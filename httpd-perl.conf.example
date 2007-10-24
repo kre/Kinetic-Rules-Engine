@@ -1,0 +1,23 @@
+
+<Location /krl>
+  AddHandler perl-script .pl
+</Location>
+
+PerlRequire /web/lib/perl/startup.pl
+
+
+<Location /hello/world>
+  SetHandler perl-script
+  PerlHandler Apache::Hello
+</Location>
+
+<Location /site>
+  SetHandler perl-script
+  PerlHandler Apache::Kynetx
+  PerlSetVar debug 1
+</Location>
+
+
+
+
+ 

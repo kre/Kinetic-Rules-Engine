@@ -1,0 +1,2 @@
+
+- copy httpd-perl.conf.example to ~/conf/extras/httpd-perl.conf and ensure it's being loaded in ~/conf/httpd.conf
