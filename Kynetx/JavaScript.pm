@@ -39,6 +39,9 @@ sub gen_js_expr {
 	/var/ && do {
 	    return  $val ;
 	};
+	/bool/ && do {
+	    return  $val ;
+	};
 	/prim/ && do {
 	    return gen_js_prim($val);
 	};
@@ -65,24 +68,10 @@ sub gen_js_rands {
 
 
 
-
-
-#	    pre => {
-#		decls => [{name => 'tc',
-#			   source => {weather => 'tomorrow_cond'}}],
-#	    },
-
 sub gen_js_pre {
     my ($req_info, $rule_env, $pre) = @_;
 
-    return join(' ', gen_js_decls($req_info, $rule_env, $pre->{'decls'}));
-
-}
-
-sub gen_js_decls {
-    my ($req_info, $rule_env, $decls) = @_;
-
-    map {gen_js_decl($req_info, $rule_env, $_)} @{ $decls };
+    join "", map {gen_js_decl($req_info, $rule_env, $_)} @{ $pre };
 }
 
 sub gen_js_decl {
@@ -90,17 +79,16 @@ sub gen_js_decl {
 
     my $source = $decl->{'source'};
 
-    my @nodes = keys %{ $source };  # these are singleton hashes
-    my $type =  $nodes[0];
+    my $function = $decl->{'function'};
 
-    Apache2::ServerUtil->server->warn("Decl source: ". $type);
+    Apache2::ServerUtil->server->warn("Decl source: ". "$source:$function");
 
     my $val = '0';
-    if($type eq 'weather') {
-	$val = Kynetx::Rules::get_weather($req_info,$source->{$type});
-    } elsif ($type eq 'geoip') {
-	$val = Kynetx::Rules::get_geoip($req_info,$source->{$type});
+    if($source eq 'weather') {
+	$val = Kynetx::Rules::get_weather($req_info,$function);
+    } elsif ($source eq 'geoip') {
+	$val = Kynetx::Rules::get_geoip($req_info,$function);
     }
     
-    return 'var ' . $decl->{'name'} . ' = \'' . $val . '\';'
+    return 'var ' . $decl->{'name'} . ' = \'' . $val . "\';\n"
 }

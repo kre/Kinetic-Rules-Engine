@@ -13,8 +13,6 @@ use Kynetx::Rules qw(:all);;
 use Kynetx::JavaScript qw(:all);
 
 
-
-
 my $s = Apache2::ServerUtil->server;
 
 my $debug = 0;
@@ -47,8 +45,8 @@ sub process_rules {
   
   
     # WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
-    $r->connection->remote_ip('128.122.108.71'); # new York (NYU)
-#    $r->connection->remote_ip('72.21.203.1'); # Seattle
+#    $r->connection->remote_ip('128.122.108.71'); # new York (NYU)
+    $r->connection->remote_ip('72.21.203.1'); # Seattle
 
     # build initial env
     my $path_info = $r->path_info;
@@ -70,23 +68,37 @@ sub process_rules {
     my ($rules, $rule_env) = get_rule_set($global_env{'site'}, $global_env{'referer'});
 
     # this loops through the rules ONCE applying all that fire
-    foreach my $rule (keys %{ $rules } ) {
+    foreach my $rule ( @{ $rules } ) {
 
 	foreach my $var (keys %{ $rule_env } ) {
 	    debug_msg("Env", "$var has value $rule_env->{$var}");
 	}
 
-	my $predicate = $rules->{$rule}->{'condition'}->{'predicate'};
-	my $cond_args = $rules->{$rule}->{'condition'}->{'args'};
-	
 
-	if (&$predicate(\%global_env, $rule_env, $cond_args)) {
+	debug_msg("Eval", "Executing $rule->{'name'}");
 
-	    debug_msg("Firing the rule named", $rule);
+	my $conds = $rule->{'cond'};
+	my $pred_value = 1;
+	foreach my $cond ( @$conds ) {
+	    my $predf = $Kynetx::Rules::predicates{$cond->{'predicate'}};
+
+	    my $v = &$predf(\%global_env, $rule_env, $cond->{'args'});
+
+	    debug_msg("Pred", "$cond->{'predicate'} returns $v");
+
+	    $pred_value = $pred_value && $v;
+	}
+
+
+	if ($pred_value) {
+
+	    debug_msg("Firing the rule named", $rule->{'name'});
 	    
 	    # this is the main event.  The browser has asked for a
 	    # chunk of Javascrip and this is where we deliver... 
-	    print mk_action($rules, \%global_env, $rule_env, $rule); 
+	    print mk_action($rule, \%global_env, $rule_env); 
+	} else {
+	    debug_msg("Rule did not fire",  $rule->{'name'});
 	}
     }
 
@@ -95,17 +107,17 @@ sub process_rules {
 
 
 sub mk_action {
-    my ($rules, $req_info, $rule_env, $rule) = @_;
+    my ($rule, $req_info, $rule_env) = @_;
 #    my ($action) = @_;
 
-    my $action = $rules->{$rule}->{'action'};
-    my $action_name = $rules->{$rule}->{'action'}->{'name'};
+    my $action = $rule->{'action'};
+    my $action_name = $rule->{'action'}->{'name'};
 
 
     # create comma separated list of arguments 
     my $arg_str = 
        join(',', 
-	     gen_js_rands($rules->{$rule}->{'action'}->{'args'})) || '';
+	     gen_js_rands($rule->{'action'}->{'args'})) || '';
 
 
     # do we need to pass this in anymore?
@@ -113,9 +125,6 @@ sub mk_action {
 
     $arg_str = '\'' . $uniq . '\', ' . $arg_str;
     my $id_str = 'kobj_'.$uniq; 
-	    
-    my $delay = $action->{'delay'} || 0;
-    my $effect = $action->{'effect'} || '';
 
     debug_msg("Action", $action_name);
     debug_msg("Args", $arg_str);
@@ -124,35 +133,48 @@ sub mk_action {
     my $js = "";
 
     # set JS vars from rule env
-    foreach my $var ( @{ get_precondition_vars($rules->{$rule}) } ) {
+    foreach my $var ( @{ get_precondition_vars($rule) } ) {
 	debug_msg("Setting jS var for", $var);
-	$js .= "var $var = \'" . $rule_env->{"$rule:$var"} . "\';\n";
+	$js .= "var $var = \'" . $rule_env->{"$rule->{'name'}:$var"} . "\';\n";
 
     }
 
-    $js .= gen_js_pre($req_info, $rule_env, $rules->{$rule}->{'pre'});
+    $js .= gen_js_pre($req_info, $rule_env, $rule->{'pre'});
 
 
     # apply the action function
-    $js .= "(". $actions{$action_name} . "(" . $arg_str . "));";
+    $js .= "(". $actions{$action_name} . "(" . $arg_str . "));\n";
+
+
+    # set defaults
+    my %mods = (
+	delay => 0,
+	effect => 'appear',
+	scrollable => 0,
+	draggable => 0,
+	);
+
+    # override defaults if set
+    foreach my $m ( @{ $rule->{'action'}{'modifiers'} } ) {
+	$mods{$m->{'name'}} = gen_js_expr($m->{'value'});
+    }
+
 
 
     if($action_name eq "float") {
-	if($effect eq 'slide') {
-	    $js .= "new Effect.toggle('" . $id_str . "', 'slide');"  ;
-	} elsif($effect eq 'blind') {
-	    $js .= "new Effect.toggle('" . $id_str . "', 'blind');"  ;
-	} else {
-	    $js .= "new Effect.toggle('" . $id_str . "', 'appear');"  ;
-	}
-	if($$action{'draggable'}) {
+	
+	$js .= "new Effect.toggle('" . $id_str . "', ". $mods{'effect'} . " );"  ;
+
+	if($mods{'draggable'} eq 'true') {
 	    $js .= "new Draggable('". $id_str . "', '{ zindex: 99999 }');";
 	}
-	if($$action{'scrolls'}) {
+
+	if($mods{'scrollable'} eq 'true') {
 	    $js .= "new FixedElement('". $id_str . "');";
 	}
+
     } elsif($action_name eq "popup") {
-	if ($effect eq 'onpageexit') {
+	if ($mods{'effect'} eq 'onpageexit') {
 	    my $funcname = "leave_" . $id_str;
 	    $js = "function $funcname () { " . $js . "};\n";
 	    $js .= "document.body.setAttribute('onUnload', '$funcname()');"
@@ -161,12 +183,12 @@ sub mk_action {
 
     
 
-    if($delay) {
+    if($mods{'delay'}) {
 	# these ought to be pre-compiled on the rules
 	$js =~ y/\n\r//d; # remove newlines
 	$js =~ y/ //s;
 	$js =~ s/'/\\'/g; # escape single quotes
-	$js = "setTimeout(\'" . $js . "\', " . ($delay * 1000) . ")";
+	$js = "setTimeout(\'" . $js . "\', " . ($mods{'delay'} * 1000) . ")";
     }
 
 

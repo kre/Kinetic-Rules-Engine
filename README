@@ -1,2 +1,18 @@
 
-- copy httpd-perl.conf.example to ~/conf/extras/httpd-perl.conf and ensure it's being loaded in ~/conf/httpd.conf
+- copy httpd-perl.conf.example to ~/conf/extras/httpd-perl.conf and
+  ensure it's being loaded in ~/conf/httpd.conf
+
+- You need to install
+
+  Apache
+  mod_perl
+  Geo::IP (www.maxmind.com)
+  LWP::Simple - CPAN
+  DateTime - CPAN
+  XML::XPath - CPAN
+  SVN::Client - use  sudo yum install subversion-perl
+  HOP::Parser - CPAN
+  HOP::Lexer - CPAN
+
+- Set up and SVN user for the rules repository
+  -- make sure it starts automatically (use chkconfig)
