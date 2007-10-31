@@ -10,7 +10,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
-our %EXPORT_TAGS = (all => [ qw(parse_ruleset) ]);
+our %EXPORT_TAGS = (all => [ qw(parse_ruleset dump_lex) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 use HOP::Stream qw/:all/;
@@ -33,15 +33,19 @@ my @keywords = (
     'alert',
     'popup',
     'with',
-    'and'
+    'and',
+    'not'
     );
-  
+
+# only on word boundaries
+my $kw = join '|', map {"\\b".$_."\\b"} @keywords;
+
 my @input_tokens = (
      [ 'STRING', qr/"[^"]*"/, \&string],
      [ 'COMMENT', qr%//.*%, sub { () } ],
-     [ 'KEYWORD', qr/(?i:@{[join '|', map {$_} @keywords]})/ ],
+     [ 'KEYWORD', qr/(?i:$kw)/ ],
      [ 'BOOL', qr/true|false/ ],
-     [ 'VAR',   qr/[[:alpha:]][[:alpha:][:digit:]_]+/    ],
+     [ 'VAR',   qr/[_A-Za-z]\w*/    ],
      [ 'NUM',   qr/\d+/             ],
      [ 'COMMA', qr/,/ ],
      [ 'OP',    qr{[+-/*]}            ],
@@ -212,7 +216,7 @@ $pred = T(concatenate(lookfor('VAR'),
 		      $Args,
 		      lookfor('RPAREN')),
 	  sub { {'predicate' => $_[0],
-		 'args' => $_[2]} } 
+		 'args' => empty_not_undef($_[2])} } 
     );
 
 # <primrule> ::= <action> LPAREN <args> RPAREN with <modifiers>
@@ -325,6 +329,21 @@ sub parse_ruleset {
     my ($result) = $entire_input->($lexer);
 
     return $result->[0];
+}
+
+
+
+sub dump_lex {
+    my @input = @_;
+    my $input = sub {shift @input};
+    
+    my $lexer = iterator_to_stream(
+	make_lexer($input,@input_tokens));
+
+    while(my $t = drop($lexer)) {
+	print "$t->[0], $t->[1]\n";
+    }
+
 }
 
 

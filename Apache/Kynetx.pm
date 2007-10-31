@@ -13,6 +13,7 @@ use Kynetx::Rules qw(:all);;
 use Kynetx::JavaScript qw(:all);
 
 
+
 my $s = Apache2::ServerUtil->server;
 
 my $debug = 0;
@@ -46,26 +47,37 @@ sub process_rules {
   
     # WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
 #    $r->connection->remote_ip('128.122.108.71'); # new York (NYU)
-    $r->connection->remote_ip('72.21.203.1'); # Seattle
+#    $r->connection->remote_ip('72.21.203.1'); # Seattle (Amazon)
+    $r->connection->remote_ip('128.187.16.242'); # Utah (BYU)
+
+
 
     # build initial env
     my $path_info = $r->path_info;
-    my %global_env = (
+    my %request_info = (
 	host => $r->connection->get_remote_host,
-	referer => $r->headers_in->{'Referer'},
+	caller => $r->headers_in->{'Referer'},
 	now => time,
 	site => $path_info =~ m#/(\d+)/.*\.js#,
 	ip => $r->connection->remote_ip(),
 	);
+    
+    # we're going to process our own params
+    foreach my $arg (split('&',$r->args())) {
+	my ($k,$v) = split('=',$arg);
+	$request_info{$k} = $v;
+	$request_info{$k} =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
+    }
+    
 
     if($debug) {
-	foreach my $entry (keys %global_env) {
-	    debug_msg($entry,  $global_env{$entry});
+	foreach my $entry (keys %request_info) {
+	    debug_msg($entry,  $request_info{$entry});
 	}
     }
 
     # side effects environment with precondition pattern values
-    my ($rules, $rule_env) = get_rule_set($global_env{'site'}, $global_env{'referer'});
+    my ($rules, $rule_env) = get_rule_set($request_info{'site'}, $request_info{'caller'});
 
     # this loops through the rules ONCE applying all that fire
     foreach my $rule ( @{ $rules } ) {
@@ -80,9 +92,18 @@ sub process_rules {
 	my $conds = $rule->{'cond'};
 	my $pred_value = 1;
 	foreach my $cond ( @$conds ) {
-	    my $predf = $Kynetx::Rules::predicates{$cond->{'predicate'}};
+	    my $pred = $cond->{'predicate'};
+	    my $predf = $Kynetx::Rules::predicates{$pred};
 
-	    my $v = &$predf(\%global_env, $rule_env, $cond->{'args'});
+	    my @args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+
+	    debug_msg('Predicate',
+		"$pred executing with args(" . join(', ', @args ) . ')');
+
+	    my $v = &$predf(\%request_info, 
+			    $rule_env, 
+			    \@args
+		           );
 
 	    debug_msg("Pred", "$cond->{'predicate'} returns $v");
 
@@ -96,7 +117,7 @@ sub process_rules {
 	    
 	    # this is the main event.  The browser has asked for a
 	    # chunk of Javascrip and this is where we deliver... 
-	    print mk_action($rule, \%global_env, $rule_env); 
+	    print mk_action($rule, \%request_info, $rule_env); 
 	} else {
 	    debug_msg("Rule did not fire",  $rule->{'name'});
 	}
@@ -213,6 +234,9 @@ d = (new Date).getTime();
 
 r=document.createElement("script");
 r.src=KOBJ.proto+KOBJ.host_with_port+"/site/" + KOBJ.site_id + "/" + d + ".js";
+r.src=r.src+"?";
+r.src=r.src+"referer="+encodeURI(document.referrer) + "&";
+r.src=r.src+"title="+encodeURI(document.title);
 body=document.getElementsByTagName("body")[0];
 body.appendChild(r);
 

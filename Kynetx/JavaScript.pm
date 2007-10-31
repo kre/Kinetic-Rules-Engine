@@ -31,6 +31,7 @@ sub gen_js_expr {
 
     case: for ($nodes[0]) {
 	/str/ && do {
+	    $val =~ s/'/\\'/g;  #' - for syntax highlighting
 	    return '\'' . $val . '\'';
 	};
 	/num/ && do {
@@ -88,6 +89,11 @@ sub gen_js_decl {
 	$val = Kynetx::Rules::get_weather($req_info,$function);
     } elsif ($source eq 'geoip') {
 	$val = Kynetx::Rules::get_geoip($req_info,$function);
+    }elsif ($source eq 'stocks') {
+	my @arg = gen_js_rands($decl->{'args'});
+	$arg[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
+    Apache2::ServerUtil->server->warn("Arg for stock ($function): ". $arg[0]);
+	$val = Kynetx::Rules::get_stocks($req_info,$arg[0],$function);
     }
     
     return 'var ' . $decl->{'name'} . ' = \'' . $val . "\';\n"

@@ -191,6 +191,206 @@ sub get_weather {
 
 }
 
+sub get_stocks {
+    my ($req_info, $symbol, $field) = @_;
+
+
+    my @field_names = qw(
+         symbol
+         last
+         date
+         time
+         change
+         open
+         high
+         low
+         volume
+         previous_close
+         name
+         );
+    
+    if(not defined $req_info->{'stocks'}->{$symbol}->{$field}) {
+
+	my $url = 
+	    'http://www.webservicex.net//stockquote.asmx/GetQuote?symbol='. 
+	    $symbol;
+
+	my $content = LWP::Simple::get($url);
+
+
+
+	$content =~ s#.*<string.*>(.*)</string>.*#$1#ms;
+	$content =~ s#&lt;#<#g;
+	$content =~ s#&gt;#>#g;
+
+	Apache2::ServerUtil->server->warn("Quote for symbol ($symbol): " . 
+				      $content . " using " .$url 
+	);
+
+
+
+	my $rss = new XML::XPath->new(xml => $content);
+
+	my $quote = 
+	    $rss ->find('/StockQuotes/Stock')->get_node(1);;
+
+	foreach my $field (@field_names) {
+	    my $v = $quote->find(ucfirst($field));
+
+	Apache2::ServerUtil->server->warn(
+	    "Value for: " . ucfirst($field) . ' = ' . $v 
+	);
+	    
+	    $req_info->{'stocks'}->{$symbol}->{$field} = $v;
+	}
+
+
+
+
+    }
+
+#    Apache2::ServerUtil->server->warn("Weather for zip ($field): " . 
+#				      $req_info->{'geoip'}->{'postal_code'} . 
+#				      " +> " . 
+#                              $req_info->{'weather'}->{$field});
+#
+
+    return $req_info->{'stocks'}->{$symbol}->{$field};
+
+}
+
+
+sub get_referer_data {
+
+    my ($req_info,  $field) = @_;
+
+
+    my @field_names = qw(
+         protocol
+         domain
+         port
+         path
+         );
+    
+    if(not defined $req_info->{'referer_data'}->{$field}) {
+
+	my $url = $req_info->{'referer'};
+	$url =~ m|(\w+)://([^/:]+)(:\d+)?/([^?]*)(\?.*)?|; 
+	$req_info->{'referer_data'}->{'protocol'} = $1;
+	$req_info->{'referer_data'}->{'domain'} = $2;
+	$req_info->{'referer_data'}->{'path'} = "/" . $4;
+	if ($3 =~ /:(\d+)/) { 
+	    $req_info->{'referer_data'}->{'port'} = $1;
+	} else { 
+	    $req_info->{'referer_data'}->{'port'} = 80;
+	}
+	if ($5 =~ /\?(.*)/) {
+	    $req_info->{'referer_data'}->{'query'} = $1;
+	} else {
+	    $req_info->{'referer_data'}->{'query'} = '';
+	}
+	foreach my $k (keys %{ $req_info->{'referer_data'} }) {
+	    Apache2::ServerUtil->server->warn("Referer piece ($k): " . 
+					      $req_info->{'referer_data'}->{$k}
+		);
+	}
+	
+
+    }
+
+    return $req_info->{'referer_data'}->{$field};
+
+}
+
+my %search_engines = (
+    'alexa.com' => 1,
+    'alltheweb.com' => 1,
+    'altavista.com' => 1,
+    'aolsearch.aol.co.uk' => 1,
+    'aolsearch.aol.com' => 1,
+    'au.search.yahoo.com' => 1,
+    'ca.search.yahoo.com' => 1,
+    'de.search.yahoo.com' => 1,
+    'dogpile.com' => 1,
+    'excite.co.jp' => 1,
+    'fr.search.yahoo.com' => 1,
+    'google.ae' => 1,
+    'google.at' => 1,
+    'google.be' => 1,
+    'google.ca' => 1,
+    'google.ch' => 1,
+    'google.cl' => 1,
+    'google.co.cr' => 1,
+    'google.co.il' => 1,
+    'google.co.in' => 1,
+    'google.co.jp' => 1,
+    'google.co.kr' => 1,
+    'google.co.nz' => 1,
+    'google.co.th' => 1,
+    'google.co.uk' => 1,
+    'google.co.ve' => 1,
+    'google.com' => 1,
+    'google.com.ar' => 1,
+    'google.com.au' => 1,
+    'google.com.br' => 1,
+    'google.com.co' => 1,
+    'google.com.do' => 1,
+    'google.com.hk' => 1,
+    'google.com.mt' => 1,
+    'google.com.mx' => 1,
+    'google.com.my' => 1,
+    'google.com.pa' => 1,
+    'google.com.pe' => 1,
+    'google.com.ph' => 1,
+    'google.com.pk' => 1,
+    'google.com.sa' => 1,
+    'google.com.sg' => 1,
+    'google.com.tr' => 1,
+    'google.com.tw' => 1,
+    'google.com.uy' => 1,
+    'google.com.vn' => 1,
+    'google.de' => 1,
+    'google.dk' => 1,
+    'google.es' => 1,
+    'google.fi' => 1,
+    'google.fr' => 1,
+    'google.ie' => 1,
+    'google.it' => 1,
+    'google.lt' => 1,
+    'google.lu' => 1,
+    'google.lv' => 1,
+    'google.mu' => 1,
+    'google.nl' => 1,
+    'google.no' => 1,
+    'google.pl' => 1,
+    'google.pt' => 1,
+    'google.ro' => 1,
+    'google.ru' => 1,
+    'google.se' => 1,
+    'google.sk' => 1,
+    'hotbot.com' => 1,
+    'infoseek.co.jp' => 1,
+    'mamma.com' => 1,
+    'ms101.mysearch.com' => 1,
+    'search.aol.com' => 1,
+    'search.com' => 1,
+    'search.earthlink.net' => 1,
+    'search.icq.com' => 1,
+    'search.msn.co.uk' => 1,
+    'search.msn.com' => 1,
+    'search.msn.de' => 1,
+    'search.msn.dk' => 1,
+    'search.msn.fr' => 1,
+    'search.naver.com' => 1,
+    'search.netscape.com' => 1,
+    'search.ninemsn.com.au' => 1,
+    'search.yahoo.com' => 1,
+    'tw.search.yahoo.com' => 1,
+    'uk.search.yahoo.com' => 1,
+    );
+
+
+
 our %predicates = (
     'true' => sub  { 1; },
     'mobile' => sub  { 1; },
@@ -201,10 +401,53 @@ our %predicates = (
 	my $city = get_geoip($req_info, 'city');
 
 	my $desired = $args->[0];
+	$desired =~ s/^'(.*)'$/$1/;  # for now, we have to remove quotes
 
 	Apache2::ServerUtil->server->warn("City: ". $city . " ?= " . $desired);
 
 	return $city eq $desired;
+	    
+    },
+
+    'outside_city' => sub {
+	my ($req_info, $rule_env, $args) = @_;
+
+	my $city = get_geoip($req_info, 'city');
+
+	my $desired = $args->[0];
+	$desired =~ s/^'(.*)'$/$1/;  # for now, we have to remove quotes
+
+	Apache2::ServerUtil->server->warn("City: ". $city . " ?= " . $desired);
+
+	return !($city eq $desired);
+	    
+    },
+
+    'state' => sub {
+	my ($req_info, $rule_env, $args) = @_;
+
+	my $state = get_geoip($req_info, 'region');
+
+	my $desired = $args->[0];
+	$desired =~ s/^'(.*)'$/$1/;  # for now, we have to remove quotes
+
+	Apache2::ServerUtil->server->warn("State: ". $state . " ?= " . $desired);
+
+	return $state eq $desired;
+	    
+    },
+
+    'outside_state' => sub {
+	my ($req_info, $rule_env, $args) = @_;
+
+	my $state = get_geoip($req_info, 'region');
+
+	my $desired = $args->[0];
+	$desired =~ s/^'(.*)'$/$1/;  # for now, we have to remove quotes
+
+	Apache2::ServerUtil->server->warn("State: ". $state . " ?= " . $desired);
+
+	return !($state eq $desired);
 	    
     },
 
@@ -291,6 +534,8 @@ our %predicates = (
 	
     },
 
+    # time predicates
+
     'timezone' => sub {
 	my ($req_info, $rule_env, $args) = @_;
 
@@ -355,7 +600,42 @@ our %predicates = (
     
     },
 
+    # market predicates
 
+    'djia_up_more_than' => sub {
+	my ($req_info, $rule_env, $args) = @_;
+
+	my $threshold = $args->[0];
+
+	my $dji = get_stocks($req_info, '^DJI', 'change');
+
+	# force the string to a num
+	# 10 is an arbitrary threshold...
+	return int($dji) > $threshold;
+    },
+
+    'djia_down_more_than' => sub {
+	my ($req_info, $rule_env, $args) = @_;
+
+	my $threshold = $args->[0];
+
+	my $dji = get_stocks($req_info, '^DJI', 'change');
+
+	# force the string to a num
+	# 10 is an arbitrary threshold...
+	return int($dji) < (0 - $threshold);
+    },
+
+    # referer predicates
+
+    'search_engine_referer' => sub {
+	my ($req_info, $rule_env, $args) = @_;
+
+	my $domain = get_referer_data($req_info,'domain');
+	$domain =~ s#^www\.(.*)$#$1# if($domain =~ m#^www\.#);
+
+	return $search_engines{$domain};
+    },
 
     );
 
@@ -365,6 +645,8 @@ $predicates{'nighttime'} = sub {
     return ! $predicates{'daytime'}(@_)
 
 };
+
+
 
 
 sub get_precondition_test {
@@ -380,13 +662,13 @@ sub get_precondition_vars {
 }
 
 
-# this returns the right rules for the referer and site
+# this returns the right rules for the caller and site
 # this is a point where things could be optimixed in the future
 sub get_rule_set {
     my $site = shift;
-    my $referer = shift;
+    my $caller = shift;
 
-    Apache2::ServerUtil->server->warn("Getting rules from $site\n");
+    Apache2::ServerUtil->server->warn("Getting rules from $site");
 
     my $rules = get_rules_from_repository($site);
 
@@ -402,12 +684,7 @@ sub get_rule_set {
 	if($rule->{'state'} eq 'active') {  # optimize??
 	    # test the pattern, captured values are stored in @captures
 
-	    if(my @captures = 
-	       $referer =~ 
-	       get_precondition_test($rule)) {
-		
-
-		Apache2::ServerUtil->server->warn("Var for rule $rule->{'name'}: $captures[0]");
+	    if(my @captures = $caller =~ get_precondition_test($rule)) {
 
 		push @new_set, $rule;
 
@@ -437,6 +714,8 @@ sub get_rules_from_repository{
 
     my $site = shift;
 
+
+
     my $ctx = new SVN::Client(
 	auth => [SVN::Client::get_simple_provider(),
 		 SVN::Client::get_simple_prompt_provider(\&simple_prompt,2),
@@ -449,6 +728,9 @@ sub get_rules_from_repository{
     $ctx->cat (\*FH,
 	       $svn_url.$site.'.krl', 
 	       'HEAD');
+
+   Apache2::ServerUtil->server->warn("Found and parsed rules for $site");
+
 
     return parse_ruleset($krl);
 
