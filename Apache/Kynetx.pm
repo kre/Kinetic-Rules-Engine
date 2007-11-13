@@ -7,12 +7,11 @@ use warnings;
 
 use XML::XPath;
 use LWP::Simple;
+use DateTime;
 
 use Kynetx::Rules qw(:all);;
 # use Kynetx::Util qw(:all);;
 use Kynetx::JavaScript qw(:all);
-
-
 
 my $s = Apache2::ServerUtil->server;
 
@@ -31,6 +30,8 @@ sub handler {
 	print_kobj('http://','127.0.0.1',$site);
 
     } else {
+
+
 	process_rules($r);
     }
 
@@ -50,6 +51,20 @@ sub process_rules {
 #    $r->connection->remote_ip('72.21.203.1'); # Seattle (Amazon)
     $r->connection->remote_ip('128.187.16.242'); # Utah (BYU)
 
+    my $cookie = $r->headers_in->{'Cookie'};
+    $cookie =~ s/SESSION_ID=(\w*)/$1/ if(defined $cookie);
+
+
+    my %session;
+    tie %session, 'Apache::Session::DB_File', $cookie, {
+	FileName      => '/web/data/sessions.db',
+	LockDirectory => '/var/lock/sessions',
+    };
+	
+    #Might be a new session, so lets give them their cookie back
+
+    my $session_cookie = "SESSION_ID=$session{_session_id};";
+    $r->headers_out->add('Set-Cookie' => $session_cookie);
 
 
     # build initial env
@@ -59,6 +74,7 @@ sub process_rules {
 	caller => $r->headers_in->{'Referer'},
 	now => time,
 	site => $path_info =~ m#/(\d+)/.*\.js#,
+	hostname => $r->hostname(),
 	ip => $r->connection->remote_ip(),
 	);
     
@@ -86,40 +102,94 @@ sub process_rules {
 	    debug_msg("Env", "$var has value $rule_env->{$var}");
 	}
 
-
 	debug_msg("Eval", "Executing $rule->{'name'}");
 
 	my $conds = $rule->{'cond'};
 	my $pred_value = 1;
 	foreach my $cond ( @$conds ) {
-	    my $pred = $cond->{'predicate'};
-	    my $predf = $Kynetx::Rules::predicates{$pred};
+	    my $v;
+	    if (my $pred = $cond->{'predicate'}) {
+		my $predf = $Kynetx::Rules::predicates{$pred};
 
-	    my @args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+		my @args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 
-	    debug_msg('Predicate',
-		"$pred executing with args(" . join(', ', @args ) . ')');
+		debug_msg('Predicate',
+			  "$pred executing with args(" . join(', ', @args ) . ')');
 
-	    my $v = &$predf(\%request_info, 
-			    $rule_env, 
-			    \@args
-		           );
+		$v = &$predf(\%request_info, 
+			     $rule_env, 
+			     \@args
+		    );
 
-	    debug_msg("Pred", "$cond->{'predicate'} returns $v");
+		debug_msg("Pred", "$cond->{'predicate'} returns $v");
+	    } elsif (my $name = $cond->{'name'}) {
+		# check count
+
+		my $count = $session{$name} || 0;
+
+		debug_msg('Counter',
+			  "$name => $count");
+
+
+		if($cond->{'ineq'} eq '>') {
+		    $v =  $count > $cond->{'value'};
+		} elsif($cond->{'ineq'} eq '<') {
+		    $v = $count < $cond->{'value'};
+		} 
+
+		# check date, if needed
+		if($v &&
+		   exists $cond->{'within'} &&
+		   exists $session{add_created($name)}) {
+
+		    my $desired = 
+			DateTime->from_epoch( epoch => 
+                                                $session{add_created($name)});
+		    $desired->add( $cond->{'timeframe'} => $cond->{'within'} );
+
+		    $v = $v && before_now($desired);
+		}
+
+
+	    }
 
 	    $pred_value = $pred_value && $v;
 	}
 
+	# set up post block execution
+	my($cons,$alt);
+	if (ref $rule->{'post'} eq 'HASH') { # it's an array if no post block
+	    my $type = $rule->{'post'}->{'type'};
+	    if($type eq 'success') {
+		$cons = $rule->{'post'}->{'cons'};
+		$alt = $rule->{'post'}->{'alt'};
+	    } elsif($type eq 'failure') { # reverse them
+		$cons = $rule->{'post'}->{'alt'};
+		$alt = $rule->{'post'}->{'cons'};
+	    } elsif($type eq 'always') { # cons is execute on both paths
+		$cons = $rule->{'post'}->{'cons'};
+		$alt = $rule->{'post'}->{'cons'};
+	    }
+
+
+	}
 
 	if ($pred_value) {
 
 	    debug_msg("Firing the rule named", $rule->{'name'});
-	    
+
 	    # this is the main event.  The browser has asked for a
 	    # chunk of Javascrip and this is where we deliver... 
-	    print mk_action($rule, \%request_info, $rule_env); 
+	    print mk_action($rule, \%request_info, $rule_env, \%session); 
+
+	    eval_post_expr($cons, \%session) if(defined $cons);
+	    
 	} else {
 	    debug_msg("Rule did not fire",  $rule->{'name'});
+
+	    eval_post_expr($alt, \%session) if(defined $alt);
+
+
 	}
     }
 
@@ -127,8 +197,11 @@ sub process_rules {
 
 
 
+
+
+
 sub mk_action {
-    my ($rule, $req_info, $rule_env) = @_;
+    my ($rule, $req_info, $rule_env, $session) = @_;
 #    my ($action) = @_;
 
     my $action = $rule->{'action'};
@@ -160,7 +233,8 @@ sub mk_action {
 
     }
 
-    $js .= gen_js_pre($req_info, $rule_env, $rule->{'pre'});
+
+    $js .= gen_js_pre($req_info, $rule_env, $session, $rule->{'pre'});
 
 
     # apply the action function
@@ -214,6 +288,53 @@ sub mk_action {
 
 
     return $js . "\n\n";
+}
+
+
+sub eval_post_expr {
+    my($expr, $session) = @_;
+
+    debug_msg("eval_post_expr", $expr->{'type'});
+    case: for ($expr->{'type'}) {
+	/clear/ && do { 
+	    if(exists $expr->{'counter'}) {
+		delete $session->{$expr->{'name'}};
+		delete $session->{add_created($expr->{'name'})}
+	    }
+	    return;
+	};
+	/iterator/ && do {
+	    if(exists $expr->{'counter'}) {
+		if(exists $session->{$expr->{'name'}}) {
+		    $session->{$expr->{'name'}} += $expr->{'value'};
+		} else {
+		    $session->{$expr->{'name'}} = $expr->{'from'};
+		    $session->{add_created($expr->{'name'})} = 
+			# use DateTime for consistency 
+			DateTime->now->epoch;
+		}
+	    }
+	    return;
+	};
+    }
+
+}
+
+sub add_created {
+    my $name = shift;
+    return $name.'_created';
+}
+
+sub before_now {
+    my $desired = shift;
+
+    my $now = DateTime->now;
+
+    debug_msg("Comparing", $now . " with " . $desired);
+
+    # 1 if first greater than second
+    return DateTime->compare($desired,$now) == 1;
+
 }
 
 

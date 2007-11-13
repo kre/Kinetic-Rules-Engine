@@ -18,12 +18,16 @@ use Apache2::ServerUtil ();
 use Apache2::Connection ();
 use Apache2::Log ();
 
+
+
 use APR::Table ();
 
 use ModPerl::Registry ();
 
 use Apache2::Const -compile => ':common';
 use APR::Const -compile => ':common';
+
+use Apache::Session::DB_File;
 
 srand( time() ^ ($$ + ($$ <<15)) );
 

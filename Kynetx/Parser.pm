@@ -34,7 +34,16 @@ my @keywords = (
     'popup',
     'with',
     'and',
-    'not'
+    'not',
+    'success',
+    'failure',
+    'else',
+    'always',
+    'counter',
+    'clear',
+    'from',
+    'within',
+    'days'
     );
 
 # only on word boundaries
@@ -48,6 +57,9 @@ my @input_tokens = (
      [ 'VAR',   qr/[_A-Za-z]\w*/    ],
      [ 'NUM',   qr/\d+/             ],
      [ 'COMMA', qr/,/ ],
+     [ 'INCR', qr/\+=/ ],
+     [ 'DECR', qr/-=/ ],
+     [ 'DOT', qr/\./ ],
      [ 'OP',    qr{[+-/*]}            ],
      [ 'SPACE', qr/\s*/, sub { () } ],
      [ 'LBRACE', qr/{/ ],
@@ -55,6 +67,7 @@ my @input_tokens = (
      [ 'LPAREN', qr/\(/ ],
      [ 'RPAREN', qr/\)/ ],
      [ 'EQUALS', qr/=/ ],
+     [ 'INEQUALITY', qr/[<>]/ ],
      [ 'COLON', qr/:/ ],
      [ 'SEMICOLON', qr/;/ ],
      [ 'LOGICAL_AND', qr/&&/ ],
@@ -71,7 +84,10 @@ sub string {
 
 my ($ruleset, $rule, $select, $vars, $pre_block, $decls, $decl, $args,
     $cond, $preds, $pred, $primrule, $modifiers, $modifier, 
-    $action, $expr, $term, $factor, $entire_input);
+    $action, $expr, $term, $factor, $entire_input,
+    $simple_pred, $counter_pred, $post_block, $clear, $iterator,
+    $counter_expr,
+);
 
 
 
@@ -87,13 +103,19 @@ my $Args = parser { $args->(@_) };
 my $Cond = parser { $cond->(@_) };
 my $Preds = parser { $preds->(@_) };
 my $Pred = parser { $pred->(@_) };
+my $Simple_pred = parser { $simple_pred->(@_) };
+my $Counter_pred = parser { $counter_pred->(@_) };
 my $Primrule = parser { $primrule->(@_) };
 my $Modifiers = parser { $modifiers->(@_) };
 my $Modifier = parser { $modifier->(@_) };
 my $Action = parser { $action->(@_) };
+my $Counter_expr = parser { $counter_expr->(@_) };
 my $Expr = parser { $expr->(@_) };
 my $Term = parser { $term->(@_) };
 my $Factor = parser { $factor->(@_) };
+my $Post_block = parser { $post_block->(@_) };
+my $Clear = parser { $clear->(@_) };
+my $Iterator = parser { $iterator->(@_) };
 
 
 
@@ -116,24 +138,28 @@ $ruleset = T(concatenate(lookfor(['KEYWORD', 'ruleset']),
 
 # <rule> ::= rule <var> is <var> LBRACE 
 #            <select> <pre_block> { <cond> | <primrule> } 
+#            { <post_block> }[0/1]
 #            RBRACE
 
-$rule = T(concatenate(lookfor(['KEYWORD', 'rule']),
+$rule = T(concatenate(absorb(lookfor(['KEYWORD', 'rule'])),
 		       lookfor('VAR'),
-		       lookfor(['KEYWORD', 'is']),
+		       absorb(lookfor(['KEYWORD', 'is'])),
 		       lookfor('VAR'),
-		       lookfor('LBRACE'),
+		       absorb(lookfor('LBRACE')),
 		       $Select,
 		       $Pre_block,
 		       alternate($Cond,
 				 $Primrule),
+		       optionalx($Post_block),
 		       lookfor('RBRACE')),
-	  sub { my $x =  { 'name' => $_[1],
-			   'state' => $_[3],
-			   'pagetype' => $_[5],
-			   'pre' => $_[6] };
-		foreach my $k (keys %{ $_[7] } ) {
-		    $x->{$k} = $_[7]->{$k};
+	  sub { my $x =  { 'name' => $_[0],
+			   'state' => $_[1],
+			   'pagetype' => $_[2],
+			   'pre' => $_[3],
+			   'post' => $_[5],
+		};
+		foreach my $k (keys %{ $_[4] } ) {
+		    $x->{$k} = $_[4]->{$k};
 		}
 		return $x;
 
@@ -168,7 +194,9 @@ $pre_block = T(concatenate(lookfor(['KEYWORD','pre']),
 
 
 # <decl> ::= <var> = <var> : <var> LPAREN <args> RPAREN SEMICOLON
-$decl = T(concatenate(lookfor('VAR'),
+#          | <var> = counter DOT <var> SEMICOLON
+$decl = alternate(
+         T(concatenate(lookfor('VAR'),
 		      lookfor('EQUALS'),
 		      lookfor('VAR'),
 		      lookfor('COLON'),
@@ -177,11 +205,21 @@ $decl = T(concatenate(lookfor('VAR'),
 		      $Args,
 		      lookfor('RPAREN'),
 		      lookfor('SEMICOLON')),
-	  sub { {'name' => $_[0],
+	  sub { {'lhs' => $_[0],
+		 'type' => 'data_source',
 	         'source' => $_[2],
 		 'function' => $_[4],
 		 'args' => defined $_[6][0] ? $_[6][0] : [] }
-	      });
+	      }),
+          T(concatenate(lookfor('VAR'),
+		      lookfor('EQUALS'),
+		      lookfor('KEYWORD'),
+		      lookfor('DOT'),
+		      lookfor('VAR'),
+		      lookfor('SEMICOLON')),
+	    sub { {'lhs' => $_[0],
+		   'type' => $_[2],
+		   'name' => $_[4] } }));
 
 # <args> ::= <expr> 
 #          | { <expr> , <args> }
@@ -203,21 +241,52 @@ $cond = T(concatenate(lookfor(['KEYWORD', 'if']),
 		}
 		return $x}
     );
+
+
+
 		      
 
 # <preds> ::= <pred> 
 #           | { <pred> && <preds> }
 $preds = star( list_values_of( $Pred, match('LOGICAL_AND')));
 
+# <pred> ::= <simple_pred> | <counter_pred>
+$pred = alternate($Simple_pred, $Counter_pred);
 
-# <pred> ::= <var> LPAREN <args> RPAREN
-$pred = T(concatenate(lookfor('VAR'),
-		      lookfor('LPAREN'),
-		      $Args,
-		      lookfor('RPAREN')),
-	  sub { {'predicate' => $_[0],
-		 'args' => empty_not_undef($_[2])} } 
+
+# <simple_pred> ::= <var> LPAREN <args> RPAREN
+$simple_pred = T(concatenate(lookfor('VAR'),
+			     lookfor('LPAREN'),
+			     $Args,
+			     lookfor('RPAREN')),
+		 sub { {'predicate' => $_[0],
+			'type' => 'simple',
+			'args' => empty_not_undef($_[2])} } 
     );
+
+# <counter_pred> ::= counter DOT <var> INEQUALITY <num>
+#                       { within <num> <timeframe> } 
+# <timeframe> ::= days
+$counter_pred = T(concatenate(
+		      lookfor(['KEYWORD','counter']),
+		      lookfor('DOT'),
+		      lookfor('VAR'),
+		      lookfor('INEQUALITY'),
+		      lookfor('NUM'),
+		      optionalx(concatenate(
+				     lookfor(['KEYWORD','within']),
+				     lookfor('NUM'),
+				     lookfor(['KEYWORD','days'])))
+
+		  ),
+		  sub { {'name' => $_[2],
+			 'counter' => $_[0],
+			 'ineq' => $_[3],
+			 'value' => $_[4],
+			 'within' => $_[5][1],
+			 'timeframe' => $_[5][2] } });
+
+
 
 # <primrule> ::= <action> LPAREN <args> RPAREN with <modifiers>
 $primrule = T(concatenate($Action,
@@ -261,6 +330,61 @@ $action = alternate(lookfor(['KEYWORD','float']),
 		    lookfor(['KEYWORD','alert']),
 		    lookfor(['KEYWORD','redirect']));
 		    
+
+
+# <post-block> ::= {success|failure|always} LBRACE <counter_expr> RBRACE
+#                    { else LBRACE <counter_expr> RBRACE }
+$post_block = T(concatenate(
+		    lookfor('KEYWORD'),
+		    absorb(lookfor('LBRACE')),
+		    $Counter_expr,
+		    absorb(lookfor('RBRACE')),
+		    optionalx(concatenate(
+				  absorb(lookfor(['KEYWORD','else'])),
+				  absorb(lookfor('LBRACE')),
+				  $Counter_expr,
+				  absorb(lookfor('RBRACE'))))
+			 ),
+		sub{ { 'type' => $_[0],
+		       'cons' => $_[1],
+		       'alt' => $_[2][0]
+		    } });
+
+
+
+
+# <counter_expr> ::= <clear> 
+#                  | <iterator>
+$counter_expr = alternate($Clear, $Iterator);
+
+# <clear> ::= clear counter DOT <var> SEMICOLON
+$clear = T(concatenate(lookfor(['KEYWORD','clear']),
+		       lookfor(['KEYWORD','counter']),
+		       absorb(lookfor('DOT')),
+		       lookfor('VAR'),
+		       lookfor('SEMICOLON')),
+	   sub { {'type' => $_[0],
+		  'counter' => $_[1],
+		  'name' => $_[2] } });
+
+# <iterator> ::= counter DOT <var> { INCR | DECR } <num> {from <num>} SEMICOLON
+$iterator = T(concatenate(lookfor(['KEYWORD','counter']),
+			  absorb(lookfor('DOT')),
+			  lookfor('VAR'),
+			  alternate(lookfor('INCR'),
+				    lookfor('DECR')),
+			  lookfor('NUM'),
+			  optionalx(concatenate(
+					absorb(lookfor(['KEYWORD','from'])),
+					lookfor('NUM'))),
+			  lookfor('SEMICOLON')),
+	      sub{ { 'type' => 'iterator',
+		     'counter' => $_[0],
+		     'name' => $_[1],
+		     'op' => $_[2],
+		     'value' => $_[3],
+		     'from' => $_[4][0] } });
+
 
 # <expr> ::= <term> {{ + <term> } | { - <term>}}*
 $expr = alternate(T(concatenate($Term,

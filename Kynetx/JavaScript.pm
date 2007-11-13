@@ -70,31 +70,45 @@ sub gen_js_rands {
 
 
 sub gen_js_pre {
-    my ($req_info, $rule_env, $pre) = @_;
+    my ($req_info, $rule_env, $session, $pre) = @_;
 
-    join "", map {gen_js_decl($req_info, $rule_env, $_)} @{ $pre };
+    join "", map {gen_js_decl($req_info, $rule_env, $session, $_)} @{ $pre };
 }
 
 sub gen_js_decl {
-    my ($req_info, $rule_env, $decl) = @_;
-
-    my $source = $decl->{'source'};
-
-    my $function = $decl->{'function'};
-
-    Apache2::ServerUtil->server->warn("Decl source: ". "$source:$function");
+    my ($req_info, $rule_env, $session, $decl) = @_;
 
     my $val = '0';
-    if($source eq 'weather') {
-	$val = Kynetx::Rules::get_weather($req_info,$function);
-    } elsif ($source eq 'geoip') {
-	$val = Kynetx::Rules::get_geoip($req_info,$function);
-    }elsif ($source eq 'stocks') {
-	my @arg = gen_js_rands($decl->{'args'});
-	$arg[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
-    Apache2::ServerUtil->server->warn("Arg for stock ($function): ". $arg[0]);
-	$val = Kynetx::Rules::get_stocks($req_info,$arg[0],$function);
+
+    Apache2::ServerUtil->server->warn(
+	"Decl type: " . $decl->{'type'}
+	);
+
+    if($decl->{'type'} eq 'data_source') {
+	my $source = $decl->{'source'};
+
+	my $function = $decl->{'function'};
+
+	Apache2::ServerUtil->server->warn("Decl source: ". "$source:$function");
+
+	if($source eq 'weather') {
+	    $val = Kynetx::Rules::get_weather($req_info,$function);
+	} elsif ($source eq 'geoip') {
+	    $val = Kynetx::Rules::get_geoip($req_info,$function);
+	}elsif ($source eq 'stocks') {
+	    my @arg = gen_js_rands($decl->{'args'});
+	    $arg[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
+	    Apache2::ServerUtil->server->warn("Arg for stock ($function): ". $arg[0]);
+	    $val = Kynetx::Rules::get_stocks($req_info,$arg[0],$function);
+	}
+
+    } elsif ($decl->{'type'} eq 'counter') {
+	Apache2::ServerUtil->server->warn(
+	    "Counter name: " . $decl->{'name'}
+	    );
+	$val = $session->{$decl->{'name'}};
     }
-    
-    return 'var ' . $decl->{'name'} . ' = \'' . $val . "\';\n"
+
+    return 'var ' . $decl->{'lhs'} . ' = \'' . $val . "\';\n"
+
 }
