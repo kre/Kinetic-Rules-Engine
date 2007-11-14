@@ -7,6 +7,7 @@ use warnings;
 
 
 use SVN::Client;
+use Log::Log4perl qw(get_logger :levels);
 
 
 use Kynetx::Parser qw(:all);
@@ -181,10 +182,11 @@ sub get_weather {
 
     }
 
-    Apache2::ServerUtil->server->warn("Weather for zip ($field): " . 
-				      $req_info->{'geoip'}->{'postal_code'} . 
-				      " +> " . 
-	                              $req_info->{'weather'}->{$field});
+    my $logger = get_logger();
+    $logger->debug("Weather for zip ($field): " ,
+		   $req_info->{'geoip'}->{'postal_code'},
+		   " -> ", 
+		   $req_info->{'weather'}->{$field});
 
 
     return $req_info->{'weather'}->{$field};
@@ -223,9 +225,10 @@ sub get_stocks {
 	$content =~ s#&lt;#<#g;
 	$content =~ s#&gt;#>#g;
 
-	Apache2::ServerUtil->server->warn("Quote for symbol ($symbol): " . 
-				      $content . " using " .$url 
-	);
+	my $logger = get_logger();
+	$logger->debug("Quote for symbol ($symbol): " . 
+		       $content . " using " .$url 
+	    );
 
 
 
@@ -237,9 +240,10 @@ sub get_stocks {
 	foreach my $field (@field_names) {
 	    my $v = $quote->find(ucfirst($field));
 
-	Apache2::ServerUtil->server->warn(
-	    "Value for: " . ucfirst($field) . ' = ' . $v 
-	);
+	    my $logger = get_logger();
+	    $logger->debug(
+		"Value for: " . ucfirst($field) . ' = ' . $v 
+		);
 	    
 	    $req_info->{'stocks'}->{$symbol}->{$field} = $v;
 	}
@@ -248,12 +252,6 @@ sub get_stocks {
 
 
     }
-
-#    Apache2::ServerUtil->server->warn("Weather for zip ($field): " . 
-#				      $req_info->{'geoip'}->{'postal_code'} . 
-#				      " +> " . 
-#                              $req_info->{'weather'}->{$field});
-#
 
     return $req_info->{'stocks'}->{$symbol}->{$field};
 
@@ -289,10 +287,15 @@ sub get_referer_data {
 	} else {
 	    $req_info->{'referer_data'}->{'query'} = '';
 	}
-	foreach my $k (keys %{ $req_info->{'referer_data'} }) {
-	    Apache2::ServerUtil->server->warn("Referer piece ($k): " . 
-					      $req_info->{'referer_data'}->{$k}
+
+	my $logger = get_logger();
+
+	if($logger->is_debug()) {
+	    foreach my $k (keys %{ $req_info->{'referer_data'} }) {
+	    $logger->debug("Referer piece ($k): " . 
+			   $req_info->{'referer_data'}->{$k}
 		);
+	    }
 	}
 	
 
@@ -403,7 +406,8 @@ our %predicates = (
 	my $desired = $args->[0];
 	$desired =~ s/^'(.*)'$/$1/;  # for now, we have to remove quotes
 
-	Apache2::ServerUtil->server->warn("City: ". $city . " ?= " . $desired);
+	my $logger = get_logger();
+        $logger->debug("City: ". $city . " ?= " . $desired);
 
 	return $city eq $desired;
 	    
@@ -417,7 +421,9 @@ our %predicates = (
 	my $desired = $args->[0];
 	$desired =~ s/^'(.*)'$/$1/;  # for now, we have to remove quotes
 
-	Apache2::ServerUtil->server->warn("City: ". $city . " ?= " . $desired);
+
+	my $logger = get_logger();
+	$logger->debug("City: ". $city . " ?= " . $desired);
 
 	return !($city eq $desired);
 	    
@@ -431,7 +437,8 @@ our %predicates = (
 	my $desired = $args->[0];
 	$desired =~ s/^'(.*)'$/$1/;  # for now, we have to remove quotes
 
-	Apache2::ServerUtil->server->warn("State: ". $state . " ?= " . $desired);
+	my $logger = get_logger();
+	$logger->debug("State: ". $state . " ?= " . $desired);
 
 	return $state eq $desired;
 	    
@@ -445,7 +452,8 @@ our %predicates = (
 	my $desired = $args->[0];
 	$desired =~ s/^'(.*)'$/$1/;  # for now, we have to remove quotes
 
-	Apache2::ServerUtil->server->warn("State: ". $state . " ?= " . $desired);
+	my $logger = get_logger();
+	$logger->debug("State: ". $state . " ?= " . $desired);
 
 	return !($state eq $desired);
 	    
@@ -458,9 +466,10 @@ our %predicates = (
     
 	my $temp = get_weather($req_info, 'curr_temp');
 
-	Apache2::ServerUtil->server->warn("Weather for zip: " . 
-					  $req_info->{'geoip'}->{'postal_code'} . 
-					  " " . int($temp) . " ?> " . $desired);
+	my $logger = get_logger();
+	$logger->debug("Weather for zip: " . 
+		       $req_info->{'geoip'}->{'postal_code'} . 
+		       " " . int($temp) . " ?> " . $desired);
 
 	return int($temp) > $desired;
 
@@ -474,9 +483,10 @@ our %predicates = (
 
 	my $tcond = get_weather($req_info, 'tomorrow_cond_code');
 
-	Apache2::ServerUtil->server->warn("Weather for zip: " . 
-					  $req_info->{'geoip'}->{'postal_code'} . 
-					  " " . int($tcond) . " ?= " . $desired);
+	my $logger = get_logger();
+	$logger->debug("Weather for zip: " . 
+		       $req_info->{'geoip'}->{'postal_code'} . 
+		       " " . int($tcond) . " ?= " . $desired);
 
 	return int($tcond) == $desired;
    
@@ -586,7 +596,8 @@ our %predicates = (
 	my $after_sunrise = DateTime->compare($now,$srto);
 	my $before_sunset = DateTime->compare($ssto,$now);
 
-	Apache2::ServerUtil->server->warn( 
+	my $logger = get_logger();
+	$logger->debug( 
 	    "Time for cust: " . $now->hms . "($tz)  " . 
 	    "After Sunrise: " . $after_sunrise . " " .
 	    "Before Sunset: " . $before_sunset . " " 
@@ -668,7 +679,8 @@ sub get_rule_set {
     my $site = shift;
     my $caller = shift;
 
-    Apache2::ServerUtil->server->warn("Getting rules from $site");
+    my $logger = get_logger();
+    $logger->debug("Getting rules...");
 
     my $rules = get_rules_from_repository($site);
 
@@ -677,9 +689,6 @@ sub get_rule_set {
     my %new_env;
 
     foreach my $rule ( @{ $rules->{$site} } ) {
-
-	Apache2::ServerUtil->server->warn("Checking rule: ". $rule->{'name'} . 
-					  "(".$rule->{'state'} .") -> " . get_precondition_test($rule));
 
 	if($rule->{'state'} eq 'active') {  # optimize??
 	    # test the pattern, captured values are stored in @captures
@@ -692,7 +701,7 @@ sub get_rule_set {
 		my $cap = 0;
 		foreach my $var ( @{ get_precondition_vars($rule)}) {
 
-		    Apache2::ServerUtil->server->warn("Var for rule $rule->{'name'}: $var -> $captures[$cap]");
+		    $logger->debug("[select var] $var -> $captures[$cap]");
 
 		    $new_env{"$rule->{'name'}:$var"} = $captures[$cap++];
 
@@ -729,7 +738,8 @@ sub get_rules_from_repository{
 	       $svn_url.$site.'.krl', 
 	       'HEAD');
 
-   Apache2::ServerUtil->server->warn("Found and parsed rules for $site");
+    my $logger = get_logger();
+    $logger->debug("Found and parsed rules");
 
 
     return parse_ruleset($krl);

@@ -4,6 +4,9 @@ package Kynetx::JavaScript;
 use strict;
 use warnings;
 
+use Log::Log4perl qw(get_logger :levels);
+
+
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
@@ -80,7 +83,9 @@ sub gen_js_decl {
 
     my $val = '0';
 
-    Apache2::ServerUtil->server->warn(
+    
+    my $logger = get_logger();
+    $logger->debug(
 	"Decl type: " . $decl->{'type'}
 	);
 
@@ -89,7 +94,8 @@ sub gen_js_decl {
 
 	my $function = $decl->{'function'};
 
-	Apache2::ServerUtil->server->warn("Decl source: ". "$source:$function");
+	my $logger = get_logger();
+	$logger->debug("Decl source: ". "$source:$function");
 
 	if($source eq 'weather') {
 	    $val = Kynetx::Rules::get_weather($req_info,$function);
@@ -98,14 +104,14 @@ sub gen_js_decl {
 	}elsif ($source eq 'stocks') {
 	    my @arg = gen_js_rands($decl->{'args'});
 	    $arg[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
-	    Apache2::ServerUtil->server->warn("Arg for stock ($function): ". $arg[0]);
 	    $val = Kynetx::Rules::get_stocks($req_info,$arg[0],$function);
 	}
 
     } elsif ($decl->{'type'} eq 'counter') {
-	Apache2::ServerUtil->server->warn(
-	    "Counter name: " . $decl->{'name'}
-	    );
+
+	my $logger = get_logger();
+	$logger->debug("Counter name: " . $decl->{'name'});
+
 	$val = $session->{$decl->{'name'}};
     }
 

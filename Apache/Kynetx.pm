@@ -8,14 +8,18 @@ use warnings;
 use XML::XPath;
 use LWP::Simple;
 use DateTime;
+use Log::Log4perl qw(get_logger :levels);
 
 use Kynetx::Rules qw(:all);;
-# use Kynetx::Util qw(:all);;
+use Kynetx::Util qw(:all);;
 use Kynetx::JavaScript qw(:all);
 
-my $s = Apache2::ServerUtil->server;
 
+Log::Log4perl->init_and_watch("/web/lib/perl/log4perl.conf", 60);
+
+my $s = Apache2::ServerUtil->server;
 my $debug = 0;
+my $logger;
 
 sub handler {
     my $r = shift;
@@ -84,11 +88,16 @@ sub process_rules {
 	$request_info{$k} = $v;
 	$request_info{$k} =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
     }
-    
 
-    if($debug) {
+    Log::Log4perl::MDC->put('site', $request_info{'site'});
+    Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
+
+    $logger = get_logger();
+    $logger->info("Processing rules for site " . $request_info{'site'});
+
+    if($logger->is_debug()) {
 	foreach my $entry (keys %request_info) {
-	    debug_msg($entry,  $request_info{$entry});
+	    $logger->debug($entry . ": " . $request_info{$entry});
 	}
     }
 
@@ -98,63 +107,17 @@ sub process_rules {
     # this loops through the rules ONCE applying all that fire
     foreach my $rule ( @{ $rules } ) {
 
+	Log::Log4perl::MDC->put('rule', $rule->{'name'});
+	$logger->info("selected ...");
+
 	foreach my $var (keys %{ $rule_env } ) {
-	    debug_msg("Env", "$var has value $rule_env->{$var}");
+	    $logger->debug("[Env] $var has value $rule_env->{$var}");
 	}
 
-	debug_msg("Eval", "Executing $rule->{'name'}");
 
-	my $conds = $rule->{'cond'};
-	my $pred_value = 1;
-	foreach my $cond ( @$conds ) {
-	    my $v;
-	    if (my $pred = $cond->{'predicate'}) {
-		my $predf = $Kynetx::Rules::predicates{$pred};
+	my $pred_value = 
+	    eval_predicates(\%request_info, $rule_env, \%session, $rule);
 
-		my @args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
-
-		debug_msg('Predicate',
-			  "$pred executing with args(" . join(', ', @args ) . ')');
-
-		$v = &$predf(\%request_info, 
-			     $rule_env, 
-			     \@args
-		    );
-
-		debug_msg("Pred", "$cond->{'predicate'} returns $v");
-	    } elsif (my $name = $cond->{'name'}) {
-		# check count
-
-		my $count = $session{$name} || 0;
-
-		debug_msg('Counter',
-			  "$name => $count");
-
-
-		if($cond->{'ineq'} eq '>') {
-		    $v =  $count > $cond->{'value'};
-		} elsif($cond->{'ineq'} eq '<') {
-		    $v = $count < $cond->{'value'};
-		} 
-
-		# check date, if needed
-		if($v &&
-		   exists $cond->{'within'} &&
-		   exists $session{add_created($name)}) {
-
-		    my $desired = 
-			DateTime->from_epoch( epoch => 
-                                                $session{add_created($name)});
-		    $desired->add( $cond->{'timeframe'} => $cond->{'within'} );
-
-		    $v = $v && before_now($desired);
-		}
-
-
-	    }
-
-	    $pred_value = $pred_value && $v;
-	}
 
 	# set up post block execution
 	my($cons,$alt);
@@ -166,7 +129,7 @@ sub process_rules {
 	    } elsif($type eq 'failure') { # reverse them
 		$cons = $rule->{'post'}->{'alt'};
 		$alt = $rule->{'post'}->{'cons'};
-	    } elsif($type eq 'always') { # cons is execute on both paths
+	    } elsif($type eq 'always') { # cons is executed on both paths
 		$cons = $rule->{'post'}->{'cons'};
 		$alt = $rule->{'post'}->{'cons'};
 	    }
@@ -176,7 +139,7 @@ sub process_rules {
 
 	if ($pred_value) {
 
-	    debug_msg("Firing the rule named", $rule->{'name'});
+	    $logger->info("Rule fired");
 
 	    # this is the main event.  The browser has asked for a
 	    # chunk of Javascrip and this is where we deliver... 
@@ -185,7 +148,7 @@ sub process_rules {
 	    eval_post_expr($cons, \%session) if(defined $cons);
 	    
 	} else {
-	    debug_msg("Rule did not fire",  $rule->{'name'});
+	    $logger->info("Rule did not fire");
 
 	    eval_post_expr($alt, \%session) if(defined $alt);
 
@@ -218,18 +181,19 @@ sub mk_action {
     my $uniq = int(rand 999999999);
 
     $arg_str = '\'' . $uniq . '\', ' . $arg_str;
+
     my $id_str = 'kobj_'.$uniq; 
 
-    debug_msg("Action", $action_name);
-    debug_msg("Args", $arg_str);
-
+    $logger->debug("[action] ", $action_name, 
+		                 ' executing with args (',$arg_str,')');
 
     my $js = "";
 
     # set JS vars from rule env
     foreach my $var ( @{ get_precondition_vars($rule) } ) {
-	debug_msg("Setting jS var for", $var);
-	$js .= "var $var = \'" . $rule_env->{"$rule->{'name'}:$var"} . "\';\n";
+	my $val = $rule_env->{"$rule->{'name'}:$var"};
+	$logger->debug("[JS var] ", $var, "->", $val);
+	$js .= "var $var = \'" . $val . "\';\n";
 
     }
 
@@ -291,10 +255,70 @@ sub mk_action {
 }
 
 
+sub eval_predicates {
+    my($request_info, $rule_env, $session, $rule) = @_;
+
+    my $conds = $rule->{'cond'};
+    my $pred_value = 1;
+    foreach my $cond ( @$conds ) {
+	my $v;
+	if (my $pred = $cond->{'predicate'}) {
+	    my $predf = $Kynetx::Rules::predicates{$pred};
+
+	    my @args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+
+
+	    $v = &$predf($request_info, 
+			 $rule_env, 
+			 \@args
+		);
+
+	    $logger->debug('[predicate] ',
+			   "$pred executing with args (" , 
+			   join(', ', @args ), 
+			   ')',
+		           ' -> ',
+		           $v);
+
+	} elsif (my $name = $cond->{'name'}) {
+	    # check count
+
+	    my $count = $session->{$name} || 0;
+
+	    $logger->debug('[counter] ', "$name -> $count");
+
+
+	    if($cond->{'ineq'} eq '>') {
+		$v =  $count > $cond->{'value'};
+	    } elsif($cond->{'ineq'} eq '<') {
+		$v = $count < $cond->{'value'};
+	    } 
+
+	    # check date, if needed
+	    if($v &&
+	       exists $cond->{'within'} &&
+	       exists $session->{add_created($name)}) {
+
+		my $desired = 
+		    DateTime->from_epoch( epoch => 
+					  $session->{add_created($name)});
+		$desired->add( $cond->{'timeframe'} => $cond->{'within'} );
+
+		$v = $v && before_now($desired);
+	    }
+
+
+	}
+
+	$pred_value = $pred_value && $v;
+    }
+    return $pred_value;
+}
+
 sub eval_post_expr {
     my($expr, $session) = @_;
 
-    debug_msg("eval_post_expr", $expr->{'type'});
+    $logger->debug("[post] ", $expr->{'type'});
     case: for ($expr->{'type'}) {
 	/clear/ && do { 
 	    if(exists $expr->{'counter'}) {
@@ -323,18 +347,6 @@ sub eval_post_expr {
 sub add_created {
     my $name = shift;
     return $name.'_created';
-}
-
-sub before_now {
-    my $desired = shift;
-
-    my $now = DateTime->now;
-
-    debug_msg("Comparing", $now . " with " . $desired);
-
-    # 1 if first greater than second
-    return DateTime->compare($desired,$now) == 1;
-
 }
 
 

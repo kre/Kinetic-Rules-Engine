@@ -4,25 +4,29 @@ package Kynetx::Util;
 use strict;
 use warnings;
 
+
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
-our %EXPORT_TAGS = (all => [ qw(debug_msg) ]);
+our %EXPORT_TAGS = (all => [ 
+qw(
+before_now
+) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
+sub before_now {
+    my $desired = shift;
 
+    my $now = DateTime->now;
 
-sub debug_msg {
+#    debug_msg("Comparing", $now . " with " . $desired);
 
-    return if(not $r->dir_config('debug');
+    # 1 if first greater than second
+    return DateTime->compare($desired,$now) == 1;
 
-    my $label = shift;
-    my $arg_str = join(', ',@_);
-
-
-    $s->warn("$label: " . $arg_str);
 }
+

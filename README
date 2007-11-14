@@ -13,6 +13,7 @@
   SVN::Client - use  sudo yum install subversion-perl
   HOP::Parser - CPAN
   HOP::Lexer - CPAN
+  Log::Log4perl - CPAN
 
 - Set up and SVN user for the rules repository
   -- make sure it starts automatically (use chkconfig)
