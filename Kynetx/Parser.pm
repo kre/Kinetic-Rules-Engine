@@ -17,6 +17,9 @@ use HOP::Stream qw/:all/;
 use HOP::Lexer 'make_lexer';
 use HOP::Parser qw/:all/;
 
+use Log::Log4perl qw(get_logger :levels);
+
+
 my @keywords = (
     'ruleset',
     'rule',
@@ -122,14 +125,17 @@ my $Iterator = parser { $iterator->(@_) };
 # <ruleset> ::= ruleset { <var> | <num> } LBRACE { <rule> }* RBRACE EOI
 
 $entire_input = concatenate($Ruleset, 
-			    \&End_of_Input);
+				  \&End_of_Input);
 			    
-$ruleset = T(concatenate(lookfor(['KEYWORD', 'ruleset']), 
-			 alternate(lookfor('VAR'),
-				   lookfor('NUM')),
-			 lookfor('LBRACE'),
-			 star($Rule),
-			 lookfor('RBRACE')),
+$ruleset = 
+	T(
+	    error(
+		concatenate(lookfor(['KEYWORD', 'ruleset']), 
+			    alternate(lookfor('VAR'),
+				      lookfor('NUM')),
+			    lookfor('LBRACE'),
+			    star($Rule),
+			    lookfor('RBRACE'))),
 	     sub { my %m;
 		   $m{ $_[1]  } = $_[3]; 
 	           return \%m;
@@ -146,10 +152,10 @@ $rule = T(concatenate(absorb(lookfor(['KEYWORD', 'rule'])),
 		       absorb(lookfor(['KEYWORD', 'is'])),
 		       lookfor('VAR'),
 		       absorb(lookfor('LBRACE')),
-		       $Select,
-		       $Pre_block,
-		       alternate($Cond,
-				 $Primrule),
+		       error($Select),
+		       error($Pre_block),
+		       alternate(error($Cond),
+				 error($Primrule)),
 		       optionalx($Post_block),
 		       lookfor('RBRACE')),
 	  sub { my $x =  { 'name' => $_[0],
@@ -334,15 +340,16 @@ $action = alternate(lookfor(['KEYWORD','float']),
 
 # <post-block> ::= {success|failure|always} LBRACE <counter_expr> RBRACE
 #                    { else LBRACE <counter_expr> RBRACE }
-$post_block = T(concatenate(
+$post_block = T(
+		concatenate(
 		    lookfor('KEYWORD'),
 		    absorb(lookfor('LBRACE')),
-		    $Counter_expr,
+		    error($Counter_expr),
 		    absorb(lookfor('RBRACE')),
 		    optionalx(concatenate(
 				  absorb(lookfor(['KEYWORD','else'])),
 				  absorb(lookfor('LBRACE')),
-				  $Counter_expr,
+				  error($Counter_expr),
 				  absorb(lookfor('RBRACE'))))
 			 ),
 		sub{ { 'type' => $_[0],
@@ -450,8 +457,16 @@ sub parse_ruleset {
 #	print "$t->[0], $t->[1]\n";
 #    }
 
-    my ($result) = $entire_input->($lexer);
+    my $logger = get_logger();
 
+    my ($result) = eval {$entire_input->($lexer)};
+    if($@) {
+	$logger->error("Can't parse rules: $@");
+    } else {
+	$logger->debug("Parsed rules");
+    }
+
+    # what should bre returned from an error?  An empty rule list?
     return $result->[0];
 }
 

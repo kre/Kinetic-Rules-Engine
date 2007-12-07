@@ -51,9 +51,9 @@ sub process_rules {
   
   
     # WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
-#    $r->connection->remote_ip('128.122.108.71'); # new York (NYU)
-#    $r->connection->remote_ip('72.21.203.1'); # Seattle (Amazon)
-    $r->connection->remote_ip('128.187.16.242'); # Utah (BYU)
+#    $r->connection->remote_ip('128.122.108.71'); # New York (NYU)
+    $r->connection->remote_ip('72.21.203.1'); # Seattle (Amazon)
+#    $r->connection->remote_ip('128.187.16.242'); # Utah (BYU)
 
     my $cookie = $r->headers_in->{'Cookie'};
     $cookie =~ s/SESSION_ID=(\w*)/$1/ if(defined $cookie);

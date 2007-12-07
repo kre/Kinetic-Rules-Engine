@@ -739,8 +739,7 @@ sub get_rules_from_repository{
 	       'HEAD');
 
     my $logger = get_logger();
-    $logger->debug("Found and parsed rules");
-
+    $logger->debug("Found rules");
 
     return parse_ruleset($krl);
 
