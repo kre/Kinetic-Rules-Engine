@@ -6,16 +6,21 @@
 PerlRequire /web/lib/perl/startup.pl
 
 
-<Location /hello/world>
+<LocationMatch /site/\d+/>
   SetHandler perl-script
-  PerlHandler Apache::Hello
-</Location>
+  PerlHandler Kynetx
+</LocationMatch>
 
-<Location /site>
+
+<LocationMatch /site/\d+/log>
   SetHandler perl-script
-  PerlHandler Apache::Kynetx
-  PerlSetVar debug 1
-</Location>
+  PerlHandler Kynetx::Logger
+</LocationMatch>
+
+<LocationMatch /site/\d+/js/>
+  SetHandler perl-script
+  PerlHandler Kynetx::KOBJ
+</LocationMatch>
 
 
 

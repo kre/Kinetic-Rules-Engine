@@ -1,5 +1,5 @@
-package Apache::Kynetx;
-# file: Apache/Kynetx.pm
+package Kynetx;
+# file: Kynetx.pm
 
 use strict;
 use warnings;
@@ -26,18 +26,10 @@ sub handler {
 
     $r->content_type('text/javascript');
 
-    $debug = $r->dir_config('debug');
+# read in some params from the httpdconf file
+#    $debug = $r->dir_config('debug');
 
-    # eventually we'll want to do this separately
-    if((my $site) = ($r->path_info =~ m%/(\d+)/js/kobj.js%)) {
-
-	print_kobj('http://','127.0.0.1',$site);
-
-    } else {
-
-
-	process_rules($r);
-    }
+    process_rules($r);
 
     return Apache2::Const::OK; 
 }
@@ -340,6 +332,12 @@ sub eval_post_expr {
 	    }
 	    return;
 	};
+	/callbacks/ && do {
+	    foreach my $t (@$expr->{'callbacks'}) {
+		$session->{$t} = 1;
+	    }
+	    return;
+	};
     }
 
 }
@@ -350,41 +348,4 @@ sub add_created {
 }
 
 
-
-sub print_kobj {
-
-    my ($proto, $host, $site_id) = @_;
-
-    print <<EOF;
-var KOBJ={
-}
-
-KOBJ.proto = \'$proto\'; 
-KOBJ.host_with_port = \'$host\'; 
-KOBJ.site_id = $site_id;
-
-d = (new Date).getTime();
-
-r=document.createElement("script");
-r.src=KOBJ.proto+KOBJ.host_with_port+"/site/" + KOBJ.site_id + "/" + d + ".js";
-r.src=r.src+"?";
-r.src=r.src+"referer="+encodeURI(document.referrer) + "&";
-r.src=r.src+"title="+encodeURI(document.title);
-body=document.getElementsByTagName("body")[0];
-body.appendChild(r);
-
-EOF
-
-}
-
-sub debug_msg {
-
-    return if(not $debug);
-
-    my $label = shift;
-    my $arg_str = join(', ',@_);
-
-
-    $s->warn("$label: " . $arg_str);
-}
 

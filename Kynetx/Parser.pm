@@ -46,7 +46,10 @@ my @keywords = (
     'clear',
     'from',
     'within',
-    'days'
+    'days',
+    'callbacks',
+    'log',
+    'click'
     );
 
 # only on word boundaries
@@ -89,7 +92,7 @@ my ($ruleset, $rule, $select, $vars, $pre_block, $decls, $decl, $args,
     $cond, $preds, $pred, $primrule, $modifiers, $modifier, 
     $action, $expr, $term, $factor, $entire_input,
     $simple_pred, $counter_pred, $post_block, $clear, $iterator,
-    $counter_expr,
+    $counter_expr, $callbacks, $click
 );
 
 
@@ -119,6 +122,8 @@ my $Factor = parser { $factor->(@_) };
 my $Post_block = parser { $post_block->(@_) };
 my $Clear = parser { $clear->(@_) };
 my $Iterator = parser { $iterator->(@_) };
+my $Callbacks = parser { $callbacks->(@_) };
+my $Click = parser { $click->(@_) };
 
 
 
@@ -154,8 +159,8 @@ $rule = T(concatenate(absorb(lookfor(['KEYWORD', 'rule'])),
 		       absorb(lookfor('LBRACE')),
 		       error($Select),
 		       error($Pre_block),
-		       alternate(error($Cond),
-				 error($Primrule)),
+		       alternate($Cond,
+				 $Primrule),
 		       optionalx($Post_block),
 		       lookfor('RBRACE')),
 	  sub { my $x =  { 'name' => $_[0],
@@ -296,9 +301,9 @@ $counter_pred = T(concatenate(
 
 # <primrule> ::= <action> LPAREN <args> RPAREN with <modifiers>
 $primrule = T(concatenate($Action,
-			  lookfor('LPAREN'),
+			  absorb(lookfor('LPAREN')),
 			  $Args,
-			  lookfor('RPAREN'),
+			  absorb(lookfor('RPAREN')),
 			  optional(T(concatenate(lookfor(['KEYWORD','with']),
 						 $Modifiers),
 				     sub {
@@ -311,8 +316,8 @@ $primrule = T(concatenate($Action,
 					 [\@x];
 				     }))),
 	      sub { {'action' => {'name' => $_[0],
-				  'args' => empty_not_undef($_[2]),
-				  'modifiers' => empty_not_undef($_[4])}}
+				  'args' => empty_not_undef($_[1]),
+				  'modifiers' => empty_not_undef($_[2])}}
 	      });
 
 # <modifiers> ::= <modifier> 
@@ -360,9 +365,11 @@ $post_block = T(
 
 
 
+
 # <counter_expr> ::= <clear> 
 #                  | <iterator>
-$counter_expr = alternate($Clear, $Iterator);
+#                  | <callbacks>
+$counter_expr = alternate($Clear, $Iterator, $Callbacks);
 
 # <clear> ::= clear counter DOT <var> SEMICOLON
 $clear = T(concatenate(lookfor(['KEYWORD','clear']),
@@ -391,6 +398,24 @@ $iterator = T(concatenate(lookfor(['KEYWORD','counter']),
 		     'op' => $_[2],
 		     'value' => $_[3],
 		     'from' => $_[4][0] } });
+
+# <callbacks> ::= callbacks LBRACE {<click>}+ RBRACE
+$callbacks = T(concatenate(
+		  lookfor(['KEYWORD','callbacks']),
+		  absorb(lookfor('LBRACE')),
+		  list_values_of( $Click, match('SEMICOLON')),
+		  absorb(lookfor('RBRACE'))),
+	      sub { { 'type' => $_[0],
+		      'callbacks' => $_[1]
+		     } });
+
+# <click> ::= click <var> 
+$click = T(concatenate(
+	       absorb(lookfor(['KEYWORD','click'])),
+	       lookfor('VAR')
+	   ),
+	   sub { $_[0]
+	   });
 
 
 # <expr> ::= <term> {{ + <term> } | { - <term>}}*
