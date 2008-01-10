@@ -19,6 +19,10 @@ gen_js_expr
 gen_js_prim
 gen_js_rands
 gen_js_pre
+gen_js_callbacks
+gen_js_afterload
+gen_js_mk_cb_func
+mk_js_str
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -86,7 +90,7 @@ sub gen_js_decl {
     
     my $logger = get_logger();
     $logger->debug(
-	"Decl type: " . $decl->{'type'}
+	"[decl] Type: " . $decl->{'type'}
 	);
 
     if($decl->{'type'} eq 'data_source') {
@@ -94,8 +98,7 @@ sub gen_js_decl {
 
 	my $function = $decl->{'function'};
 
-	my $logger = get_logger();
-	$logger->debug("Decl source: ". "$source:$function");
+	$logger->debug("[decl] Source: ". "$source:$function");
 
 	if($source eq 'weather') {
 	    $val = Kynetx::Rules::get_weather($req_info,$function);
@@ -109,7 +112,6 @@ sub gen_js_decl {
 
     } elsif ($decl->{'type'} eq 'counter') {
 
-	my $logger = get_logger();
 	$logger->debug("Counter name: " . $decl->{'name'});
 
 	$val = $session->{$decl->{'name'}};
@@ -118,3 +120,71 @@ sub gen_js_decl {
     return 'var ' . $decl->{'lhs'} . ' = \'' . $val . "\';\n"
 
 }
+
+
+sub gen_js_callbacks {
+    my ($callbacks,$type,$rule_name) = @_;
+
+    join("", map {gen_js_callback($_,$type,$rule_name)} @{ $callbacks });
+
+}
+
+sub gen_js_callback {
+    my ($cb,$type,$rule_name) = @_;
+
+    my $logger = get_logger();
+    
+    # if it's not click don't do anything!
+    if($cb->{'type'} eq 'click') {
+	$logger->debug('[callbacks]',$cb->{'attribute'}." -> ".$cb->{'value'}.",");
+
+	return 
+	    "KOBJ.obs(".
+	     mk_js_str($cb->{'attribute'}).",".
+	     mk_js_str($cb->{'value'}).",".
+	     mk_js_str($type).",".
+	     mk_js_str($rule_name).
+	    ");\n";
+    }
+
+    return '';
+
+}
+
+sub gen_js_afterload {
+
+    # separate all args by newline and put in an prototye Event
+    my $js = join("\n",@_);
+    return <<EOF;
+Event.observe(window, 'load', function() {
+$js
+});
+
+EOF
+
+}
+
+sub gen_js_mk_cb_func {
+    my $cb_func_name = shift;
+
+    # separate all args by newline and put in an prototye Event
+    my $js = join("\n",@_);
+    return <<EOF;
+function $cb_func_name () {
+$js
+};
+
+EOF
+
+    
+}
+
+
+
+#
+# utility functions
+#
+sub mk_js_str {
+    return "'". join(" ",@_) . "'";
+}
+

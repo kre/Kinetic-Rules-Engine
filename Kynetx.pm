@@ -10,6 +10,7 @@ use LWP::Simple;
 use DateTime;
 use Log::Log4perl qw(get_logger :levels);
 
+
 use Kynetx::Rules qw(:all);;
 use Kynetx::Util qw(:all);;
 use Kynetx::JavaScript qw(:all);
@@ -17,9 +18,16 @@ use Kynetx::JavaScript qw(:all);
 
 Log::Log4perl->init_and_watch("/web/lib/perl/log4perl.conf", 60);
 
-my $s = Apache2::ServerUtil->server;
-my $debug = 0;
 my $logger;
+$logger = get_logger();
+
+if($logger->is_debug()) {
+
+    use Data::Dumper;
+}
+
+
+my $s = Apache2::ServerUtil->server;
 
 sub handler {
     my $r = shift;
@@ -84,7 +92,6 @@ sub process_rules {
     Log::Log4perl::MDC->put('site', $request_info{'site'});
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
 
-    $logger = get_logger();
     $logger->info("Processing rules for site " . $request_info{'site'});
 
     if($logger->is_debug()) {
@@ -129,23 +136,28 @@ sub process_rules {
 
 	}
 
+	my $js = '';
 	if ($pred_value) {
 
-	    $logger->info("Rule fired");
+	    $logger->info("rule fired");
 
 	    # this is the main event.  The browser has asked for a
 	    # chunk of Javascrip and this is where we deliver... 
-	    print mk_action($rule, \%request_info, $rule_env, \%session); 
+	    $js .= mk_action($rule, \%request_info, $rule_env, \%session); 
 
-	    eval_post_expr($cons, \%session) if(defined $cons);
-	    
+	    $js .= eval_post_expr($cons, \%session) if(defined $cons);
+
 	} else {
 	    $logger->info("Rule did not fire");
 
-	    eval_post_expr($alt, \%session) if(defined $alt);
+	    $js .= eval_post_expr($alt, \%session) if(defined $alt);
 
 
 	}
+
+	# return the JS load to the client
+	print $js; 
+	$logger->info("finished");
     }
 
 }
@@ -172,12 +184,9 @@ sub mk_action {
     # do we need to pass this in anymore?
     my $uniq = int(rand 999999999);
 
-    $arg_str = '\'' . $uniq . '\', ' . $arg_str;
 
     my $id_str = 'kobj_'.$uniq; 
 
-    $logger->debug("[action] ", $action_name, 
-		                 ' executing with args (',$arg_str,')');
 
     my $js = "";
 
@@ -192,6 +201,31 @@ sub mk_action {
 
     $js .= gen_js_pre($req_info, $rule_env, $session, $rule->{'pre'});
 
+
+    # callbacks
+    my $cb = '';
+    if($rule->{'callbacks'}) {
+	foreach my $sense ('success','failure') {
+	    $cb .= gen_js_callbacks($rule->{'callbacks'}->{$sense},
+		                    $sense,
+				    $rule->{'name'}
+		                   );
+	}
+    }
+    
+    # wrap up in load
+#    $cb = gen_js_afterload($cb);
+    my $cb_func_name = 'callBacks'.$uniq;
+    $js .= gen_js_mk_cb_func($cb_func_name,$cb);
+
+    # add to arg str
+    $arg_str = join(',',
+		    mk_js_str($uniq),
+		    $cb_func_name,
+		    $arg_str);
+
+    $logger->debug("[action] ", $action_name, 
+		                 ' executing with args (',$arg_str,')');
 
     # apply the action function
     $js .= "(". $actions{$action_name} . "(" . $arg_str . "));\n";
@@ -243,7 +277,8 @@ sub mk_action {
     }
 
 
-    return $js . "\n\n";
+
+    return $js;
 }
 
 
@@ -311,18 +346,21 @@ sub eval_post_expr {
     my($expr, $session) = @_;
 
     $logger->debug("[post] ", $expr->{'type'});
+
+    my $js = '';
     case: for ($expr->{'type'}) {
 	/clear/ && do { 
 	    if(exists $expr->{'counter'}) {
 		delete $session->{$expr->{'name'}};
 		delete $session->{add_created($expr->{'name'})}
 	    }
-	    return;
+	    return $js;
 	};
 	/iterator/ && do {
 	    if(exists $expr->{'counter'}) {
 		if(exists $session->{$expr->{'name'}}) {
 		    $session->{$expr->{'name'}} += $expr->{'value'};
+
 		} else {
 		    $session->{$expr->{'name'}} = $expr->{'from'};
 		    $session->{add_created($expr->{'name'})} = 
@@ -330,13 +368,30 @@ sub eval_post_expr {
 			DateTime->now->epoch;
 		}
 	    }
-	    return;
+	    return $js;
 	};
+
 	/callbacks/ && do {
-	    foreach my $t (@$expr->{'callbacks'}) {
+
+	    foreach my $cb (@{$expr->{'callbacks'}}) {
+		my $t = $cb->{'value'};
+		my $a = $cb->{'attribute'};
 		$session->{$t} = 1;
+		$logger->debug("[post] Setting callback named $a = $t");
+		if($a eq 'id') {
+		    $js .= <<EJS;
+var e_$t = document.getElementById('$t');  
+Event.observe(e_$t, "click", function() {KOBJ.logger("$t")});
+EJS
+		} elsif ($a eq 'class') {
+		    $js .= <<EJS1;
+var e_$t = document.getElementsByClass('$t');  
+e_$t.each(function (c) {
+    Event.observe(c, "click", function() {KOBJ.logger("$t")})});
+EJS1
+	        } 
 	    }
-	    return;
+	    return $js;
 	};
     }
 

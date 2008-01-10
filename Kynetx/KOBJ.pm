@@ -38,26 +38,16 @@ sub print_kobj {
     my ($proto, $host, $site_id) = @_;
 
     print <<EOF;
-var KOBJ={
-}
 
+KOBJ.d = (new Date).getTime();
 KOBJ.proto = \'$proto\'; 
 KOBJ.host_with_port = \'$host\'; 
 KOBJ.site_id = $site_id;
 KOBJ.url = KOBJ.proto+KOBJ.host_with_port+"/site/" + KOBJ.site_id;
-KOBJ.logger = function(msg,url) {
 
-    r=document.createElement("script");
-    r.src=KOBJ.url+"/log?msg="+msg+"&url="+url;
-    head=document.getElementsByTagName("head")[0];
-    head.appendChild(r);
-
-}
-
-d = (new Date).getTime();
 
 r=document.createElement("script");
-r.src=KOBJ.url + "/" + d + ".js";
+r.src=KOBJ.url + "/" + KOBJ.d + ".js";
 r.src=r.src+"?";
 r.src=r.src+"referer="+encodeURI(document.referrer) + "&";
 r.src=r.src+"title="+encodeURI(document.title);

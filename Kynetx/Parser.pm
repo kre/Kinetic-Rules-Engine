@@ -38,6 +38,8 @@ my @keywords = (
     'with',
     'and',
     'not',
+    'fired',
+    'callbacks',
     'success',
     'failure',
     'else',
@@ -47,7 +49,6 @@ my @keywords = (
     'from',
     'within',
     'days',
-    'callbacks',
     'log',
     'click'
     );
@@ -92,7 +93,7 @@ my ($ruleset, $rule, $select, $vars, $pre_block, $decls, $decl, $args,
     $cond, $preds, $pred, $primrule, $modifiers, $modifier, 
     $action, $expr, $term, $factor, $entire_input,
     $simple_pred, $counter_pred, $post_block, $clear, $iterator,
-    $counter_expr, $callbacks, $click
+    $counter_expr, $callbacks, $click, $succeed, $fail
 );
 
 
@@ -124,6 +125,9 @@ my $Clear = parser { $clear->(@_) };
 my $Iterator = parser { $iterator->(@_) };
 my $Callbacks = parser { $callbacks->(@_) };
 my $Click = parser { $click->(@_) };
+my $Succeed = parser { $succeed->(@_) };
+my $Fail = parser { $fail->(@_) };
+
 
 
 
@@ -149,6 +153,8 @@ $ruleset =
 
 # <rule> ::= rule <var> is <var> LBRACE 
 #            <select> <pre_block> { <cond> | <primrule> } 
+#            { <succeed> }[0/1]
+#            { <fail> }[0/1]
 #            { <post_block> }[0/1]
 #            RBRACE
 
@@ -161,17 +167,32 @@ $rule = T(concatenate(absorb(lookfor(['KEYWORD', 'rule'])),
 		       error($Pre_block),
 		       alternate($Cond,
 				 $Primrule),
+		       optionalx($Callbacks),
 		       optionalx($Post_block),
 		       lookfor('RBRACE')),
 	  sub { my $x =  { 'name' => $_[0],
 			   'state' => $_[1],
 			   'pagetype' => $_[2],
 			   'pre' => $_[3],
-			   'post' => $_[5],
 		};
 		foreach my $k (keys %{ $_[4] } ) {
 		    $x->{$k} = $_[4]->{$k};
 		}
+
+		# optionals
+#	        if($_[5]) {
+#		    if ($_[5]->{'type'} eq 'callbacks') {
+			$x->{'callbacks'} = $_[5];
+#		    } else {
+#			$x->{'post'} = $_[5];
+#		    }
+#		}
+
+		
+	        if($_[6]) {
+		    $x->{'post'} = $_[6];
+		}
+
 		return $x;
 
 	      });
@@ -231,6 +252,7 @@ $decl = alternate(
 	    sub { {'lhs' => $_[0],
 		   'type' => $_[2],
 		   'name' => $_[4] } }));
+
 
 # <args> ::= <expr> 
 #          | { <expr> , <args> }
@@ -342,12 +364,48 @@ $action = alternate(lookfor(['KEYWORD','float']),
 		    lookfor(['KEYWORD','redirect']));
 		    
 
+# <callbacks> ::= callbacks LBRACE { <succeed> }[0/1] { <fail> }[0/1] RBRACE
+$callbacks = T(concatenate(
+		 lookfor(['KEYWORD','callbacks']),
+		 absorb(lookfor('LBRACE')),
+		 optionalx($Succeed),
+		 optionalx($Fail),
+		 absorb(lookfor('RBRACE'))),
+	       sub { { 'success' => $_[1],
+		       'failure' => $_[2]
+		     } }
+    );
 
-# <post-block> ::= {success|failure|always} LBRACE <counter_expr> RBRACE
+
+
+# <succeed> ::= succeeds LBRACE {<click>}+ RBRACE
+$succeed = T(concatenate(
+		 lookfor(['KEYWORD','success']),
+		 absorb(lookfor('LBRACE')),
+		 list_values_of( $Click, match('SEMICOLON')),
+		 absorb(lookfor('RBRACE'))
+	     ),
+	     sub {  $_[1] } 
+         );
+		 
+# <fail> ::= fails LBRACE {<click>}+ RBRACE
+$fail = T(concatenate(
+		 lookfor(['KEYWORD','failure']),
+		 absorb(lookfor('LBRACE')),
+		 list_values_of( $Click, match('SEMICOLON')),
+		 absorb(lookfor('RBRACE'))
+	     ),
+	     sub {  $_[1] } 
+         );
+	 
+
+
+# <post-block> ::= {fired|always} LBRACE <counter_expr> RBRACE
 #                    { else LBRACE <counter_expr> RBRACE }
 $post_block = T(
 		concatenate(
-		    lookfor('KEYWORD'),
+		    alternate(lookfor(['KEYWORD','fired']),
+			      lookfor(['KEYWORD','always'])),
 		    absorb(lookfor('LBRACE')),
 		    error($Counter_expr),
 		    absorb(lookfor('RBRACE')),
@@ -368,8 +426,7 @@ $post_block = T(
 
 # <counter_expr> ::= <clear> 
 #                  | <iterator>
-#                  | <callbacks>
-$counter_expr = alternate($Clear, $Iterator, $Callbacks);
+$counter_expr = alternate($Clear, $Iterator);
 
 # <clear> ::= clear counter DOT <var> SEMICOLON
 $clear = T(concatenate(lookfor(['KEYWORD','clear']),
@@ -399,22 +456,17 @@ $iterator = T(concatenate(lookfor(['KEYWORD','counter']),
 		     'value' => $_[3],
 		     'from' => $_[4][0] } });
 
-# <callbacks> ::= callbacks LBRACE {<click>}+ RBRACE
-$callbacks = T(concatenate(
-		  lookfor(['KEYWORD','callbacks']),
-		  absorb(lookfor('LBRACE')),
-		  list_values_of( $Click, match('SEMICOLON')),
-		  absorb(lookfor('RBRACE'))),
-	      sub { { 'type' => $_[0],
-		      'callbacks' => $_[1]
-		     } });
 
-# <click> ::= click <var> 
+# <click> ::= click <var> = <var> 
 $click = T(concatenate(
-	       absorb(lookfor(['KEYWORD','click'])),
-	       lookfor('VAR')
+	       lookfor(['KEYWORD','click']),
+	       lookfor('VAR'),
+	       absorb(lookfor('EQUALS')),
+	       lookfor('STRING')
 	   ),
-	   sub { $_[0]
+	   sub { { 'type' => $_[0],
+		   'attribute' => $_[1],
+		   'value' => $_[2] }
 	   });
 
 

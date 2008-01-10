@@ -13,9 +13,6 @@ sub handler {
 
     $r->content_type('text/javascript');
 
-    my $logger = get_logger();
-    $logger->info("Processing callback for site " . $r->path_info);
-
     process_action($r);
 
     return Apache2::Const::OK; 
@@ -27,6 +24,11 @@ sub handler {
 
 sub process_action {
     my $r = shift;
+
+
+
+    my $logger = get_logger();
+    $logger->info("Processing callback for site " . $r->path_info);
   
     my $cookie = $r->headers_in->{'Cookie'};
     $cookie =~ s/SESSION_ID=(\w*)/$1/ if(defined $cookie);
@@ -40,7 +42,6 @@ sub process_action {
     };
 	
     #Might be a new session, so lets give them their cookie back
-
     my $session_cookie = "SESSION_ID=$session{_session_id};";
     $r->headers_out->add('Set-Cookie' => $session_cookie);
 
@@ -50,7 +51,7 @@ sub process_action {
 	host => $r->connection->get_remote_host,
 	caller => $r->headers_in->{'Referer'},
 	now => time,
-	site => $path_info =~ m#/(\d+)/.*\.js#,
+	site => $path_info =~ m#/(\d+)/.*#,
 	hostname => $r->hostname(),
 	ip => $r->connection->remote_ip(),
 	);
@@ -63,14 +64,23 @@ sub process_action {
     }
 
     Log::Log4perl::MDC->put('site', $request_info{'site'});
+    Log::Log4perl::MDC->put('rule', $request_info{'rule'}); 
 
     my $logger = get_logger();
     $logger->info("Processing callback for site " . $request_info{'site'});
 
-    if($logger->is_debug()) {
-	foreach my $entry (keys %request_info) {
-	    $logger->debug($entry . ": " . $request_info{$entry});
-	}
+    $logger->debug("Storing: ", $request_info{'site'}, ", ",
+		               $request_info{'rule'}, ", ",
+		               $request_info{'caller'}, ", ",
+		               $session{_session_id}, ", ",
+		               $request_info{'sense'}, 
+	);
+
+    # store to db here
+
+    if($request_info{'url'}){
+	$logger->debug("Redirecting to ", $request_info{'url'});
+	print "window.location = '" . $request_info{'url'} . "'";
     }
 
 
@@ -78,38 +88,4 @@ sub process_action {
 
 
 
-sub print_kobj {
-
-    my ($proto, $host, $site_id) = @_;
-
-    print <<EOF;
-var KOBJ={
-}
-
-KOBJ.proto = \'$proto\'; 
-KOBJ.host_with_port = \'$host\'; 
-KOBJ.site_id = $site_id;
-KOBJ.url = KOBJ.proto+KOBJ.host_with_port+"/site/" + KOBJ.site_id;
-KOBJ.logger = function(msg,url) {
-
-    r=document.createElement("script");
-    r.src=KOBJ.url+"/log?msg="+msg+"&url="+url;
-    head=document.getElementsByTagName("head")[0];
-    head.appendChild(r);
-
-}
-
-d = (new Date).getTime();
-
-r=document.createElement("script");
-r.src=KOBJ.url + "/" + d + ".js";
-r.src=r.src+"?";
-r.src=r.src+"referer="+encodeURI(document.referrer) + "&";
-r.src=r.src+"title="+encodeURI(document.title);
-body=document.getElementsByTagName("body")[0];
-body.appendChild(r);
-
-EOF
-
-}
 

@@ -32,16 +32,18 @@ my($active,$test,$inactive) = (0,1,2);
 # available actions
 # should be a JS function; 
 # mk_action will create a JS expression that applies it to appropriate arguments
+# first arg MUST be uniq (a number unique to this rule action event)
+# second arg MUST be cb (a callback function)
 our %actions = (
 
     alert => 
-      'function(uniq, msg) {alert(msg)}',
+      'function(uniq, cb, msg) {alert(msg)}',
 
     redirect => 
-      'function(uniq, url) {window.location = url}',
+      'function(uniq, cb, url) {window.location = url}',
 
     float =>
-      'function(uniq, pos, top, side, url) {
+      'function(uniq, cb, pos, top, side, url) {
         var id_str = \'kobj_\'+uniq;
         var div = document.createElement(\'div\');
         div.setAttribute(\'id\', id_str);
@@ -56,10 +58,12 @@ our %actions = (
         document.body.appendChild(div);
         new Ajax.Updater(id_str, url, {
                          aynchronous: true,
-                         method: \'get\' });
+                         method: \'get\' },
+                         onComplete: cb
+                        );
        }',
     popup =>
-      'function(uniq, top, left, width, height, url) {      
+      'function(uniq, cb, top, left, width, height, url) {      
         var id_str = \'kobj_\'+uniq;
         var options = \'toolbar=no,menubar=no,resizable=yes,scrollbars=yes,alwaysRaised=yes,status=no\' +
                       \'left=\' + left + \', \' +
@@ -67,14 +71,17 @@ our %actions = (
                       \'width=\' + width + \', \' +
                       \'height=\' + height;
         open(url,id_str,options);
+        callBacks();
        }',
     replace =>
-      'function(uniq, id, url) {
+      'function(uniq, cb, id, url) {
         new Ajax.Updater(id, url, {
                          aynchronous: true,
-                         method: \'get\' });
+                         method: \'get\' ,
+                         onComplete: cb
+                         });   
         new Effect.Appear(id);
-       }'
+        }'
     );
 
 
@@ -226,9 +233,9 @@ sub get_stocks {
 	$content =~ s#&gt;#>#g;
 
 	my $logger = get_logger();
-	$logger->debug("Quote for symbol ($symbol): " . 
-		       $content . " using " .$url 
-	    );
+#	$logger->debug("Quote for symbol ($symbol): " . 
+#		       $content . " using " .$url 
+#	    );
 
 
 
@@ -680,7 +687,7 @@ sub get_rule_set {
     my $caller = shift;
 
     my $logger = get_logger();
-    $logger->debug("Getting rules...");
+    $logger->debug("Getting rules for $caller");
 
     my $rules = get_rules_from_repository($site);
 
@@ -708,6 +715,9 @@ sub get_rule_set {
 		}
                     
     
+	    } else {
+		$logger->debug("[not selected] $rule->{'name'} ");
+		
 	    }
     
 	}
