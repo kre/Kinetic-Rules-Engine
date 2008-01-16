@@ -58,9 +58,9 @@ our %actions = (
         document.body.appendChild(div);
         new Ajax.Updater(id_str, url, {
                          aynchronous: true,
-                         method: \'get\' },
+                         method: \'get\',
                          onComplete: cb
-                        );
+                        });
        }',
     popup =>
       'function(uniq, cb, top, left, width, height, url) {      
@@ -689,7 +689,7 @@ sub get_rule_set {
     my $logger = get_logger();
     $logger->debug("Getting rules for $caller");
 
-    my $rules = get_rules_from_repository($site);
+    my $rules = optimize_rules(get_rules_from_repository($site),$site);
 
 
     my @new_set;
@@ -726,6 +726,20 @@ sub get_rule_set {
     
     return (\@new_set, \%new_env);
 
+}
+
+sub optimize_rules {
+    my ($rules, $site) = @_;
+
+    foreach my $rule ( @{ $rules->{$site} } ) {
+
+	# precompile pattern regexp
+	$rule->{'pagetype'}->{'pattern'} = 
+	    qr!$rule->{'pagetype'}->{'pattern'}!;
+
+    }
+
+    return $rules;
 }
 
 

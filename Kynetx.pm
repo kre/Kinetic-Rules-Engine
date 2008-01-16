@@ -122,12 +122,12 @@ sub process_rules {
 	my($cons,$alt);
 	if (ref $rule->{'post'} eq 'HASH') { # it's an array if no post block
 	    my $type = $rule->{'post'}->{'type'};
-	    if($type eq 'success') {
+	    if($type eq 'fired') {
 		$cons = $rule->{'post'}->{'cons'};
 		$alt = $rule->{'post'}->{'alt'};
-	    } elsif($type eq 'failure') { # reverse them
-		$cons = $rule->{'post'}->{'alt'};
-		$alt = $rule->{'post'}->{'cons'};
+# 	    } elsif($type eq 'failure') { # reverse them
+# 		$cons = $rule->{'post'}->{'alt'};
+# 		$alt = $rule->{'post'}->{'cons'};
 	    } elsif($type eq 'always') { # cons is executed on both paths
 		$cons = $rule->{'post'}->{'cons'};
 		$alt = $rule->{'post'}->{'cons'};
@@ -139,7 +139,7 @@ sub process_rules {
 	my $js = '';
 	if ($pred_value) {
 
-	    $logger->info("rule fired");
+	    $logger->info("fired");
 
 	    # this is the main event.  The browser has asked for a
 	    # chunk of Javascrip and this is where we deliver... 
@@ -148,7 +148,7 @@ sub process_rules {
 	    $js .= eval_post_expr($cons, \%session) if(defined $cons);
 
 	} else {
-	    $logger->info("Rule did not fire");
+	    $logger->info("did not fire");
 
 	    $js .= eval_post_expr($alt, \%session) if(defined $alt);
 
@@ -289,7 +289,8 @@ sub eval_predicates {
     my $pred_value = 1;
     foreach my $cond ( @$conds ) {
 	my $v;
-	if (my $pred = $cond->{'predicate'}) {
+	if ($cond->{'type'} eq 'simple') {
+	    my $pred = $cond->{'predicate'};
 	    my $predf = $Kynetx::Rules::predicates{$pred};
 
 	    my @args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
@@ -307,9 +308,11 @@ sub eval_predicates {
 		           ' -> ',
 		           $v);
 
-	} elsif (my $name = $cond->{'name'}) {
-	    # check count
+	} elsif ($cond->{'type'} eq 'counter') {
 
+	    my $name = $cond->{'name'};
+
+	    # check count
 	    my $count = $session->{$name} || 0;
 
 	    $logger->debug('[counter] ', "$name -> $count");
@@ -360,12 +363,20 @@ sub eval_post_expr {
 	    if(exists $expr->{'counter'}) {
 		if(exists $session->{$expr->{'name'}}) {
 		    $session->{$expr->{'name'}} += $expr->{'value'};
+		    $logger->debug("[post] iterating counter ",  
+				   $expr->{'name'},
+				   " by ",
+				   $expr->{'value'});
 
 		} else {
 		    $session->{$expr->{'name'}} = $expr->{'from'};
 		    $session->{add_created($expr->{'name'})} = 
 			# use DateTime for consistency 
 			DateTime->now->epoch;
+		    $logger->debug("[post] initializing counter ",  
+				   $expr->{'name'},
+				   " to ",
+				   $expr->{'from'});
 		}
 	    }
 	    return $js;

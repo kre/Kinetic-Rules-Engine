@@ -180,16 +180,12 @@ $rule = T(concatenate(absorb(lookfor(['KEYWORD', 'rule'])),
 		}
 
 		# optionals
-#	        if($_[5]) {
-#		    if ($_[5]->{'type'} eq 'callbacks') {
+	        if(ref $_[5] eq 'HASH') {
 			$x->{'callbacks'} = $_[5];
-#		    } else {
-#			$x->{'post'} = $_[5];
-#		    }
-#		}
+		}
 
 		
-	        if($_[6]) {
+	        if(ref $_[6] eq 'HASH') {
 		    $x->{'post'} = $_[6];
 		}
 
@@ -206,7 +202,7 @@ $select = T(concatenate(lookfor(['KEYWORD', 'select using']),
 			lookfor('LPAREN'),
 			$Vars,
 			lookfor('RPAREN')),
-	    sub { { 'pattern' => qr!$_[1]!,
+	    sub { { 'pattern' => $_[1],
 		    'vars' => defined $_[4][0] ? $_[4][0] : []} } 
     );
 
@@ -313,7 +309,7 @@ $counter_pred = T(concatenate(
 
 		  ),
 		  sub { {'name' => $_[2],
-			 'counter' => $_[0],
+			 'type' => $_[0],
 			 'ineq' => $_[3],
 			 'value' => $_[4],
 			 'within' => $_[5][1],
