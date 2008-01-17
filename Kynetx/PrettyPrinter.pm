@@ -22,7 +22,7 @@ sub pp {
     my ($rules) = @_;
 
     foreach my $k (keys %{$rules}) {
-	print "ruleset $k {\n" . pp_rules($rules->{$k},$g_indent) . "\n}\n";
+	return "ruleset $k {\n" . pp_rules($rules->{$k},$g_indent) . "\n}\n";
     }
 
 
@@ -99,14 +99,14 @@ sub pp_decl {
     my $o = $beg;
 
     if($node->{'type'} eq 'counter') {
-	$o .= $node->{'type'} . "." . $node->{'lhs'} . " = " . 
-  	      $node->{'name'} . "\n";
+	$o .= $node->{'lhs'} . " = " . $node->{'type'} . "." .  
+  	      $node->{'name'} . ";\n";
     } else { # datasource
 
 	$o .= $node->{'lhs'} . " = ";
 	$o .= $node->{'source'} . ":" . $node->{'function'} . "(";
 	$o .= join ", ", pp_rands($node->{'args'});
-	$o .= ")\n";
+	$o .= ");\n";
     }
   
     return $o;
@@ -137,10 +137,10 @@ sub pp_pred{
 	$o .= join ", ", pp_rands($node->{'args'});
 	$o .= ")";
     } else { #counter
-	$o .= $node->{'counter'} . "." . $node->{'name'};
+	$o .= $node->{'type'} . "." . $node->{'name'};
 	$o .= " " . $node->{'ineq'} . " ";
 	$o .= $node->{'value'};
-	if(defined $node-{'within'}) {
+	if(defined $node->{'within'}) {
 	    $o .= " within " . $node->{'within'} . " " . $node->{'timeframe'};
 	}
     }
@@ -190,7 +190,7 @@ sub pp_callbacks {
 
     $o .= "callbacks {\n";
     foreach my $sense ('success','failure') {
-	if(defined $node->{$sense}) {
+	if(@{ $node->{$sense} } > 0) {
 	    $o .= pp_callback_types($node->{$sense},
 				    $indent+$g_indent,
 				    $sense);

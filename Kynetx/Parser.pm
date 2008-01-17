@@ -332,7 +332,9 @@ $primrule = T(concatenate($Action,
 						  'value' => $m->[1]}
 					 }
 					 [\@x];
-				     }))),
+				     })),
+			  absorb(optional(match('SEMICOLON')))
+	      ),
 	      sub { {'action' => {'name' => $_[0],
 				  'args' => empty_not_undef($_[1]),
 				  'modifiers' => empty_not_undef($_[2])}}
