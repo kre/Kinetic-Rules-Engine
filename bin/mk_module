@@ -1,0 +1,106 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+use lib qw(/web/lib/perl);
+
+use Getopt::Std;
+use HTML::Template;
+
+
+# global options
+use vars qw/ %opt /;
+my $opt_string = 'd:';
+getopts( "$opt_string", \%opt ); # or &usage();
+&usage() if $opt{'h'};
+
+my $dirname = 0;
+$dirname = $opt{'d'};
+
+my $filename = 0;
+if($ARGV[0]) {
+    $filename = $ARGV[0];
+} else {
+    die "You must supply a filename\n";
+}
+my $module_name = $filename . ".pm";
+my $test_name = $filename . ".t";
+
+
+# config
+my $base = "/web/lib/perl";
+my $module_dir = "Kynetx";
+my $modules = $base . "/$module_dir" ;
+my $test_dir = "t";
+my $tests = $base . "/$test_dir";
+my $tmpls = $base . "/etc/tmpl";
+my $module_tmpl = $tmpls . "/module.tmpl";
+my $test_tmpl = $tmpls . "/test.tmpl";
+
+
+if ($dirname) {
+    $modules .= "/" . $dirname;
+    $tests .= "/" . $dirname;
+}
+
+
+
+# don't overwrite
+if(-e "$modules/$module_name" || -e "tests/$test_name") {
+    die "Error: You're attempting to overwrite $modules/$module_name or\n $tests/$test_name. If this is what you want, remove them first.  \n";
+}
+
+
+# create module
+print "Creating module $module_name in $modules\n";
+do_template($module_tmpl,$modules,$module_name);
+
+
+# create test
+print "Creating test $test_name in $tests\n";
+do_template($test_tmpl,$tests,$test_name);
+
+
+# add both to svn
+print "Adding module $module_name to SVN\n";
+do_svn("$modules/$module_name");
+
+print "Adding test $test_name SVN\n";
+do_svn("$tests/$test_name");
+
+
+1;
+
+sub usage {
+print "usage goes here";
+}
+
+
+sub do_template {
+    my($template,$dir,$file) = @_;
+
+    # open the html template
+    my $test_template = HTML::Template->new(filename => $template);
+
+    # fill in the parameters
+    $test_template->param(MODULE_DIR => $dirname) if $dirname;
+    $test_template->param(MODULE_NAME => $filename);
+
+    #if the dir doesn't exist, make it
+    if(! -e $dir) {
+	mkdir $dir;
+    }
+    
+    # print the file
+    open(FH,">$dir/$file");
+    print FH $test_template->output;
+    close(FH);
+}
+
+sub do_svn {
+    my($svn_name) = @_;
+    my @args = ('svn', 'add', $svn_name);
+    system(@args) == 0 
+	or die "Can't add $svn_name to SVN repository.";
+
+}

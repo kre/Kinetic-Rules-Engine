@@ -66,7 +66,6 @@ sub process_action {
     Log::Log4perl::MDC->put('site', $request_info{'site'});
     Log::Log4perl::MDC->put('rule', $request_info{'rule'}); 
 
-    my $logger = get_logger();
     $logger->info("Processing callback for site " . $request_info{'site'});
 
     $logger->debug("Storing: ", $request_info{'site'}, ", ",

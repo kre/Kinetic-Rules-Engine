@@ -14,6 +14,7 @@
   HOP::Parser - CPAN
   HOP::Lexer - CPAN
   Log::Log4perl - CPAN
+  HTML::Template - CPAN
 
-- Set up and SVN user for the rules repository
+- Set up an SVN user for the rules repository
   -- make sure it starts automatically (use chkconfig)
