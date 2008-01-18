@@ -1,5 +1,6 @@
-#!/usr/lib/perl
+#!/usr/lib/perl -w
 
+use strict;
 use lib qw(/web/lib/perl);
 
 
@@ -7,7 +8,7 @@ use lib qw(/web/lib/perl);
 # use ModPerl::MethodLookup;
 # ModPerl::MethodLookup::preload_all_modules();
   
-use ModPerl::Util (); #for CORE::GLOBAL::exit
+use ModPerl::Util (); 
 
 use Apache2::RequestRec ();
 use Apache2::RequestIO ();

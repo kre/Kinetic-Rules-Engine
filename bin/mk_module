@@ -27,8 +27,9 @@ my $module_name = $filename . ".pm";
 my $test_name = $filename . ".t";
 
 
+
 # config
-my $base = "/web/lib/perl";
+my $base_var = 'KOBJ_ROOT';
 my $module_dir = "Kynetx";
 my $modules = $base . "/$module_dir" ;
 my $test_dir = "t";
@@ -36,6 +37,9 @@ my $tests = $base . "/$test_dir";
 my $tmpls = $base . "/etc/tmpl";
 my $module_tmpl = $tmpls . "/module.tmpl";
 my $test_tmpl = $tmpls . "/test.tmpl";
+
+
+my $base = $ENV{$base_var} || die "$base_var is undefined in the environment";
 
 
 if ($dirname) {

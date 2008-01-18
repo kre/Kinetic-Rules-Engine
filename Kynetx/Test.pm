@@ -13,6 +13,7 @@ our @ISA         = qw(Exporter);
 our %EXPORT_TAGS = (all => [ 
 qw(
 getkrl
+trim
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -30,6 +31,14 @@ sub getkrl {
     $krl =~ s!(.*)//[^\n]*!$1!og;
     return ($first_line,$krl);
 
+}
+
+# Perl trim function to remove whitespace from the start and end of the string
+sub trim {
+	my $string = shift;
+	$string =~ s/^\s+//;
+	$string =~ s/\s+$//;
+	return $string;
 }
 
 1;

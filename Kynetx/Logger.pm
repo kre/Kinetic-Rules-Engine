@@ -25,8 +25,6 @@ sub handler {
 sub process_action {
     my $r = shift;
 
-
-
     my $logger = get_logger();
     $logger->info("Processing callback for site " . $r->path_info);
   
