@@ -610,8 +610,6 @@ our %predicates = (
 	    "Before Sunset: " . $before_sunset . " " 
 	    );
 	
-	
-
 
 	return $after_sunrise eq 1 && $before_sunset eq 1;
    

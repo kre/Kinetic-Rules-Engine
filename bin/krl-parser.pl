@@ -22,7 +22,7 @@ Log::Log4perl->easy_init($DEBUG);
 use vars qw/ %opt /;
 my $opt_string = 'lhjf:';
 getopts( "$opt_string", \%opt ); # or &usage();
-# &usage() if $opt{'h'};
+&usage() if $opt{'h'};
 
 my $lex_only = 0;
 $lex_only = $opt{'l'} if $opt{'l'};
@@ -64,3 +64,29 @@ sub getkrl {
   return $krl;
 
 }
+
+
+sub usage {
+
+    print STDERR <<EOF;
+
+usage:  
+
+   krl-parser.pl -f filename [-l] [-j]
+
+krl-parser.pl takes a text representation of a KRL ruleset as input and 
+prints the corresponding Perl abstract syntax tree to the STDOUT.  
+
+Options are:
+
+   -l : only lex the file, do not parse.  Lexical results are printed.
+
+   -j : return the JSON representation instead of Perl.
+
+
+EOF
+
+exit;
+
+}
+

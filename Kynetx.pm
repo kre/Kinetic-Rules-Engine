@@ -334,7 +334,7 @@ sub eval_predicates {
 					  $session->{add_created($name)});
 		$desired->add( $cond->{'timeframe'} => $cond->{'within'} );
 
-		$v = $v && before_now($desired);
+		$v = $v && after_now($desired);
 	    }
 
 

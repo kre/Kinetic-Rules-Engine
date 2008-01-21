@@ -14,6 +14,7 @@ our @ISA         = qw(Exporter);
 our %EXPORT_TAGS = (all => [ 
 qw(
 before_now
+after_now
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -23,10 +24,17 @@ sub before_now {
 
     my $now = DateTime->now;
 
-#    debug_msg("Comparing", $now . " with " . $desired);
+    # print("Comparing ", $now . " with " . $desired . "\n");
 
     # 1 if first greater than second
-    return DateTime->compare($desired,$now) == 1;
+    return DateTime->compare($now,$desired) == 1;
 
 }
 
+
+sub after_now {
+    my $desired = shift;
+
+    return not before_now($desired);
+
+}

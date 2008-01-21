@@ -6,6 +6,7 @@ use lib qw(/web/lib/perl);
 use strict;
 
 use Kynetx::PrettyPrinter qw/:all/;
+use Kynetx::Json qw/:all/;
 use Kynetx::Parser qw/:all/;
 
 
@@ -24,26 +25,45 @@ Log::Log4perl->easy_init($DEBUG);
 use vars qw/ %opt /;
 my $opt_string = 'hf:';
 getopts( "$opt_string", \%opt ); # or &usage();
-# &usage() if $opt{'h'};
+&usage() if $opt{'h'};
 
 my $filename = "";
 $filename = $opt{'f'};
-		    
-my $tree = parse_ruleset(getkrl());
 
-print pp($tree);
+
+my $in = getin();    
+print jsonToKrl($in);
+
 
 1;
 
 
 
-sub getkrl {
+sub getin {
 
-  open(KRL, "< $filename") || die "Can't open file $filename: $!\n";
+  open(IN, "< $filename") || die "Can't open file $filename: $!\n";
   local $/ = undef;
-  my $krl = <KRL>;
-  close KRL;
-  return $krl;
+  my $in = <IN>;
+  close IN;
+  return $in;
+
+}
+
+sub usage {
+
+    print STDERR <<EOF;
+
+usage:  
+
+    krl-pp.pl -f filename
+
+krl-pp.pl takes a JSON representation of a KRL ruleset as input and 
+prints the KRL representation to the standard output.  
+
+
+EOF
+
+exit;
 
 }
 
