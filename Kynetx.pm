@@ -16,8 +16,6 @@ use Kynetx::Util qw(:all);;
 use Kynetx::JavaScript qw(:all);
 
 
-Log::Log4perl->init_and_watch("/web/lib/perl/log4perl.conf", 60);
-
 my $logger;
 $logger = get_logger();
 

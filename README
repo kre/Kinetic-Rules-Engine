@@ -1,6 +1,12 @@
 
-- copy httpd-perl.conf.example to ~/conf/extras/httpd-perl.conf and
-  ensure it's being loaded in ~/conf/httpd.conf
+- make sure that the KOBJ_ROOT environment var is set in the .bashrc
+  file
+
+- set the WEB_ROOT environment variable
+
+- copy httpd-perl.conf.example to ~/conf/extra/httpd-perl.conf and
+  ensure it's being loaded in ~/conf/httpd.conf (You can use 
+  bin/install-httpd-conf to copy the file.)
 
 - You need to install
 
@@ -15,6 +21,11 @@
   HOP::Lexer - CPAN
   Log::Log4perl - CPAN
   HTML::Template - CPAN
+  File::Find::Rule - CPAN
+  Test::LongString - CPAN
+
+  Running $KOBJ_ROOT/t/smoke dev/use.t will ensure you've got all the
+  right libraries
 
 - Set up an SVN user for the rules repository
   -- make sure it starts automatically (use chkconfig)

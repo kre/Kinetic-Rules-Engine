@@ -1,23 +1,37 @@
+#
+# Kynetx KOBJ system configuration
+# 
 
 <Location /krl>
   AddHandler perl-script .pl
 </Location>
 
+
 PerlRequire /web/lib/perl/startup.pl
 
+# Eventually this ought to come from the client configuration DB
+PerlSetVar kobj_js_version 0.8
 
-<LocationMatch /site/\d+/>
+# Where do I get the static JS files to serve?
+PerlSetVar kobj_js_root /web/lib/perl/etc/js
+
+# host names
+PerlSetVar kobj_host 127.0.0.1
+PerlSetVar log_host 127.0.0.1
+PerlSetVar action_host 127.0.0.1
+
+
+<LocationMatch /kobj/>
   SetHandler perl-script
   PerlHandler Kynetx
 </LocationMatch>
 
-
-<LocationMatch /site/\d+/log>
+<LocationMatch /log/>
   SetHandler perl-script
   PerlHandler Kynetx::Logger
 </LocationMatch>
 
-<LocationMatch /site/\d+/js/>
+<LocationMatch /js/>
   SetHandler perl-script
   PerlHandler Kynetx::KOBJ
 </LocationMatch>
