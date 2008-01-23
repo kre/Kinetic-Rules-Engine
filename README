@@ -4,9 +4,7 @@
 
 - set the WEB_ROOT environment variable
 
-- copy httpd-perl.conf.example to ~/conf/extra/httpd-perl.conf and
-  ensure it's being loaded in ~/conf/httpd.conf (You can use 
-  bin/install-httpd-conf to copy the file.)
+- Generate httpd-perl.conf using bin/install-httpd-conf.pl
 
 - You need to install
 
@@ -24,7 +22,7 @@
   File::Find::Rule - CPAN
   Test::LongString - CPAN
 
-  Running $KOBJ_ROOT/t/smoke dev/use.t will ensure you've got all the
+  Running t/smoke dev/use.t will ensure you've got all the
   right libraries
 
 - Set up an SVN user for the rules repository
