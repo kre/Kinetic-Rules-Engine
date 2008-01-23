@@ -7,7 +7,7 @@ use warnings;
 use Log::Log4perl qw(get_logger :levels);
 
 use constant DEFAULT_ACTION_HOST => '127.0.0.1';
-use constant DEFAULT_JS_ROOT => $ENV{'KOBJ_ROOT'}.'/etc/js';
+use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
 use constant DEFAULT_JS_VERSION => '0.8';
 
 sub handler {
@@ -81,7 +81,7 @@ var KOBJ={
 KOBJ.logger = function(msg,url,sense,rule) {
 
     e=document.createElement("script");
-    e.src=KOBJ.url+"/log?msg="+msg+"&ts="+KOBJ.d+"&sense="+sense+"&url="+url+"&rule="+rule;
+    e.src=KOBJ.logger_url+"?msg="+msg+"&ts="+KOBJ.d+"&sense="+sense+"&url="+url+"&rule="+rule;
     body=document.getElementsByTagName("body")[0];
     body.appendChild(e);
 }
@@ -121,6 +121,7 @@ KOBJ.proto = \'$proto\';
 KOBJ.host_with_port = \'$host\'; 
 KOBJ.site_id = $site_id;
 KOBJ.url = KOBJ.proto+KOBJ.host_with_port+"/kobj/" + KOBJ.site_id;
+KOBJ.logger_url = KOBJ.proto+KOBJ.host_with_port+"/log/" + KOBJ.site_id;
 
 
 r=document.createElement("script");

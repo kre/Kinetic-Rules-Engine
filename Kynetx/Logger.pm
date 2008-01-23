@@ -25,8 +25,7 @@ sub process_action {
     my $r = shift;
 
     my $logger = get_logger();
-    $logger->info("Processing callback for site " . $r->path_info);
-  
+
     my $cookie = $r->headers_in->{'Cookie'};
     $cookie =~ s/SESSION_ID=(\w*)/$1/ if(defined $cookie);
 
@@ -43,12 +42,12 @@ sub process_action {
     $r->headers_out->add('Set-Cookie' => $session_cookie);
 
     # build initial env
-    my $path_info = $r->path_info;
+    my $path_info = $r->uri;
     my %request_info = (
 	host => $r->connection->get_remote_host,
 	caller => $r->headers_in->{'Referer'},
 	now => time,
-	site => $path_info =~ m#/(\d+)/.*#,
+	site => $path_info =~ m#/log/(\d+)#,
 	hostname => $r->hostname(),
 	ip => $r->connection->remote_ip(),
 	);
