@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+	<Description about="urn:mozilla:install-manifest">
+
+		<em:id>{9AA46F4F-4DC7-4c06-97AF-5035170633FE}</em:id>
+		<em:name>Kynetx Pilot</em:name>
+		<em:version>1.0.0</em:version>
+		<em:description>Adds Kynetx tags to .</em:description>
+		<em:creator>Kynetx</em:creator>
+		<em:homepageURL>http://kynetx.com/</em:homepageURL>
+    <em:iconURL>chrome://pilot/content/pilot.png</em:iconURL>
+		<em:aboutURL>chrome://pilot/content/about.xul</em:aboutURL>
+		<em:updateURL>http://localhost:3000/extensions/update.rdf</em:updateURL>
+		<em:file>
+			<Description about="urn:mozilla:extension:file:pilot.jar">
+				<em:package>content/</em:package>
+				<em:skin>skin/classic/kynetx/</em:skin>
+			</Description>
+		</em:file>
+
+		<em:targetApplication>
+			<Description>
+				<em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+				<em:minVersion>0.7</em:minVersion>
+				<em:maxVersion>3.*</em:maxVersion>
+			</Description>
+		</em:targetApplication>
+
+	</Description>
+
+</RDF>

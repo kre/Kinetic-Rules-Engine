@@ -1,0 +1,5 @@
+overlay	chrome://browser/content/browser.xul	chrome://pilot/content/pilotOverlay.xul
+overlay	chrome://navigator/content/navigator.xul	chrome://pilot/content/pilotOverlay.xul
+content	pilot	jar:chrome/pilot.jar!/content/pilot/
+
+skin	pilot	classic/2.0	jar:chrome/pilot.jar!/skin/classic/pilot/

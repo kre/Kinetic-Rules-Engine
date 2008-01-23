@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window class="dialog"
+	title="Kynetx Pilot - About"
+	orient="vertical"
+	autostretch="always"
+	onload="sizeToContent()"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+
+<groupbox align="center" orient="horizontal">
+<vbox>
+  <text value="Kynetx Pilot" style="font-weight: bold; font-size: x-large;"/>
+  <text value="ver. 1.0"/>
+  <separator class="thin"/>
+  <text value="Created By:" style="font-weight: bold;"/>
+  <text value="Kynetx" class="url"
+        onclick="window.open('http://www.kynetx.com'); window.close();"/>
+  <separator class="thin"/>
+    <text value="Home Page:" style="font-weight: bold;"/>
+    <text value="http://www.kynetx.com/"
+          class="url"
+        onclick="window.open('http://www.kynetx.com/'); window.close();"/>
+  <separator class="thin"/>
+</vbox>
+<spring flex="1"/>
+<image src="chrome://pilot/skin/pilot.png"/>
+</groupbox>
+
+  <hbox>
+  <spacer flex="1"/>
+   <button label="Close" oncommand="window.close();"/>
+  </hbox>
+
+</window>
