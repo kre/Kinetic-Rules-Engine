@@ -1,0 +1,9 @@
+kobj-bundle
+
+This is a private CPAN bundle that will let you easily
+install all the modules that the Kynetx uses
+with the CPAN installer.  
+
+In this directory,  
+
+  perl -MCPAN -e 'install Bundle::kobj_modules'

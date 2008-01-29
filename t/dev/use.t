@@ -49,6 +49,9 @@ for my $module ( @mods ) {
 
 @mods = keys %modules;
 
+diag("Using the following modules");
+diag(join "\n", @mods);
+
 # set up test plan
 plan tests => ($#mods+1);
 
