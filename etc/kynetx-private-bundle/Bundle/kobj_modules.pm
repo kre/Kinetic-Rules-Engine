@@ -1,5 +1,8 @@
 package Bundle::kobj_modules;
 
+use strict;
+use warnings;
+
 $VERSION = '1.00';
 
 1;

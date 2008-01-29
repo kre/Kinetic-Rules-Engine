@@ -1,0 +1,49 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warning;
+
+use Getopt::Std;
+use CPAN;
+use Kynetx::Test;
+
+# config
+my $base_var = 'KOBJ_ROOT';
+#my $base = $ENV{$base_var} || die "$base_var is undefined in the environment";
+
+my $web_root_var = 'WEB_ROOT';
+#my $web_root = $ENV{$web_root_var} || 
+#    die "$web_root_var is undefined in the environment";
+
+# global options
+use vars qw/ %opt /;
+my $opt_string = 'h';
+getopts( "$opt_string", \%opt ); # or &usage();
+&usage() if $opt{'h'};
+
+
+$mod=CPAN::Shell->expand("Module","Geo::IP");
+CPAN::Shell->o('conf','makepl_arg',qq[ LIBS=-L/web/lib INC=-I/web/include ]);
+$mod->install;
+CPAN::Shell->o('conf','makepl_arg');
+
+
+1;
+
+
+sub usage {
+    print STDERR <<EOF;
+
+usage:  
+
+   sudo install_GeoIP
+
+Installs the Perl library for Geo::IP from CPAN
+
+EOF
+
+exit;
+
+
+}
+
