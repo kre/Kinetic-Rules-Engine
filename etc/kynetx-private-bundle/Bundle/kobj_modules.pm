@@ -48,7 +48,9 @@ Test::More
 
 APR::Table
 
-SVN::Client
+HOP::Lexer
+
+HOP::Stream
 
 Log::Log4perl
 
