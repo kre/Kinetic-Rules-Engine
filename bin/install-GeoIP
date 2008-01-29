@@ -22,7 +22,7 @@ getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'};
 
 
-$mod=CPAN::Shell->expand("Module","Geo::IP");
+my $mod=CPAN::Shell->expand("Module","Geo::IP");
 CPAN::Shell->o('conf','makepl_arg',qq[ LIBS=-L/web/lib INC=-I/web/include ]);
 $mod->install;
 CPAN::Shell->o('conf','makepl_arg');
