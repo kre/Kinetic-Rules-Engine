@@ -92,7 +92,7 @@ ServerAdmin web@kynetx.com
 #
 # If your host doesn't have a registered DNS name, enter its IP address here.
 #
-# ServerName init.kobj.net:80
+#ServerName init.kobj.net:80
 
 #
 # DocumentRoot: The directory out of which you will serve your
@@ -155,7 +155,17 @@ DocumentRoot "/web/htdocs"
     Order allow,deny
     Allow from all
 
-Redirect / http://www.kynetx.com/kobj/
+<IfModule mod_rewrite.c>
+RewriteEngine on
+#    RewriteLog "/web/logs/rewrite.log"
+#    RewriteLogLevel 5
+
+# handle categories
+RewriteRule	  !^.*\.js$	$1 [R]
+RewriteRule   ^(.*)$ http://www.kynetx.com/kobj/index.shtml
+
+
+</IfModule>
 
 </Directory>
 
@@ -340,7 +350,7 @@ DefaultType text/plain
 #
 # Some examples:
 #ErrorDocument 500 "The server made a boo boo."
-ErrorDocument 404 http://www.kynetcx.com/kobj/index.html
+ErrorDocument 404 http://www.kynetx.com/kobj/index.html
 #ErrorDocument 404 "/cgi-bin/missing_handler.pl"
 #ErrorDocument 402 http://www.example.com/subscription_info.html
 #
