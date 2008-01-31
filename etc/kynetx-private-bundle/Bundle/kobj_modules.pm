@@ -59,6 +59,8 @@ Log::Log4perl
 
 Log::Dispatch::File
 
+Log::Dispatch::Screen
+
 ModPerl::Util
 
 HTML::Template

@@ -6,4 +6,4 @@ with the CPAN installer.
 
 In this directory,  
 
-  perl -MCPAN -e 'install Bundle::kobj_modules'
+  sudo perl -MCPAN -e 'install Bundle::kobj_modules'
