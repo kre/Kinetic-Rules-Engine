@@ -57,6 +57,8 @@ HOP::Stream
 
 Log::Log4perl
 
+Log::Dispatch::File
+
 ModPerl::Util
 
 HTML::Template
