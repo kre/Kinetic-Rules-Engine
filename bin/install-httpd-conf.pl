@@ -16,7 +16,7 @@ my $web_root = $ENV{$web_root_var} ||
     die "$web_root_var is undefined in the environment";
 
 my $conf_dir = join('/',($web_root,'conf','extra'));
-my $conf_file = 'http-perl.conf';
+my $conf_file = 'httpd-perl.conf';
 
 
 # global options
