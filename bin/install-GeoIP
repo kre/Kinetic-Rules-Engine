@@ -2,6 +2,8 @@
 
 use strict;
 use warnings;
+use lib qw(/web/lib/perl);
+
 
 use Getopt::Std;
 use CPAN;
