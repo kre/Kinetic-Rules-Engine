@@ -406,6 +406,9 @@ Include conf/extra/httpd-info.conf
 # perl modules, etc.
 Include conf/extra/httpd-perl.conf
 
+# Subversion
+# Include conf/extra/httpd-svn.conf
+
 # Windley's playing around
 #Include conf/extra/windley.conf
 
