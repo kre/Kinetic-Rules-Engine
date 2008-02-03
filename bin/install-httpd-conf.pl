@@ -41,8 +41,6 @@ if ($opt{'d'}) { # development
 die "Must specify at least one option.  See $0 -h for more info."
     unless ($init_gender || $action_gender || $log_gender);
 
-# assumes that we're running in a /web configuration
-#cp $KOBJ_ROOT/httpd-perl.conf.example /web/conf/extra/httpd-perl.conf
 
 # open the html template
 my $conf_template = HTML::Template->new(filename => $config_tmpl);
@@ -60,6 +58,12 @@ $conf_template->param(GENDER_ACTION => 1) if $action_gender;
 $conf_template->param(GENDER_LOG => 1) if $log_gender;
 $conf_template->param(GENDER_INIT => 1) if $init_gender;
 
+if ($opt{'d'}) { # development
+    $conf_template->param(RUN_MODE => 'development');
+} else {
+    $conf_template->param(RUN_MODE => 'production');
+}
+
 #if the dir doesn't exist, make it
 if(! -e $conf_dir) {
     mkdir $conf_dir;
@@ -69,6 +73,7 @@ if(! -e $conf_dir) {
 
 
 # print the file
+print "Writing $conf_dir/$conf_file\n";
 open(FH,">$conf_dir/$conf_file");
 print FH $conf_template->output;
 close(FH);

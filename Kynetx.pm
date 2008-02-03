@@ -47,11 +47,13 @@ sub handler {
 sub process_rules {
     my $r = shift;
   
-  
-    # WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
-#    $r->connection->remote_ip('128.122.108.71'); # New York (NYU)
-    $r->connection->remote_ip('72.21.203.1'); # Seattle (Amazon)
-#    $r->connection->remote_ip('128.187.16.242'); # Utah (BYU)
+
+    if($r->dir_config('run_mode') eq 'development') {
+	# WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
+#        $r->connection->remote_ip('128.122.108.71'); # New York (NYU)
+	$r->connection->remote_ip('72.21.203.1'); # Seattle (Amazon)
+#        $r->connection->remote_ip('128.187.16.242'); # Utah (BYU)
+    }
 
     my $cookie = $r->headers_in->{'Cookie'};
     $cookie =~ s/SESSION_ID=(\w*)/$1/ if(defined $cookie);
@@ -60,7 +62,7 @@ sub process_rules {
     my %session;
     tie %session, 'Apache::Session::DB_File', $cookie, {
 	FileName      => '/web/data/sessions.db',
-	LockDirectory => '/var/lock/sessions',
+	LockDirectory => '/web/lock/sessions',
     };
 	
     #Might be a new session, so lets give them their cookie back

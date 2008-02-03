@@ -23,9 +23,6 @@ our %EXPORT_TAGS = (all => [ qw(get_rule_set get_precondition_vars %actions %pre
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
-my $username = "web";
-my $passwd = "foobar";
-my $svn_url = 'svn://127.0.0.1/rules/client/';
 
 my($active,$test,$inactive) = (0,1,2);
 
@@ -745,6 +742,10 @@ sub get_rules_from_repository{
 
     my $site = shift;
 
+    my $svn_url = 'svn://127.0.0.1/rules/client/';
+
+
+#    if($r->dir_config('run_mode') eq 'development') {
 
 
     my $ctx = new SVN::Client(
@@ -774,6 +775,9 @@ sub simple_prompt {
       my $default_username = shift;
       my $may_save = shift;
       my $pool = shift;
+
+      my $username = "web";
+      my $passwd = "foobar";
 
       $cred->username($username);
       $cred->password($passwd);

@@ -1,3 +1,5 @@
+DavLockDB "/web/var/DavLock"
+
 <Location /krl>
 
   DAV svn
