@@ -71,6 +71,7 @@ File::Find::Rule
 
 Apache2::RequestRec
 
+Apache2::xForwardedFor
 
 =head1 DESCRIPTION
 

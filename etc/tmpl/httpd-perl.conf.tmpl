@@ -25,6 +25,10 @@ PerlRequire <TMPL_VAR NAME=KOBJ_ROOT>/startup.pl
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
 
+  # support client IP address in XFF header, if necessary
+  PerlSetVar  xForwardedForRequire 1
+  PerlPostReadRequestHandler Apache2::xForwardedFor
+
   SetHandler perl-script
   PerlHandler Kynetx
 </LocationMatch>
