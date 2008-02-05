@@ -101,7 +101,7 @@ sub process_rules {
     }
 
     # side effects environment with precondition pattern values
-    my ($rules, $rule_env) = get_rule_set($request_info{'site'}, $request_info{'caller'});
+    my ($rules, $rule_env) = get_rule_set($request_info{'site'}, $request_info{'caller'},$r->dir_config('svn_conn'));
 
     # this loops through the rules ONCE applying all that fire
     foreach my $rule ( @{ $rules } ) {

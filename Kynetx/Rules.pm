@@ -11,6 +11,8 @@ use Log::Log4perl qw(get_logger :levels);
 
 
 use Kynetx::Parser qw(:all);
+use Kynetx::PrettyPrinter qw(:all);
+use Kynetx::Json qw(:all);
 
 
 use Exporter;
@@ -19,7 +21,13 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
-our %EXPORT_TAGS = (all => [ qw(get_rule_set get_precondition_vars %actions %predicates) ]);
+our %EXPORT_TAGS = (all => [ 
+qw(
+get_rule_set 
+get_precondition_vars 
+%actions 
+%predicates
+) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
@@ -678,13 +686,13 @@ sub get_precondition_vars {
 # this returns the right rules for the caller and site
 # this is a point where things could be optimixed in the future
 sub get_rule_set {
-    my $site = shift;
-    my $caller = shift;
+    my ($site, $caller, $svn_conn) = @_;
 
     my $logger = get_logger();
     $logger->debug("Getting rules for $caller");
 
-    my $rules = optimize_rules(get_rules_from_repository($site),$site);
+    my $rules = optimize_rules(
+	          get_rules_from_repository($site, $svn_conn),$site);
 
 
     my @new_set;
@@ -740,47 +748,101 @@ sub optimize_rules {
 
 sub get_rules_from_repository{
 
-    my $site = shift;
+    my ($site, $svn_conn) = @_;
 
-    my $svn_url = 'svn://127.0.0.1/rules/client/';
+    my $logger = get_logger();
+
+    my ($ctx, $svn_url) = get_svn_conn($svn_conn);
+
+    my %d;
+    my $info = sub {
+	my( $path, $info, $pool ) = @_;
+	$d{$path} = $info->last_changed_rev();
+    };
+
+    my $ext;
+    foreach $ext ('.krl','.json') {
+	eval {
+	    $ctx->info($svn_url.$site.$ext, 
+		       undef,
+		       'HEAD',
+		       $info,
+		       0           # don't recurse
+		);
+	};
+	if($@) {  # catch file doesn't exist...
+	    $d{$site.$ext} = -1;
+	}
+    }
 
 
-#    if($r->dir_config('run_mode') eq 'development') {
+    if($d{$site.'.krl'} > $d{$site.'.json'}) {
+	$ext = '.krl';
+    } else {
+	$ext = '.json';
+    }
 
-
-    my $ctx = new SVN::Client(
-	auth => [SVN::Client::get_simple_provider(),
-		 SVN::Client::get_simple_prompt_provider(\&simple_prompt,2),
-		 SVN::Client::get_username_provider()]
-	);
+    $logger->debug("Using the $ext version: ", $d{$site.$ext});
+    
 
     # open a variable as a filehandle (for weird SVN::Client stuff)
     my $krl;
     open(FH, '>', \$krl) or die "Can't open memory file: $!";
     $ctx->cat (\*FH,
-	       $svn_url.$site.'.krl', 
+	       $svn_url.$site.$ext, 
 	       'HEAD');
 
-    my $logger = get_logger();
-    $logger->debug("Found rules");
+    $logger->debug("Found rules for $site");
 
-    return parse_ruleset($krl);
+    # return the abstract syntax tree regardless of source
+    if($ext eq '.krl') {
+	return parse_ruleset($krl);
+    } else {
+
+	my $json = jsonToAst($krl);
+	return $json
+    }
 
 }
 
+sub get_svn_conn {
+    my($svn_conn) = @_;
+    my $logger = get_logger();
 
-sub simple_prompt {
-      my $cred = shift;
-      my $realm = shift;
-      my $default_username = shift;
-      my $may_save = shift;
-      my $pool = shift;
+    my ($svn_url,$username,$passwd);
+    if ($svn_conn) {
+	($svn_url,$username,$passwd) = split(/\|/, $svn_conn);
+    } else {
+	$svn_url = 'svn://127.0.0.1/rules/client/';
+	$username = 'web';
+	$username = 'foobar';
+    }
 
-      my $username = "web";
-      my $passwd = "foobar";
+    
+    $logger->debug("Connecting to rule repository at $svn_url");
 
-      $cred->username($username);
-      $cred->password($passwd);
+
+    my $simple_prompt = sub {
+	my $cred = shift;
+	my $realm = shift;
+	my $default_username = shift;
+	my $may_save = shift;
+	my $pool = shift;
+
+	$cred->username($username);
+	$cred->password($passwd);
+    };
+
+    # returns a list with the connection and the URL
+    return (new SVN::Client(
+		auth => [SVN::Client::get_simple_provider(),
+			 SVN::Client::get_simple_prompt_provider($simple_prompt,2),
+			 SVN::Client::get_username_provider()]
+	    ), 
+	    $svn_url)
+
+    
+
 }
 
 

@@ -7,8 +7,16 @@ use warnings;
 use Log::Log4perl qw(get_logger :levels);
 
 use constant DEFAULT_ACTION_HOST => '127.0.0.1';
+use constant DEFAULT_LOG_HOST => '127.0.0.1';
 use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
 use constant DEFAULT_JS_VERSION => '0.8';
+
+my @js_files = qw(
+prototype.js
+effects.js
+dragdrop.js
+kobj-extras.js
+);
 
 sub handler {
     my $r = shift;
@@ -27,32 +35,29 @@ sub handler {
 
 
     my $js_version = $r->dir_config('kobj_js_version') || DEFAULT_JS_VERSION;
+    my $js_root = $r->dir_config('kobj_js_root') || DEFAULT_JS_ROOT;
 
 
     my $js = "";
     if($file eq 'kobj.js') {
 
 	$logger->info("Generating KOBJ file ", $file);
-
 	my $action_host = $r->dir_config('action_host') || DEFAULT_ACTION_HOST;
-	$js = get_kobj('http://', $action_host, $site, $js_version);
+	my $log_host = $r->dir_config('log_host') || DEFAULT_LOG_HOST;
+	$js .= get_kobj('http://', $action_host, $log_host, $site, $js_version);
+
+
+    } elsif($file eq 'kobj-static.js') {
+
+	$logger->info("Generating KOBJ static file ", $file);
+	foreach my $file (@js_files) {
+	    $js .= get_js_file($file,$js_version,$js_root);
+	}
 
 
     } else {
-	$logger->info("Outputting JS file ", $file);
-	
-	my $js_root = $r->dir_config('kobj_js_root') || DEFAULT_JS_ROOT;
 
-	my $filename = join('/',($js_root,$js_version,$file));
-
-	$logger->info("Outputting JS file ", $file, " from ", $filename);
-
-	open(JS, "< $filename") || 
-	    $logger->error("Can't open file $filename: $!\n");
-	local $/ = undef;
-	$js = <JS>;
-	close JS;
-	
+	$js = get_js_file($file,$js_version,$js_root);
 
     }
 
@@ -62,14 +67,29 @@ sub handler {
 }
 
 
-1;
+sub get_js_file {
+    my ($file, $js_version, $js_root) = @_;
 
+    my $logger = get_logger();
+    my $filename = join('/',($js_root,$js_version,$file));
 
+    $logger->debug("Outputting JS file ", $file, " from ", $filename);
+
+    open(JS, "< $filename") || 
+	$logger->error("Can't open file $filename: $!\n");
+    local $/ = undef;
+    my $js = <JS>;
+    close JS;
+    
+    return $js;
+
+}
 
 
 sub get_kobj {
 
-    my ($proto, $host, $site_id, $js_version) = @_;
+
+    my ($proto, $host, $log_host, $site_id, $js_version) = @_;
 
     # be sure to escape any $ that you want passed in the JS
     return <<EOF;
@@ -119,9 +139,10 @@ KOBJ.obs = function(type, name, sense, rule) {
 KOBJ.d = (new Date).getTime();
 KOBJ.proto = \'$proto\'; 
 KOBJ.host_with_port = \'$host\'; 
+KOBJ.loghost_with_port = \'$log_host\'; 
 KOBJ.site_id = $site_id;
 KOBJ.url = KOBJ.proto+KOBJ.host_with_port+"/kobj/" + KOBJ.site_id;
-KOBJ.logger_url = KOBJ.proto+KOBJ.host_with_port+"/log/" + KOBJ.site_id;
+KOBJ.logger_url = KOBJ.proto+KOBJ.loghost_with_port+"/log/" + KOBJ.site_id;
 
 
 r=document.createElement("script");
@@ -135,4 +156,10 @@ body.appendChild(r);
 EOF
 
 }
+
+
+
+
+1;
+
 

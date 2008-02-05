@@ -10,6 +10,9 @@
 
 PerlRequire <TMPL_VAR NAME=KOBJ_ROOT>/startup.pl
 
+# support client IP address in XFF header, if needed
+# PerlSetVar  xForwardedForRequire 1  # only work behind a proxy...
+PerlPostReadRequestHandler Apache2::xForwardedFor
 
 
 <TMPL_IF NAME="GENDER_ACTION">
@@ -25,9 +28,9 @@ PerlRequire <TMPL_VAR NAME=KOBJ_ROOT>/startup.pl
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
 
-  # support client IP address in XFF header, if necessary
-  PerlSetVar  xForwardedForRequire 1
-  PerlPostReadRequestHandler Apache2::xForwardedFor
+
+  # URL for svn rule repository, username, password
+  PerlSetVar svn_conn http://krl.kobj.net/rules/client/|cs|fizzbazz
 
   SetHandler perl-script
   PerlHandler Kynetx
@@ -43,6 +46,9 @@ PerlRequire <TMPL_VAR NAME=KOBJ_ROOT>/startup.pl
 
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
+
+  # URL for svn rule repository, username, password
+  PerlSetVar log_db_conn db.kobj.net|log|fizzbazz
 
   SetHandler perl-script
   PerlHandler Kynetx::Logger

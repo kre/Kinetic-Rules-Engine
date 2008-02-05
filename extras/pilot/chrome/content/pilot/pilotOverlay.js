@@ -3,7 +3,8 @@ var Pilot = {
   sites: new Array(0),
   kynetx_js_host: 'http://init.kobj.net',
   main_js_host: 'http://init.kobj.net',
-  required_scripts: ['prototype','effects','dragdrop','kobj-extras'],
+//  required_scripts: ['prototype','effects','dragdrop','kobj-extras'],
+  required_scripts: ['kobj-static'],
   kobj_version: '0.8',
 
   // ex cookie:

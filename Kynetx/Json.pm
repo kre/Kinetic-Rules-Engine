@@ -21,6 +21,8 @@ our %EXPORT_TAGS = (all => [
 qw(
 krlToJson
 jsonToKrl
+astToJson
+jsonToAst
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -39,6 +41,21 @@ sub jsonToKrl {
     my $tree = decode_json($json);
     return pp($tree);
 
+
+}
+
+# a renaming of encode_json for Abstract Syntax Trees
+sub astToJson {
+    my($ast) = @_;
+
+    return encode_json($ast);
+
+}
+
+sub jsonToAst {
+    my($json) = @_;
+
+    return decode_json($json);
 
 }
 
