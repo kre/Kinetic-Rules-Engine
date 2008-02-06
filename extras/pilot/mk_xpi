@@ -1,2 +1,3 @@
+
 (cd chrome; ./jar_script.sh)
 zip -r new-pilot.xpi chrome chrome.manifest install.rdf

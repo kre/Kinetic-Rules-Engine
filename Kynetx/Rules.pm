@@ -775,6 +775,11 @@ sub get_rules_from_repository{
 	}
     }
 
+    if ($d{$site.'.krl'} eq -1 && $d{$site.'.json'} eq -1) {
+	$logger->debug("Didn't find any rules, returning fake ruleset");
+	return parse_ruleset("ruleset $site {}");
+    }
+
 
     if($d{$site.'.krl'} > $d{$site.'.json'}) {
 	$ext = '.krl';
