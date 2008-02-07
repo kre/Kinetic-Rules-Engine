@@ -14,6 +14,7 @@ use Log::Log4perl qw(get_logger :levels);
 use Kynetx::Rules qw(:all);;
 use Kynetx::Util qw(:all);;
 use Kynetx::JavaScript qw(:all);
+use Kynetx::Session qw(:all);
 
 
 my $logger;
@@ -55,21 +56,9 @@ sub process_rules {
 #        $r->connection->remote_ip('128.187.16.242'); # Utah (BYU)
     }
 
-    my $cookie = $r->headers_in->{'Cookie'};
-    $cookie =~ s/SESSION_ID=(\w*)/$1/ if(defined $cookie);
 
-
-    my %session;
-    tie %session, 'Apache::Session::DB_File', $cookie, {
-	FileName      => '/web/data/sessions.db',
-	LockDirectory => '/web/lock/sessions',
-    };
-	
-    #Might be a new session, so lets give them their cookie back
-
-    my $session_cookie = "SESSION_ID=$session{_session_id};";
-    $r->headers_out->add('Set-Cookie' => $session_cookie);
-
+    # get a session hash 
+    my $session = process_session($r);
 
     # build initial env
     my $path_info = $r->path_info;
@@ -115,7 +104,7 @@ sub process_rules {
 
 
 	my $pred_value = 
-	    eval_predicates(\%request_info, $rule_env, \%session, $rule);
+	    eval_predicates(\%request_info, $rule_env, $session, $rule);
 
 
 	# set up post block execution
@@ -143,14 +132,14 @@ sub process_rules {
 
 	    # this is the main event.  The browser has asked for a
 	    # chunk of Javascrip and this is where we deliver... 
-	    $js .= mk_action($rule, \%request_info, $rule_env, \%session); 
+	    $js .= mk_action($rule, \%request_info, $rule_env, $session); 
 
-	    $js .= eval_post_expr($cons, \%session) if(defined $cons);
+	    $js .= eval_post_expr($cons, $session) if(defined $cons);
 
 	} else {
 	    $logger->info("did not fire");
 
-	    $js .= eval_post_expr($alt, \%session) if(defined $alt);
+	    $js .= eval_post_expr($alt, $session) if(defined $alt);
 
 
 	}

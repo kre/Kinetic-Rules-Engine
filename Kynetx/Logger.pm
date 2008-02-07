@@ -26,20 +26,8 @@ sub process_action {
 
     my $logger = get_logger();
 
-    my $cookie = $r->headers_in->{'Cookie'};
-    $cookie =~ s/SESSION_ID=(\w*)/$1/ if(defined $cookie);
-
-
-    my %session;
-    # need to get rid of hard coded values here.
-    tie %session, 'Apache::Session::DB_File', $cookie, {
-	FileName      => '/web/data/sessions.db',
-	LockDirectory => '/var/lock/sessions',
-    };
-	
-    #Might be a new session, so lets give them their cookie back
-    my $session_cookie = "SESSION_ID=$session{_session_id};";
-    $r->headers_out->add('Set-Cookie' => $session_cookie);
+    # get a session hash from the cookie or build a new one
+    my $session = process_session($r);
 
     # build initial env
     my $path_info = $r->uri;
@@ -67,7 +55,7 @@ sub process_action {
     $logger->debug("Storing: ", $request_info{'site'}, ", ",
 		               $request_info{'rule'}, ", ",
 		               $request_info{'caller'}, ", ",
-		               $session{_session_id}, ", ",
+		               $session->{_session_id}, ", ",
 		               $request_info{'sense'}, 
 	);
 
