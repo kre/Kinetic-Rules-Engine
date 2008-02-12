@@ -43,7 +43,7 @@ sub handler {
 
 	my @memd_hosts = map {$_ . ":" . DEFAULT_MEMCACHED_PORT} $r->dir_config->get('memcached_hosts');
 
-	$logger->debug("Memcached: ", join(" ", @memd_hosts));
+#	$logger->debug("Memcached: ", join(" ", @memd_hosts));
 
  	$memd = new Cache::Memcached {
  	    'servers' => \@memd_hosts,
@@ -53,7 +53,7 @@ sub handler {
     }
 
 
-    if($r->path_info =~ m!/flush/! && $r->dir_config('memcached_hosts')) {
+    if($r->path_info =~ m!/flush/! ) {
 	flush_ruleset_cache($r);
     } else {
 	process_rules($r);
@@ -423,7 +423,10 @@ EJS1
 sub flush_ruleset_cache {
     my ($r) = @_;
 
-    my ($site) = $r->path_info =~ m#/(\d+)/#;
+    # nothing to do if no memcache hosts
+    return unless $r->dir_config('memcached_hosts');
+
+    my ($site) = $r->path_info =~ m#/(\d+)#;
 
     Log::Log4perl::MDC->put('site', $site);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
@@ -432,6 +435,8 @@ sub flush_ruleset_cache {
     $logger->debug("[flush] flushing rules for $site");
     $memd->delete("ruleset:$site");
 
+    $r->content_type('text/html');
+    print "<h1>Rules flushed for site $site</h1>";
 
 }
 
