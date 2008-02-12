@@ -686,13 +686,13 @@ sub get_precondition_vars {
 # this returns the right rules for the caller and site
 # this is a point where things could be optimixed in the future
 sub get_rule_set {
-    my ($site, $caller, $svn_conn) = @_;
+    my ($site, $caller, $svn_conn, $memd) = @_;
 
     my $logger = get_logger();
     $logger->debug("Getting rules for $caller");
 
     my $rules = optimize_rules(
-	          get_rules_from_repository($site, $svn_conn),$site);
+	          get_rules_from_repository($site, $svn_conn, $memd),$site);
 
 
     my @new_set;
@@ -748,9 +748,16 @@ sub optimize_rules {
 
 sub get_rules_from_repository{
 
-    my ($site, $svn_conn) = @_;
+    my ($site, $svn_conn, $memd) = @_;
 
     my $logger = get_logger();
+
+    my $ruleset = $memd->get("ruleset:$site");
+    if ($ruleset) {
+	$logger->debug("Using cached ruleset for $site");
+	return $ruleset;
+    } 
+
 
     my ($ctx, $svn_url) = get_svn_conn($svn_conn);
 
@@ -801,12 +808,14 @@ sub get_rules_from_repository{
 
     # return the abstract syntax tree regardless of source
     if($ext eq '.krl') {
-	return parse_ruleset($krl);
+	$ruleset = parse_ruleset($krl);
     } else {
-
-	my $json = jsonToAst($krl);
-	return $json
+	$ruleset = jsonToAst($krl);
     }
+
+    $logger->debug("Caching ruleset for $site");
+    $memd->set("ruleset:$site", $ruleset);
+    return $ruleset;    
 
 }
 

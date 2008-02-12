@@ -29,6 +29,14 @@ PerlPostReadRequestHandler Apache2::xForwardedFor
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
 
 
+  <TMPL_IF NAME="MEMCACHED">
+  PerlSetVar memcached_hosts <TMPL_VAR NAME=MEMCACHED_HOST_FIRST>
+  <TMPL_LOOP NAME="MEMCACHED_HOSTS">
+  PerlAddVar memcached_hosts <TMPL_VAR NAME=MEMCACHED_HOST>
+  </TMPL_LOOP>
+  </TMPL_IF>
+
+
   # URL for svn rule repository, username, password
   PerlSetVar svn_conn http://krl.kobj.net/rules/client/|cs|fizzbazz
 

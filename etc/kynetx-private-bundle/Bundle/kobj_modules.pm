@@ -73,6 +73,8 @@ Apache2::RequestRec
 
 Apache2::xForwardedFor
 
+Cache::Memcached
+
 =head1 DESCRIPTION
 
 This bundle is to install all the non-required modules that

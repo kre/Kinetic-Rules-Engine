@@ -9,7 +9,7 @@ use XML::XPath;
 use LWP::Simple;
 use DateTime;
 use Log::Log4perl qw(get_logger :levels);
-
+use Cache::Memcached;
 
 use Kynetx::Rules qw(:all);;
 use Kynetx::Util qw(:all);;
@@ -19,6 +19,9 @@ use Kynetx::Session qw(:all);
 
 my $logger;
 $logger = get_logger();
+
+# Make this global so we can use memcache all over
+my $memd;
 
 if($logger->is_debug()) {
 
@@ -33,14 +36,26 @@ sub handler {
 
     $r->content_type('text/javascript');
 
-# read in some params from the httpdconf file
-#    $debug = $r->dir_config('debug');
+    if($r->dir_config('memcached_hosts')) {
 
-    process_rules($r);
+	$logger->debug("Memcached: ", join(" ", $r->dir_config->get('memcached_hosts')));
+
+ 	$memd = new Cache::Memcached {
+ 	    'servers' => $r->dir_config->get('memcached_hosts'),
+ 	    'debug' => 0,
+ 	    'compress_threshold' => 10_000,
+ 	};
+    }
+
+
+    if($r->path_info =~ m!/flush/! && $r->dir_config('memcached_hosts')) {
+	flush_ruleset_cache($r);
+    } else {
+	process_rules($r);
+    }
 
     return Apache2::Const::OK; 
 }
-
 
 1;
 
@@ -90,7 +105,10 @@ sub process_rules {
     }
 
     # side effects environment with precondition pattern values
-    my ($rules, $rule_env) = get_rule_set($request_info{'site'}, $request_info{'caller'},$r->dir_config('svn_conn'));
+    my ($rules, $rule_env) = get_rule_set($request_info{'site'}, 
+					  $request_info{'caller'},
+					  $r->dir_config('svn_conn'), 
+					  $memd);
 
     # this loops through the rules ONCE applying all that fire
     foreach my $rule ( @{ $rules } ) {
@@ -394,6 +412,21 @@ EJS1
 	    return $js;
 	};
     }
+
+}
+
+sub flush_ruleset_cache {
+    my ($r) = @_;
+
+    my ($site) = $r->path_info =~ m#/(\d+)/#;
+
+    Log::Log4perl::MDC->put('site', $site);
+    Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
+
+
+    $logger->debug("[flush] flushing rules for $site");
+    $memd->delete("ruleset:$site");
+
 
 }
 

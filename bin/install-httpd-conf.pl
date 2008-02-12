@@ -21,13 +21,14 @@ my $conf_file = 'httpd-perl.conf';
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'hajld';
+my $opt_string = 'hajldm:';
 getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'};
 
 my $init_gender = $opt{'j'} || 0;
 my $action_gender = $opt{'a'} || 0;
 my $log_gender = $opt{'l'} || 0;
+my @mcd_hosts = $opt{'m'} ? split(/,/,$opt{'m'}) : [];
 
 my $init_host = 'init.kobj.net';
 my $log_host = 'logger.kobj.net';
@@ -64,6 +65,15 @@ if ($opt{'d'}) { # development
     $conf_template->param(RUN_MODE => 'production');
 }
 
+
+if ($opt{'m'}) { # memcached
+    $conf_template->param(MEMCACHED => 1);
+    $conf_template->param(MEMCACHED_HOST_FIRST => shift @mcd_hosts);
+    my @AoH = map { { MEMCACHED_HOST => ($_) }  } @mcd_hosts;
+    $conf_template->param(MEMCACHED_HOSTS => \@AoH);
+
+}
+
 #if the dir doesn't exist, make it
 if(! -e $conf_dir) {
     mkdir $conf_dir;
@@ -98,6 +108,7 @@ Options are:
   -l	: Gender is log server
   -j	: Gender is Javascript server
   -d    : use 127.0.0.1 as the host
+  -m ML : use memcached, ML is a comma seperated list of host IP numbers
 
 At least one must be given and they may be given in any combination.  
 
