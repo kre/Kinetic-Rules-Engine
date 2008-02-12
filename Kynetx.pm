@@ -17,6 +17,9 @@ use Kynetx::JavaScript qw(:all);
 use Kynetx::Session qw(:all);
 
 
+use constant DEFAULT_MEMCACHED_PORT => '11211';
+
+
 my $logger;
 $logger = get_logger();
 
@@ -38,10 +41,12 @@ sub handler {
 
     if($r->dir_config('memcached_hosts')) {
 
-	$logger->debug("Memcached: ", join(" ", $r->dir_config->get('memcached_hosts')));
+	my @memd_hosts = map {$_ . ":" . DEFAULT_MEMCACHED_PORT} $r->dir_config->get('memcached_hosts');
+
+	$logger->debug("Memcached: ", join(" ", @memd_hosts));
 
  	$memd = new Cache::Memcached {
- 	    'servers' => $r->dir_config->get('memcached_hosts'),
+ 	    'servers' => \@memd_hosts,
  	    'debug' => 0,
  	    'compress_threshold' => 10_000,
  	};
