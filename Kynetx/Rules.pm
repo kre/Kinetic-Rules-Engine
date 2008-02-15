@@ -118,6 +118,10 @@ sub get_geoip {
 			       Geo::IP::GEOIP_STANDARD);
 
 	my $record = $gi->record_by_addr($req_info->{'ip'});
+
+	my $logger = get_logger();
+	$logger->debug("GeoIP data for ($field): ", $req_info->{'ip'});
+
 	
 	for my $name (@field_names) {
 	    $req_info->{'geoip'}->{$name} = $record->$name;
@@ -157,6 +161,8 @@ sub get_weather {
 
 	my $curr_cond = 
 	    $rss ->find('/rss/channel/item/yweather:condition')->get_node(1);;
+
+	return unless $curr_cond; # fails
 
 	$req_info->{'weather'}->{'curr_temp'} = 
 	    $curr_cond->find('@temp'); 
