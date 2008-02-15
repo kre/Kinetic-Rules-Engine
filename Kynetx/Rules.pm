@@ -13,6 +13,8 @@ use Log::Log4perl qw(get_logger :levels);
 use Kynetx::Parser qw(:all);
 use Kynetx::PrettyPrinter qw(:all);
 use Kynetx::Json qw(:all);
+use Kynetx::Util qw(:all);
+use Kynetx::Memcached qw(:all);
 
 
 use Exporter;
@@ -126,6 +128,7 @@ sub get_geoip {
 
 }
 
+
 sub get_weather {
     my ($req_info, $field) = @_;
 
@@ -147,9 +150,8 @@ sub get_weather {
 
 
 	# farenhiet hardwided in.  Should come from client
-	my $content = 
-	    LWP::Simple::get('http://xml.weather.yahoo.com/forecastrss?p='. 
-			     $zip . '&u=f');
+	my $url = 'http://xml.weather.yahoo.com/forecastrss?p='. $zip . '&u=f';
+	my $content = get_remote_data($url, 60*60*6); # expire after 6 hours
 
 	my $rss = new XML::XPath->new(xml => $content);
 
@@ -229,7 +231,7 @@ sub get_stocks {
 	    'http://www.webservicex.net//stockquote.asmx/GetQuote?symbol='. 
 	    $symbol;
 
-	my $content = LWP::Simple::get($url);
+	my $content = get_remote_data($url, 60*20); # expire in 20 minutes
 
 
 
@@ -686,13 +688,13 @@ sub get_precondition_vars {
 # this returns the right rules for the caller and site
 # this is a point where things could be optimixed in the future
 sub get_rule_set {
-    my ($site, $caller, $svn_conn, $memd) = @_;
+    my ($site, $caller, $svn_conn) = @_;
 
     my $logger = get_logger();
     $logger->debug("Getting rules for $caller");
 
     my $rules = optimize_rules(
-	          get_rules_from_repository($site, $svn_conn, $memd),$site);
+	          get_rules_from_repository($site, $svn_conn),$site);
 
 
     my @new_set;
@@ -748,9 +750,11 @@ sub optimize_rules {
 
 sub get_rules_from_repository{
 
-    my ($site, $svn_conn, $memd) = @_;
+    my ($site, $svn_conn) = @_;
 
     my $logger = get_logger();
+
+    my $memd = get_memd();
 
     my $ruleset = $memd->get("ruleset:$site");
     if ($ruleset) {

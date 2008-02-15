@@ -15,16 +15,16 @@ use Kynetx::Rules qw(:all);;
 use Kynetx::Util qw(:all);;
 use Kynetx::JavaScript qw(:all);
 use Kynetx::Session qw(:all);
+use Kynetx::Memcached qw(:all);
 
 
-use constant DEFAULT_MEMCACHED_PORT => '11211';
 
 
 my $logger;
 $logger = get_logger();
 
 # Make this global so we can use memcache all over
-my $memd;
+our $memd;
 
 if($logger->is_debug()) {
 
@@ -40,19 +40,10 @@ sub handler {
     $r->content_type('text/javascript');
 
     if($r->dir_config('memcached_hosts')) {
-
-	my @memd_hosts = map {$_ . ":" . DEFAULT_MEMCACHED_PORT} $r->dir_config->get('memcached_hosts');
-
-#	$logger->debug("Memcached: ", join(" ", @memd_hosts));
-
- 	$memd = new Cache::Memcached {
- 	    'servers' => \@memd_hosts,
- 	    'debug' => 0,
- 	    'compress_threshold' => 10_000,
- 	};
+	Kynetx::Memcached->init($r->dir_config('memcached_hosts'));
     }
 
-
+    # at some point we need a better dispatch function
     if($r->path_info =~ m!/flush/! ) {
 	flush_ruleset_cache($r);
     } else {
@@ -112,8 +103,7 @@ sub process_rules {
     # side effects environment with precondition pattern values
     my ($rules, $rule_env) = get_rule_set($request_info{'site'}, 
 					  $request_info{'caller'},
-					  $r->dir_config('svn_conn'), 
-					  $memd);
+					  $r->dir_config('svn_conn'));
 
     # this loops through the rules ONCE applying all that fire
     foreach my $rule ( @{ $rules } ) {
@@ -433,6 +423,7 @@ sub flush_ruleset_cache {
 
 
     $logger->debug("[flush] flushing rules for $site");
+    my $memd = get_memd();
     $memd->delete("ruleset:$site");
 
     $r->content_type('text/html');
