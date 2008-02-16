@@ -148,19 +148,50 @@ sub get_weather {
           tomorrow_cond_code
          );
     
+    my $logger = get_logger();
+
     if(not defined $req_info->{'weather'}->{$field}) {
+
 
 	my $zip = get_geoip($req_info, 'postal_code');
 
 
+	# FIXME: urls are hardcoded in this function
+	# FIXME: expirations are hardcoded here
+
+	# if we don't get a 5 digit zip, then look up the location code
+	if ($zip !~ m/^\d\d\d\d\d$/) {
+
+	    my $city = get_geoip($req_info, 'city');
+	    my $region = get_geoip($req_info, 'region');
+	    my $country_name = get_geoip($req_info, 'country_name');
+	    my $country_code = get_geoip($req_info, 'country_code');
+	    $logger->debug("[weather] $city, $region, $zip, $country_name");
+	    
+	    my $url = "http://xoap.weather.com/weather/search/search?where=";
+	    if ($country_code eq 'US') {
+		$url .= "$city%20$region";
+	    } else {
+		$url .= "$city%20$country_name";
+	    }
+	    my $locxml = new XML::XPath->new(
+		xml => 
+		get_remote_data($url, 60 * 60 * 24 * 29) # expire after 29 days
+		);
+	    # grab the first location ID
+	    $zip = $locxml->find('//loc[1]/@id');
+	    $logger->debug("[weather] Using code $zip for ZIP");
+	    
+	}
+
 	# farenhiet hardwided in.  Should come from client
 	my $url = 'http://xml.weather.yahoo.com/forecastrss?p='. $zip . '&u=f';
-	my $content = get_remote_data($url, 60*60*6); # expire after 6 hours
+	my $content = get_remote_data($url, 60*60*12); # expire after 12 hours
 
 	my $rss = new XML::XPath->new(xml => $content);
 
 	my $curr_cond = 
-	    $rss ->find('/rss/channel/item/yweather:condition')->get_node(1);;
+	    $rss ->find('/rss/channel/item/yweather:condition')->get_node(1);
 
 	return unless $curr_cond; # fails
 
@@ -202,7 +233,6 @@ sub get_weather {
 
     }
 
-    my $logger = get_logger();
     $logger->debug("Weather for zip ($field): " ,
 		   $req_info->{'geoip'}->{'postal_code'},
 		   " -> ", 
