@@ -28,9 +28,12 @@ our $MEMD;
 sub init {
     my($class,$host_array) = @_;
 
-    my @memd_hosts = map {$_ . ":" . DEFAULT_MEMCACHED_PORT} $host_array;
-
     my $logger = get_logger();
+
+    $logger->debug("Hosts: ", join " ", @$host_array);
+
+    my @memd_hosts = map {$_ . ":" . DEFAULT_MEMCACHED_PORT} @$host_array;
+
     $logger->debug("Initializing memcached: ", join ", ", @memd_hosts);
 
     $MEMD = new Cache::Memcached {

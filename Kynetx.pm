@@ -38,9 +38,11 @@ sub handler {
     my $r = shift;
 
     $r->content_type('text/javascript');
+    
+    my @host_array = $r->dir_config->get('memcached_hosts');
 
     if($r->dir_config('memcached_hosts')) {
-	Kynetx::Memcached->init($r->dir_config('memcached_hosts'));
+	Kynetx::Memcached->init(\@host_array);
     }
 
     # at some point we need a better dispatch function
