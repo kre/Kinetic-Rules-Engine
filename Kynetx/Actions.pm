@@ -21,6 +21,8 @@ our %EXPORT_TAGS = (all => [
 qw(
 mk_action
 eval_post_expr
+get_precondition_test
+get_precondition_vars
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -266,6 +268,18 @@ EJS1
 
 }
 
+
+sub get_precondition_test {
+    my $rule = shift;
+
+    $rule->{'pagetype'}{'pattern'};
+}
+
+sub get_precondition_vars {
+    my $rule = shift;
+
+    $rule->{'pagetype'}{'vars'};
+}
 
 
 1;

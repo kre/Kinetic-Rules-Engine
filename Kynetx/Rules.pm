@@ -15,7 +15,9 @@ use Kynetx::PrettyPrinter qw(:all);
 use Kynetx::Json qw(:all);
 use Kynetx::Util qw(:all);
 use Kynetx::Memcached qw(:all);
-
+use Kynetx::Session qw(:all);
+use Kynetx::Predicates qw(:all);
+use Kynetx::Actions qw(:all);
 
 
 use Exporter;
@@ -28,8 +30,6 @@ our %EXPORT_TAGS = (all => [
 qw(
 process_rules
 get_rule_set 
-get_precondition_vars 
-%actions 
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -143,20 +143,6 @@ sub process_rules {
 	$logger->info("finished");
     }
 
-}
-
-
-
-sub get_precondition_test {
-    my $rule = shift;
-
-    $rule->{'pagetype'}{'pattern'};
-}
-
-sub get_precondition_vars {
-    my $rule = shift;
-
-    $rule->{'pagetype'}{'vars'};
 }
 
 
