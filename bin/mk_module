@@ -10,7 +10,7 @@ use HTML::Template;
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'd:';
+my $opt_string = 'd:f:h';
 getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'};
 
@@ -18,8 +18,8 @@ my $dirname = 0;
 $dirname = $opt{'d'};
 
 my $filename = 0;
-if($ARGV[0]) {
-    $filename = $ARGV[0];
+if($opt{'f'}) {
+    $filename = $opt{'f'};
 } else {
     die "You must supply a filename\n";
 }
@@ -46,6 +46,18 @@ my $test_tmpl = $tmpls . "/test.tmpl";
 if ($dirname) {
     $modules .= "/" . $dirname;
     $tests .= "/" . $dirname;
+
+    # if the directory doesn't exist, create it
+    if (! -e $modules ) {
+	print "Creating directory $modules\n";
+	mkdir($modules);
+	do_svn($modules);
+    }
+    if (! -e $tests ) {
+	print "Creating directory $tests\n";
+	mkdir($tests);
+	do_svn($tests);
+    }
 }
 
 
@@ -70,14 +82,30 @@ do_template($test_tmpl,$tests,$test_name);
 print "Adding module $module_name to SVN\n";
 do_svn("$modules/$module_name");
 
-print "Adding test $test_name SVN\n";
+print "Adding test $test_name to SVN\n";
 do_svn("$tests/$test_name");
 
 
 1;
 
 sub usage {
-print "usage goes here";
+    print STDERR <<EOF;
+
+usage:  
+
+   mk_module [-d directory] -f module_name
+
+Creates a module, an associated test file, and puts both in SVN.
+
+Options are:
+
+  -d dir   : put new module in directory dir
+  -f name  : module is named name
+
+EOF
+
+exit;
+
 }
 
 

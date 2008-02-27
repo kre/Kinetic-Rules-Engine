@@ -18,7 +18,9 @@ my $pragmas = {
     'strict' => 1,
     'vars' => 1,
     'warnings' => 1,
-    'base' => 1
+    'base' => 1,
+    'require' => 1,
+    'constant' => 1,
 };
 
 my $base_var = 'KOBJ_ROOT';
@@ -71,7 +73,7 @@ sub get_modules {
 
     my @modules;
     while(my $s = <$fh>) {
-	if($s =~ s/^use\s+([^\s]+).*;/$1/) {
+	if($s =~ s/^use\s+([^ ]+).*;.*/$1/) {
 	    push(@modules, $s);
 	} else {
 	    next;

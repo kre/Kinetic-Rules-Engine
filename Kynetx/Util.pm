@@ -18,8 +18,17 @@ our %EXPORT_TAGS = (all => [
 qw(
 before_now
 after_now
+mk_created_session_name
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
+
+
+# takes a counter name and makes a uniform session var name from it
+sub mk_created_session_name {
+    my $name = shift;
+    return $name.'_created';
+}
+
 
 
 sub before_now {
