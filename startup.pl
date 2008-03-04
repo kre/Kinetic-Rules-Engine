@@ -18,6 +18,7 @@ use Apache2::ServerRec ();
 use Apache2::ServerUtil ();
 use Apache2::Connection ();
 use Apache2::Log ();
+use APR::URI ();
 
 use Apache2::xForwardedFor ();
 

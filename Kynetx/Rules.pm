@@ -126,7 +126,7 @@ sub process_rules {
 
 	    # this is the main event.  The browser has asked for a
 	    # chunk of Javascrip and this is where we deliver... 
-	    $js .= mk_action($rule, \%request_info, $rule_env, $session); 
+	    $js .= mk_action($r, $rule, \%request_info, $rule_env, $session); 
 
 	    $js .= eval_post_expr($cons, $session) if(defined $cons);
 
@@ -164,8 +164,8 @@ sub get_rule_set {
     foreach my $rule ( @{ $rules->{$site} } ) {
 
 	if($rule->{'state'} eq 'active') {  # optimize??
-	    # test the pattern, captured values are stored in @captures
 
+	    # test the pattern, captured values are stored in @captures
 	    if(my @captures = $caller =~ get_precondition_test($rule)) {
 
 		push @new_set, $rule;

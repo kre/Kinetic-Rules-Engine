@@ -29,6 +29,8 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 my($active,$test,$inactive) = (0,1,2);
 
+# TODO factor out common functionality in float and float2
+
 # available actions
 # should be a JS function; 
 # mk_action will create a JS expression that applies it to appropriate arguments
@@ -62,6 +64,21 @@ my %actions = (
                          onComplete: cb
                         });
        }',
+    float2 =>
+      'function(uniq, cb, pos, top, side, text) {
+        var id_str = \'kobj_\'+uniq;
+        var div = document.createElement(\'div\');
+        div.setAttribute(\'id\', id_str);
+        div.setAttribute(\'style\', \'position: \' + pos + 
+                                    \'; z-index: 9999;  \' +
+                                    top + \'; \' + side + 
+                                    \'; opacity: 0.999999; display: none\');
+        var div2 = document.createElement(\'div\');
+        div2.innerHTML = text
+        div.appendChild(div2);
+        document.body.appendChild(div);
+        cb();
+       }',
     popup =>
       'function(uniq, cb, top, left, width, height, url) {      
         var id_str = \'kobj_\'+uniq;
@@ -71,7 +88,7 @@ my %actions = (
                       \'width=\' + width + \', \' +
                       \'height=\' + height;
         open(url,id_str,options);
-        callBacks();
+        cb();
        }',
     replace =>
       'function(uniq, cb, id, url) {
@@ -85,10 +102,16 @@ my %actions = (
     );
 
 
+# function names in this hash indicate if the function is modifiable
+my %modifiable = (
+    'float' => 1,
+    'float2' => 1
+    );
+
 
 
 sub mk_action {
-    my ($rule, $req_info, $rule_env, $session) = @_;
+    my ($r, $rule, $req_info, $rule_env, $session) = @_;
 
     my $logger = get_logger();
 
@@ -145,6 +168,33 @@ sub mk_action {
 		    $cb_func_name,
 		    $arg_str);
 
+    # check for which float to do (avoiding XXS)
+    if($action_name eq 'float') {
+	my @args = split(/,/, $arg_str);
+	my $url = $args[$#args];
+	$url =~ s/'([^']*)'/$1/;
+
+	my $parsed_url = APR::URI->parse($r->pool, $url);
+	my $parsed_caller = APR::URI->parse($r->pool, $req_info->{'caller'});
+
+	$logger->debug("[action] URL is ", $parsed_url->hostname, 
+		       " & caller is ", $parsed_caller->hostname);
+
+	# not relative and not equal to caller
+	if ($parsed_url->hostname && 
+	    $parsed_url->hostname ne $parsed_caller->hostname) {
+
+	    $logger->debug("[action] float2 with ", $url);
+	    $action_name = 'float2';
+	    my $content = LWP::Simple::get($url);
+	    $content =~ y/\n\r//d; # remove newlines
+	    $args[$#args] = "'". $content . "'";
+	    $arg_str = join(",",@args);
+	}
+
+    }
+
+
     $logger->debug("[action] ", $action_name, 
 		                 ' executing with args (',$arg_str,')');
 
@@ -167,7 +217,7 @@ sub mk_action {
 
 
 
-    if($action_name eq "float") {
+    if($modifiable{$action_name}) {
 	
 	$js .= "new Effect.toggle('" . $id_str . "', ". $mods{'effect'} . " );"  ;
 
