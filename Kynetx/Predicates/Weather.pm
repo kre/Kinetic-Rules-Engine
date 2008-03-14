@@ -156,7 +156,7 @@ sub get_weather {
 	    my $country_name = get_geoip($req_info, 'country_name');
 	    my $country_code = get_geoip($req_info, 'country_code');
 	    $logger->debug("[weather] $city, $region, $zip, $country_name");
-	    
+
 	    my $url = "http://xoap.weather.com/weather/search/search?where=";
 	    if ($country_code eq 'US') {
 		$url .= "$city%20$region";
@@ -173,7 +173,7 @@ sub get_weather {
 	    
 	}
 
-	# farenhiet hardwided in.  Should come from client
+	# FIXME: farenhiet hardwided in.  Should come from client
 	my $url = 'http://xml.weather.yahoo.com/forecastrss?p='. $zip . '&u=f';
 	my $content = get_remote_data($url, 60*60*12); # expire after 12 hours
 

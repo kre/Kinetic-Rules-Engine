@@ -113,6 +113,8 @@ sub get_geoip {
             longitude
             dma_code
             area_code);
+
+    # FIXME: hard coded URL
     
     if(not defined $req_info->{'geoip'}->{$field}) {
 

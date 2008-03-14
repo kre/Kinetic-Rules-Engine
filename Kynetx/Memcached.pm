@@ -23,7 +23,7 @@ get_remote_data
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
-our $MEMD;
+our $MEMD = 0;
 
 sub init {
     my($class,$host_array) = @_;
@@ -59,16 +59,21 @@ sub get_remote_data {
 
     my $key = $url;
 
-    my $content = $memd->get($key);
-    if ($content) {
-	$logger->debug("Using cached data for $url");
-	return $content;
-    } 
+    my $content;
+    if ($memd) {
+        $content = $memd->get($key) ;
+	if ($content) {
+	    $logger->debug("Using cached data for $url");
+	    return $content;
+	}
+    }
 
     $content = LWP::Simple::get($url);
 
-    $logger->debug("Caching data for $url");
-    $memd->set($key,$content,$expire);
+    if($memd) {
+	$logger->debug("Caching data for $url");
+	$memd->set($key,$content,$expire);
+    }
 
     return $content;
 
