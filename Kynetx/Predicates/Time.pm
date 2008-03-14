@@ -98,7 +98,7 @@ my %predicates = (
     },
 
     # between 11:30 and 13:00
-    'lunch' => sub {
+    'lunch_time' => sub {
 	my ($req_info, $rule_env, $args) = @_;
 	return local_time_between($req_info, 11, 30, 13, 0)
     
@@ -150,13 +150,13 @@ my %predicates = (
 
     'weekend' => sub {
 	my ($req_info, $rule_env, $args) = @_;
-	my @weekend = [1,0,0,0,0,0,1];
+	my @weekend = (1,0,0,0,0,0,1);
 	return today_is($req_info, \@weekend);
     },
 
     'weekday' => sub {
 	my ($req_info, $rule_env, $args) = @_;
-	my @weekday = [0,1,1,1,1,1,0];
+	my @weekday = (0,1,1,1,1,1,0);
 	return today_is($req_info, \@weekday);
     },
 
@@ -268,8 +268,10 @@ sub local_datetime_between {
 			 month => $start_month ||= $start_time->month, 
 			 day => $start_day ||= $start_time->day,
 			 hour => $start_hour ||= $start_time->hour, 
-			 minute => $start_minute ||= $start_time->minute, 
-			 second => $start_second ||= $start_time->second
+			 minute => defined($start_minute) ? 
+			           $start_minute : $start_time->minute, 
+			 second => defined($start_second) ?
+			           $start_second : $start_time->second
 	    );
 
 
@@ -279,8 +281,11 @@ sub local_datetime_between {
 		       month => $end_month ||= $end_time->month, 
 		       day => $end_day ||= $end_time->day,
 		       hour => $end_hour ||= $end_time->hour, 
-		       minute => $end_minute ||= $end_time->minute, 
-		       second => $end_second ||= $end_time->second
+		       minute => defined($end_minute) ? 
+		                 $end_minute : $end_time->minute, 
+		       second => defined($end_second) ?
+		                 $end_second : $end_time->second
+
 	    );
 
 

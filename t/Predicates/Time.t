@@ -56,7 +56,7 @@ ok(&{$preds->{'morning'}}($BYU_req_info) ?
      &{$preds->{'daytime'}}($BYU_req_info) : 1,
    "Its daytime if it's morning");
 
-ok(&{$preds->{'lunch'}}($BYU_req_info) ? 
+ok(&{$preds->{'lunch_time'}}($BYU_req_info) ? 
      &{$preds->{'daytime'}}($BYU_req_info) : 1,
    "Its daytime if it's lunchtime");
 
@@ -68,14 +68,16 @@ ok(&{$preds->{'early_afternoon'}}($BYU_req_info) ?
      &{$preds->{'daytime'}}($BYU_req_info) : 1,
    "Its daytime if it's early afternoon");
 
+ok(&{$preds->{'early_afternoon'}}($BYU_req_info) ? 
+     &{$preds->{'daytime'}}($BYU_req_info) : 1,
+   "Its daytime if it's early afternoon");
+
+
 ok(&{$preds->{'weekday'}}($BYU_req_info) ? 
    (! &{$preds->{'weekend'}}($BYU_req_info)) :  
    &{$preds->{'weekend'}}($BYU_req_info),
    "If it's a weekday, it's not the weekend, otherwise it is");
 
-ok(&{$preds->{'early_afternoon'}}($BYU_req_info) ? 
-     &{$preds->{'daytime'}}($BYU_req_info) : 1,
-   "Its daytime if it's early afternoon");
 
 my @dow = qw(
 Sunday
@@ -97,7 +99,12 @@ my @dow_args = ($dow[$now->day_of_week]);
 ok(&{$preds->{'day_of_week'}}($BYU_req_info, \%rule_env, \@dow_args),
    "The day of the week is OK with predicate");
 
-my @everyday = [1,1,1,1,1,1,1];
+my @everyday = (1,1,1,1,1,1,1);
+
+my $logger = get_logger();
+$logger->debug(join(", ", @everyday) );
+
+
 ok(&{$preds->{'today_is'}}($BYU_req_info, \%rule_env, \@everyday),
    "Everyday is a day of the week");
 
