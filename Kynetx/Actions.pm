@@ -74,7 +74,7 @@ my %actions = (
                                     top + \'; \' + side + 
                                     \'; opacity: 0.999999; display: none\');
         var div2 = document.createElement(\'div\');
-        div2.innerHTML = text
+        div2.innerHTML = text;
         div.appendChild(div2);
         document.body.appendChild(div);
         cb();
