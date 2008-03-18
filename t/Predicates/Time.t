@@ -1,10 +1,11 @@
+
 #!/usr/bin/perl -w 
 
 use lib qw(/web/lib/perl);
 use strict;
 
 use Test::More;
-plan tests => 16;
+plan tests => 18;
 use Test::LongString;
 
 # most Kyentx modules require this
@@ -30,7 +31,7 @@ $BYU_req_info->{'ip'} = '128.187.16.242'; # Utah (BYU)
 
 my %rule_env = ();
 
-my $preds = get_predicates();
+my $preds = Kynetx::Predicates::Time::get_predicates();
 ok(exists $preds->{'daytime'}, "Is daytime predicate available?");
 ok(exists $preds->{'nighttime'}, "Is nighttime predicate available?");
 ok(exists $preds->{'morning'}, "Is morning predicate available?");
@@ -100,13 +101,29 @@ ok(&{$preds->{'day_of_week'}}($BYU_req_info, \%rule_env, \@dow_args),
    "The day of the week is OK with predicate");
 
 my @everyday = (1,1,1,1,1,1,1);
-
 my $logger = get_logger();
 $logger->debug(join(", ", @everyday) );
 
 
 ok(&{$preds->{'today_is'}}($BYU_req_info, \%rule_env, \@everyday),
    "Everyday is a day of the week");
+
+
+# date between
+my $after = $now->clone->add(days => 1);
+my $before = $now->clone->subtract(days => 1);
+
+
+my @datearg = ($before->month,$before->day,$before->year,
+               $after->month,$after->day,$after->year);
+ok(&{$preds->{'date_between'}}($BYU_req_info, \%rule_env, \@datearg),
+   "Today is between yeaterday and tomorrow");
+
+@datearg = ($before->month,$before->day,$before->year);
+ok(&{$preds->{'date_start'}}($BYU_req_info, \%rule_env, \@datearg),
+   "Today after yesterday.");
+
+
 
 1;
 

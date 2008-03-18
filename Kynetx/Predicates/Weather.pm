@@ -21,12 +21,17 @@ our @ISA         = qw(Exporter);
 our %EXPORT_TAGS = (all => [ 
 qw(
 get_weather
+sunny_cc
+windy_cc
+snow_cc
+showers_cc
+cloudy_cc
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
 my %predicates = (
-    'warmer' => sub {
+    'warmer_than' => sub {
 	my ($req_info, $rule_env, $args) = @_;
 
 	my $desired = $args->[0];
@@ -60,17 +65,26 @@ my %predicates = (
     
     },
 
+    'today_showers' => sub {
+	my ($req_info, $rule_env, $args) = @_;
+
+	return showers_cc(get_weather($req_info, 'curr_cond_code'));
+   
+
+    },
+
     'tomorrow_showers' => sub {
 	my ($req_info, $rule_env, $args) = @_;
 
-	my $tcond = get_weather($req_info, 'tomorrow_cond_code');
+	return showers_cc(get_weather($req_info, 'tomorrow_cond_code'));
+   
 
-	return 
-	    int($tcond) == 4 ||
-	    int($tcond) == 6 || 
-	    int($tcond) == 9 || 
-	    int($tcond) == 11 || 
-	    int($tcond) == 12;
+    },
+
+    'today_cloudy' => sub {
+	my ($req_info, $rule_env, $args) = @_;
+
+	return cloudy_cc(get_weather($req_info, 'curr_cond_code'));
    
 
     },
@@ -78,40 +92,61 @@ my %predicates = (
     'tomorrow_cloudy' => sub {
 	my ($req_info, $rule_env, $args) = @_;
 
-	my $tcond = get_weather($req_info, 'tomorrow_cond_code');
-
-	return 
-	    int($tcond) == 26 ||
-	    int($tcond) == 27 || 
-	    int($tcond) == 28|| 
-	    int($tcond) == 29 || 
-	    int($tcond) == 30 || 
-	    int($tcond) == 44;
+	return cloudy_cc(get_weather($req_info, 'tomorrow_cond_code'));
    
 
+    },
+
+    'today_snow' => sub  {
+	my ($req_info, $rule_env, $args) = @_;
+
+	return snow_cc(get_weather($req_info, 'curr_cond_code'));
+	
     },
 
     'tomorrow_snow' => sub  {
 	my ($req_info, $rule_env, $args) = @_;
 
-	my $tcond = get_weather($req_info, 'tomorrow_cond_code');
+	return snow_cc(get_weather($req_info, 'tomorrow_cond_code'));
+	
+    },
 
-	return 
-	    int($tcond) == 5 ||
-	    int($tcond) == 7 || 
-	    int($tcond) == 13 || 
-	    int($tcond) == 14 || 
-	    int($tcond) == 15 || 
-	    int($tcond) == 16 || 
-	    int($tcond) == 18 ||
-	    int($tcond) == 42 ||
-	    int($tcond) == 43 ||
-	    int($tcond) == 46
-	    ;
+    'today_windy' => sub  {
+	my ($req_info, $rule_env, $args) = @_;
+
+	return windy_cc(get_weather($req_info, 'curr_cond_code'));
+	
+    },
+
+    'tomorrow_windy' => sub  {
+	my ($req_info, $rule_env, $args) = @_;
+
+	return windy_cc(get_weather($req_info, 'tomorrow_cond_code'));
+	
+    },
+
+    'today_sunny' => sub  {
+	my ($req_info, $rule_env, $args) = @_;
+
+	return sunny_cc(get_weather($req_info, 'curr_cond_code'));
+	
+    },
+
+    'tomorrow_sunny' => sub  {
+	my ($req_info, $rule_env, $args) = @_;
+
+	return sunny_cc(get_weather($req_info, 'tomorrow_cond_code'));
 	
     },
 
     );
+
+# need predicates already defined for this
+$predicates{'colder_than'} = sub {
+    return ! $predicates{'warmer_than'}(@_)
+
+};
+
 
 
 sub get_predicates {
@@ -188,7 +223,7 @@ sub get_weather {
 	    $curr_cond->find('@temp'); 
 	$req_info->{'weather'}->{'curr_cond'} = 
 	    $curr_cond->find('@text'); 
-	$req_info->{'weather'}->{'curr_cond_cond'} = 
+	$req_info->{'weather'}->{'curr_cond_code'} = 
 	    $curr_cond->find('@code'); 
 	$req_info->{'weather'}->{'timezone'} = 
 	    $curr_cond->find('@date'); 
@@ -232,6 +267,87 @@ sub get_weather {
 
 }
 
+
+sub snow_cc {
+    my($cond_code) = @_;
+
+    my $logger = get_logger();
+
+    $cond_code = int($cond_code);
+
+    return 
+	$cond_code == 5 ||
+	$cond_code == 7 || 
+	$cond_code == 13 || 
+	$cond_code == 14 || 
+	$cond_code == 15 || 
+	$cond_code == 16 || 
+	$cond_code == 18 ||
+	$cond_code == 42 ||
+	$cond_code == 43 ||
+	$cond_code == 46;
+}
+
+sub showers_cc {
+    my($cond_code) = @_;
+
+    my $logger = get_logger();
+
+    $cond_code = int($cond_code);
+
+    return
+	$cond_code == 4 ||
+	$cond_code == 6 || 
+	$cond_code == 9 || 
+	$cond_code == 11 || 
+	$cond_code == 12;
+
+}
+
+sub cloudy_cc {
+    my($cond_code) = @_;
+
+    my $logger = get_logger();
+
+    $cond_code = int($cond_code);
+
+    return
+	$cond_code == 26 ||
+	$cond_code == 27 || 
+	$cond_code == 28|| 
+	$cond_code == 29 || 
+	$cond_code == 30 || 
+	$cond_code == 44;
+
+}
+
+sub sunny_cc {
+    my($cond_code) = @_;
+
+    my $logger = get_logger();
+
+    $cond_code = int($cond_code);
+
+    return
+	$cond_code == 31 ||
+	$cond_code == 32 || 
+	$cond_code == 33 || 
+	$cond_code == 34;
+
+}
+
+sub windy_cc {
+    my($cond_code) = @_;
+
+    my $logger = get_logger();
+
+    $cond_code = int($cond_code);
+
+    return
+	$cond_code == 23 ||
+	$cond_code == 24;
+
+}
 
 
 1;

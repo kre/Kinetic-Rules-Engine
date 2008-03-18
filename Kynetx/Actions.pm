@@ -182,7 +182,10 @@ sub mk_action {
 
 	# not relative and not equal to caller
 	if ($parsed_url->hostname && 
-	    $parsed_url->hostname ne $parsed_caller->hostname) {
+	    ($parsed_url->hostname ne $parsed_caller->hostname ||
+	     $parsed_url->post ne $parsed_caller->port ||
+	     $parsed_url->scheme ne $parsed_caller->scheme)
+	    ) {
 
 	    $logger->debug("[action] float2 with ", $url);
 	    $action_name = 'float2';

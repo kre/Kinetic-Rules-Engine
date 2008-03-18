@@ -18,7 +18,6 @@ our @ISA         = qw(Exporter);
 # put exported names inside the "qw"
 our %EXPORT_TAGS = (all => [ 
 qw(
-get_predicates
 get_local_time
 local_time_between
 local_day_of_week
@@ -179,11 +178,24 @@ my %predicates = (
 	return local_date_between($req_info, 
 				  $args->[0], # start month
 				  $args->[1], # start day
-				  $args->[2], # end month
-				  $args->[3]  # end month
+				  $args->[2], # start year
+				  $args->[3], # end month
+				  $args->[4],  # end day
+				  $args->[5] # end year
 	    );
     },
 
+    'date_start' => sub {
+	my ($req_info, $rule_env, $args) = @_;
+
+	return local_date_between(
+	    $req_info, 
+	    $args->[0], 
+	    $args->[1], 
+	    $args->[2], 
+	    12, 31, 2020  # a long time in the future
+	    );
+    },
 
 
     );
@@ -239,13 +251,14 @@ sub local_time_between {
 
 sub local_date_between {
 
-	my ($req_info, $start_month, $start_day, $end_month, $end_day) = @_;
+	my ($req_info, $start_month, $start_day, $start_year, 
+	               $end_month, $end_day, $end_year) = @_;
 	my $logger = get_logger();
 
 	return local_datetime_between(
 	    $req_info, 
-	    0, $start_month, $start_day, 0, 0, 0,
-	    0, $end_month, $end_day, 0, 0, 0
+	    $start_year, $start_month, $start_day, 0, 0, 0,
+	    $end_year, $end_month, $end_day, 0, 0, 0
 	    );
 				      
 }
