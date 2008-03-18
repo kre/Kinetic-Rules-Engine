@@ -247,7 +247,7 @@ sub mk_action {
 	$js =~ y/\n\r//d; # remove newlines
 	$js =~ y/ //s;
 	$js =~ s/'/\\'/g; # escape single quotes
-	$js = "setTimeout(\'" . $js . "\', " . ($mods{'delay'} * 1000) . ")";
+	$js = "setTimeout(\'" . $js . "\', " . ($mods{'delay'} * 1000) . ");";
     }
 
 
