@@ -111,7 +111,7 @@ my %modifiable = (
 
 
 sub mk_action {
-    my ($r, $rule, $req_info, $rule_env, $session) = @_;
+    my ($rule, $req_info, $rule_env, $session) = @_;
 
     my $logger = get_logger();
 
@@ -174,8 +174,8 @@ sub mk_action {
 	my $url = $args[$#args];
 	$url =~ s/'([^']*)'/$1/;
 
-	my $parsed_url = APR::URI->parse($r->pool, $url);
-	my $parsed_caller = APR::URI->parse($r->pool, $req_info->{'caller'});
+	my $parsed_url = APR::URI->parse($req_info->{'pool'}, $url);
+	my $parsed_caller = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});
 
 	$logger->debug("[action] URL is ", $parsed_url->hostname, 
 		       " & caller is ", $parsed_caller->hostname);

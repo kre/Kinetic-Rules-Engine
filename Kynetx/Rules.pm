@@ -61,6 +61,7 @@ sub process_rules {
 	site => $path_info =~ m#/(\d+)/.*\.js#,
 	hostname => $r->hostname(),
 	ip => $r->connection->remote_ip(),
+	pool => $r->pool,
 	);
     
     # we're going to process our own params
@@ -126,7 +127,7 @@ sub process_rules {
 
 	    # this is the main event.  The browser has asked for a
 	    # chunk of Javascrip and this is where we deliver... 
-	    $js .= mk_action($r, $rule, \%request_info, $rule_env, $session); 
+	    $js .= mk_action($rule, \%request_info, $rule_env, $session); 
 
 	    $js .= eval_post_expr($cons, $session) if(defined $cons);
 

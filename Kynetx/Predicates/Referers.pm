@@ -124,8 +124,35 @@ my %predicates = (
 	return $search_engines{$domain};
     },
 
+    'referer_domain' => sub {
+	my ($req_info, $rule_env, $args) = @_;
+
+
+	my $domain = get_referer_data($req_info,'domain');
+
+	my $logger = get_logger();
+	$logger->debug("[predicate] referer_domin: looking for ",
+		       $args->[0], " got ", $domain);
+
+	return $domain eq $args->[0];
+    },
+
+    'remote_referer' => sub {
+	my ($req_info, $rule_env, $args) = @_;
+
+	my $domain = get_referer_data($req_info,'domain');
+	return defined($domain);
+    },
 
     );
+
+
+# need predicates already defined for this
+$predicates{'local_referer'} = sub {
+    return ! $predicates{'remote_referer'}(@_)
+
+};
+
 
 
 sub get_predicates {
@@ -152,28 +179,34 @@ sub get_referer_data {
     if(not defined $req_info->{'referer_data'}->{$field}) {
 
 	my $url = $req_info->{'referer'};
-	$url =~ m|(\w+)://([^/:]+)(:\d+)?/([^?]*)(\?.*)?|; 
-	$req_info->{'referer_data'}->{'protocol'} = $1;
-	$req_info->{'referer_data'}->{'domain'} = $2;
-	$req_info->{'referer_data'}->{'path'} = "/" . $4;
-	if ($3 =~ /:(\d+)/) { 
-	    $req_info->{'referer_data'}->{'port'} = $1;
+	if(! defined ($url)) {
+	    # if referer isn't set, then this is a local referer
+	    $req_info->{'referer_data'}->{'local_referer'} = 1;
+	    return undef;
+	}
+
+	my $parsed_url = APR::URI->parse($req_info->{'pool'}, $url);
+
+#	$url =~ m|(\w+)://([^/:]+)(:\d+)?/([^?]*)(\?.*)?|; 
+	$req_info->{'referer_data'}->{'protocol'} = $parsed_url->scheme;
+	$req_info->{'referer_data'}->{'domain'} = $parsed_url->hostname;
+	$req_info->{'referer_data'}->{'path'} = $parsed_url->path;
+
+	if ($parsed_url->port) { 
+	    $req_info->{'referer_data'}->{'port'} = $parsed_url->port;
 	} else { 
 	    $req_info->{'referer_data'}->{'port'} = 80;
 	}
-	if ($5 =~ /\?(.*)/) {
-	    $req_info->{'referer_data'}->{'query'} = $1;
-	} else {
-	    $req_info->{'referer_data'}->{'query'} = '';
-	}
+
+	$req_info->{'referer_data'}->{'query'} = $parsed_url->query;
 
 	my $logger = get_logger();
 
 	if($logger->is_debug()) {
 	    foreach my $k (keys %{ $req_info->{'referer_data'} }) {
 	    $logger->debug("Referer piece ($k): " . 
-			   $req_info->{'referer_data'}->{$k}
-		);
+			   $req_info->{'referer_data'}->{$k}, "\n"
+		) if $req_info->{'referer_data'}->{$k};
 	    }
 	}
 	
