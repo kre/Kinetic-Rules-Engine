@@ -21,7 +21,7 @@ my $conf_file = 'httpd-perl.conf';
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'hajldm:';
+my $opt_string = 'hajldrm:';
 getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'};
 
@@ -33,11 +33,26 @@ my @mcd_hosts = $opt{'m'} ? split(/,/,$opt{'m'}) : [];
 my $init_host = 'init.kobj.net';
 my $log_host = 'logger.kobj.net';
 my $action_host = 'cs.kobj.net';
+my $db_host = 'db.kobj.net';
+my $db_username = 'log';
+my $db_passwd = 'fizzbazz';
 if ($opt{'d'}) { # development
     $init_host = '127.0.0.1';
     $log_host = '127.0.0.1';
     $action_host = '127.0.0.1';
+    $db_host = 'localhost';
+    $db_username = 'root';
+    $db_passwd = 'foobar';
 }
+
+my $svn;
+if ($opt{'r'}) { 
+    $svn = 'svn://127.0.0.1/rules/client/|web|foobar';
+
+} else {
+    $svn = 'http://krl.kobj.net/rules/client/|cs|fizzbazz';
+}
+
 
 die "Must specify at least one option.  See $0 -h for more info."
     unless ($init_gender || $action_gender || $log_gender);
@@ -58,6 +73,15 @@ $conf_template->param(ACTION_HOST => $action_host);
 $conf_template->param(GENDER_ACTION => 1) if $action_gender;
 $conf_template->param(GENDER_LOG => 1) if $log_gender;
 $conf_template->param(GENDER_INIT => 1) if $init_gender;
+
+# database
+$conf_template->param(DB_HOST => $db_host);
+$conf_template->param(DB_USERNAME => $db_username);
+$conf_template->param(DB_PASSWD => $db_passwd);
+
+# rule repository
+$conf_template->param(RULE_REPOSITORY => $svn);
+
 
 if ($opt{'d'}) { # development
     $conf_template->param(RUN_MODE => 'development');
@@ -108,9 +132,32 @@ Options are:
   -l	: Gender is log server
   -j	: Gender is Javascript server
   -d    : use 127.0.0.1 as the host
+  -r    : use local rules repository (not krl.kobj.net)
   -m ML : use memcached, ML is a comma seperated list of host IP numbers
 
 At least one must be given and they may be given in any combination.  
+
+Examples:
+
+For local running all on one machine
+
+   install-httpd-conf.pl -aljdr -m 127.0.0.1
+
+For cs.kobj.net
+
+   install-httpd-conf.pl -a -m 192.168.122.54,192.168.122.55
+
+For logger.kobj.net
+
+   install-httpd-conf.pl -l
+
+For init.kobj.net
+
+   install-httpd-conf.pl -j
+
+
+
+
 
 EOF
 

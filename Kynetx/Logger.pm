@@ -6,11 +6,14 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
+use Kynetx::Session qw(:all);
+
 
 sub handler {
     my $r = shift;
 
     $r->content_type('text/javascript');
+
 
     process_action($r);
 
@@ -25,6 +28,17 @@ sub process_action {
     my $r = shift;
 
     my $logger = get_logger();
+
+    # FIXME: hardcoded database UID and password
+    # Connect to the database.
+    my $db_host = $r->dir_config('db_host');
+    my $db_username = $r->dir_config('db_username');
+    my $db_passwd = $r->dir_config('db_passwd');
+
+    # should be using cached connection from Apache::DBI
+    my $dbh = DBI->connect("DBI:mysql:database=logging;host=$db_host",
+			   $db_username, $db_passwd,
+			   {'RaiseError' => 1});
 
     # get a session hash from the cookie or build a new one
     my $session = process_session($r);
@@ -59,7 +73,18 @@ sub process_action {
 		               $request_info{'sense'}, 
 	);
 
-    # store to db here
+    my $log_insert = "INSERT INTO callback_log VALUES (%d, '%s', '%s', '%s', '%s', '%s',now())";
+    my $log_sql = sprintf($log_insert, 
+	     undef,  # cause the id column to autoincrement
+	     $request_info{'site'}, 
+	     $request_info{'rule'}, 
+	     $request_info{'caller'}, 
+	     $session->{_session_id}, 
+	     $request_info{'sense'}
+	);
+
+    $logger->debug("Using SQL: ", $log_sql);
+    $dbh->do($log_sql);
 
     if($request_info{'url'}){
 	$logger->debug("Redirecting to ", $request_info{'url'});
@@ -68,7 +93,6 @@ sub process_action {
 
 
 }
-
 
 
 

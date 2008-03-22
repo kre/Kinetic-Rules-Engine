@@ -6,6 +6,8 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
+use Kynetx::Memcached qw(:all);
+
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);

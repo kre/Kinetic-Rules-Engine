@@ -18,6 +18,7 @@ use Kynetx::Memcached qw(:all);
 use Kynetx::Session qw(:all);
 use Kynetx::Predicates qw(:all);
 use Kynetx::Actions qw(:all);
+use Kynetx::Log qw(:all);
 
 
 use Exporter;
@@ -131,10 +132,27 @@ sub process_rules {
 
 	    $js .= eval_post_expr($cons, $session) if(defined $cons);
 
+	    # put this in the logging DB
+	    log_rule_fire($r, 
+			  \%request_info, 
+			  $session, 
+			  $rule->{'name'},
+			  $rule->{'action'}->{'name'}
+		);
+
 	} else {
 	    $logger->info("did not fire");
 
 	    $js .= eval_post_expr($alt, $session) if(defined $alt);
+
+	    # put this in the logging DB
+	    log_rule_fire($r, 
+			  \%request_info, 
+			  $session, 
+			  $rule->{'name'},
+			  'not_fired'
+		);
+
 
 
 	}

@@ -28,6 +28,10 @@ PerlPostReadRequestHandler Apache2::xForwardedFor
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
 
+  # database configuration
+  PerlSetVar db_host <TMPL_VAR NAME=DB_HOST>
+  PerlSetVar db_username <TMPL_VAR NAME=DB_USERNAME>
+  PerlSetVar db_passwd <TMPL_VAR NAME=DB_PASSWD>
 
   <TMPL_IF NAME="MEMCACHED">
   PerlSetVar memcached_hosts <TMPL_VAR NAME=MEMCACHED_HOST_FIRST>
@@ -38,7 +42,7 @@ PerlPostReadRequestHandler Apache2::xForwardedFor
 
 
   # URL for svn rule repository, username, password
-  PerlSetVar svn_conn http://krl.kobj.net/rules/client/|cs|fizzbazz
+  PerlSetVar svn_conn <TMPL_VAR NAME=RULE_REPOSITORY>
 
   SetHandler perl-script
   PerlHandler Kynetx
@@ -52,11 +56,14 @@ PerlPostReadRequestHandler Apache2::xForwardedFor
   PerlSetVar log_host <TMPL_VAR NAME=LOG_HOST>
   PerlSetVar action_host <TMPL_VAR NAME=ACTION_HOST>
 
+  # database configuration
+  PerlSetVar db_host <TMPL_VAR NAME=DB_HOST>
+  PerlSetVar db_username <TMPL_VAR NAME=DB_USERNAME>
+  PerlSetVar db_passwd <TMPL_VAR NAME=DB_PASSWD>
+
+
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
-
-  # URL for svn rule repository, username, password
-  PerlSetVar log_db_conn db.kobj.net|log|fizzbazz
 
   SetHandler perl-script
   PerlHandler Kynetx::Logger
