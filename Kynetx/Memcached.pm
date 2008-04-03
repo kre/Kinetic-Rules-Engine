@@ -20,6 +20,7 @@ qw(
 init
 get_memd
 get_remote_data
+get_cached_file
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -76,6 +77,53 @@ sub get_remote_data {
     }
 
     return $content;
+
+}
+
+# FIXME: probably ought to refactor this and previous function to use a common core
+sub get_cached_file {
+    my($filepath,$expire) = @_;
+
+    $expire = 20 * 60 if (! $expire); # twenty minutes
+
+    my $logger = get_logger();
+    my $memd = get_memd();
+
+    my $key = $filepath;
+
+    my $content;
+    if ($memd) {
+        $content = $memd->get($key) ;
+	if ($content) {
+	    $logger->debug("Using cached data for $filepath");
+	    return $content;
+	}
+    }
+
+    $content = read_file_contents($filepath);
+
+    if($memd) {
+	$logger->debug("Caching data for $filepath");
+	$memd->set($key,$content,$expire);
+    }
+
+    return $content;
+
+}
+
+sub read_file_contents {
+
+    my ($filepath) = @_;
+
+    open(FOO, "< $filepath") ;
+# || die "Can't open file $filepath: $!\n";
+
+    # read it all at once
+    local $/ = undef;
+    my $contents = <FOO>;
+
+    close FOO;
+    return $contents;
 
 }
 

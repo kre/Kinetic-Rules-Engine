@@ -6,7 +6,7 @@
 # Timestamp: <TMPL_VAR NAME=GEN_DATE>
 #
 
-
+LoadModule apreq_module /web/modules/mod_apreq2.so
 
 PerlRequire <TMPL_VAR NAME=KOBJ_ROOT>/startup.pl
 
@@ -88,6 +88,25 @@ PerlPostReadRequestHandler Apache2::xForwardedFor
 
   SetHandler perl-script
   PerlHandler Kynetx::KOBJ
+</LocationMatch>
+
+</TMPL_IF>
+
+<TMPL_IF NAME="GENDER_KRL">
+<LocationMatch /manage/>
+  # Eventually this ought to come from the client configuration DB
+
+  # host names
+  PerlSetVar init_host <TMPL_VAR NAME=INIT_HOST>
+  PerlSetVar log_host <TMPL_VAR NAME=LOG_HOST>
+  PerlSetVar action_host <TMPL_VAR NAME=ACTION_HOST>
+  PerlSetVar krl_host <TMPL_VAR NAME=KRL_HOST>
+
+  # mode => development, production, test
+  PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
+
+  SetHandler perl-script
+  PerlHandler Kynetx::RuleManager
 </LocationMatch>
 
 </TMPL_IF>

@@ -36,19 +36,21 @@ $filename = $opt{'f'};
 if($lex_only) {
     dump_lex(getkrl());
 } else {
-    my $tree = parse_ruleset(getkrl());
 
     $Data::Dumper::Indent = 1;
 
-    if ($tree) {
+    my $tree;
+    $tree = parse_ruleset(getkrl());
+
+    if(defined $tree->{'error'}) {
+	warn "Parse error in $filename: \n" . $tree->{'error'};
+    } else {
 	if ($output_json) {
 	    print encode_json($tree), "\n";
 	} else {
 	    print Dumper($tree), "\n";
 	}
-    } else {
-    warn "Parse error.\n";
-    }
+    } 
 }
 
 1;

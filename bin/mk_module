@@ -100,7 +100,7 @@ Creates a module, an associated test file, and puts both in SVN.
 Options are:
 
   -d dir   : put new module in directory dir
-  -f name  : module is named name
+  -f name  : module is named name (do not include .pm extension in name)
 
 EOF
 

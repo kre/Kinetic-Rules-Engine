@@ -15,6 +15,7 @@ use Kynetx::Rules qw(:all);;
 use Kynetx::Util qw(:all);;
 use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
+use Kynetx::RuleManager qw(:all);
 
 
 my $logger;
@@ -79,6 +80,4 @@ sub flush_ruleset_cache {
     print "<h1>Rules flushed for site $site</h1>";
 
 }
-
-
 

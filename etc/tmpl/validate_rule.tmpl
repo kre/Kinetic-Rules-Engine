@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>Validate KRL</title>
+</head>
+<body>
+<h2>Copy and paste your KRL into the box below</h2>
+
+<p>
+The KRL must be in the form of a ruleset, not just a rule.  
+</p>
+
+<form method="post" action="<TMPL_VAR NAME=ACTION_URL>">
+
+<textarea name="rule" rows="20" cols="80">
+<TMPL_VAR NAME=RULE>
+</textarea>
+
+<p>
+<input type="submit" value="Validate!" />
+</p>
+
+
+</form>
+
+<TMPL_IF NAME=JSON>
+<h2>Congratulations! Your ruleset passed</h2>
+
+<p>
+The JSON for the above ruleset is shown here:
+</p>
+
+<pre id="json">
+<TMPL_VAR NAME=JSON>
+</pre>
+</form>
+</TMPL_IF>
+
+<TMPL_IF NAME=ERROR>
+<h2>Parse Error</h2>
+<p id="parse_error">
+<TMPL_VAR NAME=ERROR>
+</p>
+</TMPL_IF>
+
+
+</body>
+</html>

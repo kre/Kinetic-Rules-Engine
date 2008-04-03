@@ -77,6 +77,10 @@ Cache::Memcached
 
 Apache::DBI
 
+ExtUtil::XSBuilder
+
+Error
+
 =head1 DESCRIPTION
 
 This bundle is to install all the non-required modules that
@@ -84,8 +88,10 @@ the Kynetx uses.
 
 Geo::IP is not installed since it needs the C library installed first.  
 
+Apache2::Request is not installed since it needs arguments to it's build
+
 =head1 AUTHOR
 
-Phil Windley E<lt>F<phil@kynetx.com>E<gt>
+Phil Windley E<lt>F<windley@kynetx.com>E<gt>
 
 =cut

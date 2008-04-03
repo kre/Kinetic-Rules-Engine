@@ -53,7 +53,7 @@ sub log_rule_fire {
 			  $dbh->quote($action)
 	);
 
-    $logger->debug("Using SQL: ", $log_sql);
+    $logger->debug("Using SQL: ($request_info->{'title'}) ", $log_sql);
     $dbh->do($log_sql);
 
     # Disconnect from the database.

@@ -7,8 +7,7 @@ use warnings;
 use Log::Log4perl qw(get_logger :levels);
 use Kynetx::Util qw(:all);
 use Kynetx::JavaScript qw(:all);
-use Kynetx::Rules qw(:all);;
-
+use Kynetx::Rules qw(:all);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -38,68 +37,80 @@ my($active,$test,$inactive) = (0,1,2);
 # second arg MUST be cb (a callback function)
 my %actions = (
 
-    alert => 
-      'function(uniq, cb, msg) {alert(msg)}',
+    alert => <<EOF,
+function(uniq, cb, msg) {alert(msg)}
+EOF
+
+#Actions::Alert::get_action(),
 
     redirect => 
       'function(uniq, cb, url) {window.location = url}',
 
-    float =>
-      'function(uniq, cb, pos, top, side, url) {
-        var id_str = \'kobj_\'+uniq;
-        var div = document.createElement(\'div\');
-        div.setAttribute(\'id\', id_str);
-        div.setAttribute(\'style\', \'position: \' + pos + 
-                                    \'; z-index: 9999;  \' +
-                                    top + \'; \' + side + 
-                                    \'; opacity: 0.999999; display: none\');
-        var div2 = document.createElement(\'div\');
-        var newtext = document.createTextNode(\'\');
-        div2.appendChild(newtext);
-        div.appendChild(div2);
-        document.body.appendChild(div);
-        new Ajax.Updater(id_str, url, {
-                         aynchronous: true,
-                         method: \'get\',
-                         onComplete: cb
-                        });
-       }',
-    float2 =>
-      'function(uniq, cb, pos, top, side, text) {
-        var id_str = \'kobj_\'+uniq;
-        var div = document.createElement(\'div\');
-        div.setAttribute(\'id\', id_str);
-        div.setAttribute(\'style\', \'position: \' + pos + 
-                                    \'; z-index: 9999;  \' +
-                                    top + \'; \' + side + 
-                                    \'; opacity: 0.999999; display: none\');
-        var div2 = document.createElement(\'div\');
-        div2.innerHTML = text;
-        div.appendChild(div2);
-        document.body.appendChild(div);
-        cb();
-       }',
-    popup =>
-      'function(uniq, cb, top, left, width, height, url) {      
-        var id_str = \'kobj_\'+uniq;
-        var options = \'toolbar=no,menubar=no,resizable=yes,scrollbars=yes,alwaysRaised=yes,status=no\' +
-                      \'left=\' + left + \', \' +
-                      \'top=\' + top + \', \' +
-                      \'width=\' + width + \', \' +
-                      \'height=\' + height;
-        open(url,id_str,options);
-        cb();
-       }',
-    replace =>
-      'function(uniq, cb, id, url) {
-        new Ajax.Updater(id, url, {
-                         aynchronous: true,
-                         method: \'get\' ,
-                         onComplete: cb
-                         });   
-        new Effect.Appear(id);
-        }'
-    );
+    float => <<EOF,
+function(uniq, cb, pos, top, side, url) {
+   var id_str = 'kobj_'+uniq;
+   var div = document.createElement('div');
+   div.setAttribute('id', id_str);
+   div.setAttribute('style', 'position: ' + pos + 
+                    '; z-index: 9999;  ' +
+                    top + '; ' + side + 
+                    '; opacity: 0.999999; display: none');
+   var div2 = document.createElement('div');
+   var newtext = document.createTextNode('');
+   div2.appendChild(newtext);
+   div.appendChild(div2);
+   document.body.appendChild(div);
+   new Ajax.Updater(id_str, url, {
+                    aynchronous: true,
+                    method: 'get',
+                    onComplete: cb
+                   });
+}
+EOF
+
+
+    float2 => <<EOF,
+function(uniq, cb, pos, top, side, text) {
+   var id_str = 'kobj_'+uniq;
+   var div = document.createElement('div');
+   div.setAttribute('id', id_str);
+   div.setAttribute('style', 'position: ' + pos + 
+                    '; z-index: 9999;  ' +
+                    top + '; ' + side + 
+                    '; opacity: 0.999999; display: none');
+   var div2 = document.createElement('div');
+   div2.innerHTML = text;
+   div.appendChild(div2);
+   document.body.appendChild(div);
+   cb();
+}
+EOF
+
+    popup => <<EOF,
+function(uniq, cb, top, left, width, height, url) {      
+    var id_str = 'kobj_'+uniq;
+    var options = 'toolbar=no,menubar=no,resizable=yes,scrollbars=yes,alwaysRaised=yes,status=no' +
+                 'left=' + left + ', ' +
+                 'top=' + top + ', ' +
+                 'width=' + width + ', ' +
+                 'height=' + height;
+    open(url,id_str,options);
+    cb();
+}
+EOF
+
+    replace => <<EOF,
+function(uniq, cb, id, url) {
+   new Ajax.Updater(id, url, {
+                    aynchronous: true,
+                    method: 'get' ,
+                    onComplete: cb
+                    });   
+   new Effect.Appear(id);
+}
+EOF
+
+);
 
 
 # function names in this hash indicate if the function is modifiable

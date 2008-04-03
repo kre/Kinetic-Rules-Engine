@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [ ! -e $HOME/.rmd ] 
+then mkdir $HOME/.rmd
+fi
+
+find $HOME  \( -name '.rmd' -prune \) -o \
+  \( -name '*~' \
+     -o -name ',*' \
+     -o -name '#*#' \
+     -o -name 'rexec.trc'\
+     -o -name '*.bak'\
+     -o -name '*.backup' -atime +5\
+     -o -name 'core'  -type f\
+  \) \
+  -print -exec mv -f {} $HOME/.rmd \;
+
+find $HOME/.rmd -atime +5 -exec rm -f {} \;
+
+
+

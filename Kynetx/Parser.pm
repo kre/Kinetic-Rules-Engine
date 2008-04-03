@@ -534,15 +534,17 @@ sub parse_ruleset {
 
     my $logger = get_logger();
 
+
     my ($result) = eval {$entire_input->($lexer)};
-    if($@) {
-	$logger->error("Can't parse rules: $@");
+    if ($@) {
+	my $msg = $@;
+	$logger->error("Can't parse rules: $msg");
+	return {'error' => $msg};
     } else {
 	$logger->debug("Parsed rules");
+	return $result->[0];
     }
 
-    # what should bre returned from an error?  An empty rule list?
-    return $result->[0];
 }
 
 
