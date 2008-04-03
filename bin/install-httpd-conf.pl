@@ -150,15 +150,16 @@ For local running all on one machine
 
 For cs.kobj.net
 
-   install-httpd-conf.pl -a -m 192.168.122.54,192.168.122.55
+
+   install-httpd-conf.pl -a -m 192.168.122.151,192.168.122.152
 
 For logger.kobj.net
 
-   install-httpd-conf.pl -l -m 192.168.122.54,192.168.122.55
+   install-httpd-conf.pl -l -m 192.168.122.151,192.168.122.152
 
 For init.kobj.net
 
-   install-httpd-conf.pl -j -m 192.168.122.54,192.168.122.55
+   install-httpd-conf.pl -j -m 192.168.122.151,192.168.122.152
 
 For krl.kobj.net
 
