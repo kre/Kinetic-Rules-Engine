@@ -65,26 +65,34 @@ sub validate_rule {
     $test_template->param(ACTION_URL => $r->uri());
 
     my $rule = $req->param('rule');
+    my $flavor = $req->param('flavor');
+    my ($json,$tree);
     if($rule) {
 
 	$logger->debug("[validate] validating rule");
 
 	$test_template->param(RULE => $rule);
 
-	my $tree = parse_ruleset($rule);
-	
+	$tree = parse_ruleset($rule);
+
 	if(defined $tree->{'error'}) {
 	    warn $tree->{'error'};
 	    $test_template->param(ERROR => $tree->{'error'});
 	} else {
-	    my $json = krlToJson($rule);
+	    $json = krlToJson($rule);
 	    $test_template->param(JSON => $json);
 	} 
 
     } 
-    # print the page
-    $r->content_type('text/html');
-    print $test_template->output;
+    
+    if($flavor eq 'json') {
+	$r->content_type('text/plain');
+	print $json || $tree->{'error'};
+    } else {
+	# print the page
+	$r->content_type('text/html');
+	print $test_template->output;
+    }
 
 }
 
