@@ -77,9 +77,7 @@ Cache::Memcached
 
 Apache::DBI
 
-ExtUtil::XSBuilder
-
-Error
+ExtUtils::XSBuilder
 
 =head1 DESCRIPTION
 

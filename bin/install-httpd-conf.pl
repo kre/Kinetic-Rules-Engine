@@ -35,9 +35,9 @@ my $init_host = 'init.kobj.net';
 my $log_host = 'logger.kobj.net';
 my $action_host = 'cs.kobj.net';
 my $krl_host = 'krl.kobj.net';
-my $db_host = 'db.kobj.net';
-my $db_username = 'log';
-my $db_passwd = 'fizzbazz';
+my $db_host = 'db2.kobj.net';
+my $db_username = 'logger';
+my $db_passwd = '$kynetx123$';
 if ($opt{'d'}) { # development
     $init_host = '127.0.0.1';
     $log_host = '127.0.0.1';

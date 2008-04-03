@@ -195,8 +195,7 @@ RewriteRule   ^(.*)$ http://www.kynetx.com/kobj/index.shtml
 # container, that host's errors will be logged there and not here.
 #
 #ErrorLog logs/error_log
-ErrorLog "|/web/sbin/cronolog --symlink=/web/logs/error_log /web/logs/%Y/%m/%d/e
-rrors.log"
+ErrorLog "|/web/sbin/cronolog --symlink=/web/logs/error_log /web/logs/%Y/%m/%d/errors.log"
 
 #
 # LogLevel: Control the number of messages logged to the error_log.
