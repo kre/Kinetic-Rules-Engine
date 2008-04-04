@@ -35,6 +35,7 @@ my($active,$test,$inactive) = (0,1,2);
 # mk_action will create a JS expression that applies it to appropriate arguments
 # first arg MUST be uniq (a number unique to this rule action event)
 # second arg MUST be cb (a callback function)
+# note that $ is evaluated as a var indicator by perl in inlines.  Quote it.  
 my %actions = (
 
     alert => <<EOF,
@@ -110,6 +111,14 @@ function(uniq, cb, id, url) {
 }
 EOF
 
+    replace2 => <<EOF,
+function(uniq, cb, id, text) {
+    \$(id).replace(text);
+    new Effect.Appear(id);
+    cb();
+}
+EOF
+
 );
 
 
@@ -180,7 +189,7 @@ sub mk_action {
 		    $arg_str);
 
     # check for which float to do (avoiding XXS)
-    if($action_name eq 'float') {
+    if($action_name eq 'float' || $action_name eq 'replace') {
 	my @args = split(/,/, $arg_str);
 	my $url = $args[$#args];
 	$url =~ s/'([^']*)'/$1/;
@@ -194,14 +203,17 @@ sub mk_action {
 	# not relative and not equal to caller
 	if ($parsed_url->hostname && 
 	    ($parsed_url->hostname ne $parsed_caller->hostname ||
-	     $parsed_url->post ne $parsed_caller->port ||
+	     $parsed_url->port ne $parsed_caller->port ||
 	     $parsed_url->scheme ne $parsed_caller->scheme)
 	    ) {
 
-	    $logger->debug("[action] float2 with ", $url);
-	    $action_name = 'float2';
+	    $action_name = $action_name . '2';
+
+	    $logger->debug("[action] $action_name with ", $url);
+	    # FIXME: should be caching this...
 	    my $content = LWP::Simple::get($url);
-	    $content =~ y/\n\r//d; # remove newlines
+	    $content =~ y/\n\r/  /; # remove newlines
+	    $content =~ s/'/\\'/g; # quote quotes
 	    $args[$#args] = "'". $content . "'";
 	    $arg_str = join(",",@args);
 	}
