@@ -10,7 +10,11 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
-our %EXPORT_TAGS = (all => [ qw(pp) ]);
+our %EXPORT_TAGS = (all => [ 
+qw(
+pp
+pp_rule_body
+) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 use Log::Log4perl qw(get_logger :levels);
@@ -37,29 +41,38 @@ sub pp_rules {
     foreach my $r ( @{$rules}) {
 	$o .= $beg . "rule " . $r->{'name'} . " is " . $r->{'state'} . " {\n";
 
-	$o .= pp_select($r->{'pagetype'},$indent+$g_indent);
-
-	$o .= pp_pre($r->{'pre'},$indent+$g_indent);
-
-	if(defined $r->{'cond'}) {
-	    $o.= pp_cond($r,$indent+$g_indent);
-	} else { # just primrule
-	    $o.= pp_primrule($r->{'action'},$indent+$g_indent);
-	}
-
-	if(defined $r->{'callbacks'}) {
-	    $o .= pp_callbacks($r->{'callbacks'},$indent+$g_indent);
-	}
-
-
-	if(defined $r->{'post'}) {
-	    $o .= pp_post($r->{'post'},$indent+$g_indent);
-	}
+	$o .= pp_rule_body($r, $indent);
 
 	$o .= $beg . "}\n";
     }
 
     return $o;
+}
+
+sub pp_rule_body {
+    my ($r, $indent) = @_;
+
+    my $o .= pp_select($r->{'pagetype'},$indent+$g_indent);
+
+    $o .= pp_pre($r->{'pre'},$indent+$g_indent);
+
+    if(defined $r->{'cond'}) {
+	$o.= pp_cond($r,$indent+$g_indent);
+    } else { # just primrule
+	$o.= pp_primrule($r->{'action'},$indent+$g_indent);
+    }
+
+    if(defined $r->{'callbacks'}) {
+	$o .= pp_callbacks($r->{'callbacks'},$indent+$g_indent);
+    }
+
+
+    if(defined $r->{'post'}) {
+	$o .= pp_post($r->{'post'},$indent+$g_indent);
+    }
+
+    return $o;
+
 }
 
 sub pp_select {

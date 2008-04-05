@@ -38,6 +38,8 @@ sub handler {
     # at some point we need a better dispatch function
     if($r->path_info =~ m!/validate/! ) {
 	validate_rule($r);
+    } elsif($r->path_info =~ m!/jsontokrl/! ) {
+	pp_json($r);
     }
 
     return Apache2::Const::OK; 
@@ -96,3 +98,49 @@ sub validate_rule {
 
 }
 
+sub pp_json {
+    my ($r) = @_;
+
+    my $logger = get_logger();
+
+
+    my ($site) = $r->path_info =~ m#/(\d+)#;
+
+    Log::Log4perl::MDC->put('site', $site);
+    Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
+
+    my $req = Apache2::Request->new($r);
+
+    my $template = DEFAULT_TEMPLATE_DIR . "/jsonToKrl.tmpl";
+    my $test_template = HTML::Template->new(filename => $template);
+
+    # fill in the parameters
+    $test_template->param(ACTION_URL => $r->uri());
+
+    my $json = $req->param('json');
+    my $flavor = $req->param('flavor');
+    my ($krl);
+    if($json) {
+
+	$logger->debug("[jsontokrl] converting json [" . $flavor . "]");
+
+	$test_template->param(JSON => $json);
+
+
+	if($flavor eq 'bodyonly') {
+	    $krl = jsonToRuleBody($json);
+	} else {
+	    $krl = jsonToKrl($json);
+	}
+	$test_template->param(KRL => $krl);
+
+
+    } 
+
+    # print the page
+    $r->content_type('text/html');
+    print $test_template->output;
+    
+
+
+}

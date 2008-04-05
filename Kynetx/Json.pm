@@ -21,6 +21,7 @@ our %EXPORT_TAGS = (all => [
 qw(
 krlToJson
 jsonToKrl
+jsonToRuleBody
 astToJson
 jsonToAst
 ) ]);
@@ -43,6 +44,16 @@ sub jsonToKrl {
 
 
 }
+
+sub jsonToRuleBody {
+    my($json) = @_;
+
+    my $tree = decode_json($json);
+    return pp_rule_body($tree,0);
+
+
+}
+
 
 # a renaming of encode_json for Abstract Syntax Trees
 sub astToJson {
