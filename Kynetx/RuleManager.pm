@@ -118,16 +118,16 @@ sub pp_json {
     $test_template->param(ACTION_URL => $r->uri());
 
     my $json = $req->param('json');
-    my $flavor = $req->param('flavor');
+    my $type = $req->param('type');
     my ($krl);
     if($json) {
 
-	$logger->debug("[jsontokrl] converting json [" . $flavor . "]");
+	$logger->debug("[jsontokrl] converting json [" . $type . "]");
 
 	$test_template->param(JSON => $json);
 
 
-	if($flavor eq 'bodyonly') {
+	if($type eq 'bodyonly') {
 	    $krl = jsonToRuleBody($json);
 	} else {
 	    $krl = jsonToKrl($json);

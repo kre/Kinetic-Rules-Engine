@@ -52,7 +52,11 @@ sub pp_rules {
 sub pp_rule_body {
     my ($r, $indent) = @_;
 
-    my $o .= pp_select($r->{'pagetype'},$indent+$g_indent);
+    my $o;
+
+    if(defined $r->{'pagetype'}) {
+	$o .= pp_select($r->{'pagetype'},$indent+$g_indent);
+    }
 
     $o .= pp_pre($r->{'pre'},$indent+$g_indent);
 
