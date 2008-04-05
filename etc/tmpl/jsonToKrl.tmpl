@@ -1,0 +1,45 @@
+<html>
+<head>
+<title>Json to KRL</title>
+</head>
+<body>
+<h2>Copy and paste your JSON into the box below</h2>
+
+<p>
+The JSON must be a representation of a KRL ruleset
+</p>
+
+<form method="post" action="<TMPL_VAR NAME=ACTION_URL>">
+
+<textarea name="json" rows="5" cols="80">
+<TMPL_VAR NAME=JSON>
+</textarea>
+
+<p>
+Flavor:
+<select name="flavor">
+<option value="ruleset" selected="selected">Full Ruleset</option>
+<option value="bodyonly">Rule Body</option>
+</select>
+<input type="submit" value="Convert!" />
+</p>
+
+
+</form>
+
+<TMPL_IF NAME=KRL>
+<h2>KRL</h2>
+
+<p>
+The KRL for the above JSON is:
+</p>
+
+<pre id="krl">
+<TMPL_VAR NAME=KRL>
+</pre>
+</form>
+</TMPL_IF>
+
+
+</body>
+</html>
