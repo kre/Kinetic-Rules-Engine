@@ -31,7 +31,9 @@ my @keywords = (
     'if',
     'then',
     'float',
+    'float_html',
     'replace',
+    'replace_html',
     'redirect',
     'alert',
     'popup',
@@ -50,13 +52,14 @@ my @keywords = (
     'within',
     'days',
     'log',
-    'click'
+    'click',
     );
 
 # only on word boundaries
 my $kw = join '|', map {"\\b".$_."\\b"} @keywords;
 
 my @input_tokens = (
+     [ 'HTML', qr/<<.*?>>/s, \&html  ],
      [ 'STRING', qr/"[^"]*"/, \&string],
      [ 'COMMENT', qr%//.*%, sub { () } ],
      [ 'KEYWORD', qr/(?i:$kw)/ ],
@@ -87,9 +90,18 @@ sub string {
     return [$label, $value ];
 }  
 
+sub html {
+    my ($label, $value) = @_;
+    $value =~ s/^<<\s*//;
+    $value =~ s/>>\s*$//;
+    $value =~ s/[\n\r]//sg;
+    return [$label, $value ];
+}  
+
 # now to parse it
 
-my ($ruleset, $rule, $select, $vars, $pre_block, $decls, $decl, $args,
+my ($ruleset, $rule, $select, $vars, $pre_block, 
+    $decls, $decl, $args,
     $cond, $preds, $pred, $primrule, $modifiers, $modifier, 
     $action, $expr, $term, $factor, $entire_input,
     $simple_pred, $counter_pred, $post_block, $clear, $iterator,
@@ -152,7 +164,7 @@ $ruleset =
     );
 
 # <rule> ::= rule <var> is <var> LBRACE 
-#            <select> <pre_block> { <cond> | <primrule> } 
+#            <select> <pre_block> {html_block}* { <cond> | <primrule> } 
 #            { <succeed> }[0/1]
 #            { <fail> }[0/1]
 #            { <post_block> }[0/1]
@@ -170,28 +182,29 @@ $rule = T(concatenate(absorb(lookfor(['KEYWORD', 'rule'])),
 		       optionalx($Callbacks),
 		       optionalx($Post_block),
 		       lookfor('RBRACE')),
-	  sub { my $x =  { 'name' => $_[0],
-			   'state' => $_[1],
-			   'pagetype' => $_[2],
-			   'pre' => $_[3],
-		};
-		foreach my $k (keys %{ $_[4] } ) {
-		    $x->{$k} = $_[4]->{$k};
-		}
-
-		# optionals
-	        if(ref $_[5] eq 'HASH') {
-			$x->{'callbacks'} = $_[5];
-		}
+	  sub { 
+	      my($name,$state,$pagetype,$pre,$prim,$callback,$post) = @_; 
+	      my $x =  { 'name' => $name,
+			 'state' => $state,
+			 'pagetype' => $pagetype,
+			 'pre' => $pre->[0],
+	      };
 
 		
-	        if(ref $_[6] eq 'HASH') {
-		    $x->{'post'} = $_[6];
-		}
+	      foreach my $k (keys %{ $prim } ) {
+		  $x->{$k} = $prim->{$k};
+	      }
+	      # optionals
+	      if(ref $callback eq 'HASH') {
+		  $x->{'callbacks'} = $callback;
+	      }
+	      if(ref $post eq 'HASH') {
+		  $x->{'post'} = $post;
+	      }
 
-		return $x;
+	      return $x;
 
-	      });
+	  });
 		       
 
 # <select> ::= select using <string> setting LPAREN <vars> RPAREN ;
@@ -215,14 +228,15 @@ $vars = star(list_values_of( lookfor('VAR'),
 # <pre_block> ::= pre LBRACE { <decl> }* RRBRACE
 $pre_block = T(concatenate(lookfor(['KEYWORD','pre']),
 			   lookfor('LBRACE'),
-			   star($Decl),
+			   star(list_values_of($Decl, match('SEMICOLON'))),
+			   optional(absorb(match('SEMICOLON'))),
 			   lookfor('RBRACE')),
 	       sub {  $_[2] });
 
 
-
 # <decl> ::= <var> = <var> : <var> LPAREN <args> RPAREN SEMICOLON
 #          | <var> = counter DOT <var> SEMICOLON
+#          | <var> = HTML
 $decl = alternate(
          T(concatenate(lookfor('VAR'),
 		      lookfor('EQUALS'),
@@ -231,8 +245,7 @@ $decl = alternate(
 		      lookfor('VAR'),
 		      lookfor('LPAREN'),
 		      $Args,
-		      lookfor('RPAREN'),
-		      lookfor('SEMICOLON')),
+		      lookfor('RPAREN')),
 	  sub { {'lhs' => $_[0],
 		 'type' => 'data_source',
 	         'source' => $_[2],
@@ -240,14 +253,23 @@ $decl = alternate(
 		 'args' => defined $_[6][0] ? $_[6][0] : [] }
 	      }),
           T(concatenate(lookfor('VAR'),
-		      lookfor('EQUALS'),
+		      absorb(lookfor('EQUALS')),
 		      lookfor('KEYWORD'),
-		      lookfor('DOT'),
-		      lookfor('VAR'),
-		      lookfor('SEMICOLON')),
-	    sub { {'lhs' => $_[0],
-		   'type' => $_[2],
-		   'name' => $_[4] } }));
+		      absorb(lookfor('DOT')),
+		      lookfor('VAR')),
+	    sub {my ($lhs, $type, $name) = @_;
+		 {'lhs' => $lhs,
+		  'type' => $type,
+		  'name' => $name } }),
+          T(concatenate(lookfor('VAR'),
+		      absorb(lookfor('EQUALS')),
+		      lookfor('HTML')),
+	    sub {
+		my ($lhs, $value) = @_;
+		{'type' => 'here_doc',
+		 'lhs' => $lhs,
+		 'value' => $value } })
+    );
 
 
 # <args> ::= <expr> 
@@ -356,10 +378,13 @@ $modifier = T(concatenate(lookfor('VAR'),
 #            | alert
 #            | redirect
 $action = alternate(lookfor(['KEYWORD','float']),
+		    lookfor(['KEYWORD','float_html']),
 		    lookfor(['KEYWORD','replace']),
+		    lookfor(['KEYWORD','replace_html']),
 		    lookfor(['KEYWORD','popup']),
 		    lookfor(['KEYWORD','alert']),
-		    lookfor(['KEYWORD','redirect']));
+		    lookfor(['KEYWORD','redirect']),
+    );
 		    
 
 # <callbacks> ::= callbacks LBRACE { <succeed> }[0/1] { <fail> }[0/1] RBRACE

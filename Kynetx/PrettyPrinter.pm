@@ -104,6 +104,7 @@ sub pp_pre {
     $o .= "pre {\n";
     foreach my $d (@{$node}) {
 	$o .= pp_decl($d,$indent+$g_indent);
+	$o .= ";\n"
     }
     $o .= $beg . "}\n";
   
@@ -117,13 +118,18 @@ sub pp_decl {
 
     if($node->{'type'} eq 'counter') {
 	$o .= $node->{'lhs'} . " = " . $node->{'type'} . "." .  
-  	      $node->{'name'} . ";\n";
-    } else { # datasource
+	    $node->{'name'} ;
+    } elsif($node->{'type'} eq 'data_source') { # datasource
 
 	$o .= $node->{'lhs'} . " = ";
 	$o .= $node->{'source'} . ":" . $node->{'function'} . "(";
 	$o .= join ", ", pp_rands($node->{'args'});
-	$o .= ");\n";
+	$o .= ")";
+    } elsif($node->{'type'} eq 'here_doc') { 
+
+	$o .= $node->{'lhs'} . " = << \n";
+	$o .= $node->{'value'};
+	$o .= "\n >>";
     }
   
     return $o;

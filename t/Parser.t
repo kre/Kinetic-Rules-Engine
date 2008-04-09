@@ -19,7 +19,8 @@ Log::Log4perl->easy_init($INFO);
 foreach my $f (@krl_files) {
     my ($fl,$krl_text) = getkrl($f);
     
-    ok(parse_ruleset($krl_text), "$f: $fl")
+    my $result = parse_ruleset($krl_text);
+    ok(! defined ($result->{'error'}), "$f: $fl")
 }
 
 

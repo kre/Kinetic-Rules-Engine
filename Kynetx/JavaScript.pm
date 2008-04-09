@@ -22,6 +22,7 @@ gen_js_pre
 gen_js_callbacks
 gen_js_afterload
 gen_js_mk_cb_func
+get_js_html
 mk_js_str
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
@@ -61,15 +62,20 @@ sub gen_js_expr {
 sub gen_js_prim {
     my $prim = shift;
 
-    join(' ' . $prim->{'op'} . ' ', gen_js_rands($prim->{'args'}));
+    return join(' ' . $prim->{'op'} . ' ', @{ gen_js_rands($prim->{'args'}) });
 
     
 }
 
 sub gen_js_rands {
-    my $rands = shift;
+    my ($rands) = @_;
 
-    map {gen_js_expr($_)} @{ $rands };
+    my @rands = map {gen_js_expr($_)} @{ $rands } ;
+
+#    my $logger = get_logger();
+#    $logger->debug("Args: ", join(", ", @rands));
+
+    return \@rands;
 
 }
 
@@ -79,7 +85,10 @@ sub gen_js_rands {
 sub gen_js_pre {
     my ($req_info, $rule_env, $session, $pre) = @_;
 
-    join "", map {gen_js_decl($req_info, $rule_env, $session, $_)} @{ $pre };
+#    my $logger = get_logger();
+#    $logger->debug("[pre] Got ", $#{ $pre }, " items.");
+    
+    return join "", map {gen_js_decl($req_info, $rule_env, $session, $_)} @{ $pre };
 }
 
 sub gen_js_decl {
@@ -89,6 +98,7 @@ sub gen_js_decl {
 
     
     my $logger = get_logger();
+
     $logger->debug(
 	"[decl] Type: " . $decl->{'type'}
 	);
@@ -102,9 +112,9 @@ sub gen_js_decl {
 
 	if($source eq 'weather') {
 	    $val = Kynetx::Predicates::Weather::get_weather($req_info,$function);
-	} elsif ($source eq 'geoip') {
+	} elsif ($source eq 'geoip' || $source eq 'location') {
 	    $val = Kynetx::Predicates::Location::get_geoip($req_info,$function);
-	}elsif ($source eq 'stocks') {
+	} elsif ($source eq 'stocks') {
 	    my @arg = gen_js_rands($decl->{'args'});
 	    $arg[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
 	    $val = Kynetx::Predicates::Markets::get_stocks($req_info,$arg[0],$function);
@@ -115,6 +125,14 @@ sub gen_js_decl {
 	$logger->debug("Counter name: " . $decl->{'name'});
 
 	$val = $session->{$decl->{'name'}};
+
+    } elsif ($decl->{'type'} eq 'here_doc') {
+
+	$logger->debug("Here doc for ", $decl->{'lhs'} );
+
+	$val = $decl->{'value'};
+	$val =~ s/'/\\'/g;  #' - for syntax highlighting
+	$val =~ s/#{([^}]*)}/'+$1+'/g;
     }
 
     return 'var ' . $decl->{'lhs'} . ' = \'' . $val . "\';\n"
@@ -125,7 +143,7 @@ sub gen_js_decl {
 sub gen_js_callbacks {
     my ($callbacks,$type,$rule_name) = @_;
 
-    join("", map {gen_js_callback($_,$type,$rule_name)} @{ $callbacks });
+    return join("", map {gen_js_callback($_,$type,$rule_name)} @{ $callbacks });
 
 }
 

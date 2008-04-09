@@ -18,7 +18,8 @@ our @ISA         = qw(Exporter);
 # put exported names inside the "qw"
 our %EXPORT_TAGS = (all => [ 
 qw(
-mk_action
+build_js_load
+choose_action
 eval_post_expr
 get_precondition_test
 get_precondition_vars
@@ -47,7 +48,7 @@ EOF
     redirect => 
       'function(uniq, cb, url) {window.location = url}',
 
-    float => <<EOF,
+    float_url => <<EOF,
 function(uniq, cb, pos, top, side, url) {
    var id_str = 'kobj_'+uniq;
    var div = document.createElement('div');
@@ -70,7 +71,7 @@ function(uniq, cb, pos, top, side, url) {
 EOF
 
 
-    float2 => <<EOF,
+    float_html => <<EOF,
 function(uniq, cb, pos, top, side, text) {
    var id_str = 'kobj_'+uniq;
    var div = document.createElement('div');
@@ -100,7 +101,7 @@ function(uniq, cb, top, left, width, height, url) {
 }
 EOF
 
-    replace => <<EOF,
+    replace_url => <<EOF,
 function(uniq, cb, id, url) {
    new Ajax.Updater(id, url, {
                     aynchronous: true,
@@ -111,7 +112,7 @@ function(uniq, cb, id, url) {
 }
 EOF
 
-    replace2 => <<EOF,
+    replace_html => <<EOF,
 function(uniq, cb, id, text) {
     \$(id).replace(text);
     new Effect.Appear(id);
@@ -124,13 +125,13 @@ EOF
 
 # function names in this hash indicate if the function is modifiable
 my %modifiable = (
-    'float' => 1,
-    'float2' => 1
+    'float_url' => 1,
+    'float_html' => 1
     );
 
 
 
-sub mk_action {
+sub build_js_load {
     my ($rule, $req_info, $rule_env, $session) = @_;
 
     my $logger = get_logger();
@@ -139,16 +140,11 @@ sub mk_action {
     my $action_name = $rule->{'action'}->{'name'};
 
 
-    # create comma separated list of arguments 
-    my $arg_str = 
-       join(',', 
-	     gen_js_rands($rule->{'action'}->{'args'})) || '';
+    my $args = gen_js_rands( $rule->{'action'}->{'args'} );
 
 
     # do we need to pass this in anymore?
     my $uniq = int(rand 999999999);
-
-
     my $id_str = 'kobj_'.$uniq; 
 
 
@@ -164,7 +160,6 @@ sub mk_action {
 
 
     $js .= gen_js_pre($req_info, $rule_env, $session, $rule->{'pre'});
-
 
     # callbacks
     my $cb = '';
@@ -182,43 +177,18 @@ sub mk_action {
     my $cb_func_name = 'callBacks'.$uniq;
     $js .= gen_js_mk_cb_func($cb_func_name,$cb);
 
-    # add to arg str
-    $arg_str = join(',',
-		    mk_js_str($uniq),
-		    $cb_func_name,
-		    $arg_str);
 
-    # check for which float to do (avoiding XXS)
-    if($action_name eq 'float' || $action_name eq 'replace') {
-	my @args = split(/,/, $arg_str);
-	my $url = $args[$#args];
-	$url =~ s/'([^']*)'/$1/;
 
-	my $parsed_url = APR::URI->parse($req_info->{'pool'}, $url);
-	my $parsed_caller = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});
+    # process overloaded functions and arg reconstruction
+    ($action_name, $args) = choose_action($req_info,$action_name,$args);
 
-	$logger->debug("[action] URL is ", $parsed_url->hostname, 
-		       " & caller is ", $parsed_caller->hostname);
+    # add to front of arg str
+    unshift @{ $args }, $cb_func_name;
+    unshift @{ $args }, mk_js_str($uniq);
 
-	# not relative and not equal to caller
-	if ($parsed_url->hostname && 
-	    ($parsed_url->hostname ne $parsed_caller->hostname ||
-	     $parsed_url->port ne $parsed_caller->port ||
-	     $parsed_url->scheme ne $parsed_caller->scheme)
-	    ) {
+    # create comma separated list of arguments 
+    my $arg_str = join(',', @{ $args }) || '';
 
-	    $action_name = $action_name . '2';
-
-	    $logger->debug("[action] $action_name with ", $url);
-	    # FIXME: should be caching this...
-	    my $content = LWP::Simple::get($url);
-	    $content =~ y/\n\r/  /; # remove newlines
-	    $content =~ s/'/\\'/g; # quote quotes
-	    $args[$#args] = "'". $content . "'";
-	    $arg_str = join(",",@args);
-	}
-
-    }
 
 
     $logger->debug("[action] ", $action_name, 
@@ -273,9 +243,59 @@ sub mk_action {
 	$js = "setTimeout(\'" . $js . "\', " . ($mods{'delay'} * 1000) . ");";
     }
 
-
-
     return $js;
+}
+
+
+# some actions are overloaded depending on the args.  This function chooses 
+# the right JS function and adjusts the arg string.
+sub choose_action {
+    my($req_info,$action_name,$args) = @_;
+    my $logger = get_logger();
+
+    my $action_suffix = "_url";
+
+    if($action_name eq 'float' || $action_name eq 'replace') {
+
+	my $last_arg = pop @$args;
+	$logger->debug("[action] last arg is ", $last_arg);
+    
+	my $url = $last_arg;
+	$url =~ s/'([^']*)'/$1/;
+
+	$logger->debug("URL: ", $url);
+
+	my $parsed_url = APR::URI->parse($req_info->{'pool'}, $url);
+	my $parsed_caller = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});
+
+	# URL not relative and not equal to caller
+	if ($parsed_url->hostname && 
+	    ($parsed_url->hostname ne $parsed_caller->hostname ||
+	     $parsed_url->port ne $parsed_caller->port ||
+	     $parsed_url->scheme ne $parsed_caller->scheme)
+	    ) {
+
+	    $logger->debug("[action] URL is ", $parsed_url->hostname, 
+			   " & caller is ", $parsed_caller->hostname);
+
+	    $action_suffix = "_html";
+
+
+	    # FIXME: should be caching this...
+	    my $content = LWP::Simple::get($url);
+	    $content =~ y/\n\r/  /; # remove newlines
+	    $content =~ s/'/\\'/g; # quote quotes
+	    $last_arg =  "'". $content . "'";
+	    
+	} 
+
+	push @{ $args }, $last_arg;
+    	$action_name = $action_name . $action_suffix;
+    }
+
+    $logger->debug("[action] $action_name with ", join(", ", @{$args}));
+
+    return ($action_name, $args);
 }
 
 

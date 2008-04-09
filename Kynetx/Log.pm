@@ -30,7 +30,7 @@ sub log_rule_fire {
     my $db_username = $r->dir_config('db_username');
     my $db_passwd = $r->dir_config('db_passwd');
 
-    $logger->debug("Attaching to DB at $db_host with user $db_username and $db_passwd");
+#    $logger->debug("Attaching to DB at $db_host with user $db_username and $db_passwd");
 
     # should be using cached connection from Apache::DBI
     my $dbh = DBI->connect("DBI:mysql:database=logging;host=$db_host",
