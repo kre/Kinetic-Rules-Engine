@@ -214,8 +214,11 @@ sub get_weather {
 
 	my $rss = new XML::XPath->new(xml => $content);
 
+
 	my $curr_cond = 
 	    $rss ->find('/rss/channel/item/yweather:condition')->get_node(1);
+
+
 
 	return unless $curr_cond; # fails
 
@@ -228,6 +231,7 @@ sub get_weather {
 	$req_info->{'weather'}->{'timezone'} = 
 	    $curr_cond->find('@date'); 
 	$req_info->{'weather'}->{'timezone'} =~ s/.*(\w\w\w)$/$1/;
+
 
 
 	my @forecast_cond = 
@@ -247,11 +251,19 @@ sub get_weather {
 	    $rss->find('/rss/channel/yweather:astronomy')->get_node(1);
 
 	$req_info->{'weather'}->{'sunrise'} = 
-	    $$astronomy->find('@sunrise'); 
+	    $astronomy->find('@sunrise'); 
 	$req_info->{'weather'}->{'sunset'} = 
 	    $astronomy->find('@sunset'); 
 
 
+	my $location = 
+	    $rss ->find('/rss/channel/yweather:location')->get_node(1);
+	$req_info->{'weather'}->{'city'} = 
+	    $location->find('@city'); 
+	$req_info->{'weather'}->{'region'} = 
+	    $location->find('@region'); 
+	$req_info->{'weather'}->{'country'} = 
+	    $location->find('@country'); 
 
 
 

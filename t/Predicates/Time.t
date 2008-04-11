@@ -5,7 +5,7 @@ use lib qw(/web/lib/perl);
 use strict;
 
 use Test::More;
-plan tests => 18;
+plan tests => 19;
 use Test::LongString;
 
 # most Kyentx modules require this
@@ -18,6 +18,7 @@ use XML::XPath;
 use DateTime;
 
 use Kynetx::Test qw/:all/;
+use Kynetx::JavaScript qw/:all/;
 use Kynetx::Predicates::Time qw/:all/;
 
 my $NYU_req_info;
@@ -123,6 +124,37 @@ ok(&{$preds->{'date_between'}}($BYU_req_info, \%rule_env, \@datearg),
 ok(&{$preds->{'date_start'}}($BYU_req_info, \%rule_env, \@datearg),
    "Today after yesterday.");
 
+
+my @jsargs = (
+            {
+              'num' => '1'
+            },
+            {
+              'num' => '1'
+            },
+            {
+              'num' => '1'
+            },
+            {
+              'num' => '1'
+            },
+            {
+              'num' => '1'
+            },
+            {
+              'num' => '1'
+            },
+            {
+              'num' => '1'
+            }
+    );
+
+
+@datearg = Kynetx::JavaScript::gen_js_rands(\@jsargs);
+
+
+ok(&{$preds->{'today_is'}}($BYU_req_info, \%rule_env, \@everyday),
+   "Everyday is a day of the week");
 
 
 1;

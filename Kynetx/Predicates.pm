@@ -83,17 +83,17 @@ sub eval_predicates {
 	    my $pred = $cond->{'predicate'};
 	    my $predf = $predicates{$pred};
 
-	    my @args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+	    my $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 
 
 	    $v = &$predf($request_info, 
 			 $rule_env, 
-			 \@args
+			 $args
 		);
 
 	    $logger->debug('[predicate] ',
 			   "$pred executing with args (" , 
-			   join(', ', @args ), 
+			   join(', ', @{ $args } ), 
 			   ')',
 		           ' -> ',
 		           $v);
