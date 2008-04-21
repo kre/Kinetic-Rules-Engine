@@ -309,8 +309,8 @@ sub local_datetime_between {
 	$logger->debug( 
 	    "Time for cust: " . $now->ymd . " " .$now->hms . 
 	    " (" . $now->time_zone->name . ") " . 
-	    "After start time: " . $now->ymd . " " . $start_time->hms . " " .
-	    "Before end time: " . $now->ymd . " " . $end_time->hms . " " 
+	    "After start time: " . $start_time->ymd . " " . $start_time->hms . " " .
+	    "Before end time: " . $end_time->ymd . " " . $end_time->hms . " " 
 	    );
 	
 
@@ -350,7 +350,8 @@ sub today_is {
     my $logger = get_logger();
 
     my $now = get_local_time($req_info);
-    my $dow = $now->day_of_week;
+    # this returns 1-7; we substract 1 to make it zero based
+    my $dow = ($now->day_of_week) -1;
 
     $logger->debug("Today is ", $dow);
     
