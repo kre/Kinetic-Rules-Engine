@@ -110,3 +110,13 @@ PerlPostReadRequestHandler Apache2::xForwardedFor
 </LocationMatch>
 
 </TMPL_IF>
+
+Alias /widgets/ "/web/widgets/"
+<Location /widgets>
+      SetHandler perl-script
+      PerlResponseHandler ModPerl::Registry
+      PerlOptions +ParseHeaders
+      Options +ExecCGI
+      Order allow,deny
+      Allow from all 
+</Location>

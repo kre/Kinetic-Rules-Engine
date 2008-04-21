@@ -136,6 +136,15 @@ KOBJ.obs = function(type, name, sense, rule) {
     }
 }
 
+
+KOBJ.fragment = function(base_url) {
+    e=document.createElement("script");
+    e.src=base_url;
+    body=document.getElementsByTagName("body")[0];
+    body.appendChild(e);
+}
+
+
 KOBJ.d = (new Date).getTime();
 KOBJ.proto = \'$proto\'; 
 KOBJ.host_with_port = \'$host\'; 
