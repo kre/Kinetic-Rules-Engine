@@ -90,11 +90,12 @@ sub string {
     return [$label, $value ];
 }  
 
+# FIXME: should we be removing newlines or quoting them?  
 sub html {
     my ($label, $value) = @_;
     $value =~ s/^<<\s*//;
     $value =~ s/>>\s*$//;
-    $value =~ s/[\n\r]//sg;
+    $value =~ s/[\n\r]/  /sg;
     return [$label, $value ];
 }  
 

@@ -144,6 +144,14 @@ KOBJ.fragment = function(base_url) {
     body.appendChild(e);
 }
 
+KOBJ.update_elements  = function (params) {
+    var params = \$H(params);
+    
+    params.each(function(pair) {
+	\$("kobj_"+pair.key).update(pair.value);
+    });
+}
+
 
 KOBJ.d = (new Date).getTime();
 KOBJ.proto = \'$proto\'; 
