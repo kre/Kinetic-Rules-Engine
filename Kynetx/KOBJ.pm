@@ -165,7 +165,7 @@ KOBJ.logger_url = KOBJ.proto+KOBJ.loghost_with_port+"/log/" + KOBJ.site_id;
 r=document.createElement("script");
 r.src=KOBJ.url + "/" + KOBJ.d + ".js";
 r.src=r.src+"?";
-r.src=r.src+"referer="+encodeURI(document.referrer) + "&";
+r.src=r.src+"referer="+escape(document.referrer) + "&";
 r.src=r.src+"title="+encodeURI(document.title);
 body=document.getElementsByTagName("body")[0];
 body.appendChild(r);

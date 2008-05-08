@@ -53,13 +53,18 @@ sub process_action {
 	hostname => $r->hostname(),
 	ip => $r->connection->remote_ip(),
 	);
+
+
+    my $req = Apache2::Request->new($r);
+    my $request_info{'referer'} = $req->param('referer');
+    my $request_info{'title'} = $req->param('title');
     
-    # we're going to process our own params
-    foreach my $arg (split('&',$r->args())) {
-	my ($k,$v) = split('=',$arg);
-	$request_info{$k} = $v;
-	$request_info{$k} =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
-    }
+#     # we're going to process our own params
+#     foreach my $arg (split('&',$r->args())) {
+# 	my ($k,$v) = split('=',$arg);
+# 	$request_info{$k} = $v;
+# 	$request_info{$k} =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
+#     }
 
     Log::Log4perl::MDC->put('site', $request_info{'site'});
     Log::Log4perl::MDC->put('rule', $request_info{'rule'}); 

@@ -22,7 +22,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
 sub log_rule_fire {
-    my ($r, $request_info, $session, $rule_name, $action) = @_;
+    my ($r, $request_info, $rule_env, $session, $rule_name, $action) = @_;
 
     my $logger = get_logger();
 

@@ -65,12 +65,18 @@ sub process_rules {
 	pool => $r->pool,
 	);
     
+
+    my $req = Apache2::Request->new($r);
+    $request_info{'referer'} = $req->param('referer');
+    $request_info{'title'} = $req->param('title');
+
+
     # we're going to process our own params
-    foreach my $arg (split('&',$r->args())) {
-	my ($k,$v) = split('=',$arg);
-	$request_info{$k} = $v;
-	$request_info{$k} =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
-    }
+#     foreach my $arg (split('&',$r->args())) {
+# 	my ($k,$v) = split('=',$arg,2);
+# 	$request_info{$k} = $v;
+# 	$request_info{$k} =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
+#     }
 
     Log::Log4perl::MDC->put('site', $request_info{'site'});
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
@@ -135,6 +141,7 @@ sub process_rules {
 	    # put this in the logging DB
 	    log_rule_fire($r, 
 			  \%request_info, 
+			  $rule_env,
 			  $session, 
 			  $rule->{'name'},
 			  $rule->{'action'}->{'name'}
@@ -148,6 +155,7 @@ sub process_rules {
 	    # put this in the logging DB
 	    log_rule_fire($r, 
 			  \%request_info, 
+			  $rule_env,
 			  $session, 
 			  $rule->{'name'},
 			  'not_fired'

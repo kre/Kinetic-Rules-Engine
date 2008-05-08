@@ -7,14 +7,14 @@ ruleset 10 {
 	    city = geoip:city();
 	}     
         if nighttime()
-        then {
+        then 
            float("absolute", "top: 10px", "right: 10px",
                  "/cgi-bin/weather.cgi?city=" + city + "&tc=" + tc)
              with delay = 0 and
                   draggable = true and
                   scrollable = true and
                   effect = "appear";
-        }
+
 
     }
 }

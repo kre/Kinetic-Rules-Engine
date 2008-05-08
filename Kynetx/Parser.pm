@@ -53,6 +53,8 @@ my @keywords = (
     'days',
     'log',
     'click',
+    'choose',
+    'every',
     );
 
 # only on word boundaries
@@ -74,6 +76,8 @@ my @input_tokens = (
      [ 'SPACE', qr/\s*/, sub { () } ],
      [ 'LBRACE', qr/{/ ],
      [ 'RBRACE', qr/}/ ],
+     [ 'LBRACKET', qr/\[/ ],
+     [ 'RBRACKET', qr/\]/ ],
      [ 'LPAREN', qr/\(/ ],
      [ 'RPAREN', qr/\)/ ],
      [ 'EQUALS', qr/=/ ],
@@ -102,7 +106,7 @@ sub html {
 # now to parse it
 
 my ($ruleset, $rule, $select, $vars, $pre_block, 
-    $decls, $decl, $args,
+    $decls, $decl, $args, $actions, $actionblock,
     $cond, $preds, $pred, $primrule, $modifiers, $modifier, 
     $action, $expr, $term, $factor, $entire_input,
     $simple_pred, $counter_pred, $post_block, $clear, $iterator,
@@ -129,6 +133,8 @@ my $Primrule = parser { $primrule->(@_) };
 my $Modifiers = parser { $modifiers->(@_) };
 my $Modifier = parser { $modifier->(@_) };
 my $Action = parser { $action->(@_) };
+my $Actions = parser { $actions->(@_) };
+my $Actionblock = parser { $actionblock->(@_) };
 my $Counter_expr = parser { $counter_expr->(@_) };
 my $Expr = parser { $expr->(@_) };
 my $Term = parser { $term->(@_) };
@@ -165,7 +171,7 @@ $ruleset =
     );
 
 # <rule> ::= rule <var> is <var> LBRACE 
-#            <select> <pre_block> {html_block}* { <cond> | <primrule> } 
+#            <select> <pre_block> {html_block}* { <cond> | <actions> } 
 #            { <succeed> }[0/1]
 #            { <fail> }[0/1]
 #            { <post_block> }[0/1]
@@ -179,7 +185,7 @@ $rule = T(concatenate(absorb(lookfor(['KEYWORD', 'rule'])),
 		       error($Select),
 		       error($Pre_block),
 		       alternate($Cond,
-				 $Primrule),
+				 $Actions),
 		       optionalx($Callbacks),
 		       optionalx($Post_block),
 		       lookfor('RBRACE')),
@@ -191,10 +197,14 @@ $rule = T(concatenate(absorb(lookfor(['KEYWORD', 'rule'])),
 			 'pre' => $pre->[0],
 	      };
 
+	      $x->{'actions'} = $prim->{'actions'} ||  [$prim];
+	      $x->{'blocktype'} =  $prim->{'blocktype'} || 'every';
+	      $x->{'cond'} =  $prim->{'cond'};
+
 		
-	      foreach my $k (keys %{ $prim } ) {
-		  $x->{$k} = $prim->{$k};
-	      }
+#	      foreach my $k (keys %{ $prim } ) {
+#		  $x->{$k} = $prim->{$k};
+#	      }
 	      # optionals
 	      if(ref $callback eq 'HASH') {
 		  $x->{'callbacks'} = $callback;
@@ -278,22 +288,54 @@ $decl = alternate(
 $args = star(list_values_of($Expr, match('COMMA')));
 	
 
+# <actions> ::= <primrule>
+#             | <actionblock>
+$actions = alternate($Primrule, $Actionblock);
 
-# <cond> ::= if <preds> then <primrule>
-$cond = T(concatenate(lookfor(['KEYWORD', 'if']),
+
+# <actionblock> ::= (choose | every)* LBRACE {<primrule>}*; RBRACE
+$actionblock = 
+    T(concatenate(optional(alternate(lookfor(['KEYWORD', 'choose']),
+			             lookfor(['KEYWORD', 'every']))),
+	          absorb(lookfor('LBRACE')),
+		  star(list_values_of($Primrule,match('SEMICOLON'))),
+		  absorb(optional(match('SEMICOLON'))),
+		  absorb(lookfor('RBRACE'))),
+      sub { my($blocktype, $actions) = @_;
+	    { 'blocktype' => $blocktype->[0],
+	      'actions' =>  singleton($actions)
+	    }
+      }
+    );
+
+# take a list of singletons and remove the nesting
+sub singleton {
+    my $arr = shift;
+    my @a;
+    foreach my $s (@{$arr}) {
+	push @a, $s->[0];
+    }
+    return \@a;
+}
+
+
+# <cond> ::= if <preds> then <primrule> | <actionblock>
+$cond = T(concatenate(absorb(lookfor(['KEYWORD', 'if'])),
 		      $Preds,
-		      lookfor(['KEYWORD', 'then']),
-		      lookfor('LBRACE'),
-		      star(list_values_of($Primrule,match('SEMICOLON'))),
-		      absorb(optional(match('SEMICOLON'))),
-	              lookfor('RBRACE')),
-	  sub { my $x = {'cond' => defined $_[1][0] ? $_[1][0] : []};
-		foreach my $k (keys %{$_[4][0][0]} ) {
-		    $x->{$k} = $_[4][0][0]->{$k};
-		}
+		      absorb(lookfor(['KEYWORD', 'then'])),
+		      $Actions),
+	  sub { my($preds, $ab) = @_;
+	      my $x = {'cond' => defined $preds->[0] ? $preds->[0] : []};
+		# always return an array of actions
+		$x->{'actions'} = $ab->{'actions'} ||  [$ab];
+		$x->{'blocktype'} =  $ab->{'blocktype'} || 'every';
 		return $x}
     );
 
+
+#		foreach my $k (keys %{$_[1][0][0]} ) {
+#		    $x->{$k} = $_[1][0][0]->{$k};
+#		}
 
 
 		      
@@ -341,7 +383,9 @@ $counter_pred = T(concatenate(
 
 
 # <primrule> ::= <action> LPAREN <args> RPAREN with <modifiers>
-$primrule = T(concatenate($Action,
+$primrule = T(concatenate(optional(concatenate(lookfor('VAR'),
+					       absorb(match('COLON')))),
+		          $Action,
 			  absorb(lookfor('LPAREN')),
 			  $Args,
 			  absorb(lookfor('RPAREN')),
@@ -358,9 +402,13 @@ $primrule = T(concatenate($Action,
 				     })),
 			  absorb(optional(match('SEMICOLON')))
 	      ),
-	      sub { {'action' => {'name' => $_[0],
-				  'args' => empty_not_undef($_[1]),
-				  'modifiers' => empty_not_undef($_[2])}}
+	      sub {my($label,$name,$args,$modifiers) = @_;
+		   return {'label'=> $label->[0] || undef,
+			   'action' => 
+			      {'args' => empty_not_undef($args),
+			       'modifiers' => empty_not_undef($modifiers),
+			       'name' => $name
+			      }}
 	      });
 
 # <modifiers> ::= <modifier> 
@@ -527,9 +575,14 @@ $factor = alternate(T(lookfor('VAR'),
 		    T(lookfor('STRING'),
 		      sub { {'str' => $_[0] }} ),
 		    T(concatenate(
+			  absorb(lookfor('LBRACKET')),
+			  list_values_of( $Expr, match('COMMA')),
+			  absorb(lookfor('RBRACKET'))),
+		      sub { {'array' => $_[0] } } ),
+		    T(concatenate(
 			  lookfor('LPAREN'),
 			  $Expr,
-			  lookfor('LPAREN')),
+			  lookfor('RPAREN')),
 		      sub { $_[1] } ));
 		    
 

@@ -51,6 +51,9 @@ sub gen_js_expr {
 	/bool/ && do {
 	    return  $val ;
 	};
+	/array/ && do {
+	    return  "[" . join(', ', @{ gen_js_rands($val) }) . "]" ;
+	};
 	/prim/ && do {
 	    return gen_js_prim($val);
 	};
@@ -118,7 +121,9 @@ sub gen_js_decl {
 	    my @arg = gen_js_rands($decl->{'args'});
 	    $arg[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
 	    $val = Kynetx::Predicates::Markets::get_stocks($req_info,$arg[0],$function);
-	}
+	} elsif ($source eq 'referer') {
+	    $val = Kynetx::Predicates::Referers::get_referer($req_info,$function);
+	} 
 
     } elsif ($decl->{'type'} eq 'counter') {
 

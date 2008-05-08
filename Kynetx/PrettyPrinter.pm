@@ -19,6 +19,10 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 use Log::Log4perl qw(get_logger :levels);
 
+
+#use Data::Dumper;
+#$Data::Dumper::Indent = 1;
+
 my $g_indent = 4;
 
 
@@ -62,8 +66,8 @@ sub pp_rule_body {
 
     if(defined $r->{'cond'}) {
 	$o.= pp_cond($r,$indent+$g_indent);
-    } else { # just primrule
-	$o.= pp_primrule($r->{'action'},$indent+$g_indent);
+    } else { # just actions
+	$o.= pp_actions($r->{'actions'},$r->{'blocktype'},$indent+$g_indent);
     }
 
     if(defined $r->{'callbacks'}) {
@@ -143,9 +147,9 @@ sub pp_cond {
 
     $o .= "if ";
     $o .= join " && ", map {pp_pred($_, 0)} @{ $node->{'cond'} };
-    $o .= "\n" . $beg . "then {\n";
-    $o .= pp_primrule($node->{'action'},$indent+$g_indent);
-    $o .= $beg . "}\n";
+    $o .= "\n" . $beg . "then\n";
+    $o .= pp_actions($node->{'actions'},$node->{'blocktype'},$indent);
+    $o .= $beg . "\n";
 
     return $o;
 
@@ -172,19 +176,60 @@ sub pp_pred{
 }
 
 
+sub pp_actions {
+    my ($node, $blocktype, $indent) = @_;
+    my $beg = " "x$indent;
+    my $o = "";
+
+
+
+    if(defined $node && @{$node} > 1) { #actionblock
+	$o .= pp_actionblock($node, $blocktype, $indent);
+    } else { # primrule
+	# singleton block; deal with it
+	$o .= pp_primrule($node->[0], $indent+$g_indent);
+    }
+   
+    return $o;
+}
+
+
+sub pp_actionblock {
+    my ($node, $blocktype, $indent) = @_;
+    my $beg = " "x$indent;
+    my $o = $beg;
+    
+    $o .= $blocktype . " {\n";
+    foreach my $pr (@{ $node }) {
+	$o .= pp_primrule($pr,$indent+$g_indent);
+    }
+    $o .= $beg . "}\n";
+
+    return $o;
+}
+
+
 sub pp_primrule{
     my ($node, $indent) = @_;
     my $beg = " "x$indent;
     my $o = $beg;
+
+    if($node->{'label'}) {
+	$o .= $node->{'label'} . ":\n";
+	$beg .= " "x$g_indent;
+	$o .= $beg;
+    }
     
-    $o .= $node->{'name'} . "(";
-    $o .= join ", ", pp_rands($node->{'args'});
+    
+
+    $o .= $node->{'action'}->{'name'} . "(";
+    $o .= join ", ", pp_rands($node->{'action'}->{'args'});
     $o .= ")";
-    if(@{ $node->{'modifiers'} } > 0) {
-	$o .= "\n". $beg . "with\n";
-	$o .= join " and\n", 
-	        map {pp_modifier($_, $indent+$g_indent)} 
-	            @{ $node->{'modifiers'} };
+    if(@{ $node->{'action'}->{'modifiers'} } > 0) {
+ 	$o .= "\n". $beg . "with\n";
+ 	$o .= join " and\n", 
+ 	        map {pp_modifier($_, $indent+$g_indent+$g_indent)} 
+ 	            @{ $node->{'action'}->{'modifiers'} };
     }
 	
     $o .= ";\n";
@@ -197,6 +242,7 @@ sub pp_modifier{
     my ($node, $indent) = @_;
     my $beg = " "x$indent;
     my $o = $beg;
+
     
     $o .= $node->{'name'} . " = ";
     $o .= pp_expr($node->{'value'});
@@ -296,7 +342,11 @@ sub pp_counter_expr {
 sub pp_expr {
     my $expr = shift;
 
+
+
     my @nodes = keys %{ $expr };  # these are singleton hashes
+
+
     my $val =  $expr->{$nodes[0]};
 
     case: for ($nodes[0]) {
@@ -313,6 +363,9 @@ sub pp_expr {
 	/bool/ && do {
 	    return  $val ;
 	};
+	/array/ && do {
+	    return  "[" . join(', ', pp_rands($val)) . "]" ;
+	};
 	/prim/ && do {
 	    return pp_prim($val);
 	};
@@ -320,6 +373,7 @@ sub pp_expr {
     } 
 
 }
+
 
 sub pp_prim {
     my $prim = shift;

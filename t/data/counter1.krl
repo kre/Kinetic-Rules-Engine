@@ -7,9 +7,9 @@ ruleset 10 {
       c = counter.archive_pages;
     }
 
-    if counter.archive_pages > 2 within 3 days then {
+    if counter.archive_pages > 2 within 3 days then 
       alert("You win the prize!  You've seen " + c + " pages from the archives!");
-    }
+
 
     fired {
       clear counter.archive_pages; 

@@ -16,6 +16,7 @@ our @ISA         = qw(Exporter);
 # put exported names inside the "qw"
 our %EXPORT_TAGS = (all => [ 
 qw(
+get_referer
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -161,6 +162,8 @@ sub get_predicates {
 
 
 
+
+
 # condition subfunctions
 # first argument is a record of data about the request
 
@@ -219,5 +222,32 @@ sub get_referer_data {
 
 
 
+sub get_referer {
+
+    my ($req_info,  $function) = @_;
+
+    case: for ($function) {
+	/search_terms/ && do {
+	    my $query = get_referer_data($req_info,'query');
+
+	    my %p;
+	    foreach my $arg (split('&', $query)) {
+		my ($k,$v) = split('=',$arg,2);
+		$p{$k} = $v;
+		$p{$k} =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
+	    }
+
+	    return $p{'q'} || $p{'p'} || $p{'query'} || "";
+	    
+	};
+	
+    } 
+
+
+   
+
+
+
+}
 
 1;
