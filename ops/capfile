@@ -1,0 +1,71 @@
+role :local, "localhost"
+role :init, "init.kobj.net"
+role :cs, "cs0.kobj.net", "cs1.kobj.net"
+role :log, "logger.kobj.net"
+role :krl, "krl.kobj.net"
+
+
+set :perl_dir, "/web/lib/perl"
+set :memcached_ips, "192.168.122.151,192.168.122.152"
+set :type "logger"
+
+task :update_code do
+  run "cd #{perl_dir};
+       svn up"
+end
+
+desc "Run the test code for perl."
+task :test_code do
+  run "cd #{perl_dir}/t; ./smoke"
+end
+
+task :load_bundle do
+  sudo "cd #{perl_dir}/etc/kynetx-private-bundle; 
+          perl -MCPAN -e 
+          '$ENV{PERL_MM_USE_DEFAULT}=1;
+           install Bundle::kobj_modules'"
+end
+
+desc "install the perl config for HTTP so that machine does everything."
+task :local_config, :roles => :local do
+  run "cd #{perl_dir};
+       bin/install-httpd-conf.pl -aljkd -m 127.0.0.1"
+end
+
+desc "install the perl config for HTTP for init.kobj.net machines."
+task :init_config, :roles => :init do
+  run "cd #{perl_dir};
+       bin/install-httpd-conf.pl -j -m #{memcached_ips}"
+end
+
+desc "install the perl config for HTTP for cs.kobj.net machines."
+task :cs_config, :roles => :cs do
+  run "cd #{perl_dir};
+       bin/install-httpd-conf.pl -a -m #{memcached_ips}"
+end
+
+desc "install the perl config for HTTP for logger.kobj.net machines."
+task :logger_config, :roles => :logger do
+  run "cd #{perl_dir};
+       bin/install-httpd-conf.pl -l -m #{memcached_ips}"
+end
+
+desc "install the perl config for HTTP for krl.kobj.net machines."
+task :krl_config, :roles => :krl do
+  run "cd #{perl_dir};
+       bin/install-httpd-conf.pl -k"
+end
+
+desc "Restart Apache."
+task :restart_apache, :roles => :local do
+  sudo "/etc/init.d/httpd restart"
+end
+
+task :local_deploy, :roles => :local do 
+  load_bundle
+  test_code
+  local_config
+  restart_apache
+end
+
+

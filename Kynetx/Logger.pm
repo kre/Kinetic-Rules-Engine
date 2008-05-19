@@ -56,8 +56,8 @@ sub process_action {
 
 
     my $req = Apache2::Request->new($r);
-    my $request_info{'referer'} = $req->param('referer');
-    my $request_info{'title'} = $req->param('title');
+    $request_info{'referer'} = $req->param('referer');
+    $request_info{'title'} = $req->param('title');
     
 #     # we're going to process our own params
 #     foreach my $arg (split('&',$r->args())) {

@@ -119,9 +119,12 @@ EOF
 
     replace_html => <<EOF,
 function(uniq, cb, id, text) {
+ var div = document.createElement('div');
+ div.setAttribute('style', 'display: none');
+ div.innerHTML = text;
  id = \$(id);
- id.replace(text);
- new Effect.Appear(id);
+ id.replace(div);
+ new Effect.BlindDown(div, {duration: 1.0});
  cb();
 }
 EOF
