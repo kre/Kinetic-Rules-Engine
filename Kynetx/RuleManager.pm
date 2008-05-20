@@ -7,7 +7,6 @@ use warnings;
 use Log::Log4perl qw(get_logger :levels);
 
 use HTML::Template;
-use Apache2::Request;
 use JSON::XS;
 
 use Kynetx::Parser qw(:all);

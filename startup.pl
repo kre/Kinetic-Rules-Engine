@@ -33,6 +33,9 @@ use APR::Const -compile => ':common';
 
 use Apache::Session::DB_File;
 
+use Apache2::Request ();
+
+
 srand( time() ^ ($$ + ($$ <<15)) );
 
 use Geo::IP;
