@@ -98,10 +98,10 @@ var KOBJ={
     version: '$js_version'
 }
 
-KOBJ.logger = function(msg,url,sense,rule) {
+KOBJ.logger = function(type,element,url,sense,rule) {
 
     e=document.createElement("script");
-    e.src=KOBJ.logger_url+"?msg="+msg+"&ts="+KOBJ.d+"&sense="+sense+"&url="+url+"&rule="+rule;
+    e.src=KOBJ.logger_url+"?type="+type+"&element="+element+"&ts="+KOBJ.d+"&sense="+sense+"&url="+escape(url)+"&rule="+rule;
     body=document.getElementsByTagName("body")[0];
     body.appendChild(e);
 }
@@ -113,7 +113,8 @@ KOBJ.obs_one = function(name,e, sense, rule) {
       e.writeAttribute({href: '#'});
       Event.observe(e, 
 	  	    "click", 
-		    function() {KOBJ.logger("Someone clicked on " + name, 
+		    function() {KOBJ.logger("click",
+					    name, 
 					    b, 
 					    sense,
 					    rule

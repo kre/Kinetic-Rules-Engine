@@ -58,7 +58,8 @@ sub process_action {
     my $req = Apache2::Request->new($r);
     $request_info{'url'} = $req->param('url');
     $request_info{'sense'} = $req->param('sense');
-    $request_info{'msg'} = $req->param('msg');
+    $request_info{'type'} = $req->param('type');
+    $request_info{'element'} = $req->param('element');
     $request_info{'rule'} = $req->param('rule');
     
 #     # we're going to process our own params
@@ -77,6 +78,8 @@ sub process_action {
 		               $request_info{'rule'}, ", ",
 		               $request_info{'caller'}, ", ",
 		               $session->{_session_id}, ", ",
+		               $request_info{'type'}, ", ",
+		               $request_info{'element'}, ", ",
 		               $request_info{'sense'}, 
 	);
 
