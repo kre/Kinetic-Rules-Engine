@@ -176,26 +176,34 @@ sub process_rules {
 # this returns the right rules for the caller and site
 # this is a point where things could be optimixed in the future
 sub get_rule_set {
-    my ($site, $caller, $svn_conn) = @_;
+    my ($site, $caller, $svn_conn, $request_info) = @_;
 
     my $logger = get_logger();
     $logger->debug("Getting rules for $caller");
 
     my $rules = optimize_rules(
-	          get_rules_from_repository($site, $svn_conn),$site);
+	          get_rules_from_repository($site, $svn_conn, $request_info),$site);
 
 
     my @new_set;
     my %new_env;
 
+    $request_info->{'rule_count'} = 0;
+    $request_info->{'selected_rules'} = [];
     foreach my $rule ( @{ $rules->{$site} } ) {
 
 	if($rule->{'state'} eq 'active') {  # optimize??
 
+	    $request_info->{'rule_count'}++;
+
+	
 	    # test the pattern, captured values are stored in @captures
 	    if(my @captures = $caller =~ get_precondition_test($rule)) {
 
 		push @new_set, $rule;
+
+		push @{ $request_info->{'selected_rules'} }, $rule->{'name'};
+
 
 		# store the captured values from the precondition to the env
 		my $cap = 0;
@@ -238,7 +246,7 @@ sub optimize_rules {
 
 sub get_rules_from_repository{
 
-    my ($site, $svn_conn) = @_;
+    my ($site, $svn_conn, $request_info) = @_;
 
     my $logger = get_logger();
 
@@ -286,7 +294,8 @@ sub get_rules_from_repository{
 	$ext = '.json';
     }
 
-    $logger->debug("Using the $ext version: ", $d{$site.$ext});
+    $request_info->{'rule_version'} = $d{$site.$ext};
+    $logger->debug("Using the $ext version: ", $request_info->{'rule_version'});
     
 
     # open a variable as a filehandle (for weird SVN::Client stuff)

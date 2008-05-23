@@ -1,0 +1,94 @@
+<html>
+<head>
+<title>Show Context</title>
+</head>
+<body>
+<h2>Context for Client ID <TMPL_VAR NAME=site></h2>
+
+
+
+
+<p>
+<table border="1" width="100%">
+
+<tr><td colspan="2" bgcolor="FFFFAA"><b>Client Information</b></td></tr>
+
+<TMPL_LOOP NAME=client_info>
+
+<tr>
+<td width="15%"><TMPL_VAR NAME=name></td> 
+<td><TMPL_VAR NAME=value></td>
+</tr>
+
+</TMPL_LOOP>
+
+</table>
+</p>
+
+
+
+
+<p>
+<table border="1" width="100%">
+
+<tr><td colspan="2" bgcolor="FFFFAA"><b>User Information</b></td></tr>
+
+<TMPL_LOOP NAME=user_info>
+
+<tr>
+<td  width="15%"><TMPL_VAR NAME=name></td> 
+<td><TMPL_VAR NAME=value></td>
+</tr>
+
+</TMPL_LOOP>
+
+</table>
+</p>
+
+
+
+
+<p>
+<table border="1" width="100%">
+
+<tr><td colspan="2" bgcolor="FFFFAA"><b>Rule Information</b></td></tr>
+
+<TMPL_LOOP NAME=rule_info>
+
+<tr>
+<td  width="15%"><TMPL_VAR NAME=name></td> 
+<td><TMPL_VAR NAME=value></td>
+</tr>
+
+</TMPL_LOOP>
+
+</table>
+</p>
+
+
+
+<p>
+<table border="1" width="100%">
+
+<tr><td colspan="3" bgcolor="FFFFAA">
+    <b>Selected Rules</b> (<TMPL_VAR NAME=caller>)</td></tr>
+
+<TMPL_LOOP NAME=rules>
+
+<tr>
+<td  width="15%"><TMPL_VAR NAME=number></td> 
+<td><TMPL_VAR NAME=name></td>
+<td><TMPL_VAR NAME=fired></td>
+</tr>
+
+</TMPL_LOOP>
+
+</table>
+</p>
+
+
+
+
+
+</body>
+</html>

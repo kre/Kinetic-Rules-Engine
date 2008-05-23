@@ -16,6 +16,7 @@ use Kynetx::Util qw(:all);;
 use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::RuleManager qw(:all);
+use Kynetx::Console qw(:all);;
 
 
 my $logger;
@@ -46,6 +47,8 @@ sub handler {
     # at some point we need a better dispatch function
     if($r->path_info =~ m!/flush/! ) {
 	flush_ruleset_cache($r);
+    } elsif($r->path_info =~ m!/console/! ) {
+	show_context($r);
     } else {
 	process_rules($r);
     }
