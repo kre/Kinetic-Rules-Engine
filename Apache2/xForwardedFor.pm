@@ -2,8 +2,12 @@ package Apache2::xForwardedFor;
 use strict;
 use warnings;
 
-use constant DEBUG=> $ENV{'xForwardedFor_DEBUG'} || 1;
+use constant DEBUG=> $ENV{'xForwardedFor_DEBUG'} || 0;
 use constant TEST=> $ENV{'xForwardedFor_TEST'} || 0; # note that there are 2 testing levels TEST>1 will set the required additional header
+
+
+# KYNETX: we modified this to return the *last* IP address in the chain rather
+#         than the first.  That should be the originator, not the reverse proxy
 
 
 BEGIN {
@@ -21,65 +25,63 @@ sub handler {
     my 	$x_forwarded_for__header_name= $r->dir_config->get('xForwardedForAlternateHeaderName') || 'X-Forwarded-For' ;
     my 	$require_header= $r->dir_config->get('xForwardedForRequire') || undef;
 	
-	# for testing purposes, toss in a local header value
-	TEST && $r->headers_in->set( $x_forwarded_for__header_name=> '10.0.1.140' );
-	my 	$x_forwarded_for__header_value= $r->headers_in->{ $x_forwarded_for__header_name };
+    # for testing purposes, toss in a local header value
+    TEST && $r->headers_in->set( $x_forwarded_for__header_name=> '10.0.1.140' );
+    my 	$x_forwarded_for__header_value= $r->headers_in->{ $x_forwarded_for__header_name };
 
-	# if we are requiring a header to be sent, and its not there, fail immediately
-	if ( $require_header ) {
-		DEBUG && print STDERR "\nRequire: true";
-		if ( !$x_forwarded_for__header_value ) {
-			DEBUG && print STDERR "\n \theader missing";
-			return FORBIDDEN;
-		}
+    # if we are requiring a header to be sent, and its not there, fail immediately
+    if ( $require_header ) {
+	DEBUG && print STDERR "\nRequire: true";
+	if ( !$x_forwarded_for__header_value ) {
+	    DEBUG && print STDERR "\n \theader missing";
+	    return FORBIDDEN;
 	}
+    }
 
-	# if we are requiring an additional header to be sent, and its not there or doesn't match, fail immediately
-	if 	( my $require_header_other_name= $r->dir_config->get('xForwardedForRequireHeaderName') ) {
-		if ( TEST ) {
-			my 	@allowable_names= $r->dir_config->get('xForwardedForRequireHeaderValue');
-			$r->headers_in->set( $require_header_other_name=> $allowable_names[0] );
-		}
-		DEBUG && print STDERR "\nRequire Additional Header: true";
-		my 	$require_header_other_value= $r->headers_in->{ $require_header_other_name };
-		if 	( !$require_header_other_value ) {
-			DEBUG && print STDERR "\n \tadditional required header missing";
-			return FORBIDDEN;		
-		}
-		my 	%values_accept= map { $_=> 1 } $r->dir_config->get('xForwardedForRequireHeaderValue');
-		if ( !$values_accept{ $require_header_other_value } ) {
-			DEBUG && print STDERR "\n \tadditional required header invalid";
-			return FORBIDDEN;		
-		}
-	};
+    # if we are requiring an additional header to be sent, and its not there or doesn't match, fail immediately
+    if 	( my $require_header_other_name= $r->dir_config->get('xForwardedForRequireHeaderName') ) {
+	if ( TEST ) {
+	    my 	@allowable_names= $r->dir_config->get('xForwardedForRequireHeaderValue');
+	    $r->headers_in->set( $require_header_other_name=> $allowable_names[0] );
+	}
+	DEBUG && print STDERR "\nRequire Additional Header: true";
+	my 	$require_header_other_value= $r->headers_in->{ $require_header_other_name };
+	if 	( !$require_header_other_value ) {
+	    DEBUG && print STDERR "\n \tadditional required header missing";
+	    return FORBIDDEN;		
+	}
+	my 	%values_accept= map { $_=> 1 } $r->dir_config->get('xForwardedForRequireHeaderValue');
+	if ( !$values_accept{ $require_header_other_value } ) {
+	    DEBUG && print STDERR "\n \tadditional required header invalid";
+	    return FORBIDDEN;		
+	}
+    };
 	
 
     # Block based on Remove / Add AcceptForwarder values
     
-	my 	$_accept= 0;
+    my 	$_accept= 0;
     my 	$remote_ip= $r->connection->remote_ip ;
-	TEST && ( $remote_ip= '192.168.1.2');
-	DEBUG && print STDERR "\n remote_ip__proxy: ". $remote_ip;
-		my %ips_accept= map { $_=> 1 } $r->dir_config->get('xForwardedForAccept');
-		if ( exists $ips_accept{$remote_ip} ) {
-			$_accept= 1;
-		}
-		my %ips_deny= map { $_=> 1 } $r->dir_config->get('xForwardedForDeny');
-		if ( exists $ips_deny{$remote_ip} ) {
-			$_accept= -1;
-		}
+    TEST && ( $remote_ip= '192.168.1.2');
+    DEBUG && print STDERR "\n remote_ip__proxy: ". $remote_ip;
+    my %ips_accept= map { $_=> 1 } $r->dir_config->get('xForwardedForAccept');
+    if ( exists $ips_accept{$remote_ip} ) {
+	$_accept= 1;
+    }
+    my %ips_deny= map { $_=> 1 } $r->dir_config->get('xForwardedForDeny');
+    if ( exists $ips_deny{$remote_ip} ) {
+	$_accept= -1;
+    }
 
-	if 	( $_accept < 0 ) {
-		DEBUG && print STDERR "\n ip in blocked list";
-		return FORBIDDEN;
-	}
-	elsif ( !$_accept && $require_header) {
-		DEBUG && print STDERR "\n ip not passed, and header required";
-		return FORBIDDEN;
-	}
-	elsif ( !$_accept && !$require_header) {
-		DEBUG && print STDERR "\n ip not passed, but header not required";
-	}
+    if 	( $_accept < 0 ) {
+	DEBUG && print STDERR "\n ip in blocked list";
+	return FORBIDDEN;
+    }elsif ( !$_accept && $require_header) {
+	DEBUG && print STDERR "\n ip not passed, and header required";
+	return FORBIDDEN;
+    }elsif ( !$_accept && !$require_header) {
+	DEBUG && print STDERR "\n ip not passed, but header not required";
+    }
 
 
     DEBUG && print STDERR "\n x_forwarded_for__header_value: ".$x_forwarded_for__header_value;
