@@ -174,93 +174,131 @@ sub build_js_load {
 	}
     }
     
-    # wrap up in load
-#    $cb = gen_js_afterload($cb);
     my $cb_func_name = 'callBacks'.$uniq;
     $js .= gen_js_mk_cb_func($cb_func_name,$cb);
 
-    foreach my $action_expr (@{ $rule->{'actions'} }) {
 
-	my $loop_js = '';
+    my $action_num = int(@{ $rule->{'actions'} });
 
-	my $action = $action_expr->{'action'};
-	my $action_name = $action->{'name'};
+    $logger->debug('blocktype is ' . $rule->{'blocktype'});
+    $logger->debug("actions list contains $action_num actions");
+    if ($rule->{'blocktype'} eq 'every') {
+	# generate JS for every action
+	foreach my $action_expr (@{ $rule->{'actions'} }) {
+	    # tack on this loop's js
+	    $js .= build_one_action($action_expr, 
+				    $req_info, 
+				    $rule_env, 
+				    $session,
+				    $uniq,
+				    $id_str,
+				    $cb_func_name
+		);
+	}
 
-	my $args = gen_js_rands( $action->{'args'} );
-
-
-	# process overloaded functions and arg reconstruction
-	($action_name, $args) = choose_action($req_info,$action_name,$args);
-
-	# add to front of arg str
-	unshift @{ $args }, $cb_func_name;
-	unshift @{ $args }, mk_js_str($uniq);
-
-	# create comma separated list of arguments 
-	my $arg_str = join(',', @{ $args }) || '';
-
-	$logger->debug("[action] ", $action_name, 
-		       ' executing with args (',$arg_str,')');
-
-	# apply the action function
-	$loop_js .= "(". $actions{$action_name} . "(" . $arg_str . "));\n";
-
-	push(@{ $rule_env->{'actions'} }, $action_name);
-
-	# set defaults
-	my %mods = (
-	    delay => 0,
-	    effect => 'appear',
-	    scrollable => 0,
-	    draggable => 0,
+    } elsif ($rule->{'blocktype'} eq 'choose') {
+	# choose one action at random
+	my $choice = int(rand($action_num));
+	$logger->debug("chose $choice of $action_num");
+	$js .= build_one_action($rule->{'actions'}->[$choice], 
+				$req_info, 
+				$rule_env, 
+				$session,
+				$uniq,
+				$id_str,
+				$cb_func_name
 	    );
 
-	# override defaults if set
-	foreach my $m ( @{ $action->{'modifiers'} } ) {
-	    $mods{$m->{'name'}} = gen_js_expr($m->{'value'});
-	}
+    } else {
+	$logger->debug('bad blocktype');
+    }
+
+    return $js;
+
+}
 
 
-	if($modifiable{$action_name}) {
+sub build_one_action {
+    my ($action_expr, $req_info, $rule_env, $session, 
+	$uniq, $id_str, $cb_func_name) = @_;
+
+    my $logger = get_logger();
+
+
+    my $js = '';
+
+    my $action = $action_expr->{'action'};
+    my $action_name = $action->{'name'};
+
+    my $args = gen_js_rands( $action->{'args'} );
+
+
+    # process overloaded functions and arg reconstruction
+    ($action_name, $args) = choose_action($req_info,$action_name,$args);
+
+    # add to front of arg str
+    unshift @{ $args }, $cb_func_name;
+    unshift @{ $args }, mk_js_str($uniq);
+
+    # create comma separated list of arguments 
+    my $arg_str = join(',', @{ $args }) || '';
+
+    $logger->debug("[action] ", $action_name, 
+		   ' executing with args (',$arg_str,')');
+
+    # apply the action function
+    $js .= "(". $actions{$action_name} . "(" . $arg_str . "));\n";
+
+    push(@{ $rule_env->{'actions'} }, $action_name);
+
+    # set defaults
+    my %mods = (
+	delay => 0,
+	effect => 'appear',
+	scrollable => 0,
+	draggable => 0,
+	);
+
+    # override defaults if set
+    foreach my $m ( @{ $action->{'modifiers'} } ) {
+	$mods{$m->{'name'}} = gen_js_expr($m->{'value'});
+    }
+
+
+    if($modifiable{$action_name}) {
 	    
-	    $loop_js .= "new Effect.toggle('" . $id_str . "', ". $mods{'effect'} . " );"  ;
+	$js .= "new Effect.toggle('" . $id_str . "', ". $mods{'effect'} . " );"  ;
 
-	    if($mods{'draggable'} eq 'true') {
-		$loop_js .= "new Draggable('". $id_str . "', '{ zindex: 99999 }');";
-	    }
-
-	    if($mods{'scrollable'} eq 'true') {
-		$loop_js .= "new FixedElement('". $id_str . "');";
-	    }
-
-	} elsif($action_name eq "popup") {
-	    if ($mods{'effect'} eq 'onpageexit') {
-		my $funcname = "leave_" . $id_str;
-		$loop_js = "function $funcname () { " . $loop_js . "};\n";
-		$loop_js .= "document.body.setAttribute('onUnload', '$funcname()');"
-	    }
+	if($mods{'draggable'} eq 'true') {
+	    $js .= "new Draggable('". $id_str . "', '{ zindex: 99999 }');";
 	}
+	
+	if($mods{'scrollable'} eq 'true') {
+	    $js .= "new FixedElement('". $id_str . "');";
+	}
+
+    } elsif($action_name eq "popup") {
+	if ($mods{'effect'} eq 'onpageexit') {
+	    # FIXME: use a Prototype Effect here, if we can
+	    my $funcname = "leave_" . $id_str;
+	    $js = "function $funcname () { " . $js . "};\n";
+	    $js .= "document.body.setAttribute('onUnload', '$funcname()');"
+	}
+    }
 
 	
+    if($mods{'delay'}) {
+	# these ought to be pre-compiled on the rules
+	$js =~ y/\n\r//d; # remove newlines
+	$js =~ y/ //s;
+	$js =~ s/'/\\'/g; # escape single quotes
+	$js = "setTimeout(\'" . $js . "\', " . ($mods{'delay'} * 1000) . ");";
+    }
 
-	if($mods{'delay'}) {
-	    # these ought to be pre-compiled on the rules
-	    $loop_js =~ y/\n\r//d; # remove newlines
-	    $loop_js =~ y/ //s;
-	    $loop_js =~ s/'/\\'/g; # escape single quotes
-	    $loop_js = "setTimeout(\'" . $loop_js . "\', " . ($mods{'delay'} * 1000) . ");";
-	}
-
-	push(@{ $rule_env->{'tags'} }, ($mods{'tags'} || ''));
-	push(@{ $rule_env->{'labels'} }, $action_expr->{'label'} || '');
+    push(@{ $rule_env->{'tags'} }, ($mods{'tags'} || ''));
+    push(@{ $rule_env->{'labels'} }, $action_expr->{'label'} || '');
 
 #	$logger->debug(Dumper($rule_env));
-
-
-	# tack on this loop's js
-	$js .= $loop_js;
-
-    }
 
     return $js;
 }
