@@ -90,7 +90,8 @@ sub handler {
 
 	# we want the last value (presumably the originator)
 	my $ip = pop @ips;
-    
+	$ip =~ y/ //s;
+	
 	DEBUG && print STDERR "\n using... $ip";
 #    my $ip = $x_forwarded_for__header_value=~ /^([\d\.]+)/ 
 	# Extract the desired IP address
