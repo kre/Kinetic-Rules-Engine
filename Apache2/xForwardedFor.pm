@@ -89,6 +89,7 @@ sub handler {
     my $ip;
     foreach $ip (@ips) {
 	$ip =~ y/ //;
+	DEBUG && print STDERR $ip;
 	last unless $ip =~ m/^127\.|^192\.|^72\.|^10\./;
     }
     
