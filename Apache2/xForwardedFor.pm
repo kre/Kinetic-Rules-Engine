@@ -87,6 +87,7 @@ sub handler {
     if ($x_forwarded_for__header_value) {
 	my @ips = split(/,/,$x_forwarded_for__header_value);
 
+
 	# we want the last value (presumably the originator)
 	my $ip = pop @ips;
     
