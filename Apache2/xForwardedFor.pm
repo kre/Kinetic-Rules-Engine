@@ -89,10 +89,11 @@ sub handler {
     my $ip;
     foreach $ip (@ips) {
 	$ip =~ y/ //;
-	DEBUG && print STDERR $ip;
+	DEBUG && print STDERR "\n trying... $ip";
 	last unless $ip =~ m/^127\.|^192\.|^72\.|^10\./;
     }
     
+    DEBUG && print STDERR "\n using... $ip";
 #    my $ip = $x_forwarded_for__header_value=~ /^([\d\.]+)/ 
     # Extract the desired IP address
     if ($ip) {
