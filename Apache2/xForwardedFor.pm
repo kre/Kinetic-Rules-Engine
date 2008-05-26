@@ -84,31 +84,28 @@ sub handler {
 
     DEBUG && print STDERR "\n x_forwarded_for__header_value: ".$x_forwarded_for__header_value;
 
-    my @ips = split(/,/,$x_forwarded_for__header_value);
+    if ($x_forwarded_for__header_value) {
+	my @ips = split(/,/,$x_forwarded_for__header_value);
 
-    my $ip;
-    foreach $ip (@ips) {
-	$ip =~ y/ //;
-	DEBUG && print STDERR "\n trying... $ip";
-	last unless $ip =~ m/^127\.|^192\.|^72\.|^10\./;
-    }
+	# we want the last value (presumably the originator)
+	my $ip = pop @ips;
     
-    DEBUG && print STDERR "\n using... $ip";
+	DEBUG && print STDERR "\n using... $ip";
 #    my $ip = $x_forwarded_for__header_value=~ /^([\d\.]+)/ 
-    # Extract the desired IP address
-    if ($ip) {
-        DEBUG && print STDERR "\n original remote_ip: ". $remote_ip;
-        $r->connection->remote_ip($ip);
-        DEBUG && print STDERR "\n new remote_ip: ".$r->connection->remote_ip;
-    } 
-    else {
-        # do nothing if no ip is in forwarded-for header
-		# should we toss an error if this is because we couldn't parse an ip, but the header was there?
-        DEBUG && print STDERR "\n no ip change";
+	# Extract the desired IP address
+	if ($ip) {
+	    DEBUG && print STDERR "\n original remote_ip: ". $remote_ip;
+	    $r->connection->remote_ip($ip);
+	    DEBUG && print STDERR "\n new remote_ip: ".$r->connection->remote_ip;
+	} else {
+	    # do nothing if no ip is in forwarded-for header
+	    # should we toss an error if this is because we couldn't parse an ip, but the header was there?
+	    DEBUG && print STDERR "\n no ip change";
+	}
     }
 
-	# stacked handlers should still run off this
-	return OK;
+    # stacked handlers should still run off this
+    return OK;
 };
 
 =head1 NAME
