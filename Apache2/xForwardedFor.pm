@@ -81,13 +81,20 @@ sub handler {
 		DEBUG && print STDERR "\n ip not passed, but header not required";
 	}
 
-	warn "original remote_ip: $remote_ip";
-	warn "xForwardedFor header: $x_forwarded_for__header_value";
-   
 
     DEBUG && print STDERR "\n x_forwarded_for__header_value: ".$x_forwarded_for__header_value;
+
+    my @ips = split(/,/$x_forwarded_for__header_value);
+
+    my $ip;
+    foreach $ip (@ips) {
+	$ip =~ y/\s//;
+	last unless $ip =~ m/^127\.|^192\.|^72\.|^10\./;
+    }
+    
+#    my $ip = $x_forwarded_for__header_value=~ /^([\d\.]+)/ 
     # Extract the desired IP address
-    if ( my ($ip)= $x_forwarded_for__header_value=~ /^([\d\.]+)/ ) {
+    if ($ip) {
         DEBUG && print STDERR "\n original remote_ip: ". $remote_ip;
         $r->connection->remote_ip($ip);
         DEBUG && print STDERR "\n new remote_ip: ".$r->connection->remote_ip;
