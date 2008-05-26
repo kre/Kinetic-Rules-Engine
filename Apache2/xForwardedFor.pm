@@ -84,7 +84,7 @@ sub handler {
 
     DEBUG && print STDERR "\n x_forwarded_for__header_value: ".$x_forwarded_for__header_value;
 
-    my @ips = split(/,/$x_forwarded_for__header_value);
+    my @ips = split(/,/,$x_forwarded_for__header_value);
 
     my $ip;
     foreach $ip (@ips) {
