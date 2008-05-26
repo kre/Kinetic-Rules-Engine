@@ -88,7 +88,7 @@ sub handler {
 
     my $ip;
     foreach $ip (@ips) {
-	$ip =~ y/\s//;
+	$ip =~ y/ //;
 	last unless $ip =~ m/^127\.|^192\.|^72\.|^10\./;
     }
     
