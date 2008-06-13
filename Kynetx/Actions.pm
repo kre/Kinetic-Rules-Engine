@@ -145,9 +145,13 @@ sub build_js_load {
 
     my $logger = get_logger();
 
-    # do we need to pass this in anymore?
+    # rule id
     my $uniq = int(rand 999999999);
-    my $id_str = 'kobj_'.$uniq; 
+    my $uniq_id = 'kobj_'.$uniq; 
+
+
+    $rule_env->{'uniq_id'} = $uniq_id;
+
 
 
     my $js = "";
@@ -168,6 +172,7 @@ sub build_js_load {
     if($rule->{'callbacks'}) {
 	foreach my $sense ('success','failure') {
 	    $cb .= gen_js_callbacks($rule->{'callbacks'}->{$sense},
+				    $req_info->{'txn_id'},
 		                    $sense,
 				    $rule->{'name'}
 		                   );
@@ -191,7 +196,7 @@ sub build_js_load {
 				    $rule_env, 
 				    $session,
 				    $uniq,
-				    $id_str,
+				    $uniq_id,
 				    $cb_func_name
 		);
 	}
@@ -205,7 +210,7 @@ sub build_js_load {
 				$rule_env, 
 				$session,
 				$uniq,
-				$id_str,
+				$uniq_id,
 				$cb_func_name
 	    );
 
@@ -220,7 +225,7 @@ sub build_js_load {
 
 sub build_one_action {
     my ($action_expr, $req_info, $rule_env, $session, 
-	$uniq, $id_str, $cb_func_name) = @_;
+	$uniq, $uniq_id, $cb_func_name) = @_;
 
     my $logger = get_logger();
 
@@ -267,20 +272,20 @@ sub build_one_action {
 
     if($modifiable{$action_name}) {
 	    
-	$js .= "new Effect.toggle('" . $id_str . "', ". $mods{'effect'} . " );"  ;
+	$js .= "new Effect.toggle('" . $uniq_id . "', ". $mods{'effect'} . " );"  ;
 
 	if($mods{'draggable'} eq 'true') {
-	    $js .= "new Draggable('". $id_str . "', '{ zindex: 99999 }');";
+	    $js .= "new Draggable('". $uniq_id . "', '{ zindex: 99999 }');";
 	}
 	
 	if($mods{'scrollable'} eq 'true') {
-	    $js .= "new FixedElement('". $id_str . "');";
+	    $js .= "new FixedElement('". $uniq_id . "');";
 	}
 
     } elsif($action_name eq "popup") {
 	if ($mods{'effect'} eq 'onpageexit') {
 	    # FIXME: use a Prototype Effect here, if we can
-	    my $funcname = "leave_" . $id_str;
+	    my $funcname = "leave_" . $uniq_id;
 	    $js = "function $funcname () { " . $js . "};\n";
 	    $js .= "document.body.setAttribute('onUnload', '$funcname()');"
 	}

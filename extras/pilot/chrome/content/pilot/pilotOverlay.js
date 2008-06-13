@@ -129,7 +129,7 @@ var Pilot = {
         if (site['domain'] != '') site_array.push(site['domain'] + " (site id = "+site['site_id']+")"); 
         else site_array.push('bogus domain (site id = '+site['site_id']+')');
       }
-      alert(site_array.join(' \n'));
+      alert(site_array.join(' \n')+'\n'+this.kynetx_js_host+'\n');
     }
   },
 

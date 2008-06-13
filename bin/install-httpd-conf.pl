@@ -15,8 +15,8 @@ my $web_root_var = 'WEB_ROOT';
 my $web_root = $ENV{$web_root_var} || 
     die "$web_root_var is undefined in the environment";
 
-my $conf_dir = join('/',($web_root,'conf','extra'));
-my $conf_file = 'httpd-perl.conf';
+my $conf_dir = join('/',($web_root,'conf'));
+my $conf_file = 'httpd.conf';
 
 
 # global options
@@ -85,6 +85,10 @@ $conf_template->param(DB_PASSWD => $db_passwd);
 
 # rule repository
 $conf_template->param(RULE_REPOSITORY => $svn);
+
+# logging (these are for cronolog)
+$conf_template->param(LOG_PERIOD => '1hour');
+# $conf_template->param(LOG_PERIOD => '5min');
 
 
 if ($opt{'d'}) { # development

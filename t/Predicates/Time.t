@@ -5,7 +5,7 @@ use lib qw(/web/lib/perl);
 use strict;
 
 use Test::More;
-plan tests => 19;
+plan tests => 20;
 use Test::LongString;
 
 # most Kyentx modules require this
@@ -103,8 +103,8 @@ ok(&{$preds->{'day_of_week'}}($BYU_req_info, \%rule_env, \@dow_args),
    "The day of the week is OK with predicate");
 
 my @everyday = (1,1,1,1,1,1,1);
-my $logger = get_logger();
-$logger->debug(join(", ", @everyday) );
+#my $logger = get_logger();
+#$logger->debug(join(", ", @everyday) );
 
 
 ok(&{$preds->{'today_is'}}($BYU_req_info, \%rule_env, \@everyday),
@@ -125,6 +125,26 @@ ok(&{$preds->{'date_between'}}($BYU_req_info, \%rule_env, \@datearg),
 ok(&{$preds->{'date_start'}}($BYU_req_info, \%rule_env, \@datearg),
    "Today after yesterday.");
 
+
+
+
+ok(&{$preds->{'today_is'}}($BYU_req_info, \%rule_env, \@everyday),
+   "Everyday is a day of the week");
+
+
+my @no_day = (0,0,0,0,0,0,0);
+$no_day[$now->day_of_week] = 1;
+
+
+my $logger = get_logger();
+$logger->debug(join(", ", @no_day), " ", $now->day_of_week );
+
+ok(
+    &{$preds->{'today_is'}}($BYU_req_info, \%rule_env, \@no_day),
+   "Check today");
+
+
+# not using this
 
 my @jsargs = (
             {
@@ -152,10 +172,6 @@ my @jsargs = (
 
 
 @datearg = Kynetx::JavaScript::gen_js_rands(\@jsargs);
-
-
-ok(&{$preds->{'today_is'}}($BYU_req_info, \%rule_env, \@everyday),
-   "Everyday is a day of the week");
 
 
 1;

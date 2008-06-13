@@ -11,12 +11,6 @@ use constant DEFAULT_LOG_HOST => '127.0.0.1';
 use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
 use constant DEFAULT_JS_VERSION => '0.8';
 
-my @js_files = qw(
-prototype.js
-effects.js
-dragdrop.js
-kobj-extras.js
-);
 
 sub handler {
     my $r = shift;
@@ -50,11 +44,8 @@ sub handler {
     } elsif($file eq 'kobj-static.js') {
 
 	$logger->info("Generating KOBJ static file ", $file);
-	foreach my $file (@js_files) {
-	    $js .= get_js_file($file,$js_version,$js_root);
-	}
-
-
+	$js = get_js_file($file,$js_version,$js_root);
+	
     } else {
 
 	$js = get_js_file($file,$js_version,$js_root);
@@ -79,6 +70,7 @@ sub get_js_file {
 	$logger->error("Can't open file $filename: $!\n");
     local $/ = undef;
     my $js = <JS>;
+
     close JS;
     
     return $js;
@@ -98,15 +90,15 @@ var KOBJ={
     version: '$js_version'
 }
 
-KOBJ.logger = function(type,element,url,sense,rule) {
+KOBJ.logger = function(type,txn_id,element,url,sense,rule) {
 
     e=document.createElement("script");
-    e.src=KOBJ.logger_url+"?type="+type+"&element="+element+"&ts="+KOBJ.d+"&sense="+sense+"&url="+escape(url)+"&rule="+rule;
+    e.src=KOBJ.logger_url+"?type="+type+"&txn_id="+txn_id+"&element="+element+"&ts="+KOBJ.d+"&sense="+sense+"&url="+escape(url)+"&rule="+rule;
     body=document.getElementsByTagName("body")[0];
     body.appendChild(e);
 }
 
-KOBJ.obs_one = function(name,e, sense, rule) {
+KOBJ.obs_one = function(name, txn_id, e, sense, rule) {
     if (e) {
       var b = e.readAttribute('href') ? 
 	      e.readAttribute('href') : '';
@@ -114,6 +106,7 @@ KOBJ.obs_one = function(name,e, sense, rule) {
       Event.observe(e, 
 	  	    "click", 
 		    function() {KOBJ.logger("click",
+					    txn_id,
 					    name, 
 					    b, 
 					    sense,
@@ -125,15 +118,15 @@ KOBJ.obs_one = function(name,e, sense, rule) {
     }
 }
  
-KOBJ.obs = function(type, name, sense, rule) {
+KOBJ.obs = function(type, txn_id, name, sense, rule) {
     if(type == 'class') {
 	\$\$('.'+name).each(  
 	    function(e) {  
-		KOBJ.obs_one(name, e, sense, rule);
+		KOBJ.obs_one(name, txn_id, e, sense, rule);
 	    }  
 	);  
     } else {
-	KOBJ.obs_one(name,\$(name), sense, rule);
+	KOBJ.obs_one(name, txn_id, \$(name), sense, rule);
     }
 }
 
@@ -163,13 +156,19 @@ KOBJ.url = KOBJ.proto+KOBJ.host_with_port+"/kobj/" + KOBJ.site_id;
 KOBJ.logger_url = KOBJ.proto+KOBJ.loghost_with_port+"/log/" + KOBJ.site_id;
 
 
-r=document.createElement("script");
-r.src=KOBJ.url + "/" + KOBJ.d + ".js";
-r.src=r.src+"?";
-r.src=r.src+"referer="+escape(document.referrer) + "&";
-r.src=r.src+"title="+encodeURI(document.title);
-body=document.getElementsByTagName("body")[0];
-body.appendChild(r);
+KOBJ.r=document.createElement("script");
+KOBJ.r.src=
+    KOBJ.url + "/" 
+             + KOBJ.d 
+	     + ".js"
+             + "?"
+             + "referer=" 
+             + escape(document.referrer) 
+	     + "&"
+	     + "title=" 
+	     + encodeURI(document.title);
+KOBJ.body=document.getElementsByTagName("body")[0];
+KOBJ.body.appendChild(KOBJ.r);
 
 EOF
 

@@ -1,0 +1,81 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+use lib qw(/web/lib/perl);
+
+
+use Getopt::Std;
+use File::Find::Rule;
+
+# config
+my $base_var = 'KOBJ_ROOT';
+#my $base = $ENV{$base_var} || die "$base_var is undefined in the environment";
+
+my $web_root_var = 'WEB_ROOT';
+my $web_root = $ENV{$web_root_var} || 
+    die "$web_root_var is undefined in the environment";
+
+my $GZIP = '/usr/bin/gzip';
+my $RSYNC = '/usr/bin/rsync';
+
+my @logdirs = ("$web_root/logs/kynetx");
+
+
+# global options
+use vars qw/ %opt /;
+my $opt_string = 'hm:';
+getopts( "$opt_string", \%opt ); # or &usage();
+
+my $machine = $opt{'m'} || 'logs.kobj.net';
+&usage() if $opt{'h'};
+
+my $rule = File::Find::Rule->new;
+
+$rule->or(
+    $rule->new->directory->name('*.gz')->prune->discard,
+    $rule->new->file->name( '*.log' )
+);
+
+
+my @files;
+for my $dir ( @logdirs ) {
+    push( @files, (-d $dir) ? $rule->in($dir) : $dir );
+}
+
+for my $file (@files) {
+    system  "$GZIP $file\n";
+}
+
+system 
+    "$RSYNC -n -e ssh --quiet --remove-sent-files --include '*.gz' " . 
+    join(" ",@logdirs) . " " .
+    "web@" . $machine . "::logs";
+
+
+
+1;
+
+
+sub usage {
+    print STDERR <<EOF;
+
+usage:  
+
+    kobj_log_daemon -m MACHINE
+
+Moves log files to the "logs" directory of user "web" on the specified 
+machine using rsync.  The source files are deleted after they're moved.
+
+Options are:
+
+  -m M	: name of machine to move logs files to
+
+
+EOF
+
+exit;
+
+
+}
+

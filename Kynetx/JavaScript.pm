@@ -146,14 +146,14 @@ sub gen_js_decl {
 
 
 sub gen_js_callbacks {
-    my ($callbacks,$type,$rule_name) = @_;
+    my ($callbacks,$txn_id,$type,$rule_name) = @_;
 
-    return join("", map {gen_js_callback($_,$type,$rule_name)} @{ $callbacks });
+    return join("", map {gen_js_callback($_,$txn_id,$type,$rule_name)} @{ $callbacks });
 
 }
 
 sub gen_js_callback {
-    my ($cb,$type,$rule_name) = @_;
+    my ($cb,$txn_id,$type,$rule_name) = @_;
 
     my $logger = get_logger();
     
@@ -164,6 +164,7 @@ sub gen_js_callback {
 	return 
 	    "KOBJ.obs(".
 	     mk_js_str($cb->{'attribute'}).",".
+	     mk_js_str($txn_id).",".
 	     mk_js_str($cb->{'value'}).",".
 	     mk_js_str($type).",".
 	     mk_js_str($rule_name).

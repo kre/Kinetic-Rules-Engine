@@ -120,6 +120,11 @@ sub pp_decl {
     my $beg = " "x$indent;
     my $o = $beg;
 
+
+    my $logger = get_logger();
+
+    $logger->debug("Seeing ", $node->{'type'});
+
     if($node->{'type'} eq 'counter') {
 	$o .= $node->{'lhs'} . " = " . $node->{'type'} . "." .  
 	    $node->{'name'} ;
@@ -225,12 +230,12 @@ sub pp_primrule{
     $o .= $node->{'action'}->{'name'} . "(";
     $o .= join ", ", pp_rands($node->{'action'}->{'args'});
     $o .= ")";
-    if(@{ $node->{'action'}->{'modifiers'} } > 0) {
- 	$o .= "\n". $beg . "with\n";
- 	$o .= join " and\n", 
- 	        map {pp_modifier($_, $indent+$g_indent+$g_indent)} 
- 	            @{ $node->{'action'}->{'modifiers'} };
-    }
+     if(@{ $node->{'action'}->{'modifiers'} } > 0) {
+  	$o .= "\n". $beg . "with\n";
+  	$o .= join " and\n", 
+  	        map {pp_modifier($_, $indent+$g_indent+$g_indent)} 
+  	            @{ $node->{'action'}->{'modifiers'} };
+     }
 	
     $o .= ";\n";
     

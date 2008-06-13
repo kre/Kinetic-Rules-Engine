@@ -6,6 +6,7 @@ use strict;
 use warnings;
 
 
+use Data::UUID;
 use SVN::Client;
 use Log::Log4perl qw(get_logger :levels);
 
@@ -41,6 +42,8 @@ sub process_rules {
 
     my $logger = get_logger();
 
+    $r->subprocess_env(START_TIME => Time::HiRes::time);
+
 
     if($r->dir_config('run_mode') eq 'development') {
 	# WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
@@ -53,7 +56,10 @@ sub process_rules {
     # get a session hash 
     my $session = process_session($r);
 
+
+
     # build initial env
+    my $ug = new Data::UUID;
     my $path_info = $r->path_info;
     my %request_info = (
 	host => $r->connection->get_remote_host,
@@ -63,6 +69,7 @@ sub process_rules {
 	hostname => $r->hostname(),
 	ip => $r->connection->remote_ip(),
 	pool => $r->pool,
+	txn_id => $ug->create_str(),
 	);
     
 
@@ -93,6 +100,7 @@ sub process_rules {
     my ($rules, $rule_env) = get_rule_set($request_info{'site'}, 
 					  $request_info{'caller'},
 					  $r->dir_config('svn_conn'));
+
 
     # this loops through the rules ONCE applying all that fire
     foreach my $rule ( @{ $rules } ) {
@@ -143,8 +151,7 @@ sub process_rules {
 			  \%request_info, 
 			  $rule_env,
 			  $session, 
-			  $rule->{'name'},
-			  $rule->{'action'}->{'name'}
+			  $rule->{'name'}
 		);
 
 	} else {

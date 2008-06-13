@@ -81,6 +81,8 @@ ExtUtils::XSBuilder
 
 JavaScript::Minifier
 
+Data::UUID
+
 =head1 DESCRIPTION
 
 This bundle is to install all the non-required modules that

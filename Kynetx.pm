@@ -49,7 +49,14 @@ sub handler {
 	flush_ruleset_cache($r);
     } elsif($r->path_info =~ m!/console/! ) {
 	show_context($r);
+    } elsif($r->path_info =~ m!/foo/! ) {
+	my $uniq = int(rand 999999999);
+	$r->content_type('text/html');
+	print "$uniq";
+	
+
     } else {
+
 	process_rules($r);
     }
 

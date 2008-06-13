@@ -223,15 +223,16 @@ sub get_local_time {
     my $tz = get_weather($req_info, 'timezone');
     $logger->debug("Timezone ", $tz);
 
+    # FIXME: need to do better with time zones
     $tz =~ s#E.T#America/New_York#;
     $tz =~ s#C.T#America/Chicago#;
     $tz =~ s#M.T#America/Denver#;
     $tz =~ s#P.T#America/Los_Angeles#;
 
-    # this code has the potential of breaking badly when the server
+    # FIXME: this code has the potential of breaking badly when the server
     # clock/timzone is not set right...
     my $now = DateTime->now;  
-    $now->set_time_zone($tz);
+    $now->set_time_zone($tz) if defined $tz;
 
     return $now;
 
@@ -350,8 +351,8 @@ sub today_is {
     my $logger = get_logger();
 
     my $now = get_local_time($req_info);
-    # this returns 1-7; we substract 1 to make it zero based
-    my $dow = ($now->day_of_week) -1;
+
+    my $dow = ($now->day_of_week);
 
     $logger->debug("Today is ", $dow);
     

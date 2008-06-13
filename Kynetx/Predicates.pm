@@ -23,6 +23,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 # to add a new module to the engine, add it's name here
 my @Predicate_modules = qw(
+Demographics
 Location
 Weather
 Time
@@ -97,6 +98,7 @@ sub eval_predicates {
 			   ')',
 		           ' -> ',
 		           $v);
+
 
 	} elsif ($cond->{'type'} eq 'counter') {
 
