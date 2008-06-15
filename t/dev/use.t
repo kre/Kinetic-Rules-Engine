@@ -9,6 +9,8 @@ use Test::More;
 use Test::LongString;
 use File::Find::Rule;
 
+use Apache2::Const;
+
 use Kynetx::Test qw/:all/;
 
 # will ignore things in this list
