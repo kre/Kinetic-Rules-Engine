@@ -1,4 +1,9 @@
+
+
+
+;
 FixedElement=Class.create();
+
 FixedElement.prototype={
     initialize:function(_44){
 	this.elem=_44;

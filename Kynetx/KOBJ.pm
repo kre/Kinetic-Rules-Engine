@@ -53,6 +53,7 @@ sub handler {
     }
 
     print $js;
+
     return Apache2::Const::OK; 
 
 }
