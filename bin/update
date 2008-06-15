@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+#
+
+cd ~/lib/perl
+
+svn up
+
+(cd ~/lib/perl/etc/kynetx-private-bundle; sudo perl -MCPAN -e 'install Bundle::kobj_modules')
+
+bin/install-httpd-conf.pl  -j -m 192.168.122.151,192.168.122.152
+
+bin/install-init-files.pl
+
+
