@@ -87,6 +87,8 @@ my %predicates = (
 	my $urban_pop = get_demographics($req_info, 'urban_pop');
 	my $total_pop = get_demographics($req_info, 'total_pop');
 
+	$total_pop = int($total_pop) || 1; # no div by zero!
+
 	my $urban_percent = int($urban_pop)/int($total_pop);
 
 	my $logger = get_logger();
