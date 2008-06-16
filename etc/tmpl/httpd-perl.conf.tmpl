@@ -376,22 +376,14 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 </LocationMatch>
 
 
-<Location /krl>
-
+<Location /rules>
   DAV svn
-
-  SVNPath /web/svn/krl/
-
+  SVNPath /web/svn/rule_repository/
   AuthType Basic
-
-  AuthName "KRL repository"
-
-  AuthUserFile /web/svn/krl/conf/svn-auth-file
-
+  AuthName "KRL Rule Repository"
+  AuthUserFile /web/svn/rule_repository/conf/svn-auth-file
   Require valid-user
-
 </Location>
-
 
 
 </TMPL_IF>
