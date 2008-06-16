@@ -66,7 +66,10 @@ sub process_action {
     $r->subprocess_env(SITE => $request_info{'site'});
     $r->subprocess_env(TXN_ID => $req->param('txn_id'));
     $r->subprocess_env(CALLER => $request_info{'caller'});
-    $r->subprocess_env(SESSION_ID => $session->{_session_id});
+
+    my $sid = $session->{'_session_id'};
+    $r->subprocess_env(SID => $sid);
+
     $r->subprocess_env(IP => $request_info{'ip'});
     $r->subprocess_env(REFERER => $request_info{'referer'});
     $r->subprocess_env(TITLE => $request_info{'title'});
@@ -74,7 +77,7 @@ sub process_action {
     $r->subprocess_env(SENSE => $req->param('sense'));
     $r->subprocess_env(TYPE => $req->param('type'));
     $r->subprocess_env(ELEMENT => $req->param('element'));
-    $r->subprocess_env(RULE => $req->param('rule'));
+    $r->subprocess_env(RULE_NAME => $req->param('rule'));
 
     $logger->debug("Finish time: ", time, " Start time: ", $r->subprocess_env('START_TIME'));
     $r->subprocess_env(TOTAL_SECS => Time::HiRes::time - 

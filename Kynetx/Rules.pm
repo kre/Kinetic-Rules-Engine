@@ -146,13 +146,16 @@ sub process_rules {
 
 	    $js .= eval_post_expr($cons, $session) if(defined $cons);
 
-	    # put this in the logging DB
-	    log_rule_fire($r, 
-			  \%request_info, 
-			  $rule_env,
-			  $session, 
-			  $rule->{'name'}
-		);
+	    push(@{ $rule_env->{'names'} }, $rule->{'name'});
+	    push(@{ $rule_env->{'results'} }, 'fired');
+	    push(@{ $rule_env->{'all_actions'} }, $rule_env->{'actions'});
+	    $rule_env->{'actions'} = ();
+	    push(@{ $rule_env->{'all_labels'} }, $rule_env->{'labels'});
+	    $rule_env->{'labels'} = ();
+	    push(@{ $rule_env->{'all_tags'} }, $rule_env->{'tags'});
+	    $rule_env->{'tags'} = ();
+
+
 
 	} else {
 	    $logger->info("did not fire");
@@ -160,17 +163,19 @@ sub process_rules {
 	    $js .= eval_post_expr($alt, $session) if(defined $alt);
 
 	    # put this in the logging DB
-	    log_rule_fire($r, 
-			  \%request_info, 
-			  $rule_env,
-			  $session, 
-			  $rule->{'name'},
-			  'not_fired'
-		);
-
+	    push(@{ $rule_env->{'names'} }, $rule->{'name'});
+	    push(@{ $rule_env->{'results'} }, 'notfired');
 
 
 	}
+
+	# put this in the logging DB
+	log_rule_fire($r, 
+		      \%request_info, 
+		      $rule_env,
+		      $session
+	    );
+
 
 	# return the JS load to the client
 	print $js; 
