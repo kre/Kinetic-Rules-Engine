@@ -115,9 +115,9 @@ sub process_action {
 #     $logger->debug("Using SQL: ", $log_sql);
 #     $dbh->do($log_sql);
 
-    if($request_info{'url'}){
-	$logger->debug("Redirecting to ", $request_info{'url'});
-	print "window.location = '" . $request_info{'url'} . "'";
+    if($req->param('url')){
+	$logger->debug("Redirecting to ", $req->param('url'));
+	print "window.location = '" . $req->param('url') . "'";
     }
 
 
