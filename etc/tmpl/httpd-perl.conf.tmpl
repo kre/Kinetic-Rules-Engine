@@ -31,6 +31,11 @@ LoadModule deflate_module modules/mod_deflate.so
 LoadModule expires_module modules/mod_expires.so
 LoadModule headers_module modules/mod_headers.so
 
+<TMPL_IF NAME="GENDER_KRL">
+LoadModule dav_module   modules/mod_dav.so
+LoadModule dav_svn_module     modules/mod_dav_svn.so
+LoadModule authz_svn_module   modules/mod_authz_svn.so
+</TMPL_IF>
 
 <IfModule !mpm_netware_module>
 User web
@@ -369,6 +374,26 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
   SetHandler perl-script
   PerlHandler Kynetx::RuleManager
 </LocationMatch>
+
+DavLockDB "/web/var/DavLock"
+
+<Location /krl>
+
+  DAV svn
+
+  SVNPath /web/svn/krl/
+
+  AuthType Basic
+
+  AuthName "KRL repository"
+
+  AuthUserFile /web/svn/krl/conf/svn-auth-file
+
+  Require valid-user
+
+</Location>
+
+
 
 </TMPL_IF>
 

@@ -1,3 +1,7 @@
+
+# You shouldn't need this anymore.
+# bin/install-httpd-conf.pl creates the right httpd.conf file 
+
 DavLockDB "/web/var/DavLock"
 
 <Location /krl>
