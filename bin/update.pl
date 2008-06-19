@@ -31,7 +31,7 @@ system "svn up";
 
 chdir "$base/lib/perl/etc/kynetx-private-bundle"; 
 
-system "sudo perl -MCPAN -e 'install Bundle::kobj_modules'"
+system "sudo perl -MCPAN -e 'install Bundle::kobj_modules'";
 
 chdir $base;
 
@@ -41,7 +41,7 @@ if ($init_gender) { # for init.kobj.net
 
     system "$base/bin/install-httpd-conf.pl  -j -m $memcache_ips";
     # install the right init files
-    system "$base/bin/install-init-files.pl"
+    system "$base/bin/install-init-files.pl";
 
 } elsif ($action_gender) { # for csXX.kobj.net
 
