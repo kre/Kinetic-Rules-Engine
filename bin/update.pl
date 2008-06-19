@@ -33,7 +33,7 @@ chdir $base;
 print "Updating source...\n";
 system "svn up";
 
-chdir "$base/lib/perl/etc/kynetx-private-bundle"; 
+chdir "$base/etc/kynetx-private-bundle"; 
 
 my $cd = getcwd();
 
