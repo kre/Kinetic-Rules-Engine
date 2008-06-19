@@ -13,6 +13,8 @@ my $web_root_var = 'WEB_ROOT';
 my $web_root = $ENV{$web_root_var} || 
     die "$web_root_var is undefined in the environment";
 
+my $APACHECTL = "$web_root/bin/apachectl";
+
 # global options
 use vars qw/ %opt /;
 my $opt_string = 'hajlkm:';
@@ -61,6 +63,9 @@ if ($init_gender) { # for init.kobj.net
 
     system "$base/bin/install-httpd-conf.pl -k";
 }
+
+print "Restart Apache...\n";
+system "$APACHECTL restart";
 
 
 1;
