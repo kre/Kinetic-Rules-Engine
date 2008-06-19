@@ -3,6 +3,7 @@
 use strict;
 
 use Getopt::Std;
+use Cwd;
 
 # config
 my $base_var = 'KOBJ_ROOT';
@@ -27,15 +28,20 @@ my $memcache_ips = $opt{'m'};
 # set the working directory
 chdir $base;
 
+print "Updating source...\n"
 system "svn up";
 
 chdir "$base/lib/perl/etc/kynetx-private-bundle"; 
 
+my $cd = getcwd();
+
+print "Updating perl modules (with sudo in $cd)...\n"
 system "sudo perl -MCPAN -e 'install Bundle::kobj_modules'";
 
 chdir $base;
 
 
+print "Updating httpd.conf and other machine specific iterms...\n";
 # set up the machine
 if ($init_gender) { # for init.kobj.net
 
@@ -77,6 +83,11 @@ Options are:
   -k	: Gender is KRL server
   -m ML : use memcached, ML is a comma seperated list of host IP numbers
 
+Examples:
+
+  For cs.kobj.net
+
+   update.pl -a -m 192.168.122.151,192.168.122.152
 
 
 EOF
