@@ -1,0 +1,14 @@
+2008-06-19  Phil Windley  <pjw@kynetx.com>
+
+	* bin/update.pl: added this to make updating servers easier
+	* added tests to Predicate file
+	* fixed a few small bugs in predicates
+
+2008-06-16  Phil Windley  <pjw@kynetx.com>
+
+	* added the Mobile module and tests.  Adds the predicate
+	'mobile()' which checks to see if the user agent is mobile.
+
+
+
+

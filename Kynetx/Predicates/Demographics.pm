@@ -38,7 +38,7 @@ my %predicates = (
 
 	my $income = get_demographics($req_info, 'median_income');
 
-	my $desired = $args->[0];
+	my $desired = $args->[0] || 0;
 	$desired =~ s/^'(.*)'$/$1/;  # for now, we have to remove quotes
 
 	my $logger = get_logger();
@@ -53,10 +53,10 @@ my %predicates = (
 
 	my $income = get_demographics($req_info, 'median_income');
 
-	my $low = $args->[0];
+	my $low = $args->[0] || 0;
 	$low =~ s/^'(.*)'$/$1/;  # for now, we have to remove quotes
 
-	my $high = $args->[1];
+	my $high = $args->[1] || 1000000;
 	$high =~ s/^'(.*)'$/$1/;  # for now, we have to remove quotes
 
 	my $logger = get_logger();
@@ -86,10 +86,10 @@ my %predicates = (
     'urban' => sub {
 	my ($req_info, $rule_env, $args) = @_;
 
-	my $urban_pop = get_demographics($req_info, 'urban_pop');
-	my $total_pop = get_demographics($req_info, 'total_pop');
+	my $urban_pop = get_demographics($req_info, 'urban_pop') || 0;
+	my $total_pop = get_demographics($req_info, 'total_pop') || 1; # no div by zero!
 
-	$total_pop = int($total_pop) || 1; # no div by zero!
+	$total_pop = int($total_pop); 
 
 	my $urban_percent = int($urban_pop)/$total_pop;
 
@@ -176,9 +176,8 @@ sub get_demographics {
 	    or die("can't open \%demo ($db_name): $!");
 	
 
-	$demo{$zip} = "0:0:0:0" unless defined $demo{$zip}; #default
 	my($total_pop,$urban_pop,$rural_pop,$median_income) = 
-	    split(/:/,$demo{$zip});
+	    split(/:/,$demo{$zip} || "0:0:0:0");
 
 	$logger->debug($demo{$zip});
 	

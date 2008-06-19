@@ -133,10 +133,10 @@ my %predicates = (
     
     },
 
-    # between 20:00 and 20:00
+    # between 20:00 and 24:00
     'night' => sub {
 	my ($req_info, $rule_env, $args) = @_;
-	return local_time_between($req_info, 20, 0, 24, 0)
+	return local_time_between($req_info, 20, 0, 23, 59)
     
     },
 

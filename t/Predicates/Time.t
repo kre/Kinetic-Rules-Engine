@@ -5,7 +5,6 @@ use lib qw(/web/lib/perl);
 use strict;
 
 use Test::More;
-plan tests => 20;
 use Test::LongString;
 
 # most Kyentx modules require this
@@ -22,6 +21,11 @@ use Kynetx::Test qw/:all/;
 use Kynetx::JavaScript qw/:all/;
 use Kynetx::Predicates::Time qw/:all/;
 
+my $preds = Kynetx::Predicates::Time::get_predicates();
+my @pnames = keys (%{ $preds } );
+plan tests => 16 + int(@pnames);
+
+
 my $NYU_req_info;
 $NYU_req_info->{'ip'} = '128.122.108.71'; # New York (NYU)
 
@@ -33,11 +37,11 @@ $BYU_req_info->{'ip'} = '128.187.16.242'; # Utah (BYU)
 
 my %rule_env = ();
 
-my $preds = Kynetx::Predicates::Time::get_predicates();
-ok(exists $preds->{'daytime'}, "Is daytime predicate available?");
-ok(exists $preds->{'nighttime'}, "Is nighttime predicate available?");
-ok(exists $preds->{'morning'}, "Is morning predicate available?");
-ok(exists $preds->{'timezone'}, "Is timezone predicate available?");
+# check that predicates at least run without error
+my @dummy_arg = (0,0,0,0,0,0,0);
+foreach my $pn (@pnames) {
+    ok(&{$preds->{$pn}}($BYU_req_info, \%rule_env,\@dummy_arg) ? 1 : 1, "$pn runs");
+}
 
 
 # ok($preds->{'timezone'}($BYU_req_info, {}, ["America/Denver"]), "Checking Mountain Time Zone"); 
@@ -144,7 +148,10 @@ ok(
    "Check today");
 
 
-# not using this
+
+
+
+# Not using this
 
 my @jsargs = (
             {

@@ -4,7 +4,6 @@ use lib qw(/web/lib/perl);
 use strict;
 
 use Test::More;
-plan tests => 7;
 use Test::LongString;
 
 # most Kyentx modules require this
@@ -20,6 +19,11 @@ use APR::Pool ();
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Predicates::Referers qw/:all/;
+my $preds = Kynetx::Predicates::Referers::get_predicates();
+my @pnames = keys (%{ $preds } );
+
+plan tests => 7 + int(@pnames);
+
 
 my $BYU_req_info;
 $BYU_req_info->{'referer'} = 'http://www.byu.edu'; # Utah (BYU)
@@ -30,7 +34,12 @@ $no_referer_req_info->{'pool'} = APR::Pool->new;
 
 my %rule_env = ();
 
-my $preds = Kynetx::Predicates::Referers::get_predicates();
+
+# check that predicates at least run without error
+my @dummy_arg = (0);
+foreach my $pn (@pnames) {
+    ok(&{$preds->{$pn}}($BYU_req_info, \%rule_env,\@dummy_arg) ? 1 : 1, "$pn runs");
+}
 
 
 ok(exists $preds->{'search_engine_referer'}, 

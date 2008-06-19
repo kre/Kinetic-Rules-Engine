@@ -83,6 +83,8 @@ JavaScript::Minifier
 
 Data::UUID
 
+Mobile::UserAgent
+
 =head1 DESCRIPTION
 
 This bundle is to install all the non-required modules that

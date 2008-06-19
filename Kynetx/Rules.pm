@@ -67,7 +67,8 @@ sub process_rules {
 	now => time,
 	site => $path_info =~ m#/(\d+)/.*\.js#,
 	hostname => $r->hostname(),
-	ip => $r->connection->remote_ip(),
+	ip => $r->connection->remote_ip() || '0.0.0.0',
+	ua => $r->headers_in->{UserAgent} || '',
 	pool => $r->pool,
 	txn_id => $ug->create_str(),
 	);
@@ -165,6 +166,12 @@ sub process_rules {
 	    # put this in the logging DB
 	    push(@{ $rule_env->{'names'} }, $rule->{'name'});
 	    push(@{ $rule_env->{'results'} }, 'notfired');
+	    push(@{ $rule_env->{'all_actions'} }, []);
+	    $rule_env->{'actions'} = ();
+	    push(@{ $rule_env->{'all_labels'} }, []);
+	    $rule_env->{'labels'} = ();
+	    push(@{ $rule_env->{'all_tags'} }, []);
+	    $rule_env->{'tags'} = ();
 
 
 	}

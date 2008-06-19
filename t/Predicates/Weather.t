@@ -4,7 +4,6 @@ use lib qw(/web/lib/perl);
 use strict;
 
 use Test::More;
-plan tests => (48 * (4 * 5)) + 4;
 use Test::LongString;
 
 # most Kyentx modules require this
@@ -20,6 +19,13 @@ use DateTime;
 use Kynetx::Test qw/:all/;
 use Kynetx::Predicates::Weather qw/:all/;
 
+my $preds = Kynetx::Predicates::Weather::get_predicates();
+my @pnames = keys (%{ $preds } );
+
+plan tests => (48 * (4 * 5)) + 4 + int(@pnames);
+
+
+
 my $NYU_req_info;
 $NYU_req_info->{'ip'} = '128.122.108.71'; # New York (NYU)
 
@@ -31,10 +37,16 @@ $BYU_req_info->{'ip'} = '128.187.16.242'; # Utah (BYU)
 
 my %rule_env = ();
 
+# check that predicates at least run without error
+my @dummy_arg = (0);
+foreach my $pn (@pnames) {
+    ok(&{$preds->{$pn}}($BYU_req_info, \%rule_env,\@dummy_arg) ? 1 : 1, "$pn runs");
+}
+
+
 my $ccc = get_weather($BYU_req_info, 'curr_cond_code');
 my $tcc = get_weather($BYU_req_info, 'tomorrow_cond_code');
 
-my $preds = Kynetx::Predicates::Weather::get_predicates();
 
 ok(defined($ccc), "Current condition code not undef");
 ok(defined($tcc), "Tomorrow's condition code not undef");

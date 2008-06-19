@@ -29,6 +29,7 @@ Weather
 Time
 Markets
 Referers
+Mobile
 );
 
 # eval necessary with computed module names (not bare words)
@@ -46,9 +47,7 @@ foreach my $module (@Predicate_modules) {
 
 # start with some global predicates
 my %predicates = (
-    'true' => sub  { 1; },
-    'mobile' => sub  { 1; },  # for testing until the Mobile module exists
-
+    'truth' => sub  { 1; },
     );
 
 

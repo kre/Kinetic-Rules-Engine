@@ -243,7 +243,7 @@ LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combine
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/init_log /web/logs/kynetx/INIT-%Y%m%d-%H%M.log" combined env=INIT
 
 # rule logging for CS
-LogFormat "%h %t %{TOTAL_SECS}e %{SITE}e %{TXN_ID}e \"%{CALLER}e\" %{SID}e %{IP}e \"%{REFERER}e\" \"%{TITLE}e\" [%{RULE_NAMES}e] [%{RESULTS}e] [%{ACTIONS}e] [%{TAGS}e]  [%{LABELS}e] " KOBJ
+LogFormat "%h %t %{TOTAL_SECS}e %{SITE}e %{TXN_ID}e \"%{CALLER}e\" %{SID}e \"%{REFERER}e\" \"%{TITLE}e\" [%{RULE_NAMES}e] [%{RESULTS}e] [%{ACTIONS}e] [%{TAGS}e]  [%{LABELS}e] " KOBJ
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/kynetx_log /web/logs/kynetx/KOBJ-%Y%m%d-%H%M.log" KOBJ env=KOBJ
 
 # callback logging for LOG

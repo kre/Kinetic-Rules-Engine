@@ -63,7 +63,13 @@ sub process_action {
 
     my $req = Apache2::Request->new($r);
 
+    Log::Log4perl::MDC->put('site', $request_info{'site'});
+    Log::Log4perl::MDC->put('rule', $request_info{'rule'}); 
+
+
     $r->subprocess_env(SITE => $request_info{'site'});
+
+    # make sure we use the one sent, not the one for this interaction
     $r->subprocess_env(TXN_ID => $req->param('txn_id'));
     $r->subprocess_env(CALLER => $request_info{'caller'});
 
@@ -84,8 +90,6 @@ sub process_action {
 	$r->subprocess_env('START_TIME'));
    
 
-    Log::Log4perl::MDC->put('site', $request_info{'site'});
-    Log::Log4perl::MDC->put('rule', $request_info{'rule'}); 
 
     $logger->info("Processing callback for site " . $request_info{'site'});
 
