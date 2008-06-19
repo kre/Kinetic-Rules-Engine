@@ -13,7 +13,7 @@ my $web_root_var = 'WEB_ROOT';
 my $web_root = $ENV{$web_root_var} || 
     die "$web_root_var is undefined in the environment";
 
-my $APACHECTL = "$web_root/bin/apachectl";
+my $APACHECTL = "sudo /etc/init.d/httpd";
 
 # global options
 use vars qw/ %opt /;
