@@ -30,14 +30,14 @@ my $memcache_ips = $opt{'m'};
 # set the working directory
 chdir $base;
 
-print "Updating source...\n"
+print "Updating source...\n";
 system "svn up";
 
 chdir "$base/lib/perl/etc/kynetx-private-bundle"; 
 
 my $cd = getcwd();
 
-print "Updating perl modules (with sudo in $cd)...\n"
+print "Updating perl modules (with sudo in $cd)...\n";
 system "sudo perl -MCPAN -e 'install Bundle::kobj_modules'";
 
 chdir $base;
