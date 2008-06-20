@@ -403,6 +403,9 @@ Alias /widgets/ "/web/lib/perl/widgets/"
   # env var to turn on INIT logging
   PerlSetEnv INIT 1 
 
+  # mode => development, production, test
+  PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
+
 
   SetHandler perl-script
   PerlResponseHandler ModPerl::Registry

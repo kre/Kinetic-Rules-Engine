@@ -14,6 +14,7 @@ use HTML::Template;
 use LWP::Simple;
 use XML::XPath;
 
+
 use Kynetx::Predicates::Location qw(get_geoip);
 use Kynetx::Predicates::Weather qw(get_weather);
 use Kynetx::Session qw(:all);
@@ -131,46 +132,47 @@ KOBJ.update_elements({
 EOF
 
 
+my ($t, $req_info, $zip);
+
+#$req_info->{'ip'} = '72.21.203.1'; # Seattle (Amazon) for testing
+$req_info->{'ip'} = $q->remote_addr();
+
+
+my $logger = get_logger();
+$logger->debug("IP address: ", $req_info->{'ip'});
+
+$zip = get_geoip($req_info,'postal_code');
+
+
 if(defined $q->param('zip')) {
 
     print $q->header(-Content_type => 'text/javascript');
 
-    my $t = HTML::Template->new(scalarref => \$data_page);
+    $t = HTML::Template->new(scalarref => \$data_page);
 
-    my $req_info;
     $req_info->{'geoip'}->{'postal_code'} = $q->param('zip');
-
-    my $tc = get_weather($req_info,'tomorrow_cond_code');
-    my $city = get_weather($req_info,'city');
-
-    $t->param(city => ($city.''));
-    $t->param(forecast => $codes{$tc});
-   
-    my $img = "<img  src=\"http://l.yimg.com/us.yimg.com/i/us/we/52/$tc.gif\" border=\"0\" hspace=\"3\" vspace=\"3\"  />";
-
-    $t->param(weather_image => $img);
-
-    print $t->output;
 
 } else {
 
     print $q->header();
 
-    my $t = HTML::Template->new(scalarref => \$main_page);
-
-    $t->param(city => $q->param('city'));
-    $t->param(forecast => $codes{$q->param('tc')});
-    $t->param(url => $q->url());
-
-    my $tc = $q->param('tc');
-
-    my $img = "<img  src=\"http://l.yimg.com/us.yimg.com/i/us/we/52/$tc.gif\" border=\"0\" hspace=\"3\" vspace=\"3\"  />";
-
-    $t->param(weather_image => $img);
-
-    print $t->output;
+    $t = HTML::Template->new(scalarref => \$main_page);
 
 }
+
+my $tc = get_weather($req_info,'tomorrow_cond_code');
+my $city = get_weather($req_info,'city');
+
+$t->param(city => ($city.''));
+$t->param(forecast => $codes{$tc});
+$t->param(url => $q->url());
+
+my $img = "<img  src=\"http://l.yimg.com/us.yimg.com/i/us/we/52/$tc.gif\" border=\"0\" hspace=\"3\" vspace=\"3\"  />";
+
+$t->param(weather_image => $img);
+
+print $t->output;
+
 
 
 1;
