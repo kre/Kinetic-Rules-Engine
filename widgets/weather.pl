@@ -148,7 +148,9 @@ if(defined $q->param('zip')) {
 
     print $q->header(-Content_type => 'text/javascript');
 
-    $t = HTML::Template->new(scalarref => \$data_page);
+    $t = HTML::Template->new(scalarref => \$data_page,
+			     die_on_bad_params => 0, 
+	);
 
     $req_info->{'geoip'}->{'postal_code'} = $q->param('zip');
 
@@ -156,7 +158,9 @@ if(defined $q->param('zip')) {
 
     print $q->header();
 
-    $t = HTML::Template->new(scalarref => \$main_page);
+    $t = HTML::Template->new(scalarref => \$main_page,
+			     die_on_bad_params => 0, 
+	);
 
 }
 
