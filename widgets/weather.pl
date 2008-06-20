@@ -112,9 +112,9 @@ forecast for tomorrow in<br/>
 
 </div>
 
-<div style="color: #3333FF; text-decoration: underline" id="kobj_zip" onclick="new Effect.Fade(this);new Effect.BlindDown($(kobj_weather_3));Form.focusFirstElement('zip_form');">Not in <TMPL_VAR NAME=city>?</div>
+<div style="color: #3333FF; text-decoration: underline" id="kobj_zip" onclick="new Effect.Fade(this);new Effect.BlindDown($('kobj_weather_3'));Form.focusFirstElement('zip_form');">Not in <TMPL_VAR NAME=city>?</div>
 
-<div style="color: #3333FF; text-decoration: underline" id="kobj_close" onclick="new Effect.BlindUp($(kobj_weather_1));">close</div>
+<div style="color: #3333FF; text-decoration: underline" id="kobj_close" onclick="new Effect.BlindUp($('kobj_weather_1'));">close</div>
 
 </div>
 </div>
