@@ -162,6 +162,7 @@ if(defined $q->param('zip')) {
 			     die_on_bad_params => 0, 
 	);
 
+    $t->param(url => $q->url());
 }
 
 my $tc = get_weather($req_info,'tomorrow_cond_code');
@@ -169,7 +170,6 @@ my $city = get_weather($req_info,'city');
 
 $t->param(city => ($city.''));
 $t->param(forecast => $codes{$tc});
-$t->param(url => $q->url());
 
 my $img = "<img  src=\"http://l.yimg.com/us.yimg.com/i/us/we/52/$tc.gif\" border=\"0\" hspace=\"3\" vspace=\"3\"  />";
 
