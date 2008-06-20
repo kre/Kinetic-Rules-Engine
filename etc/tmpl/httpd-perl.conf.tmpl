@@ -191,7 +191,11 @@ DefaultType text/javascript
 #
 # Some examples:
 #ErrorDocument 500 "The server made a boo boo."
+<TMPL_IF NAME="GENDER_KRL">
+ErrorDocument 404 default
+<TMPL_ELSE>
 ErrorDocument 404 http://www.kynetx.com/kobj/index.html
+</TMPL_IF>
 #ErrorDocument 404 "/cgi-bin/missing_handler.pl"
 #ErrorDocument 402 http://www.example.com/subscription_info.html
 #
