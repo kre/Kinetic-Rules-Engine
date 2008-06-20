@@ -238,7 +238,7 @@ ErrorLog "|/web/sbin/cronolog --symlink=/web/logs/error_log /web/logs/%Y/%m/%d/e
 # LogLevel: Control the number of messages logged to the error_log.
 LogLevel warn
 
-# logging for INIT
+# logging for INIT, KRL, and FRAG
 LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/init_log /web/logs/kynetx/INIT-%Y%m%d-%H%M.log" combined env=INIT
 
@@ -264,6 +264,7 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
   PerlSetVar init_host <TMPL_VAR NAME=INIT_HOST>
   PerlSetVar log_host <TMPL_VAR NAME=LOG_HOST>
   PerlSetVar action_host <TMPL_VAR NAME=ACTION_HOST>
+  PerlSetVar frag_host <TMPL_VAR NAME=FRAG_HOST>
 
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
@@ -298,6 +299,7 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
   PerlSetVar init_host <TMPL_VAR NAME=INIT_HOST>
   PerlSetVar log_host <TMPL_VAR NAME=LOG_HOST>
   PerlSetVar action_host <TMPL_VAR NAME=ACTION_HOST>
+  PerlSetVar frag_host <TMPL_VAR NAME=FRAG_HOST>
 
   # database configuration
   PerlSetVar db_host <TMPL_VAR NAME=DB_HOST>
@@ -348,6 +350,7 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
   PerlSetVar init_host <TMPL_VAR NAME=INIT_HOST>
   PerlSetVar log_host <TMPL_VAR NAME=LOG_HOST>
   PerlSetVar action_host <TMPL_VAR NAME=ACTION_HOST>
+  PerlSetVar frag_host <TMPL_VAR NAME=FRAG_HOST>
 
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
@@ -362,11 +365,15 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 <LocationMatch /manage/>
   # Eventually this ought to come from the client configuration DB
 
+  # env var to turn on INIT logging
+  PerlSetEnv INIT 1 
+
   # host names
   PerlSetVar init_host <TMPL_VAR NAME=INIT_HOST>
   PerlSetVar log_host <TMPL_VAR NAME=LOG_HOST>
   PerlSetVar action_host <TMPL_VAR NAME=ACTION_HOST>
   PerlSetVar krl_host <TMPL_VAR NAME=KRL_HOST>
+  PerlSetVar frag_host <TMPL_VAR NAME=FRAG_HOST>
 
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
@@ -388,12 +395,20 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 
 </TMPL_IF>
 
-Alias /widgets/ "/web/widgets/"
+
+<TMPL_IF NAME="GENDER_FRAG">
+Alias /widgets/ "/web/lib/perl/widgets/"
 <Location /widgets>
-      SetHandler perl-script
-      PerlResponseHandler ModPerl::Registry
-      PerlOptions +ParseHeaders
-      Options +ExecCGI
-      Order allow,deny
-      Allow from all 
+
+  # env var to turn on INIT logging
+  PerlSetEnv INIT 1 
+
+
+  SetHandler perl-script
+  PerlResponseHandler ModPerl::Registry
+  PerlOptions +ParseHeaders
+  Options +ExecCGI
+  Order allow,deny
+  Allow from all 
 </Location>
+</TMPL_IF>

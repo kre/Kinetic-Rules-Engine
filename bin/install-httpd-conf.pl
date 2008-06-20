@@ -21,7 +21,7 @@ my $conf_file = 'httpd.conf';
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'hajlkdrm:';
+my $opt_string = 'hajlkfdrm:';
 getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'};
 
@@ -29,12 +29,14 @@ my $init_gender = $opt{'j'} || 0;
 my $action_gender = $opt{'a'} || 0;
 my $log_gender = $opt{'l'} || 0;
 my $krl_gender = $opt{'k'} || 0;
+my $frag_gender = $opt{'f'} || 0;
 my @mcd_hosts = $opt{'m'} ? split(/,/,$opt{'m'}) : [];
 
 my $init_host = 'init.kobj.net';
 my $log_host = 'logger.kobj.net';
 my $action_host = 'cs.kobj.net';
 my $krl_host = 'krl.kobj.net';
+my $frag_host = 'frag.kobj.net';
 my $db_host = 'db2.kobj.net';
 my $db_username = 'logger';
 my $db_passwd = '$kynetx123$';
@@ -42,6 +44,7 @@ if ($opt{'d'}) { # development
     $init_host = '127.0.0.1';
     $log_host = '127.0.0.1';
     $action_host = '127.0.0.1';
+    $frag_host = '127.0.0.1';
     $db_host = 'localhost';
     $db_username = 'root';
     $db_passwd = 'foobar';
@@ -57,7 +60,10 @@ if ($opt{'r'}) {
 
 
 die "Must specify at least one option.  See $0 -h for more info."
-    unless ($init_gender || $action_gender || $log_gender || $krl_gender);
+    unless ($init_gender || $action_gender || 
+	    $log_gender || $krl_gender ||
+	    $frag_gender
+    );
 
 
 # open the html template
@@ -71,12 +77,14 @@ $conf_template->param(GEN_DATE => $datenow);
 $conf_template->param(JS_VERSION => '0.8');
 $conf_template->param(INIT_HOST => $init_host);
 $conf_template->param(LOG_HOST => $log_host);
+$conf_template->param(FRAG_HOST => $log_host);
 $conf_template->param(ACTION_HOST => $action_host);
 $conf_template->param(KRL_HOST => $krl_host);
 $conf_template->param(GENDER_ACTION => 1) if $action_gender;
 $conf_template->param(GENDER_LOG => 1) if $log_gender;
 $conf_template->param(GENDER_INIT => 1) if $init_gender;
 $conf_template->param(GENDER_KRL => 1) if $krl_gender;
+$conf_template->param(GENDER_FRAG => 1) if $frag_gender;
 
 # database
 $conf_template->param(DB_HOST => $db_host);
@@ -140,6 +148,7 @@ Options are:
   -l	: Gender is log server
   -j	: Gender is Javascript server (init)
   -k	: Gender is KRL server
+  -f	: Gender is FRAG server
   -d    : use 127.0.0.1 as the host
   -r    : use local rules repository (not krl.kobj.net)
   -m ML : use memcached, ML is a comma seperated list of host IP numbers
@@ -150,7 +159,11 @@ Examples:
 
 For local running all on one machine
 
-   install-httpd-conf.pl -aljkdr -m 127.0.0.1
+   install-httpd-conf.pl -aljkfdr -m 127.0.0.1
+
+For local running all on one machine with remote repository
+
+   install-httpd-conf.pl -aljkfd -m 127.0.0.1
 
 For cs.kobj.net
 
@@ -168,6 +181,11 @@ For init.kobj.net
 For krl.kobj.net
 
    install-httpd-conf.pl -k
+
+
+For frag.kobj.net
+
+   install-httpd-conf.pl -f
 
 
 
