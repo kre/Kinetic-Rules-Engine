@@ -27,7 +27,7 @@ use vars qw/ %opt /;
 my $opt_string = 'hm:';
 getopts( "$opt_string", \%opt ); # or &usage();
 
-my $machine = $opt{'m'} || 'logs.kobj.net';
+my $machine = $opt{'m'} || 'unionstation.kobj.net';
 &usage() if $opt{'h'};
 
 my $rule = File::Find::Rule->new;

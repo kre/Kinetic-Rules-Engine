@@ -288,8 +288,10 @@ sub get_rules_from_repository{
 
     my $ext;
     foreach $ext ('.krl','.json') {
+	my $svn_path = $svn_url.$site.$ext;
 	eval {
-	    $ctx->info($svn_url.$site.$ext, 
+	    $logger->debug("Getting info on ", $svn_path);
+	    $ctx->info($svn_path, 
 		       undef,
 		       'HEAD',
 		       $info,
@@ -297,6 +299,7 @@ sub get_rules_from_repository{
 		);
 	};
 	if($@) {  # catch file doesn't exist...
+#	    $logger->debug($svn_path, " returned error ", $@);
 	    $d{$site.$ext} = -1;
 	}
     }

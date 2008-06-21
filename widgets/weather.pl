@@ -25,7 +25,6 @@ Log::Log4perl->easy_init($DEBUG);
 
 
 
-my $q = CGI->new();
 
 
 my %codes = (
@@ -134,6 +133,8 @@ EOF
 
 my ($t, $req_info, $zip);
 
+my $q = CGI->new();
+
 #$req_info->{'ip'} = '72.21.203.1'; # Seattle (Amazon) for testing
 $req_info->{'ip'} = $q->remote_addr();
 
@@ -153,6 +154,8 @@ if(defined $q->param('zip')) {
 	);
 
     $req_info->{'geoip'}->{'postal_code'} = $q->param('zip');
+    $logger->debug("Resetting zip: ", $q->param('zip'));
+
 
 } else {
 
