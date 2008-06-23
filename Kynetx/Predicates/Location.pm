@@ -125,7 +125,7 @@ sub get_geoip {
 
 	my $logger = get_logger();
 
-	if defined $record {
+	if (defined $record) {
 	
 	    $logger->debug("GeoIP data for ($field): ", $req_info->{'ip'});
 
