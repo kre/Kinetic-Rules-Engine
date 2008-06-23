@@ -9,10 +9,10 @@ use strict;
 use lib qw(/web/lib/perl);
 
 
-use CGI;
 use HTML::Template;
 use LWP::Simple;
 use XML::XPath;
+use Apache2::Request ();
 
 
 use Kynetx::Predicates::Location qw(get_geoip);
@@ -23,8 +23,7 @@ use Kynetx::Session qw(:all);
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($DEBUG);
 
-
-
+my $r = shift;
 
 
 my %codes = (
@@ -133,10 +132,16 @@ EOF
 
 my ($t, $req_info, $zip);
 
-my $q = CGI->new();
 
-#$req_info->{'ip'} = '72.21.203.1'; # Seattle (Amazon) for testing
-$req_info->{'ip'} = $q->remote_addr();
+
+if($r->dir_config('run_mode') eq 'development') {
+    # WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
+#        $r->connection->remote_ip('128.122.108.71'); # New York (NYU)
+    $r->connection->remote_ip('72.21.203.1'); # Seattle (Amazon)
+#        $r->connection->remote_ip('128.187.16.242'); # Utah (BYU)
+} 
+
+$req_info->{'ip'} = $r->connection->remote_ip() || '0.0.0.0';
 
 
 my $logger = get_logger();
@@ -144,28 +149,31 @@ $logger->debug("IP address: ", $req_info->{'ip'});
 
 $zip = get_geoip($req_info,'postal_code');
 
+my $req = Apache2::Request->new($r);
 
-if(defined $q->param('zip')) {
 
-    print $q->header(-Content_type => 'text/javascript');
+if(defined $req->param('zip')) {
+
+    print $r->content_type('text/javascript');
 
     $t = HTML::Template->new(scalarref => \$data_page,
 			     die_on_bad_params => 0, 
 	);
 
-    $req_info->{'geoip'}->{'postal_code'} = $q->param('zip');
-    $logger->debug("Resetting zip: ", $q->param('zip'));
+    $req_info->{'geoip'}->{'postal_code'} = $req->param('zip');
+    $logger->debug("Resetting zip: ", $req->param('zip'));
 
 
 } else {
 
-    print $q->header();
+    print $r->content_type('text/html');
+
 
     $t = HTML::Template->new(scalarref => \$main_page,
 			     die_on_bad_params => 0, 
 	);
 
-    $t->param(url => $q->url());
+    $t->param(url => $r->headers_in->{'Referer'});
 }
 
 my $tc = get_weather($req_info,'tomorrow_cond_code');
