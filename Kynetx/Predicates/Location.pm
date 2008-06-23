@@ -124,11 +124,18 @@ sub get_geoip {
 	my $record = $gi->record_by_addr($req_info->{'ip'});
 
 	my $logger = get_logger();
-	$logger->debug("GeoIP data for ($field): ", $req_info->{'ip'});
+
+	if defined $record {
+	
+	    $logger->debug("GeoIP data for ($field): ", $req_info->{'ip'});
 
 	
-	for my $name (@field_names) {
-	    $req_info->{'geoip'}->{$name} = $record->$name;
+	    for my $name (@field_names) {
+		$req_info->{'geoip'}->{$name} = $record->$name;
+	    }
+	} else {
+	    $logger->debug("No GeoIP data for ", $req_info->{'ip'});
+	    return '';
 	}
 
     }

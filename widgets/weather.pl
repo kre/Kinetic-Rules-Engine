@@ -90,6 +90,7 @@ style="padding: 3pt;
 
 <div id="kobj_weather_2">
 
+<TMPL_IF NAME=forecast>
 <p>
 <span id="kobj_forecast"><TMPL_VAR NAME=forecast></span>
 forecast for tomorrow in<br/> 
@@ -101,6 +102,11 @@ forecast for tomorrow in<br/>
 <TMPL_VAR NAME=weather_image>
 </span>
 </p>
+<TMPL_ELSE>
+<p>
+Sorry, we can't determine your location to show the weather forecast.
+</p>
+</TMPL_IF>
 
 <div id="kobj_weather_3" style="display: none">
 <form id="zip_form" onSubmit="KOBJ.fragment('<TMPL_VAR NAME=url>?'+this.serialize());new Effect.Fade($('kobj_weather_3')); return false">
@@ -119,6 +125,7 @@ forecast for tomorrow in<br/>
 
 EOF
 
+# ' fix 
 
 my $data_page = <<'EOF';
 KOBJ.update_elements({
@@ -154,7 +161,7 @@ my $req = Apache2::Request->new($r);
 
 if(defined $req->param('zip')) {
 
-    print $r->content_type('text/javascript');
+    $r->content_type('text/javascript');
 
     $t = HTML::Template->new(scalarref => \$data_page,
 			     die_on_bad_params => 0, 
@@ -166,7 +173,7 @@ if(defined $req->param('zip')) {
 
 } else {
 
-    print $r->content_type('text/html');
+    $r->content_type('text/html');
 
 
     $t = HTML::Template->new(scalarref => \$main_page,
@@ -175,6 +182,8 @@ if(defined $req->param('zip')) {
 
     $t->param(url => $r->headers_in->{'Referer'});
 }
+
+
 
 my $tc = get_weather($req_info,'tomorrow_cond_code');
 my $city = get_weather($req_info,'city');
