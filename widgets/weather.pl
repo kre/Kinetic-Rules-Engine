@@ -110,8 +110,9 @@ Sorry, we can't determine your location to show the weather forecast.
 <div id="kobj_weather_3" style="display: none">
 <form id="zip_form" onSubmit="KOBJ.fragment('<TMPL_VAR NAME=url>?'+this.serialize());new Effect.Fade($('kobj_weather_3')); return false">
 <label>Please enter your zip code and press return</label><br/>
-<input id='zip' name="zip"/ type="text" size="10"><br/>
-    </form>
+<input id='zip' name="zip" type="text" size="10"/><br/>
+<input name="redo" value="1" type="hidden"/>
+</form>
 
 </div>
 
@@ -159,14 +160,15 @@ $req_info->{'ip'} = $r->connection->remote_ip() || '0.0.0.0';
 my $logger = get_logger();
 $logger->debug("IP address: ", $req_info->{'ip'});
 
-$zip = get_geoip($req_info,'postal_code');
 
 my $req = Apache2::Request->new($r);
 
 
+$zip = $req->param('zip');
+$req_info->{'geoip'}->{'postal_code'} = $zip;
 
 
-if(defined $req->param('zip')) {
+if(defined $req->param('redo')) {
 
     $r->content_type('text/javascript');
 
@@ -174,8 +176,7 @@ if(defined $req->param('zip')) {
 			     die_on_bad_params => 0, 
 	);
 
-    $req_info->{'geoip'}->{'postal_code'} = $req->param('zip');
-    $logger->debug("Resetting zip: ", $req->param('zip'));
+    $logger->debug("Resetting zip: ", $zip);
 
 
 } else {
