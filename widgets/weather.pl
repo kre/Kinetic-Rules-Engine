@@ -17,7 +17,6 @@ use Apache2::Request ();
 
 use Kynetx::Predicates::Location qw(get_geoip);
 use Kynetx::Predicates::Weather qw(get_weather);
-use Kynetx::Session qw(:all);
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
@@ -165,6 +164,8 @@ $zip = get_geoip($req_info,'postal_code');
 my $req = Apache2::Request->new($r);
 
 
+
+
 if(defined $req->param('zip')) {
 
     $r->content_type('text/javascript');
@@ -186,7 +187,7 @@ if(defined $req->param('zip')) {
 			     die_on_bad_params => 0, 
 	);
 
-    $t->param(url => $r->headers_in->{'Referer'});
+    $t->param(url => 'http://' . $r->hostname . $r->uri);
 }
 
 
