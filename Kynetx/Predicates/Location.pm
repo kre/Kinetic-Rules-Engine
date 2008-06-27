@@ -127,12 +127,20 @@ sub get_geoip {
 
 	if (defined $record) {
 	
-	    $logger->debug("GeoIP data for ($field): ", $req_info->{'ip'});
+	    $logger->debug("GeoIP data for ($field): ", $record->$field);
 
 	
 	    for my $name (@field_names) {
 		$req_info->{'geoip'}->{$name} = $record->$name;
 	    }
+
+	    # add some more common names
+	    $req_info->{'geoip'}->{'state'} = 
+		$req_info->{'geoip'}->{'region'};
+	    $req_info->{'geoip'}->{'zip'} = 
+		$req_info->{'geoip'}->{'postal_code'};
+	    
+
 	} else {
 	    $logger->debug("No GeoIP data for ", $req_info->{'ip'});
 	    return '';
