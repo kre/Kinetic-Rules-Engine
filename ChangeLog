@@ -1,5 +1,6 @@
 2008-07-02  Phil Windley  <pjw@kynetx.com>
 
+	* bin/update.pl: Added support for fragment servers
 	* Kynetx/JavaScript.pm: Added eval_js_expr to reduce a JS
 	expression to a simple string, int, etc.   This is used in
 	Actions.pm before grabbing a URL expression on the server.

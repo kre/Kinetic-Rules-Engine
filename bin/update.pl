@@ -25,6 +25,7 @@ my $init_gender = $opt{'j'} || 0;
 my $action_gender = $opt{'a'} || 0;
 my $log_gender = $opt{'l'} || 0;
 my $krl_gender = $opt{'k'} || 0;
+my $frag_gender = $opt{'f'} || 0;
 my $memcache_ips = $opt{'m'};
 
 # set the working directory
@@ -62,6 +63,9 @@ if ($init_gender) { # for init.kobj.net
 } elsif ($krl_gender) { # for krl.kobj.net
 
     system "$base/bin/install-httpd-conf.pl -k";
+}if ($krl_gender) { # for krl.kobj.net
+
+    system "$base/bin/install-httpd-conf.pl -f -m $memcache_ips";
 }
 
 print "Restart Apache...\n";
