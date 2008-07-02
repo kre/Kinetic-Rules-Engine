@@ -353,7 +353,7 @@ sub choose_action {
 	    $action_suffix = "_html";
 
 
-	    $logger->debug("Rule env: ", Dumper($rule_env));
+#	    $logger->debug("Rule env: ", Dumper($rule_env));
 	    
 	    # We need to eval the argument since it might be an expression
 	    $url = gen_js_expr(
@@ -364,9 +364,8 @@ sub choose_action {
 	    # FIXME: should be caching this...
 	    my $content = LWP::Simple::get($url);
 	    $content =~ y/\n\r/  /; # remove newlines
-	    $content =~ s/'/\\'/g; # quote quotes
-	    # reconstruct last arg
-	    $last_arg =  {'str' => "'". $content . "'"};
+	    $last_arg =  {'str' => $content};
+#	    $logger->debug("Last arg: ", Dumper($last_arg));
 	    
 	} 
 
