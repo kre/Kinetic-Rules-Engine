@@ -9,6 +9,7 @@ use Test::LongString;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
+#Log::Log4perl->easy_init($DEBUG);
 
 
 use LWP::Simple;
@@ -19,6 +20,7 @@ use APR::Pool ();
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Predicates::Referers qw/:all/;
+use Kynetx::JavaScript qw/:all/;
 my $preds = Kynetx::Predicates::Referers::get_predicates();
 my @pnames = keys (%{ $preds } );
 
@@ -49,13 +51,26 @@ ok(exists $preds->{'remote_referer'},
 ok(exists $preds->{'local_referer'}, 
    "Is local_referer predicate available?");
 
+my $args;
 
-my @testargs = ("www.byu.edu");
-ok(&{$preds->{'referer_domain'}}($BYU_req_info,\%rule_env,\@testargs),
+# a small piece of the abstract syntax tree...
+my $cond = {'args' => [
+            {
+              'str' => 'www.byu.edu'
+            }
+          ]
+};
+
+$args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+
+
+ok(&{$preds->{'referer_domain'}}($BYU_req_info,\%rule_env,$args),
    "Referer domain");
 
-@testargs = ("www.windley.com");
-ok( ! (&{$preds->{'referer_domain'}}($BYU_req_info,\%rule_env,\@testargs)),
+$cond->{'args'}->[0]->{'str'} = 'www.windley.com';
+$args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+
+ok( ! (&{$preds->{'referer_domain'}}($BYU_req_info,\%rule_env,$args)),
     "Referer domain wrong");
 
 ok(&{$preds->{'remote_referer'}}($BYU_req_info),

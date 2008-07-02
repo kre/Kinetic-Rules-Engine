@@ -85,6 +85,7 @@ sub eval_predicates {
 
 	    my $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 
+	    # FIXME: this leaves string args as '...' which means that the predicates have to remember to remove them.  That causes errors.  
 
 	    $v = &$predf($request_info, 
 			 $rule_env, 

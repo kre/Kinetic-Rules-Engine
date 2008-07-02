@@ -2,7 +2,6 @@ var Pilot = {
   status: false,
   sites: new Array(0),
   kynetx_js_host: 'http://init.kobj.net',
-  main_js_host: 'http://init.kobj.net',
 //  required_scripts: ['prototype','effects','dragdrop','kobj-extras'],
   required_scripts: ['kobj-static'],
   kobj_version: '0.8',
@@ -34,12 +33,14 @@ var Pilot = {
   },
 
   updateSites: function() {
+    // creates a JSON version of the sites array
     c  = '[ ';
     for (var s = 0; s < this.sites.length; s++) {
       c += "{ " + "domain:'" + this.sites[s]['domain'] + "', site_id:" + this.sites[s]['site_id'] + " }";
       if(s < this.sites.length - 1) c += ", ";
     }
     c += ' ]';
+//    alert("The sites JSON is " + c + "\n");
     this.setSitesPref(c);
   },
 
@@ -92,7 +93,7 @@ var Pilot = {
              // Add kobj.js
              script = doc.createElement('script');
              script.type = 'text/javascript';
-             script.src = this.main_js_host + '/js/' + site['site_id'] + '/kobj.js';
+             script.src = this.kynetx_js_host + '/js/' + site['site_id'] + '/kobj.js';
              body.appendChild(doc.createTextNode("\n"));
              body.appendChild(script);
              body.facilitated = true;
@@ -116,7 +117,6 @@ var Pilot = {
     var regex = /\/$/g;
     
     this.kynetx_js_host = prompt("Enter the host for the kynetx.js file:","http://init.kobj.net").replace(regex, '');
-    this.main_js_host = prompt("Enter the host for the kobj.js file:","http://init.kobj.net").replace(regex, '');
     this.kobj_version = prompt("Enter the JS version:","0.8").replace(regex, '');
   },
 

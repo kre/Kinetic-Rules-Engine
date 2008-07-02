@@ -18,6 +18,7 @@ use LWP::Simple;
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
+use Kynetx::JavaScript qw/:all/;
 
 
 # test choose_action
@@ -34,94 +35,218 @@ my $given_args;
 
 my($action,$args);
 
+my $action_ast = {
+    'args' => [
+	{
+	    'str' => $first_arg
+	},
+	{
+	    'str' => $non_matching_url
+	}
+	]
+};
+
+
+
 
 # replace tests
+
+my $in_args = gen_js_rands( $action_ast->{'args'} );
+
 ($action, $args) = 
     choose_action($my_req_info, 
-		  "replace", 
-		  [$first_arg, $non_matching_url]);
+		  "replace",
+		  $action_ast->{'args'});
+
+my $out_args = gen_js_rands( $args );
+
 
 is($action, "replace_html","Replace with non-matching domain");
-is($args->[0], $first_arg, "First arg unchanged");
-isnt($args->[1], $non_matching_url, "Last arg changed");
+is($out_args->[0], $in_args->[0], "First arg unchanged");
+isnt($out_args->[1], $non_matching_url, "Last arg changed");
 
+
+$action_ast = {
+    'args' => [
+	{
+	    'str' => $first_arg
+	},
+	{
+	    'str' => $rel_url
+	}
+	]
+};
+
+
+$in_args = gen_js_rands( $action_ast->{'args'} );
 
 ($action, $args) = 
     choose_action($my_req_info, 
 		  "replace", 
-		  [$first_arg, $rel_url]);
+		  $action_ast->{'args'});
+
+
+$out_args = gen_js_rands( $args );
 
 is($action, "replace_url","Replace with relative_url");
-is($args->[0], $first_arg, "First arg unchanged");
-is($args->[1], $rel_url, "Replace URL is left alone");
+is($out_args->[0], $in_args->[0], "First arg unchanged");
+is($out_args->[1], $in_args->[1], "Replace URL is left alone");
 
+
+$action_ast = {
+    'args' => [
+	{
+	    'str' => $first_arg
+	},
+	{
+	    'str' => $second_arg
+	}
+	]
+};
+
+
+$in_args = gen_js_rands( $action_ast->{'args'} );
 
 ($action, $args) = 
     choose_action($my_req_info, 
 		  "replace_html", 
-		  [$first_arg, $second_arg]);
+		  $action_ast->{'args'});
+
+
+$out_args = gen_js_rands( $args );
+
 
 is($action, "replace_html", "Replace with string");
-is($args->[0], $first_arg, "First arg unchanged");
-is($args->[1], $second_arg, "Replace text is left alone");
+is($out_args->[0], $in_args->[0], "First arg unchanged");
+is($out_args->[1], $in_args->[1], "Replace text is left alone");
 
 
 # float tests
+
+$action_ast = {
+    'args' => [
+	{
+	    'str' => $first_arg
+	},
+	{
+	    'str' => $non_matching_url
+	}
+	]
+};
+
+
+$in_args = gen_js_rands( $action_ast->{'args'} );
+
+
 ($action, $args) = 
     choose_action($my_req_info, 
 		  "float", 
-		  [$first_arg, $non_matching_url]);
+		  $action_ast->{'args'});
+
+$out_args = gen_js_rands( $args );
+
 
 is($action, "float_html", "Float with non-matching domain");
-is($args->[0], $first_arg, "First arg unchanged");
-isnt($args->[1], $non_matching_url, "Last arg changed");
+is($out_args->[0], $in_args->[0], "First arg unchanged");
+isnt($out_args->[1], $in_args->[1], "Last arg changed float, non-matching");
+
+
+# fload with relative URL
+$action_ast = {
+    'args' => [
+	{
+	    'str' => $first_arg
+	},
+	{
+	    'str' => $rel_url
+	}
+	]
+};
+
+
+$in_args = gen_js_rands( $action_ast->{'args'} );
 
 
 ($action, $args) = 
     choose_action($my_req_info, 
 		  "float", 
-		  [$first_arg, $rel_url]);
+		  $action_ast->{'args'});
+
+$out_args = gen_js_rands( $args );
+
 
 is($action, "float_url", "Float with relative_url");
-is($args->[0], $first_arg, "First arg unchanged");
-is($args->[1], $rel_url, "Float URL is left alone");
+is($out_args->[0], $in_args->[0], "First arg unchanged");
+is($out_args->[1], $in_args->[1], "Float URL is left alone");
+
+# float_html with string
+$action_ast = {
+    'args' => [
+	{
+	    'str' => $first_arg
+	},
+	{
+	    'str' => $second_arg
+	}
+	]
+};
+
+
+$in_args = gen_js_rands( $action_ast->{'args'} );
+
 
 ($action, $args) = 
     choose_action($my_req_info, 
 		  "float_html", 
-		  [$first_arg, $second_arg]);
+		  $action_ast->{'args'});
 
-is($action, "float_html", "Float with string");
-is($args->[0], $first_arg, "First arg unchanged");
-is($args->[1], $second_arg, "Float text is left alone");
+$out_args = gen_js_rands( $args );
+
+
+
+is($action, "float_html", "Float HTML with string");
+is($out_args->[0], $in_args->[0], "First arg unchanged");
+is($out_args->[1], $in_args->[1], "Float text is left alone");
 
 
 # alert
+$in_args = gen_js_rands( $action_ast->{'args'} );
+
 ($action, $args) = 
     choose_action($my_req_info, 
 		  "alert", 
-		  [$first_arg]);
+		  $action_ast->{'args'});
+
+$out_args = gen_js_rands( $args );
 
 is($action, "alert", "Alert");
-is($args->[0], $first_arg, "Alert args unchanged");
+is($out_args->[0], $in_args->[0], "Alert args unchanged");
 
 # popup
+$in_args = gen_js_rands( $action_ast->{'args'} );
+
 ($action, $args) = 
     choose_action($my_req_info, 
 		  "popup", 
-		  [$first_arg]);
+		  $action_ast->{'args'});
+
+$out_args = gen_js_rands( $args );
 
 is($action, "popup", "Popup");
-is($args->[0], $first_arg, "Popup args unchanged");
+is($out_args->[0], $in_args->[0], "Popup args unchanged");
 
 # redirect
+$in_args = gen_js_rands( $action_ast->{'args'} );
+
 ($action, $args) = 
     choose_action($my_req_info, 
 		  "redirect", 
-		  [$first_arg]);
+		  $action_ast->{'args'});
+
+$out_args = gen_js_rands( $args );
 
 is($action, "redirect", "Redirect");
-is($args->[0], $first_arg, "Redirect args unchanged");
+is($out_args->[0], $in_args->[0], "Redirect args unchanged");
 
 1;
 

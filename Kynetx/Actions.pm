@@ -153,19 +153,24 @@ sub build_js_load {
     $rule_env->{'uniq_id'} = $uniq_id;
 
 
+    # this loads the rule_env
+    gen_js_pre($req_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
+
 
     my $js = "";
 
+    
     # set JS vars from rule env
-    foreach my $var ( @{ get_precondition_vars($rule) } ) {
-	my $val = $rule_env->{"$rule->{'name'}:$var"};
+    my $rulename_re = qr/^$rule->{'name'}:(.*)/;
+    foreach my $var ( keys %{ $rule_env} ) {
+	my $val = $rule_env->{$var};
+	next unless $var =~ s/$rulename_re/$1/;
 	$logger->debug("[JS var] ", $var, "->", $val);
 	$js .= "var $var = \'" . $val . "\';\n";
 
     }
 
 
-    $js .= gen_js_pre($req_info, $rule_env, $session, $rule->{'pre'});
 
     # callbacks
     my $cb = '';
@@ -197,7 +202,8 @@ sub build_js_load {
 				    $session,
 				    $uniq,
 				    $uniq_id,
-				    $cb_func_name
+				    $cb_func_name,
+				    $rule->{'name'}
 		);
 	}
 
@@ -211,7 +217,8 @@ sub build_js_load {
 				$session,
 				$uniq,
 				$uniq_id,
-				$cb_func_name
+				$cb_func_name,
+				$rule->{'name'}
 	    );
 
     } else {
@@ -225,7 +232,7 @@ sub build_js_load {
 
 sub build_one_action {
     my ($action_expr, $req_info, $rule_env, $session, 
-	$uniq, $uniq_id, $cb_func_name) = @_;
+	$uniq, $uniq_id, $cb_func_name, $rule_name) = @_;
 
     my $logger = get_logger();
 
@@ -235,11 +242,14 @@ sub build_one_action {
     my $action = $action_expr->{'action'};
     my $action_name = $action->{'name'};
 
-    my $args = gen_js_rands( $action->{'args'} );
-
+    my $args = $action->{'args'};
 
     # process overloaded functions and arg reconstruction
-    ($action_name, $args) = choose_action($req_info,$action_name,$args);
+    ($action_name, $args) = 
+	choose_action($req_info, $action_name, $args, $rule_env, $rule_name);
+
+    # this happens after we've chosen the action since it modifies args
+    $args = gen_js_rands( $args );
 
     # add to front of arg str
     unshift @{ $args }, $cb_func_name;
@@ -312,7 +322,7 @@ sub build_one_action {
 # some actions are overloaded depending on the args.  This function chooses 
 # the right JS function and adjusts the arg string.
 sub choose_action {
-    my($req_info,$action_name,$args) = @_;
+    my($req_info,$action_name,$args,$rule_env,$rule_name) = @_;
     my $logger = get_logger();
 
     my $action_suffix = "_url";
@@ -320,9 +330,8 @@ sub choose_action {
     if($action_name eq 'float' || $action_name eq 'replace') {
 
 	my $last_arg = pop @$args;
-	$logger->debug("[action] last arg is ", $last_arg);
-    
-	my $url = $last_arg;
+
+	my $url = gen_js_expr($last_arg);
 	$url =~ s/'([^']*)'/$1/;
 
 	$logger->debug("URL: ", $url);
@@ -338,16 +347,25 @@ sub choose_action {
 	    ) {
 
 	    $logger->debug("[action] URL is ", $parsed_url->hostname, 
-			   " & caller is ", $parsed_caller->hostname);
+			   " & caller is ", $parsed_caller->hostname
+		);
 
 	    $action_suffix = "_html";
 
+
+	    $logger->debug("Rule env: ", Dumper($rule_env));
+	    
+	    # We need to eval the argument since it might be an expression
+	    $url = gen_js_expr(
+		    eval_js_expr($last_arg, $rule_env, $rule_name));
+	    $logger->debug("Fetching ", $url);
 
 	    # FIXME: should be caching this...
 	    my $content = LWP::Simple::get($url);
 	    $content =~ y/\n\r/  /; # remove newlines
 	    $content =~ s/'/\\'/g; # quote quotes
-	    $last_arg =  "'". $content . "'";
+	    # reconstruct last arg
+	    $last_arg =  {'str' => "'". $content . "'"};
 	    
 	} 
 

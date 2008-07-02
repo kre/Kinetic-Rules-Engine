@@ -27,29 +27,47 @@ sub process_session {
     my $cookie = $r->headers_in->{'Cookie'};
     $cookie =~ s/SESSION_ID=(\w*)/$1/ if(defined $cookie);
 
-    my %session;
+    my $session;
+
     eval {
-	tie %session, 'Apache::Session::DB_File', $cookie, {
-	    FileName      => '/web/data/sessions.db',
-	    LockDirectory => '/web/lock/sessions',
-	};
+	$session = tie_servers($session,$cookie);
     };
 
     # catch an error ($cookie not found is the most usual)
     if ($@) {
 	undef $cookie; # creates a new session
-	tie %session, 'Apache::Session::DB_File', $cookie, {
-	    FileName      => '/web/data/sessions.db',
-	    LockDirectory => '/web/lock/sessions',
-	};
-	    
+	$session = tie_servers($session,$cookie);
     }
 	
     # might be a new session, so lets give them their cookie back
-    my $session_cookie = "SESSION_ID=$session{_session_id};";
+    my $session_cookie = "SESSION_ID=$session->{_session_id};";
     $r->headers_out->add('Set-Cookie' => $session_cookie);
 
-    return \%session
+    return $session;
+
+}
+
+
+sub tie_servers {
+
+    my($session,$cookie) = @_;
+
+    # presumes memcached has already been initialized
+    my $mem_servers = Kynetx::Memcached::get_memcached_servers();
+
+    my $logger = get_logger();
+    $logger->debug("Using ", $mem_servers, " for session storage");
+
+
+    tie %{$session}, 'Apache::Session::Memcached', $cookie, {
+	Servers => $mem_servers,
+	NoRehash => 1,
+	Readonly => 0,
+	Debug => 1,
+	CompressThreshold => 10_000
+    };
+
+    return $session;
 
 }
 

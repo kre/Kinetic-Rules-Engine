@@ -11,16 +11,16 @@
 <groupbox align="center" orient="horizontal">
 <vbox>
   <text value="Kynetx Pilot" style="font-weight: bold; font-size: x-large;"/>
-  <text value="ver. 1.0"/>
+  <text value="ver. 1.5"/>
   <separator class="thin"/>
   <text value="Created By:" style="font-weight: bold;"/>
   <text value="Kynetx" class="url"
         onclick="window.open('http://www.kynetx.com'); window.close();"/>
   <separator class="thin"/>
     <text value="Home Page:" style="font-weight: bold;"/>
-    <text value="http://www.kynetx.com/"
+    <text value="http://www.kynetx.com/pilot"
           class="url"
-        onclick="window.open('http://www.kynetx.com/'); window.close();"/>
+        onclick="window.open('http://www.kynetx.com/pilot'); window.close();"/>
   <separator class="thin"/>
 </vbox>
 <spring flex="1"/>

@@ -34,6 +34,7 @@ my %predicates = (
 	my ($req_info, $rule_env, $args) = @_;
 
 	my $desired = $args->[0];
+	$desired =~ s/^'(.*)'$/$1/;  # for now, we have to remove quotes
 
 	my $tz = get_weather($req_info, 'timezone');
 
@@ -49,10 +50,16 @@ my %predicates = (
 	my @sr = split(/:/, $sunrise);
 	$sr[0] += 12 if $sr[2] eq 'pm';
 
+        # assume it's daytime if we don't get good data
+	return 1 unless defined $sr[0];  
+
 	my $sunset = get_weather($req_info, 'sunset');
 	$sunset =~ y/ /:/;
 	my @ss = split(/:/, $sunset);
 	$ss[0] += 12 if $ss[2] eq 'pm';
+
+        # assume it's daytime if we don't get good data
+	return 1 unless defined $ss[0];
 
 	my $now = get_local_time($req_info);
 

@@ -24,6 +24,7 @@ gen_js_afterload
 gen_js_mk_cb_func
 get_js_html
 mk_js_str
+eval_js_expr
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -86,16 +87,17 @@ sub gen_js_rands {
 
 
 sub gen_js_pre {
-    my ($req_info, $rule_env, $session, $pre) = @_;
+    my ($req_info, $rule_env, $rule_name, $session, $pre) = @_;
 
 #    my $logger = get_logger();
 #    $logger->debug("[pre] Got ", $#{ $pre }, " items.");
     
-    return join "", map {gen_js_decl($req_info, $rule_env, $session, $_)} @{ $pre };
+    return map {gen_js_decl($req_info, $rule_env, $rule_name, $session, $_)} @{ $pre };
 }
 
+# modifies rule_env by inserting value with LHS
 sub gen_js_decl {
-    my ($req_info, $rule_env, $session, $decl) = @_;
+    my ($req_info, $rule_env, $rule_name, $session, $decl) = @_;
 
     my $val = '0';
 
@@ -111,7 +113,6 @@ sub gen_js_decl {
 
 	my $function = $decl->{'function'};
 
-	$logger->debug("[decl] Source: ". "$source:$function");
 
 	if($source eq 'weather') {
 	    $val = Kynetx::Predicates::Weather::get_weather($req_info,$function);
@@ -124,6 +125,9 @@ sub gen_js_decl {
 	} elsif ($source eq 'referer') {
 	    $val = Kynetx::Predicates::Referers::get_referer($req_info,$function);
 	} 
+
+	$logger->debug("[decl] Source: $source:$function = $val" );
+
 
     } elsif ($decl->{'type'} eq 'counter') {
 
@@ -140,7 +144,9 @@ sub gen_js_decl {
 	$val =~ s/#{([^}]*)}/'+$1+'/g;
     }
 
-    return 'var ' . $decl->{'lhs'} . ' = \'' . $val . "\';\n"
+    $rule_env->{$rule_name.":".$decl->{'lhs'}} = $val;
+
+    return $val;
 
 }
 
@@ -202,6 +208,90 @@ EOF
 
     
 }
+
+
+
+#
+# evaluation of JS exprs on the server
+#
+sub eval_js_expr {
+    my ($expr, $rule_env, $rule_name) = @_;
+
+    my @nodes = keys %{ $expr };  # these are singleton hashes
+    my $val =  $expr->{$nodes[0]};
+
+    my $logger = get_logger();
+    $logger->debug("Evaling ", $nodes[0], " -> ", $val);
+    
+
+    case: for ($nodes[0]) {
+	/str/ && do {
+	    return $expr;
+	};
+	/num/ && do {
+	    return  $expr ;
+	};
+	# FIXME: assuming all vars are  strings
+	/var/ && do {
+	    return  {'str' => $rule_env->{$rule_name.':'.$val} };
+	};
+	/bool/ && do {
+	    return  $expr ;
+	};
+	/array/ && do {
+	    return  { 'array' => join(' ', @{ eval_js_rands($val, $rule_env, $rule_name) }) } ;
+	};
+	/prim/ && do {
+	    return eval_js_prim($val, $rule_env, $rule_name);
+	};
+	
+    } 
+
+}
+
+sub eval_js_prim {
+    my ($prim, $rule_env, $rule_name) = @_;
+
+    my $val_hashes = eval_js_rands($prim->{'args'}, $rule_env, $rule_name);
+
+    my(@types, @vals);
+    foreach my $val (@{ $val_hashes }) {
+	my @type = keys %{ $val }; #singleton hash
+	push(@types, $type[0]);
+	push(@vals, $val->{$type[0]});
+	
+    }
+
+    # FIXME: Add operators
+    # FIXME: Do we need mroe than binary?
+    case: for ($prim->{'op'}) {
+	/\+/ && do {
+
+	    if($types[0] eq 'str') {
+		return {'str' => $vals[0] . $vals[1]};
+	    } else {
+		return {'num' => $vals[0] + $vals[1]};
+	    }
+
+	};
+    }
+
+    return 0;
+
+    
+}
+
+sub eval_js_rands {
+    my ($rands, $rule_env, $rule_name) = @_;
+
+    my @rands = map {eval_js_expr($_, $rule_env, $rule_name)} @{ $rands } ;
+
+    return \@rands;
+
+}
+
+
+
 
 
 

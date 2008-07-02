@@ -243,8 +243,10 @@ ErrorLog "|/web/sbin/cronolog --symlink=/web/logs/error_log /web/logs/%Y/%m/%d/e
 LogLevel warn
 
 # logging for INIT, KRL, and FRAG
-LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %{X-Forwarded-For}i" combined
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/init_log /web/logs/kynetx/INIT-%Y%m%d-%H%M.log" combined env=INIT
+CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/init_log /web/logs/kynetx/FRAG-%Y%m%d-%H%M.log" combined env=FRAG
+CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/init_log /web/logs/kynetx/KRL-%Y%m%d-%H%M.log" combined env=KRL
 
 # rule logging for CS
 LogFormat "%h %t %{TOTAL_SECS}e %{SITE}e %{TXN_ID}e \"%{CALLER}e\" %{SID}e \"%{REFERER}e\" \"%{TITLE}e\" [%{RULE_NAMES}e] [%{RESULTS}e] [%{ACTIONS}e] [%{TAGS}e]  [%{LABELS}e] " KOBJ
@@ -369,8 +371,8 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 <LocationMatch /manage/>
   # Eventually this ought to come from the client configuration DB
 
-  # env var to turn on INIT logging
-  PerlSetEnv INIT 1 
+  # env var to turn on logging
+  PerlSetEnv KRL 1 
 
   # host names
   PerlSetVar init_host <TMPL_VAR NAME=INIT_HOST>
@@ -404,8 +406,8 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 Alias /widgets/ "/web/lib/perl/widgets/"
 <Location /widgets>
 
-  # env var to turn on INIT logging
-  PerlSetEnv INIT 1 
+  # env var to turn on logging
+  PerlSetEnv FRAG 1 
 
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>

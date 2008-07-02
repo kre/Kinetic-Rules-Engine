@@ -19,12 +19,14 @@ our %EXPORT_TAGS = (all => [
 qw(
 init
 get_memd
+get_memcached_servers
 get_remote_data
 get_cached_file
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 our $MEMD = 0;
+our $MEMSERVERS = '127.0.0.1:' . DEFAULT_MEMCACHED_PORT;
 
 sub init {
     my($class,$host_array) = @_;
@@ -35,7 +37,9 @@ sub init {
 
     my @memd_hosts = map {$_ . ":" . DEFAULT_MEMCACHED_PORT} @$host_array;
 
-    $logger->debug("Initializing memcached: ", join ", ", @memd_hosts);
+    $MEMSERVERS = join(" ", @memd_hosts);
+
+    $logger->debug("Initializing memcached: ", $MEMSERVERS);
 
     $MEMD = new Cache::Memcached {
 	'servers' => \@memd_hosts,
@@ -47,6 +51,10 @@ sub init {
 
 sub get_memd {
     return $MEMD;
+}
+
+sub get_memcached_servers {
+    return $MEMSERVERS;
 }
 
 

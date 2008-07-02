@@ -47,6 +47,8 @@ Data::Dumper
 
 Apache::Session::DB_File
 
+Apache::Session::Memcached
+
 Test::More
 
 APR::Table

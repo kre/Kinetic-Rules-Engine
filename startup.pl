@@ -31,7 +31,7 @@ use ModPerl::Registry ();
 use Apache2::Const -compile => ':common';
 use APR::Const -compile => ':common';
 
-use Apache::Session::DB_File;
+use Apache::Session::Memcached;
 
 use Apache2::Request ();
 

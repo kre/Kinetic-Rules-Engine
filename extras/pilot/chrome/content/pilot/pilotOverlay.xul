@@ -68,7 +68,7 @@
   window.addEventListener("load", nowpublic_init, true);
 
   function nowpublic_init() {
-    window._content.addEventListener('load', function(){ Pilot.facilitate(); Pilot.getLocationInfo(); }, true);
+    gBrowser.addEventListener('load', function(){ Pilot.facilitate(); Pilot.getLocationInfo(); }, true);
   }
 ]]>
 </script>

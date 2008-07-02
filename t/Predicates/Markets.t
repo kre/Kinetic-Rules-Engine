@@ -25,7 +25,7 @@ use Kynetx::Predicates::Weather qw/:all/;
 my $preds = Kynetx::Predicates::Markets::get_predicates();
 my @pnames = keys (%{ $preds } );
 
-plan tests => 2 + int(@pnames);
+plan tests => 3 + int(@pnames);
 
 my $NYU_req_info;
 $NYU_req_info->{'ip'} = '128.122.108.71'; # New York (NYU)
@@ -56,6 +56,10 @@ ok(&{$preds->{'djia_down_more_than'}}($BYU_req_info, \%rule_env, \@args) ?
    (! &{$preds->{'djia_up_more_than'}}($BYU_req_info, \%rule_env, \@args)) :  
    1,
    "If the market's down, it's not up!");
+
+my $GOOG_last = get_stocks($BYU_req_info,"GOOG","last");
+ok(int($GOOG_last) > 0, 
+   "GOOG's last isn't 0");
 
 
 1;

@@ -131,11 +131,13 @@ my %predicates = (
 
 	my $domain = get_referer_data($req_info,'domain');
 
+	$args->[0] =~ s/^'(.*)'$/$1/;  # for now, we have to remove quotes
+
 	my $logger = get_logger();
 	$logger->debug("[predicate] referer_domin: looking for ",
-		       $args->[0], " got ", $domain);
+		       $args->[0], " got ", $domain, "...");
 
-	return $domain eq $args->[0];
+	return ($domain eq $args->[0]);
     },
 
     'remote_referer' => sub {

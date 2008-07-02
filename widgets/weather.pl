@@ -158,7 +158,7 @@ $req_info->{'ip'} = $r->connection->remote_ip() || '0.0.0.0';
 
 
 my $logger = get_logger();
-$logger->debug("IP address: ", $req_info->{'ip'});
+# $logger->debug("IP address: ", $req_info->{'ip'});
 
 
 my $req = Apache2::Request->new($r);

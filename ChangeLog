@@ -1,3 +1,22 @@
+2008-07-02  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/JavaScript.pm: Added eval_js_expr to reduce a JS
+	expression to a simple string, int, etc.   This is used in
+	Actions.pm before grabbing a URL expression on the server.
+	* Kynetx/Actions.pm (build_js_load): Run gen_js_pre before
+	building rule_env so that decls get into rule_env as well as in
+	the JS load.  
+	* Kynetx/Actions.pm (choose_action): when we grab a URL, we eval
+	it first in case it's an expression
+	* Kynetx/Predicates/Time.pm (get_local_time): removed quotes from
+	arg in timezone predicate
+	* Kynetx/Predicates/Referers.pm (referer_domain): removed quotes
+	from arg in timezone predicate
+	* Kynetx/Session.pm (tie_servers): sessions now use memcached
+	protocol.  At present they're configured to use the memcached
+	servers, but they will eventually point to a memcachedb setup. 
+	
+	
 2008-06-19  Phil Windley  <pjw@kynetx.com>
 
 	* bin/update.pl: added this to make updating servers easier
