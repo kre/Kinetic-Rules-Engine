@@ -143,7 +143,7 @@ KOBJ.update_elements({
 EOF
 
 
-my ($t, $req_info, $zip);
+my ($t, $req_info, $zip, $city, $state);
 
 
 
