@@ -9,8 +9,8 @@ use Test::LongString;
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
-Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($INFO);
+Log::Log4perl->easy_init($DEBUG);
 
 use APR::URI;
 use APR::Pool ();
@@ -28,7 +28,7 @@ $my_req_info->{'caller'} = 'http://www.windley.com';
 $my_req_info->{'pool'} = APR::Pool->new;
 
 my $rel_url = "/kynetx/newsletter_invite.inc";
-my $non_matching_url = "http://127.0.0.1/kynetx/newsletter_invite.inc";
+my $non_matching_url = "http://frag.kobj.net/widgets/weather.pl?zip=84042";
 my $first_arg = "kobj_test"; 
 my $second_arg = "This is a string";
 my $given_args;

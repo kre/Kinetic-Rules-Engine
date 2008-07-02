@@ -358,6 +358,7 @@ sub choose_action {
 	    # We need to eval the argument since it might be an expression
 	    $url = gen_js_expr(
 		    eval_js_expr($last_arg, $rule_env, $rule_name));
+	    $url =~ s/^'(.*)'$/$1/;
 	    $logger->debug("Fetching ", $url);
 
 	    # FIXME: should be caching this...
