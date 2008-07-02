@@ -165,7 +165,11 @@ my $req = Apache2::Request->new($r);
 
 
 $zip = $req->param('zip');
+$city = $req->param('city');
+$state = $req->param('state');
 $req_info->{'geoip'}->{'postal_code'} = $zip;
+$req_info->{'geoip'}->{'city'} = $city;
+$req_info->{'geoip'}->{'region'} = $state;
 
 
 if(defined $req->param('redo')) {
