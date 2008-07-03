@@ -65,8 +65,8 @@ for my $file (@files) {
 }
 
 system 
-    "$RSYNC -n -e ssh --quiet --remove-sent-files --include '*.gz' " . 
-    $tmpdir . " " .
+    "$RSYNC -e ssh --remove-sent-files  " . 
+    $tmpdir . "/*.gz " .
     "web@" . $machine . ":logs";
 
 
