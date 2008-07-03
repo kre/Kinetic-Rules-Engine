@@ -25,6 +25,8 @@ my $RSYNC = '/usr/bin/rsync';
 
 my @logdirs = ("$web_root/logs/kynetx");
 
+my $tmpdir = "/web/tmp/kobj-logs";
+mkdir $tmpdir unless(-e $tmpdir);
 
 # global options
 use vars qw/ %opt /;
@@ -58,14 +60,14 @@ for my $file (@files) {
     my $dir = dirname $file;
     my $name = basename $file;
     # new file name has unique machine ID
-    my $nf = "$dir/$unique-$name";
+    my $nf = "$tmpdir/$unique-$name";
     move($file, $nf) || warn "Couldn't move $file: $!";
     system  "$GZIP $nf\n";
 }
 
 system 
     "$RSYNC -n -e ssh --quiet --remove-sent-files --include '*.gz' " . 
-    join(" ",@logdirs) . " " .
+    $tmpdir . " " .
     "web@" . $machine . ":logs";
 
 
