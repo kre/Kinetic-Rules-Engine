@@ -116,7 +116,7 @@ Sorry, we can't determine your location to show the weather forecast.
 
 </div>
 
-<div style="color: #3333FF; text-decoration: underline" id="kobj_zip" onclick="new Effect.Fade(this);new Effect.BlindDown($('kobj_weather_3'));Form.focusFirstElement('zip_form');">
+<div style="color: #3333FF; text-decoration: underline; font-size: small" id="kobj_zip" onclick="new Effect.Fade(this);new Effect.BlindDown($('kobj_weather_3'));Form.focusFirstElement('zip_form');">
 <TMPL_IF NAME=city>
 Not in <TMPL_VAR NAME=city>?
 <TMPL_ELSE>
@@ -124,7 +124,7 @@ Click to fix this
 </TMPL_IF>
 </div>
 
-<div style="color: #3333FF; text-decoration: underline" id="kobj_close" onclick="new Effect.BlindUp($('kobj_weather_1'));">close</div>
+<div style="color: #3333FF; text-decoration: underline; font-size: small" id="kobj_close" onclick="new Effect.BlindUp($('kobj_weather_1'));">close</div>
 
 </div>
 </div>
