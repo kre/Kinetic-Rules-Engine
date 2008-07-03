@@ -7,6 +7,10 @@ use lib qw(/web/lib/perl);
 
 use Getopt::Std;
 use File::Find::Rule;
+use DateTime;
+use Sys::Hostname;
+use File::Basename;
+use File::Copy;
 
 # config
 my $base_var = 'KOBJ_ROOT';
@@ -24,11 +28,13 @@ my @logdirs = ("$web_root/logs/kynetx");
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'hm:';
+my $opt_string = 'hm:u:';
 getopts( "$opt_string", \%opt ); # or &usage();
 
 my $machine = $opt{'m'} || 'unionstation.kobj.net';
+my $unique = $opt{'u'} || hostname;
 &usage() if $opt{'h'};
+
 
 my $rule = File::Find::Rule->new;
 
@@ -37,20 +43,29 @@ $rule->or(
     $rule->new->file->name( '*.log' )
 );
 
-
+# get all the files
 my @files;
 for my $dir ( @logdirs ) {
     push( @files, (-d $dir) ? $rule->in($dir) : $dir );
 }
 
+# sort files by creation time and remove the newest one
+@files = sort {(stat($a))[10] cmp (stat($b))[10]} @files;
+pop @files;
+
 for my $file (@files) {
-    system  "$GZIP $file\n";
+    my $dir = dirname $file;
+    my $name = basename $file;
+    # new file name has unique machine ID
+    my $nf = "$dir/$unique-$name";
+    move($file, $nf);
+    system  "$GZIP $nf\n";
 }
 
 system 
     "$RSYNC -n -e ssh --quiet --remove-sent-files --include '*.gz' " . 
     join(" ",@logdirs) . " " .
-    "web@" . $machine . "::logs";
+    "web@" . $machine . ":logs";
 
 
 
@@ -69,7 +84,8 @@ machine using rsync.  The source files are deleted after they're moved.
 
 Options are:
 
-  -m M	: name of machine to move logs files to
+  -m M	: name of machine to move logs files to (default 'unionstation')
+  -u U  : unique identifier for these log files
 
 
 EOF
