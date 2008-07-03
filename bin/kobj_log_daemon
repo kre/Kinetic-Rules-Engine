@@ -10,7 +10,6 @@ use File::Find::Rule;
 use DateTime;
 use Sys::Hostname;
 use File::Basename;
-use File::Copy;
 
 # config
 my $base_var = 'KOBJ_ROOT';
@@ -61,7 +60,7 @@ for my $file (@files) {
     my $name = basename $file;
     # new file name has unique machine ID
     my $nf = "$tmpdir/$unique-$name";
-    move($file, $nf) || warn "Couldn't move $file: $!";
+    system "sudo mv $file $nf" || warn "Couldn't move $file: $!";
     system  "$GZIP $nf\n";
 }
 
