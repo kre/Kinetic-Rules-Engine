@@ -64,10 +64,15 @@ for my $file (@files) {
     system  "$GZIP $nf\n";
 }
 
-system 
-    "$RSYNC -e ssh --remove-sent-files  " . 
-    $tmpdir . "/*.gz " .
-    "web@" . $machine . ":logs";
+
+my @tmpfiles = <$tmpdir>;
+# only run rsync if there's something to transfer
+if (int(@tmpfiles)) {
+    system 
+	"$RSYNC -e ssh --remove-sent-files  " . 
+	$tmpdir . "/*.gz " .
+	"web@" . $machine . ":logs";
+}
 
 
 
