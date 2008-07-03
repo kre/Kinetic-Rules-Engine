@@ -54,6 +54,7 @@ for my $dir ( @logdirs ) {
 pop @files;
 
 for my $file (@files) {
+    sudo chown web $file;
     my $dir = dirname $file;
     my $name = basename $file;
     # new file name has unique machine ID
