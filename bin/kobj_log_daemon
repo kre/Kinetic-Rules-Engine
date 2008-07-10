@@ -21,20 +21,20 @@ my $web_root = $ENV{$web_root_var} ||
 
 my $GZIP = '/usr/bin/gzip';
 my $RSYNC = '/usr/bin/rsync';
-
 my @logdirs = ("$web_root/logs/kynetx");
 
-my $tmpdir = "/web/tmp/kobj-logs";
+my $tmpdir = "$web_root/tmp/kobj-logs";
 mkdir $tmpdir unless(-e $tmpdir);
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'hm:u:v';
+my $opt_string = 'hm:u:vf';
 getopts( "$opt_string", \%opt ); # or &usage();
 
 my $machine = $opt{'m'} || 'unionstation.kobj.net';
 my $unique = $opt{'u'} || hostname;
 my $verbose = $opt{'v'};
+my $finalize = $opt{'f'};
 &usage() if $opt{'h'};
 
 
@@ -53,7 +53,7 @@ for my $dir ( @logdirs ) {
 
 # sort files by creation time and remove the newest one
 @files = sort {(stat($a))[10] cmp (stat($b))[10]} @files;
-pop @files;
+pop @files unless $finalize;
 
 for my $file (@files) {
     print "Processing $file\n" if $verbose;
@@ -98,7 +98,9 @@ Options are:
 
   -m M	: name of machine to move logs files to (default 'unionstation')
   -u U  : unique identifier for these log files
-
+  -v    : vebose
+  -f    : finalize; don't skip most recent file.  Ensure Web server 
+          has been halted before using this switch.  
 
 EOF
 

@@ -119,9 +119,10 @@ sub gen_js_decl {
 	} elsif ($source eq 'geoip' || $source eq 'location') {
 	    $val = Kynetx::Predicates::Location::get_geoip($req_info,$function);
 	} elsif ($source eq 'stocks' || $ source eq 'markets') {
-	    my @arg = gen_js_rands($decl->{'args'});
-	    $arg[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
-	    $val = Kynetx::Predicates::Markets::get_stocks($req_info,$arg[0],$function);
+
+	    my $arg = gen_js_rands($decl->{'args'});
+	    $arg->[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
+	    $val = Kynetx::Predicates::Markets::get_stocks($req_info,$arg->[0],$function);
 	} elsif ($source eq 'referer') {
 	    $val = Kynetx::Predicates::Referers::get_referer($req_info,$function);
 	} 

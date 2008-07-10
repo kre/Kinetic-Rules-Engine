@@ -98,9 +98,9 @@ sub get_stocks {
 	$content =~ s#&gt;#>#g;
 
 	my $logger = get_logger();
-#	$logger->debug("Quote for symbol ($symbol): " . 
-#		       $content . " using " .$url 
-#	    );
+	$logger->debug("Quote for symbol ($symbol): " . 
+		       $content . " using " .$url 
+	    );
 
 
 
@@ -114,7 +114,7 @@ sub get_stocks {
 
 	    my $logger = get_logger();
 	    $logger->debug(
-		"Value for: " . ucfirst($field) . ' = ' . $v 
+		"Value for: " . ucfirst($field) . ' = ' . $v
 		);
 	    
 	    $req_info->{'stocks'}->{$symbol}->{$field} = $v;

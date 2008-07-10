@@ -12,6 +12,7 @@ Log::Log4perl->easy_init($INFO);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Predicates::Markets qw/:all/;
+use Kynetx::JavaScript qw/:all/;
 
 
 use LWP::Simple;
@@ -46,18 +47,33 @@ foreach my $pn (@pnames) {
 
 
 
-my @args = (0);
-ok(&{$preds->{'djia_up_more_than'}}($BYU_req_info, \%rule_env, \@args) ? 
-   (! &{$preds->{'djia_down_more_than'}}($BYU_req_info, \%rule_env, \@args)) :  
+
+my $args;
+
+# a small piece of the abstract syntax tree...
+my $cond = {'args' => [
+            {
+              'num' => 10
+            }
+          ]
+};
+
+$args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+
+ok(&{$preds->{'djia_up_more_than'}}($BYU_req_info, \%rule_env, $args) ? 
+   (! &{$preds->{'djia_down_more_than'}}($BYU_req_info, \%rule_env, $args)) :  
    1,
    "If the market's up, it's not down!");
 
-ok(&{$preds->{'djia_down_more_than'}}($BYU_req_info, \%rule_env, \@args) ? 
-   (! &{$preds->{'djia_up_more_than'}}($BYU_req_info, \%rule_env, \@args)) :  
+ok(&{$preds->{'djia_down_more_than'}}($BYU_req_info, \%rule_env, $args) ? 
+   (! &{$preds->{'djia_up_more_than'}}($BYU_req_info, \%rule_env, $args)) :  
    1,
    "If the market's down, it's not up!");
 
+$args->[0] = {'str' => 'GOOG'};
+
 my $GOOG_last = get_stocks($BYU_req_info,"GOOG","last");
+diag("GOOG_last has value => $GOOG_last");
 ok(int($GOOG_last) > 0, 
    "GOOG's last isn't 0");
 
