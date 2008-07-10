@@ -1,3 +1,10 @@
+2008-07-10  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Predicates/Referers.pm: Fixed remote and local referers
+	* Kynetx/Predicate.pm: invalid predicates give warning now
+	* t/Predicates/Markets.t: Made tests more realistic
+	* Kynetx/Javascript.pm: Fixed bug in how args were passed to get_stocks
+
 2008-07-02  Phil Windley  <pjw@kynetx.com>
 
 	* bin/update.pl: Added support for fragment servers

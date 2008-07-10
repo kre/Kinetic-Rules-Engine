@@ -98,9 +98,9 @@ sub get_stocks {
 	$content =~ s#&gt;#>#g;
 
 	my $logger = get_logger();
-	$logger->debug("Quote for symbol ($symbol): " . 
-		       $content . " using " .$url 
-	    );
+#	$logger->debug("Quote for symbol ($symbol): " . 
+#		       $content . " using " .$url 
+#	    );
 
 
 

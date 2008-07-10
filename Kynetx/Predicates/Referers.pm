@@ -143,8 +143,12 @@ my %predicates = (
     'remote_referer' => sub {
 	my ($req_info, $rule_env, $args) = @_;
 
-	my $domain = get_referer_data($req_info,'domain');
-	return defined($domain);
+	my $referer_domain = get_referer_data($req_info,'domain');
+
+	my $parsed_url = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});
+	
+
+	return !($referer_domain eq $parsed_url->hostname);
     },
 
     );

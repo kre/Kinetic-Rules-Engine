@@ -78,27 +78,31 @@ sub eval_predicates {
     my $conds = $rule->{'cond'};
     my $pred_value = 1;
     foreach my $cond ( @$conds ) {
-	my $v;
+	my $v = 0;
 	if ($cond->{'type'} eq 'simple') {
 	    my $pred = $cond->{'predicate'};
+
 	    my $predf = $predicates{$pred};
+	    if($predf eq "") {
+		$logger->warn("Predicate $pred not found for ", $rule->{'name'});
+	    } else {
 
-	    my $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+		my $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 
-	    # FIXME: this leaves string args as '...' which means that the predicates have to remember to remove them.  That causes errors.  
+		# FIXME: this leaves string args as '...' which means that the predicates have to remember to remove them.  That causes errors.  
 
-	    $v = &$predf($request_info, 
-			 $rule_env, 
-			 $args
-		);
+		$v = &$predf($request_info, 
+			     $rule_env, 
+			     $args
+		    );
 
-	    $logger->debug('[predicate] ',
-			   "$pred executing with args (" , 
-			   join(', ', @{ $args } ), 
-			   ')',
-		           ' -> ',
-		           $v);
-
+		$logger->debug('[predicate] ',
+			       "$pred executing with args (" , 
+			       join(', ', @{ $args } ), 
+			       ')',
+			       ' -> ',
+			       $v);
+	    }
 
 	} elsif ($cond->{'type'} eq 'counter') {
 
