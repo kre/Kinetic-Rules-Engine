@@ -30,6 +30,7 @@ Time
 Markets
 Referers
 Mobile
+MediaMarkets
 );
 
 # eval necessary with computed module names (not bare words)

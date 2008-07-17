@@ -1,3 +1,14 @@
+2008-07-17  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Session.pm (tie_servers): Sessions now using memcached
+	for session storage rather than /web/data...  This is in
+	anticipation of using memcachedb for session storage.
+	
+	* Kynetx/Predicates/MediaMarkets.pm: New predicates on functions
+	surrounding the use of DMA codes to determine media markets
+
+	* extras/dma/mk_db.pl: creates a DBX file for DMA codes
+
 2008-07-10  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Predicates/Referers.pm: Fixed remote and local referers

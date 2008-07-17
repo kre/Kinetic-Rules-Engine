@@ -10,7 +10,7 @@ if ($> != 0 and $< != 0) {
  print STDERR "Only root wants to run start-memcached.\n";
  exit;
 }
-my $etcfile = shift || "/web/lib/perl/etc/memcached.conf";
+my $etcfile = shift || "/web/lib/perl/etc/memcached/memcached.conf";
 my $params = [];
 my $etchandle; 
 # This script assumes that memcached is located at /usr/bin/memcached, and

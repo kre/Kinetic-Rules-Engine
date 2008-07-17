@@ -24,8 +24,16 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 sub process_session {
     my ($r) = @_;
 
+    my $logger = get_logger();
+
     my $cookie = $r->headers_in->{'Cookie'};
     $cookie =~ s/SESSION_ID=(\w*)/$1/ if(defined $cookie);
+
+    if (defined $cookie) {
+	$logger->debug("Using session id: ", $cookie );
+    } else {
+	$logger->debug("No session id found" );
+    }
 
     my $session;
 
@@ -36,11 +44,13 @@ sub process_session {
     # catch an error ($cookie not found is the most usual)
     if ($@) {
 	undef $cookie; # creates a new session
+	$logger->debug("Create cookie...");
 	$session = tie_servers($session,$cookie);
     }
 	
     # might be a new session, so lets give them their cookie back
     my $session_cookie = "SESSION_ID=$session->{_session_id};";
+    $logger->debug("Sending cookie: ", $session_cookie);
     $r->headers_out->add('Set-Cookie' => $session_cookie);
 
     return $session;

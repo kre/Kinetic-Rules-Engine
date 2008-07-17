@@ -1,0 +1,5 @@
+* add pragma to rule set for caller domain as a security check
+* add action for list reordering
+* add predicates to check direction of user-select stock symbols
+* more robust predicate language
+* simple action for Facebook sharing
