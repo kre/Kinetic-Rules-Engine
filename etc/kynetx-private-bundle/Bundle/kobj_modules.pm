@@ -87,6 +87,8 @@ Data::UUID
 
 Mobile::UserAgent
 
+Text::CSV
+
 =head1 DESCRIPTION
 
 This bundle is to install all the non-required modules that
