@@ -4,7 +4,10 @@ package Kynetx::Session;
 use strict;
 use warnings;
 
+
 use Log::Log4perl qw(get_logger :levels);
+
+use Kynetx::Memcached qw(:all);
 
 
 use Exporter;
