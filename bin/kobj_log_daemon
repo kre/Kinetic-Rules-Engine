@@ -19,7 +19,7 @@ my $web_root_var = 'WEB_ROOT';
 my $web_root = $ENV{$web_root_var} || 
     die "$web_root_var is undefined in the environment";
 
-my $GZIP = '/usr/bin/gzip';
+my $GZIP = '/bin/gzip';
 my $RSYNC = '/usr/bin/rsync';
 my @logdirs = ("$web_root/logs/kynetx");
 
@@ -57,12 +57,12 @@ pop @files unless $finalize;
 
 for my $file (@files) {
     print "Processing $file\n" if $verbose;
-    system "sudo chown web $file";
+    system "sudo /bin/chown web $file";
     my $dir = dirname $file;
     my $name = basename $file;
     # new file name has unique machine ID
     my $nf = "$tmpdir/$unique-$name";
-    system "sudo mv $file $nf" || warn "Couldn't move $file: $!";
+    system "sudo /bin/mv $file $nf" || warn "Couldn't move $file: $!";
     print "gzipping $nf\n" if $verbose;
     system  "$GZIP $nf\n";
 }

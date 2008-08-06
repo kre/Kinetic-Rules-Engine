@@ -87,8 +87,43 @@ my %predicates = (
 	    
     },
     
+    'international' => sub {
+	my ($req_info, $rule_env, $args) = @_;
+
+	my $country = get_geoip($req_info, 'country_code');
+
+	my $logger = get_logger();
+	$logger->debug("Country:  $country  " );
+
+	return !($country eq 'US');
+	    
+    },
+    
+    'country' => sub {
+	my ($req_info, $rule_env, $args) = @_;
+
+	my $country = get_geoip($req_info, 'country_code');
+
+	my $desired = $args->[0];
+	$desired =~ s/^'(.*)'$/$1/;  # for now, we have to remove quotes
+
+	my $logger = get_logger();
+	$logger->debug("Country: ". $country . " ?= " . $desired);
+
+	return $country eq $desired;
+	    
+    },
+
+    
 
     );
+
+# need predicates already defined for this
+$predicates{'outside_country'} = sub {
+    return ! $predicates{'country'}(@_)
+
+};
+
 
 
 sub get_predicates {
