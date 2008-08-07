@@ -203,6 +203,8 @@ sub get_rule_set {
     my $rules = optimize_rules(
 	          get_rules_from_repository($site, $svn_conn, $request_info),$site);
 
+    
+    $logger->debug("Found " . @{ $rules->{$site} } . " rules..." );
 
     my @new_set;
     my %new_env;

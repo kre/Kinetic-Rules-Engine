@@ -55,6 +55,8 @@ my @keywords = (
     'click',
     'choose',
     'every',
+    'move_after',
+    'move_to_top',
     );
 
 # only on word boundaries
@@ -433,6 +435,8 @@ $action = alternate(lookfor(['KEYWORD','float']),
 		    lookfor(['KEYWORD','popup']),
 		    lookfor(['KEYWORD','alert']),
 		    lookfor(['KEYWORD','redirect']),
+		    lookfor(['KEYWORD','move_after']),
+		    lookfor(['KEYWORD','move_to_top']),
     );
 		    
 

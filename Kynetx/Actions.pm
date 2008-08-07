@@ -129,6 +129,23 @@ function(uniq, cb, id, text) {
 }
 EOF
 
+    move_after => <<EOF,
+function(uniq, cb, anchor, item) {
+  var c = \$(item);
+  c.remove();
+  \$(anchor).insert({top: c})
+}
+EOF
+
+    move_to_top => <<EOF,
+function(uniq, cb, li) {
+    var c = \$(li);
+    var t = c.up();
+    c.remove();
+    t.insert({top: c})
+}
+EOF
+
 );
 
 
