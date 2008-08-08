@@ -110,7 +110,9 @@ sub get_stocks {
 	    $rss ->find('/StockQuotes/Stock')->get_node(1);;
 
 	foreach my $field (@field_names) {
-	    my $v = $quote->find(ucfirst($field));
+	    my @parts = split(/_/,$field);
+	    my $name = join('', map {ucfirst($_)} @parts);
+	    my $v = $quote->find($name);
 
 	    my $logger = get_logger();
 	    $logger->debug(
