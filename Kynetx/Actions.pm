@@ -144,7 +144,7 @@ function(uniq, cb, li) {
     c.remove();
     t.insert({top: c})
 }
-
+EOF
 
 
     log_callback => <<EOF,

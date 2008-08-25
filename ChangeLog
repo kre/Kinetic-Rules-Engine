@@ -1,5 +1,7 @@
 2008-08-25  Phil Windley  <pjw@kynetx.com>
 
+	* Kynetx/Actions.pm: Fixed error in action hash
+
 	* etc/tmpl/httpd-perl.conf.tmpl: Added static P3P compact policy
 	  header 
 
