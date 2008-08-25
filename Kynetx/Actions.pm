@@ -144,6 +144,19 @@ function(uniq, cb, li) {
     c.remove();
     t.insert({top: c})
 }
+
+
+
+    log_callback => <<EOF,
+function(uniq, cb, ) {
+    KOBJ.logger("click",
+		txn_id,
+		name, 
+	        '', 
+		sense,
+		rule
+	);
+    false;
 EOF
 
 );

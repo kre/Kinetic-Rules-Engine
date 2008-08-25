@@ -6,6 +6,9 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
+use constant DEFAULT_SERVER_ROOT => 'kobj.net';
+use constant DEFAULT_ACTION_PREFIX => 'kobj-cs';
+use constant DEFAULT_LOG_PREFIX => 'kobj-log';
 use constant DEFAULT_ACTION_HOST => '127.0.0.1';
 use constant DEFAULT_LOG_HOST => '127.0.0.1';
 use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
@@ -36,8 +39,26 @@ sub handler {
     if($file eq 'kobj.js') {
 
 	$logger->info("Generating KOBJ file ", $file);
-	my $action_host = $r->dir_config('action_host') || DEFAULT_ACTION_HOST;
-	my $log_host = $r->dir_config('log_host') || DEFAULT_LOG_HOST;
+
+	my($prefix, $middle, $root) = $r->hostname =~ m/^([^.]+)\.?(.*)\.([^.]+\.[^.]+)$/;
+
+	$logger->debug("Hostname: ", $prefix, " and ", $root);
+
+	my $action_host;
+	my $log_host;
+	# track virtual hosts
+	if($root eq DEFAULT_SERVER_ROOT) {
+	    $action_host = $r->dir_config('action_host') || DEFAULT_ACTION_HOST;
+	    $log_host = $r->dir_config('log_host') || DEFAULT_LOG_HOST;
+	} else {
+	    $middle .= "." if $middle;
+	    my $ending = "." . $middle  . $root;
+	    $action_host = DEFAULT_ACTION_PREFIX . $ending;
+	    $log_host = DEFAULT_LOG_PREFIX . $ending;
+	}
+
+	$logger->info("Generating KOBJ file ", $file, ' with action host ' , $action_host);
+
 	$js .= get_kobj('http://', $action_host, $log_host, $site, $js_version);
 
 
@@ -163,6 +184,9 @@ KOBJ.r.src=
              + KOBJ.d 
 	     + ".js"
              + "?"
+             + "caller=" 
+             + escape(document.URL) 
+	     + "&"
              + "referer=" 
              + escape(document.referrer) 
 	     + "&"

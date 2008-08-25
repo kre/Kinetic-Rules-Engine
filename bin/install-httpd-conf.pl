@@ -3,6 +3,7 @@
 use strict;
 
 use Getopt::Std;
+use Sys::Hostname;
 use HTML::Template;
 
 # config
@@ -85,6 +86,8 @@ $conf_template->param(GENDER_LOG => 1) if $log_gender;
 $conf_template->param(GENDER_INIT => 1) if $init_gender;
 $conf_template->param(GENDER_KRL => 1) if $krl_gender;
 $conf_template->param(GENDER_FRAG => 1) if $frag_gender;
+$conf_template->param(HOSTNAME => hostname);
+
 
 # database
 $conf_template->param(DB_HOST => $db_host);

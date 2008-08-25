@@ -56,14 +56,16 @@ sub process_rules {
     # get a session hash 
     my $session = process_session($r);
 
+    # grab request params
+    my $req = Apache2::Request->new($r);
 
 
-    # build initial env
+    # build initial envv
     my $ug = new Data::UUID;
     my $path_info = $r->path_info;
     my %request_info = (
 	host => $r->connection->get_remote_host,
-	caller => $r->headers_in->{'Referer'},
+	caller => $r->headers_in->{'Referer'} || $req->param('caller'),
 	now => time,
 	site => $path_info =~ m#/(\d+)/.*\.js#,
 	hostname => $r->hostname(),
@@ -74,7 +76,6 @@ sub process_rules {
 	);
     
 
-    my $req = Apache2::Request->new($r);
     $request_info{'referer'} = $req->param('referer');
     $request_info{'title'} = $req->param('title');
 

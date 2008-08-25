@@ -112,6 +112,7 @@ sub eval_predicates {
 	    # check count
 	    my $count = $session->{$name} || 0;
 
+
 	    $logger->debug('[counter] ', "$name -> $count");
 
 
@@ -123,8 +124,11 @@ sub eval_predicates {
 
 	    # check date, if needed
 	    if($v &&
-	       exists $cond->{'within'} &&
+	       defined $cond->{'within'} &&
 	       exists $session->{mk_created_session_name($name)}) {
+
+		$logger->debug('[counter] ', 
+			       $cond->{'timeframe'}, " -> ", $cond->{'within'});
 
 		my $desired = 
 		    DateTime->from_epoch( epoch => 
@@ -132,8 +136,8 @@ sub eval_predicates {
 		$desired->add( $cond->{'timeframe'} => $cond->{'within'} );
 
 		$v = $v && after_now($desired);
-	    }
 
+	    }
 
 	}
 

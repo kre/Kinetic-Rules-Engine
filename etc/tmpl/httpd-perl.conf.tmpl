@@ -44,7 +44,7 @@ Group web
 
 ServerAdmin web@kynetx.com
 
-#ServerName init.kobj.net:80
+ServerName <TMPL_VAR NAME=HOSTNAME>:80
 
 DocumentRoot "/web/htdocs"
 
@@ -71,9 +71,9 @@ RewriteEngine on
 #    RewriteLog "/web/logs/rewrite.log"
 #    RewriteLogLevel 5
 
-# handle categories
-RewriteRule	  !^.*\.js$	$1 [R]
-RewriteRule   ^(.*)$ http://www.kynetx.com/kobj/index.shtml
+# redirect everything that's not a .js file to kynetx.com
+RewriteRule	  !^.*\.(js|xml)$	$1 [R]
+RewriteRule   ^(.*)$ http://www.kynetx.com/kobj/index.html
 
 
 </IfModule>
@@ -260,6 +260,9 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 <TMPL_IF NAME="GENDER_ACTION">
 <LocationMatch /kobj/>
 
+  # P3P compressed policy header
+  Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
+
   # env var to turn on rule logging
   PerlSetEnv KOBJ 1 
 
@@ -287,6 +290,7 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
   </TMPL_LOOP>
   </TMPL_IF>
 
+  
 
   # URL for svn rule repository, username, password
   PerlSetVar svn_conn <TMPL_VAR NAME=RULE_REPOSITORY>
@@ -298,6 +302,10 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 </TMPL_IF>
 <TMPL_IF NAME="GENDER_LOG">
 <LocationMatch /log/>
+
+  # P3P compressed policy header
+  Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
+
   # env var to turn on callback logging
   PerlSetEnv CB 1 
 
@@ -323,6 +331,9 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 </TMPL_IF>
 <TMPL_IF NAME="GENDER_INIT">
 <LocationMatch /js/>
+
+  # P3P compressed policy header
+  Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
 
   # Insert compression filter
   SetOutputFilter DEFLATE
@@ -420,4 +431,30 @@ Alias /widgets/ "/web/lib/perl/widgets/"
   Order allow,deny
   Allow from all 
 </Location>
+</TMPL_IF>
+
+
+#
+# virtual hosts
+#
+
+NameVirtualHost *
+
+
+<TMPL_IF NAME="GENDER_INIT">
+<VirtualHost *>
+  ServerName kobj-init.windley.org
+</VirtualHost>
+</TMPL_IF>
+
+<TMPL_IF NAME="GENDER_ACTION">
+<VirtualHost *>
+  ServerName kobj-cs.windley.org
+</VirtualHost>
+</TMPL_IF>
+
+<TMPL_IF NAME="GENDER_LOG">
+<VirtualHost *>
+  ServerName kobj-log.windley.org
+</VirtualHost>
 </TMPL_IF>

@@ -1,3 +1,23 @@
+2008-08-25  Phil Windley  <pjw@kynetx.com>
+
+	* etc/tmpl/httpd-perl.conf.tmpl: Added static P3P compact policy
+	  header 
+
+	* Kynetx/KOBJ.pm (get_kobj): Added support for private domains and
+  	  more robust caller determination
+
+2008-08-19  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Predicates.pm (eval_predicates): Changed "exists" to
+ 	  "defined" when checking for counter predicate timeframes
+
+2008-08-08  Phil Windley  <pjw@kynetx.com>
+
+	* t/JavaScript.t (mk_datasource_function): added test for all
+	  datasources
+	* Kynetx/Location.pm new predicates for international in 
+	* Kynetx/Actions.pm new actions for moving elements
+
 2008-07-17  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Session.pm (tie_servers): Sessions now using memcached
