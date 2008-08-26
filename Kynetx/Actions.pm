@@ -54,41 +54,53 @@ EOF
 
     float_url => <<EOF,
 function(uniq, cb, pos, top, side, url) {
-   var id_str = 'kobj_'+uniq;
-   var div = document.createElement('div');
-   div.setAttribute('id', id_str);
-   div.setAttribute('style', 'position: ' + pos + 
-                    '; z-index: 9999;  ' +
-                    top + '; ' + side + 
-                    '; opacity: 0.999999; display: none');
-   var div2 = document.createElement('div');
-   var newtext = document.createTextNode('');
-   div2.appendChild(newtext);
-   div.appendChild(div2);
-   document.body.appendChild(div);
-   new Ajax.Updater(id_str, url, {
-                    aynchronous: true,
-                    method: 'get',
-                    onComplete: cb
-                   });
+    var vert = top.split(/\s*:\s*/);
+    var horz = side.split(/\s*:\s*/);
+    var div_style = \$H({
+        position: pos,
+        zIndex: '9999',
+        opacity: 0.999999,
+        display: 'none'
+    });
+    div_style.set(vert[0], vert[1]);
+    div_style.set(horz[0], horz[1]);
+
+    var id_str = 'kobj_'+uniq;
+    var div2 = new Element('div');
+    var div = new Element('div', {'id': id_str});
+    div.setStyle(div_style.toObject());
+    div.update(div2);
+    document.body.appendChild(div);
+    new Ajax.Updater(id_str, url, {
+                     aynchronous: true,
+                     method: 'get',
+                     onComplete: cb
+                     });
 }
 EOF
 
 
     float_html => <<EOF,
 function(uniq, cb, pos, top, side, text) {
-   var id_str = 'kobj_'+uniq;
-   var div = document.createElement('div');
-   div.setAttribute('id', id_str);
-   div.setAttribute('style', 'position: ' + pos + 
-                    '; z-index: 9999;  ' +
-                    top + '; ' + side + 
-                    '; opacity: 0.999999; display: none');
-   var div2 = document.createElement('div');
-   div2.innerHTML = text;
-   div.appendChild(div2);
-   document.body.appendChild(div);
-   cb();
+    var vert = top.split(/\s*:\s*/);
+    var horz = side.split(/\s*:\s*/);
+    var div_style = \$H({
+        position: pos,
+        zIndex: '9999',
+        opacity: 0.999999,
+        display: 'none'
+    });
+    div_style.set(vert[0], vert[1]);
+    div_style.set(horz[0], horz[1]);
+
+    var div2 = new Element('div');
+    div2.update(text);
+
+    var div = new Element('div', {'id': 'kobj_'+uniq});
+    div.setStyle(div_style.toObject());
+    div.update(div2);
+    document.body.appendChild(div);
+    cb();
 }
 EOF
 
@@ -296,6 +308,7 @@ sub build_one_action {
 
     push(@{ $rule_env->{'actions'} }, $action_name);
 
+
     # set defaults
     my %mods = (
 	delay => 0,
@@ -311,8 +324,24 @@ sub build_one_action {
 
 
     if($modifiable{$action_name}) {
-	    
-	$js .= "new Effect.toggle('" . $uniq_id . "', ". $mods{'effect'} . " );"  ;
+	# map our effect names to Sript.taculo.us effect names
+
+	my $effect_name;
+        case: for ($mods{'effect'}) {
+	    /appear/ && do {
+		$effect_name = 'Appear';
+	    };
+	    /slide/ && do {
+		$effect_name = 'SlideDown';
+	    };
+	    /blind/ && do {
+		$effect_name = 'BlindDown';
+	    };
+	}
+
+
+	$logger->debug("Using effect $effect_name for $mods{'effect'}");
+	$js .= "new Effect.$effect_name('$uniq_id');"  ;
 
 	if($mods{'draggable'} eq 'true') {
 	    $js .= "new Draggable('". $uniq_id . "', '{ zindex: 99999 }');";

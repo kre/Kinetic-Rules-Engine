@@ -1,3 +1,8 @@
+2008-08-26  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Actions.pm: Fixed numerous problems that made floats not
+ 	  work with IE.
+
 2008-08-25  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Actions.pm: Fixed error in action hash
