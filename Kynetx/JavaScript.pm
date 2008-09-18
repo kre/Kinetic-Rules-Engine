@@ -165,6 +165,8 @@ sub eval_js_expr {
 
     my $logger = get_logger();
 
+    $logger->debug(Dumper($rule_env));
+
     case: for ($expr->{'type'}) {
 	/str/ && do {
 	    return $expr;
