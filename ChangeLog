@@ -1,3 +1,18 @@
+2008-09-18  Phil Windley  <pjw@kynetx.com>
+
+	* Parser rewrite complete.  Page variables added as a data source.
+	76 files touched.  Ugh.   
+
+2008-09-11  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/PrettyPrinter.pm: Rewrote to match changes to
+  	  Parser.pm. Restructured expression syntax tree to be consistent
+	  with predicates and easier to use.  
+
+	* Kynetx/Parser.pm: Completely rewrote parser using RecDescent
+	  Added new productions for predicate expressions, qualified data
+	  functions and predicates, and value comparison in predicates.
+
 2008-08-26  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Actions.pm: Fixed numerous problems that made floats not

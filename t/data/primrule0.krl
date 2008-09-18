@@ -2,7 +2,6 @@
 ruleset 10 {
 
 
-  // rule for testing every
   rule test_every is inactive {
     select using "/identity-policy/" setting ()
 

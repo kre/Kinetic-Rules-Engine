@@ -6,6 +6,13 @@ use strict;
 # grab the test data file names
 my @krl_files = @ARGV ? @ARGV : <data/*.krl>;
 
+# all the files in the rules repository
+#my @krl_files = @ARGV ? @ARGV : </web/work/krl.kobj.net/rules/client/*.krl>;
+
+# testing some...
+#my @krl_files = <new/*.krl>;
+
+
 use Test::More;
 plan tests => $#krl_files+1;
 use Test::LongString;
@@ -20,7 +27,9 @@ Log::Log4perl->easy_init($INFO);
 foreach my $f (@krl_files) {
     my ($fl,$krl_text) = getkrl($f);
     my $tree = parse_ruleset($krl_text);
-    is_string_nows(pp($tree), $krl_text, "$f: $fl")
+#    diag($f);
+    # compare to text with comments removed since pp can't reinsert them.
+    is_string_nows(pp($tree), remove_comments($krl_text), "$f: $fl")
 }
 
 

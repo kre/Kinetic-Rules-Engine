@@ -12,8 +12,13 @@ Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
+use Kynetx::Parser qw/:all/;
 use Kynetx::Predicates::Location qw/:all/;
 use Kynetx::JavaScript qw/:all/;
+
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
 
 my $preds = Kynetx::Predicates::Location::get_predicates();
 my @pnames = keys (%{ $preds } );
@@ -87,23 +92,31 @@ ok(&{$preds->{'outside_country'}}($BYU_req_info, \%rule_env, \@args),
    "BYU and BBC are in different countries");
 
 
-# a small piece of the abstract syntax tree...
-my $cond = {'args' => [
-            {
-              'str' => 'US'
-            }
-          ]
-};
+my($krl_src,$cond,$args);
 
-my $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+$krl_src = <<_KRL_;
+country("US")
+_KRL_
+
+$cond = Kynetx::Parser::parse_predexpr($krl_src);
+
+$args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+
+#diag(Dumper($args));
 
 
 ok(&{$preds->{'country'}}($BYU_req_info, \%rule_env, $args),
    "BYU is in the US");
 
+$krl_src = <<_KRL_;
+country("GB")
+_KRL_
 
-$cond->{'args'}->[0]->{'str'} = 'GB';
+$cond = Kynetx::Parser::parse_predexpr($krl_src);
+
 $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+
+
 
 ok(&{$preds->{'country'}}($BBC_req_info, \%rule_env, $args),
    "BBC is in GB");

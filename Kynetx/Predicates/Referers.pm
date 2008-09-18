@@ -143,22 +143,38 @@ my %predicates = (
     'remote_referer' => sub {
 	my ($req_info, $rule_env, $args) = @_;
 
-	my $referer_domain = get_referer_data($req_info,'domain');
+	my $referer_domain = get_referer_data($req_info,'domain') ||'';
 
 	my $parsed_url = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});
-	
+
+	my $logger = get_logger();
+	$logger->debug("Refered domain: $referer_domain, hostname: ", $parsed_url->hostname);
 
 	return !($referer_domain eq $parsed_url->hostname);
+    },
+
+    'local_referer' => sub {
+	my ($req_info, $rule_env, $args) = @_;
+
+	my $referer_domain = get_referer_data($req_info,'domain');
+
+	if (defined $referer_domain) {
+	    my $parsed_url = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});
+
+	    my $logger = get_logger();
+	    $logger->debug("Refered domain: $referer_domain, hostname: ", $parsed_url->hostname);
+
+	    return ($referer_domain eq $parsed_url->hostname);
+
+	} else {
+	    # referer is undefined for local referer
+	    return 1;
+	}
     },
 
     );
 
 
-# need predicates already defined for this
-$predicates{'local_referer'} = sub {
-    return ! $predicates{'remote_referer'}(@_)
-
-};
 
 
 

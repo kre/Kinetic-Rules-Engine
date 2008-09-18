@@ -10,652 +10,639 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
-our %EXPORT_TAGS = (all => [ qw(parse_ruleset dump_lex) ]);
+our %EXPORT_TAGS = (all => [ 
+qw(
+parse_ruleset
+remove_comments
+mk_expr_node
+) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
-
-use HOP::Stream qw/:all/;
-use HOP::Lexer 'make_lexer';
-use HOP::Parser qw/:all/;
 
 use Log::Log4perl qw(get_logger :levels);
 
+use Parse::RecDescent;
+use Data::Dumper;
 
-my @keywords = (
-    'ruleset',
-    'rule',
-    'is',
-    'select using',
-    'setting',
-    'pre',
-    'decls',
-    'if',
-    'then',
-    'float',
-    'float_html',
-    'replace',
-    'replace_html',
-    'redirect',
-    'alert',
-    'popup',
-    'with',
-    'and',
-    'not',
-    'fired',
-    'callbacks',
-    'success',
-    'failure',
-    'else',
-    'always',
-    'counter',
-    'clear',
-    'from',
-    'within',
-    'days',
-    'log',
-    'click',
-    'choose',
-    'every',
-    'move_after',
-    'move_to_top',
-    );
+use vars qw(%VARIABLE);
 
-# only on word boundaries
-my $kw = join '|', map {"\\b".$_."\\b"} @keywords;
+# Enable warnings within the Parse::RecDescent module.
 
-my @input_tokens = (
-     [ 'HTML', qr/<<.*?>>/s, \&html  ],
-     [ 'STRING', qr/"[^"]*"/, \&string],
-     [ 'COMMENT', qr%//.*%, sub { () } ],
-     [ 'KEYWORD', qr/(?i:$kw)/ ],
-     [ 'BOOL', qr/true|false/ ],
-     [ 'VAR',   qr/[_A-Za-z]\w*/    ],
-     [ 'NUM',   qr/\d+/             ],
-     [ 'COMMA', qr/,/ ],
-     [ 'INCR', qr/\+=/ ],
-     [ 'DECR', qr/-=/ ],
-     [ 'DOT', qr/\./ ],
-     [ 'OP',    qr{[+-/*]}            ],
-     [ 'SPACE', qr/\s*/, sub { () } ],
-     [ 'LBRACE', qr/{/ ],
-     [ 'RBRACE', qr/}/ ],
-     [ 'LBRACKET', qr/\[/ ],
-     [ 'RBRACKET', qr/\]/ ],
-     [ 'LPAREN', qr/\(/ ],
-     [ 'RPAREN', qr/\)/ ],
-     [ 'EQUALS', qr/=/ ],
-     [ 'INEQUALITY', qr/[<>]/ ],
-     [ 'COLON', qr/:/ ],
-     [ 'SEMICOLON', qr/;/ ],
-     [ 'LOGICAL_AND', qr/&&/ ],
-);
+$::RD_ERRORS = 1; # Make sure the parser dies when it encounters an error
+#$::RD_WARN   = 1; # Enable warnings. This will warn on unused rules &c.
+#$::RD_HINT   = 1; # Give out hints to help fix problems.
 
-sub string {
-    my ($label, $value) = @_;
-    $value =~ s/^["']//;
-    $value =~ s/["']$//;
-    return [$label, $value ];
-}  
+#$::RD_AUTOSTUB = 1;
+#$::RD_TRACE = 1;
 
-# FIXME: should we be removing newlines or quoting them?  
+my $grammar = <<'_EOGRAMMAR_';
+{my $errors = "";
+} # startup action
+
+# Terminals (macros that can't expand further)
+#
+HTML: /<<.*?>>/s  {$return=Kynetx::Parser::html($item[1]) }
+STRING: /"[^"]*"|'[^']'/ {$return=Kynetx::Parser::string($item[1]) }
+VAR:   /[_A-Za-z]\w*/ 
+NUM:   /\d*\.\d+|\d+/          
+COMMA: /,/ 
+INCR: /\+=/ 
+DECR: /-=/ 
+DOT: /\./ 
+OP:   m([+-/*])          
+LBRACKET: /\[/ 
+RBRACKET: /\]/ 
+LPAREN: /\(/ 
+RPAREN: /\)/ 
+EQUALS: /=/ 
+INEQUALITY: /[<>]/ 
+COLON: /:/ 
+SEMICOLON: /;/ 
+LOGICAL_AND: /&&/ 
+BOOL: 'true' | 'false' 
+
+eofile: /^\Z/
+
+ruleset: 'ruleset' ruleset_name  '{' rule(s) '}' eofile
+             {$return = {$item{ruleset_name} => $item[4]}}
+       | { foreach (@{$thisparser->{errors}}) {
+              $errors .= "Line $_->[1]:$_->[0]\n";
+           }
+          $thisparser->{errors} = undef;
+          $return = {'error' => $errors}
+          }
+
+ruleset_name: VAR  # {return $item[1]}
+            | NUM  # {return $item[1]}
+            | <error>
+
+rule: 'rule' VAR 'is' rule_state '{'
+        select
+        pre_block
+        action SEMICOLON(?)
+        callbacks(0..1)
+        post_block(0..1)
+       '}'
+  {$return = {'name' => $item{VAR},
+	      'state' => $item{rule_state},
+	      'pagetype' => $item{select},
+  	      'pre' => $item{pre_block},
+  	      'actions' => $item{action}->{'actions'},
+	      'blocktype' => $item{action}->{'blocktype'} || 'every',
+	      'cond' => $item{action}->{'cond'} || 
+		        Kynetx::Parser::mk_expr_node('bool','true'),
+	      'callbacks' => $item[10][0],
+	      'post' => $item[11][0]
+           } }
+
+
+rule_state: 'active'
+          | 'inactive'
+          | 'test'
+          | <error>
+
+
+select:  'select' 'using' STRING 
+            'setting' '(' VAR(s? /,/) ')' SEMICOLON(?) #?
+	  {$return =
+	   { 'pattern' => $item[3],
+	     'vars' => $item[6]
+	   } 
+	  }
+      | <error>
+
+
+pre_block: 'pre' '{' decl(s? /;/) SEMICOLON(?) '}' #?
+           {$return=$item[3]}
+         | <error>
+
+
+decl: VAR '=' VAR ':' VAR '(' expr(s? /,/) ')'
+      {$return =
+       {'lhs' => $item[1],
+        'type' => 'data_source',
+        'source' => $item[3],
+        'function' => $item[5],
+        'args' => $item[7]
+       }
+      }
+    | VAR '=' 'counter' '.' VAR
+      {$return =
+       {'lhs' => $item[1],
+        'type' => $item[3],
+        'name' => $item[5]
+       }
+      }
+    | VAR '=' HTML
+      {$return =
+       {'lhs' => $item[1],
+        'type' => 'here_doc',
+        'value' => $item[3]
+       }
+      }
+    | <error: Invalid decl: $text>
+
+
+action: conditional_action 
+        {$return = $item{conditional_action}}
+      | unconditional_action 
+        {$return = $item{unconditional_action}}
+      | <error>
+
+conditional_action: 'if' predexpr 'then' unconditional_action
+        {$return=
+         {'cond' => $item{predexpr},
+          'blocktype' => $item{unconditional_action}->{'blocktype'} || 'every',
+          'actions' => $item{unconditional_action}->{'actions'},
+         }
+        }
+
+unconditional_action: primrule 
+        {$return =
+         {'blocktype' => 'every',
+          'actions' => [$item{primrule}],
+         }
+        }
+   | actionblock
+        {$return = $item{actionblock}}
+
+primrule: rule_label(?) action_name '(' expr(s? /,/) ')' modifier_clause(?)
+        {$return =
+         {'label' => $item[1][0],
+          'action' => 
+             {'args' => $item[4],
+              'modifiers' => $item[6][0],  # returned as array of array
+              'name' => $item{action_name}
+             }
+         }
+        }
+     | <error>
+
+rule_label: VAR ':'
+        {$return = $item[1]}
+
+modifier_clause: 'with' modifier(s /and/)
+        {$return = $item[2]}
+
+modifier: VAR '=' expr
+        {$return=
+         {'name' => $item{VAR},
+          'value' => $item{expr}
+         }
+        }
+
+action_name: 'float_html'
+           | 'float'
+           | 'replace_html'
+           | 'replace'
+           | 'popup'
+           | 'alert'
+           | 'redirect'
+           | 'move_after'
+           | 'move_to_top'
+           | <error>
+
+actionblock: blocktype(?) '{' primrule(s /;/) SEMICOLON(?) '}'
+      {$return =
+       {'blocktype' => $item[1][0] || 'every',
+	'actions' => $item[3]
+       }
+      }
+
+blocktype: 'choose'
+         | 'every'
+
+
+#
+# Predicate expressions
+#
+predexpr: conjunction '||' predexpr
+      {$return=
+       {'type' => 'pred',
+        'op' => '||',
+        'args' => [$item[1], $item[3]]
+       }
+      }
+    | conjunction
+
+
+conjunction: pred '&&' conjunction
+      {$return=
+       {'type' => 'pred',
+        'op' => '&&',
+        'args' => [$item[1], $item[3]]
+       }
+      }
+    | pred
+
+
+# FIXME: move all pred terms into expression?  
+pred: 'not' pred
+      {$return =
+       {'type' => 'pred',
+        'op' => 'negation',
+        'args' => [$item[2]]
+       }
+      }
+    | '(' predexpr ')'
+      {$return = $item[2]}
+    | expr predop expr
+      {$return =
+       {'type' => 'ineq',
+	'op' => $item[2],
+	'args' => [$item[1], $item[3]]
+       }
+      }
+    | expr
+    | <error>
+
+predop: '<=' | '>=' | '<' | '>' | '==' | '!=' | 'eq' | 'neq' | 'like'
+
+
+
+
+#
+# Callbacks
+#
+callbacks: 'callbacks' '{' success(?) failure(?) '}'
+     {$return=
+      {'success' => $item[3][0],
+       'failure' => $item[4][0]
+      }
+     }
+
+success: 'success' '{' click(s /;/) '}'
+     {$return= $item[3] }
+   
+failure: 'failure' '{' click(s /;/) '}'
+     {$return= $item[3] }
+   
+click: 'click' VAR '=' STRING
+     {$return=
+      {'type' => $item[1],
+       'attribute' => $item{VAR},
+       'value' => $item{STRING},
+      }
+     }
+     | <error>
+
+post_block: post '{' counter_expr SEMICOLON(?) '}' post_alternate(?)
+     {$return=
+      {'type' => $item[1],
+       'cons' => $item[3],
+       'alt' => $item[6][0],
+      }
+     }
+  
+post: 'fired'
+    | 'always'
+
+
+post_alternate: 'else' '{' counter_expr SEMICOLON(?) '}'
+      {$return=$item[3]}
+
+counter_expr: counter_clear
+	    | counter_iterate
+
+counter_clear: 'clear' 'counter' '.' VAR 
+     {$return=
+      {'type' => 'clear',
+       'counter' => $item[2],
+       'name' => $item[4],
+      }
+     }
+
+counter_iterate: 'counter' '.' VAR counter_op NUM counter_start(?)
+     {$return=
+      {'type' => 'iterator',
+       'counter' => $item[1],
+       'name' => $item[3],
+       'op' => $item[4],
+       'value' => $item[5],
+       'from' => defined $item[6][0] ? $item[6][0] : 1 ,
+      }
+     }
+    
+
+counter_op: '+='
+          | '-='
+          | <error>
+
+counter_start: 'from' NUM
+
+expr: term term_op expr
+      {$return=
+       {'type' => 'prim',
+        'op' => $item[2],
+        'args' => [$item[1], $item[3]]
+       }
+      }
+    | term
+
+term_op: '+'|'-'
+
+term: factor factor_op term
+      {$return=
+       {'type' => 'prim',
+        'op' => $item[2],
+        'args' => [$item[1], $item[3]]
+       }
+      }
+    | factor
+
+factor_op: '*'|'/'
+
+factor: NUM
+        {$return=Kynetx::Parser::mk_expr_node('num',$item[1])}
+      | '-' NUM
+        {$return=Kynetx::Parser::mk_expr_node('num',$item[2] * -1)}
+      | STRING
+        {$return=Kynetx::Parser::mk_expr_node('str',$item[1])}
+      | 'true'
+        {$return=Kynetx::Parser::mk_expr_node('bool',$item[1])}
+      | 'false'
+        {$return=Kynetx::Parser::mk_expr_node('bool',$item[1])}
+      | simple_pred 
+      | qualified_pred
+      | counter_pred
+      | VAR   # if this isn't after 'true' and 'false' they'll be vars
+        {$return=Kynetx::Parser::mk_expr_node('var',$item[1])}
+      | '[' expr(s? /,/) ']'
+        {$return=Kynetx::Parser::mk_expr_node('array',$item[2])}
+      | '(' expr ')'
+        {$return=$item[2]}
+
+simple_pred: VAR '(' expr(s? /,/) ')' 
+      {$return=
+       {'type' => 'simple',
+        'predicate' => $item{VAR},
+        'args' => $item[3]
+       }
+      }
+
+qualified_pred: VAR ':' VAR '(' expr(s? /,/) ')'
+      {$return=
+       {'type' => 'qualified',
+        'source' => $item[1],
+        'predicate' => $item[3],
+        'args' => $item[5]
+       }
+      }
+
+counter_pred: 'counter' '.' VAR INEQUALITY NUM timeframe(?)
+      {$return=
+       {'type' => 'counter',
+        'name' => $item[3],
+        'ineq' => $item[4],
+        'value' => $item[5],
+        'within' => (ref $item[6][0] eq 'HASH') ? $item[6][0]->{'within'} : undef,
+        'timeframe' => (ref $item[6][0] eq 'HASH') ? $item[6][0]->{'period'} : undef,
+       }
+      }
+
+timeframe: 'within' NUM period
+      {$return=
+       {'within' => $item[2],
+        'period' => $item[3]
+       }
+      }
+
+period: 'months'
+      | 'weeks'
+      | 'days'
+      | 'hours'
+      | 'minutes'
+      | 'seconds'
+      | <error>
+
+
+
+_EOGRAMMAR_
+
 sub html {
-    my ($label, $value) = @_;
+    my ($value) = @_;
     $value =~ s/^<<\s*//;
     $value =~ s/>>\s*$//;
     $value =~ s/[\n\r]/  /sg;
-    return [$label, $value ];
+    return $value;
 }  
 
-# now to parse it
-
-my ($ruleset, $rule, $select, $vars, $pre_block, 
-    $decls, $decl, $args, $actions, $actionblock,
-    $cond, $preds, $pred, $primrule, $modifiers, $modifier, 
-    $action, $expr, $term, $factor, $entire_input,
-    $simple_pred, $counter_pred, $post_block, $clear, $iterator,
-    $counter_expr, $callbacks, $click, $succeed, $fail
-);
+sub string {
+    my ($value) = @_;
+    $value =~ s/^["']//;
+    $value =~ s/["']$//;
+    return $value;
+}  
 
 
+my $parser = Parse::RecDescent->new($grammar);
 
-# eta conversion
-my $Ruleset = parser { $ruleset->(@_) };
-my $Rule = parser { $rule ->(@_) }; 
-my $Select = parser { $select->(@_) };
-my $Vars = parser { $vars->(@_) };
-my $Pre_block = parser { $pre_block->(@_) };
-my $Decls = parser { $decls->(@_) };
-my $Decl = parser { $decl->(@_) };
-my $Args = parser { $args->(@_) };
-my $Cond = parser { $cond->(@_) };
-my $Preds = parser { $preds->(@_) };
-my $Pred = parser { $pred->(@_) };
-my $Simple_pred = parser { $simple_pred->(@_) };
-my $Counter_pred = parser { $counter_pred->(@_) };
-my $Primrule = parser { $primrule->(@_) };
-my $Modifiers = parser { $modifiers->(@_) };
-my $Modifier = parser { $modifier->(@_) };
-my $Action = parser { $action->(@_) };
-my $Actions = parser { $actions->(@_) };
-my $Actionblock = parser { $actionblock->(@_) };
-my $Counter_expr = parser { $counter_expr->(@_) };
-my $Expr = parser { $expr->(@_) };
-my $Term = parser { $term->(@_) };
-my $Factor = parser { $factor->(@_) };
-my $Post_block = parser { $post_block->(@_) };
-my $Clear = parser { $clear->(@_) };
-my $Iterator = parser { $iterator->(@_) };
-my $Callbacks = parser { $callbacks->(@_) };
-my $Click = parser { $click->(@_) };
-my $Succeed = parser { $succeed->(@_) };
-my $Fail = parser { $fail->(@_) };
+# this removes KRL-style comments taking into account quotes
+my $comment_re = qr%
+       /\*         ##  Start of /* ... */ comment
+       [^*]*\*+    ##  Non-* followed by 1-or-more *'s
+       (
+         [^/*][^*]*\*+
+       )*          ##  0-or-more things which don't start with /
+                   ##    but do end with '*'
+       /           ##  End of /* ... */ comment
+     |
+        //[^\n]*    ## slash style comments
+     |         ##     OR  various things which aren't comments:
 
+       (
+         "           ##  Start of " ... " string
+         (
+           \\.           ##  Escaped char
+         |               ##    OR
+           [^"\\]        ##  Non "\
+         )*
+         "           ##  End of " ... " string
 
+     |         ##     OR
+        .           ##  Anything other char
+         [^/"'\\]*   ##  Chars which doesn't start a comment, string or escape
+       )
+     %xs;
 
+sub remove_comments {
 
-# <ruleset> ::= ruleset { <var> | <num> } LBRACE { <rule> }* RBRACE EOI
+    my($ruleset) = @_;
 
-$entire_input = concatenate($Ruleset, 
-				  \&End_of_Input);
-			    
-$ruleset = 
-	T(
-	    error(
-		concatenate(lookfor(['KEYWORD', 'ruleset']), 
-			    alternate(lookfor('VAR'),
-				      lookfor('NUM')),
-			    lookfor('LBRACE'),
-			    star($Rule),
-			    lookfor('RBRACE'))),
-	     sub { my %m;
-		   $m{ $_[1]  } = $_[3]; 
-	           return \%m;
-	     }
-    );
+    $ruleset =~ s%$comment_re%defined $2 ? $2 : ""%gxse;
+    return $ruleset;
 
-# <rule> ::= rule <var> is <var> LBRACE 
-#            <select> <pre_block> {html_block}* { <cond> | <actions> } 
-#            { <succeed> }[0/1]
-#            { <fail> }[0/1]
-#            { <post_block> }[0/1]
-#            RBRACE
-
-$rule = T(concatenate(absorb(lookfor(['KEYWORD', 'rule'])),
-		       lookfor('VAR'),
-		       absorb(lookfor(['KEYWORD', 'is'])),
-		       lookfor('VAR'),
-		       absorb(lookfor('LBRACE')),
-		       error($Select),
-		       error($Pre_block),
-		       alternate($Cond,
-				 $Actions),
-		       optionalx($Callbacks),
-		       optionalx($Post_block),
-		       lookfor('RBRACE')),
-	  sub { 
-	      my($name,$state,$pagetype,$pre,$prim,$callback,$post) = @_; 
-	      my $x =  { 'name' => $name,
-			 'state' => $state,
-			 'pagetype' => $pagetype,
-			 'pre' => $pre->[0],
-	      };
-
-	      $x->{'actions'} = $prim->{'actions'} ||  [$prim];
-	      $x->{'blocktype'} =  $prim->{'blocktype'} || 'every';
-	      $x->{'cond'} =  $prim->{'cond'};
-
-		
-#	      foreach my $k (keys %{ $prim } ) {
-#		  $x->{$k} = $prim->{$k};
-#	      }
-	      # optionals
-	      if(ref $callback eq 'HASH') {
-		  $x->{'callbacks'} = $callback;
-	      }
-	      if(ref $post eq 'HASH') {
-		  $x->{'post'} = $post;
-	      }
-
-	      return $x;
-
-	  });
-		       
-
-# <select> ::= select using <string> setting LPAREN <vars> RPAREN ;
-
-$select = T(concatenate(lookfor(['KEYWORD', 'select using']),
-			lookfor('STRING'),
-			lookfor(['KEYWORD','setting']),
-			lookfor('LPAREN'),
-			$Vars,
-			lookfor('RPAREN')),
-	    sub { { 'pattern' => $_[1],
-		    'vars' => defined $_[4][0] ? $_[4][0] : []} } 
-    );
-
-# <vars> ::= <var> 
-#          | { <var> , <vars> }
-$vars = star(list_values_of( lookfor('VAR'),
-			     match('COMMA')));
-
-
-# <pre_block> ::= pre LBRACE { <decl> }* RRBRACE
-$pre_block = T(concatenate(lookfor(['KEYWORD','pre']),
-			   lookfor('LBRACE'),
-			   star(list_values_of($Decl, match('SEMICOLON'))),
-			   optional(absorb(match('SEMICOLON'))),
-			   lookfor('RBRACE')),
-	       sub {  $_[2] });
-
-
-# <decl> ::= <var> = <var> : <var> LPAREN <args> RPAREN SEMICOLON
-#          | <var> = counter DOT <var> SEMICOLON
-#          | <var> = HTML
-$decl = alternate(
-         T(concatenate(lookfor('VAR'),
-		      lookfor('EQUALS'),
-		      lookfor('VAR'),
-		      lookfor('COLON'),
-		      lookfor('VAR'),
-		      lookfor('LPAREN'),
-		      $Args,
-		      lookfor('RPAREN')),
-	  sub { {'lhs' => $_[0],
-		 'type' => 'data_source',
-	         'source' => $_[2],
-		 'function' => $_[4],
-		 'args' => defined $_[6][0] ? $_[6][0] : [] }
-	      }),
-          T(concatenate(lookfor('VAR'),
-		      absorb(lookfor('EQUALS')),
-		      lookfor('KEYWORD'),
-		      absorb(lookfor('DOT')),
-		      lookfor('VAR')),
-	    sub {my ($lhs, $type, $name) = @_;
-		 {'lhs' => $lhs,
-		  'type' => $type,
-		  'name' => $name } }),
-          T(concatenate(lookfor('VAR'),
-		      absorb(lookfor('EQUALS')),
-		      lookfor('HTML')),
-	    sub {
-		my ($lhs, $value) = @_;
-		{'type' => 'here_doc',
-		 'lhs' => $lhs,
-		 'value' => $value } })
-    );
-
-
-# <args> ::= <expr> 
-#          | { <expr> , <args> }
-$args = star(list_values_of($Expr, match('COMMA')));
-	
-
-# <actions> ::= <primrule>
-#             | <actionblock>
-$actions = alternate($Primrule, $Actionblock);
-
-
-# <actionblock> ::= (choose | every)* LBRACE {<primrule>}*; RBRACE
-$actionblock = 
-    T(concatenate(optional(alternate(lookfor(['KEYWORD', 'choose']),
-			             lookfor(['KEYWORD', 'every']))),
-	          absorb(lookfor('LBRACE')),
-		  star(list_values_of($Primrule,match('SEMICOLON'))),
-		  absorb(optional(match('SEMICOLON'))),
-		  absorb(lookfor('RBRACE'))),
-      sub { my($blocktype, $actions) = @_;
-	    { 'blocktype' => $blocktype->[0],
-	      'actions' =>  singleton($actions)
-	    }
-      }
-    );
-
-# take a list of singletons and remove the nesting
-sub singleton {
-    my $arr = shift;
-    my @a;
-    foreach my $s (@{$arr}) {
-	push @a, $s->[0];
-    }
-    return \@a;
 }
-
-
-# <cond> ::= if <preds> then <primrule> | <actionblock>
-$cond = T(concatenate(absorb(lookfor(['KEYWORD', 'if'])),
-		      $Preds,
-		      absorb(lookfor(['KEYWORD', 'then'])),
-		      $Actions),
-	  sub { my($preds, $ab) = @_;
-	      my $x = {'cond' => defined $preds->[0] ? $preds->[0] : []};
-		# always return an array of actions
-		$x->{'actions'} = $ab->{'actions'} ||  [$ab];
-		$x->{'blocktype'} =  $ab->{'blocktype'} || 'every';
-		return $x}
-    );
-
-
-#		foreach my $k (keys %{$_[1][0][0]} ) {
-#		    $x->{$k} = $_[1][0][0]->{$k};
-#		}
-
-
-		      
-
-# <preds> ::= <pred> 
-#           | { <pred> && <preds> }
-$preds = star( list_values_of( $Pred, match('LOGICAL_AND')));
-
-# <pred> ::= <simple_pred> | <counter_pred>
-$pred = alternate($Simple_pred, $Counter_pred);
-
-
-# <simple_pred> ::= <var> LPAREN <args> RPAREN
-$simple_pred = T(concatenate(lookfor('VAR'),
-			     lookfor('LPAREN'),
-			     $Args,
-			     lookfor('RPAREN')),
-		 sub { {'predicate' => $_[0],
-			'type' => 'simple',
-			'args' => empty_not_undef($_[2])} } 
-    );
-
-# <counter_pred> ::= counter DOT <var> INEQUALITY <num>
-#                       { within <num> <timeframe> } 
-# <timeframe> ::= days
-$counter_pred = T(concatenate(
-		      lookfor(['KEYWORD','counter']),
-		      lookfor('DOT'),
-		      lookfor('VAR'),
-		      lookfor('INEQUALITY'),
-		      lookfor('NUM'),
-		      optionalx(concatenate(
-				     lookfor(['KEYWORD','within']),
-				     lookfor('NUM'),
-				     lookfor(['KEYWORD','days'])))
-
-		  ),
-		  sub { {'name' => $_[2],
-			 'type' => $_[0],
-			 'ineq' => $_[3],
-			 'value' => $_[4],
-			 'within' => $_[5][1],
-			 'timeframe' => $_[5][2] } });
-
-
-
-# <primrule> ::= <action> LPAREN <args> RPAREN with <modifiers>
-$primrule = T(concatenate(optional(concatenate(lookfor('VAR'),
-					       absorb(match('COLON')))),
-		          $Action,
-			  absorb(lookfor('LPAREN')),
-			  $Args,
-			  absorb(lookfor('RPAREN')),
-			  optional(T(concatenate(lookfor(['KEYWORD','with']),
-						 $Modifiers),
-				     sub {
-					 my @x;
-					 foreach my $m ( @{ $_[1] }) {
-					     push @x, 
-						 {'name' => $m->[0],
-						  'value' => $m->[1]}
-					 }
-					 [\@x];
-				     })),
-			  absorb(optional(match('SEMICOLON')))
-	      ),
-	      sub {my($label,$name,$args,$modifiers) = @_;
-		   return {'label'=> $label->[0] || undef,
-			   'action' => 
-			      {'args' => empty_not_undef($args),
-			       'modifiers' => empty_not_undef($modifiers),
-			       'name' => $name
-			      }}
-	      });
-
-# <modifiers> ::= <modifier> 
-#               | { <modifier> and <modifiers> }
-$modifiers = list_values_of( $Modifier, match('KEYWORD','and'));
-
-# <modifier> ::= <var> = <expr>
-$modifier = T(concatenate(lookfor('VAR'),
-			  lookfor('EQUALS'),
-			  $Expr),
-	      sub{[$_[0], $_[2] ] });
-
-# <action> ::= float
-#            | replace
-#            | popup
-#            | alert
-#            | redirect
-$action = alternate(lookfor(['KEYWORD','float']),
-		    lookfor(['KEYWORD','float_html']),
-		    lookfor(['KEYWORD','replace']),
-		    lookfor(['KEYWORD','replace_html']),
-		    lookfor(['KEYWORD','popup']),
-		    lookfor(['KEYWORD','alert']),
-		    lookfor(['KEYWORD','redirect']),
-		    lookfor(['KEYWORD','move_after']),
-		    lookfor(['KEYWORD','move_to_top']),
-    );
-		    
-
-# <callbacks> ::= callbacks LBRACE { <succeed> }[0/1] { <fail> }[0/1] RBRACE
-$callbacks = T(concatenate(
-		 lookfor(['KEYWORD','callbacks']),
-		 absorb(lookfor('LBRACE')),
-		 optionalx($Succeed),
-		 optionalx($Fail),
-		 absorb(lookfor('RBRACE'))),
-	       sub { { 'success' => $_[1],
-		       'failure' => $_[2]
-		     } }
-    );
-
-
-
-# <succeed> ::= succeeds LBRACE {<click>}+ RBRACE
-$succeed = T(concatenate(
-		 lookfor(['KEYWORD','success']),
-		 absorb(lookfor('LBRACE')),
-		 list_values_of( $Click, match('SEMICOLON')),
-		 absorb(lookfor('RBRACE'))
-	     ),
-	     sub {  $_[1] } 
-         );
-		 
-# <fail> ::= fails LBRACE {<click>}+ RBRACE
-$fail = T(concatenate(
-		 lookfor(['KEYWORD','failure']),
-		 absorb(lookfor('LBRACE')),
-		 list_values_of( $Click, match('SEMICOLON')),
-		 absorb(lookfor('RBRACE'))
-	     ),
-	     sub {  $_[1] } 
-         );
-	 
-
-
-# <post-block> ::= {fired|always} LBRACE <counter_expr> RBRACE
-#                    { else LBRACE <counter_expr> RBRACE }
-$post_block = T(
-		concatenate(
-		    alternate(lookfor(['KEYWORD','fired']),
-			      lookfor(['KEYWORD','always'])),
-		    absorb(lookfor('LBRACE')),
-		    error($Counter_expr),
-		    absorb(lookfor('RBRACE')),
-		    optionalx(concatenate(
-				  absorb(lookfor(['KEYWORD','else'])),
-				  absorb(lookfor('LBRACE')),
-				  error($Counter_expr),
-				  absorb(lookfor('RBRACE'))))
-			 ),
-		sub{ { 'type' => $_[0],
-		       'cons' => $_[1],
-		       'alt' => $_[2][0]
-		    } });
-
-
-
-
-
-# <counter_expr> ::= <clear> 
-#                  | <iterator>
-$counter_expr = alternate($Clear, $Iterator);
-
-# <clear> ::= clear counter DOT <var> SEMICOLON
-$clear = T(concatenate(lookfor(['KEYWORD','clear']),
-		       lookfor(['KEYWORD','counter']),
-		       absorb(lookfor('DOT')),
-		       lookfor('VAR'),
-		       lookfor('SEMICOLON')),
-	   sub { {'type' => $_[0],
-		  'counter' => $_[1],
-		  'name' => $_[2] } });
-
-# <iterator> ::= counter DOT <var> { INCR | DECR } <num> {from <num>} SEMICOLON
-$iterator = T(concatenate(lookfor(['KEYWORD','counter']),
-			  absorb(lookfor('DOT')),
-			  lookfor('VAR'),
-			  alternate(lookfor('INCR'),
-				    lookfor('DECR')),
-			  lookfor('NUM'),
-			  optionalx(concatenate(
-					absorb(lookfor(['KEYWORD','from'])),
-					lookfor('NUM'))),
-			  lookfor('SEMICOLON')),
-	      sub{ { 'type' => 'iterator',
-		     'counter' => $_[0],
-		     'name' => $_[1],
-		     'op' => $_[2],
-		     'value' => $_[3],
-		     'from' => $_[4][0] } });
-
-
-# <click> ::= click <var> = <var> 
-$click = T(concatenate(
-	       lookfor(['KEYWORD','click']),
-	       lookfor('VAR'),
-	       absorb(lookfor('EQUALS')),
-	       lookfor('STRING')
-	   ),
-	   sub { { 'type' => $_[0],
-		   'attribute' => $_[1],
-		   'value' => $_[2] }
-	   });
-
-
-# <expr> ::= <term> {{ + <term> } | { - <term>}}*
-$expr = alternate(T(concatenate($Term,
-				       lookfor(['OP','+']),
-				       $Expr),
-			  sub{ {'prim' => {'op' => $_[1],
-					   'args' => [$_[0], $_[2]]}}
-			       } ),
-			$Term);
-                        
-
-# <term> ::= <factor> {{ * <factor> } | { / <factor>}}*
-$term = alternate(T(concatenate($Factor,
-				lookfor(['OP','*']),
-				$Term),
-			  sub{ {'prim' => {'op' => $_[2],
-					   'args' => [$_[0], $_[2]]}}
-			       } ),
-			$Factor);
-				
-
-# <factor> ::= <var>
-#            | <num>
-#            | <string>
-#            | LPAREN <expr> RPAREN
-$factor = alternate(T(lookfor('VAR'),
-		      sub { {'var' => $_[0] }} ),
-		    T(lookfor('NUM'),
-		      sub { {'num' => $_[0] }} ),
-		    T(lookfor('BOOL'),
-		      sub { {'bool' => $_[0] }} ),
-		    T(lookfor('STRING'),
-		      sub { {'str' => $_[0] }} ),
-		    T(concatenate(
-			  absorb(lookfor('LBRACKET')),
-			  list_values_of( $Expr, match('COMMA')),
-			  absorb(lookfor('RBRACKET'))),
-		      sub { {'array' => $_[0] } } ),
-		    T(concatenate(
-			  lookfor('LPAREN'),
-			  $Expr,
-			  lookfor('RPAREN')),
-		      sub { $_[1] } ));
-		    
-
-#my $tree = ruleset_to_stream(getkrl());
-
-#$Data::Dumper::Indent = 1;
-
-#if ($tree) {
-#    print Dumper($tree), "\n";
-#    print "\n\n";
-#} else {
-#    warn "Parse error.\n";
-#}
-
-
-
 
 sub parse_ruleset {
-    my @input = @_;
-    my $input = sub {shift @input};
+    my ($ruleset) = @_;
     
-    my $lexer = iterator_to_stream(
-	make_lexer($input,@input_tokens));
-
-#    while(my $t = drop($lexer)) {
-#	print "$t->[0], $t->[1]\n";
-#    }
-
     my $logger = get_logger();
 
+    $ruleset = remove_comments($ruleset);
 
-    my ($result) = eval {$entire_input->($lexer)};
-    if ($@) {
-	my $msg = $@;
-	$logger->error("Can't parse rules: $msg");
-	return {'error' => $msg};
+
+#    print $ruleset; exit;
+
+    # remove newlines
+    $ruleset =~ s%\n%%g;
+
+
+    my $result = ($parser->ruleset($ruleset));
+    if (defined $result->{'error'}) {
+	$logger->error("Can't parse rules: $result->{'error'}");
     } else {
 	$logger->debug("Parsed rules");
-	return $result->[0];
     }
+
+    return $result;
+
+#    print Dumper($result);
+
 
 }
 
-
-
-sub dump_lex {
-    my @input = @_;
-    my $input = sub {shift @input};
+# Helper function used in testing  
+sub parse_expr {
+    my ($expr) = @_;
     
-    my $lexer = iterator_to_stream(
-	make_lexer($input,@input_tokens));
+    my $logger = get_logger();
 
-    while(my $t = drop($lexer)) {
-	print "$t->[0], $t->[1]\n";
-    }
+    $expr = remove_comments($expr);
 
-}
+    # remove newlines
+    $expr =~ s%\n%%g;
 
 
-
-sub empty_not_undef {
-    my $v = shift;
-    if (defined $v->[0]) {
-	return $v->[0];
+    my $result = ($parser->expr($expr));
+    if (defined $result->{'error'}) {
+	$logger->error("Can't parse expression: $result->{'error'}");
     } else {
-	return [];
+	$logger->debug("Parsed expression");
     }
+
+    return $result;
+
+#    print Dumper($result);
+
+
 }
 
+# Helper function used in testing  
+sub parse_decl {
+    my ($expr) = @_;
+    
+    my $logger = get_logger();
+
+    $expr = remove_comments($expr);
+
+    # remove newlines
+    $expr =~ s%\n%%g;
+
+    my $result = ($parser->decl($expr));
+    if (defined $result->{'error'}) {
+	$logger->error("Can't parse expression: $result->{'error'}");
+    } else {
+	$logger->debug("Parsed expression");
+    }
+
+    return $result;
+
+#    print Dumper($result);
+
+
+}
+
+# Helper function used in testing  
+sub parse_predexpr {
+    my ($expr) = @_;
+    
+    my $logger = get_logger();
+
+    $expr = remove_comments($expr);
+
+    # remove newlines
+    $expr =~ s%\n%%g;
+
+    my $result = ($parser->predexpr($expr));
+    if (defined $result->{'error'}) {
+	$logger->error("Can't parse expression: $result->{'error'}");
+    } else {
+	$logger->debug("Parsed expression");
+    }
+
+    return $result;
+
+#    print Dumper($result);
+
+
+}
+
+
+sub parse_rule {
+    my ($rule) = @_;
+    
+    my $logger = get_logger();
+
+    $rule = remove_comments($rule);
+
+
+#    print $rule; exit;
+
+    # remove newlines
+    $rule =~ s%\n%%g;
+
+
+    my $result = ($parser->rule($rule));
+    if (defined $result->{'error'}) {
+	$logger->error("Can't parse rules: $result->{'error'}");
+    } else {
+	$logger->debug("Parsed rules");
+    }
+
+    return $result;
+
+#    print Dumper($result);
+
+
+}
+
+sub mk_parser {
+    my $parse_func = shift;
+    
+    return sub {
+    
+
+    }
+
+}
+
+sub parse_action {
+    my $rule = shift;
+    
+    my $logger = get_logger();
+
+    $rule = remove_comments($rule);
+
+    # remove newlines
+    $rule =~ s%\n%%g;
+
+    my $result = $parser->action($rule);
+    if (defined $result->{'error'}) {
+	$logger->error("Can't parse rules: $result->{'error'}");
+    } else {
+	$logger->debug("Parsed rules");
+    }
+
+    return $result;
+
+}
+
+
+sub mk_expr_node {
+    my($type, $val) = @_;
+    return {'type' => $type,
+	    'val' => $val};
+}
 
 
 1;

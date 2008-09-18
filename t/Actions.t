@@ -4,7 +4,7 @@ use lib qw(/web/lib/perl);
 use strict;
 
 use Test::More;
-plan tests => 24;
+#plan tests => 24;
 use Test::LongString;
 
 # most Kyentx modules require this
@@ -20,6 +20,9 @@ use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
 use Kynetx::JavaScript qw/:all/;
 
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
 
 # test choose_action
 
@@ -33,220 +36,166 @@ my $first_arg = "kobj_test";
 my $second_arg = "This is a string";
 my $given_args;
 
-my($action,$args);
+my($action,$args,$krl_src, $krl, $name, $url, @test_cases);
+
+
+sub add_testcase {
+    my($str, $expected, $req_info, $url_changed, $desc, $diag) = @_;
+    my $krl = Kynetx::Parser::parse_action($krl_src);
+ 
+    chomp $str;
+    diag("$str = ", Dumper($krl)) if $diag;
+
+    push(@test_cases, {'expr' => $krl,
+		       'expected' => $expected,
+		       'name' => $krl->{actions}->[0]->{action}->{name},
+		       'args' => $krl->{actions}->[0]->{action}->{args},
+		       'url' => $krl->{actions}->[0]->{action}->{args}->[1]->{val},
+		       'changed' => ($url_changed eq 'changed'),
+		       'req_info' => $req_info,
+		       'src' =>  $str,
+		       'desc' => $desc
+	 }
+	 );
+}
+
+
+$krl_src = <<_KRL_;
+replace("kob_test", "http://frag.kobj.net/widgets/weather.pl?zip=84042");
+_KRL_
+add_testcase($krl_src,
+	     'replace_html',
+	     $my_req_info,
+	     'changed',
+	     'replace with non matching URL'
+	     );
+
+
+$krl_src = <<_KRL_;
+replace("kob_test", "/kynetx/newsletter_invite.inc");
+_KRL_
+add_testcase($krl_src,
+	     'replace_url',
+	     $my_req_info,
+	     'not_changed',
+	     'replace with relative URL',
+	     );
+
+
+$krl_src = <<_KRL_;
+replace_html("kobj_test", "This is a string");
+_KRL_
+add_testcase($krl_src,
+	     'replace_html',
+	     $my_req_info,
+	     'not_changed',
+	     'replace_html with text',
+	     );
+
+
+$krl_src = <<_KRL_;
+float("kob_test", "http://frag.kobj.net/widgets/weather.pl?zip=84042");
+_KRL_
+add_testcase($krl_src,
+	     'float_html',
+	     $my_req_info,
+	     'changed',
+	     'float with non matching URL',
+	     );
+
+$krl_src = <<_KRL_;
+float("kob_test", "/kynetx/newsletter_invite.inc");
+_KRL_
+add_testcase($krl_src,
+	     'float_url',
+	     $my_req_info,
+	     'not_changed',
+	     'float with relative URL',
+	     );
+
+$krl_src = <<_KRL_;
+float_html("kobj_test", "This is a string");
+_KRL_
+add_testcase($krl_src,
+	     'float_html',
+	     $my_req_info,
+	     'not_changed',
+	     'float_html with text',
+	     );
+
+
+$krl_src = <<_KRL_;
+alert("kobj_test", "foo");
+_KRL_
+add_testcase($krl_src,
+	     'alert',
+	     $my_req_info,
+	     'not_changed',
+	     'alert with text',
+	     );
+
+
+$krl_src = <<_KRL_;
+popup("kobj_test", "foo");
+_KRL_
+add_testcase($krl_src,
+	     'popup',
+	     $my_req_info,
+	     'not_changed',
+	     'pop with text',
+	     );
 
-my $action_ast = {
-    'args' => [
-	{
-	    'str' => $first_arg
-	},
-	{
-	    'str' => $non_matching_url
-	}
-	]
-};
 
+$krl_src = <<_KRL_;
+redirect("http://www.google.com", "foo");
+_KRL_
+add_testcase($krl_src,
+	     'redirect',
+	     $my_req_info,
+	     'not_changed',
+	     'redirect',
+	     );
 
 
 
-# replace tests
 
-my $in_args = gen_js_rands( $action_ast->{'args'} );
+#$krl = Kynetx::Parser::parse_action($krl_src);
+#diag(Dumper($krl));
 
-($action, $args) = 
-    choose_action($my_req_info, 
-		  "replace",
-		  $action_ast->{'args'});
 
-my $out_args = gen_js_rands( $args );
+plan tests => 0 + (@test_cases * 3);
 
 
-is($action, "replace_html","Replace with non-matching domain");
-is($out_args->[0], $in_args->[0], "First arg unchanged");
-isnt($out_args->[1], $non_matching_url, "Last arg changed");
 
+# now test each test case twice
+foreach my $case (@test_cases) {
+#    diag(Dumper($case->{'url'}));
 
-$action_ast = {
-    'args' => [
-	{
-	    'str' => $first_arg
-	},
-	{
-	    'str' => $rel_url
-	}
-	]
-};
+    my $in_args = gen_js_rands( $case->{'args'} );
+#    diag("In ", Dumper($in_args));
 
+    ($action, $args) = 
+	choose_action($case->{'req_info'}, 
+		      $case->{'name'},
+		      $case->{'args'});
 
-$in_args = gen_js_rands( $action_ast->{'args'} );
+    my $out_args = gen_js_rands( $case->{'args'} );
+#    diag("Out ", Dumper($out_args));
 
-($action, $args) = 
-    choose_action($my_req_info, 
-		  "replace", 
-		  $action_ast->{'args'});
+    my $desc = $case->{'desc'};
 
+    is($action, $case->{'expected'},"Action: $desc");
+    is($out_args->[0], $in_args->[0], "First arg: $desc");
+    if ($case->{'changed'}) {
+	isnt($out_args->[1], "'".$case->{url}."'", "Last arg: $desc");
+    } else {
+	is($out_args->[1], "'".$case->{url}."'", "Last arg: $desc");
+    }
 
-$out_args = gen_js_rands( $args );
+}
 
-is($action, "replace_url","Replace with relative_url");
-is($out_args->[0], $in_args->[0], "First arg unchanged");
-is($out_args->[1], $in_args->[1], "Replace URL is left alone");
 
-
-$action_ast = {
-    'args' => [
-	{
-	    'str' => $first_arg
-	},
-	{
-	    'str' => $second_arg
-	}
-	]
-};
-
-
-$in_args = gen_js_rands( $action_ast->{'args'} );
-
-($action, $args) = 
-    choose_action($my_req_info, 
-		  "replace_html", 
-		  $action_ast->{'args'});
-
-
-$out_args = gen_js_rands( $args );
-
-
-is($action, "replace_html", "Replace with string");
-is($out_args->[0], $in_args->[0], "First arg unchanged");
-is($out_args->[1], $in_args->[1], "Replace text is left alone");
-
-
-# float tests
-
-$action_ast = {
-    'args' => [
-	{
-	    'str' => $first_arg
-	},
-	{
-	    'str' => $non_matching_url
-	}
-	]
-};
-
-
-$in_args = gen_js_rands( $action_ast->{'args'} );
-
-
-($action, $args) = 
-    choose_action($my_req_info, 
-		  "float", 
-		  $action_ast->{'args'});
-
-$out_args = gen_js_rands( $args );
-
-
-is($action, "float_html", "Float with non-matching domain");
-is($out_args->[0], $in_args->[0], "First arg unchanged");
-isnt($out_args->[1], $in_args->[1], "Last arg changed float, non-matching");
-
-
-# fload with relative URL
-$action_ast = {
-    'args' => [
-	{
-	    'str' => $first_arg
-	},
-	{
-	    'str' => $rel_url
-	}
-	]
-};
-
-
-$in_args = gen_js_rands( $action_ast->{'args'} );
-
-
-($action, $args) = 
-    choose_action($my_req_info, 
-		  "float", 
-		  $action_ast->{'args'});
-
-$out_args = gen_js_rands( $args );
-
-
-is($action, "float_url", "Float with relative_url");
-is($out_args->[0], $in_args->[0], "First arg unchanged");
-is($out_args->[1], $in_args->[1], "Float URL is left alone");
-
-# float_html with string
-$action_ast = {
-    'args' => [
-	{
-	    'str' => $first_arg
-	},
-	{
-	    'str' => $second_arg
-	}
-	]
-};
-
-
-$in_args = gen_js_rands( $action_ast->{'args'} );
-
-
-($action, $args) = 
-    choose_action($my_req_info, 
-		  "float_html", 
-		  $action_ast->{'args'});
-
-$out_args = gen_js_rands( $args );
-
-
-
-is($action, "float_html", "Float HTML with string");
-is($out_args->[0], $in_args->[0], "First arg unchanged");
-is($out_args->[1], $in_args->[1], "Float text is left alone");
-
-
-# alert
-$in_args = gen_js_rands( $action_ast->{'args'} );
-
-($action, $args) = 
-    choose_action($my_req_info, 
-		  "alert", 
-		  $action_ast->{'args'});
-
-$out_args = gen_js_rands( $args );
-
-is($action, "alert", "Alert");
-is($out_args->[0], $in_args->[0], "Alert args unchanged");
-
-# popup
-$in_args = gen_js_rands( $action_ast->{'args'} );
-
-($action, $args) = 
-    choose_action($my_req_info, 
-		  "popup", 
-		  $action_ast->{'args'});
-
-$out_args = gen_js_rands( $args );
-
-is($action, "popup", "Popup");
-is($out_args->[0], $in_args->[0], "Popup args unchanged");
-
-# redirect
-$in_args = gen_js_rands( $action_ast->{'args'} );
-
-($action, $args) = 
-    choose_action($my_req_info, 
-		  "redirect", 
-		  $action_ast->{'args'});
-
-$out_args = gen_js_rands( $args );
-
-is($action, "redirect", "Redirect");
-is($out_args->[0], $in_args->[0], "Redirect args unchanged");
+diag("Safe to ignore warnings about unrecognized escapes");
 
 1;
 

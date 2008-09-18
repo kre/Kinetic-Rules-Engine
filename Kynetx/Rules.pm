@@ -31,6 +31,7 @@ our @ISA         = qw(Exporter);
 our %EXPORT_TAGS = (all => [ 
 qw(
 process_rules
+eval_rule
 get_rule_set 
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
@@ -63,7 +64,7 @@ sub process_rules {
     # build initial envv
     my $ug = new Data::UUID;
     my $path_info = $r->path_info;
-    my %request_info = (
+    my $request_info = {
 	host => $r->connection->get_remote_host,
 	caller => $r->headers_in->{'Referer'} || $req->param('caller'),
 	now => time,
@@ -73,124 +74,134 @@ sub process_rules {
 	ua => $r->headers_in->{UserAgent} || '',
 	pool => $r->pool,
 	txn_id => $ug->create_str(),
-	);
+	};
     
 
-    $request_info{'referer'} = $req->param('referer');
-    $request_info{'title'} = $req->param('title');
+    $request_info->{'referer'} = $req->param('referer');
+    $request_info->{'title'} = $req->param('title');
+    $request_info->{'kvars'} = $req->param('kvars');
 
 
-    # we're going to process our own params
-#     foreach my $arg (split('&',$r->args())) {
-# 	my ($k,$v) = split('=',$arg,2);
-# 	$request_info{$k} = $v;
-# 	$request_info{$k} =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
-#     }
-
-    Log::Log4perl::MDC->put('site', $request_info{'site'});
+    Log::Log4perl::MDC->put('site', $request_info->{'site'});
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
 
-    $logger->info("Processing rules for site " . $request_info{'site'});
+    $logger->info("Processing rules for site " . $request_info->{'site'});
 
     if($logger->is_debug()) {
-	foreach my $entry (keys %request_info) {
-	    $logger->debug($entry . ": " . $request_info{$entry});
+	foreach my $entry (keys %{ $request_info }) {
+	    $logger->debug($entry . ": " . $request_info->{$entry});
 	}
     }
 
     # side effects environment with precondition pattern values
-    my ($rules, $rule_env) = get_rule_set($request_info{'site'}, 
-					  $request_info{'caller'},
+    my ($rules, $rule_env) = get_rule_set($request_info->{'site'}, 
+					  $request_info->{'caller'},
 					  $r->dir_config('svn_conn'));
 
 
+    my $js = '';
     # this loops through the rules ONCE applying all that fire
     foreach my $rule ( @{ $rules } ) {
-
-	Log::Log4perl::MDC->put('rule', $rule->{'name'});
-	$logger->info("selected ...");
-
-	foreach my $var (keys %{ $rule_env } ) {
-	    $logger->debug("[Env] $var has value $rule_env->{$var}");
-	}
-
-
-	my $pred_value = 
-	    eval_predicates(\%request_info, $rule_env, $session, $rule);
-
-
-	# set up post block execution
-	my($cons,$alt);
-	if (ref $rule->{'post'} eq 'HASH') { # it's an array if no post block
-	    my $type = $rule->{'post'}->{'type'};
-	    if($type eq 'fired') {
-		$cons = $rule->{'post'}->{'cons'};
-		$alt = $rule->{'post'}->{'alt'};
-# 	    } elsif($type eq 'failure') { # reverse them
-# 		$cons = $rule->{'post'}->{'alt'};
-# 		$alt = $rule->{'post'}->{'cons'};
-	    } elsif($type eq 'always') { # cons is executed on both paths
-		$cons = $rule->{'post'}->{'cons'};
-		$alt = $rule->{'post'}->{'cons'};
-	    }
-
-
-	}
-
-	my $js = '';
-	if ($pred_value) {
-
-	    $logger->info("fired");
-
-	    # this is the main event.  The browser has asked for a
-	    # chunk of Javascrip and this is where we deliver... 
-	    $js .= build_js_load($rule, \%request_info, $rule_env, $session); 
-
-	    $js .= eval_post_expr($cons, $session) if(defined $cons);
-
-	    push(@{ $rule_env->{'names'} }, $rule->{'name'});
-	    push(@{ $rule_env->{'results'} }, 'fired');
-	    push(@{ $rule_env->{'all_actions'} }, $rule_env->{'actions'});
-	    $rule_env->{'actions'} = ();
-	    push(@{ $rule_env->{'all_labels'} }, $rule_env->{'labels'});
-	    $rule_env->{'labels'} = ();
-	    push(@{ $rule_env->{'all_tags'} }, $rule_env->{'tags'});
-	    $rule_env->{'tags'} = ();
-
-
-
-	} else {
-	    $logger->info("did not fire");
-
-	    $js .= eval_post_expr($alt, $session) if(defined $alt);
-
-	    # put this in the logging DB
-	    push(@{ $rule_env->{'names'} }, $rule->{'name'});
-	    push(@{ $rule_env->{'results'} }, 'notfired');
-	    push(@{ $rule_env->{'all_actions'} }, []);
-	    $rule_env->{'actions'} = ();
-	    push(@{ $rule_env->{'all_labels'} }, []);
-	    $rule_env->{'labels'} = ();
-	    push(@{ $rule_env->{'all_tags'} }, []);
-	    $rule_env->{'tags'} = ();
-
-
-	}
-
-	# put this in the logging DB
-	log_rule_fire($r, 
-		      \%request_info, 
-		      $rule_env,
-		      $session
-	    );
-
-
-	# return the JS load to the client
-	print $js; 
-	$logger->info("finished");
+	$js .= eval_rule($r, $request_info, $rule_env, $session, $rule);
     }
 
+    print $js;
+
 }
+
+sub eval_rule {
+    my($r, $request_info, $rule_env, $session, $rule) = @_;
+
+    my $logger = get_logger();
+
+
+    Log::Log4perl::MDC->put('rule', $rule->{'name'});
+    $logger->info("selected ...");
+
+    foreach my $var (keys %{ $rule_env } ) {
+	$logger->debug("[Env] $var has value $rule_env->{$var}" 
+		       ) if defined $rule_env->{$var};
+    }
+
+    foreach my $var (keys %{ $session } ) {
+	$logger->debug("[Session] $var has value $session->{$var}");
+    }
+
+
+    my $pred_value = 
+	eval_predicates($request_info, $rule_env, $session, 
+			$rule->{'cond'}, $rule->{'name'});
+
+
+    # set up post block execution
+    my($cons,$alt);
+    if (ref $rule->{'post'} eq 'HASH') { # it's an array if no post block
+	my $type = $rule->{'post'}->{'type'};
+	if($type eq 'fired') {
+	    $cons = $rule->{'post'}->{'cons'};
+	    $alt = $rule->{'post'}->{'alt'};
+	} elsif($type eq 'always') { # cons is executed on both paths
+	    $cons = $rule->{'post'}->{'cons'};
+	    $alt = $rule->{'post'}->{'cons'};
+	}
+
+    }
+
+    my $js = '';
+    if ($pred_value) {
+
+	$logger->info("fired");
+
+	# this is the main event.  The browser has asked for a
+	# chunk of Javascrip and this is where we deliver... 
+	$js .= build_js_load($rule, $request_info, $rule_env, $session); 
+	
+	$js .= eval_post_expr($cons, $session) if(defined $cons);
+
+	# save things for logging
+	push(@{ $rule_env->{'names'} }, $rule->{'name'});
+	push(@{ $rule_env->{'results'} }, 'fired');
+	push(@{ $rule_env->{'all_actions'} }, $rule_env->{'actions'});
+	$rule_env->{'actions'} = ();
+	push(@{ $rule_env->{'all_labels'} }, $rule_env->{'labels'});
+	$rule_env->{'labels'} = ();
+	push(@{ $rule_env->{'all_tags'} }, $rule_env->{'tags'});
+	$rule_env->{'tags'} = ();
+
+
+
+    } else {
+	$logger->info("did not fire");
+
+	$js .= eval_post_expr($alt, $session) if(defined $alt);
+
+	# put this in the logging DB
+	push(@{ $rule_env->{'names'} }, $rule->{'name'});
+	push(@{ $rule_env->{'results'} }, 'notfired');
+	push(@{ $rule_env->{'all_actions'} }, []);
+	$rule_env->{'actions'} = ();
+	push(@{ $rule_env->{'all_labels'} }, []);
+	$rule_env->{'labels'} = ();
+	push(@{ $rule_env->{'all_tags'} }, []);
+	$rule_env->{'tags'} = ();
+
+
+    }
+
+    # put this in the logging DB
+    log_rule_fire($r, 
+		  $request_info, 
+		  $rule_env,
+		  $session
+	);
+
+
+    # return the JS load to the client
+    $logger->info("finished");
+    return $js; 
+
+}
+
 
 
 # this returns the right rules for the caller and site
@@ -309,7 +320,7 @@ sub get_rules_from_repository{
 
     if ($d{$site.'.krl'} eq -1 && $d{$site.'.json'} eq -1) {
 	$logger->debug("Didn't find any rules, returning fake ruleset");
-	return parse_ruleset("ruleset $site {}");
+	return Kynetx::Parser::parse_ruleset("ruleset $site {}");
     }
 
 
@@ -334,7 +345,7 @@ sub get_rules_from_repository{
 
     # return the abstract syntax tree regardless of source
     if($ext eq '.krl') {
-	$ruleset = parse_ruleset($krl);
+	$ruleset = Kynetx::Parser::parse_ruleset($krl);
     } else {
 	$ruleset = jsonToAst($krl);
     }

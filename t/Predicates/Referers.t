@@ -19,8 +19,13 @@ use APR::URI;
 use APR::Pool ();
 
 use Kynetx::Test qw/:all/;
+use Kynetx::Parser qw/:all/;
 use Kynetx::Predicates::Referers qw/:all/;
 use Kynetx::JavaScript qw/:all/;
+
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
 my $preds = Kynetx::Predicates::Referers::get_predicates();
 my @pnames = keys (%{ $preds } );
 
@@ -29,10 +34,12 @@ plan tests => 7 + int(@pnames);
 
 my $BYU_req_info;
 $BYU_req_info->{'referer'} = 'http://www.byu.edu'; # Utah (BYU)
+$BYU_req_info->{'caller'} = 'http://www.windley.com'; 
 $BYU_req_info->{'pool'} = APR::Pool->new;
 
 my $no_referer_req_info;
 $no_referer_req_info->{'pool'} = APR::Pool->new;
+$no_referer_req_info->{'caller'} = 'http://www.windley.com'; 
 
 my %rule_env = ();
 
@@ -51,15 +58,14 @@ ok(exists $preds->{'remote_referer'},
 ok(exists $preds->{'local_referer'}, 
    "Is local_referer predicate available?");
 
-my $args;
+my($args,$cond,$krl_src);
 
-# a small piece of the abstract syntax tree...
-my $cond = {'args' => [
-            {
-              'str' => 'www.byu.edu'
-            }
-          ]
-};
+
+$krl_src = <<_KRL_;
+referer_domain("www.byu.edu")
+_KRL_
+
+$cond = Kynetx::Parser::parse_predexpr($krl_src);
 
 $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 
@@ -67,7 +73,12 @@ $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 ok(&{$preds->{'referer_domain'}}($BYU_req_info,\%rule_env,$args),
    "Referer domain");
 
-$cond->{'args'}->[0]->{'str'} = 'www.windley.com';
+$krl_src = <<_KRL_;
+referer_domain("www.windley.com")
+_KRL_
+
+$cond = Kynetx::Parser::parse_predexpr($krl_src);
+
 $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 
 ok( ! (&{$preds->{'referer_domain'}}($BYU_req_info,\%rule_env,$args)),

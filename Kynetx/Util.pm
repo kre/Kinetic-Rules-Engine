@@ -16,6 +16,7 @@ our @ISA         = qw(Exporter);
 
 our %EXPORT_TAGS = (all => [ 
 qw(
+reduce
 before_now
 after_now
 mk_created_session_name
@@ -29,6 +30,17 @@ sub mk_created_session_name {
     return $name.'_created';
 }
 
+# From HOP
+# reduce(sub { $a + $b }, @VALUES)
+sub reduce (&@) {
+    my $code = shift;
+    my $val = shift;
+    for (@_) {
+	local($a, $b) = ($val, $_);
+	$val = $code->($val, $_);
+    }
+    return $val;
+}
 
 
 sub before_now {

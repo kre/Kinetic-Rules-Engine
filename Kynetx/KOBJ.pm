@@ -47,7 +47,8 @@ sub handler {
 	my $action_host;
 	my $log_host;
 	# track virtual hosts
-	if($root eq DEFAULT_SERVER_ROOT) {
+	if($root eq DEFAULT_SERVER_ROOT ||
+	   $r->hostname =~ m/\d+\.\d+\.\d+\.\d+/) {
 	    $action_host = $r->dir_config('action_host') || DEFAULT_ACTION_HOST;
 	    $log_host = $r->dir_config('log_host') || DEFAULT_LOG_HOST;
 	} else {
@@ -178,6 +179,13 @@ KOBJ.url = KOBJ.proto+KOBJ.host_with_port+"/kobj/" + KOBJ.site_id;
 KOBJ.logger_url = KOBJ.proto+KOBJ.loghost_with_port+"/log/" + KOBJ.site_id;
 
 
+try {
+    KOBJ.kvars_json =  Object.toJSON(kvars);
+} catch (e) {
+    KOBJ.kvars_json = Object.toJSON(new Object);
+}
+ 
+
 KOBJ.r=document.createElement("script");
 KOBJ.r.src=
     KOBJ.url + "/" 
@@ -189,6 +197,9 @@ KOBJ.r.src=
 	     + "&"
              + "referer=" 
              + escape(document.referrer) 
+	     + "&"
+             + "kvars=" 
+             + escape(KOBJ.kvars_json) 
 	     + "&"
 	     + "title=" 
 	     + encodeURI(document.title);

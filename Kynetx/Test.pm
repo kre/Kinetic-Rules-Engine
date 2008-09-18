@@ -18,7 +18,6 @@ trim
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
-
 sub getkrl {
     my $filename = shift;
 
@@ -27,9 +26,11 @@ sub getkrl {
     local $/ = undef;
     my $krl = <KRL>;
     close KRL;
-    # remove comments from KRL
-    $krl =~ s!(.*)//[^\n]*!$1!og;
-    return ($first_line,$krl);
+    if ($first_line =~ m%^\s*//.*%) {
+	return ($first_line,$krl);
+    } else {
+	return ("No comment", $first_line . $krl);
+    }
 
 }
 

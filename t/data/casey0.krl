@@ -6,7 +6,7 @@ ruleset 10 {
 	   city = geoip:city();
            state = geoip:state();
   	}	
-    	if state("AL") && city("Denver")
+    	if (state("AL") && city("Denver"))
    	then every {	 
         alert_label_1:
             alert("This is alert 1")

@@ -92,7 +92,8 @@ sub show_context {
     my %fired;
     foreach my $rule ( @{ $rules } ) {
 	my $pred_value = 
-	    eval_predicates(\%request_info, $rule_env, $session, $rule);
+	    eval_predicates(\%request_info, $rule_env, $session, 
+			    $rule->{'cond'}, $rule->{'name'});
 
 	if ($pred_value) {
 	    $fired{$rule->{'name'}} = 'will fire';

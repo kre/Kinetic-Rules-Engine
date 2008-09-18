@@ -3,33 +3,33 @@ Actions.pm,551
 package Kynetx::Actions;1,0
 my($active,$test,$inactive)($active,$test,$inactive34,604
 my %actions actions44,1027
-my %modifiable modifiable166,3882
-sub build_js_load Kynetx::Actions::build_js_load173,3955
-sub build_one_action Kynetx::Actions::build_one_action263,5949
-sub choose_action Kynetx::Actions::choose_action354,8418
-sub eval_post_expr Kynetx::Actions::eval_post_expr413,10013
-sub get_precondition_test Kynetx::Actions::get_precondition_test478,11589
-sub get_precondition_vars Kynetx::Actions::get_precondition_vars484,11679
+my %modifiable modifiable178,3971
+sub build_js_load Kynetx::Actions::build_js_load185,4044
+sub build_one_action Kynetx::Actions::build_one_action275,6038
+sub choose_action Kynetx::Actions::choose_action383,8834
+sub eval_post_expr Kynetx::Actions::eval_post_expr442,10429
+sub get_precondition_test Kynetx::Actions::get_precondition_test507,12005
+sub get_precondition_vars Kynetx::Actions::get_precondition_vars513,12095
 
 Console.pm,84
 package Kynetx::Console;1,0
 sub show_context Kynetx::Console::show_context41,834
 
-JavaScript.pm,824
+JavaScript.pm,826
 package Kynetx::JavaScript;1,0
 sub gen_js_expr Kynetx::JavaScript::gen_js_expr35,618
-sub gen_js_prim Kynetx::JavaScript::gen_js_prim66,1157
-sub gen_js_rands Kynetx::JavaScript::gen_js_rands74,1287
-sub gen_js_pre Kynetx::JavaScript::gen_js_pre89,1493
-sub gen_js_decl Kynetx::JavaScript::gen_js_decl99,1809
-sub gen_js_callbacks Kynetx::JavaScript::gen_js_callbacks157,3351
-sub gen_js_callback Kynetx::JavaScript::gen_js_callback164,3519
-sub gen_js_afterload Kynetx::JavaScript::gen_js_afterload187,4009
-sub gen_js_mk_cb_func Kynetx::JavaScript::gen_js_mk_cb_func200,4203
-sub eval_js_expr Kynetx::JavaScript::eval_js_expr220,4462
-sub eval_js_prim Kynetx::JavaScript::eval_js_prim255,5183
-sub eval_js_rands Kynetx::JavaScript::eval_js_rands287,5782
-sub mk_js_str Kynetx::JavaScript::mk_js_str304,5978
+sub gen_js_prim Kynetx::JavaScript::gen_js_prim63,1190
+sub gen_js_rands Kynetx::JavaScript::gen_js_rands71,1331
+sub gen_js_pre Kynetx::JavaScript::gen_js_pre86,1537
+sub eval_js_decl Kynetx::JavaScript::eval_js_decl96,1853
+sub gen_js_callbacks Kynetx::JavaScript::gen_js_callbacks154,3396
+sub gen_js_callback Kynetx::JavaScript::gen_js_callback161,3564
+sub gen_js_afterload Kynetx::JavaScript::gen_js_afterload184,4054
+sub gen_js_mk_cb_func Kynetx::JavaScript::gen_js_mk_cb_func197,4248
+sub eval_js_expr Kynetx::JavaScript::eval_js_expr217,4507
+sub eval_js_prim Kynetx::JavaScript::eval_js_prim262,5396
+sub eval_js_rands Kynetx::JavaScript::eval_js_rands302,6162
+sub mk_js_str Kynetx::JavaScript::mk_js_str319,6358
 
 Json.pm,266
 package Kynetx::Json;1,0
@@ -39,11 +39,11 @@ sub jsonToRuleBody Kynetx::Json::jsonToRuleBody48,717
 sub astToJson Kynetx::Json::astToJson59,888
 sub jsonToAst Kynetx::Json::jsonToAst66,958
 
-KOBJ.pm,164
+KOBJ.pm,165
 package Kynetx::KOBJ;1,0
-sub handler Kynetx::KOBJ::handler15,311
-sub get_js_file Kynetx::KOBJ::get_js_file62,1410
-sub get_kobj Kynetx::KOBJ::get_kobj82,1802
+sub handler Kynetx::KOBJ::handler18,455
+sub get_js_file Kynetx::KOBJ::get_js_file84,2110
+sub get_kobj Kynetx::KOBJ::get_kobj104,2502
 
 Logger.pm,130
 package Kynetx::Logger;1,0
@@ -64,48 +64,59 @@ sub get_remote_data Kynetx::Memcached::get_remote_data61,1102
 sub get_cached_file Kynetx::Memcached::get_cached_file92,1710
 sub read_file_contents Kynetx::Memcached::read_file_contents122,2261
 
-Parser.pm,1409
+ParserOld.pm,1430
+package Kynetx::ParserOld;1,0
+my @keywords keywords23,448
+my $kw kw63,999
+my @input_tokens input_tokens65,1051
+sub string Kynetx::ParserOld::string92,1833
+sub html Kynetx::ParserOld::html100,2020
+my ($ruleset, $rule, $select, $vars, $pre_block, ($ruleset, $rule, $select, $vars, $pre_block, 110,2197
+my $Ruleset Ruleset121,2552
+my $Rule Rule122,2593
+my $Select Select123,2630
+my $Vars Vars124,2669
+my $Pre_block Pre_block125,2704
+my $Decls Decls126,2749
+my $Decl Decl127,2786
+my $Args Args128,2821
+my $Cond Cond129,2856
+my $Preds Preds130,2891
+my $Pred Pred131,2928
+my $Simple_pred Simple_pred132,2963
+my $Counter_pred Counter_pred133,3012
+my $Primrule Primrule134,3063
+my $Modifiers Modifiers135,3106
+my $Modifier Modifier136,3151
+my $Action Action137,3194
+my $Actions Actions138,3233
+my $Actionblock Actionblock139,3274
+my $Counter_expr Counter_expr140,3323
+my $Expr Expr141,3374
+my $Term Term142,3409
+my $Factor Factor143,3444
+my $Post_block Post_block144,3483
+my $Clear Clear145,3530
+my $Iterator Iterator146,3567
+my $Callbacks Callbacks147,3610
+my $Click Click148,3655
+my $Succeed Succeed149,3692
+my $Fail Fail150,3733
+sub singleton Kynetx::ParserOld::singleton314,8001
+sub parse_ruleset Kynetx::ParserOld::parse_ruleset602,15333
+sub dump_lex Kynetx::ParserOld::dump_lex630,15824
+sub empty_not_undef Kynetx::ParserOld::empty_not_undef645,16048
+
+Parser.pm,379
 package Kynetx::Parser;1,0
-my @keywords keywords23,445
-my $kw kw63,996
-my @input_tokens input_tokens65,1048
-sub string Kynetx::Parser::string92,1830
-sub html Kynetx::Parser::html100,2017
-my ($ruleset, $rule, $select, $vars, $pre_block, ($ruleset, $rule, $select, $vars, $pre_block, 110,2194
-my $Ruleset Ruleset121,2549
-my $Rule Rule122,2590
-my $Select Select123,2627
-my $Vars Vars124,2666
-my $Pre_block Pre_block125,2701
-my $Decls Decls126,2746
-my $Decl Decl127,2783
-my $Args Args128,2818
-my $Cond Cond129,2853
-my $Preds Preds130,2888
-my $Pred Pred131,2925
-my $Simple_pred Simple_pred132,2960
-my $Counter_pred Counter_pred133,3009
-my $Primrule Primrule134,3060
-my $Modifiers Modifiers135,3103
-my $Modifier Modifier136,3148
-my $Action Action137,3191
-my $Actions Actions138,3230
-my $Actionblock Actionblock139,3271
-my $Counter_expr Counter_expr140,3320
-my $Expr Expr141,3371
-my $Term Term142,3406
-my $Factor Factor143,3441
-my $Post_block Post_block144,3480
-my $Clear Clear145,3527
-my $Iterator Iterator146,3564
-my $Callbacks Callbacks147,3607
-my $Click Click148,3652
-my $Succeed Succeed149,3689
-my $Fail Fail150,3730
-sub singleton Kynetx::Parser::singleton314,8012
-sub parse_ruleset Kynetx::Parser::parse_ruleset607,15430
-sub dump_lex Kynetx::Parser::dump_lex635,15921
-sub empty_not_undef Kynetx::Parser::empty_not_undef650,16145
+my $grammar grammar36,740
+sub html Kynetx::Parser::html427,9270
+sub string Kynetx::Parser::string435,9409
+my $parser parser443,9519
+my $comment_re comment_re446,9628
+sub remove_comments Kynetx::Parser::remove_comments473,10469
+sub parse_ruleset Kynetx::Parser::parse_ruleset482,10598
+sub parse_expr Kynetx::Parser::parse_expr511,11086
 
 Predicates.pm,180
 package Kynetx::Predicates;1,0
@@ -113,7 +124,7 @@ my @Predicate_modules Predicate_modules25,487
 my %predicates predicates50,1037
 sub eval_predicates Kynetx::Predicates::eval_predicates74,1708
 
-PrettyPrinter.pm,1217
+PrettyPrinter.pm,1340
 package Kynetx::PrettyPrinter;1,0
 my $g_indent g_indent26,421
 sub pp Kynetx::PrettyPrinter::pp29,441
@@ -123,19 +134,21 @@ sub pp_select Kynetx::PrettyPrinter::pp_select86,1460
 sub pp_pre Kynetx::PrettyPrinter::pp_pre101,1701
 sub pp_decl Kynetx::PrettyPrinter::pp_decl118,1950
 sub pp_cond Kynetx::PrettyPrinter::pp_cond148,2604
-sub pp_pred{Kynetx::PrettyPrinter::pp_pred{163,2925
-sub pp_actions Kynetx::PrettyPrinter::pp_actions184,3408
-sub pp_actionblock Kynetx::PrettyPrinter::pp_actionblock202,3754
-sub pp_primrule{Kynetx::PrettyPrinter::pp_primrule{217,4025
-sub pp_modifier{Kynetx::PrettyPrinter::pp_modifier{246,4629
-sub pp_callbacks Kynetx::PrettyPrinter::pp_callbacks260,4820
-sub pp_callback_types Kynetx::PrettyPrinter::pp_callback_types278,5170
-sub pp_callback Kynetx::PrettyPrinter::pp_callback292,5440
-sub pp_post Kynetx::PrettyPrinter::pp_post304,5656
-sub pp_counter_expr Kynetx::PrettyPrinter::pp_counter_expr324,6019
-sub pp_expr Kynetx::PrettyPrinter::pp_expr347,6468
-sub pp_prim Kynetx::PrettyPrinter::pp_prim383,6994
-sub pp_rands Kynetx::PrettyPrinter::pp_rands391,7104
+sub pp_predexpr Kynetx::PrettyPrinter::pp_predexpr166,2987
+sub pp_pred Kynetx::PrettyPrinter::pp_pred186,3275
+sub pp_predrands Kynetx::PrettyPrinter::pp_predrands201,3535
+sub pp_actions Kynetx::PrettyPrinter::pp_actions235,4321
+sub pp_actionblock Kynetx::PrettyPrinter::pp_actionblock253,4667
+sub pp_primrule{Kynetx::PrettyPrinter::pp_primrule{268,4938
+sub pp_modifier{Kynetx::PrettyPrinter::pp_modifier{298,5588
+sub pp_callbacks Kynetx::PrettyPrinter::pp_callbacks312,5779
+sub pp_callback_types Kynetx::PrettyPrinter::pp_callback_types331,6161
+sub pp_callback Kynetx::PrettyPrinter::pp_callback345,6431
+sub pp_post Kynetx::PrettyPrinter::pp_post357,6647
+sub pp_counter_expr Kynetx::PrettyPrinter::pp_counter_expr377,7010
+sub pp_expr Kynetx::PrettyPrinter::pp_expr400,7459
+sub pp_prim Kynetx::PrettyPrinter::pp_prim455,8601
+sub pp_rands Kynetx::PrettyPrinter::pp_rands463,8711
 
 RuleManager.pm,194
 package Kynetx::RuleManager;1,0
@@ -146,10 +159,10 @@ sub pp_json Kynetx::RuleManager::pp_json100,2015
 Rules.pm,333
 package Kynetx::Rules;2,1
 sub process_rules Kynetx::Rules::process_rules40,678
-sub get_rule_set Kynetx::Rules::get_rule_set197,5028
-sub optimize_rules Kynetx::Rules::optimize_rules253,6281
-sub get_rules_from_repository{Kynetx::Rules::get_rules_from_repository{268,6521
-sub get_svn_conn Kynetx::Rules::get_svn_conn347,8338
+sub get_rule_set Kynetx::Rules::get_rule_set199,5131
+sub optimize_rules Kynetx::Rules::optimize_rules255,6384
+sub get_rules_from_repository{Kynetx::Rules::get_rules_from_repository{270,6624
+sub get_svn_conn Kynetx::Rules::get_svn_conn349,8473
 
 Session.pm,144
 package Kynetx::Session;1,0
@@ -158,8 +171,8 @@ sub tie_servers Kynetx::Session::tie_servers64,1302
 
 Test.pm,102
 package Kynetx::Test;1,0
-sub getkrl Kynetx::Test::getkrl22,309
-sub trim Kynetx::Test::trim37,685
+sub getkrl Kynetx::Test::getkrl21,308
+sub trim Kynetx::Test::trim38,717
 
 Util.pm,194
 package Kynetx::Util;1,0

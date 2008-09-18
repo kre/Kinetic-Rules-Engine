@@ -72,7 +72,6 @@ sub get_predicates {
 sub get_stocks {
     my ($req_info, $symbol, $field) = @_;
 
-
     my @field_names = qw(
          symbol
          last
@@ -98,6 +97,7 @@ sub get_stocks {
 	$content =~ s#&gt;#>#g;
 
 	my $logger = get_logger();
+	$logger->debug("Got quote for $symbol");
 #	$logger->debug("Quote for symbol ($symbol): " . 
 #		       $content . " using " .$url 
 #	    );
@@ -112,7 +112,7 @@ sub get_stocks {
 	foreach my $field (@field_names) {
 	    my @parts = split(/_/,$field);
 	    my $name = join('', map {ucfirst($_)} @parts);
-	    my $v = $quote->find($name);
+	    my $v = $quote->findvalue($name)->value();
 
 	    my $logger = get_logger();
 	    $logger->debug(

@@ -6,6 +6,9 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
+use Data::Dumper;
+use JSON::XS;
+
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -25,6 +28,7 @@ gen_js_mk_cb_func
 get_js_html
 mk_js_str
 eval_js_expr
+den_to_exp
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -35,30 +39,27 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 sub gen_js_expr {
     my $expr = shift;
 
-    my @nodes = keys %{ $expr };  # these are singleton hashes
-    my $val =  $expr->{$nodes[0]};
-
-    case: for ($nodes[0]) {
+    case: for ($expr->{'type'}) {
 	/str/ && do {
-	    $val =~ s/'/\\'/g;  #' - for syntax highlighting
-	    return '\'' . $val . '\'';
+	    $expr->{'val'} =~ s/'/\\'/g;  #' - for syntax highlighting
+	    return '\'' . $expr->{'val'} . '\'';
 	};
 	/num/ && do {
-	    return  $val ;
+	    return  $expr->{'val'} ;
 	};
 	/var/ && do {
-	    return  $val ;
+	    return  $expr->{'val'} ;
 	};
 	/bool/ && do {
-	    return  $val ;
+	    return  $expr->{'val'} ;
 	};
 	/array/ && do {
-	    return  "[" . join(', ', @{ gen_js_rands($val) }) . "]" ;
+	    return  "[" . join(', ', @{ gen_js_rands($expr->{'val'}) }) . "]" ;
 	};
 	/prim/ && do {
-	    return gen_js_prim($val);
+	    return gen_js_prim($expr);
 	};
-	
+	# no sense generating simple, qualified, and counter preds for JS
     } 
 
 }
@@ -66,7 +67,7 @@ sub gen_js_expr {
 sub gen_js_prim {
     my $prim = shift;
 
-    return join(' ' . $prim->{'op'} . ' ', @{ gen_js_rands($prim->{'args'}) });
+    return '(' .join(' ' . $prim->{'op'} . ' ', @{ gen_js_rands($prim->{'args'}) }) . ')';
 
     
 }
@@ -92,65 +93,7 @@ sub gen_js_pre {
 #    my $logger = get_logger();
 #    $logger->debug("[pre] Got ", $#{ $pre }, " items.");
     
-    return map {gen_js_decl($req_info, $rule_env, $rule_name, $session, $_)} @{ $pre };
-}
-
-# modifies rule_env by inserting value with LHS
-sub gen_js_decl {
-    my ($req_info, $rule_env, $rule_name, $session, $decl) = @_;
-
-    my $val = '0';
-
-    
-    my $logger = get_logger();
-
-    $logger->debug(
-	"[decl] Type: " . $decl->{'type'}
-	);
-
-    if($decl->{'type'} eq 'data_source') {
-	my $source = $decl->{'source'};
-
-	my $function = $decl->{'function'};
-
-
-	if($source eq 'weather') {
-	    $val = Kynetx::Predicates::Weather::get_weather($req_info,$function);
-	} elsif ($source eq 'geoip' || $source eq 'location') {
-	    $val = Kynetx::Predicates::Location::get_geoip($req_info,$function);
-	} elsif ($source eq 'stocks' || $ source eq 'markets') {
-
-	    my $arg = gen_js_rands($decl->{'args'});
-	    $arg->[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
-	    $val = Kynetx::Predicates::Markets::get_stocks($req_info,$arg->[0],$function);
-	} elsif ($source eq 'referer') {
-	    $val = Kynetx::Predicates::Referers::get_referer($req_info,$function);
-	} elsif ($source eq 'mediamarket') {
-	    $val = Kynetx::Predicates::MediaMarkets::get_mediamarket($req_info,$function);
-	} 
-
-	$logger->debug("[decl] Source: $source:$function = $val" );
-
-
-    } elsif ($decl->{'type'} eq 'counter') {
-
-	$logger->debug("Counter name: " . $decl->{'name'});
-
-	$val = $session->{$decl->{'name'}};
-
-    } elsif ($decl->{'type'} eq 'here_doc') {
-
-	$logger->debug("Here doc for ", $decl->{'lhs'} );
-
-	$val = $decl->{'value'};
-	$val =~ s/'/\\'/g;  #' - for syntax highlighting
-	$val =~ s/#{([^}]*)}/'+$1+'/g;
-    }
-
-    $rule_env->{$rule_name.":".$decl->{'lhs'}} = $val;
-
-    return $val;
-
+    return map {eval_js_decl($req_info, $rule_env, $rule_name, $session, $_)} @{ $pre };
 }
 
 
@@ -218,64 +161,121 @@ EOF
 # evaluation of JS exprs on the server
 #
 sub eval_js_expr {
-    my ($expr, $rule_env, $rule_name) = @_;
-
-    my @nodes = keys %{ $expr };  # these are singleton hashes
-    my $val =  $expr->{$nodes[0]};
+    my ($expr, $rule_env, $rule_name,$req_info) = @_;
 
     my $logger = get_logger();
-    $logger->debug("Evaling ", $nodes[0], " -> ", $val);
-    
 
-    case: for ($nodes[0]) {
+
+    case: for ($expr->{'type'}) {
 	/str/ && do {
 	    return $expr;
 	};
 	/num/ && do {
 	    return  $expr ;
 	};
-	# FIXME: assuming all vars are  strings
 	/var/ && do {
-	    return  {'str' => $rule_env->{$rule_name.':'.$val} };
+	    my $v = $rule_env->{$rule_name.':'.$expr->{'val'}};
+#	    $logger->debug($rule_name.':'.$expr->{'val'}, " -> ", $v);
+	    return  {'type' => infer_type($v),
+                     'val' =>  $v};
 	};
 	/bool/ && do {
 	    return  $expr ;
 	};
 	/array/ && do {
-	    return  { 'array' => join(' ', @{ eval_js_rands($val, $rule_env, $rule_name) }) } ;
+	    return  { 'type' => 'array',
+		      'val' => eval_js_rands($expr->{'val'}, $rule_env, $rule_name, $req_info)  } ;
 	};
 	/prim/ && do {
-	    return eval_js_prim($val, $rule_env, $rule_name);
+	    return eval_js_prim($expr, $rule_env, $rule_name, $req_info);
 	};
+
+ 	/qualified/ && do {
+
+
+	    my $den = eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info);
+
+	    # get the values
+	    for (@{ $den }) {
+		$_ = den_to_exp($_);
+	    }
+
+	    my $v = eval_datasource($req_info,
+				    $rule_env,
+				    $rule_name,
+				    $expr->{'source'},
+				    $expr->{'predicate'},
+				    $den
+		);
+
+	    $logger->debug($expr->{'source'}, " -> ", $v);
+
+	    return {'type' => infer_type($v),
+		    'val' => $v};
+ 	};
+	
 	
     } 
 
 }
 
-sub eval_js_prim {
-    my ($prim, $rule_env, $rule_name) = @_;
 
-    my $val_hashes = eval_js_rands($prim->{'args'}, $rule_env, $rule_name);
+#
+# evaluation of JS exprs on the server
+#
+sub den_to_exp {
+    my ($expr) = @_;
 
-    my(@types, @vals);
-    foreach my $val (@{ $val_hashes }) {
-	my @type = keys %{ $val }; #singleton hash
-	push(@types, $type[0]);
-	push(@vals, $val->{$type[0]});
+    case: for ($expr->{'type'}) {
+	/str|num/ && do {
+	    return $expr->{'val'};
+	};
+
+	/bool/ && do {
+	    return $expr->{'val'} eq 'true' ? 1 : 0;
+	};
+
+
 	
-    }
+    } 
+
+}
+
+
+
+
+sub eval_js_prim {
+    my ($prim, $rule_env, $rule_name, $req_info) = @_;
+
+    my $vals = eval_js_rands($prim->{'args'}, $rule_env, $rule_name, $req_info);
+
+    my $val0 = den_to_exp($vals->[0]);
+    my $val1 = den_to_exp($vals->[1]);
 
     # FIXME: Add operators
-    # FIXME: Do we need mroe than binary?
+    # FIXME: Do we need more than binary?
     case: for ($prim->{'op'}) {
 	/\+/ && do {
 
-	    if($types[0] eq 'str') {
-		return {'str' => $vals[0] . $vals[1]};
+	    if($vals->[0]->{'type'} eq 'str') {
+		return {'type' => 'str',
+			'val' => $val0 . $val1};
 	    } else {
-		return {'num' => $vals[0] + $vals[1]};
+		return {'type' => 'num',
+			'val' => $val0 + $val1};
 	    }
-
+	};
+	/-/ && do {
+	    return {'type' => 'num',
+		    'val' => $val0 - $val1};
+	};
+	/\*/ && do {
+	    return {'type' => 'num',
+		    'val' => $val0 * $val1};
+	};
+	/\// && do {
+	    return {'type' => 'num',
+		    'val' => $val0 / $val1};
 	};
     }
 
@@ -284,24 +284,131 @@ sub eval_js_prim {
     
 }
 
+# warning: this returns a ref to an array, not an array!
 sub eval_js_rands {
-    my ($rands, $rule_env, $rule_name) = @_;
+    my ($rands, $rule_env, $rule_name, $req_info) = @_;
 
-    my @rands = map {eval_js_expr($_, $rule_env, $rule_name)} @{ $rands } ;
+    my @rands = map {eval_js_expr($_, $rule_env, $rule_name, $req_info)} @{ $rands } ;
 
     return \@rands;
 
 }
 
+sub eval_datasource {
+    my($req_info,$rule_env,$rule_name,$source, $function, $args) = @_;
+  
+ #   $args->[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
+
+    my $val;
+
+    if($source eq 'weather') {
+	$val = Kynetx::Predicates::Weather::get_weather($req_info,$function);
+    } elsif ($source eq 'geoip' || $source eq 'location') {
+	$val = Kynetx::Predicates::Location::get_geoip($req_info,$function);
+    } elsif ($source eq 'stocks' || $ source eq 'markets') {
+
+	$val = Kynetx::Predicates::Markets::get_stocks($req_info,$args->[0],$function);
+    } elsif ($source eq 'referer') {
+	$val = Kynetx::Predicates::Referers::get_referer($req_info,$function);
+    } elsif ($source eq 'mediamarket') {
+	$val = Kynetx::Predicates::MediaMarkets::get_mediamarket($req_info,$function);
+    } elsif ($source eq 'page') {
+	my $vals = decode_json($req_info->{'kvars'});
+	$val = $vals->{$args->[0]};
+    }
+
+    return $val;
+
+}
+
+sub eval_counter {
+    my($session, $name) = @_;
+
+    return $session->{$name};
+
+}
+
+sub eval_heredoc {
+    my ($val) = @_;
+    $val =~ s/'/\\'/g;  #' - for syntax highlighting
+    $val =~ s/#{([^}]*)}/'+$1+'/g;
+    return $val;
+}
 
 
+# modifies rule_env by inserting value with LHS
+sub eval_js_decl {
+    my ($req_info, $rule_env, $rule_name, $session, $decl) = @_;
 
+    my $val = '0';
+
+    my $logger = get_logger();
+
+    $logger->debug(
+	"[decl] Type: " . $decl->{'type'}
+	);
+
+    if($decl->{'type'} eq 'data_source') {
+
+
+	$val = eval_datasource(
+	    $req_info,
+	    $rule_env,
+	    $rule_name,
+	    $decl->{'source'}, 
+	    $decl->{'function'}, 
+	    gen_js_rands($decl->{'args'}));
+
+	$logger->debug("[decl] Source: " .
+		       $decl->{'source'} . ":" . 
+		       $decl->{'function'} . 
+		       " -> $val" );
+
+    } elsif ($decl->{'type'} eq 'counter') {
+
+	$val = eval_counter($session, $decl->{'name'});
+
+	$logger->debug("[decl] Counter: " . $decl->{'name'} . " -> " . $val);
+
+    } elsif ($decl->{'type'} eq 'here_doc') {
+
+	$val = eval_heredoc($decl->{'value'});
+
+	$logger->debug("[decl] here doc for ", $decl->{'lhs'} );
+    }
+
+    # JS is generated for all vars in the rule env
+    $rule_env->{$rule_name.":".$decl->{'lhs'}} = $val;
+
+    return $val;
+
+}
+
+
+# crude type inference for prims
+sub infer_type {
+    my ($v) = @_;
+    my $t;
+    if($v =~ m/\d*\.\d+|\d+/) { # crude type inference for primitives
+	$t = 'num' ;
+    } elsif($v =~ m/true|false/) {
+	$t = 'bool';
+    } else {
+	$t = 'str';
+    }
+    return $t;
+
+}
 
 
 #
 # utility functions
-#
+#pnnn
 sub mk_js_str {
-    return "'". join(" ",@_) . "'";
+    if(defined $_[0]) {
+	return "'". join(" ",@_) . "'";
+    } else {
+	return "''";
+    }
 }
 

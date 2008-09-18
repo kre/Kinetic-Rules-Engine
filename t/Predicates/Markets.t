@@ -11,6 +11,7 @@ use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
 
 use Kynetx::Test qw/:all/;
+use Kynetx::Parser qw/:all/;
 use Kynetx::Predicates::Markets qw/:all/;
 use Kynetx::JavaScript qw/:all/;
 
@@ -48,17 +49,17 @@ foreach my $pn (@pnames) {
 
 
 
-my $args;
+my($krl_src,$cond,$args);
 
-# a small piece of the abstract syntax tree...
-my $cond = {'args' => [
-            {
-              'num' => 10
-            }
-          ]
-};
+$krl_src = <<_KRL_;
+foo(10)
+_KRL_
+
+$cond = Kynetx::Parser::parse_predexpr($krl_src);
 
 $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+
+#diag(Dumper($args));
 
 ok(&{$preds->{'djia_up_more_than'}}($BYU_req_info, \%rule_env, $args) ? 
    (! &{$preds->{'djia_down_more_than'}}($BYU_req_info, \%rule_env, $args)) :  
@@ -70,7 +71,14 @@ ok(&{$preds->{'djia_down_more_than'}}($BYU_req_info, \%rule_env, $args) ?
    1,
    "If the market's down, it's not up!");
 
-$args->[0] = {'str' => 'GOOG'};
+$krl_src = <<_KRL_;
+foo('GOOG')
+_KRL_
+
+$cond = Kynetx::Parser::parse_predexpr($krl_src);
+
+$args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+
 
 my $GOOG_last = get_stocks($BYU_req_info,"GOOG","last");
 diag("GOOG_last has value => $GOOG_last");

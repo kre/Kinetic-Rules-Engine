@@ -4,13 +4,15 @@ use lib qw(/web/lib/perl);
 use strict;
 
 use Test::More;
-plan tests => 39;
 use Test::LongString;
 
 use APR::URI qw/:all/;
 use APR::Pool ();
 use LWP::Simple;
 use XML::XPath;
+
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
 
 
 use Kynetx::Test qw/:all/;
@@ -32,109 +34,252 @@ Log::Log4perl->easy_init($INFO);
 # testing Javascript expression evaluation
 # 
 
-my $Simple_JS_Expr_Str = {
-    'str' => 'absolute'
-};
-
-my $Simple_JS_Expr_Var = {
-    'var' => 'city'
-};
-
-my $Complex_JS_Expr_1 = {
-    'prim' => {
-	'args' => [
-	    {
-		'str' => '/cgi-bin/weather.cgi?city='
-	    },
-	    {
-		'prim' => {
-		    'args' => [
-			{
-                            'var' => 'city'
-			},
-			{
-                            'prim' => {
-				'args' => [
-				    {
-					'str' => '&tc='
-				    },
-				    {
-					'var' => 'tc'
-				    }
-				    ],
-				'op' => '+'
-                            }
-			}
-                        ],
-		    'op' => '+'
-		}
-	    }
-	    ],
-	'op' => '+'
-    }
-};
-
-my $Complex_JS_Expr_2 = {
-    'prim' => {
-	'args' => [
-	    {
-		'num' => 5
-	    },
-	    {
-		'num' => 6
-	    }
-	    ],
-	'op' => '+'
-    }
-};
-
-my $Complex_JS_Expr_3 = {
-    'prim' => {
-	'args' => [
-	    {
-		'num' => 5
-	    },
-	    {
-		'var' => 'temp'
-	    }
-	    ],
-	'op' => '+'
-    }
-};
 
 
-is(gen_js_expr($Simple_JS_Expr_Str), "'absolute'",
-	  "Generating simple JS");
+my (@test_cases, $str, $val);
 
-is(gen_js_expr($Complex_JS_Expr_1), "'/cgi-bin/weather.cgi?city=\' + city + '&tc=' + tc",
-	  "Generating complex JS");
+sub add_testcase {
+    my($str,$js,$expected, $diag) = @_;
+    my $val = Kynetx::Parser::parse_expr($str);
+    
+    diag("$str = ", Dumper($val)) if $diag;
+
+    push(@test_cases, {'expr' => $val,
+		       'js' => $js,
+		       'val' => $expected eq 'unchanged' ? $val : $expected});
+}
 
 
 my $rule_name = 'foo';
 
 my $rule_env = {$rule_name . ':city' => 'Blackfoot',
-		$rule_name . ':tc' => '15'};
+		$rule_name . ':tc' => '15',
+		$rule_name . ':temp' => 20,
+		$rule_name . ':booltrue' => 'true',
+		$rule_name . ':boolfalse' => 'false',
+               };
 
-is(eval_js_expr($Simple_JS_Expr_Str, $rule_env, $rule_name), $Simple_JS_Expr_Str,
-	  "Evaling simple JS with str");
+
+my $this_session = {};
+
+my $BYU_req_info;
+$BYU_req_info->{'ip'} = '128.187.16.242'; # Utah (BYU)
+$BYU_req_info->{'referer'} = 'http://www.google.com/search?q=free+mobile+calls&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:official&client=firefox-a'; 
+$BYU_req_info->{'pool'} = APR::Pool->new;
+$BYU_req_info->{'kvars'} = '{"foo": 5, "bar": "fizz", "bizz": [1, 2, 3]}';
 
 
-is_deeply(eval_js_expr($Simple_JS_Expr_Var, $rule_env, $rule_name), 
-   {'str' => 'Blackfoot'},
-   "Evaling simple JS with var");
 
-is_deeply(eval_js_expr($Complex_JS_Expr_1, $rule_env, $rule_name), 
-          {'str' => '/cgi-bin/weather.cgi?city=Blackfoot&tc=15'},
-	  "Evaling complex JS with strings");
+$str = <<_KRL_;
+"absolute"
+_KRL_
+add_testcase(
+    $str,
+    "'absolute'",
+    mk_expr_node('str', 'absolute'));
 
-is_deeply(eval_js_expr($Complex_JS_Expr_2, $rule_env, $rule_name), 
-          {'num' => 11},
-	  "Evaling complex JS with num");
+$str = <<_KRL_;
+city
+_KRL_
+add_testcase(
+    $str,
+    'city',
+    mk_expr_node('str', 'Blackfoot')
+    );
 
-$rule_env = {$rule_name . ':temp' => 20};
-is_deeply(eval_js_expr($Complex_JS_Expr_3, $rule_env, $rule_name), 
-          {'num' => 25},
-	  "Evaling complex JS with num & var");
+$str = <<_KRL_;
+true
+_KRL_
+add_testcase(
+    $str,
+    'true',
+    mk_expr_node('bool', 'true')
+    );
+
+$str = <<_KRL_;
+false
+_KRL_
+add_testcase(
+    $str,
+    'false',
+    mk_expr_node('bool', 'false')
+    );
+
+$str = <<_KRL_;
+1022
+_KRL_
+add_testcase(
+    $str,
+    1022,
+    mk_expr_node('num', 1022)
+    );
+
+
+$str = <<_KRL_;
+5 + 6
+_KRL_
+add_testcase(
+    $str,
+    '(5 + 6)',
+    mk_expr_node('num', 11),
+    0);
+
+$str = <<_KRL_;
+6 - 5
+_KRL_
+add_testcase(
+    $str,
+    '(6 - 5)',
+    mk_expr_node('num', 1));
+
+$str = <<_KRL_;
+5 * 7
+_KRL_
+add_testcase(
+    $str,
+    '(5 * 7)',
+    mk_expr_node('num', 35),
+    0);
+
+$str = <<_KRL_;
+25 / 5
+_KRL_
+add_testcase(
+    $str,
+    '(25 / 5)',
+    mk_expr_node('num', 5));
+
+$str = <<_KRL_;
+-5
+_KRL_
+add_testcase(
+    $str,
+    '-5',
+    mk_expr_node('num', -5),
+    0);
+
+$str = <<_KRL_;
+"foo" + "bar"
+_KRL_
+add_testcase(
+    $str,
+    "('foo' + 'bar')",
+    mk_expr_node('str', 'foobar'),
+    0);
+
+
+$str = <<_KRL_;
+"/cgi-bin/weather.cgi?city=" + city + "&tc=" + tc
+_KRL_
+add_testcase(
+    $str,
+    "('/cgi-bin/weather.cgi?city=' + (city + ('&tc=' + tc)))",
+    mk_expr_node('str', '/cgi-bin/weather.cgi?city=Blackfoot&tc=15'),
+    0);
+
+
+$str = <<_KRL_;
+5 + temp
+_KRL_
+add_testcase(
+    $str,
+    "(5 + temp)",
+    mk_expr_node('num', 25),
+    0);
+
+$str = <<_KRL_;
+(5 + 6) * 3
+_KRL_
+add_testcase(
+    $str,
+    "((5 + 6) * 3)",
+    mk_expr_node('num', 33),
+    0);
+
+$str = <<_KRL_;
+5 + 6 * 3
+_KRL_
+add_testcase(
+    $str,
+    "(5 + (6 * 3))",
+    mk_expr_node('num', 23),
+    0);
+
+$str = <<_KRL_;
+[5, 6, 7]
+_KRL_
+add_testcase(
+    $str,
+    "[5, 6, 7]",
+     mk_expr_node('array', [mk_expr_node('num', 5),
+ 			    mk_expr_node('num', 6),
+ 			    mk_expr_node('num', 7)]),
+    0);
+
+$str = <<_KRL_;
+[5, 6, temp]
+_KRL_
+add_testcase(
+    $str,
+    "[5, 6, temp]",
+     mk_expr_node('array', [mk_expr_node('num', 5),
+ 			    mk_expr_node('num', 6),
+ 			    mk_expr_node('num', 20)]),
+    0);
+
+$str = <<_KRL_;
+[false, true, true, booltrue]
+_KRL_
+add_testcase(
+    $str,
+    "[false, true, true, booltrue]",
+     mk_expr_node('array', [mk_expr_node('bool', 'false'),
+ 			    mk_expr_node('bool', 'true'),
+  			    mk_expr_node('bool', 'true'),
+ 			    mk_expr_node('bool', 'true')]),
+    0);
+
+$str = <<_KRL_;
+[boolfalse, booltrue]
+_KRL_
+add_testcase(
+    $str,
+    "[boolfalse, booltrue]",
+     mk_expr_node('array', [mk_expr_node('bool', 'false'),
+ 			    mk_expr_node('bool', 'true')]),
+    0);
+
+
+
+$str = <<_KRL_;
+page:var("foo");
+_KRL_
+add_testcase(
+    $str,
+    "",
+     mk_expr_node('num', 5),
+    0);
+
+
+
+
+
+
+plan tests => 32 + (@test_cases * 2);
+
+
+
+# now test each test case twice
+foreach my $case (@test_cases) {
+    # diag(Dumper($case->{'expr'}));
+    is(gen_js_expr($case->{'expr'}),
+       $case->{'js'},
+       "Generating Javascript");
+    is_deeply(eval_js_expr($case->{'expr'}, $rule_env, $rule_name,$BYU_req_info), 
+	      $case->{'val'},
+	      "Evaling Javascript");
+    
+}
 
 
 # 
@@ -144,34 +289,27 @@ is_deeply(eval_js_expr($Complex_JS_Expr_3, $rule_env, $rule_name),
 #sub gen_js_decl {
 #   my ($req_info, $rule_env, $rule_name, $session, $decl) = @_;
 
-my %rule_env = ();
-my %this_session = ();
-
-my $BYU_req_info;
-$BYU_req_info->{'ip'} = '128.187.16.242'; # Utah (BYU)
-$BYU_req_info->{'referer'} = 'http://www.google.com/search?q=free+mobile+calls&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:official&client=firefox-a'; 
-$BYU_req_info->{'pool'} = APR::Pool->new;
-
-$rule_name = 'foo';
 
 
 sub mk_datasource_function {
     my ($source, $args, $diag) = @_;
 
     return sub {
-	my $decl = {
-	    'source' => $source,
-	    'function' => shift,# passed in as argument
-	    'lhs' => 'something',
-	    'args' => $args,
-	    'type' => 'data_source'
-	};
 
-	my $js_decl = Kynetx::JavaScript::gen_js_decl(
+	my $function = shift; # name to test
+
+	my $decl_src = <<_KRL_;
+something = $source:$function($args);
+_KRL_
+        my $decl = Kynetx::Parser::parse_decl($decl_src);
+
+#	diag(Dumper($decl));
+
+	my $js_decl = Kynetx::JavaScript::eval_js_decl(
 	    $BYU_req_info,
-	    \%rule_env,
+	    $rule_env,
 	    $rule_name,
-	    \%this_session,
+	    $this_session,
 	    $decl
 	    );
 	
@@ -184,7 +322,7 @@ sub mk_datasource_function {
 
 # check referer datasource
 
-my $referer_function = mk_datasource_function('referer',[], 0);
+my $referer_function = mk_datasource_function('referer','', 0);
 
 is(&{$referer_function}('search_terms'), 
    'free+mobile+calls',
@@ -193,14 +331,18 @@ is(&{$referer_function}('search_terms'),
 
 
 # check markets datasource
-my $symbol = 'GOOG';
+my $symbol = 'GOOG'; 
+
 # http://www.webservicex.net//stockquote.asmx/GetQuote?symbol=GOOG
 
-my $market_function = mk_datasource_function('stocks', [{'str' => $symbol},], 0);
+# $symbol has to be a string that is itself a valid KRL string
+my $market_function = mk_datasource_function('stocks', '"'.$symbol.'"' , 0);
 
 my $curr_qr = qr#\d+\.\d\d#;
 
-is(&{$market_function}('symbol'), $symbol, "Returned symbol is the one we sent");
+is(&{$market_function}('symbol'), $symbol , "Returned symbol is the one we sent");
+
+
 like(&{$market_function}('last'), $curr_qr, 'last price is a currency');
 like(&{$market_function}('date'), qr#\d+/\d+/\d+#, "market date is a date");
 like(&{$market_function}('time'), qr#\d+:\d#, "market time is a time");
@@ -218,7 +360,7 @@ like(&{$market_function}('name'), qr#[A-Za-z ]+#, 'name is a string');
 
 # http://www.webservicex.net//stockquote.asmx/GetQuote?symbol=GOOG
 
-my $location_function = mk_datasource_function('location', [], 0);
+my $location_function = mk_datasource_function('location', '', 0);
 
 
 like(&{$location_function}('country_code'), qr#[A-Z]+#, 'country code');
@@ -234,7 +376,7 @@ is(&{$location_function}('area_code'), '801', 'BYU is in area 801');
 
 # check weather datasource
 
-my $weather_function = mk_datasource_function('weather',[], 0);
+my $weather_function = mk_datasource_function('weather','', 0);
 
 my $temp_qr = qr#\d+\.*\d*#;  # what a temperature looks like
 like(&{$weather_function}('curr_temp'), $temp_qr, 'curr_temp');
@@ -248,12 +390,13 @@ like(&{$weather_function}('tomorrow_cond_code'), qr#\d\d#, 'tomorrow_cond_code')
 
 # check media market datasource
 
-my $mm_function = mk_datasource_function('mediamarket',[], 0);
+my $mm_function = mk_datasource_function('mediamarket','', 0);
 
 like(&{$mm_function}('dma'), qr#\d\d\d#, 'dma');
 like(&{$mm_function}('rank'), qr#\d+#, 'rank');
 like(&{$mm_function}('name'), qr#\w#, 'name');
 like(&{$mm_function}('households'), qr#\d+#, 'households');
+
 
 
 

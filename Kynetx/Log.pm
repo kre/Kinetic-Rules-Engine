@@ -76,8 +76,6 @@ sub log_rule_fire {
 	);
 
 
-
-
 }
     
 

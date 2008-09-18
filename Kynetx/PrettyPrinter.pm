@@ -150,35 +150,92 @@ sub pp_cond {
     my $beg = " "x$indent;
     my $o = $beg;
 
-    $o .= "if ";
-    $o .= join " && ", map {pp_pred($_, 0)} @{ $node->{'cond'} };
-    $o .= "\n" . $beg . "then\n";
-    $o .= pp_actions($node->{'actions'},$node->{'blocktype'},$indent);
-    $o .= $beg . "\n";
+    my $pred = pp_predexpr($node->{'cond'});
+    my $actions = pp_actions($node->{'actions'},$node->{'blocktype'},$indent);
+
+    if($pred eq 'true') {
+	$o .= $actions;
+    } else {
+	$o .= "if ";
+	$o .= $pred;
+	    $o .= "\n" . $beg . "then\n";
+	$o .= $actions;
+	$o .= $beg . "\n";
+    } 
 
     return $o;
 
 }
 
-sub pp_pred{
-    my ($node, $indent) = @_;
-    my $beg = " "x$indent;
-    my $o = $beg;
-    if($node->{'type'} eq 'simple') {
-	$o .= $node->{'predicate'} . "(";
-	$o .= join ", ", pp_rands($node->{'args'});
-	$o .= ")";
-    } else { #counter
-	$o .= $node->{'type'} . "." . $node->{'name'};
-	$o .= " " . $node->{'ineq'} . " ";
-	$o .= $node->{'value'};
-	if(defined $node->{'within'}) {
-	    $o .= " within " . $node->{'within'} . " " . $node->{'timeframe'};
-	}
+
+# expressions below
+sub pp_predexpr {
+    my $expr = shift;
+
+    case: for ($expr->{'type'}) {
+	/ineq/ && do {
+	    return join(' ' . $expr->{'op'} . ' ', 
+			pp_rands($expr->{'args'}))  ;
+        };
+	/pred/ && do {
+	    return pp_pred($expr);
+	};
+	/.*/ && do {
+	    return pp_expr($expr);
+	};
+	
+    } 
+
+}
+
+
+sub pp_pred {
+    my $pred = shift;
+    
+    if($pred->{'op'} eq 'negation') {
+	return 'not' . pp_predexpr($pred->{'args'}->[0]) ;
+    } else {
+	return 
+	    '(' . 
+	    join(' ' . $pred->{'op'} . ' ', pp_predrands($pred->{'args'})) .
+	    ')';
     }
 
-    return $o;
+    
 }
+
+sub pp_predrands {
+    my $rands = shift;
+
+    map {pp_predexpr($_)} @{ $rands };
+
+}
+
+
+# sub pp_pred{
+#     my ($node, $indent) = @_;
+#     my $beg = " "x$indent;
+#     my $o = $beg;
+#     if($node->{'type'} eq 'simple') {
+# 	$o .= $node->{'predicate'} . "(";
+# 	$o .= join ", ", pp_rands($node->{'args'});
+# 	$o .= ")";
+#     } elsif($node->{'type'} eq 'qualified') {
+# 	$o .= $node->{'source'} . ':';
+# 	$o .= $node->{'predicate'} . "(";
+# 	$o .= join ", ", pp_rands($node->{'args'});
+# 	$o .= ")";
+#     } else { #counter
+# 	$o .= $node->{'type'} . "." . $node->{'name'};
+# 	$o .= " " . $node->{'ineq'} . " ";
+# 	$o .= $node->{'value'};
+# 	if(defined $node->{'within'}) {
+# 	    $o .= " within " . $node->{'within'} . " " . $node->{'timeframe'};
+# 	}
+#     }
+
+#     return $o;
+# }
 
 
 sub pp_actions {
@@ -230,7 +287,8 @@ sub pp_primrule{
     $o .= $node->{'action'}->{'name'} . "(";
     $o .= join ", ", pp_rands($node->{'action'}->{'args'});
     $o .= ")";
-     if(@{ $node->{'action'}->{'modifiers'} } > 0) {
+     if(defined $node->{'action'}->{'modifiers'} && 
+	@{ $node->{'action'}->{'modifiers'} } > 0) {
   	$o .= "\n". $beg . "with\n";
   	$o .= join " and\n", 
   	        map {pp_modifier($_, $indent+$g_indent+$g_indent)} 
@@ -264,7 +322,8 @@ sub pp_callbacks {
 
     $o .= "callbacks {\n";
     foreach my $sense ('success','failure') {
-	if(@{ $node->{$sense} } > 0) {
+	if(defined $node->{$sense} && 
+	   @{ $node->{$sense} } > 0) {
 	    $o .= pp_callback_types($node->{$sense},
 				    $indent+$g_indent,
 				    $sense);
@@ -348,31 +407,50 @@ sub pp_expr {
     my $expr = shift;
 
 
-
-    my @nodes = keys %{ $expr };  # these are singleton hashes
-
-
-    my $val =  $expr->{$nodes[0]};
-
-    case: for ($nodes[0]) {
+    case: for ($expr->{'type'}) {
 	/str/ && do {
-#	    $val =~ s/'/\\'/g;  #' - for syntax highlighting
-	    return '"' . $val . '"';
+#	    $expr->{'val'} =~ s/'/\\'/g;  #' - for syntax highlighting
+	    return '"' . $expr->{'val'} . '"';
 	};
 	/num/ && do {
-	    return  $val ;
+	    return  $expr->{'val'} ;
 	};
 	/var/ && do {
-	    return  $val ;
+	    return  $expr->{'val'} ;
 	};
 	/bool/ && do {
-	    return  $val ;
+	    return  $expr->{'val'} ;
 	};
 	/array/ && do {
-	    return  "[" . join(', ', pp_rands($val)) . "]" ;
+	    return  "[" . join(', ', pp_rands($expr->{'val'})) . "]" ;
 	};
 	/prim/ && do {
-	    return pp_prim($val);
+	    return pp_prim($expr);
+	};
+	/simple/ && do {
+	    my $o = '';
+	    $o .= $expr->{'predicate'} . "(";
+	    $o .= join ", ", pp_rands($expr->{'args'});
+	    $o .= ")";
+	    return $o;
+	};
+	/qualified/ && do {
+	    my $o = '';
+	    $o .= $expr->{'source'} . ':';
+	    $o .= $expr->{'predicate'} . "(";
+	    $o .= join ", ", pp_rands($expr->{'args'});
+	    $o .= ")";
+	    return  $o ;
+	};
+	/counter/ && do {
+	    my $o = '';
+	    $o .= $expr->{'type'} . "." . $expr->{'name'};
+	    $o .= " " . $expr->{'ineq'} . " ";
+	    $o .= $expr->{'value'};
+	    if(defined $expr->{'within'}) {
+		$o .= " within " . $expr->{'within'} . " " . $expr->{'timeframe'};
+	    }
+	    return  $o ;
 	};
 	
     } 

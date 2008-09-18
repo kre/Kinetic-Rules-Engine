@@ -151,36 +151,6 @@ ok(
 
 
 
-# Not using this
-
-my @jsargs = (
-            {
-              'num' => '1'
-            },
-            {
-              'num' => '1'
-            },
-            {
-              'num' => '1'
-            },
-            {
-              'num' => '1'
-            },
-            {
-              'num' => '1'
-            },
-            {
-              'num' => '1'
-            },
-            {
-              'num' => '1'
-            }
-    );
-
-
-@datearg = Kynetx::JavaScript::gen_js_rands(\@jsargs);
-
-
 1;
 
 

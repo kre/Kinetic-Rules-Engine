@@ -6,7 +6,7 @@ ruleset 10 {
       	    tc = weather:tomorrow_cond_code();
 	    city = geoip:city();
 	}     
-        if nighttime() && outside_state("UT") 
+        if (nighttime() && outside_state("UT"))
         then 
            float("absolute", "top: 10px", "right: 10px",
                  "/cgi-bin/weather.cgi?city=" + city + "&tc=" + tc)

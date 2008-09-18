@@ -405,8 +405,8 @@ sub choose_action {
 	     $parsed_url->scheme ne $parsed_caller->scheme)
 	    ) {
 
-	    $logger->debug("[action] URL is ", $parsed_url->hostname, 
-			   " & caller is ", $parsed_caller->hostname
+	    $logger->debug("[action] URL domain is ", $parsed_url->hostname, 
+			   " & caller domain is ", $parsed_caller->hostname
 		);
 
 	    $action_suffix = "_html";
@@ -423,8 +423,8 @@ sub choose_action {
 	    # FIXME: should be caching this...
 	    my $content = LWP::Simple::get($url);
 	    $content =~ y/\n\r/  /; # remove newlines
-	    $last_arg =  {'str' => $content};
-#	    $logger->debug("Last arg: ", Dumper($last_arg));
+	    $last_arg =  Kynetx::Parser::mk_expr_node('str',$content);
+	    #$logger->debug("Last arg: ", Dumper($last_arg));
 	    
 	} 
 
@@ -432,7 +432,7 @@ sub choose_action {
     	$action_name = $action_name . $action_suffix;
     }
 
-    $logger->debug("[action] $action_name with ", join(", ", @{$args}));
+    $logger->debug("[action] $action_name with ", join(", ", Dumper(@{$args})));
 
     return ($action_name, $args);
 }
