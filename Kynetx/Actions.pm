@@ -415,13 +415,13 @@ sub choose_action {
 #	    $logger->debug("Rule env: ", Dumper($rule_env));
 	    
 	    # We need to eval the argument since it might be an expression
-	    $url = gen_js_expr(
-		    eval_js_expr($last_arg, $rule_env, $rule_name));
-	    $url =~ s/^'(.*)'$/$1/;
+	    $url = den_to_exp(
+		    eval_js_expr($last_arg, $rule_env, $rule_name,$req_info));
+#	    $url =~ s/^'(.*)'$/$1/;
 	    $logger->debug("Fetching ", $url);
 
 	    # FIXME: should be caching this...
-	    my $content = LWP::Simple::get($url);
+	    my $content = LWP::Simple::get($url) || "<!-- URL $url returned no content -->";
 	    $content =~ y/\n\r/  /; # remove newlines
 	    $last_arg =  Kynetx::Parser::mk_expr_node('str',$content);
 	    #$logger->debug("Last arg: ", Dumper($last_arg));

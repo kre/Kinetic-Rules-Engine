@@ -177,6 +177,17 @@ add_testcase(
     mk_expr_node('str', '/cgi-bin/weather.cgi?city=Blackfoot&tc=15'),
     0);
 
+$str = <<_KRL_;
+"/cgi-bin/weather.cgi?city=" + city + "&tc=" + tc + "foo=" + city + "fizz=" + tc
+_KRL_
+add_testcase(
+    $str,
+    "('/cgi-bin/weather.cgi?city=' + (city + ('&tc=' + (tc + ('foo=' + (city + ('fizz=' + tc)))))))",
+    mk_expr_node('str', '/cgi-bin/weather.cgi?city=Blackfoot&tc=15foo=Blackfootfizz=15'),
+    0);
+
+
+
 
 $str = <<_KRL_;
 5 + temp

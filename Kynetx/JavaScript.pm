@@ -165,7 +165,6 @@ sub eval_js_expr {
 
     my $logger = get_logger();
 
-
     case: for ($expr->{'type'}) {
 	/str/ && do {
 	    return $expr;
@@ -175,7 +174,7 @@ sub eval_js_expr {
 	};
 	/var/ && do {
 	    my $v = $rule_env->{$rule_name.':'.$expr->{'val'}};
-#	    $logger->debug($rule_name.':'.$expr->{'val'}, " -> ", $v);
+	    $logger->debug($rule_name.':'.$expr->{'val'}, " -> ", $v, ' Type -> ', infer_type($v));
 	    return  {'type' => infer_type($v),
                      'val' =>  $v};
 	};
@@ -248,6 +247,7 @@ sub eval_js_prim {
     my ($prim, $rule_env, $rule_name, $req_info) = @_;
 
     my $vals = eval_js_rands($prim->{'args'}, $rule_env, $rule_name, $req_info);
+   
 
     my $val0 = den_to_exp($vals->[0]);
     my $val1 = den_to_exp($vals->[1]);
@@ -257,7 +257,7 @@ sub eval_js_prim {
     case: for ($prim->{'op'}) {
 	/\+/ && do {
 
-	    if($vals->[0]->{'type'} eq 'str') {
+	    if($vals->[0]->{'type'} eq 'str' || $vals->[1]->{'type'} eq 'str' ) {
 		return {'type' => 'str',
 			'val' => $val0 . $val1};
 	    } else {
