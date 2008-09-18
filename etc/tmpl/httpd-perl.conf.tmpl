@@ -321,6 +321,13 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
   PerlSetVar db_passwd <TMPL_VAR NAME=DB_PASSWD>
 
 
+  <TMPL_IF NAME="MEMCACHED">
+  PerlSetVar memcached_hosts <TMPL_VAR NAME=MEMCACHED_HOST_FIRST>
+  <TMPL_LOOP NAME="MEMCACHED_HOSTS">
+  PerlAddVar memcached_hosts <TMPL_VAR NAME=MEMCACHED_HOST>
+  </TMPL_LOOP>
+  </TMPL_IF>
+
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
 
@@ -372,6 +379,14 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
 
+  <TMPL_IF NAME="MEMCACHED">
+  PerlSetVar memcached_hosts <TMPL_VAR NAME=MEMCACHED_HOST_FIRST>
+  <TMPL_LOOP NAME="MEMCACHED_HOSTS">
+  PerlAddVar memcached_hosts <TMPL_VAR NAME=MEMCACHED_HOST>
+  </TMPL_LOOP>
+  </TMPL_IF>
+
+
   SetHandler perl-script
   PerlHandler Kynetx::KOBJ
 </LocationMatch>
@@ -391,6 +406,13 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
   PerlSetVar action_host <TMPL_VAR NAME=ACTION_HOST>
   PerlSetVar krl_host <TMPL_VAR NAME=KRL_HOST>
   PerlSetVar frag_host <TMPL_VAR NAME=FRAG_HOST>
+
+  <TMPL_IF NAME="MEMCACHED">
+  PerlSetVar memcached_hosts <TMPL_VAR NAME=MEMCACHED_HOST_FIRST>
+  <TMPL_LOOP NAME="MEMCACHED_HOSTS">
+  PerlAddVar memcached_hosts <TMPL_VAR NAME=MEMCACHED_HOST>
+  </TMPL_LOOP>
+  </TMPL_IF>
 
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
@@ -423,6 +445,12 @@ Alias /widgets/ "/web/lib/perl/widgets/"
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
 
+  <TMPL_IF NAME="MEMCACHED">
+  PerlSetVar memcached_hosts <TMPL_VAR NAME=MEMCACHED_HOST_FIRST>
+  <TMPL_LOOP NAME="MEMCACHED_HOSTS">
+  PerlAddVar memcached_hosts <TMPL_VAR NAME=MEMCACHED_HOST>
+  </TMPL_LOOP>
+  </TMPL_IF>
 
   SetHandler perl-script
   PerlResponseHandler ModPerl::Registry
