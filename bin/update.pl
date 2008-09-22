@@ -63,7 +63,7 @@ if ($init_gender) { # for init.kobj.net
 } elsif ($krl_gender) { # for krl.kobj.net
 
     system "$base/bin/install-httpd-conf.pl -k";
-}if ($krl_gender) { # for krl.kobj.net
+} elsif (frag_gender) { # for krl.kobj.net
 
     system "$base/bin/install-httpd-conf.pl -f -m $memcache_ips";
 }

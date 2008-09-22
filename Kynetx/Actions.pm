@@ -136,6 +136,7 @@ function(uniq, cb, id, text) {
  div.innerHTML = text;
  id = \$(id);
  id.replace(div);
+ new Effect.BlindDown(div, {duration: 1.0});
  cb();
 }
 EOF
