@@ -193,6 +193,7 @@ sub eval_js_expr {
     my ($expr, $rule_env, $rule_name,$req_info) = @_;
 
     my $logger = get_logger();
+#    $logger->debug("Rule env: ", Dumper($rule_env));
 
     case: for ($expr->{'type'}) {
 	/str/ && do {
@@ -327,6 +328,8 @@ sub eval_js_decl {
 	    $decl->{'source'}, 
 	    $decl->{'function'}, 
 	    $den);
+
+
 #	    gen_js_rands($decl->{'args'}));
 
 	$logger->debug("[decl] Source: " .
@@ -348,11 +351,13 @@ sub eval_js_decl {
     }
 
     # JS is generated for all vars in the rule env
-#    $rule_env->{$rule_name.":".$decl->{'lhs'}} = $val;
+    $rule_env->{$rule_name.":".$decl->{'lhs'}} = $val;
+
     # preserve the order of decl evals
-    push(@{$rule_env->{$rule_name."_rules"}}, 
-	 {'lhs' => $decl->{'lhs'},
-	  'val' => $val});
+#    push(@{$rule_env->{$rule_name."_rules"}}, 
+#	 {'lhs' => $decl->{'lhs'},
+#	  'val' => $val});
+    push(@{$rule_env->{$rule_name."_vars"}}, $decl->{'lhs'});
 
     return $val;
 

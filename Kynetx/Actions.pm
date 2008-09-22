@@ -210,18 +210,20 @@ sub build_js_load {
 
     
     # set JS vars from rule env
-    my $rulename_re = qr/^$rule->{'name'}:(.*)/;
-    foreach my $var ( keys %{ $rule_env} ) {
-	my $val = $rule_env->{$var};
-	next unless $var =~ s/$rulename_re/$1/;
-	$logger->debug("[JS var] ", $var, "->", $val);
-	$js .= emit_var_decl($var,$val);
+#     my $rulename_re = qr/^$rule->{'name'}:(.*)/;
+#     foreach my $var ( keys %{ $rule_env} ) {
+# 	my $val = $rule_env->{$var};
+# 	next unless $var =~ s/$rulename_re/$1/;
+# 	$logger->debug("[JS var] ", $var, "->", $val);
+# 	$js .= emit_var_decl($var,$val);
 
-    }
+#     }
+
+#    $logger->debug("Rule ENV: ", Dumper($rule_env));
 
     # now do decls in order
-    foreach my $decl( @{ $rule_env->{$rule->{'name'}."_rules"} } ) {
-	$js .= emit_var_decl($decl->{'lhs'}, $decl->{'val'});
+    foreach my $var( @{ $rule_env->{$rule->{'name'}."_vars"} } ) {
+	$js .= emit_var_decl($var, $rule_env->{$rule->{'name'}.":$var"});
     }
 
     # emits

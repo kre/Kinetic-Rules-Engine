@@ -247,6 +247,8 @@ sub get_rule_set {
 		    $logger->debug("[select var] $var -> $captures[$cap]");
 
 		    $new_env{"$rule->{'name'}:$var"} = $captures[$cap++];
+		    push(@{$new_env{$rule->{'name'}."_vars"}}, $var);
+
 
 		}
                     
