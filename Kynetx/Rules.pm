@@ -242,6 +242,8 @@ sub get_rule_set {
 		my $cap = 0;
 		foreach my $var ( @{ get_precondition_vars($rule)}) {
 
+		    $var =~ s/^\s*(.+)\s*/$1/;
+
 		    $logger->debug("[select var] $var -> $captures[$cap]");
 
 		    $new_env{"$rule->{'name'}:$var"} = $captures[$cap++];

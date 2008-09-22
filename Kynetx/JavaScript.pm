@@ -29,6 +29,7 @@ get_js_html
 mk_js_str
 eval_js_expr
 den_to_exp
+infer_type
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -59,7 +60,20 @@ sub gen_js_expr {
 	/prim/ && do {
 	    return gen_js_prim($expr);
 	};
-	# no sense generating simple, qualified, and counter preds for JS
+	# no sense generating simple, most qualified, and counter preds for JS
+ 	/qualified/ && do {
+
+	    my $rands = gen_js_rands($expr->{'args'});
+
+	    my $v = gen_js_datasource($expr->{'source'},
+				      $expr->{'predicate'},
+				      $rands
+		);
+	    return $v;
+	};
+
+
+
     } 
 
 }
@@ -84,6 +98,21 @@ sub gen_js_rands {
 
 }
 
+
+sub gen_js_datasource {
+    my($source, $function, $args) = @_;
+  
+    my $val = '';
+
+    if($source eq 'page') {
+	if ($function eq 'id') {
+	    $val = "\$(".$args->[0].").innerHTML";
+	}
+    }
+
+    return $val;
+
+}
 
 
 
@@ -165,8 +194,6 @@ sub eval_js_expr {
 
     my $logger = get_logger();
 
-    $logger->debug(Dumper($rule_env));
-
     case: for ($expr->{'type'}) {
 	/str/ && do {
 	    return $expr;
@@ -193,7 +220,6 @@ sub eval_js_expr {
 
  	/qualified/ && do {
 
-
 	    my $den = eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info);
 
 	    # get the values
@@ -215,28 +241,6 @@ sub eval_js_expr {
 		    'val' => $v};
  	};
 	
-	
-    } 
-
-}
-
-
-#
-# evaluation of JS exprs on the server
-#
-sub den_to_exp {
-    my ($expr) = @_;
-
-    case: for ($expr->{'type'}) {
-	/str|num/ && do {
-	    return $expr->{'val'};
-	};
-
-	/bool/ && do {
-	    return $expr->{'val'} eq 'true' ? 1 : 0;
-	};
-
-
 	
     } 
 
@@ -296,12 +300,72 @@ sub eval_js_rands {
 
 }
 
+# modifies rule_env by inserting value with LHS
+sub eval_js_decl {
+    my ($req_info, $rule_env, $rule_name, $session, $decl) = @_;
+
+    my $val = '0';
+
+    my $logger = get_logger();
+
+    if($decl->{'type'} eq 'data_source') {
+
+
+	my $den = eval_js_rands($decl->{'args'}, 
+				$rule_env, $rule_name,$req_info);
+
+	# get the values
+	for (@{ $den }) {
+	    $_ = den_to_exp($_);
+	}
+
+
+	$val = eval_datasource(
+	    $req_info,
+	    $rule_env,
+	    $rule_name,
+	    $decl->{'source'}, 
+	    $decl->{'function'}, 
+	    $den);
+#	    gen_js_rands($decl->{'args'}));
+
+	$logger->debug("[decl] Source: " .
+		       $decl->{'source'} . ":" . 
+		       $decl->{'function'} . 
+		       " -> $val" );
+
+    } elsif ($decl->{'type'} eq 'counter') {
+
+	$val = eval_counter($session, $decl->{'name'});
+
+	$logger->debug("[decl] Counter: " . $decl->{'name'} . " -> " . $val);
+
+    } elsif ($decl->{'type'} eq 'here_doc') {
+
+	$val = eval_heredoc($decl->{'value'});
+
+	$logger->debug("[decl] here doc for ", $decl->{'lhs'} );
+    }
+
+    # JS is generated for all vars in the rule env
+#    $rule_env->{$rule_name.":".$decl->{'lhs'}} = $val;
+    # preserve the order of decl evals
+    push(@{$rule_env->{$rule_name."_rules"}}, 
+	 {'lhs' => $decl->{'lhs'},
+	  'val' => $val});
+
+    return $val;
+
+}
+
+
+
 sub eval_datasource {
     my($req_info,$rule_env,$rule_name,$source, $function, $args) = @_;
   
  #   $args->[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
 
-    my $val;
+    my $val = '';
 
     if($source eq 'weather') {
 	$val = Kynetx::Predicates::Weather::get_weather($req_info,$function);
@@ -315,8 +379,14 @@ sub eval_datasource {
     } elsif ($source eq 'mediamarket') {
 	$val = Kynetx::Predicates::MediaMarkets::get_mediamarket($req_info,$function);
     } elsif ($source eq 'page') {
-	my $vals = decode_json($req_info->{'kvars'});
-	$val = $vals->{$args->[0]};
+	if($function eq 'var') {
+	    my $vals = decode_json($req_info->{'kvars'});
+	    $val = $vals->{$args->[0]};
+	} elsif ($function eq 'id') {
+	    # we're really just generating JS here.
+	    
+	    $val = "\$('".$args->[0]."').innerHTML";
+	}
     }
 
     return $val;
@@ -338,63 +408,41 @@ sub eval_heredoc {
 }
 
 
-# modifies rule_env by inserting value with LHS
-sub eval_js_decl {
-    my ($req_info, $rule_env, $rule_name, $session, $decl) = @_;
 
-    my $val = '0';
+#
+# evaluation of JS exprs on the server
+#
+sub den_to_exp {
+    my ($expr) = @_;
 
-    my $logger = get_logger();
+    case: for ($expr->{'type'}) {
+	/str|num/ && do {
+	    return $expr->{'val'};
+	};
 
-    $logger->debug(
-	"[decl] Type: " . $decl->{'type'}
-	);
-
-    if($decl->{'type'} eq 'data_source') {
+	/bool/ && do {
+	    return $expr->{'val'} eq 'true' ? 1 : 0;
+	};
 
 
-	$val = eval_datasource(
-	    $req_info,
-	    $rule_env,
-	    $rule_name,
-	    $decl->{'source'}, 
-	    $decl->{'function'}, 
-	    gen_js_rands($decl->{'args'}));
-
-	$logger->debug("[decl] Source: " .
-		       $decl->{'source'} . ":" . 
-		       $decl->{'function'} . 
-		       " -> $val" );
-
-    } elsif ($decl->{'type'} eq 'counter') {
-
-	$val = eval_counter($session, $decl->{'name'});
-
-	$logger->debug("[decl] Counter: " . $decl->{'name'} . " -> " . $val);
-
-    } elsif ($decl->{'type'} eq 'here_doc') {
-
-	$val = eval_heredoc($decl->{'value'});
-
-	$logger->debug("[decl] here doc for ", $decl->{'lhs'} );
-    }
-
-    # JS is generated for all vars in the rule env
-    $rule_env->{$rule_name.":".$decl->{'lhs'}} = $val;
-
-    return $val;
+	
+    } 
 
 }
+
+
 
 
 # crude type inference for prims
 sub infer_type {
     my ($v) = @_;
     my $t;
-    if($v =~ m/\d*\.\d+|\d+/) { # crude type inference for primitives
+    if($v =~ m/^(\d*\.\d+|\d+)$/) { # crude type inference for primitives
 	$t = 'num' ;
     } elsif($v =~ m/true|false/) {
 	$t = 'bool';
+    } elsif($v =~ m/^\$\(.*\)/) {
+	$t = 'JS';
     } else {
 	$t = 'str';
     }

@@ -136,7 +136,6 @@ function(uniq, cb, id, text) {
  div.innerHTML = text;
  id = \$(id);
  id.replace(div);
- new Effect.BlindDown(div, {duration: 1.0});
  cb();
 }
 EOF
@@ -174,12 +173,17 @@ EOF
 );
 
 
-# function names in this hash indicate if the function is modifiable
-my %modifiable = (
-    'float_url' => 1,
-    'float_html' => 1
-    );
 
+
+sub emit_var_decl {
+    my($lhs, $val) = @_;
+    my $t = infer_type($val);
+    if($t eq 'str') {
+	$val = "'".$val."'";
+    } 
+    return "var $lhs = $val;\n";
+
+}
 
 
 sub build_js_load {
@@ -208,10 +212,17 @@ sub build_js_load {
 	my $val = $rule_env->{$var};
 	next unless $var =~ s/$rulename_re/$1/;
 	$logger->debug("[JS var] ", $var, "->", $val);
-	$js .= "var $var = \'" . $val . "\';\n";
+	$js .= emit_var_decl($var,$val);
 
     }
 
+    # now do decls in order
+    foreach my $decl( @{ $rule_env->{$rule->{'name'}."_rules"} } ) {
+	$js .= emit_var_decl($decl->{'lhs'}, $decl->{'val'});
+    }
+
+    # emits
+    $js .= $rule->{'emit'} . "\n" if(defined $rule->{'emit'});
 
 
     # callbacks
@@ -322,6 +333,15 @@ sub build_one_action {
 	$mods{$m->{'name'}} = gen_js_expr($m->{'value'});
     }
 
+    # function names in this hash indicate if the function is modifiable
+    # FIXME: this isn't a good way to map effects to actions
+    my %modifiable = (
+	'float_url' => 1,
+	'float_html' => 1,
+#	'replace_url' => 1,
+#	'replace_html' => 1,
+	);
+
 
     if($modifiable{$action_name}) {
 	# map our effect names to Sript.taculo.us effect names
@@ -350,6 +370,28 @@ sub build_one_action {
 	if($mods{'scrollable'} eq 'true') {
 	    $js .= "new FixedElement('". $uniq_id . "');";
 	}
+
+	if($mods{'highlight'}) {
+	    my $color = '#ffff99';
+ 	    case: for ($mods{'highlight'}) {
+		/yellow/ && do {
+		    $color = '#ffff99';
+		};
+		/pink/ && do {
+		    $color = '#ff99ff';
+		};
+		/purple/ && do {
+		    $color = '#99ffff';
+		};
+		/#[A-F0-9]{6}/ && do {
+		    $color = $mods{'highlight'};
+		}
+	    }
+	    
+	    $js .= "new Effect.Highlight('$uniq_id', {startcolor: '$color', });"  ;
+	}
+
+
 
     } elsif($action_name eq "popup") {
 	if ($mods{'effect'} eq 'onpageexit') {

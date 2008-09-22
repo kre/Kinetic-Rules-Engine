@@ -64,6 +64,10 @@ sub pp_rule_body {
 
     $o .= pp_pre($r->{'pre'},$indent+$g_indent);
 
+    if(defined $r->{'emit'}) {
+	$o .= pp_emit($r->{'emit'},$indent+$g_indent);
+    }
+
     if(defined $r->{'cond'}) {
 	$o.= pp_cond($r,$indent+$g_indent);
     } else { # just actions
@@ -144,6 +148,22 @@ sub pp_decl {
     return $o;
 
 }
+
+
+sub pp_emit {
+    my ($node, $indent) = @_;
+
+    my $beg = " "x$indent;
+    
+    my $o = $beg;
+
+    $o .= "emit <<\n";
+    $o .= $node;
+    $o .= $beg . ">>\n";
+  
+    return $o;
+}
+
 
 sub pp_cond {
     my ($node, $indent) = @_;

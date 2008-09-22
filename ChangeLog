@@ -1,3 +1,10 @@
+2008-09-22  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/JavaScript.pm (eval_datasource): added support for page IDs
+	* Kynetx/Parser.pm: added syntax for 'emit'
+	* Kynetx/Actions.pm: Added code to emit Javascript.
+	* Kynetx/Actions.pm: Added support for change highlighting effect
+
 2008-09-18  Phil Windley  <pjw@kynetx.com>
 
 	* Parser rewrite complete.  Page variables added as a data source.

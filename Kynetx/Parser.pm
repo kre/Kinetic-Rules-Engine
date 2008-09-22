@@ -78,6 +78,7 @@ ruleset_name: VAR  # {return $item[1]}
 rule: 'rule' VAR 'is' rule_state '{'
         select
         pre_block
+        emit_block(0..1)
         action SEMICOLON(?)
         callbacks(0..1)
         post_block(0..1)
@@ -86,12 +87,13 @@ rule: 'rule' VAR 'is' rule_state '{'
 	      'state' => $item{rule_state},
 	      'pagetype' => $item{select},
   	      'pre' => $item{pre_block},
+	      'emit' => $item[8][0],
   	      'actions' => $item{action}->{'actions'},
 	      'blocktype' => $item{action}->{'blocktype'} || 'every',
 	      'cond' => $item{action}->{'cond'} || 
 		        Kynetx::Parser::mk_expr_node('bool','true'),
-	      'callbacks' => $item[10][0],
-	      'post' => $item[11][0]
+	      'callbacks' => $item[11][0],
+	      'post' => $item[12][0]
            } }
 
 
@@ -140,6 +142,9 @@ decl: VAR '=' VAR ':' VAR '(' expr(s? /,/) ')'
        }
       }
     | <error: Invalid decl: $text>
+
+emit_block: 'emit' (HTML | STRING)
+   {$return = $item[2];}
 
 
 action: conditional_action 

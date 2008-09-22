@@ -36,17 +36,34 @@ Log::Log4perl->easy_init($INFO);
 
 
 
-my (@test_cases, $str, $val);
+my (@expr_testcases, @decl_testcases, $str, $val, $krl);
 
-sub add_testcase {
-    my($str,$js,$expected, $diag) = @_;
+sub add_expr_testcase {
+    my($str,$js,$expected,$diag) = @_;
     my $val = Kynetx::Parser::parse_expr($str);
+
+    chomp $str;
     
     diag("$str = ", Dumper($val)) if $diag;
 
-    push(@test_cases, {'expr' => $val,
+    push(@expr_testcases, {'expr' => $val,
+		       'src' => $str,
 		       'js' => $js,
 		       'val' => $expected eq 'unchanged' ? $val : $expected});
+}
+
+sub add_decl_testcase {
+    my($str, $expected, $diag) = @_;
+    my $val = Kynetx::Parser::parse_decl($str);
+
+    chomp $str;
+    
+    diag("$str = ", Dumper($val)) if $diag;
+
+    push(@decl_testcases, {'expr' => $val,
+			   'src' => $str,
+			   'val' => $expected,
+	 });
 }
 
 
@@ -73,7 +90,7 @@ $BYU_req_info->{'kvars'} = '{"foo": 5, "bar": "fizz", "bizz": [1, 2, 3]}';
 $str = <<_KRL_;
 "absolute"
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     "'absolute'",
     mk_expr_node('str', 'absolute'));
@@ -81,7 +98,7 @@ add_testcase(
 $str = <<_KRL_;
 city
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     'city',
     mk_expr_node('str', 'Blackfoot')
@@ -90,7 +107,7 @@ add_testcase(
 $str = <<_KRL_;
 true
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     'true',
     mk_expr_node('bool', 'true')
@@ -99,7 +116,7 @@ add_testcase(
 $str = <<_KRL_;
 false
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     'false',
     mk_expr_node('bool', 'false')
@@ -108,7 +125,7 @@ add_testcase(
 $str = <<_KRL_;
 1022
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     1022,
     mk_expr_node('num', 1022)
@@ -118,7 +135,7 @@ add_testcase(
 $str = <<_KRL_;
 5 + 6
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     '(5 + 6)',
     mk_expr_node('num', 11),
@@ -127,7 +144,7 @@ add_testcase(
 $str = <<_KRL_;
 6 - 5
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     '(6 - 5)',
     mk_expr_node('num', 1));
@@ -135,7 +152,7 @@ add_testcase(
 $str = <<_KRL_;
 5 * 7
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     '(5 * 7)',
     mk_expr_node('num', 35),
@@ -144,7 +161,7 @@ add_testcase(
 $str = <<_KRL_;
 25 / 5
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     '(25 / 5)',
     mk_expr_node('num', 5));
@@ -152,7 +169,7 @@ add_testcase(
 $str = <<_KRL_;
 -5
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     '-5',
     mk_expr_node('num', -5),
@@ -161,7 +178,7 @@ add_testcase(
 $str = <<_KRL_;
 "foo" + "bar"
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     "('foo' + 'bar')",
     mk_expr_node('str', 'foobar'),
@@ -171,7 +188,7 @@ add_testcase(
 $str = <<_KRL_;
 "/cgi-bin/weather.cgi?city=" + city + "&tc=" + tc
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     "('/cgi-bin/weather.cgi?city=' + (city + ('&tc=' + tc)))",
     mk_expr_node('str', '/cgi-bin/weather.cgi?city=Blackfoot&tc=15'),
@@ -180,7 +197,7 @@ add_testcase(
 $str = <<_KRL_;
 "/cgi-bin/weather.cgi?city=" + city + "&tc=" + tc + "foo=" + city + "fizz=" + tc
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     "('/cgi-bin/weather.cgi?city=' + (city + ('&tc=' + (tc + ('foo=' + (city + ('fizz=' + tc)))))))",
     mk_expr_node('str', '/cgi-bin/weather.cgi?city=Blackfoot&tc=15foo=Blackfootfizz=15'),
@@ -192,7 +209,7 @@ add_testcase(
 $str = <<_KRL_;
 5 + temp
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     "(5 + temp)",
     mk_expr_node('num', 25),
@@ -201,7 +218,7 @@ add_testcase(
 $str = <<_KRL_;
 (5 + 6) * 3
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     "((5 + 6) * 3)",
     mk_expr_node('num', 33),
@@ -210,7 +227,7 @@ add_testcase(
 $str = <<_KRL_;
 5 + 6 * 3
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     "(5 + (6 * 3))",
     mk_expr_node('num', 23),
@@ -219,7 +236,7 @@ add_testcase(
 $str = <<_KRL_;
 [5, 6, 7]
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     "[5, 6, 7]",
      mk_expr_node('array', [mk_expr_node('num', 5),
@@ -230,7 +247,7 @@ add_testcase(
 $str = <<_KRL_;
 [5, 6, temp]
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     "[5, 6, temp]",
      mk_expr_node('array', [mk_expr_node('num', 5),
@@ -241,7 +258,7 @@ add_testcase(
 $str = <<_KRL_;
 [false, true, true, booltrue]
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     "[false, true, true, booltrue]",
      mk_expr_node('array', [mk_expr_node('bool', 'false'),
@@ -253,7 +270,7 @@ add_testcase(
 $str = <<_KRL_;
 [boolfalse, booltrue]
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     "[boolfalse, booltrue]",
      mk_expr_node('array', [mk_expr_node('bool', 'false'),
@@ -261,36 +278,95 @@ add_testcase(
     0);
 
 
+$str = <<_KRL_;
+page:id("foo")
+_KRL_
+add_expr_testcase(
+    $str,
+    '$(\'foo\').innerHTML',
+    mk_expr_node('JS', '$(\'foo\').innerHTML'),
+    0);
+
+
+$str = <<_KRL_;
+page:id(city + "_ID")
+_KRL_
+add_expr_testcase(
+    $str,
+    '$((city + \'_ID\')).innerHTML',
+    mk_expr_node('JS', '$(\'Blackfoot_ID\').innerHTML'),
+    0);
+
+
 
 $str = <<_KRL_;
 page:var("foo");
 _KRL_
-add_testcase(
+add_expr_testcase(
     $str,
     "",
      mk_expr_node('num', 5),
     0);
 
 
+$str = <<_KRL_;
+page:var("fo" + "o");
+_KRL_
+add_expr_testcase(
+    $str,
+    "",
+     mk_expr_node('num', 5),
+    0);
+
+
+$str = <<_KRL_;
+c = page:id("foo")
+_KRL_
+add_decl_testcase(
+    $str,
+    '$(\'foo\').innerHTML',
+    0);
+
+#$krl = Kynetx::Parser::parse_decl($str);
+#diag(Dumper($krl));
 
 
 
 
-plan tests => 32 + (@test_cases * 2);
+
+plan tests => 32 + (@expr_testcases * 2) + (@decl_testcases * 1);
 
 
 
 # now test each test case twice
-foreach my $case (@test_cases) {
+foreach my $case (@expr_testcases) {
     # diag(Dumper($case->{'expr'}));
-    is(gen_js_expr($case->{'expr'}),
+    
+    my $js = gen_js_expr($case->{'expr'});
+    my $e = eval_js_expr($case->{'expr'}, $rule_env, $rule_name,$BYU_req_info);
+    is($js,
        $case->{'js'},
-       "Generating Javascript");
-    is_deeply(eval_js_expr($case->{'expr'}, $rule_env, $rule_name,$BYU_req_info), 
+       "Generating Javascript " . $case->{'src'});
+    is_deeply($e, 
 	      $case->{'val'},
-	      "Evaling Javascript");
+	      "Evaling Javascript " . $case->{'src'});
     
 }
+
+
+# now test each test case twice
+foreach my $case (@decl_testcases) {
+    # diag(Dumper($case->{'expr'}));
+    
+    my $e = Kynetx::JavaScript::eval_js_decl(
+	       $BYU_req_info, 
+	       $rule_env, $rule_name, $this_session, 
+	       $case->{'expr'}) ;
+    is_deeply($e, 
+	      $case->{'val'},
+	      "Evaling Javascript " . $case->{'src'});
+}
+
 
 
 # 

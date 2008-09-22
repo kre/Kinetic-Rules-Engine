@@ -79,9 +79,13 @@ sub add_testcase {
 	 );
 }
 
+#
+# note if the rules don't have unique names, you can get rule environment cross
+# contamination
+#
 
 $krl_src = <<_KRL_;
-rule google_ads is active {
+rule test_1 is active {
   select using "/archives/" setting ()
   pre {  }
   alert("testing");
@@ -101,7 +105,7 @@ add_testcase(
     );
 
 $krl_src = <<_KRL_;
-rule google_ads is active {
+rule test_2 is active {
   select using "/archives/" setting ()
   pre { 
       c = location:city();
@@ -125,7 +129,7 @@ add_testcase(
 
 
 $krl_src = <<_KRL_;
-rule google_ads is active {
+rule test_3 is active {
   select using "/archives/" setting ()
   pre { 
       c = location:city();
@@ -150,7 +154,7 @@ add_testcase(
 
 
 $krl_src = <<_KRL_;
-rule google_ads is active {
+rule test_4 is active {
   select using "/archives/" setting ()
   pre { 
       c = location:city();
@@ -175,7 +179,7 @@ add_testcase(
 
 
 $krl_src = <<_KRL_;
-rule frequent_archive_visitor is active {
+rule test_5 is active {
   select using "/archives/" setting ()
 
     pre {
@@ -194,7 +198,7 @@ rule frequent_archive_visitor is active {
 _KRL_
 
 $result = <<_JS_;
-var c = '3';
+var c = 3;
 function callBacks%uniq% () {};
 (function(uniq, cb, msg) {alert(msg)}
 ('%uniq%',callBacks%uniq%,'test'));
@@ -209,7 +213,7 @@ add_testcase(
 
 # use different counter since previous test clears it!
 $krl_src = <<_KRL_;
-rule frequent_archive_visitor is active {
+rule test_6 is active {
   select using "/archives/" setting ()
 
     pre {
@@ -228,7 +232,7 @@ rule frequent_archive_visitor is active {
 _KRL_
 
 $result = <<_JS_;
-var c = '3';
+var c = 3;
 function callBacks%uniq% () {};
 (function(uniq, cb, msg) {alert(msg)}
 ('%uniq%',callBacks%uniq%,'test'));
@@ -242,7 +246,7 @@ add_testcase(
 
 
 $krl_src = <<_KRL_;
-rule frequent_archive_visitor is active {
+rule test_7 is active {
   select using "/archives/" setting ()
 
     pre {
@@ -272,7 +276,7 @@ add_testcase(
 
 
 $krl_src = <<_KRL_;
-rule accept_offer is inactive {
+rule test_8 is inactive {
    select using "/identity-policy/" setting ()
    
    pre { }
@@ -294,9 +298,9 @@ _KRL_
 
 $result = <<_JS_;
 function callBacks%uniq% () {
-  KOBJ.obs('id','','rssfeed','success','accept_offer');
-  KOBJ.obs('class','','newsletter','success','accept_offer');
-  KOBJ.obs('id','','close_rss','failure','accept_offer');
+  KOBJ.obs('id','','rssfeed','success','test_8');
+  KOBJ.obs('class','','newsletter','success','test_8');
+  KOBJ.obs('id','','close_rss','failure','test_8');
 };
 (function(uniq, cb, msg) {alert(msg)}
  ('%uniq%',callBacks%uniq%,'test'));
@@ -307,6 +311,98 @@ add_testcase(
     $result,
     $Amazon_req_info
     );
+
+
+$krl_src = <<_KRL_;
+rule test_page_id is active {
+   select using "/identity-policy/" setting ()
+   
+   pre {
+       pt = page:id("product_name");
+       
+       html = <<
+<p>This is the product title: #{pt}</p>
+       >>;
+
+   }
+
+   alert(html);
+
+}
+_KRL_
+
+$result = <<_JS_;
+var pt = \$('product_name').innerHTML;
+var html = '<p>This is the product title: '+pt+'</p>';
+function callBacks%uniq% () {
+};
+(function(uniq, cb, msg) {alert(msg)}
+ ('%uniq%',callBacks%uniq%,html));
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+    rule emit_test_0 is active {
+        select using "/test/(.*).html" setting(pagename)
+        pre {
+
+	}     
+
+        emit <<
+pagename.replace(/-/, ' ');
+>>
+        alert(pagename);
+    }
+_KRL_
+
+$result = <<_JS_;
+pagename.replace(/-/, ' ');
+function callBacks%uniq% () {
+};
+(function(uniq, cb, msg) {alert(msg)}
+ ('%uniq%',callBacks%uniq%,pagename));
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+    rule emit_test_1 is active {
+        select using "/test/(.*).html" setting(pagename)
+        pre {
+
+	}     
+
+        emit "pagename.replace(/-/, ' ');"
+
+        alert(pagename);
+    }
+_KRL_
+
+$result = <<_JS_;
+pagename.replace(/-/, ' ');
+function callBacks%uniq% () {
+};
+(function(uniq, cb, msg) {alert(msg)}
+ ('%uniq%',callBacks%uniq%,pagename));
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
 
 
 #$krl = Kynetx::Parser::parse_rule($krl_src);
