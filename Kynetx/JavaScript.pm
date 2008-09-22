@@ -439,7 +439,7 @@ sub infer_type {
     my $t;
     if($v =~ m/^(\d*\.\d+|\d+)$/) { # crude type inference for primitives
 	$t = 'num' ;
-    } elsif($v =~ m/true|false/) {
+    } elsif($v =~ m/^(true|false)$/) {
 	$t = 'bool';
     } elsif($v =~ m/^\$\(.*\)/) {
 	$t = 'JS';

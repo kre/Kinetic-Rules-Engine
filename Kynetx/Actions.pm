@@ -181,6 +181,8 @@ sub emit_var_decl {
     if($t eq 'str') {
 	$val = "'".$val."'";
     } 
+    my $logger = get_logger();
+    $logger->debug("[decl] $lhs has type: $t");
     return "var $lhs = $val;\n";
 
 }

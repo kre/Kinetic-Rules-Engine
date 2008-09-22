@@ -404,6 +404,35 @@ add_testcase(
     );
 
 
+# tests booleans inference.  When false and true appear in string, it 
+# should still be string.
+$krl_src = <<_KRL_;
+rule extended_quote_test is active {
+   select using "/identity-policy/" setting ()
+   
+   pre {
+     welcome = <<
+Don't be false please!  Be true!
+     >>; 
+   }
+   alert(welcome);
+}
+_KRL_
+
+$result = <<_JS_;
+var welcome = 'Don\\'t be false please! Be true!';
+function callBacks%uniq% () {
+};
+(function(uniq, cb, msg) {alert(msg)}
+ ('%uniq%',callBacks%uniq%,welcome));
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
 
 #$krl = Kynetx::Parser::parse_rule($krl_src);
 #diag(Dumper($krl));
