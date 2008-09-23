@@ -309,7 +309,7 @@ sub build_one_action {
     # this happens after we've chosen the action since it modifies args
     $args = gen_js_rands( $args );
 
-    # add to front of arg str
+    # add to front of arg str (in reverse)
     unshift @{ $args }, $cb_func_name;
     unshift @{ $args }, mk_js_str($uniq);
 

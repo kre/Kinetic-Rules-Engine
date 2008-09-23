@@ -60,7 +60,7 @@ my $Amazon_req_info;
 $Amazon_req_info->{'ip'} = '72.21.203.1'; # Seattle (Amazon)
 
 
-my (@test_cases, $krl_src, $krl,$result);
+my (@test_cases, $json, $krl_src, $krl,$result);
 
 sub add_testcase {
     my($str, $expected, $req_info, $diag) = @_;
@@ -78,6 +78,25 @@ sub add_testcase {
 	 }
 	 );
 }
+
+
+sub add_json_testcase {
+    my($str, $expected, $req_info, $diag) = @_;
+    my $val = Kynetx::Json::jsonToAst($str);
+ 
+    chomp $str;
+    diag("$str = ", Dumper($val)) if $diag;
+
+
+    push(@test_cases, {'expr' => $val,
+		       'val' => $expected,
+		       'req_info' => $req_info,
+		       'session' => $session,
+		       'src' =>  $str,
+	 }
+	);
+}
+
 
 #
 # note if the rules don't have unique names, you can get rule environment cross
@@ -434,8 +453,52 @@ add_testcase(
     );
 
 
-#$krl = Kynetx::Parser::parse_rule($krl_src);
-#diag(Dumper($krl));
+$krl_src = <<_KRL_;
+rule april2008 is active {
+  select using "http://www.utahjudo.com\/2008\/(.*?)" setting (month)
+  pre {
+  }
+  alert("Hello Tim");
+}
+_KRL_
+
+$result = <<_JS_;
+function callBacks%uniq% () {
+};
+(function(uniq, cb, msg) {alert(msg)}
+ ('%uniq%',callBacks%uniq%,'Hello Tim'));
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
+
+
+$json = <<_KRL_;
+{"blocktype":"every","actions":[{"action":{"name":"alert","args":[{"val":"Hello Tim","type":"str"}],"modifiers":[]},"label":""}],"name":"april2008","pagetype":{"vars":["month"],"pattern":"http:\/\/www.utahjudo.com\\\/2008\\\/(.*?)"},"state":"active"}
+_KRL_
+
+$result = <<_JS_;
+function callBacks%uniq% () {
+};
+(function(uniq, cb, msg) {alert(msg)}
+ ('%uniq%',callBacks%uniq%,'Hello Tim'));
+_JS_
+
+add_json_testcase(
+    $json,
+    $result,
+    $Amazon_req_info
+    );
+
+
+
+
+
+#diag(Dumper($test_cases[-1]->{'expr'}));
 
 
 plan tests => 5 + (@test_cases * 1);
@@ -457,7 +520,7 @@ foreach my $case (@test_cases) {
     is_string_nows(
 	$js,
 	$case->{'val'},
-	"Evaling predicate " . $case->{'src'});
+	"Evaling rule " . $case->{'src'});
     
 }
 

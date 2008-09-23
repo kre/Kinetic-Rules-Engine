@@ -21,6 +21,9 @@ use Kynetx::Predicates qw(:all);
 use Kynetx::Actions qw(:all);
 use Kynetx::Log qw(:all);
 
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -126,6 +129,11 @@ sub eval_rule {
     foreach my $var (keys %{ $session } ) {
 	$logger->debug("[Session] $var has value $session->{$var}");
     }
+
+
+
+    # if the condition is undefined, it's true.  
+    $rule->{'cond'} ||= mk_expr_node('bool','true');
 
 
     my $pred_value = 

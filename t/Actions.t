@@ -24,7 +24,7 @@ use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
 
-# test choose_action
+# test choose_action and args
 
 my $my_req_info;
 $my_req_info->{'caller'} = 'http://www.windley.com';
@@ -35,6 +35,18 @@ my $non_matching_url = "http://frag.kobj.net/widgets/weather.pl?zip=84042";
 my $first_arg = "kobj_test"; 
 my $second_arg = "This is a string";
 my $given_args;
+
+my $rule_name = 'foo';
+
+my $rule_env = {$rule_name . ':city' => 'Blackfoot',
+		$rule_name . ':tc' => '15',
+		$rule_name . ':temp' => 20,
+		$rule_name . ':booltrue' => 'true',
+		$rule_name . ':boolfalse' => 'false',
+               };
+
+my $session = {};
+
 
 my($action,$args,$krl_src, $krl, $name, $url, @test_cases);
 
@@ -163,11 +175,89 @@ add_testcase($krl_src,
 #diag(Dumper($krl));
 
 
-plan tests => 0 + (@test_cases * 3);
+my(@action_test_cases, $result);
+
+# full actions
+sub add_action_testcase {
+    my($str, $expected, $req_info, $desc, $diag) = @_;
+    my $krl = Kynetx::Parser::parse_action($krl_src);
+ 
+    chomp $str;
+    diag("$str = ", Dumper($krl)) if $diag;
+
+    push(@action_test_cases, 
+	 {'expr' => $krl->{'actions'}->[0], # just the first one
+	  'expected' => $expected,
+	  'req_info' => $req_info,
+	  'src' =>  $str,
+	  'desc' => $desc
+	 }
+	);
+}
 
 
 
-# now test each test case twice
+
+$krl_src = <<_KRL_;
+replace_html("kobj_test", "Hello World!");
+_KRL_
+
+$result = <<_JS_;
+(function(uniq, cb, id, text) {
+ var div = document.createElement('div');
+ div.setAttribute('style', 'display: none');
+ div.innerHTML = text;
+ id = \$(id);
+ id.replace(div);
+ new Effect.BlindDown(div, {duration: 1.0});
+ cb();
+}
+('23',callbacks23,'kobj_test','Hello World!'));
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'Basic replace_html action'
+    );
+
+
+$krl_src = <<_KRL_;
+replace_html("kobj_test", "Hello World!");
+with highlight = "yellow";
+_KRL_
+
+$result = <<_JS_;
+(function(uniq, cb, id, text) {
+ var div = document.createElement('div');
+ div.setAttribute('style', 'display: none');
+ div.innerHTML = text;
+ id = \$(id);
+ id.replace(div);
+ new Effect.BlindDown(div, {duration: 1.0});
+ cb();
+}
+('23',callbacks23,'kobj_test','Hello World!'));
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'replace_html with a single modifier'
+    );
+
+
+
+
+plan tests => 0 + (@test_cases * 3) + (@action_test_cases * 1);
+
+
+
+# now test choose_action
 foreach my $case (@test_cases) {
 #    diag(Dumper($case->{'url'}));
 
@@ -193,6 +283,33 @@ foreach my $case (@test_cases) {
     }
 
 }
+
+
+# now test build_one_action
+foreach my $case (@action_test_cases) {
+    #diag(Dumper($case));
+
+
+    my $js = 
+	Kynetx::Actions::build_one_action(
+	    $case->{'expr'},
+	    $case->{'req_info'}, 
+	    $rule_env,
+	    $session,
+	    '23',
+	    'id_23',
+	    'callbacks23',
+	    $case->{'name'});
+
+    my $desc = $case->{'desc'};
+
+    is_string_nows(
+	$js,
+	$case->{'expected'},
+	"build_one_action: $desc");
+
+}
+
 
 
 diag("Safe to ignore warnings about unrecognized escapes");
