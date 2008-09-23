@@ -33,14 +33,16 @@ chdir $base;
 print "Updating source...\n";
 system "svn up";
 
-chdir "$base/etc/kynetx-private-bundle"; 
+system "sudo $base/bin/update_cpan.pl $base";
 
-my $cd = getcwd();
 
-print "Updating perl modules (with sudo in $cd)...\n";
-system "sudo /usr/bin/perl -MCPAN -e 'install Bundle::kobj_modules'";
+chdir "$base/t";
+
+# run the built in tests
+system "./smoke";
 
 chdir $base;
+
 
 
 print "Updating httpd.conf and other machine specific items...\n";
