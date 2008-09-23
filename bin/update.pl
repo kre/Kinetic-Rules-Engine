@@ -38,7 +38,7 @@ chdir "$base/etc/kynetx-private-bundle";
 my $cd = getcwd();
 
 print "Updating perl modules (with sudo in $cd)...\n";
-system "sudo perl -MCPAN -e 'install Bundle::kobj_modules'";
+system "sudo /usr/bin/perl -MCPAN -e 'install Bundle::kobj_modules'";
 
 chdir $base;
 
@@ -85,17 +85,16 @@ Do everything necessary on the local server to refresh the code base.
 Options are:
 
   -h    : show this file
-  -a	: Gender is action server
+  -a	: Gender is action server (cs)
   -l	: Gender is log server
   -j	: Gender is Javascript server (init)
   -k	: Gender is KRL server
-  -m ML : use memcached, ML is a comma seperated list of host IP numbers
 
 Examples:
 
   For cs.kobj.net
 
-   update.pl -a -m 192.168.122.151,192.168.122.152
+   update.pl -a
 
 
 EOF
