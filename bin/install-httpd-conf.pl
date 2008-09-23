@@ -6,6 +6,10 @@ use Getopt::Std;
 use Sys::Hostname;
 use HTML::Template;
 
+# where the memcache_ips module is.  
+use lib qw(/web/etc);
+
+
 # config
 my $base_var = 'KOBJ_ROOT';
 my $base = $ENV{$base_var} || die "$base_var is undefined in the environment";
@@ -19,19 +23,19 @@ my $web_root = $ENV{$web_root_var} ||
 my $conf_dir = join('/',($web_root,'conf'));
 my $conf_file = 'httpd.conf';
 
+use memcache_ips qw(@mcd_hosts);
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'hajlkfdrm:';
+my $opt_string = 'h?ajlkfdrm';
 getopts( "$opt_string", \%opt ); # or &usage();
-&usage() if $opt{'h'};
+&usage() if $opt{'h'} || $opt{'?'};
 
 my $init_gender = $opt{'j'} || 0;
 my $action_gender = $opt{'a'} || 0;
 my $log_gender = $opt{'l'} || 0;
 my $krl_gender = $opt{'k'} || 0;
 my $frag_gender = $opt{'f'} || 0;
-my @mcd_hosts = $opt{'m'} ? split(/,/,$opt{'m'}) : [];
 
 my $init_host = 'init.kobj.net';
 my $log_host = 'logger.kobj.net';
@@ -140,10 +144,10 @@ sub usage {
 
 usage:  
 
-   install-httpd-conf.pl [-aljk]
+   install-httpd-conf.pl [-aljkfdrm]
 
-Create an httpd-perl.conf file in $web_root/conf/extra 
-that configures the server's gender.
+Create an httpd.conf file in $web_root/conf
+that configures the server in accordence with it's gender
 
 Options are:
 
@@ -154,7 +158,7 @@ Options are:
   -f	: Gender is FRAG server
   -d    : use 127.0.0.1 as the host
   -r    : use local rules repository (not krl.kobj.net)
-  -m ML : use memcached, ML is a comma seperated list of host IP numbers
+  -m    : use memcached, memcache hosts are in /web/etc/memcache_ips.pm
 
 At least one must be given and they may be given in any combination.  
 
@@ -162,38 +166,31 @@ Examples:
 
 For local running all on one machine
 
-   install-httpd-conf.pl -aljkfdr -m 127.0.0.1
+   install-httpd-conf.pl -aljkfdr
 
 For local running all on one machine with remote repository
 
-   install-httpd-conf.pl -aljkfd -m 127.0.0.1
+   install-httpd-conf.pl -aljkfd 
 
 For cs.kobj.net
 
-
-   install-httpd-conf.pl -a -m 192.168.122.151,192.168.122.152
+   install-httpd-conf.pl -am
 
 For logger.kobj.net
 
-   install-httpd-conf.pl -l -m 192.168.122.151,192.168.122.152
+   install-httpd-conf.pl -lm
 
 For init.kobj.net
 
-   install-httpd-conf.pl -j -m 192.168.122.151,192.168.122.152
+   install-httpd-conf.pl -jm
 
 For krl.kobj.net
 
    install-httpd-conf.pl -k
 
-
 For frag.kobj.net
 
-   install-httpd-conf.pl -f
-
-
-
-
-
+   install-httpd-conf.pl -fm
 EOF
 
 exit;

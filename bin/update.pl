@@ -17,16 +17,15 @@ my $APACHECTL = "sudo /etc/init.d/httpd";
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'hajlkm:';
+my $opt_string = 'h?ajlk';
 getopts( "$opt_string", \%opt ); # or &usage();
-&usage() if $opt{'h'};
+&usage() if $opt{'h'} || $opt{'?'};
 
 my $init_gender = $opt{'j'} || 0;
 my $action_gender = $opt{'a'} || 0;
 my $log_gender = $opt{'l'} || 0;
 my $krl_gender = $opt{'k'} || 0;
 my $frag_gender = $opt{'f'} || 0;
-my $memcache_ips = $opt{'m'};
 
 # set the working directory
 chdir $base;
@@ -44,28 +43,28 @@ system "sudo perl -MCPAN -e 'install Bundle::kobj_modules'";
 chdir $base;
 
 
-print "Updating httpd.conf and other machine specific iterms...\n";
+print "Updating httpd.conf and other machine specific items...\n";
 # set up the machine
 if ($init_gender) { # for init.kobj.net
 
-    system "$base/bin/install-httpd-conf.pl  -j -m $memcache_ips";
+    system "$base/bin/install-httpd-conf.pl  -jm";
     # install the right init files
     system "$base/bin/install-init-files.pl";
 
 } elsif ($action_gender) { # for csXX.kobj.net
 
-    system "$base/bin/install-httpd-conf.pl -a -m $memcache_ips";
+    system "$base/bin/install-httpd-conf.pl -am";
 
 } elsif ($log_gender) { # for logger.kobj.net
 
-    system "$base/bin/install-httpd-conf.pl -l -m $memcache_ips";
+    system "$base/bin/install-httpd-conf.pl -lm";
 
 } elsif ($krl_gender) { # for krl.kobj.net
 
     system "$base/bin/install-httpd-conf.pl -k";
-} elsif ($frag_gender) { # for krl.kobj.net
+} elsif ($frag_gender) { # for frag.kobj.net
 
-    system "$base/bin/install-httpd-conf.pl -f -m $memcache_ips";
+    system "$base/bin/install-httpd-conf.pl -fm";
 }
 
 print "Restart Apache...\n";
