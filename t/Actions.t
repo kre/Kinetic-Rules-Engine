@@ -225,7 +225,7 @@ add_action_testcase(
 
 
 $krl_src = <<_KRL_;
-replace_html("kobj_test", "Hello World!");
+replace_html("kobj_test", "Hello World!")
 with highlight = "yellow";
 _KRL_
 
@@ -248,6 +248,27 @@ add_action_testcase(
     $result,
     $my_req_info,
     'replace_html with a single modifier'
+    );
+
+
+
+$krl_src = <<_KRL_;
+replace_image_src("kobj_test", "/images/foo.png");
+_KRL_
+
+$result = <<_JS_;
+(function(uniq, cb, id, new_url) {
+\$(id).writeAttribute('src',new_url)
+}
+('23',callbacks23,'kobj_test','/images/foo.png'));
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'replace_image_src'
     );
 
 

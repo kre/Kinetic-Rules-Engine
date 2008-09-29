@@ -198,6 +198,7 @@ modifier: VAR '=' expr
 action_name: 'float_html'
            | 'float'
            | 'replace_html'
+           | 'replace_image_src'
            | 'replace'
            | 'popup'
            | 'alert'

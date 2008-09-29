@@ -38,7 +38,7 @@ system "sudo $base/bin/update_cpan.pl $base";
 
 chdir "$base/t";
 
-# run the built in tests
+print "\nRunning built-in tests...\n";
 system "./smoke";
 
 chdir $base;

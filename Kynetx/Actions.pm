@@ -158,6 +158,12 @@ function(uniq, cb, li) {
 }
 EOF
 
+    replace_image_src => <<EOF,
+function(uniq, cb, id, new_url) {
+    \$(id).writeAttribute('src',new_url)
+}
+EOF
+
 
     log_callback => <<EOF,
 function(uniq, cb, ) {
