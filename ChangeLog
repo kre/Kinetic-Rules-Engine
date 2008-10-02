@@ -1,5 +1,9 @@
 2008-10-02  Phil Windley  <pjw@kynetx.com>
 
+	* Kynetx/KOBJ.pm (get_kobj): wrapped Prototype effects for future
+	  portability.  
+	* widgets/weather.pl: Updated to use new wrapped effects
+
 	* Kynetx/JavaScript.pm, Kynetx/KOBJ.pm, Kynetx/Actions.pm: updated
 	  to use new K$ function in kobj-static.js rather than original $
 	  function.  

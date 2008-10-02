@@ -108,7 +108,7 @@ Sorry, we can't determine your location to show the weather forecast.
 </TMPL_IF>
 
 <div id="kobj_weather_3" style="display: none">
-<form id="zip_form" onSubmit="KOBJ.fragment('<TMPL_VAR NAME=url>?'+this.serialize());new Effect.Fade($('kobj_weather_3')); return false">
+<form id="zip_form" onSubmit="KOBJ.fragment('<TMPL_VAR NAME=url>?'+this.serialize());KOBJ.Fade('kobj_weather_3'); return false">
 <label>Please enter your zip code and press return</label><br/>
 <input id='zip' name="zip" type="text" size="10"/><br/>
 <input name="redo" value="1" type="hidden"/>
@@ -116,15 +116,15 @@ Sorry, we can't determine your location to show the weather forecast.
 
 </div>
 
-<div style="color: #3333FF; text-decoration: underline; font-size: small" id="kobj_zip" onclick="new Effect.Fade(this);new Effect.BlindDown($('kobj_weather_3'));Form.focusFirstElement('zip_form');">
-<TMPL_IF NAME=city>
+<div style="color: #3333FF; text-decoration: underline; font-size: small" id="kobj_zip" onclick="KOBJ.Fade('kobj_zip');KOBJ.BlindDown('kobj_weather_3');Form.focusFirstElement('zip_form');">
+<TMPL_IF NAME=weather_image>
 Not in <TMPL_VAR NAME=city>?
 <TMPL_ELSE>
 Click to fix this
 </TMPL_IF>
 </div>
 
-<div style="color: #3333FF; text-decoration: underline; font-size: small" id="kobj_close" onclick="new Effect.BlindUp($('kobj_weather_1'));">close</div>
+<div style="color: #3333FF; text-decoration: underline; font-size: small" id="kobj_close" onclick="KOBJ.BlindUp('kobj_weather_1');">close</div>
 
 </div>
 </div>
@@ -212,13 +212,4 @@ print $t->output;
 
 
 1;
-
-my $foo = <<'EOF';
-
-$('zip').getValue()
-
-KOBJ.fragment('<TMPL_VAR NAME=url>?zip='+\$(zip).getValue());
-
-<form id="zip_form" onSubmit="new Ajax.Updater('kobj_weather_1', '/cgi-bin/weather.cgi', {method: 'get',  parameters: this.serialize() });	new Effect.Fade($('kobj_weather_3')); return false}">
-EOF
 

@@ -169,6 +169,19 @@ KOBJ.update_elements  = function (params) {
     });
 }
 
+// wrap some effects for use in embedded HTML
+KOBJ.Fade = function (id) {
+    new Effect.Fade(K\$(id));
+}
+
+KOBJ.BlindDown = function (id) {
+    new Effect.BlindDown(K\$(id));
+}
+
+KOBJ.BlindUp = function (id) {
+    new Effect.BlindUp(K\$(id));
+}
+
 
 KOBJ.d = (new Date).getTime();
 KOBJ.proto = \'$proto\'; 
