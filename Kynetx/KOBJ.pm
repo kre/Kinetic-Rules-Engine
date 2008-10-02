@@ -143,13 +143,13 @@ KOBJ.obs_one = function(name, txn_id, e, sense, rule) {
  
 KOBJ.obs = function(type, txn_id, name, sense, rule) {
     if(type == 'class') {
-	\$\$('.'+name).each(  
+	K\$\$('.'+name).each(  
 	    function(e) {  
 		KOBJ.obs_one(name, txn_id, e, sense, rule);
 	    }  
 	);  
     } else {
-	KOBJ.obs_one(name, txn_id, \$(name), sense, rule);
+	KOBJ.obs_one(name, txn_id, K\$(name), sense, rule);
     }
 }
 
@@ -165,7 +165,7 @@ KOBJ.update_elements  = function (params) {
     var params = \$H(params);
     
     params.each(function(pair) {
-	\$("kobj_"+pair.key).update(pair.value);
+	K\$("kobj_"+pair.key).update(pair.value);
     });
 }
 

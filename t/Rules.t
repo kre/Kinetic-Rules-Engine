@@ -351,7 +351,7 @@ rule test_page_id is active {
 _KRL_
 
 $result = <<_JS_;
-var pt = \$('product_name').innerHTML;
+var pt = K\$('product_name').innerHTML;
 var html = '<p>This is the product title: '+pt+'</p>';
 function callBacks%uniq% () {
 };

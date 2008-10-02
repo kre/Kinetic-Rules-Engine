@@ -1,3 +1,11 @@
+2008-10-02  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/JavaScript.pm, Kynetx/KOBJ.pm, Kynetx/Actions.pm: updated
+	  to use new K$ function in kobj-static.js rather than original $
+	  function.  
+	* install-init-files.pl: modifies stock Prototype files to change
+	  $ function it K$ function.  
+
 2008-09-23  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (eval_rule): made sure null rule conditions are true

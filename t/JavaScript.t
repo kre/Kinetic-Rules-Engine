@@ -283,8 +283,8 @@ page:id("foo")
 _KRL_
 add_expr_testcase(
     $str,
-    '$(\'foo\').innerHTML',
-    mk_expr_node('JS', '$(\'foo\').innerHTML'),
+    'K$(\'foo\').innerHTML',
+    mk_expr_node('JS', 'K$(\'foo\').innerHTML'),
     0);
 
 
@@ -293,8 +293,8 @@ page:id(city + "_ID")
 _KRL_
 add_expr_testcase(
     $str,
-    '$((city + \'_ID\')).innerHTML',
-    mk_expr_node('JS', '$(\'Blackfoot_ID\').innerHTML'),
+    'K$((city + \'_ID\')).innerHTML',
+    mk_expr_node('JS', 'K$(\'Blackfoot_ID\').innerHTML'),
     0);
 
 
@@ -324,7 +324,7 @@ c = page:id("foo")
 _KRL_
 add_decl_testcase(
     $str,
-    '$(\'foo\').innerHTML',
+    'K$(\'foo\').innerHTML',
     0);
 
 

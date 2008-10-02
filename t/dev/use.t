@@ -3,7 +3,10 @@
 
 use strict;
 
-use lib qw(/web/lib/perl);
+use lib qw(
+/web/lib/perl
+/web/etc
+);
 
 use Test::More;
 use Test::LongString;
@@ -53,8 +56,8 @@ for my $module ( @mods ) {
 
 @mods = keys %modules;
 
-diag("Using the following modules");
-diag(join "\n", @mods);
+#diag("Using the following modules");
+#diag(join "\n", @mods);
 
 # set up test plan
 plan tests => ($#mods+1);

@@ -164,7 +164,7 @@ At least one must be given and they may be given in any combination.
 
 Examples:
 
-For local running all on one machine
+For local running all on one machine with local repository
 
    install-httpd-conf.pl -aljkfdr
 

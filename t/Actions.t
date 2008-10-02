@@ -207,7 +207,7 @@ $result = <<_JS_;
  var div = document.createElement('div');
  div.setAttribute('style', 'display: none');
  div.innerHTML = text;
- id = \$(id);
+ id = K\$(id);
  id.replace(div);
  new Effect.BlindDown(div, {duration: 1.0});
  cb();
@@ -234,7 +234,7 @@ $result = <<_JS_;
  var div = document.createElement('div');
  div.setAttribute('style', 'display: none');
  div.innerHTML = text;
- id = \$(id);
+ id = K\$(id);
  id.replace(div);
  new Effect.BlindDown(div, {duration: 1.0});
  cb();
@@ -258,7 +258,7 @@ _KRL_
 
 $result = <<_JS_;
 (function(uniq, cb, id, new_url) {
-\$(id).writeAttribute('src',new_url)
+K\$(id).writeAttribute('src',new_url)
 }
 ('23',callbacks23,'kobj_test','/images/foo.png'));
 _JS_

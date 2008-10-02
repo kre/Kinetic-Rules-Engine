@@ -106,7 +106,7 @@ sub gen_js_datasource {
 
     if($source eq 'page') {
 	if ($function eq 'id') {
-	    $val = "\$(".$args->[0].").innerHTML";
+	    $val = "K\$(".$args->[0].").innerHTML";
 	}
     }
 
@@ -390,7 +390,7 @@ sub eval_datasource {
 	} elsif ($function eq 'id') {
 	    # we're really just generating JS here.
 	    
-	    $val = "\$('".$args->[0]."').innerHTML";
+	    $val = "K\$('".$args->[0]."').innerHTML";
 	}
     }
 
@@ -446,7 +446,7 @@ sub infer_type {
 	$t = 'num' ;
     } elsif($v =~ m/^(true|false)$/) {
 	$t = 'bool';
-    } elsif($v =~ m/^\$\(.*\)/) {
+    } elsif($v =~ m/^K\$\(.*\)/) {
 	$t = 'JS';
     } else {
 	$t = 'str';

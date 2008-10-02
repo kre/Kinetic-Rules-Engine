@@ -119,7 +119,7 @@ EOF
 
     replace_url => <<EOF,
 function(uniq, cb, id, url) {
-   id = \$(id);
+   id = K\$(id);
    new Ajax.Updater(id, url, {
                     aynchronous: true,
                     method: 'get' ,
@@ -134,7 +134,7 @@ function(uniq, cb, id, text) {
  var div = document.createElement('div');
  div.setAttribute('style', 'display: none');
  div.innerHTML = text;
- id = \$(id);
+ id = K\$(id);
  id.replace(div);
  new Effect.BlindDown(div, {duration: 1.0});
  cb();
@@ -143,15 +143,15 @@ EOF
 
     move_after => <<EOF,
 function(uniq, cb, anchor, item) {
-  var c = \$(item);
+  var c = K\$(item);
   c.remove();
-  \$(anchor).insert({top: c})
+  K\$(anchor).insert({top: c})
 }
 EOF
 
     move_to_top => <<EOF,
 function(uniq, cb, li) {
-    var c = \$(li);
+    var c = K\$(li);
     var t = c.up();
     c.remove();
     t.insert({top: c})
@@ -160,7 +160,7 @@ EOF
 
     replace_image_src => <<EOF,
 function(uniq, cb, id, new_url) {
-    \$(id).writeAttribute('src',new_url)
+    K\$(id).writeAttribute('src',new_url)
 }
 EOF
 

@@ -74,7 +74,12 @@ sub get_js_file {
     open(JS, "< $filename") || 
 	die("Can't open file $filename: $!\n");
 
+
     my $js = minify(input=> *JS);
+
+    # reduce conflict by renaming some Prototype functions
+    $js =~ s#\$\$\(#K\$\$\(#gs;
+    $js =~ s#([^\$])\$\(#$1K\$\(#gs; # don't replace $$
 
     close JS;
     
