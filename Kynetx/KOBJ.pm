@@ -182,6 +182,11 @@ KOBJ.BlindUp = function (id) {
     new Effect.BlindUp(K\$(id));
 }
 
+KOBJ.hide = function (id) {
+    K\$(id).hide();
+}
+
+
 
 KOBJ.d = (new Date).getTime();
 KOBJ.proto = \'$proto\'; 
