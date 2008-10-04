@@ -116,7 +116,7 @@ Sorry, we can't determine your location to show the weather forecast.
 
 </div>
 
-<div style="color: #3333FF; text-decoration: underline; font-size: small" id="kobj_zip" onclick="KOBJ.Fade('kobj_zip');KOBJ.BlindDown('kobj_weather_3');Form.focusFirstElement('zip_form');">
+<div style="color: #3333FF; text-decoration: underline; font-size: small" id="kobj_zip" onclick="KOBJ.Fade('kobj_zip');KOBJ.BlindDown('kobj_weather_3');">
 <TMPL_IF NAME=weather_image>
 Not in <TMPL_VAR NAME=city>?
 <TMPL_ELSE>
