@@ -47,59 +47,25 @@ my %actions = (
 function(uniq, cb, msg) {alert(msg)}
 EOF
 
-#Actions::Alert::get_action(),
-
-    redirect => 
-      'function(uniq, cb, url) {window.location = url}',
+    redirect => <<EOF,
+function(uniq, cb, url) {window.location = url}
+EOF
 
     float_url => <<EOF,
-function(uniq, cb, pos, top, side, url) {
-    var vert = top.split(/\s*:\s*/);
-    var horz = side.split(/\s*:\s*/);
-    var div_style = \$H({
-        position: pos,
-        zIndex: '9999',
-        opacity: 0.999999,
-        display: 'none'
-    });
-    div_style.set(vert[0], vert[1]);
-    div_style.set(horz[0], horz[1]);
-
-    var id_str = 'kobj_'+uniq;
-    var div2 = new Element('div');
-    var div = new Element('div', {'id': id_str});
-    div.setStyle(div_style.toObject());
-    div.update(div2);
-    document.body.appendChild(div);
-    new Ajax.Updater(id_str, url, {
-                     aynchronous: true,
-                     method: 'get',
-                     onComplete: cb
-                     });
+function(uniq, cb, pos, top, side, src_url) {
+    var d = KOBJ.buildDiv(uniq, pos, top, side);
+    \$K(d).load(src_url,{}, cb);
+    \$K('body').append(d);
+    
 }
 EOF
 
 
     float_html => <<EOF,
 function(uniq, cb, pos, top, side, text) {
-    var vert = top.split(/\s*:\s*/);
-    var horz = side.split(/\s*:\s*/);
-    var div_style = \$H({
-        position: pos,
-        zIndex: '9999',
-        opacity: 0.999999,
-        display: 'none'
-    });
-    div_style.set(vert[0], vert[1]);
-    div_style.set(horz[0], horz[1]);
-
-    var div2 = new Element('div');
-    div2.update(text);
-
-    var div = new Element('div', {'id': 'kobj_'+uniq});
-    div.setStyle(div_style.toObject());
-    div.update(div2);
-    document.body.appendChild(div);
+    var d = KOBJ.buildDiv(uniq, pos, top, side);
+    \$K(d).html(text);
+    \$K('body').append(d);
     cb();
 }
 EOF
@@ -118,49 +84,45 @@ function(uniq, cb, top, left, width, height, url) {
 EOF
 
     replace_url => <<EOF,
-function(uniq, cb, id, url) {
-   id = K\$(id);
-   new Ajax.Updater(id, url, {
-                    aynchronous: true,
-                    method: 'get' ,
-                    onComplete: cb
-                    });   
-   new Effect.Appear(id);
+function(uniq, cb, id, src_url) {
+    var d = document.createElement('div');
+    \$K(d).css({display: 'none'}).load(src_url,{}, cb);
+    \$K('#'+id).replaceWith(d);
+    \$K(d).slideDown('slow');
 }
 EOF
 
+    # need new "effects" model
     replace_html => <<EOF,
 function(uniq, cb, id, text) {
  var div = document.createElement('div');
- div.setAttribute('style', 'display: none');
- div.innerHTML = text;
- id = K\$(id);
- id.replace(div);
- new Effect.BlindDown(div, {duration: 1.0});
+ \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text)
+ \$K('#'+id).replaceWith(div);
+ \$K(div).slideDown('slow');
  cb();
 }
 EOF
 
     move_after => <<EOF,
 function(uniq, cb, anchor, item) {
-  var c = K\$(item);
-  c.remove();
-  K\$(anchor).insert({top: c})
+    var i = '#'+item;
+    \$K('#'+anchor).after(\$K(i));
+    cb();
 }
 EOF
-
+    
     move_to_top => <<EOF,
 function(uniq, cb, li) {
-    var c = K\$(li);
-    var t = c.up();
-    c.remove();
-    t.insert({top: c})
+    li = '#'+li;
+    \$K(li).siblings(':first').before(\$K(li));
+    cb();
 }
 EOF
 
     replace_image_src => <<EOF,
 function(uniq, cb, id, new_url) {
-    K\$(id).writeAttribute('src',new_url)
+    \$K('#'+id).attr('src',new_url);
+    cb();
 }
 EOF
 
@@ -360,26 +322,27 @@ sub build_one_action {
 	my $effect_name;
         case: for ($mods{'effect'}) {
 	    /appear/ && do {
-		$effect_name = 'Appear';
+		$effect_name = 'fadeIn';
 	    };
 	    /slide/ && do {
-		$effect_name = 'SlideDown';
+		$effect_name = 'slideDown';
 	    };
 	    /blind/ && do {
-		$effect_name = 'BlindDown';
+		$effect_name = 'slideDown';
 	    };
 	}
 
 
 	$logger->debug("Using effect $effect_name for $mods{'effect'}");
-	$js .= "new Effect.$effect_name('$uniq_id');"  ;
+	$js .= "\$K('#$uniq_id').$effect_name();"  ;
 
 	if($mods{'draggable'} eq 'true') {
-	    $js .= "new Draggable('". $uniq_id . "', '{ zindex: 99999 }');";
+	    $js .= "\$K('#$uniq_id').draggable();";
 	}
 	
 	if($mods{'scrollable'} eq 'true') {
-	    $js .= "new FixedElement('". $uniq_id . "');";
+	    # do nothing
+#	    $js .= "new FixedElement('". $uniq_id . "');";
 	}
 
 	if($mods{'highlight'}) {
@@ -399,7 +362,7 @@ sub build_one_action {
 		}
 	    }
 	    
-	    $js .= "new Effect.Highlight('$uniq_id', {startcolor: '$color', });"  ;
+#	    $js .= "new Effect.Highlight('$uniq_id', {startcolor: '$color', });"  ;
 	}
 
 

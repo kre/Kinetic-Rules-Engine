@@ -97,7 +97,7 @@ sub process_action {
    
 
 
-    $logger->info("Processing callback for site " . $request_info{'site'});
+    $logger->info("Processing callback for site " . $request_info{'site'} . " and rule " . $req->param('rule'));
 
 
 #     $logger->debug("Storing: ", $request_info{'site'}, ", ",
@@ -126,8 +126,18 @@ sub process_action {
 #     $dbh->do($log_sql);
 
     if($req->param('url')){
-	$logger->debug("Redirecting to ", $req->param('url'));
-	print "window.location = '" . $req->param('url') . "'";
+	my $url = $req->param('url');
+	$logger->debug("Redirecting to ", $url);
+	print "window.location = '$url'";
+# 	print <<EOF;
+# m = document.createElement('meta');
+# m.setAttribute('http-equiv', 'Refresh');
+# m.setAttribute('content', '0; url=$url');
+# head=document.getElementsByTagName('head')[0];
+# head.appendChild(m);
+# EOF
+
+
     }
 
 

@@ -12,7 +12,7 @@ use constant DEFAULT_LOG_PREFIX => 'kobj-log';
 use constant DEFAULT_ACTION_HOST => '127.0.0.1';
 use constant DEFAULT_LOG_HOST => '127.0.0.1';
 use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
-use constant DEFAULT_JS_VERSION => '0.8';
+use constant DEFAULT_JS_VERSION => '0.9';
 
 
 sub handler {
@@ -114,44 +114,38 @@ var KOBJ={
 }
 
 KOBJ.logger = function(type,txn_id,element,url,sense,rule) {
-
     e=document.createElement("script");
     e.src=KOBJ.logger_url+"?type="+type+"&txn_id="+txn_id+"&element="+element+"&ts="+KOBJ.d+"&sense="+sense+"&url="+escape(url)+"&rule="+rule;
     body=document.getElementsByTagName("body")[0];
     body.appendChild(e);
 }
 
-KOBJ.obs_one = function(name, txn_id, e, sense, rule) {
-    if (e) {
-      var b = e.readAttribute('href') ? 
-	      e.readAttribute('href') : '';
-      e.writeAttribute({href: '#'});
-      Event.observe(e, 
-	  	    "click", 
-		    function() {KOBJ.logger("click",
-					    txn_id,
-					    name, 
-					    b, 
-					    sense,
-					    rule
-					   );
-		                false;
-			       }
-		   );
-    }
-}
- 
 KOBJ.obs = function(type, txn_id, name, sense, rule) {
     if(type == 'class') {
-	K\$\$('.'+name).each(  
-	    function(e) {  
-		KOBJ.obs_one(name, txn_id, e, sense, rule);
-	    }  
-	);  
+	\$K('.'+name).click(function(e1) {
+	    KOBJ.logger("click",
+			txn_id,
+			name, 
+			\$K(this).attr('href'), 
+			sense,
+			rule
+	    );
+	    //e1.preventDefault();
+	    });
     } else {
-	KOBJ.obs_one(name, txn_id, K\$(name), sense, rule);
+	\$K('#'+name).click(function(e1) {
+	    KOBJ.logger("click",
+			txn_id,
+			name, 
+			\$K(this).attr('href'), 
+			sense,
+			rule
+	    );
+	    //e1.preventDefault();
+	    });
     }
 }
+
 
 
 KOBJ.fragment = function(base_url) {
@@ -162,28 +156,50 @@ KOBJ.fragment = function(base_url) {
 }
 
 KOBJ.update_elements  = function (params) {
-    var params = \$H(params);
-    
-    params.each(function(pair) {
-	K\$("kobj_"+pair.key).update(pair.value);
-    });
+    for (var key in params) {
+ 	\$K("#kobj_"+key).html(params[value]);
+    };
 }
 
 // wrap some effects for use in embedded HTML
 KOBJ.Fade = function (id) {
-    new Effect.Fade(K\$(id));
+    \$K(id).fadeOut()
 }
 
 KOBJ.BlindDown = function (id) {
-    new Effect.BlindDown(K\$(id));
+    \$K(id).slideDown()
 }
 
 KOBJ.BlindUp = function (id) {
-    new Effect.BlindUp(K\$(id));
+    \$K(id).slideUp()
+}
+
+KOBJ.BlindUp = function (id, speed) {
+    \$K(id).slideUp(speed)
 }
 
 KOBJ.hide = function (id) {
-    K\$(id).hide();
+    \$K(id).hide();
+}
+
+// helper functions
+KOBJ.buildDiv = function (uniq, pos, top, side) {
+    var vert = top.split(/\s*:\s*/);
+    var horz = side.split(/\s*:\s*/);
+    var div_style = {
+        position: pos,
+        zIndex: '9999',
+        opacity: 0.999999,
+        display: 'none',
+    };
+    div_style[vert[0]] = vert[1];
+    div_style[horz[0]] = horz[1];
+
+
+    var id_str = 'kobj_'+uniq;
+
+    var div = document.createElement('div');
+    return \$K(div).attr({'id': id_str}).css(div_style);
 }
 
 
@@ -197,10 +213,10 @@ KOBJ.url = KOBJ.proto+KOBJ.host_with_port+"/kobj/" + KOBJ.site_id;
 KOBJ.logger_url = KOBJ.proto+KOBJ.loghost_with_port+"/log/" + KOBJ.site_id;
 
 
-try {
-    KOBJ.kvars_json =  Object.toJSON(kvars);
-} catch (e) {
-    KOBJ.kvars_json = Object.toJSON(new Object);
+if(typeof(kvars) != "undefined") {
+    KOBJ.kvars_json = \$K.toJSON(kvars);
+} else {
+    KOBJ.kvars_json = {};
 }
  
 

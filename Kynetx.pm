@@ -87,7 +87,8 @@ sub flush_ruleset_cache {
     $memd->delete("ruleset:$site");
 
     $r->content_type('text/html');
-    print "<h1>Rules flushed for site $site</h1>";
+    my $msg = "Rules flushed for site $site";
+    print "<title>$msg</title><h1>$msg</h1>";
 
 }
 

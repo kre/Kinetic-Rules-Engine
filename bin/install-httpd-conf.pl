@@ -79,7 +79,7 @@ my $datenow = localtime();
 # fill in the parameters
 $conf_template->param(KOBJ_ROOT => $base);
 $conf_template->param(GEN_DATE => $datenow);
-$conf_template->param(JS_VERSION => '0.8');
+$conf_template->param(JS_VERSION => '0.9');
 $conf_template->param(INIT_HOST => $init_host);
 $conf_template->param(LOG_HOST => $log_host);
 $conf_template->param(FRAG_HOST => $log_host);

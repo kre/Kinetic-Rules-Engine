@@ -7,7 +7,7 @@ use HTML::Template;
 use JavaScript::Minifier qw(minify);
 
 use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
-use constant DEFAULT_JS_VERSION => '0.8';
+use constant DEFAULT_JS_VERSION => '0.9';
 
 
 my $base_var = 'KOBJ_ROOT';
@@ -22,9 +22,9 @@ my $web_root = $ENV{$web_root_var} ||
 my $kobj_file = 'kobj-static.js';
 
 my @js_files = qw(
-prototype.js
-effects.js
-dragdrop.js
+jquery-1.2.6.js
+jquery.json-1.2.js
+jquery-ui-personalized-1.6rc2.js
 kobj-extras.js
 );
 
@@ -78,8 +78,8 @@ sub get_js_file {
     my $js = minify(input=> *JS);
 
     # reduce conflict by renaming some Prototype functions
-    $js =~ s#\$\$\(#K\$\$\(#gs;
-    $js =~ s#([^\$])\$\(#$1K\$\(#gs; # don't replace $$
+#    $js =~ s#\$\$\(#K\$\$\(#gs;
+#    $js =~ s#([^\$])\$\(#$1K\$\(#gs; # don't replace $$
 
     close JS;
     
