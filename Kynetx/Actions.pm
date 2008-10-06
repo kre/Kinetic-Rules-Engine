@@ -126,7 +126,7 @@ function(uniq, cb, id, new_url) {
 }
 EOF
 
-
+# FIXME: not done with this
     log_callback => <<EOF,
 function(uniq, cb, ) {
     KOBJ.logger("click",
@@ -137,6 +137,8 @@ function(uniq, cb, ) {
 		rule
 	);
     false;
+    }
+    cb();
 EOF
 
 );

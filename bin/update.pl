@@ -17,7 +17,7 @@ my $APACHECTL = "sudo /etc/init.d/httpd";
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'h?ajlk';
+my $opt_string = 'h?ajlkf';
 getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'} || $opt{'?'};
 
@@ -91,6 +91,7 @@ Options are:
   -l	: Gender is log server
   -j	: Gender is Javascript server (init)
   -k	: Gender is KRL server
+  -f	: Gender is fragment server
 
 Examples:
 

@@ -1,3 +1,9 @@
+2008-10-06  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Actions.pm: Replaced all actions with JQuery-based
+	  equivalents.  
+	* Kynetx/KOBJ.pm: now sends JQuery JS libraries.  Version 0.9. 
+
 2008-10-02  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/KOBJ.pm (get_kobj): wrapped Prototype effects for future
