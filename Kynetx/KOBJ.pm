@@ -126,7 +126,7 @@ KOBJ.obs = function(type, txn_id, name, sense, rule) {
 	    KOBJ.logger("click",
 			txn_id,
 			name, 
-			\$K(this).attr('href'), 
+			\$K(this).attr('href') || '', 
 			sense,
 			rule
 	    );
@@ -137,7 +137,7 @@ KOBJ.obs = function(type, txn_id, name, sense, rule) {
 	    KOBJ.logger("click",
 			txn_id,
 			name, 
-			\$K(this).attr('href'), 
+			\$K(this).attr('href') || '', 
 			sense,
 			rule
 	    );
@@ -194,10 +194,7 @@ KOBJ.buildDiv = function (uniq, pos, top, side) {
     };
     div_style[vert[0]] = vert[1];
     div_style[horz[0]] = horz[1];
-
-
     var id_str = 'kobj_'+uniq;
-
     var div = document.createElement('div');
     return \$K(div).attr({'id': id_str}).css(div_style);
 }
