@@ -369,7 +369,6 @@ sub build_one_action {
 
     } elsif($action_name eq "popup") {
 	if ($mods{'effect'} eq 'onpageexit') {
-	    # FIXME: use a Prototype Effect here, if we can
 	    my $funcname = "leave_" . $uniq_id;
 	    $js = "function $funcname () { " . $js . "};\n";
 	    $js .= "document.body.setAttribute('onUnload', '$funcname()');"

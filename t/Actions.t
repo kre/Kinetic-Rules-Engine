@@ -205,11 +205,9 @@ _KRL_
 $result = <<_JS_;
 (function(uniq, cb, id, text) {
  var div = document.createElement('div');
- div.setAttribute('style', 'display: none');
- div.innerHTML = text;
- id = K\$(id);
- id.replace(div);
- new Effect.BlindDown(div, {duration: 1.0});
+ \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text)
+ \$K('#'+id).replaceWith(div);
+ \$K(div).slideDown('slow');
  cb();
 }
 ('23',callbacks23,'kobj_test','Hello World!'));
@@ -232,11 +230,9 @@ _KRL_
 $result = <<_JS_;
 (function(uniq, cb, id, text) {
  var div = document.createElement('div');
- div.setAttribute('style', 'display: none');
- div.innerHTML = text;
- id = K\$(id);
- id.replace(div);
- new Effect.BlindDown(div, {duration: 1.0});
+ \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text)
+ \$K('#'+id).replaceWith(div);
+ \$K(div).slideDown('slow');
  cb();
 }
 ('23',callbacks23,'kobj_test','Hello World!'));
@@ -258,7 +254,8 @@ _KRL_
 
 $result = <<_JS_;
 (function(uniq, cb, id, new_url) {
-K\$(id).writeAttribute('src',new_url)
+    \$K('#'+id).attr('src',new_url);
+    cb();
 }
 ('23',callbacks23,'kobj_test','/images/foo.png'));
 _JS_
