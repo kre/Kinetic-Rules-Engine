@@ -156,8 +156,8 @@ KOBJ.fragment = function(base_url) {
 }
 
 KOBJ.update_elements  = function (params) {
-    for (var key in params) {
- 	\$K("#kobj_"+key).html(params[value]);
+    for (var mykey in params) {
+ 	\$K("#kobj_"+mykey).html(params[value]);
     };
 }
 
@@ -190,7 +190,7 @@ KOBJ.buildDiv = function (uniq, pos, top, side) {
         position: pos,
         zIndex: '9999',
         opacity: 0.999999,
-        display: 'none',
+        display: 'none'
     };
     div_style[vert[0]] = vert[1];
     div_style[horz[0]] = horz[1];
@@ -237,9 +237,9 @@ KOBJ.r.src=
 	     + "&"
 	     + "title=" 
 	     + encodeURI(document.title);
-\$K('body').append(KOBJ.r);
-//KOBJ.body=document.getElementsByTagName("body")[0];
-//KOBJ.body.appendChild(KOBJ.r);
+//\$K('body').append(KOBJ.r);
+KOBJ.body=document.getElementsByTagName("body")[0];
+KOBJ.body.appendChild(KOBJ.r);
 
 EOF
 
