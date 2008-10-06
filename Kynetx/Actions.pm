@@ -54,7 +54,7 @@ EOF
     float_url => <<EOF,
 function(uniq, cb, pos, top, side, src_url) {
     var d = KOBJ.buildDiv(uniq, pos, top, side);
-    \$K(d).load(src_url,{}, cb);
+    \$K(d).load(src_url, cb);
     \$K('body').append(d);
     
 }
@@ -86,7 +86,7 @@ EOF
     replace_url => <<EOF,
 function(uniq, cb, id, src_url) {
     var d = document.createElement('div');
-    \$K(d).css({display: 'none'}).load(src_url,{}, cb);
+    \$K(d).css({display: 'none'}).load(src_url, cb);
     \$K('#'+id).replaceWith(d);
     \$K(d).slideDown('slow');
 }
@@ -96,7 +96,7 @@ EOF
     replace_html => <<EOF,
 function(uniq, cb, id, text) {
  var div = document.createElement('div');
- \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text)
+ \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text);
  \$K('#'+id).replaceWith(div);
  \$K(div).slideDown('slow');
  cb();
