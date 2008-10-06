@@ -237,8 +237,9 @@ KOBJ.r.src=
 	     + "&"
 	     + "title=" 
 	     + encodeURI(document.title);
-KOBJ.body=document.getElementsByTagName("body")[0];
-KOBJ.body.appendChild(KOBJ.r);
+\$K('body').append(KOBJ.r);
+//KOBJ.body=document.getElementsByTagName("body")[0];
+//KOBJ.body.appendChild(KOBJ.r);
 
 EOF
 
