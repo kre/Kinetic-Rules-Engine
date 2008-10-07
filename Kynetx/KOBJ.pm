@@ -242,7 +242,7 @@ KOBJ.r.src=
 KOBJ.body=document.getElementsByTagName("body")[0];
 \$K(document).ready(function() {
     KOBJ.body.appendChild(KOBJ.r);
-}
+});
 
 EOF
 
