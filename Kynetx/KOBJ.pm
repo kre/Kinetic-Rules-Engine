@@ -240,7 +240,9 @@ KOBJ.r.src=
 	     + encodeURI(document.title);
 //\$K('body').append(KOBJ.r);
 KOBJ.body=document.getElementsByTagName("body")[0];
-KOBJ.body.appendChild(KOBJ.r);
+\$K(document).ready(function() {
+    KOBJ.body.appendChild(KOBJ.r);
+}
 
 EOF
 
