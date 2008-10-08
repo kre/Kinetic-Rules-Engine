@@ -80,7 +80,7 @@ my %codes = (
 my $url = "http://".$r->hostname()."/widgets";
 
 # main page template
-my $main_page = <<EOF;
+my $main_page = <<"EOF";
 <div id="kobj_weather_1" style="padding:5px;background-color:#FFFFFF; width:194px; text-align:center;">
 <div style="padding:5px; background-image:url($url/components/weather/widgetWeatherBk.gif); width:184px; text-align:center; font-size: 14px; font-family: Tahoma, Verdana, Arial, Helvetica, sans-serif;">
 <div style="padding:5px; margin:0px; position:relative;" id="kobj_close" onclick="KOBJ.BlindUp('#kobj_weather_1');" align="right" ><img src="$url/components/weather/widgetClose.gif" /></div>
@@ -110,7 +110,7 @@ Not in <TMPL_VAR NAME=city>?<br/>
 EOF
 # ' fix 
 
-my $data_page = <<EOF;
+my $data_page = <<"EOF";
 KOBJ.update_elements({
       city: '<TMPL_VAR NAME=city>',
       weather_image: '<TMPL_VAR NAME=weather_image>',
