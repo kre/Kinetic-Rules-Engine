@@ -277,6 +277,8 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
+  # we can use the 'debug' config parameter to force detailed logging
+  PerlSetVar debug <TMPL_VAR NAME=DEBUG>
 
   # database configuration
   PerlSetVar db_host <TMPL_VAR NAME=DB_HOST>
@@ -330,6 +332,8 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
+  # we can use the 'debug' config parameter to force detailed logging
+  PerlSetVar debug <TMPL_VAR NAME=DEBUG>
 
   SetHandler perl-script
   PerlHandler Kynetx::Logger
@@ -378,6 +382,8 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
+  # we can use the 'debug' config parameter to force detailed logging
+  PerlSetVar debug <TMPL_VAR NAME=DEBUG>
 
   <TMPL_IF NAME="MEMCACHED">
   PerlSetVar memcached_hosts <TMPL_VAR NAME=MEMCACHED_HOST_FIRST>
@@ -416,6 +422,8 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
+  # we can use the 'debug' config parameter to force detailed logging
+  PerlSetVar debug <TMPL_VAR NAME=DEBUG>
 
   SetHandler perl-script
   PerlHandler Kynetx::RuleManager
@@ -459,6 +467,11 @@ Alias /widgets/ "/web/lib/perl/widgets/"
   Order allow,deny
   Allow from all 
 </Location>
+
+<Location /widgets/components>
+  SetHandler None
+</Location>
+
 </TMPL_IF>
 
 

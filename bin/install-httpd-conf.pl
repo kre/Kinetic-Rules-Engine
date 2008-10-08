@@ -105,11 +105,13 @@ $conf_template->param(RULE_REPOSITORY => $svn);
 $conf_template->param(LOG_PERIOD => '1hour');
 # $conf_template->param(LOG_PERIOD => '5min');
 
-
+# we can use the 'debug' config parameter to force detailed logging
 if ($opt{'d'}) { # development
     $conf_template->param(RUN_MODE => 'development');
+    $conf_template->param(DEBUG => 'on');
 } else {
     $conf_template->param(RUN_MODE => 'production');
+    $conf_template->param(DEBUG => 'off');
 }
 
 

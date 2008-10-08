@@ -4,7 +4,7 @@ var Pilot = {
   kynetx_js_host: 'http://init.kobj.net',
 //  required_scripts: ['prototype','effects','dragdrop','kobj-extras'],
   required_scripts: ['kobj-static'],
-  kobj_version: '0.8',
+  kobj_version: '0.9',
 
   // ex cookie:
   // [ { domain:'', site_id: }, ... ]
@@ -89,6 +89,13 @@ var Pilot = {
                body.appendChild(doc.createTextNode("\n"));
                body.appendChild(script);
              }
+
+	     // force jQuery to believe the DOM is ready
+             script = doc.createElement('script');
+             script.type = 'text/javascript';
+             script.innerHTML = 'jQuery.isReady = true;'
+             body.appendChild(doc.createTextNode("\n"));
+             body.appendChild(script);
          
              // Add kobj.js
              script = doc.createElement('script');
@@ -96,6 +103,14 @@ var Pilot = {
              script.src = this.kynetx_js_host + '/js/' + site['site_id'] + '/kobj.js';
              body.appendChild(doc.createTextNode("\n"));
              body.appendChild(script);
+
+	     // add jQuery stuff to make things fire
+//             script = doc.createElement('script');
+//             script.type = 'text/javascript';
+//	     script.innerHTML = 'KOBJ.body.appendChild(KOBJ.r);'
+//             body.appendChild(doc.createTextNode("\n"));
+//             body.appendChild(script);
+	     
              body.facilitated = true;
            }
          }
@@ -117,7 +132,7 @@ var Pilot = {
     var regex = /\/$/g;
     
     this.kynetx_js_host = prompt("Enter the host for the kynetx.js file:","http://init.kobj.net").replace(regex, '');
-    this.kobj_version = prompt("Enter the JS version:","0.8").replace(regex, '');
+      this.kobj_version = prompt("Enter the JS version:",this.kobj_version).replace(regex, '');
   },
 
   list: function() {
@@ -138,50 +153,51 @@ var Pilot = {
     this.updateSites();
     alert('Sites cleared out.');
   },
+
+//   getLocationInfo: function(url, request, cb) {
+//     var http = new XMLHttpRequest();
+//     // pjw commented out the next line...
+//     //http.open("GET","http://127.0.01/js/geoip.js",true);
+//     http.onreadystatechange = function(){
+//       if (http.readyState==4) var resp = http.responseText; // get the response if it was a success
+//       if(resp != null){
+//         eval("var info = " + resp); // turn the string of JSON into a real JSON object
+//         // is there a better XUL solution than putting each one in a menuitem?
+//         // display them all
+//         document.getElementById('location_info_ip_context_menu').style.display = 'block';
+//         document.getElementById('location_info_country_name_context_menu').style.display = 'block';
+//         document.getElementById('location_info_country_code_context_menu').style.display = 'block';
+//         document.getElementById('location_info_region_context_menu').style.display = 'block';
+//         document.getElementById('location_info_city_context_menu').style.display = 'block';
+//         document.getElementById('location_info_postal_code_context_menu').style.display = 'block';
+//         document.getElementById('location_info_dma_code_context_menu').style.display = 'block';
+//         document.getElementById('location_info_area_code_context_menu').style.display = 'block';
+//         document.getElementById('location_info_context_menu').style.display = 'none';
+//         // give them labels
+//         document.getElementById('location_info_ip_context_menu').label = "IP: " + info.ip_addr;
+//         document.getElementById('location_info_country_name_context_menu').label = "Country: " + info.country_name;
+//         document.getElementById('location_info_country_code_context_menu').label = "Country Code: " + info.country_code;
+//         document.getElementById('location_info_region_context_menu').label = "Region: " + info.region;
+//         document.getElementById('location_info_city_context_menu').label = "City: " + info.city;
+//         document.getElementById('location_info_postal_code_context_menu').label = "Postal Code: " + info.postal_code;
+//         document.getElementById('location_info_dma_code_context_menu').label = "DMA Code: " + info.dma_code;
+//         document.getElementById('location_info_area_code_context_menu').label = "Area Code: " + info.area_code;
+//       } else {
+//         document.getElementById('location_info_context_menu').label = 'N/A';
+//         document.getElementById('location_info_context_menu').style.display = 'block';
+//         document.getElementById('location_info_ip_context_menu').style.display = 'none';
+//         document.getElementById('location_info_country_name_context_menu').style.display = 'none';
+//         document.getElementById('location_info_country_code_context_menu').style.display = 'none';
+//         document.getElementById('location_info_region_context_menu').style.display = 'none';
+//         document.getElementById('location_info_city_context_menu').style.display = 'none';
+//         document.getElementById('location_info_postal_code_context_menu').style.display = 'none';
+//         document.getElementById('location_info_dma_code_context_menu').style.display = 'none';
+//         document.getElementById('location_info_area_code_context_menu').style.display = 'none';
+//       }
+//     };
+//     http.send(null);
+//   }  
   
-  getLocationInfo: function(url, request, cb) {
-    var http = new XMLHttpRequest();
-    // pjw commented out the next line...
-    //http.open("GET","http://127.0.01/js/geoip.js",true);
-    http.onreadystatechange = function(){
-      if (http.readyState==4) var resp = http.responseText; // get the response if it was a success
-      if(resp != null){
-        eval("var info = " + resp); // turn the string of JSON into a real JSON object
-        // is there a better XUL solution than putting each one in a menuitem?
-        // display them all
-        document.getElementById('location_info_ip_context_menu').style.display = 'block';
-        document.getElementById('location_info_country_name_context_menu').style.display = 'block';
-        document.getElementById('location_info_country_code_context_menu').style.display = 'block';
-        document.getElementById('location_info_region_context_menu').style.display = 'block';
-        document.getElementById('location_info_city_context_menu').style.display = 'block';
-        document.getElementById('location_info_postal_code_context_menu').style.display = 'block';
-        document.getElementById('location_info_dma_code_context_menu').style.display = 'block';
-        document.getElementById('location_info_area_code_context_menu').style.display = 'block';
-        document.getElementById('location_info_context_menu').style.display = 'none';
-        // give them labels
-        document.getElementById('location_info_ip_context_menu').label = "IP: " + info.ip_addr;
-        document.getElementById('location_info_country_name_context_menu').label = "Country: " + info.country_name;
-        document.getElementById('location_info_country_code_context_menu').label = "Country Code: " + info.country_code;
-        document.getElementById('location_info_region_context_menu').label = "Region: " + info.region;
-        document.getElementById('location_info_city_context_menu').label = "City: " + info.city;
-        document.getElementById('location_info_postal_code_context_menu').label = "Postal Code: " + info.postal_code;
-        document.getElementById('location_info_dma_code_context_menu').label = "DMA Code: " + info.dma_code;
-        document.getElementById('location_info_area_code_context_menu').label = "Area Code: " + info.area_code;
-      } else {
-        document.getElementById('location_info_context_menu').label = 'N/A';
-        document.getElementById('location_info_context_menu').style.display = 'block';
-        document.getElementById('location_info_ip_context_menu').style.display = 'none';
-        document.getElementById('location_info_country_name_context_menu').style.display = 'none';
-        document.getElementById('location_info_country_code_context_menu').style.display = 'none';
-        document.getElementById('location_info_region_context_menu').style.display = 'none';
-        document.getElementById('location_info_city_context_menu').style.display = 'none';
-        document.getElementById('location_info_postal_code_context_menu').style.display = 'none';
-        document.getElementById('location_info_dma_code_context_menu').style.display = 'none';
-        document.getElementById('location_info_area_code_context_menu').style.display = 'none';
-      }
-    };
-    http.send(null);
-  }  
 }
 
 Pilot.init();

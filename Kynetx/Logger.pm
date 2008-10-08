@@ -8,10 +8,14 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::UUID;
 
 use Kynetx::Session qw(:all);
+use Kynetx::Util qw(:all);
 
 
 sub handler {
     my $r = shift;
+
+    # configure logging for production, development, etc.
+    config_logging($r);
 
     $r->content_type('text/javascript');
 
@@ -38,17 +42,6 @@ sub process_action {
 
     $r->subprocess_env(START_TIME => Time::HiRes::time);
 
-
-#     # FIXME: hardcoded database UID and password
-#     # Connect to the database.
-#     my $db_host = $r->dir_config('db_host');
-#     my $db_username = $r->dir_config('db_username');
-#     my $db_passwd = $r->dir_config('db_passwd');
-
-#     # should be using cached connection from Apache::DBI
-#     my $dbh = DBI->connect("DBI:mysql:database=logging;host=$db_host",
-# 			   $db_username, $db_passwd,
-# 			   {'RaiseError' => 1});
 
     # get a session hash from the cookie or build a new one
     my $session = process_session($r);

@@ -1,3 +1,5 @@
+
+
 package Kynetx;
 # file: Kynetx.pm
 
@@ -19,22 +21,19 @@ use Kynetx::RuleManager qw(:all);
 use Kynetx::Console qw(:all);;
 
 
-my $logger;
-$logger = get_logger();
 
 # Make this global so we can use memcache all over
 our $memd;
-
-if($logger->is_debug()) {
-
-    use Data::Dumper;
-}
-
 
 my $s = Apache2::ServerUtil->server;
 
 sub handler {
     my $r = shift;
+
+    # configure logging for production, development, etc.
+    config_logging($r);
+
+    my $logger = get_logger();
 
     $r->content_type('text/javascript');
     
@@ -75,6 +74,8 @@ sub flush_ruleset_cache {
 
     # nothing to do if no memcache hosts
     return unless $r->dir_config('memcached_hosts');
+
+    my $logger = get_logger();
 
     my ($site) = $r->path_info =~ m#/(\d+)#;
 

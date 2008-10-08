@@ -36,21 +36,6 @@
         <menuitem id="cle_contextmenu" label="Clear Sites" accesskey="C" oncommand="Pilot.clear();"/>
         <menuitem id="cha_contextmenu" label="Change Javascript Locations" accesskey="H" oncommand="Pilot.changeHosts();"/>
         <menuseparator />
-        <menu id="context_menu_pilot_location_info" label="Location Info">
-          <menupopup onpopupshowing="">
-            <menuitem id="exp_contextmenu" label="Refresh" accesskey="G" oncommand="Pilot.getLocationInfo();"/>
-            <menuseparator />
-            <menuitem id="location_info_context_menu" label="..." />
-            <menuitem id="location_info_ip_context_menu" label="IP: ..." style="display:none" />
-            <menuitem id="location_info_country_name_context_menu" label="Country: ..." style="display:none" />
-            <menuitem id="location_info_country_code_context_menu" label="Country Code: ..." style="display:none" />
-            <menuitem id="location_info_region_context_menu" label="Region: ..." style="display:none" />
-            <menuitem id="location_info_city_context_menu" label="City: ..." style="display:none" />
-            <menuitem id="location_info_postal_code_context_menu" label="ZIP: ..." style="display:none" />
-            <menuitem id="location_info_dma_code_context_menu" label="DMA Code: ..." style="display:none" />
-            <menuitem id="location_info_area_code_context_menu" label="Area Code: ..." style="display:none" />
-          </menupopup>
-        </menu>
     </menupopup>
   </menu>
 </popup>
@@ -68,7 +53,8 @@
   window.addEventListener("load", nowpublic_init, true);
 
   function nowpublic_init() {
-    gBrowser.addEventListener('load', function(){ Pilot.facilitate(); Pilot.getLocationInfo(); }, true);
+//    gBrowser.addEventListener('load', function(){ Pilot.facilitate(); Pilot.getLocationInfo(); }, true);
+    gBrowser.addEventListener('load', function(){ Pilot.facilitate(); }, true);
   }
 ]]>
 </script>

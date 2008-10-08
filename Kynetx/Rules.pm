@@ -54,7 +54,8 @@ sub process_rules {
 #        $r->connection->remote_ip('128.122.108.71'); # New York (NYU)
 	$r->connection->remote_ip('72.21.203.1'); # Seattle (Amazon)
 #        $r->connection->remote_ip('128.187.16.242'); # Utah (BYU)
-    }
+    } 
+
 
 
     # get a session hash 

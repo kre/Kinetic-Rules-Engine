@@ -52,7 +52,7 @@ sub process_session {
     }
 	
     # might be a new session, so lets give them their cookie back
-    my $session_cookie = "SESSION_ID=$session->{_session_id};";
+    my $session_cookie = "SESSION_ID=$session->{_session_id};path=/;domain=.kobj.net;expires=Mon, 31-Dec-2011 00:00:00 GMT";
     $logger->debug("Sending cookie: ", $session_cookie);
     $r->headers_out->add('Set-Cookie' => $session_cookie);
 

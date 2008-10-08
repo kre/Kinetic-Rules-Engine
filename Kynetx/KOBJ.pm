@@ -14,9 +14,14 @@ use constant DEFAULT_LOG_HOST => '127.0.0.1';
 use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
 use constant DEFAULT_JS_VERSION => '0.9';
 
+use Kynetx::Util qw(:all);
+
 
 sub handler {
     my $r = shift;
+
+    # configure logging for production, development, etc.
+    config_logging($r);
 
     $r->content_type('text/javascript');
 
@@ -161,7 +166,7 @@ KOBJ.fragment = function(base_url) {
 
 KOBJ.update_elements  = function (params) {
     for (var mykey in params) {
- 	\$K("#kobj_"+mykey).html(params[value]);
+ 	\$K("#kobj_"+mykey).html(params[mykey]);
     };
 }
 

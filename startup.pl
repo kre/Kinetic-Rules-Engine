@@ -45,8 +45,8 @@ use DBI ();
 
 
 # initialize Log4perl
-use Log::Log4perl qw(get_logger :levels);
-Log::Log4perl->init_and_watch('/web/lib/perl/log4perl.conf', 60);
+#use Log::Log4perl qw(get_logger :levels);
+#Log::Log4perl->init_and_watch('/web/lib/perl/log4perl.conf', 60);
 
 srand (time ^ $$ ^ unpack "%L*", `ps axww | gzip -f`);
 # srand( time() ^ ($$ + ($$ <<15)) );
