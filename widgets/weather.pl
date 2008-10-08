@@ -110,7 +110,7 @@ Not in <TMPL_VAR NAME=city>?<br/>
 EOF
 # ' fix 
 
-my $data_page = <<'EOF';
+my $data_page = <<EOF;
 KOBJ.update_elements({
       city: '<TMPL_VAR NAME=city>',
       weather_image: '<TMPL_VAR NAME=weather_image>',
@@ -190,57 +190,3 @@ print $t->output;
 
 1;
 
-
-my $old_main_page = <<'EOF';
-
-<div 
-id="kobj_weather_1"
-style="padding: 3pt;
-  border: solid 1pt black;
-  background-color: #FFFFCC;
-  width: 150px;
-  text-align: center">
-
-<div id="kobj_weather_2">
-
-<TMPL_IF NAME=forecast>
-<p>
-<span id="kobj_forecast"><TMPL_VAR NAME=forecast></span>
-forecast for tomorrow in<br/> 
-<span id="kobj_city"><TMPL_VAR NAME=city></span>
-</p>
-
-<p>
-<span id="kobj_weather_image"> 
-<TMPL_VAR NAME=weather_image>
-</span>
-</p>
-<TMPL_ELSE>
-<img  src="http://l.yimg.com/us.yimg.com/i/us/we/52/32.gif" border="0" hspace="3" vspace="3"  /><p>
-Sorry, we can't determine your location to show the weather forecast.
-</p>
-</TMPL_IF>
-
-<div id="kobj_weather_3" style="display: none">
-<form id="zip_form" onSubmit="KOBJ.fragment('<TMPL_VAR NAME=url>?'+this.serialize());KOBJ.Fade('kobj_weather_3'); return false">
-<label>Please enter your zip code and press return</label><br/>
-<input id='zip' name="zip" type="text" size="10"/><br/>
-<input name="redo" value="1" type="hidden"/>
-</form>
-
-</div>
-
-<div style="color: #3333FF; text-decoration: underline; font-size: small" id="kobj_zip" onclick="KOBJ.Fade('kobj_zip');KOBJ.BlindDown('kobj_weather_3');">
-<TMPL_IF NAME=weather_image>
-Not in <TMPL_VAR NAME=city>?
-<TMPL_ELSE>
-Click to fix this
-</TMPL_IF>
-</div>
-
-<div style="color: #3333FF; text-decoration: underline; font-size: small" id="kobj_close" onclick="KOBJ.BlindUp('kobj_weather_1');">close</div>
-
-</div>
-</div>
-
-EOF
