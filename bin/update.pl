@@ -33,13 +33,11 @@ chdir $base;
 print "Updating source...\n";
 system "svn up";
 
-system "sudo $base/bin/update_cpan.pl $base";
-
 
 chdir "$base/t";
 
 print "\nRunning built-in tests...\n";
-system "./smoke";
+system "./smoke" || die "failed tests";
 
 chdir $base;
 
