@@ -30,7 +30,7 @@ sub handler {
 
     my $logger = get_logger();
 
-    my ($site,$file) = $r->uri =~ m#/js/(\d+)/(.*\.js)#;
+    my ($site,$file) = $r->uri =~ m#/js/([^/]+)/(.*\.js)#;
 
     Log::Log4perl::MDC->put('site', $site);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
@@ -215,7 +215,7 @@ KOBJ.proto = \'$proto\';
 KOBJ.host_with_port = \'$host\'; 
 KOBJ.loghost_with_port = \'$log_host\'; 
 KOBJ.site_id = $site_id;
-KOBJ.url = KOBJ.proto+KOBJ.host_with_port+"/kobj/" + KOBJ.site_id;
+KOBJ.url = KOBJ.proto+KOBJ.host_with_port+"/ruleset/eval/" + KOBJ.site_id;
 KOBJ.logger_url = KOBJ.proto+KOBJ.loghost_with_port+"/log/" + KOBJ.site_id;
 
 
@@ -243,7 +243,6 @@ KOBJ.r.src=
 	     + "&"
 	     + "title=" 
 	     + encodeURI(document.title);
-//\$K('body').append(KOBJ.r);
 KOBJ.body=document.getElementsByTagName("body")[0];
 \$K(document).ready(function() {
     KOBJ.body.appendChild(KOBJ.r);

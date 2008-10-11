@@ -84,8 +84,7 @@ var Pilot = {
              for (var r = 0; r < this.required_scripts.length; r++) {
                script = doc.createElement('script');
                script.type = 'text/javascript';
-               script.src = this.kynetx_js_host + '/js/' +
-		     site['site_id'] + '/' + this.required_scripts[r] + '.js';
+               script.src = this.kynetx_js_host + '/js/shared/' + this.required_scripts[r] + '.js';
                body.appendChild(doc.createTextNode("\n"));
                body.appendChild(script);
              }

@@ -6,7 +6,6 @@ use lib qw(/web/lib/perl);
 use strict;
 
 use Kynetx::Parser ;
-use Kynetx::ParserOld ;
 
 use JSON::XS;
 use Data::Dumper;
@@ -21,15 +20,13 @@ Log::Log4perl->easy_init($DEBUG);
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'lhjof:';
+my $opt_string = 'lhjf:';
 getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'};
 
 my $lex_only = 0;
 $lex_only = $opt{'l'} if $opt{'l'};
 
-my $old_parser = 0;
-$old_parser = $opt{'o'} if $opt{'o'};
 
 my $output_json = 0;
 $output_json = $opt{'j'} if $opt{'j'};
@@ -38,21 +35,13 @@ my $filename = "";
 $filename = $opt{'f'};
 		    
 if($lex_only) {
-    if($old_parser) {
-	Kynetx::Parser::dump_lex(getkrl());
-    } else {
-	print Kynetx::ParserNG::remove_comments(getkrl());
-    }
+    print Kynetx::Parser::remove_comments(getkrl());
 } else {
 
     $Data::Dumper::Indent = 1;
 
     my $tree;
-    if($old_parser) {
-	$tree = Kynetx::ParserOld::parse_ruleset(getkrl());
-    } else {
-	$tree = Kynetx::Parser::parse_ruleset(getkrl());
-    }
+    $tree = Kynetx::Parser::parse_ruleset(getkrl());
 
     if(defined $tree->{'error'}) {
 	warn "Parse error in $filename: \n" . $tree->{'error'};

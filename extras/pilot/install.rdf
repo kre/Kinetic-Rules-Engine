@@ -7,7 +7,7 @@ xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
 		<em:id>{9AA46F4F-4DC7-4c06-97AF-5035170633FE}</em:id>
 		<em:name>Kynetx Pilot</em:name>
-		<em:version>1.6.0</em:version>
+		<em:version>1.6.1</em:version>
 		<em:description>Adds Kynetx tags to web sites.</em:description>
 		<em:creator>Kynetx</em:creator>
 		<em:homepageURL>http://www.kynetx.com/pilot</em:homepageURL>

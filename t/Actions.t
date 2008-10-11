@@ -205,7 +205,7 @@ _KRL_
 $result = <<_JS_;
 (function(uniq, cb, id, text) {
  var div = document.createElement('div');
- \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text)
+ \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text);
  \$K('#'+id).replaceWith(div);
  \$K(div).slideDown('slow');
  cb();
@@ -230,7 +230,7 @@ _KRL_
 $result = <<_JS_;
 (function(uniq, cb, id, text) {
  var div = document.createElement('div');
- \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text)
+ \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text);
  \$K('#'+id).replaceWith(div);
  \$K(div).slideDown('slow');
  cb();
