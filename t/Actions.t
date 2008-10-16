@@ -269,6 +269,48 @@ add_action_testcase(
     );
 
 
+$krl_src = <<_KRL_;
+noop();
+_KRL_
+
+$result = <<_JS_;
+(function(uniq, cb) {
+    cb();
+}
+('23',callbacks23));
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'noop'
+    );
+
+
+$krl_src = <<_KRL_;
+noop() with delay = 5;
+_KRL_
+
+$result = <<_JS_;
+setTimeout('
+(function(uniq, cb) {
+    cb();
+}
+(\\'23\\',callbacks23));
+;KOBJ.logger(\\'timer_expired\\',\\'\\',\\'none\\',\\'\\',\\'success\\',\\'\\');',5000);
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'noop_with_delay'
+    );
+
+
 
 
 plan tests => 0 + (@test_cases * 3) + (@action_test_cases * 1);

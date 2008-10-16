@@ -180,6 +180,11 @@ primrule: rule_label(?) action_name '(' expr(s? /,/) ')' modifier_clause(?)
              }
          }
         }
+     | emit_block
+        {$return = 
+	 {'emit' => $item[1],
+         }
+	}
      | <error>
 
 rule_label: VAR ':'
@@ -205,6 +210,7 @@ action_name: 'float_html'
            | 'redirect'
            | 'move_after'
            | 'move_to_top'
+           | 'noop'
            | <error>
 
 actionblock: blocktype(?) '{' primrule(s /;/) SEMICOLON(?) '}'

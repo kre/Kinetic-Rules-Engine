@@ -4,6 +4,7 @@ package Kynetx::KOBJ;
 use strict;
 use warnings;
 
+use File::Find::Rule;
 use Log::Log4perl qw(get_logger :levels);
 
 use constant DEFAULT_SERVER_ROOT => 'kobj.net';
@@ -65,7 +66,11 @@ sub handler {
 
 	$logger->info("Generating KOBJ file ", $file, ' with action host ' , $action_host);
 
-	$js .= get_kobj('http://', $action_host, $log_host, $site, $js_version);
+
+	my $req = Apache2::Request->new($r);
+	
+
+	$js = get_kobj('http://', $action_host, $log_host, $site, $js_version, $req);
 
 
     } elsif($file eq 'kobj-static.js') {
@@ -109,10 +114,15 @@ sub get_js_file {
 sub get_kobj {
 
 
-    my ($proto, $host, $log_host, $site_id, $js_version) = @_;
+    my ($proto, $host, $log_host, $site_id, $js_version, $req) = @_;
+
+    my $data_root = "/web/data/client/$site_id";
+
+    my $logger = get_logger();
 
     # be sure to escape any $ that you want passed in the JS
-    return <<EOF;
+    # kobj.js preamble
+    my $js = <<EOF;
 
 var KOBJ={
     version: '$js_version'
@@ -208,6 +218,17 @@ KOBJ.buildDiv = function (uniq, pos, top, side) {
     return \$K(div).attr({'id': id_str}).css(div_style);
 }
 
+KOBJ.get_host = function(s) {
+     return s.match(/\\w+:\\/\\/([\\w.]+)/)[1];
+}
+
+KOBJ.pick = function(o) {
+    if (o) {
+        return o[Math.floor(Math.random()*o.length)];
+    } else {
+        return o;
+    }
+}
 
 
 KOBJ.d = (new Date).getTime();
@@ -222,8 +243,42 @@ KOBJ.logger_url = KOBJ.proto+KOBJ.loghost_with_port+"/log/" + KOBJ.site_id;
 if(typeof(kvars) != "undefined") {
     KOBJ.kvars_json = \$K.toJSON(kvars);
 } else {
-    KOBJ.kvars_json = {};
+    KOBJ.kvars_json = '';
 }
+EOF
+
+    # add in datasets  The datasets param is a filter
+    my @ds;
+
+    my $datasets = $req->param('datasets');
+    
+    if($datasets) {
+	@ds = split(/,/, $datasets);
+    } else {
+	@ds = File::Find::Rule->file()
+                              ->name( '*.pm' )
+                              ->in( $data_root );
+    }
+
+    foreach my $dataset (@ds) {
+	open(JSON, "$data_root/$dataset.json") || 
+	    $logger->error("Can't open file $$data_root/$dataset.json: $!\n");
+	local $/ = undef;
+	$js .= "KOBJ.$dataset = ";
+	$js .= <JSON>;
+	$js .= ";\n";
+	close JS;
+    }
+
+    # create param string for tacking on to CS request
+    my @param_names = $req->param;
+    my $param_str = "";
+    foreach my $n (@param_names) {
+	$param_str = "&$n=".$req->param($n);
+    }
+
+
+    $js .= <<EOF;
  
 
 KOBJ.r=document.createElement("script");
@@ -242,7 +297,11 @@ KOBJ.r.src=
              + escape(KOBJ.kvars_json) 
 	     + "&"
 	     + "title=" 
-	     + encodeURI(document.title);
+             + encodeURI(document.title) 
+             + "$param_str";
+
+
+
 KOBJ.body=document.getElementsByTagName("body")[0];
 \$K(document).ready(function() {
     KOBJ.body.appendChild(KOBJ.r);

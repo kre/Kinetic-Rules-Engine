@@ -84,6 +84,7 @@ $BYU_req_info->{'ip'} = '128.187.16.242'; # Utah (BYU)
 $BYU_req_info->{'referer'} = 'http://www.google.com/search?q=free+mobile+calls&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:official&client=firefox-a'; 
 $BYU_req_info->{'pool'} = APR::Pool->new;
 $BYU_req_info->{'kvars'} = '{"foo": 5, "bar": "fizz", "bizz": [1, 2, 3]}';
+$BYU_req_info->{'foozle'} = 'Foo';
 
 
 
@@ -309,6 +310,7 @@ add_expr_testcase(
     0);
 
 
+
 $str = <<_KRL_;
 page:var("fo" + "o");
 _KRL_
@@ -326,6 +328,26 @@ add_decl_testcase(
     $str,
     'K$(\'foo\').innerHTML',
     0);
+
+
+$str = <<_KRL_;
+page:env("foozle");
+_KRL_
+add_expr_testcase(
+    $str,
+    "",
+     mk_expr_node('str', 'Foo'),
+    0);
+
+$str = <<_KRL_;
+page:env("ip");
+_KRL_
+add_expr_testcase(
+    $str,
+    "",
+     mk_expr_node('str', '128.187.16.242'),
+    0);
+
 
 
 

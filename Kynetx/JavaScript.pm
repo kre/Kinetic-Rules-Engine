@@ -236,7 +236,7 @@ sub eval_js_expr {
 				    $den
 		);
 
-	    $logger->debug($expr->{'source'}, " -> ", $v);
+	    $logger->debug("[JS Expr] ", $expr->{'source'}, ":", $expr->{'predicate'}, " -> ", $v);
 
 	    return {'type' => infer_type($v),
 		    'val' => $v};
@@ -389,8 +389,9 @@ sub eval_datasource {
 	    $val = $vals->{$args->[0]};
 	} elsif ($function eq 'id') {
 	    # we're really just generating JS here.
-	    
 	    $val = "K\$('".$args->[0]."').innerHTML";
+	} elsif($function eq 'env') {
+	    $val = $req_info->{$args->[0]};
 	}
     }
 

@@ -126,6 +126,12 @@ function(uniq, cb, id, new_url) {
 }
 EOF
 
+    noop => <<EOF,
+function(uniq, cb) {
+    cb();
+}
+EOF
+
 # FIXME: not done with this
     log_callback => <<EOF,
 function(uniq, cb, ) {
@@ -224,15 +230,23 @@ sub build_js_load {
 	# generate JS for every action
 	foreach my $action_expr (@{ $rule->{'actions'} }) {
 	    # tack on this loop's js
-	    $js .= build_one_action($action_expr, 
-				    $req_info, 
-				    $rule_env, 
-				    $session,
-				    $uniq,
-				    $uniq_id,
-				    $cb_func_name,
-				    $rule->{'name'}
-		);
+	    if(defined $action_expr->{'action'}) {
+		$js .= build_one_action($action_expr, 
+					$req_info, 
+					$rule_env, 
+					$session,
+					$uniq,
+					$uniq_id,
+					$cb_func_name,
+					$rule->{'name'}
+		    );
+	    } elsif(defined $action_expr->{'emit'}) {
+		$js .= $action_expr->{'emit'};
+		push(@{ $rule_env->{'actions'} }, 'emit');
+		push(@{ $rule_env->{'tags'} }, '');
+		push(@{ $rule_env->{'labels'} }, '');
+
+	    }
 	}
 
     } elsif ($rule->{'blocktype'} eq 'choose') {
@@ -379,11 +393,21 @@ sub build_one_action {
 
 	
     if($mods{'delay'}) {
-	# these ought to be pre-compiled on the rules
+
+	my $delay_cb = 
+	     ";KOBJ.logger('timer_expired', '" .
+	                  $req_info->{'txn_id'} . "'," .
+		          "'none', '', 'success', '" .
+			  $rule_name .
+                          "');";
+
+	$js .= $delay_cb;  # add in automatic log of delay expiration
+	
 	$js =~ y/\n\r//d; # remove newlines
 	$js =~ y/ //s;
 	$js =~ s/'/\\'/g; # escape single quotes
-	$js = "setTimeout(\'" . $js . "\', " . ($mods{'delay'} * 1000) . ");";
+
+	$js = "setTimeout(\'" . $js . "\', " . ($mods{'delay'} * 1000) . ");\n";
     }
 
     push(@{ $rule_env->{'tags'} }, ($mods{'tags'} || ''));
@@ -496,6 +520,7 @@ sub eval_post_expr {
 
 	/callbacks/ && do {
 
+	    # what the heck is this doing????
 	    foreach my $cb (@{$expr->{'callbacks'}}) {
 		my $t = $cb->{'value'};
 		my $a = $cb->{'attribute'};

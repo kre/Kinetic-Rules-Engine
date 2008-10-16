@@ -54,6 +54,7 @@ sub process_rules {
 #        $r->connection->remote_ip('128.122.108.71'); # New York (NYU)
 	$r->connection->remote_ip('72.21.203.1'); # Seattle (Amazon)
 #        $r->connection->remote_ip('128.187.16.242'); # Utah (BYU)
+	$logger->debug("In development mode using IP address ", $r->connection->remote_ip());
     } 
 
 
@@ -81,9 +82,15 @@ sub process_rules {
 	};
     
 
-    $request_info->{'referer'} = $req->param('referer');
-    $request_info->{'title'} = $req->param('title');
-    $request_info->{'kvars'} = $req->param('kvars');
+    my @param_names = $req->param;
+    foreach my $n (@param_names) {
+	$request_info->{$n} = $req->param($n);
+    }
+    $request_info->{'param_names'} = \@param_names;
+
+#     $request_info->{'referer'} = $req->param('referer');
+#     $request_info->{'title'} = $req->param('title');
+#     $request_info->{'kvars'} = $req->param('kvars');
 
 
     Log::Log4perl::MDC->put('site', $request_info->{'site'});

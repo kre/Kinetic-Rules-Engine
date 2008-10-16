@@ -36,7 +36,11 @@ var Pilot = {
     // creates a JSON version of the sites array
     c  = '[ ';
     for (var s = 0; s < this.sites.length; s++) {
-      c += "{ " + "domain:'" + this.sites[s]['domain'] + "', site_id:" + this.sites[s]['site_id'] + " }";
+      c += 
+	"{ " + "domain:'" + this.sites[s]['domain'] + 
+	"', site_id:" + this.sites[s]['site_id'] + 
+	", datasets:'" + this.sites[s]['datasets'] + 
+	"' }";
       if(s < this.sites.length - 1) c += ", ";
     }
     c += ' ]';
@@ -100,6 +104,9 @@ var Pilot = {
              script = doc.createElement('script');
              script.type = 'text/javascript';
              script.src = this.kynetx_js_host + '/js/' + site['site_id'] + '/kobj.js';
+             if(site['datasets'] != '') {
+		 script.src += '?datasets=' + site['datasets'];
+	     }
              body.appendChild(doc.createTextNode("\n"));
              body.appendChild(script);
 
@@ -122,6 +129,7 @@ var Pilot = {
     new_site = {}
     new_site['domain'] = prompt("Enter the domain (ie www.target.com) that you wish to Kynetxify:","");
     new_site['site_id'] = prompt("Enter the Kynetx site id:","1");
+    new_site['datasets'] = prompt("Enter any data sets (comma separated):","");
 
     this.sites.push(new_site);
     this.updateSites();
@@ -140,8 +148,27 @@ var Pilot = {
       var site_array = new Array(0);
       for (s = 0; s < this.sites.length; s++) {
         site = this.sites[s];
-        if (site['domain'] != '') site_array.push(site['domain'] + " (site id = "+site['site_id']+")"); 
-        else site_array.push('bogus domain (site id = '+site['site_id']+')');
+        if (site['domain'] != '')  {
+
+	    var site_str = 
+	      site['domain'] + 
+	      " (site id = " +
+	      site['site_id']; 
+
+             if(site['datasets'] != '') {
+		 site_str += 
+		     ", datasets = " +
+		     site['datasets'] +
+		     ")";
+	     } else {
+		 site_str += ")";
+	     }
+
+	    site_array.push(site_str); 
+	}
+      
+        else 
+	    site_array.push('bogus domain (site id = '+site['site_id']+')');
       }
       alert(site_array.join(' \n')+'\n'+this.kynetx_js_host+'\n');
     }

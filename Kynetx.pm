@@ -39,7 +39,9 @@ sub handler {
     
     my @host_array = $r->dir_config->get('memcached_hosts');
 
+    # Fixme: the whole thing fails if @host_array not defined...else?
     if($r->dir_config('memcached_hosts')) {
+	$logger->debug("Initializing memcached with ", join(", ", @host_array));
 	Kynetx::Memcached->init(\@host_array);
     }
 

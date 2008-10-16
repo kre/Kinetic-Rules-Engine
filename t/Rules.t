@@ -477,6 +477,33 @@ add_testcase(
 
 
 
+$krl_src = <<_KRL_;
+rule emit_in_action is active {
+  select using "http://www.utahjudo.com\/2008\/(.*?)" setting (month)
+  pre {
+  }
+  if true then
+     emit <<(function(){}())>>
+}
+_KRL_
+
+$result = <<_JS_;
+function callBacks%uniq% () {
+};
+(function(){}())
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
+
+
+##
+## JSON test cases
+##
 $json = <<_KRL_;
 {"blocktype":"every","actions":[{"action":{"name":"alert","args":[{"val":"Hello Tim","type":"str"}],"modifiers":[]},"label":""}],"name":"april2008","pagetype":{"vars":["month"],"pattern":"http:\/\/www.utahjudo.com\\\/2008\\\/(.*?)"},"state":"active"}
 _KRL_

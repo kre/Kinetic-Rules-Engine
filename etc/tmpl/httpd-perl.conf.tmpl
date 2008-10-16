@@ -70,12 +70,9 @@ LockFile "logs/accept.lock"
     StartServers          5
     MinSpareServers       5
     MaxSpareServers      10
-<TMPL_IF NAME="GENDER_ACTION">
-    MaxClients           25
-<TMPL_ELSE>
-    MaxClients           70
+<TMPL_IF NAME="GENDER_ACTION">    MaxClients           25
+<TMPL_ELSE>    MaxClients           70
 </TMPL_IF>
-
     MaxRequestsPerChild   0
 </IfModule>
 
