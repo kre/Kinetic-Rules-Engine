@@ -1,3 +1,18 @@
+2008-11-26  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Rules.pm (process_rules): Changes to support non-numeric
+ 	  ruleset IDs.  
+
+2008-10-30  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Parser.pm: Added labels to emits.
+	* Kynetx/Action.pm: Added callback calls and logging labels to emits
+
+2008-10-28  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/KOBJ.pm (get_kobj): Updated the KOBJ.get_host function to
+	  ignore protocol if present.  
+
 2008-10-06  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Actions.pm: Replaced all actions with JQuery-based

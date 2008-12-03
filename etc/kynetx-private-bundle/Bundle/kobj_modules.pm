@@ -53,10 +53,6 @@ Test::More
 
 APR::Table
 
-HOP::Lexer
-
-HOP::Stream
-
 Log::Log4perl
 
 Log::Dispatch::File

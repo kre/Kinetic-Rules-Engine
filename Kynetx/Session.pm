@@ -76,7 +76,7 @@ sub tie_servers {
 	Servers => $mem_servers,
 	NoRehash => 1,
 	Readonly => 0,
-	Debug => 1,
+	Debug => 0,
 	CompressThreshold => 10_000
     };
 

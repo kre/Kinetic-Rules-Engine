@@ -73,7 +73,7 @@ sub process_rules {
 	host => $r->connection->get_remote_host,
 	caller => $r->headers_in->{'Referer'} || $req->param('caller'),
 	now => time,
-	site => $path_info =~ m#/(\d+)/.*\.js#,
+	site => $path_info =~ m#/eval/([^/]+)/.*\.js#,
 	hostname => $r->hostname(),
 	ip => $r->connection->remote_ip() || '0.0.0.0',
 	ua => $r->headers_in->{UserAgent} || '',
@@ -116,6 +116,7 @@ sub process_rules {
 	$js .= eval_rule($r, $request_info, $rule_env, $session, $rule);
     }
 
+    $logger->debug("Finished processing rules for " . $request_info->{'site'});
     print $js;
 
 }
@@ -226,20 +227,20 @@ sub get_rule_set {
     my ($site, $caller, $svn_conn, $request_info) = @_;
 
     my $logger = get_logger();
-    $logger->debug("Getting rules for $caller");
+    $logger->debug("Getting ruleset for $caller");
 
-    my $rules = optimize_rules(
-	          get_rules_from_repository($site, $svn_conn, $request_info),$site);
+    my $ruleset = get_rules_from_repository($site, $svn_conn, $request_info);
 
+    $ruleset = optimize_rules($ruleset);
     
-    $logger->debug("Found " . @{ $rules->{$site} } . " rules..." );
+    $logger->debug("Found " . @{ $ruleset->{'rules'} } . " rules..." );
 
     my @new_set;
     my %new_env;
 
     $request_info->{'rule_count'} = 0;
     $request_info->{'selected_rules'} = [];
-    foreach my $rule ( @{ $rules->{$site} } ) {
+    foreach my $rule ( @{ $ruleset->{'rules'} } ) {
 
 	if($rule->{'state'} eq 'active') {  # optimize??
 
@@ -283,9 +284,9 @@ sub get_rule_set {
 }
 
 sub optimize_rules {
-    my ($rules, $site) = @_;
+    my ($ruleset) = @_;
 
-    foreach my $rule ( @{ $rules->{$site} } ) {
+    foreach my $rule ( @{ $ruleset->{'rules'} } ) {
 
 	# precompile pattern regexp
 	$rule->{'pagetype'}->{'pattern'} = 
@@ -293,7 +294,7 @@ sub optimize_rules {
 
     }
 
-    return $rules;
+    return $ruleset;
 }
 
 
@@ -369,6 +370,8 @@ sub get_rules_from_repository{
     } else {
 	$ruleset = jsonToAst($krl);
     }
+
+
 
     $logger->debug("Caching ruleset for $site");
     $memd->set("ruleset:$site", $ruleset);

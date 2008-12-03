@@ -203,8 +203,8 @@ KOBJ.hide = function (id) {
 
 // helper functions
 KOBJ.buildDiv = function (uniq, pos, top, side) {
-    var vert = top.split(/\s*:\s*/);
-    var horz = side.split(/\s*:\s*/);
+    var vert = top.split(/\\s*:\\s*/);
+    var horz = side.split(/\\s*:\\s*/);
     var div_style = {
         position: pos,
         zIndex: '9999',
@@ -219,7 +219,7 @@ KOBJ.buildDiv = function (uniq, pos, top, side) {
 }
 
 KOBJ.get_host = function(s) {
-     return s.match(/\\w+:\\/\\/([\\w.]+)/)[1];
+ return s.match(/^(?:\\w+:\\/\\/)?([\\w.]+)/)[1];
 }
 
 KOBJ.pick = function(o) {
@@ -235,7 +235,7 @@ KOBJ.d = (new Date).getTime();
 KOBJ.proto = \'$proto\'; 
 KOBJ.host_with_port = \'$host\'; 
 KOBJ.loghost_with_port = \'$log_host\'; 
-KOBJ.site_id = $site_id;
+KOBJ.site_id = \'$site_id\';
 KOBJ.url = KOBJ.proto+KOBJ.host_with_port+"/ruleset/eval/" + KOBJ.site_id;
 KOBJ.logger_url = KOBJ.proto+KOBJ.loghost_with_port+"/log/" + KOBJ.site_id;
 
@@ -261,13 +261,16 @@ EOF
     }
 
     foreach my $dataset (@ds) {
-	open(JSON, "$data_root/$dataset.json") || 
-	    $logger->error("Can't open file $$data_root/$dataset.json: $!\n");
-	local $/ = undef;
-	$js .= "KOBJ.$dataset = ";
-	$js .= <JSON>;
-	$js .= ";\n";
-	close JS;
+	my $fn = "$data_root/$dataset.json";
+	if(-e $fn) {
+	    open(JSON, $fn ) || 
+		$logger->error("Can't open file $data_root/$dataset.json: $!\n");
+	    local $/ = undef;
+	    $js .= "KOBJ.$dataset = ";
+	    $js .= <JSON>;
+	    $js .= ";\n";
+	    close JS;
+	}
     }
 
     # create param string for tacking on to CS request

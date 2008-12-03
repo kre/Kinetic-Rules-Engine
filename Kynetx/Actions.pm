@@ -241,10 +241,11 @@ sub build_js_load {
 					$rule->{'name'}
 		    );
 	    } elsif(defined $action_expr->{'emit'}) {
-		$js .= $action_expr->{'emit'};
+		$js .= $action_expr->{'emit'}. "\n";
+		$js .= "$cb_func_name();\n";
 		push(@{ $rule_env->{'actions'} }, 'emit');
 		push(@{ $rule_env->{'tags'} }, '');
-		push(@{ $rule_env->{'labels'} }, '');
+		push(@{ $rule_env->{'labels'} }, $action_expr->{'label'});
 
 	    }
 	}

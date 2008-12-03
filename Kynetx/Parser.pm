@@ -1,3 +1,8 @@
+
+
+
+
+
 package Kynetx::Parser;
 # file: Kynetx/Parser.pm
 
@@ -62,8 +67,16 @@ BOOL: 'true' | 'false'
 
 eofile: /^\Z/
 
-ruleset: 'ruleset' ruleset_name  '{' rule(s) '}' eofile
-             {$return = {$item{ruleset_name} => $item[4]}}
+ruleset: 'ruleset' ruleset_name  '{' 
+           dispatch_block(0..1)
+           rule(s?) 
+         '}' eofile
+             {$return = {
+		 'ruleset_name' => $item{ruleset_name},
+		 'dispatch' => $item[4][0] || [],
+		 'rules' => $item[5]
+	         }
+	     }
        | { foreach (@{$thisparser->{errors}}) {
               $errors .= "Line $_->[1]:$_->[0]\n";
            }
@@ -74,6 +87,17 @@ ruleset: 'ruleset' ruleset_name  '{' rule(s) '}' eofile
 ruleset_name: VAR  # {return $item[1]}
             | NUM  # {return $item[1]}
             | <error>
+
+dispatch_block: 'dispatch' '{' dispatch(s? /;/)  SEMICOLON(?) '}' #?
+     {$return = $item[3]}
+
+dispatch: 'domain' STRING '->' STRING
+     {$return = {
+	 'domain' => $item[2],
+	 'ruleset_name' => $item[4]
+         }
+     }
+                   
 
 rule: 'rule' VAR 'is' rule_state '{'
         select
@@ -180,9 +204,10 @@ primrule: rule_label(?) action_name '(' expr(s? /,/) ')' modifier_clause(?)
              }
          }
         }
-     | emit_block
+     | rule_label(?) emit_block
         {$return = 
-	 {'emit' => $item[1],
+	 {'label' => $item[1][0],
+          'emit' => $item[2],
          }
 	}
      | <error>

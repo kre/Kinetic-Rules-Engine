@@ -20,19 +20,62 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 use Log::Log4perl qw(get_logger :levels);
 
 
-#use Data::Dumper;
-#$Data::Dumper::Indent = 1;
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
 
 my $g_indent = 4;
 
 
 sub pp {
-    my ($rules) = @_;
+    my ($ruleset) = @_;
 
-    foreach my $k (keys %{$rules}) {
-	return "ruleset $k {\n" . pp_rules($rules->{$k},$g_indent) . "\n}\n";
+    my $name = $ruleset->{'ruleset_name'};
+    my $rules = $ruleset->{'rules'};
+
+    my $o = "";
+
+    $o .= "ruleset $name {\n";
+
+
+    if( @{ $ruleset->{'dispatch'} }) {
+	$o .= pp_dispatch_block($ruleset->{'dispatch'}, $g_indent);
+    }    
+
+    $o .= pp_rules($rules,$g_indent);
+    $o .= "\n}\n";
+    
+    return $o;
+}
+
+
+sub pp_dispatch_block {
+    my ($db, $indent) = @_;
+
+    my $beg = " "x$indent;
+
+    my $o .= $beg . "dispatch {\n";
+    foreach my $d ( @{$db}) {
+
+	$o .= pp_dispatch($d, $indent+$g_indent) . ";";
     }
+    $o .= $beg . "}\n";
 
+    return $o;
+
+}
+
+sub pp_dispatch {
+    my ($d, $indent) = @_;
+
+    my $beg = " "x$indent;
+
+    my $o .= $beg . "domain " ;
+    $o .= '"'.$d->{'domain'}.'"';  
+    $o .= " -> ";
+    $o .= '"'.$d->{'ruleset_name'}.'"';
+    $o .= "\n";
+
+    return $o;
 
 }
 
@@ -296,27 +339,40 @@ sub pp_primrule{
     my $beg = " "x$indent;
     my $o = $beg;
 
-    if($node->{'label'}) {
-	$o .= $node->{'label'} . ":\n";
-	$beg .= " "x$g_indent;
-	$o .= $beg;
-    }
-    
-    
+    if(defined $node->{'emit'}) {
 
-    $o .= $node->{'action'}->{'name'} . "(";
-    $o .= join ", ", pp_rands($node->{'action'}->{'args'});
-    $o .= ")";
-     if(defined $node->{'action'}->{'modifiers'} && 
-	@{ $node->{'action'}->{'modifiers'} } > 0) {
-  	$o .= "\n". $beg . "with\n";
-  	$o .= join " and\n", 
-  	        map {pp_modifier($_, $indent+$g_indent+$g_indent)} 
-  	            @{ $node->{'action'}->{'modifiers'} };
-     }
+	if($node->{'label'}) {
+	    $o .= $node->{'label'} . ":\n";
+	    $beg .= " "x$g_indent;
+	    $o .= $beg;
+	}
+
+	$o .= pp_emit($node->{'emit'},$indent+$g_indent) ;
+    } else {
+
+
+	if($node->{'label'}) {
+	    $o .= $node->{'label'} . ":\n";
+	    $beg .= " "x$g_indent;
+	    $o .= $beg;
+	}
 	
+	
+
+	$o .= $node->{'action'}->{'name'} . "(";
+	$o .= join ", ", pp_rands($node->{'action'}->{'args'});
+	$o .= ")";
+	if(defined $node->{'action'}->{'modifiers'} && 
+	   @{ $node->{'action'}->{'modifiers'} } > 0) {
+	    $o .= "\n". $beg . "with\n";
+	    $o .= join " and\n", 
+	    map {pp_modifier($_, $indent+$g_indent+$g_indent)} 
+	    @{ $node->{'action'}->{'modifiers'} };
+	}
+	
+    }	
+
     $o .= ";\n";
-    
 
     return $o;
 }

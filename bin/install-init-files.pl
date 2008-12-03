@@ -2,6 +2,10 @@
 
 use strict;
 
+
+use lib qw(/web/lib/perl);
+
+
 use Getopt::Std;
 use HTML::Template;
 use JavaScript::Minifier qw(minify);
@@ -25,6 +29,7 @@ my @js_files = qw(
 jquery-1.2.6.js
 jquery.json-1.2.js
 jquery-ui-personalized-1.6rc2.js
+jquery.livequery.js
 kobj-extras.js
 );
 
@@ -47,8 +52,10 @@ getopts( "$opt_string", \%opt ); # or &usage();
 my $js_version = $opt{'v'} || DEFAULT_JS_VERSION;
 my $js_root = $opt{'r'} || DEFAULT_JS_ROOT;
 
-    
+
 my $js;
+
+# get the static files    
 foreach my $file (@js_files) {
     $js .= get_js_file($file,$js_version,$js_root);
 }
@@ -71,7 +78,7 @@ sub get_js_file {
 
     my $filename = join('/',($js_root,$js_version,$file));
 
-    open(JS, "< $filename") || 
+    open(JS, "< $filename") ||  
 	die("Can't open file $filename: $!\n");
 
 
