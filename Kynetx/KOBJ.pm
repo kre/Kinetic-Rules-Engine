@@ -75,7 +75,7 @@ sub handler {
 
     } elsif($file eq 'kobj-static.js') {
 
-	if($site eq 'static') { # redirect to CloudFront
+	if($site eq 'static' || $site eq 'shared') { # redirect to CloudFront
 	    my $version = 
 		$r->dir_config('CloudFrontFile') || 'kobj-static-1.js';
 	    my $cf_url = "http://static.kobj.net/". $version;
