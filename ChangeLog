@@ -1,3 +1,8 @@
+2008-12-08  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/KOBJ.pm (get_kobj): Added "static" URL for static file
+	  that redirects to CloudFront.
+
 2008-11-26  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (process_rules): Changes to support non-numeric

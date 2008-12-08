@@ -75,8 +75,19 @@ sub handler {
 
     } elsif($file eq 'kobj-static.js') {
 
-	$logger->info("Generating KOBJ static file ", $file);
-	$js = get_js_file($file,$js_version,$js_root);
+	if($site eq 'static') { # redirect to CloudFront
+	    my $version = 
+		$r->dir_config('CloudFrontFile') || 'kobj-static-1.js';
+	    my $cf_url = "http://static.kobj.net/". $version;
+	    $logger->info("Redirecting to Cloudfront ", $cf_url);
+	    $r->headers_out->set(Location => $cf_url);
+	    
+	    return Apache2::Const::REDIRECT;
+	    
+	} else {  # send the file from here
+	    $logger->info("Generating KOBJ static file ", $file);
+	    $js = get_js_file($file,$js_version,$js_root);
+	}
 	
     } else {
 
