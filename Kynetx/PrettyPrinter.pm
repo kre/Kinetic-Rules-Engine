@@ -37,11 +37,11 @@ sub pp {
     $o .= "ruleset $name {\n";
 
 
-    if( @{ $ruleset->{'dispatch'} }) {
+    if( $ruleset->{'dispatch'} && @{ $ruleset->{'dispatch'} }) {
 	$o .= pp_dispatch_block($ruleset->{'dispatch'}, $g_indent);
     }    
 
-    if( @{ $ruleset->{'global'} }) {
+    if( $ruleset->{'global'} && @{ $ruleset->{'global'} }) {
 	$o .= pp_global_block($ruleset->{'global'}, $g_indent);
     }    
 
