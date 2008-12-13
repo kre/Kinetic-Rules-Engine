@@ -478,8 +478,10 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
   </TMPL_LOOP>
   </TMPL_IF>
 
+  # use CloudFront?
+  PerlSetVar UseCloudFront 1
   # static file version on CloudFront
-  PerlSetVar CloudFrontFile kobj-static-1.js
+  PerlSetVar CloudFrontFile kobj-static-20081211.js
 
 
 

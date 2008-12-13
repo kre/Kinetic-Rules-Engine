@@ -9,6 +9,7 @@ use lib qw(/web/lib/perl);
 use Getopt::Std;
 use HTML::Template;
 use JavaScript::Minifier qw(minify);
+use DateTime;
 
 use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
 use constant DEFAULT_JS_VERSION => '0.9';
@@ -23,13 +24,15 @@ my $web_root_var = 'WEB_ROOT';
 my $web_root = $ENV{$web_root_var} || 
     die "$web_root_var is undefined in the environment";
 
-my $kobj_file = 'kobj-static.js';
+my $dt = DateTime->now;
+my $dstamp = $dt->ymd('');
+
+my $kobj_file = "kobj-static-".$dstamp.".js";
 
 my @js_files = qw(
 jquery-1.2.6.js
 jquery.json-1.2.js
 jquery-ui-personalized-1.6rc2.js
-jquery.livequery.js
 kobj-extras.js
 );
 
@@ -65,10 +68,12 @@ foreach my $file (@js_files) {
 my $filename = join('/',($js_root,$js_version,$kobj_file));
 print "Writing $filename...\n";
 open(FH,">$filename");
+print FH "var kobj_fn = '$kobj_file'; ";
 print FH $js;
 close(FH);
 
-
+my $pofn = join('/',($js_root,$js_version,"kobj-static.js"));
+link($filename,$pofn);
 
 1;
 

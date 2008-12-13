@@ -105,12 +105,29 @@ sub process_rules {
     }
 
     # side effects environment with precondition pattern values
-    my ($rules, $rule_env) = get_rule_set($request_info->{'site'}, 
-					  $request_info->{'caller'},
-					  $r->dir_config('svn_conn'));
+    my ($rules, $rule_env, $global) = 
+	get_rule_set($request_info->{'site'}, 
+		     $request_info->{'caller'},
+		     $r->dir_config('svn_conn'));
 
 
     my $js = '';
+
+    # handle globals
+
+    if($global) {
+	foreach my $g (@{ $global }) {
+
+	    # emits
+	    if($g->{'emit'}) {
+		$js .= $g->{'emit'} . "\n";
+	    }
+
+
+	}
+    }
+
+
     # this loops through the rules ONCE applying all that fire
     foreach my $rule ( @{ $rules } ) {
 	$js .= eval_rule($r, $request_info, $rule_env, $session, $rule);
@@ -279,7 +296,7 @@ sub get_rule_set {
     
     }
     
-    return (\@new_set, \%new_env);
+    return (\@new_set, \%new_env, $ruleset->{'global'});
 
 }
 

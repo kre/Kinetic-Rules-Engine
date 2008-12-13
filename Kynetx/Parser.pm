@@ -69,12 +69,14 @@ eofile: /^\Z/
 
 ruleset: 'ruleset' ruleset_name  '{' 
            dispatch_block(0..1)
+           global_block(0..1)
            rule(s?) 
          '}' eofile
              {$return = {
 		 'ruleset_name' => $item{ruleset_name},
 		 'dispatch' => $item[4][0] || [],
-		 'rules' => $item[5]
+		 'global' => $item[5][0] || [],
+		 'rules' => $item[6]
 	         }
 	     }
        | { foreach (@{$thisparser->{errors}}) {
@@ -98,6 +100,15 @@ dispatch: 'domain' STRING '->' STRING
          }
      }
                    
+
+global_block: 'global' '{' globals(s? /;/)  SEMICOLON(?) '}' #?
+     {$return = $item[3]}
+
+globals: emit_block
+     {$return = {'emit' => $item[1]
+                }
+     }
+
 
 rule: 'rule' VAR 'is' rule_state '{'
         select

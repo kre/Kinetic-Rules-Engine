@@ -490,7 +490,8 @@ _KRL_
 $result = <<_JS_;
 function callBacks%uniq% () {
 };
-(function(){}())
+(function(){}());
+callBacks%uniq%();
 _JS_
 
 add_testcase(

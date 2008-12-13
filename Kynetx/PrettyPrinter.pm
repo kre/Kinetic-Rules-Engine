@@ -41,6 +41,10 @@ sub pp {
 	$o .= pp_dispatch_block($ruleset->{'dispatch'}, $g_indent);
     }    
 
+    if( @{ $ruleset->{'global'} }) {
+	$o .= pp_global_block($ruleset->{'global'}, $g_indent);
+    }    
+
     $o .= pp_rules($rules,$g_indent);
     $o .= "\n}\n";
     
@@ -64,6 +68,7 @@ sub pp_dispatch_block {
 
 }
 
+
 sub pp_dispatch {
     my ($d, $indent) = @_;
 
@@ -74,6 +79,40 @@ sub pp_dispatch {
     $o .= " -> ";
     $o .= '"'.$d->{'ruleset_name'}.'"';
     $o .= "\n";
+
+    return $o;
+
+}
+
+sub pp_global_block {
+    my ($db, $indent) = @_;
+
+    my $beg = " "x$indent;
+
+    my $o .= $beg . "global {\n";
+    foreach my $d ( @{$db}) {
+
+	$o .= pp_global($d, $indent+$g_indent) . ";";
+    }
+    $o .= $beg . "}\n";
+
+    return $o;
+
+}
+
+sub pp_global {
+    my ($d, $indent) = @_;
+
+    my $beg = " "x$indent;
+
+    my $o;
+    if($d->{'emit'}) {
+	$o .= $beg . "emit << " ;
+	$o .= $d->{'emit'};
+	$o .= ">>\n";
+    }
+    
+    
 
     return $o;
 
