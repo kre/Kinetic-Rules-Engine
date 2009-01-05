@@ -3,16 +3,29 @@
 use strict;
 
 
-use lib qw(/web/lib/perl);
+use lib qw(
+/web/lib/perl
+/web/etc
+);
 
 
 use Getopt::Std;
 use HTML::Template;
 use JavaScript::Minifier qw(minify);
+use Compress::Zlib;
+use Amazon::S3;
 use DateTime;
+use Data::Dumper;
+
+# load the Amazon credentials
+# these are not in the code repository on purpose
+use amazon_credentials qw($aws_access_key_id $aws_secret_access_key);
+
 
 use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
 use constant DEFAULT_JS_VERSION => '0.9';
+
+use vars qw/$OWNER_ID $OWNER_DISPLAYNAME/;
 
 
 my $base_var = 'KOBJ_ROOT';
@@ -33,6 +46,7 @@ my @js_files = qw(
 jquery-1.2.6.js
 jquery.json-1.2.js
 jquery-ui-personalized-1.6rc2.js
+kgrowl-1.0.js
 kobj-extras.js
 );
 
@@ -56,7 +70,7 @@ my $js_version = $opt{'v'} || DEFAULT_JS_VERSION;
 my $js_root = $opt{'r'} || DEFAULT_JS_ROOT;
 
 
-my $js;
+my $js = "var kobj_fn = '$kobj_file'; ";
 
 # get the static files    
 foreach my $file (@js_files) {
@@ -64,16 +78,51 @@ foreach my $file (@js_files) {
 }
 
 
-# print the file
-my $filename = join('/',($js_root,$js_version,$kobj_file));
-print "Writing $filename...\n";
-open(FH,">$filename");
-print FH "var kobj_fn = '$kobj_file'; ";
-print FH $js;
-close(FH);
+# compress the JS program
+my $cjs = Compress::Zlib::memGzip($js);
 
-my $pofn = join('/',($js_root,$js_version,"kobj-static.js"));
-link($filename,$pofn);
+# create expires timestamp
+$dt = $dt->add(days => 364);
+my $expires = $dt->strftime("%a %d %b %Y %T %Z");
+
+
+# FIXME: there ought to be a way to override credentials on CL
+  
+my $s3 = Amazon::S3->new(
+    {   aws_access_key_id     => $aws_access_key_id,
+	aws_secret_access_key => $aws_secret_access_key
+    }
+);
+
+
+
+my $bucket = $s3->bucket('init-files') or die $s3->err . ": " . $s3->errstr;;
+
+
+
+print "Writing JS to $kobj_file on S3 with expiration of $expires\n";
+$bucket->add_key( 
+    $kobj_file, # file name
+    $cjs,        # 
+    { 'Content-type' => 'text/javascript', 
+      'Content-encoding' => 'gzip',
+      'Expires' => $expires,
+      'x-amz-acl' => 'public-read'
+    },
+  ) or die $s3->err . ": " . $s3->errstr;
+
+
+# print the file
+#my $filename = join('/',($js_root,$js_version,$kobj_file));
+#print "Writing $filename...\n";
+#open(FH,">$filename");
+#print FH $js;
+#close(FH);
+
+#my $pofn = join('/',($js_root,$js_version,"kobj-static.js"));
+#link($filename,$pofn);
+
+
 
 1;
 

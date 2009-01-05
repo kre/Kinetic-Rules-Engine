@@ -70,6 +70,68 @@ function(uniq, cb, pos, top, side, text) {
 }
 EOF
 
+    notify => <<EOF,
+function(uniq, cb, pos, color, bgcolor, header, sticky, msg) {
+  \$K.kGrowl.defaults.position = pos;
+  \$K.kGrowl.defaults.background_color = bgcolor;
+  \$K.kGrowl.defaults.color = color;
+  \$K.kGrowl.defaults.header = header;
+  \$K.kGrowl.defaults.sticky = sticky;
+  \$K.kGrowl(msg);
+  cb();
+}
+EOF
+
+
+# not finished/tested
+    catfish => <<EOF,
+function(uniq, cb, msg) {
+  var id_str = 'kobj_'+uniq;
+
+  var message = \$K('<div>').addClass("CFmessage").css(
+    {"position": "relative",
+     "float": "left",
+     "display": "block",
+     "margin-top": "20px",
+     "padding": "5px 5px 5px 5px",
+     "font-size": "10px"
+    }).html(msg);
+
+  var close_button =
+      \$K('<a></a>').css(
+	  {"color": "rgb(30, 30, 30)",
+	   "width": "20px"
+	  }).click(function(){KOBJ.BlindUp('#'+id_str);false}).html("&times;");
+
+  var closer = \$K('<div>').addClass("KOBJCatfish").css(
+      {"margin": "20px 10px 0pt 25px",
+       "padding": "0pt",
+       "cursor": "pointer", 
+       "float": "right",
+       "font-size": "x-small"
+      }).html(close_button);
+
+  var catfish = \$K('<div>').attr('id','#'+id_str).css(
+      {"position": "fixed", 
+       "bottom": "0", 
+       "left": "0pt",
+       "background": "transparent url(http://frag.kobj.net/clients/images/bkAdBarBtm-greygrn.png) repeat-x left bottom", 
+       "padding": "0",
+       "height": "79px", 
+       "z-index": "100", 
+       "overflow": "hidden",
+       "display": "none", 
+       "width": "100%"
+      }).append(closer).append(message);
+
+  \$K('body').append(catfish);
+  KOBJ.BlindDown('#KOBJ_catfish');
+  cb();
+}
+
+EOF
+
+
     popup => <<EOF,
 function(uniq, cb, top, left, width, height, url) {      
     var id_str = 'kobj_'+uniq;

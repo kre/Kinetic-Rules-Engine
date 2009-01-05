@@ -38,7 +38,7 @@ sub handler {
 sub process_action {
     my $r = shift;
 
-    my $logger = get_logger();
+     my $logger = get_logger();
 
     $r->subprocess_env(START_TIME => Time::HiRes::time);
 
@@ -83,6 +83,10 @@ sub process_action {
     $r->subprocess_env(TYPE => $req->param('type'));
     $r->subprocess_env(ELEMENT => $req->param('element'));
     $r->subprocess_env(RULE_NAME => $req->param('rule'));
+
+    if($req->param('type') eq 'click') {
+	$r->subprocess_env(CB_INFO => $req->param('url'));
+    }
 
     $logger->debug("Finish time: ", time, " Start time: ", $r->subprocess_env('START_TIME'));
     $r->subprocess_env(TOTAL_SECS => Time::HiRes::time - 

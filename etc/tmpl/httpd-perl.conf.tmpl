@@ -331,15 +331,15 @@ LogLevel warn
 # logging for INIT, KRL, and FRAG
 LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %{X-Forwarded-For}i" combined
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/init_log /web/logs/kynetx/INIT-%Y%m%d-%H%M.log" combined env=INIT
-CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/init_log /web/logs/kynetx/FRAG-%Y%m%d-%H%M.log" combined env=FRAG
-CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/init_log /web/logs/kynetx/KRL-%Y%m%d-%H%M.log" combined env=KRL
+CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/frag_log /web/logs/kynetx/FRAG-%Y%m%d-%H%M.log" combined env=FRAG
+CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/krl_log /web/logs/kynetx/KRL-%Y%m%d-%H%M.log" combined env=KRL
 
 # rule logging for CS
 LogFormat "%h %t %{TOTAL_SECS}e %{SITE}e %{TXN_ID}e \"%{CALLER}e\" %{SID}e \"%{REFERER}e\" \"%{TITLE}e\" [%{RULE_NAMES}e] [%{RESULTS}e] [%{ACTIONS}e] [%{TAGS}e] [%{LABELS}e] " KOBJ
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/kynetx_log /web/logs/kynetx/KOBJ-%Y%m%d-%H%M.log" KOBJ env=KOBJ
 
-# callback logging for LOG
-LogFormat "%h %t %{TOTAL_SECS}e %{SITE}e %{TXN_ID}e \"%{RULE_NAME}e\" \"%{CALLER}e\" %{SID}e %{TYPE}e \"%{ELEMENT}e\" \"%{SENSE}e\" " CB
+# callback logging for CALLBACK
+LogFormat "%h %t %{TOTAL_SECS}e %{SITE}e %{TXN_ID}e \"%{RULE_NAME}e\" \"%{CALLER}e\" %{SID}e %{TYPE}e \"%{ELEMENT}e\" \"%{SENSE}e\" \"%{CB_INFO}e\" " CB
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/callback_log /web/logs/kynetx/CB-%Y%m%d-%H%M.log" CB env=CB
 
 
@@ -481,7 +481,7 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
   # use CloudFront?
   PerlSetVar UseCloudFront 1
   # static file version on CloudFront
-  PerlSetVar CloudFrontFile kobj-static-20081211.js
+  PerlSetVar CloudFrontFile kobj-static-20090102.js
 
 
 

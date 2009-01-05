@@ -1,3 +1,9 @@
+2009-01-05  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Logger.pm: Added info field to callback logging
+	* Kynetx/Parser.pm: Added notify action
+	* Kynetx/Actions.pm: Added notify action
+
 2008-12-08  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/KOBJ.pm (get_kobj): Added "static" URL for static file

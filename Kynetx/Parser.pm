@@ -246,6 +246,7 @@ action_name: 'float_html'
            | 'redirect'
            | 'move_after'
            | 'move_to_top'
+           | 'notify'
            | 'noop'
            | <error>
 
