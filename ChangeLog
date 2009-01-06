@@ -1,3 +1,10 @@
+2009-01-06  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/KOBJ.pm: Modified KOBJ.obs to work on clicks with inner HTML
+	* bin/install-init-files.pl: Made Amazon S3 save optional and
+	  restored file save for local files in case S3 isn't available.  
+	
+
 2009-01-05  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Logger.pm: Added info field to callback logging

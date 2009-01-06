@@ -77,6 +77,7 @@ sub handler {
 
 	if($r->dir_config('UseCloudFront') && 
             ($site eq 'static' || $site eq 'shared')) { # redirect to CloudFront
+	    # FIXME: if config directive not available, log error
 	    my $version = 
 		$r->dir_config('CloudFrontFile') || 'kobj-static-1.js';
 	    my $cf_url = "http://static.kobj.net/". $version;
@@ -150,7 +151,7 @@ KOBJ.logger = function(type,txn_id,element,url,sense,rule) {
 KOBJ.obs = function(type, txn_id, name, sense, rule) {
     if(type == 'class') {
 	\$K('.'+name).click(function(e1) {
-	    var tgt = \$K(e1.target);
+	    var tgt = \$K(this);
 	    var b = tgt.attr('href') || '';
 	    KOBJ.logger("click",
 			txn_id,
@@ -163,7 +164,7 @@ KOBJ.obs = function(type, txn_id, name, sense, rule) {
 	    });
     } else {
 	\$K('#'+name).click(function(e1) {
-	    var tgt = \$K(e1.target);
+	    var tgt = \$K(this);
 	    var b = tgt.attr('href') || '';
 	    KOBJ.logger("click",
 			txn_id,

@@ -13,19 +13,13 @@ use Getopt::Std;
 use HTML::Template;
 use JavaScript::Minifier qw(minify);
 use Compress::Zlib;
-use Amazon::S3;
 use DateTime;
 use Data::Dumper;
-
-# load the Amazon credentials
-# these are not in the code repository on purpose
-use amazon_credentials qw($aws_access_key_id $aws_secret_access_key);
 
 
 use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
 use constant DEFAULT_JS_VERSION => '0.9';
 
-use vars qw/$OWNER_ID $OWNER_DISPLAYNAME/;
 
 
 my $base_var = 'KOBJ_ROOT';
@@ -55,7 +49,7 @@ kobj-extras.js
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'hv:r:';
+my $opt_string = 'hv:r:a';
 getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'};
 
@@ -78,49 +72,65 @@ foreach my $file (@js_files) {
 }
 
 
-# compress the JS program
-my $cjs = Compress::Zlib::memGzip($js);
 
-# create expires timestamp
-$dt = $dt->add(days => 364);
-my $expires = $dt->strftime("%a %d %b %Y %T %Z");
+if($opt{'a'}) {  # save to S3
 
+    require Amazon::S3;
+    Amazon::S3->import;
+#    use vars qw/$OWNER_ID $OWNER_DISPLAYNAME/;
 
-# FIXME: there ought to be a way to override credentials on CL
-  
-my $s3 = Amazon::S3->new(
-    {   aws_access_key_id     => $aws_access_key_id,
-	aws_secret_access_key => $aws_secret_access_key
-    }
-);
+# load the Amazon credentials
+# these are not in the code repository on purpose
+    require amazon_credentials; 
 
 
+    # compress the JS program
+    my $cjs = Compress::Zlib::memGzip($js);
 
-my $bucket = $s3->bucket('init-files') or die $s3->err . ": " . $s3->errstr;;
+    # create expires timestamp
+    $dt = $dt->add(days => 364);
+    my $expires = $dt->strftime("%a %d %b %Y %T %Z");
+
+
+    # FIXME: there ought to be a way to override credentials on CL
+
+    my $s3 = Amazon::S3->new(
+	{   aws_access_key_id     => amazon_credentials->get_key_id(),
+	    aws_secret_access_key => amazon_credentials->get_access_key()
+	}
+	);
 
 
 
-print "Writing JS to $kobj_file on S3 with expiration of $expires\n";
-$bucket->add_key( 
-    $kobj_file, # file name
-    $cjs,        # 
-    { 'Content-type' => 'text/javascript', 
-      'Content-encoding' => 'gzip',
-      'Expires' => $expires,
-      'x-amz-acl' => 'public-read'
-    },
-  ) or die $s3->err . ": " . $s3->errstr;
+    my $bucket = $s3->bucket('init-files') or die $s3->err . ": " . $s3->errstr;;
 
+
+
+    print "Writing JS to $kobj_file on S3 with expiration of $expires\n";
+    $bucket->add_key( 
+	$kobj_file, # file name
+	$cjs,        # 
+	{ 'Content-type' => 'text/javascript', 
+	  'Content-encoding' => 'gzip',
+	  'Expires' => $expires,
+	  'x-amz-acl' => 'public-read'
+	},
+	) or die $s3->err . ": " . $s3->errstr;
+
+}
 
 # print the file
-#my $filename = join('/',($js_root,$js_version,$kobj_file));
-#print "Writing $filename...\n";
-#open(FH,">$filename");
-#print FH $js;
-#close(FH);
+my $filename = join('/',($js_root,$js_version,$kobj_file));
+print "Writing $filename...\n";
 
-#my $pofn = join('/',($js_root,$js_version,"kobj-static.js"));
-#link($filename,$pofn);
+# save file locally
+open(FH,">$filename");
+print FH $js;
+close(FH);
+
+my $pofn = join('/',($js_root,$js_version,"kobj-static.js"));
+unlink $pofn;
+link($filename,$pofn);
 
 
 
@@ -161,6 +171,7 @@ Create Kynetx initialization js files
 
 Options:
 
+   -a       : store to S3
    -r DIR   : use DIR as the root directory for JS files
    -v V     : use V as the verion number
 
