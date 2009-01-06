@@ -76,7 +76,10 @@ sub handler {
     } elsif($file eq 'kobj-static.js') {
 
 	if($r->dir_config('UseCloudFront') && 
-            ($site eq 'static' || $site eq 'shared')) { # redirect to CloudFront
+            ($site eq 'static' || 
+	     $site eq 'shared' || 
+	     $site eq '996337974') # Backcountry
+	    ) { # redirect to CloudFront
 	    # FIXME: if config directive not available, log error
 	    my $version = 
 		$r->dir_config('CloudFrontFile') || 'kobj-static-1.js';
