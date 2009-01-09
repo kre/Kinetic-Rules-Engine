@@ -57,7 +57,7 @@ sub show_context {
 
     # build initial env
     my $path_info = $r->path_info;
-    my $site = $path_info =~ m#/(\d+)/.*\.js#;
+    my ($site) = $r->path_info =~ m#/console/(\w+)$#;
     my %request_info = (
 	host => $r->connection->get_remote_host,
 	caller => $r->headers_in->{'Referer'},

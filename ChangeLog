@@ -1,4 +1,15 @@
+2009-01-08  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx.pm (handler): Fixed "flush" $site regexp to work with
+	  non-numeric site ids
+	* Kynetx/Console.pm: Fixed $site regexp to work with non-numeric
+	  site ids
+	* t/cs.t: Added tests for running ruleset server
+
 2009-01-06  Phil Windley  <pjw@kynetx.com>
+
+	* bin/update.pl: removed an incorrect switch from the call to
+	  install-init-files.pl 
 
 	* Kynetx/KOBJ.pm: Modified KOBJ.obs to work on clicks with inner HTML
 	* bin/install-init-files.pl: Made Amazon S3 save optional and

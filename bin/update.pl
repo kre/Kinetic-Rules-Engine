@@ -49,7 +49,7 @@ if ($init_gender) { # for init.kobj.net
 
     system "$base/bin/install-httpd-conf.pl  -jm";
     # install the right init files
-    system "$base/bin/install-init-files.pl -n 0.9";
+    system "$base/bin/install-init-files.pl";
 
 } elsif ($action_gender) { # for csXX.kobj.net
 

@@ -81,7 +81,7 @@ sub flush_ruleset_cache {
 
     my $logger = get_logger();
 
-    my ($site) = $r->path_info =~ m#/(\d+)#;
+    my ($site) = $r->path_info =~ m#/flush/(.+)#;
 
     Log::Log4perl::MDC->put('site', $site);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
