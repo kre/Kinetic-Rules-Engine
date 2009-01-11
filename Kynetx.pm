@@ -131,7 +131,7 @@ sub describe_ruleset {
 	'ruleset_id' => $ruleset->{'ruleset_name'},
 	'ruleset_version' => $req_info{'rule_version'},
 	'number_of_rules' => $numrules,
-	'description' => $ruleset->{'meta'}->{'description'},
+	'description' => $ruleset->{'meta'}->{'description'} || '',
     };
 
 
@@ -142,7 +142,7 @@ sub describe_ruleset {
     foreach my $rule ( @{ $ruleset->{'rules'} } ) {
 
 	my $rule_info = {'rule_name' => $rule->{'name'},
-			 'precondition' => Kynetx::Actions::get_precondition_test($rule)
+			 'selected_using' => Kynetx::Actions::get_precondition_test($rule)
 	};
 
 	if($rule->{'state'} eq 'active') {  
