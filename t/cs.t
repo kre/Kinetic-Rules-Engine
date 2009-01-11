@@ -9,7 +9,7 @@ use Test::WWW::Mechanize;
 
 use LWP::UserAgent;
 
-my $numtests = 26;
+my $numtests = 37;
 
 plan tests => $numtests;
 
@@ -22,7 +22,9 @@ my $mech = Test::WWW::Mechanize->new();
 SKIP: {
     my $ua = LWP::UserAgent->new;
 
-    my $response = $ua->get('http://127.0.0.1/ruleset/console/$ruleset');
+    my $check_url = "$dn/console/$ruleset";
+    diag "Checking $check_url";
+    my $response = $ua->get($check_url);
     skip "No server available", $numtests if (! $response->is_success);
 
     # test CONSOLE function
@@ -53,6 +55,36 @@ SKIP: {
     $mech->content_like('/Active rules.+2/s');
     $mech->content_contains('test_rule_1');
     $mech->content_contains('will fire');
+
+
+    # test DESCRIBE function
+    my $url_describe_1 = "$dn/describe/$ruleset";
+
+    #diag "Testing console with $url_describe_1";
+
+    $mech->get_ok($url_describe_1);
+    is($mech->content_type(), 'text/html');
+
+    $mech->title_is('Describe Ruleset cs_test');
+
+    $mech->content_like('/"ruleset_version":"\d+"/s');
+    $mech->content_like('/"description":"[^"]+"/s');
+    $mech->content_like('/"ruleset_id":"[^"]+"/s');
+
+
+    # test DESCRIBE function
+    my $url_describe_2 = "$dn/describe/$ruleset?flavor=json";
+
+    #diag "Testing console with $url_describe_2";
+
+    $mech->get_ok($url_describe_2);
+    is($mech->content_type(), 'text/plain');
+
+    $mech->content_like('/"ruleset_version":"\d+"/s');
+    $mech->content_like('/"description":"[^"]+"/s');
+    $mech->content_like('/"ruleset_id":"[^"]+"/s');
+
+
 
     # test FLUSH function
 

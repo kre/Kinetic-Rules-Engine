@@ -68,15 +68,17 @@ BOOL: 'true' | 'false'
 eofile: /^\Z/
 
 ruleset: 'ruleset' ruleset_name  '{' 
+           meta_block(0..1)
            dispatch_block(0..1)
            global_block(0..1)
-           rule(s?) 
+           rule(s?)   #??
          '}' eofile
              {$return = {
 		 'ruleset_name' => $item{ruleset_name},
-		 'dispatch' => $item[4][0] || [],
-		 'global' => $item[5][0] || [],
-		 'rules' => $item[6]
+		 'meta' => $item[4][0] || {},
+		 'dispatch' => $item[5][0] || [],
+		 'global' => $item[6][0] || [],
+		 'rules' => $item[7]
 	         }
 	     }
        | { foreach (@{$thisparser->{errors}}) {
@@ -89,6 +91,19 @@ ruleset: 'ruleset' ruleset_name  '{'
 ruleset_name: VAR  # {return $item[1]}
             | NUM  # {return $item[1]}
             | <error>
+
+
+meta_block: 'meta' '{' 
+       desc_block(0..1)
+      '}' 
+    {$return = {
+        'description' => $item[3][0]
+        }
+    }
+
+desc_block: 'description' (HTML | STRING)
+   {$return = $item[2];}
+
 
 dispatch_block: 'dispatch' '{' dispatch(s? /;/)  SEMICOLON(?) '}' #?
      {$return = $item[3]}

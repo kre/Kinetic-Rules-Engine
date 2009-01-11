@@ -39,6 +39,10 @@ sub pp {
     $o .= "ruleset $name {\n";
 
 
+    if( $ruleset->{'meta'} && %{ $ruleset->{'meta'}} ) {
+	$o .= pp_meta_block($ruleset->{'meta'}, $g_indent);
+    }    
+
     if( $ruleset->{'dispatch'} && @{ $ruleset->{'dispatch'} }) {
 	$o .= pp_dispatch_block($ruleset->{'dispatch'}, $g_indent);
     }    
@@ -52,6 +56,37 @@ sub pp {
     
     return $o;
 }
+
+sub pp_meta_block {
+    my ($mb, $indent) = @_;
+
+    my $beg = " "x$indent;
+
+
+    my $o .= $beg . "meta {\n";
+    
+    $o .= pp_desc($mb->{'description'}, $indent+$g_indent) if ($mb->{'description'}) ;
+
+    $o .= $beg . "}\n";
+
+    return $o;
+
+}
+
+sub pp_desc {
+    my ($node, $indent) = @_;
+
+    my $beg = " "x$indent;
+    
+    my $o = $beg;
+
+    $o .= "description <<\n";
+    $o .= $node;
+    $o .= $beg . ">>\n";
+  
+    return $o;
+}
+
 
 
 sub pp_dispatch_block {

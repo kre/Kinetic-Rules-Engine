@@ -325,6 +325,7 @@ sub get_rules_from_repository{
 
     my $ruleset = $memd->get("ruleset:$site");
     if ($ruleset) {
+	$request_info->{'rule_version'} = $memd->get("ruleset_version:$site");
 	$logger->debug("Using cached ruleset for $site");
 	return $ruleset;
     } 
@@ -392,6 +393,7 @@ sub get_rules_from_repository{
 
     $logger->debug("Caching ruleset for $site");
     $memd->set("ruleset:$site", $ruleset);
+    $memd->set("ruleset_version:$site", $request_info->{'rule_version'});
     return $ruleset;    
 
 }

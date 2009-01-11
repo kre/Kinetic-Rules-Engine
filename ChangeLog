@@ -1,3 +1,12 @@
+2009-01-10  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/PrettyPrinter.pm: Added support for meta block and description block
+	* Kynetx/Parser.pm: Added support for meta block and description block
+	* Kynetx.pm (describe_ruleset): Added "describe" method to hander
+	* Kynetx/Rules.pm (get_rules_from_repository): Save ruleset verion
+	  in memcached and retrieve it when you get rules from cache
+	* t/cs.t: Added tests for the DESCRIBE method
+
 2009-01-08  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx.pm (handler): Fixed "flush" $site regexp to work with
