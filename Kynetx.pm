@@ -127,38 +127,55 @@ sub describe_ruleset {
 
     $logger->debug("Found $numrules rules..." );
 
-
-    my($active)  = 0;
-    my($inactive) = 0;
-    foreach my $rule ( @{ $ruleset->{'rules'} } ) {
-
-	if($rule->{'state'} eq 'active') {  
-	    $active++;
-	} elsif($rule->{'state'} eq 'inactive') {  
-	    $inactive++;
-	}
-
-    }
-
     my ($data) = {
 	'ruleset_id' => $ruleset->{'ruleset_name'},
 	'ruleset_version' => $req_info{'rule_version'},
 	'number_of_rules' => $numrules,
-	'number_of_active_rules' => $active,
-	'number_of_inactive_rules' => $inactive,
 	'description' => $ruleset->{'meta'}->{'description'},
     };
+
+
+    my($active)  = 0;
+    my($inactive) = 0;
+    my @active_rules;
+    my @inactive_rules;
+    foreach my $rule ( @{ $ruleset->{'rules'} } ) {
+
+	my $rule_info = {'rule_name' => $rule->{'name'},
+			 'precondition' => Kynetx::Actions::get_precondition_test($rule)
+	};
+
+	if($rule->{'state'} eq 'active') {  
+	    $active++;
+	    push(@active_rules, $rule_info);
+	} elsif($rule->{'state'} eq 'inactive') {  
+	    $inactive++;
+	    push(@inactive_rules, $rule_info);
+	}
+
+
+
+    }
+
+    $data->{'number_of_active_rules'} = $active;
+    $data->{'active_rules'} = \@active_rules;
+    $data->{'number_of_inactive_rules'} = $inactive;
+    $data->{'inactive_rules'} = \@inactive_rules;
+
+    my $json = new JSON::XS;
+
     
     if($flavor eq 'json') {
 	$r->content_type('text/plain');
-	print encode_json($data) ;
+	print $json->encode($data) ;
     } else {
 	# print the page
 	my $template = DEFAULT_TEMPLATE_DIR . "/describe.tmpl";
 	my $test_template = HTML::Template->new(filename => $template);
 
+	my $html_data = $json->pretty->encode($data);
 	$test_template->param(RULESET_ID => $data->{'ruleset_id'});
-	$test_template->param(DATA => encode_json($data));
+	$test_template->param(DATA => $html_data);
 
 	
 	$r->content_type('text/html');
