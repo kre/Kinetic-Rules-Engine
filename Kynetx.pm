@@ -77,9 +77,6 @@ sub handler {
 sub flush_ruleset_cache {
     my ($r) = @_;
 
-    # nothing to do if no memcache hosts
-    return unless $r->dir_config('memcached_hosts');
-
     my $logger = get_logger();
 
     my ($site) = $r->path_info =~ m#/flush/(.+)#;

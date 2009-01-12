@@ -89,7 +89,7 @@ SKIP: {
     # test FLUSH function
 
     my $url_2 = "$dn/flush/$ruleset";
-    #diag "Testing flush with $url_2";
+    # diag "Testing flush with $url_2";
 
     $mech->get_ok($url_2);
 

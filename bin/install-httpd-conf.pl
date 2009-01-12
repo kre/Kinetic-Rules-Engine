@@ -168,15 +168,15 @@ For local running all on one machine with remote repository
 
 For cs.kobj.net
 
-   install-httpd-conf.pl -am
+   install-httpd-conf.pl -a
 
 For logger.kobj.net
 
-   install-httpd-conf.pl -lm
+   install-httpd-conf.pl -l
 
 For init.kobj.net
 
-   install-httpd-conf.pl -jm
+   install-httpd-conf.pl -j
 
 For krl.kobj.net
 
@@ -184,7 +184,7 @@ For krl.kobj.net
 
 For frag.kobj.net
 
-   install-httpd-conf.pl -fm
+   install-httpd-conf.pl -f
 EOF
 
 exit;
