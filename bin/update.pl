@@ -47,24 +47,24 @@ print "Updating httpd.conf and other machine specific items...\n";
 # set up the machine
 if ($init_gender) { # for init.kobj.net
 
-    system "$base/bin/install-httpd-conf.pl  -jm";
+    system "$base/bin/install-httpd-conf.pl  -j";
     # install the right init files
     system "$base/bin/install-init-files.pl";
 
 } elsif ($action_gender) { # for csXX.kobj.net
 
-    system "$base/bin/install-httpd-conf.pl -am";
+    system "$base/bin/install-httpd-conf.pl -a";
 
 } elsif ($log_gender) { # for logger.kobj.net
 
-    system "$base/bin/install-httpd-conf.pl -lm";
+    system "$base/bin/install-httpd-conf.pl -l";
 
 } elsif ($krl_gender) { # for krl.kobj.net
 
     system "$base/bin/install-httpd-conf.pl -k";
 } elsif ($frag_gender) { # for frag.kobj.net
 
-    system "$base/bin/install-httpd-conf.pl -fm";
+    system "$base/bin/install-httpd-conf.pl -f";
 }
 
 print "Restart Apache...\n";

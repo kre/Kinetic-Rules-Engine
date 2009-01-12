@@ -4,7 +4,14 @@ package Kynetx::Memcached;
 use strict;
 use warnings;
 
+# for memcache config values
+use lib qw(
+/web/etc
+);
+
 use Log::Log4perl qw(get_logger :levels);
+use memcache_ips;
+
 
 use constant DEFAULT_MEMCACHED_PORT => '11211';
 
@@ -29,13 +36,15 @@ our $MEMD = 0;
 our $MEMSERVERS = '127.0.0.1:' . DEFAULT_MEMCACHED_PORT;
 
 sub init {
-    my($class,$host_array) = @_;
+    my($class) = @_;
 
     my $logger = get_logger();
 
-    $logger->debug("Hosts: ", join " ", @$host_array);
+    my $hosts_array = memcache_ips::get_mcd_hosts();
 
-    my @memd_hosts = map {$_ . ":" . DEFAULT_MEMCACHED_PORT} @$host_array;
+    $logger->debug("Hosts: ", join " ", @{ $hosts_array });
+
+    my @memd_hosts = map {$_ . ":" . memcache_ips::get_mcd_port() } @{ $hosts_array };
 
     $MEMSERVERS = join(" ", @memd_hosts);
 

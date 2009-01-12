@@ -67,9 +67,9 @@ SKIP: {
 
     $mech->title_is('Describe Ruleset cs_test');
 
-    $mech->content_like('/"ruleset_version":"\d+"/s');
-    $mech->content_like('/"description":"[^"]+"/s');
-    $mech->content_like('/"ruleset_id":"[^"]+"/s');
+    $mech->content_like('/"ruleset_version"\s*:\s*"\d+"/s');
+    $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
+    $mech->content_like('/"ruleset_id"\s*:\s*"[^"]+"/s');
 
 
     # test DESCRIBE function
@@ -80,9 +80,9 @@ SKIP: {
     $mech->get_ok($url_describe_2);
     is($mech->content_type(), 'text/plain');
 
-    $mech->content_like('/"ruleset_version":"\d+"/s');
-    $mech->content_like('/"description":"[^"]+"/s');
-    $mech->content_like('/"ruleset_id":"[^"]+"/s');
+    $mech->content_like('/"ruleset_version"\s*:\s*"\d+"/s');
+    $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
+    $mech->content_like('/"ruleset_id"\s*:\s*"[^"]+"/s');
 
 
 

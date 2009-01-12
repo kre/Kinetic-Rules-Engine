@@ -1,3 +1,19 @@
+2009-01-12  Phil Windley  <pjw@kynetx.com>
+
+	* bin/update.pl: Removed use of HTTP directives for
+	  memcache configuration.
+	* bin/install-httpd-conf.pl: Removed use of HTTP directives for
+	  memcache configuration.
+	* etc/tmpl/httpd-perl.conf.tmpl: Removed use of HTTP directives for
+	  memcache configuration.
+	* Kynetx.pm (handler): Removed use of HTTP directives for
+	  memcache configuration.
+	* Kynetx/Logger.pm (handler): Removed use of HTTP directives for
+	  memcache configuration.
+	* Kynetx/Memcached.pm: Gets memcached hosts from the
+	  /web/etc/memcache_ips file instead of the http.conf file. This
+	  allows better puppet configuration control.  
+
 2009-01-10  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/PrettyPrinter.pm: Added support for meta block and description block

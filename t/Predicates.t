@@ -734,24 +734,25 @@ add_testcase(
     $Amazon_req_info
     );
 
-$krl_src = <<_KRL_;
-stocks:symbol("GOOG") eq "GOOG"
-_KRL_
-add_testcase(
-    $krl_src,
-    1,
-    $Amazon_req_info
-    );
+
+# $krl_src = <<_KRL_;
+# stocks:symbol("GOOG") eq "GOOG"
+# _KRL_
+# add_testcase(
+#     $krl_src,
+#     1,
+#     $Amazon_req_info
+#     );
 
 
-$krl_src = <<_KRL_;
-stocks:last("GOOG") > 1.00
-_KRL_
-add_testcase(
-    $krl_src,
-    1,
-    $Amazon_req_info
-    );
+# $krl_src = <<_KRL_;
+# stocks:last("GOOG") > 1.00
+# _KRL_
+# add_testcase(
+#     $krl_src,
+#     1,
+#     $Amazon_req_info
+#     );
 
 $krl_src = <<_KRL_;
 location:country_code() eq "US"

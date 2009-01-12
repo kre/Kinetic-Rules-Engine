@@ -20,11 +20,7 @@ sub handler {
     $r->content_type('text/javascript');
 
     # set up memcached
-    my @host_array = $r->dir_config->get('memcached_hosts');
-
-    if($r->dir_config('memcached_hosts')) {
-	Kynetx::Memcached->init(\@host_array);
-    }
+    Kynetx::Memcached->init();
 
     process_action($r);
 

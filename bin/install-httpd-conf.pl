@@ -6,7 +6,7 @@ use Getopt::Std;
 use Sys::Hostname;
 use HTML::Template;
 
-# where the memcache_ips module is.  
+
 use lib qw(/web/etc);
 
 
@@ -23,11 +23,10 @@ my $web_root = $ENV{$web_root_var} ||
 my $conf_dir = join('/',($web_root,'conf'));
 my $conf_file = 'httpd.conf';
 
-use memcache_ips qw(@mcd_hosts);
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'h?ajlkfdrm';
+my $opt_string = 'h?ajlkfdr';
 getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'} || $opt{'?'};
 
@@ -115,13 +114,6 @@ if ($opt{'d'}) { # development
 }
 
 
-if ($opt{'m'}) { # memcached
-    $conf_template->param(MEMCACHED => 1);
-    $conf_template->param(MEMCACHED_HOST_FIRST => shift @mcd_hosts);
-    my @AoH = map { { MEMCACHED_HOST => ($_) }  } @mcd_hosts;
-    $conf_template->param(MEMCACHED_HOSTS => \@AoH);
-
-}
 
 #if the dir doesn't exist, make it
 if(! -e $conf_dir) {
