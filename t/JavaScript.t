@@ -498,7 +498,7 @@ like(&{$weather_function}('curr_cond_code'), qr#\d#, 'curr_cond_code');
 like(&{$weather_function}('tomorrow_low'), $temp_qr, 'tomorrow_low');
 like(&{$weather_function}('tomorrow_high'), $temp_qr, 'tomorrow_high');
 like(&{$weather_function}('tomorrow_cond'), qr#\w#, 'tomorrow_cond');
-like(&{$weather_function}('tomorrow_cond_code'), qr#\d\d#, 'tomorrow_cond_code');
+like(&{$weather_function}('tomorrow_cond_code'), qr#\d+#, 'tomorrow_cond_code');
 
 
 # check media market datasource

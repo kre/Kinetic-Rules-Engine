@@ -20,6 +20,7 @@ use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::RuleManager qw(:all);
 use Kynetx::Console qw(:all);;
+use Kynetx::Version qw(:all);;
 
 
 # FIXME: get this from config
@@ -53,6 +54,8 @@ sub handler {
 	show_context($r);
     } elsif($r->path_info =~ m!/describe/! ) {
 	describe_ruleset($r);
+    } elsif($r->path_info =~ m!/version/! ) {
+	show_build_num($r);
     } elsif($r->path_info =~ m!/foo/! ) {
 	my $uniq = int(rand 999999999);
 	$r->content_type('text/html');

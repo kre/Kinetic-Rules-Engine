@@ -346,6 +346,9 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 <TMPL_IF NAME="GENDER_ACTION">
 <LocationMatch /ruleset/>
 
+
+  PerlSetVar kobj_root <TMPL_VAR NAME=KOBJ_ROOT>
+
   # P3P compressed policy header
   Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
 
@@ -384,6 +387,8 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 <TMPL_IF NAME="GENDER_LOG">
 <LocationMatch /log/>
 
+  PerlSetVar kobj_root <TMPL_VAR NAME=KOBJ_ROOT>
+
   # P3P compressed policy header
   Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
 
@@ -411,8 +416,11 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 </LocationMatch>
 
 </TMPL_IF>
+
 <TMPL_IF NAME="GENDER_INIT">
 <LocationMatch /js/>
+
+  PerlSetVar kobj_root <TMPL_VAR NAME=KOBJ_ROOT>
 
   # P3P compressed policy header
   Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
@@ -471,7 +479,8 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 
 <TMPL_IF NAME="GENDER_KRL">
 <LocationMatch /manage/>
-  # Eventually this ought to come from the client configuration DB
+
+  PerlSetVar kobj_root <TMPL_VAR NAME=KOBJ_ROOT>
 
   # env var to turn on logging
   PerlSetEnv KRL 1 
@@ -509,6 +518,8 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 <TMPL_IF NAME="GENDER_FRAG">
 Alias /widgets/ "/web/lib/perl/widgets/"
 <Location /widgets>
+
+  PerlSetVar kobj_root <TMPL_VAR NAME=KOBJ_ROOT>
 
   # env var to turn on logging
   PerlSetEnv FRAG 1 

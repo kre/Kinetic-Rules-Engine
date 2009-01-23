@@ -12,6 +12,7 @@ use JSON::XS;
 use Kynetx::Parser qw(:all);
 use Kynetx::PrettyPrinter qw(:all);
 use Kynetx::Json qw/:all/;
+use Kynetx::Version qw/:all/;
 
 
 use Exporter;
@@ -39,6 +40,8 @@ sub handler {
 	validate_rule($r);
     } elsif($r->path_info =~ m!/jsontokrl/! ) {
 	pp_json($r);
+    } elsif($r->path_info =~ m!/version/! ) {
+	show_build_num($r);
     }
 
     return Apache2::Const::OK; 

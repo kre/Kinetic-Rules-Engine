@@ -32,7 +32,7 @@ my $base_var = 'KOBJ_ROOT';
 my $base = $ENV{$base_var} || die "$base_var is undefined in the environment";
 
 # Find all Perl files, but don’t look in CVS
-my $rule = File::Find::Rule->new;
+my $rule = File::Find::Rule->extras({ follow => 1 });
 $rule->or(
     $rule->new->directory->name('CVS')->prune->discard,
     $rule->new->file->name( '*.pl','*.pm','*.t' )

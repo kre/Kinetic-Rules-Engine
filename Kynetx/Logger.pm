@@ -9,6 +9,7 @@ use Data::UUID;
 
 use Kynetx::Session qw(:all);
 use Kynetx::Util qw(:all);
+use Kynetx::Version qw(:all);
 
 
 sub handler {
@@ -22,7 +23,11 @@ sub handler {
     # set up memcached
     Kynetx::Memcached->init();
 
-    process_action($r);
+    if($r->path_info =~ m!/version/! ) {
+	show_build_num($r);
+    } else {
+	process_action($r);
+    }
 
     return Apache2::Const::OK; 
 }

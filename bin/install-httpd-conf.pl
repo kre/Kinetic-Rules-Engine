@@ -5,20 +5,27 @@ use strict;
 use Getopt::Std;
 use Sys::Hostname;
 use HTML::Template;
-
+use File::Spec;
 
 use lib qw(/web/etc);
 
+# determine our base directory and get the web root from that
+my $base=File::Spec->rel2abs($0);
+$base =~ s#/bin/install-httpd-conf.pl##;
+my $web_root = $base;
+$web_root =~ s#(^/[^/]+).*#$1#;
 
 # config
-my $base_var = 'KOBJ_ROOT';
-my $base = $ENV{$base_var} || die "$base_var is undefined in the environment";
+#my $base_var = 'KOBJ_ROOT';
+#my $base = $ENV{$base_var} || die "$base_var is undefined in the environment";
+#my $web_root_var = 'WEB_ROOT';
+#my $web_root = $ENV{$web_root_var} || 
+#    die "$web_root_var is undefined in the environment";
+
+
 my $tmpls = $base . "/etc/tmpl";
 my $config_tmpl = $tmpls . "/httpd-perl.conf.tmpl";
 
-my $web_root_var = 'WEB_ROOT';
-my $web_root = $ENV{$web_root_var} || 
-    die "$web_root_var is undefined in the environment";
 
 my $conf_dir = join('/',($web_root,'conf'));
 my $conf_file = 'httpd.conf';
@@ -90,6 +97,7 @@ $conf_template->param(GENDER_INIT => 1) if $init_gender;
 $conf_template->param(GENDER_KRL => 1) if $krl_gender;
 $conf_template->param(GENDER_FRAG => 1) if $frag_gender;
 $conf_template->param(HOSTNAME => hostname);
+$conf_template->param(KOBJ_ROOT => $base);
 
 
 # database

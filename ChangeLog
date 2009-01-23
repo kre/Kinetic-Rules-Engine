@@ -1,3 +1,13 @@
+2009-01-22  Phil Windley  <pjw@kynetx.com>
+
+	* etc/tmpl/httpd-perl.conf.tmpl: Added config var for kobj_dir
+	* bin/install-httpd-conf.pl: New was to calculate base dir from
+	  where the program runs.
+	* Kynetx/Version.pm: Added version functions
+	* t/Version.t: Added tests for version number
+	* t/dev/rules.t: Added pragma to ensure symbolic links are followed
+	* t/dev/use.t: Added pragma to ensure symbolic links are followed
+
 2009-01-12  Phil Windley  <pjw@kynetx.com>
 
 	* bin/update.pl: Removed use of HTTP directives for

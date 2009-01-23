@@ -16,6 +16,7 @@ use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
 use constant DEFAULT_JS_VERSION => '0.9';
 
 use Kynetx::Util qw(:all);
+use Kynetx::Version qw(:all);
 
 
 sub handler {
@@ -94,6 +95,8 @@ sub handler {
 	    $js = get_js_file($file,$js_version,$js_root);
 	}
 	
+    } elsif($r->path_info =~ m!/version/! ) {
+	show_build_num($r);
     } else {
 
 	$js = get_js_file($file,$js_version,$js_root);
