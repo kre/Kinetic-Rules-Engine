@@ -1,3 +1,8 @@
+2009-02-10  Phil Windley  <pjw@kynetx.com>
+
+	* etc/js/0.9/kgrowl-1.0.js: Added default value for opacity.  This
+	  allows it to be changed.
+
 2009-01-22  Phil Windley  <pjw@kynetx.com>
 
 	* etc/tmpl/httpd-perl.conf.tmpl: Added config var for kobj_dir

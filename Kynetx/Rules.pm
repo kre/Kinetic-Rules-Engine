@@ -1,4 +1,3 @@
-
 package Kynetx::Rules;
 # file: Kynetx/Rules.pm
 
@@ -358,7 +357,7 @@ sub get_rules_from_repository{
     }
 
     if ($d{$site.'.krl'} eq -1 && $d{$site.'.json'} eq -1) {
-	$logger->debug("Didn't find any rules, returning fake ruleset");
+	$logger->debug("Ruleset $site not found; returning fake ruleset");
 	return Kynetx::Parser::parse_ruleset("ruleset $site {}");
     }
 
