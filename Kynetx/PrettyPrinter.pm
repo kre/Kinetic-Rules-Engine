@@ -66,6 +66,7 @@ sub pp_meta_block {
     my $o .= $beg . "meta {\n";
     
     $o .= pp_desc($mb->{'description'}, $indent+$g_indent) if ($mb->{'description'}) ;
+    $o .= pp_logging($mb->{'logging'}, $indent+$g_indent) if ($mb->{'logging'}) ;
 
     $o .= $beg . "}\n";
 
@@ -83,6 +84,19 @@ sub pp_desc {
     $o .= "description <<\n";
     $o .= $node;
     $o .= $beg . ">>\n";
+  
+    return $o;
+}
+
+sub pp_logging {
+    my ($node, $indent) = @_;
+
+    my $beg = " "x$indent;
+    
+    my $o = $beg;
+
+    $o .= "logging ";
+    $o .= $node;
   
     return $o;
 }

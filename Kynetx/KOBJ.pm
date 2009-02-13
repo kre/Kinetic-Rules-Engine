@@ -296,7 +296,8 @@ EOF
     my @param_names = $req->param;
     my $param_str = "";
     foreach my $n (@param_names) {
-	$param_str = "&$n=".$req->param($n);
+#	$logger->debug("Adding $n to parameters...");
+	$param_str .= "&$n=".$req->param($n);
     }
 
 
@@ -311,14 +312,11 @@ KOBJ.r.src=
              + "?"
              + "caller=" 
              + escape(document.URL) 
-	     + "&"
-             + "referer=" 
+	     + "&referer=" 
              + escape(document.referrer) 
-	     + "&"
-             + "kvars=" 
+	     + "&kvars=" 
              + escape(KOBJ.kvars_json) 
-	     + "&"
-	     + "title=" 
+	     + "&title=" 
              + encodeURI(document.title) 
              + "$param_str";
 

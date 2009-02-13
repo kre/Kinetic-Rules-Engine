@@ -97,17 +97,32 @@ sub process_rules {
 
     $logger->info("Processing rules for site " . $request_info->{'site'});
 
-    if($logger->is_debug()) {
-	foreach my $entry (keys %{ $request_info }) {
-	    $logger->debug($entry . ": " . $request_info->{$entry});
-	}
-    }
-
     # side effects environment with precondition pattern values
     my ($rules, $rule_env, $global) = 
 	get_rule_set($request_info->{'site'}, 
 		     $request_info->{'caller'},
-		     $r->dir_config('svn_conn'));
+		     $r->dir_config('svn_conn'),
+		     $request_info
+	);
+
+
+
+    if($logger->is_debug()) {
+	foreach my $entry (keys %{ $request_info }) {
+	    $logger->debug($entry . ": " . $request_info->{$entry}) 
+		unless($entry eq 'param_names' || $entry eq 'selected_rules');
+	}
+    }
+
+    # FIXME: the above loop ought to intelligently deal with arrays
+    if($request_info->{'param_names'}) {
+	$logger->debug("param_names: [" . join(", ", @{ $request_info->{'param_names'} }) . "]");
+    }
+
+    if($request_info->{'selected_rules'}) {
+	$logger->debug("selected_rules: [" . join(", ", @{ $request_info->{'selected_rules'} }) . "]");
+    }
+
 
 
     my $js = '';
@@ -248,8 +263,10 @@ sub get_rule_set {
     my $ruleset = get_rules_from_repository($site, $svn_conn, $request_info);
 
     $ruleset = optimize_rules($ruleset);
+
+    turn_on_logging() if($ruleset->{'meta'}->{'logging'} eq "on");
     
-    $logger->debug("Found " . @{ $ruleset->{'rules'} } . " rules..." );
+    $logger->debug("Found " . @{ $ruleset->{'rules'} } . " rules for site $site" );
 
     my @new_set;
     my %new_env;
@@ -258,13 +275,21 @@ sub get_rule_set {
     $request_info->{'selected_rules'} = [];
     foreach my $rule ( @{ $ruleset->{'rules'} } ) {
 
-	if($rule->{'state'} eq 'active') {  # optimize??
+# 	$logger->debug("Rule $rule->{'name'} is " . $rule->{'state'});
+
+	if($rule->{'state'} eq 'active' || 
+	   ($rule->{'state'} eq 'test' && 
+	    $request_info->{'mode'} && 
+	    $request_info->{'mode'} eq 'test' )) {  # optimize??
+
 
 	    $request_info->{'rule_count'}++;
 
 	
 	    # test the pattern, captured values are stored in @captures
 	    if(my @captures = $caller =~ get_precondition_test($rule)) {
+
+		$logger->debug("[selected] $rule->{'name'} ");
 
 		push @new_set, $rule;
 

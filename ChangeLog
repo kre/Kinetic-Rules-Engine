@@ -1,3 +1,15 @@
+2009-02-13  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Parser.pm: Added support for logging pragma
+	* Kynetx/Util.pm: Redid config_logging() to remove external
+	  configuration files and added turn_on_logging() to support
+	  logging pragma
+	* pilot/pilotOverlay.js: Added test mode support code
+	* pilot/pilotOverlay.xul: Added menu items for test mode.
+	* Kynetx/Rules.pm (get_rule_set): Turn on logging when logging
+	  pragma present
+	* Kynetx/KOBJ.pm (get_kobj): Fixed bug with parameter pass thru
+
 2009-02-10  Phil Windley  <pjw@kynetx.com>
 
 	* etc/js/0.9/kgrowl-1.0.js: Added default value for opacity.  This

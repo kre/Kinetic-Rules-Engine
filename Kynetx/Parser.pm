@@ -1,8 +1,3 @@
-
-
-
-
-
 package Kynetx::Parser;
 # file: Kynetx/Parser.pm
 
@@ -94,16 +89,35 @@ ruleset_name: VAR  # {return $item[1]}
 
 
 meta_block: 'meta' '{' 
-       desc_block(0..1)
+       pragma(s?)
       '}' 
+    { my $r = {};
+      foreach my $a ( @{ $item[3] } ) {
+        foreach my $k (keys %{ $a } ) {
+           $r->{$k} = $a->{$k};
+        }
+      }
+
+      $return = $r;
+    }
+
+pragma: desc_block 
     {$return = {
-        'description' => $item[3][0]
+        'description' => $item[1]
+        }
+    }
+ | logging_pragma
+    {$return = {
+        'logging' => $item[1]
         }
     }
 
 desc_block: 'description' (HTML | STRING)
    {$return = $item[2];}
 
+
+logging_pragma: 'logging' ('on' | 'off')
+   {$return = $item[2];}
 
 dispatch_block: 'dispatch' '{' dispatch(s? /;/)  SEMICOLON(?) '}' #?
      {$return = $item[3]}

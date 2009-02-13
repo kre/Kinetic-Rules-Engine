@@ -119,7 +119,7 @@ sub eval_predicates {
 
 		$logger->debug('[predicate] ',
 			       "$pred executing with args (" , 
-			       join(', ', @{ $args } ), 
+			       sub { join(', ', @{ $args } )}, 
 			       ')',
 			       ' -> ',
 			       $v);
@@ -219,7 +219,7 @@ sub eval_ineq {
     my @results;
     for (@{ $pred->{'args'} }) {
 	my $den = eval_js_expr($_, $rule_env, $rule_name, $request_info);
-#	$logger->debug("Denoted -> ", Dumper($den));
+#	$logger->debug("Denoted -> ", sub { Dumper($den) });
 	push @results, den_to_exp($den);
     }
 	

@@ -44,7 +44,7 @@ sub log_rule_fire {
     $r->subprocess_env(CALLER => $request_info->{'caller'});
 
     my $sid = $session->{'_session_id'};
-    $logger->debug("Session ID: ", $sid);
+    $logger->debug("[logging] Session ID: ", $sid);
     $r->subprocess_env(SID => $sid);
 
     $r->subprocess_env(IP => $request_info->{'ip'});

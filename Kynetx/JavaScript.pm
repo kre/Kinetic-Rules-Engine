@@ -92,7 +92,7 @@ sub gen_js_rands {
     my @rands = map {gen_js_expr($_)} @{ $rands } ;
 
 #    my $logger = get_logger();
-#    $logger->debug("Args: ", join(", ", @rands));
+#    $logger->debug("Args: ", sub { join(", ", @rands) });
 
     return \@rands;
 
@@ -193,7 +193,7 @@ sub eval_js_expr {
     my ($expr, $rule_env, $rule_name,$req_info) = @_;
 
     my $logger = get_logger();
-#    $logger->debug("Rule env: ", Dumper($rule_env));
+#    $logger->debug("Rule env: ", sub { Dumper($rule_env) });
 
     case: for ($expr->{'type'}) {
 	/str/ && do {

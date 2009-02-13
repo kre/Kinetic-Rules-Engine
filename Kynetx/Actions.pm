@@ -257,7 +257,7 @@ sub build_js_load {
 
 #     }
 
-#    $logger->debug("Rule ENV: ", Dumper($rule_env));
+#    $logger->debug("Rule ENV: ", sub {Dumper($rule_env)});
 
     # now do decls in order
     foreach my $var( @{ $rule_env->{$rule->{'name'}."_vars"} } ) {
@@ -476,7 +476,7 @@ sub build_one_action {
     push(@{ $rule_env->{'tags'} }, ($mods{'tags'} || ''));
     push(@{ $rule_env->{'labels'} }, $action_expr->{'label'} || '');
 
-#	$logger->debug(Dumper($rule_env));
+#	$logger->debug(sub {Dumper($rule_env)} );
 
     return $js;
 }
@@ -516,7 +516,7 @@ sub choose_action {
 	    $action_suffix = "_html";
 
 
-#	    $logger->debug("Rule env: ", Dumper($rule_env));
+#	    $logger->debug("Rule env: ", sub { Dumper($rule_env) });
 	    
 	    # We need to eval the argument since it might be an expression
 	    $url = den_to_exp(
@@ -528,7 +528,7 @@ sub choose_action {
 	    my $content = LWP::Simple::get($url) || "<!-- URL $url returned no content -->";
 	    $content =~ y/\n\r/  /; # remove newlines
 	    $last_arg =  Kynetx::Parser::mk_expr_node('str',$content);
-	    #$logger->debug("Last arg: ", Dumper($last_arg));
+	    #$logger->debug("Last arg: ", sub { Dumper($last_arg) });
 	    
 	} 
 
@@ -536,7 +536,8 @@ sub choose_action {
     	$action_name = $action_name . $action_suffix;
     }
 
-    $logger->debug("[action] $action_name with ", join(", ", Dumper(@{$args})));
+#    $logger->debug("[action] $action_name with ", 
+#		   sub { join(", ", Dumper(@{$args}))});
 
     return ($action_name, $args);
 }

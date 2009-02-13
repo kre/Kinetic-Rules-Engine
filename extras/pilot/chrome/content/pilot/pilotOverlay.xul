@@ -12,12 +12,13 @@
     <menu id="menu_pilot" label="Kynetx Pilot">
         <menupopup>
           <menuitem id="tog_menu" label="Enable Pilot" accesskey="T" oncommand="Pilot.toggle();"/>
+          <menuitem id="tog_tm_menu" label="Enable Test Mode" accesskey="T" oncommand="Pilot.toggle_test_mode();"/>
           <menuitem id="fac_menu" label="Refresh Pilot" accesskey="F" oncommand="Pilot.facilitate(true);"/>
           <menuseparator />
           <menuitem id="add_menu" label="Add A Site" accesskey="A" oncommand="Pilot.add();"/>
           <menuitem id="lis_menu" label="List Sites" accesskey="L" oncommand="Pilot.list();"/>
           <menuitem id="cle_menu" label="Clear Sites" accesskey="C" oncommand="Pilot.clear();"/>
-          <menuitem id="cha_menu" label="Change Javascript Locations" accesskey="H" oncommand="Pilot.changeHosts();"/>
+          <menuitem id="cha_menu" label="Change Initialization Server" accesskey="H" oncommand="Pilot.changeHosts();"/>
         </menupopup>
     </menu>
 </menupopup>
@@ -29,13 +30,26 @@
     <menu id="context_menu_pilot" label="Kynetx Pilot">
       <menupopup onpopupshowing="">
         <menuitem id="tog_contextmenu" label="Enable Pilot" accesskey="T" oncommand="Pilot.toggle();"/>
+	<menuitem id="tog_tm_contextmenu" label="Enable Test Mode" accesskey="T" oncommand="Pilot.toggle_test_mode();"/>
         <menuitem id="fac_contextmenu" label="Refresh Pilot" accesskey="F" oncommand="Pilot.facilitate(true);"/>
         <menuseparator />
         <menuitem id="add_contextmenu" label="Add A Site" accesskey="A" oncommand="Pilot.add();"/>
         <menuitem id="lis_contextmenu" label="List Sites" accesskey="L" oncommand="Pilot.list();"/>
         <menuitem id="cle_contextmenu" label="Clear Sites" accesskey="C" oncommand="Pilot.clear();"/>
-        <menuitem id="cha_contextmenu" label="Change Javascript Locations" accesskey="H" oncommand="Pilot.changeHosts();"/>
+        <menuitem id="cha_contextmenu" label="Change Initialization Server" accesskey="H" oncommand="Pilot.changeHosts();"/>
         <menuseparator />
+	<menu if="context_ip" label="Location">
+          <menupopup onpopupshowing="">
+            <menuitem id="location_seattle_contextmenu" label="Spoof Seattle (Amazon)" accesskey="" oncommand="Pilot.changeIP('72.21.203.1');"/>
+            <menuitem id="location_byu_contextmenu" label="Spoof BYU" accesskey="" oncommand="Pilot.changeIP('128.187.16.242');"/>
+            <menuitem id="location_nyu_contextmenu" label="Spoof NYU" accesskey="" oncommand="Pilot.changeIP('128.122.108.71');"/>
+            <menuseparator />
+            <menuitem id="location_madrid_contextmenu" label="Spoof Madrid" accesskey="" oncommand="Pilot.changeIP('217.140.16.48');"/>
+            <menuitem id="location_frankfurt_contextmenu" label="Spoof Frankfurt" accesskey="" oncommand="Pilot.changeIP('195.43.53.65');"/>
+            <menuseparator />
+            <menuitem id="location_other_contextmenu" label="Spoof Other" accesskey="" oncommand="Pilot.changeIP('');"/>
+          </menupopup>
+        </menu>
     </menupopup>
   </menu>
 </popup>
@@ -53,7 +67,6 @@
   window.addEventListener("load", nowpublic_init, true);
 
   function nowpublic_init() {
-//    gBrowser.addEventListener('load', function(){ Pilot.facilitate(); Pilot.getLocationInfo(); }, true);
     gBrowser.addEventListener('load', function(){ Pilot.facilitate(); }, true);
   }
 ]]>

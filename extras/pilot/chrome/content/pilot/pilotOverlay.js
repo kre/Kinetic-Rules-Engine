@@ -1,10 +1,12 @@
 var Pilot = {
-  status: false,
-  sites: new Array(0),
-  kynetx_js_host: 'http://init.kobj.net',
+    status: false,
+    tm_status: false,
+    sites: new Array(0),
+    kynetx_js_host: 'http://init.kobj.net',
 //  required_scripts: ['prototype','effects','dragdrop','kobj-extras'],
-  required_scripts: ['kobj-static'],
-  kobj_version: '0.9',
+    required_scripts: ['kobj-static'],
+    kobj_version: '0.9',
+    myip: '',
 
   // ex cookie:
   // [ { domain:'', site_id: }, ... ]
@@ -38,8 +40,8 @@ var Pilot = {
     for (var s = 0; s < this.sites.length; s++) {
       c += 
 	"{ " + "domain:'" + this.sites[s]['domain'] + 
-	"', site_id:" + this.sites[s]['site_id'] + 
-	", datasets:'" + this.sites[s]['datasets'] + 
+	"', site_id: '" + this.sites[s]['site_id'] + 
+	"', datasets: '" + this.sites[s]['datasets'] + 
 	"' }";
       if(s < this.sites.length - 1) c += ", ";
     }
@@ -71,6 +73,25 @@ var Pilot = {
       contextmenuItem.label = "Enable Pilot";
     }
   },
+
+    toggle_test_mode: function() {
+	this.tm_status = !this.tm_status;
+	this.refreshTestModeStatus();
+    },
+ 
+   refreshTestModeStatus: function() {
+     var menuItem = document.getElementById('tog_tm_menu');
+     var contextmenuItem = document.getElementById('tog_tm_contextmenu');
+     
+     if (this.tm_status) {
+       menuItem.label = "Disable Test Mode";
+       contextmenuItem.label = "Disable Test Mode";
+     } else {
+       menuItem.label = "Enable Test Mode";
+       contextmenuItem.label = "Enable Test Mode";
+     }
+   },
+
 
   facilitate: function(refresh) {
      if(this.sites.length>0 && this.status) {
@@ -104,9 +125,35 @@ var Pilot = {
              script = doc.createElement('script');
              script.type = 'text/javascript';
              script.src = this.kynetx_js_host + '/js/' + site['site_id'] + '/kobj.js';
-             if(site['datasets'] != '') {
-		 script.src += '?datasets=' + site['datasets'];
-	     }
+
+
+               // add parameters
+               var p = [];
+               if(this.tm_status) {
+                   p.push('mode=test');
+               }
+	       if(this.myip != '') {
+		   p.push('ip=' + this.myip);
+	       }
+               if(site['datasets'] != '') {
+                   p.push('datasets=' + site['datasets']);
+               }
+               if(p.length > 0) {
+                   script.src += '?' + p.join("&");
+               }
+
+
+
+//              if(site['datasets'] != '' || this.myip != '') {
+// 		 var args = [];
+// 		 if (site['datasets'] != '')
+// 	             args.push('datasets=' + site['datasets']);
+// 		 if (this.myip != '')
+// 	             args.push('ip=' + this.myip);
+// 		 script.src += '?' + args.join('&');
+// 	     }
+
+
              body.appendChild(doc.createTextNode("\n"));
              body.appendChild(script);
 
@@ -138,39 +185,54 @@ var Pilot = {
   changeHosts: function() {
     var regex = /\/$/g;
     
-    this.kynetx_js_host = prompt("Enter the host for the kynetx.js file:","http://init.kobj.net").replace(regex, '');
+    this.kynetx_js_host = prompt("Enter the initilization host:","http://init.kobj.net").replace(regex, '');
       this.kobj_version = prompt("Enter the JS version:",this.kobj_version).replace(regex, '');
+  },
+
+  changeIP: function(newip) {
+
+      if(newip != '') {
+	  this.myip = newip
+      } else {
+    
+	  this.myip = prompt("Enter the IP address you'd like to be from:","");
+      }
+
   },
 
   list: function() {
     if (this.sites.length<1) alert('You have no sites to pilot right now.');
     else {
-      var site_array = new Array(0);
-      for (s = 0; s < this.sites.length; s++) {
-        site = this.sites[s];
-        if (site['domain'] != '')  {
+	var site_array = new Array(0);
+	for (s = 0; s < this.sites.length; s++) {
+            site = this.sites[s];
+            if (site['domain'] != '')  {
+		
+		var site_str = 
+		    site['domain'] + 
+		    " (site id = " +
+		    site['site_id']; 
 
-	    var site_str = 
-	      site['domain'] + 
-	      " (site id = " +
-	      site['site_id']; 
+		if(site['datasets'] != '') {
+		    site_str += 
+		    ", datasets = " +
+			site['datasets'] +
+			")";
+		} else {
+		    site_str += ")";
+		}
 
-             if(site['datasets'] != '') {
-		 site_str += 
-		     ", datasets = " +
-		     site['datasets'] +
-		     ")";
-	     } else {
-		 site_str += ")";
-	     }
-
-	    site_array.push(site_str); 
-	}
+		site_array.push(site_str); 
+	    }
       
-        else 
+            else 
 	    site_array.push('bogus domain (site id = '+site['site_id']+')');
-      }
-      alert(site_array.join(' \n')+'\n'+this.kynetx_js_host+'\n');
+	}
+	var msg = site_array.join(' \n')+'\nJS Host: '+this.kynetx_js_host+'\n';
+	if(this.myip) {
+	    msg = msg + 'IP address: ' + this.myip;
+	}
+	alert(msg);
     }
   },
 

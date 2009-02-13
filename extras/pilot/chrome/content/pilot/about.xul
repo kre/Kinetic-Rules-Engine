@@ -11,7 +11,7 @@
 <groupbox align="center" orient="horizontal">
 <vbox>
   <text value="Kynetx Pilot" style="font-weight: bold; font-size: x-large;"/>
-  <text value="ver. 1.6"/>
+  <text value="ver. 1.8.0"/>
   <separator class="thin"/>
   <text value="Created By:" style="font-weight: bold;"/>
   <text value="Kynetx" class="url"
