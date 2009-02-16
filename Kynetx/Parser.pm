@@ -562,7 +562,7 @@ sub parse_ruleset {
 #    print $ruleset; exit;
 
     # remove newlines
-    $ruleset =~ s%\n%%g;
+#    $ruleset =~ s%\n%%g;
 
 
     my $result = ($parser->ruleset($ruleset));
