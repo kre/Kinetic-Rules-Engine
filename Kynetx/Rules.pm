@@ -75,7 +75,7 @@ sub process_rules {
 	site => $path_info =~ m#/eval/([^/]+)/.*\.js#,
 	hostname => $r->hostname(),
 	ip => $r->connection->remote_ip() || '0.0.0.0',
-	ua => $r->headers_in->{UserAgent} || '',
+	ua => $r->headers_in->{'User-Agent'} || '',
 	pool => $r->pool,
 	txn_id => $ug->create_str(),
 	};
@@ -112,6 +112,9 @@ sub process_rules {
 	    $logger->debug($entry . ": " . $request_info->{$entry}) 
 		unless($entry eq 'param_names' || $entry eq 'selected_rules');
 	}
+# 	foreach my $h (keys %{ $r->headers_in }) {
+# 	    $logger->debug($h . ": " . $r->headers_in->{$h});
+# 	}
     }
 
     # FIXME: the above loop ought to intelligently deal with arrays
@@ -264,7 +267,8 @@ sub get_rule_set {
 
     $ruleset = optimize_rules($ruleset);
 
-    turn_on_logging() if($ruleset->{'meta'}->{'logging'} eq "on");
+    turn_on_logging() if($ruleset->{'meta'}->{'logging'} && 
+			 $ruleset->{'meta'}->{'logging'} eq "on");
     
     $logger->debug("Found " . @{ $ruleset->{'rules'} } . " rules for site $site" );
 

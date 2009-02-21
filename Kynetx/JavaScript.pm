@@ -383,6 +383,8 @@ sub eval_datasource {
 	$val = Kynetx::Predicates::Referers::get_referer($req_info,$function);
     } elsif ($source eq 'mediamarket') {
 	$val = Kynetx::Predicates::MediaMarkets::get_mediamarket($req_info,$function);
+    } elsif ($source eq 'useragent') {
+	$val = Kynetx::Predicates::Useragent::get_useragent($req_info,$function);
     } elsif ($source eq 'page') {
 	if($function eq 'var') {
 	    my $vals = decode_json($req_info->{'kvars'});
