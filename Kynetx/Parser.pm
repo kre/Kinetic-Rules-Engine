@@ -65,6 +65,7 @@ eofile: /^\Z/
 ruleset: 'ruleset' ruleset_name  '{' 
            meta_block(0..1)
            dispatch_block(0..1)
+           dataset_block(0..1)
            global_block(0..1)
            rule(s?)   #??
          '}' eofile
@@ -72,8 +73,9 @@ ruleset: 'ruleset' ruleset_name  '{'
 		 'ruleset_name' => $item{ruleset_name},
 		 'meta' => $item[4][0] || {},
 		 'dispatch' => $item[5][0] || [],
-		 'global' => $item[6][0] || [],
-		 'rules' => $item[7]
+		 'datasets' => $item[6][0] || [],
+		 'global' => $item[7][0] || [],
+		 'rules' => $item[8]
 	         }
 	     }
        | { foreach (@{$thisparser->{errors}}) {
@@ -128,6 +130,24 @@ dispatch: 'domain' STRING '->' STRING
 	 'ruleset_name' => $item[4]
          }
      }
+                   
+dataset_block: 'dataset' '{' dataset(s? /;/)  SEMICOLON(?) '}' #?
+     {$return = {
+         'datasets' =>  $item[3]
+         }
+     }
+
+dataset: VAR '=' STRING cachable(?)
+     {$return = {
+	 'name' => $item[1],
+	 'source' => $item[3],
+	 'cachable' => $item[4]
+         }
+     }
+
+cachable: 'cachable' cachetime(?)
+
+cachetime: 'for' NUM period
                    
 
 global_block: 'global' '{' globals(s? /;/)  SEMICOLON(?) '}' #?
