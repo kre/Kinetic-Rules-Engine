@@ -47,6 +47,10 @@ sub pp {
 	$o .= pp_dispatch_block($ruleset->{'dispatch'}, $g_indent);
     }    
 
+    if( $ruleset->{'datasets'} && @{ $ruleset->{'datasets'} }) {
+	$o .= pp_datasets_block($ruleset->{'datasets'}, $g_indent);
+    }    
+
     if( $ruleset->{'global'} && @{ $ruleset->{'global'} }) {
 	$o .= pp_global_block($ruleset->{'global'}, $g_indent);
     }    
@@ -134,6 +138,44 @@ sub pp_dispatch {
     return $o;
 
 }
+
+
+sub pp_datasets_block {
+    my ($db, $indent) = @_;
+
+    my $beg = " "x$indent;
+
+    my $o .= $beg . "datasets {\n";
+    foreach my $d ( @{$db}) {
+
+	$o .= pp_datasets($d, $indent+$g_indent) . ";";
+    }
+    $o .= $beg . "}\n";
+
+    return $o;
+
+}
+
+
+sub pp_datasets {
+    my ($d, $indent) = @_;
+
+    my $beg = " "x$indent;
+
+    my $o .= $beg . $d->{'name'} . ' = "'. $d->{'source'} . '"' ;
+    if($d->{'cachable'}) {
+	$o .= " cachable";
+	if (ref $d->{'cachable'} eq 'HASH') {
+	    $o .= " for " . $d->{'cachable'}->{'value'} . " " .  $d->{'cachable'}->{'period'};
+	}
+    }
+    $o .= "\n";
+
+    return $o;
+
+}
+
+
 
 sub pp_global_block {
     my ($db, $indent) = @_;

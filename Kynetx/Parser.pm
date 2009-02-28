@@ -131,24 +131,28 @@ dispatch: 'domain' STRING '->' STRING
          }
      }
                    
-dataset_block: 'dataset' '{' dataset(s? /;/)  SEMICOLON(?) '}' #?
-     {$return = {
-         'datasets' =>  $item[3]
-         }
+dataset_block: 'datasets' '{' dataset(s? /;/)  SEMICOLON(?) '}' #?
+     {$return =   $item[3]
      }
 
 dataset: VAR '=' STRING cachable(?)
      {$return = {
 	 'name' => $item[1],
 	 'source' => $item[3],
-	 'cachable' => $item[4]
+	 'cachable' => $item[4][0] || 0
          }
      }
 
 cachable: 'cachable' cachetime(?)
+     {$return = $item[2][0] || 1
+     }
 
 cachetime: 'for' NUM period
-                   
+     {$return = {
+	 'value' => $item[2],
+	 'period' => $item[3]
+      }
+     }
 
 global_block: 'global' '{' globals(s? /;/)  SEMICOLON(?) '}' #?
      {$return = $item[3]}

@@ -1,9 +1,9 @@
 // dataset with some rules
 ruleset 10 {
-
-   dataset {
+   datasets {
       aaa = "aaa.json";
       aarp = "aarp.json";
+      fizz_data = "http://www.foo.com/data.json" cachable;
       foo_data = "http://www.foo.com/data.json" cachable for 20 minutes;
    }
 
