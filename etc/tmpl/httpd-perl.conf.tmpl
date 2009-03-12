@@ -411,6 +411,9 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
   # we can use the 'debug' config parameter to force detailed logging
   PerlSetVar debug <TMPL_VAR NAME=DEBUG>
 
+  # URL for svn rule repository, username, password
+  PerlSetVar svn_conn <TMPL_VAR NAME=RULE_REPOSITORY>
+
   SetHandler perl-script
   PerlHandler Kynetx::Logger
 </LocationMatch>
@@ -463,6 +466,9 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
   # we can use the 'debug' config parameter to force detailed logging
   PerlSetVar debug <TMPL_VAR NAME=DEBUG>
+
+  # URL for svn rule repository, username, password
+  PerlSetVar svn_conn <TMPL_VAR NAME=RULE_REPOSITORY>
 
   # use CloudFront?
   PerlSetVar UseCloudFront 1

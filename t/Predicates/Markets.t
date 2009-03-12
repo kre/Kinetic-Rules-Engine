@@ -19,7 +19,7 @@ use Kynetx::JavaScript qw/:all/;
 use LWP::Simple;
 use XML::XPath;
 use DateTime;
-
+use LWP::UserAgent;
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Predicates::Weather qw/:all/;
@@ -48,43 +48,52 @@ foreach my $pn (@pnames) {
 
 
 
+SKIP: {
+    my $ua = LWP::UserAgent->new;
 
-my($krl_src,$cond,$args);
+    my $check_url = "http://www.webservicex.net//stockquote.asmx/GetQuote?symbol=GOOG";
 
-$krl_src = <<_KRL_;
+    diag "Checking $check_url";
+    my $response = $ua->get($check_url);
+    skip "No server available", 3 if (! $response->is_success);
+
+
+    my($krl_src,$cond,$args);
+
+    $krl_src = <<_KRL_;
 foo(10)
 _KRL_
 
-$cond = Kynetx::Parser::parse_predexpr($krl_src);
+    $cond = Kynetx::Parser::parse_predexpr($krl_src);
 
-$args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+    $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 
 #diag(Dumper($args));
 
-ok(&{$preds->{'djia_up_more_than'}}($BYU_req_info, \%rule_env, $args) ? 
-   (! &{$preds->{'djia_down_more_than'}}($BYU_req_info, \%rule_env, $args)) :  
-   1,
-   "If the market's up, it's not down!");
+    ok(&{$preds->{'djia_up_more_than'}}($BYU_req_info, \%rule_env, $args) ? 
+       (! &{$preds->{'djia_down_more_than'}}($BYU_req_info, \%rule_env, $args)) :  
+       1,
+       "If the market's up, it's not down!");
 
-ok(&{$preds->{'djia_down_more_than'}}($BYU_req_info, \%rule_env, $args) ? 
-   (! &{$preds->{'djia_up_more_than'}}($BYU_req_info, \%rule_env, $args)) :  
-   1,
-   "If the market's down, it's not up!");
+    ok(&{$preds->{'djia_down_more_than'}}($BYU_req_info, \%rule_env, $args) ? 
+       (! &{$preds->{'djia_up_more_than'}}($BYU_req_info, \%rule_env, $args)) :  
+       1,
+       "If the market's down, it's not up!");
 
-$krl_src = <<_KRL_;
+    $krl_src = <<_KRL_;
 foo('GOOG')
 _KRL_
 
-$cond = Kynetx::Parser::parse_predexpr($krl_src);
+    $cond = Kynetx::Parser::parse_predexpr($krl_src);
 
-$args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+    $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 
 
-my $GOOG_last = get_stocks($BYU_req_info,"GOOG","last");
-diag("GOOG_last has value => $GOOG_last");
-ok(int($GOOG_last) > 0, 
-   "GOOG's last isn't 0");
-
+    my $GOOG_last = get_stocks($BYU_req_info,"GOOG","last");
+    diag("GOOG_last has value => $GOOG_last");
+    ok(int($GOOG_last) > 0, 
+       "GOOG's last isn't 0");
+}
 
 1;
 

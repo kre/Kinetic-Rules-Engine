@@ -13,6 +13,7 @@ $Data::Dumper::Indent = 1;
 
 
 use Kynetx::Session qw(:all);
+use Kynetx::Request qw(:all);
 use Kynetx::Rules qw(:all);
 use Kynetx::Predicates qw(:all);
 use Kynetx::Predicates::Location qw(:all);
@@ -39,7 +40,7 @@ use constant DEFAULT_TEMPLATE_DIR => '/web/lib/perl/etc/tmpl';
 
 
 sub show_context {
-    my $r = shift;
+    my ($r, $method, $rid) = @_;
 
     my $logger = get_logger();
 
@@ -55,44 +56,24 @@ sub show_context {
     # get a session hash 
     my $session = process_session($r);
 
-    # build initial env
-    my $path_info = $r->path_info;
-    my ($site) = $r->path_info =~ m#/console/(\w+)$#;
-    my %request_info = (
-	host => $r->connection->get_remote_host,
-	caller => $r->headers_in->{'Referer'},
-	now => time,
-	site => $site,
-	hostname => $r->hostname() || '',
-	ip => $r->connection->remote_ip() || '0.0.0.0',
-	pool => $r->pool,
-	);
-    
-
-    my $req = Apache2::Request->new($r);
-    my @param_names = $req->param;
-    foreach my $n (@param_names) {
-	$request_info{$n} = $req->param($n);
-    }
-    $request_info{'param_names'} = \@param_names;
+    my $request_info = Kynetx::Request::build_request_env($r, $method, $rid);
 
 
-    Log::Log4perl::MDC->put('site', $request_info{'site'});
-    Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
+    Kynetx::Request::log_request_env($logger, $request_info);
 
-    $logger->info("Displaying context data for site " . $request_info{'site'});
+
+    $logger->info("Displaying context data for site " . $request_info->{'site'});
 
     # side effects environment with precondition pattern values
-    my ($rules, $rule_env) = get_rule_set($request_info{'site'}, 
-					  $request_info{'caller'},
-					  $r->dir_config('svn_conn'),
-	                                  \%request_info);
+    my ($rules, $rule_env, $ruleset) = 
+	get_rule_set($r->dir_config('svn_conn'),
+		     $request_info);
 
     # this loops through the rules ONCE applying all that fire
     my %fired;
     foreach my $rule ( @{ $rules } ) {
 	my $pred_value = 
-	    eval_predicates(\%request_info, $rule_env, $session, 
+	    eval_predicates($request_info, $rule_env, $session, 
 			    $rule->{'cond'}, $rule->{'name'});
 
 	if ($pred_value) {
@@ -104,8 +85,8 @@ sub show_context {
     }
 
     if($logger->is_debug()) {
-	foreach my $entry (keys %request_info) {
-	    $logger->debug($entry . ": " . $request_info{$entry});
+	foreach my $entry (keys %{ $request_info}) {
+	    $logger->debug($entry . ": " . $request_info->{$entry});
 	}
     }
 
@@ -117,18 +98,18 @@ sub show_context {
     my $context_template = HTML::Template->new(filename => $template,
 					       die_on_bad_params => 0);
 
-    $context_template->param(site => $request_info{'site'});
-    $context_template->param(caller => $request_info{'caller'});
+    $context_template->param(site => $request_info->{'site'});
+    $context_template->param(caller => $request_info->{'caller'});
 
     my @client_info = (       
 	{ name => 'Kynetx CS Server',
-	  value => $request_info{'hostname'}},
+	  value => $request_info->{'hostname'}},
 
 	{ name => 'Client ID', 
-	  value => $request_info{'site'}},
+	  value => $request_info->{'site'}},
 
 	{ name => 'Client calling page',
-	  value => $request_info{'caller'}},
+	  value => $request_info->{'caller'}},
 
 	);
 
@@ -140,41 +121,41 @@ sub show_context {
     my @user_info = (       
 
 	{ name => 'User IP Address',
-	  value => $request_info{'ip'}},
+	  value => $request_info->{'ip'}},
 
 	{ name => 'City',
-	  value => get_geoip(\%request_info,'city')},
+	  value => get_geoip($request_info,'city')},
 	{ name => 'Region',
-	  value => get_geoip(\%request_info,'region')},
+	  value => get_geoip($request_info,'region')},
 	{ name => 'Zip Code',
-	  value => get_geoip(\%request_info,'postal_code')},
+	  value => get_geoip($request_info,'postal_code')},
 	{ name => 'Country',
-	  value => get_geoip(\%request_info,'country_name')},
+	  value => get_geoip($request_info,'country_name')},
 
 	{ name => 'Local time',
-	  value => get_local_time(\%request_info)},
+	  value => get_local_time($request_info)},
 	{ name => 'Local time zone',
-	  value => get_local_time(\%request_info)->time_zone->name},
+	  value => get_local_time($request_info)->time_zone->name},
 
 
 	{ name => 'Current temperature',
-	  value => get_weather(\%request_info,'curr_temp') . ' F'},
+	  value => get_weather($request_info,'curr_temp') . ' F'},
 	{ name => 'Current conditions',
-	  value => get_weather(\%request_info,'curr_cond') . ' '},
+	  value => get_weather($request_info,'curr_cond') . ' '},
 	{ name => 'Tomorrow high',
-	  value => get_weather(\%request_info,'tomorrow_high') . ' F'},
+	  value => get_weather($request_info,'tomorrow_high') . ' F'},
 	{ name => 'Tomorrow low',
-	  value => get_weather(\%request_info,'tomorrow_low') . ' F'},
+	  value => get_weather($request_info,'tomorrow_low') . ' F'},
 	{ name => 'Tomorrow forecast',
-	  value => get_weather(\%request_info,'tomorrow_cond') . ' '},
+	  value => get_weather($request_info,'tomorrow_cond') . ' '},
 
 
 	{ name => 'Median income',
-	  value => '$'.get_demographics(\%request_info, 'median_income')},
+	  value => '$'.get_demographics($request_info, 'median_income')},
 	{ name => 'Urban',
-	  value => &{$demo_preds->{'urban'}}(\%request_info) ? 'yes' : 'no'},
+	  value => &{$demo_preds->{'urban'}}($request_info) ? 'yes' : 'no'},
 	{ name => 'Rural',
-	  value => &{$demo_preds->{'rural'}}(\%request_info) ? 'yes' : 'no'},
+	  value => &{$demo_preds->{'rural'}}($request_info) ? 'yes' : 'no'},
 
 	);
 
@@ -182,10 +163,10 @@ sub show_context {
 
     my @rule_info =  (
 	{ name => 'Rule Version', 
-	  value => $request_info{'rule_version'}},
+	  value => $request_info->{'rule_version'}},
 
 	{ name => 'Active rules', 
-	  value => $request_info{'rule_count'}},
+	  value => $request_info->{'rule_count'}},
 
 	);
 
@@ -194,7 +175,7 @@ sub show_context {
 
     my $c = 0;
     my @rules = ();
-    foreach my $rule_name (@{ $request_info{'selected_rules'} }) {
+    foreach my $rule_name (@{ $request_info->{'selected_rules'} }) {
 	push @rules, 
    	     { number => $c,
 	       name => $rule_name,

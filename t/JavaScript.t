@@ -10,6 +10,7 @@ use APR::URI qw/:all/;
 use APR::Pool ();
 use LWP::Simple;
 use XML::XPath;
+use LWP::UserAgent;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -444,29 +445,39 @@ is(&{$referer_function}('search_terms'),
 
 
 # check markets datasource
-my $symbol = 'GOOG'; 
-
 # http://www.webservicex.net//stockquote.asmx/GetQuote?symbol=GOOG
 
+SKIP: {
+    my $ua = LWP::UserAgent->new;
+
+    my $check_url = "http://www.webservicex.net//stockquote.asmx/GetQuote?symbol=GOOG";
+
+    diag "Checking $check_url";
+    my $response = $ua->get($check_url);
+    skip "No server available", 9 if (! $response->is_success);
+
+    my $symbol = 'GOOG'; 
+
 # $symbol has to be a string that is itself a valid KRL string
-my $market_function = mk_datasource_function('stocks', '"'.$symbol.'"' , 0);
+    my $market_function = mk_datasource_function('stocks', '"'.$symbol.'"' , 0);
 
-my $curr_qr = qr#\d+\.\d\d#;
+    my $curr_qr = qr#\d+\.\d\d#;
 
-is(&{$market_function}('symbol'), $symbol , "Returned symbol is the one we sent");
+    is(&{$market_function}('symbol'), $symbol , "Returned symbol is the one we sent");
 
 
-like(&{$market_function}('last'), $curr_qr, 'last price is a currency');
-like(&{$market_function}('date'), qr#\d+/\d+/\d+#, "market date is a date");
-like(&{$market_function}('time'), qr#\d+:\d#, "market time is a time");
-like(&{$market_function}('change'), qr#[+|-]\d+\.\d+#, 'market change');
-like(&{$market_function}('open'), $curr_qr, 'open price is a currency');
-like(&{$market_function}('high'), $curr_qr, 'high price is a currency');
-like(&{$market_function}('low'), $curr_qr, 'low price is a currency');
-like(&{$market_function}('volume'), qr#\d+#, 'volume is string of digits');
-like(&{$market_function}('previous_close'), $curr_qr, 'previous close price is a currency');
-like(&{$market_function}('name'), qr#[A-Za-z ]+#, 'name is a string');
+    like(&{$market_function}('last'), $curr_qr, 'last price is a currency');
+    like(&{$market_function}('date'), qr#\d+/\d+/\d+#, "market date is a date");
+    like(&{$market_function}('time'), qr#\d+:\d#, "market time is a time");
+    like(&{$market_function}('change'), qr#[+|-]\d+\.\d+#, 'market change');
+    like(&{$market_function}('open'), $curr_qr, 'open price is a currency');
+    like(&{$market_function}('high'), $curr_qr, 'high price is a currency');
+    like(&{$market_function}('low'), $curr_qr, 'low price is a currency');
+    like(&{$market_function}('volume'), qr#\d+#, 'volume is string of digits');
+    like(&{$market_function}('previous_close'), $curr_qr, 'previous close price is a currency');
+    like(&{$market_function}('name'), qr#[A-Za-z ]+#, 'name is a string');
 
+}
 
 
 # check locations datasource
@@ -474,6 +485,7 @@ like(&{$market_function}('name'), qr#[A-Za-z ]+#, 'name is a string');
 # http://www.webservicex.net//stockquote.asmx/GetQuote?symbol=GOOG
 
 my $location_function = mk_datasource_function('location', '', 0);
+
 
 
 like(&{$location_function}('country_code'), qr#[A-Z]+#, 'country code');
@@ -485,7 +497,6 @@ like(&{$location_function}('latitude'), qr#[-]*\d+\.\d+#, 'latitude is a number'
 like(&{$location_function}('longitude'), qr#[-]*\d+\.\d+#, 'longitude is a number');
 is(&{$location_function}('dma_code'), '770', 'BYU is in DMA 770');
 is(&{$location_function}('area_code'), '801', 'BYU is in area 801');
-
 
 # check weather datasource
 

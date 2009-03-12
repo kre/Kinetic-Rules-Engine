@@ -22,7 +22,7 @@ my $mech = Test::WWW::Mechanize->new();
 SKIP: {
     my $ua = LWP::UserAgent->new;
 
-    my $check_url = "$dn/console/$ruleset";
+    my $check_url = "$dn/console/$ruleset?caller=http://www.windley.com/foo/bazz.html";
     diag "Checking $check_url";
     my $response = $ua->get($check_url);
     skip "No server available", $numtests if (! $response->is_success);

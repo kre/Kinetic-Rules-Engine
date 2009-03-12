@@ -4,7 +4,7 @@ use lib qw(/web/lib/perl);
 use strict;
 
 use Test::More;
-plan tests => 1;
+plan tests => 4;
 use Test::LongString;
 
 # most Kyentx modules require this
@@ -15,7 +15,14 @@ use Kynetx::Test qw/:all/;
 use Kynetx::Log qw/:all/;
 
 
-ok(1,"dummy test");
+is(Kynetx::Log::array_to_string(["foo", "bar"]), "[foo,bar]", 
+   "array to string with array");
+
+is(Kynetx::Log::array_to_string(undef), "[]", "array to string with undef");
+
+is(Kynetx::Log::array_to_string("foo"), "[]", "array to string with string");
+
+is(Kynetx::Log::array_to_string(5), "[]", "array to string with number");
 
 1;
 

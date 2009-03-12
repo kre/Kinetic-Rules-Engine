@@ -65,17 +65,17 @@ eofile: /^\Z/
 ruleset: 'ruleset' ruleset_name  '{' 
            meta_block(0..1)
            dispatch_block(0..1)
-           dataset_block(0..1)
-           global_block(0..1)
+#           dataset_block(0..1)
+           global_decls(0..1)
            rule(s?)   #??
          '}' eofile
              {$return = {
 		 'ruleset_name' => $item{ruleset_name},
 		 'meta' => $item[4][0] || {},
 		 'dispatch' => $item[5][0] || [],
-		 'datasets' => $item[6][0] || [],
-		 'global' => $item[7][0] || [],
-		 'rules' => $item[8]
+#		 'datasets' => $item[6][0] || [],
+		 'global' => $item[6][0] || [],
+		 'rules' => $item[7]
 	         }
 	     }
        | { foreach (@{$thisparser->{errors}}) {
@@ -131,17 +131,19 @@ dispatch: 'domain' STRING '->' STRING
          }
      }
                    
-dataset_block: 'datasets' '{' dataset(s? /;/)  SEMICOLON(?) '}' #?
-     {$return =   $item[3]
-     }
+# dataset_block: 'datasets' '{' dataset(s? /;/)  SEMICOLON(?) '}' #?
+#      {$return =   $item[3]
+#      }
+#    | <error>
 
-dataset: VAR '=' STRING cachable(?)
+dataset: 'dataset' VAR '<-' STRING cachable(?)
      {$return = {
-	 'name' => $item[1],
-	 'source' => $item[3],
-	 'cachable' => $item[4][0] || 0
+	 'name' => $item[2],
+	 'source' => $item[4],
+	 'cachable' => $item[5][0] || 0
          }
      }
+    | <error>
 
 cachable: 'cachable' cachetime(?)
      {$return = $item[2][0] || 1
@@ -154,13 +156,17 @@ cachetime: 'for' NUM period
       }
      }
 
-global_block: 'global' '{' globals(s? /;/)  SEMICOLON(?) '}' #?
+global_decls: 'global' '{' globals(s? /;/)  SEMICOLON(?) '}' #?
      {$return = $item[3]}
 
 globals: emit_block
-     {$return = {'emit' => $item[1]
-                }
-     }
+          {$return = {'emit' => $item[1]
+                     }
+          }
+       | dataset
+          {$return = $item[1]
+          }
+       | <error>
 
 
 rule: 'rule' VAR 'is' rule_state '{'
@@ -508,7 +514,8 @@ timeframe: 'within' NUM period
        }
       }
 
-period: 'months'
+period: 'years'
+      | 'months'
       | 'weeks'
       | 'days'
       | 'hours'
@@ -734,6 +741,23 @@ sub parse_action {
     } else {
 	$logger->debug("Parsed rules");
     }
+
+    return $result;
+
+}
+
+sub parse_global_decls {
+    my $ruleset = shift;
+    
+    my $logger = get_logger();
+
+    $ruleset = remove_comments($ruleset);
+
+    $logger->debug("Global decls: ", $ruleset);
+
+    my $result = $parser->global_decls($ruleset);
+    
+    $logger->debug("Parsed global decls");#, Dumper($result));
 
     return $result;
 

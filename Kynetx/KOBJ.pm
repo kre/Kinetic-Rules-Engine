@@ -15,6 +15,8 @@ use constant DEFAULT_LOG_HOST => '127.0.0.1';
 use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
 use constant DEFAULT_JS_VERSION => '0.9';
 
+use Kynetx::Request qw(:all);
+use Kynetx::Rules qw(:all);
 use Kynetx::Util qw(:all);
 use Kynetx::Version qw(:all);
 
@@ -32,15 +34,23 @@ sub handler {
 
     my $logger = get_logger();
 
-    my ($site,$file) = $r->uri =~ m#/js/([^/]+)/(.*\.js)#;
+    $logger->debug("Initializing memcached");
+    Kynetx::Memcached->init();
 
-    Log::Log4perl::MDC->put('site', $site);
+
+    my ($rid,$file) = $r->uri =~ m#/js/([^/]+)/(.*\.js)#;
+
+    Log::Log4perl::MDC->put('site', $rid);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
+
+
+    my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $rid);
 
 
     my $js_version = $r->dir_config('kobj_js_version') || DEFAULT_JS_VERSION;
     my $js_root = $r->dir_config('kobj_js_root') || DEFAULT_JS_ROOT;
 
+    Kynetx::Request::log_request_env($logger, $req_info);
 
     my $js = "";
     if($file eq 'kobj.js') {
@@ -68,18 +78,22 @@ sub handler {
 	$logger->info("Generating KOBJ file ", $file, ' with action host ' , $action_host);
 
 
-	my $req = Apache2::Request->new($r);
-	
 
-	$js = get_kobj('http://', $action_host, $log_host, $site, $js_version, $req);
+	$js = get_kobj('http://', 
+		       $action_host, 
+		       $log_host, 
+		       $rid, 
+		       $js_version, 
+		       $r->dir_config('svn_conn'), 
+		       $req_info);
 
 
     } elsif($file eq 'kobj-static.js') {
 
 	if($r->dir_config('UseCloudFront') && 
-            ($site eq 'static' || 
-	     $site eq 'shared' || 
-	     $site eq '996337974') # Backcountry
+            ($rid eq 'static' || 
+	     $rid eq 'shared' || 
+	     $rid eq '996337974') # Backcountry
 	    ) { # redirect to CloudFront
 	    # FIXME: if config directive not available, log error
 	    my $version = 
@@ -129,13 +143,40 @@ sub get_js_file {
 
 }
 
+sub get_datasets {
+    my ($svn_conn, $req_info) = @_;
+
+    my $rid = $req_info->{'rid'};
+
+    my $logger = get_logger();
+    $logger->debug("Getting ruleset for $rid");
+
+    my $js = "";
+
+    my $ruleset = Kynetx::Rules::get_rules_from_repository($rid, $svn_conn, $req_info);
+
+    if($ruleset->{'global'}) {
+	$logger->debug("Processing decls for $rid");
+	foreach my $g (@{ $ruleset->{'global'} }) {
+
+	    if(defined $g->{'name'} && cache_dataset_for($g) >= 24*60*60) { # more than 24 hours
+		    $js .= mk_dataset_js($g, $req_info, {}); # empty rule env
+	    }
+	}
+    }
+
+    return $js;
+
+}
+
 
 sub get_kobj {
 
 
-    my ($proto, $host, $log_host, $site_id, $js_version, $req) = @_;
+    my ($proto, $host, $log_host, $rid, $js_version, $svn_conn, $req_info) = @_;
 
-    my $data_root = "/web/data/client/$site_id";
+    # FIXME: should not be hardcoded
+    my $data_root = "/web/data/client/$rid";
 
     my $logger = get_logger();
 
@@ -254,7 +295,7 @@ KOBJ.d = (new Date).getTime();
 KOBJ.proto = \'$proto\'; 
 KOBJ.host_with_port = \'$host\'; 
 KOBJ.loghost_with_port = \'$log_host\'; 
-KOBJ.site_id = \'$site_id\';
+KOBJ.site_id = \'$rid\';
 KOBJ.url = KOBJ.proto+KOBJ.host_with_port+"/ruleset/eval/" + KOBJ.site_id;
 KOBJ.logger_url = KOBJ.proto+KOBJ.loghost_with_port+"/log/" + KOBJ.site_id;
 
@@ -269,7 +310,7 @@ EOF
     # add in datasets  The datasets param is a filter
     my @ds;
 
-    my $datasets = $req->param('datasets');
+    my $datasets = $req_info->{'datasets'};
     
     if($datasets) {
 	@ds = split(/,/, $datasets);
@@ -293,12 +334,15 @@ EOF
     }
 
     # create param string for tacking on to CS request
-    my @param_names = $req->param;
+    my $param_names = $req_info->{'param_names'};
     my $param_str = "";
-    foreach my $n (@param_names) {
-#	$logger->debug("Adding $n to parameters...");
-	$param_str .= "&$n=".$req->param($n);
+    foreach my $n (@{ $param_names }) {
+	$logger->debug("Adding $n to parameters...");
+	$param_str .= "&$n=".$req_info->{$n};
     }
+
+    $js .= get_datasets($svn_conn, $req_info);
+
 
 
     $js .= <<EOF;

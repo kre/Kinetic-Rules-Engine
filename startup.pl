@@ -39,6 +39,7 @@ use Apache2::Request ();
 
 use Geo::IP;
 use Time::HiRes qw(time);
+use Data::UUID;
 
 use Apache::DBI;
 use DBI ();

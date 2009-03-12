@@ -9,6 +9,9 @@ use Test::LongString;
 use DateTime;
 use Geo::IP;
 use Cache::Memcached;
+use LWP::Simple;
+use LWP::UserAgent;
+use JSON::XS;
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Parser qw/:all/;
@@ -60,23 +63,35 @@ $session->{mk_created_session_name('archive_pages_old')} = $three_days_ago->epoc
 
 my $Amazon_req_info;
 $Amazon_req_info->{'ip'} = '72.21.203.1'; # Seattle (Amazon)
-
+$Amazon_req_info->{'rid'} = 'cs_test';
 
 my (@test_cases, $json, $krl_src, $krl,$result);
 
 sub add_testcase {
     my($str, $expected, $req_info, $diag) = @_;
-    my $val = Kynetx::Parser::parse_rule($str);
- 
+
+    my $pt;
+    my $type = '';
+    if($str =~ m#^ruleset#) {
+	$pt = Kynetx::Parser::parse_ruleset($str);
+	$type = 'ruleset';
+     } else {
+	$pt = Kynetx::Parser::parse_rule($str);
+	$type = 'rule';
+     }
+
+
+
     chomp $str;
-    diag("$str = ", Dumper($val)) if $diag;
+    diag("$str = ", Dumper($pt)) if $diag;
+    
 
-
-    push(@test_cases, {'expr' => $val,
+    push(@test_cases, {'expr' => $pt,
 		       'val' => $expected,
 		       'req_info' => $req_info,
 		       'session' => $session,
 		       'src' =>  $str,
+		       'type' => $type,
 	 }
 	 );
 }
@@ -95,6 +110,7 @@ sub add_json_testcase {
 		       'req_info' => $req_info,
 		       'session' => $session,
 		       'src' =>  $str,
+		       'type' => 'rule',
 	 }
 	);
 }
@@ -504,6 +520,7 @@ add_testcase(
 
 
 
+
 ##
 ## JSON test cases
 ##
@@ -525,38 +542,191 @@ add_json_testcase(
     );
 
 
+#
+# global decls
+#
+
+$krl_src = <<_KRL_;
+ruleset dataset0 {
+    global {
+	dataset global_decl_0 <- "aaa.json";
+    }
+}
+_KRL_
+
+my $global_decl_0 = <<_JS_;
+var global_decl_0 = {"www.barnesandnoble.com":[
+	       {"link":"http://aaa.com/barnesandnoble",
+		"text":"AAA members sav emoney!",
+		"type":"AAA"}]
+          };
+_JS_
+
+
+add_testcase(
+    $krl_src,
+    $global_decl_0,
+    $Amazon_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+ruleset dataset0 {
+    global {
+	dataset global_decl_1 <- "test_data";
+    }
+}
+_KRL_
+
+my $global_decl_1 = <<_JS_;
+var global_decl_1 = "here is some test data!";
+_JS_
+
+add_testcase(
+    $krl_src,
+    $global_decl_1,
+    $Amazon_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+ruleset dataset0 {
+    global {
+	dataset global_decl_2 <- "http://frag.kobj.net/clients/cs_test/aaa.json";
+    }
+}
+_KRL_
+
+my $global_decl_2 = <<_JS_;
+var global_decl_2 = {"www.barnesandnoble.com":[
+	       {"link":"http://aaa.com/barnesandnoble",
+		"text":"AAA members sav emoney!",
+		"type":"AAA"}]
+          };
+_JS_
+
+add_testcase(
+    $krl_src,
+    $global_decl_2,
+    $Amazon_req_info
+    );
+
+
+
+$krl_src = <<_KRL_;
+ruleset dataset0 {
+    global {
+	dataset global_decl_3 <- "http://frag.kobj.net/clients/cs_test/some_data.txt";
+    }
+}
+_KRL_
+
+my $global_decl_3 = <<_JS_;
+var global_decl_3 = "Here is some test data!";
+_JS_
+
+add_testcase(
+    $krl_src,
+    $global_decl_3,
+    $Amazon_req_info
+    );
+
+
 
 
 
 #diag(Dumper($test_cases[-1]->{'expr'}));
 
 
-plan tests => 5 + (@test_cases * 1);
+plan tests => 9 + (@test_cases * 1);
 
 
 
 # now test each test case twice
 foreach my $case (@test_cases) {
-    #diag(Dumper($case->{'expr'}));
-    my $js = eval_rule($r,
-		       $case->{'req_info'}, 
-		       $rule_env, 
-		       $case->{'session'}, 
-		       $case->{'expr'},
-                      );
-    my $uniq = $rule_env->{'uniq_id'};
-    $uniq =~ s/^kobj_(.*)/$1/;
-    $case->{'val'} =~ s/%uniq%/$uniq/g;
-    is_string_nows(
-	$js,
-	$case->{'val'},
-	"Evaling rule " . $case->{'src'});
-    
+    if($case->{'type'} eq 'rule') {
+#	diag(Dumper($case->{'expr'}));
+	my $js = eval_rule($r,
+			   $case->{'req_info'}, 
+			   $rule_env, 
+			   $case->{'session'}, 
+			   $case->{'expr'},
+	   );
+
+	my $uniq = $rule_env->{'uniq_id'};
+	$uniq =~ s/^kobj_(.*)/$1/;
+	$case->{'val'} =~ s/%uniq%/$uniq/g;
+	is_string_nows(
+	    $js,
+	    $case->{'val'},
+	    "Evaling rule " . $case->{'src'});
+    }
 }
 
+my $ua = LWP::UserAgent->new;
+my $check_url = "http://frag.kobj.net/clients/cs_test/some_data.txt";
+my $response = $ua->get($check_url);
+my $no_server_available = (! $response->is_success);
+
+# now test each test case twice
+foreach my $case (@test_cases) {
+
+    if($case->{'type'} eq 'ruleset') {
+    
+	my $js = "";
+	if( $case->{'expr'}->{'global'} && @{ $case->{'expr'}->{'global'} })  {
+	    $js = eval_globals($case->{'req_info'}, 
+			       $case->{'expr'},
+			       $rule_env, 
+		);
+
+	}    
+
+      SKIP: {
+
+	  skip "No server available", 1 if ($no_server_available);
+	
+	  is_string_nows(
+	      $js,
+	      $case->{'val'},
+	      "Evaling ruleset: " . $case->{'src'});
+	}
+
+    }
+}
+
+#
+# rule_env_tests
+#
+
+
+contains_string(nows($global_decl_0),
+		nows(encode_json($rule_env->{'global_decl_0'})), 
+		 "Global decl data set effects env");
+contains_string(nows($global_decl_1), 
+		nows($rule_env->{'global_decl_1'}),
+		"Global decl data set effects env");
+contains_string(nows($global_decl_2), 
+		nows(encode_json($rule_env->{'global_decl_2'})),
+		"Global decl data set effects env");
+contains_string(nows($global_decl_3), 
+		nows($rule_env->{'global_decl_3'}),
+		"Global decl data set effects env");
+
+
+
+#
+# session tests
+#
 is($session->{'archive_pages_now'}, undef, "Archive pages now reset");
 is($session->{'archive_pages_now2'}, undef, "Archive pages now2 reset");
 is($session->{'archive_pages_old'}, 4, "Archive pages old iterated");
+
+
+
+#diag Dumper($rule_env);
+
+
 
 #
 # Repository tests
@@ -574,7 +744,7 @@ SKIP: {
     # this number must reflect the number of test in this SKIP block
     my $how_many = 1;
 
-    my $site = 10; # the test site.  
+    my $site = 'cs_test'; # the test site.  
 
     my $rules ;
     eval {
@@ -603,7 +773,7 @@ SKIP: {
 
     my ($rules0, $rules1);
 
-    my $site = 'test0'; # the test site.  
+    my $site = 'cs_test'; # the test site.  
     eval {
 
 	$rules0 = Kynetx::Rules::get_rules_from_repository($site, $svn_conn);
@@ -612,7 +782,7 @@ SKIP: {
     };
     skip "Can't get rules from $svn_conn for $site", $how_many if $@;
 
-    $site = 'test1'; # the test site.  
+    $site = 'cs_test'; # the test site.  
     eval {
 
 	$rules1 = Kynetx::Rules::get_rules_from_repository($site, $svn_conn);
@@ -626,6 +796,12 @@ SKIP: {
 
 diag("Safe to ignore warnings about unintialized values & unrecognized escapes");
 
+
+sub nows {
+    my $str = shift;
+    $str =~ y/\n\t\r //d;
+    return $str;
+}
 
 1;
 

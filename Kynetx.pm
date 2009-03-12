@@ -45,18 +45,24 @@ sub handler {
     $logger->debug("Initializing memcached");
     Kynetx::Memcached->init();
 
+    my ($method,$rid) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_]+)!;
+    $logger->debug("Performing $method method on ruleset $rid");
+    Log::Log4perl::MDC->put('site', $rid);
+    Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
+
+
     # at some point we need a better dispatch function
-    if($r->path_info =~ m!/eval/! ) {
-	process_rules($r);
-    } elsif($r->path_info =~ m!/flush/! ) {
-	flush_ruleset_cache($r);
-    } elsif($r->path_info =~ m!/console/! ) {
-	show_context($r);
-    } elsif($r->path_info =~ m!/describe/! ) {
-	describe_ruleset($r);
-    } elsif($r->path_info =~ m!/version/! ) {
-	show_build_num($r);
-    } elsif($r->path_info =~ m!/foo/! ) {
+    if($method eq 'eval') {
+	process_rules($r, $method, $rid);
+    } elsif($method eq 'flush' ) {
+	flush_ruleset_cache($r, $method, $rid);
+    } elsif($method eq 'console') {
+	show_context($r, $method, $rid);
+    } elsif($method eq 'describe' ) {
+	describe_ruleset($r, $method, $rid);
+    } elsif($method eq 'version' ) {
+	show_build_num($r, $method, $rid);
+    } elsif($method eq 'foo' ) {
 	my $uniq = int(rand 999999999);
 	$r->content_type('text/html');
 	print "$uniq";
@@ -64,7 +70,7 @@ sub handler {
 
     } else {
 
-	process_rules($r);
+	process_rules($r, $method, $rid);
     }
 
 
@@ -79,46 +85,35 @@ sub handler {
 
 
 sub flush_ruleset_cache {
-    my ($r) = @_;
+    my ($r, $method, $rid) = @_;
 
     my $logger = get_logger();
 
-    my ($site) = $r->path_info =~ m#/flush/(.+)#;
 
-    Log::Log4perl::MDC->put('site', $site);
-    Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
-
-
-    $logger->debug("[flush] flushing rules for $site");
+    $logger->debug("[flush] flushing rules for $rid");
     my $memd = get_memd();
-    $memd->delete("ruleset:$site");
+    $memd->delete("ruleset:$rid");
 
     $r->content_type('text/html');
-    my $msg = "Rules flushed for site $site";
+    my $msg = "Rules flushed for site $rid";
     print "<title>$msg</title><h1>$msg</h1>";
 
 }
 
 sub describe_ruleset {
-    my ($r) = @_;
+    my ($r, $method, $rid) = @_;
 
     my $logger = get_logger();
-
-
-    my ($site) = $r->path_info =~ m#/describe/(.+)#;
-
-    Log::Log4perl::MDC->put('site', $site);
-    Log::Log4perl::MDC->put('rule', '[describe]');  # no rule for now...
 
     my $req = Apache2::Request->new($r);
     my $flavor = $req->param('flavor') || 'html';
 
 
-    $logger->debug("Getting ruleset $site");
+    $logger->debug("Getting ruleset $rid");
 
-    my %req_info;
+    my $req_info = {};
 
-    my $ruleset = Kynetx::Rules::get_rules_from_repository($site, $r->dir_config('svn_conn'), \%req_info);
+    my $ruleset = Kynetx::Rules::get_rules_from_repository($rid, $r->dir_config('svn_conn'), $req_info);
 
     my $numrules = @{ $ruleset->{'rules'} } + 0;
 
@@ -126,7 +121,7 @@ sub describe_ruleset {
 
     my ($data) = {
 	'ruleset_id' => $ruleset->{'ruleset_name'},
-	'ruleset_version' => $req_info{'rule_version'},
+	'ruleset_version' => $req_info->{'rule_version'},
 	'number_of_rules' => $numrules,
 	'description' => $ruleset->{'meta'}->{'description'} || '',
     };

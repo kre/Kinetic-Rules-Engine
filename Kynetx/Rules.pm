@@ -8,17 +8,19 @@ use warnings;
 use Data::UUID;
 use SVN::Client;
 use Log::Log4perl qw(get_logger :levels);
-
+use JSON::XS;
 
 use Kynetx::Parser qw(:all);
 use Kynetx::PrettyPrinter qw(:all);
 use Kynetx::Json qw(:all);
 use Kynetx::Util qw(:all);
 use Kynetx::Memcached qw(:all);
+use Kynetx::Datasets qw(:all);
 use Kynetx::Session qw(:all);
 use Kynetx::Predicates qw(:all);
 use Kynetx::Actions qw(:all);
 use Kynetx::Log qw(:all);
+use Kynetx::Request qw(:all);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -34,6 +36,7 @@ our %EXPORT_TAGS = (all => [
 qw(
 process_rules
 eval_rule
+eval_globals
 get_rule_set 
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
@@ -41,7 +44,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
 sub process_rules {
-    my $r = shift;
+    my ($r, $method, $rid) = @_;
 
     my $logger = get_logger();
 
@@ -61,88 +64,29 @@ sub process_rules {
     # get a session hash 
     my $session = process_session($r);
 
-    # grab request params
-    my $req = Apache2::Request->new($r);
-
-
-    # build initial envv
-    my $ug = new Data::UUID;
-    my $path_info = $r->path_info;
-    my $request_info = {
-	host => $r->connection->get_remote_host,
-	caller => $r->headers_in->{'Referer'} || $req->param('caller'),
-	now => time,
-	site => $path_info =~ m#/eval/([^/]+)/.*\.js#,
-	hostname => $r->hostname(),
-	ip => $r->connection->remote_ip() || '0.0.0.0',
-	ua => $r->headers_in->{'User-Agent'} || '',
-	pool => $r->pool,
-	txn_id => $ug->create_str(),
-	};
-    
-
-    my @param_names = $req->param;
-    foreach my $n (@param_names) {
-	$request_info->{$n} = $req->param($n);
-    }
-    $request_info->{'param_names'} = \@param_names;
-
-#     $request_info->{'referer'} = $req->param('referer');
-#     $request_info->{'title'} = $req->param('title');
-#     $request_info->{'kvars'} = $req->param('kvars');
-
-
-    Log::Log4perl::MDC->put('site', $request_info->{'site'});
-    Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
+    my $request_info = Kynetx::Request::build_request_env($r, $method, $rid);
 
     $logger->info("Processing rules for site " . $request_info->{'site'});
 
     # side effects environment with precondition pattern values
-    my ($rules, $rule_env, $global) = 
-	get_rule_set($request_info->{'site'}, 
-		     $request_info->{'caller'},
-		     $r->dir_config('svn_conn'),
+    my ($rules, $rule_env, $ruleset) = 
+	get_rule_set($r->dir_config('svn_conn'),
 		     $request_info
 	);
 
 
 
-    if($logger->is_debug()) {
-	foreach my $entry (keys %{ $request_info }) {
-	    $logger->debug($entry . ": " . $request_info->{$entry}) 
-		unless($entry eq 'param_names' || $entry eq 'selected_rules');
-	}
-# 	foreach my $h (keys %{ $r->headers_in }) {
-# 	    $logger->debug($h . ": " . $r->headers_in->{$h});
-# 	}
-    }
-
-    # FIXME: the above loop ought to intelligently deal with arrays
-    if($request_info->{'param_names'}) {
-	$logger->debug("param_names: [" . join(", ", @{ $request_info->{'param_names'} }) . "]");
-    }
-
-    if($request_info->{'selected_rules'}) {
-	$logger->debug("selected_rules: [" . join(", ", @{ $request_info->{'selected_rules'} }) . "]");
-    }
-
-
+    Kynetx::Request::log_request_env($logger, $request_info);
 
     my $js = '';
 
+
+    # handle datasets
+#    $js .= eval_datasets($request_info,$ruleset, $rule_env);
+
+
     # handle globals
-
-    if($global) {
-	foreach my $g (@{ $global }) {
-
-	    # emits
-	    if($g->{'emit'}) {
-		$js .= $g->{'emit'} . "\n";
-	    }
-
-
-	}
-    }
+    $js .= eval_globals($request_info,$ruleset, $rule_env);
 
 
     # this loops through the rules ONCE applying all that fire
@@ -153,6 +97,24 @@ sub process_rules {
     $logger->debug("Finished processing rules for " . $request_info->{'site'});
     print $js;
 
+}
+
+
+sub eval_globals {
+    my($request_info,$ruleset, $rule_env) = @_;
+    my $js = "";
+    if($ruleset->{'global'}) {
+	foreach my $g (@{ $ruleset->{'global'} }) {
+	    if($g->{'emit'}) { # emit
+		$js .= $g->{'emit'} . "\n";
+	    } elsif(defined $g->{'name'}) { # dataset
+		$js .= mk_dataset_js($g, $request_info, $rule_env);
+	    }
+	}
+    }
+
+    return $js;
+   
 }
 
 sub eval_rule {
@@ -246,7 +208,6 @@ sub eval_rule {
 		  $session
 	);
 
-
     # return the JS load to the client
     $logger->info("finished");
     return $js; 
@@ -258,8 +219,11 @@ sub eval_rule {
 # this returns the right rules for the caller and site
 # this is a point where things could be optimixed in the future
 sub get_rule_set {
-    my ($site, $caller, $svn_conn, $request_info) = @_;
+    my ($svn_conn, $request_info) = @_;
 
+    my $caller = $request_info->{'caller'};
+    my $site = $request_info->{'rid'};
+    
     my $logger = get_logger();
     $logger->debug("Getting ruleset for $caller");
 
@@ -278,17 +242,13 @@ sub get_rule_set {
     $request_info->{'rule_count'} = 0;
     $request_info->{'selected_rules'} = [];
     foreach my $rule ( @{ $ruleset->{'rules'} } ) {
-
 # 	$logger->debug("Rule $rule->{'name'} is " . $rule->{'state'});
-
 	if($rule->{'state'} eq 'active' || 
 	   ($rule->{'state'} eq 'test' && 
 	    $request_info->{'mode'} && 
 	    $request_info->{'mode'} eq 'test' )) {  # optimize??
 
-
 	    $request_info->{'rule_count'}++;
-
 	
 	    # test the pattern, captured values are stored in @captures
 	    if(my @captures = $caller =~ get_precondition_test($rule)) {
@@ -296,9 +256,7 @@ sub get_rule_set {
 		$logger->debug("[selected] $rule->{'name'} ");
 
 		push @new_set, $rule;
-
 		push @{ $request_info->{'selected_rules'} }, $rule->{'name'};
-
 
 		# store the captured values from the precondition to the env
 		my $cap = 0;
@@ -310,21 +268,14 @@ sub get_rule_set {
 
 		    $new_env{"$rule->{'name'}:$var"} = $captures[$cap++];
 		    push(@{$new_env{$rule->{'name'}."_vars"}}, $var);
-
-
 		}
-                    
-    
 	    } else {
 		$logger->debug("[not selected] $rule->{'name'} ");
-		
 	    }
-    
 	}
-    
     }
     
-    return (\@new_set, \%new_env, $ruleset->{'global'});
+    return (\@new_set, \%new_env, $ruleset);
 
 }
 

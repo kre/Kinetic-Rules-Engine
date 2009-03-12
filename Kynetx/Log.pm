@@ -82,7 +82,15 @@ sub log_rule_fire {
 sub array_to_string {
     my ($arr) = @_;
 
-    return '[' . join(',', @{ $arr }) . ']';
+    my $a;
+
+    if(ref($arr) eq 'ARRAY') {
+	$a = '[' . join(',', @{ $arr }) . ']';
+    } else {
+	$a = '[]'
+    }
+
+    return $a;
 }
 
 

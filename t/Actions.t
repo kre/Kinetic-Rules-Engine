@@ -29,6 +29,7 @@ $Data::Dumper::Indent = 1;
 my $my_req_info;
 $my_req_info->{'caller'} = 'http://www.windley.com';
 $my_req_info->{'pool'} = APR::Pool->new;
+$my_req_info->{'txn_id'} = '1234';
 
 my $rel_url = "/kynetx/newsletter_invite.inc";
 my $non_matching_url = "http://frag.kobj.net/widgets/weather.pl?zip=84042";
@@ -60,7 +61,7 @@ sub add_testcase {
 
     push(@test_cases, {'expr' => $krl,
 		       'expected' => $expected,
-		       'name' => $krl->{actions}->[0]->{action}->{name},
+		       'name' => $krl->{actions}->[0]->{action}->{name} || 'no_name',
 		       'args' => $krl->{actions}->[0]->{action}->{args},
 		       'url' => $krl->{actions}->[0]->{action}->{args}->[1]->{val},
 		       'changed' => ($url_changed eq 'changed'),
@@ -190,7 +191,8 @@ sub add_action_testcase {
 	  'expected' => $expected,
 	  'req_info' => $req_info,
 	  'src' =>  $str,
-	  'desc' => $desc
+	  'desc' => $desc,
+	  'name' => 'dummy_name'
 	 }
 	);
 }
@@ -299,7 +301,7 @@ setTimeout('
     cb();
 }
 (\\'23\\',callbacks23));
-;KOBJ.logger(\\'timer_expired\\',\\'\\',\\'none\\',\\'\\',\\'success\\',\\'\\');',5000);
+;KOBJ.logger(\\'timer_expired\\',\\'1234\\',\\'none\\',\\'\\',\\'success\\',\\'dummy_name\\');',5000);
 _JS_
 
 
@@ -327,7 +329,10 @@ foreach my $case (@test_cases) {
     ($action, $args) = 
 	choose_action($case->{'req_info'}, 
 		      $case->{'name'},
-		      $case->{'args'});
+		      $case->{'args'},
+                      {}, # empty rule env
+                      'dummy_rule'
+         );
 
     my $out_args = gen_js_rands( $case->{'args'} );
 #    diag("Out ", Dumper($out_args));

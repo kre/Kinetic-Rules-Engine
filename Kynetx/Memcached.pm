@@ -101,7 +101,7 @@ sub get_remote_data {
 sub get_cached_file {
     my($filepath,$expire) = @_;
 
-    $expire = 20 * 60 if (! $expire); # twenty minutes
+    $expire = 60 * 60 if (! $expire); #   one hour
 
     my $logger = get_logger();
     my $memd = get_memd();
