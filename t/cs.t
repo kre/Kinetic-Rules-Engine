@@ -9,7 +9,7 @@ use Test::WWW::Mechanize;
 
 use LWP::UserAgent;
 
-my $numtests = 37;
+my $numtests = 39;
 
 plan tests => $numtests;
 
@@ -19,6 +19,7 @@ my $ruleset = 'cs_test';
 
 my $mech = Test::WWW::Mechanize->new();
 
+diag "Warning: running these tests on a host without memcache support is slow...";
 SKIP: {
     my $ua = LWP::UserAgent->new;
 
@@ -125,6 +126,10 @@ SKIP: {
 
     $mech->content_contains('kobj_weather');
 
+    # globals
+    $mech->content_contains('var foobar = 4;');
+
+    $mech->content_contains('var public_timeline = [{"user":{"followers_count":');
 }
 
 1;

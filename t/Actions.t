@@ -313,6 +313,26 @@ add_action_testcase(
     );
 
 
+$krl_src = <<_KRL_;
+annotate_search_results(foo);
+_KRL_
+
+$result = <<_JS_;
+(function(uniq, cb, annotate_fn) {
+    KOBJ.annotate_search_results(annotate_fn);
+    cb();
+}
+('23',callbacks23,foo));
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'annotate_search_results'
+    );
+
 
 
 plan tests => 0 + (@test_cases * 3) + (@action_test_cases * 1);

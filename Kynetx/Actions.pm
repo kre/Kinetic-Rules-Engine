@@ -82,6 +82,13 @@ function(uniq, cb, pos, color, bgcolor, header, sticky, msg) {
 }
 EOF
 
+    annotate_search_results => <<EOF,
+function(uniq, cb, annotate_fn) {
+    KOBJ.annotate_search_results(annotate_fn);
+    cb();
+}
+EOF
+
 
 # not finished/tested
     catfish => <<EOF,

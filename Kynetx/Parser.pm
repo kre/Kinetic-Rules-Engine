@@ -295,18 +295,19 @@ modifier: VAR '=' expr
          }
         }
 
-action_name: 'float_html'
+action_name: 'alert'
+           | 'annotate_search_results'
+           | 'float_html'
            | 'float'
-           | 'replace_html'
-           | 'replace_image_src'
-           | 'replace'
-           | 'popup'
-           | 'alert'
-           | 'redirect'
            | 'move_after'
            | 'move_to_top'
            | 'notify'
            | 'noop'
+           | 'popup'
+           | 'redirect'
+           | 'replace_html'
+           | 'replace_image_src'
+           | 'replace'
            | <error>
 
 actionblock: blocktype(?) '{' primrule(s /;/) SEMICOLON(?) '}'
