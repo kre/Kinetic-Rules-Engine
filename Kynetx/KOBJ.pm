@@ -157,16 +157,17 @@ sub get_datasets {
 
     my $ruleset = Kynetx::Rules::get_rules_from_repository($rid, $svn_conn, $req_info);
 
-    if($ruleset->{'global'}) {
+    if( $ruleset->{'global'} ) {
 	$logger->debug("Processing decls for $rid");
 	foreach my $g (@{ $ruleset->{'global'} }) {
 
 	    if(defined $g->{'name'} && Kynetx::Datasets::cache_dataset_for($g) >= 24*60*60) { # more than 24 hours
-		    $js .= mk_dataset_js($g, $req_info, {}); # empty rule env
+		$logger->debug("Creating JS for decl " . $g->{'name'});
+		$js .= mk_dataset_js($g, $req_info, {}); # empty rule env
 	    }
 	}
-    }
-
+    } 
+    $logger->debug("Returning JS for global decls");
     return $js;
 
 }
