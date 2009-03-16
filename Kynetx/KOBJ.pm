@@ -45,19 +45,21 @@ sub handler {
     Log::Log4perl::MDC->put('site', $rid);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
 
-
-    my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $rid);
-
-
     my $js_version = $r->dir_config('kobj_js_version') || DEFAULT_JS_VERSION;
     my $js_root = $r->dir_config('kobj_js_root') || DEFAULT_JS_ROOT;
 
-    Kynetx::Request::log_request_env($logger, $req_info);
+    $logger->info("Generating KOBJ file ", $file);
+
 
     my $js = "";
     if($file eq 'kobj.js') {
 
-	$logger->info("Generating KOBJ file ", $file);
+
+	my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $rid);
+
+	Kynetx::Request::log_request_env($logger, $req_info);
+
+
 
 	my($prefix, $middle, $root) = $r->hostname =~ m/^([^.]+)\.?(.*)\.([^.]+\.[^.]+)$/;
 
@@ -77,9 +79,7 @@ sub handler {
 	    $log_host = DEFAULT_LOG_PREFIX . $ending;
 	}
 
-	$logger->info("Generating KOBJ file ", $file, ' with action host ' , $action_host);
-
-
+	$logger->info("Generating KOBJ client file ", $file, ' with action host ' , $action_host);
 
 	$js = get_kobj('http://', 
 		       $action_host, 
@@ -89,6 +89,7 @@ sub handler {
 		       $r->dir_config('svn_conn'), 
 		       $req_info);
 
+	$logger->debug("KOBJ client file completed")
 
     } elsif($file eq 'kobj-static.js') {
 
@@ -113,10 +114,6 @@ sub handler {
 	
     } elsif($r->path_info =~ m!/version/! ) {
 	show_build_num($r);
-    } else {
-
-	$js = get_js_file($file,$js_version,$js_root);
-
     }
 
     print $js;
@@ -424,7 +421,7 @@ EOF
 
     $js .= get_datasets($svn_conn, $req_info);
 
-
+    $logger->debug("Done with data set generation");
 
     $js .= <<EOF;
  
@@ -453,6 +450,11 @@ KOBJ.body=document.getElementsByTagName("body")[0];
 });
 
 EOF
+
+
+    $logger->debug("Returning client specific JS");
+
+    return $js;
 
 }
 
