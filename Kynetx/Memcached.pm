@@ -11,7 +11,7 @@ use lib qw(
 
 use Log::Log4perl qw(get_logger :levels);
 use memcache_ips;
-
+use LWP::Simple qw(get);
 
 use constant DEFAULT_MEMCACHED_PORT => '11211';
 
