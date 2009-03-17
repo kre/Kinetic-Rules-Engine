@@ -420,7 +420,7 @@ EOF
 	$param_str .= "&$n=".$req_info->{$n};
     }
 
-    $js .= get_datasets($svn_conn, $req_info);
+ #   $js .= get_datasets($svn_conn, $req_info);
 
     $logger->debug("Done with data set generation");
 
