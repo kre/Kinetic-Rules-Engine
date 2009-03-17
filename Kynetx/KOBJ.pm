@@ -55,12 +55,16 @@ sub handler {
     if($file eq 'kobj.js') {
 
 
-	my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $rid);
+#	my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $rid);
 
-	Kynetx::Request::log_request_env($logger, $req_info);
+#	Kynetx::Request::log_request_env($logger, $req_info);
 
+
+
+	my $req_info = {};
+	$req_info->{'rid'} = $rid;
+	$req_info->{'txn_id'} = rand;
 	Log::Log4perl::MDC->put('rule', $req_info->{'txn_id'});  
-
 
 	my($prefix, $middle, $root) = $r->hostname =~ m/^([^.]+)\.?(.*)\.([^.]+\.[^.]+)$/;
 
