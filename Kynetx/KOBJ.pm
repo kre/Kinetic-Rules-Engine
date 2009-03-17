@@ -17,6 +17,7 @@ use constant DEFAULT_JS_VERSION => '0.9';
 
 use Kynetx::Util qw(:all);
 use Kynetx::Version qw(:all);
+use Kynetx::Request qw(:all);
 
 
 sub handler {
@@ -32,11 +33,10 @@ sub handler {
 
     my $logger = get_logger();
 
-    my ($site,$file) = $r->uri =~ m#/js/([^/]+)/(.*\.js)#;
+    my ($rid,$file) = $r->uri =~ m#/js/([^/]+)/(.*\.js)#;
 
-    Log::Log4perl::MDC->put('site', $site);
+    Log::Log4perl::MDC->put('site', $rid);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
-
 
     my $js_version = $r->dir_config('kobj_js_version') || DEFAULT_JS_VERSION;
     my $js_root = $r->dir_config('kobj_js_root') || DEFAULT_JS_ROOT;
@@ -45,7 +45,15 @@ sub handler {
     my $js = "";
     if($file eq 'kobj.js') {
 
-	$logger->info("Generating KOBJ file ", $file);
+	$logger->info("Generating client initialization file ", $file);
+
+	my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $rid);
+
+	Kynetx::Request::log_request_env($logger, $req_info);
+
+
+	Log::Log4perl::MDC->put('rule', $req_info->{'txn_id'});  
+
 
 	my($prefix, $middle, $root) = $r->hostname =~ m/^([^.]+)\.?(.*)\.([^.]+\.[^.]+)$/;
 
@@ -71,15 +79,15 @@ sub handler {
 	my $req = Apache2::Request->new($r);
 	
 
-	$js = get_kobj('http://', $action_host, $log_host, $site, $js_version, $req);
+	$js = get_kobj('http://', $action_host, $log_host, $rid, $js_version, $req);
 
 
     } elsif($file eq 'kobj-static.js') {
 
 	if($r->dir_config('UseCloudFront') && 
-            ($site eq 'static' || 
-	     $site eq 'shared' || 
-	     $site eq '996337974') # Backcountry
+            ($rid eq 'static' || 
+	     $rid eq 'shared' || 
+	     $rid eq '996337974') # Backcountry
 	    ) { # redirect to CloudFront
 	    # FIXME: if config directive not available, log error
 	    my $version = 
@@ -133,9 +141,9 @@ sub get_js_file {
 sub get_kobj {
 
 
-    my ($proto, $host, $log_host, $site_id, $js_version, $req) = @_;
+    my ($proto, $host, $log_host, $rid, $js_version, $req) = @_;
 
-    my $data_root = "/web/data/client/$site_id";
+    my $data_root = "/web/data/client/$rid";
 
     my $logger = get_logger();
 
@@ -332,7 +340,7 @@ KOBJ.d = (new Date).getTime();
 KOBJ.proto = \'$proto\'; 
 KOBJ.host_with_port = \'$host\'; 
 KOBJ.loghost_with_port = \'$log_host\'; 
-KOBJ.site_id = \'$site_id\';
+KOBJ.site_id = \'$rid\';
 KOBJ.url = KOBJ.proto+KOBJ.host_with_port+"/ruleset/eval/" + KOBJ.site_id;
 KOBJ.logger_url = KOBJ.proto+KOBJ.loghost_with_port+"/log/" + KOBJ.site_id;
 
