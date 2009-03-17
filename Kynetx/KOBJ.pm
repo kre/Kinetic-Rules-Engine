@@ -51,7 +51,6 @@ sub handler {
 
 	Kynetx::Request::log_request_env($logger, $req_info);
 
-
 	Log::Log4perl::MDC->put('rule', $req_info->{'txn_id'});  
 
 
@@ -76,10 +75,7 @@ sub handler {
 	$logger->info("Generating KOBJ file ", $file, ' with action host ' , $action_host);
 
 
-	my $req = Apache2::Request->new($r);
-	
-
-	$js = get_kobj('http://', $action_host, $log_host, $rid, $js_version, $req);
+	$js = get_kobj('http://', $action_host, $log_host, $rid, $js_version, $req_info);
 
 
     } elsif($file eq 'kobj-static.js') {
@@ -141,7 +137,7 @@ sub get_js_file {
 sub get_kobj {
 
 
-    my ($proto, $host, $log_host, $rid, $js_version, $req) = @_;
+    my ($proto, $host, $log_host, $rid, $js_version, $req_info) = @_;
 
     my $data_root = "/web/data/client/$rid";
 
@@ -355,7 +351,7 @@ EOF
     # add in datasets  The datasets param is a filter
     my @ds;
 
-    my $datasets = $req->param('datasets');
+    my $datasets = $req_info->{'datasets'};
     
     if($datasets) {
 	@ds = split(/,/, $datasets);
@@ -379,11 +375,11 @@ EOF
     }
 
     # create param string for tacking on to CS request
-    my @param_names = $req->param;
+    my $param_names = $req_info->{'param_names'};
     my $param_str = "";
-    foreach my $n (@param_names) {
+    foreach my $n (@{ $param_names }) {
 #	$logger->debug("Adding $n to parameters...");
-	$param_str .= "&$n=".$req->param($n);
+	$param_str .= "&$n=".$req_info->{$n};
     }
 
 
