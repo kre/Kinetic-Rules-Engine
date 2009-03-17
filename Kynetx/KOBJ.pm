@@ -59,6 +59,7 @@ sub handler {
 
 	Kynetx::Request::log_request_env($logger, $req_info);
 
+	Log::Log4perl::MDC->put('rule', $req_info->{'txn_id'});  
 
 
 	my($prefix, $middle, $root) = $r->hostname =~ m/^([^.]+)\.?(.*)\.([^.]+\.[^.]+)$/;
