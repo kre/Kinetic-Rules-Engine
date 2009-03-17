@@ -21,6 +21,8 @@ use Kynetx::Datasets qw(:all);
 use Kynetx::Rules qw(:all);
 use Kynetx::Util qw(:all);
 use Kynetx::Version qw(:all);
+use Kynetx::Memcached qw(:all);
+
 
 
 sub handler {
@@ -37,7 +39,7 @@ sub handler {
     my $logger = get_logger();
 
     $logger->debug("Initializing memcached");
-    Kynetx::Memcached->init();
+#    Kynetx::Memcached->init();
 
 
     my ($rid,$file) = $r->uri =~ m#/js/([^/]+)/(.*\.js)#;
@@ -187,6 +189,84 @@ sub get_kobj {
 
 var KOBJ={
     version: '$js_version'
+}
+
+KOBJ.search_annotation = {};
+KOBJ.search_annotation.defaults = {
+  "name": "KOBJ",
+  "sep": "<div style='padding-top: 13px'>|</div>",
+  "text_color":"#CCC",
+  "height":"40px",
+  "left_margin": "46px",
+  "right_padding" : "15px",
+  "font_size":"12px",
+  "font_family": "Verdana, Geneva, sans-serif"
+};
+
+KOBJ.annotate_search_results = function(annotate) {
+
+  function mk_list_item(i) {
+    return \$K("<li class='KOBJ_item'>").css(
+          {"float": "left",
+	   "margin": "0",
+	   "vertical-align": "middle",
+	   "padding-left": "4px",
+	   "color": KOBJ.search_annotation.defaults.text_color,
+	   "white-space": "nowrap",
+           "text-align": "center"
+          }).append(i);
+  }
+
+  function mk_rm_div (anchor) {
+    var logo_item = mk_list_item(anchor);
+    var logo_list = \$K('<ul>').css(
+          {"margin": "0",
+           "padding": "0",
+           "list-style": "none"
+          }).attr("id", KOBJ.search_annotation.defaults.name+"_logo_list").append(logo_item);
+    var inner_div = \$K('<div>').css(
+          {"float": "left",
+           "display": "inline",
+           "height": KOBJ.search_annotation.defaults.height,
+           "margin-left": KOBJ.search_annotation.defaults.left_margin,
+           "padding-right": KOBJ.search_annotation.defaults.right_padding
+          }).append(logo_list);
+    if (KOBJ.search_annotation.defaults.tail_background_image){
+      inner_div.css({
+           "background-image": "url(" + KOBJ.search_annotation.defaults.tail_background_image + ")",
+           "background-repeat": "no-repeat",
+           "background-position": "right top"
+      })
+    }
+    var rm_div = \$K('<div>').css(
+          {"float": "right",
+           "width": "auto",
+           "height": KOBJ.search_annotation.defaults.height,
+           "font-size": KOBJ.search_annotation.defaults.font_size,
+           "line-height": "normal",
+           "font-family": KOBJ.search_annotation.defaults.font_familty
+	   }).append(inner_div);
+    if (KOBJ.search_annotation.defaults.head_background_image){
+     rm_div.css({
+           "background-image": "url(" + KOBJ.search_annotation.defaults.head_background_image +")",
+           "background-repeat": "no-repeat",
+           "background-position": "left top"
+      })
+    }
+    return rm_div;
+  }
+
+  \$K("li.g, li div.res").each(function() {
+        var contents = annotate(this);
+        if (contents) {
+          if(\$K(this).find('#'+KOBJ.search_annotation.defaults.name+'_anno_list+ li').is('.'+KOBJ.search_annotation.defaults.name+'_item')) {
+             \$K(this).find('#'+KOBJ.search_annotation.defaults.name+'_anno_list').append(mk_list_item(KOBJ.search_annotation.defaults.sep)).append(mk_list_item(contents));
+          } else {
+             \$K(this).find("div.s,div.abstr").prepend(mk_rm_div(contents));
+          }
+        }
+   });
+
 }
 
 KOBJ.logger = function(type,txn_id,element,url,sense,rule) {
