@@ -13,7 +13,6 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Kynetx::Memcached qw(:all);
 use Kynetx::Json qw(:all);
-use Kynetx::Parser;
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
