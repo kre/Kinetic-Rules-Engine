@@ -35,9 +35,6 @@ sub handler {
 #    return Apache2::Const::DECLINED 
 #	unless $r->content_type() eq 'text/javascript';
 
-    $logger->debug("Initializing memcached");
-    Kynetx::Memcached->init();
-
     my ($rid,$file) = $r->uri =~ m#/js/([^/]+)/(.*\.js)#;
 
     Log::Log4perl::MDC->put('site', $rid);
@@ -175,6 +172,10 @@ sub get_kobj {
     my $data_root = "/web/data/client/$rid";
 
     my $logger = get_logger();
+
+    $logger->debug("Initializing memcached");
+    Kynetx::Memcached->init();
+
 
     # be sure to escape any $ that you want passed in the JS
     # kobj.js preamble
