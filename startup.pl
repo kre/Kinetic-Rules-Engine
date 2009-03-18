@@ -44,8 +44,24 @@ use Data::UUID ();
 use Apache::DBI ();
 use DBI ();
 
-
+# preload Kynetx code
+use Kynetx::Actions ();
+use Kynetx::Console ();
+use Kynetx::Datasets ();
+use Kynetx::JavaScript ();
+use Kynetx::Json ();
+use Kynetx::Log ();
+use Kynetx::Memcached ();
 use Kynetx::Parser ();
+use Kynetx::Predicates ();
+use Kynetx::PrettyPrinter ();
+use Kynetx::Repository ();
+use Kynetx::Request ();
+use Kynetx::RuleManager ();
+use Kynetx::Rules ();
+use Kynetx::Session ();
+use Kynetx::Util ();
+use Kynetx::Version ();
 
 
 # initialize Log4perl
