@@ -6,7 +6,6 @@ use warnings;
 
 
 use Data::UUID;
-use SVN::Client;
 use Log::Log4perl qw(get_logger :levels);
 use JSON::XS;
 

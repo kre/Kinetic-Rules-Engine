@@ -20,6 +20,7 @@ use Kynetx::Version qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Repository qw(:all);
 use Kynetx::Memcached qw(:all);
+use Kynetx::Datasets qw(:all);
 
 
 
@@ -81,7 +82,13 @@ sub handler {
 	$logger->info("Generating KOBJ file ", $file, ' with action host ' , $action_host);
 
 
-	$js = get_kobj('http://', $action_host, $log_host, $rid, $js_version, $req_info);
+	$js = get_kobj($r,
+		       'http://', 
+		       $action_host, 
+		       $log_host, 
+		       $rid, 
+		       $js_version, 
+		       $req_info);
 
 
     } elsif($file eq 'kobj-static.js') {
@@ -140,11 +147,38 @@ sub get_js_file {
 
 }
 
+sub get_datasets {
+    my ($svn_conn, $req_info) = @_;
+
+    my $rid = $req_info->{'rid'};
+
+    my $logger = get_logger();
+    $logger->debug("Getting ruleset for $rid");
+
+    my $js = "";
+
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $svn_conn, $req_info);
+
+    if( $ruleset->{'global'} ) {
+	$logger->debug("Processing decls for $rid");
+	foreach my $g (@{ $ruleset->{'global'} }) {
+
+	    if(defined $g->{'name'} && Kynetx::Datasets::cache_dataset_for($g) >= 24*60*60) { # more than 24 hours
+		$logger->debug("Creating JS for decl " . $g->{'name'});
+		$js .= mk_dataset_js($g, $req_info, {}); # empty rule env
+	    }
+	}
+    } 
+    $logger->debug("Returning JS for global decls");
+    return $js;
+
+}
+
 
 sub get_kobj {
 
 
-    my ($proto, $host, $log_host, $rid, $js_version, $req_info) = @_;
+    my ($r, $proto, $host, $log_host, $rid, $js_version, $req_info) = @_;
 
     my $data_root = "/web/data/client/$rid";
 
@@ -388,6 +422,8 @@ EOF
 #	$logger->debug("Adding $n to parameters...");
 	$param_str .= "&$n=".$req_info->{$n};
     }
+
+    $js .= get_datasets($r->dir_config('svn_conn'), $req_info);
 
 
     $js .= <<EOF;
