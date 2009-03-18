@@ -174,7 +174,7 @@ sub get_kobj {
     my $logger = get_logger();
 
     $logger->debug("Initializing memcached");
-    Kynetx::Memcached->init();
+#    Kynetx::Memcached->init();
 
 
     # be sure to escape any $ that you want passed in the JS
@@ -416,7 +416,7 @@ EOF
 	$param_str .= "&$n=".$req_info->{$n};
     }
 
-    $js .= get_datasets($r->dir_config('svn_conn'), $req_info);
+#    $js .= get_datasets($r->dir_config('svn_conn'), $req_info);
 
     $logger->debug("Done with data set generation");
 
