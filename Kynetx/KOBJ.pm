@@ -20,7 +20,7 @@ use Kynetx::Version qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Datasets qw(:all);
 use Kynetx::Rules qw(:all);
-use Kynetx::Memcached qw(:all);
+#use Kynetx::Memcached qw(:all);
 
 
 sub handler {
