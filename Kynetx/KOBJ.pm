@@ -18,7 +18,7 @@ use constant DEFAULT_JS_VERSION => '0.9';
 use Kynetx::Util qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Request qw(:all);
-use Kynetx::Rules qw(:all);
+use Kynetx::Repository qw(:all);
 
 
 sub handler {
