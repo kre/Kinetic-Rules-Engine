@@ -19,6 +19,8 @@ use Kynetx::Util qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Repository qw(:all);
+use Kynetx::Memcached qw(:all);
+
 
 
 sub handler {
@@ -33,6 +35,9 @@ sub handler {
 #	unless $r->content_type() eq 'text/javascript';
 
     my $logger = get_logger();
+
+    $logger->debug("Initializing memcached");
+    Kynetx::Memcached->init();
 
     my ($rid,$file) = $r->uri =~ m#/js/([^/]+)/(.*\.js)#;
 
@@ -131,6 +136,7 @@ sub get_js_file {
     close JS;
     
     return $js;
+
 
 }
 
