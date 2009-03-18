@@ -26,15 +26,13 @@ sub handler {
 
     # configure logging for production, development, etc.
     config_logging($r);
-    my $logger = get_logger();
 
     $r->content_type('text/javascript');
 
 #    return Apache2::Const::DECLINED 
 #	unless $r->content_type() eq 'text/javascript';
 
-    $logger->debug("Initializing memcached");
-#    Kynetx::Memcached->init();
+    my $logger = get_logger();
 
     my ($rid,$file) = $r->uri =~ m#/js/([^/]+)/(.*\.js)#;
 
@@ -78,7 +76,7 @@ sub handler {
 	$logger->info("Generating KOBJ file ", $file, ' with action host ' , $action_host);
 
 
-	$js = get_kobj($r,'http://', $action_host, $log_host, $rid, $js_version, $req_info);
+	$js = get_kobj('http://', $action_host, $log_host, $rid, $js_version, $req_info);
 
 
     } elsif($file eq 'kobj-static.js') {
@@ -137,38 +135,10 @@ sub get_js_file {
 }
 
 
-sub get_datasets {
-    my ($svn_conn, $req_info) = @_;
-
-    my $rid = $req_info->{'rid'};
-
-    my $logger = get_logger();
-    $logger->debug("Getting ruleset for $rid");
-
-    my $js = "";
-
-    my $ruleset = Kynetx::Rules::get_rules_from_repository($rid, $svn_conn, $req_info);
-
-    if( $ruleset->{'global'} ) {
-	$logger->debug("Processing decls for $rid");
-	foreach my $g (@{ $ruleset->{'global'} }) {
-
-	    if(defined $g->{'name'} && Kynetx::Datasets::cache_dataset_for($g) >= 24*60*60) { # more than 24 hours
-		$logger->debug("Creating JS for decl " . $g->{'name'});
-		$js .= mk_dataset_js($g, $req_info, {}); # empty rule env
-	    }
-	}
-    } 
-    $logger->debug("Returning JS for global decls");
-    return $js;
-
-}
-
-
 sub get_kobj {
 
 
-    my ($r, $proto, $host, $log_host, $rid, $js_version, $req_info) = @_;
+    my ($proto, $host, $log_host, $rid, $js_version, $req_info) = @_;
 
     my $data_root = "/web/data/client/$rid";
 
@@ -351,7 +321,7 @@ KOBJ.buildDiv = function (uniq, pos, top, side) {
 }
 
 KOBJ.get_host = function(s) {
- return s.match(/^(?:\\w+:\\/\\/)?([\\w.]+)/)[1]; # .
+ return s.match(/^(?:\\w+:\\/\\/)?([\\w.]+)/)[1];
 }
 
 KOBJ.pick = function(o) {
@@ -412,10 +382,6 @@ EOF
 #	$logger->debug("Adding $n to parameters...");
 	$param_str .= "&$n=".$req_info->{$n};
     }
-
-#    $js .= get_datasets($r->dir_config('svn_conn'), $req_info);
-
-    $logger->debug("Done with data set generation");
 
 
     $js .= <<EOF;
