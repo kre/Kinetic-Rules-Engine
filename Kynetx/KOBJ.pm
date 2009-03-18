@@ -18,9 +18,8 @@ use constant DEFAULT_JS_VERSION => '0.9';
 use Kynetx::Util qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Request qw(:all);
-use Kynetx::Datasets qw(:all);
 use Kynetx::Rules qw(:all);
-#use Kynetx::Memcached qw(:all);
+use Kynetx::Memcached qw(:all);
 
 
 sub handler {
@@ -34,6 +33,9 @@ sub handler {
 
 #    return Apache2::Const::DECLINED 
 #	unless $r->content_type() eq 'text/javascript';
+
+    $logger->debug("Initializing memcached");
+    Kynetx::Memcached->init();
 
     my ($rid,$file) = $r->uri =~ m#/js/([^/]+)/(.*\.js)#;
 
@@ -172,10 +174,6 @@ sub get_kobj {
     my $data_root = "/web/data/client/$rid";
 
     my $logger = get_logger();
-
-    $logger->debug("Initializing memcached");
-#    Kynetx::Memcached->init();
-
 
     # be sure to escape any $ that you want passed in the JS
     # kobj.js preamble
@@ -416,7 +414,7 @@ EOF
 	$param_str .= "&$n=".$req_info->{$n};
     }
 
-#    $js .= get_datasets($r->dir_config('svn_conn'), $req_info);
+    $js .= get_datasets($r->dir_config('svn_conn'), $req_info);
 
     $logger->debug("Done with data set generation");
 
