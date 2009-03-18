@@ -19,7 +19,6 @@ use Kynetx::Util qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Rules qw(:all);
-use Kynetx::Memcached qw(:all);
 
 
 sub handler {
@@ -35,7 +34,7 @@ sub handler {
 #	unless $r->content_type() eq 'text/javascript';
 
     $logger->debug("Initializing memcached");
-    Kynetx::Memcached->init();
+#    Kynetx::Memcached->init();
 
     my ($rid,$file) = $r->uri =~ m#/js/([^/]+)/(.*\.js)#;
 
@@ -414,7 +413,7 @@ EOF
 	$param_str .= "&$n=".$req_info->{$n};
     }
 
-    $js .= get_datasets($r->dir_config('svn_conn'), $req_info);
+#    $js .= get_datasets($r->dir_config('svn_conn'), $req_info);
 
     $logger->debug("Done with data set generation");
 
