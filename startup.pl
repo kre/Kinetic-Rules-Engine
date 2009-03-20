@@ -44,6 +44,8 @@ use Data::UUID ();
 use Apache::DBI ();
 use DBI ();
 
+use SVN::Client;
+
 # preload Kynetx code
 use Kynetx::Actions ();
 use Kynetx::Console ();
