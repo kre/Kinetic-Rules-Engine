@@ -44,7 +44,7 @@ use Data::UUID ();
 use Apache::DBI ();
 use DBI ();
 
-use SVN::Client;
+#use SVN::Client;
 
 # preload Kynetx code
 use Kynetx::Actions ();
@@ -57,7 +57,7 @@ use Kynetx::Memcached ();
 use Kynetx::Parser ();
 use Kynetx::Predicates ();
 use Kynetx::PrettyPrinter ();
-use Kynetx::Repository ();
+#use Kynetx::Repository ();
 use Kynetx::Request ();
 use Kynetx::RuleManager ();
 use Kynetx::Rules ();
