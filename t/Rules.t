@@ -733,11 +733,6 @@ is($session->{'archive_pages_old'}, 4, "Archive pages old iterated");
 diag("Safe to ignore warnings about unintialized values & unrecognized escapes");
 
 
-sub nows {
-    my $str = shift;
-    $str =~ y/\n\t\r //d;
-    return $str;
-}
 
 1;
 

@@ -599,7 +599,7 @@ sub parse_ruleset {
 
     my $result = ($parser->ruleset($ruleset));
     if (defined $result->{'error'}) {
-	$logger->error("Can't parse rules: $result->{'error'}");
+	$logger->error("Can't parse ruleset: $result->{'error'}");
     } else {
 	$logger->debug("Parsed rules");
     }
@@ -738,7 +738,7 @@ sub parse_action {
 
     my $result = $parser->action($rule);
     if (defined $result->{'error'}) {
-	$logger->error("Can't parse rules: $result->{'error'}");
+	$logger->error("Can't parse actions: $result->{'error'}");
     } else {
 	$logger->debug("Parsed rules");
     }
@@ -754,7 +754,7 @@ sub parse_global_decls {
 
     $ruleset = remove_comments($ruleset);
 
-    $logger->debug("Global decls: ", $ruleset);
+#    $logger->debug("Global decls: ", $ruleset);
 
     my $result = $parser->global_decls($ruleset);
     

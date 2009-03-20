@@ -41,6 +41,7 @@ sub build_request_env {
 	ip => $r->connection->remote_ip() || '0.0.0.0',
 	ua => $r->headers_in->{'User-Agent'} || '',
 	pool => $r->pool,
+	uri => $r->uri(),
 	txn_id => $ug->create_str(),
 	};
 

@@ -19,5 +19,9 @@ sub new {
 sub subprocess_env {
     return 0;
 }
+# fake methods for requests
+sub content_type {
+    return 0;
+}
 
 1;

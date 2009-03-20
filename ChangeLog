@@ -1,3 +1,15 @@
+2009-03-20  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Repository.pm: Added to provide interface code (moved
+	  from Rules.pm) for repository.
+	* startup.pl: Added "use" for all major Kynetx libraries.
+	* Kynetx/Datasets.pm: Added support for user declared datasets.
+	* Kynetx/Request.pm: Generalized support for API path parsing and
+	  bulkding the request envionment.
+	* Kynetx/RuleManager.pm: Added generalized support for parsing and
+	  unparsing rulesets, rules, and global decls in support of
+	  Intersekt improvements.
+
 2009-02-13  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Parser.pm: Added support for logging pragma

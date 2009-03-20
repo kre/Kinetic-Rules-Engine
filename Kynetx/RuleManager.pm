@@ -6,12 +6,17 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
+
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
 use HTML::Template;
 use JSON::XS;
 
 use Kynetx::Parser qw(:all);
 use Kynetx::PrettyPrinter qw(:all);
 use Kynetx::Json qw/:all/;
+use Kynetx::Util qw(:all);;
 use Kynetx::Version qw/:all/;
 
 
@@ -34,15 +39,41 @@ use constant DEFAULT_TEMPLATE_DIR => '/web/lib/perl/etc/tmpl';
 sub handler {
     my $r = shift;
 
+    # configure logging for production, development, etc.
+    config_logging($r);
 
+    my $logger = get_logger();
+    my ($method,$rid) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_]+)!;
+    $logger->debug("Performing $method method on ruleset $rid");
+
+    Log::Log4perl::MDC->put('site', $method);
+    Log::Log4perl::MDC->put('rule', $rid);  # no rule for now...
+
+
+
+    my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
+    Kynetx::Request::log_request_env($logger, $req_info);
+
+    my ($result, $type);
     # at some point we need a better dispatch function
-    if($r->path_info =~ m!/validate/! ) {
-	validate_rule($r);
-    } elsif($r->path_info =~ m!/jsontokrl/! ) {
-	pp_json($r);
-    } elsif($r->path_info =~ m!/version/! ) {
+    if($method eq "validate") {
+	($result,$type) = validate_rule($req_info, $method, $rid);
+    } elsif($method eq "jsontokrl") {
+	($result,$type) = pp_json($req_info, $method, $rid);
+    } elsif($method eq "version") {
 	show_build_num($r);
+	return Apache2::Const::OK; 
+    } elsif($method eq "parse") {
+	$logger->debug("Parsing $method, $rid");
+	$result = parse_api($req_info, $method, $rid);
+	$type = 'text/plain';
+    } elsif($method eq "unparse") {
+	$result = unparse_api($req_info, $method, $rid);
+	$type = 'text/plain';
     }
+
+    $r->content_type($type);
+    print $result;
 
     return Apache2::Const::OK; 
 }
@@ -50,26 +81,21 @@ sub handler {
 1;
 
 sub validate_rule {
-    my ($r) = @_;
+    my ($req_info, $method, $rid) = @_;
 
     my $logger = get_logger();
-
-
-    my ($site) = $r->path_info =~ m#/(\d+)#;
-
-    Log::Log4perl::MDC->put('site', $site);
-    Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
-
-    my $req = Apache2::Request->new($r);
 
     my $template = DEFAULT_TEMPLATE_DIR . "/validate_rule.tmpl";
     my $test_template = HTML::Template->new(filename => $template);
 
     # fill in the parameters
-    $test_template->param(ACTION_URL => $r->uri());
+    $test_template->param(ACTION_URL => $req_info->{'uri'});
 
-    my $rule = $req->param('rule');
-    my $flavor = $req->param('flavor');
+    my $result = "";
+    my $type = "";
+
+    my $rule = $req_info->{'rule'} || '';
+    my $flavor = $req_info->{'flavor'} || '';
     my ($json,$tree);
     if($rule) {
 
@@ -90,37 +116,31 @@ sub validate_rule {
     } 
     
     if($flavor eq 'json') {
-	$r->content_type('text/plain');
-	print $json || $tree->{'error'};
+	$type = 'text/plain';
+	$result = $json || $tree->{'error'};
     } else {
 	# print the page
-	$r->content_type('text/html');
-	print $test_template->output;
+	$type = 'text/html';
+	$result = $test_template->output;
     }
+
+    return($result, $type);
 
 }
 
 sub pp_json {
-    my ($r) = @_;
+    my ($req_info, $method, $rid) = @_;
 
     my $logger = get_logger();
-
-
-    my ($site) = $r->path_info =~ m#/(\d+)#;
-
-    Log::Log4perl::MDC->put('site', $site);
-    Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
-
-    my $req = Apache2::Request->new($r);
 
     my $template = DEFAULT_TEMPLATE_DIR . "/jsonToKrl.tmpl";
     my $test_template = HTML::Template->new(filename => $template);
 
     # fill in the parameters
-    $test_template->param(ACTION_URL => $r->uri());
+    $test_template->param(ACTION_URL => $req_info->{'uri'});
 
-    my $json = $req->param('json');
-    my $type = $req->param('type');
+    my $json = $req_info->{'json'};
+    my $type = $req_info->{'type'};
     my ($krl);
     if($json) {
 
@@ -139,10 +159,99 @@ sub pp_json {
 
     } 
 
-    # print the page
-    $r->content_type('text/html');
-    print $test_template->output;
+    return($test_template->output, 'text/html');
+
+}
+
+
+sub parse_api {
+    my ($req_info, $method, $submethod) = @_;
     
 
 
+    my $logger = get_logger();
+
+
+    my $krl = $req_info->{'krl'};
+
+#    $logger->debug("KRL: ", $krl);
+
+    my $json = "";
+    if($krl) {
+
+	$logger->debug("[parse_api] parsing krl as $submethod");
+
+	my $tree;
+	if($submethod eq 'ruleset') {
+	    $tree = Kynetx::Parser::parse_ruleset($krl);
+	} elsif($submethod eq 'rule') {
+	    $tree = Kynetx::Parser::parse_rule($krl);
+	} elsif($submethod eq 'global') {
+	    $tree = Kynetx::Parser::parse_global_decls($krl);
+	}
+
+	$logger->debug(Dumper($tree));
+
+	if(ref $tree eq "HASH" && defined $tree->{'error'}) {
+	    $logger->debug("Parse failed for $krl as $submethod");
+	    $json = '{"error": "' . $tree->{'error'} .'"}';
+	} else {
+
+
+	    $json = astToJson($tree);
+	}
+
+
+    }
+   
+    $logger->debug("Returning JSON");
+
+    return $json;
+
 }
+
+sub unparse_api {
+    my ($req_info, $method, $submethod) = @_;
+
+
+    my $logger = get_logger();
+
+
+    my $json = $req_info->{'ast'};
+
+    $logger->debug("KRL: ", $json);
+
+    my $krl = "";
+    if($json) {
+
+	$logger->debug("[parse_api] unparsing json as $submethod");
+
+	my $tree = jsonToAst($json);
+
+	if($submethod eq 'ruleset') {
+	    $krl = Kynetx::PrettyPrinter::pp($tree,0);
+	} elsif($submethod eq 'rule') {
+	    $krl = Kynetx::PrettyPrinter::pp_rule_body($tree,0);
+	} elsif($submethod eq 'global') {
+	    $krl = Kynetx::PrettyPrinter::pp_global_block($tree,0);
+	}
+
+#	$logger->debug(Dumper($tree));
+
+	# if(ref $tree eq "HASH" && defined $tree->{'error'}) {
+	#     $logger->debug("Parse failed for $krl as $submethod");
+	#     $json = '{"error": "' . $tree->{'error'} .'"}';
+	# } else {
+
+
+	# }
+
+
+    }
+   
+    $logger->debug("Returning KRL");
+
+    return $krl;
+
+}
+

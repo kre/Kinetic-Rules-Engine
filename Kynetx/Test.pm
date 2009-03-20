@@ -14,6 +14,7 @@ our %EXPORT_TAGS = (all => [
 qw(
 getkrl
 trim
+nows
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -41,5 +42,12 @@ sub trim {
 	$string =~ s/\s+$//;
 	return $string;
 }
+
+sub nows {
+    my $str = shift;
+    $str =~ y/\n\t\r //d;
+    return $str;
+}
+
 
 1;

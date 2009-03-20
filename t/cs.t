@@ -9,7 +9,7 @@ use Test::WWW::Mechanize;
 
 use LWP::UserAgent;
 
-my $numtests = 39;
+my $numtests = 41;
 
 plan tests => $numtests;
 
@@ -23,10 +23,10 @@ diag "Warning: running these tests on a host without memcache support is slow...
 SKIP: {
     my $ua = LWP::UserAgent->new;
 
-    my $check_url = "$dn/console/$ruleset?caller=http://www.windley.com/foo/bazz.html";
-    diag "Checking $check_url";
+    my $check_url = "$dn/version/$ruleset";
+#    diag "Checking $check_url";
     my $response = $ua->get($check_url);
-    skip "No server available", $numtests if (! $response->is_success);
+    skip "No server available", $numtests unless $response->is_success;
 
     # test CONSOLE function
     my $url_console_1 = "$dn/console/$ruleset?caller=http://www.windley.com/foo/bazz.html";
@@ -113,7 +113,7 @@ SKIP: {
     # sets search referer
     my $url_4 = "$dn/eval/$ruleset/1231363179515.js?caller=http%3A//www.windley.com/foo/bazz.html&referer=http%3A//www.google.com/&kvars={%22foo%22%3A%205%2C%20%22bar%22%3A%20%22fizz%22%2C%20%22bizz%22%3A%20[1%2C%202%2C%203]}&title=Phil%20Windleys%20Technometria";
 
-    #diag "Testing eval with $url_3";
+#    diag "Testing eval with $url_4";
 
     $mech->get_ok($url_4);
 
@@ -130,6 +130,16 @@ SKIP: {
     $mech->content_contains('var foobar = 4;');
 
     $mech->content_contains('var public_timeline = [{"user":{"followers_count":');
+
+    my $url_5 = "$dn/eval/$ruleset/1237475272090.js?caller=http%3A//search.barnesandnoble.com/booksearch/isbnInquiry.asp%3FEAN%3D9781400066940&referer=http%3A//www.barnesandnoble.com/index.asp&kvars=&title=Stealing MySpace, Julia Angwin, Book - Barnes & Noble";
+
+
+    $mech->get_ok($url_5);
+
+    is($mech->content_type(), 'text/javascript');
+
+
+
 }
 
 1;

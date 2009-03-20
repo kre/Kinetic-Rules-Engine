@@ -29,7 +29,7 @@ my $g_indent = 4;
 sub pp {
     my ($ruleset) = @_;
 
-    print Dumper($ruleset);
+#    print Dumper($ruleset);
 
     my $name = $ruleset->{'ruleset_name'};
     my $rules = $ruleset->{'rules'};

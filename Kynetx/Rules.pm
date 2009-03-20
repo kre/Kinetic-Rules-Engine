@@ -167,7 +167,7 @@ sub eval_rule {
 
 	# this is the main event.  The browser has asked for a
 	# chunk of Javascrip and this is where we deliver... 
-	$js .= build_js_load($rule, $request_info, $rule_env, $session); 
+	$js .= Kynetx::Actions::build_js_load($rule, $request_info, $rule_env, $session); 
 	
 	$js .= eval_post_expr($cons, $session) if(defined $cons);
 
@@ -251,7 +251,7 @@ sub get_rule_set {
 	    $request_info->{'rule_count'}++;
 	
 	    # test the pattern, captured values are stored in @captures
-	    if(my @captures = $caller =~ get_precondition_test($rule)) {
+	    if(my @captures = $caller =~ Kynetx::Actions::get_precondition_test($rule)) {
 
 		$logger->debug("[selected] $rule->{'name'} ");
 
@@ -260,7 +260,7 @@ sub get_rule_set {
 
 		# store the captured values from the precondition to the env
 		my $cap = 0;
-		foreach my $var ( @{ get_precondition_vars($rule)}) {
+		foreach my $var ( @{ Kynetx::Actions::get_precondition_vars($rule)}) {
 
 		    $var =~ s/^\s*(.+)\s*/$1/;
 
