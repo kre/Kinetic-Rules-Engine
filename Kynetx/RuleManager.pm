@@ -15,6 +15,7 @@ use JSON::XS;
 
 use Kynetx::Parser qw(:all);
 use Kynetx::PrettyPrinter qw(:all);
+use Kynetx::Request qw(:all);
 use Kynetx::Json qw/:all/;
 use Kynetx::Util qw(:all);;
 use Kynetx::Version qw/:all/;
@@ -43,7 +44,7 @@ sub handler {
     config_logging($r);
 
     my $logger = get_logger();
-    my ($method,$rid) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_]+)!;
+    my ($method,$rid) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_]*)!;
     $logger->debug("Performing $method method on ruleset $rid");
 
     Log::Log4perl::MDC->put('site', $method);
