@@ -21,8 +21,8 @@ use Kynetx::FakeReq qw/:all/;
 use Kynetx::Test qw/:all/;
 use Kynetx::RuleManager qw/:all/;
 
-my $numtests = 46;
-my $nonskippable = 6;
+my $numtests = 62;
+my $nonskippable = 10;
 plan tests => $numtests;
 
 my $my_req_info;
@@ -173,6 +173,37 @@ my $test_json_global = <<JSON;
 [{"source":"http://twitter.com/statuses/public_timeline.json","name":"public_timeline","cachable":0},{"source":"http://twitter.com/statuses/public_timeline.json","name":"cached_timeline","cachable":1},{"emit":"var foobar = 4;  "}]
 JSON
 
+my $test_dispatch = <<DISPATCH;
+dispatch {
+
+      domain "www.google.com"
+      domain "search.yahoo.com"
+
+      domain "www.google.com" -> "966337974"
+      domain "google.com" -> "966337974"
+      domain "www.circuitcity.com" -> "966337982"
+
+
+}
+DISPATCH
+
+my $test_json_dispatch = <<JSON;
+[{"domain":"www.google.com","ruleset_id":null},{"domain":"search.yahoo.com","ruleset_id":null},{"domain":"www.google.com","ruleset_id":"966337974"},{"domain":"google.com","ruleset_id":"966337974"},{"domain":"www.circuitcity.com","ruleset_id":"966337982"}]
+JSON
+
+my $test_meta = <<META;
+meta {
+   description <<
+Ruleset for testing something or other.
+>>
+   logging on
+}
+META
+
+my $test_json_meta = <<JSON;
+{"logging":"on","description":"Ruleset for testing something or other.  "}
+JSON
+
 my $json;
 
 # check the API calls
@@ -202,6 +233,26 @@ is_string_nows($json,
 	       "Parsing global decls");
 
 
+$my_req_info->{'krl'} = $test_dispatch;
+
+$json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "dispatch");
+#diag $json;
+
+is_string_nows($json, 
+	       $test_json_dispatch,
+	       "Parsing dispatch decls");
+
+
+$my_req_info->{'krl'} = $test_meta;
+
+$json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "meta");
+#diag $json;
+
+is_string_nows($json, 
+	       $test_json_meta,
+	       "Parsing meta decls");
+
+
 # check the unparse API calls
 my $krl;
 $my_req_info->{'ast'} = $test_json_ruleset;
@@ -228,7 +279,24 @@ is_string_nows($krl,
 	       $test_global,
 	       "Unparsing a global");
 
-#diag $json;
+
+$my_req_info->{'ast'} = $test_json_dispatch;
+
+$krl = Kynetx::RuleManager::unparse_api($my_req_info, "unparse", "dispatch");
+
+is_string_nows($krl, 
+	       $test_dispatch,
+	       "Unparsing a dispatch");
+
+
+$my_req_info->{'ast'} = $test_json_meta;
+
+$krl = Kynetx::RuleManager::unparse_api($my_req_info, "unparse", "meta");
+
+is_string_nows($krl, 
+	       $test_meta,
+	       "Unparsing a meta");
+
 
 
 
@@ -337,6 +405,26 @@ SKIP: {
     is_string_nows($mech->response()->content,$test_json_global);
 
 
+    # parse/dispatch
+    my $url_version_71 = "$dn/parse/dispatch";
+    diag "Testing $url_version_71";
+
+    $mech->post_ok($url_version_71, ['krl'=> $test_dispatch]);
+
+    is($mech->content_type(), 'text/plain');
+    is_string_nows($mech->response()->content,$test_json_dispatch);
+
+
+    # parse/meta
+    my $url_version_72 = "$dn/parse/meta";
+    diag "Testing $url_version_72";
+
+    $mech->post_ok($url_version_72, ['krl'=> $test_meta]);
+
+    is($mech->content_type(), 'text/plain');
+    is_string_nows($mech->response()->content,$test_json_meta);
+
+
     # parse/ruleset
     my $url_version_8 = "$dn/unparse/ruleset";
     diag "Testing $url_version_8";
@@ -365,6 +453,26 @@ SKIP: {
 
     is($mech->content_type(), 'text/plain');
     is_string_nows($mech->response()->content,$test_global);
+
+
+    # unparse/dispatch
+    my $url_version_11 = "$dn/unparse/dispatch";
+    diag "Testing $url_version_11";
+
+    $mech->post_ok($url_version_11, ['ast'=> $test_json_dispatch]);
+
+    is($mech->content_type(), 'text/plain');
+    is_string_nows($mech->response()->content,$test_dispatch);
+
+
+    # unparse/meta
+    my $url_version_12 = "$dn/unparse/meta";
+    diag "Testing $url_version_12";
+
+    $mech->post_ok($url_version_12, ['ast'=> $test_json_meta]);
+
+    is($mech->content_type(), 'text/plain');
+    is_string_nows($mech->response()->content,$test_meta);
 
 
 

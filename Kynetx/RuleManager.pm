@@ -189,7 +189,11 @@ sub parse_api {
 	    $tree = Kynetx::Parser::parse_rule($krl);
 	} elsif($submethod eq 'global') {
 	    $tree = Kynetx::Parser::parse_global_decls($krl);
-	}
+	} elsif($submethod eq 'dispatch') {
+	    $tree = Kynetx::Parser::parse_dispatch($krl);
+	} elsif($submethod eq 'meta') {
+	    $tree = Kynetx::Parser::parse_meta($krl);
+	} 
 
 	$logger->debug(Dumper($tree));
 
@@ -235,7 +239,11 @@ sub unparse_api {
 	    $krl = Kynetx::PrettyPrinter::pp_rule_body($tree,0);
 	} elsif($submethod eq 'global') {
 	    $krl = Kynetx::PrettyPrinter::pp_global_block($tree,0);
-	}
+	} elsif($submethod eq 'dispatch') {
+	    $krl = Kynetx::PrettyPrinter::pp_dispatch_block($tree,0);
+	} elsif($submethod eq 'meta') {
+	    $krl = Kynetx::PrettyPrinter::pp_meta_block($tree,0);
+	} 
 
 #	$logger->debug(Dumper($tree));
 

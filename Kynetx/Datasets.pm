@@ -124,6 +124,7 @@ sub cache_dataset_for {
 # side-effects $rule_env
 sub mk_dataset_js {
     my ($g, $req_info, $rule_env) = @_;
+    my $logger = get_logger();
     
     my $source = get_dataset($g, $req_info);
     
@@ -131,9 +132,11 @@ sub mk_dataset_js {
     my $source_json;
     eval { $source_json = decode_json($source); };
     if ($@) {
+	$logger->debug("seeing " . $g->{'name'} . " as string ", $@);
 	$js .= '"' . $source . '"';
 	$rule_env->{$g->{'name'}} = $source;
     } else { 
+	$logger->debug("seeing " . $g->{'name'} . " as JSON ", $@);
 	$js .= $source;
 	$rule_env->{$g->{'name'}} = $source_json;
     }

@@ -115,7 +115,7 @@ sub pp_dispatch_block {
     my $o .= $beg . "dispatch {\n";
     foreach my $d ( @{$db}) {
 
-	$o .= pp_dispatch($d, $indent+$g_indent) . ";";
+	$o .= pp_dispatch($d, $indent+$g_indent) ;
     }
     $o .= $beg . "}\n";
 
@@ -131,30 +131,16 @@ sub pp_dispatch {
 
     my $o .= $beg . "domain " ;
     $o .= '"'.$d->{'domain'}.'"';  
-    $o .= " -> ";
-    $o .= '"'.$d->{'ruleset_name'}.'"';
+    if(defined $d->{'ruleset_id'}) {
+	$o .= " -> ";
+	$o .= '"'.$d->{'ruleset_id'}.'"';
+    }
     $o .= "\n";
 
     return $o;
 
 }
 
-
-# sub pp_datasets_block {
-#     my ($db, $indent) = @_;
-
-#     my $beg = " "x$indent;
-
-#     my $o .= $beg . "datasets {\n";
-#     foreach my $d ( @{$db}) {
-
-# 	$o .= pp_dataset($d, $indent+$g_indent) . ";";
-#     }
-#     $o .= $beg . "}\n";
-
-#     return $o;
-
-# }
 
 
 sub pp_dataset {

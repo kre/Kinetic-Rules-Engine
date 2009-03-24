@@ -65,7 +65,6 @@ eofile: /^\Z/
 ruleset: 'ruleset' ruleset_name  '{' 
            meta_block(0..1)
            dispatch_block(0..1)
-#           dataset_block(0..1)
            global_decls(0..1)
            rule(s?)   #??
          '}' eofile
@@ -73,7 +72,6 @@ ruleset: 'ruleset' ruleset_name  '{'
 		 'ruleset_name' => $item{ruleset_name},
 		 'meta' => $item[4][0] || {},
 		 'dispatch' => $item[5][0] || [],
-#		 'datasets' => $item[6][0] || [],
 		 'global' => $item[6][0] || [],
 		 'rules' => $item[7]
 	         }
@@ -121,14 +119,18 @@ desc_block: 'description' (HTML | STRING)
 logging_pragma: 'logging' ('on' | 'off')
    {$return = $item[2];}
 
-dispatch_block: 'dispatch' '{' dispatch(s? /;/)  SEMICOLON(?) '}' #?
+dispatch_block: 'dispatch' '{' dispatch(s?) '}' #?
      {$return = $item[3]}
 
-dispatch: 'domain' STRING '->' STRING
+dispatch: 'domain' STRING dispatch_target(?)
      {$return = {
 	 'domain' => $item[2],
-	 'ruleset_name' => $item[4]
+	 'ruleset_id' => $item[3][0] 
          }
+     }
+
+dispatch_target: '->' STRING
+     {$return = $item[2]
      }
                    
 # dataset_block: 'datasets' '{' dataset(s? /;/)  SEMICOLON(?) '}' #?
@@ -748,17 +750,46 @@ sub parse_action {
 }
 
 sub parse_global_decls {
-    my $ruleset = shift;
+    my $element = shift;
     
     my $logger = get_logger();
 
-    $ruleset = remove_comments($ruleset);
+    $element = remove_comments($element);
 
-#    $logger->debug("Global decls: ", $ruleset);
-
-    my $result = $parser->global_decls($ruleset);
+    my $result = $parser->global_decls($element);
     
     $logger->debug("Parsed global decls");#, Dumper($result));
+
+    return $result;
+
+}
+
+sub parse_dispatch {
+    my $element = shift;
+    
+    my $logger = get_logger();
+
+    $element = remove_comments($element);
+
+    my $result = $parser->dispatch_block($element);
+    
+    $logger->debug("Parsed dispatch");#, Dumper($result));
+
+    return $result;
+
+}
+
+
+sub parse_meta {
+    my $element = shift;
+    
+    my $logger = get_logger();
+
+    $element = remove_comments($element);
+
+    my $result = $parser->meta_block($element);
+    
+    $logger->debug("Parsed meta");#, Dumper($result));
 
     return $result;
 

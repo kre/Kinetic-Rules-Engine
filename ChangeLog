@@ -1,3 +1,8 @@
+2009-03-23  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/RuleManager.pm: Added parsing and unparsing methods for
+	  meta and dispatch directives
+
 2009-03-20  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Repository.pm: Added to provide interface code (moved

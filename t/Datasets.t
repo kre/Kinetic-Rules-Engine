@@ -135,7 +135,7 @@ _KRL_
 add_cache_for_testcase($krl_src, 5*60*60*24*365, "cache_dataset_for 5 years");
 
 
-plan tests => 2+ int(@cache_for_test_cases);
+plan tests => 3+ int(@cache_for_test_cases);
 
 foreach my $case (@cache_for_test_cases) {
     is(cache_dataset_for($case->{'expr'}), 
@@ -163,7 +163,7 @@ SKIP: {
 
 #    diag "Checking $check_url";
     my $response = $ua->get($check_url);
-    skip "No server available", 1 if (! $response->is_success);
+    skip "No server available", 2 if (! $response->is_success);
 
     $krl_src = <<_KRL_;
 global {
@@ -175,7 +175,12 @@ _KRL_
 
     is_string_nows(get_dataset($krl->[0],$req_info),get_local_file("aaa.json"),"URL file");
 
-   
+    my $rule_env = {};
+
+    is_string_nows(mk_dataset_js($krl->[0], $req_info, $rule_env), 
+		   "var fizz_data  = " . get_local_file("aaa.json") . ";", 
+		   "is the JS alight?");
+    
 
 }
 
