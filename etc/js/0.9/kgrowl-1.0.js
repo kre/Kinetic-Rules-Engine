@@ -1,74 +1,76 @@
 /* modified from jGrowl 1.1.2 to fit KOBJ needs */
 (function($) {
 
- $.kGrowl = function( m , o ) {
+   $.kGrowl = function( m , o ) {
 // To maintain compatibility with older version that only supported one instance we'll create the base container.
-     var styling = {
-     	 "padding":"10px", 
-         "z-index": 9999,
-	 "position": "fixed"
-     };
+   var styling = {
+     "padding":"10px",
+     "z-index": 9999,
+     "position": "fixed"
+   };
 
 
-     var pos = $.kGrowl.defaults.position.split("-");
+   var pos = $.kGrowl.defaults.position.split("-");
 
-     if ($.browser.msie && parseInt($.browser.version) < 7 && !window["XMLHttpRequest"]) {
-	// IE6
-	styling["position"] = "absolute";
-	if(pos[0] == "top") {
-	    styling["top"] = "expression( ( 0 + ( ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop ) ) + 'px' )";
-	    if(pos[1] == "right") {
-		styling["right"] = "auto";
-		styling["bottom"] = "auto";
-		styling["left"] = "expression( ( 0 - jGrowl.offsetWidth + ( document.documentElement.clientWidth ? document.documentElement.clientWidth : document.body.clientWidth ) + ( ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft ) ) + 'px' )";
+   if ($.browser.msie && parseInt($.browser.version) < 7 && !window["XMLHttpRequest"]) {
+     // IE6
+     styling["position"] = "absolute";
+     if(pos[0] == "top") {
+       styling["top"] = "expression( ( 0 + ( ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop ) ) + 'px' )";
+       if(pos[1] == "right") {
+	 styling["right"] = "auto";
+	 styling["bottom"] = "auto";
+	 styling["left"] = "expression( ( 0 - kGrowl.offsetWidth + ( document.documentElement.clientWidth ? document.documentElement.clientWidth : document.body.clientWidth ) + ( ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft ) ) + 'px' )";
 
-	     } else { // pos[1] == "left"
-		 styling["left"] = "expression( ( 0 + ( ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft ) ) + 'px' )";
-	     }
-	 } else { //pos[0] == "bottom"
-	     styling["top"] = "expression( ( 0 - jGrowl.offsetHeight + ( document.documentElement.clientHeight ? document.documentElement.clientHeight : document.body.clientHeight ) + ( ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop ) ) + 'px' )";
-	     if(pos[1] == "right") {
-		 styling["left"] = "expression( ( 0 - jGrowl.offsetWidth + ( document.documentElement.clientWidth ? document.documentElement.clientWidth : document.body.clientWidth ) + ( ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft ) ) + 'px' )";
-	     } else { // pos[1] == "left"
-		 styling["left"] = "expression( ( 0 + ( ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft ) ) + 'px' )";
-	     }
-	 }
-     } else {
-	 styling[pos[0]] = "0px"; //vert
-	 styling[pos[1]] = "0px"; //horz
+       } else { // pos[1] == "left"
+	 styling["left"] = "expression( ( 0 + ( ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft ) ) + 'px' )";
+       }
+     } else { //pos[0] == "bottom"
+       styling["top"] = "expression( ( 0 - kGrowl.offsetHeight + ( document.documentElement.clientHeight ? document.documentElement.clientHeight : document.body.clientHeight ) + ( ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop ) ) + 'px' )";
+       if(pos[1] == "right") {
+	 styling["left"] = "expression( ( 0 - kGrowl.offsetWidth + ( document.documentElement.clientWidth ? document.documentElement.clientWidth : document.body.clientWidth ) + ( ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft ) ) + 'px' )";
+       } else { // pos[1] == "left"
+	 styling["left"] = "expression( ( 0 + ( ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft ) ) + 'px' )";
+       }
      }
+   } else {
+     styling[pos[0]] = "0px"; //vert
+     styling[pos[1]] = "0px"; //horz
+   }
 
-     if ( $('#kGrowl').size() == 0 ) $('<div id="kGrowl"></div>').css(styling).appendTo('body');
-	// Create a notification on the container.
-	$('#kGrowl').kGrowl(m,o);
+   if ( $('#kGrowl').size() == 0 )
+     $('<div id="kGrowl"></div>').css(styling).appendTo('body');
+   // Create a notification on the container.
+   $('#kGrowl').kGrowl(m,o);
  };
 
 
  /** Raise kGrowl Notification on a kGrowl Container **/
- $.fn.kGrowl = function( m , o ) {
-  if ( $.isFunction(this.each) ) {
-   var args = arguments;
+$.fn.kGrowl =
+       function( m , o ) {
+	 if ( $.isFunction(this.each) ) {
+	   var args = arguments;
 
-      return this.each(function() {
-	  var self = this;
+	   return this.each(function() {
+			      var self = this;
 
-	  /** Create a kGrowl Instance on the Container if it does not exist **/
-	  if ( $(this).data('kGrowl.instance') == undefined ) {
-	      $(this).data('kGrowl.instance', new $.fn.kGrowl());
-	      $(this).data('kGrowl.instance').startup( this );
-	  }
+              /** Create a kGrowl Instance on the Container if it does not exist **/
+			     if ( $(this).data('kGrowl.instance') == undefined ) {
+			       $(this).data('kGrowl.instance', new $.fn.kGrowl());
+			       $(this).data('kGrowl.instance').startup( this );
+			     }
 
 	  /** Optionally call kGrowl instance methods, or just raise a normal notification **/
-	  if ( $.isFunction($(this).data('kGrowl.instance')[m]) ) {
-	      $(this).data('kGrowl.instance')[m].apply( $(this).data('kGrowl.instance') , $.makeArray(args).slice(1) );
-	  } else {
-	      $(this).data('kGrowl.instance').notification( m , o );
-	  }
-      });
-  };
- };
+			      if ( $.isFunction($(this).data('kGrowl.instance')[m]) ) {
+				$(this).data('kGrowl.instance')[m].apply( $(this).data('kGrowl.instance') , $.makeArray(args).slice(1) );
+			      } else {
+				$(this).data('kGrowl.instance').notification( m , o );
+			      }
+			    });
+	 }
+       };
 
-    $.extend( $.fn.kGrowl.prototype , {
+   $.extend( $.fn.kGrowl.prototype , {
 
 	/** Default JGrowl Settings **/
 	defaults: {
@@ -79,7 +81,7 @@
             width:             "235px",
 	    header: 		'',
 	    sticky: 		false,
-	    position: 		'top-right', 
+	    position: 		'top-right',
 	    glue: 		'after',
 	    theme: 		'default',
 	    corners: 		'10px',
@@ -103,13 +105,13 @@
 		opacity: 	'hide'
 	    }
 	},
-	
+
 	/** kGrowl Container Node **/
 	element: 	null,
-	
+
 	/** Interval Function **/
 	interval:   null,
-	
+
 	/** Create a Notification **/
 	notification: 	function( message , o ) {
 	    var self = this;
@@ -132,7 +134,7 @@
 		}
 	    ).html(o.closeTemplate);
 
-            var notification_style = { 
+            var notification_style = {
 		"-moz-border-radius": "5px",
 		"-webkit-border-radius": "5px",
 		"background-color":$.kGrowl.defaults.background_color,
@@ -169,7 +171,7 @@
  		    $(this).trigger('kGrowl.close').remove();
  		});
  	    }).parent();
-	    
+
 	    ( o.glue == 'after' ) ? $('div.kGrowl-notification:last', this.element).after(notification) : $('div.kGrowl-notification:first', this.element).before(notification);
 
 	    /** Notification Actions **/
@@ -188,7 +190,7 @@
 	    }).trigger('kGrowl.beforeOpen').animate(o.animateOpen, o.speed, o.easing, function() {
 		$(this).data("kGrowl").created = new Date();
 	    }).trigger('kGrowl.open');
-	    
+
 	    /** Optional Corners Plugin **/
 	    if ( $.fn.corner != undefined ) $(notification).corner( o.corners );
 
@@ -205,7 +207,7 @@
 	/** Update the kGrowl Container, removing old kGrowl notifications **/
 	update:	 function() {
 	    $(this.element).find('div.kGrowl-notification:parent').each( function() {
-		if ( $(this).data("kGrowl") != undefined && $(this).data("kGrowl").created != undefined && ($(this).data("kGrowl").created.getTime() + $(this).data("kGrowl").life)  < (new Date()).getTime() && $(this).data("kGrowl").sticky != true && 
+		if ( $(this).data("kGrowl") != undefined && $(this).data("kGrowl").created != undefined && ($(this).data("kGrowl").created.getTime() + $(this).data("kGrowl").life)  < (new Date()).getTime() && $(this).data("kGrowl").sticky != true &&
 		     ($(this).data("kGrowl").pause == undefined || $(this).data("kGrowl").pause != true) ) {
 		    $(this).children('div.close').trigger('click.kGrowl');
 		}
@@ -222,7 +224,7 @@
 	startup:	function(e) {
 	    this.element = $(e).addClass('kGrowl').append('<div class="kGrowl-notification"></div>');
 	    this.interval = setInterval( function() { jQuery(e).data('kGrowl.instance').update(); }, this.defaults.check);
-	    
+
 	},
 
 	/** Shutdown kGrowl, removing it and clearing the interval **/
@@ -231,7 +233,7 @@
 	    clearInterval( this.interval );
 	}
     });
-    
+
     /** Reference the Defaults Object for compatibility with older versions of kGrowl **/
     $.kGrowl.defaults = $.fn.kGrowl.prototype.defaults;
 

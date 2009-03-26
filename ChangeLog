@@ -1,3 +1,9 @@
+2009-03-26  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/KOBJ.pm: refactored code that interprets API from URL
+	  path info.  Added dispatch method and support code for returning
+	  dispatch domain info.
+
 2009-03-23  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/RuleManager.pm: Added parsing and unparsing methods for

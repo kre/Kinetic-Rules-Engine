@@ -8,22 +8,46 @@ use Test::LongString;
 use Test::WWW::Mechanize;
 
 use LWP::UserAgent;
+use Cache::Memcached;
 
 use Apache2::Const;
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Parser qw/:all/;
 use Kynetx::KOBJ qw/:all/;
+use Kynetx::Repository qw/:all/;
+use Kynetx::Memcached qw/:all/;
 
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
+#Log::Log4perl->easy_init($DEBUG);
 
-my $numtests = 13;
+my $numtests = 14;
 plan tests => $numtests;
+
+
+
+my $my_req_info;
+$my_req_info->{'referer'} = 'http://www.byu.edu'; # Utah (BYU)
+
+Kynetx::Memcached->init();
+
+
+# dispatch
+my $svn_conn = "http://krl.kobj.net/rules/client/|cs|fizzbazz";
+
+is_string_nows(
+    Kynetx::KOBJ::dispatch($my_req_info,"cs_test;cs_test_1",$svn_conn), 
+    '{"cs_test_1":["www.windley.com","www.kynetx.com"],"cs_test":["www.google.com","www.yahoo.com","www.live.com"]}',
+    "Testing dispatch function with two RIDs");
+
+
 
 my $dn = "http://127.0.0.1/js";
 
 my $ruleset = "cs_test";
+
+
 
 my $mech = Test::WWW::Mechanize->new();
 
@@ -63,14 +87,15 @@ SKIP: {
 
     $mech->content_like(qr/var KOBJ={\s*version:\s*'\d+\.\d+'\s*}/s);
 
-    # kobj-static.js
-    my $url_version_4 = "$dn/$ruleset/kobj-static.js";
-    #diag "Testing console with $url_version_4";
+
+    # dispatch
+    my $url_version_4 = "$dn/dispatch/cs_test;cs_test_1/";
+    diag "Testing console with $url_version_4";
 
     $mech->get_ok($url_version_4);
-    is($mech->content_type(), 'text/javascript');
+    is($mech->content_type(), 'text/plain');
 
-    $mech->content_like(qr/var kobj_fn = 'kobj-static-\d+\.js';/);
+    $mech->content_like(qr/www\.windley\.com.*www\.yahoo\.com/s);
 
 
 }

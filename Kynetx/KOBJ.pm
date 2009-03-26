@@ -6,6 +6,7 @@ use warnings;
 
 use File::Find::Rule;
 use Log::Log4perl qw(get_logger :levels);
+use JSON::XS;
 
 use constant DEFAULT_SERVER_ROOT => 'kobj.net';
 use constant DEFAULT_ACTION_PREFIX => 'kobj-cs';
@@ -22,7 +23,7 @@ use Kynetx::Repository qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Datasets qw(:all);
 
-
+use Data::Dumper;
 
 sub handler {
     my $r = shift;
@@ -40,25 +41,47 @@ sub handler {
     $logger->debug("Initializing memcached");
     Kynetx::Memcached->init();
 
-    my ($rid,$file) = $r->uri =~ m#/js/([^/]+)/(.*\.js)#;
+    my ($method,$rids) = $r->uri =~ m#/js/([^/]+)/([^/]*(\.js)?)/?#;
 
-    Log::Log4perl::MDC->put('site', $rid);
-    Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
+    Log::Log4perl::MDC->put('site', $method);
+    Log::Log4perl::MDC->put('rule', '[initialization]');  # no rule for now...
+
+    $logger->debug("RIDs -> $rids");
 
     my $js_version = $r->dir_config('kobj_js_version') || DEFAULT_JS_VERSION;
     my $js_root = $r->dir_config('kobj_js_root') || DEFAULT_JS_ROOT;
 
 
     my $js = "";
-    if($file eq 'kobj.js') {
+    if($method eq 'static' || 
+       $method eq 'shared' || 
+       $method eq '996337974') { # Backcountry
+	if($r->dir_config('UseCloudFront')) { # redirect to CloudFront
+	    my $version = $r->dir_config('CloudFrontFile');
+	    if (! $version) {
+		 $version = 'kobj-static-1.js';
+		 $logger->error("CloudFrontFile config directive missing from Apache httpd.conf.  Using $version");
+	    } 
+	    my $cf_url = "http://static.kobj.net/". $version;
+	    $logger->info("Redirecting to Cloudfront ", $cf_url);
+	    $r->headers_out->set(Location => $cf_url);
+	    
+	    return Apache2::Const::REDIRECT;
+	    
+	} else {  # send the file from here
+	    $logger->info("Generating KOBJ static file ", $rids);
+	    $js = get_js_file($rids, $js_version,$js_root);
+	}
+	
+    } elsif ($rids eq 'kobj.js') {
 
-	$logger->info("Generating client initialization file ", $file);
+	$logger->info("Generating client initialization file ", $rids);
 
-	my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $rid);
+	my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $method);
 
 	Kynetx::Request::log_request_env($logger, $req_info);
 
-	Log::Log4perl::MDC->put('rule', $req_info->{'txn_id'});  
+#	Log::Log4perl::MDC->put('rule', $req_info->{'txn_id'});  
 
 
 	my($prefix, $middle, $root) = $r->hostname =~ m/^([^.]+)\.?(.*)\.([^.]+\.[^.]+)$/;
@@ -79,46 +102,31 @@ sub handler {
 	    $log_host = DEFAULT_LOG_PREFIX . $ending;
 	}
 
-	$logger->info("Generating KOBJ file ", $file, ' with action host ' , $action_host);
+	$logger->info("Generating KOBJ file ", $rids, ' with action host ' , $action_host);
 
 
 	$js = get_kobj($r,
 		       'http://', 
 		       $action_host, 
 		       $log_host, 
-		       $rid, 
+		       $method, 
 		       $js_version, 
 		       $req_info);
 
 
-    } elsif($file eq 'kobj-static.js') {
+    } elsif($method eq 'dispatch') {
+	my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $method);
 
-	if($r->dir_config('UseCloudFront') && 
-            ($rid eq 'static' || 
-	     $rid eq 'shared' || 
-	     $rid eq '996337974') # Backcountry
-	    ) { # redirect to CloudFront
-	    # FIXME: if config directive not available, log error
-	    my $version = 
-		$r->dir_config('CloudFrontFile') || 'kobj-static-1.js';
-	    my $cf_url = "http://static.kobj.net/". $version;
-	    $logger->info("Redirecting to Cloudfront ", $cf_url);
-	    $r->headers_out->set(Location => $cf_url);
-	    
-	    return Apache2::Const::REDIRECT;
-	    
-	} else {  # send the file from here
-	    $logger->info("Generating KOBJ static file ", $file);
-	    $js = get_js_file($file,$js_version,$js_root);
-	}
-	
-    } elsif($r->path_info =~ m!/version/! ) {
+	Kynetx::Request::log_request_env($logger, $req_info);
+
+	$js = dispatch($req_info, $rids, $r->dir_config('svn_conn'));
+
+	$r->content_type('text/plain');
+
+
+    } elsif($method eq 'version') {
 	show_build_num($r);
-    } else {
-
-	$js = get_js_file($file,$js_version,$js_root);
-
-    }
+    } 
 
     print $js;
 
@@ -173,6 +181,37 @@ sub get_datasets {
 
 }
 
+sub dispatch {
+    my($req_info, $rids, $svn_conn) = @_;
+
+    my $logger = get_logger();
+    $logger->debug("Returning dispatch sites for $rids");
+
+    my $r = {};
+
+    my @rids = split(/;/,$rids);
+    
+
+    foreach my $rid (@rids) {
+
+	my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $svn_conn, $req_info);
+
+	if( $ruleset->{'dispatch'} ) {
+	    $logger->debug("Processing dispatch block for $rid");
+#	    $logger->debug(sub() {Dumper($ruleset->{'dispatch'})});
+	    $r->{$rid} = [];
+	    foreach my $d (@{ $ruleset->{'dispatch'} }) {
+		push(@{ $r->{$rid} }, $d->{'domain'});
+	    }
+	}    
+    }
+    
+    $r = encode_json($r);
+    $logger->debug($r);
+
+    return $r;
+
+}
 
 sub get_kobj {
 
@@ -360,7 +399,12 @@ KOBJ.buildDiv = function (uniq, pos, top, side) {
 }
 
 KOBJ.get_host = function(s) {
- return s.match(/^(?:\\w+:\\/\\/)?([\\w.]+)/)[1];
+ var h = "";
+ try {
+   h = s.match(/^(?:\\w+:\/\/)?([\\w.]+)/)[1];
+ } catch(err) {
+ }
+ return h;
 }
 
 KOBJ.pick = function(o) {
