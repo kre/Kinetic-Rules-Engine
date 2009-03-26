@@ -3,6 +3,8 @@
 	* Kynetx/KOBJ.pm: refactored code that interprets API from URL
 	  path info.  Added dispatch method and support code for returning
 	  dispatch domain info.
+	  (get_kobj): Fixed KOBJ for double loads.  Fixed KOBJ.host to be
+	  more rebust.
 
 2009-03-23  Phil Windley  <pjw@kynetx.com>
 

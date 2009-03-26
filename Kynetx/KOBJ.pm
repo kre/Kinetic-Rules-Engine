@@ -226,9 +226,7 @@ sub get_kobj {
     # kobj.js preamble
     my $js = <<EOF;
 
-var KOBJ={
-    version: '$js_version'
-}
+var KOBJ= KOBJ || { version: '$js_version' };
 
 KOBJ.search_annotation = {};
 KOBJ.search_annotation.defaults = {
@@ -401,7 +399,7 @@ KOBJ.buildDiv = function (uniq, pos, top, side) {
 KOBJ.get_host = function(s) {
  var h = "";
  try {
-   h = s.match(/^(?:\\w+:\/\/)?([\\w.]+)/)[1];
+   h = s.match(/^(?:\\w+:\\/\\/)?([\\w.]+)/)[1];
  } catch(err) {
  }
  return h;
@@ -470,6 +468,8 @@ EOF
 
 
     $js .= <<EOF;
+
+if(!("console"in window)||!("firebug"in console)){var names=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"];window.console={};for(var i=0;i<names.length;++i)window.console[names[i]]=function(){};}
  
 
 KOBJ.r=document.createElement("script");

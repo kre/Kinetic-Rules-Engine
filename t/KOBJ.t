@@ -85,7 +85,7 @@ SKIP: {
     $mech->get_ok($url_version_3);
     is($mech->content_type(), 'text/javascript');
 
-    $mech->content_like(qr/var KOBJ={\s*version:\s*'\d+\.\d+'\s*}/s);
+    $mech->content_like(qr/var KOBJ= KOBJ || {\s*version:\s*'\d+\.\d+'\s*}/s);
 
 
     # dispatch
