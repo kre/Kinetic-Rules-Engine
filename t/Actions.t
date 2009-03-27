@@ -296,12 +296,12 @@ noop() with delay = 5;
 _KRL_
 
 $result = <<_JS_;
-setTimeout('
+setTimeout(function(){
 (function(uniq, cb) {
     cb();
 }
-(\\'23\\',callbacks23));
-;KOBJ.logger(\\'timer_expired\\',\\'1234\\',\\'none\\',\\'\\',\\'success\\',\\'dummy_name\\');',5000);
+('23',callbacks23));
+;KOBJ.logger('timer_expired','1234','none','','success','dummy_name');},(5*1000));
 _JS_
 
 

@@ -473,11 +473,12 @@ sub build_one_action {
 
 	$js .= $delay_cb;  # add in automatic log of delay expiration
 	
-	$js =~ y/\n\r//d; # remove newlines
-	$js =~ y/ //s;
-	$js =~ s/'/\\'/g; # escape single quotes
+#	$js =~ y/\n\r//d; # remove newlines#
+#	$js =~ y/ //s;
+#	$js =~ s/'/\\'/g; # escape single quotes
+	$js = "setTimeout(function() { $js },  ($mods{'delay'} * 1000) ); \n";
 
-	$js = "setTimeout(\'" . $js . "\', " . ($mods{'delay'} * 1000) . ");\n";
+#	$js = "setTimeout(\'" . $js . "\', " . ($mods{'delay'} * 1000) . ");\n";
     }
 
     push(@{ $rule_env->{'tags'} }, ($mods{'tags'} || ''));

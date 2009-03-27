@@ -81,9 +81,6 @@ sub process_rules {
     my $js = '';
 
 
-    # handle datasets
-#    $js .= eval_datasets($request_info,$ruleset, $rule_env);
-
 
     # handle globals
     $js .= eval_globals($request_info,$ruleset, $rule_env);
@@ -95,7 +92,7 @@ sub process_rules {
     }
 
     $logger->debug("Finished processing rules for " . $request_info->{'site'});
-    print $js;
+    print "(function() { $js } ())" ;
 
 }
 

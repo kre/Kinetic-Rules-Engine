@@ -1,3 +1,13 @@
+2009-03-27  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Rules.pm (eval_rule): Wrapped generated JS in function
+	  application to create namespace on the cheap to get ready for
+	  multiple ruleset evaluations on a single page.
+	* Kynetx/Actions.pm (build_one_action): updated setTimeout to use
+  	  function instead of string so that we can use closure to capture
+	  callbacks.
+	* t/Actions.t: updated test for new setTimeout call.
+
 2009-03-26  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/KOBJ.pm: refactored code that interprets API from URL
