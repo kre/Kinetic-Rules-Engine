@@ -315,7 +315,7 @@ LoadModule apreq_module /web/modules/mod_apreq2.so
 PerlRequire <TMPL_VAR NAME=KOBJ_ROOT>/startup-krl.pl
 <ELSE>
 PerlRequire <TMPL_VAR NAME=KOBJ_ROOT>/startup.pl
-</tMPL_IF>
+</TMPL_IF>
 
 # support client IP address in XFF header, if needed
 # PerlSetVar  xForwardedForRequire 1  # only work behind a proxy...
