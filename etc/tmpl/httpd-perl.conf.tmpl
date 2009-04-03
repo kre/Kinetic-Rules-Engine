@@ -313,7 +313,7 @@ LoadModule apreq_module /web/modules/mod_apreq2.so
 
 <TMPL_IF NAME="GENDER_KRL">
 PerlRequire <TMPL_VAR NAME=KOBJ_ROOT>/startup-krl.pl
-<ELSE>
+<TMPL_ELSE>
 PerlRequire <TMPL_VAR NAME=KOBJ_ROOT>/startup.pl
 </TMPL_IF>
 
