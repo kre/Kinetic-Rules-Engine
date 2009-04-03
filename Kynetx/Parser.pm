@@ -90,7 +90,6 @@ ruleset_name: VAR  # {return $item[1]}
 meta_block_top: meta_block
    | { foreach (@{$thisparser->{errors}}) {
               $errors .= "Line $_->[1]:$_->[0]\n";
-	      print "$_->[1]\n";
            }
        $thisparser->{errors} = undef;
        $return = {'error' => $errors}
@@ -138,7 +137,6 @@ dispatch_block_top: dispatch_block
    | { $errors = "";
        foreach (@{$thisparser->{errors}}) {
               $errors .= "Line $_->[1]:$_->[0]\n";
-	      print "$_->[1]\n";
            }
        $thisparser->{errors} = undef;
        $return = {'error' => $errors}
@@ -189,7 +187,6 @@ global_decls_top: global_decls
    | { $errors = "";
        foreach (@{$thisparser->{errors}}) {
               $errors .= "Line $_->[1]:$_->[0]\n";
-	      print "$_->[1]\n";
            }
        $thisparser->{'errors'} = undef;
        $return = {'error' =>  $errors}
@@ -214,7 +211,6 @@ rule_top: rule
    | { $errors = "";
        foreach (@{$thisparser->{errors}}) {
               $errors .= "Line $_->[1]:$_->[0]\n";
-	      print "$_->[1]\n";
            }
        $thisparser->{errors} = undef;
        $return = {'error' => $errors}
