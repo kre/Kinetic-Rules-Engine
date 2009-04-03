@@ -21,8 +21,8 @@ use Kynetx::FakeReq qw/:all/;
 use Kynetx::Test qw/:all/;
 use Kynetx::RuleManager qw/:all/;
 
-my $numtests = 62;
-my $nonskippable = 10;
+my $numtests = 67;
+my $nonskippable = 15;
 plan tests => $numtests;
 
 my $my_req_info;
@@ -74,6 +74,13 @@ ruleset 10 {
 }
 RULESET
 
+my $test_ruleset_bad = <<RULESET;
+ruleset 10 {
+    rule {}
+    ;;;
+}
+RULESET
+
 
 my $test_json_ruleset = <<JSON;
 {"global":[],"dispatch":[],"ruleset_name":"10","rules":[{"cond":{"predicate":"daytime","args":[],"type":"simple"},"blocktype":"choose","actions":[{"action":{"name":"replace","args":[{"val":"kobj_test","type":"str"},{"val":"/kynetx/newsletter_invite_1.inc","type":"str"}],"modifiers":[{"value":{"val":[{"val":"gift certificate","type":"str"},{"val":"yellow","type":"str"}],"type":"array"},"name":"tags"},{"value":{"val":"30","type":"num"},"name":"delay"}]},"label":"first_rule_name"},{"action":{"name":"replace","args":[{"val":"kobj_test","type":"str"},{"val":"/kynetx/newsletter_invite_2.inc","type":"str"}],"modifiers":[{"value":{"val":[{"val":"discount","type":"str"},{"val":"blue","type":"str"}],"type":"array"},"name":"tags"},{"value":{"val":"true","type":"bool"},"name":"draggable"}]},"label":"second_rule_name"}],"post":null,"pre":[],"name":"test_choose","emit":null,"state":"inactive","callbacks":{"success":[{"attribute":"id","value":"rssfeed","type":"click"},{"attribute":"class","value":"newsletter","type":"click"}],"failure":[{"attribute":"id","value":"close_rss","type":"click"}]},"pagetype":{"pattern":"/identity-policy/","vars":[]}}],"meta":{}}
@@ -119,6 +126,13 @@ rule test_choose is inactive {
 
 }
 RULE
+
+my $test_rule_bad = <<RULE;
+rule test_choose is stupid {
+  do not select anything here.  
+}
+RULE
+
 
 my $test_rule_body = <<RULEBODY;
     select using "/identity-policy/" setting ()
@@ -169,6 +183,21 @@ var foobar = 4;
 }
 GLOBAL
 
+
+my $test_global_bad = <<GLOBAL;
+global {
+
+
+     dataset cached_timeline <- "http://twitter.com/statuses/public_timeline.json" cachable
+
+     emit <<
+var foobar = 4;
+     >>;
+
+}
+GLOBAL
+
+
 my $test_json_global = <<JSON;
 [{"source":"http://twitter.com/statuses/public_timeline.json","name":"public_timeline","cachable":0},{"source":"http://twitter.com/statuses/public_timeline.json","name":"cached_timeline","cachable":1},{"emit":"var foobar = 4;  "}]
 JSON
@@ -187,6 +216,14 @@ dispatch {
 }
 DISPATCH
 
+my $test_dispatch_bad = <<DISPATCH;
+dispatch {
+
+This should never work!
+
+}
+DISPATCH
+
 my $test_json_dispatch = <<JSON;
 [{"domain":"www.google.com","ruleset_id":null},{"domain":"search.yahoo.com","ruleset_id":null},{"domain":"www.google.com","ruleset_id":"966337974"},{"domain":"google.com","ruleset_id":"966337974"},{"domain":"www.circuitcity.com","ruleset_id":"966337982"}]
 JSON
@@ -197,6 +234,14 @@ meta {
 Ruleset for testing something or other.
 >>
    logging on
+}
+META
+
+my $test_meta_bad = <<META;
+meta {
+ 
+ foobar is not a good entry for the meta stuff...
+ 
 }
 META
 
@@ -215,6 +260,19 @@ is_string_nows($json,
 	       $test_json_ruleset,
 	       "Parsing a ruleset");
 
+$my_req_info->{'krl'} = $test_ruleset_bad;
+#diag $my_req_info->{'krl'};
+
+$json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "ruleset");
+#diag $json;
+
+contains_string($json, 
+	       'Invalid meta block',
+	       "Parsing ruleset with syntax error");
+
+
+
+# test rule api
 $my_req_info->{'krl'} = $test_rule;
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "rule");
@@ -222,6 +280,19 @@ $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "rule");
 is_string_nows($json, 
 	       $test_json_rule,
 	       "Parsing a rule");
+
+
+$my_req_info->{'krl'} = $test_rule_bad;
+#diag $my_req_info->{'krl'};
+
+$json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "rule");
+#diag $json;
+
+contains_string($json, 
+	       'Invalid rule state',
+	       "Parsing rule with syntax error");
+
+
 
 
 $my_req_info->{'krl'} = $test_global;
@@ -233,14 +304,34 @@ is_string_nows($json,
 	       "Parsing global decls");
 
 
+$my_req_info->{'krl'} = $test_global_bad;
+
+$json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "global");
+
+contains_string($json, 
+	       'Invalid global decls',
+	       "Parsing global decls with syntax error");
+
+
 $my_req_info->{'krl'} = $test_dispatch;
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "dispatch");
-#diag $json;
 
 is_string_nows($json, 
 	       $test_json_dispatch,
 	       "Parsing dispatch decls");
+
+
+$my_req_info->{'krl'} = $test_dispatch_bad;
+#diag $my_req_info->{'krl'};
+
+$json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "dispatch");
+#diag $json;
+
+contains_string($json, 
+	       'Invalid dispatch block',
+	       "Parsing dispatch decls with syntax error");
+
 
 
 $my_req_info->{'krl'} = $test_meta;
@@ -251,6 +342,19 @@ $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "meta");
 is_string_nows($json, 
 	       $test_json_meta,
 	       "Parsing meta decls");
+
+
+$my_req_info->{'krl'} = $test_meta_bad;
+#diag $my_req_info->{'krl'};
+
+$json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "meta");
+#diag $json;
+
+contains_string($json, 
+	       'Invalid meta block',
+	       "Parsing meta decls with syntax error");
+
+
 
 
 # check the unparse API calls

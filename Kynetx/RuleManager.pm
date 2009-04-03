@@ -201,8 +201,6 @@ sub parse_api {
 	    $logger->debug("Parse failed for $krl as $submethod");
 	    $json = '{"error": "' . $tree->{'error'} .'"}';
 	} else {
-
-
 	    $json = astToJson($tree);
 	}
 

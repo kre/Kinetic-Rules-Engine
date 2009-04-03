@@ -87,6 +87,16 @@ ruleset_name: VAR  # {return $item[1]}
             | NUM  # {return $item[1]}
             | <error>
 
+meta_block_top: meta_block
+   | { foreach (@{$thisparser->{errors}}) {
+              $errors .= "Line $_->[1]:$_->[0]\n";
+	      print "$_->[1]\n";
+           }
+       $thisparser->{errors} = undef;
+       $return = {'error' => $errors}
+     }
+
+
 
 meta_block: 'meta' '{' 
        pragma(s?)
@@ -100,6 +110,7 @@ meta_block: 'meta' '{'
 
       $return = $r;
     }
+ | <error>
 
 pragma: desc_block 
     {$return = {
@@ -111,16 +122,32 @@ pragma: desc_block
         'logging' => $item[1]
         }
     }
+ | <error>
 
 desc_block: 'description' (HTML | STRING)
    {$return = $item[2];}
+ | <error>
 
 
 logging_pragma: 'logging' ('on' | 'off')
    {$return = $item[2];}
+ | <error>
+
+
+dispatch_block_top: dispatch_block
+   | { $errors = "";
+       foreach (@{$thisparser->{errors}}) {
+              $errors .= "Line $_->[1]:$_->[0]\n";
+	      print "$_->[1]\n";
+           }
+       $thisparser->{errors} = undef;
+       $return = {'error' => $errors}
+     }
+
 
 dispatch_block: 'dispatch' '{' dispatch(s?) '}' #?
      {$return = $item[3]}
+   | <error>
 
 dispatch: 'domain' STRING dispatch_target(?)
      {$return = {
@@ -128,15 +155,13 @@ dispatch: 'domain' STRING dispatch_target(?)
 	 'ruleset_id' => $item[3][0] 
          }
      }
+   | <error>
 
 dispatch_target: '->' STRING
      {$return = $item[2]
      }
+   | <error>
                    
-# dataset_block: 'datasets' '{' dataset(s? /;/)  SEMICOLON(?) '}' #?
-#      {$return =   $item[3]
-#      }
-#    | <error>
 
 dataset: 'dataset' VAR '<-' STRING cachable(?)
      {$return = {
@@ -150,6 +175,7 @@ dataset: 'dataset' VAR '<-' STRING cachable(?)
 cachable: 'cachable' cachetime(?)
      {$return = $item[2][0] || 1
      }
+   | <error>
 
 cachetime: 'for' NUM period
      {$return = {
@@ -157,9 +183,22 @@ cachetime: 'for' NUM period
 	 'period' => $item[3]
       }
      }
+   | <error>
+
+global_decls_top: global_decls
+   | { $errors = "";
+       foreach (@{$thisparser->{errors}}) {
+              $errors .= "Line $_->[1]:$_->[0]\n";
+	      print "$_->[1]\n";
+           }
+       $thisparser->{'errors'} = undef;
+       $return = {'error' =>  $errors}
+     }
+
 
 global_decls: 'global' '{' globals(s? /;/)  SEMICOLON(?) '}' #?
      {$return = $item[3]}
+    | <error>
 
 globals: emit_block
           {$return = {'emit' => $item[1]
@@ -169,6 +208,18 @@ globals: emit_block
           {$return = $item[1]
           }
        | <error>
+
+
+rule_top: rule
+   | { $errors = "";
+       foreach (@{$thisparser->{errors}}) {
+              $errors .= "Line $_->[1]:$_->[0]\n";
+	      print "$_->[1]\n";
+           }
+       $thisparser->{errors} = undef;
+       $return = {'error' => $errors}
+     }
+
 
 
 rule: 'rule' VAR 'is' rule_state '{'
@@ -191,6 +242,7 @@ rule: 'rule' VAR 'is' rule_state '{'
 	      'callbacks' => $item[11][0],
 	      'post' => $item[12][0]
            } }
+  | <error>
 
 
 rule_state: 'active'
@@ -704,9 +756,10 @@ sub parse_rule {
     $rule =~ s%\n%%g;
 
 
-    my $result = ($parser->rule($rule));
-    if (defined $result->{'error'}) {
-	$logger->error("Can't parse rules: $result->{'error'}");
+    my $result = ($parser->rule_top($rule));
+
+    if (ref $result eq 'HASH' && $result->{'error'}) {
+	$logger->debug("Can't parse rule: $result->{'error'}");
     } else {
 	$logger->debug("Parsed rules");
     }
@@ -718,15 +771,6 @@ sub parse_rule {
 
 }
 
-sub mk_parser {
-    my $parse_func = shift;
-    
-    return sub {
-    
-
-    }
-
-}
 
 sub parse_action {
     my $rule = shift;
@@ -756,9 +800,15 @@ sub parse_global_decls {
 
     $element = remove_comments($element);
 
-    my $result = $parser->global_decls($element);
+    my $result = $parser->global_decls_top($element);
+
+#    $logger->debug(Dumper($result));
+    if (ref $result eq 'HASH' && $result->{'error'}) {
+	$logger->debug("Can't parse global declarations: $result->{'error'}");
+    } else {
+	$logger->debug("Parsed global decls");#, 
+    }
     
-    $logger->debug("Parsed global decls");#, Dumper($result));
 
     return $result;
 
@@ -771,9 +821,13 @@ sub parse_dispatch {
 
     $element = remove_comments($element);
 
-    my $result = $parser->dispatch_block($element);
-    
-    $logger->debug("Parsed dispatch");#, Dumper($result));
+    my $result = $parser->dispatch_block_top($element);
+
+    if (ref $result eq 'HASH' && $result->{'error'}) {
+	$logger->debug("Can't parse dispatch declaration: $result->{'error'}");
+    } else {
+	$logger->debug("Parsed dispatch declaration");
+    }
 
     return $result;
 
@@ -787,9 +841,14 @@ sub parse_meta {
 
     $element = remove_comments($element);
 
-    my $result = $parser->meta_block($element);
+    my $result = $parser->meta_block_top($element);
     
-    $logger->debug("Parsed meta");#, Dumper($result));
+    if (ref $result eq 'HASH' && $result->{'error'}) {
+	$logger->debug("Can't parse meta information: $result->{'error'}");
+    } else {
+	$logger->debug("Parsed meta information");
+    }
+
 
     return $result;
 

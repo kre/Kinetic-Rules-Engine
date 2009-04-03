@@ -1,3 +1,12 @@
+2009-04-03  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/RuleManager.pm: Fixed error reporting in parse API
+	* Kynetx/Parser.pm: Fixed error reporting for component parsing in
+	  support of parse API
+	* etc/tmpl/httpd-perl.conf.tmpl: Load different startup file for KRL
+	* startup-krl.pl: added new startup for KRL.  Patch until we redo
+	  the respository
+
 2009-03-27  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (eval_rule): Wrapped generated JS in function
