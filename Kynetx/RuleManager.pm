@@ -51,7 +51,6 @@ sub handler {
     Log::Log4perl::MDC->put('rule', $rid);  # no rule for now...
 
 
-
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
     Kynetx::Request::log_request_env($logger, $req_info);
 
@@ -199,11 +198,10 @@ sub parse_api {
 
 	if(ref $tree eq "HASH" && defined $tree->{'error'}) {
 	    $logger->debug("Parse failed for $krl as $submethod");
-	    $json = '{"error": "' . $tree->{'error'} .'"}';
+	    $json = astToJson({"error" => $tree->{'error'} });
 	} else {
 	    $json = astToJson($tree);
 	}
-
 
     }
    

@@ -21,7 +21,7 @@ use Kynetx::FakeReq qw/:all/;
 use Kynetx::Test qw/:all/;
 use Kynetx::RuleManager qw/:all/;
 
-my $numtests = 67;
+my $numtests = 70;
 my $nonskippable = 15;
 plan tests => $numtests;
 
@@ -348,7 +348,7 @@ $my_req_info->{'krl'} = $test_meta_bad;
 #diag $my_req_info->{'krl'};
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "meta");
-#diag $json;
+diag $json;
 
 contains_string($json, 
 	       'Invalid meta block',
@@ -507,6 +507,16 @@ SKIP: {
 
     is($mech->content_type(), 'text/plain');
     is_string_nows($mech->response()->content,$test_json_global);
+
+
+    # parse/global (bad)
+    my $url_version_7a = "$dn/parse/global";
+    diag "Testing $url_version_7a";
+
+    $mech->post_ok($url_version_7a, ['krl'=> $test_global_bad]);
+
+    is($mech->content_type(), 'text/plain');
+    is_string_nows($mech->response()->content,'{"error":"Line 6:Invalid global decls: Was expecting /;/ but found \" emit<<\" instead\n"}');
 
 
     # parse/dispatch
