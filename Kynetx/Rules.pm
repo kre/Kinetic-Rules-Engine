@@ -44,12 +44,11 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
 sub process_rules {
-    my ($r, $method, $rid) = @_;
+    my ($r, $method, $rids) = @_;
 
     my $logger = get_logger();
 
     $r->subprocess_env(START_TIME => Time::HiRes::time);
-
 
     if($r->dir_config('run_mode') eq 'development') {
 	# WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
@@ -64,36 +63,50 @@ sub process_rules {
     # get a session hash 
     my $session = process_session($r);
 
-    my $request_info = Kynetx::Request::build_request_env($r, $method, $rid);
+    my $req_info = Kynetx::Request::build_request_env($r, $method, $rids);
 
-    $logger->info("Processing rules for site " . $request_info->{'site'});
+    my $js = '';
+    my @rids = split(/;/, $rids);
+    foreach my $rid (@rids) {
+	Log::Log4perl::MDC->put('site', $rid);
+	$js .= eval_ruleset($r, $req_info, $session, $rid);
+    }
 
+    return $js;
+
+}
+
+
+sub eval_ruleset {
+    my ($r, $req_info, $session, $rid) = @_;
+
+    my $logger = get_logger();
+    $logger->info("Processing rules for site " . $req_info->{'rid'});
+
+    $req_info->{'rid'} = $rid;
     # side effects environment with precondition pattern values
     my ($rules, $rule_env, $ruleset) = 
 	get_rule_set($r->dir_config('svn_conn'),
-		     $request_info
-	);
+		     $req_info
+	            );
 
-
-
-    Kynetx::Request::log_request_env($logger, $request_info);
+    Kynetx::Request::log_request_env($logger, $req_info);
 
     my $js = '';
 
 
 
     # handle globals
-    $js .= eval_globals($request_info,$ruleset, $rule_env);
+    $js .= eval_globals($req_info,$ruleset, $rule_env);
 
 
     # this loops through the rules ONCE applying all that fire
     foreach my $rule ( @{ $rules } ) {
-	$js .= eval_rule($r, $request_info, $rule_env, $session, $rule);
+	$js .= eval_rule($r, $req_info, $rule_env, $session, $rule);
     }
 
-    $logger->debug("Finished processing rules for " . $request_info->{'site'});
-    print "(function() { $js } ())" ;
-
+    $logger->debug("Finished processing rules for " . $req_info->{'rid'});
+    print "\n(function() { $js } ());\n" ;
 }
 
 

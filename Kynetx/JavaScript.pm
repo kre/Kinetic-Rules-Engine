@@ -393,7 +393,12 @@ sub eval_datasource {
 	    # we're really just generating JS here.
 	    $val = "K\$('".$args->[0]."').innerHTML";
 	} elsif($function eq 'env') {
-	    $val = $req_info->{$args->[0]};
+	    # rulespaced env parameters
+	    if(defined $req_info->{$req_info->{'rid'}.':'.$args->[0]}) {
+		$val = $req_info->{$req_info->{'rid'}.':'.$args->[0]};
+	    } elsif(defined $req_info->{$args->[0]}) {
+		$val = $req_info->{$args->[0]};
+	    }
 	}
     }
 

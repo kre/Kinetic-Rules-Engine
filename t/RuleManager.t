@@ -21,7 +21,7 @@ use Kynetx::FakeReq qw/:all/;
 use Kynetx::Test qw/:all/;
 use Kynetx::RuleManager qw/:all/;
 
-my $numtests = 70;
+my $numtests = 73;
 my $nonskippable = 15;
 plan tests => $numtests;
 
@@ -527,6 +527,17 @@ SKIP: {
 
     is($mech->content_type(), 'text/plain');
     is_string_nows($mech->response()->content,$test_json_dispatch);
+
+
+    # parse/dispatch
+    my $url_version_71a = "$dn/parse/dispatch";
+    diag "Testing $url_version_71a";
+
+    $mech->post_ok($url_version_71a, ['krl'=> $test_dispatch_bad]);
+
+    is($mech->content_type(), 'text/plain');
+    contains_string($mech->response()->content,
+		    '{"error":"Line 3:Invalid dispatch: Was expecting');
 
 
     # parse/meta

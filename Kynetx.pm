@@ -45,7 +45,7 @@ sub handler {
     $logger->debug("Initializing memcached");
     Kynetx::Memcached->init();
 
-    my ($method,$rid) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_]+)!;
+    my ($method,$rid) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_;]+)!;
     $logger->debug("Performing $method method on ruleset $rid");
     Log::Log4perl::MDC->put('site', $rid);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
@@ -66,11 +66,6 @@ sub handler {
 	my $uniq = int(rand 999999999);
 	$r->content_type('text/html');
 	print "$uniq";
-	
-
-    } else {
-
-	process_rules($r, $method, $rid);
     }
 
 

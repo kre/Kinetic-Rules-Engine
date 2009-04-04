@@ -1,3 +1,15 @@
+2009-04-04  Phil Windley  <pjw@kynetx.com>
+
+	* extras/pilot/chrome/content/pilot/pilotOverlay.js: Modified to
+	  support new initialziation sequence.
+	* Kynetx/RuleManager.pm (handler): Updated to support multiple
+	  ruleset evaluations in a single call.
+	* Kynetx/KOBJ.pm: Removed KOBJ code.  Added datasets method.
+	  Changed kobj.js generation to support new model for backwards
+	  compatibility. 
+	* etc/js/0.9/kobj-extras.js: Combined KOBJ code and updated to run
+	  KOBJ.eval based on a configuration object
+
 2009-04-03  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/RuleManager.pm: Fixed error reporting in parse API

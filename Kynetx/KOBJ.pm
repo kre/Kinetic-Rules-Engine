@@ -81,9 +81,6 @@ sub handler {
 
 	Kynetx::Request::log_request_env($logger, $req_info);
 
-#	Log::Log4perl::MDC->put('rule', $req_info->{'txn_id'});  
-
-
 	my($prefix, $middle, $root) = $r->hostname =~ m/^([^.]+)\.?(.*)\.([^.]+\.[^.]+)$/;
 
 	$logger->debug("Hostname: ", $prefix, " and ", $root);
@@ -124,6 +121,16 @@ sub handler {
 	$r->content_type('text/plain');
 
 
+    } elsif($method eq 'datasets') {
+	my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $method);
+
+	Kynetx::Request::log_request_env($logger, $req_info);
+
+	$js = datasets($req_info, $rids, $r->dir_config('svn_conn'));
+
+	$r->content_type('text/javascript');
+
+
     } elsif($method eq 'version') {
 	show_build_num($r);
     } 
@@ -155,6 +162,7 @@ sub get_js_file {
 
 }
 
+# turn the datasets from a ruleset into JS 
 sub get_datasets {
     my ($svn_conn, $req_info) = @_;
     my $rid = $req_info->{'rid'};
@@ -180,6 +188,30 @@ sub get_datasets {
     return $js;
 
 }
+
+
+sub datasets {
+    my($req_info, $rids, $svn_conn) = @_;
+
+    my $logger = get_logger();
+    $logger->debug("Returning datasets for $rids");
+
+
+    my $js = '';
+
+    my @rids = split(/;/,$rids);
+    
+
+    foreach my $rid (@rids) {
+	$req_info->{'rid'} = $rid;
+	$js .= get_datasets($svn_conn, $req_info) ;
+    }
+    
+
+    return $js;
+
+}
+
 
 sub dispatch {
     my($req_info, $rids, $svn_conn) = @_;
@@ -216,286 +248,79 @@ sub dispatch {
 sub get_kobj {
 
 
-    my ($r, $proto, $host, $log_host, $rid, $js_version, $req_info) = @_;
-
-    my $data_root = "/web/data/client/$rid";
+    my ($r, $proto, $host, $cb_host, $rids, $js_version, $req_info) = @_;
 
     my $logger = get_logger();
 
-    # be sure to escape any $ that you want passed in the JS
-    # kobj.js preamble
+    my @rids = split(/;/,$rids);
+
     my $js = <<EOF;
-
-var KOBJ= KOBJ || { version: '$js_version' };
-
-KOBJ.search_annotation = {};
-KOBJ.search_annotation.defaults = {
-  "name": "KOBJ",
-  "sep": "<div style='padding-top: 13px'>|</div>",
-  "text_color":"#CCC",
-  "height":"40px",
-  "left_margin": "46px",
-  "right_padding" : "15px",
-  "font_size":"12px",
-  "font_family": "Verdana, Geneva, sans-serif"
-};
-
-KOBJ.annotate_search_results = function(annotate) {
-
-  function mk_list_item(i) {
-    return \$K("<li class='KOBJ_item'>").css(
-          {"float": "left",
-	   "margin": "0",
-	   "vertical-align": "middle",
-	   "padding-left": "4px",
-	   "color": KOBJ.search_annotation.defaults.text_color,
-	   "white-space": "nowrap",
-           "text-align": "center"
-          }).append(i);
-  }
-
-  function mk_rm_div (anchor) {
-    var logo_item = mk_list_item(anchor);
-    var logo_list = \$K('<ul>').css(
-          {"margin": "0",
-           "padding": "0",
-           "list-style": "none"
-          }).attr("id", KOBJ.search_annotation.defaults.name+"_logo_list").append(logo_item);
-    var inner_div = \$K('<div>').css(
-          {"float": "left",
-           "display": "inline",
-           "height": KOBJ.search_annotation.defaults.height,
-           "margin-left": KOBJ.search_annotation.defaults.left_margin,
-           "padding-right": KOBJ.search_annotation.defaults.right_padding
-          }).append(logo_list);
-    if (KOBJ.search_annotation.defaults.tail_background_image){
-      inner_div.css({
-           "background-image": "url(" + KOBJ.search_annotation.defaults.tail_background_image + ")",
-           "background-repeat": "no-repeat",
-           "background-position": "right top"
-      })
-    }
-    var rm_div = \$K('<div>').css(
-          {"float": "right",
-           "width": "auto",
-           "height": KOBJ.search_annotation.defaults.height,
-           "font-size": KOBJ.search_annotation.defaults.font_size,
-           "line-height": "normal",
-           "font-family": KOBJ.search_annotation.defaults.font_familty
-	   }).append(inner_div);
-    if (KOBJ.search_annotation.defaults.head_background_image){
-     rm_div.css({
-           "background-image": "url(" + KOBJ.search_annotation.defaults.head_background_image +")",
-           "background-repeat": "no-repeat",
-           "background-position": "left top"
-      })
-    }
-    return rm_div;
-  }
-
-  \$K("li.g, li div.res").each(function() {
-        var contents = annotate(this);
-        if (contents) {
-          if(\$K(this).find('#'+KOBJ.search_annotation.defaults.name+'_anno_list+ li').is('.'+KOBJ.search_annotation.defaults.name+'_item')) {
-             \$K(this).find('#'+KOBJ.search_annotation.defaults.name+'_anno_list').append(mk_list_item(KOBJ.search_annotation.defaults.sep)).append(mk_list_item(contents));
-          } else {
-             \$K(this).find("div.s,div.abstr").prepend(mk_rm_div(contents));
-          }
-        }
-   });
-
-}
-
-KOBJ.logger = function(type,txn_id,element,url,sense,rule) {
-    e=document.createElement("script");
-    e.src=KOBJ.logger_url+"?type="+type+"&txn_id="+txn_id+"&element="+element+"&ts="+KOBJ.d+"&sense="+sense+"&url="+escape(url)+"&rule="+rule;
-    body=document.getElementsByTagName("body")[0];
-    body.appendChild(e);
-}
-
-KOBJ.obs = function(type, txn_id, name, sense, rule) {
-    if(type == 'class') {
-	\$K('.'+name).click(function(e1) {
-	    var tgt = \$K(this);
-	    var b = tgt.attr('href') || '';
-	    KOBJ.logger("click",
-			txn_id,
-			name, 
-			b, 
-			sense,
-			rule
-	    );
-            if(b) { tgt.attr('href','#'); }  // # gets replaced by redirect
-	    });
-    } else {
-	\$K('#'+name).click(function(e1) {
-	    var tgt = \$K(this);
-	    var b = tgt.attr('href') || '';
-	    KOBJ.logger("click",
-			txn_id,
-			name, 
-			b, 
-			sense,
-			rule
-	    );
-            if(b) { tgt.attr('href','#'); }  // # gets replaced by redirect
-	    });
-    }
-}
-
-
-
-KOBJ.fragment = function(base_url) {
-    e=document.createElement("script");
-    e.src=base_url;
-    body=document.getElementsByTagName("body")[0];
-    body.appendChild(e);
-}
-
-KOBJ.update_elements  = function (params) {
-    for (var mykey in params) {
- 	\$K("#kobj_"+mykey).html(params[mykey]);
-    };
-}
-
-// wrap some effects for use in embedded HTML
-KOBJ.Fade = function (id) {
-    \$K(id).fadeOut()
-}
-
-KOBJ.BlindDown = function (id) {
-    \$K(id).slideDown()
-}
-
-KOBJ.BlindUp = function (id) {
-    \$K(id).slideUp()
-}
-
-KOBJ.BlindUp = function (id, speed) {
-    \$K(id).slideUp(speed)
-}
-
-KOBJ.hide = function (id) {
-    \$K(id).hide();
-}
-
-// helper functions
-KOBJ.buildDiv = function (uniq, pos, top, side) {
-    var vert = top.split(/\\s*:\\s*/);
-    var horz = side.split(/\\s*:\\s*/);
-    var div_style = {
-        position: pos,
-        zIndex: '9999',
-        opacity: 0.999999,
-        display: 'none'
-    };
-    div_style[vert[0]] = vert[1];
-    div_style[horz[0]] = horz[1];
-    var id_str = 'kobj_'+uniq;
-    var div = document.createElement('div');
-    return \$K(div).attr({'id': id_str}).css(div_style);
-}
-
-KOBJ.get_host = function(s) {
- var h = "";
- try {
-   h = s.match(/^(?:\\w+:\\/\\/)?([\\w.]+)/)[1];
- } catch(err) {
- }
- return h;
-}
-
-KOBJ.pick = function(o) {
-    if (o) {
-        return o[Math.floor(Math.random()*o.length)];
-    } else {
-        return o;
-    }
-}
-
-
-KOBJ.d = (new Date).getTime();
-KOBJ.proto = \'$proto\'; 
-KOBJ.host_with_port = \'$host\'; 
-KOBJ.loghost_with_port = \'$log_host\'; 
-KOBJ.site_id = \'$rid\';
-KOBJ.url = KOBJ.proto+KOBJ.host_with_port+"/ruleset/eval/" + KOBJ.site_id;
-KOBJ.logger_url = KOBJ.proto+KOBJ.loghost_with_port+"/log/" + KOBJ.site_id;
-
-
-if(typeof(kvars) != "undefined") {
-    KOBJ.kvars_json = \$K.toJSON(kvars);
-} else {
-    KOBJ.kvars_json = '';
-}
+var KOBJ= KOBJ || {  };
 EOF
 
-    # add in datasets  The datasets param is a filter
-    my @ds;
+    foreach my $rid (@rids) {
 
-    my $datasets = $req_info->{'datasets'};
+	my $data_root = "/web/data/client/$rid";
+
+	# add in datasets  The datasets param is a filter
+	my @ds;
+
+	my $datasets = $req_info->{'datasets'};
     
-    if($datasets) {
-	@ds = split(/,/, $datasets);
-    } else {
-	@ds = File::Find::Rule->file()
-                              ->name( '*.pm' )
-                              ->in( $data_root );
+	if($datasets) {
+	    @ds = split(/,/, $datasets);
+	} else {
+	    @ds = File::Find::Rule->file()
+		->name( '*.pm' )
+		->in( $data_root );
+	}
+
+	foreach my $dataset (@ds) {
+	    my $fn = "$data_root/$dataset.json";
+	    if(-e $fn) {
+		open(JSON, $fn ) || 
+		    $logger->error("Can't open file $data_root/$dataset.json: $!\n");
+		local $/ = undef;
+		$js .= "KOBJ.$dataset = ";
+		$js .= <JSON>;
+		$js .= ";\n";
+		close JS;
+	    }
+	}
+
+	$req_info->{'rid'} = $rid;
+	$js .= get_datasets($r->dir_config('svn_conn'), $req_info);
     }
 
-    foreach my $dataset (@ds) {
-	my $fn = "$data_root/$dataset.json";
-	if(-e $fn) {
-	    open(JSON, $fn ) || 
-		$logger->error("Can't open file $data_root/$dataset.json: $!\n");
-	    local $/ = undef;
-	    $js .= "KOBJ.$dataset = ";
-	    $js .= <JSON>;
-	    $js .= ";\n";
-	    close JS;
-	}
-    }
 
     # create param string for tacking on to CS request
     my $param_names = $req_info->{'param_names'};
-    my $param_str = "";
+    my $params = {'rids' => \@rids};
     foreach my $n (@{ $param_names }) {
 #	$logger->debug("Adding $n to parameters...");
-	$param_str .= "&$n=".$req_info->{$n};
+	$params->{$n} = $req_info->{$n};
     }
 
-    $js .= get_datasets($r->dir_config('svn_conn'), $req_info);
+    my $param_json = encode_json($params);
 
+    
 
-    $js .= <<EOF;
-
-if(!("console"in window)||!("firebug"in console)){var names=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"];window.console={};for(var i=0;i<names.length;++i)window.console[names[i]]=function(){};}
- 
-
-KOBJ.r=document.createElement("script");
-KOBJ.r.src=
-    KOBJ.url + "/" 
-             + KOBJ.d 
-	     + ".js"
-             + "?"
-             + "caller=" 
-             + escape(document.URL) 
-	     + "&referer=" 
-             + escape(document.referrer) 
-	     + "&kvars=" 
-             + escape(KOBJ.kvars_json) 
-	     + "&title=" 
-             + encodeURI(document.title) 
-             + "$param_str";
-
-
-
-KOBJ.body=document.getElementsByTagName("body")[0];
-\$K(document).ready(function() {
-    KOBJ.body.appendChild(KOBJ.r);
-});
-
+    $js = <<EOF;
+function startKJQuery() {
+    if(typeof(KOBJ.init) !== "undefined"){
+	\$K.isReady = true;
+    } else {
+	setTimeout("startKJQuery()", 20);
+    }
+ };
+startKJQuery;
+KOBJ.init({"callback_host" : "$cb_host",
+	   "eval_host" : "$host"
+	  });
+KOBJ.eval($param_json);
 EOF
+
+    return $js;
 
 }
 

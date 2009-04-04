@@ -38,10 +38,10 @@ var Pilot = {
     // creates a JSON version of the sites array
     c  = '[ ';
     for (var s = 0; s < this.sites.length; s++) {
-      c += 
-	"{ " + "domain:'" + this.sites[s]['domain'] + 
-	"', site_id: '" + this.sites[s]['site_id'] + 
-	"', datasets: '" + this.sites[s]['datasets'] + 
+      c +=
+	"{ " + "domain:'" + this.sites[s]['domain'] +
+	"', site_id: '" + this.sites[s]['site_id'] +
+	"', datasets: '" + this.sites[s]['datasets'] +
 	"' }";
       if(s < this.sites.length - 1) c += ", ";
     }
@@ -60,7 +60,7 @@ var Pilot = {
     var menuItem = document.getElementById('pilot-status-image');
     var menuItem = document.getElementById('tog_menu');
     var contextmenuItem = document.getElementById('tog_contextmenu');
-    
+
     if (this.status) {
       statusImage.tooltipText = "Kynetx Pilot is enabled.";
       statusImage.src = "chrome://pilot/content/status_on.gif";
@@ -78,11 +78,11 @@ var Pilot = {
 	this.tm_status = !this.tm_status;
 	this.refreshTestModeStatus();
     },
- 
+
    refreshTestModeStatus: function() {
      var menuItem = document.getElementById('tog_tm_menu');
      var contextmenuItem = document.getElementById('tog_tm_contextmenu');
-     
+
      if (this.tm_status) {
        menuItem.label = "Disable Test Mode";
        contextmenuItem.label = "Disable Test Mode";
@@ -100,76 +100,94 @@ var Pilot = {
        // The 'facilitated' flag is to fix a bug that is likely caused
        // when an IFRAME on a page triggers the document's onload event twice,
        // causing the script tags to be loaded twice
+       var script;
        if (body.facilitated != true || refresh == true) {
+
+
+
+	 var sites = [];
+
          for (var s = 0; s < this.sites.length; s++) {
-           site = this.sites[s];
-           regex = new RegExp(site['domain'],"gi");
+           var site = this.sites[s];
+           var regex = new RegExp(site['domain'],"gi");
            if(site['domain'] != '' && doc.domain.match(regex)) {
-             // Add required js libraries
-             for (var r = 0; r < this.required_scripts.length; r++) {
-               script = doc.createElement('script');
-               script.type = 'text/javascript';
-               script.src = this.kynetx_js_host + '/js/shared/' + this.required_scripts[r] + '.js';
-               body.appendChild(doc.createTextNode("\n"));
-               body.appendChild(script);
-             }
-
-	     // force jQuery to believe the DOM is ready
-             script = doc.createElement('script');
-             script.type = 'text/javascript';
-             script.innerHTML = 'jQuery.isReady = true;'
-             body.appendChild(doc.createTextNode("\n"));
-             body.appendChild(script);
-         
-             // Add kobj.js
-             script = doc.createElement('script');
-             script.type = 'text/javascript';
-             script.src = this.kynetx_js_host + '/js/' + site['site_id'] + '/kobj.js';
-
-
-               // add parameters
-               var p = [];
-               if(this.tm_status) {
-                   p.push('mode=test');
-               }
-	       if(this.myip != '') {
-		   p.push('ip=' + this.myip);
-	       }
-               if(site['datasets'] != '') {
-                   p.push('datasets=' + site['datasets']);
-               }
-               if(p.length > 0) {
-                   script.src += '?' + p.join("&");
-               }
-
-
-
-//              if(site['datasets'] != '' || this.myip != '') {
-// 		 var args = [];
-// 		 if (site['datasets'] != '')
-// 	             args.push('datasets=' + site['datasets']);
-// 		 if (this.myip != '')
-// 	             args.push('ip=' + this.myip);
-// 		 script.src += '?' + args.join('&');
-// 	     }
-
-
-             body.appendChild(doc.createTextNode("\n"));
-             body.appendChild(script);
-
-	     // add jQuery stuff to make things fire
-//             script = doc.createElement('script');
-//             script.type = 'text/javascript';
-//	     script.innerHTML = 'KOBJ.body.appendChild(KOBJ.r);'
-//             body.appendChild(doc.createTextNode("\n"));
-//             body.appendChild(script);
-	     
-             body.facilitated = true;
+	     sites.push(site['site_id']);
+               body.facilitated = true;
            }
          }
+
+	 // nothing to do here....
+	 if(!body.facilitated) {
+	   return;
+	 }
+
+
+
+	 // FIXME: this isn't quite right...
+	 var eval_host;
+	 if (this.kynetx_js_host == "http://127.0.0.1") {
+	   eval_host = "127.0.0.1";
+	 } else {
+	   eval_host = "cs.kobj.net";
+	 }
+
+	 var init_obj = '{"eval_host" : \"' + eval_host + '",';
+	 if (eval_host == "127.0.0.1") {
+	   init_obj += '"callback_host":"127.0.0.1"';
+	 } else {
+	   init_obj += '"callback_host":"log.kobj.net"';
+	 };
+	 init_obj += '}';
+
+
+	 // add parameters
+         var p = ['"rids":["'+ sites.join('","') + '"]'];
+         p.push('"init" : ' + init_obj);
+         if(this.tm_status) {
+           p.push('"mode":"test"');
+         }
+	 if(this.myip != '') {
+	   p.push('"ip":"' + this.myip + '"');
+	 }
+         if(site['datasets'] != '') {
+           p.push('"datasets":"' + site['datasets'] + '"');
+         }
+	 var p_str ;
+         p_str = '{' + p.join(',') + '}';
+
+
+         script = doc.createElement('script');
+         script.type = 'text/javascript';
+//         script.src = this.kynetx_js_host + '/js/' + sites.join(';') + '/kobj.js';
+//	 script.innerHTML = 'function startKJQuery() {if(typeof(KOBJ.init) !== "undefined"){\$K.isReady = true;} else {setTimeout("startKJQuery()", 20);}};startKJQuery();\n';
+//	 script.innerHTML += 'var KOBJ_config ='+init_obj+';\n';
+	 script.innerHTML += 'var KOBJ_config =' + p_str + ';\n';
+
+	 // // force jQuery to believe the DOM is ready
+         // script = doc.createElement('script');
+         // script.type = 'text/javascript';
+         // script.innerHTML = 'jQuery.isReady = true;'
+         // body.appendChild(doc.createTextNode("\n"));
+         // body.appendChild(script);
+
+
+         body.appendChild(doc.createTextNode("\n"));
+         body.appendChild(script);
+
+	 // Add required js libraries once
+         for (var r = 0; r < this.required_scripts.length; r++) {
+           script = doc.createElement('script');
+           script.type = 'text/javascript';
+           script.src = this.kynetx_js_host + '/js/shared/' + this.required_scripts[r] + '.js';
+//	   script.onerror = 'throw("KOBJ shared library error: " + this.src)';
+           body.appendChild(doc.createTextNode("\n"));
+           body.appendChild(script);
+           }
+
+
        }
        body.appendChild(doc.createTextNode("\n"));
-     } 
+     }
   },
 
   add: function() {
@@ -181,10 +199,10 @@ var Pilot = {
     this.sites.push(new_site);
     this.updateSites();
   },
-  
+
   changeHosts: function() {
     var regex = /\/$/g;
-    
+
     this.kynetx_js_host = prompt("Enter the initilization host:","http://init.kobj.net").replace(regex, '');
       this.kobj_version = prompt("Enter the JS version:",this.kobj_version).replace(regex, '');
   },
@@ -194,7 +212,7 @@ var Pilot = {
       if(newip != '') {
 	  this.myip = newip
       } else {
-    
+
 	  this.myip = prompt("Enter the IP address you'd like to be from:","");
       }
 
@@ -207,14 +225,14 @@ var Pilot = {
 	for (s = 0; s < this.sites.length; s++) {
             site = this.sites[s];
             if (site['domain'] != '')  {
-		
-		var site_str = 
-		    site['domain'] + 
+
+		var site_str =
+		    site['domain'] +
 		    " (site id = " +
-		    site['site_id']; 
+		    site['site_id'];
 
 		if(site['datasets'] != '') {
-		    site_str += 
+		    site_str +=
 		    ", datasets = " +
 			site['datasets'] +
 			")";
@@ -222,10 +240,10 @@ var Pilot = {
 		    site_str += ")";
 		}
 
-		site_array.push(site_str); 
+		site_array.push(site_str);
 	    }
-      
-            else 
+
+            else
 	    site_array.push('bogus domain (site id = '+site['site_id']+')');
 	}
 	var msg = site_array.join(' \n')+'\nJS Host: '+this.kynetx_js_host+'\n';
@@ -284,8 +302,8 @@ var Pilot = {
 //       }
 //     };
 //     http.send(null);
-//   }  
-  
+//   }
+
 }
 
 Pilot.init();

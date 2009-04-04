@@ -62,7 +62,7 @@ global {
   dataset aaa <- "aaa.json";
 }
 _KRL_
-add_cache_for_testcase($krl_src, 0, "cache_dataset_for non-cachable");
+add_cache_for_testcase($krl_src, 600, "cache_dataset_for non-cachable");
 
 
 $krl_src = <<_KRL_;

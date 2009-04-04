@@ -89,7 +89,7 @@ sub cache_dataset_for {
     my ($d) = @_;
     my $logger = get_logger();
 
-    my $cache_for = 0;
+    my $cache_for = 10 * 60; # 10 minutes is minimum
 
     my $name = $d->{'name'};
 

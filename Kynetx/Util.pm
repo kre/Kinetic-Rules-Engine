@@ -60,27 +60,6 @@ sub config_logging {
 	$logger->level($WARN);
     }
 
-
-#     my $priority_appended = "DEBUG,A1";
-#     my $log_config = <<EOF;
-# log4perl.logger.Kynetx= $priority_appended
-
-# log4perl.appender.A1=Log::Dispatch::File
-# log4perl.appender.A1.filename=/web/logs/kynetx.log
-# log4perl.appender.A1.mode=append
-# log4perl.appender.A1.layout=Log::Log4perl::Layout::PatternLayout
-# log4perl.appender.A1.layout.ConversionPattern=%d %p %F{1} %X{site} %X{rule} %m%n
-
-# log4perl.appender.A2=Log::Dispatch::Screen
-# log4perl.appender.A2.stderr=0
-# log4perl.appender.A2.layout=Log::Log4perl::Layout::PatternLayout
-# log4perl.appender.A2.layout.ConversionPattern=// %d %p %F{1} %X{site} %X{rule} %m%n
-# EOF
-
-
-#    Log::Log4perl->init_once(\$log_config);
-
-
 }
 
 sub turn_on_logging {
