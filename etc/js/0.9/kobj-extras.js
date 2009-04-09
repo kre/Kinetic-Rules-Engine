@@ -289,10 +289,10 @@ KOBJ.eval = function(params) {
 
 };
 
-if(typeof(KOBJ_config.init) == 'object') {
-   KOBJ.init(KOBJ_config.init);
-}
-if(KOBJ_config) {
-   KOBJ.eval(KOBJ_config);
+if(typeof(KOBJ_config) == 'object') {
+  if(typeof(KOBJ_config.init) == 'object') {
+    KOBJ.init(KOBJ_config.init);
+  }
+  KOBJ.eval(KOBJ_config);
 }
 

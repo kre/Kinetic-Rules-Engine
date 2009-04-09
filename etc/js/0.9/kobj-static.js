@@ -1,4 +1,4 @@
-var kobj_fn = 'kobj-static-20090404.js'; (function(){var _jQuery=window.jQuery,_$=window.$;var jQuery=window.jQuery=window.$=function(selector,context){return new jQuery.fn.init(selector,context);};var quickExpr=/^[^<]*(<(.|\s)+>)[^>]*$|^#(\w+)$/,isSimple=/^.[^:#\[\.]*$/,undefined;jQuery.fn=jQuery.prototype={init:function(selector,context){selector=selector||document;if(selector.nodeType){this[0]=selector;this.length=1;return this;}
+var kobj_fn = 'kobj-static-20090409.js'; (function(){var _jQuery=window.jQuery,_$=window.$;var jQuery=window.jQuery=window.$=function(selector,context){return new jQuery.fn.init(selector,context);};var quickExpr=/^[^<]*(<(.|\s)+>)[^>]*$|^#(\w+)$/,isSimple=/^.[^:#\[\.]*$/,undefined;jQuery.fn=jQuery.prototype={init:function(selector,context){selector=selector||document;if(selector.nodeType){this[0]=selector;this.length=1;return this;}
 if(typeof selector=="string"){var match=quickExpr.exec(selector);if(match&&(match[1]||!context)){if(match[1])
 selector=jQuery.clean([match[1]],context);else{var elem=document.getElementById(match[3]);if(elem){if(elem.id!=match[3])
 return jQuery().find(selector);return jQuery(elem);}
@@ -560,5 +560,5 @@ var eval_url=url+"/"
 +escape(KOBJ.kvars_json)
 +"&title="
 +encodeURI(document.title)
-+param_str;KOBJ.require(eval_url);};if(typeof(KOBJ_config.init)=='object'){KOBJ.init(KOBJ_config.init);}
-if(KOBJ_config){KOBJ.eval(KOBJ_config);}
++param_str;KOBJ.require(eval_url);};if(typeof(KOBJ_config)=='object'){if(typeof(KOBJ_config.init)=='object'){KOBJ.init(KOBJ_config.init);}
+KOBJ.eval(KOBJ_config);}
