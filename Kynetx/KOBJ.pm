@@ -53,27 +53,7 @@ sub handler {
 
 
     my $js = "";
-    if($method eq 'static' || 
-       $method eq 'shared' || 
-       ($method eq '996337974' && ! $rids eq 'kobj.js')) { # Backcountry
-	if($r->dir_config('UseCloudFront')) { # redirect to CloudFront
-	    my $version = $r->dir_config('CloudFrontFile');
-	    if (! $version) {
-		 $version = 'kobj-static-1.js';
-		 $logger->error("CloudFrontFile config directive missing from Apache httpd.conf.  Using $version");
-	    } 
-	    my $cf_url = "http://static.kobj.net/". $version;
-	    $logger->info("Redirecting to Cloudfront ", $cf_url);
-	    $r->headers_out->set(Location => $cf_url);
-	    
-	    return Apache2::Const::REDIRECT;
-	    
-	} else {  # send the file from here
-	    $logger->info("Generating KOBJ static file ", $rids);
-	    $js = get_js_file($rids, $js_version,$js_root);
-	}
-	
-    } elsif ($rids eq 'kobj.js') {
+    if ($rids eq 'kobj.js') {
 
 	$logger->info("Generating client initialization file ", $rids);
 
@@ -111,6 +91,26 @@ sub handler {
 		       $req_info);
 
 
+    } elsif($method eq 'static' || 
+	    $method eq 'shared' || 
+	    $method eq '996337974') { # Backcountry
+	if($r->dir_config('UseCloudFront')) { # redirect to CloudFront
+	    my $version = $r->dir_config('CloudFrontFile');
+	    if (! $version) {
+		 $version = 'kobj-static-1.js';
+		 $logger->error("CloudFrontFile config directive missing from Apache httpd.conf.  Using $version");
+	    } 
+	    my $cf_url = "http://static.kobj.net/". $version;
+	    $logger->info("Redirecting to Cloudfront ", $cf_url);
+	    $r->headers_out->set(Location => $cf_url);
+	    
+	    return Apache2::Const::REDIRECT;
+	    
+	} else {  # send the file from here
+	    $logger->info("Generating KOBJ static file ", $rids);
+	    $js = get_js_file($rids, $js_version,$js_root);
+	}
+	
     } elsif($method eq 'dispatch') {
 	my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $method);
 
