@@ -275,7 +275,7 @@ DefaultType text/javascript
 # 1) plain text 2) local redirects 3) external redirects
 #
 # Some examples:
-#ErrorDocument 500 "The server made a boo boo."
+ErrorDocument 500 "KNS has experienced an error in processing the request.  We have logged this error and will respond to it.  For more information please contact support@kynetx.com"
 <TMPL_IF NAME="GENDER_KRL">
 ErrorDocument 404 default
 <TMPL_ELSE>
@@ -330,7 +330,7 @@ PerlPostReadRequestHandler Apache2::xForwardedFor
 # error logging, unconditional
 ErrorLog "|/web/sbin/cronolog --symlink=/web/logs/error_log /web/logs/%Y/%m/%d/errors.log"
 # LogLevel: Control the number of messages logged to the error_log.
-LogLevel warn
+LogLevel error
 
 # logging for INIT, KRL, and FRAG
 LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %{X-Forwarded-For}i" combined
