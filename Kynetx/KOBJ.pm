@@ -55,7 +55,7 @@ sub handler {
     my $js = "";
     if($method eq 'static' || 
        $method eq 'shared' || 
-       $method eq '996337974') { # Backcountry
+       ($method eq '996337974' && ! $rids eq 'kobj.js')) { # Backcountry
 	if($r->dir_config('UseCloudFront')) { # redirect to CloudFront
 	    my $version = $r->dir_config('CloudFrontFile');
 	    if (! $version) {
