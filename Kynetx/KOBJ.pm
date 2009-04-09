@@ -305,7 +305,7 @@ EOF
 
     
 
-    $js = <<EOF;
+    $js .= <<EOF;
 function startKJQuery() {
     if(typeof(KOBJ.init) !== "undefined"){
 	\$K.isReady = true;
