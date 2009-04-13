@@ -23,7 +23,7 @@ qw(
 gen_js_expr
 gen_js_prim
 gen_js_rands
-gen_js_pre
+eval_js_pre
 gen_js_callbacks
 gen_js_afterload
 gen_js_mk_cb_func
@@ -118,7 +118,7 @@ sub gen_js_datasource {
 
 
 
-sub gen_js_pre {
+sub eval_js_pre {
     my ($req_info, $rule_env, $rule_name, $session, $pre) = @_;
 
 #    my $logger = get_logger();

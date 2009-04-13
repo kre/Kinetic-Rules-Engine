@@ -119,12 +119,12 @@ $.fn.kGrowl =
 
 	    o.log.apply( this.element , [this.element,message,o] );
 
-	    var header =  $('<div>').addClass("header").css(
+	    var header =  $('<div>').addClass("KOBJ_header").css(
 		{"font-weight": "bold",
 		 "font-size": $.kGrowl.defaults.header_font_size
 		}).html(o.header);
 
-	    var message = $('<div>').addClass("message").html(message);
+	    var message = $('<div>').addClass("KOBJ_message").html(message);
 
 	    var close = $('<div>').addClass("close").css(
 		{ "float": "right",

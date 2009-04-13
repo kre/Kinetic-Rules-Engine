@@ -253,7 +253,7 @@ sub build_js_load {
 
 # do this in Rule.pm  now that the pre can set vars that are used in cond
     # this loads the rule_env
-#    gen_js_pre($req_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
+#    eval_js_pre($req_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
 
 
     my $js = "";

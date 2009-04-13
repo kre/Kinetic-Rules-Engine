@@ -133,9 +133,14 @@ var Pilot = {
 
 	 var init_obj = '{"eval_host" : \"' + eval_host + '",';
 	 if (eval_host == "127.0.0.1") {
-	   init_obj += '"callback_host":"127.0.0.1"';
+	   init_obj += '"callback_host":"127.0.0.1",';
 	 } else {
-	   init_obj += '"callback_host":"log.kobj.net"';
+	   init_obj += '"callback_host":"log.kobj.net",';
+	 };
+	 if (eval_host == "127.0.0.1") {
+	   init_obj += '"init_host":"127.0.0.1"';
+	 } else {
+	   init_obj += '"init_host":"init.kobj.net"';
 	 };
 	 init_obj += '}';
 

@@ -149,7 +149,7 @@ sub eval_rule {
     }
 
     # this loads the rule_env.  
-    Kynetx::JavaScript::gen_js_pre($request_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
+    Kynetx::JavaScript::eval_js_pre($request_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
 
 
     # if the condition is undefined, it's true.  

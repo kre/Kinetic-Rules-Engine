@@ -28,7 +28,7 @@ KOBJ.search_annotation.defaults = {
 KOBJ.annotate_search_results = function(annotate) {
 
   function mk_list_item(i) {
-    return $K("<li class='KOBJ_item'>").css(
+    return $K("<li class='"+KOBJ.search_annotation.defaults.name+"_item'>").css(
           {"float": "left",
 	   "margin": "0",
 	   "vertical-align": "middle",
@@ -45,7 +45,7 @@ KOBJ.annotate_search_results = function(annotate) {
           {"margin": "0",
            "padding": "0",
            "list-style": "none"
-          }).attr("id", KOBJ.search_annotation.defaults.name+"_logo_list").append(logo_item);
+          }).attr("id", KOBJ.search_annotation.defaults.name+"_anno_list").append(logo_item);
     var inner_div = $K('<div>').css(
           {"float": "left",
            "display": "inline",
@@ -81,7 +81,7 @@ KOBJ.annotate_search_results = function(annotate) {
   $K("li.g, li div.res").each(function() {
         var contents = annotate(this);
         if (contents) {
-          if($K(this).find('#'+KOBJ.search_annotation.defaults.name+'_anno_list+ li').is('.'+KOBJ.search_annotation.defaults.name+'_item')) {
+          if($K(this).find('#'+KOBJ.search_annotation.defaults.name+'_anno_list li').is('.'+KOBJ.search_annotation.defaults.name+'_item')) {
              $K(this).find('#'+KOBJ.search_annotation.defaults.name+'_anno_list').append(mk_list_item(KOBJ.search_annotation.defaults.sep)).append(mk_list_item(contents));
           } else {
              $K(this).find("div.s,div.abstr").prepend(mk_rm_div(contents));
