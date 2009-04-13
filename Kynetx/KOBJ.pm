@@ -197,7 +197,7 @@ sub datasets {
     $logger->debug("Returning datasets for $rids");
 
 
-    my $js = '';
+    my $js = "KOBJ['data'] = KOBJ['data'] || {};\n";
 
     my @rids = split(/;/,$rids);
     

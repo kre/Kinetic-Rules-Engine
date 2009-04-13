@@ -84,7 +84,7 @@ sub array_to_string {
 
     my $a;
 
-    if(ref($arr) eq 'ARRAY') {
+    if(ref($arr) eq 'ARRAY' && scalar( @{ $arr } ) > 0) {
 	$a = '[' . join(',', @{ $arr }) . ']';
     } else {
 	$a = '[]'

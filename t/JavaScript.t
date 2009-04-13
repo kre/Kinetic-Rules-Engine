@@ -11,6 +11,7 @@ use APR::Pool ();
 use LWP::Simple;
 use XML::XPath;
 use LWP::UserAgent;
+use JSON::XS;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -18,6 +19,7 @@ $Data::Dumper::Indent = 1;
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Parser qw/:all/;
+use Kynetx::Pick qw/:all/;
 use Kynetx::JavaScript qw/:all/;
 use Kynetx::Predicates::Referers qw/:all/;
 use Kynetx::Predicates::Markets qw/:all/;
@@ -67,7 +69,15 @@ sub add_decl_testcase {
 	 });
 }
 
+my $krl_src;
 
+$krl_src = <<_KRL_;
+global {
+   datasource twitter_search <- "http://search.twitter.com/search.json";
+}
+_KRL_
+$krl = Kynetx::Parser::parse_global_decls($krl_src);
+    
 my $rule_name = 'foo';
 
 my $rule_env = {$rule_name . ':city' => 'Blackfoot',
@@ -75,7 +85,61 @@ my $rule_env = {$rule_name . ':city' => 'Blackfoot',
 		$rule_name . ':temp' => 20,
 		$rule_name . ':booltrue' => 'true',
 		$rule_name . ':boolfalse' => 'false',
+		$rule_name . ':a' => '10',
+		$rule_name . ':b' => '11',
+		'datasource:'.$krl->[0]->{'name'} => $krl->[0]
                };
+
+
+$rule_env->{$rule_name .':store'} = {
+	"store"=> {
+		"book"=> [ 
+			{
+				"category"=> "reference",
+				"author"=> "Nigel Rees",
+				"title"=> "Sayings of the Century",
+				"price"=> 8.95,
+				"ratings"=> [
+					1,
+					3,
+					2,
+					10
+				]
+			},
+			{ 
+				"category"=> "fiction",
+				"author"=> "Evelyn Waugh",
+				"title"=> "Sword of Honour",
+				"price"=> 12.99,
+				"ratings" => [
+						"good",
+						"bad",
+						"lovely"
+					]
+			},
+			{
+				"category"=> "fiction",
+				"author"=> "Herman Melville",
+				"title"=> "Moby Dick",
+				"isbn"=> "0-553-21311-3",
+				"price"=> 8.99
+			},
+			{
+				"category"=> "fiction",
+				"author"=> "J. R. R. Tolkien",
+				"title"=> "The Lord of the Rings",
+				"isbn"=> "0-395-19395-8",
+				"price"=> 22.99
+			}
+		],
+		"bicycle"=> {
+			"color"=> "red",
+			"price"=> 19.95
+		}
+	}
+};
+
+
 
 
 my $this_session = {};
@@ -351,6 +415,57 @@ add_expr_testcase(
 
 
 
+$str = <<_KRL_;
+c = 3;
+_KRL_
+add_decl_testcase(
+    $str,
+    '3',
+    0);
+
+$str = <<_KRL_;
+c = 3 + a;
+_KRL_
+add_decl_testcase(
+    $str,
+    '13',
+    0);
+
+
+$str = <<_KRL_;
+c = b * a;
+_KRL_
+add_decl_testcase(
+    $str,
+    '110',
+    0);
+
+
+$str = <<_KRL_;
+c = b + store.pick("\$..book[1].price");
+_KRL_
+add_decl_testcase(
+    $str,
+    '23.99',
+    0);
+
+
+$str = <<_KRL_;
+c = b + store.pick("\$..book[-1:].price");
+_KRL_
+add_decl_testcase(
+    $str,
+    '33.99',
+    0);
+
+
+$str = <<_KRL_;
+c = "I love " + store.pick("\$..book[0].author");
+_KRL_
+add_decl_testcase(
+    $str,
+    'I love Nigel Rees',
+    0);
 
 
 
@@ -358,11 +473,7 @@ add_expr_testcase(
 #diag(Dumper($krl));
 
 
-
-
-
-plan tests => 32 + (@expr_testcases * 2) + (@decl_testcases * 1);
-
+plan tests => 33 + (@expr_testcases * 2) + (@decl_testcases * 1);
 
 
 # now test each test case twice
@@ -417,7 +528,7 @@ something = $source:$function($args);
 _KRL_
         my $decl = Kynetx::Parser::parse_decl($decl_src);
 
-#	diag(Dumper($decl));
+	diag(Dumper($decl)) if $diag;
 
 	my $js_decl = Kynetx::JavaScript::eval_js_decl(
 	    $BYU_req_info,
@@ -454,7 +565,7 @@ SKIP: {
 
     diag "Checking $check_url";
     my $response = $ua->get($check_url);
-    skip "No server available", 9 if (! $response->is_success);
+    skip "No server available", 11 if (! $response->is_success);
 
     my $symbol = 'GOOG'; 
 
@@ -522,7 +633,22 @@ like(&{$mm_function}('name'), qr#\w#, 'name');
 like(&{$mm_function}('households'), qr#\d+#, 'households');
 
 
+# check user defined data sources
+SKIP: {
+    my $ua = LWP::UserAgent->new;
 
+    my $check_url = "http://search.twitter.com/search.json?q=apple";
+
+    diag "Checking $check_url";
+    my $response = $ua->get($check_url);
+    skip "No server available", 1 if (! $response->is_success);
+
+    my $ds_function = mk_datasource_function('datasource','"q=rootbeer"', 0);
+    contains_string(encode_json(&{$ds_function}('twitter_search')), 
+		    '{"page":1,"query":"rootbeer","completed_in":', 
+		    'user defined datasource');
+
+}
 
 1;
 

@@ -127,6 +127,9 @@ rule test_choose is inactive {
 }
 RULE
 
+
+
+
 my $test_rule_bad = <<RULE;
 rule test_choose is stupid {
   do not select anything here.  
@@ -199,7 +202,7 @@ GLOBAL
 
 
 my $test_json_global = <<JSON;
-[{"source":"http://twitter.com/statuses/public_timeline.json","name":"public_timeline","cachable":0},{"source":"http://twitter.com/statuses/public_timeline.json","name":"cached_timeline","cachable":1},{"emit":"var foobar = 4;  "}]
+[{"source":"http://twitter.com/statuses/public_timeline.json","name":"public_timeline","type":"dataset","cachable":0},{"source":"http://twitter.com/statuses/public_timeline.json","name":"cached_timeline","type":"dataset","cachable":1},{"emit":"var foobar = 4;       "}]
 JSON
 
 my $test_dispatch = <<DISPATCH;
@@ -298,6 +301,7 @@ contains_string($json,
 $my_req_info->{'krl'} = $test_global;
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "global");
+#diag $json;
 
 is_string_nows($json, 
 	       $test_json_global,

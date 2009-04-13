@@ -182,10 +182,13 @@ sub parse_api {
 	$logger->debug("[parse_api] parsing krl as $submethod");
 
 	my $tree;
+	my $errors;
 	if($submethod eq 'ruleset') {
 	    $tree = Kynetx::Parser::parse_ruleset($krl);
+	    $errors .= lint_ruleset($tree);
 	} elsif($submethod eq 'rule') {
 	    $tree = Kynetx::Parser::parse_rule($krl);
+	    $errors .= lint_rule($tree);
 	} elsif($submethod eq 'global') {
 	    $tree = Kynetx::Parser::parse_global_decls($krl);
 	} elsif($submethod eq 'dispatch') {
@@ -193,6 +196,8 @@ sub parse_api {
 	} elsif($submethod eq 'meta') {
 	    $tree = Kynetx::Parser::parse_meta($krl);
 	} 
+
+	$tree->{'errors'} = $errors if($errors);
 
 	$logger->debug(Dumper($tree));
 
@@ -229,9 +234,12 @@ sub unparse_api {
 
 	my $tree = jsonToAst($json);
 
+	my $errors;
 	if($submethod eq 'ruleset') {
+	    $errors .= lint_ruleset($tree);
 	    $krl = Kynetx::PrettyPrinter::pp($tree,0);
 	} elsif($submethod eq 'rule') {
+	    $errors .= lint_rule($tree);
 	    $krl = Kynetx::PrettyPrinter::pp_rule_body($tree,0);
 	} elsif($submethod eq 'global') {
 	    $krl = Kynetx::PrettyPrinter::pp_global_block($tree,0);
@@ -260,3 +268,22 @@ sub unparse_api {
 
 }
 
+sub lint_ruleset {
+    my ($tree) = @_;
+    my $errors = '';
+    return '' if (! ref $tree eq 'HASH' && defined $tree->{'error'});
+    foreach my $rule ( @{ $tree->{'rules'} } ) {
+	$errors .= lint_rule($rule);
+    }
+    return $errors;
+}
+
+sub lint_rule {
+    my ($rule) = @_;
+    my $errors = '';
+    eval { qr!$rule->{'pagetype'}->{'pattern'}!; };
+    if ($@) {
+	$errors .= $@;
+    }
+    return $errors;
+}

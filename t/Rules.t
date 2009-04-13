@@ -48,7 +48,7 @@ my $rule_env = {$rule_name . ':city' => 'Blackfoot',
 
 # dummy up some counter data in the session
 my $session = {'archive_pages_old' => 3,
-	       'archive_pages_now' => 3,
+	       'archive_pages_now' => 2,
 	       'archive_pages_now2' => 3};
 
 my $now = DateTime->now;
@@ -216,8 +216,39 @@ add_testcase(
     );
 
 
+# this shouldn't fire first time
 $krl_src = <<_KRL_;
 rule test_5 is active {
+  select using "/archives/" setting ()
+
+    pre {
+      c = counter.archive_pages_now;
+    }
+
+    if counter.archive_pages_now > 2 then 
+      alert("test");
+
+    fired {
+      clear counter.archive_pages_now; 
+    } else {
+      counter.archive_pages_now += 1 from 1;  
+    }
+  }
+_KRL_
+
+# empty because rule does fire.  It increments counter so next rule fires
+$result = <<_JS_;
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
+# this should fire
+$krl_src = <<_KRL_;
+rule test_5a is active {
   select using "/archives/" setting ()
 
     pre {
@@ -556,7 +587,7 @@ ruleset dataset0 {
 _KRL_
 
 my $global_decl_0 = <<_JS_;
-var global_decl_0 = {"www.barnesandnoble.com":[
+KOBJ['data']['global_decl_0'] = {"www.barnesandnoble.com":[
 	       {"link":"http://aaa.com/barnesandnoble",
 		"text":"AAA members sav emoney!",
 		"type":"AAA"}]
@@ -580,7 +611,7 @@ ruleset dataset0 {
 _KRL_
 
 my $global_decl_1 = <<_JS_;
-var global_decl_1 = "here is some test data!";
+KOBJ['data']['global_decl_1'] = "here is some test data!";
 _JS_
 
 add_testcase(
@@ -599,7 +630,7 @@ ruleset dataset0 {
 _KRL_
 
 my $global_decl_2 = <<_JS_;
-var global_decl_2 = {"www.barnesandnoble.com":[
+KOBJ['data']['global_decl_2'] = {"www.barnesandnoble.com":[
 	       {"link":"http://aaa.com/barnesandnoble",
 		"text":"AAA members sav emoney!",
 		"type":"AAA"}]
@@ -623,7 +654,7 @@ ruleset dataset0 {
 _KRL_
 
 my $global_decl_3 = <<_JS_;
-var global_decl_3 = "Here is some test data!";
+KOBJ['data']['global_decl_3'] = "Here is some test data!";
 _JS_
 
 add_testcase(

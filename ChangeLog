@@ -1,3 +1,20 @@
+2009-04-11  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/RuleManager.pm (lint_rule): Added some inital validation
+  	  checking for rules on parsing to try and catch invalid select
+	  patterns. 
+	* Kynetx/Datasets.pm (mk_dataset_js): Changed dataset JS to store
+	  in the KOBJ obj rather than as a standard var.
+	* Kynetx/KOBJ.pm: Added data set definition defenses.
+	* Kynetx/JSONPath.pm: Added to support pick expressions with
+	  JSONPath patterns.  
+	* Kynetx/JavaScript.pm (gen_js_expr): Added support for pick expressions.
+	* Kynetx/Pick.pm: Added support for JSONPath based picks
+	* Kynetx/PrettyPrinter.pm: Changes to support Parser changes.
+	* Kynetx/Parser.pm: Support for new "pick" expression.  Pre decl is
+	  now optional.
+
+
 2009-04-04  Phil Windley  <pjw@kynetx.com>
 
 	* extras/pilot/chrome/content/pilot/pilotOverlay.js: Modified to

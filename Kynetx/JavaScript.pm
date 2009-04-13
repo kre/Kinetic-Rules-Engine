@@ -9,6 +9,8 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 use JSON::XS;
 
+use Kynetx::Datasets q/:all/;
+use Kynetx::Pick q/:all/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -190,7 +192,7 @@ EOF
 # evaluation of JS exprs on the server
 #
 sub eval_js_expr {
-    my ($expr, $rule_env, $rule_name,$req_info) = @_;
+    my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
 
     my $logger = get_logger();
 #    $logger->debug("Rule env: ", sub { Dumper($rule_env) });
@@ -213,15 +215,18 @@ sub eval_js_expr {
 	};
 	/array/ && do {
 	    return  { 'type' => 'array',
-		      'val' => eval_js_rands($expr->{'val'}, $rule_env, $rule_name, $req_info)  } ;
+		      'val' => eval_js_rands($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  } ;
 	};
 	/prim/ && do {
-	    return eval_js_prim($expr, $rule_env, $rule_name, $req_info);
+	    return eval_js_prim($expr, $rule_env, $rule_name, $req_info, $session);
 	};
 
+	/pick/ && do {
+	    return  Kynetx::Pick::eval_pick($expr, $rule_env, $rule_name, $req_info, $session);
+	};
  	/qualified/ && do {
 
-	    my $den = eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info);
+	    my $den = eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 
 	    # get the values
 	    for (@{ $den }) {
@@ -241,8 +246,12 @@ sub eval_js_expr {
 	    return {'type' => infer_type($v),
 		    'val' => $v};
  	};
-	
-	
+	/counter/ && do {
+	    my $v = eval_counter($session, $expr->{'val'});
+	    return {'type' => infer_type($v),
+		    'val' => $v};
+	};
+
     } 
 
 }
@@ -251,9 +260,9 @@ sub eval_js_expr {
 
 
 sub eval_js_prim {
-    my ($prim, $rule_env, $rule_name, $req_info) = @_;
+    my ($prim, $rule_env, $rule_name, $req_info, $session) = @_;
 
-    my $vals = eval_js_rands($prim->{'args'}, $rule_env, $rule_name, $req_info);
+    my $vals = eval_js_rands($prim->{'args'}, $rule_env, $rule_name, $req_info, $session);
    
 
     my $val0 = den_to_exp($vals->[0]);
@@ -293,9 +302,9 @@ sub eval_js_prim {
 
 # warning: this returns a ref to an array, not an array!
 sub eval_js_rands {
-    my ($rands, $rule_env, $rule_name, $req_info) = @_;
+    my ($rands, $rule_env, $rule_name, $req_info, $session) = @_;
 
-    my @rands = map {eval_js_expr($_, $rule_env, $rule_name, $req_info)} @{ $rands } ;
+    my @rands = map {eval_js_expr($_, $rule_env, $rule_name, $req_info, $session)} @{ $rands } ;
 
     return \@rands;
 
@@ -309,43 +318,50 @@ sub eval_js_decl {
 
     my $logger = get_logger();
 
-    if($decl->{'type'} eq 'data_source') {
+#     if($decl->{'type'} eq 'data_source') {
 
 
-	my $den = eval_js_rands($decl->{'args'}, 
-				$rule_env, $rule_name,$req_info);
+# 	my $den = eval_js_rands($decl->{'args'}, 
+# 				$rule_env, $rule_name,$req_info,$session);
 
-	# get the values
-	for (@{ $den }) {
-	    $_ = den_to_exp($_);
-	}
-
-
-	$val = eval_datasource(
-	    $req_info,
-	    $rule_env,
-	    $rule_name,
-	    $decl->{'source'}, 
-	    $decl->{'function'}, 
-	    $den);
+# 	# get the values
+# 	for (@{ $den }) {
+# 	    $_ = den_to_exp($_);
+# 	}
 
 
-#	    gen_js_rands($decl->{'args'}));
+# 	$val = eval_datasource(
+# 	    $req_info,
+# 	    $rule_env,
+# 	    $rule_name,
+# 	    $decl->{'source'}, 
+# 	    $decl->{'function'}, 
+# 	    $den);
 
-	$logger->debug("[decl] Source: " .
-		       $decl->{'source'} . ":" . 
-		       $decl->{'function'} . 
-		       " -> $val" );
 
-    } elsif ($decl->{'type'} eq 'counter') {
+# #	    gen_js_rands($decl->{'args'}));
 
-	$val = eval_counter($session, $decl->{'name'});
+# 	$logger->debug("[decl] Source: " .
+# 		       $decl->{'source'} . ":" . 
+# 		       $decl->{'function'} . 
+# 		       " -> " . 
+# 		       ref $val eq 'HASH' || ref $val eq 'ARRAY' ? encode_json($val): $val );
 
-	$logger->debug("[decl] Counter: " . $decl->{'name'} . " -> " . $val);
+#     } elsif ($decl->{'type'} eq 'counter') {
+
+# 	$val = eval_counter($session, $decl->{'name'});
+
+# 	$logger->debug("[decl] Counter: " . $decl->{'name'} . " -> " . $val);
+
+    if ($decl->{'type'} eq 'expr') {
+
+	my $r = eval_js_expr($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);
+	$val = $r->{'val'};
+	$logger->debug("[decl] expr for ", $decl->{'lhs'}, ' -> ', sub{Dumper($val)} );
 
     } elsif ($decl->{'type'} eq 'here_doc') {
 
-	$val = eval_heredoc($decl->{'value'});
+	$val = eval_heredoc($decl->{'rhs'});
 
 	$logger->debug("[decl] here doc for ", $decl->{'lhs'} );
     }
@@ -377,7 +393,6 @@ sub eval_datasource {
     } elsif ($source eq 'geoip' || $source eq 'location') {
 	$val = Kynetx::Predicates::Location::get_geoip($req_info,$function);
     } elsif ($source eq 'stocks' || $ source eq 'markets') {
-
 	$val = Kynetx::Predicates::Markets::get_stocks($req_info,$args->[0],$function);
     } elsif ($source eq 'referer') {
 	$val = Kynetx::Predicates::Referers::get_referer($req_info,$function);
@@ -394,12 +409,14 @@ sub eval_datasource {
 	    $val = "K\$('".$args->[0]."').innerHTML";
 	} elsif($function eq 'env') {
 	    # rulespaced env parameters
-	    if(defined $req_info->{$req_info->{'rid'}.':'.$args->[0]}) {
+	    if($req_info->{'rid'} && defined $req_info->{$req_info->{'rid'}.':'.$args->[0]}) {
 		$val = $req_info->{$req_info->{'rid'}.':'.$args->[0]};
 	    } elsif(defined $req_info->{$args->[0]}) {
 		$val = $req_info->{$args->[0]};
 	    }
 	}
+    } elsif ($source eq 'datasource') {
+	$val = Kynetx::Datasets::get_datasource($rule_env,$args,$function);
     }
 
     return $val;
@@ -454,6 +471,10 @@ sub infer_type {
 	$t = 'num' ;
     } elsif($v =~ m/^(true|false)$/) {
 	$t = 'bool';
+    } elsif(ref $v eq 'HASH') {
+	$t = 'hash';
+    } elsif(ref $v eq 'ARRAY') {
+	$t = 'array';
     } elsif($v =~ m/^K\$\(.*\)/) {
 	$t = 'JS';
     } else {

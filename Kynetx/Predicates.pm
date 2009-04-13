@@ -89,7 +89,7 @@ sub eval_predicates {
 	/bool/ && do {
 	    return den_to_exp($cond);
 	};
-	/pred/ && do {
+	/^pred$/ && do {
 	    $v = eval_pred($request_info, $rule_env, $session, 
 			   $cond, $rule_name);
 	    return $v ||= 0;
@@ -126,7 +126,7 @@ sub eval_predicates {
 	    }
 	    return $v;
 	};
-	/counter/ && do {
+	/^counter_pred$/ && do {
 	    my $name = $cond->{'name'};
 
 	    # check count
@@ -205,7 +205,7 @@ sub eval_pred {
 	return 
 	    not $results[0];
     } else {
-	warn "Invalid predicate";
+	$logger->warn("Invalid predicate");
     }
     return 0;
 
@@ -218,7 +218,7 @@ sub eval_ineq {
 
     my @results;
     for (@{ $pred->{'args'} }) {
-	my $den = eval_js_expr($_, $rule_env, $rule_name, $request_info);
+	my $den = eval_js_expr($_, $rule_env, $rule_name, $request_info, $session);
 #	$logger->debug("Denoted -> ", sub { Dumper($den) });
 	push @results, den_to_exp($den);
     }

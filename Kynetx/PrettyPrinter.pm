@@ -47,10 +47,6 @@ sub pp {
 	$o .= pp_dispatch_block($ruleset->{'dispatch'}, $g_indent);
     }    
 
-    if( $ruleset->{'datasets'} && @{ $ruleset->{'datasets'} }) {
-	$o .= pp_datasets_block($ruleset->{'datasets'}, $g_indent);
-    }    
-
     if( $ruleset->{'global'} && @{ $ruleset->{'global'} }) {
 	$o .= pp_global_block($ruleset->{'global'}, $g_indent);
     }    
@@ -149,18 +145,39 @@ sub pp_dataset {
     my $beg = " "x$indent;
 
     my $o .= $beg . 'dataset ' . $d->{'name'} . ' <- "'. $d->{'source'} . '"' ;
-    if($d->{'cachable'}) {
-	$o .= " cachable";
-	if (ref $d->{'cachable'} eq 'HASH') {
-	    $o .= " for " . $d->{'cachable'}->{'value'} . " " .  $d->{'cachable'}->{'period'};
-	}
-    }
+    $o .= pp_cachable($d) if($d->{'cachable'}) ;
     $o .= "\n";
 
     return $o;
 
 }
 
+
+sub pp_datasource {
+    my ($d, $indent) = @_;
+
+    my $beg = " "x$indent;
+
+    my $o .= $beg . 'datasource ' . $d->{'name'} . ' <- "'. $d->{'source'} . '"' ;
+    $o .= pp_cachable($d) if($d->{'cachable'}) ;
+    $o .= "\n";
+
+    return $o;
+
+}
+
+sub pp_cachable {
+    my($d) = @_;
+
+    my $o;
+    if($d->{'cachable'}) {
+	$o .= " cachable";
+	if (ref $d->{'cachable'} eq 'HASH') {
+	    $o .= " for " . $d->{'cachable'}->{'value'} . " " .  $d->{'cachable'}->{'period'};
+	}
+    }
+    return $o;
+}
 
 
 sub pp_global_block {
@@ -171,11 +188,11 @@ sub pp_global_block {
     my $o .= $beg . "global {\n";
     foreach my $d ( @{$db}) {
 
-	if (defined $d->{'name'}) { # this is a data set
-
+	if (defined $d->{'type'} && $d->{'type'} eq 'dataset') { # this is a data set
 	    $o .= pp_dataset($d, $indent+$g_indent) . ";";
+	} elsif (defined $d->{'type'} && $d->{'type'} eq 'datasource') { # this is a datasource
+	    $o .= pp_datasource($d, $indent+$g_indent) . ";";
 	} else {
-
 	    $o .= pp_global_emit($d, $indent+$g_indent) . ";";
 	}
     }
@@ -229,7 +246,7 @@ sub pp_rule_body {
 	$o .= pp_select($r->{'pagetype'},$indent+$g_indent);
     }
 
-    $o .= pp_pre($r->{'pre'},$indent+$g_indent);
+    $o .= pp_pre($r->{'pre'},$indent+$g_indent) if(defined $r->{'pre'});
 
     if(defined $r->{'emit'}) {
 	$o .= pp_emit($r->{'emit'},$indent+$g_indent);
@@ -296,19 +313,20 @@ sub pp_decl {
 
     $logger->debug("Seeing ", $node->{'type'});
 
-    if($node->{'type'} eq 'counter') {
-	$o .= $node->{'lhs'} . " = " . $node->{'type'} . "." .  
-	    $node->{'name'} ;
-    } elsif($node->{'type'} eq 'data_source') { # datasource
+    # if($node->{'type'} eq 'counter') {
+    # 	$o .= $node->{'lhs'} . " = " . $node->{'type'} . "." .  
+    # 	    $node->{'name'} ;
+    # } elsif($node->{'type'} eq 'data_source') { # datasource
 
-	$o .= $node->{'lhs'} . " = ";
-	$o .= $node->{'source'} . ":" . $node->{'function'} . "(";
-	$o .= join ", ", pp_rands($node->{'args'});
-	$o .= ")";
+    # 	$o .= $node->{'lhs'} . " = ";
+    # 	$o .= $node->{'source'} . ":" . $node->{'function'} . "(";
+    # 	$o .= join ", ", pp_rands($node->{'args'});
+    # 	$o .= ")";
+    if ($node->{'type'} eq 'expr') { 
+	$o .= $node->{'lhs'} . " = " . pp_expr($node->{'rhs'},$g_indent+$indent);
     } elsif($node->{'type'} eq 'here_doc') { 
-
 	$o .= $node->{'lhs'} . " = << \n";
-	$o .= $node->{'value'};
+	$o .= $node->{'rhs'};
 	$o .= "\n >>";
     }
   
@@ -364,7 +382,7 @@ sub pp_predexpr {
 	    return join(' ' . $expr->{'op'} . ' ', 
 			pp_rands($expr->{'args'}))  ;
         };
-	/pred/ && do {
+	/^pred$/ && do {
 	    return pp_pred($expr);
 	};
 	/.*/ && do {
@@ -627,6 +645,11 @@ sub pp_expr {
 	/prim/ && do {
 	    return pp_prim($expr);
 	};
+	/^counter$/ && do {
+	    my $o = '';
+	    $o .= 'counter.' . $expr->{'val'} ;
+	    return $o;
+	};
 	/simple/ && do {
 	    my $o = '';
 	    $o .= $expr->{'predicate'} . "(";
@@ -642,14 +665,19 @@ sub pp_expr {
 	    $o .= ")";
 	    return  $o ;
 	};
-	/counter/ && do {
+	/counter_pred/ && do {
 	    my $o = '';
-	    $o .= $expr->{'type'} . "." . $expr->{'name'};
+	    $o .= "counter." . $expr->{'name'};
 	    $o .= " " . $expr->{'ineq'} . " ";
 	    $o .= $expr->{'value'};
 	    if(defined $expr->{'within'}) {
 		$o .= " within " . $expr->{'within'} . " " . $expr->{'timeframe'};
 	    }
+	    return  $o ;
+	};
+	/pick/ && do {
+	    my $o = '';
+	    $o .= pp_expr($expr->{'obj'}) . '.pick("' . $expr->{'pattern'} . '")';
 	    return  $o ;
 	};
 	

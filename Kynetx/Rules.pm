@@ -117,8 +117,10 @@ sub eval_globals {
 	foreach my $g (@{ $ruleset->{'global'} }) {
 	    if($g->{'emit'}) { # emit
 		$js .= $g->{'emit'} . "\n";
-	    } elsif(defined $g->{'name'}) { # dataset
+	    } elsif(defined $g->{'type'} && $g->{'type'} eq 'dataset') { 
 		$js .= mk_dataset_js($g, $request_info, $rule_env);
+	    } elsif(defined $g->{'type'} && $g->{'type'} eq 'datasource') {
+		$rule_env->{'datasource:'.$g->{'name'}} = $g;
 	    }
 	}
     }
@@ -179,7 +181,7 @@ sub eval_rule {
 	# chunk of Javascrip and this is where we deliver... 
 	$js .= Kynetx::Actions::build_js_load($rule, $request_info, $rule_env, $session); 
 	
-	$js .= eval_post_expr($cons, $session) if(defined $cons);
+	$js .= Kynetx::Actions::eval_post_expr($cons, $session) if(defined $cons);
 
 	# save things for logging
 	push(@{ $rule_env->{'names'} }, $rule->{'name'});
@@ -196,7 +198,7 @@ sub eval_rule {
     } else {
 	$logger->info("did not fire");
 
-	$js .= eval_post_expr($alt, $session) if(defined $alt);
+	$js .= Kynetx::Actions::eval_post_expr($alt, $session) if(defined $alt);
 
 	# put this in the logging DB
 	push(@{ $rule_env->{'names'} }, $rule->{'name'});

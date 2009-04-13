@@ -164,6 +164,17 @@ dispatch_target: '->' STRING
 dataset: 'dataset' VAR '<-' STRING cachable(?)
      {$return = {
 	 'name' => $item[2],
+	 'type' => 'dataset',
+	 'source' => $item[4],
+	 'cachable' => $item[5][0] || 0
+         }
+     }
+    | <error>
+
+datasource: 'datasource' VAR '<-' STRING cachable(?)
+     {$return = {
+	 'name' => $item[2],
+	 'type' => 'datasource',
 	 'source' => $item[4],
 	 'cachable' => $item[5][0] || 0
          }
@@ -204,6 +215,9 @@ globals: emit_block
        | dataset
           {$return = $item[1]
           }
+       | datasource
+          {$return = $item[1]
+          }
        | <error>
 
 
@@ -220,7 +234,7 @@ rule_top: rule
 
 rule: 'rule' VAR 'is' rule_state '{'
         select
-        pre_block
+        pre_block(0..1)
         emit_block(0..1)
         action SEMICOLON(?)
         callbacks(0..1)
@@ -229,7 +243,7 @@ rule: 'rule' VAR 'is' rule_state '{'
   {$return = {'name' => $item{VAR},
 	      'state' => $item{rule_state},
 	      'pagetype' => $item{select},
-  	      'pre' => $item{pre_block},
+  	      'pre' => $item[7][0],
 	      'emit' => $item[8][0],
   	      'actions' => $item{action}->{'actions'},
 	      'blocktype' => $item{action}->{'blocktype'} || 'every',
@@ -262,30 +276,47 @@ pre_block: 'pre' '{' decl(s? /;/) SEMICOLON(?) '}' #?
          | <error>
 
 
-decl: VAR '=' VAR ':' VAR '(' expr(s? /,/) ')'
+decl: VAR '=' expr
       {$return =
        {'lhs' => $item[1],
-        'type' => 'data_source',
-        'source' => $item[3],
-        'function' => $item[5],
-        'args' => $item[7]
-       }
-      }
-    | VAR '=' 'counter' '.' VAR
-      {$return =
-       {'lhs' => $item[1],
-        'type' => $item[3],
-        'name' => $item[5]
+        'type' => 'expr',
+        'rhs' => $item[3]
        }
       }
     | VAR '=' HTML
       {$return =
        {'lhs' => $item[1],
         'type' => 'here_doc',
-        'value' => $item[3]
+        'rhs' => $item[3]
        }
       }
     | <error: Invalid decl: $text>
+
+
+# decl: VAR '=' VAR ':' VAR '(' expr(s? /,/) ')'
+#       {$return =
+#        {'lhs' => $item[1],
+#         'type' => 'data_source',
+#         'source' => $item[3],
+#         'function' => $item[5],
+#         'args' => $item[7]
+#        }
+#       }
+#     | VAR '=' 'counter' '.' VAR
+#       {$return =
+#        {'lhs' => $item[1],
+#         'type' => $item[3],
+#         'name' => $item[5]
+#        }
+#       }
+#     | VAR '=' HTML
+#       {$return =
+#        {'lhs' => $item[1],
+#         'type' => 'here_doc',
+#         'value' => $item[3]
+#        }
+#       }
+#     | <error: Invalid decl: $text>
 
 emit_block: 'emit' (HTML | STRING)
    {$return = $item[2];}
@@ -506,6 +537,12 @@ term: factor factor_op term
         'args' => [$item[1], $item[3]]
        }
       }
+    | factor '.pick' '(' STRING ')'
+        {$return =
+	 {'type' => 'pick',
+	  'pattern' => $item[4],
+	  'obj' => $item[1]
+         }}
     | factor
 
 factor_op: '*'|'/'
@@ -523,12 +560,18 @@ factor: NUM
       | simple_pred 
       | qualified_pred
       | counter_pred
+      | counter
       | VAR   # if this isn't after 'true' and 'false' they'll be vars
         {$return=Kynetx::Parser::mk_expr_node('var',$item[1])}
       | '[' expr(s? /,/) ']'
         {$return=Kynetx::Parser::mk_expr_node('array',$item[2])}
       | '(' expr ')'
         {$return=$item[2]}
+      | <error>
+
+counter: 'counter' '.' VAR
+     {$return=Kynetx::Parser::mk_expr_node('counter',$item[3])}
+
 
 simple_pred: VAR '(' expr(s? /,/) ')' 
       {$return=
@@ -549,7 +592,7 @@ qualified_pred: VAR ':' VAR '(' expr(s? /,/) ')'
 
 counter_pred: 'counter' '.' VAR INEQUALITY NUM timeframe(?)
       {$return=
-       {'type' => 'counter',
+       {'type' => 'counter_pred',
         'name' => $item[3],
         'ineq' => $item[4],
         'value' => $item[5],

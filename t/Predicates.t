@@ -36,6 +36,23 @@ my $rule_env = {$rule_name . ':city' => 'Blackfoot',
                };
 
 
+$rule_env->{$rule_name .':book_data'} = {
+    "responseHeader" => {
+	"status"=>0,
+	"QTime"=>2,
+	"params"=>{
+	    "q"=>"0316160202",
+	    "wt"=>"json"}},
+    "response"=>{
+	"numFound"=>1,
+	"start"=>0,
+	"docs"=>[{"isbn"=>"0316160202",
+		  "title"=>"Eclipse",
+		  "url"=>"http://library.minlib.net/search/i?SEARCH=0316160202"}
+	    ]
+    }
+};
+
 
 my $Amazon_req_info;
 $Amazon_req_info->{'ip'} = '72.21.203.1'; # Seattle (Amazon)
@@ -1091,8 +1108,20 @@ add_testcase(
     );
 
 
+$krl_src = <<_KRL_;
+book_data.pick("\$..numFound") > 0
+_KRL_
+
+add_testcase(
+    $krl_src,
+    1,
+    $Amazon_req_info
+    );
+
 #$krl = Kynetx::Parser::parse_predexpr($krl_src);
 #diag(Dumper($krl));
+
+
 
 
 plan tests => 0 + (@test_cases * 1);

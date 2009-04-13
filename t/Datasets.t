@@ -8,6 +8,7 @@ use Test::LongString;
 use Data::Dumper;
 use LWP::UserAgent;
 use LWP::Simple;
+use JSON::XS;
 
 use APR::URI;
 use APR::Pool ();
@@ -135,7 +136,7 @@ _KRL_
 add_cache_for_testcase($krl_src, 5*60*60*24*365, "cache_dataset_for 5 years");
 
 
-plan tests => 3+ int(@cache_for_test_cases);
+plan tests => 7 + int(@cache_for_test_cases);
 
 foreach my $case (@cache_for_test_cases) {
     is(cache_dataset_for($case->{'expr'}), 
@@ -155,7 +156,7 @@ $krl = Kynetx::Parser::parse_global_decls($krl_src);
 is_string_nows(get_dataset($krl->[0],$req_info),get_local_file("aaa.json"),"Local file");
 
 
-
+my ($rule_env, $args);
 SKIP: {
     my $ua = LWP::UserAgent->new;
 
@@ -175,11 +176,99 @@ _KRL_
 
     is_string_nows(get_dataset($krl->[0],$req_info),get_local_file("aaa.json"),"URL file");
 
-    my $rule_env = {};
+    $rule_env = {};
 
     is_string_nows(mk_dataset_js($krl->[0], $req_info, $rule_env), 
-		   "var fizz_data  = " . get_local_file("aaa.json") . ";", 
+		   "KOBJ['data']['fizz_data']  = " . get_local_file("aaa.json") . ";", 
 		   "is the JS alight?");
+
+    
+    $krl_src = <<_KRL_;
+global {
+   datasource twitter_search <- "http://search.twitter.com/search.json";
+}
+_KRL_
+    $krl = Kynetx::Parser::parse_global_decls($krl_src);
+    
+
+    $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
+
+    $args = ["q=windley"];
+
+#    diag Dumper($rule_env);
+
+#    diag Dumper($krl);
+
+    contains_string(encode_json(get_datasource($rule_env,$args,"twitter_search")),
+		    '{"page":1,"query":"windley","completed_in":',
+		    "JSON twitter search");
+
+
+
+    $krl_src = <<_KRL_;
+global {
+   datasource twitter_search <- "http://search.twitter.com/search.json" cachable for 30 minutes;
+}
+_KRL_
+    $krl = Kynetx::Parser::parse_global_decls($krl_src);
+    
+
+    $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
+
+    $args = ["q=kynetx"];
+
+#    diag Dumper($rule_env);
+
+#    diag Dumper($krl);
+
+    contains_string(encode_json(get_datasource($rule_env,$args,"twitter_search")),
+		    '{"page":1,"query":"kynetx","completed_in":',
+		    "JSON twitter search cachable");
+
+
+    $krl_src = <<_KRL_;
+global {
+   datasource twitter_search <- "http://search.twitter.com/search.json?callback=kntx";
+}
+_KRL_
+    $krl = Kynetx::Parser::parse_global_decls($krl_src);
+    
+
+    $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
+
+    $args = ["q=iphone"];
+
+ #   diag Dumper($rule_env);
+
+#    diag Dumper($krl);
+
+    contains_string(get_datasource($rule_env,$args,"twitter_search"),
+		    'kntx({"results":[{"text":',
+		    "JSON twitter search with param in spec");
+
+
+
+    $krl_src = <<_KRL_;
+global {
+   datasource twitter_search <- "http://search.twitter.com/search.json";
+}
+_KRL_
+    $krl = Kynetx::Parser::parse_global_decls($krl_src);
+    
+
+    $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
+
+    $args = ["q=byu", 'callback=kntx'];
+
+#    diag Dumper($rule_env);
+
+#    diag Dumper($krl);
+
+    contains_string(get_datasource($rule_env,$args,"twitter_search"),
+		    'kntx({"results":[{"text":',
+		    "JSON twitter search with multiple params");
+
+    
     
 
 }

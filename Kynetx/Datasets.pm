@@ -24,6 +24,7 @@ qw(
 cache_dataset_for
 get_dataset
 mk_dataset_js
+get_datasource
 ) ]);
 
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
@@ -128,7 +129,7 @@ sub mk_dataset_js {
     
     my $source = get_dataset($g, $req_info);
     
-    my $js = 'var ' . $g->{'name'} . ' = ';
+    my $js = "KOBJ['data']['" . $g->{'name'} . "'] = ";
     my $source_json;
     eval { $source_json = decode_json($source); };
     if ($@) {
@@ -143,6 +144,48 @@ sub mk_dataset_js {
     $js .= ";\n";
 
     return $js;
+
+}
+
+sub get_datasource {
+    my ($rule_env,$args,$function) = @_; 
+
+    my  ($perl_data, $json_data); 
+
+    my $logger = get_logger();
+
+    # for now, if it's not an HTTP url, assume it's a file.
+    $logger->debug("retrieving datasource");
+    my $ds = $rule_env->{'datasource:'.$function};
+
+#    $logger->debug(Dumper($ds));
+
+    my $cache_for = cache_dataset_for($ds);
+
+    my $source_name = $rule_env->{'datasource:'.$function}->{'source'};
+
+    if($source_name =~ m/\?/) {
+	$source_name .= '&'; # make it safe to add more params
+    } else {
+	$source_name .= '?'; # add ? if not there already
+    }
+    $source_name .= join("&",(sort @{ $args })); # add params; sort to maximize cachability
+
+    my $source;
+    $logger->debug("retrieving network datasource from $source_name");
+    $source = get_remote_data($source_name, $cache_for);
+
+    my($source_json, $result);
+    eval { $source_json = decode_json($source); };
+    if ($@) {
+	$logger->debug("seeing $function as string ", $@);
+	$result = $source;
+    } else { 
+	$logger->debug("seeing $function as JSON ", $@);
+	$result = $source_json;
+    }
+
+    return $result;
 
 }
 
