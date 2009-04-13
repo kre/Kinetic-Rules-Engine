@@ -11,6 +11,7 @@ use JSON::XS;
 
 use Kynetx::Parser qw(:all);
 use Kynetx::PrettyPrinter qw(:all);
+use Kynetx::JavaScript qw(:all);
 use Kynetx::Json qw(:all);
 use Kynetx::Util qw(:all);
 use Kynetx::Memcached qw(:all);
@@ -147,6 +148,8 @@ sub eval_rule {
 	$logger->debug("[Session] $var has value $session->{$var}");
     }
 
+    # this loads the rule_env.  
+    Kynetx::JavaScript::gen_js_pre($request_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
 
 
     # if the condition is undefined, it's true.  

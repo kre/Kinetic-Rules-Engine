@@ -34,7 +34,7 @@ sub eval_pick {
     my $jp = Kynetx::JSONPath->new();
     my $v = $jp->run($obj->{'val'}, $expr->{'pattern'});
 
-    $v = $v->[0] if(scalar @{ $v } == 1);
+    $v = $v->[0] if(defined $v && scalar @{ $v } == 1);
 
     return  { 'type' => Kynetx::JavaScript::infer_type($v),
 	      'val' => $v

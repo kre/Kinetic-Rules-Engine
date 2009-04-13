@@ -357,7 +357,8 @@ sub eval_js_decl {
 
 	my $r = eval_js_expr($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);
 	$val = $r->{'val'};
-	$logger->debug("[decl] expr for ", $decl->{'lhs'}, ' -> ', sub{Dumper($val)} );
+#	$logger->debug("[decl] expr for ", $decl->{'lhs'}, ' -> ', sub{Dumper($val)} );
+	$logger->debug("[decl] expr for ", $decl->{'lhs'}, ' -> ', $val );
 
     } elsif ($decl->{'type'} eq 'here_doc') {
 
@@ -387,6 +388,9 @@ sub eval_datasource {
  #   $args->[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
 
     my $val = '';
+
+    my $logger = get_logger();
+    $logger->debug("Datasource $source:$function...");
 
     if($source eq 'weather') {
 	$val = Kynetx::Predicates::Weather::get_weather($req_info,$function);

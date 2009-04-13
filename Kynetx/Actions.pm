@@ -5,6 +5,8 @@ use strict;
 use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
+use JSON::XS;
+
 use Kynetx::Util qw(:all);
 use Kynetx::JavaScript qw(:all);
 use Kynetx::Rules qw(:all);
@@ -226,7 +228,9 @@ sub emit_var_decl {
     my $t = infer_type($val);
     if($t eq 'str') {
 	$val = "'".$val."'";
-    } 
+    } elsif ($t eq 'hash' || $t eq 'array') {
+	$val = encode_json($val);
+    }
     my $logger = get_logger();
     $logger->debug("[decl] $lhs has type: $t");
     return "var $lhs = $val;\n";
@@ -247,8 +251,9 @@ sub build_js_load {
     $rule_env->{'uniq_id'} = $uniq_id;
 
 
+# do this in Rule.pm  now that the pre can set vars that are used in cond
     # this loads the rule_env
-    gen_js_pre($req_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
+#    gen_js_pre($req_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
 
 
     my $js = "";
