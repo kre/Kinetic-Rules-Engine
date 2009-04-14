@@ -82,7 +82,7 @@ sub eval_predicates {
     my $logger = get_logger();
 
 #    $logger->debug(Dumper($cond));
-    $logger->debug("Rule name: $rule_name");
+#    $logger->debug("Rule name: $rule_name");
 
     my $v = 0;
     case: for ($cond->{'type'}) {

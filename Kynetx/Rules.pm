@@ -139,10 +139,6 @@ sub eval_rule {
     Log::Log4perl::MDC->put('rule', $rule->{'name'});
     $logger->info("selected ...");
 
-    foreach my $var (keys %{ $rule_env } ) {
-	$logger->debug("[Env] $var has value $rule_env->{$var}" 
-		       ) if defined $rule_env->{$var};
-    }
 
     foreach my $var (keys %{ $session } ) {
 	$logger->debug("[Session] $var has value $session->{$var}");
@@ -151,6 +147,10 @@ sub eval_rule {
     # this loads the rule_env.  
     Kynetx::JavaScript::eval_js_pre($request_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
 
+    foreach my $var (keys %{ $rule_env } ) {
+	$logger->debug("[Env] $var has value $rule_env->{$var}" 
+		       ) if defined $rule_env->{$var};
+    }
 
     # if the condition is undefined, it's true.  
     $rule->{'cond'} ||= mk_expr_node('bool','true');

@@ -15,7 +15,7 @@ use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Data::Dumper;
-$Data::Dumper::Indent = 1;
+$Data::Dumper::Indent = 0;
 
 
 our $VERSION     = 1.00;
@@ -269,8 +269,9 @@ sub build_js_load {
 
 #     }
 
-#    $logger->debug("Rule ENV: ", sub {Dumper($rule_env)});
+    $logger->debug("Rule ENV: ", sub {my $f = Dumper($rule_env);$f =~ y/\n//d;return $f});
 
+    $logger->debug("Rule name: ", $rule->{'name'});
     # now do decls in order
     foreach my $var( @{ $rule_env->{$rule->{'name'}."_vars"} } ) {
 	$js .= emit_var_decl($var, $rule_env->{$rule->{'name'}.":$var"});

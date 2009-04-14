@@ -368,6 +368,7 @@ sub eval_js_decl {
     }
 
     # JS is generated for all vars in the rule env
+    $logger->debug("Storing " . $rule_name.":".$decl->{'lhs'});
     $rule_env->{$rule_name.":".$decl->{'lhs'}} = $val;
 
     # preserve the order of decl evals
