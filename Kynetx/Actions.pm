@@ -227,7 +227,9 @@ sub emit_var_decl {
     my($lhs, $val) = @_;
     my $t = infer_type($val);
     if($t eq 'str') {
-	$val = "'".$val."'";
+	$val = "'".escape_js_str($val)."'";
+	# relace tmpl vars with concats for JS
+	$val =~ s/#{([^}]*)}/'+$1+'/g;
     } elsif ($t eq 'hash' || $t eq 'array') {
 	$val = encode_json($val);
     }
@@ -479,9 +481,6 @@ sub build_one_action {
 
 	$js .= $delay_cb;  # add in automatic log of delay expiration
 	
-#	$js =~ y/\n\r//d; # remove newlines#
-#	$js =~ y/ //s;
-#	$js =~ s/'/\\'/g; # escape single quotes
 	$js = "setTimeout(function() { $js },  ($mods{'delay'} * 1000) ); \n";
 
 #	$js = "setTimeout(\'" . $js . "\', " . ($mods{'delay'} * 1000) . ");\n";

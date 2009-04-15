@@ -627,7 +627,6 @@ sub pp_expr {
 
     case: for ($expr->{'type'}) {
 	/str/ && do {
-#	    $expr->{'val'} =~ s/'/\\'/g;  #' - for syntax highlighting
 	    return '"' . $expr->{'val'} . '"';
 	};
 	/num/ && do {

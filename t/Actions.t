@@ -6,6 +6,7 @@ use strict;
 use Test::More;
 #plan tests => 24;
 use Test::LongString;
+use JSON::XS;
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
@@ -47,6 +48,8 @@ my $rule_env = {$rule_name . ':city' => 'Blackfoot',
                };
 
 my $session = {};
+
+
 
 
 my($action,$args,$krl_src, $krl, $name, $url, @test_cases);
@@ -335,7 +338,7 @@ add_action_testcase(
 
 
 
-plan tests => 0 + (@test_cases * 3) + (@action_test_cases * 1);
+plan tests => 5 + (@test_cases * 3) + (@action_test_cases * 1);
 
 
 
@@ -394,6 +397,30 @@ foreach my $case (@action_test_cases) {
 	"build_one_action: $desc");
 
 }
+
+# emit js vars
+is_string_nows(Kynetx::Actions::emit_var_decl("x", 5), 
+    "var x = 5;", 
+    "emit a number");
+my $no_escape = "foo bar is a boo bar";
+my $pls_escape = "foo bar isn't a boo bar";
+my $escaped = "foo bar isn\\'t a boo bar";
+is_string_nows(Kynetx::Actions::emit_var_decl("x", $no_escape), 
+    "var x = '". $no_escape ."';", 
+    "emit a string");
+is_string_nows(Kynetx::Actions::emit_var_decl("x", $pls_escape), 
+    "var x = '". $escaped . "';", 
+    "emit a string");
+my $a = [1,2,3];
+is_string_nows(Kynetx::Actions::emit_var_decl("x", $a), 
+    "var x = ". encode_json($a).";", 
+    "emit an array");
+my $h = {"a" =>1,
+    "b" => 2,
+    "c" => 3};
+is_string_nows(Kynetx::Actions::emit_var_decl("x", $h), 
+    "var x = ". encode_json($h).";", 
+    "emit a hash");
 
 
 

@@ -32,6 +32,7 @@ mk_js_str
 eval_js_expr
 den_to_exp
 infer_type
+escape_js_str
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -44,7 +45,7 @@ sub gen_js_expr {
 
     case: for ($expr->{'type'}) {
 	/str/ && do {
-	    $expr->{'val'} =~ s/'/\\'/g;  #' - for syntax highlighting
+	    $expr->{'val'} = escape_js_str($expr->{'val'});
 	    return '\'' . $expr->{'val'} . '\'';
 	};
 	/num/ && do {
@@ -437,8 +438,10 @@ sub eval_counter {
 
 sub eval_heredoc {
     my ($val) = @_;
-    $val =~ s/'/\\'/g;  #' - for syntax highlighting
-    $val =~ s/#{([^}]*)}/'+$1+'/g;
+# we do this all when we emit the JS now
+#    $val = escape_js_str($val);
+#    $val =~ s/'/\\'/g;  #' - for syntax highlighting
+#    $val =~ s/#{([^}]*)}/'+$1+'/g;
     return $val;
 }
 
@@ -492,12 +495,19 @@ sub infer_type {
 
 #
 # utility functions
-#pnnn
+#
 sub mk_js_str {
     if(defined $_[0]) {
-	return "'". join(" ",@_) . "'";
+	my $str = join(" ",@_);
+	return "'". escape_js_str($str) . "'";
     } else {
 	return "''";
     }
+}
+
+sub escape_js_str {
+    my ($val) = @_;
+    $val =~ s/'/\\'/g;  #' - for syntax highlighting
+    return $val;
 }
 

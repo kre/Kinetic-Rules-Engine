@@ -172,7 +172,7 @@ sub trace(){
 			$reserved_loc = 1;
 		}
 		
-		$self->logit("loc: $loc  // $reserved_loc // $ref_type // $x_string");
+#		$self->logit("loc: $loc  // $reserved_loc // $ref_type // $x_string");
 
 		if (! $reserved_loc and  $ref_type eq 'HASH' and ($obj and exists $obj->{$loc}) ){ 
 			#$self->logit( "tracing loc($loc) obj (hash)?");
@@ -184,7 +184,7 @@ sub trace(){
 		    if ((ref $obj->[$loc] eq 'HASH') ||
 			(ref $obj->[$loc] eq 'ARRAY')) {
 #			$self->logit( ref $obj->[$loc] );
-			$self->logit( "tracing $x_string //" . $obj->[$loc] . "// $loc" );
+#			$self->logit( "tracing $x_string //" . $obj->[$loc] . "// $loc" );
 			$self->trace($x_string, $obj->[$loc], $path . ';' . $loc);
 		    } else {
 #			$self->logit("Just storing... leaf");

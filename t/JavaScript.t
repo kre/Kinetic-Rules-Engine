@@ -473,7 +473,7 @@ add_decl_testcase(
 #diag(Dumper($krl));
 
 
-plan tests => 33 + (@expr_testcases * 2) + (@decl_testcases * 1);
+plan tests => 35 + (@expr_testcases * 2) + (@decl_testcases * 1);
 
 
 # now test each test case twice
@@ -562,6 +562,7 @@ SKIP: {
     my $ua = LWP::UserAgent->new;
 
     my $check_url = "http://www.webservicex.net//stockquote.asmx/GetQuote?symbol=GOOG";
+#    my $check_url = "http://foo";
 
     diag "Checking $check_url";
     my $response = $ua->get($check_url);
@@ -649,6 +650,12 @@ SKIP: {
 		    'user defined datasource');
 
 }
+
+my $no_escape = "foo bar is a boo bar";
+my $pls_escape = "foo bar isn't a boo bar";
+my $escaped = "foo bar isn\\'t a boo bar";
+is(escape_js_str($no_escape), $no_escape, "Escape a string");
+is(escape_js_str($pls_escape), $escaped, "Escape a string");
 
 1;
 
