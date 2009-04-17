@@ -136,7 +136,7 @@ _KRL_
 add_cache_for_testcase($krl_src, 5*60*60*24*365, "cache_dataset_for 5 years");
 
 
-plan tests => 7 + int(@cache_for_test_cases);
+plan tests => 9 + int(@cache_for_test_cases);
 
 foreach my $case (@cache_for_test_cases) {
     is(cache_dataset_for($case->{'expr'}), 
@@ -154,6 +154,19 @@ $krl = Kynetx::Parser::parse_global_decls($krl_src);
 #diag Dumper($krl);
 
 is_string_nows(get_dataset($krl->[0],$req_info),get_local_file("aaa.json"),"Local file");
+
+$krl_src = <<_KRL_;
+global {
+   dataset fizz_data <- "http://frag.kobj.net/clients/cs_test/aaa.json";
+   dataset fozz_data <- "http://frag.kobj.net/clients/cs_test/aaa.json" cachable;
+}
+_KRL_
+$krl = Kynetx::Parser::parse_global_decls($krl_src);
+#diag Dumper($krl);
+
+ok(!global_dataset($krl->[0]),"not global");
+ok(global_dataset($krl->[1]),"global");
+
 
 
 my ($rule_env, $args);

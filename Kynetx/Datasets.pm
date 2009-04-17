@@ -14,6 +14,7 @@ use Kynetx::Memcached qw/:all/;
 
 # FIXME: this ought to come out of configuration
 use constant DATA_ROOT => '/web/data/client';
+use constant CACHEABLE_THRESHOLD => 24*60*60; #24 hours
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -25,6 +26,7 @@ cache_dataset_for
 get_dataset
 mk_dataset_js
 get_datasource
+global_dataset
 ) ]);
 
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
@@ -95,7 +97,7 @@ sub cache_dataset_for {
     my $name = $d->{'name'};
 
     if($d->{'cachable'}) {
-	$cache_for = 24*60*60;  # in seconds, default to one day
+	$cache_for = CACHEABLE_THRESHOLD;  # in seconds, default to one day
     } 
 
     if (ref $d->{'cachable'} eq 'HASH') { 
@@ -121,6 +123,13 @@ sub cache_dataset_for {
     return $cache_for;
 
 }
+
+sub global_dataset {
+    my ($d) = @_;
+    # global data sets are those that are cachable for more than the CACHEABLE_THRESHOLD
+    return cache_dataset_for($d) >= CACHEABLE_THRESHOLD;
+}
+
 
 # side-effects $rule_env
 sub mk_dataset_js {

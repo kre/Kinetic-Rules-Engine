@@ -119,7 +119,8 @@ sub eval_globals {
 	    if($g->{'emit'}) { # emit
 		$js .= $g->{'emit'} . "\n";
 	    } elsif(defined $g->{'type'} && $g->{'type'} eq 'dataset') { 
-		$js .= mk_dataset_js($g, $request_info, $rule_env);
+		$js .= mk_dataset_js($g, $request_info, $rule_env) 
+		    unless Kynetx::Datasets::global_dataset($g);
 	    } elsif(defined $g->{'type'} && $g->{'type'} eq 'datasource') {
 		$rule_env->{'datasource:'.$g->{'name'}} = $g;
 	    }
