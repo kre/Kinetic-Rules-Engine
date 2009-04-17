@@ -22,7 +22,7 @@ use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
 
-my $numtests = 14;
+my $numtests = 18;
 plan tests => $numtests;
 
 
@@ -90,12 +90,22 @@ SKIP: {
 
     # dispatch
     my $url_version_4 = "$dn/dispatch/cs_test;cs_test_1/";
-    diag "Testing console with $url_version_4";
+    diag "Testing dispatch with $url_version_4";
 
     $mech->get_ok($url_version_4);
     is($mech->content_type(), 'text/plain');
 
     $mech->content_like(qr/www\.windley\.com.*www\.yahoo\.com/s);
+
+    # datasets
+    my $url_version_5 = "$dn/datasets/cs_test;cs_test_1/";
+    diag "Testing datasets with $url_version_5";
+
+    $mech->get_ok($url_version_5);
+    is($mech->content_type(), 'text/javascript');
+
+    $mech->content_contains("KOBJ['data']['cached_timeline'] =");
+    $mech->content_lacks("KOBJ['data']['public_timeline'] =");
 
 
 }

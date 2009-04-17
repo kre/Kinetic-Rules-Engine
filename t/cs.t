@@ -9,7 +9,7 @@ use Test::WWW::Mechanize;
 
 use LWP::UserAgent;
 
-my $numtests = 41;
+my $numtests = 42;
 
 plan tests => $numtests;
 
@@ -130,6 +130,7 @@ SKIP: {
     $mech->content_contains('var foobar = 4;');
 
     $mech->content_contains(q/KOBJ['data']['public_timeline'] = [{"user":{"followers_count":/);
+    $mech->content_lacks("KOBJ['data']['cached_timeline'] =");
 
     my $url_5 = "$dn/eval/$ruleset/1237475272090.js?caller=http%3A//search.barnesandnoble.com/booksearch/isbnInquiry.asp%3FEAN%3D9781400066940&referer=http%3A//www.barnesandnoble.com/index.asp&kvars=&title=Stealing MySpace, Julia Angwin, Book - Barnes & Noble";
 
