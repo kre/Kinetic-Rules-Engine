@@ -289,7 +289,7 @@ EOF
 	}
 
 	$req_info->{'rid'} = $rid;
-	$js .= get_datasets($r->dir_config('svn_conn'), $req_info);
+#	$js .= get_datasets($r->dir_config('svn_conn'), $req_info);
     }
 
 
