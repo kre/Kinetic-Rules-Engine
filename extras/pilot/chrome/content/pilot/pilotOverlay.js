@@ -154,8 +154,11 @@ var Pilot = {
 	 if(this.myip != '') {
 	   p.push('"ip":"' + this.myip + '"');
 	 }
-         if(site['datasets'] != '') {
-           p.push('"datasets":"' + site['datasets'] + '"');
+         for (var s = 0; s < this.sites.length; s++) {
+           var site = this.sites[s];
+           if(site['datasets'] != '') {
+              p.push('"'+ site['site_id'] + ':datasets":"' + site['datasets'] + '"');
+	    }
          }
 	 var p_str ;
          p_str = '{' + p.join(',') + '}';

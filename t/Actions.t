@@ -208,14 +208,14 @@ replace_html("kobj_test", "Hello World!");
 _KRL_
 
 $result = <<_JS_;
-(function(uniq, cb, id, text) {
+(function(uniq, cb, config, id, text) {
  var div = document.createElement('div');
  \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text);
  \$K('#'+id).replaceWith(div);
  \$K(div).slideDown('slow');
  cb();
 }
-('23',callbacks23,'kobj_test','Hello World!'));
+('23',callbacks23,{},'kobj_test','Hello World!'));
 _JS_
 
 
@@ -233,14 +233,14 @@ with highlight = "yellow";
 _KRL_
 
 $result = <<_JS_;
-(function(uniq, cb, id, text) {
+(function(uniq, cb, config, id, text) {
  var div = document.createElement('div');
  \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text);
  \$K('#'+id).replaceWith(div);
  \$K(div).slideDown('slow');
  cb();
 }
-('23',callbacks23,'kobj_test','Hello World!'));
+('23',callbacks23,{'highlight':'yellow'},'kobj_test','Hello World!'));
 _JS_
 
 
@@ -258,11 +258,11 @@ replace_image_src("kobj_test", "/images/foo.png");
 _KRL_
 
 $result = <<_JS_;
-(function(uniq, cb, id, new_url) {
+(function(uniq, cb, config, id, new_url) {
     \$K('#'+id).attr('src',new_url);
     cb();
 }
-('23',callbacks23,'kobj_test','/images/foo.png'));
+('23',callbacks23, {}, 'kobj_test','/images/foo.png'));
 _JS_
 
 
@@ -279,10 +279,10 @@ noop();
 _KRL_
 
 $result = <<_JS_;
-(function(uniq, cb) {
+(function(uniq, cb, config) {
     cb();
 }
-('23',callbacks23));
+('23',callbacks23,{}));
 _JS_
 
 
@@ -300,10 +300,10 @@ _KRL_
 
 $result = <<_JS_;
 setTimeout(function(){
-(function(uniq, cb) {
+(function(uniq, cb, config) {
     cb();
 }
-('23',callbacks23));
+('23',callbacks23,{'delay':5}));
 ;KOBJ.logger('timer_expired','1234','none','','success','dummy_name');},(5*1000));
 _JS_
 
@@ -321,11 +321,11 @@ annotate_search_results(foo);
 _KRL_
 
 $result = <<_JS_;
-(function(uniq, cb, annotate_fn) {
-    KOBJ.annotate_search_results(annotate_fn);
+(function(uniq, cb, config, annotate_fn) {
+    KOBJ.annotate_search_results(annotate_fn, config);
     cb();
 }
-('23',callbacks23,foo));
+('23',callbacks23,{},foo));
 _JS_
 
 

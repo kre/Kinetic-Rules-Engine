@@ -137,6 +137,10 @@ sub get_svn_conn {
     };
 
     # returns a list with the connection and the URL
+    # This message:
+    # Permission denied: Can't open file '/root/.subversion/servers': Permission denied at /web/lib/perl/Kynetx/Repository.pm line 140\
+    # means that the Web server is looking in /root/ instead of /web/ 
+    # where it has permissions.  Web server should be started with HOME=/web
     return (new SVN::Client(
 		auth => [SVN::Client::get_simple_provider(),
 			 SVN::Client::get_simple_prompt_provider($simple_prompt,2),

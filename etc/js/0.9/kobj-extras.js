@@ -12,7 +12,7 @@ if(!("console"in window)||!("firebug"in console)){var names=["log","debug","info
 var KOBJ= KOBJ || { version: '0.9' };
 
 
-
+// this can be removed next update cycle
 KOBJ.search_annotation = {};
 KOBJ.search_annotation.defaults = {
   "name": "KOBJ",
@@ -25,37 +25,55 @@ KOBJ.search_annotation.defaults = {
   "font_family": "Verdana, Geneva, sans-serif"
 };
 
-KOBJ.annotate_search_results = function(annotate) {
+KOBJ.annotate_search_results = function(annotate, config) {
+
+  var defaults = {
+  "name": "KOBJ",
+  "sep": "<div style='padding-top: 13px'>|</div>",
+  "text_color":"#CCC",
+  "height":"40px",
+  "left_margin": "15px",
+  "right_padding" : "15px",
+  "font_size":"12px",
+  "font_family": "Verdana, Geneva, sans-serif"
+  };
+
+  // if config exists, then update
+  if(typeof config === 'object') {
+    jQuery.extend(defaults,config);
+  }
 
   function mk_list_item(i) {
-    return $K("<li class='"+KOBJ.search_annotation.defaults.name+"_item'>").css(
+    return $K("<li class='"+defaults.name+"_item'>").css(
           {"float": "left",
 	   "margin": "0",
 	   "vertical-align": "middle",
 	   "padding-left": "4px",
-	   "color": KOBJ.search_annotation.defaults.text_color,
+	   "color": defaults.text_color,
 	   "white-space": "nowrap",
            "text-align": "center"
           }).append(i);
   }
 
   function mk_rm_div (anchor) {
+    var name = defaults.name;
     var logo_item = mk_list_item(anchor);
     var logo_list = $K('<ul>').css(
           {"margin": "0",
            "padding": "0",
            "list-style": "none"
-          }).attr("id", KOBJ.search_annotation.defaults.name+"_anno_list").append(logo_item);
+          }).attr("id", name+"_anno_list").append(logo_item);
     var inner_div = $K('<div>').css(
           {"float": "left",
            "display": "inline",
-           "height": KOBJ.search_annotation.defaults.height,
-           "margin-left": KOBJ.search_annotation.defaults.left_margin,
-           "padding-right": KOBJ.search_annotation.defaults.right_padding
+           "height": defaults.height,
+           "margin-left": defaults.left_margin,
+           "padding-right": defaults.right_padding
           }).append(logo_list);
-    if (KOBJ.search_annotation.defaults.tail_background_image){
+    if (typeof defaults != 'undefined' &&
+        defaults['tail_image']){
       inner_div.css({
-           "background-image": "url(" + KOBJ.search_annotation.defaults.tail_background_image + ")",
+           "background-image": "url(" + defaults['tail_image'] + ")",
            "background-repeat": "no-repeat",
            "background-position": "right top"
 		    });
@@ -63,14 +81,15 @@ KOBJ.annotate_search_results = function(annotate) {
     var rm_div = $K('<div>').css(
           {"float": "right",
            "width": "auto",
-           "height": KOBJ.search_annotation.defaults.height,
-           "font-size": KOBJ.search_annotation.defaults.font_size,
+           "height": defaults.height,
+           "font-size": defaults.font_size,
            "line-height": "normal",
-           "font-family": KOBJ.search_annotation.defaults.font_familty
+           "font-family": defaults.font_familty
 	   }).append(inner_div);
-    if (KOBJ.search_annotation.defaults.head_background_image){
+    if (typeof defaults != 'undefined' &&
+        defaults['head_image']){
      rm_div.css({
-           "background-image": "url(" + KOBJ.search_annotation.defaults.head_background_image +")",
+           "background-image": "url(" + defaults['head_image'] +")",
            "background-repeat": "no-repeat",
            "background-position": "left top"
 		});
@@ -81,8 +100,8 @@ KOBJ.annotate_search_results = function(annotate) {
   $K("li.g, li div.res").each(function() {
         var contents = annotate(this);
         if (contents) {
-          if($K(this).find('#'+KOBJ.search_annotation.defaults.name+'_anno_list li').is('.'+KOBJ.search_annotation.defaults.name+'_item')) {
-             $K(this).find('#'+KOBJ.search_annotation.defaults.name+'_anno_list').append(mk_list_item(KOBJ.search_annotation.defaults.sep)).append(mk_list_item(contents));
+          if($K(this).find('#'+defaults.name+'_anno_list li').is('.'+defaults.name+'_item')) {
+             $K(this).find('#'+defaults.name+'_anno_list').append(mk_list_item(defaults.sep)).append(mk_list_item(contents));
           } else {
              $K(this).find("div.s,div.abstr").prepend(mk_rm_div(contents));
           }
@@ -166,8 +185,8 @@ KOBJ.hide = function (id) {
 
 // helper functions
 KOBJ.buildDiv = function (uniq, pos, top, side) {
-    var vert = top.split(/\\s*:\\s*/);
-    var horz = side.split(/\\s*:\\s*/);
+    var vert = top.split(/\s*:\s*/);
+    var horz = side.split(/\s*:\s*/);
     var div_style = {
         position: pos,
         zIndex: '9999',
@@ -204,6 +223,8 @@ if(typeof(kvars) != "undefined") {
 } else {
     KOBJ.kvars_json = '';
 }
+
+KOBJ['data'] = KOBJ['data'] || {};
 
 // initialization vars
 KOBJ.proto = 'http://';

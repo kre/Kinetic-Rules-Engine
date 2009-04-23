@@ -1,3 +1,12 @@
+2009-04-23  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Rules.pm (eval_ruleset): Reset 'rule' name for each
+	  ruleset for logging (MDC->put)
+	* Kynetx/Actions.pm (build_one_action): Added support for native
+	  config params
+	* etc/js/0.9/kobj-extras.js: Change annotate_search_results to use
+	  native config parameters.
+
 2009-04-11  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/RuleManager.pm (lint_rule): Added some inital validation

@@ -132,8 +132,8 @@ _KRL_
 
 $result = <<_JS_;
 function callBacks%uniq% () {};
-(function(uniq, cb, msg) {alert(msg)}
-('%uniq%',callBacks%uniq%,'testing'));
+(function(uniq, cb, config, msg) {alert(msg)}
+('%uniq%',callBacks%uniq%,{},'testing'));
 _JS_
 
 add_testcase(
@@ -155,8 +155,8 @@ _KRL_
 $result = <<_JS_;
 var c = 'Seattle';
 function callBacks%uniq% () {};
-(function(uniq, cb, msg) {alert(msg)}
-('%uniq%',callBacks%uniq%,('testing' + c)));
+(function(uniq, cb, config, msg) {alert(msg)}
+('%uniq%',callBacks%uniq%,{},('testing' + c)));
 _JS_
 
 add_testcase(
@@ -180,8 +180,8 @@ _KRL_
 $result = <<_JS_;
 var c = 'Seattle';
 function callBacks%uniq% () {};
-(function(uniq, cb, msg) {alert(msg)}
-('%uniq%',callBacks%uniq%,('testing' + c)));
+(function(uniq, cb, config, msg) {alert(msg)}
+('%uniq%',callBacks%uniq%,{},('testing' + c)));
 _JS_
 
 add_testcase(
@@ -205,8 +205,8 @@ _KRL_
 $result = <<_JS_;
 var c = 'Seattle';
 function callBacks%uniq% () {};
-(function(uniq, cb, msg) {alert(msg)}
-('%uniq%',callBacks%uniq%,('testing' + c)));
+(function(uniq, cb, config, msg) {alert(msg)}
+('%uniq%',callBacks%uniq%,{},('testing' + c)));
 _JS_
 
 add_testcase(
@@ -269,8 +269,8 @@ _KRL_
 $result = <<_JS_;
 var c = 3;
 function callBacks%uniq% () {};
-(function(uniq, cb, msg) {alert(msg)}
-('%uniq%',callBacks%uniq%,'test'));
+(function(uniq, cb, config, msg) {alert(msg)}
+('%uniq%',callBacks%uniq%,{},'test'));
 _JS_
 
 add_testcase(
@@ -303,8 +303,8 @@ _KRL_
 $result = <<_JS_;
 var c = 3;
 function callBacks%uniq% () {};
-(function(uniq, cb, msg) {alert(msg)}
-('%uniq%',callBacks%uniq%,'test'));
+(function(uniq, cb, config, msg) {alert(msg)}
+('%uniq%',callBacks%uniq%,{},'test'));
 _JS_
 
 add_testcase(
@@ -371,8 +371,8 @@ function callBacks%uniq% () {
   KOBJ.obs('class','','newsletter','success','test_8');
   KOBJ.obs('id','','close_rss','failure','test_8');
 };
-(function(uniq, cb, msg) {alert(msg)}
- ('%uniq%',callBacks%uniq%,'test'));
+(function(uniq, cb, config, msg) {alert(msg)}
+ ('%uniq%',callBacks%uniq%,{},'test'));
 _JS_
 
 add_testcase(
@@ -405,8 +405,8 @@ var pt = K\$('product_name').innerHTML;
 var html = '<p>This is the product title: '+pt+'</p>';
 function callBacks%uniq% () {
 };
-(function(uniq, cb, msg) {alert(msg)}
- ('%uniq%',callBacks%uniq%,html));
+(function(uniq, cb, config, msg) {alert(msg)}
+ ('%uniq%',callBacks%uniq%,{},html));
 _JS_
 
 add_testcase(
@@ -434,8 +434,8 @@ $result = <<_JS_;
 pagename.replace(/-/, ' ');
 function callBacks%uniq% () {
 };
-(function(uniq, cb, msg) {alert(msg)}
- ('%uniq%',callBacks%uniq%,pagename));
+(function(uniq, cb, config, msg) {alert(msg)}
+ ('%uniq%',callBacks%uniq%,{},pagename));
 _JS_
 
 add_testcase(
@@ -462,8 +462,8 @@ $result = <<_JS_;
 pagename.replace(/-/, ' ');
 function callBacks%uniq% () {
 };
-(function(uniq, cb, msg) {alert(msg)}
- ('%uniq%',callBacks%uniq%,pagename));
+(function(uniq, cb, config, msg) {alert(msg)}
+ ('%uniq%',callBacks%uniq%,{},pagename));
 _JS_
 
 add_testcase(
@@ -492,8 +492,8 @@ $result = <<_JS_;
 var welcome = 'Don\\'t be false please! Be true!';
 function callBacks%uniq% () {
 };
-(function(uniq, cb, msg) {alert(msg)}
- ('%uniq%',callBacks%uniq%,welcome));
+(function(uniq, cb, config, msg) {alert(msg)}
+ ('%uniq%',callBacks%uniq%,{},welcome));
 _JS_
 
 add_testcase(
@@ -515,8 +515,8 @@ _KRL_
 $result = <<_JS_;
 function callBacks%uniq% () {
 };
-(function(uniq, cb, msg) {alert(msg)}
- ('%uniq%',callBacks%uniq%,'Hello Tim'));
+(function(uniq, cb, config, msg) {alert(msg)}
+ ('%uniq%',callBacks%uniq%,{},'Hello Tim'));
 _JS_
 
 add_testcase(
@@ -563,8 +563,8 @@ _KRL_
 $result = <<_JS_;
 function callBacks%uniq% () {
 };
-(function(uniq, cb, msg) {alert(msg)}
- ('%uniq%',callBacks%uniq%,'Hello Tim'));
+(function(uniq, cb, config, msg) {alert(msg)}
+ ('%uniq%',callBacks%uniq%,{},'Hello Tim'));
 _JS_
 
 add_json_testcase(

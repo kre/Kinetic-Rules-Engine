@@ -46,15 +46,15 @@ my($active,$test,$inactive) = (0,1,2);
 my %actions = (
 
     alert => <<EOF,
-function(uniq, cb, msg) {alert(msg)}
+function(uniq, cb, config, msg) {alert(msg)}
 EOF
 
     redirect => <<EOF,
-function(uniq, cb, url) {window.location = url}
+function(uniq, cb, config, url) {window.location = url}
 EOF
 
     float_url => <<EOF,
-function(uniq, cb, pos, top, side, src_url) {
+function(uniq, cb, config, pos, top, side, src_url) {
     var d = KOBJ.buildDiv(uniq, pos, top, side);
     \$K(d).load(src_url, cb);
     \$K('body').append(d);
@@ -64,7 +64,7 @@ EOF
 
 
     float_html => <<EOF,
-function(uniq, cb, pos, top, side, text) {
+function(uniq, cb, config, pos, top, side, text) {
     var d = KOBJ.buildDiv(uniq, pos, top, side);
     \$K(d).html(text);
     \$K('body').append(d);
@@ -73,7 +73,7 @@ function(uniq, cb, pos, top, side, text) {
 EOF
 
     notify => <<EOF,
-function(uniq, cb, pos, color, bgcolor, header, sticky, msg) {
+function(uniq, cb, config, pos, color, bgcolor, header, sticky, msg) {
   \$K.kGrowl.defaults.position = pos;
   \$K.kGrowl.defaults.background_color = bgcolor;
   \$K.kGrowl.defaults.color = color;
@@ -85,8 +85,8 @@ function(uniq, cb, pos, color, bgcolor, header, sticky, msg) {
 EOF
 
     annotate_search_results => <<EOF,
-function(uniq, cb, annotate_fn) {
-    KOBJ.annotate_search_results(annotate_fn);
+function(uniq, cb, config, annotate_fn) {
+    KOBJ.annotate_search_results(annotate_fn, config);
     cb();
 }
 EOF
@@ -94,7 +94,7 @@ EOF
 
 # not finished/tested
     catfish => <<EOF,
-function(uniq, cb, msg) {
+function(uniq, cb, config, msg) {
   var id_str = 'kobj_'+uniq;
 
   var message = \$K('<div>').addClass("CFmessage").css(
@@ -142,7 +142,7 @@ EOF
 
 
     popup => <<EOF,
-function(uniq, cb, top, left, width, height, url) {      
+function(uniq, cb, config, top, left, width, height, url) {      
     var id_str = 'kobj_'+uniq;
     var options = 'toolbar=no,menubar=no,resizable=yes,scrollbars=yes,alwaysRaised=yes,status=no' +
                  'left=' + left + ', ' +
@@ -155,7 +155,7 @@ function(uniq, cb, top, left, width, height, url) {
 EOF
 
     replace_url => <<EOF,
-function(uniq, cb, id, src_url) {
+function(uniq, cb, config, id, src_url) {
     var d = document.createElement('div');
     \$K(d).css({display: 'none'}).load(src_url, cb);
     \$K('#'+id).replaceWith(d);
@@ -165,7 +165,7 @@ EOF
 
     # need new "effects" model
     replace_html => <<EOF,
-function(uniq, cb, id, text) {
+function(uniq, cb, config, id, text) {
  var div = document.createElement('div');
  \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text);
  \$K('#'+id).replaceWith(div);
@@ -175,7 +175,7 @@ function(uniq, cb, id, text) {
 EOF
 
     move_after => <<EOF,
-function(uniq, cb, anchor, item) {
+function(uniq, cb, config, anchor, item) {
     var i = '#'+item;
     \$K('#'+anchor).after(\$K(i));
     cb();
@@ -183,7 +183,7 @@ function(uniq, cb, anchor, item) {
 EOF
     
     move_to_top => <<EOF,
-function(uniq, cb, li) {
+function(uniq, cb, config, li) {
     li = '#'+li;
     \$K(li).siblings(':first').before(\$K(li));
     cb();
@@ -191,21 +191,21 @@ function(uniq, cb, li) {
 EOF
 
     replace_image_src => <<EOF,
-function(uniq, cb, id, new_url) {
+function(uniq, cb, config, id, new_url) {
     \$K('#'+id).attr('src',new_url);
     cb();
 }
 EOF
 
     noop => <<EOF,
-function(uniq, cb) {
+function(uniq, cb, config) {
     cb();
 }
 EOF
 
 # FIXME: not done with this
     log_callback => <<EOF,
-function(uniq, cb, ) {
+function(uniq, cb, config) {
     KOBJ.logger("click",
 		txn_id,
 		name, 
@@ -371,7 +371,32 @@ sub build_one_action {
     # this happens after we've chosen the action since it modifies args
     $args = gen_js_rands( $args );
 
+    # set defaults
+    my %mods = (
+	delay => 0,
+	effect => 'appear',
+	scrollable => 0,
+	draggable => 0,
+	);
+
+    my @config;
+
+    # override defaults if set
+    foreach my $m ( @{ $action->{'modifiers'} } ) {
+	$mods{$m->{'name'}} = gen_js_expr($m->{'value'});
+#	$logger->debug(sub {Dumper($m)} );
+
+	push(@config, "'" . $m->{'name'} . "':" . 
+ 	               gen_js_expr(eval_js_expr($m->{'value'}, 
+						$rule_env, 
+						$rule_name, 
+						$req_info, 
+						$session)));
+    }
+
+
     # add to front of arg str (in reverse)
+    unshift @{ $args }, '{' . join(",", @config) . '}';
     unshift @{ $args }, $cb_func_name;
     unshift @{ $args }, mk_js_str($uniq);
 
@@ -387,18 +412,6 @@ sub build_one_action {
     push(@{ $rule_env->{'actions'} }, $action_name);
 
 
-    # set defaults
-    my %mods = (
-	delay => 0,
-	effect => 'appear',
-	scrollable => 0,
-	draggable => 0,
-	);
-
-    # override defaults if set
-    foreach my $m ( @{ $action->{'modifiers'} } ) {
-	$mods{$m->{'name'}} = gen_js_expr($m->{'value'});
-    }
 
     # function names in this hash indicate if the function is modifiable
     # FIXME: this isn't a good way to map effects to actions

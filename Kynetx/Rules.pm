@@ -68,6 +68,7 @@ sub process_rules {
 
     my $js = '';
     my @rids = split(/;/, $rids);
+    # if we sort @rids we change ruleset priority
     foreach my $rid (@rids) {
 	Log::Log4perl::MDC->put('site', $rid);
 	$js .= eval_ruleset($r, $req_info, $session, $rid);
@@ -82,6 +83,9 @@ sub eval_ruleset {
     my ($r, $req_info, $session, $rid) = @_;
 
     my $logger = get_logger();
+
+    Log::Log4perl::MDC->put('rule', '[global]');
+
     $logger->info("Processing rules for site " . $req_info->{'rid'});
 
     $req_info->{'rid'} = $rid;
