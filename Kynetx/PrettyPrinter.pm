@@ -179,6 +179,18 @@ sub pp_cachable {
     return $o;
 }
 
+sub pp_css {
+    my ($d, $indent) = @_;
+
+    my $beg = " "x$indent;
+
+    my $o .= $beg . 'css  <<' . $d->{'content'}  . '>>';
+    $o .= "\n";
+
+    return $o;
+
+}
+
 
 sub pp_global_block {
     my ($db, $indent) = @_;
@@ -188,10 +200,12 @@ sub pp_global_block {
     my $o .= $beg . "global {\n";
     foreach my $d ( @{$db}) {
 
-	if (defined $d->{'type'} && $d->{'type'} eq 'dataset') { # this is a data set
+	if (defined $d->{'type'} && $d->{'type'} eq 'dataset') { 
 	    $o .= pp_dataset($d, $indent+$g_indent) . ";";
-	} elsif (defined $d->{'type'} && $d->{'type'} eq 'datasource') { # this is a datasource
+	} elsif (defined $d->{'type'} && $d->{'type'} eq 'datasource') { 
 	    $o .= pp_datasource($d, $indent+$g_indent) . ";";
+	} elsif (defined $d->{'type'} && $d->{'type'} eq 'css') {
+	    $o .= pp_css($d, $indent+$g_indent) . ";";
 	} else {
 	    $o .= pp_global_emit($d, $indent+$g_indent) . ";";
 	}

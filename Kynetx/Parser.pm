@@ -145,7 +145,6 @@ dispatch_block_top: dispatch_block
 
 dispatch_block: 'dispatch' '{' dispatch(s?) '}' #?
      {$return = $item[3]}
-   | <error>
 
 dispatch: 'domain' STRING dispatch_target(?)
      {$return = {
@@ -158,7 +157,6 @@ dispatch: 'domain' STRING dispatch_target(?)
 dispatch_target: '->' STRING
      {$return = $item[2]
      }
-   | <error>
                    
 
 dataset: 'dataset' VAR '<-' STRING cachable(?)
@@ -169,7 +167,6 @@ dataset: 'dataset' VAR '<-' STRING cachable(?)
 	 'cachable' => $item[5][0] || 0
          }
      }
-    | <error>
 
 datasource: 'datasource' VAR '<-' STRING cachable(?)
      {$return = {
@@ -179,7 +176,6 @@ datasource: 'datasource' VAR '<-' STRING cachable(?)
 	 'cachable' => $item[5][0] || 0
          }
      }
-    | <error>
 
 cachable: 'cachable' cachetime(?)
      {$return = $item[2][0] || 1
@@ -194,6 +190,14 @@ cachetime: 'for' NUM period
      }
    | <error>
 
+css_emit: 'css' (HTML | STRING)
+   {$return = {
+       'type' => 'css',
+       'content' => $item[2]
+    }
+   }
+
+
 global_decls_top: global_decls
    | { $errors = "";
        foreach (@{$thisparser->{errors}}) {
@@ -204,11 +208,11 @@ global_decls_top: global_decls
      }
 
 
-global_decls: 'global' '{' globals(s? /;/)  SEMICOLON(?) '}' #?
+global_decls: 'global' '{' global(s? /;/)  SEMICOLON(?) '}' #?
      {$return = $item[3]}
     | <error>
 
-globals: emit_block
+global: emit_block
           {$return = {'emit' => $item[1]
                      }
           }
@@ -216,6 +220,9 @@ globals: emit_block
           {$return = $item[1]
           }
        | datasource
+          {$return = $item[1]
+          }
+       | css_emit
           {$return = $item[1]
           }
        | <error>
