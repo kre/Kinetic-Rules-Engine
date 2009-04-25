@@ -383,8 +383,12 @@ modifier: VAR '=' expr
          }
         }
 
-action_name: 'alert'
+action_name: 'after'
+           | 'alert'
            | 'annotate_search_results'
+           | 'append'
+           | 'before'
+           | 'close_notification'
            | 'float_html'
            | 'float'
            | 'move_after'
@@ -392,6 +396,7 @@ action_name: 'alert'
            | 'notify'
            | 'noop'
            | 'popup'
+           | 'prepend'
            | 'redirect'
            | 'replace_html'
            | 'replace_image_src'
