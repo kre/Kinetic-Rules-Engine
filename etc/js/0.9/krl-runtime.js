@@ -9,7 +9,11 @@ var $K = jQuery.noConflict();
 if(!("console"in window)||!("firebug"in console)){var names=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"];window.console={};for(var i=0;i<names.length;++i)window.console[names[i]]=function(){};}
 
 
-var KOBJ= KOBJ || { version: '0.9' };
+var KOBJ= KOBJ ||
+  { name: "KRL Runtime Library",
+    version: '0.9',
+    copyright: "Copyright 2007-2009, Kynetx LLC.  All Rights reserverd."
+  };
 
 
 // this can be removed next update cycle
@@ -183,7 +187,7 @@ KOBJ.hide = function (id) {
     $K(id).hide();
 };
 
-// helper functions
+// helper functions used by float
 KOBJ.buildDiv = function (uniq, pos, top, side) {
     var vert = top.split(/\s*:\s*/);
     var horz = side.split(/\s*:\s*/);
@@ -200,6 +204,7 @@ KOBJ.buildDiv = function (uniq, pos, top, side) {
     return $K(div).attr({'id': id_str}).css(div_style);
 };
 
+// return the host portion of a URL
 KOBJ.get_host = function(s) {
  var h = "";
  try {
@@ -209,6 +214,7 @@ KOBJ.get_host = function(s) {
  return h;
 };
 
+// randomly pick a member of a list
 KOBJ.pick = function(o) {
     if (o) {
         return o[Math.floor(Math.random()*o.length)];
@@ -216,6 +222,15 @@ KOBJ.pick = function(o) {
         return o;
     }
 };
+
+// attach a close event to an element inside a notification
+KOBJ.close_notification = function(s) {
+  $K(s).bind("click.kGrowl",
+             function(e) {
+               $K(this).unbind('click.kGrowl');
+               $K(s).parents(".kGrowl-notification").trigger('kGrowl.beforeClose').animate({opacity: 'hide'}, "normal", "swing", function() {$K(this).trigger('kGrowl.close').remove();});});
+};
+
 
 
 if(typeof(kvars) != "undefined") {
@@ -250,16 +265,35 @@ KOBJ.init = function(init_obj) {
 		    });
 };
 
-KOBJ.require = function(url) {
+KOBJ.css = function(css) {
+  if($K("style[title=KOBJ_stylesheet]").length == 0) {
+    var r=document.createElement("style");
+     r.innerHTML= css;
+     r.type= "text/css";
+     r.media = "screen";
+     r.rel = "stylesheet";
+     r.title="KOBJ_stylesheet"
+     var head=document.getElementsByTagName("head")[0];
+     head.appendChild(r);
+  }
+  $K("style[title=KOBJ_stylesheet]").append(css + '\n');
+};
 
+
+KOBJ.require = function(url) {
   var r=document.createElement("script");
   r.src= url;
   r.type= "text/javascript";
   var body=document.getElementsByTagName("body")[0];
-//  $K(document).ready(function() {
   body.appendChild(r);
-//		     });
+};
 
+KOBJ.reload = function(delay) {
+  var r=document.createElement("script");
+  r.type= "text/javascript";
+  r.innerHTML=  "KOBJ.eval(KOBJ_config);"
+  var body=document.getElementsByTagName("body")[0];
+  setTimeout(function(){body.appendChild(r)},delay);
 };
 
 

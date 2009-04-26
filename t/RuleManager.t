@@ -333,7 +333,7 @@ $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "dispatch");
 #diag $json;
 
 contains_string($json, 
-	       'Invalid dispatch block',
+	       'Invalid dispatch',
 	       "Parsing dispatch decls with syntax error");
 
 

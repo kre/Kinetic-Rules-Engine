@@ -1,3 +1,9 @@
+2009-04-25  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Rules.pm (eval_globals): Added css statement to globals
+	* Kynetx/Parser.pm: Added css statement to globals
+	* Kynetx/Actions.pm: Added new action for closing notifications.
+
 2009-04-23  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (eval_ruleset): Reset 'rule' name for each

@@ -84,6 +84,13 @@ function(uniq, cb, config, pos, color, bgcolor, header, sticky, msg) {
 }
 EOF
 
+    close_notification => <<EOF,
+function(uniq, cb, config, selector) {
+    KOBJ.close_notification(selector);
+    cb();
+}
+EOF
+
     annotate_search_results => <<EOF,
 function(uniq, cb, config, annotate_fn) {
     KOBJ.annotate_search_results(annotate_fn, config);

@@ -125,6 +125,8 @@ sub eval_globals {
 	    } elsif(defined $g->{'type'} && $g->{'type'} eq 'dataset') { 
 		$js .= mk_dataset_js($g, $request_info, $rule_env) 
 		    unless Kynetx::Datasets::global_dataset($g);
+	    } elsif(defined $g->{'type'} && $g->{'type'} eq 'css') { 
+		$js .= "KOBJ.css(" . mk_js_str($g->{'content'}) . ");\n";
 	    } elsif(defined $g->{'type'} && $g->{'type'} eq 'datasource') {
 		$rule_env->{'datasource:'.$g->{'name'}} = $g;
 	    }

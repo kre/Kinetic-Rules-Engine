@@ -319,40 +319,6 @@ sub eval_js_decl {
 
     my $logger = get_logger();
 
-#     if($decl->{'type'} eq 'data_source') {
-
-
-# 	my $den = eval_js_rands($decl->{'args'}, 
-# 				$rule_env, $rule_name,$req_info,$session);
-
-# 	# get the values
-# 	for (@{ $den }) {
-# 	    $_ = den_to_exp($_);
-# 	}
-
-
-# 	$val = eval_datasource(
-# 	    $req_info,
-# 	    $rule_env,
-# 	    $rule_name,
-# 	    $decl->{'source'}, 
-# 	    $decl->{'function'}, 
-# 	    $den);
-
-
-# #	    gen_js_rands($decl->{'args'}));
-
-# 	$logger->debug("[decl] Source: " .
-# 		       $decl->{'source'} . ":" . 
-# 		       $decl->{'function'} . 
-# 		       " -> " . 
-# 		       ref $val eq 'HASH' || ref $val eq 'ARRAY' ? encode_json($val): $val );
-
-#     } elsif ($decl->{'type'} eq 'counter') {
-
-# 	$val = eval_counter($session, $decl->{'name'});
-
-# 	$logger->debug("[decl] Counter: " . $decl->{'name'} . " -> " . $val);
 
     if ($decl->{'type'} eq 'expr') {
 
