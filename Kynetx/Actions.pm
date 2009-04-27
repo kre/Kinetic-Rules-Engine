@@ -72,13 +72,27 @@ function(uniq, cb, config, pos, top, side, text) {
 }
 EOF
 
-    notify => <<EOF,
+    notify_six => <<EOF,
 function(uniq, cb, config, pos, color, bgcolor, header, sticky, msg) {
   \$K.kGrowl.defaults.position = pos;
   \$K.kGrowl.defaults.background_color = bgcolor;
   \$K.kGrowl.defaults.color = color;
   \$K.kGrowl.defaults.header = header;
   \$K.kGrowl.defaults.sticky = sticky;
+  if(typeof config === 'object') {
+    jQuery.extend(\$K.kGrowl.defaults,config);
+  }
+  \$K.kGrowl(msg);
+  cb();
+}
+EOF
+
+    notify_two => <<EOF,
+function(uniq, cb, config, header, msg) {
+  \$K.kGrowl.defaults.header = header;
+  if(typeof config === 'object') {
+    jQuery.extend(\$K.kGrowl.defaults,config);
+  }
   \$K.kGrowl(msg);
   cb();
 }
@@ -567,6 +581,12 @@ sub choose_action {
 
 	push @{ $args }, $last_arg;
     	$action_name = $action_name . $action_suffix;
+    } elsif($action_name eq 'notify') {
+	if(scalar @{ $args} == 2) {
+	    $action_name = 'notify_two';
+	} else {
+	    $action_name = 'notify_six';
+	}
     }
 
 #    $logger->debug("[action] $action_name with ", 
