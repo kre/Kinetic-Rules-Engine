@@ -54,7 +54,7 @@ sub process_action {
 	host => $r->connection->get_remote_host,
 	caller => $r->headers_in->{'Referer'},
 	now => time,
-	site => $path_info =~ m#/log/([^/]+)#,
+	site => $path_info =~ m#/log|callback/([^/]+)#,
 	hostname => $r->hostname(),
 	ip => $r->connection->remote_ip(),
 	txn_id => $ug->create_str(),
