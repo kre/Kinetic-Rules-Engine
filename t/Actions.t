@@ -215,7 +215,7 @@ $result = <<_JS_;
  \$K(div).slideDown('slow');
  cb();
 }
-('23',callbacks23,{},'kobj_test','Hello World!'));
+('23',callbacks23,{txn_id:'1234',rule_name:'dummy_name'},'kobj_test','Hello World!'));
 _JS_
 
 
@@ -240,7 +240,7 @@ $result = <<_JS_;
  \$K(div).slideDown('slow');
  cb();
 }
-('23',callbacks23,{'highlight':'yellow'},'kobj_test','Hello World!'));
+('23',callbacks23,{txn_id:'1234',rule_name:'dummy_name','highlight':'yellow'},'kobj_test','Hello World!'));
 _JS_
 
 
@@ -262,7 +262,7 @@ $result = <<_JS_;
     \$K('#'+id).attr('src',new_url);
     cb();
 }
-('23',callbacks23, {}, 'kobj_test','/images/foo.png'));
+('23',callbacks23, {txn_id:'1234',rule_name:'dummy_name'}, 'kobj_test','/images/foo.png'));
 _JS_
 
 
@@ -282,7 +282,7 @@ $result = <<_JS_;
 (function(uniq, cb, config) {
     cb();
 }
-('23',callbacks23,{}));
+('23',callbacks23,{txn_id:'1234',rule_name:'dummy_name'}));
 _JS_
 
 
@@ -303,7 +303,8 @@ setTimeout(function(){
 (function(uniq, cb, config) {
     cb();
 }
-('23',callbacks23,{'delay':5}));
+
+('23',callbacks23,{txn_id:'1234',rule_name:'dummy_name','delay':5}));
 ;KOBJ.logger('timer_expired','1234','none','','success','dummy_name');},(5*1000));
 _JS_
 
@@ -322,10 +323,9 @@ _KRL_
 
 $result = <<_JS_;
 (function(uniq, cb, config, annotate_fn) {
-    KOBJ.annotate_search_results(annotate_fn, config);
-    cb();
+    KOBJ.annotate_search_results(annotate_fn, config, cb);
 }
-('23',callbacks23,{},foo));
+('23',callbacks23,{txn_id:'1234',rule_name:'dummy_name'},foo));
 _JS_
 
 

@@ -1,3 +1,13 @@
+2009-04-29  Phil Windley  <pjw@kynetx.com>
+
+	* etc/tmpl/httpd-perl.conf.tmpl: changed path for callback API to
+	  include "callback"
+	* etc/js/0.9/krl-runtime.js: updates to annotate_search_results to
+	  account for Google's new AJAXian SERP.  
+	* Kynetx/Logger.pm (process_action): Changed how redirect is done.
+	* Kynetx/Actions.pm: Updated annotate_search_results to include
+	  callback function in call.  
+
 2009-04-25  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (eval_globals): Added css statement to globals

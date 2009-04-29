@@ -83,7 +83,7 @@ SKIP: {
     #diag "Testing console with $url_version_4";
     $mech->get_ok($url_version_4);
     is($mech->content_type(), 'text/javascript');
-    $mech->content_is("window.location = '$url'");
+    $mech->content_is("window.location.replace('$url');");
 
 }
 

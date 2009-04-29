@@ -29,94 +29,105 @@ KOBJ.search_annotation.defaults = {
   "font_family": "Verdana, Geneva, sans-serif"
 };
 
-KOBJ.annotate_search_results = function(annotate, config) {
-
+KOBJ.annotate_search_results = function(annotate, config, cb) {
   var defaults = {
-  "name": "KOBJ",
-  "sep": "<div style='padding-top: 13px'>|</div>",
-  "text_color":"#CCC",
-  "height":"40px",
-  "left_margin": "15px",
-  "right_padding" : "15px",
-  "font_size":"12px",
-  "font_family": "Verdana, Geneva, sans-serif"
+      "name": "KOBJ",
+      "sep": "<div style='padding-top: 13px'>|</div>",
+      "text_color": "#CCC",
+      "height": "40px",
+      "left_margin": "15px",
+      "right_padding": "15px",
+      "font_size": "12px",
+      "font_family": "Verdana, Geneva, sans-serif"
   };
-
-  // if config exists, then update
-  if(typeof config === 'object') {
-    jQuery.extend(defaults,config);
+  if (typeof config === 'object') {
+      jQuery.extend(defaults, config);
   }
-
   function mk_list_item(i) {
-    return $K("<li class='"+defaults.name+"_item'>").css(
-          {"float": "left",
-	   "margin": "0",
-	   "vertical-align": "middle",
-	   "padding-left": "4px",
-	   "color": defaults.text_color,
-	   "white-space": "nowrap",
-           "text-align": "center"
-          }).append(i);
+      return $K("<li class='" + defaults.name + "_item'>").css({
+          "float": "left",
+          "margin": "0",
+          "vertical-align": "middle",
+          "padding-left": "4px",
+          "color": defaults.text_color,
+          "white-space": "nowrap",
+          "text-align": "center"
+      }).append(i);
   }
-
-  function mk_rm_div (anchor) {
-    var name = defaults.name;
-    var logo_item = mk_list_item(anchor);
-    var logo_list = $K('<ul>').css(
-          {"margin": "0",
-           "padding": "0",
-           "list-style": "none"
-          }).attr("id", name+"_anno_list").append(logo_item);
-    var inner_div = $K('<div>').css(
-          {"float": "left",
-           "display": "inline",
-           "height": defaults.height,
-           "margin-left": defaults.left_margin,
-           "padding-right": defaults.right_padding
-          }).append(logo_list);
-    if (typeof defaults != 'undefined' &&
-        defaults['tail_image']){
-      inner_div.css({
-           "background-image": "url(" + defaults['tail_image'] + ")",
-           "background-repeat": "no-repeat",
-           "background-position": "right top"
-		    });
-    }
-    var rm_div = $K('<div>').css(
-          {"float": "right",
-           "width": "auto",
-           "height": defaults.height,
-           "font-size": defaults.font_size,
-           "line-height": "normal",
-           "font-family": defaults.font_familty
-	   }).append(inner_div);
-    if (typeof defaults != 'undefined' &&
-        defaults['head_image']){
-     rm_div.css({
-           "background-image": "url(" + defaults['head_image'] +")",
-           "background-repeat": "no-repeat",
-           "background-position": "left top"
-		});
-    }
-    return rm_div;
+  function mk_rm_div(anchor) {
+      var name = defaults.name;
+      var logo_item = mk_list_item(anchor);
+      var logo_list = $K('<ul>').css({
+          "margin": "0",
+          "padding": "0",
+          "list-style": "none"
+      }).attr("id", name + "_anno_list").append(logo_item);
+      var inner_div = $K('<div>').css({
+          "float": "left",
+          "display": "inline",
+          "height": defaults.height,
+          "margin-left": defaults.left_margin,
+          "padding-right": defaults.right_padding
+      }).append(logo_list);
+      if (typeof defaults != 'undefined' && defaults['tail_image']) {
+          inner_div.css({
+              "background-image": "url(" + defaults['tail_image'] + ")",
+              "background-repeat": "no-repeat",
+              "background-position": "right top"
+          });
+      }
+      var rm_div = $K('<div>').css({
+          "float": "right",
+          "width": "auto",
+          "height": defaults.height,
+          "font-size": defaults.font_size,
+          "line-height": "normal",
+          "font-family": defaults.font_familty
+      }).append(inner_div);
+      if (typeof defaults != 'undefined' && defaults['head_image']) {
+          rm_div.css({
+              "background-image": "url(" + defaults['head_image'] + ")",
+              "background-repeat": "no-repeat",
+              "background-position": "left top"
+          });
+      }
+      return rm_div;
   }
-
-  $K("li.g, li div.res").each(function() {
-        var contents = annotate(this);
-        if (contents) {
-          if($K(this).find('#'+defaults.name+'_anno_list li').is('.'+defaults.name+'_item')) {
-             $K(this).find('#'+defaults.name+'_anno_list').append(mk_list_item(defaults.sep)).append(mk_list_item(contents));
-          } else {
-             $K(this).find("div.s,div.abstr").prepend(mk_rm_div(contents));
-          }
+  function runAnnotate(){
+    //console.log("running annotate");
+//    $K('#res div:first ol, #web').addClass("Kannotated");
+    var count = 0;
+    $K("li.g, li div.res, #results>ul>li").each(function() {
+      var contents = annotate(this);
+      if (contents) {
+	count++;
+        if ($K(this).find('#' + defaults.name + '_anno_list li').is('.' + defaults.name + '_item')) {
+          $K(this).find('#' + defaults.name + '_anno_list').append(mk_list_item(defaults.sep)).append(mk_list_item(contents));
+        } else {
+          $K(this).find("div.s,div.abstr,p").prepend(mk_rm_div(contents));
         }
-   });
-
+      }
+     });
+     KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'] );
+     cb();
+  }
+  //console.log("annotating...");
+  runAnnotate();
+  //if this is google ajax serp, wrap the 'done' method call
+  if(typeof je === "object" && je.zz){
+    var gResultDone = je.zz;
+    je.zz = function(a, b){
+      gResultDone(a, b);
+      runAnnotate();
+    };
+  }
 };
+
+
 
 KOBJ.logger = function(type,txn_id,element,url,sense,rule) {
     e=document.createElement("script");
-    e.src=KOBJ.callback_url+"?type="+type+"&txn_id="+txn_id+"&element="+element+"&ts="+KOBJ.d+"&sense="+sense+"&url="+escape(url)+"&rule="+rule;
+    e.src=KOBJ.callback_url+"?type="+type+"&txn_id="+txn_id+"&element="+element+"&sense="+sense+"&url="+escape(url)+"&rule="+rule;
     body=document.getElementsByTagName("body")[0];
     body.appendChild(e);
 };
@@ -208,7 +219,7 @@ KOBJ.buildDiv = function (uniq, pos, top, side) {
 KOBJ.get_host = function(s) {
  var h = "";
  try {
-   h = s.match(/^(?:\w+:\/\/)?([\w.]+)/)[1];
+   h = s.match(/^(?:\w+:\/\/)?([\w-.]+)/)[1];
  } catch(err) {
  }
  return h;
@@ -312,7 +323,7 @@ KOBJ.eval = function(params) {
 
   var d = (new Date).getTime();
   var url = KOBJ.proto+KOBJ.eval_host+"/ruleset/eval/" + KOBJ.site_id;
-  KOBJ.callback_url = KOBJ.proto+KOBJ.callback_host+"/log/" + KOBJ.site_id;
+  KOBJ.callback_url = KOBJ.proto+KOBJ.callback_host+"/callback/" + KOBJ.site_id;
 
   var param_str = "";
   if(params) {

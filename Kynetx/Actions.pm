@@ -46,19 +46,25 @@ my($active,$test,$inactive) = (0,1,2);
 my %actions = (
 
     alert => <<EOF,
-function(uniq, cb, config, msg) {alert(msg)}
+function(uniq, cb, config, msg) {
+    alert(msg);
+    cb();
+}
 EOF
 
     redirect => <<EOF,
-function(uniq, cb, config, url) {window.location = url}
+function(uniq, cb, config, url) {
+    window.location = url;
+    cb();
+}
 EOF
 
+    # cb in load
     float_url => <<EOF,
 function(uniq, cb, config, pos, top, side, src_url) {
     var d = KOBJ.buildDiv(uniq, pos, top, side);
     \$K(d).load(src_url, cb);
     \$K('body').append(d);
-    
 }
 EOF
 
@@ -104,11 +110,11 @@ function(uniq, cb, config, selector) {
     cb();
 }
 EOF
-
+    
+    # cb passed into function
     annotate_search_results => <<EOF,
 function(uniq, cb, config, annotate_fn) {
-    KOBJ.annotate_search_results(annotate_fn, config);
-    cb();
+    KOBJ.annotate_search_results(annotate_fn, config, cb);
 }
 EOF
 
@@ -175,6 +181,7 @@ function(uniq, cb, config, top, left, width, height, url) {
 }
 EOF
 
+    # cb in load
     replace_url => <<EOF,
 function(uniq, cb, config, id, src_url) {
     var d = document.createElement('div');
@@ -400,7 +407,7 @@ sub build_one_action {
 	draggable => 0,
 	);
 
-    my @config;
+    my @config = ("txn_id: '".$req_info->{'txn_id'} . "'", "rule_name: '$rule_name'");
 
     # override defaults if set
     foreach my $m ( @{ $action->{'modifiers'} } ) {

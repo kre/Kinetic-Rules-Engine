@@ -126,14 +126,7 @@ sub process_action {
     if($req->param('url')){
 	my $url = $req->param('url');
 	$logger->debug("Redirecting to ", $url);
-	print "window.location = '$url'";
-# 	print <<EOF;
-# m = document.createElement('meta');
-# m.setAttribute('http-equiv', 'Refresh');
-# m.setAttribute('content', '0; url=$url');
-# head=document.getElementsByTagName('head')[0];
-# head.appendChild(m);
-# EOF
+	print "window.location.replace('$url');";
 
 
     }
