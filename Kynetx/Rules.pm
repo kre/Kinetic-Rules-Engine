@@ -67,6 +67,7 @@ sub process_rules {
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rids);
 
     my $js = '';
+    
     my @rids = split(/;/, $rids);
     # if we sort @rids we change ruleset priority
     foreach my $rid (@rids) {
@@ -74,7 +75,18 @@ sub process_rules {
 	$js .= eval_ruleset($r, $req_info, $session, $rid);
     }
 
-    return $js;
+    # put this in the logging DB
+    log_rule_fire($r, 
+		  $req_info, 
+		  $session
+	);
+
+    # return the JS load to the client
+    $logger->info("finished");
+
+
+    # this is where we return the JS
+    print $js;
 
 }
 
@@ -86,9 +98,10 @@ sub eval_ruleset {
 
     Log::Log4perl::MDC->put('rule', '[global]');
 
+    $req_info->{'rid'} = $rid; # override with the one we're working on
+
     $logger->info("Processing rules for site " . $req_info->{'rid'});
 
-    $req_info->{'rid'} = $rid;
     # side effects environment with precondition pattern values
     my ($rules, $rule_env, $ruleset) = 
 	get_rule_set($r->dir_config('svn_conn'),
@@ -98,7 +111,6 @@ sub eval_ruleset {
     Kynetx::Request::log_request_env($logger, $req_info);
 
     my $js = '';
-
 
 
     # handle globals
@@ -111,19 +123,19 @@ sub eval_ruleset {
     }
 
     $logger->debug("Finished processing rules for " . $req_info->{'rid'});
-    print "\n(function() { $js } ());\n" ;
+    return "\n(function() { $js } ());\n" ;
 }
 
 
 sub eval_globals {
-    my($request_info,$ruleset, $rule_env) = @_;
+    my($req_info,$ruleset, $rule_env) = @_;
     my $js = "";
     if($ruleset->{'global'}) {
 	foreach my $g (@{ $ruleset->{'global'} }) {
 	    if($g->{'emit'}) { # emit
 		$js .= $g->{'emit'} . "\n";
 	    } elsif(defined $g->{'type'} && $g->{'type'} eq 'dataset') { 
-		$js .= mk_dataset_js($g, $request_info, $rule_env) 
+		$js .= mk_dataset_js($g, $req_info, $rule_env) 
 		    unless Kynetx::Datasets::global_dataset($g);
 	    } elsif(defined $g->{'type'} && $g->{'type'} eq 'css') { 
 		$js .= "KOBJ.css(" . mk_js_str($g->{'content'}) . ");\n";
@@ -138,7 +150,7 @@ sub eval_globals {
 }
 
 sub eval_rule {
-    my($r, $request_info, $rule_env, $session, $rule) = @_;
+    my($r, $req_info, $rule_env, $session, $rule) = @_;
 
     my $logger = get_logger();
 
@@ -152,7 +164,7 @@ sub eval_rule {
     }
 
     # this loads the rule_env.  
-    Kynetx::JavaScript::eval_js_pre($request_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
+    Kynetx::JavaScript::eval_js_pre($req_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
 
     foreach my $var (keys %{ $rule_env } ) {
 	$logger->debug("[Env] $var has value $rule_env->{$var}" 
@@ -164,7 +176,7 @@ sub eval_rule {
 
 
     my $pred_value = 
-	eval_predicates($request_info, $rule_env, $session, 
+	eval_predicates($req_info, $rule_env, $session, 
 			$rule->{'cond'}, $rule->{'name'});
 
 
@@ -189,18 +201,18 @@ sub eval_rule {
 
 	# this is the main event.  The browser has asked for a
 	# chunk of Javascrip and this is where we deliver... 
-	$js .= Kynetx::Actions::build_js_load($rule, $request_info, $rule_env, $session); 
+	$js .= Kynetx::Actions::build_js_load($rule, $req_info, $rule_env, $session); 
 	
 	$js .= Kynetx::Actions::eval_post_expr($cons, $session) if(defined $cons);
 
 	# save things for logging
-	push(@{ $rule_env->{'names'} }, $rule->{'name'});
-	push(@{ $rule_env->{'results'} }, 'fired');
-	push(@{ $rule_env->{'all_actions'} }, $rule_env->{'actions'});
+	push(@{ $req_info->{'names'} }, $req_info->{'rid'}.':'.$rule->{'name'});
+	push(@{ $req_info->{'results'} }, 'fired');
+	push(@{ $req_info->{'all_actions'} }, $rule_env->{'actions'});
 	$rule_env->{'actions'} = ();
-	push(@{ $rule_env->{'all_labels'} }, $rule_env->{'labels'});
+	push(@{ $req_info->{'all_labels'} }, $rule_env->{'labels'});
 	$rule_env->{'labels'} = ();
-	push(@{ $rule_env->{'all_tags'} }, $rule_env->{'tags'});
+	push(@{ $req_info->{'all_tags'} }, $rule_env->{'tags'});
 	$rule_env->{'tags'} = ();
 
 
@@ -211,27 +223,18 @@ sub eval_rule {
 	$js .= Kynetx::Actions::eval_post_expr($alt, $session) if(defined $alt);
 
 	# put this in the logging DB
-	push(@{ $rule_env->{'names'} }, $rule->{'name'});
-	push(@{ $rule_env->{'results'} }, 'notfired');
-	push(@{ $rule_env->{'all_actions'} }, []);
+	push(@{ $req_info->{'names'} }, $req_info->{'rid'}.':'.$rule->{'name'});
+	push(@{ $req_info->{'results'} }, 'notfired');
+	push(@{ $req_info->{'all_actions'} }, []);
 	$rule_env->{'actions'} = ();
-	push(@{ $rule_env->{'all_labels'} }, []);
+	push(@{ $req_info->{'all_labels'} }, []);
 	$rule_env->{'labels'} = ();
-	push(@{ $rule_env->{'all_tags'} }, []);
+	push(@{ $req_info->{'all_tags'} }, []);
 	$rule_env->{'tags'} = ();
 
 
     }
 
-    # put this in the logging DB
-    log_rule_fire($r, 
-		  $request_info, 
-		  $rule_env,
-		  $session
-	);
-
-    # return the JS load to the client
-    $logger->info("finished");
     return $js; 
 
 }
@@ -241,15 +244,15 @@ sub eval_rule {
 # this returns the right rules for the caller and site
 # this is a point where things could be optimixed in the future
 sub get_rule_set {
-    my ($svn_conn, $request_info) = @_;
+    my ($svn_conn, $req_info) = @_;
 
-    my $caller = $request_info->{'caller'};
-    my $site = $request_info->{'rid'};
+    my $caller = $req_info->{'caller'};
+    my $site = $req_info->{'rid'};
     
     my $logger = get_logger();
     $logger->debug("Getting ruleset for $caller");
 
-    my $ruleset = get_rules_from_repository($site, $svn_conn, $request_info);
+    my $ruleset = get_rules_from_repository($site, $svn_conn, $req_info);
 
     $ruleset = optimize_rules($ruleset);
 
@@ -261,16 +264,16 @@ sub get_rule_set {
     my @new_set;
     my %new_env;
 
-    $request_info->{'rule_count'} = 0;
-    $request_info->{'selected_rules'} = [];
+    $req_info->{'rule_count'} = 0;
+    $req_info->{'selected_rules'} = [];
     foreach my $rule ( @{ $ruleset->{'rules'} } ) {
 # 	$logger->debug("Rule $rule->{'name'} is " . $rule->{'state'});
 	if($rule->{'state'} eq 'active' || 
 	   ($rule->{'state'} eq 'test' && 
-	    $request_info->{'mode'} && 
-	    $request_info->{'mode'} eq 'test' )) {  # optimize??
+	    $req_info->{'mode'} && 
+	    $req_info->{'mode'} eq 'test' )) {  # optimize??
 
-	    $request_info->{'rule_count'}++;
+	    $req_info->{'rule_count'}++;
 	
 	    # test the pattern, captured values are stored in @captures
 	    if(my @captures = $caller =~ Kynetx::Actions::get_precondition_test($rule)) {
@@ -278,7 +281,7 @@ sub get_rule_set {
 		$logger->debug("[selected] $rule->{'name'} ");
 
 		push @new_set, $rule;
-		push @{ $request_info->{'selected_rules'} }, $rule->{'name'};
+		push @{ $req_info->{'selected_rules'} }, $rule->{'name'};
 
 		# store the captured values from the precondition to the env
 		my $cap = 0;

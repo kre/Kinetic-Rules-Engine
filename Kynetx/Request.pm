@@ -21,7 +21,7 @@ log_request_env
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 sub build_request_env {
-    my ($r, $method, $rid) = @_;
+    my ($r, $method, $rids) = @_;
 
     my $logger = get_logger();
 
@@ -34,8 +34,9 @@ sub build_request_env {
 	host => $r->connection->get_remote_host || $req->param('host') || '',
 	caller => $r->headers_in->{'Referer'} || $req->param('caller') || '',
 	now => time,
-	site => $rid,
-	rid => $rid,
+        rids => $rids,
+	site => $rids,
+	rid => $rids, 
 	method => $method,
 	hostname => $r->hostname(),
 	ip => $r->connection->remote_ip() || '0.0.0.0',

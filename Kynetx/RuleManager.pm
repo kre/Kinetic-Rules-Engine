@@ -50,6 +50,10 @@ sub handler {
     Log::Log4perl::MDC->put('site', $method);
     Log::Log4perl::MDC->put('rule', $rid);  # no rule for now...
 
+    # for later logging
+    $r->subprocess_env(RIDS => $rid);
+    $r->subprocess_env(METHOD => $method);
+
 
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
     Kynetx::Request::log_request_env($logger, $req_info);

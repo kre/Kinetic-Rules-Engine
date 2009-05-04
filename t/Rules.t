@@ -65,6 +65,7 @@ $session->{mk_created_session_name('archive_pages_old')} = $three_days_ago->epoc
 my $Amazon_req_info;
 $Amazon_req_info->{'ip'} = '72.21.203.1'; # Seattle (Amazon)
 $Amazon_req_info->{'rid'} = 'cs_test';
+$Amazon_req_info->{'txn_id'} = 'txn_id';
 
 my (@test_cases, $json, $krl_src, $krl,$result);
 
@@ -133,7 +134,7 @@ _KRL_
 $result = <<_JS_;
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks%uniq%,{txn_id:'',rule_name:'test_1'},'testing'));
+('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_1'},'testing'));
 _JS_
 
 add_testcase(
@@ -156,7 +157,7 @@ $result = <<_JS_;
 var c = 'Seattle';
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks%uniq%,{txn_id:'',rule_name:'test_2'},('testing' + c)));
+('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_2'},('testing' + c)));
 _JS_
 
 add_testcase(
@@ -181,7 +182,7 @@ $result = <<_JS_;
 var c = 'Seattle';
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks%uniq%,{txn_id:'',rule_name:'test_3'},('testing' + c)));
+('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_3'},('testing' + c)));
 _JS_
 
 add_testcase(
@@ -206,7 +207,7 @@ $result = <<_JS_;
 var c = 'Seattle';
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks%uniq%,{txn_id:'',rule_name:'test_4'},('testing' + c)));
+('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_4'},('testing' + c)));
 _JS_
 
 add_testcase(
@@ -270,7 +271,7 @@ $result = <<_JS_;
 var c = 3;
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks%uniq%,{txn_id:'',rule_name:'test_5a'},'test'));
+('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_5a'},'test'));
 _JS_
 
 add_testcase(
@@ -304,7 +305,7 @@ $result = <<_JS_;
 var c = 3;
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks%uniq%,{txn_id:'',rule_name:'test_6'},'test'));
+('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_6'},'test'));
 _JS_
 
 add_testcase(
@@ -367,12 +368,12 @@ _KRL_
 
 $result = <<_JS_;
 function callBacks%uniq% () {
-  KOBJ.obs('id','','rssfeed','success','test_8');
-  KOBJ.obs('class','','newsletter','success','test_8');
-  KOBJ.obs('id','','close_rss','failure','test_8');
+  KOBJ.obs('id','txn_id','rssfeed','success','test_8');
+  KOBJ.obs('class','txn_id','newsletter','success','test_8');
+  KOBJ.obs('id','txn_id','close_rss','failure','test_8');
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks%uniq%,{txn_id:'',rule_name:'test_8'},'test'));
+ ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_8'},'test'));
 _JS_
 
 add_testcase(
@@ -406,7 +407,7 @@ var html = '<p>This is the product title: '+pt+'</p>';
 function callBacks%uniq% () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks%uniq%,{txn_id:'',rule_name:'test_page_id'},html));
+ ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_page_id'},html));
 _JS_
 
 add_testcase(
@@ -435,7 +436,7 @@ pagename.replace(/-/, ' ');
 function callBacks%uniq% () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks%uniq%,{txn_id:'',rule_name:'emit_test_0'},pagename));
+ ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'emit_test_0'},pagename));
 _JS_
 
 add_testcase(
@@ -463,7 +464,7 @@ pagename.replace(/-/, ' ');
 function callBacks%uniq% () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks%uniq%,{txn_id:'',rule_name:'emit_test_1'},pagename));
+ ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'emit_test_1'},pagename));
 _JS_
 
 add_testcase(
@@ -493,7 +494,7 @@ var welcome = 'Don\\'t be false please! Be true!';
 function callBacks%uniq% () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks%uniq%,{txn_id:'',rule_name:'extended_quote_test'},welcome));
+ ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'extended_quote_test'},welcome));
 _JS_
 
 add_testcase(
@@ -516,7 +517,7 @@ $result = <<_JS_;
 function callBacks%uniq% () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks%uniq%,{txn_id:'',rule_name:'april2008'},'Hello Tim'));
+ ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'april2008'},'Hello Tim'));
 _JS_
 
 add_testcase(
@@ -564,7 +565,7 @@ $result = <<_JS_;
 function callBacks%uniq% () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks%uniq%,{txn_id:'',rule_name:'april2008'},'Hello Tim'));
+ ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'april2008'},'Hello Tim'));
 _JS_
 
 add_json_testcase(

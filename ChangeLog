@@ -1,3 +1,12 @@
+2009-05-04  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx.pm: Added method names to logging for all methods
+	* etc/tmpl/httpd-perl.conf.tmpl: Added method names to logging
+	* Kynetx/Rules.pm (eval_ruleset): Moved logging to outer most
+	  level in ruleset evaluation.
+	* Kynetx/Log.pm (log_rule_fire): Fixed bug that kept logging from
+	  working when no ruleset was selected
+
 2009-04-29  Phil Windley  <pjw@kynetx.com>
 
 	* etc/tmpl/httpd-perl.conf.tmpl: changed path for callback API to

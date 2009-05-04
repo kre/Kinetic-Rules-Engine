@@ -24,6 +24,8 @@ sub handler {
     Kynetx::Memcached->init();
 
     if($r->path_info =~ m!/version/! ) {
+    # store these for later logging
+	$r->subprocess_env(METHOD => 'version');
 	show_build_num($r);
     } else {
 	process_action($r);
@@ -66,7 +68,9 @@ sub process_action {
     Log::Log4perl::MDC->put('site', $request_info{'site'});
     Log::Log4perl::MDC->put('rule', $request_info{'rule'}); 
 
-
+    # store these for later logging
+    $r->subprocess_env(METHOD => 'callback');
+    $r->subprocess_env(RIDS => $request_info{'site'});
     $r->subprocess_env(SITE => $request_info{'site'});
 
     # make sure we use the one sent, not the one for this interaction
@@ -90,12 +94,9 @@ sub process_action {
     }
 
     $logger->debug("Finish time: ", time, " Start time: ", $r->subprocess_env('START_TIME'));
-    $r->subprocess_env(TOTAL_SECS => Time::HiRes::time - 
-	$r->subprocess_env('START_TIME'));
    
 
 
-    $logger->info("Processing callback for site " . $request_info{'site'} . " and rule " . $req->param('rule'));
 
 
 #     $logger->debug("Storing: ", $request_info{'site'}, ", ",
@@ -131,6 +132,10 @@ sub process_action {
 
     }
 
+    $logger->info("Processing callback for site " . $request_info{'site'} . " and rule " . $req->param('rule'));
+
+    $r->subprocess_env(TOTAL_SECS => Time::HiRes::time - 
+	$r->subprocess_env('START_TIME'));
 
 }
 

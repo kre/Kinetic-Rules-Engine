@@ -50,6 +50,10 @@ sub handler {
     Log::Log4perl::MDC->put('site', $rid);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
 
+    # store these for later logging
+    $r->subprocess_env(METHOD => $method);
+    $r->subprocess_env(RIDS => $rid);
+
 
     # at some point we need a better dispatch function
     if($method eq 'eval') {
