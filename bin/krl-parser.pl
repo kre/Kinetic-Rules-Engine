@@ -20,7 +20,7 @@ Log::Log4perl->easy_init($DEBUG);
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'lhjf:';
+my $opt_string = 'clhjf:';
 getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'};
 
@@ -31,10 +31,15 @@ $lex_only = $opt{'l'} if $opt{'l'};
 my $output_json = 0;
 $output_json = $opt{'j'} if $opt{'j'};
 
+my $remove_comments = 0;
+$remove_comments = $opt{'c'} if $opt{'c'};
+
 my $filename = "";
 $filename = $opt{'f'};
 		    
 if($lex_only) {
+    print Kynetx::Parser::remove_comments(getkrl());
+} elsif ($remove_comments) {
     print Kynetx::Parser::remove_comments(getkrl());
 } else {
 
@@ -85,6 +90,8 @@ Options are:
    -l : only lex the file, do not parse.  Lexical results are printed.
 
    -j : return the JSON representation instead of Perl.
+
+   -c : remove comments
 
 
 EOF

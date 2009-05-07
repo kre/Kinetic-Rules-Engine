@@ -158,7 +158,7 @@ ruleset 10 {
       second_thing = <<
 <div id="second">
 <p>This is the second div If you want to say something is much
-greater, use &gt;&gt; and say #{city}</p> // This is NOT a comment  
+greater, use &gt;&gt; and say #{city}</p> 
 </div>
       >>;
 
@@ -185,7 +185,7 @@ ruleset 10 {
       second_thing = <<
 <div id="second">
 <p>This is the second div If you want to say something is much
-greater, use &gt;&gt; and say #{city}</p>   // This is NOT a comment
+greater, use &gt;&gt; and say #{city}</p>   
 </div>
       >>;
 
@@ -204,6 +204,8 @@ is_string_nows(remove_comments($krl_src), $result, "Comments in string escaped")
 
 $result = <<_RES_;
 ruleset 10 {
+
+
 
  rule here_doc0 is active {
     select using "/identity-policy/" setting ()
@@ -232,6 +234,10 @@ _RES_
 $krl_src = <<_KRL_;
 ruleset 10 {
 
+//
+// AAA
+//
+
  rule here_doc0 is active {
     select using "/identity-policy/" setting ()
 
@@ -258,8 +264,6 @@ _KRL_
 
 
 is_string_nows(remove_comments($krl_src), $result, "Comments in extended quote");
-
-
 
 
 1;
