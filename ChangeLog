@@ -1,3 +1,23 @@
+2009-05-07  Phil Windley  <pjw@kynetx.com>
+
+	* t/Comments.t: Tests for remove_comments
+	* Kynetx/Parser.pm (remove_comments): Added support for extended
+	  quotes
+
+2009-05-06  Phil Windley  <pjw@kynetx.com>
+
+	* etc/tmpl/httpd-perl.conf.tmpl: Updated to reference 20090506
+	  version of the runtime library
+	* etc/js/0.9/kgrowl-1.0.js: Fixed position for IE
+	* etc/js/0.9/krl-runtime.js: Changed how CSS is inserted.
+	* Kynetx/Datasets.pm (get_datasource): Removing newlines from
+	  non-JSON sources
+	* Kynetx/Environments.pm: Added & developed module for general
+	  symbol tables; not yet in use.
+	* Kynetx/Actions.pm: Changed action JS to support general jQuery
+	  selectors
+	
+
 2009-05-04  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx.pm: Added method names to logging for all methods

@@ -208,10 +208,10 @@ replace_html("kobj_test", "Hello World!");
 _KRL_
 
 $result = <<_JS_;
-(function(uniq, cb, config, id, text) {
- var div = document.createElement('div');
+(function(uniq, cb, config, sel, text) {
+ var div = \$K('<div>');
  \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text);
- \$K('#'+id).replaceWith(div);
+ \$K(sel).replaceWith(div);
  \$K(div).slideDown('slow');
  cb();
 }
@@ -233,10 +233,10 @@ with highlight = "yellow";
 _KRL_
 
 $result = <<_JS_;
-(function(uniq, cb, config, id, text) {
- var div = document.createElement('div');
+(function(uniq, cb, config, sel, text) {
+ var div = \$K('<div>');
  \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text);
- \$K('#'+id).replaceWith(div);
+ \$K(sel).replaceWith(div);
  \$K(div).slideDown('slow');
  cb();
 }
@@ -259,7 +259,7 @@ _KRL_
 
 $result = <<_JS_;
 (function(uniq, cb, config, id, new_url) {
-    \$K('#'+id).attr('src',new_url);
+    \$K(id).attr('src',new_url);
     cb();
 }
 ('23',callbacks23, {txn_id:'1234',rule_name:'dummy_name'}, 'kobj_test','/images/foo.png'));

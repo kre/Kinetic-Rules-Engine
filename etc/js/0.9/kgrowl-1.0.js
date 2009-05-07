@@ -12,30 +12,32 @@
 
    var pos = $.kGrowl.defaults.position.split("-");
 
-   if ($.browser.msie && parseInt($.browser.version) < 7 && !window["XMLHttpRequest"]) {
-     // IE6
-     styling["position"] = "absolute";
-     if(pos[0] == "top") {
-       styling["top"] = "expression( ( 0 + ( ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop ) ) + 'px' )";
-       if(pos[1] == "right") {
-	 styling["right"] = "auto";
-	 styling["bottom"] = "auto";
-	 styling["left"] = "expression( ( 0 - kGrowl.offsetWidth + ( document.documentElement.clientWidth ? document.documentElement.clientWidth : document.body.clientWidth ) + ( ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft ) ) + 'px' )";
+   // if ($.browser.msie && parseInt($.browser.version) < 7 && !window["XMLHttpRequest"]) {
+   //   // IE6
+   //   styling["position"] = "absolute";
+   //   if(pos[0] == "top") {
+   //     styling["top"] = "expression( ( 0 + ( ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop ) ) + 'px' )";
+   //     if(pos[1] == "right") {
+   // 	 styling["right"] = "auto";
+   // 	 styling["bottom"] = "auto";
+   // 	 styling["left"] = "expression( ( 0 - kGrowl.offsetWidth + ( document.documentElement.clientWidth ? document.documentElement.clientWidth : document.body.clientWidth ) + ( ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft ) ) + 'px' )";
 
-       } else { // pos[1] == "left"
-	 styling["left"] = "expression( ( 0 + ( ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft ) ) + 'px' )";
-       }
-     } else { //pos[0] == "bottom"
-       styling["top"] = "expression( ( 0 - kGrowl.offsetHeight + ( document.documentElement.clientHeight ? document.documentElement.clientHeight : document.body.clientHeight ) + ( ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop ) ) + 'px' )";
-       if(pos[1] == "right") {
-	 styling["left"] = "expression( ( 0 - kGrowl.offsetWidth + ( document.documentElement.clientWidth ? document.documentElement.clientWidth : document.body.clientWidth ) + ( ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft ) ) + 'px' )";
-       } else { // pos[1] == "left"
-	 styling["left"] = "expression( ( 0 + ( ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft ) ) + 'px' )";
-       }
-     }
-   } else {
-     styling[pos[0]] = "0px"; //vert
-     styling[pos[1]] = "0px"; //horz
+   //     } else { // pos[1] == "left"
+   // 	 styling["left"] = "expression( ( 0 + ( ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft ) ) + 'px' )";
+   //     }
+   //   } else { //pos[0] == "bottom"
+   //     styling["top"] = "expression( ( 0 - kGrowl.offsetHeight + ( document.documentElement.clientHeight ? document.documentElement.clientHeight : document.body.clientHeight ) + ( ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop ) ) + 'px' )";
+   //     if(pos[1] == "right") {
+   // 	 styling["left"] = "expression( ( 0 - kGrowl.offsetWidth + ( document.documentElement.clientWidth ? document.documentElement.clientWidth : document.body.clientWidth ) + ( ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft ) ) + 'px' )";
+   //     } else { // pos[1] == "left"
+   // 	 styling["left"] = "expression( ( 0 + ( ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft ) ) + 'px' )";
+   //     }
+   //   }
+   // } else
+   styling[pos[0]] = "0px"; //vert
+   styling[pos[1]] = "0px"; //horz
+   if ($.browser.msie && !window["XMLHttpRequest"]) { // degrade for IE
+     styling["position"] = "absolute";
    }
 
    if ( $('#kGrowl').size() == 0 )

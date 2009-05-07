@@ -672,10 +672,14 @@ my $comment_re = qr%
            [^"\\]        ##  Non "\
          )*
          "           ##  End of " ... " string
+       |         ##     OR  various things which aren't comments:
+         <<           ##  Start of << ... >> string
+         .*
+         >>           ##  End of " ... " string
 
-     |         ##     OR
+       |         ##     OR
         .           ##  Anything other char
-         [^/"'\\]*   ##  Chars which doesn't start a comment, string or escape
+         [^/"'<\\]*   ##  Chars which doesn't start a comment, string or escape
        )
      %xs;
 

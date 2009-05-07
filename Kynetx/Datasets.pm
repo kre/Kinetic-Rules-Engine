@@ -188,6 +188,7 @@ sub get_datasource {
     eval { $source_json = decode_json($source); };
     if ($@) {
 	$logger->debug("seeing $function as string ", $@);
+	$source =~ y/\n\r/  /; # remove newlines
 	$result = $source;
     } else { 
 	$logger->debug("seeing $function as JSON ", $@);

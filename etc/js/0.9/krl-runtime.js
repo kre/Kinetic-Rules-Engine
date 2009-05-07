@@ -278,14 +278,15 @@ KOBJ.init = function(init_obj) {
 
 KOBJ.css = function(css) {
   if($K("style[title=KOBJ_stylesheet]").length == 0) {
-    var r=document.createElement("style");
-     r.innerHTML= css;
-     r.type= "text/css";
-     r.media = "screen";
-     r.rel = "stylesheet";
-     r.title="KOBJ_stylesheet"
-     var head=document.getElementsByTagName("head")[0];
-     head.appendChild(r);
+    $K('<style title="KOBJ_stylesheet"></style>').appendTo('head');
+    // var r=document.createElement("style");
+    //  r.innerHTML= css;
+    //  r.type= "text/css";
+    //  r.media = "screen";
+    //  r.rel = "stylesheet";
+    //  r.title="KOBJ_stylesheet"
+    //  var head=document.getElementsByTagName("head")[0];
+    //  head.appendChild(r);
   }
   $K("style[title=KOBJ_stylesheet]").append(css + '\n');
 };

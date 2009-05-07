@@ -183,20 +183,20 @@ EOF
 
     # cb in load
     replace_url => <<EOF,
-function(uniq, cb, config, id, src_url) {
-    var d = document.createElement('div');
+function(uniq, cb, config, sel, src_url) {
+    var d = \$K('<div>');
     \$K(d).css({display: 'none'}).load(src_url, cb);
-    \$K('#'+id).replaceWith(d);
+    \$K(sel).replaceWith(d);
     \$K(d).slideDown('slow');
 }
 EOF
 
     # need new "effects" model
     replace_html => <<EOF,
-function(uniq, cb, config, id, text) {
- var div = document.createElement('div');
+function(uniq, cb, config, sel, text) {
+ var div = \$K('<div>');
  \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text);
- \$K('#'+id).replaceWith(div);
+ \$K(sel).replaceWith(div);
  \$K(div).slideDown('slow');
  cb();
 }
@@ -204,15 +204,14 @@ EOF
 
     move_after => <<EOF,
 function(uniq, cb, config, anchor, item) {
-    var i = '#'+item;
-    \$K('#'+anchor).after(\$K(i));
+    var i = item;
+    \$K(anchor).after(\$K(i));
     cb();
 }
 EOF
     
     move_to_top => <<EOF,
 function(uniq, cb, config, li) {
-    li = '#'+li;
     \$K(li).siblings(':first').before(\$K(li));
     cb();
 }
@@ -220,13 +219,41 @@ EOF
 
     replace_image_src => <<EOF,
 function(uniq, cb, config, id, new_url) {
-    \$K('#'+id).attr('src',new_url);
+    \$K(id).attr('src',new_url);
     cb();
 }
 EOF
 
     noop => <<EOF,
 function(uniq, cb, config) {
+    cb();
+}
+EOF
+
+    before => <<EOF,
+function(uniq, cb, config, sel, content) {
+    \$K(sel).before(content);
+    cb();
+}
+EOF
+
+    after => <<EOF,
+function(uniq, cb, config, sel, content) {
+    \$K(sel).after(content);
+    cb();
+}
+EOF
+
+    append => <<EOF,
+function(uniq, cb, config, sel, content) {
+    \$K(sel).append(content);
+    cb();
+}
+EOF
+
+    prepend => <<EOF,
+function(uniq, cb, config, sel, content) {
+    \$K(sel).prepend(content);
     cb();
 }
 EOF
@@ -257,6 +284,7 @@ sub emit_var_decl {
     if($t eq 'str') {
 	$val = "'".escape_js_str($val)."'";
 	# relace tmpl vars with concats for JS
+	$val =~ y/\n\r/  /; # remove newlines
 	$val =~ s/#{([^}]*)}/'+$1+'/g;
     } elsif ($t eq 'hash' || $t eq 'array') {
 	$val = encode_json($val);
