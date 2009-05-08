@@ -36,7 +36,7 @@
    // } else
    styling[pos[0]] = "0px"; //vert
    styling[pos[1]] = "0px"; //horz
-   if ($.browser.msie && !window["XMLHttpRequest"]) { // degrade for IE
+   if ($.browser.msie) { // degrade for IE
      styling["position"] = "absolute";
    }
 
