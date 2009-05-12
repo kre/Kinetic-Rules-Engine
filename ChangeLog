@@ -1,3 +1,11 @@
+2009-05-11  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/PrettyPrinter.pm (pp_meta_item): Updated to support name
+	  and author in meta section 
+	* Kynetx/Parser.pm: Updated to support name and author in meta section
+	* Kynetx.pm (describe_ruleset): Updated to return new data (name
+	  and author) in the describe method
+
 2009-05-07  Phil Windley  <pjw@kynetx.com>
 
 	* t/Comments.t: Tests for remove_comments

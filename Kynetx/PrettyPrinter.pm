@@ -65,7 +65,10 @@ sub pp_meta_block {
 
     my $o .= $beg . "meta {\n";
     
-    $o .= pp_desc($mb->{'description'}, $indent+$g_indent) if ($mb->{'description'}) ;
+    $o .= pp_meta_item('name',$mb, $indent+$g_indent);
+    $o .= pp_meta_item('author',$mb, $indent+$g_indent);
+    $o .= pp_meta_item('description',$mb, $indent+$g_indent);
+
     $o .= pp_logging($mb->{'logging'}, $indent+$g_indent) if ($mb->{'logging'}) ;
 
     $o .= $beg . "}\n";
@@ -74,16 +77,30 @@ sub pp_meta_block {
 
 }
 
-sub pp_desc {
-    my ($node, $indent) = @_;
+sub pp_meta_item {
+    my ($item, $mb, $indent) = @_;
+
+    return "" unless $mb->{$item};
+
+    my $node = $mb->{$item};
+
 
     my $beg = " "x$indent;
     
+    
     my $o = $beg;
 
-    $o .= "description <<\n";
+    if ($item eq 'description') {
+	$o .= "description <<\n";
+    } else {
+	$o .= "$item \"";
+    }
     $o .= $node;
-    $o .= $beg . ">>\n";
+    if ($item eq 'description') {
+	$o .= $beg . ">>\n";
+    } else {
+	$o .= '"';
+    }
   
     return $o;
 }

@@ -116,6 +116,16 @@ pragma: desc_block
         'description' => $item[1]
         }
     }
+ | 'name' STRING
+    {$return = {
+        'name' => $item[2]
+        }
+    }
+ | 'author' STRING
+    {$return = {
+        'author' => $item[2]
+        }
+    }
  | logging_pragma
     {$return = {
         'logging' => $item[1]

@@ -122,7 +122,10 @@ sub describe_ruleset {
 	'ruleset_id' => $ruleset->{'ruleset_name'},
 	'ruleset_version' => $req_info->{'rule_version'},
 	'number_of_rules' => $numrules,
+	'name' => $ruleset->{'meta'}->{'name'} || '',
+	'author' => $ruleset->{'meta'}->{'author'} || '',
 	'description' => $ruleset->{'meta'}->{'description'} || '',
+	'logging' => $ruleset->{'meta'}->{'logging'} || '',
     };
 
 
