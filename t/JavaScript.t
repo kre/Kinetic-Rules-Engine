@@ -19,7 +19,7 @@ $Data::Dumper::Indent = 1;
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Parser qw/:all/;
-use Kynetx::Pick qw/:all/;
+use Kynetx::Operators qw/:all/;
 use Kynetx::JavaScript qw/:all/;
 use Kynetx::Predicates::Referers qw/:all/;
 use Kynetx::Predicates::Markets qw/:all/;

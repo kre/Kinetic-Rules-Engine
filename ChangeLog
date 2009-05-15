@@ -1,3 +1,12 @@
+2009-05-15  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Operators.pm: Moved from Pick.pm to create general
+	  operator functionality.  Added 'length' operator for arrays.
+	* Kynetx/JavaScript.pm: general operators
+	* Kynetx/PrettyPrinter.pm (pp_expr): general operator support
+	* Kynetx/Parser.pm: Updated 'pick' to be a general operator with
+	  variable rands
+
 2009-05-11  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/PrettyPrinter.pm (pp_meta_item): Updated to support name

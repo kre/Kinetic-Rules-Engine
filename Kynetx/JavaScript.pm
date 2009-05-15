@@ -10,7 +10,7 @@ use Data::Dumper;
 use JSON::XS;
 
 use Kynetx::Datasets q/:all/;
-use Kynetx::Pick q/:all/;
+use Kynetx::Operators q/:all/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -222,8 +222,8 @@ sub eval_js_expr {
 	    return eval_js_prim($expr, $rule_env, $rule_name, $req_info, $session);
 	};
 
-	/pick/ && do {
-	    return  Kynetx::Pick::eval_pick($expr, $rule_env, $rule_name, $req_info, $session);
+	/operator/ && do {
+	    return  Kynetx::Operators::eval_operator($expr, $rule_env, $rule_name, $req_info, $session);
 	};
  	/qualified/ && do {
 

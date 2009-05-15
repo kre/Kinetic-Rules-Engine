@@ -559,15 +559,18 @@ term: factor factor_op term
         'args' => [$item[1], $item[3]]
        }
       }
-    | factor '.pick' '(' STRING ')'
+    | factor '.' operator '(' expr(s? /,/) ')'
         {$return =
-	 {'type' => 'pick',
-	  'pattern' => $item[4],
+	 {'type' => 'operator',
+          'name' => $item[3],
+	  'args' => $item[5],
 	  'obj' => $item[1]
          }}
     | factor
 
 factor_op: '*'|'/'
+
+operator: 'pick'|'length'
 
 factor: NUM
         {$return=Kynetx::Parser::mk_expr_node('num',$item[1])}
@@ -612,6 +615,7 @@ qualified_pred: VAR ':' VAR '(' expr(s? /,/) ')'
        }
       }
 
+# FIXME: use predop here?  
 counter_pred: 'counter' '.' VAR INEQUALITY NUM timeframe(?)
       {$return=
        {'type' => 'counter_pred',

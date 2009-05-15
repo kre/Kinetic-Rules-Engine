@@ -17,7 +17,7 @@ Log::Log4perl->easy_init($INFO);
 use Data::Dumper;
 
 use Kynetx::Test qw/:all/;
-use Kynetx::Pick qw/:all/;
+use Kynetx::Operators qw/:all/;
 use Kynetx::Parser qw/:all/;
 use Kynetx::JavaScript qw/:all/;
 
@@ -34,7 +34,9 @@ $req_info->{'pool'} = APR::Pool->new;
 my $rule_name = 'foo';
 
 my $rule_env = {$rule_name . ':a' => '10',
-		$rule_name . ':b' => '11'
+		$rule_name . ':b' => '11',
+		$rule_name . ':c' => [4,5,6],
+		$rule_name . ':d' => [],
                };
 
 $rule_env->{$rule_name .':store'} = {
@@ -88,24 +90,25 @@ $rule_env->{$rule_name .':store'} = {
 
 
 
-
 my (@e, @x, @d);
 
+my $i = 0;
 
-sub test_pick {
+sub test_operator {
     my ($e, $x, $d) = @_;
 
     my ($v, $r);
 
     $v = Kynetx::Parser::parse_expr($e);
+    diag Dumper($v) if $d;
 
     $r = eval_js_expr($v, $rule_env, $rule_name,$req_info);
     diag Dumper($r) if $d;
     is_deeply($r, $x, "Trying $e");
 }
 
-$e[0] = q/store.pick("$.store.book[*].author")/;
-$x[0] = {
+$e[$i] = q/store.pick("$.store.book[*].author")/;
+$x[$i] = {
    'val' => [
      'Nigel Rees',
      'Evelyn Waugh',
@@ -114,9 +117,10 @@ $x[0] = {
    ],
    'type' => 'array'
 };
+$i++;
 
-$e[1] = q/store.pick("$..author")/;
-$x[1] = {
+$e[$i] = q/store.pick("$..author")/;
+$x[$i] = {
    'val' => [
      'Nigel Rees',
      'Evelyn Waugh',
@@ -125,9 +129,10 @@ $x[1] = {
    ],
    'type' => 'array'
 };
+$i++;
 
-$e[2] = q/store.pick("$..book[?(@.price<10)]")/;
-$x[2] = {
+$e[$i] = q/store.pick("$..book[?(@.price<10)]")/;
+$x[$i] = {
 'val' => [
      {
        'ratings' => [
@@ -151,10 +156,11 @@ $x[2] = {
    ],
    'type' => 'array'
 };
+$i++;
 
 
-$e[3] = q/store.pick("$..book[?(@.price == 8.99)]")/;
-$x[3] = {
+$e[$i] = q/store.pick("$..book[?(@.price == 8.99)]")/;
+$x[$i] = {
  'val' => 
      {
        'price' => '8.99',
@@ -165,11 +171,12 @@ $x[3] = {
      },
    'type' => 'hash'
 };
-$d[3]  = 0;
+$d[$i]  = 0;
+$i++;
 
 
-$e[4] = q/store.pick("$..book[?(@.price == 8.99)]")/;
-$x[4] = {
+$e[$i] = q/store.pick("$..book[?(@.price == 8.99)]")/;
+$x[$i] = {
  'val' => 
      {
        'price' => '8.99',
@@ -180,11 +187,12 @@ $x[4] = {
      },
    'type' => 'hash'
 };
-$d[4]  = 0;
+$d[$i]  = 0;
+$i++;
 
 
-$e[5] = q/store.pick("$..book[?(@.price != 8.99)]")/;
-$x[5] = {
+$e[$i] = q/store.pick("$..book[?(@.price != 8.99)]")/;
+$x[$i] = {
  'val' => [
      {
        'ratings' => [
@@ -219,10 +227,11 @@ $x[5] = {
    ],
    'type' => 'array'
 };
-$d[5]  = 0;
+$d[$i]  = 0;
+$i++;
 
-$e[6] = q/store.pick("$..book[?(@.title eq 'Moby Dick')]")/;
-$x[6] = {
+$e[$i] = q/store.pick("$..book[?(@.title eq 'Moby Dick')]")/;
+$x[$i] = {
 'val' => 
      {
        'price' => '8.99',
@@ -233,10 +242,11 @@ $x[6] = {
      },
    'type' => 'hash'
 };
-$d[6]  = 0;
+$d[$i]  = 0;
+$i++;
 
-$e[7] = q/store.pick("$..book[?(@.title ne 'Moby Dick')]")/;
-$x[7] = {
+$e[$i] = q/store.pick("$..book[?(@.title ne 'Moby Dick')]")/;
+$x[$i] = {
 'val' => [
      {
        'ratings' => [
@@ -271,10 +281,11 @@ $x[7] = {
    ],
    'type' => 'array'
 };
-$d[7]  = 0;
+$d[$i]  = 0;
+$i++;
 
-$e[8] = q/store.pick("$.store..price")/;
-$x[8] = {
+$e[$i] = q/store.pick("$.store..price")/;
+$x[$i] = {
 'val' => [
      '19.95',
      '8.95',
@@ -284,10 +295,11 @@ $x[8] = {
    ],
    'type' => 'array'
 };
-$d[8]  = 0;
+$d[$i]  = 0;
+$i++;
 
-$e[9] = q/store.pick("$..book[0,1]")/;
-$x[9] = {
+$e[$i] = q/store.pick("$..book[0,1]")/;
+$x[$i] = {
 'val' => [
      {
        'ratings' => [
@@ -315,27 +327,63 @@ $x[9] = {
    ],
    'type' => 'array'
 };
-$d[9]  = 0;
+$d[$i]  = 0;
+$i++;
 
-$e[10] = q/store.pick("$..book[0].price") + a/;
-$x[10] = {'val' => '18.95',
+$e[$i] = q/store.pick("$..book[0].price") + a/;
+$x[$i] = {'val' => '18.95',
 	  'type' => 'num'};
-$d[10]  = 0;
+$d[$i]  = 0;
+$i++;
 
-$e[11] = q/b + store.pick("$..book[1].price")/;
-$x[11] = {'val' => '23.99',
+$e[$i] = q/b + store.pick("$..book[1].price")/;
+$x[$i] = {'val' => '23.99',
 	  'type' => 'num'};
-$d[11]  = 0;
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q/c.length()/;
+$x[$i] = {
+   'val' => 3,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q/d.length()/;
+$x[$i] = {
+   'val' => 0,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q/(store.pick("$..book[0,1]")).length()/;
+$x[$i] = {
+   'val' => 2,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
 
 
 # now run the tests....
 my $l = scalar @e;
 plan tests => $l;
 
-my $i;
-for ($i = 0; $i < $l; $i++) {
-    test_pick($e[$i], $x[$i], $d[$i]);
+my $j;
+for ($j = 0; $j < $i; $j++) {
+    test_operator($e[$j], $x[$j], $d[$j]);
 }
+
+
+#
+# testing length
+#
+
+
+
 
 
 1;

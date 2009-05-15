@@ -705,9 +705,11 @@ sub pp_expr {
 	    }
 	    return  $o ;
 	};
-	/pick/ && do {
+	/operator/ && do {
 	    my $o = '';
-	    $o .= pp_expr($expr->{'obj'}) . '.pick("' . $expr->{'pattern'} . '")';
+	    $o .= pp_expr($expr->{'obj'}) . '.' . $expr->{'name'} . '(';
+	    $o .= join ", ", pp_rands($expr->{'args'});
+	    $o .= ')';
 	    return  $o ;
 	};
 	
