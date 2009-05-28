@@ -20,6 +20,7 @@ use LWP::Simple;
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
 use Kynetx::JavaScript qw/:all/;
+use Kynetx::Environments qw/:all/;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -38,14 +39,17 @@ my $first_arg = "kobj_test";
 my $second_arg = "This is a string";
 my $given_args;
 
+
+
 my $rule_name = 'foo';
 
-my $rule_env = {$rule_name . ':city' => 'Blackfoot',
-		$rule_name . ':tc' => '15',
-		$rule_name . ':temp' => 20,
-		$rule_name . ':booltrue' => 'true',
-		$rule_name . ':boolfalse' => 'false',
-               };
+my $rule_env = empty_rule_env();
+
+$rule_env = extend_rule_env(
+    ['city','tc','temp','booltrue','boolfalse','a','b'],
+    ['Blackfoot','15',20,'true','false','10','11'],
+    $rule_env);
+
 
 my $session = {};
 
@@ -377,15 +381,13 @@ foreach my $case (@test_cases) {
 foreach my $case (@action_test_cases) {
     #diag(Dumper($case));
 
-
     my $js = 
 	Kynetx::Actions::build_one_action(
 	    $case->{'expr'},
 	    $case->{'req_info'}, 
-	    $rule_env,
+	    extend_rule_env(['uniq_id', 'uniq'], ['id_23','23'],	    
+		extend_rule_env(['actions','labels','tags'],[[],[],[]],$rule_env)),
 	    $session,
-	    '23',
-	    'id_23',
 	    'callbacks23',
 	    $case->{'name'});
 

@@ -244,12 +244,6 @@ KOBJ.close_notification = function(s) {
 
 
 
-if(typeof(kvars) != "undefined") {
-    KOBJ.kvars_json = $K.toJSON(kvars);
-} else {
-    KOBJ.kvars_json = '';
-}
-
 KOBJ['data'] = KOBJ['data'] || {};
 
 // initialization vars
@@ -320,7 +314,11 @@ KOBJ.eval = function(params) {
   var data_url = KOBJ.proto+KOBJ.init_host+"/js/datasets/" + KOBJ.site_id + "/";
   KOBJ.require(data_url);
 
-
+  if(typeof(kvars) != "undefined") {
+    KOBJ.kvars_json = $K.toJSON(kvars);
+  } else {
+    KOBJ.kvars_json = '';
+  }
 
   var d = (new Date).getTime();
   var url = KOBJ.proto+KOBJ.eval_host+"/ruleset/eval/" + KOBJ.site_id;

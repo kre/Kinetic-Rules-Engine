@@ -41,13 +41,15 @@ sub eval_pick {
     if($rands->[0]->{'type'} eq 'str') {
 	$pattern = $rands->[0]->{'val'}
     } else {
-	$logger->debug("WARNING: pattern argument to pick not a string");
+	$logger->warn("WARNING: pattern argument to pick not a string");
     }
 
     my $jp = Kynetx::JSONPath->new();
     my $v = $jp->run($obj->{'val'}, $pattern);
 
     $v = $v->[0] if(defined $v && scalar @{ $v } == 1);
+
+    $logger->debug("pick using $pattern returning ", $v);
 
     return  { 'type' => Kynetx::JavaScript::infer_type($v),
 	      'val' => $v

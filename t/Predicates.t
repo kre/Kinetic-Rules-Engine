@@ -19,6 +19,7 @@ use Kynetx::Test qw/:all/;
 use Kynetx::Predicates qw/:all/;
 use Kynetx::Util qw(:all);
 use Kynetx::JavaScript qw(:all);
+use Kynetx::Environments qw(:all);
 use Kynetx::Parser;
 
 use Data::Dumper;
@@ -27,16 +28,17 @@ $Data::Dumper::Indent = 1;
 
 my $rule_name = 'foo';
 
-my $rule_env = {$rule_name . ':city' => 'Blackfoot',
-		$rule_name . ':city2' => 'Seattle',
-		$rule_name . ':tc' => '15',
-		$rule_name . ':temp' => 20,
-		$rule_name . ':booltrue' => 'true',
-		$rule_name . ':boolfalse' => 'false',
-               };
+my $rule_env = empty_rule_env();
+
+$rule_env = extend_rule_env(
+    ['city','city2','tc','temp','booltrue','boolfalse','a','b'],
+    ['Blackfoot','Seattle','15',20,'true','false','10','11'],
+    $rule_env);
 
 
-$rule_env->{$rule_name .':book_data'} = {
+
+
+$rule_env = extend_rule_env('book_data', {
     "responseHeader" => {
 	"status"=>0,
 	"QTime"=>2,
@@ -51,7 +53,7 @@ $rule_env->{$rule_name .':book_data'} = {
 		  "url"=>"http://library.minlib.net/search/i?SEARCH=0316160202"}
 	    ]
     }
-};
+}, $rule_env);
 
 
 my $Amazon_req_info;

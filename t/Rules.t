@@ -20,6 +20,7 @@ use Kynetx::Json qw/:all/;
 use Kynetx::Rules qw/:all/;
 use Kynetx::Util qw/:all/;
 use Kynetx::Memcached qw/:all/;
+use Kynetx::Environments qw/:all/;
 
 
 use Kynetx::FakeReq qw/:all/;
@@ -38,12 +39,13 @@ my $r = new Kynetx::FakeReq();
 
 my $rule_name = 'foo';
 
-my $rule_env = {$rule_name . ':city' => 'Blackfoot',
-		$rule_name . ':tc' => '15',
-		$rule_name . ':temp' => 20,
-		$rule_name . ':booltrue' => 'true',
-		$rule_name . ':boolfalse' => 'false',
-               };
+my $rule_env = empty_rule_env();
+
+$rule_env = extend_rule_env(
+    ['city','tc','temp','booltrue','boolfalse','a','b'],
+    ['Blackfoot','15',20,'true','false','10','11'],
+    $rule_env);
+
 
 
 # dummy up some counter data in the session
@@ -126,7 +128,6 @@ sub add_json_testcase {
 $krl_src = <<_KRL_;
 rule test_1 is active {
   select using "/archives/" setting ()
-  pre {  }
   alert("testing");
 }
 _KRL_
@@ -676,6 +677,8 @@ plan tests => 7 + (@test_cases * 1);
 
 
 # now test each test case twice
+
+
 foreach my $case (@test_cases) {
     if($case->{'type'} eq 'rule') {
 #	diag(Dumper($case->{'expr'}));
@@ -686,8 +689,7 @@ foreach my $case (@test_cases) {
 			   $case->{'expr'},
 	   );
 
-	my $uniq = $rule_env->{'uniq_id'};
-	$uniq =~ s/^kobj_(.*)/$1/;
+	my $uniq = $case->{'req_info'}->{'uniq'};
 	$case->{'val'} =~ s/%uniq%/$uniq/g;
 	is_string_nows(
 	    $js,
@@ -708,9 +710,9 @@ foreach my $case (@test_cases) {
     
 	my $js = "";
 	if( $case->{'expr'}->{'global'} && @{ $case->{'expr'}->{'global'} })  {
-	    $js = eval_globals($case->{'req_info'}, 
-			       $case->{'expr'},
-			       $rule_env, 
+	    ($js, $rule_env) = eval_globals($case->{'req_info'}, 
+					    $case->{'expr'},
+					    $rule_env, 
 		);
 
 	}    
@@ -734,16 +736,16 @@ foreach my $case (@test_cases) {
 
 
 contains_string(nows($global_decl_0),
-		nows(encode_json($rule_env->{'global_decl_0'})), 
+		nows(encode_json(lookup_rule_env('global_decl_0',$rule_env))), 
 		 "Global decl data set effects env");
 contains_string(nows($global_decl_1), 
-		nows($rule_env->{'global_decl_1'}),
+		nows(lookup_rule_env('global_decl_1',$rule_env)),
 		"Global decl data set effects env");
 contains_string(nows($global_decl_2), 
-		nows(encode_json($rule_env->{'global_decl_2'})),
+		nows(encode_json(lookup_rule_env('global_decl_2',$rule_env))),
 		"Global decl data set effects env");
 contains_string(nows($global_decl_3), 
-		nows($rule_env->{'global_decl_3'}),
+		nows(lookup_rule_env('global_decl_3',$rule_env)),
 		"Global decl data set effects env");
 
 

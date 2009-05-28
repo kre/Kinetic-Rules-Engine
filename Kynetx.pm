@@ -79,10 +79,6 @@ sub handler {
 1;
 
 
-
-
-
-
 sub flush_ruleset_cache {
     my ($r, $method, $rid) = @_;
 

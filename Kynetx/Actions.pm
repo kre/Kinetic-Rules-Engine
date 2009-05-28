@@ -10,6 +10,7 @@ use JSON::XS;
 use Kynetx::Util qw(:all);
 use Kynetx::JavaScript qw(:all);
 use Kynetx::Rules qw(:all);
+use Kynetx::Environments qw(:all);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -306,33 +307,18 @@ sub build_js_load {
     my $uniq_id = 'kobj_'.$uniq; 
 
 
-    $rule_env->{'uniq_id'} = $uniq_id;
-
-
-# do this in Rule.pm  now that the pre can set vars that are used in cond
-    # this loads the rule_env
-#    eval_js_pre($req_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
-
+    $rule_env = extend_rule_env(['uniq_id', 'uniq'], [$uniq_id,$uniq], $rule_env);
+    $req_info->{'uniq'} = $uniq; # just for testing
 
     my $js = "";
 
-    
-    # set JS vars from rule env
-#     my $rulename_re = qr/^$rule->{'name'}:(.*)/;
-#     foreach my $var ( keys %{ $rule_env} ) {
-# 	my $val = $rule_env->{$var};
-# 	next unless $var =~ s/$rulename_re/$1/;
-# 	$logger->debug("[JS var] ", $var, "->", $val);
-# 	$js .= emit_var_decl($var,$val);
-
-#     }
-
-    $logger->debug("Rule ENV: ", sub {my $f = Dumper($rule_env);$f =~ y/\n//d;return $f});
+   
+#    $logger->debug("Rule ENV: ", sub {my $f = Dumper($rule_env);$f =~ y/\n//d;return $f});
 
     $logger->debug("Rule name: ", $rule->{'name'});
     # now do decls in order
-    foreach my $var( @{ $rule_env->{$rule->{'name'}."_vars"} } ) {
-	$js .= emit_var_decl($var, $rule_env->{$rule->{'name'}.":$var"});
+    foreach my $var ( @{ lookup_rule_env($rule->{'name'}."_vars", $rule_env) } ) {
+	$js .= emit_var_decl($var, lookup_rule_env($var,$rule_env));
     }
 
     # emits
@@ -368,17 +354,15 @@ sub build_js_load {
 					$req_info, 
 					$rule_env, 
 					$session,
-					$uniq,
-					$uniq_id,
 					$cb_func_name,
 					$rule->{'name'}
 		    );
 	    } elsif(defined $action_expr->{'emit'}) {
 		$js .= $action_expr->{'emit'}. ";\n";
 		$js .= "$cb_func_name();\n";
-		push(@{ $rule_env->{'actions'} }, 'emit');
-		push(@{ $rule_env->{'tags'} }, '');
-		push(@{ $rule_env->{'labels'} }, $action_expr->{'label'});
+		push(@{ lookup_rule_env('actions',$rule_env) }, 'emit');
+		push(@{ lookup_rule_env('tags',$rule_env) }, '');
+		push(@{ lookup_rule_env('labels',$rule_env) }, $action_expr->{'label'});
 
 	    }
 	}
@@ -391,8 +375,6 @@ sub build_js_load {
 				$req_info, 
 				$rule_env, 
 				$session,
-				$uniq,
-				$uniq_id,
 				$cb_func_name,
 				$rule->{'name'}
 	    );
@@ -408,10 +390,12 @@ sub build_js_load {
 
 sub build_one_action {
     my ($action_expr, $req_info, $rule_env, $session, 
-	$uniq, $uniq_id, $cb_func_name, $rule_name) = @_;
+	$cb_func_name, $rule_name) = @_;
 
     my $logger = get_logger();
 
+    my $uniq = lookup_rule_env('uniq',$rule_env);
+    my $uniq_id = lookup_rule_env('uniq_id',$rule_env);
 
     my $js = '';
 
@@ -465,7 +449,9 @@ sub build_one_action {
     # apply the action function
     $js .= "(". $actions{$action_name} . "(" . $arg_str . "));\n";
 
-    push(@{ $rule_env->{'actions'} }, $action_name);
+#    $logger->debug("Env: ", Dumper($rule_env));
+
+    push(@{ lookup_rule_env('actions',$rule_env) }, $action_name);
 
 
 
@@ -555,10 +541,8 @@ sub build_one_action {
 #	$js = "setTimeout(\'" . $js . "\', " . ($mods{'delay'} * 1000) . ");\n";
     }
 
-    push(@{ $rule_env->{'tags'} }, ($mods{'tags'} || ''));
-    push(@{ $rule_env->{'labels'} }, $action_expr->{'label'} || '');
-
-#	$logger->debug(sub {Dumper($rule_env)} );
+    push(@{ lookup_rule_env('tags',$rule_env) }, ($mods{'tags'} || ''));
+    push(@{ lookup_rule_env('labels',$rule_env) }, $action_expr->{'label'} || '');
 
     return $js;
 }
@@ -598,8 +582,6 @@ sub choose_action {
 	    $action_suffix = "_html";
 
 
-#	    $logger->debug("Rule env: ", sub { Dumper($rule_env) });
-	    
 	    # We need to eval the argument since it might be an expression
 	    $url = den_to_exp(
 		    eval_js_expr($last_arg, $rule_env, $rule_name,$req_info));

@@ -11,6 +11,7 @@ use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Kynetx::Memcached qw/:all/;
+use Kynetx::Environments qw/:all/;
 
 # FIXME: this ought to come out of configuration
 use constant DATA_ROOT => '/web/data/client';
@@ -131,7 +132,6 @@ sub global_dataset {
 }
 
 
-# side-effects $rule_env
 sub mk_dataset_js {
     my ($g, $req_info, $rule_env) = @_;
     my $logger = get_logger();
@@ -140,19 +140,20 @@ sub mk_dataset_js {
     
     my $js = "KOBJ['data']['" . $g->{'name'} . "'] = ";
     my $source_json;
+    my $pval;
     eval { $source_json = decode_json($source); };
     if ($@) {
 	$logger->debug("seeing " . $g->{'name'} . " as string ", $@);
 	$js .= '"' . $source . '"';
-	$rule_env->{$g->{'name'}} = $source;
+	$pval = $source;
     } else { 
 	$logger->debug("seeing " . $g->{'name'} . " as JSON ", $@);
 	$js .= $source;
-	$rule_env->{$g->{'name'}} = $source_json;
+	$pval = $source_json;
     }
     $js .= ";\n";
 
-    return $js;
+    return ($js, $g->{'name'}, $pval);
 
 }
 
@@ -165,13 +166,13 @@ sub get_datasource {
 
     # for now, if it's not an HTTP url, assume it's a file.
     $logger->debug("retrieving datasource");
-    my $ds = $rule_env->{'datasource:'.$function};
+    my $ds = lookup_rule_env('datasource:'.$function, $rule_env);
 
 #    $logger->debug(Dumper($ds));
 
     my $cache_for = cache_dataset_for($ds);
 
-    my $source_name = $rule_env->{'datasource:'.$function}->{'source'};
+    my $source_name = lookup_rule_env('datasource:'.$function,$rule_env)->{'source'};
 
     if($source_name =~ m/\?/) {
 	$source_name .= '&'; # make it safe to add more params

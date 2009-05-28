@@ -191,7 +191,9 @@ _KRL_
 
     $rule_env = {};
 
-    is_string_nows(mk_dataset_js($krl->[0], $req_info, $rule_env), 
+    my($this_js, $val, $var) = mk_dataset_js($krl->[0], $req_info, $rule_env);
+
+    is_string_nows($this_js, 
 		   "KOBJ['data']['fizz_data']  = " . get_local_file("aaa.json") . ";", 
 		   "is the JS alight?");
 

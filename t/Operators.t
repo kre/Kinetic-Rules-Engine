@@ -20,6 +20,7 @@ use Kynetx::Test qw/:all/;
 use Kynetx::Operators qw/:all/;
 use Kynetx::Parser qw/:all/;
 use Kynetx::JavaScript qw/:all/;
+use Kynetx::Environments qw/:all/;
 
 
 
@@ -33,13 +34,16 @@ $req_info->{'pool'} = APR::Pool->new;
 
 my $rule_name = 'foo';
 
-my $rule_env = {$rule_name . ':a' => '10',
-		$rule_name . ':b' => '11',
-		$rule_name . ':c' => [4,5,6],
-		$rule_name . ':d' => [],
-               };
+my $rule_env = empty_rule_env();
 
-$rule_env->{$rule_name .':store'} = {
+$rule_env = extend_rule_env(
+    ['a','b','c','d'],
+    [10, 11, [4,5,6], []],
+    $rule_env);
+
+
+
+$rule_env = extend_rule_env('store', {
 	"store"=> {
 		"book"=> [ 
 			{
@@ -85,10 +89,10 @@ $rule_env->{$rule_name .':store'} = {
 			"price"=> 19.95
 		}
 	}
-};
+}, $rule_env);
 
 
-
+#diag Dumper($rule_env);
 
 my (@e, @x, @d);
 

@@ -20,6 +20,7 @@ $Data::Dumper::Indent = 1;
 use Kynetx::Test qw/:all/;
 use Kynetx::Parser qw/:all/;
 use Kynetx::Operators qw/:all/;
+use Kynetx::Environments qw/:all/;
 use Kynetx::JavaScript qw/:all/;
 use Kynetx::Predicates::Referers qw/:all/;
 use Kynetx::Predicates::Markets qw/:all/;
@@ -80,18 +81,16 @@ $krl = Kynetx::Parser::parse_global_decls($krl_src);
     
 my $rule_name = 'foo';
 
-my $rule_env = {$rule_name . ':city' => 'Blackfoot',
-		$rule_name . ':tc' => '15',
-		$rule_name . ':temp' => 20,
-		$rule_name . ':booltrue' => 'true',
-		$rule_name . ':boolfalse' => 'false',
-		$rule_name . ':a' => '10',
-		$rule_name . ':b' => '11',
-		'datasource:'.$krl->[0]->{'name'} => $krl->[0]
-               };
+my $rule_env = empty_rule_env();
+
+$rule_env = extend_rule_env(
+    ['city','tc','temp','booltrue','boolfalse','a','b','datasource:'.$krl->[0]->{'name'}],
+    ['Blackfoot','15',20,'true','false','10','11',$krl->[0]],
+    $rule_env);
 
 
-$rule_env->{$rule_name .':store'} = {
+
+$rule_env = extend_rule_env('store',{
 	"store"=> {
 		"book"=> [ 
 			{
@@ -137,7 +136,7 @@ $rule_env->{$rule_name .':store'} = {
 			"price"=> 19.95
 		}
 	}
-};
+ },$rule_env);
 
 
 
@@ -500,7 +499,7 @@ foreach my $case (@decl_testcases) {
 	       $BYU_req_info, 
 	       $rule_env, $rule_name, $this_session, 
 	       $case->{'expr'}) ;
-    is_deeply($e, 
+    is_deeply($e->[1], 
 	      $case->{'val'},
 	      "Evaling Javascript " . $case->{'src'});
 }
@@ -537,9 +536,11 @@ _KRL_
 	    $this_session,
 	    $decl
 	    );
+
+	my $result = $js_decl->[1];
 	
-        diag($decl->{'function'} . " --> " . $js_decl) if $diag;
-	return $js_decl;
+        diag($decl->{'function'} . " --> " . $result) if $diag;
+	return $result;
     };
 
 }

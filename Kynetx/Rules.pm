@@ -22,6 +22,7 @@ use Kynetx::Actions qw(:all);
 use Kynetx::Log qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Repository qw(:all);
+use Kynetx::Environments qw(:all);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -66,13 +67,15 @@ sub process_rules {
 
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rids);
 
+    # initialization
     my $js = '';
+    my $rule_env = empty_rule_env();
     
     my @rids = split(/;/, $rids);
     # if we sort @rids we change ruleset priority
     foreach my $rid (@rids) {
 	Log::Log4perl::MDC->put('site', $rid);
-	$js .= eval_ruleset($r, $req_info, $session, $rid);
+	$js .= eval_ruleset($r, $req_info, $rule_env, $session, $rid);
     }
 
     # put this in the logging DB
@@ -92,7 +95,7 @@ sub process_rules {
 
 
 sub eval_ruleset {
-    my ($r, $req_info, $session, $rid) = @_;
+    my ($r, $req_info, $rule_env, $session, $rid) = @_;
 
     my $logger = get_logger();
 
@@ -102,24 +105,30 @@ sub eval_ruleset {
 
     $logger->info("Processing rules for site " . $req_info->{'rid'});
 
-    # side effects environment with precondition pattern values
-    my ($rules, $rule_env, $ruleset) = 
+    my ($rules, $this_rule_env, $ruleset) = 
 	get_rule_set($r->dir_config('svn_conn'),
 		     $req_info
 	            );
 
+    # side effects environment with precondition pattern values
+    $rule_env = extend_rule_env(keys %{ $this_rule_env }, values %{ $this_rule_env }, $rule_env);
+
     Kynetx::Request::log_request_env($logger, $req_info);
 
-    my $js = '';
+    my $js;
 
-
-    # handle globals
-    $js .= eval_globals($req_info,$ruleset, $rule_env);
+    # handle globals, start js build, extend $rule_env
+    ($js, $rule_env) = eval_globals($req_info,$ruleset, $rule_env);
+    $logger->debug("Global JS: ", $js);
 
 
     # this loops through the rules ONCE applying all that fire
     foreach my $rule ( @{ $rules } ) {
-	$js .= eval_rule($r, $req_info, $rule_env, $session, $rule);
+	$js .= eval_rule($r, 
+			 $req_info, 
+			 $rule_env,
+			 $session, 
+			 $rule);
     }
 
     $logger->debug("Finished processing rules for " . $req_info->{'rid'});
@@ -129,23 +138,37 @@ sub eval_ruleset {
 
 sub eval_globals {
     my($req_info,$ruleset, $rule_env) = @_;
+    my $logger = get_logger();
+
     my $js = "";
+    my @vars;
+    my @vals;
     if($ruleset->{'global'}) {
 	foreach my $g (@{ $ruleset->{'global'} }) {
+	    my $this_js = '';
+	    my $var = '';
+	    my $val = 0;
 	    if($g->{'emit'}) { # emit
-		$js .= $g->{'emit'} . "\n";
+		$this_js = $g->{'emit'} . "\n";
 	    } elsif(defined $g->{'type'} && $g->{'type'} eq 'dataset') { 
-		$js .= mk_dataset_js($g, $req_info, $rule_env) 
-		    unless Kynetx::Datasets::global_dataset($g);
+		if (! Kynetx::Datasets::global_dataset($g)) {
+		    ($this_js, $var, $val) = mk_dataset_js($g, $req_info, $rule_env);
+#		    $logger->debug("Global dataset JS: ", $this_js);
+#		    $logger->debug("Global dataset: ", $var, " -> ", sub { Dumper($val) });
+		    push(@vars, $var);
+		    push(@vals, $val);
+		}
 	    } elsif(defined $g->{'type'} && $g->{'type'} eq 'css') { 
-		$js .= "KOBJ.css(" . mk_js_str($g->{'content'}) . ");\n";
+		$this_js = "KOBJ.css(" . mk_js_str($g->{'content'}) . ");\n";
 	    } elsif(defined $g->{'type'} && $g->{'type'} eq 'datasource') {
-		$rule_env->{'datasource:'.$g->{'name'}} = $g;
+		push(@vars,'datasource:'.$g->{'name'});
+		push(@vals, $g);
 	    }
+	    $js .= $this_js;
 	}
     }
 
-    return $js;
+    return ($js, extend_rule_env(\@vars, \@vals, $rule_env));
    
 }
 
@@ -164,20 +187,23 @@ sub eval_rule {
     }
 
     # this loads the rule_env.  
-    Kynetx::JavaScript::eval_js_pre($req_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
+    $rule_env = Kynetx::JavaScript::eval_js_pre($req_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
 
-    foreach my $var (keys %{ $rule_env } ) {
-	$logger->debug("[Env] $var has value $rule_env->{$var}" 
-		       ) if defined $rule_env->{$var};
-    }
+#    foreach my $var (keys %{ $rule_env } ) {
+#	$logger->debug("[Env] $var has value $rule_env->{$var}" 
+#		       ) if defined $rule_env->{$var};
+#    }
 
     # if the condition is undefined, it's true.  
     $rule->{'cond'} ||= mk_expr_node('bool','true');
 
 
     my $pred_value = 
-	eval_predicates($req_info, $rule_env, $session, 
-			$rule->{'cond'}, $rule->{'name'});
+	eval_predicates($req_info, 
+			$rule_env, 
+			$session, 
+			$rule->{'cond'}, 
+			$rule->{'name'});
 
 
     # set up post block execution
@@ -195,6 +221,10 @@ sub eval_rule {
     }
 
     my $js = '';
+    
+    # we're storing this in the rule_env for now, so set it up
+    $rule_env = extend_rule_env(['actions','labels','tags'],[[],[],[]],$rule_env);
+
     if ($pred_value) {
 
 	$logger->info("fired");
@@ -205,16 +235,7 @@ sub eval_rule {
 	
 	$js .= Kynetx::Actions::eval_post_expr($cons, $session) if(defined $cons);
 
-	# save things for logging
-	push(@{ $req_info->{'names'} }, $req_info->{'rid'}.':'.$rule->{'name'});
 	push(@{ $req_info->{'results'} }, 'fired');
-	push(@{ $req_info->{'all_actions'} }, $rule_env->{'actions'});
-	$rule_env->{'actions'} = ();
-	push(@{ $req_info->{'all_labels'} }, $rule_env->{'labels'});
-	$rule_env->{'labels'} = ();
-	push(@{ $req_info->{'all_tags'} }, $rule_env->{'tags'});
-	$rule_env->{'tags'} = ();
-
 
 
     } else {
@@ -223,17 +244,15 @@ sub eval_rule {
 	$js .= Kynetx::Actions::eval_post_expr($alt, $session) if(defined $alt);
 
 	# put this in the logging DB
-	push(@{ $req_info->{'names'} }, $req_info->{'rid'}.':'.$rule->{'name'});
 	push(@{ $req_info->{'results'} }, 'notfired');
-	push(@{ $req_info->{'all_actions'} }, []);
-	$rule_env->{'actions'} = ();
-	push(@{ $req_info->{'all_labels'} }, []);
-	$rule_env->{'labels'} = ();
-	push(@{ $req_info->{'all_tags'} }, []);
-	$rule_env->{'tags'} = ();
-
 
     }
+
+    # save things for logging
+    push(@{ $req_info->{'names'} }, $req_info->{'rid'}.':'.$rule->{'name'});
+    push(@{ $req_info->{'all_actions'} }, lookup_rule_env('actions',$rule_env));
+    push(@{ $req_info->{'all_labels'} }, lookup_rule_env('labels',$rule_env));
+    push(@{ $req_info->{'all_tags'} }, lookup_rule_env('tags',$rule_env));
 
     return $js; 
 
@@ -291,7 +310,7 @@ sub get_rule_set {
 
 		    $logger->debug("[select var] $var -> $captures[$cap]");
 
-		    $new_env{"$rule->{'name'}:$var"} = $captures[$cap++];
+		    $new_env{$var} = $captures[$cap++];
 		    push(@{$new_env{$rule->{'name'}."_vars"}}, $var);
 		}
 	    } else {

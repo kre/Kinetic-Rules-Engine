@@ -175,18 +175,21 @@ sub get_datasets {
     my $logger = get_logger();
     $logger->debug("Getting ruleset for $rid");
 
-    my $js = "";
+    my $js = '';
 
     my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $svn_conn, $req_info);
 
     if( $ruleset->{'global'} ) {
 	$logger->debug("Processing decls for $rid");
 	foreach my $g (@{ $ruleset->{'global'} }) {
-
+	    my $this_js = '';
+	    my $var = '';
+	    my $val = 0;
 	    if(defined $g->{'name'} && Kynetx::Datasets::global_dataset($g)) { # more than 24 hours
 		$logger->debug("Creating JS for decl " . $g->{'name'});
-		$js .= mk_dataset_js($g, $req_info, {}); # empty rule env
+		($this_js, $var, $val) = mk_dataset_js($g, $req_info, {}); # empty rule env
 	    }
+	    $js .= $this_js;
 	}
     } 
     $logger->debug("Returning JS for global decls");

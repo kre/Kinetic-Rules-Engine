@@ -10,6 +10,7 @@ use Data::Dumper;
 use JSON::XS;
 
 use Kynetx::Datasets q/:all/;
+use Kynetx::Environments q/:all/;
 use Kynetx::Operators q/:all/;
 
 use Exporter;
@@ -122,11 +123,32 @@ sub gen_js_datasource {
 sub eval_js_pre {
     my ($req_info, $rule_env, $rule_name, $session, $pre) = @_;
 
-#    my $logger = get_logger();
+    my $logger = get_logger();
 #    $logger->debug("[pre] Got ", $#{ $pre }, " items.");
-    
-    return map {eval_js_decl($req_info, $rule_env, $rule_name, $session, $_)} @{ $pre };
+
+    $pre = [] unless defined $pre;
+
+#    $logger->debug("Prelude: ", Dumper($pre));
+
+    my @results = map {eval_js_decl($req_info, $rule_env, $rule_name, $session, $_)} @{ $pre };
+
+    $logger->debug("Results of prelude: ", Dumper(@results));
+
+    # unzip the results
+    my @vars;
+    my @vals;
+    foreach my $r (@results) {
+	my($var, $val) = @{$r};
+	push(@vars, $var);
+	push(@vals, $val);
+    }
+   
+    return extend_rule_env(\@vars, 
+			   \@vals, 
+			   extend_rule_env($rule_name."_vars", \@vars, $rule_env));
 }
+
+
 
 
 sub gen_js_callbacks {
@@ -206,7 +228,10 @@ sub eval_js_expr {
 	    return  $expr ;
 	};
 	/var/ && do {
-	    my $v = $rule_env->{$rule_name.':'.$expr->{'val'}};
+	    my $v = lookup_rule_env($expr->{'val'},$rule_env);
+	    unless (defined $v) {
+		$logger->warn("Variable '", $expr->{'val'}, "' is undefined");
+	    }
 	    $logger->debug($rule_name.':'.$expr->{'val'}, " -> ", $v, ' Type -> ', infer_type($v));
 	    return  {'type' => infer_type($v),
                      'val' =>  $v};
@@ -311,7 +336,6 @@ sub eval_js_rands {
 
 }
 
-# modifies rule_env by inserting value with LHS
 sub eval_js_decl {
     my ($req_info, $rule_env, $rule_name, $session, $decl) = @_;
 
@@ -335,16 +359,11 @@ sub eval_js_decl {
     }
 
     # JS is generated for all vars in the rule env
-    $logger->debug("Storing " . $rule_name.":".$decl->{'lhs'});
-    $rule_env->{$rule_name.":".$decl->{'lhs'}} = $val;
+    $logger->debug("Evaling " . $rule_name.":".$decl->{'lhs'});
 
-    # preserve the order of decl evals
-#    push(@{$rule_env->{$rule_name."_rules"}}, 
-#	 {'lhs' => $decl->{'lhs'},
-#	  'val' => $val});
-    push(@{$rule_env->{$rule_name."_vars"}}, $decl->{'lhs'});
 
-    return $val;
+    return [$decl->{'lhs'}, $val];
+
 
 }
 

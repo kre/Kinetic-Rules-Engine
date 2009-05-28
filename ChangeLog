@@ -1,3 +1,23 @@
+2009-05-28  Phil Windley  <pjw@kynetx.com>
+
+	This was a major refactoring to remove the dependency on hashes
+	and ad hoc namespacing from the language and use the functions in
+	Environments.pm to create proper symbol tables that automatically
+	handle local variables, etc.  
+
+	* Kynetx/Actions.pm (build_one_action): Accomadate changes to rule environments.
+	* Kynetx/Rules.pm: Multiple changes to create and use environments.
+	* Kynetx/KOBJ.pm (get_datasets): Accomadate changes to mk_dataset_js
+	* Kynetx/Datasets.pm (mk_dataset_js): Changed how dat ais returned
+	  so that it can be place in environment properly
+	* Kynetx/JavaScript.pm (eval_js_expr): Support for environments.
+	  Added lookup_rule_env for vars
+
+2009-05-27  Phil Windley  <pjw@kynetx.com>
+
+	* etc/js/0.9/krl-runtime.js: Moving kvars code into eval so that
+	  it might work.
+
 2009-05-15  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Operators.pm: Moved from Pick.pm to create general

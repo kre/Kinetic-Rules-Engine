@@ -28,18 +28,18 @@ sub empty_rule_env {
 }
 
 sub lookup_rule_env {
-    my($env,$key) = @_;
+    my($key,$env) = @_;
     if(! $env) {
 	return undef;
     } elsif ($env->{$key}) {
 	return $env->{$key};
     } else {
-	return lookup_rule_env($env->{'___sub'}, $key);
+	return lookup_rule_env($key, $env->{'___sub'});
     }
 }
 
 sub extend_rule_env {
-    my($env,$keys, $vals) = @_;
+    my($keys, $vals, $env) = @_;
 
 #    my $logger = get_logger();
 #    $logger->debug('$keys has type ', ref $keys);
@@ -56,5 +56,6 @@ sub extend_rule_env {
 
     return $new_env;
 }
+
 
 1;
