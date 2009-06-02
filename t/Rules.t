@@ -18,6 +18,7 @@ use Kynetx::Parser qw/:all/;
 use Kynetx::PrettyPrinter qw/:all/;
 use Kynetx::Json qw/:all/;
 use Kynetx::Rules qw/:all/;
+use Kynetx::Actions qw/:all/;
 use Kynetx::Util qw/:all/;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::Environments qw/:all/;
@@ -46,7 +47,12 @@ $rule_env = extend_rule_env(
     ['Blackfoot','15',20,'true','false','10','11'],
     $rule_env);
 
+#diag Dumper($rule_env);
 
+my $scope_hash = flatten_env($rule_env);
+#diag Dumper($scope_hash);
+my $rule_env_js = Kynetx::Actions::emit_var_decl($scope_hash);
+#diag $rule_env_js;
 
 # dummy up some counter data in the session
 my $session = {'archive_pages_old' => 3,
@@ -688,12 +694,12 @@ foreach my $case (@test_cases) {
 			   $case->{'session'}, 
 			   $case->{'expr'},
 	   );
-
+#	diag $js;
 	my $uniq = $case->{'req_info'}->{'uniq'};
 	$case->{'val'} =~ s/%uniq%/$uniq/g;
 	is_string_nows(
 	    $js,
-	    $case->{'val'},
+	    $case->{'val'} ? $rule_env_js . $case->{'val'} : '',
 	    "Evaling rule " . $case->{'src'});
     }
 }

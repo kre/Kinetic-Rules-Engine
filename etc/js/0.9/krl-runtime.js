@@ -5,9 +5,6 @@
 
 var $K = jQuery.noConflict();
 
-// dummy up the Firebug console commands so a rogue console call doesn't kill code
-if(!("console"in window)||!("firebug"in console)){var names=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"];window.console={};for(var i=0;i<names.length;++i)window.console[names[i]]=function(){};}
-
 
 var KOBJ= KOBJ ||
   { name: "KRL Runtime Library",
@@ -94,7 +91,6 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
       return rm_div;
   }
   function runAnnotate(){
-    //console.log("running annotate");
 //    $K('#res div:first ol, #web').addClass("Kannotated");
     var count = 0;
     $K("li.g, li div.res, #results>ul>li").each(function() {
@@ -111,7 +107,6 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
      KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'] );
      cb();
   }
-  //console.log("annotating...");
   runAnnotate();
   //if this is google ajax serp, wrap the 'done' method call
   if(typeof je === "object" && je.zz){
@@ -344,10 +339,18 @@ KOBJ.eval = function(params) {
 	     + "&title="
              + encodeURI(document.title)
              + param_str;
-//  console.log(eval_url);
 
 //    $K('<script type="text/javascript">').attr(
 //         {"src": eval_url}).appendTo("body");
+
+// dummy up the Firebug console commands so a rogue console call doesn't kill code
+  // if (!window.console || !console.firebug) {
+  //   var names = ["log", "debug", "info", "warn", "error", "assert", "dir", "dirxml",
+  //   "group", "groupEnd", "time", "timeEnd", "count", "trace", "profile", "profileEnd"];
+  //   window.console = {};
+  //   for (var i = 0; i < names.length; ++i)
+  //      window.console[names[i]] = function() {}
+  // }
 
   KOBJ.require(eval_url);
 

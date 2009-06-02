@@ -111,7 +111,13 @@ sub eval_ruleset {
 	            );
 
     # side effects environment with precondition pattern values
-    $rule_env = extend_rule_env(keys %{ $this_rule_env }, values %{ $this_rule_env }, $rule_env);
+    # yes, you need to set the arrays and then use them since "keys" & "values" are context aware
+    my @this_keys = keys %{ $this_rule_env };
+    my @this_values = values %{ $this_rule_env };
+    $rule_env = extend_rule_env(@this_keys, @this_values, $rule_env);
+
+
+    $logger->debug('Env after rule selection: ', Dumper($rule_env));
 
     Kynetx::Request::log_request_env($logger, $req_info);
 
@@ -222,8 +228,10 @@ sub eval_rule {
 
     my $js = '';
     
-    # we're storing this in the rule_env for now, so set it up
-    $rule_env = extend_rule_env(['actions','labels','tags'],[[],[],[]],$rule_env);
+    # keep track of these for each rule
+    $req_info->{'actions'} = [];
+    $req_info->{'labels'} = [];
+    $req_info->{'tags'} = [];
 
     if ($pred_value) {
 
@@ -250,9 +258,9 @@ sub eval_rule {
 
     # save things for logging
     push(@{ $req_info->{'names'} }, $req_info->{'rid'}.':'.$rule->{'name'});
-    push(@{ $req_info->{'all_actions'} }, lookup_rule_env('actions',$rule_env));
-    push(@{ $req_info->{'all_labels'} }, lookup_rule_env('labels',$rule_env));
-    push(@{ $req_info->{'all_tags'} }, lookup_rule_env('tags',$rule_env));
+    push(@{ $req_info->{'all_actions'} }, $req_info->{'actions'});
+    push(@{ $req_info->{'all_labels'} }, $req_info->{'labels'});
+    push(@{ $req_info->{'all_tags'} }, $req_info->{'tags'});
 
     return $js; 
 
@@ -293,25 +301,30 @@ sub get_rule_set {
 	    $req_info->{'mode'} eq 'test' )) {  # optimize??
 
 	    $req_info->{'rule_count'}++;
-	
-	    # test the pattern, captured values are stored in @captures
-	    if(my @captures = $caller =~ Kynetx::Actions::get_precondition_test($rule)) {
+
+	    # test and capture here
+	    my($selected, $captured_vals) = select_rule($caller, $rule);
+
+	    if ($selected) {
 
 		$logger->debug("[selected] $rule->{'name'} ");
 
 		push @new_set, $rule;
 		push @{ $req_info->{'selected_rules'} }, $rule->{'name'};
 
+		my $select_vars = Kynetx::Actions::get_precondition_vars($rule);
+
+
 		# store the captured values from the precondition to the env
 		my $cap = 0;
-		foreach my $var ( @{ Kynetx::Actions::get_precondition_vars($rule)}) {
+		foreach my $var (@{ $select_vars } ) {
 
 		    $var =~ s/^\s*(.+)\s*/$1/;
 
-		    $logger->debug("[select var] $var -> $captures[$cap]");
+		    $logger->debug("[select var] $var -> $captured_vals->[$cap]");
 
-		    $new_env{$var} = $captures[$cap++];
-		    push(@{$new_env{$rule->{'name'}."_vars"}}, $var);
+		    $new_env{$var} = $captured_vals->[$cap++];
+
 		}
 	    } else {
 		$logger->debug("[not selected] $rule->{'name'} ");
@@ -321,6 +334,24 @@ sub get_rule_set {
     
     return (\@new_set, \%new_env, $ruleset);
 
+}
+
+sub select_rule {
+    my($caller, $rule) = @_;
+
+    my $logger = get_logger();
+
+    # test the pattern, captured values are stored in @captures
+
+    my $pattern_regexp = Kynetx::Actions::get_precondition_test($rule);
+    $logger->debug("Selection pattern: ", $pattern_regexp);
+
+    my $captures = [];
+    if(@{$captures} = $caller =~ $pattern_regexp) {
+	return (1, $captures);
+    } else {
+	return (0, $captures);
+    }
 }
 
 sub optimize_rules {

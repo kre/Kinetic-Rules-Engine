@@ -132,7 +132,7 @@ sub eval_js_pre {
 
     my @results = map {eval_js_decl($req_info, $rule_env, $rule_name, $session, $_)} @{ $pre };
 
-    $logger->debug("Results of prelude: ", Dumper(@results));
+#    $logger->debug("Results of prelude: ", Dumper(@results));
 
     # unzip the results
     my @vars;
@@ -145,7 +145,7 @@ sub eval_js_pre {
    
     return extend_rule_env(\@vars, 
 			   \@vals, 
-			   extend_rule_env($rule_name."_vars", \@vars, $rule_env));
+			   $rule_env);
 }
 
 
@@ -347,7 +347,7 @@ sub eval_js_decl {
     if ($decl->{'type'} eq 'expr') {
 
 	my $r = eval_js_expr($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);
-	$val = $r->{'val'};
+	$val = $r->{'val'} if (ref $r eq 'HASH');
 #	$logger->debug("[decl] expr for ", $decl->{'lhs'}, ' -> ', sub{Dumper($val)} );
 	$logger->debug("[decl] expr for ", $decl->{'lhs'}, ' -> ', $val );
 
@@ -359,7 +359,7 @@ sub eval_js_decl {
     }
 
     # JS is generated for all vars in the rule env
-    $logger->debug("Evaling " . $rule_name.":".$decl->{'lhs'});
+#    $logger->debug("Evaling " . $rule_name.":".$decl->{'lhs'});
 
 
     return [$decl->{'lhs'}, $val];

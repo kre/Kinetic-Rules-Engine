@@ -280,19 +280,31 @@ EOF
 
 
 sub emit_var_decl {
-    my($lhs, $val) = @_;
-    my $t = infer_type($val);
-    if($t eq 'str') {
-	$val = "'".escape_js_str($val)."'";
-	# relace tmpl vars with concats for JS
-	$val =~ y/\n\r/  /; # remove newlines
-	$val =~ s/#{([^}]*)}/'+$1+'/g;
-    } elsif ($t eq 'hash' || $t eq 'array') {
-	$val = encode_json($val);
-    }
+    my($scope_hash) = @_;
     my $logger = get_logger();
-    $logger->debug("[decl] $lhs has type: $t");
-    return "var $lhs = $val;\n";
+    my $js = '';
+    my $exempted = {
+	'uniq' => 1,
+	'uniq_id' => 1,
+	'___order' => 1,
+    };
+#    $logger->debug(Dumper($scope_hash));
+    foreach my $lhs (@{$scope_hash->{'___order'}}) {
+	next if $exempted->{$lhs} || $lhs =~ m/^datasource:/;
+	my $val = $scope_hash->{$lhs};
+	my $t = infer_type($val);
+	if($t eq 'str') {
+	    $val = "'".escape_js_str($val)."'";
+	    # relace tmpl vars with concats for JS
+	    $val =~ y/\n\r/  /; # remove newlines
+	    $val =~ s/#{([^}]*)}/'+$1+'/g;
+	} elsif ($t eq 'hash' || $t eq 'array') {
+	    $val = encode_json($val);
+	}
+	$logger->debug("[decl] $lhs has type: $t");
+	$js .= "var $lhs = $val;\n";
+    }
+    return $js;
 
 }
 
@@ -317,9 +329,8 @@ sub build_js_load {
 
     $logger->debug("Rule name: ", $rule->{'name'});
     # now do decls in order
-    foreach my $var ( @{ lookup_rule_env($rule->{'name'}."_vars", $rule_env) } ) {
-	$js .= emit_var_decl($var, lookup_rule_env($var,$rule_env));
-    }
+    my $scope_hash = flatten_env($rule_env);
+    $js .= emit_var_decl($scope_hash);
 
     # emits
     $js .= $rule->{'emit'} . "\n" if(defined $rule->{'emit'});
@@ -360,9 +371,9 @@ sub build_js_load {
 	    } elsif(defined $action_expr->{'emit'}) {
 		$js .= $action_expr->{'emit'}. ";\n";
 		$js .= "$cb_func_name();\n";
-		push(@{ lookup_rule_env('actions',$rule_env) }, 'emit');
-		push(@{ lookup_rule_env('tags',$rule_env) }, '');
-		push(@{ lookup_rule_env('labels',$rule_env) }, $action_expr->{'label'});
+		push(@{ $req_info->{'actions'} }, 'emit');
+		push(@{ $req_info->{'tags'} }, '');
+		push(@{ $req_info->{'labels'} }, $action_expr->{'label'});
 
 	    }
 	}
@@ -451,7 +462,7 @@ sub build_one_action {
 
 #    $logger->debug("Env: ", Dumper($rule_env));
 
-    push(@{ lookup_rule_env('actions',$rule_env) }, $action_name);
+    push(@{ $req_info->{'actions'} }, $action_name);
 
 
 
@@ -541,8 +552,8 @@ sub build_one_action {
 #	$js = "setTimeout(\'" . $js . "\', " . ($mods{'delay'} * 1000) . ");\n";
     }
 
-    push(@{ lookup_rule_env('tags',$rule_env) }, ($mods{'tags'} || ''));
-    push(@{ lookup_rule_env('labels',$rule_env) }, $action_expr->{'label'} || '');
+    push(@{ $req_info->{'tags'} }, ($mods{'tags'} || ''));
+    push(@{ $req_info->{'labels'} }, $action_expr->{'label'} || '');
 
     return $js;
 }

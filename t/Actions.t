@@ -401,26 +401,61 @@ foreach my $case (@action_test_cases) {
 }
 
 # emit js vars
-is_string_nows(Kynetx::Actions::emit_var_decl("x", 5), 
+
+my $emit_env = empty_rule_env();
+
+$emit_env = extend_rule_env(
+    ['x'],
+    [5],
+    $emit_env);
+
+is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
     "var x = 5;", 
     "emit a number");
+
 my $no_escape = "foo bar is a boo bar";
 my $pls_escape = "foo bar isn't a boo bar";
 my $escaped = "foo bar isn\\'t a boo bar";
-is_string_nows(Kynetx::Actions::emit_var_decl("x", $no_escape), 
+
+$emit_env = extend_rule_env(
+    ['x'],
+    [$no_escape],
+    $emit_env);
+
+is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
     "var x = '". $no_escape ."';", 
     "emit a string");
-is_string_nows(Kynetx::Actions::emit_var_decl("x", $pls_escape), 
+
+$emit_env = extend_rule_env(
+    ['x'],
+    [$pls_escape],
+    $emit_env);
+
+is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
     "var x = '". $escaped . "';", 
     "emit a string");
+
 my $a = [1,2,3];
-is_string_nows(Kynetx::Actions::emit_var_decl("x", $a), 
+
+$emit_env = extend_rule_env(
+    ['x'],
+    [$a],
+    $emit_env);
+
+is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
     "var x = ". encode_json($a).";", 
     "emit an array");
+
 my $h = {"a" =>1,
     "b" => 2,
     "c" => 3};
-is_string_nows(Kynetx::Actions::emit_var_decl("x", $h), 
+
+$emit_env = extend_rule_env(
+    ['x'],
+    [$h],
+    $emit_env);
+
+is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
     "var x = ". encode_json($h).";", 
     "emit a hash");
 

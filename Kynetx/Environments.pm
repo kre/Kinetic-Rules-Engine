@@ -19,6 +19,7 @@ qw(
 empty_rule_env
 lookup_rule_env
 extend_rule_env
+flatten_env
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -29,7 +30,11 @@ sub empty_rule_env {
 
 sub lookup_rule_env {
     my($key,$env) = @_;
-    if(! $env) {
+
+#    my $logger = get_logger();
+#    $logger->debug('$env has type ', ref $env);
+
+    if(! defined $env || ! (ref $env eq 'HASH')) {
 	return undef;
     } elsif ($env->{$key}) {
 	return $env->{$key};
@@ -46,15 +51,38 @@ sub extend_rule_env {
 
     my $new_env = {'___sub' =>$env};
     if(ref $keys eq 'ARRAY' && ref $vals eq 'ARRAY') {
+	$new_env->{'___vars'} = $keys;
 	my $i = 0;
 	foreach my $key (@{ $keys}) {
 	    $new_env->{$key} = $vals->[$i++];
 	}
     } elsif(ref $keys eq 'SCALAR' || ref $keys eq '') {
+	$new_env->{'___vars'} = [$keys];
 	$new_env->{$keys} = $vals;
     }
 
     return $new_env;
+}
+
+# returns a hash with the variables and values proper reflecting scoping
+sub flatten_env {
+    my ($env) = @_;
+    return flatten_env_aux($env, {});
+}
+
+sub flatten_env_aux {
+    my ($env, $result) = @_;
+    if(! defined $env || ! (ref $env eq 'HASH')) {
+	return $result;
+    } else {
+	my @this_scope_order;
+	foreach my $k (@{$env->{'___vars'}}) {
+	    push(@this_scope_order, $k) unless grep $k eq $_, @{ $result->{'___order'}};
+	    $result->{$k} = $env->{$k} unless ($k eq '___sub') || (defined $result->{$k});
+	}
+	unshift(@{$result->{'___order'}},@this_scope_order);
+	$result = flatten_env_aux($env->{'___sub'}, $result);
+    }
 }
 
 
