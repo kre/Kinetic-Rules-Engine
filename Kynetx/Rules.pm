@@ -117,7 +117,7 @@ sub eval_ruleset {
     $rule_env = extend_rule_env(@this_keys, @this_values, $rule_env);
 
 
-    $logger->debug('Env after rule selection: ', Dumper($rule_env));
+#    $logger->debug('Env after rule selection: ', Dumper($rule_env));
 
     Kynetx::Request::log_request_env($logger, $req_info);
 
