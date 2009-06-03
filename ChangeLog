@@ -1,3 +1,11 @@
+2009-06-03  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Parser.pm: Support for regular expressions as primitives
+	  and the replace operator
+	* Kynetx/Operators.pm (eval_replace): Added the replace operator
+	* Kynetx/JavaScript.pm (eval_js_pre): Fixed so that sequential
+	  decls see previous decl's results in environment
+
 2009-06-02  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (get_rule_set): Separated out selection testing

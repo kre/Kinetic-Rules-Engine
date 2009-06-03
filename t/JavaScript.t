@@ -40,7 +40,7 @@ Log::Log4perl->easy_init($INFO);
 
 
 
-my (@expr_testcases, @decl_testcases, $str, $val, $krl);
+my (@expr_testcases, @decl_testcases, @pre_testcases, $str, $val, $krl);
 
 sub add_expr_testcase {
     my($str,$js,$expected,$diag) = @_;
@@ -65,6 +65,20 @@ sub add_decl_testcase {
     diag("$str = ", Dumper($val)) if $diag;
 
     push(@decl_testcases, {'expr' => $val,
+			   'src' => $str,
+			   'val' => $expected,
+	 });
+}
+
+sub add_pre_testcase {
+    my($str, $expected, $diag) = @_;
+    my $val = Kynetx::Parser::parse_pre($str);
+
+    chomp $str;
+    
+    diag("$str = ", Dumper($val)) if $diag;
+
+    push(@pre_testcases, {'expr' => $val,
 			   'src' => $str,
 			   'val' => $expected,
 	 });
@@ -467,12 +481,41 @@ add_decl_testcase(
     0);
 
 
+my $re1 = extend_rule_env(['c'], 
+			  ['Hello'],
+			  $rule_env);
+$str = <<_KRL_;
+pre {
+    c = "Hello";
+}
+_KRL_
+add_pre_testcase(
+    $str,
+    $re1,
+    0);
+
+
+$re1 = extend_rule_env(['c','d'], 
+		       ['Hello','Hello world!'],
+		       $rule_env);
+$str = <<_KRL_;
+pre {
+    c = "Hello";
+    d = c + " world!";
+}
+_KRL_
+add_pre_testcase(
+    $str,
+    $re1,
+    0);
+
+
 
 #$krl = Kynetx::Parser::parse_decl($str);
 #diag(Dumper($krl));
 
 
-plan tests => 35 + (@expr_testcases * 2) + (@decl_testcases * 1);
+plan tests => 35 + (@expr_testcases * 2) + (@decl_testcases * 1) + (@pre_testcases * 1);
 
 
 # now test each test case twice
@@ -493,13 +536,28 @@ foreach my $case (@expr_testcases) {
 
 # now test each test case twice
 foreach my $case (@decl_testcases) {
-    # diag(Dumper($case->{'expr'}));
+    #diag(Dumper($case->{'expr'}));
     
-    my $e = Kynetx::JavaScript::eval_js_decl(
+    my ($v,$e) = Kynetx::JavaScript::eval_js_decl(
+	$BYU_req_info, 
+	$rule_env, $rule_name, $this_session, 
+	$case->{'expr'}) ;
+    #diag Dumper($e);
+    is_deeply($e, 
+	      $case->{'val'},
+	      "Evaling Javascript " . $case->{'src'});
+}
+
+# now test each test case twice
+foreach my $case (@pre_testcases) {
+    #diag(Dumper($case->{'expr'}));
+    
+    my $e = Kynetx::JavaScript::eval_js_pre(
 	       $BYU_req_info, 
 	       $rule_env, $rule_name, $this_session, 
 	       $case->{'expr'}) ;
-    is_deeply($e->[1], 
+    #diag(Dumper($e));
+    is_deeply($e, 
 	      $case->{'val'},
 	      "Evaling Javascript " . $case->{'src'});
 }
@@ -529,7 +587,7 @@ _KRL_
 
 	diag(Dumper($decl)) if $diag;
 
-	my $js_decl = Kynetx::JavaScript::eval_js_decl(
+	my ($v,$js_decl) = Kynetx::JavaScript::eval_js_decl(
 	    $BYU_req_info,
 	    $rule_env,
 	    $rule_name,
@@ -537,7 +595,7 @@ _KRL_
 	    $decl
 	    );
 
-	my $result = $js_decl->[1];
+	my $result = $js_decl;
 	
         diag($decl->{'function'} . " --> " . $result) if $diag;
 	return $result;

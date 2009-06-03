@@ -40,6 +40,7 @@ my $grammar = <<'_EOGRAMMAR_';
 
 # Terminals (macros that can't expand further)
 #
+REGEXP: /\/(\\.|[^\/])+\/(i|g){0,2}/
 HTML: /<<.*?>>/s  {$return=Kynetx::Parser::html($item[1]) }
 STRING: /"[^"]*"|'[^']'/ {$return=Kynetx::Parser::string($item[1]) }
 VAR:   /[_A-Za-z]\w*/ 
@@ -570,7 +571,7 @@ term: factor factor_op term
 
 factor_op: '*'|'/'
 
-operator: 'pick'|'length'
+operator: 'pick'|'length'|'replace'
 
 factor: NUM
         {$return=Kynetx::Parser::mk_expr_node('num',$item[1])}
@@ -578,6 +579,8 @@ factor: NUM
         {$return=Kynetx::Parser::mk_expr_node('num',$item[2] * -1)}
       | STRING
         {$return=Kynetx::Parser::mk_expr_node('str',$item[1])}
+      | REGEXP
+        {$return=Kynetx::Parser::mk_expr_node('regexp',$item[1])}
       | 'true'
         {$return=Kynetx::Parser::mk_expr_node('bool',$item[1])}
       | 'false'
@@ -778,6 +781,31 @@ sub parse_decl {
     } else {
 	$logger->debug("Parsed expression");
     }
+
+    return $result;
+
+#    print Dumper($result);
+
+
+}
+
+# Helper function used in testing  
+sub parse_pre {
+    my ($expr) = @_;
+    
+    my $logger = get_logger();
+
+    $expr = remove_comments($expr);
+
+    # remove newlines
+    $expr =~ s%\n%%g;
+
+    my $result = ($parser->pre_block($expr));
+    # if (defined $result->{'error'}) {
+    # 	$logger->error("Can't parse expression: $result->{'error'}");
+    # } else {
+    # 	$logger->debug("Parsed expression");
+    # }
 
     return $result;
 

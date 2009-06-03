@@ -76,6 +76,49 @@ sub eval_length {
 }
 $funcs->{'length'} = \&eval_length;
 
+sub eval_replace {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::JavaScript::eval_js_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+
+    my $rands = Kynetx::JavaScript::eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+    $logger->debug("obj: ", sub { Dumper($rands) });
+
+    my $v = $obj->{'val'};
+
+    if($obj->{'type'} eq 'str' && 
+       $rands->[0]->{'type'} eq 'regexp' && 
+       $rands->[1]->{'type'} eq 'str') {
+    
+	my $pattern = '';
+	($pattern) = $rands->[0]->{'val'} =~ m#/([^/]+)/(i|g){0,2}#;  
+
+	$logger->debug("Replacing string with $pattern ");
+
+	# yeah, this is really ugly...
+	if($rands->[0]->{'val'} =~ m#/i$#) {
+	    $v =~ s/$pattern/$rands->[1]->{'val'}/i;
+	} elsif($rands->[0]->{'val'} =~ m#/g$#) {
+	    $v =~ s/$pattern/$rands->[1]->{'val'}/g;
+	} elsif($rands->[0]->{'val'} =~ m#/gi$#) {
+	    $v =~ s/$pattern/$rands->[1]->{'val'}/gi;
+	} elsif($rands->[0]->{'val'} =~ m#/ig$#) {
+	    $v =~ s/$pattern/$rands->[1]->{'val'}/ig;
+	} else {
+	    $v =~ s/$pattern/$rands->[1]->{'val'}/;
+	}
+
+    }
+
+
+    return { 'type' => Kynetx::JavaScript::infer_type($v),
+	      'val' => $v
+    }
+}
+$funcs->{'replace'} = \&eval_replace;
+
 
 sub eval_operator {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;

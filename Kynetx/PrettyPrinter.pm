@@ -663,6 +663,9 @@ sub pp_expr {
 	/num/ && do {
 	    return  $expr->{'val'} ;
 	};
+	/regexp/ && do {
+	    return  $expr->{'val'} ;
+	};
 	/var/ && do {
 	    return  $expr->{'val'} ;
 	};

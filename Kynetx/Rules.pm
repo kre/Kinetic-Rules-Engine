@@ -125,7 +125,7 @@ sub eval_ruleset {
 
     # handle globals, start js build, extend $rule_env
     ($js, $rule_env) = eval_globals($req_info,$ruleset, $rule_env);
-    $logger->debug("Global JS: ", $js);
+#    $logger->debug("Global JS: ", $js);
 
 
     # this loops through the rules ONCE applying all that fire
@@ -195,10 +195,12 @@ sub eval_rule {
     # this loads the rule_env.  
     $rule_env = Kynetx::JavaScript::eval_js_pre($req_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
 
+#    $logger->debug("[ENV] after prelude ", Dumper($rule_env));
 #    foreach my $var (keys %{ $rule_env } ) {
 #	$logger->debug("[Env] $var has value $rule_env->{$var}" 
 #		       ) if defined $rule_env->{$var};
 #    }
+
 
     # if the condition is undefined, it's true.  
     $rule->{'cond'} ||= mk_expr_node('bool','true');

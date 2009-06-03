@@ -128,24 +128,39 @@ sub eval_js_pre {
 
     $pre = [] unless defined $pre;
 
-#    $logger->debug("Prelude: ", Dumper($pre));
 
-    my @results = map {eval_js_decl($req_info, $rule_env, $rule_name, $session, $_)} @{ $pre };
+    my @vars = map {$_->{'lhs'}} @{ $pre};
+#    $logger->debug("Prelude vars: ", Dumper(@vars));
 
-#    $logger->debug("Results of prelude: ", Dumper(@results));
+    my @empty_vals = map {''} @vars;
+
+    $rule_env = extend_rule_env(\@vars, \@empty_vals, $rule_env);
+#    $logger->debug("Prelude env before: ", Dumper($rule_env));
+
+
+    foreach my $decl (@{ $pre }) {
+	my($var, $val) = eval_js_decl($req_info, $rule_env, $rule_name, $session, $decl);
+	# yes, this is cheating and breaking the abstraction, but it's fast...
+	$rule_env->{$var} = $val;
+    }
+
+#    my @results = map {eval_js_decl($req_info, $rule_env, $rule_name, $session, $_)} @{ $pre };
+
+#    $logger->debug("Results of prelude: ", Dumper($rule_env));
 
     # unzip the results
-    my @vars;
-    my @vals;
-    foreach my $r (@results) {
-	my($var, $val) = @{$r};
-	push(@vars, $var);
-	push(@vals, $val);
-    }
+#    my @vars;
+#    my @vals;
+#    foreach my $r (@results) {
+#	my($var, $val) = @{$r};
+#	push(@vars, $var);
+#	push(@vals, $val);
+#    }
    
-    return extend_rule_env(\@vars, 
-			   \@vals, 
-			   $rule_env);
+#    return extend_rule_env(\@vars, 
+#			   \@vals, 
+#			   $rule_env);
+    return $rule_env;
 }
 
 
@@ -225,6 +240,9 @@ sub eval_js_expr {
 	    return $expr;
 	};
 	/num/ && do {
+	    return  $expr ;
+	};
+	/regexp/ && do {
 	    return  $expr ;
 	};
 	/var/ && do {
@@ -362,7 +380,7 @@ sub eval_js_decl {
 #    $logger->debug("Evaling " . $rule_name.":".$decl->{'lhs'});
 
 
-    return [$decl->{'lhs'}, $val];
+    return ($decl->{'lhs'}, $val);
 
 
 }
@@ -399,6 +417,7 @@ sub eval_datasource {
 	    # we're really just generating JS here.
 	    $val = "K\$('".$args->[0]."').innerHTML";
 	} elsif($function eq 'env') {
+	    # FIXME: should only be able to get and test certain page env info
 	    # rulespaced env parameters
 	    if($req_info->{'rid'} && defined $req_info->{$req_info->{'rid'}.':'.$args->[0]}) {
 		$val = $req_info->{$req_info->{'rid'}.':'.$args->[0]};
