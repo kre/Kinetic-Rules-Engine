@@ -13,7 +13,7 @@ use APR::Pool ();
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 use Data::Dumper;
 
 use Kynetx::Test qw/:all/;
@@ -37,8 +37,8 @@ my $rule_name = 'foo';
 my $rule_env = empty_rule_env();
 
 $rule_env = extend_rule_env(
-    ['a','b','c','d','my_str'],
-    [10, 11, [4,5,6], [], 'This is a string'],
+    ['a','b','c','d','my_str','my_url'],
+    [10, 11, [4,5,6], [], 'This is a string', 'http://www.amazon.com/gp/products/123456789/'],
     $rule_env);
 
 
@@ -406,6 +406,22 @@ $i++;
 $e[$i] = q#my_str.replace(/this/i,"do you want a")#;
 $x[$i] = {
    'val' => 'do you want a is a string',
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#my_str.replace(/Th(is)/,"Nothing $1")#;
+$x[$i] = {
+   'val' => 'Nothing is is a string',
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#my_url.replace(/http:\/\/([A-Za-z0-9.-]+)\/.*/,"$1")#;
+$x[$i] = {
+   'val' => 'www.amazon.com',
    'type' => 'str'
 };
 $d[$i]  = 0;

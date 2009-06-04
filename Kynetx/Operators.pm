@@ -93,9 +93,12 @@ sub eval_replace {
        $rands->[1]->{'type'} eq 'str') {
     
 	my $pattern = '';
-	($pattern) = $rands->[0]->{'val'} =~ m#/([^/]+)/(i|g){0,2}#;  
+	($pattern) = $rands->[0]->{'val'} =~ m#/(.+)/(i|g){0,2}#;  
 
 	$logger->debug("Replacing string with $pattern ");
+
+	# get capture vars first
+	my @items = ( $v =~ $pattern ); 
 
 	# yeah, this is really ugly...
 	if($rands->[0]->{'val'} =~ m#/i$#) {
@@ -110,6 +113,13 @@ sub eval_replace {
 	    $v =~ s/$pattern/$rands->[1]->{'val'}/;
 	}
 
+	# now put capture vars in (this avoids evaling the replacement)
+	for( reverse 0 .. $#items ){ 
+	    my $n = $_ + 1; 
+	    #  Many More Rules can go here, ie: \g matchers  and \{ } 
+	    $v =~ s/\\$n/${items[$_]}/g ;
+	    $v =~ s/\$$n/${items[$_]}/g ;
+	}
     }
 
 
