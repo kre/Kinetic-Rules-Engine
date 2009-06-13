@@ -43,25 +43,53 @@ sub lookup_rule_env {
     }
 }
 
+# Takes three or two arguments. 
+# If three, an array of keys, and array of vals, and an env to extend
+# If two, a hash to use in enxtending env in the second
 sub extend_rule_env {
-    my($keys, $vals, $env) = @_;
+
+    if(@_ == 3) {
+
+	my($keys, $vals, $env) = @_;
+	my $new_env = {'___sub' =>$env};
 
 #    my $logger = get_logger();
 #    $logger->debug('$keys has type ', ref $keys);
 
-    my $new_env = {'___sub' =>$env};
-    if(ref $keys eq 'ARRAY' && ref $vals eq 'ARRAY') {
-	$new_env->{'___vars'} = $keys;
-	my $i = 0;
-	foreach my $key (@{ $keys}) {
-	    $new_env->{$key} = $vals->[$i++];
+	if(ref $keys eq 'ARRAY' && ref $vals eq 'ARRAY') {
+	    $new_env->{'___vars'} = $keys;
+	    my $i = 0;
+	    foreach my $key (@{ $keys}) {
+		$new_env->{$key} = $vals->[$i++];
+	    }
+	} elsif(ref $keys eq 'SCALAR' || ref $keys eq '') {
+	    $new_env->{'___vars'} = [$keys];
+	    $new_env->{$keys} = $vals;
 	}
-    } elsif(ref $keys eq 'SCALAR' || ref $keys eq '') {
-	$new_env->{'___vars'} = [$keys];
-	$new_env->{$keys} = $vals;
+
+	return $new_env;
+
+    } elsif(@_ == 2) {
+	my($hash, $env) = @_;
+	my $new_env = {'___sub' =>$env};
+
+#    my $logger = get_logger();
+#    $logger->debug('$keys has type ', ref $keys);
+
+	if(ref $hash eq 'HASH') {
+	    my @keys = keys %{ $hash };
+
+	    $new_env->{'___vars'} = \@keys;
+	    my $i = 0;
+	    foreach my $key (@keys) {
+		$new_env->{$key} = $hash->{$key};
+	    }
+	} 
+	
+	return $new_env;
     }
 
-    return $new_env;
+
 }
 
 # returns a hash with the variables and values proper reflecting scoping

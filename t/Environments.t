@@ -20,7 +20,7 @@ use Kynetx::Test qw/:all/;
 use Kynetx::Environments qw/:all/;
 
 
-plan tests => 14;
+plan tests => 19;
 
 
 my $e = empty_rule_env();
@@ -52,6 +52,19 @@ my $e4 = extend_rule_env(['c'], [[3]], $e);
 
 #diag Dumper($e3);
 is_deeply(lookup_rule_env('c',$e4),[3], 'lookup an array in e3 after extending');
+
+
+my $e5  = extend_rule_env({'a' => 5}, $e);
+is(lookup_rule_env('a',$e5),5, 'lookup a in e5 after extending with a hash');
+
+my $e6  = extend_rule_env({'a' => [5]}, $e);
+is_deeply(lookup_rule_env('a',$e6),[5], 'lookup an array in e6 after extending with hash');
+
+
+my $e7  = extend_rule_env({'a' => 5, 'd' => '5'}, $e);
+is(lookup_rule_env('a',$e7),5, 'lookup a in e7 after extending with a hash');
+is(lookup_rule_env('d',$e7),'5', 'lookup d in e7 after extending with a hash');
+
 
 my $flat_e = {
            'a' => 1,
@@ -86,6 +99,15 @@ my $flat_e3 = {
          };
 
 is_deeply(flatten_env($e3), $flat_e3, "Flattening creates correct scope for e3");
+#diag(Dumper(flatten_env($e3)));
+
+my $flat_e6 = {
+           'b' => 2,
+	   'a' => [5],
+	   '___order' => ['b','a']
+         };
+
+is_deeply(flatten_env($e6), $flat_e6, "Flattening creates correct scope for e6");
 #diag(Dumper(flatten_env($e3)));
 
 

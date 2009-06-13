@@ -479,7 +479,7 @@ sub den_to_exp {
 sub infer_type {
     my ($v) = @_;
     my $t;
-    if($v =~ m/^(\d*\.\d+|\d+)$/) { # crude type inference for primitives
+    if($v =~ m/^(\d*\.\d+|[1-9]\d+|\d)$/) { # crude type inference for primitives
 	$t = 'num' ;
     } elsif($v =~ m/^(true|false)$/) {
 	$t = 'bool';

@@ -515,7 +515,7 @@ add_pre_testcase(
 #diag(Dumper($krl));
 
 
-plan tests => 35 + (@expr_testcases * 2) + (@decl_testcases * 1) + (@pre_testcases * 1);
+plan tests => 45 + (@expr_testcases * 2) + (@decl_testcases * 1) + (@pre_testcases * 1);
 
 
 # now test each test case twice
@@ -715,6 +715,17 @@ my $pls_escape = "foo bar isn't a boo bar";
 my $escaped = "foo bar isn\\'t a boo bar";
 is(escape_js_str($no_escape), $no_escape, "Escape a string");
 is(escape_js_str($pls_escape), $escaped, "Escape a string");
+
+is(infer_type('hello'),'str','inferring simple string');
+is(infer_type('5'),'num','inferring single digit number number');
+is(infer_type('0'),'num','inferring 0 as a number number');
+is(infer_type('15'),'num','inferring integer as number');
+is(infer_type('0.4'),'num','inferring real number');
+is(infer_type('0847564'),'str','inferring number with leading 0');
+is(infer_type('true'),'bool','inferring boolean');
+is(infer_type('false'),'bool','inferring boolean');
+is(infer_type([0,1,2]),'array','inferring array');
+is(infer_type({'a' => 0}),'hash','inferring hash');
 
 1;
 

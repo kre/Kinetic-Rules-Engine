@@ -110,11 +110,15 @@ sub eval_ruleset {
 		     $req_info
 	            );
 
-    # side effects environment with precondition pattern values
+    
     # yes, you need to set the arrays and then use them since "keys" & "values" are context aware
-    my @this_keys = keys %{ $this_rule_env };
-    my @this_values = values %{ $this_rule_env };
-    $rule_env = extend_rule_env(@this_keys, @this_values, $rule_env);
+#    my @this_keys = keys %{ $this_rule_env };
+#    my @this_values = values %{ $this_rule_env };
+
+#    $logger->debug('Keys after rule selection: ', Dumper());
+
+    # side effects environment with precondition pattern values
+    $rule_env = extend_rule_env($this_rule_env, $rule_env);
 
 
 #    $logger->debug('Env after rule selection: ', Dumper($rule_env));

@@ -1,3 +1,16 @@
+2009-06-13  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Rules.pm (eval_ruleset): Fixed problem with how select
+	  vars extend the rule environment.  
+	* Kynetx/Environments.pm (extend_rule_env): Changed to support
+	  extending via a hash as well as a list of keys and values.
+
+2009-06-04  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/JavaScript.pm (infer_type): Changed to be pickier about
+	  numbers.  Don't accept leading 0 as a number.  Added tests for
+	  infer_type to javascript.t
+
 2009-06-03  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Parser.pm: Support for regular expressions as primitives

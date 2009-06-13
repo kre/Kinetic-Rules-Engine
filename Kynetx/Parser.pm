@@ -42,7 +42,7 @@ my $grammar = <<'_EOGRAMMAR_';
 #
 REGEXP: /\/(\\.|[^\/])+\/(i|g){0,2}/
 HTML: /<<.*?>>/s  {$return=Kynetx::Parser::html($item[1]) }
-STRING: /"[^"]*"|'[^']'/ {$return=Kynetx::Parser::string($item[1]) }
+STRING: /"(\\"|[^"])*"|'[^']'/ {$return=Kynetx::Parser::string($item[1]) }
 VAR:   /[_A-Za-z]\w*/ 
 NUM:   /\d*\.\d+|\d+/          
 COMMA: /,/ 
