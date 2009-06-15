@@ -42,6 +42,7 @@ my $action_gender = $opt{'a'} || 0;
 my $log_gender = $opt{'l'} || 0;
 my $krl_gender = $opt{'k'} || 0;
 my $frag_gender = $opt{'f'} || 0;
+my $include_svn = $opt{'s'} || 0;
 
 my $init_host = 'init.kobj.net';
 my $log_host = 'logger.kobj.net';
@@ -96,6 +97,7 @@ $conf_template->param(GENDER_LOG => 1) if $log_gender;
 $conf_template->param(GENDER_INIT => 1) if $init_gender;
 $conf_template->param(GENDER_KRL => 1) if $krl_gender;
 $conf_template->param(GENDER_FRAG => 1) if $frag_gender;
+$conf_template->param(INCLUDE_SVN => 1) if $include_svn;
 $conf_template->param(HOSTNAME => hostname);
 $conf_template->param(KOBJ_ROOT => $base);
 
@@ -168,7 +170,7 @@ Examples:
 
 For local running all on one machine with local repository
 
-   install-httpd-conf.pl -aljkfdr
+   install-httpd-conf.pl -aljkfdsr
 
 For local running all on one machine with remote repository
 

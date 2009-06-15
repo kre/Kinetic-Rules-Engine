@@ -1,3 +1,10 @@
+2009-06-15  Phil Windley  <pjw@kynetx.com>
+
+	* bin/install-httpd-conf.pl: Changed to allow separate
+	  inclusion of SVN config.
+	* etc/tmpl/httpd-perl.conf.tmpl: Changed to allow separate
+	  inclusion of SVN config.
+
 2009-06-13  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (eval_ruleset): Fixed problem with how select
