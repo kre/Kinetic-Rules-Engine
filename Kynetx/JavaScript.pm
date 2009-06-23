@@ -503,6 +503,7 @@ sub infer_type {
 sub mk_js_str {
     if(defined $_[0]) {
 	my $str = join(" ",@_);
+	$str =~ y/\n\r/  /; # remove newlines
 	return "'". escape_js_str($str) . "'";
     } else {
 	return "''";

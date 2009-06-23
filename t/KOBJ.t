@@ -30,6 +30,9 @@ plan tests => $numtests;
 my $my_req_info;
 $my_req_info->{'referer'} = 'http://www.byu.edu'; # Utah (BYU)
 
+# configure KNS
+Kynetx::Configure::configure();
+
 Kynetx::Memcached->init();
 
 

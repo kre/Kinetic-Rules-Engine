@@ -10,8 +10,9 @@ use lib qw(
 );
 
 use Log::Log4perl qw(get_logger :levels);
-use memcache_ips;
-use LWP::Simple qw(get);
+#use LWP::Simple qw(get);
+use LWP::UserAgent;
+use Kynetx::Configure;
 
 use constant DEFAULT_MEMCACHED_PORT => '11211';
 
@@ -40,21 +41,18 @@ sub init {
 
     my $logger = get_logger();
 
-    my $hosts_array = memcache_ips::get_mcd_hosts();
+    $MEMSERVERS = Kynetx::Configure::get_config('MEMCACHE_SERVERS');
 
-    $logger->debug("Hosts: ", join " ", @{ $hosts_array });
+    $logger->debug("Initializing memcached: ", join(" ", @{ $MEMSERVERS }));
 
-    my @memd_hosts = map {$_ . ":" . memcache_ips::get_mcd_port() } @{ $hosts_array };
-
-    $MEMSERVERS = join(" ", @memd_hosts);
-
-    $logger->debug("Initializing memcached: ", $MEMSERVERS);
-
+    # don't set compress threshold.  Compression uses MemGzip which doesn't 
+    # handle UTF chars correctly.  
     $MEMD = new Cache::Memcached {
-	'servers' => \@memd_hosts,
-	'debug' => 0,
-	'compress_threshold' => 10000,
+	'servers' => $MEMSERVERS,
+	'debug' => 0
     };
+    $MEMD->enable_compress(0);
+
 }
 
 
@@ -63,14 +61,14 @@ sub get_memd {
 }
 
 sub get_memcached_servers {
-    return $MEMSERVERS;
+    return join(" ", $MEMSERVERS);
 }
 
 
 sub get_remote_data {
     my($url,$expire) = @_;
 
-    $expire = 20 * 60 if (! $expire); # twenty minutes
+    $expire = 10 * 60 if (! $expire); # twenty minutes
 
     my $logger = get_logger();
     my $memd = get_memd();
@@ -86,10 +84,21 @@ sub get_remote_data {
 	}
     }
 
-    $content = LWP::Simple::get($url);
+    my $ua = LWP::UserAgent->new;
+    $ua->agent("Kynetx Rule Engine/1.0");
 
-    if($memd) {
-	$logger->debug("Caching data for $url");
+    my $req = HTTP::Request->new(GET => $url);
+    my $res = $ua->request($req);
+
+    if($res->is_success) {
+	$content = $res->decoded_content;
+    } else {
+	$content = '';
+	$logger->debug("Error retrieving $url: " . $res->status_line . "\n");
+    }
+
+    if($memd && $res->is_success) {
+	$logger->debug("Caching data for $url for $expire seconds");
 	$memd->set($key,$content,$expire);
     }
 

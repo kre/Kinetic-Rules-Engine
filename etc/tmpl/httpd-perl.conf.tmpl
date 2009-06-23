@@ -70,9 +70,7 @@ LockFile "logs/accept.lock"
     StartServers          5
     MinSpareServers       5
     MaxSpareServers      10
-<TMPL_IF NAME="GENDER_ACTION">    MaxClients           25
-<TMPL_ELSE>    MaxClients           70
-</TMPL_IF>
+    MaxClients      <TMPL_VAR NAME=MAX_SERVERS>
     MaxRequestsPerChild   0
 </IfModule>
 
@@ -127,7 +125,7 @@ User web
 Group web
 </IfModule>
 
-ServerAdmin web@kynetx.com
+ServerAdmin <TMPL_VAR NAME=SERVER_ADMIN>
 
 ServerName <TMPL_VAR NAME=HOSTNAME>:80
 
@@ -158,7 +156,7 @@ RewriteEngine on
 
 # redirect everything that's not a .js file to kynetx.com
 RewriteRule	  !^.*\.(js|xml)$	$1 [R]
-RewriteRule   ^(.*)$ http://www.kynetx.com/kobj/index.html
+RewriteRule   ^(.*)$ <TMPL_VAR NAME=KNS_LANDING_PAGE>
 
 
 </IfModule>
@@ -193,7 +191,7 @@ RewriteRule   ^(.*)$ http://www.kynetx.com/kobj/index.html
     # Example:
     # Redirect permanent /foo http://www.example.com/bar
 
-Redirect permanent /index.html http://www.kynetx.com/kobj/index.html
+Redirect permanent /index.html <TMPL_VAR NAME=KNS_LANDING_PAGE>
 
     #
     # Alias: Maps web paths into filesystem paths and is used to
@@ -274,16 +272,12 @@ DefaultType text/javascript
 # Customizable error responses come in three flavors:
 # 1) plain text 2) local redirects 3) external redirects
 #
-# Some examples:
-ErrorDocument 500 "KNS has experienced an error in processing the request.  We have logged this error and will respond to it.  For more information please contact support@kynetx.com"
-<TMPL_IF NAME="GENDER_KRL">
+ErrorDocument 500 "<TMPL_VAR NAME=KNS_ERROR_MSG>"
+<TMPL_IF NAME="API_KRL">
 ErrorDocument 404 default
 <TMPL_ELSE>
-ErrorDocument 404 http://www.kynetx.com/kobj/index.html
+ErrorDocument 404 <TMPL_VAR NAME=KNS_ERROR_MSG>
 </TMPL_IF>
-#ErrorDocument 404 "/cgi-bin/missing_handler.pl"
-#ErrorDocument 402 http://www.example.com/subscription_info.html
-#
 
 #
 # Supplemental configuration
@@ -311,7 +305,7 @@ SSLRandomSeed connect builtin
 
 LoadModule apreq_module /web/modules/mod_apreq2.so
 
-<TMPL_IF NAME="GENDER_KRL">
+<TMPL_IF NAME="API_KRL">
 PerlRequire <TMPL_VAR NAME=KOBJ_ROOT>/startup-krl.pl
 <TMPL_ELSE>
 PerlRequire <TMPL_VAR NAME=KOBJ_ROOT>/startup.pl
@@ -347,7 +341,7 @@ LogFormat "%h %t %{TOTAL_SECS}e %{METHOD}e %{RIDS}e %{TXN_ID}e \"%{RULE_NAME}e\"
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/callback_log /web/logs/kynetx/CB-%Y%m%d-%H%M.log" CB env=CB
 
 
-<TMPL_IF NAME="GENDER_ACTION">
+<TMPL_IF NAME="API_EVAL">
 <LocationMatch /ruleset/>
 
 
@@ -364,8 +358,8 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 
   # host names
   PerlSetVar init_host <TMPL_VAR NAME=INIT_HOST>
-  PerlSetVar log_host <TMPL_VAR NAME=LOG_HOST>
-  PerlSetVar action_host <TMPL_VAR NAME=ACTION_HOST>
+  PerlSetVar log_host <TMPL_VAR NAME=CB_HOST>
+  PerlSetVar eval_host <TMPL_VAR NAME=EVAL_HOST>
   PerlSetVar frag_host <TMPL_VAR NAME=FRAG_HOST>
 
   # mode => development, production, test
@@ -373,12 +367,14 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
   # we can use the 'debug' config parameter to force detailed logging
   PerlSetVar debug <TMPL_VAR NAME=DEBUG>
 
-  # database configuration
-  PerlSetVar db_host <TMPL_VAR NAME=DB_HOST>
-  PerlSetVar db_username <TMPL_VAR NAME=DB_USERNAME>
-  PerlSetVar db_passwd <TMPL_VAR NAME=DB_PASSWD>
+  PerlSetVar cacheable_threshold <TMPL_VAR NAME=CACHEABLE_THRESHOLD>
 
-  
+  # # database configuration
+  # PerlSetVar db_host <TMPL_VAR NAME=DB_HOST>
+  # PerlSetVar db_username <TMPL_VAR NAME=DB_USERNAME>
+  # PerlSetVar db_passwd <TMPL_VAR NAME=DB_PASSWD>
+
+  PerlSetVar default_template_dir <TMPL_VAR NAME=DEFAULT_TEMPLATE_DIR>  
 
   # URL for svn rule repository, username, password
   PerlSetVar svn_conn <TMPL_VAR NAME=RULE_REPOSITORY>
@@ -388,7 +384,7 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 </LocationMatch>
 
 </TMPL_IF>
-<TMPL_IF NAME="GENDER_LOG">
+<TMPL_IF NAME="API_CALLBACK">
 <LocationMatch /callback|log/>
 
   PerlSetVar kobj_root <TMPL_VAR NAME=KOBJ_ROOT>
@@ -401,14 +397,14 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 
   # host names
   PerlSetVar init_host <TMPL_VAR NAME=INIT_HOST>
-  PerlSetVar log_host <TMPL_VAR NAME=LOG_HOST>
-  PerlSetVar action_host <TMPL_VAR NAME=ACTION_HOST>
+  PerlSetVar log_host <TMPL_VAR NAME=CB_HOST>
+  PerlSetVar eval_host <TMPL_VAR NAME=EVAL_HOST>
   PerlSetVar frag_host <TMPL_VAR NAME=FRAG_HOST>
 
-  # database configuration
-  PerlSetVar db_host <TMPL_VAR NAME=DB_HOST>
-  PerlSetVar db_username <TMPL_VAR NAME=DB_USERNAME>
-  PerlSetVar db_passwd <TMPL_VAR NAME=DB_PASSWD>
+  # # database configuration
+  # PerlSetVar db_host <TMPL_VAR NAME=DB_HOST>
+  # PerlSetVar db_username <TMPL_VAR NAME=DB_USERNAME>
+  # PerlSetVar db_passwd <TMPL_VAR NAME=DB_PASSWD>
 
   # mode => development, production, test
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
@@ -424,7 +420,7 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 
 </TMPL_IF>
 
-<TMPL_IF NAME="GENDER_INIT">
+<TMPL_IF NAME="API_INIT">
 <LocationMatch /js/>
 
   PerlSetVar kobj_root <TMPL_VAR NAME=KOBJ_ROOT>
@@ -458,12 +454,12 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
   PerlSetVar kobj_js_version <TMPL_VAR NAME=JS_VERSION>
 
   # Where do I get the static JS files to serve?
-  PerlSetVar kobj_js_root <TMPL_VAR NAME=KOBJ_ROOT>/etc/js
+  PerlSetVar kobj_js_root <TMPL_VAR NAME=DEFAULT_JS_ROOT>
 
   # host names
   PerlSetVar init_host <TMPL_VAR NAME=INIT_HOST>
-  PerlSetVar log_host <TMPL_VAR NAME=LOG_HOST>
-  PerlSetVar action_host <TMPL_VAR NAME=ACTION_HOST>
+  PerlSetVar log_host <TMPL_VAR NAME=CB_HOST>
+  PerlSetVar eval_host <TMPL_VAR NAME=EVAL_HOST>
   PerlSetVar frag_host <TMPL_VAR NAME=FRAG_HOST>
 
   # mode => development, production, test
@@ -475,9 +471,9 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
   PerlSetVar svn_conn <TMPL_VAR NAME=RULE_REPOSITORY>
 
   # use CloudFront?
-  PerlSetVar UseCloudFront 1
-  # static file version on CloudFront (updated by hand for now)
-  PerlSetVar CloudFrontFile kobj-static-20090602.js
+  PerlSetVar UseCloudFront <TMPL_VAR NAME=USE_CLOUDFRONT>
+  # static file version on CloudFront; Updated in kns_config.pm
+  PerlSetVar CloudFrontURL <TMPL_VAR NAME=RUNTIME_LIB_NAME>
 
 
 
@@ -487,7 +483,7 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 
 </TMPL_IF>
 
-<TMPL_IF NAME="GENDER_KRL">
+<TMPL_IF NAME="API_KRL">
 <LocationMatch /manage/>
 
   PerlSetVar kobj_root <TMPL_VAR NAME=KOBJ_ROOT>
@@ -497,8 +493,8 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 
   # host names
   PerlSetVar init_host <TMPL_VAR NAME=INIT_HOST>
-  PerlSetVar log_host <TMPL_VAR NAME=LOG_HOST>
-  PerlSetVar action_host <TMPL_VAR NAME=ACTION_HOST>
+  PerlSetVar log_host <TMPL_VAR NAME=CB_HOST>
+  PerlSetVar eval_host <TMPL_VAR NAME=EVAL_HOST>
   PerlSetVar krl_host <TMPL_VAR NAME=KRL_HOST>
   PerlSetVar frag_host <TMPL_VAR NAME=FRAG_HOST>
 
@@ -506,6 +502,8 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
   PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
   # we can use the 'debug' config parameter to force detailed logging
   PerlSetVar debug <TMPL_VAR NAME=DEBUG>
+
+  PerlSetVar default_template_dir <TMPL_VAR NAME=DEFAULT_TEMPLATE_DIR>  
 
   SetHandler perl-script
   PerlHandler Kynetx::RuleManager
@@ -527,7 +525,7 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 
 
 
-<TMPL_IF NAME="GENDER_FRAG">
+<TMPL_IF NAME="API_FRAG">
 Alias /widgets/ "/web/lib/perl/widgets/"
 <Location /widgets>
 

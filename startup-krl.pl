@@ -64,6 +64,7 @@ use Kynetx::PrettyPrinter ();
 #use Kynetx::Session ();
 #use Kynetx::Util ();
 use Kynetx::Version ();
+use Kynetx::Configure ();
 
 
 # initialize Log4perl
@@ -73,5 +74,7 @@ use Kynetx::Version ();
 srand (time ^ $$ ^ unpack "%L*", `ps axww | gzip -f`);
 # srand( time() ^ ($$ + ($$ <<15)) );
 
+# configure KNS
+Kynetx::Configure::configure();
 
 1;

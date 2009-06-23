@@ -100,18 +100,18 @@ sub handler {
 	    $method eq 'shared' || 
 	    $method eq '996337974') { # Backcountry
 	if($r->dir_config('UseCloudFront')) { # redirect to CloudFront
-	    my $version = $r->dir_config('CloudFrontFile');
+	    my $version = $r->dir_config('CloudFrontURL');
 	    if (! $version) {
-		 $version = 'kobj-static-1.js';
-		 $logger->error("CloudFrontFile config directive missing from Apache httpd.conf.  Using $version");
+		 $version = 'http://static.kobj.net/kobj-static-1.js';
+		 $logger->error("CloudFrontURL config directive missing from Apache httpd.conf.  Using $version");
 	    } 
-	    my $cf_url = "http://static.kobj.net/". $version;
-	    $logger->info("Redirecting to Cloudfront ", $cf_url);
-	    $r->headers_out->set(Location => $cf_url);
+	    $logger->info("Redirecting to Cloudfront ", $version);
+	    $r->headers_out->set(Location => $version);
 	    
 	    return Apache2::Const::REDIRECT;
 	    
 	} else {  # send the file from here
+	    # $rids will be the final file name of the URL called...
 	    $logger->info("Generating KOBJ static file ", $rids);
 	    $js = get_js_file($rids, $js_version,$js_root);
 	}

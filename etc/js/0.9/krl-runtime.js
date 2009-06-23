@@ -93,7 +93,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
   function runAnnotate(){
 //    $K('#res div:first ol, #web').addClass("Kannotated");
     var count = 0;
-    $K("li.g, li div.res, #results>ul>li").each(function() {
+    $K("li.g, div.g, li div.res, #results>ul>li").each(function() {
       var contents = annotate(this);
       if (contents) {
 	count++;
@@ -243,6 +243,8 @@ KOBJ['data'] = KOBJ['data'] || {};
 
 // initialization vars
 KOBJ.proto = 'http://';
+//KOBJ.proto = (("https:" == document.location.protocol) ? "https://" : "http://");
+
 KOBJ.init_host = 'init.kobj.net';
 KOBJ.eval_host = 'cs.kobj.net';
 KOBJ.callback_host = 'log.kobj.net';

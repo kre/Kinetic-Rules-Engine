@@ -5,10 +5,11 @@ use strict;
 use warnings;
 
 
+# use kns_config qw(get_config);
+
 use Log::Log4perl qw(get_logger :levels);
 
-use Kynetx::Memcached qw(:all);
-
+use Kynetx::Configure qw(:all);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -50,9 +51,12 @@ sub process_session {
 	$logger->debug("Create cookie...");
 	$session = tie_servers($session,$cookie);
     }
-	
+
     # might be a new session, so lets give them their cookie back
-    my $session_cookie = "SESSION_ID=$session->{_session_id};path=/;domain=.kobj.net;expires=Mon, 31-Dec-2011 00:00:00 GMT";
+    my $session_cookie = 
+	"SESSION_ID=$session->{_session_id};path=/;domain=" .
+	Kynetx::Configure::get_config('COOKIE_DOMAIN') .
+	';expires=Mon, 31-Dec-2011 00:00:00 GMT';
     $logger->debug("Sending cookie: ", $session_cookie);
     $r->headers_out->add('Set-Cookie' => $session_cookie);
 
@@ -66,7 +70,8 @@ sub tie_servers {
     my($session,$cookie) = @_;
 
     # presumes memcached has already been initialized
-    my $mem_servers = Kynetx::Memcached::get_memcached_servers();
+#    my $mem_servers = Kynetx::Memcached::get_memcached_servers();
+    my $mem_servers = Kynetx::Configure::get_config('SESSION_SERVERS');
 
     my $logger = get_logger();
     $logger->debug("Using ", $mem_servers, " for session storage");

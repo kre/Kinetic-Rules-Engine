@@ -18,6 +18,9 @@ sub handler {
     # configure logging for production, development, etc.
     config_logging($r);
 
+    Log::Log4perl::MDC->put('site', '[global]');
+    Log::Log4perl::MDC->put('rule', '[callbacks]'); 
+
     $r->content_type('text/javascript');
 
     # set up memcached
@@ -41,7 +44,8 @@ sub handler {
 sub process_action {
     my $r = shift;
 
-     my $logger = get_logger();
+    my $logger = get_logger();
+
 
     $r->subprocess_env(START_TIME => Time::HiRes::time);
 
@@ -62,11 +66,10 @@ sub process_action {
 	txn_id => $ug->create_str(),
 	);
 
+    Log::Log4perl::MDC->put('site', $request_info{'site'});
 
     my $req = Apache2::Request->new($r);
 
-    Log::Log4perl::MDC->put('site', $request_info{'site'});
-    Log::Log4perl::MDC->put('rule', $request_info{'rule'}); 
 
     # store these for later logging
     $r->subprocess_env(METHOD => 'callback');

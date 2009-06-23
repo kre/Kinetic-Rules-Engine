@@ -10,6 +10,7 @@ use JSON::XS;
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
+use Kynetx::JavaScript qw/:all/;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::Environments qw/:all/;
 
@@ -144,7 +145,7 @@ sub mk_dataset_js {
     eval { $source_json = decode_json($source); };
     if ($@) {
 	$logger->debug("seeing " . $g->{'name'} . " as string ", $@);
-	$js .= '"' . $source . '"';
+	$js .= Kynetx::JavaScript::mk_js_str($source);
 	$pval = $source;
     } else { 
 	$logger->debug("seeing " . $g->{'name'} . " as JSON ", $@);

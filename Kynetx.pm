@@ -1,5 +1,3 @@
-
-
 package Kynetx;
 # file: Kynetx.pm
 

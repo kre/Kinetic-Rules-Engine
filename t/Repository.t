@@ -44,6 +44,9 @@ plan tests => 2;
 # this ought to be read from the httpd-perl.conf file
 my $svn_conn = "http://krl.kobj.net/rules/client/|cs|fizzbazz";
 
+# configure KNS
+Kynetx::Configure::configure();
+
 Kynetx::Memcached->init();
 
 

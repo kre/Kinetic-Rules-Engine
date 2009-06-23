@@ -1,3 +1,22 @@
+2009-06-22  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Configure.pm: Movind configuration into YAML file.  This
+	  module reads that file and sets up the configuration.
+	* etc/tmpl/httpd-perl.conf.tmpl: Changed significantly to accomadate
+	  new kns_config.pm 
+	* bin/install-httpd-conf.pl: Changed significantly to accomadate
+	  new kns_config.pm 
+	* Kynetx/Logger.pm (handler): Changed default values for rule
+	  logging in callbacks
+	* Kynetx/Session.pm (tie_servers): Using config that can point
+	  sessions at different servers from memcached servers
+
+2009-06-18  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Memcached.pm (get_remote_data): Beefed up content
+	  retrieval with LWP instead of LWP::Simple.  Caching only if
+  	  success. 
+
 2009-06-15  Phil Windley  <pjw@kynetx.com>
 
 	* bin/install-httpd-conf.pl: Changed to allow separate

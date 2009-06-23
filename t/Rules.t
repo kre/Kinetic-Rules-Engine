@@ -619,7 +619,7 @@ ruleset dataset0 {
 _KRL_
 
 my $global_decl_1 = <<_JS_;
-KOBJ['data']['global_decl_1'] = "here is some test data!";
+KOBJ['data']['global_decl_1'] = 'here is some test data!';
 _JS_
 
 add_testcase(
@@ -662,7 +662,7 @@ ruleset dataset0 {
 _KRL_
 
 my $global_decl_3 = <<_JS_;
-KOBJ['data']['global_decl_3'] = "Here is some test data!";
+KOBJ['data']['global_decl_3'] = 'Here is some test data!';
 _JS_
 
 add_testcase(
