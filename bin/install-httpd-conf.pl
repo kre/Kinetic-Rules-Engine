@@ -44,7 +44,7 @@ my $conf_file = 'httpd.conf';
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'h?ajlkfdr';
+my $opt_string = 'h?ajlkfdrs';
 getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'} || $opt{'?'};
 
