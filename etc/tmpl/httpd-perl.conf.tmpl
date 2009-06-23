@@ -276,7 +276,7 @@ ErrorDocument 500 "<TMPL_VAR NAME=KNS_ERROR_MSG>"
 <TMPL_IF NAME="API_KRL">
 ErrorDocument 404 default
 <TMPL_ELSE>
-ErrorDocument 404 <TMPL_VAR NAME=KNS_ERROR_MSG>
+ErrorDocument 404 "<TMPL_VAR NAME=KNS_ERROR_MSG>"
 </TMPL_IF>
 
 #
