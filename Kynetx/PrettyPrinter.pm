@@ -675,6 +675,9 @@ sub pp_expr {
 	/array/ && do {
 	    return  "[" . join(', ', pp_rands($expr->{'val'})) . "]" ;
 	};
+	/hash/ && do {
+	    return  "{" . join(', ', pp_hash_lines($expr->{'val'})) . "}" ;
+	};
 	/prim/ && do {
 	    return pp_prim($expr);
 	};
@@ -724,7 +727,7 @@ sub pp_expr {
 sub pp_prim {
     my $prim = shift;
 
-    join(' ' . $prim->{'op'} . ' ', pp_rands($prim->{'args'}));
+    return join(' ' . $prim->{'op'} . ' ', pp_rands($prim->{'args'}));
 
     
 }
@@ -732,11 +735,23 @@ sub pp_prim {
 sub pp_rands {
     my $rands = shift;
 
-    map {pp_expr($_)} @{ $rands };
+    return map {pp_expr($_)} @{ $rands };
 
 }
 
 
+sub pp_hash_lines {
+    my $rands = shift;
+
+    return map {pp_hash_line($_)} @{ $rands };
+
+}
+
+sub pp_hash_line {
+    my $hash_line = shift;
+    return '"' . $hash_line->{'lhs'} .'" : ' . pp_expr($hash_line->{'rhs'});
+
+}
 
 
 1;

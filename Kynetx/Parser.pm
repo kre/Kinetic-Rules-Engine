@@ -593,9 +593,16 @@ factor: NUM
         {$return=Kynetx::Parser::mk_expr_node('var',$item[1])}
       | '[' expr(s? /,/) ']'
         {$return=Kynetx::Parser::mk_expr_node('array',$item[2])}
+      | '{' hash_line(s? /,/) '}'
+          {$return=Kynetx::Parser::mk_expr_node('hash',$item[2])}
       | '(' expr ')'
         {$return=$item[2]}
       | <error>
+
+
+hash_line: STRING ':' expr
+   {$return= {'lhs' => $item[1], 
+              'rhs' => $item[3]}}
 
 counter: 'counter' '.' VAR
      {$return=Kynetx::Parser::mk_expr_node('counter',$item[3])}

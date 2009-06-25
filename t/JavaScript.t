@@ -426,6 +426,20 @@ add_expr_testcase(
      mk_expr_node('str', '128.187.16.242'),
     0);
 
+$str = <<_KRL_;
+{"fizz": 3,
+ "flip": 3 + 5,
+ "flop": city + ", ID"}
+_KRL_
+add_expr_testcase(
+    $str,
+    "{'fizz' : 3, 'flip' : (3 + 5), 'flop' : (city + ', ID')}",
+     mk_expr_node('hash', 
+		  {"fizz" => mk_expr_node('num',3), 
+		   "flip" => mk_expr_node('num',8), 
+		   "flop" => mk_expr_node('str',"Blackfoot, ID")}),
+    0);
+
 
 
 $str = <<_KRL_;
@@ -524,6 +538,8 @@ foreach my $case (@expr_testcases) {
     
     my $js = gen_js_expr($case->{'expr'});
     my $e = eval_js_expr($case->{'expr'}, $rule_env, $rule_name,$BYU_req_info);
+
+    #diag(Dumper($e));
     is($js,
        $case->{'js'},
        "Generating Javascript " . $case->{'src'});

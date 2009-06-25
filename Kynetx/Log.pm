@@ -43,6 +43,12 @@ sub log_rule_fire {
 	) if defined $request_info->{'results'};
 
 
+    my @fired = grep(/^fired$/,@{ $request_info->{'results'}  });
+    $r->subprocess_env(RSE => 1)
+	 if @fired && int(@fired) > 0;
+
+    
+
     $r->subprocess_env(CALLER => $request_info->{'caller'});
 
     my $sid = $session->{'_session_id'};

@@ -11,13 +11,19 @@ use DateTime;
 use Sys::Hostname;
 use File::Basename;
 
-# config
-my $base_var = 'KOBJ_ROOT';
-#my $base = $ENV{$base_var} || die "$base_var is undefined in the environment";
+use Kynetx::Configure qw/:all/;
 
-my $web_root_var = 'WEB_ROOT';
-my $web_root = $ENV{$web_root_var} || 
-    die "$web_root_var is undefined in the environment";
+
+# configure KNS
+Kynetx::Configure::configure();
+
+
+
+my $web_root = get_config('WEB_ROOT') || 
+    die "WEB_ROOT is undefined in the configuration";
+
+my $log_sink = get_config('LOG_SINK');
+my $log_account = get_config('LOG_ACCOUNT') || 'web';
 
 my $GZIP = '/bin/gzip';
 my $RSYNC = '/usr/bin/rsync';
@@ -31,10 +37,10 @@ use vars qw/ %opt /;
 my $opt_string = 'hm:u:vf';
 getopts( "$opt_string", \%opt ); # or &usage();
 
-my $machine = $opt{'m'} || 'unionstation.kobj.net';
+my $machine = $opt{'m'} || $log_sink ; #|| 'unionstation.kobj.net';
 my $unique = $opt{'u'} || hostname;
 my $verbose = $opt{'v'};
-my $finalize = $opt{'f'};
+my $finalize = $opt{'f'} || 0;
 &usage() if $opt{'h'};
 
 
@@ -45,16 +51,37 @@ $rule->or(
     $rule->new->file->name( '*.log' )
 );
 
+
 # get all the files
 my @files;
 for my $dir ( @logdirs ) {
+    print "Looking for log files in $dir\n" if $verbose;
     push( @files, (-d $dir) ? $rule->in($dir) : $dir );
 }
 
-# sort files by creation time and remove the newest one
-@files = sort {(stat($a))[10] cmp (stat($b))[10]} @files;
-pop @files unless $finalize;
 
+# sort files and remove the newest one of each type
+#my @newfiles = sort {((stat($a))[10]) cmp ((stat($b))[10])} @files;
+my @newfiles = sort {$b cmp $a} @files;
+#pop @files unless $finalize;
+
+my %seen;
+
+@files = ();
+foreach my $file (@newfiles) {
+    my $type = basename $file;
+    $type =~ s/^([A-Z]+).*/$1/;
+#    print "Seeing file of type $type\n" if $verbose;
+    print "for $file, seen is true" if $seen{$type};
+    if($seen{$type} || $finalize) {
+	push(@files, $file);
+    } else {
+	$seen{$type} = 1;
+	next;
+    }
+}
+
+# now process the files
 for my $file (@files) {
     print "Processing $file\n" if $verbose;
     system "sudo /bin/chown web $file";
@@ -74,7 +101,7 @@ if (int(@tmpfiles)) {
     my $rsync_cmd = 
 	"$RSYNC -e ssh --remove-sent-files  " . 
 	$tmpdir . "/*.gz " .
-	"web@" . $machine . ":logs";
+	$log_account . "@" . $machine . ":logs";
     print "Running $rsync_cmd\n" if $verbose;
     system $rsync_cmd
 }
@@ -96,8 +123,8 @@ machine using rsync.  The source files are deleted after they're moved.
 
 Options are:
 
-  -m M	: name of machine to move logs files to (default 'unionstation')
-  -u U  : unique identifier for these log files
+  -m M	: name of machine to move logs files to (default: $log_sink)
+  -u U  : unique identifier for these log files (default: hostname)
   -v    : vebose
   -f    : finalize; don't skip most recent file.  Ensure Web server 
           has been halted before using this switch.  

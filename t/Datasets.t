@@ -136,7 +136,7 @@ _KRL_
 add_cache_for_testcase($krl_src, 5*60*60*24*365, "cache_dataset_for 5 years");
 
 
-plan tests => 9 + int(@cache_for_test_cases);
+plan tests => 11 + int(@cache_for_test_cases);
 
 foreach my $case (@cache_for_test_cases) {
     is(cache_dataset_for($case->{'expr'}), 
@@ -208,7 +208,7 @@ _KRL_
 
     $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
 
-    $args = ["q=windley"];
+    $args = ["?q=windley"];
 
 #    diag Dumper($rule_env);
 
@@ -230,7 +230,7 @@ _KRL_
 
     $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
 
-    $args = ["q=kynetx"];
+    $args = ["?q=kynetx"];
 
 #    diag Dumper($rule_env);
 
@@ -251,7 +251,7 @@ _KRL_
 
     $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
 
-    $args = ["q=iphone"];
+    $args = ["&q=iphone"];
 
  #   diag Dumper($rule_env);
 
@@ -273,11 +273,65 @@ _KRL_
 
     $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
 
-    $args = ["q=byu", 'callback=kntx'];
+    $args = ["?q=byu&callback=kntx"];
 
 #    diag Dumper($rule_env);
 
 #    diag Dumper($krl);
+
+    contains_string(get_datasource($rule_env,$args,"twitter_search"),
+		    'kntx({"results":[{"text":',
+		    "JSON twitter search with multiple params");
+
+    
+    
+
+
+    $krl_src = <<_KRL_;
+global {
+   datasource twitter_search <- "http://search.twitter.com/search.json";
+}
+_KRL_
+    $krl = Kynetx::Parser::parse_global_decls($krl_src);
+    
+
+    $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
+
+    $args = [{'q' => 'byu',
+	      'callback' => 'kntx'}];
+
+#    diag Dumper($rule_env);
+
+#    diag Dumper($krl);
+
+# http://search.twitter.com/search.json?callback=kntx&q=byu
+
+
+    contains_string(get_datasource($rule_env,$args,"twitter_search"),
+		    'kntx({"results":[{"text":',
+		    "JSON twitter search with multiple params");
+
+    
+    
+    $krl_src = <<_KRL_;
+global {
+   datasource twitter_search <- "http://search.twitter.com/search.json?callback=kntx";
+}
+_KRL_
+    $krl = Kynetx::Parser::parse_global_decls($krl_src);
+    
+
+    $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
+
+    $args = [{'q' => 'byu',
+	      'a' => 'phil'}];
+
+#    diag Dumper($rule_env);
+
+#    diag Dumper($krl);
+
+# http://search.twitter.com/search.json?callback=kntx&q=byu
+
 
     contains_string(get_datasource($rule_env,$args,"twitter_search"),
 		    'kntx({"results":[{"text":',

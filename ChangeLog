@@ -1,3 +1,16 @@
+2009-06-25  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Datasets.pm (get_datasource): string arg now gets tacked
+	  directly on.  Hash arg generates QUERY string
+	* etc/tmpl/httpd-perl.conf.tmpl: Support for billing logs
+	* Kynetx/Log.pm: Support for billing logs
+	* bin/kobj_log_daemon: supports multiple logs files per machine
+	  and reads config from the configuration system
+	* Kynetx/Parser.pm: Support for literal hashes
+	* Kynetx/PrettyPrinter.pm: Support for literal hashs
+	* etc/js/0.9/krl-runtime.js: anotate_search_results now accepts
+	  params to modify the what get annotated.
+
 2009-06-22  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Configure.pm: Movind configuration into YAML file.  This

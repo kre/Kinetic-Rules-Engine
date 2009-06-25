@@ -35,7 +35,9 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
       "left_margin": "15px",
       "right_padding": "15px",
       "font_size": "12px",
-      "font_family": "Verdana, Geneva, sans-serif"
+    "font_family": "Verdana, Geneva, sans-serif",
+    "results_lister" : "li.g, div.g, li div.res, #results>ul>li",
+    "result_to_modify" : "div.s,div.abstr,p"
   };
   if (typeof config === 'object') {
       jQuery.extend(defaults, config);
@@ -93,17 +95,18 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
   function runAnnotate(){
 //    $K('#res div:first ol, #web').addClass("Kannotated");
     var count = 0;
-    $K("li.g, div.g, li div.res, #results>ul>li").each(function() {
+    $K(defaults['results_lister']).each(function() {
       var contents = annotate(this);
       if (contents) {
 	count++;
         if ($K(this).find('#' + defaults.name + '_anno_list li').is('.' + defaults.name + '_item')) {
           $K(this).find('#' + defaults.name + '_anno_list').append(mk_list_item(defaults.sep)).append(mk_list_item(contents));
         } else {
-          $K(this).find("div.s,div.abstr,p").prepend(mk_rm_div(contents));
+          $K(this).find(defaults['result_to_modify']).prepend(mk_rm_div(contents));
         }
       }
-     });
+     }
+     );
      KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'] );
      cb();
   }
@@ -330,17 +333,7 @@ KOBJ.eval = function(params) {
 	      });
   }
 
-  var eval_url = url + "/"
-             + d
-	     + ".js?caller="
-             + escape(document.URL)
-	     + "&referer="
-             + escape(document.referrer)
-	     + "&kvars="
-             + escape(KOBJ.kvars_json)
-	     + "&title="
-             + encodeURI(document.title)
-             + param_str;
+  var eval_url = url + "/" + d + ".js?caller=" + escape(document.URL) + "&referer="+ escape(document.referrer) + "&kvars=" + escape(KOBJ.kvars_json) + "&title=" + encodeURI(document.title) + param_str;
 
 //    $K('<script type="text/javascript">').attr(
 //         {"src": eval_url}).appendTo("body");

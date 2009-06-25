@@ -175,12 +175,25 @@ sub get_datasource {
 
     my $source_name = lookup_rule_env('datasource:'.$function,$rule_env)->{'source'};
 
-    if($source_name =~ m/\?/) {
-	$source_name .= '&'; # make it safe to add more params
+    if(ref $args->[0] eq 'HASH') {
+
+	if($source_name =~ m/\?/) {
+	    $source_name .= '&'; # make it safe to add more params
+	} else {
+	    $source_name .= '?'; # add ? if not there already
+	}
+
+	my @params;
+	for my $k (keys %{ $args->[0] }) {
+	    push(@params, $k."=".$args->[0]->{$k});
+	}
+
+	$source_name .= join("&",(sort @params)); # add params; sort to maximize cachability
+
     } else {
-	$source_name .= '?'; # add ? if not there already
+	$source_name .= $args->[0];
     }
-    $source_name .= join("&",(sort @{ $args })); # add params; sort to maximize cachability
+
 
     my $source;
     $logger->debug("retrieving network datasource from $source_name");

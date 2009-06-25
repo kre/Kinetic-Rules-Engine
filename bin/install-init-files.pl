@@ -33,6 +33,7 @@ my $web_root = $ENV{$web_root_var} ||
 
 my $dt = DateTime->now;
 my $dstamp = $dt->ymd('');
+my $hstamp = $dt->hms('');
 
 my $kobj_file = "kobj-static-".$dstamp.".js";
 
@@ -64,7 +65,7 @@ my $js_version = $opt{'v'} || DEFAULT_JS_VERSION;
 my $js_root = $opt{'r'} || DEFAULT_JS_ROOT;
 
 
-my $js = "var kobj_fn = '$kobj_file'; ";
+my $js = "var kobj_fn = '$kobj_file'; var kobj_ts = '$hstamp';";
 
 # get the static files    
 foreach my $file (@js_files) {

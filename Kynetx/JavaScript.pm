@@ -61,6 +61,9 @@ sub gen_js_expr {
 	/array/ && do {
 	    return  "[" . join(', ', @{ gen_js_rands($expr->{'val'}) }) . "]" ;
 	};
+	/hash/ && do {
+	    return  "{" . join(', ', @{ gen_js_hash_lines($expr->{'val'}) }) . "}" ;
+	};
 	/prim/ && do {
 	    return gen_js_prim($expr);
 	};
@@ -102,6 +105,24 @@ sub gen_js_rands {
 
 }
 
+sub gen_js_hash_lines {
+    my ($hash_lines) = @_;
+
+    my @hash_lines = map {gen_js_hash_line($_)} @{ $hash_lines } ;
+
+#    my $logger = get_logger();
+#    $logger->debug("Args: ", sub { join(", ", @rands) });
+
+    return \@hash_lines;
+}
+
+sub gen_js_hash_line {
+    my ($hash_line) = @_;
+
+    return "'" . $hash_line->{'lhs'} ."' : " . gen_js_expr($hash_line->{'rhs'});
+
+
+}
 
 sub gen_js_datasource {
     my($source, $function, $args) = @_;
@@ -261,6 +282,10 @@ sub eval_js_expr {
 	    return  { 'type' => 'array',
 		      'val' => eval_js_rands($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  } ;
 	};
+	/hash/ && do {
+	    return  { 'type' => 'hash',
+		      'val' => eval_js_hash($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  } ;
+	};
 	/prim/ && do {
 	    return eval_js_prim($expr, $rule_env, $rule_name, $req_info, $session);
 	};
@@ -351,6 +376,20 @@ sub eval_js_rands {
     my @rands = map {eval_js_expr($_, $rule_env, $rule_name, $req_info, $session)} @{ $rands } ;
 
     return \@rands;
+
+}
+
+sub eval_js_hash {
+    my ($hash_lines, $rule_env, $rule_name, $req_info, $session) = @_;
+
+    my $hash = {};
+    foreach my $hl (@{ $hash_lines} ) {
+	$hash->{$hl->{'lhs'}} = 
+	    eval_js_expr($hl->{'rhs'}, $rule_env, 
+			 $rule_name, $req_info, $session);
+    }
+
+    return $hash;
 
 }
 
@@ -464,6 +503,18 @@ sub den_to_exp {
 
 	/bool/ && do {
 	    return $expr->{'val'} eq 'true' ? 1 : 0;
+	};
+
+	/hash/ && do {
+	    for my $k (keys %{ $expr->{'val'} }) {
+		$expr->{'val'}->{$k} = den_to_exp($expr->{'val'}->{$k});
+	    }
+	    return $expr->{'val'}
+	};
+
+
+	/array/ && do {
+	    return map {den_to_exp($_)} @{ $expr->{'val'} };
 	};
 
 
