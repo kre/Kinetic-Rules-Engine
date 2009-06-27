@@ -37,7 +37,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
       "font_size": "12px",
     "font_family": "Verdana, Geneva, sans-serif",
     "results_lister" : "li.g, div.g, li div.res, #results>ul>li",
-    "result_to_modify" : "div.s,div.abstr,p"
+    "element_to_modify" : "div.s,div.abstr,p"
   };
   if (typeof config === 'object') {
       jQuery.extend(defaults, config);
@@ -102,7 +102,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
         if ($K(this).find('#' + defaults.name + '_anno_list li').is('.' + defaults.name + '_item')) {
           $K(this).find('#' + defaults.name + '_anno_list').append(mk_list_item(defaults.sep)).append(mk_list_item(contents));
         } else {
-          $K(this).find(defaults['result_to_modify']).prepend(mk_rm_div(contents));
+          $K(this).find(defaults['element_to_modify']).prepend(mk_rm_div(contents));
         }
       }
      }
@@ -245,8 +245,8 @@ KOBJ.close_notification = function(s) {
 KOBJ['data'] = KOBJ['data'] || {};
 
 // initialization vars
-KOBJ.proto = 'http://';
-//KOBJ.proto = (("https:" == document.location.protocol) ? "https://" : "http://");
+//KOBJ.proto = 'http://';
+KOBJ.proto = (("https:" == document.location.protocol) ? "https://" : "http://");
 
 KOBJ.init_host = 'init.kobj.net';
 KOBJ.eval_host = 'cs.kobj.net';

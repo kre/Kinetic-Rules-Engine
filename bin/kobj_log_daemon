@@ -72,7 +72,7 @@ foreach my $file (@newfiles) {
     my $type = basename $file;
     $type =~ s/^([A-Z]+).*/$1/;
 #    print "Seeing file of type $type\n" if $verbose;
-    print "for $file, seen is true" if $seen{$type};
+#    print "for $file, seen is true" if $seen{$type};
     if($seen{$type} || $finalize) {
 	push(@files, $file);
     } else {

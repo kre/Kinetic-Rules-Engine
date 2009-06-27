@@ -55,6 +55,9 @@ sub handler {
     my $js_version = $r->dir_config('kobj_js_version') || DEFAULT_JS_VERSION;
     my $js_root = $r->dir_config('kobj_js_root') || DEFAULT_JS_ROOT;
 
+    my $not_secure = ! ($r->headers_in->{'X-Secure'} eq 'Yes');
+    $logger->debug("This is a secure connection") unless $not_secure;
+
 
     my $js = "";
     if ($rids eq 'kobj.js') {
@@ -99,7 +102,7 @@ sub handler {
     } elsif($method eq 'static' || 
 	    $method eq 'shared' || 
 	    $method eq '996337974') { # Backcountry
-	if($r->dir_config('UseCloudFront')) { # redirect to CloudFront
+	if($r->dir_config('UseCloudFront') && $not_secure) { # redirect to CloudFront
 	    my $version = $r->dir_config('CloudFrontURL');
 	    if (! $version) {
 		 $version = 'http://static.kobj.net/kobj-static-1.js';

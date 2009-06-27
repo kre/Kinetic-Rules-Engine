@@ -1,3 +1,8 @@
+2009-06-27  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/KOBJ.pm (handler): Changed to never redirect to
+	  CloudFront when HTTPS
+
 2009-06-25  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Datasets.pm (get_datasource): string arg now gets tacked
@@ -13,7 +18,7 @@
 
 2009-06-22  Phil Windley  <pjw@kynetx.com>
 
-	* Kynetx/Configure.pm: Movind configuration into YAML file.  This
+	* Kynetx/Configure.pm: Moving configuration into YAML file.  This
 	  module reads that file and sets up the configuration.
 	* etc/tmpl/httpd-perl.conf.tmpl: Changed significantly to accomadate
 	  new kns_config.pm 
