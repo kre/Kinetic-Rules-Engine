@@ -252,7 +252,6 @@ KOBJ.init_host = 'init.kobj.net';
 KOBJ.eval_host = 'cs.kobj.net';
 KOBJ.callback_host = 'log.kobj.net';
 
-
 // I don't think we need this anymore.
 // KOBJ.startKJQuery = function(){
 // 		      if(typeof($K) != "undefined"){

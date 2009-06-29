@@ -124,24 +124,27 @@ var Pilot = {
 
 
 	 // FIXME: this isn't quite right...
+
+	 var init_host = this.kynetx_js_host;
+
+	 init_host = init_host.replace(/http(s)?:\/\//,"");
+
 	 var eval_host;
-	 if (this.kynetx_js_host == "http://127.0.0.1") {
-	   eval_host = "127.0.0.1";
-	 } else {
+	 var cb_host;
+
+	 if (init_host == "init.kobj.net") {
 	   eval_host = "cs.kobj.net";
+	   cb_host = "log.kobj.net";
+	 } else {
+	   eval_host = init_host;
+	   cb_host = init_host;
 	 }
 
-	 var init_obj = '{"eval_host" : \"' + eval_host + '",';
-	 if (eval_host == "127.0.0.1") {
-	   init_obj += '"callback_host":"127.0.0.1",';
-	 } else {
-	   init_obj += '"callback_host":"log.kobj.net",';
-	 };
-	 if (eval_host == "127.0.0.1") {
-	   init_obj += '"init_host":"127.0.0.1"';
-	 } else {
-	   init_obj += '"init_host":"init.kobj.net"';
-	 };
+
+	 var init_obj = '{';
+	 init_obj += '"init_host" : \"' + init_host + '",';
+	 init_obj += '"eval_host" : \"' + eval_host + '",';
+	 init_obj += '"callback_host":"' + cb_host + '"';
 	 init_obj += '}';
 
 
