@@ -347,8 +347,6 @@ KOBJ.eval = function(params) {
   // }
 
   KOBJ.require(eval_url);
-
-
 };
 
 //start closure and data registration code
