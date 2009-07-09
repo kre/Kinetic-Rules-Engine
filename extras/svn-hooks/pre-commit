@@ -1,0 +1,32 @@
+#!/bin/bash
+# SVN pre-commit hook to check KRL syntax for .krl files
+PATH="/usr/bin:/bin"
+REPOS="$1"
+TXN="$2"
+tmpfile=`mktemp`
+errfile=`mktemp`
+export HOME=/
+KRL_CHECK=/web/lib/perl/bin/krl_check.pl
+SVNLOOK=/usr/bin/svnlook
+$SVNLOOK changed -t "$TXN" "$REPOS" | awk '{print $2}' | grep '\.krl$' | while read line
+do
+	$SVNLOOK cat -t "$TXN" "$REPOS" "$line" > $tmpfile
+	if [ $? -ne 0 ]
+	then
+		echo "Warning: Failed to checkout $line" >&2
+	fi
+	$KRL_CHECK -f $tmpfile >$errfile 2>&1 
+	if [  -s $errfile ]
+	then
+		echo "KRL syntax error in $line." >&2
+		cat $errfile >&2
+		exit 2
+	fi
+done
+res=$?
+rm -f $tmpfile
+rm -f $errfile
+if [ $res -ne 0 ]
+then
+	exit $res
+fi

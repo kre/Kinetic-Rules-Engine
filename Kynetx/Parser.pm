@@ -132,7 +132,13 @@ meta_block: 'meta' '{'
     { my $r = {};
       foreach my $a ( @{ $item[3] } ) {
         foreach my $k (keys %{ $a } ) {
-           $r->{$k} = $a->{$k};
+           if($r->{$k} && ref $r->{$k} eq 'HASH' && ref $a->{$k} eq 'HASH') {
+               foreach my $k1 (keys %{ $a->{$k} }) {
+                  $r->{$k}->{$k1} = $a->{$k}->{$k1}; 
+               }
+           } else {
+               $r->{$k} = $a->{$k};
+           }
         }
       }
 
@@ -154,6 +160,11 @@ pragma: desc_block
     {$return = {
         'author' => $item[2]
         }
+    }
+ | 'key' ('errorstack' | 'googleanalytics') STRING
+    {$return = {
+        keys => { $item[2] => $item[3] }
+      }
     }
  | logging_pragma
     {$return = {

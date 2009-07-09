@@ -99,6 +99,8 @@ sub pp_meta_block {
 
     $o .= pp_logging($mb->{'logging'}, $indent+$g_indent) if ($mb->{'logging'}) ;
 
+    $o .= pp_keys($mb->{'keys'}, $indent+$g_indent) if ($mb->{'keys'}) ;
+
     $o .= $beg . "}\n";
 
     return $o;
@@ -143,6 +145,25 @@ sub pp_logging {
     $o .= "logging ";
     $o .= $node;
   
+    return $o;
+}
+
+
+sub pp_keys {
+    my ($node, $indent) = @_;
+
+    return unless ref $node eq 'HASH';
+
+    my $beg = " "x$indent;
+    
+    my $o = $beg;
+    foreach my $k (sort keys %{ $node }) {
+	$o .= "key ";
+	$o .= $k . " ";
+	$o .= '"' . $node->{$k} . "\"\n";
+    }
+
+ 
     return $o;
 }
 

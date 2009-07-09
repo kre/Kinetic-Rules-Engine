@@ -155,9 +155,12 @@ sub eval_ruleset {
 
     my $js;
 
+
     # handle globals, start js build, extend $rule_env
     ($js, $rule_env) = eval_globals($req_info,$ruleset, $rule_env);
 #    $logger->debug("Global JS: ", $js);
+
+    $js .= eval_meta($req_info,$ruleset, $rule_env);
 
 
     # this loops through the rules ONCE applying all that fire
@@ -173,6 +176,37 @@ sub eval_ruleset {
     return "\n(function() { $js } ());\n" ;
 }
 
+sub eval_meta {
+    my($req_info,$ruleset, $rule_env) = @_;
+
+    my $logger = get_logger();
+
+    my $js = "KOBJ." . $ruleset->{'ruleset_name'} . "= KOBJ." . $ruleset->{'ruleset_name'} . " || {};\n";
+
+    $js .= "KOBJ." . $ruleset->{'ruleset_name'} .  ".keys = KOBJ." . $ruleset->{'ruleset_name'} . ".keys || {};\n";
+
+#     my $skip = {
+# 	'description' => 1,
+# 	'author' => 1,
+# 	'name' => 1,
+#     };
+#     if($ruleset->{'meta'}) {
+# 	$logger->debug("Found meta block; generating JS");
+# 	foreach my $k (keys %{ $ruleset->{'meta'} }) {
+# 	    next if $skip->{$k};
+# 	    $js .= "KOBJ." . $ruleset->{'ruleset_name'} . ".meta.$k = '" . 
+# 		$ruleset->{'meta'}->{$k} . "';\n";
+# 	}
+#     }
+     if($ruleset->{'meta'}->{'keys'}) {
+ 	$logger->debug("Found keys; generating JS");
+ 	foreach my $k (keys %{ $ruleset->{'meta'}->{'keys'} }) {
+ 	    $js .= "KOBJ." . $ruleset->{'ruleset_name'} . ".keys.$k = '" . 
+ 		$ruleset->{'meta'}->{'keys'}->{$k} . "';\n";
+ 	}
+     }
+    return $js;
+}
 
 sub eval_globals {
     my($req_info,$ruleset, $rule_env) = @_;

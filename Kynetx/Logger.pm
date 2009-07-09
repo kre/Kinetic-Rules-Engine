@@ -126,10 +126,6 @@ sub process_action {
 
     $logger->debug("Finish time: ", time, " Start time: ", $r->subprocess_env('START_TIME'));
    
-
-
-
-
 #     $logger->debug("Storing: ", $request_info{'site'}, ", ",
 # 		               $request_info{'txn_id'}, ", ",
 # 		               $request_info{'rule'}, ", ",
@@ -139,21 +135,6 @@ sub process_action {
 # 		               $request_info{'element'}, ", ",
 # 		               $request_info{'sense'}, 
 # 	);
-
-
-
-#     my $log_insert = "INSERT INTO callback_log VALUES (%d, '%s', '%s', '%s', '%s', '%s',now())";
-#     my $log_sql = sprintf($log_insert, 
-# 	     undef,  # cause the id column to autoincrement
-# 	     $request_info{'site'}, 
-# 	     $request_info{'rule'}, 
-# 	     $request_info{'caller'}, 
-# 	     $session->{_session_id}, 
-# 	     $request_info{'sense'}
-# 	);
-
-#     $logger->debug("Using SQL: ", $log_sql);
-#     $dbh->do($log_sql);
 
     if($req->param('url')){
 	my $url = $req->param('url');

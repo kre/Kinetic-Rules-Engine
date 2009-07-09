@@ -1,0 +1,4 @@
+
+These hooks can be installed in an SVN rule repository as the pre and post 
+commit hooks. pre-commit checks the syntax of KRL rulesets checked in.  
+post-commit flushes the rule cache for a particular ruleset when it's checked in.  
