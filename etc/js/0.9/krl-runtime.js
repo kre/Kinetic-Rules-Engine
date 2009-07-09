@@ -351,6 +351,31 @@ KOBJ.eval = function(params) {
 
 };
 
+//start closure and data registration code
+KOBJ.registerDataSet = function(rid, datasets){
+   //KOBJ.data[rid] = datasets;
+	KOBJ[rid] = KOBJ[rid] || {};
+	KOBJ[rid].dataLoaded = true;
+   if(KOBJ[rid].pendingClosure){
+       var rseclosure = KOBJ[rid].pendingClosure;
+       KOBJ[rid].pendingClosure = null;
+       KOBJ.executeClosure(rid, rseclosure);
+   }
+}
+
+KOBJ.registerClosure = function(rid, closure){
+	if(KOBJ[rid] && KOBJ[rid].dataLoaded){
+		KOBJ.executeClosure(rid, closure);
+	} else {
+		KOBJ[rid] = KOBJ[rid] || {};
+		KOBJ[rid].pendingClosure = closure;
+	}
+}
+KOBJ.executeClosure = function(rid, closure){
+	closure();
+}
+//end closure and data registration code
+
 if(typeof(KOBJ_config) == 'object') {
   if(typeof(KOBJ_config.init) == 'object') {
     KOBJ.init(KOBJ_config.init);

@@ -173,7 +173,7 @@ sub eval_ruleset {
     }
 
     $logger->debug("Finished processing rules for " . $req_info->{'rid'});
-    return "\n(function() { $js } ());\n" ;
+    return "\nKOBJ.registerClosure('$rid', function() { $js });\n" ;
 }
 
 sub eval_meta {
