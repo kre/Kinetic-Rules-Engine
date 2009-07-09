@@ -72,7 +72,7 @@ sub handler {
     $logger->debug("Initializing memcached");
     Kynetx::Memcached->init();
 
-    my ($method,$rid) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_;]+)!;
+    my ($method,$rid) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_;]*)/?!;
     $logger->debug("Performing $method method on ruleset $rid");
     Log::Log4perl::MDC->put('site', $rid);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...

@@ -180,10 +180,13 @@ sub eval_meta {
     my($req_info,$ruleset, $rule_env) = @_;
 
     my $logger = get_logger();
+    my $js = "";
 
-    my $js = "KOBJ." . $ruleset->{'ruleset_name'} . "= KOBJ." . $ruleset->{'ruleset_name'} . " || {};\n";
+     if($ruleset->{'meta'}->{'keys'}) {
 
-    $js .= "KOBJ." . $ruleset->{'ruleset_name'} .  ".keys = KOBJ." . $ruleset->{'ruleset_name'} . ".keys || {};\n";
+	 $js .= "KOBJ." . $ruleset->{'ruleset_name'} . "= KOBJ." . $ruleset->{'ruleset_name'} . " || {};\n";
+
+	 $js .= "KOBJ." . $ruleset->{'ruleset_name'} .  ".keys = KOBJ." . $ruleset->{'ruleset_name'} . ".keys || {};\n";
 
 #     my $skip = {
 # 	'description' => 1,
@@ -198,7 +201,6 @@ sub eval_meta {
 # 		$ruleset->{'meta'}->{$k} . "';\n";
 # 	}
 #     }
-     if($ruleset->{'meta'}->{'keys'}) {
  	$logger->debug("Found keys; generating JS");
  	foreach my $k (keys %{ $ruleset->{'meta'}->{'keys'} }) {
  	    $js .= "KOBJ." . $ruleset->{'ruleset_name'} . ".keys.$k = '" . 

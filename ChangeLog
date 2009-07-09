@@ -1,3 +1,10 @@
+2009-07-09  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Rules.pm (eval_meta): Added support for keys in the meta
+	  section 
+	* Kynetx.pm (handler): Modified method/RID regexp to not require
+	  RID for methods like version
+
 2009-06-27  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/KOBJ.pm (handler): Changed to never redirect to
