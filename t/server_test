@@ -1,0 +1,14 @@
+#!/usr/bin/perl -w 
+
+use strict;
+
+use Test::Harness qw(&runtests);
+
+my @tests = qw/
+cs.t
+KOBJ.t
+Logger.t
+RuleManager.t
+/;
+
+runtests(@tests);
