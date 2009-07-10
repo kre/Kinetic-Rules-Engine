@@ -39,6 +39,7 @@ use warnings;
 sub new {
     my ($class) = @_;
     my $self = {};
+    $self->{'add'} = sub {return 1};
     bless $self, $class;
     return $self;
 }
@@ -47,9 +48,25 @@ sub new {
 sub subprocess_env {
     return 0;
 }
-# fake methods for requests
+
 sub content_type {
     return 0;
+}
+
+sub headers_in {
+    return {
+	'Cookie' => 'SESSION_ID=my_fake_cookie_id'
+    };
+}
+
+sub headers_out {
+    my ($self) = @_;
+
+    return $self;
+}
+
+sub add {
+    return 1;
 }
 
 1;

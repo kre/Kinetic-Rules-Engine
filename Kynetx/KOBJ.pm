@@ -244,7 +244,10 @@ sub datasets {
     foreach my $rid (@rids) {
 	$req_info->{'rid'} = $rid;
 	$js .= get_datasets($svn_conn, $req_info) ;
-	$js .="\nKOBJ.registerDataSet('$rid', []);\n";
+	$js .= <<EOF
+KOBJ.registerDataSet = KOBJ.registerDataSet || function(x,y){};
+KOBJ.registerDataSet('$rid', []);
+EOF
     }
     
     return $js;

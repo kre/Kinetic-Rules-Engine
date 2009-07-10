@@ -450,7 +450,7 @@ CustomLog "|/web/sbin/cronolog --period=1day --symlink=/web/logs/billing_log /we
 
   # send an expires header
   ExpiresActive On
-  ExpiresDefault "access plus 1 day"
+  ExpiresDefault "access plus 24 hours"
 
   # env var to turn on INIT logging
   PerlSetEnv INIT 1 

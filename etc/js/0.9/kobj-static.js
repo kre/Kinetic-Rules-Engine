@@ -1,4 +1,4 @@
-var kobj_fn = 'kobj-static-20090707.js'; var kobj_ts = '230212';(function(){var _jQuery=window.jQuery,_$=window.$;var jQuery=window.jQuery=window.$=function(selector,context){return new jQuery.fn.init(selector,context);};var quickExpr=/^[^<]*(<(.|\s)+>)[^>]*$|^#(\w+)$/,isSimple=/^.[^:#\[\.]*$/,undefined;jQuery.fn=jQuery.prototype={init:function(selector,context){selector=selector||document;if(selector.nodeType){this[0]=selector;this.length=1;return this;}
+var kobj_fn = 'kobj-static-20090710.js'; var kobj_ts = '184320';(function(){var _jQuery=window.jQuery,_$=window.$;var jQuery=window.jQuery=window.$=function(selector,context){return new jQuery.fn.init(selector,context);};var quickExpr=/^[^<]*(<(.|\s)+>)[^>]*$|^#(\w+)$/,isSimple=/^.[^:#\[\.]*$/,undefined;jQuery.fn=jQuery.prototype={init:function(selector,context){selector=selector||document;if(selector.nodeType){this[0]=selector;this.length=1;return this;}
 if(typeof selector=="string"){var match=quickExpr.exec(selector);if(match&&(match[1]||!context)){if(match[1])
 selector=jQuery.clean([match[1]],context);else{var elem=document.getElementById(match[3]);if(elem){if(elem.id!=match[3])
 return jQuery().find(selector);return jQuery(elem);}
@@ -553,5 +553,8 @@ $K("style[title=KOBJ_stylesheet]").append(css+'\n');};KOBJ.require=function(url)
 var body=document.getElementsByTagName("body")[0];setTimeout(function(){body.appendChild(r)},delay);};KOBJ.eval=function(params){if(!params.rids&&typeof(params.rids)!=='array'){return;}
 KOBJ.site_id=params.rids.join(";");var data_url=KOBJ.proto+KOBJ.init_host+"/js/datasets/"+KOBJ.site_id+"/";KOBJ.require(data_url);if(typeof(kvars)!="undefined"){KOBJ.kvars_json=$K.toJSON(kvars);}else{KOBJ.kvars_json='';}
 var d=(new Date).getTime();var url=KOBJ.proto+KOBJ.eval_host+"/ruleset/eval/"+KOBJ.site_id;KOBJ.callback_url=KOBJ.proto+KOBJ.callback_host+"/callback/"+KOBJ.site_id;var param_str="";if(params){$K.each(params,function(k,v){if(!(k=='rids'||k=='init')){param_str+="&"+k+"="+v;}});}
-var eval_url=url+"/"+d+".js?caller="+escape(document.URL)+"&referer="+escape(document.referrer)+"&kvars="+escape(KOBJ.kvars_json)+"&title="+encodeURI(document.title)+param_str;KOBJ.require(eval_url);};if(typeof(KOBJ_config)=='object'){if(typeof(KOBJ_config.init)=='object'){KOBJ.init(KOBJ_config.init);}
+var eval_url=url+"/"+d+".js?caller="+escape(document.URL)+"&referer="+escape(document.referrer)+"&kvars="+escape(KOBJ.kvars_json)+"&title="+encodeURI(document.title)+param_str;KOBJ.require(eval_url);};KOBJ.registerDataSet=function(rid,datasets){KOBJ[rid]=KOBJ[rid]||{};KOBJ[rid].dataLoaded=true;if(KOBJ[rid].pendingClosure){var rseclosure=KOBJ[rid].pendingClosure;KOBJ[rid].pendingClosure=null;KOBJ.executeClosure(rid,rseclosure);}}
+KOBJ.registerClosure=function(rid,closure){if(KOBJ[rid]&&KOBJ[rid].dataLoaded){KOBJ.executeClosure(rid,closure);}else{KOBJ[rid]=KOBJ[rid]||{};KOBJ[rid].pendingClosure=closure;}}
+KOBJ.executeClosure=function(rid,closure){closure();}
+if(typeof(KOBJ_config)=='object'){if(typeof(KOBJ_config.init)=='object'){KOBJ.init(KOBJ_config.init);}
 KOBJ.eval(KOBJ_config);}

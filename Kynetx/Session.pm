@@ -37,6 +37,7 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
+use DateTime;
 use Kynetx::Configure qw(:all);
 
 use Exporter;
@@ -49,6 +50,12 @@ our @ISA         = qw(Exporter);
 our %EXPORT_TAGS = (all => [ 
 qw(
 process_session
+session_store
+session_get
+session_created
+session_delete
+session_defined
+session_within
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -80,11 +87,18 @@ sub process_session {
 	$session = tie_servers($session,$cookie);
     }
 
-    # might be a new session, so lets give them their cookie back
+    my $dt = DateTime->now;
+    # create expires timestamp
+    $dt = $dt->add(days => 364);
+    my $expires = $dt->strftime("%a, %d-%b-%Y 23:59:59 GMT");
+
+
+    # might be a new session, so lets give them their cookie back 
+    #  with an updated expiration 
     my $session_cookie = 
 	"SESSION_ID=$session->{_session_id};path=/;domain=" .
 	Kynetx::Configure::get_config('COOKIE_DOMAIN') .
-	';expires=Mon, 31-Dec-2011 00:00:00 GMT';
+	';expires=' . $expires; #Mon, 31-Dec-2012 00:00:00 GMT';
     $logger->debug("Sending cookie: ", $session_cookie);
     $r->headers_out->add('Set-Cookie' => $session_cookie);
 
@@ -115,6 +129,75 @@ sub tie_servers {
 
     return $session;
 
+}
+
+sub session_store {
+    my ($rid, $session, $var, $val) = @_;
+
+    $session->{$rid} = {} unless exists $session->{$rid};
+
+    $session->{$rid}->{$var} = $val;
+    $session->{$rid}->{$var.'_created'} = DateTime->now->epoch;
+
+    return $val;
+
+}
+
+sub session_get {
+    my ($rid, $session, $var) = @_;
+
+    if(exists $session->{$rid} && exists $session->{$rid}->{$var}) {
+	return $session->{$rid}->{$var};
+    } else {
+	return undef;
+    }
+}
+
+sub session_created {
+    my ($rid, $session, $var) = @_;
+
+    if(exists $session->{$rid} && exists $session->{$rid}->{$var}) {
+	return $session->{$rid}->{$var.'_created'};
+    } else {
+	return undef;
+    }
+}
+
+
+sub session_defined {
+    my ($rid, $session, $var) = @_;
+
+    return exists $session->{$rid} && exists $session->{$rid}->{$var};
+}
+
+sub session_delete {
+    my ($rid, $session, $var) = @_;
+
+    if(exists $session->{$rid} && exists $session->{$rid}->{$var}) {
+	delete $session->{$rid}->{$var};
+	delete $session->{$rid}->{$var.'_created'};
+    }
+}
+
+
+sub session_within {
+    my ($rid, $session, $var, $timevalue, $timeframe) = @_;
+    my $logger = get_logger();
+    
+    my $desired = DateTime->from_epoch( 
+	epoch => session_created($rid, $session, $var)
+	);
+
+    $logger->debug("[session:$var] created ", $desired->datetime());
+
+    $desired->add( $timeframe => $timevalue );
+
+    $logger->debug("[counter:$var] ",
+		   $timeframe, " -> ", $timevalue,
+		   ' desired ', $desired->datetime()
+	);
+
+    return Kynetx::Util::after_now($desired);
 }
 
 1;
