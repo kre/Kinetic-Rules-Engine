@@ -112,7 +112,7 @@ sub eval_replace {
 #    $logger->debug("obj: ", sub { Dumper($obj) });
 
     my $rands = Kynetx::JavaScript::eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-    $logger->debug("obj: ", sub { Dumper($rands) });
+#    $logger->debug("obj: ", sub { Dumper($rands) });
 
     my $v = $obj->{'val'};
 
