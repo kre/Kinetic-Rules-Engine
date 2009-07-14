@@ -117,6 +117,9 @@ $rule_env = extend_rule_env('store', {
 			"color"=> "red",
 			"price"=> 19.95
 		}
+	},
+	"kynetx.com" => {"link" => "http://www.kynetx.com",
+			 "text" => "Simply the hottest company around!"
 	}
 }, $rule_env);
 
@@ -396,6 +399,14 @@ $e[$i] = q/(store.pick("$..book[0,1]")).length()/;
 $x[$i] = {
    'val' => 2,
    'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q/(store.pick("$.kynetx\.com.text"))/;
+$x[$i] = {
+   'val' => 'Simply the hottest company around!',
+   'type' => 'str'
 };
 $d[$i]  = 0;
 $i++;

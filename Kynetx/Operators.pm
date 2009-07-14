@@ -63,7 +63,7 @@ sub eval_pick {
 #    $logger->debug("obj: ", sub { Dumper($obj) });
     
     my $rands = Kynetx::JavaScript::eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-#    $logger->debug("obj: ", sub { Dumper($rands) });
+ #   $logger->debug("vars: ", sub { Dumper($rands) });
 
     my $pattern = '';
     if($rands->[0]->{'type'} eq 'str') {
@@ -77,7 +77,7 @@ sub eval_pick {
 
     $v = $v->[0] if(defined $v && scalar @{ $v } == 1);
 
-    $logger->debug("pick using $pattern returning ", $v);
+#    $logger->debug("pick using $pattern returning ", Dumper($v));
 
     return  { 'type' => Kynetx::JavaScript::infer_type($v),
 	      'val' => $v

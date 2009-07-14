@@ -111,6 +111,7 @@ sub run(){
 	     $self->{'result_type'} eq 'PATH')) {
 		my $cleaned_expr = $self->normalize($expr);
 		$cleaned_expr =~ s/^\$;//;
+		$self->logit("Cleaned expr: $cleaned_expr");
 		$self->trace($cleaned_expr, $obj, '$');
 		my $result = $self->{'result'};
 		
@@ -134,7 +135,8 @@ sub normalize (){
 	my $x = shift;
 #	my $o = $x;
 	$x =~ s/"\/[\['](\??\(.*?\))[\]']\/"/&_callback_01($1)/eg;
-	$x =~ s/'?(?<!@|\d)\.'?|\['?/;/g; 	#added the negative lookbehind -krhodes
+	$x =~ s/'?(?<!@|\d|\\)\.'?|\['?/;/g; 	#added the negative lookbehind -krhodes
+	$x =~ s/\\\./\./g; # replace escaped periods with periods
 	# added \d in it to compensate when 
 	# comparing against decimal numbers
 	$x =~ s/;;;|;;/;..;/g;

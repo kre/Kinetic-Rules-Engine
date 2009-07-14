@@ -39,6 +39,7 @@ use JSON::XS;
 
 use Kynetx::Datasets q/:all/;
 use Kynetx::Environments q/:all/;
+use Kynetx::Session q/:all/;
 use Kynetx::Operators q/:all/;
 
 use Exporter;
@@ -90,7 +91,7 @@ sub gen_js_expr {
 	    return  "[" . join(', ', @{ gen_js_rands($expr->{'val'}) }) . "]" ;
 	};
 	/hash/ && do {
-	    return  "{" . join(', ', @{ gen_js_hash_lines($expr->{'val'}) }) . "}" ;
+	    return  gen_js_hash_lines($expr->{'val'});
 	};
 	/prim/ && do {
 	    return gen_js_prim($expr);
@@ -136,12 +137,24 @@ sub gen_js_rands {
 sub gen_js_hash_lines {
     my ($hash_lines) = @_;
 
-    my @hash_lines = map {gen_js_hash_line($_)} @{ $hash_lines } ;
+    my $logger = get_logger();
 
-#    my $logger = get_logger();
-#    $logger->debug("Args: ", sub { join(", ", @rands) });
+#   $logger->debug(Dumper($hash_lines));
 
-    return \@hash_lines;
+    # we might get a Perl hash here or a parse tree...
+    if(ref $hash_lines eq 'HASH') {
+	$hash_lines = exp_to_den($hash_lines);
+#	$logger->debug(Dumper($hash_lines));
+	foreach my $k (keys %{ $hash_lines->{'val'} }) {
+	    $hash_lines->{'val'}->{$k} = gen_js_expr($hash_lines->{'val'}->{$k});
+	}
+#	$logger->debug(Dumper($hash_lines));
+	$hash_lines = encode_json($hash_lines->{'val'});
+    } else {
+	my @res = map {gen_js_hash_line($_)} @{ $hash_lines } ;
+	$hash_lines = "{" . join(', ', @res) . "}" ;
+    }
+    return $hash_lines;
 }
 
 sub gen_js_hash_line {
@@ -344,7 +357,7 @@ sub eval_js_expr {
 		    'val' => $v};
  	};
 	/counter/ && do {
-	    my $v = eval_counter($session, $expr->{'val'});
+	    my $v = eval_counter($req_info, $session, $expr->{'val'});
 	    return {'type' => infer_type($v),
 		    'val' => $v};
 	};
@@ -501,9 +514,9 @@ sub eval_datasource {
 }
 
 sub eval_counter {
-    my($session, $name) = @_;
+    my($req_info, $session, $name) = @_;
 
-    return $session->{$name};
+    return session_get($req_info->{'rid'}, $session, $name);
 
 }
 
@@ -551,8 +564,22 @@ sub den_to_exp {
 
 }
 
+sub exp_to_den {
+    my ($expr) = @_;
 
+    my $type = infer_type($expr);
+    if(ref $expr eq 'HASH') {
+	foreach my $k (keys %{ $expr }) {
+	    $expr->{$k} = exp_to_den($expr->{$k});
+	}
+    } elsif(ref $expr eq 'ARRAY') {
+	my @res = map {exp_to_den($_)} @{ $expr };
+	$expr = \@res;
+    } 
+    return {'type' => $type,
+	    'val' => $expr}
 
+}
 
 # crude type inference for prims
 sub infer_type {
