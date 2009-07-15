@@ -39,6 +39,8 @@ use Time::HiRes qw(time);
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
+use Kynetx::Session qw/session_id/;
+
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
@@ -79,7 +81,7 @@ sub log_rule_fire {
 
     $r->subprocess_env(CALLER => $request_info->{'caller'});
 
-    my $sid = $session->{'_session_id'};
+    my $sid = session_id($session);
     $r->subprocess_env(SID => $sid);
 
     $r->subprocess_env(IP => $request_info->{'ip'});
@@ -124,38 +126,6 @@ sub array_to_string {
 
     return $a;
 }
-
-
-#    $logger->debug("Attaching to DB at $db_host with user $db_username and $db_passwd");
-
-#     # should be using cached connection from Apache::DBI
-#     my $dbh = DBI->connect("DBI:mysql:database=logging;host=$db_host",
-# 			   $db_username, $db_passwd,
-# 			   {'RaiseError' => 1});
-
-
-    
-#     my $log_insert = 
-# 	"INSERT INTO rule_log VALUES (%d, now(), %s, %s, %s, %s, %s, %s, %s, %s)";
-#     my $log_sql = sprintf($log_insert, 
-# 			  undef, # undef cause the id column to autoincrement
-# 			  $dbh->quote($request_info->{'site'}), 
-# 			  $dbh->quote($rule_name),
-# 			  $dbh->quote($request_info->{'caller'}), 
-# 			  $dbh->quote($session->{_session_id}), 
-# 			  $dbh->quote($request_info->{'ip'}),
-# 			  $dbh->quote($request_info->{'referer'}),
-# 			  $dbh->quote($request_info->{'title'}),
-# 			  $dbh->quote($action)
-# 	);
-
-#     $logger->debug("Using SQL: ($request_info->{'title'}) ", $log_sql);
-#     $dbh->do($log_sql);
-
-#     # Disconnect from the database.
-#     $dbh->disconnect();
-
-
 
 
 

@@ -63,7 +63,7 @@ my $session = process_session($r);
 
 my $rid = 'rid123';
 
-plan tests => 14;
+plan tests => 29;
 
 session_store($rid, $session, 'a', 3);
 
@@ -104,6 +104,66 @@ ok(!session_within($rid, $session, 'b', 1, 'seconds'), 'b not stored within last
 
 
 session_delete($rid, $session, 'b');
+
+session_inc_by_from($rid, $session, 'b', 4, 1);
+is(session_get($rid, $session, 'b'), 1, 'initialization of b');
+
+session_inc_by_from($rid, $session, 'b', 4, 1);
+is(session_get($rid, $session, 'b'), 5, 'incrementing b');
+
+session_inc_by_from($rid, $session, 'b', 4, 1);
+is(session_get($rid, $session, 'b'), 9, 'incrementing b again');
+
+session_inc_by_from($rid, $session, 'b', -10, 1);
+is(session_get($rid, $session, 'b'), -1, 'decrementing b');
+
+session_delete($rid, $session, 'b');
+
+session_delete($rid, $session, 'c');
+ok(!session_true($rid, $session, 'c'), "undefined isn't true");
+
+session_clear($rid, $session, 'c');
+ok(!session_true($rid, $session, 'c'), "clearing undef is still false");
+
+session_set($rid, $session, 'c');
+ok(session_true($rid, $session, 'c'), "set makes it true");
+
+session_clear($rid, $session, 'c');
+ok(!session_true($rid, $session, 'c'), "clear makes it false");
+
+session_delete($rid, $session, 'b');
+
+##
+## Check namespacing for independence of RIDs
+##
+
+my $rid1 = 'rid456';
+
+session_delete($rid, $session, 'a');
+session_delete($rid1, $session, 'a');
+
+session_store($rid, $session, 'a', 3);
+session_store($rid1, $session, 'a', 4);
+
+is(session_get($rid, $session, 'a'), 3, 'storing a simple value for rid');
+is(session_get($rid1, $session, 'a'), 4, 'storing a simple value for rid1');
+
+
+session_inc_by_from($rid, $session, 'a', 4, 1);
+is(session_get($rid, $session, 'a'), 7, 'incrementing a for rid');
+
+session_inc_by_from($rid1, $session, 'a', 4, 1);
+is(session_get($rid1, $session, 'a'), 8, 'incrementing a for rid1');
+
+session_delete($rid, $session, 'a');
+
+ok(!session_defined($rid, $session, 'a'), 'the variable is not defined for rid');
+ok(session_defined($rid1, $session, 'a'), 'the variable is still defined for rid1');
+
+
+session_delete($rid1, $session, 'a');
+
+ok(!session_defined($rid1, $session, 'a'), 'the variable is not defined for rid1');
 
 
 1;

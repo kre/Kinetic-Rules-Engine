@@ -50,12 +50,20 @@ our @ISA         = qw(Exporter);
 our %EXPORT_TAGS = (all => [ 
 qw(
 process_session
+session_cleanup
+session_id
+session_keys
 session_store
+session_touch
 session_get
 session_created
 session_delete
 session_defined
 session_within
+session_inc_by_from
+session_set
+session_clear
+session_true
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -131,6 +139,22 @@ sub tie_servers {
 
 }
 
+sub session_cleanup {
+    my($session) = @_;
+    untie %{ $session };
+}
+
+sub session_id {
+    my ($session) = @_;
+    return $session->{_session_id};
+}
+
+sub session_keys {
+    my ($rid, $session) = @_;
+    my @keys = keys %{ $session->{$rid} };
+    return \@keys;
+}
+
 sub session_store {
     my ($rid, $session, $var, $val) = @_;
 
@@ -140,6 +164,21 @@ sub session_store {
     $session->{$rid}->{$var.'_created'} = DateTime->now->epoch;
 
     return $val;
+
+}
+
+sub session_touch {
+    my ($rid, $session, $var, $dt) = @_;
+
+    $session->{$rid}->{$var} = 0 unless exists $session->{$rid}->{$var};
+
+    if(defined $dt) {
+	$session->{$rid}->{$var.'_created'} = $dt->epoch;
+    } else {
+	$session->{$rid}->{$var.'_created'} = DateTime->now->epoch;
+    }
+
+    return $session->{$rid}->{$var};
 
 }
 
@@ -190,6 +229,8 @@ sub session_within {
 
     $logger->debug("[session:$var] created ", $desired->datetime());
 
+    $logger->debug("Timeframe: $timeframe, Timevalue: $timevalue");
+
     $desired->add( $timeframe => $timevalue );
 
     $logger->debug("[counter:$var] ",
@@ -198,6 +239,44 @@ sub session_within {
 	);
 
     return Kynetx::Util::after_now($desired);
+}
+
+sub session_inc_by_from {
+    my ($rid, $session, $var, $val, $from) = @_;
+    my $logger = get_logger();
+    if(session_defined($rid, $session, $var)) {
+	session_store($rid, $session, $var,
+		      session_get($rid, $session, $var) + $val);
+	$logger->debug("iterating session var ",  
+		       $var,
+		       " by ",
+		       $val);
+
+    } else {
+	session_store($rid, $session, $var, $from);
+	$logger->debug("initializing session var ",  
+		       $var,
+		       " to ",
+		       $from);
+    }
+    return session_get($rid, $session, $var);
+}
+
+
+sub session_set {
+    my ($rid, $session, $var) = @_;
+    return session_store($rid, $session, $var, 1);
+}
+
+sub session_clear {
+    my ($rid, $session, $var) = @_;
+    session_delete($rid, $session, $var);
+    return undef;
+}
+
+sub session_true {
+    my ($rid, $session, $var) = @_;
+    return session_get($rid, $session, $var);
 }
 
 1;

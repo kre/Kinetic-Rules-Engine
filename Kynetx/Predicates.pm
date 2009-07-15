@@ -35,6 +35,7 @@ use warnings;
 use Log::Log4perl qw(get_logger :levels);
 use Kynetx::Util qw(:all);
 use Kynetx::JavaScript qw(:all);
+use Kynetx::Session qw(:all);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -105,7 +106,7 @@ foreach my $module (@Predicate_modules) {
 
 
 sub eval_predicates {
-    my($request_info, $rule_env, $session, $cond, $rule_name) = @_;
+    my($req_info, $rule_env, $session, $cond, $rule_name) = @_;
 
     my $logger = get_logger();
 
@@ -118,12 +119,12 @@ sub eval_predicates {
 	    return den_to_exp($cond);
 	};
 	/^pred$/ && do {
-	    $v = eval_pred($request_info, $rule_env, $session, 
+	    $v = eval_pred($req_info, $rule_env, $session, 
 			   $cond, $rule_name);
 	    return $v ||= 0;
 	};
 	/ineq/ && do {
-	    $v = eval_ineq($request_info, $rule_env, $session, 
+	    $v = eval_ineq($req_info, $rule_env, $session, 
 			   $cond, $rule_name);
 	    return $v ||= 0;
 	};
@@ -139,7 +140,7 @@ sub eval_predicates {
 
 		# FIXME: this leaves string args as '...' which means that the predicates have to remember to remove them.  That causes errors.  
 
-		$v = &$predf($request_info, 
+		$v = &$predf($req_info, 
 			     $rule_env, 
 			     $args
 		    );
@@ -158,7 +159,7 @@ sub eval_predicates {
 	    my $name = $cond->{'name'};
 
 	    # check count
-	    my $count = $session->{$name} || 0;
+	    my $count = session_get($req_info->{'rid'}, $session, $name) || 0;
 
 
 	    $logger->debug('[counter] ', "$name -> $count");
@@ -173,24 +174,15 @@ sub eval_predicates {
 	    # check date, if needed
 	    if($v &&
 	       defined $cond->{'within'} &&
-	       exists $session->{mk_created_session_name($name)}) {
+	       session_defined($req_info->{'rid'}, $session, $name)) {
 
-
-		my $desired = 
-		    DateTime->from_epoch( epoch => 
-					  $session->{mk_created_session_name($name)});
-
-		$logger->debug("[counter:$name] created ", $desired->ymd);
-
-		$desired->add( $cond->{'timeframe'} => $cond->{'within'} );
-
-		$logger->debug("[counter:$name] ",
-			       $cond->{'timeframe'}, " -> ", $cond->{'within'},
-			       ' desired ', $desired->ymd
-		     );
-
-		$v = $v && after_now($desired);
-
+	       $v = $v && 
+		    session_within($req_info->{'rid'}, 
+				   $session, 
+				   $name, 
+				   $cond->{'within'},
+				   $cond->{'timeframe'}
+				   )
 	    }
 	    return $v;
 	};
@@ -202,13 +194,13 @@ sub eval_predicates {
 }
 
 sub eval_pred {
-    my($request_info, $rule_env, $session, $pred, $rule_name) = @_;
+    my($req_info, $rule_env, $session, $pred, $rule_name) = @_;
 
     my $logger = get_logger();
 
     my @results = 
 	map {eval_predicates(
-		 $request_info, $rule_env, $session, 
+		 $req_info, $rule_env, $session, 
 		 $_, $rule_name) } @{ $pred->{'args'} };
 
 
@@ -240,13 +232,13 @@ sub eval_pred {
 }
 
 sub eval_ineq {
-    my($request_info, $rule_env, $session, $pred, $rule_name) = @_;
+    my($req_info, $rule_env, $session, $pred, $rule_name) = @_;
 
     my $logger = get_logger();
 
     my @results;
     for (@{ $pred->{'args'} }) {
-	my $den = eval_js_expr($_, $rule_env, $rule_name, $request_info, $session);
+	my $den = eval_js_expr($_, $rule_env, $rule_name, $req_info, $session);
 #	$logger->debug("Denoted -> ", sub { Dumper($den) });
 	push @results, den_to_exp($den);
     }

@@ -516,6 +516,9 @@ sub eval_datasource {
 sub eval_counter {
     my($req_info, $session, $name) = @_;
 
+#    my $logger = get_logger();
+#    $logger->debug("RID: ", $req_info->{'rid'}, "Name: $name");
+    
     return session_get($req_info->{'rid'}, $session, $name);
 
 }

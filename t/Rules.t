@@ -35,6 +35,7 @@ use strict;
 use Test::More;
 use Test::LongString;
 
+use Apache::Session::Memcached;
 use DateTime;
 use Geo::IP;
 use Cache::Memcached;
@@ -51,6 +52,8 @@ use Kynetx::Actions qw/:all/;
 use Kynetx::Util qw/:all/;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::Environments qw/:all/;
+use Kynetx::Session qw/:all/;
+use Kynetx::Configure qw/:all/;
 
 
 use Kynetx::FakeReq qw/:all/;
@@ -62,11 +65,14 @@ Log::Log4perl->easy_init($WARN);
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
+# configure KNS
+Kynetx::Configure::configure();
 
+Kynetx::Memcached->init();
 
 my $r = new Kynetx::FakeReq();
 
-
+my $rid = 'cs_test';
 my $rule_name = 'foo';
 
 my $rule_env = empty_rule_env();
@@ -84,24 +90,21 @@ my $rule_env_js = Kynetx::Actions::emit_var_decl($scope_hash);
 #diag $rule_env_js;
 
 # dummy up some counter data in the session
-my $session = {'archive_pages_old' => 3,
-	       'archive_pages_now' => 2,
-	       'archive_pages_now2' => 3};
 
-my $now = DateTime->now;
+my $session = process_session($r);
 
+session_store($rid, $session, 'archive_pages_old', 3);
 my $three_days_ago = DateTime->now->add( days => -3 );
+session_touch($rid, $session, 'archive_pages_old', $three_days_ago);
 
-
-$session->{mk_created_session_name('archive_pages_now')} = $now->epoch;
-$session->{mk_created_session_name('archive_pages_now2')} = $now->epoch;
-$session->{mk_created_session_name('archive_pages_old')} = $three_days_ago->epoch;
+session_store($rid, $session, 'archive_pages_now', 2);
+session_store($rid, $session, 'archive_pages_now2', 3);
 
 
 
 my $Amazon_req_info;
 $Amazon_req_info->{'ip'} = '72.21.203.1'; # Seattle (Amazon)
-$Amazon_req_info->{'rid'} = 'cs_test';
+$Amazon_req_info->{'rid'} = $rid;
 $Amazon_req_info->{'txn_id'} = 'txn_id';
 
 my (@test_cases, $json, $krl_src, $krl,$result);
@@ -788,16 +791,19 @@ contains_string(nows($global_decl_3),
 #
 # session tests
 #
-is($session->{'archive_pages_now'}, undef, "Archive pages now reset");
-is($session->{'archive_pages_now2'}, undef, "Archive pages now2 reset");
-is($session->{'archive_pages_old'}, 4, "Archive pages old iterated");
+is(session_get($rid,$session,'archive_pages_now'), undef, "Archive pages now reset");
+is(session_get($rid,$session,'archive_pages_now2'), undef, "Archive pages now2 reset");
+is(session_get($rid,$session,'archive_pages_old'), 4, "Archive pages old iterated");
 
+session_delete($rid,$session,'archive_pages_old');
+session_delete($rid,$session,'archive_pages_now');
+session_delete($rid,$session,'archive_pages_now2');
 
 
 #diag Dumper($rule_env);
 
 
-
+session_cleanup($session);
 
 diag("Safe to ignore warnings about unintialized values & unrecognized escapes");
 

@@ -108,7 +108,7 @@ sub process_action {
     $r->subprocess_env(TXN_ID => $req->param('txn_id'));
     $r->subprocess_env(CALLER => $request_info{'caller'});
 
-    my $sid = $session->{'_session_id'};
+    my $sid = session_id($session);
     $r->subprocess_env(SID => $sid);
 
     $r->subprocess_env(IP => $request_info{'ip'});
@@ -126,16 +126,6 @@ sub process_action {
 
     $logger->debug("Finish time: ", time, " Start time: ", $r->subprocess_env('START_TIME'));
    
-#     $logger->debug("Storing: ", $request_info{'site'}, ", ",
-# 		               $request_info{'txn_id'}, ", ",
-# 		               $request_info{'rule'}, ", ",
-# 		               $request_info{'caller'}, ", ",
-# 		               $session->{_session_id}, ", ",
-# 		               $request_info{'type'}, ", ",
-# 		               $request_info{'element'}, ", ",
-# 		               $request_info{'sense'}, 
-# 	);
-
     if($req->param('url')){
 	my $url = $req->param('url');
 	$logger->debug("Redirecting to ", $url);

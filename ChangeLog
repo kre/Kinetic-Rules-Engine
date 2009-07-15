@@ -1,3 +1,16 @@
+2009-07-15  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Session.pm: Extended abstraction with additional
+	  functions to support refactoring
+	* Kynetx/Actions.pm: Refactored to support new session abstraction
+	* Kynetx/Logger.pm: Refactored to support new session abstraction
+	* Kynetx/Log.pm: Refactored to support new session abstraction
+	* Kynetx/JavaScript.pm (eval_counter): Refactored to support new
+	  session abstraction 
+	* Kynetx/Predicates.pm (eval_predicates): Refactored to support
+	  new session abstraction 
+	* Kynetx/Rules.pm: Refactored to support new session abstraction
+
 2009-07-10  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Session.pm: Added methods to abstract session variable.

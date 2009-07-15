@@ -39,6 +39,7 @@ use Kynetx::Util qw(:all);
 use Kynetx::JavaScript qw(:all);
 use Kynetx::Rules qw(:all);
 use Kynetx::Environments qw(:all);
+use Kynetx::Session q/:all/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -654,7 +655,7 @@ sub choose_action {
 
 
 sub eval_post_expr {
-    my($expr, $session) = @_;
+    my($expr, $session, $req_info) = @_;
 
     my $logger = get_logger();
     $logger->debug("[post] ", $expr->{'type'});
@@ -662,31 +663,18 @@ sub eval_post_expr {
     my $js = '';
     case: for ($expr->{'type'}) {
 	/clear/ && do { 
-	    if(exists $expr->{'counter'}) {
-		delete $session->{$expr->{'name'}};
-		delete $session->{mk_created_session_name($expr->{'name'})}
-	    }
+	    session_clear($req_info->{'rid'}, $session, $expr->{'name'});
 	    return $js;
 	};
 	/iterator/ && do {
 	    if(exists $expr->{'counter'}) {
-		if(exists $session->{$expr->{'name'}}) {
-		    $session->{$expr->{'name'}} += $expr->{'value'};
-		    $logger->debug("[post] iterating counter ",  
-				   $expr->{'name'},
-				   " by ",
-				   $expr->{'value'});
-
-		} else {
-		    $session->{$expr->{'name'}} = $expr->{'from'};
-		    $session->{mk_created_session_name($expr->{'name'})} = 
-			# use DateTime for consistency 
-			DateTime->now->epoch;
-		    $logger->debug("[post] initializing counter ",  
-				   $expr->{'name'},
-				   " to ",
-				   $expr->{'from'});
-		}
+		my $val = $expr->{'value'};
+		$val = -$val if($expr->{'op'} eq '-=');
+		session_inc_by_from($req_info->{'rid'},
+				    $session,
+				    $expr->{'name'},
+				    $val,
+				    $expr->{'from'});
 	    }
 	    return $js;
 	};
@@ -697,7 +685,7 @@ sub eval_post_expr {
 	    foreach my $cb (@{$expr->{'callbacks'}}) {
 		my $t = $cb->{'value'};
 		my $a = $cb->{'attribute'};
-		$session->{$t} = 1;
+# huh?		$session->{$t} = 1;
 		$logger->debug("[post] Setting callback named $a = $t");
 		if($a eq 'id') {
 		    $js .= <<EJS;

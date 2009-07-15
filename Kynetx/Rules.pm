@@ -90,7 +90,7 @@ sub process_rules {
 
 
 
-    # get a session hash 
+    # get a session
     my $session = process_session($r);
 
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rids);
@@ -111,6 +111,8 @@ sub process_rules {
 		  $req_info, 
 		  $session
 	);
+
+    session_cleanup($session);
 
     # return the JS load to the client
     $logger->info("finished");
@@ -139,12 +141,6 @@ sub eval_ruleset {
 	            );
 
     
-    # yes, you need to set the arrays and then use them since "keys" & "values" are context aware
-#    my @this_keys = keys %{ $this_rule_env };
-#    my @this_values = values %{ $this_rule_env };
-
-#    $logger->debug('Keys after rule selection: ', Dumper());
-
     # side effects environment with precondition pattern values
     $rule_env = extend_rule_env($this_rule_env, $rule_env);
 
@@ -259,8 +255,10 @@ sub eval_rule {
     $logger->info("selected ...");
 
 
-    foreach my $var (keys %{ $session } ) {
-	$logger->debug("[Session] $var has value $session->{$var}");
+    foreach my $var (@{ session_keys($req_info->{'rid'}, $session) } ) {
+	next if($var =~ m/_created$/);
+	$logger->debug("[Session] $var has value ". 
+		       session_get($req_info->{'rid'}, $session, $var));
     }
 
     # this loads the rule_env.  
@@ -314,7 +312,7 @@ sub eval_rule {
 	# chunk of Javascrip and this is where we deliver... 
 	$js .= Kynetx::Actions::build_js_load($rule, $req_info, $rule_env, $session); 
 	
-	$js .= Kynetx::Actions::eval_post_expr($cons, $session) if(defined $cons);
+	$js .= Kynetx::Actions::eval_post_expr($cons, $session, $req_info) if(defined $cons);
 
 	push(@{ $req_info->{'results'} }, 'fired');
 
@@ -322,7 +320,7 @@ sub eval_rule {
     } else {
 	$logger->info("did not fire");
 
-	$js .= Kynetx::Actions::eval_post_expr($alt, $session) if(defined $alt);
+	$js .= Kynetx::Actions::eval_post_expr($alt, $session, $req_info) if(defined $alt);
 
 	# put this in the logging DB
 	push(@{ $req_info->{'results'} }, 'notfired');
