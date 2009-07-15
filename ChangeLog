@@ -1,5 +1,10 @@
 2009-07-15  Phil Windley  <pjw@kynetx.com>
 
+	* Kynetx/Rules.pm (eval_ruleset): Turn off logging for any ruleset
+	  that's turned it on.  Logging independence!
+	* Kynetx/Util.pm (turn_on_logging): Added callback to replace
+	  newlines with newlines and JS comment chars
+	  (turn_off_logging): added
 	* Kynetx/Session.pm: Extended abstraction with additional
 	  functions to support refactoring
 	* Kynetx/Actions.pm: Refactored to support new session abstraction

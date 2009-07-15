@@ -52,9 +52,9 @@ after_now
 mk_created_session_name
 config_logging
 turn_on_logging
+turn_off_logging
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
-
 
 
 
@@ -90,16 +90,24 @@ sub config_logging {
 
 }
 
+
 sub turn_on_logging {
 
     my $logger = get_logger('Kynetx');
-
+    
+    # match any newline not at the end of the string
+    my $re = qr%\n(?!$)%;
     my $appender = Log::Log4perl::Appender->new(
-         "Log::Dispatch::Screen",
-         stderr => 0,
-         name => "ConsoleLogger"
+	"Log::Dispatch::Screen",
+	stderr => 0,
+	name => "ConsoleLogger",
+	callbacks => sub{my (%h) = @_;
+			 $h{'message'} =~ s%$re%\n//%gs; 
+			 return $h{'message'};
+	}
 	);
      
+
     $logger->add_appender($appender);
 
     # don't write detailed logs unless we're already in debug mode
@@ -109,9 +117,15 @@ sub turn_on_logging {
     # Layouts
     my $layout = 
 	Log::Log4perl::Layout::PatternLayout->new(
-	    "// %d %p %F{1} %X{site} %X{rule} %m%n");
+	    "// %d %p %F{1} %X{site} %X{rule} %m%n"
+	);
     $appender->layout($layout);
 
+}
+
+sub turn_off_logging {
+    my $logger = get_logger('Kynetx');
+    $logger->remove_appender('ConsoleLogger');
 }
 
 # takes a counter name and makes a uniform session var name from it

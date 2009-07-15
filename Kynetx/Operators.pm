@@ -63,7 +63,7 @@ sub eval_pick {
 #    $logger->debug("obj: ", sub { Dumper($obj) });
     
     my $rands = Kynetx::JavaScript::eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
- #   $logger->debug("vars: ", sub { Dumper($rands) });
+#    $logger->debug("vars: ", sub { Dumper($rands) });
 
     my $pattern = '';
     if($rands->[0]->{'type'} eq 'str') {

@@ -169,6 +169,11 @@ sub eval_ruleset {
     }
 
     $logger->debug("Finished processing rules for " . $req_info->{'rid'});
+
+    # we're done logging now
+    turn_off_logging if($ruleset->{'meta'}->{'logging'} && 
+			$ruleset->{'meta'}->{'logging'} eq "on");
+
     return <<EOF
 KOBJ.registerClosure = KOBJ.registerClosure || function(r,c){c();};
 KOBJ.registerClosure('$rid', function() { $js });
