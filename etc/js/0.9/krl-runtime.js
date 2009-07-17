@@ -374,10 +374,20 @@ KOBJ.executeClosure = function(rid, closure){
 }
 //end closure and data registration code
 
-if(typeof(KOBJ_config) == 'object') {
+KOBJ.runit = function(){
+ if(typeof(KOBJ_config) == 'object') {
   if(typeof(KOBJ_config.init) == 'object') {
     KOBJ.init(KOBJ_config.init);
   }
   KOBJ.eval(KOBJ_config);
+ }
+};
+
+//see if page is already loaded (ex: tags planted AFTER dom ready) to know if we should wait for document onReady
+//this code block is adapted from swfObject code used for the same purpose
+if ((typeof document.readyState != "undefined" && document.readyState == "complete") || (typeof document.readyState == "undefined" && (document.getElementsByTagName("body")[0] || document.body))) { 
+  KOBJ.runit(); //dom ready
+} else {
+  $K(KOBJ.runit); //dom not ready
 }
 
