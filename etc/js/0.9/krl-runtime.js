@@ -269,21 +269,28 @@ KOBJ.init = function(init_obj) {
 		    });
 };
 
-KOBJ.css = function(css) {
-  if($K("style[title=KOBJ_stylesheet]").length == 0) {
-    $K('<style title="KOBJ_stylesheet"></style>').appendTo('head');
-    // var r=document.createElement("style");
-    //  r.innerHTML= css;
-    //  r.type= "text/css";
-    //  r.media = "screen";
-    //  r.rel = "stylesheet";
-    //  r.title="KOBJ_stylesheet"
-    //  var head=document.getElementsByTagName("head")[0];
-    //  head.appendChild(r);
-  }
-  $K("style[title=KOBJ_stylesheet]").append(css + '\n');
-};
-
+KOBJ.css=function(css){
+   var head = document.getElementsByTagName('head')[0],
+       style = document.createElement('style'),
+       rules = document.createTextNode(css);
+	KOBJstyle = document.getElementById('KOBJ_stylesheet');
+	if(KOBJstyle == null) {
+		style.type = 'text/css';
+		style.id = 'KOBJ_spreadsheet';
+		if(style.styleSheet) {
+			style.styleSheet.cssText = rules.nodeValue;
+		} else {
+			style.appendChild(rules);
+		}
+		head.appendChild(style);
+	} else {
+		if(KOBJstyle.styleSheet) {
+			KOBJstyle.styleSheet.cssText = rules.nodeValue;
+		} else {
+			KOBJstyle.appendChild(rules);
+		}
+	}
+}; 
 
 KOBJ.require = function(url) {
   var r=document.createElement("script");
