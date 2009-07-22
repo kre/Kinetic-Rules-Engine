@@ -724,7 +724,7 @@ sub pp_expr {
 	/array/ && do {
 	    return  "[" . join(', ', pp_rands($expr->{'val'})) . "]" ;
 	};
-	/hash/ && do {
+	/hashraw/ && do {
 	    return  "{" . join(', ', pp_hash_lines($expr->{'val'})) . "}" ;
 	};
 	/prim/ && do {

@@ -17,15 +17,17 @@ use DateTime;
 use Data::Dumper;
 
 
+use Kynetx::Configure qw/:all/;
+
 use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
 use constant DEFAULT_JS_VERSION => '0.9';
 
 
+# configure KNS
+Kynetx::Configure::configure();
 
 my $base_var = 'KOBJ_ROOT';
 my $base = $ENV{$base_var} || die "$base_var is undefined in the environment";
-my $tmpls = $base . "/etc/tmpl";
-#my $init_tmpl = $tmpls . "/httpd-perl.conf.tmpl";
 
 my $web_root_var = 'WEB_ROOT';
 my $web_root = $ENV{$web_root_var} || 
@@ -35,14 +37,14 @@ my $dt = DateTime->now;
 my $dstamp = $dt->ymd('');
 my $hstamp = $dt->hms('');
 
-my $kobj_file = "kobj-static-".$dstamp.".js";
+my $kobj_file = "kobj-static-".$dstamp.$hstamp.".js";
 
 my @js_files = qw(
 jquery-1.2.6.js
 jquery.json-1.2.js
 jquery-ui-personalized-1.6rc2.js
 kgrowl-1.0.js
-krl-runtime.js
+krl-runtime.js.tmpl
 );
 
 
@@ -55,17 +57,11 @@ getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'};
 
 
-# open the template
-#my $init_template = HTML::Template->new(filename => $init_tmpl);
-
-# fill in the parameters
-#$init_template->param(KOBJ_ROOT => $base);
-
 my $js_version = $opt{'v'} || DEFAULT_JS_VERSION;
 my $js_root = $opt{'r'} || DEFAULT_JS_ROOT;
 
 
-my $js = "var kobj_fn = '$kobj_file'; var kobj_ts = '$hstamp';";
+my $js = "var kobj_fn = '$kobj_file'; var kobj_ts = '$dstamp$hstamp';";
 
 # get the static files    
 foreach my $file (@js_files) {
@@ -101,11 +97,7 @@ if($opt{'a'}) {  # save to S3
 	}
 	);
 
-
-
     my $bucket = $s3->bucket('init-files') or die $s3->err . ": " . $s3->errstr;;
-
-
 
     print "Writing JS to $kobj_file on S3 with expiration of $expires\n";
     $bucket->add_key( 
@@ -142,16 +134,27 @@ sub get_js_file {
     my ($file, $js_version, $js_root) = @_;
 
     my $filename = join('/',($js_root,$js_version,$file));
+    my $js = '';
 
-    open(JS, "< $filename") ||  
-	die("Can't open file $filename: $!\n");
+    if ($filename =~ m/\.tmpl$/) {
+        # open the template
+	my $init_template = HTML::Template->new(filename => $filename,
+						die_on_bad_params => 0);
 
+        # do this last to override anything from above
+	for my $key (@{ Kynetx::Configure::config_keys() }) {
+	    $init_template->param($key => Kynetx::Configure::get_config($key));
+	}
 
-    my $js = minify(input=> *JS);
+	$js = minify(input => $init_template->output);
 
-    # reduce conflict by renaming some Prototype functions
-#    $js =~ s#\$\$\(#K\$\$\(#gs;
-#    $js =~ s#([^\$])\$\(#$1K\$\(#gs; # don't replace $$
+    } else {
+	open(JS, "< $filename") ||  
+	    die("Can't open file $filename: $!\n");
+	$js = minify(input=> *JS);
+
+    }
+
 
     close JS;
     

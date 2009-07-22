@@ -4,11 +4,10 @@ ruleset 10 {
     select using "/archives/\d+/\d+/" setting ()
 
     pre {
-      c = counter.archive_pages;
     }
 
     if counter.archive_pages > 2 within 3 days then 
-      alert("You win the prize!  You've seen " + c + " pages from the archives!");
+      alert("You win the prize!  You've seen " + archive_pages + " pages from the archives!");
 
 
     fired {

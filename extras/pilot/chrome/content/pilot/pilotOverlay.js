@@ -2,7 +2,8 @@ var Pilot = {
     status: false,
     tm_status: false,
     sites: new Array(0),
-    kynetx_js_host: 'http://init.kobj.net',
+    kynetx_js_proto: 'http',
+    kynetx_js_host: 'init.kobj.net',
 //  required_scripts: ['prototype','effects','dragdrop','kobj-extras'],
     required_scripts: ['kobj-static'],
     kobj_version: '0.9',
@@ -169,28 +170,20 @@ var Pilot = {
 
          script = doc.createElement('script');
          script.type = 'text/javascript';
-//         script.src = this.kynetx_js_host + '/js/' + sites.join(';') + '/kobj.js';
-//	 script.innerHTML = 'function startKJQuery() {if(typeof(KOBJ.init) !== "undefined"){\$K.isReady = true;} else {setTimeout("startKJQuery()", 20);}};startKJQuery();\n';
-//	 script.innerHTML += 'var KOBJ_config ='+init_obj+';\n';
 	 script.innerHTML += 'var KOBJ_config =' + p_str + ';\n';
-
-	 // // force jQuery to believe the DOM is ready
-         // script = doc.createElement('script');
-         // script.type = 'text/javascript';
-         // script.innerHTML = 'jQuery.isReady = true;'
-         // body.appendChild(doc.createTextNode("\n"));
-         // body.appendChild(script);
-
 
          body.appendChild(doc.createTextNode("\n"));
          body.appendChild(script);
+
+#	 var proto = (("https:" == window._content.location.protocol) ? "https://" : "http://");
+
+#	 this.kynetx_js_host = proto + init_host;
 
 	 // Add required js libraries once
          for (var r = 0; r < this.required_scripts.length; r++) {
            script = doc.createElement('script');
            script.type = 'text/javascript';
            script.src = this.kynetx_js_host + '/js/shared/' + this.required_scripts[r] + '.js';
-//	   script.onerror = 'throw("KOBJ shared library error: " + this.src)';
            body.appendChild(doc.createTextNode("\n"));
            body.appendChild(script);
            }

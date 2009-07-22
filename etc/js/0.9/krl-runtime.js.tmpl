@@ -9,65 +9,69 @@ var $K = jQuery.noConflict();
 var KOBJ= KOBJ ||
   { name: "KRL Runtime Library",
     version: '0.9',
-    copyright: "Copyright 2007-2009, Kynetx LLC.  All Rights reserverd."
+    copyright: "Copyright 2007-2009, Kynetx Inc.  All Rights reserverd."
   };
 
 
-// this can be removed next update cycle
-KOBJ.search_annotation = {};
-KOBJ.search_annotation.defaults = {
-  "name": "KOBJ",
-  "sep": "<div style='padding-top: 13px'>|</div>",
-  "text_color":"#CCC",
-  "height":"40px",
-  "left_margin": "46px",
-  "right_padding" : "15px",
-  "font_size":"12px",
-  "font_family": "Verdana, Geneva, sans-serif"
-};
-
 KOBJ.annotate_search_results = function(annotate, config, cb) {
   var defaults = {
-      "name": "KOBJ",
-      "sep": "<div style='padding-top: 13px'>|</div>",
-      "text_color": "#CCC",
-      "height": "40px",
-      "left_margin": "15px",
-      "right_padding": "15px",
-      "font_size": "12px",
+    "name": "KOBJ",
+    "sep": "<div style='padding-top: 13px'>|</div>",
+    "text_color": "#CCC",
+    "height": "40px",
+    "left_margin": "15px",
+    "right_padding": "15px",
+    "font_size": "12px",
     "font_family": "Verdana, Geneva, sans-serif",
     "results_lister" : "li.g, div.g, li div.res, #results>ul>li",
-    "element_to_modify" : "div.s,div.abstr,p"
+    "element_to_modify" : "div.s,div.abstr,p",
+    "placement" : 'prepend',
+    "outer_div_css" : 0,
+    "inner_div_css" : 0,
+    "li_css" : 0,
+    "ul_css" : 0
   };
   if (typeof config === 'object') {
       jQuery.extend(defaults, config);
   }
+  // these have to occur after the config has been updated
+  defaults.outer_div_css = defaults.outer_div_css || {
+      "float": "right",
+      "width": "auto",
+      "height": defaults.height,
+      "font-size": defaults.font_size,
+      "line-height": "normal",
+      "font-family": defaults.font_family
+      };
+  defaults.li_css = defaults.li_css || {
+      "float": "left",
+      "margin": "0",
+      "vertical-align": "middle",
+      "padding-left": "4px",
+      "color": defaults.text_color,
+      "white-space": "nowrap",
+      "text-align": "center"
+      };
+  defaults.ul_css = defaults.ul_css || {
+      "margin": "0",
+      "padding": "0",
+      "list-style": "none"
+      };
+  defaults.inner_div_css = defaults.inner_div_css || {
+      "float": "left",
+      "display": "inline",
+      "height": defaults.height,
+      "margin-left": defaults.left_margin,
+      "padding-right": defaults.right_padding
+      };
   function mk_list_item(i) {
-      return $K("<li class='" + defaults.name + "_item'>").css({
-          "float": "left",
-          "margin": "0",
-          "vertical-align": "middle",
-          "padding-left": "4px",
-          "color": defaults.text_color,
-          "white-space": "nowrap",
-          "text-align": "center"
-      }).append(i);
+    return $K("<li class='" + defaults.name + "_item'>").css(defaults.li_css).append(i);
   }
-  function mk_rm_div(anchor) {
+  function mk_outer_div(anchor) {
       var name = defaults.name;
       var logo_item = mk_list_item(anchor);
-      var logo_list = $K('<ul>').css({
-          "margin": "0",
-          "padding": "0",
-          "list-style": "none"
-      }).attr("id", name + "_anno_list").append(logo_item);
-      var inner_div = $K('<div>').css({
-          "float": "left",
-          "display": "inline",
-          "height": defaults.height,
-          "margin-left": defaults.left_margin,
-          "padding-right": defaults.right_padding
-      }).append(logo_list);
+      var logo_list = $K('<ul>').css(defaults.ul_css).attr("id", name + "_anno_list").append(logo_item);
+      var inner_div = $K('<div>').css(defaults.inner_div_css).append(logo_list);
       if (typeof defaults != 'undefined' && defaults['tail_image']) {
           inner_div.css({
               "background-image": "url(" + defaults['tail_image'] + ")",
@@ -75,22 +79,15 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
               "background-position": "right top"
           });
       }
-      var rm_div = $K('<div>').css({
-          "float": "right",
-          "width": "auto",
-          "height": defaults.height,
-          "font-size": defaults.font_size,
-          "line-height": "normal",
-          "font-family": defaults.font_familty
-      }).append(inner_div);
+      var outer_div = $K('<div>').css(defaults.outer_div_css).append(inner_div);
       if (typeof defaults != 'undefined' && defaults['head_image']) {
-          rm_div.css({
+          outer_div.css({
               "background-image": "url(" + defaults['head_image'] + ")",
               "background-repeat": "no-repeat",
               "background-position": "left top"
           });
       }
-      return rm_div;
+      return outer_div;
   }
   function runAnnotate(){
 //    $K('#res div:first ol, #web').addClass("Kannotated");
@@ -102,14 +99,14 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
         if ($K(this).find('#' + defaults.name + '_anno_list li').is('.' + defaults.name + '_item')) {
           $K(this).find('#' + defaults.name + '_anno_list').append(mk_list_item(defaults.sep)).append(mk_list_item(contents));
         } else {
-          $K(this).find(defaults['element_to_modify']).prepend(mk_rm_div(contents));
-        }
+          $K(this).find(defaults['element_to_modify'])[defaults.placement](mk_outer_div(contents));
+	}
       }
-     }
-     );
-     KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'] );
-     cb();
-  }
+    }
+    );
+    KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'] );
+    cb();
+  };
   runAnnotate();
   //if this is google ajax serp, wrap the 'done' method call
   if(typeof je === "object" && je.zz){
@@ -248,19 +245,9 @@ KOBJ['data'] = KOBJ['data'] || {};
 //KOBJ.proto = 'http://';
 KOBJ.proto = (("https:" == document.location.protocol) ? "https://" : "http://");
 
-KOBJ.init_host = 'init.kobj.net';
-KOBJ.eval_host = 'cs.kobj.net';
-KOBJ.callback_host = 'log.kobj.net';
-
-// I don't think we need this anymore.
-// KOBJ.startKJQuery = function(){
-// 		      if(typeof($K) != "undefined"){
-// 			$K.isReady = true;
-// 		      } else {
-// 			setTimeout("startKJQuery()", 50);
-// 		      }
-// };
-// KOBJ.startKJQuery;
+KOBJ.init_host = '<TMPL_VAR NAME=INIT_HOST>';
+KOBJ.eval_host = '<TMPL_VAR NAME=EVAL_HOST>';
+KOBJ.callback_host = '<TMPL_VAR NAME=CB_HOST>';
 
 KOBJ.init = function(init_obj) {
 
@@ -285,12 +272,13 @@ KOBJ.css=function(css){
 		head.appendChild(style);
 	} else {
 		if(KOBJstyle.styleSheet) {
-			KOBJstyle.styleSheet.cssText = rules.nodeValue;
+			KOBJstyle.styleSheet.cssText += rules.nodeValue;
 		} else {
 			KOBJstyle.appendChild(rules);
 		}
 	}
-}; 
+};
+
 
 KOBJ.require = function(url) {
   var r=document.createElement("script");
@@ -303,9 +291,9 @@ KOBJ.require = function(url) {
 KOBJ.reload = function(delay) {
   var r=document.createElement("script");
   r.type= "text/javascript";
-  r.innerHTML=  "KOBJ.eval(KOBJ_config);"
+  r.innerHTML=  "KOBJ.eval(KOBJ_config);";
   var body=document.getElementsByTagName("body")[0];
-  setTimeout(function(){body.appendChild(r)},delay);
+  setTimeout(function(){body.appendChild(r);},delay);
 };
 
 
@@ -366,7 +354,7 @@ KOBJ.registerDataSet = function(rid, datasets){
        KOBJ[rid].pendingClosure = null;
        KOBJ.executeClosure(rid, rseclosure);
    }
-}
+};
 
 KOBJ.registerClosure = function(rid, closure){
 	if(KOBJ[rid] && KOBJ[rid].dataLoaded){
@@ -375,10 +363,10 @@ KOBJ.registerClosure = function(rid, closure){
 		KOBJ[rid] = KOBJ[rid] || {};
 		KOBJ[rid].pendingClosure = closure;
 	}
-}
+};
 KOBJ.executeClosure = function(rid, closure){
 	closure();
-}
+};
 //end closure and data registration code
 
 KOBJ.runit = function(){
@@ -392,7 +380,7 @@ KOBJ.runit = function(){
 
 //see if page is already loaded (ex: tags planted AFTER dom ready) to know if we should wait for document onReady
 //this code block is adapted from swfObject code used for the same purpose
-if ((typeof document.readyState != "undefined" && document.readyState == "complete") || (typeof document.readyState == "undefined" && (document.getElementsByTagName("body")[0] || document.body))) { 
+if ((typeof document.readyState != "undefined" && document.readyState == "complete") || (typeof document.readyState == "undefined" && (document.getElementsByTagName("body")[0] || document.body))) {
   KOBJ.runit(); //dom ready
 } else {
   $K(KOBJ.runit); //dom not ready

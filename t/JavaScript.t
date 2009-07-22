@@ -63,6 +63,17 @@ Log::Log4perl->easy_init($INFO);
 
 
 
+# is_deeply(decode_json(
+# 	      gen_js_expr(
+# 		   mk_expr_node('hash', 
+# 				{"fizz" => mk_expr_node('num',3), 
+# 				 "flip" => mk_expr_node('num',8), 
+# 				 "flop" => mk_expr_node('str',"Blackfoot, ID")}))),
+# 	  decode_json('{"fizz": 3, "flip": 8, "flop": "Blackfoot, ID"}'),
+# 	  "gen_js_exp and hashes");
+
+
+
 #
 # testing Javascript expression evaluation
 # 

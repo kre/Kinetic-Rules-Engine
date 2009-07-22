@@ -61,6 +61,7 @@ get_js_html
 mk_js_str
 eval_js_expr
 den_to_exp
+exp_to_den
 infer_type
 escape_js_str
 ) ]);
@@ -90,8 +91,11 @@ sub gen_js_expr {
 	/array/ && do {
 	    return  "[" . join(', ', @{ gen_js_rands($expr->{'val'}) }) . "]" ;
 	};
-	/hash/ && do {
+	/hashraw/ && do {
 	    return  gen_js_hash_lines($expr->{'val'});
+	};
+	/hash/ && do {
+	    return  gen_js_hash($expr->{'val'});
 	};
 	/prim/ && do {
 	    return gen_js_prim($expr);
@@ -134,26 +138,36 @@ sub gen_js_rands {
 
 }
 
+sub gen_js_hash {
+    my ($hash_items) = @_;
+
+    my $logger = get_logger();
+
+#    $logger->debug(Dumper($hash_items));
+
+    $hash_items = exp_to_den($hash_items);
+#    $logger->debug(Dumper($hash_items));
+    my @items;
+    foreach my $k (keys %{ $hash_items->{'val'} }) {
+	push(@items, "'" . $k . "' :"  . gen_js_expr($hash_items->{'val'}->{$k}));
+    }
+    my $js =  '{' . join(",", @items) . '}';
+#    $logger->debug($js);
+
+    return $js;
+}
+
+
 sub gen_js_hash_lines {
     my ($hash_lines) = @_;
 
     my $logger = get_logger();
 
-#   $logger->debug(Dumper($hash_lines));
+   $logger->debug(Dumper($hash_lines));
 
-    # we might get a Perl hash here or a parse tree...
-    if(ref $hash_lines eq 'HASH') {
-	$hash_lines = exp_to_den($hash_lines);
-#	$logger->debug(Dumper($hash_lines));
-	foreach my $k (keys %{ $hash_lines->{'val'} }) {
-	    $hash_lines->{'val'}->{$k} = gen_js_expr($hash_lines->{'val'}->{$k});
-	}
-#	$logger->debug(Dumper($hash_lines));
-	$hash_lines = encode_json($hash_lines->{'val'});
-    } else {
-	my @res = map {gen_js_hash_line($_)} @{ $hash_lines } ;
-	$hash_lines = "{" . join(', ', @res) . "}" ;
-    }
+    my @res = map {gen_js_hash_line($_)} @{ $hash_lines } ;
+    $hash_lines = "{" . join(', ', @res) . "}" ;
+    
     return $hash_lines;
 }
 
@@ -571,16 +585,21 @@ sub exp_to_den {
     my ($expr) = @_;
 
     my $type = infer_type($expr);
-    if(ref $expr eq 'HASH') {
+    if(ref $expr eq 'HASH' && ! defined $expr->{'val'} && ! defined $expr->{'type'}) {
 	foreach my $k (keys %{ $expr }) {
 	    $expr->{$k} = exp_to_den($expr->{$k});
 	}
+	return {'type' => $type,
+		'val' => $expr}
+
     } elsif(ref $expr eq 'ARRAY') {
 	my @res = map {exp_to_den($_)} @{ $expr };
 	$expr = \@res;
-    } 
-    return {'type' => $type,
-	    'val' => $expr}
+	return {'type' => $type,
+		'val' => $expr}
+    } else {
+	return $expr
+    }
 
 }
 

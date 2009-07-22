@@ -633,7 +633,7 @@ factor: NUM
       | '[' expr(s? /,/) ']'
         {$return=Kynetx::Parser::mk_expr_node('array',$item[2])}
       | '{' hash_line(s? /,/) '}'
-          {$return=Kynetx::Parser::mk_expr_node('hash',$item[2])}
+          {$return=Kynetx::Parser::mk_expr_node('hashraw',$item[2])}
       | '(' expr ')'
         {$return=$item[2]}
       | <error>

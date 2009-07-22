@@ -463,8 +463,9 @@ sub build_one_action {
 
     # override defaults if set
     foreach my $m ( @{ $action->{'modifiers'} } ) {
-	$mods{$m->{'name'}} = gen_js_expr($m->{'value'});
-#	$logger->debug(sub {Dumper($m)} );
+	$mods{$m->{'name'}} = gen_js_expr($m->{'value'}) if defined $mods{$m->{'name'}};
+
+	$logger->debug(sub {Dumper($m)} );
 
 	push(@config, "'" . $m->{'name'} . "':" . 
  	               gen_js_expr(eval_js_expr($m->{'value'}, 
