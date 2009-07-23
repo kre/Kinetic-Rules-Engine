@@ -26,13 +26,6 @@ use constant DEFAULT_JS_VERSION => '0.9';
 # configure KNS
 Kynetx::Configure::configure();
 
-my $base_var = 'KOBJ_ROOT';
-my $base = $ENV{$base_var} || die "$base_var is undefined in the environment";
-
-my $web_root_var = 'WEB_ROOT';
-my $web_root = $ENV{$web_root_var} || 
-    die "$web_root_var is undefined in the environment";
-
 my $dt = DateTime->now;
 my $dstamp = $dt->ymd('');
 my $hstamp = $dt->hms('');
