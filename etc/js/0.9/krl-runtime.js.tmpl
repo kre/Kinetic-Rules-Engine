@@ -256,28 +256,29 @@ KOBJ.init = function(init_obj) {
 		    });
 };
 
+
 KOBJ.css=function(css){
-   var head = document.getElementsByTagName('head')[0],
-       style = document.createElement('style'),
-       rules = document.createTextNode(css);
-	KOBJstyle = document.getElementById('KOBJ_stylesheet');
-	if(KOBJstyle == null) {
-		style.type = 'text/css';
-		style.id = 'KOBJ_spreadsheet';
-		if(style.styleSheet) {
-			style.styleSheet.cssText = rules.nodeValue;
-		} else {
-			style.appendChild(rules);
-		}
-		head.appendChild(style);
-	} else {
-		if(KOBJstyle.styleSheet) {
-			KOBJstyle.styleSheet.cssText += rules.nodeValue;
-		} else {
-			KOBJstyle.appendChild(rules);
-		}
-	}
-};
+   var head=document.getElementsByTagName('head')[0],
+   style=document.createElement('style'),
+   rules=document.createTextNode(css);
+     style.type='text/css';
+   style.id='KOBJ_stylesheet';
+     KOBJstyle=document.getElementById('KOBJ_stylesheet');
+   if(KOBJstyle==null){
+       if(style.styleSheet){
+           style.styleSheet.cssText=rules.nodeValue;
+       }else{
+           style.appendChild(rules);
+       }
+   head.appendChild(style);
+   }else{
+       if(KOBJstyle.styleSheet){
+           KOBJstyle.styleSheet.cssText+=rules.nodeValue;
+       }else{
+           KOBJstyle.appendChild(rules);
+       }
+   }
+}; 
 
 
 KOBJ.require = function(url) {
