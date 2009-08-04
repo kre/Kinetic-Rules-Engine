@@ -19,6 +19,7 @@ use Data::Dumper;
 
 use Kynetx::Configure qw/:all/;
 
+# FIXME: don't hardcode this...
 use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
 use constant DEFAULT_JS_VERSION => '0.9';
 

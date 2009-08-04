@@ -1,3 +1,10 @@
+2009-08-04  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/JavaScript.pm (eval_datasource): refactored to use new
+	  Page.pm module.
+	* Kynetx/Predicates/Page.pm (get_pageinfo): added.  page:url now
+	  supported.  
+
 2009-07-15  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (eval_ruleset): Turn off logging for any ruleset

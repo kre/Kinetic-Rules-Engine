@@ -56,6 +56,7 @@ use Kynetx::Predicates::Markets qw/:all/;
 use Kynetx::Predicates::Location qw/:all/;
 use Kynetx::Predicates::Weather qw/:all/;
 use Kynetx::Predicates::MediaMarkets qw/:all/;
+use Kynetx::Predicates::Page qw/:all/;
 
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
@@ -200,6 +201,7 @@ my $this_session = {};
 my $BYU_req_info;
 $BYU_req_info->{'ip'} = '128.187.16.242'; # Utah (BYU)
 $BYU_req_info->{'referer'} = 'http://www.google.com/search?q=free+mobile+calls&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:official&client=firefox-a'; 
+$BYU_req_info->{'caller'} = 'http://www.windley.com/archives/2008/07?q=foo'; 
 $BYU_req_info->{'pool'} = APR::Pool->new;
 $BYU_req_info->{'kvars'} = '{"foo": 5, "bar": "fizz", "bizz": [1, 2, 3]}';
 $BYU_req_info->{'foozle'} = 'Foo';
@@ -448,13 +450,14 @@ add_decl_testcase(
     0);
 
 
+# not in allowed
 $str = <<_KRL_;
 page:env("foozle");
 _KRL_
 add_expr_testcase(
     $str,
     "",
-     mk_expr_node('str', 'Foo'),
+    mk_expr_node('str',''),
     0);
 
 $str = <<_KRL_;
@@ -464,6 +467,74 @@ add_expr_testcase(
     $str,
     "",
      mk_expr_node('str', '128.187.16.242'),
+    0);
+
+$str = <<_KRL_;
+page:url("protocol");
+_KRL_
+add_expr_testcase(
+    $str,
+    "",
+     mk_expr_node('str', 'http'),
+    0);
+
+
+$str = <<_KRL_;
+page:url("hostname");
+_KRL_
+add_expr_testcase(
+    $str,
+    "",
+     mk_expr_node('str', 'www.windley.com'),
+    0);
+
+
+$str = <<_KRL_;
+page:url("domain");
+_KRL_
+add_expr_testcase(
+    $str,
+    "",
+     mk_expr_node('str', 'windley.com'),
+    0);
+
+
+$str = <<_KRL_;
+page:url("tld");
+_KRL_
+add_expr_testcase(
+    $str,
+    "",
+     mk_expr_node('str', 'com'),
+    0);
+
+
+$str = <<_KRL_;
+page:url("port");
+_KRL_
+add_expr_testcase(
+    $str,
+    "",
+     mk_expr_node('num', 80),
+    0);
+
+$str = <<_KRL_;
+page:url("path");
+_KRL_
+add_expr_testcase(
+    $str,
+    "",
+     mk_expr_node('str', '/archives/2008/07'),
+    0);
+
+
+$str = <<_KRL_;
+page:url("query");
+_KRL_
+add_expr_testcase(
+    $str,
+    "",
+    mk_expr_node('str', 'q=foo'),
     0);
 
 $str = <<_KRL_;

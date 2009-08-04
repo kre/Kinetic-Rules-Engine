@@ -504,21 +504,7 @@ sub eval_datasource {
     } elsif ($source eq 'useragent') {
 	$val = Kynetx::Predicates::Useragent::get_useragent($req_info,$function);
     } elsif ($source eq 'page') {
-	if($function eq 'var') {
-	    my $vals = decode_json($req_info->{'kvars'});
-	    $val = $vals->{$args->[0]};
-	} elsif ($function eq 'id') {
-	    # we're really just generating JS here.
-	    $val = "K\$('".$args->[0]."').innerHTML";
-	} elsif($function eq 'env') {
-	    # FIXME: should only be able to get and test certain page env info
-	    # rulespaced env parameters
-	    if($req_info->{'rid'} && defined $req_info->{$req_info->{'rid'}.':'.$args->[0]}) {
-		$val = $req_info->{$req_info->{'rid'}.':'.$args->[0]};
-	    } elsif(defined $req_info->{$args->[0]}) {
-		$val = $req_info->{$args->[0]};
-	    }
-	}
+	$val = Kynetx::Predicates::Page::get_pageinfo($req_info,$function,$args);
     } elsif ($source eq 'datasource') {
 	$val = Kynetx::Datasets::get_datasource($rule_env,$args,$function);
     }

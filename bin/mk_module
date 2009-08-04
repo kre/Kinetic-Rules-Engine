@@ -10,9 +10,9 @@ use HTML::Template;
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'd:f:h';
+my $opt_string = 'd:f:h?';
 getopts( "$opt_string", \%opt ); # or &usage();
-&usage() if $opt{'h'};
+&usage() if $opt{'h'} || $opt{'?'};
 
 my $dirname = 0;
 $dirname = $opt{'d'};
