@@ -656,56 +656,105 @@ sub choose_action {
 
 
 sub eval_post_expr {
-    my($expr, $session, $req_info) = @_;
+    my($rule, $session, $req_info, $rule_env, $fired) = @_;
+    
+    my $js = '';
+
+    # set up post block execution
+    my($cons,$alt);
+    if (ref $rule->{'post'} eq 'HASH') { # it's an array if no post block
+	my $type = $rule->{'post'}->{'type'};
+	if($type eq 'fired') {
+	    $cons = $rule->{'post'}->{'cons'};
+	    $alt = $rule->{'post'}->{'alt'};
+	} elsif($type eq 'notfired') { # reverse sense
+	    $cons = $rule->{'post'}->{'alt'};
+	    $alt = $rule->{'post'}->{'cons'};
+	} elsif($type eq 'always') { # cons is executed on both paths
+	    $cons = $rule->{'post'}->{'cons'};
+	    $alt = $rule->{'post'}->{'cons'};
+	}
+    }
+
+    # there's only persistent expressions
+    if($fired) {
+	$js .= join(" ", 
+		    map {eval_persistent_expr($_, $session, $req_info, $rule_env, $rule->{'name'})} @{ $cons });
+    } else {
+	$js .= join(" ", 
+		    map {eval_persistent_expr($_, $session, $req_info, $rule_env, $rule->{'name'})} @{ $alt } );
+    }
+
+
+}
+
+sub eval_persistent_expr {
+    my($expr, $session, $req_info, $rule_env, $rule_name) = @_;
 
     my $logger = get_logger();
     $logger->debug("[post] ", $expr->{'type'});
 
     my $js = '';
-    case: for ($expr->{'type'}) {
-	/clear/ && do { 
+
+    if ($expr->{'action'} eq 'clear') {
+	if($expr->{'domain'} eq 'ent') {
 	    session_clear($req_info->{'rid'}, $session, $expr->{'name'});
-	    return $js;
-	};
-	/iterator/ && do {
-	    if(exists $expr->{'counter'}) {
-		my $val = $expr->{'value'};
-		$val = -$val if($expr->{'op'} eq '-=');
-		session_inc_by_from($req_info->{'rid'},
-				    $session,
-				    $expr->{'name'},
-				    $val,
-				    $expr->{'from'});
-	    }
-	    return $js;
-	};
-
-	/callbacks/ && do {
-
-	    # what the heck is this doing????
-	    foreach my $cb (@{$expr->{'callbacks'}}) {
-		my $t = $cb->{'value'};
-		my $a = $cb->{'attribute'};
-# huh?		$session->{$t} = 1;
-		$logger->debug("[post] Setting callback named $a = $t");
-		if($a eq 'id') {
-		    $js .= <<EJS;
-var e_$t = document.getElementById('$t');  
-Event.observe(e_$t, "click", function() {KOBJ.logger("$t")});
-EJS
-		} elsif ($a eq 'class') {
-		    $js .= <<EJS1;
-var e_$t = document.getElementsByClass('$t');  
-e_$t.each(function (c) {
-    Event.observe(c, "click", function() {KOBJ.logger("$t")})});
-EJS1
-	        } 
-	    }
-	    return $js;
-	};
+	}
+    } elsif ($expr->{'action'} eq 'set') {
+	if($expr->{'domain'} eq 'ent') {
+	    session_set($req_info->{'rid'}, $session, $expr->{'name'});
+	}
+    } elsif ($expr->{'action'} eq 'iterator') {
+	my $val = 
+	    den_to_exp(
+		eval_js_expr($expr->{'value'},
+			     $rule_env,
+			     $rule_name,
+			     $req_info,
+			     $session));
+	$val = -$val if($expr->{'op'} eq '-=');
+	if($expr->{'domain'} eq 'ent') {
+	    session_inc_by_from($req_info->{'rid'},
+				$session,
+				$expr->{'name'},
+				$val,
+				den_to_exp(
+				    eval_js_expr($expr->{'from'},
+						 $rule_env,
+						 $rule_name,
+						 $req_info,
+						 $session))
+		);
+	}
+    } elsif ($expr->{'action'} eq 'forget') {
+	if($expr->{'domain'} eq 'ent') {
+	    session_forget($req_info->{'rid'},
+			   $session,
+			   $expr->{'name'},
+			   $expr->{'regexp'});
+	}
+    } elsif ($expr->{'action'} eq 'mark') {
+	if($expr->{'domain'} eq 'ent') {
+	    my $url = defined $expr->{'with'} ?
+		den_to_exp(
+		    eval_js_expr($expr->{'with'},
+				 $rule_env,
+				 $rule_name,
+				 $req_info,
+				 $session)) 
+		: $req_info->{'caller'};
+#	    $logger->debug("Marking trail $expr->{'name'} with $url");
+	    session_push($req_info->{'rid'},
+			 $session,
+			 $expr->{'name'},
+			 $url
+			 );
+	}
     }
 
+    return $js;
 }
+
 
 
 sub get_precondition_test {

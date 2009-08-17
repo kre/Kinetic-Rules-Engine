@@ -232,7 +232,7 @@ cachable: 'cachable' cachetime(?)
      }
    | <error>
 
-cachetime: 'for' NUM period
+cachetime: 'for' NUM (periods | period)
      {$return = {
 	 'value' => $item[2],
 	 'period' => $item[3]
@@ -350,30 +350,6 @@ decl: VAR '=' expr
     | <error: Invalid decl: $text>
 
 
-# decl: VAR '=' VAR ':' VAR '(' expr(s? /,/) ')'
-#       {$return =
-#        {'lhs' => $item[1],
-#         'type' => 'data_source',
-#         'source' => $item[3],
-#         'function' => $item[5],
-#         'args' => $item[7]
-#        }
-#       }
-#     | VAR '=' 'counter' '.' VAR
-#       {$return =
-#        {'lhs' => $item[1],
-#         'type' => $item[3],
-#         'name' => $item[5]
-#        }
-#       }
-#     | VAR '=' HTML
-#       {$return =
-#        {'lhs' => $item[1],
-#         'type' => 'here_doc',
-#         'value' => $item[3]
-#        }
-#       }
-#     | <error: Invalid decl: $text>
 
 emit_block: 'emit' (HTML | STRING)
    {$return = $item[2];}
@@ -497,6 +473,48 @@ pred: 'not' pred
       }
     | '(' predexpr ')'
       {$return = $item[2]}
+    | 'seen' STRING 'in' var_domain ':' VAR timeframe(?)
+      {$return=
+       {'type' => 'seen_timeframe',
+	'domain' => $item[4],
+        'var' => $item[6],
+	'regexp' => $item[2],
+        'within' => (ref $item[7][0] eq 'HASH') ? $item[7][0]->{'within'} : undef,
+        'timeframe' => (ref $item[7][0] eq 'HASH') ? $item[7][0]->{'period'} : undef,
+       }
+      }
+    | 'seen' STRING ('before' | 'after') STRING 'in' var_domain ':' VAR
+      {$return=
+       {'type' => 'seen_compare',
+	'domain' => $item[6],
+        'var' => $item[8],
+	'regexp_1' => $item[2],
+	'regexp_2' => $item[4],
+	'op' => $item[3],
+       }
+      }
+    | var_domain ':' VAR predop expr timeframe 
+      {$return=
+       {'type' => 'persistent_ineq',
+	'domain' => $item[1],
+        'var' => $item[3],
+        'ineq' => $item[4],
+        'expr' => $item[5],
+        'within' => (ref $item[6] eq 'HASH') ? $item[6]->{'within'} : undef,
+        'timeframe' => (ref $item[6] eq 'HASH') ? $item[6]->{'period'} : undef,
+       }
+      }
+    | var_domain ':' VAR timeframe 
+      {$return=
+       {'type' => 'persistent_ineq',
+	'domain' => $item[1],
+        'var' => $item[3],
+        'ineq' => '==',
+        'expr' => Kynetx::Parser::mk_expr_node('bool','true'),
+        'within' => (ref $item[4] eq 'HASH') ? $item[4]->{'within'} : undef,
+        'timeframe' => (ref $item[4] eq 'HASH') ? $item[4]->{'period'} : undef,
+       }
+      }
     | expr predop expr
       {$return =
        {'type' => 'ineq',
@@ -509,7 +527,7 @@ pred: 'not' pred
 
 predop: '<=' | '>=' | '<' | '>' | '==' | '!=' | 'eq' | 'neq' | 'like'
 
-
+var_domain: 'ent' | 'app'
 
 
 #
@@ -522,22 +540,26 @@ callbacks: 'callbacks' '{' success(?) failure(?) '}'
       }
      }
 
-success: 'success' '{' click(s /;/) '}'
+success: 'success' '{' click(s /;/)  SEMICOLON(?) '}'
      {$return= $item[3] }
    
-failure: 'failure' '{' click(s /;/) '}'
+failure: 'failure' '{' click(s /;/)  SEMICOLON(?) '}'
      {$return= $item[3] }
    
-click: 'click' VAR '=' STRING
+click: 'click' VAR '=' STRING click_link(?)
      {$return=
       {'type' => $item[1],
        'attribute' => $item{VAR},
        'value' => $item{STRING},
+       'trigger' => $item[5][0],
       }
      }
      | <error>
 
-post_block: post '{' counter_expr SEMICOLON(?) '}' post_alternate(?)
+click_link: 'triggers' persistent_expr
+  {$return=$item[2]}
+
+post_block: post '{' persistent_expr(s? /;/) SEMICOLON(?) '}' post_alternate(?)
      {$return=
       {'type' => $item[1],
        'cons' => $item[3],
@@ -547,26 +569,42 @@ post_block: post '{' counter_expr SEMICOLON(?) '}' post_alternate(?)
   
 post: 'fired'
     | 'always'
+    | 'notfired'
 
 
-post_alternate: 'else' '{' counter_expr SEMICOLON(?) '}'
+post_alternate: 'else' '{' persistent_expr(s?  /;/) SEMICOLON(?) '}'
       {$return=$item[3]}
 
-counter_expr: counter_clear
-	    | counter_iterate
+persistent_expr: persistent_clear
+   | persistent_set
+   | persistent_iterate
+   | trail_forget
+   | trail_mark
 
-counter_clear: 'clear' 'counter' '.' VAR 
+
+persistent_clear: 'clear' var_domain ':' VAR 
      {$return=
-      {'type' => 'clear',
-       'counter' => $item[2],
+      {'action' => 'clear',
+       'type' => 'persistent',
+       'domain' => $item[2],
        'name' => $item[4],
       }
      }
 
-counter_iterate: 'counter' '.' VAR counter_op NUM counter_start(?)
+persistent_set: 'set' var_domain ':' VAR 
      {$return=
-      {'type' => 'iterator',
-       'counter' => $item[1],
+      {'action' => 'set',
+       'type' => 'persistent',
+       'domain' => $item[2],
+       'name' => $item[4],
+      }
+     }
+
+persistent_iterate: var_domain ':' VAR counter_op expr counter_start(?)
+     {$return=
+      {'action' => 'iterator',
+       'type' => 'persistent',
+       'domain' => $item[1],
        'name' => $item[3],
        'op' => $item[4],
        'value' => $item[5],
@@ -574,12 +612,35 @@ counter_iterate: 'counter' '.' VAR counter_op NUM counter_start(?)
       }
      }
     
+trail_forget: 'forget' STRING 'in' var_domain ':' VAR
+     {$return=
+      {'action' => 'forget',
+       'type' => 'persistent',
+       'domain' => $item[4],
+       'name' => $item[6],
+       'regexp' => $item[2],
+      }
+     }
+
+trail_mark: 'mark' var_domain ':' VAR trail_with(?)
+     {$return=
+      {'action' => 'mark',
+       'type' => 'persistent',
+       'domain' => $item[2],
+       'name' => $item[4],
+       'with' => $item[5][0],
+      }
+     }
+
+trail_with: 'with' expr
+   {$return = $item[2]}
+   
 
 counter_op: '+='
           | '-='
           | <error>
 
-counter_start: 'from' NUM
+counter_start: 'from' expr
 
 expr: term term_op expr
       {$return=
@@ -624,10 +685,10 @@ factor: NUM
         {$return=Kynetx::Parser::mk_expr_node('bool',$item[1])}
       | 'false'
         {$return=Kynetx::Parser::mk_expr_node('bool',$item[1])}
+      | persistent_var
+      | trail_exp
       | simple_pred 
       | qualified_pred
-      | counter_pred
-      | counter
       | VAR   # if this isn't after 'true' and 'false' they'll be vars
         {$return=Kynetx::Parser::mk_expr_node('var',$item[1])}
       | '[' expr(s? /,/) ']'
@@ -643,9 +704,30 @@ hash_line: STRING ':' expr
    {$return= {'lhs' => $item[1], 
               'rhs' => $item[3]}}
 
-counter: 'counter' '.' VAR
-     {$return=Kynetx::Parser::mk_expr_node('counter',$item[3])}
+persistent_var: var_domain ':' VAR
+     {$return=
+      {'type' => 'persistent',
+       'domain' => $item[1],
+       'name' => $item[3],
+      }
+     }
 
+trail_exp: 'current' var_domain ':' VAR 
+     {$return=
+      {'type' => 'trail_history',
+       'offset' => Kynetx::Parser::mk_expr_node('num','0'),
+       'domain' => $item[2],
+       'name' => $item[4],
+      }
+     }
+ | 'history' expr var_domain ':' VAR 
+     {$return=
+      {'type' => 'trail_history',
+       'offset' => $item[2],
+       'domain' => $item[3],
+       'name' => $item[5],
+      }
+     }
 
 simple_pred: VAR '(' expr(s? /,/) ')' 
       {$return=
@@ -664,26 +746,31 @@ qualified_pred: VAR ':' VAR '(' expr(s? /,/) ')'
        }
       }
 
-# FIXME: use predop here?  
-counter_pred: 'counter' '.' VAR INEQUALITY NUM timeframe(?)
-      {$return=
-       {'type' => 'counter_pred',
-        'name' => $item[3],
-        'ineq' => $item[4],
-        'value' => $item[5],
-        'within' => (ref $item[6][0] eq 'HASH') ? $item[6][0]->{'within'} : undef,
-        'timeframe' => (ref $item[6][0] eq 'HASH') ? $item[6][0]->{'period'} : undef,
-       }
-      }
 
-timeframe: 'within' NUM period
+timeframe: 'within' expr (periods | period)
       {$return=
        {'within' => $item[2],
         'period' => $item[3]
        }
       }
 
-period: 'years'
+period: 'year'
+   {$return = $item[1].'s'}
+ | 'month'
+   {$return = $item[1].'s'}
+ | 'week'
+   {$return = $item[1].'s'}
+ | 'day'
+   {$return = $item[1].'s'}
+ | 'hour'
+   {$return = $item[1].'s'}
+ | 'minute'
+   {$return = $item[1].'s'}
+ | 'second'
+   {$return = $item[1].'s'}
+ | <error>
+
+periods: 'years'
       | 'months'
       | 'weeks'
       | 'days'

@@ -6,14 +6,14 @@ ruleset 10 {
     pre {
     }
 
-    if counter.archive_pages > 2 within 3 days then 
-      alert("You win the prize!  You've seen " + archive_pages + " pages from the archives!");
+    if ent:archive_pages > 2 within 3 days then 
+      alert("You win the prize!  You've seen " + ent:archive_pages + " pages from the archives!");
 
 
     fired {
-      clear counter.archive_pages; 
+      clear ent:archive_pages; 
     } else {
-      counter.archive_pages += 1 from 1;  
+      ent:archive_pages += 2 from 1;  
     }
 
 

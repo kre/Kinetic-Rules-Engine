@@ -41,6 +41,9 @@ use LWP::Simple;
 use XML::XPath;
 use LWP::UserAgent;
 use JSON::XS;
+use Cache::Memcached;
+use Apache::Session::Memcached;
+use DateTime;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -57,11 +60,15 @@ use Kynetx::Predicates::Location qw/:all/;
 use Kynetx::Predicates::Weather qw/:all/;
 use Kynetx::Predicates::MediaMarkets qw/:all/;
 use Kynetx::Predicates::Page qw/:all/;
+use Kynetx::Session qw(:all);
+use Kynetx::Memcached qw(:all);
+use Kynetx::FakeReq qw(:all);
 
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
 
+my $logger = get_logger();
 
 
 # is_deeply(decode_json(
@@ -79,6 +86,10 @@ Log::Log4perl->easy_init($INFO);
 # testing Javascript expression evaluation
 # 
 
+# configure KNS
+Kynetx::Configure::configure();
+
+
 
 
 my (@expr_testcases, @decl_testcases, @pre_testcases, $str, $val, $krl);
@@ -94,6 +105,7 @@ sub add_expr_testcase {
     push(@expr_testcases, {'expr' => $val,
 		       'src' => $str,
 		       'js' => $js,
+		       'diag' => $diag,
 		       'val' => $expected eq 'unchanged' ? $val : $expected});
 }
 
@@ -107,6 +119,7 @@ sub add_decl_testcase {
 
     push(@decl_testcases, {'expr' => $val,
 			   'src' => $str,
+			   'diag' => $diag,
 			   'val' => $expected,
 	 });
 }
@@ -132,8 +145,10 @@ global {
    datasource twitter_search <- "http://search.twitter.com/search.json";
 }
 _KRL_
+
 $krl = Kynetx::Parser::parse_global_decls($krl_src);
     
+my $rid = 'abcd1234';
 my $rule_name = 'foo';
 
 my $rule_env = empty_rule_env();
@@ -194,9 +209,21 @@ $rule_env = extend_rule_env('store',{
  },$rule_env);
 
 
+# set up session
+$logger->debug("Initializing memcached");
+Kynetx::Memcached->init();
 
+my $r = new Kynetx::FakeReq();
 
-my $this_session = {};
+my $session = process_session($r);
+
+session_store($rid, $session, 'my_count', 2);
+
+session_push($rid, $session, 'my_trail', "http://www.windley.com/foo.html");
+session_push($rid, $session, 'my_trail', "http://www.kynetx.com/foo.html");
+session_push($rid, $session, 'my_trail', "http://www.windley.com/bar.html");
+
+session_set($rid, $session, 'my_flag');
 
 my $BYU_req_info;
 $BYU_req_info->{'ip'} = '128.187.16.242'; # Utah (BYU)
@@ -205,6 +232,7 @@ $BYU_req_info->{'caller'} = 'http://www.windley.com/archives/2008/07?q=foo';
 $BYU_req_info->{'pool'} = APR::Pool->new;
 $BYU_req_info->{'kvars'} = '{"foo": 5, "bar": "fizz", "bizz": [1, 2, 3]}';
 $BYU_req_info->{'foozle'} = 'Foo';
+$BYU_req_info->{'rid'} = $rid;
 
 
 
@@ -635,6 +663,47 @@ add_pre_testcase(
     0);
 
 
+$str = <<_KRL_;
+d = ent:my_count + 3
+_KRL_
+add_decl_testcase(
+    $str,
+    5,
+    0);
+
+$str = <<_KRL_;
+d = 2 * ent:my_count 
+_KRL_
+add_decl_testcase(
+    $str,
+    4,
+    0);
+
+$str = <<_KRL_;
+d = current ent:my_trail
+_KRL_
+add_decl_testcase(
+    $str,
+    "http://www.windley.com/bar.html",
+    0);
+
+$str = <<_KRL_;
+d = history 2 ent:my_trail
+_KRL_
+add_decl_testcase(
+    $str,
+    "http://www.windley.com/foo.html",
+    0);
+
+
+$str = <<_KRL_;
+d = (history 2 ent:my_trail).replace(/foo.html/,"hello.html") + ''
+_KRL_
+add_decl_testcase(
+    $str,
+    "http://www.windley.com/hello.html",
+    0);
+
 
 #$krl = Kynetx::Parser::parse_decl($str);
 #diag(Dumper($krl));
@@ -648,7 +717,7 @@ foreach my $case (@expr_testcases) {
     # diag(Dumper($case->{'expr'}));
     
     my $js = gen_js_expr($case->{'expr'});
-    my $e = eval_js_expr($case->{'expr'}, $rule_env, $rule_name,$BYU_req_info);
+    my $e = eval_js_expr($case->{'expr'}, $rule_env, $rule_name,$BYU_req_info, $session);
 
     #diag(Dumper($e));
     is($js,
@@ -667,9 +736,9 @@ foreach my $case (@decl_testcases) {
     
     my ($v,$e) = Kynetx::JavaScript::eval_js_decl(
 	$BYU_req_info, 
-	$rule_env, $rule_name, $this_session, 
+	$rule_env, $rule_name, $session, 
 	$case->{'expr'}) ;
-    #diag Dumper($e);
+    diag Dumper($e) if $case->{'diag'};
     is_deeply($e, 
 	      $case->{'val'},
 	      "Evaling Javascript " . $case->{'src'});
@@ -681,7 +750,7 @@ foreach my $case (@pre_testcases) {
     
     my $e = Kynetx::JavaScript::eval_js_pre(
 	       $BYU_req_info, 
-	       $rule_env, $rule_name, $this_session, 
+	       $rule_env, $rule_name, $session, 
 	       $case->{'expr'}) ;
     #diag(Dumper($e));
     is_deeply($e, 
@@ -718,7 +787,7 @@ _KRL_
 	    $BYU_req_info,
 	    $rule_env,
 	    $rule_name,
-	    $this_session,
+	    $session,
 	    $decl
 	    );
 
@@ -828,9 +897,10 @@ SKIP: {
 
     diag "Checking $check_url";
     my $response = $ua->get($check_url);
-    skip "No server available", 1 if (! $response->is_success);
+    skip "No server available", 1 unless ($response->is_success);
 
     my $ds_function = mk_datasource_function('datasource','"?q=rootbeer"', 0);
+    $logger->debug("Got $ds_function");
     contains_string(encode_json(&{$ds_function}('twitter_search')), 
 		    '{"page":1,"query":"rootbeer","completed_in":', 
 		    'user defined datasource');
@@ -853,6 +923,13 @@ is(infer_type('true'),'bool','inferring boolean');
 is(infer_type('false'),'bool','inferring boolean');
 is(infer_type([0,1,2]),'array','inferring array');
 is(infer_type({'a' => 0}),'hash','inferring hash');
+
+session_delete($rid, $session, 'my_count');
+session_delete($rid, $session, 'my_trail');
+session_delete($rid, $session, 'my_flag');
+
+session_cleanup($session);
+
 
 1;
 

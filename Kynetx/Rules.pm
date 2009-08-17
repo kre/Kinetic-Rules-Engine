@@ -288,19 +288,6 @@ sub eval_rule {
 			$rule->{'name'});
 
 
-    # set up post block execution
-    my($cons,$alt);
-    if (ref $rule->{'post'} eq 'HASH') { # it's an array if no post block
-	my $type = $rule->{'post'}->{'type'};
-	if($type eq 'fired') {
-	    $cons = $rule->{'post'}->{'cons'};
-	    $alt = $rule->{'post'}->{'alt'};
-	} elsif($type eq 'always') { # cons is executed on both paths
-	    $cons = $rule->{'post'}->{'cons'};
-	    $alt = $rule->{'post'}->{'cons'};
-	}
-
-    }
 
     my $js = '';
     
@@ -309,6 +296,7 @@ sub eval_rule {
     $req_info->{'labels'} = [];
     $req_info->{'tags'} = [];
 
+    my $fired = 0;
     if ($pred_value) {
 
 	$logger->info("fired");
@@ -317,20 +305,20 @@ sub eval_rule {
 	# chunk of Javascrip and this is where we deliver... 
 	$js .= Kynetx::Actions::build_js_load($rule, $req_info, $rule_env, $session); 
 	
-	$js .= Kynetx::Actions::eval_post_expr($cons, $session, $req_info) if(defined $cons);
-
+	$fired = 1;
 	push(@{ $req_info->{'results'} }, 'fired');
 
 
     } else {
 	$logger->info("did not fire");
 
-	$js .= Kynetx::Actions::eval_post_expr($alt, $session, $req_info) if(defined $alt);
-
+	$fired = 0;
 	# put this in the logging DB
 	push(@{ $req_info->{'results'} }, 'notfired');
 
     }
+
+    $js .= Kynetx::Actions::eval_post_expr($rule, $session, $req_info, $rule_env, $fired);
 
     # save things for logging
     push(@{ $req_info->{'names'} }, $req_info->{'rid'}.':'.$rule->{'name'});

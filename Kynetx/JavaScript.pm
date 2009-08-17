@@ -311,72 +311,57 @@ sub eval_js_expr {
     my $logger = get_logger();
 #    $logger->debug("Rule env: ", sub { Dumper($rule_env) });
 
-    case: for ($expr->{'type'}) {
-	/str/ && do {
-	    return $expr;
-	};
-	/num/ && do {
-	    return  $expr ;
-	};
-	/regexp/ && do {
-	    return  $expr ;
-	};
-	/var/ && do {
-	    my $v = lookup_rule_env($expr->{'val'},$rule_env);
-	    unless (defined $v) {
-		$logger->warn("Variable '", $expr->{'val'}, "' is undefined");
-	    }
-	    $logger->debug($rule_name.':'.$expr->{'val'}, " -> ", $v, ' Type -> ', infer_type($v));
-	    return  {'type' => infer_type($v),
-                     'val' =>  $v};
-	};
-	/bool/ && do {
-	    return  $expr ;
-	};
-	/array/ && do {
-	    return  { 'type' => 'array',
-		      'val' => eval_js_rands($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  } ;
-	};
-	/hash/ && do {
-	    return  { 'type' => 'hash',
-		      'val' => eval_js_hash($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  } ;
-	};
-	/prim/ && do {
-	    return eval_js_prim($expr, $rule_env, $rule_name, $req_info, $session);
-	};
+    if ($expr->{'type'} eq 'str' ) {
+	return $expr;
+    } elsif($expr->{'type'} eq 'num') {
+	return  $expr ;
+    } elsif($expr->{'type'} eq 'regexp') {
+	return  $expr ;
+    } elsif($expr->{'type'} eq 'var') {
+	my $v = lookup_rule_env($expr->{'val'},$rule_env);
+	unless (defined $v) {
+	    $logger->warn("Variable '", $expr->{'val'}, "' is undefined");
+	}
+	$logger->debug($rule_name.':'.$expr->{'val'}, " -> ", $v, ' Type -> ', infer_type($v));
+	return  {'type' => infer_type($v),
+		 'val' =>  $v};
+    } elsif($expr->{'type'} eq 'bool') {
+	return  $expr ;
+    } elsif($expr->{'type'} eq 'array') {
+	return  { 'type' => 'array',
+		  'val' => eval_js_rands($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  } ;
+    } elsif($expr->{'type'} eq 'hashraw') {
+	return  { 'type' => 'hash',
+		  'val' => eval_js_hash($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  } ;
+    } elsif($expr->{'type'} eq 'prim') {
+	return eval_js_prim($expr, $rule_env, $rule_name, $req_info, $session);
+    } elsif($expr->{'type'} eq 'operator') {
+	return  Kynetx::Operators::eval_operator($expr, $rule_env, $rule_name, $req_info, $session);
+    } elsif($expr->{'type'} eq 'qualified') {
+	my $den = eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+	# get the values
+	for (@{ $den }) {
+	    $_ = den_to_exp($_);
+	}
+	my $v = eval_datasource($req_info,
+				$rule_env,
+				$rule_name,
+				$expr->{'source'},
+				$expr->{'predicate'},
+				$den
+	    );
 
-	/operator/ && do {
-	    return  Kynetx::Operators::eval_operator($expr, $rule_env, $rule_name, $req_info, $session);
-	};
- 	/qualified/ && do {
+	$logger->debug("[JS Expr] ", $expr->{'source'}, ":", $expr->{'predicate'}, " -> ", $v);
 
-	    my $den = eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-
-	    # get the values
-	    for (@{ $den }) {
-		$_ = den_to_exp($_);
-	    }
-
-	    my $v = eval_datasource($req_info,
-				    $rule_env,
-				    $rule_name,
-				    $expr->{'source'},
-				    $expr->{'predicate'},
-				    $den
-		);
-
-	    $logger->debug("[JS Expr] ", $expr->{'source'}, ":", $expr->{'predicate'}, " -> ", $v);
-
-	    return {'type' => infer_type($v),
-		    'val' => $v};
- 	};
-	/counter/ && do {
-	    my $v = eval_counter($req_info, $session, $expr->{'val'});
-	    return {'type' => infer_type($v),
-		    'val' => $v};
-	};
-
-    } 
+	return {'type' => infer_type($v),
+		'val' => $v};
+    } elsif($expr->{'type'} eq 'persistent' || 
+	    $expr->{'type'} eq 'trail_history' 
+	) {
+	my $v = eval_persistent($req_info, $rule_env, $rule_name, $session, $expr);
+	return {'type' => infer_type($v),
+		'val' => $v};
+    }
 
 }
 
@@ -513,15 +498,43 @@ sub eval_datasource {
 
 }
 
-sub eval_counter {
-    my($req_info, $session, $name) = @_;
+sub eval_persistent {
+    my($req_info, $rule_env, $rule_name, $session, $expr) = @_;
 
-#    my $logger = get_logger();
-#    $logger->debug("RID: ", $req_info->{'rid'}, "Name: $name");
+
+    my $logger = get_logger();
+    my $v = 0;
+
+
+    if($expr->{'domain'} eq 'ent') {
+	if(defined $expr->{'offset'}) {
+
+	    my $idx = den_to_exp(
+		eval_js_expr($expr->{'offset'}, 
+			     $rule_env, 
+			     $rule_name, 
+			     $req_info, 
+			     $session) );
+
+	    $v = session_history($req_info->{'rid'}, 
+				 $session, 
+				 $expr->{'name'}, 
+				 $idx);
+	    $logger->debug("[persistent trail] $expr->{'name'} at $idx -> $v");
+
+	} else {
+	    $v = session_get($req_info->{'rid'}, $session, $expr->{'name'});
+	    $logger->debug("[persistent] $expr->{'name'} -> $v");
+	}
     
-    return session_get($req_info->{'rid'}, $session, $name);
+    }
+    
+    return $v;
 
 }
+
+
+
 
 sub eval_heredoc {
     my ($val) = @_;

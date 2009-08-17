@@ -1,3 +1,15 @@
+2009-08-17  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Parser.pm: Added syntax for persistents
+	* Kynetx/PrettyPrinter.pm: Added syntax for persistents
+	* Kynetx/JavaScript.pm: Added support for persistent expressions
+	* Kynetx/Predicates.pm: Added support for persistent predicate
+	  expressions 
+	* Kynetx/Session.pm: Added functions to support trails
+	* Kynetx/Rules.pm (eval_rule): Refactored postludes
+	* Kynetx/Actions.pm (eval_persistent_expr): added to support
+	  generalized persistent expressions in postludes
+
 2009-08-04  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/JavaScript.pm (eval_datasource): refactored to use new

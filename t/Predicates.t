@@ -43,6 +43,9 @@ Log::Log4perl->easy_init($INFO);
 
 use LWP::Simple;
 use XML::XPath;
+use Cache::Memcached;
+use Apache::Session::Memcached;
+use DateTime;
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Predicates qw/:all/;
@@ -50,11 +53,20 @@ use Kynetx::Util qw(:all);
 use Kynetx::JavaScript qw(:all);
 use Kynetx::Environments qw(:all);
 use Kynetx::Parser;
+use Kynetx::Session qw(:all);
+use Kynetx::Memcached qw(:all);
+use Kynetx::FakeReq qw(:all);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
+my $logger = get_logger();
 
+
+# configure KNS
+Kynetx::Configure::configure();
+
+my $rid = 'abcd1234';
 my $rule_name = 'foo';
 
 my $rule_env = empty_rule_env();
@@ -86,9 +98,26 @@ $rule_env = extend_rule_env('book_data', {
 
 
 my $Amazon_req_info;
+$Amazon_req_info->{'rid'} = $rid;
 $Amazon_req_info->{'ip'} = '72.21.203.1'; # Seattle (Amazon)
 $Amazon_req_info->{'kvars'} = '{"foo": 5, "bar": "fizz", "bizz": [1, 2, 3]}';
 
+
+# set up session
+$logger->debug("Initializing memcached");
+Kynetx::Memcached->init();
+
+my $r = new Kynetx::FakeReq();
+
+my $session = process_session($r);
+
+session_store($rid, $session, 'my_count', 2);
+
+session_push($rid, $session, 'my_trail', "http://www.windley.com/foo.html");
+session_push($rid, $session, 'my_trail', "http://www.kynetx.com/foo.html");
+session_push($rid, $session, 'my_trail', "http://www.windley.com/bar.html");
+
+session_set($rid, $session, 'my_flag');
 
 my (@test_cases, $krl_src, $krl);
 
@@ -103,7 +132,7 @@ sub add_testcase {
     push(@test_cases, {'expr' => $val,
 		       'val' => $expected,
 		       'req_info' => $req_info,
-		       'session' => {},
+		       'session' => $session,
 		       'src' =>  $str,
 	 }
 	 );
@@ -1149,8 +1178,143 @@ add_testcase(
     $Amazon_req_info
     );
 
+
+# entity vars
+$krl_src = <<_KRL_;
+ent:my_count < 3
+_KRL_
+
+add_testcase(
+    $krl_src,
+    1,
+    $Amazon_req_info
+    );
+
+
+# entity vars
+$krl_src = <<_KRL_;
+ent:my_count == 3
+_KRL_
+
+add_testcase(
+    $krl_src,
+    0,
+    $Amazon_req_info
+    );
+
+
+
+$krl_src = <<_KRL_;
+ent:my_count > 1
+_KRL_
+
+add_testcase(
+    $krl_src,
+    1,
+    $Amazon_req_info
+    );
+
+sleep(2);
+
+$krl_src = <<_KRL_;
+ent:my_count > 1 within 40 seconds
+_KRL_
+
+add_testcase(
+    $krl_src,
+    1,
+    $Amazon_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+ent:my_count > 1 within 1 seconds
+_KRL_
+
+add_testcase(
+    $krl_src,
+    0,
+    $Amazon_req_info
+    );
+
+$krl_src = <<_KRL_;
+seen "windley.com" in ent:my_trail 
+_KRL_
+
+add_testcase(
+    $krl_src,
+    1,
+    $Amazon_req_info
+    );
+
+$krl_src = <<_KRL_;
+seen "google.com" in ent:my_trail 
+_KRL_
+
+add_testcase(
+    $krl_src,
+    0,
+    $Amazon_req_info
+    );
+
+$krl_src = <<_KRL_;
+seen "kynetx.com/foo.html" after "windley.com/foo.html" in ent:my_trail 
+_KRL_
+
+add_testcase(
+    $krl_src,
+    1,
+    $Amazon_req_info
+    );
+
+$krl_src = <<_KRL_;
+seen "kynetx.com/foo.html" before "windley.com/foo.html" in ent:my_trail 
+_KRL_
+
+add_testcase(
+    $krl_src,
+    0,
+    $Amazon_req_info
+    );
+
+$krl_src = <<_KRL_;
+seen "windley.com" in ent:my_trail within 1 minutes
+_KRL_
+
+add_testcase(
+    $krl_src,
+    1,
+    $Amazon_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+seen "windley.com" in ent:my_trail within 1 second
+_KRL_
+
+add_testcase(
+    $krl_src,
+    0,
+    $Amazon_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+ent:my_flag
+_KRL_
+
+add_testcase(
+    $krl_src,
+    1,
+    $Amazon_req_info
+    );
+
+
+
+
 #$krl = Kynetx::Parser::parse_predexpr($krl_src);
 #diag(Dumper($krl));
+
 
 
 
@@ -1173,6 +1337,14 @@ foreach my $case (@test_cases) {
     
 }
 
+# cleanup
+
+session_delete($rid, $session, 'my_count');
+session_delete($rid, $session, 'my_trail');
+session_delete($rid, $session, 'my_flag');
+
+session_cleanup($session);
+
 exit;
 
 my @rule;
@@ -1192,6 +1364,8 @@ $Mobile_req_info->{'ua'} = '"Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:
 
 ok(! eval_predicates($Mobile_req_info, $rule_env, 0, \@rule),
    'testing not mobile()');
+
+
 
 1;
 

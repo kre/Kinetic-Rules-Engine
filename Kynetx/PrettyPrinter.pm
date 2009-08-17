@@ -358,7 +358,7 @@ sub pp_select {
     
     my $o = $beg;
 
-    $o .= 'select using "' . $node->{'pattern'} . '" setting (';
+    $o .= 'select using ' . pp_string($node->{'pattern'}) . ' setting (';
     $o .= join ", ", @{$node->{'vars'}};
     $o .= ")\n";
 
@@ -458,10 +458,46 @@ sub pp_predexpr {
     my $expr = shift;
 
     case: for ($expr->{'type'}) {
-	/ineq/ && do {
+	/^ineq$/ && do {
 	    return join(' ' . $expr->{'op'} . ' ', 
 			pp_rands($expr->{'args'}))  ;
         };
+	/seen_timeframe/ && do {
+	    return join(' ', 
+			('seen',
+			 pp_string($expr->{'regexp'}),
+			 'in',
+			 pp_var_domain($expr->{'domain'}, 
+				       $expr->{'var'}),
+			 pp_timeframe($expr)
+			));
+	};
+	/seen_compare/ && do {
+	    return join(' ', 
+			('seen',
+			 pp_string($expr->{'regexp_1'}),
+			 $expr->{'op'},
+			 pp_string($expr->{'regexp_2'}), 
+			 'in',
+			 pp_var_domain($expr->{'domain'}, $expr->{'var'})
+			));
+	};
+	/persistent_ineq/ && do {
+	    if($expr->{'ineq'} eq '==' &&
+	       $expr->{'expr'}->{'val'} eq 'true') {
+		return join(' ', 
+			    (pp_var_domain($expr->{'domain'}, $expr->{'var'}),
+			     pp_timeframe($expr)
+			    ));
+	    } else {
+		return join(' ', 
+			    (pp_var_domain($expr->{'domain'}, $expr->{'var'}),
+			     $expr->{'ineq'},
+			     pp_expr($expr->{'expr'}),
+			     pp_timeframe($expr)
+			    ));
+	    }
+	};
 	/^pred$/ && do {
 	    return pp_pred($expr);
 	};
@@ -473,11 +509,18 @@ sub pp_predexpr {
 
 }
 
+sub pp_string {
+    my $str = shift;
+    return '"'.$str.'"';
+}
+
 
 sub pp_pred {
     my $pred = shift;
     
     if($pred->{'op'} eq 'negation') {
+	return 'not' . pp_predexpr($pred->{'args'}->[0]) ;
+    } elsif($pred->{'op'} eq 'negation') {
 	return 'not' . pp_predexpr($pred->{'args'}->[0]) ;
     } else {
 	return 
@@ -495,32 +538,6 @@ sub pp_predrands {
     map {pp_predexpr($_)} @{ $rands };
 
 }
-
-
-# sub pp_pred{
-#     my ($node, $indent) = @_;
-#     my $beg = " "x$indent;
-#     my $o = $beg;
-#     if($node->{'type'} eq 'simple') {
-# 	$o .= $node->{'predicate'} . "(";
-# 	$o .= join ", ", pp_rands($node->{'args'});
-# 	$o .= ")";
-#     } elsif($node->{'type'} eq 'qualified') {
-# 	$o .= $node->{'source'} . ':';
-# 	$o .= $node->{'predicate'} . "(";
-# 	$o .= join ", ", pp_rands($node->{'args'});
-# 	$o .= ")";
-#     } else { #counter
-# 	$o .= $node->{'type'} . "." . $node->{'name'};
-# 	$o .= " " . $node->{'ineq'} . " ";
-# 	$o .= $node->{'value'};
-# 	if(defined $node->{'within'}) {
-# 	    $o .= " within " . $node->{'within'} . " " . $node->{'timeframe'};
-# 	}
-#     }
-
-#     return $o;
-# }
 
 
 sub pp_actions {
@@ -651,10 +668,26 @@ sub pp_callback {
     my $beg = " "x$indent;
     my $o = $beg;
 
-    $o .= $node->{'type'} . " " . $node->{'attribute'} . "=";
-    $o .= '"' . $node->{'value'} . '"';
+    $o .= join(' ',
+	       ($node->{'type'},
+		$node->{'attribute'},
+		"=",
+		pp_string($node->{'value'}),
+		pp_callback_trigger($node),
+		)
+	);
 
     return $o;
+}
+
+sub pp_callback_trigger {
+    my($node) = @_;
+    my $o = '';
+    if(defined $node->{'trigger'}) {
+	$o .= 'triggers '. pp_persistent_expr($node->{'trigger'});
+    }
+    return $o;
+	
 }
 
 
@@ -664,41 +697,75 @@ sub pp_post {
     my $o = $beg;
     $o .= $node->{'type'} . " {\n";
 
-    $o .= pp_counter_expr($node->{'cons'}, $indent+$g_indent);
+    $o .= join ";\n", 
+          map {pp_post_expr($_, $indent+$g_indent)} @{$node->{'cons'}};
 
-    if(defined $node->{'alt'}) {
+    if(defined $node->{'alt'} && $node->{'alt'}) {
 	$o .= $beg . "} else {\n";
-	
-	$o .= pp_counter_expr($node->{'alt'}, $indent+$g_indent);
-
+	$o .= join ";\n", 
+	       map {pp_post_expr($_, $indent+$g_indent)} @{$node->{'alt'}};
     }
 
     $o .= $beg . "}\n";
     return $o;
 }
 
-
-sub pp_counter_expr {
+sub pp_post_expr {
     my ($node, $indent) = @_;
     my $beg = " "x$indent;
     my $o = $beg;
-
-    my $counter =  "counter" . "." . $node->{'name'};
-
-    if($node->{'type'} eq 'iterator') {
-	$o .= $counter . " " . $node->{'op'} . " " . $node->{'value'};
-	if(defined $node->{'from'}) {
-	    $o .= " from " . $node->{'from'};
-	}
-	$o .= ";\n";
-	
-    } else { # clear
-
-	$o .= "clear " . $counter . ";\n";
+    if($node->{'type'} eq 'persistent') {
+	$o.= pp_persistent_expr($node);
     }
+    return $o . ";\n";
+}
+
+
+sub pp_persistent_expr {
+    my ($node) = @_;
+    
+    my $o = '';
+
+    if($node->{'action'} eq 'set') {
+	$o .= 'set ' . pp_var_domain($node->{'domain'}, $node->{'name'});
+    } elsif($node->{'action'} eq 'clear') {
+	$o .= 'clear ' . pp_var_domain($node->{'domain'}, $node->{'name'});
+    } elsif($node->{'action'} eq 'iterator') {
+	$o .= join(' ',
+		   (pp_var_domain($node->{'domain'}, $node->{'name'}),
+		    $node->{'op'},
+		    pp_expr($node->{'value'}),
+		    'from',
+		    pp_expr($node->{'from'}),
+		   ));
+    } elsif($node->{'action'} eq 'forget') {
+	$o .= join(' ',
+		   ('forget',
+		    pp_string($node->{'regexp'}),
+		    'in',
+		    pp_var_domain($node->{'domain'}, $node->{'name'}),
+		   ));
+    } elsif($node->{'action'} eq 'mark') {
+	$o .= join(' ',
+		   ('mark',
+		    pp_var_domain($node->{'domain'}, $node->{'name'}),
+		    pp_mark_with($node),
+		   ));
+    } 
+	
 
     return $o;
 }
+
+sub pp_mark_with {
+    my $node = shift;
+    if (defined $node->{'with'}) {
+	return 'with ' . pp_expr($node->{'with'});
+    } else {
+	return '';
+    }
+}
+
 
 # expressions below
 sub pp_expr {
@@ -707,7 +774,7 @@ sub pp_expr {
 
     case: for ($expr->{'type'}) {
 	/str/ && do {
-	    return '"' . $expr->{'val'} . '"';
+	    return pp_string($expr->{'val'});
 	};
 	/num/ && do {
 	    return  $expr->{'val'} ;
@@ -730,10 +797,17 @@ sub pp_expr {
 	/prim/ && do {
 	    return pp_prim($expr);
 	};
-	/^counter$/ && do {
+	/^persistent$/ && do {
+	    return pp_var_domain($expr->{'domain'}, $expr->{'name'}) ;
+	};
+	/trail_history/ && do {
 	    my $o = '';
-	    $o .= 'counter.' . $expr->{'val'} ;
-	    return $o;
+	    if($expr->{'offset'}->{'val'} == 0) {
+		$o .= 'current ';
+	    } else {
+		$o .= 'history ' . pp_expr($expr->{'offset'});
+	    }
+	    return $o . ' ' . pp_var_domain($expr->{'domain'}, $expr->{'name'});
 	};
 	/simple/ && do {
 	    my $o = '';
@@ -750,16 +824,16 @@ sub pp_expr {
 	    $o .= ")";
 	    return  $o ;
 	};
-	/counter_pred/ && do {
-	    my $o = '';
-	    $o .= "counter." . $expr->{'name'};
-	    $o .= " " . $expr->{'ineq'} . " ";
-	    $o .= $expr->{'value'};
-	    if(defined $expr->{'within'}) {
-		$o .= " within " . $expr->{'within'} . " " . $expr->{'timeframe'};
-	    }
-	    return  $o ;
-	};
+# 	/counter_pred/ && do {
+# 	    my $o = '';
+# 	    $o .= "counter." . $expr->{'name'};
+# 	    $o .= " " . $expr->{'ineq'} . " ";
+# 	    $o .= $expr->{'value'};
+# 	    if(defined $expr->{'within'}) {
+# 		$o .= " within " . $expr->{'within'} . " " . $expr->{'timeframe'};
+# 	    }
+# 	    return  $o ;
+# 	};
 	/operator/ && do {
 	    my $o = '';
 	    $o .= pp_expr($expr->{'obj'}) . '.' . $expr->{'name'} . '(';
@@ -770,6 +844,20 @@ sub pp_expr {
 	
     } 
 
+}
+
+sub pp_timeframe {
+    my $expr = shift;
+    my $o = '';
+    if(defined $expr->{'within'}) {
+	$o .= " within " . pp_expr($expr->{'within'}) . " " . $expr->{'timeframe'};
+    }
+    return $o;
+}
+
+sub pp_var_domain {
+    my ($domain, $name) = @_;
+    return $domain . ':' . $name;
 }
 
 

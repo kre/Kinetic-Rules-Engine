@@ -43,6 +43,9 @@ use Kynetx::Configure qw(:all);
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
+use constant MAX_STACK_SIZE => 20;
+
+
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
@@ -64,6 +67,13 @@ session_inc_by_from
 session_set
 session_clear
 session_true
+session_push
+session_pop
+session_history
+session_forget
+session_seen
+session_seen_within
+session_seen_compare
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -227,13 +237,13 @@ sub session_within {
 	epoch => session_created($rid, $session, $var)
 	);
 
-    $logger->debug("[session:$var] created ", $desired->datetime());
+#    $logger->debug("[session:$var] created ", $desired->datetime());
 
-    $logger->debug("Timeframe: $timeframe, Timevalue: $timevalue");
+#    $logger->debug("Timeframe: $timeframe, Timevalue: $timevalue");
 
     $desired->add( $timeframe => $timevalue );
 
-    $logger->debug("[counter:$var] ",
+    $logger->debug("[session:$var] ",
 		   $timeframe, " -> ", $timevalue,
 		   ' desired ', $desired->datetime()
 	);
@@ -278,5 +288,145 @@ sub session_true {
     my ($rid, $session, $var) = @_;
     return session_get($rid, $session, $var);
 }
+
+# stack stuff
+#
+# we want to know the creation time of each member of the stack so...
+#  - we store each value as a tuple [value, created]
+#
+sub session_push {
+    my ($rid, $session, $var, $val) = @_;
+    my $logger = get_logger();
+
+    my $res = [];
+    my $tuple = [$val, DateTime->now->epoch];
+    if (session_defined($rid, $session, $var)) {
+
+	my $s = session_get($rid, $session, $var);
+	if(ref $s eq 'ARRAY') {
+	    unshift @{ $s }, $tuple;
+	    # store the array after slicing it to the right length
+	    if(scalar @{$s} >= MAX_STACK_SIZE) {
+		delete $s->[MAX_STACK_SIZE]
+	    }
+	    $res = session_store($rid, $session, $var, $s);
+	    $logger->debug("Pushing $val onto $var");
+	} else {
+	    # not sure what to do but make a stack of it.
+	    $res = session_store($rid, $session, $var, 
+				 [$tuple, 
+				  [$s, session_created($rid, $session, $var)]
+				 ]);
+	    $logger->debug("Pushing $val onto $var with previous");
+
+	}
+
+    } else {
+
+	$res = session_store($rid, $session, $var, [$tuple]);
+	$logger->debug("Pushing $val onto $var as new trail");
+	
+    }
+
+    return $res;
+}
+
+sub session_pop {
+    my ($rid, $session, $var) = @_;
+
+    my $res = undef;
+    my $s = session_get($rid, $session, $var);
+    if(ref $s eq 'ARRAY') {
+	$res = shift @{ $s };
+    }
+    return $res->[0]; # just the value
+}
+
+sub session_history {
+    my ($rid, $session, $var, $index) = @_;
+
+    my $res = undef;
+    my $s = session_get($rid, $session, $var);
+    if(ref $s eq 'ARRAY') {
+	$res = $s->[$index];
+    }
+    return $res->[0];
+}
+
+
+sub session_seen_proto {
+    my ($rid, $session, $var, $regexp) = @_;
+#    my $logger = get_logger();
+
+    my $res = undef;
+    my $s = session_get($rid, $session, $var);
+
+    for my $i (0..@{$s}-1){
+	if($s->[$i]->[0] =~ /$regexp/) {
+	    $res = $i;
+	    last;
+	}
+    }
+#    $logger->debug("Found ". $s->[$res]->[0]) if defined $res;
+    # return index and date created
+    if(defined $res) {
+	return [$res, $s->[$res]->[1]];
+    } else {
+	return undef;
+    }
+}
+
+sub session_seen {
+    my ($rid, $session, $var, $regexp) = @_;
+
+    my $seen = session_seen_proto($rid, $session, $var, $regexp);
+    return $seen->[0];
+}
+
+sub session_seen_within {
+    my ($rid, $session, $var, $regexp, $timevalue, $timeframe) = @_;
+    my $logger = get_logger();
+
+    my $seen = session_seen_proto($rid, $session, $var, $regexp);
+
+    # the regexp isn't even there...let alone within a timeframe
+    return 0 unless (defined $seen->[0]);
+
+    my $desired = DateTime->from_epoch( 
+	epoch => $seen->[1]
+	);
+
+    $logger->debug("[session:$var] created ", $desired->datetime());
+
+    $logger->debug("Timeframe: $timeframe, Timevalue: $timevalue");
+
+    $desired->add( $timeframe => $timevalue );
+
+    $logger->debug("[session:$var] ",
+		   $timeframe, " -> ", $timevalue,
+		   ' desired ', $desired->datetime()
+	);
+
+    return Kynetx::Util::after_now($desired);
+}
+
+# compares to see if 1 was added before 2
+sub session_seen_compare {
+    my ($rid, $session, $var, $regexp1, $regexp2) = @_;
+    my $seen1 = session_seen_proto($rid, $session, $var, $regexp1);
+    my $seen2 = session_seen_proto($rid, $session, $var, $regexp2);
+
+    return $seen1->[0] < $seen2->[0]
+}
+
+sub session_forget {
+    my ($rid, $session, $var, $regexp) = @_;
+    my $s = session_get($rid, $session, $var);
+    my $seen = session_seen_proto($rid, $session, $var, $regexp);
+    splice(@{$s}, $seen->[0], 1) if defined $seen->[0];
+    return session_store($rid, $session, $var, $s);
+}
+
+
 
 1;

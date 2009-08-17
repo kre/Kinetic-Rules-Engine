@@ -100,12 +100,18 @@ session_touch($rid, $session, 'archive_pages_old', $three_days_ago);
 session_store($rid, $session, 'archive_pages_now', 2);
 session_store($rid, $session, 'archive_pages_now2', 3);
 
+session_push($rid, $session, 'my_trail', "http://www.windley.com/foo.html");
+session_push($rid, $session, 'my_trail', "http://www.kynetx.com/foo.html");
+
+session_clear($rid, $session, 'my_flag');
+
 
 
 my $Amazon_req_info;
 $Amazon_req_info->{'ip'} = '72.21.203.1'; # Seattle (Amazon)
 $Amazon_req_info->{'rid'} = $rid;
 $Amazon_req_info->{'txn_id'} = 'txn_id';
+$Amazon_req_info->{'caller'} = 'http://www.google.com/search';
 
 my (@test_cases, $json, $krl_src, $krl,$result);
 
@@ -255,6 +261,65 @@ add_testcase(
     $Amazon_req_info
     );
 
+#
+# entity vars
+#
+
+$krl_src = <<_KRL_;
+rule test_flag_1 is active {
+  select using "/archives/" setting ()
+
+    if ent:my_flag then 
+      alert("test");
+
+    fired {
+      clear ent:my_flag
+    } else {
+      set ent:my_flag
+    }
+  }
+_KRL_
+
+# empty because rule does fire.  It increments counter so next rule fires
+$result = <<_JS_;
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
+
+# should fire now!
+$krl_src = <<_KRL_;
+rule test_flag_1 is active {
+  select using "/archives/" setting ()
+
+    if ent:my_flag then 
+      alert("test");
+
+    fired {
+      clear ent:my_flag
+    } else {
+      set ent:my_flag
+    }
+  }
+_KRL_
+
+$result = <<_JS_;
+function callBacks%uniq% () {};
+(function(uniq, cb, config, msg) {alert(msg);cb();}
+('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_flag_1'},'test'));
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
+
 
 # this shouldn't fire first time
 $krl_src = <<_KRL_;
@@ -262,19 +327,20 @@ rule test_5 is active {
   select using "/archives/" setting ()
 
     pre {
-      c = counter.archive_pages_now;
+      c = ent:archive_pages_now;
     }
 
-    if counter.archive_pages_now > 2 then 
+    if ent:archive_pages_now > 2 then 
       alert("test");
 
     fired {
-      clear counter.archive_pages_now; 
+      clear ent:archive_pages_now; 
     } else {
-      counter.archive_pages_now += 1 from 1;  
+      ent:archive_pages_now += 1 from 1;  
     }
   }
 _KRL_
+
 
 # empty because rule does fire.  It increments counter so next rule fires
 $result = <<_JS_;
@@ -292,16 +358,16 @@ rule test_5a is active {
   select using "/archives/" setting ()
 
     pre {
-      c = counter.archive_pages_now;
+      c = ent:archive_pages_now;
     }
 
-    if counter.archive_pages_now > 2 then 
+    if ent:archive_pages_now > 2 then 
       alert("test");
 
     fired {
-      clear counter.archive_pages_now; 
+      clear ent:archive_pages_now; 
     } else {
-      counter.archive_pages_now += 1 from 1;  
+      ent:archive_pages_now += 1 from 1;  
     }
   }
 _KRL_
@@ -326,16 +392,16 @@ rule test_6 is active {
   select using "/archives/" setting ()
 
     pre {
-      c = counter.archive_pages_now2;
+      c = ent:archive_pages_now2;
     }
 
-    if counter.archive_pages_now2 > 2 within 2 days then 
+    if ent:archive_pages_now2 > 2 within 2 days then 
       alert("test");
 
     fired {
-      clear counter.archive_pages_now2; 
+      clear ent:archive_pages_now2; 
     } else {
-      counter.archive_pages_now2 += 1 from 1;  
+      ent:archive_pages_now2 += 1 from 1;  
     }
   }
 _KRL_
@@ -359,16 +425,16 @@ rule test_7 is active {
   select using "/archives/" setting ()
 
     pre {
-      c = counter.archive_pages_old;
+      c = ent:archive_pages_old;
     }
 
-    if counter.archive_pages_old > 2 within 2 days then 
+    if ent:archive_pages_old > 2 within 2 days then 
       alert("test");
 
     fired {
-      clear counter.archive_pages_old; 
+      clear ent:archive_pages_old; 
     } else {
-      counter.archive_pages_old += 1 from 1;  
+      ent:archive_pages_old += 1 from 1;  
     }
   }
 _KRL_
@@ -383,6 +449,195 @@ add_testcase(
     $Amazon_req_info
     );
 
+$krl_src = <<_KRL_;
+rule test_trail_1 is active {
+  select using "/archives/" setting ()
+
+    if seen "windley.com" in ent:my_trail then 
+      alert("test");
+
+    fired {
+      mark ent:my_trail
+    } 
+  }
+_KRL_
+
+#my $r = Kynetx::Parser::parse_rule($krl_src);
+#diag Dumper($r);
+
+$result = <<_JS_;
+function callBacks%uniq% () {};
+(function(uniq, cb, config, msg) {alert(msg);cb();}
+('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_trail_1'},'test'));
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+rule test_trail_2 is active {
+  select using "/archives/" setting ()
+
+    if seen "google.com" in ent:my_trail then 
+      alert("test");
+
+    fired {
+      forget "google.com" in ent:my_trail
+    } 
+  }
+_KRL_
+
+#my $r = Kynetx::Parser::parse_rule($krl_src);
+#diag Dumper($r);
+
+$result = <<_JS_;
+function callBacks%uniq% () {};
+(function(uniq, cb, config, msg) {alert(msg);cb();}
+('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_trail_2'},'test'));
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+rule test_trail_3 is active {
+  select using "/archives/" setting ()
+
+    if seen "google.com" in ent:my_trail then 
+      alert("test");
+
+    notfired {
+      mark ent:my_trail with "amazon.com"
+    } 
+  }
+_KRL_
+
+##my $r = Kynetx::Parser::parse_rule($krl_src);
+#diag Dumper($r);
+
+$result = <<_JS_;
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+rule test_trail_4 is active {
+  select using "/archives/" setting ()
+
+    if seen "amazon.com" in ent:my_trail then 
+      alert("test");
+
+  }
+_KRL_
+
+#my $r = Kynetx::Parser::parse_rule($krl_src);
+#diag Dumper($r);
+
+$result = <<_JS_;
+function callBacks%uniq% () {};
+(function(uniq, cb, config, msg) {alert(msg);cb();}
+('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_trail_4'},'test'));
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+rule test_trail_5 is active {
+  select using "/archives/" setting ()
+
+    if seen "amazon.com" after "windley.com" in ent:my_trail then 
+      alert("test");
+
+  }
+_KRL_
+
+#my $r = Kynetx::Parser::parse_rule($krl_src);
+#diag Dumper($r);
+
+$result = <<_JS_;
+function callBacks%uniq% () {};
+(function(uniq, cb, config, msg) {alert(msg);cb();}
+('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_trail_5'},'test'));
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+rule test_trail_6 is active {
+  select using "/archives/" setting ()
+
+    if seen "amazon.com" before "windley.com" in ent:my_trail then 
+      alert("test");
+
+  }
+_KRL_
+
+#my $r = Kynetx::Parser::parse_rule($krl_src);
+#diag Dumper($r);
+
+# shouldn't fire
+$result = <<_JS_;
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+rule test_trail_7 is active {
+  select using "/archives/" setting ()
+
+    if seen "amazon.com" in ent:my_trail within 1 minute then 
+      alert("test");
+
+  }
+_KRL_
+
+#my $r = Kynetx::Parser::parse_rule($krl_src);
+#diag Dumper($r);
+
+$result = <<_JS_;
+function callBacks%uniq% () {};
+(function(uniq, cb, config, msg) {alert(msg);cb();}
+('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_trail_7'},'test'));
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
+
+#
+# callbacks
+#
 
 $krl_src = <<_KRL_;
 rule test_8 is inactive {
@@ -798,6 +1053,8 @@ is(session_get($rid,$session,'archive_pages_old'), 4, "Archive pages old iterate
 session_delete($rid,$session,'archive_pages_old');
 session_delete($rid,$session,'archive_pages_now');
 session_delete($rid,$session,'archive_pages_now2');
+session_delete($rid,$session,'my_flag');
+session_delete($rid,$session,'my_trail');
 
 
 #diag Dumper($rule_env);

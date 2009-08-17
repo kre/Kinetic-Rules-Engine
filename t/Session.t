@@ -63,7 +63,7 @@ my $session = process_session($r);
 
 my $rid = 'rid123';
 
-plan tests => 29;
+plan tests => 58;
 
 session_store($rid, $session, 'a', 3);
 
@@ -160,11 +160,84 @@ session_delete($rid, $session, 'a');
 ok(!session_defined($rid, $session, 'a'), 'the variable is not defined for rid');
 ok(session_defined($rid1, $session, 'a'), 'the variable is still defined for rid1');
 
-
+# cleanup
 session_delete($rid1, $session, 'a');
 
 ok(!session_defined($rid1, $session, 'a'), 'the variable is not defined for rid1');
 
+my @vals =  qw(
+http://www.windley.com/archives/2006/06
+http://www.windley.com/archives/2007/06
+http://www.windley.com/archives/2007/07
+http://www.windley.com/archives/2008/06
+);
+
+session_push($rid, $session, 't', $vals[3]);
+session_push($rid, $session, 't', $vals[2]);
+session_push($rid, $session, 't', $vals[1]);
+session_push($rid, $session, 't', $vals[0]);
+
+ok(session_defined($rid, $session, 't'), 'the variable is defined for rid');
+
+is(session_history($rid, $session, 't', 0), $vals[0], "history check");
+is(session_history($rid, $session, 't', 1), $vals[1], "history check");
+is(session_history($rid, $session, 't', 2), $vals[2], "history check");
+is(session_history($rid, $session, 't', 3), $vals[3], "history check");
+
+is(session_seen($rid, $session, 't', '/2006/06'), 0, "We should fine it");
+is(session_seen($rid, $session, 't', '/2007/06'), 1, "We should fine it");
+is(session_seen($rid, $session, 't', '/2007/07'), 2, "We should fine it");
+is(session_seen($rid, $session, 't', '/2008/06'), 3, "We should fine it");
+is(session_seen($rid, $session, 't', '/2007/09'), undef, "We shouldn't find it");
+
+ok(session_seen_within($rid, $session, 't', '/2007/07', 3, 'minutes'), 'b stored within last 3 minutes');
+ok(session_seen_within($rid, $session, 't', '/2007/07', 3, 'hours'), 'b stored within last 3 hours');
+ok(session_seen_within($rid, $session, 't', '/2007/07', 3, 'days'), 'b stored within last 3 days');
+ok(session_seen_within($rid, $session, 't', '/2007/07', 3, 'weeks'), 'b stored within last 3 week');
+ok(session_seen_within($rid, $session, 't', '/2007/07', 3, 'months'), 'b stored within last 3 months');
+
+sleep 2; # sleep to make sure one second has passed
+
+ok(!session_seen_within($rid, $session, 't', '/2007/07', 1, 'seconds'), 'b not stored within last 1 seconds');
+
+
+ok(session_seen_compare($rid, $session, 't', '/2006/06', '/2007/06'), '0 added before 1');
+ok(!session_seen_compare($rid, $session, 't', '/2006/06', '/2006/06'), '0 not added before 0');
+ok(!session_seen_compare($rid, $session, 't', '/2007/06', '/2006/06'), '1 not added before 0');
+
+
+
+session_pop($rid, $session, 't');
+
+is(session_history($rid, $session, 't', 0), $vals[1], "history check");
+is(session_history($rid, $session, 't', 1), $vals[2], "history check");
+is(session_history($rid, $session, 't', 2), $vals[3], "history check");
+
+session_forget($rid, $session, 't', '/2007/07');
+
+#diag session_history($rid, $session, 't', 0);
+
+is(session_seen($rid, $session, 't', '/2007/07'), undef, "We shouldn't find it");
+is(session_history($rid, $session, 't', 0), $vals[1], "history check 2");
+is(session_history($rid, $session, 't', 1), $vals[3], "history check 2");
+
+session_forget($rid, $session, 't', '/2007/06');
+session_forget($rid, $session, 't', '/2008/06');
+
+is(session_history($rid, $session, 't', 0), undef, "nothing in empty stack");
+
+ok(session_defined($rid, $session, 't'), 'the variable is defined for rid');
+
+session_push($rid, $session, 't', $vals[0]);
+
+is(session_history($rid, $session, 't', 0), $vals[0], "history check");
+
+
+
+# cleanup
+session_delete($rid, $session, 't');
+
+ok(!session_defined($rid1, $session, 't'), 'the variable is not defined for rid');
 
 1;
 

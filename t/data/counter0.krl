@@ -4,16 +4,16 @@ ruleset 10 {
     select using "/archives/\d+/\d+/" setting ()
 
     pre {
-      c = counter.archive_pages;
+      c = ent:archive_pages;
     }
 
-    if counter.archive_pages > 2 then 
+    if ent:archive_pages > 2 then 
       alert("You win the prize!  You've seen " + c + " pages from the archives!");
 
     fired {
-      clear counter.archive_pages; 
+      clear ent:archive_pages; 
     } else {
-      counter.archive_pages += 1 from 1;  
+      ent:archive_pages += 1 from 1;  
     }
 
 

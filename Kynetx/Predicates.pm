@@ -115,79 +115,143 @@ sub eval_predicates {
 #    $logger->debug("Rule name: $rule_name");
 
     my $v = 0;
-    case: for ($cond->{'type'}) {
-	/bool/ && do {
-	    return den_to_exp($cond);
-	};
-	/^pred$/ && do {
-	    $v = eval_pred($req_info, $rule_env, $session, 
-			   $cond, $rule_name);
-	    return $v ||= 0;
-	};
-	/ineq/ && do {
-	    $v = eval_ineq($req_info, $rule_env, $session, 
-			   $cond, $rule_name);
-	    return $v ||= 0;
-	};
-	/simple/ && do {
-	    my $pred = $cond->{'predicate'};
+    if ($cond->{'type'} eq 'bool') {
+	return den_to_exp($cond);
+    } elsif($cond->{'type'} eq 'pred') {
+	$v = eval_pred($req_info, $rule_env, $session, 
+		       $cond, $rule_name);
+	return $v ||= 0;
+    } elsif($cond->{'type'} eq 'ineq') {
+	$v = eval_ineq($req_info, $rule_env, $session, 
+		       $cond, $rule_name);
+	return $v ||= 0;
+    } elsif($cond->{'type'} eq 'simple') {
 
-	    my $predf = $predicates{$pred};
-	    if($predf eq "") {
-		$logger->warn("Predicate $pred not found for ", $rule_name);
-	    } else {
+	my $pred = $cond->{'predicate'};
 
-		my $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+	my $predf = $predicates{$pred};
+	if($predf eq "") {
+	    $logger->warn("Predicate $pred not found for ", $rule_name);
+	} else {
 
-		# FIXME: this leaves string args as '...' which means that the predicates have to remember to remove them.  That causes errors.  
+	    my $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 
-		$v = &$predf($req_info, 
-			     $rule_env, 
-			     $args
+	# FIXME: this leaves string args as '...' which means that the predicates have to remember to remove them.  That causes errors.  
+
+	    $v = &$predf($req_info, 
+			 $rule_env, 
+			 $args
 		    );
-		$v ||= 0;
+	    $v ||= 0;
 
-		$logger->debug('[predicate] ',
-			       "$pred executing with args (" , 
-			       sub { join(', ', @{ $args } )}, 
-			       ')',
-			       ' -> ',
-			       $v);
+	    $logger->debug('[predicate] ',
+			   "$pred executing with args (" , 
+			   sub { join(', ', @{ $args } )}, 
+			   ')',
+			   ' -> ',
+			   $v);
+	}
+    } elsif($cond->{'type'} eq 'persistent_ineq') {
+	my $name = $cond->{'var'};
+
+	# check count
+	my $count = 0;
+	if($cond->{'domain'} eq 'ent') {
+	    $count = session_get($req_info->{'rid'}, $session, $name);
+	}
+
+	$logger->debug('[persistent_ineq] ', "$name -> $count");
+
+	$v = ineq_test($cond->{'ineq'}, 
+		       $count, 
+		       den_to_exp(
+			   eval_js_expr($cond->{'expr'}, 
+					$rule_env, 
+					$rule_name, 
+					$req_info, 
+					$session))
+	    );
+
+
+	# check date, if needed
+	if($v && 
+	   defined $cond->{'within'} &&
+	   session_defined($req_info->{'rid'}, $session, $name)) {
+
+	    my $tv = 1;
+	    if($cond->{'domain'} eq 'ent') {
+		$tv = session_within($req_info->{'rid'}, 
+				     $session, 
+				     $name, 
+				     den_to_exp(
+					 eval_js_expr($cond->{'within'},
+						      $rule_env, 
+						      $rule_name, 
+						      $req_info, 
+						      $session)),
+				     $cond->{'timeframe'}
+		    )
 	    }
-	    return $v;
-	};
-	/^counter_pred$/ && do {
-	    my $name = $cond->{'name'};
 
-	    # check count
-	    my $count = session_get($req_info->{'rid'}, $session, $name) || 0;
+	    $v = $v && $tv;
+	}
+    } elsif($cond->{'type'} eq 'seen_timeframe') {
+	my $name = $cond->{'var'};
 
+	$logger->debug('[seen_timeframe] ', "$name");
 
-	    $logger->debug('[counter] ', "$name -> $count");
+	# check date, if needed
+	if(defined $cond->{'within'} &&
+	   session_defined($req_info->{'rid'}, $session, $name)) {
 
-
-	    if($cond->{'ineq'} eq '>') {
-		$v =  $count > $cond->{'value'};
-	    } elsif($cond->{'ineq'} eq '<') {
-		$v = $count < $cond->{'value'};
-	    } 
-
-	    # check date, if needed
-	    if($v &&
-	       defined $cond->{'within'} &&
-	       session_defined($req_info->{'rid'}, $session, $name)) {
-
-	       $v = $v && 
-		    session_within($req_info->{'rid'}, 
-				   $session, 
-				   $name, 
-				   $cond->{'within'},
-				   $cond->{'timeframe'}
-				   )
+	    if($cond->{'domain'} eq 'ent') {
+		$v = session_seen_within($req_info->{'rid'}, 
+					 $session, 
+					 $name, 
+					 $cond->{'regexp'},
+					 den_to_exp(
+					  eval_js_expr($cond->{'within'},
+						       $rule_env, 
+						       $rule_name, 
+						       $req_info, 
+						       $session)),
+					  $cond->{'timeframe'}
+		    )
 	    }
-	    return $v;
-	};
+	} elsif(session_defined($req_info->{'rid'}, $session, $name)) {
+	    if($cond->{'domain'} eq 'ent') {
+		# session_seen returns index (which can be 0)
+		$v = defined session_seen($req_info->{'rid'}, 
+				  $session, 
+				  $name, 
+				  $cond->{'regexp'}
+		    ) ? 1 : 0;
+	    }
+	}
+    } elsif($cond->{'type'} eq 'seen_compare') {
+	my $name = $cond->{'var'};
+	if($cond->{'domain'} eq 'ent') {
+	    my($r1,$r2) =
+		$cond->{'op'} eq 'after' ? ($cond->{'regexp_1'},
+					    $cond->{'regexp_2'})
+                                         : ($cond->{'regexp_2'},
+					    $cond->{'regexp_1'});
+	    $v = session_seen_compare($req_info->{'rid'}, 
+				      $session, 
+				      $name, 
+				      $r1,
+				      $r2
+		) ? 1 : 0; # ensure 0 returned for testing
+	}
+    } elsif($cond->{'type'} eq 'persistent') {
+	my $name = $cond->{'name'};
+	if($cond->{'domain'} eq 'ent') {
+	    $v = session_defined($req_info->{'rid'}, $session, $name) &&
+		session_get($req_info->{'rid'}, $session, $name);
+	    
+	}
     }
+
 
     # returns default value if nothing returned above
     return $v;
@@ -243,44 +307,38 @@ sub eval_ineq {
 #	$logger->debug("Denoted -> ", sub { Dumper($den) });
 	push @results, den_to_exp($den);
     }
+
+    return ineq_test($pred->{'op'}, $results[0], $results[1]);
 	
-    case: for ($pred->{'op'}) {
-	/<=/ && do {
-	    return $results[0] <= $results[1]
-	};
-	/>=/ && do {
-	    return $results[0] >= $results[1]
-	};
-	/</ && do {
-	    return $results[0] < $results[1]
-	};
-	/>/ && do {
-	    return $results[0] > $results[1]
-	};
-	/==/ && do {
-	    return $results[0] == $results[1]
-	};
-
-	/!=/ && do {
-	    return $results[0] != $results[1]
-	};
-
-	/neq/ && do {
-	    return ! ($results[0] eq $results[1]);
-	};
-	/eq/ && do {
-	    return $results[0] eq $results[1]
-	};
-	/like/ && do {
-	    my $re = qr!$results[1]!;
-	    return $results[0] =~ $re;
-	};
-
-#	    $logger->debug($results[0], " neq? ", $results[1]);
-
-    }
 }
 
 
+sub ineq_test {
+    my($op, $rand0, $rand1) = @_;
+
+#    my $logger = get_logger();
+#    $logger->debug("[ineq_test] $rand0 $op $rand1");
+
+    if ($op eq '<=') {
+	return $rand0 <= $rand1;
+    } elsif($op eq '>=') {
+	return $rand0 >= $rand1;
+    } elsif($op eq '<') {
+	return $rand0 < $rand1;
+    } elsif($op eq '>') {
+	return $rand0 > $rand1;
+    } elsif($op eq '==') {
+	return $rand0 == $rand1;
+    } elsif($op eq '!=') {
+	return $rand0 != $rand1;
+    } elsif($op eq 'neq') {
+	    return ! ($rand0 eq $rand1);
+    } elsif($op eq 'eq') {
+	return $rand0 eq $rand1;
+    } elsif($op eq 'like') {
+	my $re = qr!$rand1!;
+	return $rand0 =~ $re;
+    }
+}
 
 1;

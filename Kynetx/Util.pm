@@ -152,10 +152,13 @@ sub before_now {
 
     my $now = DateTime->now;
 
-    # print("Comparing ", $now . " with " . $desired . "\n");
+    my $ans = DateTime->compare($now,$desired);
+
+#    my $logger = get_logger();
+#    $logger->debug("[before_now] is $now  after $desired: $ans" );
 
     # 1 if first greater than second
-    return DateTime->compare($now,$desired) == 1;
+    return $ans == 1;
 
 }
 
@@ -163,7 +166,8 @@ sub before_now {
 sub after_now {
     my $desired = shift;
 
-    return not before_now($desired);
+    # ensure consistently get 0 or 1 for testing
+    return before_now($desired) ? 0 : 1;
 
 }
 
