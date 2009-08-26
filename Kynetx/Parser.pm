@@ -546,7 +546,7 @@ success: 'success' '{' click(s /;/)  SEMICOLON(?) '}'
 failure: 'failure' '{' click(s /;/)  SEMICOLON(?) '}'
      {$return= $item[3] }
    
-click: 'click' VAR '=' STRING click_link(?)
+click: ('click' | 'change') VAR '=' STRING click_link(?)
      {$return=
       {'type' => $item[1],
        'attribute' => $item{VAR},
@@ -1014,6 +1014,48 @@ sub parse_action {
     $rule =~ s%\n%%g;
 
     my $result = $parser->action($rule);
+    if (defined $result->{'error'}) {
+	$logger->error("Can't parse actions: $result->{'error'}");
+    } else {
+	$logger->debug("Parsed rules");
+    }
+
+    return $result;
+
+}
+
+sub parse_callbacks {
+    my $rule = shift;
+    
+    my $logger = get_logger();
+
+    $rule = remove_comments($rule);
+
+    # remove newlines
+    $rule =~ s%\n%%g;
+
+    my $result = $parser->callbacks($rule);
+    if (defined $result->{'error'}) {
+	$logger->error("Can't parse actions: $result->{'error'}");
+    } else {
+	$logger->debug("Parsed rules");
+    }
+
+    return $result;
+
+}
+
+sub parse_post {
+    my $rule = shift;
+    
+    my $logger = get_logger();
+
+    $rule = remove_comments($rule);
+
+    # remove newlines
+    $rule =~ s%\n%%g;
+
+    my $result = $parser->post_block($rule);
     if (defined $result->{'error'}) {
 	$logger->error("Can't parse actions: $result->{'error'}");
     } else {
