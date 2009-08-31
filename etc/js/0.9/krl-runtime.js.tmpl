@@ -120,16 +120,27 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 
 
 
-KOBJ.logger = function(type,txn_id,element,url,sense,rule) {
+KOBJ.logger = function(type,txn_id,element,url,sense,rule,rid) {
     e=document.createElement("script");
     e.src=KOBJ.callback_url+"?type="+type+"&txn_id="+txn_id+"&element="+element+"&sense="+sense+"&url="+escape(url)+"&rule="+rule;
+    if(rid){
+      e.src+="&rid="+rid;
+    }
     body=document.getElementsByTagName("body")[0];
     body.appendChild(e);
 };
 
-KOBJ.obs = function(type, txn_id, name, sense, rule) {
-    if(type == 'class') {
-	$K('.'+name).click(function(e1) {
+KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
+    var elem;
+    if(attr == 'class') {
+      elem = '.'+ name;
+    } else if(attr == 'id') {
+      elem = '#'+ name;
+    } else {
+      elem = name;
+    }
+    if(type == 'click') {
+	$K(elem).click(function(e1) {
 	    var tgt = $K(this);
 	    var b = tgt.attr('href') || '';
 	    KOBJ.logger("click",
@@ -137,24 +148,25 @@ KOBJ.obs = function(type, txn_id, name, sense, rule) {
 			name,
 			b,
 			sense,
-			rule
+			rule,
+			rid
 	    );
             if(b) { tgt.attr('href','#'); }  // # gets replaced by redirect
 	    });
-    } else {
-	$K('#'+name).click(function(e1) {
-	    var tgt = $K(this);
-	    var b = tgt.attr('href') || '';
-	    KOBJ.logger("click",
+
+    } else if(type == 'change') {
+	$K(elem).change(function(e1) {
+	    KOBJ.logger("change",
 			txn_id,
 			name,
-			b,
+			'',
 			sense,
-			rule
+			rule,
+			rid
 	    );
-            if(b) { tgt.attr('href','#'); }  // # gets replaced by redirect
 	    });
     }
+
 };
 
 
@@ -278,7 +290,7 @@ KOBJ.css=function(css){
            KOBJstyle.appendChild(rules);
        }
    }
-}; 
+};
 
 
 KOBJ.require = function(url) {

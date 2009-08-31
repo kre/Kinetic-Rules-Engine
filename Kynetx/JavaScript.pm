@@ -243,28 +243,30 @@ sub eval_js_pre {
 
 
 sub gen_js_callbacks {
-    my ($callbacks,$txn_id,$type,$rule_name) = @_;
+    my ($callbacks,$txn_id,$type,$rule_name,$rid) = @_;
 
-    return join("", map {gen_js_callback($_,$txn_id,$type,$rule_name)} @{ $callbacks });
+    return join("", map {gen_js_callback($_,$txn_id,$type,$rule_name,$rid)} @{ $callbacks });
 
 }
 
 sub gen_js_callback {
-    my ($cb,$txn_id,$type,$rule_name) = @_;
+    my ($cb,$txn_id,$type,$rule_name,$rid) = @_;
 
     my $logger = get_logger();
     
-    # if it's not click don't do anything!
-    if($cb->{'type'} eq 'click') {
-	$logger->debug('[callbacks]',$cb->{'attribute'}." -> ".$cb->{'value'}.",");
+    # if it's not click | change don't do anything!
+    if($cb->{'type'} eq 'click' || $cb->{'type'} eq 'change') {
+	$logger->debug('[callbacks] ',$cb->{'attribute'}." -> ".$cb->{'value'}." for $rid [$rule_name]");
 
 	return 
 	    "KOBJ.obs(".
+	     mk_js_str($cb->{'type'}).",".
 	     mk_js_str($cb->{'attribute'}).",".
 	     mk_js_str($txn_id).",".
 	     mk_js_str($cb->{'value'}).",".
 	     mk_js_str($type).",".
-	     mk_js_str($rule_name).
+	     mk_js_str($rule_name).",".
+	     mk_js_str($rid).
 	    ");\n";
     }
 
@@ -523,7 +525,8 @@ sub eval_persistent {
 	    $logger->debug("[persistent trail] $expr->{'name'} at $idx -> $v");
 
 	} else {
-	    $v = session_get($req_info->{'rid'}, $session, $expr->{'name'});
+	    # FIXME: not sure I like setting to 0 by default
+	    $v = session_get($req_info->{'rid'}, $session, $expr->{'name'}) || 0;
 	    $logger->debug("[persistent] $expr->{'name'} -> $v");
 	}
     

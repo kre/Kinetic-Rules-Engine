@@ -59,6 +59,7 @@ choose_action
 eval_post_expr
 get_precondition_test
 get_precondition_vars
+eval_persistent_expr
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -372,7 +373,8 @@ sub build_js_load {
 	    $cb .= gen_js_callbacks($rule->{'callbacks'}->{$sense},
 				    $req_info->{'txn_id'},
 		                    $sense,
-				    $rule->{'name'}
+				    $rule->{'name'},
+				    $req_info->{'rid'}
 		                   );
 	}
     }
@@ -465,7 +467,7 @@ sub build_one_action {
     foreach my $m ( @{ $action->{'modifiers'} } ) {
 	$mods{$m->{'name'}} = gen_js_expr($m->{'value'}) if defined $mods{$m->{'name'}};
 
-	$logger->debug(sub {Dumper($m)} );
+#	$logger->debug(sub {Dumper($m)} );
 
 	push(@config, "'" . $m->{'name'} . "':" . 
  	               gen_js_expr(eval_js_expr($m->{'value'}, 
@@ -572,7 +574,8 @@ sub build_one_action {
 	     ";KOBJ.logger('timer_expired', '" .
 	                  $req_info->{'txn_id'} . "'," .
 		          "'none', '', 'success', '" .
-			  $rule_name .
+			  $rule_name . "','".
+			  $req_info->{'rid'} .
                           "');";
 
 	$js .= $delay_cb;  # add in automatic log of delay expiration
@@ -660,9 +663,15 @@ sub eval_post_expr {
     
     my $js = '';
 
+    my $logger = get_logger();
+    $logger->debug("[post] evaling post expressions with rule ",
+		   $fired ? "fired" : "notfired"
+	);
+
+
     # set up post block execution
     my($cons,$alt);
-    if (ref $rule->{'post'} eq 'HASH') { # it's an array if no post block
+    if (ref $rule->{'post'} eq 'HASH') { 
 	my $type = $rule->{'post'}->{'type'};
 	if($type eq 'fired') {
 	    $cons = $rule->{'post'}->{'cons'};
@@ -678,9 +687,11 @@ sub eval_post_expr {
 
     # there's only persistent expressions
     if($fired) {
+	$logger->debug("[post] evaling consequent");
 	$js .= join(" ", 
 		    map {eval_persistent_expr($_, $session, $req_info, $rule_env, $rule->{'name'})} @{ $cons });
     } else {
+	$logger->debug("[post] evaling alternate");
 	$js .= join(" ", 
 		    map {eval_persistent_expr($_, $session, $req_info, $rule_env, $rule->{'name'})} @{ $alt } );
     }
@@ -692,7 +703,7 @@ sub eval_persistent_expr {
     my($expr, $session, $req_info, $rule_env, $rule_name) = @_;
 
     my $logger = get_logger();
-    $logger->debug("[post] ", $expr->{'type'});
+#    $logger->debug("[post] ", $expr->{'type'});
 
     my $js = '';
 
@@ -705,27 +716,31 @@ sub eval_persistent_expr {
 	    session_set($req_info->{'rid'}, $session, $expr->{'name'});
 	}
     } elsif ($expr->{'action'} eq 'iterator') {
-	my $val = 
+#	$logger->debug(Dumper($session));
+	my $by = 
 	    den_to_exp(
 		eval_js_expr($expr->{'value'},
 			     $rule_env,
 			     $rule_name,
 			     $req_info,
 			     $session));
-	$val = -$val if($expr->{'op'} eq '-=');
+	$by = -$by if($expr->{'op'} eq '-=');
+	my $from = 
+	    den_to_exp(
+		eval_js_expr($expr->{'from'},
+			     $rule_env,
+			     $rule_name,
+			     $req_info,
+			     $session));
 	if($expr->{'domain'} eq 'ent') {
 	    session_inc_by_from($req_info->{'rid'},
 				$session,
 				$expr->{'name'},
-				$val,
-				den_to_exp(
-				    eval_js_expr($expr->{'from'},
-						 $rule_env,
-						 $rule_name,
-						 $req_info,
-						 $session))
+				$by,
+				$from
 		);
 	}
+#	$logger->debug(Dumper($session));
     } elsif ($expr->{'action'} eq 'forget') {
 	if($expr->{'domain'} eq 'ent') {
 	    session_forget($req_info->{'rid'},

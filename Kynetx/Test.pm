@@ -35,6 +35,11 @@ use warnings;
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
+use Kynetx::Environments qw/:all/;
+use Kynetx::Memcached qw/:all/;
+use Kynetx::Session qw/:all/;
+use Kynetx::Configure qw/:all/;
+
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
@@ -76,6 +81,60 @@ sub nows {
     $str =~ y/\n\t\r //d;
     return $str;
 }
+
+
+sub configure {
+    # configure KNS
+    Kynetx::Configure::configure();
+
+    Kynetx::Memcached->init();
+
+    return new Kynetx::FakeReq();
+}
+
+sub gen_req_info {
+    my($rid, $options) = @_;
+    my $req_info;
+    $req_info->{'caller'} = $options->{'caller'} || 'http://www.windley.com';
+    $req_info->{'pool'} = APR::Pool->new;
+    $req_info->{'txn_id'} = $options->{'txn_id'} || '1234';
+    $req_info->{'rid'} = $rid;
+
+    return $req_info;
+}
+
+sub gen_rule_env {
+    my($options) = @_;
+    
+    my $rule_env = empty_rule_env();
+
+    $rule_env =  extend_rule_env(
+	['city','tc','temp','booltrue','boolfalse','a','b'],
+	['Blackfoot','15',20,'true','false','10','11'],
+	$rule_env);
+
+    return extend_rule_env($options, $rule_env);
+}
+
+sub gen_session {
+    my($r, $rid, $options) = @_;
+    my $session = process_session($r);
+
+    session_store($rid, $session, 'archive_pages_old', 3);
+    my $three_days_ago = DateTime->now->add( days => -3 );
+    session_touch($rid, $session, 'archive_pages_old', $three_days_ago);
+
+    session_store($rid, $session, 'archive_pages_now', 2);
+    session_store($rid, $session, 'archive_pages_now2', 3);
+
+    session_push($rid, $session, 'my_trail', "http://www.windley.com/foo.html");
+    session_push($rid, $session, 'my_trail', "http://www.kynetx.com/foo.html");
+
+    session_clear($rid, $session, 'my_flag');
+
+    return $session;
+}
+
 
 
 1;

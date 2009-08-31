@@ -662,9 +662,9 @@ _KRL_
 
 $result = <<_JS_;
 function callBacks%uniq% () {
-  KOBJ.obs('id','txn_id','rssfeed','success','test_8');
-  KOBJ.obs('class','txn_id','newsletter','success','test_8');
-  KOBJ.obs('id','txn_id','close_rss','failure','test_8');
+  KOBJ.obs('click', 'id','txn_id','rssfeed','success','test_8', 'cs_test');
+  KOBJ.obs('click', 'class','txn_id','newsletter','success','test_8', 'cs_test');
+  KOBJ.obs('click', 'id','txn_id','close_rss','failure','test_8', 'cs_test');
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
  ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_8'},'test'));

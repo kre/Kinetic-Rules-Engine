@@ -7,7 +7,7 @@ use Test::Harness qw(&runtests);
 my @tests = qw/
 cs.t
 KOBJ.t
-Logger.t
+Callbacks.t
 RuleManager.t
 /;
 

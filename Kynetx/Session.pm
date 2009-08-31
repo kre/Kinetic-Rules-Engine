@@ -79,12 +79,14 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
 sub process_session {
-    my ($r) = @_;
+    my ($r, $ck) = @_;
 
     my $logger = get_logger();
 
     my $cookie = $r->headers_in->{'Cookie'};
     $cookie =~ s/SESSION_ID=(\w*)/$1/ if(defined $cookie);
+
+    $cookie = $ck if $ck;  # mainly for testing
 
     if (defined $cookie) {
 	$logger->debug("Using session id: ", $cookie );
@@ -106,6 +108,8 @@ sub process_session {
     }
 
     my $dt = DateTime->now;
+
+
     # create expires timestamp
     $dt = $dt->add(days => 364);
     my $expires = $dt->strftime("%a, %d-%b-%Y 23:59:59 GMT");
@@ -168,10 +172,14 @@ sub session_keys {
 sub session_store {
     my ($rid, $session, $var, $val) = @_;
 
+    # timestamp session to ensure it gets written back
+    my $dt = DateTime->now->epoch;
+    $session->{'_timestamp'} = $dt;
+
     $session->{$rid} = {} unless exists $session->{$rid};
 
     $session->{$rid}->{$var} = $val;
-    $session->{$rid}->{$var.'_created'} = DateTime->now->epoch;
+    $session->{$rid}->{$var.'_created'} = $dt;
 
     return $val;
 
@@ -222,6 +230,10 @@ sub session_defined {
 sub session_delete {
     my ($rid, $session, $var) = @_;
 
+    # timestamp session to ensure it gets written back
+    my $dt = DateTime->now->epoch;
+    $session->{'_timestamp'} = $dt;
+
     if(exists $session->{$rid} && exists $session->{$rid}->{$var}) {
 	delete $session->{$rid}->{$var};
 	delete $session->{$rid}->{$var.'_created'};
@@ -255,10 +267,12 @@ sub session_inc_by_from {
     my ($rid, $session, $var, $val, $from) = @_;
     my $logger = get_logger();
     if(session_defined($rid, $session, $var)) {
-	session_store($rid, $session, $var,
-		      session_get($rid, $session, $var) + $val);
+	my $old = session_get($rid, $session, $var);
+	session_store($rid, $session, $var, $old + $val);
 	$logger->debug("iterating session var ",  
 		       $var,
+		       " from ",
+		       $old,
 		       " by ",
 		       $val);
 

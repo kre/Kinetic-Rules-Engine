@@ -78,6 +78,7 @@ sub build_request_env {
 
     my @param_names = $req->param;
     foreach my $n (@param_names) {
+#	$logger->debug("Param $n -> ", $req->param($n));
 	$request_info->{$n} = $req->param($n);
     }
     $request_info->{'param_names'} = \@param_names;

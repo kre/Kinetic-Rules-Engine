@@ -45,44 +45,44 @@ Log::Log4perl->easy_init($INFO);
 use APR::URI;
 use APR::Pool ();
 use LWP::Simple;
+use Cache::Memcached;
+use Apache::Session::Memcached;
+use DateTime;
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
 use Kynetx::JavaScript qw/:all/;
 use Kynetx::Environments qw/:all/;
+use Kynetx::Memcached qw/:all/;
+use Kynetx::Session qw/:all/;
+use Kynetx::Configure qw/:all/;
+
+use Kynetx::FakeReq qw/:all/;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
+my $r = Kynetx::Test::configure();
+
+my $rid = 'cs_test';
 
 # test choose_action and args
 
-my $my_req_info;
-$my_req_info->{'caller'} = 'http://www.windley.com';
-$my_req_info->{'pool'} = APR::Pool->new;
-$my_req_info->{'txn_id'} = '1234';
+my $my_req_info = Kynetx::Test::gen_req_info($rid);
+
+
+my $rule_name = 'foo';
+
+my $rule_env = Kynetx::Test::gen_rule_env();
+
+
+my $session = Kynetx::Test::gen_session($r, $rid);
 
 my $rel_url = "/kynetx/newsletter_invite.inc";
 my $non_matching_url = "http://frag.kobj.net/widgets/weather.pl?zip=84042";
 my $first_arg = "kobj_test"; 
 my $second_arg = "This is a string";
 my $given_args;
-
-
-
-my $rule_name = 'foo';
-
-my $rule_env = empty_rule_env();
-
-$rule_env = extend_rule_env(
-    ['city','tc','temp','booltrue','boolfalse','a','b'],
-    ['Blackfoot','15',20,'true','false','10','11'],
-    $rule_env);
-
-
-my $session = {};
-
-
 
 
 my($action,$args,$krl_src, $krl, $name, $url, @test_cases);
@@ -338,7 +338,7 @@ setTimeout(function(){
 }
 
 ('23',callbacks23,{txn_id:'1234',rule_name:'dummy_name','delay':5}));
-;KOBJ.logger('timer_expired','1234','none','','success','dummy_name');},(5*1000));
+;KOBJ.logger('timer_expired','1234','none','','success','dummy_name','cs_test');},(5*1000));
 _JS_
 
 
@@ -369,10 +369,117 @@ add_action_testcase(
     'annotate_search_results'
     );
 
+plan tests => 14 + (@test_cases * 3) + (@action_test_cases * 1);
 
 
-plan tests => 5 + (@test_cases * 3) + (@action_test_cases * 1);
 
+# post expressions
+sub run_post_testcase {
+    my($src, $req_info, $session, $rule_env, $fired, $diag) = @_;
+    my $krl = Kynetx::Parser::parse_post($src);
+ 
+    
+    chomp $krl;
+
+    # fix it up for what eval_post_expr expects
+    $krl = {'post' => $krl};
+    diag(Dumper($krl)) if $diag;
+
+    return eval_post_expr($krl, 
+			  $session, 
+			  $req_info, 
+			  $rule_env, 
+			  $fired);
+
+}
+
+use constant FIRED => 1;
+use constant NOTFIRED => 0;
+
+$krl_src = <<_KRL_;
+fired {
+  clear ent:archive_pages_now; 
+} else {
+  ent:archive_pages_now += 2 from 1;  
+}
+_KRL_
+
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
+is(session_get($rid, $session, 'archive_pages_now'),
+   4,
+   "incrementing archive pages"
+  );
+
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+is(session_get($rid, $session, 'archive_pages_now'),
+   undef,
+   "incrementing archive pages"
+  );
+
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
+is(session_get($rid, $session, 'archive_pages_now'),
+   1,
+   "incrementing archive pages"
+  );
+
+
+$krl_src = <<_KRL_;
+fired {
+  clear ent:my_flag
+} else {
+  set ent:my_flag
+}
+_KRL_
+
+#diag("my_flag: ", session_get($rid, $session, 'my_flag'));
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
+ok(session_true($rid, $session, 'my_flag'),
+   "setting my_flag"
+  );
+
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+ok(! session_true($rid, $session, 'my_flag'),
+   "clearing my_flag"
+  );
+
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
+ok(session_true($rid, $session, 'my_flag'),
+   "setting my_flag"
+  );
+
+
+$krl_src = <<_KRL_;
+fired {
+  forget "testing" in ent:my_trail
+} else {
+  mark ent:my_trail with "testing!" 
+}
+_KRL_
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
+is(session_seen($rid, $session, 'my_trail',"testing"),
+   0,
+   'testing added'
+  );
+
+is(session_seen($rid, $session, 'my_trail',"kynetx"),
+   1,
+   'kynetx pushed down'
+  );
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+is(session_seen($rid, $session, 'my_trail',"kynetx"),
+   0,
+   'testing forgotten'
+  );
+
+
+#diag Dumper($session);
 
 
 # now test choose_action
@@ -491,6 +598,8 @@ is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)),
 
 
 diag("Safe to ignore warnings about unrecognized escapes");
+
+session_cleanup($session);
 
 1;
 

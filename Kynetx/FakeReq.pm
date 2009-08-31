@@ -55,7 +55,7 @@ sub content_type {
 
 sub headers_in {
     return {
-	'Cookie' => 'SESSION_ID=my_fake_cookie_id'
+	'Cookie' => 'SESSION_ID=7e9ea0ff190e0f883aaae0c3e64166c0'
     };
 }
 

@@ -37,7 +37,7 @@ use Test::LongString;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Apache::Session::Memcached;
 use DateTime;
@@ -47,6 +47,9 @@ use Kynetx::Session qw/:all/;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::FakeReq qw/:all/;
 use Kynetx::Util qw/:all/;
+
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
 
 
 # configure KNS
@@ -61,9 +64,13 @@ my $r = new Kynetx::FakeReq();
 
 my $session = process_session($r);
 
+my $ck= session_id($session); # store for later use
+
 my $rid = 'rid123';
 
-plan tests => 58;
+plan tests => 59;
+
+#diag Dumper($session);
 
 session_store($rid, $session, 'a', 3);
 
@@ -205,8 +212,6 @@ ok(session_seen_compare($rid, $session, 't', '/2006/06', '/2007/06'), '0 added b
 ok(!session_seen_compare($rid, $session, 't', '/2006/06', '/2006/06'), '0 not added before 0');
 ok(!session_seen_compare($rid, $session, 't', '/2007/06', '/2006/06'), '1 not added before 0');
 
-
-
 session_pop($rid, $session, 't');
 
 is(session_history($rid, $session, 't', 0), $vals[1], "history check");
@@ -233,11 +238,23 @@ session_push($rid, $session, 't', $vals[0]);
 is(session_history($rid, $session, 't', 0), $vals[0], "history check");
 
 
+# redo the session is the history still there?
+session_cleanup($session);
+
+$session = process_session($r, $ck); # pass in the other cookie
+
+is(session_history($rid, $session, 't', 0), $vals[0], "persistence check");
+
 
 # cleanup
 session_delete($rid, $session, 't');
 
+
+
 ok(!session_defined($rid1, $session, 't'), 'the variable is not defined for rid');
+
+
+session_cleanup($session);
 
 1;
 
