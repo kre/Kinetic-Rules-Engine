@@ -135,7 +135,7 @@ sub process_action {
 		      $req->param('type'),
 		      $req->param('element'),
 		      $req_info,
-		      $session);
+		      $session) if $req_info->{'rid'};
 		      
 
 

@@ -135,7 +135,8 @@ id
 	    txn_id  => 1,
 	    );
 
-	return '' unless $allowed{$args->[0]};
+	# FIXME: uncomment after Azigo implements ruleset changes
+	#return '' unless $allowed{$args->[0]};
 
 	# rulespaced env parameters
 	if($req_info->{'rid'} && defined $req_info->{$req_info->{'rid'}.':'.$args->[0]}) {
@@ -143,6 +144,14 @@ id
 	} elsif(defined $req_info->{$args->[0]}) {
 	    $val = $req_info->{$args->[0]};
 	}
+
+    } elsif($function eq 'param') {
+
+	# rulespaced env parameters
+	if($req_info->{'rid'} && defined $req_info->{$req_info->{'rid'}.':'.$args->[0]}) {
+	    $val = $req_info->{$req_info->{'rid'}.':'.$args->[0]};
+	}
+
     }
 
     return $val;

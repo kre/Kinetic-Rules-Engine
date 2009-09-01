@@ -461,7 +461,8 @@ sub build_one_action {
 	draggable => 0,
 	);
 
-    my @config = ("txn_id: '".$req_info->{'txn_id'} . "'", "rule_name: '$rule_name'");
+
+    my @config = ("txn_id: '".$req_info->{'txn_id'} . "'", "rule_name: '$rule_name'", "rid: '".$req_info->{'rid'}."'");
 
     # override defaults if set
     foreach my $m ( @{ $action->{'modifiers'} } ) {

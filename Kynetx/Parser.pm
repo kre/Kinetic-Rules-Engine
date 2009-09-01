@@ -789,14 +789,14 @@ sub html {
     $value =~ s/>>\s*$//;
     $value =~ s/[\n\r]/  /sg;
     return $value;
-}  
+}
 
 sub string {
     my ($value) = @_;
     $value =~ s/^["']//;
     $value =~ s/["']$//;
     return $value;
-}  
+}
 
 
 my $parser = Parse::RecDescent->new($grammar);
@@ -845,7 +845,7 @@ sub remove_comments {
 
 sub parse_ruleset {
     my ($ruleset) = @_;
-    
+
     my $logger = get_logger();
 
     $ruleset = remove_comments($ruleset);

@@ -104,7 +104,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
       }
     }
     );
-    KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'] );
+    KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'], config['rid'] );
     cb();
   };
   runAnnotate();
@@ -123,9 +123,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 KOBJ.logger = function(type,txn_id,element,url,sense,rule,rid) {
     e=document.createElement("script");
     e.src=KOBJ.callback_url+"?type="+type+"&txn_id="+txn_id+"&element="+element+"&sense="+sense+"&url="+escape(url)+"&rule="+rule;
-    if(rid){
-      e.src+="&rid="+rid;
-    }
+    if(rid) e.src+="&rid="+rid;
     body=document.getElementsByTagName("body")[0];
     body.appendChild(e);
 };

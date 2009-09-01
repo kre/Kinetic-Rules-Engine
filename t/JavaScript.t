@@ -234,6 +234,8 @@ $BYU_req_info->{'kvars'} = '{"foo": 5, "bar": "fizz", "bizz": [1, 2, 3]}';
 $BYU_req_info->{'foozle'} = 'Foo';
 $BYU_req_info->{'rid'} = $rid;
 
+$BYU_req_info->{"$rid:datasets"} = "aaa,aaawa,ebates";
+
 
 
 $str = <<_KRL_;
@@ -478,14 +480,14 @@ add_decl_testcase(
     0);
 
 
-# not in allowed
+# not in allowed (until we reinstate security patch, this will return Foo
 $str = <<_KRL_;
 page:env("foozle");
 _KRL_
 add_expr_testcase(
     $str,
     "",
-    mk_expr_node('str',''),
+    mk_expr_node('str','Foo'),
     0);
 
 $str = <<_KRL_;
@@ -564,6 +566,18 @@ add_expr_testcase(
     "",
     mk_expr_node('str', 'q=foo'),
     0);
+
+
+$str = <<_KRL_;
+page:param("datasets");
+_KRL_
+add_expr_testcase(
+    $str,
+    "",
+     mk_expr_node('str', "aaa,aaawa,ebates"),
+    0);
+
+
 
 $str = <<_KRL_;
 {"fizz": 3,
