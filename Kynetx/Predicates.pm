@@ -111,12 +111,11 @@ sub eval_predicates {
 
     my $logger = get_logger();
 
-#    $logger->debug(Dumper($cond));
 #    $logger->debug("Rule name: $rule_name");
 
     my $v = 0;
     if ($cond->{'type'} eq 'bool') {
-	return den_to_exp($cond);
+	return Kynetx::JavaScript::den_to_exp($cond);
     } elsif($cond->{'type'} eq 'pred') {
 	$v = eval_pred($req_info, $rule_env, $session, 
 		       $cond, $rule_name);
@@ -164,8 +163,8 @@ sub eval_predicates {
 
 	$v = ineq_test($cond->{'ineq'}, 
 		       $count, 
-		       den_to_exp(
-			   eval_js_expr($cond->{'expr'}, 
+		       Kynetx::JavaScript::den_to_exp(
+			   Kynetx::JavaScript::eval_js_expr($cond->{'expr'}, 
 					$rule_env, 
 					$rule_name, 
 					$req_info, 
@@ -183,8 +182,8 @@ sub eval_predicates {
 		$tv = session_within($req_info->{'rid'}, 
 				     $session, 
 				     $name, 
-				     den_to_exp(
-					 eval_js_expr($cond->{'within'},
+				     Kynetx::JavaScript::den_to_exp(
+					 Kynetx::JavaScript::eval_js_expr($cond->{'within'},
 						      $rule_env, 
 						      $rule_name, 
 						      $req_info, 
@@ -209,8 +208,8 @@ sub eval_predicates {
 					 $session, 
 					 $name, 
 					 $cond->{'regexp'},
-					 den_to_exp(
-					  eval_js_expr($cond->{'within'},
+					 Kynetx::JavaScript::den_to_exp(
+					  Kynetx::JavaScript::eval_js_expr($cond->{'within'},
 						       $rule_env, 
 						       $rule_name, 
 						       $req_info, 
@@ -303,9 +302,9 @@ sub eval_ineq {
 
     my @results;
     for (@{ $pred->{'args'} }) {
-	my $den = eval_js_expr($_, $rule_env, $rule_name, $req_info, $session);
+	my $den = Kynetx::JavaScript::eval_js_expr($_, $rule_env, $rule_name, $req_info, $session);
 #	$logger->debug("Denoted -> ", sub { Dumper($den) });
-	push @results, den_to_exp($den);
+	push @results, Kynetx::JavaScript::den_to_exp($den);
     }
 
     return ineq_test($pred->{'op'}, $results[0], $results[1]);

@@ -337,7 +337,7 @@ LogFormat "%h %t %{TOTAL_SECS}e %{METHOD}e %{RIDS}e %{TXN_ID}e \"%{CALLER}e\" %{
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/kynetx_log /web/logs/kynetx/KOBJ-%Y%m%d-%H%M.log" KOBJ env=KOBJ
 
 # callback logging for CALLBACK
-LogFormat "%h %t %{TOTAL_SECS}e %{METHOD}e %{RIDS}e %{TXN_ID}e \"%{RULE_NAME}e\" \"%{CALLER}e\" %{SID}e %{TYPE}e \"%{ELEMENT}e\" \"%{SENSE}e\" \"%{CB_INFO}e\" " CB
+LogFormat "%h %t %{TOTAL_SECS}e %{METHOD}e %{RIDS}e %{TXN_ID}e \"%{RULE_NAME}e\" \"%{CALLER}e\" %{SID}e %{TYPE}e \"%{ELEMENT}e\" \"%{SENSE}e\" \"%{CB_INFO}e\" %{RID}e " CB
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/callback_log /web/logs/kynetx/CB-%Y%m%d-%H%M.log" CB env=CB
 
 # logging billable RSEs for billing purposes

@@ -1,3 +1,16 @@
+2009-09-08  Phil Windley  <pjw@kynetx.com>
+
+	* etc/tmpl/httpd-perl.conf.tmpl: Added RID of executing ruleset to
+	  CB log
+	* Kynetx/Callbacks.pm (process_action): Added RID of executing ruleset
+	* Kynetx/Parser.pm: support for conditional expressions
+	* Kynetx/JavaScript.pm: support for conditional expressions
+	* Kynetx/Predicates.pm: support for predicates in expressions
+	* Kynetx/Log.pm (explicit_callback): incomplete function to do
+	  explicit callback
+	* Kynetx/Actions.pm (eval_log_statement): Added support for
+	  explicit callbacks to postlude
+
 2009-09-01  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Predicates/Page.pm (get_pageinfo): added support for

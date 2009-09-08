@@ -41,6 +41,7 @@ use Kynetx::Datasets q/:all/;
 use Kynetx::Environments q/:all/;
 use Kynetx::Session q/:all/;
 use Kynetx::Operators q/:all/;
+use Kynetx::Predicates q/:all/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -100,6 +101,13 @@ sub gen_js_expr {
 	/prim/ && do {
 	    return gen_js_prim($expr);
 	};
+	/^ineq|pred$/ && do {
+	    return gen_js_pred($expr);
+	};
+        /condexpr/ && do {
+	    return gen_js_condexpr($expr);
+	};
+	# FIXME: need to eval these, not ignore them
 	# no sense generating simple, most qualified, and counter preds for JS
  	/qualified/ && do {
 
@@ -122,6 +130,16 @@ sub gen_js_prim {
     my $prim = shift;
 
     return '(' .join(' ' . $prim->{'op'} . ' ', @{ gen_js_rands($prim->{'args'}) }) . ')';
+
+    
+}
+
+sub gen_js_condexpr {
+    my $cond = shift;
+
+    return gen_js_predexpr($cond->{'test'}) . ' ? ' . 
+           gen_js_expr($cond->{'then'}) . ' : ' . 
+	   gen_js_expr($cond->{'else'});
 
     
 }
@@ -163,7 +181,7 @@ sub gen_js_hash_lines {
 
     my $logger = get_logger();
 
-   $logger->debug(Dumper($hash_lines));
+#   $logger->debug(Dumper($hash_lines));
 
     my @res = map {gen_js_hash_line($_)} @{ $hash_lines } ;
     $hash_lines = "{" . join(', ', @res) . "}" ;
@@ -193,6 +211,78 @@ sub gen_js_datasource {
     return $val;
 
 }
+
+
+sub gen_js_pred {
+    my $pred = shift;
+    
+    if($pred->{'op'} eq 'negation') {
+	return '!' . gen_js_predexpr($pred->{'args'}->[0]) ;
+    } else {
+	return 
+	    '(' . 
+	    join(' ' . $pred->{'op'} . ' ', @{ gen_js_rands($pred->{'args'}) }) .
+	    ')';
+    }
+
+    
+}
+
+
+# expressions below
+sub gen_js_predexpr {
+    my $expr = shift;
+
+#    my $logger = get_logger();
+
+    if($expr->{'type'} eq "ineq") {
+	    return  '('. join(' ' . $expr->{'op'} . ' ', 
+			@{ gen_js_rands($expr->{'args'}) }) . ')'  ;
+# 	/seen_timeframe/ && do {
+# 	    return join(' ', 
+# 			('seen',
+# 			 pp_string($expr->{'regexp'}),
+# 			 'in',
+# 			 pp_var_domain($expr->{'domain'}, 
+# 				       $expr->{'var'}),
+# 			 pp_timeframe($expr)
+# 			));
+# 	};
+# 	/seen_compare/ && do {
+# 	    return join(' ', 
+# 			('seen',
+# 			 pp_string($expr->{'regexp_1'}),
+# 			 $expr->{'op'},
+# 			 pp_string($expr->{'regexp_2'}), 
+# 			 'in',
+# 			 pp_var_domain($expr->{'domain'}, $expr->{'var'})
+# 			));
+# 	};
+# 	/persistent_ineq/ && do {
+# 	    if($expr->{'ineq'} eq '==' &&
+# 	       $expr->{'expr'}->{'val'} eq 'true') {
+# 		return join(' ', 
+# 			    (pp_var_domain($expr->{'domain'}, $expr->{'var'}),
+# 			     pp_timeframe($expr)
+# 			    ));
+# 	    } else {
+# 		return join(' ', 
+# 			    (pp_var_domain($expr->{'domain'}, $expr->{'var'}),
+# 			     $expr->{'ineq'},
+# 			     pp_expr($expr->{'expr'}),
+# 			     pp_timeframe($expr)
+# 			    ));
+# 	    }
+# 	};
+     } elsif($expr->{'type'} eq "pred") {
+       return gen_js_pred($expr);
+     } else {
+       return gen_js_expr($expr);
+     }
+
+}
+
+
 
 
 
@@ -339,6 +429,12 @@ sub eval_js_expr {
 	return eval_js_prim($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'operator') {
 	return  Kynetx::Operators::eval_operator($expr, $rule_env, $rule_name, $req_info, $session);
+    } elsif($expr->{'type'} eq 'pred') {
+	return eval_predicates($req_info, $rule_env, $session, $expr, $rule_name);
+    } elsif($expr->{'type'} eq 'condexpr') {
+	return eval_predicates($req_info, $rule_env, $session, $expr->{'test'}, $rule_name) ?
+	       eval_js_expr($expr->{'then'}, $rule_env, $rule_name, $req_info, $session) :
+	       eval_js_expr($expr->{'else'}, $rule_env, $rule_name, $req_info, $session)
     } elsif($expr->{'type'} eq 'qualified') {
 	my $den = eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 	# get the values

@@ -143,7 +143,7 @@ sub process_action {
     $r->subprocess_env(METHOD => 'callback');
     $r->subprocess_env(RIDS => $req_info->{'site'});
     $r->subprocess_env(SITE => $req_info->{'site'});
-    $r->subprocess_env(RIDS => $req_info->{'rid'});
+    $r->subprocess_env(RID => $req_info->{'rid'});
 
     # make sure we use the one sent, not the one for this interaction
     $r->subprocess_env(TXN_ID => $req->param('txn_id'));
@@ -162,7 +162,9 @@ sub process_action {
     $r->subprocess_env(RULE_NAME => $req->param('rule'));
 
     if($req->param('type') eq 'click') {
-	$r->subprocess_env(CB_INFO => $req->param('url'));
+      $r->subprocess_env(CB_INFO => $req->param('url'));
+    } elsif ($req->param('type') eq 'explicit') {
+      $r->subprocess_env(CB_INFO => $req->param('message'));
     }
 
     $logger->debug("Finish time: ", time, " Start time: ", $r->subprocess_env('START_TIME'));

@@ -36,6 +36,8 @@ use Log::Log4perl qw(get_logger :levels);
 use Log::Log4perl::Level;
 
 use Kynetx::Memcached qw(:all);
+use URI::Escape ('uri_escape');
+
 
 
 use Exporter;
@@ -53,6 +55,7 @@ mk_created_session_name
 config_logging
 turn_on_logging
 turn_off_logging
+mk_url
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -171,4 +174,13 @@ sub after_now {
 
 }
 
+sub mk_url {
+  my ($base_url, $url_options) = @_;
 
+  $base_url .= join('&', map("$_=".uri_escape($url_options->{$_}), keys %{ $url_options }));
+
+
+  return $base_url;
+}
+
+1;

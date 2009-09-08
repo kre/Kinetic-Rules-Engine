@@ -35,11 +35,14 @@ use warnings;
 use Log::Log4perl qw(get_logger :levels);
 use DateTime;
 use Time::HiRes qw(time);
+use LWP::Simple;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Kynetx::Session qw/session_id/;
+use Kynetx::Util qw/mk_url/;
+
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -48,6 +51,7 @@ our @ISA         = qw(Exporter);
 our %EXPORT_TAGS = (all => [ 
 qw(
 log_rule_fire
+explicit_callback
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -111,7 +115,34 @@ sub log_rule_fire {
 
 
 }
-    
+
+sub explicit_callback {
+  my ($req_info, $rule_name, $message) = @_;
+  
+  my $logger = get_logger();
+
+  $logger->debug("[explicit callback] Storing explicit logging data for " . $req_info->{'rid'} );
+
+  my $callback_url = 'http://' . Kynetx::Configure::get_config("CB_HOST") . '/callback/?';
+
+  my $cb_options = {'type' => 'explicit',
+		    'txn_id' => $req_info->{'txn_id'},
+		    'element' => '',
+		    'sense' => 'success',
+		    'message' => $message,
+		    'rule' => $rule_name,
+		    'rid' => $req_info->{'rid'}
+		   };
+
+  $callback_url = mk_url($callback_url, $cb_options );
+
+  my $vv = LWP::Simple::get($callback_url);
+  $logger->debug("[explicit callback] Using URL $callback_url");
+
+  return '';
+		  
+}
+
 
 sub array_to_string {
     my ($arr) = @_;

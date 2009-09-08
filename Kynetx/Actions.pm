@@ -40,6 +40,7 @@ use Kynetx::JavaScript qw(:all);
 use Kynetx::Rules qw(:all);
 use Kynetx::Environments qw(:all);
 use Kynetx::Session q/:all/;
+use Kynetx::Log q/:all/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -690,15 +691,28 @@ sub eval_post_expr {
     if($fired) {
 	$logger->debug("[post] evaling consequent");
 	$js .= join(" ", 
-		    map {eval_persistent_expr($_, $session, $req_info, $rule_env, $rule->{'name'})} @{ $cons });
+		    map {eval_post_statement($_, $session, $req_info, $rule_env, $rule->{'name'})} @{ $cons });
     } else {
 	$logger->debug("[post] evaling alternate");
 	$js .= join(" ", 
-		    map {eval_persistent_expr($_, $session, $req_info, $rule_env, $rule->{'name'})} @{ $alt } );
+		    map {eval_post_statement($_, $session, $req_info, $rule_env, $rule->{'name'})} @{ $alt } );
     }
 
 
 }
+
+sub eval_post_statement {
+    my($expr, $session, $req_info, $rule_env, $rule_name) = @_;
+
+#    my $logger = get_logger();
+
+    if ($expr->{'type'} eq 'persistent') {
+      return eval_persistent_expr($expr, $session, $req_info, $rule_env, $rule_name);
+    } elsif ($expr->{'type'} eq 'log') {
+      return eval_log_statement($expr, $session, $req_info, $rule_env, $rule_name);
+    }
+
+  }
 
 sub eval_persistent_expr {
     my($expr, $session, $req_info, $rule_env, $rule_name) = @_;
@@ -772,6 +786,27 @@ sub eval_persistent_expr {
 }
 
 
+sub eval_log_statement {
+    my($expr, $session, $req_info, $rule_env, $rule_name) = @_;
+
+#    my $logger = get_logger();
+
+#    $logger->debug("eval_log_statement ", Dumper($expr));
+
+    my $js ='';
+
+    # call the callback server here with a HTTP GET
+    $js = explicit_callback($req_info, 
+			    $rule_name, 
+			    den_to_exp(
+				       eval_js_expr($expr->{'what'},
+						    $rule_env,
+						    $rule_name,
+						    $req_info,
+						    $session)));
+
+    return $js;
+}
 
 sub get_precondition_test {
     my $rule = shift;
