@@ -559,7 +559,7 @@ click: ('click' | 'change') VAR '=' STRING click_link(?)
 click_link: 'triggers' persistent_expr
   {$return=$item[2]}
 
-post_block: post '{' persistent_expr(s? /;/) SEMICOLON(?) '}' post_alternate(?)
+post_block: post '{' post_statement(s? /;/) SEMICOLON(?) '}' post_alternate(?)
      {$return=
       {'type' => $item[1],
        'cons' => $item[3],
@@ -572,8 +572,10 @@ post: 'fired'
     | 'notfired'
 
 
-post_alternate: 'else' '{' persistent_expr(s?  /;/) SEMICOLON(?) '}'
+post_alternate: 'else' '{' post_statement(s?  /;/) SEMICOLON(?) '}'
       {$return=$item[3]}
+
+post_statement: persistent_expr|log_statement
 
 persistent_expr: persistent_clear
    | persistent_set
@@ -642,6 +644,16 @@ counter_op: '+='
 
 counter_start: 'from' expr
 
+
+log_statement: 'log' expr
+     {$return=
+      {'type' => 'log',
+       'what' => $item[2]
+      }
+     }
+ 
+
+
 expr: term term_op expr
       {$return=
        {'type' => 'prim',
@@ -667,6 +679,12 @@ term: factor factor_op term
 	  'args' => $item[5],
 	  'obj' => $item[1]
          }}
+    | factor '=>' expr '|' expr
+        {$return = {'type' => 'condexpr',
+                    'test' => $item[1],
+                    'then' => $item[3],
+                    'else' => $item[5],
+                   }}
     | factor
 
 factor_op: '*'|'/'
@@ -695,7 +713,7 @@ factor: NUM
         {$return=Kynetx::Parser::mk_expr_node('array',$item[2])}
       | '{' hash_line(s? /,/) '}'
           {$return=Kynetx::Parser::mk_expr_node('hashraw',$item[2])}
-      | '(' expr ')'
+      | '(' (predexpr|expr) ')'
         {$return=$item[2]}
       | <error>
 

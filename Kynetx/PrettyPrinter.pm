@@ -520,8 +520,6 @@ sub pp_pred {
     
     if($pred->{'op'} eq 'negation') {
 	return 'not' . pp_predexpr($pred->{'args'}->[0]) ;
-    } elsif($pred->{'op'} eq 'negation') {
-	return 'not' . pp_predexpr($pred->{'args'}->[0]) ;
     } else {
 	return 
 	    '(' . 
@@ -716,6 +714,8 @@ sub pp_post_expr {
     my $o = $beg;
     if($node->{'type'} eq 'persistent') {
 	$o.= pp_persistent_expr($node);
+    } elsif($node->{'type'} eq 'log') {
+	$o.= pp_log_statement($node);
     }
     return $o . ";\n";
 }
@@ -765,6 +765,15 @@ sub pp_mark_with {
 	return '';
     }
 }
+
+sub pp_log_statement {
+    my ($node) = @_;
+    
+    my $o = '';
+
+    $o = 'log ' . pp_expr($node->{'what'});
+
+  }
 
 
 # expressions below
@@ -822,6 +831,17 @@ sub pp_expr {
 	    $o .= $expr->{'predicate'} . "(";
 	    $o .= join ", ", pp_rands($expr->{'args'});
 	    $o .= ")";
+	    return  $o ;
+	};
+	/^pred$/ && do {
+	    my $o = pp_pred($expr);
+	    return  $o ;
+	};
+	/^condexpr$/ && do {
+	    my $o = '';
+	    $o .= pp_predexpr($expr->{'test'}) . ' => ';
+	    $o .= pp_expr($expr->{'then'}) . ' | ';
+	    $o .= pp_expr($expr->{'else'});
 	    return  $o ;
 	};
 # 	/counter_pred/ && do {
