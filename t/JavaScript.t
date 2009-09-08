@@ -54,6 +54,7 @@ use Kynetx::Parser qw/:all/;
 use Kynetx::Operators qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::JavaScript qw/:all/;
+use Kynetx::Predicates qw/:all/;
 use Kynetx::Predicates::Referers qw/:all/;
 use Kynetx::Predicates::Markets qw/:all/;
 use Kynetx::Predicates::Location qw/:all/;
@@ -383,6 +384,41 @@ add_expr_testcase(
     "(5 + (6 * 3))",
     mk_expr_node('num', 23),
     0);
+
+
+#
+# conditional expressions
+#
+$str = <<_KRL_;
+true => 5 | 6
+_KRL_
+add_expr_testcase(
+    $str,
+    "true ? 5 : 6",
+    mk_expr_node('num', 5),
+    0);
+
+
+$str = <<_KRL_;
+(5 > 6) => 5 | 6
+_KRL_
+add_expr_testcase(
+    $str,
+    "(5 > 6) ? 5 : 6",
+    mk_expr_node('num', 6),
+    0);
+
+
+$str = <<_KRL_;
+(5 > 6 || 4 > 3) => 5 | 6
+_KRL_
+add_expr_testcase(
+    $str,
+    "((5 > 6) || (4 > 3)) ? 5 : 6",
+    mk_expr_node('num', 5),
+    0);
+
+
 
 $str = <<_KRL_;
 [5, 6, 7]

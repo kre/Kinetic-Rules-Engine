@@ -33,7 +33,7 @@ use lib qw(/web/lib/perl);
 use strict;
 
 use Test::More;
-plan tests => 4;
+plan tests => 5;
 use Test::LongString;
 
 use Kynetx::Test qw/:all/;
@@ -58,6 +58,17 @@ ok(!before_now($after), "before_now: after");
 # after_now
 ok(after_now($after), "after_now: after");
 ok(!after_now($before), "after_now: before");
+
+
+my $url = 'http://www.windley.com/?';
+
+my $url_options = {'A' => '1',
+		   'B' => '2',
+		   'C' => 'This is a test',
+		  };
+
+
+is(mk_url($url, $url_options), "http://www.windley.com/?A=1&C=This%20is%20a%20test&B=2");
 
 1;
 
