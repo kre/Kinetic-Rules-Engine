@@ -174,8 +174,13 @@ sub eval_ruleset {
     turn_off_logging if($ruleset->{'meta'}->{'logging'} && 
 			$ruleset->{'meta'}->{'logging'} eq "on");
 
+    #add verify logging call
+    if((Kynetx::Configure::get_config('USE_KVERIFY') || '0') == '1'){
+      $js .= "KOBJ.logVerify = KOBJ.logVerify || function(t,a,c){};";
+      $js .= "KOBJ.logVerify('" . $req_info->{'txn_id'} . "', '$rid', '" . Kynetx::Configure::get_config('EVAL_HOST') . "');";
+    }
+
     return <<EOF
-KOBJ.registerClosure = KOBJ.registerClosure || function(r,c){c();};
 KOBJ.registerClosure('$rid', function() { $js });
 EOF
 }
