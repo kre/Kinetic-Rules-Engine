@@ -74,6 +74,11 @@ if($opt{'a'}) {  # save to S3
 # these are not in the code repository on purpose
     require amazon_credentials; 
 
+    warn "\nWARNING!!!!! 127.0.0.1 appear in the KRL runetime file on S3\n" if 
+      Kynetx::Configure::get_config('INIT_HOST') eq '127.0.0.1' ||
+      Kynetx::Configure::get_config('CB_HOST') eq '127.0.0.1' ||
+      Kynetx::Configure::get_config('KRL_HOST') eq '127.0.0.1' ||
+      Kynetx::Configure::get_config('EVAL_HOST') eq '127.0.0.1';
 
     # compress the JS program
     my $cjs = Compress::Zlib::memGzip($js);

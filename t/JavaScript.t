@@ -390,7 +390,7 @@ add_expr_testcase(
 # conditional expressions
 #
 $str = <<_KRL_;
-true => 5 | 6
+(true) => 5 | 6
 _KRL_
 add_expr_testcase(
     $str,

@@ -654,7 +654,8 @@ log_statement: 'log' expr
  
 
 
-expr: term term_op expr
+expr: conditional_expression
+    | term term_op expr
       {$return=
        {'type' => 'prim',
         'op' => $item[2],
@@ -664,6 +665,19 @@ expr: term term_op expr
     | term
 
 term_op: '+'|'-'
+
+conditional_expression : cond_expr_cond '=>' expr '|' expr
+        {$return = {'type' => 'condexpr',
+                    'test' => $item[1],
+                    'then' => $item[3],
+                    'else' => $item[5],
+                   }}
+
+cond_expr_cond: '(' predexpr ')'
+    {$return = $item[2]}
+   | simple_pred
+   | qualified_pred
+  
 
 term: factor factor_op term
       {$return=
@@ -679,12 +693,6 @@ term: factor factor_op term
 	  'args' => $item[5],
 	  'obj' => $item[1]
          }}
-    | factor '=>' expr '|' expr
-        {$return = {'type' => 'condexpr',
-                    'test' => $item[1],
-                    'then' => $item[3],
-                    'else' => $item[5],
-                   }}
     | factor
 
 factor_op: '*'|'/'

@@ -1,3 +1,9 @@
+2009-09-09  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Parser.pm: Changed conditional expression parsing to
+	  speed it up by several orders of magnitude on large conditional
+	  expressions. 
+
 2009-09-08  Phil Windley  <pjw@kynetx.com>
 
 	* etc/tmpl/httpd-perl.conf.tmpl: Added RID of executing ruleset to
