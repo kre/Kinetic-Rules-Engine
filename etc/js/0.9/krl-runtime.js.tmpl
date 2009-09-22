@@ -120,6 +120,8 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 
 
 
+
+
 KOBJ.logger = function(type,txn_id,element,url,sense,rule,rid) {
     e=document.createElement("script");
     e.src=KOBJ.callback_url+"?type="+type+"&txn_id="+txn_id+"&element="+element+"&sense="+sense+"&url="+escape(url)+"&rule="+rule;
@@ -202,6 +204,195 @@ KOBJ.BlindUp = function (id, speed) {
 KOBJ.hide = function (id) {
     $K(id).hide();
 };
+
+//new jessie actions
+
+
+
+KOBJ.createPopIn = function(config,content) {
+
+	defaults = {
+
+		"position": "left-center",
+		"imageLocation": "http://k-misc.s3.amazonaws.com/actions/pop_in_feedback.jpg",
+		"bg_color": "#FFFFFF",
+		"link_color": "#FF0000",
+		"overlay_color": "#000000"
+
+	};
+	if (typeof config === 'object') {
+		jQuery.extend(defaults, config);
+	}
+
+	var side1;
+	var side2;
+	var distance;
+
+	switch(defaults["position"])
+	{
+	case "top-left":
+		side1 = "top";
+		side2 = "left";
+		distance = "10%";
+		break;
+	case "top-center":
+		side1 = "top";
+		side2 = "left";
+		distance = "45%";
+		break;
+	case "top-right":
+		side1 = "top";
+		side2 = "right";
+		distance = "10%";
+		break;
+	case "bottom-left":
+		side1 = "bottom";
+		side2 = "left";
+		distance = "10%";
+		break;
+	case "bottom-center":
+		side1 = "bottom";
+		side2 = "left";
+		distance = "45%";
+		break;
+	case "bottom-right":
+		side1 = "bottom";
+		side2 = "right";
+		distance = "10%";
+		break;
+	case "left-top":
+		side1 = "left";
+		side2 = "top";
+		distance = "10%";
+		break;
+	case "left-center":
+		side1 = "left";
+		side2 = "top";
+		distance = "45%";
+		break;
+	case "left-bottom":
+		side1 = "left";
+		side2 = "bottom";
+		distance = "10%";
+		break;
+	case "right-top":
+		side1 = "right";
+		side2 = "top";
+		distance = "10%";
+		break;
+	case "right-center":
+		side1 = "right";
+		side2 = "top";
+		distance = "45%";
+		break;
+	case "right-bottom":
+		side1 = "right";
+		side2 = "bottom";
+		distance = "10%";
+		break;
+	default:
+		side1 = "left";
+		side2 = "top";
+		distance = "45%";
+		break;
+	}
+	
+	$K('body').append('<div id="KOBJ_PopIn_Link" style="'+side1+': 0; '+side2+':'+distance+'; -moz-border-radius-bottomright: 12px; -moz-border-radius-topright: 12px; background-color:'+defaults["link_color"]+'; display:block; margin-top:-45px; position: fixed;  z-index:100001;"><a href="javascript:KOBJ_create_pop_in()"><img src="'+defaults["imageLocation"]+'" alt="KOBJ_pop_in" border="none" /></a>');
+	KOBJ_create_pop_in = function() {
+		var OverlayPresent = $K('#KOBJ_PopIn_Overlay').length;
+		var ContentPresent = $K('#KOBJ_PopIn_Dialog').length;
+	
+		if(OverlayPresent) {
+			$K('#KOBJ_PopIn_Overlay').fadeIn('slow');
+		}
+		if(ContentPresent) {
+			$K('#KOBJ_PopIn_Dialog').fadeIn('slow');
+		}
+		if(!OverlayPresent) {
+			$K('body').append('<div id="KOBJ_PopIn_Overlay" style="display: block; position: fixed; background-color: '+defaults["overlay_color"]+'; height: 100%; width: 100%; left: 0; filter:alpha(opacity=70); opacity: 0.7; top: 0; z-index: 100002; display: none;" />');
+			$K('#KOBJ_PopIn_Overlay').fadeIn('slow');
+		}
+		if(!ContentPresent) {
+			$K('body').append('<div id="KOBJ_PopIn_Dialog" style="top: 45%; right: 40%; -moz-border-radius: 5px; display: block; height: auto; width: 20%; position: fixed; margin: 0 auto; text-align: center; z-index: 100003; display: none; background: '+defaults["bg_color"]+'; filter:alpha(opacity=85); opacity: .85; "><div class="close" id="KOBJ_Close" style="cursor: pointer; float: right; font-weight: bold; margin-right: 8px; margin-top: 5px;">x</div><div id="KOBJ_PopIn_Content" style="padding: 10px; ">'+content+'</div></div>');
+			$K("#KOBJ_Close").click(function() {KOBJ_close_pop_in()});
+			$K('#KOBJ_PopIn_Dialog').fadeIn('slow');
+		}
+	
+	};
+	
+	KOBJ_close_pop_in = function() {
+		
+		$K('#KOBJ_PopIn_Overlay').fadeOut('slow');
+		$K('#KOBJ_PopIn_Dialog').fadeOut('slow');
+	
+	};
+
+};
+
+
+KOBJ.bar = function(config,content) {
+	
+	defaults = {
+
+
+		"sticky": false,
+		"width": "98.5%",
+		"height": "30px",
+		"id": "KOBJ_test_bar",
+		"bg_color": "#222222",
+		"delay": 3000,
+		"position": "bottom",
+		"opacity": ".8",
+		"color": "#ffffff"
+
+	};
+	if (typeof config === 'object') {
+		if(config["sticky"] === true) {
+			config["delay"] = false;
+		}
+		jQuery.extend(defaults, config);
+
+	}
+		var side = "";
+		var corners = "";
+		var direction = "";
+		
+	switch(defaults["position"]) {
+	case "top":
+		side = "top";
+		corners = "bottom";
+		direction = "down";
+		break;
+	case "bottom":
+		side = "bottom";
+		corners = "top";
+		direction = "up";
+		break;
+	default:
+		side = "bottom";
+		corners = "top";
+		direction = "up";
+		break;
+	}
+
+
+	$K('body').append('<div id="'+defaults["id"]+'_wrapper" style="display: none; position: fixed; '+side+': 0; width: 100%; height: '+defaults["height"]+';"><div id="'+defaults["id"]+'" style="color: '+defaults["color"]+'; height: '+defaults["height"]+'; background: '+defaults["bg_color"]+'; opacity: '+defaults["opacity"]+'; -moz-border-radius-'+corners+'right: 5px; -moz-border-radius-'+corners+'left: 5px; margin-left: 12px; margin-right: 30px;"><div class="close" style="float: right; font-weight: bold; font-size: 20px; cursor: pointer; margin-right: 10px; margin-top: 5px;">x</div><div class="KOBJ_bar_content" style="color: '+defaults["color"]+';">'+content+'</div></div>');
+	$K('#'+defaults["id"]+'>.close').click(function() { bar_close(defaults["id"]); });
+	$K('#'+defaults["id"]+'_wrapper').slideDown('slow');
+	if(defaults["sticky"] === false) {
+		setTimeout(function() {bar_close(defaults["id"]);},defaults["delay"]);
+	}
+
+
+};
+
+KOBJ.bar_close = function(id) {
+	$K('#'+id).fadeOut('slow');
+};
+
+
+//end new jessie actions
+
 
 // helper functions used by float
 KOBJ.buildDiv = function (uniq, pos, top, side) {
