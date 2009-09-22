@@ -391,6 +391,106 @@ KOBJ.bar_close = function(id) {
 };
 
 
+KOBJ.annotate_localsearch_results = function(annotate, config, cb) {
+	var defaults = {
+		"name": "KOBJL",
+		"results_lister" : "table.ts tr td:last-child:has(h4),.sc_ol1li,table.ts tr td:last-child:has(div):has(:not(.csb)), #srs_orderedList>.llsResultItem,.res.sc-ng.sc-lc-bz-m div.content>ol>li,#yls-rs-res tbody tr .yls-rs-bizinfo,.vcard"
+	};
+
+	if (typeof config === 'object') {
+		jQuery.extend(defaults, config);
+	}
+	function runAnnotate(){
+		var count = 0;
+		$K(defaults['results_lister']).each(function() {
+
+			var toAnnotate = this;
+
+			var phoneTemp = $K(toAnnotate).find("nobr,.sc_hl1 li:eq(1),.tel,[id *= lblPhone]").text().replace(/[\u00B7() -]/g, "");
+			var domainTemp = $K(toAnnotate).find("cite").text().substr(3); 
+			if(phone==""){
+				phoneTemp = $K(toAnnotate).find(".addr");
+				phoneTemp = phone.text().replace(/(\(\d\d\d\)\s\d\d\d-\d\d\d\d)[\w-».,\s]+/g,"$1").replace(/[\u00B7() -]/g, "");
+			}
+			if(phone==""){
+				phoneTemp = $K(toAnnotate);
+				phoneTemp = phone.text().replace(/[\w-,\s]+(\(\d\d\d\)\s\d\d\d-\d\d\d\d)[\w-».,\s]+/g,"$1").replace(/[\u00B7() -]/g, "");
+			}
+
+
+
+			toAnnotate.KOBJ = function() {
+
+
+				var phone = phoneTemp;
+				var domain = domainTemp;
+				var height = $K(toAnnotate).height();
+				
+				return {
+
+					phone: function(){
+						return phone;
+					},
+
+					phone: function(newPhone){
+						phone = newPhone;
+					},
+
+					domain: function(){
+						return domain;
+					},
+					
+					domain: function(newDomain){
+						domain = newDomain
+					},
+
+					height: function(){
+						return height;
+					},
+
+					height: function(newHeight){
+						height = newHeight;
+					}
+				}
+
+
+
+
+
+			}();
+
+
+
+
+			if(toAnnotate.KOBJ.height > 60){
+				toAnnotate.KOBJ.compact = false;
+			} else {
+				toAnnotate.KOBJ.compact = true;
+			}
+
+			var contents = annotate(toAnnotate);
+			if (contents) {
+				count++;
+				$K(":last",this).after(contents);
+			}
+		}
+	
+		KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'] );
+		cb();
+	};
+
+	runAnnotate();
+
+	//if this is google ajax serp, wrap the 'done' method call
+	if(typeof je === "object" && je.zz){
+		var gResultDone = je.zz;
+		je.zz = function(a, b){
+			gResultDone(a, b);
+			runAnnotate();
+		};
+	}
+};
+
 //end new jessie actions
 
 
