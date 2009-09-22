@@ -378,13 +378,13 @@ unconditional_action: primrule
    | actionblock
         {$return = $item{actionblock}}
 
-primrule: rule_label(?) action_name '(' expr(s? /,/) ')' modifier_clause(?)
+primrule: rule_label(?) VAR '(' expr(s? /,/) ')' modifier_clause(?)
         {$return =
          {'label' => $item[1][0],
           'action' => 
              {'args' => $item[4],
               'modifiers' => $item[6][0],  # returned as array of array
-              'name' => $item{action_name}
+              'name' => $item[2]
              }
          }
         }
