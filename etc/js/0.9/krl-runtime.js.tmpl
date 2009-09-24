@@ -408,64 +408,26 @@ KOBJ.annotate_localsearch_results = function(annotate, config, cb) {
 
 			var phoneTemp = $K(toAnnotate).find("nobr,.sc_hl1 li:eq(1),.tel,[id *= lblPhone]").text().replace(/[\u00B7() -]/g, "");
 			var domainTemp = $K(toAnnotate).find("cite").text().substr(3); 
-			if(phone==""){
+			if(phoneTemp===""){
 				phoneTemp = $K(toAnnotate).find(".addr");
-				phoneTemp = phone.text().replace(/(\(\d\d\d\)\s\d\d\d-\d\d\d\d)[\w-».,\s]+/g,"$1").replace(/[\u00B7() -]/g, "");
+				phoneTemp = phoneTemp.text().replace(/(\(\d\d\d\)\s\d\d\d-\d\d\d\d)[\w-».,\s]+/g,"$1").replace(/[\u00B7() -]/g, "");
 			}
-			if(phone==""){
+			if(phoneTemp===""){
 				phoneTemp = $K(toAnnotate);
-				phoneTemp = phone.text().replace(/[\w-,\s]+(\(\d\d\d\)\s\d\d\d-\d\d\d\d)[\w-».,\s]+/g,"$1").replace(/[\u00B7() -]/g, "");
+				phoneTemp = phoneTemp.text().replace(/[\w-,\s]+(\(\d\d\d\)\s\d\d\d-\d\d\d\d)[\w-».,\s]+/g,"$1").replace(/[\u00B7() -]/g, "");
 			}
+			var heightTemp = $K(toAnnotate).height();
+
+			toAnnotate.KOBJ = {};
+			$K(toAnnotate.KOBJ).data("phone",phoneTemp);
+			$K(toAnnotate.KOBJ).data("domain",domainTemp);
+			$K(toAnnotate.KOBJ).data("height",heightTemp);
 
 
-
-			toAnnotate.KOBJ = function() {
-
-
-				var phone = phoneTemp;
-				var domain = domainTemp;
-				var height = $K(toAnnotate).height();
-				
-				return {
-
-					phone: function(){
-						return phone;
-					},
-
-					phone: function(newPhone){
-						phone = newPhone;
-					},
-
-					domain: function(){
-						return domain;
-					},
-					
-					domain: function(newDomain){
-						domain = newDomain
-					},
-
-					height: function(){
-						return height;
-					},
-
-					height: function(newHeight){
-						height = newHeight;
-					}
-				}
-
-
-
-
-
-			}();
-
-
-
-
-			if(toAnnotate.KOBJ.height > 60){
-				toAnnotate.KOBJ.compact = false;
+			if(heightTemp > 60){
+				$K(toAnnotate.KOBJ).data("compact",false);
 			} else {
-				toAnnotate.KOBJ.compact = true;
+				$K(toAnnotate.KOBJ).data("compact",true);
 			}
 
 			var contents = annotate(toAnnotate);
@@ -473,11 +435,11 @@ KOBJ.annotate_localsearch_results = function(annotate, config, cb) {
 				count++;
 				$K(":last",this).after(contents);
 			}
-		}
+		});
 	
 		KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'] );
 		cb();
-	};
+	}
 
 	runAnnotate();
 
