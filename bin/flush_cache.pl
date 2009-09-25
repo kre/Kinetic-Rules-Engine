@@ -8,6 +8,11 @@ use Getopt::Std;
 use Cache::Memcached;
 use Log::Log4perl qw(get_logger :levels);
 use Kynetx::Memcached qw(:all);
+use Kynetx::Configure qw/:all/;
+
+
+# configure KNS
+Kynetx::Configure::configure();
 
 Log::Log4perl->easy_init($WARN);
 
