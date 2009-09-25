@@ -50,6 +50,7 @@ use Kynetx::Request qw(:all);
 use Kynetx::Repository qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Datasets qw(:all);
+use Kynetx::Environments qw(:all);
 
 use Data::Dumper;
 
@@ -218,7 +219,7 @@ sub get_datasets {
 	    my $val = 0;
 	    if(defined $g->{'name'} && Kynetx::Datasets::global_dataset($g)) { # more than 24 hours
 		$logger->debug("Creating JS for decl " . $g->{'name'});
-		($this_js, $var, $val) = mk_dataset_js($g, $req_info, {}); # empty rule env
+		($this_js, $var, $val) = mk_dataset_js($g, $req_info, empty_rule_env()); # empty rule env
 	    }
 	    $js .= $this_js;
 	}

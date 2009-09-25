@@ -296,12 +296,12 @@ KOBJ.createPopIn = function(config,content) {
 		distance = "45%";
 		break;
 	}
-	
+
 	$K('body').append('<div id="KOBJ_PopIn_Link" style="'+side1+': 0; '+side2+':'+distance+'; -moz-border-radius-bottomright: 12px; -moz-border-radius-topright: 12px; background-color:'+defaults["link_color"]+'; display:block; margin-top:-45px; position: fixed;  z-index:100001;"><a href="javascript:KOBJ_create_pop_in()"><img src="'+defaults["imageLocation"]+'" alt="KOBJ_pop_in" border="none" /></a>');
 	KOBJ_create_pop_in = function() {
 		var OverlayPresent = $K('#KOBJ_PopIn_Overlay').length;
 		var ContentPresent = $K('#KOBJ_PopIn_Dialog').length;
-	
+
 		if(OverlayPresent) {
 			$K('#KOBJ_PopIn_Overlay').fadeIn('slow');
 		}
@@ -314,31 +314,31 @@ KOBJ.createPopIn = function(config,content) {
 		}
 		if(!ContentPresent) {
 			$K('body').append('<div id="KOBJ_PopIn_Dialog" style="top: 45%; right: 40%; -moz-border-radius: 5px; display: block; height: auto; width: 20%; position: fixed; margin: 0 auto; text-align: center; z-index: 100003; display: none; background: '+defaults["bg_color"]+'; filter:alpha(opacity=85); opacity: .85; "><div class="close" id="KOBJ_Close" style="cursor: pointer; float: right; font-weight: bold; margin-right: 8px; margin-top: 5px;">x</div><div id="KOBJ_PopIn_Content" style="padding: 10px; ">'+content+'</div></div>');
-			$K("#KOBJ_Close").click(function() {KOBJ_close_pop_in()});
-			$K('#KOBJ_PopIn_Dialog').fadeIn('slow');
+		  $K("#KOBJ_Close").click(function() {KOBJ_close_pop_in();});
+		  $K('#KOBJ_PopIn_Dialog').fadeIn('slow');
 		}
-	
+
 	};
-	
+
 	KOBJ_close_pop_in = function() {
-		
+
 		$K('#KOBJ_PopIn_Overlay').fadeOut('slow');
 		$K('#KOBJ_PopIn_Dialog').fadeOut('slow');
-	
+
 	};
 
 };
 
 
-KOBJ.bar = function(config,content) {
-	
+KOBJ.statusbar = function(config,content) {
+
 	defaults = {
 
 
 		"sticky": false,
 		"width": "98.5%",
 		"height": "30px",
-		"id": "KOBJ_test_bar",
+		"id": "KOBJ_status_bar",
 		"bg_color": "#222222",
 		"delay": 3000,
 		"position": "bottom",
@@ -356,7 +356,7 @@ KOBJ.bar = function(config,content) {
 		var side = "";
 		var corners = "";
 		var direction = "";
-		
+
 	switch(defaults["position"]) {
 	case "top":
 		side = "top";
@@ -376,22 +376,21 @@ KOBJ.bar = function(config,content) {
 	}
 
 
-	$K('body').append('<div id="'+defaults["id"]+'_wrapper" style="display: none; position: fixed; '+side+': 0; width: 100%; height: '+defaults["height"]+';"><div id="'+defaults["id"]+'" style="color: '+defaults["color"]+'; height: '+defaults["height"]+'; background: '+defaults["bg_color"]+'; opacity: '+defaults["opacity"]+'; -moz-border-radius-'+corners+'right: 5px; -moz-border-radius-'+corners+'left: 5px; margin-left: 12px; margin-right: 30px;"><div class="close" style="float: right; font-weight: bold; font-size: 20px; cursor: pointer; margin-right: 10px; margin-top: 5px;">x</div><div class="KOBJ_bar_content" style="color: '+defaults["color"]+';">'+content+'</div></div>');
-	$K('#'+defaults["id"]+'>.close').click(function() { bar_close(defaults["id"]); });
+	$K('body').append('<div id="'+defaults["id"]+'_wrapper" style="display: none; position: fixed; '+side+': 0; width: 100%; height: '+defaults["height"]+';"><div id="'+defaults["id"]+'" style="color: '+defaults["color"]+'; height: '+defaults["height"]+'; background: '+defaults["bg_color"]+'; opacity: '+defaults["opacity"]+'; -moz-border-radius-'+corners+'right: 5px; -moz-border-radius-'+corners+'left: 5px; margin-left: 12px; margin-right: 30px;"><div class="close" style="float: right; font-weight: bold; font-size: 20px; cursor: pointer; margin-right: 10px; margin-top: 5px;">x</div><div class="KOBJ_statusbar_content" style="color: '+defaults["color"]+';">'+content+'</div></div>');
+	$K('#'+defaults["id"]+'>.close').click(function() { KOBJ.statusbar_close(defaults["id"]); });
 	$K('#'+defaults["id"]+'_wrapper').slideDown('slow');
 	if(defaults["sticky"] === false) {
-		setTimeout(function() {bar_close(defaults["id"]);},defaults["delay"]);
+		setTimeout(function() {KOBJ.statusbar_close(defaults["id"]);},defaults["delay"]);
 	}
 
 
 };
 
-KOBJ.bar_close = function(id) {
+KOBJ.statusbar_close = function(id) {
 	$K('#'+id).fadeOut('slow');
 };
 
-
-KOBJ.annotate_localsearch_results = function(annotate, config, cb) {
+KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 	var defaults = {
 		"name": "KOBJL",
 		"results_lister" : "table.ts tr td:last-child:has(h4),.sc_ol1li,table.ts tr td:last-child:has(div):has(:not(.csb)), #srs_orderedList>.llsResultItem,.res.sc-ng.sc-lc-bz-m div.content>ol>li,#yls-rs-res tbody tr .yls-rs-bizinfo,.vcard"
@@ -407,14 +406,14 @@ KOBJ.annotate_localsearch_results = function(annotate, config, cb) {
 			var toAnnotate = this;
 
 			var phoneTemp = $K(toAnnotate).find("nobr,.sc_hl1 li:eq(1),.tel,[id *= lblPhone]").text().replace(/[\u00B7() -]/g, "");
-			var domainTemp = $K(toAnnotate).find("cite").text().substr(3); 
+			var domainTemp = $K(toAnnotate).find("cite").text().substr(3);
 			if(phoneTemp===""){
 				phoneTemp = $K(toAnnotate).find(".addr");
-				phoneTemp = phoneTemp.text().replace(/(\(\d\d\d\)\s\d\d\d-\d\d\d\d)[\w-».,\s]+/g,"$1").replace(/[\u00B7() -]/g, "");
+				phoneTemp = phoneTemp.text().replace(/(\(\d\d\d\)\s\d\d\d-\d\d\d\d)/g,"$1").replace(/[\u00B7() -]/g, "");
 			}
 			if(phoneTemp===""){
 				phoneTemp = $K(toAnnotate);
-				phoneTemp = phoneTemp.text().replace(/[\w-,\s]+(\(\d\d\d\)\s\d\d\d-\d\d\d\d)[\w-».,\s]+/g,"$1").replace(/[\u00B7() -]/g, "");
+				phoneTemp = phoneTemp.text().replace(/[\w-,\s]+(\(\d\d\d\)\s\d\d\d-\d\d\d\d)/g,"$1").replace(/[\u00B7() -]/g, "");
 			}
 			var heightTemp = $K(toAnnotate).height();
 
@@ -436,8 +435,8 @@ KOBJ.annotate_localsearch_results = function(annotate, config, cb) {
 				$K(":last",this).after(contents);
 			}
 		});
-	
-		KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'] );
+
+		KOBJ.logger('annotated_local_search_results', config['txn_id'], count, '', 'success', config['rule_name'] );
 		cb();
 	}
 
@@ -452,6 +451,7 @@ KOBJ.annotate_localsearch_results = function(annotate, config, cb) {
 		};
 	}
 };
+
 
 //end new jessie actions
 

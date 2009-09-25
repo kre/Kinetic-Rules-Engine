@@ -151,53 +151,6 @@ function(uniq, cb, config, annotate_fn) {
 EOF
 
 
-# not finished/tested
-    catfish => <<EOF,
-function(uniq, cb, config, msg) {
-  var id_str = 'kobj_'+uniq;
-
-  var message = \$K('<div>').addClass("CFmessage").css(
-    {"position": "relative",
-     "float": "left",
-     "display": "block",
-     "margin-top": "20px",
-     "padding": "5px 5px 5px 5px",
-     "font-size": "10px"
-    }).html(msg);
-
-  var close_button =
-      \$K('<a></a>').css(
-	  {"color": "rgb(30, 30, 30)",
-	   "width": "20px"
-	  }).click(function(){KOBJ.BlindUp('#'+id_str);false}).html("&times;");
-
-  var closer = \$K('<div>').addClass("KOBJCatfish").css(
-      {"margin": "20px 10px 0pt 25px",
-       "padding": "0pt",
-       "cursor": "pointer", 
-       "float": "right",
-       "font-size": "x-small"
-      }).html(close_button);
-
-  var catfish = \$K('<div>').attr('id','#'+id_str).css(
-      {"position": "fixed", 
-       "bottom": "0", 
-       "left": "0pt",
-       "background": "transparent url(http://frag.kobj.net/clients/images/bkAdBarBtm-greygrn.png) repeat-x left bottom", 
-       "padding": "0",
-       "height": "79px", 
-       "z-index": "100", 
-       "overflow": "hidden",
-       "display": "none", 
-       "width": "100%"
-      }).append(closer).append(message);
-
-  \$K('body').append(catfish);
-  KOBJ.BlindDown('#KOBJ_catfish');
-  cb();
-}
-
-EOF
 
 
     popup => <<EOF,
@@ -230,6 +183,14 @@ function(uniq, cb, config, sel, text) {
  \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text);
  \$K(sel).replaceWith(div);
  \$K(div).slideDown('slow');
+ cb();
+}
+EOF
+
+    # need new "effects" model
+    replace_inner => <<EOF,
+function(uniq, cb, config, sel, text) {
+ \$K(sel).html(text);
  cb();
 }
 EOF
@@ -290,20 +251,27 @@ function(uniq, cb, config, sel, content) {
 }
 EOF
 
-# FIXME: not done with this
-    log_callback => <<EOF,
-function(uniq, cb, config) {
-    KOBJ.logger("click",
-		txn_id,
-		name, 
-	        '', 
-		sense,
-		rule
-	);
-    false;
-    }
+    side_tab => <<EOF,
+function(uniq, cb, config, content) {
+    KOBJ.createPopIn(config, content);
     cb();
+}
 EOF
+
+    status_bar => <<EOF,
+function(uniq, cb, config, content) {
+    KOBJ.statusbar(config, content);
+    cb();
+}
+EOF
+
+    annotate_local_search_results => <<EOF,
+function(uniq, cb, config, annotate_fn) {
+    KOBJ.annotate_local_search_results(annotate_fn, config, cb);
+}
+EOF
+
+
 
 );
 
@@ -488,107 +456,115 @@ sub build_one_action {
     # create comma separated list of arguments 
     my $arg_str = join(',', @{ $args }) || '';
 
-    $logger->debug("[action] ", $action_name, 
-		   ' executing with args (',$arg_str,')');
+    if (defined $actions{$action_name}) {
+  
+      # apply the action function
+      $js .= "(". $actions{$action_name} . "(" . $arg_str . "));\n";
 
-    # apply the action function
-    $js .= "(". $actions{$action_name} . "(" . $arg_str . "));\n";
-
-#    $logger->debug("Env: ", Dumper($rule_env));
-
-    push(@{ $req_info->{'actions'} }, $action_name);
+      $logger->debug("[action] ", $action_name, 
+		     ' executing with args (',$arg_str,')');
 
 
+      #    $logger->debug("Env: ", Dumper($rule_env));
 
-    # function names in this hash indicate if the function is modifiable
-    # FIXME: this isn't a good way to map effects to actions
-    my %modifiable = (
-	'float_url' => 1,
-	'float_html' => 1,
-#	'replace_url' => 1,
-#	'replace_html' => 1,
-	);
+      push(@{ $req_info->{'actions'} }, $action_name);
 
 
-    if($modifiable{$action_name}) {
+
+      # function names in this hash indicate if the function is modifiable
+      # FIXME: this isn't a good way to map effects to actions
+      my %modifiable = (
+			'float_url' => 1,
+			'float_html' => 1,
+			#	'replace_url' => 1,
+			#	'replace_html' => 1,
+		       );
+
+
+      if ($modifiable{$action_name}) {
 	# map our effect names to Sript.taculo.us effect names
 
 	my $effect_name;
-        case: for ($mods{'effect'}) {
-	    /appear/ && do {
-		$effect_name = 'fadeIn';
-	    };
-	    /slide/ && do {
-		$effect_name = 'slideDown';
-	    };
-	    /blind/ && do {
-		$effect_name = 'slideDown';
-	    };
+      case: for ($mods{'effect'}) {
+	  /appear/ && do {
+	    $effect_name = 'fadeIn';
+	  };
+	  /slide/ && do {
+	    $effect_name = 'slideDown';
+	  };
+	  /blind/ && do {
+	    $effect_name = 'slideDown';
+	  };
 	}
 
 
 	$logger->debug("Using effect $effect_name for $mods{'effect'}");
 	$js .= "\$K('#$uniq_id').$effect_name();"  ;
 
-	if($mods{'draggable'} eq 'true') {
-	    $js .= "\$K('#$uniq_id').draggable();";
+	if ($mods{'draggable'} eq 'true') {
+	  $js .= "\$K('#$uniq_id').draggable();";
 	}
 	
-	if($mods{'scrollable'} eq 'true') {
-	    # do nothing
-#	    $js .= "new FixedElement('". $uniq_id . "');";
+	if ($mods{'scrollable'} eq 'true') {
+	  # do nothing
+	  #	    $js .= "new FixedElement('". $uniq_id . "');";
 	}
 
-	if($mods{'highlight'}) {
-	    my $color = '#ffff99';
- 	    case: for ($mods{'highlight'}) {
-		/yellow/ && do {
-		    $color = '#ffff99';
-		};
-		/pink/ && do {
-		    $color = '#ff99ff';
-		};
-		/purple/ && do {
-		    $color = '#99ffff';
-		};
-		/#[A-F0-9]{6}/ && do {
-		    $color = $mods{'highlight'};
-		}
+	if ($mods{'highlight'}) {
+	  my $color = '#ffff99';
+	case: for ($mods{'highlight'}) {
+	    /yellow/ && do {
+	      $color = '#ffff99';
+	    };
+	    /pink/ && do {
+	      $color = '#ff99ff';
+	    };
+	    /purple/ && do {
+	      $color = '#99ffff';
+	    };
+	    /#[A-F0-9]{6}/ && do {
+	      $color = $mods{'highlight'};
 	    }
+	  }
 	    
-#	    $js .= "new Effect.Highlight('$uniq_id', {startcolor: '$color', });"  ;
+	  #	    $js .= "new Effect.Highlight('$uniq_id', {startcolor: '$color', });"  ;
 	}
 
 
 
-    } elsif($action_name eq "popup") {
+      } elsif ($action_name eq "popup") {
 	if ($mods{'effect'} eq 'onpageexit') {
-	    my $funcname = "leave_" . $uniq_id;
-	    $js = "function $funcname () { " . $js . "};\n";
-	    $js .= "document.body.setAttribute('onUnload', '$funcname()');"
+	  my $funcname = "leave_" . $uniq_id;
+	  $js = "function $funcname () { " . $js . "};\n";
+	  $js .= "document.body.setAttribute('onUnload', '$funcname()');"
 	}
-    }
+      }
 
 	
-    if($mods{'delay'}) {
+      if ($mods{'delay'}) {
 
 	my $delay_cb = 
-	     ";KOBJ.logger('timer_expired', '" .
-	                  $req_info->{'txn_id'} . "'," .
-		          "'none', '', 'success', '" .
-			  $rule_name . "','".
-			  $req_info->{'rid'} .
-                          "');";
+	  ";KOBJ.logger('timer_expired', '" .
+	    $req_info->{'txn_id'} . "'," .
+	      "'none', '', 'success', '" .
+		$rule_name . "','".
+		  $req_info->{'rid'} .
+		    "');";
 
 	$js .= $delay_cb;  # add in automatic log of delay expiration
 	
 	$js = "setTimeout(function() { $js },  ($mods{'delay'} * 1000) ); \n";
 
-#	$js = "setTimeout(\'" . $js . "\', " . ($mods{'delay'} * 1000) . ");\n";
+	#	$js = "setTimeout(\'" . $js . "\', " . ($mods{'delay'} * 1000) . ");\n";
+      }
+
+      push(@{ $req_info->{'tags'} }, ($mods{'tags'} || ''));
+      push(@{ $req_info->{'labels'} }, $action_expr->{'label'} || '');
+    } else {
+      $logger->warn("[action] ", $action_name, " undefined");
+      
     }
 
-    push(@{ $req_info->{'tags'} }, ($mods{'tags'} || ''));
-    push(@{ $req_info->{'labels'} }, $action_expr->{'label'} || '');
 
     return $js;
 }

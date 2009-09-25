@@ -99,7 +99,7 @@ sub get_dataset {
     my $source_name = $dataset->{'source'};
 
     # for now, if it's not an HTTP url, assume it's a file.
-    my $type = ($source_name =~ m#^http://#) ? "url" : "file";
+    my $type = ($source_name =~ m#^(http|https)://#) ? "url" : "file";
     $logger->debug("retrieving dataset $name as $type");
     
     my $cache_for = cache_dataset_for($dataset);
