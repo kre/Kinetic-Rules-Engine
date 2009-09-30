@@ -393,7 +393,7 @@ KOBJ.statusbar_close = function(id) {
 KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 	var defaults = {
 		"name": "KOBJL",
-		"results_lister" : "table.ts tr td:last-child:has(h4),.sc_ol1li,table.ts tr td:last-child:has(div):has(:not(.csb)), #srs_orderedList>.llsResultItem,.res.sc-ng.sc-lc-bz-m div.content>ol>li,#yls-rs-res tbody tr .yls-rs-bizinfo,.vcard"
+		"results_lister" : "#results td:last-child:has(h4),.g>table tbody tr td:has(h3),.sc_ol1li, #srs_orderedList>.llsResultItem,.res.sc-ng.sc-lc-bz-m div.content>ol>li,#yls-rs-res tbody tr .yls-rs-bizinfo,.vcard"
 	};
 
 	if (typeof config === 'object') {
@@ -404,23 +404,24 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 		$K(defaults['results_lister']).each(function() {
 
 			var toAnnotate = this;
-
-			var phoneTemp = $K(toAnnotate).find("nobr,.sc_hl1 li:eq(1),.tel,[id *= lblPhone]").text().replace(/[\u00B7() -]/g, "");
-			var domainTemp = $K(toAnnotate).find("cite").text().substr(3);
-			if(phoneTemp===""){
-				phoneTemp = $K(toAnnotate).find(".addr");
-				phoneTemp = phoneTemp.text().replace(/(\(\d\d\d\)\s\d\d\d-\d\d\d\d)/g,"$1").replace(/[\u00B7() -]/g, "");
+			
+			var phoneTemp = $K(toAnnotate).find("nobr,.sc_hl1 li>:not(a),.tel,[id *= lblPhone]").text().replace(/[\u00B7() -]/g, "");
+			var domainTemp = $K(toAnnotate).find(".url").text().replace(/www./,"");
+			if(domainTemp===""){
+				domainTemp = $K(toAnnotate).find("cite").text().replace(/www./,"").replace(/[\s-]/g,"");
 			}
 			if(phoneTemp===""){
 				phoneTemp = $K(toAnnotate);
-				phoneTemp = phoneTemp.text().replace(/[\w-,\s]+(\(\d\d\d\)\s\d\d\d-\d\d\d\d)/g,"$1").replace(/[\u00B7() -]/g, "");
+				phoneTemp = phoneTemp.text().match(/\(\d{3}\)\s\d{3}-\d{4}/g,"$1");
+				phoneTemp = phoneTemp[0];
+				phoneTemp = phoneTemp.replace(/[() -]/g, "");
 			}
+
 			var heightTemp = $K(toAnnotate).height();
 
-			toAnnotate.KOBJ = {};
-			$K(toAnnotate.KOBJ).data("phone",phoneTemp);
-			$K(toAnnotate.KOBJ).data("domain",domainTemp);
-			$K(toAnnotate.KOBJ).data("height",heightTemp);
+			$K(toAnnotate).data("phone",phoneTemp);
+			$K(toAnnotate).data("domain",domainTemp);
+			$K(toAnnotate).data("height",heightTemp);
 
 
 			if(heightTemp > 60){
@@ -435,8 +436,8 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 				$K(":last",this).after(contents);
 			}
 		});
-
-		KOBJ.logger('annotated_local_search_results', config['txn_id'], count, '', 'success', config['rule_name'] );
+	
+		KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'] );
 		cb();
 	}
 
