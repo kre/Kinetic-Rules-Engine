@@ -12,6 +12,11 @@ var KOBJ= KOBJ ||
     copyright: "Copyright 2007-2009, Kynetx Inc.  All Rights reserved."
   };
 
+KOBJ._log = new Array();
+KOBJ.log = function(msg){
+	KOBJ._log.push({'ts':new Date(),'msg':msg});
+	if(window.console != undefined && console.log != undefined){ console.log(msg); }
+};
 
 KOBJ.annotate_search_results = function(annotate, config, cb) {
   var defaults = {
@@ -117,9 +122,6 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
     };
   }
 };
-
-
-
 
 
 KOBJ.logger = function(type,txn_id,element,url,sense,rule,rid) {
@@ -611,26 +613,29 @@ KOBJ.eval = function(params) {
 
 //start closure and data registration code
 KOBJ.registerDataSet = function(rid, datasets){
-   //KOBJ.data[rid] = datasets;
+	KOBJ.log("registering dataset " + rid);	   
+	//KOBJ.data[rid] = datasets;
 	KOBJ[rid] = KOBJ[rid] || {};
 	KOBJ[rid].dataLoaded = true;
    if(KOBJ[rid].pendingClosure){
        var rseclosure = KOBJ[rid].pendingClosure;
-       KOBJ[rid].pendingClosure = null;
+       //KOBJ[rid].pendingClosure = null;
        KOBJ.executeClosure(rid, rseclosure);
    }
 };
 
 KOBJ.registerClosure = function(rid, closure){
+	KOBJ.log("registering closure " + rid);		
+	KOBJ[rid] = KOBJ[rid] || {};
+	KOBJ[rid].pendingClosure = closure;
 	if(KOBJ[rid] && KOBJ[rid].dataLoaded){
 		KOBJ.executeClosure(rid, closure);
-	} else {
-		KOBJ[rid] = KOBJ[rid] || {};
-		KOBJ[rid].pendingClosure = closure;
 	}
 };
 KOBJ.executeClosure = function(rid, closure){
+	KOBJ.log("executing closure " + rid);
 	closure();
+	KOBJ.log("execution complete " + rid);
 };
 //end closure and data registration code
 
