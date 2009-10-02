@@ -177,9 +177,11 @@ rule test_1 is active {
 _KRL_
 
 $result = <<_JS_;
+(function(){
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
 ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_1',rid:'cs_test'},'testing'));
+}());
 _JS_
 
 add_testcase(
@@ -199,10 +201,12 @@ rule test_2 is active {
 _KRL_
 
 $result = <<_JS_;
+(function(){
 var c = 'Seattle';
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
 ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_2',rid:'cs_test'},('testing' + c)));
+}());
 _JS_
 
 add_testcase(
@@ -224,10 +228,12 @@ rule test_3 is active {
 _KRL_
 
 $result = <<_JS_;
+(function(){
 var c = 'Seattle';
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
 ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_3',rid:'cs_test'},('testing' + c)));
+}());
 _JS_
 
 add_testcase(
@@ -249,10 +255,12 @@ rule test_4 is active {
 _KRL_
 
 $result = <<_JS_;
+(function(){
 var c = 'Seattle';
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
 ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_4',rid:'cs_test'},('testing' + c)));
+}());
 _JS_
 
 add_testcase(
@@ -308,9 +316,11 @@ rule test_flag_1 is active {
 _KRL_
 
 $result = <<_JS_;
+(function(){
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
 ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_flag_1',rid:'cs_test'},'test'));
+}());
 _JS_
 
 add_testcase(
@@ -373,10 +383,12 @@ rule test_5a is active {
 _KRL_
 
 $result = <<_JS_;
+(function(){
 var c = 3;
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
 ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_5a',rid:'cs_test'},'test'));
+}());
 _JS_
 
 add_testcase(
@@ -407,10 +419,12 @@ rule test_6 is active {
 _KRL_
 
 $result = <<_JS_;
+(function(){
 var c = 3;
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
 ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_6',rid:'cs_test'},'test'));
+}());
 _JS_
 
 add_testcase(
@@ -466,9 +480,11 @@ _KRL_
 #diag Dumper($r);
 
 $result = <<_JS_;
+(function(){
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
 ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_trail_1',rid:'cs_test'},'test'));
+}());
 _JS_
 
 add_testcase(
@@ -495,9 +511,11 @@ _KRL_
 #diag Dumper($r);
 
 $result = <<_JS_;
+(function(){
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
 ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_trail_2',rid:'cs_test'},'test'));
+}());
 _JS_
 
 add_testcase(
@@ -547,9 +565,11 @@ _KRL_
 #diag Dumper($r);
 
 $result = <<_JS_;
+(function(){
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
 ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_trail_4',rid:'cs_test'},'test'));
+}());
 _JS_
 
 add_testcase(
@@ -573,9 +593,11 @@ _KRL_
 #diag Dumper($r);
 
 $result = <<_JS_;
+(function(){
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
 ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_trail_5',rid:'cs_test'},'test'));
+}());
 _JS_
 
 add_testcase(
@@ -623,9 +645,11 @@ _KRL_
 #diag Dumper($r);
 
 $result = <<_JS_;
+(function(){
 function callBacks%uniq% () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
 ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_trail_7',rid:'cs_test'},'test'));
+}());
 _JS_
 
 add_testcase(
@@ -661,6 +685,7 @@ rule test_8 is inactive {
 _KRL_
 
 $result = <<_JS_;
+(function(){
 function callBacks%uniq% () {
   KOBJ.obs('click', 'id','txn_id','rssfeed','success','test_8', 'cs_test');
   KOBJ.obs('click', 'class','txn_id','newsletter','success','test_8', 'cs_test');
@@ -668,6 +693,7 @@ function callBacks%uniq% () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
  ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_8',rid:'cs_test'},'test'));
+}());
 _JS_
 
 add_testcase(
@@ -696,12 +722,14 @@ rule test_page_id is active {
 _KRL_
 
 $result = <<_JS_;
+(function(){
 var pt = K\$('product_name').innerHTML;
 var html = '<p>This is the product title: '+pt+'</p>';
 function callBacks%uniq% () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
  ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'test_page_id',rid:'cs_test'},html));
+}());
 _JS_
 
 add_testcase(
@@ -726,11 +754,13 @@ pagename.replace(/-/, ' ');
 _KRL_
 
 $result = <<_JS_;
+(function(){
 pagename.replace(/-/, ' ');
 function callBacks%uniq% () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
  ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'emit_test_0',rid:'cs_test'},pagename));
+}());
 _JS_
 
 add_testcase(
@@ -754,11 +784,13 @@ $krl_src = <<_KRL_;
 _KRL_
 
 $result = <<_JS_;
+(function(){
 pagename.replace(/-/, ' ');
 function callBacks%uniq% () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
  ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'emit_test_1',rid:'cs_test'},pagename));
+}());
 _JS_
 
 add_testcase(
@@ -784,11 +816,13 @@ Don't be false please!  Be true!
 _KRL_
 
 $result = <<_JS_;
+(function(){
 var welcome = 'Don\\'t be false please! Be true!';
 function callBacks%uniq% () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
  ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'extended_quote_test',rid:'cs_test'},welcome));
+}());
 _JS_
 
 add_testcase(
@@ -808,10 +842,12 @@ rule april2008 is active {
 _KRL_
 
 $result = <<_JS_;
+(function(){
 function callBacks%uniq% () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
  ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'april2008',rid:'cs_test'},'Hello Tim'));
+}());
 _JS_
 
 add_testcase(
@@ -833,10 +869,12 @@ rule emit_in_action is active {
 _KRL_
 
 $result = <<_JS_;
+(function(){
 function callBacks%uniq% () {
 };
 (function(){}());
 callBacks%uniq%();
+}());
 _JS_
 
 add_testcase(
@@ -856,10 +894,12 @@ $json = <<_KRL_;
 _KRL_
 
 $result = <<_JS_;
+(function(){
 function callBacks%uniq% () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
  ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'april2008',rid:'cs_test'},'Hello Tim'));
+}());
 _JS_
 
 add_json_testcase(
@@ -959,14 +999,64 @@ add_testcase(
     );
 
 
+$krl_src = <<_KRL_;
+ruleset global_expr_0 {
+    global {
+	x = 3;
+    }
+}
+_KRL_
+
+my $global_expr_0 = <<_JS_;
+var x = 3;
+_JS_
+
+add_testcase(
+    $krl_src,
+    $global_expr_0,
+    $Amazon_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+ruleset global_expr_1 {
+    global {
+	x = 3;
+    }
+    rule t0 is active {
+      select using ".*" setting ()
+      pre {
+         y = 6;
+      }
+      noop();
+    }
+}
+_KRL_
+
+my $global_expr_1 = <<_JS_;
+var x = 3;
+(function(){
+var y = 6;
+function callBacks%uniq% () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks%uniq%,{txn_id:'txn_id',rule_name:'t0',rid:'cs_test'}));
+}());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $global_expr_1,
+    $Amazon_req_info
+    );
+
 
 
 
 #diag(Dumper($test_cases[-1]->{'expr'}));
 
 
-plan tests => 7 + (@test_cases * 1);
-
+#plan tests => 7 + (@test_cases * 1);
 
 
 # now test each test case twice
@@ -986,7 +1076,8 @@ foreach my $case (@test_cases) {
 	$case->{'val'} =~ s/%uniq%/$uniq/g;
 	is_string_nows(
 	    $js,
-	    $case->{'val'} ? $rule_env_js . $case->{'val'} : '',
+#	    $case->{'val'} ? $rule_env_js . $case->{'val'} : '',
+	    $case->{'val'},
 	    "Evaling rule " . $case->{'src'});
     }
 }
@@ -1001,14 +1092,22 @@ foreach my $case (@test_cases) {
 
     if($case->{'type'} eq 'ruleset') {
     
-	my $js = "";
-	if( $case->{'expr'}->{'global'} && @{ $case->{'expr'}->{'global'} })  {
-	    ($js, $rule_env) = eval_globals($case->{'req_info'}, 
-					    $case->{'expr'},
-					    $rule_env, 
-		);
+#	my $js = "";
+# 	if( $case->{'expr'}->{'global'} && @{ $case->{'expr'}->{'global'} })  {
+# 	    ($js, $rule_env) = eval_globals($case->{'req_info'}, 
+# 					    $case->{'expr'},
+# 					    $rule_env, 
+# 		);
 
-	}    
+# 	}    
+
+#      diag Dumper($case->{'expr'});
+
+      my $js = Kynetx::Rules::eval_ruleset($r, $case->{'req_info'}, empty_rule_env(), $session, $case->{'expr'}, $case->{'expr'}->{'rules'});
+
+      my $uniq = $case->{'req_info'}->{'uniq'};
+      $case->{'val'} =~ s/%uniq%/$uniq/g;
+#      diag $js;
 
       SKIP: {
 
@@ -1023,23 +1122,24 @@ foreach my $case (@test_cases) {
     }
 }
 
+
 #
 # rule_env_tests
 #
 
 
-contains_string(nows($global_decl_0),
-		nows(encode_json(lookup_rule_env('global_decl_0',$rule_env))), 
-		 "Global decl data set effects env");
-contains_string(nows($global_decl_1), 
-		nows(lookup_rule_env('global_decl_1',$rule_env)),
-		"Global decl data set effects env");
-contains_string(nows($global_decl_2), 
-		nows(encode_json(lookup_rule_env('global_decl_2',$rule_env))),
-		"Global decl data set effects env");
-contains_string(nows($global_decl_3), 
-		nows(lookup_rule_env('global_decl_3',$rule_env)),
-		"Global decl data set effects env");
+# contains_string(nows($global_decl_0),
+# 		nows(encode_json(lookup_rule_env('global_decl_0',$rule_env))), 
+# 		 "Global decl data set effects env");
+# contains_string(nows($global_decl_1), 
+# 		nows(lookup_rule_env('global_decl_1',$rule_env)),
+# 		"Global decl data set effects env");
+# contains_string(nows($global_decl_2), 
+# 		nows(encode_json(lookup_rule_env('global_decl_2',$rule_env))),
+# 		"Global decl data set effects env");
+# contains_string(nows($global_decl_3), 
+# 		nows(lookup_rule_env('global_decl_3',$rule_env)),
+# 		"Global decl data set effects env");
 
 
 
@@ -1059,6 +1159,7 @@ session_delete($rid,$session,'my_trail');
 
 #diag Dumper($rule_env);
 
+done_testing(3 + (@test_cases * 1));
 
 session_cleanup($session);
 

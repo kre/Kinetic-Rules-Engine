@@ -328,8 +328,8 @@ sub build_js_load {
 
     $logger->debug("Rule name: ", $rule->{'name'});
     # now do decls in order
-    my $scope_hash = flatten_env($rule_env);
-    $js .= emit_var_decl($scope_hash);
+   # my $scope_hash = flatten_env($rule_env);
+   # $js .= emit_var_decl($scope_hash);
 
     # emits
     $js .= $rule->{'emit'} . "\n" if(defined $rule->{'emit'});

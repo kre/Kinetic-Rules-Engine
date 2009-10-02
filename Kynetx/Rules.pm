@@ -103,7 +103,7 @@ sub process_rules {
     # if we sort @rids we change ruleset priority
     foreach my $rid (@rids) {
 	Log::Log4perl::MDC->put('site', $rid);
-	$js .= eval_ruleset($r, $req_info, $rule_env, $session, $rid);
+	$js .= process_ruleset($r, $req_info, $rule_env, $session, $rid);
     }
 
     # put this in the logging DB
@@ -124,7 +124,7 @@ sub process_rules {
 }
 
 
-sub eval_ruleset {
+sub process_ruleset {
     my ($r, $req_info, $rule_env, $session, $rid) = @_;
 
     my $logger = get_logger();
@@ -149,24 +149,8 @@ sub eval_ruleset {
 
     Kynetx::Request::log_request_env($logger, $req_info);
 
-    my $js;
+    my $js = eval_ruleset($r, $req_info,$rule_env, $session, $ruleset, $rules);
 
-
-    # handle globals, start js build, extend $rule_env
-    ($js, $rule_env) = eval_globals($req_info,$ruleset, $rule_env);
-#    $logger->debug("Global JS: ", $js);
-
-    $js .= eval_meta($req_info,$ruleset, $rule_env);
-
-
-    # this loops through the rules ONCE applying all that fire
-    foreach my $rule ( @{ $rules } ) {
-	$js .= eval_rule($r, 
-			 $req_info, 
-			 $rule_env,
-			 $session, 
-			 $rule);
-    }
 
     $logger->debug("Finished processing rules for " . $req_info->{'rid'});
 
@@ -183,6 +167,36 @@ sub eval_ruleset {
     return <<EOF
 KOBJ.registerClosure('$rid', function() { $js });
 EOF
+}
+
+sub eval_ruleset {
+  my($r, $req_info,$rule_env, $session, $ruleset, $rules) = @_;
+
+  my $logger = get_logger();
+
+  # generate JS for meta
+  my $js = eval_meta($req_info,$ruleset, $rule_env);
+
+  # handle globals, start js build, extend $rule_env
+  my $gjs;
+  ($gjs, $rule_env) = eval_globals($req_info,$ruleset, $rule_env, $session);
+  #    $logger->debug("Global JS: ", $js);
+
+  # tack on the JS for globals.
+  $js .= $gjs;
+
+
+  # this loops through the rules ONCE applying all that fire
+  foreach my $rule ( @{ $rules } ) {
+    $js .= eval_rule($r, 
+		     $req_info, 
+		     $rule_env,
+		     $session, 
+		     $rule);
+  }
+
+  return $js;
+
 }
 
 sub eval_meta {
@@ -220,7 +234,7 @@ sub eval_meta {
 }
 
 sub eval_globals {
-    my($req_info,$ruleset, $rule_env) = @_;
+    my($req_info,$ruleset, $rule_env, $session) = @_;
     my $logger = get_logger();
 
     my $js = "";
@@ -246,6 +260,15 @@ sub eval_globals {
 	    } elsif(defined $g->{'type'} && $g->{'type'} eq 'datasource') {
 		push(@vars,'datasource:'.$g->{'name'});
 		push(@vals, $g);
+	    } elsif(defined $g->{'type'} && 
+		    ($g->{'type'} eq 'expr' || $g->{'type'} eq 'here_doc')) {
+	      ($var, $val) = Kynetx::JavaScript::eval_js_decl($req_info, $rule_env, $ruleset->{'name'}, $session, $g);
+	      $logger->debug("Seeing global decl for ", $var);
+
+	      push(@vars, $var);
+	      push(@vals, $val);
+	      $this_js .= "var $var = " . Kynetx::JavaScript::gen_js_expr(
+					     Kynetx::JavaScript::exp_to_den($val)) . ";\n";
 	    }
 	    $js .= $this_js;
 	}
@@ -271,8 +294,11 @@ sub eval_rule {
 		       session_get($req_info->{'rid'}, $session, $var));
     }
 
+
+
     # this loads the rule_env.  
-    $rule_env = Kynetx::JavaScript::eval_js_pre($req_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
+    my $tentative_js;
+    ($tentative_js,$rule_env) = Kynetx::JavaScript::eval_js_pre($req_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
 
 #    $logger->debug("[ENV] after prelude ", Dumper($rule_env));
 #    foreach my $var (keys %{ $rule_env } ) {
@@ -293,8 +319,8 @@ sub eval_rule {
 			$rule->{'name'});
 
 
-
     my $js = '';
+
     
     # keep track of these for each rule
     $req_info->{'actions'} = [];
@@ -308,7 +334,13 @@ sub eval_rule {
 
 	# this is the main event.  The browser has asked for a
 	# chunk of Javascrip and this is where we deliver... 
+
+
+	$js .= '(function(){';
+	# since we fired, include the declarations
+	$js .= $tentative_js;
 	$js .= Kynetx::Actions::build_js_load($rule, $req_info, $rule_env, $session); 
+	$js .= "}());\n";
 	
 	$fired = 1;
 	push(@{ $req_info->{'results'} }, 'fired');

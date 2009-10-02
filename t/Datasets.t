@@ -287,7 +287,7 @@ _KRL_
 #    diag Dumper($krl);
 
     contains_string(get_datasource($rule_env,$args,"twitter_search"),
-		    'kntx({"results":[{"text":',
+		    'kntx({"results":[{',
 		    "JSON twitter search with param in spec");
 
 
@@ -309,7 +309,7 @@ _KRL_
 #    diag Dumper($krl);
 
     contains_string(get_datasource($rule_env,$args,"twitter_search"),
-		    'kntx({"results":[{"text":',
+		    'kntx({"results":[{',
 		    "JSON twitter search with multiple params");
 
     
@@ -337,7 +337,7 @@ _KRL_
 
 
     contains_string(get_datasource($rule_env,$args,"twitter_search"),
-		    'kntx({"results":[{"text":',
+		    'kntx({"results":[{',
 		    "JSON twitter search with multiple params");
 
     
@@ -363,7 +363,7 @@ _KRL_
 
 
     contains_string(get_datasource($rule_env,$args,"twitter_search"),
-		    'kntx({"results":[{"text":',
+		    'kntx({"results":[{',
 		    "JSON twitter search with multiple params");
 
     

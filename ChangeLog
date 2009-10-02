@@ -1,3 +1,11 @@
+2009-10-01  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Parser.pm: Support for decls in global section
+	* Kynetx/JavaScript.pm: eval_js_pre now generates JS
+	* Kynetx/Actions.pm: no longer use emit_decl_js
+	* Kynetx/Rules.pm: Put rules in their own closure and explicitly
+	  put prelude JS decls in rule.
+
 2009-09-09  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Parser.pm: Changed conditional expression parsing to

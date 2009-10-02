@@ -272,6 +272,10 @@ sub pp_global_block {
 	    $o .= pp_datasource($d, $indent+$g_indent) . ";";
 	} elsif (defined $d->{'type'} && $d->{'type'} eq 'css') {
 	    $o .= pp_css($d, $indent+$g_indent) . ";";
+	} elsif (defined $d->{'type'} && $d->{'type'} eq 'expr') {
+	    $o .= pp_decl($d, $indent+$g_indent) . ";";
+	} elsif (defined $d->{'type'} && $d->{'type'} eq 'here_doc') {
+	    $o .= pp_decl($d, $indent+$g_indent) . ";";
 	} else {
 	    $o .= pp_global_emit($d, $indent+$g_indent) . ";";
 	}

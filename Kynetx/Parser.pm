@@ -275,6 +275,9 @@ global: emit_block
        | css_emit
           {$return = $item[1]
           }
+       | decl
+          {$return = $item[1]
+          }
        | <error>
 
 

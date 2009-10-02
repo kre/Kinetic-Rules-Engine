@@ -61,6 +61,7 @@ gen_js_mk_cb_func
 get_js_html
 mk_js_str
 eval_js_expr
+eval_js_decl
 den_to_exp
 exp_to_den
 infer_type
@@ -78,9 +79,18 @@ sub gen_js_expr {
     case: for ($expr->{'type'}) {
 	/str/ && do {
 	    $expr->{'val'} = escape_js_str($expr->{'val'});
+
+	    # any string is potentially a JS template...
+	    # relace tmpl vars with concats for JS
+	    $expr->{'val'} =~ y/\n\r/  /; # remove newlines
+	    $expr->{'val'} =~ s/#{([^}]*)}/'+$1+'/g;
+
 	    return '\'' . $expr->{'val'} . '\'';
 	};
 	/num/ && do {
+	    return  $expr->{'val'} ;
+	};
+	/JS/ && do {
 	    return  $expr->{'val'} ;
 	};
 	/var/ && do {
@@ -119,11 +129,7 @@ sub gen_js_expr {
 		);
 	    return $v;
 	};
-
-
-
     } 
-
 }
 
 sub gen_js_prim {
@@ -303,30 +309,21 @@ sub eval_js_pre {
     $rule_env = extend_rule_env(\@vars, \@empty_vals, $rule_env);
 #    $logger->debug("Prelude env before: ", Dumper($rule_env));
 
+    my $js = '';
 
     foreach my $decl (@{ $pre }) {
 	my($var, $val) = eval_js_decl($req_info, $rule_env, $rule_name, $session, $decl);
 	# yes, this is cheating and breaking the abstraction, but it's fast...
 	$rule_env->{$var} = $val;
+
+	$logger->debug("[eval_pre] $var -> $val");
+
+	$js .= "var $var = " . gen_js_expr(exp_to_den($val)) . ";\n";
+
     }
+    $logger->debug("[eval_pre] Sending back $js");
 
-#    my @results = map {eval_js_decl($req_info, $rule_env, $rule_name, $session, $_)} @{ $pre };
-
-#    $logger->debug("Results of prelude: ", Dumper($rule_env));
-
-    # unzip the results
-#    my @vars;
-#    my @vals;
-#    foreach my $r (@results) {
-#	my($var, $val) = @{$r};
-#	push(@vars, $var);
-#	push(@vals, $val);
-#    }
-   
-#    return extend_rule_env(\@vars, 
-#			   \@vals, 
-#			   $rule_env);
-    return $rule_env;
+    return ($js, $rule_env);
 }
 
 
@@ -695,8 +692,10 @@ sub exp_to_den {
 	$expr = \@res;
 	return {'type' => $type,
 		'val' => $expr}
-    } else {
-	return $expr
+    } else {	
+	return {'type' => $type,
+		'val' => $expr}
+#return $expr
     }
 
 }
