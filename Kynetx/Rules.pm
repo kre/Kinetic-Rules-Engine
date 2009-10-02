@@ -180,6 +180,7 @@ sub eval_ruleset {
   # handle globals, start js build, extend $rule_env
   my $gjs;
   ($gjs, $rule_env) = eval_globals($req_info,$ruleset, $rule_env, $session);
+      $logger->debug("Rule env after globals: ", $rule_env);
   #    $logger->debug("Global JS: ", $js);
 
   # tack on the JS for globals.

@@ -217,7 +217,9 @@ sub get_datasets {
 	    my $this_js = '';
 	    my $var = '';
 	    my $val = 0;
-	    if(defined $g->{'name'} && Kynetx::Datasets::global_dataset($g)) { # more than 24 hours
+	    if(defined $g->{'name'} && 
+	       $g->{'type'} eq 'dataset' && 
+	       Kynetx::Datasets::global_dataset($g)) { # more than 24 hours
 		$logger->debug("Creating JS for decl " . $g->{'name'});
 		($this_js, $var, $val) = mk_dataset_js($g, $req_info, empty_rule_env()); # empty rule env
 	    }

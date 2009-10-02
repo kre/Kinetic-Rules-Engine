@@ -998,6 +998,24 @@ add_testcase(
     $Amazon_req_info
     );
 
+$krl_src = <<_KRL_;
+ruleset dataset0 {
+    global {
+       datasource twitter_search <- "http://search.twitter.com/search.json";
+    }
+}
+_KRL_
+
+my $global_decl_4 = <<_JS_;
+_JS_
+
+add_testcase(
+    $krl_src,
+    $global_decl_4,
+    $Amazon_req_info
+    );
+
+
 
 $krl_src = <<_KRL_;
 ruleset global_expr_0 {

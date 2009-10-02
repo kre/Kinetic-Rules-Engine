@@ -76,6 +76,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 sub gen_js_expr {
     my $expr = shift;
 
+
     case: for ($expr->{'type'}) {
 	/str/ && do {
 	    $expr->{'val'} = escape_js_str($expr->{'val'});
@@ -318,7 +319,22 @@ sub eval_js_pre {
 
 	$logger->debug("[eval_pre] $var -> $val");
 
-	$js .= "var $var = " . gen_js_expr(exp_to_den($val)) . ";\n";
+
+#	$js .= "var $var = " . gen_js_expr(exp_to_den($val)) . ";\n";
+
+	my $t = infer_type($val);
+	if($t eq 'str') {
+	    $val = "'".escape_js_str($val)."'";
+	    # relace tmpl vars with concats for JS
+	    $val =~ y/\n\r/  /; # remove newlines
+	    $val =~ s/#{([^}]*)}/'+$1+'/g;
+	} elsif ($t eq 'hash' || $t eq 'array') {
+	    $val = encode_json($val);
+	}
+	$logger->debug("[decl] $var has type: $t");
+
+	$js .= "var $var = $val;\n";
+	
 
     }
     $logger->debug("[eval_pre] Sending back $js");
@@ -679,7 +695,16 @@ sub den_to_exp {
 sub exp_to_den {
     my ($expr) = @_;
 
+#    my $logger = get_logger();
+
+#    $logger->debug("exp_to_den: $expr");
+
+    if (ref $expr eq 'HASH' && defined $expr->{'val'} && defined $expr->{'type'}) {
+      return $expr
+    }
+
     my $type = infer_type($expr);
+#    $logger->debug("exp_to_den: type is $type");
     if(ref $expr eq 'HASH' && ! defined $expr->{'val'} && ! defined $expr->{'type'}) {
 	foreach my $k (keys %{ $expr }) {
 	    $expr->{$k} = exp_to_den($expr->{$k});

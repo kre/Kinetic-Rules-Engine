@@ -111,7 +111,7 @@ sub run(){
 	     $self->{'result_type'} eq 'PATH')) {
 		my $cleaned_expr = $self->normalize($expr);
 		$cleaned_expr =~ s/^\$;//;
-		$self->logit("Cleaned expr: $cleaned_expr");
+#		$self->logit("Cleaned expr: $cleaned_expr");
 		$self->trace($cleaned_expr, $obj, '$');
 		my $result = $self->{'result'};
 		
