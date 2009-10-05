@@ -135,21 +135,18 @@ sub process_ruleset {
 
     $logger->info("Processing rules for site " . $req_info->{'rid'});
 
-    my ($rules, $this_rule_env, $ruleset) = 
+    my $ruleset = 
 	get_rule_set($r->dir_config('svn_conn'),
 		     $req_info
 	            );
 
-    
-    # side effects environment with precondition pattern values
-    $rule_env = extend_rule_env($this_rule_env, $rule_env);
 
 
 #    $logger->debug('Env after rule selection: ', Dumper($rule_env));
 
     Kynetx::Request::log_request_env($logger, $req_info);
 
-    my $js = eval_ruleset($r, $req_info,$rule_env, $session, $ruleset, $rules);
+    my $js = eval_ruleset($r, $req_info,$rule_env, $session, $ruleset);
 
 
     $logger->debug("Finished processing rules for " . $req_info->{'rid'});
@@ -170,7 +167,7 @@ EOF
 }
 
 sub eval_ruleset {
-  my($r, $req_info,$rule_env, $session, $ruleset, $rules) = @_;
+  my($r, $req_info,$rule_env, $session, $ruleset) = @_;
 
   my $logger = get_logger();
 
@@ -187,15 +184,51 @@ sub eval_ruleset {
   $js .= $gjs;
 
 
-  # this loops through the rules ONCE applying all that fire
-  foreach my $rule ( @{ $rules } ) {
-    $js .= eval_rule($r, 
-		     $req_info, 
-		     $rule_env,
-		     $session, 
-		     $rule);
-  }
+  $req_info->{'rule_count'} = 0;
+  $req_info->{'selected_rules'} = [];
+  foreach my $rule ( @{ $ruleset->{'rules'} } ) {
+    my $this_rule_env;
+    $logger->debug("Rule $rule->{'name'} is " . $rule->{'state'});
+    if($rule->{'state'} eq 'active' || 
+       ($rule->{'state'} eq 'test' && 
+	$req_info->{'mode'} && 
+	$req_info->{'mode'} eq 'test' )) {  # optimize??
 
+      $req_info->{'rule_count'}++;
+
+
+      # test and capture here
+      my($selected, $captured_vals) = select_rule($req_info->{'caller'}, $rule);
+
+      if ($selected) {
+
+	$logger->debug("[selected] $rule->{'name'} ");
+
+	push @{ $req_info->{'selected_rules'} }, $rule->{'name'};
+
+	my $select_vars = Kynetx::Actions::get_precondition_vars($rule);
+
+	# store the captured values from the precondition to the env
+	my $cap = 0;
+	foreach my $var (@{ $select_vars } ) {
+	  $var =~ s/^\s*(.+)\s*/$1/;
+#		    $logger->debug("[select var] $var -> $captured_vals->[$cap]");
+	  $this_rule_env->{$var} = $captured_vals->[$cap++];
+	}
+	
+	$js .= eval_rule($r, 
+			 $req_info, 
+			 extend_rule_env($this_rule_env, $rule_env),
+			 $session, 
+			 $rule);
+      } else {
+	$logger->debug("[not selected] $rule->{'name'} ");
+      }
+    }
+  }
+  $logger->debug("Executed $req_info->{'rule_count'} rules");
+
+    
   return $js;
 
 }
@@ -390,51 +423,8 @@ sub get_rule_set {
     
     $logger->debug("Found " . @{ $ruleset->{'rules'} } . " rules for site $site" );
 
-    my @new_set;
-    my %new_env;
-
-    $req_info->{'rule_count'} = 0;
-    $req_info->{'selected_rules'} = [];
-    foreach my $rule ( @{ $ruleset->{'rules'} } ) {
-# 	$logger->debug("Rule $rule->{'name'} is " . $rule->{'state'});
-	if($rule->{'state'} eq 'active' || 
-	   ($rule->{'state'} eq 'test' && 
-	    $req_info->{'mode'} && 
-	    $req_info->{'mode'} eq 'test' )) {  # optimize??
-
-	    $req_info->{'rule_count'}++;
-
-	    # test and capture here
-	    my($selected, $captured_vals) = select_rule($caller, $rule);
-
-	    if ($selected) {
-
-		$logger->debug("[selected] $rule->{'name'} ");
-
-		push @new_set, $rule;
-		push @{ $req_info->{'selected_rules'} }, $rule->{'name'};
-
-		my $select_vars = Kynetx::Actions::get_precondition_vars($rule);
-
-
-		# store the captured values from the precondition to the env
-		my $cap = 0;
-		foreach my $var (@{ $select_vars } ) {
-
-		    $var =~ s/^\s*(.+)\s*/$1/;
-
-		    $logger->debug("[select var] $var -> $captured_vals->[$cap]");
-
-		    $new_env{$var} = $captured_vals->[$cap++];
-
-		}
-	    } else {
-		$logger->debug("[not selected] $rule->{'name'} ");
-	    }
-	}
-    }
     
-    return (\@new_set, \%new_env, $ruleset);
+    return $ruleset;
 
 }
 

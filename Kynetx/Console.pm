@@ -41,6 +41,7 @@ $Data::Dumper::Indent = 1;
 
 
 use Kynetx::Session qw(:all);
+use Kynetx::Environments qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Rules qw(:all);
 use Kynetx::Predicates qw(:all);
@@ -84,39 +85,62 @@ sub show_context {
     # get a session hash 
     my $session = process_session($r);
 
-    my $request_info = Kynetx::Request::build_request_env($r, $method, $rid);
+    my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
 
 
-    Kynetx::Request::log_request_env($logger, $request_info);
-
-
-    $logger->info("Displaying context data for site " . $request_info->{'site'});
+    $logger->info("Displaying context data for site " . $req_info->{'site'});
 
     # side effects environment with precondition pattern values
-    my ($rules, $rule_env, $ruleset) = 
+    my $ruleset = 
 	get_rule_set($r->dir_config('svn_conn'),
-		     $request_info);
+		     $req_info);
 
+    my $rule_env = empty_rule_env();
     # this loops through the rules ONCE applying all that fire
+
+    # FIXME: too much code duplicated between here and Rules.pm.  Abstract
+
     my %fired;
-    foreach my $rule ( @{ $rules } ) {
-	my $pred_value = 
-	    eval_predicates($request_info, $rule_env, $session, 
+    $req_info->{'rule_count'} = 0;
+    $req_info->{'selected_rules'} = [];
+    foreach my $rule ( @{ $ruleset->{'rules'} } ) {
+      if($rule->{'state'} eq 'active' || 
+	 ($rule->{'state'} eq 'test' && 
+	  $req_info->{'mode'} && 
+	  $req_info->{'mode'} eq 'test' )) {  # optimize??
+
+	$req_info->{'rule_count'}++;
+      
+
+
+	# test and capture here
+	my($selected, $captured_vals) = 
+	  Kynetx::Rules::select_rule($req_info->{'caller'}, $rule);
+
+	if ($selected) {
+	  my $pred_value = 
+	    eval_predicates($req_info, $rule_env, $session, 
 			    $rule->{'cond'}, $rule->{'name'});
 
-	if ($pred_value) {
+	  push @{ $req_info->{'selected_rules'} }, $rule->{'name'};
+
+	  if ($pred_value) {
 	    $fired{$rule->{'name'}} = 'will fire';
-	} else {
+	  } else {
 	    $fired{$rule->{'name'}} = 'will not fire';
+	  }
 	}
+      }
 
     }
 
-    if($logger->is_debug()) {
-	foreach my $entry (keys %{ $request_info}) {
-	    $logger->debug($entry . ": " . $request_info->{$entry});
-	}
-    }
+    Kynetx::Request::log_request_env($logger, $req_info);
+
+#     if($logger->is_debug()) {
+# 	foreach my $entry (keys %{ $req_info}) {
+# 	    $logger->debug($entry . ": " . $req_info->{$entry});
+# 	}
+#     }
 
 
     # print template
@@ -126,18 +150,18 @@ sub show_context {
     my $context_template = HTML::Template->new(filename => $template,
 					       die_on_bad_params => 0);
 
-    $context_template->param(site => $request_info->{'site'});
-    $context_template->param(caller => $request_info->{'caller'});
+    $context_template->param(site => $req_info->{'site'});
+    $context_template->param(caller => $req_info->{'caller'});
 
     my @client_info = (       
 	{ name => 'Kynetx CS Server',
-	  value => $request_info->{'hostname'}},
+	  value => $req_info->{'hostname'}},
 
 	{ name => 'Client ID', 
-	  value => $request_info->{'site'}},
+	  value => $req_info->{'site'}},
 
 	{ name => 'Client calling page',
-	  value => $request_info->{'caller'}},
+	  value => $req_info->{'caller'}},
 
 	);
 
@@ -149,41 +173,41 @@ sub show_context {
     my @user_info = (       
 
 	{ name => 'User IP Address',
-	  value => $request_info->{'ip'}},
+	  value => $req_info->{'ip'}},
 
 	{ name => 'City',
-	  value => get_geoip($request_info,'city')},
+	  value => get_geoip($req_info,'city')},
 	{ name => 'Region',
-	  value => get_geoip($request_info,'region')},
+	  value => get_geoip($req_info,'region')},
 	{ name => 'Zip Code',
-	  value => get_geoip($request_info,'postal_code')},
+	  value => get_geoip($req_info,'postal_code')},
 	{ name => 'Country',
-	  value => get_geoip($request_info,'country_name')},
+	  value => get_geoip($req_info,'country_name')},
 
 	{ name => 'Local time',
-	  value => get_local_time($request_info)},
+	  value => get_local_time($req_info)},
 	{ name => 'Local time zone',
-	  value => get_local_time($request_info)->time_zone->name},
+	  value => get_local_time($req_info)->time_zone->name},
 
 
 	{ name => 'Current temperature',
-	  value => get_weather($request_info,'curr_temp') . ' F'},
+	  value => get_weather($req_info,'curr_temp') . ' F'},
 	{ name => 'Current conditions',
-	  value => get_weather($request_info,'curr_cond') . ' '},
+	  value => get_weather($req_info,'curr_cond') . ' '},
 	{ name => 'Tomorrow high',
-	  value => get_weather($request_info,'tomorrow_high') . ' F'},
+	  value => get_weather($req_info,'tomorrow_high') . ' F'},
 	{ name => 'Tomorrow low',
-	  value => get_weather($request_info,'tomorrow_low') . ' F'},
+	  value => get_weather($req_info,'tomorrow_low') . ' F'},
 	{ name => 'Tomorrow forecast',
-	  value => get_weather($request_info,'tomorrow_cond') . ' '},
+	  value => get_weather($req_info,'tomorrow_cond') . ' '},
 
 
 	{ name => 'Median income',
-	  value => '$'.get_demographics($request_info, 'median_income')},
+	  value => '$'.get_demographics($req_info, 'median_income')},
 	{ name => 'Urban',
-	  value => &{$demo_preds->{'urban'}}($request_info) ? 'yes' : 'no'},
+	  value => &{$demo_preds->{'urban'}}($req_info) ? 'yes' : 'no'},
 	{ name => 'Rural',
-	  value => &{$demo_preds->{'rural'}}($request_info) ? 'yes' : 'no'},
+	  value => &{$demo_preds->{'rural'}}($req_info) ? 'yes' : 'no'},
 
 	);
 
@@ -191,10 +215,10 @@ sub show_context {
 
     my @rule_info =  (
 	{ name => 'Rule Version', 
-	  value => $request_info->{'rule_version'}},
+	  value => $req_info->{'rule_version'}},
 
 	{ name => 'Active rules', 
-	  value => $request_info->{'rule_count'}},
+	  value => $req_info->{'rule_count'}},
 
 	);
 
@@ -203,7 +227,7 @@ sub show_context {
 
     my $c = 0;
     my @rules = ();
-    foreach my $rule_name (@{ $request_info->{'selected_rules'} }) {
+    foreach my $rule_name (@{ $req_info->{'selected_rules'} }) {
 	push @rules, 
    	     { number => $c,
 	       name => $rule_name,

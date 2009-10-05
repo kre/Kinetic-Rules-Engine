@@ -1,3 +1,10 @@
+2009-10-03  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Console.pm (show_context): Changed to work with changes
+	  for rule selection done to Rules.pm
+	* Kynetx/Rules.pm (eval_ruleset): Refactored to do rule selection
+	  processing in eval_ruleset instead of get_rule_set.  
+
 2009-10-01  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Parser.pm: Support for decls in global section
