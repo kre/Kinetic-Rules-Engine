@@ -125,11 +125,14 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 
 
 KOBJ.logger = function(type,txn_id,element,url,sense,rule,rid) {
-    e=document.createElement("script");
-    e.src=KOBJ.callback_url+"?type="+type+"&txn_id="+txn_id+"&element="+element+"&sense="+sense+"&url="+escape(url)+"&rule="+rule;
-    if(rid) e.src+="&rid="+rid;
-    body=document.getElementsByTagName("body")[0];
-    body.appendChild(e);
+//     e=document.createElement("script");
+//     e.src=KOBJ.callback_url+"?type="+type+"&txn_id="+txn_id+"&element="+element+"&sense="+sense+"&url="+escape(url)+"&rule="+rule;
+//     if(rid) e.src+="&rid="+rid;
+//     body=document.getElementsByTagName("body")[0];
+//     body.appendChild(e);
+  var url=KOBJ.callback_url+"?type="+type+"&txn_id="+txn_id+"&element="+element+"&sense="+sense+"&url="+escape(url)+"&rule="+rule;
+  if(rid) url+="&rid="+rid;
+  KOBJ.require(url);
 };
 
 KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
@@ -407,7 +410,7 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 		$K(defaults['results_lister']).each(function() {
 
 			var toAnnotate = this;
-			
+
 			var phoneTemp = $K(toAnnotate).find("nobr,.sc_hl1 li>:not(a),.tel,[id *= lblPhone]").text().replace(/[\u00B7() -]/g, "");
 			var domainTemp = $K(toAnnotate).find(".url").text().replace(/www\./,"");
 			if(domainTemp===""){
@@ -423,14 +426,14 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 			}
 
 			var heightTemp = $K(toAnnotate).height();
-			
+
 			if(phoneTemp!==null){
 				$K(toAnnotate).data("phone",phoneTemp);
 			} else { $K(toAnnotate).data("phone","none"); }
 			if(domainTemp!==null){
 				$K(toAnnotate).data("domain",domainTemp);
 			} else { $K(toAnnotate).data("domain","none"); }
-			
+
 			$K(toAnnotate).data("height",heightTemp);
 
 			if(heightTemp > 60){
@@ -438,20 +441,20 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 			} else {
 				$K(toAnnotate).data("compact",true);
 			}
-		
+
 			var contents = annotate(toAnnotate);
 			if (contents) {
 				count++;
 				$K(":last",this).after(contents);
 			}
 		});
-	
+
 		KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'] );
 		cb();
 	};
 
 	runAnnotateLocal();
-	
+
 	if(typeof je === "object" && je.zz){
 		var gResultDone = je.zz;
 		je.zz = function(a, b){
@@ -559,8 +562,11 @@ KOBJ.require = function(url) {
   var r=document.createElement("script");
   r.src= url;
   r.type= "text/javascript";
-  var body=document.getElementsByTagName("body")[0];
+//  console.log("Requiring " + url);
+  var body=document.getElementsByTagName("body")[0] ||
+              document.getElementsByTagName("frameset")[0] ;
   body.appendChild(r);
+
 };
 
 KOBJ.reload = function(delay) {
@@ -572,12 +578,12 @@ KOBJ.reload = function(delay) {
 };
 
 
-KOBJ.eval = function(params) {
-  if(! params.rids && typeof(params.rids) !== 'array') {
+KOBJ.eval = function(config) {
+  if(! config.rids && typeof(config.rids) !== 'array') {
     return;
   }
 
-  KOBJ.site_id = params.rids.join(";");
+  KOBJ.site_id = config.rids.join(";");
 
   // datasets
   var data_url = KOBJ.proto+KOBJ.init_host+"/js/datasets/" + KOBJ.site_id + "/";
@@ -594,8 +600,8 @@ KOBJ.eval = function(params) {
   KOBJ.callback_url = KOBJ.proto+KOBJ.callback_host+"/callback/" + KOBJ.site_id;
 
   var param_str = "";
-  if(params) {
-    $K.each(params,function(k,v) {
+  if(config) {
+    $K.each(config,function(k,v) {
 	      if(!(k == 'rids' || k == 'init')) {
 		param_str += "&" + k + "=" + v;
 		}
@@ -604,24 +610,12 @@ KOBJ.eval = function(params) {
 
   var eval_url = url + "/" + d + ".js?caller=" + escape(document.URL) + "&referer="+ escape(document.referrer) + "&kvars=" + escape(KOBJ.kvars_json) + "&title=" + encodeURI(document.title) + param_str;
 
-//    $K('<script type="text/javascript">').attr(
-//         {"src": eval_url}).appendTo("body");
-
-// dummy up the Firebug console commands so a rogue console call doesn't kill code
-  // if (!window.console || !console.firebug) {
-  //   var names = ["log", "debug", "info", "warn", "error", "assert", "dir", "dirxml",
-  //   "group", "groupEnd", "time", "timeEnd", "count", "trace", "profile", "profileEnd"];
-  //   window.console = {};
-  //   for (var i = 0; i < names.length; ++i)
-  //      window.console[names[i]] = function() {}
-  // }
-
   KOBJ.require(eval_url);
 };
 
 //start closure and data registration code
 KOBJ.registerDataSet = function(rid, datasets){
-	KOBJ.log("registering dataset " + rid);	   
+	KOBJ.log("registering dataset " + rid);
 	//KOBJ.data[rid] = datasets;
 	KOBJ[rid] = KOBJ[rid] || {};
 	KOBJ[rid].dataLoaded = true;
@@ -633,7 +627,7 @@ KOBJ.registerDataSet = function(rid, datasets){
 };
 
 KOBJ.registerClosure = function(rid, closure){
-	KOBJ.log("registering closure " + rid);		
+	KOBJ.log("registering closure " + rid);
 	KOBJ[rid] = KOBJ[rid] || {};
 	KOBJ[rid].pendingClosure = closure;
 	if(KOBJ[rid] && KOBJ[rid].dataLoaded){
