@@ -28,7 +28,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
     "right_padding": "15px",
     "font_size": "12px",
     "font_family": "Verdana, Geneva, sans-serif",
-    "results_lister" : "li.g, div.g, li div.res, #results>ul>li,#sw_main>.sr_dcard,.sb_adsW",
+    "results_lister" : "li.g, div.g, li div.res, #results>ul>li, #sw_main>.sr_dcard",
     "element_to_modify" : "div.s,div.abstr,p",
     "placement" : 'prepend',
     "outer_div_css" : 0,
@@ -95,32 +95,38 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
       return outer_div;
   }
   function runAnnotate(){
-//    $K('#res div:first ol, #web').addClass("Kannotated");
+    var alreadyAnnotated = $K(".Kannotated").length === 0;
+    $K('cite:first').addClass("Kannotated");
     var count = 0;
-    $K(defaults['results_lister']).each(function() {
-      var contents = annotate(this);
-      if (contents) {
-	count++;
-        if ($K(this).find('#' + defaults.name + '_anno_list li').is('.' + defaults.name + '_item')) {
-          $K(this).find('#' + defaults.name + '_anno_list').append(mk_list_item(defaults.sep)).append(mk_list_item(contents));
-        } else {
-          $K(this).find(defaults['element_to_modify'])[defaults.placement](mk_outer_div(contents));
-	}
-      }
+    if(alreadyAnnotated){
+	    $K(defaults['results_lister']).each(function() {
+	      var contents = annotate(this);
+	      if (contents) {
+		count++;
+	        if ($K(this).find('#' + defaults.name + '_anno_list li').is('.' + defaults.name + '_item')) {
+	          $K(this).find('#' + defaults.name + '_anno_list').append(mk_list_item(defaults.sep)).append(mk_list_item(contents));
+	        } else {
+	          $K(this).find(defaults['element_to_modify'])[defaults.placement](mk_outer_div(contents));
+		}
+	      }
+	    }
+	    );
+       KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'], config['rid'] );
     }
-    );
-    KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'], config['rid'] );
     cb();
   };
-  runAnnotate();
+	runAnnotate();
+	setInterval(function(){runAnnotate()},100);
   //if this is google ajax serp, wrap the 'done' method call
-  if(typeof je === "object" && je.zz){
-    var gResultDone = je.zz;
-    je.zz = function(a, b){
-      gResultDone(a, b);
-      runAnnotate();
-    };
-  }
+//  if(typeof je === "object" && je.zz){
+//    var gResultDone = je.zz;
+//    je.zz = function(a, b){
+//      gResultDone(a, b);
+//	KOBJ.log("running annotate");
+//      setTimeout(runAnnotate, 25);
+//    };
+//  }
+
 };
 
 
