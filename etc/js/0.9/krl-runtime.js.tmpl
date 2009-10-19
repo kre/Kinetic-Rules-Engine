@@ -18,6 +18,7 @@ KOBJ.log = function(msg){
 	if(window.console != undefined && console.log != undefined){ console.log(msg); }
 };
 
+
 KOBJ.annotate_search_results = function(annotate, config, cb) {
   var defaults = {
     "name": "KOBJ",
@@ -95,22 +96,26 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
       return outer_div;
   }
   function runAnnotate(){
-    var alreadyAnnotated = $K(".Kannotated").length === 0;
-    $K('cite:first').addClass("Kannotated");
+    var notAlreadyAnnotated = $K(".Kannotated").length === 0;
+
+    var resultslist = $K(defaults['results_lister']);
+    if(resultslist.length == 0){ return; }
+
     var count = 0;
-    if(alreadyAnnotated){
-	    $K(defaults['results_lister']).each(function() {
-	      var contents = annotate(this);
-	      if (contents) {
+    if(notAlreadyAnnotated){
+	$K('cite:first').addClass("Kannotated");
+	resultslist.each(function() {
+	     var contents = annotate(this);
+	     if (contents) {
 		count++;
-	        if ($K(this).find('#' + defaults.name + '_anno_list li').is('.' + defaults.name + '_item')) {
-	          $K(this).find('#' + defaults.name + '_anno_list').append(mk_list_item(defaults.sep)).append(mk_list_item(contents));
-	        } else {
-	          $K(this).find(defaults['element_to_modify'])[defaults.placement](mk_outer_div(contents));
-		}
-	      }
-	    }
-	    );
+	       if ($K(this).find('#' + defaults.name + '_anno_list li').is('.' + defaults.name + '_item')) {
+	         $K(this).find('#' + defaults.name + '_anno_list').append(mk_list_item(defaults.sep)).append(mk_list_item(contents));
+	       } else {
+	         $K(this).find(defaults['element_to_modify'])[defaults.placement](mk_outer_div(contents));
+	}
+	     }
+	   }
+	   );
        KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'], config['rid'] );
     }
     cb();
