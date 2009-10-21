@@ -18,7 +18,6 @@ KOBJ.log = function(msg){
 	if(window.console != undefined && console.log != undefined){ console.log(msg); }
 };
 
-
 KOBJ.annotate_search_results = function(annotate, config, cb) {
   var defaults = {
     "name": "KOBJ",
@@ -95,15 +94,17 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
       }
       return outer_div;
   }
+  var annotatedMarker = "Kannotated" + (new Date().getTime());
+	KOBJ.log("marker: "+annotatedMarker);
   function runAnnotate(){
-    var notAlreadyAnnotated = $K(".Kannotated").length === 0;
+    var notAlreadyAnnotated = $K("."+annotatedMarker).length === 0;
 
     var resultslist = $K(defaults['results_lister']);
     if(resultslist.length == 0){ return; }
 
     var count = 0;
     if(notAlreadyAnnotated){
-	$K('cite:first').addClass("Kannotated");
+	$K('cite:first').addClass(annotatedMarker);
 	resultslist.each(function() {
 	     var contents = annotate(this);
 	     if (contents) {
@@ -121,19 +122,9 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
     cb();
   };
 	runAnnotate();
-	setInterval(function(){runAnnotate()},100);
-  //if this is google ajax serp, wrap the 'done' method call
-//  if(typeof je === "object" && je.zz){
-//    var gResultDone = je.zz;
-//    je.zz = function(a, b){
-//      gResultDone(a, b);
-//	KOBJ.log("running annotate");
-//      setTimeout(runAnnotate, 25);
-//    };
-//  }
+	setInterval(runAnnotate,100);
 
 };
-
 
 KOBJ.logger = function(type,txn_id,element,url,sense,rule,rid) {
 //     e=document.createElement("script");
