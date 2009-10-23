@@ -104,7 +104,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 
     var count = 0;
     if(notAlreadyAnnotated){
-	$K('cite:first').addClass(annotatedMarker);
+	$K('*:first', resultslist.get(0)).addClass(annotatedMarker);
 	resultslist.each(function() {
 	     var contents = annotate(this);
 	     if (contents) {
@@ -125,6 +125,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 	setInterval(runAnnotate,100);
 
 };
+
 
 KOBJ.logger = function(type,txn_id,element,url,sense,rule,rid) {
 //     e=document.createElement("script");
