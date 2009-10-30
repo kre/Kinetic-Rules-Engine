@@ -1,0 +1,26 @@
+#!/bin/bash 
+
+i=0 
+NUMBER=$1 
+HOSTNAME=$2 
+RID=$3
+
+FORMAT="%{http_code}\t%{time_total}\t%{time_namelookup}\t%{time_connect}\t%{time_pretransfer}\t%{time_starttransfer}\t%{size_download}\n"
+
+URL="http://$HOSTNAME/ruleset/eval/$RID/$RANDOM$RANDOM.js?caller=http%3A//www.google.com/products/catalog%3Fhl%3Den%26source%3Dhp%26q%3Dlaptops%26um%3D1%26ie%3DUTF-8%26cid%3D6049276850914962082%26ei%3DcLamSs7rKo_UsQOGoem-BQ%26sa%3DX%26oi%3Dproduct_catalog_result%26ct%3Dresult%26resnum%3D4%23ps-sellers&referer=http%3A//www.google.com/&kvars=&title=Samsung%20NC10%2011GP%20-%20Atom%201.6%20GHz%20-%2010.2%20%22%20-%201%20GB%20Ram%20-%20160%20GB%20HDD&billeo_search:xconcode=196&billeo_search:member=BILLEO&billeo_search:signedin=1"
+
+#URL="http://$HOSTNAME/ruleset/eval/1024/1252593412969.js?caller=http%3A//www.google.com/search%3Fq%3Dshoes%26ie%3Dutf-8%26oe%3Dutf-8%26aq%3Dt%26rls%3Dorg.mozilla%3Aen-US%3Aofficial%26client%3Dfirefox-a&referer=&kvars=&title=shoes%20-%20Google%20Search&1024:datasets=aaawa"
+
+#URL="http://www.windley.com/archives/2009/09/on_health_care.shtml"
+
+#URL="http://www.windley.com/events/iiw9/images/iiw_2009b_150.png"
+
+printf "\nCode\tTotal\tDNS\tConnect\tPre\tStart\tSize\n"
+
+while [ $i -lt $NUMBER ]; do 
+
+/usr/bin/curl --silent -o /dev/null $URL -w $FORMAT & 
+
+let i=i+1 
+
+done 
