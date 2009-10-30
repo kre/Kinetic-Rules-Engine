@@ -321,17 +321,28 @@ rule_state: 'active'
           | <error>
 
 
-select:  'select' 'using' STRING 
-            'setting' '(' VAR(s? /,/) ')' SEMICOLON(?) #?
+select:  'select' 'using' STRING setting(?) foreach(s?)
 	  {$return =
 	   { 'pattern' => $item[3],
-	     'vars' => $item[6]
+	     'vars' => $item[4][0],
+             'foreach' => $item[5]
 	   } 
 	  }
       | <error>
 
+setting: 'setting' '(' VAR(s? /,/) ')'
+	  {$return =  $item[3]
+	  }
 
-pre_block: 'pre' '{' decl(s? /;/) SEMICOLON(?) '}' #?
+foreach: 'foreach' expr setting
+    {$return =
+      {'expr' => $item[2],
+       'var' => $item[3][0]
+      }
+    }
+
+
+pre_block: 'pre' '{' decl(s? /;/) SEMICOLON(?) '}' 
            {$return=$item[3]}
          | <error>
 

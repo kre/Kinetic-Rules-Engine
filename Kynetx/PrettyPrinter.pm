@@ -362,11 +362,36 @@ sub pp_select {
     
     my $o = $beg;
 
-    $o .= 'select using ' . pp_string($node->{'pattern'}) . ' setting (';
-    $o .= join ", ", @{$node->{'vars'}};
-    $o .= ")\n";
+    $o .= 'select using ' . pp_string($node->{'pattern'});
+    $o .= pp_setting($node->{'vars'}) . "\n";
+    $o .= pp_foreach($node->{'foreach'}, $indent+$g_indent);
+    $o .= "\n";
 
     return $o;
+
+}
+
+sub pp_foreach {
+  my($node, $indent) = @_;
+
+  my $o = '';
+  foreach my $fe (@{$node}) {
+    $o .= " "x$indent;
+    $o .= 'foreach ' . pp_expr($fe->{'expr'});
+    $o .= pp_setting([$fe->{'var'}]) . "\n";
+    $indent+=$g_indent;
+  }
+
+  return $o;
+}
+
+sub pp_setting {
+  my ($vars) = @_;
+  my $o = ' setting (';
+  $o .= join ", ", @{$vars};
+  $o .= ")";
+
+  return $o;
 
 }
 
