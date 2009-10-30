@@ -66,6 +66,7 @@ den_to_exp
 exp_to_den
 infer_type
 escape_js_str
+var_free_in_expr
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -441,9 +442,7 @@ sub eval_js_expr {
     } elsif($expr->{'type'} eq 'prim') {
 	return eval_js_prim($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'operator') {
-	return  Kynetx::Operators::eval_operator($expr, $rule_env, $rule_name, $req_info, $session);
-    } elsif($expr->{'type'} eq 'pred') {
-	return eval_predicates($req_info, $rule_env, $session, $expr, $rule_name);
+	return Kynetx::Operators::eval_operator($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'condexpr') {
 	return eval_predicates($req_info, $rule_env, $session, $expr->{'test'}, $rule_name) ?
 	       eval_js_expr($expr->{'then'}, $rule_env, $rule_name, $req_info, $session) :
@@ -683,7 +682,7 @@ sub den_to_exp {
 
 
 	/array/ && do {
-	    return map {den_to_exp($_)} @{ $expr->{'val'} };
+	    return [ map {den_to_exp($_)} @{ $expr->{'val'} } ];
 	};
 
 
@@ -766,3 +765,46 @@ sub escape_js_str {
     return $val;
 }
 
+sub var_free_in_expr {
+    my ($var, $expr) = @_;
+
+#    my $logger = get_logger();
+#    $logger->debug("Rule env: ", sub { Dumper($rule_env) });
+
+    if ($expr->{'type'} eq 'str' ) {
+	return 0;
+    } elsif($expr->{'type'} eq 'num') {
+	return  0;
+    } elsif($expr->{'type'} eq 'regexp') {
+	return  0;
+    } elsif($expr->{'type'} eq 'var') {
+#        $logger->debug("Comparing $expr->{'val'} and $var");
+        return ($expr->{'val'} eq $var);
+    } elsif($expr->{'type'} eq 'bool') {
+	return  0;
+    } elsif($expr->{'type'} eq 'array') {
+      return at_least_one($expr->{'val'}, $var);
+    } elsif($expr->{'type'} eq 'prim' ||
+	    $expr->{'type'} eq 'pred' ||
+	    $expr->{'type'} eq 'qualified') {
+	return at_least_one($expr->{'args'}, $var);
+    } elsif($expr->{'type'} eq 'operator') {
+	return  var_free_in_expr($var, $expr->{'obj'});
+    } elsif($expr->{'type'} eq 'condexpr') {
+      	return at_least_one([$expr->{'test'},
+			     $expr->{'then'},
+			     $expr->{'else'}], $var);
+    } else {
+        return 1;
+    }
+
+}
+
+sub at_least_one {
+  my($a, $var) = @_;
+  my $r = 0;
+  foreach my $e (@{$a}) {
+    $r ||= var_free_in_expr($var, $e);
+  }
+  return $r
+}

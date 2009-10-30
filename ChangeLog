@@ -1,3 +1,14 @@
+2009-10-30  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Rules.pm (optimize_pre): Move decls not dependent on
+	  foreach var into outer_pre and vars that are into inner_pre
+	* Kynetx/JavaScript.pm (var_free_in_expr): added to compute if a
+	  var is free in a given expression
+	* Kynetx/Rules.pm (eval_foreach): added support for foreach in
+	  rule.
+	* Kynetx/PrettyPrinter.pm: added support for foreach in rule.
+	* Kynetx/Parser.pm: added support for foreach in rule.
+
 2009-10-03  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Console.pm (show_context): Changed to work with changes

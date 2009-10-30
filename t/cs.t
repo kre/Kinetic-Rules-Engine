@@ -136,7 +136,7 @@ SKIP: {
 
     is($mech->content_type(), 'text/javascript');
 
-    $mech->content_like('/function callBacks\d+/');
+    $mech->content_like('/function callBacks/');
     $mech->content_like('/function\(uniq, cb,/');
 
     # sets search referer
@@ -150,7 +150,7 @@ SKIP: {
     is($mech->content_type(), 'text/javascript');
 
     # should be two actions, one callback
-    $mech->content_like('/function callBacks\d+/');
+    $mech->content_like('/function callBacks/');
     $mech->content_like('/function\(uniq, cb,.+function\(uniq, cb,/s');
 
     $mech->content_contains('kobj_weather');

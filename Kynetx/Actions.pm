@@ -348,7 +348,7 @@ sub build_js_load {
 	}
     }
     
-    my $cb_func_name = 'callBacks'.$uniq;
+    my $cb_func_name = 'callBacks';
     $js .= gen_js_mk_cb_func($cb_func_name,$cb);
 
 

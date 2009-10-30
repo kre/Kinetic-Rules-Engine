@@ -72,8 +72,8 @@ sub handler {
     $logger->debug("Initializing memcached");
     Kynetx::Memcached->init();
 
-    my ($method,$rid) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_;]*)/?!;
-    $logger->debug("Performing $method method on ruleset $rid");
+    my ($method,$rid,$eid) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_;]*)/?(\d+)?!;
+    $logger->debug("Performing $method method on rulesets $rid and EID $eid");
     Log::Log4perl::MDC->put('site', $rid);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
 
@@ -84,7 +84,7 @@ sub handler {
 
     # at some point we need a better dispatch function
     if($method eq 'eval') {
-	process_rules($r, $method, $rid);
+	process_rules($r, $method, $rid, $eid);
     } elsif($method eq 'flush' ) {
 	flush_ruleset_cache($r, $method, $rid);
     } elsif($method eq 'console') {

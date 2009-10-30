@@ -49,6 +49,7 @@ our @ISA         = qw(Exporter);
 our %EXPORT_TAGS = (all => [ 
 qw(
 reduce
+cdr
 before_now
 after_now
 mk_created_session_name
@@ -149,6 +150,7 @@ sub reduce (&@) {
     return $val;
 }
 
+sub cdr { shift; @_ } 
 
 sub before_now {
     my $desired = shift;

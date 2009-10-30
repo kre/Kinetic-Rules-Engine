@@ -759,7 +759,7 @@ add_decl_testcase(
 #diag(Dumper($krl));
 
 
-plan tests => 45 + (@expr_testcases * 2) + (@decl_testcases * 1) + (@pre_testcases * 1);
+plan tests => 66 + (@expr_testcases * 2) + (@decl_testcases * 1) + (@pre_testcases * 1);
 
 
 # now test each test case twice
@@ -979,6 +979,48 @@ session_delete($rid, $session, 'my_trail');
 session_delete($rid, $session, 'my_flag');
 
 session_cleanup($session);
+
+sub check_free {
+   my($var, $expr, $etype) = @_;
+
+   my $ptree = Kynetx::Parser::parse_expr($expr);
+
+   ok(var_free_in_expr($var, $ptree), $var . " occurs free in "  . $etype);
+ }
+
+sub check_not_free {
+   my($var, $expr, $etype) = @_;
+
+   my $ptree = Kynetx::Parser::parse_expr($expr);
+
+   ok(!var_free_in_expr($var, $ptree), $var . " does not occur free in " . $etype);
+ }
+
+check_free("v", "v + 3", "prim");
+check_not_free("x", "v + 3", "prim");
+
+check_not_free("v", "true", "bool");
+check_not_free("v", "false", "bool");
+check_not_free("v", "1", "num");
+check_not_free("v", "10 + 20", "prim");
+check_not_free("v", '"purple"', "string");
+check_not_free("v", '/x*/', "regexp");
+
+check_free("v", "v + x", "prim");
+check_free("v", "x + v", "prim");
+check_not_free("v", "y + x", "prim");
+check_not_free("v", '["a", "b", "v"]', "string array");
+check_free("v", '[a, b, v]', "var array");
+check_not_free("v", '[a, b, c]', "var array");
+
+check_free("v", 'v.pick("$..[0]")', "operator");
+check_not_free("v", 'x.pick("$..[0]")', "operator");
+check_free("v", 'today(v)', "predicate");
+
+check_free("v", 'weather:sunny(v)', "qualified predicate");
+check_free("v", '(v) => 3 | x', "conditional test");
+check_free("v", '(r) => v | 3', "conditional then");
+check_free("v", '(s) => 3 | v', "conditional else");
 
 
 1;

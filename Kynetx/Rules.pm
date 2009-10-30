@@ -74,7 +74,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
 sub process_rules {
-    my ($r, $method, $rids) = @_;
+    my ($r, $method, $rids, $eid) = @_;
 
     my $logger = get_logger();
 
@@ -94,6 +94,7 @@ sub process_rules {
     my $session = process_session($r);
 
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rids);
+    $req_info->{'eid'} = $eid;
 
     # initialization
     my $js = '';
@@ -161,8 +162,9 @@ sub process_ruleset {
       $js .= "KOBJ.logVerify('" . $req_info->{'txn_id'} . "', '$rid', '" . Kynetx::Configure::get_config('EVAL_HOST') . "');";
     }
 
+    my $eid = $req_info->{'eid'};
     return <<EOF
-KOBJ.registerClosure('$rid', function() { $js });
+KOBJ.registerClosure('$rid', function() { $js }, '$eid');
 EOF
 }
 
@@ -215,7 +217,7 @@ sub eval_ruleset {
 #		    $logger->debug("[select var] $var -> $captured_vals->[$cap]");
 	  $this_rule_env->{$var} = $captured_vals->[$cap++];
 	}
-	
+
 	$js .= eval_rule($r, 
 			 $req_info, 
 			 extend_rule_env($this_rule_env, $rule_env),
@@ -229,7 +231,7 @@ sub eval_ruleset {
   $logger->debug("Executed $req_info->{'rule_count'} rules");
 
     
-  return $js;
+  return mk_turtle($js) if $js;
 
 }
 
@@ -319,7 +321,7 @@ sub eval_rule {
 
 
     Log::Log4perl::MDC->put('rule', $rule->{'name'});
-    $logger->info("selected ...");
+#    $logger->info($rule->{'name'}, " selected...");
 
 
     foreach my $var (@{ session_keys($req_info->{'rid'}, $session) } ) {
@@ -328,68 +330,56 @@ sub eval_rule {
 		       session_get($req_info->{'rid'}, $session, $var));
     }
 
-
-
-    # this loads the rule_env.  
-    my $tentative_js;
-    ($tentative_js,$rule_env) = Kynetx::JavaScript::eval_js_pre($req_info, $rule_env, $rule->{'name'}, $session, $rule->{'pre'});
-
-#    $logger->debug("[ENV] after prelude ", Dumper($rule_env));
-#    foreach my $var (keys %{ $rule_env } ) {
-#	$logger->debug("[Env] $var has value $rule_env->{$var}" 
-#		       ) if defined $rule_env->{$var};
-#    }
-
-
-    # if the condition is undefined, it's true.  
-    $rule->{'cond'} ||= mk_expr_node('bool','true');
-
-
-    my $pred_value = 
-	eval_predicates($req_info, 
-			$rule_env, 
-			$session, 
-			$rule->{'cond'}, 
-			$rule->{'name'});
-
-
-    my $js = '';
-
-    
     # keep track of these for each rule
     $req_info->{'actions'} = [];
     $req_info->{'labels'} = [];
     $req_info->{'tags'} = [];
 
-    my $fired = 0;
-    if ($pred_value) {
-
-	$logger->info("fired");
-
-	# this is the main event.  The browser has asked for a
-	# chunk of Javascrip and this is where we deliver... 
-
-
-	$js .= '(function(){';
-	# since we fired, include the declarations
-	$js .= $tentative_js;
-	$js .= Kynetx::Actions::build_js_load($rule, $req_info, $rule_env, $session); 
-	$js .= "}());\n";
-	
-	$fired = 1;
-	push(@{ $req_info->{'results'} }, 'fired');
-
-
-    } else {
-	$logger->info("did not fire");
-
-	$fired = 0;
-	# put this in the logging DB
-	push(@{ $req_info->{'results'} }, 'notfired');
-
+    if ($rule->{'pre'} &&
+	! ($rule->{'inner_pre'} || $rule->{'outer_pre'})) {
+	  $logger->debug("Rule not pre optimized...");
+	  optimize_pre($rule);
     }
 
-    $js .= Kynetx::Actions::eval_post_expr($rule, $session, $req_info, $rule_env, $fired);
+    my $js = '';
+    my $outer_tentative_js = '';
+
+#    $logger->debug(Dumper($rule->{'pagetype'}));
+#    $logger->debug("[eval_rule] ", Dumper($rule));
+
+
+    # this loads the rule_env.  
+    ($outer_tentative_js,$rule_env) = 
+      Kynetx::JavaScript::eval_js_pre($req_info, 
+				      $rule_env, 
+				      $rule->{'name'}, 
+				      $session, 
+				      $rule->{'outer_pre'});
+
+
+#     if (!defined $rule->{'pagetype'}->{'foreach'} ||
+# 	@{$rule->{'pagetype'}->{'foreach'}} == 0) {
+#       my $rb_js = eval_rule_body($r, 
+# 				 $req_info, 
+# 				 $rule_env, 
+# 				 $session, 
+# 				 $rule);
+#       $js .= mk_turtle($rb_js) if $rb_js; # keep the js clean
+#     } else { # foreach isn't empty
+
+    # now we don't have to flush cache on deploy
+    $rule->{'pagetype'}->{'foreach'} = [] 
+      unless defined $rule->{'pagetype'}->{'foreach'};
+
+      $js .= eval_foreach($r, 
+			  $req_info, 
+			  $rule_env, 
+			  $session, 
+			  $rule,
+			  @{ $rule->{'pagetype'}->{'foreach'} });
+#    }
+
+    
 
     # save things for logging
     push(@{ $req_info->{'names'} }, $req_info->{'rid'}.':'.$rule->{'name'});
@@ -397,10 +387,123 @@ sub eval_rule {
     push(@{ $req_info->{'all_labels'} }, $req_info->{'labels'});
     push(@{ $req_info->{'all_tags'} }, $req_info->{'tags'});
 
-    return $js; 
+    # combine JS and wrap in a closure if rule fired
+    $js = mk_turtle($outer_tentative_js . $js) if $js;
+
+    return $js;
 
 }
 
+# recursive function on foreach list.
+sub eval_foreach {
+  my($r, $req_info, $rule_env, $session, $rule, @foreach_list) = @_;
+
+  my $logger = get_logger();
+
+  my $fjs = '';
+
+  # $logger->debug("In foreach with " . Dumper(@foreach_list));
+
+  if (@foreach_list == 0) {
+
+    $fjs =  eval_rule_body($r, 
+			    $req_info, 
+			    $rule_env, 
+			    $session, 
+			    $rule);
+
+  } else {
+
+    # expr has to result in array of prims
+    my $valarray = 
+         eval_js_expr($foreach_list[0]->{'expr'}, 
+		      $rule_env, 
+		      $rule->{'name'}, 
+		      $req_info, 
+		      $session);
+
+    $logger->warn("Foreach expression does not yield array") unless
+      $valarray->{'type'} eq 'array';
+    my $var = $foreach_list[0]->{'var'};
+
+    foreach my $val (@{ $valarray->{'val'} }) {
+      
+      $fjs .= mk_turtle(
+		"var $var = ". gen_js_expr($val) . ";\n" .
+  	        eval_foreach($r, 
+			     $req_info, 
+			     extend_rule_env({$var,den_to_exp($val)},
+					     $rule_env), 
+			     $session, 
+			     $rule,
+			     cdr(@foreach_list)
+			    ));
+    }
+  }
+
+  return $fjs;
+}
+
+sub eval_rule_body {
+  my($r, $req_info, $rule_env, $session, $rule) = @_;
+
+  my $logger = get_logger();
+
+  my $inner_tentative_js;
+  ($inner_tentative_js,$rule_env) = 
+    Kynetx::JavaScript::eval_js_pre($req_info, 
+				    $rule_env, $rule->{'name'}, 
+				    $session, $rule->{'inner_pre'});
+
+
+
+  # if the condition is undefined, it's true.  
+  $rule->{'cond'} ||= mk_expr_node('bool','true');
+
+
+  my $pred_value = 
+	eval_predicates($req_info, 
+			$rule_env, 
+			$session, 
+			$rule->{'cond'}, 
+			$rule->{'name'});
+
+
+  my $js = '';
+
+    
+  my $fired = 0;
+  if ($pred_value) {
+
+    $logger->info("fired");
+
+    # this is the main event.  The browser has asked for a
+    # chunk of Javascrip and this is where we deliver... 
+
+    # combine the inner_tentive JS, with the generated JS and wrap in a closure
+    $js = $inner_tentative_js .
+          Kynetx::Actions::build_js_load($rule, 
+					 $req_info, 
+					 $rule_env, 
+					 $session);
+	
+    $fired = 1;
+    push(@{ $req_info->{'results'} }, 'fired');
+
+
+  } else {
+    $logger->info("did not fire");
+
+    $fired = 0;
+    # put this in the logging DB
+    push(@{ $req_info->{'results'} }, 'notfired');
+
+  }
+
+  $js .= Kynetx::Actions::eval_post_expr($rule, $session, $req_info, $rule_env, $fired);
+
+  return $js;
+}
 
 
 # this returns the right rules for the caller and site
@@ -416,7 +519,8 @@ sub get_rule_set {
 
     my $ruleset = get_rules_from_repository($site, $svn_conn, $req_info);
 
-    $ruleset = optimize_rules($ruleset);
+    # FIXME: store optimized RS in cache???
+    $ruleset = optimize_ruleset($ruleset);
 
     turn_on_logging() if($ruleset->{'meta'}->{'logging'} && 
 			 $ruleset->{'meta'}->{'logging'} eq "on");
@@ -446,21 +550,73 @@ sub select_rule {
     }
 }
 
-sub optimize_rules {
+
+sub optimize_ruleset {
     my ($ruleset) = @_;
 
+    my $logger = get_logger();
+
+    $logger->debug("Optimizing rules for ", $ruleset->{'ruleset_name'});
+
     foreach my $rule ( @{ $ruleset->{'rules'} } ) {
-
-	# precompile pattern regexp
-	$rule->{'pagetype'}->{'pattern'} = 
-	    qr!$rule->{'pagetype'}->{'pattern'}!;
-
+      optimize_rule($rule);
     }
 
     return $ruleset;
 }
 
 
+sub optimize_rule {
+  my ($rule) = @_;
+
+  my $logger = get_logger();
+
+  # precompile pattern regexp
+  $rule->{'pagetype'}->{'pattern'} = 
+    qr!$rule->{'pagetype'}->{'pattern'}!;
+
+  # break up pre, if needed
+  optimize_pre($rule);
+
+  return $rule;
+}
+
+sub optimize_pre {
+  my ($rule) = @_;
+  my $logger = get_logger();
+    my @vars = map {$_->{'var'}} @{ $rule->{'pagetype'}->{'foreach'} };
+
+# don't need this, but I love it.
+# 	  my %is_var;
+# 	  # create a hash for testing whether a var is defined or not
+# 	  @is_var{@vars} = (1) x @vars;
+
+
+    foreach my $decl (@{$rule->{'pre'}}) {
+      # check if any of the vars occur free in the rhs
+      my $dependent = 0;
+      foreach my $v (@vars) {
+	if ($decl->{'type'} eq 'expr' &&
+	    var_free_in_expr($v, $decl->{'rhs'})) {
+	  $dependent = 1;
+	}
+      }
+      if ($dependent) {
+	push(@{$rule->{'inner_pre'}}, $decl);
+	push(@vars, $decl->{'lhs'}); # collect new var
+      } else {
+	push(@{$rule->{'outer_pre'}}, $decl);
+      }
+    }
+#    $logger->debug("Dependent vars in optimization: ", @vars);
+
+}
+
+
+sub mk_turtle {
+  my($ijs) = @_;
+  return '(function(){' . $ijs . "}());\n";
+}
 
 
 
