@@ -759,7 +759,7 @@ add_decl_testcase(
 #diag(Dumper($krl));
 
 
-plan tests => 66 + (@expr_testcases * 2) + (@decl_testcases * 1) + (@pre_testcases * 1);
+plan tests => 67 + (@expr_testcases * 2) + (@decl_testcases * 1) + (@pre_testcases * 1);
 
 
 # now test each test case twice
@@ -829,6 +829,8 @@ sub mk_datasource_function {
 	my $decl_src = <<_KRL_;
 something = $source:$function($args);
 _KRL_
+
+	diag $decl_src if $diag;
         my $decl = Kynetx::Parser::parse_decl($decl_src);
 
 	diag(Dumper($decl)) if $diag;
@@ -843,7 +845,7 @@ _KRL_
 
 	my $result = $js_decl;
 	
-        diag($decl->{'function'} . " --> " . $result) if $diag;
+        diag($decl->{'rhs'}->{'predicate'} . " --> " . $result) if $diag;
 	return $result;
     };
 
@@ -857,7 +859,6 @@ my $referer_function = mk_datasource_function('referer','', 0);
 is(&{$referer_function}('search_terms'), 
    'free+mobile+calls',
    'keywords from search engine referer' );
-
 
 
 # check markets datasource
@@ -900,6 +901,7 @@ SKIP: {
 # check locations datasource
 
 # http://www.webservicex.net//stockquote.asmx/GetQuote?symbol=GOOG
+
 
 my $location_function = mk_datasource_function('location', '', 0);
 
@@ -980,6 +982,15 @@ session_delete($rid, $session, 'my_flag');
 
 session_cleanup($session);
 
+##
+## gen_js_var
+## 
+is(gen_js_var("c","3"), "var c = 3;\n", "simple stings");
+
+
+##
+## var_free_in_expr
+##
 sub check_free {
    my($var, $expr, $etype) = @_;
 

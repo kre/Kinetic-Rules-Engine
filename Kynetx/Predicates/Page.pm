@@ -147,10 +147,13 @@ id
 
     } elsif($function eq 'param') {
 
-	# rulespaced env parameters
-	if($req_info->{'rid'} && defined $req_info->{$req_info->{'rid'}.':'.$args->[0]}) {
-	    $val = $req_info->{$req_info->{'rid'}.':'.$args->[0]};
-	}
+      # FIXME: should namespace params so that this can't be used to grab random
+      #        req_info items.
+
+      # rulespaced env parameters
+      if($req_info->{'rid'} && defined $req_info->{$req_info->{'rid'}.':'.$args->[0]}) {
+	$val = $req_info->{$req_info->{'rid'}.':'.$args->[0]};
+      }
 
     }
 

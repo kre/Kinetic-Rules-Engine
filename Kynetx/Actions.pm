@@ -301,7 +301,7 @@ sub emit_var_decl {
 	    $val = encode_json($val);
 	}
 	$logger->debug("[decl] $lhs has type: $t");
-	$js .= "var $lhs = $val;\n";
+	$js .= gen_js_var($lhs, $val);
     }
     return $js;
 

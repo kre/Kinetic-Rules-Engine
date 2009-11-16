@@ -1,3 +1,21 @@
+2009-11-16  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Rules.pm (add_errorstack): Added support for calling errorstack
+
+2009-11-12  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/KOBJ.pm (get_datasets): Removed need to pass svn connection
+	* Kynetx.pm (describe_ruleset): Removed need to pass svn connection
+	* Kynetx/Repository.pm (get_rules_from_repository): Added option
+	  for getting rules from the rulemanager API. 
+
+2009-11-02  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/JavaScript.pm (gen_js_var): Added to normalize creation
+	  of vars in JS
+	* Kynetx/Operators.pm (eval_toRegexp): Added to allow for coercion
+	  of strings to regexps.  
+
 2009-10-30  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (optimize_pre): Move decls not dependent on

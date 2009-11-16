@@ -72,7 +72,11 @@ sub handler {
     $logger->debug("Initializing memcached");
     Kynetx::Memcached->init();
 
-    my ($method,$rid,$eid) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_;]*)/?(\d+)?!;
+    my $method;
+    my $rid;
+    my $eid = '';
+
+    ($method,$rid,$eid) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_;]*)/?(\d+)?!;
     $logger->debug("Performing $method method on rulesets $rid and EID $eid");
     Log::Log4perl::MDC->put('site', $rid);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
@@ -111,10 +115,17 @@ sub flush_ruleset_cache {
 
     my $logger = get_logger();
 
+    my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
 
-    $logger->debug("[flush] flushing rules for $rid");
+
+    # default to production for svn repo
+    # defaults to production when no version specified
+
+    my $version = Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kynetx_app_version']) || 'prod';
+
+    $logger->debug("[flush] flushing rules for $rid ($version version)");
     my $memd = get_memd();
-    $memd->delete("ruleset:$rid");
+    $memd->delete(Kynetx::Repository::make_ruleset_key($rid, $version));
 
     $r->content_type('text/html');
     my $msg = "Rules flushed for site $rid";
@@ -130,12 +141,13 @@ sub describe_ruleset {
     my $req = Apache2::Request->new($r);
     my $flavor = $req->param('flavor') || 'html';
 
-
     $logger->debug("Getting ruleset $rid");
 
-    my $req_info = {};
 
-    my $ruleset = Kynetx::Rules::get_rules_from_repository($rid, $r->dir_config('svn_conn'), $req_info);
+    my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
+
+
+    my $ruleset = Kynetx::Rules::get_rules_from_repository($rid, $req_info);
 
     my $numrules = @{ $ruleset->{'rules'} } + 0;
 

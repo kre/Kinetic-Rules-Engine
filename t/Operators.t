@@ -66,8 +66,8 @@ my $rule_name = 'foo';
 my $rule_env = empty_rule_env();
 
 $rule_env = extend_rule_env(
-    ['a','b','c','d','my_str','my_url'],
-    [10, 11, [4,5,6], [], 'This is a string', 'http://www.amazon.com/gp/products/123456789/'],
+    ['a','b','c','d','e','my_str','my_url'],
+    [10, 11, [4,5,6], [], 'this', 'This is a string', 'http://www.amazon.com/gp/products/123456789/'],
     $rule_env);
 
 
@@ -135,11 +135,13 @@ sub test_operator {
 
     my ($v, $r);
 
+    diag "Expr: ", Dumper($e) if $d;
+
     $v = Kynetx::Parser::parse_expr($e);
-    diag Dumper($v) if $d;
+    diag "Parsed expr: ", Dumper($v) if $d;
 
     $r = eval_js_expr($v, $rule_env, $rule_name,$req_info);
-    diag Dumper($r) if $d;
+    diag "Result: ", Dumper($r) if $d;
     is_deeply($r, $x, "Trying $e");
 }
 
@@ -467,6 +469,21 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
+$e[$i] = q#my_str.replace(("/this/"+ "i").toRegexp(),"do you want a")#;
+$x[$i] = {
+   'val' => 'do you want a is a string',
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#my_str.replace(("/"+ e + "/i").toRegexp(),"do you want a")#;
+$x[$i] = {
+   'val' => 'do you want a is a string',
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
 
 
 # now run the tests....

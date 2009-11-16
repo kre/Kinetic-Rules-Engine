@@ -128,8 +128,7 @@ sub process_action {
 #    Kynetx::Request::log_request_env($logger, $req_info);
 
     process_callbacks(get_ruleset($req_info->{'rid'}, 
-				  $req_info,
-				  $r->dir_config('svn_conn')),
+				  $req_info),
 		      $req->param('rule'),
 		      $req->param('sense'),
 		      $req->param('type'),
@@ -186,12 +185,12 @@ sub process_action {
 
 # retrieve callback info for expression
 sub get_ruleset {
-    my ($rid, $req_info, $svn_conn) = @_;
+    my ($rid, $req_info) = @_;
 
     my $logger = get_logger();
     $logger->debug("[callbacks] Getting ruleset for $rid");
 
-    return Kynetx::Repository::get_rules_from_repository($rid, $svn_conn, $req_info);
+    return Kynetx::Repository::get_rules_from_repository($rid, $req_info);
 
 }
 

@@ -148,7 +148,10 @@ sub eval_replace {
 	    $v =~ s/\\$n/${items[$_]}/g ;
 	    $v =~ s/\$$n/${items[$_]}/g ;
 	}
-    }
+      } else {
+	$logger->warn("Not a regular expression: ", $rands->[0]->{'val'})
+	  unless $rands->[0]->{'type'} eq 'regexp';
+      }
 
 
     return { 'type' => Kynetx::JavaScript::infer_type($v),
@@ -156,6 +159,24 @@ sub eval_replace {
     }
 }
 $funcs->{'replace'} = \&eval_replace;
+
+
+sub eval_toRegexp {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::JavaScript::eval_js_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+
+    my $v = 0;
+    if ($obj->{'type'} eq 'str') {
+      $obj->{'type'} = 'regexp';
+    }
+
+    return $obj;
+}
+$funcs->{'toRegexp'} = \&eval_toRegexp;
+
 
 
 sub eval_operator {

@@ -92,8 +92,7 @@ sub show_context {
 
     # side effects environment with precondition pattern values
     my $ruleset = 
-	get_rule_set($r->dir_config('svn_conn'),
-		     $req_info);
+	get_rule_set($req_info);
 
     my $rule_env = empty_rule_env();
     # this loops through the rules ONCE applying all that fire

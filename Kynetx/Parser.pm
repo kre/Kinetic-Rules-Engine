@@ -711,7 +711,7 @@ term: factor factor_op term
 
 factor_op: '*'|'/'
 
-operator: 'pick'|'length'|'replace'
+operator: 'pick'|'length'|'replace'|'toRegexp'
 
 factor: NUM
         {$return=Kynetx::Parser::mk_expr_node('num',$item[1])}

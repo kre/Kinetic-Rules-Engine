@@ -41,6 +41,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Kynetx::Memcached qw(:all);
 use Kynetx::Json qw(:all);
+use Kynetx::Predicates::Page;
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -49,89 +50,149 @@ our @ISA         = qw(Exporter);
 our %EXPORT_TAGS = (all => [ 
 qw(
 get_rules_from_repository
+make_ruleset_key
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
 sub get_rules_from_repository{
 
-    my ($site, $svn_conn, $request_info) = @_;
+    my ($site, $req_info) = @_;
 
     my $logger = get_logger();
 
+
+    # default to production for svn repo
+    # defaults to production when no version specified
+    my $version = Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kynetx_app_version']) || 'prod';
+    $req_info->{'rule_version'} = $version;
+
     my $memd = get_memd();
 
-    my $ruleset = $memd->get("ruleset:$site");
+    my $ruleset = $memd->get(make_ruleset_key($site, $version));
     if ($ruleset) {
-	$request_info->{'rule_version'} = $memd->get("ruleset_version:$site");
-	$logger->debug("Using cached ruleset for $site");
+	$logger->debug("Using cached ruleset for $site ($version)");
 	return $ruleset;
     } 
 
+    my $ext;
+    my $krl;
+    # defaults to SVN so things keep working
+    my $rule_repo_type = 
+          Kynetx::Configure::get_config('RULE_REPOSITORY_TYPE') || 'svn';
 
-    my ($ctx, $svn_url) = get_svn_conn($svn_conn);
+    my $repo_info = Kynetx::Configure::get_config('RULE_REPOSITORY');
 
-    my %d;
-    my $info = sub {
+    $logger->debug("Getting rules from repo for $site using $rule_repo_type");
+
+
+    if ($rule_repo_type eq 'api') {
+
+      my ($base_url,$username,$passwd) = split(/\|/, $repo_info);
+
+
+      my $parsed_url = APR::URI->parse($req_info->{'pool'}, $base_url);
+      my $hostname = $parsed_url->hostname;
+
+      # FIXME: this ought to be using code from Memcached.pm
+      #        that requires refactoring svn code below and fixing 
+      #        flush_ruleset_cache
+
+      # grab json version on the bet that more code in repo is in that format
+      # final '' ensures a trailing slash
+      my $rs_url = join('/', ($base_url, $site, $version, 'json', ''));
+
+      $logger->debug("Using API to retrieve $rs_url");
+
+      my $ua = LWP::UserAgent->new;
+      $ua->agent("Kynetx Rule Engine/1.0");
+
+      my $req = HTTP::Request->new(GET => $rs_url);
+      $req->authorization_basic($username, $passwd);
+
+      my $res = $ua->request($req);
+
+      my $json;
+      if($res->is_success) {
+	$json = $res->decoded_content;
+      } else {
+
+	$logger->debug("Error retrieving ruleset: ",  $res->status_line);
+	# return now to avoid caching fake ruleset
+	return make_empty_ruleset($site, $rs_url);
+      }
+
+      $ruleset = jsonToAst($json);
+
+    } else { # default is svn
+      
+      # FIXME: all this complicated SVN code could be replaced by nicer WebDAV
+      #        code and refactored to work with code from Memcached.pm
+
+      my ($ctx, $svn_url) = get_svn_conn($repo_info);
+      $svn_url .= '/' unless $svn_url =~ m#/$#;
+
+      my %d;
+      my $info = sub {
 	my( $path, $info, $pool ) = @_;
 	$d{$path} = $info->last_changed_rev();
-    };
+      };
 
-    my $ext;
-    foreach $ext ('.krl','.json') {
-	my $svn_path = $svn_url.$site.$ext;
+      my $svn_path;
+      foreach $ext ('.krl','.json') {
+	$svn_path = $svn_url.$site.$ext;
 	eval {
-	    $logger->debug("Getting info on ", $svn_path);
-	    $ctx->info($svn_path, 
-		       undef,
-		       'HEAD',
-		       $info,
-		       0           # don't recurse
-		);
+	  $logger->debug("Getting info on ", $svn_path);
+	  $ctx->info($svn_path, 
+		     undef,
+		     'HEAD',
+		     $info,
+		     0		# don't recurse
+		    );
 	};
-	if($@) {  # catch file doesn't exist...
-#	    $logger->debug($svn_path, " returned error ", $@);
-	    $d{$site.$ext} = -1;
+	if ($@) {		# catch file doesn't exist...
+	  #	    $logger->debug($svn_path, " returned error ", $@);
+	  $d{$site.$ext} = -1;
 	}
-    }
+      }
 
-    if ($d{$site.'.krl'} eq -1 && $d{$site.'.json'} eq -1) {
-	$logger->debug("Ruleset $site not found; returning fake ruleset");
-	return Kynetx::Parser::parse_ruleset("ruleset $site {}");
-    }
+      if ($d{$site.'.krl'} eq -1 && $d{$site.'.json'} eq -1) {
+	# return now to avoid caching fake ruleset
+	return make_empty_ruleset($site, $svn_path);
+      }
 
 
-    if($d{$site.'.krl'} > $d{$site.'.json'}) {
+      if ($d{$site.'.krl'} > $d{$site.'.json'}) {
 	$ext = '.krl';
-    } else {
+      } else {
 	$ext = '.json';
+      }
+
+      $req_info->{'rule_version'} = $d{$site.$ext};
+      $logger->debug("Using the $ext version: ", $req_info->{'rule_version'});
+    
+      # open a variable as a filehandle (for weird SVN::Client stuff)
+      open(FH, '>', \$krl) or die "Can't open memory file: $!";
+      $ctx->cat (\*FH,
+		 $svn_url.$site.$ext, 
+		 'HEAD');
+
+      # return the abstract syntax tree regardless of source
+      if($ext eq '.krl') {
+	$ruleset = Kynetx::Parser::parse_ruleset($krl);
+      } else {
+	$ruleset = jsonToAst($krl);
+      }
+
     }
 
-    $request_info->{'rule_version'} = $d{$site.$ext};
-    $logger->debug("Using the $ext version: ", $request_info->{'rule_version'});
-    
-
-    # open a variable as a filehandle (for weird SVN::Client stuff)
-    my $krl;
-    open(FH, '>', \$krl) or die "Can't open memory file: $!";
-    $ctx->cat (\*FH,
-	       $svn_url.$site.$ext, 
-	       'HEAD');
 
     $logger->debug("Found rules for $site");
 
-    # return the abstract syntax tree regardless of source
-    if($ext eq '.krl') {
-	$ruleset = Kynetx::Parser::parse_ruleset($krl);
-    } else {
-	$ruleset = jsonToAst($krl);
-    }
+    my $key = make_ruleset_key($site, $version);
 
-
-
-    $logger->debug("Caching ruleset for $site");
-    $memd->set("ruleset:$site", $ruleset);
-    $memd->set("ruleset_version:$site", $request_info->{'rule_version'});
+    $logger->debug("Caching ruleset for $site using key $key");
+    $memd->set($key, $ruleset);
     return $ruleset;    
 
 }
@@ -146,7 +207,7 @@ sub get_svn_conn {
     } else {
 	$svn_url = 'svn://127.0.0.1/rules/client/';
 	$username = 'web';
-	$username = 'foobar';
+	$passwd = 'foobar';
     }
 
     
@@ -178,6 +239,24 @@ sub get_svn_conn {
 
     
 
+  }
+
+sub make_empty_ruleset {
+  my ($site, $url) = @_;
+
+  my $logger = get_logger();
+  $logger->error("Error retrieving $url; returning empty ruleset\n");
+  my $json = <<JSON;
+{"global":[],"dispatch":[],"ruleset_name":"$site","rules":[],"meta":{}}
+JSON
+
+  return jsonToAst($json);
+
+}
+
+sub make_ruleset_key {
+  my ($site, $version) = @_;
+  return "ruleset:$version:$site";
 }
 
 

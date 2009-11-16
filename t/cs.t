@@ -38,7 +38,7 @@ use Test::WWW::Mechanize;
 
 use LWP::UserAgent;
 
-my $numtests = 42;
+my $numtests = 52;
 
 plan tests => $numtests;
 
@@ -97,7 +97,7 @@ SKIP: {
 
     $mech->title_is('Describe Ruleset cs_test');
 
-    $mech->content_like('/"ruleset_version"\s*:\s*"\d+"/s');
+    $mech->content_like('/"ruleset_version"\s*:\s*"(prod|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
     $mech->content_like('/"ruleset_id"\s*:\s*"[^"]+"/s');
 
@@ -110,7 +110,33 @@ SKIP: {
     $mech->get_ok($url_describe_2);
     is($mech->content_type(), 'text/plain');
 
-    $mech->content_like('/"ruleset_version"\s*:\s*"\d+"/s');
+    $mech->content_like('/"ruleset_version"\s*:\s*"(prod|\d+)"/s');
+    $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
+    $mech->content_like('/"ruleset_id"\s*:\s*"[^"]+"/s');
+
+
+    # test DESCRIBE function
+    my $url_describe_3 = "$dn/describe/$ruleset?$ruleset:kynetx_app_version=dev";
+
+    #diag "Testing console with $url_describe_3";
+
+    $mech->get_ok($url_describe_3);
+    is($mech->content_type(), 'text/html');
+
+    $mech->content_like('/"ruleset_version"\s*:\s*"(dev|\d+)"/s');
+    $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
+    $mech->content_like('/"ruleset_id"\s*:\s*"[^"]+"/s');
+
+
+    # test DESCRIBE function
+    my $url_describe_4 = "$dn/describe/$ruleset?$ruleset:kynetx_app_version=dev&flavor=json";
+
+    #diag "Testing console with $url_describe_4";
+
+    $mech->get_ok($url_describe_4);
+    is($mech->content_type(), 'text/plain');
+
+    $mech->content_like('/"ruleset_version"\s*:\s*"(dev|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
     $mech->content_like('/"ruleset_id"\s*:\s*"[^"]+"/s');
 

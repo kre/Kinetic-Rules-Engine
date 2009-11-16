@@ -40,12 +40,16 @@ use LWP::UserAgent;
 use Cache::Memcached;
 
 use Apache2::Const;
+use APR::URI;
+use APR::Pool;
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Parser qw/:all/;
 use Kynetx::KOBJ qw/:all/;
 use Kynetx::Repository qw/:all/;
 use Kynetx::Memcached qw/:all/;
+use Kynetx::FakeReq qw/:all/;
+
 
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
@@ -55,29 +59,36 @@ my $numtests = 18;
 plan tests => $numtests;
 
 
+my $r = Kynetx::Test::configure();
 
-my $my_req_info;
-$my_req_info->{'referer'} = 'http://www.byu.edu'; # Utah (BYU)
+my $rid = 'cs_test';
+
+# test choose_action and args
+
+my $my_req_info = Kynetx::Test::gen_req_info($rid);
+
+
+#my $my_req_info;
+#$my_req_info->{'referer'} = 'http://www.byu.edu'; # Utah (BYU)
 
 # configure KNS
-Kynetx::Configure::configure();
+#Kynetx::Configure::configure();
 
-Kynetx::Memcached->init();
+#Kynetx::Memcached->init();
 
 
 # dispatch
 my $svn_conn = "http://krl.kobj.net/rules/client/|cs|fizzbazz";
 
 is_string_nows(
-    Kynetx::KOBJ::dispatch($my_req_info,"cs_test;cs_test_1",$svn_conn), 
+    Kynetx::KOBJ::dispatch($my_req_info,"cs_test;cs_test_1"), 
     '{"cs_test_1":["www.windley.com","www.kynetx.com"],"cs_test":["www.google.com","www.yahoo.com","www.live.com"]}',
     "Testing dispatch function with two RIDs");
 
 
-
 my $dn = "http://127.0.0.1/js";
 
-my $ruleset = "cs_test";
+my $ruleset = $rid;
 
 
 

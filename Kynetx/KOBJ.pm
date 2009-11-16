@@ -91,7 +91,7 @@ sub handler {
     my $js = "";
     if ($rids eq 'kobj.js') {
 
-
+      # FIXME: I don't think this is used anymore
 	$logger->info("Generating client initialization file ", $rids);
 
 	my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $method);
@@ -153,7 +153,7 @@ sub handler {
 
 	Kynetx::Request::log_request_env($logger, $req_info);
 
-	$js = dispatch($req_info, $rids, $r->dir_config('svn_conn'));
+	$js = dispatch($req_info, $rids);
 
 	$r->content_type('text/plain');
 
@@ -163,7 +163,7 @@ sub handler {
 
 	Kynetx::Request::log_request_env($logger, $req_info);
 
-	$js = datasets($req_info, $rids, $r->dir_config('svn_conn'));
+	$js = datasets($req_info, $rids);
 
 	$r->content_type('text/javascript');
 
@@ -201,7 +201,7 @@ sub get_js_file {
 
 # turn the datasets from a ruleset into JS 
 sub get_datasets {
-    my ($svn_conn, $req_info) = @_;
+    my ($req_info) = @_;
     my $rid = $req_info->{'rid'};
 
     my $logger = get_logger();
@@ -209,7 +209,7 @@ sub get_datasets {
 
     my $js = '';
 
-    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $svn_conn, $req_info);
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
 
     if( $ruleset->{'global'} ) {
 	$logger->debug("Processing decls for $rid");
@@ -233,7 +233,7 @@ sub get_datasets {
 
 
 sub datasets {
-    my($req_info, $rids, $svn_conn) = @_;
+    my($req_info, $rids) = @_;
 
     my $logger = get_logger();
     $logger->debug("Returning datasets for $rids");
@@ -246,7 +246,7 @@ sub datasets {
 
     foreach my $rid (@rids) {
 	$req_info->{'rid'} = $rid;
-	$js .= get_datasets($svn_conn, $req_info) ;
+	$js .= get_datasets($req_info) ;
 	$js .= <<EOF
 KOBJ.registerDataSet('$rid', []);
 EOF
@@ -258,7 +258,7 @@ EOF
 
 
 sub dispatch {
-    my($req_info, $rids, $svn_conn) = @_;
+    my($req_info, $rids) = @_;
 
     my $logger = get_logger();
     $logger->debug("Returning dispatch sites for $rids");
@@ -270,7 +270,7 @@ sub dispatch {
 
     foreach my $rid (@rids) {
 
-	my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $svn_conn, $req_info);
+	my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
 
 	if( $ruleset->{'dispatch'} ) {
 	    $logger->debug("Processing dispatch block for $rid");
@@ -304,6 +304,8 @@ EOF
 
     foreach my $rid (@rids) {
 
+        # we don't store client datasets anymore. Historical...
+
 	my $data_root = "/web/data/client/$rid";
 
 	# add in datasets  The datasets param is a filter
@@ -333,7 +335,6 @@ EOF
 	}
 
 	$req_info->{'rid'} = $rid;
-#	$js .= get_datasets($r->dir_config('svn_conn'), $req_info);
     }
 
 

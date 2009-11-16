@@ -137,9 +137,7 @@ sub process_ruleset {
     $logger->info("Processing rules for site " . $req_info->{'rid'});
 
     my $ruleset = 
-	get_rule_set($r->dir_config('svn_conn'),
-		     $req_info
-	            );
+	get_rule_set($req_info);
 
 
 
@@ -174,7 +172,7 @@ sub eval_ruleset {
   my $logger = get_logger();
 
   # generate JS for meta
-  my $js = eval_meta($req_info,$ruleset, $rule_env);
+  my $mjs = eval_meta($req_info,$ruleset, $rule_env);
 
   # handle globals, start js build, extend $rule_env
   my $gjs;
@@ -182,10 +180,8 @@ sub eval_ruleset {
       $logger->debug("Rule env after globals: ", $rule_env);
   #    $logger->debug("Global JS: ", $js);
 
-  # tack on the JS for globals.
-  $js .= $gjs;
 
-
+  my $js = '';
   $req_info->{'rule_count'} = 0;
   $req_info->{'selected_rules'} = [];
   foreach my $rule ( @{ $ruleset->{'rules'} } ) {
@@ -230,8 +226,15 @@ sub eval_ruleset {
   }
   $logger->debug("Executed $req_info->{'rule_count'} rules");
 
-    
+  # wrap the rule evals in a try-catch-block
+  $js = add_errorstack($ruleset,$js) if $js;
+
+  # put it all together
+  $js = $mjs . $gjs . $js;
+
+
   return mk_turtle($js) if $js;
+
 
 }
 
@@ -243,9 +246,9 @@ sub eval_meta {
 
      if($ruleset->{'meta'}->{'keys'}) {
 
-	 $js .= "KOBJ." . $ruleset->{'ruleset_name'} . "= KOBJ." . $ruleset->{'ruleset_name'} . " || {};\n";
+	 $js .= KOBJ_ruleset_obj($ruleset->{'ruleset_name'}) . " =  " . KOBJ_ruleset_obj($ruleset->{'ruleset_name'}) . " || {};\n";
 
-	 $js .= "KOBJ." . $ruleset->{'ruleset_name'} .  ".keys = KOBJ." . $ruleset->{'ruleset_name'} . ".keys || {};\n";
+	 $js .= KOBJ_ruleset_obj($ruleset->{'ruleset_name'}) .  ".keys = " . KOBJ_ruleset_obj($ruleset->{'ruleset_name'}) . ".keys || {};\n";
 
 #     my $skip = {
 # 	'description' => 1,
@@ -262,7 +265,7 @@ sub eval_meta {
 #     }
  	$logger->debug("Found keys; generating JS");
  	foreach my $k (keys %{ $ruleset->{'meta'}->{'keys'} }) {
- 	    $js .= "KOBJ." . $ruleset->{'ruleset_name'} . ".keys.$k = '" . 
+ 	    $js .= KOBJ_ruleset_obj($ruleset->{'ruleset_name'}). ".keys.$k = '" . 
  		$ruleset->{'meta'}->{'keys'}->{$k} . "';\n";
  	}
      }
@@ -303,8 +306,8 @@ sub eval_globals {
 
 	      push(@vars, $var);
 	      push(@vals, $val);
-	      $this_js .= "var $var = " . Kynetx::JavaScript::gen_js_expr(
-					     Kynetx::JavaScript::exp_to_den($val)) . ";\n";
+	      $this_js .= gen_js_var($var, Kynetx::JavaScript::gen_js_expr(
+					     Kynetx::JavaScript::exp_to_den($val)));
 	    }
 	    $js .= $this_js;
 	}
@@ -429,7 +432,7 @@ sub eval_foreach {
     foreach my $val (@{ $valarray->{'val'} }) {
       
       $fjs .= mk_turtle(
-		"var $var = ". gen_js_expr($val) . ";\n" .
+		gen_js_var($var, gen_js_expr($val)) .
   	        eval_foreach($r, 
 			     $req_info, 
 			     extend_rule_env({$var,den_to_exp($val)},
@@ -507,9 +510,9 @@ sub eval_rule_body {
 
 
 # this returns the right rules for the caller and site
-# this is a point where things could be optimixed in the future
+# this is a point where things could be optimized in the future
 sub get_rule_set {
-    my ($svn_conn, $req_info) = @_;
+    my ($req_info) = @_;
 
     my $caller = $req_info->{'caller'};
     my $site = $req_info->{'rid'};
@@ -517,7 +520,7 @@ sub get_rule_set {
     my $logger = get_logger();
     $logger->debug("Getting ruleset for $caller");
 
-    my $ruleset = get_rules_from_repository($site, $svn_conn, $req_info);
+    my $ruleset = get_rules_from_repository($site, $req_info);
 
     # FIXME: store optimized RS in cache???
     $ruleset = optimize_ruleset($ruleset);
@@ -614,10 +617,28 @@ sub optimize_pre {
 
 
 sub mk_turtle {
-  my($ijs) = @_;
-  return '(function(){' . $ijs . "}());\n";
+  my($js) = @_;
+  return '(function(){' . $js . "}());\n";
 }
 
+sub add_errorstack {
+  my($ruleset, $js) = @_;
+  my $kobj_rs = KOBJ_ruleset_obj($ruleset->{'ruleset_name'});
+  my $r = <<_JS_;
+try { $js } catch (e) { 
+KOBJ.errorstack_submit($kobj_rs.keys.errorstack, e);
+};
+_JS_
+  if($ruleset->{'meta'}->{'keys'}->{'errorstack'}) {
+    return $r;
+  } else {
+    return $js;
+  }
+}
 
+sub KOBJ_ruleset_obj {
+  my($ruleset_name) = @_;
+  return "KOBJ['" . $ruleset_name . "']";
+}
 
 1;

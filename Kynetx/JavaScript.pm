@@ -52,6 +52,7 @@ our @ISA         = qw(Exporter);
 our %EXPORT_TAGS = (all => [ 
 qw(
 gen_js_expr
+gen_js_var
 gen_js_prim
 gen_js_rands
 eval_js_pre
@@ -132,6 +133,11 @@ sub gen_js_expr {
 	    return $v;
 	};
     } 
+}
+
+sub gen_js_var {
+  my ($lhs, $rhs) = @_;
+  return "var $lhs = $rhs;\n";
 }
 
 sub gen_js_prim {
@@ -321,8 +327,6 @@ sub eval_js_pre {
 	$logger->debug("[eval_pre] $var -> $val");
 
 
-#	$js .= "var $var = " . gen_js_expr(exp_to_den($val)) . ";\n";
-
 	my $t = infer_type($val);
 	if($t eq 'str') {
 	    $val = "'".escape_js_str($val)."'";
@@ -334,11 +338,11 @@ sub eval_js_pre {
 	}
 	$logger->debug("[decl] $var has type: $t");
 
-	$js .= "var $var = $val;\n";
+	$js .= gen_js_var($var,$val);
 	
 
     }
-    $logger->debug("[eval_pre] Sending back $js");
+#    $logger->debug("[eval_pre] Sending back $js");
 
     return ($js, $rule_env);
 }
