@@ -1,3 +1,9 @@
+2009-11-20  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Predicates/Math.pm: Added a 'random' function
+	* Kynetx/Operators.pm (eval_as): Added eval_as as a generalized
+	  coercion replacement for toRegexp
+
 2009-11-16  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (add_errorstack): Added support for calling errorstack

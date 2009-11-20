@@ -220,13 +220,11 @@ KOBJ.hide = function (id) {
 KOBJ.createPopIn = function(config,content) {
 
 	defaults = {
-
-		"position": "left-center",
-		"imageLocation": "http://k-misc.s3.amazonaws.com/actions/pop_in_feedback.jpg",
-		"bg_color": "#FFFFFF",
-		"link_color": "#FF0000",
-		"overlay_color": "#000000"
-
+  	  "position": "left-center",
+	   "imageLocation": "http://k-misc.s3.amazonaws.com/actions/pop_in_feedback.jpg",
+	   "bg_color": "#FFFFFF",
+           "link_color": "#FF0000",
+	   "overlay_color": "#000000"
 	};
 	if (typeof config === 'object') {
 		jQuery.extend(defaults, config);

@@ -66,6 +66,7 @@ Referers
 Mobile
 MediaMarkets
 Page
+Math
 );
 
 # eval necessary with computed module names (not bare words)

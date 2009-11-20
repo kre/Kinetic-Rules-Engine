@@ -759,7 +759,7 @@ add_decl_testcase(
 #diag(Dumper($krl));
 
 
-plan tests => 67 + (@expr_testcases * 2) + (@decl_testcases * 1) + (@pre_testcases * 1);
+plan tests => 68 + (@expr_testcases * 2) + (@decl_testcases * 1) + (@pre_testcases * 1);
 
 
 # now test each test case twice
@@ -939,6 +939,10 @@ like(&{$mm_function}('dma'), qr#\d\d\d#, 'dma');
 like(&{$mm_function}('rank'), qr#\d+#, 'rank');
 like(&{$mm_function}('name'), qr#\w#, 'name');
 like(&{$mm_function}('households'), qr#\d+#, 'households');
+
+
+my $math_function = mk_datasource_function('math', 9, 0);
+like(&{$math_function}('random'), qr#^\d$#, 'one digit random number');
 
 
 # check user defined data sources

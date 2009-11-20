@@ -6,8 +6,11 @@ use strict;
 use Test::More;
 use Test::LongString;
 
+use Apache::Session::Memcached;
+use DateTime;
 use APR::URI;
 use APR::Pool ();
+use Cache::Memcached;
 
 
 # most Kyentx modules require this
@@ -16,7 +19,18 @@ Log::Log4perl->easy_init($INFO);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::<TMPL_IF NAME="MODULE_DIR"><TMPL_VAR NAME=MODULE_DIR>::</TMPL_IF><TMPL_VAR NAME=MODULE_NAME> qw/:all/;
-use Kynetx::JavaScript qw/:all/;
+use Kynetx::Environments qw/:all/;
+use Kynetx::Session qw/:all/;
+use Kynetx::Configure qw/:all/;
+
+
+use Kynetx::FakeReq qw/:all/;
+
+#Log::Log4perl->easy_init($DEBUG);
+
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
 
 <TMPL_IF NAME="MODULE_DIR">
 my $preds = Kynetx::<TMPL_VAR NAME=MODULE_DIR>::<TMPL_VAR NAME=MODULE_NAME>::get_predicates();
@@ -30,15 +44,19 @@ plan tests => 1;
 
 </TMPL_IF>
 
-my $BYU_req_info;
-$BYU_req_info->{'referer'} = 'http://www.byu.edu'; # Utah (BYU)
-$BYU_req_info->{'pool'} = APR::Pool->new;
+my $r = Kynetx::Test::configure();
 
-my $no_referer_req_info;
-$no_referer_req_info->{'pool'} = APR::Pool->new;
+my $rid = 'cs_test';
 
-my %rule_env = ();
+# test choose_action and args
 
+my $my_req_info = Kynetx::Test::gen_req_info($rid);
+
+my $rule_name = 'foo';
+
+my $rule_env = Kynetx::Test::gen_rule_env();
+
+my $session = Kynetx::Test::gen_session($r, $rid);
 
 <TMPL_IF NAME="MODULE_DIR">
 # check that predicates at least run without error

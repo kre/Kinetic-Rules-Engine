@@ -604,6 +604,8 @@ sub eval_datasource {
 	$val = Kynetx::Predicates::Useragent::get_useragent($req_info,$function);
     } elsif ($source eq 'page') {
 	$val = Kynetx::Predicates::Page::get_pageinfo($req_info,$function,$args);
+    } elsif ($source eq 'math') {
+	$val = Kynetx::Predicates::Math::do_math($req_info,$function,$args);
     } elsif ($source eq 'datasource') {
 	$val = Kynetx::Datasets::get_datasource($rule_env,$args,$function);
     }

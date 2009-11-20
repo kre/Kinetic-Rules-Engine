@@ -43,6 +43,8 @@ use APR::Pool ();
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
+
+
 use Data::Dumper;
 
 use Kynetx::Test qw/:all/;
@@ -469,7 +471,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_str.replace(("/this/"+ "i").toRegexp(),"do you want a")#;
+$e[$i] = q#my_str.replace(("/this/"+ "i").as("regexp"),"do you want a")#;
 $x[$i] = {
    'val' => 'do you want a is a string',
    'type' => 'str'
@@ -477,7 +479,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_str.replace(("/"+ e + "/i").toRegexp(),"do you want a")#;
+$e[$i] = q#my_str.replace(("/"+ e + "/i").as("regexp"),"do you want a")#;
 $x[$i] = {
    'val' => 'do you want a is a string',
    'type' => 'str'

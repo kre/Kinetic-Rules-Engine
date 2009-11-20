@@ -178,6 +178,37 @@ sub eval_toRegexp {
 $funcs->{'toRegexp'} = \&eval_toRegexp;
 
 
+sub eval_as {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::JavaScript::eval_js_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+    my $rands = Kynetx::JavaScript::eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) }, " as ", $rands->[0]->{'val'} );
+
+    my $v = 0;
+    if ($obj->{'type'} eq 'str') {
+      if ($rands->[0]->{'val'} eq 'num' || 
+	  $rands->[0]->{'val'} eq 'regexp' ) {
+	$obj->{'type'} = $rands->[0]->{'val'};
+      }
+    } elsif ($obj->{'type'} eq 'num') {
+      if ($rands->[0]->{'val'} eq 'str' ) {
+	$obj->{'type'} = $rands->[0]->{'val'};
+      }
+    } elsif ($obj->{'type'} eq 'regexp') {
+      if ($rands->[0]->{'val'} eq 'str') {
+	$obj->{'type'} = $rands->[0]->{'val'};
+      }
+    }
+
+
+    return $obj;
+}
+$funcs->{'as'} = \&eval_as;
+
+
 
 sub eval_operator {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
