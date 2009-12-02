@@ -125,6 +125,9 @@ my $session = Kynetx::Test::gen_session($r, $rid);
 # session_clear($rid, $session, 'my_flag');
 
 my $krl_src;
+my $js;
+my $test_count;
+
 
 my $Amazon_req_info;
 $Amazon_req_info->{'ip'} = '72.21.203.1'; # Seattle (Amazon)
@@ -147,6 +150,11 @@ sub add_testcase {
 	$type = 'rule';
      }
 
+  if ($pt->{'error'}) {
+    diag $str;
+    diag $pt->{'error'};
+  }
+
 
 
     chomp $str;
@@ -159,6 +167,7 @@ sub add_testcase {
 		       'session' => $session,
 		       'src' =>  $str,
 		       'type' => $type,
+		       'diag' => $diag
 	 }
 	 );
 }
@@ -1144,120 +1153,8 @@ add_json_testcase(
 
 
 #
-# global decls
+# global decls, no datasource
 #
-
-$krl_src = <<_KRL_;
-ruleset dataset0 {
-    global {
-	dataset global_decl_0 <- "aaa.json";
-    }
-}
-_KRL_
-
-my $global_decl_0 = <<_JS_;
-(function(){
-KOBJ['data']['global_decl_0'] = {"www.barnesandnoble.com":[
-	       {"link":"http://aaa.com/barnesandnoble",
-		"text":"AAA members sav emoney!",
-		"type":"AAA"}]
-          };
-}());
-_JS_
-
-
-add_testcase(
-    $krl_src,
-    $global_decl_0,
-    $Amazon_req_info
-    );
-
-
-$krl_src = <<_KRL_;
-ruleset dataset0 {
-    global {
-	dataset global_decl_1 <- "test_data";
-    }
-}
-_KRL_
-
-my $global_decl_1 = <<_JS_;
-(function(){
-KOBJ['data']['global_decl_1'] = 'here is some test data!';
-}());
-_JS_
-
-add_testcase(
-    $krl_src,
-    $global_decl_1,
-    $Amazon_req_info
-    );
-
-
-$krl_src = <<_KRL_;
-ruleset dataset0 {
-    global {
-	dataset global_decl_2 <- "http://frag.kobj.net/clients/cs_test/aaa.json";
-    }
-}
-_KRL_
-
-my $global_decl_2 = <<_JS_;
-(function(){
-KOBJ['data']['global_decl_2'] = {"www.barnesandnoble.com":[
-	       {"link":"http://aaa.com/barnesandnoble",
-		"text":"AAA members sav emoney!",
-		"type":"AAA"}]
-          };
-}());
-_JS_
-
-add_testcase(
-    $krl_src,
-    $global_decl_2,
-    $Amazon_req_info
-    );
-
-
-
-$krl_src = <<_KRL_;
-ruleset dataset0 {
-    global {
-	dataset global_decl_3 <- "http://frag.kobj.net/clients/cs_test/some_data.txt";
-    }
-}
-_KRL_
-
-my $global_decl_3 = <<_JS_;
-(function(){
-KOBJ['data']['global_decl_3'] = 'Here is some test data!';
-}());
-_JS_
-
-add_testcase(
-    $krl_src,
-    $global_decl_3,
-    $Amazon_req_info
-    );
-
-$krl_src = <<_KRL_;
-ruleset dataset0 {
-    global {
-       datasource twitter_search <- "http://search.twitter.com/search.json";
-    }
-}
-_KRL_
-
-my $global_decl_4 = <<_JS_;
-_JS_
-
-add_testcase(
-    $krl_src,
-    $global_decl_4,
-    $Amazon_req_info
-    );
-
-
 
 $krl_src = <<_KRL_;
 ruleset global_expr_0 {
@@ -1315,107 +1212,397 @@ add_testcase(
     );
 
 
+#
+# control statements in rulesets
+#
+$krl_src = <<_KRL_;
+ruleset two_rules_both_fire {
+    rule t0 is active {
+      select using ".*" setting ()
+      pre {
+      }
+      noop();
+    }
+    rule t1 is active {
+      select using ".*" setting ()
+      pre {
+      }
+      noop();
+    }
+}
+_KRL_
+
+$js = <<_JS_;
+(function(){
+(function(){
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'t0',rid:'cs_test'}));
+}());
+(function(){
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'t1',rid:'cs_test'}));
+}());
+}());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $js,
+    $Amazon_req_info
+    );
 
 
-#diag(Dumper($test_cases[-1]->{'expr'}));
+
+$krl_src = <<_KRL_;
+ruleset two_rules_first_fires {
+    rule t0 is active {
+      select using ".*" setting ()
+      pre {
+      }
+      noop();
+      fired {
+        last;
+      }
+    }
+    rule t1 is active {
+      select using ".*" setting ()
+      pre {
+      }
+      noop();
+    }
+}
+_KRL_
+
+$js = <<_JS_;
+(function(){
+(function(){
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'t0',rid:'cs_test'}));
+}());
+}());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $js,
+    $Amazon_req_info
+    );
 
 
-#plan tests => 7 + (@test_cases * 1);
+$krl_src = <<_KRL_;
+ruleset two_rules_both_fire {
+    rule t8 is active {
+      select using ".*" setting ()
+      pre {
+        x = 3
+      }
+      noop();
+      fired {
+        last if(x==4)
+      }
+    }
+    rule t9 is active {
+      select using ".*" setting ()
+      pre {
+      }
+      noop();
+    }
+}
+_KRL_
+
+$js = <<_JS_;
+(function(){
+(function(){
+var x = 3;
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'t8',rid:'cs_test'}));
+}());
+(function(){
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'t9',rid:'cs_test'}));
+}());
+}());
+_JS_
+
+
+add_testcase(
+    $krl_src,
+    $js,
+    $Amazon_req_info,
+    0
+    );
+
+$krl_src = <<_KRL_;
+ruleset two_rules_both_fire {
+    rule t10 is active {
+      select using ".*" setting ()
+      pre {
+        x = 3
+      }
+      noop();
+      fired {
+        last if(x==3)
+      }
+    }
+    rule t11 is active {
+      select using ".*" setting ()
+      pre {
+      }
+      noop();
+    }
+}
+_KRL_
+
+$js = <<_JS_;
+(function(){
+(function(){
+var x = 3;
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'t10',rid:'cs_test'}));
+}());
+}());
+_JS_
+
+
+add_testcase(
+    $krl_src,
+    $js,
+    $Amazon_req_info,
+    0
+    );
 
 
 # now test each test case twice
-
 foreach my $case (@test_cases) {
-    if($case->{'type'} eq 'rule') {
-#	diag(Dumper($case->{'expr'}));
-	my $js = eval_rule($r,
-			   $case->{'req_info'}, 
-			   $rule_env, 
-			   $case->{'session'}, 
-			   $case->{'expr'},
-	   );
-#	diag "-----------------------------------------------------------------";
-#	diag $js;
 
-	# remove WS
-	$case->{'val'} = nows($case->{'val'});
+  if($case->{'type'} eq 'ruleset') {
+
+    $js = Kynetx::Rules::eval_ruleset($r, 
+				      $case->{'req_info'}, 
+				      empty_rule_env(), 
+				      $session, 
+				      $case->{'expr'}, 
+				      $case->{'expr'}->{'rules'});
+
+  } elsif($case->{'type'} eq 'rule') {
+
+    $js = Kynetx::Rules::eval_rule($r,
+				   $case->{'req_info'}, 
+				   $rule_env, 
+				   $case->{'session'}, 
+				   $case->{'expr'});
+
+  } else {
+    diag "WARNING: No test run! Case must be either rule or ruleset"
+  }
+
+  # reset the last flag for the next test
+  $case->{'req_info'}->{$rid.':last'} = 0;
+
+  # remove whitespace
+  $js = nows($js);
+
+  diag "Eval result: $js" if $case->{'diag'};
+
+  $case->{'val'} = nows($case->{'val'});
 	
-	# quote special for RE
-	$case->{'val'} =~ s/\\/\\\\/g;
-	$case->{'val'} =~ s/\+/\\\+/g;
-	$case->{'val'} =~ s/\(/\\\(/g;
-	$case->{'val'} =~ s/\)/\\\)/g;
-	$case->{'val'} =~ s/\[/\\\[/g;
-	$case->{'val'} =~ s/\]/\\\]/g;
-	$case->{'val'} =~ s/\{/\\\{/g;
-	$case->{'val'} =~ s/\}/\\\}/g;
-	$case->{'val'} =~ s/\^/\\\^/g;
-	$case->{'val'} =~ s/\$/\\\$/g;
-	$case->{'val'} =~ s/\|/\\\|/g;
+  # quote special for RE
+  $case->{'val'} =~ s/\\/\\\\/g;
+  $case->{'val'} =~ s/\+/\\\+/g;
+  $case->{'val'} =~ s/\(/\\\(/g;
+  $case->{'val'} =~ s/\)/\\\)/g;
+  $case->{'val'} =~ s/\[/\\\[/g;
+  $case->{'val'} =~ s/\]/\\\]/g;
+  $case->{'val'} =~ s/\{/\\\{/g;
+  $case->{'val'} =~ s/\}/\\\}/g;
+  $case->{'val'} =~ s/\^/\\\^/g;
+  $case->{'val'} =~ s/\$/\\\$/g;
+  $case->{'val'} =~ s/\|/\\\|/g;
 
-	# now make RE substitutions
-	$case->{'val'} =~ s/%uniq%/\\d+/g;
+  # now make RE substitutions
+  $case->{'val'} =~ s/%uniq%/\\d+/g;
 
-	my $re = qr/$case->{'val'}/;
+  $case->{'val'} = '^' . $case->{'val'} . '$';
 
-	like(
-	    nows($js),
-#	    $case->{'val'} ? $rule_env_js . $case->{'val'} : '',
-	    $re,
-	    "Evaling rule " . $case->{'src'});
-    }
+  if ($case->{'val'} eq '') {
+    is($js, $case->{'val'}, "Evaling rule " . $case->{'src'});
+  } else {
+
+    my $re = qr/$case->{'val'}/;
+
+    like($js,
+	 $re,
+	 "Evaling rule " . $case->{'src'});
+    
+  }
+
+
 }
+
+#diag "Starting tests of global decls with data feeds";
+
+#
+# global decls with data sources
+#
 
 my $ua = LWP::UserAgent->new;
 my $check_url = "http://frag.kobj.net/clients/cs_test/some_data.txt";
 my $response = $ua->get($check_url);
 my $no_server_available = (! $response->is_success);
 
-# now test each test case twice
-foreach my $case (@test_cases) {
 
-    if($case->{'type'} eq 'ruleset') {
-    
-#	my $js = "";
-# 	if( $case->{'expr'}->{'global'} && @{ $case->{'expr'}->{'global'} })  {
-# 	    ($js, $rule_env) = eval_globals($case->{'req_info'}, 
-# 					    $case->{'expr'},
-# 					    $rule_env, 
-# 		);
+sub test_datafeeds {
+  my ($no_server_available, $src, $js, $req_info, $diag) = @_;
+  $test_count++;
+ SKIP: {
 
-# 	}    
+    skip "No server available", 1 if ($no_server_available);
+    my $krl = Kynetx::Parser::parse_ruleset($src);
+    my $val = Kynetx::Rules::eval_ruleset($r, 
+				      $req_info, 
+				      empty_rule_env(), 
+				      $session, 
+				      $krl, 
+				      $krl->{'rules'});
 
-#      diag Dumper($case->{'expr'});
 
-      my $js = Kynetx::Rules::eval_ruleset($r, 
-					   $case->{'req_info'}, 
-					   empty_rule_env(), 
-					   $session, 
-					   $case->{'expr'}, 
-					   $case->{'expr'}->{'rules'});
-
-      my $uniq = $case->{'req_info'}->{'uniq'};
-      $case->{'val'} =~ s/%uniq%/$uniq/g;
-#      diag $js;
-
-      SKIP: {
-
-	  skip "No server available", 1 if ($no_server_available);
-	
-	  is_string_nows(
-	      $js,
-	      $case->{'val'},
-	      "Evaling ruleset: " . $case->{'src'});
-	}
-
+    is_string_nows($js, $val, "Evaling ruleset: $src");
+  }
+}
+$krl_src = <<_KRL_;
+ruleset dataset0 {
+    global {
+	dataset global_decl_0 <- "aaa.json";
     }
 }
+_KRL_
+
+$js = <<_JS_;
+(function(){
+KOBJ['data']['global_decl_0'] = {"www.barnesandnoble.com":[
+	       {"link":"http://aaa.com/barnesandnoble",
+		"text":"AAA members sav emoney!",
+		"type":"AAA"}]
+          };
+}());
+_JS_
+
+test_datafeeds(
+    $no_server_available,
+    $krl_src,
+    $js,
+    $Amazon_req_info,
+    0);
+
+
+$krl_src = <<_KRL_;
+ruleset dataset0 {
+    global {
+	dataset global_decl_1 <- "test_data";
+    }
+}
+_KRL_
+
+$js = <<_JS_;
+(function(){
+KOBJ['data']['global_decl_1'] = 'here is some test data!';
+}());
+_JS_
+
+test_datafeeds(
+    $no_server_available,
+    $krl_src,
+    $js,
+    $Amazon_req_info,
+    0
+    );
+
+
+$krl_src = <<_KRL_;
+ruleset dataset0 {
+    global {
+	dataset global_decl_2 <- "http://frag.kobj.net/clients/cs_test/aaa.json";
+    }
+}
+_KRL_
+
+$js = <<_JS_;
+(function(){
+KOBJ['data']['global_decl_2'] = {"www.barnesandnoble.com":[
+	       {"link":"http://aaa.com/barnesandnoble",
+		"text":"AAA members sav emoney!",
+		"type":"AAA"}]
+          };
+}());
+_JS_
+
+test_datafeeds(
+    $no_server_available,
+    $krl_src,
+    $js,
+    $Amazon_req_info,
+    0
+    );
+
+
+$krl_src = <<_KRL_;
+ruleset dataset0 {
+    global {
+	dataset global_decl_3 <- "http://frag.kobj.net/clients/cs_test/some_data.txt";
+    }
+}
+_KRL_
+
+$js = <<_JS_;
+(function(){
+KOBJ['data']['global_decl_3'] = 'Here is some test data!';
+}());
+_JS_
+
+test_datafeeds(
+    $no_server_available,
+    $krl_src,
+    $js,
+    $Amazon_req_info,
+    0
+    );
+
+$krl_src = <<_KRL_;
+ruleset dataset0 {
+    global {
+       datasource twitter_search <- "http://search.twitter.com/search.json";
+    }
+}
+_KRL_
+
+$js = <<_JS_;
+_JS_
+
+test_datafeeds(
+    $no_server_available,
+    $krl_src,
+    $js,
+    $Amazon_req_info,
+    0
+    );
 
 
 #
 # rule_env_tests
 #
-
+#diag "Stating rule environment tests";
 
 # contains_string(nows($global_decl_0),
 # 		nows(encode_json(lookup_rule_env('global_decl_0',$rule_env))), 
@@ -1435,6 +1622,8 @@ foreach my $case (@test_cases) {
 #
 # session tests
 #
+$test_count += 3;
+
 is(session_get($rid,$session,'archive_pages_now'), undef, "Archive pages now reset");
 is(session_get($rid,$session,'archive_pages_now2'), undef, "Archive pages now2 reset");
 is(session_get($rid,$session,'archive_pages_old'), 4, "Archive pages old iterated");
@@ -1459,12 +1648,15 @@ sub check_optimize {
 #  diag "Optimized: ", Dumper($ost);
 
 #  diag "Inner pre: ", Dumper $ost->{'rules'}->[0]->{'inner_pre'};
+  $test_count++;
+
   is_deeply($ost->{'rules'}->[0]->{'inner_pre'} || [], 
 	    $ip, 
 	    $desc . "(inner)");
 
 
 #  diag "Outer pre: ", Dumper $ost->{'rules'}->[0]->{'outer_pre'};
+  $test_count++;
   is_deeply($ost->{'rules'}->[0]->{'outer_pre'} || [], 
 	    $op, 
 	    $desc . "(outer)");
@@ -1907,8 +2099,9 @@ check_optimize($krl_src,
 
 
 
+#diag "Test cases: " . int(@test_cases) . " and others: " . $test_count;
 
-done_testing(21 + (@test_cases * 1));
+done_testing($test_count + (@test_cases * 1));
 
 session_cleanup($session);
 

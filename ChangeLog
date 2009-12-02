@@ -1,3 +1,17 @@
+2009-12-02  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Parser.pm: Added support for "last" control statement in
+	  the postlude.  Added modified syntax for keys.
+	* Kynetx/PrettyPrinter.pm (pp_post_expr): Added support for "last"
+	  control statement in the postlude.
+	* bin/krl-parser.pl: removed dependence on Rules.pm
+	* Kynetx/Rules.pm: Added support for "last" control statement in
+	  the postlude.
+	* Kynetx/Actions.pm (eval_post_statement): Added support for a
+	  guard condition on postlude statements and support for "last"
+	  control statement. 
+	
+
 2009-11-20  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Predicates/Math.pm: Added a 'random' function

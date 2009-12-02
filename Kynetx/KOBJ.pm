@@ -78,7 +78,6 @@ sub handler {
     # for later logging
     $r->subprocess_env(METHOD => $method);
 
-
     $logger->debug("RIDs -> $rids");
 
     my $js_version = $r->dir_config('kobj_js_version') || DEFAULT_JS_VERSION;
@@ -272,7 +271,8 @@ sub dispatch {
 
 	my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
 
-	if( $ruleset->{'dispatch'} ) {
+
+	if( defined $ruleset && $ruleset->{'dispatch'} ) {
 	    $logger->debug("Processing dispatch block for $rid");
 #	    $logger->debug(sub() {Dumper($ruleset->{'dispatch'})});
 	    $r->{$rid} = [];
@@ -281,7 +281,9 @@ sub dispatch {
 	    }
 	}    
     }
-    
+
+    $logger->debug(Dumper $r);
+
     $r = encode_json($r);
     $logger->debug($r);
 

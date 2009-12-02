@@ -7,7 +7,7 @@ use strict;
 
 use Kynetx::Parser ;
 use Kynetx::PrettyPrinter qw/:all/ ;
-use Kynetx::Rules qw/:all/ ;
+#use Kynetx::Rules qw/:all/ ;
 
 use JSON::XS;
 use Data::Dumper;

@@ -129,7 +129,7 @@ sub pp_meta_item {
     if ($item eq 'description') {
 	$o .= $beg . ">>\n";
     } else {
-	$o .= '"';
+	$o .= "\"\n";
     }
   
     return $o;
@@ -156,18 +156,39 @@ sub pp_keys {
 
     my $beg = " "x$indent;
     
-    my $o = $beg;
+    my $o = '';
     foreach my $k (sort keys %{ $node }) {
-	$o .= "key ";
+	$o .= $beg ."key ";
 	$o .= $k . " ";
-	$o .= '"' . $node->{$k} . "\"\n";
+	$o .= pp_keyval($node->{$k}, $indent+$g_indent) . "\n";
     }
-
- 
     return $o;
 }
 
 
+sub pp_keyval {
+  my ($node, $indent) = @_;
+
+  my $beg = " "x$indent;
+
+  my $o = '';
+  if (ref $node eq 'HASH') {
+    $o .= "{\n$beg";
+    $o .= join(",\n$beg", map {'"' . $_ . '" : ' . pp_val($node->{$_}) } (sort keys %{ $node}));
+    $o .= "\n$beg}";
+  } else {
+    $o .= '"' . $node . '"';
+  }
+}
+
+sub pp_val {
+  my($node) = @_;
+  if ($node =~ /^\d+$/) {
+    return $node;
+  } else {
+    return '"'.$node.'"';
+  }
+}
 
 sub pp_dispatch_block {
     my ($db, $indent) = @_;
@@ -745,7 +766,15 @@ sub pp_post_expr {
 	$o.= pp_persistent_expr($node);
     } elsif($node->{'type'} eq 'log') {
 	$o.= pp_log_statement($node);
+    } elsif($node->{'type'} eq 'control') {
+	$o.= pp_control_statement($node);
     }
+
+    if (defined $node->{'test'}) {
+      $o .= ' if ' . pp_predexpr($node->{'test'}) 
+    }
+
+
     return $o . ";\n";
 }
 
@@ -801,6 +830,18 @@ sub pp_log_statement {
     my $o = '';
 
     $o = 'log ' . pp_expr($node->{'what'});
+
+    return $o;
+
+  }
+
+sub pp_control_statement {
+    my ($node) = @_;
+    
+    my $o = '';
+
+    $o .= $node->{'statement'};
+    return $o;
 
   }
 

@@ -167,24 +167,28 @@ EOF
 }
 
 sub eval_ruleset {
-  my($r, $req_info,$rule_env, $session, $ruleset) = @_;
+  my($r, $req_info, $rule_env, $session, $ruleset) = @_;
 
   my $logger = get_logger();
 
   # generate JS for meta
-  my $mjs = eval_meta($req_info,$ruleset, $rule_env);
+  my $mjs = eval_meta($req_info, $ruleset, $rule_env);
 
   # handle globals, start js build, extend $rule_env
   my $gjs;
-  ($gjs, $rule_env) = eval_globals($req_info,$ruleset, $rule_env, $session);
-      $logger->debug("Rule env after globals: ", $rule_env);
-  #    $logger->debug("Global JS: ", $js);
+  ($gjs, $rule_env) = eval_globals($req_info, $ruleset, $rule_env, $session);
+#      $logger->debug("Rule env after globals: ", $rule_env);
+  #    $logger->debug("Global JS: ", $gjs);
 
 
   my $js = '';
   $req_info->{'rule_count'} = 0;
   $req_info->{'selected_rules'} = [];
   foreach my $rule ( @{ $ruleset->{'rules'} } ) {
+
+    # set by eval_control_statement in Actions.pm
+    last if $req_info->{$req_info->{'rid'}.':last'};
+
     my $this_rule_env;
     $logger->debug("Rule $rule->{'name'} is " . $rule->{'state'});
     if($rule->{'state'} eq 'active' || 
@@ -224,7 +228,7 @@ sub eval_ruleset {
       }
     }
   }
-  $logger->debug("Executed $req_info->{'rule_count'} rules");
+  $logger->debug("[eval_ruleset] Executed $req_info->{'rule_count'} rules");
 
   # wrap the rule evals in a try-catch-block
   $js = add_errorstack($ruleset,$js) if $js;

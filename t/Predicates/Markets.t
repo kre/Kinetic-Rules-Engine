@@ -69,23 +69,26 @@ $BYU_req_info->{'ip'} = '128.187.16.242'; # Utah (BYU)
 
 my %rule_env = ();
 
-# check that predicates at least run without error
-my @dummy_arg = (0);
-foreach my $pn (@pnames) {
-    ok(&{$preds->{$pn}}($BYU_req_info, \%rule_env,\@dummy_arg) ? 1 : 1, "$pn runs");
-}
 
 
+my $ua = LWP::UserAgent->new;
+
+my $check_url = "http://www.webservicex.net//stockquote.asmx/GetQuote?symbol=GOOG";
+
+diag "Checking $check_url";
+my $response = $ua->get($check_url);
+
+diag $response->content;
 
 SKIP: {
-    my $ua = LWP::UserAgent->new;
+    skip "No server available", 3 if (! $response->is_success || $response->content =~ /busy/);
 
-    my $check_url = "http://www.webservicex.net//stockquote.asmx/GetQuote?symbol=GOOG";
-
-    diag "Checking $check_url";
-    my $response = $ua->get($check_url);
-    skip "No server available", 3 if (! $response->is_success);
-
+    
+    # check that predicates at least run without error
+    my @dummy_arg = (0);
+    foreach my $pn (@pnames) {
+      ok(&{$preds->{$pn}}($BYU_req_info, \%rule_env,\@dummy_arg) ? 1 : 1, "$pn runs");
+    }
 
     my($krl_src,$cond,$args);
 

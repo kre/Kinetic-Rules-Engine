@@ -161,7 +161,7 @@ pragma: desc_block
         'author' => $item[2]
         }
     }
- | 'key' ('errorstack' | 'googleanalytics') STRING
+ | 'key' ('errorstack' | 'googleanalytics' | 'twitter') key_value
     {$return = {
         keys => { $item[2] => $item[3] }
       }
@@ -181,6 +181,19 @@ desc_block: 'description' (HTML | STRING)
 logging_pragma: 'logging' ('on' | 'off')
    {$return = $item[2];}
  | <error>
+
+key_value: STRING 
+  | '{' name_value_pair(s /,/) '}'
+       {my $r = {};
+        foreach my $a (@{ $item[2]}) {
+          foreach my $k (keys %{ $a } ) {
+             $r->{$k} = $a->{$k}
+          }
+        }
+        $return = $r}
+
+name_value_pair: STRING ':' (NUM | STRING)
+  {$return = {$item[1] => $item[3]}}
 
 
 dispatch_block_top: dispatch_block
@@ -589,7 +602,15 @@ post: 'fired'
 post_alternate: 'else' '{' post_statement(s?  /;/) SEMICOLON(?) '}'
       {$return=$item[3]}
 
-post_statement: persistent_expr|log_statement
+post_statement: persistent_expr ('if' predexpr)(?)
+    {$item[1]->{'test'} = $item[2][0];
+     $return = $item[1];}
+  |log_statement ('if' expr)(?)
+    {$item[1]->{'test'} = $item[2][0];
+     $return = $item[1];}
+  |control_statement ('if' expr)(?)
+    {$item[1]->{'test'} = $item[2][0];
+     $return = $item[1];}
 
 persistent_expr: persistent_clear
    | persistent_set
@@ -667,6 +688,13 @@ log_statement: 'log' expr
      }
  
 
+control_statement: 'last' 
+     {$return=
+      {'type' => 'control',
+       'statement' => $item[1],
+      }
+     }
+
 
 expr: conditional_expression
     | term term_op expr
@@ -738,7 +766,6 @@ factor: NUM
       | '(' (predexpr|expr) ')'
         {$return=$item[2]}
       | <error>
-
 
 hash_line: STRING ':' expr
    {$return= {'lhs' => $item[1], 

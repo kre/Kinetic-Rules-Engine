@@ -680,12 +680,30 @@ sub eval_post_expr {
 sub eval_post_statement {
     my($expr, $session, $req_info, $rule_env, $rule_name) = @_;
 
-#    my $logger = get_logger();
+    my $logger = get_logger();
 
-    if ($expr->{'type'} eq 'persistent') {
+    #default to true if not present
+    my $test = 1;
+    if (defined $expr->{'test'}) {
+      $test = 
+	Kynetx::Predicates::eval_predicates($req_info, 
+						  $rule_env, 
+						  $session, 
+						  $expr->{'test'}, 
+						  $rule_name);
+
+      $logger->debug("[post] Evaluating statement test", $test);
+    }
+
+
+    if ($expr->{'type'} eq 'persistent' && $test) {
       return eval_persistent_expr($expr, $session, $req_info, $rule_env, $rule_name);
-    } elsif ($expr->{'type'} eq 'log') {
+    } elsif ($expr->{'type'} eq 'log' && $test) {
       return eval_log_statement($expr, $session, $req_info, $rule_env, $rule_name);
+    } elsif ($expr->{'type'} eq 'control' && $test) {
+      return eval_control_statement($expr, $session, $req_info, $rule_env, $rule_name);
+    } else {
+      return '';
     }
 
   }
@@ -783,6 +801,21 @@ sub eval_log_statement {
 
     return $js;
 }
+
+
+sub eval_control_statement {
+    my($expr, $session, $req_info, $rule_env, $rule_name) = @_;
+
+    my $js ='';
+
+    if ($expr->{'statement'} eq 'last') {
+      $req_info->{$req_info->{'rid'}.':last'} = 1;
+    }
+
+    return $js;
+}
+
+
 
 sub get_precondition_test {
     my $rule = shift;
