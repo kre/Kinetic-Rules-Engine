@@ -1,5 +1,8 @@
 2009-12-03  Phil Windley  <pjw@kynetx.com>
 
+	* Kynetx/Callbacks.pm (process_action): Added context sensitive
+	  field data for annotated_search_reseults
+
 	* etc/tmpl/httpd-perl.conf.tmpl: Removed HTTPD directives that are
 	  now coming directly from config file
 	* bin/install-httpd-conf.pl: Removed commented out code

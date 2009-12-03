@@ -160,10 +160,13 @@ sub process_action {
     $r->subprocess_env(ELEMENT => $req->param('element'));
     $r->subprocess_env(RULE_NAME => $req->param('rule'));
 
+    # set values of context sensitive field
     if($req->param('type') eq 'click') {
       $r->subprocess_env(CB_INFO => $req->param('url'));
     } elsif ($req->param('type') eq 'explicit') {
       $r->subprocess_env(CB_INFO => $req->param('message'));
+    }elsif ($req->param('type') eq 'annotated_search_results') {
+      $r->subprocess_env(CB_INFO => $req->param('element'));
     }
 
     $logger->debug("Finish time: ", time, " Start time: ", $r->subprocess_env('START_TIME'));
