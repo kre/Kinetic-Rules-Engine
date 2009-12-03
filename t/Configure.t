@@ -162,6 +162,9 @@ ok( exists $active->{'DEFAULT_ACTION_HOST'}, 'KOBJ default action host exists');
 ok( exists $active->{'DEFAULT_LOG_HOST'}, 'KOBJ default log host exists');
 ok( exists $active->{'DEFAULT_JS_ROOT'}, 'KOBJ default js root exists');
 
+# TEMPLATES
+ok( exists $active->{'DEFAULT_TEMPLATE_DIR'}, 'Templates for various things');
+
 
 # Now that basic testing is done, let's compare the active file with our 
 # template definitions

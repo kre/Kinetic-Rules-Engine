@@ -55,33 +55,6 @@ my $log_api = $opt{'l'} || 0;
 my $krl_api = $opt{'k'} || 0;
 my $frag_api = $opt{'f'} || 0;
 
-# my $init_host = 'init.kobj.net';
-# my $log_host = 'logger.kobj.net';
-# my $eval_host = 'cs.kobj.net';
-# my $krl_host = 'krl.kobj.net';
-# my $frag_host = 'frag.kobj.net';
-# #my $db_host = 'db2.kobj.net';
-# #my $db_username = 'logger';
-# #my $db_passwd = '$kynetx123$';
-# if ($opt{'d'}) { # development
-#     $init_host = '127.0.0.1';
-#     $log_host = '127.0.0.1';
-#     $eval_host = '127.0.0.1';
-#     $frag_host = '127.0.0.1';
-# #    $db_host = 'localhost';
-# #    $db_username = 'root';
-# #    $db_passwd = 'foobar';
-# }
-
-# my $svn;
-# if ($opt{'r'}) { 
-#     $svn = 'svn://127.0.0.1/rules/client/|web|foobar';
-
-# } else {
-#     $svn = 'http://krl.kobj.net/rules/client/|cs|fizzbazz';
-# }
-
-
 die "Must specify at least one option.  See $0 -h for more info."
     unless ($init_api || $eval_api || 
 	    $log_api || $krl_api ||
@@ -101,46 +74,11 @@ $conf_template->param(GEN_DATE => $datenow);
 $conf_template->param(INCLUDE_SVN => 1) if $include_svn;
 $conf_template->param(HOSTNAME => hostname);
 
-# fill in the parameters
-# $conf_template->param(KOBJ_ROOT => $base);
-# $conf_template->param(JS_VERSION => '0.9');
-# $conf_template->param(INIT_HOST => $init_host);
-# $conf_template->param(CB_HOST => $log_host);
-# $conf_template->param(FRAG_HOST => $frag_host);
-# $conf_template->param(EVAL_HOST => $eval_host);
-# $conf_template->param(KRL_HOST => $krl_host);
-# $conf_template->param(KOBJ_ROOT => $base);
-
-
 $conf_template->param(API_EVAL => 1) if $eval_api;
 $conf_template->param(API_CALLBACK => 1) if $log_api;
 $conf_template->param(API_INIT => 1) if $init_api;
 $conf_template->param(API_KRL => 1) if $krl_api;
 $conf_template->param(API_FRAG => 1) if $frag_api;
-
-
-
-# # database
-# #$conf_template->param(DB_HOST => $db_host);
-# #$conf_template->param(DB_USERNAME => $db_username);
-# #$conf_template->param(DB_PASSWD => $db_passwd);
-
-# # rule repository
-# $conf_template->param(RULE_REPOSITORY => $svn);
-
-# # logging (these are for cronolog)
-# $conf_template->param(LOG_PERIOD => '1hour');
-# # $conf_template->param(LOG_PERIOD => '5min');
-
-# # we can use the 'debug' config parameter to force detailed logging
-# if ($opt{'d'}) { # development
-#     $conf_template->param(RUN_MODE => 'development');
-#     $conf_template->param(DEBUG => 'on');
-# } else {
-#     $conf_template->param(RUN_MODE => 'production');
-#     $conf_template->param(DEBUG => 'off');
-# }
-
 
 # do this last to override anything from above
 for my $key (@{ Kynetx::Configure::config_keys() }) {

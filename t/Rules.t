@@ -1478,7 +1478,7 @@ sub test_datafeeds {
 				      $krl->{'rules'});
 
 
-    is_string_nows($js, $val, "Evaling ruleset: $src");
+    is_string_nows($val, $js, "Evaling ruleset: $src");
   }
 }
 $krl_src = <<_KRL_;

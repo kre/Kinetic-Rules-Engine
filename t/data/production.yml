@@ -64,10 +64,6 @@ RULE_REPOSITORY_TYPE: api
 #RULE_REPOSITORY: http://krl.kobj.net/rules/client/|cs|fizzbazz
 RULE_REPOSITORY: https://rulesetmanager.kobj.net/ruleset/source|kynetx|fart95
 
-# SVN repository
-# pattern: URL|username|password
-#RULE_REPOSITORY: http://krl.kobj.net/rules/client/|cs|fizzbazz
-
 # rotation period for logs (cronolog based)
 # pattern: #period (e.g. 1hour, 5min)
 LOG_PERIOD: 1hour
@@ -101,7 +97,7 @@ RUNTIME_LIB_NAME: http://static.kobj.net/kobj-static-20091116220629.js
 USE_CLOUDFRONT: 1
 
 # default time to cache datasets for when no time period is specified
-CACHEABLE_THRESHOLD: 86400; #24 hours
+CACHEABLE_THRESHOLD: 86400  #24 hours
 
 # machine to rsync log files to. 
 # logs are placed in directory named "logs" in the account named by LOG_ACCOUNT
@@ -115,4 +111,23 @@ LOG_ACCOUNT: web
 # should this cluster send audit data back to the kverify application?
 #  valid values are 0 == no, 1 = yes
 USE_KVERIFY: 1
+
+# root directory for Datasets.pm data
+#
+DATA_ROOT: /web/data/client
+
+# Constant declarations taken from KOBJ.pm
+DEFAULT_SERVER_ROOT:  kobj.net
+DEFAULT_ACTION_PREFIX: kobj-cs
+DEFAULT_LOG_PREFIX: kobj-log
+DEFAULT_ACTION_HOST: 127.0.0.1
+DEFAULT_LOG_HOST: 127.0.0.1
+DEFAULT_JS_ROOT: /web/lib/perl/etc/js
+
+# Test IP for development testing
+#TEST_IP: 72.21.203.1            # Seattle (Amazon)
+#TEST_IP: 128.122.108.71        # New York (NYU)
+#TEST_IP: 128.187.16.242        # Utah (BYU)
+
+
 

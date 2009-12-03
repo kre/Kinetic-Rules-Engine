@@ -64,8 +64,8 @@ qw(
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
-# FIXME: get this from config
-use constant DEFAULT_TEMPLATE_DIR => '/web/lib/perl/etc/tmpl';
+use constant DEFAULT_TEMPLATE_DIR => Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
+
 
 sub handler {
     my $r = shift;

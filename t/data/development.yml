@@ -32,7 +32,7 @@ sessions:
 
 # domain that the cookie will be set in for sessions.
 #  should be usable by all KNS servers
-COOKIE_DOMAIN: kobj.net
+COOKIE_DOMAIN: 127.0.0.1
 
 # The home directory
 WEB_ROOT: /web
@@ -58,7 +58,9 @@ RULE_REPOSITORY_TYPE: api
 
 # SVN repository
 # pattern: URL|username|password
-RULE_REPOSITORY: http://krl.kobj.net/rules/client/|cs|fizzbazz
+# no trailing slash on URL
+#RULE_REPOSITORY: http://krl.kobj.net/rules/client/|cs|fizzbazz
+RULE_REPOSITORY: https://rulesetmanager.kobj.net/ruleset/source|kynetx|fart95
 
 # rotation period for logs (cronolog based)
 # pattern: #period (e.g. 1hour, 5min)
@@ -83,9 +85,6 @@ KNS_LANDING_PAGE: http://www.kynetx.com/kobj/index.html
 # unrecoverable error
 KNS_ERROR_MSG: KNS has experienced an error in processing the request.  We have logged this error and will respond to it.  For more information please contact support@kynetx.com
 
-# log data to kverify for analytics validation. 1 enables, 0 disables
-USE_KVERIFY: 1
-
 # URL for the runtime library file to redirect to is USE_CLOUDFRONT is 1
 # if USE_CLOUDFRONT is 0, then this is ignored.  
 RUNTIME_LIB_NAME: http://static.kobj.net/kobj-static-20091116220629.js 
@@ -104,6 +103,9 @@ LOG_SINK: 127.0.0.1
 # an account with this name should exist on LOG_SINK
 # a public SSH cert for LOG_ACCOUNT should be on all KNS machines
 LOG_ACCOUNT: web
+
+# log data to kverify for analytics validation. 1 enables, 0 disables
+USE_KVERIFY: 1
 
 # root directory for Datasets.pm data
 #

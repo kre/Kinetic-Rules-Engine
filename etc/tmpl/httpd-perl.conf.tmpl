@@ -348,77 +348,25 @@ CustomLog "|/web/sbin/cronolog --period=1day --symlink=/web/logs/billing_log /we
 
 <TMPL_IF NAME="API_EVAL">
 <LocationMatch /ruleset/>
-
-
-  PerlSetVar kobj_root <TMPL_VAR NAME=KOBJ_ROOT>
-
   # P3P compressed policy header
   Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
 
   # env var to turn on rule logging
   PerlSetEnv KOBJ 1 
-
-  # Eventually this ought to come from the client configuration DB
-  PerlSetVar kobj_js_version <TMPL_VAR NAME=JS_VERSION>
-
-  # host names
-  PerlSetVar init_host <TMPL_VAR NAME=INIT_HOST>
-  PerlSetVar log_host <TMPL_VAR NAME=CB_HOST>
-  PerlSetVar eval_host <TMPL_VAR NAME=EVAL_HOST>
-  PerlSetVar frag_host <TMPL_VAR NAME=FRAG_HOST>
-
-  # mode => development, production, test
-  PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
-  # we can use the 'debug' config parameter to force detailed logging
-  PerlSetVar debug <TMPL_VAR NAME=DEBUG>
-
-  PerlSetVar cacheable_threshold <TMPL_VAR NAME=CACHEABLE_THRESHOLD>
-
-  # # database configuration
-  # PerlSetVar db_host <TMPL_VAR NAME=DB_HOST>
-  # PerlSetVar db_username <TMPL_VAR NAME=DB_USERNAME>
-  # PerlSetVar db_passwd <TMPL_VAR NAME=DB_PASSWD>
-
-  PerlSetVar default_template_dir <TMPL_VAR NAME=DEFAULT_TEMPLATE_DIR>  
-
-  # URL for svn rule repository, username, password
-  PerlSetVar svn_conn <TMPL_VAR NAME=RULE_REPOSITORY>
-
   SetHandler perl-script
   PerlHandler Kynetx
+
 </LocationMatch>
 
 </TMPL_IF>
 <TMPL_IF NAME="API_CALLBACK">
 <LocationMatch /callback|log/>
 
-  PerlSetVar kobj_root <TMPL_VAR NAME=KOBJ_ROOT>
-
   # P3P compressed policy header
   Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
 
   # env var to turn on callback logging
   PerlSetEnv CB 1 
-
-  # host names
-  PerlSetVar init_host <TMPL_VAR NAME=INIT_HOST>
-  PerlSetVar log_host <TMPL_VAR NAME=CB_HOST>
-  PerlSetVar eval_host <TMPL_VAR NAME=EVAL_HOST>
-  PerlSetVar frag_host <TMPL_VAR NAME=FRAG_HOST>
-
-  # # database configuration
-  # PerlSetVar db_host <TMPL_VAR NAME=DB_HOST>
-  # PerlSetVar db_username <TMPL_VAR NAME=DB_USERNAME>
-  # PerlSetVar db_passwd <TMPL_VAR NAME=DB_PASSWD>
-
-  # mode => development, production, test
-  PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
-  # we can use the 'debug' config parameter to force detailed logging
-  PerlSetVar debug <TMPL_VAR NAME=DEBUG>
-
-  # URL for svn rule repository, username, password
-  PerlSetVar svn_conn <TMPL_VAR NAME=RULE_REPOSITORY>
-
   SetHandler perl-script
   PerlHandler Kynetx::Callbacks
 </LocationMatch>
@@ -427,8 +375,6 @@ CustomLog "|/web/sbin/cronolog --period=1day --symlink=/web/logs/billing_log /we
 
 <TMPL_IF NAME="API_INIT">
 <LocationMatch /js/>
-
-  PerlSetVar kobj_root <TMPL_VAR NAME=KOBJ_ROOT>
 
   # P3P compressed policy header
   Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
@@ -454,34 +400,6 @@ CustomLog "|/web/sbin/cronolog --period=1day --symlink=/web/logs/billing_log /we
 
   # env var to turn on INIT logging
   PerlSetEnv INIT 1 
-
-  # Eventually this ought to come from the client configuration DB
-  PerlSetVar kobj_js_version <TMPL_VAR NAME=JS_VERSION>
-
-  # Where do I get the static JS files to serve?
-  PerlSetVar kobj_js_root <TMPL_VAR NAME=DEFAULT_JS_ROOT>
-
-  # host names
-  PerlSetVar init_host <TMPL_VAR NAME=INIT_HOST>
-  PerlSetVar log_host <TMPL_VAR NAME=CB_HOST>
-  PerlSetVar eval_host <TMPL_VAR NAME=EVAL_HOST>
-  PerlSetVar frag_host <TMPL_VAR NAME=FRAG_HOST>
-
-  # mode => development, production, test
-  PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
-  # we can use the 'debug' config parameter to force detailed logging
-  PerlSetVar debug <TMPL_VAR NAME=DEBUG>
-
-  # URL for svn rule repository, username, password
-  PerlSetVar svn_conn <TMPL_VAR NAME=RULE_REPOSITORY>
-
-  # use CloudFront?
-  PerlSetVar UseCloudFront <TMPL_VAR NAME=USE_CLOUDFRONT>
-  # static file version on CloudFront; Updated in kns_config.pm
-  PerlSetVar CloudFrontURL <TMPL_VAR NAME=RUNTIME_LIB_NAME>
-
-
-
   SetHandler perl-script
   PerlHandler Kynetx::KOBJ
 </LocationMatch>
@@ -491,25 +409,8 @@ CustomLog "|/web/sbin/cronolog --period=1day --symlink=/web/logs/billing_log /we
 <TMPL_IF NAME="API_KRL">
 <LocationMatch /manage/>
 
-  PerlSetVar kobj_root <TMPL_VAR NAME=KOBJ_ROOT>
-
   # env var to turn on logging
   PerlSetEnv KRL 1 
-
-  # host names
-  PerlSetVar init_host <TMPL_VAR NAME=INIT_HOST>
-  PerlSetVar log_host <TMPL_VAR NAME=CB_HOST>
-  PerlSetVar eval_host <TMPL_VAR NAME=EVAL_HOST>
-  PerlSetVar krl_host <TMPL_VAR NAME=KRL_HOST>
-  PerlSetVar frag_host <TMPL_VAR NAME=FRAG_HOST>
-
-  # mode => development, production, test
-  PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
-  # we can use the 'debug' config parameter to force detailed logging
-  PerlSetVar debug <TMPL_VAR NAME=DEBUG>
-
-  PerlSetVar default_template_dir <TMPL_VAR NAME=DEFAULT_TEMPLATE_DIR>  
-
   SetHandler perl-script
   PerlHandler Kynetx::RuleManager
 </LocationMatch>
@@ -534,13 +435,8 @@ CustomLog "|/web/sbin/cronolog --period=1day --symlink=/web/logs/billing_log /we
 Alias /widgets/ "/web/lib/perl/widgets/"
 <Location /widgets>
 
-  PerlSetVar kobj_root <TMPL_VAR NAME=KOBJ_ROOT>
-
   # env var to turn on logging
   PerlSetEnv FRAG 1 
-
-  # mode => development, production, test
-  PerlSetVar run_mode <TMPL_VAR NAME=RUN_MODE>
 
   SetHandler perl-script
   PerlResponseHandler ModPerl::Registry

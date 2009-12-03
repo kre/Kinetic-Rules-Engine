@@ -1,3 +1,10 @@
+2009-12-03  Phil Windley  <pjw@kynetx.com>
+
+	* etc/tmpl/httpd-perl.conf.tmpl: Removed HTTPD directives that are
+	  now coming directly from config file
+	* bin/install-httpd-conf.pl: Removed commented out code
+	* Kynetx/RuleManager.pm: Use config params rather than CONSTANT
+
 2009-12-02  Mark Horstmeier <meh@kynetx.com>
 	* Kynetx.pm: Added additional REST method 'mth' for mod_perl testing
 	additional REST method 'mth' for mod_perl testing
