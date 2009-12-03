@@ -72,7 +72,7 @@ my $my_req_info = Kynetx::Test::gen_req_info($rid);
 #$my_req_info->{'referer'} = 'http://www.byu.edu'; # Utah (BYU)
 
 # configure KNS
-#Kynetx::Configure::configure();
+Kynetx::Configure::configure();
 
 #Kynetx::Memcached->init();
 

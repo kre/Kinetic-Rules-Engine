@@ -36,30 +36,32 @@ my $kobj_file = "kobj-static-".$dstamp.$hstamp.".js";
 my @js_files = qw(
 jquery-1.3.2.js
 jquery.json-1.2.js
-jquery-ui-personalized-1.6rc2.js
+jquery-ui-1.7.2.custom.js
 kgrowl-1.0.js
 krl-runtime.js.tmpl
 );
+#jquery-ui-personalized-1.6rc2.js
 
 
 
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'hv:r:a';
+my $opt_string = 'hv:r:au';
 getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'};
 
 
 my $js_version = $opt{'v'} || DEFAULT_JS_VERSION;
 my $js_root = $opt{'r'} || DEFAULT_JS_ROOT;
+my $minify = !$opt{'u'};
 
 
 my $js = "var kobj_fn = '$kobj_file'; var kobj_ts = '$dstamp$hstamp';";
 
 # get the static files    
 foreach my $file (@js_files) {
-    $js .= get_js_file($file,$js_version,$js_root);
+    $js .= get_js_file($file,$js_version,$js_root,$minify);
 }
 
 
@@ -130,7 +132,7 @@ link($filename,$pofn);
 
 
 sub get_js_file {
-    my ($file, $js_version, $js_root) = @_;
+    my ($file, $js_version, $js_root, $minify) = @_;
 
     my $filename = join('/',($js_root,$js_version,$file));
     my $js = '';
@@ -144,13 +146,19 @@ sub get_js_file {
 	for my $key (@{ Kynetx::Configure::config_keys() }) {
 	    $init_template->param($key => Kynetx::Configure::get_config($key));
 	}
-
-	$js = minify(input => $init_template->output);
-
+		if($minify){
+			$js = minify(input => $init_template->output);
+		} else {
+			$js = $init_template->output;
+		}
     } else {
-	open(JS, "< $filename") ||  
-	    die("Can't open file $filename: $!\n");
-	$js = minify(input=> *JS);
+		open(JS, "< $filename") || die("Can't open file $filename: $!\n");
+		if($minify){	
+			$js = minify(input=> *JS);
+		} else {
+			undef $/;
+			$js = <JS>;
+		}
 
     }
 
@@ -175,6 +183,7 @@ Create Kynetx initialization js files
 Options:
 
    -a       : store to S3
+   -u       : don't minify the file during publish
    -r DIR   : use DIR as the root directory for JS files
    -v V     : use V as the verion number
 

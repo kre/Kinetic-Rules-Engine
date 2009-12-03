@@ -52,6 +52,8 @@ get_mcd_hosts
 get_mcd_port
 get_config
 config_keys
+set_run_mode
+set_debug
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -96,9 +98,31 @@ sub get_config {
     return $config->{$name};
 }
 
+sub set_run_mode {
+    my ($mode) = @_;
+    $config->{'RUN_MODE'} = $mode || $config->{'RUN_MODE'} || '';
+    return $config->{'RUN_MODE'};
+}
+
+sub set_debug { 
+    my ($debug) = @_;
+    $config->{'DEBUG'} = $debug || $config->{'DEBUG'} || '';
+    return $config->{'DEBUG'};
+}
+
+sub set_js_root {
+    my ($js_root) = @_;
+    $config->{'DEFAULT_JS_ROOT'} = $js_root || $config->{'DEFAULT_JS_ROOT'} || '';
+}
+
 sub config_keys {
     my @keys = keys %{ $config };
     return  \@keys;
+}
+
+sub get_properties {
+    my %copy = %$config;
+    return \%copy;
 }
 
 
@@ -119,8 +143,9 @@ sub read_config {
     return $config;
 }
 
-
-
+sub to_string {
+    return Dumper($config);
+}
 
 1;
 

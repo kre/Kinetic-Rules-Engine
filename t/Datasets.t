@@ -52,7 +52,9 @@ use Kynetx::Test qw/:all/;
 use Kynetx::Datasets qw/:all/;
 use Kynetx::JavaScript qw/:all/;
 use Kynetx::Parser qw/:all/;
+use Kynetx::Configure;
 
+Kynetx::Configure::configure();
 
 my $req_info;
 $req_info->{'referer'} = 'http://www.byu.edu'; # Utah (BYU)

@@ -52,6 +52,8 @@ use Kynetx::Version qw/:all/;
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
+use Apache2::Const qw(FORBIDDEN OK);
+
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 

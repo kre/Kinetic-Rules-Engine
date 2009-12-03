@@ -36,13 +36,15 @@ use File::Find::Rule;
 use Log::Log4perl qw(get_logger :levels);
 use JSON::XS;
 
-use constant DEFAULT_SERVER_ROOT => 'kobj.net';
-use constant DEFAULT_ACTION_PREFIX => 'kobj-cs';
-use constant DEFAULT_LOG_PREFIX => 'kobj-log';
-use constant DEFAULT_ACTION_HOST => '127.0.0.1';
-use constant DEFAULT_LOG_HOST => '127.0.0.1';
-use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
-use constant DEFAULT_JS_VERSION => '0.9';
+# meh: I am taking out references to these defaults because they should be
+# loaded from the Configure module
+#use constant DEFAULT_SERVER_ROOT => 'kobj.net';
+#use constant DEFAULT_ACTION_PREFIX => 'kobj-cs';
+#use constant DEFAULT_LOG_PREFIX => 'kobj-log';
+#use constant DEFAULT_ACTION_HOST => '127.0.0.1';
+#use constant DEFAULT_LOG_HOST => '127.0.0.1';
+#use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
+#use constant DEFAULT_JS_VERSION => '0.9';
 
 use Kynetx::Util qw(:all);
 use Kynetx::Version qw(:all);
@@ -80,8 +82,8 @@ sub handler {
 
     $logger->debug("RIDs -> $rids");
 
-    my $js_version = $r->dir_config('kobj_js_version') || DEFAULT_JS_VERSION;
-    my $js_root = $r->dir_config('kobj_js_root') || DEFAULT_JS_ROOT;
+    my $js_version = Kynetx::Configure::get_config('JS_VERSION');
+    my $js_root = Kynetx::Configure::get_config('DEFAULT_JS_ROOT');
 
     my $not_secure = ! ($r->headers_in->{'X-Secure'} eq 'Yes');
     $logger->debug("This is a secure connection") unless $not_secure;
@@ -104,15 +106,17 @@ sub handler {
 	my $action_host;
 	my $log_host;
 	# track virtual hosts
-	if($root eq DEFAULT_SERVER_ROOT ||
+	if($root eq Kynetx::Configure::get_config('DEFAULT_SERVER_ROOT') ||
 	   $r->hostname =~ m/\d+\.\d+\.\d+\.\d+/) {
-	    $action_host = $r->dir_config('action_host') || DEFAULT_ACTION_HOST;
-	    $log_host = $r->dir_config('log_host') || DEFAULT_LOG_HOST;
+	    $action_host = Kynetx::Configure::get_config('DEFAULT_ACTION_HOST');
+	    $log_host = Kynetx::Configure::get_config('DEFAULT_LOG_HOST');
 	} else {
 	    $middle .= "." if $middle;
 	    my $ending = "." . $middle  . $root;
-	    $action_host = DEFAULT_ACTION_PREFIX . $ending;
-	    $log_host = DEFAULT_LOG_PREFIX . $ending;
+	    $action_host = 
+		Kynetx::Configure::get_config('DEFAULT_ACTION_PREFIX') . $ending;
+	    $log_host = 
+		Kynetx::Configure::get_config('DEFAULT_LOG_PREFIX') . $ending;
 	}
 
 	$logger->info("Generating KOBJ file ", $rids, ' with action host ' , $action_host);
@@ -130,11 +134,12 @@ sub handler {
     } elsif($method eq 'static' || 
 	    $method eq 'shared' || 
 	    $method eq '996337974') { # Backcountry
-	if($r->dir_config('UseCloudFront') && $not_secure) { # redirect to CloudFront
-	    my $version = $r->dir_config('CloudFrontURL');
+	if(Kynetx::Configure::get_config('USE_CLOUDFRONT') && $not_secure) { 
+            # redirect to CloudFront
+	    my $version = Kynetx::Configure::get_config('RUNTIME_LIB_NAME');
 	    if (! $version) {
 		 $version = 'http://static.kobj.net/kobj-static-1.js';
-		 $logger->error("CloudFrontURL config directive missing from Apache httpd.conf.  Using $version");
+		 $logger->error("RUNTIME_LIB_NAME is undefined in configuration!" .  " Using $version");
 	    } 
 	    $logger->info("Redirecting to Cloudfront ", $version);
 	    $r->headers_out->set(Location => $version);

@@ -49,6 +49,7 @@ use Kynetx::Predicates::Location qw(:all);
 use Kynetx::Predicates::Time qw(:all);
 use Kynetx::Predicates::Weather qw(:all);
 use Kynetx::Predicates::Demographics qw(:all);
+use Kynetx::Configure qw(:all);
 
 
 use Exporter;
@@ -60,13 +61,25 @@ our @ISA         = qw(Exporter);
 # put exported names inside the "qw"
 our %EXPORT_TAGS = (all => [ 
 qw(
-show_context
+show_context test_harness
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
-# FIXME: get this from config
-use constant DEFAULT_TEMPLATE_DIR => '/web/lib/perl/etc/tmpl';
+use constant DEFAULT_TEMPLATE_DIR => Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
 
+sub test_harness {
+    my ($r, $method, $rid,$eid) = @_;
+    
+    my $logger = get_logger();
+
+    my $session = process_session($r);
+
+    my $req_info = Kynetx::Request::build_request_env($r,$method,$rid);
+
+    $r->content_type('text/plain');
+    print "Request env: " . Dumper($req_info);
+    print "Config test: " . Kynetx::Configure::to_string();
+}
 
 sub show_context {
     my ($r, $method, $rid) = @_;
@@ -74,11 +87,10 @@ sub show_context {
     my $logger = get_logger();
 
 
-    if($r->dir_config('run_mode') eq 'development') {
+    if(Kynetx::Configure::get_config('RUN_MODE') eq 'development') {
 	# WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
-#        $r->connection->remote_ip('128.122.108.71'); # New York (NYU)
-	$r->connection->remote_ip('72.21.203.1'); # Seattle (Amazon)
-#        $r->connection->remote_ip('128.187.16.242'); # Utah (BYU)
+	my $test_ip = Kynetx::Configure::get_config('TEST_IP');
+	$r->connection->remote_ip($test_ip); 
     }
 
 

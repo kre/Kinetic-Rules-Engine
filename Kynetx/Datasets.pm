@@ -43,8 +43,8 @@ use Kynetx::Memcached qw/:all/;
 use Kynetx::Environments qw/:all/;
 
 # FIXME: this ought to come out of configuration
-use constant DATA_ROOT => '/web/data/client';
-use constant CACHEABLE_THRESHOLD => 24*60*60; #24 hours
+# use constant DATA_ROOT => '/web/data/client';
+# use constant CACHEABLE_THRESHOLD => 24*60*60; #24 hours
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -106,7 +106,7 @@ sub get_dataset {
 
     my $source;
     if($type eq 'file') {
-	$source_name = join("/", (DATA_ROOT, $req_info->{'rid'}, $source_name));
+	$source_name = join("/", (Kynetx::Configure::get_config('DATA_ROOT'), $req_info->{'rid'}, $source_name));
 	$logger->debug("retrieving file dataset from $source_name");
 	$source = get_cached_file($source_name); # no expiration on 
     } else {
@@ -127,7 +127,7 @@ sub cache_dataset_for {
     my $name = $d->{'name'};
 
     if($d->{'cachable'}) {
-	$cache_for = CACHEABLE_THRESHOLD;  # in seconds, default to one day
+	$cache_for = Kynetx::Configure::get_config('CACHEABLE_THRESHOLD');  # in seconds, default to one day
     } 
 
     if (ref $d->{'cachable'} eq 'HASH') { 
@@ -157,7 +157,7 @@ sub cache_dataset_for {
 sub global_dataset {
     my ($d) = @_;
     # global data sets are those that are cachable for more than the CACHEABLE_THRESHOLD
-    return cache_dataset_for($d) >= CACHEABLE_THRESHOLD;
+    return cache_dataset_for($d) >= Kynetx::Configure::get_config('CACHEABLE_THRESHOLD');
 }
 
 

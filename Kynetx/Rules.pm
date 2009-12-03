@@ -80,11 +80,10 @@ sub process_rules {
 
     $r->subprocess_env(START_TIME => Time::HiRes::time);
 
-    if($r->dir_config('run_mode') eq 'development') {
+    if(Kynetx::Configure::get_config('RUN_MODE') eq 'development') {
 	# WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
-#        $r->connection->remote_ip('128.122.108.71'); # New York (NYU)
-	$r->connection->remote_ip('72.21.203.1'); # Seattle (Amazon)
-#        $r->connection->remote_ip('128.187.16.242'); # Utah (BYU)
+	my $test_ip = Kynetx::Configure::get_config('TEST_IP');
+	 $r->connection->remote_ip($test_ip);
 	$logger->debug("In development mode using IP address ", $r->connection->remote_ip());
     } 
 

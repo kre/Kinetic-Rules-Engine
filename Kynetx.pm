@@ -41,17 +41,17 @@ use Log::Log4perl qw(get_logger :levels);
 use Cache::Memcached;
 use JSON::XS;
 
-use Kynetx::Rules qw(:all);;
-use Kynetx::Util qw(:all);;
+use Kynetx::Rules qw(:all);
+use Kynetx::Util qw(:all);
 use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::RuleManager qw(:all);
-use Kynetx::Console qw(:all);;
-use Kynetx::Version qw(:all);;
+use Kynetx::Console qw(:all);
+use Kynetx::Version qw(:all);
+use Kynetx::Configure qw(:all);
 
 
-# FIXME: get this from config
-use constant DEFAULT_TEMPLATE_DIR => '/web/lib/perl/etc/tmpl';
+use constant DEFAULT_TEMPLATE_DIR => Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
 
 # Make this global so we can use memcache all over
 our $memd;
@@ -85,7 +85,6 @@ sub handler {
     $r->subprocess_env(METHOD => $method);
     $r->subprocess_env(RIDS => $rid);
 
-
     # at some point we need a better dispatch function
     if($method eq 'eval') {
 	process_rules($r, $method, $rid, $eid);
@@ -101,6 +100,8 @@ sub handler {
 	my $uniq = int(rand 999999999);
 	$r->content_type('text/html');
 	print "$uniq";
+    } elsif($method eq 'mth') {
+    	test_harness($r, $method, $rid, $eid);
     }
 
 

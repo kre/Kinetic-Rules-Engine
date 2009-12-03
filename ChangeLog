@@ -1,3 +1,36 @@
+2009-12-02  Mark Horstmeier <meh@kynetx.com>
+	* Kynetx.pm: Added additional REST method 'mth' for mod_perl testing
+	additional REST method 'mth' for mod_perl testing
+	* Kynetx/Datasets.pm: Removed constants: DATA_ROOT, CACHEABLE_THRESHOLD
+	* Kynetx/Util.pm: Referenced YAML for RUN_MODE, DEBUG
+	* Kynetx/Configure.pm: Added 4 methods, get_properties, to_string, set_run_mode, set_debug 
+	     get_properties returns a copy of the $config hash
+             set_run_mode modifies RUN_MODE 
+	     set_debug modifies DEBUG 
+	* Kynetx/KOBJ.pm: Referenced YAML for USE_CLOUDFRONT, RUNTIME_LIB_NAME 
+	Replaced package constants with YAML ref 
+		DEFAULT_SERVER_ROOT 
+		DEFAULT_ACTION_PREFIX 
+		DEFAULT_LOG_PREFIX 
+		DEFAULT_ACTION_HOST                      
+		DEFAULT_LOG_HOST 
+		DEFAULT_JS_ROOT 
+		DEFAULT_JS_VERSION               
+	* Kynetx/Version.pm: Referenced YAML for KOBJ_ROOT 
+	* Kynetx/Rules.pm: Referenced YAML for RUN_MODE, TEST_IP 
+	* Kynetx/Console.pm: Added method test_harness for testing in the mod_perl environment 
+	Referenced YAML for DEFAULT_TEMPLATE_DIR, RUN_MODE, TEST_IP 
+	* Kynetx/RuleManager.pm: Added specific ref to Apache2::Const::FORBIDDEN,OK for perl -w test 
+	* etc/kns_config.yml: Added multiple mandatory config variables. 
+	* t/Configure.t: I have made a major change to the test harness for
+	Configure.  Since the kns_config.yml file is now the authority for
+	system variables, I made the associated tests in Configure.t more
+	robust and added support for context sensitive (RUN_MODE) testing
+	* t/data/development.yml: New File Sample Template for development 
+	* t/data/production.yml: New File Sample Template for production 
+	* t/KOBJ.t: Restored initialization of Kynetx::Configure      
+	* t/Datasets.t: Restored initialization of Kynetx::Configure
+
 2009-12-02  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Parser.pm: Added support for "last" control statement in

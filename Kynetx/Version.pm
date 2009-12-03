@@ -59,7 +59,7 @@ sub get_build_num {
 sub show_build_num {
     my ($r) = @_;
 
-    my $kobj_root = $r->dir_config('kobj_root');
+    my $kobj_root = Kynetx::Configure::get_config('KOBJ_ROOT');
 
     my $build_num = get_build_num($kobj_root);
 

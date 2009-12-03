@@ -85,10 +85,11 @@ sub config_logging {
 	    "%d %p %F{1} %X{site} %X{rule} %m%n");
     $appender->layout($layout);
 
-    if($r->dir_config('run_mode') eq 'development' || 
-       $r->dir_config('debug') eq 'on') {
+    my $mode = Kynetx::Configure::get_config('RUN_MODE');
+    my $debug = Kynetx::Configure::get_config('DEBUG');
+    if($mode eq 'development' || $debug eq 'on') {
 	$logger->level($DEBUG);
-    } elsif($r->dir_config('run_mode') eq 'production') {
+    } elsif($mode eq 'production') {
 	$logger->level($WARN);
     }
 
