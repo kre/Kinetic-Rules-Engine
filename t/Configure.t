@@ -52,7 +52,7 @@ use Kynetx::JavaScript qw/:all/;
 
 my @RUN_MODES = ("development","production");
 
-#plan tests => 2;
+plan tests => 40;
 
 
 # Old reference to a test configure file

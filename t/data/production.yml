@@ -120,8 +120,8 @@ DATA_ROOT: /web/data/client
 DEFAULT_SERVER_ROOT:  kobj.net
 DEFAULT_ACTION_PREFIX: kobj-cs
 DEFAULT_LOG_PREFIX: kobj-log
-DEFAULT_ACTION_HOST: 127.0.0.1
-DEFAULT_LOG_HOST: 127.0.0.1
+DEFAULT_ACTION_HOST: cs.kobj.net
+DEFAULT_LOG_HOST: log.kobj.net
 DEFAULT_JS_ROOT: /web/lib/perl/etc/js
 
 # Test IP for development testing
