@@ -65,8 +65,6 @@ show_context test_harness
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
-use constant DEFAULT_TEMPLATE_DIR => Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
-
 sub test_harness {
     my ($r, $method, $rid,$eid) = @_;
     
@@ -157,7 +155,7 @@ sub show_context {
     # print template
     $logger->debug("printing template");
 
-    my $template = DEFAULT_TEMPLATE_DIR . "/show_context.tmpl";
+    my $template = Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR') . "/show_context.tmpl";
     my $context_template = HTML::Template->new(filename => $template,
 					       die_on_bad_params => 0);
 
