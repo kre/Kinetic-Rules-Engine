@@ -36,11 +36,11 @@ my $kobj_file = "kobj-static-".$dstamp.$hstamp.".js";
 my @js_files = qw(
 jquery-1.3.2.js
 jquery.json-1.2.js
-jquery-ui-1.7.2.custom.js
+jquery-ui-personalized-1.6rc2.js
 kgrowl-1.0.js
 krl-runtime.js.tmpl
 );
-#jquery-ui-personalized-1.6rc2.js
+#jquery-ui-1.7.2.custom.js
 
 
 
