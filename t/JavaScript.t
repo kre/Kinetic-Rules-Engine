@@ -29,7 +29,7 @@
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
 # 
-use lib qw(/web/lib/perl);
+use lib qw(../);
 use strict;
 
 use Test::More;
@@ -629,7 +629,45 @@ add_expr_testcase(
 		   "flop" => mk_expr_node('str',"Blackfoot, ID")}),
     0);
 
+#
+#  Modulus Test Cases
+#
 
+$str = <<_KRL_;
+23 % 5 + 1
+_KRL_
+add_expr_testcase(
+    $str,
+    '((23 % 5) + 1)',
+    mk_expr_node('num', 4),
+    0);
+
+$str = <<_KRL_;
+21 % 7
+_KRL_
+add_expr_testcase(
+    $str,
+    '(21 % 7)',
+    mk_expr_node('num', 0),
+    0);
+
+$str = <<_KRL_;
+1 + 31 % 5
+_KRL_
+add_expr_testcase(
+    $str,
+    '(1 + (31 % 5))',
+    mk_expr_node('num', 2),
+    0);
+
+$str = <<_KRL_;
+6 * 31 % 5
+_KRL_
+add_expr_testcase(
+    $str,
+    '(6 * (31 % 5))',
+    mk_expr_node('num', 6),
+    0);
 
 $str = <<_KRL_;
 c = 3;

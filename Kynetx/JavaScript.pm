@@ -516,6 +516,10 @@ sub eval_js_prim {
 	    return {'type' => 'num',
 		    'val' => $val0 / $val1};
 	};
+	/\%/ && do {
+	    return {'type' => 'num',
+		    'val' => $val0 % $val1};
+	};
     }
 
     return 0;

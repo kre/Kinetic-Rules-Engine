@@ -77,7 +77,7 @@ COMMA: /,/
 INCR: /\+=/ 
 DECR: /-=/ 
 DOT: /\./ 
-OP:   m([+-/*])          
+OP:   m([+-/*\%])          
 LBRACKET: /\[/ 
 RBRACKET: /\]/ 
 LPAREN: /\(/ 
@@ -737,7 +737,7 @@ term: factor factor_op term
          }}
     | factor
 
-factor_op: '*'|'/'
+factor_op: '*'|'/'|'%'
 
 operator: 'pick'|'length'|'replace'|'as'
 
@@ -948,7 +948,7 @@ sub parse_expr {
 
     # remove newlines
     $expr =~ s%\n%%g;
-
+    
 
     my $result = ($parser->expr($expr));
     if (defined $result->{'error'}) {
@@ -956,11 +956,8 @@ sub parse_expr {
     } else {
 	$logger->debug("Parsed expression");
     }
-
+    
     return $result;
-
-#    print Dumper($result);
-
 
 }
 

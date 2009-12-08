@@ -1,3 +1,7 @@
+2009-12-08  Mark Horstmeier <meh@kynetx.com>
+	* Kynetx/JavaScript.pm: Added modulus to eval_js_prim
+	* Kynetx/Parser.pm: Added modulus to lexicon and to factor_op
+	* t/JavaScript.t: Added a few expr tests to support modulus
 2009-12-03  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Callbacks.pm (process_action): Added context sensitive
