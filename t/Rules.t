@@ -127,6 +127,8 @@ my $session = Kynetx::Test::gen_session($r, $rid);
 my $krl_src;
 my $js;
 my $test_count;
+my $config;
+my $config2;
 
 
 my $Amazon_req_info;
@@ -204,11 +206,17 @@ rule test_1 is active {
 }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'test_1',
+    "rid" => 'cs_test'});
+
+
 $result = <<_JS_;
 (function(){
 function callBacks () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'test_1',rid:'cs_test'},'testing'));
+('%uniq%',callBacks,$config,'testing'));
 }());
 _JS_
 
@@ -228,12 +236,18 @@ rule test_2 is active {
 }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'test_2',
+    "rid" => 'cs_test'});
+
+
 $result = <<_JS_;
 (function(){
 var c = 'Seattle';
 function callBacks () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'test_2',rid:'cs_test'},('testing' + c)));
+('%uniq%',callBacks,$config,('testing' + c)));
 }());
 _JS_
 
@@ -255,12 +269,17 @@ rule test_3 is active {
 }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'test_3',
+    "rid" => 'cs_test'});
+
 $result = <<_JS_;
 (function(){
 var c = 'Seattle';
 function callBacks () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'test_3',rid:'cs_test'},('testing' + c)));
+('%uniq%',callBacks,$config,('testing' + c)));
 }());
 _JS_
 
@@ -282,12 +301,17 @@ rule test_4 is active {
 }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'test_4',
+    "rid" => 'cs_test'});
+
 $result = <<_JS_;
 (function(){
 var c = 'Seattle';
 function callBacks () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'test_4',rid:'cs_test'},('testing' + c)));
+('%uniq%',callBacks,$config,('testing' + c)));
 }());
 _JS_
 
@@ -343,11 +367,17 @@ rule test_flag_1 is active {
   }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'test_flag_1',
+    "rid" => 'cs_test'});
+
+
 $result = <<_JS_;
 (function(){
 function callBacks () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'test_flag_1',rid:'cs_test'},'test'));
+('%uniq%',callBacks,$config,'test'));
 }());
 _JS_
 
@@ -410,12 +440,18 @@ rule test_5a is active {
   }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'test_5a',
+    "rid" => 'cs_test'});
+
+
 $result = <<_JS_;
 (function(){
 var c = 3;
 function callBacks () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'test_5a',rid:'cs_test'},'test'));
+('%uniq%',callBacks,$config,'test'));
 }());
 _JS_
 
@@ -446,12 +482,17 @@ rule test_6 is active {
   }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'test_6',
+    "rid" => 'cs_test'});
+
 $result = <<_JS_;
 (function(){
 var c = 3;
 function callBacks () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'test_6',rid:'cs_test'},'test'));
+('%uniq%',callBacks,$config,'test'));
 }());
 _JS_
 
@@ -507,11 +548,16 @@ _KRL_
 #my $r = Kynetx::Parser::parse_rule($krl_src);
 #diag Dumper($r);
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'test_trail_1',
+    "rid" => 'cs_test'});
+
 $result = <<_JS_;
 (function(){
 function callBacks () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'test_trail_1',rid:'cs_test'},'test'));
+('%uniq%',callBacks,$config,'test'));
 }());
 _JS_
 
@@ -538,11 +584,17 @@ _KRL_
 #my $r = Kynetx::Parser::parse_rule($krl_src);
 #diag Dumper($r);
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'test_trail_2',
+    "rid" => 'cs_test'});
+
+
 $result = <<_JS_;
 (function(){
 function callBacks () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'test_trail_2',rid:'cs_test'},'test'));
+('%uniq%',callBacks,$config,'test'));
 }());
 _JS_
 
@@ -592,11 +644,17 @@ _KRL_
 #my $r = Kynetx::Parser::parse_rule($krl_src);
 #diag Dumper($r);
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'test_trail_4',
+    "rid" => 'cs_test'});
+
+
 $result = <<_JS_;
 (function(){
 function callBacks () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'test_trail_4',rid:'cs_test'},'test'));
+('%uniq%',callBacks,$config,'test'));
 }());
 _JS_
 
@@ -620,11 +678,17 @@ _KRL_
 #my $r = Kynetx::Parser::parse_rule($krl_src);
 #diag Dumper($r);
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'test_trail_5',
+    "rid" => 'cs_test'});
+
+
 $result = <<_JS_;
 (function(){
 function callBacks () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'test_trail_5',rid:'cs_test'},'test'));
+('%uniq%',callBacks,$config,'test'));
 }());
 _JS_
 
@@ -672,11 +736,17 @@ _KRL_
 #my $r = Kynetx::Parser::parse_rule($krl_src);
 #diag Dumper($r);
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'test_trail_7',
+    "rid" => 'cs_test'});
+
+
 $result = <<_JS_;
 (function(){
 function callBacks () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'test_trail_7',rid:'cs_test'},'test'));
+('%uniq%',callBacks,$config,'test'));
 }());
 _JS_
 
@@ -712,6 +782,11 @@ rule test_8 is inactive {
 }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'test_8',
+    "rid" => 'cs_test'});
+
 $result = <<_JS_;
 (function(){
 function callBacks () {
@@ -720,7 +795,7 @@ function callBacks () {
   KOBJ.obs('click', 'id','txn_id','close_rss','failure','test_8', 'cs_test');
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'test_8',rid:'cs_test'},'test'));
+ ('%uniq%',callBacks,$config,'test'));
 }());
 _JS_
 
@@ -749,6 +824,12 @@ rule test_page_id is active {
 }
 _KRL_
 
+
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'test_page_id',
+    "rid" => 'cs_test'});
+
 $result = <<_JS_;
 (function(){
 var pt = K\$('product_name').innerHTML;
@@ -756,7 +837,7 @@ var html = '<p>This is the product title: '+pt+'</p>';
 function callBacks () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'test_page_id',rid:'cs_test'},html));
+ ('%uniq%',callBacks,$config,html));
 }());
 _JS_
 
@@ -781,13 +862,19 @@ pagename.replace(/-/, ' ');
     }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'emit_test_0',
+    "rid" => 'cs_test'});
+
+
 $result = <<_JS_;
 (function(){
 pagename.replace(/-/, ' ');
 function callBacks () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'emit_test_0',rid:'cs_test'},pagename));
+ ('%uniq%',callBacks,$config,pagename));
 }());
 _JS_
 
@@ -811,13 +898,20 @@ $krl_src = <<_KRL_;
     }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'emit_test_1',
+    "rid" => 'cs_test'});
+
+
+
 $result = <<_JS_;
 (function(){
 pagename.replace(/-/, ' ');
 function callBacks () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'emit_test_1',rid:'cs_test'},pagename));
+ ('%uniq%',callBacks,$config,pagename));
 }());
 _JS_
 
@@ -843,13 +937,20 @@ Don't be false please!  Be true!
 }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'extended_quote_test',
+    "rid" => 'cs_test'});
+
+
+
 $result = <<_JS_;
 (function(){
 var welcome = 'Don\\'t be false please! Be true!';
 function callBacks () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'extended_quote_test',rid:'cs_test'},welcome));
+ ('%uniq%',callBacks,$config,welcome));
 }());
 _JS_
 
@@ -869,12 +970,18 @@ rule april2008 is active {
 }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'april2008',
+    "rid" => 'cs_test'});
+
+
 $result = <<_JS_;
 (function(){
 function callBacks () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'april2008',rid:'cs_test'},'Hello Tim'));
+ ('%uniq%',callBacks,$config,'Hello Tim'));
 }());
 _JS_
 
@@ -925,6 +1032,12 @@ rule foreach_0 is active {
 }
 _KRL_
 
+
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'foreach_0',
+    "rid" => 'cs_test'});
+
 $result = <<_JS_;
 (function(){
  (function(){
@@ -935,7 +1048,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,{txn_id: 'txn_id',rule_name: 'foreach_0',rid: 'cs_test'},x));
+    ('%uniq%',callBacks,$config,x));
    }());
  (function(){
    var x = 2;
@@ -945,7 +1058,7 @@ $result = <<_JS_;
       alert(msg);
      cb();
     }
-    ('%uniq%',callBacks,{txn_id: 'txn_id',rule_name: 'foreach_0',rid: 'cs_test'},x));
+    ('%uniq%',callBacks,$config,x));
    }());
  (function(){
    var x = 4;
@@ -955,7 +1068,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,{txn_id: 'txn_id',rule_name: 'foreach_0',rid: 'cs_test'},x));
+    ('%uniq%',callBacks,$config,x));
   }());
  }());
 _JS_
@@ -970,6 +1083,12 @@ rule foreach_01 is active {
 }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'foreach_01',
+    "rid" => 'cs_test'});
+
+
 $result = <<_JS_;
 (function(){
  (function(){
@@ -980,7 +1099,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,{txn_id: 'txn_id',rule_name: 'foreach_01',rid: 'cs_test'},x));
+    ('%uniq%',callBacks,$config,x));
    }());
  (function(){
    var x = 'b';
@@ -990,7 +1109,7 @@ $result = <<_JS_;
       alert(msg);
      cb();
     }
-    ('%uniq%',callBacks,{txn_id: 'txn_id',rule_name: 'foreach_01',rid: 'cs_test'},x));
+    ('%uniq%',callBacks,$config,x));
    }());
  }());
 _JS_
@@ -1015,6 +1134,13 @@ rule foreach_1 is active {
 }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'foreach_1',
+    "rid" => 'cs_test'});
+
+
+
 $result = <<_JS_;
 (function(){
  var z = 6;
@@ -1027,7 +1153,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,{txn_id: 'txn_id',rule_name: 'foreach_1',rid: 'cs_test'},(x+(y+z))));
+    ('%uniq%',callBacks,$config,(x+(y+z))));
    }());
  (function(){
    var x = 7;
@@ -1038,7 +1164,7 @@ $result = <<_JS_;
       alert(msg);
      cb();
     }
-    ('%uniq%',callBacks,{txn_id: 'txn_id',rule_name: 'foreach_1',rid: 'cs_test'},(x+(y+z))));
+    ('%uniq%',callBacks,$config,(x+(y+z))));
    }());
  }());
 _JS_
@@ -1063,6 +1189,12 @@ rule foreach_2 is active {
 }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'foreach_2',
+    "rid" => 'cs_test'});
+
+
 $result = <<_JS_;
 (function(){
  (function(){
@@ -1076,7 +1208,7 @@ $result = <<_JS_;
         alert(msg);
         cb();
       }
-      ('%uniq%',callBacks,{txn_id: 'txn_id',rule_name: 'foreach_2',rid: 'cs_test'},(x+(y+z))));
+      ('%uniq%',callBacks,$config,(x+(y+z))));
     }());
    (function(){
      var z = 5;
@@ -1087,7 +1219,7 @@ $result = <<_JS_;
         alert(msg);
         cb();
       }
-      ('%uniq%',callBacks,{txn_id: 'txn_id',rule_name: 'foreach_2',rid: 'cs_test'},(x+(y+z))));
+      ('%uniq%',callBacks,$config,(x+(y+z))));
     }());
   }());
  (function(){
@@ -1101,7 +1233,7 @@ $result = <<_JS_;
         alert(msg);
        cb();
       }
-      ('%uniq%',callBacks,{txn_id: 'txn_id',rule_name: 'foreach_2',rid: 'cs_test'},(x+(y+z))));
+      ('%uniq%',callBacks,$config,(x+(y+z))));
      }());
    (function(){
      var z = 10;
@@ -1112,7 +1244,7 @@ $result = <<_JS_;
         alert(msg);
         cb();
       }
-      ('%uniq%',callBacks,{txn_id: 'txn_id',rule_name: 'foreach_2',rid: 'cs_test'},(x+(y+z))));
+      ('%uniq%',callBacks,$config,(x+(y+z))));
      }());
    }());
  }());
@@ -1136,12 +1268,19 @@ $json = <<_KRL_;
 {"blocktype":"every","actions":[{"action":{"name":"alert","args":[{"val":"Hello Tim","type":"str"}],"modifiers":[]},"label":""}],"name":"april2008","pagetype":{"vars":["month"],"pattern":"http:\/\/www.utahjudo.com\\\/2008\\\/(.*?)","foreach":[]},"state":"active"}
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'april2008',
+    "rid" => 'cs_test'});
+
+
+
 $result = <<_JS_;
 (function(){
 function callBacks () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'april2008',rid:'cs_test'},'Hello Tim'));
+ ('%uniq%',callBacks,$config,'Hello Tim'));
 }());
 _JS_
 
@@ -1192,6 +1331,12 @@ ruleset global_expr_1 {
 }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 't0',
+    "rid" => 'cs_test'});
+
+
 my $global_expr_1 = <<_JS_;
 (function(){
 var x = 3;
@@ -1200,7 +1345,7 @@ var y = 6;
 function callBacks () {
 };
 (function(uniq, cb, config) {cb();}
- ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'t0',rid:'cs_test'}));
+ ('%uniq%',callBacks,$config));
 }());
 }());
 _JS_
@@ -1232,19 +1377,32 @@ ruleset two_rules_both_fire {
 }
 _KRL_
 
+
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 't0',
+    "rid" => 'cs_test'});
+
+
+$config2 = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 't1',
+    "rid" => 'cs_test'});
+
+
 $js = <<_JS_;
 (function(){
 (function(){
 function callBacks () {
 };
 (function(uniq, cb, config) {cb();}
- ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'t0',rid:'cs_test'}));
+ ('%uniq%',callBacks,$config));
 }());
 (function(){
 function callBacks () {
 };
 (function(uniq, cb, config) {cb();}
- ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'t1',rid:'cs_test'}));
+ ('%uniq%',callBacks,$config2));
 }());
 }());
 _JS_
@@ -1277,13 +1435,19 @@ ruleset two_rules_first_fires {
 }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 't0',
+    "rid" => 'cs_test'});
+
+
 $js = <<_JS_;
 (function(){
 (function(){
 function callBacks () {
 };
 (function(uniq, cb, config) {cb();}
- ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'t0',rid:'cs_test'}));
+ ('%uniq%',callBacks,$config));
 }());
 }());
 _JS_
@@ -1316,6 +1480,18 @@ ruleset two_rules_both_fire {
 }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 't8',
+    "rid" => 'cs_test'});
+
+
+$config2 = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 't9',
+    "rid" => 'cs_test'});
+
+
 $js = <<_JS_;
 (function(){
 (function(){
@@ -1323,13 +1499,13 @@ var x = 3;
 function callBacks () {
 };
 (function(uniq, cb, config) {cb();}
- ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'t8',rid:'cs_test'}));
+ ('%uniq%',callBacks,$config));
 }());
 (function(){
 function callBacks () {
 };
 (function(uniq, cb, config) {cb();}
- ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'t9',rid:'cs_test'}));
+ ('%uniq%',callBacks,$config2));
 }());
 }());
 _JS_
@@ -1363,6 +1539,12 @@ ruleset two_rules_both_fire {
 }
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 't10',
+    "rid" => 'cs_test'});
+
+
 $js = <<_JS_;
 (function(){
 (function(){
@@ -1370,7 +1552,7 @@ var x = 3;
 function callBacks () {
 };
 (function(uniq, cb, config) {cb();}
- ('%uniq%',callBacks,{txn_id:'txn_id',rule_name:'t10',rid:'cs_test'}));
+ ('%uniq%',callBacks,$config));
 }());
 }());
 _JS_
@@ -1477,10 +1659,13 @@ sub test_datafeeds {
 				      $krl, 
 				      $krl->{'rules'});
 
+    diag $val if $diag;
+
 
     is_string_nows($val, $js, "Evaling ruleset: $src");
   }
 }
+
 $krl_src = <<_KRL_;
 ruleset dataset0 {
     global {
@@ -1500,7 +1685,7 @@ KOBJ['data']['global_decl_0'] = {"www.barnesandnoble.com":[
 _JS_
 
 test_datafeeds(
-    $no_server_available,
+    0, # this test can run without a server
     $krl_src,
     $js,
     $Amazon_req_info,
@@ -1597,6 +1782,40 @@ test_datafeeds(
     $Amazon_req_info,
     0
     );
+
+
+
+$krl_src = <<_KRL_;
+ruleset dataset0 {
+    global {
+      dataset site_data <- "http://frag.kobj.net/clients/cs_test/aaa.json";
+      type = site_data.pick("\$..type");
+      css <<
+.foo: 4
+>>;
+      x = type + " Rocks!";
+      datasource sites <- "aaa.json";
+    }
+}
+_KRL_
+
+$js = <<_JS_;
+(function(){KOBJ['data']['site_data'] = {"www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]} ;
+ var type = 'AAA';
+ KOBJ.css('.foo: 4  ');
+ var x = 'AAA Rocks!';
+ }());
+
+_JS_
+
+test_datafeeds(
+    $no_server_available,
+    $krl_src,
+    $js,
+    $Amazon_req_info,
+    0
+    );
+
 
 
 #

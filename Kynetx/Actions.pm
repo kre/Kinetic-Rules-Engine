@@ -41,6 +41,7 @@ use Kynetx::Rules qw(:all);
 use Kynetx::Environments qw(:all);
 use Kynetx::Session q/:all/;
 use Kynetx::Log q/:all/;
+use Kynetx::Json q/:all/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -67,41 +68,62 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 my($active,$test,$inactive) = (0,1,2);
 
-# TODO factor out common functionality in float and float2
+# FIXME factor out common functionality in float and float2
 
 # available actions
-# should be a JS function; 
+# can be simply a JS function; 
 # mk_action will create a JS expression that applies it to appropriate arguments
 # first arg MUST be uniq (a number unique to this rule action event)
 # second arg MUST be cb (a callback function)
 # note that $ is evaluated as a var indicator by perl in inlines.  Quote it.  
+
+# can alternately be a hash
+#   'js' is the JS to be included
+#   'before' is a function of five args to be executed before the action's JS 
+#       is included ($req_info,$rule_env,$session,$config,$mods)
+#       returns JS
+#   'after' is an array of functions to be executed in order after the
+#       action's JS.  Same args as 'before' except first additional arg is
+#       the existing JS.  It's replaced with the final result of the chain.
+#   'before' and 'after' are both optional
+
 my %actions = (
 
-    alert => <<EOF,
+    alert => { 
+      'js' => <<EOF,
 function(uniq, cb, config, msg) {
     alert(msg);
     cb();
 }
 EOF
+      'after' => [\&handle_delay]
+    },
 
-    redirect => <<EOF,
+    redirect => {
+       'js' => <<EOF,
 function(uniq, cb, config, url) {
     window.location = url;
     cb();
 }
 EOF
+      'after' => [\&handle_delay]
+    },
 
     # cb in load
-    float_url => <<EOF,
+    float_url => {
+      'js' => <<EOF,
 function(uniq, cb, config, pos, top, side, src_url) {
     var d = KOBJ.buildDiv(uniq, pos, top, side);
     \$K(d).load(src_url, cb);
     \$K('body').append(d);
 }
 EOF
+     'after' => [\&handle_effects, \&handle_delay]
+   },
 
 
-    float_html => <<EOF,
+    float_html => {
+      'js' => <<EOF,
 function(uniq, cb, config, pos, top, side, text) {
     var d = KOBJ.buildDiv(uniq, pos, top, side);
     \$K(d).html(text);
@@ -109,8 +131,11 @@ function(uniq, cb, config, pos, top, side, text) {
     cb();
 }
 EOF
+     'after' => [\&handle_effects, \&handle_delay]
+   },
 
-    notify_six => <<EOF,
+    notify_six => {
+	 'js' => <<EOF,
 function(uniq, cb, config, pos, color, bgcolor, header, sticky, msg) {
   \$K.kGrowl.defaults.position = pos;
   \$K.kGrowl.defaults.background_color = bgcolor;
@@ -124,8 +149,11 @@ function(uniq, cb, config, pos, color, bgcolor, header, sticky, msg) {
   cb();
 }
 EOF
+       'after' => [\&handle_delay]
+    },
 
-    notify_two => <<EOF,
+    notify_two => {
+	 'js' => <<EOF,
 function(uniq, cb, config, header, msg) {
   \$K.kGrowl.defaults.header = header;
   if(typeof config === 'object') {
@@ -135,6 +163,8 @@ function(uniq, cb, config, header, msg) {
   cb();
 }
 EOF
+       'after' => [\&handle_delay]
+    },
 
     close_notification => <<EOF,
 function(uniq, cb, config, selector) {
@@ -142,18 +172,37 @@ function(uniq, cb, config, selector) {
     cb();
 }
 EOF
+
+    'twitter:authorize' => {
+       js => <<EOF,
+function(uniq, cb, config, header, msg) {
+  \$K.kGrowl.defaults.header = header;
+  if(typeof config === 'object') {
+    jQuery.extend(\$K.kGrowl.defaults,config);
+  }
+  \$K.kGrowl(msg);
+  cb();
+}
+EOF
+       before => \&Kynetx::Predicate::Twitter::authorize
+     },
+
     
     # cb passed into function
-    annotate_search_results => <<EOF,
+    annotate_search_results => {
+	 'js' => <<EOF,
 function(uniq, cb, config, annotate_fn) {
     KOBJ.annotate_search_results(annotate_fn, config, cb);
 }
 EOF
+      'after' => [\&handle_delay]
+    },
 
 
 
 
-    popup => <<EOF,
+    popup => {
+       'js' => <<EOF,
 function(uniq, cb, config, top, left, width, height, url) {      
     var id_str = 'kobj_'+uniq;
     var options = 'toolbar=no,menubar=no,resizable=yes,scrollbars=yes,alwaysRaised=yes,status=no' +
@@ -165,9 +214,13 @@ function(uniq, cb, config, top, left, width, height, url) {
     cb();
 }
 EOF
+      # in truth these are mutually exclusive...how to handle...
+      'after' => [\&handle_popup,\&handle_delay]
+   },
 
     # cb in load
-    replace_url => <<EOF,
+    replace_url => {
+       'js' => <<EOF,
 function(uniq, cb, config, sel, src_url) {
     var d = \$K('<div>');
     \$K(d).css({display: 'none'}).load(src_url, cb);
@@ -175,9 +228,12 @@ function(uniq, cb, config, sel, src_url) {
     \$K(d).slideDown('slow');
 }
 EOF
+      'after' => [\&handle_delay]
+    },
 
     # need new "effects" model
-    replace_html => <<EOF,
+    replace_html => {
+        'js' => <<EOF,
 function(uniq, cb, config, sel, text) {
  var div = \$K('<div>');
  \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text);
@@ -186,90 +242,130 @@ function(uniq, cb, config, sel, text) {
  cb();
 }
 EOF
+        'after' => [\&handle_delay]
+    },
 
     # need new "effects" model
-    replace_inner => <<EOF,
+    replace_inner => {
+       'js' => <<EOF,
 function(uniq, cb, config, sel, text) {
  \$K(sel).html(text);
  cb();
 }
 EOF
+      'after' => [\&handle_delay]
+    },
 
-    move_after => <<EOF,
+
+    move_after => {
+      'js' => <<EOF,
 function(uniq, cb, config, anchor, item) {
     var i = item;
     \$K(anchor).after(\$K(i));
     cb();
 }
 EOF
-    
-    move_to_top => <<EOF,
+     'after' => [\&handle_delay]
+    },
+
+    move_to_top => {
+       'js' => <<EOF,
 function(uniq, cb, config, li) {
     \$K(li).siblings(':first').before(\$K(li));
     cb();
 }
 EOF
+      'after' => [\&handle_delay]
+    },
 
-    replace_image_src => <<EOF,
+
+    replace_image_src => {
+       'js' => <<EOF,
 function(uniq, cb, config, id, new_url) {
     \$K(id).attr('src',new_url);
     cb();
 }
 EOF
+      'after' => [\&handle_delay]
+    },
 
-    noop => <<EOF,
+    noop =>  {
+       'js' => <<EOF,
 function(uniq, cb, config) {
     cb();
 }
 EOF
+      'after' => [\&handle_delay],
+   },
 
-    before => <<EOF,
+    before => {
+      'js' => <<EOF,
 function(uniq, cb, config, sel, content) {
     \$K(sel).before(content);
     cb();
 }
 EOF
+      'after' => [\&handle_delay]
+    },
 
-    after => <<EOF,
+    after => {
+       'js' => <<EOF,
 function(uniq, cb, config, sel, content) {
     \$K(sel).after(content);
     cb();
 }
 EOF
+      'after' => [\&handle_delay]
+    },
 
-    append => <<EOF,
+    append => {
+       'js' => <<EOF,
 function(uniq, cb, config, sel, content) {
     \$K(sel).append(content);
     cb();
 }
 EOF
+      'after' => [\&handle_delay]
+    },
 
-    prepend => <<EOF,
+    prepend => {
+       'js' => <<EOF,
 function(uniq, cb, config, sel, content) {
     \$K(sel).prepend(content);
     cb();
 }
 EOF
+      'after' => [\&handle_delay]
+    },
 
-    side_tab => <<EOF,
+    side_tab => {
+      'js' => <<EOF,
 function(uniq, cb, config, content) {
     KOBJ.createPopIn(config, content);
     cb();
 }
 EOF
+     'after' => [\&handle_delay]
+   },
 
-    status_bar => <<EOF,
+    status_bar => {
+      'js' => <<EOF,
 function(uniq, cb, config, content) {
     KOBJ.statusbar(config, content);
     cb();
 }
 EOF
+      'after' => [\&handle_delay]
+    },
 
-    annotate_local_search_results => <<EOF,
+    annotate_local_search_results => {
+      'js' => <<EOF,
 function(uniq, cb, config, annotate_fn) {
     KOBJ.annotate_local_search_results(annotate_fn, config, cb);
 }
 EOF
+      'after' => [\&handle_delay]
+    },
 
 
 
@@ -278,34 +374,34 @@ EOF
 
 
 
-sub emit_var_decl {
-    my($scope_hash) = @_;
-    my $logger = get_logger();
-    my $js = '';
-    my $exempted = {
-	'uniq' => 1,
-	'uniq_id' => 1,
-	'___order' => 1,
-    };
-#    $logger->debug(Dumper($scope_hash));
-    foreach my $lhs (@{$scope_hash->{'___order'}}) {
-	next if $exempted->{$lhs} || $lhs =~ m/^datasource:/;
-	my $val = $scope_hash->{$lhs};
-	my $t = infer_type($val);
-	if($t eq 'str') {
-	    $val = "'".escape_js_str($val)."'";
-	    # relace tmpl vars with concats for JS
-	    $val =~ y/\n\r/  /; # remove newlines
-	    $val =~ s/#{([^}]*)}/'+$1+'/g;
-	} elsif ($t eq 'hash' || $t eq 'array') {
-	    $val = encode_json($val);
-	}
-	$logger->debug("[decl] $lhs has type: $t");
-	$js .= gen_js_var($lhs, $val);
-    }
-    return $js;
+# sub emit_var_decl {
+#     my($scope_hash) = @_;
+#     my $logger = get_logger();
+#     my $js = '';
+#     my $exempted = {
+# 	'uniq' => 1,
+# 	'uniq_id' => 1,
+# 	'___order' => 1,
+#     };
+# #    $logger->debug(Dumper($scope_hash));
+#     foreach my $lhs (@{$scope_hash->{'___order'}}) {
+# 	next if $exempted->{$lhs} || $lhs =~ m/^datasource:/;
+# 	my $val = $scope_hash->{$lhs};
+# 	my $t = infer_type($val);
+# 	if($t eq 'str') {
+# 	    $val = "'".escape_js_str($val)."'";
+# 	    # relace tmpl vars with concats for JS
+# 	    $val =~ y/\n\r/  /; # remove newlines
+# 	    $val =~ s/#{([^}]*)}/'+$1+'/g;
+# 	} elsif ($t eq 'hash' || $t eq 'array') {
+# 	    $val = encode_json($val);
+# 	}
+# 	$logger->debug("[decl] $lhs has type: $t");
+# 	$js .= gen_js_var($lhs, $val);
+#     }
+#     return $js;
 
-}
+# }
 
 
 sub build_js_load {
@@ -405,6 +501,7 @@ sub build_one_action {
 
     my $logger = get_logger();
 
+    
     my $uniq = lookup_rule_env('uniq',$rule_env);
     my $uniq_id = lookup_rule_env('uniq_id',$rule_env);
 
@@ -422,148 +519,82 @@ sub build_one_action {
     # this happens after we've chosen the action since it modifies args
     $args = gen_js_rands( $args );
 
-    # set defaults
-    my %mods = (
+    my @config = ("txn_id: '".$req_info->{'txn_id'} . "'", "rule_name: '$rule_name'", "rid: '".$req_info->{'rid'}."'");
+
+
+    my $config = {"txn_id" => $req_info->{'txn_id'}, 
+		  "rule_name" => $rule_name, 
+		  "rid" => $req_info->{'rid'}};
+    
+   # set default modifications
+    my $mods = {
 	delay => 0,
 	effect => 'appear',
 	scrollable => 0,
 	draggable => 0,
-	);
+	};
 
-
-    my @config = ("txn_id: '".$req_info->{'txn_id'} . "'", "rule_name: '$rule_name'", "rid: '".$req_info->{'rid'}."'");
-
-    # override defaults if set
     foreach my $m ( @{ $action->{'modifiers'} } ) {
-	$mods{$m->{'name'}} = gen_js_expr($m->{'value'}) if defined $mods{$m->{'name'}};
+	$mods->{$m->{'name'}} = gen_js_expr($m->{'value'});
 
 #	$logger->debug(sub {Dumper($m)} );
 
-	push(@config, "'" . $m->{'name'} . "':" . 
- 	               gen_js_expr(eval_js_expr($m->{'value'}, 
+	# Should the name be in quotes??
+
+	$config->{$m->{'name'}} = 
+ 	               den_to_exp(eval_js_expr($m->{'value'}, 
 						$rule_env, 
 						$rule_name, 
 						$req_info, 
-						$session)));
+						$session));
     }
 
 
     # add to front of arg str (in reverse)
-    unshift @{ $args }, '{' . join(",", @config) . '}';
+    unshift @{ $args }, astToJson($config);
     unshift @{ $args }, $cb_func_name;
     unshift @{ $args }, mk_js_str($uniq);
 
     # create comma separated list of arguments 
     my $arg_str = join(',', @{ $args }) || '';
 
-    if (defined $actions{$action_name}) {
+    my ($action_js, $before, $after);
+    if (ref $actions{$action_name} eq 'HASH') {
+      $action_js = $actions{$action_name}->{'js'};
+      $before = $actions{$action_name}->{'before'} || \&noop;
+      $after = $actions{$action_name}->{'after'} || [];
+    } else {
+      $action_js = $actions{$action_name};
+      $before = \&noop;
+      $after = [];
+    }
+
+    $js .= &$before($req_info, $rule_env, $session, $config, $mods);
+    if (defined $action_js) {
   
       # apply the action function
-      $js .= "(". $actions{$action_name} . "(" . $arg_str . "));\n";
+      $js .= "(". $action_js . "(" . $arg_str . "));\n";
 
       $logger->debug("[action] ", $action_name, 
 		     ' executing with args (',$arg_str,')');
 
 
-      #    $logger->debug("Env: ", Dumper($rule_env));
-
       push(@{ $req_info->{'actions'} }, $action_name);
 
 
-
-      # function names in this hash indicate if the function is modifiable
-      # FIXME: this isn't a good way to map effects to actions
-      my %modifiable = (
-			'float_url' => 1,
-			'float_html' => 1,
-			#	'replace_url' => 1,
-			#	'replace_html' => 1,
-		       );
-
-
-      if ($modifiable{$action_name}) {
-	# map our effect names to Sript.taculo.us effect names
-
-	my $effect_name;
-      case: for ($mods{'effect'}) {
-	  /appear/ && do {
-	    $effect_name = 'fadeIn';
-	  };
-	  /slide/ && do {
-	    $effect_name = 'slideDown';
-	  };
-	  /blind/ && do {
-	    $effect_name = 'slideDown';
-	  };
-	}
-
-
-	$logger->debug("Using effect $effect_name for $mods{'effect'}");
-	$js .= "\$K('#$uniq_id').$effect_name();"  ;
-
-	if ($mods{'draggable'} eq 'true') {
-	  $js .= "\$K('#$uniq_id').draggable();";
-	}
-	
-	if ($mods{'scrollable'} eq 'true') {
-	  # do nothing
-	  #	    $js .= "new FixedElement('". $uniq_id . "');";
-	}
-
-	if ($mods{'highlight'}) {
-	  my $color = '#ffff99';
-	case: for ($mods{'highlight'}) {
-	    /yellow/ && do {
-	      $color = '#ffff99';
-	    };
-	    /pink/ && do {
-	      $color = '#ff99ff';
-	    };
-	    /purple/ && do {
-	      $color = '#99ffff';
-	    };
-	    /#[A-F0-9]{6}/ && do {
-	      $color = $mods{'highlight'};
-	    }
-	  }
-	    
-	  #	    $js .= "new Effect.Highlight('$uniq_id', {startcolor: '$color', });"  ;
-	}
-
-
-
-      } elsif ($action_name eq "popup") {
-	if ($mods{'effect'} eq 'onpageexit') {
-	  my $funcname = "leave_" . $uniq_id;
-	  $js = "function $funcname () { " . $js . "};\n";
-	  $js .= "document.body.setAttribute('onUnload', '$funcname()');"
-	}
+      # the after functions processes the JS as a chain and replaces it.  
+      foreach my $a (@{$after}) {
+	 $js = $a->($js, $req_info, $rule_env, $session, $config, $mods);
       }
+      
 
-	
-      if ($mods{'delay'}) {
-
-	my $delay_cb = 
-	  ";KOBJ.logger('timer_expired', '" .
-	    $req_info->{'txn_id'} . "'," .
-	      "'none', '', 'success', '" .
-		$rule_name . "','".
-		  $req_info->{'rid'} .
-		    "');";
-
-	$js .= $delay_cb;  # add in automatic log of delay expiration
-	
-	$js = "setTimeout(function() { $js },  ($mods{'delay'} * 1000) ); \n";
-
-	#	$js = "setTimeout(\'" . $js . "\', " . ($mods{'delay'} * 1000) . ");\n";
-      }
-
-      push(@{ $req_info->{'tags'} }, ($mods{'tags'} || ''));
+      push(@{ $req_info->{'tags'} }, ($mods->{'tags'} || ''));
       push(@{ $req_info->{'labels'} }, $action_expr->{'label'} || '');
     } else {
       $logger->warn("[action] ", $action_name, " undefined");
       
     }
+
 
 
     return $js;
@@ -634,7 +665,101 @@ sub choose_action {
     return ($action_name, $args);
 }
 
+# after function for floats
+sub handle_effects {
+ my ($js,$req_info,$rule_env,$session,$config,$mods)  = @_;
 
+ my $logger=get_logger();
+
+ my $uniq_id = lookup_rule_env('uniq_id',$rule_env);
+ 
+ $logger->debug("[handle_effects] ", $mods->{'effect'});
+
+ my $effect_name;
+ case: for ($mods->{'effect'}) {
+   /appear/ && do {
+     $effect_name = 'fadeIn';
+   };
+   /slide/ && do {
+     $effect_name = 'slideDown';
+   };
+   /blind/ && do {
+     $effect_name = 'slideDown';
+   };
+ }
+
+
+ $logger->debug("Using effect $effect_name for $mods->{'effect'}");
+ $js .= "\$K('#$uniq_id').$effect_name();"  ;
+
+ if ($mods->{'draggable'} eq 'true') {
+   $js .= "\$K('#$uniq_id').draggable();";
+ }
+	
+ if ($mods->{'scrollable'} eq 'true') {
+   # do nothing 
+   #	    $js .= "new FixedElement('". $uniq_id . "');";
+ }
+
+ # FIXME: this isn't finished and doesn't work
+ if ($mods->{'highlight'}) {
+   my $color = '#ffff99';
+ case: for ($mods->{'highlight'}) {
+     /yellow/ && do {
+       $color = '#ffff99';
+     };
+     /pink/ && do {
+       $color = '#ff99ff';
+     };
+     /purple/ && do {
+       $color = '#99ffff';
+     };
+     /#[A-F0-9]{6}/ && do {
+       $color = $mods->{'highlight'};
+     }
+   }
+	    
+   #	    $js .= "new Effect.Highlight('$uniq_id', {startcolor: '$color', });"  ;
+ }
+
+ return $js;
+
+}
+
+sub handle_delay {
+ my ($js,$req_info,$rule_env,$session,$config,$mods)  = @_;
+
+ if (defined $mods && $mods->{'delay'}) {
+   my $rule_name = $config->{'rule_name'};
+   my $delay_cb = 
+     ";KOBJ.logger('timer_expired', '" .
+       $req_info->{'txn_id'} . "'," .
+	 "'none', '', 'success', '" .
+	   $rule_name . "','".
+	     $req_info->{'rid'} .
+	       "');";
+
+   $js .= $delay_cb;  # add in automatic log of delay expiration
+	
+   $js = "setTimeout(function() { $js },  ($mods->{'delay'} * 1000) ); \n";
+ }
+
+ return $js;
+
+}
+
+sub handle_popup {
+  my ($js,$req_info,$rule_env,$session,$config,$mods)  = @_;
+
+  my $uniq_id = lookup_rule_env('uniq_id',$rule_env);
+
+  if ($mods->{'effect'} eq "'onpageexit'") {
+    my $funcname = "leave_" . $uniq_id;
+    $js = "function $funcname () { " . $js . "};\n";
+    $js .= "document.body.setAttribute('onUnload', '$funcname()');"
+  }
+  return $js;
+}
 
 sub eval_post_expr {
     my($rule, $session, $req_info, $rule_env, $fired) = @_;
@@ -829,5 +954,6 @@ sub get_precondition_vars {
     $rule->{'pagetype'}{'vars'};
 }
 
+sub noop {return ''};
 
 1;

@@ -98,7 +98,7 @@ sub run(){
 	$self->{'obj'} = undef;
 	my ($obj, $expr, $arg) = @_;
 	#my $self->{'obj'} = $obj;
-	#$self->logit( "arg: $arg");
+#$self->logit( "arg: $arg");
 	$self->{'result_type'} = 'VALUE';
 	if ($arg && $arg->{'result_type'}){
 		my $result_type = $arg->{'result_type'};
@@ -111,12 +111,12 @@ sub run(){
 	     $self->{'result_type'} eq 'PATH')) {
 		my $cleaned_expr = $self->normalize($expr);
 		$cleaned_expr =~ s/^\$;//;
-#		$self->logit("Cleaned expr: $cleaned_expr");
+		#$self->logit("Cleaned expr: $cleaned_expr");
 		$self->trace($cleaned_expr, $obj, '$');
 		my $result = $self->{'result'};
 		
 		if (defined $result){
-			#print STDERR " will return result\n";
+#			$self->logit("will return result $result");
 			return $result;
 		} 
 		#print STDERR "will return zero\n";
@@ -133,14 +133,23 @@ normalize the path expression;
 sub normalize (){
 	my $self = shift;
 	my $x = shift;
-#	my $o = $x;
+	my $o = $x;
 	$x =~ s/"\/[\['](\??\(.*?\))[\]']\/"/&_callback_01($1)/eg;
-	$x =~ s/'?(?<!@|\d|\\)\.'?|\['?/;/g; 	#added the negative lookbehind -krhodes
+
+	# save strings from replacement; only works for one string...
+	$x =~ s/('[^']*')/_STRING_/;
+        my $string = $1;
+
+	# replace . and [ with ; unless it's followed by @, digit, \
+	$x =~ s/'?(?<!@|\d|\\)\.'?|\['?/;/g; 
+
+	$x =~ s/_STRING_/$string/;
+
 	$x =~ s/\\\./\./g; # replace escaped periods with periods
-	# added \d in it to compensate when 
-	# comparing against decimal numbers
 	$x =~ s/;;;|;;/;..;/g;
 	$x =~ s/;$|'?\]|'$//g;
+	# replace ; in strings with periods...this is stupid
+#	$x =~ s/'([^;]*);(.*)/'$1\.$2/g;
 	$x =~ s/#([0-9]+)/&_callback_02($1)/eg;
 	$self->{'result'} = [];
 #	$self->logit("normalized: $o -> $x");
@@ -178,9 +187,9 @@ sub store(){
 			push @{$self->{'result'}}, $object;
 		}
 	}
-	#print STDERR "-Updated Result to: \n";
+#	$self->logit("-Updated Result to: \n");
 	foreach my $res (@{$self->{'result'}}){
-		#print STDERR "-- $res\n";
+#		$self->logit("-- $res\n");
 	} 
 	
 	return $path;
@@ -406,7 +415,7 @@ sub eval_query() {
 
 sub _callback_01(){
 	my $self = shift;
-	#$self->logit( "in 01");
+#	$self->logit( "in 01");
 	my $arg = shift;
 	push @{$self->{'result'}}, $arg;
 	return '[#' . $#{$self->{'result'}} . ']';

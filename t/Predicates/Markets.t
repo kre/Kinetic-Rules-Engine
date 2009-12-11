@@ -78,7 +78,7 @@ my $check_url = "http://www.webservicex.net//stockquote.asmx/GetQuote?symbol=GOO
 diag "Checking $check_url";
 my $response = $ua->get($check_url);
 
-diag $response->content;
+#diag $response->content;
 
 SKIP: {
     skip "No server available", 3 if (! $response->is_success || $response->content =~ /busy/);

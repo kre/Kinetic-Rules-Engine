@@ -224,7 +224,7 @@ dispatch_target: '->' STRING
 
 dataset: 'dataset' VAR '<-' STRING cachable(?)
      {$return = {
-	 'name' => $item[2],
+	 'name' => $item[2], 
 	 'type' => 'dataset',
 	 'source' => $item[4],
 	 'cachable' => $item[5][0] || 0
@@ -233,7 +233,7 @@ dataset: 'dataset' VAR '<-' STRING cachable(?)
 
 datasource: 'datasource' VAR '<-' STRING cachable(?)
      {$return = {
-	 'name' => $item[2],
+	 'name' => $item[2],  
 	 'type' => 'datasource',
 	 'source' => $item[4],
 	 'cachable' => $item[5][0] || 0
@@ -276,7 +276,7 @@ global_decls: 'global' '{' global(s? /;/)  SEMICOLON(?) '}' #?
     | <error>
 
 global: emit_block
-          {$return = {'emit' => $item[1]
+          {$return = {'emit' => $item[1],
                      }
           }
        | dataset
@@ -742,7 +742,7 @@ factor_op: '*'|'/'|'%'
 operator: 'pick'|'length'|'replace'|'as'
 
 factor: NUM
-        {$return=Kynetx::Parser::mk_expr_node('num',$item[1])}
+        {$return=Kynetx::Parser::mk_expr_node('num',$item[1]+0)}
       | '-' NUM
         {$return=Kynetx::Parser::mk_expr_node('num',$item[2] * -1)}
       | STRING

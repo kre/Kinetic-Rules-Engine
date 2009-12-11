@@ -34,6 +34,7 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
+use Storable qw(dclone);
 
 use Kynetx::JavaScript q/eval_js_expr/;
 use Kynetx::JSONPath ;
@@ -59,11 +60,15 @@ sub eval_pick {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
 
-    my $obj = Kynetx::JavaScript::eval_js_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
-#    $logger->debug("obj: ", sub { Dumper($obj) });
+#    $logger->debug("[pick] rule_env: ", sub { Dumper($rule_env) });
+
+    my $int = Kynetx::JavaScript::eval_js_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    # if you don't clone this, it modified the rule env 
+
+    my $obj = Kynetx::JavaScript::den_to_exp(dclone($int));
+#    $logger->debug("[pick] obj: ", sub { Dumper($obj) });
     
     my $rands = Kynetx::JavaScript::eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-#    $logger->debug("vars: ", sub { Dumper($rands) });
 
     my $pattern = '';
     if($rands->[0]->{'type'} eq 'str') {
@@ -71,13 +76,20 @@ sub eval_pick {
     } else {
 	$logger->warn("WARNING: pattern argument to pick not a string");
     }
+#    $logger->debug("pattern: ", $pattern);
+
 
     my $jp = Kynetx::JSONPath->new();
-    my $v = $jp->run($obj->{'val'}, $pattern);
+    my $v = $jp->run($obj, $pattern);
+
+#    $logger->debug("[pick] obj after processing pick: ", sub { Dumper($obj) });
+
+#    $logger->debug("[pick] Rule env after: ", sub { Dumper($rule_env) });
+
 
     $v = $v->[0] if(defined $v && scalar @{ $v } == 1);
 
-#    $logger->debug("pick using $pattern returning ", Dumper($v));
+    $logger->debug("pick using $pattern"); # returning ", Dumper($v));
 
     return  { 'type' => Kynetx::JavaScript::infer_type($v),
 	      'val' => $v

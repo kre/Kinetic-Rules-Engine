@@ -1,7 +1,25 @@
+
+2009-12-11  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Actions.pm: Refactored action hash to include before and
+	  after subroutines for any action.  build_one_action now uses
+	  them and action specific code moved out.
+	* Kynetx/Predicates.pm: Added UserAgents to the list of modules to load.
+	* Kynetx/JSONPath.pm (normalize): treat strings better.  Don't
+	  normalize them.
+	* Kynetx/Operators.pm (eval_pick): clone the object to avoid
+	  rewriting original in rule env.
+	* Kynetx/Rules.pm (eval_globals): works like let* rather than
+	  let. Normalized with how preludes are calculated
+	* Kynetx/JavaScript.pm: den_to_exp is smarter, doesn't do more
+	  than necessary.
+	* Kynetx/Predicates/Twitter.pm: initial add, not working yet.
+
 2009-12-08  Mark Horstmeier <meh@kynetx.com>
 	* Kynetx/JavaScript.pm: Added modulus to eval_js_prim
 	* Kynetx/Parser.pm: Added modulus to lexicon and to factor_op
 	* t/JavaScript.t: Added a few expr tests to support modulus
+
 2009-12-03  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Callbacks.pm (process_action): Added context sensitive

@@ -56,6 +56,7 @@ use Kynetx::Environments qw/:all/;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
+use Kynetx::Json qw/:all/;
 
 use Kynetx::FakeReq qw/:all/;
 
@@ -85,7 +86,7 @@ my $second_arg = "This is a string";
 my $given_args;
 
 
-my($action,$args,$krl_src, $krl, $name, $url, @test_cases);
+my($action,$args,$krl_src, $krl, $name, $url, $config, @test_cases);
 
 
 sub add_testcase {
@@ -103,7 +104,8 @@ sub add_testcase {
 		       'changed' => ($url_changed eq 'changed'),
 		       'req_info' => $req_info,
 		       'src' =>  $str,
-		       'desc' => $desc
+		       'desc' => $desc,
+		       'diag' => $diag
 	 }
 	 );
 }
@@ -228,7 +230,8 @@ sub add_action_testcase {
 	  'req_info' => $req_info,
 	  'src' =>  $str,
 	  'desc' => $desc,
-	  'name' => 'dummy_name'
+	  'name' => 'dummy_name',
+	  'diag' => $diag
 	 }
 	);
 }
@@ -240,6 +243,11 @@ $krl_src = <<_KRL_;
 replace_html("kobj_test", "Hello World!");
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test'});
+
 $result = <<_JS_;
 (function(uniq, cb, config, sel, text) {
  var div = \$K('<div>');
@@ -248,7 +256,7 @@ $result = <<_JS_;
  \$K(div).slideDown('slow');
  cb();
 }
-('23',callbacks23,{txn_id:'1234',rule_name:'dummy_name',rid:'cs_test'},'kobj_test','Hello World!'));
+('23',callbacks23,$config,'kobj_test','Hello World!'));
 _JS_
 
 
@@ -260,10 +268,19 @@ add_action_testcase(
     );
 
 
+
 $krl_src = <<_KRL_;
 replace_html("kobj_test", "Hello World!")
-with highlight = "yellow";
+ with foo = 5
 _KRL_
+
+
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test',
+    "foo" => 5});
+
 
 $result = <<_JS_;
 (function(uniq, cb, config, sel, text) {
@@ -273,7 +290,7 @@ $result = <<_JS_;
  \$K(div).slideDown('slow');
  cb();
 }
-('23',callbacks23,{txn_id:'1234',rule_name:'dummy_name',rid:'cs_test','highlight':'yellow'},'kobj_test','Hello World!'));
+('23',callbacks23,$config,'kobj_test','Hello World!'));
 _JS_
 
 
@@ -281,21 +298,347 @@ add_action_testcase(
     $krl_src,
     $result,
     $my_req_info,
-    'replace_html with a single modifier'
+    'Basic replace_html action with one modifier'
     );
 
 
 
 $krl_src = <<_KRL_;
+replace_html("kobj_test", "Hello World!")
+ with foo = 2+3
+_KRL_
+
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test',
+    "foo" => 5});
+
+
+$result = <<_JS_;
+(function(uniq, cb, config, sel, text) {
+ var div = \$K('<div>');
+ \$K(div).attr('class', 'kobj_'+uniq).css({display: 'none'}).html(text);
+ \$K(sel).replaceWith(div);
+ \$K(div).slideDown('slow');
+ cb();
+}
+('23',callbacks23,$config,'kobj_test','Hello World!'));
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'Basic replace_html action with one modifier (and addition)'
+    );
+
+
+##
+## float and mod
+##
+
+$krl_src = <<_KRL_;
+float_html("absolute", "top:50px", "right:50px", "Hello World!")
+_KRL_
+
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test'});
+
+
+$result = <<_JS_;
+(function(uniq, cb, config, pos, top, side, text) {
+     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     \$K(d).html(text);
+     \$K('body').append(d);
+     cb();
+ }
+ ('23',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
+ \$K('#id_23').fadeIn();
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'Basic float_html action with no modifier',
+    0
+    );
+
+
+$krl_src = <<_KRL_;
+float_html("absolute", "top:50px", "right:50px", "Hello World!")
+ with effect = "slide"
+_KRL_
+
+
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test',
+    "effect" => "slide"});
+
+
+$result = <<_JS_;
+(function(uniq, cb, config, pos, top, side, text) {
+     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     \$K(d).html(text);
+     \$K('body').append(d);
+     cb();
+ }
+ ('23',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
+ \$K('#id_23').slideDown();
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'Basic float_html action with one modifier (slide)',
+    0
+    );
+
+
+$krl_src = <<_KRL_;
+float_html("absolute", "top:50px", "right:50px", "Hello World!")
+ with effect = "slide" and 
+      delay = 5
+_KRL_
+
+
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test',
+    "effect" => "slide",
+    "delay" => 5});
+
+
+$result = <<_JS_;
+setTimeout(function() {
+(function(uniq, cb, config, pos, top, side, text) {
+     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     \$K(d).html(text);
+     \$K('body').append(d);
+     cb();
+ }
+ ('23',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
+ \$K('#id_23').slideDown();
+;KOBJ.logger('timer_expired','1234','none','','success','dummy_name','cs_test');},(5*1000));
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'Basic float_html action with two modifier (slide & delay)',
+    0
+    );
+
+
+$krl_src = <<_KRL_;
+float_html("absolute", "top:50px", "right:50px", "Hello World!")
+ with effect = "blind"
+_KRL_
+
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test',
+    "effect" => 'blind'});
+
+
+$result = <<_JS_;
+(function(uniq, cb, config, pos, top, side, text) {
+     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     \$K(d).html(text);
+     \$K('body').append(d);
+     cb();
+ }
+ ('23',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
+ \$K('#id_23').slideDown();
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'Basic float_html action with one modifier (blind)',
+    0
+    );
+
+
+$krl_src = <<_KRL_;
+float_html("absolute", "top:50px", "right:50px", "Hello World!")
+ with draggable = true
+_KRL_
+
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test',
+    "draggable" => 1});
+
+$result = <<_JS_;
+(function(uniq, cb, config, pos, top, side, text) {
+     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     \$K(d).html(text);
+     \$K('body').append(d);
+     cb();
+ }
+ ('23',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
+ \$K('#id_23').fadeIn();
+ \$K('#id_23').draggable();
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'Basic float_html action with one modifier (draggable)',
+    0
+    );
+
+$krl_src = <<_KRL_;
+float_html("absolute", "top:50px", "right:50px", "Hello World!")
+ with draggable = true
+_KRL_
+
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test',  
+    "draggable" => 1});
+
+$result = <<_JS_;
+(function(uniq, cb, config, pos, top, side, text) {
+     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     \$K(d).html(text);
+     \$K('body').append(d);
+     cb();
+ }
+ ('23',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
+ \$K('#id_23').fadeIn();
+ \$K('#id_23').draggable();
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'Basic float_html action with one modifier (draggable)',
+    0
+    );
+
+
+##
+## popup
+##
+
+$krl_src = <<_KRL_;
+popup("top:50px", "right:50px", "Hello World!", "50px", "100px", "http:")
+ with effect="onpageexit"
+_KRL_
+
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test',
+    "effect" => "onpageexit"});
+
+
+$result = <<_JS_;
+function leave_id_23 () {
+(function(uniq, cb, config, top, left, width, height, url) {      
+     var id_str = 'kobj_'+uniq;
+     var options = 'toolbar=no,menubar=no,resizable=yes,scrollbars=yes,alwaysRaised=yes,status=no' +
+                  'left=' + left + ', ' +
+                  'top=' + top + ', ' +
+                  'width=' + width + ', ' +
+                  'height=' + height;
+     open(url,id_str,options);
+     cb();
+ }
+ ('23',callbacks23,$config,'top:50px','right:50px','Hello World!','50px','100px','http:'));
+};
+document.body.setAttribute('onUnload', 'leave_id_23()');
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'popup action with one modifier (onpageexit)',
+    0
+    );
+
+
+
+$krl_src = <<_KRL_;
+popup("top:50px", "right:50px", "Hello World!", "50px", "100px", "http:")
+_KRL_
+
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test'});
+
+
+$result = <<_JS_;
+(function(uniq, cb, config, top, left, width, height, url) {      
+     var id_str = 'kobj_'+uniq;
+     var options = 'toolbar=no,menubar=no,resizable=yes,scrollbars=yes,alwaysRaised=yes,status=no' +
+                  'left=' + left + ', ' +
+                  'top=' + top + ', ' +
+                  'width=' + width + ', ' +
+                  'height=' + height;
+     open(url,id_str,options);
+     cb();
+ }
+ ('23',callbacks23,$config,'top:50px','right:50px','Hello World!','50px','100px','http:'));
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'popup action with no modifier',
+    0
+    );
+
+
+
+##
+## replace_img_src
+##
+
+$krl_src = <<_KRL_;
 replace_image_src("kobj_test", "/images/foo.png");
 _KRL_
+
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test'});
+
 
 $result = <<_JS_;
 (function(uniq, cb, config, id, new_url) {
     \$K(id).attr('src',new_url);
     cb();
 }
-('23',callbacks23, {txn_id:'1234',rule_name:'dummy_name',rid:'cs_test'}, 'kobj_test','/images/foo.png'));
+('23',callbacks23, $config, 'kobj_test','/images/foo.png'));
 _JS_
 
 
@@ -311,11 +654,16 @@ $krl_src = <<_KRL_;
 noop();
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test'});
+
 $result = <<_JS_;
 (function(uniq, cb, config) {
     cb();
 }
-('23',callbacks23,{txn_id:'1234',rule_name:'dummy_name',rid:'cs_test'}));
+('23',callbacks23,$config));
 _JS_
 
 
@@ -323,9 +671,16 @@ add_action_testcase(
     $krl_src,
     $result,
     $my_req_info,
-    'noop'
+    'noop',
+    0
     );
 
+
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test',
+    "delay" => 5});
 
 $krl_src = <<_KRL_;
 noop() with delay = 5;
@@ -337,7 +692,7 @@ setTimeout(function(){
     cb();
 }
 
-('23',callbacks23,{txn_id:'1234',rule_name:'dummy_name',rid:'cs_test','delay':5}));
+('23',callbacks23,$config));
 ;KOBJ.logger('timer_expired','1234','none','','success','dummy_name','cs_test');},(5*1000));
 _JS_
 
@@ -346,19 +701,27 @@ add_action_testcase(
     $krl_src,
     $result,
     $my_req_info,
-    'noop_with_delay'
+    'noop_with_delay',
+    0
     );
+
 
 
 $krl_src = <<_KRL_;
 annotate_search_results(foo);
 _KRL_
 
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test'});
+
+
 $result = <<_JS_;
 (function(uniq, cb, config, annotate_fn) {
     KOBJ.annotate_search_results(annotate_fn, config, cb);
 }
-('23',callbacks23,{txn_id:'1234',rule_name:'dummy_name',rid:'cs_test'},foo));
+('23',callbacks23,$config,foo));
 _JS_
 
 
@@ -368,9 +731,6 @@ add_action_testcase(
     $my_req_info,
     'annotate_search_results'
     );
-
-plan tests => 14 + (@test_cases * 3) + (@action_test_cases * 1);
-
 
 
 # post expressions
@@ -527,6 +887,8 @@ foreach my $case (@action_test_cases) {
 	    'callbacks23',
 	    $case->{'name'});
 
+    diag $js if $case->{'diag'};
+
     my $desc = $case->{'desc'};
 
     is_string_nows(
@@ -538,64 +900,66 @@ foreach my $case (@action_test_cases) {
 
 # emit js vars
 
-my $emit_env = empty_rule_env();
+# my $emit_env = empty_rule_env();
 
-$emit_env = extend_rule_env(
-    ['x'],
-    [5],
-    $emit_env);
+# $emit_env = extend_rule_env(
+#     ['x'],
+#     [5],
+#     $emit_env);
 
-is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
-    "var x = 5;", 
-    "emit a number");
+# is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
+#     "var x = 5;", 
+#     "emit a number");
 
-my $no_escape = "foo bar is a boo bar";
-my $pls_escape = "foo bar isn't a boo bar";
-my $escaped = "foo bar isn\\'t a boo bar";
+# my $no_escape = "foo bar is a boo bar";
+# my $pls_escape = "foo bar isn't a boo bar";
+# my $escaped = "foo bar isn\\'t a boo bar";
 
-$emit_env = extend_rule_env(
-    ['x'],
-    [$no_escape],
-    $emit_env);
+# $emit_env = extend_rule_env(
+#     ['x'],
+#     [$no_escape],
+#     $emit_env);
 
-is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
-    "var x = '". $no_escape ."';", 
-    "emit a string");
+# is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
+#     "var x = '". $no_escape ."';", 
+#     "emit a string");
 
-$emit_env = extend_rule_env(
-    ['x'],
-    [$pls_escape],
-    $emit_env);
+# $emit_env = extend_rule_env(
+#     ['x'],
+#     [$pls_escape],
+#     $emit_env);
 
-is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
-    "var x = '". $escaped . "';", 
-    "emit a string");
+# is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
+#     "var x = '". $escaped . "';", 
+#     "emit a string");
 
-my $a = [1,2,3];
+# my $a = [1,2,3];
 
-$emit_env = extend_rule_env(
-    ['x'],
-    [$a],
-    $emit_env);
+# $emit_env = extend_rule_env(
+#     ['x'],
+#     [$a],
+#     $emit_env);
 
-is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
-    "var x = ". encode_json($a).";", 
-    "emit an array");
+# is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
+#     "var x = ". encode_json($a).";", 
+#     "emit an array");
 
-my $h = {"a" =>1,
-    "b" => 2,
-    "c" => 3};
+# my $h = {"a" =>1,
+#     "b" => 2,
+#     "c" => 3};
 
-$emit_env = extend_rule_env(
-    ['x'],
-    [$h],
-    $emit_env);
+# $emit_env = extend_rule_env(
+#     ['x'],
+#     [$h],
+#     $emit_env);
 
-is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
-    "var x = ". encode_json($h).";", 
-    "emit a hash");
+# is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
+#     "var x = ". encode_json($h).";", 
+#     "emit a hash");
 
 
+
+done_testing(9 + (@test_cases * 3) + (@action_test_cases * 1));
 
 diag("Safe to ignore warnings about unrecognized escapes");
 

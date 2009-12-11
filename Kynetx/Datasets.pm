@@ -201,7 +201,7 @@ sub get_datasource {
 
     my $cache_for = cache_dataset_for($ds);
 
-    my $source_name = lookup_rule_env('datasource:'.$function,$rule_env)->{'source'};
+    my $source_name = $ds->{'source'};
 
     if(ref $args->[0] eq 'HASH') {
 

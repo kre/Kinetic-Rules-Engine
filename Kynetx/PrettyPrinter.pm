@@ -231,7 +231,9 @@ sub pp_dataset {
 
     my $beg = " "x$indent;
 
-    my $o .= $beg . 'dataset ' . $d->{'name'} . ' <- "'. $d->{'source'} . '"' ;
+    my $var = $d->{'name'};
+
+    my $o .= $beg . 'dataset ' . $var . ' <- "'. $d->{'source'} . '"' ;
     $o .= pp_cachable($d) if($d->{'cachable'}) ;
     $o .= "\n";
 
@@ -245,7 +247,9 @@ sub pp_datasource {
 
     my $beg = " "x$indent;
 
-    my $o .= $beg . 'datasource ' . $d->{'name'} . ' <- "'. $d->{'source'} . '"' ;
+    my $var = $d->{'name'};
+
+    my $o .= $beg . 'datasource ' . $var . ' <- "'. $d->{'source'} . '"' ;
     $o .= pp_cachable($d) if($d->{'cachable'}) ;
     $o .= "\n";
 

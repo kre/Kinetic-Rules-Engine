@@ -176,7 +176,7 @@ sub eval_ruleset {
   # handle globals, start js build, extend $rule_env
   my $gjs;
   ($gjs, $rule_env) = eval_globals($req_info, $ruleset, $rule_env, $session);
-#      $logger->debug("Rule env after globals: ", $rule_env);
+#      $logger->debug("Rule env after globals: ", Dumper $rule_env);
   #    $logger->debug("Global JS: ", $gjs);
 
 
@@ -247,29 +247,27 @@ sub eval_meta {
     my $logger = get_logger();
     my $js = "";
 
-     if($ruleset->{'meta'}->{'keys'}) {
+    my $rid = $req_info->{'rid'};
+
+    $req_info->{"$rid:ruleset_name"} = $ruleset->{'ruleset_name'};
+    $req_info->{"$rid:name"} = $ruleset->{'meta'}->{'name'};
+    $req_info->{"$rid:author"} = $ruleset->{'meta'}->{'author'};
+    $req_info->{"$rid:description"} = $ruleset->{'meta'}->{'description'};
+
+    if($ruleset->{'meta'}->{'keys'}) {
 
 	 $js .= KOBJ_ruleset_obj($ruleset->{'ruleset_name'}) . " =  " . KOBJ_ruleset_obj($ruleset->{'ruleset_name'}) . " || {};\n";
 
 	 $js .= KOBJ_ruleset_obj($ruleset->{'ruleset_name'}) .  ".keys = " . KOBJ_ruleset_obj($ruleset->{'ruleset_name'}) . ".keys || {};\n";
 
-#     my $skip = {
-# 	'description' => 1,
-# 	'author' => 1,
-# 	'name' => 1,
-#     };
-#     if($ruleset->{'meta'}) {
-# 	$logger->debug("Found meta block; generating JS");
-# 	foreach my $k (keys %{ $ruleset->{'meta'} }) {
-# 	    next if $skip->{$k};
-# 	    $js .= "KOBJ." . $ruleset->{'ruleset_name'} . ".meta.$k = '" . 
-# 		$ruleset->{'meta'}->{$k} . "';\n";
-# 	}
-#     }
  	$logger->debug("Found keys; generating JS");
  	foreach my $k (keys %{ $ruleset->{'meta'}->{'keys'} }) {
- 	    $js .= KOBJ_ruleset_obj($ruleset->{'ruleset_name'}). ".keys.$k = '" . 
- 		$ruleset->{'meta'}->{'keys'}->{$k} . "';\n";
+	  if ($k eq 'twitter') {
+	    $req_info->{'key:twitter'} = $ruleset->{'meta'}->{'keys'}->{$k};
+	  } else { # googleanalytics, errorstack
+	    $js .= KOBJ_ruleset_obj($ruleset->{'ruleset_name'}). ".keys.$k = '" . 
+	      $ruleset->{'meta'}->{'keys'}->{$k} . "';\n";
+	  }
  	}
      }
     return $js;
@@ -280,43 +278,69 @@ sub eval_globals {
     my $logger = get_logger();
 
     my $js = "";
-    my @vars;
-    my @vals;
     if($ruleset->{'global'}) {
-	foreach my $g (@{ $ruleset->{'global'} }) {
-	    my $this_js = '';
-	    my $var = '';
-	    my $val = 0;
-	    if($g->{'emit'}) { # emit
-		$this_js = $g->{'emit'} . "\n";
-	    } elsif(defined $g->{'type'} && $g->{'type'} eq 'dataset') { 
-		if (! Kynetx::Datasets::global_dataset($g)) {
-		    ($this_js, $var, $val) = mk_dataset_js($g, $req_info, $rule_env);
+
+      $logger->debug("Here's the globals: ", Dumper $ruleset->{'global'});
+
+      # make this act like let* not let
+      my @vars;
+      foreach my $g (@{ $ruleset->{'global'} }) {
+	$g->{'lhs'} = $g->{'name'} unless(defined $g->{'lhs'});
+	if (defined $g->{'lhs'}) {
+	  if (defined $g->{'type'} && $g->{'type'} eq 'datasource') {
+	    push @vars, 'datasource:'.$g->{'lhs'};
+	  } else {
+	    push @vars, $g->{'lhs'};
+	  }
+	}
+      }
+
+      my @empty_vals = map {''} @vars;
+      $rule_env = extend_rule_env(\@vars, \@empty_vals, $rule_env);
+
+      $logger->debug("Global vars: ", join(", ", @vars));
+
+      foreach my $g (@{ $ruleset->{'global'} }) {
+	my $this_js = '';
+	my $var = '';
+	my $val = 0;
+	if($g->{'emit'}) { # emit
+	  $this_js = $g->{'emit'} . "\n";
+	} elsif(defined $g->{'type'} && $g->{'type'} eq 'dataset') { 
+	  if (! Kynetx::Datasets::global_dataset($g)) {
+	    ($this_js, $var, $val) = mk_dataset_js($g, $req_info, $rule_env);
 #		    $logger->debug("Global dataset JS: ", $this_js);
 #		    $logger->debug("Global dataset: ", $var, " -> ", sub { Dumper($val) });
-		    push(@vars, $var);
-		    push(@vals, $val);
-		}
-	    } elsif(defined $g->{'type'} && $g->{'type'} eq 'css') { 
-		$this_js = "KOBJ.css(" . mk_js_str($g->{'content'}) . ");\n";
-	    } elsif(defined $g->{'type'} && $g->{'type'} eq 'datasource') {
-		push(@vars,'datasource:'.$g->{'name'});
-		push(@vals, $g);
-	    } elsif(defined $g->{'type'} && 
-		    ($g->{'type'} eq 'expr' || $g->{'type'} eq 'here_doc')) {
-	      ($var, $val) = Kynetx::JavaScript::eval_js_decl($req_info, $rule_env, $ruleset->{'name'}, $session, $g);
-	      $logger->debug("Seeing global decl for ", $var);
+	    # yes, this is cheating and breaking the abstraction, but it's fast
+	    $rule_env->{$var} = $val;
+	  }
+	} elsif(defined $g->{'type'} && $g->{'type'} eq 'css') { 
+	  $this_js = "KOBJ.css(" . mk_js_str($g->{'content'}) . ");\n";
+	} elsif(defined $g->{'type'} && $g->{'type'} eq 'datasource') {
+	  $rule_env->{'datasource:'.$g->{'lhs'}} = $g;
 
-	      push(@vars, $var);
-	      push(@vals, $val);
-	      $this_js .= gen_js_var($var, Kynetx::JavaScript::gen_js_expr(
-					     Kynetx::JavaScript::exp_to_den($val)));
-	    }
-	    $js .= $this_js;
+#	  push(@vars,'datasource:'.$g->{'lhs'});
+#	  push(@vals, $g);
+	} elsif(defined $g->{'type'} && 
+		($g->{'type'} eq 'expr' || $g->{'type'} eq 'here_doc')) {
+
+
+	  $this_js = eval_one_decl($req_info, $rule_env, $ruleset->{'lhs'}, $session, $g);
+
+# 	  ($var, $val) = Kynetx::JavaScript::eval_js_decl($req_info, $rule_env, $ruleset->{'lhs'}, $session, $g);
+# 	  $logger->debug("Seeing global decl for ", $var);
+
+# 	  push(@vars, $var);
+# 	  push(@vals, $val);
+# 	  $this_js .= gen_js_var($var, Kynetx::JavaScript::gen_js_expr(
+# 					     Kynetx::JavaScript::exp_to_den($val)));
+	}
+	$js .= $this_js;
 	}
     }
+    $logger->debug(" rule_env: ", Dumper($rule_env));
 
-    return ($js, extend_rule_env(\@vars, \@vals, $rule_env));
+    return ($js, $rule_env);
    
 }
 
@@ -433,7 +457,10 @@ sub eval_foreach {
     my $var = $foreach_list[0]->{'var'};
 
     foreach my $val (@{ $valarray->{'val'} }) {
-      
+
+      $val = typed_value($val);
+
+      $logger->debug("Evaluating rule body with " . Dumper($val));
       $fjs .= mk_turtle(
 		gen_js_var($var, gen_js_expr($val)) .
   	        eval_foreach($r, 

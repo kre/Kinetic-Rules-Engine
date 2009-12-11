@@ -93,7 +93,7 @@ Kynetx::Configure::configure();
 
 
 
-my (@expr_testcases, @decl_testcases, @pre_testcases, $str, $val, $krl);
+my (@expr_testcases, @decl_testcases, @pre_testcases, $str, $val, $krl, $js);
 
 sub add_expr_testcase {
     my($str,$js,$expected,$diag) = @_;
@@ -126,7 +126,7 @@ sub add_decl_testcase {
 }
 
 sub add_pre_testcase {
-    my($str, $expected, $diag) = @_;
+    my($str, $expected, $js, $diag) = @_;
     my $val = Kynetx::Parser::parse_pre($str);
 
     chomp $str;
@@ -136,6 +136,8 @@ sub add_pre_testcase {
     push(@pre_testcases, {'expr' => $val,
 			   'src' => $str,
 			   'val' => $expected,
+			  'js' => $js,
+			  'diag' => $diag
 	 });
 }
 
@@ -730,9 +732,16 @@ pre {
     c = "Hello";
 }
 _KRL_
+
+$js = <<_JS_;
+var c = 'Hello';
+_JS_
+
+
 add_pre_testcase(
     $str,
     $re1,
+    $js,
     0);
 
 
@@ -745,9 +754,40 @@ pre {
     d = c + " world!";
 }
 _KRL_
+
+$js = <<_JS_;
+var c = 'Hello';
+var d = 'Hello world!';
+_JS_
+
 add_pre_testcase(
     $str,
     $re1,
+    $js,
+    0);
+
+
+$re1 = extend_rule_env(['c','d'], 
+		       ['Hello','#{c} world!'],
+		       $rule_env);
+$str = <<_KRL_;
+pre {
+    c = "Hello";
+    d = <<
+#{c} world!
+>>;
+}
+_KRL_
+
+$js = <<_JS_;
+var c = 'Hello';
+var d = '' + c +  'world!';
+_JS_
+
+add_pre_testcase(
+    $str,
+    $re1,
+    $js,
     0);
 
 
@@ -797,7 +837,7 @@ add_decl_testcase(
 #diag(Dumper($krl));
 
 
-plan tests => 68 + (@expr_testcases * 2) + (@decl_testcases * 1) + (@pre_testcases * 1);
+plan tests => 68 + (@expr_testcases * 2) + (@decl_testcases * 1) + (@pre_testcases * 2);
 
 
 # now test each test case twice
@@ -836,11 +876,14 @@ foreach my $case (@decl_testcases) {
 foreach my $case (@pre_testcases) {
     #diag(Dumper($case->{'expr'}));
     
-    my $e = Kynetx::JavaScript::eval_js_pre(
+    my ($js,$e) = Kynetx::JavaScript::eval_js_pre(
 	       $BYU_req_info, 
 	       $rule_env, $rule_name, $session, 
 	       $case->{'expr'}) ;
-    #diag(Dumper($e));
+    diag($js) if $case->{'diag'};
+    is_string_nows($js,
+		   $case->{'js'},
+		   "Pre JS for " . $case->{'src'});
     is_deeply($e, 
 	      $case->{'val'},
 	      "Evaling Javascript " . $case->{'src'});
@@ -910,7 +953,8 @@ SKIP: {
 
     diag "Checking $check_url";
     my $response = $ua->get($check_url);
-    skip "No server available", 11 if (! $response->is_success);
+#    diag $response->content;
+    skip "No server available", 11 if (! $response->is_success || $response->content =~ /Bad hostname/);
 
     my $symbol = 'GOOG'; 
 
@@ -957,16 +1001,28 @@ is(&{$location_function}('area_code'), '801', 'BYU is in area 801');
 
 # check weather datasource
 
-my $weather_function = mk_datasource_function('weather','', 0);
+SKIP: {
+    my $ua = LWP::UserAgent->new;
 
-my $temp_qr = qr#\d+\.*\d*#;  # what a temperature looks like
-like(&{$weather_function}('curr_temp'), $temp_qr, 'curr_temp');
-like(&{$weather_function}('curr_cond'), qr#\w#, 'curr_cond');
-like(&{$weather_function}('curr_cond_code'), qr#\d#, 'curr_cond_code');
-like(&{$weather_function}('tomorrow_low'), $temp_qr, 'tomorrow_low');
-like(&{$weather_function}('tomorrow_high'), $temp_qr, 'tomorrow_high');
-like(&{$weather_function}('tomorrow_cond'), qr#\w#, 'tomorrow_cond');
-like(&{$weather_function}('tomorrow_cond_code'), qr#\d+#, 'tomorrow_cond_code');
+    my $check_url = 'http://xml.weather.yahoo.com/forecastrss?p=84043&u=f';
+
+    diag "Checking $check_url";
+    my $response = $ua->get($check_url);
+#    diag $response->content;
+    skip "No server available", 7 if (! $response->is_success || $response->content =~ /Bad hostname/);
+
+
+    my $weather_function = mk_datasource_function('weather','', 0);
+
+    my $temp_qr = qr#\d+\.*\d*#;  # what a temperature looks like
+    like(&{$weather_function}('curr_temp'), $temp_qr, 'curr_temp');
+    like(&{$weather_function}('curr_cond'), qr#\w#, 'curr_cond');
+    like(&{$weather_function}('curr_cond_code'), qr#\d#, 'curr_cond_code');
+    like(&{$weather_function}('tomorrow_low'), $temp_qr, 'tomorrow_low');
+    like(&{$weather_function}('tomorrow_high'), $temp_qr, 'tomorrow_high');
+    like(&{$weather_function}('tomorrow_cond'), qr#\w#, 'tomorrow_cond');
+    like(&{$weather_function}('tomorrow_cond_code'), qr#\d+#, 'tomorrow_cond_code');
+  }
 
 
 # check media market datasource
@@ -991,7 +1047,8 @@ SKIP: {
 
     diag "Checking $check_url";
     my $response = $ua->get($check_url);
-    skip "No server available", 1 unless ($response->is_success);
+#    diag $response->content;
+    skip "No server available", 1 if (! $response->is_success  || $response->content =~ /Bad hostname/);
 
     my $ds_function = mk_datasource_function('datasource','"?q=rootbeer"', 0);
     $logger->debug("Got $ds_function");

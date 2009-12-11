@@ -64,8 +64,6 @@ qw(
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
-use constant DEFAULT_TEMPLATE_DIR => Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
-
 
 sub handler {
     my $r = shift;
@@ -119,7 +117,7 @@ sub validate_rule {
 
     my $logger = get_logger();
 
-    my $template = DEFAULT_TEMPLATE_DIR . "/validate_rule.tmpl";
+    my $template = Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR') . "/validate_rule.tmpl";
     my $test_template = HTML::Template->new(filename => $template);
 
     # fill in the parameters
@@ -167,7 +165,7 @@ sub pp_json {
 
     my $logger = get_logger();
 
-    my $template = DEFAULT_TEMPLATE_DIR . "/jsonToKrl.tmpl";
+    my $template =  Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR') . "/jsonToKrl.tmpl";
     my $test_template = HTML::Template->new(filename => $template);
 
     # fill in the parameters

@@ -65,6 +65,7 @@ Markets
 Referers
 Mobile
 MediaMarkets
+Useragent
 Page
 Math
 );

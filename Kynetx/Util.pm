@@ -151,6 +151,7 @@ sub reduce (&@) {
     return $val;
 }
 
+
 sub cdr { shift; @_ } 
 
 sub before_now {

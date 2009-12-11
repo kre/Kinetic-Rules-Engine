@@ -44,7 +44,7 @@ use APR::Pool ();
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::JSONPath qw/:all/;
@@ -103,7 +103,46 @@ my %test_structure =(
 	}
 );
 
-plan tests => 70;
+my %test_structure_2 =  (
+  'count' => 3,
+  'value' => {
+    'link' => 'http://pipes.yahoo.com/pipes/pipe.info?_id=8008eddc07e120ac18b80f38210b82ec',
+    'callback' => '',
+    'title' => 'jsonworld',
+    'pubDate' => 'Wed, 09 Dec 2009 19:25:53 -0800',
+    'description' => 'Pipes Output',
+    'items' => [
+      {
+        'page' => 'www.baconsalt.com',
+        'row' => '1',
+        'content' => 'Hello World. Go Bacon.',
+        'title' => '',
+        'description' => '',
+        'header' => 'Bacon Salt Test'
+      },
+      {
+        'page' => 'craigburton.com',
+        'row' => '2',
+        'content' => 'Hello World. Burtonian methods.',
+        'title' => '',
+        'description' => '',
+        'header' => 'Craig Burton Test'
+      },
+      {
+        'page' => 'kynetx.com',
+        'row' => '3',
+        'content' => 'Hello World. The World According to Kynetx',
+        'title' => '',
+        'description' => '',
+        'header' => 'Kynetx Test'
+      }
+    ],
+    'generator' => 'http://pipes.yahoo.com/pipes/'
+  }
+);
+
+
+plan tests => 79;
 
 
 my $jp = Kynetx::JSONPath->new();
@@ -378,6 +417,33 @@ is($#result, 0);
 #diag Dumper($raw_result);
 #is($result[0]{'category'}, 'reference');
 is_deeply($raw_result,$expected);
+
+
+$raw_result = $jp->run(\%test_structure_2, "\$..items[?(@.page eq 'kynetx.com')].content");
+#diag Dumper $raw_result;
+$expected = decode_json('["Hello World. The World According to Kynetx"]');
+isnt($raw_result, 0, 'not empty');
+@result = @{$raw_result};
+is($#result, 0, 'length 0 for 2');
+is_deeply($raw_result, $expected);
+
+
+
+$raw_result = $jp->run(\%test_structure_2, "\$..items[?(@.page eq 'www.baconsalt.com')].content");
+#rediag Dumper $raw_result;
+$expected = decode_json('["Hello World. Go Bacon."]');
+isnt($raw_result, 0, 'not empty');
+@result = @{$raw_result};
+is($#result, 0, 'length 0 for 2');
+is_deeply($raw_result, $expected);
+
+$raw_result = $jp->run(\%test_structure_2, "\$..items[?(@.page eq 'craigburton.com')].content");
+#rediag Dumper $raw_result;
+$expected = decode_json('["Hello World. Burtonian methods."]');
+isnt($raw_result, 0, 'not empty');
+@result = @{$raw_result};
+is($#result, 0, 'length 0 for 2');
+is_deeply($raw_result, $expected);
 
 
 

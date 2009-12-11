@@ -36,6 +36,7 @@ use Log::Log4perl qw(get_logger :levels);
 
 use Data::Dumper;
 use JSON::XS;
+use Storable qw(dclone);
 
 use Kynetx::Datasets q/:all/;
 use Kynetx::Environments q/:all/;
@@ -56,6 +57,7 @@ gen_js_var
 gen_js_prim
 gen_js_rands
 eval_js_pre
+eval_one_decl
 gen_js_callbacks
 gen_js_afterload
 gen_js_mk_cb_func
@@ -66,6 +68,7 @@ eval_js_decl
 den_to_exp
 exp_to_den
 infer_type
+typed_value
 escape_js_str
 var_free_in_expr
 ) ]);
@@ -320,27 +323,7 @@ sub eval_js_pre {
     my $js = '';
 
     foreach my $decl (@{ $pre }) {
-	my($var, $val) = eval_js_decl($req_info, $rule_env, $rule_name, $session, $decl);
-	# yes, this is cheating and breaking the abstraction, but it's fast...
-	$rule_env->{$var} = $val;
-
-	$logger->debug("[eval_pre] $var -> $val");
-
-
-	my $t = infer_type($val);
-	if($t eq 'str') {
-	    $val = "'".escape_js_str($val)."'";
-	    # relace tmpl vars with concats for JS
-	    $val =~ y/\n\r/  /; # remove newlines
-	    $val =~ s/#{([^}]*)}/'+$1+'/g;
-	} elsif ($t eq 'hash' || $t eq 'array') {
-	    $val = encode_json($val);
-	}
-	$logger->debug("[decl] $var has type: $t");
-
-	$js .= gen_js_var($var,$val);
-	
-
+	$js .= eval_one_decl($req_info, $rule_env, $rule_name, $session, $decl);
     }
 #    $logger->debug("[eval_pre] Sending back $js");
 
@@ -348,6 +331,34 @@ sub eval_js_pre {
 }
 
 
+## we do this above and in eval_globals
+##  assumes rule_env is pre-loaded with vars, side effects rule_env
+sub eval_one_decl {
+  my($req_info, $rule_env, $rule_name, $session, $decl) = @_;
+
+  my $logger= get_logger();
+
+  my($var, $val) = eval_js_decl($req_info, $rule_env, $rule_name, $session, $decl);
+  # yes, this is cheating and breaking the abstraction, but it's fast...
+  $rule_env->{$var} = $val;
+
+  $logger->debug("[eval_pre] $var -> $val");
+
+  my $js = gen_js_var($var, Kynetx::JavaScript::gen_js_expr(
+			     Kynetx::JavaScript::exp_to_den($val)));
+
+#   my $t = infer_type($val);
+#   if($t eq 'str') {
+#     $val = mk_js_str($val);
+#   } elsif ($t eq 'hash' || $t eq 'array') {
+#     $val = encode_json($val);
+#   }
+#   $logger->debug("[decl] $var has type: $t");
+
+#   my $js = gen_js_var($var,$val);
+
+  return $js
+}
 
 
 sub gen_js_callbacks {
@@ -415,11 +426,14 @@ EOF
 #
 # evaluation of JS exprs on the server
 #
+#  dclone used to ensure we return a new copy, not a pointer to the env
 sub eval_js_expr {
     my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
 
     my $logger = get_logger();
 #    $logger->debug("Rule env: ", sub { Dumper($rule_env) });
+
+    $rule_name ||= 'global';
 
     if ($expr->{'type'} eq 'str' ) {
 	return $expr;
@@ -674,6 +688,7 @@ sub eval_heredoc {
 sub den_to_exp {
     my ($expr) = @_;
 
+    return $expr unless (ref $expr eq 'HASH' && defined $expr->{'type'});
     case: for ($expr->{'type'}) {
 	/str|num/ && do {
 	    return $expr->{'val'};
@@ -763,6 +778,7 @@ sub mk_js_str {
     if(defined $_[0]) {
 	my $str = join(" ",@_);
 	$str =~ y/\n\r/  /; # remove newlines
+	$str =~ s/#{([^}]*)}/'+$1+'/g;
 	return "'". escape_js_str($str) . "'";
     } else {
 	return "''";
@@ -773,6 +789,14 @@ sub escape_js_str {
     my ($val) = @_;
     $val =~ s/'/\\'/g;  #' - for syntax highlighting
     return $val;
+}
+
+sub typed_value {
+  my($val) = @_;
+  unless (ref $val eq 'HASH' && defined $val->{'type'}) {
+    $val = Kynetx::Parser::mk_expr_node(infer_type($val),$val);
+  }
+  return $val
 }
 
 sub var_free_in_expr {
