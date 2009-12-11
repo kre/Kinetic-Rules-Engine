@@ -280,7 +280,7 @@ sub eval_globals {
     my $js = "";
     if($ruleset->{'global'}) {
 
-      $logger->debug("Here's the globals: ", Dumper $ruleset->{'global'});
+#      $logger->debug("Here's the globals: ", Dumper $ruleset->{'global'});
 
       # make this act like let* not let
       my @vars;
