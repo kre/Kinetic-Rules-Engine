@@ -338,7 +338,7 @@ sub eval_globals {
 	$js .= $this_js;
 	}
     }
-    $logger->debug(" rule_env: ", Dumper($rule_env));
+#    $logger->debug(" rule_env: ", Dumper($rule_env));
 
     return ($js, $rule_env);
    
