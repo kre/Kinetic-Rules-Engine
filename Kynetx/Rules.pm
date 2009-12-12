@@ -338,7 +338,7 @@ sub eval_globals {
 	$js .= $this_js;
 	}
     }
-#    $logger->debug(" rule_env: ", Dumper($rule_env));
+    $logger->debug(" rule_env: ", Dumper($rule_env));
 
     return ($js, $rule_env);
    
@@ -460,7 +460,7 @@ sub eval_foreach {
 
       $val = typed_value($val);
 
-      $logger->debug("Evaluating rule body with " . Dumper($val));
+#      $logger->debug("Evaluating rule body with " . Dumper($val));
       $fjs .= mk_turtle(
 		gen_js_var($var, gen_js_expr($val)) .
   	        eval_foreach($r, 

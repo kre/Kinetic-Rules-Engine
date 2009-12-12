@@ -47,6 +47,7 @@ use DateTime;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
+$Data::Dumper::Terse = 1;
 
 
 use Kynetx::Test qw/:all/;
@@ -62,6 +63,7 @@ use Kynetx::Predicates::Weather qw/:all/;
 use Kynetx::Predicates::MediaMarkets qw/:all/;
 use Kynetx::Predicates::Page qw/:all/;
 use Kynetx::Session qw(:all);
+use Kynetx::Json qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::FakeReq qw(:all);
 
@@ -71,7 +73,7 @@ Log::Log4perl->easy_init($INFO);
 
 my $logger = get_logger();
 
-
+my $test_count = 0;
 # is_deeply(decode_json(
 # 	      gen_js_expr(
 # 		   mk_expr_node('hash', 
@@ -247,7 +249,8 @@ _KRL_
 add_expr_testcase(
     $str,
     "'absolute'",
-    mk_expr_node('str', 'absolute'));
+    mk_expr_node('str', 'absolute'),
+    0);
 
 $str = <<_KRL_;
 city
@@ -837,8 +840,6 @@ add_decl_testcase(
 #diag(Dumper($krl));
 
 
-plan tests => 68 + (@expr_testcases * 2) + (@decl_testcases * 1) + (@pre_testcases * 2);
-
 
 # now test each test case twice
 foreach my $case (@expr_testcases) {
@@ -847,7 +848,8 @@ foreach my $case (@expr_testcases) {
     my $js = gen_js_expr($case->{'expr'});
     my $e = eval_js_expr($case->{'expr'}, $rule_env, $rule_name,$BYU_req_info, $session);
 
-    #diag(Dumper($e));
+    diag("JS = $js") if $case->{'diag'};
+    diag("Expr = ", Dumper($e)) if $case->{'diag'};
     is($js,
        $case->{'js'},
        "Generating Javascript " . $case->{'src'});
@@ -1131,6 +1133,94 @@ check_free("v", 'weather:sunny(v)', "qualified predicate");
 check_free("v", '(v) => 3 | x', "conditional test");
 check_free("v", '(r) => v | 3', "conditional then");
 check_free("v", '(s) => 3 | v', "conditional else");
+
+##
+## exp_to_den
+##
+
+sub test_exp_to_den {
+  my($ds, $desc, $diag) = @_;
+
+  my $new_ds = exp_to_den($ds);
+
+  diag Dumper $new_ds if $diag;
+
+  my $rebuilt_ds = den_to_exp($new_ds);
+
+  diag $rebuilt_ds if $diag;
+
+  $test_count++;
+  is_deeply($ds, $rebuilt_ds, $desc);
+}
+
+test_exp_to_den(
+  'hello',
+  "Simple string",
+  0
+);
+
+test_exp_to_den(
+  5,
+  "Number",
+  0
+);
+
+test_exp_to_den(
+  5.87,
+  "Decimal number",
+  0
+);
+
+test_exp_to_den(
+  [1,2,3],
+  "array",
+  0
+);
+
+test_exp_to_den(
+  {'x' => 5,
+   'y' => 'hello'},
+  "simple hash",
+  0
+);
+
+test_exp_to_den(
+  {'x' => 5,
+   'y' => 'hello',
+   'z' => [1, 4, 5]
+  },
+  "hash with array",
+  0
+);
+
+test_exp_to_den(
+  [{'x' => 5,
+    'y' => 'hello',
+   },
+   {'r' => 'another',
+    'x' => [1, 5, 6]
+   }
+  ],
+  "Array of hashes with array",
+  0
+);
+
+
+
+my $twitter_json = '[{"favorited":false,"geo":null,"in_reply_to_user_id":null,"in_reply_to_status_id":null,"in_reply_to_screen_name":null,"source":"<a href=\"http://foursquare.com\" rel=\"nofollow\">foursquare</a>","user":{"description":"I build things; I write code; I void warranties","statuses_count":5983,"profile_sidebar_fill_color":"e0ff92","followers_count":1974,"geo_enabled":false,"time_zone":"Mountain Time (US & Canada)","profile_sidebar_border_color":"87bc44","following":true,"favourites_count":10,"verified":false,"notifications":false,"profile_text_color":"000000","profile_background_image_url":"http://a3.twimg.com/profile_background_images/3343255/blue-water-drops.jpg","protected":false,"url":"http://www.windley.com","friends_count":581,"profile_link_color":"0000ff","profile_image_url":"http://a3.twimg.com/profile_images/525686087/windley_2009_145_normal.jpg","location":"Utah","name":"Phil Windley","profile_background_tile":false,"id":1878461,"utc_offset":-25200,"created_at":"Thu Mar 22 14:04:00 +0000 2007","profile_background_color":"001E4C","screen_name":"windley"},"truncated":false,"id":6576388596,"text":"Friday lunch!  Stop by sometime. (@ Kynetx World Headquarters in Lehi) http://4sq.com/3TSQhf","created_at":"Fri Dec 11 19:35:09 +0000 2009"}]';
+
+
+test_exp_to_den(
+  jsonToAst($twitter_json),
+  "Complex twitter JSON",
+  0
+);
+
+
+done_testing($test_count + 68 + (@expr_testcases * 2) + (@decl_testcases * 1) + (@pre_testcases * 2));
+
+
+
 
 
 1;

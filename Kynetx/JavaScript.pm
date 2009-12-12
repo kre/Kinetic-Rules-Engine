@@ -81,17 +81,29 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 sub gen_js_expr {
     my $expr = shift;
 
+#    my $logger = get_logger();
 
     case: for ($expr->{'type'}) {
 	/str/ && do {
-	    $expr->{'val'} = escape_js_str($expr->{'val'});
 
-	    # any string is potentially a JS template...
-	    # relace tmpl vars with concats for JS
-	    $expr->{'val'} =~ y/\n\r/  /; # remove newlines
-	    $expr->{'val'} =~ s/#{([^}]*)}/'+$1+'/g;
 
-	    return '\'' . $expr->{'val'} . '\'';
+	  return mk_js_str($expr->{'val'});
+
+#	  $logger->debug("Seeing ", Dumper $expr);
+	  
+# 	  unless (defined $expr->{'val'}) {
+# #	    $logger->debug('returning empty string');
+# 	    return "''" ;
+#           }
+
+# 	    $expr->{'val'} = escape_js_str($expr->{'val'});
+
+# 	    # any string is potentially a JS template...
+# 	    # relace tmpl vars with concats for JS
+# 	    $expr->{'val'} =~ y/\n\r/  /; # remove newlines
+# 	    $expr->{'val'} =~ s/#{([^}]*)}/'+$1+'/g;
+
+# 	    return '\'' . $expr->{'val'} . '\'';
 	};
 	/num/ && do {
 	    return  $expr->{'val'} ;
@@ -184,7 +196,9 @@ sub gen_js_hash {
 #    $logger->debug(Dumper($hash_items));
     my @items;
     foreach my $k (keys %{ $hash_items->{'val'} }) {
-	push(@items, "'" . $k . "' :"  . gen_js_expr($hash_items->{'val'}->{$k}));
+      $logger->debug("Seeing $k ", Dumper $hash_items->{'val'}->{$k}) 
+	if $k eq 'geo';
+      push(@items, "'" . $k . "' :"  . gen_js_expr($hash_items->{'val'}->{$k}));
     }
     my $js =  '{' . join(",", @items) . '}';
 #    $logger->debug($js);
@@ -344,8 +358,10 @@ sub eval_one_decl {
 
   $logger->debug("[eval_pre] $var -> $val");
 
-  my $js = gen_js_var($var, Kynetx::JavaScript::gen_js_expr(
-			     Kynetx::JavaScript::exp_to_den($val)));
+  $val = Kynetx::JavaScript::exp_to_den($val);
+  $logger->debug("[eval_one_decl] after denoting:", Dumper $val);
+  $val = Kynetx::JavaScript::gen_js_expr($val);
+  my $js = gen_js_var($var, $val);
 
 #   my $t = infer_type($val);
 #   if($t eq 'str') {
@@ -723,8 +739,14 @@ sub exp_to_den {
 
 #    $logger->debug("exp_to_den: $expr");
 
-    if (ref $expr eq 'HASH' && defined $expr->{'val'} && defined $expr->{'type'}) {
-      return $expr
+    if (ref $expr eq 'HASH' && defined $expr->{'type'}) {
+      my @keys = sort keys %{ $expr };
+      # this is a looser test that
+      #   defined $expr->{'val'}
+      # since it allows the val to be undef
+      if ($keys[1] eq 'val') {
+	return $expr
+      }
     }
 
     my $type = infer_type($expr);
@@ -753,6 +775,9 @@ sub exp_to_den {
 sub infer_type {
     my ($v) = @_;
     my $t;
+
+    return 'str' unless defined $v;
+
     if($v =~ m/^(\d*\.\d+|[1-9]\d+|\d)$/) { # crude type inference for primitives
 	$t = 'num' ;
     } elsif($v =~ m/^(true|false)$/) {
@@ -777,9 +802,10 @@ sub infer_type {
 sub mk_js_str {
     if(defined $_[0]) {
 	my $str = join(" ",@_);
+	$str = escape_js_str($str);
 	$str =~ y/\n\r/  /; # remove newlines
 	$str =~ s/#{([^}]*)}/'+$1+'/g;
-	return "'". escape_js_str($str) . "'";
+	return "'". $str . "'";
     } else {
 	return "''";
     }
@@ -787,7 +813,7 @@ sub mk_js_str {
 
 sub escape_js_str {
     my ($val) = @_;
-    $val =~ s/'/\\'/g;  #' - for syntax highlighting
+    $val =~ s/'/\\'/g if defined $val;  #' - for syntax highlighting
     return $val;
 }
 

@@ -1,3 +1,7 @@
+2009-12-11  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Rules.pm (eval_foreach): commented out long debug statement
+	* Kynetx/JavaScript.pm: Normalized how strings are generated.
 
 2009-12-11  Phil Windley  <pjw@kynetx.com>
 
