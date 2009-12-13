@@ -1,3 +1,8 @@
+2009-12-12  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Predicates/Page.pm (get_pageinfo): fixed to work with two
+	  element hostnames.  
+
 2009-12-11  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (eval_foreach): commented out long debug statement

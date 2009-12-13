@@ -96,15 +96,19 @@ id
 	    $req_info->{'caller_url'}->{'path'} = $parsed_url->path;
 
 	    my $hostname = $parsed_url->hostname;
-	    my ($domain, $tld) = $hostname =~ /.*\.(.+)\.(.+)$/;
-	    $domain .= ".$tld";
-	    $req_info->{'caller_url'}->{'domain'} = $domain;
-	    $req_info->{'caller_url'}->{'tld'} = $tld;
+	    my @components = split(/\./, $hostname);
+	    $req_info->{'caller_url'}->{'domain'} = 
+	          $components[-2] . '.' . $components[-1];
+	    $req_info->{'caller_url'}->{'tld'} = $components[-1];
 
 	    if ($parsed_url->port) { 
 		$req_info->{'caller_url'}->{'port'} = $parsed_url->port;
 	    } else { 
+	      if ($parsed_url->scheme eq 'http') {
 		$req_info->{'caller_url'}->{'port'} = 80;
+	      } else {
+		$req_info->{'caller_url'}->{'port'} = 443;
+	      }
 	    }
 
 	    $req_info->{'caller_url'}->{'query'} = $parsed_url->query;
