@@ -90,6 +90,9 @@ sub get_useragent {
          os
          os_type
          os_version
+	 using_selector
+	 selector_name
+	 selector_version
          );
     
     my $logger = get_logger();
@@ -98,7 +101,12 @@ sub get_useragent {
 
 	my $ua_string = $req_info->{'ua'};
 
+
+	$ua_string =~ s%(infoCard)/(.*)/(\d+\.\d+)%%;
+	my($cards, $selector, $version) = ($1, $2, $3);
+
 	$logger->debug("UserAgent: ", $ua_string);
+	$logger->debug("Endpoint info:  $cards, $selector, $version");
 	my $ua = HTML::ParseBrowser->new($ua_string);
 
 
@@ -112,9 +120,15 @@ sub get_useragent {
 	$req_info->{'useragent'}->{'os_type'} = $ua->ostype();
 	$req_info->{'useragent'}->{'os_version'} = $ua->osvers();
 
+	$req_info->{'useragent'}->{'using_selector'} = 
+	  ($cards eq 'infoCard') ? 1 : 0;
+	$req_info->{'useragent'}->{'selector_name'} = $selector;
+	$req_info->{'useragent'}->{'selector_version'} = $version;
+
+
     }
 
-    $logger->debug("User-Agent information: " ,
+    $logger->debug("User-Agent information ($field): " ,
 		   $req_info->{'useragent'}->{$field});
 
 

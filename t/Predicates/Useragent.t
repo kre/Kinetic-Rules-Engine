@@ -42,6 +42,7 @@ use APR::Pool ();
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Predicates::Useragent qw/:all/;
@@ -73,19 +74,24 @@ os_type
 os_version
 language
 language_code
+using_selector
+selector_name
+selector_version
 );
 
 my @ua_strings = (
 ['Mozilla/4.7 [en] (WinNT; U)',
- 'Netscape','4.7','4','7','WinNT','Windows','NT','English','en'],
+ 'Netscape','4.7','4','7','WinNT','Windows','NT','English','en',0],
 ['Mozilla/4.0 (compatible; MSIE 5.01; Windows NT)',
- 'Internet Explorer','5.01','5','01','Windows NT','Windows NT',undef,undef,undef],
+ 'Internet Explorer','5.01','5','01','Windows NT','Windows NT',undef,undef,undef,0],
 ['Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0; T312461; .NET CLR 11.4322)',
- 'Internet Explorer','6.0','6','0','Windows NT 5.0','Windows NT','2000',undef,undef],
+ 'Internet Explorer','6.0','6','0','Windows NT 5.0','Windows NT','2000',undef,undef,0],
 ['Mozilla/4.0 (compatible; MSIE 5.0; Windows NT 4.0) Opera 5.11 [en]',
- 'Internet Explorer','5.0','5','0','Windows NT 4.0','Windows NT','4.0','English','en'],
+ 'Internet Explorer','5.0','5','0','Windows NT 4.0','Windows NT','4.0','English','en',0],
 ['Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6) Gecko/20040612 Firefox/0.8',
- 'Firefox','0.8','0','8','Linux i686','Linux','i686',undef,''],
+ 'Firefox','0.8','0','8','Linux i686','Linux','i686',undef,'',0],
+['Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5 infoCard/AzigoLite/1.0',
+'Firefox','3.5.5','3','5.5','Macintosh','Macintosh',undef,undef,'',1,'AzigoLite','1.0'],
 # 'Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.0.2) Gecko/20030208 Netscape/7.02',
 # 'Mozilla/5.0 (compatible; Konqueror/3.2; Linux) (KHTML, like Gecko)',
 # 'Lynx/2.8.4rel.1 libwww-FM/2.14 SSL-MM/1.4.1 OpenSSL/0.9.6h',
