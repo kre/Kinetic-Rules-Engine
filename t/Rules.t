@@ -1584,7 +1584,8 @@ foreach my $case (@test_cases) {
 				   $case->{'req_info'}, 
 				   $rule_env, 
 				   $case->{'session'}, 
-				   $case->{'expr'});
+				   $case->{'expr'},
+				   '');
 
   } else {
     diag "WARNING: No test run! Case must be either rule or ruleset"

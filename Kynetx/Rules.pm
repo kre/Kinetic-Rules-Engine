@@ -211,17 +211,25 @@ sub eval_ruleset {
 
 	# store the captured values from the precondition to the env
 	my $cap = 0;
+	my $sjs = '';
 	foreach my $var (@{ $select_vars } ) {
 	  $var =~ s/^\s*(.+)\s*/$1/;
-#		    $logger->debug("[select var] $var -> $captured_vals->[$cap]");
-	  $this_rule_env->{$var} = $captured_vals->[$cap++];
+	  $logger->debug("[select var] $var -> $captured_vals->[$cap]");
+	  $this_rule_env->{$var} = $captured_vals->[$cap];
+	  $sjs .= gen_js_var($var,
+			    gen_js_expr(exp_to_den($captured_vals->[$cap])));
+
+	  $cap++
 	}
+
 
 	$js .= eval_rule($r, 
 			 $req_info, 
 			 extend_rule_env($this_rule_env, $rule_env),
 			 $session, 
-			 $rule);
+			 $rule,
+			 $sjs  # pass in the select JS to be inside rule
+			);
       } else {
 	$logger->debug("[not selected] $rule->{'name'} ");
       }
@@ -263,7 +271,7 @@ sub eval_meta {
  	$logger->debug("Found keys; generating JS");
  	foreach my $k (keys %{ $ruleset->{'meta'}->{'keys'} }) {
 	  if ($k eq 'twitter') {
-	    $req_info->{'key:twitter'} = $ruleset->{'meta'}->{'keys'}->{$k};
+	    $req_info->{$rid.':key:twitter'} = $ruleset->{'meta'}->{'keys'}->{$k};
 	  } else { # googleanalytics, errorstack
 	    $js .= KOBJ_ruleset_obj($ruleset->{'ruleset_name'}). ".keys.$k = '" . 
 	      $ruleset->{'meta'}->{'keys'}->{$k} . "';\n";
@@ -309,8 +317,6 @@ sub eval_globals {
 	} elsif(defined $g->{'type'} && $g->{'type'} eq 'dataset') { 
 	  if (! Kynetx::Datasets::global_dataset($g)) {
 	    ($this_js, $var, $val) = mk_dataset_js($g, $req_info, $rule_env);
-#		    $logger->debug("Global dataset JS: ", $this_js);
-#		    $logger->debug("Global dataset: ", $var, " -> ", sub { Dumper($val) });
 	    # yes, this is cheating and breaking the abstraction, but it's fast
 	    $rule_env->{$var} = $val;
 	  }
@@ -318,37 +324,26 @@ sub eval_globals {
 	  $this_js = "KOBJ.css(" . mk_js_str($g->{'content'}) . ");\n";
 	} elsif(defined $g->{'type'} && $g->{'type'} eq 'datasource') {
 	  $rule_env->{'datasource:'.$g->{'lhs'}} = $g;
-
-#	  push(@vars,'datasource:'.$g->{'lhs'});
-#	  push(@vals, $g);
 	} elsif(defined $g->{'type'} && 
 		($g->{'type'} eq 'expr' || $g->{'type'} eq 'here_doc')) {
-
-
 	  $this_js = eval_one_decl($req_info, $rule_env, $ruleset->{'lhs'}, $session, $g);
-
-# 	  ($var, $val) = Kynetx::JavaScript::eval_js_decl($req_info, $rule_env, $ruleset->{'lhs'}, $session, $g);
-# 	  $logger->debug("Seeing global decl for ", $var);
-
-# 	  push(@vars, $var);
-# 	  push(@vals, $val);
-# 	  $this_js .= gen_js_var($var, Kynetx::JavaScript::gen_js_expr(
-# 					     Kynetx::JavaScript::exp_to_den($val)));
 	}
 	$js .= $this_js;
-	}
+      }
     }
-    $logger->debug(" rule_env: ", Dumper($rule_env));
+#    $logger->debug(" rule_env: ", Dumper($rule_env));
 
     return ($js, $rule_env);
    
 }
 
 sub eval_rule {
-    my($r, $req_info, $rule_env, $session, $rule) = @_;
+    my($r, $req_info, $rule_env, $session, $rule, $initial_js) = @_;
 
     my $logger = get_logger();
 
+
+    my $js = '';
 
     Log::Log4perl::MDC->put('rule', $rule->{'name'});
 #    $logger->info($rule->{'name'}, " selected...");
@@ -371,7 +366,6 @@ sub eval_rule {
 	  optimize_pre($rule);
     }
 
-    my $js = '';
     my $outer_tentative_js = '';
 
 #    $logger->debug(Dumper($rule->{'pagetype'}));
@@ -418,7 +412,7 @@ sub eval_rule {
     push(@{ $req_info->{'all_tags'} }, $req_info->{'tags'});
 
     # combine JS and wrap in a closure if rule fired
-    $js = mk_turtle($outer_tentative_js . $js) if $js;
+    $js = mk_turtle($initial_js . $outer_tentative_js . $js) if $js;
 
     return $js;
 
