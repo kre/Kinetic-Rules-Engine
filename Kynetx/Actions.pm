@@ -367,10 +367,10 @@ EOF
       'after' => [\&handle_delay]
     },
 
-	snowfall => {
+	let_it_snow => {
 		'js' => <<EOF,
 function(uniq, cb, config) {
-	KOBJ.snowfall();
+	KOBJ.snowfall(config);
 	cb();
 }		
 EOF
