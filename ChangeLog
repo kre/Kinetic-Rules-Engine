@@ -1,3 +1,6 @@
+2009-12-21 Mark Horstmeier <meh@kynetx.com>
+	* Kynetx/Action.pm: added stub for new snowfall action
+
 2009-12-12  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Predicates/Page.pm (get_pageinfo): fixed to work with two
