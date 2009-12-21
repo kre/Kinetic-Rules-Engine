@@ -367,6 +367,16 @@ EOF
       'after' => [\&handle_delay]
     },
 
+	snowfall => {
+		'js' => <<EOF,
+function(uniq, cb, config) {
+	KOBJ.snowfall();
+	cb();
+}		
+EOF
+		'after' => [ \&handle_delay ]
+		
+	},
 
 
 );
