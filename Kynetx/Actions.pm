@@ -370,7 +370,7 @@ EOF
 	let_it_snow => {
 		'js' => <<EOF,
 function(uniq, cb, config) {
-	KOBJ.snowfall(config);
+	KOBJ.letitsnow(config);
 	cb();
 }		
 EOF
