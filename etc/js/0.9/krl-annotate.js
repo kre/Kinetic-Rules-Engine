@@ -66,7 +66,7 @@ KOBJ.watchDOM = function(selector,callBackFunc,time){
 				KOBJ.log("DOM Watcher Call for new selector "+selector+" added");
 			}
 		});
-	}	
+	}
 };
 
 // Start of annotate local changes, v1.2
@@ -75,13 +75,13 @@ KOBJ.watchDOM = function(selector,callBackFunc,time){
 // KOBJ.annotate_local_search_extractdata pulls the data out automatically, such as phone and domain.
 
 KOBJ.annotate_local_search_extractdata = function(toAnnotate,config){
-	
+
 	var annotateData = {};
 	var phoneSelector = config.domains[window.location.host].phoneSel;
 	var urlSelector = config.domains[window.location.host].phoneSel;
 	var phoneTemp = $K(toAnnotate).find(phoneSelector).text().replace(/[\u00B7() -]/g, "");
 	var urlTemp = $K(toAnnotate).find(urlSelector).attr("href");
-	
+
 	if(!urlTemp){
 		urlTemp = $K(toAnnotate).find(".url, cite").text();
 		if(!urlTemp){
@@ -108,7 +108,7 @@ KOBJ.annotate_local_search_extractdata = function(toAnnotate,config){
 
 
 	var heightTemp = $K(toAnnotate).height();
-	
+
 	if(phoneTemp!==null){
 		annotateData["phone"] = phoneTemp;
 	} else { annotateData["phone"] = ""; }
@@ -158,7 +158,7 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 		function runAnnotateLocal(){
 			var count = 0;
 			function annotateCBLocal(data){
-	   			$K.each(data, function(key,contents){ 
+	   			$K.each(data, function(key,contents){
 	   				if(contents){
 	   	 				$K("."+key+" :last").after(contents);
 						count++;
@@ -168,11 +168,11 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 			}
 
 			var annotateInfo = {};
-			
+
 			$K(lister).each(function() {
 				var toAnnotate = this;
 				var itemCounter = defaults["name"] + (KOBJ.annotate_local_counter += 1);
-				
+
 				annotateInfo[itemCounter] = KOBJ.annotate_local_search_extractdata(toAnnotate,defaults);
 				$K(toAnnotate).addClass(itemCounter);
 			});
@@ -184,7 +184,7 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 				$K.getJSON(remote_url, {'annotatedata':annotateString},annotateCBLocal);
 			});
 
-	
+
 			KOBJ.logger('annotated_local_search_results', config['txn_id'], count, '', 'success', config['rule_name'], config['rid']);
 		}
 
@@ -194,22 +194,22 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 			if(resultslist.length===0){ return; }
 			var count = 0;
 			$K(resultslist).each(function() {
-	
+
 				var toAnnotate = this;
-				
+
 				var extractedData = KOBJ.annotate_local_search_extractdata(toAnnotate,defaults);
 				// Inserts the data into the object.
 				$K.each(extractedData, function(name, value){
 					$K(toAnnotate).data(name, value);
-				}); 
-	
+				});
+
 				var contents = annotate(toAnnotate);
 				if (contents) {
 					count++;
 					$K(":last",this).after(contents);
 				}
 			});
-	
+
 			KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'] );
 			cb();
 		}
@@ -252,41 +252,8 @@ KOBJ.annotate_search_defaults = {
 	"www.bing.com": { "selector": "#results>ul>li", "modify": "p", "watcher": "","urlSel":".nc_tc a, .sb_tlst a" },
 	"search.yahoo.com": { "selector": "li div.res", "modify": "div.abstr", "watcher": "","urlSel":".yschttl" }
     }
-	
+
   };
-
-KOBJ.annotate_search_defaults.outer_div_css = KOBJ.annotate_search_defaults.outer_div_css.outer_div_css || {
-      "float": "right",
-      "width": "auto",
-      "height": KOBJ.annotate_search_defaults.height,
-      "font-size": KOBJ.annotate_search_defaults.font_size,
-      "line-height": "normal",
-      "font-family": KOBJ.annotate_search_defaults.font_family
-      };
-
-KOBJ.annotate_search_defaults.li_css = KOBJ.annotate_search_defaults.outer_div_css.li_css || {
-      "float": "left",
-      "margin": "0",
-      "vertical-align": "middle",
-      "padding-left": "4px",
-      "color": KOBJ.annotate_search_defaults.text_color,
-      "white-space": "nowrap",
-      "text-align": "center"
-      };
-
-KOBJ.annotate_search_defaults.ul_css = KOBJ.annotate_search_defaults.outer_div_css.ul_css || {
-      "margin": "0",
-      "padding": "0",
-      "list-style": "none"
-      };
-
-KOBJ.annotate_search_defaults.inner_div_css = KOBJ.annotate_search_defaults.outer_div_css.inner_div_css || {
-      "float": "left",
-      "display": "inline",
-      "height": KOBJ.annotate_search_defaults.height,
-      "margin-left": KOBJ.annotate_search_defaults.left_margin,
-      "padding-right": KOBJ.annotate_search_defaults.right_padding
-      };
 
 
 // Extracts the data from the element
@@ -296,7 +263,7 @@ KOBJ.annotate_search_extractdata = function(toAnnotate,config){
 	var urlSelector = config.domains[window.location.host].urlSel;
 	var urlTemp = $K(toAnnotate).find(urlSelector).attr("href");
 	// ".l" is for Google, ".nc_tc, .sb_tlst" are for Bing, .yschttl is for Yahoo
-	
+
 	if(!urlTemp){
 		urlTemp = $K(toAnnotate).find(".url, cite").attr(href);
 		// Failsafe
@@ -314,11 +281,47 @@ KOBJ.annotate_search_extractdata = function(toAnnotate,config){
 
 KOBJ.annotate_search_results = function(annotate, config, cb) {
 
-	var defaults = jQuery.extend(true, {}, KOBJ.annotate_search_defaults);
+  var defaults = jQuery.extend(true, {}, KOBJ.annotate_search_defaults);
 
-	if (typeof config === 'object') {
-		jQuery.extend(true, defaults, config);
-	}
+  if (typeof config === 'object') {
+    jQuery.extend(true, defaults, config);
+  }
+
+
+  defaults.outer_div_css = {
+      "float": "right",
+      "width": "auto",
+      "height": defaults.height,
+      "font-size": defaults.font_size,
+      "line-height": "normal",
+      "font-family": defaults.font_family
+      };
+
+  defaults.li_css = {
+      "float": "left",
+      "margin": "0",
+      "vertical-align": "middle",
+      "padding-left": "4px",
+      "color": defaults.text_color,
+      "white-space": "nowrap",
+      "text-align": "center"
+      };
+
+   defaults.ul_css = {
+      "margin": "0",
+      "padding": "0",
+      "list-style": "none"
+      };
+
+   defaults.inner_div_css = {
+      "float": "left",
+      "display": "inline",
+      "height": defaults.height,
+      "margin-left": defaults.left_margin,
+      "padding-right": defaults.right_padding
+      };
+
+
 
 	var lister = "";
 	var modify = "";
@@ -378,10 +381,10 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 			resultslist.each(function() {
 				var toAnnotate = this;
 				var itemCounter = defaults['name'] + (KOBJ.annotate_search_counter += 1);
-					
+
 				annotateInfo[itemCounter] = KOBJ.annotate_search_extractdata(toAnnotate,defaults);
 				$K(toAnnotate).addClass(itemCounter);
-			});	
+			});
 			function annotateCB(data){
 				$K.each(data, function(key,contents){
 					if(contents){
@@ -390,17 +393,17 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 						} else {
 							$K("."+key).find(modify)[defaults.placement](mk_outer_div(contents));
 						}
-					}				
+					}
 					count++;
 	        		});
 			}
-		
+
 			var annotateArray = KOBJ.splitJSONRequest(annotateInfo,maxLengthURL,remote_url);
 			$K.each(annotateArray,function(key,data){
 				annotateString = $K.compactJSON(data);
 				$K.getJSON(remote_url, {'annotatedata':annotateString},annotateCB);
 			});
-			
+
 			KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'], config['rid'] );
 			cb();
 
@@ -409,17 +412,17 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 	} else {
 		function runAnnotate(){
 			var count = 0;
-	
+
 			var resultslist = $K(lister);
 			if(resultslist.length === 0){ return; }
-	
+
 			resultslist.each(function() {
-	
-				var toAnnotate = this;			
+
+				var toAnnotate = this;
 				var extractedData = KOBJ.annotate_search_extractdata(toAnnotate,defaults);
 				$K.each(extractedData, function(name, value){
 					$K(toAnnotate).data(name, value);
-				}); 
+				});
 				var contents = annotate(toAnnotate);
 				if (contents) {
 					count++;

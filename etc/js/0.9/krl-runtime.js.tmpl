@@ -319,6 +319,11 @@ KOBJ.proto = (("https:" == document.location.protocol) ? "https://" : "http://")
 KOBJ.init_host = '<TMPL_VAR NAME=INIT_HOST>';
 KOBJ.eval_host = '<TMPL_VAR NAME=EVAL_HOST>';
 KOBJ.callback_host = '<TMPL_VAR NAME=CB_HOST>';
+<TMPL_IF KNS_PORT>
+KOBJ.kns_port = ':<TMPL_VAR NAME=KNS_PORT>';
+<TMPL_ELSE>
+KOBJ.kns_port = '';
+</TMPL_IF>
 
 KOBJ.init = function(init_obj) {
 
@@ -394,7 +399,7 @@ KOBJ.eval = function(config) {
   KOBJ.site_id = config.rids.join(";");
 
   // datasets
-  var data_url = KOBJ.proto+KOBJ.init_host+"/js/datasets/" + KOBJ.site_id + "/";
+  var data_url = KOBJ.proto+KOBJ.init_host+KOBJ.kns_port+"/js/datasets/" + KOBJ.site_id + "/";
   KOBJ.require(data_url);
 
   if(typeof(kvars) != "undefined") {
@@ -404,8 +409,8 @@ KOBJ.eval = function(config) {
   }
 
   var d = (new Date).getTime();
-  var url = KOBJ.proto+KOBJ.eval_host+"/ruleset/eval/" + KOBJ.site_id;
-  KOBJ.callback_url = KOBJ.proto+KOBJ.callback_host+"/callback/" + KOBJ.site_id;
+  var url = KOBJ.proto+KOBJ.eval_host+KOBJ.kns_port+"/ruleset/eval/" + KOBJ.site_id;
+  KOBJ.callback_url = KOBJ.proto+KOBJ.callback_host+KOBJ.kns_port+"/callback/" + KOBJ.site_id;
 
   var param_str = "";
   if(config) {
