@@ -188,15 +188,15 @@
 
 			defaults = {
 
-				flakeCount : 35,
+				flakeCount : 25,
 
 				flakeColor : '#ffffff',
 
 				flakeIndex: 999999,
 
-				minSize : 1,
+				minSize : 2,
 
-				maxSize : 3,
+				maxSize : 5,
 
 				minSpeed : 2,
 
@@ -246,7 +246,7 @@
 
 			
 
-			setTimeout(function(){snow()}, 30);
+			setTimeout(function(){snow()}, 90);
 
 		}
 
