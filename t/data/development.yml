@@ -87,7 +87,7 @@ KNS_ERROR_MSG: KNS has experienced an error in processing the request.  We have 
 
 # URL for the runtime library file to redirect to is USE_CLOUDFRONT is 1
 # if USE_CLOUDFRONT is 0, then this is ignored.  
-RUNTIME_LIB_NAME: http://static.kobj.net/kobj-static-20091116220629.js 
+RUNTIME_LIB_NAME: #ignore 
 
 # serve runtime from cloudfront
 USE_CLOUDFRONT: 0
