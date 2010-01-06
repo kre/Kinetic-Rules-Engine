@@ -1,3 +1,20 @@
+2010-01-06 Mark Horstmeier <meh@kynetx.com>
+	* Kynetx/Javascript.pm: Removed type check from exp_to_den because it 
+	  had a namespace collision with yahoo web api datasource (looked for type)
+
+2009-12-28 Mark Horstmeier <meh@kynetx.com>
+	* t/Configure.t: Switched Configure.t to use a more flexible version of 
+	  Test::Harness.  Using Test::Deep instead to read a base template for 
+	  config variable existence. Still using the development.yml and 
+	  production.yml templates for deeper inspection, but if there is a 
+	  variable that changes often you can mark it with '#ignore' and the 
+	  comparison will be similar to the Test::More::exists function.	  
+	* t/data/base.yml: Checks for variable existence on a single level.
+	* t/data/development.yml: Flagged RUNTIME_LIB_NAME as #ignore
+	* t/data/production.yml: Flagged RUNTIME_LIB_NAME as #ignore
+	  
+	  
+
 2009-12-21 Mark Horstmeier <meh@kynetx.com>
 	* Kynetx/Action.pm: added stub for new snowfall action
 
