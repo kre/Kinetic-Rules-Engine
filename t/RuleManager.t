@@ -73,12 +73,12 @@ ruleset 10 {
 
     if daytime() then 
     choose {
-        first_rule_name: 
+        first_rule_name =>
            replace("kobj_test", "/kynetx/newsletter_invite_1.inc")
 	   with tags = ["gift certificate", "yellow"] and
 	        delay = 30;
 
-	second_rule_name: 
+	second_rule_name =>
            replace("kobj_test", "/kynetx/newsletter_invite_2.inc")
 	   with tags = ["discount", "blue"] and
 	        draggable = true;
@@ -112,11 +112,11 @@ RULESET
 
 
 my $test_json_ruleset = <<JSON;
-{"global":[],"dispatch":[],"ruleset_name":"10","rules":[{"cond":{"predicate":"daytime","args":[],"type":"simple"},"blocktype":"choose","actions":[{"action":{"name":"replace","args":[{"val":"kobj_test","type":"str"},{"val":"/kynetx/newsletter_invite_1.inc","type":"str"}],"modifiers":[{"value":{"val":[{"val":"gift certificate","type":"str"},{"val":"yellow","type":"str"}],"type":"array"},"name":"tags"},{"value":{"val":30,"type":"num"},"name":"delay"}]},"label":"first_rule_name"},{"action":{"name":"replace","args":[{"val":"kobj_test","type":"str"},{"val":"/kynetx/newsletter_invite_2.inc","type":"str"}],"modifiers":[{"value":{"val":[{"val":"discount","type":"str"},{"val":"blue","type":"str"}],"type":"array"},"name":"tags"},{"value":{"val":"true","type":"bool"},"name":"draggable"}]},"label":"second_rule_name"}],"post":null,"pre":[],"name":"test_choose","emit":null,"state":"inactive","callbacks":{"success":[{"attribute":"id", "trigger" : null, "value":"rssfeed","type":"click"},{"attribute":"class", "trigger" : null, "value":"newsletter","type":"click"}],"failure":[{"attribute":"id", "trigger" : null, "value":"close_rss","type":"click"}]},"pagetype":{"pattern":"/identity-policy/","vars":[],"foreach":[]}}],"meta":{}}
+{"global":[],"dispatch":[],"ruleset_name":"10","rules":[{"cond":{"predicate":"daytime","args":[],"type":"simple"},"blocktype":"choose","actions":[{"action":{"source":null,"name":"replace","args":[{"val":"kobj_test","type":"str"},{"val":"/kynetx/newsletter_invite_1.inc","type":"str"}],"modifiers":[{"value":{"val":[{"val":"gift certificate","type":"str"},{"val":"yellow","type":"str"}],"type":"array"},"name":"tags"},{"value":{"val":30,"type":"num"},"name":"delay"}]},"label":"first_rule_name"},{"action":{"source":null,"name":"replace","args":[{"val":"kobj_test","type":"str"},{"val":"/kynetx/newsletter_invite_2.inc","type":"str"}],"modifiers":[{"value":{"val":[{"val":"discount","type":"str"},{"val":"blue","type":"str"}],"type":"array"},"name":"tags"},{"value":{"val":"true","type":"bool"},"name":"draggable"}]},"label":"second_rule_name"}],"post":null,"pre":[],"name":"test_choose","emit":null,"state":"inactive","callbacks":{"success":[{"attribute":"id", "trigger" : null, "value":"rssfeed","type":"click"},{"attribute":"class", "trigger" : null, "value":"newsletter","type":"click"}],"failure":[{"attribute":"id", "trigger" : null, "value":"close_rss","type":"click"}]},"pagetype":{"pattern":"/identity-policy/","vars":[],"foreach":[]}}],"meta":{}}
 JSON
 
 my $test_json_rule = <<JSON;
-{"cond":{"predicate":"daytime","args":[],"type":"simple"},"blocktype":"choose","actions":[{"action":{"name":"replace","args":[{"val":"kobj_test","type":"str"},{"val":"/kynetx/newsletter_invite_1.inc","type":"str"}],"modifiers":[{"value":{"val":[{"val":"gift certificate","type":"str"},{"val":"yellow","type":"str"}],"type":"array"},"name":"tags"},{"value":{"val":30,"type":"num"},"name":"delay"}]},"label":"first_rule_name"},{"action":{"name":"replace","args":[{"val":"kobj_test","type":"str"},{"val":"/kynetx/newsletter_invite_2.inc","type":"str"}],"modifiers":[{"value":{"val":[{"val":"discount","type":"str"},{"val":"blue","type":"str"}],"type":"array"},"name":"tags"},{"value":{"val":"true","type":"bool"},"name":"draggable"}]},"label":"second_rule_name"}],"post":null,"pre":[],"name":"test_choose","emit":null,"state":"inactive","callbacks":{"success":[{"attribute":"id","trigger" : null, "value":"rssfeed","type":"click"},{"attribute":"class", "trigger" : null, "value":"newsletter","type":"click"}],"failure":[{"attribute":"id", "trigger" : null, "value":"close_rss","type":"click"}]},"pagetype":{"pattern":"/identity-policy/","vars":[],"foreach":[]}}
+{"cond":{"predicate":"daytime","args":[],"type":"simple"},"blocktype":"choose","actions":[{"action":{"source":null,"name":"replace","args":[{"val":"kobj_test","type":"str"},{"val":"/kynetx/newsletter_invite_1.inc","type":"str"}],"modifiers":[{"value":{"val":[{"val":"gift certificate","type":"str"},{"val":"yellow","type":"str"}],"type":"array"},"name":"tags"},{"value":{"val":30,"type":"num"},"name":"delay"}]},"label":"first_rule_name"},{"action":{"source":null,"name":"replace","args":[{"val":"kobj_test","type":"str"},{"val":"/kynetx/newsletter_invite_2.inc","type":"str"}],"modifiers":[{"value":{"val":[{"val":"discount","type":"str"},{"val":"blue","type":"str"}],"type":"array"},"name":"tags"},{"value":{"val":"true","type":"bool"},"name":"draggable"}]},"label":"second_rule_name"}],"post":null,"pre":[],"name":"test_choose","emit":null,"state":"inactive","callbacks":{"success":[{"attribute":"id","trigger" : null, "value":"rssfeed","type":"click"},{"attribute":"class", "trigger" : null, "value":"newsletter","type":"click"}],"failure":[{"attribute":"id", "trigger" : null, "value":"close_rss","type":"click"}]},"pagetype":{"pattern":"/identity-policy/","vars":[],"foreach":[]}}
 JSON
 
 my $test_rule = <<RULE;
@@ -128,12 +128,12 @@ rule test_choose is inactive {
 
     if daytime() then 
     choose {
-        first_rule_name: 
+        first_rule_name =>
            replace("kobj_test", "/kynetx/newsletter_invite_1.inc")
 	   with tags = ["gift certificate", "yellow"] and
 	        delay = 30;
 
-	second_rule_name: 
+	second_rule_name =>
            replace("kobj_test", "/kynetx/newsletter_invite_2.inc")
 	   with tags = ["discount", "blue"] and
 	        draggable = true;
@@ -174,12 +174,12 @@ my $test_rule_body = <<RULEBODY;
 
     if daytime() then 
     choose {
-        first_rule_name: 
+        first_rule_name =>
            replace("kobj_test", "/kynetx/newsletter_invite_1.inc")
 	   with tags = ["gift certificate", "yellow"] and
 	        delay = 30;
 
-	second_rule_name: 
+	second_rule_name =>
            replace("kobj_test", "/kynetx/newsletter_invite_2.inc")
 	   with tags = ["discount", "blue"] and
 	        draggable = true;

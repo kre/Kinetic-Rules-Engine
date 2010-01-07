@@ -388,7 +388,8 @@ sub pp_select {
     my $o = $beg;
 
     $o .= 'select using ' . pp_string($node->{'pattern'});
-    $o .= pp_setting($node->{'vars'}) . "\n";
+    $o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
+    $o .= "\n";
     $o .= pp_foreach($node->{'foreach'}, $indent+$g_indent);
     $o .= "\n";
 
@@ -403,7 +404,7 @@ sub pp_foreach {
   foreach my $fe (@{$node}) {
     $o .= " "x$indent;
     $o .= 'foreach ' . pp_expr($fe->{'expr'});
-    $o .= pp_setting([$fe->{'var'}]) . "\n";
+    $o .= pp_setting([$fe->{'var'}]) . "\n" ;
     $indent+=$g_indent;
   }
 
@@ -633,7 +634,7 @@ sub pp_primrule{
     if(defined $node->{'emit'}) {
 
 	if($node->{'label'}) {
-	    $o .= $node->{'label'} . ":\n";
+	    $o .= $node->{'label'} . " =>\n";
 	    $beg .= " "x$g_indent;
 	    $o .= $beg;
 	}
@@ -643,11 +644,14 @@ sub pp_primrule{
 
 
 	if($node->{'label'}) {
-	    $o .= $node->{'label'} . ":\n";
+	    $o .= $node->{'label'} . " =>\n";
 	    $beg .= " "x$g_indent;
 	    $o .= $beg;
 	}
-	
+
+	if ($node->{'action'}->{'source'}) {
+	    $o .= $node->{'action'}->{'source'} . ":";
+	}
 	
 
 	$o .= $node->{'action'}->{'name'} . "(";

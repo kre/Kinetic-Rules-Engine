@@ -1,3 +1,10 @@
+2010-01-06  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Parser.pm: updated to support new label separator
+	  and namespaced actions.
+	* Kynetx/PrettyPrinter.pm: updated to support new label separator
+	  and namespaced actions.
+
 2010-01-06 Mark Horstmeier <meh@kynetx.com>
 	* Kynetx/Javascript.pm: Removed type check from exp_to_den because it 
 	  had a namespace collision with yahoo web api datasource (looked for type)
@@ -13,7 +20,13 @@
 	* t/data/development.yml: Flagged RUNTIME_LIB_NAME as #ignore
 	* t/data/production.yml: Flagged RUNTIME_LIB_NAME as #ignore
 	  
-	  
+
+2009-12-21  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Actions.pm: Added changes to annotate_* in case function
+	  is missing.
+	* etc/js/0.9/krl-annotate.js: moved CSS functions inside function
+	  to avoid nasty overwriting bug.  
 
 2009-12-21 Mark Horstmeier <meh@kynetx.com>
 	* Kynetx/Action.pm: added stub for new snowfall action

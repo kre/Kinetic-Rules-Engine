@@ -405,13 +405,14 @@ unconditional_action: primrule
    | actionblock
         {$return = $item{actionblock}}
 
-primrule: rule_label(?) VAR '(' expr(s? /,/) ')' modifier_clause(?)
+primrule: rule_label(?) namespace(?) VAR '(' expr(s? /,/) ')' modifier_clause(?)
         {$return =
          {'label' => $item[1][0],
           'action' => 
-             {'args' => $item[4],
-              'modifiers' => $item[6][0],  # returned as array of array
-              'name' => $item[2]
+             {'args' => $item[5],
+              'modifiers' => $item[7][0],  # returned as array of array
+              'name' => $item[3],
+              'source' => $item[2][0]
              }
          }
         }
@@ -423,7 +424,7 @@ primrule: rule_label(?) VAR '(' expr(s? /,/) ')' modifier_clause(?)
 	}
      | <error>
 
-rule_label: VAR ':'
+rule_label: VAR '=>'
         {$return = $item[1]}
 
 modifier_clause: 'with' modifier(s /and/)
@@ -804,15 +805,17 @@ simple_pred: VAR '(' expr(s? /,/) ')'
        }
       }
 
-qualified_pred: VAR ':' VAR '(' expr(s? /,/) ')'
+qualified_pred: namespace VAR '(' expr(s? /,/) ')'
       {$return=
        {'type' => 'qualified',
         'source' => $item[1],
-        'predicate' => $item[3],
-        'args' => $item[5]
+        'predicate' => $item[2],
+        'args' => $item[4]
        }
       }
 
+namespace: VAR ':'
+    {$return = $item[1]}
 
 timeframe: 'within' expr (periods | period)
       {$return=
