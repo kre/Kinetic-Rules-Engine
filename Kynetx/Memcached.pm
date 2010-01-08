@@ -96,7 +96,7 @@ sub get_memcached_servers {
 sub get_remote_data {
     my($url,$expire) = @_;
 
-    $expire = 10 * 60 if (! $expire); # twenty minutes
+    $expire = 10 * 60 if (! $expire); # ten minutes
 
     my $logger = get_logger();
     my $memd = get_memd();

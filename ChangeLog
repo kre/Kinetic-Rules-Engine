@@ -1,3 +1,10 @@
+2010-01-08  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Actions.pm: Updated to use namespaces in actions by
+	  loading them from modules.
+	* Kynetx/Predicates/Twitter.pm: defined Twitter module
+	* Kynetx/JavaScript.pm: added Twitter as a datasource
+
 2010-01-06  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Parser.pm: updated to support new label separator

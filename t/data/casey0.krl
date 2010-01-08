@@ -8,11 +8,11 @@ ruleset 10 {
   	}	
     	if (state("AL") && city("Denver"))
    	then every {	 
-        alert_label_1:
+        alert_label_1 =>
             alert("This is alert 1")
             with
                 tags = ["alert", "label", "1"];
-        alert_label_2:
+        alert_label_2 =>
             alert("Alert Message 2")
             with
                 tags = ["alert", "label", "2"];

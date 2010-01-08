@@ -719,6 +719,7 @@ $config = astToJson(
 
 $result = <<_JS_;
 (function(uniq, cb, config, annotate_fn) {
+    annotate_fn = annotate_fn || function(){return true};
     KOBJ.annotate_search_results(annotate_fn, config, cb);
 }
 ('23',callbacks23,$config,foo));
@@ -731,6 +732,62 @@ add_action_testcase(
     $my_req_info,
     'annotate_search_results'
     );
+
+
+$krl_src = <<_KRL_;
+annotate_search_results();
+_KRL_
+
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test'});
+
+
+$result = <<_JS_;
+(function(uniq, cb, config, annotate_fn) {
+    annotate_fn = annotate_fn || function(){return true};
+    KOBJ.annotate_search_results(annotate_fn, config, cb);
+}
+('23',callbacks23,$config));
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'annotate_search_results'
+    );
+
+$krl_src = <<_KRL_;
+annotate_local_search_results() with
+  remote = "http://chevelle.caandb.com/annotate_remote.php?jsoncallback=?";
+_KRL_
+
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test',
+    "remote" => 'http://chevelle.caandb.com/annotate_remote.php?jsoncallback=?'});
+
+
+$result = <<_JS_;
+(function(uniq, cb, config, annotate_fn) {
+    annotate_fn = annotate_fn || function(){return true};
+    KOBJ.annotate_local_search_results(annotate_fn, config, cb);
+}
+('23',callbacks23,$config));
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'annotate_search_results'
+    );
+
 
 
 # post expressions

@@ -196,8 +196,8 @@ sub gen_js_hash {
 #    $logger->debug(Dumper($hash_items));
     my @items;
     foreach my $k (keys %{ $hash_items->{'val'} }) {
-      $logger->debug("Seeing $k ", Dumper $hash_items->{'val'}->{$k}) 
-	if $k eq 'geo';
+#      $logger->debug("Seeing $k ", Dumper $hash_items->{'val'}->{$k}) 
+#	if $k eq 'geo';
       push(@items, "'" . $k . "' :"  . gen_js_expr($hash_items->{'val'}->{$k}));
     }
     my $js =  '{' . join(",", @items) . '}';
@@ -359,7 +359,7 @@ sub eval_one_decl {
   $logger->debug("[eval_pre] $var -> $val");
 
   $val = Kynetx::JavaScript::exp_to_den($val);
-  $logger->debug("[eval_one_decl] after denoting:", Dumper $val);
+#  $logger->debug("[eval_one_decl] after denoting:", Dumper $val);
   $val = Kynetx::JavaScript::gen_js_expr($val);
   my $js = gen_js_var($var, $val);
 
@@ -489,6 +489,7 @@ sub eval_js_expr {
 	}
 	my $v = eval_datasource($req_info,
 				$rule_env,
+				$session,
 				$rule_name,
 				$expr->{'source'},
 				$expr->{'predicate'},
@@ -615,7 +616,7 @@ sub eval_js_decl {
 
 
 sub eval_datasource {
-    my($req_info,$rule_env,$rule_name,$source, $function, $args) = @_;
+    my($req_info,$rule_env,$session,$rule_name,$source, $function, $args) = @_;
   
  #   $args->[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
 
@@ -640,8 +641,12 @@ sub eval_datasource {
 	$val = Kynetx::Predicates::Page::get_pageinfo($req_info,$function,$args);
     } elsif ($source eq 'math') {
 	$val = Kynetx::Predicates::Math::do_math($req_info,$function,$args);
+    } elsif ($source eq 'twitter') {
+	$val = Kynetx::Predicates::Twitter::eval_twitter($req_info,$rule_env,$session,$rule_name,$function,$args);
     } elsif ($source eq 'datasource') {
-	$val = Kynetx::Datasets::get_datasource($rule_env,$args,$function);
+      $val = Kynetx::Datasets::get_datasource($rule_env,$args,$function);
+    } else {
+      $logger->warn("Datasource for $source not found");
     }
 
     return $val;

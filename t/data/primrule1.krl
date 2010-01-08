@@ -8,7 +8,7 @@ ruleset 10 {
     pre {
     }
 
-    label1:
+    label1 =>
        replace("kobj_test", "/kynetx/newsletter_invite_1.inc")
 	   with tags = ["gift certificate", "yellow"] and
 	        delay = 30;

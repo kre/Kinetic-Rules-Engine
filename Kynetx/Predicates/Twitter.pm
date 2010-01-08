@@ -1,6 +1,5 @@
 package Kynetx::Predicates::Twitter;
 # file: Kynetx/Predicates/Twitter.pm
-# file: Kynetx/Predicates/Referers.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
 # 
@@ -36,13 +35,19 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
-use Net::Twitter;
+use Apache2::Const;
+
+use Net::Twitter::Lite;
+#use Net::Twitter::OAuth;
 use Data::Dumper;
+
+
 
 
 use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Configure qw(:all);
+use Kynetx::Util qw(:all);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -53,46 +58,84 @@ our @ISA         = qw(Exporter);
 # put exported names inside the "qw"
 our %EXPORT_TAGS = (all => [ 
 qw(
-get_predicates
+authorized
+authorize
+eval_twitter
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
+use constant TWITTER_BASE_URL => 'http://twitter.com/';
+use constant EXPIRE => '300'; # 300 seconds
+
+
 my %predicates = (
+
 );
 
 sub get_predicates {
     return \%predicates;
 }
 
-#sub twitter { shift->{twitter} ||= Net::Twitter->new(traits => [qw/API::REST OAuth/], %consumer_tokens) }
+my $actions = {
+   'authorize' => {
+       js => <<EOF,
+function(uniq, cb, config) {
+  \$K.kGrowl.defaults.header = "Authorize Twitter Access";
+  if(typeof config === 'object') {
+    jQuery.extend(\$K.kGrowl.defaults,config);
+  }
+  \$K.kGrowl(KOBJ_twitter_notice);
+  cb();
+}
+EOF
+       before => \&authorize
+   },
+
+};
+
+sub get_actions {
+    return $actions;
+}
+
+
+my $funcs = {};
 
 sub authorized {
- my ($req_info,$rule_env,$session)  = @_;
+ my ($req_info,$rule_env,$session,$rule_name,$function,$args)  = @_;
+ my $logger = get_logger();
 
+ my $rid = $req_info->{'rid'};
 
- my $logger->get_logger();
-
- my $rid = $req_info-{'rid'};
+ $logger->debug("Authorizing twitter access for rule $rule_name in $rid");
 
  my $result = 1;
 
- my $consumer_tokens = $req_info->{'key:twitter'};
- my $nt = Net::Twitter->new(traits => [qw/API::REST OAuth/], %{ $consumer_tokens}) ;
+
+# $logger->debug("Consumer tokens: ", Dumper $consumer_tokens);
 
  my $access_tokens = session_get($rid, $session, 'twitter:access_tokens');
- 
- if (defined $access_tokens) {
-   # pass the access tokens to Net::Twitter
-    $nt->access_token($access_tokens->{'access_token'});
-    $nt->access_token_secret($access_tokens->{'access_token_secret'});
 
-    # attempt to get the user's last tweet
-    my $status = eval { $nt->user_timeline({ count => 1 }) };
-    if ( $@ ) {
-      $result = 0;
-    } else {
-      $result = 1;
-    }
+ 
+ if (defined $access_tokens && 
+     defined $access_tokens->{'access_token'} &&
+     defined $access_tokens->{'access_token_secret'}) {
+   # pass the access tokens to Net::Twitter
+
+#  $logger->debug("Validating authorization using access_token = " . $access_tokens->{'access_token'} . 
+#		  " &  access_secret = " . $access_tokens->{'access_token_secret'} );
+
+
+   my $nt = twitter($req_info, $session);
+
+   # attempt to get the user's last tweet
+   my $status = eval { $nt->verify_credentials() };
+   if ($@ ) {
+#     $logger->debug("not authorized: Dumper $status");
+     $result = 0;
+   } else {
+#     $logger->debug("authorized: Dumper $status");
+     $result = 1;
+   }
 
  } else {
    $result = 0;
@@ -101,54 +144,83 @@ sub authorized {
  return $result;
  
 }
+$funcs->{'authorized'} = \&authorized;
+
+sub user_id {
+  my ($req_info,$rule_env,$session,$rule_name,$function,$args)  = @_;
+  my $logger = get_logger();
+
+  my $rid = $req_info->{'rid'};
+  my $access_tokens = session_get($rid, $session, 'twitter:access_tokens');
+
+  return $access_tokens->{'user_id'};
+
+}
+$funcs->{'user_id'} = \&user_id;
 
 sub authorize {
  my ($req_info,$rule_env,$session,$config,$mods)  = @_;
 
- my $logger->get_logger();
+ my $logger= get_logger();
 
- my $rid = $req_info-{'rid'};
+ my $rid = $req_info->{'rid'};
  my $ruleset_name = $req_info->{"$rid:ruleset_name"};
  my $name = $req_info->{"$rid:name"};
  my $author = $req_info->{"$rid:author"};
  my $description = $req_info->{"$rid:description"};
 
- my $consumer_tokens = $req_info->{'key:twitter'};
- my $nt = Net::Twitter->new(traits => [qw/API::REST OAuth/], %{ $consumer_tokens}) ;
 
- my $self; #what is this really?
+ my $nt = twitter($req_info);
 
- $logger->debug("requesting authorization URL");
- my $auth_url = $self->twitter->get_authorization_url(callback => Kynetx::Configure::get_config('EVAL_SERVER')."/rulesets/twitter_callback/$rid?caller=$req_info->{'caller'}");
+ my $base_cb_url = 'http://' . 
+                   Kynetx::Configure::get_config('OAUTH_CALLBACK_HOST').
+                   ':'.Kynetx::Configure::get_config('OAUTH_CALLBACK_PORT') . 
+                   "/ruleset/twitter_callback/$rid?";
+
+ my $version = $req_info->{'rule_version'} || 'prod';
+
+ my $caller = 
+ my $callback_url = mk_url($base_cb_url,
+			   {'caller',$req_info->{'caller'}, 
+			    "$rid:kynetx_app_version", $version});
+
+ $logger->debug("requesting authorization URL with callback_url = $callback_url");
+ my $auth_url = $nt->get_authorization_url(callback => $callback_url);
+ 
+ session_store($rid, $session, 'twitter:token_secret', $nt->request_token_secret);
 
 
- $logger->debug("Got $auth_url; sending use a authorization invitation");
+ $logger->debug("Got $auth_url ... sending user an authorization invitation");
 
- my $js =  <<EOF;
-my KOBJ_twitter_notice = '<div id="KOBJ_twitter_auth">
+ my $msg =  <<EOF;
+<div id="KOBJ_twitter_auth">
 <p>The application $name ($rid) from $author is requesting that you authorize Twitter to share your Twitter information with it.  </p>
 <blockquote><b>Description:</b>$description</blockquote>
 <p>
-The application will not have access to your login credentials at Twitter.  If you click "OK" below, you will taken to Twitter and asked to authorize this application.  You can cancel at that point or by clicking "Close" below.  Note: if you choose not to proceed, this application may not work properly. After you have authorized this application, you will be redirected back to this page.
+The application will not have access to your login credentials at Twitter.  If you click "Take me to Twitter" below, you will taken to Twitter and asked to authorize this application.  You can cancel at that point or now by clicking "No Thanks" below.  Note: if you cancel, this application may not work properly. After you have authorized this application, you will be redirected back to this page.
 </p>
-<p align="center">
-<a href="$auth_url">OK</a> <span class="">Close</span>
-</p>
-</div>';
+<div style="color: #000; background-color: #FFF; -moz-border-radius: 5px; -webkit-border-radius: 5px; padding: 10px;margin:10px;text-align:center;font-size:18px;"cursor": "pointer"">
+<a href="$auth_url">Take me to Twitter</a></div>
+
+<div style="color: #FFF; background-color: #F33; -moz-border-radius: 5px; -webkit-border-radius: 5px; padding: 10px;margin:10px;text-align:center;font-size:18px;"cursor": "pointer"" onclick="javascript:KOBJ.close_notification('#KOBJ_twitter_auth')">No Thanks!</div>
+</div>
 EOF
 
- return $js;
+ my $js =  Kynetx::JavaScript::gen_js_var('KOBJ_twitter_notice',
+		   Kynetx::JavaScript::mk_js_str($msg));
+
+ return $js
  
 }
+
 
 sub process_oauth_callback {
   my($r, $method, $rid) = @_;
 
-  my $logger->get_logger();
+  my $logger = get_logger();
 
   # we have to contruct a whole request env and session
   my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
-  my $ruleset = Kynetx::Rules::get_rules_from_repository($rid, $req_info);
   my $session = process_session($r);
 
   my $req = Apache2::Request->new($r);
@@ -158,8 +230,13 @@ sub process_oauth_callback {
 
   $logger->debug("User returned from Twitter with oauth_token => $request_token &  oauth_verifier => $verifier & caller => $caller");
 
-  my $consumer_tokens = $ruleset->{'meta'}->{'keys'}->{'twitter'};
-  my $nt = Net::Twitter::OAuth->new(traits => [qw/API::REST OAuth/], %{$consumer_tokens});
+  my $nt = twitter($req_info);
+
+  $logger->debug("Successfully created Twitter object");
+
+  $nt->request_token($request_token);
+  $nt->request_token_secret(session_get($rid, $session, 'twitter:token_secret'));
+
 
   # exchange the request token for access tokens
   my($access_token, $access_token_secret, $user_id, $screen_name) = $nt->request_access_token(verifier => $verifier);
@@ -175,7 +252,287 @@ sub process_oauth_callback {
 
   $logger->debug("redirecting newly authorized tweeter to $caller");
   $r->headers_out->set(Location => $caller);
-  return Apache2::Const::REDIRECT;
+}
+
+
+
+my $func_name = {
+		 'blocking' => {
+		    "name" => "blocking" ,
+		    "parameters" => [qw/page/],
+		    "required" => [qw/none/],
+		   },
+		 'blocking_ids' => {
+				    "name" => "blocking_ids" ,
+				    "parameters" => [qw/none/],
+				    "required" => [qw/none/],
+				   },
+
+		 'favorites' => {
+				 "name" => "favorites" ,
+				 "parameters" => [qw/id page/],
+				 "required" => [qw/none/],
+				},
+
+		 'followers' => {
+				 "name" => "followers" ,
+				 "parameters" => [qw/id user_id screen_name cursor/],
+				 "required" => [qw/none/],
+				},
+
+		 'followers_ids' => {
+				     "name" => "followers_ids" ,
+				     "parameters" => [qw/id user_id screen_name cursor/],
+				     "required" => [qw/id/],
+				    },
+
+		 'friends' => {
+			       "name" => "friends" ,
+			       "parameters" => [qw/id user_id screen_name cursor/],
+			       "required" => [qw/none/],
+			      },
+
+		 'friends_ids' => {
+				   "name" => "friends_ids" ,
+				   "parameters" => [qw/id user_id screen_name cursor/],
+				   "required" => [qw/id/],
+				  },
+
+		 'friends_timeline' => {
+					"name" => "friends_timeline" ,
+					"parameters" => [qw/since_id max_id count page/],
+					"required" => [qw/none/],
+				       },
+
+		 'friendship_exists' => {
+					 "name" => "friendship_exists" ,
+					 "parameters" => [qw/user_a user_b/],
+					 "required" => [qw/user_a user_b/],
+					},
+
+		 'home_timeline' => {
+				     "name" => "home_timeline" ,
+				     "parameters" => [qw/since_id max_id count page/],
+				     "required" => [qw/none/],
+				    },
+
+		 'mentions' => {
+				"name" => "mentions" ,
+				"parameters" => [qw/since_id max_id count page/],
+				"required" => [qw/none/],
+			       },
+
+		 'public_timeline' => {
+				       "name" => "public_timeline" ,
+				       "parameters" => [qw/none/],
+				       "required" => [qw/none/],
+				      },
+
+		 'rate_limit_status' => {
+					 "name" => "rate_limit_status" ,
+					 "parameters" => [qw/none/],
+					 "required" => [qw/none/],
+					},
+
+		 'retweeted_by_me' => {
+				       "name" => "retweeted_by_me" ,
+				       "parameters" => [qw/since_id max_id count page/],
+				       "required" => [qw/none/],
+				      },
+
+		 'retweeted_of_me' => {
+				       "name" => "retweeted_of_me" ,
+				       "parameters" => [qw/since_id max_id count page/],
+				       "required" => [qw/none/],
+				      },
+
+		 'retweeted_to_me' => {
+				       "name" => "retweeted_to_me" ,
+				       "parameters" => [qw/since_id max_id count page/],
+				       "required" => [qw/none/],
+				      },
+
+		 'retweets' => {
+				"name" => "retweets" ,
+				"parameters" => [qw/id count/],
+				"required" => [qw/id/],
+			       },
+
+		 'saved_searches' => {
+				      "name" => "saved_searches" ,
+				      "parameters" => [qw/none/],
+				      "required" => [qw/none/],
+				     },
+
+		 'sent_direct_messages' => {
+					    "name" => "sent_direct_messages" ,
+					    "parameters" => [qw/since_id max_id page/],
+					    "required" => [qw/none/],
+					   },
+
+		 'show_friendship' => {
+				       "name" => "show_friendship" ,
+				       "parameters" => [qw/source_id source_screen_name target_id target_id_name/],
+				       "required" => [qw/id/],
+				      },
+
+		 'show_saved_search' => {
+					 "name" => "show_saved_search" ,
+					 "parameters" => [qw/id/],
+					 "required" => [qw/id/],
+					},
+
+		 'show_status' => {
+				   "name" => "show_status" ,
+				   "parameters" => [qw/id/],
+				   "required" => [qw/id/],
+				  },
+
+		 'show_user' => {
+				 "name" => "show_user" ,
+				 "parameters" => [qw/id/],
+				 "required" => [qw/id/],
+				},
+
+		 'trends_available' => {
+					"name" => "trends_available" ,
+					"parameters" => [qw/lat long/],
+					"required" => [qw/none/],
+				       },
+
+		 'trends_location' => {
+				       "name" => "trends_location" ,
+				       "parameters" => [qw/woeid/],
+				       "required" => [qw/woeid/],
+				      },
+
+		 'user_timeline' => {
+				     "name" => "user_timeline" ,
+				     "parameters" => [qw/id user_id screen_name since_id max_id count page/],
+				     "required" => [qw/none/],
+				    },
+
+		 'users_search' => {
+				    "name" => "users_search" ,
+				    "parameters" => [qw/q per_page page/],
+				    "required" => [qw/q/],
+				   },
+
+		 'search' => {
+			      "name" => "search" ,
+			      "parameters" => [qw/q callback lang rpp page since_id geocode show_user/],
+			      "required" => [qw/q/],
+			     },
+
+		 'trends' => {
+			      "name" => "trends" ,
+			      "parameters" => [qw/none/],
+			      "required" => [qw/none/],
+			     },
+
+		 'trends_current' => {
+				      "name" => "trends_current" ,
+				      "parameters" => [qw/exclude/],
+				      "required" => [qw/none/],
+				     },
+
+		 'trends_daily' => {
+				    "name" => "trends_daily" ,
+				    "parameters" => [qw/date exclude/],
+				    "required" => [qw/none/],
+				   },
+
+		 'trends_weekly' => {
+				     "name" => "trends_weekly" ,
+				     "parameters" => [qw/date exclude/],
+				     "required" => [qw/none/],
+				    },
+};
+
+
+sub eval_twitter {
+  my ($req_info,$rule_env,$session,$rule_name,$function,$args)  = @_;
+  my $logger = get_logger();
+  $logger->debug("eval_twitter evaluation with function -> ", $function);
+  my $f = $funcs->{$function};
+  if (defined $f) {
+    return $f->($req_info,$rule_env,$session,$rule_name,$function,$args);
+  } else {
+
+    my $nt = twitter($req_info, $session);
+
+    my $name = $func_name->{$function}->{'name'};
+
+    # construct the command and then get it
+
+
+    my $tweets = eval {
+      my $arg = '';
+      if (ref $args eq 'ARRAY' && defined $args->[0]) {
+	$arg = '$args->[0]';
+      }
+      my $command = "\$nt->$name(".$arg.");";
+      $logger->debug("[eval_twitter] executing: $command");
+      eval $command;
+    };
+  
+    if ( $@ ) {
+      # something bad happened; show the user the error
+      if ($@ =~ /\b401\b/) {
+	$logger->warn("Unauthorized access: $@");
+      } elsif ($@ =~ /\b502\b/) {
+	$logger->warn("Fail Whale: $@");
+      } else {
+	$logger->warn("$@");
+      }
+      $tweets = $@;
+    }
+#    $logger->debug("[eval_twitter] returning ", Dumper $tweets);
+
+    return $tweets;
+
+  }
+}
+
+sub twitter {
+  my($req_info, $session) = @_;
+
+  my $logger = get_logger();
+  
+  my $rid = $req_info->{'rid'};
+
+  my $consumer_tokens=get_consumer_tokens($req_info);
+#  $logger->debug("Consumer tokens: ", Dumper $consumer_tokens);
+  my $nt = Net::Twitter::Lite->new(traits => [qw/API::REST OAuth/], %{ $consumer_tokens}) ;
+
+  my $access_tokens = session_get($rid, $session, 'twitter:access_tokens');
+  if (defined $access_tokens && 
+      defined $access_tokens->{'access_token'} &&
+      defined $access_tokens->{'access_token_secret'}) {
+
+#    $logger->debug("Using access_token = " . $access_tokens->{'access_token'} . 
+#		   " &  access_secret = " . $access_tokens->{'access_token_secret'} );
+
+
+    $nt->access_token($access_tokens->{'access_token'});
+    $nt->access_token_secret($access_tokens->{'access_token_secret'});
+  }
+
+  return $nt;
+
+}
+
+sub get_consumer_tokens {
+  my($req_info) = @_;
+  my $consumer_tokens;
+  my $logger = get_logger();
+  my $rid = $req_info->{'rid'};
+  unless ($consumer_tokens = $req_info->{$rid.':key:twitter'}) {
+    my $ruleset = Kynetx::Rules::get_rules_from_repository($rid, $req_info);
+#    $logger->debug("Got ruleset: ", Dumper $ruleset);
+    $consumer_tokens = $ruleset->{'meta'}->{'keys'}->{'twitter'};
+  }
+  return $consumer_tokens;
 }
 
 1;

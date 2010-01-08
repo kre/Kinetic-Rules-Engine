@@ -10,9 +10,9 @@ ruleset 10 {
     if daytime() 
     then every {
 
-       fizz: alert("Hey!");
+       fizz => alert("Hey!");
 
-       fuzz: emit <<
+       fuzz => emit <<
 pagename = pagename.replace(/-/, ' ');
  >> ;
       

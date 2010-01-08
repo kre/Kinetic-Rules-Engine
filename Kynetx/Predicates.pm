@@ -55,6 +55,7 @@ eval_predicates
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
+
 # to add a new module to the engine, add it's name here
 my @Predicate_modules = qw(
 Demographics
@@ -66,6 +67,7 @@ Referers
 Mobile
 MediaMarkets
 Useragent
+Twitter
 Page
 Math
 );
@@ -74,6 +76,8 @@ Math
 foreach my $module (@Predicate_modules) {
     eval "use Kynetx::Predicates::${module} (':all')";
 }
+
+
 # the above code does this:
 # use Kynetx::Predicates::Location qw(:all);
 # use Kynetx::Predicates::Weather qw(:all);
@@ -82,13 +86,14 @@ foreach my $module (@Predicate_modules) {
 # use Kynetx::Predicates::Referers qw(:all);
 
 
-
 # start with some global predicates
 my %predicates = (
     'truth' => sub  { 1; },
     );
 
 
+#warn (Dumper Kynetx::Predicates::Twitter::eval_twitter()) ;
+  
 
 # load the predicates from the predicate modules
 #  eval necessary with computed module names
@@ -96,6 +101,8 @@ foreach my $module (@Predicate_modules) {
     %predicates = (%predicates,
 		   %{ eval "Kynetx::Predicates::${module}::get_predicates()"  });
 }
+
+
 
 # this code does this:
 # %predicates = (%predicates, 
@@ -117,41 +124,63 @@ sub eval_predicates {
 
     my $v = 0;
     if ($cond->{'type'} eq 'bool') {
-	return Kynetx::JavaScript::den_to_exp($cond);
+      return Kynetx::JavaScript::den_to_exp($cond);
     } elsif($cond->{'type'} eq 'pred') {
-	$v = eval_pred($req_info, $rule_env, $session, 
-		       $cond, $rule_name);
-	return $v ||= 0;
+      $v = eval_pred($req_info, $rule_env, $session, 
+		     $cond, $rule_name);
+      return $v ||= 0;
     } elsif($cond->{'type'} eq 'ineq') {
-	$v = eval_ineq($req_info, $rule_env, $session, 
-		       $cond, $rule_name);
-	return $v ||= 0;
+      $v = eval_ineq($req_info, $rule_env, $session, 
+		     $cond, $rule_name);
+      return $v ||= 0;
     } elsif($cond->{'type'} eq 'simple') {
 
-	my $pred = $cond->{'predicate'};
+      my $pred = $cond->{'predicate'};
 
-	my $predf = $predicates{$pred};
-	if($predf eq "") {
-	    $logger->warn("Predicate $pred not found for ", $rule_name);
-	} else {
+      my $predf = $predicates{$pred};
+      if($predf eq "") {
+	$logger->warn("Predicate $pred not found for ", $rule_name);
+      } else {
 
-	    my $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+
+	#FIXME: I don't know why we're using gen instead of eval, but it works...
+	my $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 
 	# FIXME: this leaves string args as '...' which means that the predicates have to remember to remove them.  That causes errors.  
 
-	    $v = &$predf($req_info, 
-			 $rule_env, 
-			 $args
+	$v = &$predf($req_info, 
+		     $rule_env, 
+		     $args
 		    );
-	    $v ||= 0;
+	$v ||= 0;
 
-	    $logger->debug('[predicate] ',
-			   "$pred executing with args (" , 
-			   sub { join(', ', @{ $args } )}, 
-			   ')',
-			   ' -> ',
-			   $v);
-	}
+	$logger->debug('[predicate] ',
+		       "$pred executing with args (" , 
+		       sub { join(', ', @{ $args } )}, 
+		       ')',
+		       ' -> ',
+		       $v);
+      }
+    } elsif ($cond->{'type'} eq 'qualified') {
+
+      my $den = Kynetx::JavaScript::eval_js_rands($cond->{'args'}, $rule_env, $rule_name,$req_info, $session);
+      # get the values
+      for (@{ $den }) {
+	$_ = den_to_exp($_);
+      }
+      $v = Kynetx::JavaScript::eval_datasource($req_info,
+						  $rule_env,
+						  $session,
+						  $rule_name,
+						  $cond->{'source'},
+						  $cond->{'predicate'},
+						  $den
+						 );
+	
+      $logger->debug("[predicate] ", $cond->{'source'}, ":", $cond->{'predicate'}, " -> ", $v);
+
+      $v ||= 0;
+
     } elsif($cond->{'type'} eq 'persistent_ineq') {
 	my $name = $cond->{'var'};
 
@@ -251,7 +280,8 @@ sub eval_predicates {
 		session_get($req_info->{'rid'}, $session, $name);
 	    
 	}
-    }
+      }
+
 
 
     # returns default value if nothing returned above
@@ -264,13 +294,16 @@ sub eval_pred {
 
     my $logger = get_logger();
 
+#    $logger->debug("[eval_pred] ", Dumper $pred);
+
     my @results = 
 	map {eval_predicates(
 		 $req_info, $rule_env, $session, 
 		 $_, $rule_name) } @{ $pred->{'args'} };
 
+    
 
-#    warn Dumper(@results);
+#    $logger->debug("[eval_pred] Rand values: ", Dumper @results);
 
     $logger->debug("Complex predicate: ", $pred->{'op'});
 

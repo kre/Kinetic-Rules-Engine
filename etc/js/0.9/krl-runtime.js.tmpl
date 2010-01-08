@@ -20,7 +20,7 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
 			rule,
 			rid
 	    );
-            if(b) { tgt.attr('href','#'); }  // # gets replaced by redirect
+            if(b) { tgt.attr('href','#KOBJ'); }  // # gets replaced by redirect
 	    });
 
     } else if(type == 'change') {

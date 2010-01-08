@@ -8,7 +8,7 @@ ruleset 10 {
 
         if x == 5
         then 
-          foo: emit <<
+          foo => emit <<
 pagename = pagename.replace(/-/, ' ');
  >>;
    }

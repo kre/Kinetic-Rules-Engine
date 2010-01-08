@@ -42,6 +42,7 @@ use Kynetx::Environments qw(:all);
 use Kynetx::Session q/:all/;
 use Kynetx::Log q/:all/;
 use Kynetx::Json q/:all/;
+#use Kynetx::Predicates::Twitter q/:authorize/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -87,7 +88,7 @@ my($active,$test,$inactive) = (0,1,2);
 #       the existing JS.  It's replaced with the final result of the chain.
 #   'before' and 'after' are both optional
 
-my %actions = (
+my $default_actions = {
 
     alert => { 
       'js' => <<EOF,
@@ -173,31 +174,29 @@ function(uniq, cb, config, selector) {
 }
 EOF
 
-    'twitter:authorize' => {
-       js => <<EOF,
-function(uniq, cb, config, header, msg) {
-  \$K.kGrowl.defaults.header = header;
-  if(typeof config === 'object') {
-    jQuery.extend(\$K.kGrowl.defaults,config);
-  }
-  \$K.kGrowl(msg);
-  cb();
-}
-EOF
-       before => \&Kynetx::Predicate::Twitter::authorize
-     },
-
+ 
     
     # cb passed into function
     annotate_search_results => {
 	 'js' => <<EOF,
 function(uniq, cb, config, annotate_fn) {
+    annotate_fn = annotate_fn || function(){return true};
     KOBJ.annotate_search_results(annotate_fn, config, cb);
 }
 EOF
       'after' => [\&handle_delay]
     },
 
+
+    annotate_local_search_results => {
+      'js' => <<EOF,
+function(uniq, cb, config, annotate_fn) {
+    annotate_fn = annotate_fn || function(){return true};
+    KOBJ.annotate_local_search_results(annotate_fn, config, cb);
+}
+EOF
+      'after' => [\&handle_delay]
+    },
 
 
 
@@ -358,28 +357,19 @@ EOF
       'after' => [\&handle_delay]
     },
 
-    annotate_local_search_results => {
-      'js' => <<EOF,
-function(uniq, cb, config, annotate_fn) {
-    KOBJ.annotate_local_search_results(annotate_fn, config, cb);
-}
-EOF
-      'after' => [\&handle_delay]
-    },
-
-	let_it_snow => {
-		'js' => <<EOF,
+    let_it_snow => {
+		    'js' => <<EOF,
 function(uniq, cb, config) {
 	KOBJ.letitsnow(config);
 	cb();
 }		
 EOF
-		'after' => [ \&handle_delay ]
+		    'after' => [ \&handle_delay ]
 		
 	},
 
 
-);
+};
 
 
 
@@ -568,13 +558,23 @@ sub build_one_action {
     # create comma separated list of arguments 
     my $arg_str = join(',', @{ $args }) || '';
 
-    my ($action_js, $before, $after);
-    if (ref $actions{$action_name} eq 'HASH') {
-      $action_js = $actions{$action_name}->{'js'};
-      $before = $actions{$action_name}->{'before'} || \&noop;
-      $after = $actions{$action_name}->{'after'} || [];
+    my $actions = {};
+    if (defined $action->{'source'}) {
+      if ($action->{'source'} eq 'twitter') {
+	$actions = Kynetx::Predicates::Twitter::get_actions();
+#	$logger->debug("Actions: ", Dumper $actions);
+      }
     } else {
-      $action_js = $actions{$action_name};
+      $actions = $default_actions;
+    }
+
+    my ($action_js, $before, $after);
+    if (ref $actions->{$action_name} eq 'HASH') {
+      $action_js = $actions->{$action_name}->{'js'};
+      $before = $actions->{$action_name}->{'before'} || \&noop;
+      $after = $actions->{$action_name}->{'after'} || [];
+    } else {
+      $action_js = $actions->{$action_name};
       $before = \&noop;
       $after = [];
     }

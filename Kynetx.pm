@@ -76,7 +76,7 @@ sub handler {
     my $rid;
     my $eid = '';
 
-    ($method,$rid,$eid) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_;]*)/?(\d+)?!;
+    ($method,$rid,$eid) = $r->path_info =~ m!/([a-z+_]+)/([A-Za-z0-9_;]*)/?(\d+)?!;
     $logger->debug("Performing $method method on rulesets $rid and EID $eid");
     Log::Log4perl::MDC->put('site', $rid);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
@@ -97,7 +97,9 @@ sub handler {
     } elsif($method eq 'version' ) {
 	show_build_num($r, $method, $rid);
     } elsif($method eq 'twitter_callback' ) {
-	Kynetx::Twitter::process_oauth_callback($r, $method, $rid);
+	Kynetx::Predicates::Twitter::process_oauth_callback($r, $method, $rid);
+	return Apache2::Const::REDIRECT;
+
     } elsif($method eq 'foo' ) {
 	my $uniq = int(rand 999999999);
 	$r->content_type('text/html');

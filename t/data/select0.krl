@@ -1,4 +1,4 @@
-// adding modifiers to actio
+// select without var
 ruleset 10 {
     rule test0 is active {
         select using "/test/" setting()
