@@ -69,7 +69,7 @@ use Kynetx::FakeReq qw(:all);
 
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 my $logger = get_logger();
 
@@ -1095,44 +1095,67 @@ is(gen_js_var("c","3"), "var c = 3;\n", "simple stings");
 sub check_free {
    my($var, $expr, $etype) = @_;
 
-   my $ptree = Kynetx::Parser::parse_expr($expr);
+   my $ptree = Kynetx::Parser::parse_decl($expr);
 
+   if ($ptree->{'type'} eq 'expr') {
+     # only care about rhs of non-here_doc decls
+     $ptree = $ptree->{'rhs'};
+   }
+
+   #diag Dumper $ptree;
+
+  $test_count++;
    ok(var_free_in_expr($var, $ptree), $var . " occurs free in "  . $etype);
  }
 
 sub check_not_free {
    my($var, $expr, $etype) = @_;
 
-   my $ptree = Kynetx::Parser::parse_expr($expr);
+   my $ptree = Kynetx::Parser::parse_decl($expr);
 
+   if ($ptree->{'type'} eq 'expr') {
+     # only care about rhs of non-here_doc decls
+     $ptree = $ptree->{'rhs'};
+   }
+   $test_count++;
    ok(!var_free_in_expr($var, $ptree), $var . " does not occur free in " . $etype);
  }
 
-check_free("v", "v + 3", "prim");
-check_not_free("x", "v + 3", "prim");
+check_free("v", "q = v + 3", "prim");
+check_not_free("x", "q = v + 3", "prim");
 
-check_not_free("v", "true", "bool");
-check_not_free("v", "false", "bool");
-check_not_free("v", "1", "num");
-check_not_free("v", "10 + 20", "prim");
-check_not_free("v", '"purple"', "string");
-check_not_free("v", '/x*/', "regexp");
+check_not_free("v", "q = true", "bool");
+check_not_free("v", "q = false", "bool");
+check_not_free("v", "q = 1", "num");
+check_not_free("v", "q = 10 + 20", "prim");
+check_not_free("v", 'q = "purple"', "string");
+check_not_free("v", 'q = /x*/', "regexp");
 
-check_free("v", "v + x", "prim");
-check_free("v", "x + v", "prim");
-check_not_free("v", "y + x", "prim");
-check_not_free("v", '["a", "b", "v"]', "string array");
-check_free("v", '[a, b, v]', "var array");
-check_not_free("v", '[a, b, c]', "var array");
+check_free("v", "q = v + x", "prim");
+check_free("v", "q = x + v", "prim");
+check_not_free("v", "q = y + x", "prim");
+check_not_free("v", 'q = ["a", "b", "v"]', "string array");
+check_free("v", 'q = [a, b, v]', "var array");
+check_not_free("v", 'q = [a, b, c]', "var array");
 
-check_free("v", 'v.pick("$..[0]")', "operator");
-check_not_free("v", 'x.pick("$..[0]")', "operator");
-check_free("v", 'today(v)', "predicate");
+check_free("v", 'q = v.pick("$..[0]")', "operator");
+check_not_free("v", 'q = x.pick("$..[0]")', "operator");
+check_free("v", 'q = today(v)', "predicate");
 
-check_free("v", 'weather:sunny(v)', "qualified predicate");
-check_free("v", '(v) => 3 | x', "conditional test");
-check_free("v", '(r) => v | 3', "conditional then");
-check_free("v", '(s) => 3 | v', "conditional else");
+check_free("v", 'q = weather:sunny(v)', "qualified predicate");
+check_free("v", 'q = (v) => 3 | x', "conditional test");
+check_free("v", 'q = (r) => v | 3', "conditional then");
+check_free("v", 'q = (s) => 3 | v', "conditional else");
+
+my $k = <<EOF;
+x = << 
+  This is a test #{v} of something 
+ >>
+EOF
+
+check_free("v", $k, "bee stings");
+check_not_free("v", 'x = << This is a test #{y} of something >>', "different bee sting");
+
 
 ##
 ## exp_to_den
@@ -1217,7 +1240,7 @@ test_exp_to_den(
 );
 
 
-done_testing($test_count + 68 + (@expr_testcases * 2) + (@decl_testcases * 1) + (@pre_testcases * 2));
+done_testing($test_count + 47 + (@expr_testcases * 2) + (@decl_testcases * 1) + (@pre_testcases * 2));
 
 
 

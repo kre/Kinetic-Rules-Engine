@@ -1258,6 +1258,65 @@ add_testcase(
 
 
 
+$krl_src = <<_KRL_;
+rule foreach_here is active {
+  select using "http://www.google.com" setting ()
+   foreach [2,7] setting (x)
+    pre {
+      y = <<
+This is the number #{x}
+>>;
+      z = 6;
+      w = <<
+This is another number #{z}
+>>;
+    }
+    alert(x+y+z);
+}
+_KRL_
+
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'foreach_here',
+    "rid" => 'cs_test'});
+
+
+
+$result = <<_JS_;
+(function(){
+ var z = 6;
+ var w = 'This is another number ' + z + '';
+ (function(){
+   var x = 2;
+   var y = 'This is the number ' + x + '';
+   function callBacks () {
+   };
+   (function(uniq,cb,config,msg) {
+      alert(msg);
+      cb();
+    }
+    ('%uniq%',callBacks,$config,(x+(y+z))));
+   }());
+ (function(){
+   var x = 7;
+   var y = 'This is the number ' + x + '';
+   function callBacks () {
+   };
+   (function(uniq, cb, config, msg) {
+      alert(msg);
+     cb();
+    }
+    ('%uniq%',callBacks,$config,(x+(y+z))));
+   }());
+ }());
+_JS_
+
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
 
 
 

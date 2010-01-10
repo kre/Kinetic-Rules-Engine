@@ -867,6 +867,8 @@ sub var_free_in_expr {
 	return at_least_one($expr->{'args'}, $var);
     } elsif($expr->{'type'} eq 'operator') {
 	return  var_free_in_expr($var, $expr->{'obj'});
+    } elsif($expr->{'type'} eq 'here_doc') {
+	return  var_free_in_here_doc($var, $expr->{'rhs'});
     } elsif($expr->{'type'} eq 'condexpr') {
       	return at_least_one([$expr->{'test'},
 			     $expr->{'then'},
@@ -884,4 +886,21 @@ sub at_least_one {
     $r ||= var_free_in_expr($var, $e);
   }
   return $r
+}
+
+sub var_free_in_here_doc {
+  my ($var, $rhs) = @_;
+
+  my $logger = get_logger();
+
+  my @vars = $rhs =~ /#{([^}])}/g;
+
+  my $found = 0;
+
+  foreach my $v (@vars) {
+    $found = 1 if $v eq $var;
+  }
+
+  return $found;
+
 }

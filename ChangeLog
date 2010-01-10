@@ -1,3 +1,10 @@
+2010-01-09  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Rules.pm (optimize_pre): Fixed over aggressive
+	  optimization of extended quotes in foreach loops.
+	* Kynetx/JavaScript.pm (var_free_in_here_doc): Added support for
+	  determining if variables are free in extended quotes;
+
 2010-01-08  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Actions.pm: Updated to use namespaces in actions by

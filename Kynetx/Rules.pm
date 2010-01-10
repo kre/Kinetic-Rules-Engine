@@ -626,6 +626,9 @@ sub optimize_pre {
 	if ($decl->{'type'} eq 'expr' &&
 	    var_free_in_expr($v, $decl->{'rhs'})) {
 	  $dependent = 1;
+	} elsif ($decl->{'type'} eq 'here_doc' &&
+	    var_free_in_expr($v, $decl)) {
+	  $dependent = 1;
 	}
       }
       if ($dependent) {
