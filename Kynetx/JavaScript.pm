@@ -893,7 +893,9 @@ sub var_free_in_here_doc {
 
   my $logger = get_logger();
 
-  my @vars = $rhs =~ /#{([^}])}/g;
+  my @vars = ($rhs =~ /#{([^}]+)}/g);
+
+#  $logger->debug("Vars in here_doc for $rhs: ", Dumper @vars);
 
   my $found = 0;
 

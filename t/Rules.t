@@ -1319,6 +1319,70 @@ add_testcase(
     );
 
 
+$krl_src = <<_KRL_;
+rule foreach_here is active {
+  select using "http://www.google.com" setting ()
+   foreach [2,7] setting (x)
+    pre {
+      p = x.pick("\$..foo");
+      y = <<
+This is the number #{p}
+>>;
+      z = 6;
+      w = <<
+This is another number #{z}
+>>;
+    }
+    alert(x+y+z);
+}
+_KRL_
+
+$config = astToJson(
+   {"txn_id" => 'txn_id',
+    "rule_name" => 'foreach_here',
+    "rid" => 'cs_test'});
+
+
+
+$result = <<_JS_;
+(function(){
+ var z = 6;
+ var w = 'This is another number ' + z + '';
+ (function(){
+   var x = 2;
+   var p = [];
+   var y = 'This is the number ' + p + '';
+   function callBacks () {
+   };
+   (function(uniq,cb,config,msg) {
+      alert(msg);
+      cb();
+    }
+    ('%uniq%',callBacks,$config,(x+(y+z))));
+   }());
+ (function(){
+   var x = 7;
+   var p = [];
+   var y = 'This is the number ' + p + '';
+   function callBacks () {
+   };
+   (function(uniq, cb, config, msg) {
+      alert(msg);
+     cb();
+    }
+    ('%uniq%',callBacks,$config,(x+(y+z))));
+   }());
+ }());
+_JS_
+
+
+add_testcase(
+    $krl_src,
+    $result,
+    $Amazon_req_info
+    );
+
+
 
 ##
 ## JSON test cases
@@ -1919,14 +1983,14 @@ session_delete($rid,$session,'my_trail');
 #
 
 sub check_optimize {
-  my($krl,$ip, $op, $desc) = @_;
+  my($krl,$ip, $op, $desc, $diag) = @_;
+  diag "============================================================"  if $diag;
   my $rst = Kynetx::Parser::parse_ruleset($krl);
-#  diag "Unoptimized: ", Dumper($rst);
+#  diag "Unoptimized: ", Dumper($rst) if $diag;
   my $ost = Kynetx::Rules::optimize_ruleset($rst);
-#  my $ost = $rst;
-#  diag "Optimized: ", Dumper($ost);
+#  diag "Optimized: ", Dumper($ost) if $diag;
 
-#  diag "Inner pre: ", Dumper $ost->{'rules'}->[0]->{'inner_pre'};
+  diag "Inner pre: ", Dumper $ost->{'rules'}->[0]->{'inner_pre'}  if $diag;
   $test_count++;
 
   is_deeply($ost->{'rules'}->[0]->{'inner_pre'} || [], 
@@ -1934,7 +1998,7 @@ sub check_optimize {
 	    $desc . "(inner)");
 
 
-#  diag "Outer pre: ", Dumper $ost->{'rules'}->[0]->{'outer_pre'};
+  diag "Outer pre: ", Dumper $ost->{'rules'}->[0]->{'outer_pre'}  if $diag;
   $test_count++;
   is_deeply($ost->{'rules'}->[0]->{'outer_pre'} || [], 
 	    $op, 
@@ -2329,6 +2393,8 @@ ruleset global_expr_1 {
 }
 _KRL_
 
+
+
 check_optimize($krl_src,
 	       [{
 		 'rhs' => {
@@ -2377,6 +2443,64 @@ check_optimize($krl_src,
 	       "Two foreach; One independent, one dependent, order doesn't matter");
 
 
+$krl_src = <<_KRL_;
+ruleset global_expr_1 {
+ rule foreach_here is active {
+  select using "http://www.google.com" setting ()
+   foreach [2,7] setting (x)
+    pre {
+      tweetUser = x.pick("\$..foo");
+      y = <<
+This is the number #{tweetUser} and #{x} 
+>>;
+      z = 6;
+      w = <<
+This is another number #{z}
+>>;
+    }
+    alert(x+y+z);
+ }
+}
+_KRL_
+
+check_optimize($krl_src,
+[{
+     'rhs' => {
+       'obj' => {
+         'val' => 'x',
+         'type' => 'var'
+       },
+       'args' => [
+         {
+           'val' => '$..foo',
+           'type' => 'str'
+         }
+       ],
+       'name' => 'pick',
+       'type' => 'operator'
+     },
+     'lhs' => 'tweetUser',
+     'type' => 'expr'
+   },
+   {
+     'rhs' => 'This is the number #{tweetUser} and #{x}   ',
+     'lhs' => 'y',
+     'type' => 'here_doc'
+   }
+],[{
+     'rhs' => {
+       'val' => 6,
+       'type' => 'num'
+     },
+     'lhs' => 'z',
+     'type' => 'expr'
+   },
+   {
+     'rhs' => 'This is another number #{z}  ',
+     'lhs' => 'w',
+     'type' => 'here_doc'
+   }
+], "Extended quotes", 0);
 
 #diag "Test cases: " . int(@test_cases) . " and others: " . $test_count;
 
