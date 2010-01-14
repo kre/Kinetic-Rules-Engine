@@ -34,7 +34,7 @@ my $hstamp = $dt->hms('');
 my $kobj_file = "kobj-static-".$dstamp.$hstamp.".js";
 
 my @js_files = qw(
-jquery-1.3.2.js
+jquery-1.4.js
 jquery.json-1.2.js
 jquery-ui-1.7.2.custom.js
 kgrowl-1.0.js
