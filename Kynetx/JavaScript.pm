@@ -356,7 +356,7 @@ sub eval_one_decl {
   # yes, this is cheating and breaking the abstraction, but it's fast...
   $rule_env->{$var} = $val;
 
-  $logger->debug("[eval_pre] $var -> $val");
+  $logger->debug("[eval_pre] $var -> $val") if (defined $val);
 
   $val = Kynetx::JavaScript::exp_to_den($val);
 #  $logger->debug("[eval_one_decl] after denoting:", Dumper $val);
@@ -447,7 +447,7 @@ sub eval_js_expr {
     my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
 
     my $logger = get_logger();
-#    $logger->debug("Rule env: ", sub { Dumper($rule_env) });
+    $logger->trace("[javascript] expr: ", sub { Dumper($expr) });
 
     $rule_name ||= 'global';
 
@@ -462,7 +462,7 @@ sub eval_js_expr {
 	unless (defined $v) {
 	    $logger->warn("Variable '", $expr->{'val'}, "' is undefined");
 	}
-	$logger->debug($rule_name.':'.$expr->{'val'}, " -> ", $v, ' Type -> ', infer_type($v));
+	$logger->trace($rule_name.':'.$expr->{'val'}, " -> ", $v, ' Type -> ', infer_type($v));
 	return  {'type' => infer_type($v),
 		 'val' =>  $v};
     } elsif($expr->{'type'} eq 'bool') {
@@ -476,7 +476,8 @@ sub eval_js_expr {
     } elsif($expr->{'type'} eq 'prim') {
 	return eval_js_prim($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'operator') {
-	return Kynetx::Operators::eval_operator($expr, $rule_env, $rule_name, $req_info, $session);
+        $logger->trace('[javascript::eval_js_expr] ', Dumper($expr));
+	   return Kynetx::Operators::eval_operator($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'condexpr') {
 	return eval_predicates($req_info, $rule_env, $session, $expr->{'test'}, $rule_name) ?
 	       eval_js_expr($expr->{'then'}, $rule_env, $rule_name, $req_info, $session) :
@@ -496,7 +497,7 @@ sub eval_js_expr {
 				$den
 	    );
 
-	$logger->debug("[JS Expr] ", $expr->{'source'}, ":", $expr->{'predicate'}, " -> ", $v);
+	$logger->trace("[JS Expr] ", $expr->{'source'}, ":", $expr->{'predicate'}, " -> ", $v);
 
 	return {'type' => infer_type($v),
 		'val' => $v};
@@ -560,8 +561,9 @@ sub eval_js_prim {
 
 # warning: this returns a ref to an array, not an array!
 sub eval_js_rands {
+    my $logger = get_logger();
     my ($rands, $rule_env, $rule_name, $req_info, $session) = @_;
-
+    $logger->trace("[javascript] rands: ", Dumper($rands));
     my @rands = map {eval_js_expr($_, $rule_env, $rule_name, $req_info, $session)} @{ $rands } ;
 
     return \@rands;
@@ -595,7 +597,6 @@ sub eval_js_decl {
 	my $r = eval_js_expr($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);
 	$val = $r->{'val'} if (ref $r eq 'HASH');
 #	$logger->debug("[decl] expr for ", $decl->{'lhs'}, ' -> ', sub{Dumper($val)} );
-	$logger->debug("[decl] expr for ", $decl->{'lhs'}, ' -> ', $val );
 
     } elsif ($decl->{'type'} eq 'here_doc') {
 
@@ -644,7 +645,17 @@ sub eval_datasource {
     } elsif ($source eq 'twitter') {
 	$val = Kynetx::Predicates::Twitter::eval_twitter($req_info,$rule_env,$session,$rule_name,$function,$args);
     } elsif ($source eq 'datasource') {
-      $val = Kynetx::Datasets::get_datasource($rule_env,$args,$function);
+      #$val = Kynetx::Datasets::get_datasource($rule_env,$args,$function);
+      my $rs = lookup_rule_env('datasource:'.$function,$rule_env);
+      my $new_ds = Kynetx::Datasets->new($rs);
+      $new_ds->load($req_info,$args);
+      $new_ds->unmarshal();
+      if (defined $new_ds->json) {
+        $val = $new_ds->json;
+      } else {
+        $val = $new_ds->sourcedata;
+      }
+      
     } else {
       $logger->warn("Datasource for $source not found");
     }
