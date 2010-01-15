@@ -80,7 +80,6 @@ my $rid = 'cs_test';
 
 # test choose_action and args
 
-my $my_req_info = Kynetx::Test::gen_req_info($rid);
 
 
 my $rule_name = 'foo';
@@ -91,39 +90,6 @@ my $rule_env = Kynetx::Test::gen_rule_env();
 my $session = Kynetx::Test::gen_session($r, $rid);
 
 
-# my $rid = 'cs_test';
-# my $rule_name = 'foo';
-
-# my $rule_env = empty_rule_env();
-
-# $rule_env = extend_rule_env(
-#     ['city','tc','temp','booltrue','boolfalse','a','b'],
-#     ['Blackfoot','15',20,'true','false','10','11'],
-#     $rule_env);
-
-# #diag Dumper($rule_env);
-
-# my $scope_hash = flatten_env($rule_env);
-# #diag Dumper($scope_hash);
-# my $rule_env_js = Kynetx::Actions::emit_var_decl($scope_hash);
-# #diag $rule_env_js;
-
-# # dummy up some counter data in the session
-
-# my $session = process_session($r);
-
-# session_store($rid, $session, 'archive_pages_old', 3);
-# my $three_days_ago = DateTime->now->add( days => -3 );
-# session_touch($rid, $session, 'archive_pages_old', $three_days_ago);
-
-# session_store($rid, $session, 'archive_pages_now', 2);
-# session_store($rid, $session, 'archive_pages_now2', 3);
-
-# session_push($rid, $session, 'my_trail', "http://www.windley.com/foo.html");
-# session_push($rid, $session, 'my_trail', "http://www.kynetx.com/foo.html");
-
-# session_clear($rid, $session, 'my_flag');
-
 my $krl_src;
 my $js;
 my $test_count;
@@ -131,16 +97,29 @@ my $config;
 my $config2;
 
 
-my $Amazon_req_info;
-$Amazon_req_info->{'ip'} = '72.21.203.1'; # Seattle (Amazon)
-$Amazon_req_info->{'rid'} = $rid;
-$Amazon_req_info->{'txn_id'} = 'txn_id';
-$Amazon_req_info->{'caller'} = 'http://www.google.com/search';
+sub gen_req_info {
+  return Kynetx::Test::gen_req_info($rid, 
+				    {'ip' =>  '72.21.203.1',
+				     'txn_id' => 'txn_id',
+				     'caller' => 'http://www.google.com/search',
+				    });
+}
+
+my $dummy_final_req_info = undef;
+my $final_req_info = {};
+
+
+#diag Dumper gen_req_info();
+
+# $Amazon_req_info->{'ip'} = '72.21.203.1'w; # Seattle (Amazon)
+# $Amazon_req_info->{'rid'} = $rid;
+# $Amazon_req_info->{'txn_id'} = 'txn_id';
+# $Amazon_req_info->{'caller'} = 'http://www.google.com/search';
 
 my (@test_cases, $json, $krl,$result);
 
 sub add_testcase {
-    my($str, $expected, $req_info, $diag) = @_;
+    my($str, $expected, $final_req_info, $diag) = @_;
 
     my $pt;
     my $type = '';
@@ -152,10 +131,10 @@ sub add_testcase {
 	$type = 'rule';
      }
 
-  if ($pt->{'error'}) {
-    diag $str;
-    diag $pt->{'error'};
-  }
+    if ($pt->{'error'}) {
+      diag $str;
+      diag $pt->{'error'};
+    }
 
 
 
@@ -165,10 +144,10 @@ sub add_testcase {
 
     push(@test_cases, {'expr' => $pt,
 		       'val' => $expected,
-		       'req_info' => $req_info,
 		       'session' => $session,
 		       'src' =>  $str,
 		       'type' => $type,
+		       'final_req_info' => $final_req_info,
 		       'diag' => $diag
 	 }
 	 );
@@ -176,7 +155,7 @@ sub add_testcase {
 
 
 sub add_json_testcase {
-    my($str, $expected, $req_info, $diag) = @_;
+    my($str, $expected, $final_req_info, $diag) = @_;
     my $val = Kynetx::Json::jsonToAst($str);
  
     chomp $str;
@@ -185,9 +164,9 @@ sub add_json_testcase {
 
     push(@test_cases, {'expr' => $val,
 		       'val' => $expected,
-		       'req_info' => $req_info,
 		       'session' => $session,
 		       'src' =>  $str,
+		       'final_req_info' => $final_req_info,
 		       'type' => 'rule',
 	 }
 	);
@@ -223,7 +202,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 $krl_src = <<_KRL_;
@@ -254,7 +233,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -286,7 +265,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -318,7 +297,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 #
@@ -347,7 +326,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -384,7 +363,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -417,7 +396,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 # this should fire
@@ -458,7 +437,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -499,7 +478,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -529,7 +508,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 $krl_src = <<_KRL_;
@@ -564,7 +543,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -601,7 +580,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -627,7 +606,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -661,7 +640,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -695,7 +674,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -719,7 +698,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -753,7 +732,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -802,7 +781,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -844,7 +823,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -881,7 +860,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -918,7 +897,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -957,7 +936,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -988,7 +967,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -1015,7 +994,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -1117,7 +1096,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -1172,7 +1151,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -1194,6 +1173,11 @@ $config = astToJson(
     "rule_name" => 'foreach_2',
     "rid" => 'cs_test'});
 
+$final_req_info = {
+ 'results' => ['fired'],
+ 'names' => [$rid.':foreach_2'],
+ 'all_actions' => [['alert','alert','alert','alert']],
+ };
 
 $result = <<_JS_;
 (function(){
@@ -1253,7 +1237,8 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $final_req_info,
+    0
     );
 
 
@@ -1315,7 +1300,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -1342,6 +1327,11 @@ $config = astToJson(
     "rule_name" => 'foreach_here',
     "rid" => 'cs_test'});
 
+$final_req_info = {
+ 'results' => ['fired'],
+ 'names' => [$rid.':foreach_here'],
+ 'all_actions' => [['alert','alert']],
+ };
 
 
 $result = <<_JS_;
@@ -1379,7 +1369,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $Amazon_req_info
+    $final_req_info
     );
 
 
@@ -1410,7 +1400,7 @@ _JS_
 add_json_testcase(
     $json,
     $result,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -1435,7 +1425,7 @@ _JS_
 add_testcase(
     $krl_src,
     $global_expr_0,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -1460,6 +1450,12 @@ $config = astToJson(
     "rid" => 'cs_test'});
 
 
+$final_req_info = {
+ 'results' => ['fired'],
+ 'names' => ['cs_test:t0'],
+ 'all_actions' => [['noop']],
+ };
+
 my $global_expr_1 = <<_JS_;
 (function(){
 var x = 3;
@@ -1476,7 +1472,7 @@ _JS_
 add_testcase(
     $krl_src,
     $global_expr_1,
-    $Amazon_req_info
+    $final_req_info
     );
 
 
@@ -1533,7 +1529,7 @@ _JS_
 add_testcase(
     $krl_src,
     $js,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -1578,7 +1574,7 @@ _JS_
 add_testcase(
     $krl_src,
     $js,
-    $Amazon_req_info
+    $dummy_final_req_info
     );
 
 
@@ -1637,7 +1633,7 @@ _JS_
 add_testcase(
     $krl_src,
     $js,
-    $Amazon_req_info,
+    $dummy_final_req_info,
     0
     );
 
@@ -1684,7 +1680,7 @@ _JS_
 add_testcase(
     $krl_src,
     $js,
-    $Amazon_req_info,
+    $dummy_final_req_info,
     0
     );
 
@@ -1692,10 +1688,12 @@ add_testcase(
 # now test each test case twice
 foreach my $case (@test_cases) {
 
+  my $req_info = gen_req_info();
   if($case->{'type'} eq 'ruleset') {
 
+    
     $js = Kynetx::Rules::eval_ruleset($r, 
-				      $case->{'req_info'}, 
+				      $req_info, 
 				      empty_rule_env(), 
 				      $session, 
 				      $case->{'expr'}, 
@@ -1704,7 +1702,7 @@ foreach my $case (@test_cases) {
   } elsif($case->{'type'} eq 'rule') {
 
     $js = Kynetx::Rules::eval_rule($r,
-				   $case->{'req_info'}, 
+				   $req_info, 
 				   $rule_env, 
 				   $case->{'session'}, 
 				   $case->{'expr'},
@@ -1715,7 +1713,7 @@ foreach my $case (@test_cases) {
   }
 
   # reset the last flag for the next test
-  $case->{'req_info'}->{$rid.':last'} = 0;
+#  $case->{'req_info'}->{$rid.':last'} = 0;
 
   # remove whitespace
   $js = nows($js);
@@ -1744,6 +1742,7 @@ foreach my $case (@test_cases) {
 
   if ($case->{'val'} eq '') {
     is($js, $case->{'val'}, "Evaling rule " . $case->{'src'});
+    $test_count++;
   } else {
 
     my $re = qr/$case->{'val'}/;
@@ -1751,7 +1750,17 @@ foreach my $case (@test_cases) {
     like($js,
 	 $re,
 	 "Evaling rule " . $case->{'src'});
+    $test_count++;
     
+  }
+
+  # check the request env
+
+  if (defined $case->{'final_req_info'}) {
+    foreach my $k (keys %{ $final_req_info} ) {
+      is_deeply($req_info->{$k}, $case->{'final_req_info'}->{$k}, "Checking $k");
+      $test_count++;
+    }
   }
 
 
@@ -1770,8 +1779,10 @@ my $no_server_available = (! $response->is_success);
 
 
 sub test_datafeeds {
-  my ($no_server_available, $src, $js, $req_info, $diag) = @_;
+  my ($no_server_available, $src, $js, $log_results, $diag) = @_;
   $test_count++;
+
+  my $req_info = gen_req_info();
  SKIP: {
 
     skip "No server available", 1 if ($no_server_available);
@@ -1812,7 +1823,7 @@ test_datafeeds(
     0, # this test can run without a server
     $krl_src,
     $js,
-    $Amazon_req_info,
+    $dummy_final_req_info,
     0);
 
 
@@ -1834,7 +1845,7 @@ test_datafeeds(
     $no_server_available,
     $krl_src,
     $js,
-    $Amazon_req_info,
+    $dummy_final_req_info,
     0
     );
 
@@ -1861,7 +1872,7 @@ test_datafeeds(
     $no_server_available,
     $krl_src,
     $js,
-    $Amazon_req_info,
+    $dummy_final_req_info,
     0
     );
 
@@ -1884,7 +1895,7 @@ test_datafeeds(
     $no_server_available,
     $krl_src,
     $js,
-    $Amazon_req_info,
+    $dummy_final_req_info,
     0
     );
 
@@ -1903,7 +1914,7 @@ test_datafeeds(
     $no_server_available,
     $krl_src,
     $js,
-    $Amazon_req_info,
+    $dummy_final_req_info,
     0
     );
 
@@ -1936,7 +1947,7 @@ test_datafeeds(
     $no_server_available,
     $krl_src,
     $js,
-    $Amazon_req_info,
+    $dummy_final_req_info,
     0
     );
 
@@ -2504,7 +2515,7 @@ check_optimize($krl_src,
 
 #diag "Test cases: " . int(@test_cases) . " and others: " . $test_count;
 
-done_testing($test_count + (@test_cases * 1));
+done_testing($test_count);
 
 session_cleanup($session);
 

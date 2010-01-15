@@ -32,9 +32,6 @@ sessions:
   # 21201 is the default for memcachedb
   session_port: 11211
 
-# domain that the cookie will be set in for sessions.
-#  should be usable by all KNS servers
-COOKIE_DOMAIN: kobj.net
 
 # The home directory
 WEB_ROOT: /web
@@ -45,12 +42,21 @@ KOBJ_ROOT: /web/lib/perl
 # where should Apache direct people when it wants to give an address?
 SERVER_ADMIN: web@kynetx.com
 
-# hostnames
-# just the full hostnames.  
-INIT_HOST: init.kobj.net
-CB_HOST: log.kobj.net
-EVAL_HOST: cs.kobj.net
-KRL_HOST: krl.kobj.net
+# runmode: production or development
+# in development mode, the IP address of the client is faked, etc.
+RUN_MODE: production
+
+production: 
+  # hostnames
+  #just the full hostnames.  
+  INIT_HOST: init.kobj.net
+  CB_HOST: log.kobj.net
+  EVAL_HOST: cs.kobj.net
+  KRL_HOST: krl.kobj.net
+
+  # domain that the cookie will be set in for sessions.
+  #  should be usable by all KNS servers
+  COOKIE_DOMAIN: kobj.net
 
 
 # Rule repository configuration
@@ -69,9 +75,6 @@ RULE_REPOSITORY: https://rulesetmanager.kobj.net/ruleset/source|kynetx|fart95
 LOG_PERIOD: 1hour
 
 
-# runmode: production or development
-# in development mode, the IP address of the client is faked, etc.
-RUN_MODE: production
 
 # debug: on or off 
 # turn on detailed debugging logs.  Recommendd off in production

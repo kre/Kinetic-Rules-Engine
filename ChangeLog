@@ -1,3 +1,15 @@
+2010-01-15  Phil Windley  <pjw@kynetx.com>
+
+	* bin/install-init-files.pl: Amazon upload or local gen, not both;
+	  use production config for Amazon always.
+	* Kynetx/PrettyPrinter.pm: Added function decls
+	* Kynetx/Parser.pm: Added function decls
+	* Kynetx/Configure.pm (configure): production and development
+	  configuration hierarchy supported
+	* Kynetx/Test.pm (gen_req_info): Added option for 'ip'
+	* Kynetx/Rules.pm (eval_rule): fixed multiple logging of 'fired'
+	  in foreach rules
+
 2010-01-09  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (optimize_pre): Fixed over aggressive

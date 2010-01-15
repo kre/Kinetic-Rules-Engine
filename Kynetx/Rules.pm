@@ -359,6 +359,9 @@ sub eval_rule {
     $req_info->{'actions'} = [];
     $req_info->{'labels'} = [];
     $req_info->{'tags'} = [];
+    
+    # assume the rule doesn't fire.  We will change this if it EVER fires in this eval
+    $req_info->{$rule->{'name'}.'_result'} = 'notfired';
 
     if ($rule->{'pre'} &&
 	! ($rule->{'inner_pre'} || $rule->{'outer_pre'})) {
@@ -367,9 +370,6 @@ sub eval_rule {
     }
 
     my $outer_tentative_js = '';
-
-#    $logger->debug(Dumper($rule->{'pagetype'}));
-#    $logger->debug("[eval_rule] ", Dumper($rule));
 
 
     # this loads the rule_env.  
@@ -380,32 +380,18 @@ sub eval_rule {
 				      $session, 
 				      $rule->{'outer_pre'});
 
-
-#     if (!defined $rule->{'pagetype'}->{'foreach'} ||
-# 	@{$rule->{'pagetype'}->{'foreach'}} == 0) {
-#       my $rb_js = eval_rule_body($r, 
-# 				 $req_info, 
-# 				 $rule_env, 
-# 				 $session, 
-# 				 $rule);
-#       $js .= mk_turtle($rb_js) if $rb_js; # keep the js clean
-#     } else { # foreach isn't empty
-
-    # now we don't have to flush cache on deploy
     $rule->{'pagetype'}->{'foreach'} = [] 
       unless defined $rule->{'pagetype'}->{'foreach'};
 
-      $js .= eval_foreach($r, 
-			  $req_info, 
-			  $rule_env, 
-			  $session, 
-			  $rule,
-			  @{ $rule->{'pagetype'}->{'foreach'} });
-#    }
-
-    
+    $js .= eval_foreach($r, 
+			$req_info, 
+			$rule_env, 
+			$session, 
+			$rule,
+			@{ $rule->{'pagetype'}->{'foreach'} });
 
     # save things for logging
+    push(@{ $req_info->{'results'} }, $req_info->{$rule->{'name'}.'_result'});
     push(@{ $req_info->{'names'} }, $req_info->{'rid'}.':'.$rule->{'name'});
     push(@{ $req_info->{'all_actions'} }, $req_info->{'actions'});
     push(@{ $req_info->{'all_labels'} }, $req_info->{'labels'});
@@ -455,6 +441,8 @@ sub eval_foreach {
       $val = typed_value($val);
 
 #      $logger->debug("Evaluating rule body with " . Dumper($val));
+
+      # we recurse in side this loop to handle nested foreach statements
       $fjs .= mk_turtle(
 		gen_js_var($var, gen_js_expr($val)) .
   	        eval_foreach($r, 
@@ -515,15 +503,19 @@ sub eval_rule_body {
 					 $session);
 	
     $fired = 1;
-    push(@{ $req_info->{'results'} }, 'fired');
+    # change the 'fired' flag to indicate this rule fired.  
+    $req_info->{$rule->{'name'}.'_result'} = 'fired';
+#    push(@{ $req_info->{'results'} }, 'fired');
 
 
   } else {
     $logger->info("did not fire");
 
     $fired = 0;
-    # put this in the logging DB
-    push(@{ $req_info->{'results'} }, 'notfired');
+
+# don't do anything since we already assume no fire; 
+#    $req_info->{$rule->{'name'}.'_result'} = 'notfired';
+#    push(@{ $req_info->{'results'} }, 'notfired');
 
   }
 

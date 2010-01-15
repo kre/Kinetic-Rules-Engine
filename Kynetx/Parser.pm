@@ -720,6 +720,7 @@ cond_expr_cond: '(' predexpr ')'
     {$return = $item[2]}
    | simple_pred
    | qualified_pred
+
   
 
 term: factor factor_op term
@@ -754,6 +755,7 @@ factor: NUM
         {$return=Kynetx::Parser::mk_expr_node('bool',$item[1])}
       | 'false'
         {$return=Kynetx::Parser::mk_expr_node('bool',$item[1])}
+      | function
       | persistent_var
       | trail_exp
       | simple_pred 
@@ -849,6 +851,18 @@ periods: 'years'
       | 'seconds'
       | <error>
 
+
+function: 'function' '(' VAR(s? /,/) ')' '{' fundecls(?) expr '}' 
+      {$return={
+          'type' => 'function',
+          'vars' => $item[3],
+          'decls' => $item[6][0] || [],
+          'expr' => $item[7]
+        }
+      } 
+ 
+fundecls: decl(s? /;/) SEMICOLON
+     {$return = $item[1]}
 
 
 _EOGRAMMAR_

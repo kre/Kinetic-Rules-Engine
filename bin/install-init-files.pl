@@ -16,6 +16,12 @@ use Compress::Zlib;
 use DateTime;
 use Data::Dumper;
 
+# global options
+use vars qw/ %opt /;
+my $opt_string = 'hv:r:au';
+getopts( "$opt_string", \%opt ); # or &usage();
+&usage() if $opt{'h'};
+
 
 use Kynetx::Configure qw/:all/;
 
@@ -26,6 +32,10 @@ use constant DEFAULT_JS_VERSION => '0.9';
 
 # configure KNS
 Kynetx::Configure::configure();
+
+# use production mode to generate the file if sending to Amazon
+Kynetx::Configure::set_run_mode('production') if $opt{'a'};
+
 
 my $dt = DateTime->now;
 my $dstamp = $dt->ymd('');
@@ -48,12 +58,6 @@ krl-runtime.js.tmpl
 
 
 
-# global options
-use vars qw/ %opt /;
-my $opt_string = 'hv:r:au';
-getopts( "$opt_string", \%opt ); # or &usage();
-&usage() if $opt{'h'};
-
 
 my $js_version = $opt{'v'} || DEFAULT_JS_VERSION;
 my $js_root = $opt{'r'} || DEFAULT_JS_ROOT;
@@ -71,40 +75,40 @@ foreach my $file (@js_files) {
 
 if($opt{'a'}) {  # save to S3
 
-    require Amazon::S3;
-    Amazon::S3->import;
+  require Amazon::S3;
+  Amazon::S3->import;
 #    use vars qw/$OWNER_ID $OWNER_DISPLAYNAME/;
 
 # load the Amazon credentials
-# these are not in the code repository on purpose
-    require amazon_credentials; 
+  # these are not in the code repository on purpose
+  require amazon_credentials; 
 
-    warn "\nWARNING!!!!! 127.0.0.1 appear in the KRL runetime file on S3\n" if 
+  warn "\nWARNING!!!!! 127.0.0.1 appear in the KRL runetime file on S3\n" if 
       Kynetx::Configure::get_config('INIT_HOST') eq '127.0.0.1' ||
       Kynetx::Configure::get_config('CB_HOST') eq '127.0.0.1' ||
       Kynetx::Configure::get_config('KRL_HOST') eq '127.0.0.1' ||
       Kynetx::Configure::get_config('EVAL_HOST') eq '127.0.0.1';
 
-    # compress the JS program
-    my $cjs = Compress::Zlib::memGzip($js);
+  # compress the JS program
+  my $cjs = Compress::Zlib::memGzip($js);
 
-    # create expires timestamp
-    $dt = $dt->add(days => 364);
-    my $expires = $dt->strftime("%a %d %b %Y %T %Z");
+  # create expires timestamp
+  $dt = $dt->add(days => 364);
+  my $expires = $dt->strftime("%a %d %b %Y %T %Z");
 
 
-    # FIXME: there ought to be a way to override credentials on CL
+  # FIXME: there ought to be a way to override credentials on CL
 
-    my $s3 = Amazon::S3->new(
+  my $s3 = Amazon::S3->new(
 	{   aws_access_key_id     => amazon_credentials->get_key_id(),
 	    aws_secret_access_key => amazon_credentials->get_access_key()
 	}
 	);
 
-    my $bucket = $s3->bucket('init-files') or die $s3->err . ": " . $s3->errstr;;
+  my $bucket = $s3->bucket('init-files') or die $s3->err . ": " . $s3->errstr;;
 
-    print "Writing JS to $kobj_file on S3 with expiration of $expires\n";
-    $bucket->add_key( 
+  print "Writing JS to $kobj_file on S3 with expiration of $expires\n";
+  $bucket->add_key( 
 	$kobj_file, # file name
 	$cjs,        # 
 	{ 'Content-type' => 'text/javascript', 
@@ -114,20 +118,25 @@ if($opt{'a'}) {  # save to S3
 	},
 	) or die $s3->err . ": " . $s3->errstr;
 
+  print "See http://static.kobj.net/$kobj_file for results\n";
+
+} else {
+
+  # print the file
+  my $filename = join('/',($js_root,$js_version,$kobj_file));
+  print "Writing $filename...\n";
+
+  # save file locally
+  open(FH,">$filename");
+  print FH $js;
+  close(FH);
+
+  my $pofn = join('/',($js_root,$js_version,"kobj-static.js"));
+  unlink $pofn;
+  link($filename,$pofn);
+
+    
 }
-
-# print the file
-my $filename = join('/',($js_root,$js_version,$kobj_file));
-print "Writing $filename...\n";
-
-# save file locally
-open(FH,">$filename");
-print FH $js;
-close(FH);
-
-my $pofn = join('/',($js_root,$js_version,"kobj-static.js"));
-unlink $pofn;
-link($filename,$pofn);
 
 
 
@@ -185,7 +194,7 @@ Create Kynetx initialization js files
 
 Options:
 
-   -a       : store to S3
+   -a       : store to S3 only in production mode
    -u       : don't minify the file during publish
    -r DIR   : use DIR as the root directory for JS files
    -v V     : use V as the verion number

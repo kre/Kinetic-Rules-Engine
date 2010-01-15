@@ -95,6 +95,9 @@ ok( !exists $got->{'mustfail'}, 'Fake config variables fail' );
 my $template_file = "./data/base.yml";
 Kynetx::Configure::configure($template_file);
 
+# make things match
+Kynetx::Configure::set_run_mode($runmode);
+
 my $expected = Kynetx::Configure::get_properties();
 prune_hash($expected,1);
 
@@ -107,6 +110,9 @@ Kynetx::Configure::configure($template_file);
 
 $expected = Kynetx::Configure::get_properties();
 prune_hash($expected);
+
+#diag Dumper $got;
+#diag Dumper $expected;
 
 cmp_deeply( $got, superhashof($expected), "Config Value Comparisons" );
 

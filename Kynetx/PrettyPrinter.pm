@@ -911,6 +911,9 @@ sub pp_expr {
 	    $o .= ")";
 	    return  $o ;
 	};
+	/function/ && do {
+	    return pp_function($expr);
+	};
 	/^pred$/ && do {
 	    my $o = pp_pred($expr);
 	    return  $o ;
@@ -942,6 +945,18 @@ sub pp_expr {
 	
     } 
 
+}
+
+sub pp_function {
+  my $expr = shift;
+  my $o = '';
+  $o .= 'function (';
+  $o .= join ", ", @{ $expr->{'vars'} };
+  $o .= ") {";
+  $o .= join "; ", (map {pp_decl($_, 0)} @{ $expr->{'decls'} });
+  $o .= "; " if @{$expr->{'decls'}};
+  $o .= pp_expr($expr->{'expr'});
+  $o .= "}";
 }
 
 sub pp_timeframe {

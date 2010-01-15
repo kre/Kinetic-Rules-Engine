@@ -90,7 +90,8 @@ sub configure {
     my @mservers = map {$_ . ":" . $config->{'memcache'}->{'mcd_port'} } 
 	          @{ $config->{'memcache'}->{'mcd_hosts'} };	   
     $config->{'MEMCACHE_SERVERS'} = \@mservers;
-	  
+
+    set_run_mode();
 
 
     return 1;
@@ -105,8 +106,15 @@ sub get_config {
 
 sub set_run_mode {
     my ($mode) = @_;
-    $config->{'RUN_MODE'} = $mode || $config->{'RUN_MODE'} || '';
-    return $config->{'RUN_MODE'};
+
+    $mode = $mode || $config->{'RUN_MODE'} || 'production';
+    $config->{'RUN_MODE'} = $mode;
+
+    for my $k (qw/INIT_HOST CB_HOST EVAL_HOST KRL_HOST KNS_PORT COOKIE_DOMAIN/) {
+      $config->{$k} = $config->{$mode}->{$k};
+    }
+
+    return $mode;
 }
 
 sub set_debug { 

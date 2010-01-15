@@ -95,6 +95,7 @@ sub configure {
 sub gen_req_info {
     my($rid, $options) = @_;
     my $req_info;
+    $req_info->{'ip'} = $options->{'ip'} || '72.21.203.1';
     $req_info->{'caller'} = $options->{'caller'} || 'http://www.windley.com';
     $req_info->{'pool'} = APR::Pool->new;
     $req_info->{'txn_id'} = $options->{'txn_id'} || '1234';
