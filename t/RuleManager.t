@@ -231,7 +231,7 @@ GLOBAL
 
 
 my $test_json_global = <<JSON;
-[{"source":"http://twitter.com/statuses/public_timeline.json","name":"public_timeline","type":"dataset","cachable":0},{"source":"http://twitter.com/statuses/public_timeline.json","name":"cached_timeline","type":"dataset","cachable":1},{"emit":"var foobar = 4;       "}]
+[{"source":"http://twitter.com/statuses/public_timeline.json","name":"public_timeline","type":"dataset","datatype":"JSON","cachable":0},{"source":"http://twitter.com/statuses/public_timeline.json","name":"cached_timeline","type":"dataset","datatype":"JSON","cachable":1},{"emit":"var foobar = 4;       "}]
 JSON
 
 my $test_dispatch = <<DISPATCH;
