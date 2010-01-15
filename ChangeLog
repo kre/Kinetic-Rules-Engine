@@ -1,3 +1,19 @@
+2010-01-15 Mark Horstmeier <meh@kynetx.com>
+    * Kynetx/Datasets.pm: Refactored the whole module to support 
+      datasets/datasources with JSON and XML sources.  For
+      convenience, there are helper functions that mimic the old
+      behavior (see Datasets.t), but those should be deprecated
+    * Kynetx/JavaScript.pm: changed data source references to use the new
+      object methods
+    * Kynetx/Parser.pm: Modified parser to support the optional data source
+      type syntax
+    * Kynetx/Rules.pm: changed data source references to use the new
+      object methods
+    * t/Datasets.t: minor modifications made for testing.  All of the original
+      tests are there to make sure of backwards compatibility (though
+      there shouldn't be any references to the old methods)
+    * t/RuleManager.t: modified an AST test to support new datatype syntax
+
 2010-01-15  Phil Windley  <pjw@kynetx.com>
 
 	* bin/install-init-files.pl: Amazon upload or local gen, not both;
