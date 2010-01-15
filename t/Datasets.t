@@ -45,8 +45,9 @@ use APR::Pool ();
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
-Log::Log4perl->easy_init($WARN);
+#Log::Log4perl->easy_init($WARN);
 #Log::Log4perl->easy_init($DEBUG);
+my $logger = get_logger();
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Datasets qw/:all/;
@@ -223,6 +224,9 @@ _KRL_
     $rule_env = {};
 
     my($this_js, $val, $var) = mk_dataset_js($krl->[0], $req_info, $rule_env);
+    my $expected = "KOBJ['data']['fizz_data']  = " . get_local_file("aaa.json") . ";";
+    $logger->debug("Expected: ", $expected);
+    $logger->debug("Created: ", $this_js);
 
     is_string_nows($this_js, 
 		   "KOBJ['data']['fizz_data']  = " . get_local_file("aaa.json") . ";", 
