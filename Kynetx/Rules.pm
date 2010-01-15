@@ -169,7 +169,7 @@ sub eval_ruleset {
   my($r, $req_info, $rule_env, $session, $ruleset) = @_;
 
   my $logger = get_logger();
-
+    $logger->trace("[eval ruleset] rs: ",Dumper($ruleset));
   # generate JS for meta
   my $mjs = eval_meta($req_info, $ruleset, $rule_env);
 
@@ -184,7 +184,7 @@ sub eval_ruleset {
   $req_info->{'rule_count'} = 0;
   $req_info->{'selected_rules'} = [];
   foreach my $rule ( @{ $ruleset->{'rules'} } ) {
-
+    $logger->trace("[rules] foreach pre: ",Dumper($rule->{'pre'}));
     # set by eval_control_statement in Actions.pm
     last if $req_info->{$req_info->{'rid'}.':last'};
 
@@ -204,6 +204,7 @@ sub eval_ruleset {
       if ($selected) {
 
 	$logger->debug("[selected] $rule->{'name'} ");
+	$logger->trace("[rules] ",Dumper($rule));
 
 	push @{ $req_info->{'selected_rules'} }, $rule->{'name'};
 
@@ -288,7 +289,7 @@ sub eval_globals {
     my $js = "";
     if($ruleset->{'global'}) {
 
-#      $logger->debug("Here's the globals: ", Dumper $ruleset->{'global'});
+    $logger->debug("Here's the globals: ", Dumper $ruleset->{'global'});
 
       # make this act like let* not let
       my @vars;
@@ -315,8 +316,18 @@ sub eval_globals {
 	if($g->{'emit'}) { # emit
 	  $this_js = $g->{'emit'} . "\n";
 	} elsif(defined $g->{'type'} && $g->{'type'} eq 'dataset') { 
-	  if (! Kynetx::Datasets::global_dataset($g)) {
-	    ($this_js, $var, $val) = mk_dataset_js($g, $req_info, $rule_env);
+	    my $new_ds = Kynetx::Datasets->new($g);
+	  if (! $new_ds->is_global()) {
+	      $new_ds->load($req_info);
+	      $new_ds->unmarshal();
+	      $this_js = $new_ds->make_javascript();
+	      $var = $new_ds->name;
+	      if (defined $new_ds->json) {
+	          $val = $new_ds->json;
+	      } else {
+	          $val = $new_ds->sourcedata;
+	      }
+	    #($this_js, $var, $val) = mk_dataset_js($g, $req_info, $rule_env);
 	    # yes, this is cheating and breaking the abstraction, but it's fast
 	    $rule_env->{$var} = $val;
 	  }
@@ -604,7 +615,7 @@ sub optimize_pre {
   my ($rule) = @_;
   my $logger = get_logger();
     my @vars = map {$_->{'var'}} @{ $rule->{'pagetype'}->{'foreach'} };
-
+    $logger->trace("[rules::optimize_pre] foreach vars: ", Dumper(@vars));
 # don't need this, but I love it.
 # 	  my %is_var;
 # 	  # create a hash for testing whether a var is defined or not
@@ -613,6 +624,7 @@ sub optimize_pre {
 
     foreach my $decl (@{$rule->{'pre'}}) {
       # check if any of the vars occur free in the rhs
+      $logger->trace("[rules::optimize_pre] decl: ", Dumper($decl));
       my $dependent = 0;
       foreach my $v (@vars) {
 	if ($decl->{'type'} eq 'expr' &&
