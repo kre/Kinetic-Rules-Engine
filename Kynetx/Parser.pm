@@ -222,23 +222,27 @@ dispatch_target: '->' STRING
      }
                    
 
-dataset: 'dataset' VAR '<-' STRING cachable(?)
+dataset: 'dataset' VAR datatype(?) '<-' STRING cachable(?)
      {$return = {
 	 'name' => $item[2], 
 	 'type' => 'dataset',
-	 'source' => $item[4],
-	 'cachable' => $item[5][0] || 0
+	 'source' => $item[5],
+	 'cachable' => $item[6][0] || 0,
+	 'datatype' => $item[3][0] || 'JSON'
          }
      }
 
-datasource: 'datasource' VAR '<-' STRING cachable(?)
+datasource: 'datasource' VAR datatype(?) '<-' STRING cachable(?)
      {$return = {
 	 'name' => $item[2],  
 	 'type' => 'datasource',
-	 'source' => $item[4],
-	 'cachable' => $item[5][0] || 0
+	 'source' => $item[5],
+	 'cachable' => $item[6][0] || 0,
+	 'datatype' => $item[3][0] || 'JSON'
          }
      }
+     
+datatype: COLON ('JSON' | 'XML' | 'RSS' | 'HTML')  
 
 cachable: 'cachable' cachetime(?)
      {$return = $item[2][0] || 1
@@ -931,6 +935,7 @@ sub parse_ruleset {
     my ($ruleset) = @_;
 
     my $logger = get_logger();
+    $logger->trace("[parser::parse_ruleset] passed: ", Dumper($ruleset));
 
     $ruleset = remove_comments($ruleset);
 
@@ -947,6 +952,7 @@ sub parse_ruleset {
     } else {
 	$logger->debug("Parsed rules");
     }
+    $logger->trace("[parser:parse_rule] ",Dumper($result));
 
     return $result;
 
@@ -1075,7 +1081,6 @@ sub parse_rule {
     } else {
 	$logger->debug("Parsed rules");
     }
-
     return $result;
 
 #    print Dumper($result);
@@ -1158,9 +1163,9 @@ sub parse_global_decls {
 
 #    $logger->debug(Dumper($result));
     if (ref $result eq 'HASH' && $result->{'error'}) {
-	$logger->debug("Can't parse global declarations: $result->{'error'}");
+	   $logger->debug("[Parser] Can't parse global declarations: $result->{'error'}");
     } else {
-	$logger->debug("Parsed global decls");#, 
+	   #$logger->debug("[Parser] Parsed global decls");#, 
     }
     
 
