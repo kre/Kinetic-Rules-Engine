@@ -32,6 +32,7 @@ package Kynetx::Datasets;
 #
 use strict;
 use warnings;
+use utf8;
 
 use Log::Log4perl qw(get_logger :levels);
 use JSON::XS;
@@ -245,16 +246,7 @@ sub _load_datasource {
         $source_url .= join( '&', ( sort @params ) );
     } else {
         $logger->trace( "[Datasets] datasource args: ", Dumper $args);
-        if ( $source_url =~ m/\?$/ ) {
-            $source_url .= $args->[0];
-        } elsif ( $source_url =~ m/\?/ ) {
-            $source_url .= '&' . $args->[0];
-        } elsif ( $args->[0] =~ m/^\?/ ) {
-            $source_url .= $args->[0];
-        } else {
-            $source_url .= '?' . $args->[0];
-        }
-
+        $source_url .= $args->[0];
     }
     $self->source($source_url);
     $self->sourcedata(
@@ -315,30 +307,12 @@ sub make_javascript {
     # if the source data was not convertable into a perl/JSON representation
     # $json will be undefined and treat the source data as a string
     if ( !defined $self->json ) {
-
-        #$logger->debug("[make_javascript] source =>",$self->sourcedata);
-        if ( defined $dev ) {
-
-            # Dont squish the code if this is a dev endpoint
-            $js .= Kynetx::JavaScript::mk_dev_str( $self->sourcedata );
-        } else {
             $js .= Kynetx::JavaScript::mk_js_str( $self->sourcedata );
-        }
     } else {
-
-        #$logger->debug("[make_javascript] json =>",Dumper($self->json));
-
-# Everything (XML,RSS)is going to be unmarshalled into a perl/JSON representation
-# so unfortunately we are going to have to marshal the $json object
-        if ( defined $dev ) {
-
-            # Dont squish the code if this is a dev endpoint
             $js .= JSON::XS::->new->utf8(1)->pretty(1)->encode( $self->json );
-        } else {
-            $js .= JSON::XS->new->utf8(1)->pretty(1)->encode( $self->json );
-        }
     }
     $js .= ";\n";
+    $logger->trace("UTF-8 flag: ", utf8::is_utf8($js));
     return $js;
 }
 
