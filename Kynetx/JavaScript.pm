@@ -135,6 +135,9 @@ sub gen_js_expr {
         /condexpr/ && do {
 	    return gen_js_condexpr($expr);
 	};
+        /function/ && do {
+	    return gen_js_function($expr);
+	};
 	# FIXME: need to eval these, not ignore them
 	# no sense generating simple, most qualified, and counter preds for JS
  	/qualified/ && do {
@@ -169,6 +172,42 @@ sub gen_js_condexpr {
     return gen_js_predexpr($cond->{'test'}) . ' ? ' . 
            gen_js_expr($cond->{'then'}) . ' : ' . 
 	   gen_js_expr($cond->{'else'});
+
+    
+}
+
+sub gen_js_function {
+    my $func = shift;
+
+#     my $logger = get_logger();
+
+#     $logger->debug("Function: ", Dumper $func);
+
+    my $decls = '';
+    foreach my $d (@{ $func->{'decls'} }) {
+
+
+      # note that this won't work for everything.  Functions that include KRL exprs that
+      # are not translatable to JS without evaluation won't work.  
+
+      my $rhs = mk_js_str('');
+      if ($d->{'type'} eq 'expr') {
+	$rhs = gen_js_expr($d->{'rhs'});
+      } elsif ($d->{'type'} eq 'here_doc') {
+	$rhs = gen_js_exp(exp_to_den(eval_heredoc($d->{'rhs'})));
+      } 
+
+      $decls .= gen_js_var($d->{'lhs'}, $rhs);
+    }
+
+    my $js = "function(".
+              join(", ", @{ $func->{'vars'} }) .
+	      ") {" .
+	      $decls .
+	      gen_js_expr($func->{'expr'}).
+	      "}";
+
+    return $js;
 
     
 }
@@ -618,12 +657,17 @@ sub eval_js_decl {
 
 sub eval_datasource {
     my($req_info,$rule_env,$session,$rule_name,$source, $function, $args) = @_;
+
+
+    my $logger = get_logger();
   
  #   $args->[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
+      # get the values
+    
+    $logger->debug("Pred args ", Dumper $args);
 
     my $val = '';
 
-    my $logger = get_logger();
     $logger->debug("Datasource $source:$function...");
 
     if($source eq 'weather') {
@@ -722,7 +766,7 @@ sub den_to_exp {
 
     return $expr unless (ref $expr eq 'HASH' && defined $expr->{'type'});
     case: for ($expr->{'type'}) {
-	/str|num/ && do {
+	/str|num|regexp/ && do {
 	    return $expr->{'val'};
 	};
 

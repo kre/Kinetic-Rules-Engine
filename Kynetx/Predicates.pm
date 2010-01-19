@@ -144,14 +144,25 @@ sub eval_predicates {
 
 
 	#FIXME: I don't know why we're using gen instead of eval, but it works...
-	my $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+#	my $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
+	my $args = Kynetx::JavaScript::eval_js_rands($cond->{'args'}, 
+						     $rule_env, 
+						     $rule_name,
+						     $req_info, 
+						     $session
+						    );
+	for (@{ $args }) {
+	  $_ = den_to_exp($_);
+	}
 
-	# FIXME: this leaves string args as '...' which means that the predicates have to remember to remove them.  That causes errors.  
 
+#	$logger->debug("Pred args ", Dumper $args);
+	
 	$v = &$predf($req_info, 
 		     $rule_env, 
 		     $args
 		    );
+
 	$v ||= 0;
 
 	$logger->debug('[predicate] ',
@@ -164,10 +175,13 @@ sub eval_predicates {
     } elsif ($cond->{'type'} eq 'qualified') {
 
       my $den = Kynetx::JavaScript::eval_js_rands($cond->{'args'}, $rule_env, $rule_name,$req_info, $session);
-      # get the values
+
+    # FIXME: datasources don't expect denoted values.  
+    
       for (@{ $den }) {
 	$_ = den_to_exp($_);
       }
+
       $v = Kynetx::JavaScript::eval_datasource($req_info,
 						  $rule_env,
 						  $session,
@@ -350,7 +364,7 @@ sub eval_ineq {
 sub ineq_test {
     my($op, $rand0, $rand1) = @_;
 
-#    my $logger = get_logger();
+    my $logger = get_logger();
 #    $logger->debug("[ineq_test] $rand0 $op $rand1");
 
     if ($op eq '<=') {
@@ -370,8 +384,33 @@ sub ineq_test {
     } elsif($op eq 'eq') {
 	return $rand0 eq $rand1;
     } elsif($op eq 'like') {
-	my $re = qr!$rand1!;
-	return $rand0 =~ $re;
+
+      # Note: this relies on the fact that a regular expression looks like a string inside 
+      # the KRL AST.
+
+      # for backward compatibility, make strings look like KRL regexp
+      $rand1 = "/$rand1/" unless $rand1 =~ m#^/[^/]+/#;
+
+      # FIXME: This is code that should be shared with replace in Operators.pm
+
+
+      my $pattern = '';
+      my $modifiers;
+      ($pattern, $modifiers) = $rand1 =~ m#/(.+)/(i|g){0,2}#; 
+
+      $modifiers = $modifiers || '';
+
+      my $embedable_modifiers = $modifiers;
+      $embedable_modifiers =~ s/g//;
+
+      my $re = qr/(?$embedable_modifiers)$pattern/;
+#	my $re = qr!$rand1!;
+
+      $logger->debug("Matching string $rand0 with $pattern & modifiers $modifiers: $re");
+
+      # g modifier does nothing here...
+      return $rand0 =~ /$re/;
+
     }
 }
 

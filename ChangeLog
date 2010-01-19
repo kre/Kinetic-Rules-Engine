@@ -1,3 +1,11 @@
+2010-01-19  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/JavaScript.pm (gen_js_function): Added initial support
+	  for functions
+	* Kynetx/Operators.pm (eval_replace): normalize regexp code
+	* Kynetx/Predicates.pm (ineq_test): 'like' operator now accepts
+	  regexp in addition to strings interpreted as regexp.
+
 2010-01-15 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Datasets.pm: Refactored the whole module to support 
       datasets/datasources with JSON and XML sources.  For

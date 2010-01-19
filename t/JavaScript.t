@@ -674,6 +674,29 @@ add_expr_testcase(
     mk_expr_node('num', 6),
     0);
 
+
+
+$str = <<_KRL_;
+function(x) {
+      x
+    }
+_KRL_
+add_expr_testcase(
+    $str,
+    'function(x) {x}',
+    '',
+#     mk_expr_node('closure', {'vars' => ['x'],
+# 			     'decls' => [],
+# 			     'expr' => {'val' => 'x',
+# 					'type' => 'var'
+# 				       },
+# 			     'env' => $rule_env
+# 			    }
+# 		 ),
+    0);
+
+
+
 $str = <<_KRL_;
 c = 3;
 _KRL_
@@ -841,9 +864,10 @@ add_decl_testcase(
 
 
 
+
 # now test each test case twice
 foreach my $case (@expr_testcases) {
-    # diag(Dumper($case->{'expr'}));
+    diag(Dumper($case->{'expr'})) if $case->{'diag'};
     
     my $js = gen_js_expr($case->{'expr'});
     my $e = eval_js_expr($case->{'expr'}, $rule_env, $rule_name,$BYU_req_info, $session);
@@ -862,7 +886,7 @@ foreach my $case (@expr_testcases) {
 
 # now test each test case twice
 foreach my $case (@decl_testcases) {
-    #diag(Dumper($case->{'expr'}));
+    diag(Dumper($case->{'expr'})) if $case->{'diag'};
     
     my ($v,$e) = Kynetx::JavaScript::eval_js_decl(
 	$BYU_req_info, 

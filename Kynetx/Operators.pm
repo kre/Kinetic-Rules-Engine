@@ -133,25 +133,26 @@ sub eval_replace {
        $rands->[1]->{'type'} eq 'str') {
     
 	my $pattern = '';
-	($pattern) = $rands->[0]->{'val'} =~ m#/(.+)/(i|g){0,2}#;  
+	my $modifiers;
+	($pattern, $modifiers) = $rands->[0]->{'val'} =~ m#/(.+)/(i|g){0,2}#; 
 
-	$logger->debug("Replacing string with $pattern ");
+	$modifiers = $modifiers || '';
+
+	my $embedable_modifiers = $modifiers;
+	$embedable_modifiers =~ s/g//;
+
+	my $re = qr/(?$embedable_modifiers)$pattern/;
+
+	$logger->debug("Replacing string with $pattern & modifiers $modifiers: $re");
 
 	# get capture vars first
 	my @items = ( $v =~ $pattern ); 
 
-	# yeah, this is really ugly...
-	if($rands->[0]->{'val'} =~ m#/i$#) {
-	    $v =~ s/$pattern/$rands->[1]->{'val'}/i;
-	} elsif($rands->[0]->{'val'} =~ m#/g$#) {
-	    $v =~ s/$pattern/$rands->[1]->{'val'}/g;
-	} elsif($rands->[0]->{'val'} =~ m#/gi$#) {
-	    $v =~ s/$pattern/$rands->[1]->{'val'}/gi;
-	} elsif($rands->[0]->{'val'} =~ m#/ig$#) {
-	    $v =~ s/$pattern/$rands->[1]->{'val'}/ig;
-	} else {
-	    $v =~ s/$pattern/$rands->[1]->{'val'}/;
-	}
+	if($modifiers =~ m#g#) {
+	  $v =~ s/$re/$rands->[1]->{'val'}/g;
+ 	} else {
+	  $v =~ s/$re/$rands->[1]->{'val'}/;
+ 	}
 
 	# now put capture vars in (this avoids evaling the replacement)
 	for( reverse 0 .. $#items ){ 

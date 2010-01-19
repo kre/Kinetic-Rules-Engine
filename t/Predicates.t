@@ -40,7 +40,6 @@ use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
 
-
 use LWP::Simple;
 use XML::XPath;
 use Cache::Memcached;
@@ -776,7 +775,25 @@ add_testcase(
     );
 
 $krl_src = <<_KRL_;
+"foobar" like /foo.*/
+_KRL_
+add_testcase(
+    $krl_src,
+    1,
+    $Amazon_req_info
+    );
+
+$krl_src = <<_KRL_;
 "bar" like ".*bar"
+_KRL_
+add_testcase(
+    $krl_src,
+    1,
+    $Amazon_req_info
+    );
+
+$krl_src = <<_KRL_;
+"bar" like /.*bar/
 _KRL_
 add_testcase(
     $krl_src,
@@ -808,6 +825,34 @@ _KRL_
 add_testcase(
     $krl_src,
     0,
+    $Amazon_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+"Bar" like "bar"
+_KRL_
+add_testcase(
+    $krl_src,
+    0,
+    $Amazon_req_info
+    );
+
+$krl_src = <<_KRL_;
+"Bar" like /bar/
+_KRL_
+add_testcase(
+    $krl_src,
+    0,
+    $Amazon_req_info
+    );
+
+$krl_src = <<_KRL_;
+"Bar" like /bar/i
+_KRL_
+add_testcase(
+    $krl_src,
+    1,
     $Amazon_req_info
     );
 
