@@ -38,6 +38,7 @@ use Data::Dumper;
 use JSON::XS;
 use Storable qw(dclone);
 
+use Kynetx::Parser qw/mk_expr_node/;
 use Kynetx::Datasets q/:all/;
 use Kynetx::Environments q/:all/;
 use Kynetx::Session q/:all/;
@@ -502,16 +503,15 @@ sub eval_js_expr {
 	    $logger->warn("Variable '", $expr->{'val'}, "' is undefined");
 	}
 	$logger->trace($rule_name.':'.$expr->{'val'}, " -> ", $v, ' Type -> ', infer_type($v));
-	return  {'type' => infer_type($v),
-		 'val' =>  $v};
+	return  mk_expr_node(infer_type($v),$v);
     } elsif($expr->{'type'} eq 'bool') {
 	return  $expr ;
     } elsif($expr->{'type'} eq 'array') {
-	return  { 'type' => 'array',
-		  'val' => eval_js_rands($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  } ;
+	return mk_expr_node('array',
+			    eval_js_rands($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  ) ;
     } elsif($expr->{'type'} eq 'hashraw') {
-	return  { 'type' => 'hash',
-		  'val' => eval_js_hash($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  } ;
+	return  mk_expr_node('hash',
+			     eval_js_hash($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  ) ;
     } elsif($expr->{'type'} eq 'prim') {
 	return eval_js_prim($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'operator') {
@@ -521,6 +521,12 @@ sub eval_js_expr {
 	return eval_predicates($req_info, $rule_env, $session, $expr->{'test'}, $rule_name) ?
 	       eval_js_expr($expr->{'then'}, $rule_env, $rule_name, $req_info, $session) :
 	       eval_js_expr($expr->{'else'}, $rule_env, $rule_name, $req_info, $session)
+    } elsif($expr->{'type'} eq 'function') {
+	return mk_expr_node('closure',
+			    {'vars' => $expr->{'vars'},
+			     'decls' => $expr->{'decls'},
+			     'expr' => $expr->{'expr'},
+			     'env' => $rule_env});
     } elsif($expr->{'type'} eq 'qualified') {
 	my $den = eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 	# get the values
@@ -538,14 +544,12 @@ sub eval_js_expr {
 
 	$logger->trace("[JS Expr] ", $expr->{'source'}, ":", $expr->{'predicate'}, " -> ", $v);
 
-	return {'type' => infer_type($v),
-		'val' => $v};
+	return mk_expr_node(infer_type($v),$v);
     } elsif($expr->{'type'} eq 'persistent' || 
 	    $expr->{'type'} eq 'trail_history' 
 	) {
 	my $v = eval_persistent($req_info, $rule_env, $rule_name, $session, $expr);
-	return {'type' => infer_type($v),
-		'val' => $v};
+	return mk_expr_node(infer_type($v),$v);
     }
 
 }
@@ -564,6 +568,7 @@ sub eval_js_prim {
 
     # FIXME: Add operators
     # FIXME: Do we need more than binary?
+    # FIXME: return result shold be constructed using mk_expr_node
     case: for ($prim->{'op'}) {
 	/\+/ && do {
 

@@ -161,7 +161,11 @@ pragma: desc_block
         'author' => $item[2]
         }
     }
- | 'key' ('errorstack' | 'googleanalytics' | 'twitter') key_value
+ | 'key' ('errorstack' | 
+          'googleanalytics' | 
+          'twitter' | 
+          'amazon' | 
+          'kpds' ) key_value
     {$return = {
         keys => { $item[2] => $item[3] }
       }

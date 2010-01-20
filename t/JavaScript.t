@@ -684,15 +684,14 @@ _KRL_
 add_expr_testcase(
     $str,
     'function(x) {x}',
-    '',
-#     mk_expr_node('closure', {'vars' => ['x'],
-# 			     'decls' => [],
-# 			     'expr' => {'val' => 'x',
-# 					'type' => 'var'
-# 				       },
-# 			     'env' => $rule_env
-# 			    }
-# 		 ),
+    mk_expr_node('closure', {'vars' => ['x'],
+			     'decls' => [],
+			     'expr' => {'val' => 'x',
+					'type' => 'var'
+				       },
+			     'env' => $rule_env
+			    }
+		 ),
     0);
 
 

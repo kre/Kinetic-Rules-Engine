@@ -1,3 +1,11 @@
+2010-01-20  Phil Windley  <pjw@kynetx.com>
+
+	* etc/js/0.9/krl-annotate.js: Added updated watchDOM function
+	* Kynetx/Parser.pm: Added support for amazon and kpds keys
+	* Kynetx/JavaScript.pm (eval_js_expr): Added evaluation for
+	  function, changed to use mk_expr_node for return results.
+	* t/Datasets.t: Added initialization for Log4Perl
+
 2010-01-19  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/JavaScript.pm (gen_js_function): Added initial support
