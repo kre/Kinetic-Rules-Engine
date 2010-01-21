@@ -72,6 +72,7 @@ Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
 
 my $logger = get_logger();
+my $url_timeout = 1;
 
 my $test_count = 0;
 # is_deeply(decode_json(
@@ -674,28 +675,6 @@ add_expr_testcase(
     mk_expr_node('num', 6),
     0);
 
-
-
-$str = <<_KRL_;
-function(x) {
-      x
-    }
-_KRL_
-add_expr_testcase(
-    $str,
-    'function(x) {x}',
-    mk_expr_node('closure', {'vars' => ['x'],
-			     'decls' => [],
-			     'expr' => {'val' => 'x',
-					'type' => 'var'
-				       },
-			     'env' => $rule_env
-			    }
-		 ),
-    0);
-
-
-
 $str = <<_KRL_;
 c = 3;
 _KRL_
@@ -814,6 +793,48 @@ add_pre_testcase(
     $re1,
     $js,
     0);
+
+$re1 = extend_rule_env(['kx','ky'],
+    ['windley.com','$..windley.com']
+    ,$rule_env);
+$str = <<_KRL_;
+pre {
+    kx = page:url("domain");
+    ky = "\$\.\.#{kx}";
+}
+_KRL_
+
+
+$js = <<_JS_;
+var kx = 'windley.com';
+var ky = '\$\.\.windley.com';
+_JS_
+
+add_pre_testcase(
+    $str,
+    $re1,
+    $js,
+    0);
+
+$re1 = extend_rule_env(['kx'],
+	[['Nigel Rees','Herman Melville']],
+	$rule_env);
+$str = <<_KRL_;
+pre {
+    kx = store.pick("\$..book[?(@.price < #{a})].author");
+}
+_KRL_
+
+$js = <<_JS_;
+var kx = ['Nigel Rees','Herman Melville'];
+_JS_
+
+add_pre_testcase(
+    $str,
+    $re1,
+    $js,
+    0);
+
 
 
 $str = <<_KRL_;
@@ -971,7 +992,7 @@ is(&{$referer_function}('search_terms'),
 # http://www.webservicex.net//stockquote.asmx/GetQuote?symbol=GOOG
 
 SKIP: {
-    my $ua = LWP::UserAgent->new;
+    my $ua = LWP::UserAgent->new('timeout' => $url_timeout);
 
     my $check_url = "http://www.webservicex.net//stockquote.asmx/GetQuote?symbol=GOOG";
 #    my $check_url = "http://foo";

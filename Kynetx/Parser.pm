@@ -981,7 +981,7 @@ sub parse_expr {
     if (defined $result->{'error'}) {
 	$logger->error("Can't parse expression: $result->{'error'}");
     } else {
-	$logger->debug("Parsed expression");
+    $logger->debug("Parsed expression: ",sub {Dumper($expr)});
     }
     
     return $result;
@@ -1003,7 +1003,7 @@ sub parse_decl {
     if (defined $result->{'error'}) {
 	$logger->error("Can't parse expression: $result->{'error'}");
     } else {
-	$logger->debug("Parsed expression");
+    $logger->debug("Parsed expression: ",sub {Dumper($expr)});
     }
 
     return $result;
@@ -1053,7 +1053,7 @@ sub parse_predexpr {
     if (defined $result->{'error'}) {
 	$logger->error("Can't parse expression: $result->{'error'}");
     } else {
-	$logger->debug("Parsed expression");
+	$logger->debug("Parsed expression: ",sub {Dumper($expr)});
     }
 
     return $result;

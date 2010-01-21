@@ -31,6 +31,7 @@ package Kynetx::JavaScript;
 # 
 use strict;
 use warnings;
+use utf8;
 
 use Log::Log4perl qw(get_logger :levels);
 
@@ -492,7 +493,12 @@ sub eval_js_expr {
     $rule_name ||= 'global';
 
     if ($expr->{'type'} eq 'str' ) {
-	return $expr;
+        if ($expr->{'val'} =~ m/\#\{(.+)\}{1}?/) {
+            $logger->trace("Bee sting: ",$1);
+            return(eval_js_beesting($expr, $rule_env, $rule_name,$req_info, $session));
+        } else {
+	       return $expr;
+        }
     } elsif($expr->{'type'} eq 'num') {
 	return  $expr ;
     } elsif($expr->{'type'} eq 'regexp') {
@@ -865,11 +871,15 @@ sub infer_type {
 # utility functions
 #
 sub mk_js_str {
+    my $logger = get_logger();
+    $logger->trace("passed: ",int @_, " args");
     if(defined $_[0]) {
 	my $str = join(" ",@_);
+	$logger->trace("joined: ",$str);
 	$str = escape_js_str($str);
 	$str =~ y/\n\r/  /; # remove newlines
 	$str =~ s/#{([^}]*)}/'+$1+'/g;
+	$logger->trace("escaped: ",$str);
 	return "'". $str . "'";
     } else {
 	return "''";
@@ -965,4 +975,15 @@ sub var_free_in_here_doc {
 
   return $found;
 
+}
+
+sub eval_js_beesting {
+    my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
+    my $logger = get_logger();
+    $expr->{'val'} =~ m/(.*)\#\{(.+)\}{1}?(.*)/;
+    my $bee_expr = Kynetx::Parser::parse_expr($2);
+    $logger->trace("parsed beesting: ", sub {Dumper($bee_expr)} );
+    my $val = $1.eval_js_expr($bee_expr,$rule_env, $rule_name,$req_info, $session)->{'val'}.$3;
+    return (eval_js_expr({'val' => $val, 'type' => 'str'}, $rule_env, $rule_name,$req_info, $session));
+    
 }

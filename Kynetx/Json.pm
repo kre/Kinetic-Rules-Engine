@@ -31,6 +31,7 @@ package Kynetx::Json;
 # 
 use strict;
 use warnings;
+use utf8;
 
 use Log::Log4perl qw(get_logger :levels);
 use JSON::XS;

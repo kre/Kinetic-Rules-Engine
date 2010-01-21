@@ -60,13 +60,14 @@ sub eval_pick {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
 
-#    $logger->debug("[pick] rule_env: ", sub { Dumper($rule_env) });
+    $logger->trace("expr: ", sub { Dumper($expr)});
+    $logger->trace("[pick] rule_env: ", sub { Dumper($rule_env) });
 
     my $int = Kynetx::JavaScript::eval_js_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
     # if you don't clone this, it modified the rule env 
 
     my $obj = Kynetx::JavaScript::den_to_exp(dclone($int));
-#    $logger->debug("[pick] obj: ", sub { Dumper($obj) });
+    $logger->trace("[pick] obj: ", sub { Dumper($obj) });
     
     my $rands = Kynetx::JavaScript::eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 
@@ -76,7 +77,7 @@ sub eval_pick {
     } else {
 	$logger->warn("WARNING: pattern argument to pick not a string");
     }
-#    $logger->debug("pattern: ", $pattern);
+    $logger->trace("pattern: ", $pattern);
 
 
     my $jp = Kynetx::JSONPath->new();
@@ -198,7 +199,7 @@ sub eval_as {
 
     my $rands = Kynetx::JavaScript::eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 
-#    $logger->debug("obj: ", sub { Dumper($obj) }, " as ", $rands->[0]->{'val'} );
+    $logger->trace("obj: ", sub { Dumper($obj) }, " as ", $rands->[0]->{'val'} );
 
     my $v = 0;
     if ($obj->{'type'} eq 'str') {
