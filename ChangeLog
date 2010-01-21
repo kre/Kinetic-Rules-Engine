@@ -1,3 +1,11 @@
+2010-01-21 Mark Horstmeier <meh@kynetx.com>
+    * Kynetx/JavaScript.pm:  added a parse beesting function to eval_js_expr
+    * Kynetx/Json.pm: added use utf-8 to make uft-8 the default encoding
+    * Kynetx/Operators.pm: add trace level to debugging for console work
+    * Kynetx/Parser.pm: added expression to debug statement
+    * t/JavaScript.t: added tests for beesting evaluation
+    * t/XML.t: updated version of Datasets.t to add XML testing
+
 2010-01-20  Phil Windley  <pjw@kynetx.com>
 
 	* etc/js/0.9/krl-annotate.js: Added updated watchDOM function
