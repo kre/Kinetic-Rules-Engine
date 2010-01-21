@@ -286,11 +286,6 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 
   var defaults = jQuery.extend(true, {}, KOBJ.annotate_search_defaults);
 
-  if (typeof config === 'object') {
-    jQuery.extend(true, defaults, config);
-  }
-
-
   defaults.outer_div_css = {
       "float": "right",
       "width": "auto",
@@ -323,6 +318,11 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
       "margin-left": defaults.left_margin,
       "padding-right": defaults.right_padding
       };
+
+   if (typeof config === 'object') {
+     jQuery.extend(true, defaults, config);
+   }
+
 
 
 
