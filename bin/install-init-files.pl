@@ -50,6 +50,7 @@ jquery-ui-1.7.2.custom.js
 kgrowl-1.0.js
 snowfall.jquery.js
 krl-setup.js
+krl-domwatch.js
 krl-annotate.js
 krl-runtime.js.tmpl
 );

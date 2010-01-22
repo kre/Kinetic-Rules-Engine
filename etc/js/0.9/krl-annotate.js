@@ -21,56 +21,11 @@ KOBJ.splitJSONRequest = function(json,maxLength,url){
 		}
 };
 
-KOBJ.watchDOM = function(selector,callBackFunc,time){
-  if(!KOBJ.watcherRunning){
-    KOBJ.log("Starting the DOM Watcher");
-    var KOBJ_setInterval = 0;
-    if(!typeof(setInterval_native) == "undefined"){
-      KOBJ_setInterval = setInterval_native;
-    } else {
-      KOBJ_setInterval = setInterval;
-    }
-    if(KOBJ.watcherRunning){clearInterval(KOBJ.watcherRunning);}
-    KOBJ.watcherData = [];
-    KOBJ.watcherData.push({"selector": selector,"callBacks": [callBackFunc]});
-    KOBJ.log("DOM Watcher Callback for new selector " +selector+ " added");
-    $K(selector+" :first-child").addClass("KOBJ_AjaxWatcher");
-    KOBJ.watcher = function(){
-      $K(KOBJ.watcherData).each(function(){
-				  var data = this;
-				  var selectorExists = $K(selector).length;
-				  if(!selectorExists){return;}
-				  var hasNotChanged = $K(data.selector+" :first-child").is(".KOBJ_AjaxWatcher");
-				  if(!hasNotChanged){
-				    $K(data.callBacks).each(function(){
-							      callBack = this;
-							      KOBJ.log("Running call back on selector " + selector);
-							      callBack();
-							    });
-				    $K(data.selector+" :first-child").addClass("KOBJ_AjaxWatcher");
-				  }
-      });
-    };
-    KOBJ.watcherRunning = KOBJ_setInterval(KOBJ.watcher,time||1000);
-  } else {
-    $K(KOBJ.watcherData).each(function(){
-				dataObj = this;
-				if(dataObj.selector == selector){
-				  dataObj.callBacks.push(callBackFunc);
-				  $K(selector+" :first-child").addClass("KOBJ_AjaxWatcher");
-				  KOBJ.log("DOM Watcher Callback for previous selector " +selector+ " added");
-				  return false;
-				} else {
-				  KOBJ.watcherData.push({"selector": selector,"callBacks": [callBackFunc]});
-				  $K(selector+" :first-child").addClass("KOBJ_AjaxWatcher");
-				  KOBJ.log("DOM Watcher Call for new selector "+selector+" added");
-				};
-			      }
-			     );
-  }
+
+KOBJ.getJSONP = function(url, data, cb){
+	KOBJ.log("getJSON with JSONP");
+	$K.getJSON(url, data,cb);
 };
-
-
 
 // Start of annotate local changes, v1.2
 
@@ -158,7 +113,7 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 		KOBJ.annotate_local_counter = KOBJ.annotate_local_counter || 0;
 		var maxLengthURL = KOBJ.maxURLLength;
 
-		function runAnnotateLocal(){
+		runAnnotateLocal = function(){
 			var count = 0;
 			function annotateCBLocal(data){
 	   			$K.each(data, function(key,contents){
@@ -184,7 +139,7 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 			var annotateArray = KOBJ.splitJSONRequest(annotateInfo,maxLengthURL,remote_url);
 			$K.each(annotateArray,function(key,data){
 				annotateString = $K.compactJSON(data);
-				$K.getJSON(remote_url, {'annotatedata':annotateString},annotateCBLocal);
+				KOBJ.getJSONP(remote_url, {'annotatedata':annotateString},annotateCBLocal);
 			});
 
 
@@ -192,7 +147,7 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 		}
 
 	} else {
-		function runAnnotateLocal(){
+		runAnnotateLocal = function(){
 			resultslist = $K(lister);
 			if(resultslist.length===0){ return; }
 			var count = 0;
@@ -268,7 +223,7 @@ KOBJ.annotate_search_extractdata = function(toAnnotate,config){
 	// ".l" is for Google, ".nc_tc, .sb_tlst" are for Bing, .yschttl is for Yahoo
 
 	if(!urlTemp){
-		urlTemp = $K(toAnnotate).find(".url, cite").attr(href);
+		urlTemp = $K(toAnnotate).find(".url, cite").attr("href");
 		// Failsafe
 	}
 	if(urlTemp){
@@ -319,10 +274,9 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
       "padding-right": defaults.right_padding
       };
 
-   if (typeof config === 'object') {
-     jQuery.extend(true, defaults, config);
-   }
-
+  if (typeof config === 'object') {
+    jQuery.extend(true, defaults, config);
+  }
 
 
 
@@ -375,7 +329,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 		var maxLengthURL = KOBJ.maxURLLength;
 
 		KOBJ.annotate_search_counter = KOBJ.annotate_search_counter || 0;
-		function runAnnotate(){
+		runAnnotate = function(){
 
 			var resultslist = $K(lister);
 			if(resultslist.length === 0){ return; }
@@ -404,7 +358,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 			var annotateArray = KOBJ.splitJSONRequest(annotateInfo,maxLengthURL,remote_url);
 			$K.each(annotateArray,function(key,data){
 				annotateString = $K.compactJSON(data);
-				$K.getJSON(remote_url, {'annotatedata':annotateString},annotateCB);
+				KOBJ.getJSONP(remote_url, {'annotatedata':annotateString},annotateCB);
 			});
 
 			KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'], config['rid'] );
@@ -413,7 +367,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 		}
 
 	} else {
-		function runAnnotate(){
+		runAnnotate = function(){
 			var count = 0;
 
 			var resultslist = $K(lister);
