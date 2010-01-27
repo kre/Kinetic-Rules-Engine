@@ -446,7 +446,7 @@ sub pp_decl {
 
     my $logger = get_logger();
 
-    $logger->debug("Seeing ", $node->{'type'});
+#    $logger->debug("Seeing ", $node->{'type'});
 
     # if($node->{'type'} eq 'counter') {
     # 	$o .= $node->{'lhs'} . " = " . $node->{'type'} . "." .  
@@ -490,16 +490,17 @@ sub pp_cond {
     my $beg = " "x$indent;
     my $o = $beg;
 
-    my $pred = pp_predexpr($node->{'cond'});
-    my $actions = pp_actions($node->{'actions'},$node->{'blocktype'},$indent);
+    my $pred = pp_expr($node->{'cond'});
+    my $actions;
 
     if($pred eq 'true') {
-	$o .= $actions;
+        
+	$o .= pp_actions($node->{'actions'},$node->{'blocktype'},$indent);
     } else {
 	$o .= "if ";
 	$o .= $pred;
-	    $o .= "\n" . $beg . "then\n";
-	$o .= $actions;
+	$o .= "\n" . $beg . "then\n";
+	$o .= pp_actions($node->{'actions'},$node->{'blocktype'},$g_indent+$indent);
 	$o .= $beg . "\n";
     } 
 
@@ -508,61 +509,61 @@ sub pp_cond {
 }
 
 
-# expressions below
-sub pp_predexpr {
-    my $expr = shift;
+# # expressions below
+# sub pp_predexpr {
+#     my $expr = shift;
 
-    case: for ($expr->{'type'}) {
-	/^ineq$/ && do {
-	    return join(' ' . $expr->{'op'} . ' ', 
-			pp_rands($expr->{'args'}))  ;
-        };
-	/seen_timeframe/ && do {
-	    return join(' ', 
-			('seen',
-			 pp_string($expr->{'regexp'}),
-			 'in',
-			 pp_var_domain($expr->{'domain'}, 
-				       $expr->{'var'}),
-			 pp_timeframe($expr)
-			));
-	};
-	/seen_compare/ && do {
-	    return join(' ', 
-			('seen',
-			 pp_string($expr->{'regexp_1'}),
-			 $expr->{'op'},
-			 pp_string($expr->{'regexp_2'}), 
-			 'in',
-			 pp_var_domain($expr->{'domain'}, $expr->{'var'})
-			));
-	};
-	/persistent_ineq/ && do {
-	    if($expr->{'ineq'} eq '==' &&
-	       $expr->{'expr'}->{'val'} eq 'true') {
-		return join(' ', 
-			    (pp_var_domain($expr->{'domain'}, $expr->{'var'}),
-			     pp_timeframe($expr)
-			    ));
-	    } else {
-		return join(' ', 
-			    (pp_var_domain($expr->{'domain'}, $expr->{'var'}),
-			     $expr->{'ineq'},
-			     pp_expr($expr->{'expr'}),
-			     pp_timeframe($expr)
-			    ));
-	    }
-	};
-	/^pred$/ && do {
-	    return pp_pred($expr);
-	};
-	/.*/ && do {
-	    return pp_expr($expr);
-	};
+#     case: for ($expr->{'type'}) {
+# 	/^ineq$/ && do {
+# 	    return join(' ' . $expr->{'op'} . ' ', 
+# 			pp_rands($expr->{'args'}))  ;
+#         };
+# 	/seen_timeframe/ && do {
+# 	    return join(' ', 
+# 			('seen',
+# 			 pp_string($expr->{'regexp'}),
+# 			 'in',
+# 			 pp_var_domain($expr->{'domain'}, 
+# 				       $expr->{'var'}),
+# 			 pp_timeframe($expr)
+# 			));
+# 	};
+# 	/seen_compare/ && do {
+# 	    return join(' ', 
+# 			('seen',
+# 			 pp_string($expr->{'regexp_1'}),
+# 			 $expr->{'op'},
+# 			 pp_string($expr->{'regexp_2'}), 
+# 			 'in',
+# 			 pp_var_domain($expr->{'domain'}, $expr->{'var'})
+# 			));
+# 	};
+# 	/persistent_ineq/ && do {
+# 	    if($expr->{'ineq'} eq '==' &&
+# 	       $expr->{'expr'}->{'val'} eq 'true') {
+# 		return join(' ', 
+# 			    (pp_var_domain($expr->{'domain'}, $expr->{'var'}),
+# 			     pp_timeframe($expr)
+# 			    ));
+# 	    } else {
+# 		return join(' ', 
+# 			    (pp_var_domain($expr->{'domain'}, $expr->{'var'}),
+# 			     $expr->{'ineq'},
+# 			     pp_expr($expr->{'expr'}),
+# 			     pp_timeframe($expr)
+# 			    ));
+# 	    }
+# 	};
+# 	/^pred$/ && do {
+# 	    return pp_pred($expr);
+# 	};
+# 	/.*/ && do {
+# 	    return pp_expr($expr);
+# 	};
 	
-    } 
+#     } 
 
-}
+# }
 
 sub pp_string {
     my $str = shift;
@@ -574,22 +575,15 @@ sub pp_pred {
     my $pred = shift;
     
     if($pred->{'op'} eq 'negation') {
-	return 'not' . pp_predexpr($pred->{'args'}->[0]) ;
+	return '(not ' . pp_expr($pred->{'args'}->[0]) . ')' ;
     } else {
-	return 
-	    '(' . 
-	    join(' ' . $pred->{'op'} . ' ', pp_predrands($pred->{'args'})) .
-	    ')';
+	return '(' .
+	    join(' ' . $pred->{'op'} . ' ', pp_rands($pred->{'args'})) .
+          ')';
+
     }
 
     
-}
-
-sub pp_predrands {
-    my $rands = shift;
-
-    map {pp_predexpr($_)} @{ $rands };
-
 }
 
 
@@ -604,7 +598,7 @@ sub pp_actions {
 	$o .= pp_actionblock($node, $blocktype, $indent);
     } else { # primrule
 	# singleton block; deal with it
-	$o .= pp_primrule($node->[0], $indent+$g_indent);
+	$o .= pp_primrule($node->[0], $indent);
     }
    
     return $o;
@@ -629,6 +623,7 @@ sub pp_actionblock {
 sub pp_primrule{
     my ($node, $indent) = @_;
     my $beg = " "x$indent;
+#    my $beg;
     my $o = $beg;
 
     if(defined $node->{'emit'}) {
@@ -779,7 +774,7 @@ sub pp_post_expr {
     }
 
     if (defined $node->{'test'}) {
-      $o .= ' if ' . pp_predexpr($node->{'test'}) 
+      $o .= ' if ' . pp_expr($node->{'test'}) 
     }
 
 
@@ -889,16 +884,17 @@ sub pp_expr {
 	};
 	/trail_history/ && do {
 	    my $o = '';
-	    if($expr->{'offset'}->{'val'} == 0) {
+	    if($expr->{'offset'}->{'type'} eq 'num' &&
+	       $expr->{'offset'}->{'val'} == 0) {
 		$o .= 'current ';
 	    } else {
 		$o .= 'history ' . pp_expr($expr->{'offset'});
 	    }
 	    return $o . ' ' . pp_var_domain($expr->{'domain'}, $expr->{'name'});
 	};
-	/simple/ && do {
+	/^app$/ && do {
 	    my $o = '';
-	    $o .= $expr->{'predicate'} . "(";
+	    $o .= pp_expr($expr->{'function_expr'}) . "(";
 	    $o .= join ", ", pp_rands($expr->{'args'});
 	    $o .= ")";
 	    return $o;
@@ -911,7 +907,7 @@ sub pp_expr {
 	    $o .= ")";
 	    return  $o ;
 	};
-	/function/ && do {
+	/^function$/ && do {
 	    return pp_function($expr);
 	};
 	/^pred$/ && do {
@@ -920,27 +916,60 @@ sub pp_expr {
 	};
 	/^condexpr$/ && do {
 	    my $o = '';
-	    $o .= pp_predexpr($expr->{'test'}) . ' => ';
+	    $o .= pp_expr($expr->{'test'}) . ' => ';
 	    $o .= pp_expr($expr->{'then'}) . ' | ';
 	    $o .= pp_expr($expr->{'else'});
 	    return  $o ;
 	};
-# 	/counter_pred/ && do {
-# 	    my $o = '';
-# 	    $o .= "counter." . $expr->{'name'};
-# 	    $o .= " " . $expr->{'ineq'} . " ";
-# 	    $o .= $expr->{'value'};
-# 	    if(defined $expr->{'within'}) {
-# 		$o .= " within " . $expr->{'within'} . " " . $expr->{'timeframe'};
-# 	    }
-# 	    return  $o ;
-# 	};
 	/operator/ && do {
 	    my $o = '';
 	    $o .= pp_expr($expr->{'obj'}) . '.' . $expr->{'name'} . '(';
 	    $o .= join ", ", pp_rands($expr->{'args'});
 	    $o .= ')';
 	    return  $o ;
+	};
+	/^ineq$/ && do {
+	    return '('. join(' ' . $expr->{'op'} . ' ', 
+			pp_rands($expr->{'args'}))  . ')' ;
+        };
+	/seen_timeframe/ && do {
+	    return join(' ', 
+			('seen',
+			 pp_string($expr->{'regexp'}),
+			 'in',
+			 pp_var_domain($expr->{'domain'}, 
+				       $expr->{'var'}),
+			 pp_timeframe($expr)
+			));
+	};
+	/seen_compare/ && do {
+	    return join(' ', 
+			('seen',
+			 pp_string($expr->{'regexp_1'}),
+			 $expr->{'op'},
+			 pp_string($expr->{'regexp_2'}), 
+			 'in',
+			 pp_var_domain($expr->{'domain'}, $expr->{'var'})
+			));
+	};
+	/persistent_ineq/ && do {
+	    if($expr->{'ineq'} eq '==' &&
+	       $expr->{'expr'}->{'val'} eq 'true') {
+		return join(' ', 
+			    (pp_var_domain($expr->{'domain'}, $expr->{'var'}),
+			     pp_timeframe($expr)
+			    ));
+	    } else {
+		return join(' ', 
+			    (pp_var_domain($expr->{'domain'}, $expr->{'var'}),
+			     $expr->{'ineq'},
+			     pp_expr($expr->{'expr'}),
+			     pp_timeframe($expr)
+			    ));
+	    }
+	};
+	/^pred$/ && do {
+	    return pp_pred($expr);
 	};
 	
     } 
@@ -955,7 +984,7 @@ sub pp_function {
   $o .= ") {";
   $o .= join "; ", (map {pp_decl($_, 0)} @{ $expr->{'decls'} });
   $o .= "; " if @{$expr->{'decls'}};
-  $o .= pp_expr($expr->{'expr'});
+  $o .=  pp_expr($expr->{'expr'});
   $o .= "}";
 }
 
@@ -977,7 +1006,7 @@ sub pp_var_domain {
 sub pp_prim {
     my $prim = shift;
 
-    return join(' ' . $prim->{'op'} . ' ', pp_rands($prim->{'args'}));
+    return '('. join(' ' . $prim->{'op'} . ' ', pp_rands($prim->{'args'})) . ')';
 
     
 }

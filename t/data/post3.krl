@@ -6,7 +6,7 @@ ruleset 10 {
     noop();
 
     fired {
-      last if sunny();
+      last if weather:sunny();
     } 
 
   }

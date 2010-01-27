@@ -5,7 +5,7 @@ ruleset 10 {
         pre {
 	}     
 
-	if page:var("price") != 15.99 then
+	if (page:var("price") != 15.99) then
 	   alert("The price has changed") ;
 
     }

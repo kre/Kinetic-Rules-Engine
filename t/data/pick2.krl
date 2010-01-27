@@ -6,7 +6,7 @@ ruleset 10 {
 	   c = datasource:fizzle("q=foo");
 	}     
 
-	if c.pick("$..doc[0]") eq "3" then
+	if (c.pick("$..doc[0]") eq "3") then
 	   alert("You're coming from Idaho!") ;
 
     }

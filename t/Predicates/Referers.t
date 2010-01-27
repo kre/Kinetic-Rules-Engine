@@ -94,7 +94,7 @@ $krl_src = <<_KRL_;
 referer_domain("www.byu.edu")
 _KRL_
 
-$cond = Kynetx::Parser::parse_predexpr($krl_src);
+$cond = Kynetx::Parser::parse_expr($krl_src);
 
 $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 
@@ -106,7 +106,7 @@ $krl_src = <<_KRL_;
 referer_domain("www.windley.com")
 _KRL_
 
-$cond = Kynetx::Parser::parse_predexpr($krl_src);
+$cond = Kynetx::Parser::parse_expr($krl_src);
 
 $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 

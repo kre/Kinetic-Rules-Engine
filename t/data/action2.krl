@@ -23,7 +23,7 @@ greater, use &gt;&gt;</p>
 
     }
 
-    replace_html("kobj_test", city_announcement + second_thing);
+    replace_html("kobj_test", (city_announcement + second_thing));
 
   }
 }

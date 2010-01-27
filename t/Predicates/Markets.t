@@ -80,23 +80,24 @@ my $response = $ua->get($check_url);
 
 #diag $response->content;
 
-SKIP: {
-    skip "No server available", 3 if (! $response->is_success || $response->content =~ /busy/);
 
-    
+
+SKIP: {
+    skip "No server available", 5 if (! $response->is_success || $response->content =~ /busy/);
+
     # check that predicates at least run without error
     my @dummy_arg = (0);
     foreach my $pn (@pnames) {
       ok(&{$preds->{$pn}}($BYU_req_info, \%rule_env,\@dummy_arg) ? 1 : 1, "$pn runs");
     }
-
+    
     my($krl_src,$cond,$args);
 
     $krl_src = <<_KRL_;
 foo(10)
 _KRL_
 
-    $cond = Kynetx::Parser::parse_predexpr($krl_src);
+    $cond = Kynetx::Parser::parse_expr($krl_src);
 
     $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 
@@ -116,7 +117,7 @@ _KRL_
 foo('GOOG')
 _KRL_
 
-    $cond = Kynetx::Parser::parse_predexpr($krl_src);
+    $cond = Kynetx::Parser::parse_expr($krl_src);
 
     $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 

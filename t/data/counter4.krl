@@ -7,13 +7,13 @@ ruleset 10 {
     }
 
     if ent:archive_pages > 2 within 3 days then 
-      alert("You win the prize!  You've seen " + ent:archive_pages + " pages from the archives!");
+      alert(("You win the prize!  You've seen " + (ent:archive_pages + " pages from the archives!")));
 
 
     fired {
       clear ent:archive_pages; 
     } else {
-      ent:archive_pages += 2 from 1 if a == 4;  
+      ent:archive_pages += 2 from 1 if (a == 4);  
     }
 
 

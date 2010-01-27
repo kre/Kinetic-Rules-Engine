@@ -44,7 +44,8 @@ use Kynetx::Session qw(:all);
 use Kynetx::Environments qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Rules qw(:all);
-use Kynetx::Predicates qw(:all);
+use Kynetx::Modules qw(:all);
+use Kynetx::Expressions qw(:all);
 use Kynetx::Predicates::Location qw(:all);
 use Kynetx::Predicates::Time qw(:all);
 use Kynetx::Predicates::Weather qw(:all);
@@ -128,8 +129,9 @@ sub show_context {
 
 	if ($selected) {
 	  my $pred_value = 
-	    eval_predicates($req_info, $rule_env, $session, 
-			    $rule->{'cond'}, $rule->{'name'});
+	    den_to_exp(
+		       eval_expr ($rule->{'cond'}, $rule_env, $rule->{'name'},$req_info, $session));
+
 
 	  push @{ $req_info->{'selected_rules'} }, $rule->{'name'};
 

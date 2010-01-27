@@ -6,15 +6,9 @@ ruleset 10 {
       	    tc = weather:tomorrow_cond_code();
 	    city = geoip:city();
 	}     
-        if (nighttime() && outside_state("UT"))
+        if (time:nighttime() && location:outside_state("UT"))
         then 
-           float("absolute", "top: 10px", "right: 10px",
-                 "/cgi-bin/weather.cgi?city=" + city + "&tc=" + tc)
-             with delay = 0 and
-                  draggable = true and
-                  scrollable = true and
-                  effect = "appear";
-
+	alert("hello");
 
     }
 }

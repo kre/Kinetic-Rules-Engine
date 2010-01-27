@@ -4,7 +4,7 @@ ruleset 10 {
         select using "/test/" setting(gp)
 
 	pre {
-          foo = {"foo": "bar" + gp,
+          foo = {"foo": ("bar" + gp),
                  "fizz": 3
 	        };
         }

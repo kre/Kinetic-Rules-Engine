@@ -1,0 +1,2 @@
+#!/bin/bash
+wc -l `find . \( -name '*.pl' -o -name '*.t' -o -name '*.pm' \) -print | xargs`

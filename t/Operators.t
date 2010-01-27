@@ -50,7 +50,7 @@ use Data::Dumper;
 use Kynetx::Test qw/:all/;
 use Kynetx::Operators qw/:all/;
 use Kynetx::Parser qw/:all/;
-use Kynetx::JavaScript qw/:all/;
+use Kynetx::Expressions qw/:all/;
 use Kynetx::Environments qw/:all/;
 
 
@@ -142,7 +142,7 @@ sub test_operator {
     $v = Kynetx::Parser::parse_expr($e);
     diag "Parsed expr: ", Dumper($v) if $d;
 
-    $r = eval_js_expr($v, $rule_env, $rule_name,$req_info);
+    $r = eval_expr($v, $rule_env, $rule_name,$req_info);
     diag "Result: ", Dumper($r) if $d;
     is_deeply($r, $x, "Trying $e");
 }

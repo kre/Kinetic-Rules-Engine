@@ -55,8 +55,8 @@ use vars qw(%VARIABLE);
 
 # Enable warnings within the Parse::RecDescent module.
 
-$::RD_ERRORS = 1; # Make sure the parser dies when it encounters an error
-#$::RD_WARN   = 1; # Enable warnings. This will warn on unused rules &c.
+#$::RD_ERRORS = 1; # Make sure the parser dies when it encounters an error
+$::RD_WARN   = 1; # Enable warnings. This will warn on unused rules &c.
 #$::RD_HINT   = 1; # Give out hints to help fix problems.
 
 #$::RD_AUTOSTUB = 1;
@@ -396,9 +396,9 @@ action: conditional_action
         {$return = $item{unconditional_action}}
       | <error>
 
-conditional_action: 'if' predexpr 'then' unconditional_action
+conditional_action: 'if' expr 'then' unconditional_action
         {$return=
-         {'cond' => $item{predexpr},
+         {'cond' => $item{expr},
           'blocktype' => $item{unconditional_action}->{'blocktype'} || 'every',
           'actions' => $item{unconditional_action}->{'actions'},
          }
@@ -476,99 +476,10 @@ blocktype: 'choose'
          | 'every'
 
 
-#
-# Predicate expressions
-#
-predexpr: conjunction '||' predexpr
-      {$return=
-       {'type' => 'pred',
-        'op' => '||',
-        'args' => [$item[1], $item[3]]
-       }
-      }
-    | conjunction
 
-
-conjunction: pred '&&' conjunction
-      {$return=
-       {'type' => 'pred',
-        'op' => '&&',
-        'args' => [$item[1], $item[3]]
-       }
-      }
-    | pred
-
-
-# FIXME: move all pred terms into expression?  
-pred: 'not' pred
-      {$return =
-       {'type' => 'pred',
-        'op' => 'negation',
-        'args' => [$item[2]]
-       }
-      }
-    | '(' predexpr ')'
-      {$return = $item[2]}
-    | 'seen' STRING 'in' var_domain ':' VAR timeframe(?)
-      {$return=
-       {'type' => 'seen_timeframe',
-	'domain' => $item[4],
-        'var' => $item[6],
-	'regexp' => $item[2],
-        'within' => (ref $item[7][0] eq 'HASH') ? $item[7][0]->{'within'} : undef,
-        'timeframe' => (ref $item[7][0] eq 'HASH') ? $item[7][0]->{'period'} : undef,
-       }
-      }
-    | 'seen' STRING ('before' | 'after') STRING 'in' var_domain ':' VAR
-      {$return=
-       {'type' => 'seen_compare',
-	'domain' => $item[6],
-        'var' => $item[8],
-	'regexp_1' => $item[2],
-	'regexp_2' => $item[4],
-	'op' => $item[3],
-       }
-      }
-    | var_domain ':' VAR predop expr timeframe 
-      {$return=
-       {'type' => 'persistent_ineq',
-	'domain' => $item[1],
-        'var' => $item[3],
-        'ineq' => $item[4],
-        'expr' => $item[5],
-        'within' => (ref $item[6] eq 'HASH') ? $item[6]->{'within'} : undef,
-        'timeframe' => (ref $item[6] eq 'HASH') ? $item[6]->{'period'} : undef,
-       }
-      }
-    | var_domain ':' VAR timeframe 
-      {$return=
-       {'type' => 'persistent_ineq',
-	'domain' => $item[1],
-        'var' => $item[3],
-        'ineq' => '==',
-        'expr' => Kynetx::Parser::mk_expr_node('bool','true'),
-        'within' => (ref $item[4] eq 'HASH') ? $item[4]->{'within'} : undef,
-        'timeframe' => (ref $item[4] eq 'HASH') ? $item[4]->{'period'} : undef,
-       }
-      }
-    | expr predop expr
-      {$return =
-       {'type' => 'ineq',
-	'op' => $item[2],
-	'args' => [$item[1], $item[3]]
-       }
-      }
-    | expr
-    | <error>
-
-predop: '<=' | '>=' | '<' | '>' | '==' | '!=' | 'eq' | 'neq' | 'like'
-
-var_domain: 'ent' | 'app'
-
-
-#
-# Callbacks
-#
+#-----------------------------------------------------------------------------
+# callbacks
+#-----------------------------------------------------------------------------
 callbacks: 'callbacks' '{' success(?) failure(?) '}'
      {$return=
       {'success' => $item[3][0],
@@ -595,6 +506,10 @@ click: ('click' | 'change') VAR '=' STRING click_link(?)
 click_link: 'triggers' persistent_expr
   {$return=$item[2]}
 
+
+#-----------------------------------------------------------------------------
+# postlude 
+#-----------------------------------------------------------------------------
 post_block: post '{' post_statement(s? /;/) SEMICOLON(?) '}' post_alternate(?)
      {$return=
       {'type' => $item[1],
@@ -611,7 +526,10 @@ post: 'fired'
 post_alternate: 'else' '{' post_statement(s?  /;/) SEMICOLON(?) '}'
       {$return=$item[3]}
 
-post_statement: persistent_expr ('if' predexpr)(?)
+#-----------------------------------------------------------------------------
+# statements
+#-----------------------------------------------------------------------------
+post_statement: persistent_expr ('if' expr)(?)
     {$item[1]->{'test'} = $item[2][0];
      $return = $item[1];}
   |log_statement ('if' expr)(?)
@@ -704,41 +622,130 @@ control_statement: 'last'
       }
      }
 
+#-----------------------------------------------------------------------------
+# expressions
+#-----------------------------------------------------------------------------
 
-expr: conditional_expression
-    | term term_op expr
-      {$return=
-       {'type' => 'prim',
-        'op' => $item[2],
-        'args' => [$item[1], $item[3]]
-       }
-      }
-    | term
+expr: function_def
+    | conditional_expression
 
-term_op: '+'|'-'
 
-conditional_expression : cond_expr_cond '=>' expr '|' expr
+conditional_expression : disjunction '=>' expr '|' expr
         {$return = {'type' => 'condexpr',
                     'test' => $item[1],
                     'then' => $item[3],
                     'else' => $item[5],
                    }}
+  | disjunction
+#     {$return= $item[1][0]}
 
-cond_expr_cond: '(' predexpr ')'
-    {$return = $item[2]}
-   | simple_pred
-   | qualified_pred
 
-  
-
-term: factor factor_op term
+disjunction: <leftop: conjunction '||' conjunction> 
       {$return=
-       {'type' => 'prim',
-        'op' => $item[2],
-        'args' => [$item[1], $item[3]]
+       (defined $item[1][1]) ?
+          {'type' => 'pred',
+           'op' => '||',
+           'args' => $item[1]
+          } 
+       :
+          $item[1][0]
+      }
+
+conjunction: <leftop: equality_expr '&&' equality_expr>
+      {$return =
+       (defined $item[1][1]) ?
+         {'type' => 'pred',
+          'op' => '&&',
+          'args' => $item[1]
+         } 
+       :
+         $item[1][0]
+      }
+
+# we assume that there's never more than 1 op and 2 exprs
+equality_expr: <leftop: add_expr predop add_expr>
+      {$return = 
+       (defined $item[1][1]) ?
+         Kynetx::Parser::build_expr_tree($item[1],'ineq')
+       :
+         $item[1][0]
+      }
+
+predop: '<=' | '>=' | '<' | '>' | '==' | '!=' | 'eq' | 'neq' | 'like'
+
+
+add_expr: <leftop: mult_expr add_op mult_expr>
+      {$return= 
+        (defined $item[1][1]) ?
+          Kynetx::Parser::build_expr_tree($item[1], 'prim')
+        :
+          $item[1][0]
+       }
+
+add_op: '+'|'-'
+
+mult_expr: <leftop: unary_expr mult_op unary_expr>
+      {$return=
+       (defined $item[1][1]) ?
+        Kynetx::Parser::build_expr_tree($item[1], 'prim')
+       :
+        $item[1][0]
+      }
+
+mult_op: '*'|'/'|'%'
+
+unary_expr: 'not' unary_expr
+       {$return =
+          {'type' => 'pred',
+           'op' => 'negation',
+           'args' => [$item[2]]
+          }
+       }
+    | 'seen' STRING 'in' var_domain ':' VAR timeframe(?)
+      {$return=
+       {'type' => 'seen_timeframe',
+	'domain' => $item[4],
+        'var' => $item[6],
+	'regexp' => $item[2],
+        'within' => (ref $item[7][0] eq 'HASH') ? $item[7][0]->{'within'} : undef,
+        'timeframe' => (ref $item[7][0] eq 'HASH') ? $item[7][0]->{'period'} : undef,
        }
       }
-    | factor '.' operator '(' expr(s? /,/) ')'
+    | 'seen' STRING ('before' | 'after') STRING 'in' var_domain ':' VAR
+      {$return=
+       {'type' => 'seen_compare',
+	'domain' => $item[6],
+        'var' => $item[8],
+	'regexp_1' => $item[2],
+	'regexp_2' => $item[4],
+	'op' => $item[3],
+       }
+      }
+    | var_domain ':' VAR predop expr timeframe 
+      {$return=
+       {'type' => 'persistent_ineq',
+	'domain' => $item[1],
+        'var' => $item[3],
+        'ineq' => $item[4],
+        'expr' => $item[5],
+        'within' => (ref $item[6] eq 'HASH') ? $item[6]->{'within'} : undef,
+        'timeframe' => (ref $item[6] eq 'HASH') ? $item[6]->{'period'} : undef,
+       }
+      }
+    | var_domain ':' VAR timeframe 
+      {$return=
+       {'type' => 'persistent_ineq',
+	'domain' => $item[1],
+        'var' => $item[3],
+        'ineq' => '==',
+        'expr' => Kynetx::Parser::mk_expr_node('bool','true'),
+        'within' => (ref $item[4] eq 'HASH') ? $item[4]->{'within'} : undef,
+        'timeframe' => (ref $item[4] eq 'HASH') ? $item[4]->{'period'} : undef,
+       }
+      }
+    | operator_expr
+
+operator_expr: factor '.' operator '(' expr(s? /,/) ')'
         {$return =
 	 {'type' => 'operator',
           'name' => $item[3],
@@ -746,8 +753,6 @@ term: factor factor_op term
 	  'obj' => $item[1]
          }}
     | factor
-
-factor_op: '*'|'/'|'%'
 
 operator: 'pick'|'length'|'replace'|'as'
 
@@ -763,20 +768,37 @@ factor: NUM
         {$return=Kynetx::Parser::mk_expr_node('bool',$item[1])}
       | 'false'
         {$return=Kynetx::Parser::mk_expr_node('bool',$item[1])}
-      | function
       | persistent_var
       | trail_exp
-      | simple_pred 
-      | qualified_pred
-      | VAR   # if this isn't after 'true' and 'false' they'll be vars
-        {$return=Kynetx::Parser::mk_expr_node('var',$item[1])}
+      | function_app
       | '[' expr(s? /,/) ']'
         {$return=Kynetx::Parser::mk_expr_node('array',$item[2])}
       | '{' hash_line(s? /,/) '}'
           {$return=Kynetx::Parser::mk_expr_node('hashraw',$item[2])}
-      | '(' (predexpr|expr) ')'
+      | VAR   # if this isn't after 'true' and 'false' they'll be vars
+        {$return=Kynetx::Parser::mk_expr_node('var',$item[1])}
+      | '(' expr ')'
         {$return=$item[2]}
       | <error>
+
+# FIXME: allow for expressions to be used for application
+function_app: namespace VAR '(' expr(s? /,/) ')'
+      {$return=
+       {'type' => 'qualified',
+        'source' => $item[1],
+        'predicate' => $item[2],
+        'args' => $item[4]
+       }
+      }
+   | VAR '(' expr(s? /,/) ')' # FIXME: should allow expressions besides VARS
+      {$return=
+       {'type' => 'app',
+        'function_expr' => Kynetx::Parser::mk_expr_node('var',$item{VAR}),
+        'args' => $item[3]
+       }
+      }
+
+var_domain: 'ent' | 'app'
 
 hash_line: STRING ':' expr
    {$return= {'lhs' => $item[1], 
@@ -806,23 +828,6 @@ trail_exp: 'current' var_domain ':' VAR
        'name' => $item[5],
       }
      }
-
-simple_pred: VAR '(' expr(s? /,/) ')' 
-      {$return=
-       {'type' => 'simple',
-        'predicate' => $item{VAR},
-        'args' => $item[3]
-       }
-      }
-
-qualified_pred: namespace VAR '(' expr(s? /,/) ')'
-      {$return=
-       {'type' => 'qualified',
-        'source' => $item[1],
-        'predicate' => $item[2],
-        'args' => $item[4]
-       }
-      }
 
 namespace: VAR ':'
     {$return = $item[1]}
@@ -860,7 +865,7 @@ periods: 'years'
       | <error>
 
 
-function: 'function' '(' VAR(s? /,/) ')' '{' fundecls(?) expr '}' 
+function_def: 'function' '(' VAR(s? /,/) ')' '{' fundecls(?) expr '}' 
       {$return={
           'type' => 'function',
           'vars' => $item[3],
@@ -888,6 +893,28 @@ sub string {
     $value =~ s/^["']//;
     $value =~ s/["']$//;
     return $value;
+}
+
+# assumes an array of at least length three and with odd number of members
+sub build_expr_tree {
+  my ($exprs, $type) = @_;
+
+  return unless (int(@{ $exprs}) >= 3);
+  my $firstarg = shift @{ $exprs };
+  my $op = shift @{ $exprs };
+  my $secondarg;
+
+  if (defined $exprs->[1]) {
+    $secondarg = build_expr_tree($exprs, $type);
+  } else {
+    $secondarg = $exprs->[0];
+  }
+
+  return {'type' => $type,
+	  'op' => $op,
+	  'args' => [$firstarg, $secondarg]
+         };
+
 }
 
 
@@ -1038,30 +1065,30 @@ sub parse_pre {
 
 }
 
-# Helper function used in testing  
-sub parse_predexpr {
-    my ($expr) = @_;
+# # Helper function used in testing  
+# sub parse_predexpr {
+#     my ($expr) = @_;
     
-    my $logger = get_logger();
+#     my $logger = get_logger();
 
-    $expr = remove_comments($expr);
+#     $expr = remove_comments($expr);
 
-    # remove newlines
-    $expr =~ s%\n%%g;
+#     # remove newlines
+#     $expr =~ s%\n%%g;
 
-    my $result = ($parser->predexpr($expr));
-    if (defined $result->{'error'}) {
-	$logger->error("Can't parse expression: $result->{'error'}");
-    } else {
-	$logger->debug("Parsed expression: ",sub {Dumper($expr)});
-    }
+#     my $result = ($parser->predexpr($expr));
+#     if (defined $result->{'error'}) {
+# 	$logger->error("Can't parse expression: $result->{'error'}");
+#     } else {
+# 	$logger->debug("Parsed expression: ",sub {Dumper($expr)});
+#     }
 
-    return $result;
+#     return $result;
 
-#    print Dumper($result);
+# #    print Dumper($result);
 
 
-}
+# }
 
 
 sub parse_rule {

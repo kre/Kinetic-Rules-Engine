@@ -26,8 +26,8 @@ What about <a href="http://www.windley.com">URLs in double quotes</a>?
     } 
 
    //comments in strings shouldn't be deleted
-    replace("kobj_test", city_announcement + second_thing +    
-            "Can we put //comments inside a string?");
+    replace("kobj_test", (city_announcement + (second_thing +    
+            "Can we put //comments inside a string?")));
 
   }
 

@@ -243,7 +243,7 @@ rule test_3 is active {
   pre { 
       c = location:city();
   }
-  if urban() then
+  if demographics:urban() then
     alert("testing " + c);
 }
 _KRL_
@@ -275,7 +275,7 @@ rule test_4 is active {
   pre { 
       c = location:city();
   }
-  if urban() && location:city() eq "Seattle" then
+  if demographics:urban() && location:city() eq "Seattle" then
     alert("testing " + c);
 }
 _KRL_

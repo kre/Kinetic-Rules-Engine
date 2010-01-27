@@ -5,7 +5,7 @@ ruleset 10 {
         pre {
 	}     
 
-	if (tomorrow_windy() || (nighttime() && today_windy())) then
+	if (weather:tomorrow_windy() || (time:nighttime() && weather:today_windy())) then
 	   alert("You're coming from Idaho!");
 
     }

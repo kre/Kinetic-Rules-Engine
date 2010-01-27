@@ -37,12 +37,12 @@ use JSON::XS;
 
 use Kynetx::Util qw(:all);
 use Kynetx::JavaScript qw(:all);
+use Kynetx::Expressions qw(:all);
 use Kynetx::Rules qw(:all);
 use Kynetx::Environments qw(:all);
 use Kynetx::Session q/:all/;
 use Kynetx::Log q/:all/;
 use Kynetx::Json q/:all/;
-#use Kynetx::Predicates::Twitter q/:authorize/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -542,7 +542,7 @@ sub build_one_action {
 	# Should the name be in quotes??
 
 	$config->{$m->{'name'}} = 
- 	               den_to_exp(eval_js_expr($m->{'value'}, 
+ 	               den_to_exp(eval_expr($m->{'value'}, 
 						$rule_env, 
 						$rule_name, 
 						$req_info, 
@@ -647,7 +647,7 @@ sub choose_action {
 
 	    # We need to eval the argument since it might be an expression
 	    $url = den_to_exp(
-		    eval_js_expr($last_arg, $rule_env, $rule_name,$req_info));
+		    eval_expr($last_arg, $rule_env, $rule_name,$req_info));
 #	    $url =~ s/^'(.*)'$/$1/;
 	    $logger->debug("Fetching ", $url);
 
@@ -820,12 +820,13 @@ sub eval_post_statement {
     #default to true if not present
     my $test = 1;
     if (defined $expr->{'test'}) {
-      $test = 
-	Kynetx::Predicates::eval_predicates($req_info, 
+      $test = den_to_exp(
+	Kynetx::Expressions::eval_expr($expr->{'test'}, 
 						  $rule_env, 
-						  $session, 
-						  $expr->{'test'}, 
-						  $rule_name);
+						  $rule_name,
+						  $req_info, 
+						  $session
+				      ));
 
       $logger->debug("[post] Evaluating statement test", $test);
     }
@@ -863,7 +864,7 @@ sub eval_persistent_expr {
 #	$logger->debug(Dumper($session));
 	my $by = 
 	    den_to_exp(
-		eval_js_expr($expr->{'value'},
+		eval_expr($expr->{'value'},
 			     $rule_env,
 			     $rule_name,
 			     $req_info,
@@ -871,7 +872,7 @@ sub eval_persistent_expr {
 	$by = -$by if($expr->{'op'} eq '-=');
 	my $from = 
 	    den_to_exp(
-		eval_js_expr($expr->{'from'},
+		eval_expr($expr->{'from'},
 			     $rule_env,
 			     $rule_name,
 			     $req_info,
@@ -896,7 +897,7 @@ sub eval_persistent_expr {
 	if($expr->{'domain'} eq 'ent') {
 	    my $url = defined $expr->{'with'} ?
 		den_to_exp(
-		    eval_js_expr($expr->{'with'},
+		    eval_expr($expr->{'with'},
 				 $rule_env,
 				 $rule_name,
 				 $req_info,
@@ -928,7 +929,7 @@ sub eval_log_statement {
     $js = explicit_callback($req_info, 
 			    $rule_name, 
 			    den_to_exp(
-				       eval_js_expr($expr->{'what'},
+				       eval_expr($expr->{'what'},
 						    $rule_env,
 						    $rule_name,
 						    $req_info,

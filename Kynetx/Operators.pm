@@ -36,7 +36,7 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 use Storable qw(dclone);
 
-use Kynetx::JavaScript q/eval_js_expr/;
+use Kynetx::Expressions q/eval_expr/;
 use Kynetx::JSONPath ;
 
 use Exporter;
@@ -63,13 +63,13 @@ sub eval_pick {
     $logger->trace("expr: ", sub { Dumper($expr)});
     $logger->trace("[pick] rule_env: ", sub { Dumper($rule_env) });
 
-    my $int = Kynetx::JavaScript::eval_js_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    my $int = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
     # if you don't clone this, it modified the rule env 
 
-    my $obj = Kynetx::JavaScript::den_to_exp(dclone($int));
+    my $obj = Kynetx::Expressions::den_to_exp(dclone($int));
     $logger->trace("[pick] obj: ", sub { Dumper($obj) });
     
-    my $rands = Kynetx::JavaScript::eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 
     my $pattern = '';
     if($rands->[0]->{'type'} eq 'str') {
@@ -92,7 +92,7 @@ sub eval_pick {
 
     $logger->debug("pick using $pattern"); # returning ", Dumper($v));
 
-    return  { 'type' => Kynetx::JavaScript::infer_type($v),
+    return  { 'type' => Kynetx::Expressions::infer_type($v),
 	      'val' => $v
     };
 }
@@ -102,7 +102,7 @@ $funcs->{'pick'} = \&eval_pick;
 sub eval_length {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
-    my $obj = Kynetx::JavaScript::eval_js_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
 #    $logger->debug("obj: ", sub { Dumper($obj) });
 
@@ -111,7 +111,7 @@ sub eval_length {
 	$v = @{ $obj->{'val'} } + 0;
     }
 
-    return { 'type' => Kynetx::JavaScript::infer_type($v),
+    return { 'type' => Kynetx::Expressions::infer_type($v),
 	      'val' => $v
     }
 }
@@ -120,11 +120,11 @@ $funcs->{'length'} = \&eval_length;
 sub eval_replace {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
-    my $obj = Kynetx::JavaScript::eval_js_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
 #    $logger->debug("obj: ", sub { Dumper($obj) });
 
-    my $rands = Kynetx::JavaScript::eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 #    $logger->debug("obj: ", sub { Dumper($rands) });
 
     my $v = $obj->{'val'};
@@ -168,7 +168,7 @@ sub eval_replace {
       }
 
 
-    return { 'type' => Kynetx::JavaScript::infer_type($v),
+    return { 'type' => Kynetx::Expressions::infer_type($v),
 	      'val' => $v
     }
 }
@@ -178,7 +178,7 @@ $funcs->{'replace'} = \&eval_replace;
 sub eval_toRegexp {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
-    my $obj = Kynetx::JavaScript::eval_js_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
 #    $logger->debug("obj: ", sub { Dumper($obj) });
 
@@ -195,9 +195,9 @@ $funcs->{'toRegexp'} = \&eval_toRegexp;
 sub eval_as {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
-    my $obj = Kynetx::JavaScript::eval_js_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
-    my $rands = Kynetx::JavaScript::eval_js_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 
     $logger->trace("obj: ", sub { Dumper($obj) }, " as ", $rands->[0]->{'val'} );
 

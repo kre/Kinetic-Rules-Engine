@@ -74,7 +74,7 @@ SKIP: {
 
     # test CONSOLE function
     my $url_console_2 = "$dn/console/$ruleset?caller=http://www.windley.com/foo/bar.html";
-    #diag "Testing console with $url_console_2";
+#    diag "Testing console with $url_console_2";
 
     $mech->get_ok($url_console_2);
     is($mech->content_type(), 'text/html');

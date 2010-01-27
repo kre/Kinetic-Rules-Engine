@@ -133,12 +133,14 @@ my $friends_timeline = eval_twitter($my_req_info,
 				    $session,
 				    'foo',
 				    'friends_timeline',
-				    [{'count' => 10}]
+				    [{'count' => 5}]
 				   );
 #$logger->debug("Friends timeline: ", $friends_timeline);
 
+#diag Dumper $friends_timeline;
 
-is(int @{ $friends_timeline }, 10, "Getting back 10 returns");
+
+is(int @{ $friends_timeline }, 5, "Getting back 5 returns");
 $test_count++;
 
 like($friends_timeline->[0]->{'user'}->{'friends_count'}, qr/\d+/, "Friend count is a number");

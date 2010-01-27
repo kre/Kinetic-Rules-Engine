@@ -81,7 +81,7 @@ $krl_src = <<_KRL_;
 media_market_greater_than(500)
 _KRL_
 
-$cond = Kynetx::Parser::parse_predexpr($krl_src);
+$cond = Kynetx::Parser::parse_expr($krl_src);
 
 $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 
@@ -95,7 +95,7 @@ $krl_src = <<_KRL_;
 dma_is(819)
 _KRL_
 
-$cond = Kynetx::Parser::parse_predexpr($krl_src);
+$cond = Kynetx::Parser::parse_expr($krl_src);
 
 $args = Kynetx::JavaScript::gen_js_rands($cond->{'args'});
 

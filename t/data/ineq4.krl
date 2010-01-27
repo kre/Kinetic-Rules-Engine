@@ -5,7 +5,7 @@ ruleset 10 {
         pre {
 	}     
 
-	if page:var("total") >= 100 then
+	if (page:var("total") >= 100) then
 	   alert("You qualify for free shipping!");
 
     }

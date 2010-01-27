@@ -9,7 +9,7 @@ ruleset library {
         select using "www.amazon.com/gp/product/(\d+)/" setting(isbn)
 
         pre {
-      	  book_data = datasource:library_search("q="+isbn);
+      	  book_data = datasource:library_search(("q="+isbn));
   	  url = book_data.pick("$..docs[0].url");
  	  title = book_data.pick("$..docs[0].title");
 
@@ -19,7 +19,7 @@ This book's available at your local library. Click here to see:'
 >>;
 	}
 
-	if book_data.pick("$..numFound") > 0  then 
+	if (book_data.pick("$..numFound") > 0) then 
 		notify("top-right", "#222", "#FFF", "Minuteman Library", true,
        		         msg);
     }

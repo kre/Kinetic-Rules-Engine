@@ -7,7 +7,7 @@ ruleset 10 {
       c = app:page_counter;
     }
 
-    alert("You're visitor number " + c + " to the archives!");
+    alert(("You're visitor number " + (c + " to the archives!")));
 
     fired {
       app:page_counter += 1 from 0;  

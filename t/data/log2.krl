@@ -6,7 +6,7 @@ ruleset 10 {
     noop();
 
     fired {
-      log "year: " + year  if (sunny() || night());
+      log ("year: " + year)  if (weather:sunny() || time:night());
     } else {
       log "nothing going on";
     }

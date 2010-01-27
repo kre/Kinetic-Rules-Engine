@@ -6,11 +6,11 @@ ruleset 10 {
       	    foo = function(a,b) {
                       fooz = 3;
 		      boaz = "string";
-		      foozle = fooz * a + b;
+		      foozle = (fooz * (a + b));
                       doc = << Testing #{boaz} >>;
                       x
                   };
 	}     
-        replace("test","test" + foo);
+        replace("test",("test" + foo));
     }
 }

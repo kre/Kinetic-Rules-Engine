@@ -5,7 +5,7 @@ ruleset 10 {
         pre {
 	}     
 
-	if (page:var("total") > 99.99 && location:zip() like "83*") then
+	if ((page:var("total") > 99.99) && (location:zip() like "83*")) then
 	   alert("A big spender from Idaho!");
 
     }

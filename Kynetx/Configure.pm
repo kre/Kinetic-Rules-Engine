@@ -73,12 +73,6 @@ sub configure {
 
     $config->{'DEFAULT_TEMPLATE_DIR'} = $config->{'KOBJ_ROOT'} . '/etc/tmpl';
 
-    $config->{'OAUTH_CALLBACK_HOST'} = $config->{'EVAL_HOST'} 
-      unless $config->{'OAUTH_CALLBACK_HOST'};
- 
-    $config->{'OAUTH_CALLBACK_PORT'} = $config->{'80'} 
-      unless $config->{'OAUTH_CALLBACK_PORT'};
- 
     # note that Apache::Session::Memecached wants a space delimited string
     $config->{'SESSION_SERVERS'} = 
 	join(" ", 
@@ -92,6 +86,14 @@ sub configure {
     $config->{'MEMCACHE_SERVERS'} = \@mservers;
 
     set_run_mode();
+
+
+    $config->{'OAUTH_CALLBACK_HOST'} = $config->{'EVAL_HOST'} 
+      unless $config->{'OAUTH_CALLBACK_HOST'};
+ 
+    $config->{'OAUTH_CALLBACK_PORT'} = '80'
+      unless $config->{'OAUTH_CALLBACK_PORT'};
+ 
 
 
     return 1;

@@ -76,23 +76,6 @@ my %predicates = (
     },
 
 
-    'tomorrow_cond' => sub {
-	my ($req_info, $rule_env, $args) = @_;
-
-	my $desired = $args->[0];
-
-	my $tcond = get_weather($req_info, 'tomorrow_cond_code');
-
-	my $logger = get_logger();
-	$logger->debug("Weather for zip: " . 
-		       $req_info->{'geoip'}->{'postal_code'} . 
-		       " " . int($tcond) . " ?= " . $desired);
-
-	return int($tcond) == $desired;
-   
-    
-    },
-
     'today_showers' => sub {
 	my ($req_info, $rule_env, $args) = @_;
 

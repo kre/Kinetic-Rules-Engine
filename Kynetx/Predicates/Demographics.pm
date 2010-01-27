@@ -155,6 +155,9 @@ sub get_demographics {
 
     my @field_names = qw(
                          median_income
+			 total_pop
+			 urban_pop
+			 rural_pop
                         );
 
     if(not defined $req_info->{'demographics'}->{$field}) {
@@ -207,7 +210,7 @@ sub get_demographics {
 	my($total_pop,$urban_pop,$rural_pop,$median_income) = 
 	    split(/:/,$demo{$zip} || "0:0:0:0");
 
-	$logger->debug($demo{$zip});
+	$logger->debug("Demograhic results: ", $demo{$zip});
 	
 
 	$logger->debug("Demographic data for ($field): ", 

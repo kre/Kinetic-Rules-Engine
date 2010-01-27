@@ -6,7 +6,7 @@ ruleset 10 {
     noop();
 
     fired {
-      log "year: " + year;
+      log ("year: " + year);
     } 
 
   }

@@ -1,3 +1,26 @@
+2010-01-27  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Environments.pm (lookup_rule_env): Added "defined" to
+	  initial test so that zero (false) valued items can be returned.
+	* t/ExprTests.pm: Broke expression test cases into separate file
+	  so that Expressions.t and JavaScript.t can both use them.
+	* Kynetx/Actions.pm: support for new eval_expr.
+	* Kynetx/PrettyPrinter.pm: completely reworked expression and predicate
+	  language. 
+	* Kynetx/Parser.pm: completely reworked expression and predicate
+	  language.  
+	* Kynetx/Rules.pm: Support for new eval_expr instead of
+	  eval_predicates 
+	* Kynetx/Modules.pm: Former Predicates.pm.  Predicate evaluation
+	  moved to Expressions.pm  eval_library added (former
+	  eval_datasource). 
+	* Kynetx/JavaScript.pm:  Separated expressions from Javascript
+	  generation. Fixed some issues with generation.  
+	* Kynetx/Expressions.pm: Separated expressions from Javascript
+	  generation. Added support for function definition and
+	  application. Moved predicate language into expression. Fixed
+	  some issues with denoted values. 
+
 2010-01-21 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/JavaScript.pm:  added a parse beesting function to eval_js_expr
     * Kynetx/Json.pm: added use utf-8 to make uft-8 the default encoding

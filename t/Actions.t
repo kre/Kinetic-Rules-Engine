@@ -884,13 +884,13 @@ is(session_seen($rid, $session, 'my_trail',"testing"),
    'testing added'
   );
 
-is(session_seen($rid, $session, 'my_trail',"kynetx"),
+is(session_seen($rid, $session, 'my_trail',"windley"),
    1,
-   'kynetx pushed down'
+   'windley pushed down'
   );
 
 run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
-is(session_seen($rid, $session, 'my_trail',"kynetx"),
+is(session_seen($rid, $session, 'my_trail',"windley"),
    0,
    'testing forgotten'
   );

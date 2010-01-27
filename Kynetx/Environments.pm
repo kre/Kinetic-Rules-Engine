@@ -64,7 +64,7 @@ sub lookup_rule_env {
 
     if(! defined $env || ! (ref $env eq 'HASH')) {
 	return undef;
-    } elsif ($env->{$key}) {
+    } elsif (defined $env->{$key}) {
 	return $env->{$key};
     } else {
 	return lookup_rule_env($key, $env->{'___sub'});

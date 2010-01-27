@@ -40,12 +40,13 @@ use JSON::XS;
 use Kynetx::Parser qw(:all);
 use Kynetx::PrettyPrinter qw(:all);
 use Kynetx::JavaScript qw(:all);
+use Kynetx::Expressions qw(:all);
 use Kynetx::Json qw(:all);
 use Kynetx::Util qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Datasets qw(:all);
 use Kynetx::Session qw(:all);
-use Kynetx::Predicates qw(:all);
+use Kynetx::Modules qw(:all);
 use Kynetx::Actions qw(:all);
 use Kynetx::Log qw(:all);
 use Kynetx::Request qw(:all);
@@ -289,7 +290,7 @@ sub eval_globals {
     my $js = "";
     if($ruleset->{'global'}) {
 
-    $logger->debug("Here's the globals: ", Dumper $ruleset->{'global'});
+#    $logger->debug("Here's the globals: ", Dumper $ruleset->{'global'});
 
       # make this act like let* not let
       my @vars;
@@ -385,11 +386,11 @@ sub eval_rule {
 
     # this loads the rule_env.  
     ($outer_tentative_js,$rule_env) = 
-      Kynetx::JavaScript::eval_js_pre($req_info, 
-				      $rule_env, 
-				      $rule->{'name'}, 
-				      $session, 
-				      $rule->{'outer_pre'});
+      Kynetx::Expressions::eval_prelude($req_info, 
+					$rule_env, 
+					$rule->{'name'}, 
+					$session, 
+					$rule->{'outer_pre'});
 
     $rule->{'pagetype'}->{'foreach'} = [] 
       unless defined $rule->{'pagetype'}->{'foreach'};
@@ -437,7 +438,7 @@ sub eval_foreach {
 
     # expr has to result in array of prims
     my $valarray = 
-         eval_js_expr($foreach_list[0]->{'expr'}, 
+         eval_expr($foreach_list[0]->{'expr'}, 
 		      $rule_env, 
 		      $rule->{'name'}, 
 		      $req_info, 
@@ -477,9 +478,9 @@ sub eval_rule_body {
 
   my $inner_tentative_js;
   ($inner_tentative_js,$rule_env) = 
-    Kynetx::JavaScript::eval_js_pre($req_info, 
-				    $rule_env, $rule->{'name'}, 
-				    $session, $rule->{'inner_pre'});
+    Kynetx::Expressions::eval_prelude($req_info, 
+				      $rule_env, $rule->{'name'}, 
+				      $session, $rule->{'inner_pre'});
 
 
 
@@ -488,11 +489,8 @@ sub eval_rule_body {
 
 
   my $pred_value = 
-	eval_predicates($req_info, 
-			$rule_env, 
-			$session, 
-			$rule->{'cond'}, 
-			$rule->{'name'});
+    den_to_exp(
+       eval_expr ($rule->{'cond'}, $rule_env, $rule->{'name'},$req_info, $session));
 
 
   my $js = '';

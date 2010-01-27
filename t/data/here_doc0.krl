@@ -24,7 +24,7 @@ greater, use &gt;&gt;</p>
 
     }
 
-    replace("kobj_test", city_announcement + second_thing);
+    replace("kobj_test", (city_announcement + second_thing));
 
   }
 

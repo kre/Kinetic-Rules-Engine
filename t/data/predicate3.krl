@@ -5,7 +5,7 @@ ruleset 10 {
         pre {
 	}     
 
-	if nighttime() then
+	if time:nighttime() then
 	   alert("You're coming from Idaho!") ;
 
     }

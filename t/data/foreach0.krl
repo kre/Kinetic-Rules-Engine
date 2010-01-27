@@ -10,13 +10,7 @@ ruleset 10 {
 	  }     
           if (nighttime() && outside_state("UT"))
           then 
-           float("absolute", "top: 10px", "right: 10px",
-                 "/cgi-bin/weather.cgi?city=" + city + "&tc=" + tc + x)
-             with delay = 0 and
-                  draggable = true and
-                  scrollable = true and
-                  effect = "appear";
-
+	         alert("hello");
 
     }
 }

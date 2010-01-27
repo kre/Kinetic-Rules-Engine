@@ -5,8 +5,6 @@ ruleset 10 {
         pre {
       	    zip = page:var("zip");
 	}     
-        float("absolute", "top: 10px", "right: 10px",
-                 "/cgi-bin/weather.cgi?zip=" + zip);
-
+	alert("hello");
     }
 }

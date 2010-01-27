@@ -55,7 +55,7 @@ use Kynetx::Json ();
 use Kynetx::Log ();
 use Kynetx::Memcached ();
 use Kynetx::Parser ();
-use Kynetx::Predicates ();
+use Kynetx::Modules ();
 use Kynetx::PrettyPrinter ();
 #use Kynetx::Repository ();
 use Kynetx::Request ();

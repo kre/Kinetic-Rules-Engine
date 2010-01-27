@@ -7,7 +7,7 @@ ruleset 10 {
     }
 
     if ent:archive_pages > 2 within 3 days then 
-      alert("You win the prize!  You've seen " + ent:archive_pages + " pages from the archives!");
+      alert(("You win the prize!  You've seen " + (ent:archive_pages + " pages from the archives!")));
 
 
     fired {

@@ -6,7 +6,7 @@ ruleset 10 {
 
 	}     
 
-        if x == 5
+        if (x == 5)
         then 
           foo => emit <<
 pagename = pagename.replace(/-/, ' ');

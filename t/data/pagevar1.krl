@@ -5,7 +5,7 @@ ruleset 10 {
         pre {
 	}     
 
-	if page:var("zip") like "83*" then
+	if (page:var("zip") like "83*") then
 	   alert("You're coming from Idaho!");
 
     }

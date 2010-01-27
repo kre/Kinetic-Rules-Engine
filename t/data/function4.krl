@@ -4,10 +4,10 @@ ruleset 10 {
         select using "/test/" setting()
         pre {
       	    foo = function(a) {
-                      x = a + 5;
-                      4 * x
+                      x = (a + 5);
+                      (4 * x)
                   };
 	}     
-        replace("test","test " + foo(3));
+        replace("test",("test " + foo(3)));
     }
 }

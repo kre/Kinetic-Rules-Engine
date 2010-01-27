@@ -5,7 +5,7 @@ ruleset 10 {
         pre {
 	}     
 
-	if not (nighttime() || today_windy()) then
+	if (not (time:nighttime() || weather:today_windy())) then
 	   alert("You're coming from Idaho!");
 
     }

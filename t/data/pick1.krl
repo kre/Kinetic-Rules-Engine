@@ -6,7 +6,7 @@ ruleset 10 {
 	   c = datasource:fizzle("q=foo").pick("$..doc");
 	}     
 
-	if nighttime() then
+	if time:nighttime() then
 	   alert("You're coming from Idaho!") ;
 
     }

@@ -5,7 +5,7 @@ ruleset 10 {
         pre {
 	}     
 
-	if (page:var("total") > 99.99 && today_windy()) then
+	if ((page:var("total") > 99.99) && weather:today_windy()) then
 	   alert("A windy shopping trip!");
 
     }

@@ -7,8 +7,8 @@ ruleset 10 {
       c = ent:archive_pages;
     }
 
-    if ent:archive_pages > 2 then 
-      alert("You win the prize!  You've seen " + c + " pages from the archives!");
+    if (ent:archive_pages > 2) then 
+      alert(("You win the prize!  You've seen " + (c + " pages from the archives!")));
 
     fired {
       clear ent:archive_pages; 

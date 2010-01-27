@@ -95,26 +95,80 @@ sub configure {
 sub gen_req_info {
     my($rid, $options) = @_;
     my $req_info;
-    $req_info->{'ip'} = $options->{'ip'} || '72.21.203.1';
-    $req_info->{'caller'} = $options->{'caller'} || 'http://www.windley.com';
+    $req_info->{'ip'} =  '72.21.203.1';
+    $req_info->{'caller'} = 'http://www.windley.com';
     $req_info->{'pool'} = APR::Pool->new;
-    $req_info->{'txn_id'} = $options->{'txn_id'} || '1234';
+    $req_info->{'txn_id'} = '1234';
     $req_info->{'rid'} = $rid;
+
+    foreach my $k (keys %{ $options}) {
+      $req_info->{$k} = $options->{$k};
+    }
 
     return $req_info;
 }
 
 sub gen_rule_env {
-    my($options) = @_;
+  my($options) = @_;
     
-    my $rule_env = empty_rule_env();
+  my $rule_env = empty_rule_env();
 
-    $rule_env =  extend_rule_env(
-	['city','tc','temp','booltrue','boolfalse','a','b'],
-	['Blackfoot','15',20,'true','false','10','11'],
-	$rule_env);
+  $rule_env =  extend_rule_env(
+			       ['city','tc','temp','booltrue','boolfalse','a','b'],
+			       ['Blackfoot','15',20,'true','false','10','11'],
+			       $rule_env);
 
-    return extend_rule_env($options, $rule_env);
+  $rule_env = extend_rule_env('store',{
+				       "store"=> {
+						  "book"=> [ 
+							    {
+							     "category"=> "reference",
+							     "author"=> "Nigel Rees",
+							     "title"=> "Sayings of the Century",
+							     "price"=> 8.95,
+							     "ratings"=> [
+									  1,
+									  3,
+									  2,
+									  10
+									 ]
+							    },
+							    { 
+							     "category"=> "fiction",
+							     "author"=> "Evelyn Waugh",
+							     "title"=> "Sword of Honour",
+							     "price"=> 12.99,
+							     "ratings" => [
+									   "good",
+									   "bad",
+									   "lovely"
+									  ]
+							    },
+							    {
+							     "category"=> "fiction",
+							     "author"=> "Herman Melville",
+							     "title"=> "Moby Dick",
+							     "isbn"=> "0-553-21311-3",
+							     "price"=> 8.99
+							    },
+							    {
+							     "category"=> "fiction",
+							     "author"=> "J. R. R. Tolkien",
+							     "title"=> "The Lord of the Rings",
+							     "isbn"=> "0-395-19395-8",
+							     "price"=> 22.99
+							    }
+							   ],
+						  "bicycle"=> {
+							       "color"=> "red",
+							       "price"=> 19.95
+							      }
+						 }
+				      },$rule_env);
+
+
+
+  return extend_rule_env($options, $rule_env);
 }
 
 sub gen_session {
@@ -125,11 +179,15 @@ sub gen_session {
     my $three_days_ago = DateTime->now->add( days => -3 );
     session_touch($rid, $session, 'archive_pages_old', $three_days_ago);
 
+    session_store($rid, $session, 'my_count', 2);
+
     session_store($rid, $session, 'archive_pages_now', 2);
     session_store($rid, $session, 'archive_pages_now2', 3);
 
     session_push($rid, $session, 'my_trail', "http://www.windley.com/foo.html");
     session_push($rid, $session, 'my_trail', "http://www.kynetx.com/foo.html");
+    session_push($rid, $session, 'my_trail', "http://www.windley.com/bar.html");
+
 
     session_clear($rid, $session, 'my_flag');
 

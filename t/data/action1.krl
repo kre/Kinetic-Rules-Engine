@@ -6,8 +6,7 @@ ruleset 10 {
       	    tc = weather:tomorrow_cond_code();
 	    city = geoip:city();
 	}     
-      float("absolute", "top: 10px", "right: 10px",
-            "/cgi-bin/weather.cgi?city=" + city + "&tc=" + tc)
+      float("absolute", "top: 10px", "right: 10px", "url")
         with delay = 0 ;
 
     }

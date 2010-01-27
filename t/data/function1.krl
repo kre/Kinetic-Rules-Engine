@@ -4,9 +4,9 @@ ruleset 10 {
         select using "/test/" setting()
         pre {
       	    foo = function() { 
-                     x
+                    x
                   };
 	}     
-        replace("test","test" + foo);
+        replace("test",("test" + foo));
     }
 }

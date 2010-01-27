@@ -9,7 +9,7 @@ ruleset 10 {
     }
 
     if seen "/archive/2006" after "/archive/2007" in ent:my_trail then 
-      alert("You win the prize!  You've seen " + t);
+      alert(("You win the prize!  You've seen " + t));
 
     fired {
       forget "/archive/2006" in ent:my_trail;

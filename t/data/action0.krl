@@ -5,9 +5,10 @@ ruleset 10 {
         pre {
       	    tc = weather:tomorrow_cond_code();
 	    city = geoip:city();
+
 	}     
       float("absolute", "top: 10px", "right: 10px",
-            "/cgi-bin/weather.cgi?city=" + city + "&tc=" + tc)
+            ("/cgi-bin/weather.cgi?city=" + (city + ("&tc=" + tc))))
         with delay = 0 and
              draggable = true and
              scrollable = true and
