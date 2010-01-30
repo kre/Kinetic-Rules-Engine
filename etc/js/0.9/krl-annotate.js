@@ -144,7 +144,7 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 
 
 			KOBJ.logger('annotated_local_search_results', config['txn_id'], count, '', 'success', config['rule_name'], config['rid']);
-		}
+		};
 
 	} else {
 		runAnnotateLocal = function(){
@@ -170,7 +170,7 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 
 			KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'] );
 			cb();
-		}
+		};
 
 	}
 
@@ -369,7 +369,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 			KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'], config['rid'] );
 			cb();
 
-		}
+		};
 
 	} else {
 		runAnnotate = function(){
@@ -397,7 +397,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 			});
 			KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'], config['rid'] );
 			cb();
-		}
+		};
 
 
 	}

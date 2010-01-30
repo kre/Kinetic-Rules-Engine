@@ -368,9 +368,18 @@ KOBJ.errorstack_submit = function(key,e) {
   var i = document.createElement("img");
   i.setAttribute("src", "http://www.errorstack.com/submit?" + txt);
   document.body.appendChild(i);
+  //KOBJ.getwithimage("http://www.errorstack.com/submit?" + txt);
 };
 
 
+//this method is overridden in sandboxed environments
+KOBJ.getwithimage = function(url){
+	var i = document.createElement("img");
+	i.setAttribute("src", url);
+	document.body.appendChild(i);
+}
+
+//this method is overridden in sandboxed environments
 KOBJ.require = function(url) {
   var r=document.createElement("script");
   r.src= url;
@@ -390,6 +399,9 @@ KOBJ.reload = function(delay) {
   setTimeout(function(){body.appendChild(r);},delay);
 };
 
+/*KOBJ.encodeEndpointSignature = function(endpoint){
+	return endpoint.type + ":" + endpoint.name + ":" + endpoint.version;
+};*/
 
 KOBJ.eval = function(config) {
   if(! config.rids && typeof(config.rids) !== 'array') {
@@ -397,7 +409,7 @@ KOBJ.eval = function(config) {
   }
 
 	//create response structs
-	for(i in config.rids){
+	for(var i in config.rids){
 		var rid = config.rids[i];		
 		KOBJ[rid] = KOBJ[rid] || {};
 		if(config.delayExecution){
@@ -430,6 +442,21 @@ KOBJ.eval = function(config) {
 	      });
   }
 
+
+/*
+
+  if(config) {
+	$K.each(config,function(k,v) {
+		if(!(k === 'rids' || k === 'init' || k === 'endpoint')) {
+			param_str += "&" + k + "=" + v;
+		} else if(k === 'endpoint'){
+			param_str += "&endpoint=" + KOBJ.encodeEndpointSignature(v);
+		}
+	});
+  }
+
+
+*/
   var eval_url = url + "/" + d + ".js?caller=" + escape(document.URL) + "&referer="+ escape(document.referrer) + "&kvars=" + escape(KOBJ.kvars_json) + "&title=" + encodeURI(document.title) + param_str;
 
   KOBJ.require(eval_url);
@@ -488,9 +515,11 @@ KOBJ.runit = function(){
 };
 
 KOBJ.logVerify = function(txn, appid, cluster){
-		var i = document.createElement("img");
+		/*var i = document.createElement("img");
 		i.setAttribute("src", KOBJ.proto + "kverify.appspot.com/log?txn="+txn+"&appid="+appid+"&cluster="+cluster);
 		document.body.appendChild(i);
+		*/	
+	KOBJ.getwithimage(KOBJ.proto + "kverify.appspot.com/log?txn="+txn+"&appid="+appid+"&cluster="+cluster);		
 };
 
 //see if page is already loaded (ex: tags planted AFTER dom ready) to know if we should wait for document onReady
