@@ -51,6 +51,7 @@ use Kynetx::Actions ();
 use Kynetx::Console ();
 use Kynetx::Datasets ();
 use Kynetx::JavaScript ();
+use Kynetx::Expressions ();
 use Kynetx::Json ();
 use Kynetx::Log ();
 use Kynetx::Memcached ();

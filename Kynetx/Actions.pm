@@ -563,6 +563,9 @@ sub build_one_action {
       if ($action->{'source'} eq 'twitter') {
 	$actions = Kynetx::Predicates::Twitter::get_actions();
 #	$logger->debug("Actions: ", Dumper $actions);
+      } elsif ($action->{'source'} eq 'kpds') {
+	$actions = Kynetx::Predicates::KPDS::get_actions();
+#	$logger->debug("Actions: ", Dumper $actions);
       }
     } else {
       $actions = $default_actions;

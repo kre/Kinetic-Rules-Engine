@@ -1,3 +1,8 @@
+2010-02-01  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/OAuth.pm: Added module to generalize OAuth usage in KRE
+	* Kynetx/Predicates/KPDS.pm: Added module to talk to KPDS
+
 2010-01-27  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Environments.pm (lookup_rule_env): Added "defined" to

@@ -57,34 +57,19 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
 
-# to add a new module to the engine, add it's name here
-my @modules = qw(
-Demographics
-Location
-Weather
-Time
-Markets
-Referers
-Mobile
-MediaMarkets
-Useragent
-Twitter
-Page
-Math
-);
-
-# eval necessary with computed module names (not bare words)
-foreach my $module (@modules) {
-    eval "use Kynetx::Predicates::${module} (':all')";
-}
-
-
-# the above code does this:
-# use Kynetx::Predicates::Location qw(:all);
-# use Kynetx::Predicates::Weather qw(:all);
-# use Kynetx::Predicates::Time qw(:all);
-# use Kynetx::Predicates::Markets qw(:all);
-# use Kynetx::Predicates::Referers qw(:all);
+use Kynetx::Predicates::Demographics qw/:all/;
+use Kynetx::Predicates::Location qw/:all/;
+use Kynetx::Predicates::Weather qw/:all/;
+use Kynetx::Predicates::Time qw/:all/;
+use Kynetx::Predicates::Markets qw/:all/;
+use Kynetx::Predicates::Referers qw/:all/;
+use Kynetx::Predicates::Mobile qw/:all/;
+use Kynetx::Predicates::MediaMarkets qw/:all/;
+use Kynetx::Predicates::Useragent qw/:all/;
+use Kynetx::Predicates::Twitter qw/:all/;
+use Kynetx::Predicates::KPDS;
+use Kynetx::Predicates::Page qw/:all/;
+use Kynetx::Predicates::Math qw/:all/;
 
 
 
@@ -135,6 +120,14 @@ sub eval_module {
 	  $val ||= 0;
 	} else {
 	  $val = Kynetx::Predicates::Page::get_pageinfo($req_info,$function,$args);
+	}
+    } elsif ($source eq 'math') {
+	$preds = Kynetx::Predicates::Math::get_predicates();
+	if (defined $preds->{$function}) {
+	  $val = $preds->{$function}->($req_info,$rule_env,$args);
+	  $val ||= 0;
+	} else {
+	  $val = Kynetx::Predicates::Math::do_math($req_info,$function,$args);
 	}
     } elsif($source eq 'weather') {
 	$preds = Kynetx::Predicates::Weather::get_predicates();
@@ -192,13 +185,13 @@ sub eval_module {
 	} else {
 	  $val = Kynetx::Predicates::Useragent::get_useragent($req_info,$function);
 	}
-    } elsif ($source eq 'math') {
-	$preds = Kynetx::Predicates::Math::get_predicates();
+    } elsif ($source eq 'kpds') {
+	$preds = Kynetx::Predicates::KPDS::get_predicates();
 	if (defined $preds->{$function}) {
 	  $val = $preds->{$function}->($req_info,$rule_env,$args);
 	  $val ||= 0;
 	} else {
-	  $val = Kynetx::Predicates::Math::do_math($req_info,$function,$args);
+	  $val = Kynetx::Predicates::KPDS::eval_kpds($req_info,$rule_env,$session,$rule_name,$function,$args);
 	}
     } else {
       $logger->warn("Datasource for $source not found");
@@ -211,331 +204,5 @@ sub eval_module {
 }
 
 
-# # start with some global predicates
-# my %predicates = (
-#     'truth' => sub  { 1; },
-#     );
-
-
-# #warn (Dumper Kynetx::Predicates::Twitter::eval_twitter()) ;
-  
-
-# # load the predicates from the predicate modules
-# #  eval necessary with computed module names
-# foreach my $module (@Predicate_modules) {
-#     %predicates = (%predicates,
-# 		   %{ eval "Kynetx::Predicates::${module}::get_predicates()"  });
-# }
-
-# # this code does this:
-# # %predicates = (%predicates, 
-# # 	       %{ Kynetx::Predicates::Location::get_predicates() },
-# # 	       %{ Kynetx::Predicates::Weather::get_predicates() },
-# # 	       %{ Kynetx::Predicates::Time::get_predicates() },
-# # 	       %{ Kynetx::Predicates::Markets::get_predicates() },
-# # 	       %{ Kynetx::Predicates::Referers::get_predicates() },
-# #     );
-
-# my get_predicates {
-#   return \%predicates;
-# }
-
-
-# sub eval_predicates {
-#     my($req_info, $rule_env, $session, $cond, $rule_name) = @_;
-
-#     my $logger = get_logger();
-
-# #    $logger->debug("Rule name: $rule_name");
-
-#     my $v = 0;
-#     if ($cond->{'type'} eq 'bool') {
-#       return Kynetx::Expressions::den_to_exp($cond);
-# #     } elsif($cond->{'type'} eq 'pred') {
-# #       $v = eval_pred($req_info, $rule_env, $session, 
-# # 		     $cond, $rule_name);
-# #       return $v ||= 0;
-# #     } elsif($cond->{'type'} eq 'ineq') {
-# #       $v = eval_ineq($req_info, $rule_env, $session, 
-# # 		     $cond, $rule_name);
-# #       return $v ||= 0;
-#     } elsif($cond->{'type'} eq 'simple') {
-
-#       my $pred = $cond->{'predicate'};
-
-#       my $predf = $predicates{$pred};
-#       if($predf eq "") {
-# 	$logger->warn("Predicate $pred not found for ", $rule_name);
-#       } else {
-
-# 	my $args = Kynetx::Expressions::eval_rands($cond->{'args'}, 
-# 						     $rule_env, 
-# 						     $rule_name,
-# 						     $req_info, 
-# 						     $session
-# 						    );
-# 	for (@{ $args }) {
-# 	  $_ = den_to_exp($_);
-# 	}
-
-
-# #	$logger->debug("Pred args ", Dumper $args);
-	
-# 	$v = &$predf($req_info, 
-# 		     $rule_env, 
-# 		     $args
-# 		    );
-
-# 	$v ||= 0;
-
-# 	$logger->debug('[predicate] ',
-# 		       "$pred executing with args (" , 
-# 		       sub { join(', ', @{ $args } )}, 
-# 		       ')',
-# 		       ' -> ',
-# 		       $v);
-#       }
-# #     } elsif ($cond->{'type'} eq 'qualified') {
-
-# #       my $den = Kynetx::Expressions::eval_rands($cond->{'args'}, $rule_env, $rule_name,$req_info, $session);
-
-# #     # FIXME: datasources don't expect denoted values.  
-    
-# #       for (@{ $den }) {
-# # 	$_ = den_to_exp($_);
-# #       }
-
-# #       $v = Kynetx::JavaScript::eval_datasource($req_info,
-# # 						  $rule_env,
-# # 						  $session,
-# # 						  $rule_name,
-# # 						  $cond->{'source'},
-# # 						  $cond->{'predicate'},
-# # 						  $den
-# # 						 );
-	
-# #       $logger->debug("[predicate] ", $cond->{'source'}, ":", $cond->{'predicate'}, " -> ", $v);
-
-# #       $v ||= 0;
-
-# #     } elsif($cond->{'type'} eq 'persistent_ineq') {
-# # 	my $name = $cond->{'var'};
-
-# # 	# check count
-# # 	my $count = 0;
-# # 	if($cond->{'domain'} eq 'ent') {
-# # 	    $count = session_get($req_info->{'rid'}, $session, $name);
-# # 	}
-
-# # 	$logger->debug('[persistent_ineq] ', "$name -> $count");
-
-# # 	$v = ineq_test($cond->{'ineq'}, 
-# # 		       $count, 
-# # 		       Kynetx::Expressions::den_to_exp(
-# # 			   Kynetx::Expressions::eval_expr($cond->{'expr'}, 
-# # 					$rule_env, 
-# # 					$rule_name, 
-# # 					$req_info, 
-# # 					$session))
-# # 	    );
-
-
-# # 	# check date, if needed
-# # 	if($v && 
-# # 	   defined $cond->{'within'} &&
-# # 	   session_defined($req_info->{'rid'}, $session, $name)) {
-
-# # 	    my $tv = 1;
-# # 	    if($cond->{'domain'} eq 'ent') {
-# # 		$tv = session_within($req_info->{'rid'}, 
-# # 				     $session, 
-# # 				     $name, 
-# # 				     Kynetx::Expressions::den_to_exp(
-# # 					 Kynetx::Expressions::eval_expr($cond->{'within'},
-# # 						      $rule_env, 
-# # 						      $rule_name, 
-# # 						      $req_info, 
-# # 						      $session)),
-# # 				     $cond->{'timeframe'}
-# # 		    )
-# # 	    }
-
-# # 	    $v = $v && $tv;
-# # 	}
-# #     } elsif($cond->{'type'} eq 'seen_timeframe') {
-# # 	my $name = $cond->{'var'};
-
-# # 	$logger->debug('[seen_timeframe] ', "$name");
-
-# # 	# check date, if needed
-# # 	if(defined $cond->{'within'} &&
-# # 	   session_defined($req_info->{'rid'}, $session, $name)) {
-
-# # 	    if($cond->{'domain'} eq 'ent') {
-# # 		$v = session_seen_within($req_info->{'rid'}, 
-# # 					 $session, 
-# # 					 $name, 
-# # 					 $cond->{'regexp'},
-# # 					 Kynetx::Expressions::den_to_exp(
-# # 					  Kynetx::Expressions::eval_expr($cond->{'within'},
-# # 						       $rule_env, 
-# # 						       $rule_name, 
-# # 						       $req_info, 
-# # 						       $session)),
-# # 					  $cond->{'timeframe'}
-# # 		    )
-# # 	    }
-# # 	} elsif(session_defined($req_info->{'rid'}, $session, $name)) {
-# # 	    if($cond->{'domain'} eq 'ent') {
-# # 		# session_seen returns index (which can be 0)
-# # 		$v = defined session_seen($req_info->{'rid'}, 
-# # 				  $session, 
-# # 				  $name, 
-# # 				  $cond->{'regexp'}
-# # 		    ) ? 1 : 0;
-# # 	    }
-# # 	}
-# #     } elsif($cond->{'type'} eq 'seen_compare') {
-# # 	my $name = $cond->{'var'};
-# # 	if($cond->{'domain'} eq 'ent') {
-# # 	    my($r1,$r2) =
-# # 		$cond->{'op'} eq 'after' ? ($cond->{'regexp_1'},
-# # 					    $cond->{'regexp_2'})
-# #                                          : ($cond->{'regexp_2'},
-# # 					    $cond->{'regexp_1'});
-# # 	    $v = session_seen_compare($req_info->{'rid'}, 
-# # 				      $session, 
-# # 				      $name, 
-# # 				      $r1,
-# # 				      $r2
-# # 		) ? 1 : 0; # ensure 0 returned for testing
-# # 	}
-# #     } elsif($cond->{'type'} eq 'persistent') {
-# # 	my $name = $cond->{'name'};
-# # 	if($cond->{'domain'} eq 'ent') {
-# # 	    $v = session_defined($req_info->{'rid'}, $session, $name) &&
-# # 		session_get($req_info->{'rid'}, $session, $name);
-	    
-# # 	}
-# #       }
-
-
-
-#     # returns default value if nothing returned above
-
-#     }
-#     return $v;
-#   }
-
-# # sub eval_pred {
-# #     my($req_info, $rule_env, $session, $pred, $rule_name) = @_;
-
-# #     my $logger = get_logger();
-
-# # #    $logger->debug("[eval_pred] ", Dumper $pred);
-
-# #     my @results = 
-# # 	map {eval_predicates(
-# # 		 $req_info, $rule_env, $session, 
-# # 		 $_, $rule_name) } @{ $pred->{'args'} };
-
-    
-
-# # #    $logger->debug("[eval_pred] Rand values: ", Dumper @results);
-
-# #     $logger->debug("Complex predicate: ", $pred->{'op'});
-
-# #     if($pred->{'op'} eq '&&') {
-# # 	my $val = shift @results;
-# # 	for (@results) {
-# # 	    $val = $val && $_;
-# # 	}
-# # 	return $val;
-
-# #     } elsif($pred->{'op'} eq '||') {
-# # 	my $val = shift @results;
-# # 	for (@results) {
-# # 	    $val = $val || $_;
-# # 	}
-# # 	return $val;
-# #     } elsif($pred->{'op'} eq 'negation') {
-# # 	return 
-# # 	    not $results[0];
-# #     } else {
-# # 	$logger->warn("Invalid predicate");
-# #     }
-# #     return 0;
-
-# # }
-
-# # sub eval_ineq {
-# #     my($req_info, $rule_env, $session, $pred, $rule_name) = @_;
-
-# #     my $logger = get_logger();
-
-# #     my @results;
-# #     for (@{ $pred->{'args'} }) {
-# # 	my $den = Kynetx::Expressions::eval_expr($_, $rule_env, $rule_name, $req_info, $session);
-# # #	$logger->debug("Denoted -> ", sub { Dumper($den) });
-# # 	push @results, Kynetx::Expressions::den_to_exp($den);
-# #     }
-
-# #     return ineq_test($pred->{'op'}, $results[0], $results[1]);
-	
-# # }
-
-
-# # sub ineq_test {
-# #     my($op, $rand0, $rand1) = @_;
-
-# #     my $logger = get_logger();
-# # #    $logger->debug("[ineq_test] $rand0 $op $rand1");
-
-# #     if ($op eq '<=') {
-# # 	return $rand0 <= $rand1;
-# #     } elsif($op eq '>=') {
-# # 	return $rand0 >= $rand1;
-# #     } elsif($op eq '<') {
-# # 	return $rand0 < $rand1;
-# #     } elsif($op eq '>') {
-# # 	return $rand0 > $rand1;
-# #     } elsif($op eq '==') {
-# # 	return $rand0 == $rand1;
-# #     } elsif($op eq '!=') {
-# # 	return $rand0 != $rand1;
-# #     } elsif($op eq 'neq') {
-# # 	    return ! ($rand0 eq $rand1);
-# #     } elsif($op eq 'eq') {
-# # 	return $rand0 eq $rand1;
-# #     } elsif($op eq 'like') {
-
-# #       # Note: this relies on the fact that a regular expression looks like a string inside 
-# #       # the KRL AST.
-
-# #       # for backward compatibility, make strings look like KRL regexp
-# #       $rand1 = "/$rand1/" unless $rand1 =~ m#^/[^/]+/#;
-
-# #       # FIXME: This is code that should be shared with replace in Operators.pm
-
-
-# #       my $pattern = '';
-# #       my $modifiers;
-# #       ($pattern, $modifiers) = $rand1 =~ m#/(.+)/(i|g){0,2}#; 
-
-# #       $modifiers = $modifiers || '';
-
-# #       my $embedable_modifiers = $modifiers;
-# #       $embedable_modifiers =~ s/g//;
-
-# #       my $re = qr/(?$embedable_modifiers)$pattern/;
-# # #	my $re = qr!$rand1!;
-
-# #       $logger->debug("Matching string $rand0 with $pattern & modifiers $modifiers: $re");
-
-# #       # g modifier does nothing here...
-# #       return $rand0 =~ /$re/;
-
-# #     }
-# # }
 
 1;

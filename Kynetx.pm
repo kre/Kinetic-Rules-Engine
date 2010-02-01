@@ -100,6 +100,10 @@ sub handler {
 	Kynetx::Predicates::Twitter::process_oauth_callback($r, $method, $rid);
 	return Apache2::Const::REDIRECT;
 
+    } elsif($method eq 'kpds_callback' ) {
+	Kynetx::Predicates::KPDS::process_oauth_callback($r, $method, $rid);
+	return Apache2::Const::REDIRECT;
+
     } elsif($method eq 'foo' ) {
 	my $uniq = int(rand 999999999);
 	$r->content_type('text/html');

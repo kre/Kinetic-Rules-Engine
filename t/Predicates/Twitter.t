@@ -204,6 +204,7 @@ session_delete($rid, $session, 'twitter:access_tokens');
 
 done_testing($test_count + int(@pnames));
 
+session_cleanup($session);
 
 1;
 
