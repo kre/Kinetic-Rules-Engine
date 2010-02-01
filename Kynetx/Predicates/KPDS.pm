@@ -45,24 +45,24 @@ use JSON::XS;
 use Data::Dumper;
 
 
+use Kynetx::OAuth;
 use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Util qw(:all);
-use Kynetx::OAuth;
 
-use Exporter;
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+# use Exporter;
+# use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
-our $VERSION     = 1.00;
-our @ISA         = qw(Exporter);
+# our $VERSION     = 1.00;
+# our @ISA         = qw(Exporter);
 
-# put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [ 
-qw(
-eval_kpds
-) ]);
-our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
+# # put exported names inside the "qw"
+# our %EXPORT_TAGS = (all => [ 
+# qw(
+# eval_kpds
+# ) ]);
+# our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 #
 # NAMESPACE is the name the Parser assigns to keys in the keys from the meta block

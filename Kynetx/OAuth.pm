@@ -36,7 +36,8 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
-use base qw(Net::OAuth::Simple);
+#use base qw(Net::OAuth::Simple);
+use Net::OAuth::Simple;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -46,17 +47,19 @@ use HTTP::Request::Common;
 
 use Kynetx::Session qw/:all/;
 
-# use Exporter;
-# use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+use Exporter;
+use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
-# our $VERSION     = 1.00;
-# our @ISA         = qw(Exporter);
+our $VERSION     = 1.00;
 
-# # put exported names inside the "qw"
-# our %EXPORT_TAGS = (all => [ 
-# qw(
-# ) ]);
-# our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
+# we inherit from Net::OAuth::Simple.  
+our @ISA         = qw(Exporter Net::OAuth::Simple);
+
+# put exported names inside the "qw"
+our %EXPORT_TAGS = (all => [ 
+ qw(
+ ) ]);
+our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 #our $AUTOLOAD;
 

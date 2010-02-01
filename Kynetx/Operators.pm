@@ -36,7 +36,7 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 use Storable qw(dclone);
 
-use Kynetx::Expressions q/eval_expr/;
+use Kynetx::Expressions;
 use Kynetx::JSONPath ;
 
 use Exporter;
