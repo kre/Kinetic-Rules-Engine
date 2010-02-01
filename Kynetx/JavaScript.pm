@@ -40,12 +40,11 @@ use JSON::XS;
 use Storable qw(dclone);
 
 use Kynetx::Parser qw/mk_expr_node/;
-use Kynetx::Datasets q/:all/;
-use Kynetx::Environments q/:all/;
-use Kynetx::Session q/:all/;
-use Kynetx::Operators q/:all/;
-#use Kynetx::Predicates q/:all/;
-use Kynetx::Expressions q/:all/;
+use Kynetx::Datasets qw/:all/;
+use Kynetx::Environments qw/:all/;
+use Kynetx::Session qw/:all/;
+use Kynetx::Operators qw/:all/;
+use Kynetx::Expressions qw/:all/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);

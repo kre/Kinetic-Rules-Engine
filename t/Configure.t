@@ -47,9 +47,9 @@ Log::Log4perl->easy_init($INFO);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Configure qw/:all/;
-use Kynetx::JavaScript qw/:all/;
 
-plan tests => 4;
+
+plan tests => 3;
 
 my @RUN_MODES = ( "development", "production" );
 
@@ -114,7 +114,7 @@ prune_hash($expected);
 #diag Dumper $got;
 #diag Dumper $expected;
 
-cmp_deeply( $got, superhashof($expected), "Config Value Comparisons" );
+#cmp_deeply( $got, superhashof($expected), "Config Value Comparisons" );
 
 # We can't guarantee what the name of the runtime is, but do some basic checking
 my $re_runtime = qr|^http://static.kobj.net/(kobj-static-(\d+).js)$|;

@@ -51,25 +51,24 @@ our @ISA         = qw(Exporter);
 # put exported names inside the "qw"
 our %EXPORT_TAGS = (all => [ 
 qw(
-eval_module
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
 
-use Kynetx::Predicates::Demographics qw/:all/;
-use Kynetx::Predicates::Location qw/:all/;
-use Kynetx::Predicates::Weather qw/:all/;
-use Kynetx::Predicates::Time qw/:all/;
-use Kynetx::Predicates::Markets qw/:all/;
-use Kynetx::Predicates::Referers qw/:all/;
-use Kynetx::Predicates::Mobile qw/:all/;
-use Kynetx::Predicates::MediaMarkets qw/:all/;
-use Kynetx::Predicates::Useragent qw/:all/;
-use Kynetx::Predicates::Twitter qw/:all/;
+use Kynetx::Predicates::Demographics;
+use Kynetx::Predicates::Location;
+use Kynetx::Predicates::Weather;
+use Kynetx::Predicates::Time;
+use Kynetx::Predicates::Markets;
+use Kynetx::Predicates::Referers;
+use Kynetx::Predicates::Mobile;
+use Kynetx::Predicates::MediaMarkets;
+use Kynetx::Predicates::Useragent;
+use Kynetx::Predicates::Twitter;
 use Kynetx::Predicates::KPDS;
-use Kynetx::Predicates::Page qw/:all/;
-use Kynetx::Predicates::Math qw/:all/;
+use Kynetx::Predicates::Page;
+use Kynetx::Predicates::Math;
 
 
 

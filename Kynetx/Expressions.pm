@@ -43,12 +43,12 @@ use Storable qw/dclone freeze/;
 use Digest::MD5 qw/md5_hex/;
 
 use Kynetx::Parser qw/mk_expr_node/;
-use Kynetx::Datasets q/:all/;
-use Kynetx::Environments q/:all/;
-use Kynetx::Session q/:all/;
-use Kynetx::Operators q/:all/;
-use Kynetx::Modules q/:all/;
-use Kynetx::JavaScript q/:all/;
+use Kynetx::Datasets qw/:all/;
+use Kynetx::Environments qw/:all/;
+use Kynetx::Session qw/:all/;
+use Kynetx::Operators qw/:all/;
+use Kynetx::Modules qw/:all/;
+use Kynetx::JavaScript;
 
 
 use Exporter;
