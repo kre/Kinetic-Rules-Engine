@@ -38,7 +38,7 @@ use JSON::XS;
 use Kynetx::Util qw(:all);
 use Kynetx::JavaScript qw(:all);
 use Kynetx::Expressions qw(:all);
-use Kynetx::Rules qw(:all);
+use Kynetx::Rules;
 use Kynetx::Environments qw(:all);
 use Kynetx::Session q/:all/;
 use Kynetx::Log q/:all/;
