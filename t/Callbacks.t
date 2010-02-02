@@ -57,7 +57,7 @@ use Kynetx::Memcached qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
 
-use Kynetx::FakeReq qw/:all/;
+use Kynetx::FakeReq;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
