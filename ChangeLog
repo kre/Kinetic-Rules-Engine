@@ -1,3 +1,14 @@
+2010-02-02  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Expressions.pm: added mk_closure, added function to
+	  translate old predicates to function apps.  So far, just applies
+	  to "truth()".  All others have to be namespaced.  
+
+	* Kynetx/Rules.pm (process_rules): Added initial rule environment
+	  that defined "truth()"
+	* etc/js/0.9/krl-runtime.js.tmpl: changed document.URL to
+	  window.location.href in KOBJ.eval
+
 2010-02-01  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/OAuth.pm: Added module to generalize OAuth usage in KRE

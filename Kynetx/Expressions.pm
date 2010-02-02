@@ -226,16 +226,10 @@ sub eval_expr {
 	  eval_expr($expr->{'then'}, $rule_env, $rule_name, $req_info, $session) :
 	  eval_expr($expr->{'else'}, $rule_env, $rule_name, $req_info, $session)
     } elsif($expr->{'type'} eq 'function') {
-
-      my $sig = md5_hex(freeze $expr);
-
-      return mk_expr_node('closure',
-			  {'vars' => $expr->{'vars'},
-			   'decls' => $expr->{'decls'},
-			   'expr' => $expr->{'expr'},
-			   'env' => $rule_env,
-			   'sig' => $sig
-			  });
+      return mk_closure($expr, $rule_env);
+    } elsif($expr->{'type'} eq 'simple') {
+      # rearranges parse tree on the fly.  Should be removed after June 2010.
+      return eval_application(mk_app_from_simple($expr), $rule_env, $rule_name,$req_info, $session);
     } elsif($expr->{'type'} eq 'app') {
       return eval_application($expr, $rule_env, $rule_name,$req_info, $session);
     } elsif($expr->{'type'} eq 'qualified') {
@@ -452,10 +446,11 @@ sub eval_application {
 
   my $logger = get_logger();
 
-
 #  $logger->debug("Function...");
 
   # the trick to getting this right is managing env extension correctly
+
+  $logger->debug("Env in eval_application: ", sub { Dumper $rule_env});
 
   my $closure = eval_expr($expr->{'function_expr'}, 
 			  $rule_env, 
@@ -819,6 +814,19 @@ sub typed_value {
   return $val
 }
 
+sub mk_closure {
+  my ($expr, $env)  = @_;
+  my $sig = md5_hex(freeze $expr);
+
+  return mk_expr_node('closure',
+		      {'vars' => $expr->{'vars'},
+		       'decls' => $expr->{'decls'},
+		       'expr' => $expr->{'expr'},
+		       'env' => $env,
+		       'sig' => $sig
+		      });
+}
+
 sub var_free_in_expr {
     my ($var, $expr) = @_;
 
@@ -899,6 +907,16 @@ sub eval_string {
 sub is_closure {
   my $val = shift;
   return (ref $val eq 'HASH' && defined $val->{'type'} && $val->{'type'} eq 'closure');
+}
+
+# rearranges parse tree on the fly.  Should be removed after June 2010.
+sub mk_app_from_simple {
+  my $expr = shift;
+
+  return {'args' => $expr->{'args'},
+	  'type' => 'app',
+	  'function_expr' => mk_expr_node('var',$expr->{'predicate'})
+	 };
 }
 
 1;

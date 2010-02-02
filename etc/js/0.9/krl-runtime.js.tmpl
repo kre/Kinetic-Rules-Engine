@@ -457,7 +457,7 @@ KOBJ.eval = function(config) {
 
 
 */
-  var eval_url = url + "/" + d + ".js?caller=" + escape(document.URL) + "&referer="+ escape(document.referrer) + "&kvars=" + escape(KOBJ.kvars_json) + "&title=" + encodeURI(document.title) + param_str;
+  var eval_url = url + "/" + d + ".js?caller=" + escape(window.location.href) + "&referer="+ escape(document.referrer) + "&kvars=" + escape(KOBJ.kvars_json) + "&title=" + encodeURI(document.title) + param_str;
 
   KOBJ.require(eval_url);
 };

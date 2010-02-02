@@ -39,15 +39,15 @@ use JSON::XS;
 
 use Kynetx::Parser qw(:all);
 use Kynetx::PrettyPrinter qw(:all);
-use Kynetx::JavaScript qw(:all);
-use Kynetx::Expressions qw(:all);
+use Kynetx::JavaScript;
+use Kynetx::Expressions ;
 use Kynetx::Json qw(:all);
 use Kynetx::Util qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Datasets qw(:all);
 use Kynetx::Session qw(:all);
 use Kynetx::Modules qw(:all);
-use Kynetx::Actions qw(:all);
+use Kynetx::Actions;
 use Kynetx::Log qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Repository qw(:all);
@@ -98,7 +98,19 @@ sub process_rules {
 
     # initialization
     my $js = '';
+
+
     my $rule_env = empty_rule_env();
+
+    # define initial environment to have a truth function
+    $rule_env = extend_rule_env({'truth' =>
+				 Kynetx::Expressions::mk_closure({'vars' => [],
+								  'decls' => [],
+								  'expr' => mk_expr_node('num', 1),
+								 }, 
+								 $rule_env)},
+				$rule_env);
+
     
     my @rids = split(/;/, $rids);
     # if we sort @rids we change ruleset priority
@@ -218,8 +230,9 @@ sub eval_ruleset {
 	  $var =~ s/^\s*(.+)\s*/$1/;
 	  $logger->debug("[select var] $var -> $captured_vals->[$cap]");
 	  $this_rule_env->{$var} = $captured_vals->[$cap];
-	  $sjs .= gen_js_var($var,
-			    gen_js_expr(exp_to_den($captured_vals->[$cap])));
+	  $sjs .= Kynetx::JavaScript::gen_js_var($var,
+			    Kynetx::JavaScript::gen_js_expr(
+					Kynetx::Expressions::exp_to_den($captured_vals->[$cap])));
 
 	  $cap++
 	}
@@ -333,12 +346,12 @@ sub eval_globals {
 	    $rule_env->{$var} = $val;
 	  }
 	} elsif(defined $g->{'type'} && $g->{'type'} eq 'css') { 
-	  $this_js = "KOBJ.css(" . mk_js_str($g->{'content'}) . ");\n";
+	  $this_js = "KOBJ.css(" . Kynetx::JavaScript::mk_js_str($g->{'content'}) . ");\n";
 	} elsif(defined $g->{'type'} && $g->{'type'} eq 'datasource') {
 	  $rule_env->{'datasource:'.$g->{'lhs'}} = $g;
 	} elsif(defined $g->{'type'} && 
 		($g->{'type'} eq 'expr' || $g->{'type'} eq 'here_doc')) {
-	  $this_js = eval_one_decl($req_info, $rule_env, $ruleset->{'lhs'}, $session, $g);
+	  $this_js = Kynetx::Expressions::eval_one_decl($req_info, $rule_env, $ruleset->{'lhs'}, $session, $g);
 	}
 	$js .= $this_js;
       }
@@ -438,11 +451,11 @@ sub eval_foreach {
 
     # expr has to result in array of prims
     my $valarray = 
-         eval_expr($foreach_list[0]->{'expr'}, 
-		      $rule_env, 
-		      $rule->{'name'}, 
-		      $req_info, 
-		      $session);
+         Kynetx::Expressions::eval_expr($foreach_list[0]->{'expr'}, 
+					$rule_env, 
+					$rule->{'name'}, 
+					$req_info, 
+					$session);
 
     $logger->warn("Foreach expression does not yield array") unless
       $valarray->{'type'} eq 'array';
@@ -450,16 +463,18 @@ sub eval_foreach {
 
     foreach my $val (@{ $valarray->{'val'} }) {
 
-      $val = typed_value($val);
+      $val = Kynetx::Expressions::typed_value($val);
 
 #      $logger->debug("Evaluating rule body with " . Dumper($val));
 
       # we recurse in side this loop to handle nested foreach statements
       $fjs .= mk_turtle(
-		gen_js_var($var, gen_js_expr($val)) .
+		Kynetx::JavaScript::gen_js_var($var, 
+					       Kynetx::JavaScript::gen_js_expr($val)) .
   	        eval_foreach($r, 
 			     $req_info, 
-			     extend_rule_env({$var,den_to_exp($val)},
+			     extend_rule_env({$var,
+					      Kynetx::Expressions::den_to_exp($val)},
 					     $rule_env), 
 			     $session, 
 			     $rule,
@@ -489,8 +504,8 @@ sub eval_rule_body {
 
 
   my $pred_value = 
-    den_to_exp(
-       eval_expr ($rule->{'cond'}, $rule_env, $rule->{'name'},$req_info, $session));
+    Kynetx::Expressions::den_to_exp(
+       Kynetx::Expressions::eval_expr ($rule->{'cond'}, $rule_env, $rule->{'name'},$req_info, $session));
 
 
   my $js = '';
@@ -626,10 +641,10 @@ sub optimize_pre {
       my $dependent = 0;
       foreach my $v (@vars) {
 	if ($decl->{'type'} eq 'expr' &&
-	    var_free_in_expr($v, $decl->{'rhs'})) {
+	    Kynetx::Expressions::var_free_in_expr($v, $decl->{'rhs'})) {
 	  $dependent = 1;
 	} elsif ($decl->{'type'} eq 'here_doc' &&
-	    var_free_in_expr($v, $decl)) {
+	    Kynetx::Expressions::var_free_in_expr($v, $decl)) {
 	  $dependent = 1;
 	}
       }
