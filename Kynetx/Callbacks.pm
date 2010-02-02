@@ -55,7 +55,7 @@ use Kynetx::Version qw(:all);
 use Kynetx::Repository qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Environments qw(:all);
-use Kynetx::Actions qw(:all);
+use Kynetx::Actions;
 
 
 
@@ -210,11 +210,11 @@ sub process_callbacks {
 		   $cb->{'value'} eq $value) {
 		    $logger->debug("Evaluating callback triggered persistent expr");
 #		    $logger->debug(Dumper($cb->{'trigger'}));
-		    eval_persistent_expr($cb->{'trigger'}, 
-					 $session, 
-					 $req_info,
-					 empty_rule_env(), 
-					 $rule_name);
+		    Kynetx::Actions::eval_persistent_expr($cb->{'trigger'}, 
+							  $session, 
+							  $req_info,
+							  empty_rule_env(), 
+							  $rule_name);
 		}
 	    }
 	    last; # only one rule with that name
