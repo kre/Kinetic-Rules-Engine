@@ -1,3 +1,4 @@
+
 KOBJ.maxURLLength = 1800;
 
 KOBJ.splitJSONRequest = function(json,maxLength,url){
@@ -20,7 +21,6 @@ KOBJ.splitJSONRequest = function(json,maxLength,url){
 			return [json];
 		}
 };
-
 
 KOBJ.getJSONP = function(url, data, cb){
 	KOBJ.log("getJSON with JSONP");
@@ -94,7 +94,6 @@ KOBJ.annotate_local_search_defaults = {
 
 KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 	var defaults = jQuery.extend(true, {}, KOBJ.annotate_local_search_defaults);
-	KOBJ.log(annotate);
 
 	if (typeof config === 'object') {
 		jQuery.extend(true, defaults, config);
@@ -115,8 +114,20 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 
 		runAnnotateLocal = function(){
 			var count = 0;
+
+			var annotateFuncLocal = function(){};
+			
+			if(annotate){
+				annotateFuncLocal = annotate;
+			} else {
+				annotateFuncLocal = function(data){
+					return data;
+				};
+			}
+
 			function annotateCBLocal(data){
-	   			$K.each(data, function(key,contents){
+	   			$K.each(data, function(key,data){
+					var contents = annotateFuncLocal(data);
 	   				if(contents){
 	   	 				$K("."+key+" :last").after(contents);
 						count++;
@@ -178,7 +189,7 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 
 
 	// Watcher is the element which is being watched, runAnnotateLocal is the function to be run
-	if(watcher){
+	if(typeof(watcher) != "undefined"){
 		KOBJ.watchDOM(watcher, runAnnotateLocal);
 	}
 
@@ -280,7 +291,6 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 
   if (typeof config === 'object') {
     jQuery.extend(true, defaults, config);
-	KOBJ.log(defaults);
   }
 
 
@@ -347,8 +357,20 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 				annotateInfo[itemCounter] = KOBJ.annotate_search_extractdata(toAnnotate,defaults);
 				$K(toAnnotate).addClass(itemCounter);
 			});
+
+			var annotateFunc = function(){};
+			
+			if(annotate){
+				annotateFunc = annotate;
+			} else {
+				annotateFunc = function(data){
+					return data;
+				};
+			}
+			
 			function annotateCB(data){
-				$K.each(data, function(key,contents){
+				$K.each(data, function(key,data){
+					var contents = annotateFunc(data);
 					if(contents){
 						if ($K("."+key).find('#' + defaults.name + '_anno_list li').is('.' + defaults.name + '_item')) {
 							$K("."+key).find('#' + defaults.name + '_anno_list').append(mk_list_item(defaults.sep)).append(mk_list_item(contents));
@@ -405,9 +427,10 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 	runAnnotate();
 
 	// Watcher is the element which is being watched, runAnnotateLocal is the function to be run
-	if(watcher){
+	if(typeof(watcher) != "undefined"){
 		KOBJ.watchDOM(watcher, runAnnotate);
 	}
 };
 
 // End new annotate code
+

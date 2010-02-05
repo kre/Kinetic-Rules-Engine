@@ -44,7 +44,7 @@ my $hstamp = $dt->hms('');
 my $kobj_file = "kobj-static-".$dstamp.$hstamp.".js";
 
 my @js_files = qw(
-jquery-1.4.js
+jquery-1.3.2.js
 jquery.json-1.2.js
 jquery-ui-1.7.2.custom.js
 kgrowl-1.0.js
@@ -52,8 +52,18 @@ snowfall.jquery.js
 krl-setup.js
 krl-domwatch.js
 krl-annotate.js
+krl-percolation.js
 krl-runtime.js.tmpl
 );
+
+my $foo = <<_krl_;
+
+
+
+
+
+_krl_
+
 #jquery-ui-personalized-1.6rc2.js
 
 
@@ -90,12 +100,25 @@ if($opt{'a'}) {  # save to S3
       Kynetx::Configure::get_config('KRL_HOST') eq '127.0.0.1' ||
       Kynetx::Configure::get_config('EVAL_HOST') eq '127.0.0.1';
 
-  # compress the JS program
-  my $cjs = Compress::Zlib::memGzip($js);
-
   # create expires timestamp
   $dt = $dt->add(days => 364);
   my $expires = $dt->strftime("%a %d %b %Y %T %Z");
+
+  # compress the JS program
+	my $cjs = "";
+	my $jsheaders = { 'Content-type' => 'text/javascript',
+	  'Expires' => $expires,
+	  'x-amz-acl' => 'public-read'
+	};
+	if($minify){
+		$cjs = Compress::Zlib::memGzip($js);
+		$jsheaders->{'Content-encoding'} = 'gzip';
+	} else {
+		$cjs = $js;
+	}
+  
+
+
 
 
   # FIXME: there ought to be a way to override credentials on CL
@@ -112,11 +135,7 @@ if($opt{'a'}) {  # save to S3
   $bucket->add_key( 
 	$kobj_file, # file name
 	$cjs,        # 
-	{ 'Content-type' => 'text/javascript', 
-	  'Content-encoding' => 'gzip',
-	  'Expires' => $expires,
-	  'x-amz-acl' => 'public-read'
-	},
+	$jsheaders,
 	) or die $s3->err . ": " . $s3->errstr;
 
   print "See http://static.kobj.net/$kobj_file for results\n";
