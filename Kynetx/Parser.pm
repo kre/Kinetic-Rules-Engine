@@ -72,7 +72,7 @@ REGEXP: /\/(\\.|[^\/])+\/(i|g){0,2}/
 HTML: /<<.*?>>/s  {$return=Kynetx::Parser::html($item[1]) }
 STRING: /"(\\"|[^"])*"|'[^']'/ {$return=Kynetx::Parser::string($item[1]) }
 VAR:   /[_A-Za-z]\w*/ 
-NUM:   /\d*\.\d+|\d+/          
+NUM:   /(-)?\d*\.\d+|\d+/          
 COMMA: /,/ 
 INCR: /\+=/ 
 DECR: /-=/ 
@@ -445,6 +445,7 @@ modifier: VAR '=' expr
          }
         }
 
+# these aren't used anymore???
 action_name: 'after'
            | 'alert'
            | 'annotate_search_results'
@@ -745,16 +746,13 @@ unary_expr: 'not' unary_expr
       }
     | operator_expr
 
-operator_expr: factor '.' operator '(' expr(s? /,/) ')'
-        {$return =
-	 {'type' => 'operator',
-          'name' => $item[3],
-	  'args' => $item[5],
-	  'obj' => $item[1]
-         }}
-    | factor
+operator_expr: factor operator(s?)
+        {$return = Kynetx::Parser::structure_operators($item[1], $item[2]) }
 
-operator: 'pick'|'length'|'replace'|'as'
+operator: '.' operator_op '(' expr(s? /,/) ')'
+  {$return = [$item[2], $item[4]]}
+
+operator_op: 'pick'|'length'|'replace'|'as'|'head'|'tail'|'sort'|'filter'|'map'
 
 factor: NUM
         {$return=Kynetx::Parser::mk_expr_node('num',$item[1]+0)}
@@ -768,6 +766,11 @@ factor: NUM
         {$return=Kynetx::Parser::mk_expr_node('bool',$item[1])}
       | 'false'
         {$return=Kynetx::Parser::mk_expr_node('bool',$item[1])}
+      | VAR '[' expr ']'
+        {$return = Kynetx::Parser::mk_expr_node('array_ref',
+                         {'var_expr' => $item[1],
+                          'index' => $item[3]}
+                       )}
       | persistent_var
       | trail_exp
       | function_app
@@ -917,6 +920,21 @@ sub build_expr_tree {
 
 }
 
+sub structure_operators {
+  my($obj, $operators) = @_;
+  if (int(@{$operators}) == 0) {
+    return $obj;
+  } else {
+    my $last = pop(@{$operators});
+    return {'type' => 'operator',
+	    'name' => $last->[0],
+	    'args' => $last->[1],
+	    'obj' => structure_operators($obj, $operators)
+	   }
+
+  }
+
+}
 
 my $parser = Parse::RecDescent->new($grammar);
 

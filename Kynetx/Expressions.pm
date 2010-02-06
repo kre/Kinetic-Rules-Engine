@@ -68,6 +68,7 @@ den_to_exp
 exp_to_den
 infer_type
 typed_value
+type_of
 var_free_in_expr
 eval_ineq
 eval_pred
@@ -211,6 +212,8 @@ sub eval_expr {
     } elsif($expr->{'type'} eq 'array') {
 	return mk_expr_node('array',
 			    eval_rands($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  ) ;
+    } elsif($expr->{'type'} eq 'array_ref') {
+	return eval_array_ref($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'hashraw') {
 	return  mk_expr_node('hash',
 			     eval_hash($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  ) ;
@@ -446,11 +449,13 @@ sub eval_application {
 
   my $logger = get_logger();
 
-#  $logger->debug("Function...");
 
   # the trick to getting this right is managing env extension correctly
 
-  $logger->debug("Env in eval_application: ", sub { Dumper $rule_env});
+#  $logger->debug("Env in eval_application: ", sub { Dumper $rule_env});
+
+#  $logger->trace("Evaluation function...", sub { Dumper $expr} );
+
 
   my $closure = eval_expr($expr->{'function_expr'}, 
 			  $rule_env, 
@@ -458,7 +463,6 @@ sub eval_application {
 			  $req_info, 
 			  $session
 			 );
-
 
   unless ($closure->{'type'} eq 'closure') {
     $logger->warn("Function not found in ", $rule_name);
@@ -483,7 +487,7 @@ sub eval_application {
   # values in the env are expressed
   $args = [ map {den_to_exp($_)} @{ $args } ];
 
-#  $logger->debug("Executing function with args ", sub {Dumper $args});
+  $logger->trace("Executing function with args ", sub {Dumper $args});
 
   my $closure_env = extend_rule_env($closure->{'val'}->{'vars'},
 				    $args,
@@ -524,6 +528,37 @@ sub eval_hash {
     }
 
     return $hash;
+
+}
+
+
+
+sub eval_array_ref {
+  my($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+
+  my $logger = get_logger();
+
+
+  my $v = lookup_rule_env($expr->{'val'}->{'var_expr'},$rule_env);
+
+  unless (defined $v) {
+	    $logger->warn("Variable '", $expr->{'val_expr'}, "' is undefined");
+	  }
+
+  unless (ref $v eq 'ARRAY') {
+	    $logger->warn("Variable '", $expr->{'val_expr'}, "' is not an array");
+	  } else {
+
+	    $logger->trace("Using array ", sub {Dumper $v}, " with index ",sub {Dumper  $expr->{'val'}->{'index'}});
+
+	    my $dval = eval_expr($expr->{'val'}->{'index'}, 
+				 $rule_env, 
+				 $rule_name, 
+				 $req_info, 
+				 $session);
+	    return typed_value($v->[den_to_exp($dval)])
+	    
+	  }
 
 }
 
@@ -903,6 +938,10 @@ sub eval_string {
     
 }
 
+sub type_of {
+  my $dval = shift;
+  return $dval->{'type'};
+}
 
 sub is_closure {
   my $val = shift;

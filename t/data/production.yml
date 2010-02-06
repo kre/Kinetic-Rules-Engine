@@ -130,5 +130,7 @@ DEFAULT_JS_ROOT: /web/lib/perl/etc/js
 #TEST_IP: 128.122.108.71        # New York (NYU)
 #TEST_IP: 128.187.16.242        # Utah (BYU)
 
-
+# KRE will send errors to ErrorStack if provided with a stack key. Level defaults to 'WARN'
+ERRORSTACK_KEY: '2227a5485b14d71a2bf57cbbe212bb89'
+ERRORSTACK_LEVEL: 'WARN'
 

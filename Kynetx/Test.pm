@@ -114,8 +114,8 @@ sub gen_rule_env {
   my $rule_env = empty_rule_env();
 
   $rule_env =  extend_rule_env(
-			       ['city','tc','temp','booltrue','boolfalse','a','b'],
-			       ['Blackfoot','15',20,'true','false','10','11'],
+			       ['city','tc','temp','booltrue','boolfalse','a','b','c'],
+			       ['Blackfoot','15',20,'true','false','10','11',[5,6,4]],
 			       $rule_env);
 
   $rule_env = extend_rule_env('store',{

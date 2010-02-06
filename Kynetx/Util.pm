@@ -34,10 +34,11 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 use Log::Log4perl::Level;
+use Log::Log4perl::Appender::ErrorStack;
 
 use Kynetx::Memcached qw(:all);
 use URI::Escape ('uri_escape');
-
+use Sys::Hostname;
 
 
 use Exporter;
@@ -83,14 +84,43 @@ sub config_logging {
     my $layout = 
 	Log::Log4perl::Layout::PatternLayout->new(
 	    "%d %p %F{1} %X{site} %X{rule} %m%n");
+
     $appender->layout($layout);
+
+
+    my $stack_key = Kynetx::Configure::get_config('ERRORSTACK_KEY');
+    
+    if (defined $stack_key) {
+    # Layouts
+
+      my $stack_level = Kynetx::Configure::get_config('ERRORSTACK_LEVEL') || 'WARN';
+      my $trigger = sub { 
+                      my ($self, $params) = @_;
+		      return $params->{'message'} =~ /__FLUSH__/;
+		    };
+
+      my $hostname = Sys::Hostname::hostname();
+      my $es_layout = 
+	Log::Log4perl::Layout::PatternLayout->new(
+	    "<b>$hostname</b> %d %p %F{1} %X{site} <em>%X{rule}</em> <code>%m%n</code>");
+      my $es_appender = Log::Log4perl::Appender->new(
+						     "Log::Log4perl::Appender::ErrorStack",
+						     name => 'ErrorStack',
+						     key => $stack_key,
+						     level => $stack_level,
+						     trigger => $trigger
+						    );
+      $es_appender->layout($es_layout);
+      $logger->add_appender($es_appender);
+    }
+
 
     my $mode = Kynetx::Configure::get_config('RUN_MODE');
     my $debug = Kynetx::Configure::get_config('DEBUG');
     if($mode eq 'development' || $debug eq 'on') {
-	$logger->level($DEBUG);
+      $logger->level($DEBUG);
     } elsif($mode eq 'production') {
-	$logger->level($WARN);
+      $logger->level($WARN);
     }
 
 }

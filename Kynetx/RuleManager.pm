@@ -104,6 +104,8 @@ sub handler {
 	$type = 'text/plain';
     }
 
+    $logger->debug("__FLUSH__");
+
     $r->content_type($type);
     print $result;
 

@@ -5,6 +5,7 @@ ruleset 10 {
         pre {
 
 	  x = 5;
+	  x = -5;
 	  x = "test";
 	  x = true;
 	  x = false;
@@ -51,6 +52,8 @@ ruleset 10 {
 	  x = ((not true) == false);
 	  x = (not (true == false));
 	  x = (((not x) || (not y)) == (not (x && y)));
+	  x = a[5];
+	  x = vari[(x+6)];
 	}     
 	alert("Hello");
 

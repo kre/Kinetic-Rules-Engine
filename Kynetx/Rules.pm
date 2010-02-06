@@ -116,7 +116,10 @@ sub process_rules {
     # if we sort @rids we change ruleset priority
     foreach my $rid (@rids) {
 	Log::Log4perl::MDC->put('site', $rid);
-	$js .= process_ruleset($r, $req_info, $rule_env, $session, $rid);
+	$js .= eval { process_ruleset($r, $req_info, $rule_env, $session, $rid) }; 
+	if ($@) {
+	  $logger->error("Ruleset $rid failed: ", $@);
+	}
     }
 
     # put this in the logging DB
@@ -128,7 +131,8 @@ sub process_rules {
     session_cleanup($session);
 
     # return the JS load to the client
-    $logger->info("finished");
+    $logger->info("Ruleset processing finished");
+    $logger->debug("__FLUSH__");
 
 
     # this is where we return the JS

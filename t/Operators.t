@@ -37,13 +37,17 @@ use Test::LongString;
 
 use APR::URI;
 use APR::Pool ();
+use Cache::Memcached;
+use Apache::Session::Memcached;
 
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($TRACE);
 
+my $logger = get_logger();
 
 use Data::Dumper;
 
@@ -52,25 +56,51 @@ use Kynetx::Operators qw/:all/;
 use Kynetx::Parser qw/:all/;
 use Kynetx::Expressions qw/:all/;
 use Kynetx::Environments qw/:all/;
+use Kynetx::FakeReq qw/:all/;
 
 
 
 $Data::Dumper::Indent = 1;
 
 
-
-my $req_info;
-$req_info->{'referer'} = 'http://www.byu.edu'; # Utah (BYU)
-$req_info->{'pool'} = APR::Pool->new;
-
+my $rid = 'abcd1234';
 my $rule_name = 'foo';
 
-my $rule_env = empty_rule_env();
+my $r = Kynetx::Test::configure();
 
-$rule_env = extend_rule_env(
-    ['a','b','c','d','e','my_str','my_url'],
-    [10, 11, [4,5,6], [], 'this', 'This is a string', 'http://www.amazon.com/gp/products/123456789/'],
-    $rule_env);
+my $req_info = Kynetx::Test::gen_req_info($rid);
+
+my $init_rule_env = empty_rule_env();
+
+my $session = Kynetx::Test::gen_session($r, $rid);
+
+my $p = << "_KRL_";
+pre {
+  a = 10;
+  b = 11;
+  c = [4,5,6];
+  f = [7,4,3,5,2,1,6];
+  d = [];
+  e = "this";
+  my_str = "This is a string";
+  my_url = "http://www.amazon.com/gp/products/123456789/";
+}
+_KRL_
+
+my $ptree = Kynetx::Parser::parse_pre($p);
+
+
+
+my ($js, $rule_env) = Kynetx::Expressions::eval_prelude($req_info,
+							$init_rule_env,
+							$rule_name,
+							$session,
+							$ptree);
+
+# $rule_env = extend_rule_env(
+#     ['a','b','c','d','e','my_str','my_url'],
+#     [10, 11, [4,5,6], [], 'this', 'This is a string', 'http://www.amazon.com/gp/products/123456789/'],
+#     $init_rule_env);
 
 
 
@@ -382,6 +412,28 @@ $x[$i] = {'val' => '23.99',
 $d[$i]  = 0;
 $i++;
 
+$e[$i] = q#{"foo":1,"bar":2}.pick("$.foo")#;
+$x[$i] = {
+   'val' => 1,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#{"foo":1,"bar":2}.pick("$.bar")#;
+$x[$i] = {
+   'val' => 2,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+
+
+#-----------------------------------------------------------------------------------
+# array operators
+#-----------------------------------------------------------------------------------
+
 $e[$i] = q/c.length()/;
 $x[$i] = {
    'val' => 3,
@@ -488,6 +540,121 @@ $d[$i]  = 0;
 $i++;
 
 
+#
+# testing array ops
+#
+$e[$i] = q#c.length()#;
+$x[$i] = {
+   'val' => 3,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#c.head()#;
+$x[$i] = {
+   'val' => 4,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#c.tail()#;
+$x[$i] = {
+   'val' => [5,6],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#c.tail().length()#;
+$x[$i] = {
+   'val' => 2,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#c.sort()#;
+$x[$i] = {
+   'val' => [4,5,6],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#f.sort()#;
+$x[$i] = {
+   'val' => [1,2,3,4,5,6,7],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#[6,4,5].sort()#;
+$x[$i] = {
+   'val' => [4,5,6],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#c.sort("reverse")#;
+$x[$i] = {
+   'val' => [6,5,4],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#c.sort(function(a,b){b > a})#;
+$x[$i] = {
+   'val' => [6,5,4],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#f.filter(function(a){a < 5})#;
+$x[$i] = {
+   'val' => [4,3,2,1],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#f.filter(function(a){a < 5}).sort()#;
+$x[$i] = {
+   'val' => [1,2,3,4],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#c.map(function(a){a + 2}).sort()#;
+$x[$i] = {
+   'val' => [6,7,8],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#c.sort().map(function(a){a + 2})#;
+$x[$i] = {
+   'val' => [6,7,8],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
+
 # now run the tests....
 my $l = scalar @e;
 plan tests => $l;
@@ -497,10 +664,6 @@ for ($j = 0; $j < $i; $j++) {
     test_operator($e[$j], $x[$j], $d[$j]);
 }
 
-
-#
-# testing length
-#
 
 
 

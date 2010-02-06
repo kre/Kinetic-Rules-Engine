@@ -870,8 +870,11 @@ sub pp_expr {
 	/bool/ && do {
 	    return  $expr->{'val'} ;
 	};
-	/array/ && do {
+	/^array$/ && do {
 	    return  "[" . join(', ', pp_rands($expr->{'val'})) . "]" ;
+	};
+	/^array_ref$/ && do {
+	    return  $expr->{'val'}->{'var_expr'} . '['. pp_expr($expr->{'val'}->{'index'}) . ']';
 	};
 	/hashraw/ && do {
 	    return  "{" . join(', ', pp_hash_lines($expr->{'val'})) . "}" ;

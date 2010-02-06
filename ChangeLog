@@ -1,3 +1,18 @@
+2010-02-05  Phil Windley  <pjw@kynetx.com>
+
+	* Log/Log4perl/Appender/ErrorStack.pm: Log4perl appender for ErrorStack
+	* Kynetx/Util.pm (config_logging): Using ErrorStack when config
+	  contains a stack key
+	* Kynetx/Operators.pm: Added head, tail, sort, map, and filter on arrays.
+	* Kynetx/Parser.pm: Added array references
+	* Kynetx/Expressions.pm (eval_array_ref): Added array references
+	* Kynetx/PrettyPrinter.pm (pp_expr): Added array references
+	* Kynetx/JavaScript.pm (gen_js_expr): Added array references
+
+2010-02-03  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Parser.pm: Fixed negative numbers so they work
+
 2010-02-02  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Expressions.pm: added mk_closure, added function to

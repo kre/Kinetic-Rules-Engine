@@ -119,26 +119,33 @@ sub authorized {
 
  $logger->debug("Checking KPDS access for rule $rule_name in $rid");
 
-# $logger->debug("Session in authorized: ", sub { Dumper $session});
+ $logger->debug("Session in authorized: ", sub { Dumper $session});
 
  my $nt = Kynetx::OAuth->new(NAMESPACE, $req_info, $session, $urls);
  
  if ($nt->authorized()) {
 
    my $url = BASE_KPDS_URL . '7795';
+  
+
+   $logger->debug("Trying $url");
+
 
    my $response = eval {$nt->get_restricted_resource($url)};
 
+
    if ($@ || ! $response->is_success) {
+     my $status = $@ || $response->status;
+     $logger->debug("Not authorized: ", $status);
      return 0;
    } else {
+     $logger->debug("Got ", $response->content);
      return 1;
    }
    
    
  } else {
    return  0;
-      
  }
  
  
@@ -246,7 +253,7 @@ sub process_oauth_callback {
          access_token_secret => $access_token_secret,
      });
 
-#  $logger->debug("Session after store: ", sub { Dumper $session});
+  $logger->debug("Session after store: ", sub { Dumper $session});
  
 
   $logger->debug("redirecting newly authorized tweeter to $caller");

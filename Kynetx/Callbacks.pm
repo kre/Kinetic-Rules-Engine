@@ -85,6 +85,8 @@ sub handler {
 	process_action($r, $rids);
     }
 
+    $logger->debug("__FLUSH__");
+
     return Apache2::Const::OK; 
 }
 

@@ -97,8 +97,11 @@ sub gen_js_expr {
 	/bool/ && do {
 	    return  $expr->{'val'} ;
 	};
-	/array/ && do {
+	/^array$/ && do {
 	    return  "[" . join(', ', @{ gen_js_rands($expr->{'val'}) }) . "]" ;
+	};
+	/^array_ref$/ && do {
+	    return  gen_js_array_ref($expr->{'val'}) ;
 	};
 	/hashraw/ && do {
 	    return  gen_js_hash_lines($expr->{'val'});
@@ -253,6 +256,15 @@ sub gen_js_hash_line {
     return "'" . $hash_line->{'lhs'} ."' : " . gen_js_expr($hash_line->{'rhs'});
 
 
+}
+
+
+sub gen_js_array_ref {
+  my $array_ref = shift;
+
+  return  $array_ref->{'var_expr'} . '['. gen_js_expr($array_ref->{'index'}) . ']';
+
+  
 }
 
 sub gen_js_datasource {

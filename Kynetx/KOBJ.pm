@@ -176,6 +176,8 @@ sub handler {
 	show_build_num($r);
     } 
 
+    $logger->debug("__FLUSH__");
+
     print $js;
 
     return Apache2::Const::OK; 

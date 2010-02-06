@@ -1522,6 +1522,48 @@ add_expr_testcase(
 
 
 ##
+## arrays
+##
+
+$krl_src = <<_KRL_;
+c[0]
+_KRL_
+add_expr_testcase(
+		  $krl_src,
+		  'expr',
+		  'c[0]',
+		  mk_expr_node('num',    5),
+		  0
+    );
+
+
+$krl_src = <<_KRL_;
+c[1]
+_KRL_
+add_expr_testcase(
+		  $krl_src,
+		  'expr',
+		  'c[1]',
+		  mk_expr_node('num',    6),
+		  0
+    );
+
+
+$krl_src = <<_KRL_;
+c[2]
+_KRL_
+add_expr_testcase(
+		  $krl_src,
+		  'expr',
+		  'c[2]',
+		  mk_expr_node('num',    4),
+		  0
+    );
+
+
+
+
+##
 ## entity vars
 ##
 $krl_src = <<_KRL_;

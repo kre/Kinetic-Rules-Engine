@@ -67,7 +67,7 @@ sub eval_pick {
     # if you don't clone this, it modified the rule env 
 
     my $obj = Kynetx::Expressions::den_to_exp(dclone($int));
-    $logger->trace("[pick] obj: ", sub { Dumper($obj) });
+   $logger->trace("[pick] obj: ", sub { Dumper($obj) });
     
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 
@@ -92,12 +92,13 @@ sub eval_pick {
 
     $logger->debug("pick using $pattern"); # returning ", Dumper($v));
 
-    return  { 'type' => Kynetx::Expressions::infer_type($v),
-	      'val' => $v
-    };
+    return Kynetx::Expressions::typed_value($v);
 }
 $funcs->{'pick'} = \&eval_pick;
 
+#-----------------------------------------------------------------------------------
+# array operators
+#-----------------------------------------------------------------------------------
 
 sub eval_length {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
@@ -109,13 +110,228 @@ sub eval_length {
     my $v = 0;
     if ($obj->{'type'} eq 'array') {
 	$v = @{ $obj->{'val'} } + 0;
+    } else {
+      $logger->debug("length used in non-array context");
     }
 
-    return { 'type' => Kynetx::Expressions::infer_type($v),
-	      'val' => $v
-    }
+    return Kynetx::Expressions::typed_value($v);
 }
 $funcs->{'length'} = \&eval_length;
+
+sub eval_head {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+
+    my $v = 0;
+    if ($obj->{'type'} eq 'array') {
+	$v =$obj->{'val'}->[0];
+    } else {
+      $logger->debug("head used in non-array context");
+    }
+
+    return Kynetx::Expressions::typed_value($v);
+}
+$funcs->{'head'} = \&eval_head;
+
+sub eval_tail {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+
+    my $v = 0;
+    if ($obj->{'type'} eq 'array') {
+      my @a = @{$obj->{'val'}};
+      shift @a;
+      $v = \@a;
+    } else {
+      $logger->debug("tail used in non-array context");
+    }
+
+    return Kynetx::Expressions::typed_value($v);
+}
+$funcs->{'tail'} = \&eval_tail;
+
+
+sub eval_sort {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    
+    my $obj = 
+      Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+
+    my $v = 0;
+    if ($obj->{'type'} eq 'array') {
+      
+
+      my $eval = Kynetx::Expressions::den_to_exp($obj);
+
+      my $dval = Kynetx::Expressions::eval_expr($expr->{'args'}->[0], $rule_env, $rule_name,$req_info, $session) if (int(@{$expr->{'args'}}) > 0);
+      
+      if (Kynetx::Expressions::den_to_exp($dval) eq 'reverse') {
+	my @a = sort {$b cmp $a} @{$eval};
+	$v = \@a;
+      } elsif (Kynetx::Expressions::type_of($dval) eq 'closure') {
+
+
+	my @a = sort {
+	  my $app = {'type' => 'app',
+		     'function_expr' => $expr->{'args'}->[0],
+		     'args' => [Kynetx::Expressions::typed_value($a),
+				Kynetx::Expressions::typed_value($b)]};
+	 
+	  my $r = Kynetx::Expressions::den_to_exp(
+	    Kynetx::Expressions::eval_application($app,
+						  $rule_env,
+						  $rule_name,
+						  $req_info,
+						  $session));
+
+#	  $logger->debug("Sort function returned ",Dumper $r);
+
+	  return $r;
+
+
+	} @{$eval};
+	
+	$v = \@a;
+	
+#	$logger->debug("Array after sort ",Dumper $v);
+
+						    
+
+      } else {
+	my @a = sort {$a cmp $b} @{$eval};
+#        $logger->debug("Array after sorting ",Dumper @a);
+	$v = \@a;
+      }
+	
+    } else {
+      $logger->debug("sort used in non-array context");
+    }
+      
+    return Kynetx::Expressions::typed_value($v);
+
+}
+$funcs->{'sort'} = \&eval_sort;
+
+sub eval_filter {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    
+    my $obj = 
+      Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+
+    my $v = 0;
+    if ($obj->{'type'} eq 'array' && int(@{$expr->{'args'}}) > 0) {
+
+      my $eval = Kynetx::Expressions::den_to_exp($obj);
+
+      my $dval = Kynetx::Expressions::eval_expr($expr->{'args'}->[0], $rule_env, $rule_name,$req_info, $session);
+      
+      if (Kynetx::Expressions::type_of($dval) eq 'closure') {
+
+
+	my $a = [];
+	foreach my $av (@{$eval}) {
+
+	  my $app = {'type' => 'app',
+		     'function_expr' => $expr->{'args'}->[0],
+		     'args' => [Kynetx::Expressions::typed_value($av)]};
+	 
+	  my $r = Kynetx::Expressions::den_to_exp(
+	    Kynetx::Expressions::eval_application($app,
+						  $rule_env,
+						  $rule_name,
+						  $req_info,
+						  $session));
+
+	  push(@{$a}, $av) if $r;
+
+	}
+	
+	$v = $a;
+	
+#	$logger->debug("Array after sort ",Dumper $v);
+					    
+
+      } else {
+	$logger->debug("filter used with non-function argument");
+      }
+    } else {
+      $logger->debug("filter used in non-array context or without argument");
+    }
+      
+    return Kynetx::Expressions::typed_value($v);
+
+}
+$funcs->{'filter'} = \&eval_filter;
+
+sub eval_map {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    
+    my $obj = 
+      Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+
+    my $v = 0;
+    if ($obj->{'type'} eq 'array' && int(@{$expr->{'args'}}) > 0) {
+
+      my $eval = Kynetx::Expressions::den_to_exp($obj);
+
+      my $dval = Kynetx::Expressions::eval_expr($expr->{'args'}->[0], $rule_env, $rule_name,$req_info, $session);
+      
+      if (Kynetx::Expressions::type_of($dval) eq 'closure') {
+
+
+	my $a = [];
+	foreach my $av (@{$eval}) {
+
+	  my $app = {'type' => 'app',
+		     'function_expr' => $expr->{'args'}->[0],
+		     'args' => [Kynetx::Expressions::typed_value($av)]};
+	 
+	  my $r = Kynetx::Expressions::den_to_exp(
+	    Kynetx::Expressions::eval_application($app,
+						  $rule_env,
+						  $rule_name,
+						  $req_info,
+						  $session));
+
+	  push(@{$a}, $r);
+
+	}
+	
+	$v = $a;
+	
+#	$logger->debug("Array after sort ",Dumper $v);
+					    
+
+      } else {
+	$logger->debug("map used with non-function argument");
+      }
+    } else {
+      $logger->debug("map used in non-array context or without argument");
+    }
+      
+    return Kynetx::Expressions::typed_value($v);
+
+}
+$funcs->{'map'} = \&eval_map;
+
+#-----------------------------------------------------------------------------------
+# string operators
+#-----------------------------------------------------------------------------------
 
 sub eval_replace {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
@@ -175,22 +391,9 @@ sub eval_replace {
 $funcs->{'replace'} = \&eval_replace;
 
 
-sub eval_toRegexp {
-    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
-    my $logger = get_logger();
-    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
-
-#    $logger->debug("obj: ", sub { Dumper($obj) });
-
-    my $v = 0;
-    if ($obj->{'type'} eq 'str') {
-      $obj->{'type'} = 'regexp';
-    }
-
-    return $obj;
-}
-$funcs->{'toRegexp'} = \&eval_toRegexp;
-
+#-----------------------------------------------------------------------------------
+# casting
+#-----------------------------------------------------------------------------------
 
 sub eval_as {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
@@ -223,6 +426,26 @@ sub eval_as {
 $funcs->{'as'} = \&eval_as;
 
 
+sub eval_toRegexp {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+
+    my $v = 0;
+    if ($obj->{'type'} eq 'str') {
+      $obj->{'type'} = 'regexp';
+    }
+
+    return $obj;
+}
+$funcs->{'toRegexp'} = \&eval_toRegexp;
+
+
+#-----------------------------------------------------------------------------------
+# make it all happen
+#-----------------------------------------------------------------------------------
 
 sub eval_operator {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
