@@ -74,7 +74,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 sub gen_js_expr {
     my $expr = shift;
 
-#    my $logger = get_logger();
+    my $logger = get_logger();
 
     case: for ($expr->{'type'}) {
 	/str/ && do {
@@ -93,6 +93,9 @@ sub gen_js_expr {
 	};
 	/var/ && do {
 	    return  $expr->{'val'} ;
+	};
+	/regexp/ && do {
+	    return  $expr->{'val'};
 	};
 	/bool/ && do {
 	    return  $expr->{'val'} ;
@@ -113,7 +116,7 @@ sub gen_js_expr {
 	    return gen_js_prim($expr);
 	};
 	/^ineq|pred$/ && do {
-	    return gen_js_pred($expr);
+	    return gen_js_predexpr($expr);
 	};
         /condexpr/ && do {
 	    return gen_js_condexpr($expr);
@@ -306,8 +309,18 @@ sub gen_js_predexpr {
 #    my $logger = get_logger();
 
     if($expr->{'type'} eq "ineq") {
-	    return  '('. join(' ' . $expr->{'op'} . ' ', 
-			@{ gen_js_rands($expr->{'args'}) }) . ')'  ;
+
+#      $logger->debug("Expr ", sub {Dumper $expr });
+      if ($expr->{'op'} eq 'like') {
+	if ($expr->{'args'}->[1]->{'type'} eq 'str') {
+	  $expr->{'args'}->[1]->{'val'} = '/' . $expr->{'args'}->[1]->{'val'} . '/';
+	  $expr->{'args'}->[1]->{'type'} = 'regexp'
+	}
+	return gen_js_expr($expr->{'args'}->[0]) . '.match(' . gen_js_expr($expr->{'args'}->[1]) . ')';
+      } else {
+	return  '('. join(' ' . gen_js_ineq_op($expr->{'op'}) . ' ', 
+			  @{ gen_js_rands($expr->{'args'}) }) . ')'  ;
+      }
 # 	/seen_timeframe/ && do {
 # 	    return join(' ', 
 # 			('seen',
@@ -350,6 +363,20 @@ sub gen_js_predexpr {
        return gen_js_expr($expr);
      }
 
+}
+
+sub gen_js_ineq_op {
+  my $op = shift;
+
+  if ($op eq 'eq') {
+    return '=='
+  } elsif ($op eq 'neq') {
+    return '!='
+  } elsif ($op eq 'like') {
+    return '=='  # this is wrong!!! we shouldn't ever get here, but generate JS in case
+  } else {
+    return $op
+  }
 }
 
 

@@ -1088,7 +1088,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "('foo' eq 'foo')",
+		  "('foo' == 'foo')",
 		  mk_expr_node('num',    1),
 		  0
     );
@@ -1099,7 +1099,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "('foo' eq 'bar')",
+		  "('foo' == 'bar')",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1111,7 +1111,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "('foo' neq 'foo')",
+		  "('foo' != 'foo')",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1122,7 +1122,8 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "('foo' neq 'bar')",
+		  "('foo' !=
+ 'bar')",
 		  mk_expr_node('num',    1),
 		  0
     );
@@ -1134,7 +1135,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "(city eq 'Blackfoot')",
+		  "(city == 'Blackfoot')",
 		  mk_expr_node('num',    1),
 		  0
     );
@@ -1145,7 +1146,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "('foo' eq city)",
+		  "('foo' == city)",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1157,7 +1158,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "('Blackfoot' neq city)",
+		  "('Blackfoot' != city)",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1168,7 +1169,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "(city neq 'bar')",
+		  "(city != 'bar')",
 		  mk_expr_node('num',    1),
 		  0
     );
@@ -1182,7 +1183,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  '_ignore_',
+		  "'foobar'.match(/foo.*/)",
 		  mk_expr_node('num',    1),
 		  0
     );
@@ -1193,7 +1194,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  '_ignore_',
+		  "'foobar'.match(/foo.*/)",
 		  mk_expr_node('num',    1),
 		  0
     );
@@ -1204,7 +1205,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  '_ignore_',
+		  "'bar'.match(/.*bar/)",
 		  mk_expr_node('num',    1),
 		  0
     );
@@ -1215,7 +1216,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  '_ignore_',
+		  "'bar'.match(/.*bar/)",
 		  mk_expr_node('num',    1),
 		  0
     );
@@ -1226,7 +1227,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  '_ignore_',
+		  "'foobar'.match(/^bar/)",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1237,7 +1238,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  '_ignore_',
+		  "'bar'.match(/foo.*/)",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1248,7 +1249,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  '_ignore_',
+		  "'bar'.match(/foo.*/)",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1260,7 +1261,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  '_ignore_',
+		  "'Bar'.match(/bar/)",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1271,7 +1272,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  '_ignore_',
+		  "'Bar'.match(/bar/)",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1282,7 +1283,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  '_ignore_',
+		  "'Bar'.match(/bar/i)",
 		  mk_expr_node('num',    1),
 		  0
     );
