@@ -1,3 +1,7 @@
+2010-02-08  Mark Horstmeier <meh@kynetx.com>
+
+    * Kynetx/Actions.pm:  added percolate and flippyloo actions
+    
 2010-02-06  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/JavaScript.pm (gen_js_predexpr): Fixed up Javascript

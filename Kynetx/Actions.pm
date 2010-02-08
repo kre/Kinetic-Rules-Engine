@@ -198,7 +198,14 @@ EOF
       'after' => [\&handle_delay]
     },
 
-
+    percolate => {
+        'js' => <<EOF,
+function(uniq,cb,config,sel) {
+    KOBJ.percolate(sel,config);
+}
+EOF
+    'after' => [\&handle_delay]
+    },
 
     popup => {
        'js' => <<EOF,
@@ -291,6 +298,15 @@ EOF
     noop =>  {
        'js' => <<EOF,
 function(uniq, cb, config) {
+    cb();
+}
+EOF
+      'after' => [\&handle_delay],
+   },
+   
+   flippyloo => {
+       'js' => <<EOF,
+function(uniq,cb,config) {
     cb();
 }
 EOF
