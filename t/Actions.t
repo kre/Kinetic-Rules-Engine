@@ -719,7 +719,6 @@ $config = astToJson(
 
 $result = <<_JS_;
 (function(uniq, cb, config, annotate_fn) {
-    annotate_fn = annotate_fn || function(){return true};
     KOBJ.annotate_search_results(annotate_fn, config, cb);
 }
 ('23',callbacks23,$config,foo));
@@ -746,7 +745,6 @@ $config = astToJson(
 
 $result = <<_JS_;
 (function(uniq, cb, config, annotate_fn) {
-    annotate_fn = annotate_fn || function(){return true};
     KOBJ.annotate_search_results(annotate_fn, config, cb);
 }
 ('23',callbacks23,$config));
@@ -774,7 +772,6 @@ $config = astToJson(
 
 $result = <<_JS_;
 (function(uniq, cb, config, annotate_fn) {
-    annotate_fn = annotate_fn || function(){return true};
     KOBJ.annotate_local_search_results(annotate_fn, config, cb);
 }
 ('23',callbacks23,$config));

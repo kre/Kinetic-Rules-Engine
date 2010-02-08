@@ -180,7 +180,6 @@ EOF
     annotate_search_results => {
 	 'js' => <<EOF,
 function(uniq, cb, config, annotate_fn) {
-    annotate_fn = annotate_fn || function(){return true};
     KOBJ.annotate_search_results(annotate_fn, config, cb);
 }
 EOF
@@ -191,7 +190,6 @@ EOF
     annotate_local_search_results => {
       'js' => <<EOF,
 function(uniq, cb, config, annotate_fn) {
-    annotate_fn = annotate_fn || function(){return true};
     KOBJ.annotate_local_search_results(annotate_fn, config, cb);
 }
 EOF
