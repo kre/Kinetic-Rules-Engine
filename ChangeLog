@@ -1,3 +1,6 @@
+2010-02-09  Sam Curren <sxc@kynetx.com>
+	* Changed inner.html to inner.text to fix FogBugz ticket 374. 		Produced a new runtime.
+
 2010-02-09  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (eval_foreach): Allowed for singletons in
@@ -5,11 +8,11 @@
 
 2010-02-08  Phil Windley  <pjw@kynetx.com>
 
-	* Kynetx/Actions.pm: Removed default function for ASR and ALSR actions.
+	* Kynetx/Actions.pm: Removed default function for ASR and ALSR 		actions.
 
 2010-02-08  Mark Horstmeier <meh@kynetx.com>
 
-    * Kynetx/Actions.pm:  added percolate and flippyloo actions
+   	* Kynetx/Actions.pm:  added percolate and flippyloo actions
     
 2010-02-06  Phil Windley  <pjw@kynetx.com>
 
