@@ -394,7 +394,7 @@ KOBJ.require = function(url) {
 KOBJ.reload = function(delay) {
   var r=document.createElement("script");
   r.type= "text/javascript";
-  r.innerHTML=  "KOBJ.eval(KOBJ_config);";
+  r.text= "KOBJ.eval(KOBJ_config);";
   var body=document.getElementsByTagName("body")[0];
   setTimeout(function(){body.appendChild(r);},delay);
 };
