@@ -1,3 +1,8 @@
+2010-02-09  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Rules.pm (eval_foreach): Allowed for singletons in
+	  foreach (make them into arrays of one item).
+
 2010-02-08  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Actions.pm: Removed default function for ASR and ALSR actions.

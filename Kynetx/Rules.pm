@@ -461,8 +461,15 @@ sub eval_foreach {
 					$req_info, 
 					$session);
 
-    $logger->warn("Foreach expression does not yield array") unless
-      $valarray->{'type'} eq 'array';
+    
+
+    unless ($valarray->{'type'} eq 'array') {
+      $logger->warn("Foreach expression does not yield array; creating array from singleton") ;
+      $valarray->{'val'} = [$valarray->{'val'}];
+      $valarray->{'type'} = 'array'
+    }
+
+
     my $var = $foreach_list[0]->{'var'};
 
     foreach my $val (@{ $valarray->{'val'} }) {
