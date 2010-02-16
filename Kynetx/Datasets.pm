@@ -37,7 +37,6 @@ use utf8;
 use Log::Log4perl qw(get_logger :levels);
 use JSON::XS;
 use Data::Dumper;
-use XML::XML2JSON;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -333,8 +332,9 @@ sub _unmarshal_xml {
     my $logger = get_logger();
     my $perl;
     my $json;
-    my $XML2JSON = XML::XML2JSON->new( module => 'JSON::XS', pretty => 0 );
-    $perl = $XML2JSON->xml2obj( $self->sourcedata );
+    #my $XML2JSON = XML::XML2JSON->new( module => 'JSON::XS', pretty => 0 );
+    #$perl = $XML2JSON->xml2obj( $self->sourcedata );
+    $perl = Kynetx::Json::xmlToJson($self->sourcedata);
 
     #$logger->trace("Perl (JSON) Obj: " , Dumper($perl));
     $self->json($perl);

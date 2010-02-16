@@ -575,11 +575,13 @@ sub build_one_action {
     my $actions = {};
     if (defined $action->{'source'}) {
       if ($action->{'source'} eq 'twitter') {
-	$actions = Kynetx::Predicates::Twitter::get_actions();
-#	$logger->debug("Actions: ", Dumper $actions);
+	   $actions = Kynetx::Predicates::Twitter::get_actions();
+#	   $logger->debug("Actions: ", Dumper $actions);
       } elsif ($action->{'source'} eq 'kpds') {
-	$actions = Kynetx::Predicates::KPDS::get_actions();
-#	$logger->debug("Actions: ", Dumper $actions);
+	   $actions = Kynetx::Predicates::KPDS::get_actions();	
+#	   $logger->debug("Actions: ", Dumper $actions);
+      } elsif ($action->{'source'} eq 'amazon') {
+          $actions = Kynetx::Predicates::Amazon::get_actions();
       }
     } else {
       $actions = $default_actions;

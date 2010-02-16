@@ -94,14 +94,19 @@ sub get_memcached_servers {
 
 
 sub get_remote_data {
-    my($url,$expire) = @_;
+    my($url,$expire,$alt_key) = @_;
+    my $key;
 
     $expire = 10 * 60 if (! $expire); # ten minutes
 
     my $logger = get_logger();
     my $memd = get_memd();
 
-    my $key = $url;
+    if ($alt_key) {
+        $key = $alt_key;
+    }else {
+        $key = $url;
+    }
 
     my $content;
     if ($memd) {
@@ -137,10 +142,11 @@ sub get_remote_data {
 # FIXME: probably ought to refactor this and previous function to use a common core
 sub get_cached_file {
     my($filepath,$expire) = @_;
+    my $logger = get_logger();
+    $logger->trace("get file: ", $filepath);
 
     $expire = 60 * 60 if (! $expire); #   one hour
 
-    my $logger = get_logger();
     my $memd = get_memd();
 
     my $key = $filepath;

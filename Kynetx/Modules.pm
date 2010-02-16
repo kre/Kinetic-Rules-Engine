@@ -69,6 +69,7 @@ use Kynetx::Predicates::Twitter;
 use Kynetx::Predicates::KPDS;
 use Kynetx::Predicates::Page;
 use Kynetx::Predicates::Math;
+use Kynetx::Predicates::Amazon;
 
 
 
@@ -185,13 +186,21 @@ sub eval_module {
 	  $val = Kynetx::Predicates::Useragent::get_useragent($req_info,$function);
 	}
     } elsif ($source eq 'kpds') {
-	$preds = Kynetx::Predicates::KPDS::get_predicates();
-	if (defined $preds->{$function}) {
-	  $val = $preds->{$function}->($req_info,$rule_env,$args);
-	  $val ||= 0;
-	} else {
-	  $val = Kynetx::Predicates::KPDS::eval_kpds($req_info,$rule_env,$session,$rule_name,$function,$args);
-	}
+	   $preds = Kynetx::Predicates::KPDS::get_predicates();
+	   if (defined $preds->{$function}) {
+	       $val = $preds->{$function}->($req_info,$rule_env,$args);
+	       $val ||= 0;
+	   } else {
+	       $val = Kynetx::Predicates::KPDS::eval_kpds($req_info,$rule_env,$session,$rule_name,$function,$args);
+	   }
+    } elsif ($source eq 'amazon') {
+        $preds = Kynetx::Predicates::Amazon::get_predicates();
+        if (defined $preds->{$function}) {
+            $val = $preds->{$function}->($req_info,$rule_env,$args);
+            $val ||= 0;
+        } else {
+            $val = Kynetx::Predicates::Amazon::eval_amazon($req_info,$rule_env,$session,$rule_name,$function,$args);
+        }
     } else {
       $logger->warn("Datasource for $source not found");
     }

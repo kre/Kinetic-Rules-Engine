@@ -1,3 +1,25 @@
+2010-02-16 Mark Horstmeier <meh@kynetx.com>
+    * Kynetx/Memcached.pm: added an optional cache key so the digital signature required
+      by Amazon wont break our cache
+    * Kynetx/Datasets.pm:  see Kynetx/Json.pm
+    * Kynetx/Modules.pm:   added Amazon module
+    * Kynetx/Predicates/Amazon.pm: Dispatcher to Amazon qualified functions
+    * Kynetx/Predicates/Amazon/RequestSignatureHelper.pm: Helper module to sign requests
+    * Kynetx/Predicates/Amazon/ItemLookup.pm: Amazon ItemLookup operation
+    * Kynetx/Predicates/Amazon/ItemSearch.pm: Amazon ItemSearch operation
+    * Kynetx/Json.pm: added unified interface for JSON encode/decode to always UTF-8
+    * Kynetx/Util.pm: added convenience function for caching yml files to memcache
+    * Kynetx/Rules.pm: check for the Amazon keys
+    * Kynetx/Actions.pm: added check for amazon actions
+    * t/Predicates/AmazonLookup.t: Lookup tests 
+    * t/Predicates/AmazonSearch.t: Search tests
+    * /web/etc/Amazon/locale.yml                    
+    * /web/etc/Amazon/searchindex_itemindex_us.yml  
+    * /web/etc/Amazon/response_group.yml            
+    * /web/etc/Amazon/searchindex.yml
+    * /web/etc/Amazon/searchindex_itemindex_ca.yml  
+    * /web/etc/Amazon/search_response_groups.yml
+
 2010-02-09  Sam Curren <sxc@kynetx.com>
 	* Changed inner.html to inner.text to fix FogBugz ticket 374. 		Produced a new runtime.
 

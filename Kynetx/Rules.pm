@@ -291,6 +291,8 @@ sub eval_meta {
  	foreach my $k (keys %{ $ruleset->{'meta'}->{'keys'} }) {
 	  if ($k eq 'twitter') {
 	    $req_info->{$rid.':key:twitter'} = $ruleset->{'meta'}->{'keys'}->{$k};
+	  } elsif ($k eq 'amazon') {
+	    $req_info->{$rid.':key:amazon'} = $ruleset->{'meta'}->{'keys'}->{$k};    	  
 	  } else { # googleanalytics, errorstack
 	    $js .= KOBJ_ruleset_obj($ruleset->{'ruleset_name'}). ".keys.$k = '" . 
 	      $ruleset->{'meta'}->{'keys'}->{$k} . "';\n";

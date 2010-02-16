@@ -58,6 +58,8 @@ config_logging
 turn_on_logging
 turn_off_logging
 mk_url
+merror
+mis_error
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -215,6 +217,59 @@ sub mk_url {
 
 
   return $base_url;
+}
+
+sub merror {
+    my ($e, $v, $private) = @_;
+    my $msg='';
+    my $tag;
+    if ($private) {
+        $tag = 'TRACE';
+    } else {
+        $tag = 'DEBUG';
+    }
+    if (ref $e eq 'HASH') {
+        # Existing error hash
+        $msg =  $v;
+    } else {
+        $msg = $e;
+        $e = {'_error_' => 1};
+        if ($v) {
+            $tag = 'TRACE';
+        } else {
+            $tag = 'DEBUG';
+        }
+        
+    }
+    $e->{$tag} =  $msg . "\n" . ($e->{$tag} || '');
+    
+    return $e;
+}
+
+sub mis_error {
+    my ($v) = @_;
+    if (ref $v eq 'HASH' and $v->{'_error_'}) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+sub get_yaml {
+    my ($filename,$cache) = @_;
+    my $logger = get_logger();
+    my $cachetime = defined $cache && $cache > 0 ? $cache : Kynetx::Configure::get_config('CACHEABLE_THRESHOLD');
+    my $config_file = Kynetx::Memcached::get_cached_file($filename,$cachetime);
+    if ($config_file) {
+        my $temp = YAML::XS::Load($config_file);
+        if ($temp) {
+            return $temp;
+        } else {
+            return merror("Unable to initialize parameters for $filename");
+        }
+    } else {
+        return merror("Unable to read $filename");
+    }
 }
 
 1;
