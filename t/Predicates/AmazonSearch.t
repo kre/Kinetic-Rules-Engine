@@ -9,7 +9,7 @@ use Test::LongString;
 use Test::Deep;
 
 # most Kyentx modules require this
-use Log::Log4perl qw(get_logger :levels);
+use Log::Log4perl qw(get_logger :levels :easy);
 Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($TRACE);
 #Log::Log4perl->easy_init($DEBUG);
@@ -24,16 +24,16 @@ use APR::URI;
 use APR::Pool ();
 use Cache::Memcached;
 
-use Kynetx::Test qw/:all/;
-use Kynetx::Environments qw/:all/;
+use Kynetx::Test;
+use Kynetx::Environments;
 use Kynetx::Session qw/:all/;
-use Kynetx::Configure qw/:all/;
-use Kynetx::Predicates::Twitter qw/:all/;
-use Kynetx::JavaScript qw(mk_js_str gen_js_var);
-use Kynetx::Rules qw(:all);
-use Kynetx::Modules qw(:all);
+use Kynetx::Configure;
+use Kynetx::Predicates::Twitter;
+use Kynetx::JavaScript;
+use Kynetx::Rules;
+use Kynetx::Modules;
 
-use Kynetx::FakeReq qw/:all/;
+use Kynetx::FakeReq;
 
 
 use Data::Dumper;
