@@ -141,9 +141,10 @@ sub eval_amazon {
     } elsif ($function eq 'item_lookup') {
         $built = Kynetx::Predicates::Amazon::ItemLookup::build($a_request,$a_args,$locale);
     } elsif ($function eq 'widget') {
-        my $widget = Kynetx::Predicates::Amazon::Widget::build($a_request,$args,$locale,$secret->{'associate_id'});
-        $logger->trace("Widget: ", $widget);
-        return $widget;
+        #my $widget = Kynetx::Predicates::Amazon::Widget::build($a_request,$args,$locale,$secret->{'associate_id'});
+        #$logger->trace("Widget: ", $widget);
+        #return $widget;
+        return '';
     }
     
     if (mis_error($built)) {
