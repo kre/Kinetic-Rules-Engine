@@ -46,14 +46,12 @@ use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Util qw(:all);
-use Kynetx::Configure qw/:all/;
-use Kynetx::Predicates::Amazon qw/:all/;  
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 our $VERSION = 1.00;
-our @ISA     = qw(Exporter);
+our @ISA     = qw(Exporter Kynetx::Predicates::Amazon);
 
 # put exported names inside the "qw" 
 our %EXPORT_TAGS = (

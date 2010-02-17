@@ -46,8 +46,6 @@ use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Util qw(:all);
-use Kynetx::Configure qw/:all/;
-use Kynetx::Util qw/merror mis_error/;
 use Kynetx::Predicates::Amazon::ItemSearch qw/get_search_index/;
 
 use Exporter;
