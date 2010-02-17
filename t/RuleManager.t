@@ -481,7 +481,7 @@ SKIP: {
 
     is($mech->content_type(), 'text/html');
     $mech->title_is('Validate KRL');
-    $mech->content_contains('"ruleset_name":"10"');
+    $mech->content_contains('"ruleset_name" : "10"');
 
     $mech->back();
     $mech->field('rule',$test_ruleset);
@@ -489,7 +489,7 @@ SKIP: {
     $mech->submit_form_ok();
 
     is($mech->content_type(), 'text/plain');
-    $mech->content_contains('"ruleset_name":"10"');
+    $mech->content_contains('"ruleset_name" : "10"');
 
     # jsontokrl
     my $url_version_4 = "$dn/jsontokrl/$ruleset";
@@ -570,7 +570,7 @@ SKIP: {
 
     is($mech->content_type(), 'text/plain');
     contains_string($mech->response()->content,
-		    '{"error":"Line 3:Invalid dispatch: Was expecting');
+		    '"error" : "Line 3:Invalid dispatch: Was expecting');
 
 
     # parse/meta
