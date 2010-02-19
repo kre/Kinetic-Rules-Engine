@@ -391,6 +391,48 @@ sub eval_replace {
 $funcs->{'replace'} = \&eval_replace;
 
 
+sub eval_uc {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+    $logger->trace("obj: ", sub { Dumper($obj) });
+
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+    $logger->trace("obj: ", sub { Dumper($rands) });
+
+    if($obj->{'type'} eq 'str') {
+        my $v = $obj->{'val'};
+        $v = uc($v);
+        $logger->debug("toUpper: ", $v);
+        return Kynetx::Expressions::typed_value($v);
+    } else {
+        $logger->warn("Not a string");
+    }
+}
+$funcs->{'uc'} = \&eval_uc;
+
+sub eval_lc {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+    $logger->trace("obj: ", sub { Dumper($obj) });
+
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+    $logger->trace("obj: ", sub { Dumper($rands) });
+
+    if($obj->{'type'} eq 'str') {
+        my $v = $obj->{'val'};
+        $v = lc($v);
+        $logger->debug("toLower: ", $v);
+        return Kynetx::Expressions::typed_value($v);
+    } else {
+        $logger->warn("Not a string");
+    }
+}
+$funcs->{'lc'} = \&eval_lc;
+
 #-----------------------------------------------------------------------------------
 # casting
 #-----------------------------------------------------------------------------------

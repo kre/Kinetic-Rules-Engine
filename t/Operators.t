@@ -44,7 +44,7 @@ use Apache::Session::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 my $logger = get_logger();
@@ -537,6 +537,22 @@ $x[$i] = {
    'type' => 'str'
 };
 $d[$i]  = 0;
+$i++;
+
+$e[$i] = q#my_str.uc()#;
+$x[$i] = {
+    'val' => 'THIS IS A STRING',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q#my_str.lc()#;
+$x[$i] = {
+    'val' => 'this is a string',
+    'type' => 'str'
+};
+$d[$i] = 0;
 $i++;
 
 

@@ -1,4 +1,9 @@
 2010-02-19 Mark Horstmeier <meh@kynetx.com>
+    * Kynetx/Operators.pm: added uc and lc operators
+    * Kynetx/Parser.pm: added uc and lc operators
+    * t/Operators.t: added uc and lc operators
+
+2010-02-19 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Predicates/Amazon/ItemLookup.pm: fix for merchantid
     * t/Predicates/AmazonLookup.t: Lookup tests update
     * t/Predicates/AmazonSearch.t: Search tests update
