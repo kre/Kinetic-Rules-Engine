@@ -231,6 +231,17 @@ $args = [{
 
 push(@test_args,$args);
 
+$args = [{
+    'locale' => 'us',
+    'index' => 'Grocery',
+    'Keywords' => 'bacon salt',
+    'response_group' => ['Small','SalesRank','Images'],
+    'Sort' => 'salesrank',
+}];
+
+push(@test_args,$args);
+
+
 # catch invalid requests
 $args = [{
     'locale' => 'ca',

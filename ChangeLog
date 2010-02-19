@@ -1,3 +1,8 @@
+2010-02-19 Mark Horstmeier <meh@kynetx.com>
+    * Kynetx/Predicates/Amazon/ItemLookup.pm: fix for merchantid
+    * t/Predicates/AmazonLookup.t: Lookup tests update
+    * t/Predicates/AmazonSearch.t: Search tests update
+
 2010-02-16 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Memcached.pm: added an optional cache key so the digital signature required
       by Amazon wont break our cache

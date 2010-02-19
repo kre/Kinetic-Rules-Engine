@@ -154,14 +154,14 @@ push(@lookup_args,$args);
 $args = [{
     'item_id'=>["C2002-WK"],
     'idtype' =>'SKU',
-    'merchant' => 'All'
+    'merchantid' => 'All'
 }];
 push(@lookup_args,$args);
 
 $args = [{
     'item_id'=>["C2002-WK"],
     'idtype' =>'SKU',
-    'merchant' => 'All',
+    'merchantid' => 'All',
     'condition' => 'Used'
 }];
 push(@lookup_args,$args);
@@ -169,7 +169,7 @@ push(@lookup_args,$args);
 $args = [{
     'item_id'=>["C2002-WK"],
     'idtype' =>'SKU',
-    'merchant' => 'All',
+    'merchantid' => 'All',
     'response_info' => ['Variations']
 }];
 push(@lookup_args,$args);
@@ -177,7 +177,7 @@ push(@lookup_args,$args);
 $args = [{
     'item_id'=>["C2002-WK"],
     'idtype' =>'SKU',
-    'merchant' => 'All',
+    'merchantid' => 'All',
     'response_group' => ['Variations'],
     'relationshiptype' => 'Track'
 }];
@@ -367,7 +367,7 @@ push(@lookup_args,$args);
 $args = [{
     'item_id'=>["C2002-WK"],
     'idtype' =>'SKU',
-    'merchant' => 'All',
+    'merchantid' => 'All',
     'response_group' => ['EditorialReview','Tags'],
     'review_page' => 2,
     'tag_page' => 3,
@@ -375,7 +375,14 @@ $args = [{
 }];
 push(@lookup_args,$args);
 
-
+$args = [{
+    'item_id'=>'0312567073',
+    'idtype' => 'ISBN',
+    'condition' => 'All',
+    'merchantid' => 'All',
+    'response_group' => ['Offers'],  
+}];
+push(@lookup_args,$args);
 
 
 # item lookups
@@ -384,14 +391,14 @@ foreach my $case (@lookup_args) {
     my $ds = Kynetx::Modules::eval_module($my_req_info,$new_rule_env,$session,
         'amz_test','amazon','item_lookup',$case);
     my $good = Kynetx::Predicates::Amazon::good_response($ds);
-    is ($good,1);
     if (! $good) {
         my $error = Kynetx::Predicates::Amazon::get_error_msg($ds); 
-        $logger->debug("Error: ", sub {Dumper($error)});
-        $logger->debug("Args: ",sub {Dumper(Kynetx::Predicates::Amazon::get_request_args($ds))});        
+        $logger->warn("Error: ", sub {Dumper($error)});
+        $logger->warn("Args: ",sub {Dumper(Kynetx::Predicates::Amazon::get_request_args($ds))});        
     }else {
-        $logger->debug("Good result: ", sub {Dumper(astToJson($ds))});
+        $logger->debug("Good result: ", sub {Dumper(Kynetx::Json::astToJson($ds))});
     }
+    is ($good,1);
 }
 
 

@@ -69,7 +69,7 @@ use constant DEFAULT_IDTYPE => 'ASIN';
 use constant IDTYPE_REQUIRES_MERCHANTID => 'SKU';
 use constant MAX_ITEMS => 10;
 use constant DEFAULT_CONDITION => 'New';
-use constant PRODUCT_CONDITION => ['New','Used','Collectible','Refurbished','All'];
+use constant PRODUCT_CONDITION => ('New','Used','Collectible','Refurbished','All');
 use constant MAX_OFFER_PAGE => 100;
 use constant MAX_REVIEW_PAGE => 20;
 use constant AMAZON =>  '/web/etc/Amazon';
@@ -124,7 +124,6 @@ sub build {
                 merror($merch_id,"Merchant ID required for idtype: ".IDTYPE_REQUIRES_MERCHANTID,0);
                 return $merch_id;
             }
-            $request->{'MerchantID'}=$merch_id;
         }
         $request->{'SearchIndex'}=$search_index;
     }
@@ -138,10 +137,10 @@ sub build {
 
 sub get_merchantid{
     my ($args) = @_;
-    if (defined $args->{'merchant'}) {
-        return $args->{'merchant'};
+    if (defined $args->{'merchantid'}) {
+        return $args->{'merchantid'};
     } else {
-        return error("No merchant id supplied",1);
+        return merror("No merchant id supplied",1);
     }
     
     
@@ -149,8 +148,10 @@ sub get_merchantid{
 
 sub get_condition {
     my ($args) = @_;
+    my $logger = get_logger();
     if (defined $args->{'condition'}) {
         foreach my $allowed (PRODUCT_CONDITION) {
+            $logger->trace("got: ",$args->{'condition'}," try: ",sub {Dumper($allowed)});
             if (uc($allowed) eq uc($args->{'condition'})) {
                 return $allowed;
             }
@@ -257,6 +258,13 @@ sub set_variation_page {
     }           
 } 
 
+sub set_merchant_id {
+    my ($args,$request) = @_;
+    if (defined $args->{'merchantid'}) {
+        $request->{'MerchantId'} = $args->{'merchantid'};
+    }
+}
+
 sub set_search_index {
     my ($args,$locale) = @_;
     if (defined $args->{'search_index'}) {
@@ -280,7 +288,7 @@ sub get_lookup_parameters {
     set_tag_page($args,$request);
     set_tags_per_page($args,$request); 
     set_variation_page($args,$request);  
-         
+    set_merchant_id($args,$request);
 }
 
 sub get_item_idtype {
