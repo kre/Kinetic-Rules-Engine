@@ -34,6 +34,7 @@ use warnings;
 
 use Geo::IP;
 use Log::Log4perl qw(get_logger :levels);
+use Data::Dumper;
 
 use Kynetx::Util qw(:all);
 use Kynetx::Memcached qw(:all);
@@ -88,8 +89,10 @@ sub get_geoip {
 			       Geo::IP::GEOIP_STANDARD);
 
 	my $record = $gi->record_by_addr($req_info->{'ip'});
+    my $logger = get_logger();
+	
+	$logger->debug("Requesting GeoIP information for : ", $req_info->{'ip'});
 
-	my $logger = get_logger();
 
 	if (defined $record) {
 	

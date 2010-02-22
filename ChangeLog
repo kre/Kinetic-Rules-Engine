@@ -1,3 +1,7 @@
+2010-02-22 Mark Horstmeier <meh@kynetx.com>
+    * Kynetx/Predicates/Location.pm: added a debug statement so IP is always displayed for
+      geoIP requests
+
 2010-02-19 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Operators.pm: added uc and lc operators
     * Kynetx/Parser.pm: added uc and lc operators
