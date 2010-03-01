@@ -165,7 +165,8 @@ pragma: desc_block
           'googleanalytics' | 
           'twitter' | 
           'amazon' | 
-          'kpds' ) key_value
+          'kpds' |
+          'google' ) key_value
     {$return = {
         keys => { $item[2] => $item[3] }
       }
