@@ -1,3 +1,6 @@
+2010-03-01 Mark Horstmeier <meh@kynetx.com>
+    * Kynetx/Parser.pm: support google keys in the meta tag
+
 2010-02-22 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Predicates/Location.pm: added a debug statement so IP is always displayed for
       geoIP requests
