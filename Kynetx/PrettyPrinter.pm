@@ -97,11 +97,13 @@ sub pp_meta_block {
     $o .= pp_meta_item('author',$mb, $indent+$g_indent);
     $o .= pp_meta_item('description',$mb, $indent+$g_indent);
 
+    $o .= pp_authz($mb->{'authz'}, $indent+$g_indent) if ($mb->{'authz'}) ;
+
     $o .= pp_logging($mb->{'logging'}, $indent+$g_indent) if ($mb->{'logging'}) ;
 
     $o .= pp_keys($mb->{'keys'}, $indent+$g_indent) if ($mb->{'keys'}) ;
 
-    $o .= $beg . "}\n";
+    $o .= $beg . "\n$beg}\n";
 
     return $o;
 
@@ -127,7 +129,7 @@ sub pp_meta_item {
     }
     $o .= $node;
     if ($item eq 'description') {
-	$o .= $beg . ">>\n";
+	$o .= "\n>>\n";
     } else {
 	$o .= "\"\n";
     }
@@ -144,6 +146,19 @@ sub pp_logging {
 
     $o .= "logging ";
     $o .= $node;
+  
+    return $o;
+}
+
+sub pp_authz {
+    my ($node, $indent) = @_;
+
+    my $beg = " "x$indent;
+    
+    my $o = $beg;
+
+    $o .= "authz ";
+    $o .= $node->{'type'} . " " . $node->{'level'} ;
   
     return $o;
 }

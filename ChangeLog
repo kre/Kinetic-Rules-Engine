@@ -1,3 +1,8 @@
+2010-03-02  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Parser.pm: Added support for authz pragma
+    * Kynetx/PrettyPrinter.pm (pp_meta_item): Added support for authz pragma
+
 2010-03-02 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Configure.pm: cleaned up Amazon config
     * Kynetx/Util.pm: removed get_yaml method to make sure it is not referenced elsewhere
@@ -45,8 +50,14 @@
     * /web/etc/Amazon/searchindex_itemindex_ca.yml  
     * /web/etc/Amazon/search_response_groups.yml
 
+2010-02-11  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Operators.pm (eval_pick): Added check to make sure $v is
+	  an array before dereferencing it.  
+
 2010-02-09  Sam Curren <sxc@kynetx.com>
-	* Changed inner.html to inner.text to fix FogBugz ticket 374. 		Produced a new runtime.
+	* Changed inner.html to inner.text to fix FogBugz ticket 374.
+	  Produced a new runtime.
 
 2010-02-09  Phil Windley  <pjw@kynetx.com>
 
@@ -55,7 +66,7 @@
 
 2010-02-08  Phil Windley  <pjw@kynetx.com>
 
-	* Kynetx/Actions.pm: Removed default function for ASR and ALSR 		actions.
+	* Kynetx/Actions.pm: Removed default function for ASR and ALSR actions.
 
 2010-02-08  Mark Horstmeier <meh@kynetx.com>
 

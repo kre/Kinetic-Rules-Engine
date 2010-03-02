@@ -171,6 +171,11 @@ pragma: desc_block
         keys => { $item[2] => $item[3] }
       }
     }
+ | authz_pragma
+    {$return = {
+        'authz' => $item[1]
+        }
+    }
  | logging_pragma
     {$return = {
         'logging' => $item[1]
@@ -185,6 +190,11 @@ desc_block: 'description' (HTML | STRING)
 
 logging_pragma: 'logging' ('on' | 'off')
    {$return = $item[2];}
+ | <error>
+
+authz_pragma: 'authz' 'require' 'user'
+   {$return = {'type' => $item[2],
+               'level' => $item[3]};}
  | <error>
 
 key_value: STRING 
