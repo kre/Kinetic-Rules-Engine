@@ -58,6 +58,10 @@ set_debug
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 use constant DEFAULT_CONFIG_FILE => '/web/etc/kns_config.yml';
+use constant AMAZON =>  '/web/etc/Amazon';
+use constant ACONFIG => 'locale.yml';
+use constant RESPONSE_GROUP => 'response_group.yml';
+use constant SEARCH_INDEX_FILE => 'searchindex.yml';
 
 our $config;
 
@@ -65,6 +69,10 @@ sub configure {
     my($filename) = @_;
 
     $config = read_config($filename || DEFAULT_CONFIG_FILE);
+    $config->{'AMAZON'}->{'LOCALE'} = read_config(AMAZON.'/'.ACONFIG);
+    $config->{'AMAZON'}->{'RESPONSE_GROUP'} = read_config(AMAZON . '/' . RESPONSE_GROUP);
+    $config->{'AMAZON'}->{'SEARCH_INDEX'} = read_config(AMAZON . '/' . SEARCH_INDEX_FILE);
+    
 
     # this is stuff for config that we don't put in the config file
     $config->{'JS_VERSION'} = '0.9';
@@ -102,9 +110,15 @@ sub configure {
 
 
 sub get_config {
-    my ($name) = @_;
-    return $config->{$name};
+    my ($name,$ns) = @_;
+    if (defined $ns) {
+        return $config->{$ns}->{$name};
+    } else {
+        return $config->{$name};
+    }
 }
+
+
 
 sub set_run_mode {
     my ($mode) = @_;

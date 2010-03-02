@@ -72,9 +72,7 @@ use constant DEFAULT_CONDITION => 'New';
 use constant PRODUCT_CONDITION => ('New','Used','Collectible','Refurbished','All');
 use constant MAX_OFFER_PAGE => 100;
 use constant MAX_REVIEW_PAGE => 20;
-use constant AMAZON =>  '/web/etc/Amazon';
 use constant DEFAULT_LOCALE =>  'us';
-use constant RESPONSE_GROUP => 'response_group.yml';
 use constant DEFAULT_RESPONSE_GROUP => 'Small';
 use constant DEFAULT_RELATIONSHIP_TYPE => 'AuthorityTitle';
 use constant RELATIONSHIP_TYPES => (
@@ -100,9 +98,6 @@ use constant REVIEW_SORT_ORDERS => (
     'OverallRating',
     'SubmissionDate'
 );
-
-Kynetx::Configure::configure();
-our $response_group = Kynetx::Util::get_yaml(AMAZON . '/' . RESPONSE_GROUP);
 
 sub build {
     my ($request,$args,$locale,$a_parm) = @_;
@@ -321,6 +316,7 @@ sub get_item {
 
 sub validate_response_group {
     my ($rg) = @_;
+    my $response_group = Kynetx::Configure::get_config('RESPONSE_GROUP','AMAZON');
     my $rg_set = $response_group->{'item_lookup'};
     foreach my $element (@$rg_set) {
        if (uc($element) eq uc($rg)) {

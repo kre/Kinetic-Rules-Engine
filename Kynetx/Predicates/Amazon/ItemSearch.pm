@@ -68,17 +68,12 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 Kynetx::Configure::configure();
 
 use constant DEFAULT_INDEX => 'All';
-use constant SEARCH_INDEX_FILE => 'searchindex.yml';
-use constant AMAZON =>  '/web/etc/Amazon';
 use constant DEFAULT_LOCALE =>  'us';
-use constant RESPONSE_GROUP => 'response_group.yml';
 use constant DEFAULT_RESPONSE_GROUP => 'Small';
-
-our $search_index_parameters = Kynetx::Util::get_yaml(AMAZON . '/' . SEARCH_INDEX_FILE);
-our $response_group = Kynetx::Util::get_yaml(AMAZON . '/' . RESPONSE_GROUP);
 
 sub validate_response_group {
     my ($rg) = @_;
+    my $response_group = Kynetx::Configure::get_config('RESPONSE_GROUP','AMAZON');
     my $rg_set = $response_group->{'item_search'};
     foreach my $element (@$rg_set) {
        if (uc($element) eq uc($rg)) {
@@ -139,21 +134,17 @@ sub get_search_index {
 
 sub get_search_index_parameters {
     my ($locale) = @_;
-    my $filename = AMAZON . '/' . SEARCH_INDEX_FILE;
+    my $search_index_parameters = Kynetx::Configure::get_config('SEARCH_INDEX','AMAZON');
     if (defined $search_index_parameters->{$locale}) {
         return $search_index_parameters->{$locale};
     } else {
-        $search_index_parameters = Kynetx::Util::get_yaml($filename);
-        if (defined $search_index_parameters->{$locale}) {
-            return $search_index_parameters->{$locale};
-        } else {
-            return $search_index_parameters->{DEFAULT_LOCALE};
-        }
+        return $search_index_parameters->{DEFAULT_LOCALE};
     }
 }
 
 sub validate_request {
     my ($request) = @_;
+    my $search_index_parameters = Kynetx::Configure::get_config('SEARCH_INDEX','AMAZON');
     if (! has_minimum_parameter($request)){
         my $mins = $search_index_parameters->{'minimum'};
         my $min_err = join(",",keys %$mins);
@@ -166,6 +157,7 @@ sub validate_request {
 sub has_minimum_parameter {
     my ($request) = @_;
     my $logger = get_logger();
+    my $search_index_parameters = Kynetx::Configure::get_config('SEARCH_INDEX','AMAZON');
     my $mins = $search_index_parameters->{'minimum'};
     $logger->trace("min parms: ",sub {Dumper($request,$mins)});
     foreach my $r_key (keys %$request) {

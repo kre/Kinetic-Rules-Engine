@@ -255,21 +255,5 @@ sub mis_error {
     }
 }
 
-sub get_yaml {
-    my ($filename,$cache) = @_;
-    my $logger = get_logger();
-    my $cachetime = defined $cache && $cache > 0 ? $cache : Kynetx::Configure::get_config('CACHEABLE_THRESHOLD');
-    my $config_file = Kynetx::Memcached::get_cached_file($filename,$cachetime);
-    if ($config_file) {
-        my $temp = YAML::XS::Load($config_file);
-        if ($temp) {
-            return $temp;
-        } else {
-            return merror("Unable to initialize parameters for $filename");
-        }
-    } else {
-        return merror("Unable to read $filename");
-    }
-}
 
 1;

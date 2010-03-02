@@ -1,3 +1,11 @@
+2010-03-02 Mark Horstmeier <meh@kynetx.com>
+    * Kynetx/Configure.pm: cleaned up Amazon config
+    * Kynetx/Util.pm: removed get_yaml method to make sure it is not referenced elsewhere
+    * Kynetx/Datasets.pm: removed call to configure
+    * Kynetx/Predicates/Amazon.pm: cleaned up Amazon config
+    * Kynetx/Predicates/Amazon/ItemSearch.pm: cleaned up Amazon config
+    * Kynetx/Predicates/Amazon/ItemLookup.pm: cleaned up Amazon config
+
 2010-03-01 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Parser.pm: support google keys in the meta tag
 

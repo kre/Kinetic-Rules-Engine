@@ -74,8 +74,6 @@ my %fields = (
                json       => JSON::XS->new->utf8(1),
 );
 
-Kynetx::Configure::configure();
-
 sub new {
     my $class  = shift;
     my $logger = get_logger();

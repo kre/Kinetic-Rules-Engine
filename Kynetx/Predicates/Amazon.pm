@@ -63,21 +63,15 @@ our %EXPORT_TAGS = (
     all => [
         qw(
         search 
-        get_parameters       
+        get_parameters
         )
     ]
 );
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} });
-Kynetx::Configure::configure();
 
-use constant SEARCH_INDEX_PARAM =>  Kynetx::Configure::get_config('KOBJ_ROOT') . '/Kynetx/Predicates/Amazon/searchindex_itemindex.yml';
 use constant DEFAULT_LOCALE =>  'us';
-use constant AMAZON =>  '/web/etc/Amazon';
-use constant FILENAME_PREFIX => 'searchindex_itemindex_';
-use constant ACONFIG => 'locale.yml';
 use constant LOCALE => 'us';
 
-our $amazon_config = Kynetx::Util::get_yaml(AMAZON . '/' . ACONFIG);
 my %predicates = (
     # search predicates
     
@@ -86,8 +80,6 @@ my %predicates = (
 my $actions = {
     
 };
-
-my $amazon_parameters;
 
 sub get_actions {
     return $actions;
@@ -98,6 +90,7 @@ sub get_endpoint {
     my ($locale) = @_;
     my $logger = get_logger();
     my $endpoint;
+    my $amazon_config = Kynetx::Configure::get_config('LOCALE','AMAZON');
     if (defined $amazon_config->{$locale}->{'endpoint'}) {
         $endpoint = $amazon_config->{$locale}->{'endpoint'};
     } else {
@@ -230,6 +223,7 @@ sub escape {
 
 sub get_locale{
     my ($args) = @_;
+    my $amazon_config = Kynetx::Configure::get_config('LOCALE','AMAZON');    
     my $logger = get_logger();
     $logger->trace("get_locale: ", ref $args, " ",sub {Dumper($args)});    
     my $locale;
