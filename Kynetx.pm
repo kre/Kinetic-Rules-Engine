@@ -41,6 +41,7 @@ use Log::Log4perl qw(get_logger :levels);
 use Cache::Memcached;
 use JSON::XS;
 
+use Kynetx::Events;
 use Kynetx::Rules qw(:all);
 use Kynetx::Util qw(:all);
 use Kynetx::Session qw(:all);
@@ -88,6 +89,8 @@ sub handler {
     # at some point we need a better dispatch function
     if($method eq 'eval') {
 	process_rules($r, $method, $rid, $eid);
+    } elsif($method eq 'event') {
+	Kynetx::Events::process_event($r, $method, $rid, $eid);
     } elsif($method eq 'flush' ) {
 	flush_ruleset_cache($r, $method, $rid);
     } elsif($method eq 'console') {
@@ -96,6 +99,7 @@ sub handler {
 	describe_ruleset($r, $method, $rid);
     } elsif($method eq 'version' ) {
 	show_build_num($r, $method, $rid);
+
     } elsif($method eq 'twitter_callback' ) {
 	Kynetx::Predicates::Twitter::process_oauth_callback($r, $method, $rid);
 	return Apache2::Const::REDIRECT;

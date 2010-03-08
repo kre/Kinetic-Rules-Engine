@@ -197,7 +197,7 @@ sub eval_expr {
     } elsif($expr->{'type'} eq 'var') {
 	my $v = lookup_rule_env($expr->{'val'},$rule_env);
 	unless (defined $v) {
-	    $logger->warn("Variable '", $expr->{'val'}, "' is undefined");
+	    $logger->info("Variable '", $expr->{'val'}, "' is undefined");
 	}
 	$logger->trace($rule_name.':'.$expr->{'val'}, " -> ", $v, ' Type -> ', infer_type($v));
 

@@ -7,6 +7,8 @@ use warnings;
 use Test::More;
 use Test::LongString;
 
+use Apache2::Const;
+
 use Apache::Session::Memcached;
 use DateTime;
 use APR::URI;
@@ -19,7 +21,7 @@ use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
 
 use Kynetx::Test qw/:all/;
-use Kynetx::<TMPL_IF NAME="MODULE_DIR"><TMPL_VAR NAME=MODULE_DIR>::</TMPL_IF><TMPL_VAR NAME=MODULE_NAME> qw/:all/;
+use Kynetx::Events qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
@@ -32,18 +34,6 @@ use Kynetx::FakeReq qw/:all/;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
-
-<TMPL_IF NAME="MODULE_DIR">
-my $preds = Kynetx::<TMPL_VAR NAME=MODULE_DIR>::<TMPL_VAR NAME=MODULE_NAME>::get_predicates();
-my @pnames = keys (%{ $preds } );
-
-plan tests => 1 + int(@pnames);
-
-<TMPL_ELSE>
-
-plan tests => 1;
-
-</TMPL_IF>
 
 my $r = Kynetx::Test::configure();
 
@@ -59,26 +49,13 @@ my $rule_env = Kynetx::Test::gen_rule_env();
 
 my $session = Kynetx::Test::gen_session($r, $rid);
 
-my $test_count = 0;
 
-<TMPL_IF NAME="MODULE_DIR">
-# check that predicates at least run without error
-my @dummy_arg = (0);
-foreach my $pn (@pnames) {
-    ok(&{$preds->{$pn}}($my_req_info, $rule_env,\@dummy_arg) ? 1 : 1, "$pn runs");
-    $test_count++;
-}
-</TMPL_IF>
 
 
 
 ok(1,"dummy test");
-$test_count++;
 
-
-done_testing($test_count);
-
-
+done_testing(1);
 
 1;
 

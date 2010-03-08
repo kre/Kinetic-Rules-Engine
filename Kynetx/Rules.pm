@@ -48,6 +48,7 @@ use Kynetx::Datasets qw(:all);
 use Kynetx::Session qw(:all);
 use Kynetx::Modules qw(:all);
 use Kynetx::Actions;
+use Kynetx::Authz;
 use Kynetx::Log qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Repository qw(:all);
@@ -155,13 +156,17 @@ sub process_ruleset {
     my $ruleset = 
 	get_rule_set($req_info);
 
-
-
-#    $logger->debug('Env after rule selection: ', Dumper($rule_env));
+    $logger->debug('Ruleset after rule selection: ', Dumper($ruleset));
 
     Kynetx::Request::log_request_env($logger, $req_info);
 
-    my $js = eval_ruleset($r, $req_info,$rule_env, $session, $ruleset);
+    my $js = '';
+    if (Kynetx::Authz::is_authorized($rid,$ruleset,$session)) {
+      $js = eval_ruleset($r, $req_info,$rule_env, $session, $ruleset);
+    } else {
+      $logger->debug("Sending activation notice for $rid");
+      $js = Kynetx::Authz::authorize_message($req_info, $session, $ruleset);
+    }
 
 
     $logger->debug("Finished processing rules for " . $req_info->{'rid'});
@@ -188,6 +193,7 @@ sub eval_ruleset {
   my $logger = get_logger();
     $logger->trace("[eval ruleset] rs: ",Dumper($ruleset));
   # generate JS for meta
+
   my $mjs = eval_meta($req_info, $ruleset, $rule_env);
 
   # handle globals, start js build, extend $rule_env
@@ -466,7 +472,7 @@ sub eval_foreach {
     
 
     unless ($valarray->{'type'} eq 'array') {
-      $logger->warn("Foreach expression does not yield array; creating array from singleton") ;
+      $logger->debug("Foreach expression does not yield array; creating array from singleton") ;
       $valarray->{'val'} = [$valarray->{'val'}];
       $valarray->{'type'} = 'array'
     }

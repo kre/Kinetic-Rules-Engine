@@ -71,7 +71,6 @@ my $rid = 'cs_test';
 
 my $my_req_info = Kynetx::Test::gen_req_info($rid);
 
-
 my $rule_name = 'foo';
 
 my $rule_env = Kynetx::Test::gen_rule_env();

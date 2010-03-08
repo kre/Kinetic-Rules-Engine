@@ -1,3 +1,9 @@
+2010-03-08  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Authz.pm: processes rulesets for authorization pragma
+    * Kynetx/Rules.pm (process_ruleset): added check for authorization
+	meta commands.  
+
 2010-03-08 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Datasets.pm: Added RSS tag to dataset
     * Kynetx/Modules.pm: Added RSS module

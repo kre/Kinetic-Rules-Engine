@@ -1,0 +1,152 @@
+package Kynetx::Events::State;
+# file: Kynetx/Events/State.pm
+# file: Kynetx/Predicates/Referers.pm
+#
+# Copyright 2007-2009, Kynetx Inc.  All rights reserved.
+# 
+# This Software is an unpublished, proprietary work of Kynetx Inc.
+# Your access to it does not grant you any rights, including, but not
+# limited to, the right to install, execute, copy, transcribe, reverse
+# engineer, or transmit it by any means.  Use of this Software is
+# governed by the terms of a Software License Agreement transmitted
+# separately.
+# 
+# Any reproduction, redistribution, or reverse engineering of the
+# Software not in accordance with the License Agreement is expressly
+# prohibited by law, and may result in severe civil and criminal
+# penalties. Violators will be prosecuted to the maximum extent
+# possible.
+# 
+# Without limiting the foregoing, copying or reproduction of the
+# Software to any other server or location for further reproduction or
+# redistribution is expressly prohibited, unless such reproduction or
+# redistribution is expressly permitted by the License Agreement
+# accompanying this Software.
+# 
+# The Software is warranted, if at all, only according to the terms of
+# the License Agreement. Except as warranted in the License Agreement,
+# Kynetx Inc. hereby disclaims all warranties and conditions
+# with regard to the software, including all warranties and conditions
+# of merchantability, whether express, implied or statutory, fitness
+# for a particular purpose, title and non-infringement.
+# 
+
+use strict;
+use warnings;
+
+use Log::Log4perl qw(get_logger :levels);
+
+
+use Exporter;
+use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+
+our $VERSION     = 1.00;
+our @ISA         = qw(Exporter);
+
+# put exported names inside the "qw"
+
+our %EXPORT_TAGS = (all => [ 
+qw(
+) ]);
+our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
+
+sub new {
+    my $invocant = shift;
+    my $class = ref($invocant) || $invocant;
+    my $self = {
+	"initial"    => undef, 
+	"final"      => {},
+	"transitions"  => {}, 
+    };
+    bless($self, $class); # consecrate
+    return $self;
+}
+
+sub add_state {
+  my $self = shift;
+  my($name, $transitions, $default) = @_;
+
+  my $logger = get_logger();
+
+  $logger->warn("adding a state that already exists") if defined $self->{'transitions'}->{$name};
+
+  $self->{'transitions'}->{$name} = $transitions if defined $transitions;
+  $self->{'transitions'}->{$name}->{'__default__'} = $default if defined $default;
+
+}
+
+sub mk_initial {
+  my $self = shift;
+  my $name = shift;
+
+  my $logger = get_logger();
+
+  $logger->warn("redefining initial state") if defined $self->{'initial'};
+
+  $self->{'initial'} = $name;
+}
+
+
+sub mk_final {
+
+  my $self = shift;
+  my $name = shift;
+
+  $self->{'final'}->{$name} = 1;
+
+}
+
+sub is_initial {
+  my $self = shift;
+  my $name = shift;
+
+  return $self->{'initial'} eq $name;
+
+}
+
+sub is_final {
+  my $self = shift;
+  my $name = shift;
+
+  return $self->{'final'}->{$name};
+
+}
+
+sub get_states {
+  my $self = shift;
+  my @ks = keys %{ $self->{'transitions'} };
+  return \@ks;
+}
+
+sub get_transitions {
+  my $self = shift;
+  my $state = shift;
+  return $self->{'transitions'}->{$state};
+}
+
+sub add_transition {
+  my $self = shift;
+  my($name, $token, $new) = @_;
+
+  my $logger = get_logger();
+
+  $logger->warn("adding a transition that already exists") if defined $self->{'transitions'}->{$name}->{$token};
+
+  $self->{'transitions'}->{$name}->{$token} = $new;
+
+}
+
+sub next_state {
+  my $self = shift;
+  my($state, $token) = @_;
+
+  if (defined $self->{'transitions'}->{$state}->{$token}) {
+    return $self->{'transitions'}->{$state}->{$token};
+  } else {
+    return $self->{'transitions'}->{$state}->{'__default__'};
+  }
+
+}
+
+
+1;

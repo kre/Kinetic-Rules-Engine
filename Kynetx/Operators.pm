@@ -88,7 +88,7 @@ sub eval_pick {
 #    $logger->debug("[pick] Rule env after: ", sub { Dumper($rule_env) });
 
 
-    $v = $v->[0] if(defined $v && scalar @{ $v } == 1);
+    $v = $v->[0] if(defined $v && ref $v eq 'ARRAY' && int(@{ $v }) == 1);
 
     $logger->debug("pick using $pattern"); # returning ", Dumper($v));
 
@@ -174,10 +174,10 @@ sub eval_sort {
 
       my $dval = Kynetx::Expressions::eval_expr($expr->{'args'}->[0], $rule_env, $rule_name,$req_info, $session) if (int(@{$expr->{'args'}}) > 0);
       
-      if (Kynetx::Expressions::den_to_exp($dval) eq 'reverse') {
+      if (defined $dval && Kynetx::Expressions::den_to_exp($dval) eq 'reverse') {
 	my @a = sort {$b cmp $a} @{$eval};
 	$v = \@a;
-      } elsif (Kynetx::Expressions::type_of($dval) eq 'closure') {
+      } elsif (defined $dval && Kynetx::Expressions::type_of($dval) eq 'closure') {
 
 
 	my @a = sort {

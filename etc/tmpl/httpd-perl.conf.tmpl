@@ -347,6 +347,19 @@ CustomLog "|/web/sbin/cronolog --period=1day --symlink=/web/logs/billing_log /we
 
 
 <TMPL_IF NAME="API_EVAL">
+
+<LocationMatch /event/>
+  # P3P compressed policy header
+  Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
+
+  # env var to turn on rule logging
+  PerlSetEnv KOBJ 1 
+  SetHandler perl-script
+  PerlHandler Kynetx::Events
+
+</LocationMatch>
+
+
 <LocationMatch /ruleset/>
   # P3P compressed policy header
   Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""

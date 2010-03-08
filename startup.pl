@@ -48,6 +48,7 @@ use DBI ();
 
 # preload Kynetx code
 use Kynetx::Actions ();
+use Kynetx::Authz ();
 use Kynetx::Console ();
 use Kynetx::Datasets ();
 use Kynetx::JavaScript ();
