@@ -1,3 +1,9 @@
+2010-03-08 Mark Horstmeier <meh@kynetx.com>
+    * Kynetx/Datasets.pm: Added RSS tag to dataset
+    * Kynetx/Modules.pm: Added RSS module
+    * Kynetx/Predicates/RSS.pm: New RSS module to provide convenience access for RSS feeds
+    * t/Predicates/RSS.t: Test suites
+
 2010-03-02  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Parser.pm: Added support for authz pragma

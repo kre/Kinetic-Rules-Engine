@@ -201,7 +201,15 @@ sub eval_module {
         } else {
             $val = Kynetx::Predicates::Amazon::eval_amazon($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
-    } else {
+    } elsif ($source eq 'rss') {
+        $preds = Kynetx::Predicates::RSS::get_predicates();
+        if (defined $preds->{$function}) {
+            $val = $preds->{$function}->($req_info,$rule_env,$args);
+            $val ||= 0;
+        } else {
+            $val = Kynetx::Predicates::RSS::eval_rss($req_info,$rule_env,$session,$rule_name,$function,$args);
+        }
+    }else {
       $logger->warn("Datasource for $source not found");
     }
 

@@ -283,6 +283,12 @@ sub unmarshal {
                             . $self->name
                             . " as XML" );
             $self->_unmarshal_xml();
+        } elsif ( $switch eq 'RSS' ) {
+            $logger->debug(   "[Datasets] Parse "
+                            . $self->type . ":"
+                            . $self->name
+                            . " as RSS" );
+            $self->_unmarshal_xml();
         } else {
             $logger->debug(   "[Datasets] Parse "
                             . $self->type . ":"
