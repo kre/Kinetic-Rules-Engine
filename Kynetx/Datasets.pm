@@ -358,7 +358,7 @@ sub _unmarshal_json {
         $self->json(undef);
         $logger->debug(
                      "[Datasets] Invalid JSON format => parse result as string",
-                     Dumper(@_) );
+                     sub { Dumper(@_) } );
     } else {
 
         # JSON string converted to perl hash

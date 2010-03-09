@@ -1,3 +1,9 @@
+2010-03-09  Phil Windley  <pjw@kynetx.com>
+
+   * Kynetx/PersistentDataService.pm: provide a persistent data service
+     for accessing values in the persistent user store.  Used by
+     Marketplace to store activated apps for a user
+
 2010-03-08  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Authz.pm: processes rulesets for authorization pragma

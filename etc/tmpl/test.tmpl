@@ -37,11 +37,7 @@ $Data::Dumper::Indent = 1;
 my $preds = Kynetx::<TMPL_VAR NAME=MODULE_DIR>::<TMPL_VAR NAME=MODULE_NAME>::get_predicates();
 my @pnames = keys (%{ $preds } );
 
-plan tests => 1 + int(@pnames);
-
 <TMPL_ELSE>
-
-plan tests => 1;
 
 </TMPL_IF>
 

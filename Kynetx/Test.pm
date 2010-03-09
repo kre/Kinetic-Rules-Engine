@@ -173,7 +173,7 @@ sub gen_rule_env {
 
 sub gen_session {
     my($r, $rid, $options) = @_;
-    my $session = process_session($r);
+    my $session = process_session($r, $options->{'sid'});
 
     session_store($rid, $session, 'archive_pages_old', 3);
     my $three_days_ago = DateTime->now->add( days => -3 );
@@ -184,6 +184,7 @@ sub gen_session {
     session_store($rid, $session, 'archive_pages_now', 2);
     session_store($rid, $session, 'archive_pages_now2', 3);
 
+    session_delete($rid, $session, 'my_trail');
     session_push($rid, $session, 'my_trail', "http://www.windley.com/foo.html");
     session_push($rid, $session, 'my_trail', "http://www.kynetx.com/foo.html");
     session_push($rid, $session, 'my_trail', "http://www.windley.com/bar.html");

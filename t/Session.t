@@ -66,6 +66,8 @@ my $session = process_session($r);
 
 my $ck= session_id($session); # store for later use
 
+diag $ck;
+
 my $rid = 'rid123';
 
 plan tests => 59;

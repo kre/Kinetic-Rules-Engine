@@ -36,7 +36,6 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
-
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
@@ -148,5 +147,11 @@ sub next_state {
 
 }
 
+sub mk_and {
+  my($sm1, $sm1) = @_;
+
+  my $sm3 = clone($sm1);
+
+}
 
 1;
