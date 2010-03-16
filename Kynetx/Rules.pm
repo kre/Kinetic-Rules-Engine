@@ -156,7 +156,7 @@ sub process_ruleset {
     my $ruleset = 
 	get_rule_set($req_info);
 
-    $logger->debug('Ruleset after rule selection: ', Dumper($ruleset));
+#    $logger->debug('Ruleset after rule selection: ', Dumper($ruleset));
 
     Kynetx::Request::log_request_env($logger, $req_info);
 
@@ -181,7 +181,7 @@ sub process_ruleset {
       $js .= "KOBJ.logVerify('" . $req_info->{'txn_id'} . "', '$rid', '" . Kynetx::Configure::get_config('EVAL_HOST') . "');";
     }
 
-    my $eid = $req_info->{'eid'};
+    my $eid = $req_info->{'eid'} || 'unknown';
     return <<EOF
 KOBJ.registerClosure('$rid', function() { $js }, '$eid');
 EOF

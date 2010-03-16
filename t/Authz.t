@@ -91,8 +91,8 @@ ok(!is_authorized($rid,$pt,$session),"authz request without settion fails");
 $test_count++;
 
 
-$session->{'authz_tokens'} = {$rid => {'type' => 'require',
-				       'level' => 'user'}};
+$session->{'chico'}->{'authz_tokens'} = {$rid => {'type' => 'require',
+						  'level' => 'user'}};
 $krl = <<_KRL_;
 ruleset $rid {
     meta {
@@ -123,7 +123,7 @@ ruleset $rid {
 _KRL_
 
 $pt = Kynetx::Parser::parse_ruleset($krl);
-my $authorize_message = authorize_message($r, $my_req_info, $rule_env, $session, $pt);
+my $authorize_message = authorize_message($my_req_info, $session, $pt);
 #diag $authorize_message;
 like($authorize_message,
      qr/KOBJ_ruleset_activation/,

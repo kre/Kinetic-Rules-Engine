@@ -100,7 +100,7 @@ sub authorize_message {
   my $author = $ruleset->{'meta'}->{'author'} || 'unknown';
   my $description = $ruleset->{'meta'}->{'description'} || 'unknown';
 
-  my $session_id = Kynetx::Session::session_id($session);
+  my $session_id = Kynetx::Session::session_id($session) || 'unknown';
 
   my $image_url = Kynetx::Configure::get_config('BASE_MARKETPLACE_IMAGE_URL') . 
                   $session_id;
@@ -149,7 +149,7 @@ _JS_
 
 sub get_authz_tokens {
   my($session) = @_;
-  return $session->{'authz_tokens'};
+  return $session->{'chico'}->{'authz_tokens'};
 }
 
 
