@@ -1,3 +1,8 @@
+2010-03-17 Mark Horstmeier <meh@kynetx.com>
+    ** Bug fix to restore time predicates
+    * Kynetx/Modules.pm: Time predicates were left off when the module loading mechanism
+      was refactored.  This has my google references but they are commented out
+
 2010-03-09  Phil Windley  <pjw@kynetx.com>
 
    * Kynetx/PersistentDataService.pm: provide a persistent data service

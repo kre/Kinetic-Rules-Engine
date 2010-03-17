@@ -37,6 +37,7 @@ use Kynetx::Util qw(:all);
 use Kynetx::Expressions qw(:all);
 use Kynetx::Environments qw(:all);
 use Kynetx::Session qw(:all);
+#use Kynetx::Predicates::Google qw(:all);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -185,6 +186,14 @@ sub eval_module {
 	} else {
 	  $val = Kynetx::Predicates::Useragent::get_useragent($req_info,$function);
 	}
+    } elsif ($source eq 'time') {
+    $preds = Kynetx::Predicates::Time::get_predicates();
+    if (defined $preds->{$function}) {
+      $val = $preds->{$function}->($req_info,$rule_env,$args);
+      $val ||= 0;
+    } else {
+      $val = Kynetx::Predicates::Time::get_time($req_info,$function);
+    }
     } elsif ($source eq 'kpds') {
 	   $preds = Kynetx::Predicates::KPDS::get_predicates();
 	   if (defined $preds->{$function}) {
@@ -209,6 +218,14 @@ sub eval_module {
         } else {
             $val = Kynetx::Predicates::RSS::eval_rss($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
+#    } elsif ($source eq 'google') {
+#        $preds = Kynetx::Predicates::Google::get_predicates();
+#        if (defined $preds->{$function}) {
+#            $val = $preds->{$function}->($req_info,$rule_env,$args);
+#            $val ||= 0;
+#        } else {
+#            $val = Kynetx::Predicates::Google::eval_google($req_info,$rule_env,$session,$rule_name,$function,$args);
+#        }
     }else {
       $logger->warn("Datasource for $source not found");
     }
