@@ -1,3 +1,10 @@
+2010-03-19 Mark Horstmeier <meh@kynetx.com>
+    ** Increase compatibility between the Kynetx runtime and 3rd party JavaScript libraries
+    * Kynetx/Actions.pm: Removed references to jQuery with \$K
+    * Kynetx/Predicates/KPDS.pm: Removed references to jQuery with \$K
+    * Kynetx/Predicates/Twitter.pm: Removed references to jQuery with \$K
+    * Kynetx/Predicates/Authz.pm: Removed references to jQuery with \$K
+    
 2010-03-17 Mark Horstmeier <meh@kynetx.com>
     ** Bug fix to restore time predicates
     * Kynetx/Modules.pm: Time predicates were left off when the module loading mechanism

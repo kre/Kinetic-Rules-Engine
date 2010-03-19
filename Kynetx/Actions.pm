@@ -144,7 +144,7 @@ function(uniq, cb, config, pos, color, bgcolor, header, sticky, msg) {
   \$K.kGrowl.defaults.header = header;
   \$K.kGrowl.defaults.sticky = sticky;
   if(typeof config === 'object') {
-    jQuery.extend(\$K.kGrowl.defaults,config);
+    \$K.extend(\$K.kGrowl.defaults,config);
   }
   \$K.kGrowl(msg);
   cb();
@@ -158,7 +158,7 @@ EOF
 function(uniq, cb, config, header, msg) {
   \$K.kGrowl.defaults.header = header;
   if(typeof config === 'object') {
-    jQuery.extend(\$K.kGrowl.defaults,config);
+    \$K.extend(\$K.kGrowl.defaults,config);
   }
   \$K.kGrowl(msg);
   cb();
@@ -525,6 +525,13 @@ sub build_one_action {
     my $action_name = $action->{'name'};
 
     my $args = $action->{'args'};
+    
+    # parse the action args and make the raw format available to the 'before' action
+    my $before_args = Kynetx::Expressions::eval_rands($args, $rule_env, $rule_name,$req_info, $session);
+    # get the values
+    for (@{ $before_args }) {
+        $_ = den_to_exp($_);
+    }
 
     # process overloaded functions and arg reconstruction
     ($action_name, $args) = 
@@ -576,12 +583,12 @@ sub build_one_action {
     if (defined $action->{'source'}) {
       if ($action->{'source'} eq 'twitter') {
 	   $actions = Kynetx::Predicates::Twitter::get_actions();
-#	   $logger->debug("Actions: ", Dumper $actions);
       } elsif ($action->{'source'} eq 'kpds') {
 	   $actions = Kynetx::Predicates::KPDS::get_actions();	
-#	   $logger->debug("Actions: ", Dumper $actions);
       } elsif ($action->{'source'} eq 'amazon') {
           $actions = Kynetx::Predicates::Amazon::get_actions();
+      #} elsif ($action->{'source'} eq 'google') {
+      #    $actions = Kynetx::Predicates::Google::get_actions();
       }
     } else {
       $actions = $default_actions;
@@ -598,7 +605,8 @@ sub build_one_action {
       $after = [];
     }
 
-    $js .= &$before($req_info, $rule_env, $session, $config, $mods);
+    $js .= &$before($req_info, $rule_env, $session, $config, $mods,$before_args);
+    $logger->debug("Action $action_name (before) returns js: ",$js);
     if (defined $action_js) {
   
       # apply the action function

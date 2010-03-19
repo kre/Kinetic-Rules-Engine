@@ -82,7 +82,7 @@ my $actions = {
 function(uniq, cb, config) {
   \$K.kGrowl.defaults.header = "Authorize Twitter Access";
   if(typeof config === 'object') {
-    jQuery.extend(\$K.kGrowl.defaults,config);
+    \$K.extend(\$K.kGrowl.defaults,config);
   }
   \$K.kGrowl(KOBJ_twitter_notice);
   cb();

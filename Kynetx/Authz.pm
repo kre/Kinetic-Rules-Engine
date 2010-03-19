@@ -137,7 +137,7 @@ EOF
 (function(uniq, cb, config) {
   \$K.kGrowl.defaults.header = "App Activation";
   if(typeof config === 'object') {
-    jQuery.extend(\$K.kGrowl.defaults,config);
+    \$K.extend(\$K.kGrowl.defaults,config);
   }
   \$K.kGrowl(KOBJ_authz_notice);
   cb();
