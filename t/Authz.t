@@ -27,6 +27,7 @@ use Kynetx::Configure qw/:all/;
 use Kynetx::Parser qw/:all/;
 use Kynetx::Rules qw/:all/;
 use Kynetx::Util qw/:all/;
+use Kynetx::PersistentDataService qw/:all/;
 
 
 use Kynetx::FakeReq qw/:all/;
@@ -91,8 +92,16 @@ ok(!is_authorized($rid,$pt,$session),"authz request without settion fails");
 $test_count++;
 
 
-$session->{'chico'}->{'authz_tokens'} = {$rid => {'type' => 'require',
-						  'level' => 'user'}};
+#$session->{'chico'}->{'authz_tokens'} = {$rid => {'type' => 'require',
+#						  'level' => 'user'}};
+
+Kynetx::PersistentDataService::store_values('chico', 
+					    $session, 
+					    'authz_tokens',
+					    {$rid => {'type' => 'require',
+						      'level' => 'user'}});
+
+
 $krl = <<_KRL_;
 ruleset $rid {
     meta {

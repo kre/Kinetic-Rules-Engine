@@ -402,8 +402,12 @@ sub pp_select {
     
     my $o = $beg;
 
-    $o .= 'select using ' . pp_string($node->{'pattern'});
-    $o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
+    if (defined $node->{'event_expr'}->{'legacy'}) {
+      $o .= 'select using ';
+    } else {
+      $o .= 'select when ';
+    }
+    $o .= pp_event_expr($node->{'event_expr'}, $indent+$g_indent);
     $o .= "\n";
     $o .= pp_foreach($node->{'foreach'}, $indent+$g_indent);
     $o .= "\n";
@@ -411,6 +415,7 @@ sub pp_select {
     return $o;
 
 }
+
 
 sub pp_foreach {
   my($node, $indent) = @_;
@@ -431,6 +436,36 @@ sub pp_setting {
   my $o = ' setting (';
   $o .= join ", ", @{$vars};
   $o .= ")";
+
+  return $o;
+}
+
+sub pp_event_expr {
+  my($node, $indent) = @_;
+  my $o = '';
+
+  if ($node->{'type'} eq 'complex_event') {
+    if ($node->{'op'} eq 'between' ||
+        $node->{'op'} eq 'notbetween') {
+       $o .= pp_event_expr($node->{'mid'},$indent);
+       $o .= ' ' . (($node->{'op'} eq 'notbetween') ? 'not ' : '') . "between(";
+       $o .= pp_event_expr($node->{'first'},$indent);
+       $o .= ', ';
+       $o .= pp_event_expr($node->{'last'},$indent);
+       $o .= ")\n";
+
+    } else {
+       $o .= pp_event_expr($node->{'args'}->[0],$indent);
+       $o .= ' ' . $node->{'op'} . "\n" . " "x$indent;
+       $o .= pp_event_expr($node->{'args'}->[1],$indent);
+    }
+  } elsif ($node->{'type'} eq 'prim_event') {
+    if (! defined $node->{'legacy'}) {
+      $o .= 'pageview '
+    }
+    $o .= pp_string($node->{'pattern'});
+    $o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
+  }
 
   return $o;
 

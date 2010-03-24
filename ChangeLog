@@ -1,5 +1,13 @@
+2010-03-24  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Events/State.pm: added composition operators
+    * Kynetx/Actions.pm (get_precondition_vars): changed to support
+	new AST
+    * Kynetx/PrettyPrinter.pm (pp_rule_body): Added support for event syntax
+    * Kynetx/Parser.pm: Added support for event syntax
+
 2010-03-19 Mark Horstmeier <meh@kynetx.com>
-    ** Increase compatibility between the Kynetx runtime and 3rd party JavaScript libraries
+    * Increase compatibility between the Kynetx runtime and 3rd party JavaScript libraries
     * Kynetx/Actions.pm: Removed references to jQuery with \$K
     * Kynetx/Predicates/KPDS.pm: Removed references to jQuery with \$K
     * Kynetx/Predicates/Twitter.pm: Removed references to jQuery with \$K
@@ -9,6 +17,12 @@
     ** Bug fix to restore time predicates
     * Kynetx/Modules.pm: Time predicates were left off when the module loading mechanism
       was refactored.  This has my google references but they are commented out
+
+2010-03-16  Phil Windley  <pjw@kynetx.com>
+
+   * Kynetx/Authz.pm (get_authz_tokens): added 'chico' namespace to tokens
+   * Kynetx/Rules.pm (process_ruleset): commented out ruleset dump in
+	debug & gave default val of 'unknown' to $eid
 
 2010-03-09  Phil Windley  <pjw@kynetx.com>
 

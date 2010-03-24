@@ -103,22 +103,36 @@ sub handler {
     if($method eq 'version' ) {
       show_build_num($r, $method, $rid);
     } elsif ($method eq 'get' ) {
-      $logger->debug("Session ", sub {Dumper $session});
-      print astToJson({$vars => session_get($rid, $session, $vars)});
-    } elsif ($method eq 'store' ) {
-      $logger->debug("Storing $vars => $val");
-
-      # try to decode it as JSON
-      my $nval = eval { jsonToAst($val) };
-      $nval = $val if ($@);
-
-      print astToJson({$vars => session_store($rid, $session, $vars, $nval)});
 #      $logger->debug("Session ", sub {Dumper $session});
+      print get_values($rid, $session, $vars);
+    } elsif ($method eq 'store' ) {
+#      $logger->debug("Session ", sub {Dumper $session});
+      print store_values($rid, $session, $vars, $val)
     }
 
     return Apache2::Const::OK; 
 }
 
+sub get_values {
+  my ($rid, $session, $vars) = @_;
+
+  return astToJson({$vars => session_get($rid, $session, $vars)});
+}
+
+sub store_values {
+  my ($rid, $session, $vars, $val) = @_;
+
+  my $logger = get_logger();
+
+  $logger->debug("Storing $vars => $val");
+
+  # try to decode it as JSON
+  my $nval = eval { jsonToAst($val) };
+  $nval = $val if ($@);
+
+  return astToJson({$vars => session_store($rid, $session, $vars, $nval)});
+
+}
 
 
 

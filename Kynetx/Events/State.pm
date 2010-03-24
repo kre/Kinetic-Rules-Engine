@@ -36,6 +36,11 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
+use Data::UUID;
+
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
@@ -46,19 +51,29 @@ our @ISA         = qw(Exporter);
 
 our %EXPORT_TAGS = (all => [ 
 qw(
+mk_pageview_prim
+next_state
+mk_and
+mk_or
+mk_before
+mk_then
+mk_between
+mk_not_between
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 sub new {
-    my $invocant = shift;
-    my $class = ref($invocant) || $invocant;
-    my $self = {
-	"initial"    => undef, 
-	"final"      => {},
-	"transitions"  => {}, 
-    };
-    bless($self, $class); # consecrate
-    return $self;
+  my $invocant = shift;
+  my $class = ref($invocant) || $invocant;
+  my $id = "SM-" . Data::UUID->new->create_str();
+  my $self = {
+	      "id"         => $id,
+	      "initial"    => '_unknown_', 
+	      "final"      => {},
+	      "transitions"  => {}, 
+	     };
+  bless($self, $class); # consecrate
+  return $self;
 }
 
 sub add_state {
@@ -70,9 +85,92 @@ sub add_state {
   $logger->warn("adding a state that already exists") if defined $self->{'transitions'}->{$name};
 
   $self->{'transitions'}->{$name} = $transitions if defined $transitions;
-  $self->{'transitions'}->{$name}->{'__default__'} = $default if defined $default;
+  $self->{'__default__'}->{$name} = $default if defined $default;
 
+  return $self;
 }
+
+sub clone {
+  my $self = shift;
+
+  my $logger = get_logger();
+
+  $logger->debug("Cloning " . $self->get_id());
+
+
+  my $state_map = {};
+  # create all the new states and store in a map
+  foreach my $s (@{$self->get_states()}) {
+    $state_map->{$s} = Data::UUID->new->create_str();
+  }
+
+  # now build the clone
+  my $nsm = Kynetx::Events::State->new();
+  foreach my $s (@{$self->get_states()}) {
+
+    my @nt;
+    foreach my $t (@{$self->get_transitions($s)}) {
+#        $logger->debug("working on: $t->{'next'} for $s");
+	push @nt,
+	  {"next" => $state_map->{$t->{'next'}},
+	   "type" => $t->{'type'},
+	   "test" => $t->{'test'},
+	  };
+
+    }
+    $nsm->add_state($state_map->{$s},
+		    \@nt,
+		    $state_map->{$self->get_default_transition($s)});
+
+    $nsm->mk_initial($state_map->{$s}) if $self->is_initial($s);
+    $nsm->mk_final($state_map->{$s}) if $self->is_final($s);
+
+  }
+  return $nsm;
+}
+
+# This function makes some big assumptions.  
+#  1. That initial and final states are all that are being joined
+#  2. That default transitions for initial states are always to the initial state.
+#  2. That default transitions for final states are always to the final state.
+sub join_states {
+  my $self = shift;
+  my ($s1, $s2) = @_;
+
+  my $logger = get_logger();
+  $logger->debug("Joining $s1 & $s2");
+
+  my $ns = Data::UUID->new->create_str();
+
+  my @nt;
+  push(@nt, @{$self->get_transitions($s1)});
+  push(@nt, @{$self->get_transitions($s2)});
+
+  $self->add_state($ns,
+		   \@nt,
+		   $ns);
+
+#  $logger->debug("New transitions added: ", Dumper $self->get_transitions($ns));
+  
+  foreach my $s (@{$self->get_states()}) {
+    foreach my $t (@{$self->get_transitions($s)}) {
+      $t->{'next'} = $ns if $t->{'next'} eq $s1 || $t->{'next'} eq $s2
+    }
+  }
+  delete $self->{'transitions'}->{$s1};
+  delete $self->{'transitions'}->{$s2};
+
+
+  return $ns;
+}
+
+sub get_id {
+  my $self = shift;
+
+  return $self->{'id'};
+}
+
+
 
 sub mk_initial {
   my $self = shift;
@@ -80,36 +178,72 @@ sub mk_initial {
 
   my $logger = get_logger();
 
-  $logger->warn("redefining initial state") if defined $self->{'initial'};
-
   $self->{'initial'} = $name;
+
+  return $self;
 }
 
-
-sub mk_final {
-
+sub get_initial {
   my $self = shift;
-  my $name = shift;
-
-  $self->{'final'}->{$name} = 1;
-
+  return $self->{'initial'};
 }
 
 sub is_initial {
   my $self = shift;
   my $name = shift;
 
-  return $self->{'initial'} eq $name;
+#   my $logger = get_logger();
+#   $logger->debug("[is_initial] initial: ", $self->{'initial'});
+#   $logger->debug("[is_initial] name: ", $name);
 
+  return $self->{'initial'} eq $name;
+}
+
+sub mk_final {
+  my $self = shift;
+  my $name = shift;
+
+  $self->{'final'}->{$name} = 1;
+
+  return $self;
+}
+
+sub get_final {
+  my $self = shift;
+  my $name = shift;
+
+  return $self->{'final'};
+}
+
+sub get_singleton_final {
+  my $self = shift;
+
+  my $logger = get_logger();
+
+  my $final;
+  my @finals = keys %{ $self->get_final() };
+  if (@finals == 1) {
+    $final = $finals[0];
+  } else {
+    $logger->warn("State machine " . $self->get_id() . " has more than one final state");
+  }
+
+  return $final;
 }
 
 sub is_final {
   my $self = shift;
   my $name = shift;
 
-  return $self->{'final'}->{$name};
+  if (defined $self->{'final'}->{$name}) {
+    return $self->{'final'}->{$name};
+  } else {
+    return 0;
+  }
+
 
 }
+
 
 sub get_states {
   my $self = shift;
@@ -120,38 +254,311 @@ sub get_states {
 sub get_transitions {
   my $self = shift;
   my $state = shift;
-  return $self->{'transitions'}->{$state};
+  return $self->{'transitions'}->{$state} || [];
 }
 
-sub add_transition {
+sub get_default_transition {
   my $self = shift;
-  my($name, $token, $new) = @_;
+  my $name = shift;
 
-  my $logger = get_logger();
-
-  $logger->warn("adding a transition that already exists") if defined $self->{'transitions'}->{$name}->{$token};
-
-  $self->{'transitions'}->{$name}->{$token} = $new;
-
+  return $self->{'__default__'}->{$name};
 }
+
+sub set_default_transition {
+  my $self = shift;
+  my $name = shift;
+  my $new = shift;
+
+  $self->{'__default__'}->{$name} = $new;
+}
+
+# sub add_transition {
+#   my $self = shift;
+#   my($name, $token, $new) = @_;
+
+#   my $logger = get_logger();
+
+#   $logger->warn("adding a transition that already exists") if defined $self->{'transitions'}->{$name}->{$token};
+
+#   $self->{'transitions'}->{$name}->{$token} = $new;
+# }
+
+
+#-------------------------------------------------------------------------
+# calculate next state
+#-------------------------------------------------------------------------
+
+my $eval_funcs = {};
 
 sub next_state {
   my $self = shift;
-  my($state, $token) = @_;
+  my($state, $event) = @_;
+  my $logger = get_logger();
 
-  if (defined $self->{'transitions'}->{$state}->{$token}) {
-    return $self->{'transitions'}->{$state}->{$token};
-  } else {
-    return $self->{'transitions'}->{$state}->{'__default__'};
+  my $transitions = $self->get_transitions($state);
+
+  my $next = $self->get_default_transition($state);
+  foreach my $t (@{ $transitions }) {
+    if (match($event, $t)) {
+      $next = $t->{'next'};
+    }
+  }
+  return $next;
+
+}
+
+
+#-------------------------------------------------------------------------
+# primitives
+#-------------------------------------------------------------------------
+
+sub mk_prim {
+  my ($test) = @_;
+  my $sm = Kynetx::Events::State->new();
+  my $s1 = Data::UUID->new->create_str();
+  my $s2 = Data::UUID->new->create_str();
+
+  $sm->mk_initial($s1);
+  $sm->mk_final($s2);
+
+  $sm->add_state($s1, 
+		 [{"next" => $s2,
+		   "type" => "pageview",
+		   "test" => $test,
+		  }],
+		 $s1
+		);
+
+  $sm->add_state($s2, 
+		 [],
+		 $s2
+		);
+
+  return $sm;
+}
+
+#-------------------------------------------------------------------------
+# pageview
+#-------------------------------------------------------------------------
+
+sub mk_pageview_prim {
+  my ($pattern) = @_;
+
+  return mk_prim(sub {my $url = shift; 
+		      return $url =~ /$pattern/;
+		    }
+		);
+}
+
+sub pageview_eval {
+  my ($event, $t) = @_;
+
+  return $t->{'test'}->($event->url());
+}
+$eval_funcs->{'pageview'} = \&pageview_eval;
+
+
+sub match {
+  my($event, $transition) = @_;
+
+  return 0 unless $event->isa($transition->{'type'});
+
+  return $eval_funcs->{$event->{'type'}}->($event, $transition);
+}
+
+#-------------------------------------------------------------------------
+# composite state machines
+#-------------------------------------------------------------------------
+sub mk_and {
+  my($osm1, $osm2) = @_;
+
+  my $logger = get_logger();
+
+
+  $logger->debug("Composing (and) " . $osm1->get_id() . " & " . $osm2->get_id());
+
+  # we don't want this modifying the original SM
+  my $sm1 = $osm1->clone();
+  my $sm2 = $osm2->clone();
+  my $sm3 = $sm2->clone();
+  my $sm4 = $sm1->clone();
+  
+  my $nsm = Kynetx::Events::State->new();
+
+  foreach my $sm ($sm1, $sm2, $sm3, $sm4) {
+    foreach my $s (@{$sm->get_states()}) {
+      $nsm->add_state($s,
+		      $sm->get_transitions($s),
+		      $sm->get_default_transition($s)
+		    );
+    }
   }
 
+  my $ni = $nsm->join_states($sm1->get_initial(), $sm3->get_initial());
+  $nsm->mk_initial($ni);
+  $logger->debug("new initial state $ni");
+
+
+  $nsm->join_states($sm1->get_singleton_final(), $sm2->get_initial());
+  $nsm->join_states($sm3->get_singleton_final(), $sm4->get_initial());
+  
+  my $nf = $nsm->join_states($sm2->get_singleton_final(), 
+			     $sm4->get_singleton_final());
+  $nsm->mk_final($nf);
+  $logger->debug("new final state $nf");
+
+  return $nsm;
 }
 
-sub mk_and {
-  my($sm1, $sm1) = @_;
+sub mk_or {
+  my($osm1, $osm2) = @_;
 
-  my $sm3 = clone($sm1);
+  my $logger = get_logger();
 
+  # we don't want this modifying the original SM
+  my $sm1 = $osm1->clone();
+  my $sm2 = $osm2->clone();
+
+  my $nsm = Kynetx::Events::State->new();
+  foreach my $sm ($sm1, $sm2) {
+    foreach my $s (@{$sm->get_states()}) {
+      $nsm->add_state($s,
+		      $sm->get_transitions($s),
+		      $sm->get_default_transition($s)
+		    );
+    }
+  }
+
+  my $ni = $nsm->join_states($sm1->get_initial(), $sm2->get_initial());
+  $nsm->mk_initial($ni);
+  $logger->debug("new initial state $ni");
+  
+  my $nf = $nsm->join_states($sm1->get_singleton_final(), 
+			     $sm2->get_singleton_final());
+
+  $nsm->mk_final($nf);
+  $logger->debug("new final state $nf");
+
+  return $nsm;
 }
+
+sub mk_before {
+  my($osm1, $osm2) = @_;
+
+  my $logger = get_logger();
+
+  # we don't want this modifying the original SM
+  my $sm1 = $osm1->clone();
+  my $sm2 = $osm2->clone();
+
+  my $nsm = Kynetx::Events::State->new();
+  foreach my $sm ($sm1, $sm2) {
+    foreach my $s (@{$sm->get_states()}) {
+      $nsm->add_state($s,
+		      $sm->get_transitions($s),
+		      $sm->get_default_transition($s)
+		    );
+    }
+  }
+    
+  $nsm->mk_initial($sm1->get_initial());
+  $nsm->join_states($sm1->get_singleton_final(), $sm2->get_initial());
+  $nsm->mk_final($sm2->get_singleton_final());
+  
+  return $nsm;
+}
+
+sub mk_then {
+  my($osm1, $osm2) = @_;
+
+  my $logger = get_logger();
+
+  # we don't want this modifying the original SM
+  my $sm1 = $osm1->clone();
+  my $sm2 = $osm2->clone();
+
+  my $nsm = Kynetx::Events::State->new();
+  foreach my $sm ($sm1, $sm2) {
+    foreach my $s (@{$sm->get_states()}) {
+      $nsm->add_state($s,
+		      $sm->get_transitions($s),
+		      $sm->get_default_transition($s)
+		    );
+    }
+  }
+    
+  $nsm->mk_initial($sm1->get_initial());
+
+  my $mid = $nsm->join_states($sm1->get_singleton_final(), $sm2->get_initial());
+  # default transition goes back instead of looping
+  $nsm->set_default_transition($mid, $sm1->get_initial());
+
+  $nsm->mk_final($sm2->get_singleton_final());
+  
+  return $nsm;
+}
+
+sub mk_between {
+  my($oa, $ob, $oc) = @_;
+
+  my $logger = get_logger();
+
+  # we don't want this modifying the original SM
+  my $a = $oa->clone();
+  my $b = $ob->clone();
+  my $c = $oc->clone();
+
+  my $nsm = Kynetx::Events::State->new();
+  foreach my $sm ($a, $b, $c) {
+    foreach my $s (@{$sm->get_states()}) {
+      $nsm->add_state($s,
+		      $sm->get_transitions($s),
+		      $sm->get_default_transition($s)
+		    );
+    }
+  }
+    
+  $nsm->mk_initial($b->get_initial());
+  $nsm->join_states($b->get_singleton_final(), $a->get_initial());
+  $nsm->join_states($a->get_singleton_final(), $c->get_initial());
+  $nsm->mk_final($c->get_singleton_final());
+  
+  return $nsm;
+}
+
+sub mk_not_between {
+  my($oa, $ob, $oc) = @_;
+
+  my $logger = get_logger();
+
+  # we don't want this modifying the original SM
+  my $a = $oa->clone();
+  my $b = $ob->clone();
+  my $c = $oc->clone();
+
+  my $nsm = Kynetx::Events::State->new();
+  foreach my $sm ($a, $b, $c) {
+    foreach my $s (@{$sm->get_states()}) {
+      $nsm->add_state($s,
+		      $sm->get_transitions($s),
+		      $sm->get_default_transition($s)
+		    );
+    }
+  }
+
+      
+  my $mid = $nsm->join_states($b->get_singleton_final(), $c->get_initial());
+
+  $mid = $nsm->join_states($mid, $a->get_initial());
+
+  $mid = $nsm->join_states($a->get_singleton_final(), $b->get_initial());
+
+  $nsm->mk_initial($mid);
+  $nsm->mk_final($c->get_singleton_final());
+  
+  return $nsm;
+}
+
+
 
 1;

@@ -24,7 +24,7 @@ use LWP::UserAgent;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::PersistentDataService qw/:all/;
@@ -72,7 +72,7 @@ SKIP: {
     my $ua = LWP::UserAgent->new;
 
     my $check_url = "$dn/version/$rid";
-    diag "Checking $check_url";
+#    diag "Checking $check_url";
     my $response = $ua->get($check_url);
     skip "No server available", $skippable if (! $response->is_success);
 
@@ -99,7 +99,7 @@ SKIP: {
 
     # post #
     my $url_version_3 = "$dn/store/$rid/$sid/a_count/";
-    diag "Testing console with $url_version_3";
+#    diag "Testing console with $url_version_3";
     $mech->post_ok($url_version_3, ['val' => 5]);
     is($mech->content_type(), 'text/javascript');
 #    diag "Found ", $mech->content();
@@ -110,7 +110,7 @@ SKIP: {
 
     # post different #
     my $url_version_4 = "$dn/store/$rid/$sid/a_count/";
-    diag "Testing console with $url_version_4";
+#    diag "Testing console with $url_version_4";
     $mech->post_ok($url_version_4, ['val' => 10]);
     is($mech->content_type(), 'text/javascript');
 #    diag "Found ", $mech->content();
@@ -120,7 +120,7 @@ SKIP: {
 
     # post json
     my $url_version_4 = "$dn/store/$rid/$sid/a_count/";
-    diag "Testing console with $url_version_4";
+#    diag "Testing console with $url_version_4";
     $mech->post_ok($url_version_4, [val => '{"foo": {"type": "required", "level": "user"}}']);
     is($mech->content_type(), 'text/javascript');
 
@@ -128,8 +128,6 @@ SKIP: {
     $session = Kynetx::Test::gen_session($r, $rid, {'sid' => $sid});
 
     my $a_count = session_get($rid,$session,'a_count');
-
-    diag Dumper($session);
 
     is($a_count->{'foo'}->{'type'}, 'required', "We stored it and can get it back");
 

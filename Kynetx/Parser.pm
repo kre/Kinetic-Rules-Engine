@@ -353,14 +353,69 @@ rule_state: 'active'
           | <error>
 
 
-select:  'select' 'using' STRING setting(?) foreach(s?)
+select: 'select' (using|when) foreach(s?)
+     {$return = {'event_expr' => $item[2],
+                 'foreach' => $item[3]
+        }
+      }
+      | <error>
+
+using: 'using' STRING setting(?) 
 	  {$return =
-	   { 'pattern' => $item[3],
-	     'vars' => $item[4][0],
-             'foreach' => $item[5]
+	   { 'pattern' => $item[2],
+	     'vars' => $item[3][0],
+             'type' => 'prim_event',
+             'op' => 'pageview',
+             'legacy' => 1
 	   } 
 	  }
-      | <error>
+
+when: 'when' event_seq
+
+event_seq: <leftop: event_or ('then'|'before') event_or> 
+     {$return =
+       (defined $item[1][1]) ?
+          Kynetx::Parser::build_expr_tree($item[1], 'complex_event')
+       :
+          $item[1][0]
+      }
+
+event_or: <leftop: event_and ('or') event_and> 
+    {$return = 
+      (defined $item[1][1]) ?
+          Kynetx::Parser::build_expr_tree($item[1], 'complex_event')
+       :
+          $item[1][0]
+    }
+
+event_and: <leftop: event_btwn ('and') event_btwn> 
+    {$return = 
+       (defined $item[1][1]) ?
+          Kynetx::Parser::build_expr_tree($item[1], 'complex_event')
+       :
+          $item[1][0]
+    }
+
+event_btwn: event_prim ('not')(?) 'between' '(' event_seq ',' event_seq ')'
+       {$return =
+          {'type' => 'complex_event',
+           'op' => (defined $item[2][0]) ? 'notbetween' : 'between',
+           'mid' => $item[1],
+           'first' => $item[5],
+           'last' => $item[7],
+          } 
+       }
+    | event_prim
+
+event_prim: 'pageview' (STRING | REGEXP) setting(?) 
+	  {$return =
+	   { 'pattern' => $item[2],
+	     'vars' => $item[3][0],
+             'type' => 'prim_event',
+             'op' => 'pageview'
+	   } 
+	  }
+  | '(' event_seq ')'
 
 setting: 'setting' '(' VAR(s? /,/) ')'
 	  {$return =  $item[3]

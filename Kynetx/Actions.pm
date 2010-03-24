@@ -983,13 +983,13 @@ sub eval_control_statement {
 sub get_precondition_test {
     my $rule = shift;
 
-    $rule->{'pagetype'}{'pattern'};
+    $rule->{'pagetype'}->{'event_expr'}->{'pattern'} || $rule->{'pagetype'}->{'pattern'} ;
 }
 
 sub get_precondition_vars {
     my $rule = shift;
 
-    $rule->{'pagetype'}{'vars'};
+    $rule->{'pagetype'}->{'event_expr'}->{'vars'} || $rule->{'pagetype'}->{'vars'};
 }
 
 sub noop {return ''};

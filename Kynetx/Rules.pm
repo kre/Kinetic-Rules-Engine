@@ -380,6 +380,7 @@ sub eval_rule {
     my $logger = get_logger();
 
 
+#    my $js = "kobj_rule_name = '". $rule->{'name'} ."';\n";
     my $js = '';
 
     Log::Log4perl::MDC->put('rule', $rule->{'name'});
@@ -634,8 +635,8 @@ sub optimize_rule {
   my $logger = get_logger();
 
   # precompile pattern regexp
-  $rule->{'pagetype'}->{'pattern'} = 
-    qr!$rule->{'pagetype'}->{'pattern'}!;
+  $rule->{'pagetype'}->{'event_expr'}->{'pattern'} = 
+    qr!$rule->{'pagetype'}->{'event_expr'}->{'pattern'}!;
 
   # break up pre, if needed
   optimize_pre($rule);

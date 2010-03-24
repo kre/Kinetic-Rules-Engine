@@ -17,12 +17,14 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
+Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Events::State qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
+use Kynetx::Events::Primitives qw/:all/;
 
 
 use Kynetx::FakeReq qw/:all/;
@@ -49,84 +51,283 @@ my $rule_env = Kynetx::Test::gen_rule_env();
 
 my $session = Kynetx::Test::gen_session($r, $rid);
 
+my $ev1 = Kynetx::Events::Primitives->new();
+$ev1->pageview($my_req_info->{'caller'});
 
-my $sm = Kynetx::Events::State->new();
-$sm->add_state("i", {"a"=>"p"},"q");
-$sm->add_state("p", {"a"=>"p"}, "q");
-$sm->add_state("q", {"a"=>"p"}, "q");
-$sm->mk_initial("i");
-$sm->mk_final("p");
+my $ev2 = Kynetx::Events::Primitives->new();
+$ev2->pageview("http://www.kynetx.com/this/is/a/bad/url.html");
 
-is($sm->next_state("i", "a"), "p", "i->p for a");
-is($sm->next_state("i", "b"), "q", "i->q for other");
-is($sm->next_state("p", "a"), "p", "p->p for a");
-is($sm->next_state("p", "b"), "q", "p->q for other");
-is($sm->next_state("q", "a"), "p", "q->p for a");
-is($sm->next_state("q", "b"), "q", "q->q for other");
-$test_count += 6;
+my $ev3 = Kynetx::Events::Primitives->new();
+$ev3->pageview("http://www.google.com/");
 
-ok($sm->is_final("p"), "p is final");
-ok($sm->is_initial("i"), "i is initial");
-ok(!$sm->is_initial("p"), "p is not initial");
-ok(!$sm->is_initial("q"), "q is not initial");
-ok(!$sm->is_final("q"), "q is not final");
-ok(!$sm->is_final("i"), "i is not final");
-$test_count += 6;
+my $ev4 = Kynetx::Events::Primitives->new();
+$ev4->pageview("http://www.yahoo.com/");
 
-is_deeply($sm->get_states(), ["p", "q", "i"], "Get the states");
+# test the pageview prim SMs
+my $sm1 = mk_pageview_prim(qr/www.windley.com/);
+
+my $initial = $sm1->get_initial();
+
+my $next = $sm1->next_state($initial, $ev1);
+ok($sm1->is_final($next), "ev1 leads to final state");
 $test_count++;
 
-is_deeply($sm->get_transitions("i"), {"a" => "p", "__default__" => "q"}, "transitions from i");
-is_deeply($sm->get_transitions("p"), {"a" => "p", "__default__" => "q"}, "transitions from p");
-is_deeply($sm->get_transitions("q"), {"a" => "p", "__default__" => "q"}, "transitions from q");
-$test_count += 3;
+$next = $sm1->next_state($initial, $ev2);
+ok($sm1->is_initial($next), "ev2 does not lead to initial state");
+$test_count++;
+
+# test the pageview prim SMs
+my $sm2 = mk_pageview_prim(qr#/is/a#);
+
+my $initial = $sm2->get_initial();
+
+my $next = $sm2->next_state($initial, $ev2);
+ok($sm2->is_final($next), "ev2 leads to final state");
+$test_count++;
+
+$next = $sm2->next_state($initial, $ev1);
+ok($sm2->is_initial($next), "ev2 does not lead to initial state");
+$test_count++;
 
 
-sub sm_and {
-  my($sm1, $sm2) = @_;
+# test cloning
+my $smc = $sm1->clone();
 
-  my $sm1_states = $sm1->get_states();
-  my $sm2_states = $sm2->get_states();
+$initial = $smc->get_initial();
 
-  my $nsm = Kynetx::Events::State->new();
+$next = $smc->next_state($initial, $ev1);
+ok($smc->is_final($next), "ev1 leads to final state in clone");
+$test_count++;
 
-  foreach my $s1 (@{$sm1_states}) {
-    foreach my $s2 (@{$sm2_states}) {
-      $nsm->add_state("$s1$s2");
+$next = $smc->next_state($initial, $ev2);
+ok($smc->is_initial($next), "ev2 leads to initial state in clone");
+$test_count++;
 
-      my $sm1_outs = $sm1->get_transitions($s1); # {"a" => "i", "b" => "y"} 
-      my $sm2_outs = $sm2->get_transitions($s2);
+# do it again
+my $sm3 = mk_pageview_prim(qr/www.google.com/);
+$initial = $sm3->get_initial();
 
-      # calculate intersection of inputs
-      my @t;
-      foreach my $sm1_token (keys %{$sm1_outs}) {
-	push @t, $sm1_token if defined $sm2_outs->{$sm1_token};
-      }
-      
-      foreach my $token (@t) {
-	$nsm->add_transition("$s1$s2", $token, $sm1_outs->{$token}.$sm1_outs->{$token});
-      }
+$next = $sm3->next_state($initial, $ev3);
+ok($sm3->is_final($next), "ev3 leads to final state");
+$test_count++;
 
-      $nsm->mk_initial("$s1$s2") if $sm1->is_initial($s1) && $sm2->is_initial($s2);
-      $nsm->mk_final("$s1$s2") if $sm1->is_final($s1) && $sm2->is_final($s2);
+$next = $sm3->next_state($initial, $ev2);
+ok($sm3->is_initial($next), "ev2 leads to initial state");
+$test_count++;
 
-    }
-  }
-  return $nsm;
-}
+# test join
 
-my $sm2 = Kynetx::Events::State->new();
-$sm->add_state("i", {"b"=>"p"},"q");
-$sm->add_state("p", {"b"=>"p"}, "q");
-$sm->add_state("q", {"b"=>"p"}, "q");
-$sm->mk_initial("i");
-$sm->mk_final("p");
+my $join_sm = mk_pageview_prim(qr/www.google.com/);
+$join_sm = $join_sm->add_state("foo",
+			       [{"next" => $join_sm->get_singleton_final(),
+				 "type" => "pageview",
+				 "test" => sub {my $url = shift; 
+						return $url =~ /www.kynetx.com/;
+					      }
+				}]);
 
-my $sm3 = sm_and($sm, $sm2);
+
+$initial = $join_sm->get_initial();
+$next = $join_sm->next_state("foo", $ev2);
+ok($join_sm->is_final($next), "ev2 leads to final state");
+$test_count++;
+
+
+$next = $join_sm->next_state($initial, $ev3);
+ok($join_sm->is_final($next), "ev3 leads to final state");
+$test_count++;
+
+is(@{ $join_sm->get_states() } + 0, 3, "join_sm has 3 states before join");
+$test_count++;
+
+my $ni = $join_sm->join_states("foo", $initial);
+$join_sm->mk_initial($ni);		       
+
+is(@{ $join_sm->get_states() } + 0, 2, "join_sm has 2 states after join");
+$test_count++;
+
+$initial = $join_sm->get_initial();
+$next = $join_sm->next_state($initial, $ev2);
+ok($join_sm->is_final($next), "ev2 leads to final state");
+$test_count++;
+
+
+$next = $join_sm->next_state($initial, $ev3);
+ok($join_sm->is_final($next), "ev3 leads to final state");
+$test_count++;
+
+
+
+my ($n1, $n2, $n3);
+
+# test mk_and
+my $and_sm = mk_and($sm1, $sm3);
+$initial = $and_sm->get_initial();
+
+$n1 = $and_sm->next_state($initial, $ev1);
+$n2 = $and_sm->next_state($n1, $ev3);
+ok($and_sm->is_final($n2), "ev1,ev3 leads to final state in and");
+$test_count++;
+
+$n1 = $and_sm->next_state($initial, $ev3);
+$n2 = $and_sm->next_state($n1, $ev1);
+ok($and_sm->is_final($n2), "ev3,ev1 leads to final state in and");
+$test_count++;
+
+$n1 = $and_sm->next_state($initial, $ev3);
+$n2 = $and_sm->next_state($n1, $ev2);
+$n2 = $and_sm->next_state($n2, $ev2);
+$n2 = $and_sm->next_state($n2, $ev2);
+$n3 = $and_sm->next_state($n2, $ev1);
+ok($and_sm->is_final($n3), "ev3,ev2...,ev1 leads to final state in and");
+$test_count++;
+
+$n1 = $and_sm->next_state($initial, $ev3);
+$n2 = $and_sm->next_state($n1, $ev2);
+$n2 = $and_sm->next_state($n2, $ev3);
+$n2 = $and_sm->next_state($n2, $ev2);
+$n3 = $and_sm->next_state($n2, $ev1);
+ok($and_sm->is_final($n3), "ev3,ev2,ev3,ev2..,ev1 leads to final state in and");
+$test_count++;
+
+$next = $and_sm->next_state($initial, $ev2);
+ok($and_sm->is_initial($next), "ev2 leads to initial state in and");
+$test_count++;
+
+
+# test mk_or
+
+my $or_sm = mk_or($sm1, $sm3);
+$initial = $or_sm->get_initial();
+
+$n1 = $or_sm->next_state($initial, $ev1);
+ok($or_sm->is_final($n1), "ev1 leads to final state in or");
+$test_count++;
+
+$n1 = $or_sm->next_state($initial, $ev3);
+ok($or_sm->is_final($n1), "ev3 leads to final state in or");
+$test_count++;
+
+$n1 = $or_sm->next_state($initial, $ev2);
+ok($or_sm->is_initial($n1), "ev2 leads to initial state in or");
+$test_count++;
+
+# test mk_before
+
+my $b_sm = mk_before($sm1, $sm3);
+$initial = $b_sm->get_initial();
+
+$n1 = $b_sm->next_state($initial, $ev1);
+$n2 = $b_sm->next_state($n1, $ev3);
+ok($b_sm->is_final($n2), "ev1,ev3 leads to final state in before");
+$test_count++;
+
+$n1 = $b_sm->next_state($initial, $ev1);
+$n2 = $b_sm->next_state($n1, $ev2);
+$n3 = $b_sm->next_state($n2, $ev3);
+ok($b_sm->is_final($n3), "ev1,ev2,ev3 leads to final state in before");
+$test_count++;
+
+$n1 = $b_sm->next_state($initial, $ev1);
+$n2 = $b_sm->next_state($n1, $ev2);
+$n2 = $b_sm->next_state($n1, $ev1);
+$n2 = $b_sm->next_state($n1, $ev2);
+$n2 = $b_sm->next_state($n1, $ev2);
+$n2 = $b_sm->next_state($n1, $ev1);
+$n3 = $b_sm->next_state($n2, $ev3);
+ok($b_sm->is_final($n3), "ev1,ev2,ev3 leads to final state in before");
+$test_count++;
+
+$n1 = $b_sm->next_state($initial, $ev3);
+$n2 = $b_sm->next_state($n1, $ev1);
+ok(!$b_sm->is_final($n2), "ev3,ev1 does not lead to final state in before");
+$test_count++;
+
+
+# test mk_then
+
+my $t_sm = mk_then($sm1, $sm3);
+$initial = $t_sm->get_initial();
+
+$n1 = $t_sm->next_state($initial, $ev1);
+$n2 = $t_sm->next_state($n1, $ev3);
+ok($t_sm->is_final($n2), "ev1,ev3 leads to final state in then");
+$test_count++;
+
+$n1 = $t_sm->next_state($initial, $ev1);
+$n2 = $t_sm->next_state($n1, $ev2);
+$n3 = $t_sm->next_state($n2, $ev3);
+ok(!$t_sm->is_final($n3), "ev1,ev2,ev3 does not lead to final state in before");
+$test_count++;
+
+$n1 = $t_sm->next_state($initial, $ev1);
+$n2 = $t_sm->next_state($n1, $ev2);
+$n2 = $t_sm->next_state($n1, $ev1);
+$n2 = $t_sm->next_state($n1, $ev2);
+$n2 = $t_sm->next_state($n1, $ev2);
+$n2 = $t_sm->next_state($n1, $ev1);
+$n3 = $t_sm->next_state($n2, $ev3);
+ok(!$t_sm->is_final($n3), "ev1,ev2,ev3 leads to final state in before");
+$test_count++;
+
+$n1 = $t_sm->next_state($initial, $ev3);
+$n2 = $t_sm->next_state($n1, $ev1);
+ok(!$t_sm->is_final($n2), "ev3,ev1 does not lead to final state in before");
+$test_count++;
+
+
+# test mk_between
+
+my $btwn_sm = mk_between($sm1, $sm2, $sm3);
+
+$initial = $btwn_sm->get_initial();
+
+$n1 = $btwn_sm->next_state($initial, $ev2);
+$n2 = $btwn_sm->next_state($n1, $ev1);
+$n3 = $btwn_sm->next_state($n2, $ev3);
+ok($btwn_sm->is_final($n3), "ev2,ev1,ev3 leads to final state in between");
+$test_count++;
+
+$n1 = $btwn_sm->next_state($initial, $ev2);
+$n2 = $btwn_sm->next_state($n1, $ev4);
+$n3 = $btwn_sm->next_state($n2, $ev3);
+ok(!$btwn_sm->is_final($n3), "ev2,ev4,ev3 does not lead to final state in between");
+$test_count++;
+
+$n1 = $btwn_sm->next_state($initial, $ev2);
+$n1 = $btwn_sm->next_state($n1, $ev4);
+$n2 = $btwn_sm->next_state($n1, $ev1);
+$n2 = $btwn_sm->next_state($n2, $ev4);
+$n3 = $btwn_sm->next_state($n2, $ev3);
+ok($btwn_sm->is_final($n3), "ev2,ev4,ev1,ev4,ev3 leads to final state in between");
+$test_count++;
+
+
+# test mk_not_between
+
+my $nb_sm = mk_not_between($sm1, $sm2, $sm3);
+
+$initial = $nb_sm->get_initial();
+
+$n1 = $nb_sm->next_state($initial, $ev2);
+$n2 = $nb_sm->next_state($n1, $ev3);
+ok($nb_sm->is_final($n2), "ev2,ev3 leads to final state in not_between");
+$test_count++;
+
+$n1 = $nb_sm->next_state($initial, $ev2);
+$n2 = $nb_sm->next_state($n1, $ev1);
+$n3 = $nb_sm->next_state($n2, $ev3);
+ok(!$nb_sm->is_final($n3), "ev2,ev1,ev3 does not lead to final state in not_between");
+$test_count++;
+
+$n1 = $nb_sm->next_state($initial, $ev1);
+$n2 = $nb_sm->next_state($n1, $ev2);
+$n3 = $nb_sm->next_state($n2, $ev3);
+ok($nb_sm->is_final($n3), "ev1,ev2,ev3 leads to final state in not_between");
+$test_count++;
 
 
 done_testing($test_count);
-
 
 1;
 
