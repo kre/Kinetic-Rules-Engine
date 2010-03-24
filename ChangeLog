@@ -1,5 +1,7 @@
 2010-03-24  Phil Windley  <pjw@kynetx.com>
 
+    * Kynetx/Rules.pm (optimize_rule): added if-then-else to accomodate
+	new syntax for patterns
     * Kynetx/Events/State.pm: added composition operators
     * Kynetx/Actions.pm (get_precondition_vars): changed to support
 	new AST

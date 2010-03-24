@@ -635,8 +635,13 @@ sub optimize_rule {
   my $logger = get_logger();
 
   # precompile pattern regexp
-  $rule->{'pagetype'}->{'event_expr'}->{'pattern'} = 
-    qr!$rule->{'pagetype'}->{'event_expr'}->{'pattern'}!;
+  if (defined $rule->{'pagetype'}->{'event_expr'}->{'pattern'}) {
+    $rule->{'pagetype'}->{'event_expr'}->{'pattern'} = 
+      qr!$rule->{'pagetype'}->{'event_expr'}->{'pattern'}!;
+  } else { # deprecated syntax...
+    $rule->{'pagetype'}->{'pattern'} = 
+      qr!$rule->{'pagetype'}->{'pattern'}!;
+  }
 
   # break up pre, if needed
   optimize_pre($rule);

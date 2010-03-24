@@ -61,7 +61,7 @@ use Kynetx::FakeReq;
 
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($WARN);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
