@@ -74,9 +74,9 @@ use constant BASE_KPDS_URL => 'http://kpds.kynetx.com/infobase/';
 #Access Token URL http://accounts-staging.kynetx.com/oauth/access_token
 #Authorize URL http://accounts-staging.kynetx.com/oauth/authorize 
 
-my $urls = {request_token_url => 'http://accounts-staging.kynetx.com/oauth/request_token',
-	    access_token_url  => 'http://accounts-staging.kynetx.com/oauth/access_token',
-	    authorization_url => 'http://accounts-staging.kynetx.com/oauth/authorize',
+my $urls = {request_token_url => 'https://accounts.kynetx.com/oauth/request_token',
+	    access_token_url  => 'https://accounts.kynetx.com/oauth/access_token',
+	    authorization_url => 'https://accounts.kynetx.com/oauth/authorize',
 	   };
 
 my %predicates = (

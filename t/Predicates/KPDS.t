@@ -50,8 +50,8 @@ my $my_req_info = Kynetx::Test::gen_req_info($rid);
 
 # these are KRE generic consumer tokens
 $my_req_info->{$rid.':key:kpds'} = 
-  {'consumer_secret' => 'abFU77wEt7wN4Rac7Og3ojOYBzj9rt9AKcwhUBdo',
-   'consumer_key' => '5Wh6NkskarMGzJvly3fk'
+  {'consumer_secret' => 'iS1jmmJ6WRudiA8denmt3b9mKsvz8EEcmt42yoSl',
+   'consumer_key' => 'xVzxZSd7ArBV3at6YOnz'
   };
 
 $my_req_info->{"$rid:ruleset_name"} = "cs_test";
@@ -80,7 +80,7 @@ isnt(Kynetx::Predicates::KPDS::authorized($my_req_info, $rule_env, $session, $ru
      "random calls aren't authorized");
 $test_count++;
 
-contains_string(Kynetx::Predicates::KPDS::authorize($my_req_info, $rule_env, $session, {},{}), "http://accounts-staging.kynetx.com/oauth/authorize?oauth_token=", "authorize gets a URL");
+contains_string(Kynetx::Predicates::KPDS::authorize($my_req_info, $rule_env, $session, {},{}), "https://accounts.kynetx.com/oauth/authorize?oauth_token=", "authorize gets a URL");
 $test_count++;
 
 
