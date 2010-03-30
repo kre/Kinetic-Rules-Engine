@@ -44,7 +44,6 @@ $Data::Dumper::Indent = 1;
 my $r = Kynetx::Test::configure();
 
 my $rid = 'cs_test';
-my $sid = 'e8e618aa6ea06e2c59f8e1f74fecb719';
 
 # test choose_action and args
 
@@ -54,7 +53,9 @@ my $rule_name = 'foo';
 
 my $rule_env = Kynetx::Test::gen_rule_env();
 
-my $session = Kynetx::Test::gen_session($r, $rid, {'sid' => $sid});
+#my $session = Kynetx::Test::gen_session($r, $rid, {'sid' => $sid});
+my $session = Kynetx::Test::gen_session($r, $rid);
+my $sid = session_id($session);
 
 my $test_count = 0;
 
@@ -87,16 +88,6 @@ SKIP: {
     $mech->content_like('/number\s+\d+/');
     $test_count += 4;
 
-    # get val
-    my $url_version_2 = "$dn/get/$rid/$sid/my_count/";
-    diag "Testing console with $url_version_2";
-    $mech->get_ok($url_version_2);
-    is($mech->content_type(), 'text/javascript');
-#    diag "Found ", $mech->content();
-    is_deeply(JSON::XS->new->utf8->decode($mech->content()), {'my_count' => 2}, "got a single val");
-    $test_count += 3;
-
-
     # post #
     my $url_version_3 = "$dn/store/$rid/$sid/a_count/";
 #    diag "Testing console with $url_version_3";
@@ -107,6 +98,14 @@ SKIP: {
 
     $test_count += 3;
 
+    # get val
+    my $url_version_2 = "$dn/get/$rid/$sid/a_count/";
+    diag "Testing console with $url_version_2";
+    $mech->get_ok($url_version_2);
+    is($mech->content_type(), 'text/javascript');
+#    diag "Found ", $mech->content();
+    is_deeply(JSON::XS->new->utf8->decode($mech->content()), {'a_count' => 5}, "got a single val");
+    $test_count += 3;
 
     # post different #
     my $url_version_4 = "$dn/store/$rid/$sid/a_count/";
@@ -119,7 +118,7 @@ SKIP: {
     $test_count += 3;
 
     # post json
-    my $url_version_4 = "$dn/store/$rid/$sid/a_count/";
+    $url_version_4 = "$dn/store/$rid/$sid/a_count/";
 #    diag "Testing console with $url_version_4";
     $mech->post_ok($url_version_4, [val => '{"foo": {"type": "required", "level": "user"}}']);
     is($mech->content_type(), 'text/javascript');

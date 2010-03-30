@@ -57,7 +57,10 @@ sub new {
     my $self = {
 	"timestamp"    => DateTime->now->epoch(), 
 	"guid"         => $ug->create_str(),
-	"type"         => undef
+	"type"         => undef,
+	"vars"         => undef,
+        "vals"         => undef,
+        "req_info"     => undef
     };
     bless($self, $class); # consecrate
     return $self;
@@ -81,13 +84,19 @@ sub happened_before {
 
 }
 
+sub is {
+  my $self = shift;
+  my $other = shift;
+
+  return ($self->{'guid'} eq $other->{'guid'});
+}
+
 sub different_than {
   my $self = shift;
   my $other = shift;
 
   return ! ($self->{'guid'} eq $other->{'guid'});
 }
-
 
 sub set_type {
   my $self = shift;
@@ -96,19 +105,59 @@ sub set_type {
   return $self->{'type'} = $type;
 }
 
-
 sub get_type {
   my $self = shift;
 
   return $self->{'type'};
 }
 
-
 sub isa {
   my $self = shift;
   my $type = shift;
 
   return $self->{'type'} eq $type;
+}
+
+
+sub set_vars {
+  my $self = shift;
+  my $vars = shift;
+
+  return $self->{'vars'} = $vars;
+}
+
+sub get_vars {
+  my $self = shift;
+
+  return $self->{'vars'};
+}
+
+
+sub set_vals {
+  my $self = shift;
+  my $vals = shift;
+
+  return $self->{'vals'} = $vals;
+}
+
+sub get_vals {
+  my $self = shift;
+
+  return $self->{'vals'};
+}
+
+
+sub set_req_info {
+  my $self = shift;
+  my $req_info = shift;
+
+  return $self->{'req_info'} = $req_info;
+}
+
+sub get_req_info {
+  my $self = shift;
+
+  return $self->{'req_info'};
 }
 
 
@@ -130,7 +179,6 @@ sub url {
   my $self = shift;
   return $self->{'url'}
 }
-
 
 
 

@@ -90,7 +90,7 @@ sub jsonToRuleBody {
 sub astToJson {
     my ($ast) = @_;
 
-    return JSON::XS::->new->utf8(1)->pretty(1)->encode($ast);
+    return JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(1)->encode($ast);
 
 }
 

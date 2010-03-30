@@ -85,7 +85,7 @@ is(get_pageinfo($my_req_info, 'url', ['query']),
    'page:url query');
 
 is(get_pageinfo($my_req_info, 'url', ['path']), 
-   undef, 
+   "/", 
    'page:url path');
 
 is(get_pageinfo($my_req_info, 'url', ['port']), 

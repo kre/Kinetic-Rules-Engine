@@ -76,6 +76,15 @@ sub new {
   return $self;
 }
 
+sub TO_JSON {
+  my $b_obj = B::svref_2object( $_[0] );
+  return    
+    $b_obj->isa('B::HV') ? { %{ $_[0] } }
+      : $b_obj->isa('B::AV') ? [ @{ $_[0] } ]
+	: undef
+	  ;
+}
+
 sub add_state {
   my $self = shift;
   my($name, $transitions, $default) = @_;
@@ -254,7 +263,7 @@ sub get_states {
 sub get_transitions {
   my $self = shift;
   my $state = shift;
-  return $self->{'transitions'}->{$state} || [];
+  return $self->{'transitions'}->{$state} || undef;
 }
 
 sub get_default_transition {
@@ -288,6 +297,11 @@ sub set_default_transition {
 # calculate next state
 #-------------------------------------------------------------------------
 
+# $eval_funcs is a hash of transition application functions keyed 
+# by primitive type.
+# transition application functions should take an event obj and a transition and 
+# return a bool if the application of the transition function in the transition 
+# returns true as well as an array of values returns from the match
 my $eval_funcs = {};
 
 sub next_state {
@@ -295,16 +309,34 @@ sub next_state {
   my($state, $event) = @_;
   my $logger = get_logger();
 
+  # reset if needed
+  $state = $self->get_initial() unless defined $self->get_transitions($state);
+
+  $logger->debug("Starting state: ", $state);
+
   my $transitions = $self->get_transitions($state);
 
   my $next = $self->get_default_transition($state);
   foreach my $t (@{ $transitions }) {
-    if (match($event, $t)) {
+#    $logger->debug("Transition type: ",$t->{'type'}, " Event type: ", $event->get_type());
+    my ($match,$vals) = match($event, $t);
+    $logger->debug("Match? ", $match);
+    if ($match) {
       $next = $t->{'next'};
+      $event->set_vars($t->{'vars'});
+      $event->set_vals($vals);
     }
   }
   return $next;
 
+}
+
+sub match {
+  my($event, $transition) = @_;
+
+  return 0 unless $event->isa($transition->{'type'});
+
+  return $eval_funcs->{$event->get_type()}->($event, $transition);
 }
 
 
@@ -313,7 +345,7 @@ sub next_state {
 #-------------------------------------------------------------------------
 
 sub mk_prim {
-  my ($test) = @_;
+  my ($test, $vars) = @_;
   my $sm = Kynetx::Events::State->new();
   my $s1 = Data::UUID->new->create_str();
   my $s2 = Data::UUID->new->create_str();
@@ -325,6 +357,7 @@ sub mk_prim {
 		 [{"next" => $s2,
 		   "type" => "pageview",
 		   "test" => $test,
+		   "vars" => $vars
 		  }],
 		 $s1
 		);
@@ -342,29 +375,33 @@ sub mk_prim {
 #-------------------------------------------------------------------------
 
 sub mk_pageview_prim {
-  my ($pattern) = @_;
+  my ($pattern, $vars) = @_;
 
-  return mk_prim(sub {my $url = shift; 
-		      return $url =~ /$pattern/;
-		    }
+  return mk_prim($pattern,
+		 $vars
 		);
 }
 
 sub pageview_eval {
   my ($event, $t) = @_;
 
-  return $t->{'test'}->($event->url());
+  sub test {my $url = shift; 
+	    my $pattern = shift;
+	    my $captures = [];
+	    my $logger = get_logger();
+	    $logger->debug("Url: $url; Pattern: $pattern");
+	    
+	    if(@{$captures} = $url =~ /$pattern/) {
+	      return (1, $captures);
+	    } else {
+	      return (0, $captures);
+	    }		    
+	  };
+
+  return test($event->url(), $t->{'test'});
 }
 $eval_funcs->{'pageview'} = \&pageview_eval;
 
-
-sub match {
-  my($event, $transition) = @_;
-
-  return 0 unless $event->isa($transition->{'type'});
-
-  return $eval_funcs->{$event->{'type'}}->($event, $transition);
-}
 
 #-------------------------------------------------------------------------
 # composite state machines

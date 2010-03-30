@@ -3,6 +3,7 @@
 use lib qw(/web/lib/perl);
 use strict;
 use warnings;
+use diagnostics;
 
 use Test::More;
 use Test::LongString;
@@ -77,11 +78,11 @@ ok($sm1->is_initial($next), "ev2 does not lead to initial state");
 $test_count++;
 
 # test the pageview prim SMs
-my $sm2 = mk_pageview_prim(qr#/is/a#);
+my $sm2 = mk_pageview_prim(qr#/(..)/(a)#, ['vv','bb']);
 
-my $initial = $sm2->get_initial();
+$initial = $sm2->get_initial();
+$next = $sm2->next_state($initial, $ev2);
 
-my $next = $sm2->next_state($initial, $ev2);
 ok($sm2->is_final($next), "ev2 leads to final state");
 $test_count++;
 
@@ -89,6 +90,11 @@ $next = $sm2->next_state($initial, $ev1);
 ok($sm2->is_initial($next), "ev2 does not lead to initial state");
 $test_count++;
 
+is_deeply($ev2->get_vals(), ['is','a'], "we capture regexps");
+$test_count++;
+
+is_deeply($ev2->get_vars(), ['vv','bb'], "we get vars too");
+$test_count++;
 
 # test cloning
 my $smc = $sm1->clone();
@@ -121,9 +127,7 @@ my $join_sm = mk_pageview_prim(qr/www.google.com/);
 $join_sm = $join_sm->add_state("foo",
 			       [{"next" => $join_sm->get_singleton_final(),
 				 "type" => "pageview",
-				 "test" => sub {my $url = shift; 
-						return $url =~ /www.kynetx.com/;
-					      }
+				 "test" => 'www.kynetx.com',
 				}]);
 
 
@@ -323,8 +327,9 @@ $test_count++;
 $n1 = $nb_sm->next_state($initial, $ev1);
 $n2 = $nb_sm->next_state($n1, $ev2);
 $n3 = $nb_sm->next_state($n2, $ev3);
-ok($nb_sm->is_final($n3), "ev1,ev2,ev3 leads to final state in not_between");
+ok($nb_sm->is_final($n3), "ev1,ev2,ev3  lead to final state in not_between");
 $test_count++;
+
 
 
 done_testing($test_count);

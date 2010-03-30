@@ -103,10 +103,10 @@ sub handler {
     if($method eq 'version' ) {
       show_build_num($r, $method, $rid);
     } elsif ($method eq 'get' ) {
-#      $logger->debug("Session ", sub {Dumper $session});
+      $logger->debug("Session ", sub {Dumper $session});
       print get_values($rid, $session, $vars);
     } elsif ($method eq 'store' ) {
-#      $logger->debug("Session ", sub {Dumper $session});
+      $logger->debug("Session ", sub {Dumper $session});
       print store_values($rid, $session, $vars, $val)
     }
 

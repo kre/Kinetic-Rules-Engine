@@ -49,7 +49,7 @@ log_request_env
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 sub build_request_env {
-    my ($r, $method, $rids) = @_;
+    my ($r, $method, $rids, $eventtype) = @_;
 
     my $logger = get_logger();
 
@@ -66,6 +66,8 @@ sub build_request_env {
 	site => $rids,
 	rid => $rids, 
 	method => $method,
+	domain => $method,
+	eventtype => $eventtype,
 	hostname => $r->hostname(),
 	ip => $r->connection->remote_ip() || '0.0.0.0',
 	ua => $r->headers_in->{'User-Agent'} || '',

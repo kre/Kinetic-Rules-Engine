@@ -97,7 +97,7 @@ $pe2->pageview('http://www.windley.com/foo/bar.html');
 ok($pe2->isa('pageview'), '$pe2 is a pageview');
 $test_count++;
 
-is($pe2->url, 'http://www.windley.com/foo/bar.html', 'paaeview url is correct');
+is($pe2->url, 'http://www.windley.com/foo/bar.html', 'pageview url is correct');
 $test_count++;
 
 my $pe4 = Kynetx::Events::Primitives->new();

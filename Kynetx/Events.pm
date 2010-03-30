@@ -41,8 +41,15 @@ use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Configure qw(:all);
+use Kynetx::Request;
+use Kynetx::Rules;
+use Kynetx::Json;
 
 use Kynetx::Events::Primitives qw(:all);
+use Kynetx::Events::State qw(:all);
+
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
 
 
 use Exporter;
@@ -54,6 +61,8 @@ our @ISA         = qw(Exporter);
 # put exported names inside the "qw"
 our %EXPORT_TAGS = (all => [ 
 qw(
+compile_event_expr
+mk_event
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -71,90 +80,104 @@ sub handler {
     $logger->debug("Initializing memcached");
     Kynetx::Memcached->init();
 
-    my $method;
-    my $rid;
+    my ($domain,$rid,$eventtype);
     my $eid = '';
 
-    ($method,$rid,$eid) = $r->path_info =~ m!/([a-z+_]+)/([A-Za-z0-9_;]*)/?(\d+)?!;
+    ($domain,$eventtype,$rid,$eid) = $r->path_info =~ m!/event/([a-z+_]+)/([a-z+_]+)/?([A-Za-z0-9_;]*)/?(\d+)?!;
 
     $eid = $eid || 'unknown';
-    $logger->debug("processing event $method on rulesets $rid and EID $eid");
+    $logger->debug("processing event $domain/$eventtype on rulesets $rid and EID $eid");
+
     Log::Log4perl::MDC->put('site', $rid);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
 
     # store these for later logging
-    $r->subprocess_env(METHOD => $method);
+    $r->subprocess_env(DOMAIN => $domain);
+    $r->subprocess_env(EVENTTYPE => $eventtype);
     $r->subprocess_env(RIDS => $rid);
 
     # at some point we need a better dispatch function
-    if($method eq 'version' ) {
-      show_build_num($r, $method, $rid);
+    if($domain eq 'version' ) {
+      show_build_num($r, $domain, $rid);
     } else {
-      process_event($r, $method, $rid, $eid);
+      process_event($r, $domain, $eventtype, $rid, $eid);
     }
 
     return Apache2::Const::OK; 
 }
 
 
-sub process_events {
+sub process_event {
 
-    my ($r, $method, $rids, $eid) = @_;
+    my ($r, $domain, $eventtype, $rids, $eid) = @_;
 
     my $logger = get_logger();
     Log::Log4perl::MDC->put('events', '[global]');
 
+    $logger->debug("processing event $domain/$eventtype on rulesets $rids and EID $eid");
 
     $r->subprocess_env(START_TIME => Time::HiRes::time);
 
-    if(Kynetx::Configure::get_config('RUN_MODE') eq 'development') {
-	# WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
-	my $test_ip = Kynetx::Configure::get_config('TEST_IP');
-	 $r->connection->remote_ip($test_ip);
-	$logger->debug("In development mode using IP address ", $r->connection->remote_ip());
-    } 
+#     if(Kynetx::Configure::get_config('RUN_MODE') eq 'development') {
+# 	# WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
+# 	my $test_ip = Kynetx::Configure::get_config('TEST_IP');
+# 	 $r->connection->remote_ip($test_ip);
+# 	$logger->debug("In development mode using IP address ", $r->connection->remote_ip());
+#     } 
 
     # get a session
     my $session = process_session($r);
 
-    my $req = Apache2::Request->new($r);
+    my $req_info = Kynetx::Request::build_request_env($r, $domain, $rids, $eventtype);
 
+    Kynetx::Request::log_request_env($logger, $req_info);
 
 # not clear we need the request env now
-#    my $req_info = Kynetx::Request::build_request_env($r, $method, $rids);
+#    my $req_info = Kynetx::Request::build_request_env($r, $domain, $rids);
 #    $req_info->{'eid'} = $eid || '';
 
-    my $ev = Kynetx::Events::Primitives->new();
-    if ($method eq 'pageview' ) {
-      $ev->pageview($r->headers_in->{'Referer'} || $req->param('caller') || '');
-    } elsif ($method eq 'click' ) {
-      $ev->click($req->param('element'));
-    } elsif ($method eq 'change' ) {
-      $ev->change($req->param('element'));
-    } else {
-      $logger->error("Unhandlable event: $method");
-    }
+    my $ev = mk_event($req_info);
 
     my @rules_to_execute;
 
-    foreach my $rid (@{ $rids }) {
-      foreach my $rule (@{$rid->{'rules'}}) {
-	
+    foreach my $rid (split(/;/, $rids)) {
+
+      $req_info->{'rid'} = $rid;
+      my $ruleset = Kynetx::Rules::get_rule_set($req_info);
+
+#      $logger->debug("Ruleset: ", Dumper $ruleset );
+
+      foreach my $rule (@{$ruleset->{'rules'}}) {
+
 	my $sm_current_name = $rule->{'name'}.':sm_current';
 
-	$rule->{'event_sm'} = make_event_sm($rule) unless $rule->{'event_sm'};
-
 	# reconstitute the object.  
-	my $sm = bless $rule->{'event_sm'}, "Kynetx::Events::State";
+#	my $sm = bless $rule->{'event_sm'}, "Kynetx::Events::State";
+#	$logger->debug("Rule: ", Kynetx::Json::astToJson($rule));
+	
+#	$logger->debug("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
 
-	my $current_state = session_get($rid, $session, $sm_current_name);
+	next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
+
+	my $sm = $rule->{'event_sm'};
+
+#	$logger->debug("Event SM: ", Dumper $sm);
+
+	my $current_state = session_get($rid, $session, $sm_current_name) || 
+	                    $sm->get_initial();
+
+#	$logger->debug("Initial: ", $current_state );
+
 
 	my $next_state = $sm->next_state($current_state, $ev);
 
+#	$logger->debug("Next: ", $next_state );
+
 	if ($sm->is_final($next_state)) {
-	  push @rules_to_execute, [$rid,$rule];
+	  push @rules_to_execute, [$rid, $rule];
+	  $logger->debug("Pushing " , $rid, " & ",  $rule->{'name'});
 	  # reset SM
-	  session_store($rid, $session, $sm_current_name, $sm->initial_state());
+	  session_store($rid, $session, $sm_current_name, $sm->get_initial());
 	} else {
 	  session_store($rid, $session, $sm_current_name, $next_state);
 	}
@@ -163,16 +186,74 @@ sub process_events {
       }
     }
 
-    
-
+#    $logger->debug("RIDS: " , Dumper( @rules_to_execute) );
+    my $js = '';
+    foreach my $pair (@rules_to_execute) {
+      $req_info->{'rid'} = $pair->[0];
+#      Kynetx::Rules::eval_rule($r, $req_info, $rule_env, $session, $pair->[1], $js)
+;
+    }
 
     # finish up
     session_cleanup($session);
 
     # return the JS load to the client
-    $logger->info("Ruleset processing finished");
+    $logger->info("Event processing finished");
     $logger->debug("__FLUSH__");
 
+
+}
+
+sub mk_event {
+   my($req_info) = @_;
+
+   my $logger = get_logger();
+
+   my $ev = Kynetx::Events::Primitives->new();
+   $ev->set_req_info($req_info);
+   if ($req_info->{'eventtype'} eq 'pageview' ) {
+     $ev->pageview($req_info->{'caller'});
+   } elsif ($req_info->{'eventtype'} eq 'click' ) {
+     $ev->click($req_info->{'element'});
+   } elsif ($req_info->{'eventtype'} eq 'change' ) {
+     $ev->change($req_info->{'element'});
+   } else {
+     $logger->error("Unhandlable event: $req_info->{'eventtype'}");
+   }
+
+   return $ev;
+}
+
+sub compile_event_expr {
+
+  my($eexpr) = @_;
+
+  my $logger = get_logger();
+
+  my $sm;
+
+  if ($eexpr->{'type'} eq 'prim_event') {
+    if ($eexpr->{'op'} eq 'pageview') {
+      $sm = mk_pageview_prim($eexpr->{'pattern'}, $eexpr->{'vars'});
+    } else {
+      $logger->warn("Unrecognized primitive event");
+    }
+  } elsif ($eexpr->{'type'} eq 'complex_event') {
+    if ($eexpr->{'op'} eq 'between' ||
+        $eexpr->{'op'} eq 'notbetween') {
+    } else { # other complex event
+      my $sm0 = compile_event_expr($eexpr->{'args'}->[0]);
+      my $sm1 = compile_event_expr($eexpr->{'args'}->[1]);
+      if ($eexpr->{'op'} eq 'and') {
+	$sm = mk_and($sm0, $sm1);
+      }
+    }
+
+  } else {
+    $logger->warn("Attempt to compile malformed event expression");
+  }
+
+  return $sm;
 
 }
 

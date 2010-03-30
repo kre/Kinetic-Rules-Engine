@@ -42,6 +42,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Json qw(:all);
 use Kynetx::Predicates::Page;
+use Kynetx::Rules;
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -57,7 +58,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 sub get_rules_from_repository{
 
-    my ($site, $req_info) = @_;
+    my ($site, $req_info, $localparsing) = @_;
 
     my $logger = get_logger();
 
@@ -71,7 +72,7 @@ sub get_rules_from_repository{
 
     my $ruleset = $memd->get(make_ruleset_key($site, $version));
     if ($ruleset) {
-	$logger->debug("Using cached ruleset for $site ($version)");
+	$logger->debug("Using cached ruleset for $site ($version) with key ", make_ruleset_key($site, $version));
 	return $ruleset;
     } 
 
@@ -100,7 +101,15 @@ sub get_rules_from_repository{
 
       # grab json version on the bet that more code in repo is in that format
       # final '' ensures a trailing slash
-      my $rs_url = join('/', ($base_url, $site, $version, 'json', ''));
+
+      my $res_type;
+      if ($localparsing) {
+	$res_type = 'krl';
+      } else {
+	$res_type = 'json';
+      }
+
+      my $rs_url = join('/', ($base_url, $site, $version, $res_type, ''));
 
       $logger->debug("Using API to retrieve $rs_url");
 
@@ -122,7 +131,11 @@ sub get_rules_from_repository{
 	return make_empty_ruleset($site, $rs_url);
       }
 
-      $ruleset = jsonToAst($json);
+      if ($localparsing) {
+	$ruleset = Kynetx::Parser::parse_ruleset($json);
+      } else {
+	$ruleset = jsonToAst($json);
+      }
 
     } else { # default is svn
       
@@ -186,6 +199,7 @@ sub get_rules_from_repository{
 
     }
 
+    $ruleset = Kynetx::Rules::optimize_ruleset($ruleset);
 
     $logger->debug("Found rules for $site");
 

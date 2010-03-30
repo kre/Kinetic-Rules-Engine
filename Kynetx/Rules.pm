@@ -49,6 +49,7 @@ use Kynetx::Session qw(:all);
 use Kynetx::Modules qw(:all);
 use Kynetx::Actions;
 use Kynetx::Authz;
+use Kynetx::Events;
 use Kynetx::Log qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Repository qw(:all);
@@ -101,17 +102,7 @@ sub process_rules {
     my $js = '';
 
 
-    my $rule_env = empty_rule_env();
-
-    # define initial environment to have a truth function
-    $rule_env = extend_rule_env({'truth' =>
-				 Kynetx::Expressions::mk_closure({'vars' => [],
-								  'decls' => [],
-								  'expr' => mk_expr_node('num', 1),
-								 }, 
-								 $rule_env)},
-				$rule_env);
-
+    my $rule_env = mk_initial_env();
     
     my @rids = split(/;/, $rids);
     # if we sort @rids we change ruleset priority
@@ -572,7 +563,7 @@ sub eval_rule_body {
 # this returns the right rules for the caller and site
 # this is a point where things could be optimized in the future
 sub get_rule_set {
-    my ($req_info) = @_;
+    my ($req_info, $localparsing) = @_;
 
     my $caller = $req_info->{'caller'};
     my $site = $req_info->{'rid'};
@@ -580,10 +571,7 @@ sub get_rule_set {
     my $logger = get_logger();
     $logger->debug("Getting ruleset for $caller");
 
-    my $ruleset = get_rules_from_repository($site, $req_info);
-
-    # FIXME: store optimized RS in cache???
-    $ruleset = optimize_ruleset($ruleset);
+    my $ruleset = get_rules_from_repository($site, $req_info, $localparsing);
 
     turn_on_logging() if($ruleset->{'meta'}->{'logging'} && 
 			 $ruleset->{'meta'}->{'logging'} eq "on");
@@ -625,6 +613,8 @@ sub optimize_ruleset {
       optimize_rule($rule);
     }
 
+#    $logger->debug("Optimized ruleset ", sub { Dumper $ruleset });
+    
     return $ruleset;
 }
 
@@ -636,11 +626,12 @@ sub optimize_rule {
 
   # precompile pattern regexp
   if (defined $rule->{'pagetype'}->{'event_expr'}->{'pattern'}) {
-    $rule->{'pagetype'}->{'event_expr'}->{'pattern'} = 
-      qr!$rule->{'pagetype'}->{'event_expr'}->{'pattern'}!;
+    $rule->{'event_sm'} = Kynetx::Events::compile_event_expr($rule->{'pagetype'}->{'event_expr'});
+#     $rule->{'pagetype'}->{'event_expr'}->{'pattern'} = 
+#       qr!$rule->{'pagetype'}->{'event_expr'}->{'pattern'}!;
   } else { # deprecated syntax...
-    $rule->{'pagetype'}->{'pattern'} = 
-      qr!$rule->{'pagetype'}->{'pattern'}!;
+#     $rule->{'pagetype'}->{'pattern'} = 
+#       qr!$rule->{'pagetype'}->{'pattern'}!;
   }
 
   # break up pre, if needed
@@ -703,6 +694,20 @@ _JS_
   } else {
     return $js;
   }
+}
+
+sub mk_initial_env {
+ my $rule_env = empty_rule_env();
+
+ # define initial environment to have a truth function
+ $rule_env = extend_rule_env({'truth' =>
+			      Kynetx::Expressions::mk_closure({'vars' => [],
+							       'decls' => [],
+							       'expr' => mk_expr_node('num', 1),
+							      }, 
+							      $rule_env)},
+			     $rule_env);
+ return $rule_env;
 }
 
 sub KOBJ_ruleset_obj {
