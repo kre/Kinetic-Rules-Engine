@@ -53,6 +53,7 @@ krl-setup.js
 krl-domwatch.js
 krl-annotate.js
 krl-percolation.js
+krl-sidetab.js
 krl-runtime.js.tmpl
 );
 

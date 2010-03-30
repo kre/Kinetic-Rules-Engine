@@ -14,6 +14,8 @@ KOBJ.log = function(msg){
 	KOBJ._log.push({'ts':new Date(),'msg':msg});
 	if(window.console != undefined && console.log != undefined){ console.log(msg); }
 };
+//used for overriding the document for UI actions
+KOBJ.document = document;
 
 KOBJ.logger = function(type,txn_id,element,url,sense,rule,rid) {
 //     e=document.createElement("script");

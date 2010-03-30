@@ -100,7 +100,7 @@
 
 			
 
-			if($(element).get(0).tagName === $(document).get(0).tagName){
+			if($(element).get(0).tagName === $(KOBJ.document).get(0).tagName){
 
 				$('body').append(flakeMarkup);
 
@@ -112,7 +112,7 @@
 
 			
 
-			this.element = document.getElementById('flake-' + this.id);
+			this.element = KOBJ.document.getElementById('flake-' + this.id);
 
 			
 

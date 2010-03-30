@@ -130,19 +130,19 @@ KOBJ.percolate = function(selector, config) {
 
 	try{
 
-		var defaults = jQuery.extend(true, {}, KOBJ.search_percolate.defaults);
+		var defaults = $K.extend(true, {}, KOBJ.search_percolate.defaults);
 		
 		if (typeof config === 'object') {
-			jQuery.extend(true, defaults, config);
+			$K.extend(true, defaults, config);
 		}
 		site_defaults = defaults.site[window.location.host];
 	
 		function percolate_search_results(selector,config){
 		
-			var defaults = jQuery.extend(true, {}, KOBJ.search_percolate.defaults);
+			var defaults = $K.extend(true, {}, KOBJ.search_percolate.defaults);
 		
 			if (typeof config === 'object') {
-				jQuery.extend(true, defaults, config);
+				$K.extend(true, defaults, config);
 			}
 	
 			if(KOBJ.search_percolate.ajax){
@@ -201,7 +201,7 @@ KOBJ.percolate = function(selector, config) {
 			function serpslurp(){
 				//returns the URL for the next batch of results
 				var cloc = document.location.toString();
-				if(cloc.search(/#/) && window.location.host == "www.google.com"){
+				if(cloc.search(/#/) && KOBJ.document.window.location.host == "www.google.com"){
 					cloc = cloc.replace(/http:\/\/www.google.com\/(.*?)#/,"http://www.google.com/search?").replace(/&aq.*?&/,"&").replace(/&aqo.*?&/,"&").replace(/&aql.*?&/,"&").replace(/fp.*?/,"&").replace(/&oq.*?&/,"&").replace(/&aqi.*?&/,"&");
 				}
 	

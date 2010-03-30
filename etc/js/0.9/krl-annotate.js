@@ -93,10 +93,10 @@ KOBJ.annotate_local_search_defaults = {
 // Includes DOM watching, seperating selector based on site, and some speed improvements
 
 KOBJ.annotate_local_search_results = function(annotate, config, cb) {
-	var defaults = jQuery.extend(true, {}, KOBJ.annotate_local_search_defaults);
+	var defaults = $K.extend(true, {}, KOBJ.annotate_local_search_defaults);
 
 	if (typeof config === 'object') {
-		jQuery.extend(true, defaults, config);
+		$K.extend(true, defaults, config);
 	}
 	//get domain's lister
 	if(defaults["domains"][window.location.hostname]){
@@ -250,10 +250,10 @@ KOBJ.annotate_search_extractdata = function(toAnnotate,config){
 
 KOBJ.annotate_search_results = function(annotate, config, cb) {
 
-  var defaults = jQuery.extend(true, {}, KOBJ.annotate_search_defaults);
+  var defaults = $K.extend(true, {}, KOBJ.annotate_search_defaults);
 
   if (typeof config === 'object') {
-    jQuery.extend(true, defaults, config);
+    $K.extend(true, defaults, config);
   }
 
   defaults.outer_div_css = {
@@ -290,7 +290,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
       };
 
   if (typeof config === 'object') {
-    jQuery.extend(true, defaults, config);
+    $K.extend(true, defaults, config);
   }
 
 
