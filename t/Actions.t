@@ -704,7 +704,47 @@ add_action_testcase(
     0
     );
 
+$config = astToJson(
+   {"txn_id" => '1234',
+    "rule_name" => 'dummy_name',
+    "rid" => 'cs_test',
+    "tabLocation" => "left",
+    "name" => "JAM_test2",
+    "message" => "How do you do?",
+    "pathToTabImage" => "http://wpaoli.building58.com/wp-content/uploads/2009/09/contact_tab.gif"});
 
+$krl_src = <<_KRL_;
+sidetab() with tabLocation = "left" and
+    pathToTabImage = "http://wpaoli.building58.com/wp-content/uploads/2009/09/contact_tab.gif" and
+    name = "JAM_test2" and 
+    message = "How do you do?"
+_KRL_
+
+$result = <<_JS_;
+(function(uniq, cb, config) {
+     KOBJ.tabManager.addNew(config);
+     cb();
+ }
+ ('23',callbacks23,{
+    "rule_name" : "dummy_name",
+    "name" : "JAM_test2",
+    "pathToTabImage" : "http://wpaoli.building58.com/wp-content/uploads/2009/09/contact_tab.gif",
+    "tabLocation" : "left",
+    "rid" : "cs_test",
+    "txn_id" : "1234",
+    "message" : "How do you do?"
+ }
+ ));
+
+_JS_
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'sidetab test',
+    0
+    );
 
 $krl_src = <<_KRL_;
 annotate_search_results(foo);

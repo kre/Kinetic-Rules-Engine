@@ -351,10 +351,10 @@ EOF
       'after' => [\&handle_delay]
     },
 
-    side_tab => {
+    sidetab => {
       'js' => <<EOF,
-function(uniq, cb, config, content) {
-    KOBJ.createPopIn(config, content);
+function(uniq, cb, config) {
+    KOBJ.tabManager.addNew(config);
     cb();
 }
 EOF
