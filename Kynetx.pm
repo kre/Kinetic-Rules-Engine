@@ -166,7 +166,7 @@ sub describe_ruleset {
 
     $logger->debug("Found $numrules rules..." );
 
-    my ($data) = {
+    my $data = {
 	'ruleset_id' => $ruleset->{'ruleset_name'},
 	'ruleset_version' => $req_info->{'rule_version'},
 	'number_of_rules' => $numrules,

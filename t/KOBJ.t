@@ -45,8 +45,8 @@ use APR::Pool;
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Parser qw/:all/;
-use Kynetx::KOBJ qw/:all/;
-use Kynetx::Repository qw/:all/;
+use Kynetx::KOBJ;
+use Kynetx::Repository;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::FakeReq qw/:all/;
 
