@@ -43,12 +43,12 @@ use Apache2::Const;
 use APR::URI;
 use APR::Pool;
 
-use Kynetx::Test qw/:all/;
-use Kynetx::Parser qw/:all/;
+use Kynetx::Test;
+use Kynetx::Parser;
 use Kynetx::KOBJ;
 use Kynetx::Repository;
-use Kynetx::Memcached qw/:all/;
-use Kynetx::FakeReq qw/:all/;
+use Kynetx::Memcached;
+use Kynetx::FakeReq;
 
 
 use Log::Log4perl qw(get_logger :levels);
