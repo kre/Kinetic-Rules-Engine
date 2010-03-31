@@ -52,7 +52,7 @@ use Data::UUID;
 use Kynetx::Session qw(:all);
 use Kynetx::Util qw(:all);
 use Kynetx::Version qw(:all);
-use Kynetx::Repository qw(:all);
+use Kynetx::Repository;
 use Kynetx::Request qw(:all);
 use Kynetx::Environments qw(:all);
 use Kynetx::Actions;

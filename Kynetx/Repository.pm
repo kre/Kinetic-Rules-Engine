@@ -50,15 +50,13 @@ our @ISA         = qw(Exporter);
 # put exported names inside the "qw"
 our %EXPORT_TAGS = (all => [ 
 qw(
-get_rules_from_repository
-make_ruleset_key
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
 sub get_rules_from_repository{
 
-    my ($site, $req_info, $localparsing) = @_;
+    my ($rid, $req_info, $localparsing) = @_;
 
     my $logger = get_logger();
 
@@ -70,9 +68,9 @@ sub get_rules_from_repository{
 
     my $memd = get_memd();
 
-    my $ruleset = $memd->get(make_ruleset_key($site, $version));
+    my $ruleset = $memd->get(make_ruleset_key($rid, $version));
     if ($ruleset) {
-	$logger->debug("Using cached ruleset for $site ($version) with key ", make_ruleset_key($site, $version));
+	$logger->debug("Using cached ruleset for $rid ($version) with key ", make_ruleset_key($rid, $version));
 	return $ruleset;
     } 
 
@@ -84,7 +82,7 @@ sub get_rules_from_repository{
 
     my $repo_info = Kynetx::Configure::get_config('RULE_REPOSITORY');
 
-    $logger->debug("Getting rules from repo for $site using $rule_repo_type");
+    $logger->debug("Getting rules from repo for $rid using $rule_repo_type");
 
 
     if ($rule_repo_type eq 'api') {
@@ -109,7 +107,7 @@ sub get_rules_from_repository{
 	$res_type = 'json';
       }
 
-      my $rs_url = join('/', ($base_url, $site, $version, $res_type, ''));
+      my $rs_url = join('/', ($base_url, $rid, $version, $res_type, ''));
 
       $logger->debug("Using API to retrieve $rs_url");
 
@@ -128,7 +126,7 @@ sub get_rules_from_repository{
 
 	$logger->debug("Error retrieving ruleset: ",  $res->status_line);
 	# return now to avoid caching fake ruleset
-	return make_empty_ruleset($site, $rs_url);
+	return make_empty_ruleset($rid, $rs_url);
       }
 
       if ($localparsing) {
@@ -153,7 +151,7 @@ sub get_rules_from_repository{
 
       my $svn_path;
       foreach $ext ('.krl','.json') {
-	$svn_path = $svn_url.$site.$ext;
+	$svn_path = $svn_url.$rid.$ext;
 	eval {
 	  $logger->debug("Getting info on ", $svn_path);
 	  $ctx->info($svn_path, 
@@ -165,29 +163,29 @@ sub get_rules_from_repository{
 	};
 	if ($@) {		# catch file doesn't exist...
 	  #	    $logger->debug($svn_path, " returned error ", $@);
-	  $d{$site.$ext} = -1;
+	  $d{$rid.$ext} = -1;
 	}
       }
 
-      if ($d{$site.'.krl'} eq -1 && $d{$site.'.json'} eq -1) {
+      if ($d{$rid.'.krl'} eq -1 && $d{$rid.'.json'} eq -1) {
 	# return now to avoid caching fake ruleset
-	return make_empty_ruleset($site, $svn_path);
+	return make_empty_ruleset($rid, $svn_path);
       }
 
 
-      if ($d{$site.'.krl'} > $d{$site.'.json'}) {
+      if ($d{$rid.'.krl'} > $d{$rid.'.json'}) {
 	$ext = '.krl';
       } else {
 	$ext = '.json';
       }
 
-      $req_info->{'rule_version'} = $d{$site.$ext};
+      $req_info->{'rule_version'} = $d{$rid.$ext};
       $logger->debug("Using the $ext version: ", $req_info->{'rule_version'});
     
       # open a variable as a filehandle (for weird SVN::Client stuff)
       open(FH, '>', \$krl) or die "Can't open memory file: $!";
       $ctx->cat (\*FH,
-		 $svn_url.$site.$ext, 
+		 $svn_url.$rid.$ext, 
 		 'HEAD');
 
       # return the abstract syntax tree regardless of source
@@ -201,11 +199,11 @@ sub get_rules_from_repository{
 
     $ruleset = Kynetx::Rules::optimize_ruleset($ruleset);
 
-    $logger->debug("Found rules for $site");
+    $logger->debug("Found rules for $rid");
 
-    my $key = make_ruleset_key($site, $version);
+    my $key = make_ruleset_key($rid, $version);
 
-    $logger->debug("Caching ruleset for $site using key $key");
+    $logger->debug("Caching ruleset for $rid using key $key");
     $memd->set($key, $ruleset);
     return $ruleset;    
 
@@ -256,12 +254,12 @@ sub get_svn_conn {
   }
 
 sub make_empty_ruleset {
-  my ($site, $url) = @_;
+  my ($rid, $url) = @_;
 
   my $logger = get_logger();
   $logger->error("Error retrieving $url; returning empty ruleset\n");
   my $json = <<JSON;
-{"global":[],"dispatch":[],"ruleset_name":"$site","rules":[],"meta":{}}
+{"global":[],"dispatch":[],"ruleset_name":"$rid","rules":[],"meta":{}}
 JSON
 
   return jsonToAst($json);
@@ -269,8 +267,8 @@ JSON
 }
 
 sub make_ruleset_key {
-  my ($site, $version) = @_;
-  return "ruleset:$version:$site";
+  my ($rid, $version) = @_;
+  return "ruleset:$version:$rid";
 }
 
 

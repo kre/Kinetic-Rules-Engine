@@ -138,11 +138,10 @@ sub process_event {
 
     my $ev = mk_event($req_info);
 
-    my @rules_to_execute;
+    my $rules_to_execute;
 
     foreach my $rid (split(/;/, $rids)) {
 
-      $req_info->{'rid'} = $rid;
       my $ruleset = Kynetx::Rules::get_rule_set($req_info);
 
 #      $logger->debug("Ruleset: ", Dumper $ruleset );
@@ -150,6 +149,7 @@ sub process_event {
       foreach my $rule (@{$ruleset->{'rules'}}) {
 
 	my $sm_current_name = $rule->{'name'}.':sm_current';
+	my $event_list_name = $rule->{'name'}.':event_list';
 
 	# reconstitute the object.  
 #	my $sm = bless $rule->{'event_sm'}, "Kynetx::Events::State";
@@ -170,29 +170,89 @@ sub process_event {
 
 
 	my $next_state = $sm->next_state($current_state, $ev);
+	
+	# when there's a state change, store the event in the event list
+	unless ($current_state eq $next_state) {
+	  session_push($rid, $session, $event_list_name, $ev);
+	}
+
 
 #	$logger->debug("Next: ", $next_state );
 
 	if ($sm->is_final($next_state)) {
-	  push @rules_to_execute, [$rid, $rule];
+
+	  push @{$rules_to_execute->{$rid}->{'rules'}}, $rule;
+	  $rules_to_execute->{$rid}->{$ruleset} = $ruleset;
+
 	  $logger->debug("Pushing " , $rid, " & ",  $rule->{'name'});
+
 	  # reset SM
-	  session_store($rid, $session, $sm_current_name, $sm->get_initial());
+	  session_delete($rid, $session, $sm_current_name);
+	  session_delete($rid, $session, $event_list_name);
+
 	} else {
 	  session_store($rid, $session, $sm_current_name, $next_state);
 	}
 
-
       }
     }
 
-#    $logger->debug("RIDS: " , Dumper( @rules_to_execute) );
+    my $rule_env = Kynetx::Rules::mk_initial_env();
+
     my $js = '';
-    foreach my $pair (@rules_to_execute) {
-      $req_info->{'rid'} = $pair->[0];
-#      Kynetx::Rules::eval_rule($r, $req_info, $rule_env, $session, $pair->[1], $js)
-;
+
+# {ruleset => 
+#  rules => [...]
+#  rule_name => {req_info =>
+#                vars =>
+#                vals =>
+#               }
+#  req_info =>
+# }
+
+    foreach my $rid (keys %{$rules_to_execute}) {
+
+      $rules_to_execute->{$rid}->{'req_info'} = $req_info;
+
+      foreach my $rule ($rules_to_execute->{$rid}) {
+
+	my $event_list_name = $rule->{'name'}.':event_list';
+	my $ev_list = session_get($rid, $session, $event_list_name);
+	my $rule_name = $rule->{'name'};
+	
+	#global req_info
+	# pre rule req_info
+	$rules_to_execute->{$rid}->{$rule_name}->{'req_info'} = 
+	  Kynetx::Request::merge_req_env(map {$_->get_req_info} @{$ev_list});
+
+	$rules_to_execute->{$rid}->{$rule_name}->{'vars'} = 
+	  map {$_->get_vars} @{$ev_list};
+	$rules_to_execute->{$rid}->{$rule_name}->{'vals'} = 
+	  map {$_->get_vals} @{$ev_list};
+
+      }
+
+      $js .= eval {
+	      Kynetx::Rules::process_ruleset_event($r, 
+						   $rules_to_execute->{$rid},
+						   $rule_env,
+						   $session,
+						   $rid)
+      };
+      if ($@) {
+	$logger->error("Ruleset $rid failed: ", $@);
+      }
+
     }
+
+
+# where to do this???
+    # put this in the logging DB
+#     log_rule_fire($r, 
+# 		  $req_info, 
+# 		  $session
+# 	);
+
 
     # finish up
     session_cleanup($session);
@@ -201,6 +261,8 @@ sub process_event {
     $logger->info("Event processing finished");
     $logger->debug("__FLUSH__");
 
+    # this is where we return the JS
+    print $js;
 
 }
 

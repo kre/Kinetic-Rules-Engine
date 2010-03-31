@@ -49,7 +49,7 @@ use JSON::XS;
 use Kynetx::Util qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Request qw(:all);
-use Kynetx::Repository qw(:all);
+use Kynetx::Repository;
 use Kynetx::Memcached qw(:all);
 use Kynetx::Datasets qw(:all);
 use Kynetx::Environments qw(:all);

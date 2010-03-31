@@ -160,7 +160,7 @@ sub describe_ruleset {
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
 
 
-    my $ruleset = Kynetx::Rules::get_rules_from_repository($rid, $req_info);
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
 
     my $numrules = @{ $ruleset->{'rules'} } + 0;
 

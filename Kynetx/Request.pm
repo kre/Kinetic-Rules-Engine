@@ -45,6 +45,7 @@ our %EXPORT_TAGS = (all => [
 qw(
 build_request_env
 log_request_env
+merge_request_env
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -94,6 +95,15 @@ sub build_request_env {
     return $request_info;
 }
 
+sub merge_req_env {
+  my $first = shift;
+  foreach my $req (@_) {
+    foreach my $k (keys %{$req}) {
+      $first->{$k} = $req->{$k};
+    }
+  }
+  return $first
+}
 
 sub log_request_env {
     my ($logger, $request_info) = @_;

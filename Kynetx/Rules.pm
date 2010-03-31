@@ -52,7 +52,7 @@ use Kynetx::Authz;
 use Kynetx::Events;
 use Kynetx::Log qw(:all);
 use Kynetx::Request qw(:all);
-use Kynetx::Repository qw(:all);
+use Kynetx::Repository;
 use Kynetx::Environments qw(:all);
 
 use Data::Dumper;
@@ -178,6 +178,139 @@ KOBJ.registerClosure('$rid', function() { $js }, '$eid');
 EOF
 }
 
+
+sub process_ruleset_event {
+    my ($r, $rule_list, $rule_env, $session, $rid) = @_;
+
+    my $logger = get_logger();
+
+    Log::Log4perl::MDC->put('rule', '[global]');
+
+    $logger->info("Processing rules for site " . $rid);
+
+    my $ruleset = $rule_list->{'ruleset'};
+
+    my $js = '';
+
+    if (Kynetx::Authz::is_authorized($rid,$ruleset,$session)) {
+
+      $js = eval_ruleset_event($r, $rule_list, $rule_env, $session, $ruleset);
+
+    } else {
+
+      $logger->debug("Sending activation notice for $rid");
+      $js = Kynetx::Authz::authorize_message($rule_list->{'req_info'}, $session, $ruleset);
+
+    }
+
+
+    $logger->debug("Finished processing rules for " . $rid);
+
+    # we're done logging now
+    turn_off_logging if($ruleset->{'meta'}->{'logging'} && 
+			$ruleset->{'meta'}->{'logging'} eq "on");
+
+    #add verify logging call
+    if((Kynetx::Configure::get_config('USE_KVERIFY') || '0') == '1'){
+      $js .= "KOBJ.logVerify = KOBJ.logVerify || function(t,a,c){};";
+      $js .= "KOBJ.logVerify('" . $rule_list->{'req_info'}->{'txn_id'} . "', '$rid', '" . Kynetx::Configure::get_config('EVAL_HOST') . "');";
+    }
+
+    my $eid = $rule_list->{'req_info'}->{'eid'} || 'unknown';
+    return <<EOF
+KOBJ.registerClosure('$rid', function() { $js }, '$eid');
+EOF
+}
+
+
+
+sub eval_ruleset_event {
+  my($r, $rule_list, $rule_env, $session, $ruleset) = @_;
+
+  my $logger = get_logger();
+
+  my $req_info = $rule_list->{'req_info'};
+
+  # generate JS for meta
+  my $mjs = eval_meta($req_info, $ruleset, $rule_env);
+
+  # handle globals, start js build, extend $rule_env
+  my $gjs;
+  ($gjs, $rule_env) = eval_globals($req_info, $ruleset, $rule_env, $session);
+#      $logger->debug("Rule env after globals: ", Dumper $rule_env);
+  #    $logger->debug("Global JS: ", $gjs);
+
+
+  my $js = '';
+  $req_info->{'rule_count'} = 0;
+  $req_info->{'selected_rules'} = [];
+  foreach my $rule ( @{ $rule_list->{'rules'} } ) {
+    $logger->trace("[rules] foreach pre: ", sub { Dumper($rule->{'pre'}) });
+    # set by eval_control_statement in Actions.pm
+    last if $req_info->{$req_info->{'rid'}.':last'};
+
+    my $rule_name = $rule->{'name'};
+
+    my $this_rule_env;
+    $logger->debug("Rule $rule_name is " . $rule->{'state'});
+    if($rule->{'state'} eq 'active' || 
+       ($rule->{'state'} eq 'test' && 
+	$req_info->{'mode'} && 
+	$req_info->{'mode'} eq 'test' )) {  # optimize??
+
+      $req_info->{'rule_count'}++;
+
+
+      $logger->debug("[selected] $rule->{'name'} ");
+      $logger->trace("[rules] ", sub { Dumper($rule) });
+
+      push @{ $req_info->{'selected_rules'} }, $rule->{'name'};
+
+      my $select_vars = $rule_list->{$rule_name}->{'vars'};
+      my $captured_vals = $rule_list->{$rule_name}->{'vals'};
+
+      # store the captured values from the precondition to the env
+      my $cap = 0;
+      my $sjs = '';
+      foreach my $var (@{ $select_vars } ) {
+	$var =~ s/^\s*(.+)\s*/$1/; # trim whitspace
+	$logger->debug("[select var] $var -> $captured_vals->[$cap]");
+	$this_rule_env->{$var} = $captured_vals->[$cap];
+	$sjs .= Kynetx::JavaScript::gen_js_var($var,
+  	           Kynetx::JavaScript::gen_js_expr(
+		      Kynetx::Expressions::exp_to_den($captured_vals->[$cap])));
+
+	$cap++
+      }
+
+      my $new_req_info = Kynetx::Request::merge_req_env($req_info, $rule_list->{$rule_name}->{'req_info'});
+
+      $js .= eval_rule($r, 
+		       $new_req_info,
+		       extend_rule_env($this_rule_env, $rule_env),
+		       $session, 
+		       $rule,
+		       $sjs  # pass in the select JS to be inside rule
+		      );
+    } else {
+      $logger->debug("[not selected] $rule->{'name'} ");
+    }
+  }
+
+  $logger->debug("[eval_ruleset] Executed $req_info->{'rule_count'} rules");
+
+  # wrap the rule evals in a try-catch-block
+  $js = add_errorstack($ruleset,$js) if $js;
+
+  # put it all together
+  $js = $mjs . $gjs . $js;
+
+
+  return mk_turtle($js) if $js;
+
+
+}
+
 sub eval_ruleset {
   my($r, $req_info, $rule_env, $session, $ruleset) = @_;
 
@@ -264,6 +397,8 @@ sub eval_ruleset {
 
 
 }
+
+
 
 sub eval_meta {
     my($req_info,$ruleset, $rule_env) = @_;
@@ -561,24 +696,22 @@ sub eval_rule_body {
 
 
 # this returns the right rules for the caller and site
-# this is a point where things could be optimized in the future
 sub get_rule_set {
     my ($req_info, $localparsing) = @_;
 
     my $caller = $req_info->{'caller'};
-    my $site = $req_info->{'rid'};
+    my $rid = $req_info->{'rid'};
     
     my $logger = get_logger();
     $logger->debug("Getting ruleset for $caller");
 
-    my $ruleset = get_rules_from_repository($site, $req_info, $localparsing);
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info, $localparsing);
 
     turn_on_logging() if($ruleset->{'meta'}->{'logging'} && 
 			 $ruleset->{'meta'}->{'logging'} eq "on");
     
-    $logger->debug("Found " . @{ $ruleset->{'rules'} } . " rules for site $site" );
+    $logger->debug("Found " . @{ $ruleset->{'rules'} } . " rules for RID $rid" );
 
-    
     return $ruleset;
 
 }
