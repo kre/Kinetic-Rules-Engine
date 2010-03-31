@@ -522,8 +522,10 @@ foreach my $case (@ruleset_testcases) {
     my $r = Kynetx::Test::configure();
     my $session = Kynetx::Test::gen_session($r,'cs_test');
     my $parsed = Kynetx::Parser::parse_ruleset($case->{'expr'});
-    my $val = Kynetx::Rules::eval_ruleset($r,
-        $req_info,
+    my $rl = Kynetx::Rules::mk_rule_list($req_info, $req_info->{'rid'}, $parsed);
+    my $val = Kynetx::Rules::eval_ruleset(
+        $r,
+        $rl,
         empty_rule_env(),
         $session,
         $parsed,

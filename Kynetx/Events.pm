@@ -233,11 +233,11 @@ sub process_event {
       }
 
       $js .= eval {
-	      Kynetx::Rules::process_ruleset_event($r, 
-						   $rules_to_execute->{$rid},
-						   $rule_env,
-						   $session,
-						   $rid)
+	      Kynetx::Rules::process_ruleset($r, 
+					     $rules_to_execute->{$rid},
+					     $rule_env,
+					     $session,
+					     $rid)
       };
       if ($@) {
 	$logger->error("Ruleset $rid failed: ", $@);

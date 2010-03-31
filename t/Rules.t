@@ -98,6 +98,7 @@ my $config2;
 
 
 sub gen_req_info {
+  
   return Kynetx::Test::gen_req_info($rid, 
 				    {'ip' =>  '72.21.203.1',
 				     'txn_id' => 'txn_id',
@@ -1688,16 +1689,19 @@ add_testcase(
 # now test each test case twice
 foreach my $case (@test_cases) {
 
-  my $req_info = gen_req_info();
+  my $ruleset_rid = $case->{'expr'}->{'ruleset_name'} || $rid;
+  my $req_info = gen_req_info($ruleset_rid);
+
+  my $rl = Kynetx::Rules::mk_rule_list($req_info, $req_info->{'rid'},$case->{'expr'});
+
   if($case->{'type'} eq 'ruleset') {
 
     
     $js = Kynetx::Rules::eval_ruleset($r, 
-				      $req_info, 
+				      $rl, 
 				      empty_rule_env(), 
 				      $session, 
-				      $case->{'expr'}, 
-				      $case->{'expr'}->{'rules'});
+				      $case->{'expr'});
 
   } elsif($case->{'type'} eq 'rule') {
 
@@ -1787,8 +1791,11 @@ sub test_datafeeds {
 
     skip "No server available", 1 if ($no_server_available);
     my $krl = Kynetx::Parser::parse_ruleset($src);
+
+    my $rl = Kynetx::Rules::mk_rule_list($req_info, $req_info->{'rid'});
+
     my $val = Kynetx::Rules::eval_ruleset($r, 
-				      $req_info, 
+				      $rl, 
 				      empty_rule_env(), 
 				      $session, 
 				      $krl, 

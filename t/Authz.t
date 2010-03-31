@@ -139,14 +139,15 @@ like($authorize_message,
      'we get something back');
 $test_count++;
 
-my $js = Kynetx::Rules::process_ruleset($r, $my_req_info, $rule_env, $session, $rid);
+my $rl = Kynetx::Rules::mk_rule_list($my_req_info, $rid);
+my $js = Kynetx::Rules::process_ruleset($r, $rl, $rule_env, $session, $rid);
 unlike($js,
      qr/KOBJ_ruleset_activation/,
      'plain ruleset does not ask for activation');
 $test_count++;
 
-
-$js = Kynetx::Rules::process_ruleset($r, $my_req_info, $rule_env, $session, 
+$rl = Kynetx::Rules::mk_rule_list($my_req_info, 'cs_test_authz');
+$js = Kynetx::Rules::process_ruleset($r, $rl, $rule_env, $session, 
 				       'cs_test_authz');
 
 #diag $js;

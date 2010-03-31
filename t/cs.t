@@ -36,9 +36,13 @@ use Test::More;
 use Test::LongString;
 use Test::WWW::Mechanize;
 
+use Log::Log4perl qw(get_logger :levels);
+Log::Log4perl->easy_init($INFO);
+#Log::Log4perl->easy_init($DEBUG);
+
 use LWP::UserAgent;
 
-my $numtests = 52;
+my $numtests = 53;
 
 plan tests => $numtests;
 
@@ -161,6 +165,10 @@ SKIP: {
 
 
     is($mech->content_type(), 'text/javascript');
+
+#diag $mech->content();
+
+     $mech->content_like("/var x = 'foo';/");
 
     $mech->content_like('/function callBacks/');
     $mech->content_like('/function\(uniq, cb,/');

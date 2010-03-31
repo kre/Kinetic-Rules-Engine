@@ -1,3 +1,11 @@
+2010-03-31  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Request.pm (merge_req_env): new function for merging events
+    * Kynetx/Events.pm (process_event): Works now...
+    * Kynetx/Rules.pm (process_ruleset): Changed to be usable from
+	events, as well as ruleset API.  Uses new mk_rule_list() function
+	to normalize for old API.  
+
 2010-03-25 Mark Horstmeier <meh@kynetx.com>
     ** New action 'sidetab' 
     * Kynetx/Actions.pm:  Added sidetab action

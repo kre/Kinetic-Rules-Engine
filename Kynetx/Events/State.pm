@@ -312,7 +312,7 @@ sub next_state {
   # reset if needed
   $state = $self->get_initial() unless defined $self->get_transitions($state);
 
-  $logger->debug("Starting state: ", $state);
+#  $logger->debug("Starting state: ", $state);
 
   my $transitions = $self->get_transitions($state);
 
@@ -320,7 +320,7 @@ sub next_state {
   foreach my $t (@{ $transitions }) {
 #    $logger->debug("Transition type: ",$t->{'type'}, " Event type: ", $event->get_type());
     my ($match,$vals) = match($event, $t);
-    $logger->debug("Match? ", $match);
+#    $logger->debug("Match? ", $match);
     if ($match) {
       $next = $t->{'next'};
       $event->set_vars($t->{'vars'});
@@ -389,7 +389,7 @@ sub pageview_eval {
 	    my $pattern = shift;
 	    my $captures = [];
 	    my $logger = get_logger();
-	    $logger->debug("Url: $url; Pattern: $pattern");
+#	    $logger->debug("Url: $url; Pattern: $pattern");
 	    
 	    if(@{$captures} = $url =~ /$pattern/) {
 	      return (1, $captures);
