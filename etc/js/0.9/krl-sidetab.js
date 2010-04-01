@@ -52,13 +52,15 @@ Available at http:\/\/wpaoli.building58.com/2009/09/jquery-tab-slide-out-plugin/
             'height': settings.imageHeight
             });
         }
-        
-        settings.tabHandle.css({ 
-            'display': 'block',
-            'textIndent' : '-99999px',
-            'outline' : 'none',
-            'position' : 'absolute'
-        });
+
+	var tempCSS =$.extend({
+		'display': 'block',
+		'textIndent' : '-99999px',
+		'outline' : 'none',
+		'position' : 'absolute'
+	},settings.linkCSS,true);
+
+        settings.tabHandle.css(tempCSS);
         
         obj.css({
             'line-height' : '1',
@@ -227,6 +229,7 @@ KOBJ.tabManager.tabs = KOBJ.tabManager.tabs || [];
 
 KOBJ.tabManager.defaults = {
 	"backgroundColor": "white",
+	"tabColor": "black",
 	"divCSS": {},
 	"tabClass": "handle",
 	"pathToTabImage": "http:\/\/k-misc.s3.amazonaws.com/actions/schedule.png",
@@ -247,13 +250,13 @@ KOBJ.tabManager.defaults = {
 	"linkContent": "Content",
 	"notificationDefaults":{
 		"notifyClass": "notification",
+		"color": "red",
 		"leftPadding": "10px",
 		"topPadding": "2px",
 		"rightPadding": "10px",
 		"bottomPadding": "2px",
 		"divCSS": {
 			"text-indent":"0px",
-			"background-color":"red",
 			"-moz-border-radius": "20px",
 			"-webkit-border-radius": "20px",
 			"-khtml-border-radius": "20px",
@@ -265,8 +268,11 @@ KOBJ.tabManager.defaults = {
 		}
 	},
 
-	"linkCSS": {"cursor":"pointer"}
+	"linkCSS": {
+		"cursor":"pointer",
+	}
 };
+
 
 /* Nasty notifications
  * I hate making this kind of stuff.
@@ -318,6 +324,9 @@ KOBJ.tabManager.notification = function(config){
 	// Extend the defaults with the config passed in
 	if(typeof config === 'object'){
 		$K.extend(true, defaults, config);
+		if(defaults.color){
+			defaults.divCSS['background-color'] = defaults.color;
+		}
 	}
 
 	if(defaults.message){
@@ -432,10 +441,11 @@ KOBJ.tabManager.addNew = function(config){
 	// Extend the defaults
 	if(typeof config === 'object') {
 		jQuery.extend(true, defaults, config);
+		if(defaults.tabColor){
+			defaults.linkCSS["background-color"] = defaults.tabColor;
+		}
 	}
 	
-	console.log(defaults);	
-
 	// Add "px" or other measurement to elements which are sizes
 	var toAddUnit = ["topPos","width","padding"];
 	$K.each(toAddUnit, function(key,object){
@@ -522,13 +532,13 @@ KOBJ.tabManager.addNew = function(config){
 	} else {
 		if(defaults.url){
 			var tempMessage = $K('<div>').addClass(defaults['contentClass']).css({"width": defaults['width'], "background-color": defaults['backgroundColor']}).css(defaults['divCSS']);
-			link = $K('<a>').addClass(defaults['tabClass']).html(defaults['linkContent']).css(defaults['linkCSS']);
+			link = $K('<a>').addClass(defaults['tabClass']).html(defaults['linkContent']);
 			message = $K('<iframe>').attr('src',defaults.url).css({"width": defaults.width, "height": defaults.height});
 			message = $K(tempMessage).append(link).append(message);
 			message = $K(message).addClass(classToAdd);
 		} else {
 			var tempMessage = $K('<div>').addClass(defaults['contentClass']).css({"width": defaults['width'], "background-color": defaults['backgroundColor']}).css(defaults['divCSS']);
-			link = $K('<a>').addClass(defaults['tabClass']).html(defaults['linkContent']).css(defaults['linkCSS']);
+			link = $K('<a>').addClass(defaults['tabClass']).html(defaults['linkContent']);
 			message = $K(tempMessage).append(link).append(message);
 			message = $K(message).addClass(classToAdd);
 		}
