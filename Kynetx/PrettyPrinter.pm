@@ -403,8 +403,8 @@ sub pp_select {
     my $o = $beg;
 
     if (defined $node->{'pattern'}) {
-      $o .= 'select using ' . $node->{'pattern'} ;
-      $o .= ' setting(' . join(',',@{$node->{'vars'}}) . ")\n" if $node->{'vars'}; 
+      $o .= 'select using "' . $node->{'pattern'} ;
+      $o .= '" setting(' . join(',',@{$node->{'vars'}}) . ")\n" if $node->{'vars'}; 
     } else {
       if (defined $node->{'event_expr'}->{'legacy'}) {
 	$o .= 'select using ';
