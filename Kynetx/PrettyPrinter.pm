@@ -402,13 +402,19 @@ sub pp_select {
     
     my $o = $beg;
 
-    if (defined $node->{'event_expr'}->{'legacy'}) {
-      $o .= 'select using ';
+    if (defined $node->{'pattern'}) {
+      $o .= 'select using ' . $node->{'pattern'} ;
+      $o .= ' setting(' . join(',',@{$node->{'vars'}}) . ")\n" if $node->{'vars'}; 
     } else {
-      $o .= 'select when ';
-    }
-    $o .= pp_event_expr($node->{'event_expr'}, $indent+$g_indent);
-    $o .= "\n";
+      if (defined $node->{'event_expr'}->{'legacy'}) {
+	$o .= 'select using ';
+      } else {
+	$o .= 'select when ';
+      }
+      $o .= pp_event_expr($node->{'event_expr'}, $indent+$g_indent);
+      $o .= "\n";
+    } 
+
     $o .= pp_foreach($node->{'foreach'}, $indent+$g_indent);
     $o .= "\n";
 
