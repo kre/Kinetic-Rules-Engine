@@ -314,7 +314,8 @@ KOBJ['data'] = KOBJ['data'] || {};
 
 // initialization vars
 //KOBJ.proto = 'http://';
-KOBJ.proto = (("https:" == KOBJ.document.location.protocol) ? "https://" : "http://");
+//KOBJ.proto = (("https:" == KOBJ.document.location.protocol) ? "https://" : "http://");
+KOBJ.proto = function(){ return (("https:" == KOBJ.location('protocol')) ? "https://" : "http://") };
 
 KOBJ.init_host = '<TMPL_VAR NAME=INIT_HOST>';
 KOBJ.eval_host = '<TMPL_VAR NAME=EVAL_HOST>';
@@ -382,7 +383,7 @@ KOBJ.eval = function(config) {
   KOBJ.site_id = config.rids.join(";");
 
   // datasets
-  var data_url = KOBJ.proto+KOBJ.init_host+KOBJ.kns_port+"/js/datasets/" + KOBJ.site_id + "/";
+  var data_url = KOBJ.proto()+KOBJ.init_host+KOBJ.kns_port+"/js/datasets/" + KOBJ.site_id + "/";
   KOBJ.require(data_url);
 
   if(typeof(kvars) != "undefined") {
@@ -392,8 +393,8 @@ KOBJ.eval = function(config) {
   }
 
   var d = (new Date).getTime();
-  var url = KOBJ.proto+KOBJ.eval_host+KOBJ.kns_port+"/ruleset/eval/" + KOBJ.site_id;
-  KOBJ.callback_url = KOBJ.proto+KOBJ.callback_host+KOBJ.kns_port+"/callback/" + KOBJ.site_id;
+  var url = KOBJ.proto()+KOBJ.eval_host+KOBJ.kns_port+"/ruleset/eval/" + KOBJ.site_id;
+  KOBJ.callback_url = KOBJ.proto()+KOBJ.callback_host+KOBJ.kns_port+"/callback/" + KOBJ.site_id;
 
   var param_str = "";
   if(config) {
@@ -419,7 +420,7 @@ KOBJ.eval = function(config) {
 
 
 */
-  var eval_url = url + "/" + d + ".js?caller=" + escape(KOBJ.document.location.href) + "&referer="+ escape(KOBJ.document.referrer) + "&kvars=" + escape(KOBJ.kvars_json) + "&title=" + encodeURI(KOBJ.document.title) + param_str;
+  var eval_url = url + "/" + d + ".js?caller=" + escape(KOBJ.location('href')) + "&referer="+ escape(KOBJ.document.referrer) + "&kvars=" + escape(KOBJ.kvars_json) + "&title=" + encodeURI(KOBJ.document.title) + param_str;
 
   KOBJ.require(eval_url);
 };
@@ -478,10 +479,10 @@ KOBJ.runit = function(){
 
 KOBJ.logVerify = function(txn, appid, cluster){
 		/*var i = document.createElement("img");
-		i.setAttribute("src", KOBJ.proto + "kverify.appspot.com/log?txn="+txn+"&appid="+appid+"&cluster="+cluster);
+		i.setAttribute("src", KOBJ.proto() + "kverify.appspot.com/log?txn="+txn+"&appid="+appid+"&cluster="+cluster);
 		document.body.appendChild(i);
 		*/	
-	KOBJ.getwithimage(KOBJ.proto + "kverify.appspot.com/log?txn="+txn+"&appid="+appid+"&cluster="+cluster);		
+	KOBJ.getwithimage(KOBJ.proto() + "kverify.appspot.com/log?txn="+txn+"&appid="+appid+"&cluster="+cluster);		
 };
 
 //see if page is already loaded (ex: tags planted AFTER dom ready) to know if we should wait for document onReady

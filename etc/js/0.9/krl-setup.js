@@ -16,6 +16,15 @@ KOBJ.log = function(msg){
 };
 //used for overriding the document for UI actions
 KOBJ.document = document;
+KOBJ.locationHref = null;
+KOBJ.locationHost = null;
+KOBJ.locationProtocol = null;
+
+KOBJ.location = function(part){
+	if (part == "href") return KOBJ.locationHref || KOBJ.document.location.href;
+	if (part == "host") return KOBJ.locationHost || KOBJ.document.location.host;
+	if (part == "protocol") return KOBJ.locationProtocol || KOBJ.document.location.protocol;
+};
 
 KOBJ.logger = function(type,txn_id,element,url,sense,rule,rid) {
 //     e=document.createElement("script");

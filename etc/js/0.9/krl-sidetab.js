@@ -269,7 +269,7 @@ KOBJ.tabManager.defaults = {
 	},
 
 	"linkCSS": {
-		"cursor":"pointer",
+		"cursor":"pointer"
 	}
 };
 
