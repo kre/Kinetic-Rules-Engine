@@ -201,7 +201,7 @@ KOBJ.percolate = function(selector, config) {
 			function serpslurp(){
 				//returns the URL for the next batch of results
 				var cloc = document.location.toString();
-				if(cloc.search(/#/) && KOBJ.document.window.location.host == "www.google.com"){
+				if(cloc.search(/#/) && KOBJ.document.location.host == "www.google.com"){
 					cloc = cloc.replace(/http:\/\/www.google.com\/(.*?)#/,"http://www.google.com/search?").replace(/&aq.*?&/,"&").replace(/&aqo.*?&/,"&").replace(/&aql.*?&/,"&").replace(/fp.*?/,"&").replace(/&oq.*?&/,"&").replace(/&aqi.*?&/,"&");
 				}
 	
