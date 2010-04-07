@@ -15,15 +15,20 @@ if !ENV['browser']
   settings = load_settings(File.dirname(__FILE__) + "/config/settings.yml")
   settings['test']['testing_servers'].each do |browser|
     ENV['browser'] = browser
-    `rake browser_test`
-    if $? != 0
+    result = %x["rake browser_test 2>&1"]
+    code = $?
+    puts result
+    if code != 0
       puts "Error runing rake task for #{browser}"
       exit(5);
     end
   end
 else
-  `rake browser_test`
-  if $? != 0
+
+  result = %x["rake browser_test 2>&1"]
+  code = $?
+  puts result
+  if code != 0
     puts "Error runing rake task for #{browser}"
     exit(5);
   end
