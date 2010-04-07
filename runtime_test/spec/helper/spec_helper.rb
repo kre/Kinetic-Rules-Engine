@@ -1,5 +1,5 @@
-require "json"
 require 'rubygems'
+require "json"
 require "yaml"
 require "spec"
 require "selenium/client"
@@ -41,7 +41,7 @@ module SPEC_HELPER
   # Inject the kobj static runtime script into the page.   Allow the url to be overridden with an
   # environment variable call kobj_static_url
   #
-  def insert_runtime_script(r_ids, kobj_static_js_url = ENV["kobj_static_url"] || "http://init.kobj.net/js/shared/kobj-static.js")
+  def insert_runtime_script(r_ids, kobj_static_js_url = ENV["kobj_static_url"])
 
     if !kobj_static_js_url
       kobj_static_js_url = @settings["test"]["kobj_static_js_url"]
