@@ -1,5 +1,5 @@
 test:
-  testing_servers : [firefox_30_osx, safari_30_osx, ie6_windows, ie7_windows, ie8_windows, chrome_beta_windows, chrome_beta_osx, chrome_beta_linux]
+  testing_servers : [firefox_30_osx]
   kobj_static_js_url: "http://init.kobj.net/js/shared/kobj-static.js"
 
 firefox_30_osx :
