@@ -22,7 +22,7 @@
 # -t:
 #    move your job to top of queue
 #
-# -url url_of_kobj:
+# -k url_of_kobj:
 #    full url of the kobj java script to test.
 #
 #
