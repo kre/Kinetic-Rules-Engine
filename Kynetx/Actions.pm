@@ -587,8 +587,8 @@ sub build_one_action {
 	   $actions = Kynetx::Predicates::KPDS::get_actions();	
       } elsif ($action->{'source'} eq 'amazon') {
           $actions = Kynetx::Predicates::Amazon::get_actions();
-      #} elsif ($action->{'source'} eq 'google') {
-      #    $actions = Kynetx::Predicates::Google::get_actions();
+      } elsif ($action->{'source'} eq 'google') {
+          $actions = Kynetx::Predicates::Google::get_actions();
       }
     } else {
       $actions = $default_actions;

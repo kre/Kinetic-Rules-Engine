@@ -38,6 +38,8 @@ use warnings;
 use Log::Log4perl qw(get_logger :levels);
 
 use DateTime;
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
 use Kynetx::Configure qw(:all);
 
 use Exporter;
@@ -102,6 +104,7 @@ sub process_session {
 
     # catch an error ($cookie not found is the most usual)
     if ($@) {
+        $logger->debug("tie error: ",sub {Dumper($@)});
 	undef $cookie; # creates a new session
 	$logger->debug("Create cookie...");
 	$session = tie_servers($session,$cookie);
@@ -138,7 +141,10 @@ sub tie_servers {
     my $mem_servers = Kynetx::Configure::get_config('SESSION_SERVERS');
 
     my $logger = get_logger();
-    $logger->debug("Using ", $mem_servers, " for session storage");
+    $logger->trace("Using ", $mem_servers, " for session storage");
+    $logger->trace("Session: ",sub { Dumper($session)});
+    $logger->trace("Cookie: ", sub {Dumper($cookie)});
+    $logger->trace("session servers: ", sub {Dumper($mem_servers)});
 
 
     tie %{$session}, 'Apache::Session::Memcached', $cookie, {
@@ -171,6 +177,8 @@ sub session_keys {
 
 sub session_store {
     my ($rid, $session, $var, $val) = @_;
+    my $logger = get_logger();
+    $logger->trace("session store: ",$var," = ",$val);
 
     # timestamp session to ensure it gets written back
     my $dt = DateTime->now->epoch;

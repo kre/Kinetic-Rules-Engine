@@ -37,7 +37,7 @@ use Kynetx::Util qw(:all);
 use Kynetx::Expressions qw(:all);
 use Kynetx::Environments qw(:all);
 use Kynetx::Session qw(:all);
-#use Kynetx::Predicates::Google qw(:all);
+use Kynetx::Predicates::Google qw(:all);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -83,7 +83,7 @@ sub eval_module {
  #   $args->[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
       # get the values
     
-#    $logger->debug("Datasource args ", sub {Dumper $args});
+    $logger->debug("Datasource args ", sub {Dumper $args});
 
     my $val = '';
     my $preds = {};
@@ -218,19 +218,19 @@ sub eval_module {
         } else {
             $val = Kynetx::Predicates::RSS::eval_rss($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
-#    } elsif ($source eq 'google') {
-#        $preds = Kynetx::Predicates::Google::get_predicates();
-#        if (defined $preds->{$function}) {
-#            $val = $preds->{$function}->($req_info,$rule_env,$args);
-#            $val ||= 0;
-#        } else {
-#            $val = Kynetx::Predicates::Google::eval_google($req_info,$rule_env,$session,$rule_name,$function,$args);
-#        }
+    } elsif ($source eq 'google') {
+        $preds = Kynetx::Predicates::Google::get_predicates();
+        if (defined $preds->{$function}) {
+            $val = $preds->{$function}->($req_info,$rule_env,$args);
+            $val ||= 0;
+        } else {
+            $val = Kynetx::Predicates::Google::eval_google($req_info,$rule_env,$session,$rule_name,$function,$args);
+        }
     }else {
       $logger->warn("Datasource for $source not found");
     }
 
-    $logger->debug("Datasource $source:$function -> $val");
+    $logger->trace("Datasource $source:$function -> $val");
 
     return $val;
 

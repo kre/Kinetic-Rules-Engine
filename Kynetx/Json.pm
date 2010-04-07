@@ -97,7 +97,7 @@ sub astToJson {
 sub jsonToAst {
     my ($json) = @_;
 
-    return JSON::XS::->new->utf8(1)->pretty(1)->decode($json);
+    return JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(1)->decode($json);
 
 }
 

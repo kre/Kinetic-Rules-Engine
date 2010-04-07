@@ -54,12 +54,15 @@ get_config
 config_keys
 set_run_mode
 set_debug
+get_oauth_param
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 use constant DEFAULT_CONFIG_FILE => '/web/etc/kns_config.yml';
 use constant AMAZON =>  '/web/etc/Amazon';
 use constant ACONFIG => 'locale.yml';
+use constant GOOGLE => '/web/etc/Google';
+use constant GCONFIG => 'gconfig.yml';
 use constant RESPONSE_GROUP => 'response_group.yml';
 use constant SEARCH_INDEX_FILE => 'searchindex.yml';
 
@@ -68,11 +71,7 @@ our $config;
 sub configure {
     my($filename) = @_;
 
-    $config = read_config($filename || DEFAULT_CONFIG_FILE);
-    $config->{'AMAZON'}->{'LOCALE'} = read_config(AMAZON.'/'.ACONFIG);
-    $config->{'AMAZON'}->{'RESPONSE_GROUP'} = read_config(AMAZON . '/' . RESPONSE_GROUP);
-    $config->{'AMAZON'}->{'SEARCH_INDEX'} = read_config(AMAZON . '/' . SEARCH_INDEX_FILE);
-    
+    $config = read_config($filename || DEFAULT_CONFIG_FILE);    
 
     # this is stuff for config that we don't put in the config file
     $config->{'JS_VERSION'} = '0.9';
@@ -95,13 +94,20 @@ sub configure {
 
     set_run_mode();
 
-
     $config->{'OAUTH_CALLBACK_HOST'} = $config->{'EVAL_HOST'} 
       unless $config->{'OAUTH_CALLBACK_HOST'};
  
     $config->{'OAUTH_CALLBACK_PORT'} = '80'
       unless $config->{'OAUTH_CALLBACK_PORT'};
  
+    # Amazon
+    $config->{'AMAZON'}->{'LOCALE'} = read_config(AMAZON.'/'.ACONFIG);
+    $config->{'AMAZON'}->{'RESPONSE_GROUP'} = read_config(AMAZON . '/' . RESPONSE_GROUP);
+    $config->{'AMAZON'}->{'SEARCH_INDEX'} = read_config(AMAZON . '/' . SEARCH_INDEX_FILE);
+    
+    # Google
+    $config->{'GOOGLE'} = read_config(GOOGLE.'/'.GCONFIG);
+    
 
 
     return 1;
@@ -163,10 +169,14 @@ sub get_mcd_port {
     return $config->{'memcache'}->{'mcd_port'};
 }
 
+sub get_oauth_param {
+    my ($namespace,$key) = @_;
+    return $config->{'oauth'}->{$key}->{$namespace};
+}
+
 
 sub read_config {
     my ($filename) = @_;
-
     my $config = YAML::XS::LoadFile($filename) || 
 	warn "Can't open configuration file $filename: $!";
     return $config;
