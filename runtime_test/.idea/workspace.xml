@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager" verified="true">
     <list default="true" readonly="true" id="b4732e1d-ada4-4ef4-80a4-b098efdd028f" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/runall_test.rb" afterPath="$PROJECT_DIR$/runall_test.rb" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/config/settings.yml" afterPath="$PROJECT_DIR$/config/settings.yml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path=".idea/workspace.xml" />
@@ -27,10 +27,19 @@
   <component name="FileColors" enabled="true" enabledForTabs="true" />
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="runall_test.rb" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="runall_test.rb" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/runall_test.rb">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="29" column="0" selection-start="661" selection-end="661" vertical-scroll-proportion="0.37299034">
+            <state line="29" column="25" selection-start="664" selection-end="664" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="settings.yml" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/config/settings.yml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="24" column="56" selection-start="566" selection-end="566" vertical-scroll-proportion="0.3137255">
               <folding />
             </state>
           </provider>
@@ -64,11 +73,11 @@
         <option value="$PROJECT_DIR$/runtime_test.rb" />
         <option value="$PROJECT_DIR$/Rakefile" />
         <option value="$PROJECT_DIR$/spec/search_engine_spec.rb" />
-        <option value="$PROJECT_DIR$/config/settings.yml" />
         <option value="$PROJECT_DIR$/submit_test.sh" />
         <option value="$PROJECT_DIR$/submit_test.rb" />
         <option value="$PROJECT_DIR$/spec/helper/spec_helper.rb" />
         <option value="$PROJECT_DIR$/runall_test.rb" />
+        <option value="$PROJECT_DIR$/config/settings.yml" />
       </list>
     </option>
   </component>
@@ -351,16 +360,16 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/config/settings.yml">
+    <entry file="file://$PROJECT_DIR$/runall_test.rb">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="1" column="17" selection-start="8" selection-end="23" vertical-scroll-proportion="0.013071896">
+        <state line="29" column="25" selection-start="664" selection-end="664" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/runall_test.rb">
+    <entry file="file://$PROJECT_DIR$/config/settings.yml">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="29" column="0" selection-start="661" selection-end="661" vertical-scroll-proportion="0.37299034">
+        <state line="24" column="56" selection-start="566" selection-end="566" vertical-scroll-proportion="0.3137255">
           <folding />
         </state>
       </provider>
