@@ -22,5 +22,9 @@ if !ENV['browser']
     end
   end
 else
-  rake browser_test
+  `rake browser_test`
+  if $? != 0
+    puts "Error runing rake task for #{browser}"
+    exit(5);
+  end
 end
