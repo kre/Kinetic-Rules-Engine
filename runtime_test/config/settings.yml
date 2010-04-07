@@ -3,41 +3,41 @@ test:
   kobj_static_js_url: "http://init.kobj.net/js/shared/kobj-static.js"
 
 firefox_30_osx :
-  host : "localhost"
+  host : "209.41.75.70"
   port : 4444
   browser : "*firefox"
 
 safari_30_osx :
-  host : "localhost"
+  host : "209.41.75.70"
   port : 4444
   browser : "*firefox"
 
 ie6_windows :
-  host : "localhost"
+  host : "209.41.75.70"
   port : 4444
   browser : "*firefox"
 
 ie7_windows :
-  host : "localhost"
+  host : "209.41.75.70"
   port : 4444
   browser : "*firefox"
 
 ie8_windows :
-  host : "localhost"
+  host : "209.41.75.70"
   port : 4444
   browser : "*firefox"
 
 chrome_beta_windows :
-  host : "localhost"
+  host : "209.41.75.70"
   port : 4444
   browser : "*firefox"
 
 chrome_beta_osx :
-  host : "localhost"
+  host : "209.41.75.70"
   port : 4444
   browser : "*firefox"
 
 chrome_beta_linux :
-  host : "localhost"
+  host : "209.41.75.70"
   port : 4444
   browser : "*firefox"
