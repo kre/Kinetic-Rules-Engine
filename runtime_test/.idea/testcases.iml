@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="RUBY_MODULE" version="4">
+  <component name="GemRequirementsHolder" version="2">
+    <requirement>
+      <requirement>
+        <dependency name="rspec" version="0" bound="GREATER_OR_EQUAL" />
+      </requirement>
+      <source from="spec/helper/spec_helper.rb" />
+      <source from="test/helper/spec_helper.rb" />
+    </requirement>
+    <requirement>
+      <requirement>
+        <dependency name="selenium-client" version="0" bound="GREATER_OR_EQUAL" />
+      </requirement>
+      <source from="spec/helper/spec_helper.rb" />
+      <source from="test/helper/spec_helper.rb" />
+    </requirement>
+  </component>
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$" />
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" scope="PROVIDED" name="[gem] rspec (v1.3.0, /Library/Ruby/Gems/1.8/gems/rspec-1.3.0)" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="[gem] selenium-client (v1.2.18, /Library/Ruby/Gems/1.8/gems/selenium-client-1.2.18)" level="application" />
+  </component>
+</module>
+

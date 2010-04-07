@@ -1,0 +1,16 @@
+require 'rubygems'
+require 'rake'
+require 'rake/testtask'
+require 'rake/rdoctask'
+require 'spec/rake/spectask'
+
+Spec::Rake::SpecTask.new(:browser_test) do |t|
+ t.libs << "spec"
+ t.pattern = "spec/*_spec.rb"
+ t.spec_opts << '--color'
+ t.spec_opts << "--require 'rubygems,selenium/rspec/reporting/selenium_test_report_formatter'"
+ t.spec_opts << "--format=Selenium::RSpec::SeleniumTestReportFormatter:./report/#{ENV['browser']}/tests_report.html"
+ t.spec_opts << "--format=progress"                
+ t.verbose = true
+end
+

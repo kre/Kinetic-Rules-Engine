@@ -1,0 +1,43 @@
+test:
+  testing_servers : [firefox_30_osx, safari_30_osx, ie6_windows, ie7_windows, ie8_windows, chrome_beta_windows, chrome_beta_osx, chrome_beta_linux]
+  kobj_static_js_url: "http://init.kobj.net/js/shared/kobj-static.js"
+
+firefox_30_osx :
+  host : "localhost"
+  port : 4444
+  browser : "*firefox"
+
+safari_30_osx :
+  host : "localhost"
+  port : 4444
+  browser : "*firefox"
+
+ie6_windows :
+  host : "localhost"
+  port : 4444
+  browser : "*firefox"
+
+ie7_windows :
+  host : "localhost"
+  port : 4444
+  browser : "*firefox"
+
+ie8_windows :
+  host : "localhost"
+  port : 4444
+  browser : "*firefox"
+
+chrome_beta_windows :
+  host : "localhost"
+  port : 4444
+  browser : "*firefox"
+
+chrome_beta_osx :
+  host : "localhost"
+  port : 4444
+  browser : "*firefox"
+
+chrome_beta_linux :
+  host : "localhost"
+  port : 4444
+  browser : "*firefox"

@@ -1,0 +1,15 @@
+export browser="firefox_30_osx"
+rake browser_test
+ps -aef|grep firefox-bin |cut -c6-12|xargs kill
+export browser="safari_30_osx"
+rake browser_test
+ps -aef|grep firefox-bin |cut -c6-12|xargs kill
+export browser="chrome_beta_linux"
+rake browser_test
+export browser="ie6_windows"
+ps -aef|grep firefox-bin |cut -c6-12|xargs kill
+rake browser_test
+export browser="ie7_windows"
+ps -aef|grep firefox-bin |cut -c6-12|xargs kill
+rake browser_test
+ps -aef|grep firefox-bin |cut -c6-12|xargs kill
