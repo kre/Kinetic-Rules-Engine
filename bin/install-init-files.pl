@@ -44,9 +44,9 @@ my $hstamp = $dt->hms('');
 my $kobj_file = "kobj-static-".$dstamp.$hstamp.".js";
 
 my @js_files = qw(
-jquery-1.3.2.js
+jquery-1.4.2.js
 jquery.json-1.2.js
-jquery-ui-1.7.2.custom.js
+jquery-ui-1.8.custom.js
 kgrowl-1.0.js
 snowfall.jquery.js
 krl-setup.js
@@ -82,6 +82,10 @@ my $js = "var kobj_fn = '$kobj_file'; var kobj_ts = '$dstamp$hstamp';";
 foreach my $file (@js_files) {
     $js .= get_js_file($file,$js_version,$js_root,$minify);
 }
+
+# At the vary vary bottom of our new js put back jquery.
+$js .= "jQuery.noConflict();";
+
 
 
 

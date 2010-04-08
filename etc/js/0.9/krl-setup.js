@@ -1,6 +1,6 @@
 ;
 
-var $K = jQuery.noConflict();
+var $K = jQuery
 
 
 var KOBJ= KOBJ ||

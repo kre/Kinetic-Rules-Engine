@@ -66,7 +66,7 @@ module SPEC_HELPER
   # Create a new browser session using the information from the settings file.  This will also open the requested
   # page.
   #
-  def start_browser_session(settings,domain, url, timeout = 60)
+  def start_browser_session(settings,domain, url, timeout = 30)
     @selenium_driver = Selenium::Client::Driver.new(
             :host => settings[ENV["browser"]]["host"],
             :port => settings[ENV["browser"]]["port"],
