@@ -10,19 +10,25 @@ if ENV['kobj_static_url']
   puts  "URL override set to: #{ENV['kobj_static_url']}"
 end
 
+bad_code = 0
+
 if !ENV['browser']
   puts "All Browser begin tested"
   settings = load_settings(File.dirname(__FILE__) + "/config/settings.yml")
   settings['test']['testing_servers'].each do |browser|
     ENV['browser'] = browser
+    puts "Testing Browser " + browser
     cmd = "rake browser_test 2>&1"
     result = %x[#{cmd}]
     code = $?
     puts result
     if code != 0
       puts "Error runing rake task for #{browser}"
-      exit(5);
+      bad_code = code
     end
+  end
+  if bad_code
+    exit(bad_code)
   end
 else
 
