@@ -16,6 +16,11 @@ bad_code = 0
 if !ENV['browser']
   puts "All Browser begin tested"
   settings = load_settings(File.dirname(__FILE__) + "/config/settings.yml")
+  
+  if !ENV['kobj_static_url'] 
+  	puts "Using default kobj_static_url : " + settings["test"]["kobj_static_js_url"]
+  end
+  
   settings['test']['testing_servers'].each do |browser|
     ENV['browser'] = browser
     puts "Testing Browser " + browser
@@ -40,9 +45,6 @@ if !ENV['browser']
       bad_code = code
     end
   end
-  if bad_code != 0
-    exit(bad_code)
-  end
 else
 
   cmd = "rake browser_test 2>&1"
@@ -62,7 +64,5 @@ else
 end
 
 STDOUT.flush
-if code != 0
-  puts "Error running rake task"
-  exit(code);
-end
+puts "Existing Process with code : #{bad_code}"
+exit(bad_code)
