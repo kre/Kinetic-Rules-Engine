@@ -10,6 +10,7 @@ if ENV['kobj_static_url']
   puts  "URL override set to: #{ENV['kobj_static_url']}"
 end
 
+STDOUT.flush
 bad_code = 0
 
 if !ENV['browser']
@@ -18,10 +19,12 @@ if !ENV['browser']
   settings['test']['testing_servers'].each do |browser|
     ENV['browser'] = browser
     puts "Testing Browser " + browser
+    STDOUT.flush
     cmd = "rake browser_test 2>&1"
     result = %x[#{cmd}]
     code = $?
     puts result
+    STDOUT.flush
     if code != 0
       puts "Error runing rake task for #{browser}"
       bad_code = code
@@ -36,6 +39,7 @@ else
   result = %x[#{cmd}]
   code = $?
   puts result
+  STDOUT.flush
   if code != 0
     puts "Error runing rake task for #{browser}"
     exit(5);

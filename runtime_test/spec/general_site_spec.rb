@@ -66,11 +66,11 @@ describe "General Site Test" do
 
   end
 
-  describe "www.netflix.com" do
+  describe "www.apple.com" do
     it_should_behave_like "Any Site"
 
     before(:each) do
-      start_browser_session(@settings, "http://www.netflix.com", "/")
+      start_browser_session(@settings, "http://www.apple.com", "/")
     end
 
     after(:each) do
@@ -79,11 +79,11 @@ describe "General Site Test" do
 
   end
 
-  describe "www.wikipedia.org" do
+  describe "www.bing.com" do
     it_should_behave_like "Any Site"
 
     before(:each) do
-      start_browser_session(@settings, "http://www.wikipedia.org", "/")
+      start_browser_session(@settings, "http://www.bing.com", "/")
     end
 
     after(:each) do
@@ -97,6 +97,19 @@ describe "General Site Test" do
 
     before(:each) do
       start_browser_session(@settings, "http://www.youtube.com", "/")
+    end
+
+    after(:each) do
+      end_browser_session
+    end
+
+  end
+
+  describe "www.msn.com" do
+    it_should_behave_like "Any Site"
+
+    before(:each) do
+      start_browser_session(@settings, "http://www.msn.com", "/")
     end
 
     after(:each) do

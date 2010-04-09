@@ -47,6 +47,7 @@ my @js_files = qw(
 jquery-1.4.2.js
 jquery.json-1.2.js
 jquery-ui-1.8.custom.js
+jquery.bgiframe.js
 kgrowl-1.0.js
 snowfall.jquery.js
 krl-setup.js

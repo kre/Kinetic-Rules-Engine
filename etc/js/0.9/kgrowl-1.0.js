@@ -196,6 +196,9 @@ $.fn.kGrowl =
 	    /** Optional Corners Plugin **/
 	    if ( $.fn.corner != undefined ) $(notification).corner( o.corners );
 
+	    /* For IE put iframe behide it to cover flash */
+	    $(".kGrowl-notification").parent().bgiframe({"opacity":true,"left":10,"top":-15});
+	    
 	    /** Add a Global Closer if more than one notification exists **/
 	    if ( $('div.kGrowl-notification:parent', this.element).size() > 1 && $('div.kGrowl-closer', this.element).size() == 0 && this.defaults.closer != false ) {
 		$(this.defaults.closerTemplate).addClass('kGrowl-closer').css(closer_style).addClass(this.defaults.theme).appendTo(this.element).animate(this.defaults.animateOpen, this.defaults.speed, this.defaults.easing).bind("click.kGrowl", function() {

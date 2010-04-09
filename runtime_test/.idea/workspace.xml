@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager" verified="true">
     <list default="true" readonly="true" id="b4732e1d-ada4-4ef4-80a4-b098efdd028f" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/spec/general_site_spec.rb" afterPath="$PROJECT_DIR$/spec/general_site_spec.rb" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/runall_test.rb" afterPath="$PROJECT_DIR$/runall_test.rb" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
@@ -27,10 +28,10 @@
   <component name="FileColors" enabled="true" enabledForTabs="true" />
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="general_site_spec.rb" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="general_site_spec.rb" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/spec/general_site_spec.rb">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="32" column="0" selection-start="1971" selection-end="1971" vertical-scroll-proportion="0.0">
+            <state line="71" column="65" selection-start="2584" selection-end="2584" vertical-scroll-proportion="0.34640524">
               <folding />
             </state>
           </provider>
@@ -39,16 +40,25 @@
       <file leaf-file-name="settings.yml" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/config/settings.yml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="1" column="101" selection-start="27" selection-end="107" vertical-scroll-proportion="0.0">
+            <state line="20" column="51" selection-start="508" selection-end="508" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="runall_test.rb" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="runall_test.rb" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/runall_test.rb">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="30" column="17" selection-start="710" selection-end="710" vertical-scroll-proportion="0.3858521">
+            <state line="17" column="12" selection-start="312" selection-end="312" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Rakefile" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Rakefile">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="16" column="0" selection-start="520" selection-end="520" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -78,8 +88,8 @@
         <option value="$PROJECT_DIR$/spec/dom_watching_spec.rb" />
         <option value="$PROJECT_DIR$/spec/search_engine_spec.rb" />
         <option value="$PROJECT_DIR$/config/settings.yml" />
-        <option value="$PROJECT_DIR$/spec/general_site_spec.rb" />
         <option value="$PROJECT_DIR$/runall_test.rb" />
+        <option value="$PROJECT_DIR$/spec/general_site_spec.rb" />
       </list>
     </option>
   </component>
@@ -275,7 +285,7 @@
     </option>
   </component>
   <component name="ToolWindowManager">
-    <frame x="1245" y="244" width="1156" height="1055" extended-state="0" />
+    <frame x="-1713" y="106" width="1156" height="1055" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -329,11 +339,6 @@
         <state line="19" column="6" selection-start="283" selection-end="283" vertical-scroll-proportion="0.332696" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Rakefile">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="16" column="0" selection-start="520" selection-end="520" vertical-scroll-proportion="0.35424355" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/spec/dom_watching_spec.rb">
       <provider selected="true" editor-type-id="text-editor">
         <state line="21" column="66" selection-start="543" selection-end="543" vertical-scroll-proportion="0.27450982" />
@@ -349,21 +354,30 @@
         <state line="68" column="62" selection-start="1858" selection-end="1858" vertical-scroll-proportion="0.8888889" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/spec/general_site_spec.rb">
+    <entry file="file://$PROJECT_DIR$/runall_test.rb">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="32" column="0" selection-start="1971" selection-end="1971" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/config/settings.yml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="1" column="101" selection-start="27" selection-end="107" vertical-scroll-proportion="0.0">
+        <state line="17" column="12" selection-start="312" selection-end="312" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/runall_test.rb">
+    <entry file="file://$PROJECT_DIR$/Rakefile">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="30" column="17" selection-start="710" selection-end="710" vertical-scroll-proportion="0.3858521">
+        <state line="16" column="0" selection-start="520" selection-end="520" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config/settings.yml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="20" column="51" selection-start="508" selection-end="508" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/spec/general_site_spec.rb">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="71" column="65" selection-start="2584" selection-end="2584" vertical-scroll-proportion="0.34640524">
           <folding />
         </state>
       </provider>
