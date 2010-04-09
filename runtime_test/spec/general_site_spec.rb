@@ -14,14 +14,14 @@ describe "General Site Test" do
       insert_runtime_script(["a41x27"])
       #  We wait for all the elements as the java script is rendering them so we need to give them time
       page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='KOBJ_after']"});
-      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='KOBJ_append']"});
-      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='KOBJ_before']"});
-      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='KOBJ_test']"});
-      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='KOBJ_float_html']"});
-      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='KOBJ_notify']"});
-      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='KOBJ_prepend']"});
-      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='KOBJ_image']"});
-      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='KOBJ_close_test']"});
+      page.wait_for({:wait_for => :element, :timeout_in_seconds => 10, :element => "//*[@id='KOBJ_append']"});
+      page.wait_for({:wait_for => :element, :timeout_in_seconds => 10, :element => "//*[@id='KOBJ_before']"});
+      page.wait_for({:wait_for => :element, :timeout_in_seconds => 10, :element => "//*[@id='KOBJ_test']"});
+      page.wait_for({:wait_for => :element, :timeout_in_seconds => 10, :element => "//*[@id='KOBJ_float_html']"});
+      page.wait_for({:wait_for => :element, :timeout_in_seconds => 10, :element => "//*[@id='KOBJ_notify']"});
+      page.wait_for({:wait_for => :element, :timeout_in_seconds => 10, :element => "//*[@id='KOBJ_prepend']"});
+      page.wait_for({:wait_for => :element, :timeout_in_seconds => 10, :element => "//*[@id='KOBJ_image']"});
+      page.wait_for({:wait_for => :element, :timeout_in_seconds => 10, :element => "//*[@id='KOBJ_close_test']"});
 
       page.text("//div[@id='KOBJ_app_bef_aft_test']").should == "KOBJ_beforeKOBJ_afterKOBJ_append"
 

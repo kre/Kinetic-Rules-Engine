@@ -24,13 +24,23 @@ if !ENV['browser']
     result = %x[#{cmd}]
     code = $?
     puts result
+
+    if code == 0
+      matcher = /(\d+) failures/.match(result)
+
+      # if we have failures
+      if matcher[0].to_i != 0
+        code = matcher[0].to_i
+      end
+
+    end
     STDOUT.flush
     if code != 0
       puts "Error runing rake task for #{browser}"
       bad_code = code
     end
   end
-  if bad_code
+  if bad_code != 0
     exit(bad_code)
   end
 else
@@ -39,9 +49,20 @@ else
   result = %x[#{cmd}]
   code = $?
   puts result
-  STDOUT.flush
-  if code != 0
-    puts "Error runing rake task for #{browser}"
-    exit(5);
+
+  if code == 0
+    matcher = /(\d+) failures/.match(result)
+
+    # if we have failures
+    if matcher[0].to_i != 0
+      code = matcher[0].to_i
+    end
   end
+
+end
+
+STDOUT.flush
+if code != 0
+  puts "Error running rake task"
+  exit(code);
 end
