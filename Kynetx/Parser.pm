@@ -407,12 +407,22 @@ event_btwn: event_prim ('not')(?) 'between' '(' event_seq ',' event_seq ')'
        }
     | event_prim
 
-event_prim: 'pageview' (STRING | REGEXP) setting(?) 
+event_prim: event_domain(?) 'pageview' (STRING | REGEXP) setting(?) 
 	  {$return =
-	   { 'pattern' => $item[2],
-	     'vars' => $item[3][0],
+	   { 'pattern' => $item[3],
+	     'vars' => $item[4][0],
              'type' => 'prim_event',
-             'op' => 'pageview'
+             'op' => 'pageview',
+             'domain' => $item[1][0]
+	   } 
+	  }
+  | event_domain(?) ('submit'|'click'|'change') STRING setting(?)
+	  {$return =
+	   { 'element' => $item[3],
+	     'vars' => $item[4][0],
+             'type' => $item[2].'_event',
+             'op' => 'pageview',
+             'domain' => $item[1][0]
 	   } 
 	  }
   | '(' event_seq ')'
@@ -420,6 +430,9 @@ event_prim: 'pageview' (STRING | REGEXP) setting(?)
 setting: 'setting' '(' VAR(s? /,/) ')'
 	  {$return =  $item[3]
 	  }
+
+event_domain: ('web' | 'mail') ':'
+   {$return = $item[1]}
 
 foreach: 'foreach' expr setting
     {$return =

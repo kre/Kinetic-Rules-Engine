@@ -1,5 +1,9 @@
+2010-04-09  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/PrettyPrinter.pm (pp_event_expr): Updated for other Web events
+
 2010-04-07 Mark Horstmeier <meh@kynetx.com>
-    ** Internal release of gdata/calendar implementation, documentation still needs documenting
+    * Internal release of gdata/calendar implementation, documentation still needs documenting
     * Kynetx/Actions.pm: Added check for google actions
     * Kynetx.pm:  Added rest landing spot for google oauth callback
     * Kynetx/Session.pm: Added some debug handles to check session values
