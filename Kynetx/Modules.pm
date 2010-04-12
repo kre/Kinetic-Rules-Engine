@@ -37,7 +37,7 @@ use Kynetx::Util qw(:all);
 use Kynetx::Expressions qw(:all);
 use Kynetx::Environments qw(:all);
 use Kynetx::Session qw(:all);
-use Kynetx::Predicates::Google qw(:all);
+use Kynetx::Predicates::Google;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
