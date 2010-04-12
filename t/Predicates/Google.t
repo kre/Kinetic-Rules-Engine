@@ -1,8 +1,8 @@
 #!/usr/bin/perl -w 
 
-use lib qw(/web/lib/perl);
 use strict;
 use warnings;
+use lib qw(/web/lib/perl);
 
 use Test::More;
 use Test::LongString;
@@ -30,7 +30,7 @@ use Kynetx::Rules;
 use Kynetx::Predicates::Google::OAuthHelper;
 
 
-use Kynetx::FakeReq qw/:all/;
+use Kynetx::FakeReq;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
