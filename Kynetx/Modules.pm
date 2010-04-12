@@ -33,10 +33,10 @@ use strict;
 use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
-use Kynetx::Util qw(:all);
-use Kynetx::Expressions qw(:all);
-use Kynetx::Environments qw(:all);
-use Kynetx::Session qw(:all);
+use Kynetx::Util;
+use Kynetx::Expressions;
+use Kynetx::Environments;
+use Kynetx::Session;
 use Kynetx::Predicates::Google;
 
 use Data::Dumper;
