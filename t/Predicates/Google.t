@@ -9,9 +9,9 @@ use Test::LongString;
 use Test::Deep;
 
 use Apache::Session::Memcached;
-use DateTime qw(:all);
+use DateTime;
 use APR::URI;
-use APR::Pool ();
+use APR::Pool;
 use Cache::Memcached;
 
 
@@ -20,14 +20,14 @@ use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
 
-use Kynetx::Test;# qw/:all/;
-use Kynetx::Predicates::Google;# qw/:all/;
-use Kynetx::Environments;# qw/:all/;
-use Kynetx::Session;# qw/:all/;
-use Kynetx::Configure;# qw/:all/;
-use Kynetx::Parser;# qw/:all/;
-use Kynetx::Rules;# qw/:all/;
-use Kynetx::Predicates::Google::OAuthHelper;# qw/:all/;
+use Kynetx::Test;
+use Kynetx::Predicates::Google;
+use Kynetx::Environments;
+use Kynetx::Session;
+use Kynetx::Configure;
+use Kynetx::Parser;
+use Kynetx::Rules;
+use Kynetx::Predicates::Google::OAuthHelper;
 
 
 use Kynetx::FakeReq qw/:all/;

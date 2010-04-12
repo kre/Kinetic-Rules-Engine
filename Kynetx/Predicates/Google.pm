@@ -40,10 +40,9 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 
 use Kynetx::OAuth;
-use Kynetx::Session qw(:all);
-use Kynetx::Util qw(:all);
-use Kynetx::Configure qw(:all);
-use Kynetx::Memcached qw(:all);
+use Kynetx::Util;
+use Kynetx::Configure;
+use Kynetx::Memcached;
 use Kynetx::Predicates::Google::OAuthHelper qw(:all);
 use Kynetx::Predicates::Google::Calendar;
 
