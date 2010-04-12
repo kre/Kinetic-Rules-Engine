@@ -20,14 +20,14 @@ use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
 
-use Kynetx::Test qw/:all/;
-use Kynetx::Predicates::Google qw/:all/;
-use Kynetx::Environments qw/:all/;
-use Kynetx::Session qw/:all/;
-use Kynetx::Configure qw/:all/;
-use Kynetx::Parser qw/:all/;
-use Kynetx::Rules qw/:all/;
-use Kynetx::Predicates::Google::OAuthHelper qw/:all/;
+use Kynetx::Test;# qw/:all/;
+use Kynetx::Predicates::Google;# qw/:all/;
+use Kynetx::Environments;# qw/:all/;
+use Kynetx::Session;# qw/:all/;
+use Kynetx::Configure;# qw/:all/;
+use Kynetx::Parser;# qw/:all/;
+use Kynetx::Rules;# qw/:all/;
+use Kynetx::Predicates::Google::OAuthHelper;# qw/:all/;
 
 
 use Kynetx::FakeReq qw/:all/;
@@ -252,12 +252,12 @@ $gcal_tests++;
 contains_string(Kynetx::Predicates::Google::authorize($my_req_info, $rule_env, $session, {},{},['calendar']), "https://www.google.com/accounts/OAuthAuthorizeToken?oauth_token", "authorize gets a URL");
 $gcal_tests++;
 
-store_token($rid,$session,'access_token_secret',$atoken_secret,'google','Calendar');
-store_token($rid,$session,'access_token',$atoken,'google','Calendar');
+Kynetx::Predicates::Google::OAuthHelper::store_token($rid,$session,'access_token_secret',$atoken_secret,'google','Calendar');
+Kynetx::Predicates::Google::OAuthHelper::store_token($rid,$session,'access_token',$atoken,'google','Calendar');
 
 #### Create a calendar entry so we can can do dynamic tests
 $args = {"quickadd" => $rwords};
-$json = eval_google($my_req_info,$rule_env,$session,$rule_name,'add',['calendar',$args]);
+$json = Kynetx::Predicates::Google::eval_google($my_req_info,$rule_env,$session,$rule_name,'add',['calendar',$args]);
 $val = $json->{'entry'}->{'gCal$uid'}->{'value'};
 $val =~ m/^(\w+)\@google.com/;
 my $created_event_id= $1;
@@ -351,12 +351,12 @@ $args = {"feed" => "event", "ctz"=>"America/Los Angeles", "projection"=>"free-bu
 test_google('calendar','get',$args,$expected,$description,0);
 
 
-session_cleanup($session);
+Kynetx::Session::session_cleanup($session);
 
 sub test_google {
     my ($scope_str,$function,$args,$expected,$description,$debug) = @_;
     $gcal_tests++;
-    my $json = eval_google($my_req_info,$rule_env,$session,$rule_name,$function,[$scope_str,$args]);
+    my $json = Kynetx::Predicates::Google::eval_google($my_req_info,$rule_env,$session,$rule_name,$function,[$scope_str,$args]);
     if ($debug) {
         $logger->debug("Returned from eval_google: ", sub { Dumper($json)});
     }
