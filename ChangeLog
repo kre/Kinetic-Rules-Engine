@@ -4,6 +4,7 @@
     * Kynetx/Predicates/Google/Calendar.pm: removed circular references
     * t/Predicates/Google.t: removed circular references
     * Kynetx/Json.pm: removed circular references
+    * Kynetx/Expressions.pm: removed circular references
     
 2010-04-09  Phil Windley  <pjw@kynetx.com>
 

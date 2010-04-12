@@ -43,11 +43,18 @@ use Storable qw/dclone freeze/;
 use Digest::MD5 qw/md5_hex/;
 
 use Kynetx::Parser qw/mk_expr_node/;
-use Kynetx::Datasets qw/:all/;
-use Kynetx::Environments qw/:all/;
-use Kynetx::Session qw/:all/;
-use Kynetx::Operators qw/:all/;
-use Kynetx::Modules qw/:all/;
+use Kynetx::Datasets;
+use Kynetx::Environments qw/lookup_rule_env
+    extend_rule_env/;
+use Kynetx::Session qw/session_get 
+    session_defined 
+    session_within 
+    session_seen 
+    session_seen_compare
+    session_seen_within
+    session_history/;
+use Kynetx::Operators;
+use Kynetx::Modules;
 use Kynetx::JavaScript;
 
 
