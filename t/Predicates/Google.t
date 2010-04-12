@@ -81,7 +81,7 @@ my $scope = {
     
 };
 
-my $email_re = qr/(?<username>\w+)\@\w+\.\w+/;
+my $email_re = qr/(\w+)\@\w+\.\w+/;
 my $email_value = {
     '$t' => re($email_re)
 };
