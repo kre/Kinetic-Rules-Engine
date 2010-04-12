@@ -44,11 +44,10 @@ use Encode;
 use LWP::UserAgent;
 use HTTP::Request::Common;
 use URI::Escape ('uri_escape');
-#use XML::Atom::Entry;
 
-use Kynetx::Session qw/:all/;
-use Kynetx::Util qw(:all);
-use Kynetx::Predicates::Google qw(:all);
+use Kynetx::Session;
+use Kynetx::Util;
+use Kynetx::Predicates::Google;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);

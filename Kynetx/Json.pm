@@ -39,8 +39,8 @@ use JSON::XS;
 use XML::XML2JSON;
 use Data::Dumper;
 
-use Kynetx::Parser qw/:all/;
-use Kynetx::PrettyPrinter qw/:all/;
+use Kynetx::Parser; # qw/:all/;
+use Kynetx::PrettyPrinter; # qw/:all/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -57,6 +57,7 @@ our %EXPORT_TAGS = (
           jsonToRuleBody
           astToJson
           jsonToAst
+          get_obj
           )
     ]
 );
@@ -65,7 +66,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 sub krlToJson {
     my ($krl) = @_;
 
-    my $tree = parse_ruleset($krl);
+    my $tree = Kynetx::Parser::parse_ruleset($krl);
     return JSON::XS::->new->utf8(1)->pretty(1)->encode($tree);
 
 }
@@ -74,7 +75,7 @@ sub jsonToKrl {
     my ($json) = @_;
 
     my $tree = JSON::XS::->new->utf8(1)->pretty(1)->decode($json);
-    return pp($tree);
+    return Kynetx::PrettyPrinter::pp($tree);
 
 }
 
@@ -82,7 +83,7 @@ sub jsonToRuleBody {
     my ($json) = @_;
 
     my $tree = JSON::XS::->new->utf8(1)->pretty(1)->decode($json);
-    return pp_rule_body( $tree, 0 );
+    return Kynetx::PrettyPrinter::pp_rule_body( $tree, 0 );
 
 }
 
@@ -162,5 +163,30 @@ sub lookahead {
     }
 }
 
+sub get_obj {
+    my ( $obj, $regexp ) = @_;
+    my $logger = get_logger();
+    my $ret_val;
+    if ( ref $obj eq 'HASH' ) {
+        foreach my $key ( keys %$obj ) {
+            if ( $key =~ $regexp ) {
+                return $obj->{$key};
+            } else {
+                $ret_val = get_obj( $obj->{$key}, $regexp );
+                if ($ret_val) {
+                    return $ret_val;
+                }
+            }
+        }
+    } elsif ( ref $obj eq 'ARRAY' ) {
+        foreach my $element (@$obj) {
+            $ret_val = get_obj( $element, $regexp );
+            if ($ret_val) {
+                return $ret_val;
+            }
+        }
+    }
+    
+}
 
 1;

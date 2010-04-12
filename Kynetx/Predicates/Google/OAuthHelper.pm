@@ -48,8 +48,8 @@ use LWP::UserAgent;
 use HTTP::Request::Common;
 use URI::Escape ('uri_escape');
 
-use Kynetx::Session qw/:all/;
-use Kynetx::Util qw(:all);
+use Kynetx::Session;
+use Kynetx::Util;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -351,7 +351,7 @@ sub store_token {
         $key = $namespace . SEP . $lscope;
     }
     $key .= SEP . $name;
-    session_store( $rid, $session, $key, $value );
+    Kynetx::Session::session_store( $rid, $session, $key, $value );
 }
 
 sub get_token {
@@ -367,7 +367,7 @@ sub get_token {
         $key = $namespace . SEP . $lscope;
     }
     $key .= SEP . $name;
-    return session_get( $rid, $session, $key );
+    return Kynetx::Session::session_get( $rid, $session, $key );
 }
 
 sub trim_tokens {
@@ -406,7 +406,7 @@ sub blast_tokens {
     if ( defined $lscope ) {
         $key = $namespace . SEP . $lscope;
     }
-    foreach my $session_key (@{session_keys($rid,$session)}) {
+    foreach my $session_key (@{Kynetx::Session::session_keys($rid,$session)}) {
         my $re = qr/^$key/ ;
         if ($session_key =~ $re) {
             session_delete($rid,$session,$session_key);
@@ -510,7 +510,7 @@ sub make_callback_url {
       Kynetx::Configure::get_oauth_param( $namespace, 'callback' );
     my $url_part = "/ruleset/$rest_part/";
     my $base     = "http://" . $host . ":" . $port . $url_part . $rid . "?";
-    my $callback = mk_url(
+    my $callback = Kynetx::Util::mk_url(
                            $base,
                            {
                               'caller',                  $caller,

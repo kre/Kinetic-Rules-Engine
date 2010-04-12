@@ -45,7 +45,7 @@ use Kynetx::Util qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Predicates::Google::OAuthHelper qw(:all);
-use Kynetx::Predicates::Google::Calendar qw(:all);
+use Kynetx::Predicates::Google::Calendar;
 
 use LWP::UserAgent;
 use URI::Escape;
