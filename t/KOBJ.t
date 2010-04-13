@@ -55,8 +55,8 @@ use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
 
-my $numtests = 18;
-plan tests => $numtests;
+# my $numtests = 18;
+# plan tests => $numtests;
 
 
 my $r = Kynetx::Test::configure();
@@ -76,6 +76,7 @@ Kynetx::Configure::configure();
 
 #Kynetx::Memcached->init();
 
+my $test_count = 0;
 
 # dispatch
 my $svn_conn = "http://krl.kobj.net/rules/client/|cs|fizzbazz";
@@ -84,7 +85,7 @@ is_string_nows(
     Kynetx::KOBJ::dispatch($my_req_info,"cs_test;cs_test_1"), 
     '{"cs_test_1":["www.windley.com","www.kynetx.com"],"cs_test":["www.google.com","www.yahoo.com","www.live.com"]}',
     "Testing dispatch function with two RIDs");
-
+$test_count++;
 
 my $dn = "http://127.0.0.1/js";
 
@@ -100,7 +101,7 @@ SKIP: {
     my $check_url = "$dn/version/$ruleset";
     diag "Checking $check_url";
     my $response = $ua->get($check_url);
-    skip "No server available", $numtests if (! $response->is_success);
+    skip "No server available", 0 if (! $response->is_success);
 
     # test version function
     my $url_version_1 = "$dn/version/$ruleset";
@@ -108,10 +109,10 @@ SKIP: {
 
     $mech->get_ok($url_version_1);
     is($mech->content_type(), 'text/html');
-
     $mech->title_is('KNS Version');
-
     $mech->content_like('/number\s+\d+/');
+    $test_count += 4;
+
 
     my $url_version_2 = "$dn/version/$ruleset?flavor=json";
     #diag "Testing console with $url_version_2";
@@ -120,6 +121,7 @@ SKIP: {
     is($mech->content_type(), 'text/plain');
 
     $mech->content_like('/{"build_num"\s*:\s*"\d+/');
+    $test_count += 3;
 
     # kobj.js
     my $url_version_3 = "$dn/$ruleset/kobj.js";
@@ -129,6 +131,7 @@ SKIP: {
     is($mech->content_type(), 'text/javascript');
 
     $mech->content_like(qr/var KOBJ= KOBJ || {\s*version:\s*'\d+\.\d+'\s*}/s);
+    $test_count += 3;
 
 
     # dispatch
@@ -139,6 +142,7 @@ SKIP: {
     is($mech->content_type(), 'text/plain');
 
     $mech->content_like(qr/www\.windley\.com.*www\.yahoo\.com/s);
+    $test_count += 3;
 
     # datasets
     my $url_version_5 = "$dn/datasets/cs_test;cs_test_1/";
@@ -149,10 +153,12 @@ SKIP: {
 
     $mech->content_contains("KOBJ['data']['cached_timeline'] =");
     $mech->content_lacks("KOBJ['data']['public_timeline'] =");
+    $test_count += 4;
 
 
 }
 
+done_testing($test_count);
 
 1;
 
