@@ -99,8 +99,14 @@ ruleset: 'ruleset' ruleset_name  '{'
          '}' eofile
              {$return = {
 		 'ruleset_name' => $item{ruleset_name},
+                 'meta_start_line' => $itempos[4]{line}{from},
+                 'meta_start_col' => $itempos[4]{column}{from},
 		 'meta' => $item[4][0] || {},
+                 'dispatch_start_line' => $itempos[5]{line}{from},
+                 'dispatch_start_col' => $itempos[5]{column}{from},
 		 'dispatch' => $item[5][0] || [],
+                 'global_start_line' => $itempos[6]{line}{from},
+                 'global_start_col' => $itempos[6]{column}{from},
 		 'global' => $item[6][0] || [],
 		 'rules' => $item[7]
 	         }
@@ -342,7 +348,9 @@ rule: 'rule' VAR 'is' rule_state '{'
 	      'cond' => $item{action}->{'cond'} || 
 		        Kynetx::Parser::mk_expr_node('bool','true'),
 	      'callbacks' => $item[11][0],
-	      'post' => $item[12][0]
+	      'post' => $item[12][0],
+              'start_line' => $itempos[1]{line}{from},
+              'start_col' => $itempos[1]{column}{from}
            } }
   | <error>
 
