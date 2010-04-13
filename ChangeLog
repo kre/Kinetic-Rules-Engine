@@ -1,3 +1,7 @@
+2010-04-13 Mark Horstmeier <meh@kynetx.com>
+    * Kynetx/Predicates/Google.pm: Fixed unresolved references to Session and OAuthHelper
+    * Kynetx/Predicates/Google/OAuthHelper.pm: fixed unresolved references to Session 
+
 2010-04-12 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Predicates/Google.pm: removed circular references
     * Kynetx/Predicates/Google/OAuthHelper.pm: removed circular references

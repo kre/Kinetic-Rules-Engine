@@ -43,13 +43,23 @@ use Kynetx::OAuth;
 use Kynetx::Util;
 use Kynetx::Configure;
 use Kynetx::Memcached;
-use Kynetx::Predicates::Google::OAuthHelper qw(get_token
-    blast_tokens
-    get_authorization_message
-    post_protected_resource
-    get_protected_resource
+use Kynetx::Predicates::Google::OAuthHelper qw(get_authorization_message
+          get_tokens_by_oauth_token
+          get_token
+          get_scope_from_token
+          store_token
+          set_auth_tokens
+          get_access_tokens
+          get_protected_resource
+          trim_tokens
+          blast_tokens
+          post_protected_resource 
 );
 use Kynetx::Predicates::Google::Calendar;
+use Kynetx::Session qw(
+    process_session
+    session_cleanup
+);
 
 use LWP::UserAgent;
 use URI::Escape;

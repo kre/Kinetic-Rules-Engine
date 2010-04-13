@@ -48,7 +48,12 @@ use LWP::UserAgent;
 use HTTP::Request::Common;
 use URI::Escape ('uri_escape');
 
-use Kynetx::Session;
+use Kynetx::Session qw(
+    session_keys
+    session_delete
+    session_store
+    session_get
+);
 use Kynetx::Util;
 
 use Exporter;
@@ -351,7 +356,7 @@ sub store_token {
         $key = $namespace . SEP . $lscope;
     }
     $key .= SEP . $name;
-    Kynetx::Session::session_store( $rid, $session, $key, $value );
+    session_store( $rid, $session, $key, $value );
 }
 
 sub get_token {
@@ -367,7 +372,7 @@ sub get_token {
         $key = $namespace . SEP . $lscope;
     }
     $key .= SEP . $name;
-    return Kynetx::Session::session_get( $rid, $session, $key );
+    return session_get( $rid, $session, $key );
 }
 
 sub trim_tokens {
