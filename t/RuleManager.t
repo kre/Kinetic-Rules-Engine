@@ -572,7 +572,7 @@ SKIP: {
 
     is($mech->content_type(), 'text/plain');
     contains_string($mech->response()->content,
-		    '"error" : "Line 1:Invalid dispatch: Was expecting');
+		    'Invalid dispatch: Was expecting');
 
 
     # parse/meta
