@@ -589,6 +589,8 @@ sub build_one_action {
           $actions = Kynetx::Predicates::Amazon::get_actions();
       } elsif ($action->{'source'} eq 'google') {
           $actions = Kynetx::Predicates::Google::get_actions();
+      } elsif ($action->{'source'} eq 'odata') {
+          $actions = Kynetx::Predicates::OData::get_actions();
       }
     } else {
       $actions = $default_actions;

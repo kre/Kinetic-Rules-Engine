@@ -1,3 +1,11 @@
+2010-04-15 Mark Horstmeier <meh@kynetx.com>
+    * Kynetx/Actions.pm: Added hook for odata actions
+    * Kynetx/Json.pm: Helper functions for odata
+    * Kynetx/Predicates/OData.pm: new module for OData integration
+    * Kynetx/Modules.pm: added hook for odata predicates
+    * Kynetx/Util.pm: convenience method to check and add '/' to EoS
+    * t/Predicates/OData.t: test suites against odata.org and netflix for OData.pm
+
 2010-04-15 Cid Dennis <cid@kynetx.com>
     * bin/install-init-files.pl:  Added code to wrap the runtime and make sure it does not initialize two time.
     * etc/js/0.9/jquery.json-1.2.js: Var name fixes

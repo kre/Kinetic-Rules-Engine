@@ -60,6 +60,7 @@ turn_off_logging
 mk_url
 merror
 mis_error
+end_slash
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -255,5 +256,14 @@ sub mis_error {
     }
 }
 
+sub end_slash {
+    my ($url_str)= @_;
+    my $logger = get_logger();
+    $url_str =~ /.+(\/)$/g;
+    if (not defined $1) {
+        $url_str = $url_str . '/';
+    } 
+    return $url_str;
+}
 
 1;

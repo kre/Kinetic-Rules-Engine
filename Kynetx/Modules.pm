@@ -226,6 +226,14 @@ sub eval_module {
         } else {
             $val = Kynetx::Predicates::Google::eval_google($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
+     } elsif ($source eq 'odata') {
+        $preds = Kynetx::Predicates::OData::get_predicates();
+        if (defined $preds->{$function}) {
+            $val = $preds->{$function}->($req_info,$rule_env,$args);
+            $val ||= 0;
+        } else {
+            $val = Kynetx::Predicates::OData::eval_odata($req_info,$rule_env,$session,$rule_name,$function,$args);
+        }
     }else {
       $logger->warn("Datasource for $source not found");
     }

@@ -57,6 +57,7 @@ our %EXPORT_TAGS = (
           jsonToRuleBody
           astToJson
           jsonToAst
+          jsonToAst_w
           get_obj
           )
     ]
@@ -100,6 +101,24 @@ sub jsonToAst {
 
     return JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(1)->decode($json);
 
+}
+
+# Wrap any conversion errors and just return content
+sub jsonToAst_w {
+    my ($json)=@_;
+    my $logger = get_logger();
+    my $pstruct;
+    eval {
+        $pstruct = jsonToAst($json);
+    };
+    if ($@) {
+        $logger->debug(
+                     "Invalid JSON format => parse result as string",
+                     sub { Dumper(@_) } );
+        return $json
+    } else {
+        return $pstruct;
+    }
 }
 
 sub xmlToJson {
@@ -166,9 +185,11 @@ sub lookahead {
 sub get_obj {
     my ( $obj, $regexp ) = @_;
     my $logger = get_logger();
+    $logger->debug("Regex: ", sub {Dumper($regexp)});
     my $ret_val;
     if ( ref $obj eq 'HASH' ) {
         foreach my $key ( keys %$obj ) {
+            $logger->debug("  key: ",$key);
             if ( $key =~ $regexp ) {
                 return $obj->{$key};
             } else {
