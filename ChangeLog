@@ -1,3 +1,16 @@
+
+2010-04-15 Cid Dennis <cid@kynetx.com>
+    * bin/install-init-files.pl:  Added code to wrap the runtime and make sure it does not initialize two time.
+    * etc/js/0.9/jquery.json-1.2.js: Var name fixes
+    * etc/js/0.9/krl-annotate.js: Var name fixes
+    * etc/js/0.9/krl-domwatch.js: Var name fixes
+    * etc/js/0.9/krl-percolation.js: Var name fixes
+    * etc/js/0.9/krl-runtime.js.tmpl: Var name fixes
+    * etc/js/0.9/krl-setup.js:  Var name fixes and added back in errorstack function
+    * etc/js/0.9/krl-sidetab.js: Var name fixes
+    * etc/js/0.9/snowfall.jquery.js: Removed extra lines and fixed var name
+
+
 2010-04-13 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Predicates/Google.pm: Fixed unresolved references to Session and OAuthHelper
     * Kynetx/Predicates/Google/OAuthHelper.pm: fixed unresolved references to Session 

@@ -25,17 +25,7 @@
   </component>
   <component name="FileColors" enabled="true" enabledForTabs="true" />
   <component name="FileEditorManager">
-    <leaf>
-      <file leaf-file-name="test.js" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/test.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="6" column="52" selection-start="180" selection-end="180" vertical-scroll-proportion="0.08348794">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf />
   </component>
   <component name="FindManager">
     <FindUsagesManager>
@@ -347,7 +337,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/test.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="6" column="52" selection-start="180" selection-end="180" vertical-scroll-proportion="0.08348794">
+        <state line="6" column="1" selection-start="129" selection-end="180" vertical-scroll-proportion="0.08348794">
           <folding />
         </state>
       </provider>
