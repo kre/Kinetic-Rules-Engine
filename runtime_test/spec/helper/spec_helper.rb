@@ -46,11 +46,12 @@ module SPEC_HELPER
     if !kobj_static_js_url
       kobj_static_js_url = @settings["test"]["kobj_static_js_url"]
     end
+#    r.text = 'KOBJ_config ={    "rids"  : #{r_ids.to_json},"init"  : {"eval_host" : "qa.kobj.net", "callback_host":"qa.kobj.net", "init_host" : "qa.kobj.net"}};';
 
     script = <<-ENDS
         var d = window.document;
         var r = d.createElement('script');
-        r.text = 'KOBJ_config ={    "rids"  : #{r_ids.to_json},"init"  : {"eval_host" : "qa.kobj.net", "callback_host":"qa.kobj.net", "init_host" : "qa.kobj.net"}};';
+        r.text = 'KOBJ_config ={    "rids"  : #{r_ids.to_json}};';
         var body = d.getElementsByTagName('body')[0];
         body.appendChild(r);
         var q = d.createElement('script');
