@@ -1,4 +1,3 @@
-
 2010-04-15 Cid Dennis <cid@kynetx.com>
     * bin/install-init-files.pl:  Added code to wrap the runtime and make sure it does not initialize two time.
     * etc/js/0.9/jquery.json-1.2.js: Var name fixes
@@ -10,6 +9,9 @@
     * etc/js/0.9/krl-sidetab.js: Var name fixes
     * etc/js/0.9/snowfall.jquery.js: Removed extra lines and fixed var name
 
+2010-04-13  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Parser.pm: Added line numbers and columns to AST
 
 2010-04-13 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Predicates/Google.pm: Fixed unresolved references to Session and OAuthHelper

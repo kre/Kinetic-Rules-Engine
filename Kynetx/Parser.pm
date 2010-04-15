@@ -99,15 +99,15 @@ ruleset: 'ruleset' ruleset_name  '{'
          '}' eofile
              {$return = {
 		 'ruleset_name' => $item{ruleset_name},
-                 'meta_start_line' => $itempos[4]{line}{from},
-                 'meta_start_col' => $itempos[4]{column}{from},
+                 'meta_start_line' => $item[4][0]->{'meta_start_line'},
+                 'meta_start_col' => $item[4][0]->{'meta_start_col'},
 		 'meta' => $item[4][0] || {},
-                 'dispatch_start_line' => $itempos[5]{line}{from},
-                 'dispatch_start_col' => $itempos[5]{column}{from},
-		 'dispatch' => $item[5][0] || [],
-                 'global_start_line' => $itempos[6]{line}{from},
-                 'global_start_col' => $itempos[6]{column}{from},
-		 'global' => $item[6][0] || [],
+                 'dispatch_start_line' => $item[5][0]->{'dispatch_start_line'},
+                 'dispatch_start_col' => $item[5][0]->{'dispatch_start_col'},
+		 'dispatch' => $item[5][0]->{'dispatchs'} || [],
+                 'global_start_line' => $item[6][0]->{'global_start_line'},
+                 'global_start_col' => $item[6][0]->{'global_start_col'},
+		 'global' => $item[6][0]->{'globals'} || [],
 		 'rules' => $item[7]
 	         }
 	     }
@@ -135,7 +135,9 @@ meta_block_top: meta_block
 meta_block: 'meta' '{' 
        pragma(s?)
       '}' 
-    { my $r = {};
+    { my $r = {'meta_start_line' => $itempos[1]{line}{from},
+               'meta_start_col' => $itempos[1]{column}{from},  
+              };
       foreach my $a ( @{ $item[3] } ) {
         foreach my $k (keys %{ $a } ) {
            if($r->{$k} && ref $r->{$k} eq 'HASH' && ref $a->{$k} eq 'HASH') {
@@ -228,7 +230,9 @@ dispatch_block_top: dispatch_block
 
 
 dispatch_block: 'dispatch' '{' dispatch(s?) '}' #?
-     {$return = $item[3]}
+     {$return = {'dispatchs' => $item[3],
+                 'dispatch_start_line' => $itempos[1]{line}{from},
+                 'dispatch_start_col' => $itempos[1]{column}{from}}}
 
 dispatch: 'domain' STRING dispatch_target(?)
      {$return = {
@@ -297,7 +301,9 @@ global_decls_top: global_decls
 
 
 global_decls: 'global' '{' global(s? /;/)  SEMICOLON(?) '}' #?
-     {$return = $item[3]}
+     {$return = {'globals' => $item[3],
+                 'global_start_line' => $itempos[1]{line}{from},
+                 'global_start_col' => $itempos[1]{column}{from}}}
     | <error>
 
 global: emit_block
@@ -421,15 +427,15 @@ event_prim: event_domain(?) 'pageview' (STRING | REGEXP) setting(?)
 	     'vars' => $item[4][0],
              'type' => 'prim_event',
              'op' => 'pageview',
-             'domain' => $item[1][0]
+             'domain' => $item[1][0] 
 	   } 
 	  }
   | event_domain(?) ('submit'|'click'|'change') STRING setting(?)
 	  {$return =
 	   { 'element' => $item[3],
 	     'vars' => $item[4][0],
-             'type' => $item[2].'_event',
-             'op' => 'pageview',
+             'type' => 'prim_event',
+             'op' => $item[2],
              'domain' => $item[1][0]
 	   } 
 	  }
@@ -1071,7 +1077,7 @@ sub parse_ruleset {
     my ($ruleset) = @_;
 
     my $logger = get_logger();
-    $logger->trace("[parser::parse_ruleset] passed: ", Dumper($ruleset));
+    $logger->debug("[parser::parse_ruleset] passed: ", sub {Dumper($ruleset)});
 
     $ruleset = remove_comments($ruleset);
 
@@ -1088,7 +1094,7 @@ sub parse_ruleset {
     } else {
 	$logger->debug("Parsed rules");
     }
-    $logger->trace("[parser:parse_rule] ",Dumper($result));
+    $logger->debug("[parser:parse_rule] ", sub {Dumper($result)});
 
     return $result;
 
@@ -1106,7 +1112,7 @@ sub parse_expr {
     $expr = remove_comments($expr);
 
     # remove newlines
-    $expr =~ s%\n%%g;
+#    $expr =~ s%\n%%g;
     
 
     my $result = ($parser->expr($expr));
@@ -1129,7 +1135,7 @@ sub parse_decl {
     $expr = remove_comments($expr);
 
     # remove newlines
-    $expr =~ s%\n%%g;
+#    $expr =~ s%\n%%g;
 
     my $result = ($parser->decl($expr));
     if (defined $result->{'error'}) {
@@ -1154,7 +1160,7 @@ sub parse_pre {
     $expr = remove_comments($expr);
 
     # remove newlines
-    $expr =~ s%\n%%g;
+#    $expr =~ s%\n%%g;
 
     my $result = ($parser->pre_block($expr));
     # if (defined $result->{'error'}) {
@@ -1207,7 +1213,7 @@ sub parse_rule {
 #    print $rule; exit;
 
     # remove newlines
-    $rule =~ s%\n%%g;
+#    $rule =~ s%\n%%g;
 
 
     my $result = ($parser->rule_top($rule));
@@ -1233,7 +1239,7 @@ sub parse_action {
     $rule = remove_comments($rule);
 
     # remove newlines
-    $rule =~ s%\n%%g;
+#    $rule =~ s%\n%%g;
 
     my $result = $parser->action($rule);
     if (defined $result->{'error'}) {
@@ -1254,7 +1260,7 @@ sub parse_callbacks {
     $rule = remove_comments($rule);
 
     # remove newlines
-    $rule =~ s%\n%%g;
+ #   $rule =~ s%\n%%g;
 
     my $result = $parser->callbacks($rule);
     if (defined $result->{'error'}) {
@@ -1275,7 +1281,7 @@ sub parse_post {
     $rule = remove_comments($rule);
 
     # remove newlines
-    $rule =~ s%\n%%g;
+#    $rule =~ s%\n%%g;
 
     my $result = $parser->post_block($rule);
     if (defined $result->{'error'}) {
