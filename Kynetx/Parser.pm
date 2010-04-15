@@ -220,6 +220,7 @@ name_value_pair: STRING ':' (NUM | STRING)
 
 
 dispatch_block_top: dispatch_block
+   {$return = $item[1]->{'dispatchs'}}
    | { $errors = "";
        foreach (@{$thisparser->{errors}}) {
               $errors .= "Line $_->[1]:$_->[0]\n";
@@ -291,6 +292,7 @@ css_emit: 'css' (HTML | STRING)
 
 
 global_decls_top: global_decls
+   {$return = $item[1]->{'globals'}}
    | { $errors = "";
        foreach (@{$thisparser->{errors}}) {
               $errors .= "Line $_->[1]:$_->[0]\n";
