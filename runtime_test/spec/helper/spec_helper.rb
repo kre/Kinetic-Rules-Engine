@@ -76,7 +76,7 @@ module SPEC_HELPER
             :url => domain,
             :timeout_in_second => timeout)
     @selenium_driver.start_new_browser_session
-    puts "Connecting browser to url : #{url}"
+    puts "Connecting browser to url : #{domain}#{url}"
     @selenium_driver.open(url)
   end
 

@@ -1,15 +1,14 @@
 require File.dirname(__FILE__) + "/helper/spec_helper.rb"
 
-
-
 describe "General Site Test" do
   include SPEC_HELPER
 
-  # All the search result spec all look the same so use a shared exmaple for validation
+
+# All the search result spec all look the same so use a shared exmaple for validation
   shared_examples_for "Any Site" do
     include SPEC_HELPER
 
-    it "function same on all sites" do
+    it "apply rule to all sites in the same mannor." do
 
       insert_runtime_script(["a41x27"])
       #  We wait for all the elements as the java script is rendering them so we need to give them time
@@ -31,6 +30,7 @@ describe "General Site Test" do
       page.wait_for({:wait_for => :no_element, :element => "KOBJ_close_test" })
       page.element?("//div[@id='KOBJ_close_test']").should be_false
     end
+
 
   end
 
