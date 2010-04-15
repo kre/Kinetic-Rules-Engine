@@ -69,7 +69,6 @@ KOBJ.search_percolate.defaults = {
 		},
 
 		"search.yahoo.com": {
-			"seperator_css":"",
 			"parem": "b",
 			"mainSelector":"#web > ol",
 			"backupSelector":"#main",
@@ -117,8 +116,7 @@ KOBJ.search_percolate.extractdata = function(toPercolate,config){
 
 	if(urlTemp){
 		percolateData["url"] = urlTemp;
-		domainTemp = KOBJ.get_host(urlTemp);
-		percolateData["domain"] = domainTemp;
+		percolateData["domain"] = KOBJ.get_host(urlTemp);
 	} else {
 		percolateData["url"] = "";
 		percolateData["domain"] = "";
@@ -135,7 +133,7 @@ KOBJ.percolate = function(selector, config) {
 		if (typeof config === 'object') {
 			$K.extend(true, defaults, config);
 		}
-		site_defaults = defaults.site[window.location.host];
+		var site_defaults = defaults.site[window.location.host];
 	
 		function percolate_search_results(selector,config){
 		
@@ -159,12 +157,6 @@ KOBJ.percolate = function(selector, config) {
 			
 			function mk_rm_div (anchor) {
 				var logo_item = mk_list_item(anchor);
-				var title = $K("<h2>").text(defaults.title).css({
-					"margin": "3px",
-					"color": "#676767",
-					"font-size":"small",
-					"font-family":"arial,sans-serif"
-				});
 				var top_box = $K('<ol>').css(site_defaults.ol_css).attr("id", defaults.name+"_top_box").append(logo_item);
 				var inner_div = $K('<div>').css(site_defaults.seperator_css).append(top_box);
 				if (defaults.tail_background_image){
@@ -226,7 +218,7 @@ KOBJ.percolate = function(selector, config) {
 				} catch(err) {
 	
 				}
-				var next = (start+10).toString();
+				next = (start+10).toString();
 				if(m) {
 				    cloc = cloc.replace(regExp, nextParem + next);
 				} else {

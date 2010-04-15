@@ -1,4 +1,5 @@
 
+/* Sets up the call backs for "click" and "change" events */
 KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
     var elem;
     if(attr == 'class') {
@@ -39,18 +40,19 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
 };
 
 
-
+/* Injects a javascript fragment into the page */
 KOBJ.fragment = function(base_url) {
-    e=KOBJ.document.createElement("script");
+    var e=KOBJ.document.createElement("script");
     e.src=base_url;
-    body=KOBJ.document.getElementsByTagName("body")[0];
+    var body=KOBJ.document.getElementsByTagName("body")[0];
     body.appendChild(e);
 };
 
+/* Replaces the html contents of an element */
 KOBJ.update_elements  = function (params) {
     for (var mykey in params) {
  	$K("#kobj_"+mykey).html(params[mykey]);
-    };
+    }
 };
 
 // wrap some effects for use in embedded HTML
@@ -184,6 +186,8 @@ KOBJ.createPopIn = function(config,content) {
 			$K('#KOBJ_PopIn_Overlay').fadeIn('slow');
 		}
 		if(!ContentPresent) {
+
+               // TODO: Display is overridden remove which one?
 			$K('body').append('<div id="KOBJ_PopIn_Dialog" style="top: 45%; right: 40%; -moz-border-radius: 5px; display: block; height: auto; width: 20%; position: fixed; margin: 0 auto; text-align: center; z-index: 100003; display: none; background: '+defaults["bg_color"]+'; filter:alpha(opacity=85); opacity: .85; "><div class="close" id="KOBJ_Close" style="cursor: pointer; float: right; font-weight: bold; margin-right: 8px; margin-top: 5px;">x</div><div id="KOBJ_PopIn_Content" style="padding: 10px; ">'+content+'</div></div>');
 		  $K("#KOBJ_Close").click(function() {KOBJ_close_pop_in();});
 		  $K('#KOBJ_PopIn_Dialog').fadeIn('slow');
@@ -203,7 +207,7 @@ KOBJ.createPopIn = function(config,content) {
 
 KOBJ.statusbar = function(config,content) {
 
-	defaults = {
+	var defaults = {
 
 
 		"sticky": false,
@@ -340,7 +344,7 @@ KOBJ.getwithimage = function(url){
 	var i = document.createElement("img");
 	i.setAttribute("src", url);
 	document.body.appendChild(i);
-}
+};
 
 //this method is overridden in sandboxed environments
 KOBJ.require = function(url) {
@@ -487,12 +491,16 @@ KOBJ.logVerify = function(txn, appid, cluster){
 
 //see if page is already loaded (ex: tags planted AFTER dom ready) to know if we should wait for document onReady
 //this code block is adapted from swfObject code used for the same purpose
-if (typeof KOBJSandboxEnvironment === "undefined" || KOBJSandboxEnvironment !== true){ //sandbox bootstrap prevention
-if ((typeof document.readyState != "undefined" && document.readyState == "complete") || (typeof document.readyState == "undefined" && (document.getElementsByTagName("body")[0] || document.body))) {
-  KOBJ.runit(); //dom ready
-} else {
-  $K(KOBJ.runit); //dom not ready
-}
+if (typeof KOBJSandboxEnvironment === "undefined" || KOBJSandboxEnvironment !== true) { //sandbox bootstrap prevention
+     // Check to see if the runtime is already initialized by checking the KOBJ_LOADED variable.  If it is defined then we have been loaded
+     //if (typeof(window["KRL_LOADED"]) == "undefined") {
+     //	window["KRL_LOADED"] = true;
+		if ((typeof document.readyState != "undefined" && document.readyState == "complete") || (typeof document.readyState == "undefined" && (document.getElementsByTagName("body")[0] || document.body))) {
+	  		KOBJ.runit(); //dom ready
+		} else {
+  			$K(KOBJ.runit); //dom not ready
+		}	
+	//}
 }
 
 //jQuery.noConflict(); //testing extreme

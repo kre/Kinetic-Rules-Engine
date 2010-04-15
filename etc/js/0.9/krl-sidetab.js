@@ -151,7 +151,7 @@ Available at http:\/\/wpaoli.building58.com/2009/09/jquery-tab-slide-out-plugin/
                 event.stopPropagation();
             });
             
-            $(document).click(function(){
+            $(this.window.document).click(function(){
                 slideIn();
             });
         };
@@ -232,7 +232,7 @@ KOBJ.tabManager.defaults = {
 	"tabColor": "black",
 	"divCSS": {},
 	"tabClass": "handle",
-	"pathToTabImage": "http:\/\/k-misc.s3.amazonaws.com/actions/schedule.png",
+	"pathToTabImage": "http://k-misc.s3.amazonaws.com/actions/schedule.png",
 	"tabLocation": "right",
 	"speed": "300",
 	"action": "click",
@@ -560,5 +560,5 @@ KOBJ.tabManager.addNew = function(config){
 	KOBJ.tabManager.tabs.push(defaults);
 };
 
-KOBJ.css('.modal-overlay {	position: fixed;	top: 0;	right: 0;	bottom: 0;	left: 0;	height: 100%;	width: 100%;	margin: 0;	padding: 0;	background: #131313;	opacity: .85;	filter: alpha(opacity=85);	z-index: 101; } .modal-window { 	position: fixed; 	top: 50%; 	left: 50%; 	margin: 0; 	padding: 0; 	z-index: 102;	background: #fff;	border: solid 8px #000;	-moz-border-radius: 8px;	-webkit-border-radius: 8px;} .close-window {	position: absolute;	width: 47px;	height: 47px;	right: -23px;	top: -23px;	background: transparent url(http:\/\/grigglee.com/random/fancybox/fancy_close.png) no-repeat scroll right top;	text-indent: -99999px;	overflow: hidden;	cursor: pointer;}');
+KOBJ.css('.modal-overlay {	position: fixed;	top: 0;	right: 0;	bottom: 0;	left: 0;	height: 100%;	width: 100%;	margin: 0;	padding: 0;	background: #131313;	opacity: .85;	filter: alpha(opacity=85);	z-index: 101; } .modal-window { 	position: fixed; 	top: 50%; 	left: 50%; 	margin: 0; 	padding: 0; 	z-index: 102;	background: #fff;	border: solid 8px #000;	-moz-border-radius: 8px;	-webkit-border-radius: 8px;} .close-window {	position: absolute;	width: 47px;	height: 47px;	right: -23px;	top: -23px;	background: transparent url(http://grigglee.com/random/fancybox/fancy_close.png) no-repeat scroll right top;	text-indent: -99999px;	overflow: hidden;	cursor: pointer;}');
 

@@ -3,7 +3,7 @@ KOBJ.maxURLLength = 1800;
 
 KOBJ.splitJSONRequest = function(json,maxLength,url){
 
-		jsonString = $K.compactJSON(json);
+		var jsonString = $K.compactJSON(json);
 		var numOfRequests = Math.ceil((jsonString.length + url.length) / maxLength);
 		KOBJ.log("The number of requests to be made is: " + numOfRequests);
 		if( numOfRequests > 1){
@@ -11,8 +11,8 @@ KOBJ.splitJSONRequest = function(json,maxLength,url){
 			var toReturn = [];
                         var count = 1;
 			$K.each(json, function(index){
-				object = this;
-                                number = count++ % (numOfRequests);
+				var object = this;
+                                var number = count++ % (numOfRequests);
                                 toReturn[number] = toReturn[number] || {};
                                 toReturn[number][index] = object;
 		        });
@@ -49,8 +49,7 @@ KOBJ.annotate_local_search_extractdata = function(toAnnotate,config){
 	}
 	if(urlTemp){
 		annotateData["url"] = urlTemp;
-		domainTemp = KOBJ.get_host(urlTemp);
-		annotateData["domain"] = domainTemp;
+		annotateData["domain"] = KOBJ.get_host(urlTemp);
 	} else {
 		annotateData["url"] = "";
 		annotateData["domain"] = "";
@@ -106,6 +105,7 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 	} else {
 		return;
 	}
+    var runAnnotateLocal = null;
 	if(defaults["remote"]){
 
 		var remote_url = defaults["remote"];
@@ -149,7 +149,7 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 
 			var annotateArray = KOBJ.splitJSONRequest(annotateInfo,maxLengthURL,remote_url);
 			$K.each(annotateArray,function(key,data){
-				annotateString = $K.compactJSON(data);
+				var annotateString = $K.compactJSON(data);
 				KOBJ.getJSONP(remote_url, {'annotatedata':annotateString},annotateCBLocal);
 			});
 
@@ -159,7 +159,7 @@ KOBJ.annotate_local_search_results = function(annotate, config, cb) {
 
 	} else {
 		runAnnotateLocal = function(){
-			resultslist = $K(lister);
+			var resultslist = $K(lister);
 			if(resultslist.length===0){ return; }
 			var count = 0;
 			$K(resultslist).each(function() {
@@ -239,8 +239,7 @@ KOBJ.annotate_search_extractdata = function(toAnnotate,config){
 	}
 	if(urlTemp){
 		annotateData["url"] = urlTemp;
-		domainTemp = KOBJ.get_host(urlTemp);
-		annotateData["domain"] = domainTemp;
+		annotateData["domain"] = KOBJ.get_host(urlTemp);
 	} else {
 		annotateData["url"] = "";
 		annotateData["domain"] = "";
@@ -338,6 +337,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 		}
 		return outer_div;
 	}
+    var runAnnotate = null;
 	if(defaults["remote"]){
 
 		var remote_url = defaults["remote"];
@@ -384,7 +384,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
 
 			var annotateArray = KOBJ.splitJSONRequest(annotateInfo,maxLengthURL,remote_url);
 			$K.each(annotateArray,function(key,data){
-				annotateString = $K.compactJSON(data);
+				var annotateString = $K.compactJSON(data);
 				KOBJ.getJSONP(remote_url, {'annotatedata':annotateString},annotateCB);
 			});
 

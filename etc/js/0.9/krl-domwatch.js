@@ -39,6 +39,7 @@ KOBJ.watchDOM = function(selector,callBackFunc,time){
 
 				if(!hasNotChanged && data.there){
 					$K(data.callBacks).each(function(){
+                        // TODO: Should this be var?
 						callBack = this;
 						KOBJ.log("Running call back on selector " + selector);
 						callBack();
@@ -50,7 +51,7 @@ KOBJ.watchDOM = function(selector,callBackFunc,time){
 	KOBJ.watcherRunning = KOBJ_setInterval(KOBJ.watcher,time||500);
    } else {
 		$K(KOBJ.watcherData).each(function(){
-			dataObj = this;
+			var dataObj = this;
 			if(dataObj.selector == selector){
 				dataObj.callBacks.push(callBackFunc);
 				$K(selector+" :first").addClass("KOBJ_AjaxWatcher");

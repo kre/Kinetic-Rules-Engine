@@ -66,18 +66,15 @@ my $foo = <<_krl_;
 
 _krl_
 
-#jquery-ui-personalized-1.6rc2.js
-
-
-
-
 
 my $js_version = $opt{'v'} || DEFAULT_JS_VERSION;
 my $js_root = $opt{'r'} || DEFAULT_JS_ROOT;
 my $minify = !$opt{'u'};
 
+my $js = "if(typeof(kobj_fn) == 'undefined') { ";
 
-my $js = "var kobj_fn = '$kobj_file'; var kobj_ts = '$dstamp$hstamp';";
+$js .= "window['kobj_fn'] = '$kobj_file'; window['kobj_ts'] = '$dstamp$hstamp';";
+
 
 # get the static files    
 foreach my $file (@js_files) {
@@ -86,6 +83,7 @@ foreach my $file (@js_files) {
 
 # At the vary vary bottom of our new js put back jquery.
 $js .= "jQuery.noConflict();";
+$js .= "}";
 
 
 

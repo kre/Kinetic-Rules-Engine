@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager" verified="true">
     <list default="true" readonly="true" id="b4732e1d-ada4-4ef4-80a4-b098efdd028f" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/spec/helper/spec_helper.rb" afterPath="$PROJECT_DIR$/spec/helper/spec_helper.rb" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="testcases.iws" />
@@ -27,46 +26,10 @@
   <component name="FileColors" enabled="true" enabledForTabs="true" />
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="search_engine_spec.rb" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/spec/search_engine_spec.rb">
+      <file leaf-file-name="test.js" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/test.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="80" column="108" selection-start="1869" selection-end="1869" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="dom_watching_spec.rb" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/spec/dom_watching_spec.rb">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="26" column="120" selection-start="683" selection-end="683" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="general_site_spec.rb" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/spec/general_site_spec.rb">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="92" column="54" selection-start="2948" selection-end="2948" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="settings.yml" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/config/settings.yml">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="30" column="102" selection-start="652" selection-end="652" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="spec_helper.rb" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/spec/helper/spec_helper.rb">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="53" column="0" selection-start="1418" selection-end="1418" vertical-scroll-proportion="0.51707315">
+            <state line="6" column="52" selection-start="180" selection-end="180" vertical-scroll-proportion="0.08348794">
               <folding />
             </state>
           </provider>
@@ -82,7 +45,6 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/test/test1_spec.rb" />
         <option value="$PROJECT_DIR$/test/general_site_spec.rb" />
         <option value="$PROJECT_DIR$/test/search_engine_spec.rb" />
         <option value="$PROJECT_DIR$/test/dom_watching_spec.rb" />
@@ -98,6 +60,7 @@
         <option value="$PROJECT_DIR$/spec/general_site_spec.rb" />
         <option value="$PROJECT_DIR$/config/settings.yml" />
         <option value="$PROJECT_DIR$/spec/helper/spec_helper.rb" />
+        <option value="$PROJECT_DIR$/test.js" />
       </list>
     </option>
   </component>
@@ -128,6 +91,7 @@
     </navigator>
     <panes>
       <pane id="Favorites" />
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -194,14 +158,13 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="options.lastSelected" value="editor.preferences.appearance" />
-    <property name="options.searchVisible" value="true" />
     <property name="options.splitter.details.proportions" value="0.2" />
+    <property name="options.searchVisible" value="true" />
   </component>
   <component name="RunManager">
     <configuration default="true" type="RSpecRunConfigurationType" factoryName="RSpec">
@@ -293,7 +256,7 @@
     </option>
   </component>
   <component name="ToolWindowManager">
-    <frame x="229" y="88" width="1386" height="1367" extended-state="0" />
+    <frame x="-1544" y="0" width="1386" height="1200" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -359,35 +322,32 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/spec/search_engine_spec.rb">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="80" column="108" selection-start="1869" selection-end="1869" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="23" column="89" selection-start="777" selection-end="777" vertical-scroll-proportion="0.22168675" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/spec/dom_watching_spec.rb">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="26" column="120" selection-start="683" selection-end="683" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="26" column="120" selection-start="683" selection-end="683" vertical-scroll-proportion="0.25060242" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/spec/general_site_spec.rb">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="92" column="54" selection-start="2948" selection-end="2948" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="92" column="54" selection-start="2948" selection-end="2948" vertical-scroll-proportion="0.89756095" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/config/settings.yml">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="30" column="102" selection-start="652" selection-end="652" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="30" column="102" selection-start="652" selection-end="652" vertical-scroll-proportion="0.28915662" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/spec/helper/spec_helper.rb">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="53" column="0" selection-start="1418" selection-end="1418" vertical-scroll-proportion="0.51707315">
+        <state line="53" column="0" selection-start="1418" selection-end="1418" vertical-scroll-proportion="0.51707315" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="6" column="52" selection-start="180" selection-end="180" vertical-scroll-proportion="0.08348794">
           <folding />
         </state>
       </provider>
