@@ -46,6 +46,7 @@ module SPEC_HELPER
     if !kobj_static_js_url
       kobj_static_js_url = @settings["test"]["kobj_static_js_url"]
     end
+    puts "Inserting Kobj Static JS : #{kobj_static_js_url} with rid's of #{r_ids.to_json}" 
 #    r.text = 'KOBJ_config ={    "rids"  : #{r_ids.to_json},"init"  : {"eval_host" : "qa.kobj.net", "callback_host":"qa.kobj.net", "init_host" : "qa.kobj.net"}};';
 
     script = <<-ENDS
@@ -75,6 +76,7 @@ module SPEC_HELPER
             :url => domain,
             :timeout_in_second => timeout)
     @selenium_driver.start_new_browser_session
+    puts "Connecting browser to url : #{url}"
     @selenium_driver.open(url)
   end
 
