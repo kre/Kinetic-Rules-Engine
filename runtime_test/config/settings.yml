@@ -1,6 +1,6 @@
 test:
   testing_servers : [ie7_windows, firefox_30_osx, firefox_windows, safari_404_osx, safari_404_windows]
-  kobj_static_js_url: "http://static.kobj.net/kobj-static-20100416063211.js"
+  kobj_static_js_url: "http://static.kobj.net/kobj-static-20100416064207.js"
 
   #kobj_static_js_url: "http://static.kobj.net/kobj-static-20100415065837.js"
 
