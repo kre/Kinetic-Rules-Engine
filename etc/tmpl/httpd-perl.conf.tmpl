@@ -332,9 +332,13 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/frag_log /web/logs/kynetx/FRAG-%Y%m%d-%H%M.log" combined env=FRAG
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/krl_log /web/logs/kynetx/KRL-%Y%m%d-%H%M.log" combined env=KRL
 
-# rule logging for CS
+# rule logging for RULESET
 LogFormat "%h %t %{TOTAL_SECS}e %{METHOD}e %{RIDS}e %{TXN_ID}e \"%{CALLER}e\" %{SID}e \"%{REFERER}e\" \"%{TITLE}e\" [%{RULE_NAMES}e] [%{RESULTS}e] [%{ACTIONS}e] [%{TAGS}e] [%{LABELS}e] " KOBJ
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/kynetx_log /web/logs/kynetx/KOBJ-%Y%m%d-%H%M.log" KOBJ env=KOBJ
+
+# rule logging for EVENTS
+LogFormat "%h %t %{TOTAL_SECS}e %{DOMAIN}e %{EVENTTYPE}e %{RIDS}e %{TXN_ID}e \"%{CALLER}e\" %{SID}e [%{RULE_NAMES}e] [%{RESULTS}e] [%{ACTIONS}e] [%{TAGS}e] [%{LABELS}e] " EVENT
+CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/event_log /web/logs/kynetx/EVENT-%Y%m%d-%H%M.log" EVENT env=EVENT
 
 # callback logging for CALLBACK
 LogFormat "%h %t %{TOTAL_SECS}e %{METHOD}e %{RIDS}e %{TXN_ID}e \"%{RULE_NAME}e\" \"%{CALLER}e\" %{SID}e %{TYPE}e \"%{ELEMENT}e\" \"%{SENSE}e\" \"%{CB_INFO}e\" %{RID}e " CB
@@ -387,6 +391,19 @@ CustomLog "|/web/sbin/cronolog --period=1day --symlink=/web/logs/billing_log /we
 </TMPL_IF>
 
 <TMPL_IF NAME="API_INIT">
+
+<LocationMatch /blue/init/>
+  # P3P compressed policy header
+  Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
+
+  # env var to turn on rule logging
+  PerlSetEnv KOBJ 1 
+  SetHandler perl-script
+  PerlHandler Kynetx::KOBJ
+
+</LocationMatch>
+
+
 <LocationMatch /js/>
 
   # P3P compressed policy header

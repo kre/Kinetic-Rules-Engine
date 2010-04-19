@@ -81,12 +81,6 @@ my $test_count = 0;
 # dispatch
 my $svn_conn = "http://krl.kobj.net/rules/client/|cs|fizzbazz";
 
-is_string_nows(
-    Kynetx::KOBJ::dispatch($my_req_info,"cs_test;cs_test_1"), 
-    '{"cs_test_1":["www.windley.com","www.kynetx.com"],"cs_test":["www.google.com","www.yahoo.com","www.live.com"]}',
-    "Testing dispatch function with two RIDs");
-$test_count++;
-
 my $dn = "http://127.0.0.1/js";
 
 my $ruleset = $rid;

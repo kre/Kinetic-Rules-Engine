@@ -1,3 +1,15 @@
+2010-04-19  Phil Windley  <pjw@kynetx.com>
+
+    * etc/js/0.9/krl-runtime.js.tmpl: added KOBJ.raise to raise events and
+	changed runtime to call it when a pageview event occurs.
+
+    * Kynetx/Events.pm (process_event): support for multiple RIDs per call
+    * Kynetx/KOBJ.pm (handler): Refactored dispatch to support new,
+        extended dispatch for new API
+    * Kynetx/Dispatch.pm: New dispatch code. Reserve old code as "simple_dispatch"
+    * Kynetx/Repository.pm (get_rules_from_repository): no longer cache
+	not found rulesets, report error instead.
+
 2010-04-15 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Actions.pm: Added hook for odata actions
     * Kynetx/Json.pm: Helper functions for odata
@@ -56,6 +68,7 @@
     *    DateTime::Format::RFC3339
     *    DateTime::Format::ISO8601
     *    Encode (probably default install)
+	
 2010-04-01  Phil Windley  <pjw@kynetx.com>
 
    * Kynetx/PrettyPrinter.pm (pp_select): Added back code to pretty print

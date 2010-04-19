@@ -70,6 +70,7 @@ sub handler {
     $r->content_type('text/javascript');
     
 
+    $logger->debug(">>>>---------------- begin ruleset execution-------------<<<<");
     $logger->debug("Initializing memcached");
     Kynetx::Memcached->init();
 
@@ -109,8 +110,8 @@ sub handler {
 	return Apache2::Const::REDIRECT;
 	
     } elsif($method eq 'google_callback' ) {
-    Kynetx::Predicates::Google::process_oauth_callback($r, $method, $rid);
-    return Apache2::Const::REDIRECT;
+      Kynetx::Predicates::Google::process_oauth_callback($r, $method, $rid);
+      return Apache2::Const::REDIRECT;
 
     } elsif($method eq 'foo' ) {
 	my $uniq = int(rand 999999999);

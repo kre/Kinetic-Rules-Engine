@@ -85,6 +85,7 @@ my %predicates = (
 	$sunset =~ y/ /:/;
 	my @ss = split(/:/, $sunset);
 	$ss[0] += 12 if $ss[2] eq 'pm';
+	$ss[0] -= 24 if $ss[0] > 23;
 
         # assume it's daytime if we don't get good data
 	return 1 unless defined $ss[0];

@@ -71,6 +71,7 @@ session_clear
 session_true
 session_push
 session_pop
+session_next
 session_history
 session_forget
 session_seen
@@ -360,6 +361,17 @@ sub session_pop {
     my $s = session_get($rid, $session, $var);
     if(ref $s eq 'ARRAY') {
 	$res = shift @{ $s };
+    }
+    return $res->[0]; # just the value
+}
+
+sub session_next {
+    my ($rid, $session, $var) = @_;
+
+    my $res = undef;
+    my $s = session_get($rid, $session, $var);
+    if(ref $s eq 'ARRAY') {
+	$res = pop @{ $s };
     }
     return $res->[0]; # just the value
 }

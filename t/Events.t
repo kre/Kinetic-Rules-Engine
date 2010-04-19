@@ -6,6 +6,7 @@ use warnings;
 
 use Test::More;
 use Test::LongString;
+use Test::WWW::Mechanize;
 
 use Apache2::Const;
 use Apache2::Request;
@@ -20,7 +21,7 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Events qw/:all/;
@@ -87,6 +88,333 @@ $test_count++;
 #diag Dumper astToJson($ast);
 
 #diag Kynetx::Events::process_event($r, 'web', 'pageview', ['cs_test_1']);
+
+
+my $dn = "http://127.0.0.1/blue/event";
+
+my $ruleset = 'cs_test_1';
+
+my $mech = Test::WWW::Mechanize->new();
+
+diag "Warning: running these tests on a host without memcache support is slow...";
+SKIP: {
+    my $ua = LWP::UserAgent->new;
+
+    my $check_url = "$dn/version/";
+
+    my $response = $ua->get($check_url);
+    unless ($response->is_success) {
+      diag "skipping server tests: $check_url failed";
+      skip "No server available", 0;
+    }
+
+    sub test_event_plan {
+      my $test_plan = shift;
+      my $tc = 0;
+      foreach my $test (@{$test_plan}) {
+	if (defined $test->{'method'} && $test->{'method'} eq 'post') {
+	  $mech->post_ok($test->{'url'}, $test->{'post_data'});
+	} else {
+	  $mech->get_ok($test->{'url'});
+	}
+
+	diag $mech->content() if $test->{'diag'};
+	is($mech->content_type(), $test->{'type'});
+	$tc += 2;
+	foreach my $like (@{$test->{'like'}}) {
+	  $mech->content_like($like);
+	  $tc++;
+	}
+	foreach my $unlike (@{$test->{'unlike'}}) {
+	  $mech->content_unlike($unlike);
+	  $tc++;
+	}
+      }
+      return $tc;
+    }
+
+    # tests in an event plan are order dependent since events are order dependent.  
+    # Each plan is running different events in order to test a specific
+    #   scenario defined in the rule's select statement
+
+    my $before_test_plan = 
+      [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
+	'type' => 'text/javascript',
+	'like' => ['/test_rule_4/',
+		   '/var year = 2006/']
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/bar.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/',
+		 ]
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
+	'type' => 'text/javascript',
+	'like' => ['/test_rule_4/',
+		  '/var year = 2006/',
+		  '/test_rule_5/'
+		 ]
+       },
+       # next series of three shows that interceding events don't matter
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/bar.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/',
+		 ]
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/something_else.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/',
+		 ]
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
+	'type' => 'text/javascript',
+	'like' => ['/test_rule_4/',
+		  '/var year = 2006/',
+		  '/test_rule_5/'
+		 ]
+       },
+      ];
+
+    $test_count += test_event_plan($before_test_plan);
+
+    my $and_test_plan = 
+      [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and1.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/']
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and2.html",
+	'type' => 'text/javascript',
+	'like' => ['/test_rule_and/',
+		 ]
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and2.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/']
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and2.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/']
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and1.html",
+	'type' => 'text/javascript',
+	'like' => ['/test_rule_and/',
+		  ]
+       },      
+      ];
+
+    $test_count += test_event_plan($and_test_plan);
+
+    my $or_test_plan = 
+      [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/or1.html",
+	'type' => 'text/javascript',
+	'like' => ['/test_rule_or/',
+		   '/var num = 1/',
+		  ],
+	'unlike' => ['/var num = 2/',
+		  ],
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/or2.html",
+	'type' => 'text/javascript',
+	'like' => ['/test_rule_or/',
+		   '/var num = 2/',
+		  ],
+	'unlike' => ['/var num = 1/',
+		  ],
+       },
+      ];
+
+    $test_count += test_event_plan($or_test_plan);
+
+    my $then_test_plan = 
+      [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/then1.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/',
+		  ],
+	'unlike' => ['/var two = 2/',
+		     '/var one = 1/',
+		  ],
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/then2.html",
+	'type' => 'text/javascript',
+	'like' => ['/test_rule_then/',
+		   '/var two = 2/',
+		   '/var one = 1/',
+		  ],
+       },
+       # next series of three shows that an interceding event cancels then1
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/then1.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/',
+		  ],
+	'unlike' => ['/var two = 2/',
+		     '/var one = 1/',
+		  ],
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/something_else.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/',
+		  ],
+	'unlike' => ['/var two = 2/',
+		     '/var one = 1/',
+		  ],
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/then2.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/'],
+	'unlike' => ['/test_rule_then/',
+		   '/var two = 2/',
+		   '/var one = 1/',
+		  ],
+       },
+      ];
+
+    $test_count += test_event_plan($then_test_plan);
+
+    my $between_test_plan = 
+      [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/first.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/',
+		  ],
+	'unlike' => ["/var a = 't'/",
+		     "/var b = 'd'/",
+		     "/var c = 't'/",
+		  ],
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/mid.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/',
+		  ],
+	'unlike' => ["/var a = 't'/",
+		     "/var b = 'd'/",
+		     "/var c = 't'/",
+		  ],
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/last.html",
+	'type' => 'text/javascript',
+	'like' => ["/test_rule_between/",
+		   "/var a = 't'/",
+		   "/var b = 'd'/",
+		   "/var c = 't'/",
+		  ],
+       },
+       # without intervening 'mid' event, should not fire
+      {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/first.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/',
+		  ],
+	'unlike' => ["/var a = 't'/",
+		     "/var b = 'd'/",
+		     "/var c = 't'/",
+		  ],
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/last.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/',
+		  ],
+	'unlike' => ["/var a = 't'/",
+		     "/var b = 'd'/",
+		     "/var c = 't'/",
+		  ],
+       },
+      ];
+
+    $test_count += test_event_plan($between_test_plan);
+
+
+    my $not_between_test_plan = 
+       # with intervening 'mid' event, should not fire
+      [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/firstn.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/',
+		  ],
+	'unlike' => ["/var a = 't'/",
+		     "/var b = 'd'/",
+		     "/var c = 't'/",
+		  ],
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/midn.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/',
+		  ],
+	'unlike' => ["/var a = 't'/",
+		     "/var b = 'd'/",
+		     "/var c = 't'/",
+		  ],
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/lastn.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/',
+		  ],
+	'unlike' => ["/var a = 't'/",
+		     "/var b = 'd'/",
+		     "/var c = 't'/",
+		  ],
+       },
+       # without intervening 'mid' event, should  fire
+      {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/firstn.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/',
+		  ],
+	'unlike' => ["/var a = 't'/",
+		     "/var b = 'd'/",
+		     "/var c = 't'/",
+		  ],
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/lastn.html",
+	'type' => 'text/javascript',
+	'like' => ["/test_rule_notbetween/",
+		   "/var a = 't'/",
+		   "/var b = 'd'/",
+		   "/var c = 't'/",
+		  ],
+	'diag' => 0,
+       },
+       # does fire with some OTHER intervening enent
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/firstn.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/',
+		  ],
+	'unlike' => ["/var a = 't'/",
+		     "/var c = 't'/",
+		  ],
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/something_else.html",
+	'type' => 'text/javascript',
+	'like' => ['/^$/',
+		  ],
+	'unlike' => ["/var a = 't'/",
+		     "/var c = 't'/",
+		  ],
+       },
+       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/lastn.html",
+	'type' => 'text/javascript',
+	'like' => ["/test_rule_notbetween/",
+		   "/var a = 't'/",
+		   "/var c = 't'/",
+		  ],
+	'diag' => 0,
+       },
+      ];
+
+    $test_count += test_event_plan($not_between_test_plan);
+
+
+#     my $submit_test_plan = 
+#       [{'url' => "$dn/web/submit/cs_test_1",
+# 	'method' => 'post',
+# 	'post_data' => {'fname' => 'John', 'lname' => 'Doe'},
+# 	'type' => 'text/javascript',
+# 	'like' => ["/var form_data = {'fname': 'John', 'lname': 'Doe'}/",
+# 		   "/submit_rule/"
+# 		  ],
+#        },
+#       ];
+
+#     $test_count += test_event_plan($submit_test_plan);
+
+
+  }
+
 
 done_testing($test_count);
 

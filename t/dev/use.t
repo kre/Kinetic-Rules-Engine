@@ -78,7 +78,7 @@ sub get_modules {
 
     my @modules;
     while(my $s = <$fh>) {
-	if($s =~ s/^use\s+([^ ]+).*;.*/$1/) {
+	if($s =~ s/^use\s+([^ ;]+).*;.*/$1/) {
 	    push(@modules, $s);
 	} else {
 	    next;

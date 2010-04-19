@@ -18,7 +18,7 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Events::State qw/:all/;
@@ -328,6 +328,27 @@ $n1 = $nb_sm->next_state($initial, $ev1);
 $n2 = $nb_sm->next_state($n1, $ev2);
 $n3 = $nb_sm->next_state($n2, $ev3);
 ok($nb_sm->is_final($n3), "ev1,ev2,ev3  lead to final state in not_between");
+$test_count++;
+
+
+my $ev5 = Kynetx::Events::Primitives->new();
+$ev5->submit("#my_form");
+
+#diag Dumper $ev5;
+
+# test the pageview prim SMs
+my $sm5 = mk_submit_prim("#my_form");
+
+#diag Dumper $sm5;	    
+
+$initial = $sm5->get_initial();
+
+$next = $sm5->next_state($initial, $ev5);
+ok($sm5->is_final($next), "ev5 leads to final state");
+$test_count++;
+
+$next = $sm5->next_state($initial, $ev2);
+ok($sm5->is_initial($next), "ev2 does not lead to initial state");
 $test_count++;
 
 

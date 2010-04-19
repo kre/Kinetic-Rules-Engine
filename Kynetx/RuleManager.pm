@@ -139,6 +139,8 @@ sub validate_rule {
 
 	$tree = parse_ruleset($rule);
 
+	$logger->debug("Global start: ", $tree->{'global_start_line'});
+
 	if(defined $tree->{'error'}) {
 	    warn $tree->{'error'};
 	    $test_template->param(ERROR => $tree->{'error'});
@@ -233,7 +235,7 @@ sub parse_api {
 
 	$tree->{'errors'} = $errors if($errors);
 
-	$logger->debug(Dumper($tree));
+#	$logger->debug(sub {Dumper($tree)});
 
 	if(ref $tree eq "HASH" && defined $tree->{'error'}) {
 	    $logger->debug("Parse failed for $krl as $submethod");
@@ -315,7 +317,8 @@ sub lint_ruleset {
 sub lint_rule {
     my ($rule) = @_;
     my $errors = '';
-    eval { qr!$rule->{'pagetype'}->{'pattern'}!; };
+    my $pattern = $rule->{'pagetype'}->{'pattern'} || $rule->{'pagetype'}->{'event_expr'}->{'pattern'} || "/.*/";
+    eval { qr!$pattern!; };
     if ($@) {
 	$errors .= $@;
     }

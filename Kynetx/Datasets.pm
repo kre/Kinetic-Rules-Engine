@@ -82,7 +82,7 @@ sub new {
     my ($var_hash) = @_;
     if ( defined $var_hash ) {
         if ( ref $var_hash eq 'HASH' ) {
-            $logger->trace( "data hash: ", Dumper($var_hash) );
+            $logger->trace( "data hash: ", sub { Dumper($var_hash) });
             foreach my $varkey ( keys %$var_hash ) {
                 $logger->trace( "var: ", $varkey, "->", $var_hash->{$varkey} );
                 if ( exists $self->{$varkey} ) {
@@ -109,7 +109,7 @@ sub AUTOLOAD {
     my $name = $AUTOLOAD;
     $name =~ s/.*://;
     if ( $name eq 'datasource' ) {
-        $logger->trace( "Autoload: " . Dumper($self) );
+        $logger->trace( "Autoload: " . sub { Dumper($self) } );
     }
     unless ( exists $self->{$name} ) {
         $logger->trace("$name not permitted in class $type");
@@ -242,7 +242,7 @@ sub _load_datasource {
         # so that data is cached efficiently
         $source_url .= join( '&', ( sort @params ) );
     } else {
-        $logger->trace( "[Datasets] datasource args: ", Dumper $args);
+        $logger->trace( "[Datasets] datasource args: ", sub { Dumper $args });
         $source_url .= $args->[0];
     }
     $self->source($source_url);
@@ -363,7 +363,7 @@ sub _unmarshal_json {
 
         # JSON string converted to perl hash
         $self->json($json);
-        $logger->trace( "[Datasets] ", Dumper( $self->json ) );
+        $logger->trace( "[Datasets] ", sub { Dumper( $self->json ) });
     }
 
 }
@@ -413,16 +413,16 @@ sub get_datasource {
     my ( $rule_env, $args, $function ) = @_;
     my $req_info;
     my $logger = get_logger();
-    $logger->trace( "[get datasource] re: ",  Dumper $rule_env);
-    $logger->trace( "[get datasource] arg: ", Dumper $args);
-    $logger->trace( "[get datasource] fx: ",  Dumper $function);
+    $logger->trace( "[get datasource] re: ",  sub {Dumper $rule_env});
+    $logger->trace( "[get datasource] arg: ", sub {Dumper $args});
+    $logger->trace( "[get datasource] fx: ",  sub {Dumper $function});
     $logger->trace( "[get datasource] ruleset:",
-                    Dumper( $rule_env->{ 'datasource:' . $function } ) );
+                    sub { Dumper( $rule_env->{ 'datasource:' . $function } ) });
     my $ds = new Kynetx::Datasets lookup_rule_env( 'datasource:' . $function,
                                                    $rule_env );
-    $logger->trace( "[get datasource] new: ", Dumper $ds);
+    $logger->trace( "[get datasource] new: ", sub {Dumper $ds});
     $ds->load( $req_info, $args );
-    $logger->trace( "[get datasource] load: ", Dumper $ds);
+    $logger->trace( "[get datasource] load: ", sub {Dumper $ds});
     $ds->unmarshal();
 
     if ( defined $ds->json ) {

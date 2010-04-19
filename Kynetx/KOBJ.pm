@@ -53,6 +53,8 @@ use Kynetx::Repository;
 use Kynetx::Memcached qw(:all);
 use Kynetx::Datasets qw(:all);
 use Kynetx::Environments qw(:all);
+use Kynetx::Environments ;
+use Kynetx::Dispatch ;
 
 use Data::Dumper;
 
@@ -72,7 +74,7 @@ sub handler {
     $logger->debug("Initializing memcached");
     Kynetx::Memcached->init();
 
-    my ($method,$rids) = $r->uri =~ m#/js/([^/]+)/([^/]*(\.js)?)/?#;
+    my ($api,$method,$rids) = $r->uri =~ m#/(init|js)/([^/]+)/([^/]*(\.js)?)/?#;
 
     Log::Log4perl::MDC->put('site', $method);
     Log::Log4perl::MDC->put('rule', '[initialization]');  # no rule for now...
@@ -157,7 +159,12 @@ sub handler {
 
 	Kynetx::Request::log_request_env($logger, $req_info);
 
-	$js = dispatch($req_info, $rids);
+	if ($api eq 'js') {
+	  $js = Kynetx::Dispatch::simple_dispatch($req_info, $rids);
+	
+	} elsif ($api eq 'init') {
+	  $js = Kynetx::Dispatch::extended_dispatch($req_info, $rids);
+	}
 
 	$r->content_type('text/plain');
 
@@ -263,40 +270,6 @@ EOF
 }
 
 
-sub dispatch {
-    my($req_info, $rids) = @_;
-
-    my $logger = get_logger();
-    $logger->debug("Returning dispatch sites for $rids");
-
-    my $r = {};
-
-    my @rids = split(/;/,$rids);
-    
-
-    foreach my $rid (@rids) {
-
-	my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
-
-
-	if( defined $ruleset && $ruleset->{'dispatch'} ) {
-	    $logger->debug("Processing dispatch block for $rid");
-#	    $logger->debug(sub() {Dumper($ruleset->{'dispatch'})});
-	    $r->{$rid} = [];
-	    foreach my $d (@{ $ruleset->{'dispatch'} }) {
-		push(@{ $r->{$rid} }, $d->{'domain'});
-	    }
-	}    
-    }
-
-    $logger->debug(Dumper $r);
-
-    $r = encode_json($r);
-    $logger->debug($r);
-
-    return $r;
-
-}
 
 sub get_kobj {
 

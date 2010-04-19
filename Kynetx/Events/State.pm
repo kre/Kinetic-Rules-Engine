@@ -52,6 +52,7 @@ our @ISA         = qw(Exporter);
 our %EXPORT_TAGS = (all => [ 
 qw(
 mk_pageview_prim
+mk_submit_prim
 next_state
 mk_and
 mk_or
@@ -123,6 +124,7 @@ sub clone {
 	push @nt,
 	  {"next" => $state_map->{$t->{'next'}},
 	   "type" => $t->{'type'},
+	   "vars" => $t->{'vars'},
 	   "test" => $t->{'test'},
 	  };
 
@@ -320,7 +322,7 @@ sub next_state {
   foreach my $t (@{ $transitions }) {
 #    $logger->debug("Transition type: ",$t->{'type'}, " Event type: ", $event->get_type());
     my ($match,$vals) = match($event, $t);
-#    $logger->debug("Match? ", $match);
+#    $logger->debug("Trans vars ", sub { Dumper $t->{'vars'} });
     if ($match) {
       $next = $t->{'next'};
       $event->set_vars($t->{'vars'});
@@ -345,7 +347,7 @@ sub match {
 #-------------------------------------------------------------------------
 
 sub mk_prim {
-  my ($test, $vars) = @_;
+  my ($test, $vars, $type) = @_;
   my $sm = Kynetx::Events::State->new();
   my $s1 = Data::UUID->new->create_str();
   my $s2 = Data::UUID->new->create_str();
@@ -355,7 +357,7 @@ sub mk_prim {
 
   $sm->add_state($s1, 
 		 [{"next" => $s2,
-		   "type" => "pageview",
+		   "type" => $type,
 		   "test" => $test,
 		   "vars" => $vars
 		  }],
@@ -378,7 +380,8 @@ sub mk_pageview_prim {
   my ($pattern, $vars) = @_;
 
   return mk_prim($pattern,
-		 $vars
+		 $vars,
+		 'pageview'
 		);
 }
 
@@ -401,6 +404,39 @@ sub pageview_eval {
   return test($event->url(), $t->{'test'});
 }
 $eval_funcs->{'pageview'} = \&pageview_eval;
+
+#-------------------------------------------------------------------------
+# submit
+#-------------------------------------------------------------------------
+
+sub mk_submit_prim {
+  my ($sm_elem, $vars) = @_;
+
+  return mk_prim($sm_elem,
+		 $vars,
+		 'submit'
+		);
+}
+
+sub submit_eval {
+  my ($event, $t) = @_;
+
+  my $test = sub {my $event_elem = shift; 
+		  my $sm_elem = shift;
+		  my $logger = get_logger();
+		  #	    $logger->debug("Url: $url; Pattern: $pattern");
+		  my $req_info = $event->get_req_info();
+		  my $form_data = $req_info->{'KOBJ_form_data'} if $req_info->{'KOBJ_form_data'};
+		  if ($event_elem eq $sm_elem) {
+		    return(1, $form_data);
+		  } else {
+		    return(0, []);
+		  }
+	  };
+
+  return $test->($event->element(), $t->{'test'});
+}
+$eval_funcs->{'submit'} = \&submit_eval;
 
 
 #-------------------------------------------------------------------------
@@ -535,6 +571,7 @@ sub mk_then {
   return $nsm;
 }
 
+# a between b & c
 sub mk_between {
   my($oa, $ob, $oc) = @_;
 
@@ -563,6 +600,7 @@ sub mk_between {
   return $nsm;
 }
 
+# a not between b & c
 sub mk_not_between {
   my($oa, $ob, $oc) = @_;
 

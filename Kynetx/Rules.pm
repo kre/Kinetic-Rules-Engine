@@ -287,7 +287,7 @@ sub eval_ruleset {
       my $new_req_info = Kynetx::Request::merge_req_env($req_info, $rule_list->{$rule_name}->{'req_info'});
 
       $js .= eval_rule($r, 
-		       $new_req_info,
+		       $req_info,
 		       extend_rule_env($this_rule_env, $rule_env),
 		       $session, 
 		       $rule,
@@ -562,6 +562,7 @@ sub eval_rule {
     push(@{ $req_info->{'all_labels'} }, $req_info->{'labels'});
     push(@{ $req_info->{'all_tags'} }, $req_info->{'tags'});
 
+
     # combine JS and wrap in a closure if rule fired
     $js = mk_turtle($initial_js . $outer_tentative_js . $js) if $js;
 
@@ -704,7 +705,7 @@ sub get_rule_set {
     my $rid = $req_info->{'rid'};
     
     my $logger = get_logger();
-    $logger->debug("Getting ruleset for $caller");
+    $logger->debug("Getting ruleset $rid for $caller");
 
     my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info, $localparsing);
 
@@ -758,8 +759,22 @@ sub optimize_rule {
 
   my $logger = get_logger();
 
+  # fix up old syntax, if needed
+  if ($rule->{'pagetype'}->{'pattern'}) {
+    $logger->debug("Fixing select for ", $rule->{'name'});
+
+    $rule->{'pagetype'}->{'event_expr'}->{'pattern'}  = 
+      $rule->{'pagetype'}->{'pattern'} ;
+    $rule->{'pagetype'}->{'event_expr'}->{'vars'}  = 
+      $rule->{'pagetype'}->{'vars'} ;
+    $rule->{'pagetype'}->{'event_expr'}->{'op'}  = 'pageview';
+    $rule->{'pagetype'}->{'event_expr'}->{'type'}  = 'prim_event';
+    $rule->{'pagetype'}->{'event_expr'}->{'legacy'}  = 1;
+  }
+
   # precompile pattern regexp
-  if (defined $rule->{'pagetype'}->{'event_expr'}->{'pattern'}) {
+  if (defined $rule->{'pagetype'}->{'event_expr'}->{'op'}) {
+    $logger->debug("Optimizing ", $rule->{'name'});
     $rule->{'event_sm'} = Kynetx::Events::compile_event_expr($rule->{'pagetype'}->{'event_expr'});
 #     $rule->{'pagetype'}->{'event_expr'}->{'pattern'} = 
 #       qr!$rule->{'pagetype'}->{'event_expr'}->{'pattern'}!;
@@ -778,7 +793,7 @@ sub optimize_pre {
   my ($rule) = @_;
   my $logger = get_logger();
     my @vars = map {$_->{'var'}} @{ $rule->{'pagetype'}->{'foreach'} };
-    $logger->trace("[rules::optimize_pre] foreach vars: ", Dumper(@vars));
+    $logger->trace("[rules::optimize_pre] foreach vars: ", sub {Dumper(@vars)});
 # don't need this, but I love it.
 # 	  my %is_var;
 # 	  # create a hash for testing whether a var is defined or not
@@ -787,7 +802,7 @@ sub optimize_pre {
 
     foreach my $decl (@{$rule->{'pre'}}) {
       # check if any of the vars occur free in the rhs
-      $logger->trace("[rules::optimize_pre] decl: ", Dumper($decl));
+      $logger->trace("[rules::optimize_pre] decl: ", sub {Dumper($decl)});
       my $dependent = 0;
       foreach my $v (@vars) {
 	if ($decl->{'type'} eq 'expr' &&

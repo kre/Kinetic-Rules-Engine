@@ -119,6 +119,16 @@ $test_count++;
 is($pe5->element, 'foo_id', 'change element is correct');
 $test_count++;
 
+my $pe6 = Kynetx::Events::Primitives->new();
+$pe6->submit('foo_id');
+
+ok($pe6->isa('submit'), '$pe6 is a submit');
+$test_count++;
+
+is($pe6->element, 'foo_id', 'submit element is correct');
+$test_count++;
+
+
 
 
 done_testing($test_count);

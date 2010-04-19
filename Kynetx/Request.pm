@@ -59,9 +59,11 @@ sub build_request_env {
 
     # build initial envv
     my $ug = new Data::UUID;
+    my $caller = $req->param('caller') || $r->headers_in->{'Referer'} ||  '';
     my $request_info = {
 	host => $r->connection->get_remote_host || $req->param('host') || '',
-	caller => $r->headers_in->{'Referer'} || $req->param('caller') || '',
+	caller => $caller,
+	page => $caller,
 	now => time,
         rids => $rids,
 	site => $rids,
@@ -77,7 +79,6 @@ sub build_request_env {
 	txn_id => $ug->create_str(),
 	};
 
-    $request_info->{'page'} = $request_info->{'caller'};
 
     my @param_names = $req->param;
     foreach my $n (@param_names) {

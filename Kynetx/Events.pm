@@ -77,6 +77,7 @@ sub handler {
     $r->content_type('text/javascript');
     
 
+    $logger->debug("------------------------------ begin ruleset execution-----------------------------");
     $logger->debug("Initializing memcached");
     Kynetx::Memcached->init();
 
@@ -140,19 +141,24 @@ sub process_event {
 
     my $rules_to_execute;
 
+#    $logger->debug("Processing events for $rids");
+
     foreach my $rid (split(/;/, $rids)) {
+
+      $logger->debug("Processing events for $rid");
+      Log::Log4perl::MDC->put('site', $rid);
+
+      $req_info->{'rid'} = $rid;
 
       my $ruleset = Kynetx::Rules::get_rule_set($req_info);
 
-#      $logger->debug("Ruleset: ", Dumper $ruleset );
+#      $logger->debug("Ruleset: ", sub {Dumper $ruleset} );
 
       foreach my $rule (@{$ruleset->{'rules'}}) {
 
 	my $sm_current_name = $rule->{'name'}.':sm_current';
 	my $event_list_name = $rule->{'name'}.':event_list';
 
-	# reconstitute the object.  
-#	my $sm = bless $rule->{'event_sm'}, "Kynetx::Events::State";
 #	$logger->debug("Rule: ", Kynetx::Json::astToJson($rule));
 	
 #	$logger->debug("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
@@ -161,12 +167,12 @@ sub process_event {
 
 	my $sm = $rule->{'event_sm'};
 
-#	$logger->debug("Event SM: ", Dumper $sm);
+#	$logger->debug("Event SM: ", sub { Dumper $sm });
 
 	my $current_state = session_get($rid, $session, $sm_current_name) || 
 	                    $sm->get_initial();
 
-#	$logger->debug("Initial: ", $current_state );
+	$logger->debug("Initial: ", $current_state );
 
 
 	my $next_state = $sm->next_state($current_state, $ev);
@@ -174,21 +180,20 @@ sub process_event {
 	# when there's a state change, store the event in the event list
 	unless ($current_state eq $next_state) {
 	  session_push($rid, $session, $event_list_name, $ev);
+#	  $logger->debug("Event list ($event_list_name): ", sub { Dumper session_get($rid, $session, $event_list_name)});
 	}
 
 
-#	$logger->debug("Next: ", $next_state );
+	$logger->debug("Next: ", $next_state );
 
 	if ($sm->is_final($next_state)) {
 
 	  push @{$rules_to_execute->{$rid}->{'rules'}}, $rule;
-	  $rules_to_execute->{$rid}->{$ruleset} = $ruleset;
-
+	  $rules_to_execute->{$rid}->{'ruleset'} = $ruleset;
 	  $logger->debug("Pushing " , $rid, " & ",  $rule->{'name'});
 
 	  # reset SM
 	  session_delete($rid, $session, $sm_current_name);
-	  session_delete($rid, $session, $event_list_name);
 
 	} else {
 	  session_store($rid, $session, $sm_current_name, $next_state);
@@ -210,27 +215,41 @@ sub process_event {
 #  req_info =>
 # }
 
+
     foreach my $rid (keys %{$rules_to_execute}) {
 
       $rules_to_execute->{$rid}->{'req_info'} = $req_info;
+      Log::Log4perl::MDC->put('site', $rid);
+      $req_info->{'rid'} = $rid;
 
-      foreach my $rule ($rules_to_execute->{$rid}) {
+      foreach my $rule (@{ $rules_to_execute->{$rid}->{'rules'} }) {
 
-	my $event_list_name = $rule->{'name'}.':event_list';
-	my $ev_list = session_get($rid, $session, $event_list_name);
 	my $rule_name = $rule->{'name'};
-	
-	#global req_info
-	# pre rule req_info
-	$rules_to_execute->{$rid}->{$rule_name}->{'req_info'} = 
-	  Kynetx::Request::merge_req_env(map {$_->get_req_info} @{$ev_list});
 
-	$rules_to_execute->{$rid}->{$rule_name}->{'vars'} = 
-	  map {$_->get_vars} @{$ev_list};
-	$rules_to_execute->{$rid}->{$rule_name}->{'vals'} = 
-	  map {$_->get_vals} @{$ev_list};
+	# get event list and reset+
+	my $event_list_name = $rule->{'name'}.':event_list';
+
+	my @req_list;
+	while (my $ev = session_next($rid, $session, $event_list_name)) {
+
+	  push @req_list, $ev->get_req_info();
+	  push @{$rules_to_execute->{$rid}->{$rule_name}->{'vars'}}, 
+	       @{$ev->get_vars()};
+	  push @{$rules_to_execute->{$rid}->{$rule_name}->{'vals'}}, 
+	       @{$ev->get_vals()};
+	}
+
+# merging the req_info this way mods it in unpredictable ways
+#	$rules_to_execute->{$rid}->{$rule_name}->{'req_info'} = 
+#	    Kynetx::Request::merge_req_env(@req_list);
+
+	session_delete($rid, $session, $event_list_name);
+
+	
 
       }
+
+#      $logger->debug("RL: ", sub { Dumper $rules_to_execute->{$rid} });
 
       $js .= eval {
 	      Kynetx::Rules::process_ruleset($r, 
@@ -245,13 +264,11 @@ sub process_event {
 
     }
 
-
-# where to do this???
     # put this in the logging DB
-#     log_rule_fire($r, 
-# 		  $req_info, 
-# 		  $session
-# 	);
+    Kynetx::Log::log_rule_fire($r, 
+			       $req_info, 
+			       $session
+			      );
 
 
     # finish up
@@ -277,6 +294,8 @@ sub mk_event {
      $ev->pageview($req_info->{'caller'});
    } elsif ($req_info->{'eventtype'} eq 'click' ) {
      $ev->click($req_info->{'element'});
+   } elsif ($req_info->{'eventtype'} eq 'submit' ) {
+     $ev->submit($req_info->{'element'});
    } elsif ($req_info->{'eventtype'} eq 'change' ) {
      $ev->change($req_info->{'element'});
    } else {
@@ -303,12 +322,28 @@ sub compile_event_expr {
   } elsif ($eexpr->{'type'} eq 'complex_event') {
     if ($eexpr->{'op'} eq 'between' ||
         $eexpr->{'op'} eq 'notbetween') {
+      my $mid = compile_event_expr($eexpr->{'mid'});
+      my $first = compile_event_expr($eexpr->{'first'});
+      my $last = compile_event_expr($eexpr->{'last'});
+
+      if ($eexpr->{'op'} eq 'between') {
+	$sm = mk_between($mid, $first, $last);
+      } elsif ($eexpr->{'op'} eq 'notbetween') {
+	$sm = mk_not_between($mid, $first, $last);
+      }
+      
     } else { # other complex event
       my $sm0 = compile_event_expr($eexpr->{'args'}->[0]);
       my $sm1 = compile_event_expr($eexpr->{'args'}->[1]);
       if ($eexpr->{'op'} eq 'and') {
 	$sm = mk_and($sm0, $sm1);
-      }
+      } elsif ($eexpr->{'op'} eq 'or') {
+	$sm = mk_or($sm0, $sm1);
+      } elsif ($eexpr->{'op'} eq 'before') {
+	$sm = mk_before($sm0, $sm1);
+      } elsif ($eexpr->{'op'} eq 'then') {
+	$sm = mk_then($sm0, $sm1);
+      } 
     }
 
   } else {

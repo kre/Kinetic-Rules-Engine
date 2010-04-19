@@ -135,7 +135,7 @@ SKIP: {
     # test DESCRIBE function
     my $url_describe_4 = "$dn/describe/$ruleset?$ruleset:kynetx_app_version=dev&flavor=json";
 
-    #diag "Testing console with $url_describe_4";
+    diag "Testing console with $url_describe_4";
 
     $mech->get_ok($url_describe_4);
     is($mech->content_type(), 'text/plain');
@@ -196,7 +196,6 @@ SKIP: {
     $mech->content_lacks("KOBJ['data']['cached_timeline'] =");
 
     my $url_5 = "$dn/eval/$ruleset/1237475272090.js?caller=http%3A//search.barnesandnoble.com/booksearch/isbnInquiry.asp%3FEAN%3D9781400066940&referer=http%3A//www.barnesandnoble.com/index.asp&kvars=&title=Stealing MySpace, Julia Angwin, Book - Barnes & Noble";
-
 
     $mech->get_ok($url_5);
 

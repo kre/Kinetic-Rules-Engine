@@ -71,10 +71,18 @@ sub log_rule_fire {
 		       
 	) if defined $request_info->{'names'};
 
-    $r->subprocess_env(RESULTS => 
-		       join(',', @{ $request_info->{'results'} } ) 
-		       
-	) if defined $request_info->{'results'};
+    $r->subprocess_env(METHOD => $request_info->{'method'} . ':' . $request_info->{'eventtype'}) if defined $request_info->{'eventtype'};
+
+
+    my @results;
+    foreach my $ri (@{$request_info->{'names'}}) {
+      my($r,$rn) = split(/:/,$ri);
+      $logger->debug("results for $rn");
+      push @results, $request_info->{$rn.'_result'};
+    }
+
+    $r->subprocess_env(RESULTS => join(',', @results ) 	       
+		      ) if @results;
 
 
     my @fired = grep(/^fired$/,@{ $request_info->{'results'}  });
@@ -154,6 +162,8 @@ sub array_to_string {
     } else {
 	$a = '[]'
     }
+
+    $a = '[]' if $a =~ m/\[(\s*,)+\s*\]/;
 
     return $a;
 }

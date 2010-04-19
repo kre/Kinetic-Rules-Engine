@@ -2311,8 +2311,7 @@ $krl_src = <<_KRL_;
 pre {
     c = "Hello";
     d = <<
-#{c} world!
->>;
+#{c} world!>>;
 }
 _KRL_
 

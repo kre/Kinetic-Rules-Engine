@@ -129,7 +129,7 @@ sub set_vars {
 sub get_vars {
   my $self = shift;
 
-  return $self->{'vars'};
+  return $self->{'vars'} || [];
 }
 
 
@@ -143,7 +143,7 @@ sub set_vals {
 sub get_vals {
   my $self = shift;
 
-  return $self->{'vals'};
+  return $self->{'vals'} || [];
 }
 
 
@@ -198,6 +198,21 @@ sub click {
 sub element {
   my $self = shift;
   return $self->{'element'}
+}
+
+
+
+#-------------------------------------------------------------------------------------
+# submit
+#-------------------------------------------------------------------------------------
+
+sub submit {
+  my $self = shift;
+  my($element) = @_;
+
+  $self->{'type'} = 'submit';
+  $self->{'element'} = $element;
+
 }
 
 

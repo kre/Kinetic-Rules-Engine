@@ -466,20 +466,22 @@ sub pp_event_expr {
        $o .= pp_event_expr($node->{'args'}->[1],$indent);
     }
   } elsif ($node->{'type'} eq 'prim_event') {
-    if (! defined $node->{'legacy'}) {
+
+    if ($node->{'op'} eq 'pageview') {
+      if (! defined $node->{'legacy'}) {
+	$o .= $node->{'domain'} .':' if $node->{'domain'};
+	$o .= 'pageview '
+      }
+      $o .= pp_string($node->{'pattern'});
+      $o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
+    } elsif ($node->{'op'} eq 'submit' ||
+	     $node->{'op'} eq 'change' ||
+	     $node->{'op'} eq 'click') {
       $o .= $node->{'domain'} .':' if $node->{'domain'};
-      $o .= 'pageview '
+      $o .= $node->{'op'} . ' ';
+      $o .= pp_string($node->{'element'});
+      $o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
     }
-    $o .= pp_string($node->{'pattern'});
-    $o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
-  } elsif ($node->{'type'} eq 'submit_event' ||
-	   $node->{'type'} eq 'change_event' ||
-	   $node->{'type'} eq 'click_event') {
-    $o .= $node->{'domain'} .':' if $node->{'domain'};
-    my @type = ($node->{'type'} =~ /(\w+)_event/);
-    $o .= $type[0];
-    $o .= pp_string($node->{'element'});
-    $o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
   }
 
   return $o;

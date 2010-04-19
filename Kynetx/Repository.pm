@@ -34,7 +34,7 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 use SVN::Client;
-
+use APR::URI;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -197,14 +197,18 @@ sub get_rules_from_repository{
 
     }
 
-    $ruleset = Kynetx::Rules::optimize_ruleset($ruleset);
+    unless ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid') {
+      $ruleset = Kynetx::Rules::optimize_ruleset($ruleset);
 
-    $logger->debug("Found rules for $rid");
+      $logger->debug("Found rules for $rid");
 
-    my $key = make_ruleset_key($rid, $version);
+      my $key = make_ruleset_key($rid, $version);
 
-    $logger->debug("Caching ruleset for $rid using key $key");
-    $memd->set($key, $ruleset);
+      $logger->debug("Caching ruleset for $rid using key $key");
+      $memd->set($key, $ruleset);
+    } else {
+      $logger->error("Ruleset $rid not found");
+    }
     return $ruleset;    
 
 }

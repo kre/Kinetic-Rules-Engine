@@ -331,17 +331,16 @@ KOBJ.kns_port = '';
 </TMPL_IF>
 
 KOBJ.init = function(init_obj) {
-
   $K.each(init_obj,function(k,v) {
 		      KOBJ[k] = v;
-		    });
+	  });
 };
 
 
 
 //this method is overridden in sandboxed environments
 KOBJ.getwithimage = function(url){
-	var i = document.createElement("img");
+   var i = document.createElement("img");
 	i.setAttribute("src", url);
 	document.body.appendChild(i);
 };
@@ -377,10 +376,10 @@ KOBJ.eval = function(config) {
 
 	//create response structs
 	for(var i in config.rids){
-		var rid = config.rids[i];		
+		var rid = config.rids[i];
 		KOBJ[rid] = KOBJ[rid] || {};
 		if(config.delayExecution){
-			KOBJ[rid].delayExecution = true; 
+			KOBJ[rid].delayExecution = true;
 		}
 	}
 
@@ -428,6 +427,70 @@ KOBJ.eval = function(config) {
 
   KOBJ.require(eval_url);
 };
+
+KOBJ.raise = function(config, event_type) {
+  if(! config.rids && typeof(config.rids) !== 'array') {
+    return;
+  }
+
+  var version = config.version || 'blue';
+  var domain =  config.domain || 'web';
+  event_type = event_type || 'pageview';
+
+  //create response structs
+  for(var i in config.rids){
+    var rid = config.rids[i];
+    KOBJ[rid] = KOBJ[rid] || {};
+    if(config.delayExecution){
+      KOBJ[rid].delayExecution = true;
+    }
+  }
+
+  KOBJ.site_id = config.rids.join(";");
+
+  // datasets
+  // we really shouldnt be doing this on *every* event raised...
+  var data_url = KOBJ.proto()+KOBJ.init_host+KOBJ.kns_port+"/js/datasets/" + KOBJ.site_id + "/";
+  KOBJ.require(data_url);
+
+  if(typeof(kvars) != "undefined") {
+    KOBJ.kvars_json = $K.toJSON(kvars);
+  } else {
+    KOBJ.kvars_json = '';
+  }
+
+  var d = (new Date).getTime();
+  var url = [KOBJ.proto() +
+             KOBJ.eval_host +
+	     KOBJ.kns_port,
+	     version,
+             'event',
+	     domain,
+	     event_type,
+	     KOBJ.site_id,
+	     d
+	    ].join("/");
+
+  KOBJ.callback_url = KOBJ.proto()+KOBJ.callback_host+KOBJ.kns_port+"/callback/" + KOBJ.site_id;
+
+  var params = ["caller=" + escape(KOBJ.location('href')),
+		"referer="+ escape(KOBJ.document.referrer),
+		"kvars=" + escape(KOBJ.kvars_json),
+		"title=" + encodeURI(KOBJ.document.title)
+	       ];
+  
+  if(config) {
+    $K.each(config,function(k,v) {
+      if(!(k == 'rids' || k == 'init')) {
+	params.push(k + "=" + v);
+      }
+    });
+  }
+
+  var event_url = url + "?" +  params.join("&");
+
+  KOBJ.require(event_url);
+}; // end of KOBJ.raise
 
 //start closure and data registration code
 KOBJ.registerDataSet = function(rid, datasets){
@@ -477,7 +540,8 @@ KOBJ.runit = function(){
   if(typeof(KOBJ_config.init) == 'object') {
     KOBJ.init(KOBJ_config.init);
   }
-  KOBJ.eval(KOBJ_config);
+//  KOBJ.eval(KOBJ_config);
+  KOBJ.raise(KOBJ_config, 'pageview');
  }
 };
 
@@ -485,8 +549,8 @@ KOBJ.logVerify = function(txn, appid, cluster){
 		/*var i = document.createElement("img");
 		i.setAttribute("src", KOBJ.proto() + "kverify.appspot.com/log?txn="+txn+"&appid="+appid+"&cluster="+cluster);
 		document.body.appendChild(i);
-		*/	
-	KOBJ.getwithimage(KOBJ.proto() + "kverify.appspot.com/log?txn="+txn+"&appid="+appid+"&cluster="+cluster);		
+		*/
+	KOBJ.getwithimage(KOBJ.proto() + "kverify.appspot.com/log?txn="+txn+"&appid="+appid+"&cluster="+cluster);
 };
 
 //see if page is already loaded (ex: tags planted AFTER dom ready) to know if we should wait for document onReady

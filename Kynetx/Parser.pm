@@ -135,8 +135,8 @@ meta_block_top: meta_block
 meta_block: 'meta' '{' 
        pragma(s?)
       '}' 
-    { my $r = {'meta_start_line' => $itempos[1]{line}{from},
-               'meta_start_col' => $itempos[1]{column}{from},  
+    { my $r = {'meta_start_line' => int $itempos[1]{line}{from},
+               'meta_start_col' => int $itempos[1]{column}{from},  
               };
       foreach my $a ( @{ $item[3] } ) {
         foreach my $k (keys %{ $a } ) {
@@ -232,8 +232,8 @@ dispatch_block_top: dispatch_block
 
 dispatch_block: 'dispatch' '{' dispatch(s?) '}' #?
      {$return = {'dispatchs' => $item[3],
-                 'dispatch_start_line' => $itempos[1]{line}{from},
-                 'dispatch_start_col' => $itempos[1]{column}{from}}}
+                 'dispatch_start_line' => int $itempos[1]{line}{from},
+                 'dispatch_start_col' => int $itempos[1]{column}{from}}}
 
 dispatch: 'domain' STRING dispatch_target(?)
      {$return = {
@@ -304,8 +304,8 @@ global_decls_top: global_decls
 
 global_decls: 'global' '{' global(s? /;/)  SEMICOLON(?) '}' #?
      {$return = {'globals' => $item[3],
-                 'global_start_line' => $itempos[1]{line}{from},
-                 'global_start_col' => $itempos[1]{column}{from}}}
+                 'global_start_line' => int $itempos[1]{line}{from},
+                 'global_start_col' => int $itempos[1]{column}{from}}}
     | <error>
 
 global: emit_block
@@ -357,8 +357,8 @@ rule: 'rule' VAR 'is' rule_state '{'
 		        Kynetx::Parser::mk_expr_node('bool','true'),
 	      'callbacks' => $item[11][0],
 	      'post' => $item[12][0],
-              'start_line' => $itempos[1]{line}{from},
-              'start_col' => $itempos[1]{column}{from}
+              'start_line' => int $itempos[1]{line}{from},
+              'start_col' => int $itempos[1]{column}{from}
            } }
   | <error>
 
@@ -1225,9 +1225,11 @@ sub parse_rule {
     } else {
 	$logger->debug("Parsed rules");
     }
+
+ #   $logger->debug("Rule parsed:", sub {Dumper($result)});
+
     return $result;
 
-#    print Dumper($result);
 
 
 }

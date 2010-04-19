@@ -97,7 +97,7 @@ sub eval_prelude {
 
 
     my @vars = map {$_->{'lhs'}} @{ $pre};
-#    $logger->debug("Prelude vars: ", Dumper(@vars));
+#    $logger->debug("Prelude vars: ", sub {Dumper(@vars)});
 
     my @empty_vals = map {''} @vars;
 
@@ -107,7 +107,7 @@ sub eval_prelude {
 
 
     $rule_env = extend_rule_env(\@vars, \@empty_vals, $rule_env);
-#    $logger->debug("Prelude env before: ", Dumper($rule_env));
+#    $logger->debug("Prelude env before: ", sub {Dumper($rule_env)});
 
     my $js = '';
 
@@ -136,7 +136,7 @@ sub eval_one_decl {
 
   $val = Kynetx::Expressions::exp_to_den($val);
 
-#  $logger->debug("[eval_one_decl] after denoting:", Dumper $val);
+#  $logger->debug("[eval_one_decl] after denoting:", sub{Dumper $val});
   $val = Kynetx::JavaScript::gen_js_expr($val);
   my $js = Kynetx::JavaScript::gen_js_var($var, $val);
 
@@ -150,7 +150,7 @@ sub eval_decl {
 
     my $logger = get_logger();
 
-#    $logger->debug("[eval_decl]: ", Dumper $decl->{'rhs'});
+#    $logger->debug("[eval_decl]: ", sub {Dumper $decl->{'rhs'}});
 
     if ($decl->{'type'} eq 'expr' ) {
 
@@ -227,7 +227,7 @@ sub eval_expr {
     } elsif($expr->{'type'} eq 'prim') {
 	return eval_prim($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'operator') {
-        $logger->trace('[javascript::eval_expr] ', Dumper($expr));
+        $logger->trace('[javascript::eval_expr] ', sub {Dumper($expr)});
 	   return Kynetx::Operators::eval_operator($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'condexpr') {
       my $test = eval_expr($expr->{'test'}, $rule_env, $rule_name, $req_info, $session);
@@ -443,7 +443,7 @@ sub eval_rands {
     my ($rands, $rule_env, $rule_name, $req_info, $session) = @_;
 
     my $logger = get_logger();
-    $logger->trace("[javascript] rands: ", Dumper($rands));
+    $logger->trace("[javascript] rands: ", sub {Dumper($rands)});
     my @rands = map {eval_expr($_, $rule_env, $rule_name, $req_info, $session)} @{ $rands } ;
 
     return \@rands;
@@ -922,7 +922,7 @@ sub var_free_in_here_doc {
 
   my @vars = ($rhs =~ /#{([^}]+)}/g);
 
-#  $logger->debug("Vars in here_doc for $rhs: ", Dumper @vars);
+#  $logger->debug("Vars in here_doc for $rhs: ", sub {Dumper @vars});
 
   my $found = 0;
 
