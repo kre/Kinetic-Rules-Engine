@@ -151,7 +151,7 @@ Available at http:\/\/wpaoli.building58.com/2009/09/jquery-tab-slide-out-plugin/
                 event.stopPropagation();
             });
             
-            $(this.window.document).click(function(){
+            $(document).click(function(){
                 slideIn();
             });
         };
@@ -163,6 +163,7 @@ Available at http:\/\/wpaoli.building58.com/2009/09/jquery-tab-slide-out-plugin/
                 } else {
                     slideOut();
                 }
+		settings.callback();
             });
             
             clickScreenToClose();
@@ -229,8 +230,11 @@ KOBJ.tabManager.tabs = KOBJ.tabManager.tabs || [];
 
 KOBJ.tabManager.defaults = {
 	"backgroundColor": "white",
+	"cssPlanted": false,
 	"tabColor": "black",
+	"callback": function(){},
 	"divCSS": {},
+	"measurementUnit":"px",
 	"tabClass": "handle",
 	"pathToTabImage": "http://k-misc.s3.amazonaws.com/actions/schedule.png",
 	"tabLocation": "right",
@@ -239,14 +243,13 @@ KOBJ.tabManager.defaults = {
 	"fixedPosition": true,
 	"imageHeight": "122px",
 	"imageWidth": "40px",
-	"topPos": 100,
-	"width": 250,
-	"padding": 10,
+	"topPos": "100px",
+	"width": "250px",
+	"padding": "10px",
 	"contentClass": "KOBJ_tab_content",
-	"measurementUnit": "px",
 	"mode": "slideout",
 	"url": "",
-	"height": 250,
+	"height": "250px",
 	"linkContent": "Content",
 	"notificationDefaults":{
 		"notifyClass": "notification",
@@ -446,28 +449,23 @@ KOBJ.tabManager.addNew = function(config){
 		}
 	}
 	
-	// Add "px" or other measurement to elements which are sizes
-	var toAddUnit = ["topPos","width","padding"];
-	$K.each(toAddUnit, function(key,object){
-		defaults[object] = defaults[object] + defaults['measurementUnit'];
-	});
-
 	// Make a random class
 	var classToAdd = "KOBJ_tab_" + Math.floor(Math.random()*9999999);
 
 	var tabs = KOBJ.tabManager.tabs;
-	var posToBe = parseInt(defaults['topPos'], 10);
+	var posToBe = parseInt(defaults['topPos'].replace(/(\d+).*/,"$1"), 10);
 	
 	// Sets the top position of each element based upon height of the other elements.
 	$K.each(tabs,function(key,object){
 		if(object['tabLocation'] == defaults['tabLocation']){
-			posToBe = posToBe + parseInt(object['imageHeight'].replace(/(\d+).*/,"$1"), 10) + parseInt(object['padding'], 10);
+			posToBe += $K(object['tabClass']).outerHeight() + parseInt(object['padding'].replace(/(\d+).*/,"$1"),10);
 		}
 	});
 
 	// Adds "px" or whatnot
 	defaults['topPos'] = posToBe + defaults['measurementUnit'];
 
+	KOBJ.log(defaults);
 	var link = "";
 
 
@@ -481,7 +479,11 @@ KOBJ.tabManager.addNew = function(config){
 
 	// Do different stuff if it's a lightbox...
 	if(defaults['mode'] == "lightbox"){
-
+		if(!defaults.cssPlanted){
+			KOBJ.css('.modal-overlay {position: fixed;top: 0;right: 0;bottom: 0;left: 0;height: 100%;width: 100%;margin: 0;padding: 0;background: #131313;opacity: .85;filter: alpha(opacity=85);z-index: 101;}.modal-window {position: fixed;top: 50%;left: 50%;margin: 0;padding: 0;z-index: 102;background: #fff;border: solid 8px #000;-moz-border-radius: 8px;-webkit-border-radius: 8px;}.close-window {position: absolute;width: 47px;height: 47px;right: -23px;top: -23px;background: transparent url(http:\/\/grigglee.com/random/fancybox/fancy_close.png) no-repeat scroll right top;text-indent: -99999px;overflow: hidden;cursor: pointer;}');
+			KOBJ.tabManager.defaults.cssPlanted = true;
+		}
+			
 		// The lightbox will display content if it's passed in or iframe if there's a URL
 		if(defaults.url){
 			defaults['src'] = defaults.url;
@@ -491,7 +493,7 @@ KOBJ.tabManager.addNew = function(config){
 		}
 
 		// Function to bind later on.
-		var action = function(){ $K(this).modal(defaults).open(); return false; };
+		var action = function(){ $K(this).modal(defaults).open(); defaults.callback(); return false; };
 		
 		// Makes an anchor, adds CSS, binds the above function to it, and then adds the class
 
@@ -559,6 +561,3 @@ KOBJ.tabManager.addNew = function(config){
 
 	KOBJ.tabManager.tabs.push(defaults);
 };
-
-KOBJ.css('.modal-overlay {	position: fixed;	top: 0;	right: 0;	bottom: 0;	left: 0;	height: 100%;	width: 100%;	margin: 0;	padding: 0;	background: #131313;	opacity: .85;	filter: alpha(opacity=85);	z-index: 101; } .modal-window { 	position: fixed; 	top: 50%; 	left: 50%; 	margin: 0; 	padding: 0; 	z-index: 102;	background: #fff;	border: solid 8px #000;	-moz-border-radius: 8px;	-webkit-border-radius: 8px;} .close-window {	position: absolute;	width: 47px;	height: 47px;	right: -23px;	top: -23px;	background: transparent url(http://grigglee.com/random/fancybox/fancy_close.png) no-repeat scroll right top;	text-indent: -99999px;	overflow: hidden;	cursor: pointer;}');
-
