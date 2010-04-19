@@ -52,7 +52,7 @@ use Kynetx::Predicates::Time qw/:all/;
 
 my $preds = Kynetx::Predicates::Time::get_predicates();
 my @pnames = keys (%{ $preds } );
-plan tests => 16 + int(@pnames);
+plan tests => 21 + int(@pnames);
 
 
 my $NYU_req_info;
@@ -176,9 +176,23 @@ ok(
     &{$preds->{'today_is'}}($BYU_req_info, \%rule_env, \@no_day),
    "Check today");
 
+my $tz = 'America/Denver';;
+my $base_time = DateTime->now('time_zone' => $tz);
+my $rightnow = Kynetx::Predicates::Time::get_time($BYU_req_info,'now',[{'tz'=>$tz}]);
+cmp_ok($base_time->truncate("to" => 'hour'),'eq',$rightnow->truncate('to'=>'hour'),"time:now()");
 
+my $t = Kynetx::Predicates::Time::get_time($BYU_req_info,'new',["2010-08-08"]);
+cmp_ok("$t",'eq','2010-08-08T00:00:00',"Create a new time string");
 
+$t = Kynetx::Predicates::Time::get_time($BYU_req_info,'add',["$t",{"hours"=>4}]);
+cmp_ok("$t",'eq','2010-08-08T04:00:00',"Create a new time string");
 
+$t = Kynetx::Predicates::Time::get_time($BYU_req_info,'strftime',["$t","%F %T"]);
+cmp_ok("$t",'eq','2010-08-08 04:00:00',"Create a new time string");
+
+$t = Kynetx::Predicates::Time::get_time($BYU_req_info,'atom',["2010-08-08",{'tz'=>'America/Denver'}]);
+cmp_ok("$t",'eq','2010-08-08T06:00:00Z',"Create a new time string");
+$logger->debug("t: ", $t);
 
 1;
 

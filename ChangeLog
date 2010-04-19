@@ -1,3 +1,10 @@
+2010-04-19 Mark Horstmeier <meh@kynetx.com>
+    
+    ** Added some new functions to the time module: now(), new(), add(), strftime(), atom()
+    * Kynetx/Predicates/Time.pm: new functions
+    * t/Predicates/Time.t: test cases for each of the new functions
+    * t/Predicates/Google.t: Uses the new time functions to handle dates in Atom format
+
 2010-04-19  Phil Windley  <pjw@kynetx.com>
 
     * etc/js/0.9/krl-runtime.js.tmpl: added KOBJ.raise to raise events and

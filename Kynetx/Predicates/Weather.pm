@@ -33,6 +33,7 @@ use strict;
 use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
+use XML::XPath;
 use Kynetx::Util qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Predicates::Location qw(get_geoip);

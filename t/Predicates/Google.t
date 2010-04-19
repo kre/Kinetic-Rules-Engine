@@ -6,7 +6,17 @@ use lib qw(/web/lib/perl);
 
 use Test::More;
 use Test::LongString;
-use Test::Deep;
+use Test::Deep qw(
+    cmp_deeply
+    superbagof
+    bag
+    superhashof
+    subhashof
+    subbagof
+    re
+    ignore
+    array_each
+);
 
 use Apache::Session::Memcached;
 use DateTime;
@@ -61,6 +71,23 @@ $my_req_info->{"$rid:description"} = "test rule for google data api";
 $my_req_info->{"$rid:key:google"} = {'consumer_key' => 'kynetx.com',
         'consumer_secret' => '6aXgrwSCnpLutnJy0W8Vg5Tq'
 };
+
+my $rightnow = Kynetx::Predicates::Time::get_time($my_req_info,'now',[{'timezone'=>'America/Denver'}]);
+my $dow = $rightnow->local_day_of_week();
+# Find Friday
+my $offset = 6 - $dow;
+if ($offset < 0) {
+    $offset = 6 - $offset;
+}
+my $dstuff = Kynetx::Predicates::Time::get_time($my_req_info,'new',["2010-08-08T17:45"]);
+my $friday = Kynetx::Predicates::Time::get_time($my_req_info,'add',["$rightnow",{"days"=>$offset}]);
+
+my $fri_morn = $friday->set_hour(10)->truncate("to" => "hour");
+my $fri_aft = Kynetx::Predicates::Time::get_time($my_req_info,'add',["$fri_morn",{"hours"=>4}]);
+my $afri_morn = Kynetx::Predicates::Time::get_time($my_req_info,'atom',
+    ["$fri_morn",{'tz'=>'America/Denver'}]);
+my $afri_aft = Kynetx::Predicates::Time::get_time($my_req_info,'atom',
+    ["$fri_aft",{'tz'=>'America/Denver'}]);
 
 
 my $dict_path = "/usr/share/dict/words";
@@ -305,13 +332,11 @@ $detail = $feed_elements;
 $detail->{'entry'} = array_each(superhashof({%$entry_elements}));
 $expected->{'feed'} = superhashof({%$detail,%$opensearch_feed_template});
 $args = {"feed" => "event","projection" => "basic"};
-test_google('calendar','get',$args,$expected,$description,1);
+test_google('calendar','get',$args,$expected,$description,0);
 
 
 ##
-$description = "free-busy projection test--search for Friday lunch starts at 12
-  This is limited by the last updated date, so if the event is modified after \
-  (2010-03-30T20:00:00) in the calendar the test can fail";
+$description = "free-busy projection test--search for Friday lunch starts at 12";
 my $mdate_re = qr/\d\d\d\d-\d\d-\d\dT12:\d\d:\d\d.\d+/;
 my $mwhen_value = {
     'endTime' => re($date_re),
@@ -325,13 +350,15 @@ $expected = $atom_feed_template;
 $detail = $feed_elements;
 $detail->{'entry'} = array_each(superhashof({%$mgd_test}));
 $expected->{'feed'} = superhashof({%$feed_elements,%$opensearch_feed_template});
-$args = {"feed" => "event", "projection"=>"free-busy","updated-max"=>'2010-03-30T20:00:00'};
+$args = {"feed" => "event", "projection"=>"free-busy",
+    "start-min"=>"$afri_morn","start-max"=>"$afri_aft"};
 test_google('calendar','get',$args,$expected,$description,0);
 
+
+
+
 ##
-$description = "free-busy projection test--search for Friday lunch starts at 11 PST
-  This is limited by the last updated date, so if the event is modified after \
-  (2010-03-30T16:00:00.000-07:00) in the calendar the test can fail";
+$description = "free-busy projection test--search for Friday lunch starts at 11 PST";
 $mdate_re = qr/\d\d\d\d-\d\d-\d\dT11:\d\d:\d\d.\d+/;
 $mwhen_value = {
     'endTime' => re($date_re),
@@ -347,9 +374,35 @@ $detail->{'entry'} = array_each(superhashof({%$mgd_test}));
 $expected->{'feed'} = superhashof({%$feed_elements,%$opensearch_feed_template});
 
 $args = {"feed" => "event", "ctz"=>"America/Los Angeles", "projection"=>"free-busy",
-    "updated-max"=>'2010-03-30T16:00:00.000-07:00'};
+    "start-min"=>"$afri_morn","start-max"=>"$afri_aft"};
 test_google('calendar','get',$args,$expected,$description,0);
 
+
+##
+$description = "Full projection test";
+$expected = $atom_feed_template;
+$detail = $feed_elements;
+$detail->{'entry'} = array_each(superhashof({%$entry_elements}));
+$expected->{'feed'} = superhashof({%$detail,%$opensearch_feed_template});
+$args = {"feed" => "event","projection" => "full"};
+test_google('calendar','get',$args,$expected,$description,0);
+
+
+
+##
+my $start = $afri_morn;
+my $end = $afri_aft;
+$description = "Composite projection test";
+$expected = $atom_feed_template;
+$detail = $feed_elements;
+$detail->{'entry'} = array_each(superhashof({%$entry_elements}));
+$expected->{'feed'} = superhashof({%$detail,%$opensearch_feed_template});
+$args = {"feed" => "event","projection" => "composite",
+    "start-min"=>"$start","start-max"=>"$end",
+    "ctz"=>"America/Denver"};
+test_google('calendar','get',$args,$expected,$description,0);
+
+ENDY:
 
 Kynetx::Session::session_cleanup($session);
 
@@ -358,7 +411,7 @@ sub test_google {
     $gcal_tests++;
     my $json = Kynetx::Predicates::Google::eval_google($my_req_info,$rule_env,$session,$rule_name,$function,[$scope_str,$args]);
     if ($debug) {
-        $logger->debug("Returned from eval_google: ", sub { Dumper($json)});
+        $logger->info("Returned from eval_google: ", sub { Dumper($json)});
     }
     cmp_deeply($json,$expected,$description);
 }

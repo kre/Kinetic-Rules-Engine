@@ -34,7 +34,17 @@ use strict;
 
 use Test::More;
 use Test::LongString max => 100;
-use Test::Deep;
+use Test::Deep qw(
+    cmp_deeply
+    superbagof
+    bag
+    superhashof
+    subhashof
+    subbagof
+    re
+    ignore
+    array_each
+);
 use Data::Dumper;
 use LWP::UserAgent;
 use LWP::Simple;
