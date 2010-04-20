@@ -275,7 +275,7 @@ sub get_consumer_tokens {
     my $rid    = $req_info->{'rid'};
     unless ( $consumer_tokens = $req_info->{ $rid . ':key:google' } ) {
         my $ruleset =
-          Kynetx::Rules::get_rules_from_repository( $rid, $req_info );
+          Kynetx::Repository::get_rules_from_repository( $rid, $req_info );
 
         #    $logger->debug("Got ruleset: ", Dumper $ruleset);
         $consumer_tokens = $ruleset->{'meta'}->{'keys'}->{'google'};
@@ -366,7 +366,7 @@ sub get_google_scope {
         my $scope = $google_config->{'scope'}->{ lc($key) };
         return $scope;
     } else {
-        return merror("No scope defined for: $key");
+        return Kynetx::Util::merror("No scope defined for: $key");
     }
 
 }

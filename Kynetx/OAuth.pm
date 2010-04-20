@@ -129,7 +129,7 @@ sub get_consumer_tokens {
   my $consumer_tokens;
   my $logger = get_logger();
   unless ($consumer_tokens = $req_info->{$rid.':key:'.$namespace}) {
-    my $ruleset = Kynetx::Rules::get_rules_from_repository($rid, $req_info);
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
 #    $logger->debug("Got ruleset: ", Dumper $ruleset);
     $consumer_tokens = $ruleset->{'meta'}->{'keys'}->{$namespace};
   }

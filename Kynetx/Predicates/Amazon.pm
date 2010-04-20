@@ -161,7 +161,7 @@ sub get_amazon_tokens {
     $logger->trace("amazon tokens from req: ", sub {Dumper($req_info->{ $rid . ':key:amazon' })});
     unless ( $amazon_tokens = $req_info->{ $rid . ':key:amazon' } ) {
         my $ruleset =
-          Kynetx::Rules::get_rules_from_repository( $rid, $req_info );
+          Kynetx::Repository::get_rules_from_repository( $rid, $req_info );
 
         $logger->debug("Got ruleset: ", Dumper $ruleset);
         $amazon_tokens = $ruleset->{'meta'}->{'keys'}->{'amazon'};

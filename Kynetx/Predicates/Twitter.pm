@@ -528,7 +528,7 @@ sub get_consumer_tokens {
   my $logger = get_logger();
   my $rid = $req_info->{'rid'};
   unless ($consumer_tokens = $req_info->{$rid.':key:twitter'}) {
-    my $ruleset = Kynetx::Rules::get_rules_from_repository($rid, $req_info);
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
 #    $logger->debug("Got ruleset: ", Dumper $ruleset);
     $consumer_tokens = $ruleset->{'meta'}->{'keys'}->{'twitter'};
   }
