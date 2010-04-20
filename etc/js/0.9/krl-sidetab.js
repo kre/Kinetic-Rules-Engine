@@ -29,7 +29,9 @@ Available at http:\/\/wpaoli.building58.com/2009/09/jquery-tab-slide-out-plugin/
         }, callerSettings||{});
 
         settings.tabHandle = $(settings.tabHandle);
+//      // settings.tabHandle.bgiframe({src:settings.pathToTabImage});
         var obj = this;
+        obj.bgiframe();
         if (settings.fixedPosition === true) {
             settings.positioning = 'fixed';
         } else {
@@ -57,6 +59,7 @@ Available at http:\/\/wpaoli.building58.com/2009/09/jquery-tab-slide-out-plugin/
 		'display': 'block',
 		'textIndent' : '-99999px',
 		'outline' : 'none',
+        'z-index' : '99999',
 		'position' : 'absolute'
 	},settings.linkCSS,true);
 
@@ -118,7 +121,8 @@ Available at http:\/\/wpaoli.building58.com/2009/09/jquery-tab-slide-out-plugin/
         settings.tabHandle.click(function(event){
             event.preventDefault();
         });
-        
+        //settings.tabHandle.parent().bgiframe();
+
         var slideIn = function() {
             
             if (settings.tabLocation === 'top') {
@@ -423,6 +427,7 @@ KOBJ.tabManager.notification = function(config){
 
 		// Adds the div and sets all the CSS and classes needed
 		var notification = $K("<div>").html(changeTo).css(objCSS).addClass(defaults.notifyClass);
+        notifcation.b
 		$K(toAlter.tabHandle).append(notification);
 
 		// Yay!! It worked!
