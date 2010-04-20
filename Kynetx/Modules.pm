@@ -38,6 +38,9 @@ use Kynetx::Expressions;
 use Kynetx::Environments;
 use Kynetx::Session;
 use Kynetx::Predicates::Google;
+use Kynetx::Actions::LetItSnow;
+use Kynetx::Actions::JQueryUI;
+use Kynetx::Actions::FlippyLoo;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -226,6 +229,20 @@ sub eval_module {
         } else {
             $val = Kynetx::Predicates::Google::eval_google($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
+    } elsif ($source eq 'snow') {
+	    $preds = Kynetx::Actions::LetItSnow::get_predicates();
+	    $val = $preds->{$function}->($req_info,$rule_env,$args);
+	    $val ||= 0;
+	  }
+	 elsif ($source eq 'jquery_ui') {
+	    $preds = Kynetx::Actions::JQueryUI::get_predicates();
+	    $val = $preds->{$function}->($req_info,$rule_env,$args);
+	    $val ||= 0;
+     }
+	 elsif ($source eq 'flippy_loo') {
+	    $preds = Kynetx::Actions::FlippyLoo::get_predicates();
+	    $val = $preds->{$function}->($req_info,$rule_env,$args);
+	    $val ||= 0;     
      } elsif ($source eq 'odata') {
         $preds = Kynetx::Predicates::OData::get_predicates();
         if (defined $preds->{$function}) {

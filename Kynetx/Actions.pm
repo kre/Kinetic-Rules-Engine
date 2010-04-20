@@ -43,6 +43,9 @@ use Kynetx::Environments qw(:all);
 use Kynetx::Session q/:all/;
 use Kynetx::Log q/:all/;
 use Kynetx::Json q/:all/;
+use Kynetx::Actions::LetItSnow;
+use Kynetx::Actions::JQueryUI;
+use Kynetx::Actions::FlippyLoo;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -340,6 +343,15 @@ function(uniq, cb, config, sel, content) {
 EOF
       'after' => [\&handle_delay]
     },
+    flippyloo => {
+       'js' => <<EOF,
+function(uniq, cb, config, sel, content) {
+    KOBJ.flippylooMain();
+    cb();
+}
+EOF
+      'after' => [\&handle_delay]
+    },
 
     prepend => {
        'js' => <<EOF,
@@ -580,6 +592,8 @@ sub build_one_action {
     my $arg_str = join(',', @{ $args }) || '';
 
     my $actions = {};
+    # External resources need by action.
+    my $resources = {};
     if (defined $action->{'source'}) {
       if ($action->{'source'} eq 'twitter') {
 	   $actions = Kynetx::Predicates::Twitter::get_actions();
@@ -589,6 +603,15 @@ sub build_one_action {
           $actions = Kynetx::Predicates::Amazon::get_actions();
       } elsif ($action->{'source'} eq 'google') {
           $actions = Kynetx::Predicates::Google::get_actions();
+      } elsif ($action->{'source'} eq 'snow') {
+          $actions = Kynetx::Actions::LetItSnow::get_actions();
+          $resources = Kynetx::Actions::LetItSnow::get_resources(); 
+      } elsif ($action->{'source'} eq 'jquery_ui') {
+          $actions = Kynetx::Actions::JQueryUI::get_actions();
+          $resources = Kynetx::Actions::JQueryUI::get_resources();
+      } elsif ($action->{'source'} eq 'flippy_loo') {
+          $actions = Kynetx::Actions::FlippyLoo::get_actions();
+          $resources = Kynetx::Actions::FlippyLoo::get_resources();
       } elsif ($action->{'source'} eq 'odata') {
           $actions = Kynetx::Predicates::OData::get_actions();
       }
@@ -619,7 +642,8 @@ sub build_one_action {
 
 
       push(@{ $req_info->{'actions'} }, $action_name);
-
+      # Add the needed resources
+      push(@{ $req_info->{'resources'} }, $resources);
 
       # the after functions processes the JS as a chain and replaces it.  
       foreach my $a (@{$after}) {

@@ -55,6 +55,10 @@ use Kynetx::Request qw(:all);
 use Kynetx::Repository;
 use Kynetx::Environments qw(:all);
 
+use Kynetx::Actions::LetItSnow;
+use Kynetx::Actions::JQueryUI;
+use Kynetx::Actions::FlippyLoo;
+
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
@@ -128,8 +132,17 @@ sub process_rules {
     $logger->debug("__FLUSH__");
 
 
+    # For each resource lets make a register resources call.
+    my $register_resources_json = encode_json($req_info->{'resources'}[0]);
+    my $register_resources_js = "KOBJ.registerExternalResources('" .
+                    $req_info->{'rid'} .
+                    "', " .
+                    $register_resources_json .
+                    ");";
+
+
     # this is where we return the JS
-    print $js;
+    print $register_resources_js . $js;
 
 }
 
@@ -218,6 +231,9 @@ sub process_ruleset {
     }
 
     my $eid = $rule_list->{'req_info'}->{'eid'} || 'unknown';
+
+
+
     return <<EOF
 KOBJ.registerClosure('$rid', function() { $js }, '$eid');
 EOF
@@ -522,6 +538,7 @@ sub eval_rule {
 
     # keep track of these for each rule
     $req_info->{'actions'} = [];
+    $req_info->{'resources'} = [];
     $req_info->{'labels'} = [];
     $req_info->{'tags'} = [];
     
@@ -561,7 +578,6 @@ sub eval_rule {
     push(@{ $req_info->{'all_actions'} }, $req_info->{'actions'});
     push(@{ $req_info->{'all_labels'} }, $req_info->{'labels'});
     push(@{ $req_info->{'all_tags'} }, $req_info->{'tags'});
-
 
     # combine JS and wrap in a closure if rule fired
     $js = mk_turtle($initial_js . $outer_tentative_js . $js) if $js;

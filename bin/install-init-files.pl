@@ -43,26 +43,29 @@ my $hstamp = $dt->hms('');
 
 my $kobj_file = "kobj-static-".$dstamp.$hstamp.".js";
 
+
+
 my @js_files = qw(
+krl-application.js
+krl-runtime-header.js
 jquery-1.4.2.js
 jquery.json-1.2.js
-jquery-ui-1.8.custom.js
 jquery.bgiframe.js
 kgrowl-1.0.js
 snowfall.jquery.js
 krl-setup.js
+krl-runtime.js.tmpl
+krl-functions.js
 krl-domwatch.js
 krl-annotate.js
 krl-percolation.js
 krl-sidetab.js
-krl-runtime.js.tmpl
+frameworks/flippy_loo/1.0/flippyloo.js
+krl-runtime.js
+krl-runtime-footer.js
 );
 
 my $foo = <<_krl_;
-
-
-
-
 
 _krl_
 
@@ -71,20 +74,23 @@ my $js_version = $opt{'v'} || DEFAULT_JS_VERSION;
 my $js_root = $opt{'r'} || DEFAULT_JS_ROOT;
 my $minify = !$opt{'u'};
 
-my $js = "if(typeof(kobj_fn) == 'undefined') { ";
-
-$js .= "window['kobj_fn'] = '$kobj_file'; window['kobj_ts'] = '$dstamp$hstamp';";
-
+my $js = "";
 
 # get the static files    
 foreach my $file (@js_files) {
     $js .= get_js_file($file,$js_version,$js_root,$minify);
 }
 
-# At the vary vary bottom of our new js put back jquery.
-$js .= "jQuery.noConflict();";
-$js .= "}";
+my $runtime_infos = "/*";
 
+foreach my $file (@js_files) {
+    my $output = get_file_info($file,$js_version,$js_root);
+    $output =~ s/[\n\r\l]+/|/g;
+    $runtime_infos .= $output;
+}
+
+$js .= $runtime_infos;
+$js .= "*/";
 
 
 
@@ -203,6 +209,18 @@ sub get_js_file {
     
     return $js;
 
+}
+
+
+# Example svn log output
+#Name: runall_test.rb
+#Last Changed Author: cid
+#Last Changed Rev: 484
+
+sub get_file_info {
+    my ($file, $js_version, $js_root) = @_;
+     my $filename = join('/',($js_root,$js_version,$file));
+    return `svn info $filename | grep -P "^Name:|^Revision:|^Path:|^Last Changed Author:"`;
 }
 
 
