@@ -58,6 +58,23 @@ KOBJ.add_app_config = function(app_config) {
         return;
     }
 
+    /* Over ride what server to talk to if ask to in config */
+     if (typeof(app_config.init) == 'object')
+    {
+        if(typeof(app_config.init.eval_host) != 'undefined' )
+        {
+            KOBJ.eval_host = app_config.init.eval_host;
+        }
+        if(typeof(app_config.init.callback_host) != 'undefined' )
+        {
+            KOBJ.callback_host = app_config.init.callback_host;
+        }
+        if(typeof(app_config.init.init_host) != 'undefined' )
+        {
+            KOBJ.init_host = app_config.init.init_host;
+        }
+    }
+
     /*
      Look at each application defined in the config and add or update the known application
      list.
@@ -80,7 +97,7 @@ KOBJ.add_app_config = function(app_config) {
 
     // TODO: Not sure why we would join all the ids Ask Phil about this
     KOBJ.site_id = app_id_s.join(";");
-    KOBJ.callback_url = KOBJ.proto()+KOBJ.callback_host+KOBJ.kns_port+"/callback/" + KOBJ.site_id;
+    KOBJ.callback_url = KOBJ.proto()+ KOBJ.callback_host +KOBJ.kns_port+"/callback/" + KOBJ.site_id;
 };
 
 // This does not call the setTimeout Directly on the KOBJ.eval as it would block

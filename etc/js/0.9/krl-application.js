@@ -61,7 +61,6 @@ function KrlApplication(app)
     this.completed = false;
     this.delay_execution = false;
     this.config_data = {};
-    this.server_init = {};
     this.page_params = {};
     this.version = "blue";
     this.domain = "web";
@@ -255,13 +254,6 @@ KrlApplication.prototype.load_data_sets = function()
  */
 KrlApplication.prototype.update_from_config = function(a_config)
 {
-    // Save of the server configuration
-    if (typeof(a_config.init) == 'object')
-    {
-        this.server_init = a_config.init;
-    }
-
-
     // TODO: this is here for backwards compatablity.
     if (a_config.delayExecution) {
         this.delay_execution = true
