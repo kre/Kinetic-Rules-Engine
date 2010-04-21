@@ -30,188 +30,188 @@ describe "Verify Runtime Functions" do
 
 
   it "have defined a function called KOBJ.log" do
-    page.js_eval("typeof(window.KOBJ.log) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.log) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.location" do
-    page.js_eval("typeof(window.KOBJ.location) == 'function'").should be_true
+    page.js_eval("typeof(window.KOBJ.location) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.css" do
-    page.js_eval("typeof(window.KOBJ.css) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.css) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.errorstack_submit" do
-    page.js_eval("typeof(window.KOBJ.errorstack_submit) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.errorstack_submit) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.logger" do
-    page.js_eval("typeof(window.KOBJ.logger) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.logger) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.obs" do
-    page.js_eval("typeof(window.KOBJ.obs) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.obs) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.fragment" do
-    page.js_eval("typeof(window.KOBJ.fragment) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.fragment) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.update_elements" do
-    page.js_eval("typeof(window.KOBJ.update_elements) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.update_elements) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.Fade" do
-    page.js_eval("typeof(window.KOBJ.Fade) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.Fade) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.BlindDown" do
-    page.js_eval("typeof(window.KOBJ.BlindDown) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.BlindDown) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.BlindUp" do
-    page.js_eval("typeof(window.KOBJ.BlindUp) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.BlindUp) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.BlindUp" do
-    page.js_eval("typeof(window.KOBJ.BlindUp) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.BlindUp) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.hide" do
-    page.js_eval("typeof(window.KOBJ.hide) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.hide) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.letitsnow" do
-    page.js_eval("typeof(window.KOBJ.letitsnow) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.letitsnow) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.createPopIn" do
-    page.js_eval("typeof(window.KOBJ.createPopIn) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.createPopIn) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.statusbar" do
-    page.js_eval("typeof(window.KOBJ.statusbar) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.statusbar) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.statusbar_close" do
-    page.js_eval("typeof(window.KOBJ.statusbar_close) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.statusbar_close) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.buildDiv" do
-    page.js_eval("typeof(window.KOBJ.buildDiv) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.buildDiv) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.get_host" do
-    page.js_eval("typeof(window.KOBJ.get_host) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.get_host) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.close_notification" do
-    page.js_eval("typeof(window.KOBJ.close_notification) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.close_notification) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.getwithimage" do
-    page.js_eval("typeof(window.KOBJ.getwithimage) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.getwithimage) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.require" do
-    page.js_eval("typeof(window.KOBJ.require) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.require) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.reload" do
-    page.js_eval("typeof(window.KOBJ.reload) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.reload) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.eval" do
-    page.js_eval("typeof(window.KOBJ.eval) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.eval) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.init" do
-    page.js_eval("typeof(window.KOBJ.init) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.init) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.registerDataSet" do
-    page.js_eval("typeof(window.KOBJ.registerDataSet) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.registerDataSet) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.registerClosure" do
-    page.js_eval("typeof(window.KOBJ.registerClosure) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.registerClosure) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.clearExecutionDelay" do
-    page.js_eval("typeof(window.KOBJ.clearExecutionDelay) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.clearExecutionDelay) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.executeWhenReady" do
-    page.js_eval("typeof(window.KOBJ.executeWhenReady) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.executeWhenReady) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.executeClosure" do
-    page.js_eval("typeof(window.KOBJ.executeClosure) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.executeClosure) == 'function')").should match(/true/)
   end
 
 
 
   it "have defined a function called KOBJ.percolate" do
-    page.js_eval("typeof(window.KOBJ.percolate) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.percolate) == 'function')").should match(/true/)
   end
 
 
 
   it "have defined a function called KOBJ.watchDOM" do
-    page.js_eval("typeof(window.KOBJ.watchDOM) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.watchDOM) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.splitJSONRequest" do
-    page.js_eval("typeof(window.KOBJ.splitJSONRequest) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.splitJSONRequest) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.getJSONP" do
-    page.js_eval("typeof(window.KOBJ.getJSONP) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.getJSONP) == 'function')").should match(/true/)
   end
 
   it "have defined a function called KOBJ.annotate_local_search_extractdata" do
-    page.js_eval("typeof(window.KOBJ.annotate_local_search_extractdata) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.annotate_local_search_extractdata) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.annotate_local_search_results" do
-    page.js_eval("typeof(window.KOBJ.annotate_local_search_results) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.annotate_local_search_results) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called KOBJ.annotate_search_extractdata" do
-    page.js_eval("typeof(window.KOBJ.annotate_search_extractdata) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.annotate_search_extractdata) == 'function')").should match(/true/)
   end
 
 
 
   it "have defined a function called KOBJ.annotate_search_results" do
-    page.js_eval("typeof(window.KOBJ.annotate_search_results) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.KOBJ.annotate_search_results) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called $K.kGrowl" do
-    page.js_eval("typeof(window.$K.kGrowl) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.$K.kGrowl) == 'function')").should match(/true/)
   end
 
 
   it "have defined a function called $K.kGrowl" do
-    page.js_eval("typeof(window.$K.tabSlideOut) == 'function'").should be_true
+    page.js_eval("'' + (typeof(window.$K.tabSlideOut) == 'function')").should match(/true/)
   end
 
 end
