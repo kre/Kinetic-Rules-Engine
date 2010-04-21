@@ -75,6 +75,7 @@ module SPEC_HELPER
         body.appendChild(q);
     ENDS
 
+    puts "Injecting script: " + script
     
     page.js_eval(script)
   end
