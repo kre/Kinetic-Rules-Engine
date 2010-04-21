@@ -56,7 +56,9 @@ module SPEC_HELPER
 
     extra_init_info = ""
 
-    extra_init_info = ', "init"  : {"eval_host" : "#{eval_host}", "callback_host":"#{callback_host}", "init_host" : "#{init_host"}' if eval_host
+    extra_init_info = ', "init"  : {"eval_host" : "' +  eval_host +
+             '", "callback_host":" ' + callback_host +
+             '", "init_host" : "' + init_host + '}' if eval_host
 
     if(!extra_init_info != "")
       puts "Using extra init params of " + extra_init_info
