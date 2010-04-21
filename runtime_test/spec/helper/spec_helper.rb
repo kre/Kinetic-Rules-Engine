@@ -46,13 +46,21 @@ module SPEC_HELPER
     if !kobj_static_js_url
       kobj_static_js_url = @settings["test"]["kobj_static_js_url"]
     end
+
+    eval_host = ENV["eval_host"] 
+    callback_host =ENV["callback_host"]
+    init_host = ENV["init_host"] 
+
     puts "Inserting Kobj Static JS : #{kobj_static_js_url} with rid's of #{r_ids.to_json}" 
-#    r.text = 'KOBJ_config ={    "rids"  : #{r_ids.to_json},"init"  : {"eval_host" : "qa.kobj.net", "callback_host":"qa.kobj.net", "init_host" : "qa.kobj.net"}};';
+
+    extra_init_info = ""
+
+    extra_init_info = ', "init"  : {"eval_host" : "#{eval_host}", "callback_host":"#{callback_host}", "init_host" : "#{init_host"}' if eval_host
 
     script = <<-ENDS
         var d = window.document;
         var r = d.createElement('script');
-        r.text = 'KOBJ_config ={    "rids"  : #{r_ids.to_json}};';
+        r.text = 'KOBJ_config ={    "rids"  : #{r_ids.to_json} #{extra_init_info}};';
         var body = d.getElementsByTagName('body')[0];
         body.appendChild(r);
         var q = d.createElement('script');
