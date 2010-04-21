@@ -49,13 +49,18 @@ module SPEC_HELPER
 
     eval_host = ENV["eval_host"] 
     callback_host =ENV["callback_host"]
-    init_host = ENV["init_host"] 
+    init_host = ENV["init_host"]
+
 
     puts "Inserting Kobj Static JS : #{kobj_static_js_url} with rid's of #{r_ids.to_json}" 
 
     extra_init_info = ""
 
     extra_init_info = ', "init"  : {"eval_host" : "#{eval_host}", "callback_host":"#{callback_host}", "init_host" : "#{init_host"}' if eval_host
+
+    if(!extra_init_info.blank?)
+      puts "Using extra init params of " + extra_init_info
+    end
 
     script = <<-ENDS
         var d = window.document;
