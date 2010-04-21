@@ -133,30 +133,28 @@ KOBJ.flippylooAppendDiv = function() {
  */
 KOBJ.flippylooMain = function() {
 
-    if(window.location.href.search(/^http:\/\/www.kynetx.com\/$/) == 0 ) {
+    if(window.location.href.search(/^http:\/\/www.kynetx.com\/$/) === 0 ) {
         KOBJ.flippylooPokeKynetxCorp();
     }
-    else if(window.location.href.search(/^http:\/\/www.google.com\/search/) == 0 || window.location.href.search(/^http:\/\/search.yahoo.com\/search/) == 0 || window.location.href.search(/^http:\/\/www.bing.com\/search/) == 0 ) {
+    else if(window.location.href.search(/^http:\/\/www.google.com\/search/) === 0 || window.location.href.search(/^http:\/\/search.yahoo.com\/search/) === 0 || window.location.href.search(/^http:\/\/www.bing.com\/search/) === 0 ) {
         KOBJ.flippylooAnnotate();
     }
-    else if (window.location.href.search(/^http:\/\/www.google.com\/$/) == 0 ) {
+    else if (window.location.href.search(/^http:\/\/www.google.com\/$/) === 0 ) {
         KOBJ.flippylooKynetxGoogle();
     }
-    else if (window.location.href.search(/^http:\/\/www.bing.com\/$/) == 0 ) {
+    else if (window.location.href.search(/^http:\/\/www.bing.com\/$/) === 0 ) {
         KOBJ.flippylooKynetxBing();
     }
-    else if (window.location.href.search(/^http:\/\/www.yahoo.com\/$/) == 0 ) {
+    else if (window.location.href.search(/^http:\/\/www.yahoo.com\/$/) === 0 ) {
         KOBJ.flippylooKynetxYahoo();
     }
-    else if (window.location.href.search(/^http:\/\/code.kynetx.com\/$/) == 0 ) {
+    else if (window.location.href.search(/^http:\/\/code.kynetx.com\/$/) === 0 ) {
         KOBJ.flippylooHintCodeKynetxCom();
     }
-    else if (window.location.href.search(/^http:\/\/en.wikipedia.org\/wiki\/Kynetx/) == 0 ) {
+    else if (window.location.href.search(/^http:\/\/en.wikipedia.org\/wiki\/Kynetx/) === 0 ) {
         KOBJ.flippylooAppendDiv();
     }
     else {
         KOBJ.log("Nothing executed.....are you following the path?");
     }
 };
-
-KOBJ.flippylooMain();

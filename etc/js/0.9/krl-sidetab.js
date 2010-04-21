@@ -167,7 +167,7 @@ Available at http:\/\/wpaoli.building58.com/2009/09/jquery-tab-slide-out-plugin/
                 } else {
                     slideOut();
                 }
-		settings.callback();
+		eval(settings.callback);
             });
             
             clickScreenToClose();
@@ -236,7 +236,7 @@ KOBJ.tabManager.defaults = {
 	"backgroundColor": "white",
 	"cssPlanted": false,
 	"tabColor": "black",
-	"callback": function(){},
+	"callback": "",
 	"divCSS": {},
 	"measurementUnit":"px",
 	"tabClass": "handle",
@@ -498,7 +498,7 @@ KOBJ.tabManager.addNew = function(config){
 		}
 
 		// Function to bind later on.
-		var action = function(){ $K(this).modal(defaults).open(); defaults.callback(); return false; };
+		var action = function(){ $K(this).modal(defaults).open(); eval(defaults.callback); return false; };
 		
 		// Makes an anchor, adds CSS, binds the above function to it, and then adds the class
 

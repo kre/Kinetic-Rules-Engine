@@ -1,30 +1,29 @@
-
 KOBJ.maxURLLength = 1800;
 
-KOBJ.splitJSONRequest = function(json,maxLength,url){
+KOBJ.splitJSONRequest = function(json, maxLength, url) {
 
-		var jsonString = $K.compactJSON(json);
-		var numOfRequests = Math.ceil((jsonString.length + url.length) / maxLength);
-		KOBJ.log("The number of requests to be made is: " + numOfRequests);
-		if( numOfRequests > 1){
-			KOBJ.log("The length of the annotation request would be too large. Splitting into "+ numOfRequests+ " requests.");
-			var toReturn = [];
-                        var count = 1;
-			$K.each(json, function(index){
-				var object = this;
-                                var number = count++ % (numOfRequests);
-                                toReturn[number] = toReturn[number] || {};
-                                toReturn[number][index] = object;
-		        });
-			return toReturn;
-		} else {
-			return [json];
-		}
+    var jsonString = $K.compactJSON(json);
+    var numOfRequests = Math.ceil((jsonString.length + url.length) / maxLength);
+    KOBJ.log("The number of requests to be made is: " + numOfRequests);
+    if (numOfRequests > 1) {
+        KOBJ.log("The length of the annotation request would be too large. Splitting into " + numOfRequests + " requests.");
+        var toReturn = [];
+        var count = 1;
+        $K.each(json, function(index) {
+            var object = this;
+            var number = count++ % (numOfRequests);
+            toReturn[number] = toReturn[number] || {};
+            toReturn[number][index] = object;
+        });
+        return toReturn;
+    } else {
+        return [json];
+    }
 };
 
-KOBJ.getJSONP = function(url, data, cb){
-	KOBJ.log("getJSON with JSONP");
-	$K.getJSON(url, data,cb);
+KOBJ.getJSONP = function(url, data, cb) {
+    KOBJ.log("getJSON with JSONP");
+    $K.getJSON(url, data, cb);
 };
 
 // Start of annotate local changes, v1.2
@@ -32,166 +31,171 @@ KOBJ.getJSONP = function(url, data, cb){
 
 // KOBJ.annotate_local_search_extractdata pulls the data out automatically, such as phone and domain.
 
-KOBJ.annotate_local_search_extractdata = function(toAnnotate,config){
+KOBJ.annotate_local_search_extractdata = function(toAnnotate, config) {
 
-	var annotateData = {};
-	var phoneSelector = config.domains[window.location.host].phoneSel;
-	var urlSelector = config.domains[window.location.host].phoneSel;
-	var phoneTemp = $K(toAnnotate).find(phoneSelector).text().replace(/[\u00B7() -]/g, "");
-	var urlTemp = $K(toAnnotate).find(urlSelector).attr("href");
+    var annotateData = {};
+    var phoneSelector = config.domains[window.location.host].phoneSel;
+    var urlSelector = config.domains[window.location.host].phoneSel;
+    var phoneTemp = $K(toAnnotate).find(phoneSelector).text().replace(/[\u00B7() -]/g, "");
+    var urlTemp = $K(toAnnotate).find(urlSelector).attr("href");
 
-	if(!urlTemp){
-		urlTemp = $K(toAnnotate).find(".url, cite").text();
-		if(!urlTemp){
-			urlTemp = $K(toAnnotate).find("li:eq(1) a").attr("href");
-		}
-		// Failsafe
-	}
-	if(urlTemp){
-		annotateData["url"] = urlTemp;
-		annotateData["domain"] = KOBJ.get_host(urlTemp);
-	} else {
-		annotateData["url"] = "";
-		annotateData["domain"] = "";
-	}
-	if(phoneTemp===""){
-		phoneTemp = $K(toAnnotate);
-		phoneTemp = phoneTemp.text().match(/\(\d{3}\)\s\d{3}-\d{4}/,"$1");
-		if(phoneTemp!==null){
-			phoneTemp = phoneTemp[0];
-			phoneTemp = phoneTemp.replace(/[() -]/g, "");
-		}
-	}
+    if (!urlTemp) {
+        urlTemp = $K(toAnnotate).find(".url, cite").text();
+        if (!urlTemp) {
+            urlTemp = $K(toAnnotate).find("li:eq(1) a").attr("href");
+        }
+        // Failsafe
+    }
+    if (urlTemp) {
+        annotateData["url"] = urlTemp;
+        annotateData["domain"] = KOBJ.get_host(urlTemp);
+    } else {
+        annotateData["url"] = "";
+        annotateData["domain"] = "";
+    }
+    if (phoneTemp === "") {
+        phoneTemp = $K(toAnnotate);
+        phoneTemp = phoneTemp.text().match(/\(\d{3}\)\s\d{3}-\d{4}/, "$1");
+        if (phoneTemp !== null) {
+            phoneTemp = phoneTemp[0];
+            phoneTemp = phoneTemp.replace(/[() -]/g, "");
+        }
+    }
 
 
-	var heightTemp = $K(toAnnotate).height();
+    var heightTemp = $K(toAnnotate).height();
 
-	if(phoneTemp!==null){
-		annotateData["phone"] = phoneTemp;
-	} else { annotateData["phone"] = ""; }
-	annotateData["height"] = heightTemp;
-	return annotateData;
+    if (phoneTemp !== null) {
+        annotateData["phone"] = phoneTemp;
+    } else {
+        annotateData["phone"] = "";
+    }
+    annotateData["height"] = heightTemp;
+    return annotateData;
 };
 
 // Defaults for both with and without remote.
 // The "domains" element provides selector on a site by site basis
 
 KOBJ.annotate_local_search_defaults = {
-	"name": "KOBJL",
-	"domains":{
-		"www.google.com":{"selector":".g>.ts>tbody>tr>td:has(cite):not(:has(table)):not(:has(div)),#results td:last-child:has(h4):not(:has(table)):has(cite),.g table.ts tr td:last:not(:has(img)):has(cite),.g>table tbody tr td:has(h3):has(cite),.g>table tbody tr td table tr:has(.fl):has(cite)","watcher":"#rso","phoneSel":".nobr","urlSel":".l"},
-		"search.yahoo.com":{"selector":".res.sc-ng.sc-lc-bz-m div.content>ol>li,#yls-rs-res tbody tr .yls-rs-bizinfo,.vcard","watcher": "","phoneSel":"[id *= lblPhone]","urlSel":".yschttl"},
-		"www.bing.com":{"selector":".sc_ol1li, #srs_orderedList>.llsResultItem","watcher": "","phoneSel":".sc_hl1 li>:not(a)","urlSel":".nc_tc a, .sb_tlst a"},
-		"maps.google.com":{"selector":"#resultspanel .res div.one:visible","watcher":"#spsizer .opanel:visible","phoneSel":".tel","urlSel":".fn.org"},
-		"local.yahoo.com":{"selector":"#yls-rs-res tr.yls-rs-listinfo","watcher":"","phoneSel":".tel","urlSel":".yls-rs-listing-title"}
+    "name": "KOBJL",
+    "domains":{
+        "www.google.com":{"selector":".g>.ts>tbody>tr>td:has(cite):not(:has(table)):not(:has(div)),#results td:last-child:has(h4):not(:has(table)):has(cite),.g table.ts tr td:last:not(:has(img)):has(cite),.g>table tbody tr td:has(h3):has(cite),.g>table tbody tr td table tr:has(.fl):has(cite)","watcher":"#rso","phoneSel":".nobr","urlSel":".l"},
+        "search.yahoo.com":{"selector":".res.sc-ng.sc-lc-bz-m div.content>ol>li,#yls-rs-res tbody tr .yls-rs-bizinfo,.vcard","watcher": "","phoneSel":"[id *= lblPhone]","urlSel":".yschttl"},
+        "www.bing.com":{"selector":".sc_ol1li, #srs_orderedList>.llsResultItem","watcher": "","phoneSel":".sc_hl1 li>:not(a)","urlSel":".nc_tc a, .sb_tlst a"},
+        "maps.google.com":{"selector":"#resultspanel .res div.one:visible","watcher":"#spsizer .opanel:visible","phoneSel":".tel","urlSel":".fn.org"},
+        "local.yahoo.com":{"selector":"#yls-rs-res tr.yls-rs-listinfo","watcher":"","phoneSel":".tel","urlSel":".yls-rs-listing-title"}
 
-	}
+    }
 };
 
 // New Annotate Local function v 2.0
 // Includes DOM watching, seperating selector based on site, and some speed improvements
 
 KOBJ.annotate_local_search_results = function(annotate, config, cb) {
-	var defaults = $K.extend(true, {}, KOBJ.annotate_local_search_defaults);
+    var defaults = $K.extend(true, {}, KOBJ.annotate_local_search_defaults);
 
-	if (typeof config === 'object') {
-		$K.extend(true, defaults, config);
-	}
-	//get domain's lister
-	if(defaults["domains"][window.location.hostname]){
-		// Gets selector for both the DOM watcher and to get element
-		var lister = defaults["domains"][window.location.hostname]["selector"];
-		var watcher = defaults["domains"][window.location.hostname]["watcher"];
-	} else {
-		return;
-	}
+    if (typeof config === 'object') {
+        $K.extend(true, defaults, config);
+    }
+    //get domain's lister
+    if (defaults["domains"][window.location.hostname]) {
+        // Gets selector for both the DOM watcher and to get element
+        var lister = defaults["domains"][window.location.hostname]["selector"];
+        var watcher = defaults["domains"][window.location.hostname]["watcher"];
+    } else {
+        return;
+    }
     var runAnnotateLocal = null;
-	if(defaults["remote"]){
+    if (defaults["remote"]) {
 
-		var remote_url = defaults["remote"];
-		KOBJ.annotate_local_counter = KOBJ.annotate_local_counter || 0;
-		var maxLengthURL = KOBJ.maxURLLength;
+        var remote_url = defaults["remote"];
+        KOBJ.annotate_local_counter = KOBJ.annotate_local_counter || 0;
+        var maxLengthURL = KOBJ.maxURLLength;
 
-		runAnnotateLocal = function(){
-			var count = 0;
+        runAnnotateLocal = function() {
+            var count = 0;
 
-			var annotateFuncLocal = function(){};
-			
-			if(annotate){
-				annotateFuncLocal = annotate;
-			} else {
-				annotateFuncLocal = function(data){
-					return data;
-				};
-			}
+            var annotateFuncLocal = function() {
+            };
 
-			function annotateCBLocal(data){
-	   			$K.each(data, function(key,data){
-					var contents = annotateFuncLocal(data);
-	   				if(contents){
-	   	 				$K("."+key+" :last").after(contents);
-						count++;
-					}
-	   	 	        });
-				cb();
-			}
+            if (annotate) {
+                annotateFuncLocal = annotate;
+            } else {
+                annotateFuncLocal = function(data) {
+                    return data;
+                };
+            }
 
-			var annotateInfo = {};
+            function annotateCBLocal(data) {
+                $K.each(data, function(key, data) {
+                    var contents = annotateFuncLocal(data);
+                    if (contents) {
+                        $K("." + key + " :last").after(contents);
+                        count++;
+                    }
+                });
+                cb();
+            }
 
-			$K(lister).each(function() {
-				var toAnnotate = this;
-				var itemCounter = defaults["name"] + (KOBJ.annotate_local_counter += 1);
+            var annotateInfo = {};
 
-				annotateInfo[itemCounter] = KOBJ.annotate_local_search_extractdata(toAnnotate,defaults);
-				$K(toAnnotate).addClass(itemCounter);
-			});
+            $K(lister).each(function() {
+                var toAnnotate = this;
+                var itemCounter = defaults["name"] + (KOBJ.annotate_local_counter += 1);
 
-
-			var annotateArray = KOBJ.splitJSONRequest(annotateInfo,maxLengthURL,remote_url);
-			$K.each(annotateArray,function(key,data){
-				var annotateString = $K.compactJSON(data);
-				KOBJ.getJSONP(remote_url, {'annotatedata':annotateString},annotateCBLocal);
-			});
+                annotateInfo[itemCounter] = KOBJ.annotate_local_search_extractdata(toAnnotate, defaults);
+                $K(toAnnotate).addClass(itemCounter);
+            });
 
 
-			KOBJ.logger('annotated_local_search_results', config['txn_id'], count, '', 'success', config['rule_name'], config['rid']);
-		};
-
-	} else {
-		runAnnotateLocal = function(){
-			var resultslist = $K(lister);
-			if(resultslist.length===0){ return; }
-			var count = 0;
-			$K(resultslist).each(function() {
-
-				var toAnnotate = this;
-
-				var extractedData = KOBJ.annotate_local_search_extractdata(toAnnotate,defaults);
-				// Inserts the data into the object.
-				$K.each(extractedData, function(name, value){
-					$K(toAnnotate).data(name, value);
-				});
-
-				var contents = annotate(toAnnotate);
-				if (contents) {
-					count++;
-					$K(":last",this).after(contents);
-				}
-			});
-
-			KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'] );
-			cb();
-		};
-
-	}
-
-	runAnnotateLocal();
+            var annotateArray = KOBJ.splitJSONRequest(annotateInfo, maxLengthURL, remote_url);
+            $K.each(annotateArray, function(key, data) {
+                var annotateString = $K.compactJSON(data);
+                KOBJ.getJSONP(remote_url, {'annotatedata':annotateString}, annotateCBLocal);
+            });
 
 
-	// Watcher is the element which is being watched, runAnnotateLocal is the function to be run
-	if(typeof(watcher) != "undefined"){
-		KOBJ.watchDOM(watcher, runAnnotateLocal);
-	}
+            KOBJ.logger('annotated_local_search_results', config['txn_id'], count, '', 'success', config['rule_name'], config['rid']);
+        };
+
+    } else {
+        runAnnotateLocal = function() {
+            var resultslist = $K(lister);
+            if (resultslist.length === 0) {
+                return;
+            }
+            var count = 0;
+            $K(resultslist).each(function() {
+
+                var toAnnotate = this;
+
+                var extractedData = KOBJ.annotate_local_search_extractdata(toAnnotate, defaults);
+                // Inserts the data into the object.
+                $K.each(extractedData, function(name, value) {
+                    $K(toAnnotate).data(name, value);
+                });
+
+                var contents = annotate(toAnnotate);
+                if (contents) {
+                    count++;
+                    $K(":last", this).after(contents);
+                }
+            });
+
+            KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name']);
+            cb();
+        };
+
+    }
+
+    runAnnotateLocal();
+
+
+    // Watcher is the element which is being watched, runAnnotateLocal is the function to be run
+    if (typeof(watcher) != "undefined") {
+        KOBJ.watchDOM(watcher, runAnnotateLocal);
+    }
 
 };
 
@@ -217,219 +221,224 @@ KOBJ.annotate_search_defaults = {
     "results_lister" : "",
     "element_to_modify" : "div.s,div.abstr,p",
     "domains": {
-	"www.google.com": { "selector": "li.g, div.g", "modify": "div.s", "watcher": "#rso", "urlSel":".l" },
-	"www.bing.com": { "selector": "#results>ul>li", "modify": "p", "watcher": "","urlSel":".nc_tc a, .sb_tlst a" },
-	"search.yahoo.com": { "selector": "li div.res", "modify": "div.abstr", "watcher": "","urlSel":".yschttl" }
+        "www.google.com": { "selector": "li.g, div.g", "modify": "div.s", "watcher": "#rso", "urlSel":".l" },
+        "www.bing.com": { "selector": "#results>ul>li", "modify": "p", "watcher": "","urlSel":".nc_tc a, .sb_tlst a" },
+        "search.yahoo.com": { "selector": "li div.res", "modify": "div.abstr", "watcher": "","urlSel":".yschttl" }
     }
 
-  };
+};
 
 
 // Extracts the data from the element
-KOBJ.annotate_search_extractdata = function(toAnnotate,config){
+KOBJ.annotate_search_extractdata = function(toAnnotate, config) {
 
-	var annotateData = {};
-	var urlSelector = config.domains[window.location.host].urlSel;
-	var urlTemp = $K(toAnnotate).find(urlSelector).attr("href");
-	// ".l" is for Google, ".nc_tc, .sb_tlst" are for Bing, .yschttl is for Yahoo
+    var annotateData = {};
+    var urlSelector = config.domains[window.location.host].urlSel;
+    var urlTemp = $K(toAnnotate).find(urlSelector).attr("href");
+    // ".l" is for Google, ".nc_tc, .sb_tlst" are for Bing, .yschttl is for Yahoo
 
-	if(!urlTemp){
-		urlTemp = $K(toAnnotate).find(".url, cite").attr("href");
-		// Failsafe
-	}
-	if(urlTemp){
-		annotateData["url"] = urlTemp;
-		annotateData["domain"] = KOBJ.get_host(urlTemp);
-	} else {
-		annotateData["url"] = "";
-		annotateData["domain"] = "";
-	}
-	return annotateData;
+    if (!urlTemp) {
+        urlTemp = $K(toAnnotate).find(".url, cite").attr("href");
+        // Failsafe
+    }
+    if (urlTemp) {
+        annotateData["url"] = urlTemp;
+        annotateData["domain"] = KOBJ.get_host(urlTemp);
+    } else {
+        annotateData["url"] = "";
+        annotateData["domain"] = "";
+    }
+    return annotateData;
 };
 
 KOBJ.annotate_search_results = function(annotate, config, cb) {
 
-  var defaults = $K.extend(true, {}, KOBJ.annotate_search_defaults);
+    var defaults = $K.extend(true, {}, KOBJ.annotate_search_defaults);
 
-  if (typeof config === 'object') {
-    $K.extend(true, defaults, config);
-  }
+    if (typeof config === 'object') {
+        $K.extend(true, defaults, config);
+    }
 
-  defaults.outer_div_css = {
-      "float": "right",
-      "width": "auto",
-      "height": defaults.height,
-      "font-size": defaults.font_size,
-      "line-height": "normal",
-      "font-family": defaults.font_family
-      };
+    defaults.outer_div_css = {
+        "float": "right",
+        "width": "auto",
+        "height": defaults.height,
+        "font-size": defaults.font_size,
+        "line-height": "normal",
+        "font-family": defaults.font_family
+    };
 
-  defaults.li_css = {
-      "float": "left",
-      "margin": "0",
-      "vertical-align": "middle",
-      "padding-left": "4px",
-      "color": defaults.text_color,
-      "white-space": "nowrap",
-      "text-align": "center"
-      };
+    defaults.li_css = {
+        "float": "left",
+        "margin": "0",
+        "vertical-align": "middle",
+        "padding-left": "4px",
+        "color": defaults.text_color,
+        "white-space": "nowrap",
+        "text-align": "center"
+    };
 
-   defaults.ul_css = {
-      "margin": "0",
-      "padding": "0",
-      "list-style": "none"
-      };
+    defaults.ul_css = {
+        "margin": "0",
+        "padding": "0",
+        "list-style": "none"
+    };
 
-   defaults.inner_div_css = {
-      "float": "left",
-      "display": "inline",
-      "height": defaults.height,
-      "margin-left": defaults.left_margin,
-      "padding-right": defaults.right_padding
-      };
+    defaults.inner_div_css = {
+        "float": "left",
+        "display": "inline",
+        "height": defaults.height,
+        "margin-left": defaults.left_margin,
+        "padding-right": defaults.right_padding
+    };
 
-  if (typeof config === 'object') {
-    $K.extend(true, defaults, config);
-  }
+    if (typeof config === 'object') {
+        $K.extend(true, defaults, config);
+    }
 
 
+    var lister = "";
+    var modify = "";
+    var watcher = "";
 
-	var lister = "";
-	var modify = "";
-	var watcher = "";
+    if (defaults["results_lister"]) {
+        lister = defaults["results_lister"];
+        watcher = "";
+        modify = defaults["element_to_modify"];
+    } else if (defaults["domains"][window.location.hostname]) {
+        // Gets selectors for both DOM watcher and the element
+        lister = defaults["domains"][window.location.hostname]["selector"];
+        watcher = defaults["domains"][window.location.hostname]["watcher"];
+        modify = defaults["domains"][window.location.hostname]["modify"];
+    } else {
+        return;
+    }
 
-	if (defaults["results_lister"]) {
-		lister = defaults["results_lister"];
-		watcher = "";
-		modify = defaults["element_to_modify"];
-	} else if (defaults["domains"][window.location.hostname]){
-		// Gets selectors for both DOM watcher and the element
-		lister = defaults["domains"][window.location.hostname]["selector"];
-		watcher = defaults["domains"][window.location.hostname]["watcher"];
-		modify = defaults["domains"][window.location.hostname]["modify"];
-	} else {
-		return;
-	}
+    function mk_list_item(i) {
+        return $K("<li class='" + defaults.name + "_item'>").css(defaults.li_css).append(i);
+    }
 
-	function mk_list_item(i) {
-		return $K("<li class='" + defaults.name + "_item'>").css(defaults.li_css).append(i);
-	}
+    function mk_outer_div(anchor) {
+        var name = defaults.name;
+        var logo_item = mk_list_item(anchor);
+        var logo_list = $K('<ul>').css(defaults.ul_css).attr("id", name + "_anno_list").append(logo_item);
+        var inner_div = $K('<div>').css(defaults.inner_div_css).append(logo_list);
+        if (typeof defaults != 'undefined' && defaults['tail_image']) {
+            inner_div.css({
+                "background-image": "url(" + defaults['tail_image'] + ")",
+                "background-repeat": "no-repeat",
+                "background-position": "right top"
+            });
+        }
+        var outer_div = $K('<div>').css(defaults.outer_div_css).append(inner_div);
+        if (typeof defaults != 'undefined' && defaults['head_image']) {
+            outer_div.css({
+                "background-image": "url(" + defaults['head_image'] + ")",
+                "background-repeat": "no-repeat",
+                "background-position": "left top"
+            });
+        }
+        return outer_div;
+    }
 
-	function mk_outer_div(anchor) {
-		var name = defaults.name;
-		var logo_item = mk_list_item(anchor);
-		var logo_list = $K('<ul>').css(defaults.ul_css).attr("id", name + "_anno_list").append(logo_item);
-		var inner_div = $K('<div>').css(defaults.inner_div_css).append(logo_list);
-		if (typeof defaults != 'undefined' && defaults['tail_image']) {
-			inner_div.css({
-				"background-image": "url(" + defaults['tail_image'] + ")",
-				"background-repeat": "no-repeat",
-				"background-position": "right top"
-			});
-		}
-		var outer_div = $K('<div>').css(defaults.outer_div_css).append(inner_div);
-		if (typeof defaults != 'undefined' && defaults['head_image']) {
-			outer_div.css({
-				"background-image": "url(" + defaults['head_image'] + ")",
-				"background-repeat": "no-repeat",
-				"background-position": "left top"
-			});
-		}
-		return outer_div;
-	}
     var runAnnotate = null;
-	if(defaults["remote"]){
+    if (defaults["remote"]) {
 
-		var remote_url = defaults["remote"];
-		var maxLengthURL = KOBJ.maxURLLength;
+        var remote_url = defaults["remote"];
+        var maxLengthURL = KOBJ.maxURLLength;
 
-		KOBJ.annotate_search_counter = KOBJ.annotate_search_counter || 0;
-		runAnnotate = function(){
+        KOBJ.annotate_search_counter = KOBJ.annotate_search_counter || 0;
+        runAnnotate = function() {
 
-			var resultslist = $K(lister);
-			if(resultslist.length === 0){ return; }
-			var count = 0;
-			var annotateInfo = {};
-			resultslist.each(function() {
-				var toAnnotate = this;
-				var itemCounter = defaults['name'] + (KOBJ.annotate_search_counter += 1);
+            var resultslist = $K(lister);
+            if (resultslist.length === 0) {
+                return;
+            }
+            var count = 0;
+            var annotateInfo = {};
+            resultslist.each(function() {
+                var toAnnotate = this;
+                var itemCounter = defaults['name'] + (KOBJ.annotate_search_counter += 1);
 
-				annotateInfo[itemCounter] = KOBJ.annotate_search_extractdata(toAnnotate,defaults);
-				$K(toAnnotate).addClass(itemCounter);
-			});
+                annotateInfo[itemCounter] = KOBJ.annotate_search_extractdata(toAnnotate, defaults);
+                $K(toAnnotate).addClass(itemCounter);
+            });
 
-			var annotateFunc = function(){};
-			
-			if(annotate){
-				annotateFunc = annotate;
-			} else {
-				annotateFunc = function(data){
-					return data;
-				};
-			}
-			
-			function annotateCB(data){
-				$K.each(data, function(key,data){
-					var contents = annotateFunc(data);
-					if(contents){
-						if ($K("."+key).find('#' + defaults.name + '_anno_list li').is('.' + defaults.name + '_item')) {
-							$K("."+key).find('#' + defaults.name + '_anno_list').append(mk_list_item(defaults.sep)).append(mk_list_item(contents));
-						} else {
-							$K("."+key).find(modify)[defaults.placement](mk_outer_div(contents));
-						}
-					}
-					count++;
-	        		});
-			}
+            var annotateFunc = function() {
+            };
 
-			var annotateArray = KOBJ.splitJSONRequest(annotateInfo,maxLengthURL,remote_url);
-			$K.each(annotateArray,function(key,data){
-				var annotateString = $K.compactJSON(data);
-				KOBJ.getJSONP(remote_url, {'annotatedata':annotateString},annotateCB);
-			});
+            if (annotate) {
+                annotateFunc = annotate;
+            } else {
+                annotateFunc = function(data) {
+                    return data;
+                };
+            }
 
-			KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'], config['rid'] );
-			cb();
+            function annotateCB(data) {
+                $K.each(data, function(key, data) {
+                    var contents = annotateFunc(data);
+                    if (contents) {
+                        if ($K("." + key).find('#' + defaults.name + '_anno_list li').is('.' + defaults.name + '_item')) {
+                            $K("." + key).find('#' + defaults.name + '_anno_list').append(mk_list_item(defaults.sep)).append(mk_list_item(contents));
+                        } else {
+                            $K("." + key).find(modify)[defaults.placement](mk_outer_div(contents));
+                        }
+                    }
+                    count++;
+                });
+            }
 
-		};
+            var annotateArray = KOBJ.splitJSONRequest(annotateInfo, maxLengthURL, remote_url);
+            $K.each(annotateArray, function(key, data) {
+                var annotateString = $K.compactJSON(data);
+                KOBJ.getJSONP(remote_url, {'annotatedata':annotateString}, annotateCB);
+            });
 
-	} else {
-		runAnnotate = function(){
-			var count = 0;
+            KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'], config['rid']);
+            cb();
 
-			var resultslist = $K(lister);
-			if(resultslist.length === 0){ return; }
+        };
 
-			resultslist.each(function() {
+    } else {
+        runAnnotate = function() {
+            var count = 0;
 
-				var toAnnotate = this;
-				var extractedData = KOBJ.annotate_search_extractdata(toAnnotate,defaults);
-				$K.each(extractedData, function(name, value){
-					$K(toAnnotate).data(name, value);
-				});
-				var contents = annotate(toAnnotate);
-				if (contents) {
-					count++;
-					if ($K(toAnnotate).find('#' + defaults.name + '_anno_list li').is('.' + defaults.name + '_item')) {
-						$K(toAnnotate).find('#' + defaults.name + '_anno_list').append(mk_list_item(defaults.sep)).append(mk_list_item(contents));
-					} else {
-						$K(toAnnotate).find(modify)[defaults.placement](mk_outer_div(contents));
-					}
-				}
-			});
-			KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'], config['rid'] );
-			cb();
-		};
+            var resultslist = $K(lister);
+            if (resultslist.length === 0) {
+                return;
+            }
+
+            resultslist.each(function() {
+
+                var toAnnotate = this;
+                var extractedData = KOBJ.annotate_search_extractdata(toAnnotate, defaults);
+                $K.each(extractedData, function(name, value) {
+                    $K(toAnnotate).data(name, value);
+                });
+                var contents = annotate(toAnnotate);
+                if (contents) {
+                    count++;
+                    if ($K(toAnnotate).find('#' + defaults.name + '_anno_list li').is('.' + defaults.name + '_item')) {
+                        $K(toAnnotate).find('#' + defaults.name + '_anno_list').append(mk_list_item(defaults.sep)).append(mk_list_item(contents));
+                    } else {
+                        $K(toAnnotate).find(modify)[defaults.placement](mk_outer_div(contents));
+                    }
+                }
+            });
+            KOBJ.logger('annotated_search_results', config['txn_id'], count, '', 'success', config['rule_name'], config['rid']);
+            cb();
+        };
 
 
-	}
+    }
 
-	runAnnotate();
+    runAnnotate();
 
-	// Watcher is the element which is being watched, runAnnotateLocal is the function to be run
-	if(typeof(watcher) != "undefined"){
-		KOBJ.watchDOM(watcher, runAnnotate);
-	}
+    // Watcher is the element which is being watched, runAnnotateLocal is the function to be run
+    if (typeof(watcher) != "undefined") {
+        KOBJ.watchDOM(watcher, runAnnotate);
+    }
 };
 
 // End new annotate code
