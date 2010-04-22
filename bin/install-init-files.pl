@@ -75,6 +75,7 @@ my $js_root = $opt{'r'} || DEFAULT_JS_ROOT;
 my $minify = !$opt{'u'};
 
 my $js = "";
+$js .= "window['kobj_ts'] = '$dstamp$hstamp';";
 
 # get the static files    
 foreach my $file (@js_files) {
