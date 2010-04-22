@@ -60,7 +60,6 @@ krl-domwatch.js
 krl-annotate.js
 krl-percolation.js
 krl-sidetab.js
-frameworks/flippy_loo/1.0/flippyloo.js
 krl-runtime.js
 krl-runtime-footer.js
 );
