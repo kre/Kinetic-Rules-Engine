@@ -304,15 +304,6 @@ function(uniq, cb, config) {
 EOF
       'after' => [\&handle_delay],
    },
-   
-   flippyloo => {
-       'js' => <<EOF,
-function(uniq,cb,config) {
-    cb();
-}
-EOF
-      'after' => [\&handle_delay],
-   },
 
     before => {
       'js' => <<EOF,
@@ -343,16 +334,6 @@ function(uniq, cb, config, sel, content) {
 EOF
       'after' => [\&handle_delay]
     },
-    flippyloo => {
-       'js' => <<EOF,
-function(uniq, cb, config, sel, content) {
-    KOBJ.flippylooMain();
-    cb();
-}
-EOF
-      'after' => [\&handle_delay]
-    },
-
     prepend => {
        'js' => <<EOF,
 function(uniq, cb, config, sel, content) {
@@ -625,6 +606,12 @@ sub build_one_action {
       $before = $actions->{$action_name}->{'before'} || \&noop;
       $after = $actions->{$action_name}->{'after'} || [];
     } else {
+      # I really hate this but in order to make it this is what must
+      # be done. Once impact is done we can remove this at some point.
+      if($action_name == "flippyloo")
+      {
+        $resources = Kynetx::Actions::FlippyLoo::get_resources();
+      }
       $action_js = $actions->{$action_name};
       $before = \&noop;
       $after = [];

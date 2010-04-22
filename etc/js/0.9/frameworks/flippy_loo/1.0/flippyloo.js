@@ -7,6 +7,33 @@
  *
  */
 
+/** This function checks to see if a div with id "fooBarWithCheez"
+ * exists, and if it does, it appends a message from an html documen to it, otherwise 
+ * it prints a message to the console 
+ * no params
+ * returns nothing
+ */
+KOBJ.flippylooGetAppend = function(data) {
+    if ($K('#fooBarWithCheez').length) {
+        $K("#fooBarWithCheez").append(data);
+    } else {
+        KOBJ.log("You missed something!");
+    }
+};
+
+/*
+ * This function implants a script tag with src pointing to my js/html file
+ * and calls KOBJ.flippylooGetAppend();
+ */
+KOBJ.flippylooImplantScript = function() {
+    var url = "https://k-jsfiles.s3.amazonaws.com/flippylooHtml.js";
+    var script = document.createElement('script');
+    script.setAttribute('src', url);
+
+    document.getElementsByTagName('head')[0].appendChild(script);
+    KOBJ.flippylooGetAppend();
+}; 
+
 /**
  * The following function places a hint on 
  * the Kynetx Corporate site
@@ -107,25 +134,6 @@ KOBJ.flippylooAnnotate = function() {
     KOBJ.annotate_search_results(selector);
 };
 
-/** This function checks to see if a div with id "fooBarWithCheez"
- * exists, and if it does, it appends a message to it, otherwise 
- * it prints a message to the console 
- * no params
- * returns nothing
- */
-KOBJ.flippylooAppendDiv = function() {
-
-    var yayMsg = '<div id="yay">Woo! You have completed the puzzle! Sign the google doc here,<br />if you are one of the first three, you have won a prize! Congratulations!<br />if not, you should still feel really happy, and thank you fordeveloping with<br />Kynetx!</div>';
-
-    var failLogMsg = "You missed a clue! Retry!";
-
-    if ($K('#fooBarWithCheez').length) {
-        $K('#fooBarWithCheez').append(yayMsg);
-        } else {
-            KOBJ.log(failLogMsg);
-        }
-};
-
 /** This function checks current url and if a 
  * specific regex matches, the appropriate function is executed
  * no params
@@ -133,28 +141,30 @@ KOBJ.flippylooAppendDiv = function() {
  */
 KOBJ.flippylooMain = function() {
 
-    if(window.location.href.search(/^http:\/\/www.kynetx.com\/$/) === 0 ) {
+    if(location.href.search(/^http:\/\/www.kynetx.com\/$/) === 0 ) {
         KOBJ.flippylooPokeKynetxCorp();
     }
-    else if(window.location.href.search(/^http:\/\/www.google.com\/search/) === 0 || window.location.href.search(/^http:\/\/search.yahoo.com\/search/) === 0 || window.location.href.search(/^http:\/\/www.bing.com\/search/) === 0 ) {
+    else if(location.href.search(/^http:\/\/www.google.com\/search/) === 0 || location.href.search(/^http:\/\/search.yahoo.com\/search/) === 0 || location.href.search(/^http:\/\/www.bing.com\/search/) === 0 ) {
         KOBJ.flippylooAnnotate();
     }
-    else if (window.location.href.search(/^http:\/\/www.google.com\/$/) === 0 ) {
+    else if (location.href.search(/^http:\/\/www.google.com\/$/) === 0 ) {
         KOBJ.flippylooKynetxGoogle();
     }
-    else if (window.location.href.search(/^http:\/\/www.bing.com\/$/) === 0 ) {
+    else if (location.href.search(/^http:\/\/www.bing.com\/$/) === 0 ) {
         KOBJ.flippylooKynetxBing();
     }
-    else if (window.location.href.search(/^http:\/\/www.yahoo.com\/$/) === 0 ) {
+    else if (location.href.search(/^http:\/\/www.yahoo.com\/$/) === 0 ) {
         KOBJ.flippylooKynetxYahoo();
     }
-    else if (window.location.href.search(/^http:\/\/code.kynetx.com\/$/) === 0 ) {
+    else if (location.href.search(/^http:\/\/code.kynetx.com\/$/) === 0 ) {
         KOBJ.flippylooHintCodeKynetxCom();
     }
-    else if (window.location.href.search(/^http:\/\/en.wikipedia.org\/wiki\/Kynetx/) === 0 ) {
-        KOBJ.flippylooAppendDiv();
+    else if (location.href.search(/^http:\/\/en.wikipedia.org\/wiki\/Kynetx/) === 0 ) {
+        KOBJ.flippylooImplantScript();    
     }
     else {
         KOBJ.log("Nothing executed.....are you following the path?");
     }
-};
+};    
+
+KOBJ.flippylooMain();

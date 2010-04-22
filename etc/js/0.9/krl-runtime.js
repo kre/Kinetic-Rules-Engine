@@ -3,7 +3,6 @@ KOBJ.get_application = function(name) {
 };
 
 
-
 // Example config
 //KOBJ_config= {'rids':['a93x7'],
 //    'a93x7:kynetx_app_version':'dev',
@@ -17,8 +16,8 @@ KOBJ.add_extra_page_var = function(key, value)
 {
     /* Ignore if the key is rids, init or has a : which means there is an app id */
     if (key.match(":") == null &&
-            key != 'rids' &&
-            key != 'init')
+        key != 'rids' &&
+        key != 'init')
     {
         KOBJ['extra_page_vars'][key] = value;
     }
@@ -35,8 +34,8 @@ KOBJ.extra_page_vars_as_url = function() {
 };
 
 KOBJ.add_config_and_run = function(app_config) {
-  KOBJ.add_app_config(app_config);
-  KOBJ.run_when_ready();
+    KOBJ.add_app_config(app_config);
+    KOBJ.run_when_ready();
 };
 
 KOBJ.add_app_configs = function(app_configs) {
@@ -51,6 +50,11 @@ KOBJ.add_app_configs = function(app_configs) {
     });
 };
 
+KOBJ.eval = function(app_config) {
+    KOBJ.add_app_config(app_config);
+    KOBJ.runit();
+};
+
 KOBJ.add_app_config = function(app_config) {
 
     /* if someone messed up and did not send us the right data just ignore the request */
@@ -58,21 +62,12 @@ KOBJ.add_app_config = function(app_config) {
         return;
     }
 
-    /* Over ride what server to talk to if ask to in config */
-     if (typeof(app_config.init) == 'object')
+    /* Override what server to talk to if ask to in config */
+    if (typeof(app_config.init) == 'object')
     {
-        if(typeof(app_config.init.eval_host) != 'undefined' )
-        {
-            KOBJ.eval_host = app_config.init.eval_host;
-        }
-        if(typeof(app_config.init.callback_host) != 'undefined' )
-        {
-            KOBJ.callback_host = app_config.init.callback_host;
-        }
-        if(typeof(app_config.init.init_host) != 'undefined' )
-        {
-            KOBJ.init_host = app_config.init.init_host;
-        }
+        $K.each(app_config.init, function(k, v) {
+            KOBJ[k] = v;
+        });
     }
 
     /*
@@ -91,14 +86,17 @@ KOBJ.add_app_config = function(app_config) {
             app = new KrlApplication(value);
             app.update_from_config(app_config);
             KOBJ['applications'][value] = app;
+            // TODO: This is the old way need here for backwords  compat
+            KOBJ[value] = {};
         }
         app_id_s[index] = app.app_id;
     });
 
     // TODO: Not sure why we would join all the ids Ask Phil about this
     KOBJ.site_id = app_id_s.join(";");
-    KOBJ.callback_url = KOBJ.proto()+ KOBJ.callback_host +KOBJ.kns_port+"/callback/" + KOBJ.site_id;
-};
+    KOBJ.callback_url = KOBJ.proto() + KOBJ.callback_host + KOBJ.kns_port + "/callback/" + KOBJ.site_id;
+}
+        ;
 
 // This does not call the setTimeout Directly on the KOBJ.eval as it would block
 // so we add a script element to be executed at a later time.
@@ -111,32 +109,32 @@ KOBJ.reload = function(delay) {
 };
 
 KOBJ.kvars_to_json = function() {
-  if(typeof(kvars) == "undefined" || typeof(kvars) != "object")
-  {
-    return "";
-  }
-  else
-  {
-    return $K.toJSON(kvars);
-  }
+    if (typeof(kvars) == "undefined" || typeof(kvars) != "object")
+    {
+        return "";
+    }
+    else
+    {
+        return $K.toJSON(kvars);
+    }
 
 };
 
 /*
-  Add all external resources request here.  We do this so that we can
-  attempt to stop double loading. Each resource may have multiple applications
-  using it.
+ Add all external resources request here.  We do this so that we can
+ attempt to stop double loading. Each resource may have multiple applications
+ using it.
  */
-KOBJ.registerExternalResources = function(rid,resources) {
+KOBJ.registerExternalResources = function(rid, resources) {
     KOBJ.log("registering dataset " + rid);
-    var resource_array =  [];
-    $K.each(resources,function (url,options){
-        if(KOBJ.external_resources[url] == null)
+    var resource_array = [];
+    $K.each(resources, function (url, options) {
+        if (KOBJ.external_resources[url] == null)
         {
             var a_resource = new KrlExternalResource(url);
             a_resource.css_selector = options["selector"];
             a_resource.type = options["type"];
-            KOBJ.external_resources[url] =  a_resource;
+            KOBJ.external_resources[url] = a_resource;
             resource_array.push(a_resource);
             a_resource.load();
         }
@@ -155,9 +153,9 @@ KOBJ.registerDataSet = function(rid, datasets) {
     //    KOBJ.executeWhenReady(rid);
 };
 
-KOBJ.clearExecutionDelay = function(rid){
+KOBJ.clearExecutionDelay = function(rid) {
     var app = KOBJ.get_application(rid);
-    if(app != null)
+    if (app != null)
     {
         app.delay_execution = false;
     }
