@@ -33,9 +33,9 @@ describe "Verify Runtime Functions" do
     page.js_eval("'' + (typeof(window.KOBJ.log) == 'function')").should match(/true/)
   end
 
-  it "have defined a function called KOBJ.location" do
-    page.js_eval("typeof(window.KOBJ.location) == 'function')").should match(/true/)
-  end
+#  it "have defined a function called KOBJ.location" do
+#    page.js_eval("typeof(window.KOBJ.location) == 'function')").should match(/true/)
+#  end
 
   it "have defined a function called KOBJ.css" do
     page.js_eval("'' + (typeof(window.KOBJ.css) == 'function')").should match(/true/)
@@ -135,9 +135,9 @@ describe "Verify Runtime Functions" do
     page.js_eval("'' + (typeof(window.KOBJ.eval) == 'function')").should match(/true/)
   end
 
-  it "have defined a function called KOBJ.init" do
-    page.js_eval("'' + (typeof(window.KOBJ.init) == 'function')").should match(/true/)
-  end
+#  it "have defined a function called KOBJ.init" do
+#    page.js_eval("'' + (typeof(window.KOBJ.init) == 'function')").should match(/true/)
+#  end
 
 
   it "have defined a function called KOBJ.registerDataSet" do
@@ -154,14 +154,14 @@ describe "Verify Runtime Functions" do
     page.js_eval("'' + (typeof(window.KOBJ.clearExecutionDelay) == 'function')").should match(/true/)
   end
 
-  it "have defined a function called KOBJ.executeWhenReady" do
-    page.js_eval("'' + (typeof(window.KOBJ.executeWhenReady) == 'function')").should match(/true/)
-  end
+#  it "have defined a function called KOBJ.executeWhenReady" do
+#    page.js_eval("'' + (typeof(window.KOBJ.executeWhenReady) == 'function')").should match(/true/)
+#  end
 
 
-  it "have defined a function called KOBJ.executeClosure" do
-    page.js_eval("'' + (typeof(window.KOBJ.executeClosure) == 'function')").should match(/true/)
-  end
+#  it "have defined a function called KOBJ.executeClosure" do
+#    page.js_eval("'' + (typeof(window.KOBJ.executeClosure) == 'function')").should match(/true/)
+#  end
 
 
 
