@@ -208,10 +208,11 @@ sub element {
 
 sub submit {
   my $self = shift;
-  my($element) = @_;
+  my($element,$url) = @_;
 
   $self->{'type'} = 'submit';
   $self->{'element'} = $element;
+  $self->{'url'} = $url;
 
 }
 

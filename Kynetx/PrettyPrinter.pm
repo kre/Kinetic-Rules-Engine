@@ -480,12 +480,19 @@ sub pp_event_expr {
       $o .= $node->{'domain'} .':' if $node->{'domain'};
       $o .= $node->{'op'} . ' ';
       $o .= pp_string($node->{'element'});
+      $o .= pp_on_expr($node->{'on'}) if defined $node->{'on'};
       $o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
     }
   }
 
   return $o;
 
+}
+
+sub pp_on_expr {
+  my $node = shift;
+
+  return ' on ' . pp_string($node);
 }
 
 sub pp_pre {

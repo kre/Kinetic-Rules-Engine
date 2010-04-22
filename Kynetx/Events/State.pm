@@ -410,9 +410,9 @@ $eval_funcs->{'pageview'} = \&pageview_eval;
 #-------------------------------------------------------------------------
 
 sub mk_submit_prim {
-  my ($sm_elem, $vars) = @_;
+  my ($sm_elem, $sm_pattern, $vars) = @_;
 
-  return mk_prim($sm_elem,
+  return mk_prim([$sm_elem, $sm_pattern],
 		 $vars,
 		 'submit'
 		);
@@ -423,18 +423,20 @@ sub submit_eval {
 
   my $test = sub {my $event_elem = shift; 
 		  my $sm_elem = shift;
+		  my $url = shift;
+		  my $pattern = shift;
 		  my $logger = get_logger();
 		  #	    $logger->debug("Url: $url; Pattern: $pattern");
 		  my $req_info = $event->get_req_info();
 		  my $form_data = $req_info->{'KOBJ_form_data'} if $req_info->{'KOBJ_form_data'};
-		  if ($event_elem eq $sm_elem) {
+		  if ($event_elem eq $sm_elem && $url =~ /$pattern/) {
 		    return(1, $form_data);
 		  } else {
 		    return(0, []);
 		  }
 	  };
 
-  return $test->($event->element(), $t->{'test'});
+  return $test->($event->element(), $t->{'test'}->[0], $event->url(), $t->{'test'}->[1]);
 }
 $eval_funcs->{'submit'} = \&submit_eval;
 

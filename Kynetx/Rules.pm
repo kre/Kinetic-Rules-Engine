@@ -627,9 +627,9 @@ sub eval_foreach {
 
     foreach my $val (@{ $valarray->{'val'} }) {
 
-      $val = Kynetx::Expressions::typed_value($val);
-
 #      $logger->debug("Evaluating rule body with " . Dumper($val));
+
+      $val = Kynetx::Expressions::typed_value($val);
 
       # we recurse in side this loop to handle nested foreach statements
       $fjs .= mk_turtle(
@@ -764,9 +764,17 @@ sub optimize_ruleset {
       optimize_rule($rule);
     }
 
+    $ruleset->{'optimization_version'} = get_optimization_version();
+
 #    $logger->debug("Optimized ruleset ", sub { Dumper $ruleset });
     
     return $ruleset;
+}
+
+# incrementing the number here will force cache reloads of rulesets with lower #'s
+sub get_optimization_version {
+  my $version = 2;
+  return $version;
 }
 
 
@@ -911,7 +919,7 @@ sub mk_rule_list {
     }
   }
 
-  $logger->debug("Rule List: ", sub {Dumper $rl->{'rules'}});
+#  $logger->debug("Rule List: ", sub {Dumper $rl->{'rules'}});
 
 
   return $rl;

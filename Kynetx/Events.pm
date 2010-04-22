@@ -84,7 +84,7 @@ sub handler {
     my ($domain,$rid,$eventtype);
     my $eid = '';
 
-    ($domain,$eventtype,$rid,$eid) = $r->path_info =~ m!/event/([a-z+_]+)/([a-z+_]+)/?([A-Za-z0-9_;]*)/?(\d+)?!;
+    ($domain,$eventtype,$rid,$eid) = $r->path_info =~ m!/event/([a-z+_]+)/?([a-z+_]+)?/?([A-Za-z0-9_;]*)/?(\d+)?!;
 
     $eid = $eid || 'unknown';
     $logger->debug("processing event $domain/$eventtype on rulesets $rid and EID $eid");
@@ -99,7 +99,7 @@ sub handler {
 
     # at some point we need a better dispatch function
     if($domain eq 'version' ) {
-      show_build_num($r, $domain, $rid);
+      show_build_num($r);
     } else {
       process_event($r, $domain, $eventtype, $rid, $eid);
     }

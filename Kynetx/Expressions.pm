@@ -848,9 +848,21 @@ sub infer_type {
 
 }
 
+# this hash identifies all literal values
+my %literal_types = ('str' => 1,
+		     'num' => 1,
+		     'bool' => 1,
+		     'regexp' => 1,
+		     'array' => 1,
+		     'hash' => 1,
+		    );
+
 sub typed_value {
   my($val) = @_;
-  unless (ref $val eq 'HASH' && defined $val->{'type'}) {
+  unless (ref $val eq 'HASH' && 
+	  defined $val->{'type'} &&
+	  $literal_types{$val->{'type'}}
+	 ) {
     $val = Kynetx::Parser::mk_expr_node(infer_type($val),$val);
   }
   return $val

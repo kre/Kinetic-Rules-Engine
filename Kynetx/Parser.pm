@@ -432,10 +432,11 @@ event_prim: event_domain(?) 'pageview' (STRING | REGEXP) setting(?)
              'domain' => $item[1][0] 
 	   } 
 	  }
-  | event_domain(?) ('submit'|'click'|'change') STRING setting(?)
+  | event_domain(?) ('submit'|'click'|'change') STRING on_expr(?) setting(?)
 	  {$return =
 	   { 'element' => $item[3],
-	     'vars' => $item[4][0],
+	     'vars' => $item[5][0],
+             'on' => $item[4][0],
              'type' => 'prim_event',
              'op' => $item[2],
              'domain' => $item[1][0]
@@ -449,6 +450,9 @@ setting: 'setting' '(' VAR(s? /,/) ')'
 
 event_domain: ('web' | 'mail') ':'
    {$return = $item[1]}
+
+on_expr: 'on' (STRING|REGEXP)
+  {$return = $item[2]}
 
 foreach: 'foreach' expr setting
     {$return =
