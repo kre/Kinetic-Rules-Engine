@@ -206,7 +206,7 @@ KrlApplication.prototype.run = function()
 
         var params = ["caller=" + escape(KOBJ.location('href')),
               "referer="+ escape(KOBJ.document.referrer),
-              "kvars=" + escape(KOBJ.kvars_json),
+              "kvars=" + escape(KOBJ.kvars_to_json()),
               "title=" + encodeURI(KOBJ.document.title)
                  ];
 
