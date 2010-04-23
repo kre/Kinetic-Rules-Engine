@@ -606,16 +606,16 @@ sub build_one_action {
       $before = $actions->{$action_name}->{'before'} || \&noop;
       $after = $actions->{$action_name}->{'after'} || [];
     } else {
-      # I really hate this but in order to make it this is what must
-      # be done. Once impact is done we can remove this at some point.
-      if($action_name == "flippyloo")
-      {
-        $resources = Kynetx::Actions::FlippyLoo::get_resources();
-      }
       $action_js = $actions->{$action_name};
       $before = \&noop;
       $after = [];
     }
+      # I really hate this but in order to make it this is what must
+      # be done. Once impact is done we can remove this at some point.
+      if($action_name eq "flippyloo")
+      {
+        $resources = Kynetx::Actions::FlippyLoo::get_resources();
+      }
 
     $js .= &$before($req_info, $rule_env, $session, $config, $mods,$before_args);
     $logger->debug("Action $action_name (before) returns js: ",$js);
@@ -629,8 +629,6 @@ sub build_one_action {
 
 
       push(@{ $req_info->{'actions'} }, $action_name);
-      # Add the needed resources
-      push(@{ $req_info->{'resources'} }, $resources);
 
       # the after functions processes the JS as a chain and replaces it.  
       foreach my $a (@{$after}) {
@@ -645,6 +643,12 @@ sub build_one_action {
       
     }
 
+      # Add the needed resources
+      if($resources) {
+         push(@{ $req_info->{'resources'} }, $resources);
+       }
+
+       $logger->debug("RESORUCES ARE ", astToJson($req_info->{'resources'}));
 
 
     return $js;

@@ -133,7 +133,7 @@ sub process_rules {
 
 
     # For each resource lets make a register resources call.
-    my $register_resources_js = "";
+    my $register_resources_js = '';
 
     if($req_info->{'resources'})
     {

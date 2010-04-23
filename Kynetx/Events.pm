@@ -278,8 +278,26 @@ sub process_event {
     $logger->info("Event processing finished");
     $logger->debug("__FLUSH__");
 
+      # For each resource lets make a register resources call.
+        my $register_resources_js = '';
+
+#        $logger->debug("cid test data right here");
+#        $logger->debug("RESORUCES ARE should put stuff out?". Kynetx::Json::astToJson($req_info->{'resources'}));
+        if($req_info->{'resources'})
+        {
+            my $register_resources_json = Kynetx::Json::encode_json($req_info->{'resources'}[0]);
+            $register_resources_js = "KOBJ.registerExternalResources('" .
+                        $req_info->{'rid'} .
+                        "', " .
+                        $register_resources_json .
+                        ");";
+
+        }
+#        $logger->debug("resource add js ". $register_resources_js);
+
+
     # this is where we return the JS
-    print $js;
+    print $register_resources_js . $js;
 
 }
 
