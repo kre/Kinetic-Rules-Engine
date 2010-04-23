@@ -1,3 +1,6 @@
+2010-04-23  Cid Dennis  <cid@kynetx.com> a
+    * Added double check to make sure register resources only accepts valid data.
+      etc/js/0.9/krl-runtime.js
 2010-04-23  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Actions.pm (build_one_action): made resource undef
