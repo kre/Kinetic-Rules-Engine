@@ -131,12 +131,15 @@ KOBJ.registerExternalResources = function(rid, resources) {
     $K.each(resources, function (url, options) {
         if (KOBJ.external_resources[url] == null)
         {
-            var a_resource = new KrlExternalResource(url);
-            a_resource.css_selector = options["selector"];
-            a_resource.type = options["type"];
-            KOBJ.external_resources[url] = a_resource;
-            resource_array.push(a_resource);
-            a_resource.load();
+            if(typeof(options["type"]) != "undefined")
+            {
+                var a_resource = new KrlExternalResource(url);
+                a_resource.css_selector = options["selector"];
+                a_resource.type = options["type"];
+                KOBJ.external_resources[url] = a_resource;
+                resource_array.push(a_resource);
+                a_resource.load();
+            }
         }
     });
     var app = KOBJ.get_application(rid);
