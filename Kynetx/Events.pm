@@ -304,12 +304,12 @@ sub register_resources {
    my $logger = get_logger();
 
 
-   $logger->debug("Req info for register resources ", sub {Dumper $req_info});
+#   $logger->debug("Req info for register resources ", sub {Dumper $req_info});
    
-   if($req_info->{'resources'} &&
-      defined $req_info->{'resources'}->[0]
+   if($req_info->{'resources'}
      ) {
-     my $register_resources_json = Kynetx::Json::encode_json($req_info->{'resources'}->[0]);
+
+     my $register_resources_json = Kynetx::Json::encode_json($req_info->{'resources'});
      $register_resources_js = "KOBJ.registerExternalResources('" .
        $req_info->{'rid'} .
 	 "', " .

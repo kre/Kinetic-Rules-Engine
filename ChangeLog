@@ -8,6 +8,7 @@
 
     * Kynetx/Events.pm:  vars and vals now name spaced by sm id
     * Kynetx/Events/State.pm: vars and vals now name spaced by sm id
+    * Kynetx/Events.pm(register_resources): removed array deference
 
 2010-04-22  Phil Windley  <pjw@kynetx.com>
 
