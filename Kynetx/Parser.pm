@@ -1087,6 +1087,8 @@ sub parse_ruleset {
 
     $ruleset = remove_comments($ruleset);
 
+    $logger->debug("[parser::parse_ruleset] after comments: ", sub {Dumper($ruleset)});
+
 
 #    print $ruleset; exit;
 
@@ -1100,7 +1102,7 @@ sub parse_ruleset {
     } else {
 	$logger->debug("Parsed rules");
     }
-    $logger->debug("[parser:parse_rule] ", sub {Dumper($result)});
+#    $logger->debug("[parser:parse_rule] ", sub {Dumper($result)});
 
     return $result;
 

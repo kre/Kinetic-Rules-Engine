@@ -574,7 +574,7 @@ sub build_one_action {
 
     my $actions = {};
     # External resources need by action.
-    my $resources = {};
+    my $resources;
     if (defined $action->{'source'}) {
       if ($action->{'source'} eq 'twitter') {
 	   $actions = Kynetx::Predicates::Twitter::get_actions();

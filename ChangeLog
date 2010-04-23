@@ -1,3 +1,7 @@
+2010-04-23  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Actions.pm (build_one_action): made resource undef
+
 2010-04-23  Cid Dennis  <cid@kynetx.com>
     * Tuncate the stack trace from runtime to errorstack to 500 characters.  Also fixed an issue where KRL engine make
          variables that looked like K$ not $K.
