@@ -519,12 +519,12 @@ sub eval_rule {
     Log::Log4perl::MDC->put('rule', $rule->{'name'});
 #    $logger->info($rule->{'name'}, " selected...");
 
-
-    foreach my $var (@{ session_keys($req_info->{'rid'}, $session) } ) {
-	next if($var =~ m/_created$/);
-	$logger->debug("[Session] $var has value ". 
-		       session_get($req_info->{'rid'}, $session, $var));
-    }
+# uncomment to print out all the session keys.  With events there's a lot
+#     foreach my $var (@{ session_keys($req_info->{'rid'}, $session) } ) {
+# 	next if($var =~ m/_created$/);
+# 	$logger->debug("[Session] $var has value ". 
+# 		       session_get($req_info->{'rid'}, $session, $var));
+#     }
 
     # keep track of these for each rule
     $req_info->{'actions'} = [];

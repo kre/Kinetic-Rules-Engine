@@ -610,12 +610,11 @@ sub build_one_action {
       $before = \&noop;
       $after = [];
     }
-      # I really hate this but in order to make it this is what must
-      # be done. Once impact is done we can remove this at some point.
-      if($action_name eq "flippyloo")
-      {
+    # I really hate this but in order to make it this is what must
+    # be done. Once impact is done we can remove this at some point.
+    if($action_name eq "flippyloo") {
         $resources = Kynetx::Actions::FlippyLoo::get_resources();
-      }
+    }
 
     $js .= &$before($req_info, $rule_env, $session, $config, $mods,$before_args);
     $logger->debug("Action $action_name (before) returns js: ",$js);

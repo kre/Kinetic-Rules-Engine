@@ -121,29 +121,33 @@ sub isa {
 
 sub set_vars {
   my $self = shift;
+  my $id = shift;
   my $vars = shift;
 
-  return $self->{'vars'} = $vars;
+  return $self->{'vars'}->{$id} = $vars;
 }
 
 sub get_vars {
   my $self = shift;
+  my $id = shift;
 
-  return $self->{'vars'} || [];
+  return $self->{'vars'}->{$id} || [];
 }
 
 
 sub set_vals {
   my $self = shift;
+  my $id = shift;
   my $vals = shift;
 
-  return $self->{'vals'} = $vals;
+  return $self->{'vals'}->{$id} = $vals;
 }
 
 sub get_vals {
   my $self = shift;
+  my $id = shift;
 
-  return $self->{'vals'} || [];
+  return $self->{'vals'}->{$id} || [];
 }
 
 

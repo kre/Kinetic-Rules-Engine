@@ -325,8 +325,8 @@ sub next_state {
 #    $logger->debug("Trans vars ", sub { Dumper $t->{'vars'} });
     if ($match) {
       $next = $t->{'next'};
-      $event->set_vars($t->{'vars'});
-      $event->set_vals($vals);
+      $event->set_vars( $self->get_id(), $t->{'vars'});
+      $event->set_vals($self->get_id(), $vals);
     }
   }
   return $next;

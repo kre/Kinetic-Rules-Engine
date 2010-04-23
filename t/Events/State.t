@@ -90,10 +90,10 @@ $next = $sm2->next_state($initial, $ev1);
 ok($sm2->is_initial($next), "ev2 does not lead to initial state");
 $test_count++;
 
-is_deeply($ev2->get_vals(), ['is','a'], "we capture regexps");
+is_deeply($ev2->get_vals($sm2->get_id()), ['is','a'], "we capture regexps");
 $test_count++;
 
-is_deeply($ev2->get_vars(), ['vv','bb'], "we get vars too");
+is_deeply($ev2->get_vars($sm2->get_id()), ['vv','bb'], "we get vars too");
 $test_count++;
 
 # test cloning

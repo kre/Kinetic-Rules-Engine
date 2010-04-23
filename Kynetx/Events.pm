@@ -188,6 +188,9 @@ sub process_event {
 
 	if ($sm->is_final($next_state)) {
 
+	  # sm vars and vals are namespace by sm id.
+	  $rules_to_execute->{$rid}->{$rule->{'name'}}->{'sm_id'} = $sm->get_id();
+
 	  push @{$rules_to_execute->{$rid}->{'rules'}}, $rule;
 	  $rules_to_execute->{$rid}->{'ruleset'} = $ruleset;
 	  $logger->debug("Pushing " , $rid, " & ",  $rule->{'name'});
@@ -232,11 +235,13 @@ sub process_event {
 	my @req_list;
 	while (my $ev = session_next($rid, $session, $event_list_name)) {
 
+#	  $logger->debug("Event: ", sub {Dumper $ev});
+
 	  push @req_list, $ev->get_req_info();
 	  push @{$rules_to_execute->{$rid}->{$rule_name}->{'vars'}}, 
-	       @{$ev->get_vars()};
+	       @{$ev->get_vars($rules_to_execute->{$rid}->{$rule_name}->{'sm_id'})};
 	  push @{$rules_to_execute->{$rid}->{$rule_name}->{'vals'}}, 
-	       @{$ev->get_vals()};
+	       @{$ev->get_vals($rules_to_execute->{$rid}->{$rule_name}->{'sm_id'})};
 	}
 
 # merging the req_info this way mods it in unpredictable ways
@@ -293,20 +298,26 @@ sub process_event {
 sub register_resources {
    my($req_info) = @_;
 
-    # For each resource lets make a register resources call.
-    my $register_resources_js = '';
+   # For each resource lets make a register resources call.
+   my $register_resources_js = '';
 
-    if($req_info->{'resources'})
-    {
-            my $register_resources_json = Kynetx::Json::encode_json($req_info->{'resources'}[0]);
-            $register_resources_js = "KOBJ.registerExternalResources('" .
-                        $req_info->{'rid'} .
-                        "', " .
-                        $register_resources_json .
-                        ");";
+   my $logger = get_logger();
 
-    }
-    return $register_resources_js;
+
+   $logger->debug("Req info for register resources ", sub {Dumper $req_info});
+   
+   if($req_info->{'resources'} &&
+      defined $req_info->{'resources'}->[0]
+     ) {
+     my $register_resources_json = Kynetx::Json::encode_json($req_info->{'resources'}->[0]);
+     $register_resources_js = "KOBJ.registerExternalResources('" .
+       $req_info->{'rid'} .
+	 "', " .
+	   $register_resources_json .
+	     ");";
+
+   }
+   return $register_resources_js;
 }
 
 sub mk_event {
@@ -341,6 +352,8 @@ sub compile_event_expr {
 
   if ($eexpr->{'type'} eq 'prim_event') {
     if ($eexpr->{'op'} eq 'pageview') {
+      $sm = mk_pageview_prim($eexpr->{'pattern'}, $eexpr->{'vars'});
+    } elsif ($eexpr->{'op'} eq 'submit') {
       $sm = mk_pageview_prim($eexpr->{'pattern'}, $eexpr->{'vars'});
     } else {
       $logger->warn("Unrecognized primitive event");

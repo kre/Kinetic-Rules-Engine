@@ -398,6 +398,19 @@ SKIP: {
 
     $test_count += test_event_plan($not_between_test_plan);
 
+    my $multi_test_plan = 
+      [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.google.com/search",
+	'type' => 'text/javascript',
+	'like' => ['/test_rule_google_1/',
+		   '/test_rule_google_2/',
+		   "/var search = 'search';/",
+		  ],
+	'diag' => 0,
+       },
+      ];
+
+    $test_count += test_event_plan($multi_test_plan);
+
 
 #     my $submit_test_plan = 
 #       [{'url' => "$dn/web/submit/cs_test_1",
