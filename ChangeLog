@@ -1,3 +1,28 @@
+2010-04-23  Cid Dennis  <cid@kynetx.com>
+    * Tuncate the stack trace from runtime to errorstack to 500 characters.  Also fixed an issue where KRL engine make
+         variables that looked like K$ not $K.
+	/Kynetx/Expressions.pm
+	/Kynetx/JavaScript.pm
+	/Kynetx/Predicates/Page.pm
+	/etc/js/0.9/krl-functions.js
+	/t/ExprTests.pm
+	/t/Rules.t
+    * Fix resource loader after code in KRL engine and small interation bug in runtime when doing KOBJ.reload.
+	/Kynetx/Actions.pm
+	/Kynetx/Events.pm
+	/Kynetx/Rules.pm
+	/etc/js/0.9/krl-runtime.js
+    * Fixed flippyloo action to now send javascript when used not before and few other resoruce loading bugs
+	/Kynetx/Actions.pm
+	/Kynetx/Events.pm
+	/Kynetx/Rules.pm
+    * Fixed bug where kvars were ignored by runtime.
+	/etc/js/0.9/krl-application.js
+    * Fix bad array refencing 
+	/Kynetx/Rules.pm
+    * Added Timestamp back into runtime code so it will be easy to see what version it is
+      	/bin/install-init-files.pl
+
 2010-04-23  Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Google.pm: added a debug statement for a time function
     * Kynetx/OData.pm: Fall back for the Windley vest bug. debug statements
