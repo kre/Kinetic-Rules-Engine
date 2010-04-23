@@ -82,7 +82,7 @@ id
 	$val = $vals->{$args->[0]};
     } elsif ($function eq 'id') {
 	# we're really just generating JS here.
-	$val = "K\$('".$args->[0]."').innerHTML";
+	$val = "\$K('".$args->[0]."').innerHTML";
 	
     } elsif($function eq 'url') {
 

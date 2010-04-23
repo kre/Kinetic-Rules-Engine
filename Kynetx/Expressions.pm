@@ -839,7 +839,7 @@ sub infer_type {
 	$t = 'hash';
     } elsif(ref $v eq 'ARRAY') {
 	$t = 'array';
-    } elsif($v =~ m/^K\$\(.*\)/) {
+    } elsif($v =~ m/^\$K\(.*\)/) {
 	$t = 'JS';
     } else {
 	$t = 'str';

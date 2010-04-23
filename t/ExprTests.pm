@@ -329,8 +329,8 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    'K$(\'foo\').innerHTML',
-    mk_expr_node('JS', 'K$(\'foo\').innerHTML'),
+    '$K(\'foo\').innerHTML',
+    mk_expr_node('JS', '$K(\'foo\').innerHTML'),
     0);
 
 
@@ -340,8 +340,8 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    'K$((city + \'_ID\')).innerHTML',
-    mk_expr_node('JS', 'K$(\'Blackfoot_ID\').innerHTML'),
+    '$K((city + \'_ID\')).innerHTML',
+    mk_expr_node('JS', '$K(\'Blackfoot_ID\').innerHTML'),
     0);
 
 
@@ -2131,8 +2131,8 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'decl',
-    'var c = K$(\'foo\').innerHTML;',
-    'K$(\'foo\').innerHTML',
+    'var c = $K(\'foo\').innerHTML;',
+    '$K(\'foo\').innerHTML',
     0);
 
 

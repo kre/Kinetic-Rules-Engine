@@ -812,7 +812,7 @@ $config = astToJson(
 
 $result = <<_JS_;
 (function(){
-var pt = K\$('product_name').innerHTML;
+var pt = \$K('product_name').innerHTML;
 var html = '<p>This is the product title: '+pt+'</p>';
 function callBacks () {
 };

@@ -453,7 +453,7 @@ KOBJ.errorstack_submit = function(key, e) {
     txt += "&name=" + escape(e.name ? e.name : e);
     txt += "&Platform=" + escape(navigator.platform);
     txt += "&UserAgent=" + escape(navigator.userAgent);
-    txt += "&stack=" + escape(e.stack ? e.stack : "");
+    txt += "&stack=" + escape(e.stack ? e.stack.substring(0,500) : "");
     var i = document.createElement("img");
     i.setAttribute("src", "http://www.errorstack.com/submit?" + txt);
     document.body.appendChild(i);
