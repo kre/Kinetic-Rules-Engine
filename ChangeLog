@@ -1,3 +1,9 @@
+2010-04-23  Mark Horstmeier <meh@kynetx.com>
+    * Kynetx/Google.pm: added a debug statement for a time function
+    * Kynetx/OData.pm: Fall back for the Windley vest bug. debug statements
+    * Kynetx/Module.pm: Fixed reference miss for RSS and OData
+    * Kynetx/Util.pm:  Fall back for the Windley vest bug.
+    
 2010-04-23  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Events.pm:  vars and vals now name spaced by sm id

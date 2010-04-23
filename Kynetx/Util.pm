@@ -260,7 +260,7 @@ sub end_slash {
     my ($url_str)= @_;
     my $logger = get_logger();
     $url_str =~ /.+(\/)$/g;
-    if (not defined $1) {
+    if (not defined $1 or $1 eq 'web') {
         $url_str = $url_str . '/';
     } 
     return $url_str;

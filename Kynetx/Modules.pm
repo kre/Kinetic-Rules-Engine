@@ -37,7 +37,6 @@ use Kynetx::Util;
 use Kynetx::Expressions;
 use Kynetx::Environments;
 use Kynetx::Session;
-use Kynetx::Predicates::Google;
 use Kynetx::Actions::LetItSnow;
 use Kynetx::Actions::JQueryUI;
 use Kynetx::Actions::FlippyLoo;
@@ -74,7 +73,10 @@ use Kynetx::Predicates::KPDS;
 use Kynetx::Predicates::Page;
 use Kynetx::Predicates::Math;
 use Kynetx::Predicates::Amazon;
-
+use Kynetx::Predicates::Google;
+use Kynetx::Predicates::OData;
+use Kynetx::Predicates::RSS;
+ 
 
 
 sub eval_module {
@@ -86,7 +88,7 @@ sub eval_module {
  #   $args->[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
       # get the values
     
-    $logger->debug("Datasource args ", sub {Dumper $args});
+    $logger->trace("Datasource args ", sub {Dumper $args});
 
     my $val = '';
     my $preds = {};
@@ -195,7 +197,7 @@ sub eval_module {
       $val = $preds->{$function}->($req_info,$rule_env,$args);
       $val ||= 0;
     } else {
-      $val = Kynetx::Predicates::Time::get_time($req_info,$function);
+      $val = Kynetx::Predicates::Time::get_time($req_info,$function,$args);
     }
     } elsif ($source eq 'kpds') {
 	   $preds = Kynetx::Predicates::KPDS::get_predicates();

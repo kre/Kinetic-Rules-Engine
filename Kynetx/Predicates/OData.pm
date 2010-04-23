@@ -39,7 +39,9 @@ use lib qw(../../);
 use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 
-use Kynetx::Util qw(:all);
+use Kynetx::Util qw(
+    end_slash
+); 
 use Kynetx::Json qw(
   jsonToAst_w
   get_obj
@@ -78,7 +80,7 @@ my %predicates = (
         my $url    = build( 'service_document', $args );
         my $resp   = request($url);
         if ( defined $resp ) {
-            my $sets = get_obj( jsonToAst_w( $resp->content ), qr/EntitySets/ );
+            my $sets = get_obj( jsonToAst_w($resp->content), qr/\EntitySets/ );
             return $sets
         }
     },
@@ -120,7 +122,7 @@ my %predicates = (
     'service_operation' => sub {
         my ( $req_info, $rule_env, $args ) = @_;
         my $logger = get_logger();
-        $logger->debug( "so args: ", sub { Dumper($args) } );
+        $logger->debug( "ServiceOperation args: ", sub { Dumper($args) } );
         my $url = build( 'service_operation', $args );
         my $resp = request($url);
         my $result;
@@ -173,15 +175,15 @@ sub build {
 
     $url = get_service_root($args);
     if ( $target eq 'metadata' ) {
-        $url = end_slash($url) . '$metadata';
+        $url = Kynetx::Util::end_slash($url) . '$metadata';
     } elsif ( $target eq 'service_operation' ) {
-        $url = end_slash($url);
+        $url = Kynetx::Util::end_slash($url);
         $url .= get_function_name($args);
         my @parms = get_function_query_parameters($args);
         $logger->debug( "Parms: ", sub { Dumper(@parms) } );
         $url .= '?' . join( '&', @parms );
     } elsif ( $target eq 'get' ) {
-        $url = end_slash($url);
+        $url = Kynetx::Util::end_slash($url);
         $url .= get_resource_path($args) || '';
         $url .= get_operations($args) || '';
     }
@@ -349,8 +351,10 @@ sub request {
         $hreq->header( 'accept' => 'application/json' );
     } elsif ( $1 eq '$count' || $1 eq '$value') {
         $hreq->header( 'accept' => 'text/plain' );
-    } else {
+    } elsif ($1 eq '$metadata'){
         $hreq->header( 'accept' => 'application/xml' );
+    } else {
+        $hreq->header( 'accept' => 'application/json');
     }
     my $ua    = LWP::UserAgent->new;
     my $resp  = $ua->simple_request($hreq);

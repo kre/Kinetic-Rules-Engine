@@ -334,6 +334,7 @@ sub test_request {
 sub get_google_endpoints {
     my ($scope) = @_;
     my $logger  = get_logger();
+    $logger->debug("scope: ", sub {Dumper($scope)});
     my $gurls   = $google_config->{'urls'};
     if ( !defined $scope ) {
         return $gurls;
@@ -557,7 +558,9 @@ sub validate_timestamp {
     my $f      = DateTime::Format::RFC3339->new();
     my $dt     = DateTime::Format::ISO8601->parse_datetime($arg);
     if ( defined $arg ) {
-        return $f->format_datetime($dt);
+        my $ts = $f->format_datetime($dt);
+        $logger->debug("Validate: ", $ts);
+        return $ts;
     } else {
         return undef;
     }
