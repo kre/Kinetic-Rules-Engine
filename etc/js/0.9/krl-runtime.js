@@ -85,7 +85,7 @@ KOBJ.add_app_config = function(app_config) {
         {
             app = new KrlApplication(value);
             app.update_from_config(app_config);
-            KOBJ['applications'][value] = app;
+            KOBJ.applications[value] = app;
             // TODO: This is the old way need here for backwords  compat
             KOBJ[value] = {};
         }
@@ -102,8 +102,8 @@ KOBJ.add_app_config = function(app_config) {
 // so we add a script element to be executed at a later time.
 // DEPRECATED use app.reload_later
 KOBJ.reload = function(delay) {
-    $K.each(KOBJ.applications, function(index, id) {
-        var app = KOBJ.get_application(id);
+    $K.each(KOBJ.applications, function(name, id) {
+        var app = KOBJ.get_application(name);
         app.reload_later(delay);
     });
 };

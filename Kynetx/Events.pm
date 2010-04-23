@@ -278,13 +278,26 @@ sub process_event {
     $logger->info("Event processing finished");
     $logger->debug("__FLUSH__");
 
-      # For each resource lets make a register resources call.
-        my $register_resources_js = '';
 
-#        $logger->debug("cid test data right here");
-#        $logger->debug("RESORUCES ARE should put stuff out?". Kynetx::Json::astToJson($req_info->{'resources'}));
-        if($req_info->{'resources'})
-        {
+
+    # this is where we return the JS
+    print register_resources($req_info) . $js;
+
+}
+
+#
+# This will put out the needed code that action use to express
+# that they have external js or css.  If no resources are need
+# it just return ""
+#
+sub register_resources {
+   my($req_info) = @_;
+
+    # For each resource lets make a register resources call.
+    my $register_resources_js = '';
+
+    if($req_info->{'resources'})
+    {
             my $register_resources_json = Kynetx::Json::encode_json($req_info->{'resources'}[0]);
             $register_resources_js = "KOBJ.registerExternalResources('" .
                         $req_info->{'rid'} .
@@ -292,13 +305,8 @@ sub process_event {
                         $register_resources_json .
                         ");";
 
-        }
-#        $logger->debug("resource add js ". $register_resources_js);
-
-
-    # this is where we return the JS
-    print $register_resources_js . $js;
-
+    }
+    return $register_resources_js;
 }
 
 sub mk_event {

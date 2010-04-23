@@ -131,24 +131,8 @@ sub process_rules {
     $logger->info("Ruleset processing finished");
     $logger->debug("__FLUSH__");
 
-
-    # For each resource lets make a register resources call.
-    my $register_resources_js = '';
-
-    if($req_info->{'resources'})
-    {
-        my $register_resources_json = encode_json($req_info->{'resources'}[0]);
-        $register_resources_js = "KOBJ.registerExternalResources('" .
-                    $req_info->{'rid'} .
-                    "', " .
-                    $register_resources_json .
-                    ");";
-
-    }
-
-
     # this is where we return the JS
-    print $register_resources_js . $js;
+    print Kynetx::Events::register_resources($req_info) . $js;
 
 }
 

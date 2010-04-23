@@ -644,11 +644,11 @@ sub build_one_action {
     }
 
       # Add the needed resources
+      # These are the urls of either js or css that need to be added because an action needs them before they
+      # execute
       if($resources) {
          push(@{ $req_info->{'resources'} }, $resources);
        }
-
-       $logger->debug("RESORUCES ARE ", astToJson($req_info->{'resources'}));
 
 
     return $js;
