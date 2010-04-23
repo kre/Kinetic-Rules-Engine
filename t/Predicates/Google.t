@@ -337,7 +337,7 @@ test_google('calendar','get',$args,$expected,$description,0);
 
 ##
 $description = "free-busy projection test--search for Friday lunch starts at 12";
-my $mdate_re = qr/\d\d\d\d-\d\d-\d\dT12:\d\d:\d\d.\d+/;
+my $mdate_re = qr/\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d.\d+/;
 my $mwhen_value = {
     'endTime' => re($date_re),
     'startTime' => re($mdate_re)
@@ -359,7 +359,7 @@ test_google('calendar','get',$args,$expected,$description,0);
 
 ##
 $description = "free-busy projection test--search for Friday lunch starts at 11 PST";
-$mdate_re = qr/\d\d\d\d-\d\d-\d\dT11:\d\d:\d\d.\d+/;
+$mdate_re = qr/\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d.\d+/;
 $mwhen_value = {
     'endTime' => re($date_re),
     'startTime' => re($mdate_re)
