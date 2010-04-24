@@ -642,13 +642,7 @@ sub build_one_action {
       
     }
 
-      # Add the needed resources
-      # These are the urls of either js or css that need to be added because an action needs them before they
-      # execute
-      if($resources) {
-         push(@{ $req_info->{'resources'} }, $resources);
-       }
-
+    register_resources($req_info, $resources);
 
     return $js;
 }
@@ -992,6 +986,48 @@ sub eval_control_statement {
     }
 
     return $js;
+}
+
+
+#
+# This will put out the needed code that action use to express
+# that they have external js or css.  If no resources are need
+# it just return ""
+#
+sub mk_registered_resource_js {
+   my($req_info) = @_;
+
+   # For each resource lets make a register resources call.
+   my $register_resources_js = '';
+
+   my $logger = get_logger();
+
+
+#   $logger->debug("Req info for register resources ", sub {Dumper $req_info});
+   
+   if($req_info->{'resources'}
+     ) {
+
+     my $register_resources_json = Kynetx::Json::encode_json($req_info->{'resources'});
+     $register_resources_js = "KOBJ.registerExternalResources('" .
+       $req_info->{'rid'} .
+	 "', " .
+	   $register_resources_json .
+	     ");";
+
+   }
+   return $register_resources_js;
+}
+
+sub register_resources {
+   my($req_info, $resources) = @_;
+   # Add the needed resources
+   # These are the urls of either js or css that need to be added because an 
+   # action needs them before they execute
+   if($resources) {
+     push(@{ $req_info->{'resources'} }, $resources);
+   }
+
 }
 
 

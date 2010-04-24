@@ -43,6 +43,7 @@ use Kynetx::Version qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Request;
 use Kynetx::Rules;
+use Kynetx::Actions;
 use Kynetx::Json;
 
 use Kynetx::Events::Primitives qw(:all);
@@ -286,39 +287,10 @@ sub process_event {
 
 
     # this is where we return the JS
-    print register_resources($req_info) . $js;
+    print Kynetx::Actions::mk_registered_resource_js($req_info) . $js;
 
 }
 
-#
-# This will put out the needed code that action use to express
-# that they have external js or css.  If no resources are need
-# it just return ""
-#
-sub register_resources {
-   my($req_info) = @_;
-
-   # For each resource lets make a register resources call.
-   my $register_resources_js = '';
-
-   my $logger = get_logger();
-
-
-#   $logger->debug("Req info for register resources ", sub {Dumper $req_info});
-   
-   if($req_info->{'resources'}
-     ) {
-
-     my $register_resources_json = Kynetx::Json::encode_json($req_info->{'resources'});
-     $register_resources_js = "KOBJ.registerExternalResources('" .
-       $req_info->{'rid'} .
-	 "', " .
-	   $register_resources_json .
-	     ");";
-
-   }
-   return $register_resources_js;
-}
 
 sub mk_event {
    my($req_info) = @_;

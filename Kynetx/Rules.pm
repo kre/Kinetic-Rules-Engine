@@ -132,7 +132,7 @@ sub process_rules {
     $logger->debug("__FLUSH__");
 
     # this is where we return the JS
-    print Kynetx::Events::register_resources($req_info) . $js;
+    print Kynetx::Actions::mk_registered_resource_js($req_info) . $js;
 
 }
 

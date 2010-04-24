@@ -1051,8 +1051,25 @@ foreach my $case (@action_test_cases) {
 #     "emit a hash");
 
 
+my $fl_resources = Kynetx::Actions::FlippyLoo::get_resources();
+Kynetx::Actions::register_resources($my_req_info, $fl_resources);
 
-done_testing(9 + (@test_cases * 3) + (@action_test_cases * 1));
+is_deeply($my_req_info->{'resources'}, [$fl_resources], "got right resources");
+
+my $resource_js = Kynetx::Actions::mk_registered_resource_js($my_req_info);
+like($resource_js, qr#KOBJ.registerExternalResources\('cs_test', \[\{"http://static.kobj.net/kjs-frameworks/flippy_loo/\d.\d/obFlippyloo.js":\{"type":"js"\}\}\]\);#, "got the right JS");
+
+my $jqui_resources = Kynetx::Actions::JQueryUI::get_resources();
+Kynetx::Actions::register_resources($my_req_info, $jqui_resources);
+is_deeply($my_req_info->{'resources'}, [$fl_resources,$jqui_resources], "got right resources");
+
+$resource_js = Kynetx::Actions::mk_registered_resource_js($my_req_info);
+like($resource_js, qr#KOBJ.registerExternalResources\('cs_test', \[\{"http://static.kobj.net/kjs-frameworks/flippy_loo/\d.\d/obFlippyloo.js":\{"type":"js"\}\},\{"http://static.kobj.net/kjs-frameworks/jquery_ui/\d.\d/jquery-ui-\d.\d.custom.js":\{"type":"js"\},"http://static.kobj.net/kjs-frameworks/jquery_ui/\d.\d/css/ui-darkness/jquery-ui-\d.\d.custom.css":\{"selector":".ui-helper-hidden","type":"css"\}\}\]\);#, "got the right JS");
+
+#diag Dumper $my_req_info;
+diag "Resource JS: ", $resource_js;
+
+done_testing(13 + (@test_cases * 3) + (@action_test_cases * 1));
 
 diag("Safe to ignore warnings about unrecognized escapes");
 
