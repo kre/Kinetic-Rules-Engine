@@ -1,4 +1,13 @@
-2010-04-23  Cid Dennis  <cid@kynetx.com> a
+2010-04-24  Cid Dennis  <cid@kynetx.com> 
+	* Fixed flippy loo and the resource stuff once and for all.
+	/Kynetx/Actions/FlippyLoo.pm
+	/Kynetx/Actions/JQueryUI.pm
+	/Kynetx/Actions/LetItSnow.pm
+	/Kynetx/Actions.pm
+	/Kynetx/Rules.pm
+	/t/Actions.t
+
+2010-04-23  Cid Dennis  <cid@kynetx.com> 
     * Added double check to make sure register resources only accepts valid data.
       etc/js/0.9/krl-runtime.js
 2010-04-23  Phil Windley  <pjw@kynetx.com>
