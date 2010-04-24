@@ -1005,8 +1005,7 @@ sub mk_registered_resource_js {
 
 #   $logger->debug("Req info for register resources ", sub {Dumper $req_info});
    
-   if($req_info->{'resources'}
-     ) {
+   if($req_info->{'resources'}) {
 
      my $register_resources_json = Kynetx::Json::encode_json($req_info->{'resources'});
      $register_resources_js = "KOBJ.registerExternalResources('" .
@@ -1025,8 +1024,10 @@ sub register_resources {
    # These are the urls of either js or css that need to be added because an 
    # action needs them before they execute
    if($resources) {
-     push(@{ $req_info->{'resources'} }, $resources);
-   }
+        while( my ($k, $v) = each %$resources ) {
+            $req_info->{'resources'}->{$k} = $v;
+        }
+    }
 
 }
 

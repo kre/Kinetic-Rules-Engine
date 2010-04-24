@@ -63,14 +63,11 @@ EOF
 	}
 };
 
-my $external_resource =  {
-    "http://static.kobj.net/kjs-frameworks/jquery_ui/1.8/jquery-ui-1.8.custom.js" => { "type" => "js" },
-    "http://static.kobj.net/kjs-frameworks/jquery_ui/1.8/css/ui-darkness/jquery-ui-1.8.custom.css" => { "type" => "css", "selector" => ".ui-helper-hidden" }
-};
-
 
 sub get_resources {
-    return $external_resource;
+    return     {"http://static.kobj.net/kjs-frameworks/jquery_ui/1.8/jquery-ui-1.8.custom.js" => { "type" => "js" },
+    "http://static.kobj.net/kjs-frameworks/jquery_ui/1.8/css/ui-darkness/jquery-ui-1.8.custom.css" => { "type" => "css", "selector" => ".ui-helper-hidden" }
+    };
 }
 
 sub get_actions {

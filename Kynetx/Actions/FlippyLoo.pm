@@ -62,13 +62,11 @@ EOF
     }
 };
 
-my $external_resource =  {
-    "http://static.kobj.net/kjs-frameworks/flippy_loo/1.0/obFlippyloo.js" => { "type" => "js" }
-};
-
 
 sub get_resources {
-    return $external_resource;
+    return {
+        "http://static.kobj.net/kjs-frameworks/flippy_loo/1.0/obFlippyloo.js" => { "type" => "js" }
+    };
 }
 
 sub get_actions {

@@ -1054,17 +1054,30 @@ foreach my $case (@action_test_cases) {
 my $fl_resources = Kynetx::Actions::FlippyLoo::get_resources();
 Kynetx::Actions::register_resources($my_req_info, $fl_resources);
 
-is_deeply($my_req_info->{'resources'}, [$fl_resources], "got right resources");
+is_deeply($my_req_info->{'resources'}, $fl_resources, "got right resources");
 
 my $resource_js = Kynetx::Actions::mk_registered_resource_js($my_req_info);
-like($resource_js, qr#KOBJ.registerExternalResources\('cs_test', \[\{"http://static.kobj.net/kjs-frameworks/flippy_loo/\d.\d/obFlippyloo.js":\{"type":"js"\}\}\]\);#, "got the right JS");
+like($resource_js, qr#KOBJ.registerExternalResources\('cs_test', \{"http://static.kobj.net/kjs-frameworks/flippy_loo/\d.\d/obFlippyloo.js":\{"type":"js"\}\}\);#, "got the right JS");
 
 my $jqui_resources = Kynetx::Actions::JQueryUI::get_resources();
 Kynetx::Actions::register_resources($my_req_info, $jqui_resources);
-is_deeply($my_req_info->{'resources'}, [$fl_resources,$jqui_resources], "got right resources");
+
+
+my $merged_resource = {};
+
+ while( my ($k, $v) = each %$fl_resources ) {
+            $merged_resource->{$k} = $v;
+        }
+
+ while( my ($k, $v) = each %$jqui_resources ) {
+            $merged_resource->{$k} = $v;
+        }
+
+is_deeply($my_req_info->{'resources'}, $merged_resource, "got right resources");
 
 $resource_js = Kynetx::Actions::mk_registered_resource_js($my_req_info);
-like($resource_js, qr#KOBJ.registerExternalResources\('cs_test', \[\{"http://static.kobj.net/kjs-frameworks/flippy_loo/\d.\d/obFlippyloo.js":\{"type":"js"\}\},\{"http://static.kobj.net/kjs-frameworks/jquery_ui/\d.\d/jquery-ui-\d.\d.custom.js":\{"type":"js"\},"http://static.kobj.net/kjs-frameworks/jquery_ui/\d.\d/css/ui-darkness/jquery-ui-\d.\d.custom.css":\{"selector":".ui-helper-hidden","type":"css"\}\}\]\);#, "got the right JS");
+like($resource_js, qr#KOBJ.registerExternalResources\('cs_test', \{"http://static.kobj.net/kjs-frameworks/flippy_loo/\d.\d/obFlippyloo.js":\{"type":"js"\},"http://static.kobj.net/kjs-frameworks/jquery_ui/\d.\d/jquery-ui-\d.\d.custom.js":\{"type":"js"\},"http://static.kobj.net/kjs-frameworks/jquery_ui/\d.\d/css/ui-darkness/jquery-ui-\d.\d.custom.css":\{"selector":".ui-helper-hidden","type":"css"\}\}\);#, "got the right JS");
+diag($resource_js);
 
 #diag Dumper $my_req_info;
 diag "Resource JS: ", $resource_js;

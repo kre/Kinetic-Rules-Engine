@@ -63,12 +63,9 @@ EOF
 	}
 };
 
-my $external_resource =  {
-};
-
 
 sub get_resources {
-    return $external_resource;
+    return {};
 }
 
 sub get_actions {

@@ -528,7 +528,7 @@ sub eval_rule {
 
     # keep track of these for each rule
     $req_info->{'actions'} = [];
-    $req_info->{'resources'} = [];
+    $req_info->{'resources'} = {};
     $req_info->{'labels'} = [];
     $req_info->{'tags'} = [];
     
