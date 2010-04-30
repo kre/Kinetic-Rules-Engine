@@ -1,4 +1,26 @@
-2010-04-24  Cid Dennis  <cid@kynetx.com> 
+2010-04-30  Cid Dennis <cid@kynetx.com>
+    * Alter the runtime to not depend on $K as it conflicts with some websites.  The
+      runtime now uses $KOBJ.   But I still define $K on sites where it will not
+      conflict.
+        Kynetx/Rules.pm
+        bin/install-init-files.pl
+        etc/js/0.9/jquery-1.4.2.js
+        etc/js/0.9/jquery_noconflict.js
+        etc/js/0.9/krl-annotate.js
+        etc/js/0.9/krl-application.js
+        etc/js/0.9/krl-domwatch.js
+        etc/js/0.9/krl-functions.js
+        etc/js/0.9/krl-percolation.js
+        etc/js/0.9/krl-runtime-footer.js
+        etc/js/0.9/krl-runtime-header.js
+        etc/js/0.9/krl-runtime.js
+        etc/js/0.9/krl-setup.js
+        etc/js/0.9/krl-sidetab.js
+        runtime_test/spec/general_site_spec.rb
+        runtime_test/spec/verify_functions_spec.rb
+        widgets/weather.pl
+
+2010-04-24  Cid Dennis  <cid@kynetx.com>
 	* Fixed flippy loo and the resource stuff once and for all.
 	/Kynetx/Actions/FlippyLoo.pm
 	/Kynetx/Actions/JQueryUI.pm
