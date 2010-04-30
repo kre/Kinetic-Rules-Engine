@@ -49,6 +49,7 @@ my @js_files = qw(
 krl-application.js
 krl-runtime-header.js
 jquery-1.4.2.js
+jquery_noconflict.js
 jquery.json-1.2.js
 jquery.bgiframe.js
 kgrowl-1.0.js

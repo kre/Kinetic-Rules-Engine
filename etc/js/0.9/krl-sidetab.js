@@ -2,7 +2,7 @@
 
 Available at http:\/\/fancybox.net/ */
 
-(function (b) { var a = { width: 800, height: 600, overlayOpacity: 0.85, id: "modal", src: function (c) { return jQuery(c).attr("href") }, fadeInSpeed: 0, fadeOutSpeed: 0 }; b.modal = function (c) { return _modal(this, c) }; b.modal.open = function () { _modal.open() }; b.modal.close = function () { _modal.close() }; b.fn.modal = function (c) { return _modal(this, c) }; _modal = function (c, d) { this.options = { parent: null, overlayOpacity: null, id: null, content: null, width: null, height: null, modalClassName: null, imageClassName: null, closeClassName: null, overlayClassName: null, src: null }; this.options = b.extend({}, options, _defaults); this.options = b.extend({}, options, a); this.options = b.extend({}, options, d); this.close = function () { jQuery("." + options.modalClassName + ", ." + options.overlayClassName).fadeOut(a.fadeOutSpeed, function () { jQuery(this).unbind().remove() }) }; this.open = function () { if (typeof options.src == "function") { options.src = options.src(c) } else { options.src = options.src || _defaults.src(c) } var e = /^.+\.((jpg)|(gif)|(jpeg)|(png)|(jpg))$/i; var f = ""; if (e.test(options.src)) { f = '<div class="' + options.imageClassName + '"><img src="' + options.src + '"/></div>' } else { f = '<iframe width="' + options.width + '" height="' + options.height + '" frameborder="0" scrolling="no" allowtransparency="true" src="' + options.src + '"></iframe>' } options.content = options.content || f; if (jQuery("." + options.modalClassName).length && jQuery("." + options.overlayClassName).length) { jQuery("." + options.modalClassName).html(options.content) } else { $overlay = jQuery((_isIE6()) ? '<iframe src="BLOCKED SCRIPT\'<html></html>\';" scrolling="no" frameborder="0" class="' + options.overlayClassName + '"></iframe><div class="' + options.overlayClassName + '"></div>' : '<div class="' + options.overlayClassName + '"></div>'); $overlay.hide().appendTo(options.parent); $modal = jQuery('<div id="' + options.id + '" class="' + options.modalClassName + '" style="width:' + options.width + "px; height:" + options.height + "px; margin-top:-" + (options.height / 2) + "px; margin-left:-" + (options.width / 2) + 'px;">' + options.content + "</div>"); $modal.hide().appendTo(options.parent); $close = jQuery('<a class="' + options.closeClassName + '"></a>'); $close.appendTo($modal); var g = _getOpacity($overlay.not("iframe")) || options.overlayOpacity; $overlay.fadeTo(0, 0).show().not("iframe").fadeTo(a.fadeInSpeed, g); $modal.fadeIn(a.fadeInSpeed); $close.click(function () { jQuery.modal().close() }); $overlay.click(function () { jQuery.modal().close() }) } }; return this }; _isIE6 = function () { if (document.all && document.getElementById) { if (document.compatMode && !window.XMLHttpRequest) { return true } } return false }; _getOpacity = function (c) { $sender = jQuery(c); opacity = $sender.css("opacity"); filter = $sender.css("filter"); if (filter.indexOf("opacity=") >= 0) { return parseFloat(filter.match(/opacity=([^)]*)/)[1]) / 100 } else { if (opacity != "") { return opacity } } return "" }; _defaults = { parent: "body", overlayOpacity: 85, id: "modal", content: null, width: 800, height: 600, modalClassName: "modal-window", imageClassName: "modal-image", closeClassName: "close-window", overlayClassName: "modal-overlay", src: function (c) { return jQuery(c).attr("href") } } })($K);
+(function (b) { var a = { width: 800, height: 600, overlayOpacity: 0.85, id: "modal", src: function (c) { return jQuery(c).attr("href") }, fadeInSpeed: 0, fadeOutSpeed: 0 }; b.modal = function (c) { return _modal(this, c) }; b.modal.open = function () { _modal.open() }; b.modal.close = function () { _modal.close() }; b.fn.modal = function (c) { return _modal(this, c) }; _modal = function (c, d) { this.options = { parent: null, overlayOpacity: null, id: null, content: null, width: null, height: null, modalClassName: null, imageClassName: null, closeClassName: null, overlayClassName: null, src: null }; this.options = b.extend({}, options, _defaults); this.options = b.extend({}, options, a); this.options = b.extend({}, options, d); this.close = function () { jQuery("." + options.modalClassName + ", ." + options.overlayClassName).fadeOut(a.fadeOutSpeed, function () { jQuery(this).unbind().remove() }) }; this.open = function () { if (typeof options.src == "function") { options.src = options.src(c) } else { options.src = options.src || _defaults.src(c) } var e = /^.+\.((jpg)|(gif)|(jpeg)|(png)|(jpg))$/i; var f = ""; if (e.test(options.src)) { f = '<div class="' + options.imageClassName + '"><img src="' + options.src + '"/></div>' } else { f = '<iframe width="' + options.width + '" height="' + options.height + '" frameborder="0" scrolling="no" allowtransparency="true" src="' + options.src + '"></iframe>' } options.content = options.content || f; if (jQuery("." + options.modalClassName).length && jQuery("." + options.overlayClassName).length) { jQuery("." + options.modalClassName).html(options.content) } else { $overlay = jQuery((_isIE6()) ? '<iframe src="BLOCKED SCRIPT\'<html></html>\';" scrolling="no" frameborder="0" class="' + options.overlayClassName + '"></iframe><div class="' + options.overlayClassName + '"></div>' : '<div class="' + options.overlayClassName + '"></div>'); $overlay.hide().appendTo(options.parent); $modal = jQuery('<div id="' + options.id + '" class="' + options.modalClassName + '" style="width:' + options.width + "px; height:" + options.height + "px; margin-top:-" + (options.height / 2) + "px; margin-left:-" + (options.width / 2) + 'px;">' + options.content + "</div>"); $modal.hide().appendTo(options.parent); $close = jQuery('<a class="' + options.closeClassName + '"></a>'); $close.appendTo($modal); var g = _getOpacity($overlay.not("iframe")) || options.overlayOpacity; $overlay.fadeTo(0, 0).show().not("iframe").fadeTo(a.fadeInSpeed, g); $modal.fadeIn(a.fadeInSpeed); $close.click(function () { jQuery.modal().close() }); $overlay.click(function () { jQuery.modal().close() }) } }; return this }; _isIE6 = function () { if (document.all && document.getElementById) { if (document.compatMode && !window.XMLHttpRequest) { return true } } return false }; _getOpacity = function (c) { $sender = jQuery(c); opacity = $sender.css("opacity"); filter = $sender.css("filter"); if (filter.indexOf("opacity=") >= 0) { return parseFloat(filter.match(/opacity=([^)]*)/)[1]) / 100 } else { if (opacity != "") { return opacity } } return "" }; _defaults = { parent: "body", overlayOpacity: 85, id: "modal", content: null, width: 800, height: 600, modalClassName: "modal-window", imageClassName: "modal-image", closeClassName: "close-window", overlayClassName: "modal-overlay", src: function (c) { return jQuery(c).attr("href") } } })($KOBJ);
 
 /* End fancybox... */
 
@@ -211,7 +211,7 @@ Available at http:\/\/wpaoli.building58.com/2009/09/jquery-tab-slide-out-plugin/
         }
         
     };
-})($K);
+})($KOBJ);
 
 
 /* End of slideout */
@@ -303,7 +303,7 @@ KOBJ.tabManager.notification = function(config){
 	var toAlter, alterNum;
 	// Trying to find the right tab. I may change the KOBJ.tabManager.tabs
 	// to a hash so I do not need to loop, but the speed hit from this is not major
-	$K.each(KOBJ.tabManager.tabs,function(num){
+	$KOBJ.each(KOBJ.tabManager.tabs,function(num){
 		var object = this;
 		if(object['name'] == config['name']){
 			toAlter = object;
@@ -326,11 +326,11 @@ KOBJ.tabManager.notification = function(config){
 	}
 	
 	// Get the defaults stored within KOBJ.tabManager.defaults
-	var defaults = $K.extend(true, {}, toAlter['notificationDefaults']);
+	var defaults = $KOBJ.extend(true, {}, toAlter['notificationDefaults']);
 
 	// Extend the defaults with the config passed in
 	if(typeof config === 'object'){
-		$K.extend(true, defaults, config);
+		$KOBJ.extend(true, defaults, config);
 		if(defaults.color){
 			defaults.divCSS['background-color'] = defaults.color;
 		}
@@ -347,27 +347,27 @@ KOBJ.tabManager.notification = function(config){
 		// notification is the class which the notification *should* have...
 		// If it's there, I change it's contents and apply CSS. otherwise, I add the div.
 
-		var notification = $K(toAlter.tabContentClass + " ." + defaults.notifyClass);
+		var notification = $KOBJ(toAlter.tabContentClass + " ." + defaults.notifyClass);
 		if(notification.length){
 			// If it's there and if I need to change it to nothing, delete the div
 			if(changeTo === 0 || changeTo == ''){
-				$K(notification).hide();
+				$KOBJ(notification).hide();
 				return true;
 			}
 			
 			// Otherwise, set the contents and CSS
-			$K(notification).html(changeTo).css(defaults.divCSS).show();
+			$KOBJ(notification).html(changeTo).css(defaults.divCSS).show();
 			return true;
 		}
 
 
-		var tab = $K(toAlter.tabContentClass);
-		var objCSS = $K.extend(true,{},defaults.divCSS);
+		var tab = $KOBJ(toAlter.tabContentClass);
+		var objCSS = $KOBJ.extend(true,{},defaults.divCSS);
 
 		// This next block splits the "px" or what not away from the number.
 		// This lets me add the numbers later on
 		var splitArray = ["imageHeight","imageWidth","topPos","leftPadding","rightPadding","topPadding","bottomPadding"];
-		$K.each(splitArray,function(){
+		$KOBJ.each(splitArray,function(){
 			var tempToSplit = this;
 			var toSplit = toAlter[tempToSplit];
 
@@ -421,14 +421,14 @@ KOBJ.tabManager.notification = function(config){
 		}
 
 		//ie6 doesn't do well with the fixed option
-		if ($K.browser.msie && $K.browser.version.substr(0,1)<7) {
+		if ($KOBJ.browser.msie && $KOBJ.browser.version.substr(0,1)<7) {
 			objCSS.position = "absolute";
 		}
 
 		// Adds the div and sets all the CSS and classes needed
-		var notification = $K("<div>").html(changeTo).css(objCSS).addClass(defaults.notifyClass);
+		var notification = $KOBJ("<div>").html(changeTo).css(objCSS).addClass(defaults.notifyClass);
         notifcation.b
-		$K(toAlter.tabHandle).append(notification);
+		$KOBJ(toAlter.tabHandle).append(notification);
 
 		// Yay!! It worked!
 		return true;
@@ -444,7 +444,7 @@ KOBJ.tabManager.notification = function(config){
 KOBJ.tabManager.addNew = function(config){
 
 
-	var defaults = $K.extend(true, {}, KOBJ['tabManager']['defaults']);
+	var defaults = $KOBJ.extend(true, {}, KOBJ['tabManager']['defaults']);
 
 	// Extend the defaults
 	if(typeof config === 'object') {
@@ -461,9 +461,9 @@ KOBJ.tabManager.addNew = function(config){
 	var posToBe = parseInt(defaults['topPos'].replace(/(\d+).*/,"$1"), 10);
 	
 	// Sets the top position of each element based upon height of the other elements.
-	$K.each(tabs,function(key,object){
+	$KOBJ.each(tabs,function(key,object){
 		if(object['tabLocation'] == defaults['tabLocation']){
-			posToBe += $K(object['tabClass']).outerHeight() + parseInt(object['padding'].replace(/(\d+).*/,"$1"),10);
+			posToBe += $KOBJ(object['tabClass']).outerHeight() + parseInt(object['padding'].replace(/(\d+).*/,"$1"),10);
 		}
 	});
 
@@ -498,13 +498,13 @@ KOBJ.tabManager.addNew = function(config){
 		}
 
 		// Function to bind later on.
-		var action = function(){ $K(this).modal(defaults).open(); eval(defaults.callback); return false; };
+		var action = function(){ $KOBJ(this).modal(defaults).open(); eval(defaults.callback); return false; };
 		
 		// Makes an anchor, adds CSS, binds the above function to it, and then adds the class
 
-		link = $K('<a>').css(defaults['linkCSS']).bind(defaults['action'],action).addClass(classToAdd);
-		var img = $K('<img>').attr('src',defaults['pathToTabImage']);
-		var obj = $K(link).html(img);
+		link = $KOBJ('<a>').css(defaults['linkCSS']).bind(defaults['action'],action).addClass(classToAdd);
+		var img = $KOBJ('<img>').attr('src',defaults['pathToTabImage']);
+		var obj = $KOBJ(link).html(img);
 
 		if(defaults['tabLocation'] === 'top' || defaults['tabLocation'] === 'bottom') {
 	            obj.css({'right': defaults['topPos']});
@@ -531,23 +531,23 @@ KOBJ.tabManager.addNew = function(config){
 	
 	        if(defaults['tabLocation'] === 'right') {
 	            obj.css({ 'right': 0, 'position': 'fixed'});
-	            $K('html').css('overflow-x', 'hidden');
+	            $KOBJ('html').css('overflow-x', 'hidden');
 	        }
 
-		$K('body').append(obj);
+		$KOBJ('body').append(obj);
 
 	} else {
 		if(defaults.url){
-			var tempMessage = $K('<div>').addClass(defaults['contentClass']).css({"width": defaults['width'], "background-color": defaults['backgroundColor']}).css(defaults['divCSS']);
-			link = $K('<a>').addClass(defaults['tabClass']).html(defaults['linkContent']);
-			message = $K('<iframe>').attr('src',defaults.url).css({"width": defaults.width, "height": defaults.height});
-			message = $K(tempMessage).append(link).append(message);
-			message = $K(message).addClass(classToAdd);
+			var tempMessage = $KOBJ('<div>').addClass(defaults['contentClass']).css({"width": defaults['width'], "background-color": defaults['backgroundColor']}).css(defaults['divCSS']);
+			link = $KOBJ('<a>').addClass(defaults['tabClass']).html(defaults['linkContent']);
+			message = $KOBJ('<iframe>').attr('src',defaults.url).css({"width": defaults.width, "height": defaults.height});
+			message = $KOBJ(tempMessage).append(link).append(message);
+			message = $KOBJ(message).addClass(classToAdd);
 		} else {
-			var tempMessage = $K('<div>').addClass(defaults['contentClass']).css({"width": defaults['width'], "background-color": defaults['backgroundColor']}).css(defaults['divCSS']);
-			link = $K('<a>').addClass(defaults['tabClass']).html(defaults['linkContent']);
-			message = $K(tempMessage).append(link).append(message);
-			message = $K(message).addClass(classToAdd);
+			var tempMessage = $KOBJ('<div>').addClass(defaults['contentClass']).css({"width": defaults['width'], "background-color": defaults['backgroundColor']}).css(defaults['divCSS']);
+			link = $KOBJ('<a>').addClass(defaults['tabClass']).html(defaults['linkContent']);
+			message = $KOBJ(tempMessage).append(link).append(message);
+			message = $KOBJ(message).addClass(classToAdd);
 		}
 	}
 
@@ -556,8 +556,8 @@ KOBJ.tabManager.addNew = function(config){
 
 	if(defaults['mode'] != "lightbox"){
 		defaults['tabHandle'] = defaults['tabContentClass'] + ">" + defaults['tabClass'];
-		$K("body").append(message);
-		$K(defaults['tabContentClass']).tabSlideOut(defaults);
+		$KOBJ("body").append(message);
+		$KOBJ(defaults['tabContentClass']).tabSlideOut(defaults);
 	} else {
 		defaults['tabHandle'] = defaults['tabContentClass'];
 	}

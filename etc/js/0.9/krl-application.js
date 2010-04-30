@@ -80,7 +80,7 @@ function KrlApplication(app)
 
 KrlApplication.prototype.external_resource_loaded = function(url) {
     var my_resources = this.external_resources || {};
-    $K.each(my_resources,function (key,value) {
+    $KOBJ.each(my_resources,function (key,value) {
         if(key == url ) {
             KOBJ.log("Resource marked as loaded:  " +url);
             value.did_load();
@@ -93,7 +93,7 @@ KrlApplication.prototype.external_resource_loaded = function(url) {
 KrlApplication.prototype.add_external_resources = function(resources)
 {
     var my_resources = this.external_resources || {};
-    $K.each(resources,function (index) {
+    $KOBJ.each(resources,function (index) {
         var a_resource = resources[index];
         my_resources[a_resource.url] = a_resource;
     });
@@ -129,7 +129,7 @@ KrlApplication.prototype.reload_later = function(delay)
 KrlApplication.prototype.page_vars_as_url = function() {
     var param_str = "";
 
-    $K.each(this.page_params, function(k, v) {
+    $KOBJ.each(this.page_params, function(k, v) {
         param_str += "&" + k + "=" + v;
     });
 
@@ -143,7 +143,7 @@ KrlApplication.prototype.resources_loaded = function()
     var is_loaded = true;
     if(this.external_resources != null)
     {
-        $K.each(this.external_resources, function(index,value) {
+        $KOBJ.each(this.external_resources, function(index,value) {
            if(!value.is_loaded()){
                 is_loaded = false;
            } 
@@ -180,11 +180,15 @@ KrlApplication.prototype.run = function()
             {
                 return;
             }
-
-            this.closure();
+//            pattern = /\\$K[\\(|\\.]/;
+//            if(pattern.exec(this.closure) != null && KOBJ.compat_mode) {
+//                KOBJ.log("Rule could not execute because of incomptable site.  Change you $K vars to $KOBJ.")
+//                this.closure();
+//            }
             this.load_started = false;
-            this.closure = null;
+                this.closure();
             this.completed = true;
+            this.closure = null;
         }
     }
     else
@@ -262,7 +266,7 @@ KrlApplication.prototype.update_from_config = function(a_config)
     // Search for page parameters.  They start with the app_id
 
     var my_self = this;
-    $K.each(a_config, function(key, value) {
+    $KOBJ.each(a_config, function(key, value) {
         if (key.match("^" + my_self.app_id)) {
             my_self.page_params[key] = value;
         }

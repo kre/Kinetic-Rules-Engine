@@ -1,4 +1,3 @@
-jQuery.noConflict();
 }
 
 /* If there is an config add or update known applications running in this browser */

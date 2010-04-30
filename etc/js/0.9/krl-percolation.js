@@ -102,10 +102,10 @@ KOBJ.search_percolate.extractdata = function(toPercolate,config){
 
 	var percolateData = {};
 	var urlSelector = config.site[window.location.host].urlSel;
-	var urlTemp = $K(toPercolate).find(urlSelector).attr("href");
+	var urlTemp = $KOBJ(toPercolate).find(urlSelector).attr("href");
 
 	if(!urlTemp){
-		urlTemp = $K(toPercolate).find(".url, cite").attr("href");
+		urlTemp = $KOBJ(toPercolate).find(".url, cite").attr("href");
 		// Failsafe
 	}
 
@@ -128,23 +128,23 @@ KOBJ.percolate = function(selector, config) {
 
 	try{
 
-		var defaults = $K.extend(true, {}, KOBJ.search_percolate.defaults);
+		var defaults = $KOBJ.extend(true, {}, KOBJ.search_percolate.defaults);
 		
 		if (typeof config === 'object') {
-			$K.extend(true, defaults, config);
+			$KOBJ.extend(true, defaults, config);
 		}
 		var site_defaults = defaults.site[window.location.host];
 	
 		function percolate_search_results(selector,config){
 		
-			var defaults = $K.extend(true, {}, KOBJ.search_percolate.defaults);
+			var defaults = $KOBJ.extend(true, {}, KOBJ.search_percolate.defaults);
 		
 			if (typeof config === 'object') {
-				$K.extend(true, defaults, config);
+				$KOBJ.extend(true, defaults, config);
 			}
 	
 			if(KOBJ.search_percolate.ajax){
-				$K("." + defaults.name + "_percolate").remove();
+				$KOBJ("." + defaults.name + "_percolate").remove();
 				KOBJ.search_percolate.ajax = false;
 			}
 	
@@ -152,13 +152,13 @@ KOBJ.percolate = function(selector, config) {
 	
 	
 			function mk_list_item(i) {
-				return $K(i).attr({"class": defaults["class"]}).css({"margin-bottom":"5px"});
+				return $KOBJ(i).attr({"class": defaults["class"]}).css({"margin-bottom":"5px"});
 			}
 			
 			function mk_rm_div (anchor) {
 				var logo_item = mk_list_item(anchor);
-				var top_box = $K('<ol>').css(site_defaults.ol_css).attr("id", defaults.name+"_top_box").append(logo_item);
-				var inner_div = $K('<div>').css(site_defaults.seperator_css).append(top_box);
+				var top_box = $KOBJ('<ol>').css(site_defaults.ol_css).attr("id", defaults.name+"_top_box").append(logo_item);
+				var inner_div = $KOBJ('<div>').css(site_defaults.seperator_css).append(top_box);
 				if (defaults.tail_background_image){
 					inner_div.css({
 						"background-image": "url(" + defaults.tail_background_image + ")",
@@ -167,7 +167,7 @@ KOBJ.percolate = function(selector, config) {
 					});
 				}
 			
-				var rm_div = $K('<div>').attr({"class":defaults.name + "_percolate " + site_defaults.classes}).css(site_defaults.div_css).append(inner_div);
+				var rm_div = $KOBJ('<div>').attr({"class":defaults.name + "_percolate " + site_defaults.classes}).css(site_defaults.div_css).append(inner_div);
 				if (defaults.head_background_image){
 					rm_div.css({
 						"background-image": "url(" + defaults.head_background_image +")",
@@ -179,13 +179,13 @@ KOBJ.percolate = function(selector, config) {
 			}
 		
 			function move_item (obj) {
-				if($K('#'+ defaults.name+ '_top_box').find("li").is('.'+ defaults.name+ '_item')) {
-					$K('#'+ defaults.name+ '_top_box').append(defaults.sep).append(mk_list_item(obj));
+				if($KOBJ('#'+ defaults.name+ '_top_box').find("li").is('.'+ defaults.name+ '_item')) {
+					$KOBJ('#'+ defaults.name+ '_top_box').append(defaults.sep).append(mk_list_item(obj));
 				} else {
-					if($K(site_defaults.mainSelector).size() !== 0) {
-						$K(site_defaults.mainSelector)[site_defaults.actionMain](mk_rm_div(obj));
+					if($KOBJ(site_defaults.mainSelector).size() !== 0) {
+						$KOBJ(site_defaults.mainSelector)[site_defaults.actionMain](mk_rm_div(obj));
 					} else {
-						$K(site_defaults.backupSelector)[site_defaults.actionBackup](mk_rm_div(obj));
+						$KOBJ(site_defaults.backupSelector)[site_defaults.actionBackup](mk_rm_div(obj));
 					}
 				}
 			}
@@ -229,11 +229,11 @@ KOBJ.percolate = function(selector, config) {
 			}
 		
 			//percolate this page
-			$K(site_defaults.resultElement).each(function() {
+			$KOBJ(site_defaults.resultElement).each(function() {
 			var data = this;
 				var extractedData = KOBJ.search_percolate.extractdata(data,defaults);
-				$K.each(extractedData, function(name, value){
-					$K(data).data(name, value);
+				$KOBJ.each(extractedData, function(name, value){
+					$KOBJ(data).data(name, value);
 				});
 				if (selector(data)) {
 					move_item(data);
@@ -241,12 +241,12 @@ KOBJ.percolate = function(selector, config) {
 			});
 		
 			//percolate deep results
-			$K.get(serpslurp(), function(res) {
-				$K(site_defaults.resultElement, res).each(function() {
+			$KOBJ.get(serpslurp(), function(res) {
+				$KOBJ(site_defaults.resultElement, res).each(function() {
 					var data = this;
 					var extractedData = KOBJ.search_percolate.extractdata(data,defaults);
-					$K.each(extractedData, function(name, value){
-						$K(data).data(name, value);
+					$KOBJ.each(extractedData, function(name, value){
+						$KOBJ(data).data(name, value);
 					});
 					if (selector(data)) {
 						move_item(data);

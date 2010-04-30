@@ -93,10 +93,10 @@ my $main_page = <<"EOF";
 <p>Sorry, we can't determine your location to show the weather forecast.</p>
 </TMPL_IF>
 		
-<div id="kobj_weather_3" style="display: none"><form id="zip_form" onSubmit="KOBJ.fragment('<TMPL_VAR NAME=url>?'+\$K(this).serialize());KOBJ.Fade('#kobj_weather_3'); return false"> <label>Please enter your zip code and press return</label><br/> <input id='zip' name="zip" type="text" size="10"/><br/> <input name="redo" value="1" type="hidden"/> </form>
+<div id="kobj_weather_3" style="display: none"><form id="zip_form" onSubmit="KOBJ.fragment('<TMPL_VAR NAME=url>?'+\$KOBJ(this).serialize());KOBJ.Fade('#kobj_weather_3'); return false"> <label>Please enter your zip code and press return</label><br/> <input id='zip' name="zip" type="text" size="10"/><br/> <input name="redo" value="1" type="hidden"/> </form>
 </div>
 		
-<div style="font-size: 11px; font-family: Arial, Helvetica, sans-serif;" id="kobj_zip" onclick="KOBJ.Fade(this);\$K('#kobj_weather_3').slideDown();">
+<div style="font-size: 11px; font-family: Arial, Helvetica, sans-serif;" id="kobj_zip" onclick="KOBJ.Fade(this);\$KOBJ('#kobj_weather_3').slideDown();">
 <TMPL_IF NAME=city>
 Not in <TMPL_VAR NAME=city>?<br/>
 <span style="color: #3333FF; text-decoration: underline; font-size:11px">Click here</span>

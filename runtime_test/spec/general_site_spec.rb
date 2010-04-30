@@ -25,7 +25,7 @@ describe "General Site Test" do
       page.text("//div[@id='KOBJ_app_bef_aft_test']").should == "KOBJ_beforeKOBJ_afterKOBJ_append"
 
       page.text("//span[@id='KOBJ_float_html']").should == "KOBJ_prependKOBJ_float_html"
-      page.js_eval("window.$K('#KOBJ_image').attr('src');").should == "http://k-misc.s3.amazonaws.com/resources/a41x27/image-2.jpg"
+      page.js_eval("window.$KOBJ('#KOBJ_image').attr('src');").should == "http://k-misc.s3.amazonaws.com/resources/a41x27/image-2.jpg"
       page.click "//div[@id='KOBJ_close_test']"
       page.wait_for({:wait_for => :no_element, :element => "KOBJ_close_test" })
       page.element?("//div[@id='KOBJ_close_test']").should be_false

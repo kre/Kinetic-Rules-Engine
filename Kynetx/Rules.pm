@@ -225,7 +225,7 @@ sub process_ruleset {
 
 
     return <<EOF
-KOBJ.registerClosure('$rid', function() { $js }, '$eid');
+KOBJ.registerClosure('$rid', function(\$K) { $js }(\$KOBJ), '$eid');
 EOF
 }
 

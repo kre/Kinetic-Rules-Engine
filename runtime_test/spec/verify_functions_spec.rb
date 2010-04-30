@@ -205,13 +205,13 @@ describe "Verify Runtime Functions" do
   end
 
 
-  it "have defined a function called $K.kGrowl" do
-    page.js_eval("'' + (typeof(window.$K.kGrowl) == 'function')").should match(/true/)
+  it "have defined a function called $KOBJ.kGrowl" do
+    page.js_eval("'' + (typeof(window.$KOBJ.kGrowl) == 'function')").should match(/true/)
   end
 
 
-  it "have defined a function called $K.kGrowl" do
-    page.js_eval("'' + (typeof(window.$K.tabSlideOut) == 'function')").should match(/true/)
+  it "have defined a function called $KOBJ.kGrowl" do
+    page.js_eval("'' + (typeof(window.$KOBJ.tabSlideOut) == 'function')").should match(/true/)
   end
 
 end

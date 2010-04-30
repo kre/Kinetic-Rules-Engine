@@ -34,8 +34,8 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
         elem = name;
     }
     if (type == 'click') {
-        $K(elem).click(function(e1) {
-            var tgt = $K(this);
+        $KOBJ(elem).click(function(e1) {
+            var tgt = $KOBJ(this);
             var b = tgt.attr('href') || '';
             KOBJ.logger("click",
                     txn_id,
@@ -51,7 +51,7 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
         });
 
     } else if (type == 'change') {
-        $K(elem).change(function(e1) {
+        $KOBJ(elem).change(function(e1) {
             KOBJ.logger("change",
                     txn_id,
                     name,
@@ -77,33 +77,33 @@ KOBJ.fragment = function(base_url) {
 /* Replaces the html contents of an element */
 KOBJ.update_elements = function (params) {
     for (var mykey in params) {
-        $K("#kobj_" + mykey).html(params[mykey]);
+        $KOBJ("#kobj_" + mykey).html(params[mykey]);
     }
 };
 
 // wrap some effects for use in embedded HTML
 KOBJ.Fade = function (id) {
-    $K(id).fadeOut();
+    $KOBJ(id).fadeOut();
 };
 
 KOBJ.BlindDown = function (id) {
-    $K(id).slideDown();
+    $KOBJ(id).slideDown();
 };
 
 KOBJ.BlindUp = function (id) {
-    $K(id).slideUp();
+    $KOBJ(id).slideUp();
 };
 
 KOBJ.BlindUp = function (id, speed) {
-    $K(id).slideUp(speed);
+    $KOBJ(id).slideUp(speed);
 };
 
 KOBJ.hide = function (id) {
-    $K(id).hide();
+    $KOBJ(id).hide();
 };
 
 KOBJ.letitsnow = function(config) {
-    $K(KOBJ.document).snowfall();
+    $KOBJ(KOBJ.document).snowfall();
 };
 
 //new jessie actions
@@ -195,37 +195,37 @@ KOBJ.createPopIn = function(config, content) {
             break;
     }
 
-    $K('body').append('<div id="KOBJ_PopIn_Link" style="' + side1 + ': 0; ' + side2 + ':' + distance + '; -moz-border-radius-bottomright: 12px; -moz-border-radius-topright: 12px; background-color:' + defaults["link_color"] + '; display:block; margin-top:-45px; position: fixed;  z-index:100001;"><a href="javascript:KOBJ_create_pop_in()"><img src="' + defaults["imageLocation"] + '" alt="KOBJ_pop_in" border="none" /></a>');
+    $KOBJ('body').append('<div id="KOBJ_PopIn_Link" style="' + side1 + ': 0; ' + side2 + ':' + distance + '; -moz-border-radius-bottomright: 12px; -moz-border-radius-topright: 12px; background-color:' + defaults["link_color"] + '; display:block; margin-top:-45px; position: fixed;  z-index:100001;"><a href="javascript:KOBJ_create_pop_in()"><img src="' + defaults["imageLocation"] + '" alt="KOBJ_pop_in" border="none" /></a>');
     KOBJ_create_pop_in = function() {
-        var OverlayPresent = $K('#KOBJ_PopIn_Overlay').length;
-        var ContentPresent = $K('#KOBJ_PopIn_Dialog').length;
+        var OverlayPresent = $KOBJ('#KOBJ_PopIn_Overlay').length;
+        var ContentPresent = $KOBJ('#KOBJ_PopIn_Dialog').length;
 
         if (OverlayPresent) {
-            $K('#KOBJ_PopIn_Overlay').fadeIn('slow');
+            $KOBJ('#KOBJ_PopIn_Overlay').fadeIn('slow');
         }
         if (ContentPresent) {
-            $K('#KOBJ_PopIn_Dialog').fadeIn('slow');
+            $KOBJ('#KOBJ_PopIn_Dialog').fadeIn('slow');
         }
         if (!OverlayPresent) {
-            $K('body').append('<div id="KOBJ_PopIn_Overlay" style="display: block; position: fixed; background-color: ' + defaults["overlay_color"] + '; height: 100%; width: 100%; left: 0; filter:alpha(opacity=70); opacity: 0.7; top: 0; z-index: 100002; display: none;" />');
-            $K('#KOBJ_PopIn_Overlay').fadeIn('slow');
+            $KOBJ('body').append('<div id="KOBJ_PopIn_Overlay" style="display: block; position: fixed; background-color: ' + defaults["overlay_color"] + '; height: 100%; width: 100%; left: 0; filter:alpha(opacity=70); opacity: 0.7; top: 0; z-index: 100002; display: none;" />');
+            $KOBJ('#KOBJ_PopIn_Overlay').fadeIn('slow');
         }
         if (!ContentPresent) {
 
             // TODO: Display is overridden remove which one?
-            $K('body').append('<div id="KOBJ_PopIn_Dialog" style="top: 45%; right: 40%; -moz-border-radius: 5px; display: block; height: auto; width: 20%; position: fixed; margin: 0 auto; text-align: center; z-index: 100003; display: none; background: ' + defaults["bg_color"] + '; filter:alpha(opacity=85); opacity: .85; "><div class="close" id="KOBJ_Close" style="cursor: pointer; float: right; font-weight: bold; margin-right: 8px; margin-top: 5px;">x</div><div id="KOBJ_PopIn_Content" style="padding: 10px; ">' + content + '</div></div>');
-            $K("#KOBJ_Close").click(function() {
+            $KOBJ('body').append('<div id="KOBJ_PopIn_Dialog" style="top: 45%; right: 40%; -moz-border-radius: 5px; display: block; height: auto; width: 20%; position: fixed; margin: 0 auto; text-align: center; z-index: 100003; display: none; background: ' + defaults["bg_color"] + '; filter:alpha(opacity=85); opacity: .85; "><div class="close" id="KOBJ_Close" style="cursor: pointer; float: right; font-weight: bold; margin-right: 8px; margin-top: 5px;">x</div><div id="KOBJ_PopIn_Content" style="padding: 10px; ">' + content + '</div></div>');
+            $KOBJ("#KOBJ_Close").click(function() {
                 KOBJ_close_pop_in();
             });
-            $K('#KOBJ_PopIn_Dialog').fadeIn('slow');
+            $KOBJ('#KOBJ_PopIn_Dialog').fadeIn('slow');
         }
 
     };
 
     KOBJ_close_pop_in = function() {
 
-        $K('#KOBJ_PopIn_Overlay').fadeOut('slow');
-        $K('#KOBJ_PopIn_Dialog').fadeOut('slow');
+        $KOBJ('#KOBJ_PopIn_Overlay').fadeOut('slow');
+        $KOBJ('#KOBJ_PopIn_Dialog').fadeOut('slow');
 
     };
 
@@ -278,11 +278,11 @@ KOBJ.statusbar = function(config, content) {
     }
 
 
-    $K('body').append('<div id="' + defaults["id"] + '_wrapper" style="display: none; position: fixed; ' + side + ': 0; width: 100%; height: ' + defaults["height"] + ';"><div id="' + defaults["id"] + '" style="color: ' + defaults["color"] + '; height: ' + defaults["height"] + '; background: ' + defaults["bg_color"] + '; opacity: ' + defaults["opacity"] + '; -moz-border-radius-' + corners + 'right: 5px; -moz-border-radius-' + corners + 'left: 5px; margin-left: 12px; margin-right: 30px;"><div class="close" style="float: right; font-weight: bold; font-size: 20px; cursor: pointer; margin-right: 10px; margin-top: 5px;">x</div><div class="KOBJ_statusbar_content" style="color: ' + defaults["color"] + ';">' + content + '</div></div>');
-    $K('#' + defaults["id"] + '>.close').click(function() {
+    $KOBJ('body').append('<div id="' + defaults["id"] + '_wrapper" style="display: none; position: fixed; ' + side + ': 0; width: 100%; height: ' + defaults["height"] + ';"><div id="' + defaults["id"] + '" style="color: ' + defaults["color"] + '; height: ' + defaults["height"] + '; background: ' + defaults["bg_color"] + '; opacity: ' + defaults["opacity"] + '; -moz-border-radius-' + corners + 'right: 5px; -moz-border-radius-' + corners + 'left: 5px; margin-left: 12px; margin-right: 30px;"><div class="close" style="float: right; font-weight: bold; font-size: 20px; cursor: pointer; margin-right: 10px; margin-top: 5px;">x</div><div class="KOBJ_statusbar_content" style="color: ' + defaults["color"] + ';">' + content + '</div></div>');
+    $KOBJ('#' + defaults["id"] + '>.close').click(function() {
         KOBJ.statusbar_close(defaults["id"]);
     });
-    $K('#' + defaults["id"] + '_wrapper').slideDown('slow');
+    $KOBJ('#' + defaults["id"] + '_wrapper').slideDown('slow');
     if (defaults["sticky"] === false) {
         setTimeout(function() {
             KOBJ.statusbar_close(defaults["id"]);
@@ -293,7 +293,7 @@ KOBJ.statusbar = function(config, content) {
 };
 
 KOBJ.statusbar_close = function(id) {
-    $K('#' + id).fadeOut('slow');
+    $KOBJ('#' + id).fadeOut('slow');
 };
 
 //end new jessie actions
@@ -313,7 +313,7 @@ KOBJ.buildDiv = function (uniq, pos, top, side) {
     div_style[horz[0]] = horz[1];
     var id_str = 'kobj_' + uniq;
     var div = KOBJ.document.createElement('div');
-    return $K(div).attr({'id': id_str}).css(div_style);
+    return $KOBJ(div).attr({'id': id_str}).css(div_style);
 };
 
 // return the host portion of a URL
@@ -337,11 +337,11 @@ KOBJ.pick = function(o) {
 
 // attach a close event to an element inside a notification
 KOBJ.close_notification = function(s) {
-    $K(s).bind("click.kGrowl",
+    $KOBJ(s).bind("click.kGrowl",
             function(e) {
-                $K(this).unbind('click.kGrowl');
-                $K(s).parents(".kGrowl-notification").trigger('kGrowl.beforeClose').animate({opacity: 'hide'}, "normal", "swing", function() {
-                    $K(this).trigger('kGrowl.close').remove();
+                $KOBJ(this).unbind('click.kGrowl');
+                $KOBJ(s).parents(".kGrowl-notification").trigger('kGrowl.beforeClose').animate({opacity: 'hide'}, "normal", "swing", function() {
+                    $KOBJ(this).trigger('kGrowl.close').remove();
                 });
             });
 };
@@ -393,14 +393,14 @@ KOBJ.url_loaded_callback = function() {
 KOBJ.did_stylesheet_load = function(url, selector) {
 
     var found_style = false;
-    $K.each(document.styleSheets, function(sheet_index, style_sheet) {
+    $KOBJ.each(document.styleSheets, function(sheet_index, style_sheet) {
         // We have the stylesheet
         if (style_sheet.href != null) {
             if (style_sheet.href == url) {
                 // Look for the selector
                 //                                if (style_sheet.rules != null)
                 //                                {
-                //                                    $K.each(style_sheet.rules, function(rule_index, rule) {
+                //                                    $KOBJ.each(style_sheet.rules, function(rule_index, rule) {
                 //                                        if (rule.selectorText == selector) {
                 //                                            KOBJ.log("Also found the selector");
                 //                                            found_style = true;
@@ -435,7 +435,7 @@ KOBJ.load_style_sheet_link = function(url) {
 KOBJ.siteIds = function()
 {
     var siteid = [];
-    $K.each(KOBJ.applications, function(index, app) {
+    $KOBJ.each(KOBJ.applications, function(index, app) {
         siteid[index] = app.app_id;
     });
     return siteid.join(";");
@@ -521,7 +521,7 @@ KOBJ.run_when_ready = function() {
             ( typeof document.readyState == "undefined" && (document.getElementsByTagName("body")[0] || document.body))) {
             KOBJ.runit(); //dom ready
         } else {
-            $K(KOBJ.runit); //dom not ready
+            $KOBJ(KOBJ.runit); //dom not ready
         }
     }
 };

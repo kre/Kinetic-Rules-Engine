@@ -26,14 +26,14 @@ KOBJ.add_extra_page_var = function(key, value)
 KOBJ.extra_page_vars_as_url = function() {
     var param_str = "";
 
-    $K.each(KOBJ['extra_page_vars'], function(k, v) {
+    $KOBJ.each(KOBJ['extra_page_vars'], function(k, v) {
         param_str += "&" + k + "=" + v;
     });
 
     return param_str;
 };
 
-KOBJ.add_config_and_run = function(app_config) {
+    KOBJ.add_config_and_run = function(app_config) {
     KOBJ.add_app_config(app_config);
     KOBJ.run_when_ready();
 };
@@ -45,7 +45,7 @@ KOBJ.add_app_configs = function(app_configs) {
         return;
     }
 
-    $K.each(app_configs, function(index) {
+    $KOBJ.each(app_configs, function(index) {
         KOBJ.add_app_config(app_configs[index]);
     });
 };
@@ -65,7 +65,7 @@ KOBJ.add_app_config = function(app_config) {
     /* Override what server to talk to if ask to in config */
     if (typeof(app_config.init) == 'object')
     {
-        $K.each(app_config.init, function(k, v) {
+        $KOBJ.each(app_config.init, function(k, v) {
             KOBJ[k] = v;
         });
     }
@@ -75,7 +75,7 @@ KOBJ.add_app_config = function(app_config) {
      list.
      */
     var app_id_s = [];
-    $K.each(app_config.rids, function(index, value) {
+    $KOBJ.each(app_config.rids, function(index, value) {
         var app = KOBJ.get_application(value);
         if (app != null)
         {
@@ -102,7 +102,7 @@ KOBJ.add_app_config = function(app_config) {
 // so we add a script element to be executed at a later time.
 // DEPRECATED use app.reload_later
 KOBJ.reload = function(delay) {
-    $K.each(KOBJ.applications, function(name, id) {
+    $KOBJ.each(KOBJ.applications, function(name, id) {
         var app = KOBJ.get_application(name);
         app.reload_later(delay);
     });
@@ -115,7 +115,7 @@ KOBJ.kvars_to_json = function() {
     }
     else
     {
-        return $K.toJSON(kvars);
+        return $KOBJ.toJSON(kvars);
     }
 
 };
@@ -126,9 +126,9 @@ KOBJ.kvars_to_json = function() {
  using it.
  */
 KOBJ.registerExternalResources = function(rid, resources) {
-    KOBJ.log("registering dataset " + rid);
+    KOBJ.log("Registering external resources " + rid);
     var resource_array = [];
-    $K.each(resources, function (url, options) {
+    $KOBJ.each(resources, function (url, options) {
         if (KOBJ.external_resources[url] == null)
         {
             if(typeof(options["type"]) != "undefined")
@@ -180,7 +180,7 @@ KOBJ.runit = function() {
     /*
      We need to look at each and find out if it has been loaded. If not then doit.
      */
-    $K.each(KOBJ.applications, function(index, app) {
+    $KOBJ.each(KOBJ.applications, function(index, app) {
         app.run();
     });
 };
