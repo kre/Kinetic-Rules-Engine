@@ -539,6 +539,26 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
+
+$e[$i] = q#my_str.match(/string/)#;
+$x[$i] = {
+   'val' => 'true',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#my_str.match(/strung/)#;
+$x[$i] = {
+   'val' => 'false',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
+
+
 $e[$i] = q#my_str.uc()#;
 $x[$i] = {
     'val' => 'THIS IS A STRING',

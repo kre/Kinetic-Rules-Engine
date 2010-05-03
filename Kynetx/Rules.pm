@@ -510,13 +510,15 @@ sub eval_globals {
 sub eval_rule {
     my($r, $req_info, $rule_env, $session, $rule, $initial_js) = @_;
 
+    Log::Log4perl::MDC->put('rule', $rule->{'name'});
+
     my $logger = get_logger();
 
+    $logger->debug("------------------- begin rule execution: $rule->{'name'} ------------------------");
 
 #    my $js = "kobj_rule_name = '". $rule->{'name'} ."';\n";
     my $js = '';
 
-    Log::Log4perl::MDC->put('rule', $rule->{'name'});
 #    $logger->info($rule->{'name'}, " selected...");
 
 # uncomment to print out all the session keys.  With events there's a lot

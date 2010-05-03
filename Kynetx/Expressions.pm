@@ -905,7 +905,8 @@ sub var_free_in_expr {
 	    $expr->{'type'} eq 'qualified') {
 	return at_least_one($expr->{'args'}, $var);
     } elsif($expr->{'type'} eq 'operator') {
-	return  var_free_in_expr($var, $expr->{'obj'});
+	return  var_free_in_expr($var, $expr->{'obj'}) ||
+ 	        at_least_one($expr->{'args'}, $var);
     } elsif($expr->{'type'} eq 'here_doc') {
 	return  var_free_in_here_doc($var, $expr->{'rhs'});
     } elsif($expr->{'type'} eq 'condexpr') {

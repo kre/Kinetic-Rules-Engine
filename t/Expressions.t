@@ -375,6 +375,10 @@ check_not_free("v", 'q = [a, b, c]', "var array");
 
 check_free("v", 'q = v.pick("$..[0]")', "operator");
 check_not_free("v", 'q = x.pick("$..[0]")', "operator");
+
+check_free("v", 'q = x.pick("$..[0]" + v)', "operator");
+
+
 check_free("v", 'q = today(v)', "predicate");
 
 check_free("v", 'q = weather:sunny(v)', "qualified predicate");

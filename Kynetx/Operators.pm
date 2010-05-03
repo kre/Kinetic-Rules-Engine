@@ -338,7 +338,7 @@ sub eval_replace {
     my $logger = get_logger();
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
-#    $logger->debug("obj: ", sub { Dumper($obj) });
+    $logger->debug("obj: ", sub { Dumper($obj) });
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 #    $logger->debug("obj: ", sub { Dumper($rands) });
@@ -389,6 +389,58 @@ sub eval_replace {
     }
 }
 $funcs->{'replace'} = \&eval_replace;
+
+sub eval_match {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#   $logger->debug("obj: ", sub { Dumper($obj) });
+
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+#    $logger->debug("obj: ", sub { Dumper($rands) });
+
+    my $v = $obj->{'val'};
+
+    if($obj->{'type'} eq 'str' && 
+       $rands->[0]->{'type'} eq 'regexp') {
+    
+	my $pattern = '';
+	my $modifiers;
+	($pattern, $modifiers) = $rands->[0]->{'val'} =~ m#/(.+)/(i|g){0,2}#; 
+
+	$modifiers = $modifiers || '';
+
+	my $embedable_modifiers = $modifiers;
+	$embedable_modifiers =~ s/g//;
+
+	my $re = qr/(?$embedable_modifiers)$pattern/;
+
+	$logger->debug("Matching string with $pattern & modifiers $modifiers: $re");
+
+	# get capture vars first
+	my @items = ( $v =~ $pattern ); 
+
+	if($modifiers =~ m#g#) {
+	  $v = ($v =~ m/$re/g);
+ 	} else {
+	  $v = ($v =~ m/$re/);
+ 	}
+#	$logger->debug("Match at ", pos($v));
+
+      } else {
+	$logger->warn("Not a regular expression: ", $rands->[0]->{'val'})
+	  unless $rands->[0]->{'type'} eq 'regexp';
+      }
+
+
+    if ($v) {
+      return Kynetx::Expressions::mk_expr_node('bool','true');
+    } else {
+      return Kynetx::Expressions::mk_expr_node('bool','false');
+    }
+}
+$funcs->{'match'} = \&eval_match;
 
 
 sub eval_uc {

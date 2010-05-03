@@ -851,7 +851,7 @@ operator_expr: factor operator(s?)
 operator: '.' operator_op '(' expr(s? /,/) ')'
   {$return = [$item[2], $item[4]]}
 
-operator_op: 'pick'|'length'|'replace'|'as'|'head'|'tail'|'sort'|'filter'|'map'|'uc'|'lc'
+operator_op: 'pick'|'match'|'length'|'replace'|'as'|'head'|'tail'|'sort'|'filter'|'map'|'uc'|'lc'
 
 factor: NUM
         {$return=Kynetx::Parser::mk_expr_node('num',$item[1]+0)}

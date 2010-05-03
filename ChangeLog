@@ -1,3 +1,9 @@
+2010-05-03  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Expressions.pm (var_free_in_expr): Fixed problem not
+	classifying var as free in the args to an operator
+    * Kynetx/Operators.pm (eval_match): Added.
+
 2010-04-30  Cid Dennis <cid@kynetx.com>
     * Alter the runtime to not depend on $K as it conflicts with some websites.  The
       runtime now uses $KOBJ.   But I still define $K on sites where it will not

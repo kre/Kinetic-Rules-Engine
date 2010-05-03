@@ -314,13 +314,13 @@ sub next_state {
   # reset if needed
   $state = $self->get_initial() unless defined $self->get_transitions($state);
 
-#  $logger->debug("Starting state: ", $state);
+  $logger->debug("Starting state: ", $state);
 
   my $transitions = $self->get_transitions($state);
 
   my $next = $self->get_default_transition($state);
   foreach my $t (@{ $transitions }) {
-#    $logger->debug("Transition type: ",$t->{'type'}, " Event type: ", $event->get_type());
+    $logger->debug("Transition type: ",$t->{'type'}, " Event type: ", $event->get_type());
     my ($match,$vals) = match($event, $t);
 #    $logger->debug("Trans vars ", sub { Dumper $t->{'vars'} });
     if ($match) {
@@ -426,10 +426,14 @@ sub submit_eval {
 		  my $url = shift;
 		  my $pattern = shift;
 		  my $logger = get_logger();
-		  #	    $logger->debug("Url: $url; Pattern: $pattern");
+
+
+		  $logger->debug("Evaluating event $event_elem against SM $sm_elem");
+		  
 		  my $req_info = $event->get_req_info();
 		  my $form_data = $req_info->{'KOBJ_form_data'} if $req_info->{'KOBJ_form_data'};
-		  if ($event_elem eq $sm_elem && $url =~ /$pattern/) {
+#		  if ($event_elem eq $sm_elem && $url =~ /$pattern/) {
+		  if ($event_elem eq $sm_elem) {
 		    return(1, $form_data);
 		  } else {
 		    return(0, []);

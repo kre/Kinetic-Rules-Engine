@@ -88,7 +88,7 @@ sub handler {
     ($domain,$eventtype,$rid,$eid) = $r->path_info =~ m!/event/([a-z+_]+)/?([a-z+_]+)?/?([A-Za-z0-9_;]*)/?(\d+)?!;
 
     $eid = $eid || 'unknown';
-    $logger->debug("processing event $domain/$eventtype on rulesets $rid and EID $eid");
+#    $logger->debug("processing event $domain/$eventtype on rulesets $rid and EID $eid");
 
     Log::Log4perl::MDC->put('site', $rid);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
@@ -142,7 +142,7 @@ sub process_event {
 
     my $rules_to_execute;
 
-#    $logger->debug("Processing events for $rids");
+    $logger->debug("Processing events for $rids with event ", sub {Dumper $ev});
 
     foreach my $rid (split(/;/, $rids)) {
 
@@ -326,7 +326,7 @@ sub compile_event_expr {
     if ($eexpr->{'op'} eq 'pageview') {
       $sm = mk_pageview_prim($eexpr->{'pattern'}, $eexpr->{'vars'});
     } elsif ($eexpr->{'op'} eq 'submit') {
-      $sm = mk_pageview_prim($eexpr->{'pattern'}, $eexpr->{'vars'});
+      $sm = mk_submit_prim($eexpr->{'element'}, $eexpr->{'pattern'}, $eexpr->{'vars'});
     } else {
       $logger->warn("Unrecognized primitive event");
     }

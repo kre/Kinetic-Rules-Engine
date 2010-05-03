@@ -66,6 +66,7 @@ function KrlApplication(app)
     this.domain = "web";
     this.event_type = "pageview";
     this.load_started = false;
+    this.override_url = null;
 }
 
 // Example config
@@ -146,7 +147,7 @@ KrlApplication.prototype.resources_loaded = function()
         $KOBJ.each(this.external_resources, function(index,value) {
            if(!value.is_loaded()){
                 is_loaded = false;
-           } 
+           }
         });
     }
     return is_loaded;
@@ -159,10 +160,12 @@ KrlApplication.prototype.run = function()
      * We do not allow rules to execute multiple times unless we are told to reload their config.
      */
     if(this.completed) {
+
         return;
     }
     if (this.load_started)
     {
+
         // If the resources are not loaded check in again in a little while.
         if(!this.resources_loaded())
         {
@@ -175,7 +178,7 @@ KrlApplication.prototype.run = function()
         if (this.data_sets != null && this.closure != null) {
             // TODO: This is here to allow some other kind of call back to delay the execution of a rule
             // What really needs to happen is a way for people to have rules way for other resources like
-            // I made for css and js 
+            // I made for css and js
             if(this.delay_execution)
             {
                 return;
@@ -229,7 +232,12 @@ KrlApplication.prototype.run = function()
 //                       KOBJ.extra_page_vars_as_url() +
 //                       this.page_vars_as_url();
 
+
+      if(this.override_url) {
+	KOBJ.require(this.override_url);
+      } else {
         KOBJ.require(event_url);
+      }
     }
 };
 
