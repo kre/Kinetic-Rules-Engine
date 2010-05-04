@@ -61,6 +61,7 @@ krl-domwatch.js
 krl-annotate.js
 krl-percolation.js
 krl-sidetab.js
+formfill.js
 krl-runtime.js
 krl-runtime-footer.js
 );
