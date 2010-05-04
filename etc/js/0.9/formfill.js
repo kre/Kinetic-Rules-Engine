@@ -1,6 +1,6 @@
 KOBJ.a41x88 = KOBJ.a41x88 || {};
 
-function ($) {
+(function ($) {
     $.format = (function () {
 
 		var parseMonth = function(value){
@@ -173,8 +173,10 @@ function ($) {
         	}
         };
     })();
-}($KOBJ);
-function ($) {
+}($KOBJ));
+
+
+(function ($) {
     $.format = (function () {
 
 		var parseMonth = function(value){
@@ -347,7 +349,7 @@ function ($) {
         	}
         };
     })();
-}($KOBJ);
+}($KOBJ));
 
 
 // No more date library.
