@@ -1,3 +1,6 @@
+2010-05-04 Mark Horstmeier <meh@kynetx.com>
+    * Kynetx/Actions.pm:  added set_form_maps and fill_forms actions for JAM
+
 2010-05-03  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Expressions.pm (var_free_in_expr): Fixed problem not

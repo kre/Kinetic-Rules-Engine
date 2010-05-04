@@ -375,6 +375,26 @@ EOF
 		
 	},
 
+    set_form_maps => {
+        'js' => <<EOF,
+function(uniq, cb, config, map) {
+    KOBJ.setFormMaps(map);
+    cb();
+}
+EOF
+    'after' => [\&handle_delay]
+    },
+    
+    fill_forms => {
+        'js' => <<EOF,
+function(uniq, cb, config, data) {
+    KOBJ.fillForms(data,config);
+    cb();
+}
+EOF
+    'after' => [\&handle_delay]
+        
+    },
 
 };
 
@@ -584,6 +604,8 @@ sub build_one_action {
           $actions = Kynetx::Predicates::Amazon::get_actions();
       } elsif ($action->{'source'} eq 'google') {
           $actions = Kynetx::Predicates::Google::get_actions();
+      } elsif ($action->{'source'} eq 'facebook') {
+          $actions = Kynetx::Predicates::Facebook::get_actions();
       } elsif ($action->{'source'} eq 'snow') {
           $actions = Kynetx::Actions::LetItSnow::get_actions();
           $resources = Kynetx::Actions::LetItSnow::get_resources(); 
