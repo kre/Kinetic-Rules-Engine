@@ -656,7 +656,7 @@ KOBJ.fillForms = function(formData, configuration){
 
 	var defaults = $KOBJ.extend(true, {}, KOBJ.fillFormsDefault);
 
-	if(typeof(config) === "object"){
+	if(typeof(configuration) === "object"){
 		$KOBJ.extend(true, defaults, configuration);
 	}
 
@@ -781,11 +781,11 @@ KOBJ.fillForms = function(formData, configuration){
 		}
 	});
 
-    if(anyError && config.logurl){
-		$K.getJSON(config.logurl + "callback=?&map=amazon&errors="+problemData,function(){});
+    if(anyError && configuration.logurl){
+		$K.getJSON(configuration.logurl + "callback=?&map=amazon&errors="+problemData,function(){});
 	}
 
-	KOBJ.logger('form_fill', config['txn_id'], problemData, '', status, config['rule_name'], config['rid']);
+	KOBJ.logger('form_fill', configuration['txn_id'], problemData, '', status, configuration['rule_name'], configuration['rid']);
 
 	var annotateArray = KOBJ.splitJSONRequest(stateArray,maxLengthURL,'');
 
