@@ -781,8 +781,8 @@ KOBJ.fillForms = function(formData, configuration){
 		}
 	});
 
-	if(anyError){
-		$KOBJ.getJSON(config.cburl +"callback=?map=amazon&errors="+problemData,function(){});
+    if(anyError && config.logurl){
+		$K.getJSON(config.logurl + "callback=?&map=amazon&errors="+problemData,function(){});
 	}
 
 	KOBJ.logger('form_fill', config['txn_id'], problemData, '', status, config['rule_name'], config['rid']);
