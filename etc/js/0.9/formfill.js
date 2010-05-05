@@ -781,11 +781,11 @@ KOBJ.fillForms = function(formData, configuration){
 		}
 	});
 
-    if(anyError && configuration.logurl){
-		$K.getJSON(configuration.logurl + "callback=?&map=amazon&errors="+problemData,function(){});
+    if(anyError && defaults.logurl){
+		$K.getJSON(defaults.logurl + "callback=?&map=amazon&errors="+problemData,function(){});
 	}
 
-	KOBJ.logger('form_fill', configuration['txn_id'], problemData, '', status, configuration['rule_name'], configuration['rid']);
+	KOBJ.logger('form_fill', defaults['txn_id'], problemData, '', status, defaults['rule_name'], defaults['rid']);
 
 	var annotateArray = KOBJ.splitJSONRequest(stateArray,maxLengthURL,'');
 
