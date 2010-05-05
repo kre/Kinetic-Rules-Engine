@@ -1,3 +1,8 @@
+2010-05-05 Cid Dennis <cid@kynetx.com>
+    * etc/js/0.9/formfill.js:  Put the code that jam wanted in.  this is a hack until they decided how to really
+      do this kind of code.
+    * bin/install-init-file.pl:  Added script above to runtime builder.
+
 2010-05-04 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Actions.pm:  added set_form_maps and fill_forms actions for JAM
     * Kynetx/Parser.pm: added VAR to meta block for key argument
