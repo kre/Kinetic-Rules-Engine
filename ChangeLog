@@ -1,4 +1,7 @@
 2010-05-05 Cid Dennis <cid@kynetx.com>
+    * etc/js/0.9/krl_applicaiton.js: Fixed an issue where wrong application id was passed back to server for rule execution when multiple apps were on the same page.
+
+2010-05-05 Cid Dennis <cid@kynetx.com>
     * etc/js/0.9/formfill.js:  Put the code that jam wanted in.  this is a hack until they decided how to really
       do this kind of code.
     * bin/install-init-file.pl:  Added script above to runtime builder.
