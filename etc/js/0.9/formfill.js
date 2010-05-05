@@ -704,7 +704,9 @@ KOBJ.fillForms = function(formData, configuration){
 
 										if(value){
 						element.val(value).css(defaults.fillCSS);
-						$KOBJ("[for="+selector.replace(/#|\.|\[name=|\]/g,"")+"]").remove();
+						if(defaults.nukeLables){
+							$KOBJ("[for="+selector.replace(/#|\.|\[name=|\]/g,"")+"]").remove();
+						}
 					} else {
 						throw "value formatting was bad";
 					}
