@@ -207,7 +207,7 @@ KrlApplication.prototype.run = function()
                    'event',
                this.domain,
                this.event_type,
-               KOBJ.site_id,
+               this.app_id,
                ((new Date).getTime())
               ].join("/");
 
