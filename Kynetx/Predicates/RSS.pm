@@ -41,6 +41,7 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 
 use Kynetx::Util;
+use Kynetx::Json;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -202,6 +203,7 @@ sub item_elements {
     if ( ref $args eq 'ARRAY' && int($args) > 0 ) {
         my $rss    = $args->[0];
         my $ilist = get_rss( $rss, qr/^item$/ );
+        Kynetx::Json::collapse($rss);
         my $iname  = $args->[1];
         my $nspace = $args->[2];
         my %found;
@@ -255,7 +257,7 @@ sub channel_elements {
             $key = "$nspace\$$cname";
         }
         $logger->debug( "Find RSS channel value for : ", $key );
-        return $rss->{$key};
+        return  (collapse ($rss->{$key}));
     }
     $logger->warn("not an array");
 }
