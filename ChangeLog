@@ -1,5 +1,8 @@
+2010-05-12 Mark Horstmeier <meh@kynetx.com>
+    * Kynetx/Actions.pm: JAM request to add config to (KOBJ.setFormMaps(map,config))
+
 2010-05-07 Mark Horstmeier <meh@kynetx.com>
-    * Kynetx/RSS.pm: bug fix to remove $t hash
+    * Kynetx/Predicates/RSS.pm: bug fix to remove $t hash
     
 2010-05-05 Cid Dennis <cid@kynetx.com>
     * etc/js/0.9/krl_applicaiton.js: Fixed an issue where wrong application id was passed back to server for rule execution when multiple apps were on the same page.

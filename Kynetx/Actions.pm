@@ -378,7 +378,7 @@ EOF
     set_form_maps => {
         'js' => <<EOF,
 function(uniq, cb, config, map) {
-    KOBJ.setFormMaps(map);
+    KOBJ.setFormMaps(map,config);
     cb();
 }
 EOF
