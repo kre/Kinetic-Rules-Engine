@@ -30,188 +30,188 @@ describe "Verify Runtime Functions" do
 
 
   it "have defined a function called KOBJ.log" do
-    page.js_eval("'' + (typeof(window.KOBJ.log) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.log) != 'undefined')").to_s.should == "true"
   end
 
 #  it "have defined a function called KOBJ.location" do
-#    page.js_eval("typeof(window.KOBJ.location) == 'function')").should == "true"
+#    page.js_eval("typeof(window.KOBJ.location)  != 'undefined')").should == "true"
 #  end
 
   it "have defined a function called KOBJ.css" do
-    page.js_eval("'' + (typeof(window.KOBJ.css) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.css)  != 'undefined')").to_s.should == "true"
   end
 
   it "have defined a function called KOBJ.errorstack_submit" do
-    page.js_eval("'' + (typeof(window.KOBJ.errorstack_submit) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.errorstack_submit)  != 'undefined')").to_s.should == "true"
   end
 
   it "have defined a function called KOBJ.logger" do
-    page.js_eval("'' + (typeof(window.KOBJ.logger) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.logger)  != 'undefined')").to_s.should == "true"
   end
 
   it "have defined a function called KOBJ.obs" do
-    page.js_eval("'' + (typeof(window.KOBJ.obs) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.obs)  != 'undefined')").to_s.should == "true"
   end
 
 
   it "have defined a function called KOBJ.fragment" do
-    page.js_eval("'' + (typeof(window.KOBJ.fragment) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.fragment)  != 'undefined')").to_s.should == "true"
   end
 
 
   it "have defined a function called KOBJ.update_elements" do
-    page.js_eval("'' + (typeof(window.KOBJ.update_elements) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.update_elements)  != 'undefined')").to_s.should == "true"
   end
 
   it "have defined a function called KOBJ.Fade" do
-    page.js_eval("'' + (typeof(window.KOBJ.Fade) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.Fade)  != 'undefined')").to_s.should == "true"
   end
 
 
   it "have defined a function called KOBJ.BlindDown" do
-    page.js_eval("'' + (typeof(window.KOBJ.BlindDown) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.BlindDown)  != 'undefined')").to_s.should == "true"
   end
 
 
   it "have defined a function called KOBJ.BlindUp" do
-    page.js_eval("'' + (typeof(window.KOBJ.BlindUp) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.BlindUp)  != 'undefined')").to_s.should == "true"
   end
 
   it "have defined a function called KOBJ.BlindUp" do
-    page.js_eval("'' + (typeof(window.KOBJ.BlindUp) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.BlindUp)  != 'undefined')").to_s.should == "true"
   end
 
   it "have defined a function called KOBJ.hide" do
-    page.js_eval("'' + (typeof(window.KOBJ.hide) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.hide)  != 'undefined')").to_s.should == "true"
   end
 
 
   it "have defined a function called KOBJ.letitsnow" do
-    page.js_eval("'' + (typeof(window.KOBJ.letitsnow) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.letitsnow)  != 'undefined')").to_s.should == "true"
   end
 
 
   it "have defined a function called KOBJ.createPopIn" do
-    page.js_eval("'' + (typeof(window.KOBJ.createPopIn) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.createPopIn)  != 'undefined')").to_s.should == "true"
   end
 
   it "have defined a function called KOBJ.statusbar" do
-    page.js_eval("'' + (typeof(window.KOBJ.statusbar) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.statusbar)  != 'undefined')").to_s.should == "true"
   end
 
 
   it "have defined a function called KOBJ.statusbar_close" do
-    page.js_eval("'' + (typeof(window.KOBJ.statusbar_close) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.statusbar_close)  != 'undefined')").to_s.should == "true"
   end
 
 
   it "have defined a function called KOBJ.buildDiv" do
-    page.js_eval("'' + (typeof(window.KOBJ.buildDiv) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.buildDiv)  != 'undefined')").to_s.should == "true"
   end
 
 
   it "have defined a function called KOBJ.get_host" do
-    page.js_eval("'' + (typeof(window.KOBJ.get_host) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.get_host)  != 'undefined')").to_s.should == "true"
   end
 
   it "have defined a function called KOBJ.close_notification" do
-    page.js_eval("'' + (typeof(window.KOBJ.close_notification) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.close_notification)  != 'undefined')").to_s.should == "true"
   end
 
   it "have defined a function called KOBJ.getwithimage" do
-    page.js_eval("'' + (typeof(window.KOBJ.getwithimage) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.getwithimage)  != 'undefined')").to_s.should == "true"
   end
 
   it "have defined a function called KOBJ.require" do
-    page.js_eval("'' + (typeof(window.KOBJ.require) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.require)  != 'undefined')").to_s.should == "true"
   end
 
   it "have defined a function called KOBJ.reload" do
-    page.js_eval("'' + (typeof(window.KOBJ.reload) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.reload)  != 'undefined')").to_s.should == "true"
   end
 
 
   it "have defined a function called KOBJ.eval" do
-    page.js_eval("'' + (typeof(window.KOBJ.eval) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.eval)  != 'undefined')").to_s.should == "true"
   end
 
 #  it "have defined a function called KOBJ.init" do
-#    page.js_eval("'' + (typeof(window.KOBJ.init) == 'function')").should == "true"
+#    page.js_eval("'' + (typeof(window.KOBJ.init)  != 'undefined')").should == "true"
 #  end
 
 
   it "have defined a function called KOBJ.registerDataSet" do
-    page.js_eval("'' + (typeof(window.KOBJ.registerDataSet) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.registerDataSet)  != 'undefined')").to_s.should == "true"
   end
 
 
   it "have defined a function called KOBJ.registerClosure" do
-    page.js_eval("'' + (typeof(window.KOBJ.registerClosure) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.registerClosure)  != 'undefined')").to_s.should == "true"
   end
 
 
   it "have defined a function called KOBJ.clearExecutionDelay" do
-    page.js_eval("'' + (typeof(window.KOBJ.clearExecutionDelay) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.clearExecutionDelay)  != 'undefined')").to_s.should == "true"
   end
 
 #  it "have defined a function called KOBJ.executeWhenReady" do
-#    page.js_eval("'' + (typeof(window.KOBJ.executeWhenReady) == 'function')").should == "true"
+#    page.js_eval("'' + (typeof(window.KOBJ.executeWhenReady)  != 'undefined')").should == "true"
 #  end
 
 
 #  it "have defined a function called KOBJ.executeClosure" do
-#    page.js_eval("'' + (typeof(window.KOBJ.executeClosure) == 'function')").should == "true"
+#    page.js_eval("'' + (typeof(window.KOBJ.executeClosure)  != 'undefined')").should == "true"
 #  end
 
 
 
   it "have defined a function called KOBJ.percolate" do
-    page.js_eval("'' + (typeof(window.KOBJ.percolate) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.percolate)  != 'undefined')").to_s.should == "true"
   end
 
 
 
   it "have defined a function called KOBJ.watchDOM" do
-    page.js_eval("'' + (typeof(window.KOBJ.watchDOM) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.watchDOM)  != 'undefined')").to_s.should == "true"
   end
 
 
   it "have defined a function called KOBJ.splitJSONRequest" do
-    page.js_eval("'' + (typeof(window.KOBJ.splitJSONRequest) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.splitJSONRequest)  != 'undefined')").to_s.should == "true"
   end
 
   it "have defined a function called KOBJ.getJSONP" do
-    page.js_eval("'' + (typeof(window.KOBJ.getJSONP) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.getJSONP)  != 'undefined')").to_s.should == "true"
   end
 
   it "have defined a function called KOBJ.annotate_local_search_extractdata" do
-    page.js_eval("'' + (typeof(window.KOBJ.annotate_local_search_extractdata) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.annotate_local_search_extractdata)  != 'undefined')").to_s.should == "true"
   end
 
 
   it "have defined a function called KOBJ.annotate_local_search_results" do
-    page.js_eval("'' + (typeof(window.KOBJ.annotate_local_search_results) == 'function')").should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.annotate_local_search_results)  != 'undefined')").should == "true"
   end
 
 
   it "have defined a function called KOBJ.annotate_search_extractdata" do
-    page.js_eval("'' + (typeof(window.KOBJ.annotate_search_extractdata) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.annotate_search_extractdata)  != 'undefined')").to_s.should == "true"
   end
 
 
 
   it "have defined a function called KOBJ.annotate_search_results" do
-    page.js_eval("'' + (typeof(window.KOBJ.annotate_search_results) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.KOBJ.annotate_search_results)  != 'undefined')").to_s.should == "true"
   end
 
 
   it "have defined a function called $KOBJ.kGrowl" do
-    page.js_eval("'' + (typeof(window.$KOBJ.kGrowl) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.$KOBJ.kGrowl)  != 'undefined')").to_s.should == "true"
   end
 
 
   it "have defined a function called $KOBJ.kGrowl" do
-    page.js_eval("'' + (typeof(window.$KOBJ.tabSlideOut) == 'function')").to_s.should == "true"
+    page.js_eval("'' + (typeof(window.$KOBJ.tabSlideOut)  != 'undefined')").to_s.should == "true"
   end
 
 end
