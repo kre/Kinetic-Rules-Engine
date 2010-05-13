@@ -71,9 +71,8 @@ module SPEC_HELPER
         var body = d.getElementsByTagName('body')[0];
         body.appendChild(r);
         var q = d.createElement('script');
-        q.src = '#{kobj_static_js_url}';
-        body.appendChild(q);
-    ENDS
+        q.src = '#{kobj_static_js_url}';body.appendChild(q);
+ENDS
 
     puts "Injecting script: " + script
     
