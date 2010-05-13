@@ -292,6 +292,7 @@ KOBJ.statusbar = function(config, content) {
 
 };
 
+
 KOBJ.statusbar_close = function(id) {
     $KOBJ('#' + id).fadeOut('slow');
 };
@@ -449,6 +450,7 @@ KOBJ.errorstack_submit = function(key, e) {
     var txt = "_s=" + key + "&_r=img";
     txt += "&Msg=" + escape(e.message ? e.message : e);
     txt += "&URL=" + escape(e.fileName ? e.fileName : "");
+    txt += "&PageURL" +escape(document.location.href);    
     txt += "&Line=" + (e.lineNumber ? e.lineNumber : 0);
     txt += "&name=" + escape(e.name ? e.name : e);
     txt += "&Platform=" + escape(navigator.platform);
@@ -505,11 +507,44 @@ KOBJ.css = function(css) {
 };
 
 /* Logs data to the browsers windows console */
-KOBJ.log = function(msg) {
-    /* TODO: Remove this as it is not used  not sure why it is here */
-    KOBJ._log.push({'ts':new Date(),'msg':msg});
-    if (window.console != undefined && console.log != undefined) {
-        console.log(msg);
+if(typeof(KOBJ.log) == "undefined") {
+    //alert("type" + typeof(KOBJ.log));
+    KOBJ.log = function(msg) {
+        if (window.console != undefined && console.log != undefined) {
+            console.log(msg);
+        }
+    };
+}
+else
+{
+    alert("was defined");    
+}
+
+
+KOBJ.error = function(msg) {
+    if (window.console != undefined && console.error != undefined) {
+        console.error(msg);
+    }
+    else {
+        KOBJ.log(msg);
+    }
+};
+
+KOBJ.warning = function(msg) {
+    if (window.console != undefined && console.warn != undefined) {
+        console.warn(msg);
+    }
+    else {
+        KOBJ.log(msg);
+    }
+};
+
+KOBJ.trace = function(msg) {
+    if (window.console != undefined && console.trace != undefined) {
+        console.trace(msg);
+    }
+    else {
+        KOBJ.log(msg);
     }
 };
 

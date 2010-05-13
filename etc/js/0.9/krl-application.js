@@ -10,12 +10,16 @@ function KrlExternalResource(url)
     this.css_selector = null;
 }
 
+/*
+ * Allow request a external resource to be loaded.   If it is already
+ * request this will do nothing.
+ */
 KrlExternalResource.prototype.load = function() {
-    if(this.requested)
+    if (this.requested)
     {
         return;
     }
-    if(this.type == "css") {
+    if (this.type == "css") {
         KOBJ.load_style_sheet_link(this.url);
     }
     else
@@ -24,8 +28,13 @@ KrlExternalResource.prototype.load = function() {
     }
 };
 
+/*
+ * Checks to see if a resource is loaded. In the case of a javascript we will
+ * be called back by the browser and will know for sure it was loaded but in
+ * the case of css we only can check to see if the link is there.
+ */
 KrlExternalResource.prototype.is_loaded = function() {
-    if(this.type == "css")
+    if (this.type == "css")
     {
         return KOBJ.did_stylesheet_load(this.url);
     }
@@ -33,9 +42,13 @@ KrlExternalResource.prototype.is_loaded = function() {
 };
 
 
+/*
+ * Sets the state of this resource as loaded so it will not
+ * be loaded a second time.
+ */
 KrlExternalResource.prototype.did_load = function() {
-       this.loaded = true;
-       this.requested = false;
+    this.loaded = true;
+    this.requested = false;
 };
 
 /*  -----------------------------------------
@@ -54,67 +67,83 @@ function KrlDataSet(config)
  ------------------------------------------ */
 function KrlApplication(app)
 {
+    // This applications id
     this.app_id = app;
+
+    this.data_set_load_requested = false;
+
+    // List of external resources needed for this app
     this.external_resources = null;
+
+    // Data sets registered fro this app
     this.data_sets = null;
-    this.closure = null;
-    this.completed = false;
+
     this.delay_execution = false;
-    this.config_data = {};
     this.page_params = {};
+
+    // Defaults for request to server
     this.version = "blue";
     this.domain = "web";
-    this.event_type = "pageview";
-    this.load_started = false;
-    this.override_url = null;
+
+    this.app_vars = {};
+
+    // Closures that will execute after all resources and data is loaded
+    this.pending_closures = {};
 }
 
-// Example config
-//KOBJ_config= {'rids':['a93x7'],
-//    'a93x7:kynetx_app_version':'dev',
-//    init:{
-//        eval_host:'cs.kobj.net',
-//        callback_host:'log.kobj.net'
-//    }
-//};
 
-
+/*
+ * This is called when a resource was loaded and the browser has
+ * notified us.  If the resource is not for this application nothing
+ * will happen.
+ */
 KrlApplication.prototype.external_resource_loaded = function(url) {
     var my_resources = this.external_resources || {};
-    $KOBJ.each(my_resources,function (key,value) {
-        if(key == url ) {
-            KOBJ.log("Resource marked as loaded:  " +url);
+    $KOBJ.each(my_resources, function (key, value) {
+        if (key == url) {
+            KOBJ.log("Resource marked as loaded:  " + url);
             value.did_load();
         }
     });
+    // Execute and closures pending because they were waiting for resources.
+    this.execute_pending_closures();
 };
+
+KrlApplication.prototype.store_data_sets = function(datasetdata)
+{
+    this.data_sets = datasetdata;
+    // Execute and closures pending because they were waiting for resources.
+    this.execute_pending_closures();
+};
+
 /*
  Add what external resources we need for THIS app
  */
 KrlApplication.prototype.add_external_resources = function(resources)
 {
     var my_resources = this.external_resources || {};
-    $KOBJ.each(resources,function (index) {
+    $KOBJ.each(resources, function (index) {
         var a_resource = resources[index];
         my_resources[a_resource.url] = a_resource;
     });
     this.external_resources = my_resources;
 };
 
-
-KrlApplication.prototype.data_loaded = function()
+/*
+ * Tells us if the datasets have been loaded
+ */
+KrlApplication.prototype.is_data_loaded = function()
 {
     return this.data_sets != null;
 };
 
+/*
+ * This basicly resets the application and submits the pageview event again.
+ */
 KrlApplication.prototype.reload = function()
 {
-    this.completed = false;
-    this.load_started = false;
-    this.closure = null;
-    this.run();
+    KOBJEventManager.add_out_of_bound_event(this, "pageview");
 };
-
 
 
 /*
@@ -139,112 +168,133 @@ KrlApplication.prototype.page_vars_as_url = function() {
 };
 
 
-KrlApplication.prototype.resources_loaded = function()
+/*
+ * This will return true if all the resources are loaded.
+ */
+KrlApplication.prototype.are_resources_loaded = function()
 {
     var is_loaded = true;
-    if(this.external_resources != null)
+    if (this.external_resources != null)
     {
-        $KOBJ.each(this.external_resources, function(index,value) {
-           if(!value.is_loaded()){
+        $KOBJ.each(this.external_resources, function(index, value) {
+            if (!value.is_loaded()) {
                 is_loaded = false;
-           }
+            }
         });
     }
     return is_loaded;
 };
 
+/*
+ * Request a closure be executed. If the needed resources or data have not
+ * been loaded then it is stored in a pending state to be executed when the
+ * resources are loaded.
+ */
 
-KrlApplication.prototype.run = function()
+KrlApplication.prototype.execute_closure = function(guid, a_closure)
 {
-    /*
-     * We do not allow rules to execute multiple times unless we are told to reload their config.
-     */
-    if(this.completed) {
-
-        return;
-    }
-    if (this.load_started)
+    if (!this.is_data_loaded() || !this.are_resources_loaded())
     {
-
-        // If the resources are not loaded check in again in a little while.
-        if(!this.resources_loaded())
-        {
-            KOBJ.log("Resources are not loaded waiting...");
-            var func = "KOBJ.get_application('" + this.app_id + "').run();";
-            setTimeout(func,200);
-            return;
-        }
-        // We need the data and the closure to event think about executing
-        if (this.data_sets != null && this.closure != null) {
-            // TODO: This is here to allow some other kind of call back to delay the execution of a rule
-            // What really needs to happen is a way for people to have rules way for other resources like
-            // I made for css and js
-            if(this.delay_execution)
-            {
-                return;
-            }
-//            pattern = /\\$K[\\(|\\.]/;
-//            if(pattern.exec(this.closure) != null && KOBJ.compat_mode) {
-//                KOBJ.log("Rule could not execute because of incomptable site.  Change you $K vars to $KOBJ.")
-//                this.closure();
-//            }
-            this.load_started = false;
-                this.closure();
-            this.completed = true;
-            this.closure = null;
-        }
+        this.pending_closures[guid] = a_closure;
     }
     else
     {
-        this.load_started = true;
-        this.load_data_sets();
-        this.fire_callbacks();
-
-        var url = [KOBJ.proto() +
-                   KOBJ.eval_host +
-               KOBJ.kns_port,
-               this.version,
-                   'event',
-               this.domain,
-               this.event_type,
-               this.app_id,
-               ((new Date).getTime())
-              ].join("/");
-
-        var params = ["caller=" + escape(KOBJ.location('href')),
-              "referer="+ escape(KOBJ.document.referrer),
-              "kvars=" + escape(KOBJ.kvars_to_json()),
-              "title=" + encodeURI(KOBJ.document.title)
-                 ];
-
-        var event_url = url + "?" +  params.join("&") + KOBJ.extra_page_vars_as_url() + this.page_vars_as_url();
-
-        // OLD Way before events
-//        var url = KOBJ.proto() + KOBJ.eval_host + KOBJ.kns_port + "/ruleset/eval/" + this.app_id;
-//        var eval_url = url +
-//                       "/" +
-//                       ((new Date).getTime()) +
-//                       ".js?caller=" +
-//                       escape(KOBJ.location('href')) +
-//                       "&referer=" + escape(KOBJ.document.referrer) +
-//                       "&kvars=" + escape(KOBJ.kvars_to_json()) +
-//                       "&title=" + escape(KOBJ.document.title) +
-//                       KOBJ.extra_page_vars_as_url() +
-//                       this.page_vars_as_url();
-
-
-      if(this.override_url) {
-	KOBJ.require(this.override_url);
-      } else {
-        KOBJ.require(event_url);
-      }
+        KOBJEventManager.event_fire_complete(this, guid);
+        this.execute_pending_closures();
+        a_closure;
     }
+
 };
+
+/*
+ * Because closures can be delayed because of needed resources or data
+ * we store them off.  This method will execute the pending closures.
+ */
+KrlApplication.prototype.execute_pending_closures = function()
+{
+    if ($KOBJ.isEmptyObject(this.pending_closures))
+    {
+        return;
+    }
+
+    $KOBJ.each(this.pending_closures, function(guid, the_closure) {
+        the_closure();
+        KOBJEventManager.event_fire_complete(this, guid);
+    });
+
+    this.pending_closures();
+};
+
+KrlApplication.prototype.run = function()
+{
+    this.load_data_sets();
+    KOBJEventManager.add_out_of_bound_event(this, "pageview");
+};
+
+
+KrlApplication.prototype.fire_event = function(event, data, guid)
+{
+    this.load_data_sets();
+
+    var url = [KOBJ.proto() +
+               KOBJ.eval_host +
+               KOBJ.kns_port,
+        this.version,
+        'event',
+        this.domain,
+        event,
+        this.app_id,
+        guid
+    ].join("/");
+
+
+    var all_vars = {};
+    // If the old global kvars are defined add them
+    if (typeof(kvars) != "undefined" || typeof(kvars) == "object") {
+        $KOBJ.extend(true, all_vars, kvars)
+    }
+    $KOBJ.extend(true, all_vars, this.app_vars)
+
+    params = [];
+
+    // If we have form data we need to transalate it.
+    if(data["submit_data"] != null)
+    {
+        // In order for the engine to know how to deal with form fields we need
+        // to translate from "name" to "app_id:name".
+
+        var this_app = this;
+        $KOBJ.each(data["submit_data"], function(index) {
+            value = data["submit_data"][index];
+            params.push({ "name"  : (this_app.app_id + ":" + value["name"]),
+                "value" :  value["value"]});
+        });
+    }
+
+    if (event != "pageview") {
+        params.push({name: "element", value: data.selector});
+    }
+
+    params.push({name: "kvars", value: $KOBJ.toJSON(all_vars)});
+    params.push({name: "caller", value: KOBJ.location('href')});
+    params.push({name: "referer", value: KOBJ.document.referrer});
+    params.push({name: "title", value: KOBJ.document.title});
+
+    var event_url = url + "?" +
+                    $KOBJ.param(params) +
+                    KOBJ.extra_page_vars_as_url() +
+                    this.page_vars_as_url();
+
+
+
+    KOBJ.require(event_url);
+};
+
 
 /*
  Execute the app by loading its javascript
  */
-KrlApplication.prototype.fire_callbacks = function()
+KrlApplication.prototype.fire_callbacks = function(guid)
 {
     //TODO: Looks like callback_url is not used anywhere.
     //    KOBJ.callback_url = KOBJ.proto() + KOBJ.callback_host + KOBJ.kns_port + "/callback/" + KOBJ.siteIds();
@@ -252,12 +302,18 @@ KrlApplication.prototype.fire_callbacks = function()
 
 
 /*
- Load up this applicaitons datasets
+ Load up this applications datasets
  */
 KrlApplication.prototype.load_data_sets = function()
 {
-    var data_url = KOBJ.proto() + KOBJ.init_host + KOBJ.kns_port + "/js/datasets/" + KOBJ.site_id + "/";
-    KOBJ.require(data_url);
+    // We only try to load the data one time.  This is because if data is returned it would be
+    // Cached by the browser for 24 hours.  Any data not to be cached for 24 hours or more will
+    // not come back in this call anyway.
+    if (!this.is_data_loaded() && !this.data_set_load_requested)
+    {
+        var data_url = KOBJ.proto() + KOBJ.init_host + KOBJ.kns_port + "/js/datasets/" + KOBJ.site_id + "/";
+        KOBJ.require(data_url);
+    }
 };
 
 
@@ -272,7 +328,6 @@ KrlApplication.prototype.update_from_config = function(a_config)
     }
 
     // Search for page parameters.  They start with the app_id
-
     var my_self = this;
     $KOBJ.each(a_config, function(key, value) {
         if (key.match("^" + my_self.app_id)) {

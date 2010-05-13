@@ -33,7 +33,8 @@ KOBJ.extra_page_vars_as_url = function() {
     return param_str;
 };
 
-    KOBJ.add_config_and_run = function(app_config) {
+KOBJ.add_config_and_run = function(app_config) {
+//    alert("adding config" +app_config);
     KOBJ.add_app_config(app_config);
     KOBJ.run_when_ready();
 };
@@ -144,16 +145,29 @@ KOBJ.registerExternalResources = function(rid, resources) {
     });
     var app = KOBJ.get_application(rid);
     app.add_external_resources(resource_array);
-    app.run();
+};
+
+/*
+ * This is a shortcut way to register interest for an event for a given application
+ * id.
+ */
+KOBJ.watch_event = function(event,selector,config)
+{
+    // Page views are special in that they do not have selectors
+    var application = KOBJ.get_application(config["rid"]); 
+    if(event != "pageview") {
+        KOBJEventManager.register_interest(event,selector,application,config);
+    }
+    else {
+        KOBJEventManager.add_out_of_bound_event(application, "pageview");
+    }
 };
 
 //start closure and data registration code
 KOBJ.registerDataSet = function(rid, datasets) {
     KOBJ.log("registering dataset " + rid);
     var app = KOBJ.get_application(rid);
-    app.data_sets = datasets;
-    app.run();
-    //    KOBJ.executeWhenReady(rid);
+    app.store_data_sets(datasets);
 };
 
 KOBJ.clearExecutionDelay = function(rid) {
@@ -165,15 +179,11 @@ KOBJ.clearExecutionDelay = function(rid) {
     app.run();
 };
 
-KOBJ.registerClosure = function(rid, closure) {
-    KOBJ.log("registering closure " + rid);
+KOBJ.registerClosure = function(rid, closure,guid) {
+    KOBJ.log("registering closure " + rid + " - " + guid );
     var app = KOBJ.get_application(rid);
-    app.closure = closure;
-    app.run();
-    //    KOBJ.executeWhenReady(rid);
+    app.execute_closure(guid,closure);
 };
-//end closure and data registration code
-
 
 KOBJ.runit = function() {
 

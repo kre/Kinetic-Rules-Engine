@@ -48,21 +48,23 @@ my $kobj_file = "kobj-static-".$dstamp.$hstamp.".js";
 my @js_files = qw(
 krl-application.js
 krl-runtime-header.js
-jquery-1.4.2.js
+frameworks/jquery/1.4.2/jquery.js
 jquery_noconflict.js
-jquery.json-1.2.js
-jquery.bgiframe.js
-kgrowl-1.0.js
-snowfall.jquery.js
+frameworks/jquery_sprintf/1.0.3/jquery_sprintf.js
+frameworks/json/1.2/jquery.json-1.2.js
+frameworks/bg_iframe/1.0/jquery.bgiframe.js
+frameworks/kgrowl/1.0/kgrowl-1.0.js
+frameworks/snowfall/1.0/snowfall.jquery.js
 krl-setup.js
 krl-runtime.js.tmpl
 krl-functions.js
-krl-domwatch.js
-krl-annotate.js
-krl-percolation.js
-krl-sidetab.js
+frameworks/dom_watch/1.0/krl-domwatch.js
+frameworks/perc_and_annotate/1.0/krl-annotate.js
+frameworks/perc_and_annotate/1.0/krl-percolation.js
+frameworks/sidetab/1.0/krl-sidetab.js
 formfill.js
 krl-runtime.js
+krl-eventmanager.js
 krl-runtime-footer.js
 );
 
