@@ -67,7 +67,7 @@ module SPEC_HELPER
     script = <<-ENDS
         var d = window.document;
         var r = d.createElement('script');
-        r.text = 'KOBJ_config ={    "rids"  : #{r_ids.to_json} #{extra_init_info}};';
+        r.text = 'KOBJ_config={"rids":#{r_ids.to_json} #{extra_init_info}};';
         var body = d.getElementsByTagName('body')[0];
         body.appendChild(r);
         var q = d.createElement('script');

@@ -1,13 +1,9 @@
 test:
   testing_servers : [ie7_windows, firefox_30_osx, firefox_windows, safari_404_osx, safari_404_windows]
-  kobj_static_js_url: "http://static.kobj.net/kobj-static-20100513220413.js"
-#  kobj_static_js_url: "http://init.kobj.net/js/shared/kobj-static.js"
+  kobj_static_js_url: "http://init.kobj.net/js/shared/kobj-static.js"
+
  # New
-#  kobj_static_js_url: "http://static.kobj.net/kobj-static-20100513165620.js"
-
-
-  #kobj_static_js_url: "http://static.kobj.net/kobj-static-20100415065837.js"
-#  kobj_static_js_url: "http://static.kobj.net/kobj-static-20100408173225.js"
+#  kobj_static_js_url: "http://static.kobj.net/kobj-static-20100513220413.js"
 
 firefox_30_osx :
   host : "office.kynetx.com"
