@@ -117,7 +117,7 @@
                     if (!app_data["processing"])
                     {
 
-                        console.log("Fireing Event " + app_id + " - " + app_data["processing"]);
+                        KOBJ.log("Fireing Event " + app_id + " - " + app_data["processing"]);
                         app_data["app"].fire_event(event,app_data,guid);
                         app_data.processing = true;
                     }
@@ -162,7 +162,7 @@
     {
         if(KOBJEventManager.is_dup_event(event,data.selector,app))
         {
-            console.log("Dup Event " + event );
+            KOBJ.log("Dup Event " + event );
             return;
         }
         // When adding to the queue we do not allow the same event for the same selector to
@@ -261,7 +261,7 @@
      * This is the call back for all events. It sorts out what kind of event and does the right thing.
      */
     KOBJEventManager.event_handler = function(event) {
-        console.log("in event handle");
+        KOBJ.log("in event handle");
         var event_data = event.data;
         var current_guid = KOBJEventManager.eid();
 
