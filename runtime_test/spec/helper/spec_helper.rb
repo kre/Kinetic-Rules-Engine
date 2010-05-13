@@ -72,9 +72,10 @@ module SPEC_HELPER
         body.appendChild(r);
         var q = d.createElement('script');
         q.src = '#{kobj_static_js_url}';
-    alert("here 3");
         body.appendChild(q);
-ENDS
+    alert("here 3");
+
+    ENDS
 
     puts "Injecting script: " + script
     
