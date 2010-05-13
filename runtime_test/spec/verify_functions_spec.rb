@@ -9,7 +9,7 @@ describe "Verify Runtime Functions" do
     load_settings
     start_browser_session(@settings, "http://search.yahoo.com", "/")
     insert_runtime_script(["a41x27"])
-    page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='KOBJ_after']"});
+    page.wait_for({:wait_for => :element, :timeout_in_seconds => 300, :element => "//*[@id='KOBJ_after']"});
   end
 
   after(:all) do
