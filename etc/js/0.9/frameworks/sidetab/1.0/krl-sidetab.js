@@ -421,7 +421,7 @@ KOBJ.tabManager.notification = function(config){
 		}
 
 		//ie6 doesn't do well with the fixed option
-		if ($KOBJ.browser.msie && $KOBJ.browser.version.substr(0,1)<7) {
+		 if ($.browser.msie && ($.browser.version.substr(0,1)<7 || document.compatMode == "BackCompat")) {
 			objCSS.position = "absolute";
 		}
 
