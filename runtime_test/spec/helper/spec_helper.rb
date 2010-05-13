@@ -65,11 +65,11 @@ module SPEC_HELPER
     end
 
     script = <<-ENDS
-    alert("here");
         var d = window.document;
         var r = d.createElement('script');
         r.text = 'KOBJ_config ={    "rids"  : #{r_ids.to_json} #{extra_init_info}};';
         var body = d.getElementsByTagName('body')[0];
+    alert("here 2");
         body.appendChild(r);
         var q = d.createElement('script');
         q.src = '#{kobj_static_js_url}';
