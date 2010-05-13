@@ -69,11 +69,11 @@ module SPEC_HELPER
         var r = d.createElement('script');
         r.text = 'KOBJ_config ={    "rids"  : #{r_ids.to_json} #{extra_init_info}};';
         var body = d.getElementsByTagName('body')[0];
-    alert("here 2");
         body.appendChild(r);
         var q = d.createElement('script');
         q.src = '#{kobj_static_js_url}';
-        body.appendChild(q);    
+    alert("here 3");
+        body.appendChild(q);
 ENDS
 
     puts "Injecting script: " + script
