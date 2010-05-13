@@ -254,7 +254,7 @@ sub eval_ruleset {
   foreach my $rule ( @{ $rule_list->{'rules'} } ) {
     $logger->trace("[rules] foreach pre: ", sub { Dumper($rule->{'pre'}) });
     # set by eval_control_statement in Actions.pm
-    last if $req_info->{$req_info->{'rid'}.':last'};
+    last if $req_info->{$req_info->{'rid'}.':__KOBJ_EXEC_LAST'};
 
     my $rule_name = $rule->{'name'};
 

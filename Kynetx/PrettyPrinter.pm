@@ -453,36 +453,48 @@ sub pp_event_expr {
   if ($node->{'type'} eq 'complex_event') {
     if ($node->{'op'} eq 'between' ||
         $node->{'op'} eq 'notbetween') {
-       $o .= pp_event_expr($node->{'mid'},$indent);
-       $o .= ' ' . (($node->{'op'} eq 'notbetween') ? 'not ' : '') . "between(";
-       $o .= pp_event_expr($node->{'first'},$indent);
-       $o .= ', ';
-       $o .= pp_event_expr($node->{'last'},$indent);
-       $o .= ")\n";
+      $o .= pp_event_expr($node->{'mid'},$indent);
+      $o .= ' ' . (($node->{'op'} eq 'notbetween') ? 'not ' : '') . "between(";
+      $o .= pp_event_expr($node->{'first'},$indent);
+      $o .= ', ';
+      $o .= pp_event_expr($node->{'last'},$indent);
+      $o .= ")\n";
 
     } else {
-       $o .= pp_event_expr($node->{'args'}->[0],$indent);
-       $o .= ' ' . $node->{'op'} . "\n" . " "x$indent;
-       $o .= pp_event_expr($node->{'args'}->[1],$indent);
+      $o .= pp_event_expr($node->{'args'}->[0],$indent);
+      $o .= ' ' . $node->{'op'} . "\n" . " "x$indent;
+      $o .= pp_event_expr($node->{'args'}->[1],$indent);
     }
   } elsif ($node->{'type'} eq 'prim_event') {
 
-    if ($node->{'op'} eq 'pageview') {
-      if (! defined $node->{'legacy'}) {
-	$o .= $node->{'domain'} .':' if $node->{'domain'};
-	$o .= 'pageview '
+    if (!defined $node->{'domain'} || $node->{'domain'} eq 'web') {
+      if ($node->{'op'} eq 'pageview') {
+	if (! defined $node->{'legacy'}) {
+	  $o .= $node->{'domain'}  if $node->{'domain'};
+	  $o .= 'pageview '
+	}
+	$o .= pp_string($node->{'pattern'});
+	$o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
+      } elsif ($node->{'op'} eq 'submit' ||
+	       $node->{'op'} eq 'change' ||
+	       $node->{'op'} eq 'update' ||
+	       $node->{'op'} eq 'dblclick' ||
+	       $node->{'op'} eq 'click') {
+	$o .= $node->{'domain'} if $node->{'domain'};
+	$o .= $node->{'op'} . ' ';
+	$o .= pp_string($node->{'element'});
+	$o .= pp_on_expr($node->{'on'}) if defined $node->{'on'};
+	$o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
       }
-      $o .= pp_string($node->{'pattern'});
-      $o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
-    } elsif ($node->{'op'} eq 'submit' ||
-	     $node->{'op'} eq 'change' ||
-	     $node->{'op'} eq 'click') {
-      $o .= $node->{'domain'} .':' if $node->{'domain'};
+    } elsif ($node->{'domain'} eq 'mail') {
+      $o .= $node->{'domain'} ;
       $o .= $node->{'op'} . ' ';
-      $o .= pp_string($node->{'element'});
-      $o .= pp_on_expr($node->{'on'}) if defined $node->{'on'};
+      foreach my $f (@{ $node->{'filters'} }) {
+	$o .= $f->{'type'} . ' ' . pp_string($f->{'pattern'}) . ' ' ;
+      }
       $o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
     }
+
   }
 
   return $o;

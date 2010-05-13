@@ -85,10 +85,12 @@ sub handler {
     my ($domain,$rid,$eventtype);
     my $eid = '';
 
-    ($domain,$eventtype,$rid,$eid) = $r->path_info =~ m!/event/([a-z+_]+)/?([a-z+_]+)?/?([A-Za-z0-9_;]*)/?(\d+)?!;
+    ($domain,$eventtype,$rid,$eid) = $r->path_info =~ m!/event/([a-z+_]+)/?([a-z+_]+)?/?([A-Za-z0-9_;]*)/?([A-Z0-9-]*)?/?!;
 
-    $eid = $eid || 'unknown';
-#    $logger->debug("processing event $domain/$eventtype on rulesets $rid and EID $eid");
+
+ # Set to be the same now one.  This will pass back the rid to the runtime
+    #$eid = $rid;
+    $logger->debug("processing event $domain/$eventtype on rulesets $rid and EID $eid");
 
     Log::Log4perl::MDC->put('site', $rid);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
@@ -136,7 +138,7 @@ sub process_event {
 
 # not clear we need the request env now
 #    my $req_info = Kynetx::Request::build_request_env($r, $domain, $rids);
-#    $req_info->{'eid'} = $eid || '';
+    $req_info->{'eid'} = $eid || '';
 
     my $ev = mk_event($req_info);
 
@@ -156,6 +158,9 @@ sub process_event {
 #      $logger->debug("Ruleset: ", sub {Dumper $ruleset} );
 
       foreach my $rule (@{$ruleset->{'rules'}}) {
+
+
+	Log::Log4perl::MDC->put('rule', $rule->{'name'});  # no rule for now...
 
 	my $sm_current_name = $rule->{'name'}.':sm_current';
 	my $event_list_name = $rule->{'name'}.':event_list';
@@ -227,6 +232,8 @@ sub process_event {
       $req_info->{'rid'} = $rid;
 
       foreach my $rule (@{ $rules_to_execute->{$rid}->{'rules'} }) {
+
+	Log::Log4perl::MDC->put('rule', $rule->{'name'}); 
 
 	my $rule_name = $rule->{'name'};
 
@@ -325,8 +332,13 @@ sub compile_event_expr {
   if ($eexpr->{'type'} eq 'prim_event') {
     if ($eexpr->{'op'} eq 'pageview') {
       $sm = mk_pageview_prim($eexpr->{'pattern'}, $eexpr->{'vars'});
-    } elsif ($eexpr->{'op'} eq 'submit') {
-      $sm = mk_submit_prim($eexpr->{'element'}, $eexpr->{'pattern'}, $eexpr->{'vars'});
+    } elsif ($eexpr->{'op'} eq 'submit' ||
+	     $eexpr->{'op'} eq 'click' ||
+	     $eexpr->{'op'} eq 'dblclick' ||
+	     $eexpr->{'op'} eq 'change' ||
+	     $eexpr->{'op'} eq 'update'
+	    ) {
+      $sm = mk_dom_prim($eexpr->{'element'}, $eexpr->{'pattern'}, $eexpr->{'vars'}, $eexpr->{'op'});
     } else {
       $logger->warn("Unrecognized primitive event");
     }

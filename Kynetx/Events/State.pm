@@ -52,7 +52,7 @@ our @ISA         = qw(Exporter);
 our %EXPORT_TAGS = (all => [ 
 qw(
 mk_pageview_prim
-mk_submit_prim
+mk_dom_prim
 next_state
 mk_and
 mk_or
@@ -406,19 +406,19 @@ sub pageview_eval {
 $eval_funcs->{'pageview'} = \&pageview_eval;
 
 #-------------------------------------------------------------------------
-# submit
+# submit, click, change
 #-------------------------------------------------------------------------
 
-sub mk_submit_prim {
-  my ($sm_elem, $sm_pattern, $vars) = @_;
+sub mk_dom_prim {
+  my ($sm_elem, $sm_pattern, $vars, $type) = @_;
 
   return mk_prim([$sm_elem, $sm_pattern],
 		 $vars,
-		 'submit'
+		 $type
 		);
 }
 
-sub submit_eval {
+sub dom_eval {
   my ($event, $t) = @_;
 
   my $test = sub {my $event_elem = shift; 
@@ -442,7 +442,12 @@ sub submit_eval {
 
   return $test->($event->element(), $t->{'test'}->[0], $event->url(), $t->{'test'}->[1]);
 }
-$eval_funcs->{'submit'} = \&submit_eval;
+$eval_funcs->{'submit'} = \&dom_eval;
+$eval_funcs->{'click'} = \&dom_eval;
+$eval_funcs->{'change'} = \&dom_eval;
+$eval_funcs->{'update'} = \&dom_eval;
+$eval_funcs->{'dblclick'} = \&dom_eval;
+
 
 
 #-------------------------------------------------------------------------

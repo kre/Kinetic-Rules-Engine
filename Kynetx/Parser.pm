@@ -62,15 +62,17 @@ $::RD_WARN   = 1; # Enable warnings. This will warn on unused rules &c.
 #$::RD_AUTOSTUB = 1;
 #$::RD_TRACE = 1;
 
+#$Parse::RecDescent::skip = qr{\s*//[^\n]*\n|\s*};
+
 my $grammar = <<'_EOGRAMMAR_';
 {my $errors = "";
 } # startup action
 
 # Terminals (macros that can't expand further)
 #
-REGEXP: /\/(\\.|[^\/])+\/(i|g){0,2}/
+REGEXP: m%(/(\\.|[^\/])+/|#(\\.|[^\#])+#)(i|g){0,2}%
 HTML: /<<.*?>>/s  {$return=Kynetx::Parser::html($item[1]) }
-STRING: /"(\\"|[^"])*"|'[^']'/ {$return=Kynetx::Parser::string($item[1]) }
+STRING: /"(\\"|[^"])*"|'[^']*'/ {$return=Kynetx::Parser::string($item[1]) }
 VAR:   /[_A-Za-z]\w*/ 
 NUM:   /(-)?\d*\.\d+|\d+/          
 COMMA: /,/ 
@@ -433,11 +435,20 @@ event_prim: event_domain(?) 'pageview' (STRING | REGEXP) setting(?)
              'domain' => $item[1][0] 
 	   } 
 	  }
-  | event_domain(?) ('submit'|'click'|'change') STRING on_expr(?) setting(?)
+  | event_domain(?) ('submit'|'click'|'dblclick'|'change'|'update') STRING on_expr(?) setting(?)
 	  {$return =
 	   { 'element' => $item[3],
 	     'vars' => $item[5][0],
              'on' => $item[4][0],
+             'type' => 'prim_event',
+             'op' => $item[2],
+             'domain' => $item[1][0]
+	   } 
+	  }
+  | event_domain(?) ('received'|'sent'|'forwarded') mail_filter(s?) setting(?)
+	  {$return =
+	   { 'filters' => $item[3],
+	     'vars' => $item[4][0],
              'type' => 'prim_event',
              'op' => $item[2],
              'domain' => $item[1][0]
@@ -449,11 +460,15 @@ setting: 'setting' '(' VAR(s? /,/) ')'
 	  {$return =  $item[3]
 	  }
 
-event_domain: ('web' | 'mail') ':'
+event_domain: ('web' | 'mail') 
    {$return = $item[1]}
 
 on_expr: 'on' (STRING|REGEXP)
   {$return = $item[2]}
+
+mail_filter: ('from' | 'subject' | 'to')  (STRING | REGEXP)
+   {$return = {'type' => $item[1],
+               'pattern' => $item[2]}}
 
 foreach: 'foreach' expr setting
     {$return =
@@ -1059,6 +1074,14 @@ my $comment_re = qr%
            [^"\\]        ##  Non "\
          )*
          "           ##  End of " ... " string
+        |
+         \#           ##  Start of # ... # regexp
+         (
+           \\.           ##  Escaped char
+         |               ##    OR
+           [^#\\]        ##  Non "\
+         )*
+         \#          ##  End 
        # |         ##     OR  various things which aren't comments:
        #   <<           ##  Start of << ... >> string
        #   .*
@@ -1066,8 +1089,7 @@ my $comment_re = qr%
 
        |         ##     OR
         .           ##  Anything other char
-         [^/"'<\\]*   ##  Chars which doesn't start a comment, string or escape
-#         [^/"'<\\]*   ##  Chars which doesn't start a comment, string or escape
+         [^/"#'<\\]*   ##  Chars which doesn't start a comment, string or escape
        )
      %xs;
 

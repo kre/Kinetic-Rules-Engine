@@ -1,5 +1,11 @@
-2010-05-12 Mark Horstmeier <meh@kynetx.com>
-    * Kynetx/Actions.pm: JAM request to add config to (KOBJ.setFormMaps(map,config))
+2010-05-12  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Actions.pm: Added watch action
+    * Kynetx/Events/State.pm (mk_dom_prim): Generalized to handle all web
+	events except pageview. Added new web events
+    * Kynetx/Events.pm: Added new web events
+    * Kynetx/Parser.pm: Added mail events; removed : from event domains
+    * Kynetx/PrettyPrinter.pm (pp_event_expr): Added mail events
 
 2010-05-07 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Predicates/RSS.pm: bug fix to remove $t hash

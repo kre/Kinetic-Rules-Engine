@@ -364,6 +364,16 @@ EOF
       'after' => [\&handle_delay]
     },
 
+    'watch' => {
+      'js' => <<EOF,
+function(uniq, cb, config, element, type) {
+    KOBJ.watch_event(type, element, config);
+    cb();
+}
+EOF
+      'after' => []
+    },
+
     let_it_snow => {
 		    'js' => <<EOF,
 function(uniq, cb, config) {
@@ -1004,7 +1014,7 @@ sub eval_control_statement {
     my $js ='';
 
     if ($expr->{'statement'} eq 'last') {
-      $req_info->{$req_info->{'rid'}.':last'} = 1;
+      $req_info->{$req_info->{'rid'}.':__KOBJ_EXEC_LAST'} = 1;
     }
 
     return $js;

@@ -337,7 +337,7 @@ $ev5->submit("#my_form");
 #diag Dumper $ev5;
 
 # test the pageview prim SMs
-my $sm5 = mk_submit_prim("#my_form");
+my $sm5 = mk_dom_prim("#my_form", '', '', 'submit');
 
 #diag Dumper $sm5;	    
 

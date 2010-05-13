@@ -540,6 +540,15 @@ $d[$i]  = 0;
 $i++;
 
 
+$e[$i] = q%my_url.replace(#http://www.amazon.com#,"foozle::")%;
+$x[$i] = {
+   'val' => 'foozle::/gp/products/123456789/',
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
+
 $e[$i] = q#my_str.match(/string/)#;
 $x[$i] = {
    'val' => 'true',
@@ -550,6 +559,42 @@ $i++;
 
 
 $e[$i] = q#my_str.match(/strung/)#;
+$x[$i] = {
+   'val' => 'false',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q%my_str.match(#string#)%;
+$x[$i] = {
+   'val' => 'true',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q%my_str.match(#strung#)%;
+$x[$i] = {
+   'val' => 'false',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q%my_url.match(#http://www.amazon.com#)%;
+$x[$i] = {
+   'val' => 'true',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q%my_str.match(#https://www.amazon.com#)%;
 $x[$i] = {
    'val' => 'false',
    'type' => 'bool'

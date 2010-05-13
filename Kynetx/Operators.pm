@@ -351,7 +351,7 @@ sub eval_replace {
     
 	my $pattern = '';
 	my $modifiers;
-	($pattern, $modifiers) = $rands->[0]->{'val'} =~ m#/(.+)/(i|g){0,2}#; 
+	($pattern, $modifiers) = $rands->[0]->{'val'} =~ m%[#/](.+)[#/](i|g){0,2}%; 
 
 	$modifiers = $modifiers || '';
 
@@ -407,7 +407,7 @@ sub eval_match {
     
 	my $pattern = '';
 	my $modifiers;
-	($pattern, $modifiers) = $rands->[0]->{'val'} =~ m#/(.+)/(i|g){0,2}#; 
+	($pattern, $modifiers) = $rands->[0]->{'val'} =~ m%[/#](.+)[/#](i|g){0,2}%; 
 
 	$modifiers = $modifiers || '';
 
