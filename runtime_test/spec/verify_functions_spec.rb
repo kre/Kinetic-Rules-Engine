@@ -210,7 +210,7 @@ describe "Verify Runtime Functions" do
   end
 
 
-  it "have defined a function called $KOBJ.kGrowl" do
+  it "have defined a function called $KOBJ.tabSlideOut" do
     page.js_eval("'' + (typeof(window.$KOBJ.tabSlideOut)  != 'undefined')").to_s.should == "true"
   end
 
