@@ -72,6 +72,7 @@ module SPEC_HELPER
         body.appendChild(r);
         var q = d.createElement('script');
         q.src = '#{kobj_static_js_url}';body.appendChild(q);
+    alert("test");
 ENDS
 
     puts "Injecting script: " + script
