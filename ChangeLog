@@ -1,3 +1,58 @@
+2010-05-12  Cid Dennis <cid@kynetx.com>
+    * Added more testcases for runtime
+    * Refactored Directory structure for example Javascript Files
+    * Added Event Manager Framework
+    * Tied Runtime to new Event Manager Framework
+  M     /bin/install-init-files.pl
+  A	/bin/install-js-resources.rb
+  D	/etc/js/0.8
+  A	/etc/js/0.9/frameworks/bg_iframe
+  A	/etc/js/0.9/frameworks/bg_iframe/1.0
+  A	/etc/js/0.9/frameworks/bg_iframe/1.0/jquery.bgiframe.js
+  A	/etc/js/0.9/frameworks/dom_watch
+  A	/etc/js/0.9/frameworks/dom_watch/1.0
+  A	/etc/js/0.9/frameworks/dom_watch/1.0/krl-domwatch.js
+  A	/etc/js/0.9/frameworks/form_fill
+  A	/etc/js/0.9/frameworks/form_fill/1.0
+  A	/etc/js/0.9/frameworks/form_fill/1.0/formfill.js
+  A	/etc/js/0.9/frameworks/jquery
+  A	/etc/js/0.9/frameworks/jquery/1.4.2
+  A	/etc/js/0.9/frameworks/jquery/1.4.2/jquery.js
+  A	/etc/js/0.9/frameworks/jquery_sprintf
+  A	/etc/js/0.9/frameworks/jquery_sprintf/1.0.3
+  A	/etc/js/0.9/frameworks/jquery_sprintf/1.0.3/jquery_sprintf.js
+  A	/etc/js/0.9/frameworks/json
+  A	/etc/js/0.9/frameworks/json/1.2
+  A	/etc/js/0.9/frameworks/json/1.2/jquery.json-1.2.js
+  A	/etc/js/0.9/frameworks/kgrowl
+  A	/etc/js/0.9/frameworks/kgrowl/1.0
+  A	/etc/js/0.9/frameworks/kgrowl/1.0/kgrowl-1.0.js
+  A	/etc/js/0.9/frameworks/perc_and_annotate
+  A	/etc/js/0.9/frameworks/perc_and_annotate/1.0
+  A	/etc/js/0.9/frameworks/perc_and_annotate/1.0/krl-annotate.js
+  A	/etc/js/0.9/frameworks/perc_and_annotate/1.0/krl-percolation.js
+  A	/etc/js/0.9/frameworks/sidetab
+  A	/etc/js/0.9/frameworks/sidetab/1.0
+  A	/etc/js/0.9/frameworks/sidetab/1.0/krl-sidetab.js
+  A	/etc/js/0.9/frameworks/snowfall
+  A	/etc/js/0.9/frameworks/snowfall/1.0
+  A	/etc/js/0.9/frameworks/snowfall/1.0/snowfall.jquery.js
+  D	/etc/js/0.9/jquery-1.4.2.js
+  D	/etc/js/0.9/jquery-ui-1.8.custom.js
+  D	/etc/js/0.9/jquery.bgiframe.js
+  D	/etc/js/0.9/jquery.json-1.2.js
+  D	/etc/js/0.9/kgrowl-1.0.js
+  D	/etc/js/0.9/krl-annotate.js
+  M	/etc/js/0.9/krl-application.js
+  D	/etc/js/0.9/krl-domwatch.js
+  A	/etc/js/0.9/krl-eventmanager.js
+  M	/etc/js/0.9/krl-functions.js
+  D	/etc/js/0.9/krl-percolation.js
+  M	/etc/js/0.9/krl-runtime.js
+  M	/etc/js/0.9/krl-setup.js
+  D	/etc/js/0.9/krl-sidetab.js
+  D	/etc/js/0.9/snowfall.jquery.js
+
 2010-05-12  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Actions.pm: Added watch action
