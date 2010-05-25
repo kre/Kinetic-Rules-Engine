@@ -210,15 +210,15 @@ sub parse_api {
 
     my $krl = $req_info->{'krl'};
 
-#    $logger->debug("KRL: ", $krl);
+    $logger->debug("KRL: ", $krl);
 
     my $json = "";
     if($krl) {
 
 	$logger->debug("[parse_api] parsing krl as $submethod");
 
-	my $tree;
-	my $errors;
+	my $tree = "";
+	my $errors = "";
 	if($submethod eq 'ruleset') {
 	    $tree = Kynetx::Parser::parse_ruleset($krl);
 	    $errors .= lint_ruleset($tree);
@@ -235,7 +235,8 @@ sub parse_api {
 
 	$tree->{'errors'} = $errors if($errors);
 
-#	$logger->debug(sub {Dumper($tree)});
+	$logger->debug("Tree: ", sub {Dumper($tree)});
+	$logger->debug("Errors: ", sub {Dumper($errors)});
 
 	if(ref $tree eq "HASH" && defined $tree->{'error'}) {
 	    $logger->debug("Parse failed for $krl as $submethod");
