@@ -1,3 +1,15 @@
+2010-05-25  Cid Dennis <cid@kynetx.com>
+    * Updated runtime to better handle external resources and fixed the engine not to execute the closure before 
+      it was passed into the runtime.  
+        Kynetx/Rules.pm
+	etc/js/0.9/frameworks/kgrowl/1.0/kgrowl-1.0.js
+	etc/js/0.9/krl-runtime-footer.js
+	etc/js/0.9/krl-setup.js
+	etc/js/0.9/krl-application.js
+	etc/js/0.9/krl-runtime.js
+	etc/js/0.9/krl-functions.js
+	etc/js/0.9/krl-runtime-header.js
+
 2010-05-12  Cid Dennis <cid@kynetx.com>
     * Added more testcases for runtime
     * Refactored Directory structure for example Javascript Files

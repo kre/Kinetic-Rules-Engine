@@ -3,15 +3,33 @@ KOBJ.proto = function() {
 };
 
 //this method is overridden in sandboxed environments
-KOBJ.require = function(url) {
-    var r = document.createElement("script");
-    r.src = url;
-    r.type = "text/javascript";
-    r.onload = r.onreadystatechange = KOBJ.url_loaded_callback;
-    //  console.log("Requiring " + url);
-    var body = document.getElementsByTagName("body")[0] ||
-               document.getElementsByTagName("frameset")[0];
-    body.appendChild(r);
+KOBJ.require = function(url, callback_params) {
+
+    //KOBJ.log("Require " + url);
+    if (typeof(async_url_request) != "undefined")
+    {
+        var params = {}
+        if (typeof(callback_params) != "undefined") {
+            params = $KOBJ.extend({data_type : "js"}, callback_params, true);
+        }
+        else {
+            params = {data_type :"js"};
+        }
+        //        alert("have params: " + params);
+        async_url_request(url, KOBJ.url_loaded_callback, params);
+    }
+    else
+    {
+      //  KOBJ.log("adding script " + url);
+        var r = document.createElement("script");
+        r.src = url;
+        r.type = "text/javascript";
+        r.onload = r.onreadystatechange = KOBJ.url_loaded_callback;
+        //  console.log("Requiring " + url);
+        var body = document.getElementsByTagName("body")[0] ||
+                   document.getElementsByTagName("frameset")[0];
+        body.appendChild(r);
+    }
 
 };
 
@@ -351,36 +369,67 @@ KOBJ.close_notification = function(s) {
 /*
  Called when one of our script is loaded including css links
  */
-KOBJ.url_loaded_callback = function() {
+KOBJ.url_loaded_callback = function(loaded_url, response, callback_params) {
 
-    var done = false;
-    if (!done && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete"))
-    {
-        done = true;
-        var url = null;
-        if (typeof(this.src) != "undefined")
-        {
-            url = this.src;
-        }
-        else
-        {
-            url = this.href;
-        }
-        if (url == null)
-        {
-            return;
-        }
-//        alert("Go callback for " + url);
 
-        if (KOBJ.external_resources[url] != null)
+//    if (typeof(loaded_url) != "undefined")
+//    {
+//        if (callback_params.data_type == "js")
+//        {
+//            eval(response);
+//        }
+//        else
+//        {
+//            $KOBJ("head").append($KOBJ("<style>").text(response));
+//        }
+//        if (KOBJ.external_resources[loaded_url] != null)
+//        {
+//            KOBJ.external_resources[loaded_url].did_load();
+//        }
+//        else
+//        {
+//        }
+//    }
+//    else
+//    {
+        var done = false;
+        if (!done && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete"))
         {
-//            alert("Found a resource and letting it know");
-            KOBJ.external_resources[url].did_load();
-        }
-//        alert("Done letting everyone know");
+            done = true;
+            var url = null;
+            // This would happen if we were in a browser sandbox.
+            if (typeof(loaded_url) == "undefined")
+            {
+                if (typeof(this.src) != "undefined")
+                {
+                    url = this.src;
+                }
+                else
+                {
+                    url = this.href;
+                }
+                if (url == null)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                url = loaded_url;
+            }
 
-        this.onload = this.onreadystatechange = null;
-    }
+            //        alert("Go callback for " + url);
+
+            if (KOBJ.external_resources[url] != null)
+            {
+                //            alert("Found a resource and letting it know");
+                KOBJ.external_resources[url].did_load();
+            }
+            //        alert("Done letting everyone know");
+
+            this.onload = this.onreadystatechange = null;
+        }
+//    }
 };
 
 /*
@@ -391,45 +440,41 @@ KOBJ.url_loaded_callback = function() {
  here  must be ".tab span"
 
  */
-KOBJ.did_stylesheet_load = function(url, selector) {
-
-    var found_style = false;
-    $KOBJ.each(document.styleSheets, function(sheet_index, style_sheet) {
-        // We have the stylesheet
-        if (style_sheet.href != null) {
-            if (style_sheet.href == url) {
-                // Look for the selector
-                //                                if (style_sheet.rules != null)
-                //                                {
-                //                                    $KOBJ.each(style_sheet.rules, function(rule_index, rule) {
-                //                                        if (rule.selectorText == selector) {
-                //                                            KOBJ.log("Also found the selector");
-                //                                            found_style = true;
-                //                                            // Return false to break out of the each loop.
-                //                                            return false;
-                //                                        }
-                //                                    });
-                //                                }
-                found_style = true;
-                return false;
-            }
-        }
-    });
-    return found_style;
-};
+//KOBJ.did_stylesheet_load = function(url, selector) {
+//
+//    var found_style = false;
+//    $KOBJ.each(document.styleSheets, function(sheet_index, style_sheet) {
+//        // We have the stylesheet
+//        if (style_sheet.href != null) {
+//            if (style_sheet.href == url) {
+//                found_style = true;
+//                return false;
+//            }
+//        }
+//    });
+//    return found_style;
+//};
 
 /*
  Add a link tag to the head of the document
  url = URL to stylesheet
  */
 KOBJ.load_style_sheet_link = function(url) {
-    var head = KOBJ.document.getElementsByTagName('head')[0];
-    var new_style_sheet = document.createElement("link");
-    new_style_sheet.href = url;
-    new_style_sheet.rel = "stylesheet";
-    new_style_sheet.type = "text/css";
-    new_style_sheet.onload = new_style_sheet.onreadystatechange = KOBJ.url_loaded_callback;
-    head.appendChild(new_style_sheet);
+
+//    if (typeof(async_url_request) == "undefined")
+//    {
+        var head = KOBJ.document.getElementsByTagName('head')[0];
+        var new_style_sheet = document.createElement("link");
+        new_style_sheet.href = url;
+        new_style_sheet.rel = "stylesheet";
+        new_style_sheet.type = "text/css";
+        new_style_sheet.onload = new_style_sheet.onreadystatechange = KOBJ.url_loaded_callback;
+        head.appendChild(new_style_sheet);
+//    }
+//    else
+//    {
+//        async_url_request(url, KOBJ.url_loaded_callback, {data_type : "css"})
+//    }
 };
 
 
@@ -450,12 +495,12 @@ KOBJ.errorstack_submit = function(key, e) {
     var txt = "_s=" + key + "&_r=img";
     txt += "&Msg=" + escape(e.message ? e.message : e);
     txt += "&URL=" + escape(e.fileName ? e.fileName : "");
-    txt += "&PageURL" +escape(document.location.href);    
+    txt += "&PageURL" + escape(document.location.href);
     txt += "&Line=" + (e.lineNumber ? e.lineNumber : 0);
     txt += "&name=" + escape(e.name ? e.name : e);
     txt += "&Platform=" + escape(navigator.platform);
     txt += "&UserAgent=" + escape(navigator.userAgent);
-    txt += "&stack=" + escape(e.stack ? e.stack.substring(0,500) : "");
+    txt += "&stack=" + escape(e.stack ? e.stack.substring(0, 500) : "");
     var i = document.createElement("img");
     i.setAttribute("src", "http://www.errorstack.com/submit?" + txt);
     document.body.appendChild(i);
@@ -507,18 +552,12 @@ KOBJ.css = function(css) {
 };
 
 /* Logs data to the browsers windows console */
-if(typeof(KOBJ.log) == "undefined") {
     //alert("type" + typeof(KOBJ.log));
-    KOBJ.log = function(msg) {
-        if (window.console != undefined && console.log != undefined) {
-            console.log(msg);
-        }
-    };
-}
-else
-{
-    alert("was defined");    
-}
+KOBJ.log = function(msg) {
+    if (window.console != undefined && console.log != undefined) {
+        console.log(msg);
+    }
+};
 
 
 KOBJ.error = function(msg) {

@@ -36,7 +36,9 @@ KrlExternalResource.prototype.load = function() {
 KrlExternalResource.prototype.is_loaded = function() {
     if (this.type == "css")
     {
-        return KOBJ.did_stylesheet_load(this.url);
+        this.loaded = true;
+        return this.loaded;
+//        return KOBJ.did_stylesheet_load(this.url);
     }
     return this.loaded;
 };
@@ -49,6 +51,10 @@ KrlExternalResource.prototype.is_loaded = function() {
 KrlExternalResource.prototype.did_load = function() {
     this.loaded = true;
     this.requested = false;
+    
+     $KOBJ.each(KOBJ.applications, function(index, app) {
+        app.execute_pending_closures();
+    });
 };
 
 /*  -----------------------------------------
@@ -92,22 +98,6 @@ function KrlApplication(app)
 }
 
 
-/*
- * This is called when a resource was loaded and the browser has
- * notified us.  If the resource is not for this application nothing
- * will happen.
- */
-KrlApplication.prototype.external_resource_loaded = function(url) {
-    var my_resources = this.external_resources || {};
-    $KOBJ.each(my_resources, function (key, value) {
-        if (key == url) {
-            KOBJ.log("Resource marked as loaded:  " + url);
-            value.did_load();
-        }
-    });
-    // Execute and closures pending because they were waiting for resources.
-    this.execute_pending_closures();
-};
 
 KrlApplication.prototype.store_data_sets = function(datasetdata)
 {
@@ -195,13 +185,15 @@ KrlApplication.prototype.execute_closure = function(guid, a_closure)
 {
     if (!this.is_data_loaded() || !this.are_resources_loaded())
     {
+        KOBJ.log("Adding closure to pending list");
         this.pending_closures[guid] = a_closure;
     }
     else
     {
+        KOBJ.log("Executing closure");
         KOBJEventManager.event_fire_complete(this, guid);
         this.execute_pending_closures();
-        a_closure;
+        a_closure($KOBJ);
     }
 
 };
@@ -212,17 +204,18 @@ KrlApplication.prototype.execute_closure = function(guid, a_closure)
  */
 KrlApplication.prototype.execute_pending_closures = function()
 {
-    if ($KOBJ.isEmptyObject(this.pending_closures))
+    if (!this.is_data_loaded() || !this.are_resources_loaded())
     {
         return;
     }
 
     $KOBJ.each(this.pending_closures, function(guid, the_closure) {
-        the_closure();
+        the_closure($KOBJ);
         KOBJEventManager.event_fire_complete(this, guid);
     });
+    
+    this.pending_closures = {};
 
-    this.pending_closures();
 };
 
 KrlApplication.prototype.run = function()
@@ -287,7 +280,7 @@ KrlApplication.prototype.fire_event = function(event, data, guid)
 
 
 
-    KOBJ.require(event_url);
+    KOBJ.require(event_url,{rule_execute :  true});
 };
 
 

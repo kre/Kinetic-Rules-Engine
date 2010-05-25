@@ -9,7 +9,6 @@
      "position": "fixed"
    };
 
-
    var pos = $.kGrowl.defaults.position.split("-");
 
    // if ($.browser.msie && parseInt($.browser.version) < 7 && !window["XMLHttpRequest"]) {

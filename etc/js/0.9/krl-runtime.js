@@ -3,15 +3,6 @@ KOBJ.get_application = function(name) {
 };
 
 
-// Example config
-//KOBJ_config= {'rids':['a93x7'],
-//    'a93x7:kynetx_app_version':'dev',
-//    init:{
-//        eval_host:'cs.kobj.net',
-//        callback_host:'log.kobj.net'
-//    }
-//};
-
 KOBJ.add_extra_page_var = function(key, value)
 {
     /* Ignore if the key is rids, init or has a : which means there is an app id */
@@ -165,7 +156,7 @@ KOBJ.watch_event = function(event,selector,config)
 
 //start closure and data registration code
 KOBJ.registerDataSet = function(rid, datasets) {
-    KOBJ.log("registering dataset " + rid);
+//    KOBJ.log("registering dataset " + rid);
     var app = KOBJ.get_application(rid);
     app.store_data_sets(datasets);
 };
@@ -179,10 +170,10 @@ KOBJ.clearExecutionDelay = function(rid) {
     app.run();
 };
 
-KOBJ.registerClosure = function(rid, closure,guid) {
-    KOBJ.log("registering closure " + rid + " - " + guid );
+KOBJ.registerClosure = function(rid, data,guid) {
+//    KOBJ.log("Registering external resources " + rid);
     var app = KOBJ.get_application(rid);
-    app.execute_closure(guid,closure);
+    app.execute_closure(guid,data)  ;
 };
 
 KOBJ.runit = function() {
