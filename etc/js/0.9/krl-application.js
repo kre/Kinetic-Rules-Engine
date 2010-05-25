@@ -185,12 +185,12 @@ KrlApplication.prototype.execute_closure = function(guid, a_closure)
 {
     if (!this.is_data_loaded() || !this.are_resources_loaded())
     {
-        KOBJ.log("Adding closure to pending list");
+        KOBJ.itrace("Adding closure to pending list "  + this.app_id + " : " + guid);
         this.pending_closures[guid] = a_closure;
     }
     else
     {
-        KOBJ.log("Executing closure");
+        KOBJ.itrace("Executing closure " + this.app_id + " : " + guid);
         KOBJEventManager.event_fire_complete(this, guid);
         this.execute_pending_closures();
         a_closure($KOBJ);
@@ -280,7 +280,7 @@ KrlApplication.prototype.fire_event = function(event, data, guid)
 
 
 
-    KOBJ.require(event_url,{rule_execute :  true});
+    KOBJ.require(event_url,{ruleexecute :  true});
 };
 
 

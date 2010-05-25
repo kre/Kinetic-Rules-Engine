@@ -78,7 +78,7 @@ KOBJ.add_app_config = function(app_config) {
             app = new KrlApplication(value);
             app.update_from_config(app_config);
             KOBJ.applications[value] = app;
-            // TODO: This is the old way need here for backwords  compat
+            // TODO: This is the old way need here for backwards  compat
             KOBJ[value] = {};
         }
         app_id_s[index] = app.app_id;
@@ -118,7 +118,7 @@ KOBJ.kvars_to_json = function() {
  using it.
  */
 KOBJ.registerExternalResources = function(rid, resources) {
-    KOBJ.log("Registering external resources " + rid);
+    KOBJ.itrace("Registering external resources " + rid);
     var resource_array = [];
     $KOBJ.each(resources, function (url, options) {
         if (KOBJ.external_resources[url] == null)

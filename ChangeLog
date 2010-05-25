@@ -1,4 +1,7 @@
 2010-05-25  Cid Dennis <cid@kynetx.com>
+    * Fixed issue in runtime where apps using same selector would get duplcated incorrectly. Now dup check is done per app not per selector.
+  
+2010-05-25  Cid Dennis <cid@kynetx.com>
     * Updated runtime to better handle external resources and fixed the engine not to execute the closure before 
       it was passed into the runtime.  
         Kynetx/Rules.pm

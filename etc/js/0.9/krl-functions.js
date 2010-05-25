@@ -587,6 +587,11 @@ KOBJ.trace = function(msg) {
     }
 };
 
+KOBJ.itrace = function(msg) {
+    return;
+//    KOBJ.log(msg);
+};
+
 KOBJ.run_when_ready = function() {
     //see if page is already loaded (ex: tags planted AFTER dom ready) to know if we should wait for document onReady
     //this code block is adapted from swfObject code used for the same purpose

@@ -83,8 +83,10 @@
     {
         var event = KOBJEventManager.find_event_by_guid(guid);
         delete KOBJEventManager.current_fires[event][guid][application.app_id];
+        KOBJ.itrace("Event Fire Complete " + application.app_id + " - " + guid);
         if ($KOBJ.isEmptyObject(KOBJEventManager.current_fires[event][guid]))
         {
+            KOBJ.itrace("Remove Guid : " + guid);
             delete KOBJEventManager.current_fires[event][guid];
         }
 
@@ -117,7 +119,7 @@
                     if (!app_data["processing"])
                     {
 
-                        KOBJ.log("Fireing Event " + app_id + " - " + app_data["processing"]);
+                        KOBJ.itrace("Fireing Event " + app_id + " - " + app_data["processing"]);
                         app_data["app"].fire_event(event,app_data,guid);
                         app_data.processing = true;
                     }
@@ -143,7 +145,7 @@
             $KOBJ.each(KOBJEventManager.current_fires[event], function(guid, guid_data)
             {
                 $KOBJ.each(KOBJEventManager.current_fires[event][guid], function(app_id, app_data) {
-                    if(app_data.selector == selector)
+                    if(app_data.selector == selector && app.app_id == app_id)
                     {
                         found_event = true;
                     }
@@ -162,7 +164,7 @@
     {
         if(KOBJEventManager.is_dup_event(event,data.selector,app))
         {
-            KOBJ.log("Dup Event " + event );
+            KOBJ.itrace("Dup Event " +  event  + " : " + app.app_id);
             return;
         }
         // When adding to the queue we do not allow the same event for the same selector to
@@ -261,7 +263,7 @@
      * This is the call back for all events. It sorts out what kind of event and does the right thing.
      */
     KOBJEventManager.event_handler = function(event) {
-        KOBJ.log("in event handle");
+        KOBJ.itrace("in event handle");
         var event_data = event.data;
         var current_guid = KOBJEventManager.eid();
 
@@ -272,6 +274,7 @@
         }
 
         $KOBJ.each(KOBJEventManager.events["" + event.type][event_data.selector], function(app_id, application) {
+
             KOBJEventManager.add_to_fire_queue(current_guid, event.type, event_data, application);
         });
 
