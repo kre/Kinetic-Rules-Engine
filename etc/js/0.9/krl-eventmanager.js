@@ -236,10 +236,10 @@
      * This is how an application remove it self from the event manager.
      */
     KOBJEventManager.deregister_interest = function(event, selector, application) {
-        if (events[event][selector] != null)
+        if (KOBJEventManager.events[event][selector] != null)
         {
-            delete events[event][selector][application.app_id];
-            if ($KOBJ.isEmptyObject(KOBJEventManager.events[event][selector]))
+            delete KOBJEventManager.events[event][selector][application.app_id];
+            if (event != "pageview" && $KOBJ.isEmptyObject(KOBJEventManager.events[event][selector]))
             {
                 $KOBJ(selector).unbind(event + "." + selector);
             }
@@ -257,6 +257,12 @@
 
         // We fake out a jquery event in order to reuse the code.
         KOBJEventManager.event_handler({"type" : event, "data" : { "selector" : "unknown"}});
+
+        // Page View events can only happen one time so no need to keep them around.
+        if(event == "pageview")
+        {
+          KOBJEventManager.deregister_interest(event, "unknown", application);
+        }
     };
 
     /*
