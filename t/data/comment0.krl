@@ -23,6 +23,10 @@ What about <a href="http://www.windley.com">URLs in double quotes</a>?
 </div>
       >>;
 
+      third_thing = <<
+K("#searchbutton " + index).html("<img src='https://kynetx-apps.s3.amaz ...' />"); 
+>>;
+
     } 
 
    //comments in strings shouldn't be deleted

@@ -1082,10 +1082,10 @@ my $comment_re = qr%
            [^#\\]        ##  Non "\
          )*
          \#          ##  End 
-       # |         ##     OR  various things which aren't comments:
-       #   <<           ##  Start of << ... >> string
-       #   .*
-       #   >>           ##  End of " ... " string
+        |         ##     OR  various things which aren't comments:
+          <<           ##  Start of << ... >> string
+          .*
+          >>           ##  End of " ... " string
 
        |         ##     OR
         .           ##  Anything other char
