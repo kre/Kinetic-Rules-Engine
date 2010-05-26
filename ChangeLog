@@ -1,3 +1,7 @@
+2010-05-26  Phil Windley  <pjw@kynetx.com>
+
+	* Kynetx/Parser.pm (structure_operators): fixed comment in << " \'.//..\' " >> problem
+
 2010-05-25 Mark Horstmeier <meh@kynetx.com>
     * Turned up logging in RuleManager.pm
     
