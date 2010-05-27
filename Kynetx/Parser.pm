@@ -1084,7 +1084,7 @@ my $comment_re = qr%
          \#          ##  End 
         |         ##     OR  various things which aren't comments:
           <<           ##  Start of << ... >> string
-          .*
+          .*?
           >>           ##  End of " ... " string
 
        |         ##     OR
