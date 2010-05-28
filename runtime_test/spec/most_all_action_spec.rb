@@ -34,6 +34,11 @@ describe "Verify Runtime Functions" do
      page.text("//div[@class='KOBJ_message']").should == "This is a sample rule."
   end
 
+  it "should replace element value" do
+     page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='mychangeelement']"});
+     page.text("//*[@id='mychangeelement']/@value").should == "Ihavechanged"
+  end
+
   it "should have appended text to div with id of area9" do
      page.text("//div[@id='area9']").should == "prepend to area 9Area 9added to area 9"
   end

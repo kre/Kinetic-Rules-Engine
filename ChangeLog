@@ -1,4 +1,10 @@
 2010-05-28  Cid Dennis <cid@kynetx.com>
+    * Fixed issue 747 where people wanted a simple action to changes attributes on an html page.  There is now a new
+       action called set_element_attr(<jquery selector>,<attribute name>,<value to set>)
+       runtime_test/spec/most_all_action_spec.rb
+       Kynetx/Actions.pm
+
+2010-05-28  Cid Dennis <cid@kynetx.com>
     * Fixed issue with KGrowl where default were never reqest between request.
 	Kynetx/Actions.pm
 	etc/js/0.9/frameworks/kgrowl/1.0/kgrowl-1.0.js

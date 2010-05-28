@@ -409,6 +409,16 @@ EOF
     'after' => [\&handle_delay]
         
     },
+	set_element_attr => {
+	       'js' => <<EOF,
+	function(uniq, cb, config, selector, attr,value) {
+	    \$K(selector).attr(attr,value);
+	    cb();
+	}
+EOF
+	  'after' => [\&handle_delay]
+	},
+
 
 };
 
