@@ -159,11 +159,15 @@ EOF
     notify_two => {
 	 'js' => <<EOF,
 function(uniq, cb, config, header, msg) {
-  \$K.kGrowl.defaults.header = header;
-  if(typeof config === 'object') {
-    \$K.extend(\$K.kGrowl.defaults,config);
-  }
-  \$K.kGrowl(msg);
+	if(typeof config != 'object')
+   {
+ 	config = {header : header};
+   }
+else
+{
+ 	\$K.extend(config,{header : header});
+}
+   \$K.kGrowl(msg,config);
   cb();
 }
 EOF
