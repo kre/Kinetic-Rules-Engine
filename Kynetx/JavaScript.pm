@@ -454,7 +454,6 @@ sub mk_js_str {
 	my $str = join(" ",@_);
 	$logger->trace("joined: ",$str);
 	$str = escape_js_str($str);
-	$str =~ y/\n\r/  /; # remove newlines
 	$str =~ s/#{([^}]*)}/'+$1+'/g;
 	$logger->trace("escaped: ",$str);
 	return "'". $str . "'";
@@ -465,7 +464,11 @@ sub mk_js_str {
 
 sub escape_js_str {
     my ($val) = @_;
-    $val =~ s/'/\\'/g if defined $val;  #' - for syntax highlighting
+    if (defined $val) {
+      $val =~ s/'/\\'/g ;  #' - for syntax highlighting
+      $val =~ s/\n/\\n/g; 
+      $val =~ s/\r/\\r/g; 
+    }
     return $val;
 }
 

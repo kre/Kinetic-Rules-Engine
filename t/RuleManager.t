@@ -211,8 +211,7 @@ global {
      dataset cached_timeline <- "http://twitter.com/statuses/public_timeline.json" cachable;
 
      emit <<
-var foobar = 4;
-     >>;
+var foobar = 4;    >>;
 
 }
 GLOBAL
@@ -280,7 +279,7 @@ meta {
 META
 
 my $test_json_meta = <<JSON;
-{"logging":"on","meta_start_line":1,"description":"Ruleset for testing something or other.  ","meta_start_col":1}
+{"logging":"on","meta_start_line":1,"description":"Ruleset for testing something or other.\\n  ","meta_start_col":1}
 JSON
 
 my $json;

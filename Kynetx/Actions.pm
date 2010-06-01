@@ -425,36 +425,6 @@ EOF
 
 
 
-# sub emit_var_decl {
-#     my($scope_hash) = @_;
-#     my $logger = get_logger();
-#     my $js = '';
-#     my $exempted = {
-# 	'uniq' => 1,
-# 	'uniq_id' => 1,
-# 	'___order' => 1,
-#     };
-# #    $logger->debug(Dumper($scope_hash));
-#     foreach my $lhs (@{$scope_hash->{'___order'}}) {
-# 	next if $exempted->{$lhs} || $lhs =~ m/^datasource:/;
-# 	my $val = $scope_hash->{$lhs};
-# 	my $t = infer_type($val);
-# 	if($t eq 'str') {
-# 	    $val = "'".escape_js_str($val)."'";
-# 	    # relace tmpl vars with concats for JS
-# 	    $val =~ y/\n\r/  /; # remove newlines
-# 	    $val =~ s/#{([^}]*)}/'+$1+'/g;
-# 	} elsif ($t eq 'hash' || $t eq 'array') {
-# 	    $val = encode_json($val);
-# 	}
-# 	$logger->debug("[decl] $lhs has type: $t");
-# 	$js .= gen_js_var($lhs, $val);
-#     }
-#     return $js;
-
-# }
-
-
 sub build_js_load {
     my ($rule, $req_info, $rule_env, $session) = @_;
 
@@ -474,12 +444,9 @@ sub build_js_load {
 #    $logger->debug("Rule ENV: ", sub {my $f = Dumper($rule_env);$f =~ y/\n//d;return $f});
 
     $logger->debug("Rule name: ", $rule->{'name'});
-    # now do decls in order
-   # my $scope_hash = flatten_env($rule_env);
-   # $js .= emit_var_decl($scope_hash);
 
     # emits
-    $js .= $rule->{'emit'} . "\n" if(defined $rule->{'emit'});
+    $js .= eval_emit($rule->{'emit'}) . "\n" if(defined $rule->{'emit'});
 
 
     # callbacks

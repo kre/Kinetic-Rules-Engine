@@ -197,6 +197,14 @@ is(escape_js_str($no_escape), $no_escape, "Escape a string");
 is(escape_js_str($pls_escape), $escaped, "Escape a string");
 $test_count += 2;
 
+my $nl_escape = "foo
+bar
+foo";
+$escaped = 'foo\nbar\nfoo';
+#diag $nl_escape;
+#diag escape_js_str($nl_escape);
+is(escape_js_str($nl_escape), $escaped, "Escape newlines in s string");
+$test_count++;
 
 
 #--------------------------------------------------------------------------------

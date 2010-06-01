@@ -159,7 +159,7 @@ SKIP: {
     # test EVAL function
 
     my $url_3 = "$dn/eval/$ruleset/1231363179515.js?caller=http%3A//www.windley.com/foo/bar.html&referer=http%3A//www.windley.com/&kvars=%7B%22foo%22%3A%205%2C%20%22bar%22%3A%20%22fizz%22%2C%20%22bizz%22%3A%20%5B1%2C%202%2C%203%5D%7D&title=Phil%20Windleys%20Technometria";
-    #diag "Testing eval with $url_3";
+#    diag "Testing eval with $url_3";
 
     $mech->get_ok($url_3);
 

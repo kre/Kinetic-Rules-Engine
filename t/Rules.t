@@ -794,8 +794,7 @@ rule test_page_id is active {
        pt = page:id("product_name");
        
        html = <<
-<p>This is the product title: #{pt}</p>
-       >>;
+<p>This is the product title: #{pt}</p>       >>;
 
    }
 
@@ -910,8 +909,7 @@ rule extended_quote_test is active {
    
    pre {
      welcome = <<
-Don't be false please!  Be true!
-     >>; 
+Don't be false please!  Be true!     >>; 
    }
    alert(welcome);
 }
@@ -1250,12 +1248,10 @@ rule foreach_here is active {
    foreach [2,7] setting (x)
     pre {
       y = <<
-This is the number #{x}
->>;
+This is the number #{x}>>;
       z = 6;
       w = <<
-This is another number #{z}
->>;
+This is another number #{z}>>;
     }
     alert(x+y+z);
 }
@@ -1312,12 +1308,10 @@ rule foreach_here is active {
     pre {
       p = x.pick("\$..foo");
       y = <<
-This is the number #{p}
->>;
+This is the number #{p}>>;
       z = 6;
       w = <<
-This is another number #{z}
->>;
+This is another number #{z}>>;
     }
     alert(x+y+z);
 }
@@ -1844,7 +1838,7 @@ _KRL_
 
 $js = <<_JS_;
 (function(){
-KOBJ['data']['global_decl_1'] = 'here is some test data!';
+KOBJ['data']['global_decl_1'] = 'here is some test data!\\n';
 }());
 _JS_
 
@@ -1894,7 +1888,7 @@ _KRL_
 
 $js = <<_JS_;
 (function(){
-KOBJ['data']['global_decl_3'] = 'Here is some test data!';
+KOBJ['data']['global_decl_3'] = 'Here is some test data!\\n';
 }());
 _JS_
 
@@ -1944,7 +1938,7 @@ _KRL_
 $js = <<_JS_;
 (function(){KOBJ['data']['site_data'] = {"www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]} ;
  var type = 'AAA';
- KOBJ.css('.foo: 4  ');
+ KOBJ.css('.foo: 4\\n ');
  var x = 'AAA Rocks!';
  }());
 
@@ -2469,12 +2463,10 @@ ruleset global_expr_1 {
     pre {
       tweetUser = x.pick("\$..foo");
       y = <<
-This is the number #{tweetUser} and #{x} 
->>;
+This is the number #{tweetUser} and #{x}   >>;
       z = 6;
       w = <<
-This is another number #{z}
->>;
+This is another number #{z}  >>;
     }
     alert(x+y+z);
  }

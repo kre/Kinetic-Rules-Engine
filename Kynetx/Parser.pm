@@ -1002,7 +1002,8 @@ sub html {
     my ($value) = @_;
     $value =~ s/^<<\s*//;
     $value =~ s/>>\s*$//;
-    $value =~ s/[\n\r]/  /sg;
+#    $value = remove_comments($value);
+#    $value =~ s/[\n\r]/  /sg;
     return $value;
 }
 

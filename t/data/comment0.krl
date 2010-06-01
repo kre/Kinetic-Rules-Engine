@@ -31,7 +31,8 @@ K("#searchbutton " + index).html("<img src='https://kynetx-apps.s3.amaz ...' />"
 
    //comments in strings shouldn't be deleted
     replace("kobj_test", (city_announcement + (second_thing +    
-            "Can we put //comments inside a string?")));
+            "Can we put //comments inside a string?")))
+     with remote = "http://www.foo.com";
 
   }
 

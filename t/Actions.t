@@ -151,6 +151,7 @@ add_testcase($krl_src,
 	     $my_req_info,
 	     'changed',
 	     'float with non matching URL',
+	     0
 	     );
 
 $krl_src = <<_KRL_;
@@ -937,10 +938,10 @@ is(session_seen($rid, $session, 'my_trail',"windley"),
 
 # now test choose_action
 foreach my $case (@test_cases) {
-#    diag(Dumper($case->{'url'}));
+    diag(Dumper($case->{'url'})) if $case->{'diag'};
 
     my $in_args = gen_js_rands( $case->{'args'} );
-#    diag("In ", Dumper($in_args));
+    diag("In ", Dumper($in_args)) if $case->{'diag'};
 
     ($action, $args) = 
 	choose_action($case->{'req_info'}, 
@@ -951,7 +952,7 @@ foreach my $case (@test_cases) {
          );
 
     my $out_args = gen_js_rands( $case->{'args'} );
-#    diag("Out ", Dumper($out_args));
+    diag("Out ", Dumper($out_args))  if $case->{'diag'};
 
     my $desc = $case->{'desc'};
 
@@ -968,7 +969,7 @@ foreach my $case (@test_cases) {
 
 # now test build_one_action
 foreach my $case (@action_test_cases) {
-    #diag(Dumper($case));
+    diag(Dumper($case))  if $case->{'diag'};
 
     my $js = 
 	Kynetx::Actions::build_one_action(
@@ -990,65 +991,6 @@ foreach my $case (@action_test_cases) {
 	"build_one_action: $desc");
 
 }
-
-# emit js vars
-
-# my $emit_env = empty_rule_env();
-
-# $emit_env = extend_rule_env(
-#     ['x'],
-#     [5],
-#     $emit_env);
-
-# is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
-#     "var x = 5;", 
-#     "emit a number");
-
-# my $no_escape = "foo bar is a boo bar";
-# my $pls_escape = "foo bar isn't a boo bar";
-# my $escaped = "foo bar isn\\'t a boo bar";
-
-# $emit_env = extend_rule_env(
-#     ['x'],
-#     [$no_escape],
-#     $emit_env);
-
-# is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
-#     "var x = '". $no_escape ."';", 
-#     "emit a string");
-
-# $emit_env = extend_rule_env(
-#     ['x'],
-#     [$pls_escape],
-#     $emit_env);
-
-# is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
-#     "var x = '". $escaped . "';", 
-#     "emit a string");
-
-# my $a = [1,2,3];
-
-# $emit_env = extend_rule_env(
-#     ['x'],
-#     [$a],
-#     $emit_env);
-
-# is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
-#     "var x = ". encode_json($a).";", 
-#     "emit an array");
-
-# my $h = {"a" =>1,
-#     "b" => 2,
-#     "c" => 3};
-
-# $emit_env = extend_rule_env(
-#     ['x'],
-#     [$h],
-#     $emit_env);
-
-# is_string_nows(Kynetx::Actions::emit_var_decl(flatten_env($emit_env)), 
-#     "var x = ". encode_json($h).";", 
-#     "emit a hash");
 
 
 my $fl_resources = Kynetx::Actions::FlippyLoo::get_resources();
@@ -1077,14 +1019,14 @@ is_deeply($my_req_info->{'resources'}, $merged_resource, "got right resources");
 
 $resource_js = Kynetx::Actions::mk_registered_resource_js($my_req_info);
 like($resource_js, qr#KOBJ.registerExternalResources\('cs_test', \{"http://static.kobj.net/kjs-frameworks/flippy_loo/\d.\d/obFlippyloo.js":\{"type":"js"\},"http://static.kobj.net/kjs-frameworks/jquery_ui/\d.\d/jquery-ui-\d.\d.custom.js":\{"type":"js"\},"http://static.kobj.net/kjs-frameworks/jquery_ui/\d.\d/css/ui-darkness/jquery-ui-\d.\d.custom.css":\{"selector":".ui-helper-hidden","type":"css"\}\}\);#, "got the right JS");
-diag($resource_js);
+#diag($resource_js);
 
 #diag Dumper $my_req_info;
-diag "Resource JS: ", $resource_js;
+#diag "Resource JS: ", $resource_js;
 
 done_testing(13 + (@test_cases * 3) + (@action_test_cases * 1));
 
-diag("Safe to ignore warnings about unrecognized escapes");
+#diag("Safe to ignore warnings about unrecognized escapes");
 
 session_cleanup($session);
 

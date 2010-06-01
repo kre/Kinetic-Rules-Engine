@@ -79,6 +79,7 @@ type_of
 var_free_in_expr
 eval_ineq
 eval_pred
+eval_emit
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -738,10 +739,15 @@ sub ineq_test {
 
 sub eval_heredoc {
     my ($val) = @_;
-# we do this all when we emit the JS now
-#    $val = escape_js_str($val);
-#    $val =~ s/'/\\'/g;  #' - for syntax highlighting
-#    $val =~ s/#{([^}]*)}/'+$1+'/g;
+
+    # we post process when we emit the JS now, so no need to modify this further
+    return $val;
+}
+
+sub eval_emit {
+    my ($val) = @_;
+
+    # we post process when we emit the JS now, so no need to modify this further
     return $val;
 }
 

@@ -1,3 +1,15 @@
+2010-06-01  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Expressions.pm (eval_emit): Added eval_emit.  Empty for
+	now, but provides a hook for emit processing later
+    * Kynetx/Actions.pm (build_js_load): Added explicit call to eval_emit
+	for emits
+    * Kynetx/JavaScript.pm (escape_js_str): Added escaping for
+	newlines and carraige returns
+    * Kynetx/Rules.pm: Removed commented code that did var expression
+	the old (pre-environment) way
+    * Kynetx/Parser.pm: don't strip // comments in extended quotes
+
 2010-05-28  Cid Dennis <cid@kynetx.com>
     * Fixed issue 747 where people wanted a simple action to changes attributes on an html page.  There is now a new
        action called set_element_attr(<jquery selector>,<attribute name>,<value to set>)

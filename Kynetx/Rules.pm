@@ -473,7 +473,7 @@ sub eval_globals {
 	my $var = '';
 	my $val = 0;
 	if($g->{'emit'}) { # emit
-	  $this_js = $g->{'emit'} . "\n";
+	  $this_js = Kynetx::Expressions::eval_emit($g->{'emit'}) . "\n";
 	} elsif(defined $g->{'type'} && $g->{'type'} eq 'dataset') { 
 	    my $new_ds = Kynetx::Datasets->new($g);
 	  if (! $new_ds->is_global()) {
