@@ -51,16 +51,89 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
 my $default_actions = {
-    dialog => {
-		    'js' => <<EOF,
-    function(uniq, cb, config) {
-	KOBJ.letitsnow(config);
-	cb();
-}
-EOF
-		    'after' => [ \&handle_delay ]
-
+    effect => {
+	       'js' => <<EOF,
+	function(uniq, cb, config, selector, effect,speed) {
+	    \$K(selector).effect(effect,config,speed);
+	    cb();
 	}
+EOF
+	  'after' => [\&handle_delay]
+	},
+    toggle => {
+	       'js' => <<EOF,
+	function(uniq, cb, config, selector, effect,speed) {
+	    \$K(selector).toggle(effect,config,speed);
+	    cb();
+	}
+EOF
+	  'after' => [\&handle_delay]
+	},
+    hide => {
+	       'js' => <<EOF,
+	function(uniq, cb, config, selector, effect,speed) {
+	    \$K(selector).hide(effect,config,speed);
+	    cb();
+	}
+EOF
+	  'after' => [\&handle_delay]
+	},
+    show => {
+	       'js' => <<EOF,
+	function(uniq, cb, config, selector, effect,speed) {
+	    \$K(selector).show(effect,config,speed);
+	    cb();
+	}
+EOF
+	  'after' => [\&handle_delay]
+	},
+    switchClass => {
+	       'js' => <<EOF,
+	function(uniq, cb, config, selector, from_class, to_class,speed) {
+	    \$K(selector).switchClass(from_class,to_class,speed);
+	    cb();
+	}
+EOF
+	  'after' => [\&handle_delay]
+	},
+    removeClass => {
+	       'js' => <<EOF,
+	function(uniq, cb, config,selector, classname,speed) {
+	    \$K(selector).removeClass(classname,speed);
+	    cb();
+	}
+EOF
+	  'after' => [\&handle_delay]
+	},
+    addClass => {
+	       'js' => <<EOF,
+	function(uniq, cb, config, selector,classname,speed) {
+	    \$K(selector).addClass(classname,speed);
+	    cb();
+	}
+EOF
+	  'after' => [\&handle_delay]
+	},
+    animate => {
+	       'js' => <<EOF,
+	function(uniq, cb, config, selector,speed) {
+	    \$K(selector).animate(config,speed);
+	    cb();
+	}
+EOF
+	  'after' => [\&handle_delay]
+	},
+    datepicker => {
+	       'js' => <<EOF,
+	function(uniq, cb, config, selector) {
+	    \$K(selector).datepicker(config);
+	    cb();
+	}
+EOF
+	  'after' => [\&handle_delay]
+	},
+
+
 };
 
 

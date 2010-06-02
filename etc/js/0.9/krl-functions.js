@@ -398,8 +398,8 @@ KOBJ.url_loaded_callback = function(loaded_url, response, callback_params) {
             done = true;
             var url = null;
             // This would happen if we were in a browser sandbox.
-            if (typeof(loaded_url) == "undefined")
-            {
+//            if (typeof(loaded_url) == "undefined")
+//            {
                 if (typeof(this.src) != "undefined")
                 {
                     url = this.src;
@@ -412,11 +412,11 @@ KOBJ.url_loaded_callback = function(loaded_url, response, callback_params) {
                 {
                     return;
                 }
-            }
-            else
-            {
-                url = loaded_url;
-            }
+//            }
+//            else
+//            {
+//                url = loaded_url;
+//            }
 
             //        alert("Go callback for " + url);
 
