@@ -1,3 +1,6 @@
+2010-06-02 Cid Dennis <cid>	 
+    * Added code to JqueryUI.pm to allow for some of the jquery ui feature to be used in krl.
+
 2010-06-02 Cid Dennis <cid>
     * Resolves issues #768 to add more fields including rule set id and name to error stack reports. 
 	Commit : 612
