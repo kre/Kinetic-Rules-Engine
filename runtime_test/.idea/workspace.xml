@@ -5,11 +5,10 @@
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/testcases.iml" afterPath="$PROJECT_DIR$/.idea/testcases.iml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Rakefile" afterPath="$PROJECT_DIR$/Rakefile" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/config/settings.yml" afterPath="$PROJECT_DIR$/config/settings.yml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/spec/multi_rule_spec.rb" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/spec/conflict_spec.rb" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/spec/multi_rule_spec.rb" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/spec/helper/spec_helper.rb" afterPath="$PROJECT_DIR$/spec/helper/spec_helper.rb" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/spec/google_docs_spec.rb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path=".idea/workspace.xml" />
     <ignored path="testcases.iws" />

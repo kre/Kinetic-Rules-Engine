@@ -1,3 +1,20 @@
+2010-06-02 Cid Dennis <cid>
+    * Resolved issue #768 where if multiple apps were defined at one time the datasets call would
+      not be formulated right.
+    etc/js/0.9/krl-application.js
+    etc/js/0.9/krl-runtime.js
+    * Added runtime test to do more checking of double fire and conflict testing on
+      some sites.
+    runtime_test/.idea/testcases.iml
+    runtime_test/.idea/workspace.xml
+    runtime_test/Rakefile
+    runtime_test/config/settings.yml
+    runtime_test/spec/conflict_spec.rb
+    runtime_test/spec/google_docs_spec.rb
+    runtime_test/spec/helper/spec_helper.rb
+    runtime_test/spec/multi_rule_spec.rb
+
+    
 2010-06-01  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Expressions.pm (eval_emit): Added eval_emit.  Empty for
