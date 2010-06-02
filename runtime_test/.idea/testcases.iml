@@ -3,14 +3,14 @@
   <component name="GemRequirementsHolder" version="2">
     <requirement>
       <requirement>
-        <dependency name="rspec" version="0" bound="GREATER_OR_EQUAL" />
+        <dependency name="rspec" version="0" bound="GREATER_OR_EQUAL" git="false" />
       </requirement>
       <source from="spec/helper/spec_helper.rb" />
       <source from="test/helper/spec_helper.rb" />
     </requirement>
     <requirement>
       <requirement>
-        <dependency name="selenium-client" version="0" bound="GREATER_OR_EQUAL" />
+        <dependency name="selenium-client" version="0" bound="GREATER_OR_EQUAL" git="false" />
       </requirement>
       <source from="spec/helper/spec_helper.rb" />
       <source from="test/helper/spec_helper.rb" />

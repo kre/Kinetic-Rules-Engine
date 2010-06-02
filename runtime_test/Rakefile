@@ -6,7 +6,8 @@ require 'spec/rake/spectask'
 
 Spec::Rake::SpecTask.new(:browser_test) do |t|
  t.libs << "spec"
- t.pattern = "spec/*_spec.rb"
+ t.pattern = ENV['test'] if ENV['test']
+ t.pattern = "spec/*_spec.rb" if !ENV['test']
  t.spec_opts << '--color'
  t.spec_opts << "--require 'rubygems,selenium/rspec/reporting/selenium_test_report_formatter'"
  t.spec_opts << "--format=Selenium::RSpec::SeleniumTestReportFormatter:./report/#{ENV['browser']}/tests_report.html"

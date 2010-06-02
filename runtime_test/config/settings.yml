@@ -1,6 +1,6 @@
 test:
   testing_servers : [ie7_windows, firefox_30_osx, firefox_windows, safari_404_osx, safari_404_windows]
-  kobj_static_js_url: "http://static.kobj.net/kobj-static-20100528211848.js"
+  kobj_static_js_url: "http://static.kobj.net/kobj-static-20100602182218.js"
 
  # New
 #  kobj_static_js_url: "http://static.kobj.net/kobj-static-20100513220413.js"
@@ -12,6 +12,11 @@ firefox_30_osx :
 
 safari_404_osx :
   host : "office.kynetx.com"
+  port : 4444
+  browser : "*safari"
+
+safari_local_osx :
+  host : "localhost"
   port : 4444
   browser : "*safari"
 

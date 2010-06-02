@@ -25,7 +25,7 @@ KOBJ.extra_page_vars_as_url = function() {
 };
 
 KOBJ.add_config_and_run = function(app_config) {
-//    alert("adding config" +app_config);
+    //    alert("adding config" +app_config);
     KOBJ.add_app_config(app_config);
     KOBJ.run_when_ready();
 };
@@ -46,6 +46,15 @@ KOBJ.eval = function(app_config) {
     KOBJ.add_app_config(app_config);
     KOBJ.runit();
 };
+
+KOBJ.configure_kynetx = function(config)
+{
+    /* Override what server to talk to if ask to in config */
+    $KOBJ.each(config, function(k, v) {
+        KOBJ[k] = v;
+    });
+}
+;
 
 KOBJ.add_app_config = function(app_config) {
 
@@ -123,7 +132,7 @@ KOBJ.registerExternalResources = function(rid, resources) {
     $KOBJ.each(resources, function (url, options) {
         if (KOBJ.external_resources[url] == null)
         {
-            if(typeof(options["type"]) != "undefined")
+            if (typeof(options["type"]) != "undefined")
             {
                 var a_resource = new KrlExternalResource(url);
                 a_resource.css_selector = options["selector"];
@@ -142,12 +151,12 @@ KOBJ.registerExternalResources = function(rid, resources) {
  * This is a shortcut way to register interest for an event for a given application
  * id.
  */
-KOBJ.watch_event = function(event,selector,config)
+KOBJ.watch_event = function(event, selector, config)
 {
     // Page views are special in that they do not have selectors
-    var application = KOBJ.get_application(config["rid"]); 
-    if(event != "pageview") {
-        KOBJEventManager.register_interest(event,selector,application,config);
+    var application = KOBJ.get_application(config["rid"]);
+    if (event != "pageview") {
+        KOBJEventManager.register_interest(event, selector, application, config);
     }
     else {
         KOBJEventManager.add_out_of_bound_event(application, "pageview");
@@ -156,7 +165,7 @@ KOBJ.watch_event = function(event,selector,config)
 
 //start closure and data registration code
 KOBJ.registerDataSet = function(rid, datasets) {
-//    KOBJ.log("registering dataset " + rid);
+    //    KOBJ.log("registering dataset " + rid);
     var app = KOBJ.get_application(rid);
     app.store_data_sets(datasets);
 };
@@ -170,10 +179,10 @@ KOBJ.clearExecutionDelay = function(rid) {
     app.run();
 };
 
-KOBJ.registerClosure = function(rid, data,guid) {
-//    KOBJ.log("Registering external resources " + rid);
+KOBJ.registerClosure = function(rid, data, guid) {
+    //    KOBJ.log("Registering external resources " + rid);
     var app = KOBJ.get_application(rid);
-    app.execute_closure(guid,data)  ;
+    app.execute_closure(guid, data);
 };
 
 KOBJ.runit = function() {

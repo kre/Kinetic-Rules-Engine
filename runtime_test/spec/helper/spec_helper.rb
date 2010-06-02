@@ -81,6 +81,51 @@ module SPEC_HELPER
   end
 
   #
+  # Inject the kobj static runtime script into the page.   Allow the url to be overridden with an
+  # environment variable call kobj_static_url
+  #
+  def insert_runtime_script_no_app(kobj_static_js_url = ENV["kobj_static_url"])
+
+    if !kobj_static_js_url
+      kobj_static_js_url = @settings["test"]["kobj_static_js_url"]
+    end
+
+    eval_host = ENV["eval_host"]
+    callback_host =ENV["callback_host"]
+    init_host = ENV["init_host"]
+
+
+    puts "Inserting Kobj Static JS : #{kobj_static_js_url}"
+
+    extra_init_info = {}
+    extra_init_info =  {:eval_host =>  eval_host , :callback_host => callback_host,
+        :init_host =>  init_host } if eval_host
+
+
+    script = <<-ENDS
+        var d = window.document;
+        var body = d.getElementsByTagName('body')[0];
+        var q = d.createElement('script');
+        q.src = '#{kobj_static_js_url}';
+        body.appendChild(q);
+    ENDS
+
+    puts "Injecting script: " + script
+
+    page.js_eval(script)
+
+    page.wait_for({:wait_for => :condition , :timeout_in_seconds => 30, :javascript => "typeof(window.KOBJ) != 'undefined'"});
+
+    page.js_eval("window.KOBJ.configure_kynetx(#{extra_init_info.to_json})")
+
+
+  end
+
+
+
+
+
+  #
   # Create a new browser session using the information from the settings file.  This will also open the requested
   # page.
   #
