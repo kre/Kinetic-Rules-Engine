@@ -307,7 +307,7 @@ sub eval_ruleset {
   $logger->debug("[eval_ruleset] Executed $req_info->{'rule_count'} rules");
 
   # wrap the rule evals in a try-catch-block
-  $js = add_errorstack($ruleset,$js) if $js;
+  $js = add_errorstack($ruleset,$req_info,$js) if $js;
 
   # put it all together
   $js = $mjs . $gjs . $js;
@@ -847,11 +847,13 @@ sub mk_turtle {
 }
 
 sub add_errorstack {
-  my($ruleset, $js) = @_;
+  my($ruleset,$req_info, $js) = @_;
   my $kobj_rs = KOBJ_ruleset_obj($ruleset->{'ruleset_name'});
+  my $kobj_rs_name = $ruleset->{'meta'}->{'name'};
+  my $kobj_rs_id = $req_info->{'rid'};
   my $r = <<_JS_;
 try { $js } catch (e) { 
-KOBJ.errorstack_submit($kobj_rs.keys.errorstack, e);
+KOBJ.errorstack_submit($kobj_rs.keys.errorstack, e, {id : '$kobj_rs_id',name : '$kobj_rs_name'});
 };
 _JS_
   if($ruleset->{'meta'}->{'keys'}->{'errorstack'}) {

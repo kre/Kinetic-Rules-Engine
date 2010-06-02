@@ -487,20 +487,25 @@ KOBJ.siteIds = function()
     return siteid.join(";");
 };
 
-KOBJ.errorstack_submit = function(key, e) {
+KOBJ.errorstack_submit = function(key, e,rule_info) {
     // No key the ignore.
     if (key == null) {
         return;
     }
     var txt = "_s=" + key + "&_r=img";
     txt += "&Msg=" + escape(e.message ? e.message : e);
-    txt += "&URL=" + escape(e.fileName ? e.fileName : "");
-    txt += "&PageURL" + escape(document.location.href);
+    txt += "&ScriptURL=" + escape(e.fileName ? e.fileName : "Dynamic");
+    txt += "&PageURL=" + escape(document.location.href);
     txt += "&Line=" + (e.lineNumber ? e.lineNumber : 0);
     txt += "&name=" + escape(e.name ? e.name : e);
     txt += "&Platform=" + escape(navigator.platform);
     txt += "&UserAgent=" + escape(navigator.userAgent);
     txt += "&stack=" + escape(e.stack ? e.stack.substring(0, 500) : "");
+    if(typeof(rule_info) != "undefined")
+    {
+        txt += "&RuleName=" + escape(rule_info.name);
+        txt += "&RuleID=" + escape(rule_info.id); 
+    }
     var i = document.createElement("img");
     i.setAttribute("src", "http://www.errorstack.com/submit?" + txt);
     document.body.appendChild(i);
