@@ -36,7 +36,7 @@ describe "Verify Runtime Functions" do
 
   it "should replace element value" do
      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='mychangeelement']"});
-     page.text("//*[@id='mychangeelement']/@value").should == "Ihavechanged"
+     page.js_eval("window.$KOBJ('#mychangeelement').attr('value')").to_s.should == "Ihavechanged"
   end
 
   it "should have appended text to div with id of area9" do

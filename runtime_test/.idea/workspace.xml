@@ -32,35 +32,7 @@
   </component>
   <component name="FileColors" enabled="true" enabledForTabs="true" />
   <component name="FileEditorManager">
-    <leaf>
-      <file leaf-file-name="multi_rule_spec.rb" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/spec/multi_rule_spec.rb">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="77" column="59" selection-start="3381" selection-end="3381" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="spec_helper.rb" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/spec/helper/spec_helper.rb">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="123" column="30" selection-start="3306" selection-end="3306" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="settings.yml" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/config/settings.yml">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="2" column="75" selection-start="184" selection-end="184" vertical-scroll-proportion="0.03168317">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf />
   </component>
   <component name="FindManager">
     <FindUsagesManager>
@@ -384,23 +356,23 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/config/settings.yml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="5" column="35" selection-start="229" selection-end="229" vertical-scroll-proportion="0.07920792">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/spec/helper/spec_helper.rb">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="123" column="30" selection-start="3306" selection-end="3306" vertical-scroll-proportion="0.0">
+        <state line="123" column="30" selection-start="3306" selection-end="3306" vertical-scroll-proportion="0.63015074">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/spec/multi_rule_spec.rb">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="77" column="59" selection-start="3381" selection-end="3381" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/config/settings.yml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="2" column="75" selection-start="184" selection-end="184" vertical-scroll-proportion="0.03168317">
+        <state line="77" column="59" selection-start="3381" selection-end="3381" vertical-scroll-proportion="0.53366834">
           <folding />
         </state>
       </provider>
