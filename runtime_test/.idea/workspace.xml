@@ -5,10 +5,11 @@
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/testcases.iml" afterPath="$PROJECT_DIR$/.idea/testcases.iml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Rakefile" afterPath="$PROJECT_DIR$/Rakefile" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/config/settings.yml" afterPath="$PROJECT_DIR$/config/settings.yml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/spec/conflict_spec.rb" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/spec/multi_rule_spec.rb" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/spec/conflict_spec.rb" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/spec/helper/spec_helper.rb" afterPath="$PROJECT_DIR$/spec/helper/spec_helper.rb" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/spec/google_docs_spec.rb" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path=".idea/workspace.xml" />
     <ignored path="testcases.iws" />
@@ -32,10 +33,10 @@
   <component name="FileColors" enabled="true" enabledForTabs="true" />
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="multi_rule_spec.rb" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="multi_rule_spec.rb" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/spec/multi_rule_spec.rb">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="77" column="59" selection-start="3381" selection-end="3381" vertical-scroll-proportion="0.53366834">
+            <state line="77" column="59" selection-start="3381" selection-end="3381" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -50,10 +51,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="settings.yml" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="settings.yml" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/config/settings.yml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="2" column="75" selection-start="184" selection-end="184" vertical-scroll-proportion="0.0">
+            <state line="2" column="75" selection-start="184" selection-end="184" vertical-scroll-proportion="0.03168317">
               <folding />
             </state>
           </provider>
@@ -83,8 +84,8 @@
         <option value="$PROJECT_DIR$/spec/conflict_spec.rb" />
         <option value="$PROJECT_DIR$/spec/verify_functions_spec.rb" />
         <option value="$PROJECT_DIR$/spec/helper/spec_helper.rb" />
-        <option value="$PROJECT_DIR$/config/settings.yml" />
         <option value="$PROJECT_DIR$/spec/multi_rule_spec.rb" />
+        <option value="$PROJECT_DIR$/config/settings.yml" />
       </list>
     </option>
   </component>
@@ -383,13 +384,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/config/settings.yml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="2" column="75" selection-start="184" selection-end="184" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/spec/helper/spec_helper.rb">
       <provider selected="true" editor-type-id="text-editor">
         <state line="123" column="30" selection-start="3306" selection-end="3306" vertical-scroll-proportion="0.0">
@@ -399,7 +393,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/spec/multi_rule_spec.rb">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="77" column="59" selection-start="3381" selection-end="3381" vertical-scroll-proportion="0.53366834">
+        <state line="77" column="59" selection-start="3381" selection-end="3381" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config/settings.yml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="2" column="75" selection-start="184" selection-end="184" vertical-scroll-proportion="0.03168317">
           <folding />
         </state>
       </provider>
