@@ -1,4 +1,11 @@
 2010-06-02 Cid Dennis <cid>
+    * Resolves issues #768 to add more fields including rule set id and name to error stack reports. 
+	Commit : 612
+	Kynetx/Rules.pm
+	etc/js/0.9/krl-functions.js
+	Runtime: http://static.kobj.net/kobj-static-20100602203953.js
+
+2010-06-02 Cid Dennis <cid>
     * Resolved issue #768 where if multiple apps were defined at one time the datasets call would
       not be formulated right.
     etc/js/0.9/krl-application.js
