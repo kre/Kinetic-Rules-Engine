@@ -112,6 +112,7 @@ SKIP: {
       my $test_plan = shift;
       my $tc = 0;
       foreach my $test (@{$test_plan}) {
+	diag $test->{'url'} if $test->{'diag'};
 	if (defined $test->{'method'} && $test->{'method'} eq 'post') {
 	  $mech->post_ok($test->{'url'}, $test->{'post_data'});
 	} else {
@@ -410,6 +411,43 @@ SKIP: {
       ];
 
     $test_count += test_event_plan($multi_test_plan);
+
+
+    my $email_test_plan = 
+      [{'url' => "$dn/mail/received/cs_test_1",
+	'type' => 'text/javascript',
+	'like' => ['/forward/',
+		   '/pjw@kynetx.com/',
+		   '/"msg_id":15/',
+		  ],
+	'unlike' => ['/"msg_id":25/',
+		     '/"msg_id":35/',
+		    ],
+	'diag' => 0,
+       },
+       {'url' => $dn .'/mail/received/cs_test_1?from=swf@windley.com',
+	'type' => 'text/javascript',
+	'like' => ['/forward/',
+		   '/"msg_id":25/',
+		   '/"address":"swf"/',
+		  ],
+	'unlike' => ['/"msg_id":35/',
+		  ],
+	'diag' => 0,
+       },
+       {'url' => "$dn/mail/sent/cs_test_1",
+	'type' => 'text/javascript',
+	'like' => ['/send/',
+		   '/qwb@kynetx.com/',
+		   '/"msg_id":35/',
+		  ],
+	'unlike' => ['/25/',
+		   '/15/',
+		  ],
+       },
+      ];
+
+    $test_count += test_event_plan($email_test_plan);
 
 
 #     my $submit_test_plan = 

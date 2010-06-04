@@ -1,5 +1,6 @@
-#!/usr/bin/perl -w 
-
+package Kynetx::Actions::Email;
+# file: Kynetx/Actions/Email.pm
+# file: Kynetx/Predicates/Referers.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
 # 
@@ -29,66 +30,60 @@
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
 # 
-use lib qw(/web/lib/perl);
+
 use strict;
+use warnings;
 
-use Test::More;
-use Test::LongString;
-
-use Apache::Session::Memcached;
-use DateTime;
-use APR::URI;
-use APR::Pool ();
-use Cache::Memcached;
-
-# most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
-Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
-
-use Kynetx::Test qw/:all/;
-use Kynetx::Request qw/:all/;
-use Kynetx::JavaScript qw/:all/;
-
-use Kynetx::Environments qw/:all/;
-use Kynetx::Session qw/:all/;
-use Kynetx::Configure qw/:all/;
-use Kynetx::FakeReq qw/:all/;
-
-use Data::Dumper;
-$Data::Dumper::Indent = 1;
 
 
-my $test_count = 0;
+use Exporter;
+use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
-my $r = Kynetx::Test::configure();
+our $VERSION     = 1.00;
+our @ISA         = qw(Exporter);
 
-my $rid = 'cs_test';
+# put exported names inside the "qw"
+our %EXPORT_TAGS = (all => [ 
+qw(
+) ]);
+our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
-# test choose_action and args
+use Kynetx::Directives qw/:all/;
 
-my $my_req_info = Kynetx::Test::gen_req_info($rid, {'domain' => 'web'});
+my $default_actions = {
+    forward => {
+      directive => sub {
+	my $req_info = shift;
+	my $config = shift;
+	send_directive($req_info,
+		       'forward',
+		       $config);
+      },
+    },
+    send => {
+      directive => sub {
+	my $req_info = shift;
+	my $config = shift;
+	send_directive($req_info,
+		       'send',
+		       $config);
+      },
+    },
+};
 
 
-my $rule_name = 'foo';
 
-my $rule_env = Kynetx::Test::gen_rule_env();
+sub get_resources {
+    return {};
+}
 
-my $session = Kynetx::Test::gen_session($r, $rid);
+sub get_actions {
+    return $default_actions;
+}
+sub get_predicates {
+    return {};
+}
 
-set_capabilities($my_req_info);
-
-ok($my_req_info->{'understands_javascript'}, "Web understands JS");
-$test_count++;
-
-$my_req_info->{'domain'} = 'email';
-set_capabilities($my_req_info);
-
-ok($my_req_info->{'understands_javascript'}, "Email does not understands JS");
-$test_count++;
-
-done_testing($test_count);
 
 1;
-
-

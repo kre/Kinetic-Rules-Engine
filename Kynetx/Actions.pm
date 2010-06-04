@@ -46,6 +46,7 @@ use Kynetx::Json q/:all/;
 use Kynetx::Actions::LetItSnow;
 use Kynetx::Actions::JQueryUI;
 use Kynetx::Actions::FlippyLoo;
+use Kynetx::Actions::Email;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -606,6 +607,9 @@ sub build_one_action {
       } elsif ($action->{'source'} eq 'flippy_loo') {
           $actions = Kynetx::Actions::FlippyLoo::get_actions();
           $resources = Kynetx::Actions::FlippyLoo::get_resources();
+      } elsif ($action->{'source'} eq 'email') {
+          $actions = Kynetx::Actions::Email::get_actions();
+          $resources = Kynetx::Actions::Email::get_resources();
       } elsif ($action->{'source'} eq 'odata') {
           $actions = Kynetx::Predicates::OData::get_actions();
       }
@@ -613,15 +617,17 @@ sub build_one_action {
       $actions = $default_actions;
     }
 
-    my ($action_js, $before, $after);
+    my ($action_js, $before, $after, $directive);
     if (ref $actions->{$action_name} eq 'HASH') {
       $action_js = $actions->{$action_name}->{'js'};
       $before = $actions->{$action_name}->{'before'} || \&noop;
       $after = $actions->{$action_name}->{'after'} || [];
+      $directive = $actions->{$action_name}->{'directive'} || \&noop;
     } else {
       $action_js = $actions->{$action_name};
       $before = \&noop;
       $after = [];
+      $directive = \&noop;
     }
     # I really hate this but in order to make it this is what must
     # be done. Once impact is done we can remove this at some point.
@@ -630,7 +636,7 @@ sub build_one_action {
     }
 
     $js .= &$before($req_info, $rule_env, $session, $config, $mods,$before_args);
-    $logger->debug("Action $action_name (before) returns js: ",$js);
+    $logger->debug("Action $action_name (before) returns js: ",$js) if $js;
     if (defined $action_js) {
   
       # apply the action function
@@ -651,9 +657,13 @@ sub build_one_action {
       push(@{ $req_info->{'tags'} }, ($mods->{'tags'} || ''));
       push(@{ $req_info->{'labels'} }, $action_expr->{'label'} || '');
     } else {
-      $logger->warn("[action] ", $action_name, " undefined");
-      
+      if ($directive eq \&noop) {
+	$logger->warn("[action] ", $action_name, " undefined");
+      }
     }
+
+    # now run directive functions to store those
+    $directive->($req_info, $config);
 
     register_resources($req_info, $resources);
 

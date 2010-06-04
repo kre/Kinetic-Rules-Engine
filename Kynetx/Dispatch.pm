@@ -74,7 +74,7 @@ sub simple_dispatch {
 #	    $logger->debug(sub() {Dumper($ruleset->{'dispatch'})});
 	    $r->{$rid} = [];
 	    foreach my $d (@{ $ruleset->{'dispatch'} }) {
-		push(@{ $r->{$rid} }, $d->{'domain'});
+	      push(@{ $r->{$rid} }, $d->{'domain'});
 	    }
 	}    
     }

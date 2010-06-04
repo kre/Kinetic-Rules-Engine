@@ -144,7 +144,7 @@ sub process_event {
 
     my $rules_to_execute;
 
-    $logger->debug("Processing events for $rids with event ", sub {Dumper $ev});
+#    $logger->debug("Processing events for $rids with event ", sub {Dumper $ev});
 
     foreach my $rid (split(/;/, $rids)) {
 
@@ -294,7 +294,19 @@ sub process_event {
 
 
     # this is where we return the JS
-    print Kynetx::Actions::mk_registered_resource_js($req_info) . $js;
+    if ($req_info->{'understands_javascript'}) {
+      $logger->debug("Returning javascript from evaluation");
+      print Kynetx::Actions::mk_registered_resource_js($req_info) . $js;
+    } else {
+      $logger->debug("Returning directives from evaluation");
+
+      my @directive_doc = map {$_->to_directive()} @{$req_info->{'directives'}};
+#      $logger->debug("Directives ", sub {Dumper @directive_doc });
+      print JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(0)->encode(
+	   \@directive_doc
+        );
+
+    }
 
 }
 
@@ -315,7 +327,9 @@ sub mk_event {
    } elsif ($req_info->{'eventtype'} eq 'change' ) {
      $ev->change($req_info->{'element'});
    } else {
-     $logger->error("Unhandlable event: $req_info->{'eventtype'}");
+     $logger->error("Event: $req_info->{'domain'} $req_info->{'eventtype'}");
+
+     $ev->generic("$req_info->{'domain'}:$req_info->{'eventtype'}");
    }
 
    return $ev;
@@ -340,7 +354,8 @@ sub compile_event_expr {
 	    ) {
       $sm = mk_dom_prim($eexpr->{'element'}, $eexpr->{'pattern'}, $eexpr->{'vars'}, $eexpr->{'op'});
     } else {
-      $logger->warn("Unrecognized primitive event");
+      $logger->debug("Creating primitive event for $eexpr->{'domain'}:$eexpr->{'op'}");
+      $sm = mk_gen_prim($eexpr->{'domain'}, $eexpr->{'op'}, $eexpr->{'vars'}, $eexpr->{'filters'});
     }
   } elsif ($eexpr->{'type'} eq 'complex_event') {
     if ($eexpr->{'op'} eq 'between' ||

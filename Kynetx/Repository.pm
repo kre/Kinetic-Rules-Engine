@@ -72,7 +72,7 @@ sub get_rules_from_repository{
     if ($ruleset && 
 	$ruleset->{'optimization_version'} && 
 	$ruleset->{'optimization_version'} >= Kynetx::Rules::get_optimization_version()) {
-      $logger->debug("Using cached ruleset for $rid ($version) with key ", make_ruleset_key($rid, $version), " &  optimizaiton version ", $ruleset->{'optimization_version'} );
+      $logger->debug("Using cached ruleset for $rid ($version) with key ", make_ruleset_key($rid, $version), " & optimization version ", $ruleset->{'optimization_version'} );
 
       return $ruleset;
     } 

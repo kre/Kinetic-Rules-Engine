@@ -1,5 +1,6 @@
-#!/usr/bin/perl -w 
-
+package Kynetx::Directives;
+# file: Kynetx/Directives.pm
+# file: Kynetx/Predicates/Referers.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
 # 
@@ -29,66 +30,89 @@
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
 # 
-use lib qw(/web/lib/perl);
+
 use strict;
+use warnings;
 
-use Test::More;
-use Test::LongString;
-
-use Apache::Session::Memcached;
-use DateTime;
-use APR::URI;
-use APR::Pool ();
-use Cache::Memcached;
-
-# most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
-Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
 
-use Kynetx::Test qw/:all/;
-use Kynetx::Request qw/:all/;
-use Kynetx::JavaScript qw/:all/;
+use JSON::XS;
 
-use Kynetx::Environments qw/:all/;
-use Kynetx::Session qw/:all/;
-use Kynetx::Configure qw/:all/;
-use Kynetx::FakeReq qw/:all/;
+use Exporter;
+use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
-use Data::Dumper;
-$Data::Dumper::Indent = 1;
+our $VERSION     = 1.00;
+our @ISA         = qw(Exporter);
 
-
-my $test_count = 0;
-
-my $r = Kynetx::Test::configure();
-
-my $rid = 'cs_test';
-
-# test choose_action and args
-
-my $my_req_info = Kynetx::Test::gen_req_info($rid, {'domain' => 'web'});
+# put exported names inside the "qw"
+our %EXPORT_TAGS = (all => [ 
+qw(
+send_directive
+send_data
+emit_js
+to_directive
+) ]);
+our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
-my $rule_name = 'foo';
 
-my $rule_env = Kynetx::Test::gen_rule_env();
+sub new {
+    my $invocant = shift;
+    my $type = shift;
+    my $class = ref($invocant) || $invocant;
+    my $self = {
+	"type"         => $type,
+	"options"      => undef,
+    };
+    bless($self, $class); # consecrate
+    return $self;
+}
 
-my $session = Kynetx::Test::gen_session($r, $rid);
+sub type {
+  my $self = shift;
+  return $self->{'type'};
+}
 
-set_capabilities($my_req_info);
+sub set_options {
+  my $self = shift;
+  my $opts = shift;
+  $self->{'options'} = $opts;
+  return $self;
+}
 
-ok($my_req_info->{'understands_javascript'}, "Web understands JS");
-$test_count++;
+sub options {
+  my $self = shift;
+  return $self->{'options'};
+}
 
-$my_req_info->{'domain'} = 'email';
-set_capabilities($my_req_info);
+sub send_directive {
+  my $req_info = shift;
+  my $name = shift;
+  my $opts = shift;
+  my $direct = Kynetx::Directives->new($name);
+  $direct->set_options($opts);
+  push @{$req_info->{'directives'}}, $direct;
+}
 
-ok($my_req_info->{'understands_javascript'}, "Email does not understands JS");
-$test_count++;
+sub emit_js {
+  my $req_info = shift;
+  my $js = shift;
+  send_directive($req_info, 
+		 "emit_js", 
+		 {'js' => $js});
+}
 
-done_testing($test_count);
+sub send_data {
+  my $req_info = shift;
+  my $data = shift;
+  send_directive($req_info, 
+		 "data", 
+		 $data);
+}
+
+sub to_directive {
+  my $self = shift;
+  return { $self->type()  => $self->options()};
+}
 
 1;
-
-

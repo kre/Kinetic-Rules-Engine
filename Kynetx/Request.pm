@@ -32,6 +32,7 @@ package Kynetx::Request;
 use strict;
 use warnings;
 
+use Data::Dumper;
 use Log::Log4perl qw(get_logger :levels);
 
 use Exporter;
@@ -46,6 +47,7 @@ qw(
 build_request_env
 log_request_env
 merge_request_env
+set_capabilities
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -59,24 +61,40 @@ sub build_request_env {
 
     # build initial envv
     my $ug = new Data::UUID;
+
     my $caller = $req->param('caller') || $r->headers_in->{'Referer'} ||  '';
+
     my $request_info = {
+
 	host => $r->connection->get_remote_host || $req->param('host') || '',
-	caller => $caller,
+	caller => $caller,  # historical
 	page => $caller,
 	now => time,
         rids => $rids,
-	site => $rids,
+	site => $rids, #historical
+	# this will get overridden with a single RID later
 	rid => $rids, 
+
 	method => $method,
+	# this is also determines the endpint capability type
 	domain => $method,
 	eventtype => $eventtype,
+
 	hostname => $r->hostname(),
 	ip => $r->connection->remote_ip() || '0.0.0.0',
 	ua => $r->headers_in->{'User-Agent'} || '',
 	pool => $r->pool,
 	uri => $r->uri(),
+
+	# set the default major and minor version for this endpoint
+	# these may get overridden by parameters below
+        majv => 0,
+        minv => 0,
+
 	txn_id => $ug->create_str(),
+
+	# directives
+	directives => [],
 	};
 
 
@@ -86,6 +104,9 @@ sub build_request_env {
 	$request_info->{$n} = $req->param($n);
     }
     $request_info->{'param_names'} = \@param_names;
+
+    set_capabilities($request_info);
+
 
 #     $request_info->{'referer'} = $req->param('referer');
 #     $request_info->{'title'} = $req->param('title');
@@ -110,8 +131,9 @@ sub log_request_env {
     my ($logger, $request_info) = @_;
     if($logger->is_debug()) {
 	foreach my $entry (keys %{ $request_info }) {
-	    $logger->debug($entry . ": " . $request_info->{$entry}) 
-		unless($entry eq 'param_names' || $entry eq 'selected_rules');
+	  # print out first 50 chars of the request string
+	  $logger->debug($entry . ": " . substr($request_info->{$entry},0,50))
+	    unless($entry eq 'param_names' || $entry eq 'selected_rules');
 	}
 # 	foreach my $h (keys %{ $r->headers_in }) {
 # 	    $logger->debug($h . ": " . $r->headers_in->{$h});
@@ -129,5 +151,23 @@ sub log_request_env {
 
 }
 
+
+sub set_capabilities {
+  my $req_info = shift;
+  my $capspec = shift;
+
+  my $logger = get_logger();
+  
+  $capspec = Kynetx::Configure::get_config('capabilities') unless $capspec;
+
+#  $logger->debug("Cap spec ", sub { Dumper $capspec });
+
+  if ($capspec->{$req_info->{'domain'}}->{'capabilities'}->{'understands_javascript'} || 
+      $req_info->{'domain'}  eq 'eval' # old style evaluation
+     ) {
+    $req_info->{'understands_javascript'} = 1;
+  }
+
+}
 
 1;

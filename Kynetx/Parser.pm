@@ -70,7 +70,7 @@ my $grammar = <<'_EOGRAMMAR_';
 
 # Terminals (macros that can't expand further)
 #
-REGEXP: m%(/(\\.|[^\/])+/|#(\\.|[^\#])+#)(i|g){0,2}%
+REGEXP: m%(/(\\.|[^\/])+/|#(\\.|[^\#])+#)(i|g|m){0,2}%
 HTML: /<<.*?>>/s  {$return=Kynetx::Parser::html($item[1]) }
 STRING: /"(\\"|[^"])*"|'[^']*'/ {$return=Kynetx::Parser::string($item[1]) }
 VAR:   /[_A-Za-z]\w*/ 
@@ -445,13 +445,13 @@ event_prim: event_domain(?) 'pageview' (STRING | REGEXP) setting(?)
              'domain' => $item[1][0]
 	   } 
 	  }
-  | event_domain(?) ('received'|'sent'|'forwarded') mail_filter(s?) setting(?)
+  | VAR VAR event_filter(s?) setting(?)
 	  {$return =
 	   { 'filters' => $item[3],
 	     'vars' => $item[4][0],
              'type' => 'prim_event',
              'op' => $item[2],
-             'domain' => $item[1][0]
+             'domain' => $item[1]
 	   } 
 	  }
   | '(' event_seq ')'
@@ -460,15 +460,18 @@ setting: 'setting' '(' VAR(s? /,/) ')'
 	  {$return =  $item[3]
 	  }
 
-event_domain: ('web' | 'mail') 
+event_domain: 'web'
    {$return = $item[1]}
+
 
 on_expr: 'on' (STRING|REGEXP)
   {$return = $item[2]}
 
-mail_filter: ('from' | 'subject' | 'to')  (STRING | REGEXP)
+event_filter: VAR (STRING | REGEXP)
    {$return = {'type' => $item[1],
                'pattern' => $item[2]}}
+
+
 
 foreach: 'foreach' expr setting
     {$return =
@@ -867,7 +870,7 @@ operator_expr: factor operator(s?)
 operator: '.' operator_op '(' expr(s? /,/) ')'
   {$return = [$item[2], $item[4]]}
 
-operator_op: 'pick'|'match'|'length'|'replace'|'as'|'head'|'tail'|'sort'|'filter'|'map'|'uc'|'lc'
+operator_op: 'pick'|'match'|'length'|'replace'|'as'|'head'|'tail'|'sort'|'filter'|'map'|'uc'|'lc' |'split' | 'join'
 
 factor: NUM
         {$return=Kynetx::Parser::mk_expr_node('num',$item[1]+0)}

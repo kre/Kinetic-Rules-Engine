@@ -1,3 +1,19 @@
+2010-06-04  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Directives.pm: Added to support directives
+    * Kynetx/Repository.pm (get_rules_from_repository): Fixed a
+	logging message.
+    * Kynetx/Events/Primitives.pm (submit): Support for generalized events
+    * Kynetx/Rules.pm (process_rules): Support for directives
+    * Kynetx/Actions.pm (build_one_action): Support for directives
+    * Kynetx/Request.pm (set_capabilities): Sets endpoint capabilities
+	in req_info
+    * Kynetx/Events.pm: Support for generalized events and directives
+    * Kynetx/Parser.pm: added new operators, support for generalized events
+    * Kynetx/PrettyPrinter.pm: added support for generalized events
+    * Kynetx/Actions/Email.pm: adds email actions
+    * Kynetx/Operators.pm: added split and join
+
 2010-06-02 Cid Dennis <cid>	 
     * Added code to JqueryUI.pm to allow for some of the jquery ui feature to be used in krl.
 

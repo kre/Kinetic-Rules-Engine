@@ -83,6 +83,7 @@ pre {
   d = [];
   e = "this";
   my_str = "This is a string";
+  split_str = "A;B;C";
   my_url = "http://www.amazon.com/gp/products/123456789/";
 }
 _KRL_
@@ -621,6 +622,15 @@ $d[$i] = 0;
 $i++;
 
 
+$e[$i] = q#split_str.split(/;/)#;
+$x[$i] = {
+    'val' => ['A','B','C'],
+    'type' => 'array'
+};
+$d[$i] = 0;
+$i++;
+
+
 #
 # testing array ops
 #
@@ -730,6 +740,14 @@ $e[$i] = q#c.sort().map(function(a){a + 2})#;
 $x[$i] = {
    'val' => [6,7,8],
    'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#c.join(";")#;
+$x[$i] = {
+   'val' => '4;5;6',
+   'type' => 'str'
 };
 $d[$i]  = 0;
 $i++;

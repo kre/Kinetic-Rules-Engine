@@ -329,6 +329,36 @@ sub eval_map {
 }
 $funcs->{'map'} = \&eval_map;
 
+sub eval_join {
+  my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+  my $logger = get_logger();
+  my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#   $logger->debug("obj: ", sub { Dumper($obj) });
+
+  my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+#    $logger->debug("obj: ", sub { Dumper($rands) });
+
+  my $v = $obj->{'val'};
+  my $join_val = Kynetx::Expressions::den_to_exp($rands->[0]);
+  my $result;
+
+  if($obj->{'type'} eq 'array' && 
+     $rands->[0]->{'type'} eq 'str') {
+    
+    # get capture vars first
+    $result = join($join_val, @{$v}); 
+
+  } else {
+    $logger->warn("Not a string: ", $join_val)
+      unless $rands->[0]->{'type'} eq 'regexp';
+  }
+
+  return Kynetx::Expressions::typed_value($result);
+}
+$funcs->{'join'} = \&eval_join;
+
+
 #-----------------------------------------------------------------------------------
 # string operators
 #-----------------------------------------------------------------------------------
@@ -338,7 +368,7 @@ sub eval_replace {
     my $logger = get_logger();
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
-    $logger->debug("obj: ", sub { Dumper($obj) });
+#    $logger->debug("obj: ", sub { Dumper($obj) });
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 #    $logger->debug("obj: ", sub { Dumper($rands) });
@@ -351,7 +381,7 @@ sub eval_replace {
     
 	my $pattern = '';
 	my $modifiers;
-	($pattern, $modifiers) = $rands->[0]->{'val'} =~ m%[#/](.+)[#/](i|g){0,2}%; 
+	($pattern, $modifiers) = $rands->[0]->{'val'} =~ m%[#/](.+)[#/](i|g|m){0,2}%; 
 
 	$modifiers = $modifiers || '';
 
@@ -407,7 +437,7 @@ sub eval_match {
     
 	my $pattern = '';
 	my $modifiers;
-	($pattern, $modifiers) = $rands->[0]->{'val'} =~ m%[/#](.+)[/#](i|g){0,2}%; 
+	($pattern, $modifiers) = $rands->[0]->{'val'} =~ m%[/#](.+)[/#](i|g|m){0,2}%; 
 
 	$modifiers = $modifiers || '';
 
@@ -451,12 +481,12 @@ sub eval_uc {
     $logger->trace("obj: ", sub { Dumper($obj) });
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-    $logger->trace("obj: ", sub { Dumper($rands) });
+#    $logger->trace("obj: ", sub { Dumper($rands) });
 
     if($obj->{'type'} eq 'str') {
         my $v = $obj->{'val'};
         $v = uc($v);
-        $logger->debug("toUpper: ", $v);
+#        $logger->debug("toUpper: ", $v);
         return Kynetx::Expressions::typed_value($v);
     } else {
         $logger->warn("Not a string");
@@ -472,12 +502,12 @@ sub eval_lc {
     $logger->trace("obj: ", sub { Dumper($obj) });
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-    $logger->trace("obj: ", sub { Dumper($rands) });
+#    $logger->trace("obj: ", sub { Dumper($rands) });
 
     if($obj->{'type'} eq 'str') {
         my $v = $obj->{'val'};
         $v = lc($v);
-        $logger->debug("toLower: ", $v);
+#        $logger->debug("toLower: ", $v);
         return Kynetx::Expressions::typed_value($v);
     } else {
         $logger->warn("Not a string");
@@ -485,8 +515,45 @@ sub eval_lc {
 }
 $funcs->{'lc'} = \&eval_lc;
 
+sub eval_split {
+  my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+  my $logger = get_logger();
+  my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#   $logger->debug("obj: ", sub { Dumper($obj) });
+
+  my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+#    $logger->debug("obj: ", sub { Dumper($rands) });
+
+  my $v = $obj->{'val'};
+
+  # we ignore the modifiers
+  my ($pattern, $modifiers) = $rands->[0]->{'val'} =~ m%[/#](.+)[/#](i|g|m){0,2}%; 
+
+  my @items;
+  if($obj->{'type'} eq 'str' && 
+     $rands->[0]->{'type'} eq 'regexp') {
+    
+    $logger->debug("Spliting string with $pattern");
+
+    # get capture vars first
+    @items = split($pattern,$v); 
+
+  } else {
+    $logger->warn("Not a regular expression: ", $rands->[0]->{'val'})
+      unless $rands->[0]->{'type'} eq 'regexp';
+  }
+
+  return Kynetx::Expressions::typed_value(\@items);
+}
+$funcs->{'split'} = \&eval_split;
+
+
+
+
+
 #-----------------------------------------------------------------------------------
-# casting
+# Casting
 #-----------------------------------------------------------------------------------
 
 sub eval_as {

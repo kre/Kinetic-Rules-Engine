@@ -53,6 +53,7 @@ our %EXPORT_TAGS = (all => [
 qw(
 mk_pageview_prim
 mk_dom_prim
+mk_gen_prim
 next_state
 mk_and
 mk_or
@@ -338,7 +339,11 @@ sub match {
 
   return 0 unless $event->isa($transition->{'type'});
 
-  return $eval_funcs->{$event->get_type()}->($event, $transition);
+  if (defined $eval_funcs->{$event->get_type()}) {
+    return $eval_funcs->{$event->get_type()}->($event, $transition);
+  } else {
+    return gen_event_eval($event, $transition);
+  }
 }
 
 
@@ -448,6 +453,48 @@ $eval_funcs->{'change'} = \&dom_eval;
 $eval_funcs->{'update'} = \&dom_eval;
 $eval_funcs->{'dblclick'} = \&dom_eval;
 
+sub mk_gen_prim {
+  my ($domain, $op, $vars, $filters) = @_;
+
+  return mk_prim($filters,
+		 $vars,
+		 "$domain:$op"
+		);
+}
+
+# this creates a target from then params names in the event spec &
+# a pattern from the associated pattern and then captures the values
+sub gen_event_eval {
+  my ($event, $t) = @_;
+
+  my $logger = get_logger();
+  my $captures = [];
+
+  my $delimeter = 'XQX';
+  my $req_info = $event->get_req_info();
+
+# $logger->debug("t: ", sub {Dumper $t});
+
+  my $filters = $t->{'test'};
+
+  # initializing these to delimeter ensures we'll get a match if no
+  # pattern and target
+  my $pattern = $delimeter;
+  my $target = $delimeter;
+  foreach my $filter (@{ $filters }) {
+    $target .= $req_info->{$filter->{'type'}} . $delimeter ;
+    $pattern .= $filter->{'pattern'} .  $delimeter ;
+  }
+
+  $logger->debug("Target: $target; Pattern: $pattern");
+
+  if(@{$captures} = $target =~ /$pattern/) {
+#    $logger->debug("Captures: ", sub {Dumper $captures});
+    return (1, $captures);
+  } else {
+    return (0, $captures);
+  }		    
+}
 
 
 #-------------------------------------------------------------------------

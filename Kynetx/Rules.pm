@@ -132,7 +132,19 @@ sub process_rules {
     $logger->debug("__FLUSH__");
 
     # this is where we return the JS
-    print Kynetx::Actions::mk_registered_resource_js($req_info) . $js;
+    if ($req_info->{'understands_javascript'}) {
+      $logger->debug("Returning javascript from evaluation");
+      print Kynetx::Actions::mk_registered_resource_js($req_info) . $js;
+    } else {
+      $logger->debug("Returning directives from evaluation");
+
+      my @directive_doc = map {$_->to_directive()} @{$req_info->{'directives'}};
+#      $logger->debug("Directives ", sub {Dumper @directive_doc });
+      print JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(0)->encode(
+	   \@directive_doc
+        );
+
+    }
 
 }
 
