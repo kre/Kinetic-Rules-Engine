@@ -113,7 +113,8 @@ ruleset: 'ruleset' ruleset_name  '{'
 		 'rules' => $item[7]
 	         }
 	     }
-       | { foreach (@{$thisparser->{errors}}) {
+       | { $errors = "";
+	   foreach (@{$thisparser->{errors}}) {
               $errors .= "Line $_->[1]:$_->[0]\n";
            }
           $thisparser->{errors} = undef;

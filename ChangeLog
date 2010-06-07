@@ -1,3 +1,7 @@
+2010-06-07 Mark Horstmeier <meh@kynetx.com>
+    * Fix for 745
+    * Kynetx/Parser.pm: Initialized $errors in ruleset rule
+
 2010-06-04  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Directives.pm: Added to support directives
@@ -14,11 +18,11 @@
     * Kynetx/Actions/Email.pm: adds email actions
     * Kynetx/Operators.pm: added split and join
 
-2010-06-02 Cid Dennis <cid>	 
+2010-06-02 Cid Dennis <cid>
     * Added code to JqueryUI.pm to allow for some of the jquery ui feature to be used in krl.
 
 2010-06-02 Cid Dennis <cid>
-    * Resolves issues #768 to add more fields including rule set id and name to error stack reports. 
+    * Resolves issues #768 to add more fields including rule set id and name to error stack reports.
 	Commit : 612
 	Kynetx/Rules.pm
 	etc/js/0.9/krl-functions.js
@@ -40,7 +44,7 @@
     runtime_test/spec/helper/spec_helper.rb
     runtime_test/spec/multi_rule_spec.rb
 
-    
+
 2010-06-01  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Expressions.pm (eval_emit): Added eval_emit.  Empty for
@@ -63,7 +67,7 @@
     * Fixed issue with KGrowl where default were never reqest between request.
 	Kynetx/Actions.pm
 	etc/js/0.9/frameworks/kgrowl/1.0/kgrowl-1.0.js
- 
+
 2010-05-27  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Parser.pm (structure_operators): Made previous fix
@@ -75,7 +79,7 @@
 
 2010-05-25 Mark Horstmeier <meh@kynetx.com>
     * Turned up logging in RuleManager.pm
-    
+
     * Kynetx/RuleManager.pm: Forced init of $tree and $errors to null (worth a try)
 
 2010-05-25  Cid Dennis <cid@kynetx.com>
@@ -83,10 +87,10 @@
 
 2010-05-25  Cid Dennis <cid@kynetx.com>
     * Fixed issue in runtime where apps using same selector would get duplcated incorrectly. Now dup check is done per app not per selector.
-  
+
 2010-05-25  Cid Dennis <cid@kynetx.com>
-    * Updated runtime to better handle external resources and fixed the engine not to execute the closure before 
-      it was passed into the runtime.  
+    * Updated runtime to better handle external resources and fixed the engine not to execute the closure before
+      it was passed into the runtime.
         Kynetx/Rules.pm
 	etc/js/0.9/frameworks/kgrowl/1.0/kgrowl-1.0.js
 	etc/js/0.9/krl-runtime-footer.js
@@ -162,7 +166,7 @@
 
 2010-05-07 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Predicates/RSS.pm: bug fix to remove $t hash
-    
+
 2010-05-05 Cid Dennis <cid@kynetx.com>
     * etc/js/0.9/krl_applicaiton.js: Fixed an issue where wrong application id was passed back to server for rule execution when multiple apps were on the same page.
 
@@ -212,7 +216,7 @@
 	/Kynetx/Rules.pm
 	/t/Actions.t
 
-2010-04-23  Cid Dennis  <cid@kynetx.com> 
+2010-04-23  Cid Dennis  <cid@kynetx.com>
     * Added double check to make sure register resources only accepts valid data.
       etc/js/0.9/krl-runtime.js
 2010-04-23  Phil Windley  <pjw@kynetx.com>
@@ -241,7 +245,7 @@
 	/Kynetx/Rules.pm
     * Fixed bug where kvars were ignored by runtime.
 	/etc/js/0.9/krl-application.js
-    * Fix bad array refencing 
+    * Fix bad array refencing
 	/Kynetx/Rules.pm
     * Added Timestamp back into runtime code so it will be easy to see what version it is
       	/bin/install-init-files.pl
@@ -251,7 +255,7 @@
     * Kynetx/OData.pm: Fall back for the Windley vest bug. debug statements
     * Kynetx/Module.pm: Fixed reference miss for RSS and OData
     * Kynetx/Util.pm:  Fall back for the Windley vest bug.
-    
+
 2010-04-23  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Events.pm:  vars and vals now name spaced by sm id
@@ -267,7 +271,7 @@
 	and restricted 'typed_value' check to only those.
 
 2010-04-19 Mark Horstmeier <meh@kynetx.com>
-    
+
     ** Added some new functions to the time module: now(), new(), add(), strftime(), atom()
     * Kynetx/Predicates/Time.pm: new functions
     * t/Predicates/Time.t: test cases for each of the new functions
@@ -310,7 +314,7 @@
 
 2010-04-13 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Predicates/Google.pm: Fixed unresolved references to Session and OAuthHelper
-    * Kynetx/Predicates/Google/OAuthHelper.pm: fixed unresolved references to Session 
+    * Kynetx/Predicates/Google/OAuthHelper.pm: fixed unresolved references to Session
 
 2010-04-12 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Predicates/Google.pm: removed circular references
@@ -320,7 +324,7 @@
     * Kynetx/Json.pm: removed circular references
     * Kynetx/Expressions.pm: removed circular references
     * Kynetx/Modules.pm: removed circular references
-    
+
 2010-04-09  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/PrettyPrinter.pm (pp_event_expr): Updated for other Web events
@@ -338,12 +342,12 @@
     * Kynetx/Predicates/Google/Calendar.pm: Calendar flavor of gdata impl
     * t/Predicates/Google.t: test suite
     * /web/etc/Google/gconfig.yml: (in puppet)
-    * requires perl modules: 
-    *    DateTime 
+    * requires perl modules:
+    *    DateTime
     *    DateTime::Format::RFC3339
     *    DateTime::Format::ISO8601
     *    Encode (probably default install)
-	
+
 2010-04-01  Phil Windley  <pjw@kynetx.com>
 
    * Kynetx/PrettyPrinter.pm (pp_select): Added back code to pretty print
@@ -355,10 +359,10 @@
     * Kynetx/Events.pm (process_event): Works now...
     * Kynetx/Rules.pm (process_ruleset): Changed to be usable from
 	events, as well as ruleset API.  Uses new mk_rule_list() function
-	to normalize for old API.  
+	to normalize for old API.
 
 2010-03-25 Mark Horstmeier <meh@kynetx.com>
-    ** New action 'sidetab' 
+    ** New action 'sidetab'
     * Kynetx/Actions.pm:  Added sidetab action
     * t/Actions.t: Added test for sidetab action
 
@@ -382,7 +386,7 @@
     * Kynetx/Predicates/KPDS.pm: Removed references to jQuery with \$K
     * Kynetx/Predicates/Twitter.pm: Removed references to jQuery with \$K
     * Kynetx/Predicates/Authz.pm: Removed references to jQuery with \$K
-    
+
 2010-03-17 Mark Horstmeier <meh@kynetx.com>
     ** Bug fix to restore time predicates
     * Kynetx/Modules.pm: Time predicates were left off when the module loading mechanism
@@ -404,7 +408,7 @@
 
     * Kynetx/Authz.pm: processes rulesets for authorization pragma
     * Kynetx/Rules.pm (process_ruleset): added check for authorization
-	meta commands.  
+	meta commands.
 
 2010-03-08 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Datasets.pm: Added RSS tag to dataset
@@ -455,19 +459,19 @@
     * Kynetx/Util.pm: added convenience function for caching yml files to memcache
     * Kynetx/Rules.pm: check for the Amazon keys
     * Kynetx/Actions.pm: added check for amazon actions
-    * t/Predicates/AmazonLookup.t: Lookup tests 
+    * t/Predicates/AmazonLookup.t: Lookup tests
     * t/Predicates/AmazonSearch.t: Search tests
-    * /web/etc/Amazon/locale.yml                    
-    * /web/etc/Amazon/searchindex_itemindex_us.yml  
-    * /web/etc/Amazon/response_group.yml            
+    * /web/etc/Amazon/locale.yml
+    * /web/etc/Amazon/searchindex_itemindex_us.yml
+    * /web/etc/Amazon/response_group.yml
     * /web/etc/Amazon/searchindex.yml
-    * /web/etc/Amazon/searchindex_itemindex_ca.yml  
+    * /web/etc/Amazon/searchindex_itemindex_ca.yml
     * /web/etc/Amazon/search_response_groups.yml
 
 2010-02-11  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Operators.pm (eval_pick): Added check to make sure $v is
-	  an array before dereferencing it.  
+	  an array before dereferencing it.
 
 2010-02-09  Sam Curren <sxc@kynetx.com>
 	* Changed inner.html to inner.text to fix FogBugz ticket 374.
@@ -485,7 +489,7 @@
 2010-02-08  Mark Horstmeier <meh@kynetx.com>
 
    	* Kynetx/Actions.pm:  added percolate and flippyloo actions
-    
+
 2010-02-06  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/JavaScript.pm (gen_js_predexpr): Fixed up Javascript
@@ -510,7 +514,7 @@
 
 	* Kynetx/Expressions.pm: added mk_closure, added function to
 	  translate old predicates to function apps.  So far, just applies
-	  to "truth()".  All others have to be namespaced.  
+	  to "truth()".  All others have to be namespaced.
 
 	* Kynetx/Rules.pm (process_rules): Added initial rule environment
 	  that defined "truth()"
@@ -530,20 +534,20 @@
 	  so that Expressions.t and JavaScript.t can both use them.
 	* Kynetx/Actions.pm: support for new eval_expr.
 	* Kynetx/PrettyPrinter.pm: completely reworked expression and predicate
-	  language. 
+	  language.
 	* Kynetx/Parser.pm: completely reworked expression and predicate
-	  language.  
+	  language.
 	* Kynetx/Rules.pm: Support for new eval_expr instead of
-	  eval_predicates 
+	  eval_predicates
 	* Kynetx/Modules.pm: Former Predicates.pm.  Predicate evaluation
 	  moved to Expressions.pm  eval_library added (former
-	  eval_datasource). 
+	  eval_datasource).
 	* Kynetx/JavaScript.pm:  Separated expressions from Javascript
-	  generation. Fixed some issues with generation.  
+	  generation. Fixed some issues with generation.
 	* Kynetx/Expressions.pm: Separated expressions from Javascript
 	  generation. Added support for function definition and
 	  application. Moved predicate language into expression. Fixed
-	  some issues with denoted values. 
+	  some issues with denoted values.
 
 2010-01-21 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/JavaScript.pm:  added a parse beesting function to eval_js_expr
@@ -570,7 +574,7 @@
 	  regexp in addition to strings interpreted as regexp.
 
 2010-01-15 Mark Horstmeier <meh@kynetx.com>
-    * Kynetx/Datasets.pm: Refactored the whole module to support 
+    * Kynetx/Datasets.pm: Refactored the whole module to support
       datasets/datasources with JSON and XML sources.  For
       convenience, there are helper functions that mimic the old
       behavior (see Datasets.t), but those should be deprecated
@@ -619,27 +623,27 @@
 	  and namespaced actions.
 
 2010-01-06 Mark Horstmeier <meh@kynetx.com>
-	* Kynetx/Javascript.pm: Removed type check from exp_to_den because it 
+	* Kynetx/Javascript.pm: Removed type check from exp_to_den because it
 	  had a namespace collision with yahoo web api datasource (looked for type)
 
 2009-12-28 Mark Horstmeier <meh@kynetx.com>
-	* t/Configure.t: Switched Configure.t to use a more flexible version of 
-	  Test::Harness.  Using Test::Deep instead to read a base template for 
-	  config variable existence. Still using the development.yml and 
-	  production.yml templates for deeper inspection, but if there is a 
-	  variable that changes often you can mark it with '#ignore' and the 
-	  comparison will be similar to the Test::More::exists function.	  
+	* t/Configure.t: Switched Configure.t to use a more flexible version of
+	  Test::Harness.  Using Test::Deep instead to read a base template for
+	  config variable existence. Still using the development.yml and
+	  production.yml templates for deeper inspection, but if there is a
+	  variable that changes often you can mark it with '#ignore' and the
+	  comparison will be similar to the Test::More::exists function.
 	* t/data/base.yml: Checks for variable existence on a single level.
 	* t/data/development.yml: Flagged RUNTIME_LIB_NAME as #ignore
 	* t/data/production.yml: Flagged RUNTIME_LIB_NAME as #ignore
-	  
+
 
 2009-12-21  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Actions.pm: Added changes to annotate_* in case function
 	  is missing.
 	* etc/js/0.9/krl-annotate.js: moved CSS functions inside function
-	  to avoid nasty overwriting bug.  
+	  to avoid nasty overwriting bug.
 
 2009-12-21 Mark Horstmeier <meh@kynetx.com>
 	* Kynetx/Action.pm: added stub for new snowfall action
@@ -647,7 +651,7 @@
 2009-12-12  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Predicates/Page.pm (get_pageinfo): fixed to work with two
-	  element hostnames.  
+	  element hostnames.
 
 2009-12-11  Phil Windley  <pjw@kynetx.com>
 
@@ -690,32 +694,32 @@
 	additional REST method 'mth' for mod_perl testing
 	* Kynetx/Datasets.pm: Removed constants: DATA_ROOT, CACHEABLE_THRESHOLD
 	* Kynetx/Util.pm: Referenced YAML for RUN_MODE, DEBUG
-	* Kynetx/Configure.pm: Added 4 methods, get_properties, to_string, set_run_mode, set_debug 
+	* Kynetx/Configure.pm: Added 4 methods, get_properties, to_string, set_run_mode, set_debug
 	     get_properties returns a copy of the $config hash
-             set_run_mode modifies RUN_MODE 
-	     set_debug modifies DEBUG 
-	* Kynetx/KOBJ.pm: Referenced YAML for USE_CLOUDFRONT, RUNTIME_LIB_NAME 
-	Replaced package constants with YAML ref 
-		DEFAULT_SERVER_ROOT 
-		DEFAULT_ACTION_PREFIX 
-		DEFAULT_LOG_PREFIX 
-		DEFAULT_ACTION_HOST                      
-		DEFAULT_LOG_HOST 
-		DEFAULT_JS_ROOT 
-		DEFAULT_JS_VERSION               
-	* Kynetx/Version.pm: Referenced YAML for KOBJ_ROOT 
-	* Kynetx/Rules.pm: Referenced YAML for RUN_MODE, TEST_IP 
-	* Kynetx/Console.pm: Added method test_harness for testing in the mod_perl environment 
-	Referenced YAML for DEFAULT_TEMPLATE_DIR, RUN_MODE, TEST_IP 
-	* Kynetx/RuleManager.pm: Added specific ref to Apache2::Const::FORBIDDEN,OK for perl -w test 
-	* etc/kns_config.yml: Added multiple mandatory config variables. 
+             set_run_mode modifies RUN_MODE
+	     set_debug modifies DEBUG
+	* Kynetx/KOBJ.pm: Referenced YAML for USE_CLOUDFRONT, RUNTIME_LIB_NAME
+	Replaced package constants with YAML ref
+		DEFAULT_SERVER_ROOT
+		DEFAULT_ACTION_PREFIX
+		DEFAULT_LOG_PREFIX
+		DEFAULT_ACTION_HOST
+		DEFAULT_LOG_HOST
+		DEFAULT_JS_ROOT
+		DEFAULT_JS_VERSION
+	* Kynetx/Version.pm: Referenced YAML for KOBJ_ROOT
+	* Kynetx/Rules.pm: Referenced YAML for RUN_MODE, TEST_IP
+	* Kynetx/Console.pm: Added method test_harness for testing in the mod_perl environment
+	Referenced YAML for DEFAULT_TEMPLATE_DIR, RUN_MODE, TEST_IP
+	* Kynetx/RuleManager.pm: Added specific ref to Apache2::Const::FORBIDDEN,OK for perl -w test
+	* etc/kns_config.yml: Added multiple mandatory config variables.
 	* t/Configure.t: I have made a major change to the test harness for
 	Configure.  Since the kns_config.yml file is now the authority for
 	system variables, I made the associated tests in Configure.t more
 	robust and added support for context sensitive (RUN_MODE) testing
-	* t/data/development.yml: New File Sample Template for development 
-	* t/data/production.yml: New File Sample Template for production 
-	* t/KOBJ.t: Restored initialization of Kynetx::Configure      
+	* t/data/development.yml: New File Sample Template for development
+	* t/data/production.yml: New File Sample Template for production
+	* t/KOBJ.t: Restored initialization of Kynetx::Configure
 	* t/Datasets.t: Restored initialization of Kynetx::Configure
 
 2009-12-02  Phil Windley  <pjw@kynetx.com>
@@ -729,8 +733,8 @@
 	  the postlude.
 	* Kynetx/Actions.pm (eval_post_statement): Added support for a
 	  guard condition on postlude statements and support for "last"
-	  control statement. 
-	
+	  control statement.
+
 
 2009-11-20  Phil Windley  <pjw@kynetx.com>
 
@@ -747,14 +751,14 @@
 	* Kynetx/KOBJ.pm (get_datasets): Removed need to pass svn connection
 	* Kynetx.pm (describe_ruleset): Removed need to pass svn connection
 	* Kynetx/Repository.pm (get_rules_from_repository): Added option
-	  for getting rules from the rulemanager API. 
+	  for getting rules from the rulemanager API.
 
 2009-11-02  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/JavaScript.pm (gen_js_var): Added to normalize creation
 	  of vars in JS
 	* Kynetx/Operators.pm (eval_toRegexp): Added to allow for coercion
-	  of strings to regexps.  
+	  of strings to regexps.
 
 2009-10-30  Phil Windley  <pjw@kynetx.com>
 
@@ -772,7 +776,7 @@
 	* Kynetx/Console.pm (show_context): Changed to work with changes
 	  for rule selection done to Rules.pm
 	* Kynetx/Rules.pm (eval_ruleset): Refactored to do rule selection
-	  processing in eval_ruleset instead of get_rule_set.  
+	  processing in eval_ruleset instead of get_rule_set.
 
 2009-10-01  Phil Windley  <pjw@kynetx.com>
 
@@ -786,7 +790,7 @@
 
 	* Kynetx/Parser.pm: Changed conditional expression parsing to
 	  speed it up by several orders of magnitude on large conditional
-	  expressions. 
+	  expressions.
 
 2009-09-08  Phil Windley  <pjw@kynetx.com>
 
@@ -807,7 +811,7 @@
 	  'param' datasource.  Removed security check on page:env for now.
 	* etc/js/0.9/krl-runtime.js.tmpl: Updated annotate_search_results
 	  auto-callback to use RID.  Standard action config block now
-	  contains rid.  
+	  contains rid.
 
 2009-08-31  Phil Windley  <pjw@kynetx.com>
 
@@ -828,7 +832,7 @@
 	* Kynetx/PrettyPrinter.pm: Added syntax for persistents
 	* Kynetx/JavaScript.pm: Added support for persistent expressions
 	* Kynetx/Predicates.pm: Added support for persistent predicate
-	  expressions 
+	  expressions
 	* Kynetx/Session.pm: Added functions to support trails
 	* Kynetx/Rules.pm (eval_rule): Refactored postludes
 	* Kynetx/Actions.pm (eval_persistent_expr): added to support
@@ -839,7 +843,7 @@
 	* Kynetx/JavaScript.pm (eval_datasource): refactored to use new
 	  Page.pm module.
 	* Kynetx/Predicates/Page.pm (get_pageinfo): added.  page:url now
-	  supported.  
+	  supported.
 
 2009-07-15  Phil Windley  <pjw@kynetx.com>
 
@@ -854,9 +858,9 @@
 	* Kynetx/Logger.pm: Refactored to support new session abstraction
 	* Kynetx/Log.pm: Refactored to support new session abstraction
 	* Kynetx/JavaScript.pm (eval_counter): Refactored to support new
-	  session abstraction 
+	  session abstraction
 	* Kynetx/Predicates.pm (eval_predicates): Refactored to support
-	  new session abstraction 
+	  new session abstraction
 	* Kynetx/Rules.pm: Refactored to support new session abstraction
 
 2009-07-10  Phil Windley  <pjw@kynetx.com>
@@ -865,12 +869,12 @@
 	* Kynetx/Rules.pm (eval_ruleset): Sam added support for closure
 	  registration and execution.
 	* Kynetx/KOBJ.pm (datasets): Sam added support for dataset
-	  registration. 
+	  registration.
 
 2009-07-09  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (eval_meta): Added support for keys in the meta
-	  section 
+	  section
 	* Kynetx.pm (handler): Modified method/RID regexp to not require
 	  RID for methods like version
 
@@ -897,9 +901,9 @@
 	* Kynetx/Configure.pm: Moving configuration into YAML file.  This
 	  module reads that file and sets up the configuration.
 	* etc/tmpl/httpd-perl.conf.tmpl: Changed significantly to accomadate
-	  new kns_config.pm 
+	  new kns_config.pm
 	* bin/install-httpd-conf.pl: Changed significantly to accomadate
-	  new kns_config.pm 
+	  new kns_config.pm
 	* Kynetx/Logger.pm (handler): Changed default values for rule
 	  logging in callbacks
 	* Kynetx/Session.pm (tie_servers): Using config that can point
@@ -909,7 +913,7 @@
 
 	* Kynetx/Memcached.pm (get_remote_data): Beefed up content
 	  retrieval with LWP instead of LWP::Simple.  Caching only if
-  	  success. 
+  	  success.
 
 2009-06-15  Phil Windley  <pjw@kynetx.com>
 
@@ -921,7 +925,7 @@
 2009-06-13  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (eval_ruleset): Fixed problem with how select
-	  vars extend the rule environment.  
+	  vars extend the rule environment.
 	* Kynetx/Environments.pm (extend_rule_env): Changed to support
 	  extending via a hash as well as a list of keys and values.
 
@@ -942,18 +946,18 @@
 2009-06-02  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (get_rule_set): Separated out selection testing
-	  & var setting so we can test it. 
+	  & var setting so we can test it.
 	* Kynetx/JavaScript.pm: Removed old way of keeping track of JS vars
 	* Kynetx/Actions.pm (emit_var_decl): uses output from flatten_env now.
 	* Kynetx/Environments.pm: Added flatten_env to produce vars and
-	  values in properly scoped order.  
+	  values in properly scoped order.
 
 2009-05-28  Phil Windley  <pjw@kynetx.com>
 
 	This was a major refactoring to remove the dependency on hashes
 	and ad hoc namespacing from the language and use the functions in
 	Environments.pm to create proper symbol tables that automatically
-	handle local variables, etc.  
+	handle local variables, etc.
 
 	* Kynetx/Actions.pm (build_one_action): Accomadate changes to rule environments.
 	* Kynetx/Rules.pm: Multiple changes to create and use environments.
@@ -980,7 +984,7 @@
 2009-05-11  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/PrettyPrinter.pm (pp_meta_item): Updated to support name
-	  and author in meta section 
+	  and author in meta section
 	* Kynetx/Parser.pm: Updated to support name and author in meta section
 	* Kynetx.pm (describe_ruleset): Updated to return new data (name
 	  and author) in the describe method
@@ -1003,7 +1007,7 @@
 	  symbol tables; not yet in use.
 	* Kynetx/Actions.pm: Changed action JS to support general jQuery
 	  selectors
-	
+
 
 2009-05-04  Phil Windley  <pjw@kynetx.com>
 
@@ -1019,10 +1023,10 @@
 	* etc/tmpl/httpd-perl.conf.tmpl: changed path for callback API to
 	  include "callback"
 	* etc/js/0.9/krl-runtime.js: updates to annotate_search_results to
-	  account for Google's new AJAXian SERP.  
+	  account for Google's new AJAXian SERP.
 	* Kynetx/Logger.pm (process_action): Changed how redirect is done.
 	* Kynetx/Actions.pm: Updated annotate_search_results to include
-	  callback function in call.  
+	  callback function in call.
 
 2009-04-25  Phil Windley  <pjw@kynetx.com>
 
@@ -1043,12 +1047,12 @@
 
 	* Kynetx/RuleManager.pm (lint_rule): Added some inital validation
   	  checking for rules on parsing to try and catch invalid select
-	  patterns. 
+	  patterns.
 	* Kynetx/Datasets.pm (mk_dataset_js): Changed dataset JS to store
 	  in the KOBJ obj rather than as a standard var.
 	* Kynetx/KOBJ.pm: Added data set definition defenses.
 	* Kynetx/JSONPath.pm: Added to support pick expressions with
-	  JSONPath patterns.  
+	  JSONPath patterns.
 	* Kynetx/JavaScript.pm (gen_js_expr): Added support for pick expressions.
 	* Kynetx/Pick.pm: Added support for JSONPath based picks
 	* Kynetx/PrettyPrinter.pm: Changes to support Parser changes.
@@ -1064,7 +1068,7 @@
 	  ruleset evaluations in a single call.
 	* Kynetx/KOBJ.pm: Removed KOBJ code.  Added datasets method.
 	  Changed kobj.js generation to support new model for backwards
-	  compatibility. 
+	  compatibility.
 	* etc/js/0.9/kobj-extras.js: Combined KOBJ code and updated to run
 	  KOBJ.eval based on a configuration object
 
@@ -1153,7 +1157,7 @@
 	  memcache configuration.
 	* Kynetx/Memcached.pm: Gets memcached hosts from the
 	  /web/etc/memcache_ips file instead of the http.conf file. This
-	  allows better puppet configuration control.  
+	  allows better puppet configuration control.
 
 2009-01-10  Phil Windley  <pjw@kynetx.com>
 
@@ -1175,12 +1179,12 @@
 2009-01-06  Phil Windley  <pjw@kynetx.com>
 
 	* bin/update.pl: removed an incorrect switch from the call to
-	  install-init-files.pl 
+	  install-init-files.pl
 
 	* Kynetx/KOBJ.pm: Modified KOBJ.obs to work on clicks with inner HTML
 	* bin/install-init-files.pl: Made Amazon S3 save optional and
-	  restored file save for local files in case S3 isn't available.  
-	
+	  restored file save for local files in case S3 isn't available.
+
 
 2009-01-05  Phil Windley  <pjw@kynetx.com>
 
@@ -1196,7 +1200,7 @@
 2008-11-26  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Rules.pm (process_rules): Changes to support non-numeric
- 	  ruleset IDs.  
+ 	  ruleset IDs.
 
 2008-10-30  Phil Windley  <pjw@kynetx.com>
 
@@ -1206,25 +1210,25 @@
 2008-10-28  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/KOBJ.pm (get_kobj): Updated the KOBJ.get_host function to
-	  ignore protocol if present.  
+	  ignore protocol if present.
 
 2008-10-06  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/Actions.pm: Replaced all actions with JQuery-based
-	  equivalents.  
-	* Kynetx/KOBJ.pm: now sends JQuery JS libraries.  Version 0.9. 
+	  equivalents.
+	* Kynetx/KOBJ.pm: now sends JQuery JS libraries.  Version 0.9.
 
 2008-10-02  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/KOBJ.pm (get_kobj): wrapped Prototype effects for future
-	  portability.  
+	  portability.
 	* widgets/weather.pl: Updated to use new wrapped effects
 
 	* Kynetx/JavaScript.pm, Kynetx/KOBJ.pm, Kynetx/Actions.pm: updated
 	  to use new K$ function in kobj-static.js rather than original $
-	  function.  
+	  function.
 	* install-init-files.pl: modifies stock Prototype files to change
-	  $ function it K$ function.  
+	  $ function it K$ function.
 
 2008-09-23  Phil Windley  <pjw@kynetx.com>
 
@@ -1240,13 +1244,13 @@
 2008-09-18  Phil Windley  <pjw@kynetx.com>
 
 	* Parser rewrite complete.  Page variables added as a data source.
-	76 files touched.  Ugh.   
+	76 files touched.  Ugh.
 
 2008-09-11  Phil Windley  <pjw@kynetx.com>
 
 	* Kynetx/PrettyPrinter.pm: Rewrote to match changes to
   	  Parser.pm. Restructured expression syntax tree to be consistent
-	  with predicates and easier to use.  
+	  with predicates and easier to use.
 
 	* Kynetx/Parser.pm: Completely rewrote parser using RecDescent
 	  Added new productions for predicate expressions, qualified data
@@ -1262,7 +1266,7 @@
 	* Kynetx/Actions.pm: Fixed error in action hash
 
 	* etc/tmpl/httpd-perl.conf.tmpl: Added static P3P compact policy
-	  header 
+	  header
 
 	* Kynetx/KOBJ.pm (get_kobj): Added support for private domains and
   	  more robust caller determination
@@ -1276,7 +1280,7 @@
 
 	* t/JavaScript.t (mk_datasource_function): added test for all
 	  datasources
-	* Kynetx/Location.pm new predicates for international in 
+	* Kynetx/Location.pm new predicates for international in
 	* Kynetx/Actions.pm new actions for moving elements
 
 2008-07-17  Phil Windley  <pjw@kynetx.com>
@@ -1284,7 +1288,7 @@
 	* Kynetx/Session.pm (tie_servers): Sessions now using memcached
 	for session storage rather than /web/data...  This is in
 	anticipation of using memcachedb for session storage.
-	
+
 	* Kynetx/Predicates/MediaMarkets.pm: New predicates on functions
 	surrounding the use of DMA codes to determine media markets
 
@@ -1305,7 +1309,7 @@
 	Actions.pm before grabbing a URL expression on the server.
 	* Kynetx/Actions.pm (build_js_load): Run gen_js_pre before
 	building rule_env so that decls get into rule_env as well as in
-	the JS load.  
+	the JS load.
 	* Kynetx/Actions.pm (choose_action): when we grab a URL, we eval
 	it first in case it's an expression
 	* Kynetx/Predicates/Time.pm (get_local_time): removed quotes from
@@ -1314,9 +1318,9 @@
 	from arg in timezone predicate
 	* Kynetx/Session.pm (tie_servers): sessions now use memcached
 	protocol.  At present they're configured to use the memcached
-	servers, but they will eventually point to a memcachedb setup. 
-	
-	
+	servers, but they will eventually point to a memcachedb setup.
+
+
 2008-06-19  Phil Windley  <pjw@kynetx.com>
 
 	* bin/update.pl: added this to make updating servers easier
