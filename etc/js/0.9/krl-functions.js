@@ -593,8 +593,8 @@ KOBJ.trace = function(msg) {
 };
 
 KOBJ.itrace = function(msg) {
-    return;
-//    KOBJ.log(msg);
+//    return;
+    KOBJ.log(msg);
 };
 
 KOBJ.run_when_ready = function() {

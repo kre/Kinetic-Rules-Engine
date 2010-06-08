@@ -39,7 +39,7 @@ Available at http:\/\/wpaoli.building58.com/2009/09/jquery-tab-slide-out-plugin/
         }
         
         //ie6 doesn't do well with the fixed option
-        if ($.browser.msie && $.browser.version.substr(0,1)<7) {
+         if ($.browser.msie && ($.browser.version.substr(0,1)<7 || document.compatMode == "BackCompat")) {
             settings.positioning = 'absolute';
         }
         
@@ -231,9 +231,9 @@ ToDo:
 KOBJ.tabManager = KOBJ.tabManager || {};
 
 KOBJ.tabManager.tabs = KOBJ.tabManager.tabs || [];
+//"backgroundColor": "white",
 
 KOBJ.tabManager.defaults = {
-	"backgroundColor": "white",
 	"cssPlanted": false,
 	"tabColor": "black",
 	"callback": "",
@@ -450,7 +450,9 @@ KOBJ.tabManager.addNew = function(config){
 	if(typeof config === 'object') {
 		jQuery.extend(true, defaults, config);
 		if(defaults.tabColor){
-			defaults.linkCSS["background-color"] = defaults.tabColor;
+            if (!$.browser.msie) {
+                defaults.linkCSS["background-color"] = defaults.tabColor;
+            }
 		}
 	}
 	
@@ -538,13 +540,13 @@ KOBJ.tabManager.addNew = function(config){
 
 	} else {
 		if(defaults.url){
-			var tempMessage = $KOBJ('<div>').addClass(defaults['contentClass']).css({"width": defaults['width'], "background-color": defaults['backgroundColor']}).css(defaults['divCSS']);
+			var tempMessage = $KOBJ('<div>').addClass(defaults['contentClass']).css({ "width": defaults['width'], "background-color": defaults['backgroundColor']}).css(defaults['divCSS']);
 			link = $KOBJ('<a>').addClass(defaults['tabClass']).html(defaults['linkContent']);
 			message = $KOBJ('<iframe>').attr('src',defaults.url).css({"width": defaults.width, "height": defaults.height});
 			message = $KOBJ(tempMessage).append(link).append(message);
 			message = $KOBJ(message).addClass(classToAdd);
 		} else {
-			var tempMessage = $KOBJ('<div>').addClass(defaults['contentClass']).css({"width": defaults['width'], "background-color": defaults['backgroundColor']}).css(defaults['divCSS']);
+            var tempMessage = $KOBJ('<div>').addClass(defaults['contentClass']).css({  "width": defaults['width'], "background-color": defaults['backgroundColor']}).css(defaults['divCSS']);
 			link = $KOBJ('<a>').addClass(defaults['tabClass']).html(defaults['linkContent']);
 			message = $KOBJ(tempMessage).append(link).append(message);
 			message = $KOBJ(message).addClass(classToAdd);

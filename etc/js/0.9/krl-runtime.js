@@ -75,7 +75,7 @@ KOBJ.add_app_config = function(app_config) {
      Look at each application defined in the config and add or update the known application
      list.
      */
-    var app_id_s = [];
+//    var app_id_s = [];
     $KOBJ.each(app_config.rids, function(index, value) {
         var app = KOBJ.get_application(value);
         if (app != null)
@@ -90,14 +90,25 @@ KOBJ.add_app_config = function(app_config) {
             // TODO: This is the old way need here for backwards  compat
             KOBJ[value] = {};
         }
-        app_id_s[index] = app.app_id;
+//        app_id_s[index] = app.app_id;
     });
 
     // TODO: Not sure why we would join all the ids Ask Phil about this
-    KOBJ.site_id = app_id_s.join(";");
-    KOBJ.callback_url = KOBJ.proto() + KOBJ.callback_host + KOBJ.kns_port + "/callback/" + KOBJ.site_id;
+//    KOBJ.site_id = app_id_s.join(";");
+    KOBJ.callback_url = KOBJ.proto() + KOBJ.callback_host + KOBJ.kns_port + "/callback/" + KOBJ.site_id();
 }
         ;
+
+
+
+KOBJ.site_id = function() {
+    var ids = [];
+    $KOBJ.each(KOBJ.applications, function(key,value)
+    {
+        ids.push(key);
+    });
+    return ids.join(";");
+}
 
 // This does not call the setTimeout Directly on the KOBJ.eval as it would block
 // so we add a script element to be executed at a later time.

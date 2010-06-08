@@ -263,6 +263,8 @@ sub eval_ruleset {
   my $js = '';
   $req_info->{'rule_count'} = 0;
   $req_info->{'selected_rules'} = [];
+  $req_info->{'resources'} = {};
+
   foreach my $rule ( @{ $rule_list->{'rules'} } ) {
     $logger->trace("[rules] foreach pre: ", sub { Dumper($rule->{'pre'}) });
     # set by eval_control_statement in Actions.pm
@@ -542,7 +544,6 @@ sub eval_rule {
 
     # keep track of these for each rule
     $req_info->{'actions'} = [];
-    $req_info->{'resources'} = {};
     $req_info->{'labels'} = [];
     $req_info->{'tags'} = [];
     

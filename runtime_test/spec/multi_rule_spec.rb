@@ -96,6 +96,8 @@ describe "Verify any issues with multiple rules on a single page" do
 
       page.wait_for({:wait_for => :condition , :timeout_in_seconds => 30, :javascript => "window.$KOBJ('.KOBJ_header').length == 3"});
       page.js_eval("window.$KOBJ(window.$KOBJ('.KOBJ_header')[2]).html()").to_s.should == "MultiAppTestTwo"
+      # Site ID is the combination of all the apps seperated by a ;
+      page.js_eval("window.KOBJ.site_id()").to_s.should == "a685x3;a685x4"
     end
 
   end

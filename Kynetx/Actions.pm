@@ -419,6 +419,15 @@ EOF
 EOF
 	  'after' => [\&handle_delay]
 	},
+	remove => {
+	       'js' => <<EOF,
+	function(uniq, cb, config, selector) {
+	    \$K(selector).remove();
+	    cb();
+	}
+EOF
+	  'after' => [\&handle_delay]
+	},
 
 
 };
@@ -1026,11 +1035,12 @@ sub mk_registered_resource_js {
    my $logger = get_logger();
 
 
-#   $logger->debug("Req info for register resources ", sub {Dumper $req_info});
-   
+
    if($req_info->{'resources'}) {
 
+
      my $register_resources_json = Kynetx::Json::encode_json($req_info->{'resources'});
+     # $logger->debug("Req info for register resources ",  $register_resources_json);
      $register_resources_js = "KOBJ.registerExternalResources('" .
        $req_info->{'rid'} .
 	 "', " .
@@ -1051,7 +1061,6 @@ sub register_resources {
             $req_info->{'resources'}->{$k} = $v;
         }
     }
-
 }
 
 
