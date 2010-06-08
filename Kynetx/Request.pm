@@ -163,7 +163,10 @@ sub set_capabilities {
 #  $logger->debug("Cap spec ", sub { Dumper $capspec });
 
   if ($capspec->{$req_info->{'domain'}}->{'capabilities'}->{'understands_javascript'} || 
-      $req_info->{'domain'}  eq 'eval' # old style evaluation
+      $req_info->{'domain'}  eq 'eval' || # old style evaluation 
+      ($req_info->{'domain'} eq 'web' && 
+       ! defined $capspec->{'web'}->{'capabilities'}->{'understands_javascript'}
+      )
      ) {
     $req_info->{'understands_javascript'} = 1;
   }

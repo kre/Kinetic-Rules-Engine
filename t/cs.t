@@ -42,9 +42,11 @@ Log::Log4perl->easy_init($INFO);
 
 use LWP::UserAgent;
 
+my $test_count = 0;
+
 my $numtests = 66;
 
-plan tests => $numtests;
+#plan tests => $numtests;
 
 my $ruleset_base = "http://127.0.0.1/ruleset";
 my $event_base = "http://127.0.0.1/blue/event";
@@ -75,7 +77,7 @@ SKIP: {
     $mech->content_like('/Active rules.+2/s');
     $mech->content_contains('test_rule_2');
     $mech->content_contains('will not fire');
-
+    $test_count += 7;
 
     # test CONSOLE function
     my $url_console_2 = "$ruleset_base/console/$ruleset?caller=http://www.windley.com/foo/bar.html";
@@ -90,6 +92,7 @@ SKIP: {
     $mech->content_like('/Active rules.+2/s');
     $mech->content_contains('test_rule_1');
     $mech->content_contains('will fire');
+    $test_count += 7;
 
 
     # test DESCRIBE function
@@ -105,6 +108,7 @@ SKIP: {
     $mech->content_like('/"ruleset_version"\s*:\s*"(prod|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
     $mech->content_like('/"ruleset_id"\s*:\s*"[^"]+"/s');
+    $test_count += 6;
 
 
     # test DESCRIBE function
@@ -118,6 +122,7 @@ SKIP: {
     $mech->content_like('/"ruleset_version"\s*:\s*"(prod|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
     $mech->content_like('/"ruleset_id"\s*:\s*"[^"]+"/s');
+    $test_count += 5;
 
 
     # test DESCRIBE function
@@ -131,6 +136,7 @@ SKIP: {
     $mech->content_like('/"ruleset_version"\s*:\s*"(dev|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
     $mech->content_like('/"ruleset_id"\s*:\s*"[^"]+"/s');
+    $test_count += 5;
 
 
     # test DESCRIBE function
@@ -144,6 +150,7 @@ SKIP: {
     $mech->content_like('/"ruleset_version"\s*:\s*"(dev|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
     $mech->content_like('/"ruleset_id"\s*:\s*"[^"]+"/s');
+    $test_count += 5;
 
 
 
@@ -156,6 +163,7 @@ SKIP: {
 
     is($mech->content_type(), 'text/html');
     $mech->content_like('/rules flushed/i');
+    $test_count += 3;
 
     # test EVAL function
 
@@ -173,6 +181,7 @@ SKIP: {
 
     $mech->content_like('/function callBacks/');
     $mech->content_like('/function\(uniq, cb,/');
+    $test_count += 5;
 
     # test web event
 
@@ -190,20 +199,23 @@ SKIP: {
 
     $mech->content_like('/function callBacks/');
     $mech->content_like('/function\(uniq, cb,/');
+    $test_count += 5;
 
     # sets search referer
     my $url_4 = "$ruleset_base/eval/$ruleset/1231363179515.js?caller=http%3A//www.windley.com/foo/bazz.html&referer=http%3A//www.google.com/&kvars={%22foo%22%3A%205%2C%20%22bar%22%3A%20%22fizz%22%2C%20%22bizz%22%3A%20[1%2C%202%2C%203]}&title=Phil%20Windleys%20Technometria";
 
 #    diag "Testing eval with $url_4";
-
     $mech->get_ok($url_4);
 
 
     is($mech->content_type(), 'text/javascript');
 
     # should be two actions, one callback
+    $mech->content_like('/test_rule_2/s');
     $mech->content_like('/function callBacks/');
     $mech->content_like('/function\(uniq, cb,.+function\(uniq, cb,/s');
+    # test_rule_3 shouldn't fire...inactive
+    $mech->content_unlike('/test_rule_3/s');
 
     $mech->content_contains('kobj_weather');
 
@@ -212,6 +224,7 @@ SKIP: {
 
     $mech->content_contains(q/KOBJ['data']['public_timeline'] = [/);
     $mech->content_lacks("KOBJ['data']['cached_timeline'] =");
+    $test_count += 10;
 
     # sets search referer with events
     my $url_4a = "$event_base/web/pageview/$ruleset/1231363179515.js?caller=http%3A//www.windley.com/foo/bazz.html&referer=http%3A//www.google.com/&kvars={%22foo%22%3A%205%2C%20%22bar%22%3A%20%22fizz%22%2C%20%22bizz%22%3A%20[1%2C%202%2C%203]}&title=Phil%20Windleys%20Technometria";
@@ -234,16 +247,20 @@ SKIP: {
 
     $mech->content_contains(q/KOBJ['data']['public_timeline'] = [/);
     $mech->content_lacks("KOBJ['data']['cached_timeline'] =");
+    $test_count += 8;
 
     my $url_5 = "$ruleset_base/eval/$ruleset/1237475272090.js?caller=http%3A//search.barnesandnoble.com/booksearch/isbnInquiry.asp%3FEAN%3D9781400066940&referer=http%3A//www.barnesandnoble.com/index.asp&kvars=&title=Stealing MySpace, Julia Angwin, Book - Barnes & Noble";
 
     $mech->get_ok($url_5);
 
     is($mech->content_type(), 'text/javascript');
+    $test_count += 2;
 
 
 
 }
+
+done_testing($test_count);
 
 1;
 

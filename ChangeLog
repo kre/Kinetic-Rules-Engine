@@ -1,3 +1,8 @@
+2010-06-08  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Request.pm (set_capabilities): Made 'understands_javascript'
+	a default for event domain 'web' (bug 785)
+
 2010-06-07 Mark Horstmeier <meh@kynetx.com>
     * Fix for 745
     * Kynetx/Parser.pm: Initialized $errors in ruleset rule

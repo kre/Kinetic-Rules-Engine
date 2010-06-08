@@ -159,6 +159,7 @@ sub process_event {
 
       foreach my $rule (@{$ruleset->{'rules'}}) {
 
+	next if $rule->{'state'} eq 'inactive';
 
 	Log::Log4perl::MDC->put('rule', $rule->{'name'});  # no rule for now...
 
