@@ -1,3 +1,10 @@
+2010-06-08  Cid <cid@kynetx.com>
+    * Added new themes for jquery-ui code.  
+    * Updated Action.pm to have new action called remove
+    * Updated Rule.pm to collect all resources needed by all actions in a rule set not just last one.
+    * Updated sidetab to work better with IE
+    * Published runtime http://static.kobj.net/kobj-static-20100608194126.js for this update
+    
 2010-06-08  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Request.pm (set_capabilities): Made 'understands_javascript'
