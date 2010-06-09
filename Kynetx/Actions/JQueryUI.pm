@@ -132,14 +132,73 @@ EOF
 EOF
 	  'after' => [\&handle_delay]
 	},
+    dialog => {
+	       'js' => <<EOF,
+	function(uniq, cb, config, selector) {
+	    if(config.buttons)
+	    {
+	        config.buttons = eval("(" + config.buttons + ")");
+	    }
+	    if(config.open)
+	    {
+	        config.open = eval("(" + config.open + ")");
+	    }
+	    if(config.modal == "1")
+	    {
+	        config.modal = true;
+	    }
+	    if(config.modal == "0")
+	    {
+	        config.modal = false;
+	    }
+	    if(config.autoOpen == "1")
+	    {
+	        config.autoOpen = true;
+	    }
+	    if(config.autoOpen == "0")
+	    {
+	        config.autoOpen = false;
+	    }
+
+	    \$K(selector).dialog(config);
+        \$K(selector).dialog().parents('.kynetx-ui-dialog:eq(0)').wrap("<div class='my_kynetx'></div>");   	    
+	    cb();
+	}
+EOF
+	  'after' => [\&handle_delay]
+	},
+    accordion => {
+	       'js' => <<EOF,
+	function(uniq, cb, config, selector) {
+	    if(config.autoHeight == "1")
+	    {
+	        config.autoHeight = true;
+	    }
+	    if(config.autoHeight == "0")
+	    {
+	        config.autoHeight = false;
+	    }
+
+	    \$K(selector).accordion(config);
+	    cb();
+	}
+EOF
+	  'after' => [\&handle_delay]
+	},
 
 
 };
 
 
+#sub get_resources {
+#    return     {"http://static.kobj.net/kjs-frameworks/jquery_ui/1.8/jquery-ui-1.8.custom.js" => { "type" => "js" },
+#    "http://static.kobj.net/kjs-frameworks/jquery_ui/1.8/css/ui-darkness/jquery-ui-1.8.custom.css" => { "type" => "css", "selector" => ".ui-helper-hidden" }
+#    };
+#}
+
 sub get_resources {
-    return     {"http://static.kobj.net/kjs-frameworks/jquery_ui/1.8/jquery-ui-1.8.custom.js" => { "type" => "js" },
-    "http://static.kobj.net/kjs-frameworks/jquery_ui/1.8/css/ui-darkness/jquery-ui-1.8.custom.css" => { "type" => "css", "selector" => ".ui-helper-hidden" }
+    return     {"http://init-files.s3.amazonaws.com/kjs-frameworks/jquery_ui/1.8/jquery-ui-1.8.2.custom.js" => { "type" => "js" },
+    "http://init-files.s3.amazonaws.com/kjs-frameworks/jquery_ui/1.8/css/kynetx_ui_darkness/jquery-ui-1.8.2.custom.css" => { "type" => "css", "selector" => ".ui-helper-hidden" }
     };
 }
 

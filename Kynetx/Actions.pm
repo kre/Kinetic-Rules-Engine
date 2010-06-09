@@ -428,6 +428,26 @@ EOF
 EOF
 	  'after' => [\&handle_delay]
 	},
+	click => {
+	       'js' => <<EOF,
+	function(uniq, cb, config, selector, func) {
+	    var myfunc = eval("(" + func + ")");
+	    \$K(selector).click(myfunc);
+	    cb();
+	}
+EOF
+	  'after' => [\&handle_delay]
+	},
+	jsfunction => {
+	       'js' => <<EOF,
+	function(uniq, cb, config,name, func) {
+	    var myfunc = eval("(" + func + ")");
+	    window[name] = myfunc;
+	    cb();
+	}
+EOF
+	  'after' => [\&handle_delay]
+	},
 
 
 };
