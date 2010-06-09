@@ -1,3 +1,10 @@
+2010-06-09  Cid <cid@kynetx.com>
+    * Added changes to jquery-ui themes 
+    * Added a few more actions to help with jquery ui.   Non of them will be published until
+      jquery ui is released as a feature.
+    * Published runtime http://static.kobj.net/kobj-static-20100609174026.js for this update
+    * Runtime above is for commit 621
+
 2010-06-08  Cid <cid@kynetx.com>
     * Added new themes for jquery-ui code.  
     * Updated Action.pm to have new action called remove
