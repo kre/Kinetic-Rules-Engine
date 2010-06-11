@@ -1,3 +1,8 @@
+2010-06-11  Cid <cid@kynetx.com>
+    * Fixed the dam side tab again .browser was called on $ not $KOBJ
+    * Runtime is http://static.kobj.net/kobj-static-20100611210815.js
+    * Commit Number : 623
+
 2010-06-09  Cid <cid@kynetx.com>
     * Added changes to jquery-ui themes 
     * Added a few more actions to help with jquery ui.   Non of them will be published until
