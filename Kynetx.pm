@@ -112,6 +112,9 @@ sub handler {
     } elsif($method eq 'google_callback' ) {
       Kynetx::Predicates::Google::process_oauth_callback($r, $method, $rid);
       return Apache2::Const::REDIRECT;
+    } elsif($method eq 'fb_callback' ) {
+      Kynetx::Predicates::Facebook::process_oauth_callback($r, $method, $rid);
+      return Apache2::Const::REDIRECT;
 
     } elsif($method eq 'foo' ) {
 	my $uniq = int(rand 999999999);

@@ -178,8 +178,8 @@ sub eval_rss {
         $retval = channel_elements($args);
     } elsif ( $function eq 'item' ) {
         $retval = item_elements($args);
-    } 
-    
+    }
+
     return $retval;
 
 }
@@ -257,7 +257,7 @@ sub channel_elements {
             $key = "$nspace\$$cname";
         }
         $logger->debug( "Find RSS channel value for : ", $key );
-        return  (collapse ($rss->{$key}));
+        return  (Kynetx::Json::collapse ($rss->{$key}));
     }
     $logger->warn("not an array");
 }

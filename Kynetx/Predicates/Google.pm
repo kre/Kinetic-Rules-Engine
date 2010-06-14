@@ -184,7 +184,7 @@ sub get {
     $gparm = get_params( $args, $gparm, $common );
     my $url = build_url( $req_info, $rule_env, $args, $gparm, $scope,'GET' );
     my $resp =
-      get_protected_resource( $req_info, $session, NAMESPACE, $scope, $url );
+      get_protected_resource( $req_info, $session, NAMESPACE, $url, $scope );
     return eval_response($resp);  
 }
 $funcs->{'get'} = \&get;
@@ -205,7 +205,7 @@ sub raw_get {
         $logger->debug("Scopes match");  
           
         my $resp =
-            get_protected_resource( $req_info, $session, NAMESPACE, $scope, $uri->as_string() );
+            get_protected_resource( $req_info, $session, NAMESPACE, $uri->as_string(), $scope );
         return $resp->content;  
     } else {
         $logger->warn("Not authorized for scope: ",$scope->{'dname'});
@@ -322,8 +322,8 @@ sub test_request {
     my $turl   = $scope->{'turl'};
     if ($turl) {
         return
-          get_protected_resource( $req_info, $session, NAMESPACE,
-                                  $scope,    $turl );
+          get_protected_resource( $req_info, $session, NAMESPACE, $turl,
+                                  $scope );
     } else {
         $logger->warn( "No test URL defined for google scope: ",
                        $scope->{'dname'} );
@@ -412,7 +412,7 @@ sub google_msg {
     my $msg = <<EOF;
 <div id="$divId">
 <p>The application $name ($rid) from $author is requesting that you authorize Google $scope_name to share your personal information with it.  </p>
-<blockquote><b>Description:</b>$description</blockquote>
+<blockquote><b>Description: </b>$description</blockquote>
 <p>
 The application will not have access to your login credentials at Google.  If you click "Take me to Google" below, you will taken to Google and asked to authorize this application.  You can cancel at that point or now by clicking "No Thanks" below.  Note: if you cancel, this application may not work properly. After you have authorized this application, you will be redirected back to this page.
 </p>

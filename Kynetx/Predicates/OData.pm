@@ -44,7 +44,7 @@ use Kynetx::Util qw(
 ); 
 use Kynetx::Json qw(
   jsonToAst_w
-  get_obj
+  get_items
 );
 
 use Exporter;
@@ -80,7 +80,7 @@ my %predicates = (
         my $url    = build( 'service_document', $args );
         my $resp   = request($url);
         if ( defined $resp ) {
-            my $sets = get_obj( jsonToAst_w($resp->content), qr/\EntitySets/ );
+            my $sets = get_items( jsonToAst_w($resp->content), qr/EntitySets/ );
             return $sets
         }
     },

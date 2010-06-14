@@ -46,15 +46,19 @@ $Data::Dumper::Indent = 1;
 
 use LWP::UserAgent;
 use HTTP::Request::Common;
+use HTTP::Status qw(:constants);
+use HTTP::Response;
 use URI::Escape ('uri_escape');
+use Encode;
 
 use Kynetx::Session qw(
-    session_keys
-    session_delete
-    session_store
-    session_get
+  session_keys
+  session_delete
+  session_store
+  session_get
 );
 use Kynetx::Util;
+use Kynetx::Memcached qw(check_cache mset_cache);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -76,13 +80,17 @@ our %EXPORT_TAGS = (
           get_protected_resource
           trim_tokens
           blast_tokens
-          post_protected_resource          
+          post_protected_resource
+          get_consumer_tokens
+          make_callback_url
+          parse_callback
           )
     ]
 );
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 use constant SEP => ":";
+use constant FLOW_TYPE => "web_server";
 
 sub get_authorization_message {
     my ( $req_info, $session, $args, $namespace, $endpoints, $scope ) = @_;
@@ -119,9 +127,59 @@ sub get_userauth_url {
 }
 
 sub get_access_tokens {
+    my $req_info = shift;
+    my $session = shift;
+    my $namespace = shift;
+    if ($namespace eq 'facebook') {
+        my ($endpoint,$callback_hash) = @_;
+        return get_access_tokens_v2($req_info,$session,$namespace,$endpoint,$callback_hash);
+    } else {
+        my ($endpoints,$scope) = @_;
+        return get_access_tokens_v1($req_info,$session,$namespace,$endpoints,$scope);
+    }
+
+}
+
+sub get_access_tokens_v2 {
+    my ($req_info,$session,$namespace,$endpoint,$callback_hash) = @_;
+    my $logger = get_logger();
+    $logger->debug("Session: ", sub {Dumper($session)});
+    my $rid         = $req_info->{'rid'};
+    my $verifier = uri_escape(get_token( $rid, $session, 'oauth_verifier', $namespace));
+    my $callback = uri_escape(make_callback_url($req_info,$namespace));
+    my $access_url = $endpoint->{'access_token_url'} || '';
+    my $consumer_tokens = get_consumer_tokens($req_info,$session,$namespace);
+    my $content;
+    $content .= 'client_id=' . $consumer_tokens->{"consumer_key"};
+    $content .= '&type='.FLOW_TYPE;
+    $content .= '&code=' . $verifier;
+    $content .= '&client_secret=' . $consumer_tokens->{"consumer_secret"};
+    $content .= '&redirect_uri=' . $callback;
+    my $mixed = $access_url . '?' . $content;
+    $logger->debug("Access Url: ", $mixed);
+    my $hreq = HTTP::Request->new( GET => $mixed);
+    my $ua = LWP::UserAgent->new;
+    my $resp = $ua->simple_request($hreq);
+    if ($resp->is_success) {
+        my $content = $resp->content();
+        my @elements = split(/&/,$content);
+        my $token_hash;
+        foreach my $element (@elements) {
+            my ($key,$value) = split(/=/,$element);
+            if ($key eq 'access_token') {
+                store_token( $rid, $session, 'access_token', $value, $namespace);
+            }
+        }
+    }
+    $logger->debug("Request: ", sub {Dumper($hreq)});
+    $logger->debug("Response: ", sub {Dumper($resp->content_ref())});
+    return $resp;
+}
+
+sub get_access_tokens_v1 {
     my ( $req_info, $session, $namespace, $endpoints, $scope ) = @_;
     my $logger = get_logger();
-    $logger->debug("Get Access Tokens");
+    $logger->trace("Get Access Tokens v1");
     $logger->trace( "Endpoints: ", sub { Dumper($endpoints) } );
     my $rid         = $req_info->{'rid'};
     my $request_url = $endpoints->{'access_token_url'};
@@ -148,7 +206,7 @@ sub get_access_tokens {
     $request->sign();
 
     my $surl = $request->to_url();
-    $logger->debug( "Access URL: ", $surl );
+    $logger->trace( "Access URL: ", $surl );
     my $ua   = LWP::UserAgent->new();
     my $resp = $ua->request( GET $surl);
 
@@ -175,12 +233,12 @@ sub get_request_tokens {
     my $logger      = get_logger();
     my $rid         = $req_info->{'rid'};
     my $request_url = $endpoints->{'request_token_url'};
-    $logger->debug( "request url: ", $request_url );
+    $logger->trace( "request url: ", $request_url );
     my $consumer_tokens =
       get_consumer_tokens( $req_info, $session, $namespace );
-    $logger->debug( "Consumer tokens: ", sub { Dumper($consumer_tokens) } );
+    $logger->trace( "Consumer tokens: ", sub { Dumper($consumer_tokens) } );
     my $callback = make_callback_url( $req_info, $namespace );
-    $logger->debug("REQUEST Callback: $callback");
+    $logger->trace("REQUEST Callback: $callback");
     my $request = Net::OAuth->request("request token")->new(
                      'consumer_key'    => $consumer_tokens->{'consumer_key'},
                      'consumer_secret' => $consumer_tokens->{'consumer_secret'},
@@ -194,7 +252,7 @@ sub get_request_tokens {
 
     $request->sign();
     my $surl = $request->to_url();
-    $logger->debug( "Request token url: ", $surl );
+    $logger->trace( "Request token url: ", $surl );
 
     my $ua   = LWP::UserAgent->new();
     my $resp = $ua->request( GET $surl);
@@ -216,7 +274,51 @@ sub get_request_tokens {
 }
 
 sub get_protected_resource {
-    my ( $req_info, $session, $namespace, $scope, $url ) = @_;
+    my ( $req_info, $session, $namespace, $url, $scopche) = @_;
+    my $logger = get_logger();
+    if ($namespace eq 'facebook') {
+        return get_protected_resource_v2($req_info, $session, $namespace, $url,$scopche);
+    } else {
+        return get_protected_resource_v1( $req_info, $session, $namespace, $url, $scopche );
+    }
+
+}
+
+sub get_protected_resource_v2 {
+    my ( $req_info, $session, $namespace, $url,$cache) = @_;
+    my $logger = get_logger();
+    $logger->debug("Protected Request URL: ",$url);
+    my $rid    = $req_info->{'rid'};
+    if ($cache) {
+        my $key = $rid.":".$url;
+        $logger->debug("Check cache for $key");
+        my $content = check_cache($key);
+        if ($content) {
+            $logger->debug("Cache hit");
+            my $r = HTTP::Response->new(HTTP_NON_AUTHORITATIVE_INFORMATION);
+            $r->content($content);
+            return $r;
+        }
+
+    }
+    my $access_token = get_token( $rid, $session, 'access_token', $namespace);
+    my ($urlpart,$querypart) = split(/\?/,$url);
+    my @parts;
+    if ($querypart) {
+        @parts = split(/&/,$querypart);
+    }
+    push(@parts,"access_token=$access_token");
+    $querypart = join("&",@parts);
+    my $token_url = "$urlpart?$querypart";
+    $logger->trace("Protected Request URL: ",$token_url);
+    my $hreq = HTTP::Request->new( GET => $token_url );
+    my $ua   = LWP::UserAgent->new;
+    my $resp = $ua->simple_request($hreq);
+    return $resp;
+}
+
+sub get_protected_resource_v1 {
+    my ( $req_info, $session, $namespace, $url, $scope ) = @_;
     my $logger = get_logger();
     my $rid    = $req_info->{'rid'};
     my $consumer_tokens =
@@ -268,7 +370,35 @@ sub get_protected_resource {
 }
 
 sub post_protected_resource {
-    my ( $req_info, $session, $namespace, $scope, $url,$content ) = @_;
+    my ( $req_info, $session, $namespace, $scope, $url, $content ) = @_;
+    my $logger = get_logger();
+    if ($namespace eq 'facebook') {
+        return post_protected_resource_v2($req_info, $session, $namespace, $url, $content);
+    } else {
+        return post_protected_resource_v1($req_info, $session, $namespace, $scope, $url, $content);
+    }
+}
+
+sub post_protected_resource_v2 {
+    my ( $req_info, $session, $namespace, $url, $content ) = @_;
+    my $logger = get_logger();
+    $logger->debug("URL: ", $url);
+    my $rid    = $req_info->{'rid'};
+    my $access_token = get_token( $rid, $session, 'access_token', $namespace);
+    my $hreq = HTTP::Request->new(POST => $url);
+    if ($content) {
+        $content .= "&access_token=$access_token";
+    } else {
+        $content = "access_token=$access_token";
+    }
+    $hreq->content($content);
+    my $ua = LWP::UserAgent->new;
+    my $resp = $ua->simple_request($hreq);
+    return $resp;
+}
+
+sub post_protected_resource_v1 {
+    my ( $req_info, $session, $namespace, $scope, $url, $content ) = @_;
     my $logger = get_logger();
     my $rid    = $req_info->{'rid'};
     my $consumer_tokens =
@@ -320,8 +450,31 @@ sub post_protected_resource {
 
 }
 
-
 sub set_auth_tokens {
+    my ( $r, $method, $rid, $session,$namespace ) = @_;
+    my $logger = get_logger();
+    $logger->trace("Set auth token session: ", sub { Dumper($session)});
+    if ($namespace eq 'facebook') {
+        return set_auth_tokens_v2($r, $method, $rid, $session, $namespace);
+    } else {
+        return set_auth_tokens_v1($r, $method, $rid, $session);
+    }
+}
+
+sub set_auth_tokens_v2 {
+    my ( $r, $method, $rid, $session, $namespace) = @_;
+    my $logger = get_logger();
+    my $req       = Apache2::Request->new($r);
+    my $verifier  = $req->param('code');
+    $logger->trace(
+            "User returned from $namespace with verifier => $verifier" );
+    $logger->trace("Auth token request returned: ", sub { Dumper($req)});
+    store_token( $rid, $session, 'oauth_verifier', $verifier, $namespace);
+
+
+}
+
+sub set_auth_tokens_v1 {
     my ( $r, $method, $rid, $session ) = @_;
     my $logger = get_logger();
     $logger->trace( "Session: ", Dumper [$session] );
@@ -331,7 +484,7 @@ sub set_auth_tokens {
     my $caller    = $req->param('caller');
     my $scope     = get_scope_from_token( $rid, $session, $token );
     my $namespace = get_namespace_from_token( $rid, $session, $token );
-    $logger->debug(
+    $logger->trace(
             "User returned from $namespace ($scope) with oauth_token => $token",
             " &  oauth_verifier => $verifier & caller => $caller" );
     $logger->trace( "Session token scope: ", sub { Dumper($scope) } );
@@ -354,13 +507,17 @@ sub store_token {
     my $key = '';
     if ( defined $lscope ) {
         $key = $namespace . SEP . $lscope;
+    } else {
+        $key = $namespace;
     }
     $key .= SEP . $name;
     session_store( $rid, $session, $key, $value );
+    $logger->trace("Stored token ($name): ", sub { Dumper($session)});
 }
 
 sub get_token {
     my ( $rid, $session, $name, $namespace, $scope ) = @_;
+    my $logger = get_logger();
     my $key = '';
     my $lscope;
     if ( ref $scope eq 'HASH' ) {
@@ -370,7 +527,10 @@ sub get_token {
     }
     if ( defined $lscope ) {
         $key = $namespace . SEP . $lscope;
+    } else {
+        $key = $namespace;
     }
+    $logger->trace("Get token ($key)");
     $key .= SEP . $name;
     return session_get( $rid, $session, $key );
 }
@@ -378,7 +538,7 @@ sub get_token {
 sub trim_tokens {
     my ( $rid, $session, $namespace, $scope ) = @_;
     my $logger = get_logger();
-    my $key = '';
+    my $key    = '';
     my $lscope;
     if ( ref $scope eq 'HASH' ) {
         $lscope = $scope->{'dname'};
@@ -388,20 +548,20 @@ sub trim_tokens {
     if ( defined $lscope ) {
         $key = $namespace . SEP . $lscope . SEP . 'access';
     }
-    foreach my $session_key (@{session_keys($rid,$session)}) {
+    foreach my $session_key ( @{ session_keys( $rid, $session ) } ) {
 
-        my $re = qr/^$key/ ;
-        if (!($session_key =~ $re)) {
-            session_delete($rid,$session,$session_key);
+        my $re = qr/^$key/;
+        if ( !( $session_key =~ $re ) ) {
+            session_delete( $rid, $session, $session_key );
         }
     }
-    
+
 }
 
 sub blast_tokens {
     my ( $rid, $session, $namespace, $scope ) = @_;
     my $logger = get_logger();
-    my $key = '';
+    my $key    = '';
     my $lscope;
     if ( ref $scope eq 'HASH' ) {
         $lscope = $scope->{'dname'};
@@ -411,13 +571,15 @@ sub blast_tokens {
     if ( defined $lscope ) {
         $key = $namespace . SEP . $lscope;
     }
-    foreach my $session_key (@{Kynetx::Session::session_keys($rid,$session)}) {
-        my $re = qr/^$key/ ;
-        if ($session_key =~ $re) {
-            session_delete($rid,$session,$session_key);
+    foreach
+      my $session_key ( @{ Kynetx::Session::session_keys( $rid, $session ) } )
+    {
+        my $re = qr/^$key/;
+        if ( $session_key =~ $re ) {
+            session_delete( $rid, $session, $session_key );
         }
     }
-    
+
 }
 
 sub get_namespace_from_token {
@@ -492,38 +654,93 @@ sub nonce {
 
 sub get_consumer_tokens {
     my ( $req_info, $session, $namespace ) = @_;
+    my $logger = get_logger();
     my $consumer_tokens;
     my $rid    = $req_info->{'rid'};
-    my $logger = get_logger();
     unless ( $consumer_tokens = $req_info->{ $rid . ':key:' . $namespace } ) {
         my $ruleset =
           Kynetx::Repository::get_rules_from_repository( $rid, $req_info );
         $consumer_tokens = $ruleset->{'meta'}->{'keys'}->{$namespace};
     }
+    $logger->trace("consumer tokens",sub {Dumper($consumer_tokens)});
     return $consumer_tokens;
+}
+
+sub parse_callback {
+    my ($r,$method,$rid,$namespace) = @_;
+    my $logger = get_logger();
+    my $cb_obj->{'namespace'} = $namespace;
+    my $req       = Apache2::Request->new($r);
+    $cb_obj->{'req_info'}  = Kynetx::Request::build_request_env( $r, $method, $rid );
+    my $uri = $cb_obj->{'req_info'}->{'uri'};
+    my $rest_part =
+          Kynetx::Configure::get_oauth_param( $namespace, 'callback' );
+    if ($namespace eq 'facebook') {
+        if ($uri =~ m/$rest_part/) {
+            if ($uri =~ m/$rest_part\/(\w+)\/(\w+)\/(\S+)\/?/) {
+                $cb_obj->{'rid'} = $1;
+                $cb_obj->{'version'} = $2;
+                $cb_obj->{'caller'} = $3;
+            }
+        } else {
+            $logger->warn("Error parsing facebook callback: ",$uri);
+        }
+    } else {
+        $cb_obj->{'namespace'} = 'common';
+        $cb_obj->{'caller'}    = $req->param('caller');
+        $cb_obj->{'verifier'}  = uri_escape($req->param('code'));
+        $cb_obj->{'version'}   = $cb_obj->{'req_info'}->{'rule_version'} || 'prod';
+    }
+    $logger->trace("Callback Object: ", sub {Dumper($cb_obj)});
+    return $cb_obj;
 }
 
 sub make_callback_url {
     my ( $req_info, $namespace ) = @_;
-    my $logger  = get_logger();
-    my $rid     = $req_info->{'rid'};
-    my $version = $req_info->{'rule_version'} || 'prod';
+    my $logger = get_logger();
+
+    if ( $namespace eq 'facebook' ) {
+        return _make_facebook_callback_url($req_info);
+    } else {
+        my $rid     = $req_info->{'rid'};
+        my $version = $req_info->{'rule_version'} || 'prod';
+        my $caller  = $req_info->{'caller'};
+        my $host    = Kynetx::Configure::get_config('EVAL_HOST');
+        my $port    = Kynetx::Configure::get_config('OAUTH_CALLBACK_PORT');
+        my $rest_part =
+          Kynetx::Configure::get_oauth_param( $namespace, 'callback' );
+        my $url_part = "/ruleset/$rest_part/";
+        my $base     = "http://" . $host . ":" . $port . $url_part . $rid . "?";
+        my $callback =
+          Kynetx::Util::mk_url(
+                                $base,
+                                {
+                                   'caller',                  $caller,
+                                   "$rid:kynetx_app_version", $version
+                                }
+          );
+        $logger->trace( "OAuth callback url: ", $callback );
+        return uri_escape($callback);
+    }
+}
+
+sub _make_facebook_callback_url {
+    my ($req_info) = @_;
+    my $logger     = get_logger();
+    my $rid        = $req_info->{'rid'};
+    my $version = $req_info->{'rule_version'} || 'dev';
     my $caller  = $req_info->{'caller'};
+    #$caller =~ s/\//../g;
+    #$caller = uri_escape($caller);
+    #$caller = "none";
     my $host    = Kynetx::Configure::get_config('EVAL_HOST');
     my $port    = Kynetx::Configure::get_config('OAUTH_CALLBACK_PORT');
     my $rest_part =
-      Kynetx::Configure::get_oauth_param( $namespace, 'callback' );
-    my $url_part = "/ruleset/$rest_part/";
-    my $base     = "http://" . $host . ":" . $port . $url_part . $rid . "?";
-    my $callback = Kynetx::Util::mk_url(
-                           $base,
-                           {
-                              'caller',                  $caller,
-                              "$rid:kynetx_app_version", $version
-                           }
-    );
-    $logger->debug( "OAuth callback url: ", $callback );
-    return $callback;
+      Kynetx::Configure::get_oauth_param( 'facebook', 'callback' );
+    my $base = "http://$host:$port/ruleset/$rest_part/$rid/$version/$caller";
+    $logger->trace( "OAuth callback url: ", $base );
+    return $base;
+
 }
 
 1;

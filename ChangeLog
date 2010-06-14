@@ -1,22 +1,40 @@
+2010-06-14 Mark Horstmeier <meh@kynetx.com>
+    * Kynetx.pm: Added callback handler for facebook Oauth
+    * Kynetx/Predicates/Facebook.pm: facebook integration
+    * Kynetx/Predicates/Google/OAuthHelper.pm: Added support for OAuth v2.0
+    * Kynetx/Predicates/Google.pm: Minor changes in call to OAuthHelper
+    * Kynetx/Predicates/OData.pm: support for function name change in Json.pm
+    * Kynetx/Predicates/RSS.pm: bug fix
+    * Kynetx/Configure.pm: support for Facebook config file and generic module config
+        requires /web/etc/Facebook/facebook.yml
+        requires /web/etc/module_config.yml
+    * Kynetx/Json.pm: changed function name, added stub function for testing
+    * Kynetx/Memcached.pm: Split functionality of get_remote_data into two functions
+    * Kynetx/Modules.pm: added facebook as module datasource
+    * Kynetx/Operators.pm: added eval .as("array") for the persistant arrays
+    * Kynetx/Util.pm: added validators and args parsers that seem to be common to my REST impl.
+    * t/Predicates/OData.t: Updated tests
+    * t/Predicates/Facebook.t: Test suite for facebook
+
 2010-06-11  Cid <cid@kynetx.com>
     * Fixed the dam side tab again .browser was called on $ not $KOBJ
     * Runtime is http://static.kobj.net/kobj-static-20100611210815.js
     * Commit Number : 623
 
 2010-06-09  Cid <cid@kynetx.com>
-    * Added changes to jquery-ui themes 
+    * Added changes to jquery-ui themes
     * Added a few more actions to help with jquery ui.   Non of them will be published until
       jquery ui is released as a feature.
     * Published runtime http://static.kobj.net/kobj-static-20100609174026.js for this update
     * Runtime above is for commit 621
 
 2010-06-08  Cid <cid@kynetx.com>
-    * Added new themes for jquery-ui code.  
+    * Added new themes for jquery-ui code.
     * Updated Action.pm to have new action called remove
     * Updated Rule.pm to collect all resources needed by all actions in a rule set not just last one.
     * Updated sidetab to work better with IE
     * Published runtime http://static.kobj.net/kobj-static-20100608194126.js for this update
-    
+
 2010-06-08  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Request.pm (set_capabilities): Made 'understands_javascript'

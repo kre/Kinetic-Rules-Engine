@@ -2,33 +2,33 @@ package Kynetx::Memcached;
 # file: Kynetx/Memcached.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use strict;
 use warnings;
 
@@ -41,6 +41,7 @@ use Log::Log4perl qw(get_logger :levels);
 #use LWP::Simple qw(get);
 use LWP::UserAgent;
 use Kynetx::Configure;
+use Data::Dumper;
 
 use constant DEFAULT_MEMCACHED_PORT => '11211';
 
@@ -51,13 +52,15 @@ our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 init
 get_memd
 get_memcached_servers
 get_remote_data
 get_cached_file
+check_cache
+mset_cache
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -73,8 +76,8 @@ sub init {
 
     $logger->debug("Initializing memcached: ", join(" ", @{ $MEMSERVERS }));
 
-    # don't set compress threshold.  Compression uses MemGzip which doesn't 
-    # handle UTF chars correctly.  
+    # don't set compress threshold.  Compression uses MemGzip which doesn't
+    # handle UTF chars correctly.
     $MEMD = new Cache::Memcached {
 	'servers' => $MEMSERVERS,
 	'debug' => 0
@@ -90,6 +93,36 @@ sub get_memd {
 
 sub get_memcached_servers {
     return join(" ", $MEMSERVERS);
+}
+
+sub check_cache {
+    my ($key) = @_;
+    my $content;
+    my $logger = get_logger();
+    $logger->debug("cache key: ", $key);
+    my $memd = get_memd();
+    if ($memd) {
+        $content = $memd->get($key);
+    }
+    if ($content) {
+        $logger->debug("Using cached data for $key");
+        return $content;
+    }
+}
+
+sub mset_cache {
+    my ($key,$content,$expire) = @_;
+    my $logger = get_logger();
+    if (not defined $expire || $expire < 1) {
+        $expire = 10 * 60;
+    }
+    my $memd = get_memd();
+    $logger->debug("memcache servers: ", sub {Dumper($MEMSERVERS)});
+    if ( $memd ) {
+        $logger->debug("Caching $key for $expire seconds for $content");
+        my $set = $memd->set($key,$content,$expire);
+        $logger->debug("Cache request: ", $set);
+    }
 }
 
 
@@ -110,7 +143,7 @@ sub get_remote_data {
 
     my $content;
     if ($memd) {
-        $content = $memd->get($key) ;
+        $content = check_cache($key) ;
 	if ($content) {
 	    $logger->debug("Using cached data for $url");
 	    return $content;
@@ -132,7 +165,7 @@ sub get_remote_data {
 
     if($memd && $res->is_success) {
 	$logger->debug("Caching data for $url for $expire seconds");
-	$memd->set($key,$content,$expire);
+	mset_cache($key,$content,$expire);
     }
 
     return $content;

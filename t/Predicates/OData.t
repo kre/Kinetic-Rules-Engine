@@ -1,34 +1,34 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use lib qw(/web/lib/perl);
 use strict;
 
@@ -95,7 +95,7 @@ my $test_name;
 sub test_odata {
     my ($pred,$req_info,$rule_env,$args) = @_;
     $tcount++;
-    return &{$preds->{$pred}}($req_info, $rule_env,$args);    
+    return &{$preds->{$pred}}($req_info, $rule_env,$args);
 };
 
 
@@ -103,9 +103,8 @@ sub test_odata {
 
 $args = ['http://services.odata.org/OData/OData.svc'];
 $results = test_odata('entity_sets',$req_info,$rule_env,$args);
-cmp_deeply($results,bag('Products','Categories','Suppliers'),"Entity set from odata.org");
-
-
+$logger->debug("Results: ", sub {Dumper($results)});
+cmp_deeply($results,bag(['Products','Categories','Suppliers']),"Entity set from odata.org");
 
 
 
@@ -113,13 +112,13 @@ cmp_deeply($results,bag('Products','Categories','Suppliers'),"Entity set from od
 
 $args = ['http://odata.netflix.com/Catalog/'];
 $results = test_odata('entity_sets',$req_info,$rule_env,$args);
-cmp_deeply($results,superbagof('TitleAudioFormats',
+cmp_deeply($results,superbagof(['TitleAudioFormats',
   'TitleAwards',
   'Titles',
   'TitleScreenFormats',
   'Genres',
   'Languages',
-  'People'),"Entity set from Netflix.com");
+  'People']),"Entity set from Netflix.com");
 
 
 
@@ -313,12 +312,12 @@ cmp_deeply($got,$expected,$test_name);
 
 
 
-$args = ['http://odata.netflix.com/Catalog/','Titles',{'$filter' => 
+$args = ['http://odata.netflix.com/Catalog/','Titles',{'$filter' =>
     'Type eq \'Movie\' and Instant/Available eq true and (Rating eq \'G\' or Rating eq \'PG-13\' or Rating eq \'PG\')',
     '$top' => 2,
     '$orderby' => 'AverageRating desc',
     '$select' => ['Name','Synopsis','AverageRating'],
-       
+
 }];
 $test_name = "Netflix instant movies with filter, Top 2";
 $results = test_odata('get',$req_info,$rule_env,$args);
@@ -335,7 +334,7 @@ my $url = "http://services.odata.org/OData/OData.svc";
 
 my $krl_expr=<<_KRL_;
 pre {
-    data =  odata:get(\"$url\","Products"); 
+    data =  odata:get(\"$url\","Products");
 }
 _KRL_
 
@@ -343,6 +342,8 @@ my $result = Kynetx::Parser::parse_pre($krl_expr);
 my ($js,$re)=Kynetx::Expressions::eval_prelude($req_info,$rule_env,'test0',$session,$result);
 cmp_deeply($js,re($url.'/Products'),"Odata pre eval test");
 $logger->debug("rule env",sub {Dumper($js)});
+
+ENDY:
 
 plan tests => $tcount + 1;
 

@@ -41,6 +41,7 @@ use Data::Dumper;
 
 use Kynetx::Parser; # qw/:all/;
 use Kynetx::PrettyPrinter; # qw/:all/;
+use Kynetx::Util qw ( merror );
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -58,7 +59,7 @@ our %EXPORT_TAGS = (
           astToJson
           jsonToAst
           jsonToAst_w
-          get_obj
+          get_items
           )
     ]
 );
@@ -113,8 +114,8 @@ sub jsonToAst_w {
     };
     if ($@) {
         $logger->debug(
-                     "Invalid JSON format => parse result as string",
-                     sub { Dumper(@_) } );
+                     "Invalid JSON format => parse result as string error(",
+                     sub { Dumper(@_) });
         return $json
     } else {
         return $pstruct;
@@ -152,9 +153,9 @@ sub collapse {
             $outstring .= ref $value;
             if ($skip)   {
                 $obj->{$key}=$skip;
-            }  else {           
+            }  else {
                 collapse($value);
-            }            
+            }
         }
     } elsif (ref $obj eq 'ARRAY') {
         foreach my $element (@$obj) {
@@ -162,9 +163,9 @@ sub collapse {
             if ($skip) {
                 $element = $skip;
             }
-            collapse($element);          
+            collapse($element);
         }
-        
+
     } else {
         return $obj;
     }
@@ -182,10 +183,54 @@ sub lookahead {
     }
 }
 
+sub get_path {
+    my ($obj,$str_path) =@_;
+    my $logger = get_logger();
+    my @path_elements = split(/\./,$str_path);
+    my $result = $obj;
+    my @trail;
+    foreach my $element (@path_elements) {
+        push(@trail,$element);
+        $result = get_items($result,$element);
+        if (! $result) {
+            return merror("Path element: " . join("->",@trail)." not found");
+        }
+    }
+    return $result;
+}
+
+sub get_items {
+    my ($obj,$regexp,$collection) = @_;
+    my $logger = get_logger();
+    unless (ref $regexp eq 'Regexp') {
+        $regexp = qr($regexp);
+        unless (ref $regexp eq 'Regexp') {
+            return (merror("Regexp or string required for get_items"));
+        }
+    }
+    if (ref $obj eq 'HASH') {
+        foreach my $key (%$obj) {
+            if ($key =~ $regexp) {
+                $logger->trace("Key: ",sub {Dumper($key)});
+                my $match = $obj->{$key};
+                if ($match) {
+                    push(@$collection,$match);
+                }
+            } else {
+                $collection = get_items($obj->{$key},$regexp,$collection);
+            }
+        }
+    } elsif (ref $obj eq 'ARRAY') {
+        foreach my $element (@$obj) {
+            $collection = get_items($element,$regexp,$collection);
+        }
+    }
+    return $collection;
+}
+
 sub get_obj {
     my ( $obj, $regexp ) = @_;
     my $logger = get_logger();
-    $logger->debug("Regex: ", sub {Dumper($regexp)});
     my $ret_val;
     if ( ref $obj eq 'HASH' ) {
         foreach my $key ( keys %$obj ) {
@@ -207,7 +252,7 @@ sub get_obj {
             }
         }
     }
-    
+
 }
 
 1;
