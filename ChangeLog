@@ -1,3 +1,12 @@
+2010-06-14 Cid <cid> 
+    * Resolved issues 807 and 796 
+    * Change proto call function to return https if document is not http or https.
+    * Change errorstack function to just have more information in stack
+    * Added more code to get sandbox working.
+    * Commit Rev #626
+    * Runtime Rev: http://static.kobj.net/kobj-static-20100615171539.js
+
+
 2010-06-14 Mark Horstmeier <meh@kynetx.com>
     * Kynetx.pm: Added callback handler for facebook Oauth
     * Kynetx/Predicates/Facebook.pm: facebook integration
