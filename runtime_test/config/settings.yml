@@ -31,6 +31,11 @@ ie7_windows :
   port : 4444
   browser : "*iexplore"
 
+ie7_local_windows :
+  host : "192.168.15.2"
+  port : 4444
+  browser : "*iexplore"
+
 
 firefox_windows :
   host : "184.73.68.157"

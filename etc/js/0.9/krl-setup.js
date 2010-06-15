@@ -24,14 +24,17 @@ if (typeof($K) == 'undefined') {
 
 
 /* TODO: Not used as far as I can tell CID 4/13 */
-KOBJ._log = new Array();
+//KOBJ._log = new Array();
+//KOBJ['defaults'] = {};
+//KOBJ['extra_page_vars'] = {};
 
 KOBJ['applications'] = {};
 KOBJ['data'] = KOBJ['data'] || {};
-KOBJ['extra_page_vars'] = {};
 KOBJ['external_resources'] = {};
 
-KOBJ['defaults'] = {};
+KOBJ.in_bx_extention = false;
+KOBJ.can_ajax_post = false;
+
 
 //used for overriding the document for UI actions
 KOBJ.document = document;
@@ -39,7 +42,3 @@ KOBJ.locationHref = null;
 KOBJ.locationHost = null;
 KOBJ.locationProtocol = null;
 KOBJ.delay_execution = false;
-
-
-
-

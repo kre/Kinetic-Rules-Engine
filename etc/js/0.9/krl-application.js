@@ -20,7 +20,9 @@ KrlExternalResource.prototype.load = function() {
         return;
     }
     if (this.type == "css") {
+        // Style sheets are hard to know if they loaded so just say they did.
         KOBJ.load_style_sheet_link(this.url);
+        this.did_load();
     }
     else
     {
@@ -273,6 +275,10 @@ KrlApplication.prototype.fire_event = function(event, data, guid)
     params.push({name: "referer", value: KOBJ.document.referrer});
     params.push({name: "title", value: KOBJ.document.title});
 
+/*    var event_url = url + "?" +
+                    $KOBJ.param(params) +
+                    this.page_vars_as_url();
+  */
     var event_url = url + "?" +
                     $KOBJ.param(params) +
                     KOBJ.extra_page_vars_as_url() +
@@ -280,7 +286,7 @@ KrlApplication.prototype.fire_event = function(event, data, guid)
 
 
 
-    KOBJ.require(event_url,{ruleexecute :  true});
+    KOBJ.require(event_url);
 };
 
 

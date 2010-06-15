@@ -9,7 +9,7 @@ KOBJ.add_extra_page_var = function(key, value)
     if (key.match(":") == null &&
         key != 'rids' &&
         key != 'init')
-    {
+   {
         KOBJ['extra_page_vars'][key] = value;
     }
 };
@@ -27,7 +27,11 @@ KOBJ.extra_page_vars_as_url = function() {
 KOBJ.add_config_and_run = function(app_config) {
     //    alert("adding config" +app_config);
     KOBJ.add_app_config(app_config);
-    KOBJ.run_when_ready();
+    // Only execute apps passed in not every single one registered.
+    $KOBJ.each(app_config.rids, function(index, value) {
+        var app = KOBJ.get_application(value);
+        app.reload();
+    });
 };
 
 KOBJ.add_app_configs = function(app_configs) {
@@ -43,8 +47,13 @@ KOBJ.add_app_configs = function(app_configs) {
 };
 
 KOBJ.eval = function(app_config) {
+    KOBJ.log("!!!!! KOBJ.eval will be deprecated soon please change to. KOBJ.add_app_configs({config});KOBJ.get_application('appid').reload();");
     KOBJ.add_app_config(app_config);
-    KOBJ.runit();
+    // Only execute apps passed in not every single one registered.
+    $KOBJ.each(app_config.rids, function(index, value) {
+        var app = KOBJ.get_application(value);
+        app.reload();
+    });
 };
 
 KOBJ.configure_kynetx = function(config)
@@ -114,6 +123,7 @@ KOBJ.site_id = function() {
 // so we add a script element to be executed at a later time.
 // DEPRECATED use app.reload_later
 KOBJ.reload = function(delay) {
+    KOBJ.log("!!!!! KOBJ.reload will be deprecated soon please change to. KOBJ.get_application('appid').reload();");
     $KOBJ.each(KOBJ.applications, function(name, id) {
         var app = KOBJ.get_application(name);
         app.reload_later(delay);

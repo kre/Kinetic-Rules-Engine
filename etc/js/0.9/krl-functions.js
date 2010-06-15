@@ -1,43 +1,56 @@
 KOBJ.proto = function() {
+    if("https:" != KOBJ.location('protocol') && "https:" != KOBJ.location('protocol'))
+    {
+        return "https://";
+    }
     return (("https:" == KOBJ.location('protocol')) ? "https://" : "http://")
 };
 
 //this method is overridden in sandboxed environments
 KOBJ.require = function(url, callback_params) {
-
-    //KOBJ.log("Require " + url);
-    if (typeof(async_url_request) != "undefined")
+    // This function is defined if we are in a browser plugin
+    if(typeof(callback_params) == "undefined")
     {
-        var params = {}
+        callback_params = {};
+    }
+
+    if (KOBJ.in_bx_extention)
+    {
+        var params = {};
         if (typeof(callback_params) != "undefined") {
             params = $KOBJ.extend({data_type : "js"}, callback_params, true);
         }
-        else {
-            params = {data_type :"js"};
-        }
-        //        alert("have params: " + params);
-        async_url_request(url, KOBJ.url_loaded_callback, params);
+        async_url_request(url, "KOBJ.url_loaded_callback", params);
     }
-    else
+    else if(KOBJ.in_bx_extention && callback_params.data_type == "other" )
     {
-      //  KOBJ.log("adding script " + url);
-        var r = document.createElement("script");
-        r.src = url;
-        r.type = "text/javascript";
-        r.onload = r.onreadystatechange = KOBJ.url_loaded_callback;
-        //  console.log("Requiring " + url);
+        async_url_request(url, "KOBJ.url_loaded_callback", callback_params);
+    }
+    else if(!KOBJ.in_bx_extention && callback_params.data_type == "img" )
+    {
+        var r = document.createElement("img");
+        // This is the max url for a get in IE7  IE6 is 488 so we will break on ie6
+        r.src = url.substring(0,1500);
         var body = document.getElementsByTagName("body")[0] ||
                    document.getElementsByTagName("frameset")[0];
         body.appendChild(r);
     }
-
+    else
+    {
+        var r = document.createElement("script");
+        // This is the max url for a get in IE7  IE6 is 488 so we will break on ie6
+        r.src = url.substring(0,1500);
+        r.type = "text/javascript";
+        r.onload = r.onreadystatechange = KOBJ.url_loaded_callback;
+        var body = document.getElementsByTagName("body")[0] ||
+                   document.getElementsByTagName("frameset")[0];
+        body.appendChild(r);
+    }
 };
 
-//this method is overridden in sandboxed environments
+
 KOBJ.getwithimage = function(url) {
-    var i = document.createElement("img");
-    i.setAttribute("src", url);
-    document.body.appendChild(i);
+    KOBJ.require(url,{data_type : "img"});
 };
 
 
@@ -85,6 +98,7 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
 
 
 /* Injects a javascript fragment into the page */
+// TODO: Remove only used by the widget weather.pl
 KOBJ.fragment = function(base_url) {
     var e = KOBJ.document.createElement("script");
     e.src = base_url;
@@ -93,6 +107,7 @@ KOBJ.fragment = function(base_url) {
 };
 
 /* Replaces the html contents of an element */
+// TODO: Remove only used by the widget weather.pl
 KOBJ.update_elements = function (params) {
     for (var mykey in params) {
         $KOBJ("#kobj_" + mykey).html(params[mykey]);
@@ -120,13 +135,12 @@ KOBJ.hide = function (id) {
     $KOBJ(id).hide();
 };
 
+// TODO: Remove as I hate this
 KOBJ.letitsnow = function(config) {
     $KOBJ(KOBJ.document).snowfall();
 };
 
-//new jessie actions
-
-
+// TODO: Remove not used use side tab now
 KOBJ.createPopIn = function(config, content) {
 
     var defaults = {
@@ -249,7 +263,8 @@ KOBJ.createPopIn = function(config, content) {
 
 };
 
-
+// TODO: Broken as it resets defaults based on config.  It should copy the config
+// and use the copied hash
 KOBJ.statusbar = function(config, content) {
 
     var defaults = {
@@ -310,7 +325,7 @@ KOBJ.statusbar = function(config, content) {
 
 };
 
-
+//TODO: Broken Assumes only one status base. Maybe that is ok.
 KOBJ.statusbar_close = function(id) {
     $KOBJ('#' + id).fadeOut('slow');
 };
@@ -372,26 +387,22 @@ KOBJ.close_notification = function(s) {
 KOBJ.url_loaded_callback = function(loaded_url, response, callback_params) {
 
 
-//    if (typeof(loaded_url) != "undefined")
-//    {
-//        if (callback_params.data_type == "js")
-//        {
-//            eval(response);
-//        }
-//        else
-//        {
-//            $KOBJ("head").append($KOBJ("<style>").text(response));
-//        }
-//        if (KOBJ.external_resources[loaded_url] != null)
-//        {
-//            KOBJ.external_resources[loaded_url].did_load();
-//        }
-//        else
-//        {
-//        }
-//    }
-//    else
-//    {
+    if(typeof(loaded_url) != "undefined" && typeof(callback_params) != "undefined")
+    {
+        switch(callback_params.data_type) {
+            case  "js":
+                eval(response);
+            case  "css":
+                $KOBJ("head").append($KOBJ("<style>").text(response));
+        }
+
+        if (KOBJ.external_resources[loaded_url] != null)
+        {
+            KOBJ.external_resources[loaded_url].did_load();
+        }
+    }
+    else
+    {
         var done = false;
         if (!done && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete"))
         {
@@ -429,31 +440,9 @@ KOBJ.url_loaded_callback = function(loaded_url, response, callback_params) {
 
             this.onload = this.onreadystatechange = null;
         }
-//    }
+    }
 };
 
-/*
- Search all the stylesheets on the page and see if the url matches. If it does it was loaded
-
- url = URL to stylesheet
- selector = The selector must be fully qualified so if in the CSS it looks like ".tab span { }" then the selector
- here  must be ".tab span"
-
- */
-//KOBJ.did_stylesheet_load = function(url, selector) {
-//
-//    var found_style = false;
-//    $KOBJ.each(document.styleSheets, function(sheet_index, style_sheet) {
-//        // We have the stylesheet
-//        if (style_sheet.href != null) {
-//            if (style_sheet.href == url) {
-//                found_style = true;
-//                return false;
-//            }
-//        }
-//    });
-//    return found_style;
-//};
 
 /*
  Add a link tag to the head of the document
@@ -461,20 +450,12 @@ KOBJ.url_loaded_callback = function(loaded_url, response, callback_params) {
  */
 KOBJ.load_style_sheet_link = function(url) {
 
-//    if (typeof(async_url_request) == "undefined")
-//    {
         var head = KOBJ.document.getElementsByTagName('head')[0];
         var new_style_sheet = document.createElement("link");
         new_style_sheet.href = url;
         new_style_sheet.rel = "stylesheet";
         new_style_sheet.type = "text/css";
-        new_style_sheet.onload = new_style_sheet.onreadystatechange = KOBJ.url_loaded_callback;
         head.appendChild(new_style_sheet);
-//    }
-//    else
-//    {
-//        async_url_request(url, KOBJ.url_loaded_callback, {data_type : "css"})
-//    }
 };
 
 
@@ -492,24 +473,36 @@ KOBJ.errorstack_submit = function(key, e,rule_info) {
     if (key == null) {
         return;
     }
-    var txt = "_s=" + key + "&_r=img";
+    var txt = "_s=" + key;
+
+    if(KOBJ.in_bx_extention)
+        txt += "&_r=json";
+    else
+        txt += "&_r=img";
+
     txt += "&Msg=" + escape(e.message ? e.message : e);
-    txt += "&ScriptURL=" + escape(e.fileName ? e.fileName : "Dynamic");
+    txt += "&ScriptURL=" + escape(e.fileName ? e.fileName : (e.filename ? e.filename : "Dynamic"));
     txt += "&PageURL=" + escape(document.location.href);
     txt += "&Line=" + (e.lineNumber ? e.lineNumber : 0);
+    txt += "&Description=" + escape(e.description ? e.description : "");
+    txt += "&Arguments=" + escape(e.arguments ? e.arguments : "");
+    txt += "&Type=" + escape(e.type ? e.type : e);
     txt += "&name=" + escape(e.name ? e.name : e);
-    txt += "&Platform=" + escape(navigator.platform);
-    txt += "&UserAgent=" + escape(navigator.userAgent);
-    txt += "&stack=" + escape(e.stack ? e.stack.substring(0, 500) : "");
+//    txt += "&Platform=" + escape(navigator.platform);
+//    txt += "&UserAgent=" + escape(navigator.userAgent);
     if(typeof(rule_info) != "undefined")
     {
         txt += "&RuleName=" + escape(rule_info.name);
         txt += "&RuleID=" + escape(rule_info.id); 
     }
-    var i = document.createElement("img");
-    i.setAttribute("src", "http://www.errorstack.com/submit?" + txt);
-    document.body.appendChild(i);
-    //KOBJ.getwithimage("http://www.errorstack.com/submit?" + txt);
+    txt += "&stack=" + escape(e.stack ? e.stack : "Unknown Stack");
+    var datatype = null;
+    if(KOBJ.in_bx_extention)
+        datatype = "js";
+    else
+        datatype = "img";
+
+    KOBJ.require("http://www.errorstack.com/submit?" + txt,{data_type: datatype});
 };
 
 
@@ -527,7 +520,7 @@ KOBJ.logger = function(type, txn_id, element, url, sense, rule, rid) {
 
     if (rid) logger_url += "&rid=" + rid;
 
-    KOBJ.require(logger_url);
+    KOBJ.require(logger_url,{data_type: "other"});
 };
 
 /* Inject requested CSS via a style tag */
