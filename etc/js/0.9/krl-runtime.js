@@ -50,6 +50,7 @@ KOBJ.eval = function(app_config) {
     KOBJ.log("!!!!! KOBJ.eval will be deprecated soon please change to. KOBJ.add_app_configs({config});KOBJ.get_application('appid').reload();");
     KOBJ.add_app_config(app_config);
     // Only execute apps passed in not every single one registered.
+
     $KOBJ.each(app_config.rids, function(index, value) {
         var app = KOBJ.get_application(value);
         app.reload();

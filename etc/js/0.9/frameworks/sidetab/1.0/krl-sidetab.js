@@ -414,16 +414,16 @@ KOBJ.tabManager.notification = function(config){
 
 		// Fixed position?
 
-		if(toAlter.fixedPosition === true) {
-			objCSS.position = "fixed";
-		} else {
-			objCSS.position = "absolute";
-		}
-
-		//ie6 doesn't do well with the fixed option
-		 if ($KOBJ.browser.msie && ($KOBJ.browser.version.substr(0,1)<7 || document.compatMode == "BackCompat")) {
-			objCSS.position = "absolute";
-		}
+//		if(toAlter.fixedPosition === true) {
+//			objCSS.position = "fixed";
+//		} else {
+//			objCSS.position = "absolute";
+//		}
+//
+//		//ie6 doesn't do well with the fixed option
+//		 if ($KOBJ.browser.msie && ($KOBJ.browser.version.substr(0,1)<7 || document.compatMode == "BackCompat")) {
+//			objCSS.position = "absolute";
+//		}
 
 		// Adds the div and sets all the CSS and classes needed
 		var notification = $KOBJ("<div>").html(changeTo).css(objCSS).addClass(defaults.notifyClass);

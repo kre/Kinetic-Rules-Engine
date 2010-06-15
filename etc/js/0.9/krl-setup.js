@@ -26,7 +26,7 @@ if (typeof($K) == 'undefined') {
 /* TODO: Not used as far as I can tell CID 4/13 */
 //KOBJ._log = new Array();
 //KOBJ['defaults'] = {};
-//KOBJ['extra_page_vars'] = {};
+KOBJ['extra_page_vars'] = {};
 
 KOBJ['applications'] = {};
 KOBJ['data'] = KOBJ['data'] || {};
