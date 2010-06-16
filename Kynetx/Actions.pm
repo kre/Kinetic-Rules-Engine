@@ -205,12 +205,12 @@ EOF
     },
 
     percolate => {
-        'js' => <<EOF,
+      'js' => <<EOF,
 function(uniq,cb,config,sel) {
     KOBJ.percolate(sel,config);
 }
 EOF
-    'after' => [\&handle_delay]
+      'after' => [\&handle_delay]
     },
 
     popup => {
@@ -574,12 +574,20 @@ sub build_one_action {
     # this happens after we've chosen the action since it modifies args
     $args = gen_js_rands( $args );
 
-    my @config = ("txn_id: '".$req_info->{'txn_id'} . "'", "rule_name: '$rule_name'", "rid: '".$req_info->{'rid'}."'");
+# pjw [20100614] is this used anywhere?  
+#    my @config = ("txn_id: '".$req_info->{'txn_id'} . "'", "rule_name: '$rule_name'", "rid: '".$req_info->{'rid'}."'");
 
 
     my $config = {"txn_id" => $req_info->{'txn_id'}, 
 		  "rule_name" => $rule_name, 
 		  "rid" => $req_info->{'rid'}};
+
+    my $js_config = [];
+    
+    foreach my $k (keys %{$config}) {
+      push @{ $js_config }, 
+	Kynetx::JavaScript::gen_js_hash_item($k,typed_value($config->{$k}));
+    }
     
    # set default modifications
     my $mods = {
@@ -590,23 +598,28 @@ sub build_one_action {
 	};
 
     foreach my $m ( @{ $action->{'modifiers'} } ) {
-	$mods->{$m->{'name'}} = gen_js_expr($m->{'value'});
+      $mods->{$m->{'name'}} = gen_js_expr($m->{'value'});
+#      $logger->debug(sub {Dumper($m)} );
 
-#	$logger->debug(sub {Dumper($m)} );
+      $config->{$m->{'name'}} = 
+	den_to_exp(eval_expr($m->{'value'}, 
+			     $rule_env, 
+			     $rule_name, 
+			     $req_info, 
+			     $session));
 
-	# Should the name be in quotes??
-
-	$config->{$m->{'name'}} = 
- 	               den_to_exp(eval_expr($m->{'value'}, 
-						$rule_env, 
-						$rule_name, 
-						$req_info, 
-						$session));
+      # don't eval for sending to client.
+      push @{ $js_config }, 
+	Kynetx::JavaScript::gen_js_hash_item($m->{'name'}, $m->{'value'});
     }
+
+#    $logger->debug("JS config ", sub { Dumper $js_config});
+#    $logger->debug("Perl config ", sub { Dumper $config});
 
 
     # add to front of arg str (in reverse)
-    unshift @{ $args }, astToJson($config);
+    #   this creates a JS string from the JS config
+    unshift @{ $args }, '{'. join(",", @{$js_config}) . '}';
     unshift @{ $args }, $cb_func_name;
     unshift @{ $args }, mk_js_str($uniq);
 

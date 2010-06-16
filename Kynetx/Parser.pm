@@ -72,6 +72,7 @@ my $grammar = <<'_EOGRAMMAR_';
 #
 REGEXP: m%(/(\\.|[^\/])+/|#(\\.|[^\#])+#)(i|g|m){0,2}%
 HTML: /<<.*?>>/s  {$return=Kynetx::Parser::html($item[1]) }
+JS: /<\|.*?\|>/s  {$return=Kynetx::Parser::javascript($item[1]) }
 STRING: /"(\\"|[^"])*"|'[^']*'/ {$return=Kynetx::Parser::string($item[1]) }
 VAR:   /[_A-Za-z]\w*/ 
 NUM:   /(-)?\d*\.\d+|\d+/          
@@ -147,6 +148,8 @@ meta_block: 'meta' '{'
                foreach my $k1 (keys %{ $a->{$k} }) {
                   $r->{$k}->{$k1} = $a->{$k}->{$k1}; 
                }
+           } elsif($r->{$k} && ref $r->{$k} eq 'ARRAY' && ref $a->{$k} eq 'ARRAY') {
+              push @{ $r->{$k}} , @{ $a->{$k} };
            } else {
                $r->{$k} = $a->{$k};
            }
@@ -193,6 +196,14 @@ pragma: desc_block
         'logging' => $item[1]
         }
     }
+ | 'use' 'module' VAR alias(?)
+    {$return = {
+        'use' => [{'type' => $item[2],
+                    'name' => $item[3],
+                    'alias' => $item[4][0]
+                   }]
+        }
+    }
  | <error>
 
 desc_block: 'description' (HTML | STRING)
@@ -222,6 +233,8 @@ key_value: STRING
 name_value_pair: STRING ':' (NUM | STRING)
   {$return = {$item[1] => $item[3]}}
 
+alias: 'alias' VAR
+  {$return = $item[2]}
 
 dispatch_block_top: dispatch_block
    {$return = $item[1]->{'dispatchs'}}
@@ -309,7 +322,7 @@ global_decls_top: global_decls
 global_decls: 'global' '{' global(s? /;/)  SEMICOLON(?) '}' #?
      {$return = {'globals' => $item[3],
                  'global_start_line' => int $itempos[1]{line}{from},
-                 'global_start_col' => int $itempos[1]{column}{from}}}
+                 'global_start_col'  => int $itempos[1]{column}{from}}}
     | <error>
 
 global: emit_block
@@ -501,11 +514,17 @@ decl: VAR '=' expr
         'rhs' => $item[3]
        }
       }
+    | VAR '=' JS
+      {$return =
+       {'lhs' => $item[1],
+        'type' => 'JS',
+        'rhs' => $item[3]
+       }
+      }
     | <error: Invalid decl: $text>
 
 
-
-emit_block: 'emit' (HTML | STRING)
+emit_block: 'emit' (HTML | STRING | JS)
    {$return = $item[2];}
 
 
@@ -560,7 +579,13 @@ modifier_clause: 'with' modifier(s /and/)
 modifier: VAR '=' expr
         {$return=
          {'name' => $item{VAR},
-          'value' => $item{expr}
+          'value' => $item{expr},
+         }
+        }
+       | VAR '=' JS
+        {$return=
+         {'name' => $item{VAR},
+          'value' => Kynetx::Parser::mk_expr_node('JS',$item[3]),
          }
         }
 
@@ -652,10 +677,13 @@ post_alternate: 'else' '{' post_statement(s?  /;/) SEMICOLON(?) '}'
 post_statement: persistent_expr ('if' expr)(?)
     {$item[1]->{'test'} = $item[2][0];
      $return = $item[1];}
-  |log_statement ('if' expr)(?)
+  | log_statement ('if' expr)(?)
     {$item[1]->{'test'} = $item[2][0];
      $return = $item[1];}
-  |control_statement ('if' expr)(?)
+  | control_statement ('if' expr)(?)
+    {$item[1]->{'test'} = $item[2][0];
+     $return = $item[1];}
+  | raise_statement ('if' expr)(?)
     {$item[1]->{'test'} = $item[2][0];
      $return = $item[1];}
 
@@ -741,6 +769,20 @@ control_statement: 'last'
        'statement' => $item[1],
       }
      }
+
+raise_statement: 'raise' 'explicit' 'event' VAR for_clause(?) modifier_clause(?)
+    {$return = 
+      {'type' => 'raise',
+       'domain' => $item[2],
+       'event' => $item[4],
+       'rid' => $item[5][0],
+       'modifiers' => $item[6][0],  # returned as array of array
+      }
+    }
+
+for_clause: 'for' VAR
+ {$return = $item[2]
+ }
 
 #-----------------------------------------------------------------------------
 # expressions
@@ -1006,6 +1048,15 @@ sub html {
     my ($value) = @_;
     $value =~ s/^<<\s*//;
     $value =~ s/>>\s*$//;
+#    $value = remove_comments($value);
+#    $value =~ s/[\n\r]/  /sg;
+    return $value;
+}
+
+sub javascript {
+    my ($value) = @_;
+    $value =~ s/^<\|[ \t]*//;
+    $value =~ s/\|>\s*$//;
 #    $value = remove_comments($value);
 #    $value =~ s/[\n\r]/  /sg;
     return $value;

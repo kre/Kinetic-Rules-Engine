@@ -14,7 +14,7 @@ ruleset 10 {
 
           emit <<
 pagename = pagename.replace(/-/, ' ');
- >> ;
+>> ;
       
        alert("world!");
 

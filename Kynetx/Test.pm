@@ -48,6 +48,7 @@ qw(
 getkrl
 trim
 nows
+mk_config_string
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -193,6 +194,23 @@ sub gen_session {
     session_clear($rid, $session, 'my_flag');
 
     return $session;
+}
+
+sub mk_config_string {
+  my($a) = @_;
+  my @items;
+  foreach my $h ( @{ $a }) {
+    my $k = (keys %{ $h })[0]; #singleton hashes
+    my $v = (ref $h->{$k} eq 'HASH' && defined $h->{$k}->{'type'}) ?
+      $h->{$k} :
+      Kynetx::Expressions::typed_value($h->{$k});
+    push(@items, 
+	 Kynetx::JavaScript::gen_js_hash_item(
+                        $k, 
+			$v)
+           );
+    }
+  return  '{' . join(",", @items) . '}';
 }
 
 

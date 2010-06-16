@@ -198,6 +198,8 @@ sub eval_expr {
         } else {
 	       return $expr;
         }
+    } elsif($expr->{'type'} eq 'JS') {
+	return  $expr ;
     } elsif($expr->{'type'} eq 'num') {
 	return  $expr ;
     } elsif($expr->{'type'} eq 'regexp') {

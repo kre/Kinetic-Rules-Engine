@@ -103,6 +103,8 @@ sub pp_meta_block {
 
     $o .= pp_keys($mb->{'keys'}, $indent+$g_indent) if ($mb->{'keys'}) ;
 
+    $o .= pp_use($mb->{'use'}, $indent+$g_indent) if ($mb->{'use'}) ;
+
     $o .= $beg . "\n$beg}\n";
 
     return $o;
@@ -204,6 +206,24 @@ sub pp_val {
     return '"'.$node.'"';
   }
 }
+
+sub pp_use {
+    my ($node, $indent) = @_;
+
+    return '' unless ref $node eq 'ARRAY';
+
+    my $beg = " "x$indent;
+    
+    my $o = '';
+    foreach my $u ( @{ $node }) {
+	$o .= $beg ."use " . $u->{'type'} . " " . $u->{'name'};
+	$o .= " alias " . $u->{'alias'} if $u->{'alias'};
+	$o .= "\n";
+    }
+    return $o;
+}
+
+
 
 sub pp_dispatch_block {
     my ($db, $indent) = @_;
@@ -316,6 +336,8 @@ sub pp_global_block {
 	    $o .= pp_decl($d, $indent+$g_indent) . ";";
 	} elsif (defined $d->{'type'} && $d->{'type'} eq 'here_doc') {
 	    $o .= pp_decl($d, $indent+$g_indent) . ";";
+	} elsif (defined $d->{'type'} && $d->{'type'} eq 'JS') {
+	    $o .= pp_decl($d, $indent+$g_indent) . ";";
 	} else {
 	    $o .= pp_global_emit($d, $indent+$g_indent) . ";";
 	}
@@ -331,14 +353,7 @@ sub pp_global_emit {
 
     my $beg = " "x$indent;
 
-    my $o;
-    if($d->{'emit'}) {
-	$o .= $beg . "emit << " ;
-	$o .= $d->{'emit'};
-	$o .= ">>\n";
-    }
-    
-    
+    my $o = pp_emit($d->{'emit'},$indent+$g_indent);
 
     return $o;
 
@@ -549,6 +564,9 @@ sub pp_decl {
 	$o .= $node->{'lhs'} . " = << \n";
 	$o .= $node->{'rhs'};
 	$o .= "\n >>";
+    } elsif($node->{'type'} eq 'JS') { 
+	$o .= $node->{'lhs'} . " = ";
+	$o .= pp_JS($node->{'rhs'});
     }
   
     return $o;
@@ -574,7 +592,7 @@ sub pp_emit {
 sub pp_cond {
     my ($node, $indent) = @_;
     my $beg = " "x$indent;
-    my $o = $beg;
+    my $o;
 
     my $pred = pp_expr($node->{'cond'});
     my $actions;
@@ -583,7 +601,8 @@ sub pp_cond {
         
 	$o .= pp_actions($node->{'actions'},$node->{'blocktype'},$indent);
     } else {
-	$o .= "if ";
+
+	$o .= $beg . "if ";
 	$o .= $pred;
 	$o .= "\n" . $beg . "then\n";
 	$o .= pp_actions($node->{'actions'},$node->{'blocktype'},$g_indent+$indent);
@@ -595,61 +614,6 @@ sub pp_cond {
 }
 
 
-# # expressions below
-# sub pp_predexpr {
-#     my $expr = shift;
-
-#     case: for ($expr->{'type'}) {
-# 	/^ineq$/ && do {
-# 	    return join(' ' . $expr->{'op'} . ' ', 
-# 			pp_rands($expr->{'args'}))  ;
-#         };
-# 	/seen_timeframe/ && do {
-# 	    return join(' ', 
-# 			('seen',
-# 			 pp_string($expr->{'regexp'}),
-# 			 'in',
-# 			 pp_var_domain($expr->{'domain'}, 
-# 				       $expr->{'var'}),
-# 			 pp_timeframe($expr)
-# 			));
-# 	};
-# 	/seen_compare/ && do {
-# 	    return join(' ', 
-# 			('seen',
-# 			 pp_string($expr->{'regexp_1'}),
-# 			 $expr->{'op'},
-# 			 pp_string($expr->{'regexp_2'}), 
-# 			 'in',
-# 			 pp_var_domain($expr->{'domain'}, $expr->{'var'})
-# 			));
-# 	};
-# 	/persistent_ineq/ && do {
-# 	    if($expr->{'ineq'} eq '==' &&
-# 	       $expr->{'expr'}->{'val'} eq 'true') {
-# 		return join(' ', 
-# 			    (pp_var_domain($expr->{'domain'}, $expr->{'var'}),
-# 			     pp_timeframe($expr)
-# 			    ));
-# 	    } else {
-# 		return join(' ', 
-# 			    (pp_var_domain($expr->{'domain'}, $expr->{'var'}),
-# 			     $expr->{'ineq'},
-# 			     pp_expr($expr->{'expr'}),
-# 			     pp_timeframe($expr)
-# 			    ));
-# 	    }
-# 	};
-# 	/^pred$/ && do {
-# 	    return pp_pred($expr);
-# 	};
-# 	/.*/ && do {
-# 	    return pp_expr($expr);
-# 	};
-	
-#     } 
-
-# }
 
 sub pp_string {
     my $str = shift;
@@ -695,6 +659,7 @@ sub pp_actionblock {
     my ($node, $blocktype, $indent) = @_;
     my $beg = " "x$indent;
     my $o = $beg;
+#    my $o;
     
     $o .= $blocktype . " {\n";
     foreach my $pr (@{ $node }) {
@@ -726,31 +691,41 @@ sub pp_primrule{
 
 	if($node->{'label'}) {
 	    $o .= $node->{'label'} . " =>\n";
-	    $beg .= " "x$g_indent;
+	    $beg .= " "x$indent;
 	    $o .= $beg;
 	}
 
 	if ($node->{'action'}->{'source'}) {
-	    $o .= $node->{'action'}->{'source'} . ":";
+	    $o .=  $node->{'action'}->{'source'} . ":";
 	}
 	
 
 	$o .= $node->{'action'}->{'name'} . "(";
 	$o .= join ", ", pp_rands($node->{'action'}->{'args'});
 	$o .= ")";
-	if(defined $node->{'action'}->{'modifiers'} && 
-	   @{ $node->{'action'}->{'modifiers'} } > 0) {
-	    $o .= "\n". $beg . "with\n";
-	    $o .= join " and\n", 
-	    map {pp_modifier($_, $indent+$g_indent+$g_indent)} 
-	    @{ $node->{'action'}->{'modifiers'} };
-	}
+	$o .= pp_modifier_clause($node->{'action'}, $indent);
 	
     }	
 
     $o .= ";\n";
 
     return $o;
+}
+
+sub pp_modifier_clause {
+  my($node, $indent) = @_;
+  my $beg = " "x$indent;
+  my $o = '';
+  if(defined $node->{'modifiers'} && 
+     @{ $node->{'modifiers'} } > 0) {
+    $o .= "\n". $beg . "with\n";
+    $o .= join " and\n", 
+      map {pp_modifier($_, $indent+$g_indent+$g_indent)} 
+	@{ $node->{'modifiers'} };
+
+  }
+  return $o;
+
 }
 
 sub pp_modifier{
@@ -857,6 +832,8 @@ sub pp_post_expr {
 	$o.= pp_log_statement($node);
     } elsif($node->{'type'} eq 'control') {
 	$o.= pp_control_statement($node);
+    } elsif($node->{'type'} eq 'raise') {
+	$o.= pp_raise_statement($node, $indent);
     }
 
     if (defined $node->{'test'}) {
@@ -934,6 +911,24 @@ sub pp_control_statement {
 
   }
 
+sub pp_raise_statement {
+    my ($node, $indent) = @_;
+    
+    my $o = '';
+
+    $o .= join(' ',
+	       @{['raise',
+		  $node->{'domain'},
+		  'event',
+		  $node->{'event'}]
+	       });
+    $o .= ' for ' . $node->{'rid'} if($node->{'rid'});
+    $o .= pp_modifier_clause($node, $indent);
+    return $o;
+
+  }
+
+
 
 # expressions below
 sub pp_expr {
@@ -946,6 +941,9 @@ sub pp_expr {
 	};
 	/num/ && do {
 	    return  $expr->{'val'} ;
+	};
+	/JS/ && do {
+	    return  pp_JS($expr->{'val'}) ;
 	};
 	/regexp/ && do {
 	    return  $expr->{'val'} ;
@@ -1119,6 +1117,11 @@ sub pp_hash_line {
     my $hash_line = shift;
     return '"' . $hash_line->{'lhs'} .'" : ' . pp_expr($hash_line->{'rhs'});
 
+}
+
+sub pp_JS {
+  my $js = shift;
+  return '<|' . $js . '|>';
 }
 
 

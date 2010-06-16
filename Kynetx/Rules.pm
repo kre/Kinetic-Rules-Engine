@@ -778,7 +778,7 @@ sub optimize_ruleset {
 
 # incrementing the number here will force cache reloads of rulesets with lower #'s
 sub get_optimization_version {
-  my $version = 2;
+  my $version = 3;
   return $version;
 }
 
@@ -862,7 +862,7 @@ sub mk_turtle {
 sub add_errorstack {
   my($ruleset,$req_info, $js) = @_;
   my $kobj_rs = KOBJ_ruleset_obj($ruleset->{'ruleset_name'});
-  my $kobj_rs_name = $ruleset->{'meta'}->{'name'};
+  my $kobj_rs_name = $ruleset->{'meta'}->{'name'} || 'Anonymous Ruleset';
   my $kobj_rs_id = $req_info->{'rid'};
   my $r = <<_JS_;
 try { $js } catch (e) { 

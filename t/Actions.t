@@ -73,7 +73,7 @@ my $my_req_info = Kynetx::Test::gen_req_info($rid);
 
 my $rule_name = 'foo';
 
-my $rule_env = Kynetx::Test::gen_rule_env();
+my $rule_env = Kynetx::Test::gen_rule_env({'foo' => 56});
 
 
 my $session = Kynetx::Test::gen_session($r, $rid);
@@ -243,10 +243,12 @@ $krl_src = <<_KRL_;
 replace_html("kobj_test", "Hello World!");
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'dummy_name'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => '1234'},
+]);
 
 $result = <<_JS_;
 (function(uniq, cb, config, sel, text) {
@@ -275,11 +277,13 @@ replace_html("kobj_test", "Hello World!")
 _KRL_
 
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test',
-    "foo" => 5});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'dummy_name'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => '1234'},
+   {"foo" => 5},
+]);
 
 
 $result = <<_JS_;
@@ -308,11 +312,15 @@ replace_html("kobj_test", "Hello World!")
  with foo = 2+3
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test',
-    "foo" => 5});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'dummy_name'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => '1234'},
+   {"foo" => {type => 'JS',
+              val => '(2+3)'}
+    }
+  ]);
 
 
 $result = <<_JS_;
@@ -343,10 +351,12 @@ $krl_src = <<_KRL_;
 float_html("absolute", "top:50px", "right:50px", "Hello World!")
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'dummy_name'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => '1234'},
+  ]);
 
 
 $result = <<_JS_;
@@ -376,11 +386,13 @@ float_html("absolute", "top:50px", "right:50px", "Hello World!")
 _KRL_
 
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test',
-    "effect" => "slide"});
+$config = mk_config_string(
+ [
+  {"rule_name" => 'dummy_name'},
+  {"rid" => 'cs_test'},
+  {"txn_id" => '1234'},
+  {"effect" => "slide"},
+ ]);
 
 
 $result = <<_JS_;
@@ -411,12 +423,14 @@ float_html("absolute", "top:50px", "right:50px", "Hello World!")
 _KRL_
 
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test',
-    "effect" => "slide",
-    "delay" => 5});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'dummy_name'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => '1234'},
+   {"effect" => "slide"},
+   {"delay" => 5},
+ ]);
 
 
 $result = <<_JS_;
@@ -447,11 +461,13 @@ float_html("absolute", "top:50px", "right:50px", "Hello World!")
  with effect = "blind"
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test',
-    "effect" => 'blind'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'dummy_name'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => '1234'},
+   {"effect" => 'blind'},
+ ]);
 
 
 $result = <<_JS_;
@@ -480,11 +496,14 @@ float_html("absolute", "top:50px", "right:50px", "Hello World!")
  with draggable = true
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test',
-    "draggable" => 1});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'dummy_name'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => '1234'},
+   {"draggable" => {'type' => 'JS',
+                     'val' => 'true'}},
+  ]);
 
 $result = <<_JS_;
 (function(uniq, cb, config, pos, top, side, text) {
@@ -512,11 +531,14 @@ float_html("absolute", "top:50px", "right:50px", "Hello World!")
  with draggable = true
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test',  
-    "draggable" => 1});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'dummy_name'},
+   {"rid" => 'cs_test'},  
+   {"txn_id" => '1234'},
+   {"draggable" => {'type' => 'JS',
+                     'val' => 'true'}},
+  ]);
 
 $result = <<_JS_;
 (function(uniq, cb, config, pos, top, side, text) {
@@ -549,11 +571,13 @@ popup("top:50px", "right:50px", "Hello World!", "50px", "100px", "http:")
  with effect="onpageexit"
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test',
-    "effect" => "onpageexit"});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'dummy_name'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => '1234'},
+   {"effect" => "onpageexit"},
+  ]);
 
 
 $result = <<_JS_;
@@ -588,10 +612,12 @@ $krl_src = <<_KRL_;
 popup("top:50px", "right:50px", "Hello World!", "50px", "100px", "http:")
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+   [
+    {"rule_name" => 'dummy_name'},
+    {"rid" => 'cs_test'},
+    {"txn_id" => '1234'},
+   ]);
 
 
 $result = <<_JS_;
@@ -627,10 +653,12 @@ $krl_src = <<_KRL_;
 replace_image_src("kobj_test", "/images/foo.png");
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'dummy_name'},
+   {"rid" => 'cs_test' },
+   {"txn_id" => '1234'},
+  ]);
 
 
 $result = <<_JS_;
@@ -654,10 +682,12 @@ $krl_src = <<_KRL_;
 noop();
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'dummy_name'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => '1234'},
+  ]);
 
 $result = <<_JS_;
 (function(uniq, cb, config) {
@@ -676,11 +706,13 @@ add_action_testcase(
     );
 
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test',
-    "delay" => 5});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'dummy_name'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => '1234'},
+   {"delay" => 5},
+  ]);
 
 $krl_src = <<_KRL_;
 noop() with delay = 5;
@@ -705,14 +737,16 @@ add_action_testcase(
     0
     );
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test',
-    "tabLocation" => "left",
-    "name" => "JAM_test2",
-    "message" => "How do you do?",
-    "pathToTabImage" => "http://wpaoli.building58.com/wp-content/uploads/2009/09/contact_tab.gif"});
+$config = mk_config_string(
+   [
+    {"rule_name" => 'dummy_name'},
+    {"rid" => 'cs_test'},
+    {"txn_id" => '1234'},
+    {"tabLocation" => "left"},
+    {"pathToTabImage" => "http://wpaoli.building58.com/wp-content/uploads/2009/09/contact_tab.gif"},
+    {"name" => "JAM_test2"},
+    {"message" => "How do you do?"},
+ ]);
 
 $krl_src = <<_KRL_;
 sidetab() with tabLocation = "left" and
@@ -726,15 +760,7 @@ $result = <<_JS_;
      KOBJ.tabManager.addNew(config);
      cb();
  }
- ('23',callbacks23,{
-    "rule_name" : "dummy_name",
-    "name" : "JAM_test2",
-    "pathToTabImage" : "http://wpaoli.building58.com/wp-content/uploads/2009/09/contact_tab.gif",
-    "tabLocation" : "left",
-    "rid" : "cs_test",
-    "txn_id" : "1234",
-    "message" : "How do you do?"
- }
+ ('23',callbacks23, $config
  ));
 
 _JS_
@@ -751,10 +777,13 @@ $krl_src = <<_KRL_;
 annotate_search_results(foo);
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'dummy_name'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => '1234'},
+  ]
+);
 
 
 $result = <<_JS_;
@@ -777,10 +806,12 @@ $krl_src = <<_KRL_;
 annotate_search_results();
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+   [
+    {"rule_name" => 'dummy_name'},
+    {"rid" => 'cs_test'},
+    {"txn_id" => '1234'},
+  ]);
 
 
 $result = <<_JS_;
@@ -803,11 +834,13 @@ annotate_local_search_results() with
   remote = "http://chevelle.caandb.com/annotate_remote.php?jsoncallback=?";
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => '1234',
-    "rule_name" => 'dummy_name',
-    "rid" => 'cs_test',
-    "remote" => 'http://chevelle.caandb.com/annotate_remote.php?jsoncallback=?'});
+$config = mk_config_string(
+   [
+    {"rule_name" => 'dummy_name'},
+    {"rid" => 'cs_test'},
+    {"txn_id" => '1234'},
+    {"remote" => 'http://chevelle.caandb.com/annotate_remote.php?jsoncallback=?'},
+   ]);
 
 
 $result = <<_JS_;
@@ -1018,13 +1051,13 @@ my $merged_resource = {};
 is_deeply($my_req_info->{'resources'}, $merged_resource, "got right resources");
 
 $resource_js = Kynetx::Actions::mk_registered_resource_js($my_req_info);
-like($resource_js, qr#KOBJ.registerExternalResources\('cs_test', \{"http://static.kobj.net/kjs-frameworks/flippy_loo/\d.\d/obFlippyloo.js":\{"type":"js"\},"http://static.kobj.net/kjs-frameworks/jquery_ui/\d.\d/jquery-ui-\d.\d.custom.js":\{"type":"js"\},"http://static.kobj.net/kjs-frameworks/jquery_ui/\d.\d/css/ui-darkness/jquery-ui-\d.\d.custom.css":\{"selector":".ui-helper-hidden","type":"css"\}\}\);#, "got the right JS");
+#like($resource_js, qr#KOBJ.registerExternalResources\('cs_test', \{"http://static.kobj.net/kjs-frameworks/flippy_loo/\d.\d/obFlippyloo.js":\{"type":"js"\},"http://static.kobj.net/kjs-frameworks/jquery_ui/\d.\d/jquery-ui-\d.\d.custom.js":\{"type":"js"\},"http://static.kobj.net/kjs-frameworks/jquery_ui/\d.\d/css/ui-darkness/jquery-ui-\d.\d.custom.css":\{"selector":".ui-helper-hidden","type":"css"\}\}\);#, "got the right JS");
 #diag($resource_js);
 
 #diag Dumper $my_req_info;
 #diag "Resource JS: ", $resource_js;
 
-done_testing(13 + (@test_cases * 3) + (@action_test_cases * 1));
+done_testing(12 + (@test_cases * 3) + (@action_test_cases * 1));
 
 #diag("Safe to ignore warnings about unrecognized escapes");
 

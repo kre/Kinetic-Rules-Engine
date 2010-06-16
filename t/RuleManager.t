@@ -39,6 +39,7 @@ use Test::WWW::Mechanize;
 use LWP::UserAgent;
 
 use Apache2::Const;
+use Cache::Memcached;
 
 
 # most Kyentx modules require this
@@ -49,8 +50,18 @@ Log::Log4perl->easy_init($INFO);
 use Kynetx::FakeReq qw/:all/;
 use Kynetx::Test qw/:all/;
 use Kynetx::RuleManager qw/:all/;
+use Kynetx::Memcached qw/:all/;
 
-my $numtests = 73;
+use Kynetx::Configure;
+
+Kynetx::Configure::configure();
+
+Kynetx::Memcached->init();
+
+my $memd = get_memd();
+
+
+my $numtests = 81;
 my $nonskippable = 15;
 plan tests => $numtests;
 
@@ -634,6 +645,30 @@ SKIP: {
     is_string_nows($mech->response()->content,$test_meta);
 
 
+    # unparse/meta
+    my $url_version_13 = "$dn/flushdata/foo";
+    diag "Testing $url_version_13";
+
+    $mech->get_ok($url_version_13);
+
+    is($mech->content_type(), 'text/html');
+    $mech->content_contains("keys foo");
+
+    my $now = time();
+
+    $memd->set("test1", $now);
+
+    is($memd->get("test1"), $now, "Did it get stored?");
+
+    my $url_version_14 = "$dn/flushdata/test1";
+    diag "Testing $url_version_14";
+
+    $mech->get_ok($url_version_14);
+
+    is($mech->content_type(), 'text/html');
+    $mech->content_contains("keys test1");
+
+    is($memd->get("test1"), undef, "Did it get deleted?");
 
 
 }

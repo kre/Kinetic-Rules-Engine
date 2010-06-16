@@ -40,6 +40,7 @@ $Data::Dumper::Indent = 1;
 
 use HTML::Template;
 use JSON::XS;
+use Cache::Memcached;
 
 use Kynetx::Parser qw(:all);
 use Kynetx::PrettyPrinter qw(:all);
@@ -47,6 +48,7 @@ use Kynetx::Request qw(:all);
 use Kynetx::Json qw/:all/;
 use Kynetx::Util qw(:all);;
 use Kynetx::Version qw/:all/;
+use Kynetx::Memcached qw(:all);
 
 
 use Exporter;
@@ -78,6 +80,8 @@ sub handler {
     Log::Log4perl::MDC->put('site', $method);
     Log::Log4perl::MDC->put('rule', $rid);  # no rule for now...
 
+    Kynetx::Memcached->init();
+
     # for later logging
     $r->subprocess_env(RIDS => $rid);
     $r->subprocess_env(METHOD => $method);
@@ -102,6 +106,9 @@ sub handler {
     } elsif($method eq "unparse") {
 	$result = unparse_api($req_info, $method, $rid);
 	$type = 'text/plain';
+    } elsif($method eq "flushdata") {
+	$result = flush_data($req_info, $method, $rid);
+	$type = 'text/html';
     }
 
     $logger->debug("__FLUSH__");
@@ -325,3 +332,20 @@ sub lint_rule {
     }
     return $errors;
 }
+
+sub flush_data {
+  my ($req_info, $method, $keys) = @_;
+  my $logger = get_logger();
+
+  my $memd = get_memd();
+
+  foreach my $key (split(/;/,$keys)) {
+    $logger->debug("Flushing $key");
+    $memd->delete($key);
+  }
+
+  return "<title>KNS Data Flush</title><h1>KNS flushed data with keys $keys</h1>";
+
+}
+
+1;

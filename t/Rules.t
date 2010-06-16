@@ -186,10 +186,13 @@ rule test_1 is active {
 }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'test_1',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'test_1'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 $result = <<_JS_;
@@ -216,10 +219,13 @@ rule test_2 is active {
 }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'test_2',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'test_2'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 $result = <<_JS_;
@@ -249,10 +255,13 @@ rule test_3 is active {
 }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'test_3',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'test_3'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 $result = <<_JS_;
 (function(){
@@ -281,10 +290,13 @@ rule test_4 is active {
 }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'test_4',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'test_4'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 $result = <<_JS_;
 (function(){
@@ -347,10 +359,13 @@ rule test_flag_1 is active {
   }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'test_flag_1',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'test_flag_1'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 $result = <<_JS_;
@@ -420,10 +435,13 @@ rule test_5a is active {
   }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'test_5a',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'test_5a'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 $result = <<_JS_;
@@ -462,10 +480,13 @@ rule test_6 is active {
   }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'test_6',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'test_6'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 $result = <<_JS_;
 (function(){
@@ -528,10 +549,13 @@ _KRL_
 #my $r = Kynetx::Parser::parse_rule($krl_src);
 #diag Dumper($r);
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'test_trail_1',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'test_trail_1'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 $result = <<_JS_;
 (function(){
@@ -564,10 +588,13 @@ _KRL_
 #my $r = Kynetx::Parser::parse_rule($krl_src);
 #diag Dumper($r);
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'test_trail_2',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'test_trail_2'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 $result = <<_JS_;
@@ -624,10 +651,13 @@ _KRL_
 #my $r = Kynetx::Parser::parse_rule($krl_src);
 #diag Dumper($r);
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'test_trail_4',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'test_trail_4'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 $result = <<_JS_;
@@ -658,10 +688,13 @@ _KRL_
 #my $r = Kynetx::Parser::parse_rule($krl_src);
 #diag Dumper($r);
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'test_trail_5',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'test_trail_5'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 $result = <<_JS_;
@@ -716,10 +749,13 @@ _KRL_
 #my $r = Kynetx::Parser::parse_rule($krl_src);
 #diag Dumper($r);
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'test_trail_7',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'test_trail_7'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 $result = <<_JS_;
@@ -762,10 +798,13 @@ rule test_8 is inactive {
 }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'test_8',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'test_8'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 $result = <<_JS_;
 (function(){
@@ -804,10 +843,13 @@ rule test_page_id is active {
 _KRL_
 
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'test_page_id',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'test_page_id'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 $result = <<_JS_;
 (function(){
@@ -841,10 +883,13 @@ pagename.replace(/-/, ' ');
     }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'emit_test_0',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'emit_test_0'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 $result = <<_JS_;
@@ -877,10 +922,13 @@ $krl_src = <<_KRL_;
     }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'emit_test_1',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'emit_test_1'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 
@@ -915,10 +963,13 @@ Don't be false please!  Be true!     >>;
 }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'extended_quote_test',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'extended_quote_test'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 
@@ -948,10 +999,13 @@ rule april2008 is active {
 }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'april2008',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'april2008'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 $result = <<_JS_;
@@ -1011,10 +1065,13 @@ rule foreach_0 is active {
 _KRL_
 
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'foreach_0',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foreach_0'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 $result = <<_JS_;
 (function(){
@@ -1061,10 +1118,13 @@ rule foreach_01 is active {
 }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'foreach_01',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foreach_01'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 $result = <<_JS_;
@@ -1112,10 +1172,13 @@ rule foreach_1 is active {
 }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'foreach_1',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foreach_1'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 
@@ -1167,10 +1230,13 @@ rule foreach_2 is active {
 }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'foreach_2',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foreach_2'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 $final_req_info = {
  'results' => ['fired'],
@@ -1257,10 +1323,13 @@ This is another number #{z}>>;
 }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'foreach_here',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foreach_here'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 
@@ -1317,10 +1386,13 @@ This is another number #{z}>>;
 }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'foreach_here',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foreach_here'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 $final_req_info = {
  'results' => ['fired'],
@@ -1376,10 +1448,13 @@ $json = <<_KRL_;
 {"blocktype":"every","actions":[{"action":{"name":"alert","args":[{"val":"Hello Tim","type":"str"}],"modifiers":[]},"label":""}],"name":"april2008","pagetype":{"vars":["month"],"pattern":"http:\/\/www.utahjudo.com\\\/2008\\\/(.*?)","foreach":[]},"state":"active"}
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 'april2008',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 'april2008'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 
@@ -1439,10 +1514,13 @@ ruleset global_expr_1 {
 }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 't0',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 't0'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 $final_req_info = {
@@ -1492,16 +1570,22 @@ ruleset two_rules_both_fire {
 _KRL_
 
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 't0',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 't0'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
-$config2 = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 't1',
-    "rid" => 'cs_test'});
+$config2 = mk_config_string(
+  [
+   {"rule_name" => 't1'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 $js = <<_JS_;
@@ -1549,10 +1633,13 @@ ruleset two_rules_first_fires {
 }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 't0',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 't0'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 $js = <<_JS_;
@@ -1594,16 +1681,22 @@ ruleset two_rules_both_fire {
 }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 't8',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 't8'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
-$config2 = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 't9',
-    "rid" => 'cs_test'});
+$config2 = mk_config_string(
+  [
+   {"rule_name" => 't9'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 
 $js = <<_JS_;
@@ -1653,10 +1746,13 @@ ruleset two_rules_both_fire {
 }
 _KRL_
 
-$config = astToJson(
-   {"txn_id" => 'txn_id',
-    "rule_name" => 't10',
-    "rid" => 'cs_test'});
+$config = mk_config_string(
+  [
+   {"rule_name" => 't10'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
 
 
 $js = <<_JS_;

@@ -231,12 +231,18 @@ sub gen_js_hash {
     foreach my $k (keys %{ $hash_items->{'val'} }) {
 #      $logger->debug("Seeing $k ", Dumper $hash_items->{'val'}->{$k}) 
 #	if $k eq 'geo';
-      push(@items, "'" . $k . "' :"  . gen_js_expr($hash_items->{'val'}->{$k}));
+      push(@items, gen_js_hash_item($k, $hash_items->{'val'}->{$k}));
+#"'" . $k . "' :"  . gen_js_expr($hash_items->{'val'}->{$k}));
     }
     my $js =  '{' . join(",", @items) . '}';
 #    $logger->debug($js);
 
     return $js;
+}
+
+sub gen_js_hash_item {
+  my ($name, $val) = @_;
+  return "'" . $name . "' :"  . gen_js_expr($val);
 }
 
 
