@@ -1,3 +1,7 @@
+2010-06-15 Mark Horstmeier <meh@kynetx.com>
+    * Kynetx/Predicates/Facebook.pm: primary change to OAuthHelper.pm
+    * Kynetx/Predicates/Google/OAuthHelper.pm: Explicit definition of hash
+
 2010-06-14 Cid <cid> 
     * Resolves issue where side tab does not show notification number right #763
     * Commit Rev #628
