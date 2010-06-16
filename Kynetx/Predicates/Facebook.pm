@@ -218,7 +218,7 @@ sub authorized {
     my $rid    = $req_info->{'rid'};
     my $logger = get_logger();
     $logger->trace( "Args: ",           sub { Dumper($args) } );
-    $logger->trace( "Session tokens: ", sub { Dumper($session) } );
+    $logger->debug( "Session tokens: ", sub { Dumper($session) } );
     my $access_token = get_token( $rid, $session, 'access_token', NAMESPACE );
     if ($access_token) {
         $logger->debug( "Found Access Token for: ", NAMESPACE );
@@ -672,12 +672,12 @@ sub facebook_error_message {
 sub process_oauth_callback {
     my ( $r, $method, $rid ) = @_;
     my $logger = get_logger();
-    $logger->debug("OAuth Callback");
+    $logger->debug("OAuth Callback: ", NAMESPACE);
     my $session = process_session($r);
     set_auth_tokens( $r, $method, $rid, $session, NAMESPACE );
-    $logger->debug( "P_O_C tokens: ", sub { Dumper($session) } );
+    $logger->trace( "P_O_C tokens: ", sub { Dumper($session) } );
     my $callback_hash = parse_callback( $r, $method, $rid, NAMESPACE );
-    $logger->debug( "Callback hash: ", sub { Dumper($callback_hash) } );
+    $logger->trace( "Callback hash: ", sub { Dumper($callback_hash) } );
     my $req_info = $callback_hash->{'req_info'};
 
     if ( $rid ne $callback_hash->{'rid'} ) {

@@ -669,7 +669,9 @@ sub get_consumer_tokens {
 sub parse_callback {
     my ($r,$method,$rid,$namespace) = @_;
     my $logger = get_logger();
-    my $cb_obj->{'namespace'} = $namespace;
+    $logger->debug("parse_callback: ",$namespace);
+    my $cb_obj;
+    $cb_obj->{'namespace'} = $namespace;
     my $req       = Apache2::Request->new($r);
     $cb_obj->{'req_info'}  = Kynetx::Request::build_request_env( $r, $method, $rid );
     my $uri = $cb_obj->{'req_info'}->{'uri'};
@@ -728,7 +730,7 @@ sub _make_facebook_callback_url {
     my ($req_info) = @_;
     my $logger     = get_logger();
     my $rid        = $req_info->{'rid'};
-    my $version = $req_info->{'rule_version'} || 'dev';
+    my $version = $req_info->{'rule_version'} || 'prod';
     my $caller  = $req_info->{'caller'};
     #$caller =~ s/\//../g;
     #$caller = uri_escape($caller);

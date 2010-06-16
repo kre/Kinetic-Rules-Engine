@@ -2,13 +2,13 @@
     * Kynetx/Predicates/Facebook.pm: primary change to OAuthHelper.pm
     * Kynetx/Predicates/Google/OAuthHelper.pm: Explicit definition of hash
 
-2010-06-14 Cid <cid> 
+2010-06-14 Cid <cid>
     * Resolves issue where side tab does not show notification number right #763
     * Commit Rev #628
     * Runtime Rev: http://static.kobj.net/kobj-static-20100615210418.js
 
-2010-06-14 Cid <cid> 
-    * Resolved issues 807 and 796 
+2010-06-14 Cid <cid>
+    * Resolved issues 807 and 796
     * Change proto call function to return https if document is not http or https.
     * Change errorstack function to just have more information in stack
     * Added more code to get sandbox working.
