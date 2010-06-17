@@ -110,9 +110,51 @@ sub send_data {
 		 $data);
 }
 
+# these have to match the standard options in
+#    Kynetx::Actions::build_one_action::$config
+my $filter_out = {
+   'txn_id' => 1,
+   'rule_name' => 1,
+   'rid' => 1,
+};
+
 sub to_directive {
   my $self = shift;
-  return { $self->type()  => $self->options()};
+
+  my $ol = $self->options();
+
+  my $options;
+  my $meta;
+  foreach my $k (keys %{$ol}) {
+    if ($filter_out->{$k}) {
+      $meta->{$k} = $ol->{$k};
+    } else {
+      $options->{$k} = $ol->{$k};
+    }
+  }
+
+  return { 'name' => $self->type(),
+	   'options' => $options,
+	   'meta' => $meta,
+
+	 };
+}
+
+sub gen_directive_document {
+  my $req_info = shift;
+  
+  my $logger = get_logger();
+
+  my @directives = map {$_->to_directive()} @{$req_info->{'directives'}};
+
+  my $directive_doc = {'directives' => \@directives,
+		      };
+
+
+#      $logger->debug("Directives ", sub {Dumper $directive_doc });
+  return JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(0)->encode(
+	   $directive_doc
+        );
 }
 
 1;

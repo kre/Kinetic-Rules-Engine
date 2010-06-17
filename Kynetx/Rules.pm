@@ -54,6 +54,7 @@ use Kynetx::Log qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Repository;
 use Kynetx::Environments qw(:all);
+use Kynetx::Directives ;
 
 use Kynetx::Actions::LetItSnow;
 use Kynetx::Actions::JQueryUI;
@@ -138,11 +139,8 @@ sub process_rules {
     } else {
       $logger->debug("Returning directives from evaluation");
 
-      my @directive_doc = map {$_->to_directive()} @{$req_info->{'directives'}};
-#      $logger->debug("Directives ", sub {Dumper @directive_doc });
-      print JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(0)->encode(
-	   \@directive_doc
-        );
+
+      print Kynetx::Directives::gen_directive_document($req_info);
 
     }
 

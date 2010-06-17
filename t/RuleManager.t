@@ -393,7 +393,7 @@ $my_req_info->{'krl'} = $test_meta_bad;
 #diag $my_req_info->{'krl'};
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "meta");
-diag $json;
+#diag $json;
 
 contains_string($json, 
 	       'Invalid meta block',
@@ -526,7 +526,7 @@ SKIP: {
 
     # parse/ruleset
     my $url_version_5 = "$dn/parse/ruleset";
-    diag "Testing $url_version_5";
+#    diag "Testing $url_version_5";
 
     $mech->post_ok($url_version_5, ['krl'=> $test_ruleset]);
 
@@ -536,7 +536,7 @@ SKIP: {
 
     # parse/rule
     my $url_version_6 = "$dn/parse/rule";
-    diag "Testing $url_version_6";
+#    diag "Testing $url_version_6";
 
     $mech->post_ok($url_version_6, ['krl'=> $test_rule]);
 
@@ -546,7 +546,7 @@ SKIP: {
 
     # parse/global
     my $url_version_7 = "$dn/parse/global";
-    diag "Testing $url_version_7";
+#    diag "Testing $url_version_7";
 
     $mech->post_ok($url_version_7, ['krl'=> $test_global]);
 
@@ -556,7 +556,7 @@ SKIP: {
 
     # parse/global (bad)
     my $url_version_7a = "$dn/parse/global";
-    diag "Testing $url_version_7a";
+#    diag "Testing $url_version_7a";
 
     $mech->post_ok($url_version_7a, ['krl'=> $test_global_bad]);
 
@@ -566,7 +566,7 @@ SKIP: {
 
     # parse/dispatch
     my $url_version_71 = "$dn/parse/dispatch";
-    diag "Testing $url_version_71";
+#    diag "Testing $url_version_71";
 
     $mech->post_ok($url_version_71, ['krl'=> $test_dispatch]);
 
@@ -576,7 +576,7 @@ SKIP: {
 
     # parse/dispatch
     my $url_version_71a = "$dn/parse/dispatch";
-    diag "Testing $url_version_71a";
+#    diag "Testing $url_version_71a";
 
     $mech->post_ok($url_version_71a, ['krl'=> $test_dispatch_bad]);
 
@@ -587,7 +587,7 @@ SKIP: {
 
     # parse/meta
     my $url_version_72 = "$dn/parse/meta";
-    diag "Testing $url_version_72";
+#    diag "Testing $url_version_72";
 
     $mech->post_ok($url_version_72, ['krl'=> $test_meta]);
 
@@ -597,7 +597,7 @@ SKIP: {
 
     # parse/ruleset
     my $url_version_8 = "$dn/unparse/ruleset";
-    diag "Testing $url_version_8";
+#    diag "Testing $url_version_8";
 
     $mech->post_ok($url_version_8, ['ast'=> $test_json_ruleset]);
 
@@ -607,7 +607,7 @@ SKIP: {
 
     # unparse/rule
     my $url_version_9 = "$dn/unparse/rule";
-    diag "Testing $url_version_9";
+#    diag "Testing $url_version_9";
 
     $mech->post_ok($url_version_9, ['ast'=> $test_json_rule]);
 
@@ -617,7 +617,7 @@ SKIP: {
 
     # unparse/global
     my $url_version_10 = "$dn/unparse/global";
-    diag "Testing $url_version_10";
+#    diag "Testing $url_version_10";
 
     $mech->post_ok($url_version_10, ['ast'=> $test_json_global]);
 
@@ -627,7 +627,7 @@ SKIP: {
 
     # unparse/dispatch
     my $url_version_11 = "$dn/unparse/dispatch";
-    diag "Testing $url_version_11";
+#    diag "Testing $url_version_11";
 
     $mech->post_ok($url_version_11, ['ast'=> $test_json_dispatch]);
 
@@ -637,7 +637,7 @@ SKIP: {
 
     # unparse/meta
     my $url_version_12 = "$dn/unparse/meta";
-    diag "Testing $url_version_12";
+#    diag "Testing $url_version_12";
 
     $mech->post_ok($url_version_12, ['ast'=> $test_json_meta]);
 
@@ -647,7 +647,7 @@ SKIP: {
 
     # unparse/meta
     my $url_version_13 = "$dn/flushdata/foo";
-    diag "Testing $url_version_13";
+#    diag "Testing $url_version_13";
 
     $mech->get_ok($url_version_13);
 
@@ -661,7 +661,7 @@ SKIP: {
     is($memd->get("test1"), $now, "Did it get stored?");
 
     my $url_version_14 = "$dn/flushdata/test1";
-    diag "Testing $url_version_14";
+#    diag "Testing $url_version_14";
 
     $mech->get_ok($url_version_14);
 

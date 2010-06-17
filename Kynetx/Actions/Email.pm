@@ -56,6 +56,7 @@ my $default_actions = {
       directive => sub {
 	my $req_info = shift;
 	my $config = shift;
+	my $args = shift;
 	send_directive($req_info,
 		       'forward',
 		       $config);
@@ -65,6 +66,7 @@ my $default_actions = {
       directive => sub {
 	my $req_info = shift;
 	my $config = shift;
+	my $args = shift;
 	send_directive($req_info,
 		       'send',
 		       $config);

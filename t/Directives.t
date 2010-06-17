@@ -88,8 +88,18 @@ is_deeply($my_req_info->{'directives'}->[2]->options(),
 	 );
 $test_count++;
 
+#diag (Dumper to_directive($my_req_info->{'directives'}->[2]));
+
 is_deeply(to_directive($my_req_info->{'directives'}->[2]),
-	  {'data' => {'a' => 5,'b' => ['a','foo']}});
+	  {'options' => {'a' => 5,
+			 'b' => [
+				 'a',
+				 'foo'
+				]
+			},
+	   'name' => 'data',
+	   'meta' => undef
+	  });
 $test_count++;
 
 done_testing($test_count);

@@ -1,3 +1,9 @@
+2010-06-17  Phil Windley  <pjw@kynetx.com>
+
+   * Kynetx/Actions.pm: Added general "send_directive" action
+   * Kynetx/Directives.pm (gen_directive_document): Added to normailize
+	directive document generation from two place.
+
 2010-06-16  Phil Windley  <pjw@kynetx.com>
 
    * Kynetx/RuleManager.pm (flush_data): Added to support data flush

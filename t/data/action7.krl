@@ -7,7 +7,10 @@ ruleset 10 {
 
         raw_action() with
 	  js = <|
-$K("#foo").after(#{b});
+function(uniq, cb, config) {
+  $K("#foo").after(#{b});
+  cb();
+}
 |>;
 
     }

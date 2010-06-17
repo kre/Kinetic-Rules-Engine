@@ -47,6 +47,7 @@ use Kynetx::Actions::LetItSnow;
 use Kynetx::Actions::JQueryUI;
 use Kynetx::Actions::FlippyLoo;
 use Kynetx::Actions::Email;
+use Kynetx::Directives qw/:all/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -410,45 +411,54 @@ EOF
     'after' => [\&handle_delay]
         
     },
-	set_element_attr => {
-	       'js' => <<EOF,
-	function(uniq, cb, config, selector, attr,value) {
-	    \$K(selector).attr(attr,value);
-	    cb();
-	}
+    set_element_attr => {
+        'js' => <<EOF,
+function(uniq, cb, config, selector, attr,value) {
+    \$K(selector).attr(attr,value);
+    cb();
+}
 EOF
-	  'after' => [\&handle_delay]
-	},
-	remove => {
-	       'js' => <<EOF,
-	function(uniq, cb, config, selector) {
-	    \$K(selector).remove();
-	    cb();
-	}
+        'after' => [\&handle_delay]
+    },
+    remove => {
+	'js' => <<EOF,
+function(uniq, cb, config, selector) {
+    \$K(selector).remove();
+    cb();
+}
 EOF
-	  'after' => [\&handle_delay]
-	},
-	click => {
-	       'js' => <<EOF,
-	function(uniq, cb, config, selector, func) {
-	    var myfunc = eval("(" + func + ")");
-	    \$K(selector).click(myfunc);
-	    cb();
-	}
+        'after' => [\&handle_delay]
+    },
+    click => {
+	'js' => <<EOF,
+function(uniq, cb, config, selector, func) {
+    var myfunc = eval("(" + func + ")");
+    \$K(selector).click(myfunc);
+    cb();
+}
 EOF
-	  'after' => [\&handle_delay]
-	},
-	jsfunction => {
-	       'js' => <<EOF,
-	function(uniq, cb, config,name, func) {
-	    var myfunc = eval("(" + func + ")");
-	    window[name] = myfunc;
-	    cb();
-	}
+        'after' => [\&handle_delay]
+    },
+    jsfunction => {
+	'js' => <<EOF,
+function(uniq, cb, config,name, func) {
+    var myfunc = eval("(" + func + ")");
+    window[name] = myfunc;
+    cb();
+}
 EOF
-	  'after' => [\&handle_delay]
-	},
-
+        'after' => [\&handle_delay]
+    },
+    send_directive => {
+      directive => sub {
+	my $req_info = shift;
+	my $config = shift;
+	my $args = shift;
+	send_directive($req_info,
+		       $args->[0],
+		       $config);
+      },
+    },
 
 };
 
@@ -560,10 +570,10 @@ sub build_one_action {
 
     my $args = $action->{'args'};
     
-    # parse the action args and make the raw format available to the 'before' action
-    my $before_args = Kynetx::Expressions::eval_rands($args, $rule_env, $rule_name,$req_info, $session);
+    # parse the action args and make the expressed values
+    my $arg_exp_vals = Kynetx::Expressions::eval_rands($args, $rule_env, $rule_name,$req_info, $session);
     # get the values
-    for (@{ $before_args }) {
+    for (@{ $arg_exp_vals }) {
         $_ = den_to_exp($_);
     }
 
@@ -677,7 +687,7 @@ sub build_one_action {
         $resources = Kynetx::Actions::FlippyLoo::get_resources();
     }
 
-    $js .= &$before($req_info, $rule_env, $session, $config, $mods,$before_args);
+    $js .= &$before($req_info, $rule_env, $session, $config, $mods,$arg_exp_vals);
     $logger->debug("Action $action_name (before) returns js: ",$js) if $js;
     if (defined $action_js) {
   
@@ -705,7 +715,7 @@ sub build_one_action {
     }
 
     # now run directive functions to store those
-    $directive->($req_info, $config);
+    $directive->($req_info, $config, $arg_exp_vals);
 
     register_resources($req_info, $resources);
 
