@@ -330,6 +330,9 @@ LogLevel error
 LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %{X-Forwarded-For}i %{METHOD}e" combined
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/init_log /web/logs/kynetx/INIT-%Y%m%d-%H%M.log" combined env=INIT
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/frag_log /web/logs/kynetx/FRAG-%Y%m%d-%H%M.log" combined env=FRAG
+
+
+#LogFormat "%h %t %{TOTAL_SECS}e %{METHOD}e %{RIDS}e " KRL
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/krl_log /web/logs/kynetx/KRL-%Y%m%d-%H%M.log" combined env=KRL
 
 # rule logging for RULESET

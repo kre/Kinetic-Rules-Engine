@@ -133,7 +133,7 @@ sub log_request_env {
 	foreach my $entry (keys %{ $request_info }) {
 	  # print out first 50 chars of the request string
 	  $logger->debug($entry . ": " . substr($request_info->{$entry},0,50))
-	    unless($entry eq 'param_names' || $entry eq 'selected_rules');
+	    unless($entry eq 'param_names' || $entry eq 'selected_rules' || ! defined $request_info->{$entry});
 	}
 # 	foreach my $h (keys %{ $r->headers_in }) {
 # 	    $logger->debug($h . ": " . $r->headers_in->{$h});
