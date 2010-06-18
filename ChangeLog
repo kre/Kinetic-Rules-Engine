@@ -1,7 +1,13 @@
+2010-06-18 Mark Horstmeier <meh@kynetx.com>
+    * Adds set operations to arrays
+    * Kynetx/Parser.pm: added set operations
+    * Kynetx/Operators.pm: added set operations
+    * t/Operators.t: new tests for set operations
+
 2010-06-18  Cid <cid>
    * Resolves issue where ann and perc did not work together well.
    * Commit Revistion : 636
-   * Release Runtime : http://static.kobj.net/kobj-static-20100618161847.js 
+   * Release Runtime : http://static.kobj.net/kobj-static-20100618161847.js
 
 2010-06-18  Phil Windley  <pjw@kynetx.com>
 
@@ -27,9 +33,9 @@
 2010-06-15  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Actions.pm (build_one_action): Changed how config OBJ is
-	created for JS.  Now uses gen_js_expr instead of evaling. 
+	created for JS.  Now uses gen_js_expr instead of evaling.
     * Kynetx/JavaScript.pm (gen_js_hash_item): Added to normalize JSON
-	generation 
+	generation
 
 2010-06-15 Mark Horstmeier <meh@kynetx.com>
     * Kynetx/Predicates/Facebook.pm: primary change to OAuthHelper.pm

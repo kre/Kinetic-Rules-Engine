@@ -2,33 +2,33 @@ package Kynetx::Parser;
 # file: Kynetx/Parser.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use strict;
 use warnings;
 
@@ -38,7 +38,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 parse_ruleset
 remove_comments
@@ -74,27 +74,27 @@ REGEXP: m%(/(\\.|[^\/])+/|#(\\.|[^\#])+#)(i|g|m){0,2}%
 HTML: /<<.*?>>/s  {$return=Kynetx::Parser::html($item[1]) }
 JS: /<\|.*?\|>/s  {$return=Kynetx::Parser::javascript($item[1]) }
 STRING: /"(\\"|[^"])*"|'[^']*'/ {$return=Kynetx::Parser::string($item[1]) }
-VAR:   /[_A-Za-z]\w*/ 
-NUM:   /(-)?\d*\.\d+|\d+/          
-COMMA: /,/ 
-INCR: /\+=/ 
-DECR: /-=/ 
-DOT: /\./ 
-OP:   m([+-/*\%])          
-LBRACKET: /\[/ 
-RBRACKET: /\]/ 
-LPAREN: /\(/ 
-RPAREN: /\)/ 
-EQUALS: /=/ 
-INEQUALITY: /[<>]/ 
-COLON: /:/ 
-SEMICOLON: /;/ 
-LOGICAL_AND: /&&/ 
-BOOL: 'true' | 'false' 
+VAR:   /[_A-Za-z]\w*/
+NUM:   /(-)?\d*\.\d+|\d+/
+COMMA: /,/
+INCR: /\+=/
+DECR: /-=/
+DOT: /\./
+OP:   m([+-/*\%])
+LBRACKET: /\[/
+RBRACKET: /\]/
+LPAREN: /\(/
+RPAREN: /\)/
+EQUALS: /=/
+INEQUALITY: /[<>]/
+COLON: /:/
+SEMICOLON: /;/
+LOGICAL_AND: /&&/
+BOOL: 'true' | 'false'
 
 eofile: /^\Z/
 
-ruleset: 'ruleset' ruleset_name  '{' 
+ruleset: 'ruleset' ruleset_name  '{'
            meta_block(0..1)
            dispatch_block(0..1)
            global_decls(0..1)
@@ -136,17 +136,17 @@ meta_block_top: meta_block
 
 
 
-meta_block: 'meta' '{' 
+meta_block: 'meta' '{'
        pragma(s?)
-      '}' 
+      '}'
     { my $r = {'meta_start_line' => int $itempos[1]{line}{from},
-               'meta_start_col' => int $itempos[1]{column}{from},  
+               'meta_start_col' => int $itempos[1]{column}{from},
               };
       foreach my $a ( @{ $item[3] } ) {
         foreach my $k (keys %{ $a } ) {
            if($r->{$k} && ref $r->{$k} eq 'HASH' && ref $a->{$k} eq 'HASH') {
                foreach my $k1 (keys %{ $a->{$k} }) {
-                  $r->{$k}->{$k1} = $a->{$k}->{$k1}; 
+                  $r->{$k}->{$k1} = $a->{$k}->{$k1};
                }
            } elsif($r->{$k} && ref $r->{$k} eq 'ARRAY' && ref $a->{$k} eq 'ARRAY') {
               push @{ $r->{$k}} , @{ $a->{$k} };
@@ -160,7 +160,7 @@ meta_block: 'meta' '{'
     }
  | <error>
 
-pragma: desc_block 
+pragma: desc_block
     {$return = {
         'description' => $item[1]
         }
@@ -175,10 +175,10 @@ pragma: desc_block
         'author' => $item[2]
         }
     }
- | 'key' ('errorstack' | 
-          'googleanalytics' | 
-          'twitter' | 
-          'amazon' | 
+ | 'key' ('errorstack' |
+          'googleanalytics' |
+          'twitter' |
+          'amazon' |
           'kpds' |
           'google' |
           VAR ) key_value
@@ -236,7 +236,7 @@ authz_pragma: 'authz' 'require' 'user'
                'level' => $item[3]};}
  | <error>
 
-key_value: STRING 
+key_value: STRING
   | '{' name_value_pair(s /,/) '}'
        {my $r = {};
         foreach my $a (@{ $item[2]}) {
@@ -271,7 +271,7 @@ dispatch_block: 'dispatch' '{' dispatch(s?) '}' #?
 dispatch: 'domain' STRING dispatch_target(?)
      {$return = {
 	 'domain' => $item[2],
-	 'ruleset_id' => $item[3][0] 
+	 'ruleset_id' => $item[3][0]
          }
      }
    | <error>
@@ -279,11 +279,11 @@ dispatch: 'domain' STRING dispatch_target(?)
 dispatch_target: '->' STRING
      {$return = $item[2]
      }
-                   
+
 
 dataset: 'dataset' VAR datatype(?) '<-' STRING cachable(?)
      {$return = {
-	 'name' => $item[2], 
+	 'name' => $item[2],
 	 'type' => 'dataset',
 	 'source' => $item[5],
 	 'cachable' => $item[6][0] || 0,
@@ -293,15 +293,15 @@ dataset: 'dataset' VAR datatype(?) '<-' STRING cachable(?)
 
 datasource: 'datasource' VAR datatype(?) '<-' STRING cachable(?)
      {$return = {
-	 'name' => $item[2],  
+	 'name' => $item[2],
 	 'type' => 'datasource',
 	 'source' => $item[5],
 	 'cachable' => $item[6][0] || 0,
 	 'datatype' => $item[3][0] || 'JSON'
          }
      }
-     
-datatype: COLON ('JSON' | 'XML' | 'RSS' | 'HTML')  
+
+datatype: COLON ('JSON' | 'XML' | 'RSS' | 'HTML')
 
 cachable: 'cachable' cachetime(?)
      {$return = $item[2][0] || 1
@@ -386,7 +386,7 @@ rule: 'rule' VAR 'is' rule_state '{'
 	      'emit' => $item[8][0],
   	      'actions' => $item{action}->{'actions'},
 	      'blocktype' => $item{action}->{'blocktype'} || 'every',
-	      'cond' => $item{action}->{'cond'} || 
+	      'cond' => $item{action}->{'cond'} ||
 		        Kynetx::Parser::mk_expr_node('bool','true'),
 	      'callbacks' => $item[11][0],
 	      'post' => $item[12][0],
@@ -409,19 +409,19 @@ select: 'select' (using|when) foreach(s?)
       }
       | <error>
 
-using: 'using' STRING setting(?) 
+using: 'using' STRING setting(?)
 	  {$return =
 	   { 'pattern' => $item[2],
 	     'vars' => $item[3][0],
              'type' => 'prim_event',
              'op' => 'pageview',
              'legacy' => 1
-	   } 
+	   }
 	  }
 
 when: 'when' event_seq
 
-event_seq: <leftop: event_or ('then'|'before') event_or> 
+event_seq: <leftop: event_or ('then'|'before') event_or>
      {$return =
        (defined $item[1][1]) ?
           Kynetx::Parser::build_expr_tree($item[1], 'complex_event')
@@ -429,16 +429,16 @@ event_seq: <leftop: event_or ('then'|'before') event_or>
           $item[1][0]
       }
 
-event_or: <leftop: event_and ('or') event_and> 
-    {$return = 
+event_or: <leftop: event_and ('or') event_and>
+    {$return =
       (defined $item[1][1]) ?
           Kynetx::Parser::build_expr_tree($item[1], 'complex_event')
        :
           $item[1][0]
     }
 
-event_and: <leftop: event_btwn ('and') event_btwn> 
-    {$return = 
+event_and: <leftop: event_btwn ('and') event_btwn>
+    {$return =
        (defined $item[1][1]) ?
           Kynetx::Parser::build_expr_tree($item[1], 'complex_event')
        :
@@ -452,18 +452,18 @@ event_btwn: event_prim ('not')(?) 'between' '(' event_seq ',' event_seq ')'
            'mid' => $item[1],
            'first' => $item[5],
            'last' => $item[7],
-          } 
+          }
        }
     | event_prim
 
-event_prim: event_domain(?) 'pageview' (STRING | REGEXP) setting(?) 
+event_prim: event_domain(?) 'pageview' (STRING | REGEXP) setting(?)
 	  {$return =
 	   { 'pattern' => $item[3],
 	     'vars' => $item[4][0],
              'type' => 'prim_event',
              'op' => 'pageview',
-             'domain' => $item[1][0] 
-	   } 
+             'domain' => $item[1][0]
+	   }
 	  }
   | event_domain(?) ('submit'|'click'|'dblclick'|'change'|'update') STRING on_expr(?) setting(?)
 	  {$return =
@@ -473,7 +473,7 @@ event_prim: event_domain(?) 'pageview' (STRING | REGEXP) setting(?)
              'type' => 'prim_event',
              'op' => $item[2],
              'domain' => $item[1][0]
-	   } 
+	   }
 	  }
   | VAR VAR event_filter(s?) setting(?)
 	  {$return =
@@ -482,7 +482,7 @@ event_prim: event_domain(?) 'pageview' (STRING | REGEXP) setting(?)
              'type' => 'prim_event',
              'op' => $item[2],
              'domain' => $item[1]
-	   } 
+	   }
 	  }
   | '(' event_seq ')'
 
@@ -511,7 +511,7 @@ foreach: 'foreach' expr setting
     }
 
 
-pre_block: 'pre' '{' decl(s? /;/) SEMICOLON(?) '}' 
+pre_block: 'pre' '{' decl(s? /;/) SEMICOLON(?) '}'
            {$return=$item[3]}
          | <error>
 
@@ -544,9 +544,9 @@ emit_block: 'emit' (HTML | STRING | JS)
    {$return = $item[2];}
 
 
-action: conditional_action 
+action: conditional_action
         {$return = $item{conditional_action}}
-      | unconditional_action 
+      | unconditional_action
         {$return = $item{unconditional_action}}
       | <error>
 
@@ -558,7 +558,7 @@ conditional_action: 'if' expr 'then' unconditional_action
          }
         }
 
-unconditional_action: primrule 
+unconditional_action: primrule
         {$return =
          {'blocktype' => 'every',
           'actions' => [$item{primrule}],
@@ -570,7 +570,7 @@ unconditional_action: primrule
 primrule: rule_label(?) namespace(?) VAR '(' expr(s? /,/) ')' modifier_clause(?)
         {$return =
          {'label' => $item[1][0],
-          'action' => 
+          'action' =>
              {'args' => $item[5],
               'modifiers' => $item[7][0],  # returned as array of array
               'name' => $item[3],
@@ -579,7 +579,7 @@ primrule: rule_label(?) namespace(?) VAR '(' expr(s? /,/) ')' modifier_clause(?)
          }
         }
      | rule_label(?) emit_block
-        {$return = 
+        {$return =
 	 {'label' => $item[1][0],
           'emit' => $item[2],
          }
@@ -650,10 +650,10 @@ callbacks: 'callbacks' '{' success(?) failure(?) '}'
 
 success: 'success' '{' click(s /;/)  SEMICOLON(?) '}'
      {$return= $item[3] }
-   
+
 failure: 'failure' '{' click(s /;/)  SEMICOLON(?) '}'
      {$return= $item[3] }
-   
+
 click: ('click' | 'change') VAR '=' STRING click_link(?)
      {$return=
       {'type' => $item[1],
@@ -669,7 +669,7 @@ click_link: 'triggers' persistent_expr
 
 
 #-----------------------------------------------------------------------------
-# postlude 
+# postlude
 #-----------------------------------------------------------------------------
 post_block: post '{' post_statement(s? /;/) SEMICOLON(?) '}' post_alternate(?)
      {$return=
@@ -678,7 +678,7 @@ post_block: post '{' post_statement(s? /;/) SEMICOLON(?) '}' post_alternate(?)
        'alt' => $item[6][0],
       }
      }
-  
+
 post: 'fired'
     | 'always'
     | 'notfired'
@@ -710,7 +710,7 @@ persistent_expr: persistent_clear
    | trail_mark
 
 
-persistent_clear: 'clear' var_domain ':' VAR 
+persistent_clear: 'clear' var_domain ':' VAR
      {$return=
       {'action' => 'clear',
        'type' => 'persistent',
@@ -719,7 +719,7 @@ persistent_clear: 'clear' var_domain ':' VAR
       }
      }
 
-persistent_set: 'set' var_domain ':' VAR 
+persistent_set: 'set' var_domain ':' VAR
      {$return=
       {'action' => 'set',
        'type' => 'persistent',
@@ -739,7 +739,7 @@ persistent_iterate: var_domain ':' VAR counter_op expr counter_start(?)
        'from' => defined $item[6][0] ? $item[6][0] : 1 ,
       }
      }
-    
+
 trail_forget: 'forget' STRING 'in' var_domain ':' VAR
      {$return=
       {'action' => 'forget',
@@ -762,7 +762,7 @@ trail_mark: 'mark' var_domain ':' VAR trail_with(?)
 
 trail_with: 'with' expr
    {$return = $item[2]}
-   
+
 
 counter_op: '+='
           | '-='
@@ -777,9 +777,9 @@ log_statement: 'log' expr
        'what' => $item[2]
       }
      }
- 
 
-control_statement: 'last' 
+
+control_statement: 'last'
      {$return=
       {'type' => 'control',
        'statement' => $item[1],
@@ -787,7 +787,7 @@ control_statement: 'last'
      }
 
 raise_statement: 'raise' 'explicit' 'event' VAR for_clause(?) modifier_clause(?)
-    {$return = 
+    {$return =
       {'type' => 'raise',
        'domain' => $item[2],
        'event' => $item[4],
@@ -818,13 +818,13 @@ conditional_expression : disjunction '=>' expr '|' expr
 #     {$return= $item[1][0]}
 
 
-disjunction: <leftop: conjunction '||' conjunction> 
+disjunction: <leftop: conjunction '||' conjunction>
       {$return=
        (defined $item[1][1]) ?
           {'type' => 'pred',
            'op' => '||',
            'args' => $item[1]
-          } 
+          }
        :
           $item[1][0]
       }
@@ -835,14 +835,14 @@ conjunction: <leftop: equality_expr '&&' equality_expr>
          {'type' => 'pred',
           'op' => '&&',
           'args' => $item[1]
-         } 
+         }
        :
          $item[1][0]
       }
 
 # we assume that there's never more than 1 op and 2 exprs
 equality_expr: <leftop: add_expr predop add_expr>
-      {$return = 
+      {$return =
        (defined $item[1][1]) ?
          Kynetx::Parser::build_expr_tree($item[1],'ineq')
        :
@@ -853,7 +853,7 @@ predop: '<=' | '>=' | '<' | '>' | '==' | '!=' | 'eq' | 'neq' | 'like'
 
 
 add_expr: <leftop: mult_expr add_op mult_expr>
-      {$return= 
+      {$return=
         (defined $item[1][1]) ?
           Kynetx::Parser::build_expr_tree($item[1], 'prim')
         :
@@ -899,7 +899,7 @@ unary_expr: 'not' unary_expr
 	'op' => $item[3],
        }
       }
-    | var_domain ':' VAR predop expr timeframe 
+    | var_domain ':' VAR predop expr timeframe
       {$return=
        {'type' => 'persistent_ineq',
 	'domain' => $item[1],
@@ -910,7 +910,7 @@ unary_expr: 'not' unary_expr
         'timeframe' => (ref $item[6] eq 'HASH') ? $item[6]->{'period'} : undef,
        }
       }
-    | var_domain ':' VAR timeframe 
+    | var_domain ':' VAR timeframe
       {$return=
        {'type' => 'persistent_ineq',
 	'domain' => $item[1],
@@ -929,7 +929,10 @@ operator_expr: factor operator(s?)
 operator: '.' operator_op '(' expr(s? /,/) ')'
   {$return = [$item[2], $item[4]]}
 
-operator_op: 'pick'|'match'|'length'|'replace'|'as'|'head'|'tail'|'sort'|'filter'|'map'|'uc'|'lc' |'split' | 'join'
+operator_op: 'pick'|'match'|'length'|'replace'|'as'|'head'|'tail'|'sort'
+      |'filter'|'map'|'uc'|'lc' |'split' | 'join' | 'query'
+      | 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
+      | 'duplicates'
 
 factor: NUM
         {$return=Kynetx::Parser::mk_expr_node('num',$item[1]+0)}
@@ -981,7 +984,7 @@ function_app: namespace VAR '(' expr(s? /,/) ')'
 var_domain: 'ent' | 'app'
 
 hash_line: STRING ':' expr
-   {$return= {'lhs' => $item[1], 
+   {$return= {'lhs' => $item[1],
               'rhs' => $item[3]}}
 
 persistent_var: var_domain ':' VAR
@@ -992,7 +995,7 @@ persistent_var: var_domain ':' VAR
       }
      }
 
-trail_exp: 'current' var_domain ':' VAR 
+trail_exp: 'current' var_domain ':' VAR
      {$return=
       {'type' => 'trail_history',
        'offset' => Kynetx::Parser::mk_expr_node('num','0'),
@@ -1000,7 +1003,7 @@ trail_exp: 'current' var_domain ':' VAR
        'name' => $item[4],
       }
      }
- | 'history' expr var_domain ':' VAR 
+ | 'history' expr var_domain ':' VAR
      {$return=
       {'type' => 'trail_history',
        'offset' => $item[2],
@@ -1045,15 +1048,15 @@ periods: 'years'
       | <error>
 
 
-function_def: 'function' '(' VAR(s? /,/) ')' '{' fundecls(?) expr '}' 
+function_def: 'function' '(' VAR(s? /,/) ')' '{' fundecls(?) expr '}'
       {$return={
           'type' => 'function',
           'vars' => $item[3],
           'decls' => $item[6][0] || [],
           'expr' => $item[7]
         }
-      } 
- 
+      }
+
 fundecls: decl(s? /;/) SEMICOLON
      {$return = $item[1]}
 
@@ -1153,7 +1156,7 @@ my $comment_re = qr%
          |               ##    OR
            [^#\\]        ##  Non "\
          )*
-         \#          ##  End 
+         \#          ##  End
         |         ##     OR  various things which aren't comments:
           <<           ##  Start of << ... >> string
           .*?
@@ -1206,17 +1209,17 @@ sub parse_ruleset {
 
 }
 
-# Helper function used in testing  
+# Helper function used in testing
 sub parse_expr {
     my ($expr) = @_;
-    
+
     my $logger = get_logger();
 
     $expr = remove_comments($expr);
 
     # remove newlines
 #    $expr =~ s%\n%%g;
-    
+
 
     my $result = ($parser->expr($expr));
     if (defined $result->{'error'}) {
@@ -1224,15 +1227,15 @@ sub parse_expr {
     } else {
     $logger->debug("Parsed expression: ",sub {Dumper($expr)});
     }
-    
+
     return $result;
 
 }
 
-# Helper function used in testing  
+# Helper function used in testing
 sub parse_decl {
     my ($expr) = @_;
-    
+
     my $logger = get_logger();
 
     $expr = remove_comments($expr);
@@ -1254,10 +1257,10 @@ sub parse_decl {
 
 }
 
-# Helper function used in testing  
+# Helper function used in testing
 sub parse_pre {
     my ($expr) = @_;
-    
+
     my $logger = get_logger();
 
     $expr = remove_comments($expr);
@@ -1279,10 +1282,10 @@ sub parse_pre {
 
 }
 
-# # Helper function used in testing  
+# # Helper function used in testing
 # sub parse_predexpr {
 #     my ($expr) = @_;
-    
+
 #     my $logger = get_logger();
 
 #     $expr = remove_comments($expr);
@@ -1307,7 +1310,7 @@ sub parse_pre {
 
 sub parse_rule {
     my ($rule) = @_;
-    
+
     my $logger = get_logger();
 
     $rule = remove_comments($rule);
@@ -1338,7 +1341,7 @@ sub parse_rule {
 
 sub parse_action {
     my $rule = shift;
-    
+
     my $logger = get_logger();
 
     $rule = remove_comments($rule);
@@ -1359,7 +1362,7 @@ sub parse_action {
 
 sub parse_callbacks {
     my $rule = shift;
-    
+
     my $logger = get_logger();
 
     $rule = remove_comments($rule);
@@ -1380,7 +1383,7 @@ sub parse_callbacks {
 
 sub parse_post {
     my $rule = shift;
-    
+
     my $logger = get_logger();
 
     $rule = remove_comments($rule);
@@ -1401,7 +1404,7 @@ sub parse_post {
 
 sub parse_global_decls {
     my $element = shift;
-    
+
     my $logger = get_logger();
 
     $element = remove_comments($element);
@@ -1412,9 +1415,9 @@ sub parse_global_decls {
     if (ref $result eq 'HASH' && $result->{'error'}) {
 	   $logger->debug("[Parser] Can't parse global declarations: $result->{'error'}");
     } else {
-	   #$logger->debug("[Parser] Parsed global decls");#, 
+	   #$logger->debug("[Parser] Parsed global decls");#,
     }
-    
+
 
     return $result;
 
@@ -1422,7 +1425,7 @@ sub parse_global_decls {
 
 sub parse_dispatch {
     my $element = shift;
-    
+
     my $logger = get_logger();
 
     $element = remove_comments($element);
@@ -1442,13 +1445,13 @@ sub parse_dispatch {
 
 sub parse_meta {
     my $element = shift;
-    
+
     my $logger = get_logger();
 
     $element = remove_comments($element);
 
     my $result = $parser->meta_block_top($element);
-    
+
     if (ref $result eq 'HASH' && $result->{'error'}) {
 	$logger->debug("Can't parse meta information: $result->{'error'}");
     } else {

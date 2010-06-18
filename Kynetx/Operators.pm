@@ -595,17 +595,6 @@ sub eval_as {
 }
 $funcs->{'as'} = \&eval_as;
 
-sub _prune_persitent_trail {
-    my ($source) = @_;
-    if (ref $source eq 'ARRAY') {
-        my @marry;
-        foreach my $element (@$source) {
-            push(@marry,$element->[0]);
-        }
-        return \@marry;
-    }
-
-}
 sub eval_toRegexp {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
@@ -622,6 +611,151 @@ sub eval_toRegexp {
 }
 $funcs->{'toRegexp'} = \&eval_toRegexp;
 
+#----------------------------------------------------------------------------------
+# Set operations
+#----------------------------------------------------------------------------------
+sub _to_sets {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+        my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+    my $a = $obj->{'val'};
+    my $b = $rands->[0]->{'val'};
+    if (ref $a eq '') {
+        my @temp = ();
+        push (@temp,$a);
+        $a = \@temp;
+    }
+    if (ref $b eq '') {
+        my @temp = ();
+        push (@temp,$b);
+        $b = \@temp;
+    }
+    if (ref $a eq 'ARRAY' and ref $b eq 'ARRAY') {
+        return ($a,$b);
+    } else {
+        return undef;
+    }
+}
+
+sub set_intersection {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my ($a,$b) = _to_sets($expr, $rule_env, $rule_name, $req_info, $session);
+    my %hash;
+    $logger->trace("Set a: ",sub {Dumper($a)});
+    $logger->trace("Set b: ",sub {Dumper($b)});
+    foreach (@{$a}) {
+        $hash{$_}++;
+    }
+    foreach (@{$b}) {
+        $hash{$_}++;
+    }
+    $logger->trace("Intersect: ", sub {Dumper(sort keys %hash)});
+    my @set = grep {$hash{$_}>1} keys %hash;
+    return Kynetx::Expressions::typed_value(\@set);
+}
+$funcs->{'intersection'} = \&set_intersection;
+
+sub set_union {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my ($a,$b) = _to_sets($expr, $rule_env, $rule_name, $req_info, $session);
+    my %hash;
+    $logger->trace("Set a: ",sub {Dumper($a)});
+    $logger->trace("Set b: ",sub {Dumper($b)});
+    foreach (@{$a}) {
+        $hash{$_}++;
+    }
+    foreach (@{$b}) {
+        $hash{$_}++;
+    }
+    my @set = sort keys %hash;
+    return Kynetx::Expressions::typed_value(\@set);
+
+}
+$funcs->{'union'} = \&set_union;
+
+sub set_difference {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my ($a,$b) = _to_sets($expr, $rule_env, $rule_name, $req_info, $session);
+    my %hash;
+    $logger->trace("Set a: ",sub {Dumper($a)});
+    $logger->trace("Set b: ",sub {Dumper($b)});
+    foreach(@{$a}) {
+        $hash{$_} = 1;
+    }
+    foreach(@{$b}) {
+        delete $hash{$_};
+    }
+    my @set = sort keys %hash;
+    return Kynetx::Expressions::typed_value(\@set);
+
+}
+$funcs->{'difference'} = \&set_difference;
+
+sub set_has {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my ($a,$b) = _to_sets($expr, $rule_env, $rule_name, $req_info, $session);
+    my $sub_set = scalar @{$b};
+    my $x_set = set_intersection($expr, $rule_env, $rule_name, $req_info, $session);
+    my $intr = scalar @{$x_set->{'val'}};
+    $logger->trace("Set b: ",$sub_set);
+    $logger->trace("xsect: ",$intr);
+    if ($sub_set == $intr) {
+      return Kynetx::Expressions::mk_expr_node('bool','true');
+    } else {
+      return Kynetx::Expressions::mk_expr_node('bool','false');
+    }
+
+}
+$funcs->{'has'} = \&set_has;
+$funcs->{'subset'} = \&set_has;
+
+sub set_once {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my ($a,$b) = _to_sets($expr, $rule_env, $rule_name, $req_info, $session);
+    my %hash;
+    foreach (@{$a}) {
+        $hash{$_}++;
+    }
+    my @set = grep {$hash{$_}==1 } keys %hash;
+    return Kynetx::Expressions::typed_value(\@set);
+
+}
+$funcs->{'once'} = \&set_once;
+
+sub set_duplicates {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my ($a,$b) = _to_sets($expr, $rule_env, $rule_name, $req_info, $session);
+    my %hash;
+    foreach (@{$a}) {
+        $hash{$_}++;
+    }
+    my @set = grep {$hash{$_} > 1} keys %hash;
+
+    return Kynetx::Expressions::typed_value(\@set);
+
+}
+$funcs->{'duplicates'} = \&set_duplicates;
+
+sub set_unique {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my ($a,$b) = _to_sets($expr, $rule_env, $rule_name, $req_info, $session);
+    my %hash;
+    foreach (@{$a}) {
+        $hash{$_}++;
+    }
+    my @set = sort keys %hash;
+
+    return Kynetx::Expressions::typed_value(\@set);
+
+}
+$funcs->{'unique'} = \&set_unique;
 
 #-----------------------------------------------------------------------------------
 # make it all happen
@@ -634,5 +768,18 @@ sub eval_operator {
     my $f = $funcs->{$expr->{'name'}};
     return &$f($expr, $rule_env, $rule_name, $req_info, $session);
 }
+
+sub _prune_persitent_trail {
+    my ($source) = @_;
+    if (ref $source eq 'ARRAY') {
+        my @marry;
+        foreach my $element (@$source) {
+            push(@marry,$element->[0]);
+        }
+        return \@marry;
+    }
+
+}
+
 
 1;
