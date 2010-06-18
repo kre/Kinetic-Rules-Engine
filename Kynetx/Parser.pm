@@ -70,7 +70,7 @@ my $grammar = <<'_EOGRAMMAR_';
 
 # Terminals (macros that can't expand further)
 #
-REGEXP: m%(/(\\.|[^\/])+/|#(\\.|[^\#])+#)(i|g|m){0,2}%
+REGEXP: m%(/(\\.|[^\/])+/|#(\\.|[^\#])+#)(i|g|m){0,2}% 
 HTML: /<<.*?>>/s  {$return=Kynetx::Parser::html($item[1]) }
 JS: /<\|.*?\|>/s  {$return=Kynetx::Parser::javascript($item[1]) }
 STRING: /"(\\"|[^"])*"|'[^']*'/ {$return=Kynetx::Parser::string($item[1]) }
@@ -1087,6 +1087,7 @@ sub string {
     $value =~ s/["']$//;
     return $value;
 }
+
 
 # assumes an array of at least length three and with odd number of members
 sub build_expr_tree {

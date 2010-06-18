@@ -72,6 +72,26 @@ my $default_actions = {
 		       $config);
       },
     },
+    reply => {
+      directive => sub {
+	my $req_info = shift;
+	my $config = shift;
+	my $args = shift;
+	send_directive($req_info,
+		       'reply',
+		       $config);
+      },
+    },
+    delete => {
+      directive => sub {
+	my $req_info = shift;
+	my $config = shift;
+	my $args = shift;
+	send_directive($req_info,
+		       'delete',
+		       $config);
+      },
+    },
 };
 
 
