@@ -215,10 +215,23 @@ sub pp_use {
     my $beg = " "x$indent;
     
     my $o = '';
+
     foreach my $u ( @{ $node }) {
+
+      if ($u->{'type'} eq 'module') {
 	$o .= $beg ."use " . $u->{'type'} . " " . $u->{'name'};
 	$o .= " alias " . $u->{'alias'} if $u->{'alias'};
 	$o .= "\n";
+      } elsif ($u->{'type'} eq 'resource') {
+	$o .= $beg ."use " . $u->{'resource_type'} . " " . $u->{'type'} . " " ;
+	if ($u->{'resource'}->{'type'} eq 'url') {
+	  $o .= pp_string($u->{'resource'}->{'location'}); 
+	} else {
+	  $o .= $u->{'resource'}->{'location'}; 
+	}
+
+	$o .= "\n";
+      }
     }
     return $o;
 }

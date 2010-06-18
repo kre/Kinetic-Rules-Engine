@@ -204,7 +204,23 @@ pragma: desc_block
                    }]
         }
     }
+ | 'use' ('css'|'javascript') 'resource' location
+    {$return = {
+        'use' => [{'type' => $item[3],
+                    'resource' => $item[4],
+                    'resource_type' => $item[2]
+                   }]
+        }
+    }
  | <error>
+
+location: STRING
+  {$return = {'location' => $item[1],
+              'type' => 'url'}}
+  | VAR
+  {$return = {'location' => $item[1],
+              'type' => 'name'}}
+
 
 desc_block: 'description' (HTML | STRING)
    {$return = $item[2];}
