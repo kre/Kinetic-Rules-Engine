@@ -17,7 +17,7 @@ KOBJ.search_percolate.defaults = {
 		"www.google.com": {
 
 			"parem": "start",
-			"mainSelector": "#res",
+			"mainSelector": "#ires ol",
 			"backupSelector": "#mbEnd",
 			"resultNumParem": "num=90",
 			"resultElement": "li.g, div.g",
@@ -28,11 +28,11 @@ KOBJ.search_percolate.defaults = {
 			"urlSel":".l",
 			"seperator_css":{},
 			"div_css":{
-				"padding-bottom": "3px",
-				"padding-left": "16px",
-				"padding-right": "5px",
-				"max-width": "48em",
-				"min-height": "30px"
+//				"padding-bottom": "3px",
+//				"padding-left": "16px",
+//				"padding-right": "5px",
+//				"max-width": "48em",
+//				"min-height": "30px"
 			},
 	
 			"ol_css": {
@@ -46,7 +46,7 @@ KOBJ.search_percolate.defaults = {
 		
 		"www.bing.com": {
 			"parem": "first",
-			"mainSelector":"#wg0",
+			"mainSelector":"#result ul:first",
 			"backupSelector":".sb_ph",
 			"resultNumParem": "count=100",
 			"resultElement":"#results>ul>li",
@@ -70,10 +70,10 @@ KOBJ.search_percolate.defaults = {
 
 		"search.yahoo.com": {
 			"parem": "b",
-			"mainSelector":"#web > ol",
+			"mainSelector":"#web ol:first",
 			"backupSelector":"#main",
 			"resultNumParem": "n=100",
-			"resultElement":"li div.res",
+			"resultElement":"#web ol>li",
 			"actionMain":"prepend",
 			"actionBackup":"prepend",
 			"watcher": "",
@@ -150,44 +150,20 @@ KOBJ.percolate = function(selector, config) {
 	
 			site_defaults = defaults.site[window.location.host];
 	
-	
-			function mk_list_item(i) {
-				return $KOBJ(i).attr({"class": defaults["class"]}).css({"margin-bottom":"5px"});
-			}
-			
-			function mk_rm_div (anchor) {
-				var logo_item = mk_list_item(anchor);
-				var top_box = $KOBJ('<ol>').css(site_defaults.ol_css).attr("id", defaults.name+"_top_box").append(logo_item);
-				var inner_div = $KOBJ('<div>').css(site_defaults.seperator_css).append(top_box);
-				if (defaults.tail_background_image){
-					inner_div.css({
-						"background-image": "url(" + defaults.tail_background_image + ")",
-						"background-repeat": "no-repeat",
-						"background-position": "right top"
-					});
-				}
-			
-				var rm_div = $KOBJ('<div>').attr({"class":defaults.name + "_percolate " + site_defaults.classes}).css(site_defaults.div_css).append(inner_div);
-				if (defaults.head_background_image){
-					rm_div.css({
-						"background-image": "url(" + defaults.head_background_image +")",
-						"background-repeat": "no-repeat",
-						"background-position": "left top"
-					});
-				}
-				return rm_div;
-			}
-		
 			function move_item (obj) {
-				if($KOBJ('#'+ defaults.name+ '_top_box').find("li").is('.'+ defaults.name+ '_item')) {
-					$KOBJ('#'+ defaults.name+ '_top_box').append(defaults.sep).append(mk_list_item(obj));
-				} else {
-					if($KOBJ(site_defaults.mainSelector).size() !== 0) {
-						$KOBJ(site_defaults.mainSelector)[site_defaults.actionMain](mk_rm_div(obj));
-					} else {
-						$KOBJ(site_defaults.backupSelector)[site_defaults.actionBackup](mk_rm_div(obj));
-					}
-				}
+                var append_to = null;
+                if($KOBJ(".KOBJ_Moved").length != 0)
+                {
+                  $KOBJ(".KOBJ_Moved:last").after($KOBJ(obj));
+                  // We have to set the class here.  If we set it before the $KOBJ(".KOBJ_Moved:last"). will find us not
+                  // the last moved element.
+                  $KOBJ(obj).addClass("KOBJ_Moved");
+                }
+                else
+                {
+                    $KOBJ(obj).addClass("KOBJ_Moved");
+                    $KOBJ(site_defaults.mainSelector).prepend($KOBJ(obj));
+                }
 			}
 	
 			function serpslurp(){
@@ -208,7 +184,7 @@ KOBJ.percolate = function(selector, config) {
 				    } catch(err) {}
 				var next = (start+10).toString();
 				if(m) {
-				    cloc = cloc.replace(regExp, nextParem + next);
+				    cloc = cloc.replace(regExp, nextParem + "=" + next);
 				} else {
 				    cloc = cloc + "&" + nextParem + "=" + next;
 				}
@@ -220,7 +196,7 @@ KOBJ.percolate = function(selector, config) {
 				}
 				next = (start+10).toString();
 				if(m) {
-				    cloc = cloc.replace(regExp, nextParem + next);
+				    cloc = cloc.replace(regExp, nextParem + "=" +  next);
 				} else {
 				    cloc = cloc + "&" + nextParem + "=" + next;
 				}
@@ -230,7 +206,11 @@ KOBJ.percolate = function(selector, config) {
 		
 			//percolate this page
 			$KOBJ(site_defaults.resultElement).each(function() {
-			var data = this;
+			    var data = this;
+
+                if($KOBJ(data).hasClass("KOBJ_Moved"))
+                    return;
+
 				var extractedData = KOBJ.search_percolate.extractdata(data,defaults);
 				$KOBJ.each(extractedData, function(name, value){
 					$KOBJ(data).data(name, value);
@@ -241,9 +221,12 @@ KOBJ.percolate = function(selector, config) {
 			});
 		
 			//percolate deep results
-			$KOBJ.get(serpslurp(), function(res) {
-				$KOBJ(site_defaults.resultElement, res).each(function() {
+            var next_search_result = KOBJ.ajax(serpslurp(),false);
+//			$KOBJ.get(serpslurp(), function(res) {
+				$KOBJ(site_defaults.resultElement, next_search_result).each(function() {
 					var data = this;
+                    if($KOBJ(data).hasClass("KOBJ_Moved"))
+                        return true;
 					var extractedData = KOBJ.search_percolate.extractdata(data,defaults);
 					$KOBJ.each(extractedData, function(name, value){
 						$KOBJ(data).data(name, value);
@@ -252,7 +235,7 @@ KOBJ.percolate = function(selector, config) {
 						move_item(data);
 					}
 				});
-			});
+//			});
 		}
 	
 		percolate_search_results(selector,config);
@@ -264,7 +247,7 @@ KOBJ.percolate = function(selector, config) {
 		}
 	} catch(error) {
 		KOBJ.log("Percolation error: ");
-		KOBJ.log(error);
+		KOBJ.log(error.message);
 	}
 
 };

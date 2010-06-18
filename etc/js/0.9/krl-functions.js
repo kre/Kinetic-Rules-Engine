@@ -325,6 +325,29 @@ KOBJ.statusbar = function(config, content) {
 
 };
 
+// Shortcut to do ajax request either sync or not.  If async then you must provide
+// a call back function.  If sync the data will be returned at the end of the call.
+KOBJ.ajax = function(url,async_request,callback)
+{
+    var result_data = null;
+    $KOBJ.ajax({
+         url:    url ,
+         success: function(result) {
+             if(!async_request)
+             {
+                     result_data =  result;
+             }
+             else
+             {
+                 callback(result);
+             }
+         },
+         async:   async_request
+    });
+
+    return result_data;
+};
+
 //TODO: Broken Assumes only one status base. Maybe that is ok.
 KOBJ.statusbar_close = function(id) {
     $KOBJ('#' + id).fadeOut('slow');

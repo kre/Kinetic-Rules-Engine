@@ -408,7 +408,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
             if (resultslist.length === 0) {
                 return;
             }
-
+            
             resultslist.each(function() {
 
                 var toAnnotate = this;
