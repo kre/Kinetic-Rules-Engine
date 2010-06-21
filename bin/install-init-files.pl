@@ -222,9 +222,10 @@ sub get_js_file {
 #Last Changed Rev: 484
 
 sub get_file_info {
-    my ($file, $js_version, $js_root) = @_;
-     my $filename = join('/',($js_root,$js_version,$file));
-    return `svn info $filename | grep -P "^Name:|^Revision:|^Path:|^Last Changed Author:"`;
+#    my ($file, $js_version, $js_root) = @_;
+#     my $filename = join('/',($js_root,$js_version,$file));
+#    return `svn info $filename | grep -P "^Name:|^Revision:|^Path:|^Last Changed Author:"`;
+return "";
 }
 
 
