@@ -569,9 +569,11 @@ sub eval_as {
 
     my $v = 0;
     if ($obj->{'type'} eq 'str') {
-      if ($rands->[0]->{'val'} eq 'num' ||
-	  $rands->[0]->{'val'} eq 'regexp' ) {
-	$obj->{'type'} = $rands->[0]->{'val'};
+      if ($rands->[0]->{'val'} eq 'num' || $rands->[0]->{'val'} eq 'regexp' ) {
+	   $obj->{'type'} = $rands->[0]->{'val'};
+      } elsif (uc($rands->[0]->{'val'}) eq 'JSON') {
+          my $str = $obj->{'val'};
+          return Kynetx::Expressions::typed_value(Kynetx::Json::jsonToAst_w($str));
       }
     } elsif ($obj->{'type'} eq 'num') {
       if ($rands->[0]->{'val'} eq 'str' ) {
@@ -582,12 +584,10 @@ sub eval_as {
 	$obj->{'type'} = $rands->[0]->{'val'};
       }
     } elsif ($rands->[0]->{'val'} eq 'array' && $orig_type eq 'persistent') {
-        $logger->debug('Convert $orig_type to array');
         my $thing = $obj->{'val'};
         my $target=_prune_persitent_trail($thing);
         $obj->{'type'} = $rands->[0]->{'val'};
         $obj->{'val'} = $target;
-        $logger->debug("to array: ", sub {Dumper($target)});
     }
 
 

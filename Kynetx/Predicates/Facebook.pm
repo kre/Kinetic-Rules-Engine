@@ -184,21 +184,12 @@ sub authorize {
     $logger->debug( "Facebook application info for $rid: ",
                     sub { Dumper($app_info) } );
 
-    unless ( $app_info ) {
-        $logger->warn(
-            "Facebook app (",
-            sub {
-                get_consumer_tokens( $req_info, $session, NAMESPACE )
-                  ->{'consumer_key'};
-            },
-            ") not found!"
-        );
-
-        return;
+    my $app_name;
+    my $app_link;
+    if ($app_info) {
+        $app_name = $app_info->{'name'};
+        $app_link  = $app_info->{'link'};
     }
-
-    my $app_name = $app_info->{'name'};
-    my $app_link = $app_info->{'link'};
 
     my $auth_url = get_fb_auth_url( $req_info, $session, NAMESPACE, $scope );
 
@@ -764,12 +755,16 @@ sub facebook_msg {
     my $name         = $req_info->{"$rid:name"};
     my $author       = $req_info->{"$rid:author"};
     my $description  = $req_info->{"$rid:description"};
+    my $link="";
+    if (! $app_link) {
+        $app_link = 'onclick="return false;';
+    }
     my $divId        = "KOBJ_facebook_notice";
 
     my $msg = <<EOF;
 <div id="$divId">
 <p>The application</p>
-<p><a href="$app_link" target="_blank" title="Open the application's Facebook page" style="color: white;font-weight:bold">$name ($rid)</a></p>
+<p><a href="$app_link" target="_blank" $link title="Open the application's Facebook page" style="color: white;font-weight:bold">$name ($rid)</a></p>
 <p> from $author is requesting that you authorize Facebook to share your personal information with it.  </p>
 <blockquote><b>Description:</b>$description</blockquote>
 <p>
@@ -788,11 +783,13 @@ EOF
 
 sub get_fb_app_info {
     my ( $req_info, $session ) = @_;
+    my $logger = get_logger();
     my $consumer_keys = get_consumer_tokens( $req_info, $session, NAMESPACE );
     my $app_id        = $consumer_keys->{'consumer_key'};
-    my $base          = $fconfig->{'urls'}->{'base'};
-    my $app_url       = "$base/$app_id";
-    return get_facebook_resource($app_url);
+    my $app_secret    = $consumer_keys->{'consumer_secret'};
+    my $base = $fconfig->{'urls'}->{'base'};
+    my $app_url = "$base/$app_id";
+    my $resp =  get_facebook_resource($app_url);
 }
 
 sub get_fb_auth_url {
@@ -814,16 +811,20 @@ sub get_facebook_resource {
     my $logger = get_logger();
     my $hreq = HTTP::Request->new( GET => $url );
     my $ua   = LWP::UserAgent->new;
-    my $resp = $ua->simple_request($hreq);
+    my $resp = $ua->request($hreq);
+    my $count = 1;
+    if ($resp->is_error) {
+        $logger->warn("Facebook server error: ", $resp->code, " : ",$resp->status_line);
+
+    }
+    while ($resp->is_redirect) {
+        $logger->debug("Redirect (",$count++,")");
+        my $r_url = URI->new( $resp->header("location") );
+        $hreq->uri($r_url);
+        $resp = $ua->simple_request($hreq);
+    }
     if ( $resp->is_success ) {
-        my $json = eval { Kynetx::Json::jsonToAst( $resp->content ) };
-        if ($@) {
-            $logger->debug(
-                     "[Facebook] Invalid JSON format => parse result as string",
-                     sub { Dumper(@_) } );
-        } else {
-            return $json;
-        }
+        return $resp;
     }
 
 }
