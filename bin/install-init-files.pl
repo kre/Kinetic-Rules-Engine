@@ -87,11 +87,8 @@ foreach my $file (@js_files) {
 
 my $runtime_infos = "/*";
 
-foreach my $file (@js_files) {
-    my $output = get_file_info($file,$js_version,$js_root);
-    $output =~ s/[\n\r\l]+/|/g;
-    $runtime_infos .= $output;
-}
+
+$runtime_infos .= get_file_info();
 
 $js .= $runtime_infos;
 $js .= "*/";
@@ -222,10 +219,7 @@ sub get_js_file {
 #Last Changed Rev: 484
 
 sub get_file_info {
-#    my ($file, $js_version, $js_root) = @_;
-#     my $filename = join('/',($js_root,$js_version,$file));
-#    return `svn info $filename | grep -P "^Name:|^Revision:|^Path:|^Last Changed Author:"`;
-return "";
+    return `git log |head -1`;
 }
 
 

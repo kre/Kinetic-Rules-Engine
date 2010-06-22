@@ -302,9 +302,9 @@
      * can be used to send the event just as if it was sent by registering it with javascript.
      * In order for this to work the application must have still registered interest in the event.
      */
-    KOBJEventManager.force_event = function(event_type,selector) {
-       KOBJEventManager.event_handler({ data: {selector : selector }, type: event_type})
-    }; 
+//    KOBJEventManager.force_event = function(event_type,selector) {
+//       KOBJEventManager.event_handler({ data: {selector : selector }, type: event_type})
+//    };
 
 //    window['KOBJEventManager'] = KOBJEventManager;
 
