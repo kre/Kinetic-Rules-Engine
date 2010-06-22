@@ -1,3 +1,9 @@
+2010-06-21 Mark Horstmeier <meh@kynetx.com>
+    * Kynetx/Json.pm: Added better debug to explain why JSON decode failed
+    * Kynetx/Operators.pm: Added .as("json") syntax
+    * Kynetx/Predicates/Facebook.pm: made change to check for FB application metadata bug
+    * Kynetx/Predicates/Google/OAuthHelper.pm: Reset debug statements and removed uri_encode from callback
+
 2010-06-18 Mark Horstmeier <meh@kynetx.com>
     * Adds set operations to arrays
     * Kynetx/Parser.pm: added set operations

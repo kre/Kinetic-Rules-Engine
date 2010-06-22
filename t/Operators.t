@@ -89,6 +89,12 @@ pre {
   my_str = "This is a string";
   split_str = "A;B;C";
   my_url = "http://www.amazon.com/gp/products/123456789/";
+  my_jstr = <<
+    {"www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]}
+>>;
+  bad_jstr = <<
+    "www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]}
+>>;
   a_s = ['apple','pear','orange','tomato'];
   b_s = ['string bean','corn','carrot','tomato','spinach'];
   c_s = ['wheat','barley','corn','rice'];
@@ -478,6 +484,43 @@ $x[$i] = {
 };
 $d[$i]  = 0;
 $i++;
+
+#-------------------------------------------------------------------------------------
+# Special case as()
+#-------------------------------------------------------------------------------------
+
+$e[$i] = q/my_jstr.as("json")/;
+$x[$i] = {
+    "val" => {
+    "www.barnesandnoble.com"=>[
+            {"link"=>"http://aaa.com/barnesandnoble",
+             "text"=>"AAA members save money!",
+             "type"=>"AAA"}
+        ]
+    },
+    "type" => "hash"
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/my_jstr.as("json").pick("$..text")/;
+$x[$i] = {
+    "val" => "AAA members save money!",
+    "type" => "str"
+};
+$d[$i] = 0;
+$i++;
+
+diag("Okay to ignore JSON parse error");
+$e[$i] = q/bad_jstr.as("json")/;
+$x[$i] = {
+    "val" => '"www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]}
+',
+    "type" => "str"
+};
+$d[$i] = 0;
+$i++;
+
 
 $e[$i] = q#my_str.replace(/string/,"puppy")#;
 $x[$i] = {

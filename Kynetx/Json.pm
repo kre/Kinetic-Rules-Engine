@@ -113,9 +113,8 @@ sub jsonToAst_w {
         $pstruct = jsonToAst($json);
     };
     if ($@) {
-        $logger->debug(
-                     "Invalid JSON format => parse result as string error(",
-                     sub { Dumper(@_) });
+        $logger->warn("Invalid JSON format => parse result as string --check debug for error details");
+        $logger->debug("JSON conversion error: ",$@);
         return $json
     } else {
         return $pstruct;

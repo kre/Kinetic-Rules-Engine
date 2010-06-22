@@ -143,7 +143,7 @@ sub get_access_tokens {
 sub get_access_tokens_v2 {
     my ($req_info,$session,$namespace,$endpoint,$callback_hash) = @_;
     my $logger = get_logger();
-    $logger->debug("Session: ", sub {Dumper($session)});
+    $logger->trace("Session: ", sub {Dumper($session)});
     my $rid         = $req_info->{'rid'};
     my $verifier = uri_escape(get_token( $rid, $session, 'oauth_verifier', $namespace));
     my $callback = uri_escape(make_callback_url($req_info,$namespace));
@@ -171,8 +171,8 @@ sub get_access_tokens_v2 {
             }
         }
     }
-    $logger->debug("Request: ", sub {Dumper($hreq)});
-    $logger->debug("Response: ", sub {Dumper($resp->content_ref())});
+    $logger->trace("Request: ", sub {Dumper($hreq)});
+    $logger->trace("Response: ", sub {Dumper($resp->content_ref())});
     return $resp;
 }
 
@@ -206,7 +206,7 @@ sub get_access_tokens_v1 {
     $request->sign();
 
     my $surl = $request->to_url();
-    $logger->trace( "Access URL: ", $surl );
+    $logger->debug( "Access URL: ", $surl );
     my $ua   = LWP::UserAgent->new();
     my $resp = $ua->request( GET $surl);
 
@@ -233,7 +233,7 @@ sub get_request_tokens {
     my $logger      = get_logger();
     my $rid         = $req_info->{'rid'};
     my $request_url = $endpoints->{'request_token_url'};
-    $logger->trace( "request url: ", $request_url );
+    $logger->debug( "request url: ", $request_url );
     my $consumer_tokens =
       get_consumer_tokens( $req_info, $session, $namespace );
     $logger->trace( "Consumer tokens: ", sub { Dumper($consumer_tokens) } );
@@ -252,7 +252,7 @@ sub get_request_tokens {
 
     $request->sign();
     my $surl = $request->to_url();
-    $logger->trace( "Request token url: ", $surl );
+    $logger->debug( "Request token url: ", $surl );
 
     my $ua   = LWP::UserAgent->new();
     my $resp = $ua->request( GET $surl);
@@ -263,6 +263,7 @@ sub get_request_tokens {
           ->from_post_body( $resp->content );
         my $oauth_token        = $oresp->token;
         my $oauth_token_secret = $oresp->token_secret;
+        $logger->debug("rt: $oauth_token rts: $oauth_token_secret");
         return { 'token' => $oauth_token, 'secret' => $oauth_token_secret };
     } else {
         $logger->warn(
@@ -484,7 +485,7 @@ sub set_auth_tokens_v1 {
     my $caller    = $req->param('caller');
     my $scope     = get_scope_from_token( $rid, $session, $token );
     my $namespace = get_namespace_from_token( $rid, $session, $token );
-    $logger->trace(
+    $logger->debug(
             "User returned from $namespace ($scope) with oauth_token => $token",
             " &  oauth_verifier => $verifier & caller => $caller" );
     $logger->trace( "Session token scope: ", sub { Dumper($scope) } );
@@ -669,7 +670,6 @@ sub get_consumer_tokens {
 sub parse_callback {
     my ($r,$method,$rid,$namespace) = @_;
     my $logger = get_logger();
-    $logger->debug("parse_callback: ",$namespace);
     my $cb_obj;
     $cb_obj->{'namespace'} = $namespace;
     my $req       = Apache2::Request->new($r);
@@ -681,7 +681,7 @@ sub parse_callback {
         if ($uri =~ m/$rest_part/) {
             if ($uri =~ m/$rest_part\/(\w+)\/(\w+)\/(\S+)\/?/) {
                 $cb_obj->{'rid'} = $1;
-                $cb_obj->{'version'} = $2;
+                $cb_obj->{'req_info'}->{'rule_version'} = $2;
                 $cb_obj->{'caller'} = $3;
             }
         } else {
@@ -693,7 +693,6 @@ sub parse_callback {
         $cb_obj->{'verifier'}  = uri_escape($req->param('code'));
         $cb_obj->{'version'}   = $cb_obj->{'req_info'}->{'rule_version'} || 'prod';
     }
-    $logger->trace("Callback Object: ", sub {Dumper($cb_obj)});
     return $cb_obj;
 }
 
@@ -721,8 +720,9 @@ sub make_callback_url {
                                    "$rid:kynetx_app_version", $version
                                 }
           );
-        $logger->trace( "OAuth callback url: ", $callback );
-        return uri_escape($callback);
+        $logger->debug( "OAuth callback url: ", $callback );
+        #return uri_escape($callback);
+        return $callback;
     }
 }
 
@@ -732,9 +732,6 @@ sub _make_facebook_callback_url {
     my $rid        = $req_info->{'rid'};
     my $version = $req_info->{'rule_version'} || 'prod';
     my $caller  = $req_info->{'caller'};
-    #$caller =~ s/\//../g;
-    #$caller = uri_escape($caller);
-    #$caller = "none";
     my $host    = Kynetx::Configure::get_config('EVAL_HOST');
     my $port    = Kynetx::Configure::get_config('OAUTH_CALLBACK_PORT');
     my $rest_part =
