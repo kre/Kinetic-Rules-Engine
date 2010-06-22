@@ -208,7 +208,11 @@ KOBJ.percolate = function(selector, config) {
 			$KOBJ(site_defaults.resultElement).each(function() {
 			    var data = this;
 
-                if($KOBJ(data).hasClass("KOBJ_Moved"))
+
+                // In the case of google the local result are mixed with the normal results
+                // so we check if the thing we are looking at has a class localbox and ignore it
+                // so that it does not move.
+                if($KOBJ(data).hasClass("KOBJ_Moved") || $KOBJ(data).hasClass("localbox"))
                     return;
 
 				var extractedData = KOBJ.search_percolate.extractdata(data,defaults);
@@ -225,7 +229,7 @@ KOBJ.percolate = function(selector, config) {
 //			$KOBJ.get(serpslurp(), function(res) {
 				$KOBJ(site_defaults.resultElement, next_search_result).each(function() {
 					var data = this;
-                    if($KOBJ(data).hasClass("KOBJ_Moved"))
+                    if($KOBJ(data).hasClass("KOBJ_Moved") || $KOBJ(data).hasClass("localbox"))
                         return true;
 					var extractedData = KOBJ.search_percolate.extractdata(data,defaults);
 					$KOBJ.each(extractedData, function(name, value){
