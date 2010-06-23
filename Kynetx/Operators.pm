@@ -38,6 +38,7 @@ use Storable qw(dclone);
 
 use Kynetx::Expressions;
 use Kynetx::JSONPath ;
+use Kynetx::PrettyPrinter qw(pp_expr);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -54,7 +55,26 @@ eval_operator
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
+my $kobj_root = Kynetx::Configure::get_config('KOBJ_ROOT');
+my $oper_dir = $kobj_root . "/Kynetx/Operators";
+my @modules = <$oper_dir/*.pm>;
+my %extensions;
+
 my $funcs = {};
+
+map {
+    my ($class,$oname);
+    m/.*\/(\w+).pm$/;
+    $oname = lc($1);
+    s/$kobj_root\///;
+    s/\//::/g;
+    s/\.pm$//;
+    eval "use $_;";
+    my $extension = $_ . "::" .$oname;
+    $funcs->{$oname} = \&$extension;
+    $extensions{$oname} = $extension;
+} @modules;
+
 
 sub eval_pick {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
@@ -590,7 +610,6 @@ sub eval_as {
         $obj->{'val'} = $target;
     }
 
-
     return $obj;
 }
 $funcs->{'as'} = \&eval_as;
@@ -781,5 +800,9 @@ sub _prune_persitent_trail {
 
 }
 
+sub list_extensions {
+    my $logger = get_logger();
+    return \%extensions;
+}
 
 1;

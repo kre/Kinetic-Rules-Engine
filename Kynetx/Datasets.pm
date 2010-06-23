@@ -289,6 +289,12 @@ sub unmarshal {
                             . $self->name
                             . " as RSS" );
             $self->_unmarshal_xml();
+        } elsif ( $switch eq 'HTML' ) {
+            $logger->debug(   "[Datasets] Parse "
+                            . $self->type . ":"
+                            . $self->name
+                            . " as HTML" );
+            $self->_unmarshal_string();
         } else {
             $logger->debug(   "[Datasets] Parse "
                             . $self->type . ":"

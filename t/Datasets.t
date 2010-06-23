@@ -1,34 +1,34 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use lib qw(/web/lib/perl);
 use strict;
 
@@ -47,7 +47,7 @@ use APR::Pool ();
 use Log::Log4perl qw(get_logger :levels);
 #Log::Log4perl->easy_init($WARN);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 my $logger = get_logger();
 
 use Kynetx::Test qw/:all/;
@@ -74,11 +74,11 @@ my(@cache_for_test_cases, @datasets_testcases, $result);
 sub add_cache_for_testcase {
     my($str, $expected, $desc, $diag) = @_;
     my $krl = Kynetx::Parser::parse_global_decls($krl_src);
- 
+
     chomp $str;
     diag("$str = ", Dumper($krl)) if $diag;
 
-    push(@cache_for_test_cases, 
+    push(@cache_for_test_cases,
 	 {'expr' => $krl->[0], # just the first one
 	  'expected' => $expected,
 	  'src' =>  $str,
@@ -169,10 +169,10 @@ _KRL_
 add_cache_for_testcase($krl_src, 5*60*60*24*365, "cache_dataset_for 5 years");
 
 
-plan tests => 11 + int(@cache_for_test_cases);
+plan tests => 13 + int(@cache_for_test_cases);
 
 foreach my $case (@cache_for_test_cases) {
-    is(cache_dataset_for($case->{'expr'}), 
+    is(cache_dataset_for($case->{'expr'}),
        $case->{'expected'},
        $case->{'desc'});
 }
@@ -226,21 +226,18 @@ _KRL_
 
     my($this_js, $val, $var) = mk_dataset_js($krl->[0], $req_info, $rule_env);
     my $expected = "KOBJ['data']['fizz_data']  = " . get_local_file("aaa.json") . ";";
-    $logger->debug("Expected: ", $expected);
-    $logger->debug("Created: ", $this_js);
-
-    is_string_nows($this_js, 
-		   "KOBJ['data']['fizz_data']  = " . get_local_file("aaa.json") . ";", 
+    is_string_nows($this_js,
+		   "KOBJ['data']['fizz_data']  = " . get_local_file("aaa.json") . ";",
 		   "is the JS alight?");
 
-    
+
     $krl_src = <<_KRL_;
 global {
    datasource twitter_search <- "http://search.twitter.com/search.json";
 }
 _KRL_
     $krl = Kynetx::Parser::parse_global_decls($krl_src);
-    
+
 
     $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
 
@@ -262,7 +259,7 @@ global {
 }
 _KRL_
     $krl = Kynetx::Parser::parse_global_decls($krl_src);
-    
+
 
     $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
 
@@ -283,7 +280,7 @@ global {
 }
 _KRL_
     $krl = Kynetx::Parser::parse_global_decls($krl_src);
-    
+
 
     $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
 
@@ -305,7 +302,7 @@ global {
 }
 _KRL_
     $krl = Kynetx::Parser::parse_global_decls($krl_src);
-    
+
 
     $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
 
@@ -319,8 +316,8 @@ _KRL_
 		    'kntx({"results":[{',
 		    "JSON twitter search with multiple params");
 
-    
-    
+
+
 
 
     $krl_src = <<_KRL_;
@@ -329,7 +326,7 @@ global {
 }
 _KRL_
     $krl = Kynetx::Parser::parse_global_decls($krl_src);
-    
+
 
     $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
 
@@ -347,15 +344,15 @@ _KRL_
 		    'kntx({"results":[{',
 		    "JSON twitter search with multiple params");
 
-    
-    
+
+
     $krl_src = <<_KRL_;
 global {
    datasource twitter_search <- "http://search.twitter.com/search.json?callback=kntx";
 }
 _KRL_
     $krl = Kynetx::Parser::parse_global_decls($krl_src);
-    
+
 
     $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
 
@@ -373,8 +370,25 @@ _KRL_
 		    'kntx({"results":[{',
 		    "JSON twitter search with multiple params");
 
-    
-    
+
+    $krl_src = <<_KRL_;
+global {
+   dataset fizz_data:HTML <- "http://frag.kobj.net/clients/cs_test/aaa.json";
+}
+_KRL_
+    $krl = Kynetx::Parser::parse_global_decls($krl_src);
+#    diag Dumper($krl);
+
+    is_string_nows(get_dataset($krl->[0],$req_info),get_local_file("aaa.json"),"URL file as string");
+
+    $rule_env = {};
+
+    ($this_js, $val, $var) = mk_dataset_js($krl->[0], $req_info, $rule_env);
+    $expected = "KOBJ['data']['fizz_data'] = '" . get_local_file("aaa.json") . "';";
+    is_string_nows($this_js,
+           $expected,
+           "JS is correct");
+
 
 }
 

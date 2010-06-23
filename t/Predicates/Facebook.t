@@ -364,7 +364,7 @@ $sifted = sift_data($results,"name",$city);
 if ($sifted) {
     $city_id = $sifted->{'id'};
 }
-$logger->debug("Found city id: ", $city_id);
+$logger->trace("Found city id: ", $city_id);
 
 ## Get the correct id for Windley
 $description = "Facebook user search";
@@ -373,7 +373,7 @@ $args = [{'type' => 'user',
     'q' => 'phil windley'
 }];
 $results = test_facebook('search',$args,$expected,$description,0);
-$logger->debug("User search for Windley: ", sub {Dumper($results)});
+$logger->trace("User search for Windley: ", sub {Dumper($results)});
 
 
 if (defined $results) {
@@ -403,7 +403,7 @@ if ($phil_id) {
 
 ##
 $description = "Get specific user metadata";
-$expected = $test_metadata;
+$expected = superhashof($test_metadata);
 $args = [$test_user];
 test_facebook('metadata',$args,$expected,$description,0);
 
@@ -453,7 +453,7 @@ test_facebook('get',$args,$expected,$description,0);
 ##
 $description = "Facebook get home for default user";
 $expected = $list_object;
-$args = [{'connection' => 'home','type'=>'user'}];
+$args = [{'connection' => 'home'}];#,'type'=>'user'}];
 test_facebook('get',$args,$expected,$description,0);
 
 ##
@@ -482,7 +482,7 @@ test_facebook('writes',$args,$expected,$description,0);
 
 ##
 $description = "Get active user metadata";
-$expected = $test_metadata;
+$expected = superhashof($test_metadata);
 $args = [];
 test_facebook('metadata',$args,$expected,$description,0);
 

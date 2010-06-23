@@ -70,7 +70,7 @@ my $grammar = <<'_EOGRAMMAR_';
 
 # Terminals (macros that can't expand further)
 #
-REGEXP: m%(/(\\.|[^\/])+/|#(\\.|[^\#])+#)(i|g|m){0,2}% 
+REGEXP: m%(/(\\.|[^\/])+/|#(\\.|[^\#])+#)(i|g|m){0,2}%
 HTML: /<<.*?>>/s  {$return=Kynetx::Parser::html($item[1]) }
 JS: /<\|.*?\|>/s  {$return=Kynetx::Parser::javascript($item[1]) }
 STRING: /"(\\"|[^"])*"|'[^']*'/ {$return=Kynetx::Parser::string($item[1]) }
@@ -1182,11 +1182,11 @@ sub parse_ruleset {
     my ($ruleset) = @_;
 
     my $logger = get_logger();
-    $logger->debug("[parser::parse_ruleset] passed: ", sub {Dumper($ruleset)});
+    $logger->trace("[parser::parse_ruleset] passed: ", sub {Dumper($ruleset)});
 
     $ruleset = remove_comments($ruleset);
 
-    $logger->debug("[parser::parse_ruleset] after comments: ", sub {Dumper($ruleset)});
+    $logger->trace("[parser::parse_ruleset] after comments: ", sub {Dumper($ruleset)});
 
 
 #    print $ruleset; exit;
