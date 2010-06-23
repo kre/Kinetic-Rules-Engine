@@ -17,7 +17,7 @@ KOBJ.search_percolate.defaults = {
 		"www.google.com": {
 
 			"parem": "start",
-			"mainSelector": "#ires ol",
+			"mainSelector": "#res ol",
 			"backupSelector": "#mbEnd",
 			"resultNumParem": "num=90",
 			"resultElement": "li.g, div.g",
@@ -134,7 +134,8 @@ KOBJ.percolate = function(selector, config) {
 			$KOBJ.extend(true, defaults, config);
 		}
 		var site_defaults = defaults.site[window.location.host];
-	
+
+
 		function percolate_search_results(selector,config){
 		
 			var defaults = $KOBJ.extend(true, {}, KOBJ.search_percolate.defaults);
@@ -144,7 +145,7 @@ KOBJ.percolate = function(selector, config) {
 			}
 	
 			if(KOBJ.search_percolate.ajax){
-				$KOBJ("." + defaults.name + "_percolate").remove();
+                $KOBJ(".KOBJ_Moved").remove();
 				KOBJ.search_percolate.ajax = false;
 			}
 	
@@ -154,6 +155,7 @@ KOBJ.percolate = function(selector, config) {
                 var append_to = null;
                 if($KOBJ(".KOBJ_Moved").length != 0)
                 {
+//                    alert("appending")
                   $KOBJ(".KOBJ_Moved:last").after($KOBJ(obj));
                   // We have to set the class here.  If we set it before the $KOBJ(".KOBJ_Moved:last"). will find us not
                   // the last moved element.
@@ -161,6 +163,7 @@ KOBJ.percolate = function(selector, config) {
                 }
                 else
                 {
+  //                  alert("adding")
                     $KOBJ(obj).addClass("KOBJ_Moved");
                     $KOBJ(site_defaults.mainSelector).prepend($KOBJ(obj));
                 }
@@ -213,7 +216,7 @@ KOBJ.percolate = function(selector, config) {
                 // so we check if the thing we are looking at has a class localbox and ignore it
                 // so that it does not move.
                 if($KOBJ(data).hasClass("KOBJ_Moved") || $KOBJ(data).hasClass("localbox"))
-                    return;
+                    return  true;
 
 				var extractedData = KOBJ.search_percolate.extractdata(data,defaults);
 				$KOBJ.each(extractedData, function(name, value){
@@ -223,7 +226,8 @@ KOBJ.percolate = function(selector, config) {
 					move_item(data);
 				}
 			});
-		
+
+
 			//percolate deep results
             var next_search_result = KOBJ.ajax(serpslurp(),false);
 //			$KOBJ.get(serpslurp(), function(res) {
@@ -241,13 +245,13 @@ KOBJ.percolate = function(selector, config) {
 				});
 //			});
 		}
-	
+
 		percolate_search_results(selector,config);
-		
+
 		var watcher = defaults.site[window.location.host].watcher;
 		
 		if(watcher){
-			KOBJ.watchDOM(watcher,function(){KOBJ.search_percolate.ajax = true; percolate_search_results(selector,config);});
+			KOBJ.watchDOM(watcher,function(){ KOBJ.search_percolate.ajax = true; percolate_search_results(selector,config);});
 		}
 	} catch(error) {
 		KOBJ.log("Percolation error: ");
