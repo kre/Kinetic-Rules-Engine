@@ -38,7 +38,7 @@ use Storable qw(dclone);
 
 use Kynetx::Expressions;
 use Kynetx::JSONPath ;
-use Kynetx::PrettyPrinter qw(pp_expr);
+use Kynetx::PrettyPrinter;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
