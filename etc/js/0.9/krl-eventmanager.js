@@ -119,7 +119,7 @@
                     if (!app_data["processing"])
                     {
 
-                        KOBJ.itrace("Fireing Event " + app_id + " - " + app_data["processing"]);
+                        KOBJ.itrace("Firing Event " + app_id + " - " + app_data["processing"]);
                         app_data["app"].fire_event(event,app_data,guid);
                         app_data.processing = true;
                     }

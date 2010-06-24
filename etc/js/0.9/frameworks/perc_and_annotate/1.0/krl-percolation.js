@@ -17,7 +17,7 @@ KOBJ.search_percolate.defaults = {
 		"www.google.com": {
 
 			"parem": "start",
-			"mainSelector": "#res ol",
+			"mainSelector": "#res  ol:first",
 			"backupSelector": "#mbEnd",
 			"resultNumParem": "num=90",
 			"resultElement": "li.g, div.g",

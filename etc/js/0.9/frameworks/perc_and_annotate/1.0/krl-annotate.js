@@ -254,7 +254,6 @@ KOBJ.annotate_search_extractdata = function(toAnnotate, config) {
 KOBJ.annotate_search_results = function(annotate, config, cb) {
 
     var defaults = $KOBJ.extend(true, {}, KOBJ.annotate_search_defaults);
-
     if (typeof config === 'object') {
         $KOBJ.extend(true, defaults, config);
     }
@@ -422,6 +421,7 @@ KOBJ.annotate_search_results = function(annotate, config, cb) {
                     if ($KOBJ(toAnnotate).find('#' + defaults.name + '_anno_list li').is('.' + defaults.name + '_item')) {
                         $KOBJ(toAnnotate).find('#' + defaults.name + '_anno_list').append(mk_list_item(defaults.sep)).append(mk_list_item(contents));
                     } else {
+
                         $KOBJ(toAnnotate).find(modify)[defaults.placement](mk_outer_div(contents));
                     }
                 }
