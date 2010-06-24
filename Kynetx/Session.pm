@@ -2,33 +2,33 @@ package Kynetx::Session;
 # file: Kynetx/Session.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use strict;
 use warnings;
 
@@ -45,14 +45,14 @@ use Kynetx::Configure qw(:all);
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
-use constant MAX_STACK_SIZE => 20;
+use constant MAX_STACK_SIZE => 50;
 
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 process_session
 session_cleanup
@@ -119,9 +119,9 @@ sub process_session {
     my $expires = $dt->strftime("%a, %d-%b-%Y 23:59:59 GMT");
 
 
-    # might be a new session, so lets give them their cookie back 
-    #  with an updated expiration 
-    my $session_cookie = 
+    # might be a new session, so lets give them their cookie back
+    #  with an updated expiration
+    my $session_cookie =
 	"SESSION_ID=$session->{_session_id};path=/;domain=" .
 	Kynetx::Configure::get_config('COOKIE_DOMAIN') .
 	';expires=' . $expires; #Mon, 31-Dec-2012 00:00:00 GMT';
@@ -253,8 +253,8 @@ sub session_delete {
 sub session_within {
     my ($rid, $session, $var, $timevalue, $timeframe) = @_;
     my $logger = get_logger();
-    
-    my $desired = DateTime->from_epoch( 
+
+    my $desired = DateTime->from_epoch(
 	epoch => session_created($rid, $session, $var)
 	);
 
@@ -278,7 +278,7 @@ sub session_inc_by_from {
     if(session_defined($rid, $session, $var)) {
 	my $old = session_get($rid, $session, $var);
 	session_store($rid, $session, $var, $old + $val);
-	$logger->debug("iterating session var ",  
+	$logger->debug("iterating session var ",
 		       $var,
 		       " from ",
 		       $old,
@@ -287,7 +287,7 @@ sub session_inc_by_from {
 
     } else {
 	session_store($rid, $session, $var, $from);
-	$logger->debug("initializing session var ",  
+	$logger->debug("initializing session var ",
 		       $var,
 		       " to ",
 		       $from);
@@ -336,8 +336,8 @@ sub session_push {
 	    $logger->debug("Pushing $val onto $var");
 	} else {
 	    # not sure what to do but make a stack of it.
-	    $res = session_store($rid, $session, $var, 
-				 [$tuple, 
+	    $res = session_store($rid, $session, $var,
+				 [$tuple,
 				  [$s, session_created($rid, $session, $var)]
 				 ]);
 	    $logger->debug("Pushing $val onto $var with previous");
@@ -348,7 +348,7 @@ sub session_push {
 
 	$res = session_store($rid, $session, $var, [$tuple]);
 	$logger->debug("Pushing $val onto $var as new trail");
-	
+
     }
 
     return $res;
@@ -426,7 +426,7 @@ sub session_seen_within {
     # the regexp isn't even there...let alone within a timeframe
     return 0 unless (defined $seen->[0]);
 
-    my $desired = DateTime->from_epoch( 
+    my $desired = DateTime->from_epoch(
 	epoch => $seen->[1]
 	);
 

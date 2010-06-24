@@ -117,11 +117,9 @@ sub mset_cache {
         $expire = 10 * 60;
     }
     my $memd = get_memd();
-    $logger->debug("memcache servers: ", sub {Dumper($MEMSERVERS)});
     if ( $memd ) {
-        $logger->debug("Caching $key for $expire seconds for $content");
+        $logger->debug("Caching $key for $expire seconds");
         my $set = $memd->set($key,$content,$expire);
-        $logger->debug("Cache request: ", $set);
     }
 }
 

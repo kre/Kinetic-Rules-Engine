@@ -122,7 +122,7 @@ function(uniq,cb,config) {
 }
 EOF
         before => \&post_to_facebook
-    }
+      }
 
 };
 
@@ -141,33 +141,35 @@ sub post_to_facebook {
     my $rid     = $req_info->{'rid'};
     my $logger  = get_logger();
     my $version = $req_info->{'rule_version'} || 'prod';
-    my $url    = build( 'post', $args );
+    my $url     = build( 'post', $args );
     my $content = build_post_content($args);
-    my $resp = post_protected_resource( $req_info, $session, NAMESPACE,'', $url,$content );
+    my $resp =
+      post_protected_resource( $req_info, $session, NAMESPACE, '', $url,
+                               $content );
     return $resp;
-};
+}
 
 sub build_post_content {
     my ($args) = @_;
     my $logger = get_logger();
     my $writes = $fconfig->{'writes'};
     my $by_connection;
-    foreach my $key (keys %$writes) {
-        if ($writes->{$key}->{'parm'}) {
+    foreach my $key ( keys %$writes ) {
+        if ( $writes->{$key}->{'parm'} ) {
             my $parms = $writes->{$key}->{'parm'};
-            map { $by_connection->{$key}->{$_} = 1} @$parms;
+            map { $by_connection->{$key}->{$_} = 1 } @$parms;
         }
     }
     my @temp;
-    if (ref $args->[0] eq 'HASH') {
+    if ( ref $args->[0] eq 'HASH' ) {
         my $type = $args->[0]->{'connection'};
-        foreach my $key (keys %{$args->[0]}) {
-            if ($by_connection->{$type}->{$key}) {
-                push(@temp,$key."=".$args->[0]->{$key});
+        foreach my $key ( keys %{ $args->[0] } ) {
+            if ( $by_connection->{$type}->{$key} ) {
+                push( @temp, $key . "=" . $args->[0]->{$key} );
             }
         }
     }
-    return join("&",@temp);
+    return join( "&", @temp );
 }
 
 sub authorize {
@@ -188,7 +190,7 @@ sub authorize {
     my $app_link;
     if ($app_info) {
         $app_name = $app_info->{'name'};
-        $app_link  = $app_info->{'link'};
+        $app_link = $app_info->{'link'};
     }
 
     my $auth_url = get_fb_auth_url( $req_info, $session, NAMESPACE, $scope );
@@ -208,8 +210,8 @@ sub authorized {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
     my $rid    = $req_info->{'rid'};
     my $logger = get_logger();
-    $logger->trace( "Args: ",           sub { Dumper($args) } );
-    $logger->debug( "Session tokens: ", sub { Dumper($session) } );
+    $logger->trace( "Args: ", sub { Dumper($args) } );
+    $logger->trace( "Session tokens: ", sub { Dumper($session) } );
     my $access_token = get_token( $rid, $session, 'access_token', NAMESPACE );
     if ($access_token) {
         $logger->debug( "Found Access Token for: ", NAMESPACE );
@@ -231,37 +233,40 @@ $funcs->{'authorized'} = \&authorized;
 
 sub metadata {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
-    my $logger = get_logger();
-    my $rid    = $req_info->{'rid'};
-    my $url    = build( $function, $args,$session,$rid );
+    my $logger    = get_logger();
+    my $rid       = $req_info->{'rid'};
+    my $url       = build( $function, $args, $session, $rid );
     my $cachetime = get_cachetime($args);
-    my $resp = get_protected_resource( $req_info, $session, NAMESPACE, $url,$cachetime );
-    return eval_response($resp,$rid,$url,$cachetime);
+    my $resp = get_protected_resource( $req_info, $session, NAMESPACE, $url,
+                                       $cachetime );
+    return eval_response( $resp, $rid, $url, $cachetime );
 
 }
 $funcs->{'metadata'} = \&metadata;
 
 sub picture {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
-    my $logger = get_logger();
-    my $rid    = $req_info->{'rid'};
-    my $url    = build( $function, $args,$session,$rid );
+    my $logger    = get_logger();
+    my $rid       = $req_info->{'rid'};
+    my $url       = build( $function, $args, $session, $rid );
     my $cachetime = get_cachetime($args);
-    my $resp = get_protected_resource( $req_info, $session, NAMESPACE, $url,$cachetime );
-    return eval_response($resp,$rid,$url,$cachetime);
+    my $resp = get_protected_resource( $req_info, $session, NAMESPACE, $url,
+                                       $cachetime );
+    return eval_response( $resp, $rid, $url, $cachetime );
 
 }
 $funcs->{'picture'} = \&picture;
 
 sub search {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
-    my $logger = get_logger();
-    my $rid    = $req_info->{'rid'};
-    my $url    = build( $function, $args,$session,$rid );
+    my $logger    = get_logger();
+    my $rid       = $req_info->{'rid'};
+    my $url       = build( $function, $args, $session, $rid );
     my $cachetime = get_cachetime($args);
     $logger->debug( "Search URL: ", $url );
-    my $resp = get_protected_resource( $req_info, $session, NAMESPACE, $url,$cachetime );
-    return eval_response($resp,$rid,$url,$cachetime);
+    my $resp = get_protected_resource( $req_info, $session, NAMESPACE, $url,
+                                       $cachetime );
+    return eval_response( $resp, $rid, $url, $cachetime );
 
 }
 $funcs->{'search'} = \&search;
@@ -270,11 +275,12 @@ sub get {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
     my $logger = get_logger();
     my $rid    = $req_info->{'rid'};
-    my $url    = build( $function, $args,$session,$rid );
+    my $url    = build( $function, $args, $session, $rid );
     $logger->debug( "GET URL: ", $url );
     my $cachetime = get_cachetime($args);
-    my $resp = get_protected_resource( $req_info, $session, NAMESPACE, $url,$cachetime );
-    return eval_response($resp,$rid,$url,$cachetime);
+    my $resp = get_protected_resource( $req_info, $session, NAMESPACE, $url,
+                                       $cachetime );
+    return eval_response( $resp, $rid, $url, $cachetime );
 }
 $funcs->{'get'} = \&get;
 
@@ -282,42 +288,43 @@ sub ids {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
     my $logger = get_logger();
     my $rid    = $req_info->{'rid'};
-    my $url    = build( $function, $args,$session,$rid );
+    my $url    = build( $function, $args, $session, $rid );
     $logger->debug( "GET URL: ", $url );
     my $cachetime = get_cachetime($args);
-    my $resp = get_protected_resource( $req_info, $session, NAMESPACE, $url,$cachetime );
-    return eval_response($resp,$rid,$url,$cachetime);
+    my $resp = get_protected_resource( $req_info, $session, NAMESPACE, $url,
+                                       $cachetime );
+    return eval_response( $resp, $rid, $url, $cachetime );
 }
 $funcs->{'ids'} = \&ids;
 
 sub mediator {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
     my $logger = get_logger();
-    return config_info($function,$args);
+    return config_info( $function, $args );
 }
-$funcs->{'fields'} = \&mediator;
-$funcs->{'feed'} = \&mediator;
+$funcs->{'fields'}      = \&mediator;
+$funcs->{'feed'}        = \&mediator;
 $funcs->{'connections'} = \&mediator;
-$funcs->{'writes'} = \&mediator;
+$funcs->{'writes'}      = \&mediator;
 
 sub config_info {
-    my ($function,$args) = @_;
+    my ( $function, $args ) = @_;
     my $default = 'objects';
     my $target;
-    if ($function eq 'fields') {
+    if ( $function eq 'fields' ) {
         $target = 'properties';
-    } elsif ($function eq 'feed') {
+    } elsif ( $function eq 'feed' ) {
         $target = 'feed';
-    } elsif ($function eq 'connections') {
+    } elsif ( $function eq 'connections' ) {
         $target = 'connections';
-    } elsif ($function eq 'writes') {
+    } elsif ( $function eq 'writes' ) {
         $default = $function;
-        $target = 'parm';
+        $target  = 'parm';
     }
     my $num_args = scalar @$args;
-    if ($num_args == 1) {
+    if ( $num_args == 1 ) {
         my $f = $args->[0];
-        if (ref $f eq '') {
+        if ( ref $f eq '' ) {
             my $obj = $fconfig->{$default}->{$f};
             if ($obj) {
                 return $obj->{$target};
@@ -335,15 +342,15 @@ sub build {
     my $logger = get_logger();
     my $url    = $fconfig->{'urls'}->{'base'};
     if ( $function eq 'metadata' ) {
-        my $fbid = get_id($args,$session,$rid);
+        my $fbid = get_id( $args, $session, $rid );
         return "$url/$fbid?metadata=1";
-    } elsif ($function eq 'post') {
-        my $fbid    = get_id($args,$session,$rid);
-        my $c       = get_connection($args);
+    } elsif ( $function eq 'post' ) {
+        my $fbid = get_id( $args, $session, $rid );
+        my $c = get_connection($args);
         $url .= "/$fbid/$c";
         return $url;
     } elsif ( $function eq 'get' ) {
-        my $fbid    = get_id($args,$session,$rid);
+        my $fbid    = get_id( $args, $session, $rid );
         my $p       = get_paging($args);
         my $c       = get_connection($args);
         my $f       = get_field_list($args);
@@ -352,13 +359,13 @@ sub build {
             push( @qparams, $p );
         }
         if ($f) {
-            push (@qparams,$f);
+            push( @qparams, $f );
         }
         $url .= "/$fbid";
-        if (defined $c) {
-            if (mis_error($c)) {
-                $logger->debug($c->{'DEBUG'});
-                $logger->trace($c->{'TRACE'});
+        if ( defined $c ) {
+            if ( mis_error($c) ) {
+                $logger->debug( $c->{'DEBUG'} );
+                $logger->trace( $c->{'TRACE'} );
             } else {
                 $url .= "/$c";
             }
@@ -370,7 +377,7 @@ sub build {
 
         return $url;
     } elsif ( $function eq 'picture' ) {
-        my $fbid = get_id($args,$session,$rid);
+        my $fbid = get_id( $args, $session, $rid );
         $url .= "/$fbid/picture";
         my $ptype = get_type( $args, $function );
         if ($ptype) {
@@ -379,7 +386,7 @@ sub build {
         return $url;
     } elsif ( $function eq 'search' ) {
         my $type = get_type( $args, $function );
-        my $fbid = get_id($args,$session,$rid);
+        my $fbid = get_id( $args, $session, $rid );
         my $q    = get_query_string($args);
         my $p    = get_paging($args);
 
@@ -395,7 +402,7 @@ sub build {
             $url .= "&$p";
         }
         return $url;
-    } elsif ($function eq 'ids') {
+    } elsif ( $function eq 'ids' ) {
         my $ids = get_ids($args);
         if ($ids) {
             $url .= "/?$ids";
@@ -406,14 +413,14 @@ sub build {
 
 sub get_ids {
     my ($args) = @_;
-    my $logger=get_logger();
+    my $logger = get_logger();
     if ( ref $args->[0] eq 'HASH' ) {
         my $f_arg = $args->[0]->{'ids'};
         if ($f_arg) {
-            if (ref $f_arg eq '') {
+            if ( ref $f_arg eq '' ) {
                 return "ids=$f_arg";
-            } elsif (ref $f_arg eq "ARRAY") {
-                my $str = join(",",@$f_arg);
+            } elsif ( ref $f_arg eq "ARRAY" ) {
+                my $str = join( ",", @$f_arg );
                 return "ids=$str";
             } else {
                 $logger->warn("param ids expects a string or an array");
@@ -424,14 +431,14 @@ sub get_ids {
 
 sub get_field_list {
     my ($args) = @_;
-    my $logger=get_logger();
+    my $logger = get_logger();
     if ( ref $args->[0] eq 'HASH' ) {
         my $f_arg = $args->[0]->{'fields'};
         if ($f_arg) {
-            if (ref $f_arg eq '') {
+            if ( ref $f_arg eq '' ) {
                 return "fields=$f_arg";
-            } elsif (ref $f_arg eq "ARRAY") {
-                my $str = join(",",@$f_arg);
+            } elsif ( ref $f_arg eq "ARRAY" ) {
+                my $str = join( ",", @$f_arg );
                 return "fields=$str";
             } else {
                 $logger->warn("param fields expects a string or an array");
@@ -443,7 +450,7 @@ sub get_field_list {
 sub get_cachetime {
     my ($args) = @_;
     my $logger = get_logger();
-    if (defined $args->[1] && ref $args->[1] eq '' && $args->[1] > 0) {
+    if ( defined $args->[1] && ref $args->[1] eq '' && $args->[1] > 0 ) {
         return $args->[1];
     } else {
         return undef;
@@ -455,17 +462,19 @@ sub get_connection {
     my $logger = get_logger();
     if ( ref $args->[0] eq 'HASH' ) {
         my $connection = $args->[0]->{'connection'};
-        my $type = $args->[0]->{'type'};
-        if ($type && $connection) {
+        my $type       = $args->[0]->{'type'};
+        if ( $type && $connection ) {
             my $obj = $fconfig->{'objects'}->{$type};
             if ($obj) {
                 my $temp = $obj->{'connections'};
                 my $type_hash;
                 map { $type_hash->{$_} = 1 } @$temp;
-                if ($type_hash->{$connection}) {
+                if ( $type_hash->{$connection} ) {
                     return $connection;
                 } else {
-                    $logger->debug("get connection, ", $connection, $type," ", sub{Dumper($type_hash)});
+                    $logger->debug( "get connection, ",
+                                    $connection, $type, " ",
+                                    sub { Dumper($type_hash) } );
                     return merror("$connection invalid for object $type");
                 }
             } else {
@@ -473,9 +482,9 @@ sub get_connection {
             }
             return $connection;
         } elsif ($connection) {
-            return $connection
+            return $connection;
         }
-        return ;
+        return;
 
     }
     return undef;
@@ -537,7 +546,7 @@ sub get_type {
                 return 'type=' . $type;
             }
 
-        } elsif ( $type_part && (ref $type_part eq '' )) {
+        } elsif ( $type_part && ( ref $type_part eq '' ) ) {
             if ( $type_hash->{$type_part} ) {
                 return 'type=' . $type_part;
             }
@@ -550,12 +559,13 @@ sub get_type {
 }
 
 sub get_id {
-    my ($args,$session,$rid)  = @_;
+    my ( $args, $session, $rid ) = @_;
     my $logger  = get_logger();
     my $id_part = $args->[0];
     $logger->trace( "Get id: ", sub { Dumper($id_part) } );
     if ( defined $id_part ) {
         if ( ref $id_part eq '' ) {
+
             # Funny characters
             $id_part =~ m/(\w+)/;
             return $1;
@@ -565,16 +575,17 @@ sub get_id {
                 return $fbid;
             }
         }
-    } else {
-            my $token = get_token( $rid, $session, 'access_token', NAMESPACE);
-            $token =~ m/\d+\|\w+-(\d+)|.+/;
-            my $fbid = $1;
-            $logger->debug("Found id: " , $fbid);
-            if ($fbid) {
-                return $fbid;
-            }
     }
-    return "me";
+    my $token = get_token( $rid, $session, 'access_token', NAMESPACE );
+    $token =~ m/\d+\|\w+-(\d+)|.+/;
+    my $fbid = $1;
+    $logger->trace( "Found id: ", $fbid, " in token" );
+    if ($fbid) {
+        return $fbid;
+    } else {
+        return "me";
+    }
+
 }
 
 sub eval_facebook {
@@ -600,19 +611,19 @@ sub eval_facebook {
 }
 
 sub eval_response {
-    my ($resp,$rid,$url,$cache) = @_;
-    my $logger = get_logger();
-    my $fb_prefix = $fconfig->{'urls'}->{'base'};
+    my ( $resp, $rid, $url, $cache ) = @_;
+    my $logger     = get_logger();
+    my $fb_prefix  = $fconfig->{'urls'}->{'base'};
     my $dont_cache = $fb_prefix . '/me';
-    if ($url =~ m/^$dont_cache.*/) {
+    if ( $url =~ m/^$dont_cache.*/ ) {
         $cache = 0;
     }
     if ( $resp->is_success ) {
         if ($cache) {
-            my $key = $rid.":".$url;
+            my $key     = $rid . ":" . $url;
             my $content = $resp->content;
-            $logger->debug("cache call: ",$key," ",$content," ",$cache);
-            mset_cache($key,$content,$cache);
+            $logger->debug( "cache call: ", $key, " ", $content, " ", $cache );
+            mset_cache( $key, $content, $cache );
         }
         my $ast = eval { Kynetx::Json::jsonToAst( $resp->content ) };
         if ($@) {
@@ -627,12 +638,13 @@ sub eval_response {
         ### for pictures, FB returns a redirect location
         if ( $resp->code() == 302 ) {
             if ($cache) {
-                my $key = $rid.":".$url;
+                my $key     = $rid . ":" . $url;
                 my $content = $resp->header('location');
-                $logger->debug("cache redirect: ",$key," ",$content," ",$cache);
-                mset_cache($key,$content,$cache);
+                $logger->debug( "cache redirect: ",
+                                $key, " ", $content, " ", $cache );
+                mset_cache( $key, $content, $cache );
             }
-        return $resp->header('location');
+            return $resp->header('location');
         } else {
             $logger->warn( "Request redirect: (",
                            $resp->status_line, ") ",
@@ -663,7 +675,7 @@ sub facebook_error_message {
 sub process_oauth_callback {
     my ( $r, $method, $rid ) = @_;
     my $logger = get_logger();
-    $logger->debug("OAuth Callback: ", NAMESPACE);
+    $logger->debug( "OAuth Callback: ", NAMESPACE );
     my $session = process_session($r);
     set_auth_tokens( $r, $method, $rid, $session, NAMESPACE );
     $logger->trace( "P_O_C tokens: ", sub { Dumper($session) } );
@@ -676,7 +688,7 @@ sub process_oauth_callback {
                        $rid, " got: ", $callback_hash->{'rid'} );
     }
     my $caller = $callback_hash->{'caller'};
-    $logger->debug("Caller: ", sub {Dumper($caller)});
+    $logger->debug( "Caller: ", sub { Dumper($caller) } );
     get_access_tokens( $req_info, $session, NAMESPACE, get_endpoints(),
                        $callback_hash );
     my $resp = test_response( $req_info, $session );
@@ -688,6 +700,7 @@ sub process_oauth_callback {
 
         #blast_tokens( $rid, $session, NAMESPACE );
     }
+
     #Kynetx::Util::page_dump( $r, $req_info, $session, $caller, $resp );
     $r->headers_out->set( Location => $caller );
     session_cleanup($session);
@@ -755,11 +768,11 @@ sub facebook_msg {
     my $name         = $req_info->{"$rid:name"};
     my $author       = $req_info->{"$rid:author"};
     my $description  = $req_info->{"$rid:description"};
-    my $link="";
-    if (! $app_link) {
+    my $link         = "";
+    if ( !$app_link ) {
         $app_link = 'onclick="return false;';
     }
-    my $divId        = "KOBJ_facebook_notice";
+    my $divId = "KOBJ_facebook_notice";
 
     my $msg = <<EOF;
 <div id="$divId">
@@ -783,13 +796,13 @@ EOF
 
 sub get_fb_app_info {
     my ( $req_info, $session ) = @_;
-    my $logger = get_logger();
+    my $logger        = get_logger();
     my $consumer_keys = get_consumer_tokens( $req_info, $session, NAMESPACE );
     my $app_id        = $consumer_keys->{'consumer_key'};
     my $app_secret    = $consumer_keys->{'consumer_secret'};
-    my $base = $fconfig->{'urls'}->{'base'};
-    my $app_url = "$base/$app_id";
-    my $resp =  get_facebook_resource($app_url);
+    my $base          = $fconfig->{'urls'}->{'base'};
+    my $app_url       = "$base/$app_id";
+    my $resp          = get_facebook_resource($app_url);
 }
 
 sub get_fb_auth_url {
@@ -809,16 +822,17 @@ sub get_fb_auth_url {
 sub get_facebook_resource {
     my ($url) = @_;
     my $logger = get_logger();
-    my $hreq = HTTP::Request->new( GET => $url );
-    my $ua   = LWP::UserAgent->new;
-    my $resp = $ua->request($hreq);
+    my $hreq  = HTTP::Request->new( GET => $url );
+    my $ua    = LWP::UserAgent->new;
+    my $resp  = $ua->request($hreq);
     my $count = 1;
-    if ($resp->is_error) {
-        $logger->warn("Facebook server error: ", $resp->code, " : ",$resp->status_line);
+    if ( $resp->is_error ) {
+        $logger->warn( "Facebook server error: ",
+                       $resp->code, " : ", $resp->status_line );
 
     }
-    while ($resp->is_redirect) {
-        $logger->debug("Redirect (",$count++,")");
+    while ( $resp->is_redirect ) {
+        $logger->debug( "Redirect (", $count++, ")" );
         my $r_url = URI->new( $resp->header("location") );
         $hreq->uri($r_url);
         $resp = $ua->simple_request($hreq);

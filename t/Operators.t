@@ -35,7 +35,7 @@ use strict;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 use Test::More;
@@ -59,6 +59,7 @@ use Kynetx::Parser qw/:all/;
 use Kynetx::Expressions qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::FakeReq qw/:all/;
+use Kynetx::Memcached;
 
 
 $Data::Dumper::Indent = 1;
@@ -75,6 +76,12 @@ my $init_rule_env = empty_rule_env();
 
 my $session = Kynetx::Test::gen_session($r, $rid);
 
+my $turl = "http://www.htmldog.com/examples/tablelayout1.html";
+my $durl = "http://www.htmldog.com/examples/darwin.html";
+my $content = Kynetx::Memcached::get_remote_data($turl);
+my $content2 = Kynetx::Memcached::get_remote_data($durl);
+
+
 my $p = << "_KRL_";
 pre {
   a = 10;
@@ -89,6 +96,9 @@ pre {
   my_str = "This is a string";
   split_str = "A;B;C";
   my_url = "http://www.amazon.com/gp/products/123456789/";
+  in_str = <<
+  th[colspan="2"]
+>>;
   my_jstr = <<
     {"www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]}
 >>;
@@ -102,6 +112,9 @@ pre {
   e_s = '';
   f_s = ['corn','tomato'];
   g_s = ['corn','tomato','tomato','tomato','sprouts','lettuce','sprouts'];
+  q_html = <<$content>>;
+  r_html = <<$content2>>;
+  html_arr = [q_html,r_html];
 }
 _KRL_
 
@@ -194,6 +207,8 @@ sub test_operator {
     diag "Result: ", Dumper($r) if $d;
     cmp_deeply($r, $x, "Trying $e");
 }
+
+goto ENDY;
 
 $e[$i] = q/store.pick("$.store.book[*].author")/;
 $x[$i] = {
@@ -1053,6 +1068,128 @@ $x[$i] = {
 };
 $d[$i]  = 0;
 $i++;
+
+ENDY:
+
+my $list = Kynetx::Operators::list_extensions();
+$logger->debug("Extensions: ", sub {Dumper($list)});
+
+$e[$i] = q/q_html.query("table tr td[style],table tr th")/;
+$x[$i] = {
+   'val' => [
+     '<td style="background: #ddf;">Grey Wolf</td>
+',
+     '<td style="background: #ddf;">Cape hunting dog</td>
+',
+     '<td style="background: #ddf;">Very silly big long-long named dog woof</td>
+',
+     '<td style="background: #ddf;">Red Fox</td>
+',
+     '<td style="background: #ddf;">Fennec</td>
+',
+     '<th>Apes</th>
+',
+     '<th colspan="2">Cats</th>
+',
+     '<th style="background: #ddf;">Dogs</th>
+',
+     '<th>Lemurs</th>
+'
+   ],
+   'type' => 'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/html_arr.query("caption,h1")/;
+$x[$i] = {
+   'val' => [
+    '<caption>Animal groups</caption>
+',
+    '<h1>Charles Darwin</h1>
+'
+   ],
+   'type' => 'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/html_arr.query(["caption","h1"])/;
+$x[$i] = {
+   'val' => [
+    '<caption>Animal groups</caption>
+',
+    '<h1>Charles Darwin</h1>
+'
+   ],
+   'type' => 'array'
+};
+$d[$i] = 0;
+$i++;
+
+
+$e[$i] = q/q_html.query(in_str)/;
+$x[$i] = {
+   'val' => [
+    '<th colspan="2">Cats</th>
+'
+   ],
+   'type' => 'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/q_html.query([in_str,"th"])/;
+$x[$i] = {
+   'val' => [
+    '<th colspan="2">Cats</th>
+',
+     '<th>Apes</th>
+',
+     '<th colspan="2">Cats</th>
+',
+     '<th style="background: #ddf;">Dogs</th>
+',
+     '<th>Lemurs</th>
+'
+   ],
+   'type' => 'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/html_arr.query([in_str,"th","h2"])/;
+$x[$i] = {
+   'val' => [
+    '<th colspan="2">Cats</th>
+',
+     '<th>Apes</th>
+',
+     '<th colspan="2">Cats</th>
+',
+     '<th style="background: #ddf;">Dogs</th>
+',
+     '<th>Lemurs</th>
+',
+    '<h2>On the Origin of The Origin</h2>
+'
+   ],
+   'type' => 'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/q_html.query("#{in_str}")/;
+$x[$i] = {
+   'val' => [
+    '<th colspan="2">Cats</th>
+'
+   ],
+   'type' => 'array'
+};
+$d[$i] = 0;
+$i++;
+
 
 
 # now run the tests....
