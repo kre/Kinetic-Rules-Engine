@@ -471,12 +471,12 @@ sub build_js_load {
     my $logger = get_logger();
 
     # rule id
-    my $uniq = int(rand 999999999);
-    my $uniq_id = 'kobj_'.$uniq; 
+#    my $uniq = int(rand 999999999);
+#    my $uniq_id = 'kobj_'.$uniq;
 
 
-    $rule_env = extend_rule_env(['uniq_id', 'uniq'], [$uniq_id,$uniq], $rule_env);
-    $req_info->{'uniq'} = $uniq; # just for testing
+#    $rule_env = extend_rule_env(['uniq_id', 'uniq'], [$uniq_id,$uniq], $rule_env);
+#    $req_info->{'uniq'} = $uniq; # just for testing
 
     my $js = "";
 
@@ -559,9 +559,11 @@ sub build_one_action {
 
     my $logger = get_logger();
 
-    
-    my $uniq = lookup_rule_env('uniq',$rule_env);
-    my $uniq_id = lookup_rule_env('uniq_id',$rule_env);
+
+    my $uniq = int(rand 999999999);
+    my $uniq_id = 'kobj_'.$uniq;
+    $rule_env = extend_rule_env(['uniq_id', 'uniq'], [$uniq_id,$uniq], $rule_env);
+    $req_info->{'uniq'} = $uniq; # just for testing
 
     my $js = '';
 

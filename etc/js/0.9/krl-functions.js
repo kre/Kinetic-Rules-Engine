@@ -1,5 +1,5 @@
 KOBJ.proto = function() {
-    if("https:" != KOBJ.location('protocol') && "https:" != KOBJ.location('protocol'))
+    if("http:" != KOBJ.location('protocol') && "https:" != KOBJ.location('protocol'))
     {
         return "https://";
     }
