@@ -9,43 +9,49 @@ firefox_30_osx :
   host : "office.kynetx.com"
   port : 4444
   browser : "*firefox"
+  timeout: 10
 
 safari_404_osx :
   host : "office.kynetx.com"
   port : 4444
   browser : "*safari"
+  timeout: 10
 
 safari_local_osx :
   host : "localhost"
   port : 4444
   browser : "*safari"
+  timeout: 10
 
 safari_404_windows :
   host : "184.73.68.157"
   port : 4444
   browser : "*safari"
-
+  timeout: 10
 
 ie7_windows :
   host : "184.73.68.157"
   port : 4444
   browser : "*iexplore"
+  timeout: 10
 
 ie7_local_windows :
   host : "192.168.15.2"
   port : 4444
   browser : "*iexplore"
-
+  timeout: 10
 
 firefox_windows :
   host : "184.73.68.157"
   port : 4444
   browser : "*firefox"
+  timeout: 10
 
 chrome_beta_windows :
   host : "184.73.68.157"
   port : 4444
   browser : "*googlechrome"
+  timeout: 10
 
 
 

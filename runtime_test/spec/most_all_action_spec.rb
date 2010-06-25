@@ -9,7 +9,8 @@ describe "Verify Runtime Functions" do
     load_settings
     start_browser_session(@settings, "http://k-misc.s3.amazonaws.com", "/runtime-dependencies/allcrapptest.html")
     insert_runtime_script(["a685x1"])
-    page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='kGrowl']"});
+#    page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='kGrowl']"});
+    page.wait_for({:wait_for => :element, :element => "//*[@id='kGrowl']"});
   end
 
   after(:all) do
@@ -30,12 +31,14 @@ describe "Verify Runtime Functions" do
 
 
   it "should have shown a kGrowl Notify" do
-     page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='kGrowl']"});
+#    page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='kGrowl']"});
+     page.wait_for({:wait_for => :element, :element => "//*[@id='kGrowl']"});
      page.text("//div[@class='KOBJ_message']").should == "This is a sample rule."
   end
 
   it "should replace element value" do
-     page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='mychangeelement']"});
+#     page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='mychangeelement']"});
+     page.wait_for({:wait_for => :element, :element => "//*[@id='mychangeelement']"});
      page.js_eval("window.$KOBJ('#mychangeelement').attr('value')").to_s.should == "Ihavechanged"
   end
 

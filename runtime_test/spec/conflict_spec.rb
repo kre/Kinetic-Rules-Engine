@@ -16,7 +16,8 @@ describe "Verify Hi Conflict Sites" do
       page.type('Passwd',"men-aCe")
       page.submit('gaia_loginform');
       # Wait to see the search box. If we are there then we are in.
-      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='doclist']"});
+#      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='doclist']"});
+      page.wait_for({:wait_for => :element, :element => "//*[@id='doclist']"});
       insert_runtime_script(["a685x1"])
     end
 
@@ -25,7 +26,8 @@ describe "Verify Hi Conflict Sites" do
     end
 
     it "should have shown a kGrowl Notify" do
-       page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='kGrowl']"});
+#       page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='kGrowl']"});
+       page.wait_for({:wait_for => :element, :element => "//*[@id='kGrowl']"});
        page.text("//div[@class='KOBJ_message']").should == "This is a sample rule."
     end
 
@@ -36,7 +38,8 @@ describe "Verify Hi Conflict Sites" do
     before(:each) do
       start_browser_session(@settings, "http://api.prototypejs.org", "/")
       # Wait to see the search box. If we are there then we are in.
-      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='sidebar']"});
+#      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='sidebar']"});
+      page.wait_for({:wait_for => :element, :element => "//*[@id='sidebar']"});
       insert_runtime_script(["a685x1"])
     end
 
@@ -45,7 +48,8 @@ describe "Verify Hi Conflict Sites" do
     end
 
     it "should have shown a kGrowl Notify" do
-       page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='kGrowl']"});
+#       page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='kGrowl']"});
+       page.wait_for({:wait_for => :element, :element => "//*[@id='kGrowl']"});
        page.text("//div[@class='KOBJ_message']").should == "This is a sample rule."
     end
 

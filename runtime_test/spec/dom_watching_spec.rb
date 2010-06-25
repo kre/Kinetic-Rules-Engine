@@ -19,7 +19,8 @@ describe "Dom Watching Specs" do
   it "Domwatch Test" do
     start_browser_session(@settings, "http://k-misc.s3.amazonaws.com", "/runtime-dependencies/domWatch.html")
     insert_runtime_script(["a41x91"])
-    page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//div[@id='kobj_loaded']"});
+#    page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//div[@id='kobj_loaded']"});
+    page.wait_for({:wait_for => :element, :element => "//div[@id='kobj_loaded']"});
     page.click "domTestClicker", :wait_for => :element, :element => 'domTestWorked'
   end
 

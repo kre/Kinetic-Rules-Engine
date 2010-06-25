@@ -114,7 +114,8 @@ module SPEC_HELPER
 
     page.js_eval(script)
 
-    page.wait_for({:wait_for => :condition , :timeout_in_seconds => 30, :javascript => "typeof(window.KOBJ) != 'undefined'"});
+#    page.wait_for({:wait_for => :condition , :timeout_in_seconds => 30, :javascript => "typeof(window.KOBJ) != 'undefined'"});
+    page.wait_for({:wait_for => :condition , :javascript => "typeof(window.KOBJ) != 'undefined'"});
 
     page.js_eval("window.KOBJ.configure_kynetx(#{extra_init_info.to_json})")
 
@@ -135,7 +136,7 @@ module SPEC_HELPER
             :port => settings[ENV["browser"]]["port"],
             :browser => settings[ENV["browser"]]["browser"],
             :url => domain,
-            :timeout_in_second => timeout)
+            :timeout_in_second => settings[ENV["browser"]]["timeout"] || timeout)
     @selenium_driver.start_new_browser_session
     puts "Connecting browser to url : #{domain}#{url}"
     @selenium_driver.open(url)

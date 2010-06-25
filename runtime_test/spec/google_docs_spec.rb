@@ -11,7 +11,7 @@ describe "Verify Google Docs and Gmail" do
     page.type('Passwd',"men-aCe")
     page.submit('gaia_loginform');
     # Wait to see the search box. If we are there then we are in.
-    page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='hist_state']"});
+    page.wait_for({:wait_for => :element, :timeout_in_seconds => 20, :element => "//*[@id='hist_state']"});
     insert_runtime_script(["a685x1"])
   end
 
@@ -30,7 +30,7 @@ describe "Verify Google Docs and Gmail" do
     end
 
     it "should have shown a kGrowl Notify" do
-       page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='kGrowl']"});
+       page.wait_for({:wait_for => :element, :timeout_in_seconds => 20, :element => "//*[@id='kGrowl']"});
        page.text("//div[@class='KOBJ_message']").should == "This is a sample rule."
     end
 
