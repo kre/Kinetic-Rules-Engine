@@ -11,7 +11,7 @@ describe "Verify Hi Conflict Sites" do
   describe "Google Docs" do
 
     before(:each) do
-      start_browser_session(@settings, "https://www.google.com", "/accounts/ServiceLogin?service=writely&passive=1209600&continue=http://docs.google.com/&followup=http://docs.google.com/&ltmpl=homepage")
+      start_browser_session(@settings, "https://www.google.com", "/accounts/ServiceLogin?service=writely&passive=1209600&continue=http://docs.google.com/&followup=http://docs.google.com/&ltmpl=homepage&browserok=true")
       page.type("Email","cid.dennis@gmail.com")
       page.type('Passwd',"men-aCe")
       page.submit('gaia_loginform');

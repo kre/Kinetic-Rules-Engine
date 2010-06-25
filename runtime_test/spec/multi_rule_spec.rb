@@ -76,7 +76,7 @@ describe "Verify any issues with multiple rules on a single page" do
       page.js_eval("window.KOBJ.get_application('a685x4').run()")
 
 #      page.wait_for({:wait_for => :condition , :timeout_in_seconds => 30, :javascript => "window.$KOBJ('.KOBJ_header').length == 2"});
-      page.wait_for({:wait_for => :condition :javascript => "window.$KOBJ('.KOBJ_header').length == 2"});
+      page.wait_for({:wait_for => :condition, :javascript => "window.$KOBJ('.KOBJ_header').length == 2"});
       page.js_eval("window.$KOBJ(window.$KOBJ('.KOBJ_header')[1]).html()").to_s.should == "MultiAppTestTwo"
     end
 
