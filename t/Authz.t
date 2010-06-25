@@ -26,6 +26,7 @@ use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
 use Kynetx::Parser qw/:all/;
 use Kynetx::Rules qw/:all/;
+use Kynetx::Expressions qw/:all/;
 use Kynetx::Util qw/:all/;
 use Kynetx::PersistentDataService qw/:all/;
 
@@ -50,6 +51,14 @@ my $my_req_info = Kynetx::Test::gen_req_info($rid);
 $my_req_info->{"$rid:name"} = "Test App";
 $my_req_info->{"$rid:author"} = "Phil Windley";
 $my_req_info->{"$rid:description"} = "Just a test ma'am!";
+
+
+my $another_req_info = Kynetx::Test::gen_req_info('cs_test_authz');
+
+$another_req_info->{"$rid:name"} = "Test App";
+$another_req_info->{"$rid:author"} = "Phil Windley";
+$another_req_info->{"$rid:description"} = "Just a test ma'am!";
+$another_req_info->{"caller"} = "http://www.windley.com/foo/bar.html";
 
 my $rule_name = 'foo';
 
@@ -108,13 +117,14 @@ ruleset $rid {
       authz require user
     }
     rule $rule_name is active {
-        select using "/test/" setting()
+        select using ".*" setting()
 	alert("hello");
     }
 }
 _KRL_
 
 $pt = Kynetx::Parser::parse_ruleset($krl);
+#diag Dumper $pt;
 
 ok(is_authorized($rid,$pt,$session),"authz request with settion works");
 $test_count++;
@@ -125,13 +135,14 @@ ruleset $rid {
     meta {
     }
     rule $rule_name is active {
-        select using "/test/" setting()
+        select using ".*" setting()
 	alert("hello");
     }
 }
 _KRL_
 
 $pt = Kynetx::Parser::parse_ruleset($krl);
+#diag Dumper $pt;
 my $authorize_message = authorize_message($my_req_info, $session, $pt);
 #diag $authorize_message;
 like($authorize_message,
@@ -139,21 +150,29 @@ like($authorize_message,
      'we get something back');
 $test_count++;
 
-my $rl = Kynetx::Rules::mk_rule_list($my_req_info, $rid);
-my $js = Kynetx::Rules::process_ruleset($r, $rl, $rule_env, $session, $rid);
-unlike($js,
-     qr/KOBJ_ruleset_activation/,
-     'plain ruleset does not ask for activation');
-$test_count++;
-
-$rl = Kynetx::Rules::mk_rule_list($my_req_info, 'cs_test_authz');
-$js = Kynetx::Rules::process_ruleset($r, $rl, $rule_env, $session, 
-				       'cs_test_authz');
+# this uses the ruleset cs_test_authz from the repo
+my $rl = Kynetx::Rules::mk_schedule($another_req_info, 'cs_test_authz');
+#diag Dumper $rl;
+my $js = Kynetx::Rules::process_schedule($r, $rl, $session, time);
 
 #diag $js;
 like($js,
      qr/KOBJ_ruleset_activation/,
      'authz ruleset does ask for activation');
+$test_count++;
+
+unlike($js,
+     qr/test_rule_1/,
+     'authz ruleset does ask for activation');
+$test_count++;
+
+$rl = Kynetx::Rules::mk_schedule($my_req_info, $rid, $pt);
+#diag Dumper $my_req_info;
+$js = Kynetx::Rules::process_schedule($r, $rl, $session, time);
+#diag $js;
+unlike($js,
+     qr/KOBJ_ruleset_activation/,
+     'plain ruleset does not ask for activation');
 $test_count++;
 
 

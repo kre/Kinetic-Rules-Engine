@@ -1182,11 +1182,11 @@ sub parse_ruleset {
     my ($ruleset) = @_;
 
     my $logger = get_logger();
-    $logger->debug("[parser::parse_ruleset] passed: ", sub {Dumper($ruleset)});
+ #   $logger->debug("[parser::parse_ruleset] passed: ", sub {Dumper($ruleset)});
 
     $ruleset = remove_comments($ruleset);
 
-    $logger->debug("[parser::parse_ruleset] after comments: ", sub {Dumper($ruleset)});
+#    $logger->debug("[parser::parse_ruleset] after comments: ", sub {Dumper($ruleset)});
 
 
 #    print $ruleset; exit;

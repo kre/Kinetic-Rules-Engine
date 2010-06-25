@@ -45,6 +45,7 @@ use Kynetx::Request;
 use Kynetx::Rules;
 use Kynetx::Actions;
 use Kynetx::Json;
+use Kynetx::Scheduler;
 
 use Kynetx::Events::Primitives qw(:all);
 use Kynetx::Events::State qw(:all);
@@ -142,9 +143,10 @@ sub process_event {
 
     my $ev = mk_event($req_info);
 
-    my $rules_to_execute;
-
 #    $logger->debug("Processing events for $rids with event ", sub {Dumper $ev});
+
+    my $schedule = Kynetx::Scheduler->new();
+
 
     foreach my $rid (split(/;/, $rids)) {
 
@@ -154,6 +156,7 @@ sub process_event {
       $req_info->{'rid'} = $rid;
 
       my $ruleset = Kynetx::Rules::get_rule_set($req_info);
+
 
 #      $logger->debug("Ruleset: ", sub {Dumper $ruleset} );
 
@@ -195,15 +198,39 @@ sub process_event {
 
 	if ($sm->is_final($next_state)) {
 
-	  # sm vars and vals are namespace by sm id.
-	  $rules_to_execute->{$rid}->{$rule->{'name'}}->{'sm_id'} = $sm->get_id();
+	  my $rulename = $rule->{'name'};
 
-	  push @{$rules_to_execute->{$rid}->{'rules'}}, $rule;
-	  $rules_to_execute->{$rid}->{'ruleset'} = $ruleset;
-	  $logger->debug("Pushing " , $rid, " & ",  $rule->{'name'});
+	  $logger->debug("Adding to schedule: " , $rid, " & ",  $rulename);
+	  $schedule->add($rid,$rule,$ruleset,$req_info);
+
+	  # get event list and reset+
+	  my $event_list_name = $rulename.':event_list';
+
+	  my $var_list = [];
+	  my $val_list = [];
+	  while (my $ev = session_next($rid, $session, $event_list_name)) {
+
+#	  $logger->debug("Event: ", sub {Dumper $ev});
+
+	    # FIXME: what we're not doing: the event list also
+	    # includes the req_info that was active when the event
+	    # came in.  We're not doing anything with it--simply
+	    # using the req_info from the final req...
+
+	   # gather up vars and vals from all the events in the path
+	    push @{$var_list}, 
+	         @{$ev->get_vars($sm->get_id())};
+	    push @{$val_list}, 
+   	         @{$ev->get_vals($sm->get_id())};
+	  }
+	  $schedule->annotate_task($rid,$rulename,'vars',$var_list);
+	  $schedule->annotate_task($rid,$rulename,'vals',$val_list);
+
 
 	  # reset SM
 	  session_delete($rid, $session, $sm_current_name);
+	  # reset event list for this rule
+	  session_delete($rid, $session, $event_list_name);
 
 	} else {
 	  session_store($rid, $session, $sm_current_name, $next_state);
@@ -212,71 +239,16 @@ sub process_event {
       }
     }
 
-    my $rule_env = Kynetx::Rules::mk_initial_env();
-
-    my $js = '';
-
-# {ruleset => 
-#  rules => [...]
-#  rule_name => {req_info =>
-#                vars =>
-#                vals =>
-#               }
-#  req_info =>
-# }
 
 
-    foreach my $rid (keys %{$rules_to_execute}) {
+#    $logger->debug("Schedule: ", sub { Dumper $schedule });
 
-      $rules_to_execute->{$rid}->{'req_info'} = $req_info;
-      Log::Log4perl::MDC->put('site', $rid);
-      $req_info->{'rid'} = $rid;
-
-      foreach my $rule (@{ $rules_to_execute->{$rid}->{'rules'} }) {
-
-	Log::Log4perl::MDC->put('rule', $rule->{'name'}); 
-
-	my $rule_name = $rule->{'name'};
-
-	# get event list and reset+
-	my $event_list_name = $rule->{'name'}.':event_list';
-
-	my @req_list;
-	while (my $ev = session_next($rid, $session, $event_list_name)) {
-
-#	  $logger->debug("Event: ", sub {Dumper $ev});
-
-	  push @req_list, $ev->get_req_info();
-	  push @{$rules_to_execute->{$rid}->{$rule_name}->{'vars'}}, 
-	       @{$ev->get_vars($rules_to_execute->{$rid}->{$rule_name}->{'sm_id'})};
-	  push @{$rules_to_execute->{$rid}->{$rule_name}->{'vals'}}, 
-	       @{$ev->get_vals($rules_to_execute->{$rid}->{$rule_name}->{'sm_id'})};
-	}
-
-# merging the req_info this way mods it in unpredictable ways
-#	$rules_to_execute->{$rid}->{$rule_name}->{'req_info'} = 
-#	    Kynetx::Request::merge_req_env(@req_list);
-
-	session_delete($rid, $session, $event_list_name);
-
-	
-
-      }
-
-#      $logger->debug("RL: ", sub { Dumper $rules_to_execute->{$rid} });
-
-      $js .= eval {
-	      Kynetx::Rules::process_ruleset($r, 
-					     $rules_to_execute->{$rid},
-					     $rule_env,
+    my $js = Kynetx::Rules::process_schedule($r,
+					     $schedule,
 					     $session,
-					     $rid)
-      };
-      if ($@) {
-	$logger->error("Ruleset $rid failed: ", $@);
-      }
-
-    }
+					     $eid
+					    );
+					    
 
     # put this in the logging DB
     Kynetx::Log::log_rule_fire($r, 

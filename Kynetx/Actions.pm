@@ -503,7 +503,7 @@ sub build_js_load {
     }
     
     my $cb_func_name = 'callBacks';
-    $js .= gen_js_mk_cb_func($cb_func_name,$cb);
+    $js .= Kynetx::JavaScript::gen_js_mk_cb_func($cb_func_name,$cb);
 
 
     my $action_num = int(@{ $rule->{'actions'} });
@@ -574,7 +574,7 @@ sub build_one_action {
     my $arg_exp_vals = Kynetx::Expressions::eval_rands($args, $rule_env, $rule_name,$req_info, $session);
     # get the values
     for (@{ $arg_exp_vals }) {
-        $_ = den_to_exp($_);
+        $_ = Kynetx::Expressions::den_to_exp($_);
     }
 
     # process overloaded functions and arg reconstruction
@@ -582,7 +582,7 @@ sub build_one_action {
 	choose_action($req_info, $action_name, $args, $rule_env, $rule_name);
 
     # this happens after we've chosen the action since it modifies args
-    $args = gen_js_rands( $args );
+    $args = Kynetx::JavaScript::gen_js_rands( $args );
 
 # pjw [20100614] is this used anywhere?  
 #    my @config = ("txn_id: '".$req_info->{'txn_id'} . "'", "rule_name: '$rule_name'", "rid: '".$req_info->{'rid'}."'");
@@ -595,8 +595,11 @@ sub build_one_action {
     my $js_config = [];
     
     foreach my $k (keys %{$config}) {
+
       push @{ $js_config }, 
-	Kynetx::JavaScript::gen_js_hash_item($k,typed_value($config->{$k}));
+	Kynetx::JavaScript::gen_js_hash_item(
+              $k,
+	      Kynetx::Expressions::typed_value($config->{$k}));
     }
     
    # set default modifications
@@ -631,7 +634,7 @@ sub build_one_action {
     #   this creates a JS string from the JS config
     unshift @{ $args }, '{'. join(",", @{$js_config}) . '}';
     unshift @{ $args }, $cb_func_name;
-    unshift @{ $args }, mk_js_str($uniq);
+    unshift @{ $args }, Kynetx::JavaScript::mk_js_str($uniq);
 
     # create comma separated list of arguments 
     my $arg_str = join(',', @{ $args }) || '';
