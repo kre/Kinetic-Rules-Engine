@@ -1,3 +1,8 @@
+2010-06-28  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Events.pm (process_event): split out code that processes an
+	event for a single RID into separate subroutine so that it can be
+	used later.  
 
 2010-06-25  Phil Windley  <pjw@kynetx.com>
 
