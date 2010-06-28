@@ -55,6 +55,7 @@ use Kynetx::Request qw(:all);
 use Kynetx::Repository;
 use Kynetx::Environments qw(:all);
 use Kynetx::Directives ;
+use Kynetx::Postlude;
 
 use Kynetx::JavaScript::AST qw/:all/;
 
@@ -730,7 +731,7 @@ sub eval_rule_body {
 
   }
 
-  $js .= Kynetx::Actions::eval_post_expr($rule, $session, $req_info, $rule_env, $fired);
+  $js .= Kynetx::Postlude::eval_post_expr($rule, $session, $req_info, $rule_env, $fired);
 
   return $js;
 }

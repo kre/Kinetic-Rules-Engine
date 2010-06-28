@@ -1,3 +1,6 @@
+2010-06-28  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Postlude.pm: Split out postlude functions from Actions.pm
 
 2010-06-25  Phil Windley  <pjw@kynetx.com>
 

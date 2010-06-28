@@ -920,111 +920,6 @@ foreach my $case (@action_test_cases) {
 
 
 
-# post expressions
-sub run_post_testcase {
-    my($src, $req_info, $session, $rule_env, $fired, $diag) = @_;
-    my $krl = Kynetx::Parser::parse_post($src);
- 
-    
-    chomp $krl;
-
-    # fix it up for what eval_post_expr expects
-    $krl = {'post' => $krl};
-    diag(Dumper($krl)) if $diag;
-
-    return eval_post_expr($krl, 
-			  $session, 
-			  $req_info, 
-			  $rule_env, 
-			  $fired);
-
-}
-
-use constant FIRED => 1;
-use constant NOTFIRED => 0;
-
-$krl_src = <<_KRL_;
-fired {
-  clear ent:archive_pages_now; 
-} else {
-  ent:archive_pages_now += 2 from 1;  
-}
-_KRL_
-
-
-run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
-is(session_get($rid, $session, 'archive_pages_now'),
-   4,
-   "incrementing archive pages"
-  );
-
-
-run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
-is(session_get($rid, $session, 'archive_pages_now'),
-   undef,
-   "incrementing archive pages"
-  );
-
-
-run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
-is(session_get($rid, $session, 'archive_pages_now'),
-   1,
-   "incrementing archive pages"
-  );
-
-
-$krl_src = <<_KRL_;
-fired {
-  clear ent:my_flag
-} else {
-  set ent:my_flag
-}
-_KRL_
-
-#diag("my_flag: ", session_get($rid, $session, 'my_flag'));
-run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
-ok(session_true($rid, $session, 'my_flag'),
-   "setting my_flag"
-  );
-
-
-run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
-ok(! session_true($rid, $session, 'my_flag'),
-   "clearing my_flag"
-  );
-
-
-run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
-ok(session_true($rid, $session, 'my_flag'),
-   "setting my_flag"
-  );
-
-
-$krl_src = <<_KRL_;
-fired {
-  forget "testing" in ent:my_trail
-} else {
-  mark ent:my_trail with "testing!" 
-}
-_KRL_
-
-run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
-is(session_seen($rid, $session, 'my_trail',"testing"),
-   0,
-   'testing added'
-  );
-
-is(session_seen($rid, $session, 'my_trail',"windley"),
-   1,
-   'windley pushed down'
-  );
-
-run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
-is(session_seen($rid, $session, 'my_trail',"windley"),
-   0,
-   'testing forgotten'
-  );
-
 
 #diag Dumper($session);
 
@@ -1061,7 +956,7 @@ $resource_js = Kynetx::Actions::mk_registered_resource_js($my_req_info);
 #diag Dumper $my_req_info;
 #diag "Resource JS: ", $resource_js;
 
-done_testing(12 + (@test_cases * 3) + (@action_test_cases * 1));
+done_testing(3 + (@test_cases * 3) + (@action_test_cases * 1));
 
 #diag("Safe to ignore warnings about unrecognized escapes");
 

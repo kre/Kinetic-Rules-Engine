@@ -17,6 +17,7 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::<TMPL_IF NAME="MODULE_DIR"><TMPL_VAR NAME=MODULE_DIR>::</TMPL_IF><TMPL_VAR NAME=MODULE_NAME> qw/:all/;
@@ -27,7 +28,6 @@ use Kynetx::Configure qw/:all/;
 
 use Kynetx::FakeReq qw/:all/;
 
-#Log::Log4perl->easy_init($DEBUG);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
