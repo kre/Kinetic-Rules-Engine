@@ -63,7 +63,7 @@ my %rule_env = ();
 
 plan tests => 1;
 
-like(get_build_num(cwd()),qr/\d+/,"we get some numbers back");
+like(get_build_num(cwd()),qr/[\da-f]+/,"we get some numbers back");
 
 
 1;

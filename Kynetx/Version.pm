@@ -52,7 +52,8 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 sub get_build_num {
     my ($kobj_root) = @_;
-    my $build_num = `cd $kobj_root;/usr/bin/svnversion -n`;
+#    my $build_num = `cd $kobj_root;/usr/bin/svnversion -n`;
+    my $build_num = `cd $kobj_root;git log -1 --pretty="format:%h"`;
     return $build_num || 'failed';
 }
 

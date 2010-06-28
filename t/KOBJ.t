@@ -104,7 +104,7 @@ SKIP: {
     $mech->get_ok($url_version_1);
     is($mech->content_type(), 'text/html');
     $mech->title_is('KNS Version');
-    $mech->content_like('/number\s+\d+/');
+    $mech->content_like('/number\s+[\da-f]+/');
     $test_count += 4;
 
 

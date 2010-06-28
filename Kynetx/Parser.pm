@@ -1188,19 +1188,14 @@ sub parse_ruleset {
 
     $logger->trace("[parser::parse_ruleset] after comments: ", sub {Dumper($ruleset)});
 
-
 #    print $ruleset; exit;
-
-    # remove newlines
-#    $ruleset =~ s%\n%%g;
-
 
     my $result = ($parser->ruleset($ruleset));
     if (defined $result->{'error'}) {
 	$logger->error("Can't parse ruleset: $result->{'error'}");
     } else {
 	$logger->debug("Parsed rules");
-    }
+g    }
 #    $logger->debug("[parser:parse_rule] ", sub {Dumper($result)});
 
     return $result;

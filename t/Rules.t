@@ -1483,19 +1483,37 @@ ruleset global_expr_0 {
     global {
 	x = 3;
     }
+    rule foo is active {
+     select using ".*"
+     noop();
+    }
 }
 _KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foo'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 my $global_expr_0 = <<_JS_;
 (function(){
 var x = 3;
+(function(){
+ function callBacks(){};
+ (function(uniq,cb,config){cb();}
+  ('%uniq%',callBacks,$config)); 
+ }());
 }());
 _JS_
 
 add_testcase(
     $krl_src,
     $global_expr_0,
-    $dummy_final_req_info
+    $dummy_final_req_info,
+    0
     );
 
 
@@ -1608,7 +1626,8 @@ _JS_
 add_testcase(
     $krl_src,
     $js,
-    $dummy_final_req_info
+    $dummy_final_req_info,
+    0
     );
 
 
@@ -1779,19 +1798,25 @@ add_testcase(
 # now test each test case twice
 foreach my $case (@test_cases) {
 
+    if ($case->{'diag'}) {
+      Kynetx::Util::turn_on_logging();
+    } else {
+      Kynetx::Util::turn_off_logging();
+    }
+
   my $ruleset_rid = $case->{'expr'}->{'ruleset_name'} || $rid;
   my $req_info = gen_req_info($ruleset_rid);
 
-  my $rl = Kynetx::Rules::mk_rule_list($req_info, $req_info->{'rid'},$case->{'expr'});
+  my $schedule = Kynetx::Rules::mk_schedule($req_info, $req_info->{'rid'},$case->{'expr'});
 
   if($case->{'type'} eq 'ruleset') {
 
     
-    $js = Kynetx::Rules::eval_ruleset($r, 
-				      $rl, 
-				      empty_rule_env(), 
-				      $session, 
-				      $case->{'expr'});
+    $js = Kynetx::Rules::process_schedule($r, 
+					  $schedule, 
+					  $session, 
+					  time
+					 );
 
   } elsif($case->{'type'} eq 'rule') {
 
@@ -1814,25 +1839,8 @@ foreach my $case (@test_cases) {
 
   diag "Eval result: $js" if $case->{'diag'};
 
-  $case->{'val'} = nows($case->{'val'});
-	
-  # quote special for RE
-  $case->{'val'} =~ s/\\/\\\\/g;
-  $case->{'val'} =~ s/\+/\\\+/g;
-  $case->{'val'} =~ s/\(/\\\(/g;
-  $case->{'val'} =~ s/\)/\\\)/g;
-  $case->{'val'} =~ s/\[/\\\[/g;
-  $case->{'val'} =~ s/\]/\\\]/g;
-  $case->{'val'} =~ s/\{/\\\{/g;
-  $case->{'val'} =~ s/\}/\\\}/g;
-  $case->{'val'} =~ s/\^/\\\^/g;
-  $case->{'val'} =~ s/\$/\\\$/g;
-  $case->{'val'} =~ s/\|/\\\|/g;
 
-  # now make RE substitutions
-  $case->{'val'} =~ s/%uniq%/\\d+/g;
-
-  $case->{'val'} = '^' . $case->{'val'} . '$';
+  $case->{'val'} = mk_reg_exp($case->{'val'});
 
   if ($case->{'val'} eq '') {
     is($js, $case->{'val'}, "Evaling rule " . $case->{'src'});
@@ -1874,7 +1882,6 @@ my $no_server_available = (! $response->is_success);
 
 sub test_datafeeds {
   my ($no_server_available, $src, $js, $log_results, $diag) = @_;
-  $test_count++;
 
   my $req_info = gen_req_info();
  SKIP: {
@@ -1882,19 +1889,30 @@ sub test_datafeeds {
     skip "No server available", 1 if ($no_server_available);
     my $krl = Kynetx::Parser::parse_ruleset($src);
 
-    my $rl = Kynetx::Rules::mk_rule_list($req_info, $req_info->{'rid'});
+    my $schedule = Kynetx::Rules::mk_schedule($req_info, 
+					      $req_info->{'rid'},
+					      $krl);
 
-    my $val = Kynetx::Rules::eval_ruleset($r, 
-				      $rl, 
-				      empty_rule_env(), 
-				      $session, 
-				      $krl, 
-				      $krl->{'rules'});
+    my $val = Kynetx::Rules::process_schedule($r, 
+					      $schedule, 
+					      $session, 
+					      time
+					     );
 
     diag $val if $diag;
 
+    $val = nows($val);
 
-    is_string_nows($val, $js, "Evaling ruleset: $src");
+    $js = mk_reg_exp($js);
+    my $re = qr/$js/;
+
+    like($val,
+	 $re,
+	 "Evaling ruleset " . $src);
+    $test_count++;
+
+
+
   }
 }
 
@@ -1903,8 +1921,20 @@ ruleset dataset0 {
     global {
 	dataset global_decl_0 <- "aaa.json";
     }
+    rule foo is active {
+     select using ".*"
+     noop();
+    }
 }
 _KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foo'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 $js = <<_JS_;
 (function(){
@@ -1913,6 +1943,11 @@ KOBJ['data']['global_decl_0'] = {"www.barnesandnoble.com":[
 		"text":"AAA members sav emoney!",
 		"type":"AAA"}]
           };
+(function(){
+ function callBacks(){};
+ (function(uniq,cb,config){cb();}
+  ('%uniq%',callBacks,$config)); 
+ }());
 }());
 _JS_
 
@@ -1929,12 +1964,30 @@ ruleset dataset0 {
     global {
 	dataset global_decl_1 <- "test_data";
     }
+    rule foo is active {
+     select using ".*"
+     noop();
+    }
 }
 _KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foo'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
+
 
 $js = <<_JS_;
 (function(){
 KOBJ['data']['global_decl_1'] = 'here is some test data!\\n';
+(function(){
+ function callBacks(){};
+ (function(uniq,cb,config){cb();}
+  ('%uniq%',callBacks,$config)); 
+ }());
 }());
 _JS_
 
@@ -1952,8 +2005,21 @@ ruleset dataset0 {
     global {
 	dataset global_decl_2 <- "http://frag.kobj.net/clients/cs_test/aaa.json";
     }
+    rule foo is active {
+     select using ".*"
+     noop();
+    }
 }
 _KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foo'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
+
 
 $js = <<_JS_;
 (function(){
@@ -1962,6 +2028,11 @@ KOBJ['data']['global_decl_2'] = {"www.barnesandnoble.com":[
 		"text":"AAA members sav emoney!",
 		"type":"AAA"}]
           };
+(function(){
+ function callBacks(){};
+ (function(uniq,cb,config){cb();}
+  ('%uniq%',callBacks,$config)); 
+ }());
 }());
 _JS_
 
@@ -1979,12 +2050,30 @@ ruleset dataset0 {
     global {
 	dataset global_decl_3 <- "http://frag.kobj.net/clients/cs_test/some_data.txt";
     }
+    rule foo is active {
+     select using ".*"
+     noop();
+    }
 }
 _KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foo'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
+
 
 $js = <<_JS_;
 (function(){
 KOBJ['data']['global_decl_3'] = 'Here is some test data!\\n';
+(function(){
+ function callBacks(){};
+ (function(uniq,cb,config){cb();}
+  ('%uniq%',callBacks,$config)); 
+ }());
 }());
 _JS_
 
@@ -2007,6 +2096,7 @@ _KRL_
 $js = <<_JS_;
 _JS_
 
+
 test_datafeeds(
     $no_server_available,
     $krl_src,
@@ -2028,15 +2118,32 @@ ruleset dataset0 {
       x = type + " Rocks!";
       datasource sites <- "aaa.json";
     }
+    rule foo is active {
+     select using ".*"
+     noop();
+    }
 }
 _KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foo'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
 
 $js = <<_JS_;
 (function(){KOBJ['data']['site_data'] = {"www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]} ;
  var type = 'AAA';
  KOBJ.css('.foo: 4\\n ');
  var x = 'AAA Rocks!';
+(function(){
+ function callBacks(){};
+ (function(uniq,cb,config){cb();}
+  ('%uniq%',callBacks,$config)); 
  }());
+}());
 
 _JS_
 
@@ -2616,7 +2723,31 @@ session_cleanup($session);
 
 diag("Safe to ignore warnings about unintialized values & unrecognized escapes");
 
+sub mk_reg_exp {
+  my $val = shift;
 
+  $val = nows($val);
+	
+  # quote special for RE
+  $val =~ s/\\/\\\\/g;
+  $val =~ s/\+/\\\+/g;
+  $val =~ s/\(/\\\(/g;
+  $val =~ s/\)/\\\)/g;
+  $val =~ s/\[/\\\[/g;
+  $val =~ s/\]/\\\]/g;
+  $val =~ s/\{/\\\{/g;
+  $val =~ s/\}/\\\}/g;
+  $val =~ s/\^/\\\^/g;
+  $val =~ s/\$/\\\$/g;
+  $val =~ s/\|/\\\|/g;
+
+  # now make RE substitutions
+  $val =~ s/%uniq%/\\d+/g;
+
+  $val =  $val ;
+
+  return $val;
+}
 
 1;
 
