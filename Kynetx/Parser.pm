@@ -1195,7 +1195,7 @@ sub parse_ruleset {
 	$logger->error("Can't parse ruleset: $result->{'error'}");
     } else {
 	$logger->debug("Parsed rules");
-g    }
+    }
 #    $logger->debug("[parser:parse_rule] ", sub {Dumper($result)});
 
     return $result;

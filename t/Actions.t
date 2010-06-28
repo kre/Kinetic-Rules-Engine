@@ -258,7 +258,7 @@ $result = <<_JS_;
  \$K(div).slideDown('slow');
  cb();
 }
-('23',callbacks23,$config,'kobj_test','Hello World!'));
+('%uniq%',callbacks23,$config,'kobj_test','Hello World!'));
 _JS_
 
 
@@ -294,7 +294,7 @@ $result = <<_JS_;
  \$K(div).slideDown('slow');
  cb();
 }
-('23',callbacks23,$config,'kobj_test','Hello World!'));
+('%uniq%',callbacks23,$config,'kobj_test','Hello World!'));
 _JS_
 
 
@@ -331,7 +331,7 @@ $result = <<_JS_;
  \$K(div).slideDown('slow');
  cb();
 }
-('23',callbacks23,$config,'kobj_test','Hello World!'));
+('%uniq%',callbacks23,$config,'kobj_test','Hello World!'));
 _JS_
 
 
@@ -366,8 +366,8 @@ $result = <<_JS_;
      \$K('body').append(d);
      cb();
  }
- ('23',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
- \$K('#id_23').fadeIn();
+ ('%uniq%',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
+ \$K('#kobj_%uniq%').fadeIn();
 _JS_
 
 
@@ -402,8 +402,8 @@ $result = <<_JS_;
      \$K('body').append(d);
      cb();
  }
- ('23',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
- \$K('#id_23').slideDown();
+ ('%uniq%',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
+ \$K('#kobj_%uniq%').slideDown();
 _JS_
 
 
@@ -441,8 +441,8 @@ setTimeout(function() {
      \$K('body').append(d);
      cb();
  }
- ('23',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
- \$K('#id_23').slideDown();
+ ('%uniq%',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
+ \$K('#kobj_%uniq%').slideDown();
 ;KOBJ.logger('timer_expired','1234','none','','success','dummy_name','cs_test');},(5*1000));
 _JS_
 
@@ -477,8 +477,8 @@ $result = <<_JS_;
      \$K('body').append(d);
      cb();
  }
- ('23',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
- \$K('#id_23').slideDown();
+ ('%uniq%',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
+ \$K('#kobj_%uniq%').slideDown();
 _JS_
 
 
@@ -512,9 +512,9 @@ $result = <<_JS_;
      \$K('body').append(d);
      cb();
  }
- ('23',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
- \$K('#id_23').fadeIn();
- \$K('#id_23').draggable();
+ ('%uniq%',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
+ \$K('#kobj_%uniq%').fadeIn();
+ \$K('#kobj_%uniq%').draggable();
 _JS_
 
 
@@ -547,9 +547,9 @@ $result = <<_JS_;
      \$K('body').append(d);
      cb();
  }
- ('23',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
- \$K('#id_23').fadeIn();
- \$K('#id_23').draggable();
+ ('%uniq%',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
+ \$K('#kobj_%uniq%').fadeIn();
+ \$K('#kobj_%uniq%').draggable();
 _JS_
 
 
@@ -581,7 +581,7 @@ $config = mk_config_string(
 
 
 $result = <<_JS_;
-function leave_id_23 () {
+function leave_kobj_%uniq% () {
 (function(uniq, cb, config, top, left, width, height, url) {      
      var id_str = 'kobj_'+uniq;
      var options = 'toolbar=no,menubar=no,resizable=yes,scrollbars=yes,alwaysRaised=yes,status=no' +
@@ -592,9 +592,9 @@ function leave_id_23 () {
      open(url,id_str,options);
      cb();
  }
- ('23',callbacks23,$config,'top:50px','right:50px','Hello World!','50px','100px','http:'));
+ ('%uniq%',callbacks23,$config,'top:50px','right:50px','Hello World!','50px','100px','http:'));
 };
-document.body.setAttribute('onUnload', 'leave_id_23()');
+document.body.setAttribute('onUnload', 'leave_kobj_%uniq%()');
 _JS_
 
 
@@ -631,7 +631,7 @@ $result = <<_JS_;
      open(url,id_str,options);
      cb();
  }
- ('23',callbacks23,$config,'top:50px','right:50px','Hello World!','50px','100px','http:'));
+ ('%uniq%',callbacks23,$config,'top:50px','right:50px','Hello World!','50px','100px','http:'));
 _JS_
 
 
@@ -666,7 +666,7 @@ $result = <<_JS_;
     \$K(id).attr('src',new_url);
     cb();
 }
-('23',callbacks23, $config, 'kobj_test','/images/foo.png'));
+('%uniq%',callbacks23, $config, 'kobj_test','/images/foo.png'));
 _JS_
 
 
@@ -693,7 +693,7 @@ $result = <<_JS_;
 (function(uniq, cb, config) {
     cb();
 }
-('23',callbacks23,$config));
+('%uniq%',callbacks23,$config));
 _JS_
 
 
@@ -724,7 +724,7 @@ setTimeout(function(){
     cb();
 }
 
-('23',callbacks23,$config));
+('%uniq%',callbacks23,$config));
 ;KOBJ.logger('timer_expired','1234','none','','success','dummy_name','cs_test');},(5*1000));
 _JS_
 
@@ -760,7 +760,7 @@ $result = <<_JS_;
      KOBJ.tabManager.addNew(config);
      cb();
  }
- ('23',callbacks23, $config
+ ('%uniq%',callbacks23, $config
  ));
 
 _JS_
@@ -790,7 +790,7 @@ $result = <<_JS_;
 (function(uniq, cb, config, annotate_fn) {
     KOBJ.annotate_search_results(annotate_fn, config, cb);
 }
-('23',callbacks23,$config,foo));
+('%uniq%',callbacks23,$config,foo));
 _JS_
 
 
@@ -818,7 +818,7 @@ $result = <<_JS_;
 (function(uniq, cb, config, annotate_fn) {
     KOBJ.annotate_search_results(annotate_fn, config, cb);
 }
-('23',callbacks23,$config));
+('%uniq%',callbacks23,$config));
 _JS_
 
 
@@ -847,7 +847,7 @@ $result = <<_JS_;
 (function(uniq, cb, config, annotate_fn) {
     KOBJ.annotate_local_search_results(annotate_fn, config, cb);
 }
-('23',callbacks23,$config));
+('%uniq%',callbacks23,$config));
 _JS_
 
 
@@ -855,8 +855,68 @@ add_action_testcase(
     $krl_src,
     $result,
     $my_req_info,
-    'annotate_search_results'
+    'annotate_search_local_results'
     );
+
+
+# now test choose_action
+foreach my $case (@test_cases) {
+    diag(Dumper($case->{'url'})) if $case->{'diag'};
+
+    my $in_args = gen_js_rands( $case->{'args'} );
+    diag("In ", Dumper($in_args)) if $case->{'diag'};
+
+    ($action, $args) = 
+	choose_action($case->{'req_info'}, 
+		      $case->{'name'},
+		      $case->{'args'},
+                      {}, # empty rule env
+                      'dummy_rule'
+         );
+
+    my $out_args = gen_js_rands( $case->{'args'} );
+    diag("Out ", Dumper($out_args))  if $case->{'diag'};
+
+    my $desc = $case->{'desc'};
+
+    is($action, $case->{'expected'},"Action: $desc");
+    is($out_args->[0], $in_args->[0], "First arg: $desc");
+    if ($case->{'changed'}) {
+	isnt($out_args->[1], "'".$case->{url}."'", "Last arg: $desc");
+    } else {
+	is($out_args->[1], "'".$case->{url}."'", "Last arg: $desc");
+    }
+
+}
+
+
+# now test build_one_action
+foreach my $case (@action_test_cases) {
+    diag(Dumper($case))  if $case->{'diag'};
+
+    my $js = 
+	Kynetx::Actions::build_one_action(
+	    $case->{'expr'},
+	    $case->{'req_info'}, 
+	    extend_rule_env(['uniq_id', 'uniq'], ['kobj_23','23'],	    
+		extend_rule_env(['actions','labels','tags'],[[],[],[]],$rule_env)),
+	    $session,
+	    'callbacks23',
+	    $case->{'name'});
+
+    diag $js if $case->{'diag'};
+
+    my $desc = $case->{'desc'};
+    
+    my $expected = $case->{'expected'};
+    $expected =~ s/%uniq%/$case->{'req_info'}->{'uniq'}/g;
+
+    is_string_nows(
+	$js,
+	$expected,
+	"build_one_action: $desc");
+
+}
 
 
 
@@ -968,63 +1028,7 @@ is(session_seen($rid, $session, 'my_trail',"windley"),
 
 #diag Dumper($session);
 
-
-# now test choose_action
-foreach my $case (@test_cases) {
-    diag(Dumper($case->{'url'})) if $case->{'diag'};
-
-    my $in_args = gen_js_rands( $case->{'args'} );
-    diag("In ", Dumper($in_args)) if $case->{'diag'};
-
-    ($action, $args) = 
-	choose_action($case->{'req_info'}, 
-		      $case->{'name'},
-		      $case->{'args'},
-                      {}, # empty rule env
-                      'dummy_rule'
-         );
-
-    my $out_args = gen_js_rands( $case->{'args'} );
-    diag("Out ", Dumper($out_args))  if $case->{'diag'};
-
-    my $desc = $case->{'desc'};
-
-    is($action, $case->{'expected'},"Action: $desc");
-    is($out_args->[0], $in_args->[0], "First arg: $desc");
-    if ($case->{'changed'}) {
-	isnt($out_args->[1], "'".$case->{url}."'", "Last arg: $desc");
-    } else {
-	is($out_args->[1], "'".$case->{url}."'", "Last arg: $desc");
-    }
-
-}
-
-
-# now test build_one_action
-foreach my $case (@action_test_cases) {
-    diag(Dumper($case))  if $case->{'diag'};
-
-    my $js = 
-	Kynetx::Actions::build_one_action(
-	    $case->{'expr'},
-	    $case->{'req_info'}, 
-	    extend_rule_env(['uniq_id', 'uniq'], ['id_23','23'],	    
-		extend_rule_env(['actions','labels','tags'],[[],[],[]],$rule_env)),
-	    $session,
-	    'callbacks23',
-	    $case->{'name'});
-
-    diag $js if $case->{'diag'};
-
-    my $desc = $case->{'desc'};
-
-    is_string_nows(
-	$js,
-	$case->{'expected'},
-	"build_one_action: $desc");
-
-}
-
+## resouce testing
 
 my $fl_resources = Kynetx::Actions::FlippyLoo::get_resources();
 Kynetx::Actions::register_resources($my_req_info, $fl_resources);
