@@ -366,7 +366,7 @@ KOBJ.buildDiv = function (uniq, pos, top, side) {
     var div_style = {
         position: pos,
         zIndex: '9999',
-        opacity: 0.999999,
+        
         display: 'none'
     };
     div_style[vert[0]] = vert[1];
