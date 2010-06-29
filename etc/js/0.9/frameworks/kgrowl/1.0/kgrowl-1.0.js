@@ -22,10 +22,14 @@
             styling["position"] = "absolute";
         }
 
-        if ($('#kGrowl').size() == 0)
-        $('<div id="kGrowl"></div>').css(styling).appendTo('body');
+        config["kid"] = "kGrowl"  + config.position
+
+        if ($("#" + config["kid"]).size() == 0)
+        {
+            $('<div id="'+ config["kid"]  +'"></div>').css(styling).appendTo('body');
+        }
         // Create a notification on the container.
-        $('#kGrowl').kGrowl(m, config);
+        $("#" + config["kid"]).kGrowl(m, config);
     };
 
 
