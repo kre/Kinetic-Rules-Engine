@@ -164,7 +164,11 @@ sub turn_on_logging {
 
 sub turn_off_logging {
     my $logger = get_logger('Kynetx');
-    $logger->remove_appender('ConsoleLogger');
+    # this is cheating.  Removing an appender that doesn't exist
+    # causes an error.  This traps it
+    eval {
+      $logger->remove_appender('ConsoleLogger');
+    }
 }
 
 # takes a counter name and makes a uniform session var name from it

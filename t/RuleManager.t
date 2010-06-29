@@ -472,7 +472,7 @@ SKIP: {
 
     $mech->title_is('KNS Version');
 
-    $mech->content_like('/number\s+\d+/');
+    $mech->content_like('/number\s+[\da-f]+/');
 
     my $url_version_2 = "$dn/version/$ruleset?flavor=json";
     #diag "Testing console with $url_version_2";

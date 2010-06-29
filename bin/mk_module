@@ -51,12 +51,12 @@ if ($dirname) {
     if (! -e $modules ) {
 	print "Creating directory $modules\n";
 	mkdir($modules);
-	do_svn($modules);
+#	do_svn($modules);
     }
     if (! -e $tests ) {
 	print "Creating directory $tests\n";
 	mkdir($tests);
-	do_svn($tests);
+#	do_svn($tests);
     }
 }
 
@@ -79,11 +79,11 @@ do_template($test_tmpl,$tests,$test_name);
 
 
 # add both to svn
-print "Adding module $module_name to SVN\n";
-do_svn("$modules/$module_name");
+#print "Adding module $module_name to SVN\n";
+#do_svn("$modules/$module_name");
 
-print "Adding test $test_name to SVN\n";
-do_svn("$tests/$test_name");
+#print "Adding test $test_name to SVN\n";
+#do_svn("$tests/$test_name");
 
 
 1;
