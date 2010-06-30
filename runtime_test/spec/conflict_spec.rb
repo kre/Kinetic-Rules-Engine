@@ -27,7 +27,7 @@ describe "Verify Hi Conflict Sites" do
 
     it "should have shown a kGrowl Notify" do
 #       page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='kGrowl']"});
-       page.wait_for({:wait_for => :element, :element => "//*[@id='kGrowl']"});
+       page.wait_for({:wait_for => :element, :element => "//*[@id='kGrowltop-right']"});
        page.text("//div[@class='KOBJ_message']").should == "This is a sample rule."
     end
 
@@ -49,7 +49,7 @@ describe "Verify Hi Conflict Sites" do
 
     it "should have shown a kGrowl Notify" do
 #       page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='kGrowl']"});
-       page.wait_for({:wait_for => :element, :element => "//*[@id='kGrowl']"});
+       page.wait_for({:wait_for => :element, :element => "//*[@id='kGrowltop-right']"});
        page.text("//div[@class='KOBJ_message']").should == "This is a sample rule."
     end
 

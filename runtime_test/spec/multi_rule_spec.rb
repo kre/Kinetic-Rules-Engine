@@ -26,7 +26,7 @@ describe "Verify any issues with multiple rules on a single page" do
       insert_runtime_script(["a685x3","a685x4"])
 #      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='kGrowl']"});
 #      page.wait_for({:wait_for => :condition , :timeout_in_seconds => 30, :javascript => "window.$KOBJ('.KOBJ_header').length == 2"});
-      page.wait_for({:wait_for => :element, :element => "//*[@id='kGrowl']"});
+      page.wait_for({:wait_for => :element, :element => "//*[@id='kGrowltop-right']"});
       page.wait_for({:wait_for => :condition , :javascript => "window.$KOBJ('.KOBJ_header').length == 2"});
 
       page.js_eval("window.$KOBJ(window.$KOBJ('.KOBJ_header')[0]).html()").to_s.should == "MultiAppTestOne"
@@ -45,7 +45,7 @@ describe "Verify any issues with multiple rules on a single page" do
        
 #      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='kGrowl']"});
 #      page.wait_for({:wait_for => :condition , :timeout_in_seconds => 30, :javascript => "window.$KOBJ('.KOBJ_header').length == 1"});
-       page.wait_for({:wait_for => :element, :element => "//*[@id='kGrowl']"});
+       page.wait_for({:wait_for => :element, :element => "//*[@id='kGrowltop-right']"});
        page.wait_for({:wait_for => :condition, :javascript => "window.$KOBJ('.KOBJ_header').length == 1"});
       page.js_eval("window.$KOBJ(window.$KOBJ('.KOBJ_header')[0]).html()").to_s.should == "MultiAppTestOne"
 
@@ -68,7 +68,7 @@ describe "Verify any issues with multiple rules on a single page" do
 
 #      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='kGrowl']"});
 #      page.wait_for({:wait_for => :condition , :timeout_in_seconds => 30, :javascript => "window.$KOBJ('.KOBJ_header').length == 1"});
-       page.wait_for({:wait_for => :element, :element => "//*[@id='kGrowl']"});
+       page.wait_for({:wait_for => :element, :element => "//*[@id='kGrowltop-right']"});
        page.wait_for({:wait_for => :condition, :javascript => "window.$KOBJ('.KOBJ_header').length == 1"});
       page.js_eval("window.$KOBJ(window.$KOBJ('.KOBJ_header')[0]).html()").to_s.should == "MultiAppTestOne"
 
@@ -91,7 +91,7 @@ describe "Verify any issues with multiple rules on a single page" do
 
 #      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='kGrowl']"});
 #      page.wait_for({:wait_for => :condition , :timeout_in_seconds => 30, :javascript => "window.$KOBJ('.KOBJ_header').length == 1"});
-       page.wait_for({:wait_for => :element,  :element => "//*[@id='kGrowl']"});
+       page.wait_for({:wait_for => :element,  :element => "//*[@id='kGrowltop-right']"});
        page.wait_for({:wait_for => :condition , :javascript => "window.$KOBJ('.KOBJ_header').length == 1"});
       page.js_eval("window.$KOBJ(window.$KOBJ('.KOBJ_header')[0]).html()").to_s.should == "MultiAppTestOne"
 

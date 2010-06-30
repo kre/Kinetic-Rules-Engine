@@ -1,5 +1,8 @@
+
+
+
 KOBJ.proto = function() {
-    if("http:" != KOBJ.location('protocol') && "https:" != KOBJ.location('protocol'))
+    if ("http:" != KOBJ.location('protocol') && "https:" != KOBJ.location('protocol'))
     {
         return "https://";
     }
@@ -9,7 +12,7 @@ KOBJ.proto = function() {
 //this method is overridden in sandboxed environments
 KOBJ.require = function(url, callback_params) {
     // This function is defined if we are in a browser plugin
-    if(typeof(callback_params) == "undefined")
+    if (typeof(callback_params) == "undefined")
     {
         callback_params = {};
     }
@@ -22,15 +25,15 @@ KOBJ.require = function(url, callback_params) {
         }
         async_url_request(url, "KOBJ.url_loaded_callback", params);
     }
-    else if(KOBJ.in_bx_extention && callback_params.data_type == "other" )
+    else if (KOBJ.in_bx_extention && callback_params.data_type == "other")
     {
         async_url_request(url, "KOBJ.url_loaded_callback", callback_params);
     }
-    else if(!KOBJ.in_bx_extention && callback_params.data_type == "img" )
+    else if (!KOBJ.in_bx_extention && callback_params.data_type == "img")
     {
         var r = document.createElement("img");
         // This is the max url for a get in IE7  IE6 is 488 so we will break on ie6
-        r.src = url.substring(0,1500);
+        r.src = url.substring(0, 1500);
         var body = document.getElementsByTagName("body")[0] ||
                    document.getElementsByTagName("frameset")[0];
         body.appendChild(r);
@@ -39,7 +42,7 @@ KOBJ.require = function(url, callback_params) {
     {
         var r = document.createElement("script");
         // This is the max url for a get in IE7  IE6 is 488 so we will break on ie6
-        r.src = url.substring(0,1500);
+        r.src = url.substring(0, 1500);
         r.type = "text/javascript";
         r.onload = r.onreadystatechange = KOBJ.url_loaded_callback;
         var body = document.getElementsByTagName("body")[0] ||
@@ -50,7 +53,7 @@ KOBJ.require = function(url, callback_params) {
 
 
 KOBJ.getwithimage = function(url) {
-    KOBJ.require(url,{data_type : "img"});
+    KOBJ.require(url, {data_type : "img"});
 };
 
 
@@ -327,22 +330,22 @@ KOBJ.statusbar = function(config, content) {
 
 // Shortcut to do ajax request either sync or not.  If async then you must provide
 // a call back function.  If sync the data will be returned at the end of the call.
-KOBJ.ajax = function(url,async_request,callback)
+KOBJ.ajax = function(url, async_request, callback)
 {
     var result_data = null;
     $KOBJ.ajax({
-         url:    url ,
-         success: function(result) {
-             if(!async_request)
-             {
-                     result_data =  result;
-             }
-             else
-             {
-                 callback(result);
-             }
-         },
-         async:   async_request
+        url:    url ,
+        success: function(result) {
+            if (!async_request)
+            {
+                result_data = result;
+            }
+            else
+            {
+                callback(result);
+            }
+        },
+        async:   async_request
     });
 
     return result_data;
@@ -363,7 +366,7 @@ KOBJ.buildDiv = function (uniq, pos, top, side) {
     var div_style = {
         position: pos,
         zIndex: '9999',
-        opacity: 0.999999,
+        
         display: 'none'
     };
     div_style[vert[0]] = vert[1];
@@ -410,9 +413,9 @@ KOBJ.close_notification = function(s) {
 KOBJ.url_loaded_callback = function(loaded_url, response, callback_params) {
 
 
-    if(typeof(loaded_url) != "undefined" && typeof(callback_params) != "undefined")
+    if (typeof(loaded_url) != "undefined" && typeof(callback_params) != "undefined")
     {
-        switch(callback_params.data_type) {
+        switch (callback_params.data_type) {
             case  "js":
                 eval(response);
             case  "css":
@@ -432,25 +435,25 @@ KOBJ.url_loaded_callback = function(loaded_url, response, callback_params) {
             done = true;
             var url = null;
             // This would happen if we were in a browser sandbox.
-//            if (typeof(loaded_url) == "undefined")
-//            {
-                if (typeof(this.src) != "undefined")
-                {
-                    url = this.src;
-                }
-                else
-                {
-                    url = this.href;
-                }
-                if (url == null)
-                {
-                    return;
-                }
-//            }
-//            else
-//            {
-//                url = loaded_url;
-//            }
+            //            if (typeof(loaded_url) == "undefined")
+            //            {
+            if (typeof(this.src) != "undefined")
+            {
+                url = this.src;
+            }
+            else
+            {
+                url = this.href;
+            }
+            if (url == null)
+            {
+                return;
+            }
+            //            }
+            //            else
+            //            {
+            //                url = loaded_url;
+            //            }
 
             //        alert("Go callback for " + url);
 
@@ -473,12 +476,12 @@ KOBJ.url_loaded_callback = function(loaded_url, response, callback_params) {
  */
 KOBJ.load_style_sheet_link = function(url) {
 
-        var head = KOBJ.document.getElementsByTagName('head')[0];
-        var new_style_sheet = document.createElement("link");
-        new_style_sheet.href = url;
-        new_style_sheet.rel = "stylesheet";
-        new_style_sheet.type = "text/css";
-        head.appendChild(new_style_sheet);
+    var head = KOBJ.document.getElementsByTagName('head')[0];
+    var new_style_sheet = document.createElement("link");
+    new_style_sheet.href = url;
+    new_style_sheet.rel = "stylesheet";
+    new_style_sheet.type = "text/css";
+    head.appendChild(new_style_sheet);
 };
 
 
@@ -491,41 +494,114 @@ KOBJ.siteIds = function()
     return siteid.join(";");
 };
 
-KOBJ.errorstack_submit = function(key, e,rule_info) {
+
+
+KOBJ.donotuse_getMethods = function(obj) {
+  var result = [];
+  for (var id in obj) {
+    try {
+      if (typeof(obj[id]) == "function") {
+        result.push(id + ": " + obj[id].toString());
+      }
+    } catch (err) {
+      result.push(id + ": inaccessible");
+    }
+  }
+  return result;
+}
+
+//KOBJ.getStrackTrace = function(exception) {
+//    var callstack = [];
+//    var isCallstackPopulated = false;
+//    if (exception.stack) { //Firefox
+//        var lines = exception.stack.split('\n');
+//        for (var i = 0, len = lines.length; i < len; i++) {
+//            if (lines[i].match(/^\s*[A-Za-z0-9\-_\$]+\(/)) {
+//                callstack.push(lines[i]);
+//            }
+//        }
+//        //Remove call to printStackTrace()
+//        callstack.shift();
+//        isCallstackPopulated = true;
+//    }
+//    else if (window.opera && exception.message) { //Opera
+//        var lines = exception.message.split('\n');
+//        for (var i = 0, len = lines.length; i < len; i++) {
+//            if (lines[i].match(/^\s*[A-Za-z0-9\-_\$]+\(/)) {
+//                var entry = lines[i];
+//                //Append next line also since it has the file info
+//                if (lines[i + 1]) {
+//                    entry += "at" + lines[i + 1];
+//                    i++;
+//                }
+//                callstack.push(entry);
+//            }
+//        }
+//        //Remove call to printStackTrace()
+//        callstack.shift();
+//        isCallstackPopulated = true;
+//    }
+//    if (!isCallstackPopulated) { //IE and Safari
+//        var currentFunction = arguments.callee.caller;
+//
+//        alert("Caller : " + KOBJ.donotuse_getMethods(currentFunction).join("\n"));
+//        alert("Callee : " + KOBJ.donotuse_getMethods(arguments.callee).join("\n"));
+//        alert("Arguments : " + KOBJ.donotuse_getMethods(arguments).join("\n"));
+//
+//        while (currentFunction) {
+//            var fn = currentFunction.toString();
+//            alert(fn);
+//            var fname = fn.substring(fn.indexOf("function") + 8, fn.indexOf('')) || 'anonymous';
+//            callstack.push(fname);
+//            currentFunction = currentFunction.caller;
+//        }
+//    }
+//    return callstack.join('\n')
+//};
+
+KOBJ.errorstack_submit = function(key, e, rule_info) {
     // No key the ignore.
     if (key == null) {
         return;
     }
     var txt = "_s=" + key;
 
-    if(KOBJ.in_bx_extention)
+    if (KOBJ.in_bx_extention)
         txt += "&_r=json";
     else
         txt += "&_r=img";
 
     txt += "&Msg=" + escape(e.message ? e.message : e);
-    txt += "&ScriptURL=" + escape(e.fileName ? e.fileName : (e.filename ? e.filename : "Dynamic"));
+
+    var script_url = e.fileName ? e.fileName : (e.filename ? e.filename : null)
+    if(!script_url)
+    {
+        script_url = (e.sourceURL ? e.sourceURL : "Browser does not support exception script url");
+    }
+
+    txt += "&ScriptURL=" + escape(script_url);
+    txt += "&Agent=" + escape(navigator.userAgent);
     txt += "&PageURL=" + escape(document.location.href);
-    txt += "&Line=" + (e.lineNumber ? e.lineNumber : 0);
+    txt += "&Line=" + (e.lineNumber ? e.lineNumber : (e.line ? e.line : "Browser does not support exception linenumber"));
     txt += "&Description=" + escape(e.description ? e.description : "");
-    txt += "&Arguments=" + escape(e.arguments ? e.arguments : "");
-    txt += "&Type=" + escape(e.type ? e.type : e);
+    txt += "&Arguments=" + escape(e.arguments ? e.arguments : "Browser does not support exception arguments");
+    txt += "&Type=" + escape(e.type ? e.type : "Browser does not support exception type");
     txt += "&name=" + escape(e.name ? e.name : e);
-//    txt += "&Platform=" + escape(navigator.platform);
-//    txt += "&UserAgent=" + escape(navigator.userAgent);
-    if(typeof(rule_info) != "undefined")
+    //    txt += "&Platform=" + escape(navigator.platform);
+    //    txt += "&UserAgent=" + escape(navigator.userAgent);
+    if (typeof(rule_info) != "undefined")
     {
         txt += "&RuleName=" + escape(rule_info.name);
-        txt += "&RuleID=" + escape(rule_info.id); 
+        txt += "&RuleID=" + escape(rule_info.id);
     }
-    txt += "&stack=" + escape(e.stack ? e.stack : "Unknown Stack");
+    txt += "&stack=" + escape(e.stack ? e.stack : "Browser Does not support exception stacktrace");
     var datatype = null;
-    if(KOBJ.in_bx_extention)
+    if (KOBJ.in_bx_extention)
         datatype = "js";
     else
         datatype = "img";
 
-    KOBJ.require("http://www.errorstack.com/submit?" + txt,{data_type: datatype});
+    KOBJ.require("http://www.errorstack.com/submit?" + txt, {data_type: datatype});
 };
 
 
@@ -543,7 +619,7 @@ KOBJ.logger = function(type, txn_id, element, url, sense, rule, rid) {
 
     if (rid) logger_url += "&rid=" + rid;
 
-    KOBJ.require(logger_url,{data_type: "other"});
+    KOBJ.require(logger_url, {data_type: "other"});
 };
 
 /* Inject requested CSS via a style tag */
@@ -573,7 +649,7 @@ KOBJ.css = function(css) {
 };
 
 /* Logs data to the browsers windows console */
-    //alert("type" + typeof(KOBJ.log));
+//alert("type" + typeof(KOBJ.log));
 KOBJ.log = function(msg) {
     if (window.console != undefined && console.log != undefined) {
         console.log(msg);
@@ -609,7 +685,7 @@ KOBJ.trace = function(msg) {
 };
 
 KOBJ.itrace = function(msg) {
-//    return;
+    //    return;
     KOBJ.log(msg);
 };
 
