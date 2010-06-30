@@ -1,7 +1,21 @@
+2010-06-30  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Rules.pm (eval_use): Added to process use pragmas in meta block
+    * Kynetx/Events.pm (process_event_for_rid): broke out for individual
+	calling 
+    * Kynetx/Callbacks.pm (process_callbacks): Changed to use Postlude
+	instead of Actions
+
+2010-06-29  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Rules.pm (get_rule_set): cached the ruleset in the
+	req_info and use it if we can
+
 2010-06-28  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Postlude.pm: Split out postlude functions from Actions.pm
-
+    * Kynetx/Postlude.pm: (eval_raise_statement): Added.
+	
 2010-06-25  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/JavaScript/AST.pm (generate_js): Now we (partially) use a JS

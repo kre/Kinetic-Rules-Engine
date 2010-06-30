@@ -55,6 +55,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 use Kynetx::Expressions qw/:all/;
 use Kynetx::Session qw/:all/;
+use Kynetx::Events;
 
 sub eval_post_expr {
     my($rule, $session, $req_info, $rule_env, $fired) = @_;
@@ -123,6 +124,8 @@ sub eval_post_statement {
       return eval_log_statement($expr, $session, $req_info, $rule_env, $rule_name);
     } elsif ($expr->{'type'} eq 'control' && $test) {
       return eval_control_statement($expr, $session, $req_info, $rule_env, $rule_name);
+    } elsif ($expr->{'type'} eq 'raise' && $test) {
+      return eval_raise_statement($expr, $session, $req_info, $rule_env, $rule_name);
     } else {
       return '';
     }
@@ -232,6 +235,45 @@ sub eval_control_statement {
     if ($expr->{'statement'} eq 'last') {
       $req_info->{$req_info->{'rid'}.':__KOBJ_EXEC_LAST'} = 1;
     }
+
+    return $js;
+}
+
+
+sub eval_raise_statement {
+    my($expr, $session, $req_info, $rule_env, $rule_name) = @_;
+
+    my $logger = get_logger();
+
+    my $js ='';
+
+    my $new_req_info = {'eventtype' => $expr->{'event'},
+			'domain' => $expr->{'domain'}};
+
+    foreach my $m (@{ $expr->{'modifiers'}}) {
+      $new_req_info->{$expr->{'name'}} =
+	  den_to_exp(eval_expr($expr->{'value'},
+			       $rule_env,
+			       $rule_name,
+			       $req_info,
+			       $session));
+
+    }
+
+    # merge in the incoming request info
+    $new_req_info = Kynetx::Request::merge_req_env($req_info, 
+						   $new_req_info);
+
+    
+    my $ev = Kynetx::Events::mk_event($new_req_info);
+
+    # this side-effects the schedule
+    Kynetx::Events::process_event_for_rid($ev,
+					  $new_req_info,
+					  $session,
+					  $req_info->{'schedule'},
+					  $expr->{'rid'} || $req_info->{'rid'},
+					 );
 
     return $js;
 }
