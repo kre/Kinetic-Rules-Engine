@@ -149,8 +149,14 @@ sub process_event {
 
 
     foreach my $rid (split(/;/, $rids)) {
-      process_event_for_rid($ev, $req_info, $session, $schedule, $rid);
+      process_event_for_rid($ev,
+			    $req_info,
+			    $session,
+			    $schedule,
+			    $rid
+			   );
     }
+
 
 
 #    $logger->debug("Schedule: ", sub { Dumper $schedule });
@@ -161,6 +167,7 @@ sub process_event {
 					     $eid
 					    );
 					    
+
     # put this in the logging DB
     Kynetx::Log::log_rule_fire($r, 
 			       $req_info, 
@@ -205,7 +212,7 @@ sub process_event_for_rid {
 
   $req_info->{'rid'} = $rid;
 
-  my $ruleset = Kynetx::Rules::get_rule_set($req_info);
+  my $ruleset = Kynetx::Rules::get_rule_set($req_info);;
 
 
   #      $logger->debug("Ruleset: ", sub {Dumper $ruleset} );
@@ -236,6 +243,8 @@ sub process_event_for_rid {
 
 
     my $next_state = $sm->next_state($current_state, $ev);
+
+    $logger->debug("Next: ", $next_state );
 	
     # when there's a state change, store the event in the event list
     unless ($current_state eq $next_state) {
@@ -289,7 +298,6 @@ sub process_event_for_rid {
   }
 }
 
-
 sub mk_event {
    my($req_info) = @_;
 
@@ -306,8 +314,6 @@ sub mk_event {
    } elsif ($req_info->{'eventtype'} eq 'change' ) {
      $ev->change($req_info->{'element'});
    } else {
-     $logger->error("Event: $req_info->{'domain'} $req_info->{'eventtype'}");
-
      $ev->generic("$req_info->{'domain'}:$req_info->{'eventtype'}");
    }
 
