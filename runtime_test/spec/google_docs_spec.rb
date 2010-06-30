@@ -30,7 +30,7 @@ describe "Verify Google Docs and Gmail" do
     end
 
     it "should have shown a kGrowl Notify" do
-       page.wait_for({:wait_for => :element, :timeout_in_seconds => 20, :element => "//*[@id='kGrowl']"});
+       page.wait_for({:wait_for => :element, :timeout_in_seconds => 20, :element => "//*[@id='kGrowltop-right']"});
        page.text("//div[@class='KOBJ_message']").should == "This is a sample rule."
     end
 
