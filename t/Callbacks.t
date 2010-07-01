@@ -195,7 +195,7 @@ SKIP: {
     $mech->get_ok($url_version_2);
     is($mech->content_type(), 'text/plain');
 
-    $mech->content_like('/{"build_num"\s*:\s*"\d+/');
+    $mech->content_like('/{"build_num"\s*:\s*"[\da-f]+/');
 
     my $txn_id = "0123456789";
     my $url = "http://www.windley.com";

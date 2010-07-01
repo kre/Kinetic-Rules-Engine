@@ -59,6 +59,8 @@ use Kynetx::Configure qw/:all/;
 
 use Kynetx::FakeReq;
 
+use Log::Log4perl::Level;
+#use Log::Log4perl::Appender::FileLogger;
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($WARN);
 #Log::Log4perl->easy_init($DEBUG);
@@ -66,15 +68,13 @@ Log::Log4perl->easy_init($WARN);
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
-# # configure KNS
-# Kynetx::Configure::configure();
-
-# Kynetx::Memcached->init();
-
-# my $r = new Kynetx::FakeReq();
-
 
 my $r = Kynetx::Test::configure();
+
+# configure logging for production, development, etc.
+#config_logging($r);
+#Kynetx::Util::turn_off_logging();
+
 
 my $rid = 'cs_test';
 
@@ -121,6 +121,12 @@ my (@test_cases, $json, $krl,$result);
 
 sub add_testcase {
     my($str, $expected, $final_req_info, $diag) = @_;
+
+#     if ($diag) {
+#       Kynetx::Util::turn_on_logging();
+#     } else {
+#       Kynetx::Util::turn_off_logging();
+#     }
 
     my $pt;
     my $type = '';
@@ -1493,7 +1499,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foo'},
-   {"rid" => 'cs_test'},
+   {"rid" => 'global_expr_0'},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1535,7 +1541,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't0'},
-   {"rid" => 'cs_test'},
+   {"rid" => 'global_expr_1'},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1543,7 +1549,7 @@ $config = mk_config_string(
 
 $final_req_info = {
  'results' => ['fired'],
- 'names' => ['cs_test:t0'],
+ 'names' => ['global_expr_1:t0'],
  'all_actions' => [['noop']],
  };
 
@@ -1565,6 +1571,54 @@ add_testcase(
     $global_expr_1,
     $final_req_info
     );
+
+
+
+#
+# meta blocks, use, etc.
+#
+
+$krl_src = <<_KRL_;
+ruleset meta_0 {
+    meta {
+	use javascript resource "http://init-files.s3.amazonaws.com/kjs-frameworks/jquery_ui/1.8/jquery-ui-1.8.2.custom.js"
+        use css resource "http://init-files.s3.amazonaws.com/kjs-frameworks/jquery_ui/1.8/css/kynetx_ui_darkness/jquery-ui-1.8.2.custom.css"
+    }
+    rule foo is active {
+     select using ".*"
+     noop();
+    }
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foo'},
+   {"rid" => 'meta_0'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
+
+my $meta_0 = <<_JS_;
+(function(){
+KOBJ.registerExternalResources("meta_0",{
+ "http://init-files.s3.amazonaws.com/kjs-frameworks/jquery_ui/1.8/jquery-ui-1.8.2.custom.js":{"type":"javascript"},
+ "http://init-files.s3.amazonaws.com/kjs-frameworks/jquery_ui/1.8/css/kynetx_ui_darkness/jquery-ui-1.8.2.custom.css":{"type":"css"}
+ });
+(function(){
+ function callBacks(){};
+ (function(uniq,cb,config){cb();}
+  ('%uniq%',callBacks,$config)); 
+ }());
+}());
+_JS_
+
+add_testcase(
+     $krl_src,
+     $meta_0,
+     $dummy_final_req_info,
+     0
+     );
 
 
 #
@@ -1591,7 +1645,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't0'},
-   {"rid" => 'cs_test'},
+   {"rid" => 'two_rules_both_fire'},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1600,7 +1654,7 @@ $config = mk_config_string(
 $config2 = mk_config_string(
   [
    {"rule_name" => 't1'},
-   {"rid" => 'cs_test'},
+   {"rid" => 'two_rules_both_fire'},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1655,7 +1709,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't0'},
-   {"rid" => 'cs_test'},
+   {"rid" => 'two_rules_first_fires'},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1703,7 +1757,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't8'},
-   {"rid" => 'cs_test'},
+   {"rid" => 'two_rules_both_fire'},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1712,7 +1766,7 @@ $config = mk_config_string(
 $config2 = mk_config_string(
   [
    {"rule_name" => 't9'},
-   {"rid" => 'cs_test'},
+   {"rid" => 'two_rules_both_fire'},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1768,7 +1822,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't10'},
-   {"rid" => 'cs_test'},
+   {"rid" => 'two_rules_both_fire'},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -1794,23 +1848,157 @@ add_testcase(
     0
     );
 
+$krl_src = <<_KRL_;
+ruleset two_rules_first_raises_second {
+    rule t10 is active {
+      select when pageview ".*"
+      noop();
+      fired {
+        raise explicit event foo;
+      }
+    }
+    rule t12 is active {
+      select when explicit foo
+      pre {
+        x = 5;
+      }
+      noop();
+    }
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 't10'},
+   {"rid" => 'two_rules_first_raises_second'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$config2 = mk_config_string(
+  [
+   {"rule_name" => 't12'},
+   {"rid" => 'two_rules_first_raises_second'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$js = <<_JS_;
+(function(){
+(function(){
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config));
+}());
+(function(){
+var x = 5;
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config2));
+}());
+}());
+_JS_
+
+$krl_src = <<_KRL_;
+ruleset two_rules_second_not_raised {
+    rule t10 is active {
+      select when pageview ".*"
+      noop();
+      fired {
+        raise explicit event bar;
+      }
+    }
+    rule t12 is active {
+      select when explicit foo
+      pre {
+        x = 5;
+      }
+      noop();
+    }
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 't10'},
+   {"rid" => 'two_rules_second_not_raised'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$config2 = mk_config_string(
+  [
+   {"rule_name" => 't12'},
+   {"rid" => 'two_rules_second_not_raised'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$js = <<_JS_;
+(function(){
+(function(){
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config));
+}());
+}());
+_JS_
+
+
+add_testcase(
+    $krl_src,
+    $js,
+    $dummy_final_req_info,
+    0
+    );
+
 
 # now test each test case twice
 foreach my $case (@test_cases) {
 
-    if ($case->{'diag'}) {
-      Kynetx::Util::turn_on_logging();
-    } else {
-      Kynetx::Util::turn_off_logging();
-    }
+#   if ($case->{'diag'}) {
+#     Kynetx::Util::turn_on_logging();
+#   } else {
+#     Kynetx::Util::turn_off_logging();
+#   }
 
   my $ruleset_rid = $case->{'expr'}->{'ruleset_name'} || $rid;
   my $req_info = gen_req_info($ruleset_rid);
+  $req_info->{'eventtype'} = 'pageview';
+  $req_info->{'domain'} = 'web';
+  
 
-  my $schedule = Kynetx::Rules::mk_schedule($req_info, $req_info->{'rid'},$case->{'expr'});
+#  diag Dumper $req_info;
+
+#   my $schedule = Kynetx::Rules::mk_schedule($req_info, $req_info->{'rid'},$case->{'expr'});
+
+
 
   if($case->{'type'} eq 'ruleset') {
 
+    $req_info->{$ruleset_rid}->{'ruleset'} = 
+      Kynetx::Rules::optimize_ruleset($case->{'expr'});
+
+    my $ev = Kynetx::Events::mk_event($req_info);
+
+#    $logger->debug("Processing events for $rids with event ", sub {Dumper $ev});
+
+    my $schedule = Kynetx::Scheduler->new();
+
+
+    Kynetx::Events::process_event_for_rid($ev,
+					  $req_info,
+					  $session,
+					  $schedule,
+					  $ruleset_rid
+					 );
     
     $js = Kynetx::Rules::process_schedule($r, 
 					  $schedule, 
@@ -1853,7 +2041,8 @@ foreach my $case (@test_cases) {
 	 $re,
 	 "Evaling rule " . $case->{'src'});
     $test_count++;
-    
+
+
   }
 
   # check the request env
@@ -1864,7 +2053,6 @@ foreach my $case (@test_cases) {
       $test_count++;
     }
   }
-
 
 }
 

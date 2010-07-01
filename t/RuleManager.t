@@ -480,7 +480,7 @@ SKIP: {
     $mech->get_ok($url_version_2);
     is($mech->content_type(), 'text/plain');
 
-    $mech->content_like('/{"build_num"\s*:\s*"\d+/');
+    $mech->content_like('/{"build_num"\s*:\s*"[\da-f]+/');
 
     # validate
     my $url_version_3 = "$dn/validate/$ruleset";

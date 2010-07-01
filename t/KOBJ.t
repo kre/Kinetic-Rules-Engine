@@ -109,12 +109,12 @@ SKIP: {
 
 
     my $url_version_2 = "$dn/version/$ruleset?flavor=json";
-    #diag "Testing console with $url_version_2";
+#    diag "Testing console with $url_version_2";
 
     $mech->get_ok($url_version_2);
     is($mech->content_type(), 'text/plain');
 
-    $mech->content_like('/{"build_num"\s*:\s*"\d+/');
+    $mech->content_like('/{"build_num"\s*:\s*"[\da-f]+/');
     $test_count += 3;
 
     # kobj.js

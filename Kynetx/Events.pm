@@ -149,94 +149,12 @@ sub process_event {
 
 
     foreach my $rid (split(/;/, $rids)) {
-
-      $logger->debug("Processing events for $rid");
-      Log::Log4perl::MDC->put('site', $rid);
-
-      $req_info->{'rid'} = $rid;
-
-      my $ruleset = Kynetx::Rules::get_rule_set($req_info);
-
-
-#      $logger->debug("Ruleset: ", sub {Dumper $ruleset} );
-
-      foreach my $rule (@{$ruleset->{'rules'}}) {
-
-	next if $rule->{'state'} eq 'inactive';
-
-	Log::Log4perl::MDC->put('rule', $rule->{'name'});  # no rule for now...
-
-	my $sm_current_name = $rule->{'name'}.':sm_current';
-	my $event_list_name = $rule->{'name'}.':event_list';
-
-#	$logger->debug("Rule: ", Kynetx::Json::astToJson($rule));
-	
-#	$logger->debug("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
-
-	next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
-
-	my $sm = $rule->{'event_sm'};
-
-#	$logger->debug("Event SM: ", sub { Dumper $sm });
-
-	my $current_state = session_get($rid, $session, $sm_current_name) || 
-	                    $sm->get_initial();
-
-	$logger->debug("Initial: ", $current_state );
-
-
-	my $next_state = $sm->next_state($current_state, $ev);
-	
-	# when there's a state change, store the event in the event list
-	unless ($current_state eq $next_state) {
-	  session_push($rid, $session, $event_list_name, $ev);
-#	  $logger->debug("Event list ($event_list_name): ", sub { Dumper session_get($rid, $session, $event_list_name)});
-	}
-
-
-	$logger->debug("Next: ", $next_state );
-
-	if ($sm->is_final($next_state)) {
-
-	  my $rulename = $rule->{'name'};
-
-	  $logger->debug("Adding to schedule: " , $rid, " & ",  $rulename);
-	  $schedule->add($rid,$rule,$ruleset,$req_info);
-
-	  # get event list and reset+
-	  my $event_list_name = $rulename.':event_list';
-
-	  my $var_list = [];
-	  my $val_list = [];
-	  while (my $ev = session_next($rid, $session, $event_list_name)) {
-
-#	  $logger->debug("Event: ", sub {Dumper $ev});
-
-	    # FIXME: what we're not doing: the event list also
-	    # includes the req_info that was active when the event
-	    # came in.  We're not doing anything with it--simply
-	    # using the req_info from the final req...
-
-	   # gather up vars and vals from all the events in the path
-	    push @{$var_list}, 
-	         @{$ev->get_vars($sm->get_id())};
-	    push @{$val_list}, 
-   	         @{$ev->get_vals($sm->get_id())};
-	  }
-	  $schedule->annotate_task($rid,$rulename,'vars',$var_list);
-	  $schedule->annotate_task($rid,$rulename,'vals',$val_list);
-
-
-	  # reset SM
-	  session_delete($rid, $session, $sm_current_name);
-	  # reset event list for this rule
-	  session_delete($rid, $session, $event_list_name);
-
-	} else {
-	  session_store($rid, $session, $sm_current_name, $next_state);
-	}
-
-      }
+      process_event_for_rid($ev,
+			    $req_info,
+			    $session,
+			    $schedule,
+			    $rid
+			   );
     }
 
 
@@ -280,6 +198,105 @@ sub process_event {
 
 }
 
+sub process_event_for_rid {
+  my $ev = shift;
+  my $req_info = shift;
+  my $session = shift;
+  my $schedule = shift;
+  my $rid = shift;
+
+  my $logger = get_logger();
+
+  $logger->debug("Processing events for $rid");
+  Log::Log4perl::MDC->put('site', $rid);
+
+  $req_info->{'rid'} = $rid;
+
+  my $ruleset = Kynetx::Rules::get_rule_set($req_info);;
+
+
+  #      $logger->debug("Ruleset: ", sub {Dumper $ruleset} );
+
+  foreach my $rule (@{$ruleset->{'rules'}}) {
+
+    next if $rule->{'state'} eq 'inactive';
+
+    Log::Log4perl::MDC->put('rule', $rule->{'name'}); # no rule for now...
+
+    my $sm_current_name = $rule->{'name'}.':sm_current';
+    my $event_list_name = $rule->{'name'}.':event_list';
+
+    #	$logger->debug("Rule: ", Kynetx::Json::astToJson($rule));
+	
+    #	$logger->debug("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
+
+    next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
+
+    my $sm = $rule->{'event_sm'};
+
+    #	$logger->debug("Event SM: ", sub { Dumper $sm });
+
+    my $current_state = session_get($rid, $session, $sm_current_name) || 
+      $sm->get_initial();
+
+    $logger->debug("Initial: ", $current_state );
+
+
+    my $next_state = $sm->next_state($current_state, $ev);
+
+    $logger->debug("Next: ", $next_state );
+	
+    # when there's a state change, store the event in the event list
+    unless ($current_state eq $next_state) {
+      session_push($rid, $session, $event_list_name, $ev);
+      #	  $logger->debug("Event list ($event_list_name): ", sub { Dumper session_get($rid, $session, $event_list_name)});
+    }
+
+
+    $logger->debug("Next: ", $next_state );
+
+    if ($sm->is_final($next_state)) {
+
+      my $rulename = $rule->{'name'};
+
+      $logger->debug("Adding to schedule: " , $rid, " & ",  $rulename);
+      $schedule->add($rid,$rule,$ruleset,$req_info);
+
+      # get event list and reset+
+      my $event_list_name = $rulename.':event_list';
+
+      my $var_list = [];
+      my $val_list = [];
+      while (my $ev = session_next($rid, $session, $event_list_name)) {
+
+	#	  $logger->debug("Event: ", sub {Dumper $ev});
+
+	# FIXME: what we're not doing: the event list also
+	# includes the req_info that was active when the event
+	# came in.  We're not doing anything with it--simply
+	# using the req_info from the final req...
+
+	# gather up vars and vals from all the events in the path
+	push @{$var_list}, 
+	  @{$ev->get_vars($sm->get_id())};
+	push @{$val_list}, 
+	  @{$ev->get_vals($sm->get_id())};
+      }
+      $schedule->annotate_task($rid,$rulename,'vars',$var_list);
+      $schedule->annotate_task($rid,$rulename,'vals',$val_list);
+
+
+      # reset SM
+      session_delete($rid, $session, $sm_current_name);
+      # reset event list for this rule
+      session_delete($rid, $session, $event_list_name);
+
+    } else {
+      session_store($rid, $session, $sm_current_name, $next_state);
+    }
+
+  }
+}
 
 sub mk_event {
    my($req_info) = @_;
@@ -297,8 +314,6 @@ sub mk_event {
    } elsif ($req_info->{'eventtype'} eq 'change' ) {
      $ev->change($req_info->{'element'});
    } else {
-     $logger->error("Event: $req_info->{'domain'} $req_info->{'eventtype'}");
-
      $ev->generic("$req_info->{'domain'}:$req_info->{'eventtype'}");
    }
 
