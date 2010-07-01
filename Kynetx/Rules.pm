@@ -530,30 +530,50 @@ sub eval_foreach {
 					$session);
 
     
+    my $vars = $foreach_list[0]->{'var'};
 
-    unless ($valarray->{'type'} eq 'array') {
-      $logger->debug("Foreach expression does not yield array; creating array from singleton") ;
-      $valarray->{'val'} = [$valarray->{'val'}];
-      $valarray->{'type'} = 'array'
+    # loop below expects array of arrays
+    if ($valarray->{'type'} eq 'array') {
+      # array of single value arrays
+      $valarray = [map {[$_->{'val'}]} @{$valarray->{'val'}}];
+    } elsif ($valarray->{'type'} eq 'hash') {
+      # turn hash into array of two element arrays
+      my @va;
+      foreach my $k (keys %{$valarray->{'val'}}) {
+	push @va, [$k, $valarray->{'val'}->{$k}->{'val'}];
+      }
+      $valarray = \@va;
+      $logger->debug("Valarray ", sub {Dumper $valarray});
+    } else {
+      $logger->debug("Foreach expression does not yield array or hash; creating array from singleton") ;
+      # make an array of arrays
+      $valarray = [[$valarray->{'val'}]];
     }
 
+#    $logger->debug("Valarray ", sub {Dumper $valarray});
 
-    my $var = $foreach_list[0]->{'var'};
 
-    foreach my $val (@{ $valarray->{'val'} }) {
+
+    foreach my $val (@{ $valarray}) {
 
 #      $logger->debug("Evaluating rule body with " . Dumper($val));
 
-      $val = Kynetx::Expressions::typed_value($val);
+      my $vjs = 
+	Kynetx::JavaScript::gen_js_var_list($vars, 
+		[map {Kynetx::JavaScript::gen_js_expr(
+		       Kynetx::Expressions::typed_value($_))} @{$val}]);
+
+
+      $logger->debug("Vars ", sub {Dumper $vars});
+      $logger->debug("Vals ", sub {Dumper $val});
 
       # we recurse in side this loop to handle nested foreach statements
       $fjs .= mk_turtle(
-		Kynetx::JavaScript::gen_js_var($var, 
-					       Kynetx::JavaScript::gen_js_expr($val)) .
+		$vjs .
   	        eval_foreach($r, 
 			     $req_info, 
-			     extend_rule_env({$var,
-					      Kynetx::Expressions::den_to_exp($val)},
+			     extend_rule_env($vars,
+					     $val,
 					     $rule_env), 
 			     $session, 
 			     $rule,
@@ -744,19 +764,25 @@ sub optimize_rule {
 sub optimize_pre {
   my ($rule) = @_;
   my $logger = get_logger();
-    my @vars = map {$_->{'var'}} @{ $rule->{'pagetype'}->{'foreach'} };
-    $logger->trace("[rules::optimize_pre] foreach vars: ", sub {Dumper(@vars)});
+  my @varlist = map {$_->{'var'}} @{ $rule->{'pagetype'}->{'foreach'} };
 # don't need this, but I love it.
 # 	  my %is_var;
 # 	  # create a hash for testing whether a var is defined or not
 # 	  @is_var{@vars} = (1) x @vars;
 
+  my @vars;
+  foreach my $v (@varlist) {
+    push @vars, @{$v};
+  }
+
+  $logger->debug("[rules::optimize_pre] foreach vars: ", sub {Dumper(@vars)});
 
     foreach my $decl (@{$rule->{'pre'}}) {
       # check if any of the vars occur free in the rhs
       $logger->trace("[rules::optimize_pre] decl: ", sub {Dumper($decl)});
       my $dependent = 0;
       foreach my $v (@vars) {
+#	$logger->debug("Checking if $v is free in expr");
 	if ($decl->{'type'} eq 'expr' &&
 	    Kynetx::Expressions::var_free_in_expr($v, $decl->{'rhs'})) {
 	  $dependent = 1;

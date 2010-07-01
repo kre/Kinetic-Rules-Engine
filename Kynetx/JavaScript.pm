@@ -56,6 +56,7 @@ our %EXPORT_TAGS = (all => [
 qw(
 gen_js_expr
 gen_js_var
+gen_js_var_list
 gen_js_prim
 gen_js_rands
 gen_js_callbacks
@@ -150,6 +151,15 @@ sub gen_js_expr {
 sub gen_js_var {
   my ($lhs, $rhs) = @_;
   return "var $lhs = $rhs;\n";
+}
+
+sub gen_js_var_list {
+  my ($lhs_list, $rhs_list) = @_;
+
+  my $logger=get_logger();
+  return join(" ", 
+	      map {gen_js_var($lhs_list->[$_], $rhs_list->[$_])} (0..scalar(@{$lhs_list})-1)
+	     );
 }
 
 sub gen_js_prim {

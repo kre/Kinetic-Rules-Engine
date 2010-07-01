@@ -506,7 +506,7 @@ event_filter: VAR (STRING | REGEXP)
 foreach: 'foreach' expr setting
     {$return =
       {'expr' => $item[2],
-       'var' => $item[3][0]
+       'var' => $item[3]
       }
     }
 
