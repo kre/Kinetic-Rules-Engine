@@ -1,3 +1,10 @@
+2010-07-01  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Parser.pm: Allow lists of vars to set
+    * Kynetx/Rules.pm (eval_foreach): Now works on hashes too
+    * Kynetx/PrettyPrinter.pm (pp_foreach): Generalized for lists of vars
+    * Kynetx/JavaScript.pm (gen_js_var_list): Added.
+
 2010-06-30  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Rules.pm (eval_use): Added to process use pragmas in meta block

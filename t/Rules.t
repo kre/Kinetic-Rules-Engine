@@ -96,7 +96,7 @@ my $test_count;
 my $config;
 my $config2;
 
-
+#diag "_____________________________START TEST____________________________";
 sub gen_req_info {
   
   return Kynetx::Test::gen_req_info($rid, 
@@ -1443,6 +1443,81 @@ add_testcase(
     $krl_src,
     $result,
     $final_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+rule foreach_hash_1 is active {
+  select using "http://www.google.com" setting ()
+   foreach {"a": 1, "b": 2, "c":3} setting (k,v)
+    pre {
+      x = "Key " + k;
+      y = v + 1;
+      z = 6
+    }
+    alert(v);
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foreach_hash_1'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
+
+
+
+$result = <<_JS_;
+(function(){
+ var z = 6;
+ (function(){
+   var k = 'c';
+   var v = 3;
+   var x = 'Key c';
+   var y = 4;
+   function callBacks () {
+   };
+   (function(uniq,cb,config,msg) {
+      alert(msg);
+      cb();
+    }
+    ('%uniq%',callBacks,$config,v));
+   }());
+ (function(){
+   var k = 'a';
+   var v = 1;
+   var x = 'Key a';
+   var y = 2;
+   function callBacks () {
+   };
+   (function(uniq,cb,config,msg) {
+      alert(msg);
+      cb();
+    }
+    ('%uniq%',callBacks,$config,v));
+   }());
+ (function(){
+   var k = 'b';
+   var v = 2;
+   var x = 'Key b';
+   var y = 3;
+   function callBacks () {
+   };
+   (function(uniq,cb,config,msg) {
+      alert(msg);
+      cb();
+    }
+    ('%uniq%',callBacks,$config,v));
+   }());
+ }());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $dummy_final_req_info
     );
 
 

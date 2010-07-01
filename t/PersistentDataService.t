@@ -85,7 +85,7 @@ SKIP: {
 
     $mech->title_is('KNS Version');
 
-    $mech->content_like('/number\s+\d+/');
+    $mech->content_like('/number\s+([a-f]\d)+/');
     $test_count += 4;
 
     # post #

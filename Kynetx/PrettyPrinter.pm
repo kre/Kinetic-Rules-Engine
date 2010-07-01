@@ -458,7 +458,7 @@ sub pp_foreach {
   foreach my $fe (@{$node}) {
     $o .= " "x$indent;
     $o .= 'foreach ' . pp_expr($fe->{'expr'});
-    $o .= pp_setting([$fe->{'var'}]) . "\n" ;
+    $o .= pp_setting([join(',',@{$fe->{'var'}})]) . "\n" ;
     $indent+=$g_indent;
   }
 
