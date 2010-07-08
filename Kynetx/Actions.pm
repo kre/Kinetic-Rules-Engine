@@ -898,6 +898,19 @@ sub mk_registered_resource_js {
 
    my $logger = get_logger();
 
+   my $rid = $req_info->{'rid'};
+
+   if($req_info->{"$rid:use"})
+   {
+   $logger->debug("Found Usess about to load them up");
+       foreach my $u (@{$req_info->{"$rid:use"}}) {
+         if ($u->{'type'} eq 'resource') {
+           $req_info->{'resources'}->{$u->{'resource'}->{'location'}} =
+     		  {'type' => $u->{'resource_type'}};
+         }
+       }
+   }
+   $logger->debug("--------------After Uses check");
 
 
    if($req_info->{'resources'}) {

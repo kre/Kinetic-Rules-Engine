@@ -335,7 +335,8 @@ sub eval_meta {
     }
 
     if ($ruleset->{'meta'}->{'use'}) {
-      $js .= eval_use($req_info, $ruleset, $rule_env, $ruleset->{'meta'}->{'use'});
+       $req_info->{"$rid:use"} = $ruleset->{'meta'}->{'use'};
+#      $js .= eval_use($req_info, $ruleset, $rule_env, $ruleset->{'meta'}->{'use'});
     }
 
     return $js;

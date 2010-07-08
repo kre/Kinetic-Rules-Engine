@@ -161,7 +161,7 @@ EOF
 	    }
 
 	    \$K(selector).dialog(config);
-        \$K(selector).dialog().parents('.kynetx-ui-dialog:eq(0)').wrap("<div class='my_kynetx'></div>");   	    
+        \$K(selector).dialog().parents('.ui-dialog:eq(0)').wrap("<div class='kynetx_ui'></div>");   	    
 	    cb();
 	}
 EOF
@@ -197,9 +197,7 @@ EOF
 #}
 
 sub get_resources {
-    return     {"http://init-files.s3.amazonaws.com/kjs-frameworks/jquery_ui/1.8/jquery-ui-1.8.2.custom.js" => { "type" => "js" },
-    "http://init-files.s3.amazonaws.com/kjs-frameworks/jquery_ui/1.8/css/kynetx_ui_darkness/jquery-ui-1.8.2.custom.css" => { "type" => "css", "selector" => ".ui-helper-hidden" }
-    };
+    return     { };
 }
 
 sub get_actions {
