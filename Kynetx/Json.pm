@@ -198,6 +198,7 @@ sub get_path {
     return $result;
 }
 
+# initial call to get_items does not require $collection
 sub get_items {
     my ($obj,$regexp,$collection) = @_;
     my $logger = get_logger();
@@ -210,7 +211,7 @@ sub get_items {
     if (ref $obj eq 'HASH') {
         foreach my $key (%$obj) {
             if ($key =~ $regexp) {
-                $logger->trace("Key: ",sub {Dumper($key)});
+                #$logger->debug("Key: ",sub {Dumper($key)});
                 my $match = $obj->{$key};
                 if ($match) {
                     push(@$collection,$match);
@@ -233,7 +234,7 @@ sub get_obj {
     my $ret_val;
     if ( ref $obj eq 'HASH' ) {
         foreach my $key ( keys %$obj ) {
-            $logger->debug("  key: ",$key);
+            $logger->trace("  key: ",$key);
             if ( $key =~ $regexp ) {
                 return $obj->{$key};
             } else {

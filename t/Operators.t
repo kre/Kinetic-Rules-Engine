@@ -115,6 +115,7 @@ pre {
   q_html = <<$content>>;
   r_html = <<$content2>>;
   html_arr = [q_html,r_html];
+  meta_str = <<td[style="background: #ddf;"]>>;
 }
 _KRL_
 
@@ -209,7 +210,6 @@ sub test_operator {
 }
 
 goto ENDY;
-
 $e[$i] = q/store.pick("$.store.book[*].author")/;
 $x[$i] = {
    'val' => [
@@ -1069,7 +1069,6 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-ENDY:
 
 my $list = Kynetx::Operators::list_extensions();
 $logger->debug("Extensions: ", sub {Dumper($list)});
@@ -1183,6 +1182,27 @@ $e[$i] = q/q_html.query("#{in_str}")/;
 $x[$i] = {
    'val' => [
     '<th colspan="2">Cats</th>
+'
+   ],
+   'type' => 'array'
+};
+$d[$i] = 0;
+$i++;
+
+ENDY:
+
+$e[$i] = q/q_html.query(meta_str)/;
+$x[$i] = {
+   'val' => [
+     '<td style="background: #ddf;">Grey Wolf</td>
+',
+     '<td style="background: #ddf;">Cape hunting dog</td>
+',
+     '<td style="background: #ddf;">Very silly big long-long named dog woof</td>
+',
+     '<td style="background: #ddf;">Red Fox</td>
+',
+     '<td style="background: #ddf;">Fennec</td>
 '
    ],
    'type' => 'array'
