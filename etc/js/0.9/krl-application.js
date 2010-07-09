@@ -40,7 +40,7 @@ KrlExternalResource.prototype.is_loaded = function() {
     {
         this.loaded = true;
         return this.loaded;
-//        return KOBJ.did_stylesheet_load(this.url);
+        //        return KOBJ.did_stylesheet_load(this.url);
     }
     return this.loaded;
 };
@@ -53,8 +53,8 @@ KrlExternalResource.prototype.is_loaded = function() {
 KrlExternalResource.prototype.did_load = function() {
     this.loaded = true;
     this.requested = false;
-    
-     $KOBJ.each(KOBJ.applications, function(index, app) {
+
+    $KOBJ.each(KOBJ.applications, function(index, app) {
         app.execute_pending_closures();
     });
 };
@@ -98,7 +98,6 @@ function KrlApplication(app)
     // Closures that will execute after all resources and data is loaded
     this.pending_closures = {};
 }
-
 
 
 KrlApplication.prototype.store_data_sets = function(datasetdata)
@@ -150,9 +149,27 @@ KrlApplication.prototype.reload_later = function(delay)
 
 KrlApplication.prototype.page_vars_as_url = function() {
     var param_str = "";
+    var our_app_id = this.app_id;
 
     $KOBJ.each(this.page_params, function(k, v) {
-        param_str += "&" + k + "=" + v;
+        // Because of an issue where people were passing in comma seperated list of app version we need
+        // to apply a rule that if dev is found then that will be used if not found then the first one will be used.
+       
+        if (k == our_app_id + ":kynetx_app_version")
+        {
+          if(v.indexOf("dev") != -1)
+          {
+              param_str += "&" + k + "=dev" ;
+          }
+          else
+          {
+              param_str += "&" + k + "=" + v.split(",")[0];
+          }
+        }
+        else
+        {
+            param_str += "&" + k + "=" + v;
+        }
     });
 
 
@@ -187,7 +204,7 @@ KrlApplication.prototype.execute_closure = function(guid, a_closure)
 {
     if (!this.is_data_loaded() || !this.are_resources_loaded())
     {
-        KOBJ.itrace("Adding closure to pending list "  + this.app_id + " : " + guid);
+        KOBJ.itrace("Adding closure to pending list " + this.app_id + " : " + guid);
         this.pending_closures[guid] = a_closure;
     }
     else
@@ -215,7 +232,7 @@ KrlApplication.prototype.execute_pending_closures = function()
         the_closure($KOBJ);
         KOBJEventManager.event_fire_complete(this, guid);
     });
-    
+
     this.pending_closures = {};
 
 };
@@ -253,7 +270,7 @@ KrlApplication.prototype.fire_event = function(event, data, guid)
     params = [];
 
     // If we have form data we need to transalate it.
-    if(data["submit_data"] != null)
+    if (data["submit_data"] != null)
     {
         // In order for the engine to know how to deal with form fields we need
         // to translate from "name" to "app_id:name".
@@ -275,15 +292,14 @@ KrlApplication.prototype.fire_event = function(event, data, guid)
     params.push({name: "referer", value: KOBJ.document.referrer});
     params.push({name: "title", value: KOBJ.document.title});
 
-/*    var event_url = url + "?" +
-                    $KOBJ.param(params) +
-                    this.page_vars_as_url();
-  */
+    /*    var event_url = url + "?" +
+     $KOBJ.param(params) +
+     this.page_vars_as_url();
+     */
     var event_url = url + "?" +
                     $KOBJ.param(params) +
                     KOBJ.extra_page_vars_as_url() +
                     this.page_vars_as_url();
-
 
 
     KOBJ.require(event_url);
