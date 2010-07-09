@@ -1,3 +1,7 @@
+2010-07-09 Q Wade Billings <qwb@kyentx.com>
+
+    * This is a test commit to test hooks
+
 2010-07-01  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Parser.pm: Allow lists of vars to set
