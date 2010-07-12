@@ -87,6 +87,8 @@ my $rule_name = 'foo';
 my $rule_env = Kynetx::Test::gen_rule_env();
 
 
+#diag Dumper $rule_env;
+
 my $session = Kynetx::Test::gen_session($r, $rid);
 
 
@@ -1519,6 +1521,80 @@ add_testcase(
     $result,
     $dummy_final_req_info
     );
+
+
+##
+$krl_src = <<_KRL_;
+ruleset foozle {
+ global {
+  coolness = {
+		"Jam" : "Phil",
+		"Alex" : "Horsty",
+		"everyone" : "Steve"
+	};
+ }
+ rule foreach_hash_2 is active {
+  select using "http://www.google.com" setting ()
+   foreach coolness setting (k,v)
+   alert(v);
+ }
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foreach_hash_2'},
+   {"rid" => 'foozle'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
+
+
+
+$result = <<_JS_;
+(function(){
+ (function(){
+   var k = 'Alex';
+   var v = 'Horsty;
+   function callBacks () {
+   };
+   (function(uniq,cb,config,msg) {
+      alert(msg);
+      cb();
+    }
+    ('%uniq%',callBacks,$config,v));
+   }());
+ (function(){
+   var k = 'Jam';
+   var v = 'Phil';
+   function callBacks () {
+   };
+   (function(uniq,cb,config,msg) {
+      alert(msg);
+      cb();
+    }
+    ('%uniq%',callBacks,$config,v));
+   }());
+ (function(){
+   var k = 'everyone';
+   var v = 'Steve';
+   function callBacks () {
+   };
+   (function(uniq,cb,config,msg) {
+      alert(msg);
+      cb();
+    }
+    ('%uniq%',callBacks,$config,v));
+   }());
+ }());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $dummy_final_req_info
+    );
+
 
 
 

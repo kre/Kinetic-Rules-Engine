@@ -540,7 +540,7 @@ sub eval_foreach {
       # turn hash into array of two element arrays
       my @va;
       foreach my $k (keys %{$valarray->{'val'}}) {
-	push @va, [$k, $valarray->{'val'}->{$k}->{'val'}];
+	push @va, [$k, Kynetx::Expressions::den_to_exp($valarray->{'val'}->{$k})];
       }
       $valarray = \@va;
       $logger->debug("Valarray ", sub {Dumper $valarray});
