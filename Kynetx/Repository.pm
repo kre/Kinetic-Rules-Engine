@@ -68,7 +68,19 @@ sub get_rules_from_repository{
 
     my $memd = get_memd();
 
-    my $ruleset = $memd->get(make_ruleset_key($rid, $version));
+    my $rs_key = make_ruleset_key($rid, $version);
+
+    # wait if this ruleset's being parsed now
+    my $counter;
+    while (Kynetx::Memcached::is_parsing($memd, $rs_key) && 
+	   $counter < 90 # don't wait forever
+	  ) {
+      sleep 1;
+      $counter++;
+    }
+
+    my $ruleset = $memd->get($rs_key);
+
     if ($ruleset && 
 	$ruleset->{'optimization_version'} && 
 	$ruleset->{'optimization_version'} >= Kynetx::Rules::get_optimization_version()) {
@@ -87,6 +99,8 @@ sub get_rules_from_repository{
 
     $logger->debug("Getting rules from repo for $rid using $rule_repo_type");
 
+    # this gets cleared when we're done
+    Kynetx::Memcached::set_parsing_flag($memd, $rs_key);
 
     if ($rule_repo_type eq 'api') {
 
@@ -199,6 +213,8 @@ sub get_rules_from_repository{
       }
 
     }
+
+    Kynetx::Memcached::clr_parsing_flag($memd, $rs_key);
 
     unless ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid') {
       $ruleset = Kynetx::Rules::optimize_ruleset($ruleset);

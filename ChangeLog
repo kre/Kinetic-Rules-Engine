@@ -1,3 +1,11 @@
+2010-07-12  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Repository.pm (get_rules_from_repository): Use timed
+	semaphore to keep the same ruleset from being parsed at the same
+	time. 
+    * Kynetx/Memcached.pm: Added functions to use memcached as a timed
+	semaphore.
+
 2010-07-01  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Parser.pm: Allow lists of vars to set
