@@ -127,6 +127,7 @@ EOF
 	       'js' => <<EOF,
 	function(uniq, cb, config, selector) {
 	    \$K(selector).datepicker(config);
+	    \$K("#ui-datepicker-div").wrap("<div class='kynetx_ui'></div>");
 	    cb();
 	}
 EOF
@@ -180,6 +181,7 @@ EOF
 	    }
 
 	    \$K(selector).accordion(config);
+        \$K(selector).wrap("<div class='kynetx_ui'></div>");   	    
 	    cb();
 	}
 EOF
