@@ -1751,17 +1751,10 @@ $config = mk_config_string(
 );
 
 my $meta_0 = <<_JS_;
-(function(){
-KOBJ.registerExternalResources("meta_0",{
+KOBJ.registerExternalResources('meta_0',{
  "http://init-files.s3.amazonaws.com/kjs-frameworks/jquery_ui/1.8/jquery-ui-1.8.2.custom.js":{"type":"javascript"},
  "http://init-files.s3.amazonaws.com/kjs-frameworks/jquery_ui/1.8/css/kynetx_ui_darkness/jquery-ui-1.8.2.custom.css":{"type":"css"}
  });
-(function(){
- function callBacks(){};
- (function(uniq,cb,config){cb();}
-  ('%uniq%',callBacks,$config)); 
- }());
-}());
 _JS_
 
 add_testcase(
@@ -2156,6 +2149,7 @@ foreach my $case (@test_cases) {
 					  $session, 
 					  time
 					 );
+
 
   } elsif($case->{'type'} eq 'rule') {
 

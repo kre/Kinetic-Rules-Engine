@@ -119,7 +119,7 @@ sub authorized {
 
  $logger->debug("Checking KPDS access for rule $rule_name in $rid");
 
- $logger->debug("Session in authorized: ", sub { Dumper $session});
+# $logger->debug("Session in authorized: ", sub { Dumper $session});
 
  my $nt = Kynetx::OAuth->new(NAMESPACE, $req_info, $session, $urls);
  

@@ -37,6 +37,7 @@ use JSON::XS;
 
 use Kynetx::Util qw(:all);
 use Kynetx::JavaScript qw(:all);
+use Kynetx::JavaScript::AST;
 use Kynetx::Expressions qw(:all);
 use Kynetx::Rules;
 use Kynetx::Environments qw(:all);
@@ -718,7 +719,7 @@ sub build_one_action {
     # now run directive functions to store those
     $directive->($req_info, $config, $arg_exp_vals);
 
-    register_resources($req_info, $resources);
+    Kynetx::JavaScript::AST::register_resources($req_info, $resources);
 
     return $js;
 }
@@ -883,50 +884,6 @@ sub handle_popup {
   }
   return $js;
 }
-
-
-#
-# This will put out the needed code that action use to express
-# that they have external js or css.  If no resources are need
-# it just return ""
-#
-sub mk_registered_resource_js {
-   my($req_info) = @_;
-
-   # For each resource lets make a register resources call.
-   my $register_resources_js = '';
-
-   my $logger = get_logger();
-
-
-
-   if($req_info->{'resources'}) {
-
-
-     my $register_resources_json = Kynetx::Json::encode_json($req_info->{'resources'});
-     # $logger->debug("Req info for register resources ",  $register_resources_json);
-     $register_resources_js = "KOBJ.registerExternalResources('" .
-       $req_info->{'rid'} .
-	 "', " .
-	   $register_resources_json .
-	     ");";
-
-   }
-   return $register_resources_js;
-}
-
-sub register_resources {
-   my($req_info, $resources) = @_;
-   # Add the needed resources
-   # These are the urls of either js or css that need to be added because an 
-   # action needs them before they execute
-   if($resources) {
-        while( my ($k, $v) = each %$resources ) {
-            $req_info->{'resources'}->{$k} = $v;
-        }
-    }
-}
-
 
 
 sub get_precondition_test {

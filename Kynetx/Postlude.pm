@@ -106,7 +106,7 @@ sub eval_post_statement {
     #default to true if not present
     my $test = 1;
     if (defined $expr->{'test'}) {
-      $test = den_to_exp(
+      $test = Kynetx::Expressions::den_to_exp(
 	Kynetx::Expressions::eval_expr($expr->{'test'}, 
 						  $rule_env, 
 						  $rule_name,
@@ -151,16 +151,16 @@ sub eval_persistent_expr {
     } elsif ($expr->{'action'} eq 'iterator') {
 #	$logger->debug(Dumper($session));
 	my $by = 
-	    den_to_exp(
-		eval_expr($expr->{'value'},
+	    Kynetx::Expressions::den_to_exp(
+		Kynetx::Expressions::eval_expr($expr->{'value'},
 			     $rule_env,
 			     $rule_name,
 			     $req_info,
 			     $session));
 	$by = -$by if($expr->{'op'} eq '-=');
 	my $from = 
-	    den_to_exp(
-		eval_expr($expr->{'from'},
+	    Kynetx::Expressions::den_to_exp(
+		Kynetx::Expressions::eval_expr($expr->{'from'},
 			     $rule_env,
 			     $rule_name,
 			     $req_info,
@@ -184,8 +184,8 @@ sub eval_persistent_expr {
     } elsif ($expr->{'action'} eq 'mark') {
 	if($expr->{'domain'} eq 'ent') {
 	    my $url = defined $expr->{'with'} ?
-		den_to_exp(
-		    eval_expr($expr->{'with'},
+		Kynetx::Expressions::den_to_exp(
+		    Kynetx::Expressions::eval_expr($expr->{'with'},
 				 $rule_env,
 				 $rule_name,
 				 $req_info,
@@ -216,8 +216,8 @@ sub eval_log_statement {
     # call the callback server here with a HTTP GET
     $js = explicit_callback($req_info, 
 			    $rule_name, 
-			    den_to_exp(
-				       eval_expr($expr->{'what'},
+			    Kynetx::Expressions::den_to_exp(
+				       Kynetx::Expressions::eval_expr($expr->{'what'},
 						    $rule_env,
 						    $rule_name,
 						    $req_info,
@@ -252,7 +252,8 @@ sub eval_raise_statement {
 
     foreach my $m (@{ $expr->{'modifiers'}}) {
       $new_req_info->{$expr->{'name'}} =
-	  den_to_exp(eval_expr($expr->{'value'},
+	  Kynetx::Expressions::den_to_exp(
+  	      Kynetx::Expressions::eval_expr($expr->{'value'},
 			       $rule_env,
 			       $rule_name,
 			       $req_info,

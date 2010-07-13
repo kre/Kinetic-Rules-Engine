@@ -147,7 +147,7 @@ sub process_rules {
     # this is where we return the JS
     if ($req_info->{'understands_javascript'}) {
       $logger->debug("Returning javascript from evaluation");
-      print Kynetx::Actions::mk_registered_resource_js($req_info) . $js;
+      print $js;
     } else {
       $logger->debug("Returning directives from evaluation");
 
@@ -179,6 +179,11 @@ sub process_schedule {
       #context switch
       # we only do this when there's a new RID
 
+      # save info from last context
+
+      $ast->add_resources($current_rid, $req_info->{'resources'});
+
+      # set up new context
       $ruleset = $task->{'ruleset'};
 
       if (($ruleset->{'meta'}->{'logging'} && 
@@ -209,8 +214,8 @@ sub process_schedule {
 
       $req_info->{'rule_count'} = 0;
       $req_info->{'selected_rules'} = [];
-      $req_info->{'resources'} = {};
 
+      $current_rid = $rid;
     } # done with context
 
     my $rule = $task->{'rule'};
@@ -295,6 +300,9 @@ sub process_schedule {
 
   }
 
+  # process for final context
+  $ast->add_resources($current_rid, $req_info->{'resources'});
+
   $logger->debug("Finished processing rules for " . $rid);
   return $ast->generate_js();
 
@@ -348,20 +356,22 @@ sub eval_use {
   my $js = "";
 
   my $rid = $req_info->{'rid'};
-
-  my $resources;
+  $logger->debug("Processing 'use' pragmas");
+  
   foreach my $u (@{$use}) {
+    # just put resources in $req_info and mk_registered_resources will grab them
     if ($u->{'type'} eq 'resource') {
-      $resources->{$u->{'resource'}->{'location'}} = 
+      $logger->debug("Adding resource ", $u->{'resource'}->{'location'});
+      $req_info->{'resources'}->{$u->{'resource'}->{'location'}} = 
 		  {'type' => $u->{'resource_type'}};
     } else {
       $logger->error("Unknown type for 'use': ", $u->{'type'});
     }
   }
 
-  $js .= "KOBJ.registerExternalResources(\"$rid\"," .
-            Kynetx::Json::astToJson($resources) .
-	  ');';
+#   $js .= "KOBJ.registerExternalResources(\"$rid\"," .
+#             Kynetx::Json::astToJson($resources) .
+# 	  ');';
 
   return $js;
 }
@@ -535,7 +545,7 @@ sub eval_foreach {
     # loop below expects array of arrays
     if ($valarray->{'type'} eq 'array') {
       # array of single value arrays
-      $valarray = [map {[$_->{'val'}]} @{$valarray->{'val'}}];
+      $valarray = [map {[Kynetx::Expressions::den_to_exp($_)]} @{$valarray->{'val'}}];
     } elsif ($valarray->{'type'} eq 'hash') {
       # turn hash into array of two element arrays
       my @va;
@@ -547,7 +557,7 @@ sub eval_foreach {
     } else {
       $logger->debug("Foreach expression does not yield array or hash; creating array from singleton") ;
       # make an array of arrays
-      $valarray = [[$valarray->{'val'}]];
+      $valarray = [[Kynetx::Expressions::den_to_exp($valarray)]];
     }
 
 #    $logger->debug("Valarray ", sub {Dumper $valarray});
