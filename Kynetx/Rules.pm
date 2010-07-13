@@ -539,8 +539,14 @@ sub eval_foreach {
 					$req_info, 
 					$session);
 
+
+    $logger->debug("Foreach ", sub { Dumper $foreach_list[0] });
     
     my $vars = $foreach_list[0]->{'var'};
+    # FIXME: not sure why we have to do this.  
+    unless (ref $vars eq 'ARRAY') {
+      $vars = [$vars];
+    }
 
     # loop below expects array of arrays
     if ($valarray->{'type'} eq 'array') {
@@ -553,7 +559,7 @@ sub eval_foreach {
 	push @va, [$k, Kynetx::Expressions::den_to_exp($valarray->{'val'}->{$k})];
       }
       $valarray = \@va;
-      $logger->debug("Valarray ", sub {Dumper $valarray});
+#      $logger->debug("Valarray ", sub {Dumper $valarray});
     } else {
       $logger->debug("Foreach expression does not yield array or hash; creating array from singleton") ;
       # make an array of arrays
@@ -782,7 +788,11 @@ sub optimize_pre {
 
   my @vars;
   foreach my $v (@varlist) {
-    push @vars, @{$v};
+    if (ref $v eq 'ARRAY') {
+      push @vars, @{$v};
+    } else {
+      push @vars, $v;
+    }
   }
 
   $logger->debug("[rules::optimize_pre] foreach vars: ", sub {Dumper(@vars)});

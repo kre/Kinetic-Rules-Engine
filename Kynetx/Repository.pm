@@ -73,7 +73,7 @@ sub get_rules_from_repository{
     # wait if this ruleset's being parsed now
     my $counter;
     while (Kynetx::Memcached::is_parsing($memd, $rs_key) && 
-	   $counter < 90 # don't wait forever
+	   $counter < 120 # don't wait forever
 	  ) {
       sleep 1;
       $counter++;
@@ -221,10 +221,9 @@ sub get_rules_from_repository{
 
       $logger->debug("Found rules for $rid");
 
-      my $key = make_ruleset_key($rid, $version);
 
-      $logger->debug("Caching ruleset for $rid using key $key");
-      $memd->set($key, $ruleset);
+      $logger->debug("Caching ruleset for $rid using key $rs_key");
+      $memd->set($rs_key, $ruleset);
     } else {
       $logger->error("Ruleset $rid not found");
     }

@@ -11,7 +11,8 @@
     * Kynetx/Rules.pm (process_schedule): Added resource registration
 	to AST
     * Kynetx/Rules.pm (eval_foreach): uses den_to_exp now instead of
-	getting vals directly from hash
+	getting vals directly from hash; make sure var array is really an
+	array.  
 
 2010-07-12  Phil Windley  <pjw@kynetx.com>
 
