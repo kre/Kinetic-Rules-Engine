@@ -230,15 +230,15 @@ foreach my $item_element (Kynetx::Predicates::RSS::get_item_names()) {
     is($got,$e_item->{$item_element},"Channel $item_element works");
 }
 
-my $parsed = Kynetx::Parser::parse_ruleset($krl_full);
-my $rs = Kynetx::Rules::eval_ruleset($r,
-        $req_info,
-        empty_rule_env(),
-        $session,
-        $parsed,
-        $parsed->{'rules'});
+# my $parsed = Kynetx::Parser::parse_ruleset($krl_full);
+# my $rs = Kynetx::Rules::eval_ruleset($r,
+#         $req_info,
+#         empty_rule_env(),
+#         $session,
+#         $parsed,
+#         $parsed->{'rules'});
         
-        $logger->debug("Rule: ", sub {Dumper($rs)});
+# $logger->debug("Rule: ", sub {Dumper($rs)});
         
 plan tests => (int(@pnames) +  int(keys %$e_channel) + int(keys %$e_item)); 
 

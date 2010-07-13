@@ -37,9 +37,9 @@ my $test_count = 0;
 
 my $r = Kynetx::Test::configure();
 
-foreach my $k (sort @{Kynetx::Configure::config_keys()}) {
-  diag "$k => ", Kynetx::Configure::get_config($k);
-}
+# foreach my $k (sort @{Kynetx::Configure::config_keys()}) {
+#   diag "$k => ", Kynetx::Configure::get_config($k);
+# }
 
 my $rid = 'cs_test';
 

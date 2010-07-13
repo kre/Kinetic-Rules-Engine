@@ -48,6 +48,7 @@ our %EXPORT_TAGS = (all => [
 qw(
 mk_turtle
 KOBJ_ruleset_obj
+register_resources
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -124,6 +125,13 @@ sub add_rule_js {
   push @{$self->{$rid}->{'rules'}}, $js;
 }
 
+sub add_resources {
+  my $self = shift;
+  my $rid = shift;
+  my $resources = shift;
+  $self->{$rid}->{'resources'} = $resources;
+}
+
 sub generate_js {
   my $self = shift;
 
@@ -156,6 +164,8 @@ sub generate_js {
     my $eid = $self->{'eid'} || 'unknown';
     #add verify logging call
 
+    $js .= $self->mk_registered_resource_js($rid);
+
     $js .= <<EOF;
 KOBJ.registerClosure('$rid', function(\$K) { $rjs }, '$eid');
 EOF
@@ -186,6 +196,49 @@ _JS_
 sub KOBJ_ruleset_obj {
   my($ruleset_name) = @_;
   return "KOBJ['" . $ruleset_name . "']";
+}
+
+
+#
+# This will put out the needed code that action use to express
+# that they have external js or css.  If no resources are need
+# it just return ""
+#
+sub mk_registered_resource_js {
+   my($self, $rid) = @_;
+
+   # For each resource lets make a register resources call.
+   my $register_resources_js = '';
+
+   my $logger = get_logger();
+
+
+   $logger->debug("Generating resource statement for $rid");
+
+   if($self->{$rid}->{'resources'}) {
+
+     my $register_resources_json = Kynetx::Json::encode_json($self->{$rid}->{'resources'});
+     # $logger->debug("Req info for register resources ",  $register_resources_json);
+     $register_resources_js = "KOBJ.registerExternalResources('" .
+       $rid .
+	 "', " .
+	   $register_resources_json .
+	     ");";
+
+   }
+   return $register_resources_js;
+}
+
+sub register_resources {
+   my($req_info, $resources) = @_;
+   # Add the needed resources
+   # These are the urls of either js or css that need to be added because an 
+   # action needs them before they execute
+   if($resources) {
+        while( my ($k, $v) = each %$resources ) {
+            $req_info->{'resources'}->{$k} = $v;
+        }
+    }
 }
 
 
