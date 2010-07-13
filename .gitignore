@@ -1,5 +1,5 @@
 .idea/*
 .DS_Store
 *~
-etc/js/*/kobj-static-*.js
+etc/js/*/kobj-static*.js
 etc/amazon_credentials.pm
