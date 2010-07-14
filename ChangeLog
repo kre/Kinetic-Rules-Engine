@@ -1,3 +1,31 @@
+2010-07-13  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Postlude.pm (eval_persistent_expr): Added explicit paths
+	to calls to things in Kynetx::Expressions
+    * Kynetx/Parser.pm: No changes, but lots of playing
+    * Kynetx/Actions.pm: Fixed resource registration because of move
+	to Kynetx::JavaScript::AST
+    * Kynetx/JavaScript/AST.pm (mk_registered_resource_js): Added
+	resource registration to generated JS
+    * Kynetx/Events.pm: Removed separate resource registration call
+    * Kynetx/Rules.pm (process_schedule): Added resource registration
+	to AST
+    * Kynetx/Rules.pm (eval_foreach): uses den_to_exp now instead of
+	getting vals directly from hash; make sure var array is really an
+	array.  
+
+2010-07-12  Phil Windley  <pjw@kynetx.com>
+
+    * Kynetx/Repository.pm (get_rules_from_repository): Use timed
+	semaphore to keep the same ruleset from being parsed at the same
+	time. 
+    * Kynetx/Memcached.pm: Added functions to use memcached as a timed
+	semaphore.
+
+2010-07-09 Q Wade Billings <qwb@kyentx.com>
+
+    * This is a test commit to test hooks - QWB
+
 2010-07-01  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Parser.pm: Allow lists of vars to set

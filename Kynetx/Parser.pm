@@ -72,6 +72,15 @@ my $grammar = <<'_EOGRAMMAR_';
 #
 REGEXP: m%(/(\\.|[^\/])+/|#(\\.|[^\#])+#)(i|g|m){0,2}%
 HTML: /<<.*?>>/s  {$return=Kynetx::Parser::html($item[1]) }
+# None of the follow have an appreciable effect on speed
+#HTML: <perl_quotelike> {$return=Kynetx::Parser::html($item[1]) }
+#HTML: /<<([^>]*+(?:>(?!>)[^>]*+)*+)>>/s {$return=Kynetx::Parser::html($item[1]) }
+#HTML:  '<<' <skip:''> /((?!>>).)+/s '>>'  {$return=Kynetx::Parser::html($item[1]) }
+#HTML: /<<((?:(?>[^>]+)|>(?!>))*)>>/  {$return=Kynetx::Parser::html($item[1]) }
+#HTML: /<<(>[^>]|[^>])+>>/s  {$return=Kynetx::Parser::html($item[1]) }
+#HTML: /<<((?!>>).)+>>/s  {$return=Kynetx::Parser::html($item[1]) }
+#HTML: /<<((?:[^>]+|>(?!>))*)>>/  {$return=Kynetx::Parser::html($item[1]) }
+#HTML: '<<' <skip:undef> / ( [^>] | >(?!>) )* /x '>>' {$return=Kynetx::Parser::html($item[1]) }
 JS: /<\|.*?\|>/s  {$return=Kynetx::Parser::javascript($item[1]) }
 STRING: /"(\\"|[^"])*"|'[^']*'/ {$return=Kynetx::Parser::string($item[1]) }
 VAR:   /[_A-Za-z]\w*/
@@ -88,7 +97,7 @@ RPAREN: /\)/
 EQUALS: /=/
 INEQUALITY: /[<>]/
 COLON: /:/
-SEMICOLON: /;/
+SEMICOLON: ';'
 LOGICAL_AND: /&&/
 BOOL: 'true' | 'false'
 

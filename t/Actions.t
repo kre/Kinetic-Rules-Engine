@@ -52,6 +52,7 @@ use DateTime;
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
 use Kynetx::JavaScript qw/:all/;
+use Kynetx::JavaScript::AST qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::Session qw/:all/;
@@ -926,15 +927,17 @@ foreach my $case (@action_test_cases) {
 ## resouce testing
 
 my $fl_resources = Kynetx::Actions::FlippyLoo::get_resources();
-Kynetx::Actions::register_resources($my_req_info, $fl_resources);
+Kynetx::JavaScript::AST::register_resources($my_req_info, $fl_resources);
 
 is_deeply($my_req_info->{'resources'}, $fl_resources, "got right resources");
 
-my $resource_js = Kynetx::Actions::mk_registered_resource_js($my_req_info);
+my $ast = Kynetx::JavaScript::AST->new(time);
+$ast->add_resources($rid, $my_req_info->{'resources'});
+my $resource_js = $ast->mk_registered_resource_js($rid);
 like($resource_js, qr#KOBJ.registerExternalResources\('cs_test', \{"http://static.kobj.net/kjs-frameworks/flippy_loo/\d.\d/obFlippyloo.js":\{"type":"js"\}\}\);#, "got the right JS");
 
 my $jqui_resources = Kynetx::Actions::JQueryUI::get_resources();
-Kynetx::Actions::register_resources($my_req_info, $jqui_resources);
+Kynetx::JavaScript::AST::register_resources($my_req_info, $jqui_resources);
 
 
 my $merged_resource = {};
@@ -949,7 +952,8 @@ my $merged_resource = {};
 
 is_deeply($my_req_info->{'resources'}, $merged_resource, "got right resources");
 
-$resource_js = Kynetx::Actions::mk_registered_resource_js($my_req_info);
+$ast->add_resources($rid, $my_req_info->{'resources'});
+$resource_js = $ast->mk_registered_resource_js($rid);
 #like($resource_js, qr#KOBJ.registerExternalResources\('cs_test', \{"http://static.kobj.net/kjs-frameworks/flippy_loo/\d.\d/obFlippyloo.js":\{"type":"js"\},"http://static.kobj.net/kjs-frameworks/jquery_ui/\d.\d/jquery-ui-\d.\d.custom.js":\{"type":"js"\},"http://static.kobj.net/kjs-frameworks/jquery_ui/\d.\d/css/ui-darkness/jquery-ui-\d.\d.custom.css":\{"selector":".ui-helper-hidden","type":"css"\}\}\);#, "got the right JS");
 #diag($resource_js);
 

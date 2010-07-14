@@ -48,7 +48,7 @@ use Kynetx::Configure;
 
 my $logger = get_logger();
 
-my $numtests = 5;
+my $numtests = 8;
 plan tests => $numtests;
 
 my $config_file = "/web/etc/kns_config.yml";
@@ -86,6 +86,17 @@ SKIP: {
 	$content,
 	'"text":',
 	'Get public timeline with HTTPS');
+
+    my $rid = 'cs_test';
+    ok(!Kynetx::Memcached::is_parsing($memd, $rid), "Not parsing now");
+    
+    Kynetx::Memcached::set_parsing_flag($memd, $rid);
+
+    ok(Kynetx::Memcached::is_parsing($memd, $rid), "Parsing now");
+    
+    Kynetx::Memcached::clr_parsing_flag($memd, $rid);
+
+    ok(!Kynetx::Memcached::is_parsing($memd, $rid), "Not parsing now");
     
 }
 

@@ -37,6 +37,7 @@ use JSON::XS;
 
 use Kynetx::Util qw(:all);
 use Kynetx::JavaScript qw(:all);
+use Kynetx::JavaScript::AST;
 use Kynetx::Expressions qw(:all);
 use Kynetx::Rules;
 use Kynetx::Environments qw(:all);
@@ -718,7 +719,7 @@ sub build_one_action {
     # now run directive functions to store those
     $directive->($req_info, $config, $arg_exp_vals);
 
-    register_resources($req_info, $resources);
+    Kynetx::JavaScript::AST::register_resources($req_info, $resources);
 
     return $js;
 }

@@ -43,7 +43,6 @@ use Kynetx::Version qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Request;
 use Kynetx::Rules;
-use Kynetx::Actions;
 use Kynetx::Json;
 use Kynetx::Scheduler;
 
@@ -187,7 +186,7 @@ sub process_event {
     # this is where we return the JS
     if ($req_info->{'understands_javascript'}) {
       $logger->debug("Returning javascript from evaluation");
-      print Kynetx::Actions::mk_registered_resource_js($req_info) . $js;
+      print $js;
     } else {
       $logger->debug("Returning directives from evaluation");
 

@@ -218,6 +218,27 @@ sub read_file_contents {
 
 }
 
+#-------------------------------------------------------------
+# use memcache as a semaphore for parsing
+
+sub set_parsing_flag {
+  my $memd = shift;
+  my $rid = shift;
+  my $time = shift || 60; # defaults to 60 seconds
+  $memd->set("parsing:$rid", 1, $time); 
+}
+
+sub clr_parsing_flag {
+  my $memd = shift;
+  my $rid = shift;
+  $memd->set("parsing:$rid", 0); 
+}
+
+sub is_parsing {
+  my $memd = shift;
+  my $rid = shift;
+  return $memd->get("parsing:$rid");
+}
 
 1;
 

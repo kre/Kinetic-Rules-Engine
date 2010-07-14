@@ -87,6 +87,8 @@ my $rule_name = 'foo';
 my $rule_env = Kynetx::Test::gen_rule_env();
 
 
+#diag Dumper $rule_env;
+
 my $session = Kynetx::Test::gen_session($r, $rid);
 
 
@@ -1521,6 +1523,80 @@ add_testcase(
     );
 
 
+##
+$krl_src = <<_KRL_;
+ruleset foozle {
+ global {
+  coolness = {
+		"Jam" : "Phil",
+		"Alex" : "Horsty",
+		"everyone" : "Steve"
+	};
+ }
+ rule foreach_hash_2 is active {
+  select using "http://www.google.com" setting ()
+   foreach coolness setting (k,v)
+   alert(v);
+ }
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foreach_hash_2'},
+   {"rid" => 'foozle'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
+
+
+
+$result = <<_JS_;
+(function(){
+ (function(){
+   var k = 'Alex';
+   var v = 'Horsty;
+   function callBacks () {
+   };
+   (function(uniq,cb,config,msg) {
+      alert(msg);
+      cb();
+    }
+    ('%uniq%',callBacks,$config,v));
+   }());
+ (function(){
+   var k = 'Jam';
+   var v = 'Phil';
+   function callBacks () {
+   };
+   (function(uniq,cb,config,msg) {
+      alert(msg);
+      cb();
+    }
+    ('%uniq%',callBacks,$config,v));
+   }());
+ (function(){
+   var k = 'everyone';
+   var v = 'Steve';
+   function callBacks () {
+   };
+   (function(uniq,cb,config,msg) {
+      alert(msg);
+      cb();
+    }
+    ('%uniq%',callBacks,$config,v));
+   }());
+ }());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $dummy_final_req_info
+    );
+
+
+
 
 ##
 ## JSON test cases
@@ -1675,17 +1751,10 @@ $config = mk_config_string(
 );
 
 my $meta_0 = <<_JS_;
-(function(){
-KOBJ.registerExternalResources("meta_0",{
+KOBJ.registerExternalResources('meta_0',{
  "http://init-files.s3.amazonaws.com/kjs-frameworks/jquery_ui/1.8/jquery-ui-1.8.2.custom.js":{"type":"javascript"},
  "http://init-files.s3.amazonaws.com/kjs-frameworks/jquery_ui/1.8/css/kynetx_ui_darkness/jquery-ui-1.8.2.custom.css":{"type":"css"}
  });
-(function(){
- function callBacks(){};
- (function(uniq,cb,config){cb();}
-  ('%uniq%',callBacks,$config)); 
- }());
-}());
 _JS_
 
 add_testcase(
@@ -2080,6 +2149,7 @@ foreach my $case (@test_cases) {
 					  $session, 
 					  time
 					 );
+
 
   } elsif($case->{'type'} eq 'rule') {
 
