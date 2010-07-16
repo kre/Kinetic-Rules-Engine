@@ -39,10 +39,18 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 use Exporter;
 use Kynetx::Json qw(:all);
+use Kynetx::Util;
 use LWP::UserAgent;
 use HTTP::Request::Common;
 use HTTP::Response;
 use HTTP::Message;
+use Kynetx::Memcached qw(
+        get_memd
+);
+use Cache::Memcached qw(
+    flush_all
+    delete
+);
 
 
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -64,10 +72,15 @@ sub confirm_subscription {
     my ($sns,$rids) = @_;
     my $logger = get_logger();
     my $url = $sns->content->{'SubscribeURL'};
-    $logger->debug("URL: **", $url,"**");
+    $logger->trace("URL: **", $url,"**");
     my $ua = LWP::UserAgent->new;
     my $resp = $ua->request(GET $url);
     $logger->debug("Response: ", sub {Dumper($resp)});
+    if ($resp->is_success()) {
+        $logger->info("Subscription verified for $url");
+    } else {
+        $logger->warn("Unable to confirm subscription request for $url");
+    }
 
 }
 $funcs->{'SubscriptionConfirmation'} = \&confirm_subscription;
@@ -75,11 +88,18 @@ $funcs->{'SubscriptionConfirmation'} = \&confirm_subscription;
 sub notification {
     my ($sns,$rids) = @_;
     my $logger = get_logger();
+    $logger->trace("SNS object: ", sub {Dumper($sns)});
     my $topic = $sns->content->{'TopicArn'};
     my $msg_id = $sns->content->{'MessageId'};
     $logger->info("Received SNS notification ($msg_id) from $topic");
     my $message = $sns->content->{'Message'};
-    parse_message($message);
+    my $verified = $sns->_meta->{'Signature_verified'};
+    if ($verified) {
+        parse_message($message);
+    } else {
+        $logger->warn("Unable to verify signature of $msg_id");
+    }
+
 
 }
 $funcs->{'Notification'} = \&notification;
@@ -88,31 +108,47 @@ sub parse_message {
     my ($msg) = @_;
     my $logger = get_logger();
     my $ast = Kynetx::Json::jsonToAst_w($msg);
-    $logger->trace("Directive: ", sub {Dumper($ast)});
+    $logger->debug("Directive: ", sub {Dumper($ast)});
     if (ref $ast eq 'HASH') {
         if ($ast->{'name'} eq 'kns') {
             my $rid;
             my $action;
+            my $log = "SNS Handler received unmatched notification: $msg";
             if ($ast->{'options'}) {
                $action = $ast->{'options'}->{'action'};
                if ($ast->{'meta'}) {
                    $rid = $ast->{'meta'}->{'rid'};
                }
                if ($action eq 'flush') {
+                   my $memd = get_memd();
                    if ($rid) {
-                       $logger->info("Request to flush rule $rid");
+                        my $version = $ast->{'options'}->{'version'} || 'prod';
+                        $log = "[SNS request] flushing rules for $rid ($version version)";
+                        my $cache_key = Kynetx::Repository::make_ruleset_key($rid, $version);
+                        $logger->debug("key: $cache_key");
+                        my $result = $memd->delete($cache_key);
+
                    } else {
-                       $logger->info("Request to flush entire cache");
+                       $log = "[SNS request] Flush cache";
+                       $memd->flush_all;
                    }
 
+               } elsif ($action eq 'stats') {
+                   my $memd = get_memd();
+                   $Data::Dumper::Terse = 1;
+                   $log = "Cache stats: " .Dumper($memd->stats('misc'));
+               } elsif ($action eq 'count') {
+                   my $memd = get_memd();
+                   my $stats = $memd->stats('misc');
+                   $Data::Dumper::Terse = 1;
+                   $log= "Cache item count: " . Dumper($stats->{'total'}->{'curr_items'});
                }
             }
+            Kynetx::Util::bloviate($log);
 
         }
     }
     $logger->warn("Invalid (SNS) directive");
-
-
 }
 
 sub eval_kns {
@@ -135,5 +171,6 @@ sub eval_kns {
     }
 
 }
+
 
 1;

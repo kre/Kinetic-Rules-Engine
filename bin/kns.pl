@@ -40,7 +40,7 @@ use Kynetx::Directives qw(
 use Kynetx::Json qw(
   get_items
 );
-use Kynetx::Predicates::Time;
+use DateTime::Format::ISO8601;
 
 Kynetx::Configure::configure();
 Log::Log4perl->easy_init($INFO);
@@ -50,7 +50,7 @@ use vars qw(
   %opt
 );
 
-my $opt_string = 'hlas:f:v:T:S:P:';
+my $opt_string = 'hlas:m:v:T:S:P:D:N:';
 getopts( "$opt_string", \%opt );
 &usage() if $opt{'h'};
 
@@ -96,11 +96,11 @@ if ( exists $opt{'s'} ) {
 
 if ( $opt{'T'} ) {
     my $topic = get_topic( $opt{'T'} );
-    if ( $opt{'f'} ) {
-        my $rid = $opt{'f'};
-        usage("Cache target and topic required: $0 -f <'all' | rid> -T <topic>")
+    if ( $opt{'m'} ) {
+        my $rid = $opt{'m'};
+        usage("Cache target and topic required: $0 -m <'all' | rid> -T <topic>")
           unless ( $topic && $rid );
-        do_flush( $topic, $rid );
+        do_publish( $topic, $rid );
     } elsif ( $opt{'S'} ) {
         my $subscriber = $opt{'S'};
         my $endpoint;
@@ -115,38 +115,76 @@ if ( $opt{'T'} ) {
         }
         $protocol = $protocol || 'email';
         if ( $protocol =~ m/^http/ ) {
-            $endpoint = "$protocol://$subscriber/endpoint/kns/sns/1";
+            $endpoint = "$protocol://$subscriber/endpoint/kns/sns/";
         } else {
             $endpoint = $subscriber;
         }
         pprint( "Found:", "$topic, $endpoint, $protocol" );
         my $s = get_subscription( $topic, $endpoint, $protocol );
 
+    } elsif ( $opt{'N'} ) {
+        my $displayname = $opt{'N'};
+        usage(
+"You must specify a Topic and new DisplayName: $0 -D <displayname> -T <topic>"
+        ) unless ( $displayname && $topic );
+        my $resp = do_rename( $topic, $displayname  );
+        pprint("Set DisplayName to $displayname",$resp);
     } else {
-        my $s = new_topic($topic);
+        my $s = new_topic( $opt{'T'} );
         pprint( "New SNS Topic:", $s );
     }
+} elsif ( $opt{'D'} ) {
+    my $topic = get_topic( $opt{'D'} );
+    my $msg;
+    my $resp;
+    if ($topic) {
+        $msg  = "Deleting $topic";
+        $resp = do_delete($topic);
+    } else {
+        $msg  = $opt{'D'} . " is not a valid topic: ";
+        $resp = get_topics();
+    }
+    pprint( $msg, $resp );
 }
 
-sub do_flush {
+sub do_rename {
+    my ( $topic, $displayname ) = @_;
+    my $hash = { 'TopicArn' => $topic };
+    my $parm = {
+        'DisplayName' => $displayname
+    };
+    my $sns  = get_sns($hash);
+    my $resp = $sns->set_topic_attributes($parm);
+    if ($resp) {
+        return 'ok';
+    } else {
+        return 'failed';
+    }
+
+}
+
+sub do_publish {
     my ( $topic, $rid ) = @_;
     my $directive = Kynetx::Directives->new("kns");
-    my $options = { 'action' => 'flush' };
+    $topic =~ m/.+:(\w+)$/;
+    my $action = $1;
+    my $options = { 'action' => $action };
     if ( $rid ne 'all' ) {
         $options->{'rid'} = $rid;
     }
     $directive->set_options($options);
     my $json = Kynetx::Json::astToJson( $directive->to_directive() );
     $logger->trace( "Flush directive: ", $json );
-    my $r = send_message( $topic, $json);
-    my $msgId = Kynetx::Json::get_items($r,'MessageId');
-    pprint("Message sent:",$msgId);
+    my $r = _send_message( $topic, $json );
+    $logger->debug( "Pub Resp: ", sub { Dumper($r) } );
+
+    #pprint("Message sent:",$msgId);
 
 }
 
-sub send_message {
+sub _send_message {
     my ( $topic, $msg ) = @_;
-    my $timestamp = Kynetx::Predicates::Time::now();
+    my $timestamp = DateTime->now;
     my $hash = {
                  'Subject'  => "KNS admin request $timestamp",
                  'TopicArn' => $topic,
@@ -174,6 +212,18 @@ sub get_subscriptions {
     return $o;
 
     #$logger->debug("Subscriptions: ", sub {Dumper($t)});
+}
+
+sub do_delete {
+    my ($topic) = @_;
+    my $hash = { 'TopicArn' => $topic };
+    my $sns  = get_sns($hash);
+    my $resp = $sns->delete_topic();
+    if ($resp) {
+        return 'ok';
+    } else {
+        return 'failed';
+    }
 }
 
 sub get_subscription {
@@ -277,19 +327,20 @@ Manage KNS via SNS
 
 Options:
 
-    -h                  : display this message
-    -l                  : List topics
-    -a                  : List all subscriptions
-    -s <topic>          : List subscriptions by Topic
-    -v 0 | 1 | 2        : show detailed output (use -vv for highest level of detail)
-    -f <all | rid>      : Send a 'cache flush' message (requires: -T <topic>)
-    -m <count | stats>  : Send a 'cache status' message (requires: -T <topic>)
+    -h                          : display this message
+    -l                          : List topics
+    -a                          : List all subscriptions
+    -s <topic>                  : List subscriptions by Topic
+    -v 0 | 1 | 2                : show detailed output (use -vv for highest level of detail)
+    -m <count | stats | rid>    : Send a 'cache status' message (requires: -T <topic>)
 
  *SNS management*
 
-    -T <topic>                                  : create SNS Topic
+    -T <topic>                                  : Create SNS Topic
+    -D <topic>                                  : Delete SNS Topic
     -S <IP address[:port] | email> -T <topic>   : Subscribe to Topic
     -P http | https | email                     : Protocol to use for subscription
+    -N <displayname>                            : Change DisplayName (default: AWS Notifications)
 
 EOF
     exit;

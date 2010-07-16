@@ -37,6 +37,8 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 use Exporter;
 use Kynetx::Json qw(:all);
+use Encode;
+#use Encoding::BER::DER;
 
 use Kynetx::Predicates::Amazon::RequestSignatureHelper qw(
     kAWSAccessKeyId
@@ -246,6 +248,8 @@ sub unsubscribe {
 
 }
 
+
+# Supports changing the DisplayName attribute
 sub set_topic_attributes {
     my $self = shift;
     my $logger = get_logger();
@@ -264,6 +268,7 @@ sub set_topic_attributes {
     }
     my $resp = $self->_request($params);
 }
+
 
 
 sub _request {

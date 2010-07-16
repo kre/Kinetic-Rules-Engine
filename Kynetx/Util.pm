@@ -41,9 +41,19 @@ use URI::Escape ('uri_escape');
 use Sys::Hostname;
 use Data::Dumper;
 
+use Kynetx::Predicates::Amazon::SNS qw(:all);
+use Kynetx::Predicates::Amazon::RequestSignatureHelper qw(
+  kAWSAccessKeyId
+  kAWSSecretKey
+);
+use amazon_credentials qw(
+  get_key_id
+  get_access_key
+);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+use constant BLOVIATE => 'arn:aws:sns:us-east-1:791773988531:SAM';
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -62,6 +72,7 @@ mk_url
 merror
 mis_error
 end_slash
+bloviate
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -489,6 +500,33 @@ sub default_value {
     } else {
         return undef;
     }
+
+}
+
+sub bloviate {
+    my ($message) = @_;
+    my $logger = get_logger();
+    my $directive = Kynetx::Directives->new("log");
+    my $host = hostname || "No hostname found";
+    my $options = {
+        'data' => $message,
+        'source' => $host
+    };
+    $directive->set_options($options);
+    my $json = Kynetx::Json::astToJson( $directive->to_directive() );
+    my $key    = get_key_id();
+    my $secret = get_access_key();
+    my $timestamp = DateTime->now;
+    my $param = {
+        kAWSAccessKeyId() => $key,
+        kAWSSecretKey()   => $secret,
+        'Subject' => "KNS logging request $timestamp",
+        'TopicArn' => BLOVIATE,
+        'Message' => $json,
+    };
+    my $sns = Kynetx::Predicates::Amazon::SNS->new($param);
+    $sns->publish();
+    $logger->info("KNS logging request: ", $message);
 
 }
 
