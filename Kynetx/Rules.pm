@@ -343,8 +343,7 @@ sub eval_meta {
     }
 
     if ($ruleset->{'meta'}->{'use'}) {
-       $req_info->{"$rid:use"} = $ruleset->{'meta'}->{'use'};
-#      $js .= eval_use($req_info, $ruleset, $rule_env, $ruleset->{'meta'}->{'use'});
+      $js .= eval_use($req_info, $ruleset, $rule_env, $ruleset->{'meta'}->{'use'});
     }
 
     return $js;
@@ -357,12 +356,10 @@ sub eval_use {
   my $js = "";
 
   my $rid = $req_info->{'rid'};
-  $logger->debug("Processing 'use' pragmas");
   
   foreach my $u (@{$use}) {
     # just put resources in $req_info and mk_registered_resources will grab them
     if ($u->{'type'} eq 'resource') {
-      $logger->debug("Adding resource ", $u->{'resource'}->{'location'});
       $req_info->{'resources'}->{$u->{'resource'}->{'location'}} = 
 		  {'type' => $u->{'resource_type'}};
     } else {

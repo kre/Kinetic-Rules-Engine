@@ -886,63 +886,6 @@ sub handle_popup {
 }
 
 
-#
-# This will put out the needed code that action use to express
-# that they have external js or css.  If no resources are need
-# it just return ""
-#
-sub mk_registered_resource_js {
-   my($req_info) = @_;
-
-   # For each resource lets make a register resources call.
-   my $register_resources_js = '';
-
-   my $logger = get_logger();
-
-   my $rid = $req_info->{'rid'};
-
-   if($req_info->{"$rid:use"})
-   {
-   $logger->debug("Found Usess about to load them up");
-       foreach my $u (@{$req_info->{"$rid:use"}}) {
-         if ($u->{'type'} eq 'resource') {
-           $req_info->{'resources'}->{$u->{'resource'}->{'location'}} =
-     		  {'type' => $u->{'resource_type'}};
-         }
-       }
-   }
-   $logger->debug("--------------After Uses check");
-
-
-   if($req_info->{'resources'}) {
-
-
-     my $register_resources_json = Kynetx::Json::encode_json($req_info->{'resources'});
-     # $logger->debug("Req info for register resources ",  $register_resources_json);
-     $register_resources_js = "KOBJ.registerExternalResources('" .
-       $req_info->{'rid'} .
-	 "', " .
-	   $register_resources_json .
-	     ");";
-
-   }
-   return $register_resources_js;
-}
-
-sub register_resources {
-   my($req_info, $resources) = @_;
-   # Add the needed resources
-   # These are the urls of either js or css that need to be added because an 
-   # action needs them before they execute
-   if($resources) {
-        while( my ($k, $v) = each %$resources ) {
-            $req_info->{'resources'}->{$k} = $v;
-        }
-    }
-}
-
-
-
 sub get_precondition_test {
     my $rule = shift;
 
