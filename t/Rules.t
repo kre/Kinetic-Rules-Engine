@@ -1555,7 +1555,7 @@ $result = <<_JS_;
 (function(){
  (function(){
    var k = 'Alex';
-   var v = 'Horsty;
+   var v = 'Horsty';
    function callBacks () {
    };
    (function(uniq,cb,config,msg) {
@@ -2578,6 +2578,43 @@ check_optimize($krl_src,
 		 'type' => 'expr'
 		}], 
 	       "No dependence");
+
+
+$krl_src = <<_KRL_;
+ruleset global_expr_1a {
+    rule t0 is active {
+      select using ".*" setting ()
+       foreach {"a":1,"b":"Hello"} setting (k,v)
+       pre {
+          x = k;
+          y = v;
+       }
+       noop();
+    }
+}
+_KRL_
+
+check_optimize($krl_src,
+	       [ {'rhs' => {
+			    'val' => 'k',
+			    'type' => 'var'
+			   },
+		  'lhs' => 'x',
+		  'type' => 'expr'
+		 },
+		 {
+		  'rhs' => {
+			    'val' => 'v',
+			    'type' => 'var'
+			   },
+		  'lhs' => 'y',
+		  'type' => 'expr'
+		 }
+	       ],
+	       [], 
+	       "Hash with dependence", 
+	       0
+	       );
 
 
 $krl_src = <<_KRL_;

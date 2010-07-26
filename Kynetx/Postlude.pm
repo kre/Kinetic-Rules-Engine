@@ -56,6 +56,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 use Kynetx::Expressions qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Events;
+use Kynetx::Log;
 
 sub eval_post_expr {
     my($rule, $session, $req_info, $rule_env, $fired) = @_;
@@ -214,8 +215,8 @@ sub eval_log_statement {
     my $js ='';
 
     # call the callback server here with a HTTP GET
-    $js = explicit_callback($req_info, 
-			    $rule_name, 
+    $js = Kynetx::Log::explicit_callback($req_info, 
+					 $rule_name, 
 			    Kynetx::Expressions::den_to_exp(
 				       Kynetx::Expressions::eval_expr($expr->{'what'},
 						    $rule_env,
