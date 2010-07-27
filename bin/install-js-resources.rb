@@ -35,11 +35,11 @@ require 'pp'
 # a has of s3 object that can be used to find the files later
 #
 def list_s3_frameworks()
-  framework_bucket = AWS::S3::Bucket.find('init-files', :prefix => 'kjs-frameworks')
+  framework_bucket = AWS::S3::Bucket.find('kns-resources')
   temp = framework_bucket.objects()
 
   result = {}
-  temp.collect { |s3object| result[s3object.key[("kjs-frameworks/".length)..9999]]  = s3object }
+  temp.collect { |s3object| result[s3object.key]  = s3object }
   return result
 end
 
@@ -121,9 +121,9 @@ files_to_process.each do |file_or_dir|
       puts "Updating file #{file_or_dir}"
     end
     if (!dry_run)
-      AWS::S3::S3Object.store('kjs-frameworks/' + file_or_dir,
+      AWS::S3::S3Object.store( file_or_dir,
                               open(FRAMEWORKS_ROOT_DIR + "/" +file_or_dir),
-                              'init-files',
+                              'kns-resources',
                               :access => :public_read)
     end
   end
