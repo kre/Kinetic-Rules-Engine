@@ -336,7 +336,7 @@ KOBJ.tabManager.notification = function(config){
 		}
 	}
 
-	if(defaults.message){
+	if(typeof defaults.message !== 'undefined' && defaults.message !== null && defaults.message !== ''){
 		var changeTo = defaults.message;
 	} else {
 		return false;
