@@ -116,7 +116,7 @@ EOF
     float_url => {
       'js' => <<EOF,
 function(uniq, cb, config, pos, top, side, src_url) {
-    var d = KOBJ.buildDiv(uniq, pos, top, side);
+    var d = KOBJ.buildDiv(uniq, pos, top, side,config);
     \$K(d).load(src_url, cb);
     \$K('body').append(d);
 }
@@ -128,7 +128,7 @@ EOF
     float_html => {
       'js' => <<EOF,
 function(uniq, cb, config, pos, top, side, text) {
-    var d = KOBJ.buildDiv(uniq, pos, top, side);
+    var d = KOBJ.buildDiv(uniq, pos, top, side,config);
     \$K(d).html(text);
     \$K('body').append(d);
     cb();
