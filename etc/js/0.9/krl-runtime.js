@@ -9,7 +9,7 @@ KOBJ.add_extra_page_var = function(key, value)
     if (key.match(":") == null &&
         key != 'rids' &&
         key != 'init')
-   {
+    {
         KOBJ['extra_page_vars'][key] = value;
     }
 };
@@ -64,7 +64,7 @@ KOBJ.configure_kynetx = function(config)
         KOBJ[k] = v;
     });
 }
-;
+        ;
 
 KOBJ.add_app_config = function(app_config) {
 
@@ -85,7 +85,7 @@ KOBJ.add_app_config = function(app_config) {
      Look at each application defined in the config and add or update the known application
      list.
      */
-//    var app_id_s = [];
+    //    var app_id_s = [];
     $KOBJ.each(app_config.rids, function(index, value) {
         var app = KOBJ.get_application(value);
         if (app != null)
@@ -100,20 +100,19 @@ KOBJ.add_app_config = function(app_config) {
             // TODO: This is the old way need here for backwards  compat
             KOBJ[value] = {};
         }
-//        app_id_s[index] = app.app_id;
+        //        app_id_s[index] = app.app_id;
     });
 
     // TODO: Not sure why we would join all the ids Ask Phil about this
-//    KOBJ.site_id = app_id_s.join(";");
+    //    KOBJ.site_id = app_id_s.join(";");
     KOBJ.callback_url = KOBJ.proto() + KOBJ.callback_host + KOBJ.kns_port + "/callback/" + KOBJ.site_id();
 }
         ;
 
 
-
 KOBJ.site_id = function() {
     var ids = [];
-    $KOBJ.each(KOBJ.applications, function(key,value)
+    $KOBJ.each(KOBJ.applications, function(key, value)
     {
         ids.push(key);
     });
@@ -143,6 +142,10 @@ KOBJ.kvars_to_json = function() {
 
 };
 
+KOBJ.named_resources = {
+    "black_n_blue" : "http://www.test.com/dark.js"
+};
+
 /*
  Add all external resources request here.  We do this so that we can
  attempt to stop double loading. Each resource may have multiple applications
@@ -152,7 +155,15 @@ KOBJ.registerExternalResources = function(rid, resources) {
     KOBJ.itrace("Registering external resources " + rid);
     var resource_array = [];
     $KOBJ.each(resources, function (url, options) {
-        if (KOBJ.external_resources[url] == null)
+
+        // We are doing a named resource not a url.
+        if (url.indexOf("http") == -1)
+        {
+            alert("found named resource  " +url)
+            url = KOBJ.named_resources[url];
+        }
+        
+        if (url && KOBJ.external_resources[url] == null)
         {
             if (typeof(options["type"]) != "undefined")
             {
