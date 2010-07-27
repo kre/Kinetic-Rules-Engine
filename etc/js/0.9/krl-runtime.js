@@ -143,10 +143,10 @@ KOBJ.kvars_to_json = function() {
 };
 
 KOBJ.named_resources = {
-    "jquery_ui_js" : "https://init-files.s3.amazonaws.com/kjs-frameworks/jquery_ui/1.8/jquery_ui_1.8.2.js",
-    "jquery_ui_darkness_css" : "https://init-files.s3.amazonaws.com/kjs-frameworks/jquery_ui/1.8/css/ui_darkness/jquery-ui-1.8.2.custom.css",
-    "jquery_ui_lightness_css" : "https://init-files.s3.amazonaws.com/kjs-frameworks/jquery_ui/1.8/css/ui_lightness/jquery-ui-1.8.2.custom.css",
-    "jquery_ui_smoothness_css" : "https://init-files.s3.amazonaws.com/kjs-frameworks/jquery_ui/1.8/css/ui_smoothness/jquery-ui-1.8.2.custom.css"
+    "jquery_ui_js" : "https://kresources.kobj.net/jquery_ui/1.8/jquery_ui_1.8.2.js",
+    "jquery_ui_darkness_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_darkness/jquery-ui-1.8.2.custom.css",
+    "jquery_ui_lightness_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_lightness/jquery-ui-1.8.2.custom.css",
+    "jquery_ui_smoothness_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_smoothness/jquery-ui-1.8.2.custom.css"
 };
 
 /*
