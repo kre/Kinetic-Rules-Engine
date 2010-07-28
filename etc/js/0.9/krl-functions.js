@@ -360,7 +360,7 @@ KOBJ.statusbar_close = function(id) {
 
 
 // helper functions used by float
-KOBJ.buildDiv = function (uniq, pos, top, side) {
+KOBJ.buildDiv = function (uniq, pos, top, side,config) {
     var vert = top.split(/\s*:\s*/);
     var horz = side.split(/\s*:\s*/);
     var div_style = {
@@ -369,11 +369,16 @@ KOBJ.buildDiv = function (uniq, pos, top, side) {
         
         display: 'none'
     };
+    var class_name = "";
+    if(typeof(config) != "undefined" && typeof(config.class_name)!= "undefined"  )
+    {
+        class_name =  config.class_name;
+    }
     div_style[vert[0]] = vert[1];
     div_style[horz[0]] = horz[1];
     var id_str = 'kobj_' + uniq;
     var div = KOBJ.document.createElement('div');
-    return $KOBJ(div).attr({'id': id_str}).css(div_style);
+    return $KOBJ(div).attr({'id': id_str}).css(div_style).addClass(class_name);
 };
 
 // return the host portion of a URL
