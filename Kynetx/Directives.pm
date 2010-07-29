@@ -58,6 +58,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
 sub new {
+    my $logger = get_logger();
     my $invocant = shift;
     my $type = shift;
     my $class = ref($invocant) || $invocant;
@@ -66,6 +67,7 @@ sub new {
 	"options"      => undef,
     };
     bless($self, $class); # consecrate
+    $logger->debug("Created new directive with: ",$type);
     return $self;
 }
 
@@ -87,10 +89,12 @@ sub options {
 }
 
 sub send_directive {
+  my $logger = get_logger();
   my $req_info = shift;
   my $name = shift;
   my $opts = shift;
   my $direct = Kynetx::Directives->new($name);
+  $logger->debug("Directive options are: ", sub {Dumper($opts)});
   $direct->set_options($opts);
   push @{$req_info->{'directives'}}, $direct;
 }
