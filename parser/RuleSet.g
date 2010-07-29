@@ -1,4 +1,4 @@
-grammar RuleSet2;
+grammar RuleSet;
 options {
   output=AST;
   backtrack=true;
@@ -1474,7 +1474,7 @@ operator_expr returns[Object result]
 			ArrayList templist = new ArrayList();
 			for(int i = 0;i < operators.size();i++)
 			{
-				RuleSet2Parser.operator_return current = (RuleSet2Parser.operator_return)operators.get(i);
+				RuleSetParser.operator_return current = (RuleSetParser.operator_return)operators.get(i);
 				HashMap tmp = new HashMap();
 			      	tmp.put("type","operator");			
 		      		tmp.put("name",current.oper);
