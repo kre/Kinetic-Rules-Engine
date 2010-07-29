@@ -198,7 +198,7 @@ WS  :   ( ' '
     ;
 
 STRING
-    :  '"' ( options {greedy=false;} : .   ) * '"' 
+    :  '"' ( '\\"' | ~('"') )* '"' 
     ;
 
 SLASH 
@@ -385,7 +385,7 @@ post_block returns[HashMap result]
 		if($alt.text != null)
 		{
 			tmp.put("alt",$alt.result);
-		}
+		} 
 		$result = tmp;
 	}
 	;
@@ -1515,12 +1515,7 @@ operator returns[String oper,ArrayList exprs]
       		$exprs = rexprs;
       	} 
       	|
-      	 o1=MATCH LEFT_PAREN regx=regex {
-	      	  HashMap tmp = new HashMap();
-        	  tmp.put("type","regx");
-	          tmp.put("val",$regx.result);
-	          rexprs.add(tmp); 
-      		 }  RIGHT_PAREN	{
+      	 o1=MATCH LEFT_PAREN e=expr { rexprs.add(e.result); }  RIGHT_PAREN	{
       		// Remove .
       		$oper = $o1.text.substring(1,$o1.text.length());
       		$exprs = rexprs;
@@ -1902,7 +1897,7 @@ OTHER_OPERATORS
  LOGGING
 	:'logging';
 		
- USE
+ USE 
 	:	'use'
 	;	
  CSS 
@@ -2009,7 +2004,7 @@ regex returns[String result]
      String data = ""; 
 } 
      :
-      ( '/'  ((ESC_SEQ)=>r=ESC_SEQ {data = data + $r.text; } |  r=('\\/') {data = data + $r.text; } | r=~('/') {data = data + $r.text; } )* '/'   { $result = "/" + data + "/"; } )
+      ( '/'  ((ESC_SEQ)=>r=ESC_SEQ {data = data + $r.text; } |  r=('\\/' |'^'|'&'|'['|']'|'$') {data = data + $r.text; } | r=~('/') {data = data + $r.text; } )* '/'   { $result = "/" + data + "/"; } )
        |
        ('#' (
             r='\\#' {data = data + $r.text; }
