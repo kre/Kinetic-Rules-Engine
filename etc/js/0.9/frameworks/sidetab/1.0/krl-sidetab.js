@@ -243,6 +243,7 @@ KOBJ.tabManager.defaults = {
 	"pathToTabImage": "http://k-misc.s3.amazonaws.com/actions/schedule.png",
 	"tabLocation": "right",
 	"speed": "300",
+    "run_in_iframe": false,
 	"action": "click",
 	"fixedPosition": true,
 	"imageHeight": "122px",
@@ -336,7 +337,7 @@ KOBJ.tabManager.notification = function(config){
 		}
 	}
 
-	if(defaults.message){
+	if(typeof defaults.message !== 'undefined' && defaults.message !== null && defaults.message !== ''){
 		var changeTo = defaults.message;
 	} else {
 		return false;
@@ -446,6 +447,7 @@ KOBJ.tabManager.addNew = function(config){
 
 	var defaults = $KOBJ.extend(true, {}, KOBJ['tabManager']['defaults']);
 
+
 	// Extend the defaults
 	if(typeof config === 'object') {
 		jQuery.extend(true, defaults, config);
@@ -455,6 +457,10 @@ KOBJ.tabManager.addNew = function(config){
             }
 		}
 	}
+    if(defaults.run_in_iframe == false && top !== self) {
+          return;
+     }
+
 	
 	// Make a random class
 	var classToAdd = "KOBJ_tab_" + Math.floor(Math.random()*9999999);

@@ -41,9 +41,19 @@ use URI::Escape ('uri_escape');
 use Sys::Hostname;
 use Data::Dumper;
 
+use Kynetx::Predicates::Amazon::SNS qw(:all);
+use Kynetx::Predicates::Amazon::RequestSignatureHelper qw(
+  kAWSAccessKeyId
+  kAWSSecretKey
+);
+use amazon_credentials qw(
+  get_key_id
+  get_access_key
+);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+use constant BLOVIATE => 'arn:aws:sns:us-east-1:791773988531:SAM';
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -62,6 +72,7 @@ mk_url
 merror
 mis_error
 end_slash
+bloviate
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -304,6 +315,38 @@ sub page_dump {
 
 }
 
+sub request_dump {
+    my $r = shift;
+    my $data;
+    my $howmuch = $r->bytes_sent() || 2000;
+    my $req = Apache2::Request->new($r);
+    #my $req_info = Kynetx::Request::build_request_env($r, "none","rugby");
+    $r->read($data,$howmuch);
+    my $logger = get_logger();
+    $logger->debug("R: ", sub {Dumper($r)});
+    $logger->debug("R.main: ", sub {Dumper($r->main())});
+    $logger->debug("R.ct: ", sub {Dumper($r->content_type())});
+    $logger->debug("R.filename: ", sub {Dumper($r->filename())});
+    $logger->debug("R.headers_in: ", sub {Dumper($r->headers_in())});
+    $logger->debug( "request: ");
+    $logger->debug( "r.method: ",$req->method);
+    $logger->debug( "r.path_info: ",$req->path_info);
+    $logger->debug( "r.args: ", $req->args());
+    $logger->debug( "r.unparsed_uri: ", $req->unparsed_uri);
+    $logger->debug( "r.uri: ", $req->uri);
+    $logger->debug( "r.user: ", $req->user);
+    $logger->debug( "r.status: ", $req->status);
+    $logger->debug( "r.the_request: ", $req->the_request());
+    $logger->debug( "r.notes: ", sub {Dumper($req->pnotes)});
+    $logger->debug( "r.subprocess_env: ", sub {Dumper($req->subprocess_env)});
+    $logger->debug("param: ", sub {Dumper($req->param())});
+    $logger->debug("R.status: ", sub {Dumper($req->body_status())});
+    $logger->debug("body: ", sub {Dumper($req->body())});
+    $logger->debug("body-token: ", sub {Dumper($req->body("Token"))});
+    $logger->debug("Data: ", $data);
+
+}
+
 sub validate_array {
     my ( $val, $arry ) = @_;
     my $logger = get_logger();
@@ -472,6 +515,33 @@ sub default_value {
     } else {
         return undef;
     }
+
+}
+
+sub bloviate {
+    my ($message) = @_;
+    my $logger = get_logger();
+    my $directive = Kynetx::Directives->new("log");
+    my $host = hostname || "No hostname found";
+    my $options = {
+        'data' => $message,
+        'source' => $host
+    };
+    $directive->set_options($options);
+    my $json = Kynetx::Json::astToJson( $directive->to_directive() );
+    my $key    = get_key_id();
+    my $secret = get_access_key();
+    my $timestamp = DateTime->now;
+    my $param = {
+        kAWSAccessKeyId() => $key,
+        kAWSSecretKey()   => $secret,
+        'Subject' => "KNS logging request $timestamp",
+        'TopicArn' => BLOVIATE,
+        'Message' => $json,
+    };
+    my $sns = Kynetx::Predicates::Amazon::SNS->new($param);
+    $sns->publish();
+    $logger->info("KNS logging request: ", $message);
 
 }
 
