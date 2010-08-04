@@ -1,0 +1,1 @@
+{"global":[],"global_start_line":null,"dispatch":[{"domain":"google.com","ruleset_id":null}],"dispatch_start_col":5,"meta_start_line":2,"rules":[],"meta_start_col":5,"meta":{"logging":"off","name":"domain test","meta_start_line":2,"meta_start_col":5},"dispatch_start_line":6,"global_start_col":null,"ruleset_name":"a60x48"}
