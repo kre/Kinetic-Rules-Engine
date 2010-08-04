@@ -151,12 +151,12 @@ id
 
     } elsif($function eq 'param') {
 
-      # FIXME: should namespace params so that this can't be used to grab random
-      #        req_info items.
-
       # rulespaced env parameters
       if($req_info->{'rid'} && defined $req_info->{$req_info->{'rid'}.':'.$args->[0]}) {
 	$val = $req_info->{$req_info->{'rid'}.':'.$args->[0]};
+      } else {
+	# event params don't have rid namespacing
+	$val = $req_info->{$args->[0]};
       }
 
     }

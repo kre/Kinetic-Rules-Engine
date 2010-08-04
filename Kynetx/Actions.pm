@@ -467,18 +467,7 @@ sub build_js_load {
 
     my $logger = get_logger();
 
-    # rule id
-#    my $uniq = int(rand 999999999);
-#    my $uniq_id = 'kobj_'.$uniq;
-
-
-#    $rule_env = extend_rule_env(['uniq_id', 'uniq'], [$uniq_id,$uniq], $rule_env);
-#    $req_info->{'uniq'} = $uniq; # just for testing
-
     my $js = "";
-
-   
-#    $logger->debug("Rule ENV: ", sub {my $f = Dumper($rule_env);$f =~ y/\n//d;return $f});
 
     $logger->debug("Rule name: ", $rule->{'name'});
 
@@ -559,8 +548,9 @@ sub build_one_action {
 
     my $uniq = int(rand 999999999);
     my $uniq_id = 'kobj_'.$uniq;
-    $rule_env = extend_rule_env(['uniq_id', 'uniq'], [$uniq_id,$uniq], $rule_env);
-    $req_info->{'uniq'} = $uniq; # just for testing
+#    $rule_env = extend_rule_env(['uniq_id', 'uniq'], [$uniq_id,$uniq], $rule_env);
+    $req_info->{'uniq'} = $uniq;
+    $req_info->{'uniq_id'} = $uniq_id; 
 
     my $js = '';
 
@@ -582,10 +572,6 @@ sub build_one_action {
 
     # this happens after we've chosen the action since it modifies args
     $args = Kynetx::JavaScript::gen_js_rands( $args );
-
-# pjw [20100614] is this used anywhere?  
-#    my @config = ("txn_id: '".$req_info->{'txn_id'} . "'", "rule_name: '$rule_name'", "rid: '".$req_info->{'rid'}."'");
-
 
     my $config = {"txn_id" => $req_info->{'txn_id'}, 
 		  "rule_name" => $rule_name, 
@@ -666,6 +652,8 @@ sub build_one_action {
           $resources = Kynetx::Actions::Email::get_resources();
       } elsif ($action->{'source'} eq 'odata') {
           $actions = Kynetx::Predicates::OData::get_actions();
+      } elsif ($action->{'source'} eq 'http') {
+          $actions = Kynetx::Modules::HTTP::get_actions();
       }
     } else {
       $actions = $default_actions;
@@ -689,7 +677,7 @@ sub build_one_action {
         $resources = Kynetx::Actions::FlippyLoo::get_resources();
     }
 
-    $js .= &$before($req_info, $rule_env, $session, $config, $mods,$arg_exp_vals);
+    $js .= &$before($req_info, $rule_env, $session, $config, $mods, $arg_exp_vals, $action->{'vars'});
     $logger->debug("Action $action_name (before) returns js: ",$js) if $js;
     if (defined $action_js) {
   
@@ -704,7 +692,7 @@ sub build_one_action {
 
       # the after functions processes the JS as a chain and replaces it.  
       foreach my $a (@{$after}) {
-	 $js = $a->($js, $req_info, $rule_env, $session, $config, $mods);
+	 $js = $a->($js, $req_info, $rule_env, $session, $config, $mods, $action->{'vars'});
       }
       
 
@@ -795,7 +783,7 @@ sub handle_effects {
 
  my $logger=get_logger();
 
- my $uniq_id = lookup_rule_env('uniq_id',$rule_env);
+ my $uniq_id = $req_info->{'uniq_id'};
  
  $logger->debug("[handle_effects] ", $mods->{'effect'});
 
@@ -875,7 +863,7 @@ sub handle_delay {
 sub handle_popup {
   my ($js,$req_info,$rule_env,$session,$config,$mods)  = @_;
 
-  my $uniq_id = lookup_rule_env('uniq_id',$rule_env);
+  my $uniq_id = $req_info->{'uniq_id'};
 
   if ($mods->{'effect'} eq "'onpageexit'") {
     my $funcname = "leave_" . $uniq_id;

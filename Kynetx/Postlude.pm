@@ -252,9 +252,9 @@ sub eval_raise_statement {
 			'domain' => $expr->{'domain'}};
 
     foreach my $m (@{ $expr->{'modifiers'}}) {
-      $new_req_info->{$expr->{'name'}} =
+      $new_req_info->{$m->{'name'}} =
 	  Kynetx::Expressions::den_to_exp(
-  	      Kynetx::Expressions::eval_expr($expr->{'value'},
+  	      Kynetx::Expressions::eval_expr($m->{'value'},
 			       $rule_env,
 			       $rule_name,
 			       $req_info,

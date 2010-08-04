@@ -1,3 +1,25 @@
+2010-08-04  Web-san  <web@dev11.kobj.net>
+
+   * Kynetx/Modules.pm (eval_module): 'event' is a synonym for 'page'
+   * Kynetx/Modules/HTTP.pm: Added.
+
+2010-07-29  Web-san  <web@dev11.kobj.net>
+
+   * Kynetx/Environments.pm (add_to_env): Added.
+   * Kynetx/Actions.pm (build_one_action): Removed uniq_id from rule_env; not a user var, so shouldn't be in there.
+   * Kynetx/Modules.pm (eval_module): Added clause for http
+                       (eval_module): Added 'event' as a source alias for page
+
+2010-07-27  Web-san  <web@dev11.kobj.net>
+
+   * Kynetx/Actions.pm (build_one_action): Added 'http' as a source for actions
+   * Kynetx/Parser.pm: Added 'http' as a legitimate explicit event domain. Added optional "setting" clause to actions
+   * Kynetx/Postlude.pm (eval_raise_statement): Changed $expr to $m when looping over modifiers.   
+
+2010-07-14  Phil Windley  <pjw@kynetx.com>
+
+   * Kynetx/Postlude.pm (eval_post_expr): Added explicit path to explicit_callback
+
 2010-07-13  Phil Windley  <pjw@kynetx.com>
 
     * Kynetx/Postlude.pm (eval_persistent_expr): Added explicit paths

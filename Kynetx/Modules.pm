@@ -77,7 +77,7 @@ use Kynetx::Predicates::Google;
 use Kynetx::Predicates::OData;
 use Kynetx::Predicates::RSS;
 use Kynetx::Predicates::Facebook;
-use Kynetx::Actions::HTTP;
+use Kynetx::Modules::HTTP;
 
 
 
@@ -203,12 +203,12 @@ sub eval_module {
 	    $val = Kynetx::Predicates::Time::get_time($req_info,$function,$args);
 	}
     } elsif ($source eq 'http') {
-	$preds = Kynetx::Actions::HTTP::get_predicates();
+	$preds = Kynetx::Modules::HTTP::get_predicates();
 	if (defined $preds->{$function}) {
 	    $val = $preds->{$function}->($req_info,$rule_env,$args);
 	    $val ||= 0;
 	} else {
-	    $val = Kynetx::Actions::HTTP::run_function($req_info,$function,$args);
+	    $val = Kynetx::Modules::HTTP::run_function($req_info,$function,$args);
 	}
     } elsif ($source eq 'kpds') {
 	   $preds = Kynetx::Predicates::KPDS::get_predicates();
