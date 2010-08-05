@@ -362,7 +362,7 @@ $config = mk_config_string(
 
 $result = <<_JS_;
 (function(uniq, cb, config, pos, top, side, text) {
-     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     var d = KOBJ.buildDiv(uniq, pos, top, side,config);
      \$K(d).html(text);
      \$K('body').append(d);
      cb();
@@ -398,7 +398,7 @@ $config = mk_config_string(
 
 $result = <<_JS_;
 (function(uniq, cb, config, pos, top, side, text) {
-     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     var d = KOBJ.buildDiv(uniq, pos, top, side,config);
      \$K(d).html(text);
      \$K('body').append(d);
      cb();
@@ -437,7 +437,7 @@ $config = mk_config_string(
 $result = <<_JS_;
 setTimeout(function() {
 (function(uniq, cb, config, pos, top, side, text) {
-     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     var d = KOBJ.buildDiv(uniq, pos, top, side,config);
      \$K(d).html(text);
      \$K('body').append(d);
      cb();
@@ -473,7 +473,7 @@ $config = mk_config_string(
 
 $result = <<_JS_;
 (function(uniq, cb, config, pos, top, side, text) {
-     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     var d = KOBJ.buildDiv(uniq, pos, top, side,config);
      \$K(d).html(text);
      \$K('body').append(d);
      cb();
@@ -508,7 +508,7 @@ $config = mk_config_string(
 
 $result = <<_JS_;
 (function(uniq, cb, config, pos, top, side, text) {
-     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     var d = KOBJ.buildDiv(uniq, pos, top, side,config);
      \$K(d).html(text);
      \$K('body').append(d);
      cb();
@@ -543,7 +543,7 @@ $config = mk_config_string(
 
 $result = <<_JS_;
 (function(uniq, cb, config, pos, top, side, text) {
-     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     var d = KOBJ.buildDiv(uniq, pos, top, side,config);
      \$K(d).html(text);
      \$K('body').append(d);
      cb();
