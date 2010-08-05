@@ -269,6 +269,13 @@ KrlApplication.prototype.fire_event = function(event, data, guid)
 
     params = [];
 
+    // Someone want to put some extra parameters on the url.  This is used, for example
+    // in the case of page_content events.
+    if (data["param_data"] != null)
+    {        
+        params = params.concat(data["param_data"]);
+    }
+
     // If we have form data we need to transalate it.
     if (data["submit_data"] != null)
     {
@@ -286,6 +293,7 @@ KrlApplication.prototype.fire_event = function(event, data, guid)
     if (event != "pageview") {
         params.push({name: "element", value: data.selector});
     }
+
 
     params.push({name: "kvars", value: $KOBJ.toJSON(all_vars)});
     params.push({name: "caller", value: KOBJ.location('href')});
