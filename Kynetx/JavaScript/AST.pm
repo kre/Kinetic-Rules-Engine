@@ -147,7 +147,7 @@ sub generate_js {
     foreach my $rule_js (@{$self->get_rules($rid)}) {
       $rjs .= $rule_js;
     }
-    
+
     # wrap the rule evals in a try-catch-block
     $rjs = add_errorstack($rid,$self->get_ruleset($rid),$rjs) if $rjs;
     # put it all together
