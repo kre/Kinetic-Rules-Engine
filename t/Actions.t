@@ -362,7 +362,7 @@ $config = mk_config_string(
 
 $result = <<_JS_;
 (function(uniq, cb, config, pos, top, side, text) {
-     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     var d = KOBJ.buildDiv(uniq, pos, top, side,config);
      \$K(d).html(text);
      \$K('body').append(d);
      cb();
@@ -398,7 +398,7 @@ $config = mk_config_string(
 
 $result = <<_JS_;
 (function(uniq, cb, config, pos, top, side, text) {
-     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     var d = KOBJ.buildDiv(uniq, pos, top, side,config);
      \$K(d).html(text);
      \$K('body').append(d);
      cb();
@@ -437,7 +437,7 @@ $config = mk_config_string(
 $result = <<_JS_;
 setTimeout(function() {
 (function(uniq, cb, config, pos, top, side, text) {
-     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     var d = KOBJ.buildDiv(uniq, pos, top, side,config);
      \$K(d).html(text);
      \$K('body').append(d);
      cb();
@@ -473,7 +473,7 @@ $config = mk_config_string(
 
 $result = <<_JS_;
 (function(uniq, cb, config, pos, top, side, text) {
-     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     var d = KOBJ.buildDiv(uniq, pos, top, side,config);
      \$K(d).html(text);
      \$K('body').append(d);
      cb();
@@ -508,7 +508,7 @@ $config = mk_config_string(
 
 $result = <<_JS_;
 (function(uniq, cb, config, pos, top, side, text) {
-     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     var d = KOBJ.buildDiv(uniq, pos, top, side,config);
      \$K(d).html(text);
      \$K('body').append(d);
      cb();
@@ -543,7 +543,7 @@ $config = mk_config_string(
 
 $result = <<_JS_;
 (function(uniq, cb, config, pos, top, side, text) {
-     var d = KOBJ.buildDiv(uniq, pos, top, side);
+     var d = KOBJ.buildDiv(uniq, pos, top, side,config);
      \$K(d).html(text);
      \$K('body').append(d);
      cb();
@@ -858,6 +858,45 @@ add_action_testcase(
     $my_req_info,
     'annotate_search_local_results'
     );
+
+
+
+
+
+
+
+
+$krl_src = <<_KRL_;
+page_content("bob",{"google_footer":{"selector":"#fll","type":"text"},
+      "search_links":{"selector":"#sbl","type":"text"}});
+_KRL_
+
+
+$config = mk_config_string(
+ [
+  {"rule_name" => 'dummy_name'},
+  {"rid" => 'cs_test'},
+  {"txn_id" => '1234'},
+ ]);
+
+
+$result = <<_JS_;
+(   function(uniq, cb, config, label, selectors) {
+        KOBJ.page_data_event(uniq, label, selectors ,config);
+        cb();
+    }
+('%uniq%',callbacks23,$config ,'bob',{'google_footer' : {'selector' : '#fll', 'type' : 'text'}, 'search_links' : {'selector' : '#sbl', 'type' : 'text'}}));
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'Generate Page Data Action',
+    0
+    );
+
 
 
 # now test choose_action

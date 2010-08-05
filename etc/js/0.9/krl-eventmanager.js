@@ -49,7 +49,8 @@
         "focusin" : {},
         "focusout" : {},
         "pageview" : {},
-        "content_change" : {}
+        "content_change" : {},
+        "page_data" : {}
     };
 
     KOBJEventManager.events = {
@@ -71,7 +72,8 @@
         "focusin" : {},
         "focusout" : {},
         "pageview" : {},
-        "content_change" : {}
+        "content_change" : {},
+        "page_data" : {}
     };
 
 
@@ -178,6 +180,8 @@
         KOBJEventManager.current_fires[event][guid][app.app_id]["processing"] = false;
         KOBJEventManager.current_fires[event][guid][app.app_id]["selector"] = data.selector;
         KOBJEventManager.current_fires[event][guid][app.app_id]["submit_data"] = data.submit_data;
+        KOBJEventManager.current_fires[event][guid][app.app_id]["param_data"] = data.param_data;
+
 
     };
 
@@ -249,17 +253,25 @@
 
     /*
      * Out of bound events are thing that are not really tied to an element. For example
-     * page load events.
+     * page load events.   This is private do not access this from client code only for
+     * internal use only
      */
-    KOBJEventManager.add_out_of_bound_event = function(application,event)
+    KOBJEventManager.add_out_of_bound_event = function(application,event,auto_deregister,extra_data)
     {
         KOBJEventManager.register_interest(event, "unknown", application);
 
         // We fake out a jquery event in order to reuse the code.
-        KOBJEventManager.event_handler({"type" : event, "data" : { "selector" : "unknown"}});
+        var data = {"type" : event, "data" : { "selector" : "unknown"}};
+        
+        if(typeof(extra_data) != "undefined")
+        {
+		    $KOBJ.extend(true,data["data"],extra_data);
+        }
+
+        KOBJEventManager.event_handler(data);
 
         // Page View events can only happen one time so no need to keep them around.
-        if(event == "pageview")
+        if(event == "pageview" || (typeof(auto_deregister) != null && auto_deregister ) )
         {
           KOBJEventManager.deregister_interest(event, "unknown", application);
         }
