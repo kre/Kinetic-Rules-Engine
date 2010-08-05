@@ -101,6 +101,15 @@ function(uniq, cb, config, msg) {
 EOF
       'after' => [\&handle_delay]
     },
+    page_content => {
+	       'js' => <<EOF,
+	function(uniq, cb, config, label, selectors) {	
+	    KOBJ.page_content_event(uniq, label, selectors ,config);
+	    cb();
+	}
+EOF
+	        'after' => [\&handle_delay]
+	},
 
     redirect => {
        'js' => <<EOF,
