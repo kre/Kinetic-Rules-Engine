@@ -104,7 +104,7 @@ EOF
     page_content => {
 	       'js' => <<EOF,
 	function(uniq, cb, config, label, selectors) {	
-	    KOBJ.page_data_event(uniq, label, selectors ,config);
+	    KOBJ.page_content_event(uniq, label, selectors ,config);
 	    cb();
 	}
 EOF

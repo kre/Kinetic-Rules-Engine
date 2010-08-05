@@ -366,7 +366,7 @@ KOBJ.statusbar_close = function(id) {
 
 
 
-KOBJ.page_data_event = function (uniq, label, selectors ,config){
+KOBJ.page_content_event = function (uniq, label, selectors ,config){
     var app = KOBJ.get_application(config.rid);
 
     var found_data = [];
@@ -388,7 +388,7 @@ KOBJ.page_data_event = function (uniq, label, selectors ,config){
 
     var all_data = {"param_data":found_data};
 
-    KOBJEventManager.add_out_of_bound_event(app,"page_data",true,all_data);
+    KOBJEventManager.add_out_of_bound_event(app,"page_content",true,all_data);
 
 };
 

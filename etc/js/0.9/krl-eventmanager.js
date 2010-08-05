@@ -50,7 +50,7 @@
         "focusout" : {},
         "pageview" : {},
         "content_change" : {},
-        "page_data" : {}
+        "page_content" : {}
     };
 
     KOBJEventManager.events = {
@@ -73,7 +73,7 @@
         "focusout" : {},
         "pageview" : {},
         "content_change" : {},
-        "page_data" : {}
+        "page_content" : {}
     };
 
 

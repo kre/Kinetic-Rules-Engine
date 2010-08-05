@@ -882,7 +882,7 @@ $config = mk_config_string(
 
 $result = <<_JS_;
 (   function(uniq, cb, config, label, selectors) {
-        KOBJ.page_data_event(uniq, label, selectors ,config);
+        KOBJ.page_content_event(uniq, label, selectors ,config);
         cb();
     }
 ('%uniq%',callbacks23,$config ,'bob',{'google_footer' : {'selector' : '#fll', 'type' : 'text'}, 'search_links' : {'selector' : '#sbl', 'type' : 'text'}}));

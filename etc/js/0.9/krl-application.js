@@ -270,7 +270,7 @@ KrlApplication.prototype.fire_event = function(event, data, guid)
     params = [];
 
     // Someone want to put some extra parameters on the url.  This is used, for example
-    // in the case of page_data events.
+    // in the case of page_content events.
     if (data["param_data"] != null)
     {        
         params = params.concat(data["param_data"]);
