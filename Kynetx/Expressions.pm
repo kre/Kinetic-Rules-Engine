@@ -74,6 +74,7 @@ eval_decl
 den_to_exp
 exp_to_den
 infer_type
+mk_den_str
 typed_value
 type_of
 var_free_in_expr
@@ -853,7 +854,13 @@ sub infer_type {
 	$t = 'str';
     }
     return $t;
+}
 
+sub mk_den_str {
+    my ($v) = @_;
+    
+    return {'type' => 'str',
+	    'val' => $v}
 }
 
 # this hash identifies all literal values

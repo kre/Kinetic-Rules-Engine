@@ -191,14 +191,14 @@ COMMENT
 	
 
 WS  :   ( ' '
-        | '\t'
+	| '\t'
         | '\r'
         | '\n' 
         ) {$channel=HIDDEN;}
     ;
 
 STRING
-    :  '"' ( options {greedy=false;} : .   ) * '"' 
+    :  '"' ( '\\"' | ~('"') )* '"' 
     ;
 
 SLASH 
@@ -224,9 +224,9 @@ fragment
 HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
 
 
-fragment
+
 ESC_SEQ
-    :   '\\' ('b'|'d'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\'|'.'|'w'|'s'|'('|')'|'-')
+    :   '\\' ('b'|'d'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\'|'.'|'w'|'s'|'?'|'('|')'|'-')
     |   UNICODE_ESC
     |   OCTAL_ESC
     ;
@@ -322,7 +322,7 @@ rule
 		ait=must_be_one[sar("active","inactive","test")]
 		LEFT_CURL 
  		  select=VAR { cn($select.text, sar("select"),input); } (ptu=using|ptw=when) (f=foreach{ fors.add($f.result);})* 
- 		  pb=pre_block? SEMI? eb=emit_block? SEMI? (action[actions_result]) cb=callbacks? SEMI? postb=post_block? SEMI?
+ 		  pb=pre_block? SEMI? eb=emit_block? SEMI? (action[actions_result] SEMI?)* cb=callbacks? SEMI? postb=post_block? SEMI?
 		RIGHT_CURL {
 			HashMap tmp = new HashMap();
 			HashMap cond = new HashMap();
@@ -336,7 +336,7 @@ rule
 		 	else
 			{ 
 				HashMap condt = new HashMap();
-				condt.put("val","true");
+				condt.put("val","true"); 
 				condt.put("type","bool"); 
 				current_rule.put("cond",condt);
 			}
@@ -385,7 +385,7 @@ post_block returns[HashMap result]
 		if($alt.text != null)
 		{
 			tmp.put("alt",$alt.result);
-		}
+		} 
 		$result = tmp;
 	}
 	;
@@ -667,7 +667,7 @@ unconditional_action[HashMap result]
 	  | action_block[result] 
 	;  
 CHOOSE 	:	'choose';
-EVERY 	:	'every';	
+EVERY 	:	'every';	 
 action_block[HashMap result]  
 @init { 
 	ArrayList temp_list = new ArrayList(); 
@@ -741,7 +741,7 @@ modifier returns[HashMap result]
 		}
 
 		tmp2.put("name",$name.text);
-		$result = tmp2;
+		$result = tmp2; 
 	}
 	;
 
@@ -779,7 +779,7 @@ setting returns[ArrayList result]
 @init {
 	ArrayList sresult = new ArrayList();
 }
-	:	SETTING LEFT_PAREN (v=VAR{sresult.add($v.text);} (COMMA v2=VAR{sresult.add($v2.text);} )*)? RIGHT_PAREN {
+	:	SETTING LEFT_PAREN (v=(VAR|OTHER_OPERATORS|REPLACE|MATCH){sresult.add($v.text);} (COMMA v2=(VAR|OTHER_OPERATORS|REPLACE|MATCH){sresult.add($v2.text);} )*)? RIGHT_PAREN {
 		$result = sresult;
 	}
 	;
@@ -1504,39 +1504,30 @@ operator_expr returns[Object result]
 	}	
 	;
 
-operator returns[String oper,ArrayList exprs]
+operator returns[String oper,ArrayList exprs] 
 @init
 {	
 	ArrayList rexprs = new ArrayList();
 }
-	: DOT o=OTHER_OPERATORS LEFT_PAREN (e=expr {rexprs.add(e.result); } (',' e1=expr {rexprs.add(e1.result); } )*)? RIGHT_PAREN	{
+	: DOT ( o=OTHER_OPERATORS LEFT_PAREN (e=expr {rexprs.add(e.result); } (',' e1=expr {rexprs.add(e1.result); } )*)? RIGHT_PAREN	{
       		// Remove .
       		$oper = $o.text.substring(1,$o.text.length());
       		$exprs = rexprs;
       	} 
       	|
-      	 DOT o1=MATCH LEFT_PAREN regx=regex {
-	      	  HashMap tmp = new HashMap();
-        	  tmp.put("type","regx");
-	          tmp.put("val",$regx.result);
-	          rexprs.add(tmp); 
-      		 }  RIGHT_PAREN	{
+      	 o1=MATCH LEFT_PAREN e=expr { rexprs.add(e.result); }  RIGHT_PAREN	{
       		// Remove .
       		$oper = $o1.text.substring(1,$o1.text.length());
       		$exprs = rexprs;
       	} 
-      	|
-      	 DOT o2=REPLACE LEFT_PAREN regx=regex (VAR)? ',' e1=expr  RIGHT_PAREN	{
-      	          HashMap tmp = new HashMap();
-        	  tmp.put("type","regx");
-	          tmp.put("val",$regx.result);
-	          rexprs.add(tmp); 
+      	| 
+      	 o2=REPLACE LEFT_PAREN e=expr {rexprs.add(e.result); } (VAR)? ',' e1=expr  RIGHT_PAREN	{
 	          rexprs.add(e1.result); 
 	          
       		// Remove .
       		$oper = $o2.text.substring(1,$o2.text.length());
       		$exprs = rexprs;
-      	} 
+      	} ) 
 	;
 //	 'i'|'g'|'m'
 
@@ -1552,7 +1543,7 @@ factor returns[Object result] options { backtrack = true; }
 		tmp.put("val",Long.parseLong($iv.text));
 		$result = tmp;
 	}
-      | sv= STRING  { 
+      | sv= STRING  {  
       		HashMap tmp = new HashMap();
 		tmp.put("type","str");
 		tmp.put("val",strip_string($sv.text));
@@ -1655,7 +1646,7 @@ factor returns[Object result] options { backtrack = true; }
       		 
 	      	$result = tmp;
 	}
-      | v=VAR  { 
+      | v=(VAR|OTHER_OPERATORS|REPLACE|MATCH)   { 
       		HashMap tmp = new HashMap(); 
 		tmp.put("type","var"); 
 		tmp.put("val",$v.text);
@@ -1881,11 +1872,11 @@ MATCH
 REPLACE
 	: 'replace';
 		
-fragment OTHER_OPERATORS
-	:  ('pick'|'length'|'as'|'head'|'tail'|'sort'
+OTHER_OPERATORS
+	:  'pick'|'length'|'as'|'head'|'tail'|'sort'
       	|'filter'|'map'|'uc'|'lc' |'split' | 'join' | 'query'
       	| 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
-      	| 'duplicates')
+      	| 'duplicates'
       	;
 		
  TRUE :'true';	
@@ -1906,7 +1897,7 @@ fragment OTHER_OPERATORS
  LOGGING
 	:'logging';
 		
- USE
+ USE 
 	:	'use'
 	;	
  CSS 
@@ -1990,7 +1981,7 @@ VAR  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*
     :   '-'? ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
     |   '-'? '.' ('0'..'9')* EXPONENT?
  
-    ;
+    ; 
     
 
 /*REGEX
@@ -1999,24 +1990,21 @@ VAR  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*
     
 
 regex returns[String result]
-@init {  
+@init {   
      String data = ""; 
 } 
-     :
+     : 
        rx=REGEX { $result = $rx.text; }
      ;
 */	
-	
+	 
 	
 regex returns[String result]
 @init {  
      String data = ""; 
 } 
      :
-      ( '/' ( r=('\\'|'?'|']'|'&'|'^'|'$') {data = data + $r.text; } 
-             r='\\/' {data = data + $r.text; }
-             r=ESC_SEQ {data = data + $r.text; }
-            | r=~('/') {data = data + $r.text; } )+ '/'   { $result = "/" + data + "/"; } )
+      ( '/'  ((ESC_SEQ)=>r=ESC_SEQ {data = data + $r.text; } |  r=('\\/' |'^'|'&'|'['|']'|'$') {data = data + $r.text; } | r=~('/') {data = data + $r.text; } )* '/'   { $result = "/" + data + "/"; } )
        |
        ('#' (
             r='\\#' {data = data + $r.text; }

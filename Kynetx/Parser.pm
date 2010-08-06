@@ -576,12 +576,13 @@ unconditional_action: primrule
    | actionblock
         {$return = $item{actionblock}}
 
-primrule: rule_label(?) namespace(?) VAR '(' expr(s? /,/) ')' modifier_clause(?)
+primrule: rule_label(?) namespace(?) VAR '(' expr(s? /,/) ')' setting(?) modifier_clause(?)
         {$return =
          {'label' => $item[1][0],
           'action' =>
              {'args' => $item[5],
-              'modifiers' => $item[7][0],  # returned as array of array
+              'vars' => $item[7][0],  # returned as array of array
+              'modifiers' => $item[8][0],  # returned as array of array
               'name' => $item[3],
               'source' => $item[2][0]
              }
@@ -795,7 +796,7 @@ control_statement: 'last'
       }
      }
 
-raise_statement: 'raise' 'explicit' 'event' VAR for_clause(?) modifier_clause(?)
+raise_statement: 'raise' ('explicit'|'http') 'event' VAR for_clause(?) modifier_clause(?)
     {$return =
       {'type' => 'raise',
        'domain' => $item[2],

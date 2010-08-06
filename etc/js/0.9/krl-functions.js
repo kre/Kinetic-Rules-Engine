@@ -34,6 +34,9 @@ KOBJ.require = function(url, callback_params) {
         var r = document.createElement("img");
         // This is the max url for a get in IE7  IE6 is 488 so we will break on ie6
         r.src = url.substring(0, 1500);
+        //  We need to change to the protcol of the location url so that we do not
+        // get security errors.
+        r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 2,r.src.length);
         var body = document.getElementsByTagName("body")[0] ||
                    document.getElementsByTagName("frameset")[0];
         body.appendChild(r);
@@ -43,6 +46,9 @@ KOBJ.require = function(url, callback_params) {
         var r = document.createElement("script");
         // This is the max url for a get in IE7  IE6 is 488 so we will break on ie6
         r.src = url.substring(0, 1500);
+        //  We need to change to the protcol of the location url so that we do not
+        // get security errors.
+        r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 2,r.src.length);
         r.type = "text/javascript";
         r.onload = r.onreadystatechange = KOBJ.url_loaded_callback;
         var body = document.getElementsByTagName("body")[0] ||
@@ -357,6 +363,34 @@ KOBJ.statusbar_close = function(id) {
 };
 
 //end new jessie actions
+
+
+
+KOBJ.page_content_event = function (uniq, label, selectors ,config){
+    var app = KOBJ.get_application(config.rid);
+
+    var found_data = [];
+
+    $KOBJ.each(selectors, function(name, selector) {
+        var result = $KOBJ(selector["selector"]);
+        if(selector["type"] == "text")
+            result = result.text();
+        else if( selector["type"] == "form" )
+            result = result.val();
+        else
+            result = "invalid select type";
+
+
+        found_data.push({name: name,value:result });
+    });
+    found_data.push({name: "label",value:label })
+
+
+    var all_data = {"param_data":found_data};
+
+    KOBJEventManager.add_out_of_bound_event(app,"page_content",true,all_data);
+
+};
 
 
 // helper functions used by float
