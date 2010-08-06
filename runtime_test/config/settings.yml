@@ -22,13 +22,13 @@ safari_local_osx :
   timeout: 10
 
 safari_404_windows :
-  host : "184.73.68.157"
+  host : "bxfactory.kynetx.com"
   port : 4444
   browser : "*safari"
   timeout: 10
 
 ie7_windows :
-  host : "184.73.68.157"
+  host : "bxfactory.kynetx.com"
   port : 4444
   browser : "*iexplore"
   timeout: 10
@@ -40,13 +40,13 @@ ie7_local_windows :
   timeout: 10
 
 firefox_windows :
-  host : "184.73.68.157"
+  host : "bxfactory.kynetx.com"
   port : 4444
   browser : "*firefox"
   timeout: 10
 
 chrome_beta_windows :
-  host : "184.73.68.157"
+  host : "bxfactory.kynetx.com"
   port : 4444
   browser : "*googlechrome"
   timeout: 10
