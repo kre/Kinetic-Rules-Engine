@@ -2327,6 +2327,36 @@ add_expr_testcase(
     $re1,
     0);
 
+$re1 = extend_rule_env(['a','b','multiline'],
+            ['1','3','#{a}
+#{b}
+'],
+            $rule_env);
+$krl_src = <<_KRL_;
+pre {
+    a = "1";
+    b = "3";
+    multiline = <<
+#{a}
+#{b}
+>>;
+}
+_KRL_
+
+$js = <<_JS_;
+var a = 1;
+var b = 3;
+var multiline = ''+a+'\\n'+b+'\\n';
+_JS_
+
+add_expr_testcase(
+    $krl_src,
+    'pre',
+    $js,
+    $re1,
+    0);
+
+
 
 $re1 = extend_rule_env(['kx','ky'],
     ['windley.com','$..windley.com']

@@ -74,6 +74,7 @@ eval_decl
 den_to_exp
 exp_to_den
 infer_type
+mk_den_str
 typed_value
 type_of
 var_free_in_expr
@@ -853,7 +854,13 @@ sub infer_type {
 	$t = 'str';
     }
     return $t;
+}
 
+sub mk_den_str {
+    my ($v) = @_;
+    
+    return {'type' => 'str',
+	    'val' => $v}
 }
 
 # this hash identifies all literal values
@@ -958,7 +965,7 @@ sub var_free_in_here_doc {
 sub eval_string {
     my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
     my $logger = get_logger();
-    $expr->{'val'} =~ m/(.*)\#\{(.+)\}{1}?(.*)/;
+    $expr->{'val'} =~ m/(.*)\#\{(.+)\}{1}?(.*)/s;
     my $bee_expr = Kynetx::Parser::parse_expr($2);
     $logger->trace("parsed beesting: ", sub {Dumper($bee_expr)} );
     my $val = $1.eval_expr($bee_expr,$rule_env, $rule_name,$req_info, $session)->{'val'}.$3;

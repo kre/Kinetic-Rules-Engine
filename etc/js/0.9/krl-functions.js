@@ -34,6 +34,9 @@ KOBJ.require = function(url, callback_params) {
         var r = document.createElement("img");
         // This is the max url for a get in IE7  IE6 is 488 so we will break on ie6
         r.src = url.substring(0, 1500);
+        //  We need to change to the protcol of the location url so that we do not
+        // get security errors.
+        r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 2,r.src.length);
         var body = document.getElementsByTagName("body")[0] ||
                    document.getElementsByTagName("frameset")[0];
         body.appendChild(r);
@@ -43,6 +46,9 @@ KOBJ.require = function(url, callback_params) {
         var r = document.createElement("script");
         // This is the max url for a get in IE7  IE6 is 488 so we will break on ie6
         r.src = url.substring(0, 1500);
+        //  We need to change to the protcol of the location url so that we do not
+        // get security errors.
+        r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 2,r.src.length);
         r.type = "text/javascript";
         r.onload = r.onreadystatechange = KOBJ.url_loaded_callback;
         var body = document.getElementsByTagName("body")[0] ||
@@ -359,8 +365,36 @@ KOBJ.statusbar_close = function(id) {
 //end new jessie actions
 
 
+
+KOBJ.page_content_event = function (uniq, label, selectors ,config){
+    var app = KOBJ.get_application(config.rid);
+
+    var found_data = [];
+
+    $KOBJ.each(selectors, function(name, selector) {
+        var result = $KOBJ(selector["selector"]);
+        if(selector["type"] == "text")
+            result = result.text();
+        else if( selector["type"] == "form" )
+            result = result.val();
+        else
+            result = "invalid select type";
+
+
+        found_data.push({name: name,value:result });
+    });
+    found_data.push({name: "label",value:label })
+
+
+    var all_data = {"param_data":found_data};
+
+    KOBJEventManager.add_out_of_bound_event(app,"page_content",true,all_data);
+
+};
+
+
 // helper functions used by float
-KOBJ.buildDiv = function (uniq, pos, top, side) {
+KOBJ.buildDiv = function (uniq, pos, top, side,config) {
     var vert = top.split(/\s*:\s*/);
     var horz = side.split(/\s*:\s*/);
     var div_style = {
@@ -369,11 +403,16 @@ KOBJ.buildDiv = function (uniq, pos, top, side) {
         
         display: 'none'
     };
+    var class_name = "";
+    if(typeof(config) != "undefined" && typeof(config.class_name)!= "undefined"  )
+    {
+        class_name =  config.class_name;
+    }
     div_style[vert[0]] = vert[1];
     div_style[horz[0]] = horz[1];
     var id_str = 'kobj_' + uniq;
     var div = KOBJ.document.createElement('div');
-    return $KOBJ(div).attr({'id': id_str}).css(div_style);
+    return $KOBJ(div).attr({'id': id_str}).css(div_style).addClass(class_name);
 };
 
 // return the host portion of a URL

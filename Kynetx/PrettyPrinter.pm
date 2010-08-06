@@ -716,6 +716,7 @@ sub pp_primrule{
 	$o .= $node->{'action'}->{'name'} . "(";
 	$o .= join ", ", pp_rands($node->{'action'}->{'args'});
 	$o .= ")";
+	$o .= ' setting(' . join(',',@{$node->{'action'}->{'vars'}}) . ")" if $node->{'action'}->{'vars'}; 
 	$o .= pp_modifier_clause($node->{'action'}, $indent);
 	
     }	

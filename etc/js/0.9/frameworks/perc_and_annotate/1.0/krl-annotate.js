@@ -221,7 +221,7 @@ KOBJ.annotate_search_defaults = {
     "results_lister" : "",
     "element_to_modify" : "div.s,div.abstr,p",
     "domains": {
-        "www.google.com": { "selector": "li.g, div.g", "modify": "div.s", "watcher": "#rso", "urlSel":".l" },
+        "www.google.com": { "selector": "li.g:not(.localbox), div.g", "modify": "div.s", "watcher": "#rso", "urlSel":".l" },
         "www.bing.com": { "selector": "#results>ul>li", "modify": "p", "watcher": "","urlSel":".nc_tc a, .sb_tlst a" },
         "search.yahoo.com": { "selector": "li div.res", "modify": "div.abstr", "watcher": "","urlSel":".yschttl" }
     }
