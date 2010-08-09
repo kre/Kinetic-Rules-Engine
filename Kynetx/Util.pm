@@ -230,7 +230,18 @@ sub after_now {
 sub mk_url {
   my ($base_url, $url_options) = @_;
 
-  $base_url .= join('&', map("$_=".uri_escape($url_options->{$_}), keys %{ $url_options }));
+  my $params = join('&', map("$_=".uri_escape($url_options->{$_}), keys %{ $url_options }));
+
+  if ($base_url =~ m/\?$/) {
+    return $base_url . $params;
+  } elsif ($base_url =~ m/\?/) {
+    return $base_url . '&' . $params;
+  } else {
+    return $base_url . '?' . $params;
+  }
+
+
+#  $base_url .= join('&', map("$_=".uri_escape($url_options->{$_}), keys %{ $url_options }));
 
 
   return $base_url;

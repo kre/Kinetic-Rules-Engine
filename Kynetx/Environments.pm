@@ -47,6 +47,7 @@ qw(
 empty_rule_env
 lookup_rule_env
 extend_rule_env
+add_to_env
 flatten_env
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
@@ -69,6 +70,17 @@ sub lookup_rule_env {
     } else {
 	return lookup_rule_env($key, $env->{'___sub'});
     }
+}
+
+# add key-value pairs to current env, overwriting any that are already there
+sub add_to_env {
+  my($hash, $env) = @_;
+
+  foreach my $k (keys %{$hash}) {
+    push(@{$env->{'___vars'}}, $k) unless defined $env->{$k};
+    $env->{$k} = $hash->{$k};
+  }
+  return $env;
 }
 
 # Takes three or two arguments. 

@@ -1,5 +1,6 @@
 use lib qw(/web/lib/perl);
 use strict;
+use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 use LWP::UserAgent;

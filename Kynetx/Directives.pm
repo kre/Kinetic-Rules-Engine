@@ -37,6 +37,7 @@ use warnings;
 use Log::Log4perl qw(get_logger :levels);
 
 use JSON::XS;
+use Data::Dumper;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
