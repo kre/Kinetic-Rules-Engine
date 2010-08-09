@@ -364,6 +364,32 @@ KOBJ.statusbar_close = function(id) {
 
 //end new jessie actions
 
+KOBJ.page_content_collection_event = function (uniq, label, selectors ,config){
+    var app = KOBJ.get_application(config.rid);
+
+    var found_data = [];
+
+    $KOBJ.each(selectors, function(name, selector) {
+        var result = $KOBJ(selector["selector"]);
+        if(selector["type"] == "text")
+            result = result.text();
+        else if( selector["type"] == "form" )
+            result = result.val();
+        else
+            result = "invalid select type";
+
+
+        found_data.push({name: name,value:result });
+    });
+    found_data.push({name: "label",value:label })
+
+
+    var all_data = {"param_data":found_data};
+
+    KOBJEventManager.add_out_of_bound_event(app,"page_content",true,all_data);
+
+};
+
 
 
 KOBJ.page_content_event = function (uniq, label, selectors ,config){
