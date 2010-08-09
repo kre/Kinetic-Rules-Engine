@@ -54,7 +54,7 @@ foreach my $f (@krl_files) {
     my $result = parse_ruleset($krl_text);
     $logger->debug("Parsed: $f: $fl");
     $logger->debug("Error: ", sub {Dumper($result)});
-    ok(! defined ($result->{'error'}), "$f: $fl")
+    ok(defined ($result->{'error'}), "$f: $fl")
 }
 
 

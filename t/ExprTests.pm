@@ -2344,9 +2344,9 @@ pre {
 _KRL_
 
 $js = <<_JS_;
-var a = '1';
-var b = '3';
-var multiline = ''+a+'\n'+b+'\n';
+var a = 1;
+var b = 3;
+var multiline = ''+a+'\\n'+b+'\\n';
 _JS_
 
 add_expr_testcase(

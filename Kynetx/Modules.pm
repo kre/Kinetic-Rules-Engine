@@ -77,6 +77,7 @@ use Kynetx::Predicates::Google;
 use Kynetx::Predicates::OData;
 use Kynetx::Predicates::RSS;
 use Kynetx::Predicates::Facebook;
+use Kynetx::Modules::HTTP;
 
 
 
@@ -121,7 +122,7 @@ sub eval_module {
 	} else {
 	  $val = Kynetx::Predicates::Twitter::eval_twitter($req_info,$rule_env,$session,$rule_name,$function,$args);
 	}
-    } elsif ($source eq 'page') {
+    } elsif ($source eq 'page' || $source eq 'event') {
 	$preds = Kynetx::Predicates::Page::get_predicates();
 	if (defined $preds->{$function}) {
 	  $val = $preds->{$function}->($req_info,$rule_env,$args);
@@ -194,13 +195,21 @@ sub eval_module {
 	  $val = Kynetx::Predicates::Useragent::get_useragent($req_info,$function);
 	}
     } elsif ($source eq 'time') {
-    $preds = Kynetx::Predicates::Time::get_predicates();
-    if (defined $preds->{$function}) {
-      $val = $preds->{$function}->($req_info,$rule_env,$args);
-      $val ||= 0;
-    } else {
-      $val = Kynetx::Predicates::Time::get_time($req_info,$function,$args);
-    }
+	$preds = Kynetx::Predicates::Time::get_predicates();
+	if (defined $preds->{$function}) {
+	    $val = $preds->{$function}->($req_info,$rule_env,$args);
+	    $val ||= 0;
+	} else {
+	    $val = Kynetx::Predicates::Time::get_time($req_info,$function,$args);
+	}
+    } elsif ($source eq 'http') {
+	$preds = Kynetx::Modules::HTTP::get_predicates();
+	if (defined $preds->{$function}) {
+	    $val = $preds->{$function}->($req_info,$rule_env,$args);
+	    $val ||= 0;
+	} else {
+	    $val = Kynetx::Modules::HTTP::run_function($req_info,$function,$args);
+	}
     } elsif ($source eq 'kpds') {
 	   $preds = Kynetx::Predicates::KPDS::get_predicates();
 	   if (defined $preds->{$function}) {
@@ -245,17 +254,15 @@ sub eval_module {
 	    $preds = Kynetx::Actions::LetItSnow::get_predicates();
 	    $val = $preds->{$function}->($req_info,$rule_env,$args);
 	    $val ||= 0;
-	  }
-	 elsif ($source eq 'jquery_ui') {
+    } elsif ($source eq 'jquery_ui') {
 	    $preds = Kynetx::Actions::JQueryUI::get_predicates();
 	    $val = $preds->{$function}->($req_info,$rule_env,$args);
 	    $val ||= 0;
-     }
-	 elsif ($source eq 'flippy_loo') {
+    } elsif ($source eq 'flippy_loo') {
 	    $preds = Kynetx::Actions::FlippyLoo::get_predicates();
 	    $val = $preds->{$function}->($req_info,$rule_env,$args);
 	    $val ||= 0;
-     } elsif ($source eq 'odata') {
+    } elsif ($source eq 'odata') {
         $preds = Kynetx::Predicates::OData::get_predicates();
         if (defined $preds->{$function}) {
             $val = $preds->{$function}->($req_info,$rule_env,$args);
@@ -263,7 +270,7 @@ sub eval_module {
         } else {
             $val = Kynetx::Predicates::OData::eval_odata($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
-    }else {
+    } else {
       $logger->warn("Datasource for $source not found");
     }
 
