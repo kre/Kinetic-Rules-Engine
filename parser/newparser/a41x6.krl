@@ -1,10 +1,1 @@
-{
-   "dispatch": [{"domain": "google.com"}],
-   "global": [],
-   "meta": {
-      "logging": "off",
-      "name": "Plex Free Wifi"
-   },
-   "rules": [],
-   "ruleset_name": "a41x6"
-}
+{"global":[],"dispatch":[{"domain":"google.com"}],"ruleset_name":"a41x6","rules":[],"meta":{"name":"Plex Free Wifi","logging":"off"}}

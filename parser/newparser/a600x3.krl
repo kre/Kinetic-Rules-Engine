@@ -1,18 +1,1 @@
-{
-   "dispatch": [{"domain": "www.google.com"}],
-   "global": [{
-      "cachable": 0,
-      "datatype": "JSON",
-      "name": "twitter_search",
-      "source": "http://search.twitter.com/search.json",
-      "type": "datasource"
-   }],
-   "meta": {
-      "author": "Nessa Maye",
-      "description": " \n     \n  ",
-      "logging": "off",
-      "name": "Twitter Mashup New"
-   },
-   "rules": [],
-   "ruleset_name": "a600x3"
-}
+{"global":[{"source":"http://search.twitter.com/search.json","cachable":0,"name":"twitter_search","datatype":"JSON","type":"datasource"}],"dispatch":[{"domain":"www.google.com"}],"ruleset_name":"a600x3","rules":[],"meta":{"author":"Nessa Maye","description":" \n     \n  ","name":"Twitter Mashup New","logging":"off"}}

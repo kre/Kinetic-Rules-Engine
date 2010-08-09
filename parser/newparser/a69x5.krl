@@ -1,10 +1,1 @@
-{
-   "dispatch": [{"domain": "www.micronotes.info"}],
-   "global": [{"emit": "\nalert('East 17');                "}],
-   "meta": {
-      "logging": "off",
-      "name": "surveyer"
-   },
-   "rules": [],
-   "ruleset_name": "a69x5"
-}
+{"global":[{"emit":"\nalert('East 17');                "}],"dispatch":[{"domain":"www.micronotes.info"}],"ruleset_name":"a69x5","rules":[],"meta":{"name":"surveyer","logging":"off"}}
