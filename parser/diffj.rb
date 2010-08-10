@@ -4,17 +4,6 @@ require "json"
 @@keystack = [];
 @@keyarraycount = [];
 
-leftside = ""
-File.open(ARGV[0]).each_line{ |s|
-  leftside << s;
-}
-rightside = ""
-File.open(ARGV[1]).each_line{ |s|
-  rightside << s;
-}
-
-leftj = JSON.parse(leftside);
-rightj = JSON.parse(rightside);
 
 def showkeys
   result = " ";
@@ -129,5 +118,27 @@ def diff_array(larray,rarray)
     
 end
 
-diff_hash(leftj,rightj)
+
+
+leftside = ""
+File.open(ARGV[0]).each_line{ |s|
+  leftside << s;
+}
+rightside = ""
+File.open(ARGV[1]).each_line{ |s|
+  rightside << s;
+}
+
+if leftside.strip.size != 0 && rightside.strip.size != 0
+  puts ARGV[0]
+  leftj = JSON.parse(leftside);
+  rightj = JSON.parse(rightside);
+  diff_hash(leftj,rightj)
+else
+  if leftside.strip.size != rightside.strip.size 
+    puts "#{ARGV[0]} - Left side #{leftside.strip.size} or right side #{rightside.strip.size} empty "
+  end
+  
+end
+
 

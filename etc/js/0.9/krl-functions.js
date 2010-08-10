@@ -36,7 +36,7 @@ KOBJ.require = function(url, callback_params) {
         r.src = url.substring(0, 1500);
         //  We need to change to the protcol of the location url so that we do not
         // get security errors.
-        r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 2,r.src.length);
+        r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 3,r.src.length);
         var body = document.getElementsByTagName("body")[0] ||
                    document.getElementsByTagName("frameset")[0];
         body.appendChild(r);
