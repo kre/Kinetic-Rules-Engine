@@ -110,6 +110,15 @@ EOF
 EOF
 	        'after' => [\&handle_delay]
 	},
+    page_collection_content => {
+	       'js' => <<EOF,
+	function(uniq, cb, config, label, top_selector, parent_selector, selectors) {
+	    KOBJ.page_collection_content_event(uniq, label,top_selector, parent_selector, selectors ,config);
+	    cb();
+	}
+EOF
+	        'after' => [\&handle_delay]
+	},
 
     redirect => {
        'js' => <<EOF,

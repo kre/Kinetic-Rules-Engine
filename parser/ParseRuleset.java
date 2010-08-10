@@ -60,7 +60,7 @@ public class ParseRuleset
 					parser.ruleset();			
 					JSONObject js = new JSONObject(parser.rule_json);
 //					System.out.println("Parsed: " + thefile + " in " + (System.currentTimeMillis() - start) + "ms." );
-					System.out.println(js.toString(3));
+					System.out.println(js.toString());
 				}
 				catch(Exception e)
 				{
