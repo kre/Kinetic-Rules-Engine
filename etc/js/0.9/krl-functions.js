@@ -1,6 +1,3 @@
-
-
-
 KOBJ.proto = function() {
     if ("http:" != KOBJ.location('protocol') && "https:" != KOBJ.location('protocol'))
     {
@@ -36,7 +33,7 @@ KOBJ.require = function(url, callback_params) {
         r.src = url.substring(0, 1500);
         //  We need to change to the protcol of the location url so that we do not
         // get security errors.
-        r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 3,r.src.length);
+        r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 3, r.src.length);
         var body = document.getElementsByTagName("body")[0] ||
                    document.getElementsByTagName("frameset")[0];
         body.appendChild(r);
@@ -48,7 +45,7 @@ KOBJ.require = function(url, callback_params) {
         r.src = url.substring(0, 1500);
         //  We need to change to the protcol of the location url so that we do not
         // get security errors.
-        r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 3,r.src.length);
+        r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 3, r.src.length);
         r.type = "text/javascript";
         r.onload = r.onreadystatechange = KOBJ.url_loaded_callback;
         var body = document.getElementsByTagName("body")[0] ||
@@ -364,44 +361,56 @@ KOBJ.statusbar_close = function(id) {
 
 //end new jessie actions
 
-KOBJ.page_content_collection_event = function (uniq, label, selectors ,config){
+KOBJ.page_collection_content_event = function (uniq, label, top_selector, parent_selector, selectors, config) {
     var app = KOBJ.get_application(config.rid);
 
     var found_data = [];
 
-    $KOBJ.each(selectors, function(name, selector) {
-        var result = $KOBJ(selector["selector"]);
-        if(selector["type"] == "text")
-            result = result.text();
-        else if( selector["type"] == "form" )
-            result = result.val();
-        else
-            result = "invalid select type";
+    // First find the top_selector elements.
+    $KOBJ(top_selector).each( function() {
+
+        // Now using that top selector as a context find each row
+        $KOBJ(parent_selector,this).each(function() {
+            var parent = this;
+            var the_data = { "parent" : parent};
+            var data = {};
+            the_data["data"] = data;
+
+            $KOBJ.each(selectors, function(name, selector) {
+                var result = $KOBJ(selector["selector"], parent);
+                if (selector["type"] == "text")
+                    result = result.text();
+                else if (selector["type"] == "form")
+                    result = result.val();
+                else
+                    result = "invalid select type";
+
+                data[name] = result;
+            });
 
 
-        found_data.push({name: name,value:result });
+            found_data.push(the_data);
+
+        })
     });
-    found_data.push({name: "label",value:label })
 
-
-    var all_data = {"param_data":found_data};
-
-    KOBJEventManager.add_out_of_bound_event(app,"page_content",true,all_data);
-
+    if (config.callback != null)
+    {
+        config.callback(label,found_data);
+    }
 };
 
 
-
-KOBJ.page_content_event = function (uniq, label, selectors ,config){
+KOBJ.page_content_event = function (uniq, label, selectors, config) {
     var app = KOBJ.get_application(config.rid);
 
     var found_data = [];
 
     $KOBJ.each(selectors, function(name, selector) {
         var result = $KOBJ(selector["selector"]);
-        if(selector["type"] == "text")
+        if (selector["type"] == "text")
             result = result.text();
-        else if( selector["type"] == "form" )
+        else if (selector["type"] == "form")
             result = result.val();
         else
             result = "invalid select type";
@@ -414,25 +423,25 @@ KOBJ.page_content_event = function (uniq, label, selectors ,config){
 
     var all_data = {"param_data":found_data};
 
-    KOBJEventManager.add_out_of_bound_event(app,"page_content",true,all_data);
+    KOBJEventManager.add_out_of_bound_event(app, "page_content", true, all_data);
 
 };
 
 
 // helper functions used by float
-KOBJ.buildDiv = function (uniq, pos, top, side,config) {
+KOBJ.buildDiv = function (uniq, pos, top, side, config) {
     var vert = top.split(/\s*:\s*/);
     var horz = side.split(/\s*:\s*/);
     var div_style = {
         position: pos,
         zIndex: '9999',
-        
+
         display: 'none'
     };
     var class_name = "";
-    if(typeof(config) != "undefined" && typeof(config.class_name)!= "undefined"  )
+    if (typeof(config) != "undefined" && typeof(config.class_name) != "undefined")
     {
-        class_name =  config.class_name;
+        class_name = config.class_name;
     }
     div_style[vert[0]] = vert[1];
     div_style[horz[0]] = horz[1];
@@ -560,19 +569,18 @@ KOBJ.siteIds = function()
 };
 
 
-
 KOBJ.donotuse_getMethods = function(obj) {
-  var result = [];
-  for (var id in obj) {
-    try {
-      if (typeof(obj[id]) == "function") {
-        result.push(id + ": " + obj[id].toString());
-      }
-    } catch (err) {
-      result.push(id + ": inaccessible");
+    var result = [];
+    for (var id in obj) {
+        try {
+            if (typeof(obj[id]) == "function") {
+                result.push(id + ": " + obj[id].toString());
+            }
+        } catch (err) {
+            result.push(id + ": inaccessible");
+        }
     }
-  }
-  return result;
+    return result;
 }
 
 //KOBJ.getStrackTrace = function(exception) {
@@ -639,7 +647,7 @@ KOBJ.errorstack_submit = function(key, e, rule_info) {
     txt += "&Msg=" + escape(e.message ? e.message : e);
 
     var script_url = e.fileName ? e.fileName : (e.filename ? e.filename : null)
-    if(!script_url)
+    if (!script_url)
     {
         script_url = (e.sourceURL ? e.sourceURL : "Browser does not support exception script url");
     }

@@ -899,6 +899,39 @@ add_action_testcase(
 
 
 
+$krl_src = <<_KRL_;
+page_collection_content("bob","#res","li.g",{"google_footer":{"selector":"#fll","type":"text"},
+      "search_links":{"selector":"#sbl","type":"text"}}) with callback <|mycallback|>;
+_KRL_
+
+
+$config = mk_config_string(
+ [
+  {"rule_name" => 'dummy_name'},
+  {"rid" => 'cs_test'},
+  {"txn_id" => '1234'},
+ ]);
+
+
+$result = <<_JS_;
+(   function(uniq, cb, config, label,top_selector,parent_selector,selectors) {
+        KOBJ.page_collection_content_event(uniq, label,top_selector, parent_selector, selectors ,config);
+        cb();
+    }
+('%uniq%',callbacks23,$config ,'bob','#res','li.g',{'google_footer' : {'selector' : '#fll', 'type' : 'text'}, 'search_links' : {'selector' : '#sbl', 'type' : 'text'}}));
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'Generate Page Collection Data Action',
+    0
+    );
+
+
+
 # now test choose_action
 foreach my $case (@test_cases) {
     diag(Dumper($case->{'url'})) if $case->{'diag'};
