@@ -1,10 +1,1 @@
-{
-   "dispatch": [],
-   "global": [],
-   "meta": {
-      "logging": "off",
-      "name": "Impact Demo 2"
-   },
-   "rules": [],
-   "ruleset_name": "a8x24"
-}
+{"global":[],"dispatch":[],"ruleset_name":"a8x24","rules":[],"meta":{"name":"Impact Demo 2","logging":"off"}}
