@@ -209,7 +209,6 @@ sub test_operator {
     cmp_deeply($r, $x, "Trying $e");
 }
 
-goto ENDY;
 $e[$i] = q/store.pick("$.store.book[*].author")/;
 $x[$i] = {
    'val' => [
@@ -545,6 +544,14 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
+$e[$i] = q#my_str.replace(re/string/,"puppy")#;
+$x[$i] = {
+   'val' => 'This is a puppy',
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
 $e[$i] = q#my_str.replace(/is/,"ese")#;
 $x[$i] = {
    'val' => 'These is a string',
@@ -620,6 +627,15 @@ $i++;
 
 
 $e[$i] = q#my_str.match(/string/)#;
+$x[$i] = {
+   'val' => 'true',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#my_str.match(re/string/)#;
 $x[$i] = {
    'val' => 'true',
    'type' => 'bool'
@@ -1188,8 +1204,6 @@ $x[$i] = {
 };
 $d[$i] = 0;
 $i++;
-
-ENDY:
 
 $e[$i] = q/q_html.query(meta_str)/;
 $x[$i] = {
