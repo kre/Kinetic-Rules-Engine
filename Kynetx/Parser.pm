@@ -70,7 +70,7 @@ my $grammar = <<'_EOGRAMMAR_';
 
 # Terminals (macros that can't expand further)
 #
-REGEXP: m%(/(\\.|[^\/])+/|#(\\.|[^\#])+#)(i|g|m){0,2}%
+REGEXP: m%(re){0,1}(/(\\.|[^\/])+/|#(\\.|[^\#])+#)(i|g|m){0,2}%
 HTML: /<<.*?>>/s  {$return=Kynetx::Parser::html($item[1]) }
 # None of the follow have an appreciable effect on speed
 #HTML: <perl_quotelike> {$return=Kynetx::Parser::html($item[1]) }
