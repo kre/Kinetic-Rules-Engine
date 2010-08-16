@@ -241,6 +241,12 @@ KOBJ.annotate_search_extractdata = function(toAnnotate, config) {
         urlTemp = $KOBJ(toAnnotate).find(".url, cite").attr("href");
         // Failsafe
     }
+
+    if(window.location.host == "search.yahoo.com"){
+		urlTemp = urlTemp.replace(/.*\*\*/,"");
+		urlTemp = urlTemp.replace(/%3a/,":");
+	}
+    
     if (urlTemp) {
         annotateData["url"] = urlTemp;
         annotateData["domain"] = KOBJ.get_host(urlTemp);
