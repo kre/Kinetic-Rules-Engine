@@ -334,7 +334,8 @@ KrlApplication.prototype.load_data_sets = function()
     // not come back in this call anyway.
     if (!this.is_data_loaded() && !this.data_set_load_requested)
     {
-        var data_url = KOBJ.proto() + KOBJ.init_host + KOBJ.kns_port + "/js/datasets/" + this.app_id + "/";
+        var data_url = KOBJ.proto() + KOBJ.init_host + KOBJ.kns_port + "/js/datasets/" + this.app_id + "/?t=t" +
+                        this.page_vars_as_url();
         KOBJ.require(data_url);
     }
 };
