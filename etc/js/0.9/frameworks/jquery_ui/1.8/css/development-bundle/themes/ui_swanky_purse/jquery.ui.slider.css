@@ -1,0 +1,24 @@
+/*
+ * jQuery UI Slider @VERSION
+ *
+ * Copyright 2010, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Slider#theming
+ */
+.kynetx-ui .ui-slider { position: relative; text-align: left; }
+.kynetx-ui .ui-slider .ui-slider-handle { position: absolute; z-index: 2; width: 1.2em; height: 1.2em; cursor: default; }
+.kynetx-ui .ui-slider .ui-slider-range { position: absolute; z-index: 1; font-size: .7em; display: block; border: 0; background-position: 0 0; }
+
+.kynetx-ui .ui-slider-horizontal { height: .8em; }
+.kynetx-ui .ui-slider-horizontal .ui-slider-handle { top: -.3em; margin-left: -.6em; }
+.kynetx-ui .ui-slider-horizontal .ui-slider-range { top: 0; height: 100%; }
+.kynetx-ui .ui-slider-horizontal .ui-slider-range-min { left: 0; }
+.kynetx-ui .ui-slider-horizontal .ui-slider-range-max { right: 0; }
+
+.kynetx-ui .ui-slider-vertical { width: .8em; height: 100px; }
+.kynetx-ui .ui-slider-vertical .ui-slider-handle { left: -.3em; margin-left: 0; margin-bottom: -.6em; }
+.kynetx-ui .ui-slider-vertical .ui-slider-range { left: 0; width: 100%; }
+.kynetx-ui .ui-slider-vertical .ui-slider-range-min { bottom: 0; }
+.kynetx-ui .ui-slider-vertical .ui-slider-range-max { top: 0; }

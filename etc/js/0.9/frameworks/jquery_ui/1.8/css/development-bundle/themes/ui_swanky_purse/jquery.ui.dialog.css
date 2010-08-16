@@ -1,0 +1,21 @@
+/*
+ * jQuery UI Dialog @VERSION
+ *
+ * Copyright 2010, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Dialog#theming
+ */
+.kynetx-ui .ui-dialog { position: absolute; padding: .2em; width: 300px; overflow: hidden; }
+.kynetx-ui .ui-dialog .ui-dialog-titlebar { padding: .5em 1em .3em; position: relative;  }
+.kynetx-ui .ui-dialog .ui-dialog-title { float: left; margin: .1em 16px .2em 0; } 
+.kynetx-ui .ui-dialog .ui-dialog-titlebar-close { position: absolute; right: .3em; top: 50%; width: 19px; margin: -10px 0 0 0; padding: 1px; height: 18px; }
+.kynetx-ui .ui-dialog .ui-dialog-titlebar-close span { display: block; margin: 1px; }
+.kynetx-ui .ui-dialog .ui-dialog-titlebar-close:hover, .kynetx-ui .ui-dialog .ui-dialog-titlebar-close:focus { padding: 0; }
+.kynetx-ui .ui-dialog .ui-dialog-content { position: relative; border: 0; padding: .5em 1em; background: none; overflow: auto; zoom: 1; }
+.kynetx-ui .ui-dialog .ui-dialog-buttonpane { text-align: left; border-width: 1px 0 0 0; background-image: none; margin: .5em 0 0 0; padding: .3em 1em .5em .4em; }
+.kynetx-ui .ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset { float: right; }
+.kynetx-ui .ui-dialog .ui-dialog-buttonpane button { margin: .5em .4em .5em 0; cursor: pointer; }
+.kynetx-ui .ui-dialog .ui-resizable-se { width: 14px; height: 14px; right: 3px; bottom: 3px; }
+.kynetx-ui .ui-draggable .ui-dialog-titlebar { cursor: move; }
