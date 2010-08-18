@@ -905,7 +905,7 @@ event_prim returns[HashMap result]
 	:	
 	WEB? PAGEVIEW (spat=STRING|rpat=regex) set=setting? {
 		HashMap tmp = new HashMap();
-		tmp.put("domain","web");
+		// tmp.put("domain","web");
 		if($spat.text != null)
 			tmp.put("pattern",strip_string($spat.text));
 		else
@@ -1373,7 +1373,11 @@ factor returns[Object result] options { backtrack = true; }
       	      	HashMap tmp = new HashMap();
 	      	tmp.put("domain",$d.text);
 	      	tmp.put("name",$v.text);
-	      	tmp.put("type","persistent");
+	      	tmp.put("type","trail_history");
+	      	HashMap tmp2 = new HashMap();
+	      	tmp2.put("val","0");
+	      	tmp2.put("type","num");
+	      	tmp.put("offset",tmp2);
 	      	$result = tmp;
       } 
       | HISTORY e=expr d=VAR_DOMAIN COLON v=VAR {
@@ -1557,12 +1561,13 @@ meta_block
 		if(!key_values.isEmpty()) 
 			keys_map.put($what.text,key_values); 
 		else 
-			keys_map.put($what.text,strip_string($key_value.text)); 
+			keys_map.put($what.text,strip_string($key_value.text));
+        key_values = new HashMap();
 	}	
 	| AUTHZ REQUIRE must_be["user"] {  
 		HashMap tmp = new HashMap(); 
 		tmp.put("level","user");
-		tmp.put("type","required");
+		tmp.put("type","require");
 		meta_block_hash.put("authz",tmp);
 	   } 
 	| LOGGING onoff=(ON|OFF) {  meta_block_hash.put("logging",$onoff.text); }
@@ -1611,6 +1616,8 @@ dispatch_block
 		if($rsid.text != null)
 		{
 			tmp.put("ruleset_id",strip_string($rsid.text));
+			rsid = null;
+			
 		}
 		dispatch_block_array.add(tmp);
 		})* 
