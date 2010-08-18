@@ -1,1 +1,1 @@
-ruby diffj.rb oldparser/$1 newparser/$1
+ruby diffj.rb newparser/$1 oldparser/$1 

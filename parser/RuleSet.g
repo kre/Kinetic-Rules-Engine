@@ -602,7 +602,7 @@ primrule returns[HashMap result]
 	ArrayList temp_list = new ArrayList();
 }
 	:  (label=VAR ARROW_RIGHT)? (
-		 src=namespace?  name=(VAR|REPLACE|MATCH|OTHER_OPERATORS) LEFT_PAREN (ex=expr{temp_list.add($ex.result);}  (COMMA ex1=expr{temp_list.add($ex1.result);})* )? COMMA?  RIGHT_PAREN m=modifier_clause? {
+		 src=namespace?  name=(VAR|REPLACE|MATCH|OTHER_OPERATORS) LEFT_PAREN (ex=expr{temp_list.add($ex.result);}  (COMMA ex1=expr{temp_list.add($ex1.result);})* )? COMMA?  RIGHT_PAREN  set=setting? m=modifier_clause? {
 		 	
 		 	HashMap tmp = new HashMap();
 		 	tmp.put("source",$src.result);
@@ -610,8 +610,12 @@ primrule returns[HashMap result]
 		 	tmp.put("args",temp_list); 
 		  
 		 	
-		 	if($label.text != null) 
-			 	tmp.put("label",$label.text);
+//		 	if($label.text != null)
+//			 	tmp.put("label",$label.text);
+
+
+            if($set.text != null)
+				tmp.put("vars",$set.result);
 			 	
 		 	tmp.put("modifiers",$m.result);
 		 	HashMap tmp2 = new HashMap();
@@ -621,9 +625,14 @@ primrule returns[HashMap result]
 			$result = tmp2;
 		 	
 		 }
-	|	e=emit_block { 
+	|	(label=VAR ARROW_RIGHT)? e=emit_block {
 			HashMap tmp = new HashMap();
 			tmp.put("emit",$e.emit_value);
+
+		 	if($label.text != null) 
+			 	tmp.put("label",$label.text);
+
+
 			$result = tmp;
 		}
 	 )
@@ -903,9 +912,9 @@ event_prim returns[HashMap result]
 	ArrayList filters = new ArrayList();
 }
 	:	
-	WEB? PAGEVIEW (spat=STRING|rpat=regex) set=setting? {
+	web=WEB? PAGEVIEW (spat=STRING|rpat=regex) set=setting? {
 		HashMap tmp = new HashMap();
-		// tmp.put("domain","web");
+		tmp.put("domain",$web.text);
 		if($spat.text != null)
 			tmp.put("pattern",strip_string($spat.text));
 		else
@@ -915,9 +924,10 @@ event_prim returns[HashMap result]
 		tmp.put("op","pageview");
 		$result = tmp;			
 	} 
-	| WEB? opt=must_be_one[sar("submit","click","dblclick","change","update")] elem=STRING on=on_expr?  set=setting? {
+	| web=WEB? opt=must_be_one[sar("submit","click","dblclick","change","update")] elem=STRING on=on_expr?  set=setting? {
 		HashMap tmp = new HashMap();
-		tmp.put("domain","web");
+
+		tmp.put("domain",$web.text);
 		tmp.put("element",strip_string($elem.text));
 		tmp.put("type","prim_event"); 
 		tmp.put("vars",$set.result);
@@ -984,6 +994,7 @@ on_expr returns[Object result] : ON
 		if($dtype.text != null)
 		{
 			tmp.put("datatype",$dtype.text);
+	        dtype = null;
 		}
 		tmp.put("source",strip_string($src.text));
 		if(found_cache)
@@ -1234,6 +1245,10 @@ unary_expr  returns[Object result] options { backtrack = true; }
 	      	tmp.put("timeframe",t.time);
 	      	tmp.put("type","persistent_ineq");
 	      	tmp.put("domain",$vd.text);
+	      	HashMap tmp2 = new HashMap();
+	      	tmp2.put("val","true");
+	      	tmp2.put("type","bool");
+	      	tmp.put("expr",tmp2);
 	      	tmp.put("ineq","==");
 	      	tmp.put("var",$v.text);
 	      	$result = tmp;		
@@ -1586,7 +1601,7 @@ meta_block
 		} 
 		tmp.put("resource",tmp2);
 		
-		tmp.put("name",$name.text);
+		tmp.put("type","resource");
 		tmp.put("resource_type",$rtype.text);
 		use_list.add(tmp);
 	 })
@@ -1596,6 +1611,7 @@ meta_block
 		tmp.put("type","module");
 		if($alias.text != null) {
 			tmp.put("alias",$alias.text);
+			alias = null;
 		}
 		use_list.add(tmp);
 	 })
@@ -1651,12 +1667,20 @@ regex returns[HashMap result]
        rx=REX {
             HashMap tmp = new HashMap();
             tmp.put("type","regexp");
-            tmp.put("val",$rx.text.substring(2,$rx.text.length()));
+            if($rx.text.charAt(0) == '#')
+            {
+                tmp.put("val",$rx.text);                
+            }
+            else
+            {
+                tmp.put("val",$rx.text.substring(2,$rx.text.length()));
+            }
             $result = tmp;
         }
      ;
 
-REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* 
+REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
+        '#' ((ESC_SEQ)=>ESC_SEQ | '\\#' | ~('#')  )* '#' ('g'|'i'|'m')*
 	;	 
 	
 /*regex returns[String result]
