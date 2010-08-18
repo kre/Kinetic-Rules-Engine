@@ -78,6 +78,7 @@ use Kynetx::Predicates::OData;
 use Kynetx::Predicates::RSS;
 use Kynetx::Predicates::Facebook;
 use Kynetx::Modules::HTTP;
+use Kynetx::Modules::PDS;
 
 
 
@@ -210,6 +211,14 @@ sub eval_module {
 	} else {
 	    $val = Kynetx::Modules::HTTP::run_function($req_info,$function,$args);
 	}
+    } elsif ($source eq 'pds') {
+    $preds = Kynetx::Modules::PDS::get_predicates();
+    if (defined $preds->{$function}) {
+        $val = $preds->{$function}->($req_info,$session,$function,$args);
+        $val ||= 0;
+    } else {
+        $val = Kynetx::Modules::PDS::eval_pds($req_info,$session,$function,$args);
+    }
     } elsif ($source eq 'kpds') {
 	   $preds = Kynetx::Predicates::KPDS::get_predicates();
 	   if (defined $preds->{$function}) {
