@@ -1,1 +1,0 @@
-{"global":[{"rhs":{"val":"0123456789","type":"str"},"type":"expr","lhs":"testString"}],"dispatch":[{"domain":"example.com"}],"ruleset_name":"a60x145","rules":[],"meta":{"author":"Mike Grace","description":"\nmanipulating strings by array index notation using regex     \n","name":"String manipulation sandbox","logging":"on"}}

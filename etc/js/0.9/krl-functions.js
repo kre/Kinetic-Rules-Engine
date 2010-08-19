@@ -46,6 +46,7 @@ KOBJ.require = function(url, callback_params) {
         //  We need to change to the protcol of the location url so that we do not
         // get security errors.
         r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 3, r.src.length);
+        KOBJ.itrace("Asking to load " + r.src);
         r.type = "text/javascript";
         r.onload = r.onreadystatechange = KOBJ.url_loaded_callback;
         var body = document.getElementsByTagName("body")[0] ||
@@ -401,6 +402,12 @@ KOBJ.page_collection_content_event = function (uniq, label, top_selector, parent
 };
 
 
+KOBJ.raise_event_action = function (uniq, event_name, config) {
+    var app = KOBJ.get_application(config.rid);
+    app.raise_event(event_name,config["parameters"],config["app_id"]);
+};
+
+
 KOBJ.page_content_event = function (uniq, label, selectors, config) {
     var app = KOBJ.get_application(config.rid);
 
@@ -530,9 +537,11 @@ KOBJ.url_loaded_callback = function(loaded_url, response, callback_params) {
             //            }
 
             //        alert("Go callback for " + url);
+            KOBJ.itrace("Resource of " + url + "was loaded");
 
             if (KOBJ.external_resources[url] != null)
             {
+                KOBJ.itrace("Updated apps of  " + url );
                 //            alert("Found a resource and letting it know");
                 KOBJ.external_resources[url].did_load();
             }

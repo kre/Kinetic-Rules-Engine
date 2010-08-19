@@ -931,6 +931,41 @@ add_action_testcase(
     );
 
 
+# Test raise event
+
+$krl_src = <<_KRL_;
+raise_event("testevent") with app_id = "aaaa" and parameters = {"aaa":"bbb"};
+_KRL_
+
+
+$config = mk_config_string(
+ [
+  {"rule_name" => 'dummy_name'},
+  {"rid" => 'cs_test'},
+  {"txn_id" => '1234'},
+  {"app_id" => 'aaaa'},
+  {"parameters" => {"aaa" => "bbb" }}
+ ]);
+
+
+$result = <<_JS_;
+(   function(uniq, cb, config, event_name) {
+        KOBJ.raise_event_action(uniq, event_name,config);
+        cb();
+    }
+('%uniq%',callbacks23,$config ,'testevent'));
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'Generate Page Collection Data Action',
+    0
+    );
+
+
 
 # now test choose_action
 foreach my $case (@test_cases) {
