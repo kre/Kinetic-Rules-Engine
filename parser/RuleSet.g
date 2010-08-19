@@ -30,10 +30,15 @@ options {
 @members { 
 	public boolean check_operator = false;
 	public HashMap rule_json = new HashMap();
+	public ArrayList parse_errors = new ArrayList();
 	public HashMap current_top = null; 
 
 	public boolean checkname = true;
-	
+
+
+	public void emitErrorMessage(String msg) {
+		parse_errors.add(msg);
+	}
 	public class InvalidToken extends RecognitionException 
 	{	 
 		String aMessage = "";
