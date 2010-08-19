@@ -1,0 +1,27 @@
+//complex
+Date:  27 Aug 76 0932 PDT
+From:  Ken Davis <KDavis@This-Host.This-net>
+Subject:  Re: The Syntax in the RFC
+Sender:  KSecy@Other-Host
+Reply-To:  Sam.Irving@Reg.Organization
+To:  George Jones <Group@Some-Reg.An-Org>,
+             Al.Neuman@MAD.Publisher
+cc:  Important folk:
+               Tom Softwood <Balsa@Tree.Root>,
+               "Sam Irving"@Other-Host;,
+             Standard Distribution:
+               /main/davis/people/standard@Other-Host,
+               "<Jones>standard.dist.3"@Tops-20-Host>;
+Comment:  Sam is away on business. He asked me to handle
+             his mail for him.  He'll be able to provide  a
+             more  accurate  explanation  when  he  returns
+             next week.
+In-Reply-To: <some.string@DBM.Group>, George's message
+X-Special-action:  This is a sample of user-defined field-
+             names.  There could also be a field-name
+             "Special-action", but its name might later be
+             preempted
+Message-ID: <4231.629.XYzi-What@Other-Host>
+
+This is an email with complex headers:
+Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?

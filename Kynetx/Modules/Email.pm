@@ -1,4 +1,5 @@
 package Kynetx::Modules::Email;
+
 # file: Kynetx/Modules/Email.pm
 # file: Kynetx/Predicates/Referers.pm
 #
@@ -37,60 +38,154 @@ use lib qw(/web/lib/perl);
 
 use Log::Log4perl qw(get_logger :levels);
 
-
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Kynetx::Environments qw/:all/;
+use Kynetx::Util qw/
+  mis_error
+  merror
+  /;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
-our $VERSION     = 1.00;
-our @ISA         = qw(Exporter);
+our $VERSION = 1.00;
+our @ISA     = qw(Exporter);
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [
-qw(
-) ]);
-our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
+our %EXPORT_TAGS = (
+    all => [
+        qw(
+          )
+    ]
+);
+our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 my $predicates = {
+    'multipart' => sub {
+        my ( $req_info, $rule_env, $args ) = @_;
+        my $logger    = get_logger();
+        my $email     = email_object($args);
+        my $num_parts = $email->parts();
+        $logger->debug("Email has $num_parts pieces");
+        return $num_parts > 0 ? 1 : 0;
+    },
+
 };
 
-my $default_actions = {
-};
+my $default_actions = {};
+
+my $funcs = {};
+
+sub _headers {
+    my ( $req_info, $rule_env, $args ) = @_;
+    my $logger = get_logger();
+    my $email  = email_object($args);
+    my $parms  = get_parms($args);
+    if ($parms) {
+        if ( ref $parms eq "ARRAY" ) {
+            my $hash = {};
+            foreach my $p (@$parms) {
+                my $hval = $email->header($p);
+                $hash->{$p} = $hval;
+            }
+            return $hash;
+        } else {
+            return $email->header($parms);
+        }
+    } else {
+        my @keys = $email->header_names();
+        return \@keys;
+    }
+    return 0;
+}
+$funcs->{"header"} = \&_headers;
+
+sub _parts {
+    my ( $req_info, $rule_env, $args ) = @_;
+    my $logger = get_logger();
+    my $email  = email_object($args);
+    my $parms  = get_parms($args);
+    my @parts  = $email->parts();
+    $logger->debug("Parm: ", $parms);
+    my @parry  = ();
+    foreach my $p (@parts) {
+        my $key = $p->{'ct'}->{'discrete'} . '/' . $p->{'ct'}->{'composite'};
+        $logger->debug("Key: ", $key);
+        push( @parry, { $key => $p->{'body'} } ) unless ($parms && $key ne $parms);
+    }
+    return \@parry;
+}
+$funcs->{"parts"} = \&_parts;
+
+sub _body {
+    my ( $req_info, $rule_env, $args ) = @_;
+    my $logger = get_logger();
+    my $email  = email_object($args);
+    my $parms  = get_parms($args);
+    my $body = $email->body();
+    $logger->trace("Body val: **",$body,"**");
+    $body = $email->body_raw() unless ($body);
+    return $body;
+
+}
+$funcs->{"body"} = \&_body;
 
 sub get_resources {
     return {};
 }
+
 sub get_actions {
     return $default_actions;
 }
+
 sub get_predicates {
     return $predicates;
 }
 
+sub email_object {
+    my ($args) = @_;
+    my $logger = get_logger();
+    my $text;
+    if ( ref $args eq "ARRAY" ) {
+        $text = $args->[0];
+    } else {
+        $text = $args;
+    }
+    return Email::MIME->new($text);
+
+}
+
+sub get_parms {
+    my ($args) = @_;
+    if ( ref $args eq "ARRAY" ) {
+        return $args->[1];
+    } else {
+        return undef;
+    }
+}
 
 sub run_function {
-    my($req_info, $function, $args) = @_;
+    my ( $req_info, $function, $args ) = @_;
 
     my $logger = get_logger();
 
-    my $resp = '';
-    if($function eq 'get') {
-      my $response = mk_http_request('GET', undef, $args->[0], $args->[1]);
-      $resp = {'content' => $response->decoded_content(),
-	       'status_code' => $response->code(),
-	       'status_line' => $response->status_line(),
-	       'content_type' => $response->header('Content-Type'),
-	       'content_length' => $response->header('Content-Length'),
-	      };
+    #$logger->debug("Args passed: ", ref $args);
+    my $f = $funcs->{$function};
+    if ( defined $f ) {
+        my $result = $f->( $req_info, $function, $args );
+        if ( mis_error($result) ) {
+            $logger->info("request email:$function failed");
+            $logger->debug( "fail: ", $result->{'DEBUG'} || '' );
+            $logger->trace( "fail detail: ", $result->{'TRACE'} || '' );
+            return [];
+        } else {
+            return $result;
+        }
     } else {
-      $logger->warn("Unknown function '$function' called in HTTP library");
+        $logger->debug("Function $function not defined");
     }
-
-    return $resp;
 }
 
 1;

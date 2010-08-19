@@ -3,6 +3,8 @@ use strict;
 use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
+use Test::More;
+use Test::Deep;
 use LWP::UserAgent;
 use HTTP::Request::Common;
 use HTTP::Response;
@@ -28,7 +30,7 @@ use Kynetx::Configure;
 
 Kynetx::Configure::configure();
 config_logging();
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 
 my $logger = get_logger();
@@ -90,8 +92,7 @@ $sns->Endpoint($endpoint);
 #$sns->subscribe();
 #die;
 
-$sns->publish();
-die;
+#$sns->publish();
 
 $sns->NewTopicName($who);
 my $n_topic = $sns->create_topic();
@@ -110,3 +111,8 @@ $logger->debug("Subscriptions: ", sub {Dumper($subs)});
 
 $subs = $sns->list_topics();
 $logger->debug("Topics: ", sub {Dumper($subs)});
+
+ok(1);
+
+done_testing(1);
+1;
