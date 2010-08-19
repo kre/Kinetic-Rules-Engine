@@ -287,9 +287,11 @@ KrlApplication.prototype.execute_pending_closures = function()
         return;
     }
 
+    var myself = this;
     $KOBJ.each(this.pending_closures, function(guid, the_closure) {
+        KOBJ.itrace("Executing Closure " + myself.app_id + " - " + guid);
         the_closure($KOBJ);
-        KOBJEventManager.event_fire_complete(this, guid);
+        KOBJEventManager.event_fire_complete(myself, guid);
     });
 
     this.pending_closures = {};
