@@ -58,8 +58,8 @@ end
 
 def check_value(lvalue,rvalue)
   if(rvalue.kind_of?(String) && lvalue.kind_of?(String))
-    rvalue = rvalue.strip();
-    lvalue = lvalue.strip();
+    rvalue = rvalue.strip().gsub("\n","").gsub("\t","");
+    lvalue = lvalue.strip().gsub("\n","").gsub("\t","");
   end
   if(rvalue != lvalue)
     puts "E-RVNM" + showkeys + " R[" + (rvalue ? rvalue.to_s : "missing") + "] L[" + (lvalue ? lvalue.to_s : "missing") + "]" 
@@ -74,22 +74,22 @@ def check_types(lvalue,rvalue)
       return true;
     end
     
-    lblank = !lvalue || ((lvalue.kind_of?(Array) || lvalue.kind_of?(Hash)) && lvalue.empty? || lvalue.size() == 0) if !lvalue.kind_of?(String) 
-    rblank = !rvalue || ((rvalue.kind_of?(Array) || rvalue.kind_of?(Hash)) && rvalue.empty? || rvalue.size() == 0) if !rvalue.kind_of?(String)
+#    lblank = !lvalue || ((lvalue.kind_of?(Array) || lvalue.kind_of?(Hash)) && lvalue.empty? || lvalue.size() == 0) if !lvalue.kind_of?(String)
+#    rblank = !rvalue || ((rvalue.kind_of?(Array) || rvalue.kind_of?(Hash)) && rvalue.empty? || rvalue.size() == 0) if !rvalue.kind_of?(String)
+#
+#    lblank = blank(lvalue) if lvalue.kind_of?(String)
+#    rblank = blank(lvalue) if rvalue.kind_of?(String)
+#
+#    if( lblank && rblank )
+#      # puts "W-LRNBE "  + showkeys + " L[" +  lvalue.class.name + "] R[" +  rvalue.class.name + "]"
+#      return false;
+#    end
 
-    lblank = blank(lvalue) if lvalue.kind_of?(String) 
-    rblank = blank(lvalue) if rvalue.kind_of?(String) 
-
-    if( lblank && rblank )
-      # puts "W-LRNBE "  + showkeys + " L[" +  lvalue.class.name + "] R[" +  rvalue.class.name + "]"
-      return false;
-    end
-
-    if(lvalue.class.name != rvalue.class.name)
+#    if(lvalue.class.name != rvalue.class.name)
      puts "E-LRCM" + showkeys + " L[" +  lvalue.class.name + "] R[" +  rvalue.class.name + "]" + "LV[" +  lvalue.to_s + "] RV[" +  rvalue.to_s + "]"
      return false;
-    end    
-    return true;
+#    end
+#    return true;
 end
 
 def diff_array(larray,rarray)
@@ -120,6 +120,15 @@ end
 
 
 
+if(!File.exist?(ARGV[0]))
+#  puts("Left file Not Found " + ARGV[0]);
+  exit(1);
+end
+if(!File.exist?(ARGV[1]))
+  puts("Right file Not Found " +ARGV[1]);
+  exit(1);
+end
+
 leftside = ""
 File.open(ARGV[0]).each_line{ |s|
   leftside << s;
@@ -131,14 +140,17 @@ File.open(ARGV[1]).each_line{ |s|
 
 if leftside.strip.size != 0 && rightside.strip.size != 0
   puts ARGV[0]
-  leftj = JSON.parse(leftside);
-  rightj = JSON.parse(rightside);
+  leftj = JSON.parse(leftside,:max_nesting => 50);
+  rightj = JSON.parse(rightside,:max_nesting => 50);
   diff_hash(leftj,rightj)
 else
-  if leftside.strip.size != rightside.strip.size 
-    puts "#{ARGV[0]} - Left side #{leftside.strip.size} or right side #{rightside.strip.size} empty "
+  if leftside.strip.size == 0
+    exit();
   end
-  
+  if rightside.strip.size == 0
+    puts "#{ARGV[1]} - right side #{rightside.strip.size} empty "
+  end
+
 end
 
 

@@ -30,10 +30,15 @@ options {
 @members { 
 	public boolean check_operator = false;
 	public HashMap rule_json = new HashMap();
-	public HashMap current_top = null;
+	public ArrayList parse_errors = new ArrayList();
+	public HashMap current_top = null; 
 
 	public boolean checkname = true;
-	
+
+
+	public void emitErrorMessage(String msg) {
+		parse_errors.add(msg);
+	}
 	public class InvalidToken extends RecognitionException 
 	{	 
 		String aMessage = "";
@@ -48,6 +53,21 @@ options {
 			return aMessage;
 		}
 	
+	}
+
+	public String fix_time(String value)
+	{
+	    if(value.equals("year") ||
+	        value.equals("month") ||
+	        value.equals("week") ||
+	        value.equals("day") ||
+	        value.equals("hour") ||
+	        value.equals("minute") ||
+	        value.equals("second"))
+	      {
+	        return value + "s";
+	      }
+	      return value;
 	}
 
 	public String strip_string(String value)
@@ -131,7 +151,7 @@ options {
 	{
 		System.out.println(str);
 	}
-	 
+
 	public HashMap build_exp_result(ArrayList operators)
 	{
 //		puts("Start " + operators.size() ) ;
@@ -271,13 +291,16 @@ rule
 			current_rule.put("callbacks",$cb.result);
 			
 			if($ptu.text != null)
+			{
+			    $ptu.result.put( "foreach",fors);
 				current_rule.put("pagetype",$ptu.result);
+				}
 			else
 			{
+			    $ptw.result.put("foreach",fors);
 				current_rule.put("pagetype",$ptw.result);
 			}
 				
-			current_rule.put("foreach",fors);
 			rule_block_array.add(current_rule);
 			 
 		}
@@ -584,7 +607,7 @@ primrule returns[HashMap result]
 	ArrayList temp_list = new ArrayList();
 }
 	:  (label=VAR ARROW_RIGHT)? (
-		 src=namespace?  name=(VAR|REPLACE|MATCH|OTHER_OPERATORS) LEFT_PAREN (ex=expr{temp_list.add($ex.result);}  (COMMA ex1=expr{temp_list.add($ex1.result);})* )? COMMA?  RIGHT_PAREN m=modifier_clause? {
+		 src=namespace?  name=(VAR|REPLACE|MATCH|OTHER_OPERATORS) LEFT_PAREN (ex=expr{temp_list.add($ex.result);}  (COMMA ex1=expr{temp_list.add($ex1.result);})* )? COMMA?  RIGHT_PAREN  set=setting? m=modifier_clause? {
 		 	
 		 	HashMap tmp = new HashMap();
 		 	tmp.put("source",$src.result);
@@ -592,8 +615,12 @@ primrule returns[HashMap result]
 		 	tmp.put("args",temp_list); 
 		  
 		 	
-		 	if($label.text != null) 
-			 	tmp.put("label",$label.text);
+//		 	if($label.text != null)
+//			 	tmp.put("label",$label.text);
+
+
+            if($set.text != null)
+				tmp.put("vars",$set.result);
 			 	
 		 	tmp.put("modifiers",$m.result);
 		 	HashMap tmp2 = new HashMap();
@@ -603,9 +630,14 @@ primrule returns[HashMap result]
 			$result = tmp2;
 		 	
 		 }
-	|	e=emit_block { 
+	|	(label=VAR ARROW_RIGHT)? e=emit_block {
 			HashMap tmp = new HashMap();
 			tmp.put("emit",$e.emit_value);
+
+		 	if($label.text != null) 
+			 	tmp.put("label",$label.text);
+
+
 			$result = tmp;
 		}
 	 )
@@ -651,13 +683,13 @@ modifier returns[HashMap result]
 
 
 using returns[HashMap result]	
-	:	USING (p=STRING|r=REX) s=setting? {
+	:	USING (p=STRING|r=regex) s=setting? {
 			HashMap tmp = new HashMap();
 			HashMap evt_expr = new HashMap();
 			if($p.text != null)
 				evt_expr.put("pattern",strip_string($p.text));
 			else
-				evt_expr.put("pattern",$r.text);
+				evt_expr.put("pattern",$r.result);
 			
 			evt_expr.put("legacy",1);
 			evt_expr.put("type","prim_event");
@@ -666,7 +698,8 @@ using returns[HashMap result]
 			if($s.text != null)
 				evt_expr.put("vars",$s.result);	
 			
-			tmp.put("event_expr",evt_expr);		
+			tmp.put("event_expr",evt_expr);
+			tmp.put("foreach",new ArrayList());
 			$result=tmp;
 		};
 
@@ -689,14 +722,13 @@ pre_block returns[ArrayList result]
 	 }
 	 
 	 ;
-foreach returns[ArrayList result]
+foreach returns[HashMap result]
 	: 
 	FOREACH e=expr s=setting {
-		$result = new ArrayList();
 		HashMap tmp = new HashMap();
 		tmp.put("expr",e.result);
 		tmp.put("var",s.result);
-		$result.add(tmp);	
+		$result = tmp;	
 	}
 	;         
 when returns[HashMap result]	
@@ -884,68 +916,72 @@ event_prim returns[HashMap result]
 @init {
 	ArrayList filters = new ArrayList();
 }
-	:	
-	WEB? PAGEVIEW (spat=STRING|rpat=REX) set=setting? {
+	:
+	(custom_event)=>ce=custom_event {
+	 $result = ce.result;
+	}
+	| web=WEB? PAGEVIEW (spat=STRING|rpat=regex) set=setting? {
 		HashMap tmp = new HashMap();
-		tmp.put("domain","web");
+		tmp.put("domain",$web.text);
 		if($spat.text != null)
 			tmp.put("pattern",strip_string($spat.text));
 		else
-			tmp.put("pattern",$rpat.text);
+			tmp.put("pattern",$rpat.result);
 		tmp.put("type","prim_event");
-		if($set.text != null)
-			tmp.put("vars",$set.result);
+		tmp.put("vars",$set.result);
 		tmp.put("op","pageview");
 		$result = tmp;			
 	} 
-	| WEB? opt=must_be_one[sar("submit","click","dblclick","change","update")] elem=STRING on=on_expr?  set=setting? {
+	| web=WEB? opt=must_be_one[sar("submit","click","dblclick","change","update")] elem=STRING on=on_expr?  set=setting? {
 		HashMap tmp = new HashMap();
-		tmp.put("domain","web");
+
+		tmp.put("domain",$web.text);
 		tmp.put("element",strip_string($elem.text));
 		tmp.put("type","prim_event"); 
-		if($set.text != null)
-			tmp.put("vars",$set.result);
+		tmp.put("vars",$set.result);
 		tmp.put("op",$opt.text);
-		if($on.text != null)
-			tmp.put("on",$on.result);
+		tmp.put("on",$on.result);
 		$result = tmp;			
 	
 	}
-	| dom=VAR oper=VAR (filter=event_filter{filters.add($filter.result);})* set=setting?  {
-		HashMap tmp = new HashMap();
-		tmp.put("domain",$dom.text);
-		tmp.put("type","prim_event");
-		if($set.text != null)
-			tmp.put("vars",$set.result);
-		tmp.put("op",$oper.text);
-		if(filters.size() != 0)
-			tmp.put("filters",filters);
-		$result = tmp;			
-	
-	} 
 	| '(' evt=event_seq ')' {
 		$result=$evt.result;
 	}
 	;
 
 
-event_filter returns[ArrayList result]  
-	: typ=VAR (sfilt=STRING | rfilt=REX) {
+custom_event  returns[HashMap result]
+@init {
+	ArrayList filters = new ArrayList();
+}
+    :
+        dom=(VAR|WEB) oper=VAR (filter=event_filter{filters.add($filter.result);})* set=setting?  {
+		HashMap tmp = new HashMap();
+		tmp.put("domain",$dom.text);
+		tmp.put("type","prim_event");
+			tmp.put("vars",$set.result);
+		tmp.put("op",$oper.text);
+
+		tmp.put("filters",filters);
+		$result = tmp;
+		}
+    ;
+
+event_filter returns[HashMap result]
+	: typ=VAR (sfilt=STRING | rfilt=regex) {
 		HashMap tmp = new HashMap();
 		tmp.put("type",$typ.text);
 		if($sfilt.text != null)
 			tmp.put("pattern",strip_string($sfilt.text));
 		else
-			tmp.put("pattern",$rfilt.text);
-		ArrayList ar = new ArrayList();
-		ar.add(tmp);
-		$result = ar;
+			tmp.put("pattern",$rfilt.result);
+		$result = tmp;
 	}
 	;	  
 
-on_expr returns[String result] : ON
+on_expr returns[Object result] : ON
 	( 	s=STRING {$result = strip_string($s.text);} 
-		| r=REX {$result = $r.text;}
+		| r=regex {$result = $r.result;}
 	)	 
 	; 
 		 
@@ -972,6 +1008,7 @@ on_expr returns[String result] : ON
 		if($dtype.text != null)
 		{
 			tmp.put("datatype",$dtype.text);
+	        dtype = null;
 		}
 		tmp.put("source",strip_string($src.text));
 		if(found_cache)
@@ -1066,8 +1103,7 @@ function_def returns[Object result]
 		}
 		tmp.put("vars",nargs);
 		tmp.put("type","function");
-		if(block_array.size() != 0)
-			tmp.put("decls",block_array); 
+		tmp.put("decls",block_array); 
 		if($e1.text != null)
 			tmp.put("expr",$e1.result);	
 				
@@ -1087,6 +1123,12 @@ conditional_expression returns[Object result]
 		}
 		else
 		{
+		    HashMap tmp = new HashMap();
+		    tmp.put("test",$d.result);
+		    tmp.put("then",$e1.result);
+		    tmp.put("else",$e2.result);
+		    tmp.put("type","condexpr");
+		    $result = tmp;
 			
 		}
 		   
@@ -1110,10 +1152,13 @@ disjunction returns[Object result]
 			 add_to_expression(result,"pred",$op.text,$me2.result);
 
 	})* {
-		if(found_op)
-			$result = build_exp_result(result); 
+		if(found_op) {
+			$result = build_exp_result(result);
+			 }
 		else
+		{
 			$result = $me1.result;
+			}
 	}
 	;	
 	
@@ -1169,7 +1214,15 @@ unary_expr  returns[Object result] options { backtrack = true; }
 @init {
 
 }
-	: NOT unary_expr  
+	: NOT ue=unary_expr {
+      	      	HashMap tmp = new HashMap();
+	      	tmp.put("type","pred");
+	      	tmp.put("op","negation");
+	      	ArrayList tmpar = new ArrayList();
+	      	tmpar.add($ue.result);
+	      	tmp.put("args",tmpar);
+	      	$result = tmp;				
+	}  
 	| SEEN rx=STRING must_be["in"] vd=VAR_DOMAIN ':' v=VAR t=timeframe? {
       	      	HashMap tmp = new HashMap();
 	      	tmp.put("within",$t.result);
@@ -1209,10 +1262,17 @@ unary_expr  returns[Object result] options { backtrack = true; }
 	      	tmp.put("timeframe",t.time);
 	      	tmp.put("type","persistent_ineq");
 	      	tmp.put("domain",$vd.text);
+	      	HashMap tmp2 = new HashMap();
+	      	tmp2.put("val","true");
+	      	tmp2.put("type","bool");
+	      	tmp.put("expr",tmp2);
 	      	tmp.put("ineq","==");
 	      	tmp.put("var",$v.text);
 	      	$result = tmp;		
 	
+	}
+	| roe=regex { 
+		$result = $roe.result; 
 	}
 	| oe=operator_expr { 
 		$result = $oe.result; 
@@ -1246,15 +1306,15 @@ operator_expr returns[Object result]
 				if(i == (templist.size() - 1))
 				{				
 					the_result = current;
-					current.put("obj",$f.result);
 				}
-				if(i != 0)
+				if(i != 0 )
 				{
 					current.put("obj",templist.get(i-1));      		
 				}
-		      		last_one = current;		
+		      	last_one = current;		
 			}
-		      	$result = the_result;;		
+			last_one.put("obj",$f.result);
+		    $result = the_result;;		
 		}
 		else
 		{
@@ -1270,21 +1330,21 @@ operator returns[String oper,ArrayList exprs]
 }
 	: DOT ( o=OTHER_OPERATORS LEFT_PAREN (e=expr {rexprs.add(e.result); } (',' e1=expr {rexprs.add(e1.result); } )*)? RIGHT_PAREN	{
       		// Remove .
-      		$oper = $o.text.substring(1,$o.text.length());
+      		$oper = $o.text;
       		$exprs = rexprs;
       	} 
       	|
       	 o1=MATCH LEFT_PAREN e=expr { rexprs.add(e.result); }  RIGHT_PAREN	{
       		// Remove .
-      		$oper = $o1.text.substring(1,$o1.text.length());
+      		$oper = $o1.text;
       		$exprs = rexprs;
       	} 
       	| 
-      	 o2=REPLACE LEFT_PAREN rx=REX {rexprs.add($rx.text); } (VAR)? ',' e1=expr  RIGHT_PAREN	{
+      	 o2=REPLACE LEFT_PAREN rx=expr {rexprs.add($rx.result); } ',' e1=expr  RIGHT_PAREN	{
 	          rexprs.add(e1.result); 
 	          
       		// Remove .
-      		$oper = $o2.text.substring(1,$o2.text.length());
+      		$oper = $o2.text;
       		$exprs = rexprs;
       	} ) 
 	;
@@ -1345,7 +1405,11 @@ factor returns[Object result] options { backtrack = true; }
       	      	HashMap tmp = new HashMap();
 	      	tmp.put("domain",$d.text);
 	      	tmp.put("name",$v.text);
-	      	tmp.put("type","persistent");
+	      	tmp.put("type","trail_history");
+	      	HashMap tmp2 = new HashMap();
+	      	tmp2.put("val","0");
+	      	tmp2.put("type","num");
+	      	tmp.put("offset",tmp2);
 	      	$result = tmp;
       } 
       | HISTORY e=expr d=VAR_DOMAIN COLON v=VAR {
@@ -1398,10 +1462,10 @@ factor returns[Object result] options { backtrack = true; }
 		tmp.put("val",$v.text);
 		$result = tmp;
       }
-      | reg=REX { 
+      | reg=regex {
 	      HashMap tmp = new HashMap(); 
 		tmp.put("type","var"); 
-		tmp.put("val",$reg.text);
+		tmp.put("val",$reg.result);
 		$result = tmp;
       	}     
 
@@ -1422,7 +1486,7 @@ fragment namespace returns[String result]
 timeframe returns[Object result,String time]
 	:  WITHIN e=expr p=period {
 		$result = $e.result;
-		$time = $p.text;
+		$time = fix_time($p.text);
 	}
 		
 	;
@@ -1444,7 +1508,7 @@ css_emit returns[String emit_value]
 	)
 	;
 	
- period 
+period
 	: 
 		must_be_one[sar( "years", "months", "weeks", "days", "hours", "minutes", "seconds", "year", "month", "week", "day", "hour", "minute", "second")]
 	;
@@ -1476,7 +1540,7 @@ cachable returns[Object what]
  			{
 	 			$what = new HashMap();
 	 			((HashMap)$what).put("value",$tm.text);
-	 			((HashMap)$what).put("period",$per.text);	 			
+	 			((HashMap)$what).put("period",fix_time($per.text));	 			
 	 		}
 	 		else if($ca.text != null)
 	 		{
@@ -1529,12 +1593,13 @@ meta_block
 		if(!key_values.isEmpty()) 
 			keys_map.put($what.text,key_values); 
 		else 
-			keys_map.put($what.text,strip_string($key_value.text)); 
+			keys_map.put($what.text,strip_string($key_value.text));
+        key_values = new HashMap();
 	}	
 	| AUTHZ REQUIRE must_be["user"] {  
 		HashMap tmp = new HashMap(); 
 		tmp.put("level","user");
-		tmp.put("type","required");
+		tmp.put("type","require");
 		meta_block_hash.put("authz",tmp);
 	   } 
 	| LOGGING onoff=(ON|OFF) {  meta_block_hash.put("logging",$onoff.text); }
@@ -1553,7 +1618,7 @@ meta_block
 		} 
 		tmp.put("resource",tmp2);
 		
-		tmp.put("name",$name.text);
+		tmp.put("type","resource");
 		tmp.put("resource_type",$rtype.text);
 		use_list.add(tmp);
 	 })
@@ -1563,6 +1628,7 @@ meta_block
 		tmp.put("type","module");
 		if($alias.text != null) {
 			tmp.put("alias",$alias.text);
+			alias = null;
 		}
 		use_list.add(tmp);
 	 })
@@ -1583,6 +1649,8 @@ dispatch_block
 		if($rsid.text != null)
 		{
 			tmp.put("ruleset_id",strip_string($rsid.text));
+			rsid = null;
+			
 		}
 		dispatch_block_array.add(tmp);
 		})* 
@@ -1607,16 +1675,29 @@ name_value_pair[HashMap key_values]
     :  '/' ( options {greedy=false;} : .   ) * '/' 
     ;	
     
-
-regex returns[String result]
+*/
+regex returns[HashMap result]
 @init {   
-     String data = ""; 
+
 } 
      : 
-       rx=REGEX { $result = $rx.text; }
+       rx=REX {
+            HashMap tmp = new HashMap();
+            tmp.put("type","regexp");
+            if($rx.text.charAt(0) == '#')
+            {
+                tmp.put("val",$rx.text);                
+            }
+            else
+            {
+                tmp.put("val",$rx.text.substring(2,$rx.text.length()));
+            }
+            $result = tmp;
+        }
      ;
-*/	
-REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* 
+
+REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
+        '#' ((ESC_SEQ)=>ESC_SEQ | '\\#' | ~('#')  )* '#' ('g'|'i'|'m')*
 	;	 
 	
 /*regex returns[String result]
@@ -1716,7 +1797,7 @@ WS  :   ( ' '
     ;
 
 STRING
-    :  '"' ( '\\"' | ~('"') )* '"' 
+    :  '"' ( '\\"' | ~('"') )* '"'  | '\'' ( '\\\'' | ~('\'') )* '\''
     ;
 
 fragment POUND 

@@ -59,8 +59,15 @@ public class ParseRuleset
 					com.kynetx.RuleSetParser parser = new com.kynetx.RuleSetParser(tokens);
 					parser.ruleset();			
 					JSONObject js = new JSONObject(parser.rule_json);
+//                    if(parser.parse_errors.size() >0)
+//                    {
+//                        for(int ii = 0;ii < parser.parse_errors.size() ;ii++)
+//                        {
+//                            System.err.println("ERROR FOUND " + parser.parse_errors.get(ii));
+//                        }
+//                    }
 //					System.out.println("Parsed: " + thefile + " in " + (System.currentTimeMillis() - start) + "ms." );
-					System.out.println(js.toString(3));
+					System.out.println(js.toString());
 				}
 				catch(Exception e)
 				{
@@ -70,6 +77,6 @@ public class ParseRuleset
 			}
 //			System.out.println("Not Parsed " + notparsed);
 //			System.out.println("Parsed " + parsed);
-			
+
 		}
 }
