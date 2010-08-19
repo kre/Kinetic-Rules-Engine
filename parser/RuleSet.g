@@ -146,7 +146,7 @@ options {
 	{
 		System.out.println(str);
 	}
-	 
+
 	public HashMap build_exp_result(ArrayList operators)
 	{
 //		puts("Start " + operators.size() ) ;
@@ -911,8 +911,11 @@ event_prim returns[HashMap result]
 @init {
 	ArrayList filters = new ArrayList();
 }
-	:	
-	web=WEB? PAGEVIEW (spat=STRING|rpat=regex) set=setting? {
+	:
+	(custom_event)=>ce=custom_event {
+	 $result = ce.result;
+	}
+	| web=WEB? PAGEVIEW (spat=STRING|rpat=regex) set=setting? {
 		HashMap tmp = new HashMap();
 		tmp.put("domain",$web.text);
 		if($spat.text != null)
@@ -936,7 +939,18 @@ event_prim returns[HashMap result]
 		$result = tmp;			
 	
 	}
-	| dom=VAR oper=VAR (filter=event_filter{filters.add($filter.result);})* set=setting?  {
+	| '(' evt=event_seq ')' {
+		$result=$evt.result;
+	}
+	;
+
+
+custom_event  returns[HashMap result]
+@init {
+	ArrayList filters = new ArrayList();
+}
+    :
+        dom=(VAR|WEB) oper=VAR (filter=event_filter{filters.add($filter.result);})* set=setting?  {
 		HashMap tmp = new HashMap();
 		tmp.put("domain",$dom.text);
 		tmp.put("type","prim_event");
@@ -944,14 +958,9 @@ event_prim returns[HashMap result]
 		tmp.put("op",$oper.text);
 
 		tmp.put("filters",filters);
-		$result = tmp;			
-	
-	} 
-	| '(' evt=event_seq ')' {
-		$result=$evt.result;
-	}
-	;
-
+		$result = tmp;
+		}
+    ;
 
 event_filter returns[HashMap result]
 	: typ=VAR (sfilt=STRING | rfilt=regex) {
@@ -1138,10 +1147,13 @@ disjunction returns[Object result]
 			 add_to_expression(result,"pred",$op.text,$me2.result);
 
 	})* {
-		if(found_op)
-			$result = build_exp_result(result); 
+		if(found_op) {
+			$result = build_exp_result(result);
+			 }
 		else
+		{
 			$result = $me1.result;
+			}
 	}
 	;	
 	
@@ -1780,7 +1792,7 @@ WS  :   ( ' '
     ;
 
 STRING
-    :  '"' ( '\\"' | ~('"') )* '"' 
+    :  '"' ( '\\"' | ~('"') )* '"'  | '\'' ( '\\\'' | ~('\'') )* '\''
     ;
 
 fragment POUND 

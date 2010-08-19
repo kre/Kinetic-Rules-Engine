@@ -1,0 +1,1 @@
+{"global":[],"global_start_line":null,"dispatch":[],"dispatch_start_col":null,"meta_start_line":2,"rules":[],"meta_start_col":5,"meta":{"logging":"off","name":"TwitterReader","meta_start_line":2,"description":"A reader of Tweets.   \n","meta_start_col":5},"dispatch_start_line":null,"global_start_col":null,"ruleset_name":"a194x1"}
