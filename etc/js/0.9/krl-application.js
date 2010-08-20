@@ -91,7 +91,6 @@ function KrlApplication(app)
 
     // Defaults for request to server
     this.version = "blue";
-    this.domain = "web";
 
     this.app_vars = {};
 
@@ -146,6 +145,66 @@ KrlApplication.prototype.reload_later = function(delay)
     setTimeout(func, delay);
 };
 
+
+KrlApplication.prototype.raise_event = function(event_name,parameters,other_app_id)
+{
+    var other_app = null;
+    if(typeof(other_app_id) != "undefined" && other_app_id != null)
+    {
+        // If we are doing an event on another app it must be registered in order to
+        // work.  So find it and add it if needed
+        other_app = KOBJ.get_application(other_app_id);
+        if(other_app == null)
+        {
+            other_app = KOBJ.add_app_config({rids: [other_app_id]});
+            other_app = KOBJ.get_application(other_app_id);
+            other_app.clone_app_params(this);
+        }
+    }
+    else
+    {
+        other_app = this;
+    }
+
+    var all_data = {};
+
+    if(typeof(parameters)  != "undefined" && parameters != null) {
+        var found_data = [];
+        $KOBJ.each(parameters, function(name,v) {
+            found_data.push({name: name,value:v });
+        });
+        all_data["param_data"] = found_data;
+    }
+
+    KOBJEventManager.add_out_of_bound_event(other_app, event_name, true, all_data);
+
+};
+
+
+
+KrlApplication.prototype.clone_app_params = function(app) {
+    var other_app_id = app.app_id;
+
+    var myself = this;
+    // right now we only need to know about app version
+    $KOBJ.each(app.page_params, function(k, v) {
+        // Because of an issue where people were passing in comma seperated list of app version we need
+        // to apply a rule that if dev is found then that will be used if not found then the first one will be used.
+
+        if (k == other_app_id + ":kynetx_app_version")
+        {
+          if(v.indexOf("dev") != -1)
+          {
+              myself.page_params[myself.app_id + ":kynetx_app_version"] = "dev" ;
+          }
+          else
+          {
+              myself.page_params[myself.app_id + ":kynetx_app_version"] = v.split(",")[0] ;
+          }
+        }
+    });
+
+}
 
 KrlApplication.prototype.page_vars_as_url = function() {
     var param_str = "";
@@ -228,9 +287,11 @@ KrlApplication.prototype.execute_pending_closures = function()
         return;
     }
 
+    var myself = this;
     $KOBJ.each(this.pending_closures, function(guid, the_closure) {
+        KOBJ.itrace("Executing Closure " + myself.app_id + " - " + guid);
         the_closure($KOBJ);
-        KOBJEventManager.event_fire_complete(this, guid);
+        KOBJEventManager.event_fire_complete(myself, guid);
     });
 
     this.pending_closures = {};
@@ -244,16 +305,17 @@ KrlApplication.prototype.run = function()
 };
 
 
-KrlApplication.prototype.fire_event = function(event, data, guid)
+KrlApplication.prototype.fire_event = function(event, data, guid,domain)
 {
     this.load_data_sets();
+
 
     var url = [KOBJ.proto() +
                KOBJ.eval_host +
                KOBJ.kns_port,
         this.version,
         'event',
-        this.domain,
+        domain,
         event,
         this.app_id,
         guid
@@ -334,7 +396,8 @@ KrlApplication.prototype.load_data_sets = function()
     // not come back in this call anyway.
     if (!this.is_data_loaded() && !this.data_set_load_requested)
     {
-        var data_url = KOBJ.proto() + KOBJ.init_host + KOBJ.kns_port + "/js/datasets/" + this.app_id + "/";
+        var data_url = KOBJ.proto() + KOBJ.init_host + KOBJ.kns_port + "/js/datasets/" + this.app_id + "/?t=t" +
+                        this.page_vars_as_url();
         KOBJ.require(data_url);
     }
 };

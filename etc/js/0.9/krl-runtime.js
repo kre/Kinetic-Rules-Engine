@@ -143,10 +143,31 @@ KOBJ.kvars_to_json = function() {
 };
 
 KOBJ.named_resources = {
-    "jquery_ui_js" : "https://kresources.kobj.net/jquery_ui/1.8/jquery_ui_1.8.2.js",
-    "jquery_ui_darkness_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_darkness/jquery-ui-1.8.2.custom.css",
-    "jquery_ui_lightness_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_lightness/jquery-ui-1.8.2.custom.css",
-    "jquery_ui_smoothness_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_smoothness/jquery-ui-1.8.2.custom.css"
+    "jquery_ui_js" : "https://kresources.kobj.net/jquery_ui/1.8/jquery-ui-1.8.4.custom.min.js",
+    "jquery_ui_darkness_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_darkness/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_lightness_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_lightness/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_smoothness_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_smoothness/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_start_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_start/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_redmond_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_redmond/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_sunny_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_sunny/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_overcast_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_overcast/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_le_frog_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_le_frog/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_flicker_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_flicker/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_pepper_grinder_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_pepper_grinder/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_eggplan_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_eggplan/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_dark_hive_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_dark_hive/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_cupertino_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_cupertino/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_south_street_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_south_street/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_blitzer_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_blitzer/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_humanity_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_humanity/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_hot_sneaks_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_hot_sneaks/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_excite_bike_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_excite_bike/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_vader_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_vader/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_dot_lov_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_dot_lov/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_mint_choc_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_mint_choc/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_black_tie_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_black_tie/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_trontastic_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_trontastic/jquery-ui-1.8.4.custom.css",
+    "jquery_ui_swanky_purse_css" : "https://kresources.kobj.net/jquery_ui/1.8/css/ui_swanky_purse/jquery-ui-1.8.4.custom.css"
 };
 
 /*
@@ -164,7 +185,9 @@ KOBJ.registerExternalResources = function(rid, resources) {
         {
             url = KOBJ.named_resources[url];
         }
-        
+
+        url = KOBJ.proto() + url.substr(url.indexOf(":") + 3, url.length);
+
         if (url && KOBJ.external_resources[url] == null)
         {
             if (typeof(options["type"]) != "undefined")
