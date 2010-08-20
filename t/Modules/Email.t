@@ -18,8 +18,8 @@ use Email::MIME;
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
-Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($INFO);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
