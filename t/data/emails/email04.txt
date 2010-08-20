@@ -1,0 +1,111 @@
+// multipart text/html
+Delivered-To: qwbillings@gmail.com
+Received: by 10.204.54.71 with SMTP id p7cs301818bkg;
+        Wed, 18 Aug 2010 10:49:51 -0700 (PDT)
+Received: by 10.151.8.8 with SMTP id l8mr659173ybi.231.1282153790270;
+        Wed, 18 Aug 2010 10:49:50 -0700 (PDT)
+Return-Path: <n-AGPUG8427_65cDTttaxMnF47tQP1sBwmn7wYCBLp2bX3f4f-TW0xVss8FWcq@bounce.linkedin.com>
+Received: from mail16-b-ab.linkedin.com (mail16-b-ab.linkedin.com [64.74.98.146])
+        by mx.google.com with ESMTP id n9si1334011ibn.41.2010.08.18.10.49.48;
+        Wed, 18 Aug 2010 10:49:49 -0700 (PDT)
+Received-SPF: pass (google.com: domain of n-AGPUG8427_65cDTttaxMnF47tQP1sBwmn7wYCBLp2bX3f4f-TW0xVss8FWcq@bounce.linkedin.com designates 64.74.98.146 as permitted sender) client-ip=64.74.98.146;
+Authentication-Results: mx.google.com; spf=pass (google.com: domain of n-AGPUG8427_65cDTttaxMnF47tQP1sBwmn7wYCBLp2bX3f4f-TW0xVss8FWcq@bounce.linkedin.com designates 64.74.98.146 as permitted sender) smtp.mail=n-AGPUG8427_65cDTttaxMnF47tQP1sBwmn7wYCBLp2bX3f4f-TW0xVss8FWcq@bounce.linkedin.com; dkim=pass header.i=@linkedin.com
+DomainKey-Signature: q=dns; a=rsa-sha1; c=nofws;
+    s=prod; d=linkedin.com;
+    h=DKIM-Signature:Sender:Date:From:To:Message-ID:Subject:MIME-Version:Content-Type:X-LinkedIn-Template:X-LinkedIn-Class:X-LinkedIn-fbl;
+    b=Q9izDLhRQjrULEI3eyFcsO1WFKf1mfOIrqdxWy85vTzSe4p7MPpc+gmluk/CFX0z
+    62YnxbZb6tGOY/g1wGWI5KNRn4EtLUlfjLpjidCAqIFgN0/vji5raGTphAWBTYFG
+DKIM-Signature: v=1; a=rsa-sha1; d=linkedin.com; s=proddkim; c=relaxed/simple;
+    q=dns/txt; i=@linkedin.com; t=1282153788;
+    h=From:Subject:Date:To:MIME-Version:Content-Type;
+    bh=KKlUJ1jbx6UFYo3KejDVi8swQXI=;
+    b=ULAaJUpiyZVjoOCJeiYsvv1TXVRPo+Wxf3iKwtIsCOaJIaJPGeAIhXf6/BCa3XB4
+    iGGasshbgjZfOMQXceJvahNAfMQ3Ywp5DMmrZuqc5Vr7AQjVsdIoMSHyh9AD8lsp;
+Sender: messages-noreply@bounce.linkedin.com
+Date: Wed, 18 Aug 2010 10:49:48 -0700 (PDT)
+From: LinkedIn Communication <communication@linkedin.com>
+To: Q Wade Billings <qwbillings@gmail.com>
+Message-ID: <1578248566.729067.1282153788757.JavaMail.app@ech3-cdn09.prod>
+Subject: LinkedIn Messages, 8/18/2010
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+    boundary="----=_Part_729066_1958089942.1282153788756"
+X-LinkedIn-Template: batch_type_1
+X-LinkedIn-Class: MBR-BATCHED
+X-LinkedIn-fbl: n-AGPUG8427_65cDTttaxMnF47tQP1sBwmn7wYCBLp2bX3f4f-TW0xVss8FWcq
+
+------=_Part_729066_1958089942.1282153788756
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+LinkedIn
+------------
+
+
+ REMINDERS:
+Invitation Reminders:
+             * View Invitation from Sandy Markle (Colleague at Lower My Bills.com, an Experian Company) http://www.linkedin.com/e/5t9dkf-gd0h9f0z-51/jELS0iEcKJkcDpbjjVH43V11EnBe_Avc/blk/I14350837_9/elYTcPwMdjcQckALqnpPbOYWrSlI/svi/
+
+
+
+
+
+PENDING MESSAGES:
+
+There are a total of 5 messages awaiting your response. Visit your InBox now:
+http://www.linkedin.com/e/5t9dkf-gd0h9f0z-51/jELS0iEcKJkcDpbjjVH43V11EnBe_Avc/inb/
+
+------
+
+Don't want to receive email notifications? Adjust your message settings:
+https://www.linkedin.com/e/5t9dkf-gd0h9f0z-51/jELS0iEcKJkcDpbjjVH43V11EnBe_Avc/prv/
+
+LinkedIn values your privacy. At no time has LinkedIn made your email address available to any other LinkedIn user without your permission. (c) 2010, LinkedIn Corporation.
+
+
+------=_Part_729066_1958089942.1282153788756
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+
+<html>
+  <body>
+
+
+
+<table border="0" width="550" cellpadding="0" cellspacing="0" style="max-width:550px; border-top:4px solid #39C; font: 12px arial, sans-serif; margin: 0 auto;"><tr><td>
+  <h1 style="color: #000; font: bold 23px arial; margin:5px 0;" >LinkedIn</h1>
+
+
+
+<h2 style="margin:0; padding:0; font:17px arial; color:#069;">REMINDERS</h2>
+    <p style="margin: 5px 0;font-size:12px"><strong>Invitation reminders:</strong></p>
+
+                <span style="color:#999999;">&#8226;</span>&nbsp;
+                <a href="http://www.linkedin.com/e/5t9dkf-gd0h9f0z-51/jELS0iEcKJkcDpbjjVH43V11EnBe_Avc/blk/I14350837_9/elYTcPwMdjcQckALqnpPbOYWrSlI/EML-bt1-rem-frm_svi/" style="color:#0066CC;"> From <strong>Sandy Markle</strong> </a>
+                  <span style="color:#666666;">(Colleague at Lower My Bills.com, an Experian Company)</span>
+        <br>
+
+
+<br>
+
+<div style="border-bottom: 3px solid #ddd; line-height:3px">&nbsp;</div>
+
+<br>
+
+    <h2 style="margin:0; padding:0; font:17px arial; color:#069;">PENDING MESSAGES</h2>
+    <p style="margin:0 0 15px 0;">
+      <span style="color:#999999;">&#8226;</span> There are a total of 5 messages awaiting your response. <a href="http://www.linkedin.com/e/5t9dkf-gd0h9f0z-51/jELS0iEcKJkcDpbjjVH43V11EnBe_Avc/inb/" style="color:#0066CC;"><strong>Visit your InBox now.</strong></a>
+    </p>
+    <div style="border-top: 3px solid #ddd; line-height:3px">&nbsp;</div>
+
+  <p style="margin: 10px 0;">Don't want to receive email notifications? <a href="https://www.linkedin.com/e/5t9dkf-gd0h9f0z-51/jELS0iEcKJkcDpbjjVH43V11EnBe_Avc/prv/" style="color:#0066CC;">Adjust your message settings.</a></p>
+  <p style="color:#999999; font-size:11px;">LinkedIn values your privacy. At no time has LinkedIn made your email address available to any other LinkedIn user without your permission. &#169; 2010, LinkedIn Corporation.</p>
+
+
+
+
+
+</body>
+</html>
+------=_Part_729066_1958089942.1282153788756--
