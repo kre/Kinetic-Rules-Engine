@@ -185,7 +185,9 @@ KOBJ.registerExternalResources = function(rid, resources) {
         {
             url = KOBJ.named_resources[url];
         }
-        
+
+        url = KOBJ.proto() + url.substr(url.indexOf(":") + 3, url.length);
+
         if (url && KOBJ.external_resources[url] == null)
         {
             if (typeof(options["type"]) != "undefined")
