@@ -231,6 +231,15 @@ sub eval_module {
             $val = Kynetx::Modules::HTTP::run_function( $req_info, $function,
                                                         $args );
         }
+    } elsif ( $source eq 'pds' ) {
+        $preds = Kynetx::Modules::PDS::get_predicates();
+        if ( defined $preds->{$function} ) {
+            $val = $preds->{$function}->( $req_info, $rule_env, $args );
+            $val ||= 0;
+        } else {
+            $val = Kynetx::Modules::PDS::run_function( $req_info, $function,
+                                                        $args );
+        }
     } elsif ( $source eq 'email' ) {
         $preds = Kynetx::Modules::Email::get_predicates();
         if ( defined $preds->{$function} ) {

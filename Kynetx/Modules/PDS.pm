@@ -136,11 +136,10 @@ sub pds_get {
     }
 }
 
-sub eval_pds {
-    my ($req_info,$session,$path,$args) =@_;
+sub run_function {
+    my ($req_info,$session,$function,$args) =@_;
     my $logger = get_logger();
-    my $function = $path;
-    $logger->debug("PDS request: $path");
+    $logger->debug("PDS request: $function");
     my $f = $funcs->{$function};
     if ( defined $f ) {
         return $f->( $req_info, $session, $function, $args);

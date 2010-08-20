@@ -72,16 +72,29 @@ use Kynetx::FakeReq;
 use Kynetx::Environments;
 use Kynetx::Rules;
 use Kynetx::Predicates::OData;
-use Kynetx::Session;
+use Kynetx::Session qw/:all/;
+use Kynetx::MongoDB;
+use Kynetx::Modules::PDS::KEN qw/:all/;
 
 Kynetx::Configure::configure();
+my $ck = "d528c1b5f7446c9322de70fbcaea1bb2";
+
+# configure KNS
+Kynetx::Configure::configure();
+
+$logger->debug("Initializing memcached");
+Kynetx::Memcached->init();
+
+# Basic MongoDB commands
+$logger->debug("Initializing mongoDB");
+Kynetx::MongoDB::init();
 
 my $rid = 'PDStest';
 my $results;
 my $tcount=0;
 
 my $r = Kynetx::Test::configure();
-my $session = Kynetx::Test::gen_session($r, $rid);
+my $session = process_session($r,$ck);
 my $req_info = Kynetx::Test::gen_req_info();
 my $rule_env = Kynetx::Test::gen_rule_env();
 
@@ -126,7 +139,7 @@ cmp_deeply($results,$expected,$description);
 $function = "get";
 
 $args = {"path" => 'medical.doctor'};
-$json = Kynetx::Modules::PDS::eval_pds($req_info,$session,$function,$args);
+$json = Kynetx::Modules::PDS::run_function($req_info,$session,$function,$args);
 cmp_deeply($json,1,"True");
 $tcount++;
 
