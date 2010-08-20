@@ -92,10 +92,6 @@ sub get_collection {
     return $db->get_collection($name);
 }
 
-sub get_pds {
-    return get_collection("kpds");
-}
-
 
 
 

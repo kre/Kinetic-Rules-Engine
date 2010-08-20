@@ -86,7 +86,7 @@ sub new_ken {
     my $logger = get_logger();
     $struct = $struct || get_ken_defaults();
     $logger->debug("KEN struct: ",sub {Dumper($struct)});
-    my $kpds = Kynetx::MongoDB::get_pds();
+    my $kpds = Kynetx::MongoDB::get_collection("kens");
     my $ken = $kpds->insert($struct);
     return $ken->{"value"};
 }
