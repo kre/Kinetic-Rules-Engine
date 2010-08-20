@@ -140,8 +140,8 @@ File.open(ARGV[1]).each_line{ |s|
 
 if leftside.strip.size != 0 && rightside.strip.size != 0
   puts ARGV[0]
-  leftj = JSON.parse(leftside);
-  rightj = JSON.parse(rightside);
+  leftj = JSON.parse(leftside,:max_nesting => 50);
+  rightj = JSON.parse(rightside,:max_nesting => 50);
   diff_hash(leftj,rightj)
 else
   if leftside.strip.size == 0

@@ -1,1 +1,1 @@
-/mnt/hgfs/Development/krl_engine/bin/krl-parser.pl -f /mnt/hgfs/crap/allrules/$1 -j  >  oldparser/$1
+/mnt/hgfs/Development/krl_engine/bin/krl-parser.pl -f /mnt/hgfs/crap/prodrules/$1 -j  >  oldparser/$1
