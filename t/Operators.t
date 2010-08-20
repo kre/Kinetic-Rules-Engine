@@ -116,6 +116,7 @@ pre {
   r_html = <<$content2>>;
   html_arr = [q_html,r_html];
   meta_str = <<td[style="background: #ddf;"]>>;
+  a_h = { "colors of the wind" : "many","pi as array" : [3,1,4,1,5,6,9]};
 }
 _KRL_
 
