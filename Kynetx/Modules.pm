@@ -79,6 +79,7 @@ use Kynetx::Predicates::Google;
 use Kynetx::Predicates::OData;
 use Kynetx::Predicates::RSS;
 use Kynetx::Predicates::Facebook;
+use Kynetx::Modules::Email;
 use Kynetx::Modules::HTTP;
 
 sub eval_module {

@@ -41,6 +41,8 @@ use Log::Log4perl qw(get_logger :levels);
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
+use Email::MIME qw/:all/;
+
 use Kynetx::Environments qw/:all/;
 use Kynetx::Util qw/
   mis_error
