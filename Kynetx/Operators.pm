@@ -585,7 +585,7 @@ sub eval_as {
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 
-    $logger->trace("obj: ", sub { Dumper($obj) }, " as ", $rands->[0]->{'val'} );
+    $logger->debug("obj: ", sub { Dumper($obj) }, " as ", $rands->[0]->{'val'} );
 
     my $v = 0;
     if ($obj->{'type'} eq 'str') {
@@ -608,6 +608,14 @@ sub eval_as {
         my $target=_prune_persitent_trail($thing);
         $obj->{'type'} = $rands->[0]->{'val'};
         $obj->{'val'} = $target;
+    } elsif ($rands->[0]->{'val'} eq 'json'){
+        if ($obj->{'type'}) {
+            my $tmp = Kynetx::Expressions::den_to_exp($obj);
+            $logger->debug("EXP: ", sub {Dumper($tmp)});
+            my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
+            $logger->debug("JSON: ", $json);
+            return $json;
+        }
     }
 
     return $obj;
@@ -775,6 +783,37 @@ sub set_unique {
 
 }
 $funcs->{'unique'} = \&set_unique;
+
+#----------------------------------------------------------------------------------
+# Hash operations
+#----------------------------------------------------------------------------------
+sub hash_put {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+    my $type = $obj->{'type'};
+    if ($type eq 'hash') {
+        my $hash = $obj->{'val'};
+        foreach my $elem (@$rands) {
+            # only hash elements can be added to hashes
+            if ($elem->{'type'} eq 'hash') {
+                my $val = $elem->{'val'};
+                foreach my $rkey (keys %$val) {
+                    $hash->{$rkey} = $val->{$rkey};
+                }
+            } else {
+                $logger->warn("Only hashes may be added using put() operator");
+                return $obj;
+            }
+        }
+        return Kynetx::Expressions::typed_value($hash);
+    } else {
+        $logger->warn("put() operator not supported for objects of type: $type");
+        return $obj;
+    }
+}
+$funcs->{'put'} = \&hash_put;
 
 #-----------------------------------------------------------------------------------
 # make it all happen

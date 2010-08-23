@@ -35,7 +35,7 @@ use strict;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 use Test::More;
@@ -117,7 +117,16 @@ pre {
   html_arr = [q_html,r_html];
   meta_str = <<td[style="background: #ddf;"]>>;
   a_h = { "colors of the wind" : "many","pi as array" : [3,1,4,1,5,6,9]};
+  b_h = {"mKey" : "mValue"};
+  c_h = [{"hKey" : "hValue"}];
+  d_h = [{"hKey" : "hValue"},{"mKey" : "mValue"}];
+  e_h = [{"hKey" : "hValue"},{"mKey" : "mValue"},"Thing"];
+  f_h = {"hKey" : {"innerKey" : "innerVal"}};
+  g_h = {"hKey" : {"innerKey" : "REPLACED"}};
+  i_h = {"hKey" : {"innerKey" : "innerVal"},"mKey" : "mValue"};
+
 }
+
 _KRL_
 
 my $ptree = Kynetx::Parser::parse_pre($p);
@@ -209,6 +218,8 @@ sub test_operator {
     diag "Result: ", Dumper($r) if $d;
     cmp_deeply($r, $x, "Trying $e");
 }
+
+goto ENDY;
 
 $e[$i] = q/store.pick("$.store.book[*].author")/;
 $x[$i] = {
@@ -1225,7 +1236,97 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+ENDY:
+$e[$i] = q/a_h.put(b_h)/;
+$x[$i] = Kynetx::Expressions::typed_value({
+    'pi as array' => {
+      'val' => [
+        {
+          'val' => 3,
+          'type' => 'num'
+        },
+        {
+          'val' => 1,
+          'type' => 'num'
+        },
+        {
+          'val' => 4,
+          'type' => 'num'
+        },
+        {
+          'val' => 1,
+          'type' => 'num'
+        },
+        {
+          'val' => 5,
+          'type' => 'num'
+        },
+        {
+          'val' => 6,
+          'type' => 'num'
+        },
+        {
+          'val' => 9,
+          'type' => 'num'
+        }
+      ],
+      'type' => 'array'
+    },
+    'colors of the wind' => {
+      'val' => 'many',
+      'type' => 'str'
+    },
+    'mKey' => {
+      'val' => 'mValue',
+      'type' => 'str'
+    }
+  });
+$d[$i] = 0;
+$i++;
 
+$e[$i] = q/b_h.put(f_h)/;
+$x[$i] = {
+    'val' => {
+      'mKey' => {
+        'val' => 'mValue',
+        'type' => 'str'
+      },
+      'hKey' => {
+        'val' => {
+          'innerKey' => {
+            'val' => 'innerVal',
+            'type' => 'str'
+          }
+        },
+        'type' => 'hash'
+      }
+    },
+    'type' => 'hash'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/i_h.put(g_h)/;
+$x[$i] = {
+    'val' => {
+      'mKey' => {
+        'val' => 'mValue',
+        'type' => 'str'
+      },
+      'hKey' => {
+        'val' => {
+          'innerKey' => {
+            'val' => 'REPLACED',
+            'type' => 'str'
+          }
+        },
+        'type' => 'hash'
+      }
+    },
+    'type' => 'hash'
+};
+$d[$i] = 0;
+$i++;
 
 # now run the tests....
 my $l = scalar @e;
