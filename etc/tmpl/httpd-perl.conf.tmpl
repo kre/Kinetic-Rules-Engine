@@ -378,6 +378,14 @@ CustomLog "|/web/sbin/cronolog --period=1day --symlink=/web/logs/billing_log /we
 
 </LocationMatch>
 
+<LocationMatch /endpoint/>
+
+  # env var to turn on logging
+  PerlSetEnv KRL 1
+  SetHandler perl-script
+  PerlHandler Kynetx::Endpoints
+</LocationMatch>
+
 </TMPL_IF>
 <TMPL_IF NAME="API_CALLBACK">
 <LocationMatch /callback|log/>
@@ -493,16 +501,6 @@ Alias /widgets/ "/web/lib/perl/widgets/"
 <Location /widgets/components>
   SetHandler None
 </Location>
-
-<LocationMatch /endpoint/>
-
-  # env var to turn on logging
-  PerlSetEnv KRL 1
-  SetHandler perl-script
-  PerlHandler Kynetx::Endpoints
-</LocationMatch>
-
-
 
 #Include conf.d/*.conf
 </TMPL_IF>
