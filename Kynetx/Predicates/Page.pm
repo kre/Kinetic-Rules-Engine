@@ -67,6 +67,8 @@ sub get_pageinfo {
     # $field is on of the valid GeoIP record field names
     my ($req_info, $function, $args) = @_;
 
+    my $logger = get_logger();
+
     my @field_names = qw(
 var
 env
@@ -113,7 +115,6 @@ id
 
 	    $req_info->{'caller_url'}->{'query'} = $parsed_url->query;
 	    
-	    my $logger = get_logger();
 
 	    if($logger->is_debug()) {
 		foreach my $k (keys %{ $req_info->{'caller_url'} }) {
@@ -159,6 +160,8 @@ id
 	$val = $req_info->{$args->[0]};
       }
 
+    } else {
+      $logger->error("Unknown function $function");
     }
 
     return $val;

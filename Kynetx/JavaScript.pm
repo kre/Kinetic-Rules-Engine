@@ -235,7 +235,7 @@ sub gen_js_hash {
 
 #    $logger->debug(Dumper($hash_items));
 
-    $hash_items = exp_to_den($hash_items);
+    $hash_items = Kynetx::Expressions::exp_to_den($hash_items);
 #    $logger->debug(Dumper($hash_items));
     my @items;
     foreach my $k (keys %{ $hash_items->{'val'} }) {
