@@ -215,4 +215,7 @@ describe "Verify Runtime Functions" do
     page.js_eval("'' + (typeof(window.$KOBJ('#atest').tabSlideOut)  != 'undefined')").to_s.should == "true"
   end
 
+
+
+
 end
