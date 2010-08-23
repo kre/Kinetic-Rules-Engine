@@ -41,6 +41,7 @@ use Data::Dumper;
 use JSON::XS;
 use Storable qw/dclone freeze/;
 use Digest::MD5 qw/md5_hex/;
+use Clone qw/clone/;
 
 use Kynetx::Parser qw/mk_expr_node/;
 use Kynetx::Datasets;
@@ -136,11 +137,13 @@ sub eval_one_decl {
 
 #  $logger->debug("[eval_pre] $var -> ", sub {Dumper $val}) if (defined $val);
 
-  $val = Kynetx::Expressions::exp_to_den($val);
+  # clone to avoid aliasing to the data structure in the env
+  my  $nval = clone $val;
+  $nval = Kynetx::Expressions::exp_to_den($nval);
 
 #  $logger->debug("[eval_one_decl] after denoting:", sub{Dumper $val});
-  $val = Kynetx::JavaScript::gen_js_expr($val);
-  my $js = Kynetx::JavaScript::gen_js_var($var, $val);
+my   $jsval = Kynetx::JavaScript::gen_js_expr($nval);
+  my $js = Kynetx::JavaScript::gen_js_var($var, $jsval);
 
   return $js
 }
@@ -157,7 +160,10 @@ sub eval_decl {
     if ($decl->{'type'} eq 'expr' ) {
 
 	my $r = eval_expr($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);
+
 	$val = den_to_exp($r);
+
+#	$logger->debug("Before and After: ", sub {Dumper($r)}, sub{Dumper($val)});
 
 #	$val = $r->{'val'} if (ref $r eq 'HASH');
 #	$logger->debug("[decl] expr for ", $decl->{'lhs'}, ' -> ', sub{Dumper($val)} );

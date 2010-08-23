@@ -34,7 +34,8 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
-use Storable qw(dclone);
+#use Storable qw(dclone);
+use Clone qw(clone);
 
 use Kynetx::Expressions;
 use Kynetx::JSONPath ;
@@ -86,7 +87,7 @@ sub eval_pick {
     my $int = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
     # if you don't clone this, it modified the rule env
 
-    my $obj = Kynetx::Expressions::den_to_exp(dclone($int));
+    my $obj = Kynetx::Expressions::den_to_exp(clone($int));
    $logger->trace("[pick] obj: ", sub { Dumper($obj) });
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
