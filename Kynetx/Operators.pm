@@ -401,7 +401,7 @@ sub eval_replace {
 
 	my $pattern = '';
 	my $modifiers;
-	($pattern, $modifiers) = $rands->[0]->{'val'} =~ m%[#/](.+)[#/](i|g|m){0,2}%;
+	($pattern, $modifiers) = split_re($rands->[0]->{'val'});
 
 	$modifiers = $modifiers || '';
 
@@ -457,7 +457,7 @@ sub eval_match {
 
 	my $pattern = '';
 	my $modifiers;
-	($pattern, $modifiers) = $rands->[0]->{'val'} =~ m%[/#](.+)[/#](i|g|m){0,2}%;
+	($pattern, $modifiers) = split_re($rands->[0]->{'val'});
 
 	$modifiers = $modifiers || '';
 
@@ -548,7 +548,7 @@ sub eval_split {
   my $v = $obj->{'val'};
 
   # we ignore the modifiers
-  my ($pattern, $modifiers) = $rands->[0]->{'val'} =~ m%[/#](.+)[/#](i|g|m){0,2}%;
+  my ($pattern, $modifiers) = split_re($rands->[0]->{'val'});
 
   my @items;
   if($obj->{'type'} eq 'str' &&
@@ -803,6 +803,13 @@ sub _prune_persitent_trail {
 sub list_extensions {
     my $logger = get_logger();
     return \%extensions;
+}
+
+sub split_re {
+  my($val) = @_;
+
+  my ($pattern, $modifiers) = $val =~ m%(?:re){0,1}[/#](.+)[/#](i|g|m){0,2}%;
+  return ($pattern, $modifiers);
 }
 
 1;
