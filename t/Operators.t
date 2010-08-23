@@ -35,7 +35,7 @@ use strict;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 use Test::More;
@@ -219,7 +219,8 @@ sub test_operator {
     cmp_deeply($r, $x, "Trying $e");
 }
 
-goto ENDY;
+
+#goto ENDY;
 
 $e[$i] = q/store.pick("$.store.book[*].author")/;
 $x[$i] = {
@@ -1236,97 +1237,70 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
-ENDY:
+
 $e[$i] = q/a_h.put(b_h)/;
 $x[$i] = Kynetx::Expressions::typed_value({
-    'pi as array' => {
-      'val' => [
-        {
-          'val' => 3,
-          'type' => 'num'
-        },
-        {
-          'val' => 1,
-          'type' => 'num'
-        },
-        {
-          'val' => 4,
-          'type' => 'num'
-        },
-        {
-          'val' => 1,
-          'type' => 'num'
-        },
-        {
-          'val' => 5,
-          'type' => 'num'
-        },
-        {
-          'val' => 6,
-          'type' => 'num'
-        },
-        {
-          'val' => 9,
-          'type' => 'num'
-        }
+  'val' => {
+    'pi as array' => [
+        3,1,4,1,5,6,9,
       ],
-      'type' => 'array'
+    'colors of the wind' => 'many',
+    'mKey' => 'mValue'
     },
-    'colors of the wind' => {
-      'val' => 'many',
-      'type' => 'str'
-    },
-    'mKey' => {
-      'val' => 'mValue',
-      'type' => 'str'
-    }
-  });
+'type' => 'hash'
+});
 $d[$i] = 0;
 $i++;
 
 $e[$i] = q/b_h.put(f_h)/;
 $x[$i] = {
     'val' => {
-      'mKey' => {
-        'val' => 'mValue',
-        'type' => 'str'
-      },
+      'mKey' => 'mValue',
       'hKey' => {
-        'val' => {
-          'innerKey' => {
-            'val' => 'innerVal',
-            'type' => 'str'
-          }
-        },
-        'type' => 'hash'
-      }
+        'innerKey' => 'innerVal'
+       }
     },
     'type' => 'hash'
 };
 $d[$i] = 0;
 $i++;
 
+
+
 $e[$i] = q/i_h.put(g_h)/;
 $x[$i] = {
     'val' => {
-      'mKey' => {
-        'val' => 'mValue',
-        'type' => 'str'
-      },
+      'mKey' => 'mValue',
       'hKey' => {
-        'val' => {
-          'innerKey' => {
-            'val' => 'REPLACED',
-            'type' => 'str'
-          }
-        },
-        'type' => 'hash'
+          'innerKey' => 'REPLACED'
       }
-    },
+     },
     'type' => 'hash'
 };
 $d[$i] = 0;
 $i++;
+
+ENDY:
+$e[$i] = q/i_h.as("str")/;
+$x[$i] = '{"mKey":"mValue","hKey":{"innerKey":"innerVal"}}';
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/c_h.as("str")/;
+$x[$i] = '[{"hKey":"hValue"}]';
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/d_h.as("str")/;
+$x[$i] = '[{"hKey":"hValue"},{"mKey":"mValue"}]';
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/a_h.as("json")/;
+$x[$i] = '{"pi as array":[3,1,4,1,5,6,9],"colors of the wind":"many"}';
+$d[$i] = 0;
+$i++;
+
 
 # now run the tests....
 my $l = scalar @e;

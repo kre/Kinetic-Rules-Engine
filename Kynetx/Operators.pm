@@ -609,14 +609,12 @@ sub eval_as {
         my $target=_prune_persitent_trail($thing);
         $obj->{'type'} = $rands->[0]->{'val'};
         $obj->{'val'} = $target;
-    } elsif ($rands->[0]->{'val'} eq 'json'){
-        if ($obj->{'type'}) {
-            my $tmp = Kynetx::Expressions::den_to_exp($obj);
-            $logger->debug("EXP: ", sub {Dumper($tmp)});
-            my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
-            $logger->debug("JSON: ", $json);
-            return $json;
-        }
+    } elsif ($rands->[0]->{'val'} eq 'str' || $rands->[0]->{'val'} eq 'json'){
+        my $tmp = Kynetx::Expressions::den_to_exp($obj);
+        $logger->trace("EXP: ", sub {Dumper($tmp)});
+        my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
+        $logger->trace("JSON: ", $json);
+        return $json;
     }
 
     return $obj;
@@ -795,7 +793,7 @@ sub hash_put {
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
     my $type = $obj->{'type'};
     if ($type eq 'hash') {
-        my $hash = $obj->{'val'};
+        my $hash = clone ($obj->{'val'});
         foreach my $elem (@$rands) {
             # only hash elements can be added to hashes
             if ($elem->{'type'} eq 'hash') {
@@ -808,6 +806,7 @@ sub hash_put {
                 return $obj;
             }
         }
+        $logger->trace("New hash: ", sub {Dumper($hash)});
         return Kynetx::Expressions::typed_value($hash);
     } else {
         $logger->warn("put() operator not supported for objects of type: $type");
