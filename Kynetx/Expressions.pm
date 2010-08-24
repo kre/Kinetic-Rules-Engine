@@ -395,6 +395,8 @@ sub eval_expr {
 	    
       }
       return mk_expr_node(infer_type($v),$v);
+    } else {
+      $logger->error("Unknown type in eval_expr: $expr->{'type'}");
     }
 
 }
