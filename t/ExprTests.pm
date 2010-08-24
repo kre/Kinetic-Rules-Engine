@@ -2587,6 +2587,32 @@ add_expr_testcase(
     0);
 
 
+$re1 = extend_rule_env(['a','b'],
+		       [{'y'=> 5},[{'y' => 5}]],
+		       $rule_env);
+
+
+
+$krl_src = <<_KRL_;
+pre {
+  a = {"y": 5};
+  b = [{"y": 5}];
+}
+_KRL_
+
+$js = <<_JS_;
+var a = {'y': 5};
+var b = [{'y': 5}];
+_JS_
+
+add_expr_testcase(
+    $krl_src,
+    'pre',
+    $js,
+    $re1,
+    0);
+
+
 
 
 

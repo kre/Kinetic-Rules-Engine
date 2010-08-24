@@ -32,6 +32,7 @@ ruleset 10 {
 	  x = {"x": [3,4,5], 
  	       "y": {"x": "hello",
 	             "y": "world"}};
+	  x = [{"x": 5}];
           x = ent:vv;
 	  x = app:vv;
 	  x = current ent:vv;

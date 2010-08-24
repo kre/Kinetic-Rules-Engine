@@ -116,7 +116,17 @@ pre {
   r_html = <<$content2>>;
   html_arr = [q_html,r_html];
   meta_str = <<td[style="background: #ddf;"]>>;
+  a_h = { "colors of the wind" : "many","pi as array" : [3,1,4,1,5,6,9]};
+  b_h = {"mKey" : "mValue"};
+  c_h = [{"hKey" : "hValue"}];
+  d_h = [{"hKey" : "hValue"},{"mKey" : "mValue"}];
+  e_h = [{"hKey" : "hValue"},{"mKey" : "mValue"},"Thing"];
+  f_h = {"hKey" : {"innerKey" : "innerVal"}};
+  g_h = {"hKey" : {"innerKey" : "REPLACED"}};
+  i_h = {"hKey" : {"innerKey" : "innerVal"},"mKey" : "mValue"};
+
 }
+
 _KRL_
 
 my $ptree = Kynetx::Parser::parse_pre($p);
@@ -208,6 +218,9 @@ sub test_operator {
     diag "Result: ", Dumper($r) if $d;
     cmp_deeply($r, $x, "Trying $e");
 }
+
+
+#goto ENDY;
 
 $e[$i] = q/store.pick("$.store.book[*].author")/;
 $x[$i] = {
@@ -1224,6 +1237,69 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+
+$e[$i] = q/a_h.put(b_h)/;
+$x[$i] = Kynetx::Expressions::typed_value({
+  'val' => {
+    'pi as array' => [
+        3,1,4,1,5,6,9,
+      ],
+    'colors of the wind' => 'many',
+    'mKey' => 'mValue'
+    },
+'type' => 'hash'
+});
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/b_h.put(f_h)/;
+$x[$i] = {
+    'val' => {
+      'mKey' => 'mValue',
+      'hKey' => {
+        'innerKey' => 'innerVal'
+       }
+    },
+    'type' => 'hash'
+};
+$d[$i] = 0;
+$i++;
+
+
+
+$e[$i] = q/i_h.put(g_h)/;
+$x[$i] = {
+    'val' => {
+      'mKey' => 'mValue',
+      'hKey' => {
+          'innerKey' => 'REPLACED'
+      }
+     },
+    'type' => 'hash'
+};
+$d[$i] = 0;
+$i++;
+
+ENDY:
+$e[$i] = q/i_h.as("str")/;
+$x[$i] = '{"mKey":"mValue","hKey":{"innerKey":"innerVal"}}';
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/c_h.as("str")/;
+$x[$i] = '[{"hKey":"hValue"}]';
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/d_h.as("str")/;
+$x[$i] = '[{"hKey":"hValue"},{"mKey":"mValue"}]';
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/a_h.as("json")/;
+$x[$i] = '{"pi as array":[3,1,4,1,5,6,9],"colors of the wind":"many"}';
+$d[$i] = 0;
+$i++;
 
 
 # now run the tests....

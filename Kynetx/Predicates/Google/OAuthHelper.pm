@@ -531,7 +531,7 @@ sub get_token {
     } else {
         $key = $namespace;
     }
-    $logger->trace("Get token ($key)");
+    $logger->debug("Get token ($key)");
     $key .= SEP . $name;
     return session_get( $rid, $session, $key );
 }
