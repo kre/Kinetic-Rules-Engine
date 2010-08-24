@@ -124,7 +124,8 @@ files_to_process.each do |file_or_dir|
       AWS::S3::S3Object.store( file_or_dir,
                               open(FRAMEWORKS_ROOT_DIR + "/" +file_or_dir),
                               'kns-resources',
-                              :access => :public_read)
+                              :access => :public_read,
+                              'Cache-Control' => 'max-age=10')
     end
   end
 end

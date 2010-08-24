@@ -1,4 +1,3 @@
-
 /*  -----------------------------------------
  This is the object that manages a single application in the runtime.
  ------------------------------------------ */
@@ -219,7 +218,14 @@ KrlApplication.prototype.execute_pending_closures = function()
     var myself = this;
     $KOBJ.each(this.pending_closures, function(guid, the_closure) {
         KOBJ.itrace("Executing Closure " + myself.app_id + " - " + guid);
-        the_closure($KOBJ);
+        try
+        {
+            the_closure($KOBJ);
+        }
+        catch(err)
+        {
+            KOBJ.itrace("Closure Executed with error " + myself.app_id + " - " + guid);
+        }
         KOBJEventManager.event_fire_complete(myself, guid);
     });
 

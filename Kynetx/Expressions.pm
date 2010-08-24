@@ -41,6 +41,7 @@ use Data::Dumper;
 use JSON::XS;
 use Storable qw/dclone freeze/;
 use Digest::MD5 qw/md5_hex/;
+use Clone qw/clone/;
 
 use Kynetx::Parser qw/mk_expr_node/;
 use Kynetx::Datasets;
@@ -136,11 +137,13 @@ sub eval_one_decl {
 
 #  $logger->debug("[eval_pre] $var -> ", sub {Dumper $val}) if (defined $val);
 
-  $val = Kynetx::Expressions::exp_to_den($val);
+  # clone to avoid aliasing to the data structure in the env
+  my  $nval = clone $val;
+  $nval = Kynetx::Expressions::exp_to_den($nval);
 
 #  $logger->debug("[eval_one_decl] after denoting:", sub{Dumper $val});
-  $val = Kynetx::JavaScript::gen_js_expr($val);
-  my $js = Kynetx::JavaScript::gen_js_var($var, $val);
+my   $jsval = Kynetx::JavaScript::gen_js_expr($nval);
+  my $js = Kynetx::JavaScript::gen_js_var($var, $jsval);
 
   return $js
 }
@@ -157,7 +160,10 @@ sub eval_decl {
     if ($decl->{'type'} eq 'expr' ) {
 
 	my $r = eval_expr($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);
+
 	$val = den_to_exp($r);
+
+#	$logger->debug("Before and After: ", sub {Dumper($r)}, sub{Dumper($val)});
 
 #	$val = $r->{'val'} if (ref $r eq 'HASH');
 #	$logger->debug("[decl] expr for ", $decl->{'lhs'}, ' -> ', sub{Dumper($val)} );
@@ -226,6 +232,9 @@ sub eval_expr {
     } elsif($expr->{'type'} eq 'array_ref') {
 	return eval_array_ref($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'hashraw') {
+	return  mk_expr_node('hash',
+			     eval_hash_raw($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  ) ;
+    } elsif($expr->{'type'} eq 'hash') {
 	return  mk_expr_node('hash',
 			     eval_hash($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  ) ;
     } elsif($expr->{'type'} eq 'prim') {
@@ -386,6 +395,8 @@ sub eval_expr {
 	    
       }
       return mk_expr_node(infer_type($v),$v);
+    } else {
+      $logger->error("Unknown type in eval_expr: $expr->{'type'}");
     }
 
 }
@@ -463,9 +474,9 @@ sub eval_application {
 
   # the trick to getting this right is managing env extension correctly
 
-#  $logger->debug("Env in eval_application: ", sub { Dumper $rule_env});
+  #$logger->debug("Env in eval_application: ", sub { Dumper $rule_env});
 
-#  $logger->trace("Evaluation function...", sub { Dumper $expr} );
+ # $logger->debug("Evaluation function...", sub { Dumper $expr} );
 
 
   my $closure = eval_expr($expr->{'function_expr'}, 
@@ -487,6 +498,8 @@ sub eval_application {
     return mk_expr_node('num', 0);
   }
 
+#  $logger->debug("Evaling args ", sub {Dumper $expr->{'args'}});
+
 
   my $args = Kynetx::Expressions::eval_rands($expr->{'args'}, 
 					      $rule_env, 
@@ -494,14 +507,15 @@ sub eval_application {
 					      $req_info, 
 					      $session
 					     );
+#  $logger->debug("Got result for args: ", sub {Dumper $expr->{'args'}});
 
   # values in the env are expressed
-  $args = [ map {den_to_exp($_)} @{ $args } ];
+  my $nargs = [ map {den_to_exp($_)} @{ $args } ];
 
-  $logger->trace("Executing function with args ", sub {Dumper $args});
+#  $logger->debug("Executing function with args ", sub {Dumper $nargs});
 
   my $closure_env = extend_rule_env($closure->{'val'}->{'vars'},
-				    $args,
+				    $nargs,
 				    $closure->{'val'}->{'env'});
 
 
@@ -528,7 +542,7 @@ sub eval_application {
 }
 
 
-sub eval_hash {
+sub eval_hash_raw {
     my ($hash_lines, $rule_env, $rule_name, $req_info, $session) = @_;
 
     my $hash = {};
@@ -539,6 +553,21 @@ sub eval_hash {
     }
 
     return $hash;
+
+}
+
+
+sub eval_hash {
+    my ($hash, $rule_env, $rule_name, $req_info, $session) = @_;
+
+    my $new_hash = {};
+    foreach my $k (keys %{ $hash } ) {
+	$new_hash->{$k} = 
+	    eval_expr($hash->{$k}, $rule_env, 
+			 $rule_name, $req_info, $session);
+    }
+
+    return $new_hash;
 
 }
 
@@ -762,6 +791,8 @@ sub eval_emit {
 sub den_to_exp {
     my ($expr) = @_;
 
+#    my $logger = get_logger();
+
     return $expr unless (ref $expr eq 'HASH' && defined $expr->{'type'});
     case: for ($expr->{'type'}) {
 	/str|num|regexp|JS/ && do {
@@ -774,7 +805,8 @@ sub den_to_exp {
 
 	/hash/ && do {
 	    for my $k (keys %{ $expr->{'val'} }) {
-		$expr->{'val'}->{$k} = den_to_exp($expr->{'val'}->{$k});
+
+	      $expr->{'val'}->{$k} = den_to_exp($expr->{'val'}->{$k});
 	    }
 	    return $expr->{'val'}
 	};
