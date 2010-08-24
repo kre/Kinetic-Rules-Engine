@@ -942,7 +942,7 @@ operator: '.' operator_op '(' expr(s? /,/) ')'
 operator_op: 'pick'|'match'|'length'|'replace'|'as'|'head'|'tail'|'sort'
       |'filter'|'map'|'uc'|'lc' |'split' | 'join' | 'query'
       | 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
-      | 'duplicates' | 'put'
+      | 'duplicates' | 'put' | 'extract'
 
 factor: NUM
         {$return=Kynetx::Parser::mk_expr_node('num',$item[1]+0)}
