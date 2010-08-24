@@ -2614,6 +2614,70 @@ add_expr_testcase(
 
 
 
+$krl_src = <<_KRL_;
+pre {
+  foo = function(x){x};
+  w = foo({"x":5})
+}
+_KRL_
+
+$re1 = extend_rule_env(['foo','w'],
+		       [{'val' => {'sig' => '440dcf65d6fa90d64db50f722121eecb',
+				   'expr' => {
+					     'val' => 'x',
+					     'type' => 'var'
+					    },
+				   'env' => Test::Deep::ignore(),
+				   'vars' => [
+					      'x'
+					     ],
+				   'decls' => []
+				  },
+			 'type' => 'closure'
+			},
+			{"x" => 5}
+		       ],
+		       $rule_env);
+
+add_expr_testcase(
+		  $krl_src,
+		  'pre',
+		  '_ignore_',
+		  $re1,		  
+		  0
+    );
+
+
+$re1 = extend_rule_env(['a','b','c'],
+		       [[{"foo"=>{"type"=>"str","val"=>"bar"}}, 
+			 {"bar"=>{"type"=>"str","val"=>"baz"}}],
+                        [{"foo" => "bar"}, {"bar" => "baz"}],
+                        [[], 'baz']],
+		       $rule_env);
+
+
+$krl_src = <<_KRL_;
+pre {
+  a = [{"foo": "bar"}, {"bar": "baz"}];
+  b = a.map(function(x){ x });
+  c = a.map(function(x){ x.pick("\$.bar") });
+}
+_KRL_
+
+$js = <<_JS_;
+var a = [{'foo': 'bar'}, {'bar': 'baz'}];
+var b = [{'foo': 'bar'}, {'bar': 'baz'}];
+var c = [[], 'baz'];
+_JS_
+
+add_expr_testcase(
+    $krl_src,
+    'pre',
+    $js,
+    $re1,
+    0
+   );
+
 
 
 #----------------------------------------------------------------------------

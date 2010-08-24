@@ -1,3 +1,8 @@
+2010-08-23  Phil Windley  <pjw@kynetx.com>
+
+   * Kynetx/Expressions.pm: moved eval_hash to eval_hash_raw and
+	added eval_hash
+
 2010-08-23  Web-san  <web@dev11.kobj.net>
 
    * Kynetx/Predicates/Page.pm (get_pageinfo): added fall thru error for Sam
