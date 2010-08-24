@@ -405,7 +405,7 @@
 .kynetx_ui .ui-button-icon-only { width: 2.2em; } /* to make room for the icon, a width needs to be set here */
 button.ui-button-icon-only { width: 2.4em; } /* button elements seem to need a little more width */
 .kynetx_ui .ui-button-icons-only { width: 3.4em; }
-button.ui-button-icons-only { width: 3.7em; } 
+button.ui-button-icons-only { width: 3.7em; }
 
 /*button text element */
 .kynetx_ui .ui-button .ui-button-text { display: block; line-height: 1.4;  }
