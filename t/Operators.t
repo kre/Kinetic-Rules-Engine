@@ -93,6 +93,7 @@ pre {
   f = [7,4,3,5,2,1,6];
   g = 5;
   h = [1,2,1,3,4,3,5,4,6,5];
+  foo = "I like cheese";
   my_str = "This is a string";
   split_str = "A;B;C";
   my_url = "http://www.amazon.com/gp/products/123456789/";
@@ -1280,7 +1281,6 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
-ENDY:
 $e[$i] = q/i_h.as("str")/;
 $x[$i] = '{"mKey":"mValue","hKey":{"innerKey":"innerVal"}}';
 $d[$i] = 0;
@@ -1301,6 +1301,39 @@ $x[$i] = '{"pi as array":[3,1,4,1,5,6,9],"colors of the wind":"many"}';
 $d[$i] = 0;
 $i++;
 
+ENDY:
+
+$e[$i] = q#my_str.extract(re/(boot)/)#;
+$x[$i] = {
+   'val' => [],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#my_str.extract(re/(is)/)#;
+$x[$i] = {
+   'val' => ['is'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#foo.extract(re/like (\w+)/)#;
+$x[$i] = {
+   'val' => ['cheese'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#my_str.extract(re/(s.+).*(.ing)/)#;
+$x[$i] = {
+   'val' => ['s is a st','ring'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
 
 # now run the tests....
 my $l = scalar @e;

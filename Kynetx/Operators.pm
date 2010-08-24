@@ -493,6 +493,63 @@ sub eval_match {
 }
 $funcs->{'match'} = \&eval_match;
 
+sub eval_extract {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    my $is_match = 0;
+    my @items = ();
+
+#   $logger->debug("obj: ", sub { Dumper($obj) });
+
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+#    $logger->debug("obj: ", sub { Dumper($rands) });
+
+    my $v = $obj->{'val'};
+
+    if($obj->{'type'} eq 'str' &&
+       $rands->[0]->{'type'} eq 'regexp') {
+
+    my $pattern = '';
+    my $modifiers;
+    ($pattern, $modifiers) = split_re($rands->[0]->{'val'});
+
+    $modifiers = $modifiers || '';
+
+    my $embedable_modifiers = $modifiers;
+    $embedable_modifiers =~ s/g//;
+
+    my $re = qr/(?$embedable_modifiers)$pattern/;
+
+    $logger->debug("Matching string (with capture) with $pattern & modifiers $modifiers: $re");
+
+    my @caps = ( $v =~ $pattern );
+    my $num = scalar(@caps);
+
+
+    if($modifiers =~ m#g#) {
+      $is_match = ($v =~ m/$re/g);
+    } else {
+      $is_match = ($v =~ m/$re/);
+    }
+
+    for (my $i = 1;$i<=$num;$i++) {
+        if (defined $-[$i]) {
+            my $match =  substr($v, $-[$i], $+[$i] - $-[$i]);
+            push(@items,$match);
+        } else {
+            last;
+        }
+    }
+      } else {
+    $logger->warn("Not a regular expression: ", $rands->[0]->{'val'})
+      unless $rands->[0]->{'type'} eq 'regexp';
+      }
+
+
+      return Kynetx::Expressions::typed_value(\@items);
+}
+$funcs->{'extract'} = \&eval_extract;
 
 sub eval_uc {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
