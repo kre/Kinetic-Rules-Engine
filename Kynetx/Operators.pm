@@ -387,6 +387,28 @@ sub eval_join {
 }
 $funcs->{'join'} = \&eval_join;
 
+sub eval_append {
+  my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+  my $logger = get_logger();
+  my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#   $logger->debug("obj: ", sub { Dumper($obj) });
+
+  my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+#    $logger->debug("obj: ", sub { Dumper($rands) });
+
+  my $array1 = Kynetx::Expressions::den_to_exp($obj);
+  my $array2 = Kynetx::Expressions::den_to_exp($rands->[0]);
+
+  my @result = @{$array1};
+  push(@result, @{$array2});
+
+  $logger->debug("Append result: ", sub {Dumper @result});
+
+  return Kynetx::Expressions::typed_value(\@result);
+}
+$funcs->{'append'} = \&eval_append;
+
 
 #-----------------------------------------------------------------------------------
 # string operators
