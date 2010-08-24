@@ -397,8 +397,18 @@ sub eval_append {
   my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 #    $logger->debug("obj: ", sub { Dumper($rands) });
 
+
+
   my $array1 = Kynetx::Expressions::den_to_exp($obj);
   my $array2 = Kynetx::Expressions::den_to_exp($rands->[0]);
+
+  unless (ref $array1 eq 'ARRAY') {
+    $array1 = [$array1];
+  }
+
+  unless (ref $array2 eq 'ARRAY') {
+    $array2 = [$array2];
+  }
 
   my @result = @{$array1};
   push(@result, @{$array2});

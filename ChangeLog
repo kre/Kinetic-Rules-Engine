@@ -1,3 +1,7 @@
+2010-08-24  Web-san  <web@dev11.kobj.net>
+
+   * Kynetx/Operators.pm (eval_append): Added
+
 2010-08-23  Phil Windley  <pjw@kynetx.com>
 
    * Kynetx/Expressions.pm: moved eval_hash to eval_hash_raw and

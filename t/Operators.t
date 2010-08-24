@@ -860,9 +860,46 @@ $d[$i]  = 0;
 $i++;
 
 
+$e[$i] = q#a_s.append(a)#;
+$x[$i] = {
+   'val' => ['apple','pear','orange','tomato',
+	     10],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#a.append(a_s)#;
+$x[$i] = {
+   'val' => [10,
+	     'apple','pear','orange','tomato'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#a.append(b)#;
+$x[$i] = {
+   'val' => [10,
+	     11],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
 $e[$i] = q#c_h.append(d_h)#;
 $x[$i] = {
    'val' => [{"hKey" => "hValue"},{"hKey" => "hValue"},{"mKey" => "mValue"}],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#c_h.append(b_h)#;
+$x[$i] = {
+   'val' => [{"hKey" => "hValue"},{"mKey" => "mValue"}],
    'type' => 'array'
 };
 $d[$i]  = 0;
