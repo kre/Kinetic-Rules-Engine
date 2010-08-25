@@ -22,7 +22,6 @@ KrlExternalResource.prototype.load = function() {
     if (this.type == "css") {
         // Style sheets are hard to know if they loaded so just say they did.
         KOBJ.load_style_sheet_link(this.url);
-        this.did_load();
     }
     else
     {
@@ -38,9 +37,13 @@ KrlExternalResource.prototype.load = function() {
 KrlExternalResource.prototype.is_loaded = function() {
     if (this.type == "css")
     {
-        this.loaded = true;
-        return this.loaded;
-        //        return KOBJ.did_stylesheet_load(this.url);
+        var me = this;
+        $KOBJ(document).ready(function() {
+            if($KOBJ("head link[href='"+ me.url +"']").length >= 1)
+            {
+                me.loaded = true;
+            }       
+        });
     }
     return this.loaded;
 };
@@ -290,7 +293,14 @@ KrlApplication.prototype.execute_pending_closures = function()
     var myself = this;
     $KOBJ.each(this.pending_closures, function(guid, the_closure) {
         KOBJ.itrace("Executing Closure " + myself.app_id + " - " + guid);
-        the_closure($KOBJ);
+        try
+        {
+            the_closure($KOBJ);
+        }
+        catch(err)
+        {
+            KOBJ.itrace("Closure Executed with error " + myself.app_id + " - " + guid);
+        }
         KOBJEventManager.event_fire_complete(myself, guid);
     });
 

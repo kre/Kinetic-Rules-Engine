@@ -7,7 +7,7 @@ describe "Verify Raise Events" do
 
   before(:all) do
     load_settings
-    start_browser_session(@settings, "http://www.google.com", "")
+    start_browser_session(@settings, "http://www.google.com", "/")
   end
 
   after(:all) do
@@ -18,8 +18,8 @@ describe "Verify Raise Events" do
 
   it "should have shown two notifies one from each rule fired" do
     insert_runtime_script(["a685x5"])
-    page.wait_for({:wait_for => :element, :element => "//*[@class='kGrowl-closer']"});
-    page.text("//div[@class='KOBJ_message']").should == "second_rulethird_rule"
+    page.wait_for({:wait_for => :element, :element => "//*[@id='kGrowltop-right']"});
+    page.text("//div[@class='KOBJ_message']").should == "second_rule"
   end
 
 end
