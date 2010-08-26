@@ -303,7 +303,7 @@ sub eval_map {
     my $obj =
       Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
-#    $logger->debug("obj: ", sub { Dumper($obj) });
+    $logger->debug("obj: ", sub { Dumper($obj) });
 
     my $v = 0;
     if ($obj->{'type'} eq 'array' && int(@{$expr->{'args'}}) > 0) {
@@ -314,13 +314,19 @@ sub eval_map {
 
       if (Kynetx::Expressions::type_of($dval) eq 'closure') {
 
-
 	my $a = [];
 	foreach my $av (@{$eval}) {
 
+	  $logger->debug("Mapping onto ", sub {Dumper $av});
+
+
+	  my $den_av = Kynetx::Expressions::exp_to_den($av);
+
+	  $logger->debug("Denoted as ", sub {Dumper $den_av});
+
 	  my $app = {'type' => 'app',
 		     'function_expr' => $expr->{'args'}->[0],
-		     'args' => [Kynetx::Expressions::typed_value($av)]};
+		     'args' => [$den_av]};
 
 	  my $r = Kynetx::Expressions::den_to_exp(
 	    Kynetx::Expressions::eval_application($app,
@@ -328,6 +334,8 @@ sub eval_map {
 						  $rule_name,
 						  $req_info,
 						  $session));
+
+	  $logger->debug("Result is ", sub {Dumper $r});
 
 	  push(@{$a}, $r);
 
@@ -378,6 +386,38 @@ sub eval_join {
   return Kynetx::Expressions::typed_value($result);
 }
 $funcs->{'join'} = \&eval_join;
+
+sub eval_append {
+  my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+  my $logger = get_logger();
+  my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#   $logger->debug("obj: ", sub { Dumper($obj) });
+
+  my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+#    $logger->debug("obj: ", sub { Dumper($rands) });
+
+
+
+  my $array1 = Kynetx::Expressions::den_to_exp($obj);
+  my $array2 = Kynetx::Expressions::den_to_exp($rands->[0]);
+
+  unless (ref $array1 eq 'ARRAY') {
+    $array1 = [$array1];
+  }
+
+  unless (ref $array2 eq 'ARRAY') {
+    $array2 = [$array2];
+  }
+
+  my @result = @{$array1};
+  push(@result, @{$array2});
+
+  $logger->debug("Append result: ", sub {Dumper @result});
+
+  return Kynetx::Expressions::typed_value(\@result);
+}
+$funcs->{'append'} = \&eval_append;
 
 
 #-----------------------------------------------------------------------------------
