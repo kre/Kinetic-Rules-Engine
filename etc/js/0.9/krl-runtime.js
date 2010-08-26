@@ -186,21 +186,6 @@ KOBJ.registerExternalResources = function(rid, resources) {
     app.add_external_resources(resource_array);
 };
 
-/*
- * This is a shortcut way to register interest for an event for a given application
- * id.
- */
-KOBJ.watch_event = function(event, selector, config)
-{
-    // Page views are special in that they do not have selectors
-    var application = KOBJ.get_application(config["rid"]);
-    if (event != "pageview") {
-        KOBJEventManager.register_interest(event, selector, application, config);
-    }
-    else {
-        KOBJEventManager.add_out_of_bound_event(application, "pageview");
-    }
-};
 
 //start closure and data registration code
 KOBJ.registerDataSet = function(rid, datasets) {

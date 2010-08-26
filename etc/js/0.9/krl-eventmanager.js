@@ -207,7 +207,7 @@ KOBJEventManager.content_change_checker = function()
                 KOBJ.itrace("Data Change going to fire content change [" + selector_data["prior_data_hash"] + "] [" + KOBJEventManager.content_change_hashcode(selector) + "]");
                 // Reset the data to the new value
                 selector_data["prior_data_hash"] = KOBJEventManager.content_change_hashcode(selector);
-                KOBJEventManager.event_handler({"type" : "content_change", "data" : { "selector" : selector}});
+                KOBJEventManager.event_handler({"type" : "content_change", "data" : { "selector" : selector }});
                 any_fired = true;
             }
         }
@@ -225,6 +225,7 @@ KOBJEventManager.content_change_checker = function()
  * This is how a app register intested in an event.
  */
 KOBJEventManager.register_interest = function(event, selector, application, config) {
+    var found_data = [];
 
     if (typeof(config) != "undefined")
     {
@@ -235,7 +236,15 @@ KOBJEventManager.register_interest = function(event, selector, application, conf
         {
             KOBJEventManager.events[event][selector]["form_submit"] = true;
         }
+
+        if (typeof(config.param_data) != "undefined" && config.param_data != null) {
+            $KOBJ.each(config.param_data, function(name, v) {
+                found_data.push({name: name,value:v });
+            });
+
+        }
     }
+
 
     // With custom events we do not know the name so we just add them if they
     // are missing
@@ -253,7 +262,10 @@ KOBJEventManager.register_interest = function(event, selector, application, conf
                     KOBJEventManager.event_handler);
         }
     }
-    KOBJEventManager.events[event][selector][application.app_id] = application;
+
+    KOBJEventManager.events[event][selector][application.app_id] = {};
+    KOBJEventManager.events[event][selector][application.app_id]["app"] = application;
+    KOBJEventManager.events[event][selector][application.app_id]["data"] = { "param_data": found_data};
 };
 
 
@@ -279,15 +291,15 @@ KOBJEventManager.deregister_interest = function(event, selector, application) {
  */
 KOBJEventManager.add_out_of_bound_event = function(application, event, auto_deregister, extra_data)
 {
-    KOBJEventManager.register_interest(event, "unknown", application);
+    KOBJEventManager.register_interest(event, "unknown", application, extra_data);
 
     // We fake out a jquery event in order to reuse the code.
     var data = {"type" : event, "data" : { "selector" : "unknown"}};
 
-    if (typeof(extra_data) != "undefined")
-    {
-        $KOBJ.extend(true, data["data"], extra_data);
-    }
+//    if (typeof(extra_data) != "undefined")
+//    {
+//        $KOBJ.extend(true, data["data"], extra_data);
+//    }
 
     KOBJEventManager.event_handler(data);
 
@@ -311,9 +323,10 @@ KOBJEventManager.event_handler = function(event) {
         event_data["submit_data"] = $KOBJ(event_data.selector).serializeArray();
     }
 
-    $KOBJ.each(KOBJEventManager.events["" + event.type][event_data.selector], function(app_id, application) {
+    $KOBJ.each(KOBJEventManager.events["" + event.type][event_data.selector], function(app_id, app_info) {
         var current_guid = KOBJEventManager.eid();
-        KOBJEventManager.add_to_fire_queue(current_guid, event.type, event_data, application);
+        $KOBJ.extend(true,event_data,app_info.data);
+        KOBJEventManager.add_to_fire_queue(current_guid, event.type, event_data, app_info.app);
     });
 
     if (event.type == "submit") {
