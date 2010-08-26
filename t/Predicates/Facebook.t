@@ -20,17 +20,18 @@ use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
 
-use Kynetx::Test;
+use Kynetx::Test qw/:all/;
 use Kynetx::Predicates::Facebook qw(
     get_predicates
     authorize
 );
-use Kynetx::Environments;
+use Kynetx::Environments qw/:all/;
 use Kynetx::Session;
 use Kynetx::Configure;
 use Kynetx::Parser;
 use Kynetx::Predicates::Google::OAuthHelper;
 use Kynetx::Json;
+use Kynetx::Expressions qw/:all/;
 
 
 use Kynetx::FakeReq;
@@ -254,6 +255,7 @@ my $post_meta = {
     'metadata' => {
         'connections' => {
             'comments' => $html_re,
+            'likes' => ignore(),
         }
     },
     'id' => ignore(),
@@ -266,7 +268,7 @@ my $post_meta = {
     'description' => ignore(),
     'message' => ignore(),
     'updated_time' => ignore(),
-    'type' => 'link'
+    'type' => 'link',
 };
 
 my $empty_response = {
@@ -301,10 +303,9 @@ my $page_object = superhashof({
 
 my $event_object = superhashof({
     'end_time' => ignore(),
-    'rsvp_status' => ignore(),
     'start_time' => ignore(),
     'name' => ignore(),
-    'id'=> $num_re
+    'id'=> $num_re,
 });
 
 my $link_object = $post_object;
@@ -402,6 +403,22 @@ if ($phil_id) {
 }
 
 ##
+my $post_args = {
+   'id' =>  $test_user,
+   'connection' => 'feed',
+   'message' => $rquote,
+   'picture' => $rpicture,
+   'link' => $rlink,
+   'name' => $rname,
+   'description' => $rdesc,
+   'subject' => 'failwhale',
+};
+my $post_id = test_post($my_req_info, $rule_env, $session,$post_args,200);
+
+
+
+
+##
 $description = "Get specific user metadata";
 $expected = superhashof($test_metadata);
 $args = [$test_user];
@@ -492,7 +509,7 @@ $expected = $empty_response;
 $args = [{'type' => 'home',
     'q' => 'P Windley'
 }];
-test_facebook('search',$args,$expected,$description,0);
+test_facebook('search',$args,$expected,$description,1);
 
 
 ##
@@ -570,14 +587,14 @@ test_facebook('search',$args,$expected,$description,0);
 
 
 ##
-my $link_id = '511048495_446064733495';
+#my $link_id = '511048495_446064733495';
 $description = "Facebook get with id";
 $expected = $link_object;
 $expected->{'from'} = {
     'name' => 'Steve Fulling',
     'id' => ignore()
 };
-$args = [{'id' => $link_id}];
+$args = [{'id' => $post_id}];
 test_facebook('get',$args,$expected,$description,0);
 
 ##
@@ -592,21 +609,7 @@ test_facebook('search',$args,$expected,$description,0);
 
 
 ##
-my $post_args = {
-   'id' =>  $test_user,
-   'connection' => 'feed',
-   'message' => $rquote,
-   'picture' => $rpicture,
-   'link' => $rlink,
-   'name' => $rname,
-   'description' => $rdesc,
-   'subject' => 'failwhale',
-};
-test_post($my_req_info, $rule_env, $session,$post_args,200);
-
-
-##
-$link_id = '511048495_446064733495';
+my $link_id = '511048495_446064733495';
 $description = "Facebook get messages for link";
 $expected = superhashof({'data' => array_each({
     'from' => {
@@ -622,7 +625,7 @@ test_facebook('get',$args,$expected,$description,0);
 
 
 ##
-my $post_id = '641349049_124260134272950';
+#my $post_id = '641349049_124260134272950';
 $post_args = {
    'id' =>  $post_id,
    'connection' => 'likes'
@@ -656,14 +659,17 @@ Kynetx::Session::session_cleanup($session);
 
 sub test_post {
     my ($my_req_info, $rule_env, $session, $post_args,$code) = @_;
-    my $result = HTTP::Response->new();
-    $result = Kynetx::Predicates::Facebook::post_to_facebook($my_req_info, $rule_env, $session, {},{},[$post_args]);
-    #$result = Kynetx::Predicates::Facebook::eval_facebook($my_req_info, $rule_env, $session, $rule_name,'post',[$post_args]);
-    my $rcode = $result->code;
-    my $rstatus = $result->status_line;
-    $logger->trace("result: ", sub {Dumper($result)});
+    Kynetx::Predicates::Facebook::post_to_facebook($my_req_info, $rule_env, $session, {},{},[$post_args],['res']);
+    $result = lookup_rule_env('res',$rule_env);
+    my $rcode = $result->{'status_code'};
+    my $rstatus = $result->{'status_line'};
+    my $content = $result->{'content'};
+    my $ast = Kynetx::Json::jsonToAst($content);
+    $logger->info("Post: ", sub {Dumper($result)});
+    my $id = $ast->{'id'};
     cmp_deeply($rcode,$code,$rstatus || "Post request: " . sub {Dumper($post_args)});
     $gcal_tests++;
+    return $id;
 }
 
 sub sift_data {

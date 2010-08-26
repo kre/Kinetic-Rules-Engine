@@ -44,6 +44,7 @@ use Kynetx::Util qw(
   merror
   mis_error
 );
+use Kynetx::Environments qw/:all/;
 use Kynetx::Configure;
 use Kynetx::Memcached qw(mset_cache);
 use Kynetx::Session qw(
@@ -61,11 +62,12 @@ use Kynetx::Predicates::Google::OAuthHelper qw(
   get_protected_resource
   post_protected_resource
   trim_tokens
+  store_token
 );
 
 use Kynetx::Repository;
 use LWP::UserAgent;
-use URI::Escape ('uri_escape');
+use URI::Escape ('uri_escape','uri_unescape');
 use DateTime;
 use DateTime::Format::RFC3339;
 use DateTime::Format::ISO8601;
@@ -97,6 +99,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 use constant FB_AUTH_URL   => "https://graph.facebook.com/oauth/authorize";
 use constant FB_ACCESS_URL => "https://graph.facebook.com/oauth/access_token";
 use constant NAMESPACE     => "facebook";
+use constant SESSION_CALLBACK_KEY => "oauth_callback";
 my $fconfig    = Kynetx::Configure::get_config('FACEBOOK')->{'facebook'};
 my %predicates = ();
 
@@ -115,13 +118,9 @@ EOF
         before => \&authorize
     },
     'post' => {
-        js => <<EOF,
-function(uniq,cb,config) {
-    /* Post to facebook */
-    cb();
-}
-EOF
-        before => \&post_to_facebook
+        js => '',
+        before => \&post_to_facebook,
+        after => []
       }
 
 };
@@ -137,16 +136,63 @@ sub get_predicates {
 my $funcs = {};
 
 sub post_to_facebook {
-    my ( $req_info, $rule_env, $session, $config, $mods, $args ) = @_;
+    my ( $req_info, $rule_env, $session, $config, $mods, $args,$vars ) = @_;
     my $rid     = $req_info->{'rid'};
     my $logger  = get_logger();
     my $version = $req_info->{'rule_version'} || 'prod';
     my $url     = build( 'post', $args );
     my $content = build_post_content($args);
-    my $resp =
+    my $response =
       post_protected_resource( $req_info, $session, NAMESPACE, '', $url,
                                $content );
-    return $resp;
+    my $v = $vars->[0] || '__dummy';
+    my $resp = {
+        $v => {'label' => $config->{'autoraise'} || '',
+            'content' => $response->decoded_content(),
+            'status_code' => $response->code(),
+            'status_line' => $response->status_line(),
+            'content_type' => $response->header('Content-Type'),
+            'content_length' => $response->header('Content-Length'),
+        }
+
+    };
+
+  $logger->debug("KRL response ", sub { Dumper $resp });
+
+  # side effect rule env with the response
+  # should this be a denoted value?
+  $rule_env = add_to_env($resp, $rule_env) unless $v eq '__dummy';
+
+#  $logger->debug("Rule Env ", sub { Dumper $rule_env });
+
+
+  my $js = '';
+    if(defined $config->{'autoraise'}) {
+    $logger->debug("facebook library autoraising event with label $config->{'autoraise'}");
+
+    # make modifiers in right form for raise expr
+    my $ms = [];
+    foreach my $k (keys %{ $resp->{$v}} ) {
+      push( @{$ms}, {'name' => $k,
+             'value' => Kynetx::Expressions::mk_den_str($resp->{$v}->{$k}),
+            })
+    }
+
+    # create an expression to pass to eval_raise_statement
+    my $expr = {'type' => 'raise',
+        'domain' => 'facebook',
+        'rid' => $config->{'rid'},
+        'event' => 'post',
+        'modifiers' => $ms,
+           };
+    $js .= Kynetx::Postlude::eval_raise_statement($expr,
+                          $session,
+                          $req_info,
+                          $rule_env,
+                          $config->{'rule_name'});
+  }
+
+
 }
 
 sub build_post_content {
@@ -181,8 +227,10 @@ sub authorize {
     if ( mis_error($scope) ) {
         $logger->warn( "Authorize failure: ", $scope->{'DEBUG'} );
     }
+    my $app_req = get_fb_app_info( $req_info, $session );
+    my $app_info = Kynetx::Json::jsonToAst($app_req->{'_content'});
 
-    my $app_info = get_fb_app_info( $req_info, $session );
+    # application info is no longer being passed in the regular contents
     $logger->debug( "Facebook application info for $rid: ",
                     sub { Dumper($app_info) } );
 
@@ -193,9 +241,13 @@ sub authorize {
         $app_link = $app_info->{'link'};
     }
 
+    # Caller URL is not surviving the auth process, place it into the session
+    my $caller  = $req_info->{'caller'};
+    store_token($rid, $session, SESSION_CALLBACK_KEY, $caller, 'facebook');
+
     my $auth_url = get_fb_auth_url( $req_info, $session, NAMESPACE, $scope );
 
-    $logger->trace( "Authorization URL: ", $auth_url );
+    $logger->debug( "Authorization URL: ", uri_unescape($auth_url ));
 
     my ( $divId, $msg ) =
       facebook_msg( $req_info, $auth_url, $app_name, $app_link );
@@ -210,8 +262,6 @@ sub authorized {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
     my $rid    = $req_info->{'rid'};
     my $logger = get_logger();
-    $logger->trace( "Args: ", sub { Dumper($args) } );
-    $logger->trace( "Session tokens: ", sub { Dumper($session) } );
     my $access_token = get_token( $rid, $session, 'access_token', NAMESPACE );
     if ($access_token) {
         $logger->debug( "Found Access Token for: ", NAMESPACE );
@@ -221,12 +271,12 @@ sub authorized {
             return 1;
         } else {
             $logger->warn( "Auth failed for ", NAMESPACE, ":$rid" );
-            blast_tokens( $rid, $session, NAMESPACE );
+            #blast_tokens( $rid, $session, NAMESPACE );
         }
     } else {
         $logger->debug( "No access token found for ", NAMESPACE );
     }
-    blast_tokens( $rid, $session, NAMESPACE, '' );
+    #blast_tokens( $rid, $session, NAMESPACE, '' );
     return 0;
 }
 $funcs->{'authorized'} = \&authorized;
@@ -675,20 +725,15 @@ sub facebook_error_message {
 sub process_oauth_callback {
     my ( $r, $method, $rid ) = @_;
     my $logger = get_logger();
-    $logger->debug( "OAuth Callback: ", NAMESPACE );
+    $logger->debug( "\n-------------------OAuth Callback ", NAMESPACE,"---------------------: " );
     my $session = process_session($r);
     set_auth_tokens( $r, $method, $rid, $session, NAMESPACE );
-    $logger->trace( "P_O_C tokens: ", sub { Dumper($session) } );
     my $callback_hash = parse_callback( $r, $method, $rid, NAMESPACE );
-    $logger->trace( "Callback hash: ", sub { Dumper($callback_hash) } );
     my $req_info = $callback_hash->{'req_info'};
-
     if ( $rid ne $callback_hash->{'rid'} ) {
         $logger->warn( "Callback rid mis-match, expected: ",
                        $rid, " got: ", $callback_hash->{'rid'} );
     }
-    my $caller = $callback_hash->{'caller'};
-    $logger->debug( "Caller: ", sub { Dumper($caller) } );
     get_access_tokens( $req_info, $session, NAMESPACE, get_endpoints(),
                        $callback_hash );
     my $resp = test_response( $req_info, $session );
@@ -700,9 +745,13 @@ sub process_oauth_callback {
 
         #blast_tokens( $rid, $session, NAMESPACE );
     }
-
-    #Kynetx::Util::page_dump( $r, $req_info, $session, $caller, $resp );
+    my $caller = get_token($rid,$session,SESSION_CALLBACK_KEY,NAMESPACE) || $req_info->{'caller'};
+    $logger->debug("Issue redirect to: ", $caller);
     $r->headers_out->set( Location => $caller );
+    my $redirect = $r->headers_out->get("Location");
+    if ($caller ne $redirect) {
+        $logger->debug("Unable to redirect from $redirect to $caller");
+    }
     session_cleanup($session);
 }
 
@@ -807,14 +856,14 @@ sub get_fb_app_info {
 
 sub get_fb_auth_url {
     my ( $req_info, $session, $namespace, $scope ) = @_;
+    my $logger = get_logger();
     my $consumer_keys = get_consumer_tokens( $req_info, $session, NAMESPACE );
-    my $callback = uri_escape( make_callback_url( $req_info, NAMESPACE ) );
+    my $callback = make_callback_url( $req_info, NAMESPACE );
+    $logger->debug("Authorization URL callback: ",uri_unescape($callback));
     my $auth_url = get_endpoints()->{'authorization_url'};
     $auth_url .= '?client_id=' . $consumer_keys->{'consumer_key'};
     $auth_url .= '&redirect_uri=' . $callback;
     $auth_url .= '&scope=' . $scope;
-
-    #$auth_url .= '&secret_type=hmac-sha256';
     $auth_url .= '&type=web_server';
     return $auth_url;
 }

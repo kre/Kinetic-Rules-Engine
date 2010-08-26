@@ -117,6 +117,24 @@ pre {
   r_html = <<$content2>>;
   html_arr = [q_html,r_html];
   meta_str = <<td[style="background: #ddf;"]>>;
+  mail_str = <<
+  Dear Scott,
+
+  We have placed your MRI images in your Personal Data Store. Based on the
+  results we recommend that you select an orthopedic surgeon and set an
+  appointment for a consultation. Please call our office with any questions.
+  Next steps:
+      * Select an orthopedic surgeon
+      * Set an appointment for a consultation
+
+
+
+  Best Regards,
+
+  The office of Dr. William Chan
+
+  >>;
+  mail2_str = << Dear Scott,\r\n\r\nWe have placed your MRI images in your Personal Data Store. Based on the \r\nresults we recommend that you select an orthopedic surgeon and set an \r\nappointment for a consultation. Please call our office with any questions.\r\n\r\nNext steps:\r\n\r\n    * Select an orthopedic surgeon\r\n    * Set an appointment for a consultation\r\n\r\n\r\nBest Regards,\r\n\r\nThe office of Dr. William Chan\r\n>>;
   a_h = { "colors of the wind" : "many","pi as array" : [3,1,4,1,5,6,9]};
   b_h = {"mKey" : "mValue"};
   c_h = [{"hKey" : "hValue"}];
@@ -1281,27 +1299,41 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+ENDY:
+
+
 $e[$i] = q/i_h.as("str")/;
-$x[$i] = '{"mKey":"mValue","hKey":{"innerKey":"innerVal"}}';
+$x[$i] = {
+    'val' => '{"mKey":"mValue","hKey":{"innerKey":"innerVal"}}',
+    'type' => 'str'
+};
 $d[$i] = 0;
 $i++;
 
 $e[$i] = q/c_h.as("str")/;
-$x[$i] = '[{"hKey":"hValue"}]';
+$x[$i] ={
+    'val' => '[{"hKey":"hValue"}]',
+    'type' => 'str'
+};
 $d[$i] = 0;
 $i++;
 
 $e[$i] = q/d_h.as("str")/;
-$x[$i] = '[{"hKey":"hValue"},{"mKey":"mValue"}]';
+$x[$i] ={
+    'val' => '[{"hKey":"hValue"},{"mKey":"mValue"}]',
+    'type' => 'str'
+};
 $d[$i] = 0;
 $i++;
 
 $e[$i] = q/a_h.as("json")/;
-$x[$i] = '{"pi as array":[3,1,4,1,5,6,9],"colors of the wind":"many"}';
+$x[$i] = {
+    'val' => '{"pi as array":[3,1,4,1,5,6,9],"colors of the wind":"many"}',
+    'type' => 'str'
+};
 $d[$i] = 0;
 $i++;
 
-ENDY:
 
 $e[$i] = q#my_str.extract(re/(boot)/)#;
 $x[$i] = {
@@ -1330,6 +1362,14 @@ $i++;
 $e[$i] = q#my_str.extract(re/(s.+).*(.ing)/)#;
 $x[$i] = {
    'val' => ['s is a st','ring'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#mail2_str.extract(re/\s*\*\s*([ \w]+)\s*\v\s*\*\s*([ \w]+)\v/)#;
+$x[$i] = {
+   'val' => ['Select an orthopedic surgeon','Set an appointment for a consultation'],
    'type' => 'array'
 };
 $d[$i]  = 0;

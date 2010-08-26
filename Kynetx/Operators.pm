@@ -671,7 +671,9 @@ sub eval_as {
         $logger->trace("EXP: ", sub {Dumper($tmp)});
         my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
         $logger->trace("JSON: ", $json);
-        return $json;
+        $obj->{'type'} = "str";
+        $obj->{'val'} = $json;
+        return $obj;
     }
 
     return $obj;

@@ -48,7 +48,7 @@ use LWP::UserAgent;
 use HTTP::Request::Common;
 use HTTP::Status qw(:constants);
 use HTTP::Response;
-use URI::Escape ('uri_escape');
+use URI::Escape ('uri_escape','uri_unescape');
 use Encode;
 
 use Kynetx::Session qw(
@@ -147,6 +147,7 @@ sub get_access_tokens_v2 {
     my $rid         = $req_info->{'rid'};
     my $verifier = uri_escape(get_token( $rid, $session, 'oauth_verifier', $namespace));
     my $callback = uri_escape(make_callback_url($req_info,$namespace));
+    $logger->debug("Access URL callback: ",uri_unescape($callback),"\n");
     my $access_url = $endpoint->{'access_token_url'} || '';
     my $consumer_tokens = get_consumer_tokens($req_info,$session,$namespace);
     my $content;
@@ -156,7 +157,7 @@ sub get_access_tokens_v2 {
     $content .= '&client_secret=' . $consumer_tokens->{"consumer_secret"};
     $content .= '&redirect_uri=' . $callback;
     my $mixed = $access_url . '?' . $content;
-    $logger->debug("Access Url: ", $mixed);
+    $logger->trace("Access Url: ", $mixed);
     my $hreq = HTTP::Request->new( GET => $mixed);
     my $ua = LWP::UserAgent->new;
     my $resp = $ua->simple_request($hreq);
@@ -513,7 +514,7 @@ sub store_token {
     }
     $key .= SEP . $name;
     session_store( $rid, $session, $key, $value );
-    $logger->trace("Stored token ($name): ", sub { Dumper($session)});
+    $logger->debug("Stored token ($key): ");
 }
 
 sub get_token {
@@ -531,8 +532,8 @@ sub get_token {
     } else {
         $key = $namespace;
     }
-    $logger->debug("Get token ($key)");
     $key .= SEP . $name;
+    $logger->debug("Get token ($key)");
     return session_get( $rid, $session, $key );
 }
 
@@ -670,6 +671,8 @@ sub get_consumer_tokens {
 sub parse_callback {
     my ($r,$method,$rid,$namespace) = @_;
     my $logger = get_logger();
+    $logger->debug("OAuth authorization received from $namespace");
+    $logger->trace("Raw request back from facebook: ", sub {Dumper($r)});
     my $cb_obj;
     $cb_obj->{'namespace'} = $namespace;
     my $req       = Apache2::Request->new($r);
@@ -679,10 +682,15 @@ sub parse_callback {
           Kynetx::Configure::get_oauth_param( $namespace, 'callback' );
     if ($namespace eq 'facebook') {
         if ($uri =~ m/$rest_part/) {
-            if ($uri =~ m/$rest_part\/(\w+)\/(\w+)\/(\S+)\/?/) {
+            #$logger->debug("Facebook callback: $rest_part");
+            if ($uri =~ m/$rest_part\/(\w+)\/(\w+)\/(.+)\/?/) {
                 $cb_obj->{'rid'} = $1;
+                # Not sure if both are needed, but Repository checks for kynetx_app_version
                 $cb_obj->{'req_info'}->{'rule_version'} = $2;
-                $cb_obj->{'caller'} = $3;
+                $cb_obj->{'req_info'}->{'kynetx_app_version'} = $2;
+                #$cb_obj->{'caller'} = $3;
+                $cb_obj->{'req_info'}->{'caller'} = $3;
+                #$logger->debug("Facebook callback info for URI: $uri\n", sub {Dumper($cb_obj)});
             }
         } else {
             $logger->warn("Error parsing facebook callback: ",$uri);
@@ -706,6 +714,7 @@ sub make_callback_url {
         my $rid     = $req_info->{'rid'};
         my $version = $req_info->{'rule_version'} || 'prod';
         my $caller  = $req_info->{'caller'};
+        #my $caller = "caller";
         my $host    = Kynetx::Configure::get_config('EVAL_HOST');
         my $port    = Kynetx::Configure::get_config('OAUTH_CALLBACK_PORT');
         my $rest_part =
@@ -729,9 +738,12 @@ sub make_callback_url {
 sub _make_facebook_callback_url {
     my ($req_info) = @_;
     my $logger     = get_logger();
+    # req_info can be extensive
+    #$logger->debug("Callback Request Info: ", sub {Dumper($req_info)});
     my $rid        = $req_info->{'rid'};
     my $version = $req_info->{'rule_version'} || 'prod';
-    my $caller  = $req_info->{'caller'};
+    #my $caller  = $req_info->{'caller'};
+    my $caller = "dummy";
     my $host    = Kynetx::Configure::get_config('EVAL_HOST');
     my $port    = Kynetx::Configure::get_config('OAUTH_CALLBACK_PORT');
     my $rest_part =
