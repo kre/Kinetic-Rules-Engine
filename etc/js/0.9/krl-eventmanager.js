@@ -9,117 +9,71 @@ KOBJEventManager.eid = function() {
     return adate.valueOf() + (Math.random() + "").substring(2);
 };
 
+KOBJEventManager.current_fires = {};
+KOBJEventManager.events = { };
+KOBJEventManager.content_changes_running = {};
+KOBJEventManager.content_change_hashcodes = {};
 
-KOBJEventManager.current_fires = {
-    "click" : {},
-    "doubleclick" : {},
-    "mouseout" : {},
-    "change" : {},
-    "mousemove" : {},
-    "submit" : {},
-    "mouseleave" : {},
-    "resize" : {},
-    "scroll" : {},
-    "select" : {},
-    "toggle" : {},
-    "load" : {},
-    "keyup" : {},
-    "keypress" : {},
-    "keydown" : {},
-    "focusin" : {},
-    "focusout" : {},
-    "pageview" : {},
-    "content_change" : {},
-    "page_content" : {}
+
+// this will look like
+// {"ax1993":
+//          {"pageview":
+//              {"unknown<selector>":
+//                      {submit_data: {},
+//                        param_data :{}
+//              }
+//           }
+//  }
+
+
+
+// List of guids currently running for the content change event.
+// If there are any in the list we do not start the timer until they are all done.
+// We also need to reset the content hash value after they have all run so that we
+// do not fire again prematurely.
+
+// Change Current fires to  look
+// {"aax":
+//      {app:application,
+//          events:
+//              {"pageview":
+//                  {data}
+//              }
+//      }
+// }
+
+// Second list of for direct guid access.
+// This is a mapping of guid to app and event
+// 'aaaddd':{app:application,"event":"pageview","selector":"#id"}
+KOBJEventManager.guid_list = {
+
 };
-
-KOBJEventManager.events = {
-    "click" : { "domain" : "web" },
-    "doubleclick" : {"domain" : "web" },
-    "mouseout" : {"domain" : "web" },
-    "change" : {"domain" : "web" },
-    "mousemove" : {"domain" : "web" },
-    "submit" : {"domain" : "web" },
-    "mouseleave" : {"domain" : "web" },
-    "resize" : {"domain" : "web" },
-    "scroll" : {"domain" : "web" },
-    "select" : {"domain" : "web" },
-    "toggle" : {"domain" : "web" },
-    "load" : {"domain" : "web" },
-    "keyup" : {"domain" : "web" },
-    "keypress" : {"domain" : "web" },
-    "keydown" : {"domain" : "web" },
-    "focusin" : {"domain" : "web" },
-    "focusout" : {"domain" : "web" },
-    "pageview" : {"domain" : "web" },
-    "content_change" : {"domain" : "web" },
-    "page_content" : {"domain" : "web" }
-};
-
 
 /*
  * This is the notification call back to let the event manager know that
  * an event was sent to the server and has come back.
  */
-KOBJEventManager.event_fire_complete = function(application, guid)
+KOBJEventManager.event_fire_complete = function(guid)
 {
-    var event = KOBJEventManager.find_event_by_guid(guid);
-    delete KOBJEventManager.current_fires[event][guid][application.app_id];
-    KOBJ.itrace("Event Fire Complete " + application.app_id + " - " + guid);
-    if ($KOBJ.isEmptyObject(KOBJEventManager.current_fires[event][guid]))
+    KOBJ.itrace("Event Fire Complete " + guid);
+    var guid_info = KOBJEventManager.guid_list[guid];
+    delete KOBJEventManager.current_fires[guid_info.app.app_id][guid_info.event][guid_info.selector];
+    delete KOBJEventManager.guid_list[guid];
+
+    if (guid_info.event == "content_change")
     {
-        KOBJ.itrace("Remove Guid : " + guid);
-        delete KOBJEventManager.current_fires[event][guid];
-    }
-
-
-};
-
-KOBJEventManager.find_event_by_guid = function(guid)
-{
-    var theevent = "";
-    $KOBJ.each(KOBJEventManager.current_fires, function(event, event_data) {
-        if (event_data[guid])
+        KOBJ.itrace("Clear Content Change " + guid);
+        delete KOBJEventManager.content_changes_running[guid];
+        KOBJEventManager.update_content_change_hash();
+        KOBJ.itrace("Done updating " + guid);
+        if ($KOBJ.isEmptyObject(KOBJEventManager.content_changes_running))
         {
-            theevent = event;
+            KOBJ.itrace("Setting change look timer 2s");
+            setTimeout(KOBJEventManager.content_change_checker, 500);
         }
-
-    });
-    return theevent;
+    }
 };
 
-/*
- * This is the timeout call back function that get called every Xms to check for events in the queue.
- */
-KOBJEventManager.process_fires = function()
-{
-    // Because hashes are really arrays we get the first thing in our current fire.
-    $KOBJ.each(KOBJEventManager.current_fires, function(event, event_data) {
-        $KOBJ.each(KOBJEventManager.current_fires[event], function(guid, guid_data)
-        {
-            $KOBJ.each(KOBJEventManager.current_fires[event][guid], function(app_id, app_data) {
-                if (!app_data["processing"])
-                {
-
-                    KOBJ.itrace("Firing Event " + app_id + " - " + app_data["processing"]);
-                    var domain = "web";
-                    if (KOBJEventManager.events[event]["domain"] != null)
-                    {
-                        domain = KOBJEventManager.events[event]["domain"]
-                    }
-                    app_data["app"].fire_event(event, app_data, guid, domain);
-                    app_data.processing = true;
-                }
-            });
-            // Break out of this each loop.
-            return false;
-        });
-    });
-
-    KOBJEventManager.content_change_checker();
-    setTimeout(KOBJEventManager.process_fires, 500);
-
-};
 
 /*
  * Check if the event is a dup.  By that I mean no app can have to events of the same
@@ -128,20 +82,15 @@ KOBJEventManager.process_fires = function()
 KOBJEventManager.is_dup_event = function(event, selector, app)
 {
     var found_event = false;
-    if (KOBJEventManager.current_fires[event] == null)
+
+    if (KOBJEventManager.current_fires[app.app_id] != null)
     {
-        return found_event;
+        var app_fire = KOBJEventManager.current_fires[app.app_id][event];
+        if (app_fire != null && app_fire[selector])
+        {
+            found_event = true;
+        }
     }
-    // Because hashes are really arrays we get the first thing in our current fire.
-    $KOBJ.each(KOBJEventManager.current_fires[event], function(guid, guid_data)
-    {
-        $KOBJ.each(KOBJEventManager.current_fires[event][guid], function(app_id, app_data) {
-            if (app_data.selector == selector && app.app_id == app_id)
-            {
-                found_event = true;
-            }
-        });
-    });
 
     return found_event;
 };
@@ -161,25 +110,71 @@ KOBJEventManager.add_to_fire_queue = function(guid, event, data, app)
     KOBJ.itrace("Adding Event " + event + " : " + app.app_id);
     // If this is a custom event we need to track it so add it to our hash
 
-    if (KOBJEventManager.current_fires[event] == null)
+    if (KOBJEventManager.current_fires[app.app_id] == null)
     {
-        //            alert("event type was not found adding " + event);
-        KOBJEventManager.current_fires[event] = {};
+        KOBJEventManager.current_fires[app.app_id] = {};
     }
-    // When adding to the queue we do not allow the same event for the same selector to
-    // be added multiple times.  This could cause some freky loops
-    if (!KOBJEventManager.current_fires[event][guid])
+    if (KOBJEventManager.current_fires[app.app_id][event] == null)
     {
-        KOBJEventManager.current_fires[event][guid] = {};
+        KOBJEventManager.current_fires[app.app_id][event] = {};
     }
-    KOBJEventManager.current_fires[event][guid][app.app_id] = {};
-    KOBJEventManager.current_fires[event][guid][app.app_id]["app"] = app;
-    KOBJEventManager.current_fires[event][guid][app.app_id]["processing"] = false;
-    KOBJEventManager.current_fires[event][guid][app.app_id]["selector"] = data.selector;
-    KOBJEventManager.current_fires[event][guid][app.app_id]["submit_data"] = data.submit_data;
-    KOBJEventManager.current_fires[event][guid][app.app_id]["param_data"] = data.param_data;
-    //        alert("Added to Queue " + event);
 
+    KOBJEventManager.current_fires[app.app_id][event][data.selector] = {};
+    KOBJEventManager.current_fires[app.app_id][event][data.selector]["submit_data"] = data.submit_data;
+    KOBJEventManager.current_fires[app.app_id][event][data.selector]["param_data"] = data.param_data;
+    KOBJEventManager.current_fires[app.app_id][event][data.selector]["selector"] = data.selector;
+
+    var app_data = KOBJEventManager.current_fires[app.app_id][event][data.selector];
+
+
+    // Short cut way to get to app
+    KOBJEventManager.guid_list[guid] = {};
+    KOBJEventManager.guid_list[guid]["app"] = app;
+    KOBJEventManager.guid_list[guid]["event"] = event;
+    KOBJEventManager.guid_list[guid]["selector"] = data.selector;
+
+    if (event == "content_change")
+    {
+        KOBJEventManager.content_changes_running[guid] = app;
+    }
+
+    app.fire_event(event, app_data, guid, "web");
+};
+
+
+KOBJEventManager.hashCode = function(value) {
+    var hash = 0;
+    if (value.length == 0) return hash;
+    for (var i = 0; i < value.length; i++) {
+        var cha = value.charCodeAt(i);
+        hash = 31 * hash + cha;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash;
+};
+
+// Ths computes the hash value for the text of a selector
+KOBJEventManager.content_change_hashcode = function(selector)
+{
+    return KOBJEventManager.hashCode($KOBJ(selector).text());
+};
+
+// This will look at all the content change selectors and update their hash values.
+KOBJEventManager.update_content_change_hash = function()
+{
+    KOBJ.itrace("Updating hashes");
+
+    $KOBJ.each(KOBJEventManager.events["content_change"], function(selector, event_data) {
+        if (!KOBJEventManager.content_change_hashcodes[selector])
+        {
+            KOBJEventManager.content_change_hashcodes[selector] = {}
+        }
+
+        KOBJ.itrace("Before  hash [" + KOBJEventManager.content_change_hashcodes[selector]["prior_data_hash"] + "]");
+        KOBJEventManager.content_change_hashcodes[selector]["prior_data_hash"] = KOBJEventManager.content_change_hashcode(selector);
+        KOBJ.itrace("After  hash [" + KOBJEventManager.content_change_hashcodes[selector]["prior_data_hash"] + "]");
+    });
+    KOBJ.itrace("Done Updating hashes");
 };
 
 /*
@@ -187,20 +182,43 @@ KOBJEventManager.add_to_fire_queue = function(guid, event, data, app)
  */
 KOBJEventManager.content_change_checker = function()
 {
-    $KOBJ.each(KOBJEventManager.events["content_change"], function(selector, selector_data) {
+    KOBJ.itrace("In Content Change");
+    // Just in any are running abort.
+    if (!$KOBJ.isEmptyObject(KOBJEventManager.content_changes_running))
+    {
+        KOBJ.itrace("Content Chagne running");
+        return;
+    }
+    var any_fired = false;
+    $KOBJ.each(KOBJEventManager.events["content_change"], function(selector, event_data) {
         // We have not yet looked at the data so we need to get it so we can check it next time.
-        if (!selector_data["prior_data"]) {
-            selector_data["prior_data"] = $KOBJ(selector).text();
+        if (!KOBJEventManager.content_change_hashcodes[selector])
+        {
+            KOBJEventManager.content_change_hashcodes[selector] = {}
+        }
+        var selector_data = KOBJEventManager.content_change_hashcodes[selector];
+        if (!selector_data["prior_data_hash"]) {
+            selector_data["prior_data_hash"] = KOBJEventManager.content_change_hashcode(selector);
         }
         else {
             // If The element changed then fire the event.
-            if (selector_data["prior_data"] != $KOBJ(selector).text()) {
-                KOBJEventManager.event_handler({"type" : "content_change", "data" : { "selector" : selector}});
+            if (selector_data["prior_data_hash"] != KOBJEventManager.content_change_hashcode(selector)) {
+
+                KOBJ.itrace("Data Change going to fire content change [" + selector_data["prior_data_hash"] + "] [" + KOBJEventManager.content_change_hashcode(selector) + "]");
                 // Reset the data to the new value
-                selector_data["prior_data"] = $KOBJ(selector).text();
+                selector_data["prior_data_hash"] = KOBJEventManager.content_change_hashcode(selector);
+                KOBJEventManager.event_handler({"type" : "content_change", "data" : { "selector" : selector}});
+                any_fired = true;
             }
         }
     });
+
+    if (!any_fired)
+    {
+        KOBJ.itrace("Setting change look timer");
+        setTimeout(KOBJEventManager.content_change_checker, 500);
+    }
+
 };
 
 /*
@@ -286,7 +304,6 @@ KOBJEventManager.add_out_of_bound_event = function(application, event, auto_dere
 KOBJEventManager.event_handler = function(event) {
     KOBJ.itrace("in event handle");
     var event_data = event.data;
-    var current_guid = KOBJEventManager.eid();
 
     // Are we doing a submit then get the form data.
     if (event.type == "submit")
@@ -295,8 +312,7 @@ KOBJEventManager.event_handler = function(event) {
     }
 
     $KOBJ.each(KOBJEventManager.events["" + event.type][event_data.selector], function(app_id, application) {
-
-        //            alert("adding to fire queue " + event.type + " - " + event_data.selector);
+        var current_guid = KOBJEventManager.eid();
         KOBJEventManager.add_to_fire_queue(current_guid, event.type, event_data, application);
     });
 
@@ -312,11 +328,5 @@ KOBJEventManager.event_handler = function(event) {
     return true;
 };
 
-/*
- * In some cases events do not get registered as a prior event registration of another
- * framework might have stopped the propagation of the event.  In that case this method
- * can be used to send the event just as if it was sent by registering it with javascript.
- * In order for this to work the application must have still registered interest in the event.
- */
-setTimeout(KOBJEventManager.process_fires, 100);
+setTimeout(KOBJEventManager.content_change_checker, 500);
 

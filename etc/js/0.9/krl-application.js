@@ -196,10 +196,8 @@ KrlApplication.prototype.execute_closure = function(guid, a_closure)
     }
     else
     {
-        KOBJ.itrace("Executing closure " + this.app_id + " : " + guid);
-        KOBJEventManager.event_fire_complete(this, guid);
+        this.pending_closures[guid] = a_closure;
         this.execute_pending_closures();
-        a_closure($KOBJ);
     }
 
 };
@@ -220,13 +218,14 @@ KrlApplication.prototype.execute_pending_closures = function()
         KOBJ.itrace("Executing Closure " + myself.app_id + " - " + guid);
         try
         {
-            the_closure($KOBJ);
+                the_closure($KOBJ);
         }
         catch(err)
         {
             KOBJ.itrace("Closure Executed with error " + myself.app_id + " - " + guid);
+            KOBJEventManager.event_fire_complete(guid);
         }
-        KOBJEventManager.event_fire_complete(myself, guid);
+        KOBJEventManager.event_fire_complete(guid);
     });
 
     this.pending_closures = {};
