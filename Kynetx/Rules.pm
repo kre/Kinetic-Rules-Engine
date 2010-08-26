@@ -2,33 +2,33 @@ package Kynetx::Rules;
 # file: Kynetx/Rules.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use strict;
 use warnings;
 
@@ -73,12 +73,12 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 process_rules
 eval_rule
 eval_globals
-get_rule_set 
+get_rule_set
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -96,7 +96,7 @@ sub process_rules {
 	my $test_ip = Kynetx::Configure::get_config('TEST_IP');
 	 $r->connection->remote_ip($test_ip);
 	$logger->debug("In development mode using IP address ", $r->connection->remote_ip());
-    } 
+    }
 
 
     # get a session
@@ -110,19 +110,19 @@ sub process_rules {
 
 
     my $rule_env = mk_initial_env();
-    
+
     my @rids = split(/;/, $rids);
     # if we sort @rids we change ruleset priority
     foreach my $rid (@rids) {
 	Log::Log4perl::MDC->put('site', $rid);
 # 	my $rule_list = mk_rule_list($req_info, $rid);
-# 	$js .= eval { process_ruleset($r, 
-# 				      $rule_list, 
-# 				      $rule_env, 
-# 				      $session, 
+# 	$js .= eval { process_ruleset($r,
+# 				      $rule_list,
+# 				      $rule_env,
+# 				      $session,
 # 				      $rid
-# 				     ) 
-# 		    }; 
+# 				     )
+# 		    };
 	my $schedule = mk_schedule($req_info, $rid);
 	$js .= eval {
 	  process_schedule($r, $schedule, $session, $eid);
@@ -133,8 +133,8 @@ sub process_rules {
     }
 
     # put this in the logging DB
-    log_rule_fire($r, 
-		  $req_info, 
+    log_rule_fire($r,
+		  $req_info,
 		  $session
 	);
 
@@ -186,7 +186,7 @@ sub process_schedule {
       # set up new context
       $ruleset = $task->{'ruleset'};
 
-      if (($ruleset->{'meta'}->{'logging'} && 
+      if (($ruleset->{'meta'}->{'logging'} &&
 	   $ruleset->{'meta'}->{'logging'} eq "on")) {
 	turn_on_logging();
       } else {
@@ -231,9 +231,9 @@ sub process_schedule {
 
     my $this_rule_env;
     $logger->debug("Rule $rule_name is " . $rule->{'state'});
-    if($rule->{'state'} eq 'active' || 
-       ($rule->{'state'} eq 'test' && 
-	$req_info->{'mode'} && 
+    if($rule->{'state'} eq 'active' ||
+       ($rule->{'state'} eq 'test' &&
+	$req_info->{'mode'} &&
 	$req_info->{'mode'} eq 'test' )) {  # optimize??
 
       $req_info->{'rule_count'}++;
@@ -266,10 +266,10 @@ sub process_schedule {
       my $js;
       if (Kynetx::Authz::is_authorized($rid,$ruleset,$session)) {
 
-	$js = eval {eval_rule($r, 
+	$js = eval {eval_rule($r,
 			      $req_info,
 			      extend_rule_env($this_rule_env, $rule_env),
-			      $session, 
+			      $session,
 			      $rule,
 			      $sjs  # pass in the select JS to be inside rule
 			     );
@@ -334,9 +334,9 @@ sub eval_meta {
 	if ($k eq 'twitter') {
 	  $req_info->{$rid.':key:twitter'} = $ruleset->{'meta'}->{'keys'}->{$k};
 	} elsif ($k eq 'amazon') {
-	  $req_info->{$rid.':key:amazon'} = $ruleset->{'meta'}->{'keys'}->{$k};    	  
+	  $req_info->{$rid.':key:amazon'} = $ruleset->{'meta'}->{'keys'}->{$k};
 	} else { # googleanalytics, errorstack
-	  $js .= KOBJ_ruleset_obj($ruleset->{'ruleset_name'}). ".keys.$k = '" . 
+	  $js .= KOBJ_ruleset_obj($ruleset->{'ruleset_name'}). ".keys.$k = '" .
 	    $ruleset->{'meta'}->{'keys'}->{$k} . "';\n";
 	}
       }
@@ -356,11 +356,11 @@ sub eval_use {
   my $js = "";
 
   my $rid = $req_info->{'rid'};
-  
+
   foreach my $u (@{$use}) {
     # just put resources in $req_info and mk_registered_resources will grab them
     if ($u->{'type'} eq 'resource') {
-      $req_info->{'resources'}->{$u->{'resource'}->{'location'}} = 
+      $req_info->{'resources'}->{$u->{'resource'}->{'location'}} =
 		  {'type' => $u->{'resource_type'}};
     } else {
       $logger->error("Unknown type for 'use': ", $u->{'type'});
@@ -407,7 +407,7 @@ sub eval_globals {
 	my $val = 0;
 	if($g->{'emit'}) { # emit
 	  $this_js = Kynetx::Expressions::eval_emit($g->{'emit'}) . "\n";
-	} elsif(defined $g->{'type'} && $g->{'type'} eq 'dataset') { 
+	} elsif(defined $g->{'type'} && $g->{'type'} eq 'dataset') {
 	    my $new_ds = Kynetx::Datasets->new($g);
 	  if (! $new_ds->is_global()) {
 	      $new_ds->load($req_info);
@@ -423,11 +423,11 @@ sub eval_globals {
 	    # yes, this is cheating and breaking the abstraction, but it's fast
 	    $rule_env->{$var} = $val;
 	  }
-	} elsif(defined $g->{'type'} && $g->{'type'} eq 'css') { 
+	} elsif(defined $g->{'type'} && $g->{'type'} eq 'css') {
 	  $this_js = "KOBJ.css(" . Kynetx::JavaScript::mk_js_str($g->{'content'}) . ");\n";
 	} elsif(defined $g->{'type'} && $g->{'type'} eq 'datasource') {
 	  $rule_env->{'datasource:'.$g->{'lhs'}} = $g;
-	} elsif(defined $g->{'type'} && 
+	} elsif(defined $g->{'type'} &&
 		($g->{'type'} eq 'expr' || $g->{'type'} eq 'here_doc')) {
 	  $this_js = Kynetx::Expressions::eval_one_decl($req_info, $rule_env, $ruleset->{'lhs'}, $session, $g);
 	}
@@ -437,7 +437,7 @@ sub eval_globals {
 #    $logger->debug(" rule_env: ", Dumper($rule_env));
 
     return ($js, $rule_env);
-   
+
 }
 
 sub eval_rule {
@@ -447,7 +447,7 @@ sub eval_rule {
 
     my $logger = get_logger();
 
-    $logger->debug("------------------- begin rule execution: $rule->{'name'} ------------------------");
+    $logger->debug("\n------------------- begin rule execution: $rule->{'name'} ------------------------\n");
 
     my $js = '';
 
@@ -456,7 +456,7 @@ sub eval_rule {
 # uncomment to print out all the session keys.  With events there's a lot
 #     foreach my $var (@{ session_keys($req_info->{'rid'}, $session) } ) {
 # 	next if($var =~ m/_created$/);
-# 	$logger->debug("[Session] $var has value ". 
+# 	$logger->debug("[Session] $var has value ".
 # 		       session_get($req_info->{'rid'}, $session, $var));
 #     }
 
@@ -464,7 +464,7 @@ sub eval_rule {
     $req_info->{'actions'} = [];
     $req_info->{'labels'} = [];
     $req_info->{'tags'} = [];
-    
+
     # assume the rule doesn't fire.  We will change this if it EVER fires in this eval
     $req_info->{$rule->{'name'}.'_result'} = 'notfired';
 
@@ -477,21 +477,21 @@ sub eval_rule {
     my $outer_tentative_js = '';
 
 
-    # this loads the rule_env.  
-    ($outer_tentative_js,$rule_env) = 
-      Kynetx::Expressions::eval_prelude($req_info, 
-					$rule_env, 
-					$rule->{'name'}, 
-					$session, 
+    # this loads the rule_env.
+    ($outer_tentative_js,$rule_env) =
+      Kynetx::Expressions::eval_prelude($req_info,
+					$rule_env,
+					$rule->{'name'},
+					$session,
 					$rule->{'outer_pre'});
 
-    $rule->{'pagetype'}->{'foreach'} = [] 
+    $rule->{'pagetype'}->{'foreach'} = []
       unless defined $rule->{'pagetype'}->{'foreach'};
 
-    $js .= eval_foreach($r, 
-			$req_info, 
-			$rule_env, 
-			$session, 
+    $js .= eval_foreach($r,
+			$req_info,
+			$rule_env,
+			$session,
 			$rule,
 			@{ $rule->{'pagetype'}->{'foreach'} });
 
@@ -521,27 +521,27 @@ sub eval_foreach {
 
   if (@foreach_list == 0) {
 
-    $fjs =  eval_rule_body($r, 
-			    $req_info, 
-			    $rule_env, 
-			    $session, 
+    $fjs =  eval_rule_body($r,
+			    $req_info,
+			    $rule_env,
+			    $session,
 			    $rule);
 
   } else {
 
     # expr has to result in array of prims
-    my $valarray = 
-         Kynetx::Expressions::eval_expr($foreach_list[0]->{'expr'}, 
-					$rule_env, 
-					$rule->{'name'}, 
-					$req_info, 
+    my $valarray =
+         Kynetx::Expressions::eval_expr($foreach_list[0]->{'expr'},
+					$rule_env,
+					$rule->{'name'},
+					$req_info,
 					$session);
 
 
     $logger->debug("Foreach ", sub { Dumper $foreach_list[0] });
-    
+
     my $vars = $foreach_list[0]->{'var'};
-    # FIXME: not sure why we have to do this.  
+    # FIXME: not sure why we have to do this.
     unless (ref $vars eq 'ARRAY') {
       $vars = [$vars];
     }
@@ -572,8 +572,8 @@ sub eval_foreach {
 
 #      $logger->debug("Evaluating rule body with " . Dumper($val));
 
-      my $vjs = 
-	Kynetx::JavaScript::gen_js_var_list($vars, 
+      my $vjs =
+	Kynetx::JavaScript::gen_js_var_list($vars,
 		[map {Kynetx::JavaScript::gen_js_expr(
 		       Kynetx::Expressions::typed_value($_))} @{$val}]);
 
@@ -584,12 +584,12 @@ sub eval_foreach {
       # we recurse in side this loop to handle nested foreach statements
       $fjs .= mk_turtle(
 		$vjs .
-  	        eval_foreach($r, 
-			     $req_info, 
+  	        eval_foreach($r,
+			     $req_info,
 			     extend_rule_env($vars,
 					     $val,
-					     $rule_env), 
-			     $session, 
+					     $rule_env),
+			     $session,
 			     $rule,
 			     cdr(@foreach_list)
 			    ));
@@ -605,42 +605,42 @@ sub eval_rule_body {
   my $logger = get_logger();
 
   my $inner_tentative_js;
-  ($inner_tentative_js,$rule_env) = 
-    Kynetx::Expressions::eval_prelude($req_info, 
-				      $rule_env, $rule->{'name'}, 
+  ($inner_tentative_js,$rule_env) =
+    Kynetx::Expressions::eval_prelude($req_info,
+				      $rule_env, $rule->{'name'},
 				      $session, $rule->{'inner_pre'});
 
 
 
-  # if the condition is undefined, it's true.  
+  # if the condition is undefined, it's true.
   $rule->{'cond'} ||= mk_expr_node('bool','true');
 
 
-  my $pred_value = 
+  my $pred_value =
     Kynetx::Expressions::den_to_exp(
        Kynetx::Expressions::eval_expr ($rule->{'cond'}, $rule_env, $rule->{'name'},$req_info, $session));
 
 
   my $js = '';
 
-    
+
   my $fired = 0;
   if ($pred_value) {
 
     $logger->info("fired");
 
     # this is the main event.  The browser has asked for a
-    # chunk of Javascrip and this is where we deliver... 
+    # chunk of Javascrip and this is where we deliver...
 
     # combine the inner_tentive JS, with the generated JS and wrap in a closure
     $js = $inner_tentative_js .
-          Kynetx::Actions::build_js_load($rule, 
-					 $req_info, 
-					 $rule_env, 
+          Kynetx::Actions::build_js_load($rule,
+					 $req_info,
+					 $rule_env,
 					 $session);
-	
+
     $fired = 1;
-    # change the 'fired' flag to indicate this rule fired.  
+    # change the 'fired' flag to indicate this rule fired.
     $req_info->{$rule->{'name'}.'_result'} = 'fired';
 #    push(@{ $req_info->{'results'} }, 'fired');
 
@@ -650,7 +650,7 @@ sub eval_rule_body {
 
     $fired = 0;
 
-# don't do anything since we already assume no fire; 
+# don't do anything since we already assume no fire;
 #    $req_info->{$rule->{'name'}.'_result'} = 'notfired';
 #    push(@{ $req_info->{'results'} }, 'notfired');
 
@@ -670,7 +670,7 @@ sub get_rule_set {
     my $rid = $req_info->{'rid'};
 
 
-    
+
     my $logger = get_logger();
     $logger->debug("Getting ruleset $rid for $caller");
 
@@ -683,13 +683,13 @@ sub get_rule_set {
       $req_info->{$rid}->{'ruleset'} = $ruleset;
     }
 
-    if (($ruleset->{'meta'}->{'logging'} && 
+    if (($ruleset->{'meta'}->{'logging'} &&
 	 $ruleset->{'meta'}->{'logging'} eq "on")) {
       turn_on_logging();
     } else {
       turn_off_logging();
     }
-    
+
     $logger->debug("Found " . @{ $ruleset->{'rules'} } . " rules for RID $rid" );
 
     return $ruleset;
@@ -729,7 +729,7 @@ sub optimize_ruleset {
     $ruleset->{'optimization_version'} = get_optimization_version();
 
 #    $logger->debug("Optimized ruleset ", sub { Dumper $ruleset });
-    
+
     return $ruleset;
 }
 
@@ -749,9 +749,9 @@ sub optimize_rule {
   if ($rule->{'pagetype'}->{'pattern'}) {
     $logger->debug("Fixing select for ", $rule->{'name'});
 
-    $rule->{'pagetype'}->{'event_expr'}->{'pattern'}  = 
+    $rule->{'pagetype'}->{'event_expr'}->{'pattern'}  =
       $rule->{'pagetype'}->{'pattern'} ;
-    $rule->{'pagetype'}->{'event_expr'}->{'vars'}  = 
+    $rule->{'pagetype'}->{'event_expr'}->{'vars'}  =
       $rule->{'pagetype'}->{'vars'} ;
     $rule->{'pagetype'}->{'event_expr'}->{'op'}  = 'pageview';
     $rule->{'pagetype'}->{'event_expr'}->{'type'}  = 'prim_event';
@@ -762,10 +762,10 @@ sub optimize_rule {
   if (defined $rule->{'pagetype'}->{'event_expr'}->{'op'}) {
     $logger->debug("Optimizing ", $rule->{'name'});
     $rule->{'event_sm'} = Kynetx::Events::compile_event_expr($rule->{'pagetype'}->{'event_expr'});
-#     $rule->{'pagetype'}->{'event_expr'}->{'pattern'} = 
+#     $rule->{'pagetype'}->{'event_expr'}->{'pattern'} =
 #       qr!$rule->{'pagetype'}->{'event_expr'}->{'pattern'}!;
   } else { # deprecated syntax...
-#     $rule->{'pagetype'}->{'pattern'} = 
+#     $rule->{'pagetype'}->{'pattern'} =
 #       qr!$rule->{'pagetype'}->{'pattern'}!;
   }
 
@@ -831,7 +831,7 @@ sub mk_initial_env {
 			      Kynetx::Expressions::mk_closure({'vars' => [],
 							       'decls' => [],
 							       'expr' => mk_expr_node('num', 1),
-							      }, 
+							      },
 							      $rule_env)},
 			     $rule_env);
  return $rule_env;
@@ -889,7 +889,7 @@ sub mk_schedule {
   my $schedule = Kynetx::Scheduler->new();
 
   $req_info->{'rid'} = $rid; # override with the one we're working on
-  
+
   $logger->info("Processing rules for site " . $req_info->{'rid'});
 
   $ruleset = get_rule_set($req_info) unless defined $ruleset;
@@ -912,7 +912,7 @@ sub mk_schedule {
       $schedule->annotate_task($rid,$rulename,'vars',$vars);
       $schedule->annotate_task($rid,$rulename,'vals',$vals);
 
-      
+
     }
   }
 
