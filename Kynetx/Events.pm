@@ -122,12 +122,13 @@ sub process_event {
 
     $r->subprocess_env(START_TIME => Time::HiRes::time);
 
-#     if(Kynetx::Configure::get_config('RUN_MODE') eq 'development') {
-# 	# WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
-# 	my $test_ip = Kynetx::Configure::get_config('TEST_IP');
-# 	 $r->connection->remote_ip($test_ip);
-# 	$logger->debug("In development mode using IP address ", $r->connection->remote_ip());
-#     }
+
+    if(Kynetx::Configure::get_config('RUN_MODE') eq 'development') {
+      # WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
+      my $test_ip = Kynetx::Configure::get_config('TEST_IP');
+      $r->connection->remote_ip($test_ip);
+      $logger->debug("In development mode using IP address ", $r->connection->remote_ip());
+    } 
 
     # get a session
     my $session = process_session($r);
