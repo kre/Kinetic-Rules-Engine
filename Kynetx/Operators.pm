@@ -387,6 +387,38 @@ sub eval_join {
 }
 $funcs->{'join'} = \&eval_join;
 
+sub eval_append {
+  my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+  my $logger = get_logger();
+  my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#   $logger->debug("obj: ", sub { Dumper($obj) });
+
+  my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+#    $logger->debug("obj: ", sub { Dumper($rands) });
+
+
+
+  my $array1 = Kynetx::Expressions::den_to_exp($obj);
+  my $array2 = Kynetx::Expressions::den_to_exp($rands->[0]);
+
+  unless (ref $array1 eq 'ARRAY') {
+    $array1 = [$array1];
+  }
+
+  unless (ref $array2 eq 'ARRAY') {
+    $array2 = [$array2];
+  }
+
+  my @result = @{$array1};
+  push(@result, @{$array2});
+
+  $logger->debug("Append result: ", sub {Dumper @result});
+
+  return Kynetx::Expressions::typed_value(\@result);
+}
+$funcs->{'append'} = \&eval_append;
+
 
 #-----------------------------------------------------------------------------------
 # string operators
@@ -679,7 +711,9 @@ sub eval_as {
         $logger->trace("EXP: ", sub {Dumper($tmp)});
         my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
         $logger->trace("JSON: ", $json);
-        return $json;
+        $obj->{'type'} = "str";
+        $obj->{'val'} = $json;
+        return $obj;
     }
 
     return $obj;

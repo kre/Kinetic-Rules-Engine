@@ -116,6 +116,17 @@ sub send_data {
 		 $data);
 }
 
+sub send_raw {
+  my $req_info = shift;
+  my $data = shift;
+  my $type = shift;
+  send_directive($req_info,
+		 "raw",
+		 {'content' => $data,
+		  'type' => $type
+		 });
+}
+
 # these have to match the standard options in
 #    Kynetx::Actions::build_one_action::$config
 my $filter_out = {
