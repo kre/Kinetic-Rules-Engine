@@ -46,6 +46,8 @@ my $kobj_file = "kobj-static-".$dstamp.$hstamp.".js";
 
 
 my @js_files = qw(
+krl-external-resource.js
+krl-data-set.js
 krl-application.js
 krl-runtime-header.js
 frameworks/jquery/1.4.2/jquery.js
@@ -57,6 +59,7 @@ frameworks/kgrowl/1.0/kgrowl-1.0.js
 frameworks/snowfall/1.0/snowfall.jquery.js
 krl-setup.js
 krl-runtime.js.tmpl
+krl-actions.js
 krl-functions.js
 frameworks/dom_watch/1.0/krl-domwatch.js
 frameworks/perc_and_annotate/1.0/krl-annotate.js
