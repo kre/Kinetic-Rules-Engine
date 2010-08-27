@@ -62,13 +62,13 @@ KOBJEventManager.event_fire_complete = function(guid)
 
     if (guid_info.event == "content_change")
     {
-        KOBJ.itrace("Clear Content Change " + guid);
+//        KOBJ.itrace("Clear Content Change " + guid);
         delete KOBJEventManager.content_changes_running[guid];
         KOBJEventManager.update_content_change_hash();
-        KOBJ.itrace("Done updating " + guid);
+//        KOBJ.itrace("Done updating " + guid);
         if ($KOBJ.isEmptyObject(KOBJEventManager.content_changes_running))
         {
-            KOBJ.itrace("Setting change look timer 2s");
+//            KOBJ.itrace("Setting change look timer 2s");
             setTimeout(KOBJEventManager.content_change_checker, 500);
         }
     }
@@ -162,7 +162,7 @@ KOBJEventManager.content_change_hashcode = function(selector)
 // This will look at all the content change selectors and update their hash values.
 KOBJEventManager.update_content_change_hash = function()
 {
-    KOBJ.itrace("Updating hashes");
+//    KOBJ.itrace("Updating hashes");
 
     $KOBJ.each(KOBJEventManager.events["content_change"], function(selector, event_data) {
         if (!KOBJEventManager.content_change_hashcodes[selector])
@@ -170,11 +170,11 @@ KOBJEventManager.update_content_change_hash = function()
             KOBJEventManager.content_change_hashcodes[selector] = {}
         }
 
-        KOBJ.itrace("Before  hash [" + KOBJEventManager.content_change_hashcodes[selector]["prior_data_hash"] + "]");
+//        KOBJ.itrace("Before  hash [" + KOBJEventManager.content_change_hashcodes[selector]["prior_data_hash"] + "]");
         KOBJEventManager.content_change_hashcodes[selector]["prior_data_hash"] = KOBJEventManager.content_change_hashcode(selector);
-        KOBJ.itrace("After  hash [" + KOBJEventManager.content_change_hashcodes[selector]["prior_data_hash"] + "]");
+//        KOBJ.itrace("After  hash [" + KOBJEventManager.content_change_hashcodes[selector]["prior_data_hash"] + "]");
     });
-    KOBJ.itrace("Done Updating hashes");
+//    KOBJ.itrace("Done Updating hashes");
 };
 
 /*
@@ -182,13 +182,14 @@ KOBJEventManager.update_content_change_hash = function()
  */
 KOBJEventManager.content_change_checker = function()
 {
-    KOBJ.itrace("In Content Change");
+//    KOBJ.itrace("In Content Change");
     // Just in any are running abort.
-    if (!$KOBJ.isEmptyObject(KOBJEventManager.content_changes_running))
+    if (!$KOBJ.isEmptyObject(KOBJEventManager.content_changes_running) )
     {
-        KOBJ.itrace("Content Chagne running");
+//        KOBJ.itrace("Content Chagne running");
         return;
     }
+
     var any_fired = false;
     $KOBJ.each(KOBJEventManager.events["content_change"], function(selector, event_data) {
         // We have not yet looked at the data so we need to get it so we can check it next time.
@@ -204,7 +205,7 @@ KOBJEventManager.content_change_checker = function()
             // If The element changed then fire the event.
             if (selector_data["prior_data_hash"] != KOBJEventManager.content_change_hashcode(selector)) {
 
-                KOBJ.itrace("Data Change going to fire content change [" + selector_data["prior_data_hash"] + "] [" + KOBJEventManager.content_change_hashcode(selector) + "]");
+//                KOBJ.itrace("Data Change going to fire content change [" + selector_data["prior_data_hash"] + "] [" + KOBJEventManager.content_change_hashcode(selector) + "]");
                 // Reset the data to the new value
                 selector_data["prior_data_hash"] = KOBJEventManager.content_change_hashcode(selector);
                 KOBJEventManager.event_handler({"type" : "content_change", "data" : { "selector" : selector }});
@@ -215,7 +216,7 @@ KOBJEventManager.content_change_checker = function()
 
     if (!any_fired)
     {
-        KOBJ.itrace("Setting change look timer");
+//        KOBJ.itrace("Setting change look timer");
         setTimeout(KOBJEventManager.content_change_checker, 500);
     }
 
@@ -226,6 +227,12 @@ KOBJEventManager.content_change_checker = function()
  */
 KOBJEventManager.register_interest = function(event, selector, application, config) {
     var found_data = [];
+
+    var start_content_timer = false;
+    if($KOBJ.isEmptyObject(KOBJEventManager.events["content_change"]) && event == "content_change")
+    {
+        start_content_timer = true;
+    }
 
     if (typeof(config) != "undefined")
     {
@@ -266,6 +273,11 @@ KOBJEventManager.register_interest = function(event, selector, application, conf
     KOBJEventManager.events[event][selector][application.app_id] = {};
     KOBJEventManager.events[event][selector][application.app_id]["app"] = application;
     KOBJEventManager.events[event][selector][application.app_id]["data"] = { "param_data": found_data};
+
+    if(start_content_timer)
+    {
+        setTimeout(KOBJEventManager.content_change_checker, 500);
+    }
 };
 
 
@@ -314,7 +326,7 @@ KOBJEventManager.add_out_of_bound_event = function(application, event, auto_dere
  * This is the call back for all events. It sorts out what kind of event and does the right thing.
  */
 KOBJEventManager.event_handler = function(event) {
-    KOBJ.itrace("in event handle");
+//    KOBJ.itrace("in event handle");
     var event_data = event.data;
 
     // Are we doing a submit then get the form data.
@@ -341,5 +353,5 @@ KOBJEventManager.event_handler = function(event) {
     return true;
 };
 
-setTimeout(KOBJEventManager.content_change_checker, 500);
+//setTimeout(KOBJEventManager.content_change_checker, 500);
 
