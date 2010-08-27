@@ -318,7 +318,7 @@ sub eval_module {
         $logger->warn("Datasource for $source not found");
     }
 
-    $logger->trace( "Datasource $source:$function -> ", sub { Dumper($val) } );
+    $logger->debug( "Datasource $source:$function -> ", sub { Dumper($val) } );
 
     return $val;
 

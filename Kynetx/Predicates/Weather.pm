@@ -235,13 +235,13 @@ sub get_weather {
 	return unless $curr_cond; # fails
 
 	$req_info->{'weather'}->{'curr_temp'} = 
-	    $curr_cond->find('@temp'); 
+	    $curr_cond->find('@temp')->string_value(); 
 	$req_info->{'weather'}->{'curr_cond'} = 
-	    $curr_cond->find('@text'); 
+	    $curr_cond->find('@text')->string_value(); 
 	$req_info->{'weather'}->{'curr_cond_code'} = 
-	    $curr_cond->find('@code'); 
+	    $curr_cond->find('@code')->string_value(); 
 	$req_info->{'weather'}->{'timezone'} = 
-	    $curr_cond->find('@date'); 
+	    $curr_cond->find('@date')->string_value(); 
 	$req_info->{'weather'}->{'timezone'} =~ s/.*(\w\w\w)$/$1/;
 
 
@@ -250,32 +250,32 @@ sub get_weather {
 	      $rss->find('/rss/channel/item/yweather:forecast')->get_nodelist;
 
 	$req_info->{'weather'}->{'tomorrow_low'} = 
-	    $forecast_cond[0]->find('@low'); 
+	    $forecast_cond[0]->find('@low')->string_value(); 
 	$req_info->{'weather'}->{'tomorrow_high'} = 
-	    $forecast_cond[0]->find('@high'); 
+	    $forecast_cond[0]->find('@high')->string_value(); 
 	$req_info->{'weather'}->{'tomorrow_cond'} = 
-	    $forecast_cond[0]->find('@text'); 
+	    $forecast_cond[0]->find('@text')->string_value(); 
 	$req_info->{'weather'}->{'tomorrow_cond_code'} = 
-	    $forecast_cond[0]->find('@code'); 
+	    $forecast_cond[0]->find('@code')->string_value(); 
 	
 
 	my $astronomy = 
 	    $rss->find('/rss/channel/yweather:astronomy')->get_node(1);
 
 	$req_info->{'weather'}->{'sunrise'} = 
-	    $astronomy->find('@sunrise'); 
+	    $astronomy->find('@sunrise')->string_value(); 
 	$req_info->{'weather'}->{'sunset'} = 
-	    $astronomy->find('@sunset'); 
+	    $astronomy->find('@sunset')->string_value(); 
 
 
 	my $location = 
 	    $rss ->find('/rss/channel/yweather:location')->get_node(1);
 	$req_info->{'weather'}->{'city'} = 
-	    $location->find('@city'); 
+	    $location->find('@city')->string_value(); 
 	$req_info->{'weather'}->{'region'} = 
-	    $location->find('@region'); 
+	    $location->find('@region')->string_value(); 
 	$req_info->{'weather'}->{'country'} = 
-	    $location->find('@country'); 
+	    $location->find('@country')->string_value(); 
 
 
 

@@ -1,3 +1,8 @@
+2010-08-27  Phil Windley  <pjw@kynetx.com>
+
+   * Kynetx/Predicates/Weather.pm (get_weather): Added "string_value()" to
+	all find expressions for directives.  
+
 2010-08-23  Phil Windley  <pjw@kynetx.com>
 
    * Kynetx/Expressions.pm: moved eval_hash to eval_hash_raw and
