@@ -41,7 +41,7 @@ use Apache::Session::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Configure;
@@ -49,12 +49,13 @@ use Kynetx::Memcached qw/:all/;
 use Kynetx::FakeReq qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::MongoDB;
-use Kynetx::Modules::PDS::KEN qw/:all/;
+use Kynetx::Persistence::KEN qw/:all/;
 my $logger = get_logger();
 my $num_tests = 0;
 my $result;
 
-my $ck = "d528c1b5f7446c9322de70fbcaea1bb2";
+my $ck = "b69341c35512b9b367ea0fdb89300d4f";
+my $ken = "4c6484f5a1a31171365896f4";
 
 # configure KNS
 Kynetx::Configure::configure();
@@ -66,51 +67,70 @@ Kynetx::Memcached->init();
 $logger->debug("Initializing mongoDB");
 Kynetx::MongoDB::init();
 
+my $ken_re = qr([0-9|a-f]{16});
 
 my $r = new Kynetx::FakeReq();
 
-my $new_session = process_session($r);
 my $session = process_session($r,$ck);
 
 # after this section we don't care about the session_id because we will be
 # using the session object
 
-my $ck_new= session_id($new_session); # store for later use
 my $ck_old = session_id($session);
 
-my $kenA;
-my $kenB;
 
 $logger->debug("Old Session Id: ",$ck_old);
-$logger->debug("New Session Id: ",$ck_new);
 
-# get the KEN
-$kenA = Kynetx::Modules::PDS::KEN::get_ken($session);
+# Make sure that our test KEN exists in the database
+my $valid = Kynetx::Persistence::KEN::_validate_ken($ken);
+testit($valid,1,"Test KEN exists",0);
+
+my $session_has_ken = Kynetx::Persistence::KEN::has_ken($session);
+if ($session_has_ken) {
+    $logger->debug("Using established session $ck_old / $session_has_ken");
+} else {
+    $logger->debug("Set the KEN for this session (Was memcache reset?)");
+    # create the Kynetx session
+    my $ksession= Kynetx::Persistence::KEN::_peg_ken_to_session($session,$ken);
+    $logger->debug("KSession: $ksession");
+}
+
+my $from_cache = Kynetx::Memcached::check_cache("KEN:default:$ck_old");
+testit($from_cache,$ken,"Check memcache for cached copy of KEN");
+
+# Check session for ken
+$result = Kynetx::Persistence::KEN::get_ken($session);
+testit($result,$ken,"Get KEN stored for session $ck_old",0);
+
+# Check to see if this is KEN with a user account
+$result = Kynetx::Persistence::KEN::is_anonymous($session);
+testit($result,0,"KEN has a username from Accounts");
+
+# Check automatic creation of new KENS
+
+# needs a new session
+my $sessionA = process_session($r);
+
+# get an anonymous KEN for new session
+my $kenA = Kynetx::Persistence::KEN::get_ken($sessionA);
+testit($kenA,re($ken_re),"Anonymous KEN created for session",0);
+
+# Check to see if this is KEN with an anonymous username
+$result = Kynetx::Persistence::KEN::is_anonymous($sessionA);
+testit($result,1,"KEN is anonymous");
 
 
-$logger->debug("Found KEN: ", sub { Dumper($kenA)});
 
-# get the KEN (return undef)
-$kenB = Kynetx::Modules::PDS::KEN::get_ken($new_session);
-cmp_deeply($kenB,undef,"KEN not found");
+sub testit {
+    my ($got,$expected,$description,$debug) = @_;
+    if ($debug) {
+        $logger->debug("$description : ",sub {Dumper($got)});
+    }
+    $num_tests++;
+    cmp_deeply($got,$expected,$description);
+}
 
-$kenB = Kynetx::Modules::PDS::KEN::new_ken();
+session_cleanup($session);
 
-$logger->debug("Found KEN: ", sub { Dumper($kenB)});
-
-# get the PDS session
-$result = Kynetx::Modules::PDS::get_pds_session($session,$kenA);
-
-$logger->debug("Found this session: ", sub {Dumper($result)});
-
-# get the PDS session
-$result = Kynetx::Modules::PDS::get_pds_session($new_session,$kenB);
-
-$logger->debug("Found this session: ", sub {Dumper($result)});
-
-# get the KPDS for the session
-$result = Kynetx::Modules::PDS::pds_get($session,$r);
-
-ok(1);
-plan tests => ++$num_tests;
+plan tests => $num_tests;
 1;
