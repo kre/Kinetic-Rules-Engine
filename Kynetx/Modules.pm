@@ -1,5 +1,4 @@
 package Kynetx::Modules;
-
 # file: Kynetx/Modules.pm
 #
 # Copyright 2007-2010, Kynetx Inc.  All rights reserved.
@@ -45,6 +44,7 @@ use Kynetx::Actions::FlippyLoo;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
+
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -254,42 +254,31 @@ sub eval_module {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
             $val ||= 0;
         } else {
-            $val =
-              Kynetx::Predicates::Amazon::eval_amazon(
-                                                $req_info,  $rule_env, $session,
-                                                $rule_name, $function, $args );
+            $val = Kynetx::Predicates::Amazon::eval_amazon($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
-    } elsif ( $source eq 'rss' ) {
+    } elsif ($source eq 'rss') {
         $preds = Kynetx::Predicates::RSS::get_predicates();
-        if ( defined $preds->{$function} ) {
-            $val = $preds->{$function}->( $req_info, $rule_env, $args );
+        if (defined $preds->{$function}) {
+            $val = $preds->{$function}->($req_info,$rule_env,$args);
             $val ||= 0;
         } else {
-            $val =
-              Kynetx::Predicates::RSS::eval_rss($req_info,  $rule_env, $session,
-                                                $rule_name, $function, $args );
+            $val = Kynetx::Predicates::RSS::eval_rss($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
-    } elsif ( $source eq 'google' ) {
+    } elsif ($source eq 'google') {
         $preds = Kynetx::Predicates::Google::get_predicates();
-        if ( defined $preds->{$function} ) {
-            $val = $preds->{$function}->( $req_info, $rule_env, $args );
+        if (defined $preds->{$function}) {
+            $val = $preds->{$function}->($req_info,$rule_env,$args);
             $val ||= 0;
         } else {
-            $val =
-              Kynetx::Predicates::Google::eval_google(
-                                                $req_info,  $rule_env, $session,
-                                                $rule_name, $function, $args );
+            $val = Kynetx::Predicates::Google::eval_google($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
-    } elsif ( $source eq 'facebook' ) {
+    } elsif ($source eq 'facebook') {
         $preds = Kynetx::Predicates::Facebook::get_predicates();
-        if ( defined $preds->{$function} ) {
-            $val = $preds->{$function}->( $req_info, $rule_env, $args );
+        if (defined $preds->{$function}) {
+            $val = $preds->{$function}->($req_info,$rule_env,$args);
             $val ||= 0;
         } else {
-            $val =
-              Kynetx::Predicates::Facebook::eval_facebook(
-                                                $req_info,  $rule_env, $session,
-                                                $rule_name, $function, $args );
+            $val = Kynetx::Predicates::Facebook::eval_facebook($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
     } elsif ( $source eq 'snow' ) {
         $preds = Kynetx::Actions::LetItSnow::get_predicates();
@@ -305,20 +294,17 @@ sub eval_module {
         $val ||= 0;
     } elsif ( $source eq 'odata' ) {
         $preds = Kynetx::Predicates::OData::get_predicates();
-        if ( defined $preds->{$function} ) {
-            $val = $preds->{$function}->( $req_info, $rule_env, $args );
+        if (defined $preds->{$function}) {
+            $val = $preds->{$function}->($req_info,$rule_env,$args);
             $val ||= 0;
         } else {
-            $val =
-              Kynetx::Predicates::OData::eval_odata(
-                                                $req_info,  $rule_env, $session,
-                                                $rule_name, $function, $args );
+            $val = Kynetx::Predicates::OData::eval_odata($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
     } else {
         $logger->warn("Datasource for $source not found");
     }
 
-    $logger->debug( "Datasource $source:$function -> ", sub { Dumper($val) } );
+    $logger->trace("Datasource $source:$function -> ", sub {Dumper($val)});
 
     return $val;
 
