@@ -242,7 +242,7 @@ KOBJ.annotate_search_extractdata = function(toAnnotate, config) {
         // Failsafe
     }
 
-    if(window.location.host == "search.yahoo.com"){
+    if(window.location.host == "search.yahoo.com" && urlTemp.indexOf("**http") != -1){
 		urlTemp = urlTemp.replace(/.*\*\*/,"");
 		urlTemp = urlTemp.replace(/%3a/,":");
 	}

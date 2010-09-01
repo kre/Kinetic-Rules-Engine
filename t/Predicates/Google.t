@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 
 use strict;
 use warnings;
@@ -46,7 +46,7 @@ use Data::Dumper;
 $Data::Dumper::Indent = 1;
 Kynetx::Configure::configure();
 my $logger = get_logger();
- 
+
 
 
 my $preds = Kynetx::Predicates::Google::get_predicates();
@@ -63,7 +63,7 @@ my $rid = 'a144x16';
 # test choose_action and args
 
 my $my_req_info = Kynetx::Test::gen_req_info($rid);
-    
+
 $my_req_info->{"$rid:ruleset_name"} = "a144x16";
 $my_req_info->{"$rid:name"} = "OAuth smoke dance";
 $my_req_info->{"$rid:author"} = "MEH";
@@ -94,7 +94,7 @@ my $dict_path = "/usr/share/dict/words";
 my @DICTIONARY;
 open DICT, $dict_path;
 @DICTIONARY = <DICT>;
-    
+
 my $session = Kynetx::Test::gen_session($r,'a144x16');
 
 my $atoken = '1/mL1V01Uzz-EefEevlllhjASDJzosp5giNX-AIjgAVhk';
@@ -105,7 +105,7 @@ my $scope = {
         'surl' => 'https://www.google.com/calendar/feeds/',
         'dname' => 'Calendar',
         'turl' => 'https://www.google.com/calendar/feeds/default/settings',
-    
+
 };
 
 my $email_re = qr/(\w+)\@\w+\.\w+/;
@@ -129,13 +129,13 @@ my $author_value = {
 
 my $category_value = {
     'scheme' => $str_value,
-    'term' => $str_value  
+    'term' => $str_value
 };
 
 my $generator_value = {
     'version' => $str_value,
     '$t' => $str_value,
-    'uri' => $str_value  
+    'uri' => $str_value
 };
 
 my $card_re = qr/\d+/;
@@ -155,71 +155,71 @@ my $when_value = {
 
 my $entry_elements = {
         'content' => $str_value,
-        'author' => array_each($author_value), 
-        'category' => ignore(), 
-        'id' => ignore(), 
-        'link' => ignore(), 
-        'published' => $date_value, 
-        'title' => $str_value, 
-        'updated' => $date_value, 
-        #'xmlns' => ignore(), 
-    
+        'author' => array_each($author_value),
+        'category' => ignore(),
+        'id' => ignore(),
+        'link' => ignore(),
+        'published' => $date_value,
+        'title' => $str_value,
+        'updated' => $date_value,
+        #'xmlns' => ignore(),
+
 };
 my $atom_entry_template = {
     'entry' => $entry_elements,
     'version' => ignore(),
     'encoding' => ignore()
-    
+
 };
 
 my $app_entry_template = {
-        #'xmlns$app' => ignore(), 
+        #'xmlns$app' => ignore(),
         'app$edited' => $date_value,
 };
 
 my $gd_entry_template = {
         #'xmlns$gd' => ignore(),
-        'gd$comments' => ignore(), 
-        'gd$etag' => ignore(), 
-        'gd$eventStatus' => ignore(), 
-        'gd$kind' => ignore(), 
-        'gd$transparency' => ignore(), 
-        'gd$visibility' => ignore(), 
-        'gd$when' => array_each(superhashof($when_value)), 
-        'gd$where' => ignore(), 
-        'gd$who' => ignore(), 
-    
+        'gd$comments' => ignore(),
+        'gd$etag' => ignore(),
+        'gd$eventStatus' => ignore(),
+        'gd$kind' => ignore(),
+        'gd$transparency' => ignore(),
+        'gd$visibility' => ignore(),
+        'gd$when' => array_each(superhashof($when_value)),
+        'gd$where' => ignore(),
+        'gd$who' => ignore(),
+
 };
 
 my $gcal_entry_template = {
-        #'xmlns$gCal' => ignore(),     
-        'gCal$anyoneCanAddSelf' => ignore(), 
-        'gCal$guestsCanInviteOthers' => ignore(), 
-        'gCal$guestsCanModify' => ignore(), 
-        'gCal$guestsCanSeeGuests' => ignore(), 
-        'gCal$sequence' => ignore(), 
-        'gCal$uid' => ignore(), 
+        #'xmlns$gCal' => ignore(),
+        'gCal$anyoneCanAddSelf' => ignore(),
+        'gCal$guestsCanInviteOthers' => ignore(),
+        'gCal$guestsCanModify' => ignore(),
+        'gCal$guestsCanSeeGuests' => ignore(),
+        'gCal$sequence' => ignore(),
+        'gCal$uid' => ignore(),
 };
 
 my $gcal_feed_template = {
-    'gCal$timesCleaned' => ignore(), 
-    'gCal$timezone' => ignore(), 
-    'xmlns$gCal' => ignore(),     
+    'gCal$timesCleaned' => ignore(),
+    'gCal$timezone' => ignore(),
+    'xmlns$gCal' => ignore(),
 };
 
 my $gd_feed_template = {
-    'gd$etag' => ignore(), 
-    'gd$kind' => ignore(), 
-    'xmlns$gd' => ignore(), 
-    
+    'gd$etag' => ignore(),
+    'gd$kind' => ignore(),
+    'xmlns$gd' => ignore(),
+
 };
 
 my $opensearch_feed_template = {
-    'openSearch$itemsPerPage' => $cardinal_value, 
-    'openSearch$startIndex' => $ordinal_value, 
-    'openSearch$totalResults' => $cardinal_value, 
+    'openSearch$itemsPerPage' => $cardinal_value,
+    'openSearch$startIndex' => $ordinal_value,
+    'openSearch$totalResults' => $cardinal_value,
     #'xmlns$openSearch' => $str_value
-    
+
 };
 
 my $feed_elements = {
@@ -228,10 +228,10 @@ my $feed_elements = {
     'link' => array_each(ignore()),
     'subtitle' => $str_value,
     'updated' => $date_value,
-    'author' => array_each($author_value), 
-    'category' => ignore(), 
-    'generator' => ignore(), #$generator_value 
-    'xmlns' => ignore(),     
+    'author' => array_each($author_value),
+    'category' => ignore(),
+    'generator' => ignore(), #$generator_value
+    'xmlns' => ignore(),
 };
 
 my $atom_feed_template = {
@@ -282,6 +282,8 @@ $gcal_tests++;
 Kynetx::Predicates::Google::OAuthHelper::store_token($rid,$session,'access_token_secret',$atoken_secret,'google','Calendar');
 Kynetx::Predicates::Google::OAuthHelper::store_token($rid,$session,'access_token',$atoken,'google','Calendar');
 
+#goto ENDY;
+
 #### Create a calendar entry so we can can do dynamic tests
 $args = {"quickadd" => $rwords};
 $json = Kynetx::Predicates::Google::eval_google($my_req_info,$rule_env,$session,$rule_name,'add',['calendar',$args]);
@@ -318,7 +320,7 @@ $expected = $atom_feed_template;
 my $detail = $feed_elements;
 $detail->{'entry'} = array_each(superhashof({%$app_entry_template,
     %$gcal_entry_template,
-    %$entry_elements    
+    %$entry_elements
 }));
 $expected->{'feed'} = superhashof({%$detail,%$opensearch_feed_template});
 $args = {"feed" => "event"};
@@ -344,7 +346,7 @@ my $mwhen_value = {
 };
 
 my $mgd_test = {
-    'gd$when' => array_each(superhashof($mwhen_value)),     
+    'gd$when' => array_each(superhashof($mwhen_value)),
 };
 $expected = $atom_feed_template;
 $detail = $feed_elements;
@@ -366,7 +368,7 @@ $mwhen_value = {
 };
 
 $mgd_test = {
-    'gd$when' => array_each(superhashof($mwhen_value)),     
+    'gd$when' => array_each(superhashof($mwhen_value)),
 };
 $expected = $atom_feed_template;
 $detail = $feed_elements;
@@ -403,6 +405,19 @@ $args = {"feed" => "event","projection" => "composite",
 test_google('calendar','get',$args,$expected,$description,0);
 
 ENDY:
+
+###
+#$description = "AKO test";
+#$expected = $atom_feed_template;
+#$detail = $feed_elements;
+#$detail->{'entry'} = array_each(superhashof({%$entry_elements}));
+#$expected->{'feed'} = superhashof({%$detail,%$opensearch_feed_template});
+#$args = {"feed" => "event","projection" => "full",
+#    "singleevents" => "true", "orderby" => "starttime","sortorder"=>"a",
+#    "q" => "Open Appointment Time", "userid" => "dms\@kynetx.com",
+#    "fields" => "entry(title,id,gd:when)"};
+#test_google('calendar','get',$args,$expected,$description,1);
+
 
 Kynetx::Session::session_cleanup($session);
 

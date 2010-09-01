@@ -41,6 +41,9 @@ use DateTime;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 use Kynetx::Configure qw(:all);
+use Kynetx::Persistence::KEN qw(
+    get_ken
+);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -110,6 +113,10 @@ sub process_session {
 	$logger->debug("Create cookie...");
 	$session = tie_servers($session,$cookie);
     }
+    
+    # we don't need the value at the moment, but we need to
+    # force the creation of an anonymous KEN if none is found
+    get_ken($session);
 
     my $dt = DateTime->now;
 

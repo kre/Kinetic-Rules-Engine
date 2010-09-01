@@ -2,33 +2,33 @@ package Kynetx;
 # file: Kynetx.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 
 use strict;
 use warnings;
@@ -68,9 +68,9 @@ sub handler {
     my $logger = get_logger();
 
     $r->content_type('text/javascript');
-    
 
-    $logger->debug(">>>>---------------- begin ruleset execution-------------<<<<");
+
+    $logger->debug("\n\n>>>>---------------- begin ruleset execution-------------<<<<");
     $logger->debug("Initializing memcached");
     Kynetx::Memcached->init();
 
@@ -108,7 +108,7 @@ sub handler {
     } elsif($method eq 'kpds_callback' ) {
 	Kynetx::Predicates::KPDS::process_oauth_callback($r, $method, $rid);
 	return Apache2::Const::REDIRECT;
-	
+
     } elsif($method eq 'google_callback' ) {
       Kynetx::Predicates::Google::process_oauth_callback($r, $method, $rid);
       return Apache2::Const::REDIRECT;
@@ -125,7 +125,7 @@ sub handler {
     }
 
 
-    return Apache2::Const::OK; 
+    return Apache2::Const::OK;
 }
 
 1;
@@ -195,10 +195,10 @@ sub describe_ruleset {
 			 'selected_using' => Kynetx::Actions::get_precondition_test($rule)
 	};
 
-	if($rule->{'state'} eq 'active') {  
+	if($rule->{'state'} eq 'active') {
 	    $active++;
 	    push(@active_rules, $rule_info);
-	} elsif($rule->{'state'} eq 'inactive') {  
+	} elsif($rule->{'state'} eq 'inactive') {
 	    $inactive++;
 	    push(@inactive_rules, $rule_info);
 	}
@@ -214,7 +214,7 @@ sub describe_ruleset {
 
     my $json = new JSON::XS;
 
-    
+
     if($flavor eq 'json') {
 	$r->content_type('text/plain');
 	print $json->encode($data) ;
@@ -227,7 +227,7 @@ sub describe_ruleset {
 	$test_template->param(RULESET_ID => $data->{'ruleset_id'});
 	$test_template->param(DATA => $html_data);
 
-	
+
 	$r->content_type('text/html');
 	print $test_template->output;
     }

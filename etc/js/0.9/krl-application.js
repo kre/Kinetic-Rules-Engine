@@ -1,76 +1,4 @@
 /*  -----------------------------------------
- This is the object that manages a dynamic load of JS or CSS
- ------------------------------------------ */
-function KrlExternalResource(url)
-{
-    this.url = url;
-    this.loaded = false;
-    this.requested = false;
-    this.type = null;
-    this.css_selector = null;
-}
-
-/*
- * Allow request a external resource to be loaded.   If it is already
- * request this will do nothing.
- */
-KrlExternalResource.prototype.load = function() {
-    if (this.requested)
-    {
-        return;
-    }
-    if (this.type == "css") {
-        // Style sheets are hard to know if they loaded so just say they did.
-        KOBJ.load_style_sheet_link(this.url);
-        this.did_load();
-    }
-    else
-    {
-        KOBJ.require(this.url);
-    }
-};
-
-/*
- * Checks to see if a resource is loaded. In the case of a javascript we will
- * be called back by the browser and will know for sure it was loaded but in
- * the case of css we only can check to see if the link is there.
- */
-KrlExternalResource.prototype.is_loaded = function() {
-    if (this.type == "css")
-    {
-        this.loaded = true;
-        return this.loaded;
-        //        return KOBJ.did_stylesheet_load(this.url);
-    }
-    return this.loaded;
-};
-
-
-/*
- * Sets the state of this resource as loaded so it will not
- * be loaded a second time.
- */
-KrlExternalResource.prototype.did_load = function() {
-    this.loaded = true;
-    this.requested = false;
-
-    $KOBJ.each(KOBJ.applications, function(index, app) {
-        app.execute_pending_closures();
-    });
-};
-
-/*  -----------------------------------------
- This is the object that manages a dataset in the runtime
- ------------------------------------------ */
-
-function KrlDataSet(config)
-{
-    this.name = config["name"];
-    this.data = config["data"];
-}
-
-
-/*  -----------------------------------------
  This is the object that manages a single application in the runtime.
  ------------------------------------------ */
 function KrlApplication(app)
@@ -268,10 +196,8 @@ KrlApplication.prototype.execute_closure = function(guid, a_closure)
     }
     else
     {
-        KOBJ.itrace("Executing closure " + this.app_id + " : " + guid);
-        KOBJEventManager.event_fire_complete(this, guid);
+        this.pending_closures[guid] = a_closure;
         this.execute_pending_closures();
-        a_closure($KOBJ);
     }
 
 };
@@ -292,13 +218,14 @@ KrlApplication.prototype.execute_pending_closures = function()
         KOBJ.itrace("Executing Closure " + myself.app_id + " - " + guid);
         try
         {
-            the_closure($KOBJ);
+                the_closure($KOBJ);
         }
         catch(err)
         {
             KOBJ.itrace("Closure Executed with error " + myself.app_id + " - " + guid);
+            KOBJEventManager.event_fire_complete(guid);
         }
-        KOBJEventManager.event_fire_complete(myself, guid);
+        KOBJEventManager.event_fire_complete(guid);
     });
 
     this.pending_closures = {};
@@ -369,10 +296,6 @@ KrlApplication.prototype.fire_event = function(event, data, guid,domain)
     params.push({name: "referer", value: KOBJ.document.referrer});
     params.push({name: "title", value: KOBJ.document.title});
 
-    /*    var event_url = url + "?" +
-     $KOBJ.param(params) +
-     this.page_vars_as_url();
-     */
     var event_url = url + "?" +
                     $KOBJ.param(params) +
                     KOBJ.extra_page_vars_as_url() +

@@ -967,6 +967,45 @@ add_action_testcase(
 
 
 
+# Test content_changed
+
+$krl_src = <<_KRL_;
+content_changed("#rso") with parameters = {"aaa":"bbb"};
+_KRL_
+
+
+$config = mk_config_string(
+ [
+  {"rule_name" => 'dummy_name'},
+  {"rid" => 'cs_test'},
+  {"txn_id" => '1234'},
+  {"parameters" => {"aaa" => "bbb" }}
+ ]);
+
+
+$result = <<_JS_;
+(   function(uniq, cb, config, selector) {
+    var app = KOBJ.get_application(config.rid);
+          if(config.parameters)
+            KOBJEventManager.register_interest("content_change",selector,app,{"param_data" : config.parameters });
+          else
+            KOBJEventManager.register_interest("content_change",selector,app);
+        cb();
+    }
+('%uniq%',callbacks23,$config ,'#rso'));
+_JS_
+
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $my_req_info,
+    'Generate Page Collection Data Action',
+    0
+    );
+
+
+
 # now test choose_action
 foreach my $case (@test_cases) {
     diag(Dumper($case->{'url'})) if $case->{'diag'};

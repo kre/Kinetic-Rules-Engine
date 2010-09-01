@@ -119,6 +119,19 @@ EOF
 EOF
 	        'after' => [\&handle_delay]
 	},
+	content_changed => {
+	       'js' => <<EOF,
+	function(uniq, cb, config, selector) {
+          var app = KOBJ.get_application(config.rid);
+          if(config.parameters)
+            KOBJEventManager.register_interest("content_change",selector,app,{"param_data" : config.parameters });
+          else
+            KOBJEventManager.register_interest("content_change",selector,app);
+	    cb();
+	}
+EOF
+	        'after' => [\&handle_delay]
+	},
     page_collection_content => {
 	       'js' => <<EOF,
 	function(uniq, cb, config, label, top_selector, parent_selector, selectors) {

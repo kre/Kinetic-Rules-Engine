@@ -2,33 +2,33 @@ package Kynetx::Request;
 # file: Kynetx/Request.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use strict;
 use warnings;
 
@@ -42,7 +42,7 @@ our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 build_request_env
 log_request_env
@@ -73,7 +73,7 @@ sub build_request_env {
         rids => $rids,
 	site => $rids, #historical
 	# this will get overridden with a single RID later
-	rid => $rids, 
+	rid => $rids,
 
 	method => $method,
 	# this is also determines the endpint capability type
@@ -131,23 +131,22 @@ sub log_request_env {
     my ($logger, $request_info) = @_;
     if($logger->is_debug()) {
 	foreach my $entry (keys %{ $request_info }) {
+	    my $value = $request_info->{$entry};
+	    if (ref $value eq 'ARRAY') {
+	        my @tmp = map {substr($_,0,50)} @$value;
+	        $value = '[' . join(',',@tmp) . ']';
+	    } else {
+	        $value = substr($value,0,50);
+	    }
 	  # print out first 50 chars of the request string
-	  $logger->debug($entry . ": " . substr($request_info->{$entry},0,50))
-	    unless($entry eq 'param_names' || $entry eq 'selected_rules' || ! defined $request_info->{$entry});
+	  $logger->debug("$entry:$value");
+
 	}
 # 	foreach my $h (keys %{ $r->headers_in }) {
 # 	    $logger->debug($h . ": " . $r->headers_in->{$h});
 # 	}
     }
 
-    # FIXME: the above loop ought to intelligently deal with arrays
-    if($request_info->{'param_names'}) {
-	$logger->debug("param_names: [" . join(", ", @{ $request_info->{'param_names'} }) . "]");
-    }
-
-    if($request_info->{'selected_rules'}) {
-	$logger->debug("selected_rules: [" . join(", ", @{ $request_info->{'selected_rules'} }) . "]");
-    }
 
 }
 
@@ -157,14 +156,14 @@ sub set_capabilities {
   my $capspec = shift;
 
   my $logger = get_logger();
-  
+
   $capspec = Kynetx::Configure::get_config('capabilities') unless $capspec;
 
 #  $logger->debug("Cap spec ", sub { Dumper $capspec });
 
-  if ($capspec->{$req_info->{'domain'}}->{'capabilities'}->{'understands_javascript'} || 
-      $req_info->{'domain'}  eq 'eval' || # old style evaluation 
-      ($req_info->{'domain'} eq 'web' && 
+  if ($capspec->{$req_info->{'domain'}}->{'capabilities'}->{'understands_javascript'} ||
+      $req_info->{'domain'}  eq 'eval' || # old style evaluation
+      ($req_info->{'domain'} eq 'web' &&
        ! defined $capspec->{'web'}->{'capabilities'}->{'understands_javascript'}
       )
      ) {

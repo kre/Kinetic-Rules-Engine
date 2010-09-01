@@ -12,8 +12,8 @@ describe "Verify Hi Conflict Sites" do
 
     before(:each) do
       start_browser_session(@settings, "https://www.google.com", "/accounts/ServiceLogin?service=writely&passive=1209600&continue=http://docs.google.com/&followup=http://docs.google.com/&ltmpl=homepage&browserok=true")
-      page.type("Email","cid.dennis@gmail.com")
-      page.type('Passwd',"men-aCe")
+      page.type("Email","autojam@kynetx.com")
+      page.type('Passwd',"Kynetx123$")
       page.submit('gaia_loginform');
       # Wait to see the search box. If we are there then we are in.
 #      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='doclist']"});
