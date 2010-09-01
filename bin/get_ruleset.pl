@@ -36,9 +36,9 @@ Kynetx::Memcached->init();
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'r:h?';
+my $opt_string = 'r:ht?';
 getopts( "$opt_string", \%opt ); # or &usage();
-&usage() if $opt{'ht'} || $opt{'?'};
+&usage() if $opt{'h'} || $opt{'?'};
 
 
 my $rid = $opt{'r'};
