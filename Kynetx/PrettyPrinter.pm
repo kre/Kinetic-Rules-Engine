@@ -458,6 +458,8 @@ sub pp_foreach {
   foreach my $fe (@{$node}) {
     $o .= " "x$indent;
     $o .= 'foreach ' . pp_expr($fe->{'expr'});
+    # for old parse trees
+    $fe->{'var'} = [$fe->{'var'}] unless (ref $fe->{'var'} eq 'ARRAY');
     $o .= pp_setting([join(',',@{$fe->{'var'}})]) . "\n" ;
     $indent+=$g_indent;
   }

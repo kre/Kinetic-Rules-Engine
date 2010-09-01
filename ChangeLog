@@ -1,5 +1,6 @@
 2010-09-01  Web-san  <web@dev11.kobj.net>
 
+   * Kynetx/PrettyPrinter.pm (pp_foreach): Added fix for old parse trees in foreach
    * Kynetx/Predicates/Page.pm (get_pageinfo): Added 'params' function that returns all params to an event.
 
 2010-08-27  Phil Windley  <pjw@kynetx.com>
