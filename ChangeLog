@@ -1,3 +1,7 @@
+2010-09-01  Web-san  <web@dev11.kobj.net>
+
+   * Kynetx/Predicates/Page.pm (get_pageinfo): Added 'params' function that returns all params to an event.
+
 2010-08-24  Web-san  <web@dev11.kobj.net>
 
    * Kynetx/Operators.pm (eval_append): Added
