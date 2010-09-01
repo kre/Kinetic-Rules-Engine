@@ -1,5 +1,7 @@
 2010-09-01  Web-san  <web@dev11.kobj.net>
 
+   * bin/get_ruleset.pl: added switch to print elapsed time
+
    * Kynetx/PrettyPrinter.pm (pp_foreach): Added fix for old parse trees in foreach
    * Kynetx/Predicates/Page.pm (get_pageinfo): Added 'params' function that returns all params to an event.
 
