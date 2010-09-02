@@ -78,8 +78,8 @@ my $session = Kynetx::Test::gen_session($r, $rid);
 
 my $turl = "http://www.htmldog.com/examples/tablelayout1.html";
 my $durl = "http://www.htmldog.com/examples/darwin.html";
-my $content = Kynetx::Memcached::get_remote_data($turl);
-my $content2 = Kynetx::Memcached::get_remote_data($durl);
+my $content = Kynetx::Memcached::get_remote_data($turl,3600);
+my $content2 = Kynetx::Memcached::get_remote_data($durl,3600);
 
 
 my $p = << "_KRL_";
@@ -147,10 +147,11 @@ pre {
 
 _KRL_
 
+$logger->debug("Parsing pre block");
 my $ptree = Kynetx::Parser::parse_pre($p);
 
 
-
+$logger->debug("Evaluating expressions");
 my ($js, $rule_env) = Kynetx::Expressions::eval_prelude($req_info,
 							$init_rule_env,
 							$rule_name,
@@ -1354,8 +1355,6 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
-ENDY:
-
 
 $e[$i] = q/i_h.as("str")/;
 $x[$i] = {
@@ -1388,6 +1387,8 @@ $x[$i] = {
 };
 $d[$i] = 0;
 $i++;
+
+ENDY:
 
 
 $e[$i] = q#my_str.extract(re/(boot)/)#;
@@ -1429,6 +1430,40 @@ $x[$i] = {
 };
 $d[$i]  = 0;
 $i++;
+
+
+$e[$i] = q#foo.extract(re/(e)/g)#;
+$x[$i] = {
+   'val' => ['e','e','e','e'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#foo.extract(re/e/g)#;
+$x[$i] = {
+   'val' => ['e','e','e','e'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#mail2_str.extract(re/^\s*\*\s*([ \w]+)/mg)#;
+$x[$i] = {
+   'val' => ['Select an orthopedic surgeon','Set an appointment for a consultation'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#mail2_str.extract(re/\bs\w*/gi)#;
+$x[$i] = {
+   'val' => ['Scott','Store','select','surgeon','set','steps','Select','surgeon','Set'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
 
 # now run the tests....
 my $l = scalar @e;
