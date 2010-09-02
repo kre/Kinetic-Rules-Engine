@@ -26,6 +26,9 @@ use Kynetx::Configure qw/:all/;
 
 use Kynetx::FakeReq qw/:all/;
 
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
 
 my $preds = Kynetx::Predicates::Page::get_predicates();
 my @pnames = keys (%{ $preds } );
@@ -160,9 +163,15 @@ is(get_pageinfo($my_req_info, 'url', ['port']),
    'page:url path & query path');
 
 
+my $params = {
+   'msg' => 'Hello World!',
+   'caller' => 'http://www.windley.com/foo?x=y&foog=goog'
+ };
 
 
-done_testing(21 + int(@pnames));
+is_deeply(get_pageinfo($my_req_info, 'params', []), $params, "Params gives all");
+
+done_testing(22 + int(@pnames));
 
 
 1;

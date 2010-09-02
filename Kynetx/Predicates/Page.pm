@@ -55,6 +55,9 @@ use JSON::XS;
 use Kynetx::Util qw(:all);
 use Kynetx::Memcached qw(:all);
 
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
 
 my %predicates = ( );
 
@@ -159,6 +162,23 @@ id
 	# event params don't have rid namespacing
 	$val = $req_info->{$args->[0]};
       }
+
+    } elsif($function eq 'params') {
+
+      my %skip = (
+		  rid => 1,
+		  rule_version => 1,
+		  txn_id  => 1,
+		 );
+
+#      $logger->debug("Req info: ", sub {Dumper($req_info)});
+
+      my $ps;
+      foreach my $pn (@{$req_info->{'param_names'}}) {
+	$ps->{$pn} = $req_info->{$pn} unless $skip{$pn};
+      }
+
+      return $ps;
 
     } else {
       $logger->error("Unknown function $function");

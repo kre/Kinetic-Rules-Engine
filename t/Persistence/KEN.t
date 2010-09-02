@@ -54,8 +54,6 @@ my $logger = get_logger();
 my $num_tests = 0;
 my $result;
 
-my $ck = "b69341c35512b9b367ea0fdb89300d4f";
-my $ken = "4c6484f5a1a31171365896f4";
 
 # configure KNS
 Kynetx::Configure::configure();
@@ -71,29 +69,18 @@ my $ken_re = qr([0-9|a-f]{16});
 
 my $r = new Kynetx::FakeReq();
 
-my $session = process_session($r,$ck);
-
+my $session = process_session($r);
+my $ken = Kynetx::Persistence::KEN::has_ken($session);
+#Kynetx::Persistence::KEN::_peg_ken_to_session($session,$ken);
 # after this section we don't care about the session_id because we will be
 # using the session object
 
 my $ck_old = session_id($session);
 
-
-$logger->debug("Old Session Id: ",$ck_old);
-
 # Make sure that our test KEN exists in the database
 my $valid = Kynetx::Persistence::KEN::_validate_ken($ken);
-testit($valid,1,"Test KEN exists",0);
+testit($valid,1,"Test KEN exists",1);
 
-my $session_has_ken = Kynetx::Persistence::KEN::has_ken($session);
-if ($session_has_ken) {
-    $logger->debug("Using established session $ck_old / $session_has_ken");
-} else {
-    $logger->debug("Set the KEN for this session (Was memcache reset?)");
-    # create the Kynetx session
-    my $ksession= Kynetx::Persistence::KEN::_peg_ken_to_session($session,$ken);
-    $logger->debug("KSession: $ksession");
-}
 
 my $from_cache = Kynetx::Memcached::check_cache("KEN:default:$ck_old");
 testit($from_cache,$ken,"Check memcache for cached copy of KEN");
@@ -102,9 +89,10 @@ testit($from_cache,$ken,"Check memcache for cached copy of KEN");
 $result = Kynetx::Persistence::KEN::get_ken($session);
 testit($result,$ken,"Get KEN stored for session $ck_old",0);
 
-# Check to see if this is KEN with a user account
-$result = Kynetx::Persistence::KEN::is_anonymous($session);
-testit($result,0,"KEN has a username from Accounts");
+## Check to see if this is KEN with a user account
+# No good way to do this until we have authentication
+#$result = Kynetx::Persistence::KEN::is_anonymous($session);
+#testit($result,0,"KEN has a username from Accounts");
 
 # Check automatic creation of new KENS
 
