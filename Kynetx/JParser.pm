@@ -56,12 +56,14 @@ use Kynetx::Configure;
 
 use vars qw(%VARIABLE);
 
+
 #---------------------------------------------------------------------------------
 # Structure to incorporate ANTLR parser's java code into PERL
 #---------------------------------------------------------------------------------
-
+my $wdir;
 BEGIN {
     my $jroot = Kynetx::Configure::get_config("JAVA_ROOT") || '/web/lib/perl/parser';
+    $wdir = "$jroot/perl";
     my $blogger = get_logger();
     my $libdir = $jroot.'/'."lib";
     my $pclasses = $jroot . '/' . 'output/classes';
@@ -71,42 +73,56 @@ BEGIN {
         next unless $fname =~ m@\.jar$@;
         push @jars,$libdir."/".$fname;
     }
-    push @jars,$pclasses;
+    #push @jars,$pclasses;
     $ENV{CLASSPATH} = join (":",@jars);
     print "Classpath: ", $ENV{CLASSPATH},"\n";
 }
 
-my $wdir = Kynetx::Configure::get_config("JAVA_ROOT") . "/perl";
+
 my $cp = $ENV{CLASSPATH};
 
-use Inline Java => <<'END', AUTOSTUDY => 1, DEBUG => 1, CLASSPATH => $cp;
+use Inline (Java => <<'END',
     import java.util.*;
     import org.antlr.runtime.*;
     import java.io.*;
+    import org.json.*;
 
     class Ahandle {
         public Ahandle() {
 
         }
 
-        public HashMap doer(String krl) throws org.antlr.runtime.RecognitionException {
-            org.antlr.runtime.ANTLRStringStream input = new org.antlr.runtime.ANTLRStringStream(krl);
-            com.kynetx.RuleSet2Lexer lexer = new com.kynetx.RuleSet2Lexer(input);
-            CommonTokenStream tokens = new CommonTokenStream(lexer);
-            com.kynetx.RuleSet2Parser parser = new com.kynetx.RuleSet2Parser(tokens);
-            parser.ruleset();
-            //JSONObject js = new JSONObject(parser.rule_json);
-            if (parser.parse_errors.size() > 0) {
-                HashMap errors = new HashMap();
-                for (int ii = 0;ii< parser.parse_errors.size(); ii++) {
-                    errors.add(ii,parser.parse_errors.get(ii));
+        public String doer(String krl) throws org.antlr.runtime.RecognitionException {
+            try {
+                org.antlr.runtime.ANTLRStringStream input = new org.antlr.runtime.ANTLRStringStream(krl);
+                com.kynetx.RuleSetLexer lexer = new com.kynetx.RuleSetLexer(input);
+                CommonTokenStream tokens = new CommonTokenStream(lexer);
+                com.kynetx.RuleSetParser parser = new com.kynetx.RuleSetParser(tokens);
+                parser.ruleset();
+                JSONObject js = new JSONObject(parser.rule_json);
+                System.err.println("Java Secret Sauce: "  + js.toString() + "\n");
+                if (parser.parse_errors.size() > 0) {
+                    StringBuffer sb = new StringBuffer();
+                    for (int ii = 0;ii< parser.parse_errors.size(); ii++) {
+                        sb.append(ii).append(":").append(parser.parse_errors.get(ii));
+                    }
+                    return sb.toString();
                 }
-                return errors;
+                return js.toString();
+            } catch(Exception e) {
+                System.out.println("Error: " + e.getMessage());
+                return (e.getMessage());
             }
-            return parser.rule_json;
         }
     }
 END
+    AUTOSTUDY => 1,
+    DEBUG => 1,
+#    SHARED_JVM => 1,
+    DIRECTORY => $wdir,
+    );
+
+use Inline::Java qw(cast);
 
 sub env {
     my $logger = get_logger();
@@ -115,7 +131,7 @@ sub env {
     }
 }
 
-my $parser = new Ahandle();
+my $parser = new Kynetx::JParser::Ahandle();
 
 sub html {
     my ($value) = @_;
@@ -313,21 +329,10 @@ sub parse_pre {
 
     $expr = remove_comments($expr);
 
-    # remove newlines
-#    $expr =~ s%\n%%g;
 
-    my $result = ($parser->pre_block($expr));
-    # if (defined $result->{'error'}) {
-    # 	$logger->error("Can't parse expression: $result->{'error'}");
-    # } else {
-    # 	$logger->debug("Parsed expression");
-    # }
+    my $result = ($parser->doer($expr));
 
     return $result;
-
-#    print Dumper($result);
-
-
 }
 
 # # Helper function used in testing
