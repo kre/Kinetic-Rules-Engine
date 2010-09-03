@@ -53,7 +53,7 @@ use Kynetx::Predicates::Google::OAuthHelper qw(get_authorization_message
           get_protected_resource
           trim_tokens
           blast_tokens
-          post_protected_resource 
+          post_protected_resource
 );
 use Kynetx::Predicates::Google::Calendar;
 use Kynetx::Session qw(
@@ -137,7 +137,6 @@ sub authorize {
     my $js =
       Kynetx::JavaScript::gen_js_var( $divId,
                                       Kynetx::JavaScript::mk_js_str($msg) );
-    $logger->debug( "Session after store: ", sub { Dumper($session) } );
     return $js;
 
 }
@@ -148,7 +147,7 @@ sub authorized {
     $logger->debug( "Args: ",          sub { Dumper($args) } );
     my $rid    = $req_info->{'rid'};
     my $scope  = get_google_scope($args);
-    $logger->debug( "Session tokens: ", sub { Dumper($session) } );
+    $logger->trace( "Session tokens: ", sub { Dumper($session) } );
     $logger->debug( "Scope: ",          sub { Dumper($scope) } );
     my $access_token =
       get_token( $rid, $session, 'access_token', NAMESPACE, $scope );
@@ -185,7 +184,7 @@ sub get {
     my $url = build_url( $req_info, $rule_env, $args, $gparm, $scope,'GET' );
     my $resp =
       get_protected_resource( $req_info, $session, NAMESPACE, $url, $scope );
-    return eval_response($resp);  
+    return eval_response($resp);
 }
 $funcs->{'get'} = \&get;
 
@@ -202,11 +201,11 @@ sub raw_get {
     }
     my $uri = URI->new($args->[1]);
     if ( $uri =~ m/^$scope_url/ ) {
-        $logger->debug("Scopes match");  
-          
+        $logger->debug("Scopes match");
+
         my $resp =
             get_protected_resource( $req_info, $session, NAMESPACE, $uri->as_string(), $scope );
-        return $resp->content;  
+        return $resp->content;
     } else {
         $logger->warn("Not authorized for scope: ",$scope->{'dname'});
     }
@@ -232,8 +231,8 @@ sub add {
     my $content = build_post_content( $req_info, $rule_env, $args, $gparm, $scope );
     my $resp =
       post_protected_resource( $req_info, $session, NAMESPACE, $scope, $url,$content );
-    return eval_response($resp);  
-    
+    return eval_response($resp);
+
 }
 $funcs->{'add'} = \&add;
 
@@ -634,6 +633,6 @@ sub build_post_content {
     } else {
         return undef;
     }
-    
+
 }
 1;

@@ -1,34 +1,34 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use lib qw(/web/lib/perl);
 use strict;
 
@@ -82,11 +82,11 @@ my(@cache_for_test_cases, @datasets_testcases, $result,@dataset_examples,@rulese
 sub add_cache_for_testcase {
     my($str, $expected, $desc, $diag) = @_;
     my $krl = Kynetx::Parser::parse_global_decls($str);
- 
+
     chomp $str;
     diag("$str = ", Dumper($krl)) if $diag;
 
-    push(@cache_for_test_cases, 
+    push(@cache_for_test_cases,
 	 {'expr' => $krl->[0], # just the first one
 	  'expected' => $expected,
 	  'src' =>  $str,
@@ -97,12 +97,12 @@ sub add_cache_for_testcase {
 
 sub add_dataset_example_testcase {
     my($str, $expected, $desc, $diag) = @_;
- 
+
     chomp $str;
     diag("$str = ", Dumper($krl)) if $diag;
 
-    push(@dataset_examples, 
-     {'expr' => $str, 
+    push(@dataset_examples,
+     {'expr' => $str,
       'expected' => $expected,
       'desc' => $desc,
       'debug' => $diag,
@@ -112,12 +112,12 @@ sub add_dataset_example_testcase {
 
 sub add_ruleset_testcase {
     my($str, $expected, $desc, $diag) = @_;
- 
+
     chomp $str;
     diag("$str = ", Dumper($str)) if $diag;
 
-    push(@ruleset_testcases, 
-     {'expr' => $str, 
+    push(@ruleset_testcases,
+     {'expr' => $str,
       'expected' => $expected,
       'desc' => $desc,
       'debug' => $diag,
@@ -145,11 +145,12 @@ my $atom_c = {
     'author'  => ignore(),
     'twitter$geo' => ignore(),
     'twitter$lang' => ignore(),
-    'published' => ignore(),  
-    'id' => $atom_element,  
-    'title' => $atom_element,  
+    'published' => ignore(),
+    'id' => $atom_element,
+    'title' => $atom_element,
     'updated' => $atom_element,
-    'twitter$source' => ignore(),       
+    'twitter$source' => ignore(),
+    'twitter$metadata'  => ignore(),
 };
 
 my $atom_t = {
@@ -160,12 +161,12 @@ my $atom_t = {
     'openSearch$itemsPerPage' => $atom_element,
     'title' => $atom_element,
     'twitter$warning' => ignore(),
-    'updated' => ignore,       
+    'updated' => ignore,
 };
 
 
 my $atom_f = {
-  'feed' => $atom_t, 
+  'feed' => $atom_t,
   '@encoding' => ignore(),
   '@version'  => ignore(),
 };
@@ -371,17 +372,17 @@ _KRL_
     #$logger->debug("Expected: ", $expected);
     #$logger->debug("Created: ", $this_js);
 
-    is_string_nows($this_js, 
-		   $expected, 
+    is_string_nows($this_js,
+		   $expected,
 		   "is the JS Correct?");
-    
+
     $krl_src = <<_KRL_;
 global {
    datasource twitter_search:XML <- "http://search.twitter.com/search.atom";
 }
 _KRL_
     $krl = Kynetx::Parser::parse_global_decls($krl_src);
-    
+
 
     $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
 
@@ -406,7 +407,7 @@ global {
 }
 _KRL_
     $krl = Kynetx::Parser::parse_global_decls($krl_src);
-    
+
 
     $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
 
@@ -420,7 +421,7 @@ global {
 }
 _KRL_
     $krl = Kynetx::Parser::parse_global_decls($krl_src);
-    
+
 
     $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
     $args = ["?q=iphone&rpp=2"];
@@ -428,112 +429,28 @@ _KRL_
     $ds = Kynetx::Datasets->new($dsr);
     $ds->load($req_info,$args);
     $ds->unmarshal();
-    
-    
+
+
     cmp_deeply($ds->sourcedata,$atom_string_re,"XML->JSON mis-conversion");
 }
 
-my $krl_full = <<_KRL_;
-ruleset txml {
-    meta {
-        name "xml test"
-        description <<
-Dataset manipulation             >>
-        logging on    }
-    global {
-        dataset fazz_data:JSON <- "http://frag.kobj.net/clients/cs_test/ktut.json" cachable for 30 minutes;
-        dataset fixx_data:XML <- "http://frag.kobj.net/clients/cs_test/books.xml";   
-        dataset fexx_data:XML <- "http://frag.kobj.net/clients/cs_test/ktut.xml" cachable for 5 seconds;
-        datasource clear:JSON <- "http://clearplay.com/filtercart.aspx?" cachable for 1 seconds;
-     }
-    rule txml_rule is active {
-        select using ".*" setting ()
-
-        pre {
-            json_pick = fazz_data.pick("\$..tree[0].name");
-            xml_pick = fixx_data.pick("\$..book[2].title.\$t");
-            x2j_pick = fexx_data.pick("\$..tree[0].\@name");
-            clearPlay = datasource:clear({"SearchValue" : "Sneakers"});
-         }
-        every {
-            notify("Picked (ktut.xml): ", x2j_pick)
-                with
-                    sticky = true and
-                    opacity = 1;            
-            notify("Picked (ktut.json): ", json_pick)
-                with
-                    sticky = true and
-                    opacity = 1;            
-            notify("Picked (books.xml): ", xml_pick)
-                with
-                    sticky = true and
-                    opacity = 1;            
-        }
-    }
-}
-_KRL_
-
-add_ruleset_testcase($krl_full,re('json_pick =.+Lemon Tree.+'),"JSON Data pick",0);
-add_ruleset_testcase($krl_full,re('xml_pick =.+Maeve Ascendant.+'),"XML Data pick",0);
-add_ruleset_testcase($krl_full,re('x2j_pick =.+Lemon Tree.+'),"XML Data pick",0);
-
-my $krl_clear = <<_KRL_;
-    ruleset cp_test {
-        meta {
-            name "ClearPlay"
-            author "test harness"
-            logging on    }
-        
-        global {
-            
-        }
-        rule cp_t is active {
-            select using "www.netflix.com/" setting ()
-            pre {
-                title = "Sneakers";
-                clearPlay = datasource:clear("SearchValue=Sneakers");
-            }
-              noop;
-        }
-    }
-_KRL_
-
-#add_ruleset_testcase($krl_clear,re('.+'),"clearplay",1);
-
-
 
 foreach my $case (@cache_for_test_cases) {
-    is(cache_dataset_for($case->{'expr'}), 
+    is(cache_dataset_for($case->{'expr'}),
        $case->{'expected'},
        $case->{'desc'});
 }
 
 foreach my $case (@dataset_examples) {
-    my $krl = Kynetx::Parser::parse_global_decls($case->{'expr'});    
+    my $krl = Kynetx::Parser::parse_global_decls($case->{'expr'});
     my $dsr = $krl->[0];
     my $ds = Kynetx::Datasets->new($dsr);
     $ds->load($req_info);
     $ds->unmarshal();
     $logger->debug("[examples] ", $ds->name);
-    is_string_nows($ds->sourcedata,$case->{'expected'},$case->{'desc'});    
+    is_string_nows($ds->sourcedata,$case->{'expected'},$case->{'desc'});
 }
 
-foreach my $case (@ruleset_testcases) {
-    my $r = Kynetx::Test::configure();
-    my $session = Kynetx::Test::gen_session($r,'cs_test');
-    my $parsed = Kynetx::Parser::parse_ruleset($case->{'expr'});
-    my $rl = Kynetx::Rules::mk_rule_list($req_info, $req_info->{'rid'}, $parsed);
-    my $val = Kynetx::Rules::eval_ruleset(
-        $r,
-        $rl,
-        empty_rule_env(),
-        $session,
-        $parsed,
-        $parsed->{'rules'});
-    $logger->debug(Dumper $val);
-    cmp_deeply($val,$case->{'expected'},$case->{'desc'});
-    
-}
 
 
 plan tests => 8 + int(@cache_for_test_cases) + int(@dataset_examples) + int(@ruleset_testcases);

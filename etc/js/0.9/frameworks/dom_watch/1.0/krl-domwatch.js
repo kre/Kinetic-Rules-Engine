@@ -20,6 +20,11 @@ KOBJ.watchDOM = function(selector, callBackFunc, time, context) {
         KOBJ.watcherData = KOBJ.watcherData || [];
 
         KOBJ.log("DOM Watcher Callback for new selector " + selector + " added");
+        if($KOBJ(selector + " :first", context).length == 0)
+        {
+            KOBJ.log("DOM Watcher selector not found NOT enabling " + selector );
+            return;
+        }
         $KOBJ(selector + " :first", context).addClass("KOBJ_AjaxWatcher");
         var there = false;
         if ($KOBJ(selector + " :first", context).is(".KOBJ_AjaxWatcher")) {

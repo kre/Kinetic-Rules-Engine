@@ -553,7 +553,6 @@ sub eval_extract {
     my $pattern = '';
     my $modifiers;
     ($pattern, $modifiers) = split_re($rands->[0]->{'val'});
-
     $modifiers = $modifiers || '';
 
     my $embedable_modifiers = $modifiers;
@@ -563,29 +562,33 @@ sub eval_extract {
 
     $logger->debug("Matching string (with capture) with $pattern & modifiers $modifiers: $re");
 
-    my @caps = ( $v =~ $pattern );
-    my $num = scalar(@caps);
+#    my @caps = ( $v =~ $pattern );
+#    $logger->debug("Binding matches: ", sub {Dumper(@caps)});
+#    my $num = scalar(@caps);
 
+    $_ = $v;
 
+    $logger->trace("Mods: $modifiers, Emb: $embedable_modifiers");
     if($modifiers =~ m#g#) {
-      $is_match = ($v =~ m/$re/g);
+      @items = /$re/g;
     } else {
-      $is_match = ($v =~ m/$re/);
+      @items = /$re/;
     }
-
-    for (my $i = 1;$i<=$num;$i++) {
-        if (defined $-[$i]) {
-            my $match =  substr($v, $-[$i], $+[$i] - $-[$i]);
-            push(@items,$match);
-        } else {
-            last;
-        }
-    }
+#    $logger->debug("Global matches: ", sub {Dumper(@test)});
+#
+#    for (my $i = 1;$i<=$num;$i++) {
+#        if (defined $-[$i]) {
+#            my $match =  substr($v, $-[$i], $+[$i] - $-[$i]);
+#            push(@items,$match);
+#        } else {
+#            last;
+#        }
+#    }
       } else {
     $logger->warn("Not a regular expression: ", $rands->[0]->{'val'})
       unless $rands->[0]->{'type'} eq 'regexp';
       }
-
+    $logger->debug("Items: ", sub {Dumper(@items)});
 
       return Kynetx::Expressions::typed_value(\@items);
 }
@@ -711,7 +714,9 @@ sub eval_as {
         $logger->trace("EXP: ", sub {Dumper($tmp)});
         my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
         $logger->trace("JSON: ", $json);
-        return $json;
+        $obj->{'type'} = "str";
+        $obj->{'val'} = $json;
+        return $obj;
     }
 
     return $obj;
@@ -944,7 +949,7 @@ sub list_extensions {
 sub split_re {
   my($val) = @_;
 
-  my ($pattern, $modifiers) = $val =~ m%(?:re){0,1}[/#](.+)[/#](i|g|m){0,2}%;
+  my ($pattern, $modifiers) = $val =~ m%(?:re){0,1}[/#](.+)[/#]([igm]{0,3})%;
   return ($pattern, $modifiers);
 }
 

@@ -114,8 +114,12 @@ sub _parts {
     my @parry  = ();
     foreach my $p (@parts) {
         my $key = $p->{'ct'}->{'discrete'} . '/' . $p->{'ct'}->{'composite'};
+        my $value = $p->{'body'};
+        if (ref $value eq 'SCALAR') {
+            $value = $$value;
+        }
         $logger->debug("Key: ", $key);
-        push( @parry, { $key => $p->{'body'} } ) unless ($parms && $key ne $parms);
+        push( @parry, { $key => $value } ) unless ($parms && $key ne $parms);
     }
     return \@parry;
 }

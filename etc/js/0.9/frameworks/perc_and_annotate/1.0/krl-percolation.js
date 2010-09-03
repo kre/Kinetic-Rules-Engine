@@ -109,7 +109,7 @@ KOBJ.search_percolate.extractdata = function(toPercolate,config){
 		// Failsafe
 	}
 
-	if(window.location.host == "search.yahoo.com"){
+	if(window.location.host == "search.yahoo.com"  && urlTemp.indexOf("**http") != -1){
 		urlTemp = urlTemp.replace(/.*\*\*/,"");
 		urlTemp = urlTemp.replace(/%3a/,":");
 	}

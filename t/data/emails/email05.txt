@@ -1,0 +1,31 @@
+//sam*ple
+Return-Path: scurren@kynetx.com
+Received: from corpserver.kobj.net (LHLO mail.kynetx.com) (209.41.75.70) by
+ mail.kynetx.com with LMTP; Fri, 20 Aug 2010 16:03:46 -0600 (MDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+    by mail.kynetx.com (Postfix) with ESMTP id 635E71D7D36
+    for <samjr@kynetx.com>; Fri, 20 Aug 2010 16:03:46 -0600 (MDT)
+X-Virus-Scanned: amavisd-new at corpserver.kobj.net
+X-Spam-Flag: NO
+X-Spam-Score: -4.204
+X-Spam-Level:
+X-Spam-Status: No, score=-4.204 tagged_above=-10 required=6.6
+    tests=[ALL_TRUSTED=-1.8, AWL=0.195, BAYES_00=-2.599] autolearn=ham
+Received: from mail.kynetx.com ([127.0.0.1])
+    by localhost (mail.kynetx.com [127.0.0.1]) (amavisd-new, port 10024)
+    with ESMTP id qsd+yIIDL6Bc for <samjr@kynetx.com>;
+    Fri, 20 Aug 2010 16:03:46 -0600 (MDT)
+Received: from wbillings-lap.medslc.medicity.com (unknown [64.55.47.131])
+    by mail.kynetx.com (Postfix) with ESMTPSA id 1AE491D7D35
+    for <samjr@kynetx.com>; Fri, 20 Aug 2010 16:03:46 -0600 (MDT)
+Message-ID: <4C6EFBC1.7080007@kynetx.com>
+Date: Fri, 20 Aug 2010 16:03:45 -0600
+From: Sam Curren <scurren@kynetx.com>
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.1.11) Gecko/20100711 Lightning/1.0b1 Thunderbird/3.0.6
+MIME-Version: 1.0
+To: samjr@kynetx.com
+Subject: foo bar baz
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+cheese
