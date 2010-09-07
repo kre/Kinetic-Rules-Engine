@@ -1,5 +1,5 @@
 }
-
+$KOBJ(document).ready(function() {
 /* If there is an config add or update known applications running in this browser */
 if (typeof(KOBJ_config) != "undefined")
 {
@@ -13,4 +13,4 @@ if (typeof(KOBJ_configs) != "undefined")
 }
 
 
-
+});
