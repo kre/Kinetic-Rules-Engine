@@ -284,10 +284,10 @@ rule
 //			if($postb.text != null)
 				current_rule.put("post",$postb.result);
 			
-//			if($pb.text != null)
+			if($pb.text != null)
 				current_rule.put("pre",$pb.result);
-//			else
-//			    current_rule.put("pre",null);
+			else
+			    current_rule.put("pre",new ArrayList());
 			
 			current_rule.put("name",$name.text);
 			current_rule.put("emit",$eb.emit_value);

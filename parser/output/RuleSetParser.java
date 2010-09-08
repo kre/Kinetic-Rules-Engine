@@ -1,4 +1,4 @@
-// $ANTLR 3.2 Sep 23, 2009 12:02:23 RuleSet.g 2010-09-08 11:10:31
+// $ANTLR 3.2 Sep 23, 2009 12:02:23 RuleSet.g 2010-09-08 11:21:40
 
 	package com.kynetx;
 	import java.util.HashMap;
@@ -1214,10 +1214,10 @@ public class RuleSetParser extends Parser {
               //			if((postb!=null?input.toString(postb.start,postb.stop):null) != null)
               				current_rule.put("post",(postb!=null?postb.result:null));
               			
-              //			if((pb!=null?input.toString(pb.start,pb.stop):null) != null)
+              			if((pb!=null?input.toString(pb.start,pb.stop):null) != null)
               				current_rule.put("pre",(pb!=null?pb.result:null));
-              //			else
-              //			    current_rule.put("pre",null);
+              			else
+              			    current_rule.put("pre",new ArrayList());
               			
               			current_rule.put("name",(name!=null?input.toString(name.start,name.stop):null));
               			current_rule.put("emit",(eb!=null?eb.emit_value:null));
