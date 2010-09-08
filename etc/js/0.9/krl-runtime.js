@@ -297,7 +297,8 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
         elem = name;
     }
     if (type == 'click') {
-        $KOBJ(elem).click(function(e1) {
+//        alert("You are calling me with " + elem);
+        $KOBJ(elem).live("click", function(e1) {
             var tgt = $KOBJ(this);
             var b = tgt.attr('href') || '';
             KOBJ.logger("click",
@@ -311,10 +312,11 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
             if (b) {
                 tgt.attr('href', '#KOBJ');
             }  // # gets replaced by redirect
+            return true;
         });
 
     } else if (type == 'change') {
-        $KOBJ(elem).change(function(e1) {
+        $KOBJ(elem).live("change",function(e1) {
             KOBJ.logger("change",
                     txn_id,
                     name,
@@ -323,6 +325,7 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
                     rule,
                     rid
                     );
+            return true;
         });
     }
 
@@ -509,7 +512,12 @@ KOBJ.logger = function(type, txn_id, element, url, sense, rule, rid) {
                      type + "&txn_id=" + txn_id + "&element=" +
                      element + "&sense=" + sense + "&url=" + escape(url) + "&rule=" + rule;
 
-    if (rid) logger_url += "&rid=" + rid;
+    if (rid) {
+           logger_url += "&rid=" + rid;
+            var app = KOBJ.get_application(rid);
+            if(app != null)
+                logger_url += app.page_vars_as_url();
+    }
 
     KOBJ.require(logger_url, {data_type: "other"});
 };
