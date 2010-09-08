@@ -509,7 +509,12 @@ KOBJ.logger = function(type, txn_id, element, url, sense, rule, rid) {
                      type + "&txn_id=" + txn_id + "&element=" +
                      element + "&sense=" + sense + "&url=" + escape(url) + "&rule=" + rule;
 
-    if (rid) logger_url += "&rid=" + rid;
+    if (rid) {
+           logger_url += "&rid=" + rid;
+            var app = KOBJ.get_application(rid);
+            if(app != null)
+                logger_url += app.page_vars_as_url();
+    }
 
     KOBJ.require(logger_url, {data_type: "other"});
 };
