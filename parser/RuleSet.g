@@ -123,7 +123,7 @@ options {
 	 */
 	public String strip_wrappers(String start, String end, String value)
 	{
-		return value.substring(start.length(),value.length() - end.length());	
+		return value.substring(start.length(),value.length() - end.length());
 	}
 
 	public String[] sar(String ... values)
@@ -281,13 +281,13 @@ rule
 			current_rule.put("blocktype",(actions_result.get("blocktype") != null ? actions_result.get("blocktype") : "every"));
 			
 			current_rule.put("actions",actions_result.get("actions"));
-			if($postb.text != null)
+//			if($postb.text != null)
 				current_rule.put("post",$postb.result);
 			
-			if($pb.text != null)
+//			if($pb.text != null)
 				current_rule.put("pre",$pb.result);
-			else
-			    current_rule.put("pre",new ArrayList());
+//			else
+//			    current_rule.put("pre",null);
 			
 			current_rule.put("name",$name.text);
 			current_rule.put("emit",$eb.emit_value);
@@ -325,7 +325,7 @@ post_block returns[HashMap result]
 //		tmp.put("alt",$alt.result);
 		tmp.put("type",$typ.text);
 		tmp.put("cons",temp_list);
-		if($alt.text != null)
+//		if($alt.text != null)
 		{
 			tmp.put("alt",$alt.result);
 		} 
@@ -381,10 +381,10 @@ raise_statement returns[HashMap result]
 		tmp.put("event",$evt.text);
 		tmp.put("domain","explicit");
 		tmp.put("type","raise");
-		if($f.text != null)
+//		if($f.text != null)
 			tmp.put("rid",$f.result);
 			
-		if($m.text != null)
+//		if($m.text != null)
 			tmp.put("modifiers",$m.result);	
 		
 		$result = tmp;	
@@ -405,12 +405,12 @@ callbacks returns[HashMap result]
 	: 
 	CALLBACKS LEFT_CURL s=success? f=failure? RIGHT_CURL {
 		HashMap tmp = new HashMap();
-		if($s.text != null)
+//		if($s.text != null)
 		{
 			tmp.put("success",$s.result);
 			
 		}
-		if($f.text != null)
+//		if($f.text != null)
 		{
 			tmp.put("failure",$f.result);		
 		}
@@ -522,7 +522,7 @@ trail_mark returns[HashMap result]
 		tmp.put("name",$name.text);
 		tmp.put("domain",$dm.text);
 		tmp.put("type","persistent");
-		if($t.text != null)
+//		if($t.text != null)
 			tmp.put("with",$t.result);
 		$result = tmp;		
 	}
@@ -639,7 +639,7 @@ primrule returns[HashMap result]
 			HashMap tmp = new HashMap();
 			tmp.put("emit",$e.emit_value);
 
-		 	if($label.text != null) 
+//		 	if($label.text != null)
 			 	tmp.put("label",$label.text);
 
 
@@ -1235,7 +1235,7 @@ unary_expr  returns[Object result] options { backtrack = true; }
 	      	tmp.put("var",$v.text);
 	      	tmp.put("regexp",strip_string($rx.text));
 	      	tmp.put("domain",$vd.text);
-	      	if($t.text != null)
+//	      	if($t.text != null)
 		      	tmp.put("timeframe",t.time);
 	      	$result = tmp;		
 	}
@@ -1631,10 +1631,10 @@ meta_block
 		HashMap tmp = new HashMap(); 
 		tmp.put("name",$modname.text);
 		tmp.put("type","module");
-		if($alias.text != null) {
+//		if($alias.text != null) {
 			tmp.put("alias",$alias.text);
 			alias = null;
-		}
+//		}
 		use_list.add(tmp);
 	 })
 		)*
@@ -1656,6 +1656,13 @@ dispatch_block
 			tmp.put("ruleset_id",strip_string($rsid.text));
 			rsid = null;
 			
+		}
+		else
+		{
+			tmp.put("ruleset_id",null);
+			rsid = null;
+
+
 		}
 		dispatch_block_array.add(tmp);
 		})* 
