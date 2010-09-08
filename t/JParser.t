@@ -130,7 +130,7 @@ sub trim_line_numbers{
     foreach my $rule (@{$ast->{'rules'}}) {
         delete $rule->{'start_col'};
         delete $rule->{'start_line'};
-        delete $rule->{'post'} unless (defined $rule->{'post'});
+        #delete $rule->{'post'} unless (defined $rule->{'post'});
 
         # Clean the actions
         foreach my $action (@{$rule->{'actions'}}) {
@@ -143,11 +143,11 @@ sub trim_line_numbers{
         }
 
         # Trim undef callbacks
-        delete $rule->{'callbacks'}->{'success'} unless (defined $rule->{'callbacks'}->{'success'});
-        delete $rule->{'callbacks'}->{'failure'} unless (defined $rule->{'callbacks'}->{'failure'});
+        #delete $rule->{'callbacks'}->{'success'} unless (defined $rule->{'callbacks'}->{'success'});
+        #delete $rule->{'callbacks'}->{'failure'} unless (defined $rule->{'callbacks'}->{'failure'});
 
         #  Modify callback block for empties
-        $rule->{'callbacks'} = undef unless (keys %{$rule->{'callbacks'}});
+        #$rule->{'callbacks'} = undef unless (keys %{$rule->{'callbacks'}});
 
         #  Modify pre block for empties
         foreach my $expr (@{$rule->{'pre'}}) {
@@ -156,7 +156,7 @@ sub trim_line_numbers{
                 $expr->{"rhs"} = "\n" . $rhs;
             }
         }
-        delete $rule->{'pre'} unless ($rule->{'pre'});
+        #delete $rule->{'pre'} unless ($rule->{'pre'});
 
         # Clean the post block
         my $empty_post = 0;
@@ -171,7 +171,7 @@ sub trim_line_numbers{
                         $e_alt = 0;
                         #delete $alt->{'test'} unless ($alt->{'test'});
                     }
-                    delete $post->{'alt'} unless (! $e_alt);
+                    #delete $post->{'alt'} unless (! $e_alt);
                 } elsif ($pkey eq "cons") {
                     foreach my $cons (@{$post->{'cons'}}) {
                         #delete $cons->{'test'} unless ($cons->{'cons'});
