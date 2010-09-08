@@ -366,10 +366,10 @@ post_statement returns[HashMap result]
 		 	$result = tmp;
 		}
 		 	
-		if($ie.text != null)
-		{
+//		if($ie.text != null)
+//		{
 			$result.put("test",$ie.result);
-		} 	
+//		}
 	}
 	
   	;
@@ -623,13 +623,14 @@ primrule returns[HashMap result]
 //			 	tmp.put("label",$label.text);
 
 
-            if($set.text != null)
+//            if($set.text != null)
 				tmp.put("vars",$set.result);
 			 	
 		 	tmp.put("modifiers",$m.result);
 		 	HashMap tmp2 = new HashMap();
-			tmp2.put("action",tmp); 
-			if($label.text != null)
+			tmp2.put("action",tmp);
+
+//			if($label.text != null)
 				tmp2.put("label",$label.text);
 			$result = tmp2;
 		 	
@@ -699,7 +700,7 @@ using returns[HashMap result]
 			evt_expr.put("type","prim_event");
 			evt_expr.put("op","pageview");
 			
-			if($s.text != null)
+//			if($s.text != null)
 				evt_expr.put("vars",$s.result);	
 			
 			tmp.put("event_expr",evt_expr);
