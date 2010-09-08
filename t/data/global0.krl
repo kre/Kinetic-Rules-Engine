@@ -13,7 +13,7 @@ var pagename = 'foobar';
         pre {
       	    tc = weather:tomorrow_cond_code();
 	    city = geoip:city();
-	}     
+	}
 	alert("hello");
 
     }

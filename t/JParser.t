@@ -43,7 +43,7 @@ Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::JParser qw/:all/;
-use Kynetx::Parser qw(:all);
+use Kynetx::OParser qw(:all);
 use Kynetx::Configure;
 use Kynetx::Json qw(:all);
 
@@ -62,6 +62,16 @@ my @krl_files = @ARGV ? @ARGV : <data/*.krl>;
 my $debug = 1;
 
 my @skips = qw(
+    data/exprs0.krl
+    data/regexp0.krl
+    data/regexp1.krl
+    data/regexp2.krl
+    data/regexp3.krl
+    data/regexp4.krl
+    data/regexp5.krl
+    data/regexp6.krl
+    data/regexp7.krl
+    data/regexp8.krl
 );
 
 my $skip_list;
@@ -69,7 +79,7 @@ map {$skip_list->{$_} = 1} @skips;
 
 $logger->debug("Skips: ", sub {Dumper($skip_list)});
 
-plan tests => $#krl_files+1;
+my $num_tests = $#krl_files+1;
 my $jparser = new Kynetx::JParser::Antlr_();
 foreach my $f (@krl_files) {
     my ($fl,$krl_text) = getkrl($f);
@@ -78,20 +88,22 @@ foreach my $f (@krl_files) {
     }
     if ($skip_list->{$f}) {
         diag "Skipping $f";
+        $num_tests--;
         next;
     }
-    my $ptree = $jparser->parse_ruleset($krl_text);
+    my $ptree = $jparser->ruleset($krl_text);
     my $ast = Kynetx::Json::jsonToAst_w($ptree);
-    my $o_ast = Kynetx::Parser::parse_ruleset($krl_text);
+    my $o_ast = Kynetx::OParser::parse_ruleset($krl_text);
     trim_line_numbers($o_ast);
-    my $result = cmp_deeply($o_ast,$ast,$fl);
+    my $result = cmp_deeply($ast,$o_ast,$fl);
     if (! $result) {
+        $logger->debug("JSON: ", $ptree);
         $logger->debug("Antler AST: ", sub {Dumper($ast)});
         $logger->debug("Old AST: ", sub {Dumper($o_ast)});
         die ($f);
     }
 }
-
+plan tests => $num_tests;
 
 
 # Remove the line numbering tags from the old parser
@@ -106,10 +118,12 @@ sub trim_line_numbers{
 
     # Global string cheat
     foreach my $global (@{$ast->{'global'}}) {
-        if ($global->{'type'} eq "css") {
+        if ($global->{'type'} eq "css" ) {
             $global->{'content'} = "\n" . $global->{'content'};
         } elsif ($global->{'emit'}) {
-            #$global->{'emit'} = "\n" .$global->{'emit'};
+            $global->{'emit'} = "\n" .$global->{'emit'};
+        } elsif ($global->{'type'} eq "here_doc") {
+            $global->{'rhs'} = "\n" . $global->{'rhs'};
         }
     }
     if ($ast->{'meta'}) {
@@ -122,7 +136,7 @@ sub trim_line_numbers{
 
     if ($ast->{'dispatch'}) {
         foreach my $dispatch (@{$ast->{'dispatch'}}) {
-            delete $dispatch->{'ruleset_id'} unless ($dispatch->{'ruleset_id'});
+            #delete $dispatch->{'ruleset_id'} unless ($dispatch->{'ruleset_id'});
         }
     }
 
@@ -158,29 +172,6 @@ sub trim_line_numbers{
         }
         #delete $rule->{'pre'} unless ($rule->{'pre'});
 
-        # Clean the post block
-        my $empty_post = 0;
-        if (my $post = $rule->{'post'}) {
-            foreach my $pkey (keys %{$post}) {
-                my $e_alt = 0;
-                if ($pkey eq "alt") {
-                    my $e_alt = 1;
-                    $empty_post = 1;
-                    foreach my $alt (@{$post->{$pkey}}) {
-                        $empty_post = 0;
-                        $e_alt = 0;
-                        #delete $alt->{'test'} unless ($alt->{'test'});
-                    }
-                    #delete $post->{'alt'} unless (! $e_alt);
-                } elsif ($pkey eq "cons") {
-                    foreach my $cons (@{$post->{'cons'}}) {
-                        #delete $cons->{'test'} unless ($cons->{'cons'});
-                    }
-                } else {
-                    $empty_post = 1;
-                }
-            }
-        }
 
     }
 

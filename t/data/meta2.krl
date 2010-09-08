@@ -3,7 +3,7 @@ ruleset 10 {
 
     meta {
       description <<
-      Ruleset for testing something or other.
+Ruleset for testing something or other.
       >>
     }
 
@@ -22,15 +22,15 @@ var pagename = 'foobar';
 
     rule testa is active {
         select using "/test/" setting()
-        pre { 
-        } 
+        pre {
+        }
         replace("test","test");
     }
 
     rule testb is active {
         select using "/test/" setting()
-        pre { 
-        } 
+        pre {
+        }
         replace("test","test");
     }
 

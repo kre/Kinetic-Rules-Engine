@@ -8,11 +8,11 @@ ruleset 10 {
 
       city = geoip:city();
 
-      city_announcement = << 
+      city_announcement = <<
 <div id="kynetx_foo">
-<p class="announcement">This is some text!!! It's cool.  
+<p class="announcement">This is some text!!! It's cool.
 You are in #{city}!</p>
-</div> 
+</div>
       >>;
 
       second_thing = <<

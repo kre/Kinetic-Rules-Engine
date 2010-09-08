@@ -1,33 +1,33 @@
 package t::ExprTests;
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use strict;
 use warnings;
 
@@ -38,7 +38,7 @@ our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 get_expr_testcases
 ) ]);
@@ -62,7 +62,7 @@ sub get_expr_testcases {
 
     sub add_expr_testcase {
       my($krl,$type,$js,$expected,$diag) = @_;
-    
+
       push(@expr_testcases, {'krl' => $krl,
 			     'type' => $type,
 			     'expected_js' => $js,
@@ -204,7 +204,7 @@ add_expr_testcase(
     0);
 
 
-  
+
 
 $krl_src = <<_KRL_;
 5 + temp
@@ -405,7 +405,7 @@ $krl_src = <<_KRL_;
 page:url("hostname");
 _KRL_
 add_expr_testcase(
-    $krl_src, 
+    $krl_src,
     'expr',
     "",
     mk_expr_node('str', 'www.windley.com'),
@@ -476,7 +476,7 @@ add_expr_testcase(
      mk_expr_node('str', "aaa,aaawa,ebates"),
     0);
 
-  
+
 
 $krl_src = <<_KRL_;
 {"fizz": 3,
@@ -487,57 +487,13 @@ add_expr_testcase(
     $krl_src,
     'expr',
     "{'fizz' : 3, 'flip' : (3 + 5), 'flop' : (city + ', ID')}",
-     mk_expr_node('hash', 
-		  {"fizz" => mk_expr_node('num',3), 
-		   "flip" => mk_expr_node('num',8), 
+     mk_expr_node('hash',
+		  {"fizz" => mk_expr_node('num',3),
+		   "flip" => mk_expr_node('num',8),
 		   "flop" => mk_expr_node('str',"Blackfoot, ID")}),
     0);
 
-#
-#  Modulus Test Cases
-#
 
-$krl_src = <<_KRL_;
-23 % 5 + 1
-_KRL_
-add_expr_testcase(
-    $krl_src,
-    'expr',
-    '((23 % 5) + 1)',
-    mk_expr_node('num', 4),
-    0);
-
-$krl_src = <<_KRL_;
-21 % 7
-_KRL_
-add_expr_testcase(
-    $krl_src,
-    'expr',
-    '(21 % 7)',
-    mk_expr_node('num', 0),
-    0);
-
-$krl_src = <<_KRL_;
-1 + 31 % 5
-_KRL_
-add_expr_testcase(
-    $krl_src,
-    'expr',
-    '(1 + (31 % 5))',
-    mk_expr_node('num', 2),
-    0);
-
-$krl_src = <<_KRL_;
-6 * 31 % 5
-_KRL_
-add_expr_testcase(
-    $krl_src,
-    'expr',
-    '(6 * (31 % 5))',
-    mk_expr_node('num', 6),
-    0);
-
-  
 #---------------------------------------------------------------------------------
 # inequalities
 #---------------------------------------------------------------------------------
@@ -1634,7 +1590,7 @@ add_expr_testcase(
     );
 
 $krl_src = <<_KRL_;
-seen "windley.com" in ent:my_trail 
+seen "windley.com" in ent:my_trail
 _KRL_
 
 add_expr_testcase(
@@ -1646,7 +1602,7 @@ add_expr_testcase(
     );
 
 $krl_src = <<_KRL_;
-seen "google.com" in ent:my_trail 
+seen "google.com" in ent:my_trail
 _KRL_
 
 add_expr_testcase(
@@ -1658,7 +1614,7 @@ add_expr_testcase(
     );
 
 $krl_src = <<_KRL_;
-seen "kynetx.com/foo.html" after "windley.com/foo.html" in ent:my_trail 
+seen "kynetx.com/foo.html" after "windley.com/foo.html" in ent:my_trail
 _KRL_
 
 add_expr_testcase(
@@ -1670,7 +1626,7 @@ add_expr_testcase(
     );
 
 $krl_src = <<_KRL_;
-seen "kynetx.com/foo.html" before "windley.com/foo.html" in ent:my_trail 
+seen "kynetx.com/foo.html" before "windley.com/foo.html" in ent:my_trail
 _KRL_
 
 add_expr_testcase(
@@ -1872,7 +1828,7 @@ add_expr_testcase(
     );
 
 $krl_src = <<_KRL_;
-location:country_code() eq "US" && demographics:urban() 
+location:country_code() eq "US" && demographics:urban()
 _KRL_
 add_expr_testcase(
     $krl_src,
@@ -1927,7 +1883,7 @@ add_expr_testcase(
     );
 
 $krl_src = <<_KRL_;
-3 < page:var("foo") * 2 
+3 < page:var("foo") * 2
 _KRL_
 add_expr_testcase(
 		  $krl_src,
@@ -1963,7 +1919,7 @@ add_expr_testcase(
 
 
 $krl_src = <<_KRL_;
-demographics:urban() && "Seattle" eq location:city() 
+demographics:urban() && "Seattle" eq location:city()
 _KRL_
 add_expr_testcase(
     $krl_src,
@@ -1986,7 +1942,7 @@ add_expr_testcase(
 
 
 $krl_src = <<_KRL_;
-demographics:urban() && city2 eq location:city() 
+demographics:urban() && city2 eq location:city()
 _KRL_
 add_expr_testcase(
     $krl_src,
@@ -2118,9 +2074,65 @@ add_expr_testcase(
     );
 
 
+#
+#  Modulus Test Cases
+#
+$krl_src = <<_KRL_;
+(23 % 5) + 1
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    '((23 % 5) + 1)',
+    mk_expr_node('num', 4),
+    0);
 
 
-  
+$krl_src = <<_KRL_;
+23 % 5 + 1
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    '((23 % 5) + 1)',
+    mk_expr_node('num', 4),
+    0);
+
+$krl_src = <<_KRL_;
+21 % 7
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    '(21 % 7)',
+    mk_expr_node('num', 0),
+    0);
+
+$krl_src = <<_KRL_;
+1 + 31 % 5
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    '(1 + (31 % 5))',
+    mk_expr_node('num', 2),
+    0);
+
+$krl_src = <<_KRL_;
+6 * 31 % 5
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    '(6 * (31 % 5))',
+    mk_expr_node('num', 6),
+    0);
+
+
+
+
+
+
 #---------------------------------------------------------------------------------
 # declarations
 #---------------------------------------------------------------------------------
@@ -2211,7 +2223,7 @@ add_expr_testcase(
     0);
 
 $krl_src = <<_KRL_;
-d = 2 * ent:my_count 
+d = 2 * ent:my_count
 _KRL_
 add_expr_testcase(
     $krl_src,
@@ -2251,7 +2263,7 @@ add_expr_testcase(
     'http://www.windley.com/hello.html',
     0);
 
-  
+
 
 
 #--------------------------------------------------------------------------------
@@ -2259,7 +2271,7 @@ add_expr_testcase(
 #--------------------------------------------------------------------------------
 
 
-my $re1 = extend_rule_env(['c'], 
+my $re1 = extend_rule_env(['c'],
 			  ['Hello'],
 			  $rule_env);
 $krl_src = <<_KRL_;
@@ -2281,7 +2293,7 @@ add_expr_testcase(
     0);
 
 
-$re1 = extend_rule_env(['c','d'], 
+$re1 = extend_rule_env(['c','d'],
 		       ['Hello','Hello world!'],
 		       $rule_env);
 $krl_src = <<_KRL_;
@@ -2304,7 +2316,7 @@ add_expr_testcase(
     0);
 
 
-$re1 = extend_rule_env(['c','d'], 
+$re1 = extend_rule_env(['c','d'],
 		       ['Hello','#{c} world!'],
 		       $rule_env);
 $krl_src = <<_KRL_;
@@ -2475,7 +2487,7 @@ $re1 = extend_rule_env(['fact','x'],
 $krl_src = <<_KRL_;
 pre {
    fact = function(n) {
-             (n <= 0) => 1 
+             (n <= 0) => 1
                        | n * fact(n-1)
           };
    x = fact(5);
@@ -2643,13 +2655,13 @@ add_expr_testcase(
 		  $krl_src,
 		  'pre',
 		  '_ignore_',
-		  $re1,		  
+		  $re1,
 		  0
     );
 
 
 $re1 = extend_rule_env(['a','b','c'],
-		       [[{"foo"=>{"type"=>"str","val"=>"bar"}}, 
+		       [[{"foo"=>{"type"=>"str","val"=>"bar"}},
 			 {"bar"=>{"type"=>"str","val"=>"baz"}}],
                         [{"foo" => "bar"}, {"bar" => "baz"}],
                         [[], 'baz']],

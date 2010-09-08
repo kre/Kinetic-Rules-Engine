@@ -41,10 +41,6 @@ our @ISA         = qw(Exporter);
 
 our %EXPORT_TAGS = (all => [
 qw(
-    parse_ruleset
-    remove_comments
-    mk_expr_node
-    env
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -91,7 +87,7 @@ use Inline (Java => <<'END',
 
         }
 
-        public String parse_ruleset(String krl) throws org.antlr.runtime.RecognitionException {
+        public String ruleset(String krl) throws org.antlr.runtime.RecognitionException {
             try {
                 org.antlr.runtime.ANTLRStringStream input = new org.antlr.runtime.ANTLRStringStream(krl);
                 com.kynetx.RuleSetLexer lexer = new com.kynetx.RuleSetLexer(input);
@@ -113,12 +109,64 @@ use Inline (Java => <<'END',
                 return (e.getMessage());
             }
         }
+
+        public String expr(String krl) throws org.antlr.runtime.RecognitionException {
+            try {
+                org.antlr.runtime.ANTLRStringStream input = new org.antlr.runtime.ANTLRStringStream(krl);
+                com.kynetx.RuleSetLexer lexer = new com.kynetx.RuleSetLexer(input);
+                CommonTokenStream tokens = new CommonTokenStream(lexer);
+                com.kynetx.RuleSetParser parser = new com.kynetx.RuleSetParser(tokens);
+                com.kynetx.RuleSetParser.expr_return result = parser.expr();
+                HashMap map = new HashMap();
+                map.put("result",result.result);
+                JSONObject js = new JSONObject(map);
+                System.err.println("Java Secret Sauce: "  + js.toString() + "\n");
+                if (parser.parse_errors.size() > 0) {
+                    StringBuffer sb = new StringBuffer();
+                    for (int i = 0;i< parser.parse_errors.size(); i++) {
+                        sb.append(parser.parse_errors.get(i)).append("\n");
+                    }
+                    return sb.toString();
+                }
+                return js.toString();
+            } catch(Exception e) {
+                System.out.println("Error: " + e.getMessage());
+                return (e.getMessage());
+            }
+        }
+
+        public String decl(String krl) throws org.antlr.runtime.RecognitionException {
+            try {
+                org.antlr.runtime.ANTLRStringStream input = new org.antlr.runtime.ANTLRStringStream(krl);
+                com.kynetx.RuleSetLexer lexer = new com.kynetx.RuleSetLexer(input);
+                CommonTokenStream tokens = new CommonTokenStream(lexer);
+                com.kynetx.RuleSetParser parser = new com.kynetx.RuleSetParser(tokens);
+                ArrayList block_array = new ArrayList();
+                parser.decl(block_array);
+                JSONObject js = new JSONObject(block_array);
+                if (parser.parse_errors.size() > 0) {
+                    StringBuffer sb = new StringBuffer();
+                    for (int i = 0;i< parser.parse_errors.size(); i++) {
+                        sb.append(parser.parse_errors.get(i)).append("\n");
+                    }
+                    return sb.toString();
+                }
+                return js.toString();
+            } catch(Exception e) {
+                System.out.println("Error: " + e.getMessage());
+                return (e.getMessage());
+            }
+        }
+
+
+
     }
 END
     AUTOSTUDY => 1,
     DEBUG => 1,
 #    SHARED_JVM => 1,
     DIRECTORY => $wdir,
+    STUDY => ['com.kynetx.RuleSetParser'],
     );
 
 use Inline::Java qw(cast);

@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 
 use lib qw(/web/lib/perl /web/lib/perl/t);
 use strict;
@@ -56,7 +56,7 @@ my $rule_name = 'foo';
 my $my_req_info = Kynetx::Test::gen_req_info($rid,
     {#'ip' => '128.187.16.242', # Utah (BYU)
      'referer' => 'http://www.google.com/search?q=free+mobile+calls&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:official&client=firefox-a',
-     'caller' => 'http://www.windley.com/archives/2008/07?q=foo', 
+     'caller' => 'http://www.windley.com/archives/2008/07?q=foo',
      'kvars' => '{"foo": 5, "bar": "fizz", "bizz": [1, 2, 3]}',
      'foozle' => 'Foo',
      "$rid:datasets" => "aaa,aaawa,ebates"
@@ -129,7 +129,7 @@ my $test_count = 0;
 my $url_timeout = 1;
 
 
-# 
+#
 # testing declarations and data sources
 #
 
@@ -163,7 +163,7 @@ _KRL_
 	    );
 
 	my $result = $js_decl;
-	
+
         diag($decl->{'rhs'}->{'predicate'} . " --> " . $result) if $diag;
 	return $result;
     };
@@ -175,7 +175,7 @@ _KRL_
 
 my $referer_function = mk_datasource_function('referer','', 0);
 
-is(&{$referer_function}('search_terms'), 
+is(&{$referer_function}('search_terms'),
    'free+mobile+calls',
    'keywords from search engine referer' );
 $test_count++;
@@ -193,14 +193,14 @@ SKIP: {
     my $response = $ua->get($check_url);
 #    diag $response->content;
     my $server_unavailable =  (! $response->is_success || $response->content =~ /Bad hostname/ || $response->content =~ /too busy/);
-    
+
     my $num_tests = 11;
     $test_count += $num_tests;
     if ($server_unavailable) {
       skip "No server available", $num_tests;
     }
 
-    my $symbol = 'GOOG'; 
+    my $symbol = 'GOOG';
 
 # $symbol has to be a string that is itself a valid KRL string
     my $market_function = mk_datasource_function('stocks', '"'.$symbol.'"' , 0);
@@ -304,8 +304,8 @@ SKIP: {
 
     my $ds_function = mk_datasource_function('datasource','"?q=rootbeer"', 0);
     $logger->debug("Got $ds_function");
-    contains_string(encode_json(&{$ds_function}('twitter_search')), 
-		    '{"page":1,"query":"rootbeer","completed_in":', 
+    contains_string(encode_json(&{$ds_function}('twitter_search')),
+		    '{"page":1,"query":"rootbeer","completed_in":',
 		    'user defined datasource');
 
 }
@@ -388,8 +388,8 @@ check_free("v", 'q = (r) => v | 3', "conditional then");
 check_free("v", 'q = (s) => 3 | v', "conditional else");
 
 my $k = <<EOF;
-x = << 
-  This is a test #{v} of something 
+x = <<
+  This is a test #{v} of something
  >>
 EOF
 
@@ -499,26 +499,26 @@ foreach my $case (@{ $testcases } ) {
   diag("KRL = ", Dumper($case->{'krl'})) if $case->{'diag'};
 
   my ($e, $val, $js, $lhs) = '';
-    
+
   if ($case->{'type'} eq 'expr') {
 
     $val = Kynetx::Parser::parse_expr($case->{'krl'});
 
     diag("AST = ", Dumper($val)) if $case->{'diag'};
 
-    $e = eval_expr($val, 
-		   $rule_env, 
+    $e = eval_expr($val,
+		   $rule_env,
 		   $rule_name,
-		   $my_req_info, 
+		   $my_req_info,
 		   $session);
 
   } elsif ($case->{'type'} eq 'pre') {
 
     $val = Kynetx::Parser::parse_pre($case->{'krl'});
-    ($js,$e) = Kynetx::Expressions::eval_prelude($my_req_info, 
-						 $rule_env, 
-						 $rule_name, 
-						 $session, 
+    ($js,$e) = Kynetx::Expressions::eval_prelude($my_req_info,
+						 $rule_env,
+						 $rule_name,
+						 $session,
 						 $val) ;
 
   } elsif ($case->{'type'} eq 'decl') {
@@ -526,21 +526,21 @@ foreach my $case (@{ $testcases } ) {
 
     diag("AST = ", Dumper($val)) if $case->{'diag'};
 
-    ($lhs,$e) = Kynetx::Expressions::eval_decl($my_req_info, 
-					       $rule_env, 
-					       $rule_name, 
-					       $session, 
+    ($lhs,$e) = Kynetx::Expressions::eval_decl($my_req_info,
+					       $rule_env,
+					       $rule_name,
+					       $session,
 					       $val) ;
   }
 
   diag("Expr = ", Dumper($e)) if $case->{'diag'};
 
-  cmp_deeply($e, 
+  cmp_deeply($e,
 	    $case->{'expected_val'},
 	    "Evaling " . $case->{'krl'});
 
   $test_count++;
-    
+
 }
 
 
