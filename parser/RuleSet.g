@@ -284,10 +284,10 @@ rule
 //			if($postb.text != null)
 				current_rule.put("post",$postb.result);
 			
-//			if($pb.text != null)
+			if($pb.text != null)
 				current_rule.put("pre",$pb.result);
-//			else
-//			    current_rule.put("pre",null);
+			else
+			    current_rule.put("pre",new ArrayList());
 			
 			current_rule.put("name",$name.text);
 			current_rule.put("emit",$eb.emit_value);
@@ -366,10 +366,19 @@ post_statement returns[HashMap result]
 		 	$result = tmp;
 		}
 		 	
-//		if($ie.text != null)
-//		{
+		if($ie.text != null)
+		{
+		    if($result == null)
+			    $result = new HashMap();
 			$result.put("test",$ie.result);
-//		}
+		}
+		else
+		{
+		    if($result == null)
+			    $result = new HashMap();
+			$result.put("test",null);
+
+		}
 	}
 	
   	;
@@ -1235,8 +1244,11 @@ unary_expr  returns[Object result] options { backtrack = true; }
 	      	tmp.put("var",$v.text);
 	      	tmp.put("regexp",strip_string($rx.text));
 	      	tmp.put("domain",$vd.text);
-//	      	if($t.text != null)
+	      	if($t.text != null)
 		      	tmp.put("timeframe",t.time);
+		     else
+		      	tmp.put("timeframe",null);
+
 	      	$result = tmp;		
 	}
 	| SEEN rx_1=STRING op=must_be_one[sar("before","after")] rx_2=STRING  must_be["in"] vd=VAR_DOMAIN ':' v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH|VAR_DOMAIN) {
