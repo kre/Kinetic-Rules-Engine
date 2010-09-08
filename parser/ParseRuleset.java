@@ -72,7 +72,8 @@ public class ParseRuleset
 				catch(Exception e)
 				{
 //					System.out.println("Error: " + thefile + " in " + (System.currentTimeMillis() - start) + "ms." );
-//					System.out.println("Error "  + thefile +  " " + e.getMessage());
+					System.out.println("Error "  + thefile +  " " + e.getMessage());
+					e.printStackTrace();
 				}
 			}
 //			System.out.println("Not Parsed " + notparsed);
