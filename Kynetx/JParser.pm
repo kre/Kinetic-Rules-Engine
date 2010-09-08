@@ -49,12 +49,11 @@ qw(
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 use Log::Log4perl qw(get_logger :levels);
-
 use Data::Dumper;
-
 use Kynetx::Configure;
-
 use vars qw(%VARIABLE);
+
+our $PARSER;
 
 
 #---------------------------------------------------------------------------------
@@ -87,12 +86,12 @@ use Inline (Java => <<'END',
     import java.io.*;
     import org.json.*;
 
-    class Ahandle {
-        public Ahandle() {
+    class Antlr_ {
+        public Antlr_() {
 
         }
 
-        public String doer(String krl) throws org.antlr.runtime.RecognitionException {
+        public String parse_ruleset(String krl) throws org.antlr.runtime.RecognitionException {
             try {
                 org.antlr.runtime.ANTLRStringStream input = new org.antlr.runtime.ANTLRStringStream(krl);
                 com.kynetx.RuleSetLexer lexer = new com.kynetx.RuleSetLexer(input);
@@ -100,11 +99,11 @@ use Inline (Java => <<'END',
                 com.kynetx.RuleSetParser parser = new com.kynetx.RuleSetParser(tokens);
                 parser.ruleset();
                 JSONObject js = new JSONObject(parser.rule_json);
-                System.err.println("Java Secret Sauce: "  + js.toString() + "\n");
+                //System.err.println("Java Secret Sauce: "  + js.toString() + "\n");
                 if (parser.parse_errors.size() > 0) {
                     StringBuffer sb = new StringBuffer();
-                    for (int ii = 0;ii< parser.parse_errors.size(); ii++) {
-                        sb.append(ii).append(":").append(parser.parse_errors.get(ii));
+                    for (int i = 0;i< parser.parse_errors.size(); i++) {
+                        sb.append(parser.parse_errors.get(i)).append("\n");
                     }
                     return sb.toString();
                 }
@@ -131,397 +130,13 @@ sub env {
     }
 }
 
-my $parser = new Kynetx::JParser::Ahandle();
 
-sub html {
-    my ($value) = @_;
-    $value =~ s/^<<\s*//;
-    $value =~ s/>>\s*$//;
-#    $value = remove_comments($value);
-#    $value =~ s/[\n\r]/  /sg;
-    return $value;
-}
-
-sub javascript {
-    my ($value) = @_;
-    $value =~ s/^<\|[ \t]*//;
-    $value =~ s/\|>\s*$//;
-#    $value = remove_comments($value);
-#    $value =~ s/[\n\r]/  /sg;
-    return $value;
-}
-
-sub string {
-    my ($value) = @_;
-    $value =~ s/^["']//;
-    $value =~ s/["']$//;
-    return $value;
-}
-
-
-# assumes an array of at least length three and with odd number of members
-sub build_expr_tree {
-  my ($exprs, $type) = @_;
-
-  return unless (int(@{ $exprs}) >= 3);
-  my $firstarg = shift @{ $exprs };
-  my $op = shift @{ $exprs };
-  my $secondarg;
-
-  if (defined $exprs->[1]) {
-    $secondarg = build_expr_tree($exprs, $type);
-  } else {
-    $secondarg = $exprs->[0];
-  }
-
-  return {'type' => $type,
-	  'op' => $op,
-	  'args' => [$firstarg, $secondarg]
-         };
+sub get_antlr_parser {
+    $PARSER = new Kynetx::JParser::Ahandle();
 
 }
 
-sub structure_operators {
-  my($obj, $operators) = @_;
-  if (int(@{$operators}) == 0) {
-    return $obj;
-  } else {
-    my $last = pop(@{$operators});
-    return {'type' => 'operator',
-	    'name' => $last->[0],
-	    'args' => $last->[1],
-	    'obj' => structure_operators($obj, $operators)
-	   }
 
-  }
-
-}
-
-# this removes KRL-style comments taking into account quotes
-my $comment_re = qr%
-       /\*         ##  Start of /* ... */ comment
-       [^*]*\*+    ##  Non-* followed by 1-or-more *'s
-       (
-         [^/*][^*]*\*+
-       )*          ##  0-or-more things which don't start with /
-                   ##    but do end with '*'
-       /           ##  End of /* ... */ comment
-     |
-        //[^\n]*    ## slash style comments
-     |         ##     OR  various things which aren't comments:
-
-       (
-         "           ##  Start of " ... " string
-         (
-           \\.           ##  Escaped char
-         |               ##    OR
-           [^"\\]        ##  Non "\
-         )*
-         "           ##  End of " ... " string
-        |
-         \#           ##  Start of # ... # regexp
-         (
-           \\.           ##  Escaped char
-         |               ##    OR
-           [^#\\]        ##  Non "\
-         )*
-         \#          ##  End
-        |         ##     OR  various things which aren't comments:
-          <<           ##  Start of << ... >> string
-          .*?
-          >>           ##  End of " ... " string
-
-       |         ##     OR
-        .           ##  Anything other char
-         [^/"#'<\\]*   ##  Chars which doesn't start a comment, string or escape
-       )
-     %xs;
-
-sub remove_comments {
-
-    my($ruleset) = @_;
-
-    $ruleset =~ s%$comment_re%defined $2 ? $2 : ""%gxse;
-    return $ruleset;
-
-}
-
-sub parse_ruleset {
-    my ($ruleset) = @_;
-
-    my $logger = get_logger();
-    $logger->trace("[parser::parse_ruleset] passed: ", sub {Dumper($ruleset)});
-
-    $ruleset = remove_comments($ruleset);
-
-    $logger->trace("[parser::parse_ruleset] after comments: ", sub {Dumper($ruleset)});
-
-#    print $ruleset; exit;
-
-    my $result = ($parser->ruleset($ruleset));
-    if (defined $result->{'error'}) {
-	$logger->error("Can't parse ruleset: $result->{'error'}");
-    } else {
-	$logger->debug("Parsed rules");
-    }
-#    $logger->debug("[parser:parse_rule] ", sub {Dumper($result)});
-
-    return $result;
-
-#    print Dumper($result);
-
-
-}
-
-# Helper function used in testing
-sub parse_expr {
-    my ($expr) = @_;
-
-    my $logger = get_logger();
-
-    $expr = remove_comments($expr);
-
-    # remove newlines
-#    $expr =~ s%\n%%g;
-
-
-    my $result = ($parser->expr($expr));
-    if (defined $result->{'error'}) {
-	$logger->error("Can't parse expression: $result->{'error'}");
-    } else {
-    $logger->debug("Parsed expression: ",sub {Dumper($expr)});
-    }
-
-    return $result;
-
-}
-
-# Helper function used in testing
-sub parse_decl {
-    my ($expr) = @_;
-
-    my $logger = get_logger();
-
-    $expr = remove_comments($expr);
-
-    # remove newlines
-#    $expr =~ s%\n%%g;
-
-    my $result = ($parser->decl($expr));
-    if (defined $result->{'error'}) {
-	$logger->error("Can't parse expression: $result->{'error'}");
-    } else {
-    $logger->debug("Parsed expression: ",sub {Dumper($expr)});
-    }
-
-    return $result;
-
-#    print Dumper($result);
-
-
-}
-
-# Helper function used in testing
-sub parse_pre {
-    my ($expr) = @_;
-
-    my $logger = get_logger();
-
-    $expr = remove_comments($expr);
-
-
-    my $result = ($parser->doer($expr));
-
-    return $result;
-}
-
-# # Helper function used in testing
-# sub parse_predexpr {
-#     my ($expr) = @_;
-
-#     my $logger = get_logger();
-
-#     $expr = remove_comments($expr);
-
-#     # remove newlines
-#     $expr =~ s%\n%%g;
-
-#     my $result = ($parser->predexpr($expr));
-#     if (defined $result->{'error'}) {
-# 	$logger->error("Can't parse expression: $result->{'error'}");
-#     } else {
-# 	$logger->debug("Parsed expression: ",sub {Dumper($expr)});
-#     }
-
-#     return $result;
-
-# #    print Dumper($result);
-
-
-# }
-
-
-sub parse_rule {
-    my ($rule) = @_;
-
-    my $logger = get_logger();
-
-    $rule = remove_comments($rule);
-
-
-#    print $rule; exit;
-
-    # remove newlines
-#    $rule =~ s%\n%%g;
-
-
-    my $result = ($parser->rule_top($rule));
-
-    if (ref $result eq 'HASH' && $result->{'error'}) {
-	$logger->debug("Can't parse rule: $result->{'error'}");
-    } else {
-	$logger->debug("Parsed rules");
-    }
-
- #   $logger->debug("Rule parsed:", sub {Dumper($result)});
-
-    return $result;
-
-
-
-}
-
-
-sub parse_action {
-    my $rule = shift;
-
-    my $logger = get_logger();
-
-    $rule = remove_comments($rule);
-
-    # remove newlines
-#    $rule =~ s%\n%%g;
-
-    my $result = $parser->action($rule);
-    if (defined $result->{'error'}) {
-	$logger->error("Can't parse actions: $result->{'error'}");
-    } else {
-	$logger->debug("Parsed rules");
-    }
-
-    return $result;
-
-}
-
-sub parse_callbacks {
-    my $rule = shift;
-
-    my $logger = get_logger();
-
-    $rule = remove_comments($rule);
-
-    # remove newlines
- #   $rule =~ s%\n%%g;
-
-    my $result = $parser->callbacks($rule);
-    if (defined $result->{'error'}) {
-	$logger->error("Can't parse actions: $result->{'error'}");
-    } else {
-	$logger->debug("Parsed rules");
-    }
-
-    return $result;
-
-}
-
-sub parse_post {
-    my $rule = shift;
-
-    my $logger = get_logger();
-
-    $rule = remove_comments($rule);
-
-    # remove newlines
-#    $rule =~ s%\n%%g;
-
-    my $result = $parser->post_block($rule);
-    if (defined $result->{'error'}) {
-	$logger->error("Can't parse actions: $result->{'error'}");
-    } else {
-	$logger->debug("Parsed rules");
-    }
-
-    return $result;
-
-}
-
-sub parse_global_decls {
-    my $element = shift;
-
-    my $logger = get_logger();
-
-    $element = remove_comments($element);
-
-    my $result = $parser->global_decls_top($element);
-
-#    $logger->debug(Dumper($result));
-    if (ref $result eq 'HASH' && $result->{'error'}) {
-	   $logger->debug("[Parser] Can't parse global declarations: $result->{'error'}");
-    } else {
-	   #$logger->debug("[Parser] Parsed global decls");#,
-    }
-
-
-    return $result;
-
-}
-
-sub parse_dispatch {
-    my $element = shift;
-
-    my $logger = get_logger();
-
-    $element = remove_comments($element);
-
-    my $result = $parser->dispatch_block_top($element);
-
-    if (ref $result eq 'HASH' && $result->{'error'}) {
-	$logger->debug("Can't parse dispatch declaration: $result->{'error'}");
-    } else {
-	$logger->debug("Parsed dispatch declaration");
-    }
-
-    return $result;
-
-}
-
-
-sub parse_meta {
-    my $element = shift;
-
-    my $logger = get_logger();
-
-    $element = remove_comments($element);
-
-    my $result = $parser->meta_block_top($element);
-
-    if (ref $result eq 'HASH' && $result->{'error'}) {
-	$logger->debug("Can't parse meta information: $result->{'error'}");
-    } else {
-	$logger->debug("Parsed meta information");
-    }
-
-
-    return $result;
-
-}
-
-
-sub mk_expr_node {
-    my($type, $val) = @_;
-    return {'type' => $type,
-	    'val' => $val};
-}
 
 
 1;

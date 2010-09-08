@@ -59,121 +59,167 @@ my @krl_files = @ARGV ? @ARGV : <data/*.krl>;
 # testing some...
 # my @krl_files = <new/ineq[0-0].krl>;
 #my @krl_files = <new/*.krl>;
+my $debug = 1;
+
+my @skips = qw(
+    data/choose2.krl
+    data/debug0.krl
+    data/emit0.krl
+    data/emit4.krl
+    data/events0.krl
+    data/events1.krl
+    data/events2.krl
+    data/events3.krl
+    data/events4.krl
+    data/events5.krl
+    data/events6.krl
+    data/events7.krl
+    data/events8.krl
+    data/events9.krl
+    data/exprs0.krl
+    data/hash0.krl
+    data/ineq0.krl
+    data/log0.krl
+    data/log1.krl
+    data/log2.krl
+    data/mail0.krl
+    data/mail1.krl
+    data/mail2.krl
+    data/meta0.krl
+    data/meta10.krl
+    data/meta11.krl
+    data/meta12.krl
+    data/meta13.krl
+    data/meta3.krl
+    data/meta4.krl
+    data/meta5.krl
+    data/meta6.krl
+    data/meta7.krl
+    data/meta8.krl
+    data/meta9.krl
+);
+
+my $skip_list;
+map {$skip_list->{$_} = 1} @skips;
+
+$logger->debug("Skips: ", sub {Dumper($skip_list)});
 
 plan tests => $#krl_files+1;
-
-#Kynetx::JParser::env();
-
-my $p = << "_KRL_";
-pre {
-  a = 10;
-  b = 11;
-  c = [4,5,6];
-  i = [7,3,5,2,1,6];
-  d = [];
-  e = "this";
-  f = [7,4,3,5,2,1,6];
-  g = 5;
-  h = [1,2,1,3,4,3,5,4,6,5];
-  foo = "I like cheese";
-  my_str = "This is a string";
-  split_str = "A;B;C";
-  my_url = "http://www.amazon.com/gp/products/123456789/";
-  in_str = <<
-  th[colspan="2"]
->>;
-  my_jstr = <<
-    {"www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]}
->>;
-  bad_jstr = <<
-    "www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]}
->>;
-  a_s = ['apple','pear','orange','tomato'];
-  b_s = ['string bean','corn','carrot','tomato','spinach'];
-  c_s = ['wheat','barley','corn','rice'];
-  d_s = ['','pear','corn'];
-  e_s = '';
-  f_s = ['corn','tomato'];
-  g_s = ['corn','tomato','tomato','tomato','sprouts','lettuce','sprouts'];
-  html_arr = [q_html,r_html];
-  meta_str = <<td[style="background: #ddf;"]>>;
-  mail_str = <<
-  Dear Scott,
-
-  We have placed your MRI images in your Personal Data Store. Based on the
-  results we recommend that you select an orthopedic surgeon and set an
-  appointment for a consultation. Please call our office with any questions.
-  Next steps:
-      * Select an orthopedic surgeon
-      * Set an appointment for a consultation
-
-
-
-  Best Regards,
-
-  The office of Dr. William Chan
-
-  >>;
-  mail2_str = << Dear Scott,\r\n\r\nWe have placed your MRI images in your Personal Data Store. Based on the \r\nresults we recommend that you select an orthopedic surgeon and set an \r\nappointment for a consultation. Please call our office with any questions.\r\n\r\nNext steps:\r\n\r\n    * Select an orthopedic surgeon\r\n    * Set an appointment for a consultation\r\n\r\n\r\nBest Regards,\r\n\r\nThe office of Dr. William Chan\r\n>>;
-  a_h = { "colors of the wind" : "many","pi as array" : [3,1,4,1,5,6,9]};
-  b_h = {"mKey" : "mValue"};
-  c_h = [{"hKey" : "hValue"}];
-  d_h = [{"hKey" : "hValue"},{"mKey" : "mValue"}];
-  e_h = [{"hKey" : "hValue"},{"mKey" : "mValue"},"Thing"];
-  f_h = {"hKey" : {"innerKey" : "innerVal"}};
-  g_h = {"hKey" : {"innerKey" : "REPLACED"}};
-  i_h = {"hKey" : {"innerKey" : "innerVal"},"mKey" : "mValue"};
-}
-
-_KRL_
-
-my $rs =<<END;
-ruleset 10 {
-    rule test0 is active {
-        select using "/test/"
-        replace("test","test");
+my $jparser = new Kynetx::JParser::Antlr_();
+foreach my $f (@krl_files) {
+    my ($fl,$krl_text) = getkrl($f);
+    if ($debug) {
+        diag $f;
+    }
+    if ($skip_list->{$f}) {
+        diag "Skipping $f";
+        next;
+    }
+    my $ptree = $jparser->parse_ruleset($krl_text);
+    my $ast = Kynetx::Json::jsonToAst_w($ptree);
+    my $o_ast = Kynetx::Parser::parse_ruleset($krl_text);
+    trim_line_numbers($o_ast);
+    my $result = cmp_deeply($o_ast,$ast,$fl);
+    if (! $result) {
+        $logger->debug("Antler AST: ", sub {Dumper($ast)});
+        $logger->debug("Old AST: ", sub {Dumper($o_ast)});
+        die ($f);
     }
 }
-END
 
-my $rs1 = <<END;
-ruleset 10 {
-    rule test0 is active {
-        select using "/test/(.*)/" setting(name)
-        pre {
-            tc = weather:tomorrow_cond_code();
-        city = geoip:city();
+
+
+# Remove the line numbering tags from the old parser
+sub trim_line_numbers{
+    my ($ast) = @_;
+    delete $ast->{'dispatch_start_col'};
+    delete $ast->{'dispatch_start_line'};
+    delete $ast->{'global_start_col'};
+    delete $ast->{'global_start_line'};
+    delete $ast->{'meta_start_col'};
+    delete $ast->{'meta_start_line'};
+
+    # Global string cheat
+    foreach my $global (@{$ast->{'global'}}) {
+        if ($global->{'type'} eq "css") {
+            $global->{'content'} = "\n" . $global->{'content'};
+        } elsif ($global->{'emit'}) {
+            #$global->{'emit'} = "\n" .$global->{'emit'};
+        }
     }
-        if (time:nighttime() && location:outside_state("UT"))
-        then
-    alert("hello");
+    if ($ast->{'meta'}) {
+        delete $ast->{'meta'}->{'meta_start_line'};
+        delete $ast->{'meta'}->{'meta_start_col'};
+        if ($ast->{'meta'}->{'description'}) {
+            $ast->{'meta'}->{'description'} = "\n".$ast->{'meta'}->{'description'};
+        }
+    }
+
+    if ($ast->{'dispatch'}) {
+        foreach my $dispatch (@{$ast->{'dispatch'}}) {
+            delete $dispatch->{'ruleset_id'} unless ($dispatch->{'ruleset_id'});
+        }
+    }
+
+    # Clean the individual rules
+    foreach my $rule (@{$ast->{'rules'}}) {
+        delete $rule->{'start_col'};
+        delete $rule->{'start_line'};
+        delete $rule->{'post'} unless (defined $rule->{'post'});
+
+        # Clean the actions
+        foreach my $action (@{$rule->{'actions'}}) {
+            delete $action->{'label'} unless (defined $action->{'label'});
+            delete $action->{'action'}->{'vars'} unless (defined $action->{'action'}->{'vars'});
+            delete $action->{'action'} unless (keys %{$action->{'action'}});
+            if ($action->{'emit'}) {
+                $action->{'emit'} = "\n" . $action->{'emit'};
+            }
+        }
+
+        # Trim undef callbacks
+        delete $rule->{'callbacks'}->{'success'} unless (defined $rule->{'callbacks'}->{'success'});
+        delete $rule->{'callbacks'}->{'failure'} unless (defined $rule->{'callbacks'}->{'failure'});
+
+        #  Modify callback block for empties
+        $rule->{'callbacks'} = undef unless (keys %{$rule->{'callbacks'}});
+
+        #  Modify pre block for empties
+        foreach my $expr (@{$rule->{'pre'}}) {
+            if ($expr->{"type"} eq "here_doc") {
+                my $rhs = $expr->{"rhs"};
+                $expr->{"rhs"} = "\n" . $rhs;
+            }
+        }
+        delete $rule->{'pre'} unless ($rule->{'pre'});
+
+        # Clean the post block
+        my $empty_post = 0;
+        if (my $post = $rule->{'post'}) {
+            foreach my $pkey (keys %{$post}) {
+                my $e_alt = 0;
+                if ($pkey eq "alt") {
+                    my $e_alt = 1;
+                    $empty_post = 1;
+                    foreach my $alt (@{$post->{$pkey}}) {
+                        $empty_post = 0;
+                        $e_alt = 0;
+                        delete $alt->{'test'} unless ($alt->{'test'});
+                    }
+                    delete $post->{'alt'} unless (! $e_alt);
+                } elsif ($pkey eq "cons") {
+                    foreach my $cons (@{$post->{'cons'}}) {
+                        delete $cons->{'test'} unless ($cons->{'cons'});
+                    }
+                } else {
+                    $empty_post = 1;
+                }
+            }
+        }
 
     }
+
 }
-END
-
-my $meta = <<END;
-    meta {
-      name "Ruleset for Orphans"
-      description <<
-Ruleset for testing something or other.
->>
-
-      use module a61x59
-      use module a61x60
-
-    }
-
-END
-
-my $jparser = new Kynetx::JParser::Ahandle();
-my $ptree = $jparser->doer($meta);
-my $ast = Kynetx::Json::jsonToAst_w($ptree);
-my $o_ast = Kynetx::Parser::parse_ruleset($meta);
-cmp_deeply($o_ast,$ast,"Compare rules");
-$logger->debug("Perl AST: ", sub {Dumper($ast)});
-$logger->debug("Old AST: ", sub {Dumper($o_ast)});
-ok(1);
 
 1;
 
