@@ -72,7 +72,7 @@ BEGIN {
         next unless $fname =~ m@\.jar$@;
         push @jars,$libdir."/".$fname;
     }
-    #push @jars,$pclasses;
+    push @jars,$pclasses;
     $ENV{CLASSPATH} = join (":",@jars);
     print "Classpath: ", $ENV{CLASSPATH},"\n";
 }

@@ -62,41 +62,6 @@ my @krl_files = @ARGV ? @ARGV : <data/*.krl>;
 my $debug = 1;
 
 my @skips = qw(
-    data/choose2.krl
-    data/debug0.krl
-    data/emit0.krl
-    data/emit4.krl
-    data/events0.krl
-    data/events1.krl
-    data/events2.krl
-    data/events3.krl
-    data/events4.krl
-    data/events5.krl
-    data/events6.krl
-    data/events7.krl
-    data/events8.krl
-    data/events9.krl
-    data/exprs0.krl
-    data/hash0.krl
-    data/ineq0.krl
-    data/log0.krl
-    data/log1.krl
-    data/log2.krl
-    data/mail0.krl
-    data/mail1.krl
-    data/mail2.krl
-    data/meta0.krl
-    data/meta10.krl
-    data/meta11.krl
-    data/meta12.krl
-    data/meta13.krl
-    data/meta3.krl
-    data/meta4.krl
-    data/meta5.krl
-    data/meta6.krl
-    data/meta7.krl
-    data/meta8.krl
-    data/meta9.krl
 );
 
 my $skip_list;
@@ -169,9 +134,9 @@ sub trim_line_numbers{
 
         # Clean the actions
         foreach my $action (@{$rule->{'actions'}}) {
-            delete $action->{'label'} unless (defined $action->{'label'});
-            delete $action->{'action'}->{'vars'} unless (defined $action->{'action'}->{'vars'});
-            delete $action->{'action'} unless (keys %{$action->{'action'}});
+            #delete $action->{'label'} unless (defined $action->{'label'});
+            #delete $action->{'action'}->{'vars'} unless (defined $action->{'action'}->{'vars'});
+            #delete $action->{'action'} unless (keys %{$action->{'action'}});
             if ($action->{'emit'}) {
                 $action->{'emit'} = "\n" . $action->{'emit'};
             }
@@ -204,12 +169,12 @@ sub trim_line_numbers{
                     foreach my $alt (@{$post->{$pkey}}) {
                         $empty_post = 0;
                         $e_alt = 0;
-                        delete $alt->{'test'} unless ($alt->{'test'});
+                        #delete $alt->{'test'} unless ($alt->{'test'});
                     }
                     delete $post->{'alt'} unless (! $e_alt);
                 } elsif ($pkey eq "cons") {
                     foreach my $cons (@{$post->{'cons'}}) {
-                        delete $cons->{'test'} unless ($cons->{'cons'});
+                        #delete $cons->{'test'} unless ($cons->{'cons'});
                     }
                 } else {
                     $empty_post = 1;
