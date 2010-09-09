@@ -1139,18 +1139,18 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'foobar'.match(/foo.*/)",
+		  "'foobar'.match(re/foo.*/)",
 		  mk_expr_node('num',    1),
 		  0
     );
 
 $krl_src = <<_KRL_;
-"foobar" like /foo.*/
+"foobar" like re/foo.*/
 _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'foobar'.match(/foo.*/)",
+		  "'foobar'.match(re/foo.*/)",
 		  mk_expr_node('num',    1),
 		  0
     );
@@ -1161,18 +1161,18 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'bar'.match(/.*bar/)",
+		  "'bar'.match(re/.*bar/)",
 		  mk_expr_node('num',    1),
 		  0
     );
 
 $krl_src = <<_KRL_;
-"bar" like /.*bar/
+"bar" like re/.*bar/
 _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'bar'.match(/.*bar/)",
+		  "'bar'.match(re/.*bar/)",
 		  mk_expr_node('num',    1),
 		  0
     );
@@ -1183,7 +1183,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'foobar'.match(/^bar/)",
+		  "'foobar'.match(re/^bar/)",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1194,7 +1194,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'bar'.match(/foo.*/)",
+		  "'bar'.match(re/foo.*/)",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1205,7 +1205,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'bar'.match(/foo.*/)",
+		  "'bar'.match(re/foo.*/)",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1217,29 +1217,29 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'Bar'.match(/bar/)",
+		  "'Bar'.match(re/bar/)",
 		  mk_expr_node('num',    0),
 		  0
     );
 
 $krl_src = <<_KRL_;
-"Bar" like /bar/
+"Bar" like re/bar/
 _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'Bar'.match(/bar/)",
+		  "'Bar'.match(re/bar/)",
 		  mk_expr_node('num',    0),
 		  0
     );
 
 $krl_src = <<_KRL_;
-"Bar" like /bar/i
+"Bar" like re/bar/i
 _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'Bar'.match(/bar/i)",
+		  "'Bar'.match(re/bar/i)",
 		  mk_expr_node('num',    1),
 		  0
     );
@@ -2254,7 +2254,7 @@ add_expr_testcase(
 
 
 $krl_src = <<_KRL_;
-d = (history 2 ent:my_trail).replace(/foo.html/,"hello.html") + ''
+d = (history 2 ent:my_trail).replace(re/foo.html/,"hello.html") + ''
 _KRL_
 add_expr_testcase(
     $krl_src,
@@ -2317,7 +2317,7 @@ add_expr_testcase(
 
 
 $re1 = extend_rule_env(['c','d'],
-		       ['Hello','#{c} world!'],
+		       ['Hello',"\n#{c} world!"],
 		       $rule_env);
 $krl_src = <<_KRL_;
 pre {
@@ -2340,7 +2340,8 @@ add_expr_testcase(
     0);
 
 $re1 = extend_rule_env(['a','b','multiline'],
-            ['1','3','#{a}
+            ['1','3','
+#{a}
 #{b}
 '],
             $rule_env);

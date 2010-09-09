@@ -139,17 +139,16 @@ foreach my $case ( @{$testcases} ) {
     #  diag $test_count;
     $case->{'diag'} = 1;
 
-
     my ( $e, $val, $js, $lhs ) = '';
 
-    if ( $case->{'type'} eq 'expr' ) {
-        $logger->debug( "Trying expression: ", sub { Dumper( $case->{'krl'} ) } );
+    if ($case->{'type'} eq 'pre') {
 
-        $val = Kynetx::Parser::parse_expr( $case->{'krl'} );
-
-        diag( "AST = ", Dumper($val) ) if $case->{'diag'};
-
-        $e = eval_expr( $val, $rule_env, $rule_name, $my_req_info, $session );
+    $val = Kynetx::Parser::parse_pre($case->{'krl'});
+    ($js,$e) = Kynetx::Expressions::eval_prelude($my_req_info,
+                         $rule_env,
+                         $rule_name,
+                         $session,
+                         $val) ;
 
         diag( "Expr = ", Dumper($e) ) if $case->{'diag'};
 

@@ -34,6 +34,7 @@ use warnings;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+use lib qw(/web/lib/perl);
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -232,15 +233,15 @@ sub parse_decl {
 
     # remove newlines
 #    $expr =~ s%\n%%g;
-
-    my $result = ($parser->decl($expr));
+    my $json = $parser->decl($expr);
+    my $result = Kynetx::Json::jsonToAst_w($json);
     if (defined $result->{'error'}) {
 	$logger->error("Can't parse expression: $result->{'error'}");
     } else {
     $logger->debug("Parsed expression: ",sub {Dumper($expr)});
     }
 
-    return $result;
+    return $result->{'result'};
 
 #    print Dumper($result);
 
@@ -258,14 +259,15 @@ sub parse_pre {
     # remove newlines
 #    $expr =~ s%\n%%g;
 
-    my $result = ($parser->pre_block($expr));
-    # if (defined $result->{'error'}) {
-    # 	$logger->error("Can't parse expression: $result->{'error'}");
-    # } else {
-    # 	$logger->debug("Parsed expression");
-    # }
+    my $json = $parser->pre_block($expr);
+    my $result = Kynetx::Json::jsonToAst_w($json);
+    if (defined $result->{'error'}) {
+        $logger->error("Can't parse pre: $result->{'error'}");
+    } else {
+        $logger->debug("Parsed pre");
+    }
 
-    return $result;
+    return $result->{'result'};
 
 #    print Dumper($result);
 

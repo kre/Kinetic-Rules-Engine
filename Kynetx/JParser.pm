@@ -143,7 +143,10 @@ use Inline (Java => <<'END',
                 com.kynetx.RuleSetParser parser = new com.kynetx.RuleSetParser(tokens);
                 ArrayList block_array = new ArrayList();
                 parser.decl(block_array);
-                JSONObject js = new JSONObject(block_array);
+                HashMap map = new HashMap();
+                map.put("result", block_array.toArray()[0]);
+                JSONObject js = new JSONObject(map);
+                System.err.println("Java Secret Sauce: "  + js.toString() + "\n");
                 if (parser.parse_errors.size() > 0) {
                     StringBuffer sb = new StringBuffer();
                     for (int i = 0;i< parser.parse_errors.size(); i++) {
@@ -158,6 +161,31 @@ use Inline (Java => <<'END',
             }
         }
 
+        public String pre_block(String krl) throws org.antlr.runtime.RecognitionException {
+            try {
+                org.antlr.runtime.ANTLRStringStream input = new org.antlr.runtime.ANTLRStringStream(krl);
+                com.kynetx.RuleSetLexer lexer = new com.kynetx.RuleSetLexer(input);
+                CommonTokenStream tokens = new CommonTokenStream(lexer);
+                com.kynetx.RuleSetParser parser = new com.kynetx.RuleSetParser(tokens);
+                com.kynetx.RuleSetParser.pre_block_return result = parser.pre_block();
+                HashMap map = new HashMap();
+                map.put("result",result.result);
+                JSONObject js = new JSONObject(map);
+                System.err.println("Java Secret Sauce: "  + js.toString() + "\n");
+                if (parser.parse_errors.size() > 0) {
+                    StringBuffer sb = new StringBuffer();
+                    for (int i = 0;i< parser.parse_errors.size(); i++) {
+                        sb.append(parser.parse_errors.get(i)).append("\n");
+                    }
+                    System.err.println("Parse error: " + sb.toString());
+                    return sb.toString();
+                }
+                return js.toString();
+            } catch(Exception e) {
+                System.err.println("Exception Error: " + e.getMessage());
+                return (e.getMessage());
+            }
+        }
 
 
     }
