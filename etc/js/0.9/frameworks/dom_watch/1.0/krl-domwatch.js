@@ -23,6 +23,7 @@ KOBJ.watchDOM = function(selector, callBackFunc, time, context) {
         if($KOBJ(selector + " :first", context).length == 0)
         {
             KOBJ.log("DOM Watcher selector not found NOT enabling " + selector );
+            setTimeout(function() {KOBJ.watchDOM(selector,callBackFunc,time,context);},1000);
             return;
         }
         $KOBJ(selector + " :first", context).addClass("KOBJ_AjaxWatcher");
