@@ -73,6 +73,8 @@ _KRL_
 
 my $krl = Kynetx::Parser::parse_global_decls($krl_src);
 
+$logger->debug("global dec",sub {Dumper($krl)});
+
 
 my $init_rule_env = Kynetx::Test::gen_rule_env(
    {'datasource:'.$krl->[0]->{'name'} => $krl->[0],
@@ -365,7 +367,7 @@ check_not_free("v", "q = false", "bool");
 check_not_free("v", "q = 1", "num");
 check_not_free("v", "q = 10 + 20", "prim");
 check_not_free("v", 'q = "purple"', "string");
-check_not_free("v", 'q = /x*/', "regexp");
+check_not_free("v", 'q = re/x*/', "regexp");
 
 check_free("v", "q = v + x", "prim");
 check_free("v", "q = x + v", "prim");

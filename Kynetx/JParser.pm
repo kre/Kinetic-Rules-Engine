@@ -187,6 +187,32 @@ use Inline (Java => <<'END',
             }
         }
 
+        public String global(String krl) throws org.antlr.runtime.RecognitionException {
+            try {
+                System.err.println("Global passed: " + krl);
+                org.antlr.runtime.ANTLRStringStream input = new org.antlr.runtime.ANTLRStringStream(krl);
+                com.kynetx.RuleSetLexer lexer = new com.kynetx.RuleSetLexer(input);
+                CommonTokenStream tokens = new CommonTokenStream(lexer);
+                com.kynetx.RuleSetParser parser = new com.kynetx.RuleSetParser(tokens);
+                parser.ruleset();
+                HashMap map = new HashMap();
+                map.put("result", parser.rule_json.get("global"));
+                JSONObject js = new JSONObject(map);
+                //System.err.println("Java Secret Sauce: "  + parser.rule_json.get("global").toString() + "\n");
+                System.err.println("Java Secret Sauce: "  + js.toString() + "\n");
+                if (parser.parse_errors.size() > 0) {
+                    StringBuffer sb = new StringBuffer();
+                    for (int i = 0;i< parser.parse_errors.size(); i++) {
+                        sb.append(parser.parse_errors.get(i)).append("\n");
+                    }
+                    return sb.toString();
+                }
+                return js.toString();
+            } catch(Exception e) {
+                System.out.println("Error: " + e.getMessage());
+                return (e.getMessage());
+            }
+        }
 
     }
 END

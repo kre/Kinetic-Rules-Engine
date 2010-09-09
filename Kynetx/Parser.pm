@@ -401,7 +401,9 @@ sub parse_global_decls {
 
     $element = remove_comments($element);
 
-    my $json = $parser->decl($element);
+    my $encap = _encapsulate($element);
+
+    my $json = $parser->global($encap);
     $logger->debug(Dumper($json));
     my $result = Kynetx::Json::jsonToAst_w($json);
 
@@ -413,7 +415,7 @@ sub parse_global_decls {
     }
 
 
-    return $result;
+    return $result->{"result"};
 
 }
 
@@ -462,6 +464,13 @@ sub mk_expr_node {
     my($type, $val) = @_;
     return {'type' => $type,
 	    'val' => $val};
+}
+
+sub _encapsulate {
+    my $element = shift;
+    my $logger = get_logger();
+    my $new_string = "ruleset dummy { " . $element . " } ";
+    return $new_string;
 }
 
 

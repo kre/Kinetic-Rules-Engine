@@ -163,7 +163,7 @@ add_expr_testcase(
     mk_expr_node('num', 5));
 
 $krl_src = <<_KRL_;
--5
+ -5
 _KRL_
 add_expr_testcase(
     $krl_src,
@@ -2158,6 +2158,36 @@ add_expr_testcase(
     '3',
     0);
 
+$krl_src = <<_KRL_;
+c=3;
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'decl',
+    'var c = 3;',
+    '3',
+    0);
+
+
+$krl_src = <<_KRL_;
+c = -5;
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'decl',
+    'var c = -5;',
+    '-5',
+    0);
+
+$krl_src = <<_KRL_;
+c =-5;
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'decl',
+    'var c = -5;',
+    '-5',
+    0);
 $krl_src = <<_KRL_;
 c = 3 + a;
 _KRL_
