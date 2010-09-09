@@ -1445,7 +1445,7 @@ factor returns[Object result] options { backtrack = true; }
 	: iv=INT { 
 		HashMap tmp = new HashMap();
 		tmp.put("type","num");
-		tmp.put("val",Long.parseLong($iv.text));
+		tmp.put("val",Long.parseLong($iv.text.trim()));
 		$result = tmp;
 	}
       | sv= STRING  {  
@@ -1457,7 +1457,7 @@ factor returns[Object result] options { backtrack = true; }
       | fv= FLOAT  { 
       		HashMap tmp = new HashMap();
 		tmp.put("type","num");
-		tmp.put("val",Float.parseFloat($fv.text));
+		tmp.put("val",Float.parseFloat($fv.text.trim()));
 		$result = tmp;
 	}    
       | bv= (TRUE| FALSE)  { 
@@ -2070,12 +2070,12 @@ VAR  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*
    ;
 
 
- INT :	'-'? '0'..'9'+
+ INT :	' -'? '0'..'9'+
     ; 
 
  FLOAT
-    :   '-'? ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
-    |   '-'? '.' ('0'..'9')* EXPONENT?
+    :   ' -'? ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
+    |   ' -'? '.' ('0'..'9')* EXPONENT?
  
     ; 
 

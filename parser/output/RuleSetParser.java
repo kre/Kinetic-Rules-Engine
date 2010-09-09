@@ -1,4 +1,4 @@
-// $ANTLR 3.2 Sep 23, 2009 12:02:23 RuleSet.g 2010-09-08 16:59:34
+// $ANTLR 3.2 Sep 23, 2009 12:02:23 RuleSet.g 2010-09-09 11:03:46
 
 	package com.kynetx;
 	import java.util.HashMap;
@@ -9015,7 +9015,7 @@ public class RuleSetParser extends Parser {
                        
                       		HashMap tmp = new HashMap();
                       		tmp.put("type","num");
-                      		tmp.put("val",Long.parseLong((iv!=null?iv.getText():null)));
+                      		tmp.put("val",Long.parseLong((iv!=null?iv.getText():null).trim()));
                       		retval.result = tmp;
                       	
                     }
@@ -9057,7 +9057,7 @@ public class RuleSetParser extends Parser {
                        
                             		HashMap tmp = new HashMap();
                       		tmp.put("type","num");
-                      		tmp.put("val",Float.parseFloat((fv!=null?fv.getText():null)));
+                      		tmp.put("val",Float.parseFloat((fv!=null?fv.getText():null).trim()));
                       		retval.result = tmp;
                       	
                     }
