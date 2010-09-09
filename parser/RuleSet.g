@@ -197,6 +197,51 @@ options {
 //		puts("End " ) ;
 		return result;
 	}
+/*
+	    public HashMap build_exp_result(ArrayList operators)
+    	{
+    //		puts("Start " + operators.size() ) ;
+    		HashMap result = new HashMap();
+    		ArrayList args_array = new ArrayList();
+    		result.put("args",args_array);
+    		for(int i = 0;i < operators.size(); i++)
+    		{
+    //			puts("at " + i);
+    			HashMap value = (HashMap)operators.get(i);
+
+    			 // Are we at the end?
+    			if(i == operators.size() - 1 ||  i == 0)
+    			{
+    				if(i == 0)
+    				{
+    //					puts("O Opt " + value.get("op") + " - " + i);
+    					result.put("op",value.get("op"));
+    					result.put("type",value.get("type"));
+    				}
+
+    				args_array.add(value.get("result"));
+    			}
+    			else
+    			{
+    				HashMap tmp = new HashMap();
+    				ArrayList new_args_array = new ArrayList();
+    				// We really need the next operator for the ast
+    				HashMap value2 = (HashMap)operators.get(i+1);
+
+    				tmp.put("op",value2.get("op"));
+    				tmp.put("type",value2.get("type"));
+    				tmp.put("args",new_args_array);
+
+    				new_args_array.add(value.get("result"));
+
+    				args_array.add(tmp);
+    				args_array = new_args_array;
+    			}
+    		}
+    //		puts("End " ) ;
+    		return result;
+    	}
+*/
 }
 
 		
@@ -1198,14 +1243,38 @@ equality_expr returns[Object result]
 			$result = $me1.result;
 	 }
 	;
-	 
+
+mult_expr returns[Object result]
+     @init {
+     	boolean found_op = false;
+     	ArrayList result = new ArrayList();
+     }
+     	: me1=unary_expr  (op=MULT_OP me2=unary_expr  {
+     		found_op = true;
+     		if(result.isEmpty())
+     		{
+     			 add_to_expression(result,"prim",$op.text,$me1.result);
+     			 add_to_expression(result,"prim",$op.text,$me2.result);
+     		}
+     		else
+     			 add_to_expression(result,"prim",$op.text,$me2.result);
+     	}
+     	)*  {
+     		if(found_op)
+     			$result = build_exp_result(result);
+     		else
+     			$result = $me1.result;
+      }
+     	;
+
+
 	 
 add_expr returns[Object result]
 @init {
 	boolean found_op = false;
 	ArrayList result = new ArrayList();
 }	 
-	: me1=unary_expr  (op=(ADD_OP|MULT_OP|REX) me2=unary_expr  {
+	: me1=mult_expr  (op=(ADD_OP|REX) me2=mult_expr  {
 		found_op = true;
 		if(result.isEmpty())
 		{
