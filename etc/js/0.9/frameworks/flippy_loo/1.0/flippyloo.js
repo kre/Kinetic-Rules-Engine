@@ -17,7 +17,7 @@ KOBJ.flippylooGetAppend = function(data) {
     if ($K('#fooBarWithCheez').length) {
         $K("#fooBarWithCheez").append(data);
     } else {
-        KOBJ.log("You missed something!");
+        KOBJ.itrace("You missed something!");
     }
 };
 
@@ -163,7 +163,7 @@ KOBJ.flippylooMain = function() {
         KOBJ.flippylooImplantScript();    
     }
     else {
-        KOBJ.log("Nothing executed.....are you following the path?");
+        KOBJ.itrace("Nothing executed.....are you following the path?");
     }
 };    
 

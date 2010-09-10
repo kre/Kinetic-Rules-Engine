@@ -294,6 +294,11 @@ must_be_one[String[\] what]
 rule
 @init{
 	 ArrayList rule_block_array = (ArrayList)rule_json.get("rules");
+           if(rule_block_array == null)
+          	 {
+          	    rule_block_array = new ArrayList();
+          	    rule_json.put("rules",rule_block_array);
+          	 }
 	 HashMap current_rule = new HashMap(); 
 	 HashMap actions_result = new HashMap();
 	 ArrayList fors = new ArrayList();
@@ -1048,6 +1053,11 @@ on_expr returns[Object result] : ON
 	global_block 
 @init {
 	 ArrayList global_block_array = (ArrayList)rule_json.get("global");
+	 if(global_block_array == null)
+	 {
+	    global_block_array = new ArrayList();
+	    rule_json.put("global",global_block_array);
+	 }
 	 boolean found_cache = false;
 }
 @after  {
@@ -1445,7 +1455,7 @@ factor returns[Object result] options { backtrack = true; }
 	: iv=INT { 
 		HashMap tmp = new HashMap();
 		tmp.put("type","num");
-		tmp.put("val",Long.parseLong($iv.text));
+		tmp.put("val",Long.parseLong($iv.text.trim()));
 		$result = tmp;
 	}
       | sv= STRING  {  
@@ -1457,7 +1467,7 @@ factor returns[Object result] options { backtrack = true; }
       | fv= FLOAT  { 
       		HashMap tmp = new HashMap();
 		tmp.put("type","num");
-		tmp.put("val",Float.parseFloat($fv.text));
+		tmp.put("val",Float.parseFloat($fv.text.trim()));
 		$result = tmp;
 	}    
       | bv= (TRUE| FALSE)  { 
@@ -1649,6 +1659,13 @@ emit_block  returns[String emit_value]
 meta_block 
 @init {
 	 HashMap meta_block_hash = (HashMap)rule_json.get("meta");
+
+	      if(meta_block_hash == null)
+     	 {
+     	    meta_block_hash = new HashMap();
+     	    rule_json.put("meta",meta_block_hash);
+     	 }
+
 	 ArrayList use_list = new ArrayList();
 	 HashMap keys_map = new HashMap();
 	 HashMap key_values = new HashMap();
@@ -1726,6 +1743,13 @@ meta_block
 dispatch_block
 @init {
 	 ArrayList dispatch_block_array = (ArrayList)rule_json.get("dispatch");
+
+	           if(dispatch_block_array == null)
+          	 {
+          	    dispatch_block_array = new ArrayList();
+          	    rule_json.put("dispatch",dispatch_block_array);
+          	 }
+
 }
 @after  {
 }	
@@ -2070,12 +2094,12 @@ VAR  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*
    ;
 
 
- INT :	'-'? '0'..'9'+
+ INT :	' -'? '0'..'9'+
     ; 
 
  FLOAT
-    :   '-'? ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
-    |   '-'? '.' ('0'..'9')* EXPONENT?
+    :   ' -'? ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
+    |   ' -'? '.' ('0'..'9')* EXPONENT?
  
     ; 
 

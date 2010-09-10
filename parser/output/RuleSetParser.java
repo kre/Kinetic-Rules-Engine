@@ -1,4 +1,4 @@
-// $ANTLR 3.2 Sep 23, 2009 12:02:23 RuleSet.g 2010-09-08 16:59:34
+// $ANTLR 3.2 Sep 23, 2009 12:02:23 RuleSet.g 2010-09-09 13:33:54
 
 	package com.kynetx;
 	import java.util.HashMap;
@@ -819,13 +819,18 @@ public class RuleSetParser extends Parser {
 
 
         	 ArrayList rule_block_array = (ArrayList)rule_json.get("rules");
+                   if(rule_block_array == null)
+                  	 {
+                  	    rule_block_array = new ArrayList();
+                  	    rule_json.put("rules",rule_block_array);
+                  	 }
         	 HashMap current_rule = new HashMap(); 
         	 HashMap actions_result = new HashMap();
         	 ArrayList fors = new ArrayList();
 
         try {
-            // RuleSet.g:301:3: ( must_be[\"rule\"] name= rule_name must_be[\"is\"] ait= must_be_one[sar(\"active\",\"inactive\",\"test\")] LEFT_CURL select= VAR (ptu= using | ptw= when ) (f= foreach )* (pb= pre_block )? ( SEMI )? (eb= emit_block )? ( SEMI )? ( action[actions_result] ( SEMI )? )* (cb= callbacks )? ( SEMI )? (postb= post_block )? ( SEMI )? RIGHT_CURL )
-            // RuleSet.g:301:6: must_be[\"rule\"] name= rule_name must_be[\"is\"] ait= must_be_one[sar(\"active\",\"inactive\",\"test\")] LEFT_CURL select= VAR (ptu= using | ptw= when ) (f= foreach )* (pb= pre_block )? ( SEMI )? (eb= emit_block )? ( SEMI )? ( action[actions_result] ( SEMI )? )* (cb= callbacks )? ( SEMI )? (postb= post_block )? ( SEMI )? RIGHT_CURL
+            // RuleSet.g:306:3: ( must_be[\"rule\"] name= rule_name must_be[\"is\"] ait= must_be_one[sar(\"active\",\"inactive\",\"test\")] LEFT_CURL select= VAR (ptu= using | ptw= when ) (f= foreach )* (pb= pre_block )? ( SEMI )? (eb= emit_block )? ( SEMI )? ( action[actions_result] ( SEMI )? )* (cb= callbacks )? ( SEMI )? (postb= post_block )? ( SEMI )? RIGHT_CURL )
+            // RuleSet.g:306:6: must_be[\"rule\"] name= rule_name must_be[\"is\"] ait= must_be_one[sar(\"active\",\"inactive\",\"test\")] LEFT_CURL select= VAR (ptu= using | ptw= when ) (f= foreach )* (pb= pre_block )? ( SEMI )? (eb= emit_block )? ( SEMI )? ( action[actions_result] ( SEMI )? )* (cb= callbacks )? ( SEMI )? (postb= post_block )? ( SEMI )? RIGHT_CURL
             {
             root_0 = (Object)adaptor.nil();
 
@@ -866,7 +871,7 @@ public class RuleSetParser extends Parser {
             if ( state.backtracking==0 ) {
                cn((select!=null?select.getText():null), sar("select"),input); 
             }
-            // RuleSet.g:307:60: (ptu= using | ptw= when )
+            // RuleSet.g:312:60: (ptu= using | ptw= when )
             int alt2=2;
             int LA2_0 = input.LA(1);
 
@@ -885,7 +890,7 @@ public class RuleSetParser extends Parser {
             }
             switch (alt2) {
                 case 1 :
-                    // RuleSet.g:307:61: ptu= using
+                    // RuleSet.g:312:61: ptu= using
                     {
                     pushFollow(FOLLOW_using_in_rule309);
                     ptu=using();
@@ -897,7 +902,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:307:71: ptw= when
+                    // RuleSet.g:312:71: ptw= when
                     {
                     pushFollow(FOLLOW_when_in_rule313);
                     ptw=when();
@@ -911,7 +916,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:307:81: (f= foreach )*
+            // RuleSet.g:312:81: (f= foreach )*
             loop3:
             do {
                 int alt3=2;
@@ -924,7 +929,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt3) {
             	case 1 :
-            	    // RuleSet.g:307:82: f= foreach
+            	    // RuleSet.g:312:82: f= foreach
             	    {
             	    pushFollow(FOLLOW_foreach_in_rule319);
             	    f=foreach();
@@ -944,7 +949,7 @@ public class RuleSetParser extends Parser {
                 }
             } while (true);
 
-            // RuleSet.g:308:8: (pb= pre_block )?
+            // RuleSet.g:313:8: (pb= pre_block )?
             int alt4=2;
             int LA4_0 = input.LA(1);
 
@@ -967,7 +972,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:308:20: ( SEMI )?
+            // RuleSet.g:313:20: ( SEMI )?
             int alt5=2;
             int LA5_0 = input.LA(1);
 
@@ -993,7 +998,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:308:28: (eb= emit_block )?
+            // RuleSet.g:313:28: (eb= emit_block )?
             int alt6=2;
             int LA6_0 = input.LA(1);
 
@@ -1045,7 +1050,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:308:41: ( SEMI )?
+            // RuleSet.g:313:41: ( SEMI )?
             int alt7=2;
             int LA7_0 = input.LA(1);
 
@@ -1071,7 +1076,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:308:47: ( action[actions_result] ( SEMI )? )*
+            // RuleSet.g:313:47: ( action[actions_result] ( SEMI )? )*
             loop9:
             do {
                 int alt9=2;
@@ -1093,7 +1098,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt9) {
             	case 1 :
-            	    // RuleSet.g:308:48: action[actions_result] ( SEMI )?
+            	    // RuleSet.g:313:48: action[actions_result] ( SEMI )?
             	    {
             	    pushFollow(FOLLOW_action_in_rule347);
             	    action17=action(actions_result);
@@ -1101,7 +1106,7 @@ public class RuleSetParser extends Parser {
             	    state._fsp--;
             	    if (state.failed) return retval;
             	    if ( state.backtracking==0 ) adaptor.addChild(root_0, action17.getTree());
-            	    // RuleSet.g:308:71: ( SEMI )?
+            	    // RuleSet.g:313:71: ( SEMI )?
             	    int alt8=2;
             	    int LA8_0 = input.LA(1);
 
@@ -1136,7 +1141,7 @@ public class RuleSetParser extends Parser {
                 }
             } while (true);
 
-            // RuleSet.g:308:81: (cb= callbacks )?
+            // RuleSet.g:313:81: (cb= callbacks )?
             int alt10=2;
             int LA10_0 = input.LA(1);
 
@@ -1159,7 +1164,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:308:93: ( SEMI )?
+            // RuleSet.g:313:93: ( SEMI )?
             int alt11=2;
             int LA11_0 = input.LA(1);
 
@@ -1185,7 +1190,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:308:104: (postb= post_block )?
+            // RuleSet.g:313:104: (postb= post_block )?
             int alt12=2;
             int LA12_0 = input.LA(1);
 
@@ -1208,7 +1213,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:308:117: ( SEMI )?
+            // RuleSet.g:313:117: ( SEMI )?
             int alt13=2;
             int LA13_0 = input.LA(1);
 
@@ -1314,7 +1319,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "post_block"
-    // RuleSet.g:361:1: post_block returns [HashMap result] : typ= must_be_one[sar(\"fired\",\"always\",\"notfired\")] LEFT_CURL p1= post_statement ( SEMI p2= post_statement )* ( SEMI )? RIGHT_CURL (alt= post_alternate )? ;
+    // RuleSet.g:366:1: post_block returns [HashMap result] : typ= must_be_one[sar(\"fired\",\"always\",\"notfired\")] LEFT_CURL p1= post_statement ( SEMI p2= post_statement )* ( SEMI )? RIGHT_CURL (alt= post_alternate )? ;
     public final RuleSetParser.post_block_return post_block() throws RecognitionException {
         RuleSetParser.post_block_return retval = new RuleSetParser.post_block_return();
         retval.start = input.LT(1);
@@ -1343,8 +1348,8 @@ public class RuleSetParser extends Parser {
         	ArrayList temp_list = new ArrayList();
 
         try {
-            // RuleSet.g:365:2: (typ= must_be_one[sar(\"fired\",\"always\",\"notfired\")] LEFT_CURL p1= post_statement ( SEMI p2= post_statement )* ( SEMI )? RIGHT_CURL (alt= post_alternate )? )
-            // RuleSet.g:366:2: typ= must_be_one[sar(\"fired\",\"always\",\"notfired\")] LEFT_CURL p1= post_statement ( SEMI p2= post_statement )* ( SEMI )? RIGHT_CURL (alt= post_alternate )?
+            // RuleSet.g:370:2: (typ= must_be_one[sar(\"fired\",\"always\",\"notfired\")] LEFT_CURL p1= post_statement ( SEMI p2= post_statement )* ( SEMI )? RIGHT_CURL (alt= post_alternate )? )
+            // RuleSet.g:371:2: typ= must_be_one[sar(\"fired\",\"always\",\"notfired\")] LEFT_CURL p1= post_statement ( SEMI p2= post_statement )* ( SEMI )? RIGHT_CURL (alt= post_alternate )?
             {
             root_0 = (Object)adaptor.nil();
 
@@ -1368,7 +1373,7 @@ public class RuleSetParser extends Parser {
             if ( state.backtracking==0 ) {
                temp_list.add((p1!=null?p1.result:null));
             }
-            // RuleSet.g:367:51: ( SEMI p2= post_statement )*
+            // RuleSet.g:372:51: ( SEMI p2= post_statement )*
             loop14:
             do {
                 int alt14=2;
@@ -1387,7 +1392,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt14) {
             	case 1 :
-            	    // RuleSet.g:367:52: SEMI p2= post_statement
+            	    // RuleSet.g:372:52: SEMI p2= post_statement
             	    {
             	    SEMI23=(Token)match(input,SEMI,FOLLOW_SEMI_in_post_block419); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
@@ -1412,7 +1417,7 @@ public class RuleSetParser extends Parser {
                 }
             } while (true);
 
-            // RuleSet.g:367:109: ( SEMI )?
+            // RuleSet.g:372:109: ( SEMI )?
             int alt15=2;
             int LA15_0 = input.LA(1);
 
@@ -1439,7 +1444,7 @@ public class RuleSetParser extends Parser {
             RIGHT_CURL25_tree = (Object)adaptor.create(RIGHT_CURL25);
             adaptor.addChild(root_0, RIGHT_CURL25_tree);
             }
-            // RuleSet.g:368:6: (alt= post_alternate )?
+            // RuleSet.g:373:6: (alt= post_alternate )?
             int alt16=2;
             int LA16_0 = input.LA(1);
 
@@ -1505,7 +1510,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "post_alternate"
-    // RuleSet.g:382:1: post_alternate returns [ArrayList result] : must_be[\"else\"] LEFT_CURL (p= post_statement ( SEMI p1= post_statement )* )? ( SEMI )? RIGHT_CURL ;
+    // RuleSet.g:387:1: post_alternate returns [ArrayList result] : must_be[\"else\"] LEFT_CURL (p= post_statement ( SEMI p1= post_statement )* )? ( SEMI )? RIGHT_CURL ;
     public final RuleSetParser.post_alternate_return post_alternate() throws RecognitionException {
         RuleSetParser.post_alternate_return retval = new RuleSetParser.post_alternate_return();
         retval.start = input.LT(1);
@@ -1532,8 +1537,8 @@ public class RuleSetParser extends Parser {
         	ArrayList temp_array = new ArrayList();
 
         try {
-            // RuleSet.g:386:2: ( must_be[\"else\"] LEFT_CURL (p= post_statement ( SEMI p1= post_statement )* )? ( SEMI )? RIGHT_CURL )
-            // RuleSet.g:387:3: must_be[\"else\"] LEFT_CURL (p= post_statement ( SEMI p1= post_statement )* )? ( SEMI )? RIGHT_CURL
+            // RuleSet.g:391:2: ( must_be[\"else\"] LEFT_CURL (p= post_statement ( SEMI p1= post_statement )* )? ( SEMI )? RIGHT_CURL )
+            // RuleSet.g:392:3: must_be[\"else\"] LEFT_CURL (p= post_statement ( SEMI p1= post_statement )* )? ( SEMI )? RIGHT_CURL
             {
             root_0 = (Object)adaptor.nil();
 
@@ -1548,7 +1553,7 @@ public class RuleSetParser extends Parser {
             LEFT_CURL27_tree = (Object)adaptor.create(LEFT_CURL27);
             adaptor.addChild(root_0, LEFT_CURL27_tree);
             }
-            // RuleSet.g:387:29: (p= post_statement ( SEMI p1= post_statement )* )?
+            // RuleSet.g:392:29: (p= post_statement ( SEMI p1= post_statement )* )?
             int alt18=2;
             int LA18_0 = input.LA(1);
 
@@ -1557,7 +1562,7 @@ public class RuleSetParser extends Parser {
             }
             switch (alt18) {
                 case 1 :
-                    // RuleSet.g:387:30: p= post_statement ( SEMI p1= post_statement )*
+                    // RuleSet.g:392:30: p= post_statement ( SEMI p1= post_statement )*
                     {
                     pushFollow(FOLLOW_post_statement_in_post_alternate475);
                     p=post_statement();
@@ -1568,7 +1573,7 @@ public class RuleSetParser extends Parser {
                     if ( state.backtracking==0 ) {
                       temp_array.add((p!=null?p.result:null));
                     }
-                    // RuleSet.g:387:76: ( SEMI p1= post_statement )*
+                    // RuleSet.g:392:76: ( SEMI p1= post_statement )*
                     loop17:
                     do {
                         int alt17=2;
@@ -1587,7 +1592,7 @@ public class RuleSetParser extends Parser {
 
                         switch (alt17) {
                     	case 1 :
-                    	    // RuleSet.g:387:77: SEMI p1= post_statement
+                    	    // RuleSet.g:392:77: SEMI p1= post_statement
                     	    {
                     	    SEMI28=(Token)match(input,SEMI,FOLLOW_SEMI_in_post_alternate480); if (state.failed) return retval;
                     	    if ( state.backtracking==0 ) {
@@ -1618,7 +1623,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:387:134: ( SEMI )?
+            // RuleSet.g:392:134: ( SEMI )?
             int alt19=2;
             int LA19_0 = input.LA(1);
 
@@ -1680,7 +1685,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "post_statement"
-    // RuleSet.g:391:1: post_statement returns [HashMap result] : ( (pe= persistent_expr | rs= raise_statement | l= log_statement | las= must_be[\"last\"] ) ( IF ie= expr )? ) ;
+    // RuleSet.g:396:1: post_statement returns [HashMap result] : ( (pe= persistent_expr | rs= raise_statement | l= log_statement | las= must_be[\"last\"] ) ( IF ie= expr )? ) ;
     public final RuleSetParser.post_statement_return post_statement() throws RecognitionException {
         RuleSetParser.post_statement_return retval = new RuleSetParser.post_statement_return();
         retval.start = input.LT(1);
@@ -1702,20 +1707,20 @@ public class RuleSetParser extends Parser {
         Object IF31_tree=null;
 
         try {
-            // RuleSet.g:392:2: ( ( (pe= persistent_expr | rs= raise_statement | l= log_statement | las= must_be[\"last\"] ) ( IF ie= expr )? ) )
-            // RuleSet.g:392:4: ( (pe= persistent_expr | rs= raise_statement | l= log_statement | las= must_be[\"last\"] ) ( IF ie= expr )? )
+            // RuleSet.g:397:2: ( ( (pe= persistent_expr | rs= raise_statement | l= log_statement | las= must_be[\"last\"] ) ( IF ie= expr )? ) )
+            // RuleSet.g:397:4: ( (pe= persistent_expr | rs= raise_statement | l= log_statement | las= must_be[\"last\"] ) ( IF ie= expr )? )
             {
             root_0 = (Object)adaptor.nil();
 
-            // RuleSet.g:392:4: ( (pe= persistent_expr | rs= raise_statement | l= log_statement | las= must_be[\"last\"] ) ( IF ie= expr )? )
-            // RuleSet.g:392:5: (pe= persistent_expr | rs= raise_statement | l= log_statement | las= must_be[\"last\"] ) ( IF ie= expr )?
+            // RuleSet.g:397:4: ( (pe= persistent_expr | rs= raise_statement | l= log_statement | las= must_be[\"last\"] ) ( IF ie= expr )? )
+            // RuleSet.g:397:5: (pe= persistent_expr | rs= raise_statement | l= log_statement | las= must_be[\"last\"] ) ( IF ie= expr )?
             {
-            // RuleSet.g:392:5: (pe= persistent_expr | rs= raise_statement | l= log_statement | las= must_be[\"last\"] )
+            // RuleSet.g:397:5: (pe= persistent_expr | rs= raise_statement | l= log_statement | las= must_be[\"last\"] )
             int alt20=4;
             alt20 = dfa20.predict(input);
             switch (alt20) {
                 case 1 :
-                    // RuleSet.g:392:6: pe= persistent_expr
+                    // RuleSet.g:397:6: pe= persistent_expr
                     {
                     pushFollow(FOLLOW_persistent_expr_in_post_statement513);
                     pe=persistent_expr();
@@ -1727,7 +1732,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:393:6: rs= raise_statement
+                    // RuleSet.g:398:6: rs= raise_statement
                     {
                     pushFollow(FOLLOW_raise_statement_in_post_statement523);
                     rs=raise_statement();
@@ -1739,7 +1744,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // RuleSet.g:394:4: l= log_statement
+                    // RuleSet.g:399:4: l= log_statement
                     {
                     pushFollow(FOLLOW_log_statement_in_post_statement530);
                     l=log_statement();
@@ -1751,7 +1756,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // RuleSet.g:395:4: las= must_be[\"last\"]
+                    // RuleSet.g:400:4: las= must_be[\"last\"]
                     {
                     pushFollow(FOLLOW_must_be_in_post_statement540);
                     las=must_be("last");
@@ -1765,7 +1770,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:396:2: ( IF ie= expr )?
+            // RuleSet.g:401:2: ( IF ie= expr )?
             int alt21=2;
             int LA21_0 = input.LA(1);
 
@@ -1774,7 +1779,7 @@ public class RuleSetParser extends Parser {
             }
             switch (alt21) {
                 case 1 :
-                    // RuleSet.g:396:3: IF ie= expr
+                    // RuleSet.g:401:3: IF ie= expr
                     {
                     IF31=(Token)match(input,IF,FOLLOW_IF_in_post_statement546); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -1860,7 +1865,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "raise_statement"
-    // RuleSet.g:431:1: raise_statement returns [HashMap result] : must_be[\"raise\"] must_be[\"explicit\"] must_be[\"event\"] evt= VAR (f= for_clause )? (m= modifier_clause )? ;
+    // RuleSet.g:436:1: raise_statement returns [HashMap result] : must_be[\"raise\"] must_be[\"explicit\"] must_be[\"event\"] evt= VAR (f= for_clause )? (m= modifier_clause )? ;
     public final RuleSetParser.raise_statement_return raise_statement() throws RecognitionException {
         RuleSetParser.raise_statement_return retval = new RuleSetParser.raise_statement_return();
         retval.start = input.LT(1);
@@ -1882,8 +1887,8 @@ public class RuleSetParser extends Parser {
         Object evt_tree=null;
 
         try {
-            // RuleSet.g:432:2: ( must_be[\"raise\"] must_be[\"explicit\"] must_be[\"event\"] evt= VAR (f= for_clause )? (m= modifier_clause )? )
-            // RuleSet.g:433:2: must_be[\"raise\"] must_be[\"explicit\"] must_be[\"event\"] evt= VAR (f= for_clause )? (m= modifier_clause )?
+            // RuleSet.g:437:2: ( must_be[\"raise\"] must_be[\"explicit\"] must_be[\"event\"] evt= VAR (f= for_clause )? (m= modifier_clause )? )
+            // RuleSet.g:438:2: must_be[\"raise\"] must_be[\"explicit\"] must_be[\"event\"] evt= VAR (f= for_clause )? (m= modifier_clause )?
             {
             root_0 = (Object)adaptor.nil();
 
@@ -1910,7 +1915,7 @@ public class RuleSetParser extends Parser {
             evt_tree = (Object)adaptor.create(evt);
             adaptor.addChild(root_0, evt_tree);
             }
-            // RuleSet.g:433:66: (f= for_clause )?
+            // RuleSet.g:438:66: (f= for_clause )?
             int alt22=2;
             int LA22_0 = input.LA(1);
 
@@ -1933,7 +1938,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:433:80: (m= modifier_clause )?
+            // RuleSet.g:438:80: (m= modifier_clause )?
             int alt23=2;
             int LA23_0 = input.LA(1);
 
@@ -2001,7 +2006,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "log_statement"
-    // RuleSet.g:448:1: log_statement returns [HashMap result] : must_be[\"log\"] e= expr ;
+    // RuleSet.g:453:1: log_statement returns [HashMap result] : must_be[\"log\"] e= expr ;
     public final RuleSetParser.log_statement_return log_statement() throws RecognitionException {
         RuleSetParser.log_statement_return retval = new RuleSetParser.log_statement_return();
         retval.start = input.LT(1);
@@ -2015,8 +2020,8 @@ public class RuleSetParser extends Parser {
 
 
         try {
-            // RuleSet.g:449:2: ( must_be[\"log\"] e= expr )
-            // RuleSet.g:450:2: must_be[\"log\"] e= expr
+            // RuleSet.g:454:2: ( must_be[\"log\"] e= expr )
+            // RuleSet.g:455:2: must_be[\"log\"] e= expr
             {
             root_0 = (Object)adaptor.nil();
 
@@ -2070,7 +2075,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "callbacks"
-    // RuleSet.g:458:1: callbacks returns [HashMap result] : CALLBACKS LEFT_CURL (s= success )? (f= failure )? RIGHT_CURL ;
+    // RuleSet.g:463:1: callbacks returns [HashMap result] : CALLBACKS LEFT_CURL (s= success )? (f= failure )? RIGHT_CURL ;
     public final RuleSetParser.callbacks_return callbacks() throws RecognitionException {
         RuleSetParser.callbacks_return retval = new RuleSetParser.callbacks_return();
         retval.start = input.LT(1);
@@ -2090,8 +2095,8 @@ public class RuleSetParser extends Parser {
         Object RIGHT_CURL38_tree=null;
 
         try {
-            // RuleSet.g:459:2: ( CALLBACKS LEFT_CURL (s= success )? (f= failure )? RIGHT_CURL )
-            // RuleSet.g:460:2: CALLBACKS LEFT_CURL (s= success )? (f= failure )? RIGHT_CURL
+            // RuleSet.g:464:2: ( CALLBACKS LEFT_CURL (s= success )? (f= failure )? RIGHT_CURL )
+            // RuleSet.g:465:2: CALLBACKS LEFT_CURL (s= success )? (f= failure )? RIGHT_CURL
             {
             root_0 = (Object)adaptor.nil();
 
@@ -2105,7 +2110,7 @@ public class RuleSetParser extends Parser {
             LEFT_CURL37_tree = (Object)adaptor.create(LEFT_CURL37);
             adaptor.addChild(root_0, LEFT_CURL37_tree);
             }
-            // RuleSet.g:460:23: (s= success )?
+            // RuleSet.g:465:23: (s= success )?
             int alt24=2;
             int LA24_0 = input.LA(1);
 
@@ -2128,7 +2133,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:460:34: (f= failure )?
+            // RuleSet.g:465:34: (f= failure )?
             int alt25=2;
             int LA25_0 = input.LA(1);
 
@@ -2201,7 +2206,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "success"
-    // RuleSet.g:474:1: success returns [ArrayList result] : SUCCESS LEFT_CURL c= click ( SEMI c1= click )* ( SEMI )? RIGHT_CURL ;
+    // RuleSet.g:479:1: success returns [ArrayList result] : SUCCESS LEFT_CURL c= click ( SEMI c1= click )* ( SEMI )? RIGHT_CURL ;
     public final RuleSetParser.success_return success() throws RecognitionException {
         RuleSetParser.success_return retval = new RuleSetParser.success_return();
         retval.start = input.LT(1);
@@ -2228,8 +2233,8 @@ public class RuleSetParser extends Parser {
         	ArrayList tmp_list = new ArrayList();
 
         try {
-            // RuleSet.g:478:2: ( SUCCESS LEFT_CURL c= click ( SEMI c1= click )* ( SEMI )? RIGHT_CURL )
-            // RuleSet.g:478:4: SUCCESS LEFT_CURL c= click ( SEMI c1= click )* ( SEMI )? RIGHT_CURL
+            // RuleSet.g:483:2: ( SUCCESS LEFT_CURL c= click ( SEMI c1= click )* ( SEMI )? RIGHT_CURL )
+            // RuleSet.g:483:4: SUCCESS LEFT_CURL c= click ( SEMI c1= click )* ( SEMI )? RIGHT_CURL
             {
             root_0 = (Object)adaptor.nil();
 
@@ -2252,7 +2257,7 @@ public class RuleSetParser extends Parser {
             if ( state.backtracking==0 ) {
               tmp_list.add((c!=null?c.result:null));
             }
-            // RuleSet.g:478:58: ( SEMI c1= click )*
+            // RuleSet.g:483:58: ( SEMI c1= click )*
             loop26:
             do {
                 int alt26=2;
@@ -2271,7 +2276,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt26) {
             	case 1 :
-            	    // RuleSet.g:478:59: SEMI c1= click
+            	    // RuleSet.g:483:59: SEMI c1= click
             	    {
             	    SEMI41=(Token)match(input,SEMI,FOLLOW_SEMI_in_success688); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
@@ -2296,7 +2301,7 @@ public class RuleSetParser extends Parser {
                 }
             } while (true);
 
-            // RuleSet.g:478:104: ( SEMI )?
+            // RuleSet.g:483:104: ( SEMI )?
             int alt27=2;
             int LA27_0 = input.LA(1);
 
@@ -2358,7 +2363,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "failure"
-    // RuleSet.g:484:1: failure returns [ArrayList result] : FAILURE LEFT_CURL c= click ( SEMI c1= click )* ( SEMI )? RIGHT_CURL ;
+    // RuleSet.g:489:1: failure returns [ArrayList result] : FAILURE LEFT_CURL c= click ( SEMI c1= click )* ( SEMI )? RIGHT_CURL ;
     public final RuleSetParser.failure_return failure() throws RecognitionException {
         RuleSetParser.failure_return retval = new RuleSetParser.failure_return();
         retval.start = input.LT(1);
@@ -2385,8 +2390,8 @@ public class RuleSetParser extends Parser {
         	ArrayList tmp_list = new ArrayList();
 
         try {
-            // RuleSet.g:488:2: ( FAILURE LEFT_CURL c= click ( SEMI c1= click )* ( SEMI )? RIGHT_CURL )
-            // RuleSet.g:489:2: FAILURE LEFT_CURL c= click ( SEMI c1= click )* ( SEMI )? RIGHT_CURL
+            // RuleSet.g:493:2: ( FAILURE LEFT_CURL c= click ( SEMI c1= click )* ( SEMI )? RIGHT_CURL )
+            // RuleSet.g:494:2: FAILURE LEFT_CURL c= click ( SEMI c1= click )* ( SEMI )? RIGHT_CURL
             {
             root_0 = (Object)adaptor.nil();
 
@@ -2409,7 +2414,7 @@ public class RuleSetParser extends Parser {
             if ( state.backtracking==0 ) {
               tmp_list.add((c!=null?c.result:null));
             }
-            // RuleSet.g:489:56: ( SEMI c1= click )*
+            // RuleSet.g:494:56: ( SEMI c1= click )*
             loop28:
             do {
                 int alt28=2;
@@ -2428,7 +2433,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt28) {
             	case 1 :
-            	    // RuleSet.g:489:57: SEMI c1= click
+            	    // RuleSet.g:494:57: SEMI c1= click
             	    {
             	    SEMI46=(Token)match(input,SEMI,FOLLOW_SEMI_in_failure743); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
@@ -2453,7 +2458,7 @@ public class RuleSetParser extends Parser {
                 }
             } while (true);
 
-            // RuleSet.g:489:103: ( SEMI )?
+            // RuleSet.g:494:103: ( SEMI )?
             int alt29=2;
             int LA29_0 = input.LA(1);
 
@@ -2515,7 +2520,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "click"
-    // RuleSet.g:494:1: click returns [HashMap result] : corc= must_be_one[sar(\"click\",\"change\")] attr= VAR EQUAL val= STRING (cl= click_link )? ;
+    // RuleSet.g:499:1: click returns [HashMap result] : corc= must_be_one[sar(\"click\",\"change\")] attr= VAR EQUAL val= STRING (cl= click_link )? ;
     public final RuleSetParser.click_return click() throws RecognitionException {
         RuleSetParser.click_return retval = new RuleSetParser.click_return();
         retval.start = input.LT(1);
@@ -2535,8 +2540,8 @@ public class RuleSetParser extends Parser {
         Object EQUAL49_tree=null;
 
         try {
-            // RuleSet.g:494:31: (corc= must_be_one[sar(\"click\",\"change\")] attr= VAR EQUAL val= STRING (cl= click_link )? )
-            // RuleSet.g:495:2: corc= must_be_one[sar(\"click\",\"change\")] attr= VAR EQUAL val= STRING (cl= click_link )?
+            // RuleSet.g:499:31: (corc= must_be_one[sar(\"click\",\"change\")] attr= VAR EQUAL val= STRING (cl= click_link )? )
+            // RuleSet.g:500:2: corc= must_be_one[sar(\"click\",\"change\")] attr= VAR EQUAL val= STRING (cl= click_link )?
             {
             root_0 = (Object)adaptor.nil();
 
@@ -2561,7 +2566,7 @@ public class RuleSetParser extends Parser {
             val_tree = (Object)adaptor.create(val);
             adaptor.addChild(root_0, val_tree);
             }
-            // RuleSet.g:495:70: (cl= click_link )?
+            // RuleSet.g:500:70: (cl= click_link )?
             int alt30=2;
             int LA30_0 = input.LA(1);
 
@@ -2624,7 +2629,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "click_link"
-    // RuleSet.g:505:1: click_link returns [HashMap result] : must_be[\"triggers\"] p= persistent_expr ;
+    // RuleSet.g:510:1: click_link returns [HashMap result] : must_be[\"triggers\"] p= persistent_expr ;
     public final RuleSetParser.click_link_return click_link() throws RecognitionException {
         RuleSetParser.click_link_return retval = new RuleSetParser.click_link_return();
         retval.start = input.LT(1);
@@ -2638,8 +2643,8 @@ public class RuleSetParser extends Parser {
 
 
         try {
-            // RuleSet.g:506:2: ( must_be[\"triggers\"] p= persistent_expr )
-            // RuleSet.g:507:2: must_be[\"triggers\"] p= persistent_expr
+            // RuleSet.g:511:2: ( must_be[\"triggers\"] p= persistent_expr )
+            // RuleSet.g:512:2: must_be[\"triggers\"] p= persistent_expr
             {
             root_0 = (Object)adaptor.nil();
 
@@ -2690,7 +2695,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "persistent_expr"
-    // RuleSet.g:513:1: persistent_expr returns [HashMap result] : (pc= persistent_clear_set | pi= persistent_iterate | tf= trail_forget | tm= trail_mark );
+    // RuleSet.g:518:1: persistent_expr returns [HashMap result] : (pc= persistent_clear_set | pi= persistent_iterate | tf= trail_forget | tm= trail_mark );
     public final RuleSetParser.persistent_expr_return persistent_expr() throws RecognitionException {
         RuleSetParser.persistent_expr_return retval = new RuleSetParser.persistent_expr_return();
         retval.start = input.LT(1);
@@ -2708,7 +2713,7 @@ public class RuleSetParser extends Parser {
 
 
         try {
-            // RuleSet.g:514:2: (pc= persistent_clear_set | pi= persistent_iterate | tf= trail_forget | tm= trail_mark )
+            // RuleSet.g:519:2: (pc= persistent_clear_set | pi= persistent_iterate | tf= trail_forget | tm= trail_mark )
             int alt31=4;
             switch ( input.LA(1) ) {
             case VAR:
@@ -2741,7 +2746,7 @@ public class RuleSetParser extends Parser {
 
             switch (alt31) {
                 case 1 :
-                    // RuleSet.g:515:2: pc= persistent_clear_set
+                    // RuleSet.g:520:2: pc= persistent_clear_set
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -2760,7 +2765,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:518:4: pi= persistent_iterate
+                    // RuleSet.g:523:4: pi= persistent_iterate
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -2779,7 +2784,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // RuleSet.g:521:7: tf= trail_forget
+                    // RuleSet.g:526:7: tf= trail_forget
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -2798,7 +2803,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // RuleSet.g:524:7: tm= trail_mark
+                    // RuleSet.g:529:7: tm= trail_mark
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -2845,7 +2850,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "persistent_clear_set"
-    // RuleSet.g:530:1: persistent_clear_set returns [HashMap result] : cs= must_be_one[sar(\"clear\",\"set\")] dm= VAR_DOMAIN COLON name= VAR ;
+    // RuleSet.g:535:1: persistent_clear_set returns [HashMap result] : cs= must_be_one[sar(\"clear\",\"set\")] dm= VAR_DOMAIN COLON name= VAR ;
     public final RuleSetParser.persistent_clear_set_return persistent_clear_set() throws RecognitionException {
         RuleSetParser.persistent_clear_set_return retval = new RuleSetParser.persistent_clear_set_return();
         retval.start = input.LT(1);
@@ -2863,8 +2868,8 @@ public class RuleSetParser extends Parser {
         Object COLON51_tree=null;
 
         try {
-            // RuleSet.g:531:2: (cs= must_be_one[sar(\"clear\",\"set\")] dm= VAR_DOMAIN COLON name= VAR )
-            // RuleSet.g:532:2: cs= must_be_one[sar(\"clear\",\"set\")] dm= VAR_DOMAIN COLON name= VAR
+            // RuleSet.g:536:2: (cs= must_be_one[sar(\"clear\",\"set\")] dm= VAR_DOMAIN COLON name= VAR )
+            // RuleSet.g:537:2: cs= must_be_one[sar(\"clear\",\"set\")] dm= VAR_DOMAIN COLON name= VAR
             {
             root_0 = (Object)adaptor.nil();
 
@@ -2929,7 +2934,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "persistent_iterate"
-    // RuleSet.g:543:1: persistent_iterate returns [HashMap result] : dm= VAR_DOMAIN COLON name= VAR op= COUNTER_OP v= expr from= counter_start ;
+    // RuleSet.g:548:1: persistent_iterate returns [HashMap result] : dm= VAR_DOMAIN COLON name= VAR op= COUNTER_OP v= expr from= counter_start ;
     public final RuleSetParser.persistent_iterate_return persistent_iterate() throws RecognitionException {
         RuleSetParser.persistent_iterate_return retval = new RuleSetParser.persistent_iterate_return();
         retval.start = input.LT(1);
@@ -2951,8 +2956,8 @@ public class RuleSetParser extends Parser {
         Object COLON52_tree=null;
 
         try {
-            // RuleSet.g:544:2: (dm= VAR_DOMAIN COLON name= VAR op= COUNTER_OP v= expr from= counter_start )
-            // RuleSet.g:545:2: dm= VAR_DOMAIN COLON name= VAR op= COUNTER_OP v= expr from= counter_start
+            // RuleSet.g:549:2: (dm= VAR_DOMAIN COLON name= VAR op= COUNTER_OP v= expr from= counter_start )
+            // RuleSet.g:550:2: dm= VAR_DOMAIN COLON name= VAR op= COUNTER_OP v= expr from= counter_start
             {
             root_0 = (Object)adaptor.nil();
 
@@ -3031,7 +3036,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "trail_forget"
-    // RuleSet.g:557:1: trail_forget returns [HashMap result] : FORGET what= STRING must_be[\"in\"] dm= VAR_DOMAIN COLON name= VAR ;
+    // RuleSet.g:562:1: trail_forget returns [HashMap result] : FORGET what= STRING must_be[\"in\"] dm= VAR_DOMAIN COLON name= VAR ;
     public final RuleSetParser.trail_forget_return trail_forget() throws RecognitionException {
         RuleSetParser.trail_forget_return retval = new RuleSetParser.trail_forget_return();
         retval.start = input.LT(1);
@@ -3053,8 +3058,8 @@ public class RuleSetParser extends Parser {
         Object COLON55_tree=null;
 
         try {
-            // RuleSet.g:558:2: ( FORGET what= STRING must_be[\"in\"] dm= VAR_DOMAIN COLON name= VAR )
-            // RuleSet.g:559:2: FORGET what= STRING must_be[\"in\"] dm= VAR_DOMAIN COLON name= VAR
+            // RuleSet.g:563:2: ( FORGET what= STRING must_be[\"in\"] dm= VAR_DOMAIN COLON name= VAR )
+            // RuleSet.g:564:2: FORGET what= STRING must_be[\"in\"] dm= VAR_DOMAIN COLON name= VAR
             {
             root_0 = (Object)adaptor.nil();
 
@@ -3131,7 +3136,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "trail_mark"
-    // RuleSet.g:571:1: trail_mark returns [HashMap result] : MARK dm= VAR_DOMAIN COLON name= VAR (t= trail_with )? ;
+    // RuleSet.g:576:1: trail_mark returns [HashMap result] : MARK dm= VAR_DOMAIN COLON name= VAR (t= trail_with )? ;
     public final RuleSetParser.trail_mark_return trail_mark() throws RecognitionException {
         RuleSetParser.trail_mark_return retval = new RuleSetParser.trail_mark_return();
         retval.start = input.LT(1);
@@ -3151,8 +3156,8 @@ public class RuleSetParser extends Parser {
         Object COLON57_tree=null;
 
         try {
-            // RuleSet.g:572:2: ( MARK dm= VAR_DOMAIN COLON name= VAR (t= trail_with )? )
-            // RuleSet.g:573:2: MARK dm= VAR_DOMAIN COLON name= VAR (t= trail_with )?
+            // RuleSet.g:577:2: ( MARK dm= VAR_DOMAIN COLON name= VAR (t= trail_with )? )
+            // RuleSet.g:578:2: MARK dm= VAR_DOMAIN COLON name= VAR (t= trail_with )?
             {
             root_0 = (Object)adaptor.nil();
 
@@ -3176,7 +3181,7 @@ public class RuleSetParser extends Parser {
             name_tree = (Object)adaptor.create(name);
             adaptor.addChild(root_0, name_tree);
             }
-            // RuleSet.g:573:37: (t= trail_with )?
+            // RuleSet.g:578:37: (t= trail_with )?
             int alt32=2;
             int LA32_0 = input.LA(1);
 
@@ -3241,7 +3246,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "trail_with"
-    // RuleSet.g:585:1: trail_with returns [Object result] : WITH e= expr ;
+    // RuleSet.g:590:1: trail_with returns [Object result] : WITH e= expr ;
     public final RuleSetParser.trail_with_return trail_with() throws RecognitionException {
         RuleSetParser.trail_with_return retval = new RuleSetParser.trail_with_return();
         retval.start = input.LT(1);
@@ -3255,8 +3260,8 @@ public class RuleSetParser extends Parser {
         Object WITH58_tree=null;
 
         try {
-            // RuleSet.g:586:2: ( WITH e= expr )
-            // RuleSet.g:587:2: WITH e= expr
+            // RuleSet.g:591:2: ( WITH e= expr )
+            // RuleSet.g:592:2: WITH e= expr
             {
             root_0 = (Object)adaptor.nil();
 
@@ -3306,7 +3311,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "counter_start"
-    // RuleSet.g:592:1: counter_start returns [Object result] : must_be[\"from\"] e= expr ;
+    // RuleSet.g:597:1: counter_start returns [Object result] : must_be[\"from\"] e= expr ;
     public final RuleSetParser.counter_start_return counter_start() throws RecognitionException {
         RuleSetParser.counter_start_return retval = new RuleSetParser.counter_start_return();
         retval.start = input.LT(1);
@@ -3320,8 +3325,8 @@ public class RuleSetParser extends Parser {
 
 
         try {
-            // RuleSet.g:593:2: ( must_be[\"from\"] e= expr )
-            // RuleSet.g:594:2: must_be[\"from\"] e= expr
+            // RuleSet.g:598:2: ( must_be[\"from\"] e= expr )
+            // RuleSet.g:599:2: must_be[\"from\"] e= expr
             {
             root_0 = (Object)adaptor.nil();
 
@@ -3372,7 +3377,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "for_clause"
-    // RuleSet.g:600:1: for_clause returns [String result] : FOR v= VAR ;
+    // RuleSet.g:605:1: for_clause returns [String result] : FOR v= VAR ;
     public final RuleSetParser.for_clause_return for_clause() throws RecognitionException {
         RuleSetParser.for_clause_return retval = new RuleSetParser.for_clause_return();
         retval.start = input.LT(1);
@@ -3386,8 +3391,8 @@ public class RuleSetParser extends Parser {
         Object FOR60_tree=null;
 
         try {
-            // RuleSet.g:601:2: ( FOR v= VAR )
-            // RuleSet.g:602:2: FOR v= VAR
+            // RuleSet.g:606:2: ( FOR v= VAR )
+            // RuleSet.g:607:2: FOR v= VAR
             {
             root_0 = (Object)adaptor.nil();
 
@@ -3435,7 +3440,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "action"
-    // RuleSet.g:616:1: action[HashMap result] : ( conditional_action[result] | unconditional_action[result] ) ( SEMI )? ;
+    // RuleSet.g:621:1: action[HashMap result] : ( conditional_action[result] | unconditional_action[result] ) ( SEMI )? ;
     public final RuleSetParser.action_return action(HashMap result) throws RecognitionException {
         RuleSetParser.action_return retval = new RuleSetParser.action_return();
         retval.start = input.LT(1);
@@ -3459,12 +3464,12 @@ public class RuleSetParser extends Parser {
         	result.put("actions",new ArrayList());
 
         try {
-            // RuleSet.g:625:2: ( ( conditional_action[result] | unconditional_action[result] ) ( SEMI )? )
-            // RuleSet.g:626:2: ( conditional_action[result] | unconditional_action[result] ) ( SEMI )?
+            // RuleSet.g:630:2: ( ( conditional_action[result] | unconditional_action[result] ) ( SEMI )? )
+            // RuleSet.g:631:2: ( conditional_action[result] | unconditional_action[result] ) ( SEMI )?
             {
             root_0 = (Object)adaptor.nil();
 
-            // RuleSet.g:626:2: ( conditional_action[result] | unconditional_action[result] )
+            // RuleSet.g:631:2: ( conditional_action[result] | unconditional_action[result] )
             int alt33=2;
             int LA33_0 = input.LA(1);
 
@@ -3483,7 +3488,7 @@ public class RuleSetParser extends Parser {
             }
             switch (alt33) {
                 case 1 :
-                    // RuleSet.g:626:3: conditional_action[result]
+                    // RuleSet.g:631:3: conditional_action[result]
                     {
                     pushFollow(FOLLOW_conditional_action_in_action1126);
                     conditional_action61=conditional_action(result);
@@ -3495,7 +3500,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:626:32: unconditional_action[result]
+                    // RuleSet.g:631:32: unconditional_action[result]
                     {
                     pushFollow(FOLLOW_unconditional_action_in_action1131);
                     unconditional_action62=unconditional_action(result);
@@ -3509,7 +3514,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:626:62: ( SEMI )?
+            // RuleSet.g:631:62: ( SEMI )?
             int alt34=2;
             int LA34_0 = input.LA(1);
 
@@ -3564,7 +3569,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "conditional_action"
-    // RuleSet.g:629:1: conditional_action[HashMap result] : IF e= expr must_be[\"then\"] unconditional_action[result] ;
+    // RuleSet.g:634:1: conditional_action[HashMap result] : IF e= expr must_be[\"then\"] unconditional_action[result] ;
     public final RuleSetParser.conditional_action_return conditional_action(HashMap result) throws RecognitionException {
         RuleSetParser.conditional_action_return retval = new RuleSetParser.conditional_action_return();
         retval.start = input.LT(1);
@@ -3582,8 +3587,8 @@ public class RuleSetParser extends Parser {
         Object IF64_tree=null;
 
         try {
-            // RuleSet.g:630:2: ( IF e= expr must_be[\"then\"] unconditional_action[result] )
-            // RuleSet.g:630:4: IF e= expr must_be[\"then\"] unconditional_action[result]
+            // RuleSet.g:635:2: ( IF e= expr must_be[\"then\"] unconditional_action[result] )
+            // RuleSet.g:635:4: IF e= expr must_be[\"then\"] unconditional_action[result]
             {
             root_0 = (Object)adaptor.nil();
 
@@ -3654,7 +3659,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "unconditional_action"
-    // RuleSet.g:645:1: unconditional_action[HashMap result] : (p= primrule | action_block[result] );
+    // RuleSet.g:650:1: unconditional_action[HashMap result] : (p= primrule | action_block[result] );
     public final RuleSetParser.unconditional_action_return unconditional_action(HashMap result) throws RecognitionException {
         RuleSetParser.unconditional_action_return retval = new RuleSetParser.unconditional_action_return();
         retval.start = input.LT(1);
@@ -3671,7 +3676,7 @@ public class RuleSetParser extends Parser {
         	ArrayList temp_list = new ArrayList(); 
 
         try {
-            // RuleSet.g:649:2: (p= primrule | action_block[result] )
+            // RuleSet.g:654:2: (p= primrule | action_block[result] )
             int alt35=2;
             int LA35_0 = input.LA(1);
 
@@ -3690,7 +3695,7 @@ public class RuleSetParser extends Parser {
             }
             switch (alt35) {
                 case 1 :
-                    // RuleSet.g:649:4: p= primrule
+                    // RuleSet.g:654:4: p= primrule
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3707,7 +3712,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:650:6: action_block[result]
+                    // RuleSet.g:655:6: action_block[result]
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3748,7 +3753,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "action_block"
-    // RuleSet.g:652:1: action_block[HashMap result] : (at= ( EVERY | CHOOSE ) )? '{' (p= primrule ( ';' p= primrule )* ) ( ';' )? '}' ;
+    // RuleSet.g:657:1: action_block[HashMap result] : (at= ( EVERY | CHOOSE ) )? '{' (p= primrule ( ';' p= primrule )* ) ( ';' )? '}' ;
     public final RuleSetParser.action_block_return action_block(HashMap result) throws RecognitionException {
         RuleSetParser.action_block_return retval = new RuleSetParser.action_block_return();
         retval.start = input.LT(1);
@@ -3773,12 +3778,12 @@ public class RuleSetParser extends Parser {
         	ArrayList temp_list = new ArrayList(); 
 
         try {
-            // RuleSet.g:656:2: ( (at= ( EVERY | CHOOSE ) )? '{' (p= primrule ( ';' p= primrule )* ) ( ';' )? '}' )
-            // RuleSet.g:656:4: (at= ( EVERY | CHOOSE ) )? '{' (p= primrule ( ';' p= primrule )* ) ( ';' )? '}'
+            // RuleSet.g:661:2: ( (at= ( EVERY | CHOOSE ) )? '{' (p= primrule ( ';' p= primrule )* ) ( ';' )? '}' )
+            // RuleSet.g:661:4: (at= ( EVERY | CHOOSE ) )? '{' (p= primrule ( ';' p= primrule )* ) ( ';' )? '}'
             {
             root_0 = (Object)adaptor.nil();
 
-            // RuleSet.g:656:6: (at= ( EVERY | CHOOSE ) )?
+            // RuleSet.g:661:6: (at= ( EVERY | CHOOSE ) )?
             int alt36=2;
             int LA36_0 = input.LA(1);
 
@@ -3815,8 +3820,8 @@ public class RuleSetParser extends Parser {
             char_literal68_tree = (Object)adaptor.create(char_literal68);
             adaptor.addChild(root_0, char_literal68_tree);
             }
-            // RuleSet.g:657:7: (p= primrule ( ';' p= primrule )* )
-            // RuleSet.g:657:8: p= primrule ( ';' p= primrule )*
+            // RuleSet.g:662:7: (p= primrule ( ';' p= primrule )* )
+            // RuleSet.g:662:8: p= primrule ( ';' p= primrule )*
             {
             pushFollow(FOLLOW_primrule_in_action_block1236);
             p=primrule();
@@ -3827,7 +3832,7 @@ public class RuleSetParser extends Parser {
             if ( state.backtracking==0 ) {
               temp_list.add((p!=null?p.result:null));
             }
-            // RuleSet.g:658:4: ( ';' p= primrule )*
+            // RuleSet.g:663:4: ( ';' p= primrule )*
             loop37:
             do {
                 int alt37=2;
@@ -3846,7 +3851,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt37) {
             	case 1 :
-            	    // RuleSet.g:658:5: ';' p= primrule
+            	    // RuleSet.g:663:5: ';' p= primrule
             	    {
             	    char_literal69=(Token)match(input,SEMI,FOLLOW_SEMI_in_action_block1246); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
@@ -3874,7 +3879,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:658:51: ( ';' )?
+            // RuleSet.g:663:51: ( ';' )?
             int alt38=2;
             int LA38_0 = input.LA(1);
 
@@ -3936,7 +3941,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "primrule"
-    // RuleSet.g:663:1: primrule returns [HashMap result] : (label= VAR ARROW_RIGHT )? ( (src= namespace )? name= ( VAR | REPLACE | MATCH | OTHER_OPERATORS ) LEFT_PAREN (ex= expr ( COMMA ex1= expr )* )? ( COMMA )? RIGHT_PAREN (set= setting )? (m= modifier_clause )? | (label= VAR ARROW_RIGHT )? e= emit_block ) ;
+    // RuleSet.g:668:1: primrule returns [HashMap result] : (label= VAR ARROW_RIGHT )? ( (src= namespace )? name= ( VAR | REPLACE | MATCH | OTHER_OPERATORS ) LEFT_PAREN (ex= expr ( COMMA ex1= expr )* )? ( COMMA )? RIGHT_PAREN (set= setting )? (m= modifier_clause )? | (label= VAR ARROW_RIGHT )? e= emit_block ) ;
     public final RuleSetParser.primrule_return primrule() throws RecognitionException {
         RuleSetParser.primrule_return retval = new RuleSetParser.primrule_return();
         retval.start = input.LT(1);
@@ -3977,12 +3982,12 @@ public class RuleSetParser extends Parser {
         	ArrayList temp_list = new ArrayList();
 
         try {
-            // RuleSet.g:667:2: ( (label= VAR ARROW_RIGHT )? ( (src= namespace )? name= ( VAR | REPLACE | MATCH | OTHER_OPERATORS ) LEFT_PAREN (ex= expr ( COMMA ex1= expr )* )? ( COMMA )? RIGHT_PAREN (set= setting )? (m= modifier_clause )? | (label= VAR ARROW_RIGHT )? e= emit_block ) )
-            // RuleSet.g:667:5: (label= VAR ARROW_RIGHT )? ( (src= namespace )? name= ( VAR | REPLACE | MATCH | OTHER_OPERATORS ) LEFT_PAREN (ex= expr ( COMMA ex1= expr )* )? ( COMMA )? RIGHT_PAREN (set= setting )? (m= modifier_clause )? | (label= VAR ARROW_RIGHT )? e= emit_block )
+            // RuleSet.g:672:2: ( (label= VAR ARROW_RIGHT )? ( (src= namespace )? name= ( VAR | REPLACE | MATCH | OTHER_OPERATORS ) LEFT_PAREN (ex= expr ( COMMA ex1= expr )* )? ( COMMA )? RIGHT_PAREN (set= setting )? (m= modifier_clause )? | (label= VAR ARROW_RIGHT )? e= emit_block ) )
+            // RuleSet.g:672:5: (label= VAR ARROW_RIGHT )? ( (src= namespace )? name= ( VAR | REPLACE | MATCH | OTHER_OPERATORS ) LEFT_PAREN (ex= expr ( COMMA ex1= expr )* )? ( COMMA )? RIGHT_PAREN (set= setting )? (m= modifier_clause )? | (label= VAR ARROW_RIGHT )? e= emit_block )
             {
             root_0 = (Object)adaptor.nil();
 
-            // RuleSet.g:667:5: (label= VAR ARROW_RIGHT )?
+            // RuleSet.g:672:5: (label= VAR ARROW_RIGHT )?
             int alt39=2;
             int LA39_0 = input.LA(1);
 
@@ -3999,7 +4004,7 @@ public class RuleSetParser extends Parser {
             }
             switch (alt39) {
                 case 1 :
-                    // RuleSet.g:667:6: label= VAR ARROW_RIGHT
+                    // RuleSet.g:672:6: label= VAR ARROW_RIGHT
                     {
                     label=(Token)match(input,VAR,FOLLOW_VAR_in_primrule1287); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -4017,7 +4022,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:667:30: ( (src= namespace )? name= ( VAR | REPLACE | MATCH | OTHER_OPERATORS ) LEFT_PAREN (ex= expr ( COMMA ex1= expr )* )? ( COMMA )? RIGHT_PAREN (set= setting )? (m= modifier_clause )? | (label= VAR ARROW_RIGHT )? e= emit_block )
+            // RuleSet.g:672:30: ( (src= namespace )? name= ( VAR | REPLACE | MATCH | OTHER_OPERATORS ) LEFT_PAREN (ex= expr ( COMMA ex1= expr )* )? ( COMMA )? RIGHT_PAREN (set= setting )? (m= modifier_clause )? | (label= VAR ARROW_RIGHT )? e= emit_block )
             int alt47=2;
             switch ( input.LA(1) ) {
             case VAR:
@@ -4063,9 +4068,9 @@ public class RuleSetParser extends Parser {
 
             switch (alt47) {
                 case 1 :
-                    // RuleSet.g:668:4: (src= namespace )? name= ( VAR | REPLACE | MATCH | OTHER_OPERATORS ) LEFT_PAREN (ex= expr ( COMMA ex1= expr )* )? ( COMMA )? RIGHT_PAREN (set= setting )? (m= modifier_clause )?
+                    // RuleSet.g:673:4: (src= namespace )? name= ( VAR | REPLACE | MATCH | OTHER_OPERATORS ) LEFT_PAREN (ex= expr ( COMMA ex1= expr )* )? ( COMMA )? RIGHT_PAREN (set= setting )? (m= modifier_clause )?
                     {
-                    // RuleSet.g:668:7: (src= namespace )?
+                    // RuleSet.g:673:7: (src= namespace )?
                     int alt40=2;
                     int LA40_0 = input.LA(1);
 
@@ -4112,7 +4117,7 @@ public class RuleSetParser extends Parser {
                     LEFT_PAREN73_tree = (Object)adaptor.create(LEFT_PAREN73);
                     adaptor.addChild(root_0, LEFT_PAREN73_tree);
                     }
-                    // RuleSet.g:668:72: (ex= expr ( COMMA ex1= expr )* )?
+                    // RuleSet.g:673:72: (ex= expr ( COMMA ex1= expr )* )?
                     int alt42=2;
                     int LA42_0 = input.LA(1);
 
@@ -4121,7 +4126,7 @@ public class RuleSetParser extends Parser {
                     }
                     switch (alt42) {
                         case 1 :
-                            // RuleSet.g:668:73: ex= expr ( COMMA ex1= expr )*
+                            // RuleSet.g:673:73: ex= expr ( COMMA ex1= expr )*
                             {
                             pushFollow(FOLLOW_expr_in_primrule1321);
                             ex=expr();
@@ -4132,7 +4137,7 @@ public class RuleSetParser extends Parser {
                             if ( state.backtracking==0 ) {
                               temp_list.add((ex!=null?ex.result:null));
                             }
-                            // RuleSet.g:668:110: ( COMMA ex1= expr )*
+                            // RuleSet.g:673:110: ( COMMA ex1= expr )*
                             loop41:
                             do {
                                 int alt41=2;
@@ -4151,7 +4156,7 @@ public class RuleSetParser extends Parser {
 
                                 switch (alt41) {
                             	case 1 :
-                            	    // RuleSet.g:668:111: COMMA ex1= expr
+                            	    // RuleSet.g:673:111: COMMA ex1= expr
                             	    {
                             	    COMMA74=(Token)match(input,COMMA,FOLLOW_COMMA_in_primrule1326); if (state.failed) return retval;
                             	    if ( state.backtracking==0 ) {
@@ -4182,7 +4187,7 @@ public class RuleSetParser extends Parser {
 
                     }
 
-                    // RuleSet.g:668:160: ( COMMA )?
+                    // RuleSet.g:673:160: ( COMMA )?
                     int alt43=2;
                     int LA43_0 = input.LA(1);
 
@@ -4209,7 +4214,7 @@ public class RuleSetParser extends Parser {
                     RIGHT_PAREN76_tree = (Object)adaptor.create(RIGHT_PAREN76);
                     adaptor.addChild(root_0, RIGHT_PAREN76_tree);
                     }
-                    // RuleSet.g:668:184: (set= setting )?
+                    // RuleSet.g:673:184: (set= setting )?
                     int alt44=2;
                     int LA44_0 = input.LA(1);
 
@@ -4232,7 +4237,7 @@ public class RuleSetParser extends Parser {
 
                     }
 
-                    // RuleSet.g:668:195: (m= modifier_clause )?
+                    // RuleSet.g:673:195: (m= modifier_clause )?
                     int alt45=2;
                     int LA45_0 = input.LA(1);
 
@@ -4285,9 +4290,9 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:692:4: (label= VAR ARROW_RIGHT )? e= emit_block
+                    // RuleSet.g:697:4: (label= VAR ARROW_RIGHT )? e= emit_block
                     {
-                    // RuleSet.g:692:4: (label= VAR ARROW_RIGHT )?
+                    // RuleSet.g:697:4: (label= VAR ARROW_RIGHT )?
                     int alt46=2;
                     int LA46_0 = input.LA(1);
 
@@ -4296,7 +4301,7 @@ public class RuleSetParser extends Parser {
                     }
                     switch (alt46) {
                         case 1 :
-                            // RuleSet.g:692:5: label= VAR ARROW_RIGHT
+                            // RuleSet.g:697:5: label= VAR ARROW_RIGHT
                             {
                             label=(Token)match(input,VAR,FOLLOW_VAR_in_primrule1363); if (state.failed) return retval;
                             if ( state.backtracking==0 ) {
@@ -4368,7 +4373,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "modifier_clause"
-    // RuleSet.g:706:1: modifier_clause returns [ArrayList result] : WITH m= modifier ( AND_AND m1= modifier )* ;
+    // RuleSet.g:711:1: modifier_clause returns [ArrayList result] : WITH m= modifier ( AND_AND m1= modifier )* ;
     public final RuleSetParser.modifier_clause_return modifier_clause() throws RecognitionException {
         RuleSetParser.modifier_clause_return retval = new RuleSetParser.modifier_clause_return();
         retval.start = input.LT(1);
@@ -4389,8 +4394,8 @@ public class RuleSetParser extends Parser {
         	ArrayList temp_list = new ArrayList();
 
         try {
-            // RuleSet.g:710:2: ( WITH m= modifier ( AND_AND m1= modifier )* )
-            // RuleSet.g:711:2: WITH m= modifier ( AND_AND m1= modifier )*
+            // RuleSet.g:715:2: ( WITH m= modifier ( AND_AND m1= modifier )* )
+            // RuleSet.g:716:2: WITH m= modifier ( AND_AND m1= modifier )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -4408,7 +4413,7 @@ public class RuleSetParser extends Parser {
             if ( state.backtracking==0 ) {
               temp_list.add((m!=null?m.result:null));
             }
-            // RuleSet.g:711:46: ( AND_AND m1= modifier )*
+            // RuleSet.g:716:46: ( AND_AND m1= modifier )*
             loop48:
             do {
                 int alt48=2;
@@ -4421,7 +4426,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt48) {
             	case 1 :
-            	    // RuleSet.g:711:47: AND_AND m1= modifier
+            	    // RuleSet.g:716:47: AND_AND m1= modifier
             	    {
             	    AND_AND79=(Token)match(input,AND_AND,FOLLOW_AND_AND_in_modifier_clause1412); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
@@ -4481,7 +4486,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "modifier"
-    // RuleSet.g:717:1: modifier returns [HashMap result] : name= VAR EQUAL (e= expr | j= JS ) ;
+    // RuleSet.g:722:1: modifier returns [HashMap result] : name= VAR EQUAL (e= expr | j= JS ) ;
     public final RuleSetParser.modifier_return modifier() throws RecognitionException {
         RuleSetParser.modifier_return retval = new RuleSetParser.modifier_return();
         retval.start = input.LT(1);
@@ -4499,8 +4504,8 @@ public class RuleSetParser extends Parser {
         Object EQUAL80_tree=null;
 
         try {
-            // RuleSet.g:718:2: (name= VAR EQUAL (e= expr | j= JS ) )
-            // RuleSet.g:718:4: name= VAR EQUAL (e= expr | j= JS )
+            // RuleSet.g:723:2: (name= VAR EQUAL (e= expr | j= JS ) )
+            // RuleSet.g:723:4: name= VAR EQUAL (e= expr | j= JS )
             {
             root_0 = (Object)adaptor.nil();
 
@@ -4514,7 +4519,7 @@ public class RuleSetParser extends Parser {
             EQUAL80_tree = (Object)adaptor.create(EQUAL80);
             adaptor.addChild(root_0, EQUAL80_tree);
             }
-            // RuleSet.g:718:18: (e= expr | j= JS )
+            // RuleSet.g:723:18: (e= expr | j= JS )
             int alt49=2;
             int LA49_0 = input.LA(1);
 
@@ -4533,7 +4538,7 @@ public class RuleSetParser extends Parser {
             }
             switch (alt49) {
                 case 1 :
-                    // RuleSet.g:718:19: e= expr
+                    // RuleSet.g:723:19: e= expr
                     {
                     pushFollow(FOLLOW_expr_in_modifier1447);
                     e=expr();
@@ -4545,7 +4550,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:718:28: j= JS
+                    // RuleSet.g:723:28: j= JS
                     {
                     j=(Token)match(input,JS,FOLLOW_JS_in_modifier1453); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -4608,7 +4613,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "using"
-    // RuleSet.g:744:1: using returns [HashMap result] : USING (p= STRING | r= regex ) (s= setting )? ;
+    // RuleSet.g:749:1: using returns [HashMap result] : USING (p= STRING | r= regex ) (s= setting )? ;
     public final RuleSetParser.using_return using() throws RecognitionException {
         RuleSetParser.using_return retval = new RuleSetParser.using_return();
         retval.start = input.LT(1);
@@ -4626,8 +4631,8 @@ public class RuleSetParser extends Parser {
         Object USING81_tree=null;
 
         try {
-            // RuleSet.g:745:2: ( USING (p= STRING | r= regex ) (s= setting )? )
-            // RuleSet.g:745:4: USING (p= STRING | r= regex ) (s= setting )?
+            // RuleSet.g:750:2: ( USING (p= STRING | r= regex ) (s= setting )? )
+            // RuleSet.g:750:4: USING (p= STRING | r= regex ) (s= setting )?
             {
             root_0 = (Object)adaptor.nil();
 
@@ -4636,7 +4641,7 @@ public class RuleSetParser extends Parser {
             USING81_tree = (Object)adaptor.create(USING81);
             adaptor.addChild(root_0, USING81_tree);
             }
-            // RuleSet.g:745:10: (p= STRING | r= regex )
+            // RuleSet.g:750:10: (p= STRING | r= regex )
             int alt50=2;
             int LA50_0 = input.LA(1);
 
@@ -4655,7 +4660,7 @@ public class RuleSetParser extends Parser {
             }
             switch (alt50) {
                 case 1 :
-                    // RuleSet.g:745:11: p= STRING
+                    // RuleSet.g:750:11: p= STRING
                     {
                     p=(Token)match(input,STRING,FOLLOW_STRING_in_using1482); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -4666,7 +4671,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:745:20: r= regex
+                    // RuleSet.g:750:20: r= regex
                     {
                     pushFollow(FOLLOW_regex_in_using1486);
                     r=regex();
@@ -4680,7 +4685,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:745:30: (s= setting )?
+            // RuleSet.g:750:30: (s= setting )?
             int alt51=2;
             int LA51_0 = input.LA(1);
 
@@ -4754,7 +4759,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "setting"
-    // RuleSet.g:765:1: setting returns [ArrayList result] : SETTING LEFT_PAREN (v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH ) ( COMMA v2= ( VAR | LIKE | OTHER_OPERATORS | REPLACE | MATCH ) )* )? RIGHT_PAREN ;
+    // RuleSet.g:770:1: setting returns [ArrayList result] : SETTING LEFT_PAREN (v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH ) ( COMMA v2= ( VAR | LIKE | OTHER_OPERATORS | REPLACE | MATCH ) )* )? RIGHT_PAREN ;
     public final RuleSetParser.setting_return setting() throws RecognitionException {
         RuleSetParser.setting_return retval = new RuleSetParser.setting_return();
         retval.start = input.LT(1);
@@ -4779,8 +4784,8 @@ public class RuleSetParser extends Parser {
         	ArrayList sresult = new ArrayList();
 
         try {
-            // RuleSet.g:769:2: ( SETTING LEFT_PAREN (v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH ) ( COMMA v2= ( VAR | LIKE | OTHER_OPERATORS | REPLACE | MATCH ) )* )? RIGHT_PAREN )
-            // RuleSet.g:769:4: SETTING LEFT_PAREN (v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH ) ( COMMA v2= ( VAR | LIKE | OTHER_OPERATORS | REPLACE | MATCH ) )* )? RIGHT_PAREN
+            // RuleSet.g:774:2: ( SETTING LEFT_PAREN (v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH ) ( COMMA v2= ( VAR | LIKE | OTHER_OPERATORS | REPLACE | MATCH ) )* )? RIGHT_PAREN )
+            // RuleSet.g:774:4: SETTING LEFT_PAREN (v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH ) ( COMMA v2= ( VAR | LIKE | OTHER_OPERATORS | REPLACE | MATCH ) )* )? RIGHT_PAREN
             {
             root_0 = (Object)adaptor.nil();
 
@@ -4794,7 +4799,7 @@ public class RuleSetParser extends Parser {
             LEFT_PAREN83_tree = (Object)adaptor.create(LEFT_PAREN83);
             adaptor.addChild(root_0, LEFT_PAREN83_tree);
             }
-            // RuleSet.g:769:23: (v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH ) ( COMMA v2= ( VAR | LIKE | OTHER_OPERATORS | REPLACE | MATCH ) )* )?
+            // RuleSet.g:774:23: (v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH ) ( COMMA v2= ( VAR | LIKE | OTHER_OPERATORS | REPLACE | MATCH ) )* )?
             int alt53=2;
             int LA53_0 = input.LA(1);
 
@@ -4803,7 +4808,7 @@ public class RuleSetParser extends Parser {
             }
             switch (alt53) {
                 case 1 :
-                    // RuleSet.g:769:24: v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH ) ( COMMA v2= ( VAR | LIKE | OTHER_OPERATORS | REPLACE | MATCH ) )*
+                    // RuleSet.g:774:24: v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH ) ( COMMA v2= ( VAR | LIKE | OTHER_OPERATORS | REPLACE | MATCH ) )*
                     {
                     v=(Token)input.LT(1);
                     if ( input.LA(1)==VAR||(input.LA(1)>=OTHER_OPERATORS && input.LA(1)<=MATCH) ) {
@@ -4820,7 +4825,7 @@ public class RuleSetParser extends Parser {
                     if ( state.backtracking==0 ) {
                       sresult.add((v!=null?v.getText():null));
                     }
-                    // RuleSet.g:769:90: ( COMMA v2= ( VAR | LIKE | OTHER_OPERATORS | REPLACE | MATCH ) )*
+                    // RuleSet.g:774:90: ( COMMA v2= ( VAR | LIKE | OTHER_OPERATORS | REPLACE | MATCH ) )*
                     loop52:
                     do {
                         int alt52=2;
@@ -4833,7 +4838,7 @@ public class RuleSetParser extends Parser {
 
                         switch (alt52) {
                     	case 1 :
-                    	    // RuleSet.g:769:91: COMMA v2= ( VAR | LIKE | OTHER_OPERATORS | REPLACE | MATCH )
+                    	    // RuleSet.g:774:91: COMMA v2= ( VAR | LIKE | OTHER_OPERATORS | REPLACE | MATCH )
                     	    {
                     	    COMMA84=(Token)match(input,COMMA,FOLLOW_COMMA_in_setting1533); if (state.failed) return retval;
                     	    if ( state.backtracking==0 ) {
@@ -4910,7 +4915,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "pre_block"
-    // RuleSet.g:775:1: pre_block returns [ArrayList result] : PRE LEFT_CURL ( decl[tmp] ( SEMI decl[tmp] )* )? ( SEMI )? RIGHT_CURL ;
+    // RuleSet.g:780:1: pre_block returns [ArrayList result] : PRE LEFT_CURL ( decl[tmp] ( SEMI decl[tmp] )* )? ( SEMI )? RIGHT_CURL ;
     public final RuleSetParser.pre_block_return pre_block() throws RecognitionException {
         RuleSetParser.pre_block_return retval = new RuleSetParser.pre_block_return();
         retval.start = input.LT(1);
@@ -4937,8 +4942,8 @@ public class RuleSetParser extends Parser {
         	ArrayList tmp = new ArrayList();
 
         try {
-            // RuleSet.g:778:3: ( PRE LEFT_CURL ( decl[tmp] ( SEMI decl[tmp] )* )? ( SEMI )? RIGHT_CURL )
-            // RuleSet.g:779:3: PRE LEFT_CURL ( decl[tmp] ( SEMI decl[tmp] )* )? ( SEMI )? RIGHT_CURL
+            // RuleSet.g:783:3: ( PRE LEFT_CURL ( decl[tmp] ( SEMI decl[tmp] )* )? ( SEMI )? RIGHT_CURL )
+            // RuleSet.g:784:3: PRE LEFT_CURL ( decl[tmp] ( SEMI decl[tmp] )* )? ( SEMI )? RIGHT_CURL
             {
             root_0 = (Object)adaptor.nil();
 
@@ -4952,7 +4957,7 @@ public class RuleSetParser extends Parser {
             LEFT_CURL87_tree = (Object)adaptor.create(LEFT_CURL87);
             adaptor.addChild(root_0, LEFT_CURL87_tree);
             }
-            // RuleSet.g:779:17: ( decl[tmp] ( SEMI decl[tmp] )* )?
+            // RuleSet.g:784:17: ( decl[tmp] ( SEMI decl[tmp] )* )?
             int alt55=2;
             int LA55_0 = input.LA(1);
 
@@ -4961,7 +4966,7 @@ public class RuleSetParser extends Parser {
             }
             switch (alt55) {
                 case 1 :
-                    // RuleSet.g:779:19: decl[tmp] ( SEMI decl[tmp] )*
+                    // RuleSet.g:784:19: decl[tmp] ( SEMI decl[tmp] )*
                     {
                     pushFollow(FOLLOW_decl_in_pre_block1586);
                     decl88=decl(tmp);
@@ -4969,7 +4974,7 @@ public class RuleSetParser extends Parser {
                     state._fsp--;
                     if (state.failed) return retval;
                     if ( state.backtracking==0 ) adaptor.addChild(root_0, decl88.getTree());
-                    // RuleSet.g:779:29: ( SEMI decl[tmp] )*
+                    // RuleSet.g:784:29: ( SEMI decl[tmp] )*
                     loop54:
                     do {
                         int alt54=2;
@@ -4988,7 +4993,7 @@ public class RuleSetParser extends Parser {
 
                         switch (alt54) {
                     	case 1 :
-                    	    // RuleSet.g:779:30: SEMI decl[tmp]
+                    	    // RuleSet.g:784:30: SEMI decl[tmp]
                     	    {
                     	    SEMI89=(Token)match(input,SEMI,FOLLOW_SEMI_in_pre_block1590); if (state.failed) return retval;
                     	    if ( state.backtracking==0 ) {
@@ -5016,7 +5021,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:779:50: ( SEMI )?
+            // RuleSet.g:784:50: ( SEMI )?
             int alt56=2;
             int LA56_0 = input.LA(1);
 
@@ -5078,7 +5083,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "foreach"
-    // RuleSet.g:784:1: foreach returns [HashMap result] : FOREACH e= expr s= setting ;
+    // RuleSet.g:789:1: foreach returns [HashMap result] : FOREACH e= expr s= setting ;
     public final RuleSetParser.foreach_return foreach() throws RecognitionException {
         RuleSetParser.foreach_return retval = new RuleSetParser.foreach_return();
         retval.start = input.LT(1);
@@ -5094,8 +5099,8 @@ public class RuleSetParser extends Parser {
         Object FOREACH93_tree=null;
 
         try {
-            // RuleSet.g:785:2: ( FOREACH e= expr s= setting )
-            // RuleSet.g:786:2: FOREACH e= expr s= setting
+            // RuleSet.g:790:2: ( FOREACH e= expr s= setting )
+            // RuleSet.g:791:2: FOREACH e= expr s= setting
             {
             root_0 = (Object)adaptor.nil();
 
@@ -5154,7 +5159,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "when"
-    // RuleSet.g:793:1: when returns [HashMap result] : WHEN es= event_seq ;
+    // RuleSet.g:798:1: when returns [HashMap result] : WHEN es= event_seq ;
     public final RuleSetParser.when_return when() throws RecognitionException {
         RuleSetParser.when_return retval = new RuleSetParser.when_return();
         retval.start = input.LT(1);
@@ -5170,8 +5175,8 @@ public class RuleSetParser extends Parser {
 
 
         try {
-            // RuleSet.g:796:2: ( WHEN es= event_seq )
-            // RuleSet.g:797:2: WHEN es= event_seq
+            // RuleSet.g:801:2: ( WHEN es= event_seq )
+            // RuleSet.g:802:2: WHEN es= event_seq
             {
             root_0 = (Object)adaptor.nil();
 
@@ -5224,7 +5229,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "event_seq"
-    // RuleSet.g:806:1: event_seq returns [HashMap result] : eor= event_or (tb= must_be_one[sar(\"then\",\"before\")] eor2= event_or )* ;
+    // RuleSet.g:811:1: event_seq returns [HashMap result] : eor= event_or (tb= must_be_one[sar(\"then\",\"before\")] eor2= event_or )* ;
     public final RuleSetParser.event_seq_return event_seq() throws RecognitionException {
         RuleSetParser.event_seq_return retval = new RuleSetParser.event_seq_return();
         retval.start = input.LT(1);
@@ -5244,8 +5249,8 @@ public class RuleSetParser extends Parser {
         	ArrayList temp_list_2 = new ArrayList();
 
         try {
-            // RuleSet.g:811:2: (eor= event_or (tb= must_be_one[sar(\"then\",\"before\")] eor2= event_or )* )
-            // RuleSet.g:812:3: eor= event_or (tb= must_be_one[sar(\"then\",\"before\")] eor2= event_or )*
+            // RuleSet.g:816:2: (eor= event_or (tb= must_be_one[sar(\"then\",\"before\")] eor2= event_or )* )
+            // RuleSet.g:817:3: eor= event_or (tb= must_be_one[sar(\"then\",\"before\")] eor2= event_or )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -5255,14 +5260,14 @@ public class RuleSetParser extends Parser {
             state._fsp--;
             if (state.failed) return retval;
             if ( state.backtracking==0 ) adaptor.addChild(root_0, eor.getTree());
-            // RuleSet.g:812:16: (tb= must_be_one[sar(\"then\",\"before\")] eor2= event_or )*
+            // RuleSet.g:817:16: (tb= must_be_one[sar(\"then\",\"before\")] eor2= event_or )*
             loop57:
             do {
                 int alt57=2;
                 alt57 = dfa57.predict(input);
                 switch (alt57) {
             	case 1 :
-            	    // RuleSet.g:812:17: tb= must_be_one[sar(\"then\",\"before\")] eor2= event_or
+            	    // RuleSet.g:817:17: tb= must_be_one[sar(\"then\",\"before\")] eor2= event_or
             	    {
             	    pushFollow(FOLLOW_must_be_one_in_event_seq1701);
             	    tb=must_be_one(sar("then","before"));
@@ -5359,7 +5364,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "event_or"
-    // RuleSet.g:857:1: event_or returns [HashMap result] : ea= event_and ( OR_OR ea1= event_and )* ;
+    // RuleSet.g:862:1: event_or returns [HashMap result] : ea= event_and ( OR_OR ea1= event_and )* ;
     public final RuleSetParser.event_or_return event_or() throws RecognitionException {
         RuleSetParser.event_or_return retval = new RuleSetParser.event_or_return();
         retval.start = input.LT(1);
@@ -5378,8 +5383,8 @@ public class RuleSetParser extends Parser {
         	ArrayList temp_list = new ArrayList();
 
         try {
-            // RuleSet.g:861:2: (ea= event_and ( OR_OR ea1= event_and )* )
-            // RuleSet.g:862:3: ea= event_and ( OR_OR ea1= event_and )*
+            // RuleSet.g:866:2: (ea= event_and ( OR_OR ea1= event_and )* )
+            // RuleSet.g:867:3: ea= event_and ( OR_OR ea1= event_and )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -5392,7 +5397,7 @@ public class RuleSetParser extends Parser {
             if ( state.backtracking==0 ) {
               temp_list.add(ea);
             }
-            // RuleSet.g:862:37: ( OR_OR ea1= event_and )*
+            // RuleSet.g:867:37: ( OR_OR ea1= event_and )*
             loop58:
             do {
                 int alt58=2;
@@ -5405,7 +5410,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt58) {
             	case 1 :
-            	    // RuleSet.g:862:38: OR_OR ea1= event_and
+            	    // RuleSet.g:867:38: OR_OR ea1= event_and
             	    {
             	    OR_OR95=(Token)match(input,OR_OR,FOLLOW_OR_OR_in_event_or1752); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
@@ -5501,7 +5506,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "event_and"
-    // RuleSet.g:902:1: event_and returns [HashMap result] : e= event_btwn ( AND_AND e1= event_btwn )* ;
+    // RuleSet.g:907:1: event_and returns [HashMap result] : e= event_btwn ( AND_AND e1= event_btwn )* ;
     public final RuleSetParser.event_and_return event_and() throws RecognitionException {
         RuleSetParser.event_and_return retval = new RuleSetParser.event_and_return();
         retval.start = input.LT(1);
@@ -5520,8 +5525,8 @@ public class RuleSetParser extends Parser {
         	ArrayList temp_list = new ArrayList();
 
         try {
-            // RuleSet.g:906:2: (e= event_btwn ( AND_AND e1= event_btwn )* )
-            // RuleSet.g:907:3: e= event_btwn ( AND_AND e1= event_btwn )*
+            // RuleSet.g:911:2: (e= event_btwn ( AND_AND e1= event_btwn )* )
+            // RuleSet.g:912:3: e= event_btwn ( AND_AND e1= event_btwn )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -5534,7 +5539,7 @@ public class RuleSetParser extends Parser {
             if ( state.backtracking==0 ) {
               temp_list.add(e);
             }
-            // RuleSet.g:907:36: ( AND_AND e1= event_btwn )*
+            // RuleSet.g:912:36: ( AND_AND e1= event_btwn )*
             loop59:
             do {
                 int alt59=2;
@@ -5547,7 +5552,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt59) {
             	case 1 :
-            	    // RuleSet.g:907:37: AND_AND e1= event_btwn
+            	    // RuleSet.g:912:37: AND_AND e1= event_btwn
             	    {
             	    AND_AND96=(Token)match(input,AND_AND,FOLLOW_AND_AND_in_event_and1790); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
@@ -5643,7 +5648,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "event_btwn"
-    // RuleSet.g:948:1: event_btwn returns [HashMap result] : ep= event_prim ( (not= NOT )? BETWEEN LEFT_PAREN es1= event_seq COMMA es2= event_seq RIGHT_PAREN )? ;
+    // RuleSet.g:953:1: event_btwn returns [HashMap result] : ep= event_prim ( (not= NOT )? BETWEEN LEFT_PAREN es1= event_seq COMMA es2= event_seq RIGHT_PAREN )? ;
     public final RuleSetParser.event_btwn_return event_btwn() throws RecognitionException {
         RuleSetParser.event_btwn_return retval = new RuleSetParser.event_btwn_return();
         retval.start = input.LT(1);
@@ -5669,8 +5674,8 @@ public class RuleSetParser extends Parser {
         Object RIGHT_PAREN100_tree=null;
 
         try {
-            // RuleSet.g:949:2: (ep= event_prim ( (not= NOT )? BETWEEN LEFT_PAREN es1= event_seq COMMA es2= event_seq RIGHT_PAREN )? )
-            // RuleSet.g:950:3: ep= event_prim ( (not= NOT )? BETWEEN LEFT_PAREN es1= event_seq COMMA es2= event_seq RIGHT_PAREN )?
+            // RuleSet.g:954:2: (ep= event_prim ( (not= NOT )? BETWEEN LEFT_PAREN es1= event_seq COMMA es2= event_seq RIGHT_PAREN )? )
+            // RuleSet.g:955:3: ep= event_prim ( (not= NOT )? BETWEEN LEFT_PAREN es1= event_seq COMMA es2= event_seq RIGHT_PAREN )?
             {
             root_0 = (Object)adaptor.nil();
 
@@ -5680,7 +5685,7 @@ public class RuleSetParser extends Parser {
             state._fsp--;
             if (state.failed) return retval;
             if ( state.backtracking==0 ) adaptor.addChild(root_0, ep.getTree());
-            // RuleSet.g:950:17: ( (not= NOT )? BETWEEN LEFT_PAREN es1= event_seq COMMA es2= event_seq RIGHT_PAREN )?
+            // RuleSet.g:955:17: ( (not= NOT )? BETWEEN LEFT_PAREN es1= event_seq COMMA es2= event_seq RIGHT_PAREN )?
             int alt61=2;
             int LA61_0 = input.LA(1);
 
@@ -5689,9 +5694,9 @@ public class RuleSetParser extends Parser {
             }
             switch (alt61) {
                 case 1 :
-                    // RuleSet.g:950:18: (not= NOT )? BETWEEN LEFT_PAREN es1= event_seq COMMA es2= event_seq RIGHT_PAREN
+                    // RuleSet.g:955:18: (not= NOT )? BETWEEN LEFT_PAREN es1= event_seq COMMA es2= event_seq RIGHT_PAREN
                     {
-                    // RuleSet.g:950:18: (not= NOT )?
+                    // RuleSet.g:955:18: (not= NOT )?
                     int alt60=2;
                     int LA60_0 = input.LA(1);
 
@@ -5700,7 +5705,7 @@ public class RuleSetParser extends Parser {
                     }
                     switch (alt60) {
                         case 1 :
-                            // RuleSet.g:950:19: not= NOT
+                            // RuleSet.g:955:19: not= NOT
                             {
                             not=(Token)match(input,NOT,FOLLOW_NOT_in_event_btwn1826); if (state.failed) return retval;
                             if ( state.backtracking==0 ) {
@@ -5805,7 +5810,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "event_prim"
-    // RuleSet.g:974:1: event_prim returns [HashMap result] : ( ( custom_event )=>ce= custom_event | (web= WEB )? PAGEVIEW (spat= STRING | rpat= regex ) (set= setting )? | (web= WEB )? opt= must_be_one[sar(\"submit\",\"click\",\"dblclick\",\"change\",\"update\")] elem= STRING (on= on_expr )? (set= setting )? | '(' evt= event_seq ')' );
+    // RuleSet.g:979:1: event_prim returns [HashMap result] : ( ( custom_event )=>ce= custom_event | (web= WEB )? PAGEVIEW (spat= STRING | rpat= regex ) (set= setting )? | (web= WEB )? opt= must_be_one[sar(\"submit\",\"click\",\"dblclick\",\"change\",\"update\")] elem= STRING (on= on_expr )? (set= setting )? | '(' evt= event_seq ')' );
     public final RuleSetParser.event_prim_return event_prim() throws RecognitionException {
         RuleSetParser.event_prim_return retval = new RuleSetParser.event_prim_return();
         retval.start = input.LT(1);
@@ -5842,12 +5847,12 @@ public class RuleSetParser extends Parser {
         	ArrayList filters = new ArrayList();
 
         try {
-            // RuleSet.g:978:2: ( ( custom_event )=>ce= custom_event | (web= WEB )? PAGEVIEW (spat= STRING | rpat= regex ) (set= setting )? | (web= WEB )? opt= must_be_one[sar(\"submit\",\"click\",\"dblclick\",\"change\",\"update\")] elem= STRING (on= on_expr )? (set= setting )? | '(' evt= event_seq ')' )
+            // RuleSet.g:983:2: ( ( custom_event )=>ce= custom_event | (web= WEB )? PAGEVIEW (spat= STRING | rpat= regex ) (set= setting )? | (web= WEB )? opt= must_be_one[sar(\"submit\",\"click\",\"dblclick\",\"change\",\"update\")] elem= STRING (on= on_expr )? (set= setting )? | '(' evt= event_seq ')' )
             int alt68=4;
             alt68 = dfa68.predict(input);
             switch (alt68) {
                 case 1 :
-                    // RuleSet.g:979:2: ( custom_event )=>ce= custom_event
+                    // RuleSet.g:984:2: ( custom_event )=>ce= custom_event
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -5866,11 +5871,11 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:982:4: (web= WEB )? PAGEVIEW (spat= STRING | rpat= regex ) (set= setting )?
+                    // RuleSet.g:987:4: (web= WEB )? PAGEVIEW (spat= STRING | rpat= regex ) (set= setting )?
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    // RuleSet.g:982:7: (web= WEB )?
+                    // RuleSet.g:987:7: (web= WEB )?
                     int alt62=2;
                     int LA62_0 = input.LA(1);
 
@@ -5897,7 +5902,7 @@ public class RuleSetParser extends Parser {
                     PAGEVIEW101_tree = (Object)adaptor.create(PAGEVIEW101);
                     adaptor.addChild(root_0, PAGEVIEW101_tree);
                     }
-                    // RuleSet.g:982:22: (spat= STRING | rpat= regex )
+                    // RuleSet.g:987:22: (spat= STRING | rpat= regex )
                     int alt63=2;
                     int LA63_0 = input.LA(1);
 
@@ -5916,7 +5921,7 @@ public class RuleSetParser extends Parser {
                     }
                     switch (alt63) {
                         case 1 :
-                            // RuleSet.g:982:23: spat= STRING
+                            // RuleSet.g:987:23: spat= STRING
                             {
                             spat=(Token)match(input,STRING,FOLLOW_STRING_in_event_prim1895); if (state.failed) return retval;
                             if ( state.backtracking==0 ) {
@@ -5927,7 +5932,7 @@ public class RuleSetParser extends Parser {
                             }
                             break;
                         case 2 :
-                            // RuleSet.g:982:35: rpat= regex
+                            // RuleSet.g:987:35: rpat= regex
                             {
                             pushFollow(FOLLOW_regex_in_event_prim1899);
                             rpat=regex();
@@ -5941,7 +5946,7 @@ public class RuleSetParser extends Parser {
 
                     }
 
-                    // RuleSet.g:982:50: (set= setting )?
+                    // RuleSet.g:987:50: (set= setting )?
                     int alt64=2;
                     int LA64_0 = input.LA(1);
 
@@ -5982,11 +5987,11 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // RuleSet.g:994:4: (web= WEB )? opt= must_be_one[sar(\"submit\",\"click\",\"dblclick\",\"change\",\"update\")] elem= STRING (on= on_expr )? (set= setting )?
+                    // RuleSet.g:999:4: (web= WEB )? opt= must_be_one[sar(\"submit\",\"click\",\"dblclick\",\"change\",\"update\")] elem= STRING (on= on_expr )? (set= setting )?
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    // RuleSet.g:994:7: (web= WEB )?
+                    // RuleSet.g:999:7: (web= WEB )?
                     int alt65=2;
                     int LA65_0 = input.LA(1);
 
@@ -6019,7 +6024,7 @@ public class RuleSetParser extends Parser {
                     elem_tree = (Object)adaptor.create(elem);
                     adaptor.addChild(root_0, elem_tree);
                     }
-                    // RuleSet.g:994:95: (on= on_expr )?
+                    // RuleSet.g:999:95: (on= on_expr )?
                     int alt66=2;
                     int LA66_0 = input.LA(1);
 
@@ -6042,7 +6047,7 @@ public class RuleSetParser extends Parser {
 
                     }
 
-                    // RuleSet.g:994:109: (set= setting )?
+                    // RuleSet.g:999:109: (set= setting )?
                     int alt67=2;
                     int LA67_0 = input.LA(1);
 
@@ -6083,7 +6088,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // RuleSet.g:1006:4: '(' evt= event_seq ')'
+                    // RuleSet.g:1011:4: '(' evt= event_seq ')'
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -6140,7 +6145,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "custom_event"
-    // RuleSet.g:1012:1: custom_event returns [HashMap result] : dom= ( VAR | WEB ) oper= VAR (filter= event_filter )* (set= setting )? ;
+    // RuleSet.g:1017:1: custom_event returns [HashMap result] : dom= ( VAR | WEB ) oper= VAR (filter= event_filter )* (set= setting )? ;
     public final RuleSetParser.custom_event_return custom_event() throws RecognitionException {
         RuleSetParser.custom_event_return retval = new RuleSetParser.custom_event_return();
         retval.start = input.LT(1);
@@ -6161,8 +6166,8 @@ public class RuleSetParser extends Parser {
         	ArrayList filters = new ArrayList();
 
         try {
-            // RuleSet.g:1016:5: (dom= ( VAR | WEB ) oper= VAR (filter= event_filter )* (set= setting )? )
-            // RuleSet.g:1017:9: dom= ( VAR | WEB ) oper= VAR (filter= event_filter )* (set= setting )?
+            // RuleSet.g:1021:5: (dom= ( VAR | WEB ) oper= VAR (filter= event_filter )* (set= setting )? )
+            // RuleSet.g:1022:9: dom= ( VAR | WEB ) oper= VAR (filter= event_filter )* (set= setting )?
             {
             root_0 = (Object)adaptor.nil();
 
@@ -6183,7 +6188,7 @@ public class RuleSetParser extends Parser {
             oper_tree = (Object)adaptor.create(oper);
             adaptor.addChild(root_0, oper_tree);
             }
-            // RuleSet.g:1017:32: (filter= event_filter )*
+            // RuleSet.g:1022:32: (filter= event_filter )*
             loop69:
             do {
                 int alt69=2;
@@ -6202,7 +6207,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt69) {
             	case 1 :
-            	    // RuleSet.g:1017:33: filter= event_filter
+            	    // RuleSet.g:1022:33: filter= event_filter
             	    {
             	    pushFollow(FOLLOW_event_filter_in_custom_event1998);
             	    filter=event_filter();
@@ -6222,7 +6227,7 @@ public class RuleSetParser extends Parser {
                 }
             } while (true);
 
-            // RuleSet.g:1017:88: (set= setting )?
+            // RuleSet.g:1022:88: (set= setting )?
             int alt70=2;
             int LA70_0 = input.LA(1);
 
@@ -6287,7 +6292,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "event_filter"
-    // RuleSet.g:1029:1: event_filter returns [HashMap result] : typ= VAR (sfilt= STRING | rfilt= regex ) ;
+    // RuleSet.g:1034:1: event_filter returns [HashMap result] : typ= VAR (sfilt= STRING | rfilt= regex ) ;
     public final RuleSetParser.event_filter_return event_filter() throws RecognitionException {
         RuleSetParser.event_filter_return retval = new RuleSetParser.event_filter_return();
         retval.start = input.LT(1);
@@ -6303,8 +6308,8 @@ public class RuleSetParser extends Parser {
         Object sfilt_tree=null;
 
         try {
-            // RuleSet.g:1030:2: (typ= VAR (sfilt= STRING | rfilt= regex ) )
-            // RuleSet.g:1030:4: typ= VAR (sfilt= STRING | rfilt= regex )
+            // RuleSet.g:1035:2: (typ= VAR (sfilt= STRING | rfilt= regex ) )
+            // RuleSet.g:1035:4: typ= VAR (sfilt= STRING | rfilt= regex )
             {
             root_0 = (Object)adaptor.nil();
 
@@ -6313,7 +6318,7 @@ public class RuleSetParser extends Parser {
             typ_tree = (Object)adaptor.create(typ);
             adaptor.addChild(root_0, typ_tree);
             }
-            // RuleSet.g:1030:12: (sfilt= STRING | rfilt= regex )
+            // RuleSet.g:1035:12: (sfilt= STRING | rfilt= regex )
             int alt71=2;
             int LA71_0 = input.LA(1);
 
@@ -6332,7 +6337,7 @@ public class RuleSetParser extends Parser {
             }
             switch (alt71) {
                 case 1 :
-                    // RuleSet.g:1030:13: sfilt= STRING
+                    // RuleSet.g:1035:13: sfilt= STRING
                     {
                     sfilt=(Token)match(input,STRING,FOLLOW_STRING_in_event_filter2033); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -6343,7 +6348,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1030:28: rfilt= regex
+                    // RuleSet.g:1035:28: rfilt= regex
                     {
                     pushFollow(FOLLOW_regex_in_event_filter2039);
                     rfilt=regex();
@@ -6398,7 +6403,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "on_expr"
-    // RuleSet.g:1041:1: on_expr returns [Object result] : ON (s= STRING | r= regex ) ;
+    // RuleSet.g:1046:1: on_expr returns [Object result] : ON (s= STRING | r= regex ) ;
     public final RuleSetParser.on_expr_return on_expr() throws RecognitionException {
         RuleSetParser.on_expr_return retval = new RuleSetParser.on_expr_return();
         retval.start = input.LT(1);
@@ -6414,8 +6419,8 @@ public class RuleSetParser extends Parser {
         Object ON104_tree=null;
 
         try {
-            // RuleSet.g:1041:32: ( ON (s= STRING | r= regex ) )
-            // RuleSet.g:1041:34: ON (s= STRING | r= regex )
+            // RuleSet.g:1046:32: ( ON (s= STRING | r= regex ) )
+            // RuleSet.g:1046:34: ON (s= STRING | r= regex )
             {
             root_0 = (Object)adaptor.nil();
 
@@ -6424,7 +6429,7 @@ public class RuleSetParser extends Parser {
             ON104_tree = (Object)adaptor.create(ON104);
             adaptor.addChild(root_0, ON104_tree);
             }
-            // RuleSet.g:1042:2: (s= STRING | r= regex )
+            // RuleSet.g:1047:2: (s= STRING | r= regex )
             int alt72=2;
             int LA72_0 = input.LA(1);
 
@@ -6443,7 +6448,7 @@ public class RuleSetParser extends Parser {
             }
             switch (alt72) {
                 case 1 :
-                    // RuleSet.g:1042:5: s= STRING
+                    // RuleSet.g:1047:5: s= STRING
                     {
                     s=(Token)match(input,STRING,FOLLOW_STRING_in_on_expr2066); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -6457,7 +6462,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1043:5: r= regex
+                    // RuleSet.g:1048:5: r= regex
                     {
                     pushFollow(FOLLOW_regex_in_on_expr2077);
                     r=regex();
@@ -6503,7 +6508,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "global_block"
-    // RuleSet.g:1048:2: global_block : GLOBAL LEFT_CURL (emt= emit_block | dst= must_be_one[sar(\"dataset\",\"datasource\")] name= VAR ( COLON dtype= DTYPE )? LEFT_SMALL_ARROW src= STRING (cas= cachable )? | cemt= css_emit | decl[global_block_array] | SEMI )* RIGHT_CURL ;
+    // RuleSet.g:1053:2: global_block : GLOBAL LEFT_CURL (emt= emit_block | dst= must_be_one[sar(\"dataset\",\"datasource\")] name= VAR ( COLON dtype= DTYPE )? LEFT_SMALL_ARROW src= STRING (cas= cachable )? | cemt= css_emit | decl[global_block_array] | SEMI )* RIGHT_CURL ;
     public final RuleSetParser.global_block_return global_block() throws RecognitionException {
         RuleSetParser.global_block_return retval = new RuleSetParser.global_block_return();
         retval.start = input.LT(1);
@@ -6542,11 +6547,16 @@ public class RuleSetParser extends Parser {
 
 
         	 ArrayList global_block_array = (ArrayList)rule_json.get("global");
+        	 if(global_block_array == null)
+        	 {
+        	    global_block_array = new ArrayList();
+        	    rule_json.put("global",global_block_array);
+        	 }
         	 boolean found_cache = false;
 
         try {
-            // RuleSet.g:1055:2: ( GLOBAL LEFT_CURL (emt= emit_block | dst= must_be_one[sar(\"dataset\",\"datasource\")] name= VAR ( COLON dtype= DTYPE )? LEFT_SMALL_ARROW src= STRING (cas= cachable )? | cemt= css_emit | decl[global_block_array] | SEMI )* RIGHT_CURL )
-            // RuleSet.g:1055:4: GLOBAL LEFT_CURL (emt= emit_block | dst= must_be_one[sar(\"dataset\",\"datasource\")] name= VAR ( COLON dtype= DTYPE )? LEFT_SMALL_ARROW src= STRING (cas= cachable )? | cemt= css_emit | decl[global_block_array] | SEMI )* RIGHT_CURL
+            // RuleSet.g:1065:2: ( GLOBAL LEFT_CURL (emt= emit_block | dst= must_be_one[sar(\"dataset\",\"datasource\")] name= VAR ( COLON dtype= DTYPE )? LEFT_SMALL_ARROW src= STRING (cas= cachable )? | cemt= css_emit | decl[global_block_array] | SEMI )* RIGHT_CURL )
+            // RuleSet.g:1065:4: GLOBAL LEFT_CURL (emt= emit_block | dst= must_be_one[sar(\"dataset\",\"datasource\")] name= VAR ( COLON dtype= DTYPE )? LEFT_SMALL_ARROW src= STRING (cas= cachable )? | cemt= css_emit | decl[global_block_array] | SEMI )* RIGHT_CURL
             {
             root_0 = (Object)adaptor.nil();
 
@@ -6560,7 +6570,7 @@ public class RuleSetParser extends Parser {
             LEFT_CURL106_tree = (Object)adaptor.create(LEFT_CURL106);
             adaptor.addChild(root_0, LEFT_CURL106_tree);
             }
-            // RuleSet.g:1056:2: (emt= emit_block | dst= must_be_one[sar(\"dataset\",\"datasource\")] name= VAR ( COLON dtype= DTYPE )? LEFT_SMALL_ARROW src= STRING (cas= cachable )? | cemt= css_emit | decl[global_block_array] | SEMI )*
+            // RuleSet.g:1066:2: (emt= emit_block | dst= must_be_one[sar(\"dataset\",\"datasource\")] name= VAR ( COLON dtype= DTYPE )? LEFT_SMALL_ARROW src= STRING (cas= cachable )? | cemt= css_emit | decl[global_block_array] | SEMI )*
             loop75:
             do {
                 int alt75=6;
@@ -6608,7 +6618,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt75) {
             	case 1 :
-            	    // RuleSet.g:1056:4: emt= emit_block
+            	    // RuleSet.g:1066:4: emt= emit_block
             	    {
             	    pushFollow(FOLLOW_emit_block_in_global_block2124);
             	    emt=emit_block();
@@ -6627,7 +6637,7 @@ public class RuleSetParser extends Parser {
             	    }
             	    break;
             	case 2 :
-            	    // RuleSet.g:1061:4: dst= must_be_one[sar(\"dataset\",\"datasource\")] name= VAR ( COLON dtype= DTYPE )? LEFT_SMALL_ARROW src= STRING (cas= cachable )?
+            	    // RuleSet.g:1071:4: dst= must_be_one[sar(\"dataset\",\"datasource\")] name= VAR ( COLON dtype= DTYPE )? LEFT_SMALL_ARROW src= STRING (cas= cachable )?
             	    {
             	    pushFollow(FOLLOW_must_be_one_in_global_block2134);
             	    dst=must_be_one(sar("dataset","datasource"));
@@ -6640,7 +6650,7 @@ public class RuleSetParser extends Parser {
             	    name_tree = (Object)adaptor.create(name);
             	    adaptor.addChild(root_0, name_tree);
             	    }
-            	    // RuleSet.g:1061:58: ( COLON dtype= DTYPE )?
+            	    // RuleSet.g:1071:58: ( COLON dtype= DTYPE )?
             	    int alt73=2;
             	    int LA73_0 = input.LA(1);
 
@@ -6649,7 +6659,7 @@ public class RuleSetParser extends Parser {
             	    }
             	    switch (alt73) {
             	        case 1 :
-            	            // RuleSet.g:1061:59: COLON dtype= DTYPE
+            	            // RuleSet.g:1071:59: COLON dtype= DTYPE
             	            {
             	            COLON107=(Token)match(input,COLON,FOLLOW_COLON_in_global_block2142); if (state.failed) return retval;
             	            if ( state.backtracking==0 ) {
@@ -6677,7 +6687,7 @@ public class RuleSetParser extends Parser {
             	    src_tree = (Object)adaptor.create(src);
             	    adaptor.addChild(root_0, src_tree);
             	    }
-            	    // RuleSet.g:1061:107: (cas= cachable )?
+            	    // RuleSet.g:1071:107: (cas= cachable )?
             	    int alt74=2;
             	    int LA74_0 = input.LA(1);
 
@@ -6686,7 +6696,7 @@ public class RuleSetParser extends Parser {
             	    }
             	    switch (alt74) {
             	        case 1 :
-            	            // RuleSet.g:1061:108: cas= cachable
+            	            // RuleSet.g:1071:108: cas= cachable
             	            {
             	            pushFollow(FOLLOW_cachable_in_global_block2159);
             	            cas=cachable();
@@ -6744,7 +6754,7 @@ public class RuleSetParser extends Parser {
             	    }
             	    break;
             	case 3 :
-            	    // RuleSet.g:1096:4: cemt= css_emit
+            	    // RuleSet.g:1106:4: cemt= css_emit
             	    {
             	    pushFollow(FOLLOW_css_emit_in_global_block2174);
             	    cemt=css_emit();
@@ -6764,7 +6774,7 @@ public class RuleSetParser extends Parser {
             	    }
             	    break;
             	case 4 :
-            	    // RuleSet.g:1102:4: decl[global_block_array]
+            	    // RuleSet.g:1112:4: decl[global_block_array]
             	    {
             	    pushFollow(FOLLOW_decl_in_global_block2182);
             	    decl109=decl(global_block_array);
@@ -6776,7 +6786,7 @@ public class RuleSetParser extends Parser {
             	    }
             	    break;
             	case 5 :
-            	    // RuleSet.g:1103:4: SEMI
+            	    // RuleSet.g:1113:4: SEMI
             	    {
             	    SEMI110=(Token)match(input,SEMI,FOLLOW_SEMI_in_global_block2188); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
@@ -6830,7 +6840,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "decl"
-    // RuleSet.g:1110:1: decl[ArrayList block_array] : var= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) EQUAL (hval= HTML | jval= JS | e= expr ) ;
+    // RuleSet.g:1120:1: decl[ArrayList block_array] : var= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) EQUAL (hval= HTML | jval= JS | e= expr ) ;
     public final RuleSetParser.decl_return decl(ArrayList  block_array) throws RecognitionException {
         RuleSetParser.decl_return retval = new RuleSetParser.decl_return();
         retval.start = input.LT(1);
@@ -6852,8 +6862,8 @@ public class RuleSetParser extends Parser {
 
 
         try {
-            // RuleSet.g:1113:2: (var= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) EQUAL (hval= HTML | jval= JS | e= expr ) )
-            // RuleSet.g:1114:2: var= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) EQUAL (hval= HTML | jval= JS | e= expr )
+            // RuleSet.g:1123:2: (var= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) EQUAL (hval= HTML | jval= JS | e= expr ) )
+            // RuleSet.g:1124:2: var= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) EQUAL (hval= HTML | jval= JS | e= expr )
             {
             root_0 = (Object)adaptor.nil();
 
@@ -6874,7 +6884,7 @@ public class RuleSetParser extends Parser {
             EQUAL112_tree = (Object)adaptor.create(EQUAL112);
             adaptor.addChild(root_0, EQUAL112_tree);
             }
-            // RuleSet.g:1114:64: (hval= HTML | jval= JS | e= expr )
+            // RuleSet.g:1124:64: (hval= HTML | jval= JS | e= expr )
             int alt76=3;
             switch ( input.LA(1) ) {
             case HTML:
@@ -6921,7 +6931,7 @@ public class RuleSetParser extends Parser {
 
             switch (alt76) {
                 case 1 :
-                    // RuleSet.g:1114:65: hval= HTML
+                    // RuleSet.g:1124:65: hval= HTML
                     {
                     hval=(Token)match(input,HTML,FOLLOW_HTML_in_decl2239); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -6932,7 +6942,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1114:75: jval= JS
+                    // RuleSet.g:1124:75: jval= JS
                     {
                     jval=(Token)match(input,JS,FOLLOW_JS_in_decl2243); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -6943,7 +6953,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // RuleSet.g:1114:83: e= expr
+                    // RuleSet.g:1124:83: e= expr
                     {
                     pushFollow(FOLLOW_expr_in_decl2247);
                     e=expr();
@@ -7008,7 +7018,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "expr"
-    // RuleSet.g:1138:1: expr returns [Object result] : (fd= function_def | c= conditional_expression ) ;
+    // RuleSet.g:1148:1: expr returns [Object result] : (fd= function_def | c= conditional_expression ) ;
     public final RuleSetParser.expr_return expr() throws RecognitionException {
         RuleSetParser.expr_return retval = new RuleSetParser.expr_return();
         retval.start = input.LT(1);
@@ -7025,12 +7035,12 @@ public class RuleSetParser extends Parser {
         	HashMap result_hash = new HashMap();
 
         try {
-            // RuleSet.g:1142:2: ( (fd= function_def | c= conditional_expression ) )
-            // RuleSet.g:1142:4: (fd= function_def | c= conditional_expression )
+            // RuleSet.g:1152:2: ( (fd= function_def | c= conditional_expression ) )
+            // RuleSet.g:1152:4: (fd= function_def | c= conditional_expression )
             {
             root_0 = (Object)adaptor.nil();
 
-            // RuleSet.g:1142:4: (fd= function_def | c= conditional_expression )
+            // RuleSet.g:1152:4: (fd= function_def | c= conditional_expression )
             int alt77=2;
             int LA77_0 = input.LA(1);
 
@@ -7049,7 +7059,7 @@ public class RuleSetParser extends Parser {
             }
             switch (alt77) {
                 case 1 :
-                    // RuleSet.g:1142:5: fd= function_def
+                    // RuleSet.g:1152:5: fd= function_def
                     {
                     pushFollow(FOLLOW_function_def_in_expr2277);
                     fd=function_def();
@@ -7066,7 +7076,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1145:4: c= conditional_expression
+                    // RuleSet.g:1155:4: c= conditional_expression
                     {
                     pushFollow(FOLLOW_conditional_expression_in_expr2286);
                     c=conditional_expression();
@@ -7115,7 +7125,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "function_def"
-    // RuleSet.g:1149:1: function_def returns [Object result] : FUNCTION LEFT_PAREN (args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )? ( COMMA args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )* RIGHT_PAREN LEFT_CURL (decs+= decl[block_array] )? ( SEMI decs+= decl[block_array] )* ( SEMI )? e1= expr RIGHT_CURL ;
+    // RuleSet.g:1159:1: function_def returns [Object result] : FUNCTION LEFT_PAREN (args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )? ( COMMA args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )* RIGHT_PAREN LEFT_CURL (decs+= decl[block_array] )? ( SEMI decs+= decl[block_array] )* ( SEMI )? e1= expr RIGHT_CURL ;
     public final RuleSetParser.function_def_return function_def() throws RecognitionException {
         RuleSetParser.function_def_return retval = new RuleSetParser.function_def_return();
         retval.start = input.LT(1);
@@ -7150,8 +7160,8 @@ public class RuleSetParser extends Parser {
         	ArrayList block_array = new ArrayList();
 
         try {
-            // RuleSet.g:1153:2: ( FUNCTION LEFT_PAREN (args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )? ( COMMA args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )* RIGHT_PAREN LEFT_CURL (decs+= decl[block_array] )? ( SEMI decs+= decl[block_array] )* ( SEMI )? e1= expr RIGHT_CURL )
-            // RuleSet.g:1153:4: FUNCTION LEFT_PAREN (args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )? ( COMMA args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )* RIGHT_PAREN LEFT_CURL (decs+= decl[block_array] )? ( SEMI decs+= decl[block_array] )* ( SEMI )? e1= expr RIGHT_CURL
+            // RuleSet.g:1163:2: ( FUNCTION LEFT_PAREN (args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )? ( COMMA args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )* RIGHT_PAREN LEFT_CURL (decs+= decl[block_array] )? ( SEMI decs+= decl[block_array] )* ( SEMI )? e1= expr RIGHT_CURL )
+            // RuleSet.g:1163:4: FUNCTION LEFT_PAREN (args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )? ( COMMA args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )* RIGHT_PAREN LEFT_CURL (decs+= decl[block_array] )? ( SEMI decs+= decl[block_array] )* ( SEMI )? e1= expr RIGHT_CURL
             {
             root_0 = (Object)adaptor.nil();
 
@@ -7165,7 +7175,7 @@ public class RuleSetParser extends Parser {
             LEFT_PAREN114_tree = (Object)adaptor.create(LEFT_PAREN114);
             adaptor.addChild(root_0, LEFT_PAREN114_tree);
             }
-            // RuleSet.g:1153:28: (args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )?
+            // RuleSet.g:1163:28: (args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )?
             int alt78=2;
             int LA78_0 = input.LA(1);
 
@@ -7197,7 +7207,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:1153:83: ( COMMA args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )*
+            // RuleSet.g:1163:83: ( COMMA args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )*
             loop79:
             do {
                 int alt79=2;
@@ -7210,7 +7220,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt79) {
             	case 1 :
-            	    // RuleSet.g:1153:84: COMMA args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN )
+            	    // RuleSet.g:1163:84: COMMA args+= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN )
             	    {
             	    COMMA115=(Token)match(input,COMMA,FOLLOW_COMMA_in_function_def2333); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
@@ -7251,7 +7261,7 @@ public class RuleSetParser extends Parser {
             LEFT_CURL117_tree = (Object)adaptor.create(LEFT_CURL117);
             adaptor.addChild(root_0, LEFT_CURL117_tree);
             }
-            // RuleSet.g:1153:177: (decs+= decl[block_array] )?
+            // RuleSet.g:1163:177: (decs+= decl[block_array] )?
             int alt80=2;
             switch ( input.LA(1) ) {
                 case VAR_DOMAIN:
@@ -7305,7 +7315,7 @@ public class RuleSetParser extends Parser {
 
             }
 
-            // RuleSet.g:1153:198: ( SEMI decs+= decl[block_array] )*
+            // RuleSet.g:1163:198: ( SEMI decs+= decl[block_array] )*
             loop81:
             do {
                 int alt81=2;
@@ -7357,7 +7367,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt81) {
             	case 1 :
-            	    // RuleSet.g:1153:199: SEMI decs+= decl[block_array]
+            	    // RuleSet.g:1163:199: SEMI decs+= decl[block_array]
             	    {
             	    SEMI118=(Token)match(input,SEMI,FOLLOW_SEMI_in_function_def2365); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
@@ -7382,7 +7392,7 @@ public class RuleSetParser extends Parser {
                 }
             } while (true);
 
-            // RuleSet.g:1153:230: ( SEMI )?
+            // RuleSet.g:1163:230: ( SEMI )?
             int alt82=2;
             int LA82_0 = input.LA(1);
 
@@ -7465,7 +7475,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "conditional_expression"
-    // RuleSet.g:1173:1: conditional_expression returns [Object result] : d= disjunction ( ARROW_RIGHT e1= expr PIPE e2= expr )? ;
+    // RuleSet.g:1183:1: conditional_expression returns [Object result] : d= disjunction ( ARROW_RIGHT e1= expr PIPE e2= expr )? ;
     public final RuleSetParser.conditional_expression_return conditional_expression() throws RecognitionException {
         RuleSetParser.conditional_expression_return retval = new RuleSetParser.conditional_expression_return();
         retval.start = input.LT(1);
@@ -7488,8 +7498,8 @@ public class RuleSetParser extends Parser {
         	ArrayList tmp_list = new ArrayList();
 
         try {
-            // RuleSet.g:1177:2: (d= disjunction ( ARROW_RIGHT e1= expr PIPE e2= expr )? )
-            // RuleSet.g:1177:5: d= disjunction ( ARROW_RIGHT e1= expr PIPE e2= expr )?
+            // RuleSet.g:1187:2: (d= disjunction ( ARROW_RIGHT e1= expr PIPE e2= expr )? )
+            // RuleSet.g:1187:5: d= disjunction ( ARROW_RIGHT e1= expr PIPE e2= expr )?
             {
             root_0 = (Object)adaptor.nil();
 
@@ -7499,7 +7509,7 @@ public class RuleSetParser extends Parser {
             state._fsp--;
             if (state.failed) return retval;
             if ( state.backtracking==0 ) adaptor.addChild(root_0, d.getTree());
-            // RuleSet.g:1177:19: ( ARROW_RIGHT e1= expr PIPE e2= expr )?
+            // RuleSet.g:1187:19: ( ARROW_RIGHT e1= expr PIPE e2= expr )?
             int alt83=2;
             int LA83_0 = input.LA(1);
 
@@ -7508,7 +7518,7 @@ public class RuleSetParser extends Parser {
             }
             switch (alt83) {
                 case 1 :
-                    // RuleSet.g:1177:20: ARROW_RIGHT e1= expr PIPE e2= expr
+                    // RuleSet.g:1187:20: ARROW_RIGHT e1= expr PIPE e2= expr
                     {
                     ARROW_RIGHT121=(Token)match(input,ARROW_RIGHT,FOLLOW_ARROW_RIGHT_in_conditional_expression2410); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -7587,7 +7597,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "disjunction"
-    // RuleSet.g:1198:1: disjunction returns [Object result] : me1= equality_expr (op= ( OR | AND ) me2= equality_expr )* ;
+    // RuleSet.g:1208:1: disjunction returns [Object result] : me1= equality_expr (op= ( OR | AND ) me2= equality_expr )* ;
     public final RuleSetParser.disjunction_return disjunction() throws RecognitionException {
         RuleSetParser.disjunction_return retval = new RuleSetParser.disjunction_return();
         retval.start = input.LT(1);
@@ -7607,8 +7617,8 @@ public class RuleSetParser extends Parser {
         	ArrayList result = new ArrayList();
 
         try {
-            // RuleSet.g:1203:2: (me1= equality_expr (op= ( OR | AND ) me2= equality_expr )* )
-            // RuleSet.g:1203:4: me1= equality_expr (op= ( OR | AND ) me2= equality_expr )*
+            // RuleSet.g:1213:2: (me1= equality_expr (op= ( OR | AND ) me2= equality_expr )* )
+            // RuleSet.g:1213:4: me1= equality_expr (op= ( OR | AND ) me2= equality_expr )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -7618,7 +7628,7 @@ public class RuleSetParser extends Parser {
             state._fsp--;
             if (state.failed) return retval;
             if ( state.backtracking==0 ) adaptor.addChild(root_0, me1.getTree());
-            // RuleSet.g:1203:22: (op= ( OR | AND ) me2= equality_expr )*
+            // RuleSet.g:1213:22: (op= ( OR | AND ) me2= equality_expr )*
             loop84:
             do {
                 int alt84=2;
@@ -7631,7 +7641,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt84) {
             	case 1 :
-            	    // RuleSet.g:1203:23: op= ( OR | AND ) me2= equality_expr
+            	    // RuleSet.g:1213:23: op= ( OR | AND ) me2= equality_expr
             	    {
             	    op=(Token)input.LT(1);
             	    if ( (input.LA(1)>=OR && input.LA(1)<=AND) ) {
@@ -7714,7 +7724,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "equality_expr"
-    // RuleSet.g:1225:1: equality_expr returns [Object result] : me1= add_expr (op= ( PREDOP | LIKE ) me2= add_expr )* ;
+    // RuleSet.g:1235:1: equality_expr returns [Object result] : me1= add_expr (op= ( PREDOP | LIKE ) me2= add_expr )* ;
     public final RuleSetParser.equality_expr_return equality_expr() throws RecognitionException {
         RuleSetParser.equality_expr_return retval = new RuleSetParser.equality_expr_return();
         retval.start = input.LT(1);
@@ -7734,8 +7744,8 @@ public class RuleSetParser extends Parser {
         	ArrayList result = new ArrayList();
 
         try {
-            // RuleSet.g:1230:2: (me1= add_expr (op= ( PREDOP | LIKE ) me2= add_expr )* )
-            // RuleSet.g:1230:4: me1= add_expr (op= ( PREDOP | LIKE ) me2= add_expr )*
+            // RuleSet.g:1240:2: (me1= add_expr (op= ( PREDOP | LIKE ) me2= add_expr )* )
+            // RuleSet.g:1240:4: me1= add_expr (op= ( PREDOP | LIKE ) me2= add_expr )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -7745,14 +7755,14 @@ public class RuleSetParser extends Parser {
             state._fsp--;
             if (state.failed) return retval;
             if ( state.backtracking==0 ) adaptor.addChild(root_0, me1.getTree());
-            // RuleSet.g:1230:17: (op= ( PREDOP | LIKE ) me2= add_expr )*
+            // RuleSet.g:1240:17: (op= ( PREDOP | LIKE ) me2= add_expr )*
             loop85:
             do {
                 int alt85=2;
                 alt85 = dfa85.predict(input);
                 switch (alt85) {
             	case 1 :
-            	    // RuleSet.g:1230:18: op= ( PREDOP | LIKE ) me2= add_expr
+            	    // RuleSet.g:1240:18: op= ( PREDOP | LIKE ) me2= add_expr
             	    {
             	    op=(Token)input.LT(1);
             	    if ( input.LA(1)==LIKE||input.LA(1)==PREDOP ) {
@@ -7831,7 +7841,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "mult_expr"
-    // RuleSet.g:1247:1: mult_expr returns [Object result] : me1= unary_expr (op= MULT_OP me2= unary_expr )* ;
+    // RuleSet.g:1257:1: mult_expr returns [Object result] : me1= unary_expr (op= MULT_OP me2= unary_expr )* ;
     public final RuleSetParser.mult_expr_return mult_expr() throws RecognitionException {
         RuleSetParser.mult_expr_return retval = new RuleSetParser.mult_expr_return();
         retval.start = input.LT(1);
@@ -7851,8 +7861,8 @@ public class RuleSetParser extends Parser {
              	ArrayList result = new ArrayList();
              
         try {
-            // RuleSet.g:1252:7: (me1= unary_expr (op= MULT_OP me2= unary_expr )* )
-            // RuleSet.g:1252:9: me1= unary_expr (op= MULT_OP me2= unary_expr )*
+            // RuleSet.g:1262:7: (me1= unary_expr (op= MULT_OP me2= unary_expr )* )
+            // RuleSet.g:1262:9: me1= unary_expr (op= MULT_OP me2= unary_expr )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -7862,7 +7872,7 @@ public class RuleSetParser extends Parser {
             state._fsp--;
             if (state.failed) return retval;
             if ( state.backtracking==0 ) adaptor.addChild(root_0, me1.getTree());
-            // RuleSet.g:1252:25: (op= MULT_OP me2= unary_expr )*
+            // RuleSet.g:1262:25: (op= MULT_OP me2= unary_expr )*
             loop86:
             do {
                 int alt86=2;
@@ -7875,7 +7885,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt86) {
             	case 1 :
-            	    // RuleSet.g:1252:26: op= MULT_OP me2= unary_expr
+            	    // RuleSet.g:1262:26: op= MULT_OP me2= unary_expr
             	    {
             	    op=(Token)match(input,MULT_OP,FOLLOW_MULT_OP_in_mult_expr2554); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
@@ -7947,7 +7957,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "add_expr"
-    // RuleSet.g:1272:1: add_expr returns [Object result] : me1= mult_expr (op= ( ADD_OP | REX ) me2= mult_expr )* ;
+    // RuleSet.g:1282:1: add_expr returns [Object result] : me1= mult_expr (op= ( ADD_OP | REX ) me2= mult_expr )* ;
     public final RuleSetParser.add_expr_return add_expr() throws RecognitionException {
         RuleSetParser.add_expr_return retval = new RuleSetParser.add_expr_return();
         retval.start = input.LT(1);
@@ -7967,8 +7977,8 @@ public class RuleSetParser extends Parser {
         	ArrayList result = new ArrayList();
 
         try {
-            // RuleSet.g:1277:2: (me1= mult_expr (op= ( ADD_OP | REX ) me2= mult_expr )* )
-            // RuleSet.g:1277:4: me1= mult_expr (op= ( ADD_OP | REX ) me2= mult_expr )*
+            // RuleSet.g:1287:2: (me1= mult_expr (op= ( ADD_OP | REX ) me2= mult_expr )* )
+            // RuleSet.g:1287:4: me1= mult_expr (op= ( ADD_OP | REX ) me2= mult_expr )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -7978,14 +7988,14 @@ public class RuleSetParser extends Parser {
             state._fsp--;
             if (state.failed) return retval;
             if ( state.backtracking==0 ) adaptor.addChild(root_0, me1.getTree());
-            // RuleSet.g:1277:19: (op= ( ADD_OP | REX ) me2= mult_expr )*
+            // RuleSet.g:1287:19: (op= ( ADD_OP | REX ) me2= mult_expr )*
             loop87:
             do {
                 int alt87=2;
                 alt87 = dfa87.predict(input);
                 switch (alt87) {
             	case 1 :
-            	    // RuleSet.g:1277:20: op= ( ADD_OP | REX ) me2= mult_expr
+            	    // RuleSet.g:1287:20: op= ( ADD_OP | REX ) me2= mult_expr
             	    {
             	    op=(Token)input.LT(1);
             	    if ( (input.LA(1)>=ADD_OP && input.LA(1)<=REX) ) {
@@ -8064,7 +8074,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "unary_expr"
-    // RuleSet.g:1296:1: unary_expr returns [Object result] options {backtrack=true; } : ( NOT ue= unary_expr | SEEN rx= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) (t= timeframe )? | SEEN rx_1= STRING op= must_be_one[sar(\"before\",\"after\")] rx_2= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) pop= ( PREDOP | LIKE ) e= expr t= timeframe | vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) t= timeframe | roe= regex | oe= operator_expr );
+    // RuleSet.g:1306:1: unary_expr returns [Object result] options {backtrack=true; } : ( NOT ue= unary_expr | SEEN rx= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) (t= timeframe )? | SEEN rx_1= STRING op= must_be_one[sar(\"before\",\"after\")] rx_2= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) pop= ( PREDOP | LIKE ) e= expr t= timeframe | vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) t= timeframe | roe= regex | oe= operator_expr );
     public final RuleSetParser.unary_expr_return unary_expr() throws RecognitionException {
         RuleSetParser.unary_expr_return retval = new RuleSetParser.unary_expr_return();
         retval.start = input.LT(1);
@@ -8119,12 +8129,12 @@ public class RuleSetParser extends Parser {
 
 
         try {
-            // RuleSet.g:1300:2: ( NOT ue= unary_expr | SEEN rx= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) (t= timeframe )? | SEEN rx_1= STRING op= must_be_one[sar(\"before\",\"after\")] rx_2= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) pop= ( PREDOP | LIKE ) e= expr t= timeframe | vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) t= timeframe | roe= regex | oe= operator_expr )
+            // RuleSet.g:1310:2: ( NOT ue= unary_expr | SEEN rx= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) (t= timeframe )? | SEEN rx_1= STRING op= must_be_one[sar(\"before\",\"after\")] rx_2= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) pop= ( PREDOP | LIKE ) e= expr t= timeframe | vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) t= timeframe | roe= regex | oe= operator_expr )
             int alt89=7;
             alt89 = dfa89.predict(input);
             switch (alt89) {
                 case 1 :
-                    // RuleSet.g:1300:4: NOT ue= unary_expr
+                    // RuleSet.g:1310:4: NOT ue= unary_expr
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -8154,7 +8164,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1309:4: SEEN rx= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) (t= timeframe )?
+                    // RuleSet.g:1319:4: SEEN rx= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) (t= timeframe )?
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -8196,7 +8206,7 @@ public class RuleSetParser extends Parser {
                         throw mse;
                     }
 
-                    // RuleSet.g:1309:106: (t= timeframe )?
+                    // RuleSet.g:1319:106: (t= timeframe )?
                     int alt88=2;
                     alt88 = dfa88.predict(input);
                     switch (alt88) {
@@ -8235,7 +8245,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // RuleSet.g:1323:4: SEEN rx_1= STRING op= must_be_one[sar(\"before\",\"after\")] rx_2= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN )
+                    // RuleSet.g:1333:4: SEEN rx_1= STRING op= must_be_one[sar(\"before\",\"after\")] rx_2= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN )
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -8304,7 +8314,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // RuleSet.g:1333:4: vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) pop= ( PREDOP | LIKE ) e= expr t= timeframe
+                    // RuleSet.g:1343:4: vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) pop= ( PREDOP | LIKE ) e= expr t= timeframe
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -8372,7 +8382,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 5 :
-                    // RuleSet.g:1345:4: vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) t= timeframe
+                    // RuleSet.g:1355:4: vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) t= timeframe
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -8425,7 +8435,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 6 :
-                    // RuleSet.g:1360:4: roe= regex
+                    // RuleSet.g:1370:4: roe= regex
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -8444,7 +8454,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 7 :
-                    // RuleSet.g:1363:4: oe= operator_expr
+                    // RuleSet.g:1373:4: oe= operator_expr
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -8491,7 +8501,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "operator_expr"
-    // RuleSet.g:1369:1: operator_expr returns [Object result] : f= factor (o= operator )* ;
+    // RuleSet.g:1379:1: operator_expr returns [Object result] : f= factor (o= operator )* ;
     public final RuleSetParser.operator_expr_return operator_expr() throws RecognitionException {
         RuleSetParser.operator_expr_return retval = new RuleSetParser.operator_expr_return();
         retval.start = input.LT(1);
@@ -8508,8 +8518,8 @@ public class RuleSetParser extends Parser {
         	ArrayList operators = new ArrayList();
 
         try {
-            // RuleSet.g:1374:2: (f= factor (o= operator )* )
-            // RuleSet.g:1374:4: f= factor (o= operator )*
+            // RuleSet.g:1384:2: (f= factor (o= operator )* )
+            // RuleSet.g:1384:4: f= factor (o= operator )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -8519,7 +8529,7 @@ public class RuleSetParser extends Parser {
             state._fsp--;
             if (state.failed) return retval;
             if ( state.backtracking==0 ) adaptor.addChild(root_0, f.getTree());
-            // RuleSet.g:1374:14: (o= operator )*
+            // RuleSet.g:1384:14: (o= operator )*
             loop90:
             do {
                 int alt90=2;
@@ -8532,7 +8542,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt90) {
             	case 1 :
-            	    // RuleSet.g:1374:15: o= operator
+            	    // RuleSet.g:1384:15: o= operator
             	    {
             	    pushFollow(FOLLOW_operator_in_operator_expr2884);
             	    o=operator();
@@ -8621,7 +8631,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "operator"
-    // RuleSet.g:1412:1: operator returns [String oper,ArrayList exprs] : DOT (o= OTHER_OPERATORS LEFT_PAREN (e= expr ( ',' e1= expr )* )? RIGHT_PAREN | o1= MATCH LEFT_PAREN e= expr RIGHT_PAREN | o2= REPLACE LEFT_PAREN rx= expr ',' e1= expr RIGHT_PAREN ) ;
+    // RuleSet.g:1422:1: operator returns [String oper,ArrayList exprs] : DOT (o= OTHER_OPERATORS LEFT_PAREN (e= expr ( ',' e1= expr )* )? RIGHT_PAREN | o1= MATCH LEFT_PAREN e= expr RIGHT_PAREN | o2= REPLACE LEFT_PAREN rx= expr ',' e1= expr RIGHT_PAREN ) ;
     public final RuleSetParser.operator_return operator() throws RecognitionException {
         RuleSetParser.operator_return retval = new RuleSetParser.operator_return();
         retval.start = input.LT(1);
@@ -8664,8 +8674,8 @@ public class RuleSetParser extends Parser {
         	ArrayList rexprs = new ArrayList();
 
         try {
-            // RuleSet.g:1417:2: ( DOT (o= OTHER_OPERATORS LEFT_PAREN (e= expr ( ',' e1= expr )* )? RIGHT_PAREN | o1= MATCH LEFT_PAREN e= expr RIGHT_PAREN | o2= REPLACE LEFT_PAREN rx= expr ',' e1= expr RIGHT_PAREN ) )
-            // RuleSet.g:1417:4: DOT (o= OTHER_OPERATORS LEFT_PAREN (e= expr ( ',' e1= expr )* )? RIGHT_PAREN | o1= MATCH LEFT_PAREN e= expr RIGHT_PAREN | o2= REPLACE LEFT_PAREN rx= expr ',' e1= expr RIGHT_PAREN )
+            // RuleSet.g:1427:2: ( DOT (o= OTHER_OPERATORS LEFT_PAREN (e= expr ( ',' e1= expr )* )? RIGHT_PAREN | o1= MATCH LEFT_PAREN e= expr RIGHT_PAREN | o2= REPLACE LEFT_PAREN rx= expr ',' e1= expr RIGHT_PAREN ) )
+            // RuleSet.g:1427:4: DOT (o= OTHER_OPERATORS LEFT_PAREN (e= expr ( ',' e1= expr )* )? RIGHT_PAREN | o1= MATCH LEFT_PAREN e= expr RIGHT_PAREN | o2= REPLACE LEFT_PAREN rx= expr ',' e1= expr RIGHT_PAREN )
             {
             root_0 = (Object)adaptor.nil();
 
@@ -8674,7 +8684,7 @@ public class RuleSetParser extends Parser {
             DOT132_tree = (Object)adaptor.create(DOT132);
             adaptor.addChild(root_0, DOT132_tree);
             }
-            // RuleSet.g:1417:8: (o= OTHER_OPERATORS LEFT_PAREN (e= expr ( ',' e1= expr )* )? RIGHT_PAREN | o1= MATCH LEFT_PAREN e= expr RIGHT_PAREN | o2= REPLACE LEFT_PAREN rx= expr ',' e1= expr RIGHT_PAREN )
+            // RuleSet.g:1427:8: (o= OTHER_OPERATORS LEFT_PAREN (e= expr ( ',' e1= expr )* )? RIGHT_PAREN | o1= MATCH LEFT_PAREN e= expr RIGHT_PAREN | o2= REPLACE LEFT_PAREN rx= expr ',' e1= expr RIGHT_PAREN )
             int alt93=3;
             switch ( input.LA(1) ) {
             case OTHER_OPERATORS:
@@ -8702,7 +8712,7 @@ public class RuleSetParser extends Parser {
 
             switch (alt93) {
                 case 1 :
-                    // RuleSet.g:1417:10: o= OTHER_OPERATORS LEFT_PAREN (e= expr ( ',' e1= expr )* )? RIGHT_PAREN
+                    // RuleSet.g:1427:10: o= OTHER_OPERATORS LEFT_PAREN (e= expr ( ',' e1= expr )* )? RIGHT_PAREN
                     {
                     o=(Token)match(input,OTHER_OPERATORS,FOLLOW_OTHER_OPERATORS_in_operator2917); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -8714,7 +8724,7 @@ public class RuleSetParser extends Parser {
                     LEFT_PAREN133_tree = (Object)adaptor.create(LEFT_PAREN133);
                     adaptor.addChild(root_0, LEFT_PAREN133_tree);
                     }
-                    // RuleSet.g:1417:39: (e= expr ( ',' e1= expr )* )?
+                    // RuleSet.g:1427:39: (e= expr ( ',' e1= expr )* )?
                     int alt92=2;
                     int LA92_0 = input.LA(1);
 
@@ -8723,7 +8733,7 @@ public class RuleSetParser extends Parser {
                     }
                     switch (alt92) {
                         case 1 :
-                            // RuleSet.g:1417:40: e= expr ( ',' e1= expr )*
+                            // RuleSet.g:1427:40: e= expr ( ',' e1= expr )*
                             {
                             pushFollow(FOLLOW_expr_in_operator2924);
                             e=expr();
@@ -8734,7 +8744,7 @@ public class RuleSetParser extends Parser {
                             if ( state.backtracking==0 ) {
                               rexprs.add(e.result); 
                             }
-                            // RuleSet.g:1417:72: ( ',' e1= expr )*
+                            // RuleSet.g:1427:72: ( ',' e1= expr )*
                             loop91:
                             do {
                                 int alt91=2;
@@ -8747,7 +8757,7 @@ public class RuleSetParser extends Parser {
 
                                 switch (alt91) {
                             	case 1 :
-                            	    // RuleSet.g:1417:73: ',' e1= expr
+                            	    // RuleSet.g:1427:73: ',' e1= expr
                             	    {
                             	    char_literal134=(Token)match(input,COMMA,FOLLOW_COMMA_in_operator2929); if (state.failed) return retval;
                             	    if ( state.backtracking==0 ) {
@@ -8794,7 +8804,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1423:9: o1= MATCH LEFT_PAREN e= expr RIGHT_PAREN
+                    // RuleSet.g:1433:9: o1= MATCH LEFT_PAREN e= expr RIGHT_PAREN
                     {
                     o1=(Token)match(input,MATCH,FOLLOW_MATCH_in_operator2966); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -8831,7 +8841,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // RuleSet.g:1429:9: o2= REPLACE LEFT_PAREN rx= expr ',' e1= expr RIGHT_PAREN
+                    // RuleSet.g:1439:9: o2= REPLACE LEFT_PAREN rx= expr ',' e1= expr RIGHT_PAREN
                     {
                     o2=(Token)match(input,REPLACE,FOLLOW_REPLACE_in_operator3002); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -8913,7 +8923,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "factor"
-    // RuleSet.g:1440:1: factor returns [Object result] options {backtrack=true; } : (iv= INT | sv= STRING | fv= FLOAT | bv= ( TRUE | FALSE ) | bv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_BRACKET e= expr RIGHT_BRACKET | d= VAR_DOMAIN COLON vv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | CURRENT d= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | HISTORY e= expr d= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | n= namespace p= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN | v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN | LEFT_BRACKET (e= expr ( COMMA e2= expr )* )? RIGHT_BRACKET | LEFT_CURL (h1= hash_line ( COMMA h2= hash_line )* )? RIGHT_CURL | LEFT_PAREN e= expr RIGHT_PAREN | v= ( VAR | OTHER_OPERATORS | REPLACE | MATCH ) | reg= regex );
+    // RuleSet.g:1450:1: factor returns [Object result] options {backtrack=true; } : (iv= INT | sv= STRING | fv= FLOAT | bv= ( TRUE | FALSE ) | bv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_BRACKET e= expr RIGHT_BRACKET | d= VAR_DOMAIN COLON vv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | CURRENT d= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | HISTORY e= expr d= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | n= namespace p= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN | v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN | LEFT_BRACKET (e= expr ( COMMA e2= expr )* )? RIGHT_BRACKET | LEFT_CURL (h1= hash_line ( COMMA h2= hash_line )* )? RIGHT_CURL | LEFT_PAREN e= expr RIGHT_PAREN | v= ( VAR | OTHER_OPERATORS | REPLACE | MATCH ) | reg= regex );
     public final RuleSetParser.factor_return factor() throws RecognitionException {
         RuleSetParser.factor_return retval = new RuleSetParser.factor_return();
         retval.start = input.LT(1);
@@ -8997,12 +9007,12 @@ public class RuleSetParser extends Parser {
 
 
         try {
-            // RuleSet.g:1445:2: (iv= INT | sv= STRING | fv= FLOAT | bv= ( TRUE | FALSE ) | bv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_BRACKET e= expr RIGHT_BRACKET | d= VAR_DOMAIN COLON vv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | CURRENT d= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | HISTORY e= expr d= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | n= namespace p= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN | v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN | LEFT_BRACKET (e= expr ( COMMA e2= expr )* )? RIGHT_BRACKET | LEFT_CURL (h1= hash_line ( COMMA h2= hash_line )* )? RIGHT_CURL | LEFT_PAREN e= expr RIGHT_PAREN | v= ( VAR | OTHER_OPERATORS | REPLACE | MATCH ) | reg= regex )
+            // RuleSet.g:1455:2: (iv= INT | sv= STRING | fv= FLOAT | bv= ( TRUE | FALSE ) | bv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_BRACKET e= expr RIGHT_BRACKET | d= VAR_DOMAIN COLON vv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | CURRENT d= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | HISTORY e= expr d= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | n= namespace p= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN | v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN | LEFT_BRACKET (e= expr ( COMMA e2= expr )* )? RIGHT_BRACKET | LEFT_CURL (h1= hash_line ( COMMA h2= hash_line )* )? RIGHT_CURL | LEFT_PAREN e= expr RIGHT_PAREN | v= ( VAR | OTHER_OPERATORS | REPLACE | MATCH ) | reg= regex )
             int alt102=15;
             alt102 = dfa102.predict(input);
             switch (alt102) {
                 case 1 :
-                    // RuleSet.g:1445:4: iv= INT
+                    // RuleSet.g:1455:4: iv= INT
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -9015,7 +9025,7 @@ public class RuleSetParser extends Parser {
                        
                       		HashMap tmp = new HashMap();
                       		tmp.put("type","num");
-                      		tmp.put("val",Long.parseLong((iv!=null?iv.getText():null)));
+                      		tmp.put("val",Long.parseLong((iv!=null?iv.getText():null).trim()));
                       		retval.result = tmp;
                       	
                     }
@@ -9023,7 +9033,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1451:9: sv= STRING
+                    // RuleSet.g:1461:9: sv= STRING
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -9044,7 +9054,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // RuleSet.g:1457:9: fv= FLOAT
+                    // RuleSet.g:1467:9: fv= FLOAT
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -9057,7 +9067,7 @@ public class RuleSetParser extends Parser {
                        
                             		HashMap tmp = new HashMap();
                       		tmp.put("type","num");
-                      		tmp.put("val",Float.parseFloat((fv!=null?fv.getText():null)));
+                      		tmp.put("val",Float.parseFloat((fv!=null?fv.getText():null).trim()));
                       		retval.result = tmp;
                       	
                     }
@@ -9065,7 +9075,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // RuleSet.g:1463:9: bv= ( TRUE | FALSE )
+                    // RuleSet.g:1473:9: bv= ( TRUE | FALSE )
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -9093,7 +9103,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 5 :
-                    // RuleSet.g:1469:9: bv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_BRACKET e= expr RIGHT_BRACKET
+                    // RuleSet.g:1479:9: bv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_BRACKET e= expr RIGHT_BRACKET
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -9145,7 +9155,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 6 :
-                    // RuleSet.g:1483:9: d= VAR_DOMAIN COLON vv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN )
+                    // RuleSet.g:1493:9: d= VAR_DOMAIN COLON vv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN )
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -9184,7 +9194,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 7 :
-                    // RuleSet.g:1490:9: CURRENT d= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN )
+                    // RuleSet.g:1500:9: CURRENT d= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN )
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -9232,7 +9242,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 8 :
-                    // RuleSet.g:1501:9: HISTORY e= expr d= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN )
+                    // RuleSet.g:1511:9: HISTORY e= expr d= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN )
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -9285,7 +9295,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 9 :
-                    // RuleSet.g:1511:9: n= namespace p= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN
+                    // RuleSet.g:1521:9: n= namespace p= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -9312,7 +9322,7 @@ public class RuleSetParser extends Parser {
                     LEFT_PAREN148_tree = (Object)adaptor.create(LEFT_PAREN148);
                     adaptor.addChild(root_0, LEFT_PAREN148_tree);
                     }
-                    // RuleSet.g:1511:86: (e= expr ( COMMA e= expr )* )?
+                    // RuleSet.g:1521:86: (e= expr ( COMMA e= expr )* )?
                     int alt95=2;
                     int LA95_0 = input.LA(1);
 
@@ -9321,7 +9331,7 @@ public class RuleSetParser extends Parser {
                     }
                     switch (alt95) {
                         case 1 :
-                            // RuleSet.g:1511:87: e= expr ( COMMA e= expr )*
+                            // RuleSet.g:1521:87: e= expr ( COMMA e= expr )*
                             {
                             pushFollow(FOLLOW_expr_in_factor3297);
                             e=expr();
@@ -9332,7 +9342,7 @@ public class RuleSetParser extends Parser {
                             if ( state.backtracking==0 ) {
                                exprs2.add((e!=null?e.result:null)); 
                             }
-                            // RuleSet.g:1511:121: ( COMMA e= expr )*
+                            // RuleSet.g:1521:121: ( COMMA e= expr )*
                             loop94:
                             do {
                                 int alt94=2;
@@ -9345,7 +9355,7 @@ public class RuleSetParser extends Parser {
 
                                 switch (alt94) {
                             	case 1 :
-                            	    // RuleSet.g:1511:123: COMMA e= expr
+                            	    // RuleSet.g:1521:123: COMMA e= expr
                             	    {
                             	    COMMA149=(Token)match(input,COMMA,FOLLOW_COMMA_in_factor3303); if (state.failed) return retval;
                             	    if ( state.backtracking==0 ) {
@@ -9395,7 +9405,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 10 :
-                    // RuleSet.g:1519:9: v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN
+                    // RuleSet.g:1529:9: v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -9416,7 +9426,7 @@ public class RuleSetParser extends Parser {
                     LEFT_PAREN151_tree = (Object)adaptor.create(LEFT_PAREN151);
                     adaptor.addChild(root_0, LEFT_PAREN151_tree);
                     }
-                    // RuleSet.g:1519:74: (e= expr ( COMMA e= expr )* )?
+                    // RuleSet.g:1529:74: (e= expr ( COMMA e= expr )* )?
                     int alt97=2;
                     int LA97_0 = input.LA(1);
 
@@ -9425,7 +9435,7 @@ public class RuleSetParser extends Parser {
                     }
                     switch (alt97) {
                         case 1 :
-                            // RuleSet.g:1519:75: e= expr ( COMMA e= expr )*
+                            // RuleSet.g:1529:75: e= expr ( COMMA e= expr )*
                             {
                             pushFollow(FOLLOW_expr_in_factor3350);
                             e=expr();
@@ -9436,7 +9446,7 @@ public class RuleSetParser extends Parser {
                             if ( state.backtracking==0 ) {
                                 exprs2.add((e!=null?e.result:null)); 
                             }
-                            // RuleSet.g:1519:109: ( COMMA e= expr )*
+                            // RuleSet.g:1529:109: ( COMMA e= expr )*
                             loop96:
                             do {
                                 int alt96=2;
@@ -9449,7 +9459,7 @@ public class RuleSetParser extends Parser {
 
                                 switch (alt96) {
                             	case 1 :
-                            	    // RuleSet.g:1519:111: COMMA e= expr
+                            	    // RuleSet.g:1529:111: COMMA e= expr
                             	    {
                             	    COMMA152=(Token)match(input,COMMA,FOLLOW_COMMA_in_factor3355); if (state.failed) return retval;
                             	    if ( state.backtracking==0 ) {
@@ -9502,7 +9512,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 11 :
-                    // RuleSet.g:1530:9: LEFT_BRACKET (e= expr ( COMMA e2= expr )* )? RIGHT_BRACKET
+                    // RuleSet.g:1540:9: LEFT_BRACKET (e= expr ( COMMA e2= expr )* )? RIGHT_BRACKET
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -9511,7 +9521,7 @@ public class RuleSetParser extends Parser {
                     LEFT_BRACKET154_tree = (Object)adaptor.create(LEFT_BRACKET154);
                     adaptor.addChild(root_0, LEFT_BRACKET154_tree);
                     }
-                    // RuleSet.g:1530:22: (e= expr ( COMMA e2= expr )* )?
+                    // RuleSet.g:1540:22: (e= expr ( COMMA e2= expr )* )?
                     int alt99=2;
                     int LA99_0 = input.LA(1);
 
@@ -9520,7 +9530,7 @@ public class RuleSetParser extends Parser {
                     }
                     switch (alt99) {
                         case 1 :
-                            // RuleSet.g:1530:23: e= expr ( COMMA e2= expr )*
+                            // RuleSet.g:1540:23: e= expr ( COMMA e2= expr )*
                             {
                             pushFollow(FOLLOW_expr_in_factor3385);
                             e=expr();
@@ -9531,7 +9541,7 @@ public class RuleSetParser extends Parser {
                             if ( state.backtracking==0 ) {
                                exprs2.add((e!=null?e.result:null)); 
                             }
-                            // RuleSet.g:1530:57: ( COMMA e2= expr )*
+                            // RuleSet.g:1540:57: ( COMMA e2= expr )*
                             loop98:
                             do {
                                 int alt98=2;
@@ -9544,7 +9554,7 @@ public class RuleSetParser extends Parser {
 
                                 switch (alt98) {
                             	case 1 :
-                            	    // RuleSet.g:1530:58: COMMA e2= expr
+                            	    // RuleSet.g:1540:58: COMMA e2= expr
                             	    {
                             	    COMMA155=(Token)match(input,COMMA,FOLLOW_COMMA_in_factor3390); if (state.failed) return retval;
                             	    if ( state.backtracking==0 ) {
@@ -9593,7 +9603,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 12 :
-                    // RuleSet.g:1537:9: LEFT_CURL (h1= hash_line ( COMMA h2= hash_line )* )? RIGHT_CURL
+                    // RuleSet.g:1547:9: LEFT_CURL (h1= hash_line ( COMMA h2= hash_line )* )? RIGHT_CURL
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -9602,7 +9612,7 @@ public class RuleSetParser extends Parser {
                     LEFT_CURL157_tree = (Object)adaptor.create(LEFT_CURL157);
                     adaptor.addChild(root_0, LEFT_CURL157_tree);
                     }
-                    // RuleSet.g:1537:19: (h1= hash_line ( COMMA h2= hash_line )* )?
+                    // RuleSet.g:1547:19: (h1= hash_line ( COMMA h2= hash_line )* )?
                     int alt101=2;
                     int LA101_0 = input.LA(1);
 
@@ -9611,7 +9621,7 @@ public class RuleSetParser extends Parser {
                     }
                     switch (alt101) {
                         case 1 :
-                            // RuleSet.g:1537:20: h1= hash_line ( COMMA h2= hash_line )*
+                            // RuleSet.g:1547:20: h1= hash_line ( COMMA h2= hash_line )*
                             {
                             pushFollow(FOLLOW_hash_line_in_factor3419);
                             h1=hash_line();
@@ -9622,7 +9632,7 @@ public class RuleSetParser extends Parser {
                             if ( state.backtracking==0 ) {
                                 exprs2.add((h1!=null?h1.result:null));
                             }
-                            // RuleSet.g:1537:61: ( COMMA h2= hash_line )*
+                            // RuleSet.g:1547:61: ( COMMA h2= hash_line )*
                             loop100:
                             do {
                                 int alt100=2;
@@ -9635,7 +9645,7 @@ public class RuleSetParser extends Parser {
 
                                 switch (alt100) {
                             	case 1 :
-                            	    // RuleSet.g:1537:62: COMMA h2= hash_line
+                            	    // RuleSet.g:1547:62: COMMA h2= hash_line
                             	    {
                             	    COMMA158=(Token)match(input,COMMA,FOLLOW_COMMA_in_factor3424); if (state.failed) return retval;
                             	    if ( state.backtracking==0 ) {
@@ -9684,7 +9694,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 13 :
-                    // RuleSet.g:1544:9: LEFT_PAREN e= expr RIGHT_PAREN
+                    // RuleSet.g:1554:9: LEFT_PAREN e= expr RIGHT_PAREN
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -9711,7 +9721,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 14 :
-                    // RuleSet.g:1545:9: v= ( VAR | OTHER_OPERATORS | REPLACE | MATCH )
+                    // RuleSet.g:1555:9: v= ( VAR | OTHER_OPERATORS | REPLACE | MATCH )
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -9739,7 +9749,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 15 :
-                    // RuleSet.g:1551:9: reg= regex
+                    // RuleSet.g:1561:9: reg= regex
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -9789,7 +9799,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "namespace"
-    // RuleSet.g:1564:10: fragment namespace returns [String result] : v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) ':' ;
+    // RuleSet.g:1574:10: fragment namespace returns [String result] : v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) ':' ;
     public final RuleSetParser.namespace_return namespace() throws RecognitionException {
         RuleSetParser.namespace_return retval = new RuleSetParser.namespace_return();
         retval.start = input.LT(1);
@@ -9803,8 +9813,8 @@ public class RuleSetParser extends Parser {
         Object char_literal162_tree=null;
 
         try {
-            // RuleSet.g:1565:2: (v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) ':' )
-            // RuleSet.g:1565:4: v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) ':'
+            // RuleSet.g:1575:2: (v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) ':' )
+            // RuleSet.g:1575:4: v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) ':'
             {
             root_0 = (Object)adaptor.nil();
 
@@ -9861,7 +9871,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "timeframe"
-    // RuleSet.g:1572:1: timeframe returns [Object result,String time] : WITHIN e= expr p= period ;
+    // RuleSet.g:1582:1: timeframe returns [Object result,String time] : WITHIN e= expr p= period ;
     public final RuleSetParser.timeframe_return timeframe() throws RecognitionException {
         RuleSetParser.timeframe_return retval = new RuleSetParser.timeframe_return();
         retval.start = input.LT(1);
@@ -9877,8 +9887,8 @@ public class RuleSetParser extends Parser {
         Object WITHIN163_tree=null;
 
         try {
-            // RuleSet.g:1573:2: ( WITHIN e= expr p= period )
-            // RuleSet.g:1573:5: WITHIN e= expr p= period
+            // RuleSet.g:1583:2: ( WITHIN e= expr p= period )
+            // RuleSet.g:1583:5: WITHIN e= expr p= period
             {
             root_0 = (Object)adaptor.nil();
 
@@ -9935,7 +9945,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "hash_line"
-    // RuleSet.g:1581:1: hash_line returns [HashMap result] : s= STRING COLON e= expr ;
+    // RuleSet.g:1591:1: hash_line returns [HashMap result] : s= STRING COLON e= expr ;
     public final RuleSetParser.hash_line_return hash_line() throws RecognitionException {
         RuleSetParser.hash_line_return retval = new RuleSetParser.hash_line_return();
         retval.start = input.LT(1);
@@ -9951,8 +9961,8 @@ public class RuleSetParser extends Parser {
         Object COLON164_tree=null;
 
         try {
-            // RuleSet.g:1582:2: (s= STRING COLON e= expr )
-            // RuleSet.g:1582:4: s= STRING COLON e= expr
+            // RuleSet.g:1592:2: (s= STRING COLON e= expr )
+            // RuleSet.g:1592:4: s= STRING COLON e= expr
             {
             root_0 = (Object)adaptor.nil();
 
@@ -10011,7 +10021,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "css_emit"
-    // RuleSet.g:1591:1: css_emit returns [String emit_value] : CSS (h= HTML | h= STRING ) ;
+    // RuleSet.g:1601:1: css_emit returns [String emit_value] : CSS (h= HTML | h= STRING ) ;
     public final RuleSetParser.css_emit_return css_emit() throws RecognitionException {
         RuleSetParser.css_emit_return retval = new RuleSetParser.css_emit_return();
         retval.start = input.LT(1);
@@ -10025,8 +10035,8 @@ public class RuleSetParser extends Parser {
         Object CSS165_tree=null;
 
         try {
-            // RuleSet.g:1592:2: ( CSS (h= HTML | h= STRING ) )
-            // RuleSet.g:1592:4: CSS (h= HTML | h= STRING )
+            // RuleSet.g:1602:2: ( CSS (h= HTML | h= STRING ) )
+            // RuleSet.g:1602:4: CSS (h= HTML | h= STRING )
             {
             root_0 = (Object)adaptor.nil();
 
@@ -10035,7 +10045,7 @@ public class RuleSetParser extends Parser {
             CSS165_tree = (Object)adaptor.create(CSS165);
             adaptor.addChild(root_0, CSS165_tree);
             }
-            // RuleSet.g:1592:8: (h= HTML | h= STRING )
+            // RuleSet.g:1602:8: (h= HTML | h= STRING )
             int alt103=2;
             int LA103_0 = input.LA(1);
 
@@ -10054,7 +10064,7 @@ public class RuleSetParser extends Parser {
             }
             switch (alt103) {
                 case 1 :
-                    // RuleSet.g:1592:10: h= HTML
+                    // RuleSet.g:1602:10: h= HTML
                     {
                     h=(Token)match(input,HTML,FOLLOW_HTML_in_css_emit3633); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -10068,7 +10078,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1593:3: h= STRING
+                    // RuleSet.g:1603:3: h= STRING
                     {
                     h=(Token)match(input,STRING,FOLLOW_STRING_in_css_emit3641); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -10113,7 +10123,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "period"
-    // RuleSet.g:1597:1: period : must_be_one[sar( \"years\", \"months\", \"weeks\", \"days\", \"hours\", \"minutes\", \"seconds\", \"year\", \"month\", \"week\", \"day\", \"hour\", \"minute\", \"second\")] ;
+    // RuleSet.g:1607:1: period : must_be_one[sar( \"years\", \"months\", \"weeks\", \"days\", \"hours\", \"minutes\", \"seconds\", \"year\", \"month\", \"week\", \"day\", \"hour\", \"minute\", \"second\")] ;
     public final RuleSetParser.period_return period() throws RecognitionException {
         RuleSetParser.period_return retval = new RuleSetParser.period_return();
         retval.start = input.LT(1);
@@ -10125,8 +10135,8 @@ public class RuleSetParser extends Parser {
 
 
         try {
-            // RuleSet.g:1598:2: ( must_be_one[sar( \"years\", \"months\", \"weeks\", \"days\", \"hours\", \"minutes\", \"seconds\", \"year\", \"month\", \"week\", \"day\", \"hour\", \"minute\", \"second\")] )
-            // RuleSet.g:1599:3: must_be_one[sar( \"years\", \"months\", \"weeks\", \"days\", \"hours\", \"minutes\", \"seconds\", \"year\", \"month\", \"week\", \"day\", \"hour\", \"minute\", \"second\")]
+            // RuleSet.g:1608:2: ( must_be_one[sar( \"years\", \"months\", \"weeks\", \"days\", \"hours\", \"minutes\", \"seconds\", \"year\", \"month\", \"week\", \"day\", \"hour\", \"minute\", \"second\")] )
+            // RuleSet.g:1609:3: must_be_one[sar( \"years\", \"months\", \"weeks\", \"days\", \"hours\", \"minutes\", \"seconds\", \"year\", \"month\", \"week\", \"day\", \"hour\", \"minute\", \"second\")]
             {
             root_0 = (Object)adaptor.nil();
 
@@ -10166,7 +10176,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "cachable"
-    // RuleSet.g:1619:1: cachable returns [Object what] : ca= CACHABLE ( FOR tm= INT per= period )? ;
+    // RuleSet.g:1629:1: cachable returns [Object what] : ca= CACHABLE ( FOR tm= INT per= period )? ;
     public final RuleSetParser.cachable_return cachable() throws RecognitionException {
         RuleSetParser.cachable_return retval = new RuleSetParser.cachable_return();
         retval.start = input.LT(1);
@@ -10187,8 +10197,8 @@ public class RuleSetParser extends Parser {
         	retval.what = null;
 
         try {
-            // RuleSet.g:1623:2: (ca= CACHABLE ( FOR tm= INT per= period )? )
-            // RuleSet.g:1624:3: ca= CACHABLE ( FOR tm= INT per= period )?
+            // RuleSet.g:1633:2: (ca= CACHABLE ( FOR tm= INT per= period )? )
+            // RuleSet.g:1634:3: ca= CACHABLE ( FOR tm= INT per= period )?
             {
             root_0 = (Object)adaptor.nil();
 
@@ -10197,7 +10207,7 @@ public class RuleSetParser extends Parser {
             ca_tree = (Object)adaptor.create(ca);
             adaptor.addChild(root_0, ca_tree);
             }
-            // RuleSet.g:1624:15: ( FOR tm= INT per= period )?
+            // RuleSet.g:1634:15: ( FOR tm= INT per= period )?
             int alt104=2;
             int LA104_0 = input.LA(1);
 
@@ -10206,7 +10216,7 @@ public class RuleSetParser extends Parser {
             }
             switch (alt104) {
                 case 1 :
-                    // RuleSet.g:1624:16: FOR tm= INT per= period
+                    // RuleSet.g:1634:16: FOR tm= INT per= period
                     {
                     FOR167=(Token)match(input,FOR,FOLLOW_FOR_in_cachable3698); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -10278,7 +10288,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "emit_block"
-    // RuleSet.g:1643:1: emit_block returns [String emit_value] : EMIT (h= HTML | h= STRING | h= JS ) ;
+    // RuleSet.g:1653:1: emit_block returns [String emit_value] : EMIT (h= HTML | h= STRING | h= JS ) ;
     public final RuleSetParser.emit_block_return emit_block() throws RecognitionException {
         RuleSetParser.emit_block_return retval = new RuleSetParser.emit_block_return();
         retval.start = input.LT(1);
@@ -10292,8 +10302,8 @@ public class RuleSetParser extends Parser {
         Object EMIT168_tree=null;
 
         try {
-            // RuleSet.g:1644:2: ( EMIT (h= HTML | h= STRING | h= JS ) )
-            // RuleSet.g:1644:4: EMIT (h= HTML | h= STRING | h= JS )
+            // RuleSet.g:1654:2: ( EMIT (h= HTML | h= STRING | h= JS ) )
+            // RuleSet.g:1654:4: EMIT (h= HTML | h= STRING | h= JS )
             {
             root_0 = (Object)adaptor.nil();
 
@@ -10302,7 +10312,7 @@ public class RuleSetParser extends Parser {
             EMIT168_tree = (Object)adaptor.create(EMIT168);
             adaptor.addChild(root_0, EMIT168_tree);
             }
-            // RuleSet.g:1644:9: (h= HTML | h= STRING | h= JS )
+            // RuleSet.g:1654:9: (h= HTML | h= STRING | h= JS )
             int alt105=3;
             switch ( input.LA(1) ) {
             case HTML:
@@ -10330,7 +10340,7 @@ public class RuleSetParser extends Parser {
 
             switch (alt105) {
                 case 1 :
-                    // RuleSet.g:1644:11: h= HTML
+                    // RuleSet.g:1654:11: h= HTML
                     {
                     h=(Token)match(input,HTML,FOLLOW_HTML_in_emit_block3734); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -10344,7 +10354,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1645:3: h= STRING
+                    // RuleSet.g:1655:3: h= STRING
                     {
                     h=(Token)match(input,STRING,FOLLOW_STRING_in_emit_block3742); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -10358,7 +10368,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // RuleSet.g:1646:3: h= JS
+                    // RuleSet.g:1656:3: h= JS
                     {
                     h=(Token)match(input,JS,FOLLOW_JS_in_emit_block3750); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -10403,7 +10413,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "meta_block"
-    // RuleSet.g:1649:1: meta_block : META LEFT_CURL (name= must_be_one[sar(\"description\",\"name\",\"author\")] (html_desc= HTML | string_desc= STRING ) | KEY what= must_be_one[sar(\"errorstack\",\"googleanalytics\",\"facebook\",\"twitter\",\"amazon\",\"kpds\",\"google\")] (key_value= STRING | LEFT_CURL ( name_value_pair[key_values] ( COMMA name_value_pair[key_values] )* ) RIGHT_CURL )+ | AUTHZ REQUIRE must_be[\"user\"] | LOGGING onoff= ( ON | OFF ) | USE ( (rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR ) ) | ( MODULE modname= VAR ( ALIAS alias= VAR )? ) ) )* RIGHT_CURL ;
+    // RuleSet.g:1659:1: meta_block : META LEFT_CURL (name= must_be_one[sar(\"description\",\"name\",\"author\")] (html_desc= HTML | string_desc= STRING ) | KEY what= must_be_one[sar(\"errorstack\",\"googleanalytics\",\"facebook\",\"twitter\",\"amazon\",\"kpds\",\"google\")] (key_value= STRING | LEFT_CURL ( name_value_pair[key_values] ( COMMA name_value_pair[key_values] )* ) RIGHT_CURL )+ | AUTHZ REQUIRE must_be[\"user\"] | LOGGING onoff= ( ON | OFF ) | USE ( (rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR ) ) | ( MODULE modname= VAR ( ALIAS alias= VAR )? ) ) )* RIGHT_CURL ;
     public final RuleSetParser.meta_block_return meta_block() throws RecognitionException {
         RuleSetParser.meta_block_return retval = new RuleSetParser.meta_block_return();
         retval.start = input.LT(1);
@@ -10470,13 +10480,20 @@ public class RuleSetParser extends Parser {
 
 
         	 HashMap meta_block_hash = (HashMap)rule_json.get("meta");
+
+        	      if(meta_block_hash == null)
+             	 {
+             	    meta_block_hash = new HashMap();
+             	    rule_json.put("meta",meta_block_hash);
+             	 }
+
         	 ArrayList use_list = new ArrayList();
         	 HashMap keys_map = new HashMap();
         	 HashMap key_values = new HashMap();
 
         try {
-            // RuleSet.g:1666:2: ( META LEFT_CURL (name= must_be_one[sar(\"description\",\"name\",\"author\")] (html_desc= HTML | string_desc= STRING ) | KEY what= must_be_one[sar(\"errorstack\",\"googleanalytics\",\"facebook\",\"twitter\",\"amazon\",\"kpds\",\"google\")] (key_value= STRING | LEFT_CURL ( name_value_pair[key_values] ( COMMA name_value_pair[key_values] )* ) RIGHT_CURL )+ | AUTHZ REQUIRE must_be[\"user\"] | LOGGING onoff= ( ON | OFF ) | USE ( (rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR ) ) | ( MODULE modname= VAR ( ALIAS alias= VAR )? ) ) )* RIGHT_CURL )
-            // RuleSet.g:1666:4: META LEFT_CURL (name= must_be_one[sar(\"description\",\"name\",\"author\")] (html_desc= HTML | string_desc= STRING ) | KEY what= must_be_one[sar(\"errorstack\",\"googleanalytics\",\"facebook\",\"twitter\",\"amazon\",\"kpds\",\"google\")] (key_value= STRING | LEFT_CURL ( name_value_pair[key_values] ( COMMA name_value_pair[key_values] )* ) RIGHT_CURL )+ | AUTHZ REQUIRE must_be[\"user\"] | LOGGING onoff= ( ON | OFF ) | USE ( (rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR ) ) | ( MODULE modname= VAR ( ALIAS alias= VAR )? ) ) )* RIGHT_CURL
+            // RuleSet.g:1683:2: ( META LEFT_CURL (name= must_be_one[sar(\"description\",\"name\",\"author\")] (html_desc= HTML | string_desc= STRING ) | KEY what= must_be_one[sar(\"errorstack\",\"googleanalytics\",\"facebook\",\"twitter\",\"amazon\",\"kpds\",\"google\")] (key_value= STRING | LEFT_CURL ( name_value_pair[key_values] ( COMMA name_value_pair[key_values] )* ) RIGHT_CURL )+ | AUTHZ REQUIRE must_be[\"user\"] | LOGGING onoff= ( ON | OFF ) | USE ( (rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR ) ) | ( MODULE modname= VAR ( ALIAS alias= VAR )? ) ) )* RIGHT_CURL )
+            // RuleSet.g:1683:4: META LEFT_CURL (name= must_be_one[sar(\"description\",\"name\",\"author\")] (html_desc= HTML | string_desc= STRING ) | KEY what= must_be_one[sar(\"errorstack\",\"googleanalytics\",\"facebook\",\"twitter\",\"amazon\",\"kpds\",\"google\")] (key_value= STRING | LEFT_CURL ( name_value_pair[key_values] ( COMMA name_value_pair[key_values] )* ) RIGHT_CURL )+ | AUTHZ REQUIRE must_be[\"user\"] | LOGGING onoff= ( ON | OFF ) | USE ( (rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR ) ) | ( MODULE modname= VAR ( ALIAS alias= VAR )? ) ) )* RIGHT_CURL
             {
             root_0 = (Object)adaptor.nil();
 
@@ -10490,7 +10507,7 @@ public class RuleSetParser extends Parser {
             LEFT_CURL170_tree = (Object)adaptor.create(LEFT_CURL170);
             adaptor.addChild(root_0, LEFT_CURL170_tree);
             }
-            // RuleSet.g:1667:2: (name= must_be_one[sar(\"description\",\"name\",\"author\")] (html_desc= HTML | string_desc= STRING ) | KEY what= must_be_one[sar(\"errorstack\",\"googleanalytics\",\"facebook\",\"twitter\",\"amazon\",\"kpds\",\"google\")] (key_value= STRING | LEFT_CURL ( name_value_pair[key_values] ( COMMA name_value_pair[key_values] )* ) RIGHT_CURL )+ | AUTHZ REQUIRE must_be[\"user\"] | LOGGING onoff= ( ON | OFF ) | USE ( (rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR ) ) | ( MODULE modname= VAR ( ALIAS alias= VAR )? ) ) )*
+            // RuleSet.g:1684:2: (name= must_be_one[sar(\"description\",\"name\",\"author\")] (html_desc= HTML | string_desc= STRING ) | KEY what= must_be_one[sar(\"errorstack\",\"googleanalytics\",\"facebook\",\"twitter\",\"amazon\",\"kpds\",\"google\")] (key_value= STRING | LEFT_CURL ( name_value_pair[key_values] ( COMMA name_value_pair[key_values] )* ) RIGHT_CURL )+ | AUTHZ REQUIRE must_be[\"user\"] | LOGGING onoff= ( ON | OFF ) | USE ( (rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR ) ) | ( MODULE modname= VAR ( ALIAS alias= VAR )? ) ) )*
             loop112:
             do {
                 int alt112=6;
@@ -10525,7 +10542,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt112) {
             	case 1 :
-            	    // RuleSet.g:1667:5: name= must_be_one[sar(\"description\",\"name\",\"author\")] (html_desc= HTML | string_desc= STRING )
+            	    // RuleSet.g:1684:5: name= must_be_one[sar(\"description\",\"name\",\"author\")] (html_desc= HTML | string_desc= STRING )
             	    {
             	    pushFollow(FOLLOW_must_be_one_in_meta_block3790);
             	    name=must_be_one(sar("description","name","author"));
@@ -10533,7 +10550,7 @@ public class RuleSetParser extends Parser {
             	    state._fsp--;
             	    if (state.failed) return retval;
             	    if ( state.backtracking==0 ) adaptor.addChild(root_0, name.getTree());
-            	    // RuleSet.g:1667:58: (html_desc= HTML | string_desc= STRING )
+            	    // RuleSet.g:1684:58: (html_desc= HTML | string_desc= STRING )
             	    int alt106=2;
             	    int LA106_0 = input.LA(1);
 
@@ -10552,7 +10569,7 @@ public class RuleSetParser extends Parser {
             	    }
             	    switch (alt106) {
             	        case 1 :
-            	            // RuleSet.g:1667:59: html_desc= HTML
+            	            // RuleSet.g:1684:59: html_desc= HTML
             	            {
             	            html_desc=(Token)match(input,HTML,FOLLOW_HTML_in_meta_block3796); if (state.failed) return retval;
             	            if ( state.backtracking==0 ) {
@@ -10563,7 +10580,7 @@ public class RuleSetParser extends Parser {
             	            }
             	            break;
             	        case 2 :
-            	            // RuleSet.g:1667:74: string_desc= STRING
+            	            // RuleSet.g:1684:74: string_desc= STRING
             	            {
             	            string_desc=(Token)match(input,STRING,FOLLOW_STRING_in_meta_block3800); if (state.failed) return retval;
             	            if ( state.backtracking==0 ) {
@@ -10591,7 +10608,7 @@ public class RuleSetParser extends Parser {
             	    }
             	    break;
             	case 2 :
-            	    // RuleSet.g:1677:5: KEY what= must_be_one[sar(\"errorstack\",\"googleanalytics\",\"facebook\",\"twitter\",\"amazon\",\"kpds\",\"google\")] (key_value= STRING | LEFT_CURL ( name_value_pair[key_values] ( COMMA name_value_pair[key_values] )* ) RIGHT_CURL )+
+            	    // RuleSet.g:1694:5: KEY what= must_be_one[sar(\"errorstack\",\"googleanalytics\",\"facebook\",\"twitter\",\"amazon\",\"kpds\",\"google\")] (key_value= STRING | LEFT_CURL ( name_value_pair[key_values] ( COMMA name_value_pair[key_values] )* ) RIGHT_CURL )+
             	    {
             	    KEY171=(Token)match(input,KEY,FOLLOW_KEY_in_meta_block3814); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
@@ -10604,7 +10621,7 @@ public class RuleSetParser extends Parser {
             	    state._fsp--;
             	    if (state.failed) return retval;
             	    if ( state.backtracking==0 ) adaptor.addChild(root_0, what.getTree());
-            	    // RuleSet.g:1677:109: (key_value= STRING | LEFT_CURL ( name_value_pair[key_values] ( COMMA name_value_pair[key_values] )* ) RIGHT_CURL )+
+            	    // RuleSet.g:1694:109: (key_value= STRING | LEFT_CURL ( name_value_pair[key_values] ( COMMA name_value_pair[key_values] )* ) RIGHT_CURL )+
             	    int cnt108=0;
             	    loop108:
             	    do {
@@ -10621,7 +10638,7 @@ public class RuleSetParser extends Parser {
 
             	        switch (alt108) {
             	    	case 1 :
-            	    	    // RuleSet.g:1677:110: key_value= STRING
+            	    	    // RuleSet.g:1694:110: key_value= STRING
             	    	    {
             	    	    key_value=(Token)match(input,STRING,FOLLOW_STRING_in_meta_block3824); if (state.failed) return retval;
             	    	    if ( state.backtracking==0 ) {
@@ -10632,15 +10649,15 @@ public class RuleSetParser extends Parser {
             	    	    }
             	    	    break;
             	    	case 2 :
-            	    	    // RuleSet.g:1678:6: LEFT_CURL ( name_value_pair[key_values] ( COMMA name_value_pair[key_values] )* ) RIGHT_CURL
+            	    	    // RuleSet.g:1695:6: LEFT_CURL ( name_value_pair[key_values] ( COMMA name_value_pair[key_values] )* ) RIGHT_CURL
             	    	    {
             	    	    LEFT_CURL172=(Token)match(input,LEFT_CURL,FOLLOW_LEFT_CURL_in_meta_block3832); if (state.failed) return retval;
             	    	    if ( state.backtracking==0 ) {
             	    	    LEFT_CURL172_tree = (Object)adaptor.create(LEFT_CURL172);
             	    	    adaptor.addChild(root_0, LEFT_CURL172_tree);
             	    	    }
-            	    	    // RuleSet.g:1678:16: ( name_value_pair[key_values] ( COMMA name_value_pair[key_values] )* )
-            	    	    // RuleSet.g:1678:17: name_value_pair[key_values] ( COMMA name_value_pair[key_values] )*
+            	    	    // RuleSet.g:1695:16: ( name_value_pair[key_values] ( COMMA name_value_pair[key_values] )* )
+            	    	    // RuleSet.g:1695:17: name_value_pair[key_values] ( COMMA name_value_pair[key_values] )*
             	    	    {
             	    	    pushFollow(FOLLOW_name_value_pair_in_meta_block3835);
             	    	    name_value_pair173=name_value_pair(key_values);
@@ -10648,7 +10665,7 @@ public class RuleSetParser extends Parser {
             	    	    state._fsp--;
             	    	    if (state.failed) return retval;
             	    	    if ( state.backtracking==0 ) adaptor.addChild(root_0, name_value_pair173.getTree());
-            	    	    // RuleSet.g:1678:45: ( COMMA name_value_pair[key_values] )*
+            	    	    // RuleSet.g:1695:45: ( COMMA name_value_pair[key_values] )*
             	    	    loop107:
             	    	    do {
             	    	        int alt107=2;
@@ -10661,7 +10678,7 @@ public class RuleSetParser extends Parser {
 
             	    	        switch (alt107) {
             	    	    	case 1 :
-            	    	    	    // RuleSet.g:1678:46: COMMA name_value_pair[key_values]
+            	    	    	    // RuleSet.g:1695:46: COMMA name_value_pair[key_values]
             	    	    	    {
             	    	    	    COMMA174=(Token)match(input,COMMA,FOLLOW_COMMA_in_meta_block3839); if (state.failed) return retval;
             	    	    	    if ( state.backtracking==0 ) {
@@ -10718,7 +10735,7 @@ public class RuleSetParser extends Parser {
             	    }
             	    break;
             	case 3 :
-            	    // RuleSet.g:1685:4: AUTHZ REQUIRE must_be[\"user\"]
+            	    // RuleSet.g:1702:4: AUTHZ REQUIRE must_be[\"user\"]
             	    {
             	    AUTHZ177=(Token)match(input,AUTHZ,FOLLOW_AUTHZ_in_meta_block3859); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
@@ -10748,7 +10765,7 @@ public class RuleSetParser extends Parser {
             	    }
             	    break;
             	case 4 :
-            	    // RuleSet.g:1691:4: LOGGING onoff= ( ON | OFF )
+            	    // RuleSet.g:1708:4: LOGGING onoff= ( ON | OFF )
             	    {
             	    LOGGING180=(Token)match(input,LOGGING,FOLLOW_LOGGING_in_meta_block3872); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
@@ -10774,14 +10791,14 @@ public class RuleSetParser extends Parser {
             	    }
             	    break;
             	case 5 :
-            	    // RuleSet.g:1692:4: USE ( (rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR ) ) | ( MODULE modname= VAR ( ALIAS alias= VAR )? ) )
+            	    // RuleSet.g:1709:4: USE ( (rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR ) ) | ( MODULE modname= VAR ( ALIAS alias= VAR )? ) )
             	    {
             	    USE181=(Token)match(input,USE,FOLLOW_USE_in_meta_block3887); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
             	    USE181_tree = (Object)adaptor.create(USE181);
             	    adaptor.addChild(root_0, USE181_tree);
             	    }
-            	    // RuleSet.g:1692:8: ( (rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR ) ) | ( MODULE modname= VAR ( ALIAS alias= VAR )? ) )
+            	    // RuleSet.g:1709:8: ( (rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR ) ) | ( MODULE modname= VAR ( ALIAS alias= VAR )? ) )
             	    int alt111=2;
             	    int LA111_0 = input.LA(1);
 
@@ -10800,10 +10817,10 @@ public class RuleSetParser extends Parser {
             	    }
             	    switch (alt111) {
             	        case 1 :
-            	            // RuleSet.g:1692:10: (rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR ) )
+            	            // RuleSet.g:1709:10: (rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR ) )
             	            {
-            	            // RuleSet.g:1692:10: (rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR ) )
-            	            // RuleSet.g:1692:11: rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR )
+            	            // RuleSet.g:1709:10: (rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR ) )
+            	            // RuleSet.g:1709:11: rtype= ( CSS | JAVASCRIPT ) must_be[\"resource\"] (url= STRING | nicename= VAR )
             	            {
             	            rtype=(Token)input.LT(1);
             	            if ( input.LA(1)==CSS||input.LA(1)==JAVASCRIPT ) {
@@ -10823,7 +10840,7 @@ public class RuleSetParser extends Parser {
             	            state._fsp--;
             	            if (state.failed) return retval;
             	            if ( state.backtracking==0 ) adaptor.addChild(root_0, must_be182.getTree());
-            	            // RuleSet.g:1692:54: (url= STRING | nicename= VAR )
+            	            // RuleSet.g:1709:54: (url= STRING | nicename= VAR )
             	            int alt109=2;
             	            int LA109_0 = input.LA(1);
 
@@ -10842,7 +10859,7 @@ public class RuleSetParser extends Parser {
             	            }
             	            switch (alt109) {
             	                case 1 :
-            	                    // RuleSet.g:1692:55: url= STRING
+            	                    // RuleSet.g:1709:55: url= STRING
             	                    {
             	                    url=(Token)match(input,STRING,FOLLOW_STRING_in_meta_block3906); if (state.failed) return retval;
             	                    if ( state.backtracking==0 ) {
@@ -10853,7 +10870,7 @@ public class RuleSetParser extends Parser {
             	                    }
             	                    break;
             	                case 2 :
-            	                    // RuleSet.g:1692:68: nicename= VAR
+            	                    // RuleSet.g:1709:68: nicename= VAR
             	                    {
             	                    nicename=(Token)match(input,VAR,FOLLOW_VAR_in_meta_block3912); if (state.failed) return retval;
             	                    if ( state.backtracking==0 ) {
@@ -10894,10 +10911,10 @@ public class RuleSetParser extends Parser {
             	            }
             	            break;
             	        case 2 :
-            	            // RuleSet.g:1711:6: ( MODULE modname= VAR ( ALIAS alias= VAR )? )
+            	            // RuleSet.g:1728:6: ( MODULE modname= VAR ( ALIAS alias= VAR )? )
             	            {
-            	            // RuleSet.g:1711:6: ( MODULE modname= VAR ( ALIAS alias= VAR )? )
-            	            // RuleSet.g:1711:7: MODULE modname= VAR ( ALIAS alias= VAR )?
+            	            // RuleSet.g:1728:6: ( MODULE modname= VAR ( ALIAS alias= VAR )? )
+            	            // RuleSet.g:1728:7: MODULE modname= VAR ( ALIAS alias= VAR )?
             	            {
             	            MODULE183=(Token)match(input,MODULE,FOLLOW_MODULE_in_meta_block3927); if (state.failed) return retval;
             	            if ( state.backtracking==0 ) {
@@ -10909,7 +10926,7 @@ public class RuleSetParser extends Parser {
             	            modname_tree = (Object)adaptor.create(modname);
             	            adaptor.addChild(root_0, modname_tree);
             	            }
-            	            // RuleSet.g:1711:27: ( ALIAS alias= VAR )?
+            	            // RuleSet.g:1728:27: ( ALIAS alias= VAR )?
             	            int alt110=2;
             	            int LA110_0 = input.LA(1);
 
@@ -10918,7 +10935,7 @@ public class RuleSetParser extends Parser {
             	            }
             	            switch (alt110) {
             	                case 1 :
-            	                    // RuleSet.g:1711:28: ALIAS alias= VAR
+            	                    // RuleSet.g:1728:28: ALIAS alias= VAR
             	                    {
             	                    ALIAS184=(Token)match(input,ALIAS,FOLLOW_ALIAS_in_meta_block3935); if (state.failed) return retval;
             	                    if ( state.backtracking==0 ) {
@@ -11012,7 +11029,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "dispatch_block"
-    // RuleSet.g:1726:1: dispatch_block : must_be[\"dispatch\"] LEFT_CURL ( must_be[\"domain\"] domain= STRING ( RIGHT_SMALL_ARROW rsid= STRING )? )* RIGHT_CURL ;
+    // RuleSet.g:1743:1: dispatch_block : must_be[\"dispatch\"] LEFT_CURL ( must_be[\"domain\"] domain= STRING ( RIGHT_SMALL_ARROW rsid= STRING )? )* RIGHT_CURL ;
     public final RuleSetParser.dispatch_block_return dispatch_block() throws RecognitionException {
         RuleSetParser.dispatch_block_return retval = new RuleSetParser.dispatch_block_return();
         retval.start = input.LT(1);
@@ -11038,9 +11055,16 @@ public class RuleSetParser extends Parser {
 
         	 ArrayList dispatch_block_array = (ArrayList)rule_json.get("dispatch");
 
+        	           if(dispatch_block_array == null)
+                  	 {
+                  	    dispatch_block_array = new ArrayList();
+                  	    rule_json.put("dispatch",dispatch_block_array);
+                  	 }
+
+
         try {
-            // RuleSet.g:1732:2: ( must_be[\"dispatch\"] LEFT_CURL ( must_be[\"domain\"] domain= STRING ( RIGHT_SMALL_ARROW rsid= STRING )? )* RIGHT_CURL )
-            // RuleSet.g:1732:4: must_be[\"dispatch\"] LEFT_CURL ( must_be[\"domain\"] domain= STRING ( RIGHT_SMALL_ARROW rsid= STRING )? )* RIGHT_CURL
+            // RuleSet.g:1756:2: ( must_be[\"dispatch\"] LEFT_CURL ( must_be[\"domain\"] domain= STRING ( RIGHT_SMALL_ARROW rsid= STRING )? )* RIGHT_CURL )
+            // RuleSet.g:1756:4: must_be[\"dispatch\"] LEFT_CURL ( must_be[\"domain\"] domain= STRING ( RIGHT_SMALL_ARROW rsid= STRING )? )* RIGHT_CURL
             {
             root_0 = (Object)adaptor.nil();
 
@@ -11055,7 +11079,7 @@ public class RuleSetParser extends Parser {
             LEFT_CURL187_tree = (Object)adaptor.create(LEFT_CURL187);
             adaptor.addChild(root_0, LEFT_CURL187_tree);
             }
-            // RuleSet.g:1732:35: ( must_be[\"domain\"] domain= STRING ( RIGHT_SMALL_ARROW rsid= STRING )? )*
+            // RuleSet.g:1756:35: ( must_be[\"domain\"] domain= STRING ( RIGHT_SMALL_ARROW rsid= STRING )? )*
             loop114:
             do {
                 int alt114=2;
@@ -11068,7 +11092,7 @@ public class RuleSetParser extends Parser {
 
                 switch (alt114) {
             	case 1 :
-            	    // RuleSet.g:1732:37: must_be[\"domain\"] domain= STRING ( RIGHT_SMALL_ARROW rsid= STRING )?
+            	    // RuleSet.g:1756:37: must_be[\"domain\"] domain= STRING ( RIGHT_SMALL_ARROW rsid= STRING )?
             	    {
             	    pushFollow(FOLLOW_must_be_in_dispatch_block3993);
             	    must_be188=must_be("domain");
@@ -11081,7 +11105,7 @@ public class RuleSetParser extends Parser {
             	    domain_tree = (Object)adaptor.create(domain);
             	    adaptor.addChild(root_0, domain_tree);
             	    }
-            	    // RuleSet.g:1732:69: ( RIGHT_SMALL_ARROW rsid= STRING )?
+            	    // RuleSet.g:1756:69: ( RIGHT_SMALL_ARROW rsid= STRING )?
             	    int alt113=2;
             	    int LA113_0 = input.LA(1);
 
@@ -11090,7 +11114,7 @@ public class RuleSetParser extends Parser {
             	    }
             	    switch (alt113) {
             	        case 1 :
-            	            // RuleSet.g:1732:70: RIGHT_SMALL_ARROW rsid= STRING
+            	            // RuleSet.g:1756:70: RIGHT_SMALL_ARROW rsid= STRING
             	            {
             	            RIGHT_SMALL_ARROW189=(Token)match(input,RIGHT_SMALL_ARROW,FOLLOW_RIGHT_SMALL_ARROW_in_dispatch_block4001); if (state.failed) return retval;
             	            if ( state.backtracking==0 ) {
@@ -11175,7 +11199,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "name_value_pair"
-    // RuleSet.g:1755:1: name_value_pair[HashMap key_values] : k= STRING COLON (v= INT | v= FLOAT | v= STRING ) ;
+    // RuleSet.g:1779:1: name_value_pair[HashMap key_values] : k= STRING COLON (v= INT | v= FLOAT | v= STRING ) ;
     public final RuleSetParser.name_value_pair_return name_value_pair(HashMap key_values) throws RecognitionException {
         RuleSetParser.name_value_pair_return retval = new RuleSetParser.name_value_pair_return();
         retval.start = input.LT(1);
@@ -11194,8 +11218,8 @@ public class RuleSetParser extends Parser {
         	Object value = null;
 
         try {
-            // RuleSet.g:1759:2: (k= STRING COLON (v= INT | v= FLOAT | v= STRING ) )
-            // RuleSet.g:1759:4: k= STRING COLON (v= INT | v= FLOAT | v= STRING )
+            // RuleSet.g:1783:2: (k= STRING COLON (v= INT | v= FLOAT | v= STRING ) )
+            // RuleSet.g:1783:4: k= STRING COLON (v= INT | v= FLOAT | v= STRING )
             {
             root_0 = (Object)adaptor.nil();
 
@@ -11209,7 +11233,7 @@ public class RuleSetParser extends Parser {
             COLON191_tree = (Object)adaptor.create(COLON191);
             adaptor.addChild(root_0, COLON191_tree);
             }
-            // RuleSet.g:1759:19: (v= INT | v= FLOAT | v= STRING )
+            // RuleSet.g:1783:19: (v= INT | v= FLOAT | v= STRING )
             int alt115=3;
             switch ( input.LA(1) ) {
             case INT:
@@ -11237,7 +11261,7 @@ public class RuleSetParser extends Parser {
 
             switch (alt115) {
                 case 1 :
-                    // RuleSet.g:1760:3: v= INT
+                    // RuleSet.g:1784:3: v= INT
                     {
                     v=(Token)match(input,INT,FOLLOW_INT_in_name_value_pair4049); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -11251,7 +11275,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1761:5: v= FLOAT
+                    // RuleSet.g:1785:5: v= FLOAT
                     {
                     v=(Token)match(input,FLOAT,FOLLOW_FLOAT_in_name_value_pair4060); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -11265,7 +11289,7 @@ public class RuleSetParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // RuleSet.g:1762:5: v= STRING
+                    // RuleSet.g:1786:5: v= STRING
                     {
                     v=(Token)match(input,STRING,FOLLOW_STRING_in_name_value_pair4071); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
@@ -11314,7 +11338,7 @@ public class RuleSetParser extends Parser {
     };
 
     // $ANTLR start "regex"
-    // RuleSet.g:1772:1: regex returns [HashMap result] : rx= REX ;
+    // RuleSet.g:1796:1: regex returns [HashMap result] : rx= REX ;
     public final RuleSetParser.regex_return regex() throws RecognitionException {
         RuleSetParser.regex_return retval = new RuleSetParser.regex_return();
         retval.start = input.LT(1);
@@ -11329,8 +11353,8 @@ public class RuleSetParser extends Parser {
 
 
         try {
-            // RuleSet.g:1776:6: (rx= REX )
-            // RuleSet.g:1777:8: rx= REX
+            // RuleSet.g:1800:6: (rx= REX )
+            // RuleSet.g:1801:8: rx= REX
             {
             root_0 = (Object)adaptor.nil();
 
@@ -11379,8 +11403,8 @@ public class RuleSetParser extends Parser {
 
     // $ANTLR start synpred14_RuleSet
     public final void synpred14_RuleSet_fragment() throws RecognitionException {   
-        // RuleSet.g:308:20: ( SEMI )
-        // RuleSet.g:308:20: SEMI
+        // RuleSet.g:313:20: ( SEMI )
+        // RuleSet.g:313:20: SEMI
         {
         match(input,SEMI,FOLLOW_SEMI_in_synpred14_RuleSet335); if (state.failed) return ;
 
@@ -11393,8 +11417,8 @@ public class RuleSetParser extends Parser {
         RuleSetParser.emit_block_return eb = null;
 
 
-        // RuleSet.g:308:28: (eb= emit_block )
-        // RuleSet.g:308:28: eb= emit_block
+        // RuleSet.g:313:28: (eb= emit_block )
+        // RuleSet.g:313:28: eb= emit_block
         {
         pushFollow(FOLLOW_emit_block_in_synpred15_RuleSet340);
         eb=emit_block();
@@ -11408,8 +11432,8 @@ public class RuleSetParser extends Parser {
 
     // $ANTLR start synpred16_RuleSet
     public final void synpred16_RuleSet_fragment() throws RecognitionException {   
-        // RuleSet.g:308:41: ( SEMI )
-        // RuleSet.g:308:41: SEMI
+        // RuleSet.g:313:41: ( SEMI )
+        // RuleSet.g:313:41: SEMI
         {
         match(input,SEMI,FOLLOW_SEMI_in_synpred16_RuleSet343); if (state.failed) return ;
 
@@ -11419,8 +11443,8 @@ public class RuleSetParser extends Parser {
 
     // $ANTLR start synpred17_RuleSet
     public final void synpred17_RuleSet_fragment() throws RecognitionException {   
-        // RuleSet.g:308:71: ( SEMI )
-        // RuleSet.g:308:71: SEMI
+        // RuleSet.g:313:71: ( SEMI )
+        // RuleSet.g:313:71: SEMI
         {
         match(input,SEMI,FOLLOW_SEMI_in_synpred17_RuleSet350); if (state.failed) return ;
 
@@ -11430,8 +11454,8 @@ public class RuleSetParser extends Parser {
 
     // $ANTLR start synpred20_RuleSet
     public final void synpred20_RuleSet_fragment() throws RecognitionException {   
-        // RuleSet.g:308:93: ( SEMI )
-        // RuleSet.g:308:93: SEMI
+        // RuleSet.g:313:93: ( SEMI )
+        // RuleSet.g:313:93: SEMI
         {
         match(input,SEMI,FOLLOW_SEMI_in_synpred20_RuleSet360); if (state.failed) return ;
 
@@ -11444,8 +11468,8 @@ public class RuleSetParser extends Parser {
         RuleSetParser.persistent_expr_return pe = null;
 
 
-        // RuleSet.g:392:6: (pe= persistent_expr )
-        // RuleSet.g:392:6: pe= persistent_expr
+        // RuleSet.g:397:6: (pe= persistent_expr )
+        // RuleSet.g:397:6: pe= persistent_expr
         {
         pushFollow(FOLLOW_persistent_expr_in_synpred29_RuleSet513);
         pe=persistent_expr();
@@ -11462,8 +11486,8 @@ public class RuleSetParser extends Parser {
         RuleSetParser.log_statement_return l = null;
 
 
-        // RuleSet.g:394:4: (l= log_statement )
-        // RuleSet.g:394:4: l= log_statement
+        // RuleSet.g:399:4: (l= log_statement )
+        // RuleSet.g:399:4: l= log_statement
         {
         pushFollow(FOLLOW_log_statement_in_synpred31_RuleSet530);
         l=log_statement();
@@ -11477,8 +11501,8 @@ public class RuleSetParser extends Parser {
 
     // $ANTLR start synpred47_RuleSet
     public final void synpred47_RuleSet_fragment() throws RecognitionException {   
-        // RuleSet.g:626:62: ( SEMI )
-        // RuleSet.g:626:62: SEMI
+        // RuleSet.g:631:62: ( SEMI )
+        // RuleSet.g:631:62: SEMI
         {
         match(input,SEMI,FOLLOW_SEMI_in_synpred47_RuleSet1135); if (state.failed) return ;
 
@@ -11490,8 +11514,8 @@ public class RuleSetParser extends Parser {
     public final void synpred54_RuleSet_fragment() throws RecognitionException {   
         Token label=null;
 
-        // RuleSet.g:667:6: (label= VAR ARROW_RIGHT )
-        // RuleSet.g:667:6: label= VAR ARROW_RIGHT
+        // RuleSet.g:672:6: (label= VAR ARROW_RIGHT )
+        // RuleSet.g:672:6: label= VAR ARROW_RIGHT
         {
         label=(Token)match(input,VAR,FOLLOW_VAR_in_synpred54_RuleSet1287); if (state.failed) return ;
         match(input,ARROW_RIGHT,FOLLOW_ARROW_RIGHT_in_synpred54_RuleSet1289); if (state.failed) return ;
@@ -11507,8 +11531,8 @@ public class RuleSetParser extends Parser {
         RuleSetParser.event_or_return eor2 = null;
 
 
-        // RuleSet.g:812:17: (tb= must_be_one[sar(\"then\",\"before\")] eor2= event_or )
-        // RuleSet.g:812:17: tb= must_be_one[sar(\"then\",\"before\")] eor2= event_or
+        // RuleSet.g:817:17: (tb= must_be_one[sar(\"then\",\"before\")] eor2= event_or )
+        // RuleSet.g:817:17: tb= must_be_one[sar(\"then\",\"before\")] eor2= event_or
         {
         pushFollow(FOLLOW_must_be_one_in_synpred83_RuleSet1701);
         tb=must_be_one(sar("then","before"));
@@ -11527,8 +11551,8 @@ public class RuleSetParser extends Parser {
 
     // $ANTLR start synpred88_RuleSet
     public final void synpred88_RuleSet_fragment() throws RecognitionException {   
-        // RuleSet.g:979:2: ( custom_event )
-        // RuleSet.g:979:3: custom_event
+        // RuleSet.g:984:2: ( custom_event )
+        // RuleSet.g:984:3: custom_event
         {
         pushFollow(FOLLOW_custom_event_in_synpred88_RuleSet1873);
         custom_event();
@@ -11546,8 +11570,8 @@ public class RuleSetParser extends Parser {
         RuleSetParser.add_expr_return me2 = null;
 
 
-        // RuleSet.g:1230:18: (op= ( PREDOP | LIKE ) me2= add_expr )
-        // RuleSet.g:1230:18: op= ( PREDOP | LIKE ) me2= add_expr
+        // RuleSet.g:1240:18: (op= ( PREDOP | LIKE ) me2= add_expr )
+        // RuleSet.g:1240:18: op= ( PREDOP | LIKE ) me2= add_expr
         {
         op=(Token)input.LT(1);
         if ( input.LA(1)==LIKE||input.LA(1)==PREDOP ) {
@@ -11576,8 +11600,8 @@ public class RuleSetParser extends Parser {
         RuleSetParser.mult_expr_return me2 = null;
 
 
-        // RuleSet.g:1277:20: (op= ( ADD_OP | REX ) me2= mult_expr )
-        // RuleSet.g:1277:20: op= ( ADD_OP | REX ) me2= mult_expr
+        // RuleSet.g:1287:20: (op= ( ADD_OP | REX ) me2= mult_expr )
+        // RuleSet.g:1287:20: op= ( ADD_OP | REX ) me2= mult_expr
         {
         op=(Token)input.LT(1);
         if ( (input.LA(1)>=ADD_OP && input.LA(1)<=REX) ) {
@@ -11605,8 +11629,8 @@ public class RuleSetParser extends Parser {
         RuleSetParser.timeframe_return t = null;
 
 
-        // RuleSet.g:1309:106: (t= timeframe )
-        // RuleSet.g:1309:106: t= timeframe
+        // RuleSet.g:1319:106: (t= timeframe )
+        // RuleSet.g:1319:106: t= timeframe
         {
         pushFollow(FOLLOW_timeframe_in_synpred147_RuleSet2709);
         t=timeframe();
@@ -11626,8 +11650,8 @@ public class RuleSetParser extends Parser {
         RuleSetParser.timeframe_return t = null;
 
 
-        // RuleSet.g:1309:4: ( SEEN rx= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) (t= timeframe )? )
-        // RuleSet.g:1309:4: SEEN rx= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) (t= timeframe )?
+        // RuleSet.g:1319:4: ( SEEN rx= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) (t= timeframe )? )
+        // RuleSet.g:1319:4: SEEN rx= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) (t= timeframe )?
         {
         match(input,SEEN,FOLLOW_SEEN_in_synpred148_RuleSet2676); if (state.failed) return ;
         rx=(Token)match(input,STRING,FOLLOW_STRING_in_synpred148_RuleSet2680); if (state.failed) return ;
@@ -11649,7 +11673,7 @@ public class RuleSetParser extends Parser {
             throw mse;
         }
 
-        // RuleSet.g:1309:106: (t= timeframe )?
+        // RuleSet.g:1319:106: (t= timeframe )?
         int alt136=2;
         int LA136_0 = input.LA(1);
 
@@ -11685,8 +11709,8 @@ public class RuleSetParser extends Parser {
         RuleSetParser.must_be_one_return op = null;
 
 
-        // RuleSet.g:1323:4: ( SEEN rx_1= STRING op= must_be_one[sar(\"before\",\"after\")] rx_2= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )
-        // RuleSet.g:1323:4: SEEN rx_1= STRING op= must_be_one[sar(\"before\",\"after\")] rx_2= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN )
+        // RuleSet.g:1333:4: ( SEEN rx_1= STRING op= must_be_one[sar(\"before\",\"after\")] rx_2= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )
+        // RuleSet.g:1333:4: SEEN rx_1= STRING op= must_be_one[sar(\"before\",\"after\")] rx_2= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN )
         {
         match(input,SEEN,FOLLOW_SEEN_in_synpred154_RuleSet2717); if (state.failed) return ;
         rx_1=(Token)match(input,STRING,FOLLOW_STRING_in_synpred154_RuleSet2721); if (state.failed) return ;
@@ -11729,8 +11753,8 @@ public class RuleSetParser extends Parser {
         RuleSetParser.timeframe_return t = null;
 
 
-        // RuleSet.g:1333:4: (vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) pop= ( PREDOP | LIKE ) e= expr t= timeframe )
-        // RuleSet.g:1333:4: vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) pop= ( PREDOP | LIKE ) e= expr t= timeframe
+        // RuleSet.g:1343:4: (vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) pop= ( PREDOP | LIKE ) e= expr t= timeframe )
+        // RuleSet.g:1343:4: vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) pop= ( PREDOP | LIKE ) e= expr t= timeframe
         {
         vd=(Token)match(input,VAR_DOMAIN,FOLLOW_VAR_DOMAIN_in_synpred161_RuleSet2765); if (state.failed) return ;
         match(input,COLON,FOLLOW_COLON_in_synpred161_RuleSet2767); if (state.failed) return ;
@@ -11778,8 +11802,8 @@ public class RuleSetParser extends Parser {
         RuleSetParser.timeframe_return t = null;
 
 
-        // RuleSet.g:1345:4: (vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) t= timeframe )
-        // RuleSet.g:1345:4: vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) t= timeframe
+        // RuleSet.g:1355:4: (vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) t= timeframe )
+        // RuleSet.g:1355:4: vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) t= timeframe
         {
         vd=(Token)match(input,VAR_DOMAIN,FOLLOW_VAR_DOMAIN_in_synpred167_RuleSet2809); if (state.failed) return ;
         match(input,COLON,FOLLOW_COLON_in_synpred167_RuleSet2811); if (state.failed) return ;
@@ -11809,8 +11833,8 @@ public class RuleSetParser extends Parser {
         RuleSetParser.regex_return roe = null;
 
 
-        // RuleSet.g:1360:4: (roe= regex )
-        // RuleSet.g:1360:4: roe= regex
+        // RuleSet.g:1370:4: (roe= regex )
+        // RuleSet.g:1370:4: roe= regex
         {
         pushFollow(FOLLOW_regex_in_synpred168_RuleSet2840);
         roe=regex();
@@ -11828,8 +11852,8 @@ public class RuleSetParser extends Parser {
         RuleSetParser.expr_return e = null;
 
 
-        // RuleSet.g:1469:9: (bv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_BRACKET e= expr RIGHT_BRACKET )
-        // RuleSet.g:1469:9: bv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_BRACKET e= expr RIGHT_BRACKET
+        // RuleSet.g:1479:9: (bv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_BRACKET e= expr RIGHT_BRACKET )
+        // RuleSet.g:1479:9: bv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_BRACKET e= expr RIGHT_BRACKET
         {
         bv=(Token)input.LT(1);
         if ( input.LA(1)==VAR||(input.LA(1)>=OTHER_OPERATORS && input.LA(1)<=MATCH)||input.LA(1)==VAR_DOMAIN ) {
@@ -11859,8 +11883,8 @@ public class RuleSetParser extends Parser {
         Token d=null;
         Token vv=null;
 
-        // RuleSet.g:1483:9: (d= VAR_DOMAIN COLON vv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )
-        // RuleSet.g:1483:9: d= VAR_DOMAIN COLON vv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN )
+        // RuleSet.g:1493:9: (d= VAR_DOMAIN COLON vv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) )
+        // RuleSet.g:1493:9: d= VAR_DOMAIN COLON vv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN )
         {
         d=(Token)match(input,VAR_DOMAIN,FOLLOW_VAR_DOMAIN_in_synpred190_RuleSet3169); if (state.failed) return ;
         match(input,COLON,FOLLOW_COLON_in_synpred190_RuleSet3171); if (state.failed) return ;
@@ -11888,8 +11912,8 @@ public class RuleSetParser extends Parser {
         RuleSetParser.expr_return e = null;
 
 
-        // RuleSet.g:1511:9: (n= namespace p= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN )
-        // RuleSet.g:1511:9: n= namespace p= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN
+        // RuleSet.g:1521:9: (n= namespace p= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN )
+        // RuleSet.g:1521:9: n= namespace p= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN
         {
         pushFollow(FOLLOW_namespace_in_synpred210_RuleSet3274);
         n=namespace();
@@ -11908,7 +11932,7 @@ public class RuleSetParser extends Parser {
         }
 
         match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_synpred210_RuleSet3292); if (state.failed) return ;
-        // RuleSet.g:1511:86: (e= expr ( COMMA e= expr )* )?
+        // RuleSet.g:1521:86: (e= expr ( COMMA e= expr )* )?
         int alt142=2;
         int LA142_0 = input.LA(1);
 
@@ -11917,14 +11941,14 @@ public class RuleSetParser extends Parser {
         }
         switch (alt142) {
             case 1 :
-                // RuleSet.g:1511:87: e= expr ( COMMA e= expr )*
+                // RuleSet.g:1521:87: e= expr ( COMMA e= expr )*
                 {
                 pushFollow(FOLLOW_expr_in_synpred210_RuleSet3297);
                 e=expr();
 
                 state._fsp--;
                 if (state.failed) return ;
-                // RuleSet.g:1511:121: ( COMMA e= expr )*
+                // RuleSet.g:1521:121: ( COMMA e= expr )*
                 loop141:
                 do {
                     int alt141=2;
@@ -11937,7 +11961,7 @@ public class RuleSetParser extends Parser {
 
                     switch (alt141) {
                 	case 1 :
-                	    // RuleSet.g:1511:123: COMMA e= expr
+                	    // RuleSet.g:1521:123: COMMA e= expr
                 	    {
                 	    match(input,COMMA,FOLLOW_COMMA_in_synpred210_RuleSet3303); if (state.failed) return ;
                 	    pushFollow(FOLLOW_expr_in_synpred210_RuleSet3307);
@@ -11972,8 +11996,8 @@ public class RuleSetParser extends Parser {
         RuleSetParser.expr_return e = null;
 
 
-        // RuleSet.g:1519:9: (v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN )
-        // RuleSet.g:1519:9: v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN
+        // RuleSet.g:1529:9: (v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN )
+        // RuleSet.g:1529:9: v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN
         {
         v=(Token)input.LT(1);
         if ( input.LA(1)==VAR||(input.LA(1)>=OTHER_OPERATORS && input.LA(1)<=MATCH)||input.LA(1)==VAR_DOMAIN ) {
@@ -11987,7 +12011,7 @@ public class RuleSetParser extends Parser {
         }
 
         match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_synpred218_RuleSet3345); if (state.failed) return ;
-        // RuleSet.g:1519:74: (e= expr ( COMMA e= expr )* )?
+        // RuleSet.g:1529:74: (e= expr ( COMMA e= expr )* )?
         int alt145=2;
         int LA145_0 = input.LA(1);
 
@@ -11996,14 +12020,14 @@ public class RuleSetParser extends Parser {
         }
         switch (alt145) {
             case 1 :
-                // RuleSet.g:1519:75: e= expr ( COMMA e= expr )*
+                // RuleSet.g:1529:75: e= expr ( COMMA e= expr )*
                 {
                 pushFollow(FOLLOW_expr_in_synpred218_RuleSet3350);
                 e=expr();
 
                 state._fsp--;
                 if (state.failed) return ;
-                // RuleSet.g:1519:109: ( COMMA e= expr )*
+                // RuleSet.g:1529:109: ( COMMA e= expr )*
                 loop144:
                 do {
                     int alt144=2;
@@ -12016,7 +12040,7 @@ public class RuleSetParser extends Parser {
 
                     switch (alt144) {
                 	case 1 :
-                	    // RuleSet.g:1519:111: COMMA e= expr
+                	    // RuleSet.g:1529:111: COMMA e= expr
                 	    {
                 	    match(input,COMMA,FOLLOW_COMMA_in_synpred218_RuleSet3355); if (state.failed) return ;
                 	    pushFollow(FOLLOW_expr_in_synpred218_RuleSet3359);
@@ -12049,8 +12073,8 @@ public class RuleSetParser extends Parser {
     public final void synpred229_RuleSet_fragment() throws RecognitionException {   
         Token v=null;
 
-        // RuleSet.g:1545:9: (v= ( VAR | OTHER_OPERATORS | REPLACE | MATCH ) )
-        // RuleSet.g:1545:9: v= ( VAR | OTHER_OPERATORS | REPLACE | MATCH )
+        // RuleSet.g:1555:9: (v= ( VAR | OTHER_OPERATORS | REPLACE | MATCH ) )
+        // RuleSet.g:1555:9: v= ( VAR | OTHER_OPERATORS | REPLACE | MATCH )
         {
         v=(Token)input.LT(1);
         if ( input.LA(1)==VAR||input.LA(1)==OTHER_OPERATORS||(input.LA(1)>=REPLACE && input.LA(1)<=MATCH) ) {
@@ -12473,7 +12497,7 @@ public class RuleSetParser extends Parser {
             this.transition = DFA20_transition;
         }
         public String getDescription() {
-            return "392:5: (pe= persistent_expr | rs= raise_statement | l= log_statement | las= must_be[\"last\"] )";
+            return "397:5: (pe= persistent_expr | rs= raise_statement | l= log_statement | las= must_be[\"last\"] )";
         }
         public int specialStateTransition(int s, IntStream _input) throws NoViableAltException {
             TokenStream input = (TokenStream)_input;
@@ -12564,7 +12588,7 @@ public class RuleSetParser extends Parser {
             this.transition = DFA57_transition;
         }
         public String getDescription() {
-            return "()* loopback of 812:16: (tb= must_be_one[sar(\"then\",\"before\")] eor2= event_or )*";
+            return "()* loopback of 817:16: (tb= must_be_one[sar(\"then\",\"before\")] eor2= event_or )*";
         }
         public int specialStateTransition(int s, IntStream _input) throws NoViableAltException {
             TokenStream input = (TokenStream)_input;
@@ -12668,7 +12692,7 @@ public class RuleSetParser extends Parser {
             this.transition = DFA68_transition;
         }
         public String getDescription() {
-            return "974:1: event_prim returns [HashMap result] : ( ( custom_event )=>ce= custom_event | (web= WEB )? PAGEVIEW (spat= STRING | rpat= regex ) (set= setting )? | (web= WEB )? opt= must_be_one[sar(\"submit\",\"click\",\"dblclick\",\"change\",\"update\")] elem= STRING (on= on_expr )? (set= setting )? | '(' evt= event_seq ')' );";
+            return "979:1: event_prim returns [HashMap result] : ( ( custom_event )=>ce= custom_event | (web= WEB )? PAGEVIEW (spat= STRING | rpat= regex ) (set= setting )? | (web= WEB )? opt= must_be_one[sar(\"submit\",\"click\",\"dblclick\",\"change\",\"update\")] elem= STRING (on= on_expr )? (set= setting )? | '(' evt= event_seq ')' );";
         }
         public int specialStateTransition(int s, IntStream _input) throws NoViableAltException {
             TokenStream input = (TokenStream)_input;
@@ -12832,7 +12856,7 @@ public class RuleSetParser extends Parser {
             this.transition = DFA85_transition;
         }
         public String getDescription() {
-            return "()* loopback of 1230:17: (op= ( PREDOP | LIKE ) me2= add_expr )*";
+            return "()* loopback of 1240:17: (op= ( PREDOP | LIKE ) me2= add_expr )*";
         }
         public int specialStateTransition(int s, IntStream _input) throws NoViableAltException {
             TokenStream input = (TokenStream)_input;
@@ -12944,7 +12968,7 @@ public class RuleSetParser extends Parser {
             this.transition = DFA87_transition;
         }
         public String getDescription() {
-            return "()* loopback of 1277:19: (op= ( ADD_OP | REX ) me2= mult_expr )*";
+            return "()* loopback of 1287:19: (op= ( ADD_OP | REX ) me2= mult_expr )*";
         }
         public int specialStateTransition(int s, IntStream _input) throws NoViableAltException {
             TokenStream input = (TokenStream)_input;
@@ -13040,7 +13064,7 @@ public class RuleSetParser extends Parser {
             this.transition = DFA89_transition;
         }
         public String getDescription() {
-            return "1296:1: unary_expr returns [Object result] options {backtrack=true; } : ( NOT ue= unary_expr | SEEN rx= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) (t= timeframe )? | SEEN rx_1= STRING op= must_be_one[sar(\"before\",\"after\")] rx_2= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) pop= ( PREDOP | LIKE ) e= expr t= timeframe | vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) t= timeframe | roe= regex | oe= operator_expr );";
+            return "1306:1: unary_expr returns [Object result] options {backtrack=true; } : ( NOT ue= unary_expr | SEEN rx= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) (t= timeframe )? | SEEN rx_1= STRING op= must_be_one[sar(\"before\",\"after\")] rx_2= STRING must_be[\"in\"] vd= VAR_DOMAIN ':' v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) pop= ( PREDOP | LIKE ) e= expr t= timeframe | vd= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) t= timeframe | roe= regex | oe= operator_expr );";
         }
         public int specialStateTransition(int s, IntStream _input) throws NoViableAltException {
             TokenStream input = (TokenStream)_input;
@@ -13186,7 +13210,7 @@ public class RuleSetParser extends Parser {
             this.transition = DFA88_transition;
         }
         public String getDescription() {
-            return "1309:106: (t= timeframe )?";
+            return "1319:106: (t= timeframe )?";
         }
         public int specialStateTransition(int s, IntStream _input) throws NoViableAltException {
             TokenStream input = (TokenStream)_input;
@@ -13281,7 +13305,7 @@ public class RuleSetParser extends Parser {
             this.transition = DFA102_transition;
         }
         public String getDescription() {
-            return "1440:1: factor returns [Object result] options {backtrack=true; } : (iv= INT | sv= STRING | fv= FLOAT | bv= ( TRUE | FALSE ) | bv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_BRACKET e= expr RIGHT_BRACKET | d= VAR_DOMAIN COLON vv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | CURRENT d= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | HISTORY e= expr d= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | n= namespace p= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN | v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN | LEFT_BRACKET (e= expr ( COMMA e2= expr )* )? RIGHT_BRACKET | LEFT_CURL (h1= hash_line ( COMMA h2= hash_line )* )? RIGHT_CURL | LEFT_PAREN e= expr RIGHT_PAREN | v= ( VAR | OTHER_OPERATORS | REPLACE | MATCH ) | reg= regex );";
+            return "1450:1: factor returns [Object result] options {backtrack=true; } : (iv= INT | sv= STRING | fv= FLOAT | bv= ( TRUE | FALSE ) | bv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_BRACKET e= expr RIGHT_BRACKET | d= VAR_DOMAIN COLON vv= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | CURRENT d= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | HISTORY e= expr d= VAR_DOMAIN COLON v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) | n= namespace p= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN | v= ( VAR | OTHER_OPERATORS | LIKE | REPLACE | MATCH | VAR_DOMAIN ) LEFT_PAREN (e= expr ( COMMA e= expr )* )? RIGHT_PAREN | LEFT_BRACKET (e= expr ( COMMA e2= expr )* )? RIGHT_BRACKET | LEFT_CURL (h1= hash_line ( COMMA h2= hash_line )* )? RIGHT_CURL | LEFT_PAREN e= expr RIGHT_PAREN | v= ( VAR | OTHER_OPERATORS | REPLACE | MATCH ) | reg= regex );";
         }
         public int specialStateTransition(int s, IntStream _input) throws NoViableAltException {
             TokenStream input = (TokenStream)_input;

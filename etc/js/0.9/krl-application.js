@@ -222,8 +222,7 @@ KrlApplication.prototype.execute_pending_closures = function()
         }
         catch(err)
         {
-            KOBJ.itrace("Closure Executed with error " + myself.app_id + " - " + guid);
-            KOBJEventManager.event_fire_complete(guid);
+            KOBJ.loggers.general.error("Closure Executed with error " + myself.app_id + " - " + guid, err);
         }
         KOBJEventManager.event_fire_complete(guid);
     });

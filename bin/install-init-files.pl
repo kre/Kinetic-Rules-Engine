@@ -62,12 +62,16 @@ krl-runtime.js.tmpl
 krl-actions.js
 krl-functions.js
 frameworks/dom_watch/1.0/krl-domwatch.js
+frameworks/dom_watch/2.0/krl-domwatch.js
 frameworks/perc_and_annotate/1.0/krl-annotate.js
+frameworks/perc_and_annotate/2.0/krl-annotate.js
 frameworks/perc_and_annotate/1.0/krl-percolation.js
 frameworks/sidetab/1.0/krl-sidetab.js
 formfill.js
 krl-runtime.js
 krl-eventmanager.js
+frameworks/log4js/1.4/log4javascript_uncompressed.js
+krl-logging.js
 krl-runtime-footer.js
 );
 
