@@ -1,39 +1,40 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use lib qw(/web/lib/perl);
 use strict;
 
 use Test::More;
 use Test::LongString;
+use Test::Deep;
 use Test::WWW::Mechanize;
 
 use LWP::UserAgent;
@@ -45,12 +46,14 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::FakeReq qw/:all/;
 use Kynetx::Test qw/:all/;
 use Kynetx::RuleManager qw/:all/;
 use Kynetx::Memcached qw/:all/;
+use Kynetx::Json;
+
 
 use Kynetx::Configure;
 
@@ -82,7 +85,7 @@ ruleset 10 {
     pre {
     }
 
-    if time:daytime() then 
+    if time:daytime() then
     choose {
         first_rule_name =>
            replace("kobj_test", "/kynetx/newsletter_invite_1.inc")
@@ -101,7 +104,7 @@ ruleset 10 {
       success {
         click id="rssfeed";
         click class="newsletter"
-      } 
+      }
 
       failure {
         click id="close_rss"
@@ -123,13 +126,203 @@ RULESET
 
 
 my $test_json_ruleset = <<JSON;
-{"global":[],"global_start_line":null,"dispatch":[],"dispatch_start_col":null,"meta_start_line":null,"rules":[{"cond":{"source":"time","predicate":"daytime","args":[],"type":"qualified"},"blocktype":"choose","actions":[{"action":{"source":null,"name":"replace","args":[{"val":"kobj_test","type":"str"},{"val":"/kynetx/newsletter_invite_1.inc","type":"str"}],"modifiers":[{"value":{"val":[{"val":"gift certificate","type":"str"},{"val":"yellow","type":"str"}],"type":"array"},"name":"tags"},{"value":{"val":30,"type":"num"},"name":"delay"}],"vars":null},"label":"first_rule_name"},{"action":{"source":null,"name":"replace","args":[{"val":"kobj_test","type":"str"},{"val":"/kynetx/newsletter_invite_2.inc","type":"str"}],"modifiers":[{"value":{"val":[{"val":"discount","type":"str"},{"val":"blue","type":"str"}],"type":"array"},"name":"tags"},{"value":{"val":"true","type":"bool"},"name":"draggable"}],"vars":null},"label":"second_rule_name"}],"post":null,"pre":[],"name":"test_choose","start_col":3,"emit":null,"state":"inactive","callbacks":{"success":[{"attribute":"id", "trigger" : null, "value":"rssfeed","type":"click"},{"attribute":"class", "trigger" : null, "value":"newsletter","type":"click"}],"failure":[{"attribute":"id", "trigger" : null, "value":"close_rss","type":"click"}]},"pagetype": {"event_expr": {"pattern":"/identity-policy/","legacy": 1, "type":"prim_event","vars":[],"op":"pageview"},"foreach":[]},"start_line":2}],"meta_start_col":null,"meta":{},"dispatch_start_line":null,"global_start_col":null,"ruleset_name":"10"}
+{"global":[],
+ "dispatch":[],
+ "rules":[
+    {"cond": {
+            "source":"time",
+            "predicate":"daytime",
+            "args":[],
+            "type":"qualified"
+    },
+    "blocktype":"choose",
+    "actions":[
+        {"action":{
+            "source":null,
+            "name":"replace",
+            "args":[
+              {
+                "val":"kobj_test",
+                "type":"str"
+              },
+              {
+                "val":"/kynetx/newsletter_invite_1.inc",
+                "type":"str"
+              }],
+            "modifiers":[
+              {"value":{
+                  "val":[
+                    {
+                      "val":"gift certificate",
+                      "type":"str"
+                    },
+                    {
+                      "val":"yellow",
+                      "type":"str"
+                    }],
+                "type":"array"
+               },
+               "name":"tags"},
+              {"value":{
+                  "val":30,
+                  "type":"num"},
+                  "name":"delay"}],
+             "vars":null},
+             "label":"first_rule_name"},
+          {"action":{
+              "source":null,
+              "name":"replace",
+              "args":[
+                {
+                    "val":"kobj_test",
+                    "type":"str"
+                },
+                {
+                    "val":"/kynetx/newsletter_invite_2.inc",
+                    "type":"str"
+                }],
+              "modifiers":[
+                {"value":{
+                    "val":[
+                      {
+                          "val":"discount",
+                          "type":"str"
+                      },
+                      {
+                          "val":"blue",
+                          "type":"str"
+                      }],
+                  "type":"array"},
+                "name":"tags"},
+                {"value":{
+                    "val":"true",
+                    "type":"bool"},
+                 "name":"draggable"}],
+              "vars":null},
+            "label":"second_rule_name"}],
+          "post":null,
+          "pre":[],
+          "name":"test_choose",
+          "emit":null,
+          "state":"inactive",
+          "callbacks":{
+              "success":[
+                {"attribute":"id",
+                 "trigger" : null,
+                 "value":"rssfeed",
+                 "type":"click"},
+                {"attribute":"class",
+                 "trigger" : null,
+                 "value":"newsletter",
+                 "type":"click"}
+                ],
+               "failure":[
+                 {"attribute":"id",
+                  "trigger" : null,
+                  "value":"close_rss",
+                  "type":"click"}
+                ]},
+           "pagetype": {
+               "event_expr": {
+                   "pattern":"/identity-policy/",
+                   "legacy": 1,
+                   "type":"prim_event",
+                   "vars":[],
+                   "op":"pageview"},
+               "foreach":[]}}],
+     "meta":{},
+     "ruleset_name":"10"}
 JSON
 
 #"ruleset_name":"10",
 
 my $test_json_rule = <<JSON;
-{"cond":{"source":"time","predicate":"daytime","args":[],"type":"qualified"},"blocktype":"choose","actions":[{"action":{"source":null,"name":"replace","args":[{"val":"kobj_test","type":"str"},{"val":"/kynetx/newsletter_invite_1.inc","type":"str"}],"modifiers":[{"value":{"val":[{"val":"gift certificate","type":"str"},{"val":"yellow","type":"str"}],"type":"array"},"name":"tags"},{"value":{"val":30,"type":"num"},"name":"delay"}],"vars":null},"label":"first_rule_name"},{"action":{"source":null,"name":"replace","args":[{"val":"kobj_test","type":"str"},{"val":"/kynetx/newsletter_invite_2.inc","type":"str"}],"modifiers":[{"value":{"val":[{"val":"discount","type":"str"},{"val":"blue","type":"str"}],"type":"array"},"name":"tags"},{"value":{"val":"true","type":"bool"},"name":"draggable"}],"vars":null},"label":"second_rule_name"}],"post":null,"pre":[],"name":"test_choose","start_col":1,"emit":null,"state":"inactive","callbacks":{"success":[{"attribute":"id","trigger" : null, "value":"rssfeed","type":"click"},{"attribute":"class", "trigger" : null, "value":"newsletter","type":"click"}],"failure":[{"attribute":"id", "trigger" : null, "value":"close_rss","type":"click"}]},"pagetype":{"event_expr":{"pattern":"/identity-policy/","legacy": 1, "type":"prim_event","vars":[],"op":"pageview"},"foreach":[]},"start_line":1}
+{"cond":{
+    "source":"time",
+    "predicate":"daytime",
+    "args":[],
+    "type":"qualified"},
+ "blocktype":"choose",
+ "actions":[
+    {"action":{
+        "source":null,
+        "name":"replace",
+        "args":[
+            {"val":"kobj_test",
+             "type":"str"},
+            {"val":"/kynetx/newsletter_invite_1.inc",
+             "type":"str"}],
+        "modifiers":[
+            {"value":{
+                "val":[
+                    {"val":"gift certificate",
+                     "type":"str"},
+                    {"val":"yellow",
+                      "type":"str"}],
+                "type":"array"},
+             "name":"tags"},
+            {"value":{
+                "val":30,
+                "type":"num"},
+             "name":"delay"}],
+        "vars":null},
+        "label":"first_rule_name"},
+     {"action":{
+         "source":null,
+         "name":"replace",
+         "args":[
+            {"val":"kobj_test",
+             "type":"str"},
+            {"val":"/kynetx/newsletter_invite_2.inc",
+             "type":"str"}],
+         "modifiers":[
+            {"value":{
+                "val":[
+                  {"val":"discount",
+                   "type":"str"},
+                  {"val":"blue","type":"str"}],
+                "type":"array"},
+             "name":"tags"},
+           {"value":{
+             "val":"true",
+             "type":"bool"},
+             "name":"draggable"}],
+             "vars":null},
+            "label":"second_rule_name"}],
+            "post":null,
+            "pre":[],
+            "name":"test_choose",
+            "emit":null,
+            "state":"inactive",
+            "callbacks":{
+                "success":[
+                  {
+                    "attribute":"id",
+                    "trigger" : null,
+                    "value":"rssfeed",
+                    "type":"click"},
+                  {
+                    "attribute":"class",
+                    "trigger" : null,
+                    "value":"newsletter",
+                    "type":"click"}],
+                "failure":[
+                  {
+                    "attribute":"id",
+                    "trigger" : null,
+                    "value":"close_rss",
+                    "type":"click"}]
+            },
+            "pagetype":{
+                "event_expr":{
+                    "pattern":"/identity-policy/",
+                    "legacy": 1,
+                    "type":"prim_event",
+                    "vars":[],
+                    "op":"pageview"},
+            "foreach":[]
+    }
+}
 JSON
 
 my $test_rule = <<RULE;
@@ -139,7 +332,7 @@ rule test_choose is inactive {
     pre {
     }
 
-    if time:daytime() then 
+    if time:daytime() then
     choose {
         first_rule_name =>
            replace("kobj_test", "/kynetx/newsletter_invite_1.inc")
@@ -158,7 +351,7 @@ rule test_choose is inactive {
       success {
         click id="rssfeed";
         click class="newsletter"
-      } 
+      }
 
       failure {
         click id="close_rss"
@@ -174,7 +367,7 @@ RULE
 
 my $test_rule_bad = <<RULE;
 rule test_choose is stupid {
-  do not select anything here.  
+  do not select anything here.
 }
 RULE
 
@@ -185,7 +378,7 @@ my $test_rule_body = <<RULEBODY;
     pre {
     }
 
-    if time:daytime() then 
+    if time:daytime() then
     choose {
         first_rule_name =>
            replace("kobj_test", "/kynetx/newsletter_invite_1.inc")
@@ -204,7 +397,7 @@ my $test_rule_body = <<RULEBODY;
       success {
         click id="rssfeed";
         click class="newsletter"
-      } 
+      }
 
       failure {
         click id="close_rss"
@@ -232,8 +425,7 @@ my $test_global_bad = <<GLOBAL;
 global {
 
 
-     dataset cached_timeline <- "http://twitter.com/statuses/public_timeline.json" cachable
-
+     datastink cached_timeline <- "http://twitter.com/statuses/public_timeline.json" cachable
      emit <<
 var foobar = 4;
      >>;
@@ -243,7 +435,7 @@ GLOBAL
 
 
 my $test_json_global = <<JSON;
-[{"source":"http://twitter.com/statuses/public_timeline.json","name":"public_timeline","type":"dataset","datatype":"JSON","cachable":0},{"source":"http://twitter.com/statuses/public_timeline.json","name":"cached_timeline","type":"dataset","datatype":"JSON","cachable":1},{"emit":"var foobar = 4;       "}]
+[{"source":"http://twitter.com/statuses/public_timeline.json","name":"public_timeline","type":"dataset","datatype":"JSON","cachable":0},{"source":"http://twitter.com/statuses/public_timeline.json","name":"cached_timeline","type":"dataset","datatype":"JSON","cachable":1},{"emit":"\\nvar foobar = 4;       "}]
 JSON
 
 my $test_dispatch = <<DISPATCH;
@@ -283,35 +475,37 @@ META
 
 my $test_meta_bad = <<META;
 meta {
- 
+
  foobar is not a good entry for the meta stuff...
- 
+
 }
 META
 
 my $test_json_meta = <<JSON;
-{"logging":"on","meta_start_line":1,"description":"Ruleset for testing something or other.\\n  ","meta_start_col":1}
+{"logging":"on","description":"\\nRuleset for testing something or other.\\n  "}
 JSON
 
 my $json;
+my $ast;
+my $east;
 
 # check the API calls
 $my_req_info->{'krl'} = $test_ruleset;
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "ruleset");
+$ast = Kynetx::Json::jsonToAst_w($json);
+$east = Kynetx::Json::jsonToAst_w($test_json_ruleset);
 
-is_string_nows($json, 
-	       $test_json_ruleset,
+cmp_deeply($ast,
+	       $east,
 	       "Parsing a ruleset");
 
 $my_req_info->{'krl'} = $test_ruleset_bad;
-#diag $my_req_info->{'krl'};
-
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "ruleset");
-#diag $json;
+diag $json;
 
-contains_string($json, 
-	       'Invalid meta block',
+contains_string($json,
+	       'Invalid value [rule] found',
 	       "Parsing ruleset with syntax error");
 
 
@@ -320,49 +514,46 @@ contains_string($json,
 $my_req_info->{'krl'} = $test_rule;
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "rule");
+$ast = Kynetx::Json::jsonToAst_w($json);
+$east = Kynetx::Json::jsonToAst_w($test_json_rule);
 
-is_string_nows($json, 
-	       $test_json_rule,
-	       "Parsing a rule");
+cmp_deeply($ast,
+    $east,
+	"Parsing a rule");
 
 
 $my_req_info->{'krl'} = $test_rule_bad;
 #diag $my_req_info->{'krl'};
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "rule");
-#diag $json;
 
-contains_string($json, 
-	       'Invalid rule state',
-	       "Parsing rule with syntax error");
-
+contains_string($json,
+    'Parser Exception',
+    "Parsing rule with syntax error");
 
 
 
 $my_req_info->{'krl'} = $test_global;
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "global");
-#diag $json;
 
-is_string_nows($json, 
+is_string_nows($json,
 	       $test_json_global,
 	       "Parsing global decls");
-
 
 $my_req_info->{'krl'} = $test_global_bad;
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "global");
 
-contains_string($json, 
-	       'Invalid global decls',
+contains_string($json,
+	       'Invalid value [datastink] found',
 	       "Parsing global decls with syntax error");
-
 
 $my_req_info->{'krl'} = $test_dispatch;
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "dispatch");
 
-is_string_nows($json, 
+is_string_nows($json,
 	       $test_json_dispatch,
 	       "Parsing dispatch decls");
 
@@ -373,10 +564,9 @@ $my_req_info->{'krl'} = $test_dispatch_bad;
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "dispatch");
 #diag $json;
 
-contains_string($json, 
-	       'Invalid dispatch',
+contains_string($json,
+	       'Invalid value [This] found should have been one of [domain]',
 	       "Parsing dispatch decls with syntax error");
-
 
 
 $my_req_info->{'krl'} = $test_meta;
@@ -384,9 +574,10 @@ $my_req_info->{'krl'} = $test_meta;
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "meta");
 #diag $json;
 
-is_string_nows($json, 
+is_string_nows($json,
 	       $test_json_meta,
 	       "Parsing meta decls");
+
 
 
 $my_req_info->{'krl'} = $test_meta_bad;
@@ -395,10 +586,9 @@ $my_req_info->{'krl'} = $test_meta_bad;
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "meta");
 #diag $json;
 
-contains_string($json, 
-	       'Invalid meta block',
+contains_string($json,
+	       'Invalid value [foobar] found',
 	       "Parsing meta decls with syntax error");
-
 
 
 
@@ -408,15 +598,16 @@ $my_req_info->{'ast'} = $test_json_ruleset;
 
 $krl = Kynetx::RuleManager::unparse_api($my_req_info, "unparse", "ruleset");
 
-is_string_nows($krl, 
+is_string_nows($krl,
 	       $test_ruleset,
 	       "Unparsing a ruleset");
+
 
 $my_req_info->{'ast'} = $test_json_rule;
 
 $krl = Kynetx::RuleManager::unparse_api($my_req_info, "unparse", "rule");
 
-is_string_nows($krl, 
+is_string_nows($krl,
 	       $test_rule_body,
 	       "Unparsing a rule");
 
@@ -424,7 +615,7 @@ $my_req_info->{'ast'} = $test_json_global;
 
 $krl = Kynetx::RuleManager::unparse_api($my_req_info, "unparse", "global");
 
-is_string_nows($krl, 
+is_string_nows($krl,
 	       $test_global,
 	       "Unparsing a global");
 
@@ -433,7 +624,7 @@ $my_req_info->{'ast'} = $test_json_dispatch;
 
 $krl = Kynetx::RuleManager::unparse_api($my_req_info, "unparse", "dispatch");
 
-is_string_nows($krl, 
+is_string_nows($krl,
 	       $test_dispatch,
 	       "Unparsing a dispatch");
 
@@ -442,10 +633,9 @@ $my_req_info->{'ast'} = $test_json_meta;
 
 $krl = Kynetx::RuleManager::unparse_api($my_req_info, "unparse", "meta");
 
-is_string_nows($krl, 
+is_string_nows($krl,
 	       $test_meta,
 	       "Unparsing a meta");
-
 
 
 

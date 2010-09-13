@@ -2180,15 +2180,6 @@ add_expr_testcase(
     0);
 
 $krl_src = <<_KRL_;
-c =-5;
-_KRL_
-add_expr_testcase(
-    $krl_src,
-    'decl',
-    'var c = -5;',
-    '-5',
-    0);
-$krl_src = <<_KRL_;
 c = 3 + a;
 _KRL_
 add_expr_testcase(

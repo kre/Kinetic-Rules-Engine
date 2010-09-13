@@ -50,6 +50,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 use Kynetx::JParser;
+use Kynetx::Json;
 
 use vars qw(%VARIABLE);
 
@@ -181,22 +182,15 @@ sub parse_ruleset {
 
     $logger->trace("[parser::parse_ruleset] after comments: ", sub {Dumper($ruleset)});
 
-#    print $ruleset; exit;
-
     my $json = $parser->ruleset($ruleset);
     my $result = Kynetx::Json::jsonToAst_w($json);
     if (defined $result->{'error'}) {
-	$logger->error("Can't parse ruleset: $result->{'error'}");
+        my $estring = join("\n",@{$result->{'error'}});
+	   $logger->error("Can't parse ruleset: $estring");
     } else {
-	$logger->debug("Parsed rules");
+	   $logger->debug("Parsed rules");
     }
-#    $logger->debug("[parser:parse_rule] ", sub {Dumper($result)});
-
     return $result;
-
-#    print Dumper($result);
-
-
 }
 
 # Helper function used in testing
@@ -214,7 +208,9 @@ sub parse_expr {
     my $json = $parser->expr($expr);
     my $result = Kynetx::Json::jsonToAst_w($json);
     if (defined $result->{'error'}) {
-	$logger->error("Can't parse expression: $result->{'error'}");
+       my $estring = join("\n",@{$result->{'error'}});
+       $logger->error("Can't parse expression: $estring");
+       return $result;
     } else {
     $logger->debug("Parsed expression: ",sub {Dumper($expr)});
     }
@@ -236,9 +232,11 @@ sub parse_decl {
     my $json = $parser->decl($expr);
     my $result = Kynetx::Json::jsonToAst_w($json);
     if (defined $result->{'error'}) {
-	$logger->error("Can't parse expression: $result->{'error'}");
+        my $estring = join("\n",@{$result->{'error'}});
+       $logger->error("Can't parse declaration: $estring");
+       return $result;
     } else {
-    $logger->debug("Parsed expression: ",sub {Dumper($expr)});
+    $logger->debug("Parsed declaration: ",sub {Dumper($expr)});
     }
 
     return $result->{'result'};
@@ -262,7 +260,9 @@ sub parse_pre {
     my $json = $parser->pre_block($expr);
     my $result = Kynetx::Json::jsonToAst_w($json);
     if (defined $result->{'error'}) {
-        $logger->error("Can't parse pre: $result->{'error'}");
+        my $estring = join("\n",@{$result->{'error'}});
+       $logger->error("Can't parse pre: $estring");
+       return $result;
     } else {
         $logger->debug("Parsed pre");
     }
@@ -274,30 +274,6 @@ sub parse_pre {
 
 }
 
-# # Helper function used in testing
-# sub parse_predexpr {
-#     my ($expr) = @_;
-
-#     my $logger = get_logger();
-
-#     $expr = remove_comments($expr);
-
-#     # remove newlines
-#     $expr =~ s%\n%%g;
-
-#     my $result = ($parser->predexpr($expr));
-#     if (defined $result->{'error'}) {
-# 	$logger->error("Can't parse expression: $result->{'error'}");
-#     } else {
-# 	$logger->debug("Parsed expression: ",sub {Dumper($expr)});
-#     }
-
-#     return $result;
-
-# #    print Dumper($result);
-
-
-# }
 
 
 sub parse_rule {
@@ -307,24 +283,20 @@ sub parse_rule {
 
     $rule = remove_comments($rule);
 
-
-#    print $rule; exit;
-
-    # remove newlines
-#    $rule =~ s%\n%%g;
-
-
-    my $result = ($parser->rule_top($rule));
+    my $json = ($parser->rule($rule));
+    my $result = Kynetx::Json::jsonToAst_w($json);
 
     if (ref $result eq 'HASH' && $result->{'error'}) {
-	$logger->debug("Can't parse rule: $result->{'error'}");
+        my $estring = join("\n",@{$result->{'error'}});
+       $logger->error("Can't parse rule: $estring");
+       return $result;
     } else {
 	$logger->debug("Parsed rules");
     }
 
  #   $logger->debug("Rule parsed:", sub {Dumper($result)});
 
-    return $result;
+    return $result->{"result"};
 
 
 
@@ -338,12 +310,14 @@ sub parse_action {
 
     $rule = remove_comments($rule);
 
-    # remove newlines
-#    $rule =~ s%\n%%g;
+    my $json = ($parser->action($rule));
+    $logger->debug("Action resp: ", $json);
 
-    my $result = $parser->action($rule);
+    my $result = Kynetx::Json::jsonToAst_w($json);
     if (defined $result->{'error'}) {
-	$logger->error("Can't parse actions: $result->{'error'}");
+        my $estring = join("\n",@{$result->{'error'}});
+       $logger->error("Can't parse action: $estring");
+       return $result;
     } else {
 	$logger->debug("Parsed rules");
     }
@@ -362,14 +336,17 @@ sub parse_callbacks {
     # remove newlines
  #   $rule =~ s%\n%%g;
 
-    my $result = $parser->callbacks($rule);
+    my $json =  $parser->callbacks($rule);
+    my $result = Kynetx::Json::jsonToAst_w($json);
     if (defined $result->{'error'}) {
-	$logger->error("Can't parse actions: $result->{'error'}");
+        my $estring = join("\n",@{$result->{'error'}});
+       $logger->error("Can't parse callback: $estring");
+       return $result;
     } else {
 	$logger->debug("Parsed rules");
     }
 
-    return $result;
+    return $result->{"result"};
 
 }
 
@@ -383,14 +360,17 @@ sub parse_post {
     # remove newlines
 #    $rule =~ s%\n%%g;
 
-    my $result = $parser->post_block($rule);
+    my $json =  $parser->post_block($rule);
+    my $result = Kynetx::Json::jsonToAst_w($json);
     if (defined $result->{'error'}) {
-	$logger->error("Can't parse actions: $result->{'error'}");
+        my $estring = join("\n",@{$result->{'error'}});
+       $logger->error("Can't parse post: $estring");
+       return $result;
     } else {
-	$logger->debug("Parsed rules");
+	$logger->debug("Parsed post");
     }
 
-    return $result;
+    return $result->{'result'};
 
 }
 
@@ -401,15 +381,17 @@ sub parse_global_decls {
 
     $element = remove_comments($element);
 
-    my $encap = _encapsulate($element);
+    #my $encap = $element;#_encapsulate($element);
 
-    my $json = $parser->global($encap);
+    my $json = $parser->global($element);
     $logger->debug(Dumper($json));
     my $result = Kynetx::Json::jsonToAst_w($json);
 
 #    $logger->debug(Dumper($result));
     if (ref $result eq 'HASH' && $result->{'error'}) {
-	   $logger->debug("[Parser] Can't parse global declarations: $result->{'error'}");
+        my $estring = join("\n",@{$result->{'error'}});
+       $logger->error("Can't parse global: $estring");
+       return $result;
     } else {
 	   #$logger->debug("[Parser] Parsed global decls");#,
     }
@@ -426,15 +408,18 @@ sub parse_dispatch {
 
     $element = remove_comments($element);
 
-    my $result = $parser->dispatch_block_top($element);
+    my $json =  $parser->dispatch_block($element);
+    my $result = Kynetx::Json::jsonToAst_w($json);
 
     if (ref $result eq 'HASH' && $result->{'error'}) {
-	$logger->debug("Can't parse dispatch declaration: $result->{'error'}");
+        my $estring = join("\n",@{$result->{'error'}});
+       $logger->error("Can't parse dispatch: $estring");
+       return $result;
     } else {
 	$logger->debug("Parsed dispatch declaration");
     }
 
-    return $result;
+    return $result->{'result'};
 
 }
 
@@ -446,16 +431,19 @@ sub parse_meta {
 
     $element = remove_comments($element);
 
-    my $result = $parser->meta_block_top($element);
+    my $json = $parser->meta_block($element);
+    my $result = Kynetx::Json::jsonToAst_w($json);
 
     if (ref $result eq 'HASH' && $result->{'error'}) {
-	$logger->debug("Can't parse meta information: $result->{'error'}");
+        my $estring = join("\n",@{$result->{'error'}});
+       $logger->error("Can't parse meta block: $estring");
+       return $result;
     } else {
 	$logger->debug("Parsed meta information");
     }
 
 
-    return $result;
+    return $result->{'result'};
 
 }
 
