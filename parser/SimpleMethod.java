@@ -18,9 +18,10 @@ public class SimpleMethod
 					CommonTokenStream tokens = new CommonTokenStream(lexer);
 					com.kynetx.RuleSetParser parser = new com.kynetx.RuleSetParser(tokens);
 					ArrayList block_array = new ArrayList();
-					parser.decl(block_array);
+					com.kynetx.RuleSetParser.expr_return result = parser.expr();
+
 					HashMap map = new HashMap();
-					map.put("result",block_array);
+					map.put("result",result.result);
 					JSONObject js = new JSONObject(map);
                     if(parser.parse_errors.size() >0)
                     {

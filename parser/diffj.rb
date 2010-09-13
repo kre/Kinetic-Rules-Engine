@@ -19,12 +19,14 @@ def diff_hash(left,right)
     if(["start_col","start_line","meta_start_col","global_start_col","meta_start_line","dispatch_start_col","global_start_line","dispatch_start_line"].include?(key))
       next;
     end
-    # if(key == "meta" || key == "rules" || key == "global" || key == "dispatch"  )
-    #   puts "====================== " + key + "====================== "
-    # end
+
     @@keystack.push(key);
 
-      rightval = right[key];
+     if !right.has_key?(key)
+       rightval = "undefined_value"
+     else
+       rightval = right[key];
+     end
 
       if !check_types(value,rightval)
         @@keystack.pop();
@@ -52,10 +54,6 @@ def diff_hash(left,right)
   
 end
 
-def blank(thestring)
-  return !thestring || thestring.strip().length == 0
-end
-
 def check_value(lvalue,rvalue)
   if(rvalue.kind_of?(String) && lvalue.kind_of?(String))
     rvalue = rvalue.strip().gsub("\n","").gsub("\t","");
@@ -74,22 +72,8 @@ def check_types(lvalue,rvalue)
       return true;
     end
     
-#    lblank = !lvalue || ((lvalue.kind_of?(Array) || lvalue.kind_of?(Hash)) && lvalue.empty? || lvalue.size() == 0) if !lvalue.kind_of?(String)
-#    rblank = !rvalue || ((rvalue.kind_of?(Array) || rvalue.kind_of?(Hash)) && rvalue.empty? || rvalue.size() == 0) if !rvalue.kind_of?(String)
-#
-#    lblank = blank(lvalue) if lvalue.kind_of?(String)
-#    rblank = blank(lvalue) if rvalue.kind_of?(String)
-#
-#    if( lblank && rblank )
-#      # puts "W-LRNBE "  + showkeys + " L[" +  lvalue.class.name + "] R[" +  rvalue.class.name + "]"
-#      return false;
-#    end
-
-#    if(lvalue.class.name != rvalue.class.name)
      puts "E-LRCM" + showkeys + " L[" +  lvalue.class.name + "] R[" +  rvalue.class.name + "]" + "LV[" +  lvalue.to_s + "] RV[" +  rvalue.to_s + "]"
      return false;
-#    end
-#    return true;
 end
 
 def diff_array(larray,rarray)
@@ -103,13 +87,10 @@ def diff_array(larray,rarray)
     end
 
     if(rvalue.kind_of? Hash)
-#      puts("process hash")
       diff_hash(lvalue,rvalue)
     elsif (rvalue.kind_of?Array)
-#      puts("process array")
       diff_array(lvalue,rvalue)
     else
-#      puts("process value")
       check_value(lvalue,rvalue);
     end
 

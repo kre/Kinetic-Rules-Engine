@@ -478,7 +478,7 @@ KOBJ.tabManager.addNew = function(config){
 	// Adds "px" or whatnot
 	defaults['topPos'] = posToBe + defaults['measurementUnit'];
 
-	KOBJ.log(defaults);
+	KOBJ.itrace(defaults);
 	var link = "";
 
 
