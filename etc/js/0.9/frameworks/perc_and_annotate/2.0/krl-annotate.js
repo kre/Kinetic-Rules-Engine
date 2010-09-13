@@ -111,10 +111,19 @@ KOBJAnnotateSearchResults.prototype.annotate = function(datasetdata) {
             var annotateInfo = {};
             resultslist.each(function() {
                 var toAnnotate = this;
+
+                if($KOBJ(toAnnotate).hasClass(myself.app.app_id + "_anno"))
+                {
+                    KOBJ.log("Aready Has Class");
+                    return true;
+                }
+
                 var itemCounter = myself.defaults['name'] + (KOBJAnnotateSearchResults.annotate_search_counter += 1);
 
                 annotateInfo[itemCounter] = myself.annotate_search_extractdata(toAnnotate, myself.defaults);
                 $KOBJ(toAnnotate).addClass(itemCounter);
+                $KOBJ(toAnnotate).addClass(myself.app.app_id + "_anno");
+                KOBJ.log("Added tracking class");
             });
 
             var annotateFunc = function() {
@@ -132,8 +141,8 @@ KOBJAnnotateSearchResults.prototype.annotate = function(datasetdata) {
                 $KOBJ.each(data, function(key, data) {
                     var contents = annotateFunc(data);
                     if (contents) {
-                        if ($KOBJ("." + key).find('#' + myself.defaults.name + '_anno_list li').is('.' + myself.defaults.name + '_item')) {
-                            $KOBJ("." + key).find('#' + myself.defaults.name + '_anno_list').append(mk_list_item(myself.defaults.sep)).append(mk_list_item(contents));
+                        if ($KOBJ("." + key).find('#' + myself.app.app_id + '_anno_list li').is('.' + myself.app.app_id + '_item')) {
+                            $KOBJ("." + key).find('#' + myself.app.app_id + '_anno_list').append(mk_list_item(myself.defaults.sep)).append(mk_list_item(contents));
                         } else {
                             $KOBJ("." + key).find(modify)[myself.defaults.placement](mk_outer_div(contents));
                         }
@@ -167,21 +176,32 @@ KOBJAnnotateSearchResults.prototype.annotate = function(datasetdata) {
 
 
             resultslist.each(function() {
-                KOBJ.loggers.annotate.trace("Working on result list");
+                KOBJ.loggers.annotate.trace("Working on result list local");
 
                 var toAnnotate = this;
+
+                if($KOBJ(toAnnotate).hasClass(myself.app.app_id + "_anno"))
+                {
+                    KOBJ.loggers.annotate.log("Already annotated");
+                    return true;
+                }
+
                 var extractedData = myself.annotate_search_extractdata(toAnnotate, myself.defaults);
                 $KOBJ.each(extractedData, function(name, value) {
                     $KOBJ(toAnnotate).data(name, value);
                 });
+
                 var contents = myself.callback(toAnnotate);
+
+                $KOBJ(toAnnotate).addClass(myself.app.app_id + "_anno");
+                KOBJ.loggers.annotate.trace("Added tracking class");
+
                 if (contents) {
                     count++;
-                    if ($KOBJ(toAnnotate).find('#' + myself.defaults.name + '_anno_list li').is('.' + myself.defaults.name + '_item')) {
-                        $KOBJ(toAnnotate).find('#' + myself.defaults.name + '_anno_list').append(mk_list_item(myself.defaults.sep)).append(mk_list_item(contents));
+                    if ($KOBJ(toAnnotate).find('#' + myself.app.app_id + '_anno_list li').is('.' + myself.app.app_id + '_item')) {
+                        $KOBJ(toAnnotate).find('#' + myself.app.app_id + '_anno_list').append(mk_list_item(myself.defaults.sep)).append(mk_list_item(contents));
                     } else {
-
-                        $KOBJ(toAnnotate).find(modify)[myself.defaults.placement](mk_outer_div(contents));
+                        $KOBJ(toAnnotate).find(myself.modify)[myself.defaults.placement](myself.mk_outer_div(contents));
                     }
                 }
             });
@@ -199,21 +219,22 @@ KOBJAnnotateSearchResults.prototype.annotate = function(datasetdata) {
     runAnnotate();
 
     // Watcher is the element which is being watched, runAnnotateLocal is the function to be run
-//    if (typeof(watcher) != "undefined") {
-//        KOBJDomWatch.watch(watcher, runAnnotate, KOBJ.get_application(config['rid']));
-//    }
+    if (typeof(this.watcher) != "undefined") {
+        KOBJ.loggers.annotate.trace("App ID is " + this.app.app_id);
+        KOBJDomWatch.watch(this.watcher, runAnnotate, KOBJ.get_application(this.app.app_id));
+    }
 
 
 };
 
 
 KOBJAnnotateSearchResults.prototype.mk_list_item = function(i) {
-    return $KOBJ("<li class='" + this.defaults.name + "_item'>").css(this.defaults.li_css).append(i);
+    return $KOBJ("<li class='" + this.app.app_id + "_item'>").css(this.defaults.li_css).append(i);
 }
 
 KOBJAnnotateSearchResults.prototype.mk_outer_div = function(anchor) {
-    var name = this.defaults.name;
-    var logo_item = mk_list_item(anchor);
+    var name = this.app.app_id;
+    var logo_item = this.mk_list_item(anchor);
     var logo_list = $KOBJ('<ul>').css(this.defaults.ul_css).attr("id", name + "_anno_list").append(logo_item);
     var inner_div = $KOBJ('<div>').css(this.defaults.inner_div_css).append(logo_list);
     if (this.defaults['tail_image']) {
