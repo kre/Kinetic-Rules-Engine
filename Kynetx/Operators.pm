@@ -88,7 +88,11 @@ sub eval_pick {
     # if you don't clone this, it modified the rule env
 
     my $obj = Kynetx::Expressions::den_to_exp(clone($int));
+
    $logger->trace("[pick] obj: ", sub { Dumper($obj) });
+
+    return $obj unless defined $obj;
+
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 
@@ -127,6 +131,7 @@ sub eval_length {
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
 #    $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
 
     my $v = 0;
     if ($obj->{'type'} eq 'array') {
@@ -163,6 +168,7 @@ sub eval_tail {
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
 #    $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
 
     my $v = 0;
     if ($obj->{'type'} eq 'array') {
@@ -250,6 +256,7 @@ sub eval_filter {
       Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
 #    $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
 
     my $v = 0;
     if ($obj->{'type'} eq 'array' && int(@{$expr->{'args'}}) > 0) {
@@ -303,7 +310,8 @@ sub eval_map {
     my $obj =
       Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
-    $logger->debug("obj: ", sub { Dumper($obj) });
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
 
     my $v = 0;
     if ($obj->{'type'} eq 'array' && int(@{$expr->{'args'}}) > 0) {
@@ -364,6 +372,7 @@ sub eval_join {
   my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
 #   $logger->debug("obj: ", sub { Dumper($obj) });
+  return $obj unless defined $obj;
 
   my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 #    $logger->debug("obj: ", sub { Dumper($rands) });
@@ -393,6 +402,7 @@ sub eval_append {
   my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
 #   $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
 
   my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 #    $logger->debug("obj: ", sub { Dumper($rands) });
@@ -430,6 +440,7 @@ sub eval_replace {
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
 #    $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 #    $logger->debug("obj: ", sub { Dumper($rands) });
@@ -487,6 +498,7 @@ sub eval_match {
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
 #   $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 #    $logger->debug("obj: ", sub { Dumper($rands) });
@@ -537,10 +549,12 @@ sub eval_extract {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
-    my $is_match = 0;
-    my @items = ();
 
 #   $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
+
+    my $is_match = 0;
+    my @items = ();
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 #    $logger->debug("obj: ", sub { Dumper($rands) });
@@ -597,6 +611,7 @@ sub eval_uc {
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
     $logger->trace("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 #    $logger->trace("obj: ", sub { Dumper($rands) });
@@ -639,6 +654,7 @@ sub eval_split {
   my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
 #   $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
 
   my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 #    $logger->debug("obj: ", sub { Dumper($rands) });
@@ -678,8 +694,10 @@ sub eval_as {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
     my $orig_type = $expr->{'obj'}->{'type'};
-    $logger->debug("Original structure: ", sub {Dumper($expr->{'obj'})});
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+    return $obj unless defined $obj;
+
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 
@@ -701,11 +719,15 @@ sub eval_as {
       if ($rands->[0]->{'val'} eq 'str') {
 	$obj->{'type'} = $rands->[0]->{'val'};
       }
-    } elsif ($rands->[0]->{'val'} eq 'array' && $orig_type eq 'persistent') {
+    } elsif ($orig_type eq 'persistent') {
+      if ($rands->[0]->{'val'} eq 'array') {
         my $thing = $obj->{'val'};
         my $target=_prune_persitent_trail($thing);
         $obj->{'type'} = $rands->[0]->{'val'};
         $obj->{'val'} = $target;
+      } 
+    # FIXME: The structure of this elsif doesn't match all the rest above.  
+    # We should be determining what the obj IS, then deciding what to do...
     } elsif ($rands->[0]->{'val'} eq 'str' || $rands->[0]->{'val'} eq 'json'){
         my $tmp = Kynetx::Expressions::den_to_exp($obj);
         $logger->trace("EXP: ", sub {Dumper($tmp)});
@@ -726,6 +748,7 @@ sub eval_toRegexp {
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
 #    $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
 
     my $v = 0;
     if ($obj->{'type'} eq 'str') {
@@ -741,7 +764,10 @@ $funcs->{'toRegexp'} = \&eval_toRegexp;
 #----------------------------------------------------------------------------------
 sub _to_sets {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
-        my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    return $obj unless defined $obj;
+
+
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
     my $a = $obj->{'val'};
     my $b = $rands->[0]->{'val'};
@@ -889,6 +915,8 @@ sub hash_put {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    return $obj unless defined $obj;
+
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
     my $type = $obj->{'type'};
     if ($type eq 'hash') {
