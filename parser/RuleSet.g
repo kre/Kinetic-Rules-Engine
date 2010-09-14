@@ -123,7 +123,7 @@ options {
 	 */
 	public String strip_wrappers(String start, String end, String value)
 	{
-		return value.substring(start.length(),value.length() - end.length());	
+		return value.substring(start.length(),value.length() - end.length());
 	}
 
 	public String[] sar(String ... values)
@@ -197,6 +197,51 @@ options {
 //		puts("End " ) ;
 		return result;
 	}
+/*
+	    public HashMap build_exp_result(ArrayList operators)
+    	{
+    //		puts("Start " + operators.size() ) ;
+    		HashMap result = new HashMap();
+    		ArrayList args_array = new ArrayList();
+    		result.put("args",args_array);
+    		for(int i = 0;i < operators.size(); i++)
+    		{
+    //			puts("at " + i);
+    			HashMap value = (HashMap)operators.get(i);
+
+    			 // Are we at the end?
+    			if(i == operators.size() - 1 ||  i == 0)
+    			{
+    				if(i == 0)
+    				{
+    //					puts("O Opt " + value.get("op") + " - " + i);
+    					result.put("op",value.get("op"));
+    					result.put("type",value.get("type"));
+    				}
+
+    				args_array.add(value.get("result"));
+    			}
+    			else
+    			{
+    				HashMap tmp = new HashMap();
+    				ArrayList new_args_array = new ArrayList();
+    				// We really need the next operator for the ast
+    				HashMap value2 = (HashMap)operators.get(i+1);
+
+    				tmp.put("op",value2.get("op"));
+    				tmp.put("type",value2.get("type"));
+    				tmp.put("args",new_args_array);
+
+    				new_args_array.add(value.get("result"));
+
+    				args_array.add(tmp);
+    				args_array = new_args_array;
+    			}
+    		}
+    //		puts("End " ) ;
+    		return result;
+    	}
+*/
 }
 
 		
@@ -249,6 +294,11 @@ must_be_one[String[\] what]
 rule
 @init{
 	 ArrayList rule_block_array = (ArrayList)rule_json.get("rules");
+           if(rule_block_array == null)
+          	 {
+          	    rule_block_array = new ArrayList();
+          	    rule_json.put("rules",rule_block_array);
+          	 }
 	 HashMap current_rule = new HashMap(); 
 	 HashMap actions_result = new HashMap();
 	 ArrayList fors = new ArrayList();
@@ -281,11 +331,13 @@ rule
 			current_rule.put("blocktype",(actions_result.get("blocktype") != null ? actions_result.get("blocktype") : "every"));
 			
 			current_rule.put("actions",actions_result.get("actions"));
-			if($postb.text != null)
+//			if($postb.text != null)
 				current_rule.put("post",$postb.result);
 			
 			if($pb.text != null)
 				current_rule.put("pre",$pb.result);
+			else
+			    current_rule.put("pre",new ArrayList());
 			
 			current_rule.put("name",$name.text);
 			current_rule.put("emit",$eb.emit_value);
@@ -323,7 +375,7 @@ post_block returns[HashMap result]
 //		tmp.put("alt",$alt.result);
 		tmp.put("type",$typ.text);
 		tmp.put("cons",temp_list);
-		if($alt.text != null)
+//		if($alt.text != null)
 		{
 			tmp.put("alt",$alt.result);
 		} 
@@ -366,8 +418,17 @@ post_statement returns[HashMap result]
 		 	
 		if($ie.text != null)
 		{
+		    if($result == null)
+			    $result = new HashMap();
 			$result.put("test",$ie.result);
-		} 	
+		}
+		else
+		{
+		    if($result == null)
+			    $result = new HashMap();
+			$result.put("test",null);
+
+		}
 	}
 	
   	;
@@ -379,10 +440,10 @@ raise_statement returns[HashMap result]
 		tmp.put("event",$evt.text);
 		tmp.put("domain","explicit");
 		tmp.put("type","raise");
-		if($f.text != null)
+//		if($f.text != null)
 			tmp.put("rid",$f.result);
 			
-		if($m.text != null)
+//		if($m.text != null)
 			tmp.put("modifiers",$m.result);	
 		
 		$result = tmp;	
@@ -403,12 +464,12 @@ callbacks returns[HashMap result]
 	: 
 	CALLBACKS LEFT_CURL s=success? f=failure? RIGHT_CURL {
 		HashMap tmp = new HashMap();
-		if($s.text != null)
+//		if($s.text != null)
 		{
 			tmp.put("success",$s.result);
 			
 		}
-		if($f.text != null)
+//		if($f.text != null)
 		{
 			tmp.put("failure",$f.result);		
 		}
@@ -520,7 +581,7 @@ trail_mark returns[HashMap result]
 		tmp.put("name",$name.text);
 		tmp.put("domain",$dm.text);
 		tmp.put("type","persistent");
-		if($t.text != null)
+//		if($t.text != null)
 			tmp.put("with",$t.result);
 		$result = tmp;		
 	}
@@ -621,13 +682,14 @@ primrule returns[HashMap result]
 //			 	tmp.put("label",$label.text);
 
 
-            if($set.text != null)
+//            if($set.text != null)
 				tmp.put("vars",$set.result);
 			 	
 		 	tmp.put("modifiers",$m.result);
 		 	HashMap tmp2 = new HashMap();
-			tmp2.put("action",tmp); 
-			if($label.text != null)
+			tmp2.put("action",tmp);
+
+//			if($label.text != null)
 				tmp2.put("label",$label.text);
 			$result = tmp2;
 		 	
@@ -636,7 +698,7 @@ primrule returns[HashMap result]
 			HashMap tmp = new HashMap();
 			tmp.put("emit",$e.emit_value);
 
-		 	if($label.text != null) 
+//		 	if($label.text != null)
 			 	tmp.put("label",$label.text);
 
 
@@ -697,7 +759,7 @@ using returns[HashMap result]
 			evt_expr.put("type","prim_event");
 			evt_expr.put("op","pageview");
 			
-			if($s.text != null)
+//			if($s.text != null)
 				evt_expr.put("vars",$s.result);	
 			
 			tmp.put("event_expr",evt_expr);
@@ -991,6 +1053,11 @@ on_expr returns[Object result] : ON
 	global_block 
 @init {
 	 ArrayList global_block_array = (ArrayList)rule_json.get("global");
+	 if(global_block_array == null)
+	 {
+	    global_block_array = new ArrayList();
+	    rule_json.put("global",global_block_array);
+	 }
 	 boolean found_cache = false;
 }
 @after  {
@@ -1186,14 +1253,38 @@ equality_expr returns[Object result]
 			$result = $me1.result;
 	 }
 	;
-	 
+
+mult_expr returns[Object result]
+     @init {
+     	boolean found_op = false;
+     	ArrayList result = new ArrayList();
+     }
+     	: me1=unary_expr  (op=MULT_OP me2=unary_expr  {
+     		found_op = true;
+     		if(result.isEmpty())
+     		{
+     			 add_to_expression(result,"prim",$op.text,$me1.result);
+     			 add_to_expression(result,"prim",$op.text,$me2.result);
+     		}
+     		else
+     			 add_to_expression(result,"prim",$op.text,$me2.result);
+     	}
+     	)*  {
+     		if(found_op)
+     			$result = build_exp_result(result);
+     		else
+     			$result = $me1.result;
+      }
+     	;
+
+
 	 
 add_expr returns[Object result]
 @init {
 	boolean found_op = false;
 	ArrayList result = new ArrayList();
 }	 
-	: me1=unary_expr  (op=(ADD_OP|MULT_OP|REX) me2=unary_expr  {
+	: me1=mult_expr  (op=(ADD_OP|REX) me2=mult_expr  {
 		found_op = true;
 		if(result.isEmpty())
 		{
@@ -1234,6 +1325,9 @@ unary_expr  returns[Object result] options { backtrack = true; }
 	      	tmp.put("domain",$vd.text);
 	      	if($t.text != null)
 		      	tmp.put("timeframe",t.time);
+		     else
+		      	tmp.put("timeframe",null);
+
 	      	$result = tmp;		
 	}
 	| SEEN rx_1=STRING op=must_be_one[sar("before","after")] rx_2=STRING  must_be["in"] vd=VAR_DOMAIN ':' v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH|VAR_DOMAIN) {
@@ -1361,7 +1455,7 @@ factor returns[Object result] options { backtrack = true; }
 	: iv=INT { 
 		HashMap tmp = new HashMap();
 		tmp.put("type","num");
-		tmp.put("val",Long.parseLong($iv.text));
+		tmp.put("val",Long.parseLong($iv.text.trim()));
 		$result = tmp;
 	}
       | sv= STRING  {  
@@ -1373,7 +1467,7 @@ factor returns[Object result] options { backtrack = true; }
       | fv= FLOAT  { 
       		HashMap tmp = new HashMap();
 		tmp.put("type","num");
-		tmp.put("val",Float.parseFloat($fv.text));
+		tmp.put("val",Float.parseFloat($fv.text.trim()));
 		$result = tmp;
 	}    
       | bv= (TRUE| FALSE)  { 
@@ -1565,6 +1659,13 @@ emit_block  returns[String emit_value]
 meta_block 
 @init {
 	 HashMap meta_block_hash = (HashMap)rule_json.get("meta");
+
+	      if(meta_block_hash == null)
+     	 {
+     	    meta_block_hash = new HashMap();
+     	    rule_json.put("meta",meta_block_hash);
+     	 }
+
 	 ArrayList use_list = new ArrayList();
 	 HashMap keys_map = new HashMap();
 	 HashMap key_values = new HashMap();
@@ -1628,10 +1729,10 @@ meta_block
 		HashMap tmp = new HashMap(); 
 		tmp.put("name",$modname.text);
 		tmp.put("type","module");
-		if($alias.text != null) {
+//		if($alias.text != null) {
 			tmp.put("alias",$alias.text);
 			alias = null;
-		}
+//		}
 		use_list.add(tmp);
 	 })
 		)*
@@ -1642,6 +1743,13 @@ meta_block
 dispatch_block
 @init {
 	 ArrayList dispatch_block_array = (ArrayList)rule_json.get("dispatch");
+
+	           if(dispatch_block_array == null)
+          	 {
+          	    dispatch_block_array = new ArrayList();
+          	    rule_json.put("dispatch",dispatch_block_array);
+          	 }
+
 }
 @after  {
 }	
@@ -1653,6 +1761,13 @@ dispatch_block
 			tmp.put("ruleset_id",strip_string($rsid.text));
 			rsid = null;
 			
+		}
+		else
+		{
+			tmp.put("ruleset_id",null);
+			rsid = null;
+
+
 		}
 		dispatch_block_array.add(tmp);
 		})* 
@@ -1769,7 +1884,7 @@ ADD_OP: '+'|'-';
 
  CALLBACKS : 'callbacks';	
  SUCCESS : 'success';
- FAILURE 
+ FAILURE
 	:	 'failure';
 
  FORGET: 'forget';
@@ -1979,12 +2094,12 @@ VAR  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*
    ;
 
 
- INT :	'-'? '0'..'9'+
+ INT :	' -'? '0'..'9'+
     ; 
 
  FLOAT
-    :   '-'? ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
-    |   '-'? '.' ('0'..'9')* EXPONENT?
+    :   ' -'? ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
+    |   ' -'? '.' ('0'..'9')* EXPONENT?
  
     ; 
 
