@@ -41,6 +41,7 @@ our @ISA         = qw(Exporter);
 
 our %EXPORT_TAGS = (all => [
 qw(
+    rq
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -84,7 +85,6 @@ use Inline (Java => <<'END',
 
     class Antlr_ {
         public Antlr_() {
-
         }
 
         public String ruleset(String krl) throws org.antlr.runtime.RecognitionException {
@@ -427,13 +427,15 @@ use Inline (Java => <<'END',
         }
     }
 END
-    AUTOSTUDY => 1,
-    DEBUG => 0,
-    #SHARED_JVM => 1,
-    #START_JVM => 0,
+    CLASSPATH=>$ENV{CLASSPATH},
+    SHARED_JVM => 1,
     DIRECTORY => $wdir,
-    STUDY => ['com.kynetx.RuleSetParser'],
-    );
+    START_JVM  => 0,
+    AUTOSTUDY  => 1,
+    DEBUG      => 3,
+    STUDY      => ['org.json.JSONObject'],
+    PACKAGE => 'main',
+);
 
 use Inline::Java qw(cast);
 
@@ -446,8 +448,7 @@ sub env {
 
 
 sub get_antlr_parser {
-    $PARSER = new Kynetx::JParser::Ahandle();
-
+    return new Antlr_();
 }
 
 

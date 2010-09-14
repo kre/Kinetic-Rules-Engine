@@ -46,7 +46,7 @@ use Kynetx::Rules qw(:all);
 use Kynetx::Util qw(:all);
 use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
-use Kynetx::RuleManager qw(:all);
+#use Kynetx::RuleManager qw(:all);
 use Kynetx::Console qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Configure qw(:all);

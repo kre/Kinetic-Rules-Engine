@@ -121,7 +121,7 @@ sub structure_operators {
 
 }
 
-my $parser = new Kynetx::JParser::Antlr_();
+my $parser = Kynetx::JParser::get_antlr_parser();
 
 # this removes KRL-style comments taking into account quotes
 my $comment_re = qr%

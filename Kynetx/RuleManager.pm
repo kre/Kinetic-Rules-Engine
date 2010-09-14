@@ -68,8 +68,22 @@ our %EXPORT_TAGS = (
 );
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
+my $skrl = <<_KRL_;
+ruleset 10 {
+    rule test0 is active {
+        select using "/test/" setting()
+        pre {
+        current_price = stocks:last("^DJI");
+        current_price = stocks:last("^DJI","foo");
+    }
+        replace("test","test");
+    }
+}
+_KRL_
+
 sub handler {
     my $r = shift;
+    my $p = Kynetx::JParser::get_antlr_parser();
 
     # configure logging for production, development, etc.
     config_logging($r);
@@ -110,6 +124,9 @@ sub handler {
     } elsif ( $method eq "flushdata" ) {
         $result = flush_data( $req_info, $method, $rid );
         $type = 'text/html';
+    } elsif ( $method eq "dummy" ) {
+        $result = $p->ruleset($skrl);
+        $type = 'text/plain';
     }
 
     $logger->debug("__FLUSH__");
