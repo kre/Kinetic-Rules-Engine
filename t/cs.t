@@ -89,7 +89,7 @@ SKIP: {
     $mech->title_is('Show Context');
 
     $mech->content_like('/Context for Client ID cs_test/');
-    $mech->content_like('/Active rules.+2/s');
+    $mech->content_like('/Active rules.+\d+/s');
     $mech->content_contains('test_rule_1');
     $mech->content_contains('will fire');
     $test_count += 7;

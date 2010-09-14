@@ -262,6 +262,12 @@ sub eval_raise_statement {
 
     }
 
+    # if we're raising an event on a new RID, ensure it's in the same mode (dev or production)
+    if ($expr->{'rid'}) {
+      $new_req_info->{$expr->{'rid'}.':kynetx_app_version'} = 
+	$req_info->{$req_info->{'rid'}.':kynetx_app_version'};
+    }
+
     # merge in the incoming request info
     $new_req_info = Kynetx::Request::merge_req_env($req_info, 
 						   $new_req_info);

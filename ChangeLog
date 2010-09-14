@@ -1,5 +1,6 @@
 2010-09-14  Web-san  <web@dev11.kobj.net>
 
+   * Kynetx/Postlude.pm (eval_raise_statement): put new RID in same mode as current
    * Kynetx/Operators.pm: added test for undefined objects
    * Kynetx/Predicates/Twitter.pm (get_access_tokens): refactored to use access tokens from the meta block if present.
 
