@@ -113,7 +113,7 @@ sub authorized {
 
 # $logger->debug("Consumer tokens: ", Dumper $consumer_tokens);
 
- my $access_tokens = session_get($rid, $session, 'twitter:access_tokens');
+ my $access_tokens = get_access_tokens($req_info, $rid, $session);
 
  
  if (defined $access_tokens && 
@@ -151,7 +151,7 @@ sub user_id {
   my $logger = get_logger();
 
   my $rid = $req_info->{'rid'};
-  my $access_tokens = session_get($rid, $session, 'twitter:access_tokens');
+  my $access_tokens =  get_access_tokens($req_info, $rid, $session);
 
   return $access_tokens->{'user_id'};
 
@@ -243,12 +243,12 @@ sub process_oauth_callback {
 
   $logger->debug("Exchanged request tokens for access tokens. access_token => $access_token & secret => $access_token_secret & user_id = $user_id & screen_name = $screen_name");
 
-  session_store($rid, $session, 'twitter:access_tokens', {
-        access_token        => $access_token,
-        access_token_secret => $access_token_secret,
-	user_id => $user_id,
-        screen_name => $screen_name
-    });
+  store_access_tokens($rid, $session, 
+        $access_token,
+        $access_token_secret,
+	$user_id,
+        $screen_name
+    );
 
   $logger->debug("redirecting newly authorized tweeter to $caller");
   $r->headers_out->set(Location => $caller);
@@ -505,7 +505,7 @@ sub twitter {
 #  $logger->debug("Consumer tokens: ", Dumper $consumer_tokens);
   my $nt = Net::Twitter::Lite->new(traits => [qw/API::REST OAuth/], %{ $consumer_tokens}) ;
 
-  my $access_tokens = session_get($rid, $session, 'twitter:access_tokens');
+  my $access_tokens =  get_access_tokens($req_info, $rid, $session);
   if (defined $access_tokens && 
       defined $access_tokens->{'access_token'} &&
       defined $access_tokens->{'access_token_secret'}) {
@@ -533,6 +533,40 @@ sub get_consumer_tokens {
     $consumer_tokens = $ruleset->{'meta'}->{'keys'}->{'twitter'};
   }
   return $consumer_tokens;
+}
+
+sub store_access_tokens {
+  my ($rid, $session, $access_token, $access_token_secret, $user_id, $screen_name) = @_;
+
+  my $r = session_store($rid, $session, 'twitter:access_tokens', {
+        access_token        => $access_token,
+        access_token_secret => $access_token_secret,
+	user_id => $user_id,
+        screen_name => $screen_name
+    });
+
+  return $r;
+}
+
+sub get_access_tokens {
+  my ($req_info, $rid, $session)  = @_;
+
+  my $consumer_tokens=get_consumer_tokens($req_info);
+
+  my $access_tokens;
+  if ($consumer_tokens->{'oauth_token'}) {
+    $access_tokens = {
+        access_token        => $consumer_tokens->{'oauth_token'},
+        access_token_secret => $consumer_tokens->{'oauth_token_secret'},
+	user_id => $consumer_tokens->{'user_id'} || '',
+        screen_name => $consumer_tokens->{'screen_name'} || ''
+    }
+  } else {
+    $access_tokens = session_get($rid, $session, 'twitter:access_tokens');
+  }
+
+  return $access_tokens;
+
 }
 
 1;
