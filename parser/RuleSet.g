@@ -1430,7 +1430,13 @@ operator returns[String oper,ArrayList exprs]
       		$exprs = rexprs;
       	} 
       	|
-      	 o1=( MATCH|EXTRACT) LEFT_PAREN e=expr { rexprs.add(e.result); }  RIGHT_PAREN	{
+      	 o1=MATCH LEFT_PAREN e=expr { rexprs.add(e.result); }  RIGHT_PAREN	{
+      		// Remove .
+      		$oper = $o1.text;
+      		$exprs = rexprs;
+      	}
+      	|
+      	 o1=EXTRACT LEFT_PAREN e=expr { rexprs.add(e.result); }  RIGHT_PAREN	{
       		// Remove .
       		$oper = $o1.text;
       		$exprs = rexprs;
@@ -1931,9 +1937,9 @@ JS
 	: '<|' ( options {greedy=false;} : . )* '|>' 
 	;
 
-fragment
+/*fragment
 EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
-
+  */
 fragment
 HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
 
@@ -2101,8 +2107,8 @@ VAR  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*
     ; 
 
  FLOAT
-    :   ' -'? ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
-    |   ' -'? '.' ('0'..'9')* EXPONENT?
+    :   ' -'? ('0'..'9')+ '.' ('0'..'9')*
+    |   ' -'? '.' ('0'..'9')*
  
     ; 
 
