@@ -1994,7 +1994,7 @@ OTHER_OPERATORS
 	:  'pick'|'length'|'as'|'head'|'tail'|'sort'
       	|'filter'|'map'|'uc'|'lc' |'split' | 'join' | 'query'
       	| 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
-      	| 'duplicates'
+      	| 'duplicates' | 'append' | 'put' | 'extract'
       	;
 		
  TRUE :'true';	
