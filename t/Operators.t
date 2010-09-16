@@ -35,7 +35,7 @@ use strict;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 use Test::More;
@@ -236,11 +236,11 @@ sub test_operator {
     $r = eval_expr($v, $rule_env, $rule_name,$req_info);
     diag "Result: ", Dumper($r) if $d;
     my $result = cmp_deeply($r, $x, "Trying $e");
-    die unless ($result);
+    #die unless ($result);
 }
 
 
-goto ENDY;
+#goto ENDY;
 
 $e[$i] = q/store.pick("$.store.book[*].author")/;
 $x[$i] = {
@@ -1398,7 +1398,7 @@ $x[$i] = {
    'val' => ['is'],
    'type' => 'array'
 };
-$d[$i]  = 1;
+$d[$i]  = 0;
 $i++;
 
 $e[$i] = q#foo.extract(re/like (\w+)/)#;
@@ -1422,7 +1422,7 @@ $x[$i] = {
    'val' => [],
    'type' => 'array'
 };
-$d[$i]  = 1;
+$d[$i]  = 0;
 $i++;
 
 
