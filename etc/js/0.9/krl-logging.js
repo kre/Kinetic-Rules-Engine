@@ -32,11 +32,20 @@ $KOBJ.each(KOBJ.loggers, function(k, v) {
 });
 
 
+KOBJ.trace_domwatch = function() {
+  KOBJ.loggers.domwatch.setLevel(KOBJ.log4js.Level.TRACE);
+};
+
+
 KOBJ.mega_debug = function() {
     KOBJ.enable_popup_logging();
-    KOBJ.log4js.getLogger().setLevel(KOBJ.log4js.Level.INFO);
+    KOBJ.log4js.getLogger().setLevel(KOBJ.log4js.Level.TRACE);
     $KOBJ.each(KOBJ.loggers, function(k, v) {
-        v.setLevel(KOBJ.log4js.Level.TRACE);
+        // Dom watch is a little to much by default even for mega debug.
+//        if(k != "domwatch")
+        {
+            v.setLevel(KOBJ.log4js.Level.TRACE);
+        }
     });
     KOBJ.popup_appender.show();
 };
