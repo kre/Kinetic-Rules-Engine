@@ -5,7 +5,7 @@ KOBJ.watchDOM = function(selector, callBackFunc, time, context) {
     }
 
     if (!KOBJ.watcherRunning) {
-        KOBJ.log("Starting the DOM Watcher");
+        KOBJ.itrace("Starting the DOM Watcher");
 
         var KOBJ_setInterval = 0;
         if (typeof(setInterval_native) != "undefined") {
@@ -19,10 +19,11 @@ KOBJ.watchDOM = function(selector, callBackFunc, time, context) {
 
         KOBJ.watcherData = KOBJ.watcherData || [];
 
-        KOBJ.log("DOM Watcher Callback for new selector " + selector + " added");
+        KOBJ.itrace("DOM Watcher Callback for new selector " + selector + " added");
         if($KOBJ(selector + " :first", context).length == 0)
         {
-            KOBJ.log("DOM Watcher selector not found NOT enabling " + selector );
+            KOBJ.itrace("DOM Watcher selector not found NOT enabling " + selector );
+            setTimeout(function() {KOBJ.watchDOM(selector,callBackFunc,time,context);},1000);
             return;
         }
         $KOBJ(selector + " :first", context).addClass("KOBJ_AjaxWatcher");
@@ -61,7 +62,7 @@ KOBJ.watchDOM = function(selector, callBackFunc, time, context) {
                     $KOBJ(data.callBacks).each(function() {
                         // TODO: Should this be var?
                         callBack = this;
-                        KOBJ.log("Running call back on selector " + data.selector);
+                        KOBJ.itrace("Running call back on selector " + data.selector);
                         callBack();
                     });
                     $KOBJ(data.selector + " :first", data.context).addClass("KOBJ_AjaxWatcher");
@@ -86,7 +87,7 @@ KOBJ.watchDOM = function(selector, callBackFunc, time, context) {
                     data.there = false;
                 }
 
-                KOBJ.log("DOM Watcher Callback for previous selector " + selector + " added");
+                KOBJ.itrace("DOM Watcher Callback for previous selector " + selector + " added");
                 return false;//breaks out of the loop.
 
             } else {
@@ -98,7 +99,7 @@ KOBJ.watchDOM = function(selector, callBackFunc, time, context) {
 
                 KOBJ.watcherData.push({"selector": selector,"callBacks": [callBackFunc], "there": there, "context" : context});
                 $KOBJ(selector + " :first", context).addClass("KOBJ_AjaxWatcher");
-                KOBJ.log("DOM Watcher Call for new selector " + selector + " added");
+                KOBJ.itrace("DOM Watcher Call for new selector " + selector + " added");
             }
         });//end each
     }//end if/else

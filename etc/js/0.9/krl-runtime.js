@@ -527,42 +527,24 @@ KOBJ.logger = function(type, txn_id, element, url, sense, rule, rid) {
 /* Logs data to the browsers windows console */
 //alert("type" + typeof(KOBJ.log));
 KOBJ.log = function(msg) {
-    if (window.console != undefined && console.log != undefined) {
-        console.log(msg);
-    }
+    KOBJ.loggers.general.info(msg);
 };
 
 
 KOBJ.error = function(msg) {
-    if (window.console != undefined && console.error != undefined) {
-        console.error(msg);
-    }
-    else {
-        KOBJ.log(msg);
-    }
+    KOBJ.loggers.general.error(msg);
 };
 
 KOBJ.warning = function(msg) {
-    if (window.console != undefined && console.warn != undefined) {
-        console.warn(msg);
-    }
-    else {
-        KOBJ.log(msg);
-    }
+    KOBJ.loggers.general.warning(msg);
 };
 
 KOBJ.trace = function(msg) {
-    if (window.console != undefined && console.trace != undefined) {
-        console.trace(msg);
-    }
-    else {
-        KOBJ.log(msg);
-    }
+    KOBJ.loggers.general.trace(msg);
 };
 
 KOBJ.itrace = function(msg) {
-    //    return;
-    KOBJ.log(msg);
+     KOBJ.loggers.runtime.trace(msg);
 };
 
 KOBJ.run_when_ready = function() {
