@@ -38,7 +38,7 @@ use Test::Deep;
 use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 
 use Kynetx::Test qw/:all/;
@@ -59,7 +59,7 @@ my @krl_files = @ARGV ? @ARGV : <data/*.krl>;
 # testing some...
 # my @krl_files = <new/ineq[0-0].krl>;
 #my @krl_files = <new/*.krl>;
-my $debug = 1;
+my $debug = 0;
 
 my @skips = qw(
     data/exprs0.krl
@@ -80,7 +80,7 @@ map {$skip_list->{$_} = 1} @skips;
 $logger->debug("Skips: ", sub {Dumper($skip_list)});
 
 my $num_tests = $#krl_files+1;
-my $jparser = new Kynetx::JParser::Antlr_();
+my $jparser = Kynetx::JParser::get_antlr_parser();
 foreach my $f (@krl_files) {
     my ($fl,$krl_text) = getkrl($f);
     if ($debug) {

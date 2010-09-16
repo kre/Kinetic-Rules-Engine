@@ -50,7 +50,9 @@ use Kynetx::Json qw/:all/;
 use Kynetx::Util qw(:all);
 use Kynetx::Version qw/:all/;
 use Kynetx::Memcached qw(:all);
+use Kynetx::Repository;
 
+use Benchmark ':hireswallclock';
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
@@ -124,8 +126,9 @@ sub handler {
     } elsif ( $method eq "flushdata" ) {
         $result = flush_data( $req_info, $method, $rid );
         $type = 'text/html';
-    } elsif ( $method eq "dummy" ) {
-        $result = $p->ruleset($skrl);
+    } elsif ( $method eq "perf" ) {
+        $logger->debug("Performance testing $method, $rid");
+        $result = parse_performance( $req_info, $method, $rid );
         $type = 'text/plain';
     }
 
@@ -137,7 +140,30 @@ sub handler {
     return Apache2::Const::OK;
 }
 
-1;
+sub parse_performance {
+    my ( $req_info, $method, $rid ) = @_;
+    my $logger = get_logger();
+    my $runs = 1;
+    my $start = new Benchmark;
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info,1,1);
+    $logger->debug("Ruleset: ", ref $ruleset);
+    if ($ruleset) {
+        my $r_repos = new Benchmark;
+        my $repo_diff = timediff($r_repos,$start);
+        my $result = "Repository request: "  . timestr($repo_diff,'auto');
+        my $p= Kynetx::JParser::get_antlr_parser();
+        my $r_parser = new Benchmark;
+        my $rp_diff = timediff($r_parser,$r_repos);
+        $result .= "\nNew parser request: "  . timestr($rp_diff,'auto');
+        my $p_str = $p->ruleset($ruleset);
+        my $parsed = new Benchmark;
+        my $pd_diff = timediff($parsed,$r_parser);
+        $result .= "\nRuleset $rid: "  . timestr($pd_diff,'auto');
+        return $result;
+    } else {
+        return parse_api($req_info, $method,'ruleset');
+    }
+}
 
 sub validate_rule {
     my ( $req_info, $method, $rid ) = @_;
@@ -232,7 +258,7 @@ sub parse_api {
 
     my $krl = $req_info->{'krl'};
 
-    $logger->debug( "KRL: ", $krl );
+    $logger->trace( "KRL: ", $krl );
 
     my $json = "";
     if ($krl) {
@@ -258,7 +284,7 @@ sub parse_api {
 
         #$tree->{'errors'} = $errors if($errors);
 
-        $logger->debug( "Tree: ", sub { Dumper($tree) } );
+        #$logger->debug( "Tree: ", sub { Dumper($tree) } );
 
         #$logger->debug("Errors: ", sub {Dumper($errors)});
 
@@ -284,7 +310,7 @@ sub unparse_api {
 
     my $json = $req_info->{'ast'};
 
-    $logger->debug( "KRL: ", $json );
+    #$logger->debug( "KRL: ", $json );
 
     my $krl = "";
     if ($json) {

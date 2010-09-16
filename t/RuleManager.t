@@ -46,7 +46,7 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::FakeReq qw/:all/;
 use Kynetx::Test qw/:all/;
@@ -721,8 +721,9 @@ SKIP: {
     $mech->post_ok($url_version_5, ['krl'=> $test_ruleset]);
 
     is($mech->content_type(), 'text/plain');
-    is_string_nows($mech->response()->content,$test_json_ruleset);
-
+    $ast = Kynetx::Json::jsonToAst_w($mech->response()->content);
+    $east = Kynetx::Json::jsonToAst_w($test_json_ruleset);
+    cmp_deeply($ast,$east,"Mech test U5 ruleset");
 
     # parse/rule
     my $url_version_6 = "$dn/parse/rule";
@@ -731,7 +732,9 @@ SKIP: {
     $mech->post_ok($url_version_6, ['krl'=> $test_rule]);
 
     is($mech->content_type(), 'text/plain');
-    is_string_nows($mech->response()->content,$test_json_rule);
+    $ast = Kynetx::Json::jsonToAst_w($mech->response()->content);
+    $east = Kynetx::Json::jsonToAst_w($test_json_rule);
+    cmp_deeply($ast,$east,"Mech test U6 rule");
 
 
     # parse/global
@@ -751,8 +754,7 @@ SKIP: {
     $mech->post_ok($url_version_7a, ['krl'=> $test_global_bad]);
 
     is($mech->content_type(), 'text/plain');
-    is_string_nows($mech->response()->content,'{"error":"Line 6:Invalid global decls: Was expecting /;/ but found \" emit<<\" instead\n"}');
-
+    is_string_nows($mech->response()->content,'{"error":["line4:15Invalidvalue[datastink]foundshouldhavebeenoneof[dataset,datasource]"]}');
 
     # parse/dispatch
     my $url_version_71 = "$dn/parse/dispatch";
@@ -772,7 +774,8 @@ SKIP: {
 
     is($mech->content_type(), 'text/plain');
     contains_string($mech->response()->content,
-		    'Invalid dispatch: Was expecting');
+		    'Invalid value [This] found');
+
 
 
     # parse/meta

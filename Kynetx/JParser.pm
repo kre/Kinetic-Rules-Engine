@@ -71,7 +71,6 @@ BEGIN {
     }
     push @jars,$pclasses;
     $ENV{CLASSPATH} = join (":",@jars);
-    print "Classpath: ", $ENV{CLASSPATH},"\n";
 }
 
 
@@ -432,7 +431,7 @@ END
     DIRECTORY => $wdir,
     START_JVM  => 0,
     AUTOSTUDY  => 1,
-    DEBUG      => 3,
+    DEBUG      => 0,
     STUDY      => ['org.json.JSONObject'],
     PACKAGE => 'main',
 );

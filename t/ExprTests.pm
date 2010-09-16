@@ -1139,7 +1139,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'foobar'.match(re/foo.*/)",
+		  "'foobar'.match(/foo.*/)",
 		  mk_expr_node('num',    1),
 		  0
     );
@@ -1150,7 +1150,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'foobar'.match(re/foo.*/)",
+		  "'foobar'.match(/foo.*/)",
 		  mk_expr_node('num',    1),
 		  0
     );
@@ -1161,7 +1161,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'bar'.match(re/.*bar/)",
+		  "'bar'.match(/.*bar/)",
 		  mk_expr_node('num',    1),
 		  0
     );
@@ -1172,7 +1172,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'bar'.match(re/.*bar/)",
+		  "'bar'.match(/.*bar/)",
 		  mk_expr_node('num',    1),
 		  0
     );
@@ -1183,7 +1183,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'foobar'.match(re/^bar/)",
+		  "'foobar'.match(/^bar/)",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1194,7 +1194,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'bar'.match(re/foo.*/)",
+		  "'bar'.match(/foo.*/)",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1205,7 +1205,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'bar'.match(re/foo.*/)",
+		  "'bar'.match(/foo.*/)",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1217,7 +1217,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'Bar'.match(re/bar/)",
+		  "'Bar'.match(/bar/)",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1228,7 +1228,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'Bar'.match(re/bar/)",
+		  "'Bar'.match(/bar/)",
 		  mk_expr_node('num',    0),
 		  0
     );
@@ -1239,7 +1239,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
 'expr',
-		  "'Bar'.match(re/bar/i)",
+		  "'Bar'.match(/bar/i)",
 		  mk_expr_node('num',    1),
 		  0
     );
@@ -2175,7 +2175,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'decl',
-    'var c = -5;',
+    'var c = \'-5\';',
     '-5',
     0);
 
@@ -2350,7 +2350,7 @@ _KRL_
 
 $js = <<_JS_;
 var c = 'Hello';
-var d = '' + c +  'world!';
+var d = '\\n' + c +  'world!';
 _JS_
 
 add_expr_testcase(
@@ -2380,7 +2380,7 @@ _KRL_
 $js = <<_JS_;
 var a = 1;
 var b = 3;
-var multiline = ''+a+'\\n'+b+'\\n';
+var multiline = '\\n'+a+'\\n'+b+'\\n';
 _JS_
 
 add_expr_testcase(
