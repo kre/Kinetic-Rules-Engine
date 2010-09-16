@@ -1,21 +1,10 @@
-ruleset a390x3 {
-    meta {
-        name "Replace!"
-        description <<
-replacement test     
->>
-        logging on    
-    }
-    dispatch {
-        domain "unspace.ca"
-    }
-    rule replace is active {
-        select using "http://unspace.ca/" setting()
-	pre { 
-	query = "asdfasdf";
-            
+ruleset 10 {
+rule test0 is active {
+select using "/test/" setting()
+pre {
+my_str = "This is a string";
+new_str = bob.extract(re/(is)/);
 }
-        replace_html("#content", "<h1>This. is. cool.</h1>");
-    }
-
+alert(new_str);
+}
 }

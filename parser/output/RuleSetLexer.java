@@ -1,4 +1,4 @@
-// $ANTLR 3.2 Sep 23, 2009 12:02:23 RuleSet.g 2010-09-16 11:35:53
+// $ANTLR 3.2 Sep 23, 2009 12:02:23 RuleSet.g 2010-09-16 12:57:41
 
 	package com.kynetx;
 	
@@ -13,10 +13,9 @@ import java.util.HashMap;
 public class RuleSetLexer extends Lexer {
     public static final int FUNCTION=51;
     public static final int ARROW_RIGHT=29;
-    public static final int EXPONENT=87;
     public static final int LEFT_BRACKET=64;
     public static final int EMIT=71;
-    public static final int OCTAL_ESC=90;
+    public static final int OCTAL_ESC=89;
     public static final int FOR=26;
     public static final int PRE=38;
     public static final int FLOAT=61;
@@ -52,8 +51,8 @@ public class RuleSetLexer extends Lexer {
     public static final int VAR=7;
     public static final int PREDOP=55;
     public static final int EXTRACT=30;
-    public static final int DOT=60;
     public static final int COMMENT=84;
+    public static final int DOT=60;
     public static final int WITH=25;
     public static final int VAR_DOMAIN=20;
     public static final int LIKE=10;
@@ -66,13 +65,13 @@ public class RuleSetLexer extends Lexer {
     public static final int POUND=86;
     public static final int KEY=73;
     public static final int WEB=44;
-    public static final int UNICODE_ESC=89;
+    public static final int UNICODE_ESC=88;
     public static final int JS=35;
     public static final int ADD_OP=57;
     public static final int EVERY=27;
     public static final int ON=46;
     public static final int CACHABLE=70;
-    public static final int HEX_DIGIT=88;
+    public static final int HEX_DIGIT=87;
     public static final int MATCH=12;
     public static final int INT=8;
     public static final int LOGGING=76;
@@ -121,7 +120,7 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = REX;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1816:6: ( 're/' ( ( ESC_SEQ )=> ESC_SEQ | '\\\\/' | ~ ( '/' ) )* '/' ( 'g' | 'i' | 'm' )* | '#' ( ( ESC_SEQ )=> ESC_SEQ | '\\\\#' | ~ ( '#' ) )* '#' ( 'g' | 'i' | 'm' )* )
+            // RuleSet.g:1822:6: ( 're/' ( ( ESC_SEQ )=> ESC_SEQ | '\\\\/' | ~ ( '/' ) )* '/' ( 'g' | 'i' | 'm' )* | '#' ( ( ESC_SEQ )=> ESC_SEQ | '\\\\#' | ~ ( '#' ) )* '#' ( 'g' | 'i' | 'm' )* )
             int alt5=2;
             int LA5_0 = input.LA(1);
 
@@ -140,25 +139,25 @@ public class RuleSetLexer extends Lexer {
             }
             switch (alt5) {
                 case 1 :
-                    // RuleSet.g:1816:8: 're/' ( ( ESC_SEQ )=> ESC_SEQ | '\\\\/' | ~ ( '/' ) )* '/' ( 'g' | 'i' | 'm' )*
+                    // RuleSet.g:1822:8: 're/' ( ( ESC_SEQ )=> ESC_SEQ | '\\\\/' | ~ ( '/' ) )* '/' ( 'g' | 'i' | 'm' )*
                     {
                     match("re/"); if (state.failed) return ;
 
-                    // RuleSet.g:1816:14: ( ( ESC_SEQ )=> ESC_SEQ | '\\\\/' | ~ ( '/' ) )*
+                    // RuleSet.g:1822:14: ( ( ESC_SEQ )=> ESC_SEQ | '\\\\/' | ~ ( '/' ) )*
                     loop1:
                     do {
                         int alt1=4;
                         alt1 = dfa1.predict(input);
                         switch (alt1) {
                     	case 1 :
-                    	    // RuleSet.g:1816:15: ( ESC_SEQ )=> ESC_SEQ
+                    	    // RuleSet.g:1822:15: ( ESC_SEQ )=> ESC_SEQ
                     	    {
                     	    mESC_SEQ(); if (state.failed) return ;
 
                     	    }
                     	    break;
                     	case 2 :
-                    	    // RuleSet.g:1816:36: '\\\\/'
+                    	    // RuleSet.g:1822:36: '\\\\/'
                     	    {
                     	    match("\\/"); if (state.failed) return ;
 
@@ -166,7 +165,7 @@ public class RuleSetLexer extends Lexer {
                     	    }
                     	    break;
                     	case 3 :
-                    	    // RuleSet.g:1816:44: ~ ( '/' )
+                    	    // RuleSet.g:1822:44: ~ ( '/' )
                     	    {
                     	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='.')||(input.LA(1)>='0' && input.LA(1)<='\uFFFF') ) {
                     	        input.consume();
@@ -188,7 +187,7 @@ public class RuleSetLexer extends Lexer {
                     } while (true);
 
                     match('/'); if (state.failed) return ;
-                    // RuleSet.g:1816:59: ( 'g' | 'i' | 'm' )*
+                    // RuleSet.g:1822:59: ( 'g' | 'i' | 'm' )*
                     loop2:
                     do {
                         int alt2=2;
@@ -226,24 +225,24 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1817:9: '#' ( ( ESC_SEQ )=> ESC_SEQ | '\\\\#' | ~ ( '#' ) )* '#' ( 'g' | 'i' | 'm' )*
+                    // RuleSet.g:1823:9: '#' ( ( ESC_SEQ )=> ESC_SEQ | '\\\\#' | ~ ( '#' ) )* '#' ( 'g' | 'i' | 'm' )*
                     {
                     match('#'); if (state.failed) return ;
-                    // RuleSet.g:1817:13: ( ( ESC_SEQ )=> ESC_SEQ | '\\\\#' | ~ ( '#' ) )*
+                    // RuleSet.g:1823:13: ( ( ESC_SEQ )=> ESC_SEQ | '\\\\#' | ~ ( '#' ) )*
                     loop3:
                     do {
                         int alt3=4;
                         alt3 = dfa3.predict(input);
                         switch (alt3) {
                     	case 1 :
-                    	    // RuleSet.g:1817:14: ( ESC_SEQ )=> ESC_SEQ
+                    	    // RuleSet.g:1823:14: ( ESC_SEQ )=> ESC_SEQ
                     	    {
                     	    mESC_SEQ(); if (state.failed) return ;
 
                     	    }
                     	    break;
                     	case 2 :
-                    	    // RuleSet.g:1817:35: '\\\\#'
+                    	    // RuleSet.g:1823:35: '\\\\#'
                     	    {
                     	    match("\\#"); if (state.failed) return ;
 
@@ -251,7 +250,7 @@ public class RuleSetLexer extends Lexer {
                     	    }
                     	    break;
                     	case 3 :
-                    	    // RuleSet.g:1817:43: ~ ( '#' )
+                    	    // RuleSet.g:1823:43: ~ ( '#' )
                     	    {
                     	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='\"')||(input.LA(1)>='$' && input.LA(1)<='\uFFFF') ) {
                     	        input.consume();
@@ -273,7 +272,7 @@ public class RuleSetLexer extends Lexer {
                     } while (true);
 
                     match('#'); if (state.failed) return ;
-                    // RuleSet.g:1817:58: ( 'g' | 'i' | 'm' )*
+                    // RuleSet.g:1823:58: ( 'g' | 'i' | 'm' )*
                     loop4:
                     do {
                         int alt4=2;
@@ -325,8 +324,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = ARROW_RIGHT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1835:2: ( '=>' )
-            // RuleSet.g:1835:4: '=>'
+            // RuleSet.g:1841:2: ( '=>' )
+            // RuleSet.g:1841:4: '=>'
             {
             match("=>"); if (state.failed) return ;
 
@@ -346,8 +345,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = PIPE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1836:6: ( '|' )
-            // RuleSet.g:1837:1: '|'
+            // RuleSet.g:1842:6: ( '|' )
+            // RuleSet.g:1843:1: '|'
             {
             match('|'); if (state.failed) return ;
 
@@ -366,8 +365,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = SEMI;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1839:6: ( ';' )
-            // RuleSet.g:1839:8: ';'
+            // RuleSet.g:1845:6: ( ';' )
+            // RuleSet.g:1845:8: ';'
             {
             match(';'); if (state.failed) return ;
 
@@ -386,8 +385,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = FUNCTION;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1840:10: ( 'function' )
-            // RuleSet.g:1840:12: 'function'
+            // RuleSet.g:1846:10: ( 'function' )
+            // RuleSet.g:1846:12: 'function'
             {
             match("function"); if (state.failed) return ;
 
@@ -407,8 +406,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = EQUAL;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1841:7: ( '=' )
-            // RuleSet.g:1841:8: '='
+            // RuleSet.g:1847:7: ( '=' )
+            // RuleSet.g:1847:8: '='
             {
             match('='); if (state.failed) return ;
 
@@ -427,8 +426,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = OR;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1844:2: ( '||' )
-            // RuleSet.g:1844:5: '||'
+            // RuleSet.g:1850:2: ( '||' )
+            // RuleSet.g:1850:5: '||'
             {
             match("||"); if (state.failed) return ;
 
@@ -448,8 +447,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = AND;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1846:2: ( '&&' )
-            // RuleSet.g:1846:5: '&&'
+            // RuleSet.g:1852:2: ( '&&' )
+            // RuleSet.g:1852:5: '&&'
             {
             match("&&"); if (state.failed) return ;
 
@@ -469,7 +468,7 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = VAR_DOMAIN;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1848:11: ( 'ent' | 'app' )
+            // RuleSet.g:1854:11: ( 'ent' | 'app' )
             int alt6=2;
             int LA6_0 = input.LA(1);
 
@@ -488,7 +487,7 @@ public class RuleSetLexer extends Lexer {
             }
             switch (alt6) {
                 case 1 :
-                    // RuleSet.g:1848:13: 'ent'
+                    // RuleSet.g:1854:13: 'ent'
                     {
                     match("ent"); if (state.failed) return ;
 
@@ -496,7 +495,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1848:21: 'app'
+                    // RuleSet.g:1854:21: 'app'
                     {
                     match("app"); if (state.failed) return ;
 
@@ -518,8 +517,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = WITH;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1851:6: ( 'with' )
-            // RuleSet.g:1851:8: 'with'
+            // RuleSet.g:1857:6: ( 'with' )
+            // RuleSet.g:1857:8: 'with'
             {
             match("with"); if (state.failed) return ;
 
@@ -539,8 +538,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = USING;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1852:7: ( 'using' )
-            // RuleSet.g:1852:9: 'using'
+            // RuleSet.g:1858:7: ( 'using' )
+            // RuleSet.g:1858:9: 'using'
             {
             match("using"); if (state.failed) return ;
 
@@ -560,8 +559,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = SETTING;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1855:2: ( 'setting' )
-            // RuleSet.g:1855:5: 'setting'
+            // RuleSet.g:1861:2: ( 'setting' )
+            // RuleSet.g:1861:5: 'setting'
             {
             match("setting"); if (state.failed) return ;
 
@@ -581,8 +580,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = PRE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1856:5: ( 'pre' )
-            // RuleSet.g:1856:7: 'pre'
+            // RuleSet.g:1862:5: ( 'pre' )
+            // RuleSet.g:1862:7: 'pre'
             {
             match("pre"); if (state.failed) return ;
 
@@ -602,8 +601,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = FOREACH;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1858:8: ( 'foreach' )
-            // RuleSet.g:1858:10: 'foreach'
+            // RuleSet.g:1864:8: ( 'foreach' )
+            // RuleSet.g:1864:10: 'foreach'
             {
             match("foreach"); if (state.failed) return ;
 
@@ -623,8 +622,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = WHEN;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1860:6: ( 'when' )
-            // RuleSet.g:1860:7: 'when'
+            // RuleSet.g:1866:6: ( 'when' )
+            // RuleSet.g:1866:7: 'when'
             {
             match("when"); if (state.failed) return ;
 
@@ -644,8 +643,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = OR_OR;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1861:7: ( 'or' )
-            // RuleSet.g:1861:9: 'or'
+            // RuleSet.g:1867:7: ( 'or' )
+            // RuleSet.g:1867:9: 'or'
             {
             match("or"); if (state.failed) return ;
 
@@ -665,8 +664,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = AND_AND;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1863:9: ( 'and' )
-            // RuleSet.g:1863:11: 'and'
+            // RuleSet.g:1869:9: ( 'and' )
+            // RuleSet.g:1869:11: 'and'
             {
             match("and"); if (state.failed) return ;
 
@@ -686,8 +685,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = BETWEEN;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1865:9: ( 'between' )
-            // RuleSet.g:1865:11: 'between'
+            // RuleSet.g:1871:9: ( 'between' )
+            // RuleSet.g:1871:11: 'between'
             {
             match("between"); if (state.failed) return ;
 
@@ -707,8 +706,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = WEB;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1867:4: ( 'web' )
-            // RuleSet.g:1867:6: 'web'
+            // RuleSet.g:1873:4: ( 'web' )
+            // RuleSet.g:1873:6: 'web'
             {
             match("web"); if (state.failed) return ;
 
@@ -728,8 +727,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = PAGEVIEW;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1868:10: ( 'pageview' )
-            // RuleSet.g:1868:11: 'pageview'
+            // RuleSet.g:1874:10: ( 'pageview' )
+            // RuleSet.g:1874:11: 'pageview'
             {
             match("pageview"); if (state.failed) return ;
 
@@ -749,8 +748,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = LEFT_SMALL_ARROW;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1872:2: ( '<-' )
-            // RuleSet.g:1872:5: '<-'
+            // RuleSet.g:1878:2: ( '<-' )
+            // RuleSet.g:1878:5: '<-'
             {
             match("<-"); if (state.failed) return ;
 
@@ -770,8 +769,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = RIGHT_SMALL_ARROW;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1875:2: ( '->' )
-            // RuleSet.g:1875:5: '->'
+            // RuleSet.g:1881:2: ( '->' )
+            // RuleSet.g:1881:5: '->'
             {
             match("->"); if (state.failed) return ;
 
@@ -791,8 +790,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = GLOBAL;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1876:7: ( 'global' )
-            // RuleSet.g:1876:9: 'global'
+            // RuleSet.g:1882:7: ( 'global' )
+            // RuleSet.g:1882:9: 'global'
             {
             match("global"); if (state.failed) return ;
 
@@ -812,10 +811,10 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = DTYPE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1878:2: ( ( 'JSON' | 'XML' | 'RSS' | 'HTML' ) )
-            // RuleSet.g:1878:3: ( 'JSON' | 'XML' | 'RSS' | 'HTML' )
+            // RuleSet.g:1884:2: ( ( 'JSON' | 'XML' | 'RSS' | 'HTML' ) )
+            // RuleSet.g:1884:3: ( 'JSON' | 'XML' | 'RSS' | 'HTML' )
             {
-            // RuleSet.g:1878:3: ( 'JSON' | 'XML' | 'RSS' | 'HTML' )
+            // RuleSet.g:1884:3: ( 'JSON' | 'XML' | 'RSS' | 'HTML' )
             int alt7=4;
             switch ( input.LA(1) ) {
             case 'J':
@@ -848,7 +847,7 @@ public class RuleSetLexer extends Lexer {
 
             switch (alt7) {
                 case 1 :
-                    // RuleSet.g:1878:4: 'JSON'
+                    // RuleSet.g:1884:4: 'JSON'
                     {
                     match("JSON"); if (state.failed) return ;
 
@@ -856,7 +855,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1878:11: 'XML'
+                    // RuleSet.g:1884:11: 'XML'
                     {
                     match("XML"); if (state.failed) return ;
 
@@ -864,7 +863,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // RuleSet.g:1878:17: 'RSS'
+                    // RuleSet.g:1884:17: 'RSS'
                     {
                     match("RSS"); if (state.failed) return ;
 
@@ -872,7 +871,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 4 :
-                    // RuleSet.g:1878:23: 'HTML'
+                    // RuleSet.g:1884:23: 'HTML'
                     {
                     match("HTML"); if (state.failed) return ;
 
@@ -898,8 +897,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = LIKE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1880:6: ( 'like' )
-            // RuleSet.g:1880:8: 'like'
+            // RuleSet.g:1886:6: ( 'like' )
+            // RuleSet.g:1886:8: 'like'
             {
             match("like"); if (state.failed) return ;
 
@@ -919,12 +918,12 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = PREDOP;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1881:7: ( '<=' | '>=' | '<' | '>' | '==' | '!=' | 'eq' | 'neq' )
+            // RuleSet.g:1887:7: ( '<=' | '>=' | '<' | '>' | '==' | '!=' | 'eq' | 'neq' )
             int alt8=8;
             alt8 = dfa8.predict(input);
             switch (alt8) {
                 case 1 :
-                    // RuleSet.g:1881:9: '<='
+                    // RuleSet.g:1887:9: '<='
                     {
                     match("<="); if (state.failed) return ;
 
@@ -932,7 +931,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1881:16: '>='
+                    // RuleSet.g:1887:16: '>='
                     {
                     match(">="); if (state.failed) return ;
 
@@ -940,21 +939,21 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // RuleSet.g:1881:23: '<'
+                    // RuleSet.g:1887:23: '<'
                     {
                     match('<'); if (state.failed) return ;
 
                     }
                     break;
                 case 4 :
-                    // RuleSet.g:1881:29: '>'
+                    // RuleSet.g:1887:29: '>'
                     {
                     match('>'); if (state.failed) return ;
 
                     }
                     break;
                 case 5 :
-                    // RuleSet.g:1881:35: '=='
+                    // RuleSet.g:1887:35: '=='
                     {
                     match("=="); if (state.failed) return ;
 
@@ -962,7 +961,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 6 :
-                    // RuleSet.g:1881:42: '!='
+                    // RuleSet.g:1887:42: '!='
                     {
                     match("!="); if (state.failed) return ;
 
@@ -970,7 +969,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 7 :
-                    // RuleSet.g:1881:49: 'eq'
+                    // RuleSet.g:1887:49: 'eq'
                     {
                     match("eq"); if (state.failed) return ;
 
@@ -978,7 +977,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 8 :
-                    // RuleSet.g:1881:56: 'neq'
+                    // RuleSet.g:1887:56: 'neq'
                     {
                     match("neq"); if (state.failed) return ;
 
@@ -1000,7 +999,7 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = ADD_OP;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1883:7: ( '+' | '-' )
+            // RuleSet.g:1889:7: ( '+' | '-' )
             // RuleSet.g:
             {
             if ( input.LA(1)=='+'||input.LA(1)=='-' ) {
@@ -1029,8 +1028,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = CALLBACKS;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1885:11: ( 'callbacks' )
-            // RuleSet.g:1885:13: 'callbacks'
+            // RuleSet.g:1891:11: ( 'callbacks' )
+            // RuleSet.g:1891:13: 'callbacks'
             {
             match("callbacks"); if (state.failed) return ;
 
@@ -1050,8 +1049,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = SUCCESS;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1886:9: ( 'success' )
-            // RuleSet.g:1886:11: 'success'
+            // RuleSet.g:1892:9: ( 'success' )
+            // RuleSet.g:1892:11: 'success'
             {
             match("success"); if (state.failed) return ;
 
@@ -1071,8 +1070,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = FAILURE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1888:2: ( 'failure' )
-            // RuleSet.g:1888:5: 'failure'
+            // RuleSet.g:1894:2: ( 'failure' )
+            // RuleSet.g:1894:5: 'failure'
             {
             match("failure"); if (state.failed) return ;
 
@@ -1092,8 +1091,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = FORGET;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1890:7: ( 'forget' )
-            // RuleSet.g:1890:9: 'forget'
+            // RuleSet.g:1896:7: ( 'forget' )
+            // RuleSet.g:1896:9: 'forget'
             {
             match("forget"); if (state.failed) return ;
 
@@ -1113,8 +1112,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = MARK;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1891:5: ( 'mark' )
-            // RuleSet.g:1891:6: 'mark'
+            // RuleSet.g:1897:5: ( 'mark' )
+            // RuleSet.g:1897:6: 'mark'
             {
             match("mark"); if (state.failed) return ;
 
@@ -1134,7 +1133,7 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = COUNTER_OP;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1894:2: ( '+=' | '-=' )
+            // RuleSet.g:1900:2: ( '+=' | '-=' )
             int alt9=2;
             int LA9_0 = input.LA(1);
 
@@ -1153,7 +1152,7 @@ public class RuleSetLexer extends Lexer {
             }
             switch (alt9) {
                 case 1 :
-                    // RuleSet.g:1895:2: '+='
+                    // RuleSet.g:1901:2: '+='
                     {
                     match("+="); if (state.failed) return ;
 
@@ -1161,7 +1160,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1896:11: '-='
+                    // RuleSet.g:1902:11: '-='
                     {
                     match("-="); if (state.failed) return ;
 
@@ -1183,8 +1182,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = IF;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1898:3: ( 'if' )
-            // RuleSet.g:1898:4: 'if'
+            // RuleSet.g:1904:3: ( 'if' )
+            // RuleSet.g:1904:4: 'if'
             {
             match("if"); if (state.failed) return ;
 
@@ -1204,8 +1203,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = CHOOSE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1899:9: ( 'choose' )
-            // RuleSet.g:1899:11: 'choose'
+            // RuleSet.g:1905:9: ( 'choose' )
+            // RuleSet.g:1905:11: 'choose'
             {
             match("choose"); if (state.failed) return ;
 
@@ -1225,8 +1224,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = EVERY;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1900:8: ( 'every' )
-            // RuleSet.g:1900:10: 'every'
+            // RuleSet.g:1906:8: ( 'every' )
+            // RuleSet.g:1906:10: 'every'
             {
             match("every"); if (state.failed) return ;
 
@@ -1246,7 +1245,7 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = COMMENT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1905:5: ( '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n' | '/*' ( options {greedy=false; } : . )* '*/' )
+            // RuleSet.g:1911:5: ( '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n' | '/*' ( options {greedy=false; } : . )* '*/' )
             int alt13=2;
             int LA13_0 = input.LA(1);
 
@@ -1276,11 +1275,11 @@ public class RuleSetLexer extends Lexer {
             }
             switch (alt13) {
                 case 1 :
-                    // RuleSet.g:1905:9: '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n'
+                    // RuleSet.g:1911:9: '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n'
                     {
                     match("//"); if (state.failed) return ;
 
-                    // RuleSet.g:1905:14: (~ ( '\\n' | '\\r' ) )*
+                    // RuleSet.g:1911:14: (~ ( '\\n' | '\\r' ) )*
                     loop10:
                     do {
                         int alt10=2;
@@ -1293,7 +1292,7 @@ public class RuleSetLexer extends Lexer {
 
                         switch (alt10) {
                     	case 1 :
-                    	    // RuleSet.g:1905:14: ~ ( '\\n' | '\\r' )
+                    	    // RuleSet.g:1911:14: ~ ( '\\n' | '\\r' )
                     	    {
                     	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='\t')||(input.LA(1)>='\u000B' && input.LA(1)<='\f')||(input.LA(1)>='\u000E' && input.LA(1)<='\uFFFF') ) {
                     	        input.consume();
@@ -1314,7 +1313,7 @@ public class RuleSetLexer extends Lexer {
                         }
                     } while (true);
 
-                    // RuleSet.g:1905:28: ( '\\r' )?
+                    // RuleSet.g:1911:28: ( '\\r' )?
                     int alt11=2;
                     int LA11_0 = input.LA(1);
 
@@ -1323,7 +1322,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     switch (alt11) {
                         case 1 :
-                            // RuleSet.g:1905:28: '\\r'
+                            // RuleSet.g:1911:28: '\\r'
                             {
                             match('\r'); if (state.failed) return ;
 
@@ -1340,11 +1339,11 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1906:9: '/*' ( options {greedy=false; } : . )* '*/'
+                    // RuleSet.g:1912:9: '/*' ( options {greedy=false; } : . )* '*/'
                     {
                     match("/*"); if (state.failed) return ;
 
-                    // RuleSet.g:1906:14: ( options {greedy=false; } : . )*
+                    // RuleSet.g:1912:14: ( options {greedy=false; } : . )*
                     loop12:
                     do {
                         int alt12=2;
@@ -1369,7 +1368,7 @@ public class RuleSetLexer extends Lexer {
 
                         switch (alt12) {
                     	case 1 :
-                    	    // RuleSet.g:1906:42: .
+                    	    // RuleSet.g:1912:42: .
                     	    {
                     	    matchAny(); if (state.failed) return ;
 
@@ -1404,8 +1403,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = WS;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1910:5: ( ( ' ' | '\\t' | '\\r' | '\\n' ) )
-            // RuleSet.g:1910:9: ( ' ' | '\\t' | '\\r' | '\\n' )
+            // RuleSet.g:1916:5: ( ( ' ' | '\\t' | '\\r' | '\\n' ) )
+            // RuleSet.g:1916:9: ( ' ' | '\\t' | '\\r' | '\\n' )
             {
             if ( (input.LA(1)>='\t' && input.LA(1)<='\n')||input.LA(1)=='\r'||input.LA(1)==' ' ) {
                 input.consume();
@@ -1436,7 +1435,7 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = STRING;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1918:5: ( '\"' ( '\\\\\"' | ~ ( '\"' ) )* '\"' | '\\'' ( '\\\\\\'' | ~ ( '\\'' ) )* '\\'' )
+            // RuleSet.g:1924:5: ( '\"' ( '\\\\\"' | ~ ( '\"' ) )* '\"' | '\\'' ( '\\\\\\'' | ~ ( '\\'' ) )* '\\'' )
             int alt16=2;
             int LA16_0 = input.LA(1);
 
@@ -1455,10 +1454,10 @@ public class RuleSetLexer extends Lexer {
             }
             switch (alt16) {
                 case 1 :
-                    // RuleSet.g:1918:8: '\"' ( '\\\\\"' | ~ ( '\"' ) )* '\"'
+                    // RuleSet.g:1924:8: '\"' ( '\\\\\"' | ~ ( '\"' ) )* '\"'
                     {
                     match('\"'); if (state.failed) return ;
-                    // RuleSet.g:1918:12: ( '\\\\\"' | ~ ( '\"' ) )*
+                    // RuleSet.g:1924:12: ( '\\\\\"' | ~ ( '\"' ) )*
                     loop14:
                     do {
                         int alt14=3;
@@ -1492,7 +1491,7 @@ public class RuleSetLexer extends Lexer {
 
                         switch (alt14) {
                     	case 1 :
-                    	    // RuleSet.g:1918:14: '\\\\\"'
+                    	    // RuleSet.g:1924:14: '\\\\\"'
                     	    {
                     	    match("\\\""); if (state.failed) return ;
 
@@ -1500,7 +1499,7 @@ public class RuleSetLexer extends Lexer {
                     	    }
                     	    break;
                     	case 2 :
-                    	    // RuleSet.g:1918:22: ~ ( '\"' )
+                    	    // RuleSet.g:1924:22: ~ ( '\"' )
                     	    {
                     	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='!')||(input.LA(1)>='#' && input.LA(1)<='\uFFFF') ) {
                     	        input.consume();
@@ -1526,10 +1525,10 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1918:39: '\\'' ( '\\\\\\'' | ~ ( '\\'' ) )* '\\''
+                    // RuleSet.g:1924:39: '\\'' ( '\\\\\\'' | ~ ( '\\'' ) )* '\\''
                     {
                     match('\''); if (state.failed) return ;
-                    // RuleSet.g:1918:44: ( '\\\\\\'' | ~ ( '\\'' ) )*
+                    // RuleSet.g:1924:44: ( '\\\\\\'' | ~ ( '\\'' ) )*
                     loop15:
                     do {
                         int alt15=3;
@@ -1563,7 +1562,7 @@ public class RuleSetLexer extends Lexer {
 
                         switch (alt15) {
                     	case 1 :
-                    	    // RuleSet.g:1918:46: '\\\\\\''
+                    	    // RuleSet.g:1924:46: '\\\\\\''
                     	    {
                     	    match("\\'"); if (state.failed) return ;
 
@@ -1571,7 +1570,7 @@ public class RuleSetLexer extends Lexer {
                     	    }
                     	    break;
                     	case 2 :
-                    	    // RuleSet.g:1918:55: ~ ( '\\'' )
+                    	    // RuleSet.g:1924:55: ~ ( '\\'' )
                     	    {
                     	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='&')||(input.LA(1)>='(' && input.LA(1)<='\uFFFF') ) {
                     	        input.consume();
@@ -1609,8 +1608,8 @@ public class RuleSetLexer extends Lexer {
     // $ANTLR start "POUND"
     public final void mPOUND() throws RecognitionException {
         try {
-            // RuleSet.g:1922:2: ( '#' )
-            // RuleSet.g:1922:5: '#'
+            // RuleSet.g:1928:2: ( '#' )
+            // RuleSet.g:1928:5: '#'
             {
             match('#'); if (state.failed) return ;
 
@@ -1627,12 +1626,12 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = HTML;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1927:2: ( '<<' ( options {greedy=false; } : . )* '>>' )
-            // RuleSet.g:1927:4: '<<' ( options {greedy=false; } : . )* '>>'
+            // RuleSet.g:1933:2: ( '<<' ( options {greedy=false; } : . )* '>>' )
+            // RuleSet.g:1933:4: '<<' ( options {greedy=false; } : . )* '>>'
             {
             match("<<"); if (state.failed) return ;
 
-            // RuleSet.g:1927:9: ( options {greedy=false; } : . )*
+            // RuleSet.g:1933:9: ( options {greedy=false; } : . )*
             loop17:
             do {
                 int alt17=2;
@@ -1657,7 +1656,7 @@ public class RuleSetLexer extends Lexer {
 
                 switch (alt17) {
             	case 1 :
-            	    // RuleSet.g:1927:37: .
+            	    // RuleSet.g:1933:37: .
             	    {
             	    matchAny(); if (state.failed) return ;
 
@@ -1687,12 +1686,12 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = JS;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1931:2: ( '<|' ( options {greedy=false; } : . )* '|>' )
-            // RuleSet.g:1931:4: '<|' ( options {greedy=false; } : . )* '|>'
+            // RuleSet.g:1937:2: ( '<|' ( options {greedy=false; } : . )* '|>' )
+            // RuleSet.g:1937:4: '<|' ( options {greedy=false; } : . )* '|>'
             {
             match("<|"); if (state.failed) return ;
 
-            // RuleSet.g:1931:9: ( options {greedy=false; } : . )*
+            // RuleSet.g:1937:9: ( options {greedy=false; } : . )*
             loop18:
             do {
                 int alt18=2;
@@ -1717,7 +1716,7 @@ public class RuleSetLexer extends Lexer {
 
                 switch (alt18) {
             	case 1 :
-            	    // RuleSet.g:1931:37: .
+            	    // RuleSet.g:1937:37: .
             	    {
             	    matchAny(); if (state.failed) return ;
 
@@ -1742,94 +1741,11 @@ public class RuleSetLexer extends Lexer {
     }
     // $ANTLR end "JS"
 
-    // $ANTLR start "EXPONENT"
-    public final void mEXPONENT() throws RecognitionException {
-        try {
-            // RuleSet.g:1935:10: ( ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+ )
-            // RuleSet.g:1935:12: ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+
-            {
-            if ( input.LA(1)=='E'||input.LA(1)=='e' ) {
-                input.consume();
-            state.failed=false;
-            }
-            else {
-                if (state.backtracking>0) {state.failed=true; return ;}
-                MismatchedSetException mse = new MismatchedSetException(null,input);
-                recover(mse);
-                throw mse;}
-
-            // RuleSet.g:1935:22: ( '+' | '-' )?
-            int alt19=2;
-            int LA19_0 = input.LA(1);
-
-            if ( (LA19_0=='+'||LA19_0=='-') ) {
-                alt19=1;
-            }
-            switch (alt19) {
-                case 1 :
-                    // RuleSet.g:
-                    {
-                    if ( input.LA(1)=='+'||input.LA(1)=='-' ) {
-                        input.consume();
-                    state.failed=false;
-                    }
-                    else {
-                        if (state.backtracking>0) {state.failed=true; return ;}
-                        MismatchedSetException mse = new MismatchedSetException(null,input);
-                        recover(mse);
-                        throw mse;}
-
-
-                    }
-                    break;
-
-            }
-
-            // RuleSet.g:1935:33: ( '0' .. '9' )+
-            int cnt20=0;
-            loop20:
-            do {
-                int alt20=2;
-                int LA20_0 = input.LA(1);
-
-                if ( ((LA20_0>='0' && LA20_0<='9')) ) {
-                    alt20=1;
-                }
-
-
-                switch (alt20) {
-            	case 1 :
-            	    // RuleSet.g:1935:34: '0' .. '9'
-            	    {
-            	    matchRange('0','9'); if (state.failed) return ;
-
-            	    }
-            	    break;
-
-            	default :
-            	    if ( cnt20 >= 1 ) break loop20;
-            	    if (state.backtracking>0) {state.failed=true; return ;}
-                        EarlyExitException eee =
-                            new EarlyExitException(20, input);
-                        throw eee;
-                }
-                cnt20++;
-            } while (true);
-
-
-            }
-
-        }
-        finally {
-        }
-    }
-    // $ANTLR end "EXPONENT"
-
     // $ANTLR start "HEX_DIGIT"
     public final void mHEX_DIGIT() throws RecognitionException {
         try {
-            // RuleSet.g:1938:11: ( ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' ) )
-            // RuleSet.g:1938:13: ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' )
+            // RuleSet.g:1944:11: ( ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' ) )
+            // RuleSet.g:1944:13: ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' )
             {
             if ( (input.LA(1)>='0' && input.LA(1)<='9')||(input.LA(1)>='A' && input.LA(1)<='F')||(input.LA(1)>='a' && input.LA(1)<='f') ) {
                 input.consume();
@@ -1855,11 +1771,11 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = ESC_SEQ;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1943:5: ( '\\\\' ( 'b' | 'd' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' | '.' | 'w' | 's' | '?' | '(' | ')' | '-' ) | UNICODE_ESC | OCTAL_ESC )
-            int alt21=3;
-            int LA21_0 = input.LA(1);
+            // RuleSet.g:1949:5: ( '\\\\' ( 'b' | 'd' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' | '.' | 'w' | 's' | '?' | '(' | ')' | '-' ) | UNICODE_ESC | OCTAL_ESC )
+            int alt19=3;
+            int LA19_0 = input.LA(1);
 
-            if ( (LA21_0=='\\') ) {
+            if ( (LA19_0=='\\') ) {
                 switch ( input.LA(2) ) {
                 case '\"':
                 case '\'':
@@ -1878,12 +1794,12 @@ public class RuleSetLexer extends Lexer {
                 case 't':
                 case 'w':
                     {
-                    alt21=1;
+                    alt19=1;
                     }
                     break;
                 case 'u':
                     {
-                    alt21=2;
+                    alt19=2;
                     }
                     break;
                 case '0':
@@ -1895,13 +1811,13 @@ public class RuleSetLexer extends Lexer {
                 case '6':
                 case '7':
                     {
-                    alt21=3;
+                    alt19=3;
                     }
                     break;
                 default:
                     if (state.backtracking>0) {state.failed=true; return ;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 21, 1, input);
+                        new NoViableAltException("", 19, 1, input);
 
                     throw nvae;
                 }
@@ -1910,13 +1826,13 @@ public class RuleSetLexer extends Lexer {
             else {
                 if (state.backtracking>0) {state.failed=true; return ;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 21, 0, input);
+                    new NoViableAltException("", 19, 0, input);
 
                 throw nvae;
             }
-            switch (alt21) {
+            switch (alt19) {
                 case 1 :
-                    // RuleSet.g:1943:9: '\\\\' ( 'b' | 'd' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' | '.' | 'w' | 's' | '?' | '(' | ')' | '-' )
+                    // RuleSet.g:1949:9: '\\\\' ( 'b' | 'd' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' | '.' | 'w' | 's' | '?' | '(' | ')' | '-' )
                     {
                     match('\\'); if (state.failed) return ;
                     if ( input.LA(1)=='\"'||(input.LA(1)>='\'' && input.LA(1)<=')')||(input.LA(1)>='-' && input.LA(1)<='.')||input.LA(1)=='?'||input.LA(1)=='\\'||input.LA(1)=='b'||input.LA(1)=='d'||input.LA(1)=='f'||input.LA(1)=='n'||(input.LA(1)>='r' && input.LA(1)<='t')||input.LA(1)=='w' ) {
@@ -1933,14 +1849,14 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1944:9: UNICODE_ESC
+                    // RuleSet.g:1950:9: UNICODE_ESC
                     {
                     mUNICODE_ESC(); if (state.failed) return ;
 
                     }
                     break;
                 case 3 :
-                    // RuleSet.g:1945:9: OCTAL_ESC
+                    // RuleSet.g:1951:9: OCTAL_ESC
                     {
                     mOCTAL_ESC(); if (state.failed) return ;
 
@@ -1959,41 +1875,41 @@ public class RuleSetLexer extends Lexer {
     // $ANTLR start "OCTAL_ESC"
     public final void mOCTAL_ESC() throws RecognitionException {
         try {
-            // RuleSet.g:1958:5: ( '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) )
-            int alt22=3;
-            int LA22_0 = input.LA(1);
+            // RuleSet.g:1964:5: ( '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) )
+            int alt20=3;
+            int LA20_0 = input.LA(1);
 
-            if ( (LA22_0=='\\') ) {
-                int LA22_1 = input.LA(2);
+            if ( (LA20_0=='\\') ) {
+                int LA20_1 = input.LA(2);
 
-                if ( ((LA22_1>='0' && LA22_1<='3')) ) {
-                    int LA22_2 = input.LA(3);
+                if ( ((LA20_1>='0' && LA20_1<='3')) ) {
+                    int LA20_2 = input.LA(3);
 
-                    if ( ((LA22_2>='0' && LA22_2<='7')) ) {
-                        int LA22_5 = input.LA(4);
+                    if ( ((LA20_2>='0' && LA20_2<='7')) ) {
+                        int LA20_4 = input.LA(4);
 
-                        if ( ((LA22_5>='0' && LA22_5<='7')) ) {
-                            alt22=1;
+                        if ( ((LA20_4>='0' && LA20_4<='7')) ) {
+                            alt20=1;
                         }
                         else {
-                            alt22=2;}
+                            alt20=2;}
                     }
                     else {
-                        alt22=3;}
+                        alt20=3;}
                 }
-                else if ( ((LA22_1>='4' && LA22_1<='7')) ) {
-                    int LA22_3 = input.LA(3);
+                else if ( ((LA20_1>='4' && LA20_1<='7')) ) {
+                    int LA20_3 = input.LA(3);
 
-                    if ( ((LA22_3>='0' && LA22_3<='7')) ) {
-                        alt22=2;
+                    if ( ((LA20_3>='0' && LA20_3<='7')) ) {
+                        alt20=2;
                     }
                     else {
-                        alt22=3;}
+                        alt20=3;}
                 }
                 else {
                     if (state.backtracking>0) {state.failed=true; return ;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 22, 1, input);
+                        new NoViableAltException("", 20, 1, input);
 
                     throw nvae;
                 }
@@ -2001,31 +1917,31 @@ public class RuleSetLexer extends Lexer {
             else {
                 if (state.backtracking>0) {state.failed=true; return ;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 22, 0, input);
+                    new NoViableAltException("", 20, 0, input);
 
                 throw nvae;
             }
-            switch (alt22) {
+            switch (alt20) {
                 case 1 :
-                    // RuleSet.g:1958:9: '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' )
+                    // RuleSet.g:1964:9: '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' )
                     {
                     match('\\'); if (state.failed) return ;
-                    // RuleSet.g:1958:14: ( '0' .. '3' )
-                    // RuleSet.g:1958:15: '0' .. '3'
+                    // RuleSet.g:1964:14: ( '0' .. '3' )
+                    // RuleSet.g:1964:15: '0' .. '3'
                     {
                     matchRange('0','3'); if (state.failed) return ;
 
                     }
 
-                    // RuleSet.g:1958:25: ( '0' .. '7' )
-                    // RuleSet.g:1958:26: '0' .. '7'
+                    // RuleSet.g:1964:25: ( '0' .. '7' )
+                    // RuleSet.g:1964:26: '0' .. '7'
                     {
                     matchRange('0','7'); if (state.failed) return ;
 
                     }
 
-                    // RuleSet.g:1958:36: ( '0' .. '7' )
-                    // RuleSet.g:1958:37: '0' .. '7'
+                    // RuleSet.g:1964:36: ( '0' .. '7' )
+                    // RuleSet.g:1964:37: '0' .. '7'
                     {
                     matchRange('0','7'); if (state.failed) return ;
 
@@ -2035,18 +1951,18 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1959:9: '\\\\' ( '0' .. '7' ) ( '0' .. '7' )
+                    // RuleSet.g:1965:9: '\\\\' ( '0' .. '7' ) ( '0' .. '7' )
                     {
                     match('\\'); if (state.failed) return ;
-                    // RuleSet.g:1959:14: ( '0' .. '7' )
-                    // RuleSet.g:1959:15: '0' .. '7'
+                    // RuleSet.g:1965:14: ( '0' .. '7' )
+                    // RuleSet.g:1965:15: '0' .. '7'
                     {
                     matchRange('0','7'); if (state.failed) return ;
 
                     }
 
-                    // RuleSet.g:1959:25: ( '0' .. '7' )
-                    // RuleSet.g:1959:26: '0' .. '7'
+                    // RuleSet.g:1965:25: ( '0' .. '7' )
+                    // RuleSet.g:1965:26: '0' .. '7'
                     {
                     matchRange('0','7'); if (state.failed) return ;
 
@@ -2056,11 +1972,11 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // RuleSet.g:1960:9: '\\\\' ( '0' .. '7' )
+                    // RuleSet.g:1966:9: '\\\\' ( '0' .. '7' )
                     {
                     match('\\'); if (state.failed) return ;
-                    // RuleSet.g:1960:14: ( '0' .. '7' )
-                    // RuleSet.g:1960:15: '0' .. '7'
+                    // RuleSet.g:1966:14: ( '0' .. '7' )
+                    // RuleSet.g:1966:15: '0' .. '7'
                     {
                     matchRange('0','7'); if (state.failed) return ;
 
@@ -2080,8 +1996,8 @@ public class RuleSetLexer extends Lexer {
     // $ANTLR start "UNICODE_ESC"
     public final void mUNICODE_ESC() throws RecognitionException {
         try {
-            // RuleSet.g:1965:5: ( '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
-            // RuleSet.g:1965:9: '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+            // RuleSet.g:1971:5: ( '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
+            // RuleSet.g:1971:9: '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
             {
             match('\\'); if (state.failed) return ;
             match('u'); if (state.failed) return ;
@@ -2103,8 +2019,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = RULE_SET;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1977:2: ( 'ruleset' )
-            // RuleSet.g:1977:4: 'ruleset'
+            // RuleSet.g:1983:2: ( 'ruleset' )
+            // RuleSet.g:1983:4: 'ruleset'
             {
             match("ruleset"); if (state.failed) return ;
 
@@ -2124,7 +2040,7 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = MULT_OP;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1980:8: ( '*' | '/' | '%' )
+            // RuleSet.g:1986:8: ( '*' | '/' | '%' )
             // RuleSet.g:
             {
             if ( input.LA(1)=='%'||input.LA(1)=='*'||input.LA(1)=='/' ) {
@@ -2153,8 +2069,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = DOT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1985:2: ( '.' )
-            // RuleSet.g:1985:5: '.'
+            // RuleSet.g:1991:2: ( '.' )
+            // RuleSet.g:1991:5: '.'
             {
             match('.'); if (state.failed) return ;
 
@@ -2173,8 +2089,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = MATCH;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1988:2: ( 'match' )
-            // RuleSet.g:1988:4: 'match'
+            // RuleSet.g:1994:2: ( 'match' )
+            // RuleSet.g:1994:4: 'match'
             {
             match("match"); if (state.failed) return ;
 
@@ -2194,8 +2110,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = REPLACE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1991:2: ( 'replace' )
-            // RuleSet.g:1991:4: 'replace'
+            // RuleSet.g:1997:2: ( 'replace' )
+            // RuleSet.g:1997:4: 'replace'
             {
             match("replace"); if (state.failed) return ;
 
@@ -2215,8 +2131,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = EXTRACT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1994:5: ( 'extract' )
-            // RuleSet.g:1994:7: 'extract'
+            // RuleSet.g:2000:5: ( 'extract' )
+            // RuleSet.g:2000:7: 'extract'
             {
             match("extract"); if (state.failed) return ;
 
@@ -2236,12 +2152,12 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = OTHER_OPERATORS;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:1997:2: ( 'pick' | 'length' | 'as' | 'head' | 'tail' | 'sort' | 'filter' | 'map' | 'uc' | 'lc' | 'split' | 'join' | 'query' | 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once' | 'duplicates' | 'append' | 'put' )
-            int alt23=22;
-            alt23 = dfa23.predict(input);
-            switch (alt23) {
+            // RuleSet.g:2003:2: ( 'pick' | 'length' | 'as' | 'head' | 'tail' | 'sort' | 'filter' | 'map' | 'uc' | 'lc' | 'split' | 'join' | 'query' | 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once' | 'duplicates' | 'append' | 'put' )
+            int alt21=22;
+            alt21 = dfa21.predict(input);
+            switch (alt21) {
                 case 1 :
-                    // RuleSet.g:1997:5: 'pick'
+                    // RuleSet.g:2003:5: 'pick'
                     {
                     match("pick"); if (state.failed) return ;
 
@@ -2249,7 +2165,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // RuleSet.g:1997:12: 'length'
+                    // RuleSet.g:2003:12: 'length'
                     {
                     match("length"); if (state.failed) return ;
 
@@ -2257,7 +2173,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // RuleSet.g:1997:21: 'as'
+                    // RuleSet.g:2003:21: 'as'
                     {
                     match("as"); if (state.failed) return ;
 
@@ -2265,7 +2181,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 4 :
-                    // RuleSet.g:1997:26: 'head'
+                    // RuleSet.g:2003:26: 'head'
                     {
                     match("head"); if (state.failed) return ;
 
@@ -2273,7 +2189,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 5 :
-                    // RuleSet.g:1997:33: 'tail'
+                    // RuleSet.g:2003:33: 'tail'
                     {
                     match("tail"); if (state.failed) return ;
 
@@ -2281,7 +2197,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 6 :
-                    // RuleSet.g:1997:40: 'sort'
+                    // RuleSet.g:2003:40: 'sort'
                     {
                     match("sort"); if (state.failed) return ;
 
@@ -2289,7 +2205,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 7 :
-                    // RuleSet.g:1998:9: 'filter'
+                    // RuleSet.g:2004:9: 'filter'
                     {
                     match("filter"); if (state.failed) return ;
 
@@ -2297,7 +2213,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 8 :
-                    // RuleSet.g:1998:18: 'map'
+                    // RuleSet.g:2004:18: 'map'
                     {
                     match("map"); if (state.failed) return ;
 
@@ -2305,7 +2221,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 9 :
-                    // RuleSet.g:1998:24: 'uc'
+                    // RuleSet.g:2004:24: 'uc'
                     {
                     match("uc"); if (state.failed) return ;
 
@@ -2313,7 +2229,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 10 :
-                    // RuleSet.g:1998:29: 'lc'
+                    // RuleSet.g:2004:29: 'lc'
                     {
                     match("lc"); if (state.failed) return ;
 
@@ -2321,7 +2237,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 11 :
-                    // RuleSet.g:1998:35: 'split'
+                    // RuleSet.g:2004:35: 'split'
                     {
                     match("split"); if (state.failed) return ;
 
@@ -2329,7 +2245,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 12 :
-                    // RuleSet.g:1998:45: 'join'
+                    // RuleSet.g:2004:45: 'join'
                     {
                     match("join"); if (state.failed) return ;
 
@@ -2337,7 +2253,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 13 :
-                    // RuleSet.g:1998:54: 'query'
+                    // RuleSet.g:2004:54: 'query'
                     {
                     match("query"); if (state.failed) return ;
 
@@ -2345,7 +2261,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 14 :
-                    // RuleSet.g:1999:10: 'has'
+                    // RuleSet.g:2005:10: 'has'
                     {
                     match("has"); if (state.failed) return ;
 
@@ -2353,7 +2269,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 15 :
-                    // RuleSet.g:1999:18: 'union'
+                    // RuleSet.g:2005:18: 'union'
                     {
                     match("union"); if (state.failed) return ;
 
@@ -2361,7 +2277,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 16 :
-                    // RuleSet.g:1999:28: 'difference'
+                    // RuleSet.g:2005:28: 'difference'
                     {
                     match("difference"); if (state.failed) return ;
 
@@ -2369,7 +2285,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 17 :
-                    // RuleSet.g:1999:43: 'intersection'
+                    // RuleSet.g:2005:43: 'intersection'
                     {
                     match("intersection"); if (state.failed) return ;
 
@@ -2377,7 +2293,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 18 :
-                    // RuleSet.g:1999:60: 'unique'
+                    // RuleSet.g:2005:60: 'unique'
                     {
                     match("unique"); if (state.failed) return ;
 
@@ -2385,7 +2301,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 19 :
-                    // RuleSet.g:1999:71: 'once'
+                    // RuleSet.g:2005:71: 'once'
                     {
                     match("once"); if (state.failed) return ;
 
@@ -2393,7 +2309,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 20 :
-                    // RuleSet.g:2000:10: 'duplicates'
+                    // RuleSet.g:2006:10: 'duplicates'
                     {
                     match("duplicates"); if (state.failed) return ;
 
@@ -2401,7 +2317,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 21 :
-                    // RuleSet.g:2000:25: 'append'
+                    // RuleSet.g:2006:25: 'append'
                     {
                     match("append"); if (state.failed) return ;
 
@@ -2409,7 +2325,7 @@ public class RuleSetLexer extends Lexer {
                     }
                     break;
                 case 22 :
-                    // RuleSet.g:2000:36: 'put'
+                    // RuleSet.g:2006:36: 'put'
                     {
                     match("put"); if (state.failed) return ;
 
@@ -2431,8 +2347,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = TRUE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2003:6: ( 'true' )
-            // RuleSet.g:2003:7: 'true'
+            // RuleSet.g:2009:6: ( 'true' )
+            // RuleSet.g:2009:7: 'true'
             {
             match("true"); if (state.failed) return ;
 
@@ -2452,8 +2368,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = FALSE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2004:7: ( 'false' )
-            // RuleSet.g:2004:8: 'false'
+            // RuleSet.g:2010:7: ( 'false' )
+            // RuleSet.g:2010:8: 'false'
             {
             match("false"); if (state.failed) return ;
 
@@ -2473,8 +2389,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = CURRENT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2005:8: ( 'current' )
-            // RuleSet.g:2005:10: 'current'
+            // RuleSet.g:2011:8: ( 'current' )
+            // RuleSet.g:2011:10: 'current'
             {
             match("current"); if (state.failed) return ;
 
@@ -2494,8 +2410,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = KEY;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2008:2: ( 'key' )
-            // RuleSet.g:2008:4: 'key'
+            // RuleSet.g:2014:2: ( 'key' )
+            // RuleSet.g:2014:4: 'key'
             {
             match("key"); if (state.failed) return ;
 
@@ -2515,8 +2431,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = AUTHZ;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2011:2: ( 'authz' )
-            // RuleSet.g:2011:4: 'authz'
+            // RuleSet.g:2017:2: ( 'authz' )
+            // RuleSet.g:2017:4: 'authz'
             {
             match("authz"); if (state.failed) return ;
 
@@ -2536,8 +2452,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = REQUIRE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2015:2: ( 'require' )
-            // RuleSet.g:2016:3: 'require'
+            // RuleSet.g:2021:2: ( 'require' )
+            // RuleSet.g:2022:3: 'require'
             {
             match("require"); if (state.failed) return ;
 
@@ -2557,8 +2473,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = LOGGING;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2019:2: ( 'logging' )
-            // RuleSet.g:2019:3: 'logging'
+            // RuleSet.g:2025:2: ( 'logging' )
+            // RuleSet.g:2025:3: 'logging'
             {
             match("logging"); if (state.failed) return ;
 
@@ -2578,8 +2494,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = USE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2022:2: ( 'use' )
-            // RuleSet.g:2022:4: 'use'
+            // RuleSet.g:2028:2: ( 'use' )
+            // RuleSet.g:2028:4: 'use'
             {
             match("use"); if (state.failed) return ;
 
@@ -2599,8 +2515,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = CSS;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2025:2: ( 'css' )
-            // RuleSet.g:2025:3: 'css'
+            // RuleSet.g:2031:2: ( 'css' )
+            // RuleSet.g:2031:3: 'css'
             {
             match("css"); if (state.failed) return ;
 
@@ -2620,8 +2536,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = JAVASCRIPT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2028:2: ( 'javascript' )
-            // RuleSet.g:2028:3: 'javascript'
+            // RuleSet.g:2034:2: ( 'javascript' )
+            // RuleSet.g:2034:3: 'javascript'
             {
             match("javascript"); if (state.failed) return ;
 
@@ -2641,8 +2557,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = META;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2031:2: ( 'meta' )
-            // RuleSet.g:2031:4: 'meta'
+            // RuleSet.g:2037:2: ( 'meta' )
+            // RuleSet.g:2037:4: 'meta'
             {
             match("meta"); if (state.failed) return ;
 
@@ -2662,8 +2578,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = ON;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2035:2: ( 'on' )
-            // RuleSet.g:2035:5: 'on'
+            // RuleSet.g:2041:2: ( 'on' )
+            // RuleSet.g:2041:5: 'on'
             {
             match("on"); if (state.failed) return ;
 
@@ -2683,8 +2599,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = OFF;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2037:6: ( 'off' )
-            // RuleSet.g:2037:8: 'off'
+            // RuleSet.g:2043:6: ( 'off' )
+            // RuleSet.g:2043:8: 'off'
             {
             match("off"); if (state.failed) return ;
 
@@ -2704,8 +2620,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = MODULE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2041:2: ( 'module' )
-            // RuleSet.g:2041:4: 'module'
+            // RuleSet.g:2047:2: ( 'module' )
+            // RuleSet.g:2047:4: 'module'
             {
             match("module"); if (state.failed) return ;
 
@@ -2725,8 +2641,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = ALIAS;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2044:2: ( 'alias' )
-            // RuleSet.g:2044:3: 'alias'
+            // RuleSet.g:2050:2: ( 'alias' )
+            // RuleSet.g:2050:3: 'alias'
             {
             match("alias"); if (state.failed) return ;
 
@@ -2746,8 +2662,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = EMIT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2049:2: ( 'emit' )
-            // RuleSet.g:2049:4: 'emit'
+            // RuleSet.g:2055:2: ( 'emit' )
+            // RuleSet.g:2055:4: 'emit'
             {
             match("emit"); if (state.failed) return ;
 
@@ -2767,8 +2683,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = CACHABLE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2053:2: ( 'cachable' )
-            // RuleSet.g:2053:3: 'cachable'
+            // RuleSet.g:2059:2: ( 'cachable' )
+            // RuleSet.g:2059:3: 'cachable'
             {
             match("cachable"); if (state.failed) return ;
 
@@ -2788,8 +2704,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = FOR;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2057:2: ( 'for' )
-            // RuleSet.g:2057:4: 'for'
+            // RuleSet.g:2063:2: ( 'for' )
+            // RuleSet.g:2063:4: 'for'
             {
             match("for"); if (state.failed) return ;
 
@@ -2809,8 +2725,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = WITHIN;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2061:2: ( 'within' )
-            // RuleSet.g:2061:4: 'within'
+            // RuleSet.g:2067:2: ( 'within' )
+            // RuleSet.g:2067:4: 'within'
             {
             match("within"); if (state.failed) return ;
 
@@ -2830,8 +2746,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = COLON;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2065:2: ( ':' )
-            // RuleSet.g:2065:5: ':'
+            // RuleSet.g:2071:2: ( ':' )
+            // RuleSet.g:2071:5: ':'
             {
             match(':'); if (state.failed) return ;
 
@@ -2850,8 +2766,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = HISTORY;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2068:2: ( 'history' )
-            // RuleSet.g:2069:2: 'history'
+            // RuleSet.g:2074:2: ( 'history' )
+            // RuleSet.g:2075:2: 'history'
             {
             match("history"); if (state.failed) return ;
 
@@ -2871,8 +2787,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = RIGHT_PAREN;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2072:2: ( ')' )
-            // RuleSet.g:2072:4: ')'
+            // RuleSet.g:2078:2: ( ')' )
+            // RuleSet.g:2078:4: ')'
             {
             match(')'); if (state.failed) return ;
 
@@ -2891,8 +2807,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = LEFT_PAREN;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2075:2: ( '(' )
-            // RuleSet.g:2075:4: '('
+            // RuleSet.g:2081:2: ( '(' )
+            // RuleSet.g:2081:4: '('
             {
             match('('); if (state.failed) return ;
 
@@ -2911,8 +2827,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = RIGHT_BRACKET;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2079:2: ( ']' )
-            // RuleSet.g:2079:5: ']'
+            // RuleSet.g:2085:2: ( ']' )
+            // RuleSet.g:2085:5: ']'
             {
             match(']'); if (state.failed) return ;
 
@@ -2931,8 +2847,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = LEFT_BRACKET;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2082:2: ( '[' )
-            // RuleSet.g:2082:4: '['
+            // RuleSet.g:2088:2: ( '[' )
+            // RuleSet.g:2088:4: '['
             {
             match('['); if (state.failed) return ;
 
@@ -2951,8 +2867,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = COMMA;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2086:2: ( ',' )
-            // RuleSet.g:2086:4: ','
+            // RuleSet.g:2092:2: ( ',' )
+            // RuleSet.g:2092:4: ','
             {
             match(','); if (state.failed) return ;
 
@@ -2971,8 +2887,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = LEFT_CURL;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2089:2: ( '{' )
-            // RuleSet.g:2089:5: '{'
+            // RuleSet.g:2095:2: ( '{' )
+            // RuleSet.g:2095:5: '{'
             {
             match('{'); if (state.failed) return ;
 
@@ -2991,8 +2907,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = RIGHT_CURL;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2091:2: ( '}' )
-            // RuleSet.g:2091:4: '}'
+            // RuleSet.g:2097:2: ( '}' )
+            // RuleSet.g:2097:4: '}'
             {
             match('}'); if (state.failed) return ;
 
@@ -3011,8 +2927,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = NOT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2093:5: ( 'not' )
-            // RuleSet.g:2093:7: 'not'
+            // RuleSet.g:2099:5: ( 'not' )
+            // RuleSet.g:2099:7: 'not'
             {
             match("not"); if (state.failed) return ;
 
@@ -3032,8 +2948,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = SEEN;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2094:6: ( 'seen' )
-            // RuleSet.g:2094:7: 'seen'
+            // RuleSet.g:2100:6: ( 'seen' )
+            // RuleSet.g:2100:7: 'seen'
             {
             match("seen"); if (state.failed) return ;
 
@@ -3053,8 +2969,8 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = VAR;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2096:6: ( ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )* )
-            // RuleSet.g:2096:8: ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
+            // RuleSet.g:2102:6: ( ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )* )
+            // RuleSet.g:2102:8: ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
             {
             if ( (input.LA(1)>='A' && input.LA(1)<='Z')||input.LA(1)=='_'||(input.LA(1)>='a' && input.LA(1)<='z') ) {
                 input.consume();
@@ -3066,18 +2982,18 @@ public class RuleSetLexer extends Lexer {
                 recover(mse);
                 throw mse;}
 
-            // RuleSet.g:2096:32: ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
-            loop24:
+            // RuleSet.g:2102:32: ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
+            loop22:
             do {
-                int alt24=2;
-                int LA24_0 = input.LA(1);
+                int alt22=2;
+                int LA22_0 = input.LA(1);
 
-                if ( ((LA24_0>='0' && LA24_0<='9')||(LA24_0>='A' && LA24_0<='Z')||LA24_0=='_'||(LA24_0>='a' && LA24_0<='z')) ) {
-                    alt24=1;
+                if ( ((LA22_0>='0' && LA22_0<='9')||(LA22_0>='A' && LA22_0<='Z')||LA22_0=='_'||(LA22_0>='a' && LA22_0<='z')) ) {
+                    alt22=1;
                 }
 
 
-                switch (alt24) {
+                switch (alt22) {
             	case 1 :
             	    // RuleSet.g:
             	    {
@@ -3096,7 +3012,7 @@ public class RuleSetLexer extends Lexer {
             	    break;
 
             	default :
-            	    break loop24;
+            	    break loop22;
                 }
             } while (true);
 
@@ -3116,19 +3032,19 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = INT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2100:5: ( ( ' -' )? ( '0' .. '9' )+ )
-            // RuleSet.g:2100:7: ( ' -' )? ( '0' .. '9' )+
+            // RuleSet.g:2106:5: ( ( ' -' )? ( '0' .. '9' )+ )
+            // RuleSet.g:2106:7: ( ' -' )? ( '0' .. '9' )+
             {
-            // RuleSet.g:2100:7: ( ' -' )?
-            int alt25=2;
-            int LA25_0 = input.LA(1);
+            // RuleSet.g:2106:7: ( ' -' )?
+            int alt23=2;
+            int LA23_0 = input.LA(1);
 
-            if ( (LA25_0==' ') ) {
-                alt25=1;
+            if ( (LA23_0==' ') ) {
+                alt23=1;
             }
-            switch (alt25) {
+            switch (alt23) {
                 case 1 :
-                    // RuleSet.g:2100:7: ' -'
+                    // RuleSet.g:2106:7: ' -'
                     {
                     match(" -"); if (state.failed) return ;
 
@@ -3138,21 +3054,21 @@ public class RuleSetLexer extends Lexer {
 
             }
 
-            // RuleSet.g:2100:13: ( '0' .. '9' )+
-            int cnt26=0;
-            loop26:
+            // RuleSet.g:2106:13: ( '0' .. '9' )+
+            int cnt24=0;
+            loop24:
             do {
-                int alt26=2;
-                int LA26_0 = input.LA(1);
+                int alt24=2;
+                int LA24_0 = input.LA(1);
 
-                if ( ((LA26_0>='0' && LA26_0<='9')) ) {
-                    alt26=1;
+                if ( ((LA24_0>='0' && LA24_0<='9')) ) {
+                    alt24=1;
                 }
 
 
-                switch (alt26) {
+                switch (alt24) {
             	case 1 :
-            	    // RuleSet.g:2100:13: '0' .. '9'
+            	    // RuleSet.g:2106:13: '0' .. '9'
             	    {
             	    matchRange('0','9'); if (state.failed) return ;
 
@@ -3160,13 +3076,13 @@ public class RuleSetLexer extends Lexer {
             	    break;
 
             	default :
-            	    if ( cnt26 >= 1 ) break loop26;
+            	    if ( cnt24 >= 1 ) break loop24;
             	    if (state.backtracking>0) {state.failed=true; return ;}
                         EarlyExitException eee =
-                            new EarlyExitException(26, input);
+                            new EarlyExitException(24, input);
                         throw eee;
                 }
-                cnt26++;
+                cnt24++;
             } while (true);
 
 
@@ -3185,26 +3101,26 @@ public class RuleSetLexer extends Lexer {
         try {
             int _type = FLOAT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // RuleSet.g:2104:5: ( ( ' -' )? ( '0' .. '9' )+ '.' ( '0' .. '9' )* ( EXPONENT )? | ( ' -' )? '.' ( '0' .. '9' )* ( EXPONENT )? )
-            int alt34=2;
+            // RuleSet.g:2110:5: ( ( ' -' )? ( '0' .. '9' )+ '.' ( '0' .. '9' )* | ( ' -' )? '.' ( '0' .. '9' )* )
+            int alt30=2;
             switch ( input.LA(1) ) {
             case ' ':
                 {
-                int LA34_1 = input.LA(2);
+                int LA30_1 = input.LA(2);
 
-                if ( (LA34_1=='-') ) {
-                    int LA34_4 = input.LA(3);
+                if ( (LA30_1=='-') ) {
+                    int LA30_4 = input.LA(3);
 
-                    if ( ((LA34_4>='0' && LA34_4<='9')) ) {
-                        alt34=1;
+                    if ( ((LA30_4>='0' && LA30_4<='9')) ) {
+                        alt30=1;
                     }
-                    else if ( (LA34_4=='.') ) {
-                        alt34=2;
+                    else if ( (LA30_4=='.') ) {
+                        alt30=2;
                     }
                     else {
                         if (state.backtracking>0) {state.failed=true; return ;}
                         NoViableAltException nvae =
-                            new NoViableAltException("", 34, 4, input);
+                            new NoViableAltException("", 30, 4, input);
 
                         throw nvae;
                     }
@@ -3212,7 +3128,7 @@ public class RuleSetLexer extends Lexer {
                 else {
                     if (state.backtracking>0) {state.failed=true; return ;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 34, 1, input);
+                        new NoViableAltException("", 30, 1, input);
 
                     throw nvae;
                 }
@@ -3229,36 +3145,36 @@ public class RuleSetLexer extends Lexer {
             case '8':
             case '9':
                 {
-                alt34=1;
+                alt30=1;
                 }
                 break;
             case '.':
                 {
-                alt34=2;
+                alt30=2;
                 }
                 break;
             default:
                 if (state.backtracking>0) {state.failed=true; return ;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 34, 0, input);
+                    new NoViableAltException("", 30, 0, input);
 
                 throw nvae;
             }
 
-            switch (alt34) {
+            switch (alt30) {
                 case 1 :
-                    // RuleSet.g:2104:9: ( ' -' )? ( '0' .. '9' )+ '.' ( '0' .. '9' )* ( EXPONENT )?
+                    // RuleSet.g:2110:9: ( ' -' )? ( '0' .. '9' )+ '.' ( '0' .. '9' )*
                     {
-                    // RuleSet.g:2104:9: ( ' -' )?
-                    int alt27=2;
-                    int LA27_0 = input.LA(1);
+                    // RuleSet.g:2110:9: ( ' -' )?
+                    int alt25=2;
+                    int LA25_0 = input.LA(1);
 
-                    if ( (LA27_0==' ') ) {
-                        alt27=1;
+                    if ( (LA25_0==' ') ) {
+                        alt25=1;
                     }
-                    switch (alt27) {
+                    switch (alt25) {
                         case 1 :
-                            // RuleSet.g:2104:9: ' -'
+                            // RuleSet.g:2110:9: ' -'
                             {
                             match(" -"); if (state.failed) return ;
 
@@ -3268,21 +3184,21 @@ public class RuleSetLexer extends Lexer {
 
                     }
 
-                    // RuleSet.g:2104:15: ( '0' .. '9' )+
-                    int cnt28=0;
-                    loop28:
+                    // RuleSet.g:2110:15: ( '0' .. '9' )+
+                    int cnt26=0;
+                    loop26:
                     do {
-                        int alt28=2;
-                        int LA28_0 = input.LA(1);
+                        int alt26=2;
+                        int LA26_0 = input.LA(1);
 
-                        if ( ((LA28_0>='0' && LA28_0<='9')) ) {
-                            alt28=1;
+                        if ( ((LA26_0>='0' && LA26_0<='9')) ) {
+                            alt26=1;
                         }
 
 
-                        switch (alt28) {
+                        switch (alt26) {
                     	case 1 :
-                    	    // RuleSet.g:2104:16: '0' .. '9'
+                    	    // RuleSet.g:2110:16: '0' .. '9'
                     	    {
                     	    matchRange('0','9'); if (state.failed) return ;
 
@@ -3290,17 +3206,68 @@ public class RuleSetLexer extends Lexer {
                     	    break;
 
                     	default :
-                    	    if ( cnt28 >= 1 ) break loop28;
+                    	    if ( cnt26 >= 1 ) break loop26;
                     	    if (state.backtracking>0) {state.failed=true; return ;}
                                 EarlyExitException eee =
-                                    new EarlyExitException(28, input);
+                                    new EarlyExitException(26, input);
                                 throw eee;
                         }
-                        cnt28++;
+                        cnt26++;
                     } while (true);
 
                     match('.'); if (state.failed) return ;
-                    // RuleSet.g:2104:31: ( '0' .. '9' )*
+                    // RuleSet.g:2110:31: ( '0' .. '9' )*
+                    loop27:
+                    do {
+                        int alt27=2;
+                        int LA27_0 = input.LA(1);
+
+                        if ( ((LA27_0>='0' && LA27_0<='9')) ) {
+                            alt27=1;
+                        }
+
+
+                        switch (alt27) {
+                    	case 1 :
+                    	    // RuleSet.g:2110:32: '0' .. '9'
+                    	    {
+                    	    matchRange('0','9'); if (state.failed) return ;
+
+                    	    }
+                    	    break;
+
+                    	default :
+                    	    break loop27;
+                        }
+                    } while (true);
+
+
+                    }
+                    break;
+                case 2 :
+                    // RuleSet.g:2111:9: ( ' -' )? '.' ( '0' .. '9' )*
+                    {
+                    // RuleSet.g:2111:9: ( ' -' )?
+                    int alt28=2;
+                    int LA28_0 = input.LA(1);
+
+                    if ( (LA28_0==' ') ) {
+                        alt28=1;
+                    }
+                    switch (alt28) {
+                        case 1 :
+                            // RuleSet.g:2111:9: ' -'
+                            {
+                            match(" -"); if (state.failed) return ;
+
+
+                            }
+                            break;
+
+                    }
+
+                    match('.'); if (state.failed) return ;
+                    // RuleSet.g:2111:19: ( '0' .. '9' )*
                     loop29:
                     do {
                         int alt29=2;
@@ -3313,7 +3280,7 @@ public class RuleSetLexer extends Lexer {
 
                         switch (alt29) {
                     	case 1 :
-                    	    // RuleSet.g:2104:32: '0' .. '9'
+                    	    // RuleSet.g:2111:20: '0' .. '9'
                     	    {
                     	    matchRange('0','9'); if (state.failed) return ;
 
@@ -3324,93 +3291,6 @@ public class RuleSetLexer extends Lexer {
                     	    break loop29;
                         }
                     } while (true);
-
-                    // RuleSet.g:2104:43: ( EXPONENT )?
-                    int alt30=2;
-                    int LA30_0 = input.LA(1);
-
-                    if ( (LA30_0=='E'||LA30_0=='e') ) {
-                        alt30=1;
-                    }
-                    switch (alt30) {
-                        case 1 :
-                            // RuleSet.g:2104:43: EXPONENT
-                            {
-                            mEXPONENT(); if (state.failed) return ;
-
-                            }
-                            break;
-
-                    }
-
-
-                    }
-                    break;
-                case 2 :
-                    // RuleSet.g:2105:9: ( ' -' )? '.' ( '0' .. '9' )* ( EXPONENT )?
-                    {
-                    // RuleSet.g:2105:9: ( ' -' )?
-                    int alt31=2;
-                    int LA31_0 = input.LA(1);
-
-                    if ( (LA31_0==' ') ) {
-                        alt31=1;
-                    }
-                    switch (alt31) {
-                        case 1 :
-                            // RuleSet.g:2105:9: ' -'
-                            {
-                            match(" -"); if (state.failed) return ;
-
-
-                            }
-                            break;
-
-                    }
-
-                    match('.'); if (state.failed) return ;
-                    // RuleSet.g:2105:19: ( '0' .. '9' )*
-                    loop32:
-                    do {
-                        int alt32=2;
-                        int LA32_0 = input.LA(1);
-
-                        if ( ((LA32_0>='0' && LA32_0<='9')) ) {
-                            alt32=1;
-                        }
-
-
-                        switch (alt32) {
-                    	case 1 :
-                    	    // RuleSet.g:2105:20: '0' .. '9'
-                    	    {
-                    	    matchRange('0','9'); if (state.failed) return ;
-
-                    	    }
-                    	    break;
-
-                    	default :
-                    	    break loop32;
-                        }
-                    } while (true);
-
-                    // RuleSet.g:2105:31: ( EXPONENT )?
-                    int alt33=2;
-                    int LA33_0 = input.LA(1);
-
-                    if ( (LA33_0=='E'||LA33_0=='e') ) {
-                        alt33=1;
-                    }
-                    switch (alt33) {
-                        case 1 :
-                            // RuleSet.g:2105:31: EXPONENT
-                            {
-                            mEXPONENT(); if (state.failed) return ;
-
-                            }
-                            break;
-
-                    }
 
 
                     }
@@ -3427,9 +3307,9 @@ public class RuleSetLexer extends Lexer {
 
     public void mTokens() throws RecognitionException {
         // RuleSet.g:1:8: ( REX | ARROW_RIGHT | PIPE | SEMI | FUNCTION | EQUAL | OR | AND | VAR_DOMAIN | WITH | USING | SETTING | PRE | FOREACH | WHEN | OR_OR | AND_AND | BETWEEN | WEB | PAGEVIEW | LEFT_SMALL_ARROW | RIGHT_SMALL_ARROW | GLOBAL | DTYPE | LIKE | PREDOP | ADD_OP | CALLBACKS | SUCCESS | FAILURE | FORGET | MARK | COUNTER_OP | IF | CHOOSE | EVERY | COMMENT | WS | STRING | HTML | JS | ESC_SEQ | RULE_SET | MULT_OP | DOT | MATCH | REPLACE | EXTRACT | OTHER_OPERATORS | TRUE | FALSE | CURRENT | KEY | AUTHZ | REQUIRE | LOGGING | USE | CSS | JAVASCRIPT | META | ON | OFF | MODULE | ALIAS | EMIT | CACHABLE | FOR | WITHIN | COLON | HISTORY | RIGHT_PAREN | LEFT_PAREN | RIGHT_BRACKET | LEFT_BRACKET | COMMA | LEFT_CURL | RIGHT_CURL | NOT | SEEN | VAR | INT | FLOAT )
-        int alt35=82;
-        alt35 = dfa35.predict(input);
-        switch (alt35) {
+        int alt31=82;
+        alt31 = dfa31.predict(input);
+        switch (alt31) {
             case 1 :
                 // RuleSet.g:1:10: REX
                 {
@@ -4011,8 +3891,8 @@ public class RuleSetLexer extends Lexer {
 
     // $ANTLR start synpred1_RuleSet
     public final void synpred1_RuleSet_fragment() throws RecognitionException {   
-        // RuleSet.g:1816:15: ( ESC_SEQ )
-        // RuleSet.g:1816:16: ESC_SEQ
+        // RuleSet.g:1822:15: ( ESC_SEQ )
+        // RuleSet.g:1822:16: ESC_SEQ
         {
         mESC_SEQ(); if (state.failed) return ;
 
@@ -4022,8 +3902,8 @@ public class RuleSetLexer extends Lexer {
 
     // $ANTLR start synpred2_RuleSet
     public final void synpred2_RuleSet_fragment() throws RecognitionException {   
-        // RuleSet.g:1817:14: ( ESC_SEQ )
-        // RuleSet.g:1817:15: ESC_SEQ
+        // RuleSet.g:1823:14: ( ESC_SEQ )
+        // RuleSet.g:1823:15: ESC_SEQ
         {
         mESC_SEQ(); if (state.failed) return ;
 
@@ -4064,8 +3944,8 @@ public class RuleSetLexer extends Lexer {
     protected DFA1 dfa1 = new DFA1(this);
     protected DFA3 dfa3 = new DFA3(this);
     protected DFA8 dfa8 = new DFA8(this);
-    protected DFA23 dfa23 = new DFA23(this);
-    protected DFA35 dfa35 = new DFA35(this);
+    protected DFA21 dfa21 = new DFA21(this);
+    protected DFA31 dfa31 = new DFA31(this);
     static final String DFA1_eotS =
         "\6\uffff\1\3\5\uffff\1\3\4\uffff";
     static final String DFA1_eofS =
@@ -4078,8 +3958,8 @@ public class RuleSetLexer extends Lexer {
     static final String DFA1_acceptS =
         "\1\uffff\1\4\1\uffff\1\3\6\uffff\1\1\2\uffff\1\2\3\uffff";
     static final String DFA1_specialS =
-        "\1\11\1\uffff\1\13\1\uffff\1\10\1\12\1\2\1\6\1\7\1\5\1\uffff\1\3"+
-        "\1\0\1\uffff\1\4\1\1\1\14}>";
+        "\1\4\1\uffff\1\10\1\uffff\1\11\1\13\1\1\1\14\1\5\1\6\1\uffff\1\2"+
+        "\1\7\1\uffff\1\3\1\0\1\12}>";
     static final String[] DFA1_transitionS = {
             "\57\3\1\1\54\3\1\2\uffa3\3",
             "",
@@ -4132,35 +4012,23 @@ public class RuleSetLexer extends Lexer {
             this.transition = DFA1_transition;
         }
         public String getDescription() {
-            return "()* loopback of 1816:14: ( ( ESC_SEQ )=> ESC_SEQ | '\\\\/' | ~ ( '/' ) )*";
+            return "()* loopback of 1822:14: ( ( ESC_SEQ )=> ESC_SEQ | '\\\\/' | ~ ( '/' ) )*";
         }
         public int specialStateTransition(int s, IntStream _input) throws NoViableAltException {
             IntStream input = _input;
         	int _s = s;
             switch ( s ) {
                     case 0 : 
-                        int LA1_12 = input.LA(1);
+                        int LA1_15 = input.LA(1);
 
                         s = -1;
-                        if ( ((LA1_12>='\u0000' && LA1_12<='f')||LA1_12=='h'||(LA1_12>='j' && LA1_12<='l')||(LA1_12>='n' && LA1_12<='\uFFFF')) ) {s = 13;}
+                        if ( ((LA1_15>='0' && LA1_15<='9')||(LA1_15>='A' && LA1_15<='F')||(LA1_15>='a' && LA1_15<='f')) ) {s = 16;}
 
-                        else if ( (LA1_12=='g'||LA1_12=='i'||LA1_12=='m') ) {s = 12;}
-
-                        else s = 3;
+                        else if ( ((LA1_15>='\u0000' && LA1_15<='/')||(LA1_15>=':' && LA1_15<='@')||(LA1_15>='G' && LA1_15<='`')||(LA1_15>='g' && LA1_15<='\uFFFF')) ) {s = 3;}
 
                         if ( s>=0 ) return s;
                         break;
                     case 1 : 
-                        int LA1_15 = input.LA(1);
-
-                        s = -1;
-                        if ( ((LA1_15>='\u0000' && LA1_15<='/')||(LA1_15>=':' && LA1_15<='@')||(LA1_15>='G' && LA1_15<='`')||(LA1_15>='g' && LA1_15<='\uFFFF')) ) {s = 3;}
-
-                        else if ( ((LA1_15>='0' && LA1_15<='9')||(LA1_15>='A' && LA1_15<='F')||(LA1_15>='a' && LA1_15<='f')) ) {s = 16;}
-
-                        if ( s>=0 ) return s;
-                        break;
-                    case 2 : 
                         int LA1_6 = input.LA(1);
 
                         s = -1;
@@ -4172,7 +4040,7 @@ public class RuleSetLexer extends Lexer {
 
                         if ( s>=0 ) return s;
                         break;
-                    case 3 : 
+                    case 2 : 
                         int LA1_11 = input.LA(1);
 
                         s = -1;
@@ -4182,7 +4050,7 @@ public class RuleSetLexer extends Lexer {
 
                         if ( s>=0 ) return s;
                         break;
-                    case 4 : 
+                    case 3 : 
                         int LA1_14 = input.LA(1);
 
                         s = -1;
@@ -4192,37 +4060,19 @@ public class RuleSetLexer extends Lexer {
 
                         if ( s>=0 ) return s;
                         break;
+                    case 4 : 
+                        int LA1_0 = input.LA(1);
+
+                        s = -1;
+                        if ( (LA1_0=='/') ) {s = 1;}
+
+                        else if ( (LA1_0=='\\') ) {s = 2;}
+
+                        else if ( ((LA1_0>='\u0000' && LA1_0<='.')||(LA1_0>='0' && LA1_0<='[')||(LA1_0>=']' && LA1_0<='\uFFFF')) ) {s = 3;}
+
+                        if ( s>=0 ) return s;
+                        break;
                     case 5 : 
-                        int LA1_9 = input.LA(1);
-
-                         
-                        int index1_9 = input.index();
-                        input.rewind();
-                        s = -1;
-                        if ( (synpred1_RuleSet()) ) {s = 10;}
-
-                        else if ( (true) ) {s = 3;}
-
-                         
-                        input.seek(index1_9);
-                        if ( s>=0 ) return s;
-                        break;
-                    case 6 : 
-                        int LA1_7 = input.LA(1);
-
-                         
-                        int index1_7 = input.index();
-                        input.rewind();
-                        s = -1;
-                        if ( (synpred1_RuleSet()) ) {s = 10;}
-
-                        else if ( (true) ) {s = 3;}
-
-                         
-                        input.seek(index1_7);
-                        if ( s>=0 ) return s;
-                        break;
-                    case 7 : 
                         int LA1_8 = input.LA(1);
 
                          
@@ -4237,11 +4087,11 @@ public class RuleSetLexer extends Lexer {
                         input.seek(index1_8);
                         if ( s>=0 ) return s;
                         break;
-                    case 8 : 
-                        int LA1_4 = input.LA(1);
+                    case 6 : 
+                        int LA1_9 = input.LA(1);
 
                          
-                        int index1_4 = input.index();
+                        int index1_9 = input.index();
                         input.rewind();
                         s = -1;
                         if ( (synpred1_RuleSet()) ) {s = 10;}
@@ -4249,32 +4099,22 @@ public class RuleSetLexer extends Lexer {
                         else if ( (true) ) {s = 3;}
 
                          
-                        input.seek(index1_4);
+                        input.seek(index1_9);
                         if ( s>=0 ) return s;
                         break;
-                    case 9 : 
-                        int LA1_0 = input.LA(1);
+                    case 7 : 
+                        int LA1_12 = input.LA(1);
 
                         s = -1;
-                        if ( (LA1_0=='/') ) {s = 1;}
+                        if ( (LA1_12=='g'||LA1_12=='i'||LA1_12=='m') ) {s = 12;}
 
-                        else if ( (LA1_0=='\\') ) {s = 2;}
+                        else if ( ((LA1_12>='\u0000' && LA1_12<='f')||LA1_12=='h'||(LA1_12>='j' && LA1_12<='l')||(LA1_12>='n' && LA1_12<='\uFFFF')) ) {s = 13;}
 
-                        else if ( ((LA1_0>='\u0000' && LA1_0<='.')||(LA1_0>='0' && LA1_0<='[')||(LA1_0>=']' && LA1_0<='\uFFFF')) ) {s = 3;}
-
-                        if ( s>=0 ) return s;
-                        break;
-                    case 10 : 
-                        int LA1_5 = input.LA(1);
-
-                        s = -1;
-                        if ( ((LA1_5>='\u0000' && LA1_5<='/')||(LA1_5>=':' && LA1_5<='@')||(LA1_5>='G' && LA1_5<='`')||(LA1_5>='g' && LA1_5<='\uFFFF')) ) {s = 3;}
-
-                        else if ( ((LA1_5>='0' && LA1_5<='9')||(LA1_5>='A' && LA1_5<='F')||(LA1_5>='a' && LA1_5<='f')) ) {s = 11;}
+                        else s = 3;
 
                         if ( s>=0 ) return s;
                         break;
-                    case 11 : 
+                    case 8 : 
                         int LA1_2 = input.LA(1);
 
                         s = -1;
@@ -4294,7 +4134,22 @@ public class RuleSetLexer extends Lexer {
 
                         if ( s>=0 ) return s;
                         break;
-                    case 12 : 
+                    case 9 : 
+                        int LA1_4 = input.LA(1);
+
+                         
+                        int index1_4 = input.index();
+                        input.rewind();
+                        s = -1;
+                        if ( (synpred1_RuleSet()) ) {s = 10;}
+
+                        else if ( (true) ) {s = 3;}
+
+                         
+                        input.seek(index1_4);
+                        if ( s>=0 ) return s;
+                        break;
+                    case 10 : 
                         int LA1_16 = input.LA(1);
 
                          
@@ -4307,6 +4162,31 @@ public class RuleSetLexer extends Lexer {
 
                          
                         input.seek(index1_16);
+                        if ( s>=0 ) return s;
+                        break;
+                    case 11 : 
+                        int LA1_5 = input.LA(1);
+
+                        s = -1;
+                        if ( ((LA1_5>='0' && LA1_5<='9')||(LA1_5>='A' && LA1_5<='F')||(LA1_5>='a' && LA1_5<='f')) ) {s = 11;}
+
+                        else if ( ((LA1_5>='\u0000' && LA1_5<='/')||(LA1_5>=':' && LA1_5<='@')||(LA1_5>='G' && LA1_5<='`')||(LA1_5>='g' && LA1_5<='\uFFFF')) ) {s = 3;}
+
+                        if ( s>=0 ) return s;
+                        break;
+                    case 12 : 
+                        int LA1_7 = input.LA(1);
+
+                         
+                        int index1_7 = input.index();
+                        input.rewind();
+                        s = -1;
+                        if ( (synpred1_RuleSet()) ) {s = 10;}
+
+                        else if ( (true) ) {s = 3;}
+
+                         
+                        input.seek(index1_7);
                         if ( s>=0 ) return s;
                         break;
             }
@@ -4329,14 +4209,14 @@ public class RuleSetLexer extends Lexer {
     static final String DFA3_acceptS =
         "\1\uffff\1\4\1\uffff\1\3\6\uffff\1\1\1\uffff\1\2\4\uffff";
     static final String DFA3_specialS =
-        "\1\13\1\uffff\1\4\1\uffff\1\5\1\0\1\3\1\1\1\14\1\2\1\uffff\1\7\1"+
-        "\uffff\1\12\1\10\1\11\1\6}>";
+        "\1\12\1\uffff\1\10\1\uffff\1\7\1\13\1\0\1\2\1\5\1\14\1\uffff\1\3"+
+        "\1\uffff\1\4\1\1\1\11\1\6}>";
     static final String[] DFA3_transitionS = {
             "\43\3\1\1\70\3\1\2\uffa3\3",
             "",
-            "\42\3\1\11\1\6\3\3\3\11\3\3\2\11\1\3\4\7\4\10\7\3\1\11\34\3"+
-            "\1\4\5\3\1\11\1\3\1\11\1\3\1\11\7\3\1\11\3\3\3\11\1\5\1\3\1"+
-            "\11\uff88\3",
+            "\42\3\1\7\1\6\3\3\3\7\3\3\2\7\1\3\4\10\4\11\7\3\1\7\34\3\1"+
+            "\4\5\3\1\7\1\3\1\7\1\3\1\7\7\3\1\7\3\3\3\7\1\5\1\3\1\7\uff88"+
+            "\3",
             "",
             "\1\uffff",
             "\60\3\12\13\7\3\6\13\32\3\6\13\uff99\3",
@@ -4383,23 +4263,35 @@ public class RuleSetLexer extends Lexer {
             this.transition = DFA3_transition;
         }
         public String getDescription() {
-            return "()* loopback of 1817:13: ( ( ESC_SEQ )=> ESC_SEQ | '\\\\#' | ~ ( '#' ) )*";
+            return "()* loopback of 1823:13: ( ( ESC_SEQ )=> ESC_SEQ | '\\\\#' | ~ ( '#' ) )*";
         }
         public int specialStateTransition(int s, IntStream _input) throws NoViableAltException {
             IntStream input = _input;
         	int _s = s;
             switch ( s ) {
                     case 0 : 
-                        int LA3_5 = input.LA(1);
+                        int LA3_6 = input.LA(1);
 
                         s = -1;
-                        if ( ((LA3_5>='0' && LA3_5<='9')||(LA3_5>='A' && LA3_5<='F')||(LA3_5>='a' && LA3_5<='f')) ) {s = 11;}
+                        if ( ((LA3_6>='\u0000' && LA3_6<='f')||LA3_6=='h'||(LA3_6>='j' && LA3_6<='l')||(LA3_6>='n' && LA3_6<='\uFFFF')) ) {s = 12;}
 
-                        else if ( ((LA3_5>='\u0000' && LA3_5<='/')||(LA3_5>=':' && LA3_5<='@')||(LA3_5>='G' && LA3_5<='`')||(LA3_5>='g' && LA3_5<='\uFFFF')) ) {s = 3;}
+                        else if ( (LA3_6=='g'||LA3_6=='i'||LA3_6=='m') ) {s = 13;}
+
+                        else s = 3;
 
                         if ( s>=0 ) return s;
                         break;
                     case 1 : 
+                        int LA3_14 = input.LA(1);
+
+                        s = -1;
+                        if ( ((LA3_14>='0' && LA3_14<='9')||(LA3_14>='A' && LA3_14<='F')||(LA3_14>='a' && LA3_14<='f')) ) {s = 15;}
+
+                        else if ( ((LA3_14>='\u0000' && LA3_14<='/')||(LA3_14>=':' && LA3_14<='@')||(LA3_14>='G' && LA3_14<='`')||(LA3_14>='g' && LA3_14<='\uFFFF')) ) {s = 3;}
+
+                        if ( s>=0 ) return s;
+                        break;
+                    case 2 : 
                         int LA3_7 = input.LA(1);
 
                          
@@ -4414,58 +4306,33 @@ public class RuleSetLexer extends Lexer {
                         input.seek(index3_7);
                         if ( s>=0 ) return s;
                         break;
-                    case 2 : 
-                        int LA3_9 = input.LA(1);
+                    case 3 : 
+                        int LA3_11 = input.LA(1);
 
-                         
-                        int index3_9 = input.index();
-                        input.rewind();
                         s = -1;
-                        if ( (synpred2_RuleSet()) ) {s = 10;}
+                        if ( ((LA3_11>='\u0000' && LA3_11<='/')||(LA3_11>=':' && LA3_11<='@')||(LA3_11>='G' && LA3_11<='`')||(LA3_11>='g' && LA3_11<='\uFFFF')) ) {s = 3;}
 
-                        else if ( (true) ) {s = 3;}
+                        else if ( ((LA3_11>='0' && LA3_11<='9')||(LA3_11>='A' && LA3_11<='F')||(LA3_11>='a' && LA3_11<='f')) ) {s = 14;}
 
-                         
-                        input.seek(index3_9);
                         if ( s>=0 ) return s;
                         break;
-                    case 3 : 
-                        int LA3_6 = input.LA(1);
+                    case 4 : 
+                        int LA3_13 = input.LA(1);
 
                         s = -1;
-                        if ( ((LA3_6>='\u0000' && LA3_6<='f')||LA3_6=='h'||(LA3_6>='j' && LA3_6<='l')||(LA3_6>='n' && LA3_6<='\uFFFF')) ) {s = 12;}
+                        if ( ((LA3_13>='\u0000' && LA3_13<='f')||LA3_13=='h'||(LA3_13>='j' && LA3_13<='l')||(LA3_13>='n' && LA3_13<='\uFFFF')) ) {s = 12;}
 
-                        else if ( (LA3_6=='g'||LA3_6=='i'||LA3_6=='m') ) {s = 13;}
+                        else if ( (LA3_13=='g'||LA3_13=='i'||LA3_13=='m') ) {s = 13;}
 
                         else s = 3;
 
                         if ( s>=0 ) return s;
                         break;
-                    case 4 : 
-                        int LA3_2 = input.LA(1);
-
-                        s = -1;
-                        if ( (LA3_2=='\\') ) {s = 4;}
-
-                        else if ( (LA3_2=='u') ) {s = 5;}
-
-                        else if ( (LA3_2=='#') ) {s = 6;}
-
-                        else if ( ((LA3_2>='0' && LA3_2<='3')) ) {s = 7;}
-
-                        else if ( ((LA3_2>='4' && LA3_2<='7')) ) {s = 8;}
-
-                        else if ( (LA3_2=='\"'||(LA3_2>='\'' && LA3_2<=')')||(LA3_2>='-' && LA3_2<='.')||LA3_2=='?'||LA3_2=='b'||LA3_2=='d'||LA3_2=='f'||LA3_2=='n'||(LA3_2>='r' && LA3_2<='t')||LA3_2=='w') ) {s = 9;}
-
-                        else if ( ((LA3_2>='\u0000' && LA3_2<='!')||(LA3_2>='$' && LA3_2<='&')||(LA3_2>='*' && LA3_2<=',')||LA3_2=='/'||(LA3_2>='8' && LA3_2<='>')||(LA3_2>='@' && LA3_2<='[')||(LA3_2>=']' && LA3_2<='a')||LA3_2=='c'||LA3_2=='e'||(LA3_2>='g' && LA3_2<='m')||(LA3_2>='o' && LA3_2<='q')||LA3_2=='v'||(LA3_2>='x' && LA3_2<='\uFFFF')) ) {s = 3;}
-
-                        if ( s>=0 ) return s;
-                        break;
                     case 5 : 
-                        int LA3_4 = input.LA(1);
+                        int LA3_8 = input.LA(1);
 
                          
-                        int index3_4 = input.index();
+                        int index3_8 = input.index();
                         input.rewind();
                         s = -1;
                         if ( (synpred2_RuleSet()) ) {s = 10;}
@@ -4473,7 +4340,7 @@ public class RuleSetLexer extends Lexer {
                         else if ( (true) ) {s = 3;}
 
                          
-                        input.seek(index3_4);
+                        input.seek(index3_8);
                         if ( s>=0 ) return s;
                         break;
                     case 6 : 
@@ -4492,22 +4359,37 @@ public class RuleSetLexer extends Lexer {
                         if ( s>=0 ) return s;
                         break;
                     case 7 : 
-                        int LA3_11 = input.LA(1);
+                        int LA3_4 = input.LA(1);
 
+                         
+                        int index3_4 = input.index();
+                        input.rewind();
                         s = -1;
-                        if ( ((LA3_11>='0' && LA3_11<='9')||(LA3_11>='A' && LA3_11<='F')||(LA3_11>='a' && LA3_11<='f')) ) {s = 14;}
+                        if ( (synpred2_RuleSet()) ) {s = 10;}
 
-                        else if ( ((LA3_11>='\u0000' && LA3_11<='/')||(LA3_11>=':' && LA3_11<='@')||(LA3_11>='G' && LA3_11<='`')||(LA3_11>='g' && LA3_11<='\uFFFF')) ) {s = 3;}
+                        else if ( (true) ) {s = 3;}
 
+                         
+                        input.seek(index3_4);
                         if ( s>=0 ) return s;
                         break;
                     case 8 : 
-                        int LA3_14 = input.LA(1);
+                        int LA3_2 = input.LA(1);
 
                         s = -1;
-                        if ( ((LA3_14>='0' && LA3_14<='9')||(LA3_14>='A' && LA3_14<='F')||(LA3_14>='a' && LA3_14<='f')) ) {s = 15;}
+                        if ( (LA3_2=='\\') ) {s = 4;}
 
-                        else if ( ((LA3_14>='\u0000' && LA3_14<='/')||(LA3_14>=':' && LA3_14<='@')||(LA3_14>='G' && LA3_14<='`')||(LA3_14>='g' && LA3_14<='\uFFFF')) ) {s = 3;}
+                        else if ( (LA3_2=='u') ) {s = 5;}
+
+                        else if ( (LA3_2=='#') ) {s = 6;}
+
+                        else if ( (LA3_2=='\"'||(LA3_2>='\'' && LA3_2<=')')||(LA3_2>='-' && LA3_2<='.')||LA3_2=='?'||LA3_2=='b'||LA3_2=='d'||LA3_2=='f'||LA3_2=='n'||(LA3_2>='r' && LA3_2<='t')||LA3_2=='w') ) {s = 7;}
+
+                        else if ( ((LA3_2>='0' && LA3_2<='3')) ) {s = 8;}
+
+                        else if ( ((LA3_2>='\u0000' && LA3_2<='!')||(LA3_2>='$' && LA3_2<='&')||(LA3_2>='*' && LA3_2<=',')||LA3_2=='/'||(LA3_2>='8' && LA3_2<='>')||(LA3_2>='@' && LA3_2<='[')||(LA3_2>=']' && LA3_2<='a')||LA3_2=='c'||LA3_2=='e'||(LA3_2>='g' && LA3_2<='m')||(LA3_2>='o' && LA3_2<='q')||LA3_2=='v'||(LA3_2>='x' && LA3_2<='\uFFFF')) ) {s = 3;}
+
+                        else if ( ((LA3_2>='4' && LA3_2<='7')) ) {s = 9;}
 
                         if ( s>=0 ) return s;
                         break;
@@ -4522,18 +4404,6 @@ public class RuleSetLexer extends Lexer {
                         if ( s>=0 ) return s;
                         break;
                     case 10 : 
-                        int LA3_13 = input.LA(1);
-
-                        s = -1;
-                        if ( (LA3_13=='g'||LA3_13=='i'||LA3_13=='m') ) {s = 13;}
-
-                        else if ( ((LA3_13>='\u0000' && LA3_13<='f')||LA3_13=='h'||(LA3_13>='j' && LA3_13<='l')||(LA3_13>='n' && LA3_13<='\uFFFF')) ) {s = 12;}
-
-                        else s = 3;
-
-                        if ( s>=0 ) return s;
-                        break;
-                    case 11 : 
                         int LA3_0 = input.LA(1);
 
                         s = -1;
@@ -4545,11 +4415,21 @@ public class RuleSetLexer extends Lexer {
 
                         if ( s>=0 ) return s;
                         break;
+                    case 11 : 
+                        int LA3_5 = input.LA(1);
+
+                        s = -1;
+                        if ( ((LA3_5>='\u0000' && LA3_5<='/')||(LA3_5>=':' && LA3_5<='@')||(LA3_5>='G' && LA3_5<='`')||(LA3_5>='g' && LA3_5<='\uFFFF')) ) {s = 3;}
+
+                        else if ( ((LA3_5>='0' && LA3_5<='9')||(LA3_5>='A' && LA3_5<='F')||(LA3_5>='a' && LA3_5<='f')) ) {s = 11;}
+
+                        if ( s>=0 ) return s;
+                        break;
                     case 12 : 
-                        int LA3_8 = input.LA(1);
+                        int LA3_9 = input.LA(1);
 
                          
-                        int index3_8 = input.index();
+                        int index3_9 = input.index();
                         input.rewind();
                         s = -1;
                         if ( (synpred2_RuleSet()) ) {s = 10;}
@@ -4557,7 +4437,7 @@ public class RuleSetLexer extends Lexer {
                         else if ( (true) ) {s = 3;}
 
                          
-                        input.seek(index3_8);
+                        input.seek(index3_9);
                         if ( s>=0 ) return s;
                         break;
             }
@@ -4624,26 +4504,26 @@ public class RuleSetLexer extends Lexer {
             this.transition = DFA8_transition;
         }
         public String getDescription() {
-            return "1881:1: PREDOP : ( '<=' | '>=' | '<' | '>' | '==' | '!=' | 'eq' | 'neq' );";
+            return "1887:1: PREDOP : ( '<=' | '>=' | '<' | '>' | '==' | '!=' | 'eq' | 'neq' );";
         }
     }
-    static final String DFA23_eotS =
+    static final String DFA21_eotS =
         "\40\uffff";
-    static final String DFA23_eofS =
+    static final String DFA21_eofS =
         "\40\uffff";
-    static final String DFA23_minS =
+    static final String DFA21_minS =
         "\1\141\1\151\1\143\1\160\1\141\1\uffff\1\157\2\uffff\1\143\2\uffff"+
         "\1\151\15\uffff\1\151\2\uffff\1\157\2\uffff";
-    static final String DFA23_maxS =
+    static final String DFA21_maxS =
         "\2\165\1\145\1\163\1\145\1\uffff\1\160\2\uffff\1\156\2\uffff\1\165"+
         "\15\uffff\1\151\2\uffff\1\161\2\uffff";
-    static final String DFA23_acceptS =
+    static final String DFA21_acceptS =
         "\5\uffff\1\5\1\uffff\1\7\1\10\1\uffff\1\14\1\15\1\uffff\1\21\1\23"+
         "\1\1\1\26\1\2\1\12\1\3\1\25\1\4\1\16\1\6\1\13\1\11\1\uffff\1\20"+
         "\1\24\1\uffff\1\17\1\22";
-    static final String DFA23_specialS =
+    static final String DFA21_specialS =
         "\40\uffff}>";
-    static final String[] DFA23_transitionS = {
+    static final String[] DFA21_transitionS = {
             "\1\3\2\uffff\1\14\1\uffff\1\7\1\uffff\1\4\1\15\1\12\1\uffff"+
             "\1\2\1\10\1\uffff\1\16\1\1\1\13\1\uffff\1\6\1\5\1\11",
             "\1\17\13\uffff\1\20",
@@ -4679,40 +4559,40 @@ public class RuleSetLexer extends Lexer {
             ""
     };
 
-    static final short[] DFA23_eot = DFA.unpackEncodedString(DFA23_eotS);
-    static final short[] DFA23_eof = DFA.unpackEncodedString(DFA23_eofS);
-    static final char[] DFA23_min = DFA.unpackEncodedStringToUnsignedChars(DFA23_minS);
-    static final char[] DFA23_max = DFA.unpackEncodedStringToUnsignedChars(DFA23_maxS);
-    static final short[] DFA23_accept = DFA.unpackEncodedString(DFA23_acceptS);
-    static final short[] DFA23_special = DFA.unpackEncodedString(DFA23_specialS);
-    static final short[][] DFA23_transition;
+    static final short[] DFA21_eot = DFA.unpackEncodedString(DFA21_eotS);
+    static final short[] DFA21_eof = DFA.unpackEncodedString(DFA21_eofS);
+    static final char[] DFA21_min = DFA.unpackEncodedStringToUnsignedChars(DFA21_minS);
+    static final char[] DFA21_max = DFA.unpackEncodedStringToUnsignedChars(DFA21_maxS);
+    static final short[] DFA21_accept = DFA.unpackEncodedString(DFA21_acceptS);
+    static final short[] DFA21_special = DFA.unpackEncodedString(DFA21_specialS);
+    static final short[][] DFA21_transition;
 
     static {
-        int numStates = DFA23_transitionS.length;
-        DFA23_transition = new short[numStates][];
+        int numStates = DFA21_transitionS.length;
+        DFA21_transition = new short[numStates][];
         for (int i=0; i<numStates; i++) {
-            DFA23_transition[i] = DFA.unpackEncodedString(DFA23_transitionS[i]);
+            DFA21_transition[i] = DFA.unpackEncodedString(DFA21_transitionS[i]);
         }
     }
 
-    class DFA23 extends DFA {
+    class DFA21 extends DFA {
 
-        public DFA23(BaseRecognizer recognizer) {
+        public DFA21(BaseRecognizer recognizer) {
             this.recognizer = recognizer;
-            this.decisionNumber = 23;
-            this.eot = DFA23_eot;
-            this.eof = DFA23_eof;
-            this.min = DFA23_min;
-            this.max = DFA23_max;
-            this.accept = DFA23_accept;
-            this.special = DFA23_special;
-            this.transition = DFA23_transition;
+            this.decisionNumber = 21;
+            this.eot = DFA21_eot;
+            this.eof = DFA21_eof;
+            this.min = DFA21_min;
+            this.max = DFA21_max;
+            this.accept = DFA21_accept;
+            this.special = DFA21_special;
+            this.transition = DFA21_transition;
         }
         public String getDescription() {
-            return "1996:1: OTHER_OPERATORS : ( 'pick' | 'length' | 'as' | 'head' | 'tail' | 'sort' | 'filter' | 'map' | 'uc' | 'lc' | 'split' | 'join' | 'query' | 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once' | 'duplicates' | 'append' | 'put' );";
+            return "2002:1: OTHER_OPERATORS : ( 'pick' | 'length' | 'as' | 'head' | 'tail' | 'sort' | 'filter' | 'map' | 'uc' | 'lc' | 'split' | 'join' | 'query' | 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once' | 'duplicates' | 'append' | 'put' );";
         }
     }
-    static final String DFA35_eotS =
+    static final String DFA31_eotS =
         "\1\uffff\1\62\1\uffff\1\70\1\72\1\uffff\1\62\1\uffff\10\62\1\30"+
         "\1\140\6\62\1\uffff\1\62\1\140\3\62\1\42\1\63\3\uffff\1\167\6\62"+
         "\12\uffff\1\u0084\2\62\4\uffff\5\62\1\30\5\62\1\u0093\6\62\1\u0093"+
@@ -4736,9 +4616,9 @@ public class RuleSetLexer extends Lexer {
         "\uffff\1\u0189\5\uffff\1\u018a\2\uffff\1\62\1\u018c\1\uffff\1\62"+
         "\1\uffff\3\62\2\uffff\1\u0191\1\uffff\4\62\1\uffff\1\62\1\u0197"+
         "\2\u0093\1\62\1\uffff\1\u0093";
-    static final String DFA35_eofS =
+    static final String DFA31_eofS =
         "\u0199\uffff";
-    static final String DFA35_minS =
+    static final String DFA31_minS =
         "\1\11\1\145\1\uffff\1\75\1\174\1\uffff\1\141\1\uffff\1\155\1\154"+
         "\1\145\1\143\1\145\1\141\1\146\1\145\1\55\1\75\1\154\1\123\1\115"+
         "\1\123\1\124\1\143\1\uffff\1\145\1\75\2\141\1\146\1\52\1\55\3\uffff"+
@@ -4773,11 +4653,11 @@ public class RuleSetLexer extends Lexer {
         "\3\uffff\1\60\5\uffff\1\60\2\uffff\1\163\1\60\1\uffff\1\164\1\uffff"+
         "\1\160\1\143\1\145\2\uffff\1\60\1\uffff\1\151\1\164\1\145\1\163"+
         "\1\uffff\1\157\3\60\1\156\1\uffff\1\60";
-    static final String DFA35_maxS =
+    static final String DFA31_maxS =
         "\1\175\1\165\1\uffff\1\76\1\174\1\uffff\1\165\1\uffff\1\170\1\165"+
         "\1\151\1\163\2\165\1\162\1\145\1\174\1\76\1\154\1\123\1\115\1\123"+
         "\1\124\1\157\1\uffff\1\157\1\75\1\165\1\157\1\156\1\57\1\55\3\uffff"+
-        "\1\145\1\151\1\162\1\157\2\165\1\145\12\uffff\1\71\1\161\1\154\4"+
+        "\1\71\1\151\1\162\1\157\2\165\1\145\12\uffff\1\71\1\161\1\154\4"+
         "\uffff\1\156\1\162\2\154\1\164\1\172\1\145\1\164\1\151\1\160\1\144"+
         "\1\172\1\164\1\151\1\164\1\145\1\142\1\151\1\172\1\151\1\164\1\143"+
         "\1\162\1\154\1\145\1\147\1\143\1\164\2\172\1\146\1\164\6\uffff\1"+
@@ -4809,7 +4689,7 @@ public class RuleSetLexer extends Lexer {
         "\1\163\1\172\1\uffff\1\164\1\uffff\1\160\1\143\1\145\2\uffff\1\172"+
         "\1\uffff\1\151\1\164\1\145\1\163\1\uffff\1\157\3\172\1\156\1\uffff"+
         "\1\172";
-    static final String DFA35_acceptS =
+    static final String DFA31_acceptS =
         "\2\uffff\1\1\2\uffff\1\4\1\uffff\1\10\20\uffff\1\32\7\uffff\1\47"+
         "\1\52\1\54\7\uffff\1\105\1\107\1\110\1\111\1\112\1\113\1\114\1\115"+
         "\1\120\1\46\3\uffff\1\2\1\6\1\7\1\3\40\uffff\1\25\1\50\1\51\1\26"+
@@ -4824,9 +4704,9 @@ public class RuleSetLexer extends Lexer {
         "\57\1\67\1\53\1\uffff\1\16\1\36\1\60\1\14\1\35\1\uffff\1\22\1\70"+
         "\2\uffff\1\64\1\uffff\1\106\3\uffff\1\5\1\24\1\uffff\1\102\4\uffff"+
         "\1\34\5\uffff\1\73\1\uffff";
-    static final String DFA35_specialS =
+    static final String DFA31_specialS =
         "\u0199\uffff}>";
-    static final String[] DFA35_transitionS = {
+    static final String[] DFA31_transitionS = {
             "\2\63\2\uffff\1\63\22\uffff\1\37\1\30\1\40\1\2\1\uffff\1\42"+
             "\1\7\1\40\1\54\1\53\1\42\1\32\1\57\1\21\1\43\1\36\12\64\1\52"+
             "\1\5\1\20\1\3\1\30\2\uffff\7\62\1\26\1\62\1\23\7\62\1\25\5\62"+
@@ -4868,7 +4748,7 @@ public class RuleSetLexer extends Lexer {
             "",
             "",
             "",
-            "\12\170\13\uffff\1\170\37\uffff\1\170",
+            "\12\170",
             "\1\172\3\uffff\1\171\3\uffff\1\173",
             "\1\174\20\uffff\1\175",
             "\1\177\15\uffff\1\176",
@@ -5246,34 +5126,34 @@ public class RuleSetLexer extends Lexer {
             "\12\62\7\uffff\32\62\4\uffff\1\62\1\uffff\32\62"
     };
 
-    static final short[] DFA35_eot = DFA.unpackEncodedString(DFA35_eotS);
-    static final short[] DFA35_eof = DFA.unpackEncodedString(DFA35_eofS);
-    static final char[] DFA35_min = DFA.unpackEncodedStringToUnsignedChars(DFA35_minS);
-    static final char[] DFA35_max = DFA.unpackEncodedStringToUnsignedChars(DFA35_maxS);
-    static final short[] DFA35_accept = DFA.unpackEncodedString(DFA35_acceptS);
-    static final short[] DFA35_special = DFA.unpackEncodedString(DFA35_specialS);
-    static final short[][] DFA35_transition;
+    static final short[] DFA31_eot = DFA.unpackEncodedString(DFA31_eotS);
+    static final short[] DFA31_eof = DFA.unpackEncodedString(DFA31_eofS);
+    static final char[] DFA31_min = DFA.unpackEncodedStringToUnsignedChars(DFA31_minS);
+    static final char[] DFA31_max = DFA.unpackEncodedStringToUnsignedChars(DFA31_maxS);
+    static final short[] DFA31_accept = DFA.unpackEncodedString(DFA31_acceptS);
+    static final short[] DFA31_special = DFA.unpackEncodedString(DFA31_specialS);
+    static final short[][] DFA31_transition;
 
     static {
-        int numStates = DFA35_transitionS.length;
-        DFA35_transition = new short[numStates][];
+        int numStates = DFA31_transitionS.length;
+        DFA31_transition = new short[numStates][];
         for (int i=0; i<numStates; i++) {
-            DFA35_transition[i] = DFA.unpackEncodedString(DFA35_transitionS[i]);
+            DFA31_transition[i] = DFA.unpackEncodedString(DFA31_transitionS[i]);
         }
     }
 
-    class DFA35 extends DFA {
+    class DFA31 extends DFA {
 
-        public DFA35(BaseRecognizer recognizer) {
+        public DFA31(BaseRecognizer recognizer) {
             this.recognizer = recognizer;
-            this.decisionNumber = 35;
-            this.eot = DFA35_eot;
-            this.eof = DFA35_eof;
-            this.min = DFA35_min;
-            this.max = DFA35_max;
-            this.accept = DFA35_accept;
-            this.special = DFA35_special;
-            this.transition = DFA35_transition;
+            this.decisionNumber = 31;
+            this.eot = DFA31_eot;
+            this.eof = DFA31_eof;
+            this.min = DFA31_min;
+            this.max = DFA31_max;
+            this.accept = DFA31_accept;
+            this.special = DFA31_special;
+            this.transition = DFA31_transition;
         }
         public String getDescription() {
             return "1:1: Tokens : ( REX | ARROW_RIGHT | PIPE | SEMI | FUNCTION | EQUAL | OR | AND | VAR_DOMAIN | WITH | USING | SETTING | PRE | FOREACH | WHEN | OR_OR | AND_AND | BETWEEN | WEB | PAGEVIEW | LEFT_SMALL_ARROW | RIGHT_SMALL_ARROW | GLOBAL | DTYPE | LIKE | PREDOP | ADD_OP | CALLBACKS | SUCCESS | FAILURE | FORGET | MARK | COUNTER_OP | IF | CHOOSE | EVERY | COMMENT | WS | STRING | HTML | JS | ESC_SEQ | RULE_SET | MULT_OP | DOT | MATCH | REPLACE | EXTRACT | OTHER_OPERATORS | TRUE | FALSE | CURRENT | KEY | AUTHZ | REQUIRE | LOGGING | USE | CSS | JAVASCRIPT | META | ON | OFF | MODULE | ALIAS | EMIT | CACHABLE | FOR | WITHIN | COLON | HISTORY | RIGHT_PAREN | LEFT_PAREN | RIGHT_BRACKET | LEFT_BRACKET | COMMA | LEFT_CURL | RIGHT_CURL | NOT | SEEN | VAR | INT | FLOAT );";
