@@ -240,7 +240,7 @@ sub test_operator {
 }
 
 
-#goto ENDY;
+goto ENDY;
 
 $e[$i] = q/store.pick("$.store.book[*].author")/;
 $x[$i] = {
@@ -1391,7 +1391,7 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
-
+ENDY:
 
 $e[$i] = q#my_str.extract(re/(is)/)#;
 $x[$i] = {
