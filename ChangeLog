@@ -1,3 +1,8 @@
+2010-09-17  Web-san  <web@dev11.kobj.net>
+
+   * Kynetx/Postlude.pm (eval_persistent_expr): Getting ready for App vars
+   * Kynetx/Predicates/Twitter.pm (process_oauth_callback): Added update function
+
 2010-09-14  Web-san  <web@dev11.kobj.net>
 
    * Kynetx/Postlude.pm (eval_raise_statement): put new RID in same mode as current
