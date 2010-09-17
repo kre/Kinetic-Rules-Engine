@@ -7,6 +7,11 @@ KOBJDomWatch.get_dom_watch = function(name,condition_callback,change_delay) {
         name = "general";
     }
 
+    if(typeof(condition_callback) == "undefined" || condition_callback == null)
+    {
+        condition_callback = function() { return true };
+    }
+
     var watcher = KOBJDomWatch.scopes[name];
     if (watcher != null) {
          KOBJ.loggers.domwatch.trace("Dom watch already exist for ",name);

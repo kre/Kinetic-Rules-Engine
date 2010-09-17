@@ -13,9 +13,9 @@ KOBJ.loggers = {
 };
 
 KOBJ.popup_appender = new KOBJ.log4js.PopUpAppender();
-KOBJ.popup_appender.setLayout(new KOBJ.log4js.PatternLayout("%d{HH:mm:ss} %p %c %m{1}"));
+KOBJ.popup_appender.setLayout(new KOBJ.log4js.PatternLayout("%d{HH:mm:ss} %p %c %m{4}"));
 KOBJ.console_appender = new KOBJ.log4js.BrowserConsoleAppender();
-KOBJ.console_appender.setLayout(new KOBJ.log4js.PatternLayout("%d{HH:mm:ss} %p %c %m{1}"));
+KOBJ.console_appender.setLayout(new KOBJ.log4js.PatternLayout("%d{HH:mm:ss} %p %c %m{4}"));
 KOBJ.log4js.getLogger().addAppender(KOBJ.console_appender);
 
 KOBJ.enable_popup_logging = function() {
