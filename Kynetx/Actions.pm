@@ -2,33 +2,33 @@ package Kynetx::Actions;
 # file: Kynetx/Actions.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use strict;
 use warnings;
 
@@ -61,7 +61,7 @@ our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 build_js_load
 choose_action
@@ -74,15 +74,15 @@ my($active,$test,$inactive) = (0,1,2);
 # FIXME factor out common functionality in float and float2
 
 # available actions
-# can be simply a JS function; 
+# can be simply a JS function;
 # mk_action will create a JS expression that applies it to appropriate arguments
 # first arg MUST be uniq (a number unique to this rule action event)
 # second arg MUST be cb (a callback function)
-# note that $ is evaluated as a var indicator by perl in inlines.  Quote it.  
+# note that $ is evaluated as a var indicator by perl in inlines.  Quote it.
 
 # can alternately be a hash
 #   'js' is the JS to be included
-#   'before' is a function of five args to be executed before the action's JS 
+#   'before' is a function of five args to be executed before the action's JS
 #       is included ($req_info,$rule_env,$session,$config,$mods)
 #       returns JS
 #   'after' is an array of functions to be executed in order after the
@@ -92,7 +92,7 @@ my($active,$test,$inactive) = (0,1,2);
 
 my $default_actions = {
 
-    alert => { 
+    alert => {
       'js' => <<EOF,
 function(uniq, cb, config, msg) {
     alert(msg);
@@ -103,7 +103,7 @@ EOF
     },
     page_content => {
 	       'js' => <<EOF,
-	function(uniq, cb, config, label, selectors) {	
+	function(uniq, cb, config, label, selectors) {
 	    KOBJ.page_content_event(uniq, label, selectors ,config);
 	    cb();
 	}
@@ -220,8 +220,8 @@ function(uniq, cb, config, selector) {
 }
 EOF
 
- 
-    
+
+
     # cb passed into function
     annotate_search_results => {
 	 'js' => <<EOF,
@@ -253,7 +253,7 @@ EOF
 
     popup => {
        'js' => <<EOF,
-function(uniq, cb, config, top, left, width, height, url) {      
+function(uniq, cb, config, top, left, width, height, url) {
     var id_str = 'kobj_'+uniq;
     var options = 'toolbar=no,menubar=no,resizable=yes,scrollbars=yes,alwaysRaised=yes,status=no' +
                  'left=' + left + ', ' +
@@ -422,10 +422,10 @@ EOF
 function(uniq, cb, config) {
 	KOBJ.letitsnow(config);
 	cb();
-}		
+}
 EOF
 		    'after' => [ \&handle_delay ]
-		
+
 	},
 
     set_form_maps => {
@@ -437,7 +437,7 @@ function(uniq, cb, config, map) {
 EOF
     'after' => [\&handle_delay]
     },
-    
+
     fill_forms => {
         'js' => <<EOF,
 function(uniq, cb, config, data) {
@@ -446,7 +446,7 @@ function(uniq, cb, config, data) {
 }
 EOF
     'after' => [\&handle_delay]
-        
+
     },
     set_element_attr => {
         'js' => <<EOF,
@@ -527,7 +527,7 @@ sub build_js_load {
 		                   );
 	}
     }
-    
+
     my $cb_func_name = 'callBacks';
     $js .= Kynetx::JavaScript::gen_js_mk_cb_func($cb_func_name,$cb);
 
@@ -541,9 +541,9 @@ sub build_js_load {
 	foreach my $action_expr (@{ $rule->{'actions'} }) {
 	    # tack on this loop's js
 	    if(defined $action_expr->{'action'}) {
-		$js .= build_one_action($action_expr, 
-					$req_info, 
-					$rule_env, 
+		$js .= build_one_action($action_expr,
+					$req_info,
+					$rule_env,
 					$session,
 					$cb_func_name,
 					$rule->{'name'}
@@ -562,9 +562,9 @@ sub build_js_load {
 	# choose one action at random
 	my $choice = int(rand($action_num));
 	$logger->debug("chose $choice of $action_num");
-	$js .= build_one_action($rule->{'actions'}->[$choice], 
-				$req_info, 
-				$rule_env, 
+	$js .= build_one_action($rule->{'actions'}->[$choice],
+				$req_info,
+				$rule_env,
 				$session,
 				$cb_func_name,
 				$rule->{'name'}
@@ -580,7 +580,7 @@ sub build_js_load {
 
 
 sub build_one_action {
-    my ($action_expr, $req_info, $rule_env, $session, 
+    my ($action_expr, $req_info, $rule_env, $session,
 	$cb_func_name, $rule_name) = @_;
 
     my $logger = get_logger();
@@ -590,7 +590,7 @@ sub build_one_action {
     my $uniq_id = 'kobj_'.$uniq;
 #    $rule_env = extend_rule_env(['uniq_id', 'uniq'], [$uniq_id,$uniq], $rule_env);
     $req_info->{'uniq'} = $uniq;
-    $req_info->{'uniq_id'} = $uniq_id; 
+    $req_info->{'uniq_id'} = $uniq_id;
 
     my $js = '';
 
@@ -598,7 +598,7 @@ sub build_one_action {
     my $action_name = $action->{'name'};
 
     my $args = $action->{'args'};
-    
+
     # parse the action args and make the expressed values
     my $arg_exp_vals = Kynetx::Expressions::eval_rands($args, $rule_env, $rule_name,$req_info, $session);
     # get the values
@@ -607,26 +607,26 @@ sub build_one_action {
     }
 
     # process overloaded functions and arg reconstruction
-    ($action_name, $args) = 
+    ($action_name, $args) =
 	choose_action($req_info, $action_name, $args, $rule_env, $rule_name);
 
     # this happens after we've chosen the action since it modifies args
     $args = Kynetx::JavaScript::gen_js_rands( $args );
 
-    my $config = {"txn_id" => $req_info->{'txn_id'}, 
-		  "rule_name" => $rule_name, 
+    my $config = {"txn_id" => $req_info->{'txn_id'},
+		  "rule_name" => $rule_name,
 		  "rid" => $req_info->{'rid'}};
 
     my $js_config = [];
-    
+
     foreach my $k (keys %{$config}) {
 
-      push @{ $js_config }, 
+      push @{ $js_config },
 	Kynetx::JavaScript::gen_js_hash_item(
               $k,
 	      Kynetx::Expressions::typed_value($config->{$k}));
     }
-    
+
    # set default modifications
     my $mods = {
 	delay => 0,
@@ -636,18 +636,18 @@ sub build_one_action {
 	};
 
     foreach my $m ( @{ $action->{'modifiers'} } ) {
-      $mods->{$m->{'name'}} = gen_js_expr($m->{'value'});
+      $mods->{$m->{'name'}} = Kynetx::JavaScript::gen_js_expr($m->{'value'});
 #      $logger->debug(sub {Dumper($m)} );
 
-      $config->{$m->{'name'}} = 
-	den_to_exp(eval_expr($m->{'value'}, 
-			     $rule_env, 
-			     $rule_name, 
-			     $req_info, 
+      $config->{$m->{'name'}} =
+	Kynetx::Expressions::den_to_exp(Kynetx::Expressions::eval_expr($m->{'value'},
+			     $rule_env,
+			     $rule_name,
+			     $req_info,
 			     $session));
 
       # don't eval for sending to client.
-      push @{ $js_config }, 
+      push @{ $js_config },
 	Kynetx::JavaScript::gen_js_hash_item($m->{'name'}, $m->{'value'});
     }
 
@@ -661,7 +661,7 @@ sub build_one_action {
     unshift @{ $args }, $cb_func_name;
     unshift @{ $args }, Kynetx::JavaScript::mk_js_str($uniq);
 
-    # create comma separated list of arguments 
+    # create comma separated list of arguments
     my $arg_str = join(',', @{ $args }) || '';
 
     my $actions = {};
@@ -671,7 +671,7 @@ sub build_one_action {
       if ($action->{'source'} eq 'twitter') {
 	   $actions = Kynetx::Predicates::Twitter::get_actions();
       } elsif ($action->{'source'} eq 'kpds') {
-	   $actions = Kynetx::Predicates::KPDS::get_actions();	
+	   $actions = Kynetx::Predicates::KPDS::get_actions();
       } elsif ($action->{'source'} eq 'amazon') {
           $actions = Kynetx::Predicates::Amazon::get_actions();
       } elsif ($action->{'source'} eq 'google') {
@@ -680,7 +680,7 @@ sub build_one_action {
           $actions = Kynetx::Predicates::Facebook::get_actions();
       } elsif ($action->{'source'} eq 'snow') {
           $actions = Kynetx::Actions::LetItSnow::get_actions();
-          $resources = Kynetx::Actions::LetItSnow::get_resources(); 
+          $resources = Kynetx::Actions::LetItSnow::get_resources();
       } elsif ($action->{'source'} eq 'jquery_ui') {
           $actions = Kynetx::Actions::JQueryUI::get_actions();
           $resources = Kynetx::Actions::JQueryUI::get_resources();
@@ -694,6 +694,8 @@ sub build_one_action {
           $actions = Kynetx::Predicates::OData::get_actions();
       } elsif ($action->{'source'} eq 'http') {
           $actions = Kynetx::Modules::HTTP::get_actions();
+      } elsif ($action->{'source'} eq 'twilio') {
+          $actions = Kynetx::Modules::Twilio::get_actions();
       }
     } else {
       $actions = $default_actions;
@@ -720,21 +722,21 @@ sub build_one_action {
     $js .= &$before($req_info, $rule_env, $session, $config, $mods, $arg_exp_vals, $action->{'vars'});
     $logger->debug("Action $action_name (before) returns js: ",$js) if $js;
     if (defined $action_js) {
-  
+
       # apply the action function
       $js .= "(". $action_js . "(" . $arg_str . "));\n";
 
-      $logger->debug("[action] ", $action_name, 
+      $logger->debug("[action] ", $action_name,
 		     ' executing with args (',$arg_str,')');
 
 
       push(@{ $req_info->{'actions'} }, $action_name);
 
-      # the after functions processes the JS as a chain and replaces it.  
+      # the after functions processes the JS as a chain and replaces it.
       foreach my $a (@{$after}) {
 	 $js = $a->($js, $req_info, $rule_env, $session, $config, $mods, $action->{'vars'});
       }
-      
+
 
       push(@{ $req_info->{'tags'} }, ($mods->{'tags'} || ''));
       push(@{ $req_info->{'labels'} }, $action_expr->{'label'} || '');
@@ -753,7 +755,7 @@ sub build_one_action {
 }
 
 
-# some actions are overloaded depending on the args.  This function chooses 
+# some actions are overloaded depending on the args.  This function chooses
 # the right JS function and adjusts the arg string.
 sub choose_action {
     my($req_info,$action_name,$args,$rule_env,$rule_name) = @_;
@@ -774,13 +776,13 @@ sub choose_action {
 	my $parsed_caller = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});
 
 	# URL not relative and not equal to caller
-	if ($parsed_url->hostname && 
+	if ($parsed_url->hostname &&
 	    ($parsed_url->hostname ne $parsed_caller->hostname ||
 	     $parsed_url->port ne $parsed_caller->port ||
 	     $parsed_url->scheme ne $parsed_caller->scheme)
 	    ) {
 
-	    $logger->debug("[action] URL domain is ", $parsed_url->hostname, 
+	    $logger->debug("[action] URL domain is ", $parsed_url->hostname,
 			   " & caller domain is ", $parsed_caller->hostname
 		);
 
@@ -798,8 +800,8 @@ sub choose_action {
 	    $content =~ y/\n\r/  /; # remove newlines
 	    $last_arg =  Kynetx::Parser::mk_expr_node('str',$content);
 	    #$logger->debug("Last arg: ", sub { Dumper($last_arg) });
-	    
-	} 
+
+	}
 
 	push @{ $args }, $last_arg;
     	$action_name = $action_name . $action_suffix;
@@ -811,7 +813,7 @@ sub choose_action {
 	}
     }
 
-#    $logger->debug("[action] $action_name with ", 
+#    $logger->debug("[action] $action_name with ",
 #		   sub { join(", ", Dumper(@{$args}))});
 
     return ($action_name, $args);
@@ -824,7 +826,7 @@ sub handle_effects {
  my $logger=get_logger();
 
  my $uniq_id = $req_info->{'uniq_id'};
- 
+
  $logger->debug("[handle_effects] ", $mods->{'effect'});
 
  my $effect_name;
@@ -847,9 +849,9 @@ sub handle_effects {
  if ($mods->{'draggable'} eq 'true') {
    $js .= "\$K('#$uniq_id').draggable();";
  }
-	
+
  if ($mods->{'scrollable'} eq 'true') {
-   # do nothing 
+   # do nothing
    #	    $js .= "new FixedElement('". $uniq_id . "');";
  }
 
@@ -870,7 +872,7 @@ sub handle_effects {
        $color = $mods->{'highlight'};
      }
    }
-	    
+
    #	    $js .= "new Effect.Highlight('$uniq_id', {startcolor: '$color', });"  ;
  }
 
@@ -883,7 +885,7 @@ sub handle_delay {
 
  if (defined $mods && $mods->{'delay'}) {
    my $rule_name = $config->{'rule_name'};
-   my $delay_cb = 
+   my $delay_cb =
      ";KOBJ.logger('timer_expired', '" .
        $req_info->{'txn_id'} . "'," .
 	 "'none', '', 'success', '" .
@@ -892,7 +894,7 @@ sub handle_delay {
 	       "');";
 
    $js .= $delay_cb;  # add in automatic log of delay expiration
-	
+
    $js = "setTimeout(function() { $js },  ($mods->{'delay'} * 1000) ); \n";
  }
 
