@@ -58,6 +58,10 @@ use Kynetx::Session qw/:all/;
 use Kynetx::Events;
 use Kynetx::Log;
 
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
+
 sub eval_post_expr {
     my($rule, $session, $req_info, $rule_env, $fired) = @_;
     
@@ -141,16 +145,20 @@ sub eval_persistent_expr {
 
     my $js = '';
 
+    my $sid;
+    if($expr->{'domain'} eq 'ent') {
+      $sid = $session;
+	$logger->debug(Dumper($session));
+    } elsif($expr->{'domain'} eq 'app') {
+      $sid = $req_info->{'appsession'};
+      $logger->debug(Dumper($req_info->{'appsession'}));
+    }
+
     if ($expr->{'action'} eq 'clear') {
-	if($expr->{'domain'} eq 'ent') {
-	    session_clear($req_info->{'rid'}, $session, $expr->{'name'});
-	}
+      session_clear($req_info->{'rid'}, $sid, $expr->{'name'});
     } elsif ($expr->{'action'} eq 'set') {
-	if($expr->{'domain'} eq 'ent') {
-	    session_set($req_info->{'rid'}, $session, $expr->{'name'});
-	}
+      session_set($req_info->{'rid'}, $sid, $expr->{'name'});
     } elsif ($expr->{'action'} eq 'iterator') {
-#	$logger->debug(Dumper($session));
 	my $by = 
 	    Kynetx::Expressions::den_to_exp(
 		Kynetx::Expressions::eval_expr($expr->{'value'},
@@ -168,7 +176,7 @@ sub eval_persistent_expr {
 			     $session));
 	if($expr->{'domain'} eq 'ent') {
 	    session_inc_by_from($req_info->{'rid'},
-				$session,
+				$sid,
 				$expr->{'name'},
 				$by,
 				$from
@@ -178,7 +186,7 @@ sub eval_persistent_expr {
     } elsif ($expr->{'action'} eq 'forget') {
 	if($expr->{'domain'} eq 'ent') {
 	    session_forget($req_info->{'rid'},
-			   $session,
+			   $sid,
 			   $expr->{'name'},
 			   $expr->{'regexp'});
 	}
@@ -194,12 +202,14 @@ sub eval_persistent_expr {
 		: $req_info->{'caller'};
 #	    $logger->debug("Marking trail $expr->{'name'} with $url");
 	    session_push($req_info->{'rid'},
-			 $session,
+			 $sid,
 			 $expr->{'name'},
 			 $url
 			 );
 	}
-    }
+      } else {
+	$logger->error("Bad action in persistent expression: $expr->{'action'}");
+      }
 
     return $js;
 }

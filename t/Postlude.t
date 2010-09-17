@@ -53,7 +53,7 @@ my $rule_env = Kynetx::Test::gen_rule_env();
 
 my $session = Kynetx::Test::gen_session($r, $rid);
 
-
+Kynetx::Test::gen_app_session($r, $my_req_info);
 
 
 my($krl_src);
@@ -172,6 +172,41 @@ is(session_seen($rid, $session, 'my_trail',"windley"),
 $test_count++;
 
 
+
+
+#---------------------------------------
+# app vars
+
+# $krl_src = <<_KRL_;
+# fired {
+#   clear app:app_count_now; 
+# } else {
+#   app:app_count_now += 2 from 1;  
+# }
+# _KRL_
+
+
+# run_post_testcase($krl_src, $my_req_info, $my_req_info->{'appsession'}, $rule_env, NOTFIRED, 1);
+# is(session_get($rid, $my_req_info->{'appsession'}, 'app_count_now'),
+#    4,
+#    "incrementing app count"
+#   );
+# $test_count++;
+
+# run_post_testcase($krl_src, $my_req_info, $req_info->{'appsession'}, $rule_env, FIRED, 0);
+# is(session_get($rid, $req_info->{'appsession'}, 'archive_pages_now'),
+#    undef,
+#    "incrementing archive pages"
+#   );
+# $test_count++;
+
+
+# run_post_testcase($krl_src, $my_req_info, $req_info->{'appsession'}, $rule_env, NOTFIRED, 0);
+# is(session_get($rid, $req_info->{'appsession'}, 'archive_pages_now'),
+#    1,
+#    "incrementing archive pages"
+#   );
+# $test_count++;
 
 
 
