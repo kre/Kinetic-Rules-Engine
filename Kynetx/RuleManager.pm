@@ -44,6 +44,7 @@ use JSON::XS;
 use Cache::Memcached;
 
 use Kynetx::Parser qw(:all);
+use Kynetx::OParser qw/:all/;
 use Kynetx::PrettyPrinter qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Json qw/:all/;
@@ -85,13 +86,13 @@ _KRL_
 
 sub handler {
     my $r = shift;
-    my $p = Kynetx::JParser::get_antlr_parser();
+    #my $p = Kynetx::JParser::get_antlr_parser();
 
     # configure logging for production, development, etc.
     config_logging($r);
 
     my $logger = get_logger();
-    my ( $method, $rid ) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_]*)!;
+    my ( $method, $rid, $version ) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_]*)/([A-Za-z0-9_]*)!;
     $logger->debug("Performing $method method on ruleset $rid");
 
     Log::Log4perl::MDC->put( 'site', $method );
@@ -104,6 +105,7 @@ sub handler {
     $r->subprocess_env( METHOD => $method );
 
     my $req_info = Kynetx::Request::build_request_env( $r, $method, $rid );
+    $req_info->{'kynetx_app_version'} = $version || 'prod';
     Kynetx::Request::log_request_env( $logger, $req_info );
 
     my ( $result, $type );
@@ -159,9 +161,43 @@ sub parse_performance {
         my $parsed = new Benchmark;
         my $pd_diff = timediff($parsed,$r_parser);
         $result .= "\nRuleset $rid: "  . timestr($pd_diff,'auto');
+        my $status = is_parsed($p_str);
+        if ($status eq 'OK') {
+            $result .= "\n $status";
+        } else {
+            $result .= "\n Failed to parse: $status";
+            $result .= "\n " . old_parser($ruleset);
+
+        }
         return $result;
     } else {
         return parse_api($req_info, $method,'ruleset');
+    }
+}
+
+sub old_parser {
+    my ($ruleset) = @_;
+    my $result = Kynetx::OParser::parse_ruleset($ruleset);
+    if (defined ($result->{'error'})) {
+        return "OParser: FAIL";
+    } else {
+        return "OParser: OK";
+    }
+}
+
+sub is_parsed {
+    my ($p_str) = @_;
+    my $ast = Kynetx::Json::jsonToAst_w($p_str);
+    if (ref $ast eq "HASH") {
+        if ($ast->{'error'}) {
+            my $rstr = "\n\t";
+            $rstr .= join('\n', @{$ast->{'error'}});
+            return $rstr;
+        } else {
+            return 'OK';
+        }
+    } else {
+        return "Invalid JSON format";
     }
 }
 

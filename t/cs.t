@@ -66,7 +66,7 @@ SKIP: {
 
     # test CONSOLE function
     my $url_console_1 = "$ruleset_base/console/$ruleset?caller=http://www.windley.com/foo/bazz.html";
-    diag "Testing console with $url_console_1";
+    #diag "Testing console with $url_console_1";
 
     $mech->get_ok($url_console_1);
     is($mech->content_type(), 'text/html');
@@ -81,7 +81,7 @@ SKIP: {
 
     # test CONSOLE function
     my $url_console_2 = "$ruleset_base/console/$ruleset?caller=http://www.windley.com/foo/bar.html";
-    diag "Testing console with $url_console_2";
+    #diag "Testing console with $url_console_2";
 
     $mech->get_ok($url_console_2);
     is($mech->content_type(), 'text/html');
@@ -89,7 +89,6 @@ SKIP: {
     $mech->title_is('Show Context');
 
     $mech->content_like('/Context for Client ID cs_test/');
-    diag $mech->content;
     $mech->content_like('/Active rules.+3/s');
     $mech->content_contains('test_rule_1');
     $mech->content_contains('will fire');
