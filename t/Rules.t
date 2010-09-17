@@ -1,39 +1,40 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use lib qw(/web/lib/perl);
 use strict;
 
 use Test::More;
 use Test::LongString;
+use Test::Deep;
 
 use Apache::Session::Memcached;
 use DateTime;
@@ -100,8 +101,8 @@ my $config2;
 
 #diag "_____________________________START TEST____________________________";
 sub gen_req_info {
-  
-  return Kynetx::Test::gen_req_info($rid, 
+
+  return Kynetx::Test::gen_req_info($rid,
 				    {'ip' =>  '72.21.203.1',
 				     'txn_id' => 'txn_id',
 				     'caller' => 'http://www.google.com/search',
@@ -139,7 +140,6 @@ sub add_testcase {
 	$pt = Kynetx::Parser::parse_rule($str);
 	$type = 'rule';
      }
-
     if ($pt->{'error'}) {
       diag $str;
       diag $pt->{'error'};
@@ -149,7 +149,7 @@ sub add_testcase {
 
     chomp $str;
     diag("$str = ", Dumper($pt)) if $diag;
-    
+
 
     push(@test_cases, {'expr' => $pt,
 		       'val' => $expected,
@@ -166,7 +166,7 @@ sub add_testcase {
 sub add_json_testcase {
     my($str, $expected, $final_req_info, $diag) = @_;
     my $val = Kynetx::Json::jsonToAst($str);
- 
+
     chomp $str;
     diag("$str = ", Dumper($val)) if $diag;
 
@@ -220,7 +220,7 @@ add_testcase(
 $krl_src = <<_KRL_;
 rule test_2 is active {
   select using "/archives/" setting ()
-  pre { 
+  pre {
       c = location:city();
   }
   alert("testing " + c);
@@ -255,7 +255,7 @@ add_testcase(
 $krl_src = <<_KRL_;
 rule test_3 is active {
   select using "/archives/" setting ()
-  pre { 
+  pre {
       c = location:city();
   }
   if demographics:urban() then
@@ -290,7 +290,7 @@ add_testcase(
 $krl_src = <<_KRL_;
 rule test_4 is active {
   select using "/archives/" setting ()
-  pre { 
+  pre {
       c = location:city();
   }
   if demographics:urban() && location:city() eq "Seattle" then
@@ -329,7 +329,7 @@ $krl_src = <<_KRL_;
 rule test_flag_1 is active {
   select using "/archives/" setting ()
 
-    if ent:my_flag then 
+    if ent:my_flag then
       alert("test");
 
     fired {
@@ -356,7 +356,7 @@ $krl_src = <<_KRL_;
 rule test_flag_1 is active {
   select using "/archives/" setting ()
 
-    if ent:my_flag then 
+    if ent:my_flag then
       alert("test");
 
     fired {
@@ -401,13 +401,13 @@ rule test_5 is active {
       c = ent:archive_pages_now;
     }
 
-    if ent:archive_pages_now > 2 then 
+    if ent:archive_pages_now > 2 then
       alert("test");
 
     fired {
-      clear ent:archive_pages_now; 
+      clear ent:archive_pages_now;
     } else {
-      ent:archive_pages_now += 1 from 1;  
+      ent:archive_pages_now += 1 from 1;
     }
   }
 _KRL_
@@ -432,13 +432,13 @@ rule test_5a is active {
       c = ent:archive_pages_now;
     }
 
-    if ent:archive_pages_now > 2 then 
+    if ent:archive_pages_now > 2 then
       alert("test");
 
     fired {
-      clear ent:archive_pages_now; 
+      clear ent:archive_pages_now;
     } else {
-      ent:archive_pages_now += 1 from 1;  
+      ent:archive_pages_now += 1 from 1;
     }
   }
 _KRL_
@@ -477,13 +477,13 @@ rule test_6 is active {
       c = ent:archive_pages_now2;
     }
 
-    if ent:archive_pages_now2 > 2 within 2 days then 
+    if ent:archive_pages_now2 > 2 within 2 days then
       alert("test");
 
     fired {
-      clear ent:archive_pages_now2; 
+      clear ent:archive_pages_now2;
     } else {
-      ent:archive_pages_now2 += 1 from 1;  
+      ent:archive_pages_now2 += 1 from 1;
     }
   }
 _KRL_
@@ -520,13 +520,13 @@ rule test_7 is active {
       c = ent:archive_pages_old;
     }
 
-    if ent:archive_pages_old > 2 within 2 days then 
+    if ent:archive_pages_old > 2 within 2 days then
       alert("test");
 
     fired {
-      clear ent:archive_pages_old; 
+      clear ent:archive_pages_old;
     } else {
-      ent:archive_pages_old += 1 from 1;  
+      ent:archive_pages_old += 1 from 1;
     }
   }
 _KRL_
@@ -545,12 +545,12 @@ $krl_src = <<_KRL_;
 rule test_trail_1 is active {
   select using "/archives/" setting ()
 
-    if seen "windley.com" in ent:my_trail then 
+    if seen "windley.com" in ent:my_trail then
       alert("test");
 
     fired {
       mark ent:my_trail
-    } 
+    }
   }
 _KRL_
 
@@ -584,12 +584,12 @@ $krl_src = <<_KRL_;
 rule test_trail_2 is active {
   select using "/archives/" setting ()
 
-    if seen "google.com" in ent:my_trail then 
+    if seen "google.com" in ent:my_trail then
       alert("test");
 
     fired {
       forget "google.com" in ent:my_trail
-    } 
+    }
   }
 _KRL_
 
@@ -624,12 +624,12 @@ $krl_src = <<_KRL_;
 rule test_trail_3 is active {
   select using "/archives/" setting ()
 
-    if seen "google.com" in ent:my_trail then 
+    if seen "google.com" in ent:my_trail then
       alert("test");
 
     notfired {
       mark ent:my_trail with "amazon.com"
-    } 
+    }
   }
 _KRL_
 
@@ -650,7 +650,7 @@ $krl_src = <<_KRL_;
 rule test_trail_4 is active {
   select using "/archives/" setting ()
 
-    if seen "amazon.com" in ent:my_trail then 
+    if seen "amazon.com" in ent:my_trail then
       alert("test");
 
   }
@@ -687,7 +687,7 @@ $krl_src = <<_KRL_;
 rule test_trail_5 is active {
   select using "/archives/" setting ()
 
-    if seen "amazon.com" after "windley.com" in ent:my_trail then 
+    if seen "amazon.com" after "windley.com" in ent:my_trail then
       alert("test");
 
   }
@@ -724,7 +724,7 @@ $krl_src = <<_KRL_;
 rule test_trail_6 is active {
   select using "/archives/" setting ()
 
-    if seen "amazon.com" before "windley.com" in ent:my_trail then 
+    if seen "amazon.com" before "windley.com" in ent:my_trail then
       alert("test");
 
   }
@@ -748,7 +748,7 @@ $krl_src = <<_KRL_;
 rule test_trail_7 is active {
   select using "/archives/" setting ()
 
-    if seen "amazon.com" in ent:my_trail within 1 minute then 
+    if seen "amazon.com" in ent:my_trail within 1 minute then
       alert("test");
 
   }
@@ -788,7 +788,7 @@ add_testcase(
 $krl_src = <<_KRL_;
 rule test_8 is inactive {
    select using "/identity-policy/" setting ()
-   
+
    pre { }
 
    alert("test");
@@ -797,7 +797,7 @@ rule test_8 is inactive {
       success {
         click id="rssfeed";
         click class="newsletter"
-   } 
+   }
 
    failure {
       click id="close_rss"
@@ -834,14 +834,13 @@ add_testcase(
 
 
 $krl_src = <<_KRL_;
-rule test_page_id is active {
+rule test_page_ida is active {
    select using "/identity-policy/" setting ()
-   
+
    pre {
        pt = page:id("product_name");
-       
-       html = <<
-<p>This is the product title: #{pt}</p>       >>;
+
+       html = <<<p>This is the product title: #{pt}</p>       >>;
 
    }
 
@@ -853,7 +852,7 @@ _KRL_
 
 $config = mk_config_string(
   [
-   {"rule_name" => 'test_page_id'},
+   {"rule_name" => 'test_page_ida'},
    {"rid" => 'cs_test'},
    {"txn_id" => 'txn_id'},
   ]
@@ -882,7 +881,7 @@ $krl_src = <<_KRL_;
         select using "/test/(.*).html" setting(pagename)
         pre {
 
-	}     
+	}
 
         emit <<
 pagename.replace(/-/, ' ');
@@ -922,7 +921,7 @@ $krl_src = <<_KRL_;
         select using "/test/(.*).html" setting(pagename)
         pre {
 
-	}     
+	}
 
         emit "pagename.replace(/-/, ' ');"
 
@@ -957,15 +956,15 @@ add_testcase(
     );
 
 
-# tests booleans inference.  When false and true appear in string, it 
+# tests booleans inference.  When false and true appear in string, it
 # should still be string.
 $krl_src = <<_KRL_;
 rule extended_quote_test is active {
    select using "/identity-policy/" setting ()
-   
+
    pre {
      welcome = <<
-Don't be false please!  Be true!     >>; 
+Don't be false please!  Be true!>>;
    }
    alert(welcome);
 }
@@ -983,7 +982,7 @@ $config = mk_config_string(
 
 $result = <<_JS_;
 (function(){
-var welcome = 'Don\\'t be false please! Be true!';
+var welcome = '\\nDon\\'t be false please! Be true!';
 function callBacks () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
@@ -1280,7 +1279,7 @@ $result = <<_JS_;
     }());
   }());
  (function(){
-   var x = 7; 
+   var x = 7;
    (function(){
      var z = 8;
      var y = 8;
@@ -1344,10 +1343,10 @@ $config = mk_config_string(
 $result = <<_JS_;
 (function(){
  var z = 6;
- var w = 'This is another number ' + z + '';
+ var w = '\\nThis is another number ' + z + '';
  (function(){
    var x = 2;
-   var y = 'This is the number ' + x + '';
+   var y = '\\nThis is the number ' + x + '';
    function callBacks () {
    };
    (function(uniq,cb,config,msg) {
@@ -1358,7 +1357,7 @@ $result = <<_JS_;
    }());
  (function(){
    var x = 7;
-   var y = 'This is the number ' + x + '';
+   var y = '\\nThis is the number ' + x + '';
    function callBacks () {
    };
    (function(uniq, cb, config, msg) {
@@ -1412,11 +1411,11 @@ $final_req_info = {
 $result = <<_JS_;
 (function(){
  var z = 6;
- var w = 'This is another number ' + z + '';
+ var w = '\\nThis is another number ' + z + '';
  (function(){
    var x = 2;
    var p = [];
-   var y = 'This is the number ' + p + '';
+   var y = '\\nThis is the number ' + p + '';
    function callBacks () {
    };
    (function(uniq,cb,config,msg) {
@@ -1428,7 +1427,7 @@ $result = <<_JS_;
  (function(){
    var x = 7;
    var p = [];
-   var y = 'This is the number ' + p + '';
+   var y = '\\nThis is the number ' + p + '';
    function callBacks () {
    };
    (function(uniq, cb, config, msg) {
@@ -1661,7 +1660,7 @@ var x = 3;
 (function(){
  function callBacks(){};
  (function(uniq,cb,config){cb();}
-  ('%uniq%',callBacks,$config)); 
+  ('%uniq%',callBacks,$config));
  }());
 }());
 _JS_
@@ -2117,7 +2116,7 @@ foreach my $case (@test_cases) {
   my $req_info = gen_req_info($ruleset_rid);
   $req_info->{'eventtype'} = 'pageview';
   $req_info->{'domain'} = 'web';
-  
+
 
 #  diag Dumper $req_info;
 
@@ -2127,7 +2126,7 @@ foreach my $case (@test_cases) {
 
   if($case->{'type'} eq 'ruleset') {
 
-    $req_info->{$ruleset_rid}->{'ruleset'} = 
+    $req_info->{$ruleset_rid}->{'ruleset'} =
       Kynetx::Rules::optimize_ruleset($case->{'expr'});
 
     my $ev = Kynetx::Events::mk_event($req_info);
@@ -2143,10 +2142,10 @@ foreach my $case (@test_cases) {
 					  $schedule,
 					  $ruleset_rid
 					 );
-    
-    $js = Kynetx::Rules::process_schedule($r, 
-					  $schedule, 
-					  $session, 
+
+    $js = Kynetx::Rules::process_schedule($r,
+					  $schedule,
+					  $session,
 					  time
 					 );
 
@@ -2154,9 +2153,9 @@ foreach my $case (@test_cases) {
   } elsif($case->{'type'} eq 'rule') {
 
     $js = Kynetx::Rules::eval_rule($r,
-				   $req_info, 
-				   $rule_env, 
-				   $case->{'session'}, 
+				   $req_info,
+				   $rule_env,
+				   $case->{'session'},
 				   $case->{'expr'},
 				   '');
 
@@ -2182,10 +2181,11 @@ foreach my $case (@test_cases) {
 
     my $re = qr/$case->{'val'}/;
 
-    like($js,
-	 $re,
-	 "Evaling rule " . $case->{'src'});
+    cmp_deeply($js,
+	 re($re),
+	 "Evaling ruleb " . $case->{'src'});
     $test_count++;
+
 
 
   }
@@ -2222,13 +2222,13 @@ sub test_datafeeds {
     skip "No server available", 1 if ($no_server_available);
     my $krl = Kynetx::Parser::parse_ruleset($src);
 
-    my $schedule = Kynetx::Rules::mk_schedule($req_info, 
+    my $schedule = Kynetx::Rules::mk_schedule($req_info,
 					      $req_info->{'rid'},
 					      $krl);
 
-    my $val = Kynetx::Rules::process_schedule($r, 
-					      $schedule, 
-					      $session, 
+    my $val = Kynetx::Rules::process_schedule($r,
+					      $schedule,
+					      $session,
 					      time
 					     );
 
@@ -2279,7 +2279,7 @@ KOBJ['data']['global_decl_0'] = {"www.barnesandnoble.com":[
 (function(){
  function callBacks(){};
  (function(uniq,cb,config){cb();}
-  ('%uniq%',callBacks,$config)); 
+  ('%uniq%',callBacks,$config));
  }());
 }());
 _JS_
@@ -2319,7 +2319,7 @@ KOBJ['data']['global_decl_1'] = 'here is some test data!\\n';
 (function(){
  function callBacks(){};
  (function(uniq,cb,config){cb();}
-  ('%uniq%',callBacks,$config)); 
+  ('%uniq%',callBacks,$config));
  }());
 }());
 _JS_
@@ -2364,7 +2364,7 @@ KOBJ['data']['global_decl_2'] = {"www.barnesandnoble.com":[
 (function(){
  function callBacks(){};
  (function(uniq,cb,config){cb();}
-  ('%uniq%',callBacks,$config)); 
+  ('%uniq%',callBacks,$config));
  }());
 }());
 _JS_
@@ -2405,7 +2405,7 @@ KOBJ['data']['global_decl_3'] = 'Here is some test data!\\n';
 (function(){
  function callBacks(){};
  (function(uniq,cb,config){cb();}
-  ('%uniq%',callBacks,$config)); 
+  ('%uniq%',callBacks,$config));
  }());
 }());
 _JS_
@@ -2469,12 +2469,12 @@ $config = mk_config_string(
 $js = <<_JS_;
 (function(){KOBJ['data']['site_data'] = {"www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]} ;
  var type = 'AAA';
- KOBJ.css('.foo: 4\\n ');
+ KOBJ.css('\\n.foo: 4\\n ');
  var x = 'AAA Rocks!';
 (function(){
  function callBacks(){};
  (function(uniq,cb,config){cb();}
-  ('%uniq%',callBacks,$config)); 
+  ('%uniq%',callBacks,$config));
  }());
 }());
 
@@ -2496,15 +2496,15 @@ test_datafeeds(
 #diag "Stating rule environment tests";
 
 # contains_string(nows($global_decl_0),
-# 		nows(encode_json(lookup_rule_env('global_decl_0',$rule_env))), 
+# 		nows(encode_json(lookup_rule_env('global_decl_0',$rule_env))),
 # 		 "Global decl data set effects env");
-# contains_string(nows($global_decl_1), 
+# contains_string(nows($global_decl_1),
 # 		nows(lookup_rule_env('global_decl_1',$rule_env)),
 # 		"Global decl data set effects env");
-# contains_string(nows($global_decl_2), 
+# contains_string(nows($global_decl_2),
 # 		nows(encode_json(lookup_rule_env('global_decl_2',$rule_env))),
 # 		"Global decl data set effects env");
-# contains_string(nows($global_decl_3), 
+# contains_string(nows($global_decl_3),
 # 		nows(lookup_rule_env('global_decl_3',$rule_env)),
 # 		"Global decl data set effects env");
 
@@ -2541,15 +2541,15 @@ sub check_optimize {
   diag "Inner pre: ", Dumper $ost->{'rules'}->[0]->{'inner_pre'}  if $diag;
   $test_count++;
 
-  is_deeply($ost->{'rules'}->[0]->{'inner_pre'} || [], 
-	    $ip, 
+  is_deeply($ost->{'rules'}->[0]->{'inner_pre'} || [],
+	    $ip,
 	    $desc . "(inner)");
 
 
   diag "Outer pre: ", Dumper $ost->{'rules'}->[0]->{'outer_pre'}  if $diag;
   $test_count++;
-  is_deeply($ost->{'rules'}->[0]->{'outer_pre'} || [], 
-	    $op, 
+  is_deeply($ost->{'rules'}->[0]->{'outer_pre'} || [],
+	    $op,
 	    $desc . "(outer)");
 }
 
@@ -2576,7 +2576,7 @@ check_optimize($krl_src,
 			  },
 		 'lhs' => 'y',
 		 'type' => 'expr'
-		}], 
+		}],
 	       "No dependence");
 
 
@@ -2611,8 +2611,8 @@ check_optimize($krl_src,
 		  'type' => 'expr'
 		 }
 	       ],
-	       [], 
-	       "Hash with dependence", 
+	       [],
+	       "Hash with dependence",
 	       0
 	       );
 
@@ -2648,7 +2648,7 @@ check_optimize($krl_src,
 			  },
 		 'lhs' => 'y',
 		 'type' => 'expr'
-		}], 
+		}],
 	       [],
 	       "One dependence");
 
@@ -2685,7 +2685,7 @@ check_optimize($krl_src,
 			  },
 		 'lhs' => 'y',
 		 'type' => 'expr'
-		}], 
+		}],
 	       [{
 		 'rhs' => {
 			   'val' => '5',
@@ -2693,7 +2693,7 @@ check_optimize($krl_src,
 			  },
 		 'lhs' => 'z',
 		 'type' => 'expr'
-		}], 
+		}],
 	       "One independent, one dependent");
 
 
@@ -2730,7 +2730,7 @@ check_optimize($krl_src,
 			  },
 		 'lhs' => 'y',
 		 'type' => 'expr'
-		}], 
+		}],
 	       [{
 		 'rhs' => {
 			   'val' => '5',
@@ -2738,7 +2738,7 @@ check_optimize($krl_src,
 			  },
 		 'lhs' => 'z',
 		 'type' => 'expr'
-		}], 
+		}],
 	       "One independent, one dependent, order doesn't matter");
 
 
@@ -2794,7 +2794,7 @@ check_optimize($krl_src,
 		 'lhs' => 'w',
 		 'type' => 'expr'
 		},
-	       ], 
+	       ],
 	       [{
 		 'rhs' => {
 			   'val' => '5',
@@ -2802,7 +2802,7 @@ check_optimize($krl_src,
 			  },
 		 'lhs' => 'z',
 		 'type' => 'expr'
-		}], 
+		}],
 	       "One independent, two dependent");
 
 
@@ -2877,7 +2877,7 @@ check_optimize($krl_src,
 		 'lhs' => 'c',
 		 'type' => 'expr'
 		}
-	       ], 
+	       ],
 	       [{
 		 'rhs' => {
 			   'val' => '5',
@@ -2894,7 +2894,7 @@ check_optimize($krl_src,
 		 'lhs' => 'b',
 		 'type' => 'expr'
 		}
-	       ], 
+	       ],
 	       "Many dependent and independent mixed");
 
 
@@ -2921,7 +2921,7 @@ check_optimize($krl_src,
 			  },
 		 'lhs' => 'z',
 		 'type' => 'expr'
-		}], 
+		}],
 	       "No dependence");
 
 
@@ -2957,7 +2957,7 @@ check_optimize($krl_src,
 			  },
 		 'lhs' => 'z',
 		 'type' => 'expr'
-		}], 
+		}],
 	       [],
 	       "Two foreach, one dependence");
 
@@ -3016,7 +3016,7 @@ check_optimize($krl_src,
 			  },
 		 'lhs' => 'v',
 		 'type' => 'expr'
-		}], 
+		}],
 	       [{
 		 'rhs' => {
 			   'val' => '5',
@@ -3024,7 +3024,7 @@ check_optimize($krl_src,
 			  },
 		 'lhs' => 'z',
 		 'type' => 'expr'
-		}], 
+		}],
 	       "Two foreach; One independent, one dependent, order doesn't matter");
 
 
@@ -3066,7 +3066,8 @@ check_optimize($krl_src,
      'type' => 'expr'
    },
    {
-     'rhs' => 'This is the number #{tweetUser} and #{x}   ',
+     'rhs' => '
+This is the number #{tweetUser} and #{x}   ',
      'lhs' => 'y',
      'type' => 'here_doc'
    }
@@ -3079,7 +3080,8 @@ check_optimize($krl_src,
      'type' => 'expr'
    },
    {
-     'rhs' => 'This is another number #{z}  ',
+     'rhs' => '
+This is another number #{z}  ',
      'lhs' => 'w',
      'type' => 'here_doc'
    }
@@ -3097,7 +3099,7 @@ sub mk_reg_exp {
   my $val = shift;
 
   $val = nows($val);
-	
+
   # quote special for RE
   $val =~ s/\\/\\\\/g;
   $val =~ s/\+/\\\+/g;

@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 
 use lib qw(/web/lib/perl);
 use strict;
@@ -123,8 +123,16 @@ SKIP: {
 	is($mech->content_type(), $test->{'type'});
 	$tc += 2;
 	foreach my $like (@{$test->{'like'}}) {
-	  $mech->content_like($like);
-	  $tc++;
+	  my $resp = $mech->content_like($like);
+	  if ($resp){
+	      $tc++;
+	  } else {
+	      diag $like;
+	      diag $mech->content();
+	      diag $test->{'url'};
+	      die;
+	  }
+
 	}
 	foreach my $unlike (@{$test->{'unlike'}}) {
 	  $mech->content_unlike($unlike);
@@ -134,11 +142,11 @@ SKIP: {
       return $tc;
     }
 
-    # tests in an event plan are order dependent since events are order dependent.  
+    # tests in an event plan are order dependent since events are order dependent.
     # Each plan is running different events in order to test a specific
     #   scenario defined in the rule's select statement
 
-    my $before_test_plan = 
+    my $before_test_plan =
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
 	'type' => 'text/javascript',
 	'like' => ['/test_rule_4/',
@@ -178,7 +186,7 @@ SKIP: {
 
     $test_count += test_event_plan($before_test_plan);
 
-    my $and_test_plan = 
+    my $and_test_plan =
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and1.html",
 	'type' => 'text/javascript',
 	'like' => ['/^$/']
@@ -200,12 +208,12 @@ SKIP: {
 	'type' => 'text/javascript',
 	'like' => ['/test_rule_and/',
 		  ]
-       },      
+       },
       ];
 
     $test_count += test_event_plan($and_test_plan);
 
-    my $or_test_plan = 
+    my $or_test_plan =
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/or1.html",
 	'type' => 'text/javascript',
 	'like' => ['/test_rule_or/',
@@ -226,7 +234,7 @@ SKIP: {
 
     $test_count += test_event_plan($or_test_plan);
 
-    my $then_test_plan = 
+    my $then_test_plan =
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/then1.html",
 	'type' => 'text/javascript',
 	'like' => ['/^$/',
@@ -271,7 +279,7 @@ SKIP: {
 
     $test_count += test_event_plan($then_test_plan);
 
-    my $between_test_plan = 
+    my $between_test_plan =
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/first.html",
 	'type' => 'text/javascript',
 	'like' => ['/^$/',
@@ -322,7 +330,7 @@ SKIP: {
     $test_count += test_event_plan($between_test_plan);
 
 
-    my $not_between_test_plan = 
+    my $not_between_test_plan =
        # with intervening 'mid' event, should not fire
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/firstn.html",
 	'type' => 'text/javascript',
@@ -399,7 +407,7 @@ SKIP: {
 
     $test_count += test_event_plan($not_between_test_plan);
 
-    my $multi_test_plan = 
+    my $multi_test_plan =
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.google.com/search",
 	'type' => 'text/javascript',
 	'like' => ['/test_rule_google_1/',
@@ -413,7 +421,7 @@ SKIP: {
     $test_count += test_event_plan($multi_test_plan);
 
 
-    my $email_test_plan = 
+    my $email_test_plan =
       [{'url' => "$dn/mail/received/cs_test_1",
 	'type' => 'text/javascript',
 	'like' => ['/forward/',
@@ -450,7 +458,7 @@ SKIP: {
     $test_count += test_event_plan($email_test_plan);
 
 
-#     my $submit_test_plan = 
+#     my $submit_test_plan =
 #       [{'url' => "$dn/web/submit/cs_test_1",
 # 	'method' => 'post',
 # 	'post_data' => {'fname' => 'John', 'lname' => 'Doe'},

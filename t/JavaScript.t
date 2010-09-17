@@ -1,34 +1,34 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use lib qw(../);
 use strict;
 
@@ -73,7 +73,7 @@ use Kynetx::FakeReq qw(:all);
 
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 my $logger = get_logger();
 
@@ -94,7 +94,7 @@ my $rule_name = 'foo';
 my $my_req_info = Kynetx::Test::gen_req_info($rid,
     {'ip' => '128.187.16.242', # Utah (BYU)
      'referer' => 'http://www.google.com/search?q=free+mobile+calls&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:official&client=firefox-a',
-     'caller' => 'http://www.windley.com/archives/2008/07?q=foo', 
+     'caller' => 'http://www.windley.com/archives/2008/07?q=foo',
      'kvars' => '{"foo": 5, "bar": "fizz", "bizz": [1, 2, 3]}',
      'foozle' => 'Foo',
      "$rid:datasets" => "aaa,aaawa,ebates"
@@ -141,7 +141,7 @@ foreach my $case (@{ $testcases } ) {
   diag(Dumper($case->{'expr'})) if $case->{'diag'};
 
   my ($e, $val, $js, $lhs) = '';
-    
+
   if ($case->{'type'} eq 'expr') {
 
     $val = Kynetx::Parser::parse_expr($case->{'krl'});
@@ -153,10 +153,10 @@ foreach my $case (@{ $testcases } ) {
   } elsif ($case->{'type'} eq 'pre') {
 
     $val = Kynetx::Parser::parse_pre($case->{'krl'});
-    ($js,$e) = Kynetx::Expressions::eval_prelude($my_req_info, 
-						 $rule_env, 
-						 $rule_name, 
-						 $session, 
+    ($js,$e) = Kynetx::Expressions::eval_prelude($my_req_info,
+						 $rule_env,
+						 $rule_name,
+						 $session,
 						 $val) ;
 
   } elsif ($case->{'type'} eq 'decl') {
@@ -164,10 +164,10 @@ foreach my $case (@{ $testcases } ) {
 
     diag("AST = ", Dumper($val)) if $case->{'diag'};
 
-    $js = Kynetx::Expressions::eval_one_decl($my_req_info, 
-					     $rule_env, 
-					     $rule_name, 
-					     $session, 
+    $js = Kynetx::Expressions::eval_one_decl($my_req_info,
+					     $rule_env,
+					     $rule_name,
+					     $session,
 					     $val) ;
   }
 
@@ -181,7 +181,7 @@ foreach my $case (@{ $testcases } ) {
 
     $test_count++;
   }
-    
+
 }
 
 

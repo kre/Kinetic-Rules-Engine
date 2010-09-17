@@ -9,7 +9,7 @@ ruleset 10 {
 	  x = "test";
 	  x = true;
 	  x = false;
-	  x = /f|g+/i;
+//	  x = re/f|g+/i;
 	  x = foo(5);
 	  x = foo(5,"hello");
 	  x = (4 + 5);
@@ -29,7 +29,7 @@ ruleset 10 {
           x = foo:bar(x,y,z);
           x = [3,4,5];
           x = {"x": 3, "y" : "hello"};
-	  x = {"x": [3,4,5], 
+	  x = {"x": [3,4,5],
  	       "y": {"x": "hello",
 	             "y": "world"}};
 	  x = [{"x": 5}];
@@ -44,10 +44,10 @@ ruleset 10 {
 
 	  x = ((weather(y) || twitter:authorized()) && false);
 	  x = ent:bar within 3 days;
-	  x = ent:bar like /f|goo+/ within 3 days;
+//	  x = ent:bar like re/f|goo+/ within 3 days;
 	  x = seen "hello" in ent:foo;
 	  x = seen "hello" in ent:foo within 4 weeks;
-	  x = seen "hello" before "world" in ent:bar;	
+	  x = seen "hello" before "world" in ent:bar;
 	  x = seen "hello" after "world" in ent:bar;
 	  x = (not true);
 	  x = ((not true) == false);
@@ -55,7 +55,7 @@ ruleset 10 {
 	  x = (((not x) || (not y)) == (not (x && y)));
 	  x = a[5];
 	  x = vari[(x+6)];
-	}     
+	}
 	alert("Hello");
 
     }

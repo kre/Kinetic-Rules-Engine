@@ -3,7 +3,7 @@ ruleset 10 {
 
     meta {
       description <<
-      Ruleset for testing something or other.
+Ruleset for testing something or other.
       >>
     }
 

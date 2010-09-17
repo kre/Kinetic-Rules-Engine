@@ -18,7 +18,7 @@ var pagename2 = 'fizzle';
         pre {
       	    tc = weather:tomorrow_cond_code();
 	    city = geoip:city();
-	}     
+	}
 	alert("hello");
 
     }

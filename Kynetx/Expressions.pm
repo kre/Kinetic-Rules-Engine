@@ -3,33 +3,33 @@ package Kynetx::Expressions;
 # file: Kynetx/Predicates/Referers.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 
 use strict;
 use warnings;
@@ -43,14 +43,15 @@ use Storable qw/dclone freeze/;
 use Digest::MD5 qw/md5_hex/;
 use Clone qw/clone/;
 
-use Kynetx::Parser qw/mk_expr_node/;
+use Kynetx::Parser qw/:all/;
+use Kynetx::JParser;
 use Kynetx::Datasets;
 use Kynetx::Environments qw/lookup_rule_env
     extend_rule_env/;
-use Kynetx::Session qw/session_get 
-    session_defined 
-    session_within 
-    session_seen 
+use Kynetx::Session qw/session_get
+    session_defined
+    session_within
+    session_seen
     session_seen_compare
     session_seen_within
     session_history/;
@@ -66,7 +67,7 @@ our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 eval_prelude
 eval_one_decl
@@ -85,7 +86,7 @@ eval_emit
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
-# make sure we get canonical freezes for good signatures.  
+# make sure we get canonical freezes for good signatures.
 $Storable::canonical = 1;
 
 use constant FUNCTION_CALL_THRESHOLD => 1000;
@@ -244,7 +245,7 @@ sub eval_expr {
 	   return Kynetx::Operators::eval_operator($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'condexpr') {
       my $test = eval_expr($expr->{'test'}, $rule_env, $rule_name, $req_info, $session);
-      return 
+      return
 	true_value($test) ?
 	  eval_expr($expr->{'then'}, $rule_env, $rule_name, $req_info, $session) :
 	  eval_expr($expr->{'else'}, $rule_env, $rule_name, $req_info, $session)
@@ -273,17 +274,17 @@ sub eval_expr {
 	$logger->trace("[JS Expr] ", $expr->{'source'}, ":", $expr->{'predicate'}, " -> ", $v);
 
 	return mk_expr_node(infer_type($v),$v);
-    } elsif($expr->{'type'} eq 'persistent' || 
-	    $expr->{'type'} eq 'trail_history' 
+    } elsif($expr->{'type'} eq 'persistent' ||
+	    $expr->{'type'} eq 'trail_history'
 	   ) {
       my $v = eval_persistent($req_info, $rule_env, $rule_name, $session, $expr);
       return mk_expr_node(infer_type($v),$v);
     } elsif($expr->{'type'} eq 'pred') {
-      my $v = eval_pred($req_info, $rule_env, $session, 
+      my $v = eval_pred($req_info, $rule_env, $session,
 			$expr, $rule_name);
       return $v;
     } elsif($expr->{'type'} eq 'ineq') {
-      my $v = eval_ineq($req_info, $rule_env, $session, 
+      my $v = eval_ineq($req_info, $rule_env, $session,
 		     $expr, $rule_name);
       return $v;
     } elsif ($expr->{'type'} eq 'persistent_ineq') {
@@ -297,32 +298,32 @@ sub eval_expr {
 
       $logger->debug('[persistent_ineq] ', "$name -> $count");
 
-      my $v = ineq_test($expr->{'ineq'}, 
-		     $count, 
+      my $v = ineq_test($expr->{'ineq'},
+		     $count,
 		     Kynetx::Expressions::den_to_exp(
-			 Kynetx::Expressions::eval_expr($expr->{'expr'}, 
-							$rule_env, 
-							$rule_name, 
-							$req_info, 
+			 Kynetx::Expressions::eval_expr($expr->{'expr'},
+							$rule_env,
+							$rule_name,
+							$req_info,
 							$session))
 		    );
 
 
       # check date, if needed
-      if ($v && 
+      if ($v &&
 	  defined $expr->{'within'} &&
 	  session_defined($req_info->{'rid'}, $session, $name)) {
 
 	my $tv = 1;
 	if ($expr->{'domain'} eq 'ent') {
-	  $tv = session_within($req_info->{'rid'}, 
-			       $session, 
-			       $name, 
+	  $tv = session_within($req_info->{'rid'},
+			       $session,
+			       $name,
 			       Kynetx::Expressions::den_to_exp(
 				   Kynetx::Expressions::eval_expr($expr->{'within'},
-								  $rule_env, 
-								  $rule_name, 
-								  $req_info, 
+								  $rule_env,
+								  $rule_name,
+								  $req_info,
 								  $session)),
 			       $expr->{'timeframe'}
 			      )
@@ -336,7 +337,7 @@ sub eval_expr {
       my $name = $expr->{'var'};
 
       $logger->debug('[seen_timeframe] ', "$name");
-      
+
       my $v;
 
       # check date, if needed
@@ -344,15 +345,15 @@ sub eval_expr {
 	  session_defined($req_info->{'rid'}, $session, $name)) {
 
 	if ($expr->{'domain'} eq 'ent') {
-	  $v = session_seen_within($req_info->{'rid'}, 
-				   $session, 
-				   $name, 
+	  $v = session_seen_within($req_info->{'rid'},
+				   $session,
+				   $name,
 				   $expr->{'regexp'},
 				   Kynetx::Expressions::den_to_exp(
   				       Kynetx::Expressions::eval_expr($expr->{'within'},
-								      $rule_env, 
-								      $rule_name, 
-								      $req_info, 
+								      $rule_env,
+								      $rule_name,
+								      $req_info,
 								      $session)),
 				   $expr->{'timeframe'}
 				  )
@@ -360,9 +361,9 @@ sub eval_expr {
       } elsif (session_defined($req_info->{'rid'}, $session, $name)) {
 	if ($expr->{'domain'} eq 'ent') {
 	  # session_seen returns index (which can be 0)
-	  $v = defined session_seen($req_info->{'rid'}, 
-				    $session, 
-				    $name, 
+	  $v = defined session_seen($req_info->{'rid'},
+				    $session,
+				    $name,
 				    $expr->{'regexp'}
 				   ) ? 1 : 0;
 	}
@@ -378,9 +379,9 @@ sub eval_expr {
 				      $expr->{'regexp_2'})
 	    : ($expr->{'regexp_2'},
 	       $expr->{'regexp_1'});
-	$v = session_seen_compare($req_info->{'rid'}, 
-				  $session, 
-				  $name, 
+	$v = session_seen_compare($req_info->{'rid'},
+				  $session,
+				  $name,
 				  $r1,
 				  $r2
 				 ) ? 1 : 0; # ensure 0 returned for testing
@@ -392,7 +393,7 @@ sub eval_expr {
       if ($expr->{'domain'} eq 'ent') {
 	$v = session_defined($req_info->{'rid'}, $session, $name) &&
 	  session_get($req_info->{'rid'}, $session, $name);
-	    
+
       }
       return mk_expr_node(infer_type($v),$v);
     } else {
@@ -450,7 +451,7 @@ sub eval_prim {
 
     return 0;
 
-    
+
 }
 
 # warning: this returns a ref to an array, not an array!
@@ -479,10 +480,10 @@ sub eval_application {
  # $logger->debug("Evaluation function...", sub { Dumper $expr} );
 
 
-  my $closure = eval_expr($expr->{'function_expr'}, 
-			  $rule_env, 
+  my $closure = eval_expr($expr->{'function_expr'},
+			  $rule_env,
 			  $rule_name,
-			  $req_info, 
+			  $req_info,
 			  $session
 			 );
 
@@ -491,7 +492,7 @@ sub eval_application {
     return mk_expr_node('str', '');
   }
 
-  $req_info->{$closure->{'val'}->{'sig'}} = 0 
+  $req_info->{$closure->{'val'}->{'sig'}} = 0
     unless defined $req_info->{$closure->{'val'}->{'sig'}};
   if ($req_info->{$closure->{'val'}->{'sig'}} > FUNCTION_CALL_THRESHOLD) {
     $logger->warn("Function call threshold exceeded...deep recursion?");
@@ -501,10 +502,10 @@ sub eval_application {
 #  $logger->debug("Evaling args ", sub {Dumper $expr->{'args'}});
 
 
-  my $args = Kynetx::Expressions::eval_rands($expr->{'args'}, 
-					      $rule_env, 
+  my $args = Kynetx::Expressions::eval_rands($expr->{'args'},
+					      $rule_env,
 					      $rule_name,
-					      $req_info, 
+					      $req_info,
 					      $session
 					     );
 #  $logger->debug("Got result for args: ", sub {Dumper $expr->{'args'}});
@@ -520,10 +521,10 @@ sub eval_application {
 
 
   # this extends the env a second time
-  my($js, $decls_env) =  eval_prelude($req_info, 
-				      $closure_env, 
-				      $rule_name, 
-				      $session, 
+  my($js, $decls_env) =  eval_prelude($req_info,
+				      $closure_env,
+				      $rule_name,
+				      $session,
 				      $closure->{'val'}->{'decls'});
 
 #  $logger->debug("Env: ", Dumper $decls_env);
@@ -531,10 +532,10 @@ sub eval_application {
 
   $req_info->{$closure->{'val'}->{'sig'}}++;
 
-  return eval_expr($closure->{'val'}->{'expr'}, 
-		   $decls_env, 
+  return eval_expr($closure->{'val'}->{'expr'},
+		   $decls_env,
 		   $rule_name,
-		   $req_info, 
+		   $req_info,
 		   $session
 		  );
 
@@ -547,8 +548,8 @@ sub eval_hash_raw {
 
     my $hash = {};
     foreach my $hl (@{ $hash_lines} ) {
-	$hash->{$hl->{'lhs'}} = 
-	    eval_expr($hl->{'rhs'}, $rule_env, 
+	$hash->{$hl->{'lhs'}} =
+	    eval_expr($hl->{'rhs'}, $rule_env,
 			 $rule_name, $req_info, $session);
     }
 
@@ -562,8 +563,8 @@ sub eval_hash {
 
     my $new_hash = {};
     foreach my $k (keys %{ $hash } ) {
-	$new_hash->{$k} = 
-	    eval_expr($hash->{$k}, $rule_env, 
+	$new_hash->{$k} =
+	    eval_expr($hash->{$k}, $rule_env,
 			 $rule_name, $req_info, $session);
     }
 
@@ -591,13 +592,13 @@ sub eval_array_ref {
 
 	    $logger->trace("Using array ", sub {Dumper $v}, " with index ",sub {Dumper  $expr->{'val'}->{'index'}});
 
-	    my $dval = eval_expr($expr->{'val'}->{'index'}, 
-				 $rule_env, 
-				 $rule_name, 
-				 $req_info, 
+	    my $dval = eval_expr($expr->{'val'}->{'index'},
+				 $rule_env,
+				 $rule_name,
+				 $req_info,
 				 $session);
 	    return typed_value($v->[den_to_exp($dval)])
-	    
+
 	  }
 
 }
@@ -615,16 +616,16 @@ sub eval_persistent {
 	if(defined $expr->{'offset'}) {
 
 	    my $idx = den_to_exp(
-		eval_expr($expr->{'offset'}, 
-			     $rule_env, 
-			     $rule_name, 
-			     $req_info, 
+		eval_expr($expr->{'offset'},
+			     $rule_env,
+			     $rule_name,
+			     $req_info,
 			     $session) );
 
 
-	    $v = session_history($req_info->{'rid'}, 
-				 $session, 
-				 $expr->{'name'}, 
+	    $v = session_history($req_info->{'rid'},
+				 $session,
+				 $expr->{'name'},
 				 $idx);
 	    $logger->debug("[persistent trail] $expr->{'name'} at $idx -> $v");
 
@@ -633,9 +634,9 @@ sub eval_persistent {
 	    $v = session_get($req_info->{'rid'}, $session, $expr->{'name'}) || 0;
 	    $logger->debug("[persistent] $expr->{'name'} -> $v");
 	}
-    
+
     }
-    
+
     return $v;
 
 }
@@ -648,7 +649,7 @@ sub eval_pred {
 
 #    $logger->debug("[eval_pred] ", Dumper $pred);
 
-    my @results = 
+    my @results =
 	map {Kynetx::Expressions::eval_expr($_, $rule_env, $rule_name, $req_info, $session)}
 	  @{ $pred->{'args'} };
 
@@ -673,12 +674,12 @@ sub eval_pred {
 	return mk_expr_node('num',$first);
     } elsif($pred->{'op'} eq 'negation') {
       if ($results[0]) {
-	return 
+	return
 	    mk_expr_node('num', 0);
       } else {
-	return 
+	return
 	    mk_expr_node('num', 1);
-	
+
       }
     } else {
 	$logger->warn("Invalid predicate");
@@ -692,7 +693,7 @@ sub eval_ineq {
 
     my $logger = get_logger();
 
-    my @results = 
+    my @results =
 	map {Kynetx::Expressions::eval_expr($_, $rule_env, $rule_name, $req_info, $session)}
 	  @{ $pred->{'args'} };
 
@@ -701,7 +702,7 @@ sub eval_ineq {
     }  else {
       return Kynetx::Parser::mk_expr_node('num',0);
     }
-	
+
 }
 
 sub true_value {
@@ -709,9 +710,9 @@ sub true_value {
 
   my $e = den_to_exp($d);
 
-  return 
+  return
     ($d->{'type'} eq 'bool' && $e eq 'true') || $e;
-    
+
 }
 
 sub ineq_test {
@@ -738,7 +739,7 @@ sub ineq_test {
 	return $rand0 eq $rand1;
     } elsif($op eq 'like') {
 
-      # Note: this relies on the fact that a regular expression looks like a string inside 
+      # Note: this relies on the fact that a regular expression looks like a string inside
       # the KRL AST.
 
       # for backward compatibility, make strings look like KRL regexp
@@ -749,7 +750,7 @@ sub ineq_test {
 
       my $pattern = '';
       my $modifiers;
-      ($pattern, $modifiers) = $rand1 =~ m#/(.+)/(i|g){0,2}#; 
+      ($pattern, $modifiers) = $rand1 =~ m#/(.+)/(i|g){0,2}#;
 
       $modifiers = $modifiers || '';
 
@@ -821,8 +822,8 @@ sub den_to_exp {
 	};
 
 
-	
-    } 
+
+    }
 
 }
 
@@ -857,7 +858,7 @@ sub exp_to_den {
 	$expr = \@res;
 	return {'type' => $type,
 		'val' => $expr}
-    } else {	
+    } else {
 	return {'type' => $type,
 		'val' => $expr}
 #return $expr
@@ -890,7 +891,7 @@ sub infer_type {
 
 sub mk_den_str {
     my ($v) = @_;
-    
+
     return {'type' => 'str',
 	    'val' => $v}
 }
@@ -906,7 +907,7 @@ my %literal_types = ('str' => 1,
 
 sub typed_value {
   my($val) = @_;
-  unless (ref $val eq 'HASH' && 
+  unless (ref $val eq 'HASH' &&
 	  defined $val->{'type'} &&
 	  $literal_types{$val->{'type'}}
 	 ) {
@@ -1002,7 +1003,7 @@ sub eval_string {
     $logger->trace("parsed beesting: ", sub {Dumper($bee_expr)} );
     my $val = $1.eval_expr($bee_expr,$rule_env, $rule_name,$req_info, $session)->{'val'}.$3;
     return (eval_expr({'val' => $val, 'type' => 'str'}, $rule_env, $rule_name,$req_info, $session));
-    
+
 }
 
 sub type_of {
