@@ -447,6 +447,11 @@ my $func_name = {
 				     "parameters" => [qw/date exclude/],
 				     "required" => [qw/none/],
 				    },
+		 'update' => {
+			     "name" => "update",
+			     "parameters" => [qw/status lat long place_id display_coordinates in_reply_to_status_id/],
+			     "required" => [qw/status/]
+			    }
 };
 
 
