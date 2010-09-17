@@ -8,7 +8,7 @@ ruleset 10 {
       emit <<
 var pagename = 'foobar';
 >>;
- 
+
       dataset fizz_data <- "http://www.foo.com/data.json" cachable;
       dataset foo_data <- "http://www.foo.com/data.json" cachable for 20 minutes;
 
@@ -16,15 +16,15 @@ var pagename = 'foobar';
 
     rule testa is active {
         select using "/test/" setting()
-        pre { 
-        } 
+        pre {
+        }
         replace("test","test");
     }
 
     rule testb is active {
         select using "/test/" setting()
-        pre { 
-        } 
+        pre {
+        }
         replace("test","test");
     }
 

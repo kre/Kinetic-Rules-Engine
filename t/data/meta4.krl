@@ -4,7 +4,7 @@ ruleset 10 {
     meta {
       name "Ruleset for Orphans"
       description <<
-      Ruleset for testing something or other.
+Ruleset for testing something or other.
       >>
     }
 

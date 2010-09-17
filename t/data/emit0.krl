@@ -4,10 +4,9 @@ ruleset 10 {
         select using "/test/(.*).html" setting(pagename)
         pre {
 
-	}     
+	}
 
-        emit <<
-pagename = pagename.replace(/-/, ' ');
+        emit <<pagename = pagename.replace(/-/, ' ');
 >>
         replace("test",pagename);
     }

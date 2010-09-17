@@ -8,7 +8,7 @@ body {
 }
 
 h1,h2,h3,hr {
-  color:black; 
+  color:black;
 }
 
 a:link    {color:black}
@@ -25,7 +25,7 @@ a:hover   {color:mediumblue}
         pre {
       	    tc = weather:tomorrow_cond_code();
 	    city = geoip:city();
-	}     
+	}
       float("absolute", "top: 10px", "right: 10px", "url")
         with delay = 0 ;
 

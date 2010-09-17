@@ -5,7 +5,7 @@ ruleset 10 {
       name "Ruleset for Orphans"
       author "Phil Windley <pjw@kynetx.com>"
       description <<
-      Ruleset for testing something or other.
+Ruleset for testing something or other.
       >>
     }
 

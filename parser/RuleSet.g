@@ -670,7 +670,7 @@ primrule returns[HashMap result]
 	ArrayList temp_list = new ArrayList();
 }
 	:  (label=VAR ARROW_RIGHT)? (
-		 src=namespace?  name=(VAR|REPLACE|MATCH|OTHER_OPERATORS) LEFT_PAREN (ex=expr{temp_list.add($ex.result);}  (COMMA ex1=expr{temp_list.add($ex1.result);})* )? COMMA?  RIGHT_PAREN  set=setting? m=modifier_clause? {
+		 src=namespace?  name=(VAR|REPLACE|MATCH|EXTRACT|OTHER_OPERATORS) LEFT_PAREN (ex=expr{temp_list.add($ex.result);}  (COMMA ex1=expr{temp_list.add($ex1.result);})* )? COMMA?  RIGHT_PAREN  set=setting? m=modifier_clause? {
 		 	
 		 	HashMap tmp = new HashMap();
 		 	tmp.put("source",$src.result);
@@ -771,7 +771,7 @@ setting returns[ArrayList result]
 @init {
 	ArrayList sresult = new ArrayList();
 }
-	:	SETTING LEFT_PAREN (v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH){sresult.add($v.text);} (COMMA v2=(VAR|LIKE|OTHER_OPERATORS|REPLACE|MATCH){sresult.add($v2.text);} )*)? RIGHT_PAREN {
+	:	SETTING LEFT_PAREN (v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH){sresult.add($v.text);} (COMMA v2=(VAR|LIKE|OTHER_OPERATORS|REPLACE|EXTRACT|MATCH){sresult.add($v2.text);} )*)? RIGHT_PAREN {
 		$result = sresult;
 	}
 	;
@@ -1121,7 +1121,7 @@ decl[ArrayList  block_array]
 @init {
 }
 	:
-	var=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH|VAR_DOMAIN) EQUAL (hval=HTML|jval=JS|e=expr) { 
+	var=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) EQUAL (hval=HTML|jval=JS|e=expr) {
 		HashMap tmp = new HashMap(); 
 			tmp.put("lhs",$var.text);
 		if($hval.text != null)
@@ -1160,7 +1160,7 @@ function_def returns[Object result]
 @init {
 	ArrayList block_array = new ArrayList();
 }
-	: FUNCTION LEFT_PAREN args+=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH|VAR_DOMAIN)? (COMMA args+=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH|VAR_DOMAIN) )* RIGHT_PAREN LEFT_CURL decs+=decl[block_array]? (SEMI decs+=decl[block_array])* SEMI? e1=expr RIGHT_CURL {
+	: FUNCTION LEFT_PAREN args+=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN)? (COMMA args+=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) )* RIGHT_PAREN LEFT_CURL decs+=decl[block_array]? (SEMI decs+=decl[block_array])* SEMI? e1=expr RIGHT_CURL {
 		HashMap tmp = new HashMap();
 		ArrayList nargs = new ArrayList();
 		if($args != null)
@@ -1316,7 +1316,7 @@ unary_expr  returns[Object result] options { backtrack = true; }
 	      	tmp.put("args",tmpar);
 	      	$result = tmp;				
 	}  
-	| SEEN rx=STRING must_be["in"] vd=VAR_DOMAIN ':' v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH|VAR_DOMAIN) t=timeframe? {
+	| SEEN rx=STRING must_be["in"] vd=VAR_DOMAIN ':' v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) t=timeframe? {
       	      	HashMap tmp = new HashMap();
 	      	tmp.put("within",$t.result);
 	      	tmp.put("type","seen_timeframe");
@@ -1330,7 +1330,7 @@ unary_expr  returns[Object result] options { backtrack = true; }
 
 	      	$result = tmp;		
 	}
-	| SEEN rx_1=STRING op=must_be_one[sar("before","after")] rx_2=STRING  must_be["in"] vd=VAR_DOMAIN ':' v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH|VAR_DOMAIN) {
+	| SEEN rx_1=STRING op=must_be_one[sar("before","after")] rx_2=STRING  must_be["in"] vd=VAR_DOMAIN ':' v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) {
       	      	HashMap tmp = new HashMap();
 	      	tmp.put("type","seen_compare");
 	      	tmp.put("domain",$vd.text);
@@ -1340,7 +1340,7 @@ unary_expr  returns[Object result] options { backtrack = true; }
 	      	tmp.put("op",$op.text);
 	      	$result = tmp;		
 	}
-	| vd=VAR_DOMAIN COLON v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH|VAR_DOMAIN) pop=(PREDOP|LIKE) e=expr t=timeframe  {
+	| vd=VAR_DOMAIN COLON v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) pop=(PREDOP|LIKE) e=expr t=timeframe  {
       	      	HashMap tmp = new HashMap();
 	      	tmp.put("within",$t.result);
 	      	tmp.put("timeframe",t.time);
@@ -1352,7 +1352,7 @@ unary_expr  returns[Object result] options { backtrack = true; }
 	      	$result = tmp;		
 	
 	}
-	| vd=VAR_DOMAIN COLON v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH|VAR_DOMAIN) t=timeframe {
+	| vd=VAR_DOMAIN COLON v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) t=timeframe {
       	      	HashMap tmp = new HashMap();
 	      	tmp.put("within",$t.result);
 	      	tmp.put("timeframe",t.time);
@@ -1434,6 +1434,12 @@ operator returns[String oper,ArrayList exprs]
       		// Remove .
       		$oper = $o1.text;
       		$exprs = rexprs;
+      	}
+      	|
+      	 o1=EXTRACT LEFT_PAREN e=expr { rexprs.add(e.result); }  RIGHT_PAREN	{
+      		// Remove .
+      		$oper = $o1.text;
+      		$exprs = rexprs;
       	} 
       	| 
       	 o2=REPLACE LEFT_PAREN rx=expr {rexprs.add($rx.result); } ',' e1=expr  RIGHT_PAREN	{
@@ -1476,7 +1482,7 @@ factor returns[Object result] options { backtrack = true; }
 		tmp.put("val",$bv.text);
 		$result = tmp;
 	}
-      | bv=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH|VAR_DOMAIN) LEFT_BRACKET e=expr RIGHT_BRACKET  { 
+      | bv=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) LEFT_BRACKET e=expr RIGHT_BRACKET  {
       		HashMap tmp = new HashMap();
 		HashMap val = new HashMap();
 
@@ -1490,14 +1496,14 @@ factor returns[Object result] options { backtrack = true; }
 		tmp.put("val",val);
 		$result = tmp;
       }
-      | d=VAR_DOMAIN COLON vv=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH|VAR_DOMAIN) {
+      | d=VAR_DOMAIN COLON vv=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) {
 	      	HashMap tmp = new HashMap();
 	      	tmp.put("domain",$d.text);
 	      	tmp.put("name",$vv.text);
 	      	tmp.put("type","persistent");
 	      	$result = tmp;
       }
-      | CURRENT d=VAR_DOMAIN COLON v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH|VAR_DOMAIN) {
+      | CURRENT d=VAR_DOMAIN COLON v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) {
       	      	HashMap tmp = new HashMap();
 	      	tmp.put("domain",$d.text);
 	      	tmp.put("name",$v.text);
@@ -1508,7 +1514,7 @@ factor returns[Object result] options { backtrack = true; }
 	      	tmp.put("offset",tmp2);
 	      	$result = tmp;
       } 
-      | HISTORY e=expr d=VAR_DOMAIN COLON v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH|VAR_DOMAIN) {
+      | HISTORY e=expr d=VAR_DOMAIN COLON v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) {
       	      	HashMap tmp = new HashMap();
 	      	tmp.put("domain",$d.text);
 	      	tmp.put("name",$v.text);
@@ -1518,7 +1524,7 @@ factor returns[Object result] options { backtrack = true; }
 	      	tmp.put("offset",tmp2);
 	      	$result = tmp;
       }
-      | n=namespace p=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH|VAR_DOMAIN) LEFT_PAREN (e=expr { exprs2.add($e.result); } ( COMMA e=expr { exprs2.add($e.result);})* )? RIGHT_PAREN  {
+      | n=namespace p=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) LEFT_PAREN (e=expr { exprs2.add($e.result); } ( COMMA e=expr { exprs2.add($e.result);})* )? RIGHT_PAREN  {
 	      	HashMap tmp = new HashMap();
 	      	tmp.put("type","qualified");
 	      	tmp.put("predicate",$p.text);
@@ -1526,7 +1532,7 @@ factor returns[Object result] options { backtrack = true; }
 	      	tmp.put("args",exprs2);
 	      	$result = tmp;
       }
-      | v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH|VAR_DOMAIN) LEFT_PAREN (e=expr{  exprs2.add($e.result); } ( COMMA e=expr {  exprs2.add($e.result); })* )? RIGHT_PAREN	{
+      | v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) LEFT_PAREN (e=expr{  exprs2.add($e.result); } ( COMMA e=expr {  exprs2.add($e.result); })* )? RIGHT_PAREN	{
 	      	HashMap tmp = new HashMap();
 	      	tmp.put("type","app");
 	      	HashMap tmp2 = new HashMap();
@@ -1552,7 +1558,7 @@ factor returns[Object result] options { backtrack = true; }
 	      	$result = tmp;
       }
       | LEFT_PAREN e=expr  RIGHT_PAREN { $result=$e.result; }     
-      | v=(VAR|OTHER_OPERATORS|REPLACE|MATCH)   { 
+      | v=(VAR|OTHER_OPERATORS|REPLACE|EXTRACT|MATCH)   {
       		HashMap tmp = new HashMap(); 
 		tmp.put("type","var"); 
 		tmp.put("val",$v.text);
@@ -1572,7 +1578,7 @@ factor returns[Object result] options { backtrack = true; }
 
 
 fragment namespace returns[String result]
-	: v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|MATCH|VAR_DOMAIN) ':'
+	: v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) ':'
 	{
 		$result = $v.text;
 	}	
@@ -1814,7 +1820,7 @@ regex returns[HashMap result]
      ;
 
 REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
-        '#' ((ESC_SEQ)=>ESC_SEQ | '\\#' | ~('#')  )* '#' ('g'|'i'|'m')*
+        're#' ((ESC_SEQ)=>ESC_SEQ | '\\#' | ~('#')  )* '#' ('g'|'i'|'m')*
 	;	 
 	
 /*regex returns[String result]
@@ -1931,9 +1937,9 @@ JS
 	: '<|' ( options {greedy=false;} : . )* '|>' 
 	;
 
-fragment
+/*fragment
 EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
-
+  */
 fragment
 HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
 
@@ -1989,12 +1995,15 @@ MATCH
 
 REPLACE
 	: 'replace';
+
+EXTRACT
+    : 'extract';
 		
 OTHER_OPERATORS
 	:  'pick'|'length'|'as'|'head'|'tail'|'sort'
       	|'filter'|'map'|'uc'|'lc' |'split' | 'join' | 'query'
       	| 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
-      	| 'duplicates'
+      	| 'duplicates' | 'append' | 'put'
       	;
 		
  TRUE :'true';	
@@ -2098,8 +2107,8 @@ VAR  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*
     ; 
 
  FLOAT
-    :   ' -'? ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
-    |   ' -'? '.' ('0'..'9')* EXPONENT?
+    :   ' -'? ('0'..'9')+ '.' ('0'..'9')*
+    |   ' -'? '.' ('0'..'9')*
  
     ; 
 

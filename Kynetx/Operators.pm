@@ -550,14 +550,14 @@ sub eval_extract {
     my $logger = get_logger();
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
-#   $logger->debug("obj: ", sub { Dumper($obj) });
+   $logger->debug("obj: ", sub { Dumper($obj) });
     return $obj unless defined $obj;
 
     my $is_match = 0;
     my @items = ();
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-#    $logger->debug("obj: ", sub { Dumper($rands) });
+    $logger->debug("obj: ", sub { Dumper($rands) });
 
     my $v = $obj->{'val'};
 
@@ -728,8 +728,8 @@ sub eval_as {
         my $target=_prune_persitent_trail($thing);
         $obj->{'type'} = $rands->[0]->{'val'};
         $obj->{'val'} = $target;
-      } 
-    # FIXME: The structure of this elsif doesn't match all the rest above.  
+      }
+    # FIXME: The structure of this elsif doesn't match all the rest above.
     # We should be determining what the obj IS, then deciding what to do...
     } elsif ($rands->[0]->{'val'} eq 'str' || $rands->[0]->{'val'} eq 'json'){
         my $tmp = Kynetx::Expressions::den_to_exp($obj);

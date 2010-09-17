@@ -235,7 +235,8 @@ sub test_operator {
 
     $r = eval_expr($v, $rule_env, $rule_name,$req_info);
     diag "Result: ", Dumper($r) if $d;
-    cmp_deeply($r, $x, "Trying $e");
+    my $result = cmp_deeply($r, $x, "Trying $e");
+    #die unless ($result);
 }
 
 
@@ -557,10 +558,12 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+#newparser format
+
 diag("Okay to ignore JSON parse error");
 $e[$i] = q/bad_jstr.as("json")/;
 $x[$i] = {
-    "val" => '"www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]}
+    "val" => "\n".'    "www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]}
 ',
     "type" => "str"
 };
@@ -568,7 +571,7 @@ $d[$i] = 0;
 $i++;
 
 
-$e[$i] = q#my_str.replace(/string/,"puppy")#;
+$e[$i] = q#my_str.replace(re/string/,"puppy")#;
 $x[$i] = {
    'val' => 'This is a puppy',
    'type' => 'str'
@@ -584,7 +587,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_str.replace(/is/,"ese")#;
+$e[$i] = q#my_str.replace(re/is/,"ese")#;
 $x[$i] = {
    'val' => 'These is a string',
    'type' => 'str'
@@ -592,7 +595,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_str.replace(/is/g,"ese")#;
+$e[$i] = q#my_str.replace(re/is/g,"ese")#;
 $x[$i] = {
    'val' => 'These ese a string',
    'type' => 'str'
@@ -600,7 +603,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_str.replace(/this/,"do you want a")#;
+$e[$i] = q#my_str.replace(re/this/,"do you want a")#;
 $x[$i] = {
    'val' => 'This is a string',
    'type' => 'str'
@@ -608,7 +611,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_str.replace(/this/i,"do you want a")#;
+$e[$i] = q#my_str.replace(re/this/i,"do you want a")#;
 $x[$i] = {
    'val' => 'do you want a is a string',
    'type' => 'str'
@@ -616,7 +619,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_str.replace(/Th(is)/,"Nothing $1")#;
+$e[$i] = q#my_str.replace(re/Th(is)/,"Nothing $1")#;
 $x[$i] = {
    'val' => 'Nothing is is a string',
    'type' => 'str'
@@ -624,7 +627,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_url.replace(/http:\/\/([A-Za-z0-9.-]+)\/.*/,"$1")#;
+$e[$i] = q#my_url.replace(re/http:\/\/([A-Za-z0-9.-]+)\/.*/,"$1")#;
 $x[$i] = {
    'val' => 'www.amazon.com',
    'type' => 'str'
@@ -632,7 +635,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_str.replace(("/this/"+ "i").as("regexp"),"do you want a")#;
+$e[$i] = q#my_str.replace(("re/this/"+ "i").as("regexp"),"do you want a")#;
 $x[$i] = {
    'val' => 'do you want a is a string',
    'type' => 'str'
@@ -640,7 +643,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_str.replace(("/"+ e + "/i").as("regexp"),"do you want a")#;
+$e[$i] = q#my_str.replace(("re/"+ e + "/i").as("regexp"),"do you want a")#;
 $x[$i] = {
    'val' => 'do you want a is a string',
    'type' => 'str'
@@ -658,7 +661,7 @@ $d[$i]  = 0;
 $i++;
 
 
-$e[$i] = q#my_str.match(/string/)#;
+$e[$i] = q#my_str.match(re/string/)#;
 $x[$i] = {
    'val' => 'true',
    'type' => 'bool'
@@ -676,7 +679,7 @@ $d[$i]  = 0;
 $i++;
 
 
-$e[$i] = q#my_str.match(/strung/)#;
+$e[$i] = q#my_str.match(re/strung/)#;
 $x[$i] = {
    'val' => 'false',
    'type' => 'bool'
@@ -739,7 +742,7 @@ $d[$i] = 0;
 $i++;
 
 
-$e[$i] = q#split_str.split(/;/)#;
+$e[$i] = q#split_str.split(re/;/)#;
 $x[$i] = {
     'val' => ['A','B','C'],
     'type' => 'array'
@@ -1390,15 +1393,6 @@ $i++;
 
 ENDY:
 
-
-$e[$i] = q#my_str.extract(re/(boot)/)#;
-$x[$i] = {
-   'val' => [],
-   'type' => 'array'
-};
-$d[$i]  = 0;
-$i++;
-
 $e[$i] = q#my_str.extract(re/(is)/)#;
 $x[$i] = {
    'val' => ['is'],
@@ -1422,6 +1416,16 @@ $x[$i] = {
 };
 $d[$i]  = 0;
 $i++;
+
+$e[$i] = q#my_str.extract(re/(boot)/)#;
+$x[$i] = {
+   'val' => [],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
 
 $e[$i] = q#mail2_str.extract(re/\s*\*\s*([ \w]+)\s*\v\s*\*\s*([ \w]+)\v/)#;
 $x[$i] = {

@@ -54,7 +54,7 @@ use DBI ();
 #use Kynetx::Json ();
 #use Kynetx::Log ();
 #use Kynetx::Memcached ();
-use Kynetx::Parser ();
+#use Kynetx::Parser ();
 #use Kynetx::Predicates ();
 use Kynetx::PrettyPrinter ();
 #use Kynetx::Repository ();
