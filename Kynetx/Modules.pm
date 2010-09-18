@@ -81,6 +81,7 @@ use Kynetx::Predicates::RSS;
 use Kynetx::Predicates::Facebook;
 use Kynetx::Modules::Email;
 use Kynetx::Modules::HTTP;
+use Kynetx::Modules::Twilio;
 
 sub eval_module {
     my ( $req_info, $rule_env, $session, $rule_name, $source, $function, $args )
@@ -226,6 +227,15 @@ sub eval_module {
             $val ||= 0;
         } else {
             $val = Kynetx::Modules::HTTP::run_function( $req_info, $function,
+                                                        $args );
+        }
+    } elsif ( $source eq 'twilio' ) {
+        $preds = Kynetx::Modules::Twilio::get_predicates();
+        if ( defined $preds->{$function} ) {
+            $val = $preds->{$function}->( $req_info, $rule_env, $args );
+            $val ||= 0;
+        } else {
+            $val = Kynetx::Modules::Twilio::run_function( $req_info, $function,
                                                         $args );
         }
     } elsif ( $source eq 'email' ) {

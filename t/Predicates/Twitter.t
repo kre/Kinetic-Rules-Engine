@@ -91,12 +91,12 @@ my $screen_name = "kynetx_test";
 my $access_token = "100844323-XqQfRm33tQqp54mmhKCfNF9VIOaxVISrIYTOTXOy";
 my $access_token_secret = "QdGk4MGc2RiNuD5MHjL5GVk9m1h3SsooGeMWfUQb7f0";
 
-session_store($rid, $session, 'twitter:access_tokens', {
-       access_token        => $access_token,
-       access_token_secret => $access_token_secret,
-       user_id => $user_id,
-       screen_name => $screen_name
-    });
+Kynetx::Predicates::Twitter::store_access_tokens($rid, $session,
+       $access_token,
+       $access_token_secret,
+       $user_id,
+       $screen_name
+    );
 
 my $rate_limit_status = eval_twitter($my_req_info,
 				 $rule_env,

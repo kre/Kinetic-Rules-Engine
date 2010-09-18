@@ -35,6 +35,8 @@ use warnings;
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
+use Log::Log4perl qw(get_logger :levels);
+
 use Kynetx::Environments qw/:all/;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::Session qw/:all/;
@@ -198,6 +200,49 @@ sub gen_session {
     session_clear($rid, $session, 'my_flag');
 
     return $session;
+}
+
+sub gen_app_session {
+    my($r, $req_info, $options) = @_;
+
+    my $logger = get_logger();
+
+    $logger->debug("Generating test app session for $req_info->{'rid'}");
+
+    my $rid = $req_info->{'rid'};
+
+    # NOTE: NONE OF THIS WORKS!!!
+
+    # set up app session, the place where app vars store data
+    $req_info->{'appsession'} = eval { 
+	# since we generate from the RID, we get the same one...
+	my $key = Digest::MD5::md5_hex($rid);
+	$logger->debug("Key for $rid is $key");
+	Kynetx::Session::tie_servers({},$key);
+      };
+
+    if ($@) {
+      $logger->debug("Didn't get session $@");
+    }
+
+
+    session_store($rid, $req_info->{'appsession'}, 'app_count_old', 3);
+    my $three_days_ago = DateTime->now->add( days => -3 );
+    session_touch($rid, $req_info->{'appsession'}, 'app_count_old', $three_days_ago);
+
+    session_store($rid, $req_info->{'appsession'}, 'app_count', 2);
+
+    session_store($rid, $req_info->{'appsession'}, 'app_count_now', 2);
+    session_store($rid, $req_info->{'appsession'}, 'app_count_now2', 3);
+
+    session_delete($rid, $req_info->{'appsession'}, 'app_trail');
+    session_push($rid, $req_info->{'appsession'}, 'app_trail', "http://www.windley.com/foo.html");
+    session_push($rid, $req_info->{'appsession'}, 'app_trail', "http://www.kynetx.com/foo.html");
+    session_push($rid, $req_info->{'appsession'}, 'app_trail', "http://www.windley.com/bar.html");
+
+
+    session_clear($rid, $req_info->{'appsession'}, 'app_flag');
+
 }
 
 sub mk_config_string {

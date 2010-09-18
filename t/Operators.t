@@ -476,6 +476,52 @@ $x[$i] = {'val' => '23.99',
 $d[$i]  = 0;
 $i++;
 
+$e[$i] = q/store.pick("$..book[?(@.ratings)]")/;
+$x[$i] = {
+'val' =>[{
+      'ratings' => [
+        1,
+        3,
+        2,
+        10
+      ],
+      'category' => 'reference',
+      'author' => 'Nigel Rees',
+      'title' => 'Sayings of the Century',
+      'price' => '8.95'
+    },
+    {
+      'ratings' => [
+        'good',
+        'bad',
+        'lovely'
+      ],
+      'category' => 'fiction',
+      'author' => 'Evelyn Waugh',
+      'title' => 'Sword of Honour',
+      'price' => '12.99'
+    }],
+    'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q/store.pick("$..book[?(@.ratings)]").length() > 0/;
+$x[$i] = {
+'val' => 1,
+'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q/store.pick("$..book[?(@.ratings)]").length() > 3/;
+$x[$i] = {
+'val' => 0,
+'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
 $e[$i] = q#{"foo":1,"bar":2}.pick("$.foo")#;
 $x[$i] = {
    'val' => 1,

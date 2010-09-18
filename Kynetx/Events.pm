@@ -135,6 +135,7 @@ sub process_event {
 
     my $req_info = Kynetx::Request::build_request_env($r, $domain, $rids, $eventtype);
 
+
     Kynetx::Request::log_request_env($logger, $req_info);
 
 # not clear we need the request env now
