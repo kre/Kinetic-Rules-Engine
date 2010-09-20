@@ -60,10 +60,10 @@ my $default_actions = {
 EOF
 	  'after' => []
 	},
-    annotate_local => {
+    local_annotate => {
     	       'js' => <<EOF,
-    	function(uniq, cb, config) {
-            KOBJAnnotateSearchResults.annotate_local_action(uniq,cb,config);
+    	function(uniq, cb, config,name) {
+                    KOBJ.local_annotate_action(uniq,cb,config,name);
     	    cb();
     	}
 EOF

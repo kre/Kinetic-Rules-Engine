@@ -1,8 +1,8 @@
 /*
-  In the case of google instance just because a page changed does not mean it is in a
-  stable state.   Because of that we need to check out  a number of things on the page to
-  know when the user has stopped typing according to google.  This is not full proof as once
-  we find the page is stage the user could start typing again.
+ In the case of google instance just because a page changed does not mean it is in a
+ stable state.   Because of that we need to check out  a number of things on the page to
+ know when the user has stopped typing according to google.  This is not full proof as once
+ we find the page is stage the user could start typing again.
  */
 KOBJAnnotateSearchResults.google_search_change_condition = function() {
     KOBJ.loggers.annotate.trace("Google Instant Check");
@@ -22,11 +22,11 @@ KOBJAnnotateSearchResults.google_search_change_condition = function() {
         return false;
     }
 
-    var about_to_be_typed =  $KOBJ("#tsf input[name='q']").prev().text();
+    var about_to_be_typed = $KOBJ("#tsf input[name='q']").prev().text();
     var search_field = $KOBJ("#tsf input[name='q']").val();
 
-    if (   KOBJ.urlDecode(current_query.oq) == search_field || KOBJ.urlDecode(current_query.q) == search_field ||
-           KOBJ.urlDecode(current_query.oq) == about_to_be_typed || KOBJ.urlDecode(current_query.q) == about_to_be_typed) {
+    if (KOBJ.urlDecode(current_query.oq) == search_field || KOBJ.urlDecode(current_query.q) == search_field ||
+            KOBJ.urlDecode(current_query.oq) == about_to_be_typed || KOBJ.urlDecode(current_query.q) == about_to_be_typed) {
         KOBJ.loggers.annotate.trace("They were the same");
         return true;
     }
@@ -35,29 +35,34 @@ KOBJAnnotateSearchResults.google_search_change_condition = function() {
     return false;
 };
 
+KOBJAnnotateSearchResults.true_change_condition = function() {
+    return true;
+};
+
 
 /* For the pages we support annotation out of the box this method will extract the wanted
-    "data" elements and store them so that the annotating function can use it to figure
-    out what should be annotated.
-*/
-KOBJAnnotateSearchResults.annotate_search_extractdata = function(toAnnotate) {
+ "data" elements and store them so that the annotating function can use it to figure
+ out what should be annotated.
+ */
+KOBJAnnotateSearchResults.annotate_search_extractdata = function(toAnnotate, annotator) {
 
     var annotateData = {};
-    var urlSelector = this.defaults.domains[window.location.host].urlSel;
-    var urlTemp = $KOBJ(toAnnotate).find(urlSelector).attr("href");
+    var urlSelector = annotator.defaults.domains[window.location.host].urlSel;
+    var urlTemp = "";
 
-
-    if (!urlTemp) {
-        urlTemp = $KOBJ(toAnnotate).find(".url, cite").attr("href");
-        // Failsafe
+    if (urlSelector == "") {
+        KOBJ.loggers.annotate.trace("Searching ourselfs");
+        urlTemp = $KOBJ(toAnnotate).attr("href");
+    }
+    else {
+        KOBJ.loggers.annotate.trace("Search by selector");
+        urlTemp = $KOBJ(toAnnotate).find(urlSelector).attr("href");
     }
 
-    KOBJ.loggers.annotate.trace("Temp URL ", urlTemp);
-
     // Yahoo sometime put tracking url befor ethe real url.   We strip the tracking url out here.
-    if (window.location.host == "search.yahoo.com" && urlTemp.indexOf("**http") != -1) {
+    if (urlTemp && urlTemp.indexOf() == "av.rds.yahoo.com" != -1 && urlTemp.indexOf("**http") != -1) {
         urlTemp = urlTemp.replace(/.*\*\*/, "");
-        urlTemp = urlTemp.replace(/%3a/, ":");
+        urlTemp = KOBJ.urlDecode(urlTemp); //.replace(/%3a/, ":");
     }
 
     if (urlTemp) {
@@ -67,36 +72,77 @@ KOBJAnnotateSearchResults.annotate_search_extractdata = function(toAnnotate) {
         annotateData["url"] = "";
         annotateData["domain"] = "";
     }
+
+    KOBJ.loggers.annotate.trace("Extracted DAta ", annotateData);
+
     return annotateData;
 };
 
+KOBJAnnotateSearchResults.altavisa_custom_modify = function(toAnnotate, placement, wrapper) {
+//    KOBJ.loggers.annotate.trace("Custom Modify Called ");
+//    KOBJ.loggers.annotate.trace($KOBJ(toAnnotate).next().next().text());
+    KOBJ.loggers.annotate.trace(placement);
+//    KOBJ.loggers.annotate.trace($KOBJ(wrapper).html());
+    $KOBJ(toAnnotate).next().next()[placement](wrapper);
+};
+
+
+KOBJAnnotateSearchResults.annotate_facebook_extractdata = function(toAnnotate, annotator) {
+
+    var annotateData = {};
+
+    annotateData["name"] = $KOBJ($KOBJ(toAnnotate).find(".actorName a,a.passiveName,span.UIIntentionalStory_Names a")[0]).text();
+    annotateData["profile_image"] = $KOBJ($KOBJ(toAnnotate).find(".uiProfilePhoto")).attr("src");
+
+    KOBJ.loggers.annotate.trace(annotateData);
+
+    return annotateData;
+};
+
+
+KOBJAnnotateSearchResults.annotate_linkedin_extractdata = function(toAnnotate, annotator) {
+
+    var annotateData = {};
+    if($KOBJ(toAnnotate).attr("data-config") == null)
+    {
+        return { "mid" :  null, "name" : null};
+    }
+    annotateData= $KOBJ(toAnnotate).attr("data-config").replace("mid", "'mid'").replace("name", "'name'").replace(/'/g, '"');
+
+    annotateData = $KOBJ.parseJSON(annotateData);
+
+    KOBJ.loggers.annotate.trace(annotateData);
+
+    return annotateData;
+};
+
+
 /*
 
-Defaults:
-    maxURLLength : This is the max url we will send with a jsonp request.
-    scope :  Is the case where there are multiple annotations from the same application we need
-           a way to keep them unique so  we know what have an attempted to annotate.  So if
-           an app wants multiple annotate actions they need to specify this option/
-           ex   with scope = "third_anno_call"
-     wrapper_css:  This are css style tags that will be added to the wrapper class for the annotation.
-     placement: Allows the placement to be:
-            before - before the element being annotated
-            after - after the element being annotated
-            prepend - Inside the element but prepened to the content of that element
-            append - Inside the element but appended to the content of that element
-     result_lister
-     domains: This is where we match domains to defaults we know about
-            selector:  Selector to find the items we are looking to annotate
-            modify:  Selector to find the element inside the above selector that we will modify
-            watcher: If continuous checking of the page for changes is want this is the elements content
-                    that will be watched for changes.
-            urlSel: In the case that this is annotating something with url this is the selector to find that url
-            change_condition: If watcher is specified that this will work in conjunction and verify that the change to
-                    the page is complete.
-            extract_function:  When extracting data from the item being annotated this function is called to do the
-                    data extraction.
+ Defaults:
+ maxURLLength : This is the max url we will send with a jsonp request.
+ scope :  Is the case where there are multiple annotations from the same application we need
+ a way to keep them unique so  we know what have an attempted to annotate.  So if
+ an app wants multiple annotate actions they need to specify this option/
+ ex   with scope = "third_anno_call"
+ wrapper_css:  This are css style tags that will be added to the wrapper class for the annotation.
+ placement: Allows the placement to be:
+ before - before the element being annotated
+ after - after the element being annotated
+ prepend - Inside the element but prepened to the content of that element
+ append - Inside the element but appended to the content of that element
+ result_lister
+ domains: This is where we match domains to defaults we know about
+ selector:  Selector to find the items we are looking to annotate
+ modify:  Selector to find the element inside the above selector that we will modify
+ watcher: If continuous checking of the page for changes is want this is the elements content
+ that will be watched for changes.
+ urlSel: In the case that this is annotating something with url this is the selector to find that url
+ change_condition: If watcher is specified that this will work in conjunction and verify that the change to
+ the page is complete.
+ extract_function:  When extracting data from the item being annotated this function is called to do the
+ data extraction.
  */
-
 function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
     KOBJ.loggers.annotate.trace("Init Annotate " + name);
 
@@ -106,16 +152,14 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
         "wrapper_css" : {
             "color": "#CCC",
             "width": "auto",
-            "height": "40px",
             "font-size": "12px",
             "line-height": "normal",
             "left-margin": "15px",
             "right-padding": "15px",
             "font-family": "Verdana, Geneva, sans-serif"
         },
-        "placement" : 'prepend',
-        "results_lister" : "",
-        "element_to_modify" : "div.s,div.abstr,p",
+        "placement" : 'append',
+        "flush_domains" : false,
         "domains": {
             "www.google.com": {
                 "selector": "li.g:not(.localbox), div.g",
@@ -125,8 +169,16 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
                 "change_condition": KOBJAnnotateSearchResults.google_search_change_condition,
                 "extract_function": KOBJAnnotateSearchResults.annotate_search_extractdata
             },
+            "search.aol.com": {
+                "selector": ".MSL li",
+                "modify": "p[property='f:desc']",
+                "watcher": "",
+                "urlSel":"a[rel='f:url']",
+                "change_condition": KOBJAnnotateSearchResults.google_search_change_condition,
+                "extract_function": KOBJAnnotateSearchResults.annotate_search_extractdata
+            },
             "www.bing.com": {
-                "selector": "#results>ul>li",
+                "selector": "#results div.sa_cc",
                 "modify": "p",
                 "watcher": "",
                 "urlSel":".nc_tc a, .sb_tlst a",
@@ -140,7 +192,87 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
                 "urlSel":".yschttl",
                 "change_condition": KOBJAnnotateSearchResults.true_change_condition,
                 "extract_function": KOBJAnnotateSearchResults.annotate_search_extractdata
+            },
+            "www.hotbot.com": {
+                "selector": "p.res",
+                "modify": "",
+                "watcher": "",
+                "urlSel":"a",
+                "change_condition": KOBJAnnotateSearchResults.true_change_condition,
+                "extract_function": KOBJAnnotateSearchResults.annotate_search_extractdata
+            },
+            "www.ask.com" : {
+                "selector": "#teoma-results .tsrc_lxlx, #psa-teoma-result #result-table .pad",
+                "modify": "",
+                "watcher": "",
+                "urlSel":".title",
+                "change_condition": KOBJAnnotateSearchResults.true_change_condition,
+                "extract_function": KOBJAnnotateSearchResults.annotate_search_extractdata
+            },
+            "www.alltheweb.com" : {
+                "selector": ".resultWell .result",
+                "modify": ".resTeaser",
+                "watcher": "",
+                "urlSel":".res",
+                "change_condition": KOBJAnnotateSearchResults.true_change_condition,
+                "extract_function": KOBJAnnotateSearchResults.annotate_search_extractdata
             }
+            ,
+            "www.altavista.com" : {
+                "selector": "a.res",
+                "modify": KOBJAnnotateSearchResults.altavisa_custom_modify,
+                "watcher": "",
+                "urlSel":"",
+                "change_condition": KOBJAnnotateSearchResults.true_change_condition,
+                "extract_function": KOBJAnnotateSearchResults.annotate_search_extractdata,
+                "wrapper_css" : {
+                    "color": "black",
+                    "width": "auto",
+                    "font-size": "12px",
+                    "line-height": "normal",
+                    "left-margin": "15px",
+                    "right-padding": "15px",
+                    "font-family": "Verdana, Geneva, sans-serif"
+                }
+            },
+            "www.facebook.com" : {
+                "selector": ".uiUnifiedStory",
+                "modify": ".commentable_item",
+                "watcher": "#pagelet_home_stream",
+                "placement" : 'before',
+                "change_condition": KOBJAnnotateSearchResults.true_change_condition,
+                "extract_function": KOBJAnnotateSearchResults.annotate_facebook_extractdata,
+                "wrapper_css" : {
+                    "color": "#CCC",
+                    "width": "auto",
+                    "font-size": "12px",
+                    "float": "none",
+                    "line-height": "normal",
+                    "left-margin": "15px",
+                    "right-padding": "15px",
+                    "font-family": "Verdana, Geneva, sans-serif"
+                }
+            },
+            "www.linkedin.com" : {
+                "selector": "ul.chron li",
+                "modify": ".feed-actions",
+                "watcher": "",
+                "placement" : 'before',
+                "change_condition": KOBJAnnotateSearchResults.true_change_condition,
+                "extract_function": KOBJAnnotateSearchResults.annotate_linkedin_extractdata,
+                "wrapper_css" : {
+                    "color": "#CCC",
+                    "width": "auto",
+                    "font-size": "12px",
+                    "float": "none",
+                    "line-height": "normal",
+                    "left-margin": "15px",
+                    "right-padding": "15px",
+                    "font-family": "Verdana, Geneva, sans-serif"
+                }
+            }
+
+
         }
     };
 
@@ -150,6 +282,39 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
     else if (this.defaults.placement == "append" || this.defaults.placement == "after") {
         this.defaults.wrapper_css.float = "right"
     }
+
+    this.domain_name = an_config.domain_override || window.location.hostname;
+
+
+    // Lets merge our defaults  and with what comes in the config
+    // Careful this is a deep merge.
+    if (typeof an_config === 'object') {
+        if (an_config.flush_domains == true) {
+            delete this.defaults.domains;
+        }
+        $KOBJ.extend(true, this.defaults, an_config);
+    }
+
+
+    KOBJ.loggers.annotate.trace("Annotate Domain " + this.domain_name);
+    // domain not find ignore.
+    if (this.defaults.domains[this.domain_name] == null) {
+        this.invalid = true;
+        return;
+    }
+
+    // If the domain / name we are working with overrides css do it here.
+    if (this.defaults.domains[this.domain_name]["wrapper_css"]) {
+        this.defaults.wrapper_css = this.defaults.domains[this.domain_name]["wrapper_css"];
+    }
+
+    KOBJ.loggers.annotate.trace("1 Placement Overridden with " + this.defaults["placement"]);
+    KOBJ.loggers.annotate.trace("2 Placement Overridden with " + this.defaults.domains[this.domain_name]["placement"]);
+
+    if (this.defaults.domains[this.domain_name]["placement"]) {
+        this.defaults.placement = this.defaults.domains[this.domain_name]["placement"];
+    }
+
 
     // Used as part of the marker to make a unique id for the search result so that
     // remote anno has a way to refernece the element they want to alter.
@@ -166,11 +331,6 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
     // This the callback passed to us by the engine so that actions can log what they are doing.
     this.callback = an_callback;
 
-    // Lets merge our defaults  and with what comes in the config
-    if (typeof an_config === 'object') {
-        $KOBJ.extend(true, this.defaults, an_config);
-    }
-
     // What get the list of things to annotate
     this.lister = "";
     // What element are we going to change
@@ -184,19 +344,13 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
     // Simple var to know if we have the data we need to annotate.
     this.invalid = false;
 
-
-    // TODO : Allow way to just say what the lister watch and such are in cases were the domain does not matter.
-    if (this.defaults["results_lister"]) {
-        this.lister = this.defaults["results_lister"];
-        this.watcher = "";
-        this.modify = this.defaults["element_to_modify"];
-    } else if (this.defaults["domains"][window.location.hostname]) {
+    if (this.defaults.domains[this.domain_name]) {
         // Gets selectors for both DOM watcher and the element
-        this.lister = this.defaults["domains"][window.location.hostname]["selector"];
-        this.watcher = this.defaults["domains"][window.location.hostname]["watcher"];
-        this.modify = this.defaults["domains"][window.location.hostname]["modify"];
-        this.change_condition = this.defaults["domains"][window.location.hostname]["change_condition"];
-        this.extract_function =    this.defaults["domains"][window.location.hostname]["extract_function"];
+        this.lister = this.defaults.domains[this.domain_name]["selector"];
+        this.watcher = this.defaults.domains[this.domain_name]["watcher"];
+        this.modify = this.defaults.domains[this.domain_name]["modify"];
+        this.change_condition = this.defaults.domains[this.domain_name]["change_condition"];
+        this.extract_function = this.defaults.domains[this.domain_name]["extract_function"];
     } else {
         this.invalid = true;
     }
@@ -206,26 +360,23 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
 
 
 /*
-Used to name the annotated item with a marker that allow use to know if it has already been
-looked at for  anno.
+ Used to name the annotated item with a marker that allow use to know if it has already been
+ looked at for  anno.
  */
 KOBJAnnotateSearchResults.prototype.app_marker = function() {
-//   KOBJ.loggers.annotate.trace("Name",this.name);
-//    KOBJ.loggers.annotate.trace("Scope",this.defaults.scope);
-//    KOBJ.loggers.annotate.trace("AppID", this.app.app_id);
     return this.name + "_" + this.defaults.scope + "_" + this.app.app_id + "_anno";
 };
 
 /*
  Used to name the annotated item with a marker that allow use to uniquely label each item so that
-  remote annotations can say what item is to be annotated in their results.
-*/
+ remote annotations can say what item is to be annotated in their results.
+ */
 KOBJAnnotateSearchResults.prototype.app_marker_count = function() {
-    return this.app_marker() + "_" +  (this.annotate_search_counter += 1);
+    return this.app_marker() + "_" + (this.annotate_search_counter += 1);
 };
 
 /*
-For the wrapper that we put on the page to put the annotation content in we label it with this name.
+ For the wrapper that we put on the page to put the annotation content in we label it with this name.
  */
 KOBJAnnotateSearchResults.prototype.anno_item = function() {
     return this.name + "_item";
@@ -241,9 +392,9 @@ KOBJAnnotateSearchResults.prototype.annotate = function() {
 
     var runAnnotate = null;
 
-    if (this.defaults["remote"]  == "event") {
+    if (this.defaults["remote"] == "event") {
         runAnnotate = this.annotate_event_search();
-    } else if(this.defaults["remote"]) {
+    } else if (this.defaults["remote"]) {
         runAnnotate = this.annotate_remote_search();
     } else {
         runAnnotate = this.annotate_normal_search();
@@ -273,7 +424,15 @@ KOBJAnnotateSearchResults.prototype.collect_and_label = function() {
 
     KOBJ.loggers.annotate.trace("Lister ", myself.lister);
 
-    $KOBJ.each($KOBJ(myself.lister), function() {
+    list_results = [];
+
+    if (typeof(myself.lister) == "function") {
+        list_results = myself.lister();
+    }
+    else {
+        list_results = $KOBJ(myself.lister)
+    }
+    $KOBJ.each(list_results, function() {
         var toAnnotate = this;
 
 
@@ -292,10 +451,18 @@ KOBJAnnotateSearchResults.prototype.collect_and_label = function() {
             KOBJ.loggers.annotate.trace("Add Wrapper Div");
             var wrapper = $KOBJ("<div>").addClass(myself.anno_item());
             wrapper.css(myself.defaults.wrapper_css);
-            $KOBJ(toAnnotate).find(myself.modify)[myself.defaults.placement](wrapper);
+            if (myself.modify == "") {
+                $KOBJ(toAnnotate)[myself.defaults.placement](wrapper);
+            }
+            else if (typeof(myself.modify) == "function") {
+                myself.modify(toAnnotate, myself.defaults.placement, wrapper);
+            } else {
+                $KOBJ(toAnnotate).find(myself.modify)[myself.defaults.placement](wrapper);
+            }
+            $KOBJ(toAnnotate).data("wrapper", wrapper);
         }
 
-        var extract_data = myself.extract_function(toAnnotate);
+        var extract_data = myself.extract_function(toAnnotate, myself);
 
         // We attached the extracted data to the element for easy access later.
         $KOBJ.each(extract_data, function(name, value) {
@@ -323,7 +490,7 @@ KOBJAnnotateSearchResults.prototype.annotate_remote_search = function() {
         var count = 0;
 
         function jsonPCallback(data) {
-             myself.annotate_data(data);
+            myself.annotate_data(data);
         }
 
         if (!$KOBJ.isEmptyObject(annotateInfo)) {
@@ -343,8 +510,8 @@ KOBJAnnotateSearchResults.prototype.annotate_remote_search = function() {
 
 
 /*
-Data should look like
-{ item_id : {data attributes} }
+ Data should look like
+ { item_id : {data attributes} }
  */
 KOBJAnnotateSearchResults.prototype.annotate_data = function(data) {
     var count = 0;
@@ -355,7 +522,7 @@ KOBJAnnotateSearchResults.prototype.annotate_data = function(data) {
         KOBJ.loggers.annotate.trace("Working on result list local");
         count++;
         var toAnnotate = $KOBJ("." + item_id);
-        var container = $KOBJ("." + myself.anno_item(), toAnnotate);
+        var container = $KOBJ(toAnnotate.data("wrapper"));
         myself.defaults.annotator(toAnnotate, container, item_data);
     });
 
@@ -378,25 +545,22 @@ KOBJAnnotateSearchResults.prototype.annotate_normal_search = function() {
 };
 
 /*
-Yes bad method name but so what.  This will take the data structure from collect and label and
-convert it to just item => data
+ Yes bad method name but so what.  This will take the data structure from collect and label and
+ convert it to just item => data
  */
 KOBJAnnotateSearchResults.prototype.data_only = function(annotateInfo) {
     var annotate_data = {};
 
     $KOBJ.each(annotateInfo, function(item_id, item_data) {
-        KOBJ.loggers.annotate.trace("int");
         annotate_data[item_id] = item_data.data;
     });
 
-
-    KOBJ.loggers.annotate.trace(annotate_data);
     return annotate_data;
 };
 
 KOBJAnnotateSearchResults.prototype.splitJSONRequest = function(json, url) {
 
-    var to_compact =  this.data_only(json);
+    var to_compact = this.data_only(json);
     var jsonString = $KOBJ.compactJSON(to_compact);
     var numOfRequests = Math.ceil((jsonString.length + url.length) / this.defaults.maxURLLength);
 
@@ -416,3 +580,142 @@ KOBJAnnotateSearchResults.prototype.splitJSONRequest = function(json, url) {
         return [json];
     }
 };
+
+
+/* For the pages we support annotation out of the box this method will extract the wanted
+ "data" elements and store them so that the annotating function can use it to figure
+ out what should be annotated.
+ */
+KOBJAnnotateLocalSearchResults.annotate_local_search_extractdata = function(toAnnotate, annotator) {
+    KOBJ.loggers.annotate.trace("Extracting Local Data.............................");
+
+    var annotateData = {};
+    var phoneSelector = annotator.defaults.domains[window.location.host].phoneSel;
+    var urlSelector = annotator.defaults.domains[window.location.host].urlSel;
+    var phoneTemp = $KOBJ(toAnnotate).find(phoneSelector).text().replace(/[\u00B7() -]/g, "");
+    var urlTemp = $KOBJ(toAnnotate).find(urlSelector).attr("href");
+
+    if (urlTemp) {
+        annotateData["url"] = urlTemp;
+        annotateData["domain"] = KOBJ.get_host(urlTemp);
+    } else {
+        annotateData["url"] = "";
+        annotateData["domain"] = "";
+    }
+    if (phoneTemp === "") {
+        phoneTemp = $KOBJ(toAnnotate);
+        phoneTemp = phoneTemp.text().match(/\(\d{3}\)\s\d{3}-\d{4}/, "$1");
+        if (phoneTemp !== null) {
+            phoneTemp = phoneTemp[0];
+            phoneTemp = phoneTemp.replace(/[() -]/g, "");
+        }
+    }
+
+    var heightTemp = $KOBJ(toAnnotate).height();
+
+    if (phoneTemp !== null) {
+        annotateData["phone"] = phoneTemp;
+    } else {
+        annotateData["phone"] = "";
+    }
+    annotateData["height"] = heightTemp;
+
+    KOBJ.loggers.annotate.trace("Extracted DAta ", annotateData);
+    return annotateData;
+};
+
+
+function KOBJAnnotateLocalSearchResults(an_app, an_name, an_config, an_callback) {
+    KOBJ.loggers.annotate.trace("Local Annotage Init ");
+
+    this.defaults = {
+        "wrapper_css" : {
+            "color": "#CCC",
+            "width": "auto",
+            "font-size": "12px",
+            "line-height": "normal",
+            "left-margin": "15px",
+            "right-padding": "15px",
+            "font-family": "Verdana, Geneva, sans-serif"
+        },
+        "placement" : 'append',
+        "flush_domains":  true,
+        "domains": {
+            "www.google.com":{
+                "selector":".ts .w0",
+                "watcher":"#rso",
+                "phoneSel":".nobr",
+                "urlSel":".l",
+                "modify":"",
+                "change_condition": KOBJAnnotateSearchResults.google_search_change_condition,
+                "extract_function": KOBJAnnotateLocalSearchResults.annotate_local_search_extractdata
+            },
+            "search.yahoo.com":{
+                "selector":".sc-loc",
+                "watcher": "",
+                "phoneSel":"[id *= lblPhone]",
+                "urlSel":".yschttl",
+                "modify":"",
+                "change_condition": KOBJAnnotateSearchResults.true_change_condition,
+                "extract_function": KOBJAnnotateLocalSearchResults.annotate_local_search_extractdata
+            },
+            "www.bing.com":{
+                "selector":".sc_ol1li",
+                "watcher": "",
+                "phoneSel":".sc_hl1 li>:not(a)",
+                "urlSel":".nc_tc a, .sb_tlst a",
+                "modify":"",
+                "change_condition": KOBJAnnotateSearchResults.true_change_condition,
+                "extract_function": KOBJAnnotateLocalSearchResults.annotate_local_search_extractdata
+
+            },
+            "www.ask.com": {
+                selector : ".mb21 td td td:odd",
+                "watcher":"",
+                "phoneSel":"span.txt3",
+                "urlSel":"a.title:odd",
+                "modify":"",
+                "change_condition": KOBJAnnotateSearchResults.true_change_condition,
+                "extract_function": KOBJAnnotateLocalSearchResults.annotate_local_search_extractdata
+            },
+            "maps.google.com":{
+                "selector":".one",
+                "watcher":"#spsizer .opanel:visible",
+                "phoneSel":".tel",
+                "urlSel":".fn.org",
+                "modify":"",
+                "change_condition": KOBJAnnotateSearchResults.true_change_condition,
+                "extract_function": KOBJAnnotateLocalSearchResults.annotate_local_search_extractdata
+
+            },
+            "local.yahoo.com":{
+                "selector":".yls-rs-bizinfo",
+                "watcher":"",
+                "phoneSel":".tel",
+                "urlSel":".yls-rs-listing-title",
+                "modify":"",
+                "change_condition": KOBJAnnotateSearchResults.true_change_condition,
+                "extract_function": KOBJAnnotateLocalSearchResults.annotate_local_search_extractdata
+            }
+        }
+    };
+
+
+    // Lets merge our defaults  and with what comes in the config
+    if (typeof an_config === 'object') {
+        $KOBJ.extend(true, this.defaults, an_config);
+    }
+
+    this.base_ann = new KOBJAnnotateSearchResults(an_app, an_name, this.defaults, an_callback)
+    KOBJ.loggers.annotate.trace("Local Init Complete ");
+
+}
+;
+
+KOBJAnnotateLocalSearchResults.prototype.annotate = function() {
+    KOBJ.loggers.annotate.trace("Local Ann annotate ");
+
+    this.base_ann.annotate();
+};
+
+

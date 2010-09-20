@@ -1,8 +1,6 @@
-
-
 KOBJ.raise_event_action = function (uniq, event_name, config) {
     var app = KOBJ.get_application(config.rid);
-    app.raise_event(event_name,config["parameters"],config["app_id"]);
+    app.raise_event(event_name, config["parameters"], config["app_id"]);
 };
 
 KOBJ.page_content_event = function (uniq, label, selectors, config) {
@@ -36,8 +34,7 @@ KOBJ.page_content_event = function (uniq, label, selectors, config) {
  * This is a shortcut way to register interest for an event for a given application
  * id.
  */
-KOBJ.watch_event = function(event, selector, config)
-{
+KOBJ.watch_event = function(event, selector, config) {
     // Page views are special in that they do not have selectors
     var application = KOBJ.get_application(config["rid"]);
     if (event != "pageview") {
@@ -49,12 +46,12 @@ KOBJ.watch_event = function(event, selector, config)
 };
 
 
-
-KOBJ.annotate_action = function(uniq,callback,config,name) {
+KOBJ.annotate_action = function(uniq, callback, config, name) {
     var ann = new KOBJAnnotateSearchResults(KOBJ.get_application(config.rid), name, config, callback);
     ann.annotate();
 };
 
-KOBJ.annotate_local_action = function(uniq,callback,config) {
-
+KOBJ.local_annotate_action = function(uniq, callback, config,name) {
+    var ann = new KOBJAnnotateLocalSearchResults(KOBJ.get_application(config.rid), name, config, callback);
+    ann.annotate();
 };
