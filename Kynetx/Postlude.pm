@@ -148,10 +148,10 @@ sub eval_persistent_expr {
     my $sid;
     if($expr->{'domain'} eq 'ent') {
       $sid = $session;
-	$logger->debug(Dumper($session));
+#      $logger->debug(Dumper($session));
     } elsif($expr->{'domain'} eq 'app') {
       $sid = $req_info->{'appsession'};
-      $logger->debug(Dumper($req_info->{'appsession'}));
+#      $logger->debug(Dumper($req_info->{'appsession'}));
     }
 
     if ($expr->{'action'} eq 'clear') {
