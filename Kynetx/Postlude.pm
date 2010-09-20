@@ -218,23 +218,36 @@ sub eval_persistent_expr {
 sub eval_log_statement {
     my($expr, $session, $req_info, $rule_env, $rule_name) = @_;
 
-#    my $logger = get_logger();
+    my $logger = get_logger();
 
 #    $logger->debug("eval_log_statement ", Dumper($expr));
 
     my $js ='';
 
+    my $log_val = Kynetx::Expressions::den_to_exp(
+		       Kynetx::Expressions::eval_expr($expr->{'what'},
+						      $rule_env,
+						      $rule_name,
+						      $req_info,
+						      $session));
+    
+    my $msg = "Explicit log value: ";
+    if ($log_val eq ':session_id') {
+      $msg = "Session ID: ";
+      $log_val = Kynetx::Session::session_id($session);
+    }
+
+
     # call the callback server here with a HTTP GET
     $js = Kynetx::Log::explicit_callback($req_info, 
 					 $rule_name, 
-			    Kynetx::Expressions::den_to_exp(
-				       Kynetx::Expressions::eval_expr($expr->{'what'},
-						    $rule_env,
-						    $rule_name,
-						    $req_info,
-						    $session)));
+					 $log_val
+					);
 
-    return $js;
+    # this puts the statement in the log data for when debug is on
+    $logger->debug($msg, $log_val);
+
+    return $msg . $log_val;
 }
 
 
