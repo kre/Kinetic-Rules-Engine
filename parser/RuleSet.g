@@ -1896,12 +1896,11 @@ ADD_OP: '+'|'-';
  FORGET: 'forget';
  MARK:'mark';
 
- COUNTER_OP
-	: 
-	'+='
-        | ' -='
-        ;
- IF:'if';	
+ COUNTER_OP: '+='
+           | ' -='
+ ;
+
+IF: 'if';	
 CHOOSE 	:	'choose';
 EVERY 	:	'every';	 
 	

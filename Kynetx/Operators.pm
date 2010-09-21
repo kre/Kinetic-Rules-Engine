@@ -325,12 +325,12 @@ sub eval_map {
 	my $a = [];
 	foreach my $av (@{$eval}) {
 
-	  $logger->debug("Mapping onto ", sub {Dumper $av});
+#	  $logger->debug("Mapping onto ", sub {Dumper $av});
 
 
 	  my $den_av = Kynetx::Expressions::exp_to_den($av);
 
-	  $logger->debug("Denoted as ", sub {Dumper $den_av});
+#	  $logger->debug("Denoted as ", sub {Dumper $den_av});
 
 	  my $app = {'type' => 'app',
 		     'function_expr' => $expr->{'args'}->[0],
@@ -343,7 +343,7 @@ sub eval_map {
 						  $req_info,
 						  $session));
 
-	  $logger->debug("Result is ", sub {Dumper $r});
+#	  $logger->debug("Result is ", sub {Dumper $r});
 
 	  push(@{$a}, $r);
 

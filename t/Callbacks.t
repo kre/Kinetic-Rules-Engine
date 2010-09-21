@@ -103,6 +103,7 @@ ruleset $rid {
 }
 _KRL_
 $ruleset = Kynetx::Parser::parse_ruleset($krl_src);
+#diag Dumper($ruleset);
 
 Kynetx::Callbacks::process_callbacks($ruleset,
 				     'test0',

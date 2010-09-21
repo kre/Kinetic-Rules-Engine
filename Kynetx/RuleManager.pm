@@ -44,7 +44,7 @@ use JSON::XS;
 use Cache::Memcached;
 
 use Kynetx::Parser qw(:all);
-use Kynetx::OParser qw/:all/;
+#use Kynetx::OParser qw/:all/;
 use Kynetx::PrettyPrinter qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Json qw/:all/;

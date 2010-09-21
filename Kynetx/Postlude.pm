@@ -159,30 +159,31 @@ sub eval_persistent_expr {
     } elsif ($expr->{'action'} eq 'set') {
       session_set($req_info->{'rid'}, $sid, $expr->{'name'});
     } elsif ($expr->{'action'} eq 'iterator') {
-	my $by = 
-	    Kynetx::Expressions::den_to_exp(
-		Kynetx::Expressions::eval_expr($expr->{'value'},
+      my $op = $expr->{'op'};
+      $op =~ s/^\s+//;
+      my $by = 
+	Kynetx::Expressions::den_to_exp(
+	    Kynetx::Expressions::eval_expr($expr->{'value'},
 			     $rule_env,
 			     $rule_name,
 			     $req_info,
 			     $session));
-	$by = -$by if($expr->{'op'} eq '-=');
-	my $from = 
-	    Kynetx::Expressions::den_to_exp(
+      $by = -$by if($op eq '-=');
+      my $from = 
+	Kynetx::Expressions::den_to_exp(
 		Kynetx::Expressions::eval_expr($expr->{'from'},
 			     $rule_env,
 			     $rule_name,
 			     $req_info,
 			     $session));
-	if($expr->{'domain'} eq 'ent') {
-	    session_inc_by_from($req_info->{'rid'},
-				$sid,
-				$expr->{'name'},
-				$by,
-				$from
-		);
-	}
-#	$logger->debug(Dumper($session));
+      if($expr->{'domain'} eq 'ent') {
+	session_inc_by_from($req_info->{'rid'},
+			    $sid,
+			    $expr->{'name'},
+			    $by,
+			    $from
+			   );
+      }
     } elsif ($expr->{'action'} eq 'forget') {
 	if($expr->{'domain'} eq 'ent') {
 	    session_forget($req_info->{'rid'},
