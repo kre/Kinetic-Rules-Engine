@@ -1,3 +1,5 @@
 newparser
 oldparser
-perl/
+perl/build/
+perl/_Inline/
+perl/lib/
