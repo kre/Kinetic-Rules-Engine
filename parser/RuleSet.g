@@ -261,7 +261,7 @@ ruleset  options {backtrack=false;}
  	:   	
  	RULE_SET rulesetname { current_top.put("ruleset_name",$rulesetname.text); } 
  	LEFT_CURL
- 		( meta_block | dispatch_block | global_block | rule )*
+ 		meta_block?  dispatch_block? global_block? rule*
 	RIGHT_CURL 
 	EOF
  	;
@@ -1878,7 +1878,7 @@ REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
 	:	 '<-';
 	
  RIGHT_SMALL_ARROW 
-	:	 '->';
+	:	 ' ->';
  GLOBAL: 'global';
  DTYPE 
 	:('JSON'|'XML'|'RSS'|'HTML');
@@ -1899,7 +1899,7 @@ ADD_OP: '+'|'-';
  COUNTER_OP
 	: 
 	'+='
-        | '-='
+        | ' -='
         ;
  IF:'if';	
 CHOOSE 	:	'choose';

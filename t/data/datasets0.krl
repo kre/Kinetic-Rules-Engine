@@ -9,15 +9,11 @@ ruleset 10 {
 
     rule testa is active {
         select using "/test/" setting()
-        pre { 
-        } 
         replace("test","test");
     }
 
     rule testb is active {
         select using "/test/" setting()
-        pre { 
-        } 
         replace("test","test");
     }
 
