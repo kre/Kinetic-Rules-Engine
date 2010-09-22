@@ -92,7 +92,7 @@ sub handler {
     config_logging($r);
 
     my $logger = get_logger();
-    my ( $method, $rid, $version ) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_]*)/([A-Za-z0-9_]*)!;
+    my ( $method, $rid, $version ) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_]*)/?([A-Za-z0-9_]*)!;
     $logger->debug("Performing $method method on ruleset $rid");
 
     Log::Log4perl::MDC->put( 'site', $method );
@@ -144,6 +144,8 @@ sub handler {
 
 sub parse_performance {
     my ( $req_info, $method, $rid ) = @_;
+    my ($t_repository,$t_newparser,$t_parseruleset,$t_oparse);
+    my ($s_parser,$s_oparser,$s_overall,$e_newparser);
     my $logger = get_logger();
     my $runs = 1;
     my $start = new Benchmark;
@@ -152,24 +154,38 @@ sub parse_performance {
     if ($ruleset) {
         my $r_repos = new Benchmark;
         my $repo_diff = timediff($r_repos,$start);
-        my $result = "Repository request: "  . timestr($repo_diff,'auto');
+        $t_repository = $repo_diff->[0];
         my $p= Kynetx::JParser::get_antlr_parser();
         my $r_parser = new Benchmark;
         my $rp_diff = timediff($r_parser,$r_repos);
-        $result .= "\nNew parser request: "  . timestr($rp_diff,'auto');
+        $t_newparser = $rp_diff->[0];
         my $p_str = $p->ruleset($ruleset);
         my $parsed = new Benchmark;
         my $pd_diff = timediff($parsed,$r_parser);
-        $result .= "\nRuleset $rid: "  . timestr($pd_diff,'auto');
+        $t_parseruleset = $pd_diff->[0];
         my $status = is_parsed($p_str);
         if ($status eq 'OK') {
-            $result .= "\n $status";
+            $s_parser = $status;
+            $s_overall = $status;
+            $e_newparser = '';
+            $s_oparser ='';
+            $t_oparse = '';
         } else {
-            $result .= "\n Failed to parse: $status";
-            $result .= "\n " . old_parser($ruleset);
+            $s_parser = 'FAIL';
+            $e_newparser = $status;
+            my $ro_start = new Benchmark;
+            $s_oparser = old_parser($ruleset);
+            if ($s_oparser eq 'OK') {
+                $s_overall = 'FIX';
+            } else {
+                $s_overall = 'FAIL';
+            }
+            my $ro_end = new Benchmark;
+            my $ro_diff = timediff($ro_end,$ro_start);
+            $t_oparse = $ro_diff->[0];
 
         }
-        return $result;
+        return "$s_overall,$t_repository,$t_newparser,$t_parseruleset,$s_parser,$t_oparse,$s_oparser,$e_newparser";
     } else {
         return parse_api($req_info, $method,'ruleset');
     }
@@ -179,9 +195,9 @@ sub old_parser {
     my ($ruleset) = @_;
     my $result = Kynetx::OParser::parse_ruleset($ruleset);
     if (defined ($result->{'error'})) {
-        return "OParser: FAIL";
+        return "FAIL";
     } else {
-        return "OParser: OK";
+        return "OK";
     }
 }
 
@@ -190,8 +206,7 @@ sub is_parsed {
     my $ast = Kynetx::Json::jsonToAst_w($p_str);
     if (ref $ast eq "HASH") {
         if ($ast->{'error'}) {
-            my $rstr = "\n\t";
-            $rstr .= join('\n', @{$ast->{'error'}});
+            my $rstr = join('|', @{$ast->{'error'}});
             return $rstr;
         } else {
             return 'OK';

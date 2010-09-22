@@ -136,7 +136,12 @@ sub log_request_env {
 	        my @tmp = map {substr($_,0,50)} @$value;
 	        $value = '[' . join(',',@tmp) . ']';
 	    } else {
-	        $value = substr($value,0,50);
+	        if ($value) {
+	            $value = substr($value,0,50);
+	        } else {
+	            $value = '';
+	        }
+
 	    }
 	  # print out first 50 chars of the request string
 	  $logger->debug("$entry:$value");

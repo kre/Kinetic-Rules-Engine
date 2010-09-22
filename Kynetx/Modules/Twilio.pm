@@ -102,7 +102,7 @@ my $default_actions = {
           my $req_info = shift;
           my $config = shift;
           my $args = shift;
-          $config->{''} = $args->[0];
+          $config->{'action'} = $args->[0];
           send_directive($req_info,
           	'record',
           	$config);
@@ -155,7 +155,7 @@ my $default_actions = {
           my $req_info = shift;
           my $config = shift;
           my $args = shift;
-          $config->{''} = $args->[0];
+          $config->{'action'} = $args->[0];
           send_directive($req_info,
           	'gather_start',
           	$config);
