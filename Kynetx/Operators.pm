@@ -762,6 +762,36 @@ sub eval_toRegexp {
 }
 $funcs->{'toRegexp'} = \&eval_toRegexp;
 
+sub eval_encode {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    my $tmp = Kynetx::Expressions::den_to_exp($obj);
+    $logger->trace("EXP: ", sub {Dumper($tmp)});
+    my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
+    $logger->trace("JSON: ", $json);
+    $obj->{'type'} = "str";
+    $obj->{'val'} = $json;
+    return $obj;
+
+}
+$funcs->{'encode'} = \&eval_encode;
+
+sub eval_decode {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    $logger->debug("Encode type: ", $obj->{'type'});
+    if ($obj->{'type'} eq 'str') {
+        my $str = $obj->{'val'};
+        return Kynetx::Expressions::typed_value(Kynetx::Json::jsonToAst_w($str));
+    } else {
+        return $obj;
+    }
+
+}
+$funcs->{'decode'} = \&eval_decode;
+
 #----------------------------------------------------------------------------------
 # Set operations
 #----------------------------------------------------------------------------------
