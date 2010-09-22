@@ -291,9 +291,11 @@ KrlApplication.prototype.fire_event = function(event, data, guid,domain)
 
 
     params.push({name: "kvars", value: $KOBJ.toJSON(all_vars)});
-    params.push({name: "caller", value: KOBJ.location('href')});
-    params.push({name: "referer", value: KOBJ.document.referrer});
-    params.push({name: "title", value: KOBJ.document.title});
+    if(event == "pageview") {
+        params.push({name: "caller", value: KOBJ.location('href')});
+        params.push({name: "referer", value: KOBJ.document.referrer});
+        params.push({name: "title", value: KOBJ.document.title});
+    }
 
     var event_url = url + "?" +
                     $KOBJ.param(params) +

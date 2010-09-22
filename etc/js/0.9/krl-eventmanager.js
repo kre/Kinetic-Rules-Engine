@@ -83,7 +83,7 @@ KOBJEventManager.is_dup_event = function(event, selector, app)
 {
     var found_event = false;
 
-    if (KOBJEventManager.current_fires[app.app_id] != null)
+    if (event == "content_change" && KOBJEventManager.current_fires[app.app_id] != null)
     {
         var app_fire = KOBJEventManager.current_fires[app.app_id][event];
         if (app_fire != null && app_fire[selector])
