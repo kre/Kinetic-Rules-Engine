@@ -155,7 +155,7 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
     KOBJ.loggers.annotate.trace("Init Annotate " + name);
 
     this.defaults = {
-        "scope": "",
+        "scope": "S" + KOBJEventManager.eid(),
         "maxURLLength" : 1500,
         "wrapper_css" : { "display" : "none" },
         "placement" : 'append',
@@ -439,15 +439,15 @@ KOBJAnnotateSearchResults.prototype.collect_and_label = function() {
             } else {
                 $KOBJ(toAnnotate).find(myself.modify)[myself.defaults.placement](wrapper);
             }
-            $KOBJ(toAnnotate).data("wrapper", wrapper);
+            $KOBJ(toAnnotate).data("wrapper" + myself.defaults.scope, wrapper);
         }
 
         var extract_data = myself.extract_function(toAnnotate, myself);
 
         // We attached the extracted data to the element for easy access later.
-        $KOBJ.each(extract_data, function(name, value) {
-            $KOBJ(toAnnotate).data(name, value);
-        });
+//        $KOBJ.each(extract_data, function(name, value) {
+//            $KOBJ(toAnnotate).data(name, value);
+//        });
 
         annotateInfo[item_counter] = {
             data: extract_data,
@@ -542,7 +542,7 @@ KOBJAnnotateSearchResults.receive_annotation = function(annotation_id, html, ins
     }
 
     var toAnnotate = $KOBJ("." + annotation_id);
-    var container = $KOBJ(toAnnotate.data("wrapper"));
+    var container = $KOBJ(toAnnotate.data("wrapper" + myself.defaults.scope));
     if(html)
     {
         container.append(html);
@@ -565,7 +565,7 @@ KOBJAnnotateSearchResults.prototype.annotate_data = function(data) {
         KOBJ.loggers.annotate.trace("Working on result list local");
         count++;
         var toAnnotate = $KOBJ("." + item_id);
-        var container = $KOBJ(toAnnotate.data("wrapper"));
+        var container = $KOBJ(toAnnotate.data("wrapper" + myself.defaults.scope));
         KOBJ.loggers.annotate.trace("Item Data: ", item_data);
         myself.defaults.annotator(toAnnotate, container, item_data);
     });
