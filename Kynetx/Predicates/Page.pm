@@ -3,33 +3,33 @@ package Kynetx::Predicates::Page;
 # file: Kynetx/Predicates/Referers.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 
 use strict;
 use warnings;
@@ -44,7 +44,7 @@ our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 get_pageinfo
 ) ]);
@@ -87,8 +87,8 @@ id
 	$val = $vals->{$args->[0]};
     } elsif ($function eq 'id') {
 	# we're really just generating JS here.
-	$val = "\$K('".$args->[0]."').innerHTML";
-	
+	$val = "\$K('".$args->[0]."').html()";
+
     } elsif($function eq 'url') {
 
 	my $parsed_url = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});
@@ -102,13 +102,13 @@ id
 
 	    my $hostname = $parsed_url->hostname;
 	    my @components = split(/\./, $hostname);
-	    $req_info->{'caller_url'}->{'domain'} = 
+	    $req_info->{'caller_url'}->{'domain'} =
 	          $components[-2] . '.' . $components[-1];
 	    $req_info->{'caller_url'}->{'tld'} = $components[-1];
 
-	    if ($parsed_url->port) { 
+	    if ($parsed_url->port) {
 		$req_info->{'caller_url'}->{'port'} = $parsed_url->port;
-	    } else { 
+	    } else {
 	      if ($parsed_url->scheme eq 'http') {
 		$req_info->{'caller_url'}->{'port'} = 80;
 	      } else {
@@ -117,16 +117,16 @@ id
 	    }
 
 	    $req_info->{'caller_url'}->{'query'} = $parsed_url->query;
-	    
+
 
 	    if($logger->is_debug()) {
 		foreach my $k (keys %{ $req_info->{'caller_url'} }) {
-		    $logger->debug("Referer piece ($k): " . 
+		    $logger->debug("Referer piece ($k): " .
 				   $req_info->{'caller_url'}->{$k}, "\n"
 			) if $req_info->{'caller_url'}->{$k};
 		}
 	    }
-	    
+
 	}
 
 	$val = $req_info->{'caller_url'}->{$part};

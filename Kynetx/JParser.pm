@@ -429,7 +429,7 @@ END
     CLASSPATH=>$ENV{CLASSPATH},
     SHARED_JVM => 1,
     DIRECTORY => $wdir,
-    START_JVM  => 0,
+    START_JVM  => 1,
     AUTOSTUDY  => 1,
     DEBUG      => 0,
     STUDY      => ['org.json.JSONObject'],
