@@ -3,13 +3,11 @@ KOBJ.get_application = function(name) {
 };
 
 
-KOBJ.add_extra_page_var = function(key, value)
-{
+KOBJ.add_extra_page_var = function(key, value) {
     /* Ignore if the key is rids, init or has a : which means there is an app id */
     if (key.match(":") == null &&
-        key != 'rids' &&
-        key != 'init')
-    {
+            key != 'rids' &&
+            key != 'init') {
         KOBJ['extra_page_vars'][key] = value;
     }
 };
@@ -57,8 +55,7 @@ KOBJ.eval = function(app_config) {
     });
 };
 
-KOBJ.configure_kynetx = function(config)
-{
+KOBJ.configure_kynetx = function(config) {
     /* Override what server to talk to if ask to in config */
     $KOBJ.each(config, function(k, v) {
         KOBJ[k] = v;
@@ -74,8 +71,7 @@ KOBJ.add_app_config = function(app_config) {
     }
 
     /* Override what server to talk to if ask to in config */
-    if (typeof(app_config.init) == 'object')
-    {
+    if (typeof(app_config.init) == 'object') {
         $KOBJ.each(app_config.init, function(k, v) {
             KOBJ[k] = v;
         });
@@ -88,12 +84,10 @@ KOBJ.add_app_config = function(app_config) {
     //    var app_id_s = [];
     $KOBJ.each(app_config.rids, function(index, value) {
         var app = KOBJ.get_application(value);
-        if (app != null)
-        {
+        if (app != null) {
             app.update_from_config(app_config);
         }
-        else
-        {
+        else {
             app = new KrlApplication(value);
             app.update_from_config(app_config);
             KOBJ.applications[value] = app;
@@ -108,7 +102,6 @@ KOBJ.add_app_config = function(app_config) {
     KOBJ.callback_url = KOBJ.proto() + KOBJ.callback_host + KOBJ.kns_port + "/callback/" + KOBJ.site_id();
 }
         ;
-
 
 
 // This does not call the setTimeout Directly on the KOBJ.eval as it would block
@@ -162,17 +155,14 @@ KOBJ.registerExternalResources = function(rid, resources) {
     $KOBJ.each(resources, function (url, options) {
 
         // We are doing a named resource not a url.
-        if (url.indexOf("http") == -1)
-        {
+        if (url.indexOf("http") == -1) {
             url = KOBJ.named_resources[url];
         }
 
         url = KOBJ.proto() + url.substr(url.indexOf(":") + 3, url.length);
 
-        if (url && KOBJ.external_resources[url] == null)
-        {
-            if (typeof(options["type"]) != "undefined")
-            {
+        if (url && KOBJ.external_resources[url] == null) {
+            if (typeof(options["type"]) != "undefined") {
                 var a_resource = new KrlExternalResource(url);
                 a_resource.css_selector = options["selector"];
                 a_resource.type = options["type"];
@@ -183,7 +173,12 @@ KOBJ.registerExternalResources = function(rid, resources) {
         }
     });
     var app = KOBJ.get_application(rid);
-    app.add_external_resources(resource_array);
+    if (app) {
+        app.add_external_resources(resource_array);
+    }
+    else {
+        KOBJ.log("Ignoring Resource registration for app " + rid + " App was not registered with runtime")
+    }
 };
 
 
@@ -191,13 +186,17 @@ KOBJ.registerExternalResources = function(rid, resources) {
 KOBJ.registerDataSet = function(rid, datasets) {
     //    KOBJ.log("registering dataset " + rid);
     var app = KOBJ.get_application(rid);
-    app.store_data_sets(datasets);
+    if (app) {
+        app.store_data_sets(datasets);
+    }
+    else {
+        KOBJ.log("Ignoring Dataset for app " + rid + " App was not registered with runtime")
+    }
 };
 
 KOBJ.clearExecutionDelay = function(rid) {
     var app = KOBJ.get_application(rid);
-    if (app != null)
-    {
+    if (app != null) {
         app.delay_execution = false;
     }
     app.run();
@@ -206,7 +205,14 @@ KOBJ.clearExecutionDelay = function(rid) {
 KOBJ.registerClosure = function(rid, data, guid) {
     //    KOBJ.log("Registering external resources " + rid);
     var app = KOBJ.get_application(rid);
-    app.execute_closure(guid, data);
+    // If we do not have the app then ignore the reuslt
+    if (app) {
+        app.execute_closure(guid, data);
+    }
+    else {
+        KOBJ.log("Ignoring Closure for app " + rid + " App was not registered with runtime")
+    }
+
 };
 
 KOBJ.runit = function() {
@@ -225,8 +231,7 @@ KOBJ.logVerify = function(txn, appid, cluster) {
 };
 
 KOBJ.proto = function() {
-    if ("http:" != KOBJ.location('protocol') && "https:" != KOBJ.location('protocol'))
-    {
+    if ("http:" != KOBJ.location('protocol') && "https:" != KOBJ.location('protocol')) {
         return "https://";
     }
     return (("https:" == KOBJ.location('protocol')) ? "https://" : "http://")
@@ -235,25 +240,21 @@ KOBJ.proto = function() {
 //this method is overridden in sandboxed environments
 KOBJ.require = function(url, callback_params) {
     // This function is defined if we are in a browser plugin
-    if (typeof(callback_params) == "undefined")
-    {
+    if (typeof(callback_params) == "undefined") {
         callback_params = {};
     }
 
-    if (KOBJ.in_bx_extention)
-    {
+    if (KOBJ.in_bx_extention) {
         var params = {};
         if (typeof(callback_params) != "undefined") {
             params = $KOBJ.extend({data_type : "js"}, callback_params, true);
         }
         async_url_request(url, "KOBJ.url_loaded_callback", params);
     }
-    else if (KOBJ.in_bx_extention && callback_params.data_type == "other")
-    {
+    else if (KOBJ.in_bx_extention && callback_params.data_type == "other") {
         async_url_request(url, "KOBJ.url_loaded_callback", callback_params);
     }
-    else if (!KOBJ.in_bx_extention && callback_params.data_type == "img")
-    {
+    else if (!KOBJ.in_bx_extention && callback_params.data_type == "img") {
         var r = document.createElement("img");
         // This is the max url for a get in IE7  IE6 is 488 so we will break on ie6
         r.src = url.substring(0, 1500);
@@ -261,11 +262,10 @@ KOBJ.require = function(url, callback_params) {
         // get security errors.
         r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 3, r.src.length);
         var body = document.getElementsByTagName("body")[0] ||
-                   document.getElementsByTagName("frameset")[0];
+                document.getElementsByTagName("frameset")[0];
         body.appendChild(r);
     }
-    else
-    {
+    else {
         var r = document.createElement("script");
         // This is the max url for a get in IE7  IE6 is 488 so we will break on ie6
         r.src = url.substring(0, 1500);
@@ -276,7 +276,7 @@ KOBJ.require = function(url, callback_params) {
         r.type = "text/javascript";
         r.onload = r.onreadystatechange = KOBJ.url_loaded_callback;
         var body = document.getElementsByTagName("body")[0] ||
-                   document.getElementsByTagName("frameset")[0];
+                document.getElementsByTagName("frameset")[0];
         body.appendChild(r);
     }
 };
@@ -316,7 +316,7 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
         });
 
     } else if (type == 'change') {
-        $KOBJ(elem).live("change",function(e1) {
+        $KOBJ(elem).live("change", function(e1) {
             KOBJ.logger("change",
                     txn_id,
                     name,
@@ -333,18 +333,15 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
 
 // Shortcut to do ajax request either sync or not.  If async then you must provide
 // a call back function.  If sync the data will be returned at the end of the call.
-KOBJ.ajax = function(url, async_request, callback)
-{
+KOBJ.ajax = function(url, async_request, callback) {
     var result_data = null;
     $KOBJ.ajax({
         url:    url ,
         success: function(result) {
-            if (!async_request)
-            {
+            if (!async_request) {
                 result_data = result;
             }
-            else
-            {
+            else {
                 callback(result);
             }
         },
@@ -369,8 +366,7 @@ KOBJ.get_host = function(s) {
 KOBJ.url_loaded_callback = function(loaded_url, response, callback_params) {
 
 
-    if (typeof(loaded_url) != "undefined" && typeof(callback_params) != "undefined")
-    {
+    if (typeof(loaded_url) != "undefined" && typeof(callback_params) != "undefined") {
         switch (callback_params.data_type) {
             case  "js":
                 eval(response);
@@ -378,39 +374,32 @@ KOBJ.url_loaded_callback = function(loaded_url, response, callback_params) {
                 $KOBJ("head").append($KOBJ("<style>").text(response));
         }
 
-        if (KOBJ.external_resources[loaded_url] != null)
-        {
+        if (KOBJ.external_resources[loaded_url] != null) {
             KOBJ.external_resources[loaded_url].did_load();
         }
     }
-    else
-    {
+    else {
         var done = false;
-        if (!done && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete"))
-        {
+        if (!done && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete")) {
             done = true;
             var url = null;
             // This would happen if we were in a browser sandbox.
             //            if (typeof(loaded_url) == "undefined")
             //            {
-            if (typeof(this.src) != "undefined")
-            {
+            if (typeof(this.src) != "undefined") {
                 url = this.src;
             }
-            else
-            {
+            else {
                 url = this.href;
             }
-            if (url == null)
-            {
+            if (url == null) {
                 return;
             }
-            
+
             KOBJ.itrace("Resource of " + url + "was loaded");
 
-            if (KOBJ.external_resources[url] != null)
-            {
-                KOBJ.itrace("Updated apps of  " + url );
+            if (KOBJ.external_resources[url] != null) {
+                KOBJ.itrace("Updated apps of  " + url);
                 //            alert("Found a resource and letting it know");
                 KOBJ.external_resources[url].did_load();
             }
@@ -437,21 +426,18 @@ KOBJ.load_style_sheet_link = function(url) {
 };
 
 
-KOBJ.siteIds = function()
-{
-   return KOBJ.site_id();
+KOBJ.siteIds = function() {
+    return KOBJ.site_id();
 };
 
 
 KOBJ.site_id = function() {
     var ids = [];
-    $KOBJ.each(KOBJ.applications, function(key, value)
-    {
+    $KOBJ.each(KOBJ.applications, function(key, value) {
         ids.push(key);
     });
     return ids.join(";");
 }
-
 
 
 KOBJ.errorstack_submit = function(key, e, rule_info) {
@@ -469,8 +455,7 @@ KOBJ.errorstack_submit = function(key, e, rule_info) {
     txt += "&Msg=" + escape(e.message ? e.message : e);
 
     var script_url = e.fileName ? e.fileName : (e.filename ? e.filename : null)
-    if (!script_url)
-    {
+    if (!script_url) {
         script_url = (e.sourceURL ? e.sourceURL : "Browser does not support exception script url");
     }
 
@@ -484,8 +469,7 @@ KOBJ.errorstack_submit = function(key, e, rule_info) {
     txt += "&name=" + escape(e.name ? e.name : e);
     //    txt += "&Platform=" + escape(navigator.platform);
     //    txt += "&UserAgent=" + escape(navigator.userAgent);
-    if (typeof(rule_info) != "undefined")
-    {
+    if (typeof(rule_info) != "undefined") {
         txt += "&RuleName=" + escape(rule_info.name);
         txt += "&RuleID=" + escape(rule_info.id);
     }
@@ -509,19 +493,18 @@ KOBJ.location = function(part) {
 /* Hook to log data to the server */
 KOBJ.logger = function(type, txn_id, element, url, sense, rule, rid) {
     var logger_url = KOBJ.callback_url + "?type=" +
-                     type + "&txn_id=" + txn_id + "&element=" +
-                     element + "&sense=" + sense + "&url=" + escape(url) + "&rule=" + rule;
+            type + "&txn_id=" + txn_id + "&element=" +
+            element + "&sense=" + sense + "&url=" + escape(url) + "&rule=" + rule;
 
     if (rid) {
-           logger_url += "&rid=" + rid;
-            var app = KOBJ.get_application(rid);
-            if(app != null)
-                logger_url += app.page_vars_as_url();
+        logger_url += "&rid=" + rid;
+        var app = KOBJ.get_application(rid);
+        if (app != null)
+            logger_url += app.page_vars_as_url();
     }
 
     KOBJ.require(logger_url, {data_type: "other"});
 };
-
 
 
 /* Logs data to the browsers windows console */
@@ -544,7 +527,7 @@ KOBJ.trace = function(msg) {
 };
 
 KOBJ.itrace = function(msg) {
-     KOBJ.loggers.runtime.trace(msg);
+    KOBJ.loggers.runtime.trace(msg);
 };
 
 KOBJ.run_when_ready = function() {
@@ -552,7 +535,7 @@ KOBJ.run_when_ready = function() {
     //this code block is adapted from swfObject code used for the same purpose
     if (typeof KOBJSandboxEnvironment === "undefined" || KOBJSandboxEnvironment !== true) { //sandbox bootstrap prevention
         if ((typeof document.readyState != "undefined" && document.readyState == "complete") ||
-            ( typeof document.readyState == "undefined" && (document.getElementsByTagName("body")[0] || document.body))) {
+                ( typeof document.readyState == "undefined" && (document.getElementsByTagName("body")[0] || document.body))) {
             KOBJ.runit(); //dom ready
         } else {
             $KOBJ(KOBJ.runit); //dom not ready
