@@ -325,7 +325,15 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
         }
 
         if (this.defaults.domains[this.domain_name]["extract_function"]) {
-            this.extract_function = this.defaults.domains[this.domain_name]["extract_function"];
+            if(typeof(this.defaults.domains[this.domain_name]["extract_function"]) == "function")
+                this.extract_function = this.defaults.domains[this.domain_name]["extract_function"];
+            else
+            {
+                var extractor =    this.defaults.domains[this.domain_name]["extract_function"];
+                this.extract_function = function(toAnnotate) {
+                        return eval(extractor + "(toAnnotate)");
+                }
+            }
         }
 
     } else {
@@ -707,14 +715,14 @@ function KOBJAnnotateLocalSearchResults(an_app, an_name, an_config, an_callback)
                 "selector":".sc_ol1li",
                 "watcher": "",
                 "phoneSel":".sc_hl1 li>:not(a)",
-                "urlSel":".nc_tc a, .sb_tlst a",
+                "urlSel":"li>a:contains('Website')",
                 "modify":"",
                 "change_condition": KOBJAnnotateSearchResults.true_change_condition,
                 "extract_function": KOBJAnnotateLocalSearchResults.annotate_local_search_extractdata
 
             },
             "www.ask.com": {
-                selector : ".mb21 td td td:odd",
+                selector : ".answers_ui_content td td td:nth-child(2) div",
                 "watcher":"",
                 "phoneSel":"span.txt3",
                 "urlSel":"a.title:odd",
@@ -724,7 +732,7 @@ function KOBJAnnotateLocalSearchResults(an_app, an_name, an_config, an_callback)
             },
             "maps.google.com":{
                 "selector":".one",
-                "watcher":"#spsizer .opanel:visible",
+                "watcher":".res",
                 "phoneSel":".tel",
                 "urlSel":".fn.org",
                 "modify":"",
