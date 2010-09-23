@@ -25,7 +25,7 @@ use Kynetx::Test qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
-use Kynetx::Predicates::Twitter qw/:all/;
+use Kynetx::Modules::Twitter qw/:all/;
 use Kynetx::JavaScript qw(mk_js_str gen_js_var);
 use Kynetx::Rules qw(:all);
 
@@ -37,7 +37,7 @@ $Data::Dumper::Indent = 1;
 
 
 
-my $preds = Kynetx::Predicates::Twitter::get_predicates();
+my $preds = Kynetx::Modules::Twitter::get_predicates();
 my @pnames = keys (%{ $preds } );
 
 my $r = Kynetx::Test::configure();
@@ -76,11 +76,11 @@ foreach my $pn (@pnames) {
 my $test_count = 0;
 
 # before we insert access tokens into session keys
-isnt(Kynetx::Predicates::Twitter::authorized($my_req_info, $rule_env, $session, $rule_name, ''.''), 
+isnt(Kynetx::Modules::Twitter::authorized($my_req_info, $rule_env, $session, $rule_name, ''.''), 
      "random calls aren't authorized");
 $test_count++;
 
-contains_string(Kynetx::Predicates::Twitter::authorize($my_req_info, $rule_env, $session, {},{}), "http://twitter.com/oauth/authorize?oauth_token", "authorize gets a URL");
+contains_string(Kynetx::Modules::Twitter::authorize($my_req_info, $rule_env, $session, {},{}), "http://twitter.com/oauth/authorize?oauth_token", "authorize gets a URL");
 $test_count++;
 
 #2009/12/31 14:25:59 DEBUG Twitter.pm a16x42 [global] Exchanged request tokens for access tokens. access_token => 100844323-hNmGVEQlEblWGkof2gLFi3d97sQtc4LkoVAID0s1 & secret => quUCMtOgcKAm2iaDXAuTGwo4XiJ8AP93HllPaMOGk & user_id = 100844323 & screen_name = kynetx_test
@@ -91,7 +91,7 @@ my $screen_name = "kynetx_test";
 my $access_token = "100844323-XqQfRm33tQqp54mmhKCfNF9VIOaxVISrIYTOTXOy";
 my $access_token_secret = "QdGk4MGc2RiNuD5MHjL5GVk9m1h3SsooGeMWfUQb7f0";
 
-Kynetx::Predicates::Twitter::store_access_tokens($rid, $session,
+Kynetx::Modules::Twitter::store_access_tokens($rid, $session,
        $access_token,
        $access_token_secret,
        $user_id,
@@ -198,6 +198,39 @@ $test_count++;
 
 # is(int @{ $mentions }, 1, "Getting most recent mention");
 # $test_count++;
+
+my ($config, $krl_src, $krl, $js, $result);
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'dummy_name'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => '1234'},
+]);
+
+my $tweet = "A test tweet from Twitter.t at " . time;
+# set variable and raise event
+$krl_src = <<_KRL_;
+twitter:update("$tweet") setting(tweet)
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#diag Dumper $krl;
+
+
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
+$result = lookup_rule_env('tweet',$rule_env);
+is($result->{'text'}, $tweet, "Tweet happens");
+ok(defined $result->{'source'}, "Content length defined");
+$test_count += 2;		
+
 
 
 # clear out now for rerunning

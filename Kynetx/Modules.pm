@@ -70,7 +70,6 @@ use Kynetx::Predicates::Referers;
 use Kynetx::Predicates::Mobile;
 use Kynetx::Predicates::MediaMarkets;
 use Kynetx::Predicates::Useragent;
-use Kynetx::Predicates::Twitter;
 use Kynetx::Predicates::KPDS;
 use Kynetx::Predicates::Page;
 use Kynetx::Predicates::Math;
@@ -79,6 +78,7 @@ use Kynetx::Predicates::Google;
 use Kynetx::Predicates::OData;
 use Kynetx::Predicates::RSS;
 use Kynetx::Predicates::Facebook;
+use Kynetx::Modules::Twitter;
 use Kynetx::Modules::Email;
 use Kynetx::Modules::HTTP;
 use Kynetx::Modules::Twilio;
@@ -118,13 +118,13 @@ sub eval_module {
             $val = $new_ds->sourcedata;
         }
     } elsif ( $source eq 'twitter' ) {
-        $preds = Kynetx::Predicates::Twitter::get_predicates();
+        $preds = Kynetx::Modules::Twitter::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
             $val ||= 0;
         } else {
             $val =
-              Kynetx::Predicates::Twitter::eval_twitter(
+              Kynetx::Modules::Twitter::eval_twitter(
                                                 $req_info,  $rule_env, $session,
                                                 $rule_name, $function, $args );
         }

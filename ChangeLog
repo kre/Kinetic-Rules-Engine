@@ -1,3 +1,8 @@
+2010-09-23  Web-san  <web@dev11.kobj.net>
+
+   * Kynetx/Modules.pm (eval_module): changed to expect Twitter.pm in new place
+   * Kynetx/Modules/Twitter.pm: moved to Modules from Predicates, added update action
+
 2010-09-17  Web-san  <web@dev11.kobj.net>
 
    * Kynetx/Postlude.pm (eval_persistent_expr): Getting ready for App vars

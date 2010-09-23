@@ -44,6 +44,7 @@ use Kynetx::Environments qw(:all);
 use Kynetx::Session q/:all/;
 use Kynetx::Log q/:all/;
 use Kynetx::Json q/:all/;
+use Kynetx::Modules::Twitter;
 use Kynetx::Actions::LetItSnow;
 use Kynetx::Actions::JQueryUI;
 use Kynetx::Actions::FlippyLoo;
@@ -669,7 +670,7 @@ sub build_one_action {
     my $resources;
     if (defined $action->{'source'}) {
       if ($action->{'source'} eq 'twitter') {
-	   $actions = Kynetx::Predicates::Twitter::get_actions();
+	   $actions = Kynetx::Modules::Twitter::get_actions();
       } elsif ($action->{'source'} eq 'kpds') {
 	   $actions = Kynetx::Predicates::KPDS::get_actions();
       } elsif ($action->{'source'} eq 'amazon') {

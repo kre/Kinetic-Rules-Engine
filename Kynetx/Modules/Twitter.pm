@@ -1,7 +1,7 @@
-package Kynetx::Predicates::Twitter;
-# file: Kynetx/Predicates/Twitter.pm
+package Kynetx::Modules::Twitter;
+# file: Kynetx/Modules/Twitter.pm
 #
-# Copyright 2007-2009, Kynetx Inc.  All rights reserved.
+# Copyright 2007-2010, Kynetx Inc.  All rights reserved.
 # 
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
@@ -47,6 +47,7 @@ use Data::Dumper;
 use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Configure qw(:all);
+use Kynetx::Environments qw(:all);
 use Kynetx::Util qw(:all);
 
 use Exporter;
@@ -90,6 +91,10 @@ function(uniq, cb, config) {
 EOF
        before => \&authorize
    },
+  'update' => {'js' => '',
+	       'before' => \&update_action,
+	       'after' => []
+	     },
 
 };
 
@@ -454,6 +459,36 @@ my $func_name = {
 			    }
 };
 
+sub update_action {
+  my ($req_info,$rule_env,$session,$config,$mods,$args,$vars)  = @_;
+  my $logger = get_logger();
+  $logger->debug("Twitter update action ");
+
+  my $nt = twitter($req_info, $session);
+
+  # construct the command and then get it
+  my $tweets = eval {
+    $nt->update($args->[0]);
+  };
+  
+  if ( $@ ) {
+    # something bad happened; show the user the error
+    if ($@ =~ /\b401\b/) {
+      $logger->warn("Unauthorized access: $@");
+    } elsif ($@ =~ /\b502\b/) {
+      $logger->warn("Fail Whale: $@");
+    } else {
+      $logger->warn("$@");
+    }
+    $tweets = $@;
+  }
+
+  my $v = $vars->[0] || '__dummy';
+  $rule_env = add_to_env({$v => $tweets}, $rule_env) unless $v eq '__dummy';
+
+
+  return '';
+}
 
 sub eval_twitter {
   my ($req_info,$rule_env,$session,$rule_name,$function,$args)  = @_;
@@ -467,9 +502,6 @@ sub eval_twitter {
     my $nt = twitter($req_info, $session);
 
     my $name = $func_name->{$function}->{'name'};
-
-    # construct the command and then get it
-
 
     my $tweets = eval {
       my $arg = '';
@@ -493,6 +525,7 @@ sub eval_twitter {
       $tweets = $@;
     }
 #    $logger->debug("[eval_twitter] returning ", Dumper $tweets);
+
 
     return $tweets;
 

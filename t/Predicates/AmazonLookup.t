@@ -28,7 +28,6 @@ use Kynetx::Test;
 use Kynetx::Environments;
 use Kynetx::Session qw(session_cleanup);
 use Kynetx::Configure;
-use Kynetx::Predicates::Twitter;
 use Kynetx::JavaScript;
 use Kynetx::Rules;
 use Kynetx::Json;
@@ -42,7 +41,7 @@ $Data::Dumper::Indent = 1;
 
 
 
-my $preds = {}; #Kynetx::Predicates::Twitter::get_predicates();
+my $preds = {};
 my @pnames = keys (%{ $preds } );
 
 my $r = Kynetx::Test::configure();
