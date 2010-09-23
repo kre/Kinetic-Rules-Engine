@@ -4,8 +4,8 @@ ruleset 10 {
         select using "/test/" setting()
         pre {
       	    my_str = "This is a string";
-	    new_str = my_str.replace(#http://www.google.com#,"puppy");
-	}     
+	    new_str = my_str.replace(re#http://www.google.com#,"puppy");
+	}
 	alert(new_str);
     }
 }

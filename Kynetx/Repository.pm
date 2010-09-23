@@ -2,33 +2,33 @@ package Kynetx::Repository;
 # file: Kynetx/Repository.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use strict;
 use warnings;
 
@@ -48,7 +48,7 @@ our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
@@ -56,7 +56,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 sub get_rules_from_repository{
 
-    my ($rid, $req_info, $localparsing) = @_;
+    my ($rid, $req_info, $localparsing, $text) = @_;
 
     my $logger = get_logger();
 
@@ -72,7 +72,7 @@ sub get_rules_from_repository{
 
     # wait if this ruleset's being parsed now
     my $counter;
-    while (Kynetx::Memcached::is_parsing($memd, $rs_key) && 
+    while (Kynetx::Memcached::is_parsing($memd, $rs_key) &&
 	   $counter < 120 # don't wait forever
 	  ) {
       sleep 1;
@@ -81,18 +81,19 @@ sub get_rules_from_repository{
 
     my $ruleset = $memd->get($rs_key);
 
-    if ($ruleset && 
-	$ruleset->{'optimization_version'} && 
-	$ruleset->{'optimization_version'} >= Kynetx::Rules::get_optimization_version()) {
+    if ($ruleset &&
+	$ruleset->{'optimization_version'} &&
+	$ruleset->{'optimization_version'} >= Kynetx::Rules::get_optimization_version() &&
+	! $text) {
       $logger->debug("Using cached ruleset for $rid ($version) with key ", make_ruleset_key($rid, $version), " & optimization version ", $ruleset->{'optimization_version'} );
 
       return $ruleset;
-    } 
+    }
 
     my $ext;
     my $krl;
     # defaults to SVN so things keep working
-    my $rule_repo_type = 
+    my $rule_repo_type =
           Kynetx::Configure::get_config('RULE_REPOSITORY_TYPE') || 'svn';
 
     my $repo_info = Kynetx::Configure::get_config('RULE_REPOSITORY');
@@ -111,7 +112,7 @@ sub get_rules_from_repository{
       my $hostname = $parsed_url->hostname;
 
       # FIXME: this ought to be using code from Memcached.pm
-      #        that requires refactoring svn code below and fixing 
+      #        that requires refactoring svn code below and fixing
       #        flush_ruleset_cache
 
       # grab json version on the bet that more code in repo is in that format
@@ -145,15 +146,16 @@ sub get_rules_from_repository{
 	# return now to avoid caching fake ruleset
 	return make_empty_ruleset($rid, $rs_url);
       }
-
-      if ($localparsing) {
+    if ($text) {
+        return $json;
+    } elsif ($localparsing) {
 	$ruleset = Kynetx::Parser::parse_ruleset($json);
       } else {
 	$ruleset = jsonToAst($json);
       }
 
     } else { # default is svn
-      
+
       # FIXME: all this complicated SVN code could be replaced by nicer WebDAV
       #        code and refactored to work with code from Memcached.pm
 
@@ -171,7 +173,7 @@ sub get_rules_from_repository{
 	$svn_path = $svn_url.$rid.$ext;
 	eval {
 	  $logger->debug("Getting info on ", $svn_path);
-	  $ctx->info($svn_path, 
+	  $ctx->info($svn_path,
 		     undef,
 		     'HEAD',
 		     $info,
@@ -198,11 +200,11 @@ sub get_rules_from_repository{
 
       $req_info->{'rule_version'} = $d{$rid.$ext};
       $logger->debug("Using the $ext version: ", $req_info->{'rule_version'});
-    
+
       # open a variable as a filehandle (for weird SVN::Client stuff)
       open(FH, '>', \$krl) or die "Can't open memory file: $!";
       $ctx->cat (\*FH,
-		 $svn_url.$rid.$ext, 
+		 $svn_url.$rid.$ext,
 		 'HEAD');
 
       # return the abstract syntax tree regardless of source
@@ -227,7 +229,7 @@ sub get_rules_from_repository{
     } else {
       $logger->error("Ruleset $rid not found");
     }
-    return $ruleset;    
+    return $ruleset;
 
 }
 
@@ -244,7 +246,7 @@ sub get_svn_conn {
 	$passwd = 'foobar';
     }
 
-    
+
     $logger->debug("Connecting to rule repository at $svn_url");
 
 
@@ -262,16 +264,16 @@ sub get_svn_conn {
     # returns a list with the connection and the URL
     # This message:
     # Permission denied: Can't open file '/root/.subversion/servers': Permission denied at /web/lib/perl/Kynetx/Repository.pm line 140\
-    # means that the Web server is looking in /root/ instead of /web/ 
+    # means that the Web server is looking in /root/ instead of /web/
     # where it has permissions.  Web server should be started with HOME=/web
     return (new SVN::Client(
 		auth => [SVN::Client::get_simple_provider(),
 			 SVN::Client::get_simple_prompt_provider($simple_prompt,2),
 			 SVN::Client::get_username_provider()]
-	    ), 
+	    ),
 	    $svn_url)
 
-    
+
 
   }
 

@@ -3,8 +3,6 @@ ruleset 10 {
   rule test_choose is inactive {
     select using "/identity-policy/" setting ()
 
-    pre {
-    }
 
     if daytime() then 
     choose {

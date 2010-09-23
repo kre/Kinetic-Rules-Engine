@@ -36,6 +36,7 @@ use warnings;
 use Data::UUID;
 use Log::Log4perl qw(get_logger :levels);
 use JSON::XS;
+use Digest::MD5 qw(md5 md5_hex);
 
 use Kynetx::Parser qw(:all);
 use Kynetx::PrettyPrinter qw(:all);
@@ -102,6 +103,7 @@ sub process_rules {
     # get a session
     my $session = process_session($r);
 
+
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rids);
     $req_info->{'eid'} = $eid;
 
@@ -115,14 +117,6 @@ sub process_rules {
     # if we sort @rids we change ruleset priority
     foreach my $rid (@rids) {
 	Log::Log4perl::MDC->put('site', $rid);
-# 	my $rule_list = mk_rule_list($req_info, $rid);
-# 	$js .= eval { process_ruleset($r,
-# 				      $rule_list,
-# 				      $rule_env,
-# 				      $session,
-# 				      $rid
-# 				     )
-# 		    };
 	my $schedule = mk_schedule($req_info, $rid);
 	$js .= eval {
 	  process_schedule($r, $schedule, $session, $eid);
@@ -200,6 +194,16 @@ sub process_schedule {
       $req_info->{'rid'} = $rid;
       # we use this to modify the schedule on-the-fly
       $req_info->{'schedule'} = $schedule;
+
+
+      # this doesn't work.  We may need to get new session storage in place before it will.
+      # If we *could* get te appsession hash defined, app vars would work.
+      # # set up app session, the place where app vars store data
+      # $req_info->{'appsession'} = eval { 
+      # 	# since we generate from the RID, we get the same one...
+      # 	my $key = Digest::MD5::md5_hex($req_info->{'rid'});
+      # 	Kynetx::Session::tie_servers({},$key);
+      # };
 
 
       # generate JS for meta

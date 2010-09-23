@@ -235,7 +235,8 @@ sub test_operator {
 
     $r = eval_expr($v, $rule_env, $rule_name,$req_info);
     diag "Result: ", Dumper($r) if $d;
-    cmp_deeply($r, $x, "Trying $e");
+    my $result = cmp_deeply($r, $x, "Trying $e");
+    #die unless ($result);
 }
 
 
@@ -476,6 +477,52 @@ $x[$i] = {'val' => '23.99',
 $d[$i]  = 0;
 $i++;
 
+$e[$i] = q/store.pick("$..book[?(@.ratings)]")/;
+$x[$i] = {
+'val' =>[{
+      'ratings' => [
+        1,
+        3,
+        2,
+        10
+      ],
+      'category' => 'reference',
+      'author' => 'Nigel Rees',
+      'title' => 'Sayings of the Century',
+      'price' => '8.95'
+    },
+    {
+      'ratings' => [
+        'good',
+        'bad',
+        'lovely'
+      ],
+      'category' => 'fiction',
+      'author' => 'Evelyn Waugh',
+      'title' => 'Sword of Honour',
+      'price' => '12.99'
+    }],
+    'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q/store.pick("$..book[?(@.ratings)]").length() > 0/;
+$x[$i] = {
+'val' => 1,
+'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q/store.pick("$..book[?(@.ratings)]").length() > 3/;
+$x[$i] = {
+'val' => 0,
+'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
 $e[$i] = q#{"foo":1,"bar":2}.pick("$.foo")#;
 $x[$i] = {
    'val' => 1,
@@ -531,44 +578,9 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-#-------------------------------------------------------------------------------------
-# Special case as()
-#-------------------------------------------------------------------------------------
-
-$e[$i] = q/my_jstr.as("json")/;
-$x[$i] = {
-    "val" => {
-    "www.barnesandnoble.com"=>[
-            {"link"=>"http://aaa.com/barnesandnoble",
-             "text"=>"AAA members save money!",
-             "type"=>"AAA"}
-        ]
-    },
-    "type" => "hash"
-};
-$d[$i] = 0;
-$i++;
-
-$e[$i] = q/my_jstr.as("json").pick("$..text")/;
-$x[$i] = {
-    "val" => "AAA members save money!",
-    "type" => "str"
-};
-$d[$i] = 0;
-$i++;
-
-diag("Okay to ignore JSON parse error");
-$e[$i] = q/bad_jstr.as("json")/;
-$x[$i] = {
-    "val" => '"www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]}
-',
-    "type" => "str"
-};
-$d[$i] = 0;
-$i++;
 
 
-$e[$i] = q#my_str.replace(/string/,"puppy")#;
+$e[$i] = q#my_str.replace(re/string/,"puppy")#;
 $x[$i] = {
    'val' => 'This is a puppy',
    'type' => 'str'
@@ -584,7 +596,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_str.replace(/is/,"ese")#;
+$e[$i] = q#my_str.replace(re/is/,"ese")#;
 $x[$i] = {
    'val' => 'These is a string',
    'type' => 'str'
@@ -592,7 +604,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_str.replace(/is/g,"ese")#;
+$e[$i] = q#my_str.replace(re/is/g,"ese")#;
 $x[$i] = {
    'val' => 'These ese a string',
    'type' => 'str'
@@ -600,7 +612,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_str.replace(/this/,"do you want a")#;
+$e[$i] = q#my_str.replace(re/this/,"do you want a")#;
 $x[$i] = {
    'val' => 'This is a string',
    'type' => 'str'
@@ -608,7 +620,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_str.replace(/this/i,"do you want a")#;
+$e[$i] = q#my_str.replace(re/this/i,"do you want a")#;
 $x[$i] = {
    'val' => 'do you want a is a string',
    'type' => 'str'
@@ -616,7 +628,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_str.replace(/Th(is)/,"Nothing $1")#;
+$e[$i] = q#my_str.replace(re/Th(is)/,"Nothing $1")#;
 $x[$i] = {
    'val' => 'Nothing is is a string',
    'type' => 'str'
@@ -624,7 +636,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_url.replace(/http:\/\/([A-Za-z0-9.-]+)\/.*/,"$1")#;
+$e[$i] = q#my_url.replace(re/http:\/\/([A-Za-z0-9.-]+)\/.*/,"$1")#;
 $x[$i] = {
    'val' => 'www.amazon.com',
    'type' => 'str'
@@ -632,7 +644,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_str.replace(("/this/"+ "i").as("regexp"),"do you want a")#;
+$e[$i] = q#my_str.replace(("re/this/"+ "i").as("regexp"),"do you want a")#;
 $x[$i] = {
    'val' => 'do you want a is a string',
    'type' => 'str'
@@ -640,7 +652,7 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q#my_str.replace(("/"+ e + "/i").as("regexp"),"do you want a")#;
+$e[$i] = q#my_str.replace(("re/"+ e + "/i").as("regexp"),"do you want a")#;
 $x[$i] = {
    'val' => 'do you want a is a string',
    'type' => 'str'
@@ -649,7 +661,7 @@ $d[$i]  = 0;
 $i++;
 
 
-$e[$i] = q%my_url.replace(#http://www.amazon.com#,"foozle::")%;
+$e[$i] = q%my_url.replace(re#http://www.amazon.com#,"foozle::")%;
 $x[$i] = {
    'val' => 'foozle::/gp/products/123456789/',
    'type' => 'str'
@@ -658,7 +670,7 @@ $d[$i]  = 0;
 $i++;
 
 
-$e[$i] = q#my_str.match(/string/)#;
+$e[$i] = q#my_str.match(re/string/)#;
 $x[$i] = {
    'val' => 'true',
    'type' => 'bool'
@@ -676,7 +688,7 @@ $d[$i]  = 0;
 $i++;
 
 
-$e[$i] = q#my_str.match(/strung/)#;
+$e[$i] = q#my_str.match(re/strung/)#;
 $x[$i] = {
    'val' => 'false',
    'type' => 'bool'
@@ -685,7 +697,7 @@ $d[$i]  = 0;
 $i++;
 
 
-$e[$i] = q%my_str.match(#string#)%;
+$e[$i] = q%my_str.match(re#string#)%;
 $x[$i] = {
    'val' => 'true',
    'type' => 'bool'
@@ -694,7 +706,7 @@ $d[$i]  = 0;
 $i++;
 
 
-$e[$i] = q%my_str.match(#strung#)%;
+$e[$i] = q%my_str.match(re#strung#)%;
 $x[$i] = {
    'val' => 'false',
    'type' => 'bool'
@@ -703,7 +715,7 @@ $d[$i]  = 0;
 $i++;
 
 
-$e[$i] = q%my_url.match(#http://www.amazon.com#)%;
+$e[$i] = q%my_url.match(re#http://www.amazon.com#)%;
 $x[$i] = {
    'val' => 'true',
    'type' => 'bool'
@@ -712,7 +724,7 @@ $d[$i]  = 0;
 $i++;
 
 
-$e[$i] = q%my_str.match(#https://www.amazon.com#)%;
+$e[$i] = q%my_str.match(re#https://www.amazon.com#)%;
 $x[$i] = {
    'val' => 'false',
    'type' => 'bool'
@@ -739,7 +751,7 @@ $d[$i] = 0;
 $i++;
 
 
-$e[$i] = q#split_str.split(/;/)#;
+$e[$i] = q#split_str.split(re/;/)#;
 $x[$i] = {
     'val' => ['A','B','C'],
     'type' => 'array'
@@ -1355,50 +1367,6 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
-
-$e[$i] = q/i_h.as("str")/;
-$x[$i] = {
-    'val' => '{"mKey":"mValue","hKey":{"innerKey":"innerVal"}}',
-    'type' => 'str'
-};
-$d[$i] = 0;
-$i++;
-
-$e[$i] = q/c_h.as("str")/;
-$x[$i] ={
-    'val' => '[{"hKey":"hValue"}]',
-    'type' => 'str'
-};
-$d[$i] = 0;
-$i++;
-
-$e[$i] = q/d_h.as("str")/;
-$x[$i] ={
-    'val' => '[{"hKey":"hValue"},{"mKey":"mValue"}]',
-    'type' => 'str'
-};
-$d[$i] = 0;
-$i++;
-
-$e[$i] = q/a_h.as("json")/;
-$x[$i] = {
-    'val' => '{"pi as array":[3,1,4,1,5,6,9],"colors of the wind":"many"}',
-    'type' => 'str'
-};
-$d[$i] = 0;
-$i++;
-
-ENDY:
-
-
-$e[$i] = q#my_str.extract(re/(boot)/)#;
-$x[$i] = {
-   'val' => [],
-   'type' => 'array'
-};
-$d[$i]  = 0;
-$i++;
-
 $e[$i] = q#my_str.extract(re/(is)/)#;
 $x[$i] = {
    'val' => ['is'],
@@ -1422,6 +1390,16 @@ $x[$i] = {
 };
 $d[$i]  = 0;
 $i++;
+
+$e[$i] = q#my_str.extract(re/(boot)/)#;
+$x[$i] = {
+   'val' => [],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
 
 $e[$i] = q#mail2_str.extract(re/\s*\*\s*([ \w]+)\s*\v\s*\*\s*([ \w]+)\v/)#;
 $x[$i] = {
@@ -1463,6 +1441,79 @@ $x[$i] = {
 };
 $d[$i]  = 0;
 $i++;
+
+ENDY:
+
+#-------------------------------------------------------------------------------------
+# encode()/decode()
+#-------------------------------------------------------------------------------------
+
+$e[$i] = q/my_jstr.decode()/;
+$x[$i] = {
+    "val" => {
+    "www.barnesandnoble.com"=>[
+            {"link"=>"http://aaa.com/barnesandnoble",
+             "text"=>"AAA members save money!",
+             "type"=>"AAA"}
+        ]
+    },
+    "type" => "hash"
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/my_jstr.decode().pick("$..text")/;
+$x[$i] = {
+    "val" => "AAA members save money!",
+    "type" => "str"
+};
+$d[$i] = 0;
+$i++;
+
+#newparser format
+
+diag("Okay to ignore JSON parse error");
+$e[$i] = q/bad_jstr.decode()/;
+$x[$i] = {
+    "val" => "\n".'    "www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]}
+',
+    "type" => "str"
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/i_h.encode()/;
+$x[$i] = {
+    'val' => '{"mKey":"mValue","hKey":{"innerKey":"innerVal"}}',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/c_h.encode()/;
+$x[$i] ={
+    'val' => '[{"hKey":"hValue"}]',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/d_h.encode()/;
+$x[$i] ={
+    'val' => '[{"hKey":"hValue"},{"mKey":"mValue"}]',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/a_h.encode()/;
+$x[$i] = {
+    'val' => '{"pi as array":[3,1,4,1,5,6,9],"colors of the wind":"many"}',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
 
 
 # now run the tests....

@@ -7,10 +7,10 @@ ruleset 10 {
                       fooz = 3;
 		      boaz = "string";
 		      foozle = (fooz * (a + b));
-                      doc = << Testing #{boaz} >>;
+                      doc = <<Testing #{boaz} >>;
                       x
                   };
-	}     
+	}
         replace("test",("test" + foo));
     }
 }

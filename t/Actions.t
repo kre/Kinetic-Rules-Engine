@@ -1,34 +1,34 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use lib qw(/web/lib/perl);
 use strict;
 
@@ -81,7 +81,7 @@ my $session = Kynetx::Test::gen_session($r, $rid);
 
 my $rel_url = "/kynetx/newsletter_invite.inc";
 my $non_matching_url = "http://frag.kobj.net/widgets/weather.pl?zip=84042";
-my $first_arg = "kobj_test"; 
+my $first_arg = "kobj_test";
 my $second_arg = "This is a string";
 my $given_args;
 
@@ -92,7 +92,7 @@ my($action,$args,$krl_src, $krl, $name, $url, $config, @test_cases);
 sub add_testcase {
     my($str, $expected, $req_info, $url_changed, $desc, $diag) = @_;
     my $krl = Kynetx::Parser::parse_action($krl_src);
- 
+
     chomp $str;
     diag("$str = ", Dumper($krl)) if $diag;
 
@@ -221,11 +221,11 @@ my(@action_test_cases, $result);
 sub add_action_testcase {
     my($str, $expected, $req_info, $desc, $diag) = @_;
     my $krl = Kynetx::Parser::parse_action($krl_src);
- 
+
     chomp $str;
     diag("$str = ", Dumper($krl)) if $diag;
 
-    push(@action_test_cases, 
+    push(@action_test_cases,
 	 {'expr' => $krl->{'actions'}->[0], # just the first one
 	  'expected' => $expected,
 	  'req_info' => $req_info,
@@ -419,7 +419,7 @@ add_action_testcase(
 
 $krl_src = <<_KRL_;
 float_html("absolute", "top:50px", "right:50px", "Hello World!")
- with effect = "slide" and 
+ with effect = "slide" and
       delay = 5
 _KRL_
 
@@ -535,7 +535,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'dummy_name'},
-   {"rid" => 'cs_test'},  
+   {"rid" => 'cs_test'},
    {"txn_id" => '1234'},
    {"draggable" => {'type' => 'JS',
                      'val' => 'true'}},
@@ -583,7 +583,7 @@ $config = mk_config_string(
 
 $result = <<_JS_;
 function leave_kobj_%uniq% () {
-(function(uniq, cb, config, top, left, width, height, url) {      
+(function(uniq, cb, config, top, left, width, height, url) {
      var id_str = 'kobj_'+uniq;
      var options = 'toolbar=no,menubar=no,resizable=yes,scrollbars=yes,alwaysRaised=yes,status=no' +
                   'left=' + left + ', ' +
@@ -622,7 +622,7 @@ $config = mk_config_string(
 
 
 $result = <<_JS_;
-(function(uniq, cb, config, top, left, width, height, url) {      
+(function(uniq, cb, config, top, left, width, height, url) {
      var id_str = 'kobj_'+uniq;
      var options = 'toolbar=no,menubar=no,resizable=yes,scrollbars=yes,alwaysRaised=yes,status=no' +
                   'left=' + left + ', ' +
@@ -752,7 +752,7 @@ $config = mk_config_string(
 $krl_src = <<_KRL_;
 sidetab() with tabLocation = "left" and
     pathToTabImage = "http://wpaoli.building58.com/wp-content/uploads/2009/09/contact_tab.gif" and
-    name = "JAM_test2" and 
+    name = "JAM_test2" and
     message = "How do you do?"
 _KRL_
 
@@ -898,10 +898,9 @@ add_action_testcase(
     );
 
 
-
 $krl_src = <<_KRL_;
 page_collection_content("bob","#res","li.g",{"google_footer":{"selector":"#fll","type":"text"},
-      "search_links":{"selector":"#sbl","type":"text"}}) with callback <|mycallback|>;
+      "search_links":{"selector":"#sbl","type":"text"}}) with callback = <|mycallback|>;
 _KRL_
 
 
@@ -909,7 +908,7 @@ $config = mk_config_string(
  [
   {"rule_name" => 'dummy_name'},
   {"rid" => 'cs_test'},
-  {"txn_id" => '1234'},
+  {"txn_id" => '1234'}
  ]);
 
 
@@ -918,7 +917,7 @@ $result = <<_JS_;
         KOBJ.page_collection_content_event(uniq, label,top_selector, parent_selector, selectors ,config);
         cb();
     }
-('%uniq%',callbacks23,$config ,'bob','#res','li.g',{'google_footer' : {'selector' : '#fll', 'type' : 'text'}, 'search_links' : {'selector' : '#sbl', 'type' : 'text'}}));
+('%uniq%',callbacks23,{'rule_name' :'dummy_name','rid' :'cs_test','txn_id' :1234,'callback' :mycallback} ,'bob','#res','li.g',{'google_footer' : {'selector' : '#fll', 'type' : 'text'}, 'search_links' : {'selector' : '#sbl', 'type' : 'text'}}));
 _JS_
 
 
@@ -1013,8 +1012,8 @@ foreach my $case (@test_cases) {
     my $in_args = gen_js_rands( $case->{'args'} );
     diag("In ", Dumper($in_args)) if $case->{'diag'};
 
-    ($action, $args) = 
-	choose_action($case->{'req_info'}, 
+    ($action, $args) =
+	choose_action($case->{'req_info'},
 		      $case->{'name'},
 		      $case->{'args'},
                       {}, # empty rule env
@@ -1041,11 +1040,11 @@ foreach my $case (@test_cases) {
 foreach my $case (@action_test_cases) {
     diag(Dumper($case))  if $case->{'diag'};
 
-    my $js = 
+    my $js =
 	Kynetx::Actions::build_one_action(
 	    $case->{'expr'},
-	    $case->{'req_info'}, 
-	    extend_rule_env(['uniq_id', 'uniq'], ['kobj_23','23'],	    
+	    $case->{'req_info'},
+	    extend_rule_env(['uniq_id', 'uniq'], ['kobj_23','23'],
 		extend_rule_env(['actions','labels','tags'],[[],[],[]],$rule_env)),
 	    $session,
 	    'callbacks23',
@@ -1054,14 +1053,16 @@ foreach my $case (@action_test_cases) {
     diag $js if $case->{'diag'};
 
     my $desc = $case->{'desc'};
-    
+
     my $expected = $case->{'expected'};
     $expected =~ s/%uniq%/$case->{'req_info'}->{'uniq'}/g;
 
-    is_string_nows(
+    my $result = is_string_nows(
 	$js,
 	$expected,
 	"build_one_action: $desc");
+	my $logger = get_logger();
+	die unless ($result);
 
 }
 

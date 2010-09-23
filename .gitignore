@@ -5,3 +5,5 @@ etc/js/*/kobj-static*.js
 etc/amazon_credentials.pm
 /.project
 /current_engine.diff
+_*
+parser/output/*
