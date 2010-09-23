@@ -5,9 +5,6 @@ ruleset 10 {
   rule test_every is inactive {
     select using "/identity-policy/" setting ()
 
-    pre {
-    }
-
     if daytime() then 
     every {
         first_rule_name =>

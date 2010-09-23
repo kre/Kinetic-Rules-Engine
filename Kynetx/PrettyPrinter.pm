@@ -398,7 +398,7 @@ sub pp_rule_body {
 	$o .= pp_select($r->{'pagetype'},$indent+$g_indent);
     }
 
-    $o .= pp_pre($r->{'pre'},$indent+$g_indent) if(defined $r->{'pre'});
+    $o .= pp_pre($r->{'pre'},$indent+$g_indent) if(defined $r->{'pre'} && @{$r->{'pre'}});
 
     if(defined $r->{'emit'}) {
 	$o .= pp_emit($r->{'emit'},$indent+$g_indent);
@@ -962,7 +962,7 @@ sub pp_expr {
 	    return  pp_JS($expr->{'val'}) ;
 	};
 	/regexp/ && do {
-	    return  $expr->{'val'} ;
+	    return  're'.$expr->{'val'} ;
 	};
 	/var/ && do {
 	    return  $expr->{'val'} ;

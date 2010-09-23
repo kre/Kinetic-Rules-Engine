@@ -6,7 +6,6 @@ ruleset 10 {
       description <<
 Ruleset for testing something or other.
 >>
-
       use css resource jquery_ui_dark
       use javascript resource "http://www.windley.com/foo.js"
 

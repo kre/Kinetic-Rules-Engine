@@ -56,14 +56,13 @@ my $session = Kynetx::Test::gen_session($r, $rid);
 Kynetx::Test::gen_app_session($r, $my_req_info);
 
 
-my($krl_src);
+my($krl_src, $result, $js);
 
 
 sub run_post_testcase {
     my($src, $req_info, $session, $rule_env, $fired, $diag) = @_;
     my $krl = Kynetx::Parser::parse_post($src);
- 
-    
+     
     chomp $krl;
 
     # fix it up for what eval_post_expr expects
@@ -170,6 +169,42 @@ is(session_seen($rid, $session, 'my_trail',"windley"),
    'testing forgotten'
   );
 $test_count++;
+
+
+$krl_src = <<_KRL_;
+always {
+  log "Foo"
+} 
+_KRL_
+
+$result = run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
+like($result,
+     qr/Foo/,
+     'explicit logging'
+  );
+$test_count++;
+
+$result = run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+like($result,
+     qr/Foo/,
+     'explicit logging'
+  );
+$test_count++;
+
+$krl_src = <<_KRL_;
+always {
+  log ":session_id"
+} 
+_KRL_
+
+$result = run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
+diag $result;
+like($result,
+     qr/[\da-f]+/,
+     'explicit logging'
+  );
+$test_count++;
+
 
 
 

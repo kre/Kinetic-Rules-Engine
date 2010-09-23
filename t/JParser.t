@@ -73,6 +73,7 @@ my @skips = qw(
     data/regexp7.krl
     data/regexp8.krl
     data/regexp9.krl
+    data/counter2.krl
 );
 
 my $skip_list;

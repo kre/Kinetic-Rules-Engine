@@ -116,6 +116,37 @@ use Inline (Java => <<'END',
             }
         }
 
+            public String meta_block(String krl) throws org.antlr.runtime.RecognitionException {
+            try {
+                org.antlr.runtime.ANTLRStringStream input = new org.antlr.runtime.ANTLRStringStream(krl);
+                com.kynetx.RuleSetLexer lexer = new com.kynetx.RuleSetLexer(input);
+                CommonTokenStream tokens = new CommonTokenStream(lexer);
+                com.kynetx.RuleSetParser parser = new com.kynetx.RuleSetParser(tokens);
+                parser.meta_block();
+                HashMap result = (HashMap)parser.rule_json.get("meta");
+                HashMap map = new HashMap();
+                map.put("result", result);
+                //JSONObject js = new JSONObject(map);
+                //System.err.println("Java Secret Sauce: "  + js.toString() + "\n");
+                if (parser.parse_errors.size() > 0) {
+                    ArrayList elist = new ArrayList();
+                    for (int i = 0;i< parser.parse_errors.size(); i++) {
+                        elist.add(parser.parse_errors.get(i));
+                    }
+                    map.put("error",elist);
+                }
+                JSONObject js = new JSONObject(map);
+                return js.toString();
+            } catch(Exception e) {
+                StringBuffer sb = new StringBuffer();
+                sb.append("Parser Exception (" + e.getMessage() + "): ");
+                sb.append(e.getStackTrace()[0].getClassName()).append(":");
+                sb.append(e.getStackTrace()[0].getMethodName()).append(":");
+                sb.append(e.getStackTrace()[0].getLineNumber()).append(":");
+                return (sb.toString());
+            }
+        }
+
         public String expr(String krl) throws org.antlr.runtime.RecognitionException {
             try {
                 org.antlr.runtime.ANTLRStringStream input = new org.antlr.runtime.ANTLRStringStream(krl);
@@ -373,37 +404,6 @@ use Inline (Java => <<'END',
                     JSONObject error = new JSONObject(map);
                     return error.toString();
                 }
-                return js.toString();
-            } catch(Exception e) {
-                StringBuffer sb = new StringBuffer();
-                sb.append("Parser Exception (" + e.getMessage() + "): ");
-                sb.append(e.getStackTrace()[0].getClassName()).append(":");
-                sb.append(e.getStackTrace()[0].getMethodName()).append(":");
-                sb.append(e.getStackTrace()[0].getLineNumber()).append(":");
-                return (sb.toString());
-            }
-        }
-
-            public String meta_block(String krl) throws org.antlr.runtime.RecognitionException {
-            try {
-                org.antlr.runtime.ANTLRStringStream input = new org.antlr.runtime.ANTLRStringStream(krl);
-                com.kynetx.RuleSetLexer lexer = new com.kynetx.RuleSetLexer(input);
-                CommonTokenStream tokens = new CommonTokenStream(lexer);
-                com.kynetx.RuleSetParser parser = new com.kynetx.RuleSetParser(tokens);
-                parser.meta_block();
-                HashMap result = (HashMap)parser.rule_json.get("meta");
-                HashMap map = new HashMap();
-                map.put("result", result);
-                //JSONObject js = new JSONObject(map);
-                //System.err.println("Java Secret Sauce: "  + js.toString() + "\n");
-                if (parser.parse_errors.size() > 0) {
-                    ArrayList elist = new ArrayList();
-                    for (int i = 0;i< parser.parse_errors.size(); i++) {
-                        elist.add(parser.parse_errors.get(i));
-                    }
-                    map.put("error",elist);
-                }
-                JSONObject js = new JSONObject(map);
                 return js.toString();
             } catch(Exception e) {
                 StringBuffer sb = new StringBuffer();

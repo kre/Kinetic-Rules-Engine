@@ -82,8 +82,6 @@ ruleset 10 {
   rule test_choose is inactive {
     select using "/identity-policy/" setting ()
 
-    pre {
-    }
 
     if time:daytime() then
     choose {
@@ -329,9 +327,6 @@ my $test_rule = <<RULE;
 rule test_choose is inactive {
     select using "/identity-policy/" setting ()
 
-    pre {
-    }
-
     if time:daytime() then
     choose {
         first_rule_name =>
@@ -374,9 +369,6 @@ RULE
 
 my $test_rule_body = <<RULEBODY;
     select using "/identity-policy/" setting ()
-
-    pre {
-    }
 
     if time:daytime() then
     choose {
@@ -655,7 +647,7 @@ SKIP: {
 
     # test version function
     my $url_version_1 = "$dn/version/$ruleset";
-    #diag "Testing console with $url_version_1";
+    diag "Testing console with $url_version_1";
 
     $mech->get_ok($url_version_1);
     is($mech->content_type(), 'text/html');

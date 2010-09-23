@@ -148,10 +148,10 @@ sub eval_persistent_expr {
     my $sid;
     if($expr->{'domain'} eq 'ent') {
       $sid = $session;
-	$logger->debug(Dumper($session));
+#      $logger->debug(Dumper($session));
     } elsif($expr->{'domain'} eq 'app') {
       $sid = $req_info->{'appsession'};
-      $logger->debug(Dumper($req_info->{'appsession'}));
+#      $logger->debug(Dumper($req_info->{'appsession'}));
     }
 
     if ($expr->{'action'} eq 'clear') {
@@ -159,30 +159,31 @@ sub eval_persistent_expr {
     } elsif ($expr->{'action'} eq 'set') {
       session_set($req_info->{'rid'}, $sid, $expr->{'name'});
     } elsif ($expr->{'action'} eq 'iterator') {
-	my $by = 
-	    Kynetx::Expressions::den_to_exp(
-		Kynetx::Expressions::eval_expr($expr->{'value'},
+      my $op = $expr->{'op'};
+      $op =~ s/^\s+//;
+      my $by = 
+	Kynetx::Expressions::den_to_exp(
+	    Kynetx::Expressions::eval_expr($expr->{'value'},
 			     $rule_env,
 			     $rule_name,
 			     $req_info,
 			     $session));
-	$by = -$by if($expr->{'op'} eq '-=');
-	my $from = 
-	    Kynetx::Expressions::den_to_exp(
+      $by = -$by if($op eq '-=');
+      my $from = 
+	Kynetx::Expressions::den_to_exp(
 		Kynetx::Expressions::eval_expr($expr->{'from'},
 			     $rule_env,
 			     $rule_name,
 			     $req_info,
 			     $session));
-	if($expr->{'domain'} eq 'ent') {
-	    session_inc_by_from($req_info->{'rid'},
-				$sid,
-				$expr->{'name'},
-				$by,
-				$from
-		);
-	}
-#	$logger->debug(Dumper($session));
+      if($expr->{'domain'} eq 'ent') {
+	session_inc_by_from($req_info->{'rid'},
+			    $sid,
+			    $expr->{'name'},
+			    $by,
+			    $from
+			   );
+      }
     } elsif ($expr->{'action'} eq 'forget') {
 	if($expr->{'domain'} eq 'ent') {
 	    session_forget($req_info->{'rid'},
@@ -218,23 +219,36 @@ sub eval_persistent_expr {
 sub eval_log_statement {
     my($expr, $session, $req_info, $rule_env, $rule_name) = @_;
 
-#    my $logger = get_logger();
+    my $logger = get_logger();
 
 #    $logger->debug("eval_log_statement ", Dumper($expr));
 
     my $js ='';
 
+    my $log_val = Kynetx::Expressions::den_to_exp(
+		       Kynetx::Expressions::eval_expr($expr->{'what'},
+						      $rule_env,
+						      $rule_name,
+						      $req_info,
+						      $session));
+    
+    my $msg = "Explicit log value: ";
+    if ($log_val eq ':session_id') {
+      $msg = "Session ID: ";
+      $log_val = Kynetx::Session::session_id($session);
+    }
+
+
     # call the callback server here with a HTTP GET
     $js = Kynetx::Log::explicit_callback($req_info, 
 					 $rule_name, 
-			    Kynetx::Expressions::den_to_exp(
-				       Kynetx::Expressions::eval_expr($expr->{'what'},
-						    $rule_env,
-						    $rule_name,
-						    $req_info,
-						    $session)));
+					 $log_val
+					);
 
-    return $js;
+    # this puts the statement in the log data for when debug is on
+    $logger->debug($msg, $log_val);
+
+    return $msg . $log_val;
 }
 
 
