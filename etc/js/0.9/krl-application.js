@@ -208,6 +208,7 @@ KrlApplication.prototype.execute_closure = function(guid, a_closure)
  */
 KrlApplication.prototype.execute_pending_closures = function()
 {
+
     if (!this.is_data_loaded() || !this.are_resources_loaded())
     {
         return;
@@ -224,7 +225,7 @@ KrlApplication.prototype.execute_pending_closures = function()
         {
             KOBJ.loggers.general.error("Closure Executed with error " + myself.app_id + " - " + guid, err);
         }
-        KOBJEventManager.event_fire_complete(guid);
+        KOBJEventManager.event_fire_complete(guid,myself);
     });
 
     this.pending_closures = {};

@@ -15,18 +15,6 @@ KOBJEventManager.content_changes_running = {};
 KOBJEventManager.content_change_hashcodes = {};
 
 
-// this will look like
-// {"ax1993":
-//          {"pageview":
-//              {"unknown<selector>":
-//                      {submit_data: {},
-//                        param_data :{}
-//              }
-//           }
-//  }
-
-
-
 // List of guids currently running for the content change event.
 // If there are any in the list we do not start the timer until they are all done.
 // We also need to reset the content hash value after they have all run so that we
@@ -53,22 +41,31 @@ KOBJEventManager.guid_list = {
  * This is the notification call back to let the event manager know that
  * an event was sent to the server and has come back.
  */
-KOBJEventManager.event_fire_complete = function(guid)
+KOBJEventManager.event_fire_complete = function(guid,app)
 {
     KOBJ.itrace("Event Fire Complete " + guid);
+
     var guid_info = KOBJEventManager.guid_list[guid];
-    delete KOBJEventManager.current_fires[guid_info.app.app_id][guid_info.event][guid_info.selector];
+    if(!guid_info)
+    {
+        KOBJ.error("Event transaction id unknown ignoring for: " + app.app_id);
+        return;
+    }
+
+    if(guid_info.app.app_id != app.app_id) {
+        KOBJ.error("Event transaction id was not registered to app: " + app.app_id + " - " + guid);
+        return;
+    }
+
+    delete KOBJEventManager.current_fires[guid_info.app.app_id][guid_info.event][guid_info.selector][guid];
     delete KOBJEventManager.guid_list[guid];
 
     if (guid_info.event == "content_change")
     {
-//        KOBJ.itrace("Clear Content Change " + guid);
         delete KOBJEventManager.content_changes_running[guid];
         KOBJEventManager.update_content_change_hash();
-//        KOBJ.itrace("Done updating " + guid);
         if ($KOBJ.isEmptyObject(KOBJEventManager.content_changes_running))
         {
-//            KOBJ.itrace("Setting change look timer 2s");
             setTimeout(KOBJEventManager.content_change_checker, 500);
         }
     }
@@ -108,8 +105,8 @@ KOBJEventManager.add_to_fire_queue = function(guid, event, data, app)
         return;
     }
     KOBJ.itrace("Adding Event " + event + " : " + app.app_id);
-    // If this is a custom event we need to track it so add it to our hash
 
+    // Build up the current fires has with the elements and data we need.
     if (KOBJEventManager.current_fires[app.app_id] == null)
     {
         KOBJEventManager.current_fires[app.app_id] = {};
@@ -118,16 +115,18 @@ KOBJEventManager.add_to_fire_queue = function(guid, event, data, app)
     {
         KOBJEventManager.current_fires[app.app_id][event] = {};
     }
+    if (KOBJEventManager.current_fires[app.app_id][event][data.selector] == null)
+    {
+        KOBJEventManager.current_fires[app.app_id][event][data.selector] = {};
+    }
+    KOBJEventManager.current_fires[app.app_id][event][data.selector][guid] = {};
+    KOBJEventManager.current_fires[app.app_id][event][data.selector][guid]["submit_data"] = data.submit_data;
+    KOBJEventManager.current_fires[app.app_id][event][data.selector][guid]["param_data"] = data.param_data;
+    KOBJEventManager.current_fires[app.app_id][event][data.selector][guid]["selector"] = data.selector;
 
-    KOBJEventManager.current_fires[app.app_id][event][data.selector] = {};
-    KOBJEventManager.current_fires[app.app_id][event][data.selector]["submit_data"] = data.submit_data;
-    KOBJEventManager.current_fires[app.app_id][event][data.selector]["param_data"] = data.param_data;
-    KOBJEventManager.current_fires[app.app_id][event][data.selector]["selector"] = data.selector;
+    var app_data = KOBJEventManager.current_fires[app.app_id][event][data.selector][guid];
 
-    var app_data = KOBJEventManager.current_fires[app.app_id][event][data.selector];
-
-
-    // Short cut way to get to app
+    // Short cut way to get to app via guid
     KOBJEventManager.guid_list[guid] = {};
     KOBJEventManager.guid_list[guid]["app"] = app;
     KOBJEventManager.guid_list[guid]["event"] = event;
