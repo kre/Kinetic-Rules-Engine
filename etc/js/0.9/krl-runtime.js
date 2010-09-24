@@ -294,7 +294,7 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
     } else if (attr == 'id') {
         elem = '#' + name;
     } else if (attr == 'selector') {
-        elem =  name;
+        elem = name;
     } else {
         elem = name;
     }
@@ -509,27 +509,27 @@ KOBJ.logger = function(type, txn_id, element, url, sense, rule, rid) {
 };
 
 
+
 /* Logs data to the browsers windows console */
 //alert("type" + typeof(KOBJ.log));
-KOBJ.log = function(msg) {
-    KOBJ.loggers.general.info(msg);
+KOBJ.log = function() {
+    KOBJ.loggers.general.log(KOBJ.log4js.Level.INFO, arguments);
 };
 
-
-KOBJ.error = function(msg) {
-    KOBJ.loggers.general.error(msg);
+KOBJ.error = function() {
+    KOBJ.loggers.general.log(KOBJ.log4js.Level.ERROR, arguments);
 };
 
-KOBJ.warning = function(msg) {
-    KOBJ.loggers.general.warning(msg);
+KOBJ.warning = function() {
+    KOBJ.loggers.general.log(KOBJ.log4js.Level.WARN, arguments);
 };
 
-KOBJ.trace = function(msg) {
-    KOBJ.loggers.general.trace(msg);
+KOBJ.trace = function() {
+    KOBJ.loggers.general.log(KOBJ.log4js.Level.TRACE, arguments);
 };
 
-KOBJ.itrace = function(msg) {
-    KOBJ.loggers.runtime.trace(msg);
+KOBJ.itrace = function() {
+    KOBJ.loggers.general.log(KOBJ.log4js.Level.TRACE, arguments);
 };
 
 KOBJ.run_when_ready = function() {
