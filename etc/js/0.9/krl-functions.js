@@ -395,4 +395,4 @@ KOBJ.urlDecode = function (psEncodeString)
   var lsRegExp = /\+/g;
   // Return the decoded string
   return unescape(String(psEncodeString).replace(lsRegExp, " "));
-}
+};

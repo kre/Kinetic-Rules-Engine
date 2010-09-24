@@ -439,7 +439,7 @@ KOBJ.site_id = function() {
         ids.push(key);
     });
     return ids.join(";");
-}
+};
 
 
 KOBJ.errorstack_submit = function(key, e, rule_info) {
