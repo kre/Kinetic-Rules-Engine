@@ -293,6 +293,8 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
         elem = '.' + name;
     } else if (attr == 'id') {
         elem = '#' + name;
+    } else if (attr == 'selector') {
+        elem =  name;
     } else {
         elem = name;
     }
