@@ -49,3 +49,9 @@ KOBJ.mega_debug = function() {
     });
     KOBJ.popup_appender.show();
 };
+
+
+if(typeof(KOBJMegaDebug) != "undefined")
+{
+    KOBJ.mega_debug();
+}

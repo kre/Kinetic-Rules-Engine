@@ -19,6 +19,7 @@ KOBJAnnotateSearchResults.google_search_change_condition = function() {
 
     // If there is not oq then instance has not even finished once.
     if (current_query.oq == "undefined") {
+        KOBJ.loggers.annotate.trace("Page is not stable url did not change");
         return false;
     }
 
@@ -27,13 +28,17 @@ KOBJAnnotateSearchResults.google_search_change_condition = function() {
 
     if (KOBJ.urlDecode(current_query.oq) == search_field || KOBJ.urlDecode(current_query.q) == search_field ||
             KOBJ.urlDecode(current_query.oq) == about_to_be_typed || KOBJ.urlDecode(current_query.q) == about_to_be_typed) {
-        KOBJ.loggers.annotate.trace("They were the same");
+        KOBJ.loggers.annotate.trace("Page considered stable.");
         return true;
     }
-    KOBJ.loggers.annotate.trace("Were not the same");
+    KOBJ.loggers.annotate.trace("Page is not stable");
 
     return false;
 };
+
+
+KOBJAnnotateSearchResults.instances = { };
+
 
 KOBJAnnotateSearchResults.true_change_condition = function() {
     return true;
@@ -78,15 +83,16 @@ KOBJAnnotateSearchResults.annotate_search_extractdata = function(toAnnotate, ann
     return annotateData;
 };
 
+/*
+ Altavisa has a strange layout so we need a special way to put the annotation
+ */
 KOBJAnnotateSearchResults.altavisa_custom_modify = function(toAnnotate, placement, wrapper) {
-//    KOBJ.loggers.annotate.trace("Custom Modify Called ");
-//    KOBJ.loggers.annotate.trace($KOBJ(toAnnotate).next().next().text());
-    KOBJ.loggers.annotate.trace(placement);
-//    KOBJ.loggers.annotate.trace($KOBJ(wrapper).html());
     $KOBJ(toAnnotate).next().next()[placement](wrapper);
 };
 
-
+/*
+ Facebook data is not really links but names and images
+ */
 KOBJAnnotateSearchResults.annotate_facebook_extractdata = function(toAnnotate, annotator) {
 
     var annotateData = {};
@@ -100,14 +106,16 @@ KOBJAnnotateSearchResults.annotate_facebook_extractdata = function(toAnnotate, a
 };
 
 
+/*
+ Linked in data is the persons name and their linked in id also known as a mid.
+ */
 KOBJAnnotateSearchResults.annotate_linkedin_extractdata = function(toAnnotate, annotator) {
 
     var annotateData = {};
-    if($KOBJ(toAnnotate).attr("data-config") == null)
-    {
+    if ($KOBJ(toAnnotate).attr("data-config") == null) {
         return { "mid" :  null, "name" : null};
     }
-    annotateData= $KOBJ(toAnnotate).attr("data-config").replace("mid", "'mid'").replace("name", "'name'").replace(/'/g, '"');
+    annotateData = $KOBJ(toAnnotate).attr("data-config").replace("mid", "'mid'").replace("name", "'name'").replace(/'/g, '"');
 
     annotateData = $KOBJ.parseJSON(annotateData);
 
@@ -148,16 +156,8 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
 
     this.defaults = {
         "scope": "",
-        "maxURLLength" : 1800,
-        "wrapper_css" : {
-            "color": "#CCC",
-            "width": "auto",
-            "font-size": "12px",
-            "line-height": "normal",
-            "left-margin": "15px",
-            "right-padding": "15px",
-            "font-family": "Verdana, Geneva, sans-serif"
-        },
+        "maxURLLength" : 1500,
+        "wrapper_css" : { "display" : "none" },
         "placement" : 'append',
         "flush_domains" : false,
         "domains": {
@@ -224,16 +224,7 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
                 "watcher": "",
                 "urlSel":"",
                 "change_condition": KOBJAnnotateSearchResults.true_change_condition,
-                "extract_function": KOBJAnnotateSearchResults.annotate_search_extractdata,
-                "wrapper_css" : {
-                    "color": "black",
-                    "width": "auto",
-                    "font-size": "12px",
-                    "line-height": "normal",
-                    "left-margin": "15px",
-                    "right-padding": "15px",
-                    "font-family": "Verdana, Geneva, sans-serif"
-                }
+                "extract_function": KOBJAnnotateSearchResults.annotate_search_extractdata
             },
             "www.facebook.com" : {
                 "selector": ".uiUnifiedStory",
@@ -241,17 +232,7 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
                 "watcher": "#pagelet_home_stream",
                 "placement" : 'before',
                 "change_condition": KOBJAnnotateSearchResults.true_change_condition,
-                "extract_function": KOBJAnnotateSearchResults.annotate_facebook_extractdata,
-                "wrapper_css" : {
-                    "color": "#CCC",
-                    "width": "auto",
-                    "font-size": "12px",
-                    "float": "none",
-                    "line-height": "normal",
-                    "left-margin": "15px",
-                    "right-padding": "15px",
-                    "font-family": "Verdana, Geneva, sans-serif"
-                }
+                "extract_function": KOBJAnnotateSearchResults.annotate_facebook_extractdata
             },
             "www.linkedin.com" : {
                 "selector": "ul.chron li",
@@ -259,33 +240,21 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
                 "watcher": "",
                 "placement" : 'before',
                 "change_condition": KOBJAnnotateSearchResults.true_change_condition,
-                "extract_function": KOBJAnnotateSearchResults.annotate_linkedin_extractdata,
-                "wrapper_css" : {
-                    "color": "#CCC",
-                    "width": "auto",
-                    "font-size": "12px",
-                    "float": "none",
-                    "line-height": "normal",
-                    "left-margin": "15px",
-                    "right-padding": "15px",
-                    "font-family": "Verdana, Geneva, sans-serif"
-                }
+                "extract_function": KOBJAnnotateSearchResults.annotate_linkedin_extractdata
             }
-
-
         }
     };
 
-    if (this.defaults.placement == "prepend" || this.defaults.placement == "before") {
-        this.defaults.wrapper_css.float = "left"
-    }
-    else if (this.defaults.placement == "append" || this.defaults.placement == "after") {
-        this.defaults.wrapper_css.float = "right"
-    }
+    // TODO : Add about.com, twitter.com
 
     this.domain_name = an_config.domain_override || window.location.hostname;
 
 
+    if(an_config.remote && an_config.remote == "event")
+    {
+        this.defaults.maxURLLength = 700;
+
+    }
     // Lets merge our defaults  and with what comes in the config
     // Careful this is a deep merge.
     if (typeof an_config === 'object') {
@@ -343,17 +312,28 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
 
     // Simple var to know if we have the data we need to annotate.
     this.invalid = false;
+    this.instance_id = "A"+KOBJEventManager.eid();
 
     if (this.defaults.domains[this.domain_name]) {
         // Gets selectors for both DOM watcher and the element
         this.lister = this.defaults.domains[this.domain_name]["selector"];
         this.watcher = this.defaults.domains[this.domain_name]["watcher"];
         this.modify = this.defaults.domains[this.domain_name]["modify"];
-        this.change_condition = this.defaults.domains[this.domain_name]["change_condition"];
-        this.extract_function = this.defaults.domains[this.domain_name]["extract_function"];
+
+        if (this.defaults.domains[this.domain_name]["change_condition"]) {
+            this.change_condition = this.defaults.domains[this.domain_name]["change_condition"];
+        }
+
+        if (this.defaults.domains[this.domain_name]["extract_function"]) {
+            this.extract_function = this.defaults.domains[this.domain_name]["extract_function"];
+        }
+
     } else {
         this.invalid = true;
     }
+
+    KOBJAnnotateSearchResults.instances[this.instance_id] = this;
+
     KOBJ.loggers.annotate.trace("Annotate Object Created");
 }
 ;
@@ -508,6 +488,68 @@ KOBJAnnotateSearchResults.prototype.annotate_remote_search = function() {
 
 };
 
+KOBJAnnotateSearchResults.prototype.annotate_event_search = function() {
+    var myself = this;
+    KOBJ.loggers.annotate.trace("Event Annotation Requested ");
+
+    var runAnnotate = function() {
+        KOBJ.loggers.annotate.trace("In Event Annotate Function");
+
+        var remote_url = myself.defaults["remote"];
+        var annotateInfo = myself.collect_and_label();
+        var count = 0;
+
+        if (!$KOBJ.isEmptyObject(annotateInfo)) {
+            var annotateArray = myself.splitJSONRequest(annotateInfo, remote_url);
+            $KOBJ.each(annotateArray, function(key, data) {
+                var annotateString = $KOBJ.compactJSON(data);
+                myself.app.raise_event("annotate_search", {
+                    "name":myself.name,
+                    "scope":myself.defaults.scope,
+                    "annotate_instance" : myself.instance_id,
+                    "annotatedata":annotateString
+                });
+            });
+        }
+        myself.callback();
+    };
+
+    return runAnnotate;
+
+};
+
+KOBJAnnotateSearchResults.receive_annotation_data = function(annotation_id, data, instance_id)
+{
+    var anno = KOBJAnnotateSearchResults.instances[instance_id];
+    if (!anno) {
+        KOBJ.log("Did not find annotation object for id " + instance_id);
+        return;
+    }
+    KOBJ.log("Calling annotate data with ");
+    KOBJ.log(data);
+    var hashinfo = {};
+    hashinfo[annotation_id] = data;
+
+    anno.annotate_data(hashinfo);
+}
+;
+
+KOBJAnnotateSearchResults.receive_annotation = function(annotation_id, html, instance_id) {
+    var anno = KOBJAnnotateSearchResults.instances[instance_id];
+    if (!anno) {
+        KOBJ.log("Did not find annotation object for id " + instance_id);
+        return;
+    }
+
+    var toAnnotate = $KOBJ("." + annotation_id);
+    var container = $KOBJ(toAnnotate.data("wrapper"));
+    if(html)
+    {
+        container.append(html);
+        container.show();
+    }
+};
+
 
 /*
  Data should look like
@@ -517,12 +559,14 @@ KOBJAnnotateSearchResults.prototype.annotate_data = function(data) {
     var count = 0;
     var myself = this;
 
+    KOBJ.loggers.annotate.trace("Anno Data Call: ", data);
     // Here item_id is the unique id we put on the item we are annotating.
     $KOBJ.each(data, function(item_id, item_data) {
         KOBJ.loggers.annotate.trace("Working on result list local");
         count++;
         var toAnnotate = $KOBJ("." + item_id);
         var container = $KOBJ(toAnnotate.data("wrapper"));
+        KOBJ.loggers.annotate.trace("Item Data: ", item_data);
         myself.defaults.annotator(toAnnotate, container, item_data);
     });
 
@@ -577,7 +621,7 @@ KOBJAnnotateSearchResults.prototype.splitJSONRequest = function(json, url) {
         });
         return toReturn;
     } else {
-        return [json];
+        return [to_compact];
     }
 };
 

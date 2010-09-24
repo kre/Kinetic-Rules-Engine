@@ -68,6 +68,24 @@ EOF
     	}
 EOF
     	 'after' => []
+    },
+    add_annotation => {
+    	       'js' => <<EOF,
+    	function(uniq, cb, config, annotate_key,html,instance_id) {
+            KOBJAnnotateSearchResults.receive_annotation(annotate_key,html,instance_id);
+    	    cb();
+    	}
+EOF
+    	 'after' => []
+    },
+    add_annotation_data => {
+    	       'js' => <<EOF,
+    	function(uniq, cb, config, annotate_key,data,instance_id) {
+            KOBJAnnotateSearchResults.receive_annotation_data(annotate_key,data,instance_id);
+    	    cb();
+    	}
+EOF
+    	 'after' => []
     }
 };
 
