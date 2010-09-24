@@ -160,6 +160,7 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
         "wrapper_css" : { "display" : "none" },
         "placement" : 'append',
         "flush_domains" : false,
+        "use_change_condition": true,
         "domains": {
             "www.google.com": {
                 "selector": "li.g:not(.localbox), div.g",
@@ -174,7 +175,7 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
                 "modify": "p[property='f:desc']",
                 "watcher": "",
                 "urlSel":"a[rel='f:url']",
-                "change_condition": KOBJAnnotateSearchResults.google_search_change_condition,
+                "change_condition": KOBJAnnotateSearchResults.true_change_condition,
                 "extract_function": KOBJAnnotateSearchResults.annotate_search_extractdata
             },
             "www.bing.com": {
@@ -340,6 +341,10 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
         this.invalid = true;
     }
 
+    if(!this.defaults.use_change_condition)
+    {
+        this.change_condition = false;
+    }
     KOBJAnnotateSearchResults.instances[this.instance_id] = this;
 
     KOBJ.loggers.annotate.trace("Annotate Object Created");
