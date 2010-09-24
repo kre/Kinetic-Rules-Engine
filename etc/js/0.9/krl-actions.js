@@ -47,3 +47,14 @@ KOBJ.watch_event = function(event, selector, config)
         KOBJEventManager.add_out_of_bound_event(application, "pageview");
     }
 };
+
+
+
+KOBJ.annotate_action = function(uniq,callback,config,name) {
+    var ann = new KOBJAnnotateSearchResults(KOBJ.get_application(config.rid), name, config, callback);
+    ann.annotate();
+};
+
+KOBJ.annotate_local_action = function(uniq,callback,config) {
+
+};

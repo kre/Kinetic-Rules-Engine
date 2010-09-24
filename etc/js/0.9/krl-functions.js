@@ -1,5 +1,3 @@
-
-
 /* Injects a javascript fragment into the page */
 // TODO: Remove only used by the widget weather.pl
 KOBJ.fragment = function(base_url) {
@@ -61,8 +59,7 @@ KOBJ.createPopIn = function(config, content) {
     var side2;
     var distance;
 
-    switch (defaults["position"])
-    {
+    switch (defaults["position"]) {
         case "top-left":
             side1 = "top";
             side2 = "left";
@@ -242,10 +239,10 @@ KOBJ.page_collection_content_event = function (uniq, label, top_selector, parent
     var found_data = [];
 
     // First find the top_selector elements.
-    $KOBJ(top_selector).each( function() {
+    $KOBJ(top_selector).each(function() {
 
         // Now using that top selector as a context find each row
-        $KOBJ(parent_selector,this).each(function() {
+        $KOBJ(parent_selector, this).each(function() {
             var parent = this;
             var the_data = { "parent" : parent};
             var data = {};
@@ -269,14 +266,10 @@ KOBJ.page_collection_content_event = function (uniq, label, top_selector, parent
         })
     });
 
-    if (config.callback != null)
-    {
-        config.callback(label,found_data);
+    if (config.callback != null) {
+        config.callback(label, found_data);
     }
 };
-
-
-
 
 
 // helper functions used by float
@@ -290,8 +283,7 @@ KOBJ.buildDiv = function (uniq, pos, top, side, config) {
         display: 'none'
     };
     var class_name = "";
-    if (typeof(config) != "undefined" && typeof(config.class_name) != "undefined")
-    {
+    if (typeof(config) != "undefined" && typeof(config.class_name) != "undefined") {
         class_name = config.class_name;
     }
     div_style[vert[0]] = vert[1];
@@ -314,12 +306,12 @@ KOBJ.pick = function(o) {
 // attach a close event to an element inside a notification
 KOBJ.close_notification = function(s) {
     $KOBJ(s).bind("click.kGrowl",
-            function(e) {
-                $KOBJ(this).unbind('click.kGrowl');
-                $KOBJ(s).parents(".kGrowl-notification").trigger('kGrowl.beforeClose').animate({opacity: 'hide'}, "normal", "swing", function() {
-                    $KOBJ(this).trigger('kGrowl.close').remove();
-                });
-            });
+                 function(e) {
+                     $KOBJ(this).unbind('click.kGrowl');
+                     $KOBJ(s).parents(".kGrowl-notification").trigger('kGrowl.beforeClose').animate({opacity: 'hide'}, "normal", "swing", function() {
+                         $KOBJ(this).trigger('kGrowl.close').remove();
+                     });
+                 });
 };
 
 
@@ -348,3 +340,59 @@ KOBJ.css = function(css) {
         }
     }
 };
+
+
+KOBJ.parseURL = function(url) {
+    var a = KOBJ.document.createElement('a');
+    a.href = url;
+    return {
+        source: url,
+        protocol: a.protocol.replace(':', ''),
+        host: a.hostname,
+        port: a.port,
+        query: a.search,
+        params: (function() {
+            var ret = {},
+                    seg = a.search.replace(/^\?/, '').split('&'),
+                    len = seg.length, i = 0, s;
+            for (; i < len; i++) {
+                if (!seg[i]) {
+                    continue;
+                }
+                s = seg[i].split('=');
+                ret[s[0]] = s[1];
+            }
+            return ret;
+        })(),
+        file: (a.pathname.match(/\/([^\/?#]+)$/i) || [,''])[1],
+        hash: a.hash.replace('#', ''),
+        path: a.pathname.replace(/^([^\/])/, '/$1'),
+        relative: (a.href.match(/tps?:\/\/[^\/]+(.+)/) || [,''])[1],
+        segments: a.pathname.replace(/^\//, '').split('/')
+    };
+};
+
+KOBJ.parseURLParams = function(param_string) {
+    var ret = {};
+    var seg = param_string.replace(/^\?/, '').split('&');
+    var len = seg.length;
+    var i = 0;
+    var s = null;
+    for (; i < len; i++) {
+        if (!seg[i]) {
+            continue;
+        }
+        s = seg[i].split('=');
+        ret[s[0]] = s[1];
+    }
+    return ret;
+};
+
+
+KOBJ.urlDecode = function (psEncodeString)
+{
+  // Create a regular expression to search all +s in the string
+  var lsRegExp = /\+/g;
+  // Return the decoded string
+  return unescape(String(psEncodeString).replace(lsRegExp, " "));
+}
