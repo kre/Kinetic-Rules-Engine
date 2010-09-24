@@ -42,6 +42,7 @@ use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Email::MIME qw/:all/;
+use Email::MIME::ContentType;
 
 use Kynetx::Environments qw/:all/;
 use Kynetx::Util qw/
@@ -111,10 +112,25 @@ sub _parts {
     my $parms  = get_parms($args);
     my @parts  = $email->parts();
     $logger->debug("Parm: ", $parms);
+    my $value = "";
     my @parry  = ();
     foreach my $p (@parts) {
+        $logger->debug("Parts: ", join(",",keys %{$p}));
         my $key = $p->{'ct'}->{'discrete'} . '/' . $p->{'ct'}->{'composite'};
-        my $value = $p->{'body'};
+        my $eValue = $p->{'body'};
+        if ($p->content_type) {
+            my $ct = parse_content_type($p->content_type);
+            my $charset = $ct->{'attributes'}{'charset'};
+            if ($charset) {
+                $value = Encode::decode($charset,$eValue);
+            } else {
+                $value = $eValue;
+            }
+        } else {
+            $value = $eValue;
+        }
+
+
         if (ref $value eq 'SCALAR') {
             $value = $$value;
         }
@@ -129,8 +145,9 @@ sub _body {
     my ( $req_info, $rule_env, $args ) = @_;
     my $logger = get_logger();
     my $email  = email_object($args);
+    $logger->debug("Body stuff: ",$email->debug_structure);
     my $parms  = get_parms($args);
-    my $body = $email->body();
+    my $body = $email->body_str();
     $logger->trace("Body val: **",$body,"**");
     $body = $email->body_raw() unless ($body);
     return $body;
@@ -177,7 +194,7 @@ sub run_function {
 
     my $logger = get_logger();
 
-    #$logger->debug("Args passed: ", ref $args);
+    $logger->debug("Args passed: ", ref $args);
     my $f = $funcs->{$function};
     if ( defined $f ) {
         my $result = $f->( $req_info, $function, $args );
