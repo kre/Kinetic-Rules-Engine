@@ -183,16 +183,12 @@ KOBJ.registerExternalResources = function(rid, resources) {
         }
     });
     var app = KOBJ.get_application(rid);
-<<<<<<< HEAD
-    app.add_external_resources(resource_array);
-=======
     if (app) {
         app.add_external_resources(resource_array);
     }
     else {
         KOBJ.error("Ignoring Resource registration for app " + rid + " App was not registered with runtime")
     }
->>>>>>> 92c362e... updated runtime to have started event manager and logging
 };
 
 
@@ -200,16 +196,12 @@ KOBJ.registerExternalResources = function(rid, resources) {
 KOBJ.registerDataSet = function(rid, datasets) {
     //    KOBJ.log("registering dataset " + rid);
     var app = KOBJ.get_application(rid);
-<<<<<<< HEAD
-    app.store_data_sets(datasets);
-=======
     if (app) {
         app.store_data_sets(datasets);
     }
     else {
         KOBJ.error("Ignoring Dataset for app " + rid + " App was not registered with runtime")
     }
->>>>>>> 92c362e... updated runtime to have started event manager and logging
 };
 
 KOBJ.clearExecutionDelay = function(rid) {
@@ -224,9 +216,6 @@ KOBJ.clearExecutionDelay = function(rid) {
 KOBJ.registerClosure = function(rid, data, guid) {
     //    KOBJ.log("Registering external resources " + rid);
     var app = KOBJ.get_application(rid);
-<<<<<<< HEAD
-    app.execute_closure(guid, data);
-=======
     // If we do not have the app then ignore the reuslt
     if (app) {
         app.execute_closure(guid, data);
@@ -234,8 +223,6 @@ KOBJ.registerClosure = function(rid, data, guid) {
     else {
         KOBJ.error("Ignoring Closure for app " + rid + " App was not registered with runtime")
     }
-
->>>>>>> 92c362e... updated runtime to have started event manager and logging
 };
 
 KOBJ.runit = function() {
