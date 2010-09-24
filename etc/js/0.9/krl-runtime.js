@@ -479,7 +479,7 @@ KOBJ.site_id = function() {
         ids.push(key);
     });
     return ids.join(";");
-}
+};
 
 
 
