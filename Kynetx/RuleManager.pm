@@ -42,6 +42,8 @@ $Data::Dumper::Indent = 1;
 use HTML::Template;
 use JSON::XS;
 use Cache::Memcached;
+use DateTime::Format::ISO8601;
+use Benchmark ':hireswallclock';
 
 use Kynetx::Parser qw(:all);
 use Kynetx::OParser qw/:all/;
@@ -52,8 +54,12 @@ use Kynetx::Util qw(:all);
 use Kynetx::Version qw/:all/;
 use Kynetx::Memcached qw(:all);
 use Kynetx::Repository;
+use Kynetx::Configure qw(get_config);
+use Kynetx::Directives qw(
+  set_options
+);
+use Kynetx::Predicates::Amazon::SNS qw(:all);
 
-use Benchmark ':hireswallclock';
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
@@ -421,16 +427,29 @@ sub lint_rule {
 sub flush_data {
     my ( $req_info, $method, $keys ) = @_;
     my $logger = get_logger();
-
-    my $memd = get_memd();
+    my $topic = get_config("sns");
+    my $flush = $topic->{"FLUSH"};
+    my $action = 'flush';
+    my $options = {'action' => $action };
+    my $response = "";
 
     foreach my $key ( split( /;/, $keys ) ) {
-        $logger->debug("Flushing $key");
-        $memd->delete($key);
+        my $directive = Kynetx::Directives->new("kns");
+        my $timestamp = DateTime->now;
+        $options->{'rid'} = $key;
+        $directive->set_options($options);
+        my $json = Kynetx::Json::astToJson( $directive->to_directive() );
+        my $hash = {
+            'Subject' => "Flush cache request for $key ($timestamp)" ,
+            'TopicArn' => $flush,
+            'Message' => $json,
+        };
+        Kynetx::Util::sns_publish($hash);
+        $response .= "<title>KNS Data Flush</title><h1>KNS ruleset flush request with keys $keys</h1>";
     }
 
-    return
-      "<title>KNS Data Flush</title><h1>KNS flushed data with keys $keys</h1>";
+    return $response;
+
 
 }
 
