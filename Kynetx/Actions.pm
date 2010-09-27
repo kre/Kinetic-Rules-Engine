@@ -47,6 +47,7 @@ use Kynetx::Json q/:all/;
 use Kynetx::Modules::Twitter;
 use Kynetx::Actions::LetItSnow;
 use Kynetx::Actions::JQueryUI;
+use Kynetx::Actions::Annotate;
 use Kynetx::Actions::FlippyLoo;
 use Kynetx::Actions::Email;
 use Kynetx::Directives qw/:all/;
@@ -685,6 +686,9 @@ sub build_one_action {
       } elsif ($action->{'source'} eq 'jquery_ui') {
           $actions = Kynetx::Actions::JQueryUI::get_actions();
           $resources = Kynetx::Actions::JQueryUI::get_resources();
+      } elsif ($action->{'source'} eq 'annotate') {
+          $actions = Kynetx::Actions::Annotate::get_actions();
+          $resources = Kynetx::Actions::Annotate::get_resources();
       } elsif ($action->{'source'} eq 'flippy_loo') {
           $actions = Kynetx::Actions::FlippyLoo::get_actions();
           $resources = Kynetx::Actions::FlippyLoo::get_resources();

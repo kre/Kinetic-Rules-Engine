@@ -73,6 +73,7 @@ merror
 mis_error
 end_slash
 bloviate
+sns_publish
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -543,6 +544,19 @@ sub bloviate {
     $sns->publish();
     $logger->info("KNS logging request: ", $message);
 
+}
+
+sub sns_publish {
+    my $param = shift;
+    my $logger = get_logger();
+    my $key    = get_key_id();
+    my $secret = get_access_key();
+    $param->{kAWSAccessKeyId()} =  $key;
+    $param->{kAWSSecretKey()} =  $secret;
+    $logger->debug("SNS publish request: ", sub {Dumper($param)});
+    my $sns = Kynetx::Predicates::Amazon::SNS->new($param);
+    my $status = $sns->publish();
+    $logger->debug("SNS publish response: ", sub {Dumper($status)});
 }
 
 
