@@ -315,6 +315,9 @@ PerlRequire <TMPL_VAR NAME=KOBJ_ROOT>/startup.pl
 # PerlSetVar  xForwardedForRequire 1  # only work behind a proxy...
 PerlPostReadRequestHandler Apache2::xForwardedFor
 
+# Tell each apache (forked) process to create their own connection to the VM
+PerlChildInitHandler Kynetx::JavaReconnect
+
 #
 # We set up logging for various servers differently depending on type
 # Which logging happens depends on conditional logging via an env var
