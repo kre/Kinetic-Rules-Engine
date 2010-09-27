@@ -1,3 +1,7 @@
+2010-09-27  Web-san  <web@dev11.kobj.net>
+
+   * Kynetx/Repository.pm (get_rules_from_repository): Added semaphore clearing to two returns that happen before the getting is done.  This is messy and bug prone.  Wish I had a "finally"
+
 2010-09-23  Web-san  <web@dev11.kobj.net>
 
    * Kynetx/Modules.pm (eval_module): changed to expect Twitter.pm in new place
