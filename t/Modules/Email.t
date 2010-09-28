@@ -14,6 +14,7 @@ use APR::URI;
 use APR::Pool ();
 use Cache::Memcached;
 use Email::MIME;
+use MIME::QuotedPrint::Perl;
 
 
 # most Kyentx modules require this
@@ -80,17 +81,32 @@ foreach my $f (@email_files) {
     $logger->trace( "Text: $text\n\n");
     my $email = Email::MIME->new($text);
     $logger->debug("ct: ", sub {Dumper ($email->content_type())});
+    #$logger->debug("headers: ", sub {Dumper ($email->encoding())});
     $logger->debug("to: ", sub {Dumper ($email->header("To"))});
+    $logger->debug("encoding: ", sub {Dumper ($email->header)});
     $logger->debug("Received: ", sub {Dumper ($email->header("From"))});
     my $numparts = $email->parts();
     my @parts = $email->parts();
     my $index = 0;
     $logger->debug("Received $numparts parts ");
     foreach my $p (@parts) {
+        my $partheaders = $p->{'header'}->{'headers'};
+        my %found;
+        map {$found{$_} = 1 } @$partheaders;
         $logger->debug("Part ",$index++, " ", sub {Dumper($p->{'ct'}->{'composite'})});
-        $logger->debug("Headers: ", sub {Dumper(keys %{$p->{'ct'}})});
+        $logger->debug("sub parts: ", sub {Dumper(keys %{$p})});
+        $logger->debug("ct Header parts: ", sub {Dumper($p->{'ct'})});
+        $logger->debug("Header parts: ", sub {Dumper($partheaders)});
+        $logger->debug("Founds: ", sub {Dumper(\%found)});
+        if ($found{'quoted-printable'}) {
+            my $ostring = MIME::QuotedPrint::Perl::decode_qp($p->body());
+            $logger->debug("decoded: ", $ostring);
+        }
+
     }
+    #$logger->debug("Email Dump: ", sub { Dumper($email)});
 }
+die;
 
 # check that predicates at least run without error
 $logger->debug("Email labels: ", sub {Dumper(keys %$email_list)});
