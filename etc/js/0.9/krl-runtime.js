@@ -461,8 +461,8 @@ KOBJ.errorstack_submit = function(key, e, rule_info) {
             return;
         }
         var prefix_text = "_s=" + key;
-// Right now ID does not seem to be working after all.
-//        prefix_text += "&_id=" + KOBJEventManager.eid();
+
+        prefix_text += "&_id=" + KOBJEventManager.eid();
 
         if (KOBJ.in_bx_extention)
             prefix_text += "&_r=json";
