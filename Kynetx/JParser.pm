@@ -432,7 +432,9 @@ END
     START_JVM  => 0,
     AUTOSTUDY  => 1,
     DEBUG      => 0,
-    STUDY      => ['org.json.JSONObject'],
+    STUDY      => ['org.json.JSONObject',
+        'Antlr_'
+    ],
     PACKAGE => 'main',
 );
 
