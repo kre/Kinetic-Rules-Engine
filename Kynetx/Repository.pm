@@ -71,12 +71,13 @@ sub get_rules_from_repository{
     my $rs_key = make_ruleset_key($rid, $version);
 
     # wait if this ruleset's being parsed now
-    my $counter;
+    my $counter = 0;
     while (Kynetx::Memcached::is_parsing($memd, $rs_key) &&
 	   $counter < 120 # don't wait forever
 	  ) {
       sleep 1;
       $counter++;
+      $logger->debug("Parsing semaphore hold: $counter") if ($counter % 10) == 0;
     }
 
     my $ruleset = $memd->get($rs_key);
@@ -101,6 +102,7 @@ sub get_rules_from_repository{
     $logger->debug("Getting rules from repo for $rid using $rule_repo_type");
 
     # this gets cleared when we're done
+    $logger->debug("Setting parsing semaphore for $rs_key");
     Kynetx::Memcached::set_parsing_flag($memd, $rs_key);
 
     if ($rule_repo_type eq 'api') {
@@ -144,11 +146,16 @@ sub get_rules_from_repository{
 
 	$logger->debug("Error retrieving ruleset: ",  $res->status_line);
 	# return now to avoid caching fake ruleset
+
+	$logger->debug("Clearing parsing semaphore for $rs_key");
+	Kynetx::Memcached::clr_parsing_flag($memd, $rs_key);
 	return make_empty_ruleset($rid, $rs_url);
       }
-    if ($text) {
+      if ($text) {
+	$logger->debug("Clearing parsing semaphore for $rs_key");
+	Kynetx::Memcached::clr_parsing_flag($memd, $rs_key);
         return $json;
-    } elsif ($localparsing) {
+      } elsif ($localparsing) {
 	$ruleset = Kynetx::Parser::parse_ruleset($json);
       } else {
 	$ruleset = jsonToAst($json);
@@ -216,6 +223,7 @@ sub get_rules_from_repository{
 
     }
 
+    $logger->debug("Clearing parsing semaphore for $rs_key");
     Kynetx::Memcached::clr_parsing_flag($memd, $rs_key);
 
     unless ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid') {

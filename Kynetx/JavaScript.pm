@@ -293,7 +293,7 @@ sub gen_js_datasource {
 
     if($source eq 'page') {
 	if ($function eq 'id') {
-	    $val = "\$K(".$args->[0].").innerHTML";
+	    $val = "\$K(".$args->[0].").html()";
 	}
     }
 

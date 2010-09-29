@@ -46,7 +46,6 @@ use Kynetx::Rules qw(:all);
 use Kynetx::Util qw(:all);
 use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
-#use Kynetx::RuleManager qw(:all);
 use Kynetx::Console qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Configure qw(:all);
@@ -102,7 +101,7 @@ sub handler {
 	show_build_num($r, $method, $rid);
 
     } elsif($method eq 'twitter_callback' ) {
-	Kynetx::Predicates::Twitter::process_oauth_callback($r, $method, $rid);
+	Kynetx::Modules::Twitter::process_oauth_callback($r, $method, $rid);
 	return Apache2::Const::REDIRECT;
 
     } elsif($method eq 'kpds_callback' ) {
