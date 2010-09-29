@@ -372,6 +372,34 @@ KOBJ.parseURL = function(url) {
     };
 };
 
+/*
+ Takes a hash and converts it into a url parameter string starting with &.
+ Also takes and extra_spacing parameter that will allow for reserving some about
+ of characters to be used if prefixing the url with other data.
+ */
+KOBJ.url_from_hash = function(params, extra_spacing) {
+    var urls = [];
+    var url = "";
+
+    $KOBJ.each(params, function(name, value) {
+        var f_value = "" + ((value != null && typeof(value) != "undefined") ? value : "");
+
+        if ((url.length + f_value.length + name.length + extra_spacing) < KOBJ.max_url_length()) {
+            url += "&" + name + "=" + f_value;
+        }
+        else {
+            urls.push(url);
+            url = ""
+        }
+    });
+    if (url.length != 0) {
+        urls.push(url);
+    }
+
+    return urls;
+};
+
+
 KOBJ.parseURLParams = function(param_string) {
     var ret = {};
     var seg = param_string.replace(/^\?/, '').split('&');
@@ -389,10 +417,57 @@ KOBJ.parseURLParams = function(param_string) {
 };
 
 
-KOBJ.urlDecode = function (psEncodeString)
+KOBJ.urlDecode = function (psEncodeString) {
+    // Create a regular expression to search all +s in the string
+    var lsRegExp = /\+/g;
+    // Return the decoded string
+    return unescape(String(psEncodeString).replace(lsRegExp, " "));
+};
+
+/*
+Microsoft Internet Explorer (Browser)
+
+Microsoft states that the maximum length of a URL in Internet Explorer is 2,083 characters, with no more than 2,048
+characters in the path portion of the URL. In my tests, attempts to use URLs longer than this produced a clear error
+message in Internet Explorer.
+
+Firefox (Browser)
+
+After 65,536 characters, the location bar no longer displays the URL in Windows Firefox 1.5.x. However, longer URLs
+will work. I stopped testing after 100,000 characters.
+
+Safari (Browser)
+
+At least 80,000 characters will work. I stopped testing after 80,000 characters.
+
+Opera (Browser)
+
+At least 190,000 characters will work. I stopped testing after 190,000 characters. Opera 9 for Windows continued to
+display a fully editable, copyable and pasteable URL in the location bar even at 190,000 characters.
+
+Apache (Server)
+
+My early attempts to measure the maximum URL length in web browsers bumped into a server URL length limit of approximately
+4,000 characters, after which Apache produces a "413 Entity Too Large" error. I used the current up to date Apache build
+found in Red Hat Enterprise Linux 4. The official Apache documentation only mentions an 8,192-byte limit on an individual
+field in a request.
+
+Microsoft Internet Information Server
+
+The default limit is 16,384 characters (yes, Microsoft's web server accepts longer URLs than Microsoft's web browser).
+This is configurable.
+
+Perl HTTP::Daemon (Server)
+
+Up to 8,000 bytes will work. Those constructing web application servers with Perl's HTTP::Daemon module will encounter a
+16,384 byte limit on the combined size of all HTTP request headers. This does not include POST-method form data, file
+uploads, etc., but it does include the URL. In practice this resulted in a 413 error when a URL was significantly longer
+than 8,000 characters. This limitation can be easily removed. Look for all occurrences of16x1024 in Daemon.
+ */
+KOBJ.max_url_length =  function()
 {
-  // Create a regular expression to search all +s in the string
-  var lsRegExp = /\+/g;
-  // Return the decoded string
-  return unescape(String(psEncodeString).replace(lsRegExp, " "));
+    if($KOBJ.browser.msie)
+        return 1500;
+    else
+        return 3500;
 };

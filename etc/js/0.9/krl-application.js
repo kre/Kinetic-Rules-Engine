@@ -224,6 +224,7 @@ KrlApplication.prototype.execute_pending_closures = function()
         catch(err)
         {
             KOBJ.loggers.general.error("Closure Executed with error " + myself.app_id + " - " + guid, err);
+            KOBJ.errorstack_submit(KOBJ.default_error_stack_key, err, {name: "unknown", id: myself.app_id}  );
         }
         KOBJEventManager.event_fire_complete(guid,myself);
     });

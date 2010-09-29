@@ -257,18 +257,22 @@ KOBJ.require = function(url, callback_params) {
     else if (!KOBJ.in_bx_extention && callback_params.data_type == "img") {
         var r = document.createElement("img");
         // This is the max url for a get in IE7  IE6 is 488 so we will break on ie6
-        r.src = url.substring(0, 1500);
+        r.src = url.substring(0, KOBJ.max_url_length());
         //  We need to change to the protcol of the location url so that we do not
         // get security errors.
         r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 3, r.src.length);
         var body = document.getElementsByTagName("body")[0] ||
                 document.getElementsByTagName("frameset")[0];
+        if (body == null) {
+            KOBJ.error("Document body missing.  Browser is reloading page.");
+            return;
+        }
         body.appendChild(r);
     }
     else {
         var r = document.createElement("script");
         // This is the max url for a get in IE7  IE6 is 488 so we will break on ie6
-        r.src = url.substring(0, 1500);
+        r.src = url.substring(0, KOBJ.max_url_length());
         //  We need to change to the protcol of the location url so that we do not
         // get security errors.
         r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 3, r.src.length);
@@ -277,6 +281,12 @@ KOBJ.require = function(url, callback_params) {
         r.onload = r.onreadystatechange = KOBJ.url_loaded_callback;
         var body = document.getElementsByTagName("body")[0] ||
                 document.getElementsByTagName("frameset")[0];
+        if (body == null) {
+            //  This happens sometime in firefox where for some reason the body of the page goes bye bye
+            //  I think this is caused by the browser still running the javascript for the prior page
+            KOBJ.error("Document body missing.  Browser is reloading page.");
+            return;
+        }
         body.appendChild(r);
     }
 };
@@ -443,48 +453,75 @@ KOBJ.site_id = function() {
 
 
 KOBJ.errorstack_submit = function(key, e, rule_info) {
-    // No key the ignore.
-    if (key == null) {
-        return;
+    try {
+
+
+        // No key the ignore.
+        if (key == null) {
+            return;
+        }
+        var prefix_text = "_s=" + key;
+// Right now ID does not seem to be working after all.
+//        prefix_text += "&_id=" + KOBJEventManager.eid();
+
+        if (KOBJ.in_bx_extention)
+            prefix_text += "&_r=json";
+        else
+            prefix_text += "&_r=img";
+
+
+        var browser_info = KRLSnoop.browser_info()
+        var exception_info = KRLSnoop.exception_info(e);
+
+
+        var st_url = {};
+
+        st_url.Msg = escape(exception_info.message);
+        st_url.ScriptURL = escape(exception_info.script_url);
+        st_url.UserAgent = escape(browser_info.nav.userAgent);
+        st_url.URL = escape(KOBJ.document.location.href);
+        st_url.Line = exception_info.lineNumber;
+        st_url.Description = escape(exception_info.description);
+        st_url.Arguments = escape(exception_info.arguments);
+        st_url.Type = escape(exception_info.type);
+        st_url.name = escape(exception_info.name);
+        if (typeof(rule_info) != "undefined") {
+            st_url.RuleName = escape(rule_info.name);
+            st_url.RuleID = escape(rule_info.id);
+        }
+        st_url.stack = escape(exception_info.stack);
+        st_url.Platform = escape("JRT-" + window['kobj_ts']);
+        st_url.AgtAppCodeName = escape(browser_info.nav.appCodeName);
+        st_url.AgtAppName = escape(browser_info.nav.appName);
+        st_url.AgtAppVer = escape(browser_info.nav.appVersion);
+        st_url.AgtLang = escape(browser_info.nav.language);
+        st_url.AgtCookiesEnable = escape(browser_info.nav.cookiesEnabled);
+        st_url.AgtSysLanguage = escape(browser_info.nav.systemLanguage);
+        st_url.AgtUsrLanguage = escape(browser_info.nav.userLanguage);
+        st_url.ScrAHeight = escape(browser_info.screen.availHeight);
+        st_url.ScrColorDepth = escape(browser_info.screen.colorDepth);
+        st_url.ScrHeight = escape(browser_info.screen.height);
+        st_url.ScrWidth = escape(browser_info.screen.width);
+        st_url.ScrAWidth = escape(browser_info.screen.availWidth);
+        st_url.ScrPixDep = escape(browser_info.screen.pixelDepth);
+
+        var datatype = null;
+
+        if (KOBJ.in_bx_extention)
+            datatype = "js";
+        else
+            datatype = "img";
+
+        // If the url is to long loop over it and keep calling require with each part.
+        var urls = KOBJ.url_from_hash(st_url, 70);
+        $KOBJ.each(urls, function(index) {
+            KOBJ.require("http://www.errorstack.com/submit?" + prefix_text  + urls[index], {data_type: datatype});
+        });
     }
-    var txt = "_s=" + key;
-
-    if (KOBJ.in_bx_extention)
-        txt += "&_r=json";
-    else
-        txt += "&_r=img";
-
-    txt += "&Msg=" + escape(e.message ? e.message : e);
-
-    var script_url = e.fileName ? e.fileName : (e.filename ? e.filename : null)
-    if (!script_url) {
-        script_url = (e.sourceURL ? e.sourceURL : "Browser does not support exception script url");
+    catch(badex) {
+        KOBJ.loggers.general.error("Could not submit to errorstack ", e, badex);
     }
-
-    txt += "&ScriptURL=" + escape(script_url);
-    txt += "&Agent=" + escape(navigator.userAgent);
-    txt += "&PageURL=" + escape(document.location.href);
-    txt += "&Line=" + (e.lineNumber ? e.lineNumber : (e.line ? e.line : "Browser does not support exception linenumber"));
-    txt += "&Description=" + escape(e.description ? e.description : "");
-    txt += "&Arguments=" + escape(e.arguments ? e.arguments : "Browser does not support exception arguments");
-    txt += "&Type=" + escape(e.type ? e.type : "Browser does not support exception type");
-    txt += "&name=" + escape(e.name ? e.name : e);
-    //    txt += "&Platform=" + escape(navigator.platform);
-    //    txt += "&UserAgent=" + escape(navigator.userAgent);
-    if (typeof(rule_info) != "undefined") {
-        txt += "&RuleName=" + escape(rule_info.name);
-        txt += "&RuleID=" + escape(rule_info.id);
-    }
-    txt += "&stack=" + escape(e.stack ? e.stack : "Browser Does not support exception stacktrace");
-    var datatype = null;
-    if (KOBJ.in_bx_extention)
-        datatype = "js";
-    else
-        datatype = "img";
-
-    KOBJ.require("http://www.errorstack.com/submit?" + txt, {data_type: datatype});
 };
-
 
 KOBJ.location = function(part) {
     if (part == "href") return KOBJ.locationHref || KOBJ.document.location.href;
@@ -507,7 +544,6 @@ KOBJ.logger = function(type, txn_id, element, url, sense, rule, rid) {
 
     KOBJ.require(logger_url, {data_type: "other"});
 };
-
 
 
 /* Logs data to the browsers windows console */

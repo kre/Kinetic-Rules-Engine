@@ -156,7 +156,7 @@ function KOBJAnnotateSearchResults(an_app, an_name, an_config, an_callback) {
 
     this.defaults = {
         "scope": "S" + KOBJEventManager.eid(),
-        "maxURLLength" : 1500,
+        "maxURLLength" : KOBJ.max_url_length(),
         "wrapper_css" : { "display" : "none" },
         "placement" : 'append',
         "flush_domains" : false,

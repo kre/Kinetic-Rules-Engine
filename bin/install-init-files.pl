@@ -71,6 +71,7 @@ krl-runtime.js
 krl-eventmanager.js
 frameworks/log4js/1.4/log4javascript_uncompressed.js
 krl-logging.js
+krl-snoop.js
 krl-runtime-footer.js
 );
 
