@@ -155,7 +155,7 @@ my $atom_c = {
 
 my $atom_t = {
     'link' => array_each($atom_l),
-    'entry' => array_each($atom_c),
+    'entry' => array_each(superhashof($atom_c)),
     '@xml:lang' => ignore(),
     'id' => ignore(),
     'openSearch$itemsPerPage' => $atom_element,

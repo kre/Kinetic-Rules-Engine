@@ -431,7 +431,7 @@ sub flush_data {
     my $flush = $topic->{"FLUSH"};
     my $action = 'flush';
     my $options = {'action' => $action };
-    my $response = "";
+    my $response = "<title>KNS Data Flush</title>";
 
     foreach my $key ( split( /;/, $keys ) ) {
         my $directive = Kynetx::Directives->new("kns");
@@ -444,8 +444,14 @@ sub flush_data {
             'TopicArn' => $flush,
             'Message' => $json,
         };
-        Kynetx::Util::sns_publish($hash);
-        $response .= "<title>KNS Data Flush</title><h1>KNS data flush request with keys $keys</h1>";
+        my $tn = Kynetx::Util::sns_publish($hash);
+        my $msg_id = $tn->{'PublishResponse'}->{'PublishResult'}->{'MessageId'};
+        my $req_id = $tn->{'PublishResponse'}->{'ResponseMetadata'}->{'RequestId'};
+        my $str = Dumper($tn);
+        $response .= "<span id=\"$key\"><h1>KNS ruleset flush request for $key</h1>";
+        $response .= "<span id=\"requestid\">$msg_id</span>";
+        $response .= "<span id=\"responseid\">$req_id</span>";
+        $response .= "</span>";
     }
 
     return $response;

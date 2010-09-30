@@ -557,6 +557,7 @@ sub sns_publish {
     my $sns = Kynetx::Predicates::Amazon::SNS->new($param);
     my $status = $sns->publish();
     $logger->debug("SNS publish response: ", sub {Dumper($status)});
+    return $status;
 }
 
 

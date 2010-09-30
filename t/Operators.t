@@ -1399,16 +1399,20 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-
-
-$e[$i] = q#mail2_str.extract(re/\s*\*\s*([ \w]+)\s*\v\s*\*\s*([ \w]+)\v/)#;
-$x[$i] = {
-   'val' => ['Select an orthopedic surgeon','Set an appointment for a consultation'],
-   'type' => 'array'
-};
-$d[$i]  = 0;
-$i++;
-
+my $perl_version = $^V;
+if (! $perl_version) {
+    diag "WTF? Where do you even find a version of perl this old?";
+} elsif ($perl_version lt v5.10) {
+    diag "Using perl version $perl_version, skipping super-cool REGEXP test!";
+} else {
+    $e[$i] = q#mail2_str.extract(re/\s*\*\s*([ \w]+)\s*\v\s*\*\s*([ \w]+)\v/)#;
+    $x[$i] = {
+       'val' => ['Select an orthopedic surgeon','Set an appointment for a consultation'],
+       'type' => 'array'
+    };
+    $d[$i]  = 0;
+    $i++;
+}
 
 $e[$i] = q#foo.extract(re/(e)/g)#;
 $x[$i] = {
@@ -1442,7 +1446,6 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-ENDY:
 
 #-------------------------------------------------------------------------------------
 # encode()/decode()

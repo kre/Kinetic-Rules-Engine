@@ -64,7 +64,7 @@ Kynetx::Memcached->init();
 my $memd = get_memd();
 
 
-my $numtests = 81;
+my $numtests = 80;
 my $nonskippable = 15;
 plan tests => $numtests;
 
@@ -480,6 +480,9 @@ JSON
 my $json;
 my $ast;
 my $east;
+my $mech = Test::WWW::Mechanize->new();
+
+#goto ENDY;
 
 # check the API calls
 $my_req_info->{'krl'} = $test_ruleset;
@@ -633,7 +636,6 @@ is_string_nows($krl,
 
 # check the server now
 
-my $mech = Test::WWW::Mechanize->new();
 
 my $skippable = $numtests - $nonskippable;
 
@@ -837,7 +839,7 @@ SKIP: {
     $mech->get_ok($url_version_13);
 
     is($mech->content_type(), 'text/html');
-    $mech->content_contains("keys foo");
+    $mech->content_contains("<span id=\"foo\">");
 
     my $now = time();
 
@@ -845,15 +847,16 @@ SKIP: {
 
     is($memd->get("test1"), $now, "Did it get stored?");
 
+ENDY:
+
     my $url_version_14 = "$dn/flushdata/test1";
 #    diag "Testing $url_version_14";
 
     $mech->get_ok($url_version_14);
 
     is($mech->content_type(), 'text/html');
-    $mech->content_contains("keys test1");
+    $mech->content_like(qr/<span id=\"requestid\">.*?<\/span>/);
 
-    is($memd->get("test1"), undef, "Did it get deleted?");
 
 
 }
