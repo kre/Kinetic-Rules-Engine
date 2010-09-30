@@ -94,7 +94,7 @@ sub process_session {
     my $logger = get_logger();
 
     my $cookie = $r->headers_in->{'Cookie'};
-    $cookie =~ s/SESSION_ID=(\w*)/$1/ if(defined $cookie);
+    $cookie =~ s/^.*[;]?SESSION_ID=(\w*)[;]?.*$/$1/ if(defined $cookie);
 
     $cookie = $ck if $ck;  # mainly for testing
 
