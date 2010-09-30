@@ -53,7 +53,7 @@ use Kynetx::Repository;
 use Kynetx::Memcached qw(:all);
 use Kynetx::Datasets qw(:all);
 use Kynetx::Environments qw(:all);
-use Kynetx::Environments ;
+use Kynetx::Session ;
 use Kynetx::Dispatch ;
 
 use Data::Dumper;
@@ -75,6 +75,9 @@ sub handler {
     Kynetx::Memcached->init();
 
     my ($api,$method,$rids) = $r->uri =~ m#/(init|js)/([^/]+)/([^/]*(\.js)?)/?#;
+
+    # get a session
+    my $session = Kynetx::Session::process_session($r);
 
     Log::Log4perl::MDC->put('site', $method);
     Log::Log4perl::MDC->put('rule', '[initialization]');  # no rule for now...

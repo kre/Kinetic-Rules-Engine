@@ -445,7 +445,7 @@ sub flush_data {
             'Message' => $json,
         };
         Kynetx::Util::sns_publish($hash);
-        $response .= "<title>KNS Data Flush</title><h1>KNS ruleset flush request with keys $keys</h1>";
+        $response .= "<title>KNS Data Flush</title><h1>KNS data flush request with keys $keys</h1>";
     }
 
     return $response;

@@ -397,7 +397,7 @@ sub pageview_eval {
 	    my $pattern = shift;
 	    my $captures = [];
 	    my $logger = get_logger();
-#	    $logger->debug("Url: $url; Pattern: $pattern");
+	    $logger->debug("Url: $url; Pattern: $pattern");
 	    
 	    if(@{$captures} = $url =~ /$pattern/) {
 	      return (1, $captures);

@@ -96,6 +96,9 @@ my $ruleset = 'cs_test_1';
 
 my $mech = Test::WWW::Mechanize->new();
 
+diag Dumper $mech->cookie_jar();
+
+
 diag "Warning: running these tests on a host without memcache support is slow...";
 SKIP: {
     my $ua = LWP::UserAgent->new;
@@ -139,6 +142,9 @@ SKIP: {
 	  $tc++;
 	}
       }
+
+#      diag Dumper $mech->cookie_jar();
+
       return $tc;
     }
 
