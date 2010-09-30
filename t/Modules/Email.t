@@ -15,12 +15,13 @@ use APR::Pool ();
 use Cache::Memcached;
 use Email::MIME;
 use MIME::QuotedPrint::Perl;
+use Encode;
 
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
@@ -67,46 +68,16 @@ my $expected;
 my $function;
 my $str_re = qr/.+/;
 
-
-
-
 ###### Load emails
 my @email_files = @ARGV ? @ARGV : </web/lib/perl/t/data/emails/*.txt>;
 my $email_list = {};
 foreach my $f (@email_files) {
+    #next unless ($f eq '/web/lib/perl/t/data/emails/email06.txt');
     my ($key,$text) = getkrl($f);
     chop($key);
     $email_list->{$key} = $text;
-    $logger->debug( "Test: $key\n\n");
-    $logger->trace( "Text: $text\n\n");
-    my $email = Email::MIME->new($text);
-    $logger->debug("ct: ", sub {Dumper ($email->content_type())});
-    #$logger->debug("headers: ", sub {Dumper ($email->encoding())});
-    $logger->debug("to: ", sub {Dumper ($email->header("To"))});
-    $logger->debug("encoding: ", sub {Dumper ($email->header)});
-    $logger->debug("Received: ", sub {Dumper ($email->header("From"))});
-    my $numparts = $email->parts();
-    my @parts = $email->parts();
-    my $index = 0;
-    $logger->debug("Received $numparts parts ");
-    foreach my $p (@parts) {
-        my $partheaders = $p->{'header'}->{'headers'};
-        my %found;
-        map {$found{$_} = 1 } @$partheaders;
-        $logger->debug("Part ",$index++, " ", sub {Dumper($p->{'ct'}->{'composite'})});
-        $logger->debug("sub parts: ", sub {Dumper(keys %{$p})});
-        $logger->debug("ct Header parts: ", sub {Dumper($p->{'ct'})});
-        $logger->debug("Header parts: ", sub {Dumper($partheaders)});
-        $logger->debug("Founds: ", sub {Dumper(\%found)});
-        if ($found{'quoted-printable'}) {
-            my $ostring = MIME::QuotedPrint::Perl::decode_qp($p->body());
-            $logger->debug("decoded: ", $ostring);
-        }
-
-    }
-    #$logger->debug("Email Dump: ", sub { Dumper($email)});
 }
-die;
+
 
 # check that predicates at least run without error
 $logger->debug("Email labels: ", sub {Dumper(keys %$email_list)});
@@ -194,26 +165,35 @@ $expected = array_each(ignore());
 $args = [$email_list->{'// multipart text/html'}];
 test_email($function,$args,$expected,$description,0);
 
-##
-$function = 'parts';
-$description = "Get html parts (multipart html)";
-$expected = array_each({'text/html'=>ignore()});
-$args = [$email_list->{'// multipart text/html'},'text/html'];
-test_email($function,$args,$expected,$description,0);
 
 ##
 $function = 'body';
 $description = "Get Body";
 $expected = re($str_re);
 $args = [$email_list->{'//complex'}];
-test_email($function,$args,$expected,$description,1);
+test_email($function,$args,$expected,$description,0);
 
 ##
 $function = 'body';
 $description = "Get Body (multipart html)";
 $expected = re($str_re);
 $args = [$email_list->{'// multipart text/html'}];
-test_email($function,$args,$expected,$description,1);
+test_email($function,$args,$expected,$description,0);
+
+##
+$function = 'body';
+$description = "Get Body (sample)";
+$expected = re($str_re);
+$args = [$email_list->{'//sam*ple'}];
+test_email($function,$args,$expected,$description,0);
+
+
+## check for quoted printable
+$function = 'parts';
+$description = "Get plaintext parts (quoted-printable)";
+$expected = array_each({'text/plain'=>ignore()});
+$args = [$email_list->{'// quoted-printable'},'text/plain'];
+test_email($function,$args,$expected,$description,0);
 
 done_testing($test_count);
 
@@ -223,7 +203,7 @@ sub test_email {
     my $json = Kynetx::Modules::Email::run_function($my_req_info,$function,$args);
     if ($debug) {
         $logger->info($description);
-        $logger->info("Returned from eval_facebook: ", sub { Dumper($json)});
+        $logger->info("Returned from run_function: ", sub { Dumper($json)});
     }
     cmp_deeply($json,$expected,$description);
     return $json;
