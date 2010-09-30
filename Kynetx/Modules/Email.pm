@@ -42,6 +42,10 @@ use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Email::MIME qw/:all/;
+use Email::MIME::ContentType;
+use MIME::QuotedPrint::Perl;
+use Encode;
+use Encode::Alias;
 
 use Kynetx::Environments qw/:all/;
 use Kynetx::Util qw/
@@ -110,15 +114,29 @@ sub _parts {
     my $email  = email_object($args);
     my $parms  = get_parms($args);
     my @parts  = $email->parts();
-    $logger->debug("Parm: ", $parms);
     my @parry  = ();
     foreach my $p (@parts) {
+        my $value = "";
+        my $partheaders = $p->{'header'}->{'headers'};
+        my %found;
+        map {$found{$_} = 1 } @$partheaders;
         my $key = $p->{'ct'}->{'discrete'} . '/' . $p->{'ct'}->{'composite'};
-        my $value = $p->{'body'};
+        $value = $p->body_raw();
+        if ($p->content_type) {
+            my $ct = parse_content_type($p->content_type);
+            $logger->debug("Content type: ", sub {Dumper($p->content_type)});
+            my $charset = $ct->{'attributes'}{'charset'};
+            if ($charset) {
+                $value = Encode::decode($charset,$value);
+            }
+        }
+        if ($found{'quoted-printable'}) {
+            $value = MIME::QuotedPrint::Perl::decode_qp($value);
+        }
+
         if (ref $value eq 'SCALAR') {
             $value = $$value;
         }
-        $logger->debug("Key: ", $key);
         push( @parry, { $key => $value } ) unless ($parms && $key ne $parms);
     }
     return \@parry;
@@ -127,11 +145,17 @@ $funcs->{"parts"} = \&_parts;
 
 sub _body {
     my ( $req_info, $rule_env, $args ) = @_;
+    define_alias(qr/7bit/ => '"us-ascii"');
     my $logger = get_logger();
     my $email  = email_object($args);
-    my $parms  = get_parms($args);
+    my $encoding = $email->header("Content-Transfer-Encoding");
+    if ($encoding) {
+        $logger->debug("Using encoding: $encoding");
+        return decode($encoding,$email->body_raw());
+    } else {
+        $logger->debug("No encoding: perhaps email is multipart");
+    }
     my $body = $email->body();
-    $logger->trace("Body val: **",$body,"**");
     $body = $email->body_raw() unless ($body);
     return $body;
 
@@ -174,10 +198,9 @@ sub get_parms {
 
 sub run_function {
     my ( $req_info, $function, $args ) = @_;
-
     my $logger = get_logger();
-
-    #$logger->debug("Args passed: ", ref $args);
+    # Suppress warnings on "text/plain;"
+    $Email::MIME::ContentType::STRICT_PARAMS=0;
     my $f = $funcs->{$function};
     if ( defined $f ) {
         my $result = $f->( $req_info, $function, $args );

@@ -1,0 +1,1148 @@
+// quoted-printable
+Return-Path: cmundy@visa.com
+Received: from corpserver.kobj.net (LHLO mail.kynetx.com) (209.41.75.70) by
+ mail.kynetx.com with LMTP; Tue, 20 Jul 2010 14:28:25 -0600 (MDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+    by mail.kynetx.com (Postfix) with ESMTP id 77B561D78AD
+    for <visarq-maps@kynetx.com>; Tue, 20 Jul 2010 14:28:25 -0600 (MDT)
+X-Virus-Scanned: amavisd-new at corpserver.kobj.net
+X-Spam-Flag: NO
+X-Spam-Score: -6.598
+X-Spam-Level:
+X-Spam-Status: No, score=-6.598 tagged_above=-10 required=6.6
+    tests=[AWL=-0.001, BAYES_00=-2.599, HTML_IMAGE_RATIO_06=0.001,
+    HTML_MESSAGE=0.001, RCVD_IN_DNSWL_MED=-4] autolearn=ham
+Authentication-Results: mail.kynetx.com (amavisd-new); dkim=pass
+    header.i=@visa.com
+Received: from mail.kynetx.com ([127.0.0.1])
+    by localhost (mail.kynetx.com [127.0.0.1]) (amavisd-new, port 10024)
+    with ESMTP id W+v0dWumShgP for <visarq-maps@kynetx.com>;
+    Tue, 20 Jul 2010 14:28:22 -0600 (MDT)
+Received: from visa.com (portal4.visa.com [198.241.159.4])
+    by mail.kynetx.com (Postfix) with ESMTPS id D9AC11D78A1
+    for <visarq-maps@kynetx.com>; Tue, 20 Jul 2010 14:28:21 -0600 (MDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple; d=visa.com;
+    s=portal4; t=1279657640; x=1595013536; q=dns/txt; h=From:Date:
+    Subject:Message-ID:Content-Language:Content-Type; bh=PQQJ1bsqo1c
+    8MfKn/yr/gDEcEx8XsFOQgQvVKRDAE1s=; b=oH7RXd9xwpDDe6rt2B85NwxqjP7
+    eZJzE7nFg6i5xhnHLPwmofIXRrvo80kYCtq7WP7whMb0cZBbmNVjTblSysCY3SfI
+    6B9OCz6um0e0cKYjxl+XKbtzOBGg6dPG7PKH7/kjBWSrKWc514HXk6T4SbJXgAdt
+    seS7ATyyS8+qcLKg=
+From: "Mundy, Cynthia" <cmundy@visa.com>
+To: "visarq-maps@kynetx.com" <visarq-maps@kynetx.com>
+Date: Tue, 20 Jul 2010 13:28:13 -0700
+Subject: FW: We Received Staples Order # 9205373677
+Thread-Topic: We Received Staples Order # 9205373677
+Thread-Index: AcsM3dd6N9z1XIYgQnS1pPTojOv2RQba73nw
+Message-ID: <155823C2ED5F2F4A916C9CA7C55AC554034AC13BD9@SW720MBPX017.visa.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+acceptlanguage: en-US
+Content-Type: multipart/alternative;
+    boundary="_000_155823C2ED5F2F4A916C9CA7C55AC554034AC13BD9SW720MBPX017v_"
+MIME-Version: 1.0
+
+--_000_155823C2ED5F2F4A916C9CA7C55AC554034AC13BD9SW720MBPX017v_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+
+
+
+Cynthia Mundy
+Platform Service Development
+Visa Inc.
+
+
+
+
+________________________________
+From: support@orders.staples.com [mailto:support@orders.staples.com]
+Sent: Tuesday, June 15, 2010 3:55 PM
+To: Mundy, Cynthia
+Subject: We Received Staples Order # 9205373677
+
+[http://www.staples.com/sbd/img/eml/emailconfheader607.gif]
+
+
+
+
+Hello, and thanks for shopping Staples.
+This is to confirm that your order has been received and is being processed=
+.
+
+
+[http://www.staples.com/sbd/img/eml/rule1-585.gif]
+Order No.: 9205373677
+
+Customer No.: 4220442992        Method of Payment: VI ending in 6136
+
+Track order: Track your order<https://www.staples.com/office/supplies/Stapl=
+esMyOrderDetail?zipCode=3D&orderNumber=3D9205373677&catalogId=3D10051&error=
+Url=3Dmyologin&langId=3D-1&lastBillToZip=3D&debugInfo=3Dfalse&staplesNumber=
+=3D4220442992&storeId=3D10001>
+[http://www.staples.com/sbd/img/eml/rule1-585.gif]
+Delivery address
+CYNTHIA MUNDY
+900 METRO CENTER BLVD
+M3-5D
+FOSTER CITY, CA 94404-2172      Billing Address
+CYNTHIA MUNDY
+900 METRO CENTER BLVD
+M3-5D
+FOSTER CITY, CA 94404
+        [http://www.staples.com/sbd/img/eml/s.gif]      [http://www.staples=
+.com/sbd/img/eml/s.gif]      [http://www.staples.com/sbd/img/eml/s.gif]
+        Item 1  Qty.    Subtotal
+        SPLS COMPOSITION 100 2PK
+Item No.: 201384 Price: $5.29/each
+Expected Delivery: 06/16/2010 by UPS    1       $5.29
+
+[http://www.staples.com/sbd/img/eml/rule1-585.gif]
+
+Subtotal:       $5.29
+Delivery:       $9.95
+Tax:    $0.49
+[http://www.staples.com/sbd/img/eml/rule1-585.gif]
+Total:  $15.73
+[http://www.staples.com/sbd/img/eml/rule1-585.gif]
+
+ *   Your order is subject to review and the expected delivery date(s) note=
+d above are pending credit or check approval.
+ *   Won't be there to sign for your order from 9 am to 5 pm, Monday - Frid=
+ay? Print our Driver Release<http://www.staples.com/sbd/content/help/polici=
+es/driver_release.html>. Some residential orders may be delivered by UPS as=
+ late as 7 pm.
+ *   Questions about your order? Call us at 1-800-3STAPLE (1-800-378-2753) =
+or email us at support@orders.staples.com<mailto:support@orders.staples.com=
+> . You can also fax us at 1-800-333-3199.
+ *   See our return policy.<http://www.staples.com/sbd/content/help/shippin=
+g/index.html>
+ *   Our prices vary from store prices. Not responsible for typographical e=
+rrors. Not all items are available. We reserve the right to limit quantitie=
+s, including the right to prohibit sales to resellers.
+ *   Thanks for Shopping Staples.
+
+
+
+                [http://www.staples.com/sbd/img/eml/merch022193_ezro_reward=
+s.gif]
+
+[http://www.staples.com/sbd/img/eml/bestsellershdr_werecommend.gif]
+                [http://ris.res-x.com/image.aspx?appid=3Dstaples01&index=3D=
+1&userid=3D4220442992&scheme=3Demail_rr&campaignid=3Doc_9205373677] <http:/=
+/ris.res-x.com/?appid=3Dstaples01&index=3D1&userid=3D4220442992&scheme=3Dem=
+ail_rr&campaignid=3Doc_9205373677>
+
+
+                [http://ris.res-x.com/image.aspx?appid=3Dstaples01&index=3D=
+2&userid=3D4220442992&scheme=3Demail_rr&campaignid=3Doc_9205373677] <http:/=
+/ris.res-x.com/?appid=3Dstaples01&index=3D2&userid=3D4220442992&scheme=3Dem=
+ail_rr&campaignid=3Doc_9205373677>
+
+
+                [http://ris.res-x.com/image.aspx?appid=3Dstaples01&index=3D=
+3&userid=3D4220442992&scheme=3Demail_rr&campaignid=3Doc_9205373677] <http:/=
+/ris.res-x.com/?appid=3Dstaples01&index=3D3&userid=3D4220442992&scheme=3Dem=
+ail_rr&campaignid=3Doc_9205373677>
+
+
+                [http://ris.res-x.com/image.aspx?appid=3Dstaples01&index=3D=
+4&userid=3D4220442992&scheme=3Demail_rr&campaignid=3Doc_9205373677] <http:/=
+/ris.res-x.com/?appid=3Dstaples01&index=3D4&userid=3D4220442992&scheme=3Dem=
+ail_rr&campaignid=3Doc_9205373677>
+
+
+                [http://ris.res-x.com/image.aspx?appid=3Dstaples01&index=3D=
+5&userid=3D4220442992&scheme=3Demail_rr&campaignid=3Doc_9205373677] <http:/=
+/ris.res-x.com/?appid=3Dstaples01&index=3D5&userid=3D4220442992&scheme=3Dem=
+ail_rr&campaignid=3Doc_9205373677>
+
+[http://www.staples.com/sbd/img/eml/bestsellersftr.gif]
+
+[http://www.staples.com/sbd/img/eml/s.gif]<http://www.staples.com>
+
+Ways to Save
+Staples Rewards<https://www.staplesrewardscenter.com/SORC/UserManagement/Lo=
+gin/Login.aspx>
+Rebate Center<https://www.stapleseasyrebates.com/img/staples/paperless/page=
+s/Landing.html>
+Staples Credit Center<http://www.staples.com/sbd/cre/programs/credit/>
+Corporate Customers<http://www.staplescentral.com/index.html>
+Staples Service Plans<http://www.staples.com/sbd/cre/programs/serviceplans/=
+>
+Email SignUp<http://www.staples.com/office/supplies/StaplesEmailSubscriptio=
+nChange?fromUrl=3Dextemail&langId=3D-1&storeId=3D10001&errorUrl=3Demailsube=
+rror&successUrl=3Demailsubdetails&emailSubAction=3DemailCapture>
+        [http://www.staples.com/sbd/img/eml/emailconffooter_splitter607.gif=
+]
+
+Policies
+Delivery & Returns<http://www.staples.com/sbd/content/help/shipping/>
+F.A.Q.'s<http://www.staples.com/sbd/content/help/using/faq.html>
+Legal Terms & Conditions<http://www.staples.com/sbd/content/help/policies/t=
+erms.html>
+Privacy Statement<http://www.staples.com/sbd/content/help/policies/privacy.=
+html>
+Warranty & Re-call Info<http://www.staples.com/sbd/content/help/using/manuf=
+acturer_warranty.html>
+Price Match Guarantee<http://www.staples.com/sbd/content/help/using/general=
+_match.html>
+        [http://www.staples.com/sbd/img/eml/emailconffooter_splitter607.gif=
+]
+
+Corporate Information
+About Staples<http://www.staples.com/sbd/cre/marketing/about_us/index.html>
+Corporate Responsibility<http://www.staples.com/sbd/content/about/soul/inde=
+x.html>
+Investor Information<http://investor.staples.com/phoenix.zhtml?c=3D96244&p=
+=3Dirol-IRHome>
+Media Information<http://www.staples.com/sbd/content/about/media/index.html=
+>
+Community Relations<http://www.staples.com/sbd/content/about/soul/>
+International Sites<http://www.staples.com/sbd/content/about/store/internat=
+ional.html>
+STAPLES Center<http://www.staplescenter.com>
+Affiliate Program<http://www.staples.com/sbd/content/about/affiliate/>
+Jobs<http://www.staples.com/sbd/cre/resources/jobs/>
+        [http://www.staples.com/sbd/img/eml/s.gif] <http://www.staples.com>
+[http://www.staples.com/sbd/img/eml/s.gif]<http://www.staples.com>
+
+Site Help & Feedback
+Favorites Lists<http://www.staples.com/office/supplies/viewalllists?langId=
+=3D-1&storeId=3D10001&catalogId=3D10051>
+Easy Reorder<http://www.staples.com/office/supplies/StaplesOrderHistoryList=
+?langId=3D-1&debugInfo=3Dfalse&reorderFlag=3DR&storeId=3D10001&catalogId=3D=
+10051>
+Order By Catalog Item #<http://www.staples.com/office/supplies/qobin?langId=
+=3D-1&storeId=3D10001&first=3Dtrue&catalogId=3D10051>
+Track an Order<http://www.staples.com/office/supplies/StaplesOrderHistoryLi=
+st?langId=3D-1&storeId=3D10001&catalogId=3D10051>
+My Account<http://www.staples.com/office/supplies/myaccount?langId=3D-1&sto=
+reId=3D10001&catalogId=3D10051>
+Store Locator<http://stores.staples-locator.com/staples/?>
+Request a Catalog<http://www.staples.com/>
+Email SignUp<http://www.staples.com/office/supplies/StaplesEmailSubscriptio=
+nChange?fromUrl=3Dextemail&langId=3D-1&storeId=3D10001&errorUrl=3Demailsube=
+rror&successUrl=3Demailsubdetails&emailSubAction=3DemailCapture>
+Contact Us<http://www.staples.com/sbd/content/help/contact/index.html>
+        [http://www.staples.com/sbd/img/eml/emailconffooter_splitter607.gif=
+]
+
+Exclusively at Staples
+Staples Easy Button<http://www.staples.com/Staples-Easy-Button/product_6063=
+96>
+Downloadable Easy Button<http://www.staples.com/>
+Easy Tech<http://www.staples.com/sbd/cre/marketing/easytech_08/index.html>
+OXO Products<http://www.staples.com/sbd/cre/marketing/oxo/index.html>
+InkDrop<http://www.staples.com/office/supplies/inkdrop?>
+Recycling Programs<http://www.staples.com/sbd/cre/marketing/ecoeasy/index.h=
+tml>
+        [http://www.staples.com/sbd/img/eml/emailconffooter_splitter607.gif=
+]
+
+Staples Brand Products
+Papers & Pads<http://www.staples.com/Paper-Pads/cat_SH76CG10_SH76>
+Binders & Presentation<http://www.staples.com/Binders-Presentation/cat_SH76=
+CG2_SH76>
+File Folders & Accessories<http://www.staples.com/File-Folders-Accessories/=
+cat_SH76CG15_SH76>
+Pens, Writing & Correction<http://www.staples.com/Pens-Writing-Correction/c=
+at_SH76CG11_SH76>
+Shredders<http://www.staples.com/Shredders/cat_SH76CG868_SH76>
+CD/DVD Media<http://www.staples.com/CD-DVD-Media/cat_SH76CG1039_SH76>
+View All Products<http://www.staples.com/Staples-Shop/cat_SH76_SH76>
+        [http://www.staples.com/sbd/img/eml/s.gif] <http://www.staples.com>
+
+
+--_000_155823C2ED5F2F4A916C9CA7C55AC554034AC13BD9SW720MBPX017v_
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML xmlns:xalan =3D=20
+"http://xml.apache.org/xslt"><HEAD><TITLE>Staples | Email</TITLE>
+<META content=3D"text/html; charset=3Dus-ascii" http-equiv=3DContent-Type>
+<META name=3DGENERATOR content=3D"MSHTML 8.00.6001.18904"></HEAD>
+<BODY leftMargin=3D0 topMargin=3D0 bgColor=3D#ffffff marginheight=3D"0" mar=
+ginwidth=3D"0">
+<DIV dir=3Dltr align=3Dleft><FONT color=3D#0000ff size=3D2=20
+face=3DArial></FONT>&nbsp;</DIV>
+<DIV>&nbsp;</DIV><!-- Converted from text/rtf format -->
+<P><B><SPAN lang=3Den-us><FONT size=3D4 face=3D"Monotype Corsiva">Cynthia</=
+FONT><FONT=20
+face=3DArial></FONT> <FONT size=3D4=20
+face=3D"Monotype Corsiva">Mundy</FONT></SPAN></B><SPAN lang=3Den-us><FONT=20
+face=3DArial>&nbsp;<BR></FONT><FONT size=3D2 face=3DArial>Platform Service=
+=20
+Development</FONT><FONT face=3DArial>&nbsp;<BR></FONT><FONT size=3D2 face=
+=3DArial>Visa=20
+Inc.</FONT><FONT face=3DArial><BR>&nbsp; </FONT></SPAN></P>
+<DIV>&nbsp;</DIV><BR>
+<DIV dir=3Dltr lang=3Den-us class=3DOutlookMessageHeader align=3Dleft>
+<HR tabIndex=3D-1>
+<FONT size=3D2 face=3DTahoma><B>From:</B> support@orders.staples.com=20
+[mailto:support@orders.staples.com] <BR><B>Sent:</B> Tuesday, June 15, 2010=
+ 3:55=20
+PM<BR><B>To:</B> Mundy, Cynthia<BR><B>Subject:</B> We Received Staples Orde=
+r #=20
+9205373677<BR></FONT><BR></DIV>
+<DIV></DIV>
+<DIV align=3Dcenter>
+<TABLE style=3D"BACKGROUND: #ffffff" border=3D0 cellSpacing=3D0 cellPadding=
+=3D0=20
+width=3D838 bgColor=3D#ffffff>
+  <TBODY>
+  <TR>
+    <TD colSpan=3D2 align=3Dmiddle>
+      <TABLE border=3D0 cellSpacing=3D0 cellPadding=3D0 width=3D600><MAP=20
+        name=3Dheader_map><AREA=20
+          href=3D"http://www.staples.com/sbd/content/help/index.html" shape=
+=3Drect=20
+          alt=3D"Customer Service" coords=3D392,111,558,139><AREA=20
+          href=3D"http://www.staples.com/office/supplies/myaccount?langId=
+=3D-1&amp;storeId=3D10001&amp;catalogId=3D10051"=20
+          shape=3Drect alt=3D"My Account" coords=3D265,111,391,139><AREA=20
+          href=3D"http://www.staples.com" shape=3Drect=20
+          alt=3D"Staples&reg; that was easy.&reg;" coords=3D22,9,182,90><AR=
+EA=20
+          href=3D"http://www.staples.com" shape=3Drect alt=3D"Show All Prod=
+ucts"=20
+          coords=3D25,111,242,140></MAP>
+        <TBODY>
+        <TR>
+          <TD><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/emailconfheader607.gi=
+f"=20
+            width=3D838 height=3D160 useMap=3D#header_map=20
+      NOSEND=3D"1"></TD></TR></TBODY></TABLE></TD></TR>
+  <TR vAlign=3Dtop>
+    <TD align=3Dmiddle>
+      <TABLE border=3D0 cellSpacing=3D0 cellPadding=3D0 width=3D604 bgColor=
+=3D#ffffff>
+        <TBODY>
+        <TR>
+          <TD><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D15 hei=
+ght=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD>
+            <TABLE border=3D0 cellSpacing=3D0 cellPadding=3D0 width=3D568>
+              <TBODY>
+              <TR>
+                <TD vAlign=3Dtop><BR><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 12px">
+                  <P><B>Hello, and thanks for shopping Staples.</B> <BR>Thi=
+s is=20
+                  to confirm that your order has been received and is being=
+=20
+                  processed.</P></SPAN></TD></TR></TBODY></TABLE>
+            <TABLE border=3D0 cellSpacing=3D0 cellPadding=3D0 width=3D568>
+              <TBODY>
+              <TR>
+                <TD colSpan=3D2><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/rule1-585.gif"=
+=20
+                  width=3D570 height=3D21 NOSEND=3D"1"></TD></TR>
+              <TR>
+              <TR>
+                <TD vAlign=3Dtop><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 16px"><B>Order=20
+                  No.: 9205373677</B></SPAN></TD></TR>
+              <TR>
+                <TD><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D=
+284=20
+                  height=3D3 NOSEND=3D"1"></TD>
+                <TD><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D=
+284=20
+                  height=3D3 NOSEND=3D"1"></TD></TR>
+              <TR>
+                <TD vAlign=3Dtop><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 11px"><B>Customer=20
+                  No.: </B>4220442992</SPAN></TD>
+                <TD vAlign=3Dtop><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 11px"><B>Method=20
+                  of Payment: </B>VI ending in 6136</SPAN></TD></TR>
+              <TR>
+                <TD colSpan=3D2><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D=
+1=20
+                  height=3D3 NOSEND=3D"1"></TD></TR>
+              <TR>
+                <TD colSpan=3D2><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 11px"><B>Track=20
+                  order:</B>&nbsp;<A style=3D"COLOR: #000066"=20
+                  href=3D"https://www.staples.com/office/supplies/StaplesMy=
+OrderDetail?zipCode=3D&amp;orderNumber=3D9205373677&amp;catalogId=3D10051&a=
+mp;errorUrl=3Dmyologin&amp;langId=3D-1&amp;lastBillToZip=3D&amp;debugInfo=
+=3Dfalse&amp;staplesNumber=3D4220442992&amp;storeId=3D10001">Track=20
+                  your order</A></SPAN></TD></TR>
+              <TR>
+                <TD colSpan=3D2><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/rule1-585.gif"=
+=20
+                  width=3D570 height=3D21 NOSEND=3D"1"></TD></TR></TR>
+              <TR>
+                <TD vAlign=3Dtop><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 11px"><B>Delivery=20
+                  address</B> <BR>CYNTHIA MUNDY<BR>900 METRO CENTER=20
+                  BLVD<BR>M3-5D<BR>FOSTER CITY, CA 94404-2172</SPAN></TD>
+                <TD vAlign=3Dtop><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 11px"><B>Billing=20
+                  Address</B> <BR>CYNTHIA MUNDY<BR>900 METRO CENTER=20
+                  BLVD<BR>M3-5D<BR>FOSTER CITY, CA=20
+            94404</SPAN></TD></TR></TBODY></TABLE>
+            <TABLE border=3D0 cellSpacing=3D0 cellPadding=3D0 width=3D568>
+              <TBODY>
+              <TR>
+                <TD><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D=
+3=20
+                  height=3D10 NOSEND=3D"1"></TD>
+                <TD><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D=
+428=20
+                  height=3D10 NOSEND=3D"1"></TD>
+                <TD><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D=
+67=20
+                  height=3D10 NOSEND=3D"1"></TD>
+                <TD><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D=
+70=20
+                  height=3D10 NOSEND=3D"1"></TD></TR>
+              <TR bgColor=3D#cccccc>
+                <TD><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D=
+3=20
+                  height=3D18 NOSEND=3D"1"></TD>
+                <TD><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 11px"><B>Item=20
+                  1</B></SPAN></TD>
+                <TD><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 11px"><B>Qty.</B></SPAN></TD>
+                <TD><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 11px"><B>Subtotal</B></SPAN></TD></TR>
+              <TR>
+                <TD><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D=
+3=20
+                  height=3D1 NOSEND=3D"1"></TD>
+                <TD vAlign=3Dtop><SPAN=20
+                  style=3D"LINE-HEIGHT: 14px; FONT-FAMILY: verdana,arial; C=
+OLOR: #000000; FONT-SIZE: 11px">SPLS=20
+                  COMPOSITION 100 2PK<BR>Item No.: 201384 Price:=20
+                  $5.29/each<BR>Expected Delivery: <B>06/16/2010 by=20
+                  UPS</B></SPAN></TD>
+                <TD vAlign=3Dtop align=3Djustify><SPAN=20
+                  style=3D"LINE-HEIGHT: 14px; FONT-FAMILY: verdana,arial; C=
+OLOR: #000000; FONT-SIZE: 11px">1</SPAN></TD>
+                <TD vAlign=3Dtop><SPAN=20
+                  style=3D"LINE-HEIGHT: 14px; FONT-FAMILY: verdana,arial; C=
+OLOR: #000000; FONT-SIZE: 11px">$5.29</SPAN></TD></TR>
+              <TR>
+                <TD colSpan=3D4><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D=
+1=20
+                  height=3D10 NOSEND=3D"1"></TD></TR>
+              <TR>
+                <TD colSpan=3D4><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/rule1-585.gif"=
+=20
+                  width=3D570 height=3D21 NOSEND=3D"1"></TD></TR></TBODY></=
+TABLE>
+            <TABLE border=3D0 cellSpacing=3D0 cellPadding=3D0 width=3D568>
+              <TBODY>
+              <TR>
+                <TD><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D=
+433=20
+                  height=3D1 NOSEND=3D"1"></TD>
+                <TD><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D=
+110=20
+                  height=3D1 NOSEND=3D"1"></TD>
+                <TD><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D=
+25=20
+                  height=3D1 NOSEND=3D"1"></TD></TR>
+              <TR>
+                <TD vAlign=3Dtop align=3Dright><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 12px"><B>Subtotal:</B></SPAN></TD>
+                <TD vAlign=3Dtop align=3Dright><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 12px"><B>$5.29</B></SPAN></TD>
+                <TD></TD></TR>
+              <TR>
+                <TD vAlign=3Dtop align=3Dright><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 12px"><B>Delivery:</B></SPAN></TD>
+                <TD vAlign=3Dtop align=3Dright><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 12px"><B>$9.95</B></SPAN></TD>
+                <TD></TD></TR>
+              <TR>
+                <TD vAlign=3Dtop align=3Dright><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 12px"><B>Tax:</B></SPAN></TD>
+                <TD vAlign=3Dtop align=3Dright><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 12px"><B>$0.49</B></SPAN></TD>
+                <TD></TD></TR>
+              <TR>
+                <TD colSpan=3D3 align=3Dright><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/rule1-585.gif"=
+=20
+                  width=3D570 height=3D21 NOSEND=3D"1"></TD></TR>
+              <TR>
+                <TD vAlign=3Dtop align=3Dright><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 12px"><B>Total:</B></SPAN></TD>
+                <TD vAlign=3Dtop align=3Dright><SPAN=20
+                  style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FONT=
+-SIZE: 12px"><B>$15.73</B></SPAN></TD>
+                <TD></TD></TR>
+              <TR>
+                <TD colSpan=3D3><IMG border=3D0 alt=3D""=20
+                  src=3D"http://www.staples.com/sbd/img/eml/rule1-585.gif"=
+=20
+                  width=3D570 height=3D21 NOSEND=3D"1"></TD></TR></TBODY></=
+TABLE>
+            <TABLE border=3D0 cellSpacing=3D0 cellPadding=3D0 width=3D568>
+              <TBODY>
+              <TR>
+                <TD vAlign=3Dtop>
+                  <UL>
+                    <LI><SPAN=20
+                    style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FO=
+NT-SIZE: 10px">Your=20
+                    order is subject to review and the expected delivery da=
+te(s)=20
+                    noted above are pending credit or check approval. </SPA=
+N>
+                    <LI><SPAN=20
+                    style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FO=
+NT-SIZE: 10px">Won't=20
+                    be there to sign for your order from 9 am to 5 pm, Mond=
+ay &#8211;=20
+                    Friday? Print our <A=20
+                    href=3D"http://www.staples.com/sbd/content/help/policie=
+s/driver_release.html">Driver=20
+                    Release</A>. Some residential orders may be delivered b=
+y UPS=20
+                    as late as 7 pm.</SPAN>=20
+                    <LI><SPAN=20
+                    style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FO=
+NT-SIZE: 10px">Questions=20
+                    about your order? Call us at 1-800-3STAPLE (1-800-378-2=
+753)=20
+                    or email us at <A=20
+                    href=3D"mailto:support@orders.staples.com">support@orde=
+rs.staples.com</A>=20
+                    . You can also fax us at 1-800-333-3199. </SPAN>
+                    <LI><SPAN=20
+                    style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FO=
+NT-SIZE: 10px"><A=20
+                    href=3D"http://www.staples.com/sbd/content/help/shippin=
+g/index.html">See=20
+                    our return policy.</A></SPAN>=20
+                    <LI><SPAN=20
+                    style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FO=
+NT-SIZE: 10px">Our=20
+                    prices vary from store prices. Not responsible for=20
+                    typographical errors. Not all items are available. We=20
+                    reserve the right to limit quantities, including the ri=
+ght=20
+                    to prohibit sales to resellers. </SPAN>
+                    <LI><SPAN=20
+                    style=3D"FONT-FAMILY: verdana,arial; COLOR: #000000; FO=
+NT-SIZE: 10px">Thanks=20
+                    for Shopping Staples. </SPAN></LI></UL></TD></TR></TBOD=
+Y></TABLE>
+          <TD><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D15 hei=
+ght=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD></TD></TR>
+        <TR>
+          <TD><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD colSpan=3D3><MAP name=3Dads_map><AREA=20
+              href=3D"http://www.staples.com/office/supplies/StaplesOrderHi=
+storyList?&amp;reorderFlag=3DR&amp;debugInfo=3Dfalse&amp;langId=3D-1&amp;st=
+oreId=3D10001&amp;catalogId=3D10051&amp;cm_sp=3Dmarketing-_-EmailConfirmati=
+on-_-EZRO"=20
+              shape=3Drect=20
+              alt=3D"Need to order these items again? See past purchases wi=
+th Easy Reorder."=20
+              coords=3D0,0,400,80><AREA=20
+              href=3D"https://www.staplesrewardscenter.com/SORC/UserManagem=
+ent/Login/Login.aspx?cm_sp=3Dmarketing-_-EmailConfirmation-_-Rewards"=20
+              shape=3Drect=20
+              alt=3D"10% back in Staples Rewards(R) on all ink &amp; toner.=
+"=20
+              coords=3D400,0,600,80></MAP><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/merch022193_ezro_rewa=
+rds.gif"=20
+            width=3D600 height=3D82 useMap=3D#ads_map NOSEND=3D"1"></TD>
+          <TD><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD></TR></TBODY></TABLE></TD>
+    <TD width=3D234 align=3Dmiddle>
+      <TABLE border=3D0 cellSpacing=3D0 cellPadding=3D0 width=3D187 bgColor=
+=3D#ffffff>
+        <TBODY>
+        <TR>
+          <TD colSpan=3D5><IMG border=3D0 alt=3D"We Recommend"=20
+            src=3D"http://www.staples.com/sbd/img/eml/bestsellershdr_wereco=
+mmend.gif"=20
+            width=3D187 height=3D22 NOSEND=3D"1"></TD></TR>
+        <TR>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #fff" align=3Dmiddle><A=20
+            href=3D"http://ris.res-x.com/?appid=3Dstaples01&amp;index=3D1&a=
+mp;userid=3D4220442992&amp;scheme=3Demail_rr&amp;campaignid=3Doc_9205373677=
+"><IMG=20
+            style=3D"BORDER-BOTTOM: medium none; BORDER-LEFT: medium none; =
+BORDER-TOP: medium none; BORDER-RIGHT: medium none"=20
+            border=3D0=20
+            src=3D"http://ris.res-x.com/image.aspx?appid=3Dstaples01&amp;in=
+dex=3D1&amp;userid=3D4220442992&amp;scheme=3Demail_rr&amp;campaignid=3Doc_9=
+205373677"=20
+            NOSEND=3D"1"></A> <BR clear=3Dall><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D183 he=
+ight=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD></TR>
+        <TR>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #e2e2e2"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D183 he=
+ight=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD></TR>
+        <TR>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #fff" align=3Dmiddle><A=20
+            href=3D"http://ris.res-x.com/?appid=3Dstaples01&amp;index=3D2&a=
+mp;userid=3D4220442992&amp;scheme=3Demail_rr&amp;campaignid=3Doc_9205373677=
+"><IMG=20
+            style=3D"BORDER-BOTTOM: medium none; BORDER-LEFT: medium none; =
+BORDER-TOP: medium none; BORDER-RIGHT: medium none"=20
+            border=3D0=20
+            src=3D"http://ris.res-x.com/image.aspx?appid=3Dstaples01&amp;in=
+dex=3D2&amp;userid=3D4220442992&amp;scheme=3Demail_rr&amp;campaignid=3Doc_9=
+205373677"=20
+            NOSEND=3D"1"></A> <BR clear=3Dall><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D183 he=
+ight=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD></TR>
+        <TR>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #e2e2e2"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D183 he=
+ight=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD></TR>
+        <TR>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #fff" align=3Dmiddle><A=20
+            href=3D"http://ris.res-x.com/?appid=3Dstaples01&amp;index=3D3&a=
+mp;userid=3D4220442992&amp;scheme=3Demail_rr&amp;campaignid=3Doc_9205373677=
+"><IMG=20
+            style=3D"BORDER-BOTTOM: medium none; BORDER-LEFT: medium none; =
+BORDER-TOP: medium none; BORDER-RIGHT: medium none"=20
+            border=3D0=20
+            src=3D"http://ris.res-x.com/image.aspx?appid=3Dstaples01&amp;in=
+dex=3D3&amp;userid=3D4220442992&amp;scheme=3Demail_rr&amp;campaignid=3Doc_9=
+205373677"=20
+            NOSEND=3D"1"></A> <BR clear=3Dall><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D183 he=
+ight=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD></TR>
+        <TR>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #e2e2e2"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D183 he=
+ight=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD></TR>
+        <TR>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #fff" align=3Dmiddle><A=20
+            href=3D"http://ris.res-x.com/?appid=3Dstaples01&amp;index=3D4&a=
+mp;userid=3D4220442992&amp;scheme=3Demail_rr&amp;campaignid=3Doc_9205373677=
+"><IMG=20
+            style=3D"BORDER-BOTTOM: medium none; BORDER-LEFT: medium none; =
+BORDER-TOP: medium none; BORDER-RIGHT: medium none"=20
+            border=3D0=20
+            src=3D"http://ris.res-x.com/image.aspx?appid=3Dstaples01&amp;in=
+dex=3D4&amp;userid=3D4220442992&amp;scheme=3Demail_rr&amp;campaignid=3Doc_9=
+205373677"=20
+            NOSEND=3D"1"></A> <BR clear=3Dall><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D183 he=
+ight=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD></TR>
+        <TR>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #e2e2e2"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D183 he=
+ight=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD></TR>
+        <TR>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #fff" align=3Dmiddle><A=20
+            href=3D"http://ris.res-x.com/?appid=3Dstaples01&amp;index=3D5&a=
+mp;userid=3D4220442992&amp;scheme=3Demail_rr&amp;campaignid=3Doc_9205373677=
+"><IMG=20
+            style=3D"BORDER-BOTTOM: medium none; BORDER-LEFT: medium none; =
+BORDER-TOP: medium none; BORDER-RIGHT: medium none"=20
+            border=3D0=20
+            src=3D"http://ris.res-x.com/image.aspx?appid=3Dstaples01&amp;in=
+dex=3D5&amp;userid=3D4220442992&amp;scheme=3Demail_rr&amp;campaignid=3Doc_9=
+205373677"=20
+            NOSEND=3D"1"></A> <BR clear=3Dall><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D183 he=
+ight=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #bfbfbf"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD>
+          <TD style=3D"BACKGROUND: #ededed"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D1 heig=
+ht=3D1=20
+            NOSEND=3D"1"></TD></TR>
+        <TR>
+          <TD colSpan=3D5><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/bestsellersftr.gif"=20
+            width=3D187 height=3D8 NOSEND=3D"1"></TD></TR></TBODY></TABLE><=
+/TD></TR>
+  <TR>
+    <TD colSpan=3D2 align=3Dmiddle>
+      <STYLE>#footertable DL {
+    FONT-FAMILY: Arial,Helvetica,sans-serif; COLOR: #e5e5e5; FONT-SIZE: 13px
+}
+#footertable TR.footertop DL {
+    MARGIN: 32px 8px 20px
+}
+#footertable TR.footerbottom DL {
+    MARGIN: 10px 8px
+}
+#footertable DT {
+    PADDING-BOTTOM: 0px; LINE-HEIGHT: 1.5; MARGIN: 0px; PADDING-LEFT: 0px; PAD=
+DING-RIGHT: 0px; FONT-SIZE: 15px; FONT-WEIGHT: bold; PADDING-TOP: 0px
+}
+#footertable DD {
+    PADDING-BOTTOM: 0px; LINE-HEIGHT: 2; MARGIN: 0px; PADDING-LEFT: 0px; PADDI=
+NG-RIGHT: 0px; PADDING-TOP: 0px
+}
+#footertable DD A {
+    COLOR: #e5e5e5; TEXT-DECORATION: none
+}
+#footertable DD A:visited {
+    COLOR: #e5e5e5; TEXT-DECORATION: none
+}
+#footertable DD A:active {
+    COLOR: #e5e5e5; TEXT-DECORATION: none
+}
+#footertable DD A:hover {
+    COLOR: #00aaff; TEXT-DECORATION: none
+}
+</STYLE>
+
+      <TABLE=20
+      style=3D"BACKGROUND: url(http://www.staples.com/sbd/img/eml/emailconf=
+footer607.gif) #666"=20
+      id=3Dfootertable border=3D0 cellSpacing=3D0 cellPadding=3D0 width=3D8=
+38>
+        <TBODY>
+        <TR class=3Dfootertop vAlign=3Dtop>
+          <TD><A href=3D"http://www.staples.com"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D154 he=
+ight=3D344=20
+            NOSEND=3D"1"></A></TD>
+          <TD>
+            <DL id=3Dwstsv class=3Dnfirst>
+              <DT>Ways to Save=20
+              <DD id=3Dwstsv_stplsrwrds><A=20
+              href=3D"https://www.staplesrewardscenter.com/SORC/UserManagem=
+ent/Login/Login.aspx">Staples=20
+              Rewards</A>=20
+              <DD id=3Dwstsv_rbtcntr><A=20
+              href=3D"https://www.stapleseasyrebates.com/img/staples/paperl=
+ess/pages/Landing.html">Rebate=20
+              Center</A>=20
+              <DD id=3Dwstsv_stplscrdtcntr><A=20
+              href=3D"http://www.staples.com/sbd/cre/programs/credit/">Stap=
+les=20
+              Credit Center</A>=20
+              <DD id=3Dwstsv_crprtcstmrs><A=20
+              href=3D"http://www.staplescentral.com/index.html">Corporate=20
+              Customers</A>=20
+              <DD id=3Dwstsv_stplssrvcplns><A=20
+              href=3D"http://www.staples.com/sbd/cre/programs/serviceplans/=
+">Staples=20
+              Service Plans</A>=20
+              <DD id=3Dwstsv_mlsgnp><A=20
+              href=3D"http://www.staples.com/office/supplies/StaplesEmailSu=
+bscriptionChange?fromUrl=3Dextemail&amp;langId=3D-1&amp;storeId=3D10001&amp=
+;errorUrl=3Demailsuberror&amp;successUrl=3Demailsubdetails&amp;emailSubActi=
+on=3DemailCapture">Email=20
+              SignUp</A> </DD></DL></TD>
+          <TD vAlign=3Dcenter><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/emailconffooter_split=
+ter607.gif"=20
+            width=3D10 height=3D220 NOSEND=3D"1"></TD>
+          <TD>
+            <DL id=3Dplcs>
+              <DT>Policies=20
+              <DD id=3Dplcs_dlvrrtrns><A=20
+              href=3D"http://www.staples.com/sbd/content/help/shipping/">De=
+livery=20
+              &amp; Returns</A>=20
+              <DD id=3Dplcs_fqs><A=20
+              href=3D"http://www.staples.com/sbd/content/help/using/faq.htm=
+l">F.A.Q.'s</A>=20
+
+              <DD id=3Dplcs_lgltrmscndtns><A=20
+              href=3D"http://www.staples.com/sbd/content/help/policies/term=
+s.html">Legal=20
+              Terms &amp; Conditions</A>=20
+              <DD id=3Dplcs_prvcsttmnt><A=20
+              href=3D"http://www.staples.com/sbd/content/help/policies/priv=
+acy.html">Privacy=20
+              Statement</A>=20
+              <DD id=3Dplcs_wrrntrcllnf><A=20
+              href=3D"http://www.staples.com/sbd/content/help/using/manufac=
+turer_warranty.html">Warranty=20
+              &amp; Re-call Info</A>=20
+              <DD id=3Dplcs_prcmtchgrnt><A=20
+              href=3D"http://www.staples.com/sbd/content/help/using/general=
+_match.html">Price=20
+              Match Guarantee</A> </DD></DL></TD>
+          <TD vAlign=3Dcenter><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/emailconffooter_split=
+ter607.gif"=20
+            width=3D10 height=3D220 NOSEND=3D"1"></TD>
+          <TD>
+            <DL id=3Dcrprtnfrmtn class=3Dnlast>
+              <DT>Corporate Information=20
+              <DD id=3Dcrprtnfrmtn_btstpls><A=20
+              href=3D"http://www.staples.com/sbd/cre/marketing/about_us/ind=
+ex.html">About=20
+              Staples</A>=20
+              <DD id=3Dcrprtnfrmtn_crprtrspnsblt><A=20
+              href=3D"http://www.staples.com/sbd/content/about/soul/index.h=
+tml">Corporate=20
+              Responsibility</A>=20
+              <DD id=3Dcrprtnfrmtn_nvstrnfrmtn><A=20
+              href=3D"http://investor.staples.com/phoenix.zhtml?c=3D96244&a=
+mp;p=3Dirol-IRHome">Investor=20
+              Information</A>=20
+              <DD id=3Dcrprtnfrmtn_mdnfrmtn><A=20
+              href=3D"http://www.staples.com/sbd/content/about/media/index.=
+html">Media=20
+              Information</A>=20
+              <DD id=3Dcrprtnfrmtn_cmmntrltns><A=20
+              href=3D"http://www.staples.com/sbd/content/about/soul/">Commu=
+nity=20
+              Relations</A>=20
+              <DD id=3Dcrprtnfrmtn_ntrntnlsts><A=20
+              href=3D"http://www.staples.com/sbd/content/about/store/intern=
+ational.html">International=20
+              Sites</A>=20
+              <DD id=3Dcrprtnfrmtn_stplscntr><A=20
+              href=3D"http://www.staplescenter.com">STAPLES Center</A>=20
+              <DD id=3Dcrprtnfrmtn_ffltprgrm><A=20
+              href=3D"http://www.staples.com/sbd/content/about/affiliate/">=
+Affiliate=20
+              Program</A>=20
+              <DD id=3Dcrprtnfrmtn_jbs><A=20
+              href=3D"http://www.staples.com/sbd/cre/resources/jobs/">Jobs<=
+/A>=20
+              </DD></DL></TD>
+          <TD><A href=3D"http://www.staples.com"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D156 he=
+ight=3D344=20
+            NOSEND=3D"1"></A></TD></TR>
+        <TR class=3Dfooterbottom vAlign=3Dtop>
+          <TD><A href=3D"http://www.staples.com"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D154 he=
+ight=3D308=20
+            NOSEND=3D"1"></A></TD>
+          <TD>
+            <DL id=3Dsthlpfdbck class=3Dnfirst>
+              <DT>Site Help &amp; Feedback=20
+              <DD id=3Dsthlpfdbck_fvrtslsts><A=20
+              href=3D"http://www.staples.com/office/supplies/viewalllists?l=
+angId=3D-1&amp;storeId=3D10001&amp;catalogId=3D10051">Favorites=20
+              Lists</A>=20
+              <DD id=3Dsthlpfdbck_srrdr><A=20
+              href=3D"http://www.staples.com/office/supplies/StaplesOrderHi=
+storyList?langId=3D-1&amp;debugInfo=3Dfalse&amp;reorderFlag=3DR&amp;storeId=
+=3D10001&amp;catalogId=3D10051">Easy=20
+              Reorder</A>=20
+              <DD id=3Dsthlpfdbck_rdrbctlgtm><A=20
+              href=3D"http://www.staples.com/office/supplies/qobin?langId=
+=3D-1&amp;storeId=3D10001&amp;first=3Dtrue&amp;catalogId=3D10051">Order=20
+              By Catalog Item #</A>=20
+              <DD id=3Dsthlpfdbck_trcknrdr><A=20
+              href=3D"http://www.staples.com/office/supplies/StaplesOrderHi=
+storyList?langId=3D-1&amp;storeId=3D10001&amp;catalogId=3D10051">Track=20
+              an Order</A>=20
+              <DD id=3Dsthlpfdbck_mccnt><A=20
+              href=3D"http://www.staples.com/office/supplies/myaccount?lang=
+Id=3D-1&amp;storeId=3D10001&amp;catalogId=3D10051">My=20
+              Account</A>=20
+              <DD id=3Dsthlpfdbck_strlctr><A=20
+              href=3D"http://stores.staples-locator.com/staples/?">Store=20
+              Locator</A>=20
+              <DD id=3Dsthlpfdbck_rqstctlg><A=20
+              href=3D"http://www.staples.com/">Request a Catalog</A>=20
+              <DD id=3Dsthlpfdbck_mlsgnp><A=20
+              href=3D"http://www.staples.com/office/supplies/StaplesEmailSu=
+bscriptionChange?fromUrl=3Dextemail&amp;langId=3D-1&amp;storeId=3D10001&amp=
+;errorUrl=3Demailsuberror&amp;successUrl=3Demailsubdetails&amp;emailSubActi=
+on=3DemailCapture">Email=20
+              SignUp</A>=20
+              <DD id=3Dsthlpfdbck_cntcts><A=20
+              href=3D"http://www.staples.com/sbd/content/help/contact/index=
+.html">Contact=20
+              Us</A> </DD></DL></TD>
+          <TD vAlign=3Dcenter><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/emailconffooter_split=
+ter607.gif"=20
+            width=3D10 height=3D220 NOSEND=3D"1"></TD>
+          <TD>
+            <DL id=3Dxclsvltstpls>
+              <DT>Exclusively at Staples=20
+              <DD id=3Dxclsvltstpls_stplssbttn><A=20
+              href=3D"http://www.staples.com/Staples-Easy-Button/product_60=
+6396">Staples=20
+              Easy Button</A>=20
+              <DD id=3Dxclsvltstpls_dwnldblsbttn><A=20
+              href=3D"http://www.staples.com/">Downloadable Easy Button</A>=
+=20
+              <DD id=3Dxclsvltstpls_stch><A=20
+              href=3D"http://www.staples.com/sbd/cre/marketing/easytech_08/=
+index.html">Easy=20
+              Tech</A>=20
+              <DD id=3Dxclsvltstpls_xprdcts><A=20
+              href=3D"http://www.staples.com/sbd/cre/marketing/oxo/index.ht=
+ml">OXO=20
+              Products</A>=20
+              <DD id=3Dxclsvltstpls_nkdrp><A=20
+              href=3D"http://www.staples.com/office/supplies/inkdrop?">InkD=
+rop</A>=20
+
+              <DD id=3Dxclsvltstpls_rcclngprgrms><A=20
+              href=3D"http://www.staples.com/sbd/cre/marketing/ecoeasy/inde=
+x.html">Recycling=20
+              Programs</A> </DD></DL></TD>
+          <TD vAlign=3Dcenter><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/emailconffooter_split=
+ter607.gif"=20
+            width=3D10 height=3D220 NOSEND=3D"1"></TD>
+          <TD>
+            <DL id=3Dstplsbrndprdcts class=3Dnlast>
+              <DT>Staples Brand Products=20
+              <DD id=3Dstplsbrndprdcts_pprspds><A=20
+              href=3D"http://www.staples.com/Paper-Pads/cat_SH76CG10_SH76">=
+Papers=20
+              &amp; Pads</A>=20
+              <DD id=3Dstplsbrndprdcts_bndrsprsnttn><A=20
+              href=3D"http://www.staples.com/Binders-Presentation/cat_SH76C=
+G2_SH76">Binders=20
+              &amp; Presentation</A>=20
+              <DD id=3Dstplsbrndprdcts_flfldrsccssrs><A=20
+              href=3D"http://www.staples.com/File-Folders-Accessories/cat_S=
+H76CG15_SH76">File=20
+              Folders &amp; Accessories</A>=20
+              <DD id=3Dstplsbrndprdcts_pnswrtngcrrctn><A=20
+              href=3D"http://www.staples.com/Pens-Writing-Correction/cat_SH=
+76CG11_SH76">Pens,=20
+              Writing &amp; Correction</A>=20
+              <DD id=3Dstplsbrndprdcts_shrddrs><A=20
+              href=3D"http://www.staples.com/Shredders/cat_SH76CG868_SH76">=
+Shredders</A>=20
+
+              <DD id=3Dstplsbrndprdcts_cddvdmd><A=20
+              href=3D"http://www.staples.com/CD-DVD-Media/cat_SH76CG1039_SH=
+76">CD/DVD=20
+              Media</A>=20
+              <DD id=3Dstplsbrndprdcts_vwllprdcts><A=20
+              href=3D"http://www.staples.com/Staples-Shop/cat_SH76_SH76">Vi=
+ew All=20
+              Products</A> </DD></DL></TD>
+          <TD><A href=3D"http://www.staples.com"><IMG border=3D0 alt=3D""=20
+            src=3D"http://www.staples.com/sbd/img/eml/s.gif" width=3D156 he=
+ight=3D308=20
+            NOSEND=3D"1"></A></TD></TR></TBODY></TABLE></TD></TR></TBODY></=
+TABLE></DIV></BODY></HTML>
+
+--_000_155823C2ED5F2F4A916C9CA7C55AC554034AC13BD9SW720MBPX017v_--
