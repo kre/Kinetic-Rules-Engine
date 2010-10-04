@@ -1701,8 +1701,11 @@ meta_block
 	 	| LEFT_CURL (name_value_pair[key_values] (COMMA name_value_pair[key_values])*) RIGHT_CURL) +  {
 		if(!key_values.isEmpty())
 			keys_map.put($what.text,key_values);
-		else
+		else if($key_value.text != null)
 			keys_map.put($what.text,strip_string($key_value.text));
+		else
+			throw new InvalidToken("key must have a string or key values", input);
+
         key_values = new HashMap();
 	}
 	| AUTHZ REQUIRE must_be["user"] {
