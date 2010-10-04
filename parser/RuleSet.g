@@ -1697,7 +1697,7 @@ meta_block
 			$string_desc = null;
 
 		}
-	 | KEY what=must_be_one[sar("errorstack","googleanalytics","facebook","twitter","amazon","kpds","google")] (key_value=STRING
+	 | KEY what=must_be_one[sar("errorstack","googleanalytics","facebook","twitter","amazon","kpds","google","twilio")] (key_value=STRING
 	 	| LEFT_CURL (name_value_pair[key_values] (COMMA name_value_pair[key_values])*) RIGHT_CURL) +  {
 		if(!key_values.isEmpty())
 			keys_map.put($what.text,key_values);
