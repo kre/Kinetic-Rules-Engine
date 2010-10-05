@@ -261,7 +261,8 @@ sub now {
             }
         }
     }
-    return $now;
+    my $f = DateTime::Format::RFC3339->new();
+    return $f->format_datetime($now);
 }
 $funcs->{'now'} = \&now;
 
@@ -273,7 +274,8 @@ sub new {
     if ( !defined $utime ) {
         return now();
     } else {
-        return ISO8601($utime);
+        my $f = DateTime::Format::RFC3339->new();
+        return $f->format_datetime(ISO8601($utime));
     }
     return undef;
 }
@@ -291,10 +293,12 @@ sub add {
             if ( ref $args->[1] eq 'HASH' ) {
                 $dt->add( $args->[1] );
                 $logger->debug( "plus: ", $dt );
-                return $dt;
+                my $f = DateTime::Format::RFC3339->new();
+                return $f->format_datetime(ISO8601($dt));
             } else {
-                $logger->debug( "Not ref: ", ref $args->[1] );
-                return $dt;
+                $logger->debug( "Found: ", ref $args->[1], " Requires: {<timeunit> : <number>}" );
+                my $f = DateTime::Format::RFC3339->new();
+                return $f->format_datetime(ISO8601($dt));
             }
 
         }
@@ -311,6 +315,7 @@ sub strformat {
     if ( ref $args->[0] eq '' ) {
         my $utime = $args->[0];
         my $dt = ISO8601($utime);
+        $logger->debug("iso8601 date: ", sub {Dumper($dt)});
         if (defined $dt) {
             return $dt->strftime($args->[1]);
         }
@@ -335,10 +340,10 @@ sub atom {
                 }
             }
             my $f = DateTime::Format::RFC3339->new();
-            return $f->format_datetime($dt);    
-        }    
+            return $f->format_datetime($dt);
+        }
     }
-    
+
 }
 $funcs->{'atom'} = \&atom;
 
