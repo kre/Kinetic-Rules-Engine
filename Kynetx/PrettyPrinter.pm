@@ -938,7 +938,10 @@ sub pp_raise_statement {
 		  'event',
 		  $node->{'event'}]
 	       });
-    $o .= ' for ' . $node->{'rid'} if($node->{'rid'});
+    if($node->{'ruleset'}) {
+      $o .= ' for ' . $node->{'ruleset'}->{'rid'};
+      $o .= '.' . $node->{'ruleset'}->{'version'} if($node->{'ruleset'}->{'version'});
+    }
     $o .= pp_modifier_clause($node, $indent);
     return $o;
 

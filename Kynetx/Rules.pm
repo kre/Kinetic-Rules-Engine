@@ -542,7 +542,7 @@ sub eval_foreach {
 					$session);
 
 
-    $logger->debug("Foreach ", sub { Dumper $foreach_list[0] });
+#    $logger->debug("Foreach ", sub { Dumper $foreach_list[0] });
 
     my $vars = $foreach_list[0]->{'var'};
     # FIXME: not sure why we have to do this.
@@ -582,8 +582,8 @@ sub eval_foreach {
 		       Kynetx::Expressions::typed_value($_))} @{$val}]);
 
 
-      $logger->debug("Vars ", sub {Dumper $vars});
-      $logger->debug("Vals ", sub {Dumper $val});
+#      $logger->debug("Vars ", sub {Dumper $vars});
+#      $logger->debug("Vals ", sub {Dumper $val});
 
       # we recurse in side this loop to handle nested foreach statements
       $fjs .= mk_turtle(

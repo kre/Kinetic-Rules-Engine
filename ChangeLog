@@ -1,3 +1,7 @@
+2010-10-01  Web-san  <web@dev11.kobj.net>
+
+   * Kynetx/Modules/Twitter.pm: removed update as a datasource call.  All updates should now use the action.
+
 2010-09-27  Web-san  <web@dev11.kobj.net>
 
    * Kynetx/Repository.pm (get_rules_from_repository): Added semaphore clearing to two returns that happen before the getting is done.  This is messy and bug prone.  Wish I had a "finally"

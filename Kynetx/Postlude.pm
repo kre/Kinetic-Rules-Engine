@@ -272,8 +272,12 @@ sub eval_raise_statement {
 
     my $js ='';
 
+    my $rid = $expr->{'ruleset'}->{'rid'} || $req_info->{'rid'};
+
     my $new_req_info = {'eventtype' => $expr->{'event'},
 			'domain' => $expr->{'domain'}};
+
+    $logger->debug("Raising explicit event $expr->{'domain'}:$expr->{'event'} for $rid");
 
     foreach my $m (@{ $expr->{'modifiers'}}) {
       $new_req_info->{$m->{'name'}} =
@@ -286,10 +290,22 @@ sub eval_raise_statement {
 
     }
 
-    # if we're raising an event on a new RID, ensure it's in the same mode (dev or production)
-    if ($expr->{'rid'}) {
-      $new_req_info->{$expr->{'rid'}.':kynetx_app_version'} = 
-	$req_info->{$req_info->{'rid'}.':kynetx_app_version'};
+    if ($expr->{'ruleset'}) {
+      if ($expr->{'ruleset'}->{'version'}) {
+	# remove the v from numeric version numbers
+	if ($expr->{'ruleset'}->{'version'} =~ /v\d+/) {
+	  $expr->{'ruleset'}->{'version'} =~ s/v(\d+)/$1/;
+	}
+	$new_req_info->{$expr->{'ruleset'}->{'rid'}.':kynetx_app_version'} = 
+	  $expr->{'ruleset'}->{'version'};
+      } else {
+	# if we're raising an event on a new RID and we don't have a version ensure it's in the same mode (dev or production)
+	if ($req_info->{$req_info->{'rid'}.':kynetx_app_version'}) {
+	  $new_req_info->{$expr->{'ruleset'}->{'rid'}.':kynetx_app_version'} = 
+	    $req_info->{$req_info->{'rid'}.':kynetx_app_version'};
+	}
+      }
+      $logger->debug("Raising explicit event for RID $rid, version " . $new_req_info->{$expr->{'ruleset'}->{'rid'}.':kynetx_app_version'} ) if $expr->{'ruleset'}->{'rid'} && $new_req_info->{$expr->{'ruleset'}->{'rid'}.':kynetx_app_version'};
     }
 
     # merge in the incoming request info
@@ -304,7 +320,7 @@ sub eval_raise_statement {
 					  $new_req_info,
 					  $session,
 					  $req_info->{'schedule'},
-					  $expr->{'rid'} || $req_info->{'rid'},
+					  $rid,
 					 );
 
     return $js;

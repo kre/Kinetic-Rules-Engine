@@ -2046,6 +2046,14 @@ function callBacks () {
 }());
 _JS_
 
+add_testcase(
+    $krl_src,
+    $js,
+    $dummy_final_req_info,
+    0
+    );
+
+
 $krl_src = <<_KRL_;
 ruleset two_rules_second_not_raised {
     rule t10 is active {
