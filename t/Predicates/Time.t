@@ -1,40 +1,41 @@
 
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 
 use lib qw(/web/lib/perl);
 use strict;
 
 use Test::More;
 use Test::LongString;
+use Data::Dumper;
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
@@ -73,44 +74,44 @@ foreach my $pn (@pnames) {
 }
 
 
-# ok($preds->{'timezone'}($BYU_req_info, {}, ["America/Denver"]), "Checking Mountain Time Zone"); 
+# ok($preds->{'timezone'}($BYU_req_info, {}, ["America/Denver"]), "Checking Mountain Time Zone");
 
 
-is(get_local_time($NYU_req_info)->time_zone->name, 
-   "America/New_York", 
+is(get_local_time($NYU_req_info)->time_zone->name,
+   "America/New_York",
    "Checking eastern time zone");
 
-is(get_local_time($Amazon_req_info)->time_zone->name, 
-   "America/Los_Angeles", 
+is(get_local_time($Amazon_req_info)->time_zone->name,
+   "America/Los_Angeles",
    "Checking pacific time zone");
 
-is(get_local_time($BYU_req_info)->time_zone->name, 
-   "America/Denver", 
+is(get_local_time($BYU_req_info)->time_zone->name,
+   "America/Denver",
    "Checking mountain time zone");
 
-ok(&{$preds->{'morning'}}($BYU_req_info) ? 
+ok(&{$preds->{'morning'}}($BYU_req_info) ?
      &{$preds->{'daytime'}}($BYU_req_info) : 1,
    "Its daytime if it's morning");
 
-ok(&{$preds->{'lunch_time'}}($BYU_req_info) ? 
+ok(&{$preds->{'lunch_time'}}($BYU_req_info) ?
      &{$preds->{'daytime'}}($BYU_req_info) : 1,
    "Its daytime if it's lunchtime");
 
-ok(&{$preds->{'late_morning'}}($BYU_req_info) ? 
+ok(&{$preds->{'late_morning'}}($BYU_req_info) ?
      &{$preds->{'daytime'}}($BYU_req_info) : 1,
    "Its daytime if it's late morning");
 
-ok(&{$preds->{'early_afternoon'}}($BYU_req_info) ? 
+ok(&{$preds->{'early_afternoon'}}($BYU_req_info) ?
      &{$preds->{'daytime'}}($BYU_req_info) : 1,
    "Its daytime if it's early afternoon");
 
-ok(&{$preds->{'early_afternoon'}}($BYU_req_info) ? 
+ok(&{$preds->{'early_afternoon'}}($BYU_req_info) ?
      &{$preds->{'daytime'}}($BYU_req_info) : 1,
    "Its daytime if it's early afternoon");
 
 
-ok(&{$preds->{'weekday'}}($BYU_req_info) ? 
-   (! &{$preds->{'weekend'}}($BYU_req_info)) :  
+ok(&{$preds->{'weekday'}}($BYU_req_info) ?
+   (! &{$preds->{'weekend'}}($BYU_req_info)) :
    &{$preds->{'weekend'}}($BYU_req_info),
    "If it's a weekday, it's not the weekend, otherwise it is");
 
@@ -178,17 +179,22 @@ ok(
 
 my $tz = 'America/Denver';;
 my $base_time = DateTime->now('time_zone' => $tz);
+my $pause = 1;
+diag "Wait for $pause second(s)";
+sleep($pause);
 my $rightnow = Kynetx::Predicates::Time::get_time($BYU_req_info,'now',[{'tz'=>$tz}]);
-cmp_ok($base_time->truncate("to" => 'hour'),'eq',$rightnow->truncate('to'=>'hour'),"time:now()");
+my $rn_dt = Kynetx::Predicates::Time::ISO8601($rightnow);
+my $diff = $rn_dt->subtract_datetime($base_time);
+cmp_ok($diff->seconds,'>=',$pause,"time:now()");
 
 my $t = Kynetx::Predicates::Time::get_time($BYU_req_info,'new',["2010-08-08"]);
-cmp_ok("$t",'eq','2010-08-08T00:00:00',"Create a new time string");
+cmp_ok("$t",'eq','2010-08-08T00:00:00Z',"Create a new time string");
 
 $t = Kynetx::Predicates::Time::get_time($BYU_req_info,'add',["$t",{"hours"=>4}]);
-cmp_ok("$t",'eq','2010-08-08T04:00:00',"Create a new time string");
+cmp_ok("$t",'eq','2010-08-08T04:00:00Z',"Add 4 hours");
 
 $t = Kynetx::Predicates::Time::get_time($BYU_req_info,'strftime',["$t","%F %T"]);
-cmp_ok("$t",'eq','2010-08-08 04:00:00',"Create a new time string");
+cmp_ok("$t",'eq','2010-08-08 04:00:00',"Format a datetime string");
 
 $t = Kynetx::Predicates::Time::get_time($BYU_req_info,'atom',["2010-08-08",{'tz'=>'America/Denver'}]);
 cmp_ok("$t",'eq','2010-08-08T06:00:00Z',"Create a new time string");
