@@ -40,6 +40,7 @@ use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
 
+use APR::Pool;
 use LWP::Simple;
 use XML::XPath;
 use Cache::Memcached;
@@ -61,10 +62,44 @@ $Data::Dumper::Indent = 1;
 
 my $logger = get_logger();
 
-
 my $test_count = 0;
 
-ok(1,"Dummy test");
+my $r = Kynetx::Test::configure();
+
+# foreach my $k (sort @{Kynetx::Configure::config_keys()}) {
+#   diag "$k => ", Kynetx::Configure::get_config($k);
+# }
+
+my $rid = 'cs_test';
+
+# test choose_action and args
+
+my $my_req_info = Kynetx::Test::gen_req_info($rid);
+
+my $rule_name = 'foo';
+
+my $rule_env = Kynetx::Test::gen_rule_env();
+
+my $session = Kynetx::Test::gen_session($r, $rid);
+
+Kynetx::Test::gen_app_session($r, $my_req_info);
+
+my($val);
+
+$val = Kynetx::Modules::eval_module($my_req_info, $rule_env, $session, $rule_name, 'keys', 'errorstack', [] );
+like($val,qr/\d+/,"Errorstack is a string a digits");
+$test_count++;
+
+$val = Kynetx::Modules::eval_module($my_req_info, $rule_env, $session, $rule_name, 'keys', 'googleanalytics', [] );
+like($val,qr/\w\w\d+/,"Google is two chars and a string a digits");
+$test_count++;
+
+$val = Kynetx::Modules::eval_module($my_req_info, $rule_env, $session, $rule_name, 'keys', 'twitter', [] );
+is_deeply($val,
+	  {"consumer_key" => "5837874827498274939",
+	   "consumer_secret" => "3HNb7NfdadadadahdajdhgajlkjakldaMtLahvkMt6Std5SO0"
+	  },
+	  "Twitter is a hash");
 $test_count++;
 
 done_testing($test_count);

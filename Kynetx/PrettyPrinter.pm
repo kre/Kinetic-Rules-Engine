@@ -101,6 +101,8 @@ sub pp_meta_block {
 
     $o .= pp_logging($mb->{'logging'}, $indent+$g_indent) if ($mb->{'logging'}) ;
 
+    $o .= pp_sharing($mb->{'sharing'}, $indent+$g_indent) if ($mb->{'sharing'}) ;
+
     $o .= pp_keys($mb->{'keys'}, $indent+$g_indent) if ($mb->{'keys'}) ;
 
     $o .= pp_use($mb->{'use'}, $indent+$g_indent) if ($mb->{'use'}) ;
@@ -147,6 +149,19 @@ sub pp_logging {
     my $o = $beg;
 
     $o .= "logging ";
+    $o .= $node;
+  
+    return $o;
+}
+
+sub pp_sharing {
+    my ($node, $indent) = @_;
+
+    my $beg = " "x$indent;
+    
+    my $o = $beg;
+
+    $o .= "sharing ";
     $o .= $node;
   
     return $o;

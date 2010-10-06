@@ -1725,7 +1725,7 @@ meta_block
 		meta_block_hash.put("authz",tmp);
 	   }
 	| LOGGING onoff=(ON|OFF) {  meta_block_hash.put("logging",$onoff.text); }
-	| SHARABLE onoff=(ON|OFF) {  meta_block_hash.put("sharable",$onoff.text); }
+	| SHARABLE onoff=(ON|OFF) {  meta_block_hash.put("sharing",$onoff.text); }
 	| USE ( (rtype=(CSS|JAVASCRIPT) must_be["resource"] (url=STRING | nicename=VAR)    {
 		HashMap tmp = new HashMap();
 		HashMap tmp2 = new HashMap();
@@ -2036,8 +2036,9 @@ OTHER_OPERATORS
 	 ;
  LOGGING
 	:'logging';
+
  SHARABLE
-	:'sharable';
+	:'sharing';
 
  USE
 	:	'use'

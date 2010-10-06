@@ -207,13 +207,14 @@ sub process_event_for_rid {
   my $rid = shift;
 
   my $logger = get_logger();
+#  $logger->debug("Req info: ", sub {Dumper $req_info} );
 
   $logger->debug("Processing events for $rid");
   Log::Log4perl::MDC->put('site', $rid);
 
   $req_info->{'rid'} = $rid;
 
-  my $ruleset = Kynetx::Rules::get_rule_set($req_info);;
+  my $ruleset = Kynetx::Rules::get_rule_set($req_info);
 
 
   #      $logger->debug("Ruleset: ", sub {Dumper $ruleset} );
@@ -285,7 +286,6 @@ sub process_event_for_rid {
       }
       $schedule->annotate_task($rid,$rulename,'vars',$var_list);
       $schedule->annotate_task($rid,$rulename,'vals',$val_list);
-
 
       # reset SM
       session_delete($rid, $session, $sm_current_name);

@@ -178,7 +178,16 @@ sub process_schedule {
       $ast->add_resources($current_rid, $req_info->{'resources'});
 
       # set up new context
-      $ruleset = $task->{'ruleset'};
+
+      $req_info = $task->{'req_info'};
+      $req_info->{'rid'} = $rid;
+      # we use this to modify the schedule on-the-fly
+      $req_info->{'schedule'} = $schedule;
+
+#      $ruleset = $task->{'ruleset'};
+      $ruleset = Kynetx::Rules::get_rule_set($req_info);
+      # store so we don't have to grab it again
+      stash_ruleset($req_info, $ruleset);
 
       if (($ruleset->{'meta'}->{'logging'} &&
 	   $ruleset->{'meta'}->{'logging'} eq "on")) {
@@ -189,11 +198,6 @@ sub process_schedule {
 
       Log::Log4perl::MDC->put('site', $rid);
       $logger->info("Processing rules for site " . $rid);
-
-      $req_info = $task->{'req_info'};
-      $req_info->{'rid'} = $rid;
-      # we use this to modify the schedule on-the-fly
-      $req_info->{'schedule'} = $schedule;
 
 
       # this doesn't work.  We may need to get new session storage in place before it will.
@@ -678,15 +682,15 @@ sub get_rule_set {
     my $logger = get_logger();
     $logger->debug("Getting ruleset $rid for $caller");
 
-    # cached the ruleset in the req_info and use it if we can
     my $ruleset;
-    if (defined $req_info->{$rid}->{'ruleset'}) {
-      $ruleset = $req_info->{$rid}->{'ruleset'};
+    if (is_ruleset_stashed($req_info, $rid)) {
+      $ruleset  = grab_ruleset($req_info, $rid);
     } else {
       $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info, $localparsing);
-      $req_info->{$rid}->{'ruleset'} = $ruleset;
+      # do not store ruleset in the request info here
+      # or it ends up in the session for the user
     }
-
+     
     if (($ruleset->{'meta'}->{'logging'} &&
 	 $ruleset->{'meta'}->{'logging'} eq "on")) {
       turn_on_logging();
@@ -698,6 +702,23 @@ sub get_rule_set {
 
     return $ruleset;
 
+}
+
+sub stash_ruleset {
+  my ($req_info, $ruleset) = @_;
+  my $rid = $req_info->{'rid'};
+  $req_info->{$rid}->{'ruleset'} = $ruleset;
+}
+
+sub grab_ruleset {
+  my ($req_info, $rid) = @_;
+  return $req_info->{$rid}->{'ruleset'};
+}
+
+sub is_ruleset_stashed {
+  my ($req_info, $rid) = @_;
+  return defined $req_info->{$rid} &&
+         defined $req_info->{$rid}->{'ruleset'};
 }
 
 sub select_rule {

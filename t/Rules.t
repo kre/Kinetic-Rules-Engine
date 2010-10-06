@@ -100,7 +100,8 @@ my $config;
 my $config2;
 
 #diag "_____________________________START TEST____________________________";
-sub gen_req_info {
+sub local_gen_req_info {
+  my($rid) = @_;
 
   return Kynetx::Test::gen_req_info($rid,
 				    {'ip' =>  '72.21.203.1',
@@ -1591,7 +1592,8 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $dummy_final_req_info
+    $dummy_final_req_info,
+    0
     );
 
 
@@ -2121,28 +2123,25 @@ foreach my $case (@test_cases) {
 #   }
 
   my $ruleset_rid = $case->{'expr'}->{'ruleset_name'} || $rid;
-  my $req_info = gen_req_info($ruleset_rid);
+#  diag "Testing $ruleset_rid";
+  # note that gen_req_info has been redefined
+  my $req_info = local_gen_req_info($ruleset_rid);
   $req_info->{'eventtype'} = 'pageview';
   $req_info->{'domain'} = 'web';
 
-
-#  diag Dumper $req_info;
-
-#   my $schedule = Kynetx::Rules::mk_schedule($req_info, $req_info->{'rid'},$case->{'expr'});
-
-
-
   if($case->{'type'} eq 'ruleset') {
 
-    $req_info->{$ruleset_rid}->{'ruleset'} =
-      Kynetx::Rules::optimize_ruleset($case->{'expr'});
+    Kynetx::Rules::stash_ruleset($req_info, 
+				 Kynetx::Rules::optimize_ruleset($case->{'expr'})
+				);
 
     my $ev = Kynetx::Events::mk_event($req_info);
 
-#    $logger->debug("Processing events for $rids with event ", sub {Dumper $ev});
+#    diag("Processing events for $req_info->{'rid'} with event ", sub {Dumper $ev});
 
     my $schedule = Kynetx::Scheduler->new();
 
+ #   diag("Processing events for $req_info->{'rid'} ($ruleset_rid)");
 
     Kynetx::Events::process_event_for_rid($ev,
 					  $req_info,
@@ -2191,7 +2190,7 @@ foreach my $case (@test_cases) {
 
     cmp_deeply($js,
 	 re($re),
-	 "Evaling ruleb " . $case->{'src'});
+	 "Evaling rule " . $case->{'src'});
     $test_count++;
 
 
@@ -2224,11 +2223,17 @@ my $no_server_available = (! $response->is_success);
 sub test_datafeeds {
   my ($no_server_available, $src, $js, $log_results, $diag) = @_;
 
-  my $req_info = gen_req_info();
  SKIP: {
 
     skip "No server available", 1 if ($no_server_available);
     my $krl = Kynetx::Parser::parse_ruleset($src);
+    
+    my $req_info = local_gen_req_info($krl->{'ruleset_name'});
+
+    Kynetx::Rules::stash_ruleset($req_info, 
+				 Kynetx::Rules::optimize_ruleset($krl)
+				);
+
 
     my $schedule = Kynetx::Rules::mk_schedule($req_info,
 					      $req_info->{'rid'},
@@ -2258,7 +2263,7 @@ sub test_datafeeds {
 }
 
 $krl_src = <<_KRL_;
-ruleset dataset0 {
+ruleset cs_test {
     global {
 	dataset global_decl_0 <- "aaa.json";
     }
@@ -2301,7 +2306,7 @@ test_datafeeds(
 
 
 $krl_src = <<_KRL_;
-ruleset dataset0 {
+ruleset cs_test {
     global {
 	dataset global_decl_1 <- "test_data";
     }
@@ -2356,7 +2361,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foo'},
-   {"rid" => 'cs_test'},
+   {"rid" => 'dataset0'},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -2401,7 +2406,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foo'},
-   {"rid" => 'cs_test'},
+   {"rid" => 'dataset0'},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -2469,7 +2474,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foo'},
-   {"rid" => 'cs_test'},
+   {"rid" => 'dataset0'},
    {"txn_id" => 'txn_id'},
   ]
 );
