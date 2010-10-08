@@ -80,7 +80,7 @@ KOBJ.annotate_local_search_extractdata = function(toAnnotate, config) {
 KOBJ.annotate_local_search_defaults = {
     "name": "KOBJL",
     "domains":{
-        "www.google.com":{"selector":".g>.ts>tbody>tr>td:has(cite):not(:has(table)):not(:has(div)),#results td:last-child:has(h4):not(:has(table)):has(cite),.g table.ts tr td:last:not(:has(img)):has(cite),.g>table tbody tr td:has(h3):has(cite),.g>table tbody tr td table tr:has(.fl):has(cite)","watcher":"#rso","phoneSel":".nobr","urlSel":".l"},
+        "www.google.com":{"selector":".localbox .ts .g table+div,.g>.ts>tbody>tr>td:has(cite):not(:has(table)):not(:has(div)),#results td:last-child:has(h4):not(:has(table)):has(cite),.g table.ts tr td:last:not(:has(img)):has(cite),.g>table tbody tr td:has(h3):has(cite),.g>table tbody tr td table tr:has(.fl):has(cite)","watcher":"#rso","phoneSel":".nobr","urlSel":".l"},
         "search.yahoo.com":{"selector":".res.sc-ng.sc-lc-bz-m div.content>ol>li,#yls-rs-res tbody tr .yls-rs-bizinfo,.vcard","watcher": "","phoneSel":"[id *= lblPhone]","urlSel":".yschttl"},
         "www.bing.com":{"selector":".sc_ol1li, #srs_orderedList>.llsResultItem","watcher": "","phoneSel":".sc_hl1 li>:not(a)","urlSel":".nc_tc a, .sb_tlst a"},
         "maps.google.com":{"selector":"#resultspanel .res div.one:visible","watcher":"#spsizer .opanel:visible","phoneSel":".tel","urlSel":".fn.org"},
