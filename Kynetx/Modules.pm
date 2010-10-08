@@ -310,6 +310,17 @@ sub eval_module {
         } else {
             $val = Kynetx::Predicates::OData::eval_odata($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
+    } elsif ( $source eq 'keys' ) {
+      # return the right key if it exists
+      my $ruleset = Kynetx::Repository::get_rules_from_repository($req_info->{'rid'}, $req_info);
+      my $keys = $ruleset->{'meta'}->{'keys'};
+      $logger->debug("Returning keys for $function");
+      if ($keys->{$function}) {
+	$val = $keys->{$function};
+      } else {
+	$logger->warn("Keys for $function not found");
+	$val = '';
+      }
     } else {
         $logger->warn("Datasource for $source not found");
     }

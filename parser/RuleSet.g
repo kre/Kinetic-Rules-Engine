@@ -441,7 +441,7 @@ raise_statement returns[HashMap result]
 		tmp.put("domain","explicit");
 		tmp.put("type","raise");
 //		if($f.text != null)
-			tmp.put("rid",$f.result);
+			tmp.put("ruleset",$f.result);
 
 //		if($m.text != null)
 			tmp.put("modifiers",$m.result);
@@ -602,13 +602,23 @@ counter_start returns[Object result]
 	;
 
 
-for_clause returns[String result]
+for_clause returns[HashMap result]
 	:
-	FOR  v=VAR
+	FOR  v=rulesetname rv=ridversion?
 	{
-		$result = $v.text;
+		HashMap tmp = new HashMap();
+        tmp.put("rid",$v.text);
+        tmp.put("version",$rv.result);
+		$result = tmp;
 	}
 	;
+
+ridversion returns[String result]
+    : DOT rv=VAR
+    {
+        $result = $rv.text;
+    }
+    ;
 
 
 
@@ -1715,6 +1725,7 @@ meta_block
 		meta_block_hash.put("authz",tmp);
 	   }
 	| LOGGING onoff=(ON|OFF) {  meta_block_hash.put("logging",$onoff.text); }
+	| SHARABLE onoff=(ON|OFF) {  meta_block_hash.put("sharing",$onoff.text); }
 	| USE ( (rtype=(CSS|JAVASCRIPT) must_be["resource"] (url=STRING | nicename=VAR)    {
 		HashMap tmp = new HashMap();
 		HashMap tmp2 = new HashMap();
@@ -2026,6 +2037,9 @@ OTHER_OPERATORS
  LOGGING
 	:'logging';
 
+ SHARABLE
+	:'sharing';
+
  USE
 	:	'use'
 	;
@@ -2104,9 +2118,9 @@ SEEN :'seen';
 VAR  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*
    ;
 
-
- INT :	' -'? '0'..'9'+
+INT :	' -'? '0'..'9'+
     ;
+
 
  FLOAT
     :   ' -'? ('0'..'9')+ '.' ('0'..'9')*
