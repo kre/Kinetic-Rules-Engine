@@ -435,16 +435,13 @@ post_statement returns[HashMap result]
 
 raise_statement returns[HashMap result]
 	:
-	must_be["raise"] must_be["explicit"] must_be["event"]  evt=VAR f=for_clause? m=modifier_clause? {
+	must_be["raise"] must_be_one[sar("http","explicit")] must_be["event"]  evt=expr f=for_clause? m=modifier_clause? {
 		HashMap tmp = new HashMap();
-		tmp.put("event",$evt.text);
+		tmp.put("event",$evt.result);
 		tmp.put("domain","explicit");
 		tmp.put("type","raise");
-//		if($f.text != null)
-			tmp.put("ruleset",$f.result);
-
-//		if($m.text != null)
-			tmp.put("modifiers",$m.result);
+        tmp.put("ruleset",$f.result);
+        tmp.put("modifiers",$m.result);
 
 		$result = tmp;
 	}
@@ -602,14 +599,11 @@ counter_start returns[Object result]
 	;
 
 
-for_clause returns[HashMap result]
+for_clause returns[Object result]
 	:
-	FOR  v=rulesetname rv=ridversion?
+    FOR v=expr
 	{
-		HashMap tmp = new HashMap();
-        tmp.put("rid",$v.text);
-        tmp.put("version",$rv.result);
-		$result = tmp;
+		$result = $v.result;
 	}
 	;
 

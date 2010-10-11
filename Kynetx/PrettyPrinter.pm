@@ -951,11 +951,10 @@ sub pp_raise_statement {
 	       @{['raise',
 		  $node->{'domain'},
 		  'event',
-		  $node->{'event'}]
+		  pp_expr($node->{'event'})]
 	       });
     if($node->{'ruleset'}) {
-      $o .= ' for ' . $node->{'ruleset'}->{'rid'};
-      $o .= '.' . $node->{'ruleset'}->{'version'} if($node->{'ruleset'}->{'version'});
+      $o .= ' for ' . pp_expr($node->{'ruleset'});
     }
     $o .= pp_modifier_clause($node, $indent);
     return $o;

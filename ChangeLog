@@ -1,3 +1,11 @@
+2010-10-11  Web-san  <web@dev11.kobj.net>
+
+   * parser/RuleSet.g:  new raise AST
+   * Kynetx/PrettyPrinter.pm (pp_post): new raise AST
+   * Kynetx/Expressions.pm (infer_type): defaults to undef now instead of string
+   * Kynetx/Modules/HTTP.pm: Changed to respect changes to Postlude.pm
+   * Kynetx/Postlude.pm (eval_raise_statement): Made event name and ruleset spec exprs instead of tokens.  Ruleset spec my eval to a string or array of strings.  
+
 2010-10-06  Web-san  <web@dev11.kobj.net>
 
    * Kynetx/Rules.pm (get_rule_set): removed dependence on RS being in req_info and added new helper functions for stashing ruleset in req_info
