@@ -153,7 +153,7 @@ KOBJ.percolate = function(selector, config) {
 	
 			function move_item (obj) {
                 var append_to = null;
-                if($KOBJ(".KOBJ_Moved").length != 0)
+                if($KOBJ(".KOBJ_Moved").length !== 0)
                 {
 //                    alert("appending")
                   $KOBJ(".KOBJ_Moved:last").after($KOBJ(obj));
@@ -183,7 +183,7 @@ KOBJ.percolate = function(selector, config) {
 				var m;
 				var start = 0;
 				try { m = cloc.match(regExp);
-					start = parseInt(m[2]);
+					start = parseInt(m[2],10);
 				    } catch(err) {}
 				var next = (start+10).toString();
 				if(m) {
@@ -193,7 +193,7 @@ KOBJ.percolate = function(selector, config) {
 				}
 				try {
 					m = cloc.match(regExp);
-					start = parseInt(m[2]);
+					start = parseInt(m[2],10);
 				} catch(err) {
 	
 				}
@@ -204,7 +204,7 @@ KOBJ.percolate = function(selector, config) {
 				    cloc = cloc + "&" + nextParem + "=" + next;
 				}
 				cloc += "&"+site_defaults.resultNumParem;
-				return cloc;
+				return cloc;                                                                                                     did_load
 			}
 		
 			//percolate this page

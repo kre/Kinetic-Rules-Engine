@@ -56,7 +56,7 @@
 
 		var random = function random(min, max){
 			return Math.round(min + Math.random()*(max-min)); 
-		}
+		};
 
 		// snow flake class
 		function Flake(_x, _y, _size, _speed)
@@ -67,7 +67,7 @@
 			this.y  = _y;
 			this.size = _size;
 			this.speed = _speed;
-			this.step = 0,
+			this.step = 0;
 			this.stepSize = random(1,10) / 100;
 
 			var flakeMarkup = "<div id='flake-" + this.id + "' style='width: " + this.size + "px; height: " + this.size + "px; background: " + options.flakeColor + "; position: absolute; top: " + this.y + "px; left:" + this.x + "px; font-size: 0px; z-index: " + options.flakeIndex + ";'></div>";
@@ -143,7 +143,7 @@
 				flakes[i].update();
 			}
 
-			setTimeout(function(){snow()}, 90);
+			setTimeout(function(){snow();}, 90);
 		}
 
 		snow();

@@ -143,7 +143,7 @@ KOBJEventManager.add_to_fire_queue = function(guid, event, data, app)
 
 KOBJEventManager.hashCode = function(value) {
     var hash = 0;
-    if (value.length == 0) return hash;
+    if (value.length === 0) return hash;
     for (var i = 0; i < value.length; i++) {
         var cha = value.charCodeAt(i);
         hash = 31 * hash + cha;
@@ -166,7 +166,7 @@ KOBJEventManager.update_content_change_hash = function()
     $KOBJ.each(KOBJEventManager.events["content_change"], function(selector, event_data) {
         if (!KOBJEventManager.content_change_hashcodes[selector])
         {
-            KOBJEventManager.content_change_hashcodes[selector] = {}
+            KOBJEventManager.content_change_hashcodes[selector] = {};
         }
 
 //        KOBJ.itrace("Before  hash [" + KOBJEventManager.content_change_hashcodes[selector]["prior_data_hash"] + "]");
@@ -194,7 +194,7 @@ KOBJEventManager.content_change_checker = function()
         // We have not yet looked at the data so we need to get it so we can check it next time.
         if (!KOBJEventManager.content_change_hashcodes[selector])
         {
-            KOBJEventManager.content_change_hashcodes[selector] = {}
+            KOBJEventManager.content_change_hashcodes[selector] = {};
         }
         var selector_data = KOBJEventManager.content_change_hashcodes[selector];
         if (!selector_data["prior_data_hash"]) {

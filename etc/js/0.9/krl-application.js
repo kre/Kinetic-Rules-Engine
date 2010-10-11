@@ -132,7 +132,7 @@ KrlApplication.prototype.clone_app_params = function(app) {
         }
     });
 
-}
+};
 
 KrlApplication.prototype.page_vars_as_url = function() {
     var param_str = "";
@@ -260,9 +260,9 @@ KrlApplication.prototype.fire_event = function(event, data, guid,domain)
     var all_vars = {};
     // If the old global kvars are defined add them
     if (typeof(kvars) != "undefined" || typeof(kvars) == "object") {
-        $KOBJ.extend(true, all_vars, kvars)
+        $KOBJ.extend(true, all_vars, kvars);
     }
-    $KOBJ.extend(true, all_vars, this.app_vars)
+    $KOBJ.extend(true, all_vars, this.app_vars) ;
 
     params = [];
 
@@ -343,7 +343,7 @@ KrlApplication.prototype.update_from_config = function(a_config)
 {
     // TODO: this is here for backwards compatablity.
     if (a_config.delayExecution) {
-        this.delay_execution = true
+        this.delay_execution = true;
     }
 
     // Search for page parameters.  They start with the app_id

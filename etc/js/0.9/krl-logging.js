@@ -12,10 +12,10 @@ KOBJ.loggers = {
     domwatch:       KOBJ.log4js.getLogger("domwatch")
 };
 
-KOBJ.popup_appender = new KOBJ.log4js.PopUpAppender();
-KOBJ.popup_appender.setLayout(new KOBJ.log4js.PatternLayout("%d{HH:mm:ss} %p %c %m{4}"));
-KOBJ.console_appender = new KOBJ.log4js.BrowserConsoleAppender();
-KOBJ.console_appender.setLayout(new KOBJ.log4js.PatternLayout("%d{HH:mm:ss} %p %c %m{4}"));
+KOBJ.popup_appender = new log4javascript.PopUpAppender();
+KOBJ.popup_appender.setLayout(new log4javascript.PatternLayout("%d{HH:mm:ss} %p %c %m{4}"));
+KOBJ.console_appender = new log4javascript.BrowserConsoleAppender();
+KOBJ.console_appender.setLayout(new log4javascript.PatternLayout("%d{HH:mm:ss} %p %c %m{4}"));
 KOBJ.log4js.getLogger().addAppender(KOBJ.console_appender);
 
 KOBJ.enable_popup_logging = function() {
@@ -27,24 +27,24 @@ KOBJ.enable_popup_logging = function() {
 
 // Set the default logging level
 $KOBJ.each(KOBJ.loggers, function(k, v) {
-    v.setLevel(KOBJ.log4js.Level.INFO);
+    v.setLevel(log4javascript.Level.INFO);
     v.addAppender(KOBJ.console_appender);
 });
 
 
 KOBJ.trace_domwatch = function() {
-  KOBJ.loggers.domwatch.setLevel(KOBJ.log4js.Level.TRACE);
+  KOBJ.loggers.domwatch.setLevel(log4javascript.Level.TRACE);
 };
 
 
 KOBJ.mega_debug = function() {
     KOBJ.enable_popup_logging();
-    KOBJ.log4js.getLogger().setLevel(KOBJ.log4js.Level.TRACE);
+    KOBJ.log4js.getLogger().setLevel(log4javascript.Level.TRACE);
     $KOBJ.each(KOBJ.loggers, function(k, v) {
         // Dom watch is a little to much by default even for mega debug.
 //        if(k != "domwatch")
         {
-            v.setLevel(KOBJ.log4js.Level.TRACE);
+            v.setLevel(log4javascript.Level.TRACE);
         }
     });
     KOBJ.popup_appender.show();

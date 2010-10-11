@@ -1,5 +1,3 @@
-;
-
 window['$KOBJ'] = $$KOBJ;
 
 if (typeof($K) == 'undefined') {

@@ -22,9 +22,9 @@
             styling["position"] = "absolute";
         }
 
-        config["kid"] = "kGrowl"  + config.position
+        config["kid"] = "kGrowl"  + config.position;
 
-        if ($("#" + config["kid"]).size() == 0)
+        if ($("#" + config["kid"]).size() === 0)
         {
             $('<div id="'+ config["kid"]  +'"></div>').css(styling).appendTo('body');
         }
@@ -75,7 +75,7 @@
             corners: '10px',
             check: 500,
             life: 3000,
-            opacity: .85,
+            opacity: 0.85,
             speed: 'normal',
             easing: 'swing',
             closer: true,
@@ -112,7 +112,7 @@
                 "font-size": config.header_font_size
             }).html(config.header);
 
-            var message = $('<div>').addClass("KOBJ_message").html(message);
+            message = $('<div>').addClass("KOBJ_message").html(message);
 
             var close = $('<div>').addClass("close").css(
             {
@@ -201,21 +201,21 @@
             });
 
             /** Add a Global Closer if more than one notification exists **/
-            if ($('div.kGrowl-notification:parent', this.element).size() > 1 && $('div.kGrowl-closer', this.element).size() == 0 && config.closer != false) {
+            if ($('div.kGrowl-notification:parent', this.element).size() > 1 && $('div.kGrowl-closer', this.element).size() === 0 && config.closer !== false) {
                 $(config.closerTemplate).addClass('kGrowl-closer').css(closer_style).addClass(config.theme).appendTo(this.element).animate(config.animateOpen, config.speed, config.easing).bind("click.kGrowl",
                 function() {
                     $(this).siblings().children('div.close').trigger("click.kGrowl");
 
                     if ($.isFunction(config.closer)) config.closer.apply($(this).parent()[0], [$(this).parent()[0]]);
                 });
-            };
+            }
         },
 
         /** Update the kGrowl Container, removing old kGrowl notifications **/
         update: function() {
             $(this.element).find('div.kGrowl-notification:parent').each(function() {
-                if ($(this).data("kGrowl") != undefined && $(this).data("kGrowl").created != undefined && ($(this).data("kGrowl").created.getTime() + $(this).data("kGrowl").life) < (new Date()).getTime() && $(this).data("kGrowl").sticky != true &&
-                ($(this).data("kGrowl").pause == undefined || $(this).data("kGrowl").pause != true)) {
+                if ($(this).data("kGrowl") != undefined && $(this).data("kGrowl").created != undefined && ($(this).data("kGrowl").created.getTime() + $(this).data("kGrowl").life) < (new Date()).getTime() && $(this).data("kGrowl").sticky !== true &&
+                ($(this).data("kGrowl").pause == undefined || $(this).data("kGrowl").pause !== true)) {
                     $(this).children('div.close').trigger('click.kGrowl');
                 }
             });
@@ -225,7 +225,7 @@
                 function() {
                     $(this).remove();
                 });
-            };
+            }
         },
 
         /** Setup the kGrowl Notification Container **/

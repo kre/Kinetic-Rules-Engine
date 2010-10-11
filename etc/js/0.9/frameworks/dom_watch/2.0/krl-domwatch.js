@@ -9,7 +9,7 @@ KOBJDomWatch.get_dom_watch = function(name,condition_callback,change_delay) {
 
     if(typeof(condition_callback) == "undefined" || condition_callback == null)
     {
-        condition_callback = function() { return true };
+        condition_callback = function() { return true; };
     }
 
     var watcher = KOBJDomWatch.scopes[name];
@@ -17,11 +17,11 @@ KOBJDomWatch.get_dom_watch = function(name,condition_callback,change_delay) {
          KOBJ.loggers.domwatch.trace("Dom watch already exist for ",name);
         return watcher;
     }
-    var watcher = new KOBJDomWatchWatcher(name,condition_callback,change_delay);
+    watcher = new KOBJDomWatchWatcher(name,condition_callback,change_delay);
     KOBJDomWatch.scopes[name] = watcher;
     // Start it up
     KOBJ.loggers.domwatch.trace("Timeout set to  " +  watcher.change_deplay);
-    setTimeout(function() { watcher.timeout_watcher() }, watcher.change_deplay);
+    setTimeout(function() { watcher.timeout_watcher(); }, watcher.change_deplay);
 
     return watcher;
 };
@@ -44,7 +44,6 @@ function KOBJDomWatchWatcher(name, condition_callback, change_delay) {
      */
     this.selector_data = {};
 }
-;
 
 KOBJDomWatchWatcher.prototype.watch = function(selector, callback, app) {
     KOBJ.loggers.domwatch.trace("Adding to Watcher ", this.name, selector);
@@ -106,7 +105,7 @@ KOBJDomWatchWatcher.prototype.timeout_watcher = function() {
             myself.reset_selector_hash();
         }
         KOBJ.loggers.domwatch.trace("Timeout set to  " +  myself.change_deplay);
-        setTimeout(function() { myself.timeout_watcher() }, myself.change_deplay);
+        setTimeout(function() { myself.timeout_watcher(); }, myself.change_deplay);
 
     });
 };

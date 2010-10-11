@@ -1,7 +1,7 @@
 KOBJ.watchDOM = function(selector, callBackFunc, time, context) {
 
     if (typeof(context) == "undefined") {
-        context = KOBJ.document
+        context = KOBJ.document;
     }
 
     if (!KOBJ.watcherRunning) {
@@ -20,7 +20,7 @@ KOBJ.watchDOM = function(selector, callBackFunc, time, context) {
         KOBJ.watcherData = KOBJ.watcherData || [];
 
         KOBJ.itrace("DOM Watcher Callback for new selector " + selector + " added");
-        if($KOBJ(selector + " :first", context).length == 0)
+        if($KOBJ(selector + " :first", context).length === 0)
         {
             KOBJ.itrace("DOM Watcher selector not found NOT enabling " + selector );
             setTimeout(function() {KOBJ.watchDOM(selector,callBackFunc,time,context);},1000);

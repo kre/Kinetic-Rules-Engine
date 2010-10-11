@@ -177,7 +177,7 @@ KOBJ.registerExternalResources = function(rid, resources) {
         app.add_external_resources(resource_array);
     }
     else {
-        KOBJ.error("Ignoring Resource registration for app " + rid + " App was not registered with runtime")
+        KOBJ.error("Ignoring Resource registration for app " + rid + " App was not registered with runtime");
     }
 };
 
@@ -190,7 +190,7 @@ KOBJ.registerDataSet = function(rid, datasets) {
         app.store_data_sets(datasets);
     }
     else {
-        KOBJ.error("Ignoring Dataset for app " + rid + " App was not registered with runtime")
+        KOBJ.error("Ignoring Dataset for app " + rid + " App was not registered with runtime");
     }
 };
 
@@ -313,14 +313,7 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
         $KOBJ(elem).live("click", function(e1) {
             var tgt = $KOBJ(this);
             var b = tgt.attr('href') || '';
-            KOBJ.logger("click",
-                    txn_id,
-                    name,
-                    b,
-                    sense,
-                    rule,
-                    rid
-                    );
+//            KOBJ.logger("click",txn_id,name, b,sense,rule,rid);
             if (b) {
                 tgt.attr('href', '#KOBJ');
             }  // # gets replaced by redirect
@@ -329,14 +322,7 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
 
     } else if (type == 'change') {
         $KOBJ(elem).live("change", function(e1) {
-            KOBJ.logger("change",
-                    txn_id,
-                    name,
-                    '',
-                    sense,
-                    rule,
-                    rid
-                    );
+//            KOBJ.logger("change",txn_id,name,'',sense,rule,rid);
             return true;
         });
     }
@@ -379,11 +365,22 @@ KOBJ.url_loaded_callback = function(loaded_url, response, callback_params) {
 
 
     if (typeof(loaded_url) != "undefined" && typeof(callback_params) != "undefined") {
+//        KOBJ.log("Call back data type was " + callback_params.data_type);
+
+        if(callback_params.base64 != null)
+        {
+            response = Base64.decode(response);
+        }
+
         switch (callback_params.data_type) {
             case  "js":
+//                 KOBJ.log("Because js eval it now");
                 eval(response);
+                break;
             case  "css":
+//                KOBJ.log("Because css head it now");
                 $KOBJ("head").append($KOBJ("<style>").text(response));
+                break;
         }
 
         if (KOBJ.external_resources[loaded_url] != null) {
@@ -470,7 +467,7 @@ KOBJ.errorstack_submit = function(key, e, rule_info) {
             prefix_text += "&_r=img";
 
 
-        var browser_info = KRLSnoop.browser_info()
+        var browser_info = KRLSnoop.browser_info();
         var exception_info = KRLSnoop.exception_info(e);
 
 

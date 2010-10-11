@@ -20,7 +20,7 @@ KOBJ.page_content_event = function (uniq, label, selectors, config) {
 
         found_data.push({name: name,value:result });
     });
-    found_data.push({name: "label",value:label })
+    found_data.push({name: "label",value:label });
 
 
     var all_data = {"param_data":found_data};

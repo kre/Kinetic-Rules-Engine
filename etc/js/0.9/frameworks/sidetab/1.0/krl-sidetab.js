@@ -47,7 +47,7 @@ Available at http:\/\/wpaoli.building58.com/2009/09/jquery-tab-slide-out-plugin/
         
         //set initial tabHandle css
         
-        if (settings.pathToTabImage !== null) {
+        if (settings.pathToTabImage != null) {
             settings.tabHandle.css({
             'background' : 'url('+settings.pathToTabImage+') no-repeat',
             'width' : settings.imageWidth,
@@ -351,7 +351,7 @@ KOBJ.tabManager.notification = function(config){
 		var notification = $KOBJ(toAlter.tabContentClass + " ." + defaults.notifyClass);
 		if(notification.length){
 			// If it's there and if I need to change it to nothing, delete the div
-			if(changeTo === 0 || changeTo == ''){
+			if(changeTo === 0 || changeTo === ''){
 				$KOBJ(notification).hide();
 				return true;
 			}
@@ -427,7 +427,7 @@ KOBJ.tabManager.notification = function(config){
 //		}
 
 		// Adds the div and sets all the CSS and classes needed
-		var notification = $KOBJ("<div>").html(changeTo).css(objCSS).addClass(defaults.notifyClass);
+		notification = $KOBJ("<div>").html(changeTo).css(objCSS).addClass(defaults.notifyClass);
         
 		$KOBJ(toAlter.tabHandle).append(notification);
 
@@ -457,7 +457,7 @@ KOBJ.tabManager.addNew = function(config){
             }
 		}
 	}
-    if(defaults.run_in_iframe == false && top !== self) {
+    if(defaults.run_in_iframe === false && top !== self) {
           return;
      }
 
