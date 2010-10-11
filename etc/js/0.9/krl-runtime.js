@@ -314,9 +314,9 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
             var tgt = $KOBJ(this);
             var b = tgt.attr('href') || '';
 //            KOBJ.logger("click",txn_id,name, b,sense,rule,rid);
-            if (b) {
-                tgt.attr('href', '#KOBJ');
-            }  // # gets replaced by redirect
+//            if (b) {
+//                tgt.attr('href', '#KOBJ');
+//            }  // # gets replaced by redirect
             return true;
         });
 
