@@ -15,10 +15,10 @@ describe "Search Test" do
     # The rule basicly add phone numbers to the search page and we need to find them
     #
     it "find the added phone numbers" do
-      insert_runtime_script(["a41x10"])
+      insert_runtime_script(["a685x13"])
 #      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//div[@id='KOBJ_append_local2']"});
       page.wait_for({:wait_for => :element,  :element => "//div[@id='KOBJ_append_local2']"});
-      text_to_try = /(Phone.:8017983217|Phone.:8017987119|Phone.:8013735713|Phone.:8017940515|Phone.:8017982257|Phone.:8017949912|Phone.:8017989803)/
+      text_to_try = /(Phone.:8017988700|Phone.:8017988849|Phone.:8017983217|Phone.:8017987119|Phone.:8013735713|Phone.:8017940515|Phone.:8017982257|Phone.:8017949912|Phone.:8017989803)/
       page.body_text.should match(text_to_try);
     end
 

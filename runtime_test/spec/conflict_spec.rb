@@ -12,6 +12,7 @@ describe "Verify Hi Conflict Sites" do
 
     before(:each) do
       start_browser_session(@settings, "https://www.google.com", "/accounts/ServiceLogin?service=writely&passive=1209600&continue=http://docs.google.com/&followup=http://docs.google.com/&ltmpl=homepage&browserok=true")
+      page.wait_for({:wait_for => :element, :element => "//*[@id='Email']"});
       page.type("Email","autojam@kynetx.com")
       page.type('Passwd',"Kynetx123$")
       page.submit('gaia_loginform');

@@ -244,10 +244,10 @@ KOBJEventManager.register_interest = function(event, selector, application, conf
         }
 
         if (typeof(config.param_data) != "undefined" && config.param_data != null) {
-            found_data = config.param_data;
-//            $KOBJ.each(config.param_data, function(name, v) {
-//                found_data.push({name: name,value:v });
-//            });
+//            found_data = config.param_data;
+            $KOBJ.each(config.param_data, function(name, v) {
+                found_data.push({name: name,value:v });
+            });
 
         }
     }

@@ -10,7 +10,7 @@ describe "General Site Test" do
 
     it "apply rule to all sites in the same mannor." do
 
-      insert_runtime_script(["a41x27"])
+      insert_runtime_script(["a685x12"])
       #  We wait for all the elements as the java script is rendering them so we need to give them time
 #      page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='KOBJ_after']"});
 #      page.wait_for({:wait_for => :element, :timeout_in_seconds => 10, :element => "//*[@id='KOBJ_append']"});

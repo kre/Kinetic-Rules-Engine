@@ -791,7 +791,7 @@ pre_block returns[ArrayList result]
 @init {
 	ArrayList tmp = new ArrayList();
 }	:
-	 PRE LEFT_CURL ( decl[tmp] (SEMI decl[tmp])* )? SEMI? RIGHT_CURL {
+	 PRE LEFT_CURL ( decl[tmp] (SEMI decl[tmp])* )? SEMI* RIGHT_CURL {
 	 	$result = tmp;
 	 }
 
@@ -1170,7 +1170,7 @@ function_def returns[Object result]
 @init {
 	ArrayList block_array = new ArrayList();
 }
-	: FUNCTION LEFT_PAREN args+=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN)? (COMMA args+=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) )* RIGHT_PAREN LEFT_CURL decs+=decl[block_array]? (SEMI decs+=decl[block_array])* SEMI? e1=expr RIGHT_CURL {
+	: FUNCTION LEFT_PAREN args+=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN)? (COMMA args+=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) )* RIGHT_PAREN LEFT_CURL decs+=decl[block_array]? (SEMI decs+=decl[block_array])* SEMI* e1=expr  SEMI* RIGHT_CURL {
 		HashMap tmp = new HashMap();
 		ArrayList nargs = new ArrayList();
 		if($args != null)

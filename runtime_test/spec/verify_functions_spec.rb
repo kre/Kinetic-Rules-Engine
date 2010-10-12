@@ -8,7 +8,7 @@ describe "Verify Runtime Functions" do
   before(:all) do
     load_settings
     start_browser_session(@settings, "http://search.yahoo.com", "/")
-    insert_runtime_script(["a41x27"])
+    insert_runtime_script(["a685x12"])
 #    page.wait_for({:wait_for => :element, :timeout_in_seconds => 30, :element => "//*[@id='KOBJ_after']"});
     page.wait_for({:wait_for => :element,  :element => "//*[@id='KOBJ_after']"});
   end
