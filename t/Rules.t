@@ -2055,7 +2055,261 @@ add_testcase(
     0
     );
 
+# now with expressions
+$krl_src = <<_KRL_;
+ruleset two_rules_first_raises_second_with_expr {
+    rule t10 is active {
+      select when pageview ".*"
+      noop();
+      fired {
+        raise explicit event "f"+"ood";
+      }
+    }
+    rule t12 is active {
+      select when explicit food
+      pre {
+        x = 5;
+      }
+      noop();
+    }
+}
+_KRL_
 
+$config = mk_config_string(
+  [
+   {"rule_name" => 't10'},
+   {"rid" => 'two_rules_first_raises_second_with_expr'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$config2 = mk_config_string(
+  [
+   {"rule_name" => 't12'},
+   {"rid" => 'two_rules_first_raises_second_with_expr'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$js = <<_JS_;
+(function(){
+(function(){
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config));
+}());
+(function(){
+var x = 5;
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config2));
+}());
+}());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $js,
+    $dummy_final_req_info,
+    0
+    );
+
+# now with explicit for
+$krl_src = <<_KRL_;
+ruleset two_rules_first_raises_second_with_for {
+    rule t10 is active {
+      select when pageview ".*"
+      noop();
+      fired {
+        raise explicit event "f"+"ood" for two_rules_first_raises_second_with_for;
+      }
+    }
+    rule t12 is active {
+      select when explicit food
+      pre {
+        x = 5;
+      }
+      noop();
+    }
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 't10'},
+   {"rid" => 'two_rules_first_raises_second_with_for'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$config2 = mk_config_string(
+  [
+   {"rule_name" => 't12'},
+   {"rid" => 'two_rules_first_raises_second_with_for'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$js = <<_JS_;
+(function(){
+(function(){
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config));
+}());
+(function(){
+var x = 5;
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config2));
+}());
+}());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $js,
+    $dummy_final_req_info,
+    0
+    );
+
+
+# now with explicit for and expr
+$krl_src = <<_KRL_;
+ruleset two_rules_first_raises_second_with_for_expr {
+    rule t10 is active {
+      select when pageview ".*"
+      noop();
+      fired {
+        raise explicit event "f"+"ood" for "two_rules_first_raises" + "_second_with_for_expr";
+      }
+    }
+    rule t12 is active {
+      select when explicit food
+      pre {
+        x = 5;
+      }
+      noop();
+    }
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 't10'},
+   {"rid" => 'two_rules_first_raises_second_with_for_expr'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$config2 = mk_config_string(
+  [
+   {"rule_name" => 't12'},
+   {"rid" => 'two_rules_first_raises_second_with_for_expr'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$js = <<_JS_;
+(function(){
+(function(){
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config));
+}());
+(function(){
+var x = 5;
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config2));
+}());
+}());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $js,
+    $dummy_final_req_info,
+    0
+    );
+
+# now with explicit for array
+$krl_src = <<_KRL_;
+ruleset two_rules_first_raises_second_with_for_array {
+    rule t10 is active {
+      select when pageview ".*"
+      noop();
+      fired {
+        raise explicit event "f"+"ood" for ["two_rules_first_raises" + "_second_with_for_array"];
+      }
+    }
+    rule t12 is active {
+      select when explicit food
+      pre {
+        x = 5;
+      }
+      noop();
+    }
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 't10'},
+   {"rid" => 'two_rules_first_raises_second_with_for_array'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$config2 = mk_config_string(
+  [
+   {"rule_name" => 't12'},
+   {"rid" => 'two_rules_first_raises_second_with_for_array'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$js = <<_JS_;
+(function(){
+(function(){
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config));
+}());
+(function(){
+var x = 5;
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config2));
+}());
+}());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $js,
+    $dummy_final_req_info,
+    0
+    );
+
+
+#not raised
 $krl_src = <<_KRL_;
 ruleset two_rules_second_not_raised {
     rule t10 is active {
@@ -2111,6 +2365,64 @@ add_testcase(
     $dummy_final_req_info,
     0
     );
+
+
+# not with explicit for expr
+$krl_src = <<_KRL_;
+ruleset two_rules_second_not_raised_with_for_expr {
+    rule t10 is active {
+      select when pageview ".*"
+      noop();
+      fired {
+        raise explicit event "dr"+"ool" for "two_rules" + "_second_not_raised_with_for_expr";
+      }
+    }
+    rule t12 is active {
+      select when explicit food
+      pre {
+        x = 5;
+      }
+      noop();
+    }
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 't10'},
+   {"rid" => 'two_rules_second_not_raised_with_for_expr'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$config2 = mk_config_string(
+  [
+   {"rule_name" => 't12'},
+   {"rid" => 'two_rules_second_not_raised_with_for_expr'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$js = <<_JS_;
+(function(){
+(function(){
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config));
+}());
+}());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $js,
+    $dummy_final_req_info,
+    0
+    );
+
 
 
 # now test each test case twice

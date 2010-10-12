@@ -56,6 +56,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 use Kynetx::Expressions qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Events;
+use Kynetx::Parser qw/mk_expr_node/;
 use Kynetx::Log;
 
 use Data::Dumper;
@@ -272,12 +273,17 @@ sub eval_raise_statement {
 
     my $js ='';
 
-    my $rid = $expr->{'ruleset'}->{'rid'} || $req_info->{'rid'};
+    my $event_name = Kynetx::Expressions::den_to_exp(
+		     eval_expr_with_default($expr->{'event'},
+					    'foo', # default value can't be seen
+					    $rule_env,
+					    $rule_name,
+					    $req_info,
+					    $session));
 
-    my $new_req_info = {'eventtype' => $expr->{'event'},
+    my $new_req_info = {'eventtype' => $event_name,
 			'domain' => $expr->{'domain'}};
 
-    $logger->debug("Raising explicit event $expr->{'domain'}:$expr->{'event'} for $rid");
 
     foreach my $m (@{ $expr->{'modifiers'}}) {
       $new_req_info->{$m->{'name'}} =
@@ -290,42 +296,101 @@ sub eval_raise_statement {
 
     }
 
-    if ($expr->{'ruleset'}) {
-      if ($expr->{'ruleset'}->{'version'}) {
+#    my $rid = $expr->{'ruleset'}->{'rid'} || $req_info->{'rid'}
+    my $rids = Kynetx::Expressions::den_to_exp(
+		     eval_expr_with_default($expr->{'ruleset'}, 
+					    $req_info->{'rid'}, # default value
+					    $rule_env,
+					    $rule_name,
+					    $req_info,
+					    $session));
+
+
+
+
+    # normalize
+    unless (ref $rids eq 'ARRAY') {
+      $rids = [$rids];
+    }
+    
+
+    foreach my $rid_and_ver (map {split(/\./, $_, 2)} @{$rids}) {
+
+      my ($rid,$ver);
+      if (ref $rid_and_ver eq 'ARRAY') {
+	($rid,$ver) = @{ $rid_and_ver};
+      } else {
+	($rid,$ver) = ($rid_and_ver, 0);
+      }
+
+      $logger->debug("Raising explicit event $expr->{'domain'}:$event_name for $rid");
+
+      # merge in the incoming request info
+      my $this_req_info = Kynetx::Request::merge_req_env($req_info, 
+						     $new_req_info);
+
+
+      if ($ver) {
 	# remove the v from numeric version numbers
-	if ($expr->{'ruleset'}->{'version'} =~ /v\d+/) {
-	  $expr->{'ruleset'}->{'version'} =~ s/v(\d+)/$1/;
+	if ($ver =~ /v\d+/) {
+	  $ver =~ s/v(\d+)/$1/;
 	}
-	$new_req_info->{$expr->{'ruleset'}->{'rid'}.':kynetx_app_version'} = 
-	  $expr->{'ruleset'}->{'version'};
+	$this_req_info->{$rid.':kynetx_app_version'} = 
+	  $ver;
       } else {
 	# if we're raising an event on a new RID and we don't have a version ensure it's in the same mode (dev or production)
 	if ($req_info->{$req_info->{'rid'}.':kynetx_app_version'}) {
-	  $new_req_info->{$expr->{'ruleset'}->{'rid'}.':kynetx_app_version'} = 
+	  $this_req_info->{$rid.':kynetx_app_version'} = 
 	    $req_info->{$req_info->{'rid'}.':kynetx_app_version'};
 	}
       }
-      $logger->debug("Raising explicit event for RID $rid, version " . $new_req_info->{$expr->{'ruleset'}->{'rid'}.':kynetx_app_version'} ) if $expr->{'ruleset'}->{'rid'} && $new_req_info->{$expr->{'ruleset'}->{'rid'}.':kynetx_app_version'};
-    }
-
-    # merge in the incoming request info
-    $new_req_info = Kynetx::Request::merge_req_env($req_info, 
-						   $new_req_info);
+      $logger->debug("Raising explicit event for RID $rid, version " . $this_req_info->{$rid.':kynetx_app_version'} ) if $rid && $this_req_info->{$rid.':kynetx_app_version'};
 
     
-    my $ev = Kynetx::Events::mk_event($new_req_info);
+      my $ev = Kynetx::Events::mk_event($this_req_info);
 
-    # this side-effects the schedule
-    Kynetx::Events::process_event_for_rid($ev,
-					  $new_req_info,
-					  $session,
-					  $req_info->{'schedule'},
-					  $rid,
-					 );
+      # this side-effects the schedule
+      Kynetx::Events::process_event_for_rid($ev,
+					    $this_req_info,
+					    $session,
+					    $req_info->{'schedule'},
+					    $rid,
+					   );
+    }
 
     return $js;
 }
 
+sub eval_expr_with_default {
+  my ($expr, $default, $rule_env, $rule_name, $req_info, $session) = @_;
+  my $logger = get_logger();
+
+#  $logger->debug("Raise exp ", sub{ Dumper($expr) });
+
+  my $val;
+  if(defined $expr) {
+    $val = Kynetx::Expressions::eval_expr($expr, 
+					     $default, 
+					     $rule_env, 
+					     $rule_name, 
+					     $req_info, 
+					     $session);
+
+    if ((! defined $val || 
+	 (ref $val eq 'HASH' && ! defined $val->{'val'})) && 
+	$expr->{'type'} eq 'var') { # not really a var
+      # use variable name as the result
+#      $logger->debug("Using var name as result");
+      $val = mk_expr_node('str', $expr->{'val'}); 
+    }
+  } else {
+    $val = mk_expr_node(Kynetx::Expressions::infer_type($default),$default);
+  }
+
+#  $logger->debug("Raise result ", sub{ Dumper($val) });
+  return $val;
+  
+}
 
 
 1;

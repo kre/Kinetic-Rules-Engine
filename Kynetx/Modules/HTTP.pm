@@ -41,6 +41,7 @@ use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Kynetx::Environments qw/:all/;
+use Kynetx::Parser qw/mk_expr_node/;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -137,7 +138,7 @@ sub do_http {
     my $expr = {'type' => 'raise',
 		'domain' => 'http',
 		'rid' => $config->{'rid'},
-		'event' => lc($method),
+		'event' => mk_expr_node('str',lc($method)),
 		'modifiers' => $ms,
 	       };
     $js .= Kynetx::Postlude::eval_raise_statement($expr,

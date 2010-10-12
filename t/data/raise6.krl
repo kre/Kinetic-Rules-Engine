@@ -6,7 +6,7 @@ ruleset 10 {
     noop();
 
     fired {
-      raise explicit event foo for a16x55.v43 with
+      raise explicit event foo for "a16x55.v43" with
          x = 5 and
          y = "hello"
        if(bar eq "bizz");

@@ -871,7 +871,7 @@ sub infer_type {
     my ($v) = @_;
     my $t;
 
-    return 'str' unless defined $v;
+    return 'undef' unless defined $v;
 
     if($v =~ m/^(\d*\.\d+|[1-9]\d+|\d)$/) { # crude type inference for primitives
 	$t = 'num' ;
