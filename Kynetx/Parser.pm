@@ -31,6 +31,7 @@ package Kynetx::Parser;
 #
 use strict;
 use warnings;
+use utf8;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -51,6 +52,7 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 use Kynetx::JParser;
 use Kynetx::Json;
+use Encode qw(from_to);
 
 use vars qw(%VARIABLE);
 
@@ -181,9 +183,23 @@ sub parse_ruleset {
     $ruleset = remove_comments($ruleset);
 
     $logger->trace("[parser::parse_ruleset] after comments: ", sub {Dumper($ruleset)});
-
     my $json = $parser->ruleset($ruleset);
-    my $result = Kynetx::Json::jsonToAst_w($json);
+    $logger->debug("Result: ",$json);
+    my $result;
+    eval {
+        $result = Kynetx::Json::jsonToAst($json);
+    };
+
+
+
+    if ($@) {
+        my @jsonerr = ("Invalid JSON Format!");
+        $logger->warn("JSON error: ", $@);
+        my $string = $@;
+        push (@jsonerr,$string);
+        push (@jsonerr,$result);
+        $result->{'error'} = @jsonerr;
+    }
     if (defined $result->{'error'}) {
         my $estring = join("\n",@{$result->{'error'}});
 	   $logger->error("Can't parse ruleset: $estring");
@@ -454,12 +470,7 @@ sub mk_expr_node {
 	    'val' => $val};
 }
 
-sub _encapsulate {
-    my $element = shift;
-    my $logger = get_logger();
-    my $new_string = "ruleset dummy { " . $element . " } ";
-    return $new_string;
-}
+
 
 
 1;

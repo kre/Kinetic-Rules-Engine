@@ -2683,8 +2683,8 @@ add_expr_testcase(
 
 
 $re1 = extend_rule_env(['a','b','c'],
-		       [[{"foo"=>{"type"=>"str","val"=>"bar"}},
-			 {"bar"=>{"type"=>"str","val"=>"baz"}}],
+		       [[{"foo"=>"bar"},
+			 {"bar"=>"baz"}],
                         [{"foo" => "bar"}, {"bar" => "baz"}],
                         [[], 'baz']],
 		       $rule_env);

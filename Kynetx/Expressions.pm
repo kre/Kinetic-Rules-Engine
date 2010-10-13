@@ -847,11 +847,12 @@ sub exp_to_den {
     my $type = infer_type($expr);
 #    $logger->debug("exp_to_den: type is $type");
     if(ref $expr eq 'HASH') {
-	foreach my $k (keys %{ $expr }) {
-	    $expr->{$k} = exp_to_den($expr->{$k});
+      my %r;
+      foreach my $k (keys %{ $expr }) {
+	    $r{$k} = exp_to_den($expr->{$k});
 	}
 	return {'type' => $type,
-		'val' => $expr}
+		'val' => \%r}
 
     } elsif(ref $expr eq 'ARRAY') {
 	my @res = map {exp_to_den($_)} @{ $expr };

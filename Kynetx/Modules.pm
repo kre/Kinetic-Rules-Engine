@@ -229,6 +229,15 @@ sub eval_module {
             $val = Kynetx::Modules::HTTP::run_function( $req_info, $function,
                                                         $args );
         }
+    } elsif ( $source eq 'uri' ) {
+        $preds = Kynetx::Modules::URI::get_predicates();
+        if ( defined $preds->{$function} ) {
+            $val = $preds->{$function}->( $req_info, $rule_env, $args );
+            $val ||= 0;
+        } else {
+            $val = Kynetx::Modules::URI::run_function( $req_info, $function,
+                                                        $args );
+        }
     } elsif ( $source eq 'twilio' ) {
         $preds = Kynetx::Modules::Twilio::get_predicates();
         if ( defined $preds->{$function} ) {

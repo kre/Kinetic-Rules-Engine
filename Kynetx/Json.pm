@@ -110,11 +110,12 @@ sub jsonToAst_w {
     my $logger = get_logger();
     my $pstruct;
     eval {
-        $pstruct = jsonToAst($json);
+        $pstruct = JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(1)->decode($json);
     };
-    if ($@) {
+    if ($@ && not defined $pstruct) {
         $logger->warn("Invalid JSON format => parse result as string --check debug for error details");
         $logger->debug("JSON conversion error: ",$@);
+        $logger->debug("Result: ", sub {Dumper($pstruct)});
         return $json
     } else {
         return $pstruct;

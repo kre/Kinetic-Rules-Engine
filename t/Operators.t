@@ -87,12 +87,13 @@ pre {
   a = 10;
   b = 11;
   c = [4,5,6];
-  i = [7,3,5,2,1,6];
   d = [];
   e = "this";
   f = [7,4,3,5,2,1,6];
   g = 5;
   h = [1,2,1,3,4,3,5,4,6,5];
+  i = [7,3,5,2,1,6];
+  j = [{"a" : 1, "b" : 2, "c": 3}, {"a" : 4, "b" : 5, "c": 6}, {"a" : 7, "b" : 8, "c": 9}];
   foo = "I like cheese";
   my_str = "This is a string";
   split_str = "A;B;C";
@@ -851,6 +852,24 @@ $i++;
 $e[$i] = q#f.filter(function(a){a < 5}).sort()#;
 $x[$i] = {
    'val' => [1,2,3,4],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#j.filter(function(a){a.pick("$..b") < 7})#;
+$x[$i] = {
+   'val' => [{"a" => 1, "b" => 2, "c"=> 3}, {"a" => 4, "b" => 5, "c"=> 6}],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#j.map(function(a){a.pick("$..b")})#;
+$x[$i] = {
+   'val' => [2,5,8],
    'type' => 'array'
 };
 $d[$i]  = 0;

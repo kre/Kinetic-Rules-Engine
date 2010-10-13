@@ -46,12 +46,16 @@ Log::Log4perl->easy_init($INFO);
 use Kynetx::Test qw/:all/;
 use Kynetx::Parser qw/:all/;
 use Kynetx::Json qw/:all/;
+use Data::Dumper;
+use Encode;
 
 # test the round trip KRL -> Json -> KRL
 foreach my $f (@krl_files) {
     my ($fl,$krl_text) = getkrl($f);
     my $json = krlToJson($krl_text);
-    my $result = is_string_nows(jsonToKrl($json), remove_comments($krl_text), "$f: $fl");
+    # Use the internal perl string structure for the compare
+    my $krl = decode("UTF-8",$krl_text);
+    my $result = is_string_nows(jsonToKrl($json), remove_comments($krl), "$f: $fl");
     die unless ($result);
 }
 

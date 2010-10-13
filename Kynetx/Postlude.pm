@@ -249,7 +249,8 @@ sub eval_log_statement {
     # this puts the statement in the log data for when debug is on
     $logger->debug($msg, $log_val);
 
-    return $msg . $log_val;
+# huh?    return $msg . $log_val;
+    return $js;
 }
 
 
