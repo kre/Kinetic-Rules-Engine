@@ -42,6 +42,8 @@ KrlExternalResource.prototype.is_loaded = function() {
         return this.loaded;
         //        return KOBJ.did_stylesheet_load(this.url);
     }
+
+    KOBJ.loggers.resources.trace("Resource think it is loaded?  ", this.url, this.loaded);
     return this.loaded;
 };
 
@@ -53,6 +55,8 @@ KrlExternalResource.prototype.is_loaded = function() {
 KrlExternalResource.prototype.did_load = function() {
     this.loaded = true;
     this.requested = false;
+    KOBJ.loggers.resources.trace("Resource was told it was loaded ", this.url);
+
 
     $KOBJ.each(KOBJ.applications, function(index, app) {
         app.execute_pending_closures();

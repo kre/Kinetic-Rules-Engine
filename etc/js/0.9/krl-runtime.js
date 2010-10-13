@@ -150,7 +150,7 @@ KOBJ.named_resources = {
  using it.
  */
 KOBJ.registerExternalResources = function(rid, resources) {
-    KOBJ.itrace("Registering external resources " + rid);
+    KOBJ.loggers.resources.trace("Registering external resources ", rid, resources);
     var resource_array = [];
     $KOBJ.each(resources, function (url, options) {
 
@@ -170,6 +170,10 @@ KOBJ.registerExternalResources = function(rid, resources) {
                 resource_array.push(a_resource);
                 a_resource.load();
             }
+        }
+        else
+        {
+            resource_array.push(KOBJ.external_resources[url]);
         }
     });
     var app = KOBJ.get_application(rid);
@@ -276,7 +280,6 @@ KOBJ.require = function(url, callback_params) {
         //  We need to change to the protcol of the location url so that we do not
         // get security errors.
         r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 3, r.src.length);
-        KOBJ.itrace("Asking to load " + r.src);
         r.type = "text/javascript";
         r.onload = r.onreadystatechange = KOBJ.url_loaded_callback;
         var body = document.getElementsByTagName("body")[0] ||
@@ -405,10 +408,9 @@ KOBJ.url_loaded_callback = function(loaded_url, response, callback_params) {
                 return;
             }
 
-            KOBJ.itrace("Resource of " + url + "was loaded");
+
 
             if (KOBJ.external_resources[url] != null) {
-                KOBJ.itrace("Updated apps of  " + url);
                 //            alert("Found a resource and letting it know");
                 KOBJ.external_resources[url].did_load();
             }

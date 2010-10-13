@@ -5,6 +5,8 @@ KOBJ.loggers = {
     general:        KOBJ.log4js.getLogger("general") ,
     application:    KOBJ.log4js.getLogger("application"),
     datasets:       KOBJ.log4js.getLogger("datasets"),
+    events:       KOBJ.log4js.getLogger("events"),
+    resources:       KOBJ.log4js.getLogger("resources"),
     actions:        KOBJ.log4js.getLogger("actions"),
     runtime:        KOBJ.log4js.getLogger("runtime"),
     annotate:       KOBJ.log4js.getLogger("annotate"),

@@ -1,5 +1,5 @@
-if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
-    (function() {
+//if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
+//    (function() {
         /*
 
          Defaults:
@@ -775,5 +775,5 @@ if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
 
         window.KOBJAnnotateSearchResults = KOBJAnnotateSearchResults;
         window.KOBJAnnotateLocalSearchResults = KOBJAnnotateLocalSearchResults;
-    })();
-}
+//    })();
+//}

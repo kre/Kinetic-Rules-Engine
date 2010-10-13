@@ -178,6 +178,8 @@ KrlApplication.prototype.are_resources_loaded = function()
             }
         });
     }
+    KOBJ.loggers.resources.trace("All app resources loaded? ", is_loaded);
+
     return is_loaded;
 };
 
@@ -191,7 +193,8 @@ KrlApplication.prototype.execute_closure = function(guid, a_closure)
 {
     if (!this.is_data_loaded() || !this.are_resources_loaded())
     {
-        KOBJ.itrace("Adding closure to pending list " + this.app_id + " : " + guid);
+
+        KOBJ.loggers.application.trace("Adding closure to pending list " + this.app_id + " : " + guid);
         this.pending_closures[guid] = a_closure;
     }
     else
@@ -216,7 +219,7 @@ KrlApplication.prototype.execute_pending_closures = function()
 
     var myself = this;
     $KOBJ.each(this.pending_closures, function(guid, the_closure) {
-        KOBJ.itrace("Executing Closure " + myself.app_id + " - " + guid);
+        KOBJ.loggers.application.trace("Executing Closure " + myself.app_id + " - " + guid);
         try
         {
                 the_closure($KOBJ);

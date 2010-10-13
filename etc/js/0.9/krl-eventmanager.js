@@ -43,8 +43,7 @@ KOBJEventManager.guid_list = {
  */
 KOBJEventManager.event_fire_complete = function(guid,app)
 {
-    KOBJ.itrace("Event Fire Complete " + guid);
-
+    KOBJ.loggers.events.trace("Event Fire Complete " + guid);
     var guid_info = KOBJEventManager.guid_list[guid];
     if(!guid_info)
     {
@@ -101,10 +100,10 @@ KOBJEventManager.add_to_fire_queue = function(guid, event, data, app)
 {
     if (KOBJEventManager.is_dup_event(event, data.selector, app))
     {
-        KOBJ.itrace("Dup Event " + event + " : " + app.app_id);
+        KOBJ.loggers.events.trace("Dup Event " + event + " : " + app.app_id);
         return;
     }
-    KOBJ.itrace("Adding Event " + event + " : " + app.app_id);
+    KOBJ.loggers.events.trace("Adding Event " + event + " : " + app.app_id);
 
     // Build up the current fires has with the elements and data we need.
     if (KOBJEventManager.current_fires[app.app_id] == null)
