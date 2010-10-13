@@ -171,39 +171,39 @@ is(session_seen($rid, $session, 'my_trail',"windley"),
 $test_count++;
 
 
-$krl_src = <<_KRL_;
-always {
-  log "Foo"
-} 
-_KRL_
+# $krl_src = <<_KRL_;
+# always {
+#   log "Foo"
+# } 
+# _KRL_
 
-$result = run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
-like($result,
-     qr/Foo/,
-     'explicit logging'
-  );
-$test_count++;
+# $result = run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
+# like($result,
+#      qr/Foo/,
+#      'explicit logging'
+#   );
+# $test_count++;
 
-$result = run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
-like($result,
-     qr/Foo/,
-     'explicit logging'
-  );
-$test_count++;
+# $result = run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+# like($result,
+#      qr/Foo/,
+#      'explicit logging'
+#   );
+# $test_count++;
 
-$krl_src = <<_KRL_;
-always {
-  log ":session_id"
-} 
-_KRL_
+# $krl_src = <<_KRL_;
+# always {
+#   log ":session_id"
+# } 
+# _KRL_
 
-$result = run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
-diag $result;
-like($result,
-     qr/[\da-f]+/,
-     'explicit logging'
-  );
-$test_count++;
+# $result = run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
+# diag $result;
+# like($result,
+#      qr/[\da-f]+/,
+#      'explicit logging'
+#   );
+# $test_count++;
 
 
 
