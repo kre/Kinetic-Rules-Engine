@@ -97,11 +97,11 @@ KrlApplication.prototype.raise_event = function(event_name,parameters,other_app_
     var all_data = {};
 
     if(typeof(parameters)  != "undefined" && parameters != null) {
-        var found_data = [];
-        $KOBJ.each(parameters, function(name,v) {
-            found_data.push({name: name,value:v });
-        });
-        all_data["param_data"] = found_data;
+//        var found_data = [];
+//        $KOBJ.each(parameters, function(name,v) {
+//            found_data.push({name: name,value:v });
+//        });
+        all_data["param_data"] = parameters;
     }
 
     KOBJEventManager.add_out_of_bound_event(other_app, event_name, true, all_data);
