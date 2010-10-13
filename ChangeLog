@@ -1,3 +1,9 @@
+2010-10-13  Web-san  <web@dev11.kobj.net>
+
+   * Kynetx/Expressions.pm (exp_to_den): Fixed bug that modified original expr
+   * Kynetx/RuleManager.pm: Fixed OParser bug
+   * Kynetx/Operators.pm (eval_filter): Fixed denoted error
+
 2010-10-11  Web-san  <web@dev11.kobj.net>
 
    * parser/RuleSet.g:  new raise AST

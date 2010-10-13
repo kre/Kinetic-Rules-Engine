@@ -45,8 +45,8 @@ use Cache::Memcached;
 use DateTime::Format::ISO8601;
 use Benchmark ':hireswallclock';
 
+use Kynetx::OParser;
 use Kynetx::Parser qw(:all);
-use Kynetx::OParser qw/:all/;
 use Kynetx::PrettyPrinter qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Json qw/:all/;
@@ -242,13 +242,11 @@ sub validate_rule {
     my ( $json, $tree );
     if ($rule) {
 
-        $logger->debug("[validate] validating rule");
+        $logger->debug("[validate] validating rule ", sub { Dumper($rule)});
 
         $test_template->param( RULE => $rule );
 
-        $tree = parse_ruleset($rule);
-
-        $logger->debug( "Global start: ", $tree->{'global_start_line'} );
+        $tree = Kynetx::Parser::parse_ruleset($rule);
 
         if ( defined $tree->{'error'} ) {
             warn $tree->{'error'};
@@ -326,7 +324,6 @@ sub parse_api {
         my $errors = "";
         if ( $submethod eq 'ruleset' ) {
             $tree = Kynetx::Parser::parse_ruleset($krl);
-
             #$errors .= lint_ruleset($tree);
         } elsif ( $submethod eq 'rule' ) {
             $tree = Kynetx::Parser::parse_rule($krl);

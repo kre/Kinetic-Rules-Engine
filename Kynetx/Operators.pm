@@ -271,9 +271,15 @@ sub eval_filter {
 	my $a = [];
 	foreach my $av (@{$eval}) {
 
+
+	  my $den_av = Kynetx::Expressions::exp_to_den($av);
+
+#	  $logger->debug("The value: ", sub { Dumper( $av ) });
+#	  $logger->debug("The denoted value: ", sub { Dumper( $den_av ) });
+
 	  my $app = {'type' => 'app',
 		     'function_expr' => $expr->{'args'}->[0],
-		     'args' => [Kynetx::Expressions::typed_value($av)]};
+		     'args' => [$den_av]};
 
 	  my $r = Kynetx::Expressions::den_to_exp(
 	    Kynetx::Expressions::eval_application($app,
@@ -287,8 +293,6 @@ sub eval_filter {
 	}
 
 	$v = $a;
-
-#	$logger->debug("Array after sort ",Dumper $v);
 
 
       } else {
