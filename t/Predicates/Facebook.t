@@ -259,7 +259,7 @@ my $post_meta = {
         }
     },
     'id' => ignore(),
-    'privacy' => ignore(),
+    #'privacy' => ignore(), ## FB change ##
     'picture' => $html_re,
     'link' => $html_re,
     'name' => ignore(),
@@ -665,7 +665,7 @@ sub test_post {
     my $rstatus = $result->{'status_line'};
     my $content = $result->{'content'};
     my $ast = Kynetx::Json::jsonToAst($content);
-    $logger->info("Post: ", sub {Dumper($result)});
+    #$logger->info("Post: ", sub {Dumper($result)});
     my $id = $ast->{'id'};
     cmp_deeply($rcode,$code,$rstatus || "Post request: " . sub {Dumper($post_args)});
     $gcal_tests++;

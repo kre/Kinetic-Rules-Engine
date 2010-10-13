@@ -33,6 +33,7 @@ package Kynetx::RuleManager;
 use strict;
 use warnings;
 use lib qw(/web/lib/perl);
+use utf8;
 
 use Log::Log4perl qw(get_logger :levels);
 
@@ -44,6 +45,7 @@ use JSON::XS;
 use Cache::Memcached;
 use DateTime::Format::ISO8601;
 use Benchmark ':hireswallclock';
+use Encode;
 
 use Kynetx::OParser;
 use Kynetx::Parser qw(:all);
@@ -59,6 +61,7 @@ use Kynetx::Directives qw(
   set_options
 );
 use Kynetx::Predicates::Amazon::SNS qw(:all);
+use Encode qw(from_to);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -156,7 +159,6 @@ sub parse_performance {
     my $runs = 1;
     my $start = new Benchmark;
     my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info,1,1);
-    $logger->debug("Ruleset: ", ref $ruleset);
     if ($ruleset) {
         my $r_repos = new Benchmark;
         my $repo_diff = timediff($r_repos,$start);
@@ -166,6 +168,7 @@ sub parse_performance {
         my $rp_diff = timediff($r_parser,$r_repos);
         $t_newparser = $rp_diff->[0];
         my $p_str = $p->ruleset($ruleset);
+    $logger->debug("Ruleset: **", $p_str,"**");
         my $parsed = new Benchmark;
         my $pd_diff = timediff($parsed,$r_parser);
         $t_parseruleset = $pd_diff->[0];
@@ -174,24 +177,11 @@ sub parse_performance {
             $s_parser = $status;
             $s_overall = $status;
             $e_newparser = '';
-            $s_oparser ='';
-            $t_oparse = '';
         } else {
             $s_parser = 'FAIL';
             $e_newparser = $status;
-            my $ro_start = new Benchmark;
-            $s_oparser = old_parser($ruleset);
-            if ($s_oparser eq 'OK') {
-                $s_overall = 'FIX';
-            } else {
-                $s_overall = 'FAIL';
-            }
-            my $ro_end = new Benchmark;
-            my $ro_diff = timediff($ro_end,$ro_start);
-            $t_oparse = $ro_diff->[0];
-
         }
-        return "$s_overall,$t_repository,$t_newparser,$t_parseruleset,$s_parser,$t_oparse,$s_oparser,$e_newparser";
+        return "$t_repository,$t_newparser,$t_parseruleset,$s_parser,$e_newparser";
     } else {
         return parse_api($req_info, $method,'ruleset');
     }
@@ -209,7 +199,16 @@ sub old_parser {
 
 sub is_parsed {
     my ($p_str) = @_;
-    my $ast = Kynetx::Json::jsonToAst_w($p_str);
+    my $json = encode("UTF-8",$p_str);
+    #my $json = $p_str;
+    my $logger = get_logger();
+
+    my $ast;
+    eval {
+        $ast = Kynetx::Json::jsonToAst($json);
+    };
+
+    $logger->debug("Result: ",sub {Dumper($ast)});
     if (ref $ast eq "HASH") {
         if ($ast->{'error'}) {
             my $rstr = join('|', @{$ast->{'error'}});
@@ -218,7 +217,7 @@ sub is_parsed {
             return 'OK';
         }
     } else {
-        return "Invalid JSON format";
+        return "Invalid JSON format: " . sub {Dumper($ast)};
     }
 }
 
@@ -313,7 +312,7 @@ sub parse_api {
 
     my $krl = $req_info->{'krl'};
 
-    $logger->trace( "KRL: ", $krl );
+    $logger->debug( "KRL: ", $krl );
 
     my $json = "";
     if ($krl) {

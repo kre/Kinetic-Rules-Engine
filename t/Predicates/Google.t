@@ -73,22 +73,24 @@ $my_req_info->{"$rid:key:google"} = {'consumer_key' => 'kynetx.com',
 };
 
 my $rightnow = Kynetx::Predicates::Time::get_time($my_req_info,'now',[{'timezone'=>'America/Denver'}]);
-my $dow = $rightnow->local_day_of_week();
+my $dow = Kynetx::Predicates::Time::get_time($my_req_info,'strftime',[$rightnow,"%u"
+]);
+#my $doww = Kynetx::Predicates::Time::get_time($my_req_info,'strftime',[$rightnow,"%d %w"]);
 # Find Friday
-my $offset = 6 - $dow;
+my $offset = 5 - $dow;
 if ($offset < 0) {
-    $offset = 6 - $offset;
+    $offset = 5 - $offset;
 }
 my $dstuff = Kynetx::Predicates::Time::get_time($my_req_info,'new',["2010-08-08T17:45"]);
 my $friday = Kynetx::Predicates::Time::get_time($my_req_info,'add',["$rightnow",{"days"=>$offset}]);
 
-my $fri_morn = $friday->set_hour(10)->truncate("to" => "hour");
+my $fri_morn = Kynetx::Predicates::Time::ISO8601($friday)->set_hour(16)->truncate("to" => "hour");
 my $fri_aft = Kynetx::Predicates::Time::get_time($my_req_info,'add',["$fri_morn",{"hours"=>4}]);
 my $afri_morn = Kynetx::Predicates::Time::get_time($my_req_info,'atom',
-    ["$fri_morn",{'tz'=>'America/Denver'}]);
+    ["$fri_morn"]);
+    #["$fri_morn",{'tz'=>'America/Denver'}]);
 my $afri_aft = Kynetx::Predicates::Time::get_time($my_req_info,'atom',
     ["$fri_aft",{'tz'=>'America/Denver'}]);
-
 
 my $dict_path = "/usr/share/dict/words";
 my @DICTIONARY;
