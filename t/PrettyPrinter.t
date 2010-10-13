@@ -45,6 +45,8 @@ my @krl_files = @ARGV ? @ARGV : <data/*.krl>;
 use Test::More;
 plan tests => $#krl_files+1;
 use Test::LongString;
+use Data::Dumper;
+use Encode;
 
 use Kynetx::Test qw/:all/;
 use Kynetx::PrettyPrinter qw/:all/;
@@ -56,9 +58,10 @@ Log::Log4perl->easy_init($INFO);
 foreach my $f (@krl_files) {
     my ($fl,$krl_text) = getkrl($f);
     my $tree = parse_ruleset($krl_text);
-#    diag($f);
     # compare to text with comments removed since pp can't reinsert them.
-    my $result = is_string_nows(pp($tree), remove_comments($krl_text), "$f: $fl");
+    # Use the internal perl string structure for the compare
+    my $krl = decode("UTF-8",$krl_text);
+    my $result = is_string_nows(pp($tree), remove_comments($krl), "$f: $fl");
     die unless ($result);
 }
 
