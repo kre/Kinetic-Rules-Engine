@@ -101,6 +101,9 @@ sub gen_js_expr {
 	/bool/ && do {
 	    return  $expr->{'val'} ;
 	};
+	/^undef$/ && do {
+	    return  'null' ;
+	};
 	/^array$/ && do {
 	    return  "[" . join(', ', @{ gen_js_rands($expr->{'val'}) }) . "]" ;
 	};
