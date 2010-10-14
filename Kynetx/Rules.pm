@@ -545,7 +545,6 @@ sub eval_foreach {
 					$req_info,
 					$session);
 
-
 #    $logger->debug("Foreach ", sub { Dumper $foreach_list[0] });
 
     my $vars = $foreach_list[0]->{'var'};
@@ -575,10 +574,12 @@ sub eval_foreach {
 #    $logger->debug("Valarray ", sub {Dumper $valarray});
 
 
-
+    my $i = 0;
     foreach my $val (@{ $valarray}) {
 
 #      $logger->debug("Evaluating rule body with " . Dumper($val));
+
+      $logger->debug("----------- foreach iteration ". $i++ ." -------------\n");
 
       my $vjs =
 	Kynetx::JavaScript::gen_js_var_list($vars,
@@ -664,7 +665,7 @@ sub eval_rule_body {
 
   }
 
-  $js .= Kynetx::Postlude::eval_post_expr($rule, $session, $req_info, $rule_env, $fired);
+  $js .= Kynetx::Postlude::eval_post_expr($rule, $session, $req_info, $rule_env, $fired) if (defined $rule->{'post'});
 
   return $js;
 }

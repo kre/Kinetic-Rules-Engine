@@ -315,13 +315,13 @@ sub next_state {
   # reset if needed
   $state = $self->get_initial() unless defined $self->get_transitions($state);
 
-  $logger->debug("Starting state: ", $state);
+#  $logger->debug("Starting state: ", $state);
 
   my $transitions = $self->get_transitions($state);
 
   my $next = $self->get_default_transition($state);
   foreach my $t (@{ $transitions }) {
-    $logger->debug("Transition type: ",$t->{'type'}, " Event type: ", $event->get_type());
+#    $logger->debug("Transition type: ",$t->{'type'}, " Event type: ", $event->get_type());
     my ($match,$vals) = match($event, $t);
 #    $logger->debug("Trans vars ", sub { Dumper $t->{'vars'} });
     if ($match) {
@@ -486,7 +486,7 @@ sub gen_event_eval {
     $pattern .= $filter->{'pattern'} .  $delimeter ;
   }
 
-  $logger->debug("Target: $target; Pattern: $pattern");
+#  $logger->debug("Target: $target; Pattern: $pattern");
 
   if(@{$captures} = $target =~ /$pattern/) {
 #    $logger->debug("Captures: ", sub {Dumper $captures});

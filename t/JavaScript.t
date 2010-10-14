@@ -210,8 +210,28 @@ $test_count++;
 #--------------------------------------------------------------------------------
 # gen_js_var
 #--------------------------------------------------------------------------------
+
 is(gen_js_var("c","3"), "var c = 3;\n", "simple stings");
 $test_count += 1;
+
+
+my $test_hash = {"a" => 5,
+		 "b" => undef,
+		 "c" => {"c1" => 3,
+			 "c2" => "hello"}};
+
+
+my $denval = Kynetx::Expressions::exp_to_den($test_hash);
+
+my $jsval = Kynetx::JavaScript::gen_js_expr($denval);
+
+# we generate JS with ' and Json expects "
+$jsval =~ s/'/"/g;
+my $new_hash = Kynetx::Json::jsonToAst($jsval);
+
+is_deeply($new_hash, $test_hash, "Round trip through exp_to_den and gen_js_expr");
+$test_count += 1;
+
 
 
 session_delete($rid, $session, 'my_count');

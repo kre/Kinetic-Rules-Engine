@@ -241,12 +241,12 @@ sub process_event_for_rid {
     my $current_state = session_get($rid, $session, $sm_current_name) ||
       $sm->get_initial();
 
-    $logger->debug("Initial: ", $current_state );
+#    $logger->debug("Initial: ", $current_state );
 
 
     my $next_state = $sm->next_state($current_state, $ev);
 
-    $logger->debug("Next: ", $next_state );
+#    $logger->debug("Next: ", $next_state );
 
     # when there's a state change, store the event in the event list
     unless ($current_state eq $next_state) {
@@ -255,7 +255,7 @@ sub process_event_for_rid {
     }
 
 
-    $logger->debug("Next: ", $next_state );
+#    $logger->debug("Next: ", $next_state );
 
     if ($sm->is_final($next_state)) {
 

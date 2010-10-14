@@ -171,6 +171,45 @@ is(session_seen($rid, $session, 'my_trail',"windley"),
 $test_count++;
 
 
+# my $expr = {'type' => 'var',
+# 	    'val' => 'hello_world'};
+
+# my $result = Kynetx::Postlude::eval_expr_with_default
+#   ($expr,
+#    '324',
+#    $rule_env,
+#    $rule_name,
+#    $my_req_info,
+#    $session);
+   
+# diag Dumper($result);
+
+# diag Dumper($rule_env);
+
+# $expr = {'type' => 'var',
+#          'val' => 'city'};
+
+# $result = Kynetx::Postlude::eval_expr_with_default
+#   ($expr,
+#    '324',
+#    $rule_env,
+#    $rule_name,
+#    $my_req_info,
+#    $session);
+   
+# diag Dumper($result);
+
+# $result = Kynetx::Postlude::eval_expr_with_default
+#   (undef,
+#    '324',
+#    $rule_env,
+#    $rule_name,
+#    $my_req_info,
+#    $session);
+   
+# diag Dumper($result);
+
+
 # $krl_src = <<_KRL_;
 # always {
 #   log "Foo"

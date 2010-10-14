@@ -307,7 +307,7 @@ sub eval_raise_statement {
 					    $session));
 
 
-
+    
 
     # normalize
     unless (ref $rids eq 'ARRAY') {
@@ -325,6 +325,8 @@ sub eval_raise_statement {
       }
 
       $logger->debug("Raising explicit event $expr->{'domain'}:$event_name for $rid");
+
+      my $schedule = $req_info->{'schedule'};
 
       # merge in the incoming request info
       my $this_req_info = Kynetx::Request::merge_req_env($req_info, 
@@ -354,7 +356,7 @@ sub eval_raise_statement {
       Kynetx::Events::process_event_for_rid($ev,
 					    $this_req_info,
 					    $session,
-					    $req_info->{'schedule'},
+					    $schedule,
 					    $rid,
 					   );
     }

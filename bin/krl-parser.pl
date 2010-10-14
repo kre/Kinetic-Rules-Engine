@@ -16,6 +16,8 @@ use Getopt::Std;
 use Log::Log4perl qw(get_logger :levels);
 
 
+use Time::HiRes qw/tv_interval gettimeofday/;
+
 
 Log::Log4perl->easy_init($INFO);
 Log::Log4perl->easy_init($DEBUG);
@@ -23,7 +25,7 @@ Log::Log4perl->easy_init($DEBUG);
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'clhrjof:';
+my $opt_string = 'clhrjotf:';
 getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'};
 
@@ -42,19 +44,31 @@ $optimize = $opt{'o'} if $opt{'o'};
 my $remove_comments = 0;
 $remove_comments = $opt{'c'} if $opt{'c'};
 
+my $print_time = 0;
+$print_time = $opt{'t'} if $opt{'t'};
+
 my $filename = "";
 $filename = $opt{'f'};
+
+my ($t0, $t1);
+
+$t0 = [gettimeofday];
 		    
 if($lex_only) {
     print Kynetx::Parser::remove_comments(getkrl());
+    $t1 = tv_interval($t0, [gettimeofday]);
 } elsif ($remove_comments) {
     print Kynetx::Parser::remove_comments(getkrl());
+    $t1 = tv_interval($t0, [gettimeofday]);
 } else {
 
     $Data::Dumper::Indent = 1;
 
     my $tree;
+
+
     $tree = Kynetx::Parser::parse_ruleset(getkrl());
+    $t1 = tv_interval($t0, [gettimeofday]);
 
     if ($optimize) {
       $tree = Kynetx::Rules::optimize_rules($tree);
@@ -72,6 +86,8 @@ if($lex_only) {
 	}
     } 
 }
+
+print "Elapsed time: $t1\n" if $print_time;
 
 1;
 
@@ -108,6 +124,8 @@ Options are:
    -r : return the KRL that the pretty printer returns for the parsed file
 
    -c : remove comments
+
+   -t : print timing information
 
 
 EOF

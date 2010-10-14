@@ -142,8 +142,8 @@ sub eval_one_decl {
   my  $nval = clone $val;
   $nval = Kynetx::Expressions::exp_to_den($nval);
 
-#  $logger->debug("[eval_one_decl] after denoting:", sub{Dumper $val});
-my   $jsval = Kynetx::JavaScript::gen_js_expr($nval);
+  my $jsval = Kynetx::JavaScript::gen_js_expr($nval);
+#  $logger->debug("[eval_one_decl] after denoting:", sub{Dumper $nval}, "JS Val: ", sub{Dumper($jsval)});
   my $js = Kynetx::JavaScript::gen_js_var($var, $jsval);
 
   return $js

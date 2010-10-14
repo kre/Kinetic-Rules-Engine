@@ -2055,6 +2055,79 @@ add_testcase(
     0
     );
 
+# multiple raises
+$krl_src = <<_KRL_;
+ruleset two_rules_first_raises_second_twice {
+    rule t10 is active {
+      select when pageview ".*"
+      noop();
+      fired {
+        raise explicit event foo;
+        raise explicit event foo;
+      }
+    }
+    rule t12 is active {
+      select when explicit foo
+      pre {
+        x = 5;
+      }
+      noop();
+    }
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 't10'},
+   {"rid" => 'two_rules_first_raises_second_twice'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$config2 = mk_config_string(
+  [
+   {"rule_name" => 't12'},
+   {"rid" => 'two_rules_first_raises_second_twice'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$js = <<_JS_;
+(function(){
+(function(){
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config));
+}());
+(function(){
+var x = 5;
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config2));
+}());
+(function(){
+var x = 5;
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config2));
+}());
+}());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $js,
+    $dummy_final_req_info,
+    0
+    );
+
+
+
 # now with expressions
 $krl_src = <<_KRL_;
 ruleset two_rules_first_raises_second_with_expr {

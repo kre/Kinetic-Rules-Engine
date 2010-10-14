@@ -107,6 +107,9 @@ sub next {
 	$r = $self->{$rid}->{$rn};
 #	$logger->debug("Rule: ", sub { Dumper($self)});
 	$self->{'current_rule'}++;
+# we used to do this to clean up, but it breaks multiple raises of the same event because
+#   the rule disappears after the first schedule iteration
+# I'm not sude it did anything but clean up.
 #	$self->delete_rule($rid,$rn);
 	$logger->debug("Schedule iterator returning $r->{'rule'}->{'name'} with current RID count $self->{'current_rid'} and current rule count $self->{'current_rule'}");
 
