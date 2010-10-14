@@ -1536,7 +1536,20 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+ENDY:
+# New pick argument to retain array
 
+$e[$i] = q/store.pick("$..book[0].price",1)/;
+$x[$i] = {'val' => ['8.95'],
+      'type' => 'array'};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q/store.pick("$..book[1].price")/;
+$x[$i] = {'val' => '12.99',
+      'type' => 'num'};
+$d[$i]  = 0;
+$i++;
 
 # now run the tests....
 my $l = scalar @e;
