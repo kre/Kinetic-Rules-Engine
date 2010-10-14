@@ -1,3 +1,9 @@
+2010-10-14  Web-san  <web@dev11.kobj.net>
+
+   * Kynetx/Events.pm (process_event): Use respond.
+   * Kynetx/Rules.pm (process_rules): Use respond.
+   * Kynetx/Response.pm (respond): new.  Common response module to gather together duplicate code.
+	
 2010-10-13  Web-san  <web@dev11.kobj.net>
 
    * Kynetx/Postlude.pm (eval_log_statement): Now returning valid JS
