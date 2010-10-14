@@ -49,6 +49,11 @@ qw(
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
+
+
 
 sub new {
   my $invocant = shift;
@@ -95,13 +100,21 @@ sub next {
 
       if (defined $self->{$rid} &&
 	  scalar(@{ $self->{$rid}->{'rules'} }) > $self->{'current_rule'}) {
+#	$logger->debug("In same ruleset; RID=$rid");
+#	$logger->debug("Rules left: ", sub { Dumper($self->{$rid}->{'rules'})});
 	my $rn = $self->{$rid}->{'rules'}->[$self->{'current_rule'}];
+#	$logger->debug("Rules name: ", $rn);
 	$r = $self->{$rid}->{$rn};
+#	$logger->debug("Rule: ", sub { Dumper($self)});
 	$self->{'current_rule'}++;
-	$self->delete_rule($rid,$rn);
+#	$self->delete_rule($rid,$rn);
 	$logger->debug("Schedule iterator returning $r->{'rule'}->{'name'} with current RID count $self->{'current_rid'} and current rule count $self->{'current_rule'}");
 
+	
+
       } else {
+	$logger->debug("Moving to next RID");
+
 	$self->{'current_rule'} = 0;
 	$self->{'current_rid'}++;
 	$self->delete_rid($rid);
@@ -109,6 +122,7 @@ sub next {
       }
 
     } else {
+      $logger->debug("Resetting schedule");
       $r = undef;
       $self->{'current_rule'} = 0;
       $self->{'current_rid'} = 0;
@@ -139,6 +153,8 @@ sub add {
   my $req_info = shift;
 
   my $rulename = $rule->{'name'};
+  
+  my $logger = get_logger();
 
   # if the RID is alread a key, just add to the rule list
   if (! defined $self->{$rid}) {
