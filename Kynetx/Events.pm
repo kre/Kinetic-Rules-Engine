@@ -45,6 +45,7 @@ use Kynetx::Request;
 use Kynetx::Rules;
 use Kynetx::Json;
 use Kynetx::Scheduler;
+use Kynetx::Response;
 
 use Kynetx::Events::Primitives qw(:all);
 use Kynetx::Events::State qw(:all);
@@ -168,34 +169,7 @@ sub process_event {
 					     $eid
 					    );
 
-
-    # put this in the logging DB
-    Kynetx::Log::log_rule_fire($r,
-			       $req_info,
-			       $session
-			      );
-
-
-    # finish up
-    session_cleanup($session);
-
-    # return the JS load to the client
-    $logger->info("Event processing finished");
-    $logger->debug("__FLUSH__");
-
-
-
-    # this is where we return the JS
-    if ($req_info->{'understands_javascript'}) {
-      $logger->debug("Returning javascript from evaluation");
-      print $js;
-    } else {
-      $logger->debug("Returning directives from evaluation");
-
-      print Kynetx::Directives::gen_directive_document($req_info);
-
-
-    }
+    Kynetx::Response::respond($r, $req_info, $session, $js, "Event");
 
 }
 

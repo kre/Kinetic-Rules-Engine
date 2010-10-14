@@ -57,6 +57,7 @@ use Kynetx::Repository;
 use Kynetx::Environments qw(:all);
 use Kynetx::Directives ;
 use Kynetx::Postlude;
+use Kynetx::Response;
 
 use Kynetx::JavaScript::AST qw/:all/;
 
@@ -126,29 +127,8 @@ sub process_rules {
 	}
     }
 
-    # put this in the logging DB
-    log_rule_fire($r,
-		  $req_info,
-		  $session
-	);
 
-    session_cleanup($session);
-
-    # return the JS load to the client
-    $logger->info("Ruleset processing finished");
-    $logger->debug("__FLUSH__");
-
-    # this is where we return the JS
-    if ($req_info->{'understands_javascript'}) {
-      $logger->debug("Returning javascript from evaluation");
-      print $js;
-    } else {
-      $logger->debug("Returning directives from evaluation");
-
-
-      print Kynetx::Directives::gen_directive_document($req_info);
-
-    }
+    Kynetx::Response::respond($r, $req_info, $session, $js, "Ruleset");
 
 }
 
