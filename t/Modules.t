@@ -102,6 +102,44 @@ is_deeply($val,
 	  "Twitter is a hash");
 $test_count++;
 
+my $source = 'uri';
+my ($result,$args);
+
+$args = ['http://www.windley.com/archives?foo=bar'];
+$result = Kynetx::Modules::eval_module($my_req_info, 
+				       $rule_env, 
+				       $session, 
+				       $rule_name, 
+				       $source, 
+				       'escape', 
+				       $args
+				      );
+
+
+is($result,
+   'http%3A%2F%2Fwww.windley.com%2Farchives%3Ffoo%3Dbar', 
+   'uri:escape');
+$test_count++;
+
+# now we reverse it
+$args = [$result];
+$result = Kynetx::Modules::eval_module($my_req_info, 
+				       $rule_env, 
+				       $session, 
+				       $rule_name, 
+				       $source, 
+				       'unescape', 
+				       $args
+				      );
+
+
+is($result,
+   'http://www.windley.com/archives?foo=bar', 
+   'uri:unescape (reverse last result)');
+$test_count++;
+
+
+
 done_testing($test_count);
 
 
