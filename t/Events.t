@@ -160,7 +160,7 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/bar.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		 ]
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
@@ -173,12 +173,12 @@ SKIP: {
        # next series of three shows that interceding events don't matter
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/bar.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		 ]
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/something_else.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		 ]
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
@@ -195,7 +195,7 @@ SKIP: {
     my $and_test_plan =
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and1.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/']
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/']
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and2.html",
 	'type' => 'text/javascript',
@@ -204,11 +204,11 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and2.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/']
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/']
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and2.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/']
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/']
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and1.html",
 	'type' => 'text/javascript',
@@ -243,7 +243,7 @@ SKIP: {
     my $then_test_plan =
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/then1.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ['/var two = 2/',
 		     '/var one = 1/',
@@ -259,7 +259,7 @@ SKIP: {
        # next series of three shows that an interceding event cancels then1
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/then1.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ['/var two = 2/',
 		     '/var one = 1/',
@@ -267,7 +267,7 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/something_else.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ['/var two = 2/',
 		     '/var one = 1/',
@@ -275,7 +275,7 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/then2.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/'],
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/'],
 	'unlike' => ['/test_rule_then/',
 		   '/var two = 2/',
 		   '/var one = 1/',
@@ -288,7 +288,7 @@ SKIP: {
     my $between_test_plan =
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/first.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var b = 'd'/",
@@ -297,7 +297,7 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/mid.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var b = 'd'/",
@@ -315,7 +315,7 @@ SKIP: {
        # without intervening 'mid' event, should not fire
       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/first.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var b = 'd'/",
@@ -324,7 +324,7 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/last.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var b = 'd'/",
@@ -340,7 +340,7 @@ SKIP: {
        # with intervening 'mid' event, should not fire
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/firstn.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var b = 'd'/",
@@ -349,7 +349,7 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/midn.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var b = 'd'/",
@@ -358,7 +358,7 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/lastn.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var b = 'd'/",
@@ -368,7 +368,7 @@ SKIP: {
        # without intervening 'mid' event, should  fire
       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/firstn.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var b = 'd'/",
@@ -387,7 +387,7 @@ SKIP: {
        # does fire with some OTHER intervening enent
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/firstn.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var c = 't'/",
@@ -395,7 +395,7 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/something_else.html",
 	'type' => 'text/javascript',
-	'like' => ['/^$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var c = 't'/",
