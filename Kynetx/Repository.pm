@@ -226,16 +226,22 @@ sub get_rules_from_repository{
     $logger->debug("Clearing parsing semaphore for $rs_key");
     Kynetx::Memcached::clr_parsing_flag($memd, $rs_key);
 
-    unless ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid') {
+    unless ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid' ||
+	    defined $ruleset->{'error'}) {
       $ruleset = Kynetx::Rules::optimize_ruleset($ruleset);
 
       $logger->debug("Found rules for $rid");
 
-
       $logger->debug("Caching ruleset for $rid using key $rs_key");
       $memd->set($rs_key, $ruleset);
     } else {
-      $logger->error("Ruleset $rid not found");
+      if ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid') {
+	$logger->error("Ruleset $rid not found");
+      } elsif (defined $ruleset->{'error'}) {
+	$logger->error("Ruleset parsing error ", sub {Dumper ($ruleset->{'error'})});
+      } else {
+	$logger->error("Unspecified ruleset repository error");
+      }
     }
     return $ruleset;
 

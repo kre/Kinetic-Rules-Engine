@@ -1,3 +1,7 @@
+2010-10-18  Web-san  <web@dev11.kobj.net>
+
+   * Kynetx/Repository.pm (get_rules_from_repository): Upgraded error conditions and messages for returns from repository
+
 2010-10-14  Web-san  <web@dev11.kobj.net>
 
    * Kynetx/Events.pm (process_event): Use respond.
