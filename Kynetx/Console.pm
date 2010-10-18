@@ -2,33 +2,33 @@ package Kynetx::Console;
 # file: Kynetx/Console.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use strict;
 use warnings;
 
@@ -60,7 +60,7 @@ our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 show_context test_harness
 ) ]);
@@ -68,7 +68,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 sub test_harness {
     my ($r, $method, $rid,$eid) = @_;
-    
+
     my $logger = get_logger();
 
     my $session = process_session($r);
@@ -80,6 +80,67 @@ sub test_harness {
     print "Config test: " . Kynetx::Configure::to_string();
 }
 
+sub oauth_error_page {
+    my ($r, $method, $rid,$oauth) = @_;
+    my $logger = get_logger();
+    $logger->info("Displaying OAuth data  ");
+    # get a session hash
+    my $session = process_session($r);
+
+    my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
+    my $template = Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR') . "/error.tmpl";
+    my $context_template = HTML::Template->new(filename => $template,
+                           die_on_bad_params => 0);
+
+    $context_template->param("RULESET_ID" => $rid);
+    $context_template->param("SESSION_ID" => Kynetx::Session::session_id($session) );
+    $context_template->param("COOKIE" => $r->headers_in->{'Cookie'});
+
+    my $req = Apache2::Request->new($r);
+    my @oauth_passed = (
+        { name => 'oauth_token',
+          value => $req->param('oauth_token') || ''
+        },
+        { name => 'oauth_verifier',
+          value => $req->param('oauth_verifier') || ''
+        },
+        { name => 'caller',
+          value => $req->param('caller') || ''
+        },
+    );
+
+    $context_template->param("passed_oauth" => \@oauth_passed);
+    $context_template->param("session_oauth" => $oauth);
+
+    my @client_info = (
+    { name => 'Kynetx CS Server',
+      value => $req_info->{'hostname'}},
+
+    { name => 'Client ID',
+      value => $req_info->{'site'}},
+
+    { name => 'Client calling page',
+      value => $req_info->{'caller'}},
+
+    );
+
+
+    $context_template->param(client_info => \@client_info);
+
+    my $req_str = Dumper($req_info);
+    my $r_str = Dumper($r->the_request());
+    my $r_b_str = Dumper($r->headers_in());
+    $context_template->param("Data" => $req_str);
+    $context_template->param("MODATA" => $r_str);
+    $context_template->param("EMODATA" => $r_b_str);
+
+    $r->content_type('text/html');
+    print $context_template->output;
+
+
+    $logger->info("OAuth Error Page Complete");
+}
+
 sub show_context {
     my ($r, $method, $rid) = @_;
 
@@ -89,11 +150,11 @@ sub show_context {
     if(Kynetx::Configure::get_config('RUN_MODE') eq 'development') {
 	# WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
 	my $test_ip = Kynetx::Configure::get_config('TEST_IP');
-	$r->connection->remote_ip($test_ip); 
+	$r->connection->remote_ip($test_ip);
     }
 
 
-    # get a session hash 
+    # get a session hash
     my $session = process_session($r);
 
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
@@ -102,7 +163,7 @@ sub show_context {
     $logger->info("Displaying context data for site " . $req_info->{'site'});
 
     # side effects environment with precondition pattern values
-    my $ruleset = 
+    my $ruleset =
 	get_rule_set($req_info);
 
     my $rule_env = empty_rule_env();
@@ -114,21 +175,21 @@ sub show_context {
     $req_info->{'rule_count'} = 0;
     $req_info->{'selected_rules'} = [];
     foreach my $rule ( @{ $ruleset->{'rules'} } ) {
-      if($rule->{'state'} eq 'active' || 
-	 ($rule->{'state'} eq 'test' && 
-	  $req_info->{'mode'} && 
+      if($rule->{'state'} eq 'active' ||
+	 ($rule->{'state'} eq 'test' &&
+	  $req_info->{'mode'} &&
 	  $req_info->{'mode'} eq 'test' )) {  # optimize??
 
 	$req_info->{'rule_count'}++;
-      
+
 
 
 	# test and capture here
-	my($selected, $captured_vals) = 
+	my($selected, $captured_vals) =
 	  Kynetx::Rules::select_rule($req_info->{'caller'}, $rule);
 
 	if ($selected) {
-	  my $pred_value = 
+	  my $pred_value =
 	    den_to_exp(
 		       eval_expr ($rule->{'cond'}, $rule_env, $rule->{'name'},$req_info, $session));
 
@@ -164,11 +225,11 @@ sub show_context {
     $context_template->param(site => $req_info->{'site'});
     $context_template->param(caller => $req_info->{'caller'});
 
-    my @client_info = (       
+    my @client_info = (
 	{ name => 'Kynetx CS Server',
 	  value => $req_info->{'hostname'}},
 
-	{ name => 'Client ID', 
+	{ name => 'Client ID',
 	  value => $req_info->{'site'}},
 
 	{ name => 'Client calling page',
@@ -181,7 +242,7 @@ sub show_context {
 
     my $demo_preds = Kynetx::Predicates::Demographics::get_predicates();
 
-    my @user_info = (       
+    my @user_info = (
 
 	{ name => 'User IP Address',
 	  value => $req_info->{'ip'}},
@@ -225,10 +286,10 @@ sub show_context {
     $context_template->param(user_info => \@user_info);
 
     my @rule_info =  (
-	{ name => 'Rule Version', 
+	{ name => 'Rule Version',
 	  value => $req_info->{'rule_version'}},
 
-	{ name => 'Active rules', 
+	{ name => 'Active rules',
 	  value => $req_info->{'rule_count'}},
 
 	);
@@ -239,7 +300,7 @@ sub show_context {
     my $c = 0;
     my @rules = ();
     foreach my $rule_name (@{ $req_info->{'selected_rules'} }) {
-	push @rules, 
+	push @rules,
    	     { number => $c,
 	       name => $rule_name,
 	       fired => $fired{$rule_name},
