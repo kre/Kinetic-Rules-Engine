@@ -35,6 +35,7 @@ use warnings;
 use Log::Log4perl qw(get_logger :levels);
 use SVN::Client;
 use APR::URI;
+use Encode;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -138,10 +139,11 @@ sub get_rules_from_repository{
       $req->authorization_basic($username, $passwd);
 
       my $res = $ua->request($req);
+      $logger->debug("URL: ",$rs_url);
 
       my $json;
       if($res->is_success) {
-	$json = $res->decoded_content;
+	$json = encode("UTF-8",$res->decoded_content);
       } else {
 
 	$logger->debug("Error retrieving ruleset: ",  $res->status_line);
