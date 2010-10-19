@@ -89,7 +89,15 @@ sub get_rules_from_repository{
 	! $text) {
       $logger->debug("Using cached ruleset for $rid ($version) with key ", make_ruleset_key($rid, $version), " & optimization version ", $ruleset->{'optimization_version'} );
 
+
       return $ruleset;
+    } else {
+      if ($ruleset &&
+	$ruleset->{'optimization_version'} &&
+	$ruleset->{'optimization_version'} < Kynetx::Rules::get_optimization_version()) {
+	$localparsing = 1;
+      }
+      
     }
 
     my $ext;
