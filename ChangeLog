@@ -1,3 +1,10 @@
+2010-10-19  Web-san  <web@dev11.kobj.net>
+
+   * Kynetx/JavaScript.pm (gen_js_hash_lines): Gen js for LHS
+   * Kynetx/Expressions.pm (eval_hash_raw): Eval the lhs and check return type
+   * Kynetx/PrettyPrinter.pm (pp_hash_line): have to pp the lhs now
+   * parser/RuleSet.g: Changed LHS of hash line to be an expression
+
 2010-10-18  Web-san  <web@dev11.kobj.net>
 
    * Kynetx/Repository.pm (get_rules_from_repository): Upgraded error conditions and messages for returns from repository

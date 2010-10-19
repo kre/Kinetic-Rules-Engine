@@ -545,12 +545,27 @@ sub eval_application {
 
 sub eval_hash_raw {
     my ($hash_lines, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
 
     my $hash = {};
     foreach my $hl (@{ $hash_lines} ) {
-	$hash->{$hl->{'lhs'}} =
-	    eval_expr($hl->{'rhs'}, $rule_env,
-			 $rule_name, $req_info, $session);
+      
+      my $lhs = 
+	eval_expr($hl->{'lhs'}, 
+			  $rule_env,
+			  $rule_name, 
+			  $req_info, 
+			  $session);
+      
+      if (type_of($lhs) eq 'str' ||
+	  type_of($lhs) eq 'num') {
+      	$hash->{den_to_exp($lhs)} =
+	  eval_expr($hl->{'rhs'}, $rule_env,
+		    $rule_name, $req_info, $session);
+      } else {
+	$logger->error("LHS of hash expression not a string or number: ", sub{Dumper($lhs)});
+      }
+
     }
 
     return $hash;

@@ -494,6 +494,22 @@ add_expr_testcase(
     0);
 
 
+$krl_src = <<_KRL_;
+{city: 3,
+ 4+5: 3 + 5,
+ "#{city}_is" +"_cool": city + ", ID"}
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    "{city : 3, (4+5) : (3 + 5), (''+city+'_is'+ '_cool') : (city + ', ID')}",
+     mk_expr_node('hash',
+		  {"Blackfoot" => mk_expr_node('num',3),
+		   9 => mk_expr_node('num',8),
+		   "Blackfoot_is_cool" => mk_expr_node('str',"Blackfoot, ID")}),
+    0);
+
+
 #---------------------------------------------------------------------------------
 # inequalities
 #---------------------------------------------------------------------------------

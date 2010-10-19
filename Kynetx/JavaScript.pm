@@ -275,7 +275,7 @@ sub gen_js_hash_lines {
 sub gen_js_hash_line {
     my ($hash_line) = @_;
 
-    return "'" . $hash_line->{'lhs'} ."' : " . gen_js_expr($hash_line->{'rhs'});
+    return  gen_js_expr($hash_line->{'lhs'}) ." : " . gen_js_expr($hash_line->{'rhs'});
 
 
 }

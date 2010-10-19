@@ -1148,7 +1148,7 @@ sub pp_hash_lines {
 
 sub pp_hash_line {
     my $hash_line = shift;
-    return '"' . $hash_line->{'lhs'} .'" : ' . pp_expr($hash_line->{'rhs'});
+    return  pp_expr($hash_line->{'lhs'}) .' : ' . pp_expr($hash_line->{'rhs'});
 
 }
 

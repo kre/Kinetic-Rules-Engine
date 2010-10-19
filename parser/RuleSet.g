@@ -1599,9 +1599,10 @@ timeframe returns[Object result,String time]
 
 
 hash_line  returns[HashMap result]
-	: s=STRING COLON e=expr  {
+	: s=expr COLON e=expr  {
 		HashMap tmp = new HashMap();
-		tmp.put("lhs",strip_string($s.text));
+//		tmp.put("lhs",strip_string($s.text));
+		tmp.put("lhs",$s.result);
 		tmp.put("rhs",$e.result);
 //		tmp.put("val",$e.result);
 		$result = tmp;
