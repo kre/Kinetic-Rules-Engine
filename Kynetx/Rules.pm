@@ -104,9 +104,14 @@ sub process_rules {
     # get a session
     my $session = process_session($r);
 
-
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rids);
     $req_info->{'eid'} = $eid;
+    my $session_lock = "lock-" . session_id($session);
+    if ($req_info->{'_lock'}->lock($session_lock)) {
+        $logger->debug("Session lock acquired for $session_lock");
+    } else {
+        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
+    }
 
     # initialization
     my $js = '';
@@ -129,7 +134,6 @@ sub process_rules {
 
 
     Kynetx::Response::respond($r, $req_info, $session, $js, "Ruleset");
-
 }
 
 
@@ -183,7 +187,7 @@ sub process_schedule {
       # this doesn't work.  We may need to get new session storage in place before it will.
       # If we *could* get te appsession hash defined, app vars would work.
       # # set up app session, the place where app vars store data
-      # $req_info->{'appsession'} = eval { 
+      # $req_info->{'appsession'} = eval {
       # 	# since we generate from the RID, we get the same one...
       # 	my $key = Digest::MD5::md5_hex($req_info->{'rid'});
       # 	Kynetx::Session::tie_servers({},$key);
@@ -671,7 +675,7 @@ sub get_rule_set {
       # do not store ruleset in the request info here
       # or it ends up in the session for the user
     }
-     
+
     if (($ruleset->{'meta'}->{'logging'} &&
 	 $ruleset->{'meta'}->{'logging'} eq "on")) {
       turn_on_logging();

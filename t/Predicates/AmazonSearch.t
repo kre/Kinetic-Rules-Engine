@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 
 use lib qw(/web/lib/perl);
 use strict;
@@ -40,7 +40,7 @@ $Data::Dumper::Indent = 1;
 
 
 
-my $preds = {}; 
+my $preds = {};
 my @pnames = keys (%{ $preds } );
 
 my $r = Kynetx::Test::configure();
@@ -55,14 +55,14 @@ my $meta_defs = <<_META_;
         author "$app_author"
         description <<
 Tutorial for Amazon Module             >>
-        logging on        
+        logging on
 _META_
 # test choose_action and args
 
 my $my_req_info = Kynetx::Test::gen_req_info($rid);
 
 # these are KRE generic consumer tokens
-$my_req_info->{$rid.':key:amazon'} = 
+$my_req_info->{$rid.':key:amazon'} =
   {secret_key => $dev_secret,
    token => $dev_token
   };
@@ -90,7 +90,7 @@ my @test_args=();
 my @fail_args=();
 my $canned_list;
 
-# 
+#
 # Parser validations
 #
 my $krl_amazon =<<_KRL_;
@@ -107,7 +107,7 @@ ruleset amz_10 {
         author "$app_author"
         description <<
 Tutorial for Amazon Module             >>
-        logging on        
+        logging on
       $krl_amazon
 
     }
@@ -116,7 +116,7 @@ Tutorial for Amazon Module             >>
 
 
         pre {
-    }     
+    }
 
         float("absolute", "top: 10px", "right: 10px",
               "/cgi-bin/weather.cgi?city=" + city + "&tc=" + tc);
@@ -166,7 +166,7 @@ $args = [{
     'index' => 'electronics',
     'manufacturer' => 'sony',
     'keywords' => '1080p',
-    'response_group' => ['Offers','Subjects'],
+    'response_group' => ['Offers','Images'],
 }];
 
 push(@test_args,$args);
@@ -203,11 +203,12 @@ $args = [{
 
 push(@test_args,$args);
 
-$args = [{
-    'locale' => 'us',
-    'index' => 'electronics',
-    'textstream' => 'where can I find bluetooth headphones in provo',
-}];
+# Currently responds with 410 Gone
+#$args = [{
+#    'locale' => 'us',
+#    'index' => 'electronics',
+#    'textstream' => 'where can I find bluetooth headphones in provo',
+#}];
 
 push(@test_args,$args);
 
@@ -270,10 +271,10 @@ foreach my $case (@test_args) {
     is ($good,1);
     if (! $good) {
         #$logger->debug("Bad result: ", sub {Dumper($ds)});
-        my $error = Kynetx::Predicates::Amazon::get_error_msg($ds); 
+        my $error = Kynetx::Predicates::Amazon::get_error_msg($ds);
         $logger->debug("Error: ", sub {Dumper($error)});
         $logger->debug("Args: ",sub {Dumper(Kynetx::Predicates::Amazon::get_request_args($ds))});
-        
+
     }else {
         $logger->debug("Good result: ", sub {Dumper($ds)});
         my $titems = Kynetx::Predicates::Amazon::total_items($ds);
@@ -281,9 +282,9 @@ foreach my $case (@test_args) {
         my $asin = Kynetx::Predicates::Amazon::get_ASIN($ds);
         $logger->debug("Results: ",$titems," Pages: ",$tpages);
         $logger->debug("ASIN: ", sub {Dumper($asin)});
-        
+
     };
-      
+
 }
 
 $logger->info("Checking poorly formed requests, okay to ignore warnings");
@@ -295,20 +296,20 @@ foreach my $case (@fail_args) {
     my $good = Kynetx::Predicates::Amazon::good_response($ds);
     isnt ($good,1);
     if (! Kynetx::Predicates::Amazon::good_response($ds)) {
-        my $error = Kynetx::Predicates::Amazon::get_error_msg($ds); 
+        my $error = Kynetx::Predicates::Amazon::get_error_msg($ds);
         $logger->debug("Error: ", sub {Dumper($error)});
-        $logger->debug("Args: ",sub {Dumper(Kynetx::Predicates::Amazon::get_request_args($ds))});        
+        $logger->debug("Args: ",sub {Dumper(Kynetx::Predicates::Amazon::get_request_args($ds))});
     }else {
         $logger->debug("Good result: ", sub {Dumper($ds)});
         my $titems = Kynetx::Predicates::Amazon::total_items($ds);
         my $tpages = Kynetx::Predicates::Amazon::total_pages($ds);
         my $asin = Kynetx::Predicates::Amazon::get_ASIN($ds);
         $logger->debug("Results: ",$titems," Pages: ",$tpages);
-        $logger->debug("ASIN: ", sub {Dumper($asin)});        
-    };      
+        $logger->debug("ASIN: ", sub {Dumper($asin)});
+    };
 }
 
-session_cleanup($session); 
+session_cleanup($session);
 
 done_testing($test_count + int(@test_args) + int(@fail_args));
 

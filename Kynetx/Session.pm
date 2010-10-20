@@ -36,6 +36,7 @@ use warnings;
 # use kns_config qw(get_config);
 
 use Log::Log4perl qw(get_logger :levels);
+use IPC::Lock::Memcached;
 
 use DateTime;
 use Data::Dumper;
@@ -44,13 +45,15 @@ use Kynetx::Configure qw(:all);
 use Kynetx::Persistence::KEN qw(
     get_ken
 );
-use Apache::Session::Lock::File;
+use Kynetx::Memcached;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use constant MAX_STACK_SIZE => 50;
-use constant EXPIRE => 30;
+use constant EXPIRE => 60;
+
+use constant DEFAULT_MEMCACHED_PORT => '11211';
 
 
 our $VERSION     = 1.00;
@@ -88,11 +91,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 sub process_session {
     my ($r, $ck) = @_;
-    my $l = new Apache::Session::Lock::File;
-    $l->clean('/var/lock/sessions',EXPIRE);
-
     my $logger = get_logger();
-
     my $cookie = $r->headers_in->{'Cookie'};
     $cookie =~ s/^.*[;]?SESSION_ID=(\w*)[;]?.*$/$1/ if(defined $cookie);
 
@@ -144,6 +143,7 @@ sub process_session {
 }
 
 
+
 sub tie_servers {
 
     my($session,$cookie) = @_;
@@ -167,19 +167,16 @@ sub tie_servers {
 	CompressThreshold => 10_000
     };
 
-    # Lock expects the session id to be under $session->{'data'}
-    $session->{'data'}->{'_session_id'} = $session->{'_session_id'};
-    $session->{'args'}->{'LockDirectory'} = '/var/lock/sessions';
-
-
     return $session;
 
 }
 
 sub session_cleanup {
-    my($session) = @_;
-    my $locker = new Apache::Session::Lock::File;
-    $locker->release_all_locks($session);
+    my($session,$req_info) = @_;
+    if ($req_info && $req_info->{"_lock"}) {
+        $req_info->{"_lock"}->unlock;
+    }
+
     untie %{ $session };
 }
 
@@ -197,8 +194,6 @@ sub session_keys {
 sub session_store {
     my ($rid, $session, $var, $val) = @_;
     my $logger = get_logger();
-    my $locker = new Apache::Session::Lock::File;
-    $locker->acquire_write_lock($session);
     $logger->trace("session store: ",$var," = ",$val);
 
     # timestamp session to ensure it gets written back
@@ -209,15 +204,12 @@ sub session_store {
 
     $session->{$rid}->{$var} = $val;
     $session->{$rid}->{$var.'_created'} = $dt;
-    $locker->release_write_lock($session);
     return $val;
 
 }
 
 sub session_touch {
     my ($rid, $session, $var, $dt) = @_;
-    my $locker = new Apache::Session::Lock::File;
-    $locker->acquire_write_lock($session);
 
     $session->{$rid}->{$var} = 0 unless exists $session->{$rid}->{$var};
 
@@ -227,37 +219,30 @@ sub session_touch {
 	$session->{$rid}->{$var.'_created'} = DateTime->now->epoch;
     }
 
-    $locker->release_write_lock($session);
     return $session->{$rid}->{$var};
 
 }
 
 sub session_get {
     my ($rid, $session, $var) = @_;
-    my $locker = new Apache::Session::Lock::File;
     my $val;
-    $locker->acquire_read_lock($session);
     if(exists $session->{$rid} && exists $session->{$rid}->{$var}) {
 	   $val =  $session->{$rid}->{$var};
     } else {
 	   $val =  undef;
     }
-    $locker->release_read_lock($session);
     return $val;
 }
 
 sub session_created {
     my ($rid, $session, $var) = @_;
-    my $locker = new Apache::Session::Lock::File;
     my $val;
-    $locker->acquire_read_lock($session);
 
     if(exists $session->{$rid} && exists $session->{$rid}->{$var}) {
 	$val =  $session->{$rid}->{$var.'_created'};
     } else {
 	$val =  undef;
     }
-    $locker->release_read_lock($session);
     return $val;
 }
 
@@ -270,8 +255,6 @@ sub session_defined {
 
 sub session_delete {
     my ($rid, $session, $var) = @_;
-    my $locker = new Apache::Session::Lock::File;
-    $locker->acquire_write_lock($session);
     # timestamp session to ensure it gets written back
     my $dt = DateTime->now->epoch;
     $session->{'_timestamp'} = $dt;
@@ -280,7 +263,6 @@ sub session_delete {
 	delete $session->{$rid}->{$var};
 	delete $session->{$rid}->{$var.'_created'};
     }
-    $locker->release_write_lock($session);
 }
 
 

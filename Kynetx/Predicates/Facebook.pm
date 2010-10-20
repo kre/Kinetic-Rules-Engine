@@ -730,6 +730,12 @@ sub process_oauth_callback {
     set_auth_tokens( $r, $method, $rid, $session, NAMESPACE );
     my $callback_hash = parse_callback( $r, $method, $rid, NAMESPACE );
     my $req_info = $callback_hash->{'req_info'};
+    my $session_lock = "lock-" . session_id($session);
+    if ($req_info->{'_lock'}->lock($session_lock)) {
+        $logger->debug("Session lock acquired for $session_lock");
+    } else {
+        $logger->warn("Session lock request timed out for ",sub {Dumper($rid)});
+    }
     if ( $rid ne $callback_hash->{'rid'} ) {
         $logger->warn( "Callback rid mis-match, expected: ",
                        $rid, " got: ", $callback_hash->{'rid'} );
@@ -752,7 +758,7 @@ sub process_oauth_callback {
     if ($caller ne $redirect) {
         $logger->debug("Unable to redirect from $redirect to $caller");
     }
-    session_cleanup($session);
+    session_cleanup($session,$req_info);
 }
 
 sub test_response {
