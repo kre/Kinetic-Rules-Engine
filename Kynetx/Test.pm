@@ -2,33 +2,33 @@ package Kynetx::Test;
 # file: Kynetx/Test.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use strict;
 use warnings;
 
@@ -36,6 +36,7 @@ use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Log::Log4perl qw(get_logger :levels);
+use IPC::Lock::Memcached;
 
 use Kynetx::Environments qw/:all/;
 use Kynetx::Memcached qw/:all/;
@@ -45,7 +46,7 @@ use Kynetx::Configure qw/:all/;
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 getkrl
 trim
@@ -105,8 +106,14 @@ sub gen_req_info {
     $req_info->{'rid'} = $rid;
     $req_info->{'param_names'} = ['msg','caller'];
     $req_info->{'msg'} = 'Hello World!';
+    my $memservers = Kynetx::Configure::get_config('MEMCACHE_SERVERS');
+    my $patience = Kynetx::Configure::get_config("LOCK_PATIENCE");
+    $req_info->{'_lock'} = IPC::Lock::Memcached->new({
+        "memcached_servers" => $memservers,
+        "patience" => $patience
+    });
 
-    
+
 
     foreach my $k (keys %{ $options}) {
       $req_info->{$k} = $options->{$k};
@@ -117,7 +124,7 @@ sub gen_req_info {
 
 sub gen_rule_env {
   my($options) = @_;
-    
+
   my $rule_env = empty_rule_env();
 
   $rule_env =  extend_rule_env(
@@ -127,7 +134,7 @@ sub gen_rule_env {
 
   $rule_env = extend_rule_env('store',{
 				       "store"=> {
-						  "book"=> [ 
+						  "book"=> [
 							    {
 							     "category"=> "reference",
 							     "author"=> "Nigel Rees",
@@ -140,7 +147,7 @@ sub gen_rule_env {
 									  10
 									 ]
 							    },
-							    { 
+							    {
 							     "category"=> "fiction",
 							     "author"=> "Evelyn Waugh",
 							     "title"=> "Sword of Honour",
@@ -214,7 +221,7 @@ sub gen_app_session {
     # NOTE: NONE OF THIS WORKS!!!
 
     # set up app session, the place where app vars store data
-    $req_info->{'appsession'} = eval { 
+    $req_info->{'appsession'} = eval {
 	# since we generate from the RID, we get the same one...
 	my $key = Digest::MD5::md5_hex($rid);
 	$logger->debug("Key for $rid is $key");
@@ -253,9 +260,9 @@ sub mk_config_string {
     my $v = (ref $h->{$k} eq 'HASH' && defined $h->{$k}->{'type'}) ?
       $h->{$k} :
       Kynetx::Expressions::typed_value($h->{$k});
-    push(@items, 
+    push(@items,
 	 Kynetx::JavaScript::gen_js_hash_item(
-                        $k, 
+                        $k,
 			$v)
            );
     }

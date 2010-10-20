@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 
 use lib qw(/web/lib/perl);
 use strict;
@@ -56,14 +56,14 @@ my $meta_defs = <<_META_;
         author "$app_author"
         description <<
 Tutorial for Amazon Module             >>
-        logging on        
+        logging on
 _META_
 # test choose_action and args
 
 my $my_req_info = Kynetx::Test::gen_req_info($rid);
 
 # these are KRE generic consumer tokens
-$my_req_info->{$rid.':key:amazon'} = 
+$my_req_info->{$rid.':key:amazon'} =
   {secret_key => $dev_secret,
    token => $dev_token
   };
@@ -98,7 +98,7 @@ my @lookup_args=();
 my @widget_args=();
 my $canned_list;
 
-# 
+#
 # Parser validations
 #
 my $krl_amazon =<<_KRL_;
@@ -116,7 +116,7 @@ ruleset amz_10 {
         author "$app_author"
         description <<
 Tutorial for Amazon Module             >>
-        logging on        
+        logging on
       $krl_amazon
 
     }
@@ -125,7 +125,7 @@ Tutorial for Amazon Module             >>
 
 
         pre {
-    }     
+    }
 
         float("absolute", "top: 10px", "right: 10px",
               "/cgi-bin/weather.cgi?city=" + city + "&tc=" + tc);
@@ -185,93 +185,93 @@ push(@lookup_args,$args);
 
 $args = [{
     'item_id'=>'B00008OE6I',
-    'response_group' => 'ItemIds',    
+    'response_group' => 'ItemIds',
 }];
 push(@lookup_args,$args);
 
 $args = [{
     'item_id'=>'B00008OE6I',
-    'response_group' => ['OfferSummary','ItemIds'],   
+    'response_group' => ['OfferSummary','ItemIds'],
 }];
 push(@lookup_args,$args);
 
 $args = [{
     'item_id'=>'B00008OE6I',
-    'response_group' => ['Accessories'],   
+    'response_group' => ['Accessories'],
 }];
 push(@lookup_args,$args);
 
 $args = [{
     'item_id'=>'B00008OE6I',
-    'response_group' => ['BrowseNodes'],   
+    'response_group' => ['BrowseNodes'],
 }];
 push(@lookup_args,$args);
 
 $args = [{
     'item_id'=>'B00008OE6I',
-    'response_group' => ['EditorialReview'],   
+    'response_group' => ['EditorialReview'],
 }];
 push(@lookup_args,$args);
 
 $args = [{
     'item_id'=>'B00008OE6I',
-    'response_group' => ['Images'],   
+    'response_group' => ['Images'],
 }];
 push(@lookup_args,$args);
 
 $args = [{
     'item_id'=>'B00008OE6I',
-    'response_group' => ['ItemAttributes'],   
+    'response_group' => ['ItemAttributes'],
 }];
 push(@lookup_args,$args);
 $args = [{
     'item_id'=>'B00008OE6I',
-    'response_group' => ['ItemIds'],   
-}];
-push(@lookup_args,$args);
-
-$args = [{
-    'item_id'=>'B00008OE6I',
-    'response_group' => ['Large'],   
+    'response_group' => ['ItemIds'],
 }];
 push(@lookup_args,$args);
 
 $args = [{
     'item_id'=>'B00008OE6I',
-    'response_group' => ['ListmaniaLists'],   
+    'response_group' => ['Large'],
 }];
 push(@lookup_args,$args);
 
 $args = [{
     'item_id'=>'B00008OE6I',
-    'response_group' => ['Medium'],   
+    'response_group' => ['ListmaniaLists'],
 }];
 push(@lookup_args,$args);
 
 $args = [{
     'item_id'=>'B00008OE6I',
-    'response_group' => ['MerchantItemAttributes'],   
+    'response_group' => ['Medium'],
+}];
+push(@lookup_args,$args);
+
+$args = [{
+    'item_id'=>'B00008OE6I',
+    'response_group' => ['MerchantItemAttributes'],
 }];
 push(@lookup_args,$args);
 
 
 $args = [{
     'item_id'=>'B001ET5U92',
-    'response_group' => ['OfferFull'],   
+    'response_group' => ['OfferFull'],
 }];
 push(@lookup_args,$args);
 
 
 $args = [{
     'item_id'=>'B001ET5U92',
-    'response_group' => ['Offers'],   
+    'response_group' => ['Offers'],
 }];
 push(@lookup_args,$args);
 
 
 $args = [{
     'item_id'=>'B000UYN9QS',
-    'response_group' => ['OfferSummary'],   
+    'response_group' => ['OfferSummary'],
 }];
 push(@lookup_args,$args);
 
@@ -279,81 +279,81 @@ push(@lookup_args,$args);
 $args = [{
     'item_id'=>'B000V9CUP8',
     'relationshiptype' => 'Tracks',
-    'response_group' => ['RelatedItems'],   
+    'response_group' => ['RelatedItems'],
 }];
 push(@lookup_args,$args);
 
 
 $args = [{
     'item_id'=>'B00008OE6I',
-    'response_group' => ['Reviews'],   
+    'response_group' => ['Reviews'],
 }];
 push(@lookup_args,$args);
 
 
 $args = [{
     'item_id'=>'B00008OE6I',
-    'response_group' => ['SalesRank'],   
+    'response_group' => ['SalesRank'],
 }];
 push(@lookup_args,$args);
 
 
 $args = [{
     'item_id'=>'B00008OE6I',
-    'response_group' => ['Similarities'],   
+    'response_group' => ['Similarities'],
 }];
 push(@lookup_args,$args);
 
 
 $args = [{
     'item_id'=>'0316769177',
-    'response_group' => ['Subjects'],   
+    'response_group' => ['Subjects'],
 }];
 push(@lookup_args,$args);
 
 
 $args = [{
     'item_id'=>'B00008OE6I',
-    'response_group' => ['Tags'],   
+    'response_group' => ['Tags'],
 }];
 push(@lookup_args,$args);
 
 
 $args = [{
     'item_id'=>'B00008OE6I',
-    'response_group' => ['TagsSummary'],   
+    'response_group' => ['TagsSummary'],
 }];
 push(@lookup_args,$args);
 
 
 $args = [{
     'item_id'=>'B0002PUHSI',
-    'response_group' => ['Tracks'],   
+    'response_group' => ['Tracks'],
 }];
 push(@lookup_args,$args);
 
 
 $args = [{
     'item_id'=>'B0009U7ROI',
-    'response_group' => ['Variations'],   
+    'response_group' => ['Variations'],
 }];
 push(@lookup_args,$args);
 
 $args = [{
     'item_id'=>'B0009U7ROI',
-    'response_group' => ['VariationImages'],   
+    'response_group' => ['VariationImages'],
 }];
 push(@lookup_args,$args);
 
 $args = [{
     'item_id'=>'B0009U7ROI',
-    'response_group' => ['VariationMinimum'],   
+    'response_group' => ['VariationMinimum'],
 }];
 push(@lookup_args,$args);
 
 $args = [{
     'item_id'=>'B0009U7ROI',
-    'response_group' => ['VariationSummary'],   
+    'response_group' => ['VariationSummary'],
 }];
 push(@lookup_args,$args);
 
@@ -370,7 +370,7 @@ $args = [{
     'response_group' => ['EditorialReview','Tags'],
     'review_page' => 2,
     'tag_page' => 3,
-    
+
 }];
 push(@lookup_args,$args);
 
@@ -379,7 +379,7 @@ $args = [{
     'idtype' => 'ISBN',
     'condition' => 'All',
     'merchantid' => 'All',
-    'response_group' => ['Offers'],  
+    'response_group' => ['Offers'],
 }];
 push(@lookup_args,$args);
 
@@ -391,9 +391,9 @@ foreach my $case (@lookup_args) {
         'amz_test','amazon','item_lookup',$case);
     my $good = Kynetx::Predicates::Amazon::good_response($ds);
     if (! $good) {
-        my $error = Kynetx::Predicates::Amazon::get_error_msg($ds); 
+        my $error = Kynetx::Predicates::Amazon::get_error_msg($ds);
         $logger->warn("Error: ", sub {Dumper($error)});
-        $logger->warn("Args: ",sub {Dumper(Kynetx::Predicates::Amazon::get_request_args($ds))});        
+        $logger->warn("Args: ",sub {Dumper(Kynetx::Predicates::Amazon::get_request_args($ds))});
     }else {
         $logger->debug("Good result: ", sub {Dumper(Kynetx::Json::astToJson($ds))});
     }
@@ -404,7 +404,7 @@ foreach my $case (@lookup_args) {
 
 
 
-session_cleanup($session); 
+session_cleanup($session);
 
 done_testing( int(@lookup_args));
 

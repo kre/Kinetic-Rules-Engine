@@ -114,6 +114,9 @@ sub handler {
     $r->subprocess_env( METHOD => $method );
 
     my $req_info = Kynetx::Request::build_request_env( $r, $method, $rid );
+    # Did not insert lock here since these functions don't seem to be
+    # consumers of persistent variables
+
     $req_info->{'kynetx_app_version'} = $version || 'prod';
     Kynetx::Request::log_request_env( $logger, $req_info );
 

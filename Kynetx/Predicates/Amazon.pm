@@ -48,21 +48,21 @@ use Kynetx::Util qw(:all);
 use Kynetx::Configure qw/:all/;
 use Kynetx::JSONPath qw/:all/;
 use Kynetx::Predicates::Amazon::RequestSignatureHelper;
-use Kynetx::Predicates::Amazon::ItemSearch;  
-use Kynetx::Predicates::Amazon::ItemLookup; 
+use Kynetx::Predicates::Amazon::ItemSearch;
+use Kynetx::Predicates::Amazon::ItemLookup;
 #use Kynetx::Predicates::Amazon::Widget;
 
-use Exporter; 
+use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 our $VERSION = 1.00;
-our @ISA     = qw(Exporter); 
+our @ISA     = qw(Exporter);
 
 # put exported names inside the "qw"
 our %EXPORT_TAGS = (
     all => [
         qw(
-        search 
+        search
         get_parameters
         )
     ]
@@ -74,11 +74,11 @@ use constant LOCALE => 'us';
 
 my %predicates = (
     # search predicates
-    
+
 );
 
 my $actions = {
-    
+
 };
 
 sub get_actions {
@@ -127,8 +127,8 @@ sub eval_amazon {
     $logger->trace( "search: req:", sub { Dumper($req_info) } );
     my $secret = get_amazon_tokens($req_info);
     $a_request->{'Service'} = 'AWSECommerceService';
-    $a_request->{'Version'} = '2009-03-31';
-    
+    $a_request->{'Version'} = '2010-09-01';
+
     if ($function eq 'item_search') {
         $built = Kynetx::Predicates::Amazon::ItemSearch::build($a_request,$a_args,$locale);
     } elsif ($function eq 'item_lookup') {
@@ -139,7 +139,7 @@ sub eval_amazon {
         #return $widget;
         return '';
     }
-    
+
     if (mis_error($built)) {
         merror($built,"Unable to build Amazon request (".$function.")");
         $logger->warn("Poorly formed request: ", sub {Dumper($args)});
@@ -147,9 +147,9 @@ sub eval_amazon {
         $logger->trace("fail detail: ", $built->{'TRACE'} || '');
         return [];
     }
-    
-    $logger->trace("send this query: ", sub {Dumper($a_request)});  
-    $a_response = request($locale,$secret,$a_request); 
+
+    $logger->trace("send this query: ", sub {Dumper($a_request)});
+    $a_response = request($locale,$secret,$a_request);
 }
 
 
@@ -183,7 +183,7 @@ sub request {
     my $helper = new Kynetx::Predicates::Amazon::RequestSignatureHelper(
         'AWSAccessKeyId' => $secret->{'token'},
         'AWSSecretKey' => $secret->{'secret_key'},
-        'EndPoint' => $endpoint,      
+        'EndPoint' => $endpoint,
     );
 
     # Sign the request
@@ -193,7 +193,7 @@ sub request {
     my $queryString = $helper->canonicalize($signedRequest);
     my $url = "http://" . $endpoint . "/onca/xml?" . $queryString;
     $logger->debug("Sending request to URL: $url");
-    
+
     $content = Kynetx::Memcached::get_remote_data($url,120,$memcached_key);
     my $converted = Kynetx::Json::xmlToJson($content);
     Kynetx::Json::collapse($converted);
@@ -204,7 +204,7 @@ sub request {
 sub get_request_key {
     my ($request_hash) = @_;
     my @parts = ();
-        
+
     while (my ($k, $v) = each %$request_hash) {
         my $x = escape($k) . "=" . escape($v);
         push @parts, $x;
@@ -212,7 +212,7 @@ sub get_request_key {
 
     my $out = join ("&", sort @parts);
     return $out;
-    
+
 }
 
 # stolen from RequestSignatureHelp::escape
@@ -223,9 +223,9 @@ sub escape {
 
 sub get_locale{
     my ($args) = @_;
-    my $amazon_config = Kynetx::Configure::get_config('LOCALE','AMAZON');    
+    my $amazon_config = Kynetx::Configure::get_config('LOCALE','AMAZON');
     my $logger = get_logger();
-    $logger->trace("get_locale: ", ref $args, " ",sub {Dumper($args)});    
+    $logger->trace("get_locale: ", ref $args, " ",sub {Dumper($args)});
     my $locale;
     if (! defined $args->{'locale'}) {
         $locale = DEFAULT_LOCALE;
@@ -279,7 +279,7 @@ sub get_request_args {
     my $pattern = '$..ItemSearchRequest';
     my $result = jsonlookup($amz_response,$pattern);
     return $result;
-    
+
 }
 
 sub total_items {
@@ -287,7 +287,7 @@ sub total_items {
     my $pattern = '$..TotalResults';
     my $result = jsonlookup($amz_response,$pattern);
     return $result->[0];
-    
+
 }
 
 sub total_pages {
@@ -295,7 +295,7 @@ sub total_pages {
     my $pattern = '$..TotalPages';
     my $result = jsonlookup($amz_response,$pattern);
     return $result->[0];
-    
+
 }
 
 sub get_ASIN {
@@ -303,7 +303,7 @@ sub get_ASIN {
     my $pattern = '$..ASIN';
     my $result = jsonlookup($amz_response,$pattern);
     return $result;
-     
+
 }
 
 
