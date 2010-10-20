@@ -85,20 +85,20 @@ sub get_rules_from_repository{
 
     if ($ruleset &&
 	$ruleset->{'optimization_version'} &&
-	$ruleset->{'optimization_version'} >= Kynetx::Rules::get_optimization_version() &&
+	$ruleset->{'optimization_version'} == Kynetx::Rules::get_optimization_version() &&
 	! $text) {
       $logger->debug("Using cached ruleset for $rid ($version) with key ", make_ruleset_key($rid, $version), " & optimization version ", $ruleset->{'optimization_version'} );
 
 
       return $ruleset;
-    } else {
-      if ($ruleset &&
-	$ruleset->{'optimization_version'} &&
-	$ruleset->{'optimization_version'} < Kynetx::Rules::get_optimization_version()) {
-	$localparsing = 1;
-      }
-      
     }
+#     if ($ruleset &&
+# 	$ruleset->{'optimization_version'} &&
+# 	$ruleset->{'optimization_version'} < Kynetx::Rules::get_optimization_version()) {
+#       $localparsing = 1;
+#     }
+# let's force local parsing...
+    $localparsing = 1;
 
     my $ext;
     my $krl;
@@ -147,11 +147,11 @@ sub get_rules_from_repository{
       $req->authorization_basic($username, $passwd);
 
       my $res = $ua->request($req);
-      $logger->debug("URL: ",$rs_url);
+#      $logger->debug("URL: ",$rs_url);
 
-      my $json;
+      my $result;
       if($res->is_success) {
-	$json = encode("UTF-8",$res->decoded_content);
+	$result = encode("UTF-8",$res->decoded_content);
       } else {
 
 	$logger->debug("Error retrieving ruleset: ",  $res->status_line);
@@ -161,14 +161,15 @@ sub get_rules_from_repository{
 	Kynetx::Memcached::clr_parsing_flag($memd, $rs_key);
 	return make_empty_ruleset($rid, $rs_url);
       }
+
       if ($text) {
 	$logger->debug("Clearing parsing semaphore for $rs_key");
 	Kynetx::Memcached::clr_parsing_flag($memd, $rs_key);
-        return $json;
+        return $result;
       } elsif ($localparsing) {
-	$ruleset = Kynetx::Parser::parse_ruleset($json);
+	$ruleset = Kynetx::Parser::parse_ruleset($result);
       } else {
-	$ruleset = jsonToAst($json);
+	$ruleset = jsonToAst($result);
       }
 
     } else { # default is svn

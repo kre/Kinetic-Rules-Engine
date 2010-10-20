@@ -110,13 +110,7 @@ SKIP: {
     my $site = 'cs_test'; # the test site.  
 
     $logger->debug("Testing that rules are identical");
-#    eval {
-
-	$rules0 = Kynetx::Repository::get_rules_from_repository($site, $req_info);
-
-	
- #   };
- #   skip "Can't get rules for $site", $how_many if $@;
+    $rules0 = Kynetx::Repository::get_rules_from_repository($site, $req_info);
 
     $site = 'cs_test'; # the test site.  
     eval {
