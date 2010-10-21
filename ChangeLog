@@ -1,3 +1,8 @@
+2010-10-21  Web-san  <web@dev11.kobj.net>
+
+   * Kynetx/Actions.pm (build_js_load): make null action lists empty
+   * Kynetx/Repository.pm (get_rules_from_repository): Added Dumper and RID to error message
+
 2010-10-20  Phil Windley  <pjw@kynetx.com>
 
    * Kynetx/Repository.pm (get_rules_from_repository): Forcing local

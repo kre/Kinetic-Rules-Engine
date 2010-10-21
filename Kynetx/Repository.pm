@@ -40,6 +40,10 @@ use Encode;
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
+
 use Kynetx::Memcached qw(:all);
 use Kynetx::Json qw(:all);
 use Kynetx::Predicates::Page;
@@ -249,9 +253,9 @@ sub get_rules_from_repository{
       if ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid') {
 	$logger->error("Ruleset $rid not found");
       } elsif (defined $ruleset->{'error'}) {
-	$logger->error("Ruleset parsing error ", sub {Dumper ($ruleset->{'error'})});
+	$logger->error("Ruleset parsing error for $rid: ", sub {Dumper ($ruleset->{'error'})});
       } else {
-	$logger->error("Unspecified ruleset repository error");
+	$logger->error("Unspecified ruleset repository error for $rid");
       }
     }
     return $ruleset;

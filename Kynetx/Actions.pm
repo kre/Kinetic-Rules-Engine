@@ -534,13 +534,16 @@ sub build_js_load {
     $js .= Kynetx::JavaScript::gen_js_mk_cb_func($cb_func_name,$cb);
 
 
+    # if it's null, we want an empty list
+    $rule->{'actions'} ||= [];
+
     my $action_num = int(@{ $rule->{'actions'} });
 
     $logger->debug('blocktype is ' . $rule->{'blocktype'});
     $logger->debug("actions list contains $action_num actions");
     if ($rule->{'blocktype'} eq 'every') {
 	# generate JS for every action
-	foreach my $action_expr (@{ $rule->{'actions'} }) {
+	foreach my $action_expr (@{ $rule->{'actions'}  }) {
 	    # tack on this loop's js
 	    if(defined $action_expr->{'action'}) {
 		$js .= build_one_action($action_expr,
