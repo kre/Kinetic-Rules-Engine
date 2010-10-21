@@ -220,6 +220,7 @@ sub process_schedule {
     # set by eval_control_statement in Actions.pm
     last if $req_info->{$req_info->{'rid'}.':__KOBJ_EXEC_LAST'};
 
+    $rule->{'state'} ||= 'active';
 
     my $this_rule_env;
     $logger->debug("Rule $rule_name is " . $rule->{'state'});

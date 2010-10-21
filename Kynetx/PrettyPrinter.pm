@@ -394,7 +394,9 @@ sub pp_rules {
     
     my $o = "";
     foreach my $r ( @{$rules}) {
-	$o .= $beg . "rule " . $r->{'name'} . " is " . $r->{'state'} . " {\n";
+	$o .= $beg . "rule " . $r->{'name'} ;
+	$o .= " is " . $r->{'state'} if $r->{'state'};
+	$o .= " {\n";
 
 	$o .= pp_rule_body($r, $indent);
 

@@ -305,9 +305,7 @@ rule
 }
  	: 	must_be["rule"]
 		name=rule_name
-		must_be["is"]
-
-		ait=must_be_one[sar("active","inactive","test")]
+        (must_be["is"] ait=must_be_one[sar("active","inactive","test")])?
 		LEFT_CURL
  		  select=VAR { cn($select.text, sar("select"),input); } (ptu=using|ptw=when) (f=foreach{ fors.add($f.result);})*
  		  pb=pre_block? SEMI? eb=emit_block? SEMI? (action[actions_result] SEMI?)* cb=callbacks? SEMI? postb=post_block? SEMI?
@@ -359,8 +357,6 @@ rule
 
 		}
 ;
-
-
 
 
 post_block returns[HashMap result]
