@@ -40,6 +40,7 @@ use DateTime;
 use Log::Log4perl qw(get_logger :levels);
 use Cache::Memcached;
 use JSON::XS;
+use Data::Dumper;
 
 use Kynetx::Events;
 use Kynetx::Rules qw(:all);
@@ -49,6 +50,7 @@ use Kynetx::Memcached qw(:all);
 use Kynetx::Console qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Configure qw(:all);
+use Kynetx::Directives;
 
 
 use constant DEFAULT_TEMPLATE_DIR => Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
@@ -99,6 +101,8 @@ sub handler {
 	describe_ruleset($r, $method, $rid);
     } elsif($method eq 'version' ) {
 	show_build_num($r, $method, $rid);
+    } elsif($method eq 'locktest') {
+        lock_handle($r, $method, $rid, $eid);
 
     } elsif($method eq 'twitter_callback' ) {
 	Kynetx::Modules::Twitter::process_oauth_callback($r, $method, $rid);
@@ -133,6 +137,74 @@ sub handler {
 
 1;
 
+sub lock_handle {
+    my ($r, $method, $rid, $delay) = @_;
+    my $tmp;
+    my $msg = "Test Lock Request";
+    my $logger = get_logger();
+    my $var = "DonTerasse";
+    my $var2 = "time";
+    my $srid = "sandbox";
+    $delay = $delay || 1;
+    my $cookie = $r->headers_in->{'Cookie'};
+    $cookie =~ s/^.*[;]?SESSION_ID=(\w*)[;]?.*$/$1/ if(defined $cookie);
+
+    $r->content_type('text/html');
+    print "<title>$msg</title><h1>$rid</h1>";
+
+    $r->subprocess_env(START_TIME => Time::HiRes::time);
+    my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
+    my $prefix = time;
+    # get a session
+    my $session = process_session($r);
+    my $session_lock = "lock-".session_id($session);
+    print "<p><strong>Using $cookie and ",session_id($session),"</strong></p>";
+    print "<p>$prefix</p>";
+
+
+
+    Kynetx::Session::session_store($srid,$session,$var2,$prefix);
+    Kynetx::Session::session_store($srid,$session,$var,"$prefix $rid");
+
+
+    my $js = "";
+    my $status = "";
+
+    if ($req_info->{'_lock'}->lock($session_lock)) {
+        $logger->debug("Session lock acquired for $session_lock");
+        $status = "true";
+    } else {
+        $logger->warn("Session lock request timed out for ",sub {Dumper($rid)});
+        $status = "false";
+    }
+    my $counter = Kynetx::Session::session_get($srid,$session,"counter");
+    $counter = $counter || 0;
+    my $got_lock = time;
+    print "<p>$got_lock Lock request ($status)</p>";
+    my $sess_val = "$rid $got_lock bink!";
+    Kynetx::Session::session_store($srid,$session,$var,$sess_val);
+    $logger->debug("Waiting----------------------------------------");
+    my $opts;
+    for(my $i = 0;$i<$delay;$i++) {
+        sleep(5);
+        my $val = Kynetx::Session::session_get($srid,$session,$var);
+        $opts->{$i . "_"} = $val;
+
+    }
+    $tmp = Kynetx::Session::session_get($srid,$session,$var2);
+    Kynetx::Directives::send_directive($req_info,$tmp,$opts);
+    Kynetx::Session::session_store($srid,$session,$var,"$rid Endy $tmp");
+    Kynetx::Session::session_store($srid,$session,"counter",++$counter);
+
+    my $enda = Kynetx::Session::session_get($srid,$session,$var);
+    my $endb = Kynetx::Session::session_get($srid,$session,$var2);
+    Kynetx::Response::respond($r, $req_info, $session, $js, "Ruleset");
+    print "<table><tr><td>$enda</td><td>$endb</td></tr></table>";
+    Kynetx::Session::session_cleanup($session,$req_info);
+    my $leftovers = Kynetx::Memcached::check_cache($session_lock);
+    print "<p>Counter (",$counter,")</p>";
+}
+
 
 sub flush_ruleset_cache {
     my ($r, $method, $rid) = @_;
@@ -140,7 +212,7 @@ sub flush_ruleset_cache {
     my $logger = get_logger();
 
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
-
+    # no locking
 
     # default to production for svn repo
     # defaults to production when no version specified
@@ -169,7 +241,7 @@ sub describe_ruleset {
 
 
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
-
+    # no locking
 
     my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
 

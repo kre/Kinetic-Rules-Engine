@@ -3,33 +3,33 @@ package Kynetx::Predicates::KPDS;
 # file: Kynetx/Predicates/KPDS.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 
 use strict;
 use warnings;
@@ -58,7 +58,7 @@ our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 eval_kpds
 ) ]);
@@ -72,7 +72,7 @@ use constant BASE_KPDS_URL => 'http://kpds.kynetx.com/infobase/';
 
 #Request Token URL  http://accounts-staging.kynetx.com/oauth/request_token
 #Access Token URL http://accounts-staging.kynetx.com/oauth/access_token
-#Authorize URL http://accounts-staging.kynetx.com/oauth/authorize 
+#Authorize URL http://accounts-staging.kynetx.com/oauth/authorize
 
 my $urls = {request_token_url => 'https://accounts.kynetx.com/oauth/request_token',
 	    access_token_url  => 'https://accounts.kynetx.com/oauth/access_token',
@@ -122,11 +122,11 @@ sub authorized {
 # $logger->debug("Session in authorized: ", sub { Dumper $session});
 
  my $nt = Kynetx::OAuth->new(NAMESPACE, $req_info, $session, $urls);
- 
+
  if ($nt->authorized()) {
 
    my $url = BASE_KPDS_URL . '7795';
-  
+
 
    $logger->debug("Trying $url");
 
@@ -142,13 +142,13 @@ sub authorized {
      $logger->debug("Got ", $response->content);
      return 1;
    }
-   
-   
+
+
  } else {
    return  0;
  }
- 
- 
+
+
 }
 $funcs->{'authorized'} = \&authorized;
 
@@ -161,15 +161,15 @@ sub authorize {
 
  my $rid = $req_info->{'rid'};
 
- my $base_cb_url = 'http://' . 
+ my $base_cb_url = 'http://' .
                    Kynetx::Configure::get_config('OAUTH_CALLBACK_HOST').
-   	           ':'.Kynetx::Configure::get_config('OAUTH_CALLBACK_PORT') . 
+   	           ':'.Kynetx::Configure::get_config('OAUTH_CALLBACK_PORT') .
 		   "/ruleset/kpds_callback/$rid?";
 
  my $version = $req_info->{'rule_version'} || 'prod';
 
  my $callback_url = mk_url($base_cb_url,
-		   {'caller',$req_info->{'caller'}, 
+		   {'caller',$req_info->{'caller'},
 		    "$rid:kynetx_app_version", $version});
 
  $logger->debug("requesting authorization URL with oauth_callback => $callback_url");
@@ -182,7 +182,7 @@ sub authorize {
    $logger->warn("request for authorization URL from " . $urls->{'authorization_url'} ." failed: ", $@);
    return '';
  }
- 
+
  $nt->store_request_secret($nt->request_token_secret);
 
  $logger->debug("Got $auth_url ... sending user an authorization invitation");
@@ -211,7 +211,7 @@ EOF
 		   Kynetx::JavaScript::mk_js_str($msg));
 
  return $js
- 
+
 }
 
 sub process_oauth_callback {
@@ -222,6 +222,12 @@ sub process_oauth_callback {
   # we have to contruct a whole request env and session
   my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
   my $session = process_session($r);
+    my $session_lock = "lock-" . session_id($session);
+    if ($req_info->{'_lock'}->lock($session_lock)) {
+        $logger->debug("Session lock acquired for $session_lock");
+    } else {
+        $logger->warn("Session lock request timed out for ",sub {Dumper($rid)});
+    }
 
   my $req = Apache2::Request->new($r);
   my $request_token = $req->param('oauth_token');
@@ -239,7 +245,7 @@ sub process_oauth_callback {
 
 
   # exchange the request token for access tokens
-  my ($access_token, $access_token_secret) = 
+  my ($access_token, $access_token_secret) =
     $nt->request_access_token(verifier => $verifier);
 
 
@@ -254,11 +260,11 @@ sub process_oauth_callback {
      });
 
   $logger->debug("Session after store: ", sub { Dumper $session});
- 
+
 
   $logger->debug("redirecting newly authorized tweeter to $caller");
   $r->headers_out->set(Location => $caller);
-  session_cleanup($session);
+  session_cleanup($session,$req_info);
 
 }
 
@@ -353,7 +359,7 @@ sub eval_kpds {
 	$logger->warning("Bad response from KPDS: $@");
 	return;
       }
-      
+
 
       unless ($response->is_success) {
 	$logger->warn("Failed to get authorized content from $url");
@@ -379,7 +385,7 @@ sub eval_kpds {
 
     return $req_info->{'kpds'}->{$function};
 
-    
+
 
   }
 }

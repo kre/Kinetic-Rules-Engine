@@ -2,33 +2,33 @@ package Kynetx::Callbacks;
 # file: Kynetx/Callbacks.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 use strict;
 use warnings;
 
@@ -38,7 +38,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 process_callbacks
 ) ]);
@@ -66,7 +66,7 @@ sub handler {
     config_logging($r);
 
     Log::Log4perl::MDC->put('site', '[global]');
-    Log::Log4perl::MDC->put('rule', '[callbacks]'); 
+    Log::Log4perl::MDC->put('rule', '[callbacks]');
 
     $r->content_type('text/javascript');
 
@@ -87,7 +87,7 @@ sub handler {
 
     $logger->debug("__FLUSH__");
 
-    return Apache2::Const::OK; 
+    return Apache2::Const::OK;
 }
 
 
@@ -108,6 +108,12 @@ sub process_action {
 
     # build initial env
     my $req_info = Kynetx::Request::build_request_env($r, 'callback', $rids);
+    my $session_lock = "lock-" . session_id($session);
+    if ($req_info->{'_lock'}->lock($session_lock)) {
+        $logger->debug("Session lock acquired for $session_lock");
+    } else {
+        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
+    }
 
 #    my $ug = new Data::UUID;
 #    my $path_info = $r->uri;
@@ -129,7 +135,7 @@ sub process_action {
 
 #    Kynetx::Request::log_request_env($logger, $req_info);
 
-    process_callbacks(get_ruleset($req_info->{'rid'}, 
+    process_callbacks(get_ruleset($req_info->{'rid'},
 				  $req_info),
 		      $req->param('rule'),
 		      $req->param('sense'),
@@ -137,7 +143,7 @@ sub process_action {
 		      $req->param('element'),
 		      $req_info,
 		      $session) if $req_info->{'rid'};
-		      
+
 
 
     # store these for later logging
@@ -172,7 +178,7 @@ sub process_action {
     }
 
     $logger->debug("Finish time: ", time, " Start time: ", $r->subprocess_env('START_TIME'));
-   
+
     if($req->param('url')){
 	my $url = $req->param('url');
 	$logger->debug("Redirecting to ", $url);
@@ -183,7 +189,7 @@ sub process_action {
 
     $logger->info("Processing callback for site " . $req_info->{'rid'} . " and rule " . $req->param('rule'));
 
-    $r->subprocess_env(TOTAL_SECS => Time::HiRes::time - 
+    $r->subprocess_env(TOTAL_SECS => Time::HiRes::time -
 	$r->subprocess_env('START_TIME'));
 
 }
@@ -212,15 +218,15 @@ sub process_callbacks {
 		   $cb->{'value'} eq $value) {
 		    $logger->debug("Evaluating callback triggered persistent expr");
 #		    $logger->debug(Dumper($cb->{'trigger'}));
-		    Kynetx::Postlude::eval_persistent_expr($cb->{'trigger'}, 
-							  $session, 
+		    Kynetx::Postlude::eval_persistent_expr($cb->{'trigger'},
+							  $session,
 							  $req_info,
-							  empty_rule_env(), 
+							  empty_rule_env(),
 							  $rule_name);
 		}
 	    }
 	    last; # only one rule with that name
-	} 
+	}
     }
 
 }
