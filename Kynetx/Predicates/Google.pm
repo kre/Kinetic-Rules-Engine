@@ -290,7 +290,7 @@ sub process_oauth_callback {
     my $dname     = set_auth_tokens( $r, $method, $rid, $session );
     my $scope     = get_scope_by_display_name($dname);
     my $req_info  = Kynetx::Request::build_request_env( $r, $method, $rid );
-    my $session_lock = "lock-" . session_id($session);
+    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
     if ($req_info->{'_lock'}->lock($session_lock)) {
         $logger->debug("Session lock acquired for $session_lock");
     } else {
