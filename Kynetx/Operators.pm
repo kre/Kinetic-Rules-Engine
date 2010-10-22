@@ -56,7 +56,7 @@ eval_operator
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
-my $kobj_root = Kynetx::Configure::get_config('KOBJ_ROOT');
+my $kobj_root = Kynetx::Configure::get_config('KOBJ_ROOT') || '/web/lib/perl';
 my $oper_dir = $kobj_root . "/Kynetx/Operators";
 my @modules = <$oper_dir/*.pm>;
 my %extensions;

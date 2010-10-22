@@ -108,7 +108,7 @@ sub process_action {
 
     # build initial env
     my $req_info = Kynetx::Request::build_request_env($r, 'callback', $rids);
-    my $session_lock = "lock-" . session_id($session);
+    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
     if ($req_info->{'_lock'}->lock($session_lock)) {
         $logger->debug("Session lock acquired for $session_lock");
     } else {
@@ -156,7 +156,7 @@ sub process_action {
     $r->subprocess_env(TXN_ID => $req->param('txn_id'));
     $r->subprocess_env(CALLER => $req_info->{'caller'});
 
-    my $sid = session_id($session);
+    my $sid = Kynetx::Session::session_id($session);
     $r->subprocess_env(SID => $sid);
 
     $r->subprocess_env(IP => $req_info->{'ip'});

@@ -157,8 +157,8 @@ sub lock_handle {
     my $prefix = time;
     # get a session
     my $session = process_session($r);
-    my $session_lock = "lock-".session_id($session);
-    print "<p><strong>Using $cookie and ",session_id($session),"</strong></p>";
+    my $session_lock = "lock-".Kynetx::Session::session_id($session);
+    print "<p><strong>Using $cookie and ",Kynetx::Session::session_id($session),"</strong></p>";
     print "<p>$prefix</p>";
 
 
