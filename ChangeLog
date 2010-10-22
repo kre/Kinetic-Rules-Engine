@@ -1,5 +1,10 @@
 2010-10-21  Web-san  <web@dev11.kobj.net>
 
+   * Kynetx/Events.pm (process_event_for_rid): Allow for optional mode clause
+   * Kynetx/Console.pm (show_context): Allow for optional mode clause
+   * Kynetx/Rules.pm (process_schedule): Allow for optional mode clause
+   * Kynetx/PrettyPrinter.pm (pp_rule_body): allow for optional mode clause
+
    * Kynetx/Actions.pm (build_js_load): make null action lists empty
    * Kynetx/Repository.pm (get_rules_from_repository): Added Dumper and RID to error message
 

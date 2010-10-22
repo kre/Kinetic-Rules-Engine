@@ -201,6 +201,9 @@ sub process_event_for_rid {
 
   foreach my $rule (@{$ruleset->{'rules'}}) {
 
+    $rule->{'state'} ||= 'active';
+
+    # FIXME: this doesn't quite cover it.
     next if $rule->{'state'} eq 'inactive';
 
     Log::Log4perl::MDC->put('rule', $rule->{'name'}); # no rule for now...

@@ -110,10 +110,12 @@ sub show_context {
 
     # FIXME: too much code duplicated between here and Rules.pm.  Abstract
 
+
     my %fired;
     $req_info->{'rule_count'} = 0;
     $req_info->{'selected_rules'} = [];
     foreach my $rule ( @{ $ruleset->{'rules'} } ) {
+      $rule->{'state'} ||= 'active';
       if($rule->{'state'} eq 'active' || 
 	 ($rule->{'state'} eq 'test' && 
 	  $req_info->{'mode'} && 
