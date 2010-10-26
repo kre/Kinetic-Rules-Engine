@@ -1,3 +1,8 @@
+2010-10-26  Web-san  <web@dev11.kobj.net>
+
+   * Kynetx/Events.pm (process_event_for_rid): Don't put RID in req_info; req_info isn't scoped.  
+   * Kynetx/Rules.pm (get_rule_set): Allow RID to be passed in
+
 2010-10-21  Web-san  <web@dev11.kobj.net>
 
    * Kynetx/Events.pm (process_event_for_rid): Allow for optional mode clause

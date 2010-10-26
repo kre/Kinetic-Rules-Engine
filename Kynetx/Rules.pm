@@ -148,6 +148,9 @@ sub process_schedule {
   my($req_info, $ruleset, $mjs, $gjs, $rule_env, $rid);
 
   my $current_rid = '';
+
+  $logger->debug("Schedule: ", Dumper($schedule));
+
   while (my $task = $schedule->next()) {
 
 #    $logger->debug("[task] ", sub { Dumper($task) });
@@ -658,10 +661,10 @@ sub eval_rule_body {
 
 # this returns the right rules for the caller and site
 sub get_rule_set {
-    my ($req_info, $localparsing) = @_;
+    my ($req_info, $localparsing, $rid) = @_;
 
     my $caller = $req_info->{'caller'};
-    my $rid = $req_info->{'rid'};
+    $rid ||= $req_info->{'rid'};
 
 
 

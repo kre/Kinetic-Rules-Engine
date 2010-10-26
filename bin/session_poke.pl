@@ -32,22 +32,22 @@ Log::Log4perl->easy_init($WARN);
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'h?k:r:v:';
+my $opt_string = 'h?k:s:r:';
 getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'} || $opt{'?'};
 
 my $key = $opt{'k'};
 
+
 die "You must supply a session ID\n" unless $key;
 
 my $session = process_session($r, $key);
 
-
-if ($opt{'v'} && $opt{'r'}) {
-  print Dumper(session_get($opt{'r'}, $session, $opt{'v'}));
-} else {
-  print Dumper($session);
+if ($opt{'s'} && $opt{'r'}) {
+  session_set($opt{'r'},  $session, $opt{'s'});
 }
+
+print Dumper($session);
 
 
 1;
