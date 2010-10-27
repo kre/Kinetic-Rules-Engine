@@ -249,7 +249,7 @@ _KRL_
 #    diag Dumper($krl);
 
     contains_string(encode_json(get_datasource($rule_env,$args,"twitter_search")),
-		    '{"page":1,"query":"windley","completed_in":',
+		    '{"since_id_str":"0","page":1,"query":"windley","completed_in":',
 		    "JSON twitter search");
 
 
@@ -271,7 +271,7 @@ _KRL_
 #    diag Dumper($krl);
 
     contains_string(encode_json(get_datasource($rule_env,$args,"twitter_search")),
-		    '{"page":1,"query":"kynetx","completed_in":',
+		    '{"since_id_str":"0","page":1,"query":"kynetx","completed_in":',
 		    "JSON twitter search cachable");
 
 
