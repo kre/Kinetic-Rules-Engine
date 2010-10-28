@@ -173,11 +173,18 @@ sub tie_servers {
 
 sub session_cleanup {
     my($session,$req_info) = @_;
-    if ($req_info && $req_info->{"_lock"}) {
-        $req_info->{"_lock"}->unlock;
-    }
 
+    my $logger = get_logger();
+
+    my $session_id = session_id($session);
+
+    $logger->debug("Cleaning up session");
     untie %{ $session };
+
+    if ($req_info && $req_info->{"_lock"}) {
+      $logger->debug("Session lock cleared for $session_id");
+      $req_info->{"_lock"}->unlock;
+    }
 }
 
 sub session_id {

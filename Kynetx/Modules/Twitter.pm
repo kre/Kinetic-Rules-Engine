@@ -192,7 +192,22 @@ sub authorize {
  $logger->debug("requesting authorization URL with callback_url = $callback_url");
  my $auth_url = $nt->get_authorization_url(callback => $callback_url);
 
- session_store($rid, $session, 'twitter:token_secret', $nt->request_token_secret);
+ my $token_secret = $nt->request_token_secret;
+# $logger->debug("Storing token secret $token_secret for $rid and session ", session_id($session));
+ session_store($rid, $session, 'twitter:token_secret', $token_secret);
+ my $got =  session_get($rid, $session, 'twitter:token_secret');
+# $logger->debug("Stored token secret for $rid and session ", session_id($session), " $got");
+
+ my $session_id = session_id($session);
+
+ Kynetx::Memcached::mset_cache("$session_id:$rid:twitter:token_secret", $token_secret);
+
+ # session_store($rid,$session,'foobar', "Hey Mark!!");
+
+ # my $session_id = session_id($session);
+ # # finish up
+ # untie %{ $session };
+ # $session = Kynetx::Session::tie_servers(undef,$session_id);
 
 
  $logger->debug("Got $auth_url ... sending user an authorization invitation");
@@ -227,12 +242,12 @@ sub process_oauth_callback {
   # we have to contruct a whole request env and session
   my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
   my $session = process_session($r);
-    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
-    if ($req_info->{'_lock'}->lock($session_lock)) {
-        $logger->debug("Session lock acquired for $session_lock");
-    } else {
-        $logger->warn("Session lock request timed out for ",sub {Dumper($rid)});
-    }
+  my $session_lock = "lock-" . Kynetx::Session::session_id($session);
+  if ($req_info->{'_lock'}->lock($session_lock)) {
+    $logger->debug("Session lock acquired for $session_lock");
+  } else {
+    $logger->warn("Session lock request timed out for ",sub {Dumper($rid)});
+  }
 
   my $req = Apache2::Request->new($r);
   my $request_token = $req->param('oauth_token');
@@ -246,7 +261,13 @@ sub process_oauth_callback {
   $logger->debug("Successfully created Twitter object");
 
   $nt->request_token($request_token);
-  $nt->request_token_secret(session_get($rid, $session, 'twitter:token_secret'));
+
+  my $token_secret = session_get($rid, $session, 'twitter:token_secret');
+  my $session_id = session_id($session);
+  $token_secret = check_cache("$session_id:$rid:twitter:token_secret");
+  
+
+  $nt->request_token_secret($token_secret);
 
 
   # exchange the request token for access tokens
@@ -260,6 +281,8 @@ sub process_oauth_callback {
 	$user_id,
         $screen_name
     );
+
+  session_cleanup($session);
 
   $logger->debug("redirecting newly authorized tweeter to $caller");
   $r->headers_out->set(Location => $caller);

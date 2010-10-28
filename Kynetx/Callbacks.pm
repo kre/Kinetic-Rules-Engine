@@ -192,6 +192,8 @@ sub process_action {
     $r->subprocess_env(TOTAL_SECS => Time::HiRes::time -
 	$r->subprocess_env('START_TIME'));
 
+    session_cleanup($session);
+
 }
 
 # retrieve callback info for expression
