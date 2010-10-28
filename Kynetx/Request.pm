@@ -64,6 +64,8 @@ sub build_request_env {
     my $ug = new Data::UUID;
 
     my $caller = $req->param('caller') || $r->headers_in->{'Referer'} ||  '';
+    my $cookie = $r->headers_in->{'Cookie'};
+    $cookie =~ s/^.*[;]?SESSION_ID=(\w*)[;]?.*$/$1/ if(defined $cookie);
 
     my $request_info = {
 
@@ -93,6 +95,7 @@ sub build_request_env {
         minv => 0,
 
 	txn_id => $ug->create_str(),
+	g_id => $cookie,
 
 	# directives
 	directives => [],

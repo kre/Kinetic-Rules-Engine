@@ -141,6 +141,7 @@ id
 	    rule_version => 1,
 	    title => 1,
 	    txn_id  => 1,
+	    g_id => 1,
 	    );
 
 	# FIXME: uncomment after Azigo implements ruleset changes
