@@ -83,6 +83,7 @@ use Kynetx::Modules::Email;
 use Kynetx::Modules::HTTP;
 use Kynetx::Modules::Twilio;
 use Kynetx::Modules::URI;
+use Kynetx::Modules::Address;
 
 sub eval_module {
     my ( $req_info, $rule_env, $session, $rule_name, $source, $function, $args )
