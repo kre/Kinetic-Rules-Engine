@@ -274,6 +274,7 @@ sub eval_raise_statement {
 
     my $js ='';
 
+#    $logger->debug("Event Expr: ", sub {Dumper($expr)});
     my $event_name = Kynetx::Expressions::den_to_exp(
 		     eval_expr_with_default($expr->{'event'},
 					    'foo', # default value can't be seen
@@ -373,7 +374,6 @@ sub eval_expr_with_default {
   my $val;
   if(defined $expr) {
     $val = Kynetx::Expressions::eval_expr($expr, 
-					     $default, 
 					     $rule_env, 
 					     $rule_name, 
 					     $req_info, 
