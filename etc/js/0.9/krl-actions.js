@@ -6,7 +6,7 @@ KOBJ.raise_event_action = function (uniq, event_name, config) {
 KOBJ.page_content_event = function (uniq, label, selectors, config) {
     var app = KOBJ.get_application(config.rid);
 
-    var found_data = [];
+    var found_data = {};
 
     $KOBJ.each(selectors, function(name, selector) {
         var result = $KOBJ(selector["selector"]);
@@ -18,9 +18,9 @@ KOBJ.page_content_event = function (uniq, label, selectors, config) {
             result = "invalid select type";
 
 
-        found_data.push({name: name,value:result });
+        found_data[name] = result;
     });
-    found_data.push({name: "label",value:label });
+    found_data["label"] = label;
 
 
     var all_data = {"param_data":found_data};
