@@ -353,6 +353,14 @@ rule
 				current_rule.put("pagetype",$ptw.result);
 			}
 
+
+            for(int i = 0;i< rule_block_array.size();i++)
+            {
+                if(((HashMap)rule_block_array.get(i)).get("name").equals($name.text))
+                {
+			                throw new InvalidToken("Rule names must be unique [" + $name.text + "]", input);
+                }
+            }
 			rule_block_array.add(current_rule);
 
 		}
