@@ -34,7 +34,7 @@ use Kynetx::FakeReq qw/:all/;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
-
+my $logger = get_logger();
 
 my $preds = Kynetx::Modules::Address::get_predicates();
 my @pnames = keys (%{ $preds } );
@@ -72,6 +72,12 @@ my $str = <<_EOF_;
 900 METRO CENTER BLVD
 M3-5D
 FOSTER CITY, CA 94404-2172
+_EOF_
+
+my $bstr = <<_EOF_;
+Elwood Blues
+1060 W Addison
+Chicago, IL  60613
 _EOF_
 
 $result = Kynetx::Modules::eval_module($my_req_info,
@@ -128,6 +134,23 @@ is($result,
    $exp,
    'Undefined value');
 $test_count++;
+
+diag "Okay to ignore address parse error";
+
+$result = Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       'all',
+                       [$bstr]
+                      );
+$exp = undef;
+is($result,
+   $exp,
+   'Bad Address Format');
+$test_count++;
+
 done_testing($test_count);
 
 

@@ -76,23 +76,29 @@ sub run_function {
 
     my $logger = get_logger();
     my $addr_str = $args->[0];
-    my $resp = '';
+    my $resp = undef;
     my $found;
     return $resp unless ($addr_str && ref $addr_str eq '');
     my $href = Geo::StreetAddress::US->parse_location($addr_str);
-    map {$found->{$_} = 1} keys %$href;
-    $logger->debug("Address struct: ", sub {Dumper($href)});
-    if($function eq 'all') {
-      return $href;
-    } elsif ($found->{$function}) {
-      my $result = $href->{$function};
-      if ($result) {
-          return $result;
-      } else {
-          return '';
-      }
+    if (ref $href eq "HASH") {
+        map {$found->{$_} = 1} keys %$href;
+        $logger->debug("Address struct: ", sub {Dumper($href)});
+        if($function eq 'all') {
+          return $href;
+        } elsif ($found->{$function}) {
+          my $result = $href->{$function};
+          if ($result) {
+              return $result;
+          } else {
+              return '';
+          }
+        } else {
+          $logger->warn("Unknown function '$function' called in Address library");
+        }
+
     } else {
-      $logger->warn("Unknown function '$function' called in Address library");
+        $logger->warn("Unable to parse address string: check debug for details");
+        $logger->debug("Failed address string: $addr_str");
     }
 
     return $resp;
