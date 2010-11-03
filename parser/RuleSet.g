@@ -1706,8 +1706,11 @@ meta_block
 			$string_desc = null;
 
 		}
-	 | KEY what=VAR (key_value=STRING
+	 | VAR what=VAR (key_value=STRING
 	 	| LEFT_CURL (name_value_pair[key_values] (COMMA name_value_pair[key_values])*) RIGHT_CURL) +  {
+	 	/*
+	 	This was key VAR but it was changed to VAR VAR in order to not make key reserved.
+	 	*/
 		if(!key_values.isEmpty())
 			keys_map.put($what.text,key_values);
 		else if($key_value.text != null)
@@ -2022,9 +2025,9 @@ OTHER_OPERATORS
  FALSE :'false';
  CURRENT: 'current';
 
- KEY
-	:	'key'
-	;
+// KEY
+//	:	'key'
+//	;
  AUTHZ
 	:	'authz'
 	;
