@@ -1,5 +1,5 @@
-//if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
-//    (function() {
+if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
+    (function() {
         /*
 
          Defaults:
@@ -278,7 +278,7 @@
         KOBJAnnotateSearchResults.annotate_search_extractdata = function(toAnnotate, annotator) {
 
             var annotateData = {};
-            var urlSelector = annotator.defaults.domains[window.location.host].urlSel;
+            var urlSelector = annotator.defaults.domains[this.domain_name].urlSel;
             var urlTemp = "";
 
             if (urlSelector == "") {
@@ -644,8 +644,8 @@
             KOBJ.loggers.annotate.trace("Extracting Local Data.............................");
 
             var annotateData = {};
-            var phoneSelector = annotator.defaults.domains[window.location.host].phoneSel;
-            var urlSelector = annotator.defaults.domains[window.location.host].urlSel;
+            var phoneSelector = annotator.defaults.domains[this.domain_name].phoneSel;
+            var urlSelector = annotator.defaults.domains[this.domain_name].urlSel;
             var phoneTemp = $KOBJ(toAnnotate).find(phoneSelector).text().replace(/[\u00B7() -]/g, "");
             var urlTemp = $KOBJ(toAnnotate).find(urlSelector).attr("href");
 
@@ -775,5 +775,5 @@
 
         window.KOBJAnnotateSearchResults = KOBJAnnotateSearchResults;
         window.KOBJAnnotateLocalSearchResults = KOBJAnnotateLocalSearchResults;
-//    })();
-//}
+    })();
+}
