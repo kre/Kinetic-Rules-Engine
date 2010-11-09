@@ -72,11 +72,44 @@ my $str_re = qr/.+/;
 my @email_files = @ARGV ? @ARGV : </web/lib/perl/t/data/emails/*.txt>;
 my $email_list = {};
 foreach my $f (@email_files) {
-    #next unless ($f eq '/web/lib/perl/t/data/emails/email06.txt');
+    #next unless ($f eq '/web/lib/perl/t/data/emails/email07.txt');
     my ($key,$text) = getkrl($f);
     chop($key);
     $email_list->{$key} = $text;
+    #diag Dumper($email_list);
 }
+
+#Log::Log4perl->easy_init($DEBUG);
+##
+
+##
+$function = 'body';
+$description = "Get Body (multipart html)";
+$expected = re($str_re);
+$args = [$email_list->{'// multipart text/html'}];
+test_email($function,$args,$expected,$description,0);
+
+#goto ENDY;
+
+$function = 'parts';
+$description = "Get all text/plain PNP (parts)";
+$expected = array_each({"text/plain"=> re($str_re)});
+$args = [$email_list->{'// PNP'},"text/plain"];
+test_email($function,$args,$expected,$description,0);
+
+##
+$function = 'body';
+$description = "Check PNP email (body)";
+$expected = re($str_re);
+$args = [$email_list->{'// PNP'},"text/plain"];
+test_email($function,$args,$expected,$description,0);
+
+##
+$function = 'parts';
+$description = "Get all parts (simple)";
+$expected = array_each({"text/plain"=> re($str_re)});
+$args = [$email_list->{'// Base64'},"text/plain"];
+test_email($function,$args,$expected,$description,0);
 
 
 # check that predicates at least run without error
@@ -93,6 +126,8 @@ $config = mk_config_string(
    {"rid" => 'cs_test'},
    {"txn_id" => '1234'},
 ]);
+
+
 
 # set variable and raise event
 my $etext = $email_list->{"// multipart text/html"};
@@ -173,12 +208,6 @@ $expected = re($str_re);
 $args = [$email_list->{'//complex'}];
 test_email($function,$args,$expected,$description,0);
 
-##
-$function = 'body';
-$description = "Get Body (multipart html)";
-$expected = re($str_re);
-$args = [$email_list->{'// multipart text/html'}];
-test_email($function,$args,$expected,$description,0);
 
 ##
 $function = 'body';
@@ -195,11 +224,14 @@ $expected = array_each({'text/plain'=>ignore()});
 $args = [$email_list->{'// quoted-printable'},'text/plain'];
 test_email($function,$args,$expected,$description,0);
 
+ENDY:
+
 done_testing($test_count);
 
 sub test_email {
     my ($function,$args,$expected,$description,$debug) = @_;
     $test_count++;
+    #diag Dumper($args);
     my $json = Kynetx::Modules::Email::run_function($my_req_info,$function,$args);
     if ($debug) {
         $logger->info($description);
