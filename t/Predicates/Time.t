@@ -53,7 +53,7 @@ use Kynetx::Predicates::Time qw/:all/;
 
 my $preds = Kynetx::Predicates::Time::get_predicates();
 my @pnames = keys (%{ $preds } );
-plan tests => 21 + int(@pnames);
+plan tests => 22 + int(@pnames);
 
 
 my $NYU_req_info;
@@ -198,6 +198,10 @@ cmp_ok("$t",'eq','2010-08-08 04:00:00',"Format a datetime string");
 
 $t = Kynetx::Predicates::Time::get_time($BYU_req_info,'atom',["2010-08-08",{'tz'=>'America/Denver'}]);
 cmp_ok("$t",'eq','2010-08-08T06:00:00Z',"Create a new time string");
+
+#Log::Log4perl->easy_init($DEBUG);
+$t = Kynetx::Predicates::Time::get_time($BYU_req_info,'strftime',["$t","%F %T",{'tz'=>'America/New_York'}]);
+cmp_ok("$t",'eq','2010-08-08 02:00:00',"Format a datetime string for Timezone America/New_York");
 $logger->debug("t: ", $t);
 
 1;
