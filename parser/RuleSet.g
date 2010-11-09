@@ -1706,11 +1706,15 @@ meta_block
 			$string_desc = null;
 
 		}
-	 | VAR what=VAR (key_value=STRING
+	 | key=VAR what=VAR (key_value=STRING
 	 	| LEFT_CURL (name_value_pair[key_values] (COMMA name_value_pair[key_values])*) RIGHT_CURL) +  {
 	 	/*
 	 	This was key VAR but it was changed to VAR VAR in order to not make key reserved.
 	 	*/
+	 	if(!$key.text.equals("key") )
+	 	{
+	 	    throw new InvalidToken("Found [" + $key.text + "] should have been key", input);
+        }
 		if(!key_values.isEmpty())
 			keys_map.put($what.text.trim(),key_values);
 		else if($key_value.text != null)
