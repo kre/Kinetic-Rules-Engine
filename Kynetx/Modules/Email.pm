@@ -46,6 +46,7 @@ use Email::MIME::ContentType;
 use MIME::QuotedPrint::Perl;
 use Encode;
 use Encode::Alias;
+use MIME::Base64;
 
 use Kynetx::Environments qw/:all/;
 use Kynetx::Util qw/
@@ -117,25 +118,32 @@ sub _parts {
     my @parry  = ();
     foreach my $p (@parts) {
         my $value = "";
-        my $partheaders = $p->{'header'}->{'headers'};
-        my %found;
-        map {$found{$_} = 1 } @$partheaders;
         my $key = $p->{'ct'}->{'discrete'} . '/' . $p->{'ct'}->{'composite'};
-        $value = $p->body_raw();
-        if ($p->content_type) {
-            my $ct = parse_content_type($p->content_type);
-            $logger->debug("Content type: ", sub {Dumper($p->content_type)});
-            my $charset = $ct->{'attributes'}{'charset'};
-            if ($charset) {
-                $value = Encode::decode($charset,$value);
+        eval {$value = $p->body_str()};
+        if ($@) {
+            my $partheaders = $p->{'header'}->{'headers'};
+            my %found;
+            map {$found{$_} = 1 } @$partheaders;
+            $value = $p->body_raw();
+            if ($p->content_type) {
+                my $ct = parse_content_type($p->content_type);
+                $logger->debug("Content type: ", sub {Dumper($p->content_type)});
+                my $charset = $ct->{'attributes'}{'charset'};
+                if ($charset) {
+                    $value = Encode::decode($charset,$value);
+                }
             }
-        }
-        if ($found{'quoted-printable'}) {
-            $value = MIME::QuotedPrint::Perl::decode_qp($value);
-        }
+            if ($found{'quoted-printable'}) {
+                $value = MIME::QuotedPrint::Perl::decode_qp($value);
+            }
 
-        if (ref $value eq 'SCALAR') {
-            $value = $$value;
+            if ($found{'base64'}) {
+                $value =  decode_base64($value);
+            }
+
+            if (ref $value eq 'SCALAR') {
+                $value = $$value;
+            }
         }
         push( @parry, { $key => $value } ) unless ($parms && $key ne $parms);
     }
@@ -148,16 +156,25 @@ sub _body {
     define_alias(qr/7bit/ => '"us-ascii"');
     my $logger = get_logger();
     my $email  = email_object($args);
-    my $encoding = $email->header("Content-Transfer-Encoding");
-    if ($encoding) {
-        $logger->debug("Using encoding: $encoding");
-        return decode($encoding,$email->body_raw());
+    my $value="";
+    eval {$value = $email->body_str()};
+    if ($@) {
+        my $encoding = $email->header("Content-Transfer-Encoding");
+        if ($encoding) {
+            $logger->debug("Using encoding: $encoding");
+            return decode($encoding,$email->body_raw());
+        } else {
+            $logger->debug("No encoding: perhaps email is multipart");
+            my $body = $email->body();
+            $body = $email->body_raw() unless ($body);
+            return $body;
+        }
+    } elsif ($value) {
+        return $value;
     } else {
-        $logger->debug("No encoding: perhaps email is multipart");
+        return $email->body();
     }
-    my $body = $email->body();
-    $body = $email->body_raw() unless ($body);
-    return $body;
+
 
 }
 $funcs->{"body"} = \&_body;

@@ -1,0 +1,72 @@
+// PNP
+Return-Path: windley.pop@gmail.com
+Received: from corpserver.kobj.net (LHLO mail.kynetx.com) (209.41.75.70) by
+ mail.kynetx.com with LMTP; Wed, 3 Nov 2010 16:26:39 -0600 (MDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+    by mail.kynetx.com (Postfix) with ESMTP id 12ED8486EC5
+    for <meh@kynetx.com>; Wed,  3 Nov 2010 16:26:39 -0600 (MDT)
+X-Virus-Scanned: amavisd-new at corpserver.kobj.net
+X-Spam-Flag: NO
+X-Spam-Score: -2.53
+X-Spam-Level:
+X-Spam-Status: No, score=-2.53 tagged_above=-10 required=6.6 tests=[AWL=0.069,
+    BAYES_00=-2.599] autolearn=ham
+Authentication-Results: mail.kynetx.com (amavisd-new); dkim=pass
+    header.i=@gmail.com
+Authentication-Results: mail.kynetx.com (amavisd-new); domainkeys=pass
+    header.sender=windley.pop@gmail.com
+Received: from mail.kynetx.com ([127.0.0.1])
+    by localhost (mail.kynetx.com [127.0.0.1]) (amavisd-new, port 10024)
+    with ESMTP id YDlhphpJN+2O for <meh@kynetx.com>;
+    Wed,  3 Nov 2010 16:26:38 -0600 (MDT)
+Received: from mail-pw0-f53.google.com (mail-pw0-f53.google.com [209.85.160.53])
+    by mail.kynetx.com (Postfix) with ESMTP id 5D13A486EC3
+    for <meh@kynetx.com>; Wed,  3 Nov 2010 16:26:37 -0600 (MDT)
+Received: by pwi6 with SMTP id 6so222461pwi.40
+        for <meh@kynetx.com>; Wed, 03 Nov 2010 15:26:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=domainkey-signature:received:received:sender:from:content-type
+         :content-transfer-encoding:subject:date:message-id:to:mime-version
+         :x-mailer;
+        bh=zFnHYjEom4Rixvgu35WBa2QVzVE7Rvz3jQd9FtQmH6I=;
+        b=esgkg/NF3DAd5BmEA0G7hYOy5F/raozbuoCSMm5KLHTXKbRTYvLioe8pep6+X8m6jK
+         00y0YrDYVYGEHdPviqgtG+CE8AEtegsih3QQ06tu7j8BsZzzjm+kEH1xbkW3F8+A/s3s
+         U1KjR/QPJudytjtySlKPVXlmyn2ofD/wVirqo=
+DomainKey-Signature: a=rsa-sha1; c=nofws;
+        d=gmail.com; s=gamma;
+        h=sender:from:content-type:content-transfer-encoding:subject:date
+         :message-id:to:mime-version:x-mailer;
+        b=U0K2+mUNUg8qwXN6mpqbEgVYFQiGkocOtFCLFeWx0ErZIrAGBjucUVfu495b78jqXS
+         bXjRjnvy1yDtpZIAtP7u5PRCAmz7djOnpExWZYSAtS2P9LrRNvB70DosAlm3YLb4ISLp
+         hOTtYTENn2bBm5uWhe5lkskBKa2mXi1uRem8w=
+Received: by 10.142.112.16 with SMTP id k16mr2905520wfc.40.1288823197432;
+        Wed, 03 Nov 2010 15:26:37 -0700 (PDT)
+Received: from [10.2.3.91] ([64.9.231.181])
+        by mx.google.com with ESMTPS id p8sm14324531wff.16.2010.11.03.15.26.35
+        (version=TLSv1/SSLv3 cipher=RC4-MD5);
+        Wed, 03 Nov 2010 15:26:36 -0700 (PDT)
+Sender: Phil Windley <windley.pop@gmail.com>
+From: Phil Windley <phil@windley.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+Subject: MRI Results and Next Steps
+Date: Wed, 3 Nov 2010 15:26:32 -0700
+Message-Id: <3C82743F-E58A-43F0-A4AD-16A50DAA369E@windley.org>
+To: Mark Horstmeier <meh@kynetx.com>
+Mime-Version: 1.0 (Apple Message framework v1081)
+X-Mailer: Apple Mail (2.1081)
+
+Dear Scott,
+
+We have placed your MRI images in your Personal Data Store. Based on the results we recommend that you select an orthopedic surgeon and set an appointment for a consultation. Please call our office with any questions.
+
+Next steps:
+
+* Select an orthopedic surgeon
+* Set an appointment for a consultation
+
+Best Regards,
+
+The office of Dr. William Chan
+
