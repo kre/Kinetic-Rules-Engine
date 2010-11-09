@@ -1,0 +1,1051 @@
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/1.krl
+ERROR FOUND line 164:18 no viable alternative at input 'archive_pages' - /Users/ciddennis/crap/allrules/10.krl
+ERROR FOUND line 164:31 Invalid value [archive_pages] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/10.krl
+ERROR FOUND line 167:4 mismatched input 'if' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/10.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/10001.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/10002.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/10003.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/10004.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/10005.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/10006.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/10007.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/10008.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/10054.krl
+line 88:0 mismatched character '<EOF>' expecting '''
+ERROR FOUND line 1:0 mismatched input ''ruleset 12 {\n\n // Fire weather widget\n rule daytime is inactive {\n   select using "/archives/(\d+)/(\d+)/" setting (year,month)\n\n   pre {\n     zip = geoip:postal_code();\n   }\n\n   if daytime()\n   then {\n     float("absolute", "top: 10px", "right: 10px",\n           "http://frag.kobj.net/widgets/weather.pl?zip=" + zip)\n       with delay = 0 and\n            draggable = true and\n            scrollable = true and\n            effect = "appear";\n\n   }\n }\n\n\n\n\n  // play action and set page chaining callback\n  rule set_newsletter_expectaton is active {\n    select using "/essays/2004/independent_identity" setting ()\n\n    pre {\n    }\n\n    first_rule_name: \n      replace("kobj_test", "/kynetx/newsletter_invite_1.inc")\n\t with tags = ["gift certificate", "yellow"] and\n\t      delay = 30;\n\n\n    callbacks {\n      success {\n        //expect a page\n        expectation newsletter.page="http://www.windley.com/cgi-bin/mojo/mojo.cgi?f=n&l=wecn"\n\n      } \n\n      failure {\n        click id="close_rss"\n      }\n\n    }\n\n  }\n\n // catch people who end up subscribing to the newsletter\n rule newsletter_subscriber is active {\n   select using "http://www.windley.com/cgi-bin/mojo/mojo.cgi\?f=n&l=wecn" setting ()\n\n   pre {\n       extra = <<\n<div style="position: relative; border: 2px solid rgb(51, 102, 255); padding: 10px; margin-top: 7px; margin-bottom: 7px;" id="extrascreen">\n\n<a id="close_invite" onclick="new Effect.BlindUp('' expecting RULE_SET - /Users/ciddennis/crap/allrules/12.krl
+ERROR FOUND line 1:10 extraneous input 'x1' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/12x1.krl
+ERROR FOUND line 212:0 Rule names must be unique [enter_discount_code] - /Users/ciddennis/crap/allrules/14.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/2.krl
+ERROR FOUND line 5484:3 Rule names must be unique [change_succ_message] - /Users/ciddennis/crap/allrules/20.krl
+ERROR FOUND line 5510:4 Rule names must be unique [change_fail] - /Users/ciddennis/crap/allrules/20.krl
+ERROR FOUND line 6104:18 no viable alternative at input 'archive_pages' - /Users/ciddennis/crap/allrules/20.krl
+ERROR FOUND line 6104:31 Invalid value [archive_pages] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/20.krl
+ERROR FOUND line 6106:11 Invalid value [succ] found should have been one of [rule] - /Users/ciddennis/crap/allrules/20.krl
+ERROR FOUND line 6118:18 Invalid value [counter] found should have been one of [rule] - /Users/ciddennis/crap/allrules/20.krl
+ERROR FOUND line 6118:33 mismatched input '>' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/20.krl
+ERROR FOUND line 6119:8 Invalid value [days] found should have been one of [rule] - /Users/ciddennis/crap/allrules/20.krl
+ERROR FOUND line 6120:21 Invalid value [replace_html] found should have been one of [is] - /Users/ciddennis/crap/allrules/20.krl
+ERROR FOUND line 6120:38 Invalid value [succ] found should have been one of [active, inactive, test] - /Users/ciddennis/crap/allrules/20.krl
+ERROR FOUND line 6120:51 Invalid value [effect] found should have been one of [select] - /Users/ciddennis/crap/allrules/20.krl
+ERROR FOUND line 6124:16 Invalid value [click] found should have been one of [rule] - /Users/ciddennis/crap/allrules/20.krl
+ERROR FOUND line 6124:18 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/20.krl
+ERROR FOUND line 6126:4 missing EOF at '}' - /Users/ciddennis/crap/allrules/20.krl
+ERROR FOUND line 6:18 no viable alternative at input 'archive_pages' - /Users/ciddennis/crap/allrules/22.krl
+ERROR FOUND line 6:31 Invalid value [archive_pages] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/22.krl
+ERROR FOUND line 8:11 Invalid value [succ] found should have been one of [rule] - /Users/ciddennis/crap/allrules/22.krl
+ERROR FOUND line 20:18 Invalid value [counter] found should have been one of [rule] - /Users/ciddennis/crap/allrules/22.krl
+ERROR FOUND line 20:33 mismatched input '>' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/22.krl
+ERROR FOUND line 21:8 Invalid value [days] found should have been one of [rule] - /Users/ciddennis/crap/allrules/22.krl
+ERROR FOUND line 22:21 Invalid value [replace_html] found should have been one of [is] - /Users/ciddennis/crap/allrules/22.krl
+ERROR FOUND line 22:38 Invalid value [succ] found should have been one of [active, inactive, test] - /Users/ciddennis/crap/allrules/22.krl
+ERROR FOUND line 22:51 Invalid value [effect] found should have been one of [select] - /Users/ciddennis/crap/allrules/22.krl
+ERROR FOUND line 26:16 Invalid value [click] found should have been one of [rule] - /Users/ciddennis/crap/allrules/22.krl
+ERROR FOUND line 26:18 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/22.krl
+ERROR FOUND line 28:4 missing EOF at '}' - /Users/ciddennis/crap/allrules/22.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/28.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/29.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/30.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/4.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/50.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/5001.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/5003.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/5004.krl
+ERROR FOUND line 16:16 Invalid value [of] found should have been one of [is] - /Users/ciddennis/crap/allrules/50test.krl
+ERROR FOUND line 16:21 Invalid value [Week] found should have been one of [active, inactive, test] - /Users/ciddennis/crap/allrules/50test.krl
+ERROR FOUND line 16:26 Invalid value [test] found should have been one of [select] - /Users/ciddennis/crap/allrules/50test.krl
+ERROR FOUND line 16:29 Invalid value [is] found should have been one of [rule] - /Users/ciddennis/crap/allrules/50test.krl
+ERROR FOUND line 55:17 Invalid value [City] found should have been one of [is] - /Users/ciddennis/crap/allrules/50test.krl
+ERROR FOUND line 55:27 Invalid value [State] found should have been one of [active, inactive, test] - /Users/ciddennis/crap/allrules/50test.krl
+ERROR FOUND line 55:30 Invalid value [is] found should have been one of [select] - /Users/ciddennis/crap/allrules/50test.krl
+ERROR FOUND line 55:37 Invalid value [active] found should have been one of [rule] - /Users/ciddennis/crap/allrules/50test.krl
+ERROR FOUND line 56:15 mismatched input 'using' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/50test.krl
+ERROR FOUND line 58:17 Invalid value [city] found should have been one of [rule] - /Users/ciddennis/crap/allrules/50test.krl
+ERROR FOUND line 58:24 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/50test.krl
+ERROR FOUND line 58:29 Invalid value [city] found should have been one of [rule] - /Users/ciddennis/crap/allrules/50test.krl
+ERROR FOUND line 59:18 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/50test.krl
+ERROR FOUND line 59:25 Invalid value [geoip] found should have been one of [rule] - /Users/ciddennis/crap/allrules/50test.krl
+ERROR FOUND line 59:31 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/50test.krl
+ERROR FOUND line 61:8 missing EOF at 'if' - /Users/ciddennis/crap/allrules/50test.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337895.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337900.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337946.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337948.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337949.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337952.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337953.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337954.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337955.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337956.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337957.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337958.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337959.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337960.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337962.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337963.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337966.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337967.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337968.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337983.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337988.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337989.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337990.krl
+ERROR FOUND line 22:28 missing VAR at 'emit' - /Users/ciddennis/crap/allrules/996337992.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337993.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/996337995.krl
+ERROR FOUND line 7:28 missing VAR at 'emit' - /Users/ciddennis/crap/allrules/996337997.krl
+ERROR FOUND line 17:28 missing VAR at 'emit' - /Users/ciddennis/crap/allrules/996337997.krl
+ERROR FOUND line 27:28 missing VAR at 'emit' - /Users/ciddennis/crap/allrules/996337997.krl
+ERROR FOUND line 32:4 Rule names must be unique [httpwwwgooglecomsearch] - /Users/ciddennis/crap/allrules/996337997.krl
+ERROR FOUND line 37:28 missing VAR at 'emit' - /Users/ciddennis/crap/allrules/996337997.krl
+ERROR FOUND line 42:4 Rule names must be unique [httpwwwgooglecomsearch] - /Users/ciddennis/crap/allrules/996337997.krl
+ERROR FOUND line 48:0 Rule names must be unique [httpwwwgooglecom] - /Users/ciddennis/crap/allrules/996337997.krl
+ERROR FOUND line 7:28 missing VAR at 'emit' - /Users/ciddennis/crap/allrules/996338010.krl
+ERROR FOUND line 18:18 no viable alternative at input ';' - /Users/ciddennis/crap/allrules/996338050.krl
+ERROR FOUND line 19:18 no viable alternative at input ';' - /Users/ciddennis/crap/allrules/996338050.krl
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/998899.krl
+ERROR FOUND line 23:0 Rule names must be unique [newrule] - /Users/ciddennis/crap/allrules/a101x1.krl
+ERROR FOUND line 55:30 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a144x22.krl
+ERROR FOUND line 55:35 Invalid value [data] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a144x22.krl
+ERROR FOUND line 55:37 Invalid value [g] found should have been one of [else] - /Users/ciddennis/crap/allrules/a144x22.krl
+ERROR FOUND line 57:2 missing RIGHT_CURL at 'alert' - /Users/ciddennis/crap/allrules/a144x22.krl
+ERROR FOUND line 57:7 Invalid value [alert] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a144x22.krl
+ERROR FOUND line 57:18 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a144x22.krl
+ERROR FOUND line 60:0 missing EOF at 'rule' - /Users/ciddennis/crap/allrules/a144x22.krl
+line 69:30 no viable alternative at character '?'
+line 69:64 no viable alternative at character '\'
+line 90:29 no viable alternative at character '^'
+line 127:39 no viable alternative at character '?'
+ERROR FOUND line 46:33 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a144x24.krl
+ERROR FOUND line 46:35 Invalid value [_] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a144x24.krl
+ERROR FOUND line 46:37 Invalid value [g] found should have been one of [else] - /Users/ciddennis/crap/allrules/a144x24.krl
+ERROR FOUND line 47:6 mismatched input 'mlist' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a144x24.krl
+ERROR FOUND line 47:12 Invalid value [mlist] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a144x24.krl
+ERROR FOUND line 47:19 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a144x24.krl
+ERROR FOUND line 47:23 Invalid value [get] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a144x24.krl
+ERROR FOUND line 47:36 mismatched input ',' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a144x24.krl
+ERROR FOUND line 47:81 Invalid value [title_str] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a144x24.krl
+ERROR FOUND line 49:13 Invalid value [mcount] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a144x24.krl
+ERROR FOUND line 49:20 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a144x24.krl
+ERROR FOUND line 50:15 Invalid value [movie_id] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a144x24.krl
+ERROR FOUND line 50:22 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a144x24.krl
+ERROR FOUND line 53:4 missing EOF at 'noop' - /Users/ciddennis/crap/allrules/a144x24.krl
+ERROR FOUND line 55:30 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a144x32.krl
+ERROR FOUND line 55:35 Invalid value [data] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a144x32.krl
+ERROR FOUND line 55:37 Invalid value [g] found should have been one of [else] - /Users/ciddennis/crap/allrules/a144x32.krl
+ERROR FOUND line 57:2 missing RIGHT_CURL at 'alert' - /Users/ciddennis/crap/allrules/a144x32.krl
+ERROR FOUND line 57:7 Invalid value [alert] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a144x32.krl
+ERROR FOUND line 57:18 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a144x32.krl
+ERROR FOUND line 60:0 missing EOF at 'rule' - /Users/ciddennis/crap/allrules/a144x32.krl
+line 93:43 no viable alternative at character '\'
+line 93:52 mismatched character '|' expecting '&'
+ERROR FOUND line 93:31 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a144x40.krl
+ERROR FOUND line 93:33 no viable alternative at input '*' - /Users/ciddennis/crap/allrules/a144x40.krl
+ERROR FOUND line 93:39 mismatched input '[' expecting RIGHT_PAREN - /Users/ciddennis/crap/allrules/a144x40.krl
+ERROR FOUND line 93:45 no viable alternative at input '|' - /Users/ciddennis/crap/allrules/a144x40.krl
+ERROR FOUND line 93:60 Invalid value [_] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a144x40.krl
+ERROR FOUND line 95:10 missing RIGHT_CURL at 'MySelector' - /Users/ciddennis/crap/allrules/a144x40.krl
+ERROR FOUND line 95:21 Invalid value [MySelector] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a144x40.krl
+ERROR FOUND line 95:63 mismatched input '+' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a144x40.krl
+ERROR FOUND line 97:20 Invalid value [MyResults] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a144x40.krl
+ERROR FOUND line 97:30 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a144x40.krl
+ERROR FOUND line 97:34 Invalid value [ids] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a144x40.krl
+ERROR FOUND line 97:50 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a144x40.krl
+ERROR FOUND line 97:52 missing EOF at ')' - /Users/ciddennis/crap/allrules/a144x40.krl
+line 90:43 no viable alternative at character '\'
+line 90:52 mismatched character '|' expecting '&'
+ERROR FOUND line 90:31 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a144x41.krl
+ERROR FOUND line 90:33 no viable alternative at input '*' - /Users/ciddennis/crap/allrules/a144x41.krl
+ERROR FOUND line 90:39 mismatched input '[' expecting RIGHT_PAREN - /Users/ciddennis/crap/allrules/a144x41.krl
+ERROR FOUND line 90:45 no viable alternative at input '|' - /Users/ciddennis/crap/allrules/a144x41.krl
+ERROR FOUND line 90:60 Invalid value [_] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a144x41.krl
+ERROR FOUND line 92:10 missing RIGHT_CURL at 'MySelector' - /Users/ciddennis/crap/allrules/a144x41.krl
+ERROR FOUND line 92:21 Invalid value [MySelector] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a144x41.krl
+ERROR FOUND line 92:63 mismatched input '+' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a144x41.krl
+ERROR FOUND line 94:20 Invalid value [MyResults] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a144x41.krl
+ERROR FOUND line 94:30 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a144x41.krl
+ERROR FOUND line 94:34 Invalid value [ids] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a144x41.krl
+ERROR FOUND line 94:50 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a144x41.krl
+ERROR FOUND line 94:52 missing EOF at ')' - /Users/ciddennis/crap/allrules/a144x41.krl
+ERROR FOUND line 124:4 Rule names must be unique [clear_populate_videos] - /Users/ciddennis/crap/allrules/a146x6.krl
+ERROR FOUND line 17:18 Invalid value [notify] found should have been one of [then] - /Users/ciddennis/crap/allrules/a166x1.krl
+ERROR FOUND line 19:27 Invalid value [sticky] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a166x1.krl
+line 130:35 no viable alternative at character '\'
+line 130:37 no viable alternative at character '\'
+line 130:55 no viable alternative at character '\'
+ERROR FOUND line 130:29 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a169x16.krl
+ERROR FOUND line 130:36 mismatched input '/' expecting set null - /Users/ciddennis/crap/allrules/a169x16.krl
+ERROR FOUND line 130:42 Invalid value [A] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a169x16.krl
+ERROR FOUND line 130:45 Invalid value [Za] found should have been one of [else] - /Users/ciddennis/crap/allrules/a169x16.krl
+ERROR FOUND line 131:6 missing RIGHT_CURL at 'user' - /Users/ciddennis/crap/allrules/a169x16.krl
+ERROR FOUND line 131:11 Invalid value [user] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x16.krl
+ERROR FOUND line 131:18 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x16.krl
+ERROR FOUND line 132:13 Invalid value [avatar] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x16.krl
+ERROR FOUND line 132:20 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x16.krl
+ERROR FOUND line 133:22 Invalid value [tweet_Container] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x16.krl
+ERROR FOUND line 135:50 mismatched input '+' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x16.krl
+ERROR FOUND line 135:76 Invalid value [avatar] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x16.krl
+ERROR FOUND line 138:50 mismatched input '+' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x16.krl
+ERROR FOUND line 138:64 Invalid value [user] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x16.krl
+ERROR FOUND line 139:54 mismatched input '+' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x16.krl
+ERROR FOUND line 144:4 missing EOF at 'append' - /Users/ciddennis/crap/allrules/a169x16.krl
+ERROR FOUND line 43:26 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a169x20.krl
+ERROR FOUND line 43:35 Invalid value [SITENAME] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a169x20.krl
+ERROR FOUND line 43:37 Invalid value [g] found should have been one of [else] - /Users/ciddennis/crap/allrules/a169x20.krl
+ERROR FOUND line 46:4 mismatched input '{' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a169x20.krl
+ERROR FOUND line 163:46 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a169x63.krl
+ERROR FOUND line 163:64 Invalid value [FooCONTENTHEREFoo] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a169x63.krl
+ERROR FOUND line 163:76 Invalid value [MyContent] found should have been one of [else] - /Users/ciddennis/crap/allrules/a169x63.krl
+ERROR FOUND line 165:4 mismatched input 'if' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a169x63.krl
+ERROR FOUND line 165:26 Invalid value [voice_redirect] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x63.krl
+ERROR FOUND line 165:43 Invalid value [minutes] found should have been one of [is] - /Users/ciddennis/crap/allrules/a169x63.krl
+ERROR FOUND line 165:48 Invalid value [then] found should have been one of [active, inactive, test] - /Users/ciddennis/crap/allrules/a169x63.krl
+ERROR FOUND line 172:16 Invalid value [float_html] found should have been one of [select] - /Users/ciddennis/crap/allrules/a169x63.krl
+ERROR FOUND line 172:66 Invalid value [VoiceContent] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x63.krl
+ERROR FOUND line 174:11 Invalid value [always] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x63.krl
+ERROR FOUND line 175:12 mismatched input 'ent' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x63.krl
+ERROR FOUND line 175:30 Invalid value [voice_redirect] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x63.krl
+ERROR FOUND line 176:12 mismatched input 'ent' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x63.krl
+ERROR FOUND line 176:25 Invalid value [articleid] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x63.krl
+ERROR FOUND line 182:2 missing EOF at 'rule' - /Users/ciddennis/crap/allrules/a169x63.krl
+line 93:43 no viable alternative at character '\'
+line 93:52 mismatched character '|' expecting '&'
+ERROR FOUND line 93:31 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a169x74.krl
+ERROR FOUND line 93:33 no viable alternative at input '*' - /Users/ciddennis/crap/allrules/a169x74.krl
+ERROR FOUND line 93:39 mismatched input '[' expecting RIGHT_PAREN - /Users/ciddennis/crap/allrules/a169x74.krl
+ERROR FOUND line 93:45 no viable alternative at input '|' - /Users/ciddennis/crap/allrules/a169x74.krl
+ERROR FOUND line 93:60 Invalid value [_] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a169x74.krl
+ERROR FOUND line 95:10 missing RIGHT_CURL at 'MySelector' - /Users/ciddennis/crap/allrules/a169x74.krl
+ERROR FOUND line 95:21 Invalid value [MySelector] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x74.krl
+ERROR FOUND line 95:63 mismatched input '+' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x74.krl
+ERROR FOUND line 97:20 Invalid value [MyResults] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x74.krl
+ERROR FOUND line 97:30 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x74.krl
+ERROR FOUND line 97:34 Invalid value [ids] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x74.krl
+ERROR FOUND line 97:50 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x74.krl
+ERROR FOUND line 97:52 missing EOF at ')' - /Users/ciddennis/crap/allrules/a169x74.krl
+line 93:43 no viable alternative at character '\'
+line 93:52 mismatched character '|' expecting '&'
+ERROR FOUND line 93:31 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a169x76.krl
+ERROR FOUND line 93:33 no viable alternative at input '*' - /Users/ciddennis/crap/allrules/a169x76.krl
+ERROR FOUND line 93:39 mismatched input '[' expecting RIGHT_PAREN - /Users/ciddennis/crap/allrules/a169x76.krl
+ERROR FOUND line 93:45 no viable alternative at input '|' - /Users/ciddennis/crap/allrules/a169x76.krl
+ERROR FOUND line 93:60 Invalid value [_] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a169x76.krl
+ERROR FOUND line 95:10 missing RIGHT_CURL at 'MySelector' - /Users/ciddennis/crap/allrules/a169x76.krl
+ERROR FOUND line 95:21 Invalid value [MySelector] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x76.krl
+ERROR FOUND line 95:63 mismatched input '+' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x76.krl
+ERROR FOUND line 97:20 Invalid value [MyResults] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x76.krl
+ERROR FOUND line 97:30 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x76.krl
+ERROR FOUND line 97:34 Invalid value [ids] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x76.krl
+ERROR FOUND line 97:50 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x76.krl
+ERROR FOUND line 97:52 missing EOF at ')' - /Users/ciddennis/crap/allrules/a169x76.krl
+ERROR FOUND line 218:47 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 218:65 Invalid value [FooCONTENTHEREFoo] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 218:77 Invalid value [MyContent] found should have been one of [else] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 220:6 mismatched input 'ChannelID' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 220:16 Invalid value [ChannelID] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 220:44 mismatched input ';' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 222:18 Invalid value [ChannelInfo] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 222:30 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 222:42 Invalid value [channelinfo] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 222:62 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 223:18 Invalid value [ChannelName] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 223:31 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 224:19 Invalid value [ChannelImage] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 224:32 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 225:17 Invalid value [ChannelBio] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 225:30 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 227:20 Invalid value [VoiceContent2] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 227:35 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 227:54 Invalid value [FooBIOFoo] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 227:67 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 228:20 Invalid value [VoiceContent3] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 228:35 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 228:56 Invalid value [FooIMAGEFoo] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 228:71 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 229:19 Invalid value [VoiceContent] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 229:34 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 229:54 Invalid value [FooNAMEFoo] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 229:68 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 231:25 Invalid value [ChannelsSubscribed] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 231:58 mismatched input ';' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 232:12 Invalid value [regex] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 232:31 mismatched input '+' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 233:21 Invalid value [UserSubscribed] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 233:41 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 233:53 Invalid value [regex] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 233:56 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 235:4 missing EOF at 'if' - /Users/ciddennis/crap/allrules/a169x83.krl
+ERROR FOUND line 218:47 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 218:65 Invalid value [FooCONTENTHEREFoo] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 218:77 Invalid value [MyContent] found should have been one of [else] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 220:6 mismatched input 'ChannelID' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 220:16 Invalid value [ChannelID] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 220:44 mismatched input ';' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 222:18 Invalid value [ChannelInfo] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 222:30 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 222:42 Invalid value [channelinfo] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 222:62 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 223:18 Invalid value [ChannelName] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 223:31 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 224:19 Invalid value [ChannelImage] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 224:32 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 225:17 Invalid value [ChannelBio] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 225:30 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 227:20 Invalid value [VoiceContent2] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 227:35 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 227:54 Invalid value [FooBIOFoo] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 227:67 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 228:20 Invalid value [VoiceContent3] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 228:35 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 228:56 Invalid value [FooIMAGEFoo] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 228:71 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 229:19 Invalid value [VoiceContent] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 229:34 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 229:54 Invalid value [FooNAMEFoo] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 229:68 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 231:25 Invalid value [ChannelsSubscribed] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 231:58 mismatched input ';' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 232:12 Invalid value [regex] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 232:31 mismatched input '+' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 233:21 Invalid value [UserSubscribed] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 233:41 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 233:53 Invalid value [regex] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 233:56 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x84.krl
+ERROR FOUND line 235:4 missing EOF at 'if' - /Users/ciddennis/crap/allrules/a169x84.krl
+line 285:32 mismatched character '/' expecting '&'
+ERROR FOUND line 285:30 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 285:34 Invalid value [g] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 286:8 missing RIGHT_CURL at 'MyChannels' - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 286:19 Invalid value [MyChannels] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 286:52 mismatched input ';' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 287:19 Invalid value [ChannelSet] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 287:31 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 287:45 Invalid value [g] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 287:59 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 287:64 Invalid value [g] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 288:16 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 288:40 Invalid value [ChannelSet] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 289:34 mismatched input ';' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 290:18 Invalid value [MyResults] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 290:30 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 290:40 Invalid value [articleid] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 290:48 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 293:14 Invalid value [msgID] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 293:25 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 295:17 Invalid value [msgIDstr] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 295:26 mismatched input '+' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 296:18 Invalid value [ArticleID] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 296:28 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 296:43 Invalid value [ARRAY] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 297:18 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 297:29 Invalid value [MyResults] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 297:34 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 298:19 Invalid value [MyDebug] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 298:49 mismatched input '+' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 299:43 Invalid value [MyQuery] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 300:39 mismatched input '+' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 301:47 Invalid value [ArticleID] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 302:48 mismatched input ';' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x89.krl
+ERROR FOUND line 304:6 missing EOF at 'if' - /Users/ciddennis/crap/allrules/a169x89.krl
+line 285:32 mismatched character '/' expecting '&'
+ERROR FOUND line 285:30 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 285:34 Invalid value [g] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 286:8 missing RIGHT_CURL at 'MyChannels' - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 286:19 Invalid value [MyChannels] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 286:52 mismatched input ';' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 287:19 Invalid value [ChannelSet] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 287:31 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 287:45 Invalid value [g] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 287:59 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 287:64 Invalid value [g] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 288:16 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 288:40 Invalid value [ChannelSet] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 289:34 mismatched input ';' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 290:18 Invalid value [MyResults] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 290:30 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 290:40 Invalid value [articleid] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 290:48 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 293:14 Invalid value [msgID] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 293:25 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 295:17 Invalid value [msgIDstr] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 295:26 mismatched input '+' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 296:18 Invalid value [ArticleID] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 296:28 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 296:43 Invalid value [ARRAY] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 297:18 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 297:29 Invalid value [MyResults] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 297:34 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 298:19 Invalid value [MyDebug] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 298:49 mismatched input '+' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 299:43 Invalid value [MyQuery] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 300:39 mismatched input '+' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 301:47 Invalid value [ArticleID] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 302:48 mismatched input ';' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x95.krl
+ERROR FOUND line 304:6 missing EOF at 'if' - /Users/ciddennis/crap/allrules/a169x95.krl
+line 186:41 no viable alternative at character '^'
+line 219:39 no viable alternative at character '^'
+line 219:49 no viable alternative at character '\'
+line 221:39 no viable alternative at character '\'
+ERROR FOUND line 186:39 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a169x97.krl
+ERROR FOUND line 186:43 Invalid value [A] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a169x97.krl
+ERROR FOUND line 186:46 Invalid value [Za] found should have been one of [else] - /Users/ciddennis/crap/allrules/a169x97.krl
+ERROR FOUND line 186:55 Invalid value [g] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x97.krl
+ERROR FOUND line 187:19 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x97.krl
+ERROR FOUND line 187:25 Invalid value [page] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a169x97.krl
+ERROR FOUND line 187:31 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a169x97.krl
+ERROR FOUND line 189:6 missing EOF at 'every' - /Users/ciddennis/crap/allrules/a169x97.krl
+ERROR FOUND line 13:18 no viable alternative at input ';' - /Users/ciddennis/crap/allrules/a16x4.krl
+ERROR FOUND line 14:18 no viable alternative at input ';' - /Users/ciddennis/crap/allrules/a16x4.krl
+java.lang.NullPointerException
+	at com.kynetx.RuleSetParser.rule(RuleSetParser.java:1324)
+	at com.kynetx.RuleSetParser.ruleset(RuleSetParser.java:505)
+	at com.kynetx.ParseRuleset.main(ParseRuleset.java:60)
+line 36:79 no viable alternative at character '$'
+line 39:34 no viable alternative at character '$'
+line 40:28 no viable alternative at character '$'
+line 41:36 no viable alternative at character '$'
+line 42:36 no viable alternative at character '$'
+line 43:36 no viable alternative at character '$'
+ERROR FOUND line 36:80 mismatched input '.' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a16x48.krl
+ERROR FOUND line 36:88 Invalid value [tweets] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a16x48.krl
+ERROR FOUND line 39:45 mismatched input '");\n            i = tweet.pick("' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a16x48.krl
+ERROR FOUND line 40:54 Invalid value [tweet_profile_image_url] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a16x48.krl
+ERROR FOUND line 41:54 mismatched input '");\n            tweetText = tweet.pick("' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a16x48.krl
+ERROR FOUND line 42:49 Invalid value [tweet_text] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a16x48.krl
+ERROR FOUND line 43:55 mismatched input '");\n            tweetHTML = << \n<li class="' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a16x48.krl
+ERROR FOUND line 45:26 Invalid value [KOBJ_tweetItems] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a16x48.krl
+ERROR FOUND line 45:65 mismatched input '">  <a href="' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a16x48.krl
+ERROR FOUND line 45:82 Invalid value [http] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a16x48.krl
+ERROR FOUND line 48:22 Invalid value [tweetUser] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a16x48.krl
+ERROR FOUND line 50:12 mismatched input 'append' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a16x48.krl
+ERROR FOUND line 50:47 Invalid value [tweetHTML] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a16x48.krl
+ERROR FOUND line 23:18 no viable alternative at input ';' - /Users/ciddennis/crap/allrules/a16x5.krl
+ERROR FOUND line 24:18 no viable alternative at input ';' - /Users/ciddennis/crap/allrules/a16x5.krl
+ERROR FOUND line 23:20 no viable alternative at input ';' - /Users/ciddennis/crap/allrules/a16x6.krl
+ERROR FOUND line 24:18 no viable alternative at input ';' - /Users/ciddennis/crap/allrules/a16x6.krl
+ERROR FOUND line 28:18 no viable alternative at input ';' - /Users/ciddennis/crap/allrules/a16x7.krl
+ERROR FOUND line 29:18 no viable alternative at input ';' - /Users/ciddennis/crap/allrules/a16x7.krl
+line 31:60 no viable alternative at character ' '
+ERROR FOUND line 79:30 mismatched input ':' expecting SETTING - /Users/ciddennis/crap/allrules/a18x10.krl
+ERROR FOUND line 79:68 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a18x10.krl
+ERROR FOUND line 79:72 missing RIGHT_PAREN at ',' - /Users/ciddennis/crap/allrules/a18x10.krl
+ERROR FOUND line 79:74 mismatched input '/' expecting RIGHT_PAREN - /Users/ciddennis/crap/allrules/a18x10.krl
+ERROR FOUND line 81:8 mismatched input 'pre' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a18x10.krl
+ERROR FOUND line 82:17 Invalid value [text] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a18x10.krl
+ERROR FOUND line 82:24 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a18x10.krl
+ERROR FOUND line 83:20 Invalid value [picture] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a18x10.krl
+ERROR FOUND line 83:27 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a18x10.krl
+ERROR FOUND line 84:22 Invalid value [tweet_div] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a18x10.krl
+ERROR FOUND line 90:39 Invalid value [tweet_div] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a18x10.krl
+ERROR FOUND line 96:0 extraneous input '}' expecting EOF - /Users/ciddennis/crap/allrules/a18x10.krl
+ERROR FOUND line 81:22 mismatched input ':' expecting SETTING - /Users/ciddennis/crap/allrules/a18x18.krl
+ERROR FOUND line 81:60 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a18x18.krl
+ERROR FOUND line 81:64 missing RIGHT_PAREN at ',' - /Users/ciddennis/crap/allrules/a18x18.krl
+ERROR FOUND line 81:66 mismatched input '/' expecting RIGHT_PAREN - /Users/ciddennis/crap/allrules/a18x18.krl
+ERROR FOUND line 82:4 mismatched input 'pre' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a18x18.krl
+ERROR FOUND line 83:10 Invalid value [text] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a18x18.krl
+ERROR FOUND line 83:17 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a18x18.krl
+ERROR FOUND line 84:13 Invalid value [picture] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a18x18.krl
+ERROR FOUND line 84:20 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a18x18.krl
+ERROR FOUND line 85:15 Invalid value [tweet_div] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a18x18.krl
+ERROR FOUND line 89:33 Invalid value [tweet_div] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a18x18.krl
+ERROR FOUND line 24:8 mismatched input 'app' expecting VAR - /Users/ciddennis/crap/allrules/a18x29.krl
+ERROR FOUND line 24:12 mismatched input '=' expecting COLON - /Users/ciddennis/crap/allrules/a18x29.krl
+ERROR FOUND line 25:13 mismatched input '=' expecting LEFT_PAREN - /Users/ciddennis/crap/allrules/a18x29.krl
+ERROR FOUND line 31:8 mismatched input 'app' expecting VAR - /Users/ciddennis/crap/allrules/a18x29.krl
+ERROR FOUND line 31:12 mismatched input '=' expecting COLON - /Users/ciddennis/crap/allrules/a18x29.krl
+ERROR FOUND line 32:13 mismatched input '=' expecting LEFT_PAREN - /Users/ciddennis/crap/allrules/a18x29.krl
+ERROR FOUND line 39:8 mismatched input 'app' expecting VAR - /Users/ciddennis/crap/allrules/a18x29.krl
+ERROR FOUND line 39:12 mismatched input '=' expecting COLON - /Users/ciddennis/crap/allrules/a18x29.krl
+ERROR FOUND line 40:13 mismatched input '=' expecting LEFT_PAREN - /Users/ciddennis/crap/allrules/a18x29.krl
+ERROR FOUND line 51:10 mismatched input 'app' expecting VAR - /Users/ciddennis/crap/allrules/a18x29.krl
+ERROR FOUND line 51:14 mismatched input '=' expecting COLON - /Users/ciddennis/crap/allrules/a18x29.krl
+ERROR FOUND line 52:15 mismatched input '=' expecting LEFT_PAREN - /Users/ciddennis/crap/allrules/a18x29.krl
+ERROR FOUND line 56:2 Rule names must be unique [update_activity_log] - /Users/ciddennis/crap/allrules/a18x29.krl
+ERROR FOUND line 58:2 missing EOF at 'rule' - /Users/ciddennis/crap/allrules/a18x29.krl
+ERROR FOUND line 30:4 Rule names must be unique [newrule] - /Users/ciddennis/crap/allrules/a222x16.krl
+ERROR FOUND line 37:4 Rule names must be unique [newrule] - /Users/ciddennis/crap/allrules/a222x16.krl
+ERROR FOUND line 45:0 Rule names must be unique [newrule] - /Users/ciddennis/crap/allrules/a222x16.krl
+line 46:45 no viable alternative at character '^'
+line 47:42 no viable alternative at character '$'
+ERROR FOUND line 32:37 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a22x19.krl
+ERROR FOUND line 32:42 Invalid value [The] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a22x19.krl
+ERROR FOUND line 32:46 Invalid value [the] found should have been one of [else] - /Users/ciddennis/crap/allrules/a22x19.krl
+ERROR FOUND line 33:12 missing RIGHT_CURL at 'clearPlay' - /Users/ciddennis/crap/allrules/a22x19.krl
+ERROR FOUND line 33:22 Invalid value [clearPlay] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a22x19.krl
+ERROR FOUND line 33:34 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a22x19.krl
+ERROR FOUND line 33:40 Invalid value [clear] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a22x19.krl
+ERROR FOUND line 33:66 mismatched input '}' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a22x19.krl
+ERROR FOUND line 33:67 missing EOF at ')' - /Users/ciddennis/crap/allrules/a22x19.krl
+ERROR FOUND line 46:18 Invalid value [notify] found should have been one of [then] - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 46:42 Invalid value [msg] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 48:27 Invalid value [sticky] found should have been one of [else] - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 51:4 missing RIGHT_CURL at 'rule' - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 61:18 Invalid value [notify] found should have been one of [then] - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 61:42 Invalid value [msg] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 63:27 Invalid value [sticky] found should have been one of [else] - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 66:4 missing RIGHT_CURL at 'rule' - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 76:18 Invalid value [notify] found should have been one of [then] - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 76:42 Invalid value [msg] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 78:27 Invalid value [sticky] found should have been one of [else] - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 81:4 missing RIGHT_CURL at 'rule' - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 91:18 Invalid value [notify] found should have been one of [then] - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 91:42 Invalid value [msg] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 93:27 Invalid value [sticky] found should have been one of [else] - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 96:4 missing RIGHT_CURL at 'rule' - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 106:18 Invalid value [notify] found should have been one of [then] - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 106:42 Invalid value [msg] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 108:27 Invalid value [sticky] found should have been one of [else] - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 111:4 missing RIGHT_CURL at 'rule' - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 124:12 missing VAR at 'every' - /Users/ciddennis/crap/allrules/a22x4.krl
+ERROR FOUND line 109:36 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a244x8.krl
+ERROR FOUND line 109:40 mismatched input ',' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a244x8.krl
+ERROR FOUND line 110:18 Invalid value [kCity] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a244x8.krl
+ERROR FOUND line 110:28 Invalid value [location] found should have been one of [else] - /Users/ciddennis/crap/allrules/a244x8.krl
+ERROR FOUND line 110:33 Invalid value [city] found should have been one of [log] - /Users/ciddennis/crap/allrules/a244x8.krl
+ERROR FOUND line 110:34 no viable alternative at input ')' - /Users/ciddennis/crap/allrules/a244x8.krl
+ERROR FOUND line 111:19 no viable alternative at input '=' - /Users/ciddennis/crap/allrules/a244x8.krl
+ERROR FOUND line 111:29 Invalid value [location] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a244x8.krl
+ERROR FOUND line 111:36 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a244x8.krl
+ERROR FOUND line 112:20 Invalid value [content] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a244x8.krl
+ERROR FOUND line 147:15 Invalid value [prepend] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a244x8.krl
+ERROR FOUND line 147:31 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a244x8.krl
+ERROR FOUND line 149:4 missing EOF at 'rule' - /Users/ciddennis/crap/allrules/a244x8.krl
+line 255:54 no viable alternative at character '\'
+line 255:56 no viable alternative at character '\'
+line 255:74 no viable alternative at character '\'
+line 256:37 no viable alternative at character '^'
+ERROR FOUND line 255:48 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 255:55 mismatched input '/' expecting set null - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 255:61 Invalid value [A] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 255:64 Invalid value [Za] found should have been one of [else] - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 256:12 missing RIGHT_CURL at 'domain' - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 256:19 Invalid value [domain] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 256:27 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 256:41 Invalid value [www] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 257:19 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 257:27 Invalid value [domain] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 257:35 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 258:25 Invalid value [wburds] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 258:30 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 258:47 Invalid value [domain] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 259:16 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 262:21 Invalid value [msgtitle] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 267:12 Invalid value [then] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 271:22 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 271:31 Invalid value [msgtitle] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 271:36 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 273:32 Invalid value [opacity] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 274:41 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 277:8 missing EOF at 'callbacks' - /Users/ciddennis/crap/allrules/a325x11.krl
+ERROR FOUND line 738:0 missing RIGHT_CURL at ';' - /Users/ciddennis/crap/allrules/a325x25.krl
+ERROR FOUND line 739:12 mismatched input 'ent' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a325x25.krl
+ERROR FOUND line 739:30 Invalid value [archive_pages] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x25.krl
+ERROR FOUND line 739:40 Invalid value [from] found should have been one of [is] - /Users/ciddennis/crap/allrules/a325x25.krl
+ERROR FOUND line 739:41 Invalid value [a] found should have been one of [active, inactive, test] - /Users/ciddennis/crap/allrules/a325x25.krl
+ERROR FOUND line 741:4 missing EOF at '}' - /Users/ciddennis/crap/allrules/a325x25.krl
+line 255:54 no viable alternative at character '\'
+line 255:56 no viable alternative at character '\'
+line 255:74 no viable alternative at character '\'
+line 256:37 no viable alternative at character '^'
+ERROR FOUND line 255:48 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 255:55 mismatched input '/' expecting set null - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 255:61 Invalid value [A] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 255:64 Invalid value [Za] found should have been one of [else] - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 256:12 missing RIGHT_CURL at 'domain' - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 256:19 Invalid value [domain] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 256:27 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 256:41 Invalid value [www] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 257:19 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 257:27 Invalid value [domain] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 257:35 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 258:25 Invalid value [wburds] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 258:30 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 258:47 Invalid value [domain] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 259:16 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 262:21 Invalid value [msgtitle] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 267:12 Invalid value [then] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 271:22 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 271:31 Invalid value [msgtitle] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 271:36 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 273:32 Invalid value [opacity] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 274:41 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x31.krl
+ERROR FOUND line 277:8 missing EOF at 'callbacks' - /Users/ciddennis/crap/allrules/a325x31.krl
+line 255:54 no viable alternative at character '\'
+line 255:56 no viable alternative at character '\'
+line 255:74 no viable alternative at character '\'
+line 256:37 no viable alternative at character '^'
+ERROR FOUND line 255:48 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 255:55 mismatched input '/' expecting set null - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 255:61 Invalid value [A] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 255:64 Invalid value [Za] found should have been one of [else] - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 256:12 missing RIGHT_CURL at 'domain' - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 256:19 Invalid value [domain] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 256:27 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 256:41 Invalid value [www] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 257:19 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 257:27 Invalid value [domain] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 257:35 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 258:25 Invalid value [wburds] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 258:30 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 258:47 Invalid value [domain] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 259:16 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 262:21 Invalid value [msgtitle] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 267:12 Invalid value [then] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 279:22 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 279:31 Invalid value [msgtitle] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 279:36 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 281:32 Invalid value [opacity] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 282:41 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x34.krl
+ERROR FOUND line 285:8 missing EOF at 'callbacks' - /Users/ciddennis/crap/allrules/a325x34.krl
+line 255:54 no viable alternative at character '\'
+line 255:56 no viable alternative at character '\'
+line 255:74 no viable alternative at character '\'
+line 256:37 no viable alternative at character '^'
+ERROR FOUND line 255:48 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 255:55 mismatched input '/' expecting set null - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 255:61 Invalid value [A] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 255:64 Invalid value [Za] found should have been one of [else] - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 256:12 missing RIGHT_CURL at 'domain' - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 256:19 Invalid value [domain] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 256:27 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 256:41 Invalid value [www] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 257:19 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 257:27 Invalid value [domain] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 257:35 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 258:25 Invalid value [wburds] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 258:30 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 258:47 Invalid value [domain] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 259:16 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 262:21 Invalid value [msgtitle] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 267:12 Invalid value [then] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 279:22 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 279:31 Invalid value [msgtitle] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 279:36 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 281:32 Invalid value [opacity] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 282:41 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 285:8 missing EOF at 'callbacks' - /Users/ciddennis/crap/allrules/a325x37.krl
+ERROR FOUND line 54:0 Rule names must be unique [callstart] - /Users/ciddennis/crap/allrules/a35x56.krl
+ERROR FOUND line 65:0 Rule names must be unique [callstart] - /Users/ciddennis/crap/allrules/a35x57.krl
+ERROR FOUND line 189:0 Rule names must be unique [TwilioYahoo] - /Users/ciddennis/crap/allrules/a35x58.krl
+line 42:49 no viable alternative at character '\'
+line 42:51 no viable alternative at character '\'
+line 42:69 no viable alternative at character '\'
+ERROR FOUND line 42:20 mismatched input ':' expecting SETTING - /Users/ciddennis/crap/allrules/a369x47.krl
+ERROR FOUND line 42:43 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a369x47.krl
+ERROR FOUND line 42:50 mismatched input '/' expecting set null - /Users/ciddennis/crap/allrules/a369x47.krl
+ERROR FOUND line 42:56 Invalid value [A] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a369x47.krl
+ERROR FOUND line 42:59 Invalid value [Za] found should have been one of [else] - /Users/ciddennis/crap/allrules/a369x47.krl
+ERROR FOUND line 42:119 Invalid value [tweetData] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a369x47.krl
+ERROR FOUND line 44:8 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a369x47.krl
+ERROR FOUND line 44:19 Invalid value [tweetData] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a369x47.krl
+ERROR FOUND line 44:24 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a369x47.krl
+ERROR FOUND line 45:9 Invalid value [tweet] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a369x47.krl
+ERROR FOUND line 45:20 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a369x47.krl
+ERROR FOUND line 46:11 Invalid value [content] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a369x47.krl
+ERROR FOUND line 53:30 Invalid value [content] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a369x47.krl
+ERROR FOUND line 57:0 extraneous input '}' expecting EOF - /Users/ciddennis/crap/allrules/a369x47.krl
+line 144:47 no viable alternative at character '\'
+ERROR FOUND line 144:46 missing RIGHT_PAREN at '/' - /Users/ciddennis/crap/allrules/a369x55.krl
+ERROR FOUND line 144:48 no viable alternative at input ',' - /Users/ciddennis/crap/allrules/a369x55.krl
+ERROR FOUND line 144:50 no viable alternative at input ')' - /Users/ciddennis/crap/allrules/a369x55.krl
+ERROR FOUND line 181:0 Rule names must be unique [get_salesforce_contact_name] - /Users/ciddennis/crap/allrules/a369x55.krl
+ERROR FOUND line 19:25 missing RIGHT_PAREN at '/' - /Users/ciddennis/crap/allrules/a369x56.krl
+ERROR FOUND line 19:26 no viable alternative at input '\s' - /Users/ciddennis/crap/allrules/a369x56.krl
+ERROR FOUND line 19:29 no viable alternative at input ')' - /Users/ciddennis/crap/allrules/a369x56.krl
+java.lang.NullPointerException
+	at com.kynetx.RuleSetParser.rule(RuleSetParser.java:1324)
+	at com.kynetx.RuleSetParser.ruleset(RuleSetParser.java:505)
+	at com.kynetx.ParseRuleset.main(ParseRuleset.java:60)
+ERROR FOUND line 90:28 missing VAR at 'emit' - /Users/ciddennis/crap/allrules/a37x6.krl
+ERROR FOUND line 80:17 Invalid value [alert] found should have been one of [then] - /Users/ciddennis/crap/allrules/a38x4.krl
+ERROR FOUND line 93:17 Invalid value [alert] found should have been one of [then] - /Users/ciddennis/crap/allrules/a38x4.krl
+ERROR FOUND line 93:60 Invalid value [curr_cond] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a38x4.krl
+ERROR FOUND line 93:78 Invalid value [city] found should have been one of [else] - /Users/ciddennis/crap/allrules/a38x4.krl
+ERROR FOUND line 101:17 Invalid value [alert] found should have been one of [then] - /Users/ciddennis/crap/allrules/a38x4.krl
+ERROR FOUND line 114:17 Invalid value [alert] found should have been one of [then] - /Users/ciddennis/crap/allrules/a38x4.krl
+ERROR FOUND line 114:52 Invalid value [area_code] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a38x4.krl
+ERROR FOUND line 114:71 Invalid value [city] found should have been one of [else] - /Users/ciddennis/crap/allrules/a38x4.krl
+ERROR FOUND line 127:17 Invalid value [alert] found should have been one of [then] - /Users/ciddennis/crap/allrules/a38x4.krl
+ERROR FOUND line 127:79 Invalid value [tomorrow_high] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a38x4.krl
+ERROR FOUND line 127:98 Invalid value [city] found should have been one of [else] - /Users/ciddennis/crap/allrules/a38x4.krl
+ERROR FOUND line 138:17 Invalid value [alert] found should have been one of [then] - /Users/ciddennis/crap/allrules/a38x4.krl
+ERROR FOUND line 138:68 Invalid value [change] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a38x4.krl
+ERROR FOUND line 149:17 Invalid value [alert] found should have been one of [then] - /Users/ciddennis/crap/allrules/a38x4.krl
+ERROR FOUND line 149:75 Invalid value [country_name] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a38x4.krl
+line 351:28 no viable alternative at character '^'
+line 351:29 no viable alternative at character '\'
+line 351:31 no viable alternative at character '\'
+line 351:33 no viable alternative at character '$'
+ERROR FOUND line 351:27 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a41x111.krl
+ERROR FOUND line 351:35 no viable alternative at input ')' - /Users/ciddennis/crap/allrules/a41x111.krl
+ERROR FOUND line 20:28 missing VAR at 'emit' - /Users/ciddennis/crap/allrules/a41x78.krl
+ERROR FOUND line 759:1 Rule names must be unique [contacts_1800] - /Users/ciddennis/crap/allrules/a41x98.krl
+ERROR FOUND line 28:28 mismatched input ':' expecting SETTING - /Users/ciddennis/crap/allrules/a579x2.krl
+ERROR FOUND line 28:65 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a579x2.krl
+ERROR FOUND line 28:69 missing RIGHT_PAREN at ',' - /Users/ciddennis/crap/allrules/a579x2.krl
+ERROR FOUND line 28:71 mismatched input '/' expecting RIGHT_PAREN - /Users/ciddennis/crap/allrules/a579x2.krl
+ERROR FOUND line 33:10 mismatched input 'pre' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a579x2.krl
+ERROR FOUND line 34:17 Invalid value [text] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a579x2.krl
+ERROR FOUND line 34:24 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a579x2.krl
+ERROR FOUND line 36:16 missing EOF at 'notify' - /Users/ciddennis/crap/allrules/a579x2.krl
+ERROR FOUND line 61:22 mismatched input ':' expecting SETTING - /Users/ciddennis/crap/allrules/a57x2.krl
+ERROR FOUND line 61:59 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a57x2.krl
+ERROR FOUND line 61:65 mismatched input '/' expecting RIGHT_PAREN - /Users/ciddennis/crap/allrules/a57x2.krl
+ERROR FOUND line 63:6 mismatched input 'pre' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a57x2.krl
+ERROR FOUND line 64:13 Invalid value [text] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a57x2.krl
+ERROR FOUND line 64:20 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a57x2.krl
+ERROR FOUND line 65:16 Invalid value [picture] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a57x2.krl
+ERROR FOUND line 65:23 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a57x2.krl
+ERROR FOUND line 66:13 Invalid value [user] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a57x2.krl
+ERROR FOUND line 66:20 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a57x2.krl
+ERROR FOUND line 67:18 Invalid value [tweet_div] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a57x2.krl
+ERROR FOUND line 72:35 Invalid value [tweet_div] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a57x2.krl
+ERROR FOUND line 31:28 missing VAR at 'emit' - /Users/ciddennis/crap/allrules/a58x12.krl
+ERROR FOUND line 25:20 mismatched input ':' expecting SETTING - /Users/ciddennis/crap/allrules/a600x3.krl
+ERROR FOUND line 25:56 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a600x3.krl
+ERROR FOUND line 25:62 mismatched input '/' expecting RIGHT_PAREN - /Users/ciddennis/crap/allrules/a600x3.krl
+ERROR FOUND line 26:2 mismatched input 'pre' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a600x3.krl
+ERROR FOUND line 29:2 missing EOF at 'notify' - /Users/ciddennis/crap/allrules/a600x3.krl
+ERROR FOUND line 341:2 Rule names must be unique [set_offer_count] - /Users/ciddennis/crap/allrules/a60x254.krl
+ERROR FOUND line 342:2 Rule names must be unique [set_offer_count] - /Users/ciddennis/crap/allrules/a60x255.krl
+ERROR FOUND line 34:2 Rule names must be unique [first_rule] - /Users/ciddennis/crap/allrules/a60x301.krl
+ERROR FOUND line 111:14 mismatched input 'map' expecting VAR - /Users/ciddennis/crap/allrules/a60x351.krl
+ERROR FOUND line 239:0 Rule names must be unique [search_for_twitter_users] - /Users/ciddennis/crap/allrules/a60x370.krl
+ERROR FOUND line 279:0 Rule names must be unique [search_for_twitter_users] - /Users/ciddennis/crap/allrules/a60x380.krl
+ERROR FOUND line 41:2 Rule names must be unique [loopty_loop_postlude] - /Users/ciddennis/crap/allrules/a60x391.krl
+line 187:4 mismatched character '<EOF>' expecting '\n'
+ERROR FOUND line 270:33 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 270:37 Invalid value [A] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 270:39 Invalid value [Z] found should have been one of [else] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 270:44 Invalid value [z] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 270:47 mismatched input '-' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 270:49 Invalid value [z] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 270:53 mismatched input '-' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 270:109 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 270:111 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 270:114 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 270:116 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 270:120 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 270:122 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 270:125 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 270:127 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 270:130 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 270:132 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:12 Invalid value [month] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:25 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:39 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:41 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:44 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:46 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:49 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:51 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:110 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:112 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:115 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:117 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:121 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:123 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:126 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:128 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:131 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 271:133 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:10 Invalid value [day] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:23 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:36 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:38 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:41 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:43 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:46 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:48 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:108 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:110 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:113 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:115 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:119 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:121 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:124 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:126 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:129 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 272:131 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:11 Invalid value [hour] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:24 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:37 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:39 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:42 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:44 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:47 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:49 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:109 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:111 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:114 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:116 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:120 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:122 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:125 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:127 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:130 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 273:132 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 274:17 Invalid value [start_hour] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 274:23 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 275:15 Invalid value [end_hour] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 275:29 mismatched input '+' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:10 Invalid value [min] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:23 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:36 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:38 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:41 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:43 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:46 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:48 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:108 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:110 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:113 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:115 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:119 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:121 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:124 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:126 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:129 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 276:131 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:11 Invalid value [ampm] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:24 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:37 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:39 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:42 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:44 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:47 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:49 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:108 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:110 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:113 Invalid value [a] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:115 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:120 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:122 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:125 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:127 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:130 Invalid value [A] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 277:132 mismatched input ']' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 278:19 Invalid value [month_to_num] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 279:16 Invalid value [month_num] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 279:30 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 281:15 Invalid value [newsItem] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 294:41 Invalid value [newsItem] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 295:17 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 295:28 Invalid value [datepicker] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 299:0 missing EOF at 'rule' - /Users/ciddennis/crap/allrules/a633x3.krl
+ERROR FOUND line 143:36 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a661x13.krl
+ERROR FOUND line 143:40 mismatched input ',' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a661x13.krl
+ERROR FOUND line 144:18 Invalid value [kCity] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a661x13.krl
+ERROR FOUND line 144:28 Invalid value [location] found should have been one of [else] - /Users/ciddennis/crap/allrules/a661x13.krl
+ERROR FOUND line 144:33 Invalid value [city] found should have been one of [log] - /Users/ciddennis/crap/allrules/a661x13.krl
+ERROR FOUND line 144:34 no viable alternative at input ')' - /Users/ciddennis/crap/allrules/a661x13.krl
+ERROR FOUND line 145:19 no viable alternative at input '=' - /Users/ciddennis/crap/allrules/a661x13.krl
+ERROR FOUND line 145:29 Invalid value [location] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a661x13.krl
+ERROR FOUND line 145:36 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a661x13.krl
+ERROR FOUND line 146:20 Invalid value [content] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a661x13.krl
+ERROR FOUND line 181:15 Invalid value [prepend] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a661x13.krl
+ERROR FOUND line 181:31 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a661x13.krl
+ERROR FOUND line 183:4 missing EOF at 'rule' - /Users/ciddennis/crap/allrules/a661x13.krl
+line 41:10 mismatched character '<EOF>' expecting '\n'
+ERROR FOUND line 28:48 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a691x5.krl
+ERROR FOUND line 28:54 mismatched input '/' expecting set null - /Users/ciddennis/crap/allrules/a691x5.krl
+ERROR FOUND line 28:56 Invalid value [i] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a691x5.krl
+ERROR FOUND line 30:14 missing RIGHT_CURL at 'item' - /Users/ciddennis/crap/allrules/a691x5.krl
+ERROR FOUND line 30:19 Invalid value [item] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a691x5.krl
+ERROR FOUND line 30:27 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a691x5.krl
+ERROR FOUND line 30:39 Invalid value [item_lookup] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a691x5.krl
+ERROR FOUND line 30:61 mismatched input ',' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a691x5.krl
+ERROR FOUND line 30:175 missing EOF at ')' - /Users/ciddennis/crap/allrules/a691x5.krl
+ERROR FOUND line 63:6 mismatched input 'current' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a703x11.krl
+ERROR FOUND line 63:25 Invalid value [stockData] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a703x11.krl
+ERROR FOUND line 64:6 missing RIGHT_CURL at 'change' - /Users/ciddennis/crap/allrules/a703x11.krl
+ERROR FOUND line 64:13 Invalid value [change] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a703x11.krl
+ERROR FOUND line 64:24 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a703x11.krl
+ERROR FOUND line 65:12 Invalid value [range] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a703x11.krl
+ERROR FOUND line 65:23 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a703x11.krl
+ERROR FOUND line 66:14 Invalid value [peratio] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a703x11.krl
+ERROR FOUND line 66:25 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a703x11.krl
+ERROR FOUND line 67:13 Invalid value [volume] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a703x11.krl
+ERROR FOUND line 67:24 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a703x11.krl
+ERROR FOUND line 68:13 Invalid value [avgVol] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a703x11.krl
+ERROR FOUND line 68:24 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a703x11.krl
+ERROR FOUND line 70:10 Invalid value [box] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a703x11.krl
+ERROR FOUND line 112:34 Invalid value [box] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a703x11.krl
+ERROR FOUND line 126:2 missing EOF at 'rule' - /Users/ciddennis/crap/allrules/a703x11.krl
+ERROR FOUND line 60:2 mismatched input '}' expecting VAR - /Users/ciddennis/crap/allrules/a710x4.krl
+ERROR FOUND line 0:-1 mismatched input '<EOF>' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a710x4.krl
+line 120:45 no viable alternative at character '^'
+line 121:42 no viable alternative at character '$'
+ERROR FOUND line 79:34 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a815x4.krl
+ERROR FOUND line 79:39 Invalid value [The] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a815x4.krl
+ERROR FOUND line 79:43 Invalid value [the] found should have been one of [else] - /Users/ciddennis/crap/allrules/a815x4.krl
+ERROR FOUND line 80:12 missing RIGHT_CURL at 'clearPlay' - /Users/ciddennis/crap/allrules/a815x4.krl
+ERROR FOUND line 80:22 Invalid value [clearPlay] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a815x4.krl
+ERROR FOUND line 80:34 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a815x4.krl
+ERROR FOUND line 80:40 Invalid value [clear] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a815x4.krl
+ERROR FOUND line 80:63 mismatched input '}' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a815x4.krl
+ERROR FOUND line 80:64 missing EOF at ')' - /Users/ciddennis/crap/allrules/a815x4.krl
+line 120:45 no viable alternative at character '^'
+line 121:42 no viable alternative at character '$'
+ERROR FOUND line 79:34 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a819x2.krl
+ERROR FOUND line 79:39 Invalid value [The] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a819x2.krl
+ERROR FOUND line 79:43 Invalid value [the] found should have been one of [else] - /Users/ciddennis/crap/allrules/a819x2.krl
+ERROR FOUND line 80:12 missing RIGHT_CURL at 'clearPlay' - /Users/ciddennis/crap/allrules/a819x2.krl
+ERROR FOUND line 80:22 Invalid value [clearPlay] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a819x2.krl
+ERROR FOUND line 80:34 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a819x2.krl
+ERROR FOUND line 80:40 Invalid value [clear] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a819x2.krl
+ERROR FOUND line 80:63 mismatched input '}' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a819x2.krl
+ERROR FOUND line 80:64 missing EOF at ')' - /Users/ciddennis/crap/allrules/a819x2.krl
+line 47:39 no viable alternative at character '\'
+line 47:41 no viable alternative at character '\'
+line 47:59 no viable alternative at character '\'
+ERROR FOUND line 47:33 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 47:40 mismatched input '/' expecting set null - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 47:46 Invalid value [A] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 47:49 Invalid value [Za] found should have been one of [else] - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 48:12 missing RIGHT_CURL at 'domain' - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 48:19 Invalid value [domain] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 48:27 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 48:40 Invalid value [www] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 49:19 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 49:27 Invalid value [domain] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 49:35 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 49:41 Invalid value [com] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 51:23 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 51:35 Invalid value [datasource] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 51:52 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 51:59 Invalid value [domain] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 52:20 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 52:32 Invalid value [searchData] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 52:37 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 53:17 Invalid value [link] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 53:26 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 54:18 Invalid value [title] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 54:27 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 55:24 Invalid value [description] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 55:33 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 57:22 Invalid value [noResults] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 58:49 mismatched input '[' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x10.krl
+ERROR FOUND line 59:37 missing EOF at ';' - /Users/ciddennis/crap/allrules/a835x10.krl
+line 12:39 no viable alternative at character '\'
+line 12:41 no viable alternative at character '\'
+line 12:59 no viable alternative at character '\'
+ERROR FOUND line 12:33 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 12:40 mismatched input '/' expecting set null - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 12:46 Invalid value [A] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 12:49 Invalid value [Za] found should have been one of [else] - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 13:12 missing RIGHT_CURL at 'backTweetsData' - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 13:27 Invalid value [backTweetsData] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 13:39 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 13:56 Invalid value [searchBackTweets] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 13:63 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 14:20 Invalid value [results] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 14:36 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 15:23 Invalid value [tweetsData] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 15:39 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 16:21 Invalid value [tweetIds] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 16:33 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 17:24 Invalid value [tweetImages] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 17:36 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 18:23 Invalid value [tweetUsers] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 18:35 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 19:23 Invalid value [tweetTexts] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 19:35 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 20:23 Invalid value [tweetTimes] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 20:35 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 21:18 Invalid value [image] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 24:20 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 28:16 missing EOF at 'every' - /Users/ciddennis/crap/allrules/a835x4.krl
+ERROR FOUND line 28:33 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 28:35 no viable alternative at input 'com' - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 28:38 Invalid value [com] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 32:12 missing RIGHT_CURL at 'photosData' - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 32:23 Invalid value [photosData] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 32:35 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 32:49 Invalid value [getPhotosData] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 32:56 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 33:19 Invalid value [photos] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 33:31 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 34:21 Invalid value [photoUrl] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 34:29 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 35:16 Invalid value [pic] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 35:26 mismatched input '[' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 37:20 Invalid value [message] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 47:9 Invalid value [notify] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 47:26 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 49:11 Invalid value [sticky] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 50:10 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 51:12 Invalid value [opacity] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x5.krl
+ERROR FOUND line 57:0 extraneous input '}' expecting EOF - /Users/ciddennis/crap/allrules/a835x5.krl
+line 48:39 no viable alternative at character '\'
+line 48:41 no viable alternative at character '\'
+line 48:59 no viable alternative at character '\'
+ERROR FOUND line 48:33 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 48:40 mismatched input '/' expecting set null - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 48:46 Invalid value [A] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 48:49 Invalid value [Za] found should have been one of [else] - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 49:12 missing RIGHT_CURL at 'domain' - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 49:19 Invalid value [domain] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 49:24 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 49:37 Invalid value [www] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 50:19 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 50:24 Invalid value [url] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 50:32 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 51:23 Invalid value [searchData] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 51:35 mismatched input ':' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 51:52 Invalid value [getGoogleResults] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 51:59 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 52:20 Invalid value [results] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 52:32 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 53:17 Invalid value [link] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 53:26 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 54:18 Invalid value [title] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 54:27 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 55:24 Invalid value [description] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 55:33 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 57:20 Invalid value [results] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 112:9 Invalid value [notify] found should have been one of [select] - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 112:21 Invalid value [results] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 114:10 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 115:10 Invalid value [width] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 116:12 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 121:2 missing EOF at '}' - /Users/ciddennis/crap/allrules/a835x6.krl
+ERROR FOUND line 52:3 Rule names must be unique [first_rule] - /Users/ciddennis/crap/allrules/a876x2.krl
+ERROR FOUND line 80:6 Rule names must be unique [first_rule] - /Users/ciddennis/crap/allrules/a876x2.krl
+ERROR FOUND line 23:28 missing VAR at 'emit' - /Users/ciddennis/crap/allrules/a8x13.krl
+ERROR FOUND line 78:28 missing VAR at 'emit' - /Users/ciddennis/crap/allrules/a8x19.krl
+ERROR FOUND line 14:28 missing VAR at 'emit' - /Users/ciddennis/crap/allrules/a8x20.krl
+ERROR FOUND line 18:28 missing VAR at 'emit' - /Users/ciddennis/crap/allrules/a8x22.krl
+ERROR FOUND line 60:20 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 60:23 no viable alternative at input '*' - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 60:24 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 60:25 no viable alternative at input ',' - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 61:20 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 61:29 Invalid value [Greater] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 62:6 missing RIGHT_CURL at 'd' - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 62:8 Invalid value [d] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 62:11 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 62:26 Invalid value [Area] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 63:16 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 63:19 Invalid value [d] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 65:12 mismatched input '=' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 65:24 Invalid value [datasource] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 65:42 mismatched input '(' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 66:18 Invalid value [TerritoryID] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 66:25 mismatched input '.' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 69:4 missing EOF at 'replace_html' - /Users/ciddennis/crap/allrules/a8x49.krl
+ERROR FOUND line 23:7 mismatched input 'extract' expecting set null - /Users/ciddennis/crap/allrules/a8x63.krl
+ERROR FOUND line 30:36 no viable alternative at input '/' - /Users/ciddennis/crap/allrules/a99x25.krl
+ERROR FOUND line 30:40 mismatched input ',' expecting RIGHT_CURL - /Users/ciddennis/crap/allrules/a99x25.krl
+ERROR FOUND line 31:23 Invalid value [searchLink] found should have been one of [fired, always, notfired] - /Users/ciddennis/crap/allrules/a99x25.krl
+ERROR FOUND line 32:12 missing RIGHT_CURL at 'message' - /Users/ciddennis/crap/allrules/a99x25.krl
+ERROR FOUND line 32:20 Invalid value [message] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a99x25.krl
+ERROR FOUND line 34:14 Invalid value [notify] found should have been one of [rule] - /Users/ciddennis/crap/allrules/a99x25.krl
+ERROR FOUND line 34:52 mismatched input ')' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/a99x25.krl
+ERROR FOUND line 37:5 missing EOF at 'rule' - /Users/ciddennis/crap/allrules/a99x25.krl
+ERROR FOUND line 161:0 Rule names must be unique [tag_google_shoes] - /Users/ciddennis/crap/allrules/azigo_chase_demo.krl
+ERROR FOUND line 161:0 Rule names must be unique [tag_google_shoes] - /Users/ciddennis/crap/allrules/azigo_citi_demo.krl
+ERROR FOUND line 165:0 Rule names must be unique [tag_google_shoes] - /Users/ciddennis/crap/allrules/azigo_usa_demo.krl
+ERROR FOUND line 1:0 missing RULE_SET at 'getprodrule' - /Users/ciddennis/crap/allrules/getall
+ERROR FOUND line 1:12 mismatched input '1' expecting LEFT_CURL - /Users/ciddennis/crap/allrules/getall
+ERROR FOUND line 1:9 mismatched input '{' expecting set null - /Users/ciddennis/crap/allrules/STORYTELLER5004.krl

@@ -316,7 +316,7 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
         $KOBJ(elem).live("click", function(e1) {
             var tgt = $KOBJ(this);
             var b = tgt.attr('href') || '';
-//            KOBJ.logger("click",txn_id,name, b,sense,rule,rid);
+            KOBJ.logger("click",txn_id,name, b,sense,rule,rid);
 //            if (b) {
 //                tgt.attr('href', '#KOBJ');
 //            }  // # gets replaced by redirect
@@ -325,7 +325,7 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
 
     } else if (type == 'change') {
         $KOBJ(elem).live("change", function(e1) {
-//            KOBJ.logger("change",txn_id,name,'',sense,rule,rid);
+            KOBJ.logger("change",txn_id,name,'',sense,rule,rid);
             return true;
         });
     }

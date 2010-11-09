@@ -63,7 +63,7 @@ public class ParseRuleset
                     {
                         for(int ii = 0;ii < parser.parse_errors.size() ;ii++)
                         {
-                            System.err.println("ERROR FOUND " + parser.parse_errors.get(ii));
+                            System.err.println("ERROR FOUND " + parser.parse_errors.get(ii) + " - " + thefile.toString());
                         }
                     }
 //					System.out.println("Parsed: " + thefile + " in " + (System.currentTimeMillis() - start) + "ms." );

@@ -674,6 +674,47 @@ if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
             }
             annotateData["height"] = heightTemp;
 
+
+
+            KOBJ.loggers.annotate.trace("Extracted DAta ", annotateData);
+            return annotateData;
+        };
+
+
+        KOBJAnnotateLocalSearchResults.annotate_local_search_google_extractdata = function(toAnnotate, annotator) {
+            KOBJ.loggers.annotate.trace("Extracting Local Data.............................");
+
+            var annotateData = {};
+            var phoneSelector = annotator.defaults.domains[this.domain_name].phoneSel;
+
+            var phoneTemp = $KOBJ(toAnnotate).find(phoneSelector).text().replace(/[\u00B7() -]/g, "");
+            var urlTemp = $KOBJ("h3 a",$KOBJ(toAnnotate).parent()).attr("href");
+
+            if (urlTemp) {
+                annotateData["url"] = urlTemp;
+                annotateData["domain"] = KOBJ.get_host(urlTemp);
+            } else {
+                annotateData["url"] = "";
+                annotateData["domain"] = "";
+            }
+            if (phoneTemp === "") {
+                phoneTemp = $KOBJ(toAnnotate);
+                phoneTemp = phoneTemp.text().match(/\(\d{3}\)\s\d{3}-\d{4}/, "$1");
+                if (phoneTemp !== null) {
+                    phoneTemp = phoneTemp[0];
+                    phoneTemp = phoneTemp.replace(/[() -]/g, "");
+                }
+            }
+
+            var heightTemp = $KOBJ(toAnnotate).height();
+
+            if (phoneTemp !== null) {
+                annotateData["phone"] = phoneTemp;
+            } else {
+                annotateData["phone"] = "";
+            }
+            annotateData["height"] = heightTemp;
+
             KOBJ.loggers.annotate.trace("Extracted DAta ", annotateData);
             return annotateData;
         };
@@ -696,13 +737,13 @@ if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
                 "flush_domains":  true,
                 "domains": {
                     "www.google.com":{
-                        "selector":".ts .w0",
+                        "selector":".ts",
                         "watcher":"#rso",
                         "phoneSel":".nobr",
                         "urlSel":".l",
                         "modify":"",
                         "change_condition": KOBJAnnotateSearchResults.google_search_change_condition,
-                        "extract_function": KOBJAnnotateLocalSearchResults.annotate_local_search_extractdata
+                        "extract_function": KOBJAnnotateLocalSearchResults.annotate_local_search_google_extractdata
                     },
                     "search.yahoo.com":{
                         "selector":".sc-loc",
