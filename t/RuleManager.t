@@ -64,7 +64,7 @@ Kynetx::Memcached->init();
 my $memd = get_memd();
 
 
-my $numtests = 80;
+my $numtests = 81;
 my $nonskippable = 15;
 plan tests => $numtests;
 
@@ -477,6 +477,15 @@ my $test_json_meta = <<JSON;
 {"logging":"on","description":"\\nRuleset for testing something or other.\\n  "}
 JSON
 
+my $meta_key_bad = <<META;
+meta {
+    butt munch {
+        qwb : "yes",
+        sjf : "Probable"
+    }
+}
+META
+
 my $json;
 my $ast;
 my $east;
@@ -582,9 +591,18 @@ $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "meta");
 #diag $json;
 
 contains_string($json,
-	       'Invalid value [foobar] found',
+	       'required (...)+ loop did not match anything at input \'not\'',
 	       "Parsing meta decls with syntax error");
 
+$my_req_info->{'krl'} = $meta_key_bad;
+#diag $my_req_info->{'krl'};
+
+$json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "meta");
+#diag $json;
+
+contains_string($json,
+           'Found [butt] should have been key',
+           "Parsing meta decls with syntax error");
 
 
 # check the unparse API calls
