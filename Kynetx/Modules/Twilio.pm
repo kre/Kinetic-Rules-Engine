@@ -203,6 +203,16 @@ my $default_actions = {
           	$config);
         }
 	 },
+  'dial_stop' => {
+        directive => sub {
+          my $req_info = shift;
+          my $config = shift;
+          my $args = shift;
+          send_directive($req_info,
+            'dial_stop',
+            $config);
+        }
+     },
   'number' => {
         directive => sub {
           my $req_info = shift;

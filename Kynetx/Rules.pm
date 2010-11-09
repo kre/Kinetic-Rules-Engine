@@ -687,6 +687,8 @@ sub get_rule_set {
       turn_off_logging();
     }
 
+    $ruleset->{'rules'} ||= [];
+
     $logger->debug("Found " . @{ $ruleset->{'rules'} } . " rules for RID $rid" );
 
     return $ruleset;
