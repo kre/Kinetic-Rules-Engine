@@ -315,8 +315,15 @@ sub strformat {
     if ( ref $args->[0] eq '' ) {
         my $utime = $args->[0];
         my $dt = ISO8601($utime);
-        $logger->debug("iso8601 date: ", sub {Dumper($dt)});
+        $logger->trace("iso8601 date: ", sub {Dumper($dt)});
         if (defined $dt) {
+            if (defined $args->[2]) {
+                my $p = $args->[2];
+                my $tz = $p->{'timezone'} || $p->{'tz'};
+                if ($tz) {
+                    $dt->set_time_zone($tz);
+                }
+            }
             return $dt->strftime($args->[1]);
         }
     }
