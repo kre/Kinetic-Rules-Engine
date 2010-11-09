@@ -1712,9 +1712,9 @@ meta_block
 	 	This was key VAR but it was changed to VAR VAR in order to not make key reserved.
 	 	*/
 		if(!key_values.isEmpty())
-			keys_map.put($what.text,key_values);
+			keys_map.put($what.text.trim(),key_values);
 		else if($key_value.text != null)
-			keys_map.put($what.text,strip_string($key_value.text));
+			keys_map.put($what.text.trim(),strip_string($key_value.text));
 		else
 			throw new InvalidToken("key must have a string or key values", input);
 
