@@ -28,6 +28,7 @@ use vars qw/ %opt /;
 my $opt_string = 'clhrjotf:';
 getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'};
+&usage unless $opt{'f'};
 
 my $lex_only = 0;
 $lex_only = $opt{'l'} if $opt{'l'};
@@ -49,6 +50,7 @@ $print_time = $opt{'t'} if $opt{'t'};
 
 my $filename = "";
 $filename = $opt{'f'};
+
 
 my ($t0, $t1);
 

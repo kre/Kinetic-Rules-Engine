@@ -107,6 +107,8 @@ sub pp_meta_block {
 
     $o .= pp_use($mb->{'use'}, $indent+$g_indent) if ($mb->{'use'}) ;
 
+    $o .= pp_provide($mb->{'provide'}, $indent+$g_indent) if ($mb->{'provide'}) ;
+
     $o .= $beg . "\n$beg}\n";
 
     return $o;
@@ -221,6 +223,20 @@ sub pp_val {
     return '"'.$node.'"';
   }
 }
+
+sub pp_provide {
+  my ($node, $indent) = @_;
+
+  my $beg = " "x$indent;
+    
+  my $o = $beg;
+
+  $o .= 'provide [' . join(', ', @{ $node->{'names'} }) .']';
+
+  return $o;
+  }
+
+
 
 sub pp_use {
     my ($node, $indent) = @_;

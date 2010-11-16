@@ -91,7 +91,11 @@ sub handler {
 
  # Set to be the same now one.  This will pass back the rid to the runtime
     #$eid = $rid;
-    $logger->debug("processing event $domain/$eventtype on rulesets $rid and EID $eid");
+    if ($domain eq 'version') {
+      $logger->debug("returning version info for event API");
+    } else {
+      $logger->debug("processing event $domain/$eventtype on rulesets $rid and EID $eid");
+    }
 
     Log::Log4perl::MDC->put('site', $rid);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
