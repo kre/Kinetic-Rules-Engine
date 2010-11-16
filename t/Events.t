@@ -96,6 +96,7 @@ my $ruleset = 'cs_test_1';
 
 my $mech = Test::WWW::Mechanize->new();
 
+# should be empty
 #diag Dumper $mech->cookie_jar();
 
 
@@ -116,15 +117,29 @@ SKIP: {
       my $tc = 0;
       foreach my $test (@{$test_plan}) {
 	diag $test->{'url'} if $test->{'diag'};
+	my $resp;
 	if (defined $test->{'method'} && $test->{'method'} eq 'post') {
-	  $mech->post_ok($test->{'url'}, $test->{'post_data'});
+
+	  $resp = $mech->get($test->{'url'});
 	} else {
-	  $mech->get_ok($test->{'url'});
+	  # should only do one of these or you break the tests.  
+#	  $mech->get_ok($test->{'url'});
+	  $resp = $mech->get($test->{'url'});
 	}
+
+	# like($mech->status(), /2../, 'Status OK');
+	# $tc++;
+	ok($resp->header('Set-Cookie'), 'has cookie header');
+	$tc++;
+	# diag "Response header: ", $resp->as_string();
+	# diag "Cookies: ", Dumper $mech->cookie_jar;
+	like($mech->cookie_jar->as_string(), qr/SESSION_ID/, 'cookie was accepted');
+	$tc++;
+
 
 	diag $mech->content() if $test->{'diag'};
 	is($mech->content_type(), $test->{'type'});
-	$tc += 2;
+	$tc += 1;
 	foreach my $like (@{$test->{'like'}}) {
 	  my $resp = $mech->content_like($like);
 	  if ($resp){
@@ -143,8 +158,6 @@ SKIP: {
 	}
       }
 
-#      diag Dumper $mech->cookie_jar();
-
       return $tc;
     }
 
@@ -156,29 +169,32 @@ SKIP: {
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
 	'type' => 'text/javascript',
 	'like' => ['/test_rule_4/',
-		   '/var year = 2006/']
+		   '/var year = 2006/'],
+	'diag' => 0
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/bar.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
-		 ]
+	'like' => ['/\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
+		 ],
+	'diag' => 0
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
 	'type' => 'text/javascript',
 	'like' => ['/test_rule_4/',
 		  '/var year = 2006/',
 		  '/test_rule_5/'
-		 ]
+		 ],
+	'diag' => 0
        },
        # next series of three shows that interceding events don't matter
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/bar.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		 ]
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/something_else.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		 ]
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
@@ -186,7 +202,8 @@ SKIP: {
 	'like' => ['/test_rule_4/',
 		  '/var year = 2006/',
 		  '/test_rule_5/'
-		 ]
+		 ],
+	'diag' => 0
        },
       ];
 
@@ -195,7 +212,7 @@ SKIP: {
     my $and_test_plan =
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and1.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/']
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/']
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and2.html",
 	'type' => 'text/javascript',
@@ -204,11 +221,11 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and2.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/']
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/']
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and2.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/']
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/']
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and1.html",
 	'type' => 'text/javascript',
@@ -243,7 +260,7 @@ SKIP: {
     my $then_test_plan =
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/then1.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ['/var two = 2/',
 		     '/var one = 1/',
@@ -259,7 +276,7 @@ SKIP: {
        # next series of three shows that an interceding event cancels then1
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/then1.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ['/var two = 2/',
 		     '/var one = 1/',
@@ -267,7 +284,7 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/something_else.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ['/var two = 2/',
 		     '/var one = 1/',
@@ -275,7 +292,7 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/then2.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/'],
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/'],
 	'unlike' => ['/test_rule_then/',
 		   '/var two = 2/',
 		   '/var one = 1/',
@@ -288,7 +305,7 @@ SKIP: {
     my $between_test_plan =
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/first.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var b = 'd'/",
@@ -297,7 +314,7 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/mid.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var b = 'd'/",
@@ -315,7 +332,7 @@ SKIP: {
        # without intervening 'mid' event, should not fire
       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/first.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var b = 'd'/",
@@ -324,7 +341,7 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/last.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var b = 'd'/",
@@ -340,7 +357,7 @@ SKIP: {
        # with intervening 'mid' event, should not fire
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/firstn.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var b = 'd'/",
@@ -349,7 +366,7 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/midn.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var b = 'd'/",
@@ -358,7 +375,7 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/lastn.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var b = 'd'/",
@@ -368,7 +385,7 @@ SKIP: {
        # without intervening 'mid' event, should  fire
       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/firstn.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var b = 'd'/",
@@ -387,7 +404,7 @@ SKIP: {
        # does fire with some OTHER intervening enent
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/firstn.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var c = 't'/",
@@ -395,7 +412,7 @@ SKIP: {
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/something_else.html",
 	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d$/',
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d$/',
 		  ],
 	'unlike' => ["/var a = 't'/",
 		     "/var c = 't'/",
@@ -455,9 +472,10 @@ SKIP: {
 		   '/qwb@kynetx.com/',
 		   '/"msg_id":35/',
 		  ],
-	'unlike' => ['/25/',
-		   '/15/',
+	'unlike' => ['/"msg_id"\s*:\s*25/',
+		   '/"msg_id"\s*:\s*15/',
 		  ],
+	'diag' => 0
        },
       ];
 

@@ -217,7 +217,9 @@ sub process_callbacks {
 	    $logger->debug("Processing callbacks for $rule_name");
 	    foreach my $cb (@{ $rule->{'callbacks'}->{$sense}} ) {
 		if($cb->{'type'} eq $type &&
-		   $cb->{'value'} eq $value) {
+		   $cb->{'value'} eq $value &&
+		   defined $cb->{'trigger'}
+		  ) {
 		    $logger->debug("Evaluating callback triggered persistent expr");
 #		    $logger->debug(Dumper($cb->{'trigger'}));
 		    Kynetx::Postlude::eval_persistent_expr($cb->{'trigger'},

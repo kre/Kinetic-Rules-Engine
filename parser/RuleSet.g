@@ -1676,6 +1676,8 @@ meta_block
 	 ArrayList use_list = new ArrayList();
 	 HashMap keys_map = new HashMap();
 	 HashMap key_values = new HashMap();
+     ArrayList provide_list = new ArrayList();
+
 }
 @after  {
 	if(!keys_map.isEmpty())
@@ -1736,7 +1738,7 @@ meta_block
 		tmp.put("resource_type",$rtype.text);
 		use_list.add(tmp);
 	 })
-	 	| (MODULE  modname=VAR (ALIAS alias=VAR)?) {
+ 	| (MODULE  modname=VAR (ALIAS alias=VAR)?) {
 		HashMap tmp = new HashMap();
 		tmp.put("name",$modname.text);
 		tmp.put("type","module");
@@ -1746,7 +1748,13 @@ meta_block
 //		}
 		use_list.add(tmp);
 	 })
-		)*
+    | PROVIDE LEFT_BRACKET (e=VAR { provide_list.add($e.text); } (COMMA e2=VAR { provide_list.add($e2.text);})* )? RIGHT_BRACKET {
+      	HashMap tmp = new HashMap();
+      	tmp.put("names",provide_list);
+        meta_block_hash.put("provide",tmp); 
+        }
+
+	)*
 	 RIGHT_CURL
 
 	;
@@ -2033,6 +2041,9 @@ OTHER_OPERATORS
 
  USE
 	:	'use'
+	;
+ PROVIDE
+	:	'provide'
 	;
  CSS
 	:'css';
