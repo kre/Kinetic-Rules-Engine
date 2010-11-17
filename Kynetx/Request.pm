@@ -111,10 +111,6 @@ sub build_request_env {
 
     set_capabilities($request_info);
 
-
-#     $request_info->{'referer'} = $req->param('referer');
-#     $request_info->{'title'} = $req->param('title');
-#     $request_info->{'kvars'} = $req->param('kvars');
     my $patience = Kynetx::Configure::get_config("LOCK_PATIENCE");
     my $l_ttl = Kynetx::Configure::get_config("LOCK_TTL");
     my $memservers = Kynetx::Configure::get_config('MEMCACHE_SERVERS');

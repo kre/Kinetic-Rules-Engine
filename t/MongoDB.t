@@ -44,7 +44,7 @@ Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Configure;
-use Kynetx::MongoDB;
+use Kynetx::MongoDB qw(:all);
 
 my $logger = get_logger();
 my $num_tests = 0;
@@ -56,7 +56,18 @@ my @result;
 my $expected;
 my $dictionary = 'dictionary';
 my $global_iname = 'kynetx';
-my $collections = ($dictionary);
+#my $collections = ($dictionary,'edata','appdata','kens','tokens');
+my $dict_path = "/usr/share/dict/words";
+my @DICTIONARY;
+open DICT, $dict_path;
+@DICTIONARY = <DICT>;
+
+my $what = $DICTIONARY[rand(@DICTIONARY)];
+my $who = $DICTIONARY[rand(@DICTIONARY)];
+my $where = $DICTIONARY[rand(@DICTIONARY)];
+chomp($what);
+chomp($where);
+chomp($who);
 
 
 Kynetx::Configure::configure();
@@ -65,20 +76,71 @@ Kynetx::MongoDB::init();
 
 # Basic MongoDB commands
 my $mdb = Kynetx::MongoDB::get_mongo();
+my $var;
+my $val;
+my $kxri;
 
 # Check Database
 @result = $mdb->collection_names();
-$expected = superbagof($collections);
+$expected = superbagof($dictionary,'edata','appdata','kens','tokens');
 compare(\@result,$expected,"Has expected collections",0);
 
 # Check Collection
 my $coll = $mdb->get_collection($dictionary);
-$result = $coll->find_one({'name' => $global_iname});
+$kxri = $coll->find_one({'name' => $global_iname});
 $expected = superhashof( {
     "_id" => ignore(),
     "name" => $global_iname
 });
-compare($result,$expected,"Kynetx inum",1);
+compare($kxri,$expected,"Kynetx inum",0);
+
+# save a value
+my $key = {
+    "key" => $who
+};
+
+my $value = {
+    "key" => $who,
+    "value" => $what
+};
+
+$result = Kynetx::MongoDB::update_value("cruft",$key,$value,1);
+
+$result = get_value("cruft",$key);
+my $touch1 = $result->{"created"};
+my $got = $result->{"value"};
+
+compare($got,$what,"Get the saved value",0);
+
+sleep 1;
+
+$result = touch_value("cruft",$key);
+my $touch2 = $result->{"created"};
+
+cmp_ok($touch2,'>',$touch1,"Touch the creation time");
+$num_tests++;
+my $three_days_ago = DateTime->now->add( days => -3 );
+$result = touch_value("cruft",$key,$three_days_ago);
+
+my $touch3 = $result->{"created"};
+cmp_ok($touch3,'<',$touch1,"Set the creation time (-3 days)");
+$num_tests++;
+
+delete_value("cruft",$key);
+
+$key->{"key"} = $where;
+touch_value("cruft",$key);
+$result = get_value("cruft",$key);
+compare($result->{"value"},0,"Initalize a $where to 0 (touch)",0);
+
+delete_value("cruft",$key);
+
+# get_value
+$var = {'name' => $global_iname};
+$result = get_value($dictionary,$var);
+compare($result,$kxri,"Get Value",0);
+
+
 
 
 sub compare {

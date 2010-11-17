@@ -7,7 +7,7 @@ use warnings;
 use Test::More;
 use Test::LongString;
 use Test::WWW::Mechanize;
-
+use HTTP::Cookies;
 use Apache2::Const;
 use Apache2::Request;
 
@@ -36,12 +36,11 @@ use Kynetx::Rules;
 
 use Kynetx::FakeReq qw/:all/;
 
-#Log::Log4perl->easy_init($DEBUG);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
-
+my $logger = get_logger();
 my $r = Kynetx::Test::configure();
 
 my $rid = 'cs_test';
@@ -103,7 +102,6 @@ my $mech = Test::WWW::Mechanize->new();
 diag "Warning: running these tests on a host without memcache support is slow...";
 SKIP: {
     my $ua = LWP::UserAgent->new;
-
     my $check_url = "$dn/version/";
 
     my $response = $ua->get($check_url);
@@ -116,46 +114,52 @@ SKIP: {
       my $test_plan = shift;
       my $tc = 0;
       foreach my $test (@{$test_plan}) {
-	diag $test->{'url'} if $test->{'diag'};
-	my $resp;
-	if (defined $test->{'method'} && $test->{'method'} eq 'post') {
+    $logger->debug( "Requesting: ". $test->{'url'});
+    my $resp;
+    if (defined $test->{'method'} && $test->{'method'} eq 'post') {
 
-	  $resp = $mech->get($test->{'url'});
-	} else {
-	  # should only do one of these or you break the tests.  
-#	  $mech->get_ok($test->{'url'});
-	  $resp = $mech->get($test->{'url'});
-	}
+      $resp = $mech->get($test->{'url'});
+    } else {
+      #$mech->get_ok($test->{'url'});
+      $resp = $mech->get($test->{'url'});
+    }
 
-	# like($mech->status(), /2../, 'Status OK');
-	# $tc++;
-	ok($resp->header('Set-Cookie'), 'has cookie header');
-	$tc++;
-	# diag "Response header: ", $resp->as_string();
-	# diag "Cookies: ", Dumper $mech->cookie_jar;
-	like($mech->cookie_jar->as_string(), qr/SESSION_ID/, 'cookie was accepted');
-	$tc++;
+#    like($mech->status(), /2../, 'Status OK');
+#    $tc++;
+    ok($resp->header('Set-Cookie'), 'has cookie header');
+    $tc++;
+#    diag "Response header: ", $resp->as_string();
+#    diag "Cookies: ", Dumper $mech->cookie_jar;
+    like($mech->cookie_jar->as_string(), qr/SESSION_ID/, 'cookie was accepted');
+    $tc++;
 
 
-	diag $mech->content() if $test->{'diag'};
-	is($mech->content_type(), $test->{'type'});
-	$tc += 1;
-	foreach my $like (@{$test->{'like'}}) {
-	  my $resp = $mech->content_like($like);
-	  if ($resp){
-	      $tc++;
-	  } else {
-	      diag $like;
-	      diag $mech->content();
-	      diag $test->{'url'};
-	      die;
-	  }
+    diag $mech->content() if $test->{'diag'};
+    is($mech->content_type(), $test->{'type'});
+    $tc += 1;
+    foreach my $like (@{$test->{'like'}}) {
+      my $resp = $mech->content_like($like);
+      if ($resp){
+          $tc++;
+      } else {
+          diag $like;
+          diag $mech->content();
+          diag $test->{'url'};
+          die;
+      }
 
-	}
-	foreach my $unlike (@{$test->{'unlike'}}) {
-	  $mech->content_unlike($unlike);
-	  $tc++;
-	}
+    }
+    foreach my $unlike (@{$test->{'unlike'}}) {
+      my $resp = $mech->content_unlike($unlike);
+      if ($resp){
+          $tc++;
+      } else {
+          diag $unlike;
+          diag $mech->content();
+          diag $test->{'url'};
+          die;
+      }
+    }
       }
 
       return $tc;
@@ -169,22 +173,19 @@ SKIP: {
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
 	'type' => 'text/javascript',
 	'like' => ['/test_rule_4/',
-		   '/var year = 2006/'],
-	'diag' => 0
+		   '/var year = 2006/']
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/bar.html",
 	'type' => 'text/javascript',
-	'like' => ['/\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
-		 ],
-	'diag' => 0
+	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
+		 ]
        },
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
 	'type' => 'text/javascript',
 	'like' => ['/test_rule_4/',
 		  '/var year = 2006/',
 		  '/test_rule_5/'
-		 ],
-	'diag' => 0
+		 ]
        },
        # next series of three shows that interceding events don't matter
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/bar.html",
@@ -202,8 +203,7 @@ SKIP: {
 	'like' => ['/test_rule_4/',
 		  '/var year = 2006/',
 		  '/test_rule_5/'
-		 ],
-	'diag' => 0
+		 ]
        },
       ];
 
@@ -436,10 +436,9 @@ SKIP: {
 		   '/qwb@kynetx.com/',
 		   '/"msg_id":35/',
 		  ],
-	'unlike' => ['/"msg_id"\s*:\s*25/',
-		   '/"msg_id"\s*:\s*15/',
+	'unlike' => ['/25/',
+		   '/15/',
 		  ],
-	'diag' => 0
        },
       ];
 

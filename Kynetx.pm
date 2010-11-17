@@ -100,6 +100,7 @@ sub handler {
     } elsif($method eq 'describe' ) {
 	describe_ruleset($r, $method, $rid);
     } elsif($method eq 'version' ) {
+	#my $session = process_session($r);
 	show_build_num($r, $method, $rid);
     } elsif($method eq 'locktest') {
         lock_handle($r, $method, $rid, $eid);

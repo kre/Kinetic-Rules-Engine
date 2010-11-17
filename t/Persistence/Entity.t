@@ -37,6 +37,7 @@ use Test::Deep;
 use Data::Dumper;
 use MongoDB;
 use Apache::Session::Memcached;
+use DateTime;
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
@@ -47,14 +48,12 @@ use Kynetx::Test qw/:all/;
 use Kynetx::Configure;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::FakeReq qw/:all/;
-use Kynetx::Session qw/:all/;
+#use Kynetx::Session qw/:all/;
 use Kynetx::MongoDB;
-use Kynetx::Persistence::KEN qw/:all/;
-use Kynetx::Persistence::KToken qw(:all);
+use Kynetx::Persistence::Entity qw/:all/;
 my $logger = get_logger();
 my $num_tests = 0;
 my $result;
-
 
 # configure KNS
 Kynetx::Configure::configure();
@@ -66,52 +65,62 @@ Kynetx::Memcached->init();
 $logger->debug("Initializing mongoDB");
 Kynetx::MongoDB::init();
 
-my $ken_re = qr([0-9|a-f]{16});
-my $ken;
-my $description;
-
 my $r = new Kynetx::FakeReq();
-my $rid = "cs_test";
-my $frid = "not_cs_test";
-my $static_token = "S3s8MpDc7apQBJgf9vQ70QLi61o8yjy1BsrdlJDAUcTA";
-my $ftoken = "MVQdefrn7F5fTwvfNBKYZgO5XumzutfJAYLkJ20/f5il";
-my $static_ken = "4c6484f5a1a31171365896f4";
-my $srid = "token_tests";
+my $oid_re = qr([0-9|a-f]{16});
 
-my $session = process_session($r);
 
-# seed the session with a bogus token
-$session->{KTOKEN}->{$frid} = $ftoken;
+my $ken = "4c6484f5a1a31171365896f4";
+my $cleanup = 1;
 
-# Tokens are namespaced by RID
-$description = "No token, no KEN";
-$ken = Kynetx::Persistence::KEN::has_ken($session,$rid);
-testit($ken,undef,$description,0);
+# Rule stuff
+my $fkan = 93402939302;
+my $k1024 = "4c7d71a167458b950b000000";
+my $ka144 = "4c61e016ab900dc2f8aab2ce";
+my $rnd1 = int(rand(200));
+my $rnd2 = int(rand(100));
+my $rid1 = "1024";
+my $rid2 = "a144x22";
+my $ridR = "test".$rnd1."x".$rnd2;
 
-$description = "Bad token, no KEN";
-$ken = Kynetx::Persistence::KEN::has_ken($session,$frid);
-testit($ken,undef,$description,0);
+# get random words
+$logger->debug("Get random words");
 
-$description = "Create a new KEN";
-my $nken = Kynetx::Persistence::KEN::get_ken($session,$srid);
-testit($nken,re($ken_re),$description);
+my $dict_path = "/usr/share/dict/words";
+my @DICTIONARY;
+open DICT, $dict_path;
+@DICTIONARY = <DICT>;
 
-$description = "Check the database for ($nken)";
-my $key = {
-  "_id" => MongoDB::OID->new("value" => $nken)
-};
-my $got = Kynetx::MongoDB::get_value("kens",$key)->{"_id"}->to_string();
-$logger->debug("Raw from DB: ", sub { Dumper($got)});
-testit($got,$nken,$description);
+my $key1 = $DICTIONARY[rand(@DICTIONARY)];
+my $key2 = $DICTIONARY[rand(@DICTIONARY)];
+my $key3 = $DICTIONARY[rand(@DICTIONARY)];
+chomp($key1);
+chomp($key2);
+chomp($key3);
 
-$description = "Good token returns KEN";
-$ken = Kynetx::Persistence::KEN::has_ken($session,$srid);
-testit($ken,$nken,$description,0);
+# basic Entity getter/setter
+$result = Kynetx::Persistence::Entity::put_edatum($ka144,$ken,$key1,$key2);
+testit($result,1,"Insert data for $ka144/$ken",0);
 
-$description = "Clean up and delete KEN";
-Kynetx::Persistence::KEN::delete_ken($nken);
-$got = Kynetx::MongoDB::get_value("kens",$key);
-testit($got,{},$description);
+$result = Kynetx::Persistence::Entity::get_edatum($ka144,$ken,$key1);
+testit($result,$key2,"Retrieve data for $ka144/$ken/$key1",0);
+
+# Store to a new ruleset
+$result = Kynetx::Persistence::Entity::put_edatum($ridR,$ken,$key1,$key3);
+testit($result,1,"Insert to new store $ridR",0);
+
+$result = Kynetx::Persistence::Entity::get_edatum($ridR,$ken,$key1);
+testit($result,$key3,"Retrieve data for $ridR/$ken/$key1",0);
+
+Log::Log4perl->easy_init($DEBUG);
+
+$result = Kynetx::Persistence::Entity::touch_edatum($ridR,$ken,$key3);
+testit($result,0,"Touch a variable");
+
+if ($cleanup) {
+    Kynetx::Persistence::Entity::delete_edatum($ka144,$ken,$key1);
+    Kynetx::Persistence::Entity::delete_edatum($ridR,$ken,$key1);
+    Kynetx::Persistence::Entity::delete_edatum($ridR,$ken,$key3);
+}
 
 sub testit {
     my ($got,$expected,$description,$debug) = @_;
@@ -121,8 +130,6 @@ sub testit {
     $num_tests++;
     cmp_deeply($got,$expected,$description);
 }
-ENDY:
-session_cleanup($session);
 
 plan tests => $num_tests;
 1;

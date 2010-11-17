@@ -50,7 +50,7 @@ use HTTP::Status qw(:constants);
 use HTTP::Response;
 use URI::Escape ('uri_escape','uri_unescape');
 use Encode;
-
+use Kynetx::Persistence qw(:all);
 use Kynetx::Session qw(
   session_keys
   session_delete
@@ -74,11 +74,11 @@ our %EXPORT_TAGS = (
           get_tokens_by_oauth_token
           get_token
           get_scope_from_token
+          trim_tokens
           store_token
           set_auth_tokens
           get_access_tokens
           get_protected_resource
-          trim_tokens
           blast_tokens
           post_protected_resource
           get_consumer_tokens
@@ -513,7 +513,7 @@ sub store_token {
         $key = $namespace;
     }
     $key .= SEP . $name;
-    session_store( $rid, $session, $key, $value );
+    Kynetx::Persistence::save_persistent_var("ent", $rid, $session, $key, $value );
     $logger->debug("Stored token ($key): ");
 }
 
@@ -534,31 +534,35 @@ sub get_token {
     }
     $key .= SEP . $name;
     $logger->debug("Get token ($key)");
-    return session_get( $rid, $session, $key );
+    return Kynetx::Persistence::get_persistent_var("ent", $rid, $session, $key );
 }
 
 sub trim_tokens {
-    my ( $rid, $session, $namespace, $scope ) = @_;
-    my $logger = get_logger();
-    my $key    = '';
-    my $lscope;
-    if ( ref $scope eq 'HASH' ) {
-        $lscope = $scope->{'dname'};
-    } else {
-        $lscope = $scope;
-    }
-    if ( defined $lscope ) {
-        $key = $namespace . SEP . $lscope . SEP . 'access';
-    }
-    foreach my $session_key ( @{ session_keys( $rid, $session ) } ) {
-
-        my $re = qr/^$key/;
-        if ( !( $session_key =~ $re ) ) {
-            session_delete( $rid, $session, $session_key );
-        }
-    }
-
+    # noop
 }
+
+#sub trim_tokens {
+#    my ( $rid, $session, $namespace, $scope ) = @_;
+#    my $logger = get_logger();
+#    my $key    = '';
+#    my $lscope;
+#    if ( ref $scope eq 'HASH' ) {
+#        $lscope = $scope->{'dname'};
+#    } else {
+#        $lscope = $scope;
+#    }
+#    if ( defined $lscope ) {
+#        $key = $namespace . SEP . $lscope . SEP . 'access';
+#    }
+#    foreach my $session_key ( @{ session_keys( $rid, $session ) } ) {
+#
+#        my $re = qr/^$key/;
+#        if ( !( $session_key =~ $re ) ) {
+#            session_delete( $rid, $session, $session_key );
+#        }
+#    }
+#
+#}
 
 sub blast_tokens {
     my ( $rid, $session, $namespace, $scope ) = @_;
@@ -590,7 +594,7 @@ sub get_namespace_from_token {
     my $keys = session_keys( $rid, $session );
     foreach my $key (@$keys) {
         my ( $namespace, $scope, $var ) = parse_oauth_session_key($key);
-        my $val = session_get( $rid, $session, $key );
+        my $val = Kynetx::Persistence::get_persistent_var("ent", $rid, $session, $key );
         if ( $val eq $token ) {
             return $namespace;
         }
@@ -604,7 +608,7 @@ sub get_scope_from_token {
     my $keys = session_keys( $rid, $session );
     foreach my $key (@$keys) {
         my ( $namespace, $scope, $var ) = parse_oauth_session_key($key);
-        my $val = session_get( $rid, $session, $key );
+        my $val = Kynetx::Persistence::get_persistent_var("ent", $rid, $session, $key );
         if ( $val eq $token ) {
             return $scope;
         }
@@ -620,7 +624,7 @@ sub get_tokens_by_oauth_token {
     my $keys       = session_keys( $rid, $session );
     foreach my $key (@$keys) {
         my ( $namespace, $scope, $var ) = parse_oauth_session_key($key);
-        my $val = session_get( $rid, $session, $key );
+        my $val = Kynetx::Persistence::get_persistent_var("ent", $rid, $session, $key );
         $token_hash->{$namespace}->{$scope}->{$var} = $val;
         if ( $val eq $token ) {
             $token_ptr = $token_hash->{$namespace}->{$scope};

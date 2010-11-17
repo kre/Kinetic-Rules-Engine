@@ -31,6 +31,7 @@ package Kynetx::Util;
 #
 use strict;
 use warnings;
+use lib qw(/web/lib/perl);
 
 use Log::Log4perl qw(get_logger :levels);
 use Log::Log4perl::Level;
@@ -41,6 +42,7 @@ use URI::Escape ('uri_escape');
 use Sys::Hostname;
 use Data::Dumper;
 
+use Kynetx::Persistence::KEN;
 use Kynetx::Predicates::Amazon::SNS qw(:all);
 use Kynetx::Predicates::Amazon::RequestSignatureHelper qw(
   kAWSAccessKeyId
@@ -524,41 +526,32 @@ sub bloviate {
     my $logger = get_logger();
     my $directive = Kynetx::Directives->new("log");
     my $host = hostname || "No hostname found";
+    my $timestamp = DateTime->now;
     my $options = {
         'data' => $message,
         'source' => $host
     };
     $directive->set_options($options);
     my $json = Kynetx::Json::astToJson( $directive->to_directive() );
-    my $key    = get_key_id();
-    my $secret = get_access_key();
-    my $timestamp = DateTime->now;
     my $param = {
-        kAWSAccessKeyId() => $key,
-        kAWSSecretKey()   => $secret,
         'Subject' => "KNS logging request $timestamp",
         'TopicArn' => BLOVIATE,
         'Message' => $json,
     };
-    my $sns = Kynetx::Predicates::Amazon::SNS->new($param);
-    $sns->publish();
     $logger->info("KNS logging request: ", $message);
 
 }
 
 sub sns_publish {
-    my $param = shift;
-    my $logger = get_logger();
+    my ($hash) = @_;
     my $key    = get_key_id();
     my $secret = get_access_key();
-    $param->{kAWSAccessKeyId()} =  $key;
-    $param->{kAWSSecretKey()} =  $secret;
-    $logger->debug("SNS publish request: ", sub {Dumper($param)});
-    my $sns = Kynetx::Predicates::Amazon::SNS->new($param);
-    my $status = $sns->publish();
-    $logger->debug("SNS publish response: ", sub {Dumper($status)});
-    return $status;
+    $hash->{kAWSAccessKeyId()} = $key;
+    $hash->{kAWSSecretKey()} = $secret;
+    my $sns = Kynetx::Predicates::Amazon::SNS->new($hash);
+    $sns->publish();
 }
+
 
 
 1;

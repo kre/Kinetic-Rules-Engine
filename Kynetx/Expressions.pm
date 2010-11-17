@@ -293,7 +293,7 @@ sub eval_expr {
       # check count
       my $count = 0;
       if ($expr->{'domain'} eq 'ent') {
-	$count = session_get($req_info->{'rid'}, $session, $name);
+	$count = Kynetx::Persistence::get_persistent_var("ent",$req_info->{'rid'}, $session, $name);
       }
 
       $logger->debug('[persistent_ineq] ', "$name -> $count");
@@ -549,14 +549,14 @@ sub eval_hash_raw {
 
     my $hash = {};
     foreach my $hl (@{ $hash_lines} ) {
-      
-      my $lhs = 
-	eval_expr($hl->{'lhs'}, 
+
+      my $lhs =
+	eval_expr($hl->{'lhs'},
 			  $rule_env,
-			  $rule_name, 
-			  $req_info, 
+			  $rule_name,
+			  $req_info,
 			  $session);
-      
+
       if (type_of($lhs) eq 'str' ||
 	  type_of($lhs) eq 'num') {
       	$hash->{den_to_exp($lhs)} =

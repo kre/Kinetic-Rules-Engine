@@ -43,6 +43,7 @@ use MongoDB qw(:all);
 
 
 use Kynetx::Configure;
+use Kynetx::Json;
 
 
 
@@ -59,6 +60,12 @@ qw(
 init
 get_mongo
 mongo
+get_value
+put_value
+touch_value
+update_value
+get_collection
+delete_value
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -67,6 +74,8 @@ our $MONGO_SERVER = "127.0.0.1";
 our $MONGO_PORT = "27017";
 our $MONGO_DB = "kynetx";
 
+use constant SAFE => 1;
+
 sub init {
     my $logger = get_logger();
 
@@ -74,8 +83,14 @@ sub init {
     $MONGO_PORT = Kynetx::Configure::get_config('MONGO_PORT') || $MONGO_PORT;
     $MONGO_DB = Kynetx::Configure::get_config('MONGO_DB') || $MONGO_DB;
 
-    $logger->debug("Initializing MongoDB connection: $MONGO_SERVER:$MONGO_PORT");
-    $MONGO = MongoDB::Connection->new(host => $MONGO_SERVER, port => $MONGO_PORT);
+    my @hosts = split(",",$MONGO_SERVER);
+    my @h_p = map {$_ . ":".$MONGO_PORT} @hosts;
+    my $mongo_url = "mongodb://" . join (",",@h_p);
+
+
+
+    $logger->debug("Initializing MongoDB connection: $mongo_url");
+    $MONGO = MongoDB::Connection->new(host => $mongo_url);
 
 }
 
@@ -92,6 +107,86 @@ sub get_collection {
     return $db->get_collection($name);
 }
 
+sub get_value {
+    my ($collection,$var) = @_;
+    my $logger = get_logger();
+    my $c = get_collection($collection);
+    if ($c) {
+        my $result = $c->find_one($var);
+
+        if ($result->{"serialize"}) {
+            my $ast = Kynetx::Json::jsonToAst($result->{"value"});
+            $logger->debug("Found a ", ref $ast," to deserialize");
+            $result->{"value"} = $ast;
+        }
+
+        return $result;
+
+    } else {
+        $logger->info("Could not access collection: $collection");
+        return undef;
+    }
+}
+
+sub touch_value {
+    my ($collection,$var,$ts) = @_;
+    my $logger = get_logger();
+    my $timestamp;
+    if (defined $ts) {
+        $timestamp = $ts->epoch;
+    } else {
+        $timestamp = DateTime->now->epoch;
+    }
+    my $result = get_value($collection,$var);
+    my $status;
+    if (defined $result->{"value"}) {
+        my $oid = $result->{"_id"};
+        my $c = get_collection($collection);
+        $status = $c->update($var,{'$set' => {"created" => $timestamp}});
+    } else {
+        my $val = {%$var};
+        $val->{"value"} =0,
+        $status = update_value($collection,$var,$val,1,0);
+    }
+    $logger->warn("Failed to update timestamp in $collection for: ", sub {Dumper($var)}) unless ($status);
+    return get_value($collection,$var);
+}
+
+sub update_value {
+    my ($collection,$var,$val,$upsert,$multi) = @_;
+    my $logger = get_logger();
+    my $serialize = 0;
+    my $timestamp = DateTime->now->epoch;
+    if (ref $val->{"value"} eq "HASH") {
+        $serialize = 1;
+        my $json = Kynetx::Json::astToJson($val->{"value"});
+        $val->{"value"} = $json;
+        $logger->debug("Store (serialized): ",$val->{"value"});
+    }
+    $val->{"serialize"} = $serialize;
+    $val->{"created"}   = $timestamp;
+    $upsert = ($upsert) ? 1 : 0;
+    $multi = ($multi) ? 1 : 0;
+    my $c = get_collection($collection);
+    my $status = $c->update($var,$val,{"upsert" => $upsert,"multiple" => $multi, "safe" => SAFE});
+    $logger->warn("Failed to insert in $collection: ", sub {Dumper($val)}) unless ($status);
+    return $status;
+}
+
+sub mongo_error {
+    my $database = get_mongo();
+    return $database->last_error();
+}
+
+sub delete_value {
+    my ($collection,$var) = @_;
+    my $logger = get_logger();
+    my $c = get_collection($collection);
+    my $success = $c->remove($var,{"safe" => 1});
+    if (!$success ) {
+        $logger->debug("Delete error: ", mongo_error());
+    }
+}
 
 
 

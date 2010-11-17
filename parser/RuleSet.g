@@ -518,8 +518,11 @@ click_link returns[HashMap result]
 
 persistent_expr returns[HashMap result]
 	:
-	pc=persistent_clear_set  {
+	pc=persistent_clear  {
 		$result = $pc.result;
+	}
+	| ps=persistent_set {
+		$result = $ps.result;
 	}
 	| pi=persistent_iterate  {
 		$result = $pi.result;
@@ -533,11 +536,11 @@ persistent_expr returns[HashMap result]
    	;
 
 
-persistent_clear_set returns[HashMap result]
+persistent_clear returns[HashMap result]
 	:
-	cs=must_be_one[sar("clear","set")]  dm=VAR_DOMAIN COLON name=VAR {
+	CLEAR  dm=VAR_DOMAIN COLON name=VAR {
 		HashMap tmp = new HashMap();
-		tmp.put("action",$cs.text);
+		tmp.put("action","clear");
 		tmp.put("name",$name.text);
 		tmp.put("domain",$dm.text);
 		tmp.put("type","persistent");
@@ -545,6 +548,19 @@ persistent_clear_set returns[HashMap result]
 	}
 	;
 
+persistent_set returns[HashMap result]
+    :
+    SET dm=VAR_DOMAIN COLON name=VAR v=set_to? {
+        HashMap tmp = new HashMap();
+        tmp.put("action","set");
+        tmp.put("name",$name.text);
+        tmp.put("domain",$dm.text);
+        tmp.put("value",$v.result);
+        tmp.put("type","persistent");
+        $result = tmp;
+
+    }
+    ;
 
 persistent_iterate returns[HashMap result]
 	:
@@ -594,6 +610,13 @@ trail_with returns[Object result]
 		$result = $e.result;
 	}
 	;
+
+set_to returns[Object result]
+    :
+    e=expr {
+    	$result = $e.result;
+    }
+    ;
 
 counter_start returns[Object result]
 	:
@@ -1923,6 +1946,8 @@ ADD_OP: '+'|'-';
 
  FORGET: 'forget';
  MARK:'mark';
+ SET: 'set';
+ CLEAR: 'clear';
 
  COUNTER_OP: '+='
            | ' -='

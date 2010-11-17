@@ -61,6 +61,7 @@ get_remote_data
 get_cached_file
 check_cache
 mset_cache
+flush_cache
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -99,13 +100,13 @@ sub check_cache {
     my ($key) = @_;
     my $content;
     my $logger = get_logger();
-    $logger->debug("cache key: ", $key);
+    $logger->trace("cache key: ", $key);
     my $memd = get_memd();
     if ($memd) {
         $content = $memd->get($key);
     }
     if ($content) {
-        $logger->debug("Using cached data for $key");
+        #$logger->debug("Using cached data for $key");
         return $content;
     }
 }
@@ -118,9 +119,17 @@ sub mset_cache {
     }
     my $memd = get_memd();
     if ( $memd ) {
-        $logger->debug("Caching $key for $expire seconds");
+        #$logger->debug("Caching $key for $expire seconds");
         my $set = $memd->set($key,$content,$expire);
     }
+}
+
+sub flush_cache {
+    my ($key) = @_;
+    my $logger = get_logger();
+    my $memd = get_memd();
+    $memd->delete($key);
+    $logger->debug("Flushed ($key) from cache");
 }
 
 
@@ -225,13 +234,13 @@ sub set_parsing_flag {
   my $memd = shift;
   my $rid = shift;
   my $time = shift || 60; # defaults to 60 seconds
-  $memd->set("parsing:$rid", 1, $time); 
+  $memd->set("parsing:$rid", 1, $time);
 }
 
 sub clr_parsing_flag {
   my $memd = shift;
   my $rid = shift;
-  $memd->set("parsing:$rid", 0); 
+  $memd->set("parsing:$rid", 0);
 }
 
 sub is_parsing {

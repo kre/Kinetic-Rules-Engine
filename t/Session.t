@@ -33,6 +33,7 @@ use strict;
 
 use Test::More;
 use Test::LongString;
+use Test::Deep;
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
@@ -70,14 +71,25 @@ my $ck= session_id($session); # store for later use
 diag $ck;
 
 my $rid = 'rid123';
+my $mongoval;
+my $key;
+my $value;
 
-plan tests => 59;
+my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+
+plan tests => 61;
 
 #diag Dumper($session);
+$key = "a";
+$value = 3;
 
-session_store($rid, $session, 'a', 3);
+session_store($rid, $session, $key, $value);
 
-is(session_get($rid, $session, 'a'), 3, 'storing a simple value');
+is(session_get($rid, $session, $key), $value, 'storing a simple value');
+
+$mongoval = Kynetx::Persistence::Entity::get_edatum($rid,$ken,$key);
+
+is($mongoval,$value,"Saved as MongoDB Entity");
 
 my $now = DateTime->now->epoch;
 ok(session_created($rid, $session, 'a') <= $now, 'var created in the past');
@@ -91,10 +103,16 @@ ok(!session_defined($rid, $session, 'a'), 'the variable is not defined');
 is(session_get($rid, $session, 'a'), undef, 'do values get deleted?');
 is(session_created($rid, $session, 'a'), undef, 'deleting a var deletes timestamp too');
 
+$key = 'b';
 my $hash = {'x' => 4, 'y' => 'a string'};
-session_store($rid, $session, 'b', $hash);
+session_store($rid, $session, $key, $hash);
 
-is(session_get($rid, $session, 'b'), $hash, 'storing a hash');
+my $nhash = session_get($rid, $session, $key);
+$logger->debug("Got: ", sub {Dumper($nhash)});
+cmp_deeply($nhash, $hash, 'storing a hash');
+
+$mongoval = Kynetx::Persistence::Entity::get_edatum($rid,$ken,$key);
+cmp_deeply($mongoval, $hash, 'Hash stored to MongoDB entity');
 
 ok(session_within($rid, $session, 'b', 5, 'seconds'), 'b stored within last 5 seconds');
 
@@ -240,7 +258,7 @@ session_push($rid, $session, 't', $vals[0]);
 
 is(session_history($rid, $session, 't', 0), $vals[0], "history check");
 
-
+$logger->debug("Session: ", sub {Dumper($session)});
 # redo the session is the history still there?
 session_cleanup($session);
 

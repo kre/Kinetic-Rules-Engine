@@ -511,15 +511,13 @@ sub build_js_load {
 
     my $js = "";
 
-    $logger->debug("Rule name: ", $rule->{'name'});
-
     # emits
     $js .= eval_emit($rule->{'emit'}) . "\n" if(defined $rule->{'emit'});
-
 
     # callbacks
     my $cb = '';
     if($rule->{'callbacks'}) {
+        $logger->debug("Has callbacks");
 	foreach my $sense ('success','failure') {
 	    $cb .= gen_js_callbacks($rule->{'callbacks'}->{$sense},
 				    $req_info->{'txn_id'},
@@ -779,6 +777,8 @@ sub choose_action {
 	$url =~ s/'([^']*)'/$1/;
 
 	$logger->debug("URL: ", $url);
+
+	my $pool = $req_info->{'pool'} ||= APR::Pool->new;
 
 	my $parsed_url = APR::URI->parse($req_info->{'pool'}, $url);
 	my $parsed_caller = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});

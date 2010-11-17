@@ -122,6 +122,7 @@ sub process_rules {
     my @rids = split(/;/, $rids);
     # if we sort @rids we change ruleset priority
     foreach my $rid (@rids) {
+        $logger->debug("-------------------------------------------Schedule $rid");
 	Log::Log4perl::MDC->put('site', $rid);
 	my $schedule = mk_schedule($req_info, $rid);
 	$js .= eval {
@@ -661,7 +662,6 @@ sub eval_rule_body {
     Kynetx::Expressions::den_to_exp(
        Kynetx::Expressions::eval_expr ($rule->{'cond'}, $rule_env, $rule->{'name'},$req_info, $session));
 
-
   my $js = '';
 
 
@@ -964,7 +964,7 @@ sub mk_schedule {
     if ($selected) {
 
       my $rulename = $rule->{'name'};
-
+        $logger->debug("Rule $rulename is selected");
       $schedule->add($rid,$rule,$ruleset,$req_info);
 
       my $vars = Kynetx::Actions::get_precondition_vars($rule);

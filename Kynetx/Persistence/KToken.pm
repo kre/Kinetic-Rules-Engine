@@ -1,0 +1,194 @@
+package Kynetx::Persistence::KToken;
+# file: Kynetx/Persistence/KToken.pm
+#
+# Copyright 2007-2009, Kynetx Inc.  All rights reserved.
+#
+# This Software is an unpublished, proprietary work of Kynetx Inc.
+# Your access to it does not grant you any rights, including, but not
+# limited to, the right to install, execute, copy, transcribe, reverse
+# engineer, or transmit it by any means.  Use of this Software is
+# governed by the terms of a Software License Agreement transmitted
+# separately.
+#
+# Any reproduction, redistribution, or reverse engineering of the
+# Software not in accordance with the License Agreement is expressly
+# prohibited by law, and may result in severe civil and criminal
+# penalties. Violators will be prosecuted to the maximum extent
+# possible.
+#
+# Without limiting the foregoing, copying or reproduction of the
+# Software to any other server or location for further reproduction or
+# redistribution is expressly prohibited, unless such reproduction or
+# redistribution is expressly permitted by the License Agreement
+# accompanying this Software.
+#
+# The Software is warranted, if at all, only according to the terms of
+# the License Agreement. Except as warranted in the License Agreement,
+# Kynetx Inc. hereby disclaims all warranties and conditions
+# with regard to the software, including all warranties and conditions
+# of merchantability, whether express, implied or statutory, fitness
+# for a particular purpose, title and non-infringement.
+#
+use strict;
+use warnings;
+use lib qw(
+    /web/lib/perl
+);
+
+
+use Log::Log4perl qw(get_logger :levels);
+use DateTime;
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
+# most Kyentx modules require this
+use Log::Log4perl qw(get_logger :levels);
+use Kynetx::Session qw(:all);
+use Kynetx::Configure qw(:all);
+use Kynetx::MongoDB qw(:all);
+use Kynetx::Memcached qw(
+    check_cache
+    mset_cache
+);
+use Kynetx::Persistence::KEN qw(
+    new_ken
+);
+use MongoDB;
+use MongoDB::OID;
+use Digest::MD5 qw(
+    md5_base64
+);
+
+use Exporter;
+use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+use constant KTOKEN => "_ktoken";
+use constant TOKEN_CACHE_TIME => 20;
+
+our $VERSION     = 1.00;
+our @ISA         = qw(Exporter);
+
+# put exported names inside the "qw"
+our %EXPORT_TAGS = (all => [
+qw(
+    session_has_token
+    is_valid_token
+    store_token_to_apache_session
+    delete_token
+    get_token
+    KTOKEN
+) ]);
+our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
+
+
+sub session_has_token {
+    my ($session, $rid) = @_;
+    my $logger = get_logger();
+    $logger->trace("Session id: ",Kynetx::Session::session_id($session));
+    $logger->trace("Session tokens: ",sub {Dumper($session->{KTOKEN})});
+    my $ktoken = $session->{KTOKEN}->{$rid};
+    if ($ktoken) {
+        #$logger->debug("Has token returns $ktoken");
+        return $ktoken;
+    } else {
+        $logger->debug("No token found");
+        return undef;
+    }
+}
+
+
+sub new_token {
+    my ($rid,$ken) = @_;
+    my $logger = get_logger();
+    my $kpds = Kynetx::MongoDB::get_collection("tokens");
+    $ken = Kynetx::Persistence::KEN::new_ken() unless ($ken);
+    my $oid = MongoDB::OID->new();
+    my $k1 = md5_base64($oid->to_string);
+    my $k2 = md5_base64($rid);
+    my $ktoken = $k1.$k2;
+    my $lastactive = DateTime->now->epoch;
+    my $token = {
+        "ken" => $ken,
+        "ktoken" => $ktoken,
+        "_id" => $oid,
+        "rid" => $rid,
+        "last_active" => $lastactive,
+    };
+    my $status = $kpds->insert($token,{"safe" => 1});
+    $logger->trace("Insert: ", sub {Dumper($status)});
+    if ($status) {
+        Kynetx::Memcached::mset_cache($ktoken,$ken,TOKEN_CACHE_TIME);
+        return $ktoken;
+    } else {
+        $logger->warn("Token request error: ", mongo_error());
+    }
+
+}
+
+sub store_token_to_apache_session {
+    my ($ktoken,$rid,$session) = @_;
+    my $logger = get_logger();
+    my $test = is_valid_token($ktoken,$rid);
+    if ($test) {
+        $logger->debug("Set token $ktoken in session ",Kynetx::Session::session_id($session));
+        $session->{KTOKEN}->{$rid} = $ktoken;
+        return $session->{KTOKEN}->{$rid};
+    } else {
+        $logger->debug("Can't save ($ktoken) to session");
+        return undef;
+    }
+}
+
+sub get_token {
+    my ($ktoken,$rid) = @_;
+    my $logger = get_logger();
+    my $kpds = Kynetx::MongoDB::get_collection("tokens");
+    my $valid = $kpds->find_one({"ktoken" => $ktoken});
+    my $ts = DateTime->now->epoch;
+    if ($valid) {
+        my $ken = $valid->{'ken'};
+        Kynetx::Memcached::mset_cache($ktoken,$ken,TOKEN_CACHE_TIME);
+        $kpds->update({"ktoken" => $ktoken},{'$set' => {"last_active" => $ts}});
+        return $valid;
+    } else {
+        return undef;
+    }
+}
+
+sub is_valid_token {
+    my ($ktoken,$rid) = @_;
+    my $logger = get_logger();
+    my $kpds = Kynetx::MongoDB::get_collection("tokens");
+    my $valid = $kpds->find_one({"ktoken" => $ktoken});
+    if ($valid) {
+        #$logger->debug("Checking $ktoken for ruleset $rid");
+        my $oid = $valid->{'_id'}->to_string;
+        $ktoken =~ m/^([A-Za-z0-9+\/]{22})([A-Za-z0-9+\/]{22})$/;
+        my $m_oid = $1;
+        my $m_rid = $2;
+        my $m_oid2 = md5_base64($oid);
+        my $m_rid2 = md5_base64($rid);
+        $logger->trace("$m_oid");
+        $logger->trace("$m_oid2");
+        $logger->trace("$m_rid");
+        $logger->trace("$m_rid2");
+        if ($m_oid eq $m_oid2 && $m_rid eq $m_rid2) {
+            #$logger->debug("Token is valid");
+            return 1;
+        } else {
+            return 0;
+            $logger->debug("Token is NOT valid");
+        }
+    } else {
+        return 0;
+            $logger->debug("Token is NOT valid");
+    }
+}
+
+sub delete_token {
+    my ($ktoken) = @_;
+    my $kpds = Kynetx::MongoDB::get_collection("tokens");
+    $kpds->remove({"ktoken" => $ktoken},{"safe" => 1});
+    Kynetx::Memcached::flush_cache($ktoken);
+}
+
+1;

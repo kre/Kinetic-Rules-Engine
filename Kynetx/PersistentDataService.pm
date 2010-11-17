@@ -3,33 +3,33 @@ package Kynetx::PersistentDataService;
 # file: Kynetx/Predicates/Referers.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 
 use strict;
 use warnings;
@@ -44,7 +44,7 @@ use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Configure qw(:all);
-
+use Kynetx::Persistence qw(save_persistent_var);
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
@@ -56,7 +56,7 @@ our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
@@ -79,8 +79,8 @@ sub handler {
     my $rid = 'unknown';
     my $vars = 'unknown';
 
-    ($method,$rid,$sid, $vars) = 
-      $r->path_info =~ 
+    ($method,$rid,$sid, $vars) =
+      $r->path_info =~
 	m!/(get|store|version)(?:/([A-Za-z0-9_;]+)/([A-Za-z0-9_]+)/([A-Za-z0-9_;]+)/?)?!;
 
     $logger->debug("processing method $method on RID $rid and session $sid with vars $vars");
@@ -110,13 +110,13 @@ sub handler {
       print store_values($rid, $session, $vars, $val)
     }
 
-    return Apache2::Const::OK; 
+    return Apache2::Const::OK;
 }
 
 sub get_values {
   my ($rid, $session, $vars) = @_;
 
-  return astToJson({$vars => session_get($rid, $session, $vars)});
+  return astToJson({$vars => Kynetx::Persistence::get_persistent_var("ent",$rid, $session, $vars)});
 }
 
 sub store_values {
@@ -130,7 +130,7 @@ sub store_values {
   my $nval = eval { jsonToAst($val) };
   $nval = $val if ($@);
 
-  return astToJson({$vars => session_store($rid, $session, $vars, $nval)});
+  return astToJson({$vars => Kynetx::Persistence::save_persistent_var("ent",$rid, $session, $vars, $nval)});
 
 }
 

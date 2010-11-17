@@ -56,6 +56,7 @@ use Kynetx::Memcached qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
+use Kynetx::Persistence qw/:all/;
 
 
 use Kynetx::FakeReq;
@@ -182,7 +183,7 @@ sub add_json_testcase {
 	);
 }
 
-
+#goto ENDY;
 #
 # note if the rules don't have unique names, you can get rule environment cross
 # contamination
@@ -1829,7 +1830,7 @@ add_testcase(
     0
     );
 
-
+ENDY:
 
 $krl_src = <<_KRL_;
 ruleset two_rules_first_fires {
@@ -2052,7 +2053,6 @@ add_testcase(
     $krl_src,
     $js,
     $dummy_final_req_info,
-    0
     );
 
 # multiple raises
@@ -2123,7 +2123,6 @@ add_testcase(
     $krl_src,
     $js,
     $dummy_final_req_info,
-    0
     );
 
 
@@ -2516,7 +2515,7 @@ foreach my $case (@test_cases) {
 
   if($case->{'type'} eq 'ruleset') {
 
-    Kynetx::Rules::stash_ruleset($req_info, 
+    Kynetx::Rules::stash_ruleset($req_info,
 				 Kynetx::Rules::optimize_ruleset($case->{'expr'})
 				);
 
@@ -2573,12 +2572,15 @@ foreach my $case (@test_cases) {
 
     my $re = qr/$case->{'val'}/;
 
-    cmp_deeply($js,
+    my $result = cmp_deeply($js,
 	 re($re),
 	 "Evaling rule " . $case->{'src'});
     $test_count++;
 
-
+    if (! $result){
+        diag $js;
+        die;
+    };
 
   }
 
@@ -2612,10 +2614,10 @@ sub test_datafeeds {
 
     skip "No server available", 1 if ($no_server_available);
     my $krl = Kynetx::Parser::parse_ruleset($src);
-    
+
     my $req_info = local_gen_req_info($krl->{'ruleset_name'});
 
-    Kynetx::Rules::stash_ruleset($req_info, 
+    Kynetx::Rules::stash_ruleset($req_info,
 				 Kynetx::Rules::optimize_ruleset($krl)
 				);
 
@@ -2912,10 +2914,10 @@ test_datafeeds(
 # session tests
 #
 $test_count += 3;
-
-is(session_get($rid,$session,'archive_pages_now'), undef, "Archive pages now reset");
-is(session_get($rid,$session,'archive_pages_now2'), undef, "Archive pages now2 reset");
-is(session_get($rid,$session,'archive_pages_old'), 4, "Archive pages old iterated");
+my $domain = "ent";
+is(get_persistent_var($domain,$rid,$session,'archive_pages_now'), undef, "Archive pages now reset");
+is(get_persistent_var($domain,$rid,$session,'archive_pages_now2'), undef, "Archive pages now2 reset");
+is(get_persistent_var($domain,$rid,$session,'archive_pages_old'), 4, "Archive pages old iterated");
 
 session_delete($rid,$session,'archive_pages_old');
 session_delete($rid,$session,'archive_pages_now');

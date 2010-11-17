@@ -115,6 +115,7 @@ $my_req_info->{"$rid:key:facebook"} = {'consumer_key' => '116360591732083',
 $logger->debug("Get a random quote");
 my $rquote = "contactless not, swipe again please";
 my $ua = LWP::UserAgent->new;
+$ua->timeout(10);
 my $quote_url = 'http://www.iheartquotes.com/api/v1/random?max_lines=4&show_permalink=false&show_source=0';
 $resp = $ua->request(GET $quote_url);
 if ($resp->is_success) {
@@ -355,7 +356,7 @@ my $post_description;
 ## Get the fbid for Lehi
 my $city= "Lehi, Utah";
 $description = "Facebook Location search";
-$expected = {'data' => array_each($user_object)};
+$expected = superhashof({'data' => array_each($user_object)});
 $args = [{'type' => 'page',
     'q' => $city
 }];
@@ -426,7 +427,7 @@ test_facebook('metadata',$args,$expected,$description,0);
 
 ##
 $description = "Get alternate object metadata";
-$expected = $post_meta;
+$expected =  superhashof($post_meta);
 $args = [{'id' => $postid}];
 test_facebook('metadata',$args,$expected,$description,0);
 
