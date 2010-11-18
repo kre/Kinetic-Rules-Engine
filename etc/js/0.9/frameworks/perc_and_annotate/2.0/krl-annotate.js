@@ -38,7 +38,7 @@ if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
                 "use_change_condition": true,
                 "domains": {
                     "www.google.com": {
-                        "selector": "li.g.w0",
+                        "selector": "li.g",
                         "modify": "div.s",
                         "watcher": "#rso",
                         "urlSel":".l",
@@ -686,9 +686,11 @@ if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
 
             var annotateData = {};
             var phoneSelector = annotator.defaults.domains[this.domain_name].phoneSel;
+            var urlSelector = annotator.defaults.domains[this.domain_name].urlSel;
 
             var phoneTemp = $KOBJ(toAnnotate).find(phoneSelector).text().replace(/[\u00B7() -]/g, "");
-            var urlTemp = $KOBJ("h3 a",$KOBJ(toAnnotate).parent()).attr("href");
+//            var urlTemp = $KOBJ("h3 a",$KOBJ(toAnnotate).parent()).attr("href");
+            var urlTemp = $KOBJ(toAnnotate).find(urlSelector).attr("href");
 
             if (urlTemp) {
                 annotateData["url"] = urlTemp;
@@ -786,10 +788,10 @@ if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
                 "flush_domains":  true,
                 "domains": {
                     "www.google.com":{
-                        "selector":"#rso>li>div>div[style='padding-bottom:10px']",
+                        "selector":"#rso>li>div>div[style='padding-bottom: 10px;'],#ires>ol>li>div>div[style='padding-bottom: 10px;'],#ires>ol>li>div>div[style='padding-bottom:10px'],#ires>ol>li>div>div[style='PADDING-BOTTOM: 10px']",
                         "watcher":"#rso",
                         "phoneSel":"nobr",
-                        "urlSel":"cite",
+                        "urlSel":"a.l",
                         "modify":"",
                         "change_condition": KOBJAnnotateSearchResults.google_search_change_condition,
                         "extract_function": KOBJAnnotateLocalSearchResults.annotate_local_search_google_extractdata
