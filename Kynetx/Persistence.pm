@@ -78,7 +78,7 @@ $Data::Dumper::Indent = 1;
 sub delete_persistent_var {
     my ($domain,$rid,$session,$varname) = @_;
     my $logger = get_logger();
-    $logger->debug("Delete $domain","var: $varname");
+    $logger->trace("Delete $domain","var: $varname");
     if ($domain eq 'ent') {
         my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
         Kynetx::Persistence::Entity::delete_edatum($rid,$ken,$varname);
@@ -96,7 +96,7 @@ sub save_persistent_var {
     }
 
     my $logger = get_logger();
-    $logger->debug("Save $domain","var: $varname$op_name");
+    $logger->trace("Save $domain","var: $varname$op_name");
     my $status;
     if ($domain eq 'ent') {
         my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
@@ -120,10 +120,10 @@ sub increment_persistent_var {
     my $old_value = get_persistent_var($domain,$rid,$session,$varname);
     if (defined $old_value) {
         save_persistent_var($domain,$rid,$session,$varname,$old_value + $value);
-        $logger->debug("var $varname in(de)cremented by $value");
+        $logger->trace("var $varname in(de)cremented by $value");
     } else {
         save_persistent_var($domain,$rid,$session,$varname,$from);
-        $logger->debug("var $varname initialized to $from");
+        $logger->trace("var $varname initialized to $from");
     }
     return get_persistent_var($domain,$rid,$session,$varname);
 }
@@ -131,7 +131,7 @@ sub increment_persistent_var {
 sub get_persistent_var {
     my ($domain,$rid,$session,$varname,$gcreated) = @_;
     my $logger = get_logger();
-    $logger->debug("Get $domain","var: $varname");
+    $logger->trace("Get $domain","var: $varname");
     my $val = undef;
     if ($domain eq 'ent') {
         my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
@@ -151,7 +151,7 @@ sub get_persistent_var {
 sub touch_persistent_var {
     my ($domain,$rid,$session,$varname,$timestamp) = @_;
     my $logger = get_logger();
-    $logger->debug("Touch $domain","var: $varname ($timestamp)");
+    $logger->trace("Touch $domain","var: $varname (",$timestamp || "",")");
     my $val = undef;
     if ($domain eq 'ent') {
         my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
@@ -173,7 +173,7 @@ sub touch_persistent_var {
 sub delete_persistent_element {
     my ($domain, $rid, $session, $varname, $regexp) = @_;
     my $logger = get_logger();
-    $logger->debug("Forget /$regexp/ from $varname");
+    $logger->trace("Forget /$regexp/ from $varname");
     my $trail = get_persistent_var($domain,$rid,$session,$varname);
     if (ref $trail eq "ARRAY") {
         my $found = 0;
@@ -181,9 +181,9 @@ sub delete_persistent_element {
         foreach my $element (@{$trail}) {
             if ($element->[0] =~ /$regexp/ && !$found) {
                 $found = 1;
-                $logger->debug("skip element: ",$element->[0]);
+                $logger->trace("skip element: ",$element->[0]);
             } else {
-                $logger->debug("save element: ",$element->[0]);
+                $logger->trace("save element: ",$element->[0]);
                 push(@narry,$element);
             }
         }
@@ -197,23 +197,23 @@ sub delete_persistent_element {
 sub add_persistent_element {
     my ($domain, $rid, $session, $varname, $value) = @_;
     my $logger = get_logger();
-    $logger->debug("Push $domain","var onto $varname");
+    $logger->trace("Push $domain","var onto $varname");
     my $trail = get_persistent_var($domain,$rid,$session,$varname);
 
     my $tuple = [$value, DateTime->now->epoch];
     if ($trail) {
         if (ref $trail eq 'ARRAY') {
             unshift @{$trail},$tuple;
-            $logger->debug("Pushing $domain","var onto $varname");
+            $logger->trace("Pushing $domain","var onto $varname");
         } else {
-            $logger->debug("$varname is not a valid trail, but it is going to be...");
+            $logger->trace("$varname is not a valid trail, but it is going to be...");
             # param of 1 returns var creation time instead of value
             my $timestamp = get_persistent_var($domain,$rid,$session,$varname,1);
             $trail = [$tuple,[$trail,$timestamp]];
         }
     } else {
         $trail = [$tuple];
-        $logger->debug("Pushing $domain","var onto $varname as new trail");
+        $logger->trace("Pushing $domain","var onto $varname as new trail");
     }
     return save_persistent_var($domain,$rid,$session,$varname,$trail);
 }
@@ -222,7 +222,7 @@ sub consume_persistent_element {
     my ($domain, $rid, $session, $varname, $direction) = @_;
     my $logger = get_logger();
     my $op_name = $direction ? "Pop" : "Shift";
-    $logger->debug("$op_name from $varname");
+    $logger->trace("$op_name from $varname");
     my $trail = get_persistent_var($domain,$rid,$session,$varname);
     if (ref $trail eq "ARRAY") {
         my $res;
@@ -246,7 +246,7 @@ sub consume_persistent_element {
 sub persistent_element_index {
     my ($domain,$rid,$session,$varname,$regexp)= @_;
     my $logger = get_logger();
-    $logger->debug("Index $varname for ",sub {Dumper($regexp)});
+    $logger->trace("Index $varname for ",sub {Dumper($regexp)});
     my $trail = get_persistent_var($domain,$rid,$session,$varname);
     my $index = undef;
     for my $i (0..@{$trail}-1) {
@@ -265,7 +265,7 @@ sub persistent_element_index {
 sub contains_persistent_element {
     my ($domain,$rid,$session,$varname,$regexp)= @_;
     my $logger = get_logger();
-    $logger->debug("Check $varname for ",sub {Dumper($regexp)});
+    $logger->trace("Check $varname for ",sub {Dumper($regexp)});
     my $res = persistent_element_index($domain,$rid,$session,$varname,$regexp);
     if (defined $res) {
         return $res->[0];
@@ -277,7 +277,7 @@ sub contains_persistent_element {
 sub persistent_element_before {
     my ($domain,$rid,$session,$varname,$regexp1,$regexp2)= @_;
     my $logger = get_logger();
-    $logger->debug("Check $varname for ",sub {Dumper($regexp1)}, " before ", sub {Dumper($regexp2)});
+    $logger->trace("Check $varname for ",sub {Dumper($regexp1)}, " before ", sub {Dumper($regexp2)});
     my $first = persistent_element_index($domain,$rid,$session,$varname,$regexp1);
     my $second = persistent_element_index($domain,$rid,$session,$varname,$regexp2);
     return $first->[1] < $second->[1];
@@ -286,7 +286,7 @@ sub persistent_element_before {
 sub persistent_element_within {
     my ($domain,$rid,$session,$varname,$regexp,$timevalue,$timeframe)= @_;
     my $logger = get_logger();
-    $logger->debug("Check $varname for ",sub {Dumper($regexp)}, " within ", sub {Dumper($timevalue)}, ",",sub {Dumper($timeframe)});
+    $logger->trace("Check $varname for ",sub {Dumper($regexp)}, " within ", sub {Dumper($timevalue)}, ",",sub {Dumper($timeframe)});
     my $element_index = persistent_element_index($domain,$rid,$session,$varname,$regexp);
     return 0 unless ($element_index);
     my $desired = DateTime->from_epoch(epoch => $element_index->[1]);

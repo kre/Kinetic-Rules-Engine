@@ -63,6 +63,7 @@ use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use constant KTOKEN => "_ktoken";
 use constant TOKEN_CACHE_TIME => 20;
+use constant COLLECTION => "tokens";
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -106,6 +107,10 @@ sub new_token {
     my $k2 = md5_base64($rid);
     my $ktoken = $k1.$k2;
     my $lastactive = DateTime->now->epoch;
+    my $var = {
+        "ktoken" => $ktoken,
+#        "_id" => $oid,
+    };
     my $token = {
         "ken" => $ken,
         "ktoken" => $ktoken,
@@ -113,10 +118,10 @@ sub new_token {
         "rid" => $rid,
         "last_active" => $lastactive,
     };
-    my $status = $kpds->insert($token,{"safe" => 1});
+#    my $status = $kpds->insert($token,{"safe" => 1});
+    my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0);
     $logger->trace("Insert: ", sub {Dumper($status)});
     if ($status) {
-        Kynetx::Memcached::mset_cache($ktoken,$ken,TOKEN_CACHE_TIME);
         return $ktoken;
     } else {
         $logger->warn("Token request error: ", mongo_error());
@@ -141,17 +146,21 @@ sub store_token_to_apache_session {
 sub get_token {
     my ($ktoken,$rid) = @_;
     my $logger = get_logger();
-    my $kpds = Kynetx::MongoDB::get_collection("tokens");
-    my $valid = $kpds->find_one({"ktoken" => $ktoken});
-    my $ts = DateTime->now->epoch;
-    if ($valid) {
-        my $ken = $valid->{'ken'};
-        Kynetx::Memcached::mset_cache($ktoken,$ken,TOKEN_CACHE_TIME);
-        $kpds->update({"ktoken" => $ktoken},{'$set' => {"last_active" => $ts}});
-        return $valid;
-    } else {
-        return undef;
-    }
+    my $var = {"ktoken" => $ktoken};
+    return Kynetx::MongoDB::get_value(COLLECTION,$var);
+#    my $kpds = Kynetx::MongoDB::get_collection("tokens");
+#    my $valid = $kpds->find_one({"ktoken" => $ktoken});
+#    my $ts = DateTime->now->epoch;
+#    if ($valid) {
+#        $logger->debug("Touch token $ktoken $ts");
+#        my $ken = $valid->{'ken'};
+#        Kynetx::Memcached::mset_cache($ktoken,$ken,TOKEN_CACHE_TIME);
+#        $kpds->update({"ktoken" => $ktoken},{'$set' => {"last_active" => $ts}});
+#        return $valid;
+#    } else {
+#        $logger->debug("Token $ktoken not found");
+#        return undef;
+#    }
 }
 
 sub is_valid_token {
@@ -186,9 +195,11 @@ sub is_valid_token {
 
 sub delete_token {
     my ($ktoken) = @_;
-    my $kpds = Kynetx::MongoDB::get_collection("tokens");
-    $kpds->remove({"ktoken" => $ktoken},{"safe" => 1});
-    Kynetx::Memcached::flush_cache($ktoken);
+    my $var = {"ktoken" => $ktoken};
+    Kynetx::MongoDB::delete_value(COLLECTION,$var);
+#    my $kpds = Kynetx::MongoDB::get_collection("tokens");
+#    $kpds->remove({"ktoken" => $ktoken},{"safe" => 1});
+#    Kynetx::Memcached::flush_cache($ktoken);
 }
 
 1;

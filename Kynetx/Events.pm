@@ -142,13 +142,13 @@ sub process_event {
 
     my $req_info =
       Kynetx::Request::build_request_env( $r, $domain, $rids, $eventtype );
-    my $session_lock = "lock-" . session_id($session);
-    if ( $req_info->{'_lock'}->lock($session_lock) ) {
-        $logger->debug("Session lock acquired for $session_lock");
-    } else {
-        $logger->warn( "Session lock request timed out for ",
-                       sub { Dumper($rids) } );
-    }
+#    my $session_lock = "lock-" . session_id($session);
+#    if ( $req_info->{'_lock'}->lock($session_lock) ) {
+#        $logger->debug("Session lock acquired for $session_lock");
+#    } else {
+#        $logger->warn( "Session lock request timed out for ",
+#                       sub { Dumper($rids) } );
+#    }
 
     Kynetx::Request::log_request_env( $logger, $req_info );
 

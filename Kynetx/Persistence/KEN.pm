@@ -105,7 +105,7 @@ sub has_ken {
     if ($token) {
         $logger->trace("Has token for $rid ($token)");
         $ken = Kynetx::Memcached::check_cache($token);
-        $logger->trace("[has_ken] found KEN: $ken for Token: $token");
+        #$logger->trace("[has_ken] found KEN: $ken for Token: $token");
         if (is_valid_token($token,$rid)) {
             my $token_obj = get_token($token,$rid);
             if ($token_obj) {
@@ -148,9 +148,10 @@ sub new_ken {
 sub get_ken_value {
     my ($ken,$key) = @_;
     my $logger = get_logger();
-    my $KENS = Kynetx::MongoDB::get_collection(COLLECTION);
+#    my $KENS = Kynetx::MongoDB::get_collection(COLLECTION);
     my $oid = MongoDB::OID->new(value => $ken);
-    my $valid = $KENS->find_one({"_id" => $oid});
+#    my $valid = $KENS->find_one({"_id" => $oid});
+    my $valid = Kynetx::MongoDB::get_value(COLLECTION,{"_id" => $oid});
     return $valid->{$key};
 }
 
@@ -173,7 +174,9 @@ sub delete_ken {
     my ($ken) = @_;
     my $kpds = Kynetx::MongoDB::get_collection(COLLECTION);
     my $oid = MongoDB::OID->new("value" => $ken);
-    $kpds->remove({"_id" => $oid},{"safe" => 1});
+    my $var = {"_id" => $oid};
+    $kpds->remove($var,{"safe" => 1});
+    Kynetx::MongoDB::clear_cache(COLLECTION,$var);
 }
 
 
