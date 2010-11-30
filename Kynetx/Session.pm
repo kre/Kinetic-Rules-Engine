@@ -45,15 +45,12 @@ use Kynetx::Configure qw(:all);
 use Kynetx::Persistence::KEN qw(
     get_ken
 );
-use Kynetx::Memcached;
+use Kynetx::Persistence::Entity qw(:all);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use constant MAX_STACK_SIZE => 50;
-use constant EXPIRE => 60;
-
-use constant DEFAULT_MEMCACHED_PORT => '11211';
 
 
 our $VERSION     = 1.00;
@@ -91,6 +88,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 sub process_session {
     my ($r, $ck) = @_;
+
     my $logger = get_logger();
     my $cookie = $r->headers_in->{'Cookie'};
     $cookie =~ s/^.*[;]?SESSION_ID=(\w*)[;]?.*$/$1/ if(defined $cookie);
@@ -116,10 +114,6 @@ sub process_session {
 	$logger->debug("Create cookie...");
 	$session = tie_servers($session,$cookie);
     }
-
-    # we don't need the value at the moment, but we need to
-    # force the creation of an anonymous KEN if none is found
-    get_ken($session);
 
     my $dt = DateTime->now;
 
@@ -181,10 +175,10 @@ sub session_cleanup {
     $logger->debug("Cleaning up session");
     untie %{ $session };
 
-    if ($req_info && $req_info->{"_lock"}) {
-      $logger->debug("Session lock cleared for $session_id");
-      $req_info->{"_lock"}->unlock;
-    }
+#    if ($req_info && $req_info->{"_lock"}) {
+#      $logger->debug("Session lock cleared for $session_id");
+#      $req_info->{"_lock"}->unlock;
+#    }
 }
 
 sub session_id {
@@ -201,17 +195,15 @@ sub session_keys {
 sub session_store {
     my ($rid, $session, $var, $val) = @_;
     my $logger = get_logger();
-    $logger->trace("session store: ",$var," = ",$val);
+    my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+    my $status = Kynetx::Persistence::Entity::put_edatum($rid,$ken,$var,$val);
 
-    # timestamp session to ensure it gets written back
-    my $dt = DateTime->now->epoch;
-    $session->{'_timestamp'} = $dt;
+    if ($status) {
+        return $val;
+    } else {
+        return undef;
+    }
 
-    $session->{$rid} = {} unless exists $session->{$rid};
-
-    $session->{$rid}->{$var} = $val;
-    $session->{$rid}->{$var.'_created'} = $dt;
-    return $val;
 
 }
 
@@ -232,44 +224,36 @@ sub session_touch {
 
 sub session_get {
     my ($rid, $session, $var) = @_;
-    my $val;
-    if(exists $session->{$rid} && exists $session->{$rid}->{$var}) {
-	   $val =  $session->{$rid}->{$var};
+    my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+
+    my $val = Kynetx::Persistence::Entity::get_edatum($rid,$ken,$var);
+    if (defined $val) {
+        return $val;
     } else {
-	   $val =  undef;
+        return undef;
     }
-    return $val;
 }
 
 sub session_created {
     my ($rid, $session, $var) = @_;
-    my $val;
-
-    if(exists $session->{$rid} && exists $session->{$rid}->{$var}) {
-	$val =  $session->{$rid}->{$var.'_created'};
-    } else {
-	$val =  undef;
-    }
-    return $val;
+    my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+    return Kynetx::Persistence::Entity::get_created($rid,$ken,$var);
 }
 
 
 sub session_defined {
     my ($rid, $session, $var) = @_;
+    my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 
-    return exists $session->{$rid} && exists $session->{$rid}->{$var};
+    return defined get_edatum($rid,$ken,$var);
 }
 
 sub session_delete {
     my ($rid, $session, $var) = @_;
-    # timestamp session to ensure it gets written back
-    my $dt = DateTime->now->epoch;
-    $session->{'_timestamp'} = $dt;
-
-    if(exists $session->{$rid} && exists $session->{$rid}->{$var}) {
-	delete $session->{$rid}->{$var};
-	delete $session->{$rid}->{$var.'_created'};
-    }
+    my $logger = get_logger();
+    $logger->debug("Delete session var: $var");
+    my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+    return delete_edatum($rid,$ken,$var);
 }
 
 
@@ -345,6 +329,7 @@ sub session_push {
     my $logger = get_logger();
 
     my $res = [];
+    $logger->debug("Push on $var: ",sub {Dumper($val)});
     my $tuple = [$val, DateTime->now->epoch];
     if (session_defined($rid, $session, $var)) {
 
@@ -383,18 +368,24 @@ sub session_pop {
     my $res = undef;
     my $s = session_get($rid, $session, $var);
     if(ref $s eq 'ARRAY') {
-	$res = shift @{ $s };
+	   $res = shift @{ $s };
+	   session_store($rid,$session,$var,$s);
     }
     return $res->[0]; # just the value
 }
 
+# TODO: delete this sub since it is not used?...
 sub session_next {
     my ($rid, $session, $var) = @_;
+    my $logger = get_logger();
 
     my $res = undef;
     my $s = session_get($rid, $session, $var);
+    $logger->debug("[Session next] session: ", sub {Dumper($s)});
     if(ref $s eq 'ARRAY') {
-	$res = pop @{ $s };
+       $logger->debug("[Session_next] is Array");
+	   $res = pop @{ $s };
+	   session_store($rid,$session,$var,$s);
     }
     return $res->[0]; # just the value
 }
@@ -405,7 +396,7 @@ sub session_history {
     my $res = undef;
     my $s = session_get($rid, $session, $var);
     if(ref $s eq 'ARRAY') {
-	$res = $s->[$index];
+	   $res = $s->[$index];
     }
     return $res->[0];
 }

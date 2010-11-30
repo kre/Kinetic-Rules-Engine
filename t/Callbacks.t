@@ -77,7 +77,7 @@ my $session = Kynetx::Test::gen_session($r, $rid);
 
 
 my $numtests = 12;
-plan tests => $numtests + 4;
+plan tests => $numtests + 5;
 
 my($krl_src, $ruleset);
 #
@@ -96,7 +96,8 @@ ruleset $rid {
         click class="newsletter" triggers ent:archive_pages_now += 2 from 1
       } 
       failure {
-        click class="newsletter" triggers ent:archive_pages_now -= 2 from 1
+        click class="newsletter" triggers ent:archive_pages_now -= 2 from 1;
+        click class="flipper"
       } 
     }
   }
@@ -157,6 +158,18 @@ is(session_get($rid, $session, 'archive_pages_now'),
    "incrementing archive pages from undef"
   );
 
+Kynetx::Callbacks::process_callbacks($ruleset,
+				     'test0',
+				     'failure',
+				     'click',
+				     'flipper',
+				     $req_info,
+				     $session);
+				     
+is(session_get($rid, $session, 'archive_pages_now'),
+   1,
+   "incrementing archive pages unchanged"
+  );
 
 
 #diag Dumper($session);

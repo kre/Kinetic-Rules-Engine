@@ -518,8 +518,11 @@ click_link returns[HashMap result]
 
 persistent_expr returns[HashMap result]
 	:
-	pc=persistent_clear_set  {
+	pc=persistent_clear  {
 		$result = $pc.result;
+	}
+	| ps=persistent_set {
+		$result = $ps.result;
 	}
 	| pi=persistent_iterate  {
 		$result = $pi.result;
@@ -533,11 +536,11 @@ persistent_expr returns[HashMap result]
    	;
 
 
-persistent_clear_set returns[HashMap result]
+persistent_clear returns[HashMap result]
 	:
-	cs=must_be_one[sar("clear","set")]  dm=VAR_DOMAIN COLON name=VAR {
+	CLEAR  dm=VAR_DOMAIN COLON name=VAR {
 		HashMap tmp = new HashMap();
-		tmp.put("action",$cs.text);
+		tmp.put("action","clear");
 		tmp.put("name",$name.text);
 		tmp.put("domain",$dm.text);
 		tmp.put("type","persistent");
@@ -545,6 +548,19 @@ persistent_clear_set returns[HashMap result]
 	}
 	;
 
+persistent_set returns[HashMap result]
+    :
+    SET dm=VAR_DOMAIN COLON name=VAR v=set_to? {
+        HashMap tmp = new HashMap();
+        tmp.put("action","set");
+        tmp.put("name",$name.text);
+        tmp.put("domain",$dm.text);
+        tmp.put("value",$v.result);
+        tmp.put("type","persistent");
+        $result = tmp;
+
+    }
+    ;
 
 persistent_iterate returns[HashMap result]
 	:
@@ -594,6 +610,13 @@ trail_with returns[Object result]
 		$result = $e.result;
 	}
 	;
+
+set_to returns[Object result]
+    :
+    e=expr {
+    	$result = $e.result;
+    }
+    ;
 
 counter_start returns[Object result]
 	:
@@ -1684,6 +1707,8 @@ meta_block
 	 ArrayList use_list = new ArrayList();
 	 HashMap keys_map = new HashMap();
 	 HashMap key_values = new HashMap();
+     ArrayList provide_list = new ArrayList();
+
 }
 @after  {
 	if(!keys_map.isEmpty())
@@ -1751,7 +1776,7 @@ meta_block
 		tmp.put("resource_type",$rtype.text);
 		use_list.add(tmp);
 	 })
-	 	| (MODULE  modname=VAR (ALIAS alias=VAR)?) {
+ 	| (MODULE  modname=VAR (ALIAS alias=VAR)?) {
 		HashMap tmp = new HashMap();
 		tmp.put("name",$modname.text);
 		tmp.put("type","module");
@@ -1761,7 +1786,13 @@ meta_block
 //		}
 		use_list.add(tmp);
 	 })
-		)*
+    | PROVIDE LEFT_BRACKET (e=VAR { provide_list.add($e.text); } (COMMA e2=VAR { provide_list.add($e2.text);})* )? RIGHT_BRACKET {
+      	HashMap tmp = new HashMap();
+      	tmp.put("names",provide_list);
+        meta_block_hash.put("provide",tmp); 
+        }
+
+	)*
 	 RIGHT_CURL
 
 	;
@@ -1915,6 +1946,8 @@ ADD_OP: '+'|'-';
 
  FORGET: 'forget';
  MARK:'mark';
+ SET: 'set';
+ CLEAR: 'clear';
 
  COUNTER_OP: '+='
            | ' -='
@@ -2048,6 +2081,9 @@ OTHER_OPERATORS
 
  USE
 	:	'use'
+	;
+ PROVIDE
+	:	'provide'
 	;
  CSS
 	:'css';

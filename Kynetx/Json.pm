@@ -42,6 +42,7 @@ use Data::Dumper;
 use Kynetx::Parser; # qw/:all/;
 use Kynetx::PrettyPrinter; # qw/:all/;
 use Kynetx::Util qw ( merror );
+use YAML::XS;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -60,10 +61,14 @@ our %EXPORT_TAGS = (
           jsonToAst
           jsonToAst_w
           get_items
+          deserialize_regexp_objects
+          serialize_regexp_objects
+          $REGEXP_TAG
           )
     ]
 );
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
+our $REGEXP_TAG = "__regexp__";
 
 sub krlToJson {
     my ($krl) = @_;
@@ -113,12 +118,55 @@ sub jsonToAst_w {
         $pstruct = JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(1)->decode($json);
     };
     if ($@ && not defined $pstruct) {
-        $logger->warn("Invalid JSON format => parse result as string --check debug for error details");
-        $logger->debug("JSON conversion error: ",$@);
-        $logger->debug("Result: ", sub {Dumper($pstruct)});
+        $logger->warn("####Invalid JSON format => parse result as string --check debug for error details");
+        $logger->debug("####JSON conversion error: ",$@);
+        $logger->debug("Source: \n##################################################\n$json");
         return $json
     } else {
         return $pstruct;
+    }
+}
+
+sub serialize_regexp_objects {
+    my ( $obj ) = @_;
+    my $logger = get_logger();
+    my $ret_val;
+    if ( ref $obj eq 'HASH' ) {
+        foreach my $key ( keys %$obj ) {
+            my $value = $obj->{$key};
+            if (ref $value eq "Regexp" ) {
+                $obj->{$key} = {$REGEXP_TAG => YAML::XS::Dump $value};
+            } else {
+                serialize_regexp_objects( $obj->{$key} );
+            }
+
+        }
+    } elsif ( ref $obj eq 'ARRAY' ) {
+        foreach my $element (@$obj) {
+            serialize_regexp_objects( $element );
+        }
+    }
+
+}
+
+sub deserialize_regexp_objects {
+    my ( $obj ) = @_;
+    my $logger = get_logger();
+    my $ret_val;
+    if ( ref $obj eq 'HASH' ) {
+        foreach my $key ( keys %$obj ) {
+            my $value = $obj->{$key};
+            if (ref $value eq "HASH" && $value->{$REGEXP_TAG}) {
+                my $regexp =  YAML::XS::Load $value->{$REGEXP_TAG};
+                $obj->{$key} = $regexp;
+            } else {
+                deserialize_regexp_objects( $obj->{$key} );
+            }
+        }
+    } elsif ( ref $obj eq 'ARRAY' ) {
+        foreach my $element (@$obj) {
+            deserialize_regexp_objects( $element );
+        }
     }
 }
 

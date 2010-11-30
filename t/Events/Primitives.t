@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 
 use lib qw(/web/lib/perl);
 use strict;
@@ -6,6 +6,7 @@ use warnings;
 
 use Test::More;
 use Test::LongString;
+use Test::Deep;
 
 use Apache::Session::Memcached;
 use DateTime;
@@ -30,7 +31,6 @@ use Kynetx::Configure qw/:all/;
 
 use Kynetx::FakeReq qw/:all/;
 
-#Log::Log4perl->easy_init($DEBUG);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -51,6 +51,10 @@ my $rule_env = Kynetx::Test::gen_rule_env();
 
 my $session = Kynetx::Test::gen_session($r, $rid);
 
+my $json;
+my $deserialized;
+my $logger = get_logger();
+
 
 my $test_count = 0;
 
@@ -59,7 +63,16 @@ my $pe1 = Kynetx::Events::Primitives->new();
 sleep 1; # that $pe2 has a different timestamp
 
 my $pe2 = Kynetx::Events::Primitives->new();
+#Log::Log4perl->easy_init($DEBUG);
 
+$json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($pe1);
+
+$logger->debug("PE1: $json");
+
+$deserialized = Kynetx::Events::Primitives->unserialize($json);
+
+cmp_deeply($deserialized,$pe1,"To JSON and Back");
+$test_count++;
 
 like($pe1->timestamp(), qr/\d+/, "timestamp is a number");
 $test_count++;
@@ -92,12 +105,25 @@ $pe1->set_type('pageview');
 ok($pe1->isa('pageview'), '$pe1 is a pageview');
 $test_count++;
 
+$json = $pe1->serialize();
+$logger->debug("After \$pe1 serialize: $json");
+$deserialized = Kynetx::Events::Primitives->unserialize($json);
+is_deeply($deserialized,$pe1,'$pe1 serialized and back');
+$test_count++;
+
+
 $pe2->pageview('http://www.windley.com/foo/bar.html');
 
 ok($pe2->isa('pageview'), '$pe2 is a pageview');
 $test_count++;
 
 is($pe2->url, 'http://www.windley.com/foo/bar.html', 'pageview url is correct');
+$test_count++;
+
+
+$json = $pe2->serialize();
+$deserialized = Kynetx::Events::Primitives->unserialize($json);
+is_deeply($deserialized,$pe2,'$pe2 serialized and back');
 $test_count++;
 
 my $pe4 = Kynetx::Events::Primitives->new();
@@ -107,6 +133,11 @@ ok($pe4->isa('click'), '$pe4 is a click');
 $test_count++;
 
 is($pe4->element, 'foo_id', 'click element is correct');
+$test_count++;
+
+$json = $pe4->serialize();
+$deserialized = Kynetx::Events::Primitives->unserialize($json);
+is_deeply($deserialized,$pe4,'$pe4 serialized and back');
 $test_count++;
 
 
@@ -119,6 +150,12 @@ $test_count++;
 is($pe5->element, 'foo_id', 'change element is correct');
 $test_count++;
 
+$json = $pe5->serialize();
+$deserialized = Kynetx::Events::Primitives->unserialize($json);
+is_deeply($deserialized,$pe5,'$pe5 serialized and back');
+$test_count++;
+
+
 my $pe6 = Kynetx::Events::Primitives->new();
 $pe6->submit('foo_id');
 
@@ -128,7 +165,10 @@ $test_count++;
 is($pe6->element, 'foo_id', 'submit element is correct');
 $test_count++;
 
-
+$json = $pe6->serialize();
+$deserialized = Kynetx::Events::Primitives->unserialize($json);
+is_deeply($deserialized,$pe6,'$pe6 serialized and back');
+$test_count++;
 
 
 done_testing($test_count);

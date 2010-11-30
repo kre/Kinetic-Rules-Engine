@@ -45,6 +45,7 @@ use Data::Dumper;
 
 
 use Kynetx::Session qw(:all);
+use Kynetx::Persistence qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Environments qw(:all);
@@ -175,7 +176,7 @@ sub authorize {
  my $description = $req_info->{"$rid:description"};
 
 
- my $nt = twitter($req_info);
+ my $nt = twitter($req_info,$session);
 
  my $base_cb_url = 'http://' .
                    Kynetx::Configure::get_config('OAUTH_CALLBACK_HOST').
@@ -192,22 +193,7 @@ sub authorize {
  $logger->debug("requesting authorization URL with callback_url = $callback_url");
  my $auth_url = $nt->get_authorization_url(callback => $callback_url);
 
- my $token_secret = $nt->request_token_secret;
-# $logger->debug("Storing token secret $token_secret for $rid and session ", session_id($session));
- session_store($rid, $session, 'twitter:token_secret', $token_secret);
- my $got =  session_get($rid, $session, 'twitter:token_secret');
-# $logger->debug("Stored token secret for $rid and session ", session_id($session), " $got");
-
- my $session_id = session_id($session);
-
- Kynetx::Memcached::mset_cache("$session_id:$rid:twitter:token_secret", $token_secret);
-
- # session_store($rid,$session,'foobar', "Hey Mark!!");
-
- # my $session_id = session_id($session);
- # # finish up
- # untie %{ $session };
- # $session = Kynetx::Session::tie_servers(undef,$session_id);
+ Kynetx::Persistence::save_persistent_var("ent",$rid, $session, 'twitter:token_secret', $nt->request_token_secret);
 
 
  $logger->debug("Got $auth_url ... sending user an authorization invitation");
@@ -242,12 +228,12 @@ sub process_oauth_callback {
   # we have to contruct a whole request env and session
   my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
   my $session = process_session($r);
-  my $session_lock = "lock-" . Kynetx::Session::session_id($session);
-  if ($req_info->{'_lock'}->lock($session_lock)) {
-    $logger->debug("Session lock acquired for $session_lock");
-  } else {
-    $logger->warn("Session lock request timed out for ",sub {Dumper($rid)});
-  }
+#  my $session_lock = "lock-" . Kynetx::Session::session_id($session);
+#  if ($req_info->{'_lock'}->lock($session_lock)) {
+#    $logger->debug("Session lock acquired for $session_lock");
+#  } else {
+#    $logger->warn("Session lock request timed out for ",sub {Dumper($rid)});
+#  }
 
   my $req = Apache2::Request->new($r);
   my $request_token = $req->param('oauth_token');
@@ -261,13 +247,7 @@ sub process_oauth_callback {
   $logger->debug("Successfully created Twitter object");
 
   $nt->request_token($request_token);
-
-  my $token_secret = session_get($rid, $session, 'twitter:token_secret');
-  my $session_id = session_id($session);
-  $token_secret = check_cache("$session_id:$rid:twitter:token_secret");
-  
-
-  $nt->request_token_secret($token_secret);
+  $nt->request_token_secret(Kynetx::Persistence::get_persistent_var("ent",$rid, $session, 'twitter:token_secret'));
 
 
   # exchange the request token for access tokens
@@ -600,7 +580,7 @@ sub get_consumer_tokens {
 sub store_access_tokens {
   my ($rid, $session, $access_token, $access_token_secret, $user_id, $screen_name) = @_;
 
-  my $r = session_store($rid, $session, 'twitter:access_tokens', {
+  my $r = Kynetx::Persistence::save_persistent_var("ent",$rid, $session, 'twitter:access_tokens', {
         access_token        => $access_token,
         access_token_secret => $access_token_secret,
 	user_id => $user_id,
@@ -624,7 +604,7 @@ sub get_access_tokens {
         screen_name => $consumer_tokens->{'screen_name'} || ''
     }
   } else {
-    $access_tokens = session_get($rid, $session, 'twitter:access_tokens');
+    $access_tokens = Kynetx::Persistence::get_persistent_var("ent",$rid, $session, 'twitter:access_tokens');
   }
 
   return $access_tokens;

@@ -46,27 +46,29 @@ use Kynetx::Rules;
 use Kynetx::Json;
 use Kynetx::Scheduler;
 use Kynetx::Response;
-
+use Kynetx::Persistence qw(:all);
 use Kynetx::Events::Primitives qw(:all);
 use Kynetx::Events::State qw(:all);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
-
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
-our $VERSION     = 1.00;
-our @ISA         = qw(Exporter);
+our $VERSION = 1.00;
+our @ISA     = qw(Exporter);
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [
-qw(
-compile_event_expr
-mk_event
-) ]);
-our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
+our %EXPORT_TAGS = (
+    all => [
+        qw(
+          compile_event_expr
+          mk_event
+          )
+    ]
+);
+our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 sub handler {
     my $r = shift;
@@ -78,43 +80,47 @@ sub handler {
 
     $r->content_type('text/javascript');
 
-
-    $logger->debug("\n\n------------------------------ begin ruleset execution-----------------------------");
+    $logger->debug(
+"\n\n------------------------------ begin EVENT evaluation-----------------------------"
+    );
     $logger->debug("Initializing memcached");
     Kynetx::Memcached->init();
 
-    my ($domain,$rid,$eventtype);
+    my ( $domain, $rid, $eventtype );
     my $eid = '';
 
-    ($domain,$eventtype,$rid,$eid) = $r->path_info =~ m!/event/([a-z+_]+)/?([a-z+_]+)?/?([A-Za-z0-9_;]*)/?([A-Z0-9-]*)?/?!;
+    ( $domain, $eventtype, $rid, $eid ) = $r->path_info =~
+      m!/event/([a-z+_]+)/?([a-z+_]+)?/?([A-Za-z0-9_;]*)/?([A-Z0-9-]*)?/?!;
 
-
- # Set to be the same now one.  This will pass back the rid to the runtime
+    # Set to be the same now one.  This will pass back the rid to the runtime
     #$eid = $rid;
-    $logger->debug("processing event $domain/$eventtype on rulesets $rid and EID $eid");
+    if ($domain eq 'version') {
+      $logger->debug("returning version info for event API");
+    } else {
+      $logger->debug("processing event $domain/$eventtype on rulesets $rid and EID $eid");
+    }
 
-    Log::Log4perl::MDC->put('site', $rid);
-    Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
+    Log::Log4perl::MDC->put( 'site', $rid );
+    Log::Log4perl::MDC->put( 'rule', '[global]' );    # no rule for now...
 
     # store these for later logging
-    $r->subprocess_env(DOMAIN => $domain);
-    $r->subprocess_env(EVENTTYPE => $eventtype);
-    $r->subprocess_env(RIDS => $rid);
+    $r->subprocess_env( DOMAIN    => $domain );
+    $r->subprocess_env( EVENTTYPE => $eventtype );
+    $r->subprocess_env( RIDS      => $rid );
 
     # at some point we need a better dispatch function
-    if($domain eq 'version' ) {
-      show_build_num($r);
+    if ( $domain eq 'version' ) {
+        show_build_num($r);
     } else {
-      process_event($r, $domain, $eventtype, $rid, $eid);
+        process_event( $r, $domain, $eventtype, $rid, $eid );
     }
 
     return Apache2::Const::OK;
 }
 
-
 sub process_event {
 
-    my ($r, $domain, $eventtype, $rids, $eid) = @_;
+    my ( $r, $domain, $eventtype, $rids, $eid ) = @_;
 
     my $logger = get_logger();
     Log::Log4perl::MDC->put('events', '[global]');
@@ -134,19 +140,20 @@ sub process_event {
     # get a session
     my $session = process_session($r);
 
-    my $req_info = Kynetx::Request::build_request_env($r, $domain, $rids, $eventtype);
-    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
-    if ($req_info->{'_lock'}->lock($session_lock)) {
-        $logger->debug("Session lock acquired for $session_lock");
-    } else {
-        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
-    }
+    my $req_info =
+      Kynetx::Request::build_request_env( $r, $domain, $rids, $eventtype );
+#    my $session_lock = "lock-" . session_id($session);
+#    if ( $req_info->{'_lock'}->lock($session_lock) ) {
+#        $logger->debug("Session lock acquired for $session_lock");
+#    } else {
+#        $logger->warn( "Session lock request timed out for ",
+#                       sub { Dumper($rids) } );
+#    }
 
+    Kynetx::Request::log_request_env( $logger, $req_info );
 
-    Kynetx::Request::log_request_env($logger, $req_info);
-
-# not clear we need the request env now
-#    my $req_info = Kynetx::Request::build_request_env($r, $domain, $rids);
+    # not clear we need the request env now
+    #    my $req_info = Kynetx::Request::build_request_env($r, $domain, $rids);
     $req_info->{'eid'} = $eid || '';
 
     my $ev = mk_event($req_info);
@@ -155,61 +162,47 @@ sub process_event {
 
     my $schedule = Kynetx::Scheduler->new();
 
-
-    foreach my $rid (split(/;/, $rids)) {
-      process_event_for_rid($ev,
-			    $req_info,
-			    $session,
-			    $schedule,
-			    $rid
-			   );
+    foreach my $rid ( split( /;/, $rids ) ) {
+        process_event_for_rid( $ev, $req_info, $session, $schedule, $rid );
     }
 
+    #    $logger->debug("Schedule: ", sub { Dumper $schedule });
 
+    my $js = Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid );
 
-#    $logger->debug("Schedule: ", sub { Dumper $schedule });
-
-    my $js = Kynetx::Rules::process_schedule($r,
-					     $schedule,
-					     $session,
-					     $eid
-					    );
-
-    Kynetx::Response::respond($r, $req_info, $session, $js, "Event");
+    Kynetx::Response::respond( $r, $req_info, $session, $js, "Event" );
 
 }
 
 sub process_event_for_rid {
-  my $ev = shift;
-  my $req_info = shift;
-  my $session = shift;
-  my $schedule = shift;
-  my $rid = shift;
+    my $ev       = shift;
+    my $req_info = shift;
+    my $session  = shift;
+    my $schedule = shift;
+    my $rid      = shift;
 
-  my $logger = get_logger();
-#  $logger->debug("Req info: ", sub {Dumper $req_info} );
+    my $logger = get_logger();
 
-  $logger->debug("Processing events for $rid");
-  Log::Log4perl::MDC->put('site', $rid);
+    #  $logger->debug("Req info: ", sub {Dumper $req_info} );
 
-#  $req_info->{'rid'} = $rid;
+    $logger->debug("Processing events for $rid");
+    Log::Log4perl::MDC->put( 'site', $rid );
 
   my $ruleset = Kynetx::Rules::get_rule_set($req_info, 1, $rid); # 1 for localparsing
 
 
-  #      $logger->debug("Ruleset: ", sub {Dumper $ruleset} );
+    #      $logger->debug("Ruleset: ", sub {Dumper $ruleset} );
 
-  foreach my $rule (@{$ruleset->{'rules'}}) {
+    foreach my $rule ( @{ $ruleset->{'rules'} } ) {
 
     $rule->{'state'} ||= 'active';
 
-    # FIXME: this doesn't quite cover it.
-    next if $rule->{'state'} eq 'inactive';
+        Log::Log4perl::MDC->put( 'rule', $rule->{'name'} ); # no rule for now...
 
-    Log::Log4perl::MDC->put('rule', $rule->{'name'}); # no rule for now...
+        my $sm_current_name = $rule->{'name'} . ':sm_current';
+        my $event_list_name = $rule->{'name'} . ':event_list';
 
-    my $sm_current_name = $rule->{'name'}.':sm_current';
-    my $event_list_name = $rule->{'name'}.':event_list';
+        $logger->trace("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
 
     #	$logger->debug("Rule: ", Kynetx::Json::astToJson($rule));
 
@@ -219,145 +212,152 @@ sub process_event_for_rid {
 
     my $sm = $rule->{'event_sm'};
 
-    #	$logger->debug("Event SM: ", sub { Dumper $sm });
+        # States stored in Mongo should be serialized
+        my $current_state = get_persistent_var("ent", $rid, $session, $sm_current_name ) || $sm->get_initial();
 
-    my $current_state = session_get($rid, $session, $sm_current_name) ||
-      $sm->get_initial();
+        my $next_state = $sm->next_state( $current_state, $ev );
 
-#    $logger->debug("Initial: ", $current_state );
+        $logger->trace("Current: ", $current_state );
+        $logger->trace("Next: ", $next_state );
 
+        # when there's a state change, store the event in the event list
+        unless ( $current_state eq $next_state ) {
+            my $json = $ev->serialize();
+            Kynetx::Persistence::add_persistent_element("ent", $rid, $session, $event_list_name, $json );
 
-    my $next_state = $sm->next_state($current_state, $ev);
+#	  $logger->debug("Event list ($event_list_name): ", sub { Dumper session_get($rid, $session, $event_list_name)});
+        }
 
-#    $logger->debug("Next: ", $next_state );
+        if ( $sm->is_final($next_state) ) {
 
-    # when there's a state change, store the event in the event list
-    unless ($current_state eq $next_state) {
-      session_push($rid, $session, $event_list_name, $ev);
-      #	  $logger->debug("Event list ($event_list_name): ", sub { Dumper session_get($rid, $session, $event_list_name)});
+            my $rulename = $rule->{'name'};
+
+            $logger->debug( "Adding to schedule: ", $rid, " & ", $rulename );
+            $schedule->add( $rid, $rule, $ruleset, $req_info );
+
+            # get event list and reset+
+            my $event_list_name = $rulename . ':event_list';
+
+            my $var_list = [];
+            my $val_list = [];
+            $logger->trace("Process sessions");
+            while ( my $json =
+                    consume_persistent_element("ent", $rid, $session, $event_list_name, 1) )
+            {
+
+                my $ev = Kynetx::Events::Primitives->unserialize($json);
+                $logger->trace( "Event: ", sub { Dumper $ev} );
+
+                # FIXME: what we're not doing: the event list also
+                # includes the req_info that was active when the event
+                # came in.  We're not doing anything with it--simply
+                # using the req_info from the final req...
+
+                # gather up vars and vals from all the events in the path
+                push @{$var_list}, @{ $ev->get_vars( $sm->get_id() ) };
+                push @{$val_list}, @{ $ev->get_vals( $sm->get_id() ) };
+            }
+            $schedule->annotate_task( $rid, $rulename, 'vars', $var_list );
+            $schedule->annotate_task( $rid, $rulename, 'vals', $val_list );
+
+            # reset SM
+            delete_persistent_var("ent", $rid, $session, $sm_current_name );
+
+            # reset event list for this rule
+            delete_persistent_var("ent", $rid, $session, $event_list_name );
+
+        } else {
+            $logger->trace("Next state not final");
+            $logger->trace("Next state ref: ", ref $next_state);
+            if ($next_state ne "") {
+                save_persistent_var("ent", $rid, $session, $sm_current_name, $next_state );
+            }
+
+        }
+
     }
-
-
-#    $logger->debug("Next: ", $next_state );
-
-    if ($sm->is_final($next_state)) {
-
-      my $rulename = $rule->{'name'};
-
-      $logger->debug("Adding to schedule: " , $rid, " & ",  $rulename);
-      $schedule->add($rid,$rule,$ruleset,$req_info);
-
-      # get event list and reset+
-      my $event_list_name = $rulename.':event_list';
-
-      my $var_list = [];
-      my $val_list = [];
-      while (my $ev = session_next($rid, $session, $event_list_name)) {
-
-	#	  $logger->debug("Event: ", sub {Dumper $ev});
-
-	# FIXME: what we're not doing: the event list also
-	# includes the req_info that was active when the event
-	# came in.  We're not doing anything with it--simply
-	# using the req_info from the final req...
-
-	# gather up vars and vals from all the events in the path
-	push @{$var_list},
-	  @{$ev->get_vars($sm->get_id())};
-	push @{$val_list},
-	  @{$ev->get_vals($sm->get_id())};
-      }
-      $schedule->annotate_task($rid,$rulename,'vars',$var_list);
-      $schedule->annotate_task($rid,$rulename,'vals',$val_list);
-
-      # reset SM
-      session_delete($rid, $session, $sm_current_name);
-      # reset event list for this rule
-      session_delete($rid, $session, $event_list_name);
-
-    } else {
-      session_store($rid, $session, $sm_current_name, $next_state);
-    }
-
-  }
 }
 
 sub mk_event {
-   my($req_info) = @_;
+    my ($req_info) = @_;
 
-   my $logger = get_logger();
+    my $logger = get_logger();
 
-   my $ev = Kynetx::Events::Primitives->new();
-   $ev->set_req_info($req_info);
-   if ($req_info->{'eventtype'} eq 'pageview' ) {
-     $ev->pageview($req_info->{'caller'});
-   } elsif ($req_info->{'eventtype'} eq 'click' ) {
-     $ev->click($req_info->{'element'});
-   } elsif ($req_info->{'eventtype'} eq 'submit' ) {
-     $ev->submit($req_info->{'element'});
-   } elsif ($req_info->{'eventtype'} eq 'change' ) {
-     $ev->change($req_info->{'element'});
-   } else {
-     $ev->generic("$req_info->{'domain'}:$req_info->{'eventtype'}");
-   }
+    my $ev = Kynetx::Events::Primitives->new();
+    $ev->set_req_info($req_info);
+    if ( $req_info->{'eventtype'} eq 'pageview' ) {
+        $ev->pageview( $req_info->{'caller'} );
+    } elsif ( $req_info->{'eventtype'} eq 'click' ) {
+        $ev->click( $req_info->{'element'} );
+    } elsif ( $req_info->{'eventtype'} eq 'submit' ) {
+        $ev->submit( $req_info->{'element'} );
+    } elsif ( $req_info->{'eventtype'} eq 'change' ) {
+        $ev->change( $req_info->{'element'} );
+    } else {
+        $ev->generic("$req_info->{'domain'}:$req_info->{'eventtype'}");
+    }
 
-   return $ev;
+    return $ev;
 }
 
 sub compile_event_expr {
 
-  my($eexpr) = @_;
+    my ($eexpr) = @_;
 
-  my $logger = get_logger();
+    my $logger = get_logger();
 
-  my $sm;
+    my $sm;
 
-  if ($eexpr->{'type'} eq 'prim_event') {
-    if ($eexpr->{'op'} eq 'pageview') {
-      $sm = mk_pageview_prim($eexpr->{'pattern'}, $eexpr->{'vars'});
-    } elsif ($eexpr->{'op'} eq 'submit' ||
-	     $eexpr->{'op'} eq 'click' ||
-	     $eexpr->{'op'} eq 'dblclick' ||
-	     $eexpr->{'op'} eq 'change' ||
-	     $eexpr->{'op'} eq 'update'
-	    ) {
-      $sm = mk_dom_prim($eexpr->{'element'}, $eexpr->{'pattern'}, $eexpr->{'vars'}, $eexpr->{'op'});
+    if ( $eexpr->{'type'} eq 'prim_event' ) {
+        if ( $eexpr->{'op'} eq 'pageview' ) {
+            $sm = mk_pageview_prim( $eexpr->{'pattern'}, $eexpr->{'vars'} );
+        } elsif (    $eexpr->{'op'} eq 'submit'
+                  || $eexpr->{'op'} eq 'click'
+                  || $eexpr->{'op'} eq 'dblclick'
+                  || $eexpr->{'op'} eq 'change'
+                  || $eexpr->{'op'} eq 'update' )
+        {
+            $sm = mk_dom_prim( $eexpr->{'element'}, $eexpr->{'pattern'},
+                               $eexpr->{'vars'},    $eexpr->{'op'} );
+        } else {
+            $logger->debug(
+                "Creating primitive event for $eexpr->{'domain'}:$eexpr->{'op'}"
+            );
+            $sm = mk_gen_prim( $eexpr->{'domain'}, $eexpr->{'op'},
+                               $eexpr->{'vars'},   $eexpr->{'filters'} );
+        }
+    } elsif ( $eexpr->{'type'} eq 'complex_event' ) {
+        if (    $eexpr->{'op'} eq 'between'
+             || $eexpr->{'op'} eq 'notbetween' )
+        {
+            my $mid   = compile_event_expr( $eexpr->{'mid'} );
+            my $first = compile_event_expr( $eexpr->{'first'} );
+            my $last  = compile_event_expr( $eexpr->{'last'} );
+
+            if ( $eexpr->{'op'} eq 'between' ) {
+                $sm = mk_between( $mid, $first, $last );
+            } elsif ( $eexpr->{'op'} eq 'notbetween' ) {
+                $sm = mk_not_between( $mid, $first, $last );
+            }
+
+        } else {    # other complex event
+            my $sm0 = compile_event_expr( $eexpr->{'args'}->[0] );
+            my $sm1 = compile_event_expr( $eexpr->{'args'}->[1] );
+            if ( $eexpr->{'op'} eq 'and' ) {
+                $sm = mk_and( $sm0, $sm1 );
+            } elsif ( $eexpr->{'op'} eq 'or' ) {
+                $sm = mk_or( $sm0, $sm1 );
+            } elsif ( $eexpr->{'op'} eq 'before' ) {
+                $sm = mk_before( $sm0, $sm1 );
+            } elsif ( $eexpr->{'op'} eq 'then' ) {
+                $sm = mk_then( $sm0, $sm1 );
+            }
+        }
+
     } else {
-      $logger->debug("Creating primitive event for $eexpr->{'domain'}:$eexpr->{'op'}");
-      $sm = mk_gen_prim($eexpr->{'domain'}, $eexpr->{'op'}, $eexpr->{'vars'}, $eexpr->{'filters'});
+        $logger->warn("Attempt to compile malformed event expression");
     }
-  } elsif ($eexpr->{'type'} eq 'complex_event') {
-    if ($eexpr->{'op'} eq 'between' ||
-        $eexpr->{'op'} eq 'notbetween') {
-      my $mid = compile_event_expr($eexpr->{'mid'});
-      my $first = compile_event_expr($eexpr->{'first'});
-      my $last = compile_event_expr($eexpr->{'last'});
-
-      if ($eexpr->{'op'} eq 'between') {
-	$sm = mk_between($mid, $first, $last);
-      } elsif ($eexpr->{'op'} eq 'notbetween') {
-	$sm = mk_not_between($mid, $first, $last);
-      }
-
-    } else { # other complex event
-      my $sm0 = compile_event_expr($eexpr->{'args'}->[0]);
-      my $sm1 = compile_event_expr($eexpr->{'args'}->[1]);
-      if ($eexpr->{'op'} eq 'and') {
-	$sm = mk_and($sm0, $sm1);
-      } elsif ($eexpr->{'op'} eq 'or') {
-	$sm = mk_or($sm0, $sm1);
-      } elsif ($eexpr->{'op'} eq 'before') {
-	$sm = mk_before($sm0, $sm1);
-      } elsif ($eexpr->{'op'} eq 'then') {
-	$sm = mk_then($sm0, $sm1);
-      }
-    }
-
-  } else {
-    $logger->warn("Attempt to compile malformed event expression");
-  }
-
-  return $sm;
+    return $sm;
 
 }
 

@@ -3,33 +3,33 @@ package Kynetx::Authz;
 # file: Kynetx/Predicates/Referers.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 
 use strict;
 use warnings;
@@ -53,7 +53,7 @@ use Kynetx::JavaScript qw/:all/;
 use Kynetx::Json qw/:all/;
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 is_authorized
 authorize_message
@@ -62,7 +62,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 sub is_authorized {
   my ($rid, $ruleset, $session) = @_;
-  
+
   my $authorized = 1;
   # if there's no authz directive, we're authorized
   if (defined $ruleset->{'meta'}->{'authz'}) {
@@ -102,7 +102,7 @@ sub authorize_message {
 
   my $session_id = Kynetx::Session::session_id($session) || 'unknown';
 
-  my $image_url = Kynetx::Configure::get_config('BASE_MARKETPLACE_IMAGE_URL') . 
+  my $image_url = Kynetx::Configure::get_config('BASE_MARKETPLACE_IMAGE_URL') .
                   $session_id;
 
   my $auth_url = Kynetx::Configure::get_config('BASE_AUTHZ_URL') . $rid;
@@ -149,7 +149,8 @@ _JS_
 
 sub get_authz_tokens {
   my($session) = @_;
-  return $session->{'chico'}->{'authz_tokens'};
+  my $tokens = Kynetx::Persistence::get_persistent_var("ent","chico",$session,"authz_tokens");
+  return $tokens;
 }
 
 

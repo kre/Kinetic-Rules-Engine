@@ -38,29 +38,42 @@ use Test::WWW::Mechanize;
 
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use LWP::UserAgent;
+
+use Kynetx::Configure;
 
 my $test_count = 0;
 
 my $numtests = 66;
 
+# configure KNS
+Kynetx::Configure::configure();
+
+my $broot = Kynetx::Configure::get_config("EVAL_HOST");
+my $bport = Kynetx::Configure::get_config("OAUTH_CALLBACK_PORT") || "80";
+
 #plan tests => $numtests;
 
-my $ruleset_base = "http://127.0.0.1/ruleset";
-my $event_base = "http://127.0.0.1/blue/event";
+#my $ruleset_base = "http://127.0.0.1/ruleset";
+#my $event_base = "http://127.0.0.1/blue/event";
+my $ruleset_base = "http://$broot:$bport/ruleset";
+my $event_base = "http://$broot:$bport/blue/event";
 
 my $ruleset = 'cs_test';
 
 my $mech = Test::WWW::Mechanize->new();
+
+diag "Using ruleset base: $ruleset_base";
+diag "Using event base: $event_base";
 
 diag "Warning: running these tests on a host without memcache support is slow...";
 SKIP: {
     my $ua = LWP::UserAgent->new;
 
     my $check_url = "$ruleset_base/version/$ruleset";
-#    diag "Checking $check_url";
+    diag "Checking $check_url";
     my $response = $ua->get($check_url);
     skip "No server available", $numtests unless $response->is_success;
 
@@ -193,7 +206,7 @@ SKIP: {
 
     is($mech->content_type(), 'text/javascript');
 
-#diag $mech->content();
+#    diag $mech->content();
 
      $mech->content_like("/var x = 'foo';/");
 

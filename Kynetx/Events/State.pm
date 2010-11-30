@@ -3,33 +3,33 @@ package Kynetx::Events::State;
 # file: Kynetx/Predicates/Referers.pm
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
-# 
+#
 # This Software is an unpublished, proprietary work of Kynetx Inc.
 # Your access to it does not grant you any rights, including, but not
 # limited to, the right to install, execute, copy, transcribe, reverse
 # engineer, or transmit it by any means.  Use of this Software is
 # governed by the terms of a Software License Agreement transmitted
 # separately.
-# 
+#
 # Any reproduction, redistribution, or reverse engineering of the
 # Software not in accordance with the License Agreement is expressly
 # prohibited by law, and may result in severe civil and criminal
 # penalties. Violators will be prosecuted to the maximum extent
 # possible.
-# 
+#
 # Without limiting the foregoing, copying or reproduction of the
 # Software to any other server or location for further reproduction or
 # redistribution is expressly prohibited, unless such reproduction or
 # redistribution is expressly permitted by the License Agreement
 # accompanying this Software.
-# 
+#
 # The Software is warranted, if at all, only according to the terms of
 # the License Agreement. Except as warranted in the License Agreement,
 # Kynetx Inc. hereby disclaims all warranties and conditions
 # with regard to the software, including all warranties and conditions
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
-# 
+#
 
 use strict;
 use warnings;
@@ -37,6 +37,8 @@ use warnings;
 use Log::Log4perl qw(get_logger :levels);
 
 use Data::UUID;
+use Kynetx::Json qw(:all);
+use Clone;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -49,7 +51,7 @@ our @ISA         = qw(Exporter);
 
 # put exported names inside the "qw"
 
-our %EXPORT_TAGS = (all => [ 
+our %EXPORT_TAGS = (all => [
 qw(
 mk_pageview_prim
 mk_dom_prim
@@ -64,28 +66,68 @@ mk_not_between
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
+my $S_TAG = "__state__";
+
 sub new {
   my $invocant = shift;
   my $class = ref($invocant) || $invocant;
   my $id = "SM-" . Data::UUID->new->create_str();
   my $self = {
 	      "id"         => $id,
-	      "initial"    => '_unknown_', 
+	      "initial"    => '_unknown_',
 	      "final"      => {},
-	      "transitions"  => {}, 
+	      "transitions"  => {},
 	     };
   bless($self, $class); # consecrate
   return $self;
 }
 
 sub TO_JSON {
-  my $b_obj = B::svref_2object( $_[0] );
-  return    
-    $b_obj->isa('B::HV') ? { %{ $_[0] } }
-      : $b_obj->isa('B::AV') ? [ @{ $_[0] } ]
-	: undef
-	  ;
+    my $self = shift;
+    my $logger = get_logger();
+    my $hash;
+    foreach my $key (keys %$self) {
+        my $value = Clone::clone($self->{$key});
+        $hash->{$key} = $value;
+    }
+    serialize_regexp_objects($hash);
+    my $s = {
+      $S_TAG => JSON::XS::->new->allow_blessed(1)->utf8(1)->encode($hash)
+    };
+    return $s;
 }
+
+sub serialize {
+    my $self = shift;
+    my $logger = get_logger();
+    my $hash = $self->TO_JSON();
+    return JSON::XS::->new->encode($hash);
+}
+
+sub unserialize {
+    my $invocant = shift;
+    my $logger = get_logger();
+    my $class = ref($invocant) || $invocant;
+    my ($json) = @_;
+    return undef unless (defined $json);
+    my $blob = $json;
+    my $hash = JSON::XS::->new
+            ->filter_json_single_key_object( $S_TAG => sub {
+                my $s_state = $_[0];
+                my $s_struct = JSON::XS::->new->utf8(1)->decode($s_state);
+                deserialize_regexp_objects($s_struct);
+                bless($s_struct,$class);
+            })->decode($json);
+    if (! defined $hash || ref $hash eq "") {
+        $logger->debug("Error attempting to unserialize State object, Source: ", sub {Dumper($json)});
+        return undef;
+    }
+
+    return $hash;
+}
+
+
+
 
 sub add_state {
   my $self = shift;
@@ -106,7 +148,7 @@ sub clone {
 
   my $logger = get_logger();
 
-  $logger->debug("Cloning " . $self->get_id());
+  $logger->trace("Cloning " . $self->get_id());
 
 
   my $state_map = {};
@@ -141,7 +183,7 @@ sub clone {
   return $nsm;
 }
 
-# This function makes some big assumptions.  
+# This function makes some big assumptions.
 #  1. That initial and final states are all that are being joined
 #  2. That default transitions for initial states are always to the initial state.
 #  2. That default transitions for final states are always to the final state.
@@ -150,7 +192,7 @@ sub join_states {
   my ($s1, $s2) = @_;
 
   my $logger = get_logger();
-  $logger->debug("Joining $s1 & $s2");
+  $logger->trace("Joining $s1 & $s2");
 
   my $ns = Data::UUID->new->create_str();
 
@@ -163,7 +205,7 @@ sub join_states {
 		   $ns);
 
 #  $logger->debug("New transitions added: ", Dumper $self->get_transitions($ns));
-  
+
   foreach my $s (@{$self->get_states()}) {
     foreach my $t (@{$self->get_transitions($s)}) {
       $t->{'next'} = $ns if $t->{'next'} eq $s1 || $t->{'next'} eq $s2
@@ -300,10 +342,10 @@ sub set_default_transition {
 # calculate next state
 #-------------------------------------------------------------------------
 
-# $eval_funcs is a hash of transition application functions keyed 
+# $eval_funcs is a hash of transition application functions keyed
 # by primitive type.
-# transition application functions should take an event obj and a transition and 
-# return a bool if the application of the transition function in the transition 
+# transition application functions should take an event obj and a transition and
+# return a bool if the application of the transition function in the transition
 # returns true as well as an array of values returns from the match
 my $eval_funcs = {};
 
@@ -360,7 +402,7 @@ sub mk_prim {
   $sm->mk_initial($s1);
   $sm->mk_final($s2);
 
-  $sm->add_state($s1, 
+  $sm->add_state($s1,
 		 [{"next" => $s2,
 		   "type" => $type,
 		   "test" => $test,
@@ -369,7 +411,7 @@ sub mk_prim {
 		 $s1
 		);
 
-  $sm->add_state($s2, 
+  $sm->add_state($s2,
 		 [],
 		 $s2
 		);
@@ -393,17 +435,17 @@ sub mk_pageview_prim {
 sub pageview_eval {
   my ($event, $t) = @_;
 
-  sub test {my $url = shift; 
+  sub test {my $url = shift;
 	    my $pattern = shift;
 	    my $captures = [];
 	    my $logger = get_logger();
-	    $logger->debug("Url: $url; Pattern: $pattern");
-	    
+	    $logger->trace("Url: $url; Pattern: $pattern");
+
 	    if(@{$captures} = $url =~ /$pattern/) {
 	      return (1, $captures);
 	    } else {
 	      return (0, $captures);
-	    }		    
+	    }
 	  };
 
   return test($event->url(), $t->{'test'});
@@ -426,15 +468,15 @@ sub mk_dom_prim {
 sub dom_eval {
   my ($event, $t) = @_;
 
-  my $test = sub {my $event_elem = shift; 
+  my $test = sub {my $event_elem = shift;
 		  my $sm_elem = shift;
 		  my $url = shift;
 		  my $pattern = shift;
 		  my $logger = get_logger();
 
 
-		  $logger->debug("Evaluating event $event_elem against SM $sm_elem");
-		  
+		  $logger->trace("Evaluating event $event_elem against SM $sm_elem");
+
 		  my $req_info = $event->get_req_info();
 		  my $form_data = $req_info->{'KOBJ_form_data'} if $req_info->{'KOBJ_form_data'};
 #		  if ($event_elem eq $sm_elem && $url =~ /$pattern/) {
@@ -493,7 +535,7 @@ sub gen_event_eval {
     return (1, $captures);
   } else {
     return (0, $captures);
-  }		    
+  }
 }
 
 
@@ -506,14 +548,14 @@ sub mk_and {
   my $logger = get_logger();
 
 
-  $logger->debug("Composing (and) " . $osm1->get_id() . " & " . $osm2->get_id());
+  $logger->trace("Composing (and) " . $osm1->get_id() . " & " . $osm2->get_id());
 
   # we don't want this modifying the original SM
   my $sm1 = $osm1->clone();
   my $sm2 = $osm2->clone();
   my $sm3 = $sm2->clone();
   my $sm4 = $sm1->clone();
-  
+
   my $nsm = Kynetx::Events::State->new();
 
   foreach my $sm ($sm1, $sm2, $sm3, $sm4) {
@@ -527,16 +569,16 @@ sub mk_and {
 
   my $ni = $nsm->join_states($sm1->get_initial(), $sm3->get_initial());
   $nsm->mk_initial($ni);
-  $logger->debug("new initial state $ni");
+  $logger->trace("new initial state $ni");
 
 
   $nsm->join_states($sm1->get_singleton_final(), $sm2->get_initial());
   $nsm->join_states($sm3->get_singleton_final(), $sm4->get_initial());
-  
-  my $nf = $nsm->join_states($sm2->get_singleton_final(), 
+
+  my $nf = $nsm->join_states($sm2->get_singleton_final(),
 			     $sm4->get_singleton_final());
   $nsm->mk_final($nf);
-  $logger->debug("new final state $nf");
+  $logger->trace("new final state $nf");
 
   return $nsm;
 }
@@ -562,13 +604,13 @@ sub mk_or {
 
   my $ni = $nsm->join_states($sm1->get_initial(), $sm2->get_initial());
   $nsm->mk_initial($ni);
-  $logger->debug("new initial state $ni");
-  
-  my $nf = $nsm->join_states($sm1->get_singleton_final(), 
+  $logger->trace("new initial state $ni");
+
+  my $nf = $nsm->join_states($sm1->get_singleton_final(),
 			     $sm2->get_singleton_final());
 
   $nsm->mk_final($nf);
-  $logger->debug("new final state $nf");
+  $logger->trace("new final state $nf");
 
   return $nsm;
 }
@@ -591,11 +633,11 @@ sub mk_before {
 		    );
     }
   }
-    
+
   $nsm->mk_initial($sm1->get_initial());
   $nsm->join_states($sm1->get_singleton_final(), $sm2->get_initial());
   $nsm->mk_final($sm2->get_singleton_final());
-  
+
   return $nsm;
 }
 
@@ -617,7 +659,7 @@ sub mk_then {
 		    );
     }
   }
-    
+
   $nsm->mk_initial($sm1->get_initial());
 
   my $mid = $nsm->join_states($sm1->get_singleton_final(), $sm2->get_initial());
@@ -625,7 +667,7 @@ sub mk_then {
   $nsm->set_default_transition($mid, $sm1->get_initial());
 
   $nsm->mk_final($sm2->get_singleton_final());
-  
+
   return $nsm;
 }
 
@@ -649,12 +691,12 @@ sub mk_between {
 		    );
     }
   }
-    
+
   $nsm->mk_initial($b->get_initial());
   $nsm->join_states($b->get_singleton_final(), $a->get_initial());
   $nsm->join_states($a->get_singleton_final(), $c->get_initial());
   $nsm->mk_final($c->get_singleton_final());
-  
+
   return $nsm;
 }
 
@@ -679,7 +721,7 @@ sub mk_not_between {
     }
   }
 
-      
+
   my $mid = $nsm->join_states($b->get_singleton_final(), $c->get_initial());
 
   $mid = $nsm->join_states($mid, $a->get_initial());
@@ -688,7 +730,7 @@ sub mk_not_between {
 
   $nsm->mk_initial($mid);
   $nsm->mk_final($c->get_singleton_final());
-  
+
   return $nsm;
 }
 

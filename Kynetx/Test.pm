@@ -42,6 +42,7 @@ use Kynetx::Environments qw/:all/;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
+use Kynetx::Persistence qw(:all);
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -106,12 +107,12 @@ sub gen_req_info {
     $req_info->{'rid'} = $rid;
     $req_info->{'param_names'} = ['msg','caller'];
     $req_info->{'msg'} = 'Hello World!';
-    my $memservers = Kynetx::Configure::get_config('MEMCACHE_SERVERS');
-    my $patience = Kynetx::Configure::get_config("LOCK_PATIENCE");
-    $req_info->{'_lock'} = IPC::Lock::Memcached->new({
-        "memcached_servers" => $memservers,
-        "patience" => $patience
-    });
+#    my $memservers = Kynetx::Configure::get_config('MEMCACHE_SERVERS');
+#    my $patience = Kynetx::Configure::get_config("LOCK_PATIENCE");
+#    $req_info->{'_lock'} = IPC::Lock::Memcached->new({
+#        "memcached_servers" => $memservers,
+#        "patience" => $patience
+#    });
 
 
 
@@ -189,22 +190,22 @@ sub gen_session {
     my($r, $rid, $options) = @_;
     my $session = process_session($r, $options->{'sid'});
 
-    session_store($rid, $session, 'archive_pages_old', 3);
+    Kynetx::Persistence::save_persistent_var("ent",$rid, $session, 'archive_pages_old', 3);
     my $three_days_ago = DateTime->now->add( days => -3 );
-    session_touch($rid, $session, 'archive_pages_old', $three_days_ago);
+    Kynetx::Persistence::touch_persistent_var("ent",$rid, $session, 'archive_pages_old', $three_days_ago);
 
-    session_store($rid, $session, 'my_count', 2);
+    Kynetx::Persistence::save_persistent_var("ent",$rid, $session, 'my_count', 2);
 
-    session_store($rid, $session, 'archive_pages_now', 2);
-    session_store($rid, $session, 'archive_pages_now2', 3);
+    Kynetx::Persistence::save_persistent_var("ent",$rid, $session, 'archive_pages_now', 2);
+    Kynetx::Persistence::save_persistent_var("ent",$rid, $session, 'archive_pages_now2', 3);
 
-    session_delete($rid, $session, 'my_trail');
-    session_push($rid, $session, 'my_trail', "http://www.windley.com/foo.html");
-    session_push($rid, $session, 'my_trail', "http://www.kynetx.com/foo.html");
-    session_push($rid, $session, 'my_trail', "http://www.windley.com/bar.html");
+    Kynetx::Persistence::delete_persistent_var("ent",$rid, $session, 'my_trail');
+    Kynetx::Persistence::add_persistent_element("ent",$rid, $session, 'my_trail', "http://www.windley.com/foo.html");
+    Kynetx::Persistence::add_persistent_element("ent",$rid, $session, 'my_trail', "http://www.kynetx.com/foo.html");
+    Kynetx::Persistence::add_persistent_element("ent",$rid, $session, 'my_trail', "http://www.windley.com/bar.html");
 
 
-    session_clear($rid, $session, 'my_flag');
+    Kynetx::Persistence::delete_persistent_var("ent",$rid, $session, 'my_flag');
 
     return $session;
 }
@@ -233,22 +234,22 @@ sub gen_app_session {
     }
 
 
-    session_store($rid, $req_info->{'appsession'}, 'app_count_old', 3);
+    Kynetx::Persistence::save_persistent_var("ent",$rid, $req_info->{'appsession'}, 'app_count_old', 3);
     my $three_days_ago = DateTime->now->add( days => -3 );
-    session_touch($rid, $req_info->{'appsession'}, 'app_count_old', $three_days_ago);
+    Kynetx::Persistence::touch_persistent_var("ent",$rid, $req_info->{'appsession'}, 'app_count_old', $three_days_ago);
 
-    session_store($rid, $req_info->{'appsession'}, 'app_count', 2);
+    Kynetx::Persistence::save_persistent_var("ent",$rid, $req_info->{'appsession'}, 'app_count', 2);
 
-    session_store($rid, $req_info->{'appsession'}, 'app_count_now', 2);
-    session_store($rid, $req_info->{'appsession'}, 'app_count_now2', 3);
+    Kynetx::Persistence::save_persistent_var("ent",$rid, $req_info->{'appsession'}, 'app_count_now', 2);
+    Kynetx::Persistence::save_persistent_var("ent",$rid, $req_info->{'appsession'}, 'app_count_now2', 3);
 
-    session_delete($rid, $req_info->{'appsession'}, 'app_trail');
-    session_push($rid, $req_info->{'appsession'}, 'app_trail', "http://www.windley.com/foo.html");
-    session_push($rid, $req_info->{'appsession'}, 'app_trail', "http://www.kynetx.com/foo.html");
-    session_push($rid, $req_info->{'appsession'}, 'app_trail', "http://www.windley.com/bar.html");
+    Kynetx::Persistence::delete_persistent_var("ent",$rid, $req_info->{'appsession'}, 'app_trail');
+    Kynetx::Persistence::add_persistent_element("ent",$rid, $req_info->{'appsession'}, 'app_trail', "http://www.windley.com/foo.html");
+    Kynetx::Persistence::add_persistent_element("ent",$rid, $req_info->{'appsession'}, 'app_trail', "http://www.kynetx.com/foo.html");
+    Kynetx::Persistence::add_persistent_element("ent",$rid, $req_info->{'appsession'}, 'app_trail', "http://www.windley.com/bar.html");
 
 
-    session_clear($rid, $req_info->{'appsession'}, 'app_flag');
+    Kynetx::Persistence::delete_persistent_var("ent",$rid, $req_info->{'appsession'}, 'app_flag');
 
 }
 

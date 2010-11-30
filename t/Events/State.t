@@ -1,12 +1,13 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 
 use lib qw(/web/lib/perl);
 use strict;
-use warnings;
-use diagnostics;
+#use warnings;
+#use diagnostics;
 
 use Test::More;
 use Test::LongString;
+use Test::Deep;
 
 use Apache::Session::Memcached;
 use DateTime;
@@ -30,7 +31,7 @@ use Kynetx::Events::Primitives qw/:all/;
 
 use Kynetx::FakeReq qw/:all/;
 
-#Log::Log4perl->easy_init($DEBUG);
+my $logger = get_logger();
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -67,6 +68,14 @@ $ev4->pageview("http://www.yahoo.com/");
 # test the pageview prim SMs
 my $sm1 = mk_pageview_prim(qr/www.windley.com/);
 
+my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm1);
+my $deserialized = Kynetx::Events::State->unserialize($json);
+cmp_deeply($deserialized,$sm1,"Roundtrip serialization");
+$test_count++;
+
+# if we believe in our serialization, put our money...
+$sm1 = $deserialized;
+
 my $initial = $sm1->get_initial();
 
 my $next = $sm1->next_state($initial, $ev1);
@@ -85,7 +94,6 @@ $next = $sm2->next_state($initial, $ev2);
 
 ok($sm2->is_final($next), "ev2 leads to final state");
 $test_count++;
-
 $next = $sm2->next_state($initial, $ev1);
 ok($sm2->is_initial($next), "ev2 does not lead to initial state");
 $test_count++;
@@ -145,7 +153,7 @@ is(@{ $join_sm->get_states() } + 0, 3, "join_sm has 3 states before join");
 $test_count++;
 
 my $ni = $join_sm->join_states("foo", $initial);
-$join_sm->mk_initial($ni);		       
+$join_sm->mk_initial($ni);
 
 is(@{ $join_sm->get_states() } + 0, 2, "join_sm has 2 states after join");
 $test_count++;
@@ -339,7 +347,7 @@ $ev5->submit("#my_form");
 # test the pageview prim SMs
 my $sm5 = mk_dom_prim("#my_form", '', '', 'submit');
 
-#diag Dumper $sm5;	    
+#diag Dumper $sm5;
 
 $initial = $sm5->get_initial();
 

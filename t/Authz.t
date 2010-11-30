@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 
 use lib qw(/web/lib/perl);
 use strict;
@@ -32,8 +32,6 @@ use Kynetx::PersistentDataService qw/:all/;
 
 
 use Kynetx::FakeReq qw/:all/;
-
-#Log::Log4perl->easy_init($DEBUG);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -104,8 +102,8 @@ $test_count++;
 #$session->{'chico'}->{'authz_tokens'} = {$rid => {'type' => 'require',
 #						  'level' => 'user'}};
 
-Kynetx::PersistentDataService::store_values('chico', 
-					    $session, 
+Kynetx::PersistentDataService::store_values('chico',
+					    $session,
 					    'authz_tokens',
 					    {$rid => {'type' => 'require',
 						      'level' => 'user'}});
@@ -128,7 +126,6 @@ $pt = Kynetx::Parser::parse_ruleset($krl);
 
 ok(is_authorized($rid,$pt,$session),"authz request with settion works");
 $test_count++;
-
 
 $krl = <<_KRL_;
 ruleset $rid {
@@ -175,7 +172,7 @@ unlike($js,
      'plain ruleset does not ask for activation');
 $test_count++;
 
-
+ENDY:
 done_testing($test_count);
 
 1;

@@ -7,7 +7,7 @@ use warnings;
 use Test::More;
 use Test::LongString;
 use Test::WWW::Mechanize;
-
+use HTTP::Cookies;
 use Apache2::Const;
 use Apache2::Request;
 
@@ -36,12 +36,11 @@ use Kynetx::Rules;
 
 use Kynetx::FakeReq qw/:all/;
 
-#Log::Log4perl->easy_init($DEBUG);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
-
+my $logger = get_logger();
 my $r = Kynetx::Test::configure();
 
 my $rid = 'cs_test';
@@ -96,13 +95,13 @@ my $ruleset = 'cs_test_1';
 
 my $mech = Test::WWW::Mechanize->new();
 
+# should be empty
 #diag Dumper $mech->cookie_jar();
 
 
 diag "Warning: running these tests on a host without memcache support is slow...";
 SKIP: {
     my $ua = LWP::UserAgent->new;
-
     my $check_url = "$dn/version/";
 
     my $response = $ua->get($check_url);
@@ -115,35 +114,53 @@ SKIP: {
       my $test_plan = shift;
       my $tc = 0;
       foreach my $test (@{$test_plan}) {
-	diag $test->{'url'} if $test->{'diag'};
-	if (defined $test->{'method'} && $test->{'method'} eq 'post') {
-	  $mech->post_ok($test->{'url'}, $test->{'post_data'});
-	} else {
-	  $mech->get_ok($test->{'url'});
-	}
+    $logger->debug( "Requesting: ". $test->{'url'});
+    my $resp;
+    if (defined $test->{'method'} && $test->{'method'} eq 'post') {
 
-	diag $mech->content() if $test->{'diag'};
-	is($mech->content_type(), $test->{'type'});
-	$tc += 2;
-	foreach my $like (@{$test->{'like'}}) {
-	  my $resp = $mech->content_like($like);
-	  if ($resp){
-	      $tc++;
-	  } else {
-	      diag $like;
-	      diag $mech->content();
-	      diag $test->{'url'};
-	      die;
-	  }
+      $resp = $mech->get($test->{'url'});
+    } else {
+      #$mech->get_ok($test->{'url'});
+      $resp = $mech->get($test->{'url'});
+    }
 
-	}
-	foreach my $unlike (@{$test->{'unlike'}}) {
-	  $mech->content_unlike($unlike);
-	  $tc++;
-	}
+#    like($mech->status(), /2../, 'Status OK');
+#    $tc++;
+    ok($resp->header('Set-Cookie'), 'has cookie header');
+    $tc++;
+#    diag "Response header: ", $resp->as_string();
+#    diag "Cookies: ", Dumper $mech->cookie_jar;
+    like($mech->cookie_jar->as_string(), qr/SESSION_ID/, 'cookie was accepted');
+    $tc++;
+
+
+    diag $mech->content() if $test->{'diag'};
+    is($mech->content_type(), $test->{'type'});
+    $tc += 1;
+    foreach my $like (@{$test->{'like'}}) {
+      my $resp = $mech->content_like($like);
+      if ($resp){
+          $tc++;
+      } else {
+          diag $like;
+          diag $mech->content();
+          diag $test->{'url'};
+          die;
       }
 
-#      diag Dumper $mech->cookie_jar();
+    }
+    foreach my $unlike (@{$test->{'unlike'}}) {
+      my $resp = $mech->content_unlike($unlike);
+      if ($resp){
+          $tc++;
+      } else {
+          diag $unlike;
+          diag $mech->content();
+          diag $test->{'url'};
+          die;
+      }
+    }
+      }
 
       return $tc;
     }
@@ -356,44 +373,8 @@ SKIP: {
 		     "/var c = 't'/",
 		  ],
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/lastn.html",
-	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
-		  ],
-	'unlike' => ["/var a = 't'/",
-		     "/var b = 'd'/",
-		     "/var c = 't'/",
-		  ],
-       },
        # without intervening 'mid' event, should  fire
       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/firstn.html",
-	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
-		  ],
-	'unlike' => ["/var a = 't'/",
-		     "/var b = 'd'/",
-		     "/var c = 't'/",
-		  ],
-       },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/lastn.html",
-	'type' => 'text/javascript',
-	'like' => ["/test_rule_notbetween/",
-		   "/var a = 't'/",
-		   "/var b = 'd'/",
-		   "/var c = 't'/",
-		  ],
-	'diag' => 0,
-       },
-       # does fire with some OTHER intervening enent
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/firstn.html",
-	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
-		  ],
-	'unlike' => ["/var a = 't'/",
-		     "/var c = 't'/",
-		  ],
-       },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/something_else.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],

@@ -106,12 +106,12 @@ sub process_rules {
 
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rids);
     $req_info->{'eid'} = $eid;
-    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
-    if ($req_info->{'_lock'}->lock($session_lock)) {
-        $logger->debug("Session lock acquired for $session_lock");
-    } else {
-        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
-    }
+#    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
+#    if ($req_info->{'_lock'}->lock($session_lock)) {
+#        $logger->debug("Session lock acquired for $session_lock");
+#    } else {
+#        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
+#    }
 
     # initialization
     my $js = '';
@@ -122,6 +122,7 @@ sub process_rules {
     my @rids = split(/;/, $rids);
     # if we sort @rids we change ruleset priority
     foreach my $rid (@rids) {
+        $logger->debug("-------------------------------------------Schedule $rid");
 	Log::Log4perl::MDC->put('site', $rid);
 	my $schedule = mk_schedule($req_info, $rid);
 	$js .= eval {
@@ -147,6 +148,7 @@ sub process_schedule {
   my $ast = Kynetx::JavaScript::AST->new($eid);
   my($req_info, $ruleset, $mjs, $gjs, $rule_env, $rid);
 
+  $rid = '';
   my $current_rid = '';
 
   #$logger->debug("Schedule: ", Dumper($schedule));
@@ -375,65 +377,107 @@ sub eval_globals {
     my $logger = get_logger();
 
     my $js = "";
+
+    my $temp_js ='';
     if($ruleset->{'global'}) {
+      ($temp_js, $rule_env) =
+	process_one_global_block($req_info,$ruleset->{'global'}, $rule_env, $session);
+      $js .= $temp_js;
+    }
 
-#    $logger->debug("Here's the globals: ", Dumper $ruleset->{'global'});
+    foreach my $use (@{ $ruleset->{'meta'}->{'use'} || []}) {
+      if ($use->{'type'} eq 'module') {
 
-      # make this act like let* not let
-      my @vars;
-      foreach my $g (@{ $ruleset->{'global'} }) {
-	$g->{'lhs'} = $g->{'name'} unless(defined $g->{'lhs'});
-	if (defined $g->{'lhs'}) {
-	  if (defined $g->{'type'} && $g->{'type'} eq 'datasource') {
-	    push @vars, 'datasource:'.$g->{'lhs'};
-	  } else {
-	    push @vars, $g->{'lhs'};
-	  }
+	my $use_ruleset = Kynetx::Rules::get_rule_set($req_info, 1, $use->{'name'});
+
+	my $provided_array = $use_ruleset->{'meta'}->{'provide'}->{'names'} || [];
+
+	# code below relies on this being undef unless defined
+	my $provided;
+	foreach my $name (@{ $provided_array }) {
+	  $provided->{$name} = 1;
+	}
+
+	my $namespace_name = $use->{'alias'} || $use->{'name'};
+	if ($use_ruleset->{'global'}) {
+	  ($temp_js, $rule_env) =
+	    process_one_global_block($req_info,$use_ruleset->{'global'}, $rule_env, $session, $namespace_name, $provided);
+	  $js .= $temp_js;
+	}
+
+      }
+    }
+
+    return ($js, $rule_env);
+
+}
+
+sub process_one_global_block {
+    my($req_info, $globals, $rule_env, $session, $namespace, $provided) = @_;
+    my $logger = get_logger();
+
+    my $js = "";
+
+    # make this act like let* not let
+    my @vars;
+    foreach my $g (@{ $globals }) {
+      $g->{'lhs'} = $g->{'name'} unless(defined $g->{'lhs'});
+      if (defined $g->{'lhs'} ) {
+	next if defined $provided && ! $provided->{$g->{'lhs'}};
+	if (defined $g->{'type'} && $g->{'type'} eq 'datasource') {
+	  push @vars, 'datasource:'.$g->{'lhs'};
+	} else {
+	  push @vars, $g->{'lhs'};
 	}
       }
+    }
 
-      my @empty_vals = map {''} @vars;
-      $rule_env = extend_rule_env(\@vars, \@empty_vals, $rule_env);
+    my @empty_vals = map {''} @vars;
+    $rule_env = extend_rule_env(\@vars, \@empty_vals, $rule_env);
 
-      $logger->debug("Global vars: ", join(", ", @vars));
+    $logger->debug("Global vars: ", join(", ", @vars));
 
-      foreach my $g (@{ $ruleset->{'global'} }) {
-	my $this_js = '';
-	my $var = '';
-	my $val = 0;
-	if($g->{'emit'}) { # emit
+    foreach my $g (@{ $globals }) {
+      next if defined $provided && ! $provided->{$g->{'lhs'}};
+      my $this_js = '';
+      my $var = '';
+      my $val = 0;
+      if (!defined $namespace) {
+	# only want these when we're not loading a module
+	if ($g->{'emit'}) {	# emit
 	  $this_js = Kynetx::Expressions::eval_emit($g->{'emit'}) . "\n";
-	} elsif(defined $g->{'type'} && $g->{'type'} eq 'dataset') {
-	    my $new_ds = Kynetx::Datasets->new($g);
+	} elsif (defined $g->{'type'} && $g->{'type'} eq 'dataset') {
+	  my $new_ds = Kynetx::Datasets->new($g);
 	  if (! $new_ds->is_global()) {
-	      $new_ds->load($req_info);
-	      $new_ds->unmarshal();
-	      $this_js = $new_ds->make_javascript();
-	      $var = $new_ds->name;
-	      if (defined $new_ds->json) {
-	          $val = $new_ds->json;
-	      } else {
-	          $val = $new_ds->sourcedata;
-	      }
+	    $new_ds->load($req_info);
+	    $new_ds->unmarshal();
+	    $this_js = $new_ds->make_javascript();
+	    $var = $new_ds->name;
+	    if (defined $new_ds->json) {
+	      $val = $new_ds->json;
+	    } else {
+	      $val = $new_ds->sourcedata;
+	    }
 	    #($this_js, $var, $val) = mk_dataset_js($g, $req_info, $rule_env);
 	    # yes, this is cheating and breaking the abstraction, but it's fast
 	    $rule_env->{$var} = $val;
 	  }
-	} elsif(defined $g->{'type'} && $g->{'type'} eq 'css') {
+	} elsif (defined $g->{'type'} && $g->{'type'} eq 'css') {
 	  $this_js = "KOBJ.css(" . Kynetx::JavaScript::mk_js_str($g->{'content'}) . ");\n";
-	} elsif(defined $g->{'type'} && $g->{'type'} eq 'datasource') {
+	} elsif (defined $g->{'type'} && $g->{'type'} eq 'datasource') {
 	  $rule_env->{'datasource:'.$g->{'lhs'}} = $g;
-	} elsif(defined $g->{'type'} &&
-		($g->{'type'} eq 'expr' || $g->{'type'} eq 'here_doc')) {
-	  $this_js = Kynetx::Expressions::eval_one_decl($req_info, $rule_env, $ruleset->{'lhs'}, $session, $g);
 	}
-	$js .= $this_js;
       }
+      if (defined $g->{'type'} &&
+	  ($g->{'type'} eq 'expr' || $g->{'type'} eq 'here_doc')) {
+	# side-effects the rule-env
+	$this_js = Kynetx::Expressions::eval_one_decl($req_info, $rule_env, 'global', $session, $g);
+      }
+      $js .= $this_js;
     }
-#    $logger->debug(" rule_env: ", Dumper($rule_env));
+    $logger->trace(" rule_env: ", Dumper($rule_env));
 
     return ($js, $rule_env);
-
 }
 
 sub eval_rule {
@@ -616,7 +660,6 @@ sub eval_rule_body {
   my $pred_value =
     Kynetx::Expressions::den_to_exp(
        Kynetx::Expressions::eval_expr ($rule->{'cond'}, $rule_env, $rule->{'name'},$req_info, $session));
-
 
   my $js = '';
 
@@ -920,7 +963,7 @@ sub mk_schedule {
     if ($selected) {
 
       my $rulename = $rule->{'name'};
-
+        $logger->debug("Rule $rulename is selected");
       $schedule->add($rid,$rule,$ruleset,$req_info);
 
       my $vars = Kynetx::Actions::get_precondition_vars($rule);

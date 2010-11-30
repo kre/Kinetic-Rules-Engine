@@ -108,12 +108,12 @@ sub process_action {
 
     # build initial env
     my $req_info = Kynetx::Request::build_request_env($r, 'callback', $rids);
-    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
-    if ($req_info->{'_lock'}->lock($session_lock)) {
-        $logger->debug("Session lock acquired for $session_lock");
-    } else {
-        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
-    }
+#    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
+#    if ($req_info->{'_lock'}->lock($session_lock)) {
+#        $logger->debug("Session lock acquired for $session_lock");
+#    } else {
+#        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
+#    }
 
 #    my $ug = new Data::UUID;
 #    my $path_info = $r->uri;
@@ -217,7 +217,9 @@ sub process_callbacks {
 	    $logger->debug("Processing callbacks for $rule_name");
 	    foreach my $cb (@{ $rule->{'callbacks'}->{$sense}} ) {
 		if($cb->{'type'} eq $type &&
-		   $cb->{'value'} eq $value) {
+		   $cb->{'value'} eq $value &&
+		   defined $cb->{'trigger'}
+		  ) {
 		    $logger->debug("Evaluating callback triggered persistent expr");
 #		    $logger->debug(Dumper($cb->{'trigger'}));
 		    Kynetx::Postlude::eval_persistent_expr($cb->{'trigger'},
