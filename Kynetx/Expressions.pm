@@ -58,6 +58,7 @@ use Kynetx::Session qw/session_get
 use Kynetx::Operators;
 use Kynetx::Modules;
 use Kynetx::JavaScript;
+use Kynetx::Persistence qw(:all);
 
 
 use Exporter;
@@ -345,7 +346,7 @@ sub eval_expr {
 	  session_defined($req_info->{'rid'}, $session, $name)) {
 
 	if ($expr->{'domain'} eq 'ent') {
-	  $v = session_seen_within($req_info->{'rid'},
+	  $v = Kynetx::Persistence::persistent_element_within($expr->{'domain'},$req_info->{'rid'},
 				   $session,
 				   $name,
 				   $expr->{'regexp'},
@@ -379,12 +380,12 @@ sub eval_expr {
 				      $expr->{'regexp_2'})
 	    : ($expr->{'regexp_2'},
 	       $expr->{'regexp_1'});
-	$v = session_seen_compare($req_info->{'rid'},
+	$v = Kynetx::Persistence::persistent_element_before($expr->{'domain'},$req_info->{'rid'},
 				  $session,
 				  $name,
 				  $r1,
 				  $r2
-				 ) ? 1 : 0; # ensure 0 returned for testing
+				 ) ? 0 : 1; # ensure 0 returned for testing
       }
       return mk_expr_node(infer_type($v),$v);
     } elsif ($expr->{'type'} eq 'persistent') {
@@ -625,9 +626,8 @@ sub eval_persistent {
 
     my $logger = get_logger();
     my $v = 0;
+    my $domain = $expr->{'domain'};
 
-
-    if($expr->{'domain'} eq 'ent') {
 	if(defined $expr->{'offset'}) {
 
 	    my $idx = den_to_exp(
@@ -638,7 +638,8 @@ sub eval_persistent {
 			     $session) );
 
 
-	    $v = session_history($req_info->{'rid'},
+	    $v = Kynetx::Persistence::persistent_element_history($domain,
+	             $req_info->{'rid'},
 				 $session,
 				 $expr->{'name'},
 				 $idx);
@@ -646,11 +647,10 @@ sub eval_persistent {
 
 	} else {
 	    # FIXME: not sure I like setting to 0 by default
-	    $v = session_get($req_info->{'rid'}, $session, $expr->{'name'}) || 0;
-	    $logger->debug("[persistent] $expr->{'name'} -> $v");
+	    $v = Kynetx::Persistence::get_persistent_var($domain,
+	           $req_info->{'rid'}, $session, $expr->{'name'}) || 0;
+	    $logger->info("[persistent] $expr->{'name'} -> $v");
 	}
-
-    }
 
     return $v;
 

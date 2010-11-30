@@ -54,6 +54,7 @@ use Kynetx::Persistence::Entity qw/:all/;
 my $logger = get_logger();
 my $num_tests = 0;
 my $result;
+my $expected;
 
 # configure KNS
 Kynetx::Configure::configure();
@@ -81,6 +82,8 @@ my $rnd2 = int(rand(100));
 my $rid1 = "1024";
 my $rid2 = "a144x22";
 my $ridR = "test".$rnd1."x".$rnd2;
+my $skey = "buildarray";
+
 
 # get random words
 $logger->debug("Get random words");
@@ -98,11 +101,73 @@ chomp($key2);
 chomp($key3);
 
 # basic Entity getter/setter
-$result = Kynetx::Persistence::Entity::put_edatum($ka144,$ken,$key1,$key2);
-testit($result,1,"Insert data for $ka144/$ken",0);
+$result = Kynetx::Persistence::Entity::put_edatum($rid1,$ken,$skey,$key2);
+testit($result,1,"Insert data for $rid1/$ken",0);
 
-$result = Kynetx::Persistence::Entity::get_edatum($ka144,$ken,$key1);
-testit($result,$key2,"Retrieve data for $ka144/$ken/$key1",0);
+$result = Kynetx::Persistence::Entity::get_edatum($rid1,$ken,$skey);
+testit($result,$key2,"Retrieve data for $rid1/$ken/$key1",0);
+
+Kynetx::Persistence::Entity::push_edatum($rid1,$ken,$skey,$key3);
+$result = Kynetx::Persistence::Entity::get_edatum($rid1,$ken,$skey);
+$expected = [$key2,$key3];
+testit($result,$expected,"Convert primitive to array",0);
+$logger->debug("Result: ", sub {Dumper($result)});
+
+Kynetx::Persistence::Entity::push_edatum($rid1,$ken,$skey,$key1);
+$result = Kynetx::Persistence::Entity::get_edatum($rid1,$ken,$skey);
+$expected = [$key2,$key3,$key1];
+testit($result,$expected,"Add value to existing array",0);
+$logger->debug("Result: ", sub {Dumper($result)});
+
+$result = Kynetx::Persistence::Entity::pop_edatum($rid1,$ken,$skey);
+$expected = $key1;
+testit($result,$expected,"Pop value from array",0);
+
+$result = Kynetx::Persistence::Entity::pop_edatum($rid1,$ken,$skey,1);
+$expected = $key2;
+testit($result,$expected,"shift value from array",0);
+
+Kynetx::Persistence::Entity::delete_edatum($rid1,$ken,$skey);
+
+
+# stack operations as trail
+
+my $trail_element = [$rnd1,DateTime->now->epoch];
+
+$result = Kynetx::Persistence::Entity::put_edatum($rid1,$ken,$skey,$key2);
+Kynetx::Persistence::Entity::push_edatum($rid1,$ken,$skey,$trail_element,1);
+
+$result = Kynetx::Persistence::Entity::get_edatum($rid1,$ken,$skey);
+$expected = [
+    [$key2,re(qr(\d+))],
+    $trail_element,
+];
+testit($result,$expected,"Create new trail",0);
+
+my $third_trail_var = [$key3,DateTime->now->epoch];
+Kynetx::Persistence::Entity::push_edatum($rid1,$ken,$skey,$third_trail_var,1);
+$result = Kynetx::Persistence::Entity::get_edatum($rid1,$ken,$skey);
+$expected = [
+    [$key2,re(qr(\d+))],
+    $trail_element,
+    $third_trail_var
+];
+testit($result,$expected,"Add to existing trail",0);
+
+$result = Kynetx::Persistence::Entity::pop_edatum($rid1,$ken,$skey);
+$expected = $third_trail_var;
+testit($result,$expected,"Pop value from trail",0);
+
+
+$result = Kynetx::Persistence::Entity::pop_edatum($rid1,$ken,$skey,1);
+$expected = [$key2,re(qr(\d+))];
+testit($result,$expected,"Pop value from trail",0);
+
+$result = Kynetx::Persistence::Entity::get_edatum($rid1,$ken,$skey);
+$expected = [$trail_element];
+testit($result,$expected,"Check trail remainder",0);
+
+
 
 # Store to a new ruleset
 $result = Kynetx::Persistence::Entity::put_edatum($ridR,$ken,$key1,$key3);
@@ -117,7 +182,7 @@ $result = Kynetx::Persistence::Entity::touch_edatum($ridR,$ken,$key3);
 testit($result,0,"Touch a variable");
 
 if ($cleanup) {
-    Kynetx::Persistence::Entity::delete_edatum($ka144,$ken,$key1);
+    Kynetx::Persistence::Entity::delete_edatum($rid1,$ken,$skey);
     Kynetx::Persistence::Entity::delete_edatum($ridR,$ken,$key1);
     Kynetx::Persistence::Entity::delete_edatum($ridR,$ken,$key3);
 }

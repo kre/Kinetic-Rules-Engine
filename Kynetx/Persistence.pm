@@ -198,49 +198,37 @@ sub add_persistent_element {
     my ($domain, $rid, $session, $varname, $value) = @_;
     my $logger = get_logger();
     $logger->trace("Push $domain","var onto $varname");
-    my $trail = get_persistent_var($domain,$rid,$session,$varname);
+    my $tuple = [$value,DateTime->now->epoch];
+    my $status;
+    if ($domain eq 'ent') {
+        my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+        $status = Kynetx::Persistence::Entity::push_edatum($rid,$ken,$varname,$tuple,1);
+    } elsif ($domain eq 'app') {
+        $status = Kynetx::Persistence::Application::push($rid,$varname,$tuple,1);
 
-    my $tuple = [$value, DateTime->now->epoch];
-    if ($trail) {
-        if (ref $trail eq 'ARRAY') {
-            unshift @{$trail},$tuple;
-            $logger->trace("Pushing $domain","var onto $varname");
-        } else {
-            $logger->trace("$varname is not a valid trail, but it is going to be...");
-            # param of 1 returns var creation time instead of value
-            my $timestamp = get_persistent_var($domain,$rid,$session,$varname,1);
-            $trail = [$tuple,[$trail,$timestamp]];
-        }
-    } else {
-        $trail = [$tuple];
-        $logger->trace("Pushing $domain","var onto $varname as new trail");
     }
-    return save_persistent_var($domain,$rid,$session,$varname,$trail);
+
 }
 
 sub consume_persistent_element {
     my ($domain, $rid, $session, $varname, $direction) = @_;
     my $logger = get_logger();
-    my $op_name = $direction ? "Pop" : "Shift";
+    my $op_name = $direction ?  "Shift" : "Pop";
     $logger->trace("$op_name from $varname");
-    my $trail = get_persistent_var($domain,$rid,$session,$varname);
-    if (ref $trail eq "ARRAY") {
-        my $res;
-        if ($direction) {
-            # pop
-            $res = pop @{$trail};
-        } else {
-            # shift
-            $res = shift @{$trail};
-        }
-        save_persistent_var($domain,$rid,$session,$varname,$trail);
-        return $res->[0];
-    } elsif (ref $trail eq "") {
-        # Single value, return and delete
-        delete_persistent_var($domain,$rid,$session,$varname);
-        return $trail;
+    my $result;
+    if ($domain eq 'ent') {
+        my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+        $result = Kynetx::Persistence::Entity::pop_edatum($rid,$ken,$varname,$direction);
+        $logger->trace("$op_name returned: ", sub {Dumper($result)});
+    } elsif ($domain eq 'app') {
+        $result = Kynetx::Persistence::Application::pop($rid,$varname,$direction);
     }
-    $logger->warn("Invalid trail request, found (",ref $trail,") as $varname");
+    if ($result) {
+        return $result->[0];
+    } else {
+        return undef;
+    }
+
 }
 
 sub persistent_element_index {
@@ -262,6 +250,22 @@ sub persistent_element_index {
     }
 }
 
+sub persistent_element_history {
+    my ($domain,$rid,$session,$varname,$index)= @_;
+    my $logger = get_logger();
+    my $result = undef;
+    $logger->trace("Check $varname for $index element");
+    my $trail = get_persistent_var($domain,$rid,$session,$varname);
+    # Mongo does not support queue operations
+    # convert $index to Stack notation
+    my $size = @$trail;
+    $logger->trace("Looks like ($size)",sub {Dumper($trail)});
+    if (ref $trail eq 'ARRAY') {
+        $result =  $trail->[$size - $index -1]->[0];
+    }
+    return $result;
+}
+
 sub contains_persistent_element {
     my ($domain,$rid,$session,$varname,$regexp)= @_;
     my $logger = get_logger();
@@ -280,7 +284,7 @@ sub persistent_element_before {
     $logger->trace("Check $varname for ",sub {Dumper($regexp1)}, " before ", sub {Dumper($regexp2)});
     my $first = persistent_element_index($domain,$rid,$session,$varname,$regexp1);
     my $second = persistent_element_index($domain,$rid,$session,$varname,$regexp2);
-    return $first->[1] < $second->[1];
+    return $first->[0] < $second->[0];
 }
 
 sub persistent_element_within {

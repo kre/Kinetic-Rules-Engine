@@ -41,7 +41,7 @@ use Apache::Session::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Configure;
@@ -82,16 +82,17 @@ my $ts2;
 ## Clean things up
 $token = Kynetx::Persistence::KToken::session_has_token($session,$rid);
 if ($token) {
+    $logger->debug("Found token: $token");
     Kynetx::Persistence::KToken::delete_token($token);
 }
 
 $description = "No token in session";
 $token = Kynetx::Persistence::KToken::session_has_token($session,$rid);
-testit($token,undef,$description,1);
+testit($token,undef,$description,0);
 
 $description = "Token is created";
-$token = Kynetx::Persistence::KToken::new_token($rid,$ken);
-testit($token,re($tok_re),$description,1);
+$token = Kynetx::Persistence::KToken::new_token($rid,$session,$ken);
+testit($token,re($tok_re),$description,0);
 
 my $key = {
   "ktoken" => $token
@@ -103,23 +104,20 @@ diag "Token last accessed: $ts1";
 
 $description = "Check that token is valid";
 $result = Kynetx::Persistence::KToken::is_valid_token($token,$rid);
-testit($result,1,$description,1);
-
+testit($result,1,$description,0);
 
 $description = "Save token to Apache session";
 $tokenb = Kynetx::Persistence::KToken::store_token_to_apache_session($token,$rid,$session);
-testit($tokenb,$token,$description,1);
+testit($tokenb,$token,$description,0);
 
 $description = "Check token from session";
 $tokenb = Kynetx::Persistence::KToken::session_has_token($session,$rid);
-testit($token,$tokenb,$description,1);
+testit($token,$tokenb,$description,0);
 
 $description = "Delete the token";
 Kynetx::Persistence::KToken::delete_token($token);
 $got = Kynetx::MongoDB::get_value("tokens",$key);
-testit($got,{},$description);
-
-$logger->debug("After delete: ", sub { Dumper($got)});
+testit($got,undef,$description);
 
 sub testit {
     my ($got,$expected,$description,$debug) = @_;

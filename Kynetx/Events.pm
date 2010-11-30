@@ -242,7 +242,7 @@ sub process_event_for_rid {
             my $val_list = [];
             $logger->trace("Process sessions");
             while ( my $json =
-                    consume_persistent_element("ent", $rid, $session, $event_list_name, 0) )
+                    consume_persistent_element("ent", $rid, $session, $event_list_name, 1) )
             {
 
                 my $ev = Kynetx::Events::Primitives->unserialize($json);

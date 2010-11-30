@@ -80,14 +80,12 @@ sub get_ken {
     my $logger = get_logger();
     $logger->warn("get_ken called with invalid session: ", sub {Dumper($session)}) unless ($session);
     $count = $count || 1;
-    #$logger->debug("KEN session_id: ",Kynetx::Session::session_id($session));
     my $ken = has_ken($session,$rid);
     if ($ken) {
         return $ken;
     } else {
         $count++;
-        my $token = Kynetx::Persistence::KToken::new_token($rid);
-        Kynetx::Persistence::KToken::store_token_to_apache_session($token,$rid,$session);
+        my $token = Kynetx::Persistence::KToken::new_token($rid,$session);
         if ($count > 3) {
             Kynetx::Session::session_cleanup($session);
             die;

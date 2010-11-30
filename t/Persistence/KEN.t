@@ -111,7 +111,7 @@ testit($ken,$nken,$description,0);
 $description = "Clean up and delete KEN";
 Kynetx::Persistence::KEN::delete_ken($nken);
 $got = Kynetx::MongoDB::get_value("kens",$key);
-testit($got,{},$description);
+testit($got,undef,$description);
 
 sub testit {
     my ($got,$expected,$description,$debug) = @_;

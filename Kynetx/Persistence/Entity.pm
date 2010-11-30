@@ -103,6 +103,43 @@ sub get_created {
     return get_edatum($rid,$ken,$var,1);
 }
 
+sub push_edatum {
+    my ($rid,$ken,$var,$val,$as_trail) = @_;
+    my $logger = get_logger();
+    my $key = {
+        "ken" => $ken,
+        "rid" => $rid,
+        "key" => $var};
+    my $value = {
+        "ken" => $ken,
+        "rid" => $rid,
+        "key" => $var,
+        "value" => $val,
+    };
+
+    if ($as_trail) {
+        $logger->trace("Push value onto trail as trail");
+    }
+
+    my $success = Kynetx::MongoDB::push_value(COLLECTION,$key,$value,$as_trail);
+    $logger->debug("Failed to push $val onto ",sub {Dumper($key)}) unless ($success);
+    return $success;
+}
+
+sub pop_edatum {
+    my ($rid,$ken,$var,$direction) = @_;
+    my $logger = get_logger();
+    my $key = {
+        "ken" => $ken,
+        "rid" => $rid,
+        "key" => $var};
+    my $result = Kynetx::MongoDB::pop_value(COLLECTION,$key,$direction);
+    if ($result) {
+        return $result;
+    } else {
+        return undef;
+    }
+}
 
 
 sub put_edatum {

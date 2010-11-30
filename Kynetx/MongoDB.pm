@@ -40,6 +40,7 @@ use Log::Log4perl qw(get_logger :levels);
 use LWP::UserAgent;
 use Data::Dumper;
 use MongoDB qw(:all);
+use Clone qw(clone);
 
 
 use Kynetx::Configure;
@@ -63,6 +64,7 @@ get_mongo
 mongo
 get_value
 put_value
+push_value
 touch_value
 update_value
 get_collection
@@ -129,22 +131,21 @@ sub get_value {
     my $keystring = make_keystring($collection,$var);
     my $cached = get_cache($collection,$var);
     if (defined $cached) {
-        $logger->trace("Found $collection variable in cache");
+        $logger->trace("Found $collection variable in cache (",sub {Dumper($cached)},",");
         return $cached;
     }  else {
-
         $logger->trace("$keystring not in cache");
     }
     my $c = get_collection($collection);
     if ($c) {
         my $result = $c->find_one($var);
-
-        if ($result->{"serialize"}) {
-            my $ast = Kynetx::Json::jsonToAst($result->{"value"});
-            $logger->debug("Found a ", ref $ast," to deserialize");
-            $result->{"value"} = $ast;
-        }
+        $logger->trace("FindOne query: ",sub {Dumper($var)}," returns: ",sub {Dumper($result)});
         if (defined $result) {
+            if ($result->{"serialize"}) {
+                my $ast = Kynetx::Json::jsonToAst($result->{"value"});
+                $logger->trace("Found a ", ref $ast," to deserialize");
+                $result->{"value"} = $ast;
+            }
             $logger->trace("Save $keystring to memcache");
             set_cache($collection,$var,$result);
         }
@@ -155,6 +156,53 @@ sub get_value {
         return undef;
     }
 }
+
+
+##
+#   Default is to POP variable from end of stack
+##
+sub pop_value {
+    my ($collection,$var,$direction) = @_;
+    my $logger = get_logger();
+    my $first = -1;
+    my $last = 1;
+    my $op_name = $direction ?  "Shift" : "Pop" ;
+    if ($op_name eq "Pop") {
+        $direction = $last;
+    } else {
+        $direction = $first;
+    }
+    $logger->trace("$op_name from ", sub {Dumper($var)});
+    my $keystring = make_keystring($collection,$var);
+    my $c = get_collection($collection);
+    my $res;
+    if ($c) {
+        my $trail = get_value($collection,$var)->{"value"};
+        $logger->trace("Stack: ",sub {Dumper($trail)});
+        if (ref $trail eq "ARRAY") {
+            if ($direction == 1) {
+                $res = pop @{$trail};
+            } else {
+                $res = shift @{$trail};
+            }
+        } else {
+            delete_value($collection,$var);
+            return $trail;
+        }
+        if ($res) {
+            my $status = $c->update($var,{'$pop' => {"value" => $direction}},{"safe" => SAFE});
+            clear_cache($collection,$var);
+            return $res;
+        } else {
+            return undef;
+        }
+    } else {
+        $logger->info("Could not access collection: $collection");
+        return undef;
+    }
+}
+
+
 
 sub touch_value {
     my ($collection,$var,$ts) = @_;
@@ -183,9 +231,45 @@ sub touch_value {
     return get_value($collection,$var);
 }
 
-sub update_value {
-    my ($collection,$var,$val,$upsert,$multi) = @_;
+sub push_value {
+    my ($collection,$var,$val,$as_trail) = @_;
     my $logger = get_logger();
+    $logger->trace("Push ", sub {Dumper($val)}," onto ", sub {Dumper($var)});
+    my $c = get_collection($collection);
+    my $status;
+    eval {
+        $status = $c->update($var,{'$push' =>
+            {"value" => $val->{"value"}}},{"upsert"=>1,"safe" => 1});
+    };
+    if ($@) {
+        $logger->debug("Existing var not an array");
+        my $result = get_value($collection,$var);
+        my $timestamp = $result->{"created"};
+        $timestamp = DateTime->now->epoch unless ($timestamp);
+        my $value = $result->{"value"};
+        my $narry;
+        if ($as_trail) {
+            $logger->debug("Push var as trail");
+            my $tuple = [$value, $timestamp];
+            $narry = [$tuple];
+        } else {
+            $narry = [$value];
+        }
+        push(@$narry,$val->{"value"});
+        my $tmp = clone($val);
+        $tmp->{"value"} = $narry;
+        update_value($collection,$var,$tmp,0,0,1);
+        clear_cache($collection,$status);
+    } elsif ($status) {
+        clear_cache($collection,$var);
+        return $status;
+    }
+}
+
+sub update_value {
+    my ($collection,$var,$val,$upsert,$multi,$safe) = @_;
+    my $logger = get_logger();
+    $safe = $safe || SAFE;
     my $serialize = 0;
     my $timestamp = DateTime->now->epoch;
     if (ref $val->{"value"} eq "HASH") {
@@ -199,7 +283,7 @@ sub update_value {
     $upsert = ($upsert) ? 1 : 0;
     $multi = ($multi) ? 1 : 0;
     my $c = get_collection($collection);
-    my $status = $c->update($var,$val,{"upsert" => $upsert,"multiple" => $multi, "safe" => SAFE});
+    my $status = $c->update($var,$val,{"upsert" => $upsert,"multiple" => $multi, "safe" => $safe});
     if ($status) {
         clear_cache($collection,$var);
         return $status;
@@ -219,7 +303,7 @@ sub delete_value {
     my ($collection,$var) = @_;
     my $logger = get_logger();
     my $c = get_collection($collection);
-    my $success = $c->remove($var,{"safe" => 1});
+    my $success = $c->remove($var,{"safe" => SAFE});
     clear_cache($collection,$var);
     if (!$success ) {
         $logger->debug("Delete error: ", mongo_error());

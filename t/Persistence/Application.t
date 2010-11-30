@@ -93,21 +93,53 @@ chomp($key1);
 chomp($key2);
 chomp($key3);
 
+my $skey = "buildtrail";
+my $expected;
+
 # basic Application getter/setter
-$result = Kynetx::Persistence::Application::put($rid1,$key1,$key2);
+$result = Kynetx::Persistence::Application::put($rid1,$skey,$key2);
 testit($result,1,"Insert data for $rid1",0);
 
-$result = Kynetx::Persistence::Application::get($rid1,$key1);
+$result = Kynetx::Persistence::Application::get($rid1,$skey);
 testit($result,$key2,"Retrieve data for $rid1/$key1",0);
 
-$result = Kynetx::Persistence::Application::get_created($rid1,$key1);
+$result = Kynetx::Persistence::Application::get_created($rid1,$skey);
 testit($result,re(qr/\d+/),"Retrieve timestamp for $rid1/$key1",0);
 
-$result = Kynetx::Persistence::Application::delete($rid1,$key1);
-testit($result,'',"Delete data for $rid1/$key1",0);
+Kynetx::Persistence::Application::push($rid1,$skey,$key1);
+$result = Kynetx::Persistence::Application::get($rid1,$skey);
+$expected = [$key2,$key1];
+testit($result,$expected,"Convert val to trail",0);
 
-$result = Kynetx::Persistence::Application::get($rid1,$key1);
-testit($result,undef,"Retrieve data for deleted $rid1/$key1",0);
+Kynetx::Persistence::Application::push($rid1,$skey,$key3);
+$result = Kynetx::Persistence::Application::get($rid1,$skey);
+$expected = [$key2,$key1,$key3];
+testit($result,$expected,"Add value to trail",0);
+
+
+$result = Kynetx::Persistence::Application::pop($rid1,$skey);
+$expected = $key3;
+testit($result,$expected,"Pop value off trail",0);
+
+$result = Kynetx::Persistence::Application::pop($rid1,$skey,1);
+$expected = $key2;
+testit($result,$expected,"Shift value off trail",0);
+
+Kynetx::Persistence::Application::pop($rid1,$skey);
+$result = Kynetx::Persistence::Application::pop($rid1,$skey);
+$expected = undef;
+testit($result,$expected,"Pop empty trail",0);
+
+Kynetx::Persistence::Application::push($rid1,$skey,$key1);
+$result = Kynetx::Persistence::Application::get($rid1,$skey);
+$expected = [$key1];
+testit($result,$expected,"Add value to empty trail",0);
+
+$result = Kynetx::Persistence::Application::delete($rid1,$skey);
+testit($result,'',"Delete data for $rid1/$skey",0);
+
+$result = Kynetx::Persistence::Application::get($rid1,$skey);
+testit($result,undef,"Retrieve data for deleted $rid1/$skey",0);
 
 # Store to a new ruleset
 $result = Kynetx::Persistence::Application::put($ridR,$key1,$key3);

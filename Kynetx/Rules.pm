@@ -417,7 +417,6 @@ sub process_one_global_block {
     my $logger = get_logger();
 
     my $js = "";
-    $logger->debug("Here's the globals: ", Dumper $globals);
 
     # make this act like let* not let
     my @vars;
@@ -476,7 +475,7 @@ sub process_one_global_block {
       }
       $js .= $this_js;
     }
-    $logger->debug(" rule_env: ", Dumper($rule_env));
+    $logger->trace(" rule_env: ", Dumper($rule_env));
 
     return ($js, $rule_env);
 }

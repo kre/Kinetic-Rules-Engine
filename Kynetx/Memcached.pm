@@ -106,7 +106,7 @@ sub check_cache {
         $content = $memd->get($key);
     }
     if ($content) {
-        #$logger->debug("Using cached data for $key");
+        $logger->trace("Using cached data for $key");
         return $content;
     }
 }

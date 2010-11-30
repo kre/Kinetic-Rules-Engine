@@ -75,6 +75,9 @@ chomp($what);
 chomp($where);
 chomp($who);
 
+$logger->debug("Who:   $who");
+$logger->debug("What:  $what");
+$logger->debug("Where: $where");
 
 Kynetx::Configure::configure();
 
@@ -91,11 +94,98 @@ my $key;
 my $got;
 my $value;
 my $cruft = "cruft";
+my $start;
+my $end;
 
 # Check Database
 @result = $mdb->collection_names();
 $expected = superbagof($dictionary,'edata','appdata','kens','tokens');
 compare(\@result,$expected,"Has expected collections",0);
+
+# save a value
+$key = {
+    "key" => "buildtrail"
+};
+
+$value = {
+    "key" => "buildtrail",
+    "value" => $what
+};
+my $value1 = {
+    "key" => "buildtrail",
+    "value" => $who
+};
+my $value2 = {
+    "key" => "buildtrail",
+    "value" => $where
+};
+
+Kynetx::MongoDB::update_value($cruft,$key,$value,1);
+
+$start = new Benchmark;
+Kynetx::MongoDB::push_value($cruft,$key,$value2);
+$end = new Benchmark;
+my $stack_query = timediff($end,$start);
+diag "Convert to stack: ". $stack_query->[0];
+
+$result = Kynetx::MongoDB::get_value($cruft,$key);
+$got = $result->{"value"};
+$expected = [$value->{"value"},$value2->{"value"}];
+compare($got,$expected,"Convert a primary var to a trail");
+
+$start = new Benchmark;
+Kynetx::MongoDB::push_value($cruft,$key,$value1);
+$end = new Benchmark;
+$stack_query = timediff($end,$start);
+diag "Push on existing stack: ". $stack_query->[0];
+$result = Kynetx::MongoDB::get_value($cruft,$key);
+$got = $result->{"value"};
+$expected = [$value->{"value"},$value2->{"value"},$value1->{"value"}];
+compare($got,$expected,"Push var on a array");
+
+$start = new Benchmark;
+$result = Kynetx::MongoDB::pop_value($cruft,$key);
+$end = new Benchmark;
+$stack_query = timediff($end,$start);
+diag "Stack pop: ". $stack_query->[0];
+$got = $result;
+$expected = $value1->{"value"};
+compare($got,$expected,"Pop value from array returns " . $value1->{"value"});
+
+$result = Kynetx::MongoDB::pop_value($cruft,$key,1);
+$got = $result;
+$expected = $value->{"value"};
+compare($got,$expected,"Shift value from array returns " . $value->{"value"});
+
+$result = Kynetx::MongoDB::pop_value($cruft,$key);
+$got = $result;
+$expected = $value2->{"value"};
+compare($got,$expected,"Pop last value from array returns " . $value2->{"value"});
+
+$result = Kynetx::MongoDB::pop_value($cruft,$key);
+$got = $result;
+$expected = undef;
+compare($got,$expected,"Pop value from empty array returns null");
+
+Kynetx::MongoDB::push_value($cruft,$key,$value2);
+$result = Kynetx::MongoDB::get_value($cruft,$key);
+$got = $result->{"value"};
+$expected = [$value2->{"value"}];
+compare($got,$expected,"Add element to empty array");
+
+delete_value($cruft,$key);
+
+Kynetx::MongoDB::push_value($cruft,$key,$value1);
+$result = Kynetx::MongoDB::get_value($cruft,$key);
+$got = $result->{"value"};
+$expected = [$value1->{"value"}];
+compare($got,$expected,"Start a new trail");
+
+Kynetx::MongoDB::update_value($cruft,$key,$value,1);
+$result = Kynetx::MongoDB::pop_value($cruft,$key);
+$got = $result;
+$expected = $value->{"value"};
+compare($got,$expected,"Pop value from array returns " . $value->{"value"});
 
 # build an entity keystring
 $key = {
@@ -120,10 +210,10 @@ $expected = undef;
 $got = Kynetx::MongoDB::get_cache("edata",$key);
 compare($got,$expected,"Not in memcache yet");
 
-my $start = new Benchmark;
+$start = new Benchmark;
 $result = Kynetx::MongoDB::get_value("edata",$key);
 $got = $result->{"value"};
-my $end = new Benchmark;
+$end = new Benchmark;
 my $m_query = timediff($end,$start);
 
 compare($got,$where,"Value saved to Mongo");

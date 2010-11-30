@@ -96,6 +96,35 @@ sub get {
 
 }
 
+sub pop {
+    my ($rid,$var,$direction) = @_;
+    my $logger = get_logger();
+    my $key = {
+        "rid" => $rid,
+        "key" => $var};
+    my $result = Kynetx::MongoDB::pop_value(COLLECTION,$key,$direction);
+    if ($result) {
+        return $result;
+    } else {
+        return undef;
+    }
+}
+
+sub push {
+    my ($rid,$var,$val,$as_trail) = @_;
+    my $logger = get_logger();
+    my $key = {
+        "rid" => $rid,
+        "key" => $var};
+    my $value = {
+        "rid"  => $rid,
+        "key"  => $var,
+        "value"=> $val,
+    };
+    my $success = Kynetx::MongoDB::push_value(COLLECTION,$key,$value,$as_trail);
+    return $success;
+}
+
 sub get_created {
     my ($rid,$var) = @_;
     return get($rid,$var,1);

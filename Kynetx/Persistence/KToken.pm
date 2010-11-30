@@ -80,17 +80,38 @@ qw(
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
 
+sub get_token {
+    my ($ktoken,$rid) = @_;
+    my $logger = get_logger();
+    my $var = {"ktoken" => $ktoken};
+    return Kynetx::MongoDB::get_value(COLLECTION,$var);
+}
+
+sub get_endpoint_token {
+    my ($session, $rid) = @_;
+    my $session_id = Kynetx::Session::session_id($session);
+    my $var = {
+        "endpoint_id" => $session_id,
+        "rid" => $rid,
+    };
+    return Kynetx::MongoDB::get_value(COLLECTION,$var);
+}
+
 
 sub session_has_token {
     my ($session, $rid) = @_;
     my $logger = get_logger();
-    $logger->trace("Session id: ",Kynetx::Session::session_id($session));
-    $logger->trace("Session tokens: ",sub {Dumper($session->{KTOKEN})});
     my $ktoken = $session->{KTOKEN}->{$rid};
     if ($ktoken) {
-        #$logger->debug("Has token returns $ktoken");
+        $logger->trace("Token found in session: $ktoken");
         return $ktoken;
     } else {
+        my $mongo_query = get_endpoint_token($session,$rid);
+        if ($mongo_query) {
+            $ktoken = $mongo_query->{"ktoken"};
+            store_token_to_apache_session($ktoken,$rid,$session);
+            return $ktoken;
+        }
         $logger->debug("No token found");
         return undef;
     }
@@ -98,7 +119,7 @@ sub session_has_token {
 
 
 sub new_token {
-    my ($rid,$ken) = @_;
+    my ($rid,$session,$ken) = @_;
     my $logger = get_logger();
     my $kpds = Kynetx::MongoDB::get_collection("tokens");
     $ken = Kynetx::Persistence::KEN::new_ken() unless ($ken);
@@ -117,10 +138,10 @@ sub new_token {
         "_id" => $oid,
         "rid" => $rid,
         "last_active" => $lastactive,
+        "endpoint_id" => Kynetx::Session::session_id($session),
     };
 #    my $status = $kpds->insert($token,{"safe" => 1});
     my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0);
-    $logger->trace("Insert: ", sub {Dumper($status)});
     if ($status) {
         return $ktoken;
     } else {
@@ -134,7 +155,6 @@ sub store_token_to_apache_session {
     my $logger = get_logger();
     my $test = is_valid_token($ktoken,$rid);
     if ($test) {
-        $logger->debug("Set token $ktoken in session ",Kynetx::Session::session_id($session));
         $session->{KTOKEN}->{$rid} = $ktoken;
         return $session->{KTOKEN}->{$rid};
     } else {
@@ -143,33 +163,13 @@ sub store_token_to_apache_session {
     }
 }
 
-sub get_token {
-    my ($ktoken,$rid) = @_;
-    my $logger = get_logger();
-    my $var = {"ktoken" => $ktoken};
-    return Kynetx::MongoDB::get_value(COLLECTION,$var);
-#    my $kpds = Kynetx::MongoDB::get_collection("tokens");
-#    my $valid = $kpds->find_one({"ktoken" => $ktoken});
-#    my $ts = DateTime->now->epoch;
-#    if ($valid) {
-#        $logger->debug("Touch token $ktoken $ts");
-#        my $ken = $valid->{'ken'};
-#        Kynetx::Memcached::mset_cache($ktoken,$ken,TOKEN_CACHE_TIME);
-#        $kpds->update({"ktoken" => $ktoken},{'$set' => {"last_active" => $ts}});
-#        return $valid;
-#    } else {
-#        $logger->debug("Token $ktoken not found");
-#        return undef;
-#    }
-}
 
 sub is_valid_token {
     my ($ktoken,$rid) = @_;
     my $logger = get_logger();
-    my $kpds = Kynetx::MongoDB::get_collection("tokens");
-    my $valid = $kpds->find_one({"ktoken" => $ktoken});
+    my $valid = get_token($ktoken,$rid);
     if ($valid) {
-        #$logger->debug("Checking $ktoken for ruleset $rid");
+        $logger->trace("Checking $ktoken for ruleset $rid");
         my $oid = $valid->{'_id'}->to_string;
         $ktoken =~ m/^([A-Za-z0-9+\/]{22})([A-Za-z0-9+\/]{22})$/;
         my $m_oid = $1;
@@ -181,7 +181,7 @@ sub is_valid_token {
         $logger->trace("$m_rid");
         $logger->trace("$m_rid2");
         if ($m_oid eq $m_oid2 && $m_rid eq $m_rid2) {
-            #$logger->debug("Token is valid");
+            $logger->trace("Token is valid");
             return 1;
         } else {
             return 0;
@@ -200,6 +200,11 @@ sub delete_token {
 #    my $kpds = Kynetx::MongoDB::get_collection("tokens");
 #    $kpds->remove({"ktoken" => $ktoken},{"safe" => 1});
 #    Kynetx::Memcached::flush_cache($ktoken);
+}
+
+sub cache_token {
+    my ($ktoken) = @_;
+
 }
 
 1;

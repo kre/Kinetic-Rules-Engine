@@ -18,6 +18,7 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Postlude qw/:all/;
@@ -31,6 +32,7 @@ use Kynetx::FakeReq qw/:all/;
 use Kynetx::Configure;
 use Kynetx::Memcached;
 use Kynetx::MongoDB;
+use Benchmark ':hireswallclock';
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -52,6 +54,9 @@ $logger->debug("KOBJ root: $kobj_root");
 
 my $test_count = 0;
 my $stack_size = 5;
+my $start;
+my $end;
+my $qtime;
 
 my $r = Kynetx::Test::configure();
 
@@ -153,7 +158,12 @@ $val = $where;
 $expected = bag(
     [$where, re(qr/\d+/)],
     [$num + $incr, re(qr/\d+/)]);
-$got = add_persistent_element($domain,$rid,$session,$var,$val);
+$start = new Benchmark;
+add_persistent_element($domain,$rid,$session,$var,$val);
+$got = get_persistent_var($domain,$rid,$session,$var);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "$description: ". $qtime->[0];
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
@@ -168,7 +178,12 @@ $description = "Start a new trail";
 $var = "this_trail";
 $val = $where;
 $expected = bag([$where, re(qr/\d+/)]);
-$got = add_persistent_element($domain,$rid,$session,$var,$val);
+$start = new Benchmark;
+add_persistent_element($domain,$rid,$session,$var,$val);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "$description: ". $qtime->[0];
+$got = get_persistent_var($domain,$rid,$session,$var);
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
@@ -181,7 +196,12 @@ $expected = bag(
     [$where, re(qr/\d+/)],
     [$who, re(qr/\d+/)],
 );
-$got = add_persistent_element($domain,$rid,$session,$var,$val);
+$start = new Benchmark;
+add_persistent_element($domain,$rid,$session,$var,$val);
+$got = get_persistent_var($domain,$rid,$session,$var);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "$description: ". $qtime->[0];
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
@@ -195,15 +215,24 @@ $expected = bag(
     [$who, re(qr/\d+/)],
     [$what, re(qr/\d+/)],
 );
-$got = add_persistent_element($domain,$rid,$session,$var,$val);
+$start = new Benchmark;
+add_persistent_element($domain,$rid,$session,$var,$val);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "$description: ". $qtime->[0];
+$got = get_persistent_var($domain,$rid,$session,$var);
 cmp_deeply($got,$expected,$description);
 $test_count++;
+
 
 $description = "Check for element in trail";
 $var = "this_trail";
 $val = $who;
-#$expected = [re(qr(\d+)),re(qr(\d\d\d+) )];
+$start = new Benchmark;
 $got = contains_persistent_element($domain,$rid,$session,$var,$val);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "$description: ". $qtime->[0];
 cmp_deeply(1,num($got),$description);
 $test_count++;
 
@@ -211,9 +240,15 @@ $description = "Check for $who before $what in trail";
 $var = "this_trail";
 $val = $who;
 #$expected = [re(qr(\d+)),re(qr(\d\d\d+) )];
+$start = new Benchmark;
 $got = persistent_element_before($domain,$rid,$session,$var,$who,$what);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "$description: ". $qtime->[0];
 cmp_deeply(1,$got,$description);
 $test_count++;
+
+
 
 my $timevalue = 2;
 my $timeframe = "seconds";
@@ -221,7 +256,11 @@ $val = $who;
 $description = "Check for $val within $timevalue $timeframe";
 $var = "this_trail";
 #$expected = [re(qr(\d+)),re(qr(\d\d\d+) )];
+$start = new Benchmark;
 $got = persistent_element_within($domain,$rid,$session,$var,$val,$timevalue,$timeframe);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "$description: ". $qtime->[0];
 cmp_deeply($got,1,$description);
 $test_count++;
 
@@ -231,7 +270,11 @@ $val = $where;
 $description = "Check for $val within $timevalue $timeframe";
 $var = "this_trail";
 #$expected = [re(qr(\d+)),re(qr(\d\d\d+) )];
+$start = new Benchmark;
 $got = persistent_element_within($domain,$rid,$session,$var,$val,$timevalue,$timeframe);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "$description: ". $qtime->[0];
 cmp_deeply($got,0,$description);
 $test_count++;
 
@@ -243,19 +286,32 @@ $expected = bag(
     [$where, re(qr/\d+/)],
     [$what, re(qr/\d+/)],
 );
+$start = new Benchmark;
 $got = delete_persistent_element($domain,$rid,$session,$var,$val);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "$description: ". $qtime->[0];
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
+
 $description = "Delete value ($var) from mongo";
+$start = new Benchmark;
 delete_persistent_var($domain,$rid,$session,$var);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "$description: ". $qtime->[0];
 $got = get_persistent_var($domain,$rid,$session,$var);
 cmp_deeply($got,undef,$description);
 $test_count++;
 
 $var = $who;
 $description = "Touch a variable ($var)";
+$start = new Benchmark;
 $got = touch_persistent_var($domain,$rid,$session,$var);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "$description: ". $qtime->[0];
 cmp_deeply($got,0,$description);
 $test_count++;
 
@@ -281,19 +337,27 @@ $expected = {
     "index" => 0,
     0 => $who
 };
+$start = new Benchmark;
 $got = consume_persistent_element($domain,$rid,$session,$var,1);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "$description: ". $qtime->[0];
 cmp_deeply($got,$expected,$description);
 $test_count++;
+
 
 $description = "Pop a value off the stack";
 $expected = {
     "index" => $stack_size,
     $stack_size => $who
 };
+$start = new Benchmark;
 $got = consume_persistent_element($domain,$rid,$session,$var,0);
 cmp_deeply($got,$expected,$description);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "$description: ". $qtime->[0];
 $test_count++;
-
 
 $description = "Pop a value off the stack";
 $expected = {
@@ -309,7 +373,6 @@ delete_persistent_var($domain,$rid,$session,$var);
 $got = get_persistent_var($domain,$rid,$session,$var);
 cmp_deeply($got,undef,$description);
 $test_count++;
-
 
 ##################################################  Application Variables
 #Log::Log4perl->easy_init($DEBUG);
@@ -374,7 +437,12 @@ $val = $where;
 $expected = bag(
     [$where, re(qr/\d+/)],
     [$num + $incr, re(qr/\d+/)]);
-$got = add_persistent_element($domain,$rid,$session,$var,$val);
+add_persistent_element($domain,$rid,$session,$var,$val);
+$start = new Benchmark;
+$got = get_persistent_var($domain,$rid,$session,$var);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "$description: ". $qtime->[0];
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
@@ -388,7 +456,8 @@ $description = "Start a new trail";
 $var = "this_trail";
 $val = $where;
 $expected = bag([$where, re(qr/\d+/)]);
-$got = add_persistent_element($domain,$rid,$session,$var,$val);
+add_persistent_element($domain,$rid,$session,$var,$val);
+$got = get_persistent_var($domain,$rid,$session,$var);
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
@@ -402,7 +471,8 @@ $expected = bag(
     [$where, re(qr/\d+/)],
     [$who, re(qr/\d+/)],
 );
-$got = add_persistent_element($domain,$rid,$session,$var,$val);
+add_persistent_element($domain,$rid,$session,$var,$val);
+$got = get_persistent_var($domain,$rid,$session,$var);
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
@@ -416,7 +486,8 @@ $expected = bag(
     [$who, re(qr/\d+/)],
     [$what, re(qr/\d+/)],
 );
-$got = add_persistent_element($domain,$rid,$session,$var,$val);
+add_persistent_element($domain,$rid,$session,$var,$val);
+$got = get_persistent_var($domain,$rid,$session,$var);
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
