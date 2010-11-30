@@ -120,7 +120,11 @@ my $value2 = {
     "value" => $where
 };
 
+$start = new Benchmark;
 Kynetx::MongoDB::update_value($cruft,$key,$value,1);
+$end = new Benchmark;
+my $base_save = timediff($end,$start);
+diag "Save to Mongo: " . $base_save->[0];
 
 $start = new Benchmark;
 Kynetx::MongoDB::push_value($cruft,$key,$value2);

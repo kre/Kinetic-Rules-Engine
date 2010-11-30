@@ -38,6 +38,7 @@ use Data::Dumper;
 use MongoDB;
 use Apache::Session::Memcached;
 use DateTime;
+use Benchmark ':hireswallclock';
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
@@ -83,6 +84,7 @@ my $rid1 = "1024";
 my $rid2 = "a144x22";
 my $ridR = "test".$rnd1."x".$rnd2;
 my $skey = "buildarray";
+my ($start,$end);
 
 
 # get random words
@@ -101,25 +103,46 @@ chomp($key2);
 chomp($key3);
 
 # basic Entity getter/setter
+$start = new Benchmark;
 $result = Kynetx::Persistence::Entity::put_edatum($rid1,$ken,$skey,$key2);
+$end = new Benchmark;
+my $qtime = timediff($end,$start);
+diag "Save to Mongo: " . $qtime->[0];
 testit($result,1,"Insert data for $rid1/$ken",0);
 
+$start = new Benchmark;
 $result = Kynetx::Persistence::Entity::get_edatum($rid1,$ken,$skey);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "Get from Mongo: " . $qtime->[0];
 testit($result,$key2,"Retrieve data for $rid1/$ken/$key1",0);
 
+$start = new Benchmark;
 Kynetx::Persistence::Entity::push_edatum($rid1,$ken,$skey,$key3);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "Convert primitive to array: " . $qtime->[0];
+
 $result = Kynetx::Persistence::Entity::get_edatum($rid1,$ken,$skey);
 $expected = [$key2,$key3];
 testit($result,$expected,"Convert primitive to array",0);
 $logger->debug("Result: ", sub {Dumper($result)});
 
+$start = new Benchmark;
 Kynetx::Persistence::Entity::push_edatum($rid1,$ken,$skey,$key1);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "Push on array: " . $qtime->[0];
 $result = Kynetx::Persistence::Entity::get_edatum($rid1,$ken,$skey);
 $expected = [$key2,$key3,$key1];
 testit($result,$expected,"Add value to existing array",0);
 $logger->debug("Result: ", sub {Dumper($result)});
 
+$start = new Benchmark;
 $result = Kynetx::Persistence::Entity::pop_edatum($rid1,$ken,$skey);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "Pop from array: " . $qtime->[0];
 $expected = $key1;
 testit($result,$expected,"Pop value from array",0);
 
@@ -170,7 +193,11 @@ testit($result,$expected,"Check trail remainder",0);
 
 
 # Store to a new ruleset
+$start = new Benchmark;
 $result = Kynetx::Persistence::Entity::put_edatum($ridR,$ken,$key1,$key3);
+$end = new Benchmark;
+my $qtime = timediff($end,$start);
+diag "Save to Mongo: " . $qtime->[0];
 testit($result,1,"Insert to new store $ridR",0);
 
 $result = Kynetx::Persistence::Entity::get_edatum($ridR,$ken,$key1);

@@ -105,12 +105,16 @@ diag "Run the test stand-alone if an error occurs with one of the *Check* tests 
 diag "Start with Entity Variables";
 $domain = 'ent';
 
-
+Kynetx::MongoDB::get_value("edata",{"key" => "null"});
 $var = "evar";
 $val = $who;
 $description = "Set a value ($val)";
 $key->{"key"} = $var;
+$start = new Benchmark;
 $got = save_persistent_var($domain,$rid,$session,$var,$val);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "First save: " . $qtime->[0];
 
 cmp_deeply($got,$val,$description);
 $test_count++;
@@ -121,7 +125,11 @@ cmp_deeply($got,$val,$description);
 $test_count++;
 
 $description = "Retrieve value from ($var)";
+$start = new Benchmark;
 $got = get_persistent_var($domain,$rid,$session,$var);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "$description: " . $qtime->[0];
 cmp_deeply($got,$val,$description);
 $test_count++;
 
