@@ -38,7 +38,7 @@ if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
                 "use_change_condition": true,
                 "domains": {
                     "www.google.com": {
-                        "selector": "li.g",
+                        "selector": "li.g:not(:has(h4))",
                         "modify": "div.s",
                         "watcher": "#rso",
                         "urlSel":".l",
