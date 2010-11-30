@@ -802,7 +802,7 @@ setting returns[ArrayList result]
 @init {
 	ArrayList sresult = new ArrayList();
 }
-	:	SETTING LEFT_PAREN (v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH){sresult.add($v.text);} (COMMA v2=(VAR|LIKE|OTHER_OPERATORS|REPLACE|EXTRACT|MATCH){sresult.add($v2.text);} )*)? RIGHT_PAREN {
+	:	SETTING LEFT_PAREN (v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN){sresult.add($v.text);} (COMMA v2=(VAR|LIKE|OTHER_OPERATORS|REPLACE|EXTRACT|MATCH|VAR_DOMAIN){sresult.add($v2.text);} )*)? RIGHT_PAREN {
 		$result = sresult;
 	}
 	;
@@ -1527,9 +1527,18 @@ factor returns[Object result] options { backtrack = true; }
 		tmp.put("val",val);
 		$result = tmp;
       }
-      | d=VAR_DOMAIN COLON vv=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) {
+      | n=namespace p=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) LEFT_PAREN (e=expr { exprs2.add($e.result); } ( COMMA e=expr { exprs2.add($e.result);})* )? RIGHT_PAREN  {
 	      	HashMap tmp = new HashMap();
-	      	tmp.put("domain",$d.text);
+	      	tmp.put("type","qualified");
+	      	tmp.put("predicate",$p.text);
+	      	tmp.put("source",$n.text.substring(0,$n.text.length() - 1));
+	      	tmp.put("args",exprs2);
+	      	$result = tmp;
+      }
+      // persistant or qualified variable
+      | n=namespace vv=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) {
+	      	HashMap tmp = new HashMap();
+	      	tmp.put("domain",$n.text.substring(0,$n.text.length() - 1));
 	      	tmp.put("name",$vv.text);
 	      	tmp.put("type","persistent");
 	      	$result = tmp;
@@ -1553,14 +1562,6 @@ factor returns[Object result] options { backtrack = true; }
       	      	HashMap tmp2 = new HashMap();
 	      	tmp2.putAll((HashMap)$e.result);
 	      	tmp.put("offset",tmp2);
-	      	$result = tmp;
-      }
-      | n=namespace p=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) LEFT_PAREN (e=expr { exprs2.add($e.result); } ( COMMA e=expr { exprs2.add($e.result);})* )? RIGHT_PAREN  {
-	      	HashMap tmp = new HashMap();
-	      	tmp.put("type","qualified");
-	      	tmp.put("predicate",$p.text);
-	      	tmp.put("source",$n.text.substring(0,$n.text.length() - 1));
-	      	tmp.put("args",exprs2);
 	      	$result = tmp;
       }
       | v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) LEFT_PAREN (e=expr{  exprs2.add($e.result); } ( COMMA e=expr {  exprs2.add($e.result); })* )? RIGHT_PAREN	{
@@ -1589,7 +1590,7 @@ factor returns[Object result] options { backtrack = true; }
 	      	$result = tmp;
       }
       | LEFT_PAREN e=expr  RIGHT_PAREN { $result=$e.result; }
-      | v=(VAR|OTHER_OPERATORS|REPLACE|EXTRACT|MATCH)   {
+      | v=(VAR|OTHER_OPERATORS|REPLACE|EXTRACT|MATCH|VAR_DOMAIN)   {
       		HashMap tmp = new HashMap();
 		tmp.put("type","var");
 		tmp.put("val",$v.text);
@@ -1902,8 +1903,6 @@ REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
  AND
 	:	 '&&';
 
- VAR_DOMAIN: 'ent' | 'app';
-
 
  WITH : 'with';
  USING : 'using';
@@ -2157,8 +2156,13 @@ OFF 	: 'off';
 NOT :	'not';
 SEEN :'seen';
 
+VAR_DOMAIN:  'ent' | 'app'
+    ;
+
 VAR  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*
    ;
+
+
 
 INT :	' -'? '0'..'9'+
     ;
