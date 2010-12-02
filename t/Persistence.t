@@ -19,6 +19,7 @@ use Cache::Memcached;
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($TRACE);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Postlude qw/:all/;
@@ -72,7 +73,7 @@ my $rule_env = Kynetx::Test::gen_rule_env();
 
 #my $session = Kynetx::Test::gen_session($r, $rid);
 my $session = Kynetx::Session::process_session($r);
-
+$logger->trace("Initial session:",sub {Dumper($session)});
 #Kynetx::Test::gen_app_session($r, $my_req_info);
 
 my $dict_path = "/usr/share/dict/words";
@@ -90,10 +91,14 @@ chomp($who);
 my ($got, $expected, $description);
 my ($domain,$var,$val,$from);
 my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+$logger->trace("New ken session:",sub {Dumper($session)});
 my $key = {
     "ken" => $ken,
     "rid" => $rid,
 };
+$logger->trace("What:  $what");
+$logger->trace("Who:   $who");
+$logger->trace("Where: $where");
 
 ######### The way this works, you could loop these tests over
 ######### Entity and Application variables, but I'm keeping them linear for now
@@ -118,9 +123,12 @@ diag "First save: " . $qtime->[0];
 
 cmp_deeply($got,$val,$description);
 $test_count++;
+$logger->trace("Post save session:",sub {Dumper($session)});
 
 $description = "Check $var for $val";
-$got = Kynetx::MongoDB::get_value("edata",$key)->{"value"};
+my $result = Kynetx::MongoDB::get_value("edata",$key);
+$logger->trace("$description: ",sub {Dumper($result)});
+$got = $result->{"value"};
 cmp_deeply($got,$val,$description);
 $test_count++;
 
