@@ -75,52 +75,83 @@ qw(
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
 
+sub _ken_query {
+    my ($var,$collection) = @_;
+    $collection = $collection || COLLECTION;
+    my $result = Kynetx::MongoDB::get_value($collection,$var);
+    if ($result) {
+        return $result->{"ken"};
+    }
+    return undef;
+}
+
 sub get_ken {
-    my ($session,$rid,$count) = @_;
+    my ($session,$rid,$domain) = @_;
     my $logger = get_logger();
+    my $ken = undef;
     $logger->warn("get_ken called with invalid session: ", sub {Dumper($session)}) unless ($session);
-    $count = $count || 1;
-    my $ken = has_ken($session,$rid);
+    my $ktoken = Kynetx::Persistence::KToken::get_token($session,$rid,$domain);
+    if ($ktoken) {
+        $logger->trace("Token found: $ktoken");
+        $ken = ken_lookup_by_token($ktoken);
+    }
     if ($ken) {
         return $ken;
     } else {
-        $count++;
-        my $token = Kynetx::Persistence::KToken::new_token($rid,$session);
-        if ($count > 3) {
-            Kynetx::Session::session_cleanup($session);
-            die;
-        }
-        return get_ken($session,$rid,$count);
-    }
-
-}
-
-sub has_ken {
-    my ($session,$rid) = @_;
-    my $logger = get_logger();
-    my $ken;
-    my $token = session_has_token($session,$rid);
-    if ($token) {
-        $logger->trace("Has token for $rid ($token)");
-        $ken = Kynetx::Memcached::check_cache($token);
-        #$logger->trace("[has_ken] found KEN: $ken for Token: $token");
-        if (is_valid_token($token,$rid)) {
-            my $token_obj = get_token($token,$rid);
-            if ($token_obj) {
-                return $token_obj->{"ken"};
-            } else {
-                return undef;
-            }
+        if ($ktoken) {
+            $logger->trace("Token invalid");
+            Kynetx::Persistence::KToken::delete_token($ktoken);
         } else {
-            $logger->warn("Invalid token ($token) found");
-            return undef;
-            die;
+            $logger->trace("Token not found");
         }
-    } else {
-        $logger->debug("No token found for $rid");
-        return undef;
+
+        $ken = ken_lookup_by_domain($session,$rid,$domain);
     }
+
+    # if we still don't have a KEN, create a new one
+    $ken = new_ken() unless ($ken);
+
+    # A new token must be created
+    Kynetx::Persistence::KToken::new_token($rid,$session,$ken);
+    return $ken;
 }
+
+sub ken_lookup_by_domain {
+    my ($session,$rid,$domain) = @_;
+    $domain = $domain || "web";
+    my $token_obj = Kynetx::Persistence::KToken::get_endpoint_token($session,$rid,$domain);
+    if ($token_obj) {
+        return $token_obj->{"ken"};
+    }
+    return undef;
+}
+
+
+sub ken_lookup_by_token {
+    my ($ktoken) = @_;
+    my $logger = get_logger();
+    my $ken = Kynetx::Memcached::check_cache($ktoken);
+    if ($ken) {
+        $logger->trace("Found KEN in memcache: $ken");
+    } else {
+        $logger->trace("Check mongo for token: $ktoken");
+        $ken = mongo_has_ken($ktoken);
+    }
+    return $ken;
+}
+
+sub mongo_has_ken {
+    my ($ktoken) = @_;
+    my $var = {
+        'ktoken' => $ktoken
+    };
+    my $result = Kynetx::Persistence::KToken::token_query($var);
+    if ($result) {
+        return $result->{"ken"};
+    }
+    return undef;
+}
+
 
 
 sub _validate_ken {

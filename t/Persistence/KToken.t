@@ -41,7 +41,8 @@ use Apache::Session::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($TRACE);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Configure;
@@ -87,7 +88,7 @@ if ($token) {
 }
 
 $description = "No token in session";
-$token = Kynetx::Persistence::KToken::session_has_token($session,$rid);
+$token = Kynetx::Persistence::KToken::get_token($session,$rid);
 testit($token,undef,$description,0);
 
 $description = "Token is created";
@@ -106,12 +107,9 @@ $description = "Check that token is valid";
 $result = Kynetx::Persistence::KToken::is_valid_token($token,$rid);
 testit($result,1,$description,0);
 
-$description = "Save token to Apache session";
-$tokenb = Kynetx::Persistence::KToken::store_token_to_apache_session($token,$rid,$session);
-testit($tokenb,$token,$description,0);
 
 $description = "Check token from session";
-$tokenb = Kynetx::Persistence::KToken::session_has_token($session,$rid);
+$tokenb = Kynetx::Persistence::KToken::get_token($session,$rid);
 testit($token,$tokenb,$description,0);
 
 $description = "Delete the token";

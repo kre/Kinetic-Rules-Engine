@@ -99,7 +99,9 @@ sub save_persistent_var {
     $logger->trace("Save $domain","var: $varname$op_name");
     my $status;
     if ($domain eq 'ent') {
+        $logger->trace("Session after before KEN query: ", sub {Dumper($session)});
         my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+        $logger->trace("Session after new KEN query: ", sub {Dumper($session)});
         $status = Kynetx::Persistence::Entity::put_edatum($rid,$ken,$varname,$value);
     } elsif ($domain eq 'app') {
         $status = Kynetx::Persistence::Application::put($rid,$varname,$value);
