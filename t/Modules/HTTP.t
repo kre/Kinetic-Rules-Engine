@@ -17,7 +17,7 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
@@ -185,6 +185,43 @@ ok(! defined lookup_rule_env('r',$rule_env), "r is NOT defined");
 $test_count += 1;
 
 is($my_req_info->{'label'}, 'example', "label is example");
+ok(defined $my_req_info->{'content_length'}, "Content length defined");
+ok(defined $my_req_info->{'status_code'}, "Status code defined");
+ok(defined $my_req_info->{'content'}, "Content defined");
+$test_count += 4;
+
+# with headers
+$krl_src = <<_KRL_;
+http:post("http://epfactory.kynetx.com:3098/1/bookmarklet/aaa/dev")
+     with params = {"init_host": "qa.kobj.net",
+		    "eval_host": "qa.kobj.net",
+		    "callback_host": "qa.kobj.net",
+		    "contents": "compiled",
+		    "format": "json",
+		    "version": "dev",
+                    "minnie" : "1.0"
+                   } and
+          autoraise = "example2" and 
+          headers = {"user-agent": "flipper",
+                     "X-proto": "foogle"
+                    };
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+
+# start with a fresh $req_info and $rule_env
+$my_req_info = Kynetx::Test::gen_req_info($rid);
+$rule_env = Kynetx::Test::gen_rule_env();
+
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
+is($my_req_info->{'label'}, 'example2', "label is example2");
 ok(defined $my_req_info->{'content_length'}, "Content length defined");
 ok(defined $my_req_info->{'status_code'}, "Status code defined");
 ok(defined $my_req_info->{'content'}, "Content defined");
