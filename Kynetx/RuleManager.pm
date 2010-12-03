@@ -98,7 +98,7 @@ sub handler {
     #my $p = Kynetx::JParser::get_antlr_parser();
 
     # configure logging for production, development, etc.
-    config_logging($r);
+    Kynetx::Util::config_logging($r);
 
     my $logger = get_logger();
     my ( $method, $rid, $version ) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_]*)/?([A-Za-z0-9_]*)!;

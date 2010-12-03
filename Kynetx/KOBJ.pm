@@ -62,7 +62,7 @@ sub handler {
     my $r = shift;
 
     # configure logging for production, development, etc.
-    config_logging($r);
+    Kynetx::Util::config_logging($r);
 
     $r->content_type('text/javascript');
 

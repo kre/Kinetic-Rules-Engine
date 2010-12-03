@@ -379,18 +379,16 @@ sub eval_expr_with_default {
 
     my $val;
     if ( defined $expr ) {
-        $val = Kynetx::Expressions::eval_expr( $expr, $default, $rule_env,
-                                              $rule_name, $req_info, $session );
+        $val = Kynetx::Expressions::eval_expr( $expr,
+                                        $rule_env,
+                                        $rule_name,
+                                        $req_info,
+                                        $session );
 
-        if (
-            (
-               !defined $val || ( ref $val eq 'HASH' && !defined $val->{'val'} )
-            )
-            && $expr->{'type'} eq 'var'
-          )
-        {    # not really a var
+        if ((! defined $val ||
+             ( ref $val eq 'HASH' && !defined $val->{'val'} )) &&
+             $expr->{'type'} eq 'var') {    # not really a var
                 # use variable name as the result
-
             #      $logger->debug("Using var name as result");
             $val = mk_expr_node( 'str', $expr->{'val'} );
         }
