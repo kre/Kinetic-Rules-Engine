@@ -36,6 +36,8 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
+use Digest::MD5 qw/md5_hex/;
+use Digest::SHA1 qw/sha1_hex/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -62,10 +64,18 @@ sub get_predicates {
 sub do_math {
     my ($req_info, $function, $args) = @_;
 
+    my $logger = get_logger();
+
     my $val;
 
     if ($function eq 'random') {
       $val = int(rand $args->[0]);
+    } elsif ($function eq 'md5') {
+      $val = md5_hex($args->[0]);
+    } elsif ($function eq 'sha1') {
+      $val = sha1_hex($args->[0]);
+    } else {
+      $logger->warn("Unknown math function: $function");
     }
 
     return $val

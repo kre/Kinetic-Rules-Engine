@@ -28,7 +28,7 @@ use Kynetx::FakeReq qw/:all/;
 
 
 
-plan tests => 15;
+plan tests => 17;
 
 my $r = Kynetx::Test::configure();
 
@@ -68,6 +68,9 @@ like(do_math($my_req_info, 'random', [999]), qr/^\d{1,3}$/, 'single digit');
 like(do_math($my_req_info, 'random', [999]), qr/^\d{1,3}$/, 'single digit');
 like(do_math($my_req_info, 'random', [999]), qr/^\d{1,3}$/, 'single digit');
 like(do_math($my_req_info, 'random', [999]), qr/^\d{1,3}$/, 'single digit');
+
+like(do_math($my_req_info, 'md5', ["this is a test"]), qr/^([a-f0-9]){32}$/, 'md5 returns hex string');
+like(do_math($my_req_info, 'sha1', ["this is a test"]), qr/^([a-f0-9]){40}$/, 'sha1 returns hex string');
 
 
 
