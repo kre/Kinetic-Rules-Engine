@@ -174,7 +174,8 @@ sub mk_http_request {
     $logger->debug("Encoded content: $content");
 
     $req->content($content);
-    $req->header('content_length' => length($content));
+    $req->header('content-length' => length($content));
+    $req->header('content-type' => "application/x-www-form-urlencoded");
 
   } elsif (uc($method) eq 'GET') {
     my $full_uri = Kynetx::Util::mk_url($uri,  $params);
@@ -192,7 +193,7 @@ sub mk_http_request {
     $req->header($k => $headers->{$k});
   }
 
-  $logger->debug("Request ", Dumper $req);
+#  $logger->debug("Request ", Dumper $req);
 
   $response = $ua->request($req);
 
