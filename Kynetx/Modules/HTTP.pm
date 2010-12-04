@@ -174,10 +174,13 @@ sub mk_http_request {
     $logger->debug("Encoded content: $content");
 
     $req->content($content);
+    $req->header('content_length' => length($content));
+
   } elsif (uc($method) eq 'GET') {
     my $full_uri = Kynetx::Util::mk_url($uri,  $params);
     $req = new HTTP::Request 'GET', $full_uri;
 #    $response = $ua->get($full_uri, $headers);
+
   } else {
     $logger->warn("Bad method ($method) called in do_http");
     return '';
@@ -189,7 +192,7 @@ sub mk_http_request {
     $req->header($k => $headers->{$k});
   }
 
-#  $logger->debug("Request ", Dumper $req);
+  $logger->debug("Request ", Dumper $req);
 
   $response = $ua->request($req);
 
