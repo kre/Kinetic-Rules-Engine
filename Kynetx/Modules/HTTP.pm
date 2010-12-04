@@ -36,6 +36,7 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
+use URI::Escape;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -111,7 +112,7 @@ sub do_http {
 		     'status_code' => $response->code(),
 		     'status_line' => $response->status_line(),
 		     'content_type' => $response->header('Content-Type'),
-		     'content_length' => $response->header('Content-Length'),
+		     'content_length' => $response->header('Content-Length') || 0,
 		    }
 	     };
 
@@ -165,9 +166,14 @@ sub mk_http_request {
   my $response;
   if (uc($method) eq 'POST') {
 
-    $req = new HTTP::Request 'POST', $uri, [Content=>$params];
+    $req = new HTTP::Request 'POST', $uri;
 
-#    $response = $ua->post($uri, Content=>$params);
+#    $response = $ua->post($uri);
+
+    my $content = join('&', map("$_=".uri_escape($params->{$_}), keys %{ $params }));
+    $logger->debug("Encoded content: $content");
+
+    $req->content($content);
   } elsif (uc($method) eq 'GET') {
     my $full_uri = Kynetx::Util::mk_url($uri,  $params);
     $req = new HTTP::Request 'GET', $full_uri;

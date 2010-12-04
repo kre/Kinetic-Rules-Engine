@@ -17,7 +17,7 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
@@ -192,7 +192,7 @@ $test_count += 4;
 
 # with headers
 $krl_src = <<_KRL_;
-http:post("http://epfactory.kynetx.com:3098/1/bookmarklet/aaa/dev")
+http:post("http://www.postbin.org/1g00pes")
      with params = {"init_host": "qa.kobj.net",
 		    "eval_host": "qa.kobj.net",
 		    "callback_host": "qa.kobj.net",
