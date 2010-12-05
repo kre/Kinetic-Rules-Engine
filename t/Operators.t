@@ -96,6 +96,7 @@ pre {
   j = [{"a" : 1, "b" : 2, "c": 3}, {"a" : 4, "b" : 5, "c": 6}, {"a" : 7, "b" : 8, "c": 9}];
   foo = "I like cheese";
   my_str = "This is a string";
+  phone_num = "1234567890";
   split_str = "A;B;C";
   my_url = "http://www.amazon.com/gp/products/123456789/";
   in_str = <<
@@ -660,7 +661,6 @@ $x[$i] = {
 };
 $d[$i]  = 0;
 $i++;
-
 
 $e[$i] = q%my_url.replace(re#http://www.amazon.com#,"foozle::")%;
 $x[$i] = {
@@ -1505,6 +1505,7 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+
 ENDY:
 # New pick argument to retain array
 
@@ -1519,6 +1520,17 @@ $x[$i] = {'val' => '12.99',
       'type' => 'num'};
 $d[$i]  = 0;
 $i++;
+
+
+$e[$i] = q#phone_num.replace(re/([0-9]{3}).*/,"$1")#;
+$x[$i] = {
+   'val' => '123',
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+
 
 # now run the tests....
 my $l = scalar @e;
