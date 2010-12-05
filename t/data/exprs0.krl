@@ -7,6 +7,7 @@ ruleset 10 {
 	  x = 5;
 	  x = -5;
 	  x = "test";
+          x = "1234567890";
 	  x = true;
 	  x = false;
 //	  x = re/f|g+/i;
