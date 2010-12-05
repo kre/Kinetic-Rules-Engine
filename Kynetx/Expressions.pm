@@ -194,11 +194,11 @@ sub eval_decl {
 #  dclone used to ensure we return a new copy, not a pointer to the env
 sub eval_expr {
     my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
-
     my $logger = get_logger();
     $logger->trace("[javascript] expr: ", sub { Dumper($expr) });
 
     $rule_name ||= 'global';
+    my $domain = $expr->{'domain'};
 
     if ($expr->{'type'} eq 'str' ) {
         if ($expr->{'val'} =~ m/\#\{(.+)\}{1}?/) {
@@ -208,62 +208,74 @@ sub eval_expr {
 	       return $expr;
         }
     } elsif($expr->{'type'} eq 'JS') {
-	return  $expr ;
+	   return  $expr ;
     } elsif($expr->{'type'} eq 'num') {
-	return  $expr ;
+	   return  $expr ;
     } elsif($expr->{'type'} eq 'regexp') {
-	return  $expr ;
+	   return  $expr ;
     } elsif($expr->{'type'} eq 'var') {
-	my $v = lookup_rule_env($expr->{'val'},$rule_env);
-	unless (defined $v) {
-	    $logger->info("Variable '", $expr->{'val'}, "' is undefined");
-	}
-	$logger->trace($rule_name.':'.$expr->{'val'}, " -> ", $v, ' Type -> ', infer_type($v));
+	   my $v = lookup_rule_env($expr->{'val'},$rule_env);
+	   unless (defined $v) {
+	       $logger->info("Variable '", $expr->{'val'}, "' is undefined");
+	   }
+	   $logger->trace($rule_name.':'.$expr->{'val'}, " -> ", $v, ' Type -> ', infer_type($v));
 
-	# alas, closures are the only denoted vals in the env...
-	if (ref $v eq 'HASH' && defined $v->{'type'} && $v->{'type'} eq 'closure') {
-	  return $v;
-	} else {
-	  return  mk_expr_node(infer_type($v),$v);
-	}
+	   # alas, closures are the only denoted vals in the env...
+    	if (ref $v eq 'HASH' && defined $v->{'type'} && $v->{'type'} eq 'closure') {
+    	  return $v;
+    	} else {
+    	  return  mk_expr_node(infer_type($v),$v);
+    	}
     } elsif($expr->{'type'} eq 'bool') {
-	return  $expr ;
+	   return  $expr ;
     } elsif($expr->{'type'} eq 'array') {
-	return mk_expr_node('array',
-			    eval_rands($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  ) ;
+	   return mk_expr_node('array',
+			    eval_rands($expr->{'val'},
+			     $rule_env,
+			     $rule_name,
+			     $req_info,
+			     $session)  ) ;
     } elsif($expr->{'type'} eq 'array_ref') {
-	return eval_array_ref($expr, $rule_env, $rule_name, $req_info, $session);
+	   return eval_array_ref($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'hashraw') {
-	return  mk_expr_node('hash',
-			     eval_hash_raw($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  ) ;
+	   return  mk_expr_node('hash',
+			     eval_hash_raw($expr->{'val'},
+			         $rule_env,
+			         $rule_name,
+			         $req_info,
+			         $session)  ) ;
     } elsif($expr->{'type'} eq 'hash') {
-	return  mk_expr_node('hash',
-			     eval_hash($expr->{'val'}, $rule_env, $rule_name, $req_info, $session)  ) ;
+	   return  mk_expr_node('hash',
+			     eval_hash($expr->{'val'},
+			         $rule_env,
+			         $rule_name,
+			         $req_info,
+			         $session)  ) ;
     } elsif($expr->{'type'} eq 'prim') {
-	return eval_prim($expr, $rule_env, $rule_name, $req_info, $session);
+	   return eval_prim($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'operator') {
-        $logger->trace('[javascript::eval_expr] ', sub {Dumper($expr)});
+       $logger->trace('[javascript::eval_expr] ', sub {Dumper($expr)});
 	   return Kynetx::Operators::eval_operator($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'condexpr') {
-      my $test = eval_expr($expr->{'test'}, $rule_env, $rule_name, $req_info, $session);
-      return
-	true_value($test) ?
-	  eval_expr($expr->{'then'}, $rule_env, $rule_name, $req_info, $session) :
-	  eval_expr($expr->{'else'}, $rule_env, $rule_name, $req_info, $session)
+        my $test = eval_expr($expr->{'test'}, $rule_env, $rule_name, $req_info, $session);
+        return
+	       true_value($test) ?
+	           eval_expr($expr->{'then'}, $rule_env, $rule_name, $req_info, $session) :
+	           eval_expr($expr->{'else'}, $rule_env, $rule_name, $req_info, $session)
     } elsif($expr->{'type'} eq 'function') {
-      return mk_closure($expr, $rule_env);
+        return mk_closure($expr, $rule_env);
     } elsif($expr->{'type'} eq 'simple') {
       # rearranges parse tree on the fly.  Should be removed after June 2010.
-      return eval_application(mk_app_from_simple($expr), $rule_env, $rule_name,$req_info, $session);
+        return eval_application(mk_app_from_simple($expr), $rule_env, $rule_name,$req_info, $session);
     } elsif($expr->{'type'} eq 'app') {
-      return eval_application($expr, $rule_env, $rule_name,$req_info, $session);
+        return eval_application($expr, $rule_env, $rule_name,$req_info, $session);
     } elsif($expr->{'type'} eq 'qualified') {
-	my $den = eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-	# get the values
-	for (@{ $den }) {
-	    $_ = den_to_exp($_);
-	}
-	my $v = Kynetx::Modules::eval_module($req_info,
+	   my $den = eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+	   # get the values
+	   for (@{ $den }) {
+	       $_ = den_to_exp($_);
+	   }
+	   my $v = Kynetx::Modules::eval_module($req_info,
 					     $rule_env,
 					     $session,
 					     $rule_name,
@@ -272,34 +284,32 @@ sub eval_expr {
 					     $den
 					    );
 
-	$logger->trace("[JS Expr] ", $expr->{'source'}, ":", $expr->{'predicate'}, " -> ", $v);
+	   $logger->trace("[JS Expr] ", $expr->{'source'}, ":", $expr->{'predicate'}, " -> ", $v);
 
-	return mk_expr_node(infer_type($v),$v);
+	   return mk_expr_node(infer_type($v),$v);
     } elsif($expr->{'type'} eq 'persistent' ||
-	    $expr->{'type'} eq 'trail_history'
-	   ) {
-      my $v = eval_persistent($req_info, $rule_env, $rule_name, $session, $expr);
-      return mk_expr_node(infer_type($v),$v);
+	    $expr->{'type'} eq 'trail_history' ) {
+            my $v = eval_persistent($req_info, $rule_env, $rule_name, $session, $expr);
+            return mk_expr_node(infer_type($v),$v);
     } elsif($expr->{'type'} eq 'pred') {
-      my $v = eval_pred($req_info, $rule_env, $session,
+        my $v = eval_pred($req_info, $rule_env, $session,
 			$expr, $rule_name);
-      return $v;
+        return $v;
     } elsif($expr->{'type'} eq 'ineq') {
-      my $v = eval_ineq($req_info, $rule_env, $session,
+        my $v = eval_ineq($req_info, $rule_env, $session,
 		     $expr, $rule_name);
-      return $v;
+        return $v;
     } elsif ($expr->{'type'} eq 'persistent_ineq') {
-      my $name = $expr->{'var'};
+        my $name = $expr->{'var'};
 
-      # check count
-      my $count = 0;
-      if ($expr->{'domain'} eq 'ent') {
-	$count = Kynetx::Persistence::get_persistent_var("ent",$req_info->{'rid'}, $session, $name);
-      }
+        # check count
+        my $count = 0;
+        if ($domain) {
+	        $count = Kynetx::Persistence::get_persistent_var($domain,$req_info->{'rid'}, $session, $name);
+        }
 
-      $logger->debug('[persistent_ineq] ', "$name -> $count");
-
-      my $v = ineq_test($expr->{'ineq'},
+        $logger->debug('[persistent_ineq] ', "$name -> $count");
+        my $v = ineq_test($expr->{'ineq'},
 		     $count,
 		     Kynetx::Expressions::den_to_exp(
 			 Kynetx::Expressions::eval_expr($expr->{'expr'},
@@ -310,43 +320,41 @@ sub eval_expr {
 		    );
 
 
-      # check date, if needed
-      if ($v &&
-	  defined $expr->{'within'} &&
-	  session_defined($req_info->{'rid'}, $session, $name)) {
+        # check date, if needed
+        if ($v &&
+    	    defined $expr->{'within'} &&
+    	    Kynetx::Persistence::defined_persistent_var($domain,$req_info->{'rid'}, $session, $name)) {
 
-	my $tv = 1;
-	if ($expr->{'domain'} eq 'ent') {
-	  $tv = session_within($req_info->{'rid'},
-			       $session,
-			       $name,
-			       Kynetx::Expressions::den_to_exp(
-				   Kynetx::Expressions::eval_expr($expr->{'within'},
-								  $rule_env,
-								  $rule_name,
-								  $req_info,
-								  $session)),
-			       $expr->{'timeframe'}
-			      )
-	}
+	       my $tv = 1;
 
-	$v = $v && $tv;
-      }
-      return mk_expr_node(infer_type($v),$v);
+           $tv = Kynetx::Persistence::persistent_var_within($domain,$req_info->{'rid'},
+		       $session,
+		       $name,
+		       Kynetx::Expressions::den_to_exp(
+			   Kynetx::Expressions::eval_expr($expr->{'within'},
+							  $rule_env,
+							  $rule_name,
+							  $req_info,
+							  $session)),
+		       $expr->{'timeframe'}
+		      );
 
+
+	       $v = $v && $tv;
+        }
+        return mk_expr_node(infer_type($v),$v);
     } elsif ($expr->{'type'} eq 'seen_timeframe') {
-      my $name = $expr->{'var'};
+        my $name = $expr->{'var'};
 
-      $logger->debug('[seen_timeframe] ', "$name");
+        $logger->debug('[seen_timeframe] ', "$name");
 
-      my $v;
+        my $v;
 
-      # check date, if needed
-      if (defined $expr->{'within'} &&
-	  session_defined($req_info->{'rid'}, $session, $name)) {
-
-	if ($expr->{'domain'} eq 'ent') {
-	  $v = Kynetx::Persistence::persistent_element_within($expr->{'domain'},$req_info->{'rid'},
+        # check date, if needed
+        if (defined $expr->{'within'} &&
+	        Kynetx::Persistence::defined_persistent_var($domain,$req_info->{'rid'}, $session, $name)) {
+	           $v = Kynetx::Persistence::persistent_element_within($domain,
+	               $req_info->{'rid'},
 				   $session,
 				   $name,
 				   $expr->{'regexp'},
@@ -357,48 +365,40 @@ sub eval_expr {
 								      $req_info,
 								      $session)),
 				   $expr->{'timeframe'}
-				  )
-	}
-      } elsif (session_defined($req_info->{'rid'}, $session, $name)) {
-	if ($expr->{'domain'} eq 'ent') {
-	  # session_seen returns index (which can be 0)
-	  $v = defined session_seen($req_info->{'rid'},
-				    $session,
-				    $name,
-				    $expr->{'regexp'}
-				   ) ? 1 : 0;
-	}
-      }
-      return mk_expr_node(infer_type($v),$v);
+				  );
+        } elsif (Kynetx::Persistence::defined_persistent_var($domain,$req_info->{'rid'}, $session, $name)) {
+           # session_seen returns index (which can be 0)
+           $v = defined Kynetx::Persistence::persistent_element_index($domain,$req_info->{'rid'},
+			    $session,
+			    $name,
+			    $expr->{'regexp'}
+			   ) ? 1 : 0;
+        }
+        return mk_expr_node(infer_type($v),$v);
 
     } elsif ($expr->{'type'} eq 'seen_compare') {
-      my $name = $expr->{'var'};
-      my $v;
-      if ($expr->{'domain'} eq 'ent') {
-	my($r1,$r2) =
-	  $expr->{'op'} eq 'after' ? ($expr->{'regexp_1'},
-				      $expr->{'regexp_2'})
-	    : ($expr->{'regexp_2'},
-	       $expr->{'regexp_1'});
-	$v = Kynetx::Persistence::persistent_element_before($expr->{'domain'},$req_info->{'rid'},
-				  $session,
-				  $name,
-				  $r1,
-				  $r2
-				 ) ? 0 : 1; # ensure 0 returned for testing
-      }
-      return mk_expr_node(infer_type($v),$v);
+        my $name = $expr->{'var'};
+        my $v;
+       my($r1,$r2) =
+           $expr->{'op'} eq 'after' ?
+             ($expr->{'regexp_1'},$expr->{'regexp_2'}) :
+             ($expr->{'regexp_2'},$expr->{'regexp_1'});
+       $v = Kynetx::Persistence::persistent_element_before($domain,
+             $req_info->{'rid'},
+			 $session,
+			 $name,
+			 $r1,
+			 $r2
+			 ) ? 0 : 1; # ensure 0 returned for testing
+        return mk_expr_node(infer_type($v),$v);
     } elsif ($expr->{'type'} eq 'persistent') {
-      my $name = $expr->{'name'};
-      my $v;
-      if ($expr->{'domain'} eq 'ent') {
-	$v = session_defined($req_info->{'rid'}, $session, $name) &&
-	  session_get($req_info->{'rid'}, $session, $name);
+        my $name = $expr->{'name'};
+        my $v = Kynetx::Persistence::defined_persistent_var($domain,$req_info->{'rid'}, $session, $name) &&
+	            Kynetx::Persistence::get_persistent_var($domain,$req_info->{'rid'}, $session, $name);
 
-      }
-      return mk_expr_node(infer_type($v),$v);
+        return mk_expr_node(infer_type($v),$v);
     } else {
-      $logger->error("Unknown type in eval_expr: $expr->{'type'}");
+        $logger->error("Unknown type in eval_expr: $expr->{'type'}");
     }
 
 }
