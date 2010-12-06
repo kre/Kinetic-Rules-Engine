@@ -357,7 +357,12 @@ sub eval_expr {
 	               $req_info->{'rid'},
 				   $session,
 				   $name,
-				   $expr->{'regexp'},
+				   Kynetx::Expressions::den_to_exp(
+  				       Kynetx::Expressions::eval_expr($expr->{'regexp'},
+								      $rule_env,
+								      $rule_name,
+								      $req_info,
+								      $session)),
 				   Kynetx::Expressions::den_to_exp(
   				       Kynetx::Expressions::eval_expr($expr->{'within'},
 								      $rule_env,
@@ -371,7 +376,12 @@ sub eval_expr {
            $v = defined Kynetx::Persistence::persistent_element_index($domain,$req_info->{'rid'},
 			    $session,
 			    $name,
-			    $expr->{'regexp'}
+			    Kynetx::Expressions::den_to_exp(
+  				Kynetx::Expressions::eval_expr($expr->{'regexp'},
+							       $rule_env,
+							       $rule_name,
+							       $req_info,
+							       $session))
 			   ) ? 1 : 0;
         }
         return mk_expr_node(infer_type($v),$v);
