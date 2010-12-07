@@ -170,7 +170,7 @@ sub mk_http_request {
 
 #    $response = $ua->post($uri);
 
-    my $content = join('&', map("$_=".uri_escape($params->{$_}), keys %{ $params }));
+    my $content = join('&', map("$_=".uri_escape_utf8($params->{$_}), keys %{ $params }));
     $logger->debug("Encoded content: $content");
 
     $req->content($content);
