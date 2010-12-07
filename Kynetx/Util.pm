@@ -38,7 +38,7 @@ use Log::Log4perl::Level;
 use Log::Log4perl::Appender::ErrorStack;
 
 use Kynetx::Memcached qw(:all);
-use URI::Escape ('uri_escape');
+use URI::Escape ('uri_escape_utf8');
 use Sys::Hostname;
 use Data::Dumper;
 
@@ -233,7 +233,7 @@ sub after_now {
 sub mk_url {
   my ($base_url, $url_options) = @_;
 
-  my $params = join('&', map("$_=".uri_escape($url_options->{$_}), keys %{ $url_options }));
+  my $params = join('&', map("$_=".uri_escape_utf8($url_options->{$_}), keys %{ $url_options }));
 
   if ($base_url =~ m/\?$/) {
     return $base_url . $params;
