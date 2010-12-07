@@ -106,7 +106,7 @@ sub check_cache {
         $content = $memd->get($key);
     }
     if ($content) {
-        #$logger->debug("Using cached data for $key");
+        $logger->trace("Using cached data for $key");
         return $content;
     }
 }
@@ -119,7 +119,7 @@ sub mset_cache {
     }
     my $memd = get_memd();
     if ( $memd ) {
-        #$logger->debug("Caching $key for $expire seconds");
+        $logger->trace("Caching $key for $expire seconds");
         my $set = $memd->set($key,$content,$expire);
     }
 }
@@ -129,7 +129,7 @@ sub flush_cache {
     my $logger = get_logger();
     my $memd = get_memd();
     $memd->delete($key);
-    $logger->debug("Flushed ($key) from cache");
+    $logger->trace("Flushed ($key) from cache");
 }
 
 

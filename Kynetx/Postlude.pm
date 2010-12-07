@@ -167,7 +167,7 @@ sub eval_persistent_expr {
     if ( $expr->{'action'} eq 'clear' ) {
         delete_persistent_var( $domain,$req_info->{'rid'}, $session, $expr->{'name'} );
     } elsif ( $expr->{'action'} eq 'set' ) {
-        $logger->debug( "expr: ", sub { Dumper($expr) } );
+        $logger->trace( "expr: ", sub { Dumper($expr) } );
         my $value;
         if ( $expr->{'value'} ) {
             $value =
@@ -179,10 +179,10 @@ sub eval_persistent_expr {
               );
         }
         if ($value) {
-            $logger->debug( "Set value ", $expr->{'name'}, " to $value" );
+            $logger->trace( "Set value ", $expr->{'name'}, " to $value" );
             save_persistent_var($domain, $req_info->{'rid'}, $session, $expr->{'name'}, $value );
         } else {
-            $logger->debug( "Set called for ", $expr->{'name'}, " as flag" );
+            $logger->trace( "Set called for ", $expr->{'name'}, " as flag" );
             save_persistent_var($domain, $req_info->{'rid'}, $session, $expr->{'name'} );
         }
 
@@ -379,18 +379,16 @@ sub eval_expr_with_default {
 
     my $val;
     if ( defined $expr ) {
-        $val = Kynetx::Expressions::eval_expr( $expr, $default, $rule_env,
-                                              $rule_name, $req_info, $session );
+        $val = Kynetx::Expressions::eval_expr( $expr,
+                                        $rule_env,
+                                        $rule_name,
+                                        $req_info,
+                                        $session );
 
-        if (
-            (
-               !defined $val || ( ref $val eq 'HASH' && !defined $val->{'val'} )
-            )
-            && $expr->{'type'} eq 'var'
-          )
-        {    # not really a var
+        if ((! defined $val ||
+             ( ref $val eq 'HASH' && !defined $val->{'val'} )) &&
+             $expr->{'type'} eq 'var') {    # not really a var
                 # use variable name as the result
-
             #      $logger->debug("Using var name as result");
             $val = mk_expr_node( 'str', $expr->{'val'} );
         }

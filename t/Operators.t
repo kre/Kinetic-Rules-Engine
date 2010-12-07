@@ -96,6 +96,7 @@ pre {
   j = [{"a" : 1, "b" : 2, "c": 3}, {"a" : 4, "b" : 5, "c": 6}, {"a" : 7, "b" : 8, "c": 9}];
   foo = "I like cheese";
   my_str = "This is a string";
+  phone_num = "1234567890";
   split_str = "A;B;C";
   my_url = "http://www.amazon.com/gp/products/123456789/";
   in_str = <<
@@ -661,7 +662,6 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-
 $e[$i] = q%my_url.replace(re#http://www.amazon.com#,"foozle::")%;
 $x[$i] = {
    'val' => 'foozle::/gp/products/123456789/',
@@ -1211,24 +1211,15 @@ $logger->debug("Extensions: ", sub {Dumper($list)});
 $e[$i] = q/q_html.query("table tr td[style],table tr th")/;
 $x[$i] = {
    'val' => [
-     '<td style="background: #ddf;">Grey Wolf</td>
-',
-     '<td style="background: #ddf;">Cape hunting dog</td>
-',
-     '<td style="background: #ddf;">Very silly big long-long named dog woof</td>
-',
-     '<td style="background: #ddf;">Red Fox</td>
-',
-     '<td style="background: #ddf;">Fennec</td>
-',
-     '<th>Apes</th>
-',
-     '<th colspan="2">Cats</th>
-',
-     '<th style="background: #ddf;">Dogs</th>
-',
-     '<th>Lemurs</th>
-'
+     '<td style="background: #ddf;">Grey Wolf</td>',
+     '<td style="background: #ddf;">Cape hunting dog</td>',
+     '<td style="background: #ddf;">Very silly big long-long named dog woof</td>',
+     '<td style="background: #ddf;">Red Fox</td>',
+     '<td style="background: #ddf;">Fennec</td>',
+     '<th>Apes</th>',
+     '<th colspan="2">Cats</th>',
+     '<th style="background: #ddf;">Dogs</th>',
+     '<th>Lemurs</th>'
    ],
    'type' => 'array'
 };
@@ -1238,10 +1229,8 @@ $i++;
 $e[$i] = q/html_arr.query("caption,h1")/;
 $x[$i] = {
    'val' => [
-    '<caption>Animal groups</caption>
-',
-    '<h1>Charles Darwin</h1>
-'
+    '<caption>Animal groups</caption>',
+    '<h1>Charles Darwin</h1>'
    ],
    'type' => 'array'
 };
@@ -1251,10 +1240,8 @@ $i++;
 $e[$i] = q/html_arr.query(["caption","h1"])/;
 $x[$i] = {
    'val' => [
-    '<caption>Animal groups</caption>
-',
-    '<h1>Charles Darwin</h1>
-'
+    '<caption>Animal groups</caption>',
+    '<h1>Charles Darwin</h1>'
    ],
    'type' => 'array'
 };
@@ -1265,8 +1252,7 @@ $i++;
 $e[$i] = q/q_html.query(in_str)/;
 $x[$i] = {
    'val' => [
-    '<th colspan="2">Cats</th>
-'
+    '<th colspan="2">Cats</th>'
    ],
    'type' => 'array'
 };
@@ -1276,16 +1262,11 @@ $i++;
 $e[$i] = q/q_html.query([in_str,"th"])/;
 $x[$i] = {
    'val' => [
-    '<th colspan="2">Cats</th>
-',
-     '<th>Apes</th>
-',
-     '<th colspan="2">Cats</th>
-',
-     '<th style="background: #ddf;">Dogs</th>
-',
-     '<th>Lemurs</th>
-'
+    '<th colspan="2">Cats</th>',
+     '<th>Apes</th>',
+     '<th colspan="2">Cats</th>',
+     '<th style="background: #ddf;">Dogs</th>',
+     '<th>Lemurs</th>'
    ],
    'type' => 'array'
 };
@@ -1295,18 +1276,12 @@ $i++;
 $e[$i] = q/html_arr.query([in_str,"th","h2"])/;
 $x[$i] = {
    'val' => [
-    '<th colspan="2">Cats</th>
-',
-     '<th>Apes</th>
-',
-     '<th colspan="2">Cats</th>
-',
-     '<th style="background: #ddf;">Dogs</th>
-',
-     '<th>Lemurs</th>
-',
-    '<h2>On the Origin of The Origin</h2>
-'
+    '<th colspan="2">Cats</th>',
+     '<th>Apes</th>',
+     '<th colspan="2">Cats</th>',
+     '<th style="background: #ddf;">Dogs</th>',
+     '<th>Lemurs</th>',
+    '<h2>On the Origin of The Origin</h2>'
    ],
    'type' => 'array'
 };
@@ -1316,8 +1291,7 @@ $i++;
 $e[$i] = q/q_html.query("#{in_str}")/;
 $x[$i] = {
    'val' => [
-    '<th colspan="2">Cats</th>
-'
+    '<th colspan="2">Cats</th>'
    ],
    'type' => 'array'
 };
@@ -1327,16 +1301,11 @@ $i++;
 $e[$i] = q/q_html.query(meta_str)/;
 $x[$i] = {
    'val' => [
-     '<td style="background: #ddf;">Grey Wolf</td>
-',
-     '<td style="background: #ddf;">Cape hunting dog</td>
-',
-     '<td style="background: #ddf;">Very silly big long-long named dog woof</td>
-',
-     '<td style="background: #ddf;">Red Fox</td>
-',
-     '<td style="background: #ddf;">Fennec</td>
-'
+     '<td style="background: #ddf;">Grey Wolf</td>',
+     '<td style="background: #ddf;">Cape hunting dog</td>',
+     '<td style="background: #ddf;">Very silly big long-long named dog woof</td>',
+     '<td style="background: #ddf;">Red Fox</td>',
+     '<td style="background: #ddf;">Fennec</td>'
    ],
    'type' => 'array'
 };
@@ -1536,6 +1505,7 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+
 ENDY:
 # New pick argument to retain array
 
@@ -1550,6 +1520,17 @@ $x[$i] = {'val' => '12.99',
       'type' => 'num'};
 $d[$i]  = 0;
 $i++;
+
+
+$e[$i] = q#phone_num.replace(re/([0-9]{3}).*/,"$1")#;
+$x[$i] = {
+   'val' => '123',
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+
 
 # now run the tests....
 my $l = scalar @e;

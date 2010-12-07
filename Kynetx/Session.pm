@@ -175,10 +175,10 @@ sub session_cleanup {
     $logger->debug("Cleaning up session");
     untie %{ $session };
 
-    if ($req_info && $req_info->{"_lock"}) {
-      $logger->debug("Session lock cleared for $session_id");
-      $req_info->{"_lock"}->unlock;
-    }
+#    if ($req_info && $req_info->{"_lock"}) {
+#      $logger->debug("Session lock cleared for $session_id");
+#      $req_info->{"_lock"}->unlock;
+#    }
 }
 
 sub session_id {

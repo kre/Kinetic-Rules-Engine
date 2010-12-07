@@ -38,7 +38,7 @@ if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
                 "use_change_condition": true,
                 "domains": {
                     "www.google.com": {
-                        "selector": "li.g:not(.localbox), div.g",
+                        "selector": "li.g:not(:has(h4))",
                         "modify": "div.s",
                         "watcher": "#rso",
                         "urlSel":".l",
@@ -686,11 +686,62 @@ if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
 
             var annotateData = {};
             var phoneSelector = annotator.defaults.domains[this.domain_name].phoneSel;
+            var urlSelector = annotator.defaults.domains[this.domain_name].urlSel;
 
             var phoneTemp = $KOBJ(toAnnotate).find(phoneSelector).text().replace(/[\u00B7() -]/g, "");
-            var urlTemp = $KOBJ("h3 a",$KOBJ(toAnnotate).parent()).attr("href");
+//            var urlTemp = $KOBJ("h3 a",$KOBJ(toAnnotate).parent()).attr("href");
+            var urlTemp = $KOBJ(toAnnotate).find(urlSelector).attr("href");
 
             if (urlTemp) {
+                annotateData["url"] = urlTemp;
+                annotateData["domain"] = KOBJ.get_host(urlTemp);
+            } else {
+                annotateData["url"] = "";
+                annotateData["domain"] = "";
+            }
+            if (phoneTemp === "") {
+                phoneTemp = $KOBJ(toAnnotate);
+                phoneTemp = phoneTemp.text().match(/\(\d{3}\)\s\d{3}-\d{4}/, "$1");
+                if (phoneTemp !== null) {
+                    phoneTemp = phoneTemp[0];
+                    phoneTemp = phoneTemp.replace(/[() -]/g, "");
+                }
+            }
+
+            var heightTemp = $KOBJ(toAnnotate).height();
+
+            if (phoneTemp !== null) {
+                annotateData["phone"] = phoneTemp;
+            } else {
+                annotateData["phone"] = "";
+            }
+            annotateData["height"] = heightTemp;
+
+            KOBJ.loggers.annotate.trace("Extracted DAta ", annotateData);
+            return annotateData;
+        };
+
+
+        KOBJAnnotateLocalSearchResults.annotate_local_search_yahoo_extractdata = function(toAnnotate, annotator) {
+            KOBJ.loggers.annotate.trace("Extracting Local Data.............................");
+
+            var annotateData = {};
+            var phoneSelector = annotator.defaults.domains[this.domain_name].phoneSel;
+
+            var phoneTemp = $KOBJ(toAnnotate).find(phoneSelector).text().replace(/[\u00B7() -]/g, "");
+            var urlSelector = annotator.defaults.domains[this.domain_name].urlSel;
+            var urlTemp = $KOBJ(toAnnotate).find(urlSelector).attr("href");
+
+            if (urlTemp) {
+                urlTemp = unescape(unescape(urlTemp));
+                if(urlTemp.match("&dest="))
+                {
+                        urlTemp = urlTemp.split("&dest=")[1].split("&")[0];
+                }
+                else
+                {
+                         urlTemp = urlTemp.split("**")[1];
+                }
                 annotateData["url"] = urlTemp;
                 annotateData["domain"] = KOBJ.get_host(urlTemp);
             } else {
@@ -737,10 +788,10 @@ if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
                 "flush_domains":  true,
                 "domains": {
                     "www.google.com":{
-                        "selector":".ts",
+                        "selector":"#rso>li>div>div[style='padding-bottom: 10px;'],#ires>ol>li>div>div[style='padding-bottom: 10px;'],#ires>ol>li>div>div[style='padding-bottom:10px'],#ires>ol>li>div>div[style='PADDING-BOTTOM: 10px']",
                         "watcher":"#rso",
-                        "phoneSel":".nobr",
-                        "urlSel":".l",
+                        "phoneSel":"nobr",
+                        "urlSel":"a.l",
                         "modify":"",
                         "change_condition": KOBJAnnotateSearchResults.google_search_change_condition,
                         "extract_function": KOBJAnnotateLocalSearchResults.annotate_local_search_google_extractdata
@@ -749,10 +800,10 @@ if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
                         "selector":".sc-loc",
                         "watcher": "",
                         "phoneSel":"[id *= lblPhone]",
-                        "urlSel":".yschttl",
+                        "urlSel":"a",
                         "modify":"",
                         "change_condition": KOBJAnnotateSearchResults.true_change_condition,
-                        "extract_function": KOBJAnnotateLocalSearchResults.annotate_local_search_extractdata
+                        "extract_function": KOBJAnnotateLocalSearchResults.annotate_local_search_yahoo_extractdata
                     },
                     "www.bing.com":{
                         "selector":".sc_ol1li",

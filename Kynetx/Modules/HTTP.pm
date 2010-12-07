@@ -36,6 +36,7 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
+use URI::Escape;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -100,7 +101,9 @@ sub do_http {
   my $response = mk_http_request($method,
 				 $config->{'credentials'},
 				 $args->[0],
-				 $config->{'params'} );
+				 $config->{'params'},
+				 $config->{'headers'},
+				);
 
   my $v = $vars->[0] || '__dummy';
 
@@ -109,7 +112,7 @@ sub do_http {
 		     'status_code' => $response->code(),
 		     'status_line' => $response->status_line(),
 		     'content_type' => $response->header('Content-Type'),
-		     'content_length' => $response->header('Content-Length'),
+		     'content_length' => $response->header('Content-Length') || 0,
 		    }
 	     };
 
@@ -150,29 +153,54 @@ sub do_http {
 }
 
 sub mk_http_request {
-  my($method, $credentials, $uri, $params) = @_;
+  my($method, $credentials, $uri, $params, $headers) = @_;
 
   my $logger = get_logger();
 
   my $ua = kynetx_ua($credentials);
 
+
   $logger->debug("Method is $method & URI is $uri");
 
+  my $req;
   my $response;
   if (uc($method) eq 'POST') {
-    $response = $ua->post($uri, Content=>$params);
+
+    $req = new HTTP::Request 'POST', $uri;
+
+#    $response = $ua->post($uri);
+
+    my $content = join('&', map("$_=".uri_escape($params->{$_}), keys %{ $params }));
+    $logger->debug("Encoded content: $content");
+
+    $req->content($content);
+    $req->header('content-length' => length($content));
+    $req->header('content-type' => "application/x-www-form-urlencoded");
+
   } elsif (uc($method) eq 'GET') {
     my $full_uri = Kynetx::Util::mk_url($uri,  $params);
-    $response = $ua->get($full_uri);
+    $req = new HTTP::Request 'GET', $full_uri;
+#    $response = $ua->get($full_uri, $headers);
+
   } else {
     $logger->warn("Bad method ($method) called in do_http");
     return '';
   }
 
+#  $logger->debug("Headers ", Dumper $headers);
+
+  foreach my $k (keys %{ $headers }) {
+    $req->header($k => $headers->{$k});
+  }
+
+#  $logger->debug("Request ", Dumper $req);
+
+  $response = $ua->request($req);
+
   # $logger->debug("Vars ", sub { Dumper $vars });
   # $logger->debug("Mods ", sub { Dumper $mods });
   # $logger->debug("Config ", sub { Dumper $config });
-  $logger->debug("Response ", sub { Dumper $response });
+#  $logger->debug("Response ", sub { Dumper $response });
 
   return $response;
 }

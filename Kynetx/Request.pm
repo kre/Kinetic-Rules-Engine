@@ -111,14 +111,14 @@ sub build_request_env {
 
     set_capabilities($request_info);
 
-    my $patience = Kynetx::Configure::get_config("LOCK_PATIENCE");
-    my $l_ttl = Kynetx::Configure::get_config("LOCK_TTL");
-    my $memservers = Kynetx::Configure::get_config('MEMCACHE_SERVERS');
-    $request_info->{'_lock'} = IPC::Lock::Memcached->new({
-        "memcached_servers" => $memservers,
-        "patience" => $patience,
-        "ttl" => $l_ttl,
-    });
+#    my $patience = Kynetx::Configure::get_config("LOCK_PATIENCE");
+#    my $l_ttl = Kynetx::Configure::get_config("LOCK_TTL");
+#    my $memservers = Kynetx::Configure::get_config('MEMCACHE_SERVERS');
+#    $request_info->{'_lock'} = IPC::Lock::Memcached->new({
+#        "memcached_servers" => $memservers,
+#        "patience" => $patience,
+#        "ttl" => $l_ttl,
+#    });
 
     $logger->debug("Returning request information");
 

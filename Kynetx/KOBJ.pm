@@ -62,7 +62,7 @@ sub handler {
     my $r = shift;
 
     # configure logging for production, development, etc.
-    config_logging($r);
+    Kynetx::Util::config_logging($r);
 
     $r->content_type('text/javascript');
 
@@ -101,12 +101,12 @@ sub handler {
 	$logger->info("Generating client initialization file ", $rids);
 
 	my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $method);
-    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
-    if ($req_info->{'_lock'}->lock($session_lock)) {
-        $logger->debug("Session lock acquired for $session_lock");
-    } else {
-        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
-    }
+#    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
+#    if ($req_info->{'_lock'}->lock($session_lock)) {
+#        $logger->debug("Session lock acquired for $session_lock");
+#    } else {
+#        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
+#    }
 
 	Kynetx::Request::log_request_env($logger, $req_info);
 
@@ -165,12 +165,12 @@ sub handler {
 
     } elsif($method eq 'dispatch') {
 	my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $method);
-    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
-    if ($req_info->{'_lock'}->lock($session_lock)) {
-        $logger->debug("Session lock acquired for $session_lock");
-    } else {
-        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
-    }
+#    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
+#    if ($req_info->{'_lock'}->lock($session_lock)) {
+#        $logger->debug("Session lock acquired for $session_lock");
+#    } else {
+#        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
+#    }
 
 	Kynetx::Request::log_request_env($logger, $req_info);
 
@@ -186,12 +186,12 @@ sub handler {
 
     } elsif($method eq 'datasets') {
 	my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $method);
-    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
-    if ($req_info->{'_lock'}->lock($session_lock)) {
-        $logger->debug("Session lock acquired for $session_lock");
-    } else {
-        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
-    }
+#    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
+#    if ($req_info->{'_lock'}->lock($session_lock)) {
+#        $logger->debug("Session lock acquired for $session_lock");
+#    } else {
+#        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
+#    }
 
 	Kynetx::Request::log_request_env($logger, $req_info);
 

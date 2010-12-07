@@ -74,7 +74,7 @@ sub handler {
     my $r = shift;
 
     # configure logging for production, development, etc.
-    config_logging($r);
+    Kynetx::Util::config_logging($r);
 
     my $logger = get_logger();
 
@@ -142,13 +142,13 @@ sub process_event {
 
     my $req_info =
       Kynetx::Request::build_request_env( $r, $domain, $rids, $eventtype );
-    my $session_lock = "lock-" . session_id($session);
-    if ( $req_info->{'_lock'}->lock($session_lock) ) {
-        $logger->debug("Session lock acquired for $session_lock");
-    } else {
-        $logger->warn( "Session lock request timed out for ",
-                       sub { Dumper($rids) } );
-    }
+#    my $session_lock = "lock-" . session_id($session);
+#    if ( $req_info->{'_lock'}->lock($session_lock) ) {
+#        $logger->debug("Session lock acquired for $session_lock");
+#    } else {
+#        $logger->warn( "Session lock request timed out for ",
+#                       sub { Dumper($rids) } );
+#    }
 
     Kynetx::Request::log_request_env( $logger, $req_info );
 
@@ -242,7 +242,7 @@ sub process_event_for_rid {
             my $val_list = [];
             $logger->trace("Process sessions");
             while ( my $json =
-                    consume_persistent_element("ent", $rid, $session, $event_list_name, 0) )
+                    consume_persistent_element("ent", $rid, $session, $event_list_name, 1) )
             {
 
                 my $ev = Kynetx::Events::Primitives->unserialize($json);

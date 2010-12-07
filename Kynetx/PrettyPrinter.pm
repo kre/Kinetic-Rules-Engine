@@ -1073,7 +1073,7 @@ sub pp_expr {
 	/seen_timeframe/ && do {
 	    return join(' ', 
 			('seen',
-			 pp_string($expr->{'regexp'}),
+			 pp_expr($expr->{'regexp'}),
 			 'in',
 			 pp_var_domain($expr->{'domain'}, 
 				       $expr->{'var'}),

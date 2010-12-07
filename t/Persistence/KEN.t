@@ -42,6 +42,7 @@ use Apache::Session::Memcached;
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($TRACE);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Configure;
@@ -80,21 +81,33 @@ my $srid = "token_tests";
 
 my $session = process_session($r);
 
+$description = "No token. Create a new KEN";
+my $nken = Kynetx::Persistence::KEN::get_ken($session,$srid);
+testit($nken,re($ken_re),$description);
+
 # seed the session with a bogus token
 $session->{KTOKEN}->{$frid} = $ftoken;
 
 # Tokens are namespaced by RID
-$description = "No token, no KEN";
-$ken = Kynetx::Persistence::KEN::has_ken($session,$rid);
-testit($ken,undef,$description,0);
+$description = "Bad token. Find KEN from session";
+$ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
+testit($ken,$nken,$description,0);
 
-$description = "Bad token, no KEN";
-$ken = Kynetx::Persistence::KEN::has_ken($session,$frid);
-testit($ken,undef,$description,0);
+$description = "Token not in apache, find KEN from session";
+$session->{KTOKEN}->{$frid} = undef;
+$ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
+testit($ken,$nken,$description,0);
 
-$description = "Create a new KEN";
-my $nken = Kynetx::Persistence::KEN::get_ken($session,$srid);
-testit($nken,re($ken_re),$description);
+
+$description = "Token exists, KEN stays same";
+$ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
+testit($ken,$nken,$description,0);
+
+my $token = Kynetx::Persistence::KToken::get_token($session,$rid);
+Kynetx::Persistence::KToken::delete_token($token);
+$description = "Token is revoked, session remains, same KEN";
+$ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
+testit($ken,$nken,$description,0);
 
 $description = "Check the database for ($nken)";
 my $key = {
@@ -104,14 +117,10 @@ my $got = Kynetx::MongoDB::get_value("kens",$key)->{"_id"}->to_string();
 $logger->debug("Raw from DB: ", sub { Dumper($got)});
 testit($got,$nken,$description);
 
-$description = "Good token returns KEN";
-$ken = Kynetx::Persistence::KEN::has_ken($session,$srid);
-testit($ken,$nken,$description,0);
-
 $description = "Clean up and delete KEN";
 Kynetx::Persistence::KEN::delete_ken($nken);
 $got = Kynetx::MongoDB::get_value("kens",$key);
-testit($got,{},$description);
+testit($got,undef,$description);
 
 sub testit {
     my ($got,$expected,$description,$debug) = @_;

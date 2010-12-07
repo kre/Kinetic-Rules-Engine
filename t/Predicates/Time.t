@@ -188,16 +188,16 @@ my $diff = $rn_dt->subtract_datetime($base_time);
 cmp_ok($diff->seconds,'>=',$pause,"time:now()");
 
 my $t = Kynetx::Predicates::Time::get_time($BYU_req_info,'new',["2010-08-08"]);
-cmp_ok("$t",'eq','2010-08-08T00:00:00Z',"Create a new time string");
+cmp_ok("$t",'eq','2010-08-08T00:00:00+00:00',"Create a new time string");
 
 $t = Kynetx::Predicates::Time::get_time($BYU_req_info,'add',["$t",{"hours"=>4}]);
-cmp_ok("$t",'eq','2010-08-08T04:00:00Z',"Add 4 hours");
+cmp_ok("$t",'eq','2010-08-08T04:00:00+00:00',"Add 4 hours");
 
 $t = Kynetx::Predicates::Time::get_time($BYU_req_info,'strftime',["$t","%F %T"]);
 cmp_ok("$t",'eq','2010-08-08 04:00:00',"Format a datetime string");
 
 $t = Kynetx::Predicates::Time::get_time($BYU_req_info,'atom',["2010-08-08",{'tz'=>'America/Denver'}]);
-cmp_ok("$t",'eq','2010-08-08T06:00:00Z',"Create a new time string");
+cmp_ok("$t",'eq','2010-08-08T00:00:00-06:00',"Create a new time string");
 
 #Log::Log4perl->easy_init($DEBUG);
 $t = Kynetx::Predicates::Time::get_time($BYU_req_info,'strftime',["$t","%F %T",{'tz'=>'America/New_York'}]);

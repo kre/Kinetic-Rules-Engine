@@ -106,12 +106,12 @@ sub process_rules {
 
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rids);
     $req_info->{'eid'} = $eid;
-    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
-    if ($req_info->{'_lock'}->lock($session_lock)) {
-        $logger->debug("Session lock acquired for $session_lock");
-    } else {
-        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
-    }
+#    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
+#    if ($req_info->{'_lock'}->lock($session_lock)) {
+#        $logger->debug("Session lock acquired for $session_lock");
+#    } else {
+#        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
+#    }
 
     # initialization
     my $js = '';
@@ -380,7 +380,7 @@ sub eval_globals {
 
     my $temp_js ='';
     if($ruleset->{'global'}) {
-      ($temp_js, $rule_env) =  
+      ($temp_js, $rule_env) =
 	process_one_global_block($req_info,$ruleset->{'global'}, $rule_env, $session);
       $js .= $temp_js;
     }
@@ -391,16 +391,16 @@ sub eval_globals {
 	my $use_ruleset = Kynetx::Rules::get_rule_set($req_info, 1, $use->{'name'});
 
 	my $provided_array = $use_ruleset->{'meta'}->{'provide'}->{'names'} || [];
-	
+
 	# code below relies on this being undef unless defined
 	my $provided;
 	foreach my $name (@{ $provided_array }) {
 	  $provided->{$name} = 1;
 	}
-	
+
 	my $namespace_name = $use->{'alias'} || $use->{'name'};
 	if ($use_ruleset->{'global'}) {
-	  ($temp_js, $rule_env) =  
+	  ($temp_js, $rule_env) =
 	    process_one_global_block($req_info,$use_ruleset->{'global'}, $rule_env, $session, $namespace_name, $provided);
 	  $js .= $temp_js;
 	}
@@ -417,7 +417,6 @@ sub process_one_global_block {
     my $logger = get_logger();
 
     my $js = "";
-    $logger->debug("Here's the globals: ", Dumper $globals);
 
     # make this act like let* not let
     my @vars;
@@ -467,8 +466,8 @@ sub process_one_global_block {
 	  $this_js = "KOBJ.css(" . Kynetx::JavaScript::mk_js_str($g->{'content'}) . ");\n";
 	} elsif (defined $g->{'type'} && $g->{'type'} eq 'datasource') {
 	  $rule_env->{'datasource:'.$g->{'lhs'}} = $g;
-	} 
-      } 
+	}
+      }
       if (defined $g->{'type'} &&
 	  ($g->{'type'} eq 'expr' || $g->{'type'} eq 'here_doc')) {
 	# side-effects the rule-env
@@ -476,7 +475,7 @@ sub process_one_global_block {
       }
       $js .= $this_js;
     }
-    $logger->debug(" rule_env: ", Dumper($rule_env));
+    $logger->trace(" rule_env: ", Dumper($rule_env));
 
     return ($js, $rule_env);
 }
@@ -795,7 +794,7 @@ sub optimize_ruleset {
 
 # incrementing the number here will force cache reloads of rulesets with lower #'s
 sub get_optimization_version {
-  my $version = 6;
+  my $version = 7;
   return $version;
 }
 

@@ -176,13 +176,13 @@ _KRL_
 
 run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
 is(contains_persistent_element($domain,$rid, $session, 'my_trail',"testing"),
-   0,
+   3,
    'testing added'
   );
 $test_count++;
 
 is(contains_persistent_element($domain,$rid, $session, 'my_trail',"windley"),
-   1,
+   0,
    'windley pushed down'
   );
 $test_count++;
@@ -438,13 +438,13 @@ _KRL_
 
 run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
 is(contains_persistent_element($domain,$rid, $session, 'my_trail',"testing"),
-   0,
+   1,
    'testing added'
   );
 $test_count++;
 
 is(contains_persistent_element($domain,$rid, $session, 'my_trail',"windley"),
-   1,
+   0,
    'windley pushed down'
   );
 $test_count++;

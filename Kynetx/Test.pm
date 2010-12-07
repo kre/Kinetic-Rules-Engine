@@ -107,12 +107,12 @@ sub gen_req_info {
     $req_info->{'rid'} = $rid;
     $req_info->{'param_names'} = ['msg','caller'];
     $req_info->{'msg'} = 'Hello World!';
-    my $memservers = Kynetx::Configure::get_config('MEMCACHE_SERVERS');
-    my $patience = Kynetx::Configure::get_config("LOCK_PATIENCE");
-    $req_info->{'_lock'} = IPC::Lock::Memcached->new({
-        "memcached_servers" => $memservers,
-        "patience" => $patience
-    });
+#    my $memservers = Kynetx::Configure::get_config('MEMCACHE_SERVERS');
+#    my $patience = Kynetx::Configure::get_config("LOCK_PATIENCE");
+#    $req_info->{'_lock'} = IPC::Lock::Memcached->new({
+#        "memcached_servers" => $memservers,
+#        "patience" => $patience
+#    });
 
 
 

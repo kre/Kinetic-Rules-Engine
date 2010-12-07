@@ -83,6 +83,16 @@ add_expr_testcase(
     mk_expr_node('str', 'absolute'),
     0);
 
+    $krl_src = <<_KRL_;
+"1234567890"
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    "'1234567890'",
+    mk_expr_node('str', '1234567890'),
+    0);
+
 $krl_src = <<_KRL_;
 city
 _KRL_

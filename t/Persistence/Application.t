@@ -38,6 +38,7 @@ use Data::Dumper;
 use MongoDB;
 use Apache::Session::Memcached;
 use DateTime;
+use Benchmark ':hireswallclock';
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
@@ -54,6 +55,7 @@ use Kynetx::Persistence::Application qw/:all/;
 my $logger = get_logger();
 my $num_tests = 0;
 my $result;
+my ($start,$end,$qtime);
 
 # configure KNS
 Kynetx::Configure::configure();
@@ -93,24 +95,80 @@ chomp($key1);
 chomp($key2);
 chomp($key3);
 
+my $skey = "buildtrail";
+my $expected;
+
 # basic Application getter/setter
-$result = Kynetx::Persistence::Application::put($rid1,$key1,$key2);
+$start = new Benchmark;
+$result = Kynetx::Persistence::Application::put($rid1,$skey,$key2);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "Save to array: " . $qtime->[0];
 testit($result,1,"Insert data for $rid1",0);
 
-$result = Kynetx::Persistence::Application::get($rid1,$key1);
+$start = new Benchmark;
+$result = Kynetx::Persistence::Application::get($rid1,$skey);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "Get from array: " . $qtime->[0];
 testit($result,$key2,"Retrieve data for $rid1/$key1",0);
 
-$result = Kynetx::Persistence::Application::get_created($rid1,$key1);
+$result = Kynetx::Persistence::Application::get_created($rid1,$skey);
 testit($result,re(qr/\d+/),"Retrieve timestamp for $rid1/$key1",0);
 
-$result = Kynetx::Persistence::Application::delete($rid1,$key1);
-testit($result,'',"Delete data for $rid1/$key1",0);
+$start = new Benchmark;
+Kynetx::Persistence::Application::push($rid1,$skey,$key1);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "Convert to array: " . $qtime->[0];
+$result = Kynetx::Persistence::Application::get($rid1,$skey);
+$expected = [$key2,$key1];
+testit($result,$expected,"Convert val to trail",0);
 
-$result = Kynetx::Persistence::Application::get($rid1,$key1);
-testit($result,undef,"Retrieve data for deleted $rid1/$key1",0);
+$start = new Benchmark;
+Kynetx::Persistence::Application::push($rid1,$skey,$key3);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "Push: " . $qtime->[0];
+$result = Kynetx::Persistence::Application::get($rid1,$skey);
+$expected = [$key2,$key1,$key3];
+testit($result,$expected,"Add value to trail",0);
+
+
+$start = new Benchmark;
+$result = Kynetx::Persistence::Application::pop($rid1,$skey);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "Pop: " . $qtime->[0];
+$expected = $key3;
+testit($result,$expected,"Pop value off trail",0);
+
+$result = Kynetx::Persistence::Application::pop($rid1,$skey,1);
+$expected = $key2;
+testit($result,$expected,"Shift value off trail",0);
+
+Kynetx::Persistence::Application::pop($rid1,$skey);
+$result = Kynetx::Persistence::Application::pop($rid1,$skey);
+$expected = undef;
+testit($result,$expected,"Pop empty trail",0);
+
+Kynetx::Persistence::Application::push($rid1,$skey,$key1);
+$result = Kynetx::Persistence::Application::get($rid1,$skey);
+$expected = [$key1];
+testit($result,$expected,"Add value to empty trail",0);
+
+$result = Kynetx::Persistence::Application::delete($rid1,$skey);
+testit($result,'',"Delete data for $rid1/$skey",0);
+
+$result = Kynetx::Persistence::Application::get($rid1,$skey);
+testit($result,undef,"Retrieve data for deleted $rid1/$skey",0);
 
 # Store to a new ruleset
+$start = new Benchmark;
 $result = Kynetx::Persistence::Application::put($ridR,$key1,$key3);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "Save: " . $qtime->[0];
 testit($result,1,"Insert to new store $ridR",0);
 
 $result = Kynetx::Persistence::Application::get($ridR,$key1);
