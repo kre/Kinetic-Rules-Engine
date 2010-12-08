@@ -1786,7 +1786,7 @@ meta_block
         tmp.put("alias",$alias.text);
         alias = null;
         tmp.put("modifiers",temp_list);
-
+        temp_list = new ArrayList();
 		use_list.add(tmp);
 	 })
     | PROVIDE e=VAR { provide_list.add($e.text); } (COMMA e2=VAR { provide_list.add($e2.text);})*  {
