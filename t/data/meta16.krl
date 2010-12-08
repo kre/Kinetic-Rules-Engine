@@ -27,4 +27,3 @@ Ruleset for testing something or other.
 
     }
 }
- 

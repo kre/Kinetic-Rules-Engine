@@ -163,12 +163,9 @@ sub eval_decl {
 
 	my $r = eval_expr($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);
 
+#    $logger->debug("before de-denoting ", Dumper $r);
+
 	$val = den_to_exp($r);
-
-#	$logger->debug("Before and After: ", sub {Dumper($r)}, sub{Dumper($val)});
-
-#	$val = $r->{'val'} if (ref $r eq 'HASH');
-#	$logger->debug("[decl] expr for ", $decl->{'lhs'}, ' -> ', sub{Dumper($val)} );
 
     } elsif ($decl->{'type'} eq 'here_doc') {
 
@@ -177,9 +174,8 @@ sub eval_decl {
 	$logger->debug("[decl] here doc for ", $decl->{'lhs'} );
     }
 
-    # JS is generated for all vars in the rule env
 #    $logger->debug("Evaling " . $rule_name.":".$decl->{'lhs'});
-
+#    $logger->debug("returning ", Dumper $val);
 
     return ($decl->{'lhs'}, $val);
 
@@ -189,7 +185,8 @@ sub eval_decl {
 
 
 #
-# evaluation of JS exprs on the server
+# evaluation of expressions
+# returns denoted value
 #
 #  dclone used to ensure we return a new copy, not a pointer to the env
 sub eval_expr {
@@ -270,12 +267,8 @@ sub eval_expr {
     } elsif($expr->{'type'} eq 'app') {
         return eval_application($expr, $rule_env, $rule_name,$req_info, $session);
     } elsif($expr->{'type'} eq 'qualified') {
-	   my $den = eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-	   # get the values
-	   for (@{ $den }) {
-	       $_ = den_to_exp($_);
-	   }
-	   my $v = Kynetx::Modules::eval_module($req_info,
+	my $den = eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+	my $v = Kynetx::Modules::eval_module($req_info,
 					     $rule_env,
 					     $session,
 					     $rule_name,
@@ -284,9 +277,9 @@ sub eval_expr {
 					     $den
 					    );
 
-	   $logger->trace("[JS Expr] ", $expr->{'source'}, ":", $expr->{'predicate'}, " -> ", $v);
+#	$logger->trace("[JS Expr] ", $expr->{'source'}, ":", $expr->{'predicate'}, " -> ", $v);
 
-	   return mk_expr_node(infer_type($v),$v);
+	return $v; 
     } elsif($expr->{'type'} eq 'persistent' ||
 	    $expr->{'type'} eq 'trail_history' ) {
             my $v = eval_persistent($req_info, $rule_env, $rule_name, $session, $expr);
@@ -387,26 +380,37 @@ sub eval_expr {
         return mk_expr_node(infer_type($v),$v);
 
     } elsif ($expr->{'type'} eq 'seen_compare') {
-        my $name = $expr->{'var'};
-        my $v;
-       my($r1,$r2) =
-           $expr->{'op'} eq 'after' ?
-             ($expr->{'regexp_1'},$expr->{'regexp_2'}) :
-             ($expr->{'regexp_2'},$expr->{'regexp_1'});
-       $v = Kynetx::Persistence::persistent_element_before($domain,
-             $req_info->{'rid'},
-			 $session,
-			 $name,
-			 $r1,
-			 $r2
-			 ) ? 0 : 1; # ensure 0 returned for testing
-        return mk_expr_node(infer_type($v),$v);
-    } elsif ($expr->{'type'} eq 'persistent') {
-        my $name = $expr->{'name'};
-        my $v = Kynetx::Persistence::defined_persistent_var($domain,$req_info->{'rid'}, $session, $name) &&
-	            Kynetx::Persistence::get_persistent_var($domain,$req_info->{'rid'}, $session, $name);
+      my $name = $expr->{'var'};
+      my $v;
+      my($r1,$r2) =
+	  $expr->{'op'} eq 'after' ? ($expr->{'regexp_1'},
+				      $expr->{'regexp_2'})
+	                           : ($expr->{'regexp_2'},
+ 	                              $expr->{'regexp_1'});
+      $v = Kynetx::Persistence::persistent_element_before(
+                                  $expr->{'domain'},$req_info->{'rid'},
+				  $session,
+				  $name,
+				  $r1,
+				  $r2
+				 ) ? 0 : 1; # ensure 0 returned for testing
+      return mk_expr_node(infer_type($v),$v);
+    # } elsif ($expr->{'type'} eq 'persistent') {
+    #   my $name = $expr->{'name'};
+    #   my $v;
 
-        return mk_expr_node(infer_type($v),$v);
+    #   $logger->debug("Evaling qualified variable ", $expr->{'domain'}, ":", $expr->{'name'});
+
+    #   if ($expr->{'domain'} eq 'ent') {
+    # 	$v = session_defined($req_info->{'rid'}, $session, $name) &&
+    # 	  session_get($req_info->{'rid'}, $session, $name);
+
+    #   } elsif ($expr->{'domain'} eq 'app') {
+    # 	$v = undef;
+    #   } else {
+    # 	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
+    #   }
+    #   return mk_expr_node(infer_type($v),$v);
     } else {
         $logger->error("Unknown type in eval_expr: $expr->{'type'}");
     }
@@ -486,22 +490,30 @@ sub eval_application {
 
   # the trick to getting this right is managing env extension correctly
 
-  #$logger->debug("Env in eval_application: ", sub { Dumper $rule_env});
+#  $logger->debug("Env in eval_application: ", sub { Dumper $rule_env});
 
- # $logger->debug("Evaluation function...", sub { Dumper $expr} );
+#  $logger->debug("Evaluation function...", sub { Dumper $expr} );
 
-
-  my $closure = eval_expr($expr->{'function_expr'},
+  my $closure;
+  if (defined $expr->{'function_expr'}->{'type'} &&
+      $expr->{'function_expr'}->{'type'} eq 'closure'){
+    $closure = $expr->{'function_expr'};
+  } else {
+    $closure = eval_expr($expr->{'function_expr'},
 			  $rule_env,
 			  $rule_name,
 			  $req_info,
 			  $session
 			 );
 
-  unless ($closure->{'type'} eq 'closure') {
-    $logger->warn("Function not found in ", $rule_name);
-    return mk_expr_node('str', '');
+    unless ($closure->{'type'} eq 'closure') {
+      $logger->warn("Function not found in ", $rule_name);
+      return mk_expr_node('str', '');
+    }
+
   }
+
+
 
   $req_info->{$closure->{'val'}->{'sig'}} = 0
     unless defined $req_info->{$closure->{'val'}->{'sig'}};
@@ -638,29 +650,42 @@ sub eval_persistent {
     my $v = 0;
     my $domain = $expr->{'domain'};
 
-	if(defined $expr->{'offset'}) {
+    if (defined $expr->{'offset'}) {
 
-	    my $idx = den_to_exp(
-		eval_expr($expr->{'offset'},
-			     $rule_env,
-			     $rule_name,
-			     $req_info,
-			     $session) );
+      my $idx = den_to_exp(
+			   eval_expr($expr->{'offset'},
+				     $rule_env,
+				     $rule_name,
+				     $req_info,
+				     $session) );
 
 
-	    $v = Kynetx::Persistence::persistent_element_history($domain,
-	             $req_info->{'rid'},
-				 $session,
-				 $expr->{'name'},
-				 $idx);
-	    $logger->debug("[persistent trail] $expr->{'name'} at $idx -> $v");
+      $v = Kynetx::Persistence::persistent_element_history($domain,
+							   $req_info->{'rid'},
+							   $session,
+							   $expr->{'name'},
+							   $idx);
+      $logger->debug("[persistent trail] $expr->{'name'} at $idx -> $v");
 
-	} else {
-	    # FIXME: not sure I like setting to 0 by default
-	    $v = Kynetx::Persistence::get_persistent_var($domain,
-	           $req_info->{'rid'}, $session, $expr->{'name'}) || 0;
-	    $logger->info("[persistent] $expr->{'name'} -> $v");
-	}
+    } else {
+
+
+      my $name = $expr->{'name'};
+
+      $logger->debug("Evaling qualified variable ", $expr->{'domain'}, ":", $expr->{'name'});
+
+      if ($expr->{'domain'} eq 'ent' || $expr->{'domain'} eq 'app') {
+	# FIXME: not sure I like setting to 0 by default
+	$v = Kynetx::Persistence::get_persistent_var($domain,
+						     $req_info->{'rid'}, $session, $name) || 0;
+	$logger->debug("[persistent] $expr->{'domain'}:$name -> $v");
+	# $v = session_defined($req_info->{'rid'}, $session, $name) &&
+	#   session_get($req_info->{'rid'}, $session, $name);
+
+      } else {
+	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
+      }
+    }
 
     return $v;
 
