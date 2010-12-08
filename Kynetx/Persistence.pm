@@ -52,6 +52,7 @@ our %EXPORT_TAGS = (
         increment_persistent_var
         get_persistent_var
         touch_persistent_var
+        defined_persistent_var
         delete_persistent_element
         add_persistent_element
         contains_persistent_element
@@ -149,6 +150,26 @@ sub get_persistent_var {
     }
 
 }
+
+sub defined_persistent_var {
+    my ($domain,$rid,$session,$varname) = @_;
+    my $logger = get_logger();
+    $logger->trace("Exists $domain","var: $varname");
+    return defined get_persistent_var($domain,$rid,$session,$varname);
+
+}
+
+sub persistent_var_within {
+    my ($domain,$rid,$session,$varname,$timevalue,$timeframe)= @_;
+    my $logger = get_logger();
+    $logger->trace("Check $varname within ", sub {Dumper($timevalue)}, ",",sub {Dumper($timeframe)});
+    my $created = get_persistent_var($domain,$rid,$session,$varname,1);
+    return 0 unless (defined $created);
+    my $desired = DateTime->from_epoch(epoch => $created);
+    $desired->add($timeframe => $timevalue);
+    return Kynetx::Util::after_now($desired);
+}
+
 
 sub touch_persistent_var {
     my ($domain,$rid,$session,$varname,$timestamp) = @_;
@@ -260,10 +281,10 @@ sub persistent_element_history {
     my $trail = get_persistent_var($domain,$rid,$session,$varname);
     # Mongo does not support queue operations
     # convert $index to Stack notation
-    my $size = @$trail;
-    $logger->trace("Looks like ($size)",sub {Dumper($trail)});
     if (ref $trail eq 'ARRAY') {
+    	my $size = @$trail;
         $result =  $trail->[$size - $index -1]->[0];
+    	$logger->trace("Looks like ($size)",sub {Dumper($trail)});
     }
     return $result;
 }
@@ -294,7 +315,7 @@ sub persistent_element_within {
     my $logger = get_logger();
     $logger->trace("Check $varname for ",sub {Dumper($regexp)}, " within ", sub {Dumper($timevalue)}, ",",sub {Dumper($timeframe)});
     my $element_index = persistent_element_index($domain,$rid,$session,$varname,$regexp);
-    return 0 unless ($element_index);
+    return undef unless (defined $element_index);
     my $desired = DateTime->from_epoch(epoch => $element_index->[1]);
     $desired->add($timeframe => $timevalue);
     return Kynetx::Util::after_now($desired);

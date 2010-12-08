@@ -156,6 +156,16 @@ $got = $result;
 $expected = $value1->{"value"};
 compare($got,$expected,"Pop value from array returns " . $value1->{"value"});
 
+
+$start = new Benchmark;
+$result = Kynetx::MongoDB::pop_value($cruft,{"key" => "foop"});
+$end = new Benchmark;
+$stack_query = timediff($end,$start);
+diag "Stack pop: ". $stack_query->[0];
+$got = $result;
+$expected = undef;
+compare($got,$expected,"Pop value from null array returns " . $expected);
+
 $result = Kynetx::MongoDB::pop_value($cruft,$key,1);
 $got = $result;
 $expected = $value->{"value"};

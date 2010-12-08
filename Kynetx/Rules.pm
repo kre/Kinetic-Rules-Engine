@@ -794,7 +794,7 @@ sub optimize_ruleset {
 
 # incrementing the number here will force cache reloads of rulesets with lower #'s
 sub get_optimization_version {
-  my $version = 6;
+  my $version = 7;
   return $version;
 }
 

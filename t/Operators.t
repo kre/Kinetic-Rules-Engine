@@ -96,6 +96,7 @@ pre {
   j = [{"a" : 1, "b" : 2, "c": 3}, {"a" : 4, "b" : 5, "c": 6}, {"a" : 7, "b" : 8, "c": 9}];
   foo = "I like cheese";
   my_str = "This is a string";
+  phone_num = "1234567890";
   split_str = "A;B;C";
   my_url = "http://www.amazon.com/gp/products/123456789/";
   in_str = <<
@@ -236,7 +237,9 @@ sub test_operator {
 
     $r = eval_expr($v, $rule_env, $rule_name,$req_info);
     diag "Result: ", Dumper($r) if $d;
-    my $result = cmp_deeply($r, $x, "Trying $e");
+    my $result = cmp_deeply($r, $x, "Trying $e");   
+    
+    
     #die unless ($result);
 }
 
@@ -660,7 +663,6 @@ $x[$i] = {
 };
 $d[$i]  = 0;
 $i++;
-
 
 $e[$i] = q%my_url.replace(re#http://www.amazon.com#,"foozle::")%;
 $x[$i] = {
@@ -1210,7 +1212,7 @@ $logger->debug("Extensions: ", sub {Dumper($list)});
 
 $e[$i] = q/q_html.query("table tr td[style],table tr th")/;
 $x[$i] = {
-   'val' => [
+   'val' => bag(
      '<td style="background: #ddf;">Grey Wolf</td>',
      '<td style="background: #ddf;">Cape hunting dog</td>',
      '<td style="background: #ddf;">Very silly big long-long named dog woof</td>',
@@ -1220,7 +1222,7 @@ $x[$i] = {
      '<th colspan="2">Cats</th>',
      '<th style="background: #ddf;">Dogs</th>',
      '<th>Lemurs</th>'
-   ],
+   ),
    'type' => 'array'
 };
 $d[$i] = 0;
@@ -1261,13 +1263,12 @@ $i++;
 
 $e[$i] = q/q_html.query([in_str,"th"])/;
 $x[$i] = {
-   'val' => [
+   'val' => bag(
     '<th colspan="2">Cats</th>',
      '<th>Apes</th>',
-     '<th colspan="2">Cats</th>',
      '<th style="background: #ddf;">Dogs</th>',
      '<th>Lemurs</th>'
-   ],
+   ),
    'type' => 'array'
 };
 $d[$i] = 0;
@@ -1275,14 +1276,13 @@ $i++;
 
 $e[$i] = q/html_arr.query([in_str,"th","h2"])/;
 $x[$i] = {
-   'val' => [
-    '<th colspan="2">Cats</th>',
+   'val' => bag(
      '<th>Apes</th>',
      '<th colspan="2">Cats</th>',
      '<th style="background: #ddf;">Dogs</th>',
      '<th>Lemurs</th>',
     '<h2>On the Origin of The Origin</h2>'
-   ],
+   ),
    'type' => 'array'
 };
 $d[$i] = 0;
@@ -1505,6 +1505,7 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+
 ENDY:
 # New pick argument to retain array
 
@@ -1519,6 +1520,17 @@ $x[$i] = {'val' => '12.99',
       'type' => 'num'};
 $d[$i]  = 0;
 $i++;
+
+
+$e[$i] = q#phone_num.replace(re/([0-9]{3}).*/,"$1")#;
+$x[$i] = {
+   'val' => '123',
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+
 
 # now run the tests....
 my $l = scalar @e;

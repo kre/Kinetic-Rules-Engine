@@ -170,14 +170,18 @@ sub mk_http_request {
 
 #    $response = $ua->post($uri);
 
-    my $content = join('&', map("$_=".uri_escape($params->{$_}), keys %{ $params }));
+    my $content = join('&', map("$_=".uri_escape_utf8($params->{$_}), keys %{ $params }));
     $logger->debug("Encoded content: $content");
 
     $req->content($content);
+    $req->header('content-length' => length($content));
+    $req->header('content-type' => "application/x-www-form-urlencoded");
+
   } elsif (uc($method) eq 'GET') {
     my $full_uri = Kynetx::Util::mk_url($uri,  $params);
     $req = new HTTP::Request 'GET', $full_uri;
 #    $response = $ua->get($full_uri, $headers);
+
   } else {
     $logger->warn("Bad method ($method) called in do_http");
     return '';

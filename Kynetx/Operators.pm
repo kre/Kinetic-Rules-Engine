@@ -447,17 +447,21 @@ $funcs->{'append'} = \&eval_append;
 sub eval_replace {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
+
+#    $logger->debug("Expression: ", sub { Dumper($rule_env) });
+#    $logger->debug("Expression: ", sub { Dumper($expr) });
+    
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
 #    $logger->debug("obj: ", sub { Dumper($obj) });
     return $obj unless defined $obj;
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-#    $logger->debug("obj: ", sub { Dumper($rands) });
+#    $logger->debug("rands: ", sub { Dumper($rands) });
 
     my $v = $obj->{'val'};
 
-    if($obj->{'type'} eq 'str' &&
+    if(($obj->{'type'} eq 'str' || $obj->{'type'} eq 'num') &&
        $rands->[0]->{'type'} eq 'regexp' &&
        $rands->[1]->{'type'} eq 'str') {
 
@@ -515,7 +519,7 @@ sub eval_match {
 
     my $v = $obj->{'val'};
 
-    if($obj->{'type'} eq 'str' &&
+    if(($obj->{'type'} eq 'str' || $obj->{'type'} eq 'num') &&
        $rands->[0]->{'type'} eq 'regexp') {
 
 	my $pattern = '';
@@ -571,7 +575,7 @@ sub eval_extract {
 
     my $v = $obj->{'val'};
 
-    if($obj->{'type'} eq 'str' &&
+    if(($obj->{'type'} eq 'str' || $obj->{'type'} eq 'num') &&
        $rands->[0]->{'type'} eq 'regexp') {
 
     my $pattern = '';
@@ -678,7 +682,7 @@ sub eval_split {
   my ($pattern, $modifiers) = split_re($rands->[0]->{'val'});
 
   my @items;
-  if($obj->{'type'} eq 'str' &&
+  if(($obj->{'type'} eq 'str' || $obj->{'type'} eq 'num') &&
      $rands->[0]->{'type'} eq 'regexp') {
 
     $logger->debug("Spliting string with $pattern");

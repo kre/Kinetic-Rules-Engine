@@ -1347,12 +1347,12 @@ unary_expr  returns[Object result] options { backtrack = true; }
 	      	tmp.put("args",tmpar);
 	      	$result = tmp;
 	}
-	| SEEN rx=STRING must_be["in"] vd=VAR_DOMAIN ':' v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) t=timeframe? {
+	| SEEN rx=expr must_be["in"] vd=VAR_DOMAIN ':' v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) t=timeframe? {
       	      	HashMap tmp = new HashMap();
 	      	tmp.put("within",$t.result);
 	      	tmp.put("type","seen_timeframe");
 	      	tmp.put("var",$v.text);
-	      	tmp.put("regexp",strip_string($rx.text));
+	      	tmp.put("regexp",$rx.result);
 	      	tmp.put("domain",$vd.text);
 	      	if($t.text != null)
 		      	tmp.put("timeframe",t.time);
