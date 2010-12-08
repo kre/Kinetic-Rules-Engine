@@ -237,7 +237,9 @@ sub test_operator {
 
     $r = eval_expr($v, $rule_env, $rule_name,$req_info);
     diag "Result: ", Dumper($r) if $d;
-    my $result = cmp_deeply($r, $x, "Trying $e");
+    my $result = cmp_deeply($r, $x, "Trying $e");   
+    
+    
     #die unless ($result);
 }
 
@@ -1210,7 +1212,7 @@ $logger->debug("Extensions: ", sub {Dumper($list)});
 
 $e[$i] = q/q_html.query("table tr td[style],table tr th")/;
 $x[$i] = {
-   'val' => [
+   'val' => bag(
      '<td style="background: #ddf;">Grey Wolf</td>',
      '<td style="background: #ddf;">Cape hunting dog</td>',
      '<td style="background: #ddf;">Very silly big long-long named dog woof</td>',
@@ -1220,7 +1222,7 @@ $x[$i] = {
      '<th colspan="2">Cats</th>',
      '<th style="background: #ddf;">Dogs</th>',
      '<th>Lemurs</th>'
-   ],
+   ),
    'type' => 'array'
 };
 $d[$i] = 0;
@@ -1261,13 +1263,12 @@ $i++;
 
 $e[$i] = q/q_html.query([in_str,"th"])/;
 $x[$i] = {
-   'val' => [
+   'val' => bag(
     '<th colspan="2">Cats</th>',
      '<th>Apes</th>',
-     '<th colspan="2">Cats</th>',
      '<th style="background: #ddf;">Dogs</th>',
      '<th>Lemurs</th>'
-   ],
+   ),
    'type' => 'array'
 };
 $d[$i] = 0;
@@ -1275,14 +1276,13 @@ $i++;
 
 $e[$i] = q/html_arr.query([in_str,"th","h2"])/;
 $x[$i] = {
-   'val' => [
-    '<th colspan="2">Cats</th>',
+   'val' => bag(
      '<th>Apes</th>',
      '<th colspan="2">Cats</th>',
      '<th style="background: #ddf;">Dogs</th>',
      '<th>Lemurs</th>',
     '<h2>On the Origin of The Origin</h2>'
-   ],
+   ),
    'type' => 'array'
 };
 $d[$i] = 0;

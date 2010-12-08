@@ -315,7 +315,7 @@ sub persistent_element_within {
     my $logger = get_logger();
     $logger->trace("Check $varname for ",sub {Dumper($regexp)}, " within ", sub {Dumper($timevalue)}, ",",sub {Dumper($timeframe)});
     my $element_index = persistent_element_index($domain,$rid,$session,$varname,$regexp);
-    return 0 unless ($element_index >= 0);
+    return undef unless (defined $element_index);
     my $desired = DateTime->from_epoch(epoch => $element_index->[1]);
     $desired->add($timeframe => $timevalue);
     return Kynetx::Util::after_now($desired);

@@ -177,7 +177,11 @@ sub pop_value {
     my $c = get_collection($collection);
     my $res;
     if ($c) {
-        my $trail = get_value($collection,$var)->{"value"};
+    	my $val = get_value($collection,$var);
+    	if (ref $val ne "HASH") {
+    		return $val;
+    	}
+        my $trail = $val->{"value"};
         $logger->trace("Stack: ",sub {Dumper($trail)});
         if (ref $trail eq "ARRAY") {
             if ($direction == 1) {
