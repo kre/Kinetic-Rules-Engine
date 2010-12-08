@@ -1099,7 +1099,7 @@ on_expr returns[Object result] : ON
 		tmp.put("emit",$emt.emit_value);
 		global_block_array.add(tmp);
 	}
-	| dst=must_be_one[sar("dataset","datasource")] name=VAR (COLON dtype=DTYPE)? LEFT_SMALL_ARROW src=STRING (cas=cachable {found_cache =true; })?  {
+	| dst=must_be_one[sar("dataset","datasource")] name=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) (COLON dtype=DTYPE)? LEFT_SMALL_ARROW src=STRING (cas=cachable {found_cache =true; })?  {
 
 		HashMap tmp = new HashMap();
 		tmp.put("type",$dst.text);
@@ -1709,6 +1709,8 @@ meta_block
 	 HashMap keys_map = new HashMap();
 	 HashMap key_values = new HashMap();
      ArrayList provide_list = new ArrayList();
+     ArrayList config_list = new ArrayList();
+     ArrayList temp_list = new ArrayList();
 
 }
 @after  {
@@ -1777,20 +1779,26 @@ meta_block
 		tmp.put("resource_type",$rtype.text);
 		use_list.add(tmp);
 	 })
- 	| (MODULE  modname=VAR (ALIAS alias=VAR)?) {
+ 	| (MODULE  modname=VAR (ALIAS alias=VAR)? (WITH m=modifier {temp_list.add($m.result);} (AND_AND m1=modifier {temp_list.add($m1.result);})*)?) {
 		HashMap tmp = new HashMap();
 		tmp.put("name",$modname.text);
 		tmp.put("type","module");
-//		if($alias.text != null) {
-			tmp.put("alias",$alias.text);
-			alias = null;
-//		}
+        tmp.put("alias",$alias.text);
+        alias = null;
+        tmp.put("modifiers",temp_list);
+
 		use_list.add(tmp);
 	 })
-    | PROVIDE LEFT_BRACKET (e=VAR { provide_list.add($e.text); } (COMMA e2=VAR { provide_list.add($e2.text);})* )? RIGHT_BRACKET {
+    | PROVIDE e=VAR { provide_list.add($e.text); } (COMMA e2=VAR { provide_list.add($e2.text);})*  {
       	HashMap tmp = new HashMap();
       	tmp.put("names",provide_list);
         meta_block_hash.put("provide",tmp); 
+        }
+
+    | CONFIGURE USING  m=modifier {config_list.add($m.result);} (AND_AND m1=modifier {config_list.add($m1.result);})* {
+      	HashMap tmp = new HashMap();
+      	tmp.put("configuration", config_list);
+        meta_block_hash.put("configure",tmp); 
         }
 
 	)*
@@ -1904,6 +1912,7 @@ REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
 	:	 '&&';
 
 
+ CONFIGURE : 'configure';
  WITH : 'with';
  USING : 'using';
 
@@ -2082,7 +2091,7 @@ OTHER_OPERATORS
 	:	'use'
 	;
  PROVIDE
-	:	'provide'
+	:	'provide' | 'provides'
 	;
  CSS
 	:'css';
