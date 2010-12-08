@@ -281,10 +281,10 @@ sub persistent_element_history {
     my $trail = get_persistent_var($domain,$rid,$session,$varname);
     # Mongo does not support queue operations
     # convert $index to Stack notation
-    my $size = @$trail;
-    $logger->trace("Looks like ($size)",sub {Dumper($trail)});
     if (ref $trail eq 'ARRAY') {
+    	my $size = @$trail;
         $result =  $trail->[$size - $index -1]->[0];
+    	$logger->trace("Looks like ($size)",sub {Dumper($trail)});
     }
     return $result;
 }
