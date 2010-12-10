@@ -56,6 +56,7 @@ our @ISA     = qw(Exporter);
 our %EXPORT_TAGS = (
     all => [
         qw(
+lookup_module_env
           )
     ]
 );
@@ -85,6 +86,8 @@ use Kynetx::Modules::Twilio;
 use Kynetx::Modules::URI;
 use Kynetx::Modules::Address;
 
+our $name_prefix = '@@module_';
+
 sub eval_module {
     my ( $req_info, $rule_env, $session, $rule_name, $source, $function, $args )
       = @_;
@@ -94,10 +97,28 @@ sub eval_module {
     #   $args->[0] =~ s/'([^']*)'/$1/;  # cheating here to remove JS quotes
     # get the values
 
-    $logger->trace( "Datasource args ", sub { Dumper $args} );
+#    $logger->trace( "Datasource args ", sub { Dumper $args} );
 
     my $val   = '';
     my $preds = {};
+
+    # see if there is a module defined function that matches
+    # if so, cut this short.
+    $val = lookup_module_env($source, $function, $rule_env);
+    if (defined $val && Kynetx::Expressions::is_closure($val)) {
+      # manufacture an application and apply it
+      my $app = {'function_expr' => $val,
+		 'type' => 'app',
+		 'args' => $args}; 
+      $val = Kynetx::Expressions::eval_application($app,
+						   $rule_env,
+						   $rule_name,
+						   $req_info,
+						   $session);
+#      $logger->debug("eval_module returning ", Dumper $val);
+
+      return $val;
+    }
 
     #
     # the following code is ugly for historical reasons.  Ultimately,
@@ -105,9 +126,14 @@ sub eval_module {
     # function name and predicates are linked into that one function
     # and this big if-then-else can go away.  Data driven FTW!
     #
+    
+    # get the values, the code below doesn't like denoted values. 
+    for (@{ $args }) {
+      $_ = Kynetx::Expressions::den_to_exp($_);
+    }
+
 
     if ( $source eq 'datasource' ) {    # do first since most common
-            #$val = Kynetx::Datasets::get_datasource($rule_env,$args,$function);
         my $rs =
           Kynetx::Environments::lookup_rule_env( 'datasource:' . $function,
                                                  $rule_env );
@@ -131,6 +157,8 @@ sub eval_module {
                                                 $rule_name, $function, $args );
         }
     } elsif ( $source eq 'page' || $source eq 'event' ) {
+
+
         $preds = Kynetx::Predicates::Page::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
@@ -139,6 +167,7 @@ sub eval_module {
             $val = Kynetx::Predicates::Page::get_pageinfo( $req_info, $function,
                                                            $args );
         }
+
     } elsif ( $source eq 'math' ) {
         $preds = Kynetx::Predicates::Math::get_predicates();
         if ( defined $preds->{$function} ) {
@@ -332,11 +361,17 @@ sub eval_module {
         }
     } elsif ( $source eq 'keys' ) {
       # return the right key if it exists
-      my $ruleset = Kynetx::Repository::get_rules_from_repository($req_info->{'rid'}, $req_info);
-      my $keys = $ruleset->{'meta'}->{'keys'};
+      # my $ruleset = Kynetx::Repository::get_rules_from_repository($req_info->{'rid'}, $req_info);
+      # my $keys = $ruleset->{'meta'}->{'keys'};
+
+      $val = Kynetx::Keys::get_key($req_info, $rule_env, $function);
+
       $logger->debug("Returning keys for $function");
-      if ($keys->{$function}) {
-	$val = $keys->{$function};
+
+      if ($val) {
+	if ($args->[0]) {
+	  $val = $val->{$args->[0]};
+	}
       } else {
 	$logger->warn("Keys for $function not found");
 	$val = '';
@@ -347,8 +382,26 @@ sub eval_module {
 
     $logger->trace("Datasource $source:$function -> ", sub {Dumper($val)});
 
-    return $val;
+#    return $val;
+    return  Kynetx::Expressions::mk_expr_node(
+    		 Kynetx::Expressions::infer_type($val),
+    		 $val);
 
+}
+
+sub lookup_module_env {
+  my ($name,$key,$env) = @_;
+  my $logger = get_logger();
+
+  my $provided = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name . '_provided', $env);
+
+  my $r;
+  if ($provided->{$key}) {
+    my $mod_env = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name, $env);
+    $r = Kynetx::Environments::lookup_rule_env($key, $mod_env);
+  }
+            
+  return $r;
 }
 
 1;

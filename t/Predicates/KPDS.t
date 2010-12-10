@@ -48,17 +48,6 @@ my $rid = 'cs_test';
 
 my $my_req_info = Kynetx::Test::gen_req_info($rid);
 
-# these are KRE generic consumer tokens
-$my_req_info->{$rid.':key:kpds'} = 
-  {'consumer_secret' => 'iS1jmmJ6WRudiA8denmt3b9mKsvz8EEcmt42yoSl',
-   'consumer_key' => 'xVzxZSd7ArBV3at6YOnz'
-  };
-
-$my_req_info->{"$rid:ruleset_name"} = "cs_test";
-$my_req_info->{"$rid:name"} = "cs_test";
-$my_req_info->{"$rid:author"} = "Phil Windley";
-$my_req_info->{"$rid:description"} = "This is a test rule";
-
 my $rule_name = 'foo';
 
 my $rule_env = Kynetx::Test::gen_rule_env();
@@ -66,6 +55,31 @@ my $rule_env = Kynetx::Test::gen_rule_env();
 my $session = Kynetx::Test::gen_session($r, $rid);
 
 my $logger = get_logger();
+
+
+my($js);
+
+
+# these are KRE generic consumer tokens
+my $keys = 
+  {'consumer_secret' => 'iS1jmmJ6WRudiA8denmt3b9mKsvz8EEcmt42yoSl',
+   'consumer_key' => 'xVzxZSd7ArBV3at6YOnz'
+  };
+
+# these are KRE generic consumer tokens
+($js, $rule_env) = 
+ Kynetx::Keys::insert_key(
+  $my_req_info,
+  $rule_env,
+  'kpds',
+  $keys);
+
+
+$my_req_info->{"$rid:ruleset_name"} = "cs_test";
+$my_req_info->{"$rid:name"} = "cs_test";
+$my_req_info->{"$rid:author"} = "Phil Windley";
+$my_req_info->{"$rid:description"} = "This is a test rule";
+
 
 # check that predicates at least run without error
 my @dummy_arg = (0);

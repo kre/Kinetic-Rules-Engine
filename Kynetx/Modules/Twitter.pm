@@ -50,6 +50,7 @@ use Kynetx::Memcached qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Environments qw(:all);
 use Kynetx::Util qw(:all);
+use Kynetx::Keys;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -119,7 +120,7 @@ sub authorized {
 
 # $logger->debug("Consumer tokens: ", Dumper $consumer_tokens);
 
- my $access_tokens = get_access_tokens($req_info, $rid, $session);
+ my $access_tokens = get_access_tokens($req_info, $rule_env, $rid, $session);
 
 
  if (defined $access_tokens &&
@@ -131,7 +132,7 @@ sub authorized {
 #		  " &  access_secret = " . $access_tokens->{'access_token_secret'} );
 
 
-   my $nt = twitter($req_info, $session);
+   my $nt = twitter($req_info, $rule_env, $session);
 
    # attempt to get the user's last tweet
    my $status = eval { $nt->verify_credentials() };
@@ -157,7 +158,7 @@ sub user_id {
   my $logger = get_logger();
 
   my $rid = $req_info->{'rid'};
-  my $access_tokens =  get_access_tokens($req_info, $rid, $session);
+  my $access_tokens =  get_access_tokens($req_info, $rule_env, $rid, $session);
 
   return $access_tokens->{'user_id'};
 
@@ -176,7 +177,7 @@ sub authorize {
  my $description = $req_info->{"$rid:description"};
 
 
- my $nt = twitter($req_info,$session);
+ my $nt = twitter($req_info, $rule_env, $session);
 
  my $base_cb_url = 'http://' .
                    Kynetx::Configure::get_config('OAUTH_CALLBACK_HOST').
@@ -468,7 +469,7 @@ sub update_action {
   my $logger = get_logger();
   $logger->debug("Twitter update action ");
 
-  my $nt = twitter($req_info, $session);
+  my $nt = twitter($req_info, $rule_env, $session);
 
   # construct the command and then get it
   my $tweets = eval {
@@ -503,7 +504,7 @@ sub eval_twitter {
     return $f->($req_info,$rule_env,$session,$rule_name,$function,$args);
   } else {
 
-    my $nt = twitter($req_info, $session);
+    my $nt = twitter($req_info, $rule_env, $session);
 
     my $name = $func_name->{$function}->{'name'};
 
@@ -537,17 +538,17 @@ sub eval_twitter {
 }
 
 sub twitter {
-  my($req_info, $session) = @_;
+  my($req_info, $rule_env, $session) = @_;
 
   my $logger = get_logger();
 
   my $rid = $req_info->{'rid'};
 
-  my $consumer_tokens=get_consumer_tokens($req_info);
+  my $consumer_tokens=get_consumer_tokens($req_info, $rule_env);
 #  $logger->debug("Consumer tokens: ", Dumper $consumer_tokens);
   my $nt = Net::Twitter::Lite->new(traits => [qw/API::REST OAuth/], %{ $consumer_tokens}) ;
 
-  my $access_tokens =  get_access_tokens($req_info, $rid, $session);
+  my $access_tokens =  get_access_tokens($req_info, $rule_env, $rid, $session);
   if (defined $access_tokens &&
       defined $access_tokens->{'access_token'} &&
       defined $access_tokens->{'access_token_secret'}) {
@@ -565,15 +566,19 @@ sub twitter {
 }
 
 sub get_consumer_tokens {
-  my($req_info) = @_;
+  my($req_info, $rule_env) = @_;
   my $consumer_tokens;
   my $logger = get_logger();
   my $rid = $req_info->{'rid'};
-  unless ($consumer_tokens = $req_info->{$rid.':key:twitter'}) {
+  unless ($consumer_tokens = Kynetx::Keys::get_key($req_info, $rule_env, 'twitter')) {
     my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
-#    $logger->debug("Got ruleset: ", Dumper $ruleset);
     $consumer_tokens = $ruleset->{'meta'}->{'keys'}->{'twitter'};
+
+    Kynetx::Keys::insert_key($req_info, $rule_env, 'twitter', $consumer_tokens)
   }
+
+#  $logger->debug("Consumer tokens: ", Dumper $consumer_tokens);
+
   return $consumer_tokens;
 }
 
@@ -591,9 +596,9 @@ sub store_access_tokens {
 }
 
 sub get_access_tokens {
-  my ($req_info, $rid, $session)  = @_;
+  my ($req_info, $rule_env, $rid, $session)  = @_;
 
-  my $consumer_tokens=get_consumer_tokens($req_info);
+  my $consumer_tokens=get_consumer_tokens($req_info, $rule_env);
 
   my $access_tokens;
   if ($consumer_tokens->{'oauth_token'}) {

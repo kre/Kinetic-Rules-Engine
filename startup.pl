@@ -68,6 +68,7 @@ use Kynetx::Util ();
 use Kynetx::Version ();
 use Kynetx::Configure ();
 use Kynetx::Postlude ();
+use Kynetx::Keys ();
 
 
 use Log::Log4perl ();

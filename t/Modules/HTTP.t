@@ -346,8 +346,119 @@ $test_count += 4;
 
 
 
+# with headers
+$krl_src = <<_KRL_;
+http:post("http://127.0.0.1/widgets/printenv.pl")
+     with params = {"init_host": "qa.kobj.net",
+		    "eval_host": "qa.kobj.net",
+		    "callback_host": "qa.kobj.net",
+		    "contents": "compiled",
+		    "format": "json",
+		    "version": "dev",
+                    "minnie" : "1.0"
+                   } and
+          autoraise = "example2" and 
+          headers = {"user-agent": "flipper",
+                     "X-proto": "foogle"
+                    } and
+          response_headers = ["flipper"];
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+
+# start with a fresh $req_info and $rule_env
+$my_req_info = Kynetx::Test::gen_req_info($rid);
+$rule_env = Kynetx::Test::gen_rule_env();
+
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
+#is($my_req_info->{'label'}, 'example2', "label is example2"); 
+#ok(defined $my_req_info->{'content_length'}, "Content length defined");
+#ok(defined $my_req_info->{'status_code'}, "Status code defined");
+#ok(defined $my_req_info->{'content'}, "Content defined");
+#$test_count += 4;
+# 
+
+
 #diag Dumper $my_req_info;
 #diag Dumper $rule_env;
+
+
+# test the get function (expression)
+$krl_src = <<_KRL_;
+r = http:get("http://127.0.0.1/widgets/printenv.pl",
+	       {"init_host": "qa.kobj.net",
+		"eval_host": "qa.kobj.net",
+		"callback_host": "qa.kobj.net",
+		"contents": "compiled",
+		"format": "json",
+		"version": "dev"
+	       },
+               {"X-proto": "flipper"},
+               ["flipper"]);
+_KRL_
+
+$krl = Kynetx::Parser::parse_decl($krl_src);
+
+#diag(Dumper($krl));
+
+# start with a fresh $req_info and $rule_env
+$my_req_info = Kynetx::Test::gen_req_info($rid);
+$rule_env = Kynetx::Test::gen_rule_env();
+
+($v,$result) = Kynetx::Expressions::eval_decl(
+    $my_req_info,
+    $rule_env,
+    $rule_name,
+    $session,
+    $krl
+    );
+
+	
+#diag($krl->{'rhs'}->{'predicate'}  . "($v) --> " . Dumper $result);
+
+is($v, "r", "Get right lhs");
+like($result->{'flipper'}, qr/hello world/, "Flipper is there");
+like($result->{'content'}, qr/HTTP_X_PROTO/, "x-proto is there");
+$test_count += 3;
+
+
+
+# with body, not encoded
+$krl_src = <<_KRL_;
+http:post("http://127.0.0.1/widgets/printenv.pl")
+     with body = "<?xml encoding='UTF-8'?><feed version='0.3'></feed>" and
+          autoraise = "example2" and 
+          headers = {"content-type": "application/xml"
+                    } and
+          response_headers = ["flipper"];
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+
+# start with a fresh $req_info and $rule_env
+$my_req_info = Kynetx::Test::gen_req_info($rid);
+$rule_env = Kynetx::Test::gen_rule_env();
+
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
+#diag Dumper $my_req_info;
+like($my_req_info->{'content'}, qr/CONTENT_LENGTH="\d+"/, "Content length there");
+like($my_req_info->{'content'}, qr/CONTENT_TYPE="application\/xml"/, "Content length there");
+$test_count += 2;
+# 
 
 
 done_testing($test_count);

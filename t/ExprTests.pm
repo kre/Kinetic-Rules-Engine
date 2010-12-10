@@ -1619,9 +1619,8 @@ $krl_src = <<_KRL_;
 seen "windley.com" in ent:my_trail
 _KRL_
 
-add_expr_testcase(
-    $krl_src,
-'expr',
+add_expr_testcase($krl_src,
+		  'expr',
 		  '_ignore_',
 		  mk_expr_node('num',    1),
 		  0

@@ -57,7 +57,14 @@ my $resp;
 
 my $r = Kynetx::Test::configure();
 
+my $rule_env = Kynetx::Test::gen_rule_env();
+
 my $rid = 'a144x22';
+
+my $session = Kynetx::Test::gen_session($r,$rid);
+
+my $gcal_tests = 0;
+
 
 my $krl_src = <<_EOL_;
 ruleset a144x22 {
@@ -95,6 +102,7 @@ rule first_rule is active {
 }
 _EOL_
 
+my($js);
 
 my $ast = Kynetx::Parser::parse_ruleset($krl_src);
 #$logger->debug("Ruleset: ", sub {Dumper($ast)});
@@ -104,9 +112,29 @@ $my_req_info->{"$rid:ruleset_name"} = "a144x22";
 $my_req_info->{"$rid:name"} = "Facebook dance";
 $my_req_info->{"$rid:author"} = "MEH";
 $my_req_info->{"$rid:description"} = "test rule for facebook data api";
-$my_req_info->{"$rid:key:facebook"} = {'consumer_key' => '116360591732083',
-        'consumer_secret' => '40bd6da5ca2047a9e882415688119a95'
-};
+
+
+
+my $keys = {'consumer_key' => '116360591732083',
+	    'consumer_secret' => '40bd6da5ca2047a9e882415688119a95'
+	   };
+
+# these are KRE generic consumer tokens
+($js, $rule_env) = 
+ Kynetx::Keys::insert_key(
+  $my_req_info,
+  $rule_env,
+  'facebook',
+  $keys);
+
+my $stored_keys = 
+ Kynetx::Keys::get_key(
+  $my_req_info,
+  $rule_env,
+  'facebook');
+
+is_deeply($stored_keys, $keys, "Keys got stored right");
+$gcal_tests++;
 
 
 ####
@@ -175,14 +203,7 @@ my $test_user = '100001078761602';
 my $postid = '100001078761602_109264155786209';
 
 
-
-
-my $session = Kynetx::Test::gen_session($r,'a144x22');
-
-my $gcal_tests = 0;
-my $rule_env = Kynetx::Test::gen_rule_env();
 my $rule_name = "foo";
-
 
 
 my $config_test = Kynetx::Configure::get_config('FACEBOOK');
@@ -329,6 +350,7 @@ $gcal_tests++;
 my $scope_str = 'publish_stream,create_event,rsvp_event,sms,offline_access,email,read_stream';
 my @scope_arry = split(",",$scope_str);
 my $auth_re = qr/var KOBJ_facebook_notice.+https:\/\/graph.facebook.com\/oauth\/authorize.client_id=$appid&redirect_uri=.+ruleset.+fb_callback.+scope=$scope_str/;
+
 my $result = Kynetx::Predicates::Facebook::authorize($my_req_info, $rule_env, $session, {},{},[\@scope_arry]);
 cmp_deeply($result,re($auth_re), "Authorize URL");
 $gcal_tests++;
@@ -336,6 +358,7 @@ $gcal_tests++;
 isnt(Kynetx::Predicates::Facebook::authorized($my_req_info,$rule_env,$session,$rule_name,'null',['publish_stream']),
     "Random calls aren't authorized");
 $gcal_tests++;
+
 
 Kynetx::Predicates::Google::OAuthHelper::store_token($rid,$session,'access_token',$access_token,'facebook');
 
@@ -510,7 +533,7 @@ $expected = $empty_response;
 $args = [{'type' => 'home',
     'q' => 'P Windley'
 }];
-test_facebook('search',$args,$expected,$description,1);
+test_facebook('search',$args,$expected,$description,0);
 
 
 ##

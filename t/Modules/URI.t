@@ -68,14 +68,15 @@ my $source = 'uri';
 my ($result,$args);
 
 $args = ['http://www.windley.com/archives?foo=bar'];
-$result = Kynetx::Modules::eval_module($my_req_info, 
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
 				       $rule_env, 
 				       $session, 
 				       $rule_name, 
 				       $source, 
 				       'escape', 
 				       $args
-				      );
+				      ));
 
 
 is($result,
@@ -85,14 +86,15 @@ $test_count++;
 
 # now we reverse it
 $args = [$result];
-$result = Kynetx::Modules::eval_module($my_req_info, 
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
 				       $rule_env, 
 				       $session, 
 				       $rule_name, 
 				       $source, 
 				       'unescape', 
 				       $args
-				      );
+				      ));
 
 
 is($result,

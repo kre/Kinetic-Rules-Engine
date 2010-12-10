@@ -81,7 +81,7 @@ sub eval_pick {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
 
-    $logger->trace("expr: ", sub { Dumper($expr)});
+#    $logger->debug("expr: ", sub { Dumper($expr)});
     $logger->trace("[pick] rule_env: ", sub { Dumper($rule_env) });
 
     my $int = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
@@ -89,12 +89,14 @@ sub eval_pick {
 
     my $obj = Kynetx::Expressions::den_to_exp(clone($int));
 
-   $logger->trace("[pick] obj: ", sub { Dumper($obj) });
+#   $logger->debug("[pick] obj: ", sub { Dumper($obj) });
 
     return $obj unless defined $obj;
 
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+
+#   $logger->debug("[pick] rands: ", sub { Dumper($rands) });
 
     my $pattern = '';
     if($rands->[0]->{'type'} eq 'str') {

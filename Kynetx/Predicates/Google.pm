@@ -129,7 +129,7 @@ sub authorize {
     my $endpoints = get_google_endpoints($scope);
 
     my $auth_url =
-      get_authorization_message( $req_info, $session,   $args,
+      get_authorization_message( $req_info, $rule_env, $session,   $args,
                                  'google',  $endpoints, $scope );
 
     my ( $divId, $msg ) = google_msg( $req_info, $scope, $auth_url );
@@ -154,7 +154,7 @@ sub authorized {
     if ($access_token) {
         $logger->debug( "Found Access Token for: ",
                         NAMESPACE, " ", $scope->{'dname'} );
-        my $treq = test_request( $req_info, $session, $scope );
+        my $treq = test_request( $req_info, $rule_env, $session, $scope );
         if ( $treq->is_success() ) {
             $logger->debug( "Authorized request for ",
                             NAMESPACE, " ", $scope->{'dname'}, ' (',
@@ -183,7 +183,7 @@ sub get {
     $gparm = get_params( $args, $gparm, $common );
     my $url = build_url( $req_info, $rule_env, $args, $gparm, $scope,'GET' );
     my $resp =
-      get_protected_resource( $req_info, $session, NAMESPACE, $url, $scope );
+      get_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $url, $scope );
     return eval_response($resp);
 }
 $funcs->{'get'} = \&get;
@@ -204,7 +204,7 @@ sub raw_get {
         $logger->debug("Scopes match");
 
         my $resp =
-            get_protected_resource( $req_info, $session, NAMESPACE, $uri->as_string(), $scope );
+            get_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $uri->as_string(), $scope );
         return $resp->content;
     } else {
         $logger->warn("Not authorized for scope: ",$scope->{'dname'});
@@ -230,7 +230,7 @@ sub add {
     my $url = build_url( $req_info, $rule_env, $args, $gparm, $scope,'POST' );
     my $content = build_post_content( $req_info, $rule_env, $args, $gparm, $scope );
     my $resp =
-      post_protected_resource( $req_info, $session, NAMESPACE, $scope, $url,$content );
+      post_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $scope, $url,$content );
     return eval_response($resp);
 
 }
@@ -268,16 +268,18 @@ sub eval_response {
 }
 
 sub get_consumer_tokens {
-    my ($req_info) = @_;
+    my ($req_info, $rule_env) = @_;
     my $consumer_tokens;
     my $logger = get_logger();
     my $rid    = $req_info->{'rid'};
-    unless ( $consumer_tokens = $req_info->{ $rid . ':key:google' } ) {
+    unless ( $consumer_tokens = Kynetx::Keys::get_key($req_info, $rule_env, 'google')  ) {
         my $ruleset =
           Kynetx::Repository::get_rules_from_repository( $rid, $req_info );
 
         #    $logger->debug("Got ruleset: ", Dumper $ruleset);
         $consumer_tokens = $ruleset->{'meta'}->{'keys'}->{'google'};
+	Kynetx::Keys::insert_key($req_info, $rule_env, 'google', $consumer_tokens);
+
     }
     return $consumer_tokens;
 }
@@ -299,9 +301,10 @@ sub process_oauth_callback {
     my $req       = Apache2::Request->new($r);
     my $caller    = $req->param('caller');
     my $endpoints = get_google_endpoints($scope);
-    get_access_tokens( $req_info, $session, NAMESPACE, $endpoints, $scope );
+    my $rule_env = {};
+    get_access_tokens( $req_info, $rule_env, $session, NAMESPACE, $endpoints, $scope );
     $logger->trace( "Session (with access token): ", sub { Dumper($session) } );
-    my $test_response = test_request( $req_info, $session, $scope );
+    my $test_response = test_request( $req_info, $rule_env, $session, $scope );
 
     if ( defined $test_response && $test_response->is_success() ) {
 
@@ -321,13 +324,13 @@ sub process_oauth_callback {
 }
 
 sub test_request {
-    my ( $req_info, $session, $scope ) = @_;
+    my ( $req_info, $rule_env, $session, $scope ) = @_;
     my $logger = get_logger();
     my $rid    = $req_info->{'rid'};
     my $turl   = $scope->{'turl'};
     if ($turl) {
         return
-          get_protected_resource( $req_info, $session, NAMESPACE, $turl,
+          get_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $turl,
                                   $scope );
     } else {
         $logger->warn( "No test URL defined for google scope: ",

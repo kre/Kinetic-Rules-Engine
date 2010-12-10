@@ -143,7 +143,7 @@ sub post_to_facebook {
     my $url     = build( 'post', $args );
     my $content = build_post_content($args);
     my $response =
-      post_protected_resource( $req_info, $session, NAMESPACE, '', $url,
+      post_protected_resource( $req_info, $rule_env, $session, NAMESPACE, '', $url,
                                $content );
     my $v = $vars->[0] || '__dummy';
     my $resp = {
@@ -227,7 +227,7 @@ sub authorize {
     if ( mis_error($scope) ) {
         $logger->warn( "Authorize failure: ", $scope->{'DEBUG'} );
     }
-    my $app_req = get_fb_app_info( $req_info, $session );
+    my $app_req = get_fb_app_info( $req_info, $rule_env, $session );
     my $app_info = Kynetx::Json::jsonToAst($app_req->{'_content'});
 
     # application info is no longer being passed in the regular contents
@@ -245,7 +245,7 @@ sub authorize {
     my $caller  = $req_info->{'caller'};
     store_token($rid, $session, SESSION_CALLBACK_KEY, $caller, 'facebook');
 
-    my $auth_url = get_fb_auth_url( $req_info, $session, NAMESPACE, $scope );
+    my $auth_url = get_fb_auth_url( $req_info, $rule_env, $session, NAMESPACE, $scope );
 
     $logger->debug( "Authorization URL: ", uri_unescape($auth_url ));
 
@@ -265,7 +265,7 @@ sub authorized {
     my $access_token = get_token( $rid, $session, 'access_token', NAMESPACE );
     if ($access_token) {
         $logger->debug( "Found Access Token for: ", NAMESPACE );
-        my $resp = test_response( $req_info, $session );
+        my $resp = test_response( $req_info, $rule_env, $session );
         if ( defined $resp && $resp->is_success() ) {
             $logger->info( "Rule $rid authorized for ", NAMESPACE );
             return 1;
@@ -287,7 +287,7 @@ sub metadata {
     my $rid       = $req_info->{'rid'};
     my $url       = build( $function, $args, $session, $rid );
     my $cachetime = get_cachetime($args);
-    my $resp = get_protected_resource( $req_info, $session, NAMESPACE, $url,
+    my $resp = get_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $url,
                                        $cachetime );
     return eval_response( $resp, $rid, $url, $cachetime );
 
@@ -300,7 +300,7 @@ sub picture {
     my $rid       = $req_info->{'rid'};
     my $url       = build( $function, $args, $session, $rid );
     my $cachetime = get_cachetime($args);
-    my $resp = get_protected_resource( $req_info, $session, NAMESPACE, $url,
+    my $resp = get_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $url,
                                        $cachetime );
     return eval_response( $resp, $rid, $url, $cachetime );
 
@@ -314,7 +314,7 @@ sub search {
     my $url       = build( $function, $args, $session, $rid );
     my $cachetime = get_cachetime($args);
     $logger->debug( "Search URL: ", $url );
-    my $resp = get_protected_resource( $req_info, $session, NAMESPACE, $url,
+    my $resp = get_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $url,
                                        $cachetime );
     return eval_response( $resp, $rid, $url, $cachetime );
 
@@ -328,7 +328,7 @@ sub get {
     my $url    = build( $function, $args, $session, $rid );
     $logger->debug( "GET URL: ", $url );
     my $cachetime = get_cachetime($args);
-    my $resp = get_protected_resource( $req_info, $session, NAMESPACE, $url,
+    my $resp = get_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $url,
                                        $cachetime );
     return eval_response( $resp, $rid, $url, $cachetime );
 }
@@ -341,7 +341,7 @@ sub ids {
     my $url    = build( $function, $args, $session, $rid );
     $logger->debug( "GET URL: ", $url );
     my $cachetime = get_cachetime($args);
-    my $resp = get_protected_resource( $req_info, $session, NAMESPACE, $url,
+    my $resp = get_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $url,
                                        $cachetime );
     return eval_response( $resp, $rid, $url, $cachetime );
 }
@@ -740,9 +740,10 @@ sub process_oauth_callback {
         $logger->warn( "Callback rid mis-match, expected: ",
                        $rid, " got: ", $callback_hash->{'rid'} );
     }
-    get_access_tokens( $req_info, $session, NAMESPACE, get_endpoints(),
+    my $rule_env = {};
+    get_access_tokens( $req_info, $rule_env, $session, NAMESPACE, get_endpoints(),
                        $callback_hash );
-    my $resp = test_response( $req_info, $session );
+    my $resp = test_response( $req_info, $rule_env, $session );
     if ( defined $resp && $resp->is_success() ) {
         $logger->info( "Rule $rid authorized for ", NAMESPACE );
         trim_tokens( $rid, $session, NAMESPACE );
@@ -762,11 +763,11 @@ sub process_oauth_callback {
 }
 
 sub test_response {
-    my ( $req_info, $session ) = @_;
+    my ( $req_info, $rule_env, $session ) = @_;
     my $logger   = get_logger();
     my $test_url = get_endpoints()->{'test_url'};
     my $resp =
-      get_protected_resource( $req_info, $session, NAMESPACE, $test_url );
+      get_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $test_url );
     $logger->trace( "Test request: ", sub { Dumper($resp) } );
     return $resp;
 }
@@ -850,9 +851,9 @@ EOF
 }
 
 sub get_fb_app_info {
-    my ( $req_info, $session ) = @_;
+    my ( $req_info, $rule_env, $session ) = @_;
     my $logger        = get_logger();
-    my $consumer_keys = get_consumer_tokens( $req_info, $session, NAMESPACE );
+    my $consumer_keys = get_consumer_tokens( $req_info, $rule_env, $session, NAMESPACE );
     my $app_id        = $consumer_keys->{'consumer_key'};
     my $app_secret    = $consumer_keys->{'consumer_secret'};
     my $base          = $fconfig->{'urls'}->{'base'};
@@ -861,9 +862,9 @@ sub get_fb_app_info {
 }
 
 sub get_fb_auth_url {
-    my ( $req_info, $session, $namespace, $scope ) = @_;
+    my ( $req_info, $rule_env, $session, $namespace, $scope ) = @_;
     my $logger = get_logger();
-    my $consumer_keys = get_consumer_tokens( $req_info, $session, NAMESPACE );
+    my $consumer_keys = get_consumer_tokens( $req_info, $rule_env, $session, NAMESPACE );
     my $callback = make_callback_url( $req_info, NAMESPACE );
     $logger->debug("Authorization URL callback: ",uri_unescape($callback));
     my $auth_url = get_endpoints()->{'authorization_url'};

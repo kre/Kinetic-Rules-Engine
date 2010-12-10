@@ -93,23 +93,24 @@ use constant SEP => ":";
 use constant FLOW_TYPE => "web_server";
 
 sub get_authorization_message {
-    my ( $req_info, $session, $args, $namespace, $endpoints, $scope ) = @_;
+    my ( $req_info, $rule_env, $session, $args, $namespace, $endpoints, $scope ) = @_;
     my $rid = $req_info->{'rid'};
     my ($uauth_url) =
-      get_userauth_url( $req_info, $session, $args, $namespace, $endpoints,
+      get_userauth_url( $req_info, $rule_env,
+			$session, $args, $namespace, $endpoints,
                         $scope );
     return $uauth_url;
 }
 
 sub get_userauth_url {
-    my ( $req_info, $session, $args, $namespace, $endpoints, $scope ) = @_;
+    my ( $req_info, $rule_env, $session, $args, $namespace, $endpoints, $scope ) = @_;
     my $logger      = get_logger();
     my $rid         = $req_info->{'rid'};
     my $request_url = $endpoints->{'authorization_url'};
     my $consumer_tokens =
-      get_consumer_tokens( $req_info, $session, $namespace );
+      get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
     my $request_tokens =
-      get_request_tokens( $req_info, $session, $args, $namespace, $endpoints,
+      get_request_tokens( $req_info, $rule_env, $session, $args, $namespace, $endpoints,
                           $scope );
     store_token( $rid, $session, 'request_token', $request_tokens->{'token'},
                  $namespace, $scope );
@@ -128,20 +129,21 @@ sub get_userauth_url {
 
 sub get_access_tokens {
     my $req_info = shift;
+    my $rule_env = shift;
     my $session = shift;
     my $namespace = shift;
     if ($namespace eq 'facebook') {
         my ($endpoint,$callback_hash) = @_;
-        return get_access_tokens_v2($req_info,$session,$namespace,$endpoint,$callback_hash);
+        return get_access_tokens_v2($req_info,$rule_env,$session,$namespace,$endpoint,$callback_hash);
     } else {
         my ($endpoints,$scope) = @_;
-        return get_access_tokens_v1($req_info,$session,$namespace,$endpoints,$scope);
+        return get_access_tokens_v1($req_info,$rule_env,$session,$namespace,$endpoints,$scope);
     }
 
 }
 
 sub get_access_tokens_v2 {
-    my ($req_info,$session,$namespace,$endpoint,$callback_hash) = @_;
+    my ($req_info,$rule_env,$session,$namespace,$endpoint,$callback_hash) = @_;
     my $logger = get_logger();
     $logger->trace("Session: ", sub {Dumper($session)});
     my $rid         = $req_info->{'rid'};
@@ -149,7 +151,7 @@ sub get_access_tokens_v2 {
     my $callback = uri_escape(make_callback_url($req_info,$namespace));
     $logger->debug("Access URL callback: ",uri_unescape($callback),"\n");
     my $access_url = $endpoint->{'access_token_url'} || '';
-    my $consumer_tokens = get_consumer_tokens($req_info,$session,$namespace);
+    my $consumer_tokens = get_consumer_tokens($req_info,$rule_env,$session,$namespace);
     my $content;
     $content .= 'client_id=' . $consumer_tokens->{"consumer_key"};
     $content .= '&type='.FLOW_TYPE;
@@ -178,14 +180,14 @@ sub get_access_tokens_v2 {
 }
 
 sub get_access_tokens_v1 {
-    my ( $req_info, $session, $namespace, $endpoints, $scope ) = @_;
+    my ( $req_info, $rule_env, $session, $namespace, $endpoints, $scope ) = @_;
     my $logger = get_logger();
     $logger->trace("Get Access Tokens v1");
     $logger->trace( "Endpoints: ", sub { Dumper($endpoints) } );
     my $rid         = $req_info->{'rid'};
     my $request_url = $endpoints->{'access_token_url'};
     my $consumer_tokens =
-      get_consumer_tokens( $req_info, $session, $namespace );
+      get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
     my $oauth_token =
       get_token( $rid, $session, 'oauth_token', $namespace, $scope );
     my $token_secret =
@@ -230,14 +232,15 @@ sub get_access_tokens_v1 {
 }
 
 sub get_request_tokens {
-    my ( $req_info, $session, $args, $namespace, $endpoints, $scope ) = @_;
+    my ( $req_info, $rule_env, $session, $args, $namespace, $endpoints, $scope ) = @_;
     my $logger      = get_logger();
     my $rid         = $req_info->{'rid'};
     my $request_url = $endpoints->{'request_token_url'};
     $logger->debug( "request url: ", $request_url );
+#    $logger->debug( "Rule env: ", sub { Dumper($rule_env) } );
     my $consumer_tokens =
-      get_consumer_tokens( $req_info, $session, $namespace );
-    $logger->trace( "Consumer tokens: ", sub { Dumper($consumer_tokens) } );
+      get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
+#    $logger->debug( "Consumer tokens: ", sub { Dumper($consumer_tokens) } );
     my $callback = make_callback_url( $req_info, $namespace );
     $logger->trace("REQUEST Callback: $callback");
     my $request = Net::OAuth->request("request token")->new(
@@ -276,18 +279,18 @@ sub get_request_tokens {
 }
 
 sub get_protected_resource {
-    my ( $req_info, $session, $namespace, $url, $scopche) = @_;
+    my ( $req_info, $rule_env, $session, $namespace, $url, $scopche) = @_;
     my $logger = get_logger();
     if ($namespace eq 'facebook') {
-        return get_protected_resource_v2($req_info, $session, $namespace, $url,$scopche);
+        return get_protected_resource_v2($req_info, $rule_env, $session, $namespace, $url,$scopche);
     } else {
-        return get_protected_resource_v1( $req_info, $session, $namespace, $url, $scopche );
+        return get_protected_resource_v1( $req_info, $rule_env, $session, $namespace, $url, $scopche );
     }
 
 }
 
 sub get_protected_resource_v2 {
-    my ( $req_info, $session, $namespace, $url,$cache) = @_;
+    my ( $req_info, $rule_env, $session, $namespace, $url,$cache) = @_;
     my $logger = get_logger();
     $logger->debug("Protected Request URL: ",$url);
     my $rid    = $req_info->{'rid'};
@@ -320,11 +323,11 @@ sub get_protected_resource_v2 {
 }
 
 sub get_protected_resource_v1 {
-    my ( $req_info, $session, $namespace, $url, $scope ) = @_;
+    my ( $req_info, $rule_env, $session, $namespace, $url, $scope ) = @_;
     my $logger = get_logger();
     my $rid    = $req_info->{'rid'};
     my $consumer_tokens =
-      get_consumer_tokens( $req_info, $session, $namespace );
+      get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
     my $token = get_token( $rid, $session, 'access_token', $namespace, $scope );
     my $token_secret =
       get_token( $rid, $session, 'access_token_secret', $namespace, $scope );
@@ -372,17 +375,17 @@ sub get_protected_resource_v1 {
 }
 
 sub post_protected_resource {
-    my ( $req_info, $session, $namespace, $scope, $url, $content ) = @_;
+    my ( $req_info, $rule_env, $session, $namespace, $scope, $url, $content ) = @_;
     my $logger = get_logger();
     if ($namespace eq 'facebook') {
-        return post_protected_resource_v2($req_info, $session, $namespace, $url, $content);
+        return post_protected_resource_v2($req_info, $rule_env, $session, $namespace, $url, $content);
     } else {
-        return post_protected_resource_v1($req_info, $session, $namespace, $scope, $url, $content);
+        return post_protected_resource_v1($req_info, $rule_env, $session, $namespace, $scope, $url, $content);
     }
 }
 
 sub post_protected_resource_v2 {
-    my ( $req_info, $session, $namespace, $url, $content ) = @_;
+    my ( $req_info, $rule_env, $session, $namespace, $url, $content ) = @_;
     my $logger = get_logger();
     $logger->debug("URL: ", $url);
     my $rid    = $req_info->{'rid'};
@@ -400,11 +403,11 @@ sub post_protected_resource_v2 {
 }
 
 sub post_protected_resource_v1 {
-    my ( $req_info, $session, $namespace, $scope, $url, $content ) = @_;
+    my ( $req_info, $rule_env, $session, $namespace, $scope, $url, $content ) = @_;
     my $logger = get_logger();
     my $rid    = $req_info->{'rid'};
     my $consumer_tokens =
-      get_consumer_tokens( $req_info, $session, $namespace );
+      get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
     my $token = get_token( $rid, $session, 'access_token', $namespace, $scope );
     my $token_secret =
       get_token( $rid, $session, 'access_token_secret', $namespace, $scope );
@@ -659,16 +662,17 @@ sub nonce {
 }
 
 sub get_consumer_tokens {
-    my ( $req_info, $session, $namespace ) = @_;
+    my ( $req_info, $rule_env, $session, $namespace ) = @_;
     my $logger = get_logger();
     my $consumer_tokens;
     my $rid    = $req_info->{'rid'};
-    unless ( $consumer_tokens = $req_info->{ $rid . ':key:' . $namespace } ) {
+    unless ( $consumer_tokens = Kynetx::Keys::get_key($req_info, $rule_env, $namespace) ) {
         my $ruleset =
           Kynetx::Repository::get_rules_from_repository( $rid, $req_info );
         $consumer_tokens = $ruleset->{'meta'}->{'keys'}->{$namespace};
-    }
-    $logger->trace("consumer tokens",sub {Dumper($consumer_tokens)});
+	Kynetx::Keys::insert_key($req_info, $rule_env, $namespace, $consumer_tokens);
+      }
+#    $logger->trace("consumer tokens",sub {Dumper($consumer_tokens)});
     return $consumer_tokens;
 }
 
