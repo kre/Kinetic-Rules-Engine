@@ -42,6 +42,7 @@ use Test::LongString;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Parser qw/:all/;
@@ -49,14 +50,21 @@ use Kynetx::Json qw/:all/;
 use Data::Dumper;
 use Encode;
 
+my $logger = get_logger();
+
 # test the round trip KRL -> Json -> KRL
 foreach my $f (@krl_files) {
     my ($fl,$krl_text) = getkrl($f);
     my $json = krlToJson($krl_text);
     # Use the internal perl string structure for the compare
     my $krl = decode("UTF-8",$krl_text);
-    my $result = is_string_nows(jsonToKrl($json), remove_comments($krl), "$f: $fl");
-    die unless ($result);
+    my $back = decode("UTF-8",jsonToKrl($json));
+    my $result = is_string_nows($back, remove_comments($krl), "$f: $fl");
+    if (! $result){
+    	$logger->debug($back);
+    	$logger->debug($krl_text);    	
+    	die;
+    }
 }
 
 1;

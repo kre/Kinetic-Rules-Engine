@@ -102,6 +102,10 @@ my $expected;
 $start = new Benchmark;
 $result = Kynetx::Persistence::Application::put($rid1,$skey,$key2);
 $end = new Benchmark;
+# Newer driver returns more information
+if (ref $result eq "HASH") {
+	$result = $result->{"ok"};
+}
 $qtime = timediff($end,$start);
 diag "Save to array: " . $qtime->[0];
 testit($result,1,"Insert data for $rid1",0);
@@ -167,6 +171,10 @@ testit($result,undef,"Retrieve data for deleted $rid1/$skey",0);
 $start = new Benchmark;
 $result = Kynetx::Persistence::Application::put($ridR,$key1,$key3);
 $end = new Benchmark;
+# Newer driver returns more information
+if (ref $result eq "HASH") {
+	$result = $result->{"ok"};
+}
 $qtime = timediff($end,$start);
 diag "Save: " . $qtime->[0];
 testit($result,1,"Insert to new store $ridR",0);

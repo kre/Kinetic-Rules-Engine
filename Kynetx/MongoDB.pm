@@ -94,35 +94,45 @@ sub init {
     $CACHETIME = Kynetx::Configure::get_config('MONGO_CACHETIME') || $CACHETIME;
 
     my @hosts = split(",",$MONGO_SERVER);
-    my @h_p = map {$_ . ":".$MONGO_PORT} @hosts;
-    my $mongo_url = "mongodb://" . join (",",@h_p);
-
-
-
-    $logger->debug("Initializing MongoDB connection: $mongo_url");
-    $MONGO = MongoDB::Connection->new(host => $mongo_url);
+	$logger->debug("Initializing MongoDB connection");
+	foreach my $host (@hosts) {
+		eval {
+			$MONGO = MongoDB::Connection->new(host => $host,find_master =>1,query_timeout =>5000);
+		};
+		if ($@) {
+			$logger->debug($@);
+		} else {
+			$logger->debug("Master is $host ", $MONGO->get_master());
+			return;
+		}
+		
+	}
 
 }
 
 sub get_mongo {
-    #return $MONGO->kynetx();
+    my $logger = get_logger();
     init unless $MONGO;
-#    if (! $DBREF) {
-#        $DBREF = $MONGO->get_database($MONGO_DB);
-#    }
-#    return $DBREF;
-    my $db = $MONGO->get_database($MONGO_DB);
+    my $db;
+    eval {$db = $MONGO->get_database($MONGO_DB)}; 
+    if ($@) {
+    	$logger->warn("Get Mongo error: ",$@);
+    }
     return $db;
 }
 
 sub get_collection {
     my ($name) = @_;
+    my $logger = get_logger();
     my $db = get_mongo();
-    return $db->get_collection($name);
-#    if ( ! $COLLECTION_REF->{$name}) {
-#        $COLLECTION_REF->{$name} = get_mongo()->get_collection($name);
-#    }
-#    return $COLLECTION_REF->{$name};
+    my $c;
+    eval {
+    	$c = $db->get_collection($name)
+    };
+    if ($@) {
+    	$logger->warn("Get Collection error: ",$@);
+    }
+    return $c;
 }
 
 sub get_value {
