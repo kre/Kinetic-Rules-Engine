@@ -87,7 +87,7 @@ sub handler {
     Kynetx::Request::log_request_env($logger, $req_info);
 
     # get a session, if _sid param is defined it will override cookie
-    my $session = process_session($r, $req_info->{'kntx_token'});
+    my $session = Kynetx::Session::process_session($r, $req_info->{'kntx_token'});
 
 
     $logger->debug("RIDs -> $rids");
