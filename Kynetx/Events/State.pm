@@ -92,7 +92,8 @@ sub TO_JSON {
     }
     serialize_regexp_objects($hash);
     my $s = {
-      $S_TAG => JSON::XS::->new->allow_blessed(1)->utf8(1)->encode($hash)
+      #$S_TAG => JSON::XS::->new->allow_blessed(1)->utf8(1)->encode($hash)
+      $S_TAG => JSON::XS::->new->allow_blessed(1)->encode($hash)
     };
     return $s;
 }
@@ -114,7 +115,8 @@ sub unserialize {
     my $hash = JSON::XS::->new
             ->filter_json_single_key_object( $S_TAG => sub {
                 my $s_state = $_[0];
-                my $s_struct = JSON::XS::->new->utf8(1)->decode($s_state);
+                #my $s_struct = JSON::XS::->new->utf8(1)->decode($s_state);
+                my $s_struct = JSON::XS::->new->decode($s_state);
                 deserialize_regexp_objects($s_struct);
                 bless($s_struct,$class);
             })->decode($json);

@@ -659,7 +659,7 @@ sub eval_persistent {
 	    # FIXME: not sure I like setting to 0 by default
 	    $v = Kynetx::Persistence::get_persistent_var($domain,
 	           $req_info->{'rid'}, $session, $expr->{'name'}) || 0;
-	    $logger->info("[persistent] $expr->{'name'} -> $v");
+	    $logger->debug("[persistent] $expr->{'name'} -> $v");
 	}
 
     return $v;
