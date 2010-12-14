@@ -42,7 +42,7 @@ use Benchmark ':hireswallclock';
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($TRACE);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Configure;
@@ -290,7 +290,8 @@ $got = $result->{"value"};
 
 compare($got,$what,"Get the saved value",0);
 
-sleep 1;
+diag "Stop master server now";
+sleep 5;
 
 $result = touch_value($cruft,$key);
 my $touch2 = $result->{"created"};
@@ -309,7 +310,7 @@ delete_value($cruft,$key);
 $key->{"key"} = $where;
 touch_value($cruft,$key);
 $result = get_value($cruft,$key);
-compare($result->{"value"},0,"Initalize a $where to 0 (touch)",0);
+compare($result->{"value"},0,"Initalize a $where to 0 (touch)",1);
 
 delete_value($cruft,$key);
 

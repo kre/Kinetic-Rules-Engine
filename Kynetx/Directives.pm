@@ -95,7 +95,7 @@ sub send_directive {
   my $name = shift;
   my $opts = shift;
   my $direct = Kynetx::Directives->new($name);
-#  $logger->debug("Directive options are: ", sub {Dumper($opts)});
+  $logger->debug("Directive options are: ", sub {Dumper($opts)});
   $direct->set_options($opts);
   push @{$req_info->{'directives'}}, $direct;
 }
@@ -169,7 +169,10 @@ sub gen_directive_document {
 		      };
   
 #  $logger->debug("Directives ", sub {Dumper $directive_doc });
-  return JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(0)->encode(
+#  return JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(0)->encode(
+#	   $directive_doc
+#        );
+  return JSON::XS::->new->convert_blessed(1)->pretty(0)->encode(
 	   $directive_doc
         );
 }

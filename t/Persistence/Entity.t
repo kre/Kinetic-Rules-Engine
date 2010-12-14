@@ -106,8 +106,12 @@ chomp($key3);
 $start = new Benchmark;
 $result = Kynetx::Persistence::Entity::put_edatum($rid1,$ken,$skey,$key2);
 $end = new Benchmark;
+if (ref $result eq "HASH") {
+	$result = $result->{"ok"};
+}
 my $qtime = timediff($end,$start);
 diag "Save to Mongo: " . $qtime->[0];
+$logger->debug("Result: ", sub {Dumper($result)});
 testit($result,1,"Insert data for $rid1/$ken",0);
 
 $start = new Benchmark;
@@ -196,7 +200,10 @@ testit($result,$expected,"Check trail remainder",0);
 $start = new Benchmark;
 $result = Kynetx::Persistence::Entity::put_edatum($ridR,$ken,$key1,$key3);
 $end = new Benchmark;
-my $qtime = timediff($end,$start);
+if (ref $result eq "HASH") {
+	$result = $result->{"ok"};
+}
+$qtime = timediff($end,$start);
 diag "Save to Mongo: " . $qtime->[0];
 testit($result,1,"Insert to new store $ridR",0);
 

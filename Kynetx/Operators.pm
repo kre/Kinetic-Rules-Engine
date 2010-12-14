@@ -750,7 +750,8 @@ sub eval_as {
     } elsif ($rands->[0]->{'val'} eq 'str' || $rands->[0]->{'val'} eq 'json'){
         my $tmp = Kynetx::Expressions::den_to_exp($obj);
         $logger->trace("EXP: ", sub {Dumper($tmp)});
-        my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
+        #my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
+        my $json = JSON::XS::->new->convert_blessed(1)->encode($tmp);
         $logger->trace("JSON: ", $json);
         $obj->{'type'} = "str";
         $obj->{'val'} = $json;
@@ -784,7 +785,8 @@ sub eval_encode {
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
     my $tmp = Kynetx::Expressions::den_to_exp($obj);
     $logger->trace("EXP: ", sub {Dumper($tmp)});
-    my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
+    #my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
+    my $json = JSON::XS::->new->convert_blessed(1)->encode($tmp);
     $logger->trace("JSON: ", $json);
     $obj->{'type'} = "str";
     $obj->{'val'} = $json;

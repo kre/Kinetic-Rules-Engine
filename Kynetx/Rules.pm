@@ -123,7 +123,7 @@ sub process_rules {
 	  process_schedule($r, $schedule, $session, $eid);
 	};
 	if ($@) {
-	  $logger->error("Ruleset $rid failed: ", $@);
+	  Kynetx::Util::handle_error("Ruleset $rid failed: ", $@);
 	}
     }
 

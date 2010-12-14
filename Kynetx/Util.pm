@@ -76,6 +76,7 @@ mis_error
 end_slash
 bloviate
 sns_publish
+handle_error
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -251,6 +252,16 @@ sub mk_url {
 
 
   return $base_url;
+}
+
+sub handle_error {
+	my ($errortext, $errormsg) = @_;
+	my $logger = get_logger();
+	$logger->error("$errortext $errormsg");
+	if ($errormsg =~ m/mongodb/i) {
+		Kynetx::MongoDB::init();
+		$logger->error("Caught MongoDB error, reset connection");
+	}
 }
 
 sub merror {
