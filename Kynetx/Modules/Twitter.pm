@@ -229,13 +229,6 @@ sub process_oauth_callback {
   # we have to contruct a whole request env and session
   my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
   my $session = process_session($r);
-#  my $session_lock = "lock-" . Kynetx::Session::session_id($session);
-#  if ($req_info->{'_lock'}->lock($session_lock)) {
-#    $logger->debug("Session lock acquired for $session_lock");
-#  } else {
-#    $logger->warn("Session lock request timed out for ",sub {Dumper($rid)});
-#  }
-
   my $req = Apache2::Request->new($r);
   my $request_token = $req->param('oauth_token');
   my $verifier      = $req->param('oauth_verifier');

@@ -683,6 +683,9 @@ sub eval_persistent {
 	#   session_get($req_info->{'rid'}, $session, $name);
 
       } else {
+
+#	$logger->debug("Looking up $expr->{'domain'}:$name in ", sub{Dumper $rule_env});
+
 	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
       }
     }

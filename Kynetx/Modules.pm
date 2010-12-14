@@ -110,12 +110,13 @@ sub eval_module {
       my $app = {'function_expr' => $val,
 		 'type' => 'app',
 		 'args' => $args}; 
+#      $logger->debug("eval_module starting with ", sub {Dumper $app});
       $val = Kynetx::Expressions::eval_application($app,
 						   $rule_env,
 						   $rule_name,
 						   $req_info,
 						   $session);
-#      $logger->debug("eval_module returning ", Dumper $val);
+#      $logger->debug("eval_module returning ", sub {Dumper $val});
 
       return $val;
     }
