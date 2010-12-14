@@ -157,12 +157,24 @@ sub process_event {
     my $schedule = Kynetx::Scheduler->new();
 
     foreach my $rid ( split( /;/, $rids ) ) {
-        process_event_for_rid( $ev, $req_info, $session, $schedule, $rid );
+    	eval {
+    		process_event_for_rid( $ev, $req_info, $session, $schedule, $rid );
+    	};
+    	if ($@) {
+    		  Kynetx::Util::handle_error("Process event failed for rid ($rid):", $@);
+    	}
+        
     }
 
     #    $logger->debug("Schedule: ", sub { Dumper $schedule });
-
-    my $js = Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid );
+    
+    my $js = '';
+	$js .= eval {
+		Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid );
+	};
+    if ($@) {
+   		Kynetx::Util::handle_error("Process event schedule failed:", $@);
+    }
 
     Kynetx::Response::respond( $r, $req_info, $session, $js, "Event" );
 
