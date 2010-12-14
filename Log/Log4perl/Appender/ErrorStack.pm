@@ -77,18 +77,19 @@ sub flush {
     
   my $response = $browser->post( $url,  $m);
 
-  warn "Bad response from ErrorStack server", $response->status_line
-    unless $response->is_success;
-
-  if ($self->{'type'} eq 'json') {
-    my $r = decode_json($response->content);
-    if (! $r->{'success'}) {
-      warn "Problem with ErrorStack logging event ", $r->{'errorMsg'}	
-    } else {
-      $self->{'buffer'} = [];
-    }
+  if (! $response->is_success) {
+  	warn "Bad response from ErrorStack server", $response->status_line;
   } else {
-    $self->{'buffer'} = [];
+	  if ($self->{'type'} eq 'json') {
+	    my $r = decode_json($response->content);
+	    if (! $r->{'success'}) {
+	      warn "Problem with ErrorStack logging event ", $r->{'errorMsg'}	
+	    } else {
+	      $self->{'buffer'} = [];
+	    }
+	  } else {
+	    $self->{'buffer'} = [];
+	  }  	
   }
 
 
