@@ -173,7 +173,7 @@ sub process_event {
 		Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid );
 	};
     if ($@) {
-   		Kynetx::Util::handle_error("Process event schedule failed:", $@);
+   		Kynetx::Util::handle_error("Process event schedule failed: ", $@);
     }
 
     Kynetx::Response::respond( $r, $req_info, $session, $js, "Event" );
