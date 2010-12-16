@@ -197,7 +197,7 @@ sub process_schedule {
       ($mjs, $rule_env) = eval_meta($req_info, $ruleset, $init_rule_env, $session);
 
       # handle globals, start js build, extend $rule_env
-      ($gjs, $rule_env) = eval_globals($req_info, $ruleset, $init_rule_env, $session);
+      ($gjs, $rule_env) = eval_globals($req_info, $ruleset, $rule_env, $session);
 #      $logger->debug("Rule env after globals: ", Dumper $rule_env);
 #    $logger->debug("Global JS: ", $gjs);
 
@@ -358,7 +358,8 @@ sub eval_use {
     } elsif ($u->{'type'} eq 'module') {
       # side effects the rule env.
       ($this_js, $rule_env) = eval_use_module($req_info, $rule_env, $session, $u->{'name'}, $u->{'alias'}, $u->{'modifiers'});
-      $js .= $this_js;
+      # don't include the module JS in the results.  
+      # $js .= $this_js;
     } else {
       $logger->error("Unknown type for 'use': ", $u->{'type'});
     }
