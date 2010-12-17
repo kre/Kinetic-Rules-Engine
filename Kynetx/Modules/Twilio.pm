@@ -251,7 +251,11 @@ sub do_place_call {
       'Url'    => $args->[2],
   };
   my $twilio_tokens =
-    Kynetx::Predicates::Google::OAuthHelper::get_consumer_tokens($req_info,$session,'twilio');
+    Kynetx::Predicates::Google::OAuthHelper::get_consumer_tokens(
+    	$req_info,
+    	$rule_env,
+    	$session,
+    	'twilio');
   my $auth_token = $twilio_tokens->{'auth_token'};
   my $account_sid = $twilio_tokens->{'account_sid'};
   my $post_url = 'https://'. $account_sid . ':' . $auth_token . '@api.twilio.com/2010-04-01/Accounts/'. $account_sid . '/Calls.json';
