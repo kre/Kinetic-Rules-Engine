@@ -387,12 +387,26 @@ sub eval_expr {
 				      $expr->{'regexp_2'})
 	                           : ($expr->{'regexp_2'},
  	                              $expr->{'regexp_1'});
+ 	  my $dexp1 = Kynetx::Expressions::den_to_exp(
+  				    Kynetx::Expressions::eval_expr($r1,
+							       $rule_env,
+							       $rule_name,
+							       $req_info,
+							       $session));
+	  my $dexp2 = Kynetx::Expressions::den_to_exp(
+  				    Kynetx::Expressions::eval_expr($r2,
+ 							       $rule_env,
+							       $rule_name,
+							       $req_info,
+							       $session));
+	  $logger->info("Expr 1: $dexp1");
+	  $logger->info("Expr 2: $dexp2");
       $v = Kynetx::Persistence::persistent_element_before(
                                   $expr->{'domain'},$req_info->{'rid'},
 				  $session,
 				  $name,
-				  $r1,
-				  $r2
+				  $dexp1,
+				  $dexp2,				    
 				 ) ? 0 : 1; # ensure 0 returned for testing
       return mk_expr_node(infer_type($v),$v);
     # } elsif ($expr->{'type'} eq 'persistent') {

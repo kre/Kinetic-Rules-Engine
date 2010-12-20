@@ -257,7 +257,6 @@ sub consume_persistent_element {
 sub persistent_element_index {
     my ($domain,$rid,$session,$varname,$regexp)= @_;
     my $logger = get_logger();
-    $logger->trace("Index $varname for ",sub {Dumper($regexp)});
     my $trail = get_persistent_var($domain,$rid,$session,$varname);
     my $index = undef;
     for my $i (0..@{$trail}-1) {
@@ -266,6 +265,8 @@ sub persistent_element_index {
             last;
         }
     }
+    $logger->trace("Index $varname for ",sub {Dumper($regexp)}, "is $index");
+    
     if (defined $index) {
         return [$index,$trail->[$index]->[1]];
     } else {

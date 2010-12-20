@@ -1105,9 +1105,9 @@ sub pp_expr {
 	/seen_compare/ && do {
 	    return join(' ', 
 			('seen',
-			 pp_string($expr->{'regexp_1'}),
+			 pp_expr($expr->{'regexp_1'}),
 			 $expr->{'op'},
-			 pp_string($expr->{'regexp_2'}), 
+			 pp_expr($expr->{'regexp_2'}), 
 			 'in',
 			 pp_var_domain($expr->{'domain'}, $expr->{'var'})
 			));
