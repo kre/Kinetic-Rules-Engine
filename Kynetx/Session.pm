@@ -89,15 +89,11 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 sub process_session {
     my ($r, $ck) = @_;
 
-
     my $logger = get_logger();
-
-    my $cookie;
-
-    $cookie = $r->headers_in->{'Cookie'};
+    my $cookie = $r->headers_in->{'Cookie'};
     $cookie =~ s/^.*[;]?SESSION_ID=(\w*)[;]?.*$/$1/ if(defined $cookie);
 
-    $cookie = $ck if $ck;  # override, used for testing and _sid param
+    $cookie = $ck if $ck;  # mainly for testing
 
     if (defined $cookie) {
 	$logger->debug("Using session id: ", $cookie );

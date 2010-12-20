@@ -38,7 +38,7 @@ use Log::Log4perl::Level;
 use Log::Log4perl::Appender::ErrorStack;
 
 use Kynetx::Memcached qw(:all);
-use URI::Escape ('uri_escape_utf8');
+use URI::Escape ('uri_escape');
 use Sys::Hostname;
 use Data::Dumper;
 
@@ -76,7 +76,6 @@ mis_error
 end_slash
 bloviate
 sns_publish
-handle_error
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -237,7 +236,7 @@ sub after_now {
 sub mk_url {
   my ($base_url, $url_options) = @_;
 
-  my $params = join('&', map("$_=".uri_escape_utf8($url_options->{$_}), keys %{ $url_options }));
+  my $params = join('&', map("$_=".uri_escape($url_options->{$_}), keys %{ $url_options }));
 
   if ($base_url =~ m/\?$/) {
     return $base_url . $params;
@@ -252,16 +251,6 @@ sub mk_url {
 
 
   return $base_url;
-}
-
-sub handle_error {
-	my ($errortext, $errormsg) = @_;
-	my $logger = get_logger();
-	$logger->error("$errortext $errormsg");
-	if ($errormsg =~ m/mongodb/i) {
-		Kynetx::MongoDB::init();
-		$logger->error("Caught MongoDB error, reset connection");
-	}
 }
 
 sub merror {

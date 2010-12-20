@@ -1099,7 +1099,7 @@ on_expr returns[Object result] : ON
 		tmp.put("emit",$emt.emit_value);
 		global_block_array.add(tmp);
 	}
-	| dst=must_be_one[sar("dataset","datasource")] name=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) (COLON dtype=DTYPE)? LEFT_SMALL_ARROW src=STRING (cas=cachable {found_cache =true; })?  {
+	| dst=must_be_one[sar("dataset","datasource")] name=VAR (COLON dtype=DTYPE)? LEFT_SMALL_ARROW src=STRING (cas=cachable {found_cache =true; })?  {
 
 		HashMap tmp = new HashMap();
 		tmp.put("type",$dst.text);
@@ -1347,12 +1347,12 @@ unary_expr  returns[Object result] options { backtrack = true; }
 	      	tmp.put("args",tmpar);
 	      	$result = tmp;
 	}
-	| SEEN rx=expr must_be["in"] vd=VAR_DOMAIN ':' v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) t=timeframe? {
+	| SEEN rx=STRING must_be["in"] vd=VAR_DOMAIN ':' v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) t=timeframe? {
       	      	HashMap tmp = new HashMap();
 	      	tmp.put("within",$t.result);
 	      	tmp.put("type","seen_timeframe");
 	      	tmp.put("var",$v.text);
-	      	tmp.put("regexp",$rx.result);
+	      	tmp.put("regexp",strip_string($rx.text));
 	      	tmp.put("domain",$vd.text);
 	      	if($t.text != null)
 		      	tmp.put("timeframe",t.time);
@@ -1361,12 +1361,12 @@ unary_expr  returns[Object result] options { backtrack = true; }
 
 	      	$result = tmp;
 	}
-	| SEEN rx_1=expr op=must_be_one[sar("before","after")] rx_2=expr  must_be["in"] vd=VAR_DOMAIN ':' v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) {
+	| SEEN rx_1=STRING op=must_be_one[sar("before","after")] rx_2=STRING  must_be["in"] vd=VAR_DOMAIN ':' v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) {
       	      	HashMap tmp = new HashMap();
 	      	tmp.put("type","seen_compare");
 	      	tmp.put("domain",$vd.text);
-	      	tmp.put("regexp_1",$rx_1.result);
-	      	tmp.put("regexp_2",$rx_2.result);
+	      	tmp.put("regexp_1",strip_string($rx_1.text));
+	      	tmp.put("regexp_2",strip_string($rx_2.text));
 	      	tmp.put("var",$v.text);
 	      	tmp.put("op",$op.text);
 	      	$result = tmp;
@@ -1709,8 +1709,6 @@ meta_block
 	 HashMap keys_map = new HashMap();
 	 HashMap key_values = new HashMap();
      ArrayList provide_list = new ArrayList();
-     ArrayList config_list = new ArrayList();
-     ArrayList temp_list = new ArrayList();
 
 }
 @after  {
@@ -1779,26 +1777,20 @@ meta_block
 		tmp.put("resource_type",$rtype.text);
 		use_list.add(tmp);
 	 })
- 	| (MODULE  modname=VAR (ALIAS alias=VAR)? (WITH m=modifier {temp_list.add($m.result);} (AND_AND m1=modifier {temp_list.add($m1.result);})*)?) {
+ 	| (MODULE  modname=VAR (ALIAS alias=VAR)?) {
 		HashMap tmp = new HashMap();
 		tmp.put("name",$modname.text);
 		tmp.put("type","module");
-        tmp.put("alias",$alias.text);
-        alias = null;
-        tmp.put("modifiers",temp_list);
-        temp_list = new ArrayList();
+//		if($alias.text != null) {
+			tmp.put("alias",$alias.text);
+			alias = null;
+//		}
 		use_list.add(tmp);
 	 })
-    | PROVIDE e=VAR { provide_list.add($e.text); } (COMMA e2=VAR { provide_list.add($e2.text);})*  {
+    | PROVIDE LEFT_BRACKET (e=VAR { provide_list.add($e.text); } (COMMA e2=VAR { provide_list.add($e2.text);})* )? RIGHT_BRACKET {
       	HashMap tmp = new HashMap();
       	tmp.put("names",provide_list);
         meta_block_hash.put("provide",tmp); 
-        }
-
-    | CONFIGURE USING  m=modifier {config_list.add($m.result);} (AND_AND m1=modifier {config_list.add($m1.result);})* {
-      	HashMap tmp = new HashMap();
-      	tmp.put("configuration", config_list);
-        meta_block_hash.put("configure",tmp); 
         }
 
 	)*
@@ -1912,7 +1904,6 @@ REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
 	:	 '&&';
 
 
- CONFIGURE : 'configure';
  WITH : 'with';
  USING : 'using';
 
@@ -2091,7 +2082,7 @@ OTHER_OPERATORS
 	:	'use'
 	;
  PROVIDE
-	:	'provide' | 'provides'
+	:	'provide'
 	;
  CSS
 	:'css';

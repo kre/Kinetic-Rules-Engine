@@ -75,7 +75,6 @@ sub krlToJson {
 
     my $tree = Kynetx::Parser::parse_ruleset($krl);
     return JSON::XS::->new->utf8(1)->pretty(1)->encode($tree);
-    #return JSON::XS::->new->pretty(1)->encode($tree);
 
 }
 
@@ -83,7 +82,6 @@ sub jsonToKrl {
     my ($json) = @_;
 
     my $tree = JSON::XS::->new->utf8(1)->pretty(1)->decode($json);
-    #my $tree = JSON::XS::->new->pretty(1)->decode($json);
     return Kynetx::PrettyPrinter::pp($tree);
 
 }
@@ -91,8 +89,7 @@ sub jsonToKrl {
 sub jsonToRuleBody {
     my ($json) = @_;
 
-    #my $tree = JSON::XS::->new->utf8(1)->pretty(1)->decode($json);
-    my $tree = JSON::XS::->new->pretty(1)->decode($json);
+    my $tree = JSON::XS::->new->utf8(1)->pretty(1)->decode($json);
     return Kynetx::PrettyPrinter::pp_rule_body( $tree, 0 );
 
 }
@@ -101,17 +98,14 @@ sub jsonToRuleBody {
 sub astToJson {
     my ($ast) = @_;
 
-    #return JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(1)->encode($ast);
-    return JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($ast);
+    return JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(1)->encode($ast);
 
 }
 
 sub jsonToAst {
     my ($json) = @_;
-	my $logger = get_logger();
-	$logger->debug("Original string: (", ref $json,") ", $json);
-    #return JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(1)->decode($json);
-    return JSON::XS::->new->convert_blessed(1)->pretty(1)->decode($json);
+
+    return JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(1)->decode($json);
 
 }
 
@@ -121,8 +115,7 @@ sub jsonToAst_w {
     my $logger = get_logger();
     my $pstruct;
     eval {
-        #$pstruct = JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(1)->decode($json);
-        $pstruct = JSON::XS::->new->convert_blessed(1)->pretty(1)->decode($json);
+        $pstruct = JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(1)->decode($json);
     };
     if ($@ && not defined $pstruct) {
         $logger->warn("####Invalid JSON format => parse result as string --check debug for error details");

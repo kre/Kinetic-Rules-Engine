@@ -84,73 +84,35 @@ my $session = Kynetx::Test::gen_session($r, $rid);
 
 #Kynetx::Test::gen_app_session($r, $my_req_info);
 
-my($val, $js);
+my($val);
 
-my $keys = {'consumer_secret' => '3HNb7NhKuqRIm2BuxKPSg6JYvMtLahvkMt6Std5SO0',
-	    'consumer_key' => 'jPlIPAk1gbigEtonC2yNA'
-	   };
-
-# set up some keys
-($js, $rule_env) = 
- Kynetx::Keys::insert_key(
-  $my_req_info,
-  $rule_env,
-  'twitter',
-  $keys);
-
-($js, $rule_env) = 
- Kynetx::Keys::insert_key(
-  $my_req_info,
-  $rule_env,
-  'errorstack',
-  '123456789812389');
-
-
-($js, $rule_env) = 
- Kynetx::Keys::insert_key(
-  $my_req_info,
-  $rule_env,
-  'googleanalytics',
-  'ab12184249284092384023942');
-
-
-$val = Kynetx::Expressions::den_to_exp(
-            Kynetx::Modules::eval_module($my_req_info, 
-					 $rule_env, 
-					 $session, 
-					 $rule_name, 
-					 'keys', 
-					 'errorstack', 
-					 [] 
-					));
+$val = Kynetx::Modules::eval_module($my_req_info, $rule_env, $session, $rule_name, 'keys', 'errorstack', [] );
 like($val,qr/\d+/,"Errorstack is a string a digits");
 $test_count++;
-
 $val = Kynetx::Modules::eval_module($my_req_info, $rule_env, $session, $rule_name, 'keys', 'googleanalytics', [] );
 like($val,qr/\w\w\d+/,"Google is two chars and a string a digits");
 $test_count++;
 
-$val = Kynetx::Expressions::den_to_exp(
-            Kynetx::Modules::eval_module($my_req_info, $rule_env, $session, $rule_name, 'keys', 'twitter', [] ));
+$val = Kynetx::Modules::eval_module($my_req_info, $rule_env, $session, $rule_name, 'keys', 'twitter', [] );
 is_deeply($val,
-	  $keys,
+	  {"consumer_key" => "5837874827498274939",
+	   "consumer_secret" => "3HNb7NfdadadadahdajdhgajlkjakldaMtLahvkMt6Std5SO0"
+	  },
 	  "Twitter is a hash");
 $test_count++;
 
-
 my $source = 'uri';
-my ($result,$args,$function);
+my ($result,$args);
 
 $args = ['http://www.windley.com/archives?foo=bar'];
-$result = Kynetx::Expressions::den_to_exp(
-            Kynetx::Modules::eval_module($my_req_info,
+$result = Kynetx::Modules::eval_module($my_req_info,
 				       $rule_env,
 				       $session,
 				       $rule_name,
 				       $source,
 				       'escape',
 				       $args
-				      ));
+				      );
 
 
 is($result,
@@ -160,15 +122,14 @@ $test_count++;
 
 # now we reverse it
 $args = [$result];
-$result = Kynetx::Expressions::den_to_exp(
-            Kynetx::Modules::eval_module($my_req_info,
+$result = Kynetx::Modules::eval_module($my_req_info,
 				       $rule_env,
 				       $session,
 				       $rule_name,
 				       $source,
 				       'unescape',
 				       $args
-				      ));
+				      );
 
 
 is($result,
@@ -176,28 +137,6 @@ is($result,
    'uri:unescape (reverse last result)');
 $test_count++;
 
-
-# page
-$source = "page";
-$function = "id";
-$args = ["foo"];
-$result = Kynetx::Expressions::den_to_exp(
-            Kynetx::Modules::eval_module($my_req_info,
-				       $rule_env,
-				       $session,
-				       $rule_name,
-				       $source,
-				       $function,
-				       $args
-				      ));
-
-
-is($result,
-   '$K(\'foo\').html()',
-   'page:id("foo")');
-$test_count++;
-
-#diag Dumper $rule_env;
 
 
 done_testing($test_count);

@@ -54,7 +54,6 @@ my @pnames = keys (%{ $preds } );
 my $args;
 
 
-my ($search_term,$eid,$val,$json,$js);
 
 
 my $r = Kynetx::Test::configure();
@@ -69,24 +68,9 @@ $my_req_info->{"$rid:ruleset_name"} = "a144x16";
 $my_req_info->{"$rid:name"} = "OAuth smoke dance";
 $my_req_info->{"$rid:author"} = "MEH";
 $my_req_info->{"$rid:description"} = "test rule for google data api";
-
-my $rule_env = Kynetx::Test::gen_rule_env();
-my $rule_name = "foo";
-
-
-my $keys = 
-  {'consumer_key' => 'kynetx.com',
-   'consumer_secret' => '6aXgrwSCnpLutnJy0W8Vg5Tq'
-  };
-
-# these are KRE generic consumer tokens
-($js, $rule_env) = 
- Kynetx::Keys::insert_key(
-  $my_req_info,
-  $rule_env,
-  'google',
-  $keys);
-
+$my_req_info->{"$rid:key:google"} = {'consumer_key' => 'kynetx.com',
+        'consumer_secret' => '6aXgrwSCnpLutnJy0W8Vg5Tq'
+};
 
 my $rightnow = Kynetx::Predicates::Time::get_time($my_req_info,'now',[{'timezone'=>'America/Denver'}]);
 my $dow = Kynetx::Predicates::Time::get_time($my_req_info,'strftime',[$rightnow,"%u"
@@ -286,6 +270,9 @@ my $rtime = $dt_week->ymd() . "T" . $dt_week->hour() . ":" . $dt_week->minute();
 my $rcomments = "$what with $who at $where";
 my $rwords = "$rcomments $qtime";
 $rwords =~ s/[\t\n\r]//g;
+my ($search_term,$eid,$val,$json);
+my $rule_env = Kynetx::Test::gen_rule_env();
+my $rule_name = "foo";
 
 isnt(Kynetx::Predicates::Google::authorized($my_req_info,$rule_env,$session,$rule_name,'null',['calendar']),
     "Random calls aren't authorized");

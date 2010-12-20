@@ -135,9 +135,7 @@ my $comment_re = qr%
                    ##    but do end with '*'
        /           ##  End of /* ... */ comment
      |
-       [\s]*//[^\n]*    ## slash style comments at start of line
-     |
-       [^\\]//[^\n]*    ## slash style comments that don't have \ in front (quote)
+        //[^\n]*    ## slash style comments
      |         ##     OR  various things which aren't comments:
 
        (
@@ -160,11 +158,6 @@ my $comment_re = qr%
           <<           ##  Start of << ... >> string
           .*?
           >>           ##  End of " ... " string
-
-        # |         ##     OR  clownhats
-        #   <\|           ##  Start of <| ... |> 
-	#   .*?
-        #   \|>           ##  End of clownhat
 
        |         ##     OR
         .           ##  Anything other char

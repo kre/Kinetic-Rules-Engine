@@ -79,7 +79,7 @@ sub run_function {
 
     my $resp = '';
     if($function eq 'escape') {
-      $resp = uri_escape_utf8($args->[0]);
+      $resp = uri_escape($args->[0]);
     } elsif($function eq 'unescape') {
       $resp = uri_unescape($args->[0]);
     } else {

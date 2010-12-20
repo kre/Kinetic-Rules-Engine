@@ -54,11 +54,17 @@ use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
 
+# configure KNS
+Kynetx::Configure::configure();
 
 my $logger = get_logger();
-my $r = Kynetx::Test::configure();
 
-my $session = Kynetx::Session::process_session($r);
+$logger->debug("Initializing memcached");
+Kynetx::Memcached->init();
+
+my $r = new Kynetx::FakeReq();
+
+my $session = process_session($r);
 
 my $ck= session_id($session); # store for later use
 

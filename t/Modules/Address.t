@@ -80,17 +80,14 @@ Elwood Blues
 Chicago, IL  60613
 _EOF_
 
-$result = Kynetx::Expressions::den_to_exp(
-            Kynetx::Modules::eval_module($my_req_info,
+$result = Kynetx::Modules::eval_module($my_req_info,
 				       $rule_env,
 				       $session,
 				       $rule_name,
 				       $source,
 				       'all',
 				       [$str]
-				      ));
-
-
+				      );
 
 my $exp = {
   'number' => '900',
@@ -108,15 +105,14 @@ is_deeply($result,
    'address:all()');
 $test_count++;
 
-$result = Kynetx::Expressions::den_to_exp(
-            Kynetx::Modules::eval_module($my_req_info,
+$result = Kynetx::Modules::eval_module($my_req_info,
                        $rule_env,
                        $session,
                        $rule_name,
                        $source,
                        'state',
                        [$str]
-                      ));
+                      );
 
 $exp = 'CA';
 is($result,
@@ -124,15 +120,14 @@ is($result,
    'address:state()');
 $test_count++;
 
-$result = Kynetx::Expressions::den_to_exp(
-            Kynetx::Modules::eval_module($my_req_info,
+$result = Kynetx::Modules::eval_module($my_req_info,
                        $rule_env,
                        $session,
                        $rule_name,
                        $source,
                        'suffix',
                        [$str]
-                      ));
+                      );
 
 $exp = '';
 is($result,
@@ -142,16 +137,15 @@ $test_count++;
 
 diag "Okay to ignore address parse error";
 
-$result = Kynetx::Expressions::den_to_exp(
-            Kynetx::Modules::eval_module($my_req_info,
+$result = Kynetx::Modules::eval_module($my_req_info,
                        $rule_env,
                        $session,
                        $rule_name,
                        $source,
                        'all',
                        [$bstr]
-                      ));
-$exp = '';
+                      );
+$exp = undef;
 is($result,
    $exp,
    'Bad Address Format');

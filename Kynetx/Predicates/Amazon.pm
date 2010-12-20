@@ -125,7 +125,7 @@ sub eval_amazon {
     my $locale = get_locale($a_args);
     $logger->debug( "amazon function -> ", $function );
     $logger->trace( "search: req:", sub { Dumper($req_info) } );
-    my $secret = get_amazon_tokens($req_info,$rule_env);
+    my $secret = get_amazon_tokens($req_info);
     $a_request->{'Service'} = 'AWSECommerceService';
     $a_request->{'Version'} = '2010-09-01';
 
@@ -154,18 +154,17 @@ sub eval_amazon {
 
 
 sub get_amazon_tokens {
-    my ($req_info, $rule_env) = @_;
+    my ($req_info) = @_;
     my $amazon_tokens;
     my $logger = get_logger();
     my $rid    = $req_info->{'rid'};
-    unless ( $amazon_tokens = Kynetx::Keys::get_key($req_info, $rule_env, 'amazon')  ) {
+    $logger->trace("amazon tokens from req: ", sub {Dumper($req_info->{ $rid . ':key:amazon' })});
+    unless ( $amazon_tokens = $req_info->{ $rid . ':key:amazon' } ) {
         my $ruleset =
           Kynetx::Repository::get_rules_from_repository( $rid, $req_info );
 
-#        $logger->debug("Got ruleset: ", Dumper $ruleset);
+        $logger->debug("Got ruleset: ", Dumper $ruleset);
         $amazon_tokens = $ruleset->{'meta'}->{'keys'}->{'amazon'};
-	Kynetx::Keys::insert_key($req_info, $rule_env, 'amazon', $amazon_tokens);
-
     }
     return $amazon_tokens;
 

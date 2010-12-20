@@ -107,9 +107,7 @@ sub pp_meta_block {
 
     $o .= pp_use($mb->{'use'}, $indent+$g_indent) if ($mb->{'use'}) ;
 
-    $o .= pp_configure($mb->{'configure'}, $indent+$g_indent) if ($mb->{'configure'}) ;
     $o .= pp_provide($mb->{'provide'}, $indent+$g_indent) if ($mb->{'provide'}) ;
-
 
     $o .= $beg . "\n$beg}\n";
 
@@ -233,22 +231,8 @@ sub pp_provide {
     
   my $o = $beg;
 
-  $o .= 'provide ' . join(', ', @{ $node->{'names'} });
+  $o .= 'provide [' . join(', ', @{ $node->{'names'} }) .']';
 
-  return $o;
-  }
-
-sub pp_configure {
-  my ($node, $indent) = @_;
-
-  my $beg = " "x$indent;
-    
-  my $o = $beg;
-
-  $o .= 'configure using ';
-  $o .= join " and\n", 
-      map {pp_modifier($_, $indent+$g_indent+$g_indent)} 
-	@{ $node->{'configuration'} };
   return $o;
   }
 
@@ -268,7 +252,6 @@ sub pp_use {
       if ($u->{'type'} eq 'module') {
 	$o .= $beg ."use " . $u->{'type'} . " " . $u->{'name'};
 	$o .= " alias " . $u->{'alias'} if $u->{'alias'};
-	$o .= pp_modifier_clause($u, $indent);
 	$o .= "\n";
       } elsif ($u->{'type'} eq 'resource') {
 	$o .= $beg ."use " . $u->{'resource_type'} . " " . $u->{'type'} . " " ;
@@ -284,7 +267,7 @@ sub pp_use {
     return $o;
 }
 
- 
+
 
 sub pp_dispatch_block {
     my ($db, $indent) = @_;
@@ -329,10 +312,7 @@ sub pp_dataset {
 
     my $var = $d->{'name'};
 
-    my $o .= $beg . 'dataset ';
-
-    $o .= ":" . $d->{'datatype'} unless $d->{'datatype'} eq 'JSON';
-    $o .= $var . ' <- "'. $d->{'source'} . '"' ;
+    my $o .= $beg . 'dataset ' . $var . ' <- "'. $d->{'source'} . '"' ;
     $o .= pp_cachable($d) if($d->{'cachable'}) ;
     $o .= "\n";
 
@@ -348,9 +328,7 @@ sub pp_datasource {
 
     my $var = $d->{'name'};
 
-    my $o .= $beg . 'datasource ' . $var;
-    $o .= ":" . $d->{'datatype'} unless $d->{'datatype'} eq 'JSON';
-    $o .= ' <- "'. $d->{'source'} . '"' ;
+    my $o .= $beg . 'datasource ' . $var . ' <- "'. $d->{'source'} . '"' ;
     $o .= pp_cachable($d) if($d->{'cachable'}) ;
     $o .= "\n";
 
@@ -1095,7 +1073,7 @@ sub pp_expr {
 	/seen_timeframe/ && do {
 	    return join(' ', 
 			('seen',
-			 pp_expr($expr->{'regexp'}),
+			 pp_string($expr->{'regexp'}),
 			 'in',
 			 pp_var_domain($expr->{'domain'}, 
 				       $expr->{'var'}),
@@ -1105,9 +1083,9 @@ sub pp_expr {
 	/seen_compare/ && do {
 	    return join(' ', 
 			('seen',
-			 pp_expr($expr->{'regexp_1'}),
+			 pp_string($expr->{'regexp_1'}),
 			 $expr->{'op'},
-			 pp_expr($expr->{'regexp_2'}), 
+			 pp_string($expr->{'regexp_2'}), 
 			 'in',
 			 pp_var_domain($expr->{'domain'}, $expr->{'var'})
 			));

@@ -67,19 +67,17 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 # $namespace is the name the Parser assigns to keys in the keys from the meta block
 #
 
-my ($namespace,$req_info,$session,$rid, $rule_env);
+my ($namespace,$req_info,$session,$rid);
 
 sub new {
   my $class  = shift;
-  my ($ns, $ri, $re, $sess, $urls) = @_;
+  my ($ns, $ri, $sess, $urls) = @_;
 
   my $logger = get_logger();
 
   $namespace = $ns;
   $req_info = $ri;
   $session = $sess;
-  $rule_env = $re;
-  
 
   $rid = $req_info->{'rid'};
 
@@ -95,7 +93,7 @@ sub new {
     $logger->debug("Using access_token = " . $tokens->{'access_token'} .
 		   " &  access_secret = " . $tokens->{'access_token_secret'} );
 
-    my $consumer_tokens = get_consumer_tokens($req_info, $rule_env, $session, $namespace);
+    my $consumer_tokens = get_consumer_tokens();
 
     $tokens->{'consumer_secret'} =     $consumer_tokens->{'consumer_secret'};
     $tokens->{'consumer_key'} =     $consumer_tokens->{'consumer_key'};
@@ -103,7 +101,7 @@ sub new {
 
 
   } else {
-      $tokens = get_consumer_tokens($req_info, $rule_env, $session, $namespace);
+      $tokens = get_consumer_tokens();
       $logger->debug("Consumer tokens: ", sub{ Dumper $tokens});
   }
 
@@ -128,15 +126,12 @@ sub update_restricted_resource {
 }
 
 sub get_consumer_tokens {
-  my ( $req_info, $rule_env, $session, $namespace ) = @_;
   my $consumer_tokens;
   my $logger = get_logger();
-  unless ($consumer_tokens = Kynetx::Keys::get_key($req_info, $rule_env, $namespace) ) {
+  unless ($consumer_tokens = $req_info->{$rid.':key:'.$namespace}) {
     my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
 #    $logger->debug("Got ruleset: ", Dumper $ruleset);
     $consumer_tokens = $ruleset->{'meta'}->{'keys'}->{$namespace};
-    Kynetx::Keys::insert_key($req_info, $rule_env, $namespace, $consumer_tokens);
-
   }
 #  $logger->debug(Dumper $consumer_tokens);
   return $consumer_tokens;

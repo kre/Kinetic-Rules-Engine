@@ -50,7 +50,6 @@ use Kynetx::Memcached qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Environments qw(:all);
 use Kynetx::Util qw(:all);
-use Kynetx::Keys;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -120,7 +119,7 @@ sub authorized {
 
 # $logger->debug("Consumer tokens: ", Dumper $consumer_tokens);
 
- my $access_tokens = get_access_tokens($req_info, $rule_env, $rid, $session);
+ my $access_tokens = get_access_tokens($req_info, $rid, $session);
 
 
  if (defined $access_tokens &&
@@ -132,7 +131,7 @@ sub authorized {
 #		  " &  access_secret = " . $access_tokens->{'access_token_secret'} );
 
 
-   my $nt = twitter($req_info, $rule_env, $session);
+   my $nt = twitter($req_info, $session);
 
    # attempt to get the user's last tweet
    my $status = eval { $nt->verify_credentials() };
@@ -158,7 +157,7 @@ sub user_id {
   my $logger = get_logger();
 
   my $rid = $req_info->{'rid'};
-  my $access_tokens =  get_access_tokens($req_info, $rule_env, $rid, $session);
+  my $access_tokens =  get_access_tokens($req_info, $rid, $session);
 
   return $access_tokens->{'user_id'};
 
@@ -177,7 +176,7 @@ sub authorize {
  my $description = $req_info->{"$rid:description"};
 
 
- my $nt = twitter($req_info, $rule_env, $session);
+ my $nt = twitter($req_info,$session);
 
  my $base_cb_url = 'http://' .
                    Kynetx::Configure::get_config('OAUTH_CALLBACK_HOST').
@@ -229,6 +228,13 @@ sub process_oauth_callback {
   # we have to contruct a whole request env and session
   my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
   my $session = process_session($r);
+#  my $session_lock = "lock-" . Kynetx::Session::session_id($session);
+#  if ($req_info->{'_lock'}->lock($session_lock)) {
+#    $logger->debug("Session lock acquired for $session_lock");
+#  } else {
+#    $logger->warn("Session lock request timed out for ",sub {Dumper($rid)});
+#  }
+
   my $req = Apache2::Request->new($r);
   my $request_token = $req->param('oauth_token');
   my $verifier      = $req->param('oauth_verifier');
@@ -462,7 +468,7 @@ sub update_action {
   my $logger = get_logger();
   $logger->debug("Twitter update action ");
 
-  my $nt = twitter($req_info, $rule_env, $session);
+  my $nt = twitter($req_info, $session);
 
   # construct the command and then get it
   my $tweets = eval {
@@ -497,7 +503,7 @@ sub eval_twitter {
     return $f->($req_info,$rule_env,$session,$rule_name,$function,$args);
   } else {
 
-    my $nt = twitter($req_info, $rule_env, $session);
+    my $nt = twitter($req_info, $session);
 
     my $name = $func_name->{$function}->{'name'};
 
@@ -531,17 +537,17 @@ sub eval_twitter {
 }
 
 sub twitter {
-  my($req_info, $rule_env, $session) = @_;
+  my($req_info, $session) = @_;
 
   my $logger = get_logger();
 
   my $rid = $req_info->{'rid'};
 
-  my $consumer_tokens=get_consumer_tokens($req_info, $rule_env);
+  my $consumer_tokens=get_consumer_tokens($req_info);
 #  $logger->debug("Consumer tokens: ", Dumper $consumer_tokens);
   my $nt = Net::Twitter::Lite->new(traits => [qw/API::REST OAuth/], %{ $consumer_tokens}) ;
 
-  my $access_tokens =  get_access_tokens($req_info, $rule_env, $rid, $session);
+  my $access_tokens =  get_access_tokens($req_info, $rid, $session);
   if (defined $access_tokens &&
       defined $access_tokens->{'access_token'} &&
       defined $access_tokens->{'access_token_secret'}) {
@@ -559,19 +565,15 @@ sub twitter {
 }
 
 sub get_consumer_tokens {
-  my($req_info, $rule_env) = @_;
+  my($req_info) = @_;
   my $consumer_tokens;
   my $logger = get_logger();
   my $rid = $req_info->{'rid'};
-  unless ($consumer_tokens = Kynetx::Keys::get_key($req_info, $rule_env, 'twitter')) {
+  unless ($consumer_tokens = $req_info->{$rid.':key:twitter'}) {
     my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
+#    $logger->debug("Got ruleset: ", Dumper $ruleset);
     $consumer_tokens = $ruleset->{'meta'}->{'keys'}->{'twitter'};
-
-    Kynetx::Keys::insert_key($req_info, $rule_env, 'twitter', $consumer_tokens)
   }
-
-#  $logger->debug("Consumer tokens: ", Dumper $consumer_tokens);
-
   return $consumer_tokens;
 }
 
@@ -589,9 +591,9 @@ sub store_access_tokens {
 }
 
 sub get_access_tokens {
-  my ($req_info, $rule_env, $rid, $session)  = @_;
+  my ($req_info, $rid, $session)  = @_;
 
-  my $consumer_tokens=get_consumer_tokens($req_info, $rule_env);
+  my $consumer_tokens=get_consumer_tokens($req_info);
 
   my $access_tokens;
   if ($consumer_tokens->{'oauth_token'}) {

@@ -98,11 +98,10 @@ sub do_http {
 
   my $logger = get_logger();
 
-
   my $response = mk_http_request($method,
 				 $config->{'credentials'},
 				 $args->[0],
-				 $config->{'params'} || $config->{'body'},
+				 $config->{'params'},
 				 $config->{'headers'},
 				);
 
@@ -116,13 +115,6 @@ sub do_http {
 		     'content_length' => $response->header('Content-Length') || 0,
 		    }
 	     };
-
-  if (defined $config->{'response_headers'}) {
-    foreach my $h (@{ $config->{'response_headers'} } ) {
-      $resp->{$v}->{lc($h)} = $response->header(uc($h));
-    }
-  }
-
 
   $logger->debug("KRL response ", sub { Dumper $resp });
 
@@ -178,20 +170,12 @@ sub mk_http_request {
 
 #    $response = $ua->post($uri);
 
-    my $content;
-    if (defined $headers->{'content-type'}) {
-      $content = $params;
-      $req->header('content-type' => $headers->{'content-type'});
-    } else {
-      $content = join('&', map("$_=".uri_escape_utf8($params->{$_}), keys %{ $params }));
-      $logger->debug("Encoded content: $content");
-      $req->header('content-type' => "application/x-www-form-urlencoded");
-       
-    }
-
+    my $content = join('&', map("$_=".uri_escape($params->{$_}), keys %{ $params }));
+    $logger->debug("Encoded content: $content");
 
     $req->content($content);
     $req->header('content-length' => length($content));
+    $req->header('content-type' => "application/x-www-form-urlencoded");
 
   } elsif (uc($method) eq 'GET') {
     my $full_uri = Kynetx::Util::mk_url($uri,  $params);
@@ -242,20 +226,13 @@ sub run_function {
 
     my $resp = '';
     if($function eq 'get') {
-      my $response = mk_http_request('GET', undef, $args->[0], $args->[1], $args->[2]);
-      $resp = {'content' => $response->decoded_content() || '',
-	       'status_code' => $response->code() || '',
-	       'status_line' => $response->status_line() || '',
-	       'content_type' => $response->header('Content-Type') || '',
-	       'content_length' => $response->header('Content-Length') || '',
+      my $response = mk_http_request('GET', undef, $args->[0], $args->[1]);
+      $resp = {'content' => $response->decoded_content(),
+	       'status_code' => $response->code(),
+	       'status_line' => $response->status_line(),
+	       'content_type' => $response->header('Content-Type'),
+	       'content_length' => $response->header('Content-Length'),
 	      };
-
-      if (defined $args->[3]) {
-	foreach my $h (@{ $args->[3] } ) {
-	  $resp->{lc($h)} = $response->header(uc($h));
-	}
-      }
-
     } else {
       $logger->warn("Unknown function '$function' called in HTTP library");
     }

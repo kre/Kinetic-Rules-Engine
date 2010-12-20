@@ -137,14 +137,20 @@ sub process_event {
       $logger->debug("In development mode using IP address ", $r->connection->remote_ip());
     }
 
+    # get a session
+    my $session = process_session($r);
+
     my $req_info =
       Kynetx::Request::build_request_env( $r, $domain, $rids, $eventtype );
+#    my $session_lock = "lock-" . session_id($session);
+#    if ( $req_info->{'_lock'}->lock($session_lock) ) {
+#        $logger->debug("Session lock acquired for $session_lock");
+#    } else {
+#        $logger->warn( "Session lock request timed out for ",
+#                       sub { Dumper($rids) } );
+#    }
+
     Kynetx::Request::log_request_env( $logger, $req_info );
-
-    # get a session, if _sid param is defined it will override cookie
-    my $session = process_session($r, $req_info->{'kntx_token'});
-
-
 
     # not clear we need the request env now
     #    my $req_info = Kynetx::Request::build_request_env($r, $domain, $rids);
@@ -157,24 +163,12 @@ sub process_event {
     my $schedule = Kynetx::Scheduler->new();
 
     foreach my $rid ( split( /;/, $rids ) ) {
-    	eval {
-    		process_event_for_rid( $ev, $req_info, $session, $schedule, $rid );
-    	};
-    	if ($@) {
-    		  Kynetx::Util::handle_error("Process event failed for rid ($rid):", $@);
-    	}
-        
+        process_event_for_rid( $ev, $req_info, $session, $schedule, $rid );
     }
 
     #    $logger->debug("Schedule: ", sub { Dumper $schedule });
-    
-    my $js = '';
-	$js .= eval {
-		Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid );
-	};
-    if ($@) {
-   		Kynetx::Util::handle_error("Process event schedule failed: ", $@);
-    }
+
+    my $js = Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid );
 
     Kynetx::Response::respond( $r, $req_info, $session, $js, "Event" );
 

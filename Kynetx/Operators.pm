@@ -81,7 +81,7 @@ sub eval_pick {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
 
-#    $logger->debug("expr: ", sub { Dumper($expr)});
+    $logger->trace("expr: ", sub { Dumper($expr)});
     $logger->trace("[pick] rule_env: ", sub { Dumper($rule_env) });
 
     my $int = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
@@ -89,14 +89,12 @@ sub eval_pick {
 
     my $obj = Kynetx::Expressions::den_to_exp(clone($int));
 
-#   $logger->debug("[pick] obj: ", sub { Dumper($obj) });
+   $logger->trace("[pick] obj: ", sub { Dumper($obj) });
 
     return $obj unless defined $obj;
 
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-
-#   $logger->debug("[pick] rands: ", sub { Dumper($rands) });
 
     my $pattern = '';
     if($rands->[0]->{'type'} eq 'str') {
@@ -750,8 +748,7 @@ sub eval_as {
     } elsif ($rands->[0]->{'val'} eq 'str' || $rands->[0]->{'val'} eq 'json'){
         my $tmp = Kynetx::Expressions::den_to_exp($obj);
         $logger->trace("EXP: ", sub {Dumper($tmp)});
-        #my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
-        my $json = JSON::XS::->new->convert_blessed(1)->encode($tmp);
+        my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
         $logger->trace("JSON: ", $json);
         $obj->{'type'} = "str";
         $obj->{'val'} = $json;
@@ -785,8 +782,7 @@ sub eval_encode {
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
     my $tmp = Kynetx::Expressions::den_to_exp($obj);
     $logger->trace("EXP: ", sub {Dumper($tmp)});
-    #my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
-    my $json = JSON::XS::->new->convert_blessed(1)->encode($tmp);
+    my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
     $logger->trace("JSON: ", $json);
     $obj->{'type'} = "str";
     $obj->{'val'} = $json;

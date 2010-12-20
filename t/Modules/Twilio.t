@@ -50,8 +50,11 @@ my $rid = 'cs_test';
 
 my $my_req_info = Kynetx::Test::gen_req_info($rid);
 
-my $rule_env = Kynetx::Test::gen_rule_env();
-
+# these are KRE generic consumer tokens
+$my_req_info->{$rid.':key:twilio'} =
+  {'account_sid' => 'AC906568eb40ef29e45c53920fb9ae60e6',
+   'auth_token' => 'c4b151c3ee6b306530f1fb2e287343f2'
+  };
 
 my $twilio_number = '4155992671';
 my $pin = "2519-4073";
@@ -63,24 +66,11 @@ $my_req_info->{"$rid:description"} = "This is a test rule";
 
 my $rule_name = 'foo';
 
+my $rule_env = Kynetx::Test::gen_rule_env();
+
 my $session = Kynetx::Test::gen_session($r, $rid);
 
 my $logger = get_logger();
-
-my($js);
-
-# these are KRE generic consumer tokens
-my $keys = {'account_sid' => 'AC906568eb40ef29e45c53920fb9ae60e6',
-	    'auth_token' => 'c4b151c3ee6b306530f1fb2e287343f2'
-	   };
-
-($js, $rule_env) = 
- Kynetx::Keys::insert_key(
-  $my_req_info,
-  $rule_env,
-  'twilio',
-  $keys);
-
 
 
 my $test_count = 1;
@@ -92,6 +82,7 @@ ok(1);
 
 my $krl_src;
 my $krl;
+my $js;
 my $config;
 my $result;
 

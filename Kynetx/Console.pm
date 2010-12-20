@@ -66,24 +66,6 @@ show_context test_harness
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
-sub error_page {
-	my ($r, $method, $rid,$oauth) = @_;
-	my $logger = get_logger();
-	my $session = process_session($r);
-
-    my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
-    my $template = Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR') . "/error.tmpl";
-    my $context_template = HTML::Template->new(filename => $template,
-                           die_on_bad_params => 0);
-
-    $context_template->param("RULESET_ID" => $rid);
-    $context_template->param("SESSION_ID" => Kynetx::Session::session_id($session) );
-    $context_template->param("COOKIE" => $r->headers_in->{'Cookie'});
-
-    my $req = Apache2::Request->new($r);
-}
-
-
 sub test_harness {
     my ($r, $method, $rid,$eid) = @_;
     

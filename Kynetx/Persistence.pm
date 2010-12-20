@@ -257,6 +257,7 @@ sub consume_persistent_element {
 sub persistent_element_index {
     my ($domain,$rid,$session,$varname,$regexp)= @_;
     my $logger = get_logger();
+    $logger->trace("Index $varname for ",sub {Dumper($regexp)});
     my $trail = get_persistent_var($domain,$rid,$session,$varname);
     my $index = undef;
     for my $i (0..@{$trail}-1) {
@@ -265,8 +266,6 @@ sub persistent_element_index {
             last;
         }
     }
-    $logger->trace("Index $varname for ",sub {Dumper($regexp)}, "is $index");
-    
     if (defined $index) {
         return [$index,$trail->[$index]->[1]];
     } else {
@@ -282,10 +281,10 @@ sub persistent_element_history {
     my $trail = get_persistent_var($domain,$rid,$session,$varname);
     # Mongo does not support queue operations
     # convert $index to Stack notation
+    my $size = @$trail;
+    $logger->trace("Looks like ($size)",sub {Dumper($trail)});
     if (ref $trail eq 'ARRAY') {
-    	my $size = @$trail;
         $result =  $trail->[$size - $index -1]->[0];
-    	$logger->trace("Looks like ($size)",sub {Dumper($trail)});
     }
     return $result;
 }
@@ -316,7 +315,7 @@ sub persistent_element_within {
     my $logger = get_logger();
     $logger->trace("Check $varname for ",sub {Dumper($regexp)}, " within ", sub {Dumper($timevalue)}, ",",sub {Dumper($timeframe)});
     my $element_index = persistent_element_index($domain,$rid,$session,$varname,$regexp);
-    return undef unless (defined $element_index);
+    return 0 unless ($element_index >= 0);
     my $desired = DateTime->from_epoch(epoch => $element_index->[1]);
     $desired->add($timeframe => $timevalue);
     return Kynetx::Util::after_now($desired);

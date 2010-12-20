@@ -62,6 +62,12 @@ _META_
 
 my $my_req_info = Kynetx::Test::gen_req_info($rid);
 
+# these are KRE generic consumer tokens
+$my_req_info->{$rid.':key:amazon'} =
+  {secret_key => $dev_secret,
+   token => $dev_token
+  };
+
 $my_req_info->{"$rid:ruleset_name"} = $app_name;
 $my_req_info->{"$rid:name"} = $app_name;
 $my_req_info->{"$rid:author"} = $app_author;
@@ -74,22 +80,6 @@ my $args;
 
 my $rule_env = Kynetx::Test::gen_rule_env();
 my $new_rule_env;
-
-my $js;
-my $keys = 
-  {secret_key => $dev_secret,
-   token => $dev_token
-  };
-# these are KRE generic consumer tokens
-($js, $rule_env) = 
- Kynetx::Keys::insert_key(
-  $my_req_info,
-  $rule_env,
-  'amazon',
-  $keys);
-
-
-
 
 my $session = Kynetx::Test::gen_session($r, $rid);
 
@@ -397,7 +387,7 @@ push(@lookup_args,$args);
 # item lookups
 foreach my $case (@lookup_args) {
     $logger->trace("Item lookup args: ",sub {Dumper($case)});
-    my $ds = Kynetx::Modules::eval_module($my_req_info,$rule_env,$session,
+    my $ds = Kynetx::Modules::eval_module($my_req_info,$new_rule_env,$session,
         'amz_test','amazon','item_lookup',$case);
     my $good = Kynetx::Predicates::Amazon::good_response($ds);
     if (! $good) {

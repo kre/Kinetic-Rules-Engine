@@ -61,7 +61,7 @@ foreach my $f (@krl_files) {
     # compare to text with comments removed since pp can't reinsert them.
     # Use the internal perl string structure for the compare
     my $krl = decode("UTF-8",$krl_text);
-    my $result = is_string_nows(decode("UTF-8",pp($tree)), remove_comments($krl), "$f: $fl");
+    my $result = is_string_nows(pp($tree), remove_comments($krl), "$f: $fl");
     die unless ($result);
 }
 

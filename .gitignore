@@ -7,6 +7,3 @@ etc/amazon_credentials.pm
 /current_engine.diff
 _*
 parser/output/*
-.includepath
-.metadata
-/.settings

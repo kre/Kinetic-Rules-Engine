@@ -42,7 +42,7 @@ use Benchmark ':hireswallclock';
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($TRACE);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Configure;
@@ -155,16 +155,6 @@ diag "Stack pop: ". $stack_query->[0];
 $got = $result;
 $expected = $value1->{"value"};
 compare($got,$expected,"Pop value from array returns " . $value1->{"value"});
-
-
-$start = new Benchmark;
-$result = Kynetx::MongoDB::pop_value($cruft,{"key" => "foop"});
-$end = new Benchmark;
-$stack_query = timediff($end,$start);
-diag "Stack pop: ". $stack_query->[0];
-$got = $result;
-$expected = undef;
-compare($got,$expected,"Pop value from null array returns " . $expected);
 
 $result = Kynetx::MongoDB::pop_value($cruft,$key,1);
 $got = $result;
@@ -290,8 +280,7 @@ $got = $result->{"value"};
 
 compare($got,$what,"Get the saved value",0);
 
-diag "Stop master server now";
-sleep 5;
+sleep 1;
 
 $result = touch_value($cruft,$key);
 my $touch2 = $result->{"created"};
@@ -310,7 +299,7 @@ delete_value($cruft,$key);
 $key->{"key"} = $where;
 touch_value($cruft,$key);
 $result = get_value($cruft,$key);
-compare($result->{"value"},0,"Initalize a $where to 0 (touch)",1);
+compare($result->{"value"},0,"Initalize a $where to 0 (touch)",0);
 
 delete_value($cruft,$key);
 

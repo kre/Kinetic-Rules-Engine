@@ -121,7 +121,7 @@ sub authorized {
 
 # $logger->debug("Session in authorized: ", sub { Dumper $session});
 
- my $nt = Kynetx::OAuth->new(NAMESPACE, $req_info, $rule_env, $session, $urls);
+ my $nt = Kynetx::OAuth->new(NAMESPACE, $req_info, $session, $urls);
 
  if ($nt->authorized()) {
 
@@ -157,7 +157,7 @@ sub authorize {
 
  my $logger= get_logger();
 
- my $nt = Kynetx::OAuth->new(NAMESPACE, $req_info, $rule_env, $session, $urls);
+ my $nt = Kynetx::OAuth->new(NAMESPACE, $req_info, $session, $urls);
 
  my $rid = $req_info->{'rid'};
 

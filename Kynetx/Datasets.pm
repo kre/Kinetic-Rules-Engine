@@ -71,7 +71,7 @@ my %fields = (
                sourcedata => undef,
                datatype   => undef,
                cachable   => 10 * 60,                  # Default minimum
-               json       => JSON::XS->new,
+               json       => JSON::XS->new->utf8(1),
 );
 
 sub new {
@@ -318,8 +318,7 @@ sub make_javascript {
     if ( !defined $self->json ) {
             $js .= Kynetx::JavaScript::mk_js_str( $self->sourcedata );
     } else {
-            #$js .= JSON::XS::->new->utf8(1)->pretty(1)->encode( $self->json );
-            $js .= JSON::XS::->new->pretty(1)->encode( $self->json );
+            $js .= JSON::XS::->new->utf8(1)->pretty(1)->encode( $self->json );
     }
     $js .= ";\n";
     $logger->trace("UTF-8 flag: ", utf8::is_utf8($js));
@@ -359,8 +358,7 @@ sub _unmarshal_json {
     # catch any errors thrown by JSON::XS
     eval {
         $json =
-          #JSON::XS::->new->utf8(1)->pretty(1)->decode( $self->sourcedata );
-          JSON::XS::->new->pretty(1)->decode( $self->sourcedata );
+          JSON::XS::->new->utf8(1)->pretty(1)->decode( $self->sourcedata );
     };
     if ($@) {
         $self->json(undef);

@@ -7,7 +7,7 @@ ruleset 10 {
 Ruleset for testing something or other.
 >>
 
-      provide x,y,flipper
+      provide [x,y,flipper]
 
     }
 
@@ -17,7 +17,7 @@ Ruleset for testing something or other.
       flipper = function() {5};
     }
 
-    rule test0 is active { 
+    rule test0 is active {
         select using "/test/" setting()
 
 	alert("hello");

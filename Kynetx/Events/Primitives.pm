@@ -80,8 +80,7 @@ sub TO_JSON {
         $hash->{$key} = $self->{$key};
     }
     my $s = {
-      #$S_TAG => JSON::XS::->new->allow_blessed(1)->utf8(1)->encode($hash)
-      $S_TAG => JSON::XS::->new->allow_blessed(1)->encode($hash)
+      $S_TAG => JSON::XS::->new->allow_blessed(1)->utf8(1)->encode($hash)
     };
     return $s;
 }
@@ -106,8 +105,7 @@ sub unserialize {
     my $hash = JSON::XS::->new
             ->filter_json_single_key_object( $S_TAG => sub {
                 my $s_primitive = $_[0];
-                #my $p_struct = JSON::XS::->new->utf8(1)->decode($s_primitive);
-                my $p_struct = JSON::XS::->new->decode($s_primitive);
+                my $p_struct = JSON::XS::->new->utf8(1)->decode($s_primitive);
                 bless($p_struct,$class);
             })->decode($json);
     if (! defined $hash || ref $hash eq "") {

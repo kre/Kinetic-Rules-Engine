@@ -76,19 +76,14 @@ sub handler {
 
     my ($api,$method,$rids) = $r->uri =~ m#/(init|js)/([^/]+)/([^/]*(\.js)?)/?#;
 
+    # get a session
+    my $session = Kynetx::Session::process_session($r);
+
     Log::Log4perl::MDC->put('site', $method);
     Log::Log4perl::MDC->put('rule', '[initialization]');  # no rule for now...
 
     # for later logging
     $r->subprocess_env(METHOD => $method);
-
-    my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $method);
-    
-    Kynetx::Request::log_request_env($logger, $req_info);
-
-    # get a session, if _sid param is defined it will override cookie
-    my $session = Kynetx::Session::process_session($r, $req_info->{'kntx_token'});
-
 
     $logger->debug("RIDs -> $rids");
 
@@ -104,6 +99,16 @@ sub handler {
 
       # FIXME: I don't think this is used anymore
 	$logger->info("Generating client initialization file ", $rids);
+
+	my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $method);
+#    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
+#    if ($req_info->{'_lock'}->lock($session_lock)) {
+#        $logger->debug("Session lock acquired for $session_lock");
+#    } else {
+#        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
+#    }
+
+	Kynetx::Request::log_request_env($logger, $req_info);
 
 	my($prefix, $middle, $root) = $r->hostname =~ m/^([^.]+)\.?(.*)\.([^.]+\.[^.]+)$/;
 
@@ -159,6 +164,15 @@ sub handler {
 	}
 
     } elsif($method eq 'dispatch') {
+	my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $method);
+#    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
+#    if ($req_info->{'_lock'}->lock($session_lock)) {
+#        $logger->debug("Session lock acquired for $session_lock");
+#    } else {
+#        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
+#    }
+
+	Kynetx::Request::log_request_env($logger, $req_info);
 
 	if ($api eq 'js') {
 	  $js = Kynetx::Dispatch::simple_dispatch($req_info, $rids);
@@ -171,6 +185,15 @@ sub handler {
 
 
     } elsif($method eq 'datasets') {
+	my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $method);
+#    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
+#    if ($req_info->{'_lock'}->lock($session_lock)) {
+#        $logger->debug("Session lock acquired for $session_lock");
+#    } else {
+#        $logger->warn("Session lock request timed out for ",sub {Dumper($rids)});
+#    }
+
+	Kynetx::Request::log_request_env($logger, $req_info);
 
 	$js = datasets($req_info, $rids);
 

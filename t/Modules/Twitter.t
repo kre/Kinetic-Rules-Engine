@@ -48,6 +48,12 @@ my $rid = 'cs_test';
 
 my $my_req_info = Kynetx::Test::gen_req_info($rid);
 
+# these are KRE generic consumer tokens
+$my_req_info->{$rid.':key:twitter'} = 
+  {'consumer_secret' => '3HNb7NhKuqRIm2BuxKPSg6JYvMtLahvkMt6Std5SO0',
+   'consumer_key' => 'jPlIPAk1gbigEtonC2yNA'
+  };
+
 $my_req_info->{"$rid:ruleset_name"} = "cs_test";
 $my_req_info->{"$rid:name"} = "cs_test";
 $my_req_info->{"$rid:author"} = "Phil Windley";
@@ -59,43 +65,15 @@ my $rule_env = Kynetx::Test::gen_rule_env();
 
 my $session = Kynetx::Test::gen_session($r, $rid);
 
-my $test_count = 0;
-
-
 my $logger = get_logger();
-
-
-
-my($js);
-
-my $keys = {'consumer_secret' => '3HNb7NhKuqRIm2BuxKPSg6JYvMtLahvkMt6Std5SO0',
-	    'consumer_key' => 'jPlIPAk1gbigEtonC2yNA'
-	   };
-
-# these are KRE generic consumer tokens
-($js, $rule_env) = 
- Kynetx::Keys::insert_key(
-  $my_req_info,
-  $rule_env,
-  'twitter',
-  $keys);
-
-
-
-my $stored_keys = 
- Kynetx::Keys::get_key(
-  $my_req_info,
-  $rule_env,
-  'twitter');
-
-is_deeply($stored_keys, $keys, "Keys got stored right");
-$test_count++;
 
 # check that predicates at least run without error
 my @dummy_arg = (0);
 foreach my $pn (@pnames) {
     ok(&{$preds->{$pn}}($my_req_info, $rule_env,\@dummy_arg) ? 1 : 1, "$pn runs");
 }
+
+my $test_count = 0;
 
 # before we insert access tokens into session keys
 isnt(Kynetx::Modules::Twitter::authorized($my_req_info, $rule_env, $session, $rule_name, ''.''), 
@@ -221,7 +199,7 @@ $test_count++;
 # is(int @{ $mentions }, 1, "Getting most recent mention");
 # $test_count++;
 
-my ($config, $krl_src, $krl, $result);
+my ($config, $krl_src, $krl, $js, $result);
 
 $config = mk_config_string(
   [
