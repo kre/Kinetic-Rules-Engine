@@ -104,7 +104,7 @@ $result = Kynetx::Persistence::Application::put($rid1,$skey,$key2);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
 diag "Save to array: " . $qtime->[0];
-testit($result,1,"Insert data for $rid1",0);
+testit($result->{'ok'},1,"Insert data for $rid1",0);
 
 $start = new Benchmark;
 $result = Kynetx::Persistence::Application::get($rid1,$skey);
@@ -169,7 +169,7 @@ $result = Kynetx::Persistence::Application::put($ridR,$key1,$key3);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
 diag "Save: " . $qtime->[0];
-testit($result,1,"Insert to new store $ridR",0);
+testit($result->{'ok'},1,"Insert to new store $ridR",0);
 
 $result = Kynetx::Persistence::Application::get($ridR,$key1);
 testit($result,$key3,"Retrieve data for $ridR/$key1",0);
