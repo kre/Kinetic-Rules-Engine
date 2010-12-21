@@ -391,8 +391,18 @@ sub eval_expr {
                                   $expr->{'domain'},$req_info->{'rid'},
 				  $session,
 				  $name,
-				  $r1,
-				  $r2
+				  Kynetx::Expressions::den_to_exp(
+  				    Kynetx::Expressions::eval_expr($r1,
+							       $rule_env,
+							       $rule_name,
+							       $req_info,
+							       $session)),
+				  Kynetx::Expressions::den_to_exp(
+  				    Kynetx::Expressions::eval_expr($r2,
+ 							       $rule_env,
+							       $rule_name,
+							       $req_info,
+							       $session))  				    
 				 ) ? 0 : 1; # ensure 0 returned for testing
       return mk_expr_node(infer_type($v),$v);
     # } elsif ($expr->{'type'} eq 'persistent') {
