@@ -71,7 +71,7 @@ my ($fl,$krl_text);
 ($fl, $krl_text) = getkrl("data/comment1.krl");
 my $krl = decode("UTF-8",$krl_text);
 #diag $krl;
-diag remove_comments($krl);
+#diag remove_comments($krl);
 
 like(remove_comments($krl), qr/exec/, "Escaped slashes don't count");
 
