@@ -120,7 +120,7 @@ sub process_rules {
 	Log::Log4perl::MDC->put('site', $rid);
 	my $schedule = mk_schedule($req_info, $rid);
 	$js .= eval {
-	  process_schedule($r, $schedule, $session, $eid);
+	  process_schedule($r, $schedule, $session, $eid,$req_info);
 	};
 	if ($@) {
 	  Kynetx::Util::handle_error("Ruleset $rid failed: ", $@);
@@ -131,16 +131,17 @@ sub process_rules {
     Kynetx::Response::respond($r, $req_info, $session, $js, "Ruleset");
 }
 
-
+# added $req_info to args because the $req_info from task is now a copy
+# so it doesn't have all_actions built up with all of the actions in the request
 sub process_schedule {
-  my ($r, $schedule, $session, $eid) = @_;
+  my ($r, $schedule, $session, $eid,$req_info) = @_;
 
   my $logger = get_logger();
 
   my $init_rule_env = Kynetx::Rules::mk_initial_env();
 
   my $ast = Kynetx::JavaScript::AST->new($eid);
-  my($req_info, $ruleset, $mjs, $gjs, $rule_env, $rid);
+  my($ruleset, $mjs, $gjs, $rule_env, $rid);
 
   $rid = '';
   my $current_rid = '';
@@ -161,8 +162,13 @@ sub process_schedule {
       $ast->add_resources($current_rid, $req_info->{'resources'});
 
       # set up new context
-
-      $req_info = $task->{'req_info'};
+      if ($req_info) {
+      	Kynetx::Request::merge_req_env($req_info, $task->{'req_info'});
+      } else {
+      	$req_info = $task->{'req_info'};
+      }
+	  
+      
       $req_info->{'rid'} = $rid;
       # we use this to modify the schedule on-the-fly
       $req_info->{'schedule'} = $schedule;
@@ -259,7 +265,7 @@ sub process_schedule {
       if (Kynetx::Authz::is_authorized($rid,$ruleset,$session)) {
 
 	$js = eval {eval_rule($r,
-			      $req_info,
+			      $new_req_info,
 			      extend_rule_env($this_rule_env, $rule_env),
 			      $session,
 			      $rule,
@@ -1055,12 +1061,12 @@ sub mk_schedule {
 
       my $rulename = $rule->{'name'};
         $logger->debug("Rule $rulename is selected");
-      $schedule->add($rid,$rule,$ruleset,$req_info);
+      my $task = $schedule->add($rid,$rule,$ruleset,$req_info);
 
       my $vars = Kynetx::Actions::get_precondition_vars($rule);
 
-      $schedule->annotate_task($rid,$rulename,'vars',$vars);
-      $schedule->annotate_task($rid,$rulename,'vals',$vals);
+      $schedule->annotate_task($rid,$rulename,$task,'vars',$vars);
+      $schedule->annotate_task($rid,$rulename,$task,'vals',$vals);
 
 
     }

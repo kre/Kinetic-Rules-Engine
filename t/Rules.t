@@ -1448,7 +1448,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $final_req_info
+    $final_req_info, 0
     );
 
 
@@ -1725,7 +1725,7 @@ _JS_
 add_testcase(
     $krl_src,
     $global_expr_1,
-    $final_req_info
+    $final_req_info, 0
     );
 
 
@@ -2524,11 +2524,11 @@ foreach my $case (@test_cases) {
 
     my $ev = Kynetx::Events::mk_event($req_info);
 
-#    diag("Processing events for $req_info->{'rid'} with event ", sub {Dumper $ev});
+    #diag("Processing events for $req_info->{'rid'} with event ", sub {Dumper $ev});
 
     my $schedule = Kynetx::Scheduler->new();
 
- #   diag("Processing events for $req_info->{'rid'} ($ruleset_rid)");
+    #diag("Processing events for $req_info->{'rid'} ($ruleset_rid)");
 
     Kynetx::Events::process_event_for_rid($ev,
 					  $req_info,
@@ -2540,7 +2540,8 @@ foreach my $case (@test_cases) {
     $js = Kynetx::Rules::process_schedule($r,
 					  $schedule,
 					  $session,
-					  time
+					  time,
+					  $req_info
 					 );
 
 
@@ -2590,8 +2591,14 @@ foreach my $case (@test_cases) {
   # check the request env
 
   if (defined $case->{'final_req_info'}) {
-    foreach my $k (keys %{ $final_req_info} ) {
-      is_deeply($req_info->{$k}, $case->{'final_req_info'}->{$k}, "Checking $k");
+    foreach my $k (keys %{ $case->{'final_req_info'}} ) {
+      my $result = is_deeply($req_info->{$k}, $case->{'final_req_info'}->{$k}, "Checking $k");
+      if (! $result) {
+      	diag "Key: ",$k;
+      	diag "Got: ", Dumper($req_info->{$k});
+      	diag "Expected: ", Dumper($case->{'final_req_info'}->{$k});
+      	die;
+      }
       $test_count++;
     }
   }

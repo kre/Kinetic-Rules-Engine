@@ -1,4 +1,5 @@
 package Kynetx::Scheduler;
+
 # file: Kynetx/Scheduler.pm
 # file: Kynetx/Predicates/Referers.pm
 #
@@ -35,108 +36,120 @@ use strict;
 use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
-
+use Time::HiRes qw(time);
+use Storable qw(dclone);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
-our $VERSION     = 1.00;
-our @ISA         = qw(Exporter);
+our $VERSION = 1.00;
+our @ISA     = qw(Exporter);
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [
-qw(
-) ]);
-our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
+our %EXPORT_TAGS = (
+	all => [
+		qw(
+		  )
+	]
+);
+our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
-
-
-
 sub new {
-  my $invocant = shift;
-  my $class = ref($invocant) || $invocant;
-  my $self = {'rids' => [],
-	      'current_rid' => 0,
-	      'current_rule' => 0,
-	     };
-  bless($self, $class); # consecrate
-  return $self;
+	my $invocant = shift;
+	my $class    = ref($invocant) || $invocant;
+	my $self     = {
+		'rids'         => [],
+		'current_rid'  => 0,
+		'current_rule' => 0,
+	};
+	bless( $self, $class );    # consecrate
+	return $self;
 }
 
-
 sub delete_rule {
-  my $self = shift;
-  my $rid = shift;
-  my $rulename = shift;
-  undef $self->{$rid}->{$rulename};
+	my $self     = shift;
+	my $rid      = shift;
+	my $rulename = shift;
+	undef $self->{$rid}->{$rulename};
 }
 
 sub delete_rid {
-  my $self = shift;
-  my $rid = shift;
-  undef $self->{$rid};
+	my $self = shift;
+	my $rid  = shift;
+	undef $self->{$rid};
 }
 
 sub annotate_task {
-  my $self = shift;
-  my $rid = shift;
-  my $rulename = shift;
-  my $var = shift;
-  my $val = shift;
-  $self->{$rid}->{$rulename}->{$var} = $val;
+	my $self     = shift;
+	my $rid      = shift;
+	my $rulename = shift;
+	my $task     = shift;
+	my $var      = shift;
+	my $val      = shift;
+	#$self->{$rid}->{$rulename}->{$var} = $val;
+	$task->{$var} = $val;
 }
 
 # return the next rule to execute
 sub next {
-    my $self = shift;
-    my $r;
+	my $self = shift;
+	my $r;
 
-    my $logger = get_logger();
+	my $logger = get_logger();
 
-    if(scalar(@{ $self->{'rids'}}) > $self->{'current_rid'}) {
-      my $rid = $self->{'rids'}->[$self->{'current_rid'}];
-
-      if (defined $self->{$rid} &&
-	  scalar(@{ $self->{$rid}->{'rules'} }) > $self->{'current_rule'}) {
-#	$logger->debug("In same ruleset; RID=$rid");
-#	$logger->debug("Rules left: ", sub { Dumper($self->{$rid}->{'rules'})});
-	my $rn = $self->{$rid}->{'rules'}->[$self->{'current_rule'}];
-#	$logger->debug("Rules name: ", $rn);
-	$r = $self->{$rid}->{$rn};
-#	$logger->debug("Rule: ", sub { Dumper($self)});
-	$self->{'current_rule'}++;
-# we used to do this to clean up, but it breaks multiple raises of the same event because
-#   the rule disappears after the first schedule iteration
-# I'm not sude it did anything but clean up.
-#	$self->delete_rule($rid,$rn);
-	$logger->debug("Schedule iterator returning $r->{'rule'}->{'name'} with current RID count $self->{'current_rid'} and current rule count $self->{'current_rule'}");
-
-
-
-      } else {
-	$logger->debug("Moving to next RID");
-
-	$self->{'current_rule'} = 0;
-	$self->{'current_rid'}++;
-	$self->delete_rid($rid);
-	$r = $self->next();
-      }
-
-    } else {
-      $logger->debug("Resetting schedule");
-      $r = undef;
-      $self->{'current_rule'} = 0;
-      $self->{'current_rid'} = 0;
-      $self->{'rids'} = [];
-    }
+	if ( scalar( @{ $self->{'rids'} } ) > $self->{'current_rid'} )
+	{
+		my $rid = $self->{'rids'}->[ $self->{'current_rid'} ];
+		if ( defined $self->{$rid}
+			&& scalar( @{ $self->{$rid}->{'rules'} } ) >
+			$self->{'current_rule'} )
+		{
+			my $rn = $self->{$rid}->{'rules'}->[ $self->{'current_rule'} ];
+			$logger->debug("Rules name: ", $rn);
+			$r = $self->{$rid}->{$rn};
+			if (defined $r && scalar(@$r)>0) {
+				my $task = shift(@$r);
+				$logger->debug("Tasks: ",scalar(@$r));
+				$logger->debug("Schedule iterator returning ",
+					$task->{'rule'}->{'name'},
+					" with current RID count ",
+					$self->{'current_rid'},
+					" and current rule count ",
+					$self->{'current_rule'}
+				);
+				$logger->debug("Found: (",$task->{'_ts'},") ",$task->{'req_info'}->{'num'});
+				return $task;
+			} else {
+				$self->{'current_rule'}++;
+				return $self->next();
+			}
+			
+			
 
 
-    return $r;
+		}
+		else {
+			#$logger->debug("Moving to next RID");
+			$self->{'current_rule'} = 0;
+			$self->{'current_rid'}++;
+			$self->delete_rid($rid);
+			$r = $self->next();
+		}
+
+	}
+	else {
+		$logger->debug("Resetting schedule");
+		$r                      = undef;
+		$self->{'current_rule'} = 0;
+		$self->{'current_rid'}  = 0;
+		$self->{'rids'}         = [];
+	}
+
+	return $r;
 }
-
 
 #
 # {ruleset =>
@@ -148,59 +161,63 @@ sub next {
 #  req_info =>
 # }
 
-
 sub add {
-  my $self = shift;
-  my $rid = shift;
-  my $rule = shift;
-  my $ruleset = shift;
-  my $req_info = shift;
+	my $self     = shift;
+	my $rid      = shift;
+	my $rule     = shift;
+	my $ruleset  = shift;
+	my $req_info = shift;
 
-  my $rulename = $rule->{'name'};
+	my $rulename = $rule->{'name'};
 
-  my $logger = get_logger();
+	my $logger = get_logger();
+	#$logger->debug("Adding: ",$req_info->{'num'});
+	my $task = mk_task( $rid, $ruleset, $rule, $req_info );
 
-  # if the RID is alread a key, just add to the rule list
-  if (! defined $self->{$rid}) {
-    push(@{$self->{'rids'}}, $rid);
-    $self->{$rid} = {
-		     'rules' => [$rulename],
-		     $rulename => mk_task($rid,$ruleset,$rule,$req_info)
-		    };
-  } else {
-    $self->{$rid}->{$rulename} =  mk_task($rid,$ruleset,$rule,$req_info);
-    push(@{$self->{$rid}->{'rules'}}, $rulename);
-  }
+	# if the RID is alread a key, just add to the rule list
+	if ( !defined $self->{$rid} ) {
+		push( @{ $self->{'rids'} }, $rid );
+		$self->{$rid} = {
+			'rules'   => [$rulename],
+			$rulename => [$task]
+		};
+	}
+	else {
+		push( @{ $self->{$rid}->{$rulename} }, $task );
+		push( @{ $self->{$rid}->{'rules'} },   $rulename );
+	}
+	return $task;
 
 }
 
 sub mk_task {
-  my $rid = shift;
-  my $ruleset = shift;
-  my $rule = shift;
-  my $req_info = shift;
-  return {'ruleset' => $ruleset,
-	  'rule' => $rule,
-	  'rid' => $rid,
-	  'req_info'=> $req_info,
-	 };
+	my $rid      = shift;
+	my $ruleset  = shift;
+	my $rule     = shift;
+	my $req_info = shift || {};
+	return {
+		'ruleset'  => $ruleset,
+		'rule'     => $rule,
+		'rid'      => $rid,
+		'req_info' => (dclone $req_info),
+		'_ts'      => time,
+	};
 }
 
 sub get_ruleset {
-  my $task = shift;
-  return $task->{'ruleset'};
+	my $task = shift;
+	return $task->{'ruleset'};
 }
 
 sub get_rule {
 
-  my $task = shift;
-  return $task->{'rule'};
+	my $task = shift;
+	return $task->{'rule'};
 }
 
 sub get_rid {
-  my $task = shift;
-  return $task->{'rid'};
+	my $task = shift;
+	return $task->{'rid'};
 }
-
 
 1;
