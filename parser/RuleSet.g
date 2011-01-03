@@ -2063,7 +2063,8 @@ OTHER_OPERATORS
 	:  'pick'|'length'|'as'|'head'|'tail'|'sort'
       	|'filter'|'map'|'uc'|'lc' |'split' | 'join' | 'query'
       	| 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
-      	| 'duplicates' | 'append' | 'put' | 'encode' | 'decode'
+      	| 'duplicates' | 'append' | 'put' 
+      	| 'encode' | 'decode' | 'delete'
       	;
 
  TRUE :'true';
