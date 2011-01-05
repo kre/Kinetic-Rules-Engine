@@ -45,7 +45,7 @@ function KOBJDomWatchWatcher(name, condition_callback, change_delay) {
     this.selector_data = {};
 }
 
-KOBJDomWatchWatcher.prototype.watch = function(selector, callback, app) {
+KOBJDomWatchWatcher.prototype.dwatch = function(selector, callback, app) {
     KOBJ.loggers.domwatch.trace("Adding to Watcher ", this.name, selector);
     if (this.selector_data[selector] == null) {
         this.selector_data[selector] = {

@@ -342,6 +342,16 @@ KOBJ.css = function(css) {
 };
 
 
+KOBJ.safe_substring = function(string,max)
+{
+    if(typeof(value) != "undefined")
+    {
+        return string;
+    }
+
+    return string.toString().substring(0,max)
+};
+
 KOBJ.parseURL = function(url) {
     var a = KOBJ.document.createElement('a');
     a.href = url;
