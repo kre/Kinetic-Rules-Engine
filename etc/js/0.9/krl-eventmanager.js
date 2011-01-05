@@ -154,7 +154,14 @@ KOBJEventManager.hashCode = function(value) {
 // Ths computes the hash value for the text of a selector
 KOBJEventManager.content_change_hashcode = function(selector)
 {
-    return KOBJEventManager.hashCode($KOBJ(selector).text());
+    if($KOBJ(selector).length > 0)
+    {
+        return KOBJEventManager.hashCode($KOBJ(selector).text());
+    }
+    else
+    {
+        return -1;
+    }
 };
 
 // This will look at all the content change selectors and update their hash values.

@@ -397,7 +397,7 @@ if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
             if (typeof(this.watcher) != "undefined") {
                 KOBJ.loggers.annotate.trace("App ID is " + this.app.app_id);
                 var dmw = KOBJDomWatch.get_dom_watch("search_annotate", this.change_condition, 1000);
-                dmw.dwatch(this.watcher, runAnnotate, KOBJ.get_application(this.app.app_id));
+                dmw.watch(this.watcher, runAnnotate, KOBJ.get_application(this.app.app_id));
             }
         };
 
