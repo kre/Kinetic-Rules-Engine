@@ -475,20 +475,20 @@ KOBJ.errorstack_submit = function(key, e, rule_info) {
 
         var st_url = {};
 
-        st_url.Msg = escape(exception_info.message);
-        st_url.ScriptURL = escape(exception_info.script_url);
+        st_url.Msg = escape(KOBJ.safe_substring(exception_info.message,500));
+        st_url.ScriptURL = escape(KOBJ.safe_substring(exception_info.script_url,500));
         st_url.UserAgent = escape(browser_info.nav.userAgent);
-        st_url.URL = escape(KOBJ.document.location.href);
+        st_url.URL = escape(KOBJ.safe_substring(KOBJ.document.location.href,500));
         st_url.Line = exception_info.lineNumber;
-        st_url.Description = escape(exception_info.description);
-        st_url.Arguments = escape(exception_info.arguments);
+        st_url.Description = escape(KOBJ.safe_substring(exception_info.description,500));
+        st_url.Arguments = escape(KOBJ.safe_substring(exception_info.arguments,500));
         st_url.Type = escape(exception_info.type);
         st_url.name = escape(exception_info.name);
         if (typeof(rule_info) != "undefined") {
             st_url.RuleName = escape(rule_info.name);
             st_url.RuleID = escape(rule_info.id);
         }
-        st_url.stack = escape(exception_info.stack);
+        st_url.stack = escape(KOBJ.safe_substring(exception_info.stack,500));
         st_url.Platform = escape("JRT-" + window['kobj_ts']);
         st_url.AgtAppCodeName = escape(browser_info.nav.appCodeName);
         st_url.AgtAppName = escape(browser_info.nav.appName);
@@ -512,7 +512,7 @@ KOBJ.errorstack_submit = function(key, e, rule_info) {
             datatype = "img";
 
         // If the url is to long loop over it and keep calling require with each part.
-        var urls = KOBJ.url_from_hash(st_url, 70);
+        var urls = KOBJ.url_from_hash(st_url, 200);
         $KOBJ.each(urls, function(index) {
             KOBJ.require("http://www.errorstack.com/submit?" + prefix_text  + urls[index], {data_type: datatype});
         });
