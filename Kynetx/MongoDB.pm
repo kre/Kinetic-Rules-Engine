@@ -328,7 +328,9 @@ sub make_keystring {
     my ($collection,$var) = @_;
     my $keystring = $collection;
     foreach my $key (sort (keys %$var)) {
-        $keystring .= $var->{$key};
+    	if ($var->{$key}) {
+    		$keystring .= $var->{$key};
+    	}        
     }
     return $keystring;
 }

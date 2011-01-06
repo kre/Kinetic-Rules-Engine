@@ -43,7 +43,7 @@ my @krl_files = @ARGV ? @ARGV : <data/*.krl>;
 
 
 use Test::More;
-plan tests => $#krl_files+1;
+plan tests => $#krl_files+7;
 use Test::LongString;
 use Data::Dumper;
 use Encode;
@@ -64,6 +64,26 @@ foreach my $f (@krl_files) {
     my $result = is_string_nows(decode("UTF-8",pp($tree)), remove_comments($krl), "$f: $fl");
     die unless ($result);
 }
+
+
+my ($fl,$krl_text);
+
+($fl, $krl_text) = getkrl("data/comment1.krl");
+my $krl = decode("UTF-8",$krl_text);
+#diag $krl;
+#diag remove_comments($krl);
+
+like(remove_comments($krl), qr/exec/, "Escaped slashes don't count");
+
+unlike(remove_comments($krl), qr/comment offset/, "offset comments are removed");
+
+like(remove_comments($krl), qr/comment in extended quote/, "don't remove extended quotes");
+
+unlike(remove_comments($krl), qr/start of line/, "don't remove extended quotes");
+unlike(remove_comments($krl), qr/JS comment/, "clownhats don't protect");
+
+like(remove_comments($krl), qr/http:\/\/www.windley.com/, "double quotes protect");
+
 
 
 1;

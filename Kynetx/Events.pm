@@ -170,7 +170,7 @@ sub process_event {
     
     my $js = '';
 	$js .= eval {
-		Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid );
+		Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid,$req_info );
 	};
     if ($@) {
    		Kynetx::Util::handle_error("Process event schedule failed: ", $@);
@@ -239,7 +239,7 @@ sub process_event_for_rid {
             my $rulename = $rule->{'name'};
 
             $logger->debug( "Adding to schedule: ", $rid, " & ", $rulename );
-            $schedule->add( $rid, $rule, $ruleset, $req_info );
+            my $task = $schedule->add( $rid, $rule, $ruleset, $req_info );
 
             # get event list and reset+
             my $event_list_name = $rulename . ':event_list';
@@ -263,8 +263,8 @@ sub process_event_for_rid {
                 push @{$var_list}, @{ $ev->get_vars( $sm->get_id() ) };
                 push @{$val_list}, @{ $ev->get_vals( $sm->get_id() ) };
             }
-            $schedule->annotate_task( $rid, $rulename, 'vars', $var_list );
-            $schedule->annotate_task( $rid, $rulename, 'vals', $val_list );
+            $schedule->annotate_task( $rid, $rulename,$task, 'vars', $var_list );
+            $schedule->annotate_task( $rid, $rulename,$task, 'vals', $val_list );
 
             # reset SM
             delete_persistent_var("ent", $rid, $session, $sm_current_name );

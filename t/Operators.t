@@ -145,6 +145,12 @@ pre {
   f_h = {"hKey" : {"innerKey" : "innerVal"}};
   g_h = {"hKey" : {"innerKey" : "REPLACED"}};
   i_h = {"hKey" : {"innerKey" : "innerVal"},"mKey" : "mValue"};
+  j_h = { "colors of the wind" : "many","pi as array" : [3,1,4,1,5,6,9],"foo" : {"bar" : {10:"I like cheese"}}};
+  
+  a_path = ["foo"];
+  b_path = ["foo","bar"];
+  c_path = ["foo",10,"bar"];
+  d_path = ["hKey","innerKey"];
 }
 
 _KRL_
@@ -1313,47 +1319,6 @@ $d[$i] = 0;
 $i++;
 
 
-$e[$i] = q/a_h.put(b_h)/;
-$x[$i] = Kynetx::Expressions::typed_value({
-  'val' => {
-    'pi as array' => [
-        3,1,4,1,5,6,9,
-      ],
-    'colors of the wind' => 'many',
-    'mKey' => 'mValue'
-    },
-'type' => 'hash'
-});
-$d[$i] = 0;
-$i++;
-
-$e[$i] = q/b_h.put(f_h)/;
-$x[$i] = {
-    'val' => {
-      'mKey' => 'mValue',
-      'hKey' => {
-        'innerKey' => 'innerVal'
-       }
-    },
-    'type' => 'hash'
-};
-$d[$i] = 0;
-$i++;
-
-
-
-$e[$i] = q/i_h.put(g_h)/;
-$x[$i] = {
-    'val' => {
-      'mKey' => 'mValue',
-      'hKey' => {
-          'innerKey' => 'REPLACED'
-      }
-     },
-    'type' => 'hash'
-};
-$d[$i] = 0;
-$i++;
 
 $e[$i] = q#my_str.extract(re/(is)/)#;
 $x[$i] = {
@@ -1506,7 +1471,6 @@ $d[$i] = 0;
 $i++;
 
 
-ENDY:
 # New pick argument to retain array
 
 $e[$i] = q/store.pick("$..book[0].price",1)/;
@@ -1530,6 +1494,243 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
+ENDY:
+
+
+# hash operations
+
+$e[$i] = q/a_h.put(b_h)/;
+$x[$i] = Kynetx::Expressions::typed_value({
+  'val' => {
+    'pi as array' => [
+        3,1,4,1,5,6,9,
+      ],
+    'colors of the wind' => 'many',
+    'mKey' => 'mValue'
+    },
+'type' => 'hash'
+});
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/b_h.put(f_h)/;
+$x[$i] = {
+    'val' => {
+      'mKey' => 'mValue',
+      'hKey' => {
+        'innerKey' => 'innerVal'
+       }
+    },
+    'type' => 'hash'
+};
+$d[$i] = 0;
+$i++;
+
+
+
+$e[$i] = q/i_h.put(g_h)/;
+$x[$i] = {
+    'val' => {
+      'mKey' => 'mValue',
+      'hKey' => {
+          'innerKey' => 'REPLACED'
+      }
+     },
+    'type' => 'hash'
+};
+$d[$i] = 0;
+$i++;
+
+
+$e[$i] = q/a_h.put(a_path,foo)/;
+$x[$i] = {
+	'val' => {
+	  'pi as array' => [
+	    3,
+	    1,
+	    4,
+	    1,
+	    5,
+	    6,
+	    9
+	  ],
+	  'colors of the wind' => 'many',
+	  'foo' => 'I like cheese'
+	},
+	'type'=>'hash'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/a_h.put(b_path,foo)/;
+$x[$i] = {
+	'val' => {
+	  'pi as array' => [
+	    3,
+	    1,
+	    4,
+	    1,
+	    5,
+	    6,
+	    9
+	  ],
+	  'colors of the wind' => 'many',
+	  'foo' => {
+	  	'bar' => 'I like cheese'
+	  }
+	},
+	'type'=>'hash'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/a_h.put(c_path,foo)/;
+$x[$i] = {
+	'val' => {
+	  'pi as array' => [
+	    3,
+	    1,
+	    4,
+	    1,
+	    5,
+	    6,
+	    9
+	  ],
+	  'colors of the wind' => 'many',
+	  'foo' => {
+	  	'bar' => {
+	  		10 => 'I like cheese'
+	  	}
+	  }
+	},
+	'type'=>'hash'
+};
+$d[$i] = 0;
+$i++;
+
+
+$e[$i] = q/i_h.put(d_path,"REPLACED")/;
+$x[$i] = {
+    'val' => {
+      'mKey' => 'mValue',
+      'hKey' => {
+          'innerKey' => 'REPLACED'
+      }
+     },
+    'type' => 'hash'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/j_h.put(["foo","bar"],"REPLACED")/;
+$x[$i] = {
+	'val' => {
+	  'pi as array' => [
+	    3,
+	    1,
+	    4,
+	    1,
+	    5,
+	    6,
+	    9
+	  ],
+	  'colors of the wind' => 'many',
+	  'foo' => {
+	  	'bar' => 'REPLACED'
+	  }
+	},
+	'type'=>'hash'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/j_h.put(b_path,"REPLACED")/;
+$x[$i] = {
+	'val' => {
+	  'pi as array' => [
+	    3,
+	    1,
+	    4,
+	    1,
+	    5,
+	    6,
+	    9
+	  ],
+	  'colors of the wind' => 'many',
+	  'foo' => {
+	  	'bar' => 'REPLACED'
+	  }
+	},
+	'type'=>'hash'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/j_h.delete(b_path)/;
+$x[$i] = {
+	'val' => {
+	  'pi as array' => [
+	    3,
+	    1,
+	    4,
+	    1,
+	    5,
+	    6,
+	    9
+	  ],
+	  'colors of the wind' => 'many',
+	  'foo' => {
+	  }
+	},
+	'type'=>'hash'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/j_h.delete(["foo","bar",10])/;
+$x[$i] = {
+	'val' => {
+	  'pi as array' => [
+	    3,
+	    1,
+	    4,
+	    1,
+	    5,
+	    6,
+	    9
+	  ],
+	  'colors of the wind' => 'many',
+	  'foo' => {
+	  	'bar' => {}
+	  }
+	},
+	'type'=>'hash'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/j_h.delete(["colors of the wind"])/;
+$x[$i] = {
+	'val' => {
+	  'pi as array' => [
+	    3,
+	    1,
+	    4,
+	    1,
+	    5,
+	    6,
+	    9
+	  ],
+	  'foo' => {
+	  	'bar' => {
+	  		10 => 'I like cheese'
+	  	}
+	  }
+	},
+	'type'=>'hash'
+};
+$d[$i] = 0;
+$i++;
 
 
 # now run the tests....

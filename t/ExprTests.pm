@@ -1663,6 +1663,31 @@ add_expr_testcase(
     );
 
 $krl_src = <<_KRL_;
+seen "kynetx.+foo.html" after "windley.+foo.html" in ent:my_trail
+_KRL_
+
+add_expr_testcase(
+    $krl_src,
+'expr',
+		  '_ignore_',
+		  mk_expr_node('num',    1),
+		  0
+    );
+
+$krl_src = <<_KRL_;
+seen "kynetx.com.foo.html" before "windley.com.foo.html" in ent:my_trail
+_KRL_
+
+add_expr_testcase(
+    $krl_src,
+'expr',
+		  '_ignore_',
+		  mk_expr_node('num',    0),
+		  0
+    );
+
+
+$krl_src = <<_KRL_;
 seen "windley.com" in ent:my_trail within 1 minutes
 _KRL_
 

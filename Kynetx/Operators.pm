@@ -962,6 +962,42 @@ $funcs->{'unique'} = \&set_unique;
 #----------------------------------------------------------------------------------
 # Hash operations
 #----------------------------------------------------------------------------------
+
+sub _empty_hash {
+	my ($path,$value) = @_;
+	my $logger = get_logger();
+	my $temp;
+	my $element = pop(@$path);
+	if ($element) {
+		my $thing = _empty_hash($path,$value);
+		$temp->{$element} = $thing;
+		return $temp;
+	} else {
+		return $value
+	}
+}
+
+sub _merge_hash {
+	my ($hash_ref,$path,$value) = @_;
+	my $logger = get_logger();
+	my $element = shift @$path;
+	my $has_more = scalar @$path;
+	$hash_ref = {} unless (defined $hash_ref);
+	if ($has_more) {
+		my $temp = $hash_ref->{$element};
+		if (ref $temp eq 'HASH') {
+			_merge_hash($temp,$path,$value);
+		} else {
+			$hash_ref->{$element} = _empty_hash($path,$value);
+		}
+				
+	} else {
+		$hash_ref->{$element} = $value;
+	}		
+	
+	
+}
+
 sub hash_put {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
@@ -972,17 +1008,25 @@ sub hash_put {
     my $type = $obj->{'type'};
     if ($type eq 'hash') {
         my $hash = clone ($obj->{'val'});
-        foreach my $elem (@$rands) {
-            # only hash elements can be added to hashes
-            if ($elem->{'type'} eq 'hash') {
-                my $val = $elem->{'val'};
-                foreach my $rkey (keys %$val) {
-                    $hash->{$rkey} = $val->{$rkey};
-                }
-            } else {
-                $logger->warn("Only hashes may be added using put() operator");
-                return $obj;
-            }
+        my $path = Kynetx::Expressions::den_to_exp($rands->[0]);
+        if (ref $path eq 'ARRAY') {
+        	$logger->debug("Is array");
+        	my $value = Kynetx::Expressions::den_to_exp($rands->[1]);
+        	_merge_hash($hash,$path,$value);
+        	return Kynetx::Expressions::typed_value($hash);        	
+        } else {
+	        foreach my $elem (@$rands) {
+	            # only hash elements can be added to hashes
+	            if ($elem->{'type'} eq 'hash') {
+	                my $val = $elem->{'val'};
+	                foreach my $rkey (keys %$val) {
+	                    $hash->{$rkey} = $val->{$rkey};
+	                }
+	            } else {
+	                $logger->warn("Only hashes may be added using put() operator");
+	                return $obj;
+	            }
+	        }        	
         }
         $logger->trace("New hash: ", sub {Dumper($hash)});
         return Kynetx::Expressions::typed_value($hash);
@@ -992,6 +1036,38 @@ sub hash_put {
     }
 }
 $funcs->{'put'} = \&hash_put;
+
+sub hash_delete {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    return $obj unless defined $obj;
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+    my $type = $obj->{'type'};
+    if ($type eq 'hash') {
+        my $hash = clone ($obj->{'val'});
+        my $path = Kynetx::Expressions::den_to_exp($rands->[0]);
+        my $temp = $hash;
+        my $path_str = join("",@$path);
+        my $str = "";
+        foreach my $path_element (@$path) {
+        	$str .= $path_element;
+        	if ($str eq $path_str) {
+        		#$temp->{$path_element} = undef;
+        		delete $temp->{$path_element};
+        	} else {
+        		$temp = $temp->{$path_element};
+        		return $obj unless (defined $temp);
+        	}
+        	
+        }
+		return Kynetx::Expressions::typed_value($hash);
+    } else {
+        $logger->warn("delete() operator not supported for objects of type: $type");
+        return $obj;
+    }
+}
+$funcs->{'delete'} = \&hash_delete;
 
 #-----------------------------------------------------------------------------------
 # make it all happen

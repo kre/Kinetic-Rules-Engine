@@ -135,7 +135,7 @@ my $comment_re = qr%
                    ##    but do end with '*'
        /           ##  End of /* ... */ comment
      |
-        //[^\n]*    ## slash style comments
+       //[^\n]*    ## slash style comments that don't have \ in front (quote)
      |         ##     OR  various things which aren't comments:
 
        (
@@ -158,18 +158,19 @@ my $comment_re = qr%
           <<           ##  Start of << ... >> string
           .*?
           >>           ##  End of " ... " string
-
+       |
+         \\//  # backslashes before double slashes
        |         ##     OR
         .           ##  Anything other char
          [^/"#'<\\]*   ##  Chars which doesn't start a comment, string or escape
        )
-     %xs;
+     %xms;
 
 sub remove_comments {
 
     my($ruleset) = @_;
 
-    $ruleset =~ s%$comment_re%defined $2 ? $2 : ""%gxse;
+    $ruleset =~ s%$comment_re%defined $2 ? $2 : ""%gxmse;
     return $ruleset;
 
 }

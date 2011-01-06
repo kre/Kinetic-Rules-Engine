@@ -1361,12 +1361,12 @@ unary_expr  returns[Object result] options { backtrack = true; }
 
 	      	$result = tmp;
 	}
-	| SEEN rx_1=STRING op=must_be_one[sar("before","after")] rx_2=STRING  must_be["in"] vd=VAR_DOMAIN ':' v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) {
+	| SEEN rx_1=expr op=must_be_one[sar("before","after")] rx_2=expr  must_be["in"] vd=VAR_DOMAIN ':' v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) {
       	      	HashMap tmp = new HashMap();
 	      	tmp.put("type","seen_compare");
 	      	tmp.put("domain",$vd.text);
-	      	tmp.put("regexp_1",strip_string($rx_1.text));
-	      	tmp.put("regexp_2",strip_string($rx_2.text));
+	      	tmp.put("regexp_1",$rx_1.result);
+	      	tmp.put("regexp_2",$rx_2.result);
 	      	tmp.put("var",$v.text);
 	      	tmp.put("op",$op.text);
 	      	$result = tmp;
@@ -2063,7 +2063,8 @@ OTHER_OPERATORS
 	:  'pick'|'length'|'as'|'head'|'tail'|'sort'
       	|'filter'|'map'|'uc'|'lc' |'split' | 'join' | 'query'
       	| 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
-      	| 'duplicates' | 'append' | 'put' | 'encode' | 'decode'
+      	| 'duplicates' | 'append' | 'put' 
+      	| 'encode' | 'decode' | 'delete'
       	;
 
  TRUE :'true';

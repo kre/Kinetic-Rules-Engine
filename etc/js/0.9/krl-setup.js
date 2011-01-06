@@ -1,7 +1,7 @@
-window['$KOBJ'] = $$KOBJ;
+//window['$KOBJ'] = $$KOBJ;
 
 if (typeof($K) == 'undefined') {
-    window['$K'] = $$KOBJ;
+    window['$K'] = $KOBJ;
 }
 
 window['KOBJ'] = { name: "KRL Runtime Library",
