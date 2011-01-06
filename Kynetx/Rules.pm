@@ -259,13 +259,15 @@ sub process_schedule {
 	$cap++
       }
 
-      my $new_req_info = Kynetx::Request::merge_req_env($req_info, $task->{'req_info'});
+      #my $new_req_info = Kynetx::Request::merge_req_env($req_info, $task->{'req_info'});
+      my $new_req_info = Kynetx::Request::merge_req_env($task->{'req_info'},$req_info);
 
       my $js;
       if (Kynetx::Authz::is_authorized($rid,$ruleset,$session)) {
 
 	$js = eval {eval_rule($r,
-			      $new_req_info,
+			      #$new_req_info,
+			      $req_info,
 			      extend_rule_env($this_rule_env, $rule_env),
 			      $session,
 			      $rule,
