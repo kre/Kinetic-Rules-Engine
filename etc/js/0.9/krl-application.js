@@ -222,7 +222,12 @@ KrlApplication.prototype.execute_pending_closures = function()
         KOBJ.loggers.application.trace("Executing Closure " + myself.app_id + " - " + guid);
         try
         {
+          (function($){
+            (function(jQuery){
                 the_closure($KOBJ);
+            })($KOBJ);
+           })($KOBJ);
+
         }
         catch(err)
         {
