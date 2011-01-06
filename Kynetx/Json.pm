@@ -109,7 +109,7 @@ sub astToJson {
 sub jsonToAst {
     my ($json) = @_;
 	my $logger = get_logger();
-	$logger->debug("Original string: (", ref $json,") ", $json);
+	#$logger->debug("Original string: (", ref $json,") ", $json);
     #return JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(1)->decode($json);
     return JSON::XS::->new->convert_blessed(1)->pretty(1)->decode($json);
 
