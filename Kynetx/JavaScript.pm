@@ -76,11 +76,11 @@ sub gen_js_expr {
     my $expr = shift;
 
     my $logger = get_logger();
+	#$logger->debug("Seeing ", sub {Dumper $expr});
 
     case: for ($expr->{'type'}) {
 	/str/ && do {
 
-#	  $logger->debug("Seeing ", Dumper $expr);
 
 	  return mk_js_str($expr->{'val'});
 
@@ -130,6 +130,9 @@ sub gen_js_expr {
 	};
         /closure/ && do {
 	    return gen_js_function($expr->{'val'});
+	};
+        /operator/ && do {
+	    return mk_js_str('UNTRANSLATABLE KRL EXPRESSION');
 	};
 	/app/ && do {
 	    my $app_name = gen_js_expr($expr->{'function_expr'});
