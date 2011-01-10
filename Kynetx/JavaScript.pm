@@ -71,86 +71,65 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 # this is NOT a JavaScript evaluater.  Rather, it creates JS strings
 # from Perly parse trees.  So, more like a pretty-printer.
 
-
+# refactor to allow for a default JS #fail expression if we 
+# fail to create valid JS
 sub gen_js_expr {
     my $expr = shift;
 
     my $logger = get_logger();
 	#$logger->debug("Seeing ", sub {Dumper $expr});
-
-    case: for ($expr->{'type'}) {
-	/str/ && do {
-
-
-	  return mk_js_str($expr->{'val'});
-
-
-	};
-	/num/ && do {
-	    return  $expr->{'val'} ;
-	};
-	/JS/ && do {
-	    return  $expr->{'val'} ;
-	};
-	/var/ && do {
-	    return  $expr->{'val'} ;
-	};
-	/regexp/ && do {
-	    return  $expr->{'val'};
-	};
-	/bool/ && do {
-	    return  $expr->{'val'} ;
-	};
-	/^undef$/ && do {
-	    return  'null' ;
-	};
-	/^array$/ && do {
-	    return  "[" . join(', ', @{ gen_js_rands($expr->{'val'}) }) . "]" ;
-	};
-	/^array_ref$/ && do {
-	    return  gen_js_array_ref($expr->{'val'}) ;
-	};
-	/hashraw/ && do {
-	    return  gen_js_hash_lines($expr->{'val'});
-	};
-	/hash/ && do {
-	    return  gen_js_hash($expr->{'val'});
-	};
-	/prim/ && do {
-	    return gen_js_prim($expr);
-	};
-	/^ineq|pred$/ && do {
-	    return gen_js_predexpr($expr);
-	};
-        /condexpr/ && do {
-	    return gen_js_condexpr($expr);
-	};
-        /function/ && do {
-	    return gen_js_function($expr);
-	};
-        /closure/ && do {
-	    return gen_js_function($expr->{'val'});
-	};
-        /operator/ && do {
-	    return mk_js_str('UNTRANSLATABLE KRL EXPRESSION');
-	};
-	/app/ && do {
+	
+	my $jsexp = undef;
+	local $_ = $expr->{'type'};
+	
+	if (/str/){
+	  	$jsexp = mk_js_str($expr->{'val'});
+	} elsif (/num/) {
+	  	$jsexp = $expr->{'val'};
+	} elsif (/JS/){
+		$jsexp = $expr->{'val'};
+	} elsif (/var/) {
+		$jsexp = $expr->{'val'};
+	} elsif (/regexp/) {
+		$jsexp = $expr->{'val'};
+	} elsif (/bool/) {
+		$jsexp = $expr->{'val'};
+	} elsif (/^undef$/) {
+		$jsexp = 'null';
+	} elsif (/^array$/) {
+		$jsexp = "[" . join(', ', @{ gen_js_rands($expr->{'val'}) }) . "]";
+	} elsif (/^array_ref$/) {
+		$jsexp = gen_js_array_ref($expr->{'val'});
+	} elsif (/hashraw/) {
+		$jsexp = gen_js_hash_lines($expr->{'val'});
+	} elsif (/hash/) {
+		$jsexp = gen_js_hash($expr->{'val'});
+	} elsif (/prim/) {
+		$jsexp = gen_js_prim($expr);
+	} elsif (/^ineq|pred$/) {
+		$jsexp = gen_js_predexpr($expr);
+	} elsif (/condexpr/) {
+		$jsexp = gen_js_condexpr($expr);
+	} elsif (/function/) {
+		$jsexp = gen_js_function($expr);
+	} elsif (/closure/) {
+		$jsexp = gen_js_function($expr->{'val'});
+	} elsif (/app/) {
 	    my $app_name = gen_js_expr($expr->{'function_expr'});
 	    my $args = "(" . join(', ', @{ gen_js_rands($expr->{'args'}) }) . ")" ;
-	    return $app_name . $args;
-	};
-	# FIXME: need to eval these, not ignore them
-	# no sense generating simple, most qualified, and counter preds for JS
- 	/qualified/ && do {
-
-	    my $rands = gen_js_rands($expr->{'args'});
-
-	    my $v = gen_js_datasource($expr->{'source'},
+		$jsexp = $app_name . $args;
+	} elsif (/qualified/) {
+		my $rands = gen_js_rands($expr->{'args'});
+		$jsexp = gen_js_datasource($expr->{'source'},
 				      $expr->{'predicate'},
 				      $rands
-		);
-	    return $v;
+		);		 
 	};
+
+    if (defined $jsexp) {
+    	return $jsexp;
+    } else {
+    	return mk_js_str('UNTRANSLATABLE KRL EXPRESSION');
     }
 }
 
