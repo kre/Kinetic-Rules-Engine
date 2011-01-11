@@ -123,7 +123,10 @@ sub handler {
       Kynetx::Predicates::Facebook::process_oauth_callback($r, $method, $rid);
       $r->status(Apache2::Const::REDIRECT);
       return Apache2::Const::REDIRECT;
-
+    } elsif($method eq 'pds_callback' ) {
+      Kynetx::Modules::PDS::process_auth_callback($r, $method, $rid);
+      $r->status(Apache2::Const::REDIRECT);
+      return Apache2::Const::REDIRECT;
     } elsif($method eq 'foo' ) {
 	my $uniq = int(rand 999999999);
 	$r->content_type('text/html');

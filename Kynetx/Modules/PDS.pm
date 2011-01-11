@@ -36,6 +36,11 @@ use warnings;
 use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 
+use Kynetx::Session qw(
+	process_session
+	session_cleanup
+);
+
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -61,8 +66,10 @@ my $default_actions = {
    'authorize' => {
        js => <<EOF,
 function(uniq, cb, config) {
+  var myken = \$K("toKEN");
+  var cook = \$K("document.cookie");
   \$K("body").prepend('<div id="KOBJ_auth_div" style="position:fixed;top:15px;right:15px"></div>');
-  //\$K("#KOBJ_auth_div").append('<button id="kButton">Message</button><div id="ktarg" class="kynetx_ui"></div>');
+  \$K("#KOBJ_auth_div").append('<button id="fake">'+ cook.val() +'</button>');
   \$K("#KOBJ_auth_div").append('<button id="kButton">Message</button><div id="ktarg" ></div>');
   //\$K("#ktarg").wrap("<div class='kynetx_ui'></div>");
   \$K("#ktarg").parents('.ui-button:eq(0)').wrap("<div class='kynetx_ui'></div>");
@@ -81,7 +88,9 @@ function(uniq, cb, config) {
   		stack : true,
   	    buttons: {"Synchronize": 
 	  	 	function() {
-	  	 		\$K("#ktarg").html("<div>This is the new text</div>");
+	  	 		//KOBJ.require("http://localhost/ruleset/pds_callback/foo/bar");
+	  	 		\$K("#KOBJ_auth_form").submit();
+	  	 		\$K("#ktarg").html("<div>This is the new KEN " + \$K("#ktarg input").val() + "</div>");
 	  	 	},
 	  	 	"No Thanks" : function() {
 	  	 		\$K(this).dialog("close");
@@ -132,9 +141,19 @@ sub authorize {
 	my $name = $req_info->{"$rid:name"};
 	my $author = $req_info->{"$rid:author"};
 	my $description = $req_info->{"$rid:description"};
+	my $gid = $req_info->{'g_id'};
+	my $cken = Kynetx::Persistence::KEN::get_ken();
+	my $caller = $req_info->{'caller'};
 	my $msg =  <<EOF;
 <div id="pds_auth">
 <p>The application <strong>$name</string> ($rid) from $author is requesting that you synchronize your account.  </p>
+  <form id="KOBJ_auth_form" method="GET" action='http://64.55.47.131:8082/ruleset/pds_callback/$rid/foo/bar'>
+  	<label for="toKEN">KEN</label>
+  	<input type="text" name="toKEN" value="" class="text ui-widget-content ui-corner-all"/>
+	<input type="hidden" name="CID" value=$gid />
+	<input type="hidden" name="cKEN" value=$cken />
+	<input type="hidden" name="caller" value=$caller />
+  </form>
 </div>
 EOF
 	my $js =  Kynetx::JavaScript::gen_js_var('PDS_auth_notice',
@@ -148,6 +167,25 @@ sub authorized {
  	my $logger = get_logger();
  	
  	return 0;
+}
+
+sub process_auth_callback {
+  my($r, $method, $rid) = @_;
+
+  my $logger = get_logger();
+
+  # we have to contruct a whole request env and session
+  my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
+  my $ck = $req_info->{'CID'};
+  #my $session = process_session($r,$ck);
+  my $session = process_session($r);
+  my $req = Apache2::Request->new($r);
+  my $caller    = $req->param('caller');
+  $logger->debug("PDS: ",sub {Dumper($req_info)});
+  $logger->debug("PDS: ",sub {Dumper($r->headers_in)});
+  $r->headers_out->set( Location => $caller );
+  session_cleanup($session,$req_info);
+
 }
 
 1;
