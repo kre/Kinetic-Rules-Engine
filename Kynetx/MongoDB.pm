@@ -316,12 +316,14 @@ sub mongo_error {
 sub delete_value {
     my ($collection,$var) = @_;
     my $logger = get_logger();
+    $logger->debug("Deleting from $collection: ", sub {Dumper($var)});
     my $c = get_collection($collection);
     my $success = $c->remove($var,{"safe" => SAFE});
     clear_cache($collection,$var);
     if (!$success ) {
         $logger->debug("Delete error: ", mongo_error());
     }
+    return $success;
 }
 
 sub make_keystring {

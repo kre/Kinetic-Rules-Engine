@@ -63,19 +63,21 @@ my $predicates = {
 };
 
 my $default_actions = {
-   'authorize' => {
+   'authenticate' => {
        js => <<EOF,
 function(uniq, cb, config) {
   var myken = \$K("toKEN");
   var cook = \$K("document.cookie");
   \$K("body").prepend('<div id="KOBJ_auth_div" style="position:fixed;top:15px;right:15px"></div>');
-  \$K("#KOBJ_auth_div").append('<button id="fake">'+ cook.val() +'</button>');
-  \$K("#KOBJ_auth_div").append('<button id="kButton">Message</button><div id="ktarg" ></div>');
+  //\$K("#KOBJ_auth_div").append('<button id="kButton">Message</button><div id="ktarg" ></div>');
+  \$K("#KOBJ_auth_div").append('<div id="kButton" title="Message" name="Message"></div><div id="ktarg" ></div>');
   //\$K("#ktarg").wrap("<div class='kynetx_ui'></div>");
   \$K("#ktarg").parents('.ui-button:eq(0)').wrap("<div class='kynetx_ui'></div>");
   \$K("#ktarg").html(PDS_auth_notice);
   \$K("#kButton").wrap("<div class='kynetx_ui'></div>");
-  \$K("#kButton").button();
+  \$K("#kButton").button({
+  		label : "Message"
+  });
   var icons = \$K("#kbutton").button("option","icons");
   \$K("#KOBJ_auth_div").wrap("<div class='kynetx_ui'></div>");
   \$K("#kButton").button( "option", "icons", {secondary:'ui-icon-info'} );  
@@ -83,31 +85,34 @@ function(uniq, cb, config) {
   		title: "Know Me",
   		autoOpen : false,
   		show : "drop",
+  		//hide : "fade",
   		modal : true,
   		dialogClass : "alert",
   		stack : true,
   	    buttons: {"Synchronize": 
 	  	 	function() {
-	  	 		//KOBJ.require("http://localhost/ruleset/pds_callback/foo/bar");
-	  	 		\$K("#KOBJ_auth_form").submit();
-	  	 		\$K("#ktarg").html("<div>This is the new KEN " + \$K("#ktarg input").val() + "</div>");
+	  	 		\$K("#KOBJ_auth_form").submit();	  	 		
+	  	 		\$K("#ktarg").html("<div>Authorizing...</div>");
 	  	 	},
-	  	 	"No Thanks" : function() {
-	  	 		\$K(this).dialog("close");
+	  	 	"No Thanks" : function() {	  	 		
+	  	 		\$K("#kButton").button("destroy");
+	  	 		\$K("#kButton").remove();
+	  	 		\$K(this).dialog("widget").effect("drop",{},500);
 	  	 	}
   	    }
   	});
   \$K("#ktarg").dialog().parents('.ui-dialog:eq(0)').wrap("<div class='kynetx_ui'></div>");
   //\$K("#pds_auth").wrap();
-  \$K("#kButton").click(function() {  		
-  		\$K("#kButton").button("option", "label","Standby..."); 
-  		\$K("#ktarg").dialog("open"); 		
+  \$K("#kButton").click(function() {  		  	    
+  		\$K("#kButton").button("option", "label","Standby...");  		
+  		\$K("#ktarg").dialog("open");
+  		\$K("#kButton").button("disable"); 		
   		//return false;
   	});
   cb();
 }
 EOF
-       before => \&authorize
+       before => \&authenticate
    },
 };
 
@@ -133,7 +138,7 @@ sub run_function {
     return $resp;
 }
 
-sub authorize {
+sub authenticate {
 	my ($req_info,$rule_env,$session,$config,$mods)  = @_;
 	my $logger= get_logger();
 	my $rid = $req_info->{'rid'};
@@ -142,12 +147,13 @@ sub authorize {
 	my $author = $req_info->{"$rid:author"};
 	my $description = $req_info->{"$rid:description"};
 	my $gid = $req_info->{'g_id'};
-	my $cken = Kynetx::Persistence::KEN::get_ken();
+	my $cken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $caller = $req_info->{'caller'};
 	my $msg =  <<EOF;
 <div id="pds_auth">
 <p>The application <strong>$name</string> ($rid) from $author is requesting that you synchronize your account.  </p>
-  <form id="KOBJ_auth_form" method="GET" action='http://64.55.47.131:8082/ruleset/pds_callback/$rid/foo/bar'>
+<p>$cken</p>
+ <form id="KOBJ_auth_form" method="GET" action='http://64.55.47.131:8082/ruleset/pds_callback/$rid/foo/bar'>
   	<label for="toKEN">KEN</label>
   	<input type="text" name="toKEN" value="" class="text ui-widget-content ui-corner-all"/>
 	<input type="hidden" name="CID" value=$gid />
@@ -162,12 +168,13 @@ EOF
 	return $js;
 }
 
-sub authorized {
+sub authenticated {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args)  = @_;
  	my $logger = get_logger();
  	
  	return 0;
 }
+
 
 sub process_auth_callback {
   my($r, $method, $rid) = @_;
@@ -177,12 +184,32 @@ sub process_auth_callback {
   # we have to contruct a whole request env and session
   my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
   my $ck = $req_info->{'CID'};
+  my $oKen = $req_info->{'cKEN'};
+  my $passed = $req_info->{'toKEN'};
   #my $session = process_session($r,$ck);
   my $session = process_session($r);
   my $req = Apache2::Request->new($r);
   my $caller    = $req->param('caller');
   $logger->debug("PDS: ",sub {Dumper($req_info)});
-  $logger->debug("PDS: ",sub {Dumper($r->headers_in)});
+  if ($oKen eq Kynetx::Persistence::KEN::get_ken($session,$rid)) {
+  	$logger->debug("KENS match!");
+  	my $newuser = Kynetx::Persistence::KEN::get_ken_value($passed,"username");
+  	if ($newuser) {
+  		$logger->debug("Found $newuser");
+  		my $token = Kynetx::Persistence::KToken::get_token($session,$rid);
+  		my $new_token = Kynetx::Persistence::KToken::new_token($rid,$session,$passed,1);
+  		if ($token) {
+  			$logger->debug("Token for $oKen is ($token)");
+  		}
+  		if ($new_token) {
+  			$logger->debug("New token is ($new_token)");
+  			Kynetx::Persistence::KToken::delete_token($token,$session,$rid);
+  		}
+  	} else {
+  		my $actual = Kynetx::Persistence::KEN::get_ken_value($oKen,"username");
+  		$logger->debug("$passed not found, current user is: $actual");
+  	}
+  }
   $r->headers_out->set( Location => $caller );
   session_cleanup($session,$req_info);
 

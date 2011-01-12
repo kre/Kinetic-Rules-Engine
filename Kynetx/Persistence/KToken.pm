@@ -92,7 +92,7 @@ sub get_token {
     my $token = undef;
 
     # check local session
-    $token = apache_session_has_token($session,$rid,$domain);
+    #$token = apache_session_has_token($session,$rid,$domain);
 
     # Check mongo for a token for this session/rid
     $token = mongo_rid_session_has_token($session,$rid) unless ($token);
@@ -111,8 +111,9 @@ sub mongo_rid_session_has_token {
     };
     my $result = token_query($var);
     if ($result) {
+    	$logger->debug("Token found in Mongo $session_id, $rid");
         my $token = $result->{"ktoken"};
-        store_token_to_apache_session($token,$rid,$session);
+        #store_token_to_apache_session($token,$rid,$session);
         return $token;
     }
     return undef;
@@ -140,9 +141,10 @@ sub get_endpoint_token {
 sub apache_session_has_token {
     my ($session, $rid,$domain) = @_;
     my $logger = get_logger();
+    $logger->debug("tokens in session: ", sub {Dumper($session->{KTOKEN})});
     my $ktoken = $session->{KTOKEN}->{$rid};
     if ($ktoken) {
-        $logger->trace("Token found in apache session: $ktoken");
+        $logger->debug("Token found in apache session: $ktoken");
         return $ktoken;
     }
     return undef;
@@ -173,8 +175,9 @@ sub session_has_token {
 
 
 sub new_token {
-    my ($rid,$session,$ken) = @_;
+    my ($rid,$session,$ken,$authenticated) = @_;
     my $logger = get_logger();
+    $logger->debug("Create new token request for ",Kynetx::Session::session_id($session));
     my $oid = MongoDB::OID->new();
     my $k1 = md5_base64($oid->to_string);
     my $k2 = md5_base64($rid);
@@ -183,6 +186,7 @@ sub new_token {
     my $var = {
         "ktoken" => $ktoken,
     };
+    my $auth = $authenticated ? 1 :0;
     my $token = {
         "ken" => $ken,
         "ktoken" => $ktoken,
@@ -190,6 +194,7 @@ sub new_token {
         "rid" => $rid,
         "last_active" => $lastactive,
         "endpoint_id" => Kynetx::Session::session_id($session),
+        "authenticated" => $auth,
     };
     my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0);
     if ($status) {
@@ -234,9 +239,14 @@ sub is_valid_token {
 }
 
 sub delete_token {
-    my ($ktoken) = @_;
+    my ($ktoken,$session,$rid) = @_;
+    my $logger=get_logger();
     my $var = {"ktoken" => $ktoken};
-    Kynetx::MongoDB::delete_value(COLLECTION,$var);
+    my $result = Kynetx::MongoDB::delete_value(COLLECTION,$var);
+    $logger->debug("Deleting $ktoken: ",sub {Dumper($result)});
+    if ($session) {
+    	delete $session->{KTOKEN}->{$rid};
+    }
 }
 
 sub cache_token {

@@ -92,15 +92,15 @@ sub get_ken {
     $logger->warn("get_ken called with invalid session: ", sub {Dumper($session)}) unless ($session);
     my $ktoken = Kynetx::Persistence::KToken::get_token($session,$rid,$domain);
     if ($ktoken) {
-        $logger->trace("Token found: $ktoken");
+        $logger->debug("Token found: $ktoken");
         $ken = ken_lookup_by_token($ktoken);
     }
     if ($ken) {
         return $ken;
     } else {
         if ($ktoken) {
-            $logger->trace("Token invalid");
-            Kynetx::Persistence::KToken::delete_token($ktoken);
+            $logger->debug("Token invalid");
+            Kynetx::Persistence::KToken::delete_token($ktoken,$session,$rid);
         } else {
             $logger->trace("Token not found");
         }
@@ -118,9 +118,11 @@ sub get_ken {
 
 sub ken_lookup_by_domain {
     my ($session,$rid,$domain) = @_;
+    my $logger = get_logger();
     $domain = $domain || "web";
     my $token_obj = Kynetx::Persistence::KToken::get_endpoint_token($session,$rid,$domain);
     if ($token_obj) {
+    	$logger->debug("Found KEN by domain");
         return $token_obj->{"ken"};
     }
     return undef;
@@ -132,9 +134,9 @@ sub ken_lookup_by_token {
     my $logger = get_logger();
     my $ken = Kynetx::Memcached::check_cache($ktoken);
     if ($ken) {
-        $logger->trace("Found KEN in memcache: $ken");
+        $logger->debug("Found KEN in memcache: $ken");
     } else {
-        $logger->trace("Check mongo for token: $ktoken");
+        $logger->debug("Check mongo for token: $ktoken");
         $ken = mongo_has_ken($ktoken);
     }
     return $ken;

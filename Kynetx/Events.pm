@@ -142,6 +142,7 @@ sub process_event {
     Kynetx::Request::log_request_env( $logger, $req_info );
 
     # get a session, if _sid param is defined it will override cookie
+    $logger->debug("Event cookie? ",$req_info->{'kntx_token'});
     my $session = process_session($r, $req_info->{'kntx_token'});
 
 
