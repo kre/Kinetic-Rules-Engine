@@ -100,6 +100,12 @@ sub get_token {
     return $token;
 }
 
+sub is_authorized {
+    my ($session,$rid,$domain) = @_;
+    my $logger = get_logger();
+	
+}
+
 
 sub mongo_rid_session_has_token {
     my ($session, $rid) = @_;

@@ -178,7 +178,6 @@ sub authenticated {
 
 sub process_auth_callback {
   my($r, $method, $rid) = @_;
-
   my $logger = get_logger();
 
   # we have to contruct a whole request env and session
@@ -186,7 +185,6 @@ sub process_auth_callback {
   my $ck = $req_info->{'CID'};
   my $oKen = $req_info->{'cKEN'};
   my $passed = $req_info->{'toKEN'};
-  #my $session = process_session($r,$ck);
   my $session = process_session($r);
   my $req = Apache2::Request->new($r);
   my $caller    = $req->param('caller');
