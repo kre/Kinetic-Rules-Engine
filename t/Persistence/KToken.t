@@ -74,22 +74,20 @@ my $rid = "token_tests";
 my $ken = "4c6484f5a1a31171365896f4";
 
 my $session = process_session($r);
+my $session_id = Kynetx::Session::session_id($session);
+
+#diag "session: ", $session_id;
 my $description;
 my $token;
 my $tokenb;
 my $ts1;
 my $ts2;
 
-## Clean things up
-$token = Kynetx::Persistence::KToken::session_has_token($session,$rid);
-if ($token) {
-    $logger->debug("Found token: $token");
-    Kynetx::Persistence::KToken::delete_token($token);
-}
 
 $description = "No token in session";
 $token = Kynetx::Persistence::KToken::get_token($session,$rid);
 testit($token,undef,$description,0);
+
 
 $description = "Token is created";
 $token = Kynetx::Persistence::KToken::new_token($rid,$session,$ken);
@@ -100,19 +98,17 @@ my $key = {
 };
 my $got = Kynetx::MongoDB::get_value("tokens",$key);
 $ts1 = $got->{"last_active"};
-diag "Token last accessed: $ts1";
-
+#diag "Token last accessed: $ts1";
 
 $description = "Check that token is valid";
-$result = Kynetx::Persistence::KToken::is_valid_token($token,$rid);
+$result = Kynetx::Persistence::KToken::is_valid_token($token,$session_id);
 testit($result,1,$description,0);
-
 
 $description = "Check token from session";
 $tokenb = Kynetx::Persistence::KToken::get_token($session,$rid);
-testit($token,$tokenb,$description,0);
+testit($token,$tokenb->{'ktoken'},$description,0);
 
-$description = "Delete the token";
+$description = "Delete the token, check Mongo";
 Kynetx::Persistence::KToken::delete_token($token);
 $got = Kynetx::MongoDB::get_value("tokens",$key);
 testit($got,undef,$description);

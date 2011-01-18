@@ -62,6 +62,8 @@ $Data::Dumper::Indent = 1;
 my $predicates = {
 };
 
+my $funcs = {};
+
 my $default_actions = {
    'authenticate' => {
        js => <<EOF,
@@ -114,6 +116,28 @@ function(uniq, cb, config) {
 EOF
        before => \&authenticate
    },
+   'revoke' => {
+   		js => <<EOF,
+function(uniq, cb, config) {
+	\$K("body").append("<div id=myKlogout></div>");	
+	\$K("#myKlogout").dialog({
+		title : "Logging out",
+		//autoOpen : true,
+		//dialogClass : "alert",
+		//stack : true,
+		modal : true,
+		buttons: {
+			Ok: function() {
+				\$K(this).dialog("close");
+			}
+		}
+	});
+	\$K("#myKlogout").dialog().parents('.ui-dialog:eq(0)').wrap("<div class='kynetx_ui'></div>");
+	cb();   	
+}	
+EOF
+		after =>[\&revoke_session]
+   }
 };
 
 sub get_resources {
@@ -128,15 +152,6 @@ sub get_predicates {
 
 
 
-sub run_function {
-    my($req_info, $function, $args) = @_;
-    my $logger = get_logger();
-    my $addr_str = $args->[0];
-    my $resp = undef;
-    my $found;
-
-    return $resp;
-}
 
 sub authenticate {
 	my ($req_info,$rule_env,$session,$config,$mods)  = @_;
@@ -170,10 +185,38 @@ EOF
 
 sub authenticated {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args)  = @_;
+	my $rid = $req_info->{'rid'};
  	my $logger = get_logger();
- 	
- 	return 0;
+ 	return Kynetx::Persistence::KToken::is_authenticated($session,$rid);
 }
+$funcs->{'authenticated'} = \&authenticated;
+
+sub revoke_session {
+	my ($js,$req_info,$rule_env,$session,$rule_name,$function,$args)  = @_;
+	my $rid = $req_info->{'rid'};
+ 	my $logger = get_logger();
+	my $token = Kynetx::Persistence::KToken::get_token($session,$rid)->{'ktoken'};
+	Kynetx::Persistence::KToken::delete_token($token,$session,$rid);
+	return 1;
+}
+$funcs->{'revoke'} = \&revoke_session;
+
+
+sub run_function {
+    my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+    my $logger = get_logger();
+    my $f = $funcs->{$function};
+    if (defined $f) {
+     	return $f->($req_info,$rule_env,$session,$rule_name,$function,$args);
+    } else {
+    	$logger->warn("Function $function not found in module PDS");
+    }
+
+    return undef;
+}
+
+
+
 
 
 sub process_auth_callback {
@@ -188,13 +231,16 @@ sub process_auth_callback {
   my $session = process_session($r);
   my $req = Apache2::Request->new($r);
   my $caller    = $req->param('caller');
+  my $current = Kynetx::Persistence::KEN::get_ken($session,$rid);
   $logger->debug("PDS: ",sub {Dumper($req_info)});
-  if ($oKen eq Kynetx::Persistence::KEN::get_ken($session,$rid)) {
+  $logger->debug("Current: $current");
+  $logger->debug("Passed: $passed");
+  if ($oKen eq $current) {
   	$logger->debug("KENS match!");
   	my $newuser = Kynetx::Persistence::KEN::get_ken_value($passed,"username");
   	if ($newuser) {
   		$logger->debug("Found $newuser");
-  		my $token = Kynetx::Persistence::KToken::get_token($session,$rid);
+  		my $token = Kynetx::Persistence::KToken::get_token($session,$rid)->{'ktoken'};
   		my $new_token = Kynetx::Persistence::KToken::new_token($rid,$session,$passed,1);
   		if ($token) {
   			$logger->debug("Token for $oKen is ($token)");
@@ -207,6 +253,8 @@ sub process_auth_callback {
   		my $actual = Kynetx::Persistence::KEN::get_ken_value($oKen,"username");
   		$logger->debug("$passed not found, current user is: $actual");
   	}
+  } else {
+  	
   }
   $r->headers_out->set( Location => $caller );
   session_cleanup($session,$req_info);

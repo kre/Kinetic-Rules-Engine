@@ -140,6 +140,8 @@ sub get_value {
     my $logger = get_logger();
     my $keystring = make_keystring($collection,$var);
     my $cached = get_cache($collection,$var);
+    my $parent = (caller(1))[3] || "TOP LEVEL";
+    $logger->trace("Called from $parent");
     if (defined $cached) {
         $logger->trace("Found $collection variable in cache (",sub {Dumper($cached)},",");
         return $cached;
@@ -290,7 +292,7 @@ sub update_value {
         $serialize = 1;
         my $json = Kynetx::Json::astToJson($val->{"value"});
         $val->{"value"} = $json;
-        $logger->debug("Store (serialized): ",$val->{"value"});
+        $logger->trace("Store (serialized): ",$val->{"value"});
     }
     $val->{"serialize"} = $serialize;
     $val->{"created"}   = $timestamp;
@@ -316,7 +318,7 @@ sub mongo_error {
 sub delete_value {
     my ($collection,$var) = @_;
     my $logger = get_logger();
-    $logger->debug("Deleting from $collection: ", sub {Dumper($var)});
+    $logger->trace("Deleting from $collection: ", sub {Dumper($var)});
     my $c = get_collection($collection);
     my $success = $c->remove($var,{"safe" => SAFE});
     clear_cache($collection,$var);
@@ -350,7 +352,10 @@ sub get_cache {
 
 sub set_cache {
     my ($collection,$var,$value) = @_;
+    my $logger = get_logger();
+    my $parent = (caller(1))[3];
     my $keystring = make_keystring($collection,$var);
+    $logger->trace("Mongo set_cache $keystring from $parent: ", sub {Dumper($value)});
     Kynetx::Memcached::mset_cache($keystring,$value,$CACHETIME);
 }
 

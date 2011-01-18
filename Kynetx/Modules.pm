@@ -367,8 +367,7 @@ sub eval_module {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
             $val ||= 0;
         } else {
-            $val = Kynetx::Modules::PDS::run_function( $req_info, $function,
-                                                        $args );
+            $val = Kynetx::Modules::PDS::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
         }    	
     } elsif ( $source eq 'keys' ) {
       # return the right key if it exists
