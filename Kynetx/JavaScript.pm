@@ -126,7 +126,7 @@ sub gen_js_expr {
 		);		 
 	};
 
-    if (defined $jsexp) {
+    if (defined $jsexp && $jsexp ne '') {
     	return $jsexp;
     } else {
     	return mk_js_str('UNTRANSLATABLE KRL EXPRESSION');
