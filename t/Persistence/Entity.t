@@ -110,7 +110,7 @@ if (ref $result eq "HASH") {
 	$result = $result->{"ok"};
 }
 my $qtime = timediff($end,$start);
-diag "Save to Mongo: " . $qtime->[0];
+#diag "Save to Mongo: " . $qtime->[0];
 $logger->debug("Result: ", sub {Dumper($result)});
 testit($result,1,"Insert data for $rid1/$ken",0);
 
@@ -118,14 +118,14 @@ $start = new Benchmark;
 $result = Kynetx::Persistence::Entity::get_edatum($rid1,$ken,$skey);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "Get from Mongo: " . $qtime->[0];
+#diag "Get from Mongo: " . $qtime->[0];
 testit($result,$key2,"Retrieve data for $rid1/$ken/$key1",0);
 
 $start = new Benchmark;
 Kynetx::Persistence::Entity::push_edatum($rid1,$ken,$skey,$key3);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "Convert primitive to array: " . $qtime->[0];
+#diag "Convert primitive to array: " . $qtime->[0];
 
 $result = Kynetx::Persistence::Entity::get_edatum($rid1,$ken,$skey);
 $expected = [$key2,$key3];
@@ -136,7 +136,7 @@ $start = new Benchmark;
 Kynetx::Persistence::Entity::push_edatum($rid1,$ken,$skey,$key1);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "Push on array: " . $qtime->[0];
+#diag "Push on array: " . $qtime->[0];
 $result = Kynetx::Persistence::Entity::get_edatum($rid1,$ken,$skey);
 $expected = [$key2,$key3,$key1];
 testit($result,$expected,"Add value to existing array",0);
@@ -146,7 +146,7 @@ $start = new Benchmark;
 $result = Kynetx::Persistence::Entity::pop_edatum($rid1,$ken,$skey);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "Pop from array: " . $qtime->[0];
+#diag "Pop from array: " . $qtime->[0];
 $expected = $key1;
 testit($result,$expected,"Pop value from array",0);
 
@@ -204,7 +204,7 @@ if (ref $result eq "HASH") {
 	$result = $result->{"ok"};
 }
 $qtime = timediff($end,$start);
-diag "Save to Mongo: " . $qtime->[0];
+#diag "Save to Mongo: " . $qtime->[0];
 testit($result,1,"Insert to new store $ridR",0);
 
 $result = Kynetx::Persistence::Entity::get_edatum($ridR,$ken,$key1);

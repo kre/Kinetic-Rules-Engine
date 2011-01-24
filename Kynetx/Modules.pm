@@ -85,6 +85,7 @@ use Kynetx::Modules::HTTP;
 use Kynetx::Modules::Twilio;
 use Kynetx::Modules::URI;
 use Kynetx::Modules::Address;
+use Kynetx::Modules::PDS;
 
 our $name_prefix = '@@module_';
 
@@ -360,6 +361,14 @@ sub eval_module {
         } else {
             $val = Kynetx::Predicates::OData::eval_odata($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
+    } elsif ( $source eq 'pds' ) {
+        $preds = Kynetx::Modules::PDS::get_predicates();
+        if ( defined $preds->{$function} ) {
+            $val = $preds->{$function}->( $req_info, $rule_env, $args );
+            $val ||= 0;
+        } else {
+            $val = Kynetx::Modules::PDS::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
+        }    	
     } elsif ( $source eq 'keys' ) {
       # return the right key if it exists
       # my $ruleset = Kynetx::Repository::get_rules_from_repository($req_info->{'rid'}, $req_info);

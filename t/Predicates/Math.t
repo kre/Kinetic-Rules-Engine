@@ -18,7 +18,7 @@ use Data::Dumper;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Predicates::Math qw/:all/;
@@ -48,6 +48,7 @@ my $rule_env = Kynetx::Test::gen_rule_env();
 
 
 my $session = Kynetx::Test::gen_session($r, $rid);
+my $logger = get_logger();
 
 sub math_handle {
 	my ($function,$args,$diag) = @_;
@@ -59,12 +60,12 @@ sub math_handle {
 		} else {
 			$vstring = $val;
 		}
-		diag "$function(",join(",",@$args),") = $vstring";
+		$logger->debug( "$function(",join(",",@$args),") = $vstring");
 	}
 	return $val;
 }
 
-goto ENDY;
+#goto ENDY;
 
 #
 # random

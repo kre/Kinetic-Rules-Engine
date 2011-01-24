@@ -101,12 +101,13 @@ sub check_cache {
     my $content;
     my $logger = get_logger();
     $logger->trace("cache key: ", $key);
+    my $parent = (caller(1))[3];
     my $memd = get_memd();
     if ($memd) {
         $content = $memd->get($key);
     }
     if ($content) {
-        $logger->trace("Using cached data for $key");
+        $logger->trace("-$parent- Using cached data for $key");
         return $content;
     }
 }
@@ -118,8 +119,9 @@ sub mset_cache {
         $expire = 10 * 60;
     }
     my $memd = get_memd();
+    my $parent = (caller(1))[3];
     if ( $memd ) {
-        $logger->trace("Caching $key for $expire seconds");
+        $logger->trace("- $parent - Caching $key for $expire seconds");
         my $set = $memd->set($key,$content,$expire);
     }
 }
@@ -152,7 +154,7 @@ sub get_remote_data {
     if ($memd) {
         $content = check_cache($key) ;
 	if ($content) {
-	    $logger->debug("Using cached data for $url");
+	    $logger->trace("Using cached data for $url");
 	    return $content;
 	}
     }
@@ -171,7 +173,7 @@ sub get_remote_data {
     }
 
     if($memd && $res->is_success) {
-	$logger->debug("Caching data for $url for $expire seconds");
+	$logger->trace("Caching data for $url for $expire seconds");
 	mset_cache($key,$content,$expire);
     }
 
@@ -195,7 +197,7 @@ sub get_cached_file {
     if ($memd) {
         $content = $memd->get($key) ;
 	if ($content) {
-	    $logger->debug("Using cached data for $filepath");
+	    $logger->trace("Using cached data for $filepath");
 	    return $content;
 	}
     }
@@ -203,7 +205,7 @@ sub get_cached_file {
     $content = read_file_contents($filepath);
 
     if($memd) {
-	$logger->debug("Caching data for $filepath");
+	$logger->trace("Caching data for $filepath");
 	$memd->set($key,$content,$expire);
     }
 

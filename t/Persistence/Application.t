@@ -107,14 +107,14 @@ if (ref $result eq "HASH") {
 	$result = $result->{"ok"};
 }
 $qtime = timediff($end,$start);
-diag "Save to array: " . $qtime->[0];
+#diag "Save to array: " . $qtime->[0];
 testit($result,1,"Insert data for $rid1",0);
 
 $start = new Benchmark;
 $result = Kynetx::Persistence::Application::get($rid1,$skey);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "Get from array: " . $qtime->[0];
+#diag "Get from array: " . $qtime->[0];
 testit($result,$key2,"Retrieve data for $rid1/$key1",0);
 
 $result = Kynetx::Persistence::Application::get_created($rid1,$skey);
@@ -124,7 +124,7 @@ $start = new Benchmark;
 Kynetx::Persistence::Application::push($rid1,$skey,$key1);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "Convert to array: " . $qtime->[0];
+#diag "Convert to array: " . $qtime->[0];
 $result = Kynetx::Persistence::Application::get($rid1,$skey);
 $expected = [$key2,$key1];
 testit($result,$expected,"Convert val to trail",0);
@@ -133,7 +133,7 @@ $start = new Benchmark;
 Kynetx::Persistence::Application::push($rid1,$skey,$key3);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "Push: " . $qtime->[0];
+#diag "Push: " . $qtime->[0];
 $result = Kynetx::Persistence::Application::get($rid1,$skey);
 $expected = [$key2,$key1,$key3];
 testit($result,$expected,"Add value to trail",0);
@@ -143,7 +143,7 @@ $start = new Benchmark;
 $result = Kynetx::Persistence::Application::pop($rid1,$skey);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "Pop: " . $qtime->[0];
+#diag "Pop: " . $qtime->[0];
 $expected = $key3;
 testit($result,$expected,"Pop value off trail",0);
 
@@ -162,7 +162,7 @@ $expected = [$key1];
 testit($result,$expected,"Add value to empty trail",0);
 
 $result = Kynetx::Persistence::Application::delete($rid1,$skey);
-testit($result,'',"Delete data for $rid1/$skey",0);
+testit($result->{'ok'},1,"Delete data for $rid1/$skey",0);
 
 $result = Kynetx::Persistence::Application::get($rid1,$skey);
 testit($result,undef,"Retrieve data for deleted $rid1/$skey",0);
@@ -176,14 +176,14 @@ if (ref $result eq "HASH") {
 	$result = $result->{"ok"};
 }
 $qtime = timediff($end,$start);
-diag "Save: " . $qtime->[0];
+#diag "Save: " . $qtime->[0];
 testit($result,1,"Insert to new store $ridR",0);
 
 $result = Kynetx::Persistence::Application::get($ridR,$key1);
 testit($result,$key3,"Retrieve data for $ridR/$key1",0);
 
 $result = Kynetx::Persistence::Application::delete($ridR,$key1);
-testit($result,'',"delete data for $ridR/$key1",0);
+testit($result->{'ok'},1,"delete data for $ridR/$key1",0);
 
 $result = Kynetx::Persistence::Application::get($ridR,$key1);
 testit($result,undef,"Retrieve data for deleted $ridR/$key1",0);
@@ -192,7 +192,7 @@ $result = Kynetx::Persistence::Application::touch($ridR,$key3);
 testit($result,0,"Touch a new variable ($key3)",0);
 
 $result = Kynetx::Persistence::Application::delete($ridR,$key3);
-testit($result,'',"delete data for $key3",0);
+testit($result->{'ok'},1,"delete data for $key3",0);
 
 sub testit {
     my ($got,$expected,$description,$debug) = @_;
