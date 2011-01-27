@@ -127,6 +127,10 @@ sub gen_js_expr {
 	};
 
     if (defined $jsexp) {
+    	if ($jsexp eq '') {
+    		$logger->debug("Empty expression: ",$expr->{'type'});
+    		return mk_js_str('UNTRANSLATABLE KRL EXPRESSION');
+    	}
     	return $jsexp;
     } else {
     	return mk_js_str('UNTRANSLATABLE KRL EXPRESSION');
@@ -277,9 +281,9 @@ sub gen_js_datasource {
     my $val = '';
 
     if($source eq 'page') {
-	if ($function eq 'id') {
-	    $val = "\$K(".$args->[0].").html()";
-	}
+		if ($function eq 'id') {
+	    	$val = "\$K(".$args->[0].").html()";
+		}
     }
 
     return $val;

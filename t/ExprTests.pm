@@ -362,7 +362,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    "",
+    "'UNTRANSLATABLE KRL EXPRESSION'",
      mk_expr_node('num', 5),
     0);
 
@@ -374,7 +374,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    "",
+    "'UNTRANSLATABLE KRL EXPRESSION'",
      mk_expr_node('num', 5),
     0);
 
@@ -386,7 +386,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    "",
+    "'UNTRANSLATABLE KRL EXPRESSION'",
     mk_expr_node('str','Foo'),
     0);
 
@@ -396,7 +396,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    "",
+    "'UNTRANSLATABLE KRL EXPRESSION'",
      mk_expr_node('str', '72.21.203.1'),
     0);
 
@@ -406,7 +406,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    "",
+    "'UNTRANSLATABLE KRL EXPRESSION'",
      mk_expr_node('str', 'http'),
     0);
 
@@ -417,7 +417,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    "",
+    "'UNTRANSLATABLE KRL EXPRESSION'",
     mk_expr_node('str', 'www.windley.com'),
     0);
 
@@ -428,7 +428,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    "",
+    "'UNTRANSLATABLE KRL EXPRESSION'",
      mk_expr_node('str', 'windley.com'),
     0);
 
@@ -439,7 +439,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    "",
+    "'UNTRANSLATABLE KRL EXPRESSION'",
      mk_expr_node('str', 'com'),
     0);
 
@@ -450,7 +450,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    "",
+    "'UNTRANSLATABLE KRL EXPRESSION'",
      mk_expr_node('num', 80),
     0);
 
@@ -460,7 +460,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    "",
+    "'UNTRANSLATABLE KRL EXPRESSION'",
      mk_expr_node('str', '/archives/2008/07'),
     0);
 
@@ -471,7 +471,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    "",
+    "'UNTRANSLATABLE KRL EXPRESSION'",
     mk_expr_node('str', 'q=foo'),
     0);
 
@@ -482,7 +482,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    "",
+    "'UNTRANSLATABLE KRL EXPRESSION'",
      mk_expr_node('str', "aaa,aaawa,ebates"),
     0);
 
