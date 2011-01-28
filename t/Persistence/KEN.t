@@ -85,27 +85,15 @@ $description = "No token. Create a new KEN";
 my $nken = Kynetx::Persistence::KEN::get_ken($session,$srid);
 testit($nken,re($ken_re),$description);
 
-# seed the session with a bogus token
-$session->{KTOKEN}->{$frid} = $ftoken;
+
 
 # Tokens are namespaced by RID
-$description = "Bad token. Find KEN from session";
-$ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
-testit($ken,$nken,$description,0);
-
-$description = "Token not in apache, find KEN from session";
-$session->{KTOKEN}->{$frid} = undef;
+$description = "Find KEN from session";
 $ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
 testit($ken,$nken,$description,0);
 
 
 $description = "Token exists, KEN stays same";
-$ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
-testit($ken,$nken,$description,0);
-
-my $token = Kynetx::Persistence::KToken::get_token($session,$rid);
-Kynetx::Persistence::KToken::delete_token($token);
-$description = "Token is revoked, session remains, same KEN";
 $ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
 testit($ken,$nken,$description,0);
 

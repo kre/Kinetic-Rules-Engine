@@ -107,7 +107,7 @@ $logger->trace("Where: $where");
 #Log::Log4perl->easy_init($DEBUG);
 diag "There are some tolerances involved with some of the trail timing issues";
 diag "Run the test stand-alone if an error occurs with one of the *Check* tests ";
-diag "Start with Entity Variables";
+#diag "Start with Entity Variables";
 $domain = 'ent';
 
 Kynetx::MongoDB::get_value("edata",{"key" => "null"});
@@ -119,15 +119,14 @@ $start = new Benchmark;
 $got = save_persistent_var($domain,$rid,$session,$var,$val);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "First save: " . $qtime->[0];
-
+#diag "First save: " . $qtime->[0];
 cmp_deeply($got,$val,$description);
 $test_count++;
-$logger->trace("Post save session:",sub {Dumper($session)});
+$logger->debug("Post save session:",sub {Dumper($session)});
 
 $description = "Check $var for $val";
 my $result = Kynetx::MongoDB::get_value("edata",$key);
-$logger->trace("$description: ",sub {Dumper($result)});
+$logger->debug("$description: ",sub {Dumper($result)});
 $got = $result->{"value"};
 cmp_deeply($got,$val,$description);
 $test_count++;
@@ -137,7 +136,7 @@ $start = new Benchmark;
 $got = get_persistent_var($domain,$rid,$session,$var);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "$description: " . $qtime->[0];
+#diag "$description: " . $qtime->[0];
 cmp_deeply($got,$val,$description);
 $test_count++;
 
@@ -179,7 +178,7 @@ add_persistent_element($domain,$rid,$session,$var,$val);
 $got = get_persistent_var($domain,$rid,$session,$var);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "$description: ". $qtime->[0];
+#diag "$description: ". $qtime->[0];
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
@@ -198,7 +197,7 @@ $start = new Benchmark;
 add_persistent_element($domain,$rid,$session,$var,$val);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "$description: ". $qtime->[0];
+#diag "$description: ". $qtime->[0];
 $got = get_persistent_var($domain,$rid,$session,$var);
 cmp_deeply($got,$expected,$description);
 $test_count++;
@@ -217,7 +216,7 @@ add_persistent_element($domain,$rid,$session,$var,$val);
 $got = get_persistent_var($domain,$rid,$session,$var);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "$description: ". $qtime->[0];
+#diag "$description: ". $qtime->[0];
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
@@ -235,7 +234,7 @@ $start = new Benchmark;
 add_persistent_element($domain,$rid,$session,$var,$val);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "$description: ". $qtime->[0];
+#diag "$description: ". $qtime->[0];
 $got = get_persistent_var($domain,$rid,$session,$var);
 cmp_deeply($got,$expected,$description);
 $test_count++;
@@ -248,7 +247,7 @@ $start = new Benchmark;
 $got = contains_persistent_element($domain,$rid,$session,$var,$val);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "$description: ". $qtime->[0];
+#diag "$description: ". $qtime->[0];
 cmp_deeply(1,num($got),$description);
 $test_count++;
 
@@ -260,7 +259,7 @@ $start = new Benchmark;
 $got = persistent_element_before($domain,$rid,$session,$var,$who,$what);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "$description: ". $qtime->[0];
+#diag "$description: ". $qtime->[0];
 cmp_deeply(1,$got,$description);
 $test_count++;
 
@@ -276,7 +275,7 @@ $start = new Benchmark;
 $got = persistent_element_within($domain,$rid,$session,$var,$val,$timevalue,$timeframe);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "$description: ". $qtime->[0];
+#diag "$description: ". $qtime->[0];
 cmp_deeply($got,1,$description);
 $test_count++;
 
@@ -290,7 +289,7 @@ $start = new Benchmark;
 $got = persistent_element_within($domain,$rid,$session,$var,$val,$timevalue,$timeframe);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "$description: ". $qtime->[0];
+#diag "$description: ". $qtime->[0];
 cmp_deeply($got,0,$description);
 $test_count++;
 
@@ -306,7 +305,7 @@ $start = new Benchmark;
 $got = delete_persistent_element($domain,$rid,$session,$var,$val);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "$description: ". $qtime->[0];
+#diag "$description: ". $qtime->[0];
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
@@ -316,7 +315,7 @@ $start = new Benchmark;
 delete_persistent_var($domain,$rid,$session,$var);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "$description: ". $qtime->[0];
+#diag "$description: ". $qtime->[0];
 $got = get_persistent_var($domain,$rid,$session,$var);
 cmp_deeply($got,undef,$description);
 $test_count++;
@@ -327,7 +326,7 @@ $start = new Benchmark;
 $got = touch_persistent_var($domain,$rid,$session,$var);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "$description: ". $qtime->[0];
+#diag "$description: ". $qtime->[0];
 cmp_deeply($got,0,$description);
 $test_count++;
 
@@ -357,7 +356,7 @@ $start = new Benchmark;
 $got = consume_persistent_element($domain,$rid,$session,$var,1);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "$description: ". $qtime->[0];
+#diag "$description: ". $qtime->[0];
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
@@ -372,7 +371,7 @@ $got = consume_persistent_element($domain,$rid,$session,$var,0);
 cmp_deeply($got,$expected,$description);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "$description: ". $qtime->[0];
+#diag "$description: ". $qtime->[0];
 $test_count++;
 
 $description = "Pop a value off the stack";
@@ -392,7 +391,7 @@ $test_count++;
 
 ##################################################  Application Variables
 #Log::Log4perl->easy_init($DEBUG);
-diag "Continue with Application Variables";
+#diag "Continue with Application Variables";
 $domain = 'app';
 
 $var = "appvar";
@@ -458,7 +457,7 @@ $start = new Benchmark;
 $got = get_persistent_var($domain,$rid,$session,$var);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
-diag "$description: ". $qtime->[0];
+#diag "$description: ". $qtime->[0];
 cmp_deeply($got,$expected,$description);
 $test_count++;
 

@@ -88,42 +88,19 @@ sub _ken_query {
 sub get_ken {
     my ($session,$rid,$domain) = @_;
     my $logger = get_logger();
+    $logger->trace("KEN Request");
     my $ken = undef;
     $logger->warn("get_ken called with invalid session: ", sub {Dumper($session)}) unless ($session);
     my $ktoken = Kynetx::Persistence::KToken::get_token($session,$rid,$domain);
     if ($ktoken) {
-        $logger->trace("Token found: $ktoken");
-        $ken = ken_lookup_by_token($ktoken);
+        $logger->trace("Token found: ",sub {Dumper($ktoken)});
+        return $ktoken->{'ken'};
     }
-    if ($ken) {
-        return $ken;
-    } else {
-        if ($ktoken) {
-            $logger->trace("Token invalid");
-            Kynetx::Persistence::KToken::delete_token($ktoken);
-        } else {
-            $logger->trace("Token not found");
-        }
-
-        $ken = ken_lookup_by_domain($session,$rid,$domain);
-    }
-
-    # if we still don't have a KEN, create a new one
     $ken = new_ken() unless ($ken);
 
     # A new token must be created
     Kynetx::Persistence::KToken::new_token($rid,$session,$ken);
     return $ken;
-}
-
-sub ken_lookup_by_domain {
-    my ($session,$rid,$domain) = @_;
-    $domain = $domain || "web";
-    my $token_obj = Kynetx::Persistence::KToken::get_endpoint_token($session,$rid,$domain);
-    if ($token_obj) {
-        return $token_obj->{"ken"};
-    }
-    return undef;
 }
 
 

@@ -45,6 +45,7 @@ use Kynetx::Session q/:all/;
 use Kynetx::Log q/:all/;
 use Kynetx::Json q/:all/;
 use Kynetx::Modules::Twitter;
+use Kynetx::Modules::PDS;
 use Kynetx::Actions::LetItSnow;
 use Kynetx::Actions::JQueryUI;
 use Kynetx::Actions::Annotate;
@@ -702,7 +703,8 @@ sub build_one_action {
           $actions = Kynetx::Modules::HTTP::get_actions();
       } elsif ($action->{'source'} eq 'twilio') {
           $actions = Kynetx::Modules::Twilio::get_actions();
-      }
+      } elsif ($action->{'source'} eq 'pds') {
+          $actions = Kynetx::Modules::PDS::get_actions();}
     } else {
       $actions = $default_actions;
     }
