@@ -198,6 +198,12 @@ sub eval_expr {
     my $domain = $expr->{'domain'};
 
     if ($expr->{'type'} eq 'str' ) {
+    	if (utf8::is_utf8($expr->{'val'})) {
+    		$logger->debug("UTF8: ",$expr->{'val'});
+    	} else {
+    		utf8::upgrade($expr->{'val'});
+    		$logger->debug("Not UTF8: ",$expr->{'val'});
+    	}
         if ($expr->{'val'} =~ m/\#\{(.+)\}{1}?/) {
             $logger->trace("Bee sting: ",$1);
             return(eval_string($expr, $rule_env, $rule_name,$req_info, $session));

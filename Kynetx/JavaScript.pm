@@ -461,6 +461,7 @@ sub mk_js_str {
 	$str = escape_js_str($str);
 	$str =~ s/#{([^}]*)}/'+$1+'/g;
 	$logger->trace("escaped: ",$str);
+	utf8::decode($str);
 	return "'". $str . "'";
     } else {
 	return "''";

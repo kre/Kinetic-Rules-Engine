@@ -758,7 +758,7 @@ sub build_one_action {
     $directive->($req_info, $config, $arg_exp_vals);
 
     Kynetx::JavaScript::AST::register_resources($req_info, $resources);
-
+	$logger->debug("Javascript: $js");
     return $js;
 }
 
