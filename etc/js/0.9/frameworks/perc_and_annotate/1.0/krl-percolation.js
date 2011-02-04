@@ -46,7 +46,7 @@ KOBJ.search_percolate.defaults = {
 		
 		"www.bing.com": {
 			"parem": "first",
-			"mainSelector":"#result ul:first",
+			"mainSelector":"#results ul:first",
 			"backupSelector":".sb_ph",
 			"resultNumParem": "count=100",
 			"resultElement":"#results>ul>li",
@@ -204,7 +204,7 @@ KOBJ.percolate = function(selector, config) {
 				    cloc = cloc + "&" + nextParem + "=" + next;
 				}
 				cloc += "&"+site_defaults.resultNumParem;
-				return cloc;                                                                                                     did_load
+				return cloc;
 			}
 		
 			//percolate this page
