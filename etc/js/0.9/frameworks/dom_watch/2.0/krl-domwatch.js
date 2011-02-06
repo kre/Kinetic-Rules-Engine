@@ -45,11 +45,11 @@ function KOBJDomWatchWatcher(name, condition_callback, change_delay) {
     this.selector_data = {};
 }
 
-KOBJDomWatchWatcher.prototype.watch = function(selector, callback, app) {
+KOBJDomWatchWatcher.prototype.watch = function(selector, callback, app,optional_prehash) {
     KOBJ.loggers.domwatch.trace("Adding to Watcher ", this.name, selector);
     if (this.selector_data[selector] == null) {
         this.selector_data[selector] = {
-            pre_hash :  KOBJEventManager.content_change_hashcode(selector),
+            pre_hash :  (typeof(optional_prehash) == "undefined" ? KOBJEventManager.content_change_hashcode(selector) : optional_prehash),
             last_check: new Date().valueOf(),
             apps: {}
         };

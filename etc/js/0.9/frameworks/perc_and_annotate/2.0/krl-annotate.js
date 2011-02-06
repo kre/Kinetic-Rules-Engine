@@ -392,12 +392,17 @@ if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
                 runAnnotate = this.annotate_normal_search();
             }
 
+            var prehash = KOBJEventManager.content_change_hashcode(selector);
             runAnnotate();
 
             if (typeof(this.watcher) != "undefined") {
                 KOBJ.loggers.annotate.trace("App ID is " + this.app.app_id);
                 var dmw = KOBJDomWatch.get_dom_watch("search_annotate", this.change_condition, 1000);
-                dmw.watch(this.watcher, runAnnotate, KOBJ.get_application(this.app.app_id));
+                if (typeof(dmw.watch) == "undefined") {
+                    dmw.dwatch(this.watcher, runAnnotate, KOBJ.get_application(this.app.app_id),prehash);
+                } else {
+                    dmw.watch(this.watcher, runAnnotate, KOBJ.get_application(this.app.app_id),prehash);
+                }
             }
         };
 
@@ -675,7 +680,6 @@ if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
             annotateData["height"] = heightTemp;
 
 
-
             KOBJ.loggers.annotate.trace("Extracted DAta ", annotateData);
             return annotateData;
         };
@@ -734,13 +738,11 @@ if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
 
             if (urlTemp) {
                 urlTemp = unescape(unescape(urlTemp));
-                if(urlTemp.match("&dest="))
-                {
-                        urlTemp = urlTemp.split("&dest=")[1].split("&")[0];
+                if (urlTemp.match("&dest=")) {
+                    urlTemp = urlTemp.split("&dest=")[1].split("&")[0];
                 }
-                else
-                {
-                         urlTemp = urlTemp.split("**")[1];
+                else {
+                    urlTemp = urlTemp.split("**")[1];
                 }
                 annotateData["url"] = urlTemp;
                 annotateData["domain"] = KOBJ.get_host(urlTemp);
