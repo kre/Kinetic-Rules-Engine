@@ -110,7 +110,7 @@ diag "Run the test stand-alone if an error occurs with one of the *Check* tests 
 #diag "Start with Entity Variables";
 $domain = 'ent';
 
-Kynetx::MongoDB::get_value("edata",{"key" => "null"});
+#Kynetx::MongoDB::get_value("edata",{"key" => "feebleenull"});
 $var = "evar";
 $val = $who;
 $description = "Set a value ($val)";
