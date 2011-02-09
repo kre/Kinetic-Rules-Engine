@@ -121,7 +121,7 @@ sub mset_cache {
     my $memd = get_memd();
     my $parent = (caller(1))[3];
     if ( $memd ) {
-        $logger->trace("- $parent - Caching $key for $expire seconds");
+        $logger->debug("- $parent - Caching $key for $expire seconds");
         my $set = $memd->set($key,$content,$expire);
     }
 }

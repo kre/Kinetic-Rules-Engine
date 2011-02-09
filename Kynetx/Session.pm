@@ -104,20 +104,24 @@ sub process_session {
     } else {
 	$logger->debug("No session id found" );
     }
+    
+#    my $cruft = { "_session_id" => $ck};
+#	Kynetx::Memcached::mset_cache($cookie,%$cruft);
+    my $session= { "_session_id" => $cookie};
 
-    my $session;
-
-    eval {
-	$session = tie_servers($session,$cookie);
-    };
+#    eval {
+#	$session = tie_servers($session,$cookie);
+#    };
 
     # catch an error ($cookie not found is the most usual)
-    if ($@) {
-        $logger->debug("tie error: ",sub {Dumper($@)});
-	undef $cookie; # creates a new session
-	$logger->debug("Create cookie...");
-	$session = tie_servers($session,$cookie);
-    }
+#    if ($@) {
+#        $logger->debug("tie error: ",sub {Dumper($@)});
+#	undef $cookie; # creates a new session
+#	$logger->debug("Create cookie...");
+#	$session = tie_servers($session,$cookie);
+#    }
+    
+    $logger->debug("Session: ", sub {Dumper($session)});
 
     my $dt = DateTime->now;
 
