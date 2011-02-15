@@ -110,7 +110,7 @@ sub get_useragent {
 	my $ua = HTML::ParseBrowser->new($ua_string);
 
 
-	$req_info->{'useragent'}->{'string'} = $ua;
+	$req_info->{'useragent'}->{'string'} = $ua_string;
 	$req_info->{'useragent'}->{'language'} = $ua->language();
 	$req_info->{'useragent'}->{'language_code'} = $ua->lang();
 	$req_info->{'useragent'}->{'browser_name'} = $ua->name();
