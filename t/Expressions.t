@@ -537,10 +537,10 @@ foreach my $case (@{ $testcases } ) {
 
   diag("Expr = ", Dumper($e)) if $case->{'diag'};
 
-  cmp_deeply($e,
+  my $result = cmp_deeply($e,
 	    $case->{'expected_val'},
 	    "Evaling " . $case->{'krl'});
-
+  die unless $result;
   $test_count++;
 
 }

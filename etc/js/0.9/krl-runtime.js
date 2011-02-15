@@ -150,40 +150,53 @@ KOBJ.named_resources = {
  using it.
  */
 KOBJ.registerExternalResources = function(rid, resources) {
-    KOBJ.loggers.resources.trace("Registering external resources ", rid, resources);
-    var resource_array = [];
-    $KOBJ.each(resources, function (url, options) {
+     KOBJ.loggers.resources.trace("Registering external resources ", rid, resources);
+     var resource_array = [];
+     $KOBJ.each(resources, function (url, options) {
 
-        // We are doing a named resource not a url.
-        if (url.indexOf("http") == -1) {
-            url = KOBJ.named_resources[url];
-        }
+         var name = null;
+         // We are doing a named resource not a url.
+         if (url.indexOf("http") == -1 || url.match(/^\[[a-zA-Z0-9 ]*\]/)) {
+             // TODO : Remove this when we can do alias hack to get GM Resoruces to work
+             if (url.match(/^\[[a-zA-Z0-9 ]*\]/)) {
+                 name = url.match(/\[[a-zA-Z0-9 ]*\]/)[0]
+                 name = name.substring(1, name.length - 1);
+                 url = url.substring(url.indexOf("]") + 1, url.length);
 
-        url = KOBJ.proto() + url.substr(url.indexOf(":") + 3, url.length);
+             }
+             else
+             {
+                 url = KOBJ.named_resources[url];
+             }
+         }
 
-        if (url && KOBJ.external_resources[url] == null) {
-            if (typeof(options["type"]) != "undefined") {
-                var a_resource = new KrlExternalResource(url);
-                a_resource.css_selector = options["selector"];
-                a_resource.type = options["type"];
-                KOBJ.external_resources[url] = a_resource;
-                resource_array.push(a_resource);
-                a_resource.load();
-            }
-        }
-        else
-        {
-            resource_array.push(KOBJ.external_resources[url]);
-        }
-    });
-    var app = KOBJ.get_application(rid);
-    if (app) {
-        app.add_external_resources(resource_array);
-    }
-    else {
-        KOBJ.error("Ignoring Resource registration for app " + rid + " App was not registered with runtime");
-    }
-};
+         url = KOBJ.proto() + url.substr(url.indexOf(":") + 3, url.length);
+
+         if (url && KOBJ.external_resources[url] == null) {
+             if (typeof(options["type"]) != "undefined") {
+                 var a_resource = new KrlExternalResource(url);
+                 a_resource.name = name;
+                 a_resource.css_selector = options["selector"];
+                 a_resource.type = options["type"];
+                 KOBJ.external_resources[url] = a_resource;
+                 resource_array.push(a_resource);
+                 a_resource.load();
+             }
+         }
+         else {
+             resource_array.push(KOBJ.external_resources[url]);
+         }
+     });
+     var app = KOBJ.get_application(rid);
+     if (app) {
+         app.add_external_resources(resource_array);
+     }
+     else {
+         KOBJ.error("Ignoring Resource registration for app " + rid + " App was not registered with runtime");
+     }
+ };
+
+
 
 
 //start closure and data registration code
@@ -247,16 +260,21 @@ KOBJ.require = function(url, callback_params) {
     if (typeof(callback_params) == "undefined") {
         callback_params = {};
     }
-
-    if (KOBJ.in_bx_extention) {
+    if (KOBJ.in_bx_extention && callback_params.data_type == "other") {
+        // This is here for backwards compat.  People need to chagne to KOBJ.async_url_request
+        if(typeof(KOBJ.async_url_request) != "undefined")
+            KOBJ.async_url_request(url, "KOBJ.url_loaded_callback", callback_params);
+        else
+          async_url_request(url, "KOBJ.url_loaded_callback", callback_params);
+    } else if (KOBJ.in_bx_extention) {
         var params = {};
         if (typeof(callback_params) != "undefined") {
             params = $KOBJ.extend({data_type : "js"}, callback_params, true);
         }
-        async_url_request(url, "KOBJ.url_loaded_callback", params);
-    }
-    else if (KOBJ.in_bx_extention && callback_params.data_type == "other") {
-        async_url_request(url, "KOBJ.url_loaded_callback", callback_params);
+        if(typeof(KOBJ.async_url_request) != "undefined")
+            KOBJ.async_url_request(url, "KOBJ.url_loaded_callback", params);
+        else
+          async_url_request(url, "KOBJ.url_loaded_callback", callback_params);
     }
     else if (!KOBJ.in_bx_extention && callback_params.data_type == "img") {
         var r = document.createElement("img");
@@ -292,6 +310,7 @@ KOBJ.require = function(url, callback_params) {
         }
         body.appendChild(r);
     }
+
 };
 
 
@@ -316,7 +335,7 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
         $KOBJ(elem).live("click", function(e1) {
             var tgt = $KOBJ(this);
             var b = tgt.attr('href') || '';
-            KOBJ.logger("click",txn_id,name, b,sense,rule,rid);
+            KOBJ.logger("click", txn_id, name, b, sense, rule, rid);
 //            if (b) {
 //                tgt.attr('href', '#KOBJ');
 //            }  // # gets replaced by redirect
@@ -325,7 +344,7 @@ KOBJ.obs = function(type, attr, txn_id, name, sense, rule, rid) {
 
     } else if (type == 'change') {
         $KOBJ(elem).live("change", function(e1) {
-            KOBJ.logger("change",txn_id,name,'',sense,rule,rid);
+            KOBJ.logger("change", txn_id, name, '', sense, rule, rid);
             return true;
         });
     }
@@ -367,59 +386,62 @@ KOBJ.get_host = function(s) {
 KOBJ.url_loaded_callback = function(loaded_url, response, callback_params) {
 
 
-    if (typeof(loaded_url) != "undefined" && typeof(callback_params) != "undefined") {
+       if (typeof(loaded_url) != "undefined" && typeof(callback_params) != "undefined") {
 //        KOBJ.log("Call back data type was " + callback_params.data_type);
 
-        if(callback_params.base64 != null)
-        {
-            response = Base64.decode(response);
-        }
+           if (callback_params.base64 != null) {
+               response = Base64.decode(response);
+           }
 
-        switch (callback_params.data_type) {
-            case  "js":
+           switch (callback_params.data_type) {
+               case  "js":
 //                 KOBJ.log("Because js eval it now");
-                eval(response);
-                break;
-            case  "css":
+                   eval(response);
+                   break;
+               case  "css":
 //                KOBJ.log("Because css head it now");
-                $KOBJ("head").append($KOBJ("<style>").text(response));
-                break;
-        }
+                   $KOBJ("head").append($KOBJ("<style>").text(response));
+                   break;
+               case "other":
+                   if (KOBJ.external_resources[loaded_url] != null) {
+                       KOBJ.external_resources[loaded_url].data = response;
+                   }
+                   break;
+           }
 
-        if (KOBJ.external_resources[loaded_url] != null) {
-            KOBJ.external_resources[loaded_url].did_load();
-        }
-    }
-    else {
-        var done = false;
-        if (!done && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete")) {
-            done = true;
-            var url = null;
-            // This would happen if we were in a browser sandbox.
-            //            if (typeof(loaded_url) == "undefined")
-            //            {
-            if (typeof(this.src) != "undefined") {
-                url = this.src;
-            }
-            else {
-                url = this.href;
-            }
-            if (url == null) {
-                return;
-            }
+           if (KOBJ.external_resources[loaded_url] != null) {
+               KOBJ.external_resources[loaded_url].did_load();
+           }
+       }
+       else {
+           var done = false;
+           if (!done && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete")) {
+               done = true;
+               var url = null;
+               // This would happen if we were in a browser sandbox.
+               //            if (typeof(loaded_url) == "undefined")
+               //            {
+               if (typeof(this.src) != "undefined") {
+                   url = this.src;
+               }
+               else {
+                   url = this.href;
+               }
+               if (url == null) {
+                   return;
+               }
 
 
+               if (KOBJ.external_resources[url] != null) {
+                   //            alert("Found a resource and letting it know");
+                   KOBJ.external_resources[url].did_load();
+               }
+               //        alert("Done letting everyone know");
 
-            if (KOBJ.external_resources[url] != null) {
-                //            alert("Found a resource and letting it know");
-                KOBJ.external_resources[url].did_load();
-            }
-            //        alert("Done letting everyone know");
-
-            this.onload = this.onreadystatechange = null;
-        }
-    }
-};
+               this.onload = this.onreadystatechange = null;
+           }
+       }
+   };
 
 
 /*
@@ -475,20 +497,20 @@ KOBJ.errorstack_submit = function(key, e, rule_info) {
 
         var st_url = {};
 
-        st_url.Msg = escape(KOBJ.safe_substring(exception_info.message,500));
-        st_url.ScriptURL = escape(KOBJ.safe_substring(exception_info.script_url,500));
+        st_url.Msg = escape(KOBJ.safe_substring(exception_info.message, 500));
+        st_url.ScriptURL = escape(KOBJ.safe_substring(exception_info.script_url, 500));
         st_url.UserAgent = escape(browser_info.nav.userAgent);
-        st_url.URL = escape(KOBJ.safe_substring(KOBJ.document.location.href,500));
+        st_url.URL = escape(KOBJ.safe_substring(KOBJ.document.location.href, 500));
         st_url.Line = exception_info.lineNumber;
-        st_url.Description = escape(KOBJ.safe_substring(exception_info.description,500));
-        st_url.Arguments = escape(KOBJ.safe_substring(exception_info.arguments,500));
+        st_url.Description = escape(KOBJ.safe_substring(exception_info.description, 500));
+        st_url.Arguments = escape(KOBJ.safe_substring(exception_info.arguments, 500));
         st_url.Type = escape(exception_info.type);
         st_url.name = escape(exception_info.name);
         if (typeof(rule_info) != "undefined") {
             st_url.RuleName = escape(rule_info.name);
             st_url.RuleID = escape(rule_info.id);
         }
-        st_url.stack = escape(KOBJ.safe_substring(exception_info.stack,500));
+        st_url.stack = escape(KOBJ.safe_substring(exception_info.stack, 500));
         st_url.Platform = escape("JRT-" + window['kobj_ts']);
         st_url.AgtAppCodeName = escape(browser_info.nav.appCodeName);
         st_url.AgtAppName = escape(browser_info.nav.appName);
@@ -514,7 +536,7 @@ KOBJ.errorstack_submit = function(key, e, rule_info) {
         // If the url is to long loop over it and keep calling require with each part.
         var urls = KOBJ.url_from_hash(st_url, 200);
         $KOBJ.each(urls, function(index) {
-            KOBJ.require("http://www.errorstack.com/submit?" + prefix_text  + urls[index], {data_type: datatype});
+            KOBJ.require("http://www.errorstack.com/submit?" + prefix_text + urls[index], {data_type: datatype});
         });
     }
     catch(badex) {

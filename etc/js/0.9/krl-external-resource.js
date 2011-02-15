@@ -3,11 +3,13 @@
  ------------------------------------------ */
 function KrlExternalResource(url)
 {
+    this.name = null;
     this.url = url;
     this.loaded = false;
     this.requested = false;
     this.type = null;
     this.css_selector = null;
+    this.data = null;
 }
 
 /*
@@ -26,7 +28,14 @@ KrlExternalResource.prototype.load = function() {
     }
     else
     {
-        KOBJ.require(this.url);
+        if(this.name)
+        {
+            KOBJ.require(this.url,{data_type:"other"})
+        }
+        else
+        {
+            KOBJ.require(this.url);
+        }
     }
 };
 

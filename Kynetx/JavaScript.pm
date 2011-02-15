@@ -187,7 +187,7 @@ sub gen_js_function {
       if ($d->{'type'} eq 'expr') {
 	$rhs = gen_js_expr($d->{'rhs'});
       } elsif ($d->{'type'} eq 'here_doc') {
-	$rhs = gen_js_exp(exp_to_den(eval_heredoc($d->{'rhs'})));
+	$rhs = gen_js_expr(Kynetx::Expressions::exp_to_den(Kynetx::Expressions::eval_heredoc($d->{'rhs'})));
       }
 
       $decls .= gen_js_var($d->{'lhs'}, $rhs);

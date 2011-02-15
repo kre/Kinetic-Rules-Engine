@@ -1183,6 +1183,9 @@ expr returns[Object result]
 	: (fd=function_def {
 		$result = $fd.result;
 	}
+	| ad=action_def {
+		$result = $ad.result;
+	}
 	| c=conditional_expression  {
 		$result = $c.result;
 	})
@@ -1210,6 +1213,40 @@ function_def returns[Object result]
 		$result = tmp;
 	}
 	;
+
+action_def returns[Object result]
+@init{
+	ArrayList block_array = new ArrayList();
+	ArrayList config_list = new ArrayList();
+	HashMap actions_result = new HashMap();
+}
+	: DEFACTION LEFT_PAREN args+=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN)? (COMMA args+=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) )* RIGHT_PAREN
+		LEFT_CURL 
+		(CONFIGURE USING m=modifier { config_list.add($m.result);} (AND_AND m1=modifier {config_list.add($m1.result);})* SEMI* )*
+		decs+=decl[block_array]? (SEMI decs+=decl[block_array])* SEMI* action[actions_result]  SEMI* 
+		RIGHT_CURL 	
+	{
+		HashMap tmp = new HashMap();
+		ArrayList nargs = new ArrayList();
+		if($args != null)
+		{
+			for(int i = 0;i< $args.size();i++)
+			{
+				nargs.add(((Token)$args.get(i)).getText());
+			}
+		}
+		tmp.put("vars",nargs);
+		tmp.put("type","defaction");
+		tmp.put("decls",block_array);
+        		tmp.put("configure",config_list); 
+		tmp.put("blocktype",(actions_result.get("blocktype") != null ? actions_result.get("blocktype") : "every"));
+		tmp.put("actions",actions_result.get("actions"));
+		//if($e1.text != null)
+		//	tmp.put("expr",$e1.result);
+
+		$result = tmp;
+	
+	};
 
 conditional_expression returns[Object result]
 @init {
@@ -1904,6 +1941,7 @@ REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
 
  SEMI : ';';
  FUNCTION : 'function';
+ DEFACTION: 'defaction';	 
  EQUAL :'=';
 
  OR

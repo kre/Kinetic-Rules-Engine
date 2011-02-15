@@ -497,6 +497,7 @@ window.Base64 = {
 
 	// public method for encoding
 	encode : function (input) {
+        return window.atob(input);
 		var output = "";
 		var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
 		var i = 0;
@@ -531,6 +532,7 @@ window.Base64 = {
 
 	// public method for decoding
 	decode : function (input) {
+        return window.btoa(input);
 		var output = "";
 		var chr1, chr2, chr3;
 		var enc1, enc2, enc3, enc4;
