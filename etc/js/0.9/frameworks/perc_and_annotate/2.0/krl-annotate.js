@@ -392,7 +392,7 @@ if (typeof(KOBJAnnotateSearchResults) == 'undefined') {
                 runAnnotate = this.annotate_normal_search();
             }
 
-            var prehash = KOBJEventManager.content_change_hashcode(selector);
+            var prehash = KOBJEventManager.content_change_hashcode(this.watcher);
             runAnnotate();
 
             if (typeof(this.watcher) != "undefined") {
