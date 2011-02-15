@@ -60,8 +60,9 @@ sub empty_rule_env {
 sub lookup_rule_env {
     my($key,$env) = @_;
 
-#    my $logger = get_logger();
-#    $logger->debug('$env has type ', ref $env);
+    #my $logger = get_logger();
+    #$logger->debug('$env has type ', ref $env);
+    #$logger->debug("Looking for $key");
 
     if(! defined $env || ! (ref $env eq 'HASH')) {
 	return undef;

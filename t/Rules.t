@@ -3506,12 +3506,18 @@ my $mod_rule_env;
 $krl =  << "_KRL_";
 ruleset foobar {
   meta {
-    use module a16x78 
+    use module a144x84 alias foo with c = "FOO"
   }
   global {
-    x = a16x78:a + 4;
-    y = a16x78:f(4);
-    z = (a16x78:search_twitter("kynetx")).pick("\$..query");
+  }
+  rule test0 is active {
+    select using "/test/" setting()
+      pre {
+        tc = weather:tomorrow_cond_code();
+      city = geoip:city();
+
+    }     
+    foo:x("looby loo");
   }
 }
 _KRL_
