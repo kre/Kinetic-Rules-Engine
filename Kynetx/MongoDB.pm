@@ -72,6 +72,7 @@ delete_value
 make_keystring
 get_cache
 set_cache
+atomic_set
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -279,6 +280,30 @@ sub push_value {
     } elsif ($status) {
         clear_cache($collection,$var);
         return $status;
+    }
+}
+
+sub atomic_set {
+    my ($collection,$key,$var,$val) = @_;
+    my $logger = get_logger();
+    my $serialize = 0;
+    my $set_val;     
+    if (ref $val eq "HASH") {
+        $serialize = 1;
+        my $json = Kynetx::Json::astToJson($val);
+        $set_val = {'$set' =>{$var => $json,'serialize' =>1}};
+        $logger->trace("Store (serialized): ",$val);
+    } else {
+    	$set_val = {'$set' =>{$var => $val}};
+    }
+	my $c = get_collection($collection);
+	my $status = $c->update($key,$set_val);
+    if ($status) {
+        clear_cache($collection,$key);
+        return $status;
+    } else {
+        $logger->warn("Failed to insert in $collection: ", sub {Dumper($val)});
+        return undef;
     }
 }
 

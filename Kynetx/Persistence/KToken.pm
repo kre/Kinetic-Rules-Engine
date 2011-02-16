@@ -109,6 +109,13 @@ sub get_token {
     return token_query($var);
 }
 
+sub set_token {
+	my ($ktoken,$session) = @_;
+	my $key = { 'ktoken' => $ktoken };
+	my $var = 'ktoken';
+	my $val = Kynetx::Session::session_id($session);
+	return Kynetx::MongoDB::atomic_set(COLLECTION,$key,$var,$val);
+}
 
 sub new_token {
     my ($rid,$session,$ken,$authenticated) = @_;

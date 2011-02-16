@@ -37,6 +37,7 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 use IPC::Lock::Memcached;
+use Digest::MD5;
 
 use DateTime;
 use Data::Dumper;
@@ -87,42 +88,40 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
 sub process_session {
-    my ($r, $ck) = @_;
+    my ($r, $ck, $tk) = @_;
 
 
     my $logger = get_logger();
 
     my $cookie;
+    my $ubx_token;
 
     $cookie = $r->headers_in->{'Cookie'};
     $cookie =~ s/^.*[;]?SESSION_ID=(\w*)[;]?.*$/$1/ if(defined $cookie);
+    
+    
 
     $cookie = $ck if $ck;  # override, used for testing and _sid param
 
     if (defined $cookie) {
-	$logger->debug("Using session id: ", $cookie );
+		$logger->info("Using session id: ", $cookie );
     } else {
-	$logger->debug("No session id found" );
+		$cookie = new_session_id(); 	
+		$logger->debug("No session id found, created $cookie" );
     }
     
-#    my $cruft = { "_session_id" => $ck};
-#	Kynetx::Memcached::mset_cache($cookie,%$cruft);
-    my $session= { "_session_id" => $cookie};
-
-#    eval {
-#	$session = tie_servers($session,$cookie);
-#    };
-
-    # catch an error ($cookie not found is the most usual)
-#    if ($@) {
-#        $logger->debug("tie error: ",sub {Dumper($@)});
-#	undef $cookie; # creates a new session
-#	$logger->debug("Create cookie...");
-#	$session = tie_servers($session,$cookie);
-#    }
-    
+    my $session= { "_session_id" => $cookie};    
     $logger->debug("Session: ", sub {Dumper($session)});
 
+    # Check to see if the UBX has sent us a token
+    $ubx_token = $r->headers_in->{'KOBJ_SESSION'};
+    $ubx_token = $tk if $tk;
+    
+    if (defined $ubx_token) {
+    	$logger->info("Received token: $ubx_token");
+    	Kynetx::KToken::set_token($ubx_token, $session);
+    }
+    
     my $dt = DateTime->now;
 
 
@@ -144,7 +143,18 @@ sub process_session {
 
 }
 
-
+sub new_session_id {
+	my $length = 32;
+	my $tmp = substr(Digest::MD5::md5_hex(Digest::MD5::md5_hex(time(). {}. rand(). $$)), 0, $length);
+	my $session= { "_session_id" => $tmp};
+	my $token = Kynetx::Persistence::KToken::get_token($session,"","web");
+	if ($token) {
+		# Get another session ID because somehow this one has been used already
+		return new_session_id();
+	} else {
+		return $tmp;
+	}
+}
 
 sub tie_servers {
 
