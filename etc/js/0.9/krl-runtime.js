@@ -274,7 +274,7 @@ KOBJ.require = function(url, callback_params) {
         if(typeof(KOBJ.async_url_request) != "undefined")
             KOBJ.async_url_request(url, "KOBJ.url_loaded_callback", params);
         else
-          async_url_request(url, "KOBJ.url_loaded_callback", callback_params);
+          async_url_request(url, "KOBJ.url_loaded_callback", params);
     }
     else if (!KOBJ.in_bx_extention && callback_params.data_type == "img") {
         var r = document.createElement("img");

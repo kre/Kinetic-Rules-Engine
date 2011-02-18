@@ -34,6 +34,8 @@ use warnings;
 #
 # This package simulates a mod_perl request object for testing
 #
+my $token = undef;
+my $cookie = "7e9ea0ff190e0f883aaae0c3e64166c0";
 
 #constructor
 sub new {
@@ -54,8 +56,18 @@ sub content_type {
 }
 
 sub headers_in {
-    return {
-	'Cookie' => 'SESSION_ID=7e9ea0ff190e0f883aaae0c3e64166c0'
+	if (defined $token) {		
+		return {
+			'Cookie' => "SESSION_ID=$cookie",
+			'Kobj-Session' => $token
+    	};
+	} elsif (defined $cookie) {
+    	return {
+			'Cookie' => "SESSION_ID=$cookie",
+		
+		}
+    }else {
+    	return {};
     };
 }
 
@@ -67,6 +79,22 @@ sub headers_out {
 
 sub add {
     return 1;
+}
+
+sub _set_session {
+	my $self = shift;
+	my ($newsession) = @_;
+	$cookie = $newsession;
+}
+
+sub _delete_session {
+	$cookie = undef;
+}
+
+sub _set_ubx_token {
+	my $self = shift;
+	my ($newtoken) = @_;
+	$token = $newtoken;
 }
 
 1;

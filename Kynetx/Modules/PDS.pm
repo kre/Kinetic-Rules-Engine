@@ -196,7 +196,8 @@ sub revoke_session {
 	my $rid = $req_info->{'rid'};
  	my $logger = get_logger();
 	my $token = Kynetx::Persistence::KToken::get_token($session,$rid)->{'ktoken'};
-	Kynetx::Persistence::KToken::delete_token($token,$session,$rid);
+	my $session_id = Kynetx::Session::session_id($session);
+	Kynetx::Persistence::KToken::delete_token($token,$session_id,$rid);
 	return 1;
 }
 $funcs->{'revoke'} = \&revoke_session;
@@ -247,7 +248,8 @@ sub process_auth_callback {
   		}
   		if ($new_token) {
   			$logger->debug("New token is ($new_token)");
-  			Kynetx::Persistence::KToken::delete_token($token,$session,$rid);
+			my $session_id = Kynetx::Session::session_id($session);
+			Kynetx::Persistence::KToken::delete_token($token,$session_id,$rid);
   		}
   	} else {
   		my $actual = Kynetx::Persistence::KEN::get_ken_value($oKen,"username");

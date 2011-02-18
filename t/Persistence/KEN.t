@@ -41,7 +41,7 @@ use Apache::Session::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 use Kynetx::Test qw/:all/;
@@ -66,49 +66,77 @@ Kynetx::Memcached->init();
 # Basic MongoDB commands
 $logger->debug("Initializing mongoDB");
 Kynetx::MongoDB::init();
-
 my $ken_re = qr([0-9|a-f]{16});
 my $ken;
 my $description;
 
-my $r = new Kynetx::FakeReq();
 my $rid = "cs_test";
 my $frid = "not_cs_test";
-my $static_token = "S3s8MpDc7apQBJgf9vQ70QLi61o8yjy1BsrdlJDAUcTA";
-my $ftoken = "MVQdefrn7F5fTwvfNBKYZgO5XumzutfJAYLkJ20/f5il";
-my $static_ken = "4c6484f5a1a31171365896f4";
+my $static_token = "247fe820-1782-012e-dbbc-525445a0543c";
 my $srid = "token_tests";
+my $ubx_bad = "TESTTOKEN_NEVERDELETE";
+my $ubx_ken = "4d544a412c15431307000001";
+my $temp_token;
+my $tsession;
+
+my $r = new Kynetx::FakeReq();
+$r->_delete_session();
+$logger->debug("r: ", sub {Dumper($r)});
 
 my $session = process_session($r);
 
 $description = "No token. Create a new KEN";
 my $nken = Kynetx::Persistence::KEN::get_ken($session,$srid);
 testit($nken,re($ken_re),$description);
-
-
-
-# Tokens are namespaced by RID
-$description = "Find KEN from session";
-$ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
-testit($ken,$nken,$description,0);
-
-
-$description = "Token exists, KEN stays same";
-$ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
-testit($ken,$nken,$description,0);
-
-$description = "Check the database for ($nken)";
 my $key = {
-  "_id" => MongoDB::OID->new("value" => $nken)
+  "ken" => $nken
 };
-my $got = Kynetx::MongoDB::get_value("kens",$key)->{"_id"}->to_string();
-$logger->debug("Raw from DB: ", sub { Dumper($got)});
-testit($got,$nken,$description);
+my $got = Kynetx::MongoDB::get_value("tokens",$key);
 
-$description = "Clean up and delete KEN";
-Kynetx::Persistence::KEN::delete_ken($nken);
-$got = Kynetx::MongoDB::get_value("kens",$key);
-testit($got,undef,$description);
+
+$temp_token = $got->{'ktoken'};
+$tsession = $got->{'endpoint_id'};
+
+diag $temp_token;
+diag $tsession;
+
+# Set the session, find a KEN
+$r = new Kynetx::FakeReq();
+$r->_set_session($tsession);
+
+$session = process_session($r);
+$description = "Find KEN from session";
+my $session_ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
+$logger->debug("Ken session: ",$session_ken);
+testit($session_ken,re($ken_re),$description,0);
+
+
+# Ignore the session, just use the UBX
+$description = "Check the token database for ($static_token)";
+$r = new Kynetx::FakeReq();
+$r->_set_ubx_token($static_token);
+$session = process_session($r);
+$ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
+testit($ken,$ubx_ken,$description);
+
+diag " ";
+diag " ";
+diag " ";
+
+$tsession = Kynetx::Session::session_id($session);
+diag "$tsession";
+# Ignore the session, just use the UBX
+$description = "Check the token database for ($static_token)";
+$r = new Kynetx::FakeReq();
+$r->_set_ubx_token($static_token);
+$session = process_session($r,$tsession);
+$ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
+testit($ken,$ubx_ken,$description);
+
+#$description = "Clean up and delete KEN";
+#Kynetx::Persistence::KEN::delete_ken($nken);
+#$got = Kynetx::MongoDB::get_value("kens",$key);
+#testit($got,undef,$description);
 
 sub testit {
     my ($got,$expected,$description,$debug) = @_;
