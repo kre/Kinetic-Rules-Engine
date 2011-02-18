@@ -72,6 +72,7 @@ qw(
     get_ken
     has_ken
     new_ken
+    ken_lookup_by_token
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
 
