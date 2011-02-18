@@ -103,7 +103,8 @@ sub init {
 		if ($@) {
 			$logger->debug($@);
 		} else {
-			$logger->debug("Master is $host ", $MONGO->get_master());
+			$MONGO->get_master();
+			$logger->debug("Master is $host ");#, sub {Dumper($MONGO->get_master())});
 			return;
 		}
 		

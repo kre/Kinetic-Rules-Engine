@@ -76,6 +76,7 @@ qw(
     store_token_to_apache_session
     delete_token
     get_token
+    set_token
     token_query
     KTOKEN
 ) ]);
@@ -110,10 +111,12 @@ sub get_token {
 }
 
 sub set_token {
-	my ($ktoken,$session) = @_;
+	my ($ktoken,$session_id) = @_;
+	my $logger = get_logger();
 	my $key = { 'ktoken' => $ktoken };
-	my $var = 'ktoken';
-	my $val = Kynetx::Session::session_id($session);
+	my $var = 'endpoint_id';
+	my $val = $session_id;
+	$logger->debug("Set $ktoken to endpoint $session_id");
 	return Kynetx::MongoDB::atomic_set(COLLECTION,$key,$var,$val);
 }
 
@@ -162,7 +165,7 @@ sub is_valid_token {
     my $valid = token_query({"ktoken" => $ktoken});
 	if ($valid){
         $logger->trace("Token is valid");
-        return 1;
+        return $valid;
     } else {
         return 0;
         $logger->debug("Token is NOT valid");
@@ -170,13 +173,18 @@ sub is_valid_token {
 }
 
 sub delete_token {
-    my ($ktoken,$session,$rid) = @_;
+    my ($ktoken,$session_id,$rid) = @_;
+    my $var;
     my $logger=get_logger();
-    my $session_id = Kynetx::Session::session_id($session);
-    my $var = {"ktoken" => $ktoken};
+    if (defined $ktoken) {
+    	$var = {"ktoken" => $ktoken};
+    } else {
+    	$var = {"endpoint_id" => $session_id};
+    }
+    
     my $result = Kynetx::MongoDB::delete_value(COLLECTION,$var);
     my $additional_ref = COLLECTION .$session_id;
-    $logger->debug("Deleting $ktoken for $session_id");
+    $logger->info("Deleting $ktoken for $session_id");
     # We store the token in cache to quickly get the ken
     Kynetx::Memcached::flush_cache($additional_ref);
 }

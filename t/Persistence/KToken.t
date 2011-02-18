@@ -41,7 +41,7 @@ use Apache::Session::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 use Kynetx::Test qw/:all/;
@@ -83,6 +83,8 @@ my $tokenb;
 my $ts1;
 my $ts2;
 
+my $org_token = Kynetx::MongoDB::delete_value("tokens",{'endpoint_id' => $session_id});
+$logger->debug("Original: ", sub {Dumper($org_token)});
 
 $description = "No token in session";
 $token = Kynetx::Persistence::KToken::get_token($session,$rid);
@@ -102,7 +104,7 @@ $ts1 = $got->{"last_active"};
 
 $description = "Check that token is valid";
 $result = Kynetx::Persistence::KToken::is_valid_token($token,$session_id);
-testit($result,1,$description,0);
+testit($result->{"last_active"},$ts1,$description,0);
 
 $description = "Check token from session";
 $tokenb = Kynetx::Persistence::KToken::get_token($session,$rid);

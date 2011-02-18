@@ -95,33 +95,49 @@ sub process_session {
 
     my $cookie;
     my $ubx_token;
-
+    
+    # check the cookie
     $cookie = $r->headers_in->{'Cookie'};
     $cookie =~ s/^.*[;]?SESSION_ID=(\w*)[;]?.*$/$1/ if(defined $cookie);
+    $cookie = $ck if $ck;  # override, used for testing and _sid param
+    $logger->debug("Passed cookie: ", $cookie);
+    
+    # Check to see if the UBX has sent us a token
+    $ubx_token = $r->headers_in->{'Kobj-Session'};
+    $ubx_token = $tk if $tk;
+    
+    if (defined $ubx_token) {
+    	my $token;
+    	if ($token = Kynetx::Persistence::KToken::is_valid_token($ubx_token)) {
+	    	$logger->info("Received token: $ubx_token");
+	    	my $tcookie = $token->{"endpoint_id"};
+	    	if ($tcookie ne $cookie) {
+	    		my $old_cookie = $cookie;
+		    	$cookie = new_session_id();
+		    	$logger->debug("Old cookie was: $old_cookie");
+		    	$logger->debug("New session is: $cookie");
+		    	Kynetx::Persistence::KToken::set_token($ubx_token,$cookie);
+		    	Kynetx::Persistence::KToken::delete_token(undef,$old_cookie,undef);    			    		
+	    	} else {
+	    		$logger->debug("Tokens are the same");
+	    	}
+    	}
+    }
+
+
     
     
 
-    $cookie = $ck if $ck;  # override, used for testing and _sid param
 
     if (defined $cookie) {
 		$logger->info("Using session id: ", $cookie );
     } else {
 		$cookie = new_session_id(); 	
-		$logger->debug("No session id found, created $cookie" );
+		$logger->info("No session id found, created $cookie" );
     }
     
     my $session= { "_session_id" => $cookie};    
-    $logger->debug("Session: ", sub {Dumper($session)});
 
-    # Check to see if the UBX has sent us a token
-    $ubx_token = $r->headers_in->{'KOBJ_SESSION'};
-    $ubx_token = $tk if $tk;
-    
-    if (defined $ubx_token) {
-    	$logger->info("Received token: $ubx_token");
-    	Kynetx::KToken::set_token($ubx_token, $session);
-    }
-    
     my $dt = DateTime->now;
 
 
