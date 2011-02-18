@@ -261,13 +261,20 @@ KOBJ.require = function(url, callback_params) {
         callback_params = {};
     }
     if (KOBJ.in_bx_extention && callback_params.data_type == "other") {
-        KOBJ.async_url_request(url, "KOBJ.url_loaded_callback", callback_params);
+        // This is here for backwards compat.  People need to chagne to KOBJ.async_url_request
+        if(typeof(KOBJ.async_url_request) != "undefined")
+            KOBJ.async_url_request(url, "KOBJ.url_loaded_callback", callback_params);
+        else
+          async_url_request(url, "KOBJ.url_loaded_callback", callback_params);
     } else if (KOBJ.in_bx_extention) {
         var params = {};
         if (typeof(callback_params) != "undefined") {
             params = $KOBJ.extend({data_type : "js"}, callback_params, true);
         }
-        KOBJ.async_url_request(url, "KOBJ.url_loaded_callback", params);
+        if(typeof(KOBJ.async_url_request) != "undefined")
+            KOBJ.async_url_request(url, "KOBJ.url_loaded_callback", params);
+        else
+          async_url_request(url, "KOBJ.url_loaded_callback", params);
     }
     else if (!KOBJ.in_bx_extention && callback_params.data_type == "img") {
         var r = document.createElement("img");
