@@ -1833,7 +1833,6 @@ add_testcase(
     0
     );
 
-ENDY:
 
 $krl_src = <<_KRL_;
 ruleset two_rules_first_fires {
@@ -3499,25 +3498,19 @@ This is another number #{z}  ',
 
 
 # test eval_use
-
+ENDY:
 my $empty_rule_env = empty_rule_env();
 my $mod_rule_env;
 
 $krl =  << "_KRL_";
 ruleset foobar {
   meta {
-    use module a144x84 alias foo with c = "FOO"
+    use module a16x78 
   }
   global {
-  }
-  rule test0 is active {
-    select using "/test/" setting()
-      pre {
-        tc = weather:tomorrow_cond_code();
-      city = geoip:city();
-
-    }     
-    foo:x("looby loo");
+    x = a16x78:a + 4;
+    y = a16x78:f(4);
+    z = (a16x78:search_twitter("kynetx")).pick("\$..query");
   }
 }
 _KRL_

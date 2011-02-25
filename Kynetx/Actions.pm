@@ -521,27 +521,48 @@ sub build_js_load {
 	my $cb_func_name = 'callBacks';
 	$js .= Kynetx::JavaScript::gen_js_mk_cb_func( $cb_func_name, $cb );
 
+	# Break out the action block functionality
+	$logger->trace("Action block: ", sub {Dumper($rule->{'actions'})});
+	
+	$js .= eval_action_block(
+		$req_info,
+		$rule_env,
+		$session,
+		$rule->{'blocktype'},
+		$rule->{'actions'},
+		$rule->{'name'},
+		$cb_func_name);
+
+	return $js;
+
+}
+
+sub eval_action_block {
+	my ($req_info,$rule_env,$session, $blocktype,$action_block,$rulename,$cb_function) = @_;
+	my $logger = get_logger();	
+	my $js = "";
+	
 	# if it's null, we want an empty list
-	$rule->{'actions'} ||= [];
+	$action_block ||= [];
 
-	my $action_num = int( @{ $rule->{'actions'} } );
+	my $action_num = int( @{ $action_block } );
 
-	$logger->debug( 'blocktype is ' . $rule->{'blocktype'} );
+	$logger->debug( "blocktype is [$blocktype]"  );
 	$logger->debug("actions list contains $action_num actions");
-	if ( $rule->{'blocktype'} eq 'every' ) {
+	if ( $blocktype eq 'every' ) {
 
 		# generate JS for every action
-		foreach my $action_expr ( @{ $rule->{'actions'} } ) {
+		foreach my $action_expr ( @{ $action_block } ) {
 
 			# tack on this loop's js
 			if ( defined $action_expr->{'action'} ) {
 				$js .=
 				  build_one_action( $action_expr, $req_info, $rule_env,
-					$session, $cb_func_name, $rule->{'name'} );
+					$session, $cb_function, $rulename );
 			}
 			elsif ( defined $action_expr->{'emit'} ) {
 				$js .= $action_expr->{'emit'} . ";\n";
-				$js .= "$cb_func_name();\n";
+				$js .= "$cb_function();\n";
 				push( @{ $req_info->{'actions'} }, 'emit' );
 				push( @{ $req_info->{'tags'} },    '' );
 				push( @{ $req_info->{'labels'} },  $action_expr->{'label'} );
@@ -550,22 +571,81 @@ sub build_js_load {
 		}
 
 	}
-	elsif ( $rule->{'blocktype'} eq 'choose' ) {
+	elsif ( $blocktype eq 'choose' ) {
 
 		# choose one action at random
 		my $choice = int( rand($action_num) );
 		$logger->debug("chose $choice of $action_num");
-		$js .= build_one_action( $rule->{'actions'}->[$choice],
-			$req_info, $rule_env, $session, $cb_func_name, $rule->{'name'} );
+		$js .= build_one_action( $action_block->[$choice],
+			$req_info, $rule_env, $session, $cb_function, $rulename);
 
 	}
 	else {
 		$logger->debug('bad blocktype');
 	}
-
 	return $js;
-
 }
+
+sub build_composed_action {
+	my ($source,$name,$orig_env, $rule_env,$req_info,$session,$args,$modifiers,$rule_name,
+			$cb_func_name) = @_;
+	my $logger = get_logger();
+	my $action_tag;
+	my $js = "";
+	
+	my $config_array = $rule_env->{'configure'};	
+	my $decls = $rule_env->{'decls'};
+	my $actions = $rule_env->{'actions'};
+	my $blocktype = $rule_env->{'blocktype'};
+	my $required = $rule_env->{'vars'};
+	$rule_env = $rule_env->{'env'};
+	
+	
+	
+	if ($source) {
+		$action_tag = $source . ":" . $name;
+	} else {
+		$action_tag = $name;
+	}
+	
+	# Composed action requires arguments
+	my $psize = scalar(@$args);
+	my $rsize = scalar(@$required);
+	
+	if ($psize < $rsize) {
+		return gen_js_error("$action_tag requires $rsize arguments, you passed ($psize)");
+	}
+	$rule_env = extend_rule_env($required,$args,$rule_env);
+	
+	$rule_env = Kynetx::Rules::set_module_configuration($req_info,
+		$orig_env,
+		$session,
+		$rule_env,
+		$config_array,
+		$modifiers);
+		
+	# decls are stored in a composable action
+	foreach my $decl (@$decls) {
+		$logger->trace("Found decl: ", sub { Dumper($decl)});
+		$js .= Kynetx::Expressions::eval_one_decl($req_info,$rule_env,$action_tag,$session,$decl);
+	}
+	
+	my @action_block = ();	
+	foreach my $action (@$actions) {
+		push(@action_block,Kynetx::Expressions::eval_action($action,$rule_env, $rule_name, $req_info, $session));
+	}
+	$js .= eval_action_block(
+		$req_info,
+		$rule_env,
+		$session,
+		$blocktype,
+		\@action_block,
+		$rule_name,
+		$cb_func_name);
+		
+	return $js;
+}
+
 
 sub build_one_action {
 	my (
@@ -574,7 +654,7 @@ sub build_one_action {
 	) = @_;
 
 	my $logger = get_logger();
-	$logger->debug( "Build one action: ",$action_expr->{'source'},":",$action_expr->{'name'} );
+	$logger->trace( "Build one action: ",sub {Dumper($action_expr)});
 
 	my $uniq    = int( rand 999999999 );
 	my $uniq_id = 'kobj_' . $uniq;
@@ -600,18 +680,39 @@ sub build_one_action {
 		$_ = Kynetx::Expressions::den_to_exp($_);
 	}
 
-	# process overloaded functions and arg reconstruction
-	( $action_name, $args ) =
-	  choose_action( $req_info, $action_name, $args, $rule_env, $rule_name );
-
-	# this happens after we've chosen the action since it modifies args
-	$args = Kynetx::JavaScript::gen_js_rands($args);
+	# Check for composable action before any other built-ins
+	my $mod_env = Kynetx::Modules::lookup_module_env($action->{'source'},$action->{'name'},$rule_env);
+	if (defined $mod_env && Kynetx::Expressions::is_defaction($mod_env) ) {
+		my $source = $action->{'source'};
+		my $name = $action->{'name'};
+		my $required = $mod_env->{'val'}->{'vars'} || [];
+		$logger->debug("Found action ($name) in module [$source]");		
+		$logger->debug("Module requires: [", join(",",@$required),"]");
+		my $modifiers = {};
+		return build_composed_action($source, 
+			$name, 
+			$rule_env,
+			$mod_env->{'val'},
+			$req_info,
+			$session,
+			$arg_exp_vals,
+			$action->{'modifiers'},
+			$rule_name,
+			$cb_func_name);
+	}
 
 	my $config = {
 		"txn_id"    => $req_info->{'txn_id'},
 		"rule_name" => $rule_name,
 		"rid"       => $req_info->{'rid'}
 	};
+
+	# process overloaded functions and arg reconstruction
+	( $action_name, $args ) =
+	  choose_action( $req_info, $action_name, $args, $rule_env, $rule_name );
+
+	# this happens after we've chosen the action since it modifies args
+	$args = Kynetx::JavaScript::gen_js_rands($args);	
 
 	my $js_config = [];
 
@@ -663,15 +764,7 @@ sub build_one_action {
 
 	# External resources need by action.
 	my $resources;
-	
-	# Check for composable action before any other built-ins
-	$logger->trace("Rule environment in [action] ", sub {Dumper($rule_env)});
-	my $mod_env = Kynetx::Modules::lookup_module_env($action->{'source'},$action->{'name'},$rule_env);
-	if (defined $mod_env && Kynetx::Expressions::is_defaction($mod_env) ) {
-		$logger->debug("Found action ($action->{'name'}) in module [$action->{'source'}]");
-		$logger->debug($action->{'name'},"'s environment is: ",sub {Dumper($mod_env)});
-	}
-	
+		
 	# Load actions from built in modules
 	if ( defined $action->{'source'} ) {
 		if ( $action->{'source'} eq 'twitter' ) {

@@ -402,8 +402,8 @@ sub eval_module {
 sub lookup_module_env {
   my ($name,$key,$env) = @_;
   my $logger = get_logger();
-
-  $logger->debug("Check for a module $key that provides $name");
+  
+  $name = $name || "";
   my $provided = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name . '_provided', $env);
 
   my $r;

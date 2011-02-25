@@ -185,7 +185,6 @@ sub eval_expr {
     my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
     my $logger = get_logger();
     $logger->trace("[javascript] expr: ", sub { Dumper($expr) });
-   	$logger->debug("Expr type: ", sub { Dumper($expr->{'type'}) });
 
     $rule_name ||= 'global';
     my $domain = $expr->{'domain'};
@@ -205,7 +204,7 @@ sub eval_expr {
 	   return  $expr ;
     } elsif($expr->{'type'} eq 'var') {
 	   my $v = lookup_rule_env($expr->{'val'},$rule_env);
-	   unless (defined $v) {
+	   unless (defined $v) {	   	
 	       $logger->info("Variable '", $expr->{'val'}, "' is undefined");
 	   }
 	   $logger->trace($rule_name.':'.$expr->{'val'}, " -> ", $v, ' Type -> ', infer_type($v));
@@ -294,7 +293,7 @@ sub eval_expr {
 	        $count = Kynetx::Persistence::get_persistent_var($domain,$req_info->{'rid'}, $session, $name);
         }
 
-        $logger->debug('[persistent_ineq] ', "$name -> $count");
+        $logger->trace('[persistent_ineq] ', "$name -> $count");
         my $v = ineq_test($expr->{'ineq'},
 		     $count,
 		     Kynetx::Expressions::den_to_exp(
@@ -1010,10 +1009,36 @@ sub mk_action_expr {
   		'actions' => \@action_array,
   		'vars' => $expr->{'vars'},
 		'decls' => $expr->{'decls'},
-		'conf' => $expr->{'configure'},
+		'configure' => $expr->{'configure'},
 		'env' => $env,
 		'sig' => $sig});
   
+	
+}
+
+sub eval_action {
+	my ($expr,$rule_env, $rule_name, $req_info, $session) = @_;
+	my $logger = get_logger();
+	return undef unless ($expr->{'type'} eq 'action');
+	my $val = $expr->{'val'};
+	my $args = $val->{'args'};
+	my @expressed_args = ();
+	#$logger->debug("Eval action ENVIRONMENT: ", sub {Dumper($rule_env)});
+	#$logger->debug("Args: ", sub {Dumper($args)});
+	foreach my $arg (@$args) {
+		#$logger->debug("Arg: ", sub {Dumper($arg)});
+		push(@expressed_args,eval_expr($arg,$rule_env, $rule_name, $req_info, $session));
+	}
+	my $struct = {
+		'action' => {
+			'name' => $val->{'name'},
+			'args' => \@expressed_args,
+			'modifiers' => $val->{'modifiers'},
+			'vars' => $val->{'vars'}
+		},
+		'label' => $val->{'label'}
+	};
+	return $struct;
 	
 }
 

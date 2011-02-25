@@ -198,15 +198,6 @@ sub process_schedule {
 			Log::Log4perl::MDC->put( 'site', $rid );
 			$logger->info( "Processing rules for site " . $rid );
 
-# this doesn't work.  We may need to get new session storage in place before it will.
-# If we *could* get te appsession hash defined, app vars would work.
-# # set up app session, the place where app vars store data
-# $req_info->{'appsession'} = eval {
-# 	# since we generate from the RID, we get the same one...
-# 	my $key = Digest::MD5::md5_hex($req_info->{'rid'});
-# 	Kynetx::Session::tie_servers({},$key);
-# };
-
 			# generate JS for meta
 			( $mjs, $rule_env ) =
 			  eval_meta( $req_info, $ruleset, $init_rule_env, $session );
@@ -332,7 +323,7 @@ sub process_schedule {
 	# process for final context
 	$ast->add_resources( $current_rid, $req_info->{'resources'} );
 
-	$logger->debug( "Finished processing rules for " . $rid );
+	$logger->debug( "Finished processing rules for " . $rid );	
 	return $ast->generate_js();
 
 }
@@ -341,7 +332,7 @@ sub eval_meta {
 	my ( $req_info, $ruleset, $rule_env, $session ) = @_;
 
 	my $logger = get_logger();
-	$logger->debug("META BLOCK EVALUATION");
+	$logger->trace("META BLOCK EVALUATION");
 	my $js     = "";
 
 	my $rid = $req_info->{'rid'};
@@ -436,8 +427,8 @@ sub eval_use_module {
 
 	my $configuration = $use_ruleset->{'meta'}->{'configure'}->{'configuration'}
 	  || [];
-	$logger->debug( "conf ",     Dumper $configuration);
-	$logger->debug( "provides ", Dumper $provided);
+	$logger->trace( "conf ",     Dumper $configuration);
+	$logger->trace( "provides ", Dumper $provided);
 
 	# create the module rule_env by extending an empty env with the config
 	my $module_rule_env =
@@ -463,11 +454,12 @@ sub eval_use_module {
 		extend_rule_env( $namespace_name . '_provided', $provided, $rule_env )
 	);
 
-	$logger->trace("Calculated env ", Dumper $rule_env);
 	return ( $js, $rule_env );    # ignore this for modules...
 
 }
 
+
+# set_module_configuration is used by eval_use_module and build_composed_action
 sub set_module_configuration {
 	my ( $req_info, $rule_env, $session, $mod_rule_env, $config_array,
 		$modifiers )
@@ -477,7 +469,7 @@ sub set_module_configuration {
 
 	my $configuration = {};
 
-#  $logger->debug("Config and modifiers: ", sub {Dumper $config_array}, sub {Dumper $modifiers});
+   $logger->trace("Config and modifiers: ", sub {Dumper $config_array}, sub {Dumper $modifiers});
 
 	foreach my $conf ( @{$config_array} ) {
 
@@ -491,6 +483,7 @@ sub set_module_configuration {
 
 	}
 
+	
 	foreach my $mod ( @{$modifiers} ) {
 
 		# only insert names that are already there (honor config)
@@ -508,11 +501,9 @@ sub set_module_configuration {
 
 	}
 
-	#  $logger->debug("Configuration ", sub {Dumper $configuration});
+	$logger->trace("Configuration ", sub {Dumper $configuration});
 
 	$mod_rule_env = extend_rule_env( $configuration, $mod_rule_env );
-
-	#  $logger->debug("Resulting env ", sub {Dumper $mod_rule_env});
 
 	return $mod_rule_env;
 
@@ -521,7 +512,7 @@ sub set_module_configuration {
 sub eval_globals {
 	my ( $req_info, $ruleset, $rule_env, $session ) = @_;
 	my $logger = get_logger();
-	$logger->debug("GLOBAL BLOCK EVALUATION");
+	$logger->trace("GLOBAL BLOCK EVALUATION");
 
 	my $js = "";
 
@@ -560,16 +551,13 @@ sub process_one_global_block {
 	my @empty_vals = map { '' } @vars;
 	$rule_env = extend_rule_env( \@vars, \@empty_vals, $rule_env );
 
-	$logger->debug("Namespaced: $namespace");
-	$logger->debug( "Global vars: ", join( ", ", @vars ) );
+	#$logger->debug("Namespaced: $namespace");
+	#$logger->debug( "Global vars: ", join( ", ", @vars ) );
 
 	foreach my $g ( @{$globals} ) {
 		my $this_js = '';
 		my $var     = '';
 		my $val     = 0;
-		$logger->trace("LHS: ", sub {Dumper($g->{'lhs'})});
-		$logger->trace("Type: ", sub {Dumper($g->{'type'})});
-		$logger->trace("AST: ", sub {Dumper($g)});
 		if ( !defined $namespace ) {
 
 			# only want these when we're not loading a module
