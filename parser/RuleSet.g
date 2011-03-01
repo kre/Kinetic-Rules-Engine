@@ -1227,6 +1227,7 @@ action_def returns[Object result]
 		RIGHT_CURL 	
 	{
 		HashMap tmp = new HashMap();
+		HashMap conf = new HashMap();
 		ArrayList nargs = new ArrayList();
 		if($args != null)
 		{
@@ -1238,7 +1239,9 @@ action_def returns[Object result]
 		tmp.put("vars",nargs);
 		tmp.put("type","defaction");
 		tmp.put("decls",block_array);
-        		tmp.put("configure",config_list); 
+       		conf.put("configuration", config_list);
+        		tmp.put("configure",conf); 
+       		tmp.put("configure",config_list); 
 		tmp.put("blocktype",(actions_result.get("blocktype") != null ? actions_result.get("blocktype") : "every"));
 		tmp.put("actions",actions_result.get("actions"));
 		//if($e1.text != null)

@@ -41,7 +41,7 @@ use Apache::Session::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 use Kynetx::Test qw/:all/;
@@ -97,8 +97,8 @@ my $got = Kynetx::MongoDB::get_value("tokens",$key);
 $temp_token = $got->{'ktoken'};
 $tsession = $got->{'endpoint_id'};
 
-diag $temp_token;
-diag $tsession;
+#diag $temp_token;
+#diag $tsession;
 
 # Set the session, find a KEN
 $r = new Kynetx::FakeReq();
@@ -119,12 +119,8 @@ $session = process_session($r);
 $ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
 testit($ken,$ubx_ken,$description);
 
-diag " ";
-diag " ";
-diag " ";
-
 $tsession = Kynetx::Session::session_id($session);
-diag "$tsession";
+#diag "$tsession";
 # Ignore the session, just use the UBX
 $description = "Check the token database for ($static_token)";
 $r = new Kynetx::FakeReq();

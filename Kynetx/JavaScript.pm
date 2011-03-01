@@ -62,6 +62,7 @@ gen_js_rands
 gen_js_callbacks
 gen_js_afterload
 gen_js_mk_cb_func
+gen_js_error
 get_js_html
 mk_js_str
 escape_js_str
@@ -157,6 +158,11 @@ sub gen_js_prim {
     return '(' .join(' ' . $prim->{'op'} . ' ', @{ gen_js_rands($prim->{'args'}) }) . ')';
 
 
+}
+
+sub get_js_error {
+	my $message = shift;
+	return '(console.log(' . $message . '))';
 }
 
 sub gen_js_condexpr {

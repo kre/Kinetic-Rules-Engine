@@ -197,6 +197,7 @@ sub mk_http_request {
     my $full_uri = Kynetx::Util::mk_url($uri,  $params);
     $req = new HTTP::Request 'GET', $full_uri;
 #    $response = $ua->get($full_uri, $headers);
+    $logger->debug("http:get uri: ", $full_uri);
 
   } else {
     $logger->warn("Bad method ($method) called in do_http");
