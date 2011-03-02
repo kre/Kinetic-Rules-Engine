@@ -160,6 +160,8 @@ my $module_rs;
 my $mod_rule_env;
 my $empty_rule_env = empty_rule_env();
 
+#goto ENDY;
+
 $krl =  << "_KRL_";
 ruleset dueling_notifies {
   meta {
@@ -224,6 +226,35 @@ $result = doer($my_req_info, $krl, $empty_rule_env, $session);
 cmp_deeply($result,re(qr/varfarb=.loobyloofiddyfiddyfappap/),"defaction decl expressed correctly");
 $test_count++;
 
+ENDY:
+
+$krl =  << "_KRL_";
+ruleset postbar {
+  meta {
+    use module a144x84 alias foo with c = "STU"
+  }
+  global {
+  }
+  rule test0 is active {
+    select using ".*" setting()
+      pre {
+        tc = time:now();
+    	}   
+    	{
+    		notify("Header","Message");
+    		foo:cpost(tc);
+    	}  
+    
+  	}
+}
+_KRL_
+
+$my_req_info->{'rid'} = 'postbar';
+$mod_rule_env = empty_rule_env();
+$result = doer($my_req_info, $krl, $empty_rule_env, $session);
+
+cmp_deeply($result,re(qr/rnd.:blob/),"defaction decl expressed correctly");
+$test_count++;
 done_testing($test_count);
 
 session_cleanup($session);
