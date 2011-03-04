@@ -122,9 +122,13 @@ sub do_http {
       $resp->{$v}->{lc($h)} = $response->header(uc($h));
     }
   }
+  $logger->trace("KRL response ", sub { Dumper $resp });
 
-
-  $logger->debug("KRL response ", sub { Dumper $resp });
+  my $r_status;
+  if ($resp) {
+  	$r_status = $resp->{'__dummy'}->{'status_line'};
+  }
+  $logger->debug("Response status: ", sub { Dumper $r_status });
 
   # side effect rule env with the response
   # should this be a denoted value?
@@ -197,7 +201,7 @@ sub mk_http_request {
     my $full_uri = Kynetx::Util::mk_url($uri,  $params);
     $req = new HTTP::Request 'GET', $full_uri;
 #    $response = $ua->get($full_uri, $headers);
-    $logger->debug("http:get uri: ", $full_uri);
+    $logger->debug("http:get (uri): ", $full_uri);
 
   } else {
     $logger->warn("Bad method ($method) called in do_http");

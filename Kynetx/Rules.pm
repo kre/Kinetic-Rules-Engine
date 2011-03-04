@@ -332,7 +332,7 @@ sub eval_meta {
 	my ( $req_info, $ruleset, $rule_env, $session ) = @_;
 
 	my $logger = get_logger();
-	$logger->trace("META BLOCK EVALUATION");
+	$logger->debug("META BLOCK EVALUATION");
 	my $js     = "";
 
 	my $rid = $req_info->{'rid'};
@@ -411,7 +411,7 @@ sub eval_use_module {
 
 	my $use_ruleset = Kynetx::Rules::get_rule_set( $req_info, 1, $name );
 
-	#$logger->debug("Using ", Dumper $use_ruleset);
+	$logger->trace("Using ", Dumper $use_ruleset);
 
 	my $provided_array = $use_ruleset->{'meta'}->{'provide'}->{'names'} || [];
 
@@ -428,7 +428,7 @@ sub eval_use_module {
 	my $configuration = $use_ruleset->{'meta'}->{'configure'}->{'configuration'}
 	  || [];
 	$logger->trace( "conf ",     Dumper $configuration);
-	$logger->trace( "provides ", Dumper $provided);
+	$logger->debug( "Module provides: ", join(",",@{$provided_array}) );
 
 	# create the module rule_env by extending an empty env with the config
 	my $module_rule_env =
@@ -512,7 +512,7 @@ sub set_module_configuration {
 sub eval_globals {
 	my ( $req_info, $ruleset, $rule_env, $session ) = @_;
 	my $logger = get_logger();
-	$logger->trace("GLOBAL BLOCK EVALUATION");
+	$logger->debug("GLOBAL BLOCK EVALUATION");
 
 	my $js = "";
 
@@ -551,8 +551,9 @@ sub process_one_global_block {
 	my @empty_vals = map { '' } @vars;
 	$rule_env = extend_rule_env( \@vars, \@empty_vals, $rule_env );
 
-	#$logger->debug("Namespaced: $namespace");
-	#$logger->debug( "Global vars: ", join( ", ", @vars ) );
+	my $ns = $namespace || "";
+	$logger->debug("Namespaced: $ns");
+	$logger->debug( "Global vars: ", join( ", ", @vars ) );
 
 	foreach my $g ( @{$globals} ) {
 		my $this_js = '';

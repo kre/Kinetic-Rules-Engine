@@ -1032,6 +1032,7 @@ sub eval_action {
 	my $struct = {
 		'action' => {
 			'name' => $val->{'name'},
+			'source' => $val->{'source'},
 			'args' => \@expressed_args,
 			'modifiers' => $val->{'modifiers'},
 			'vars' => $val->{'vars'}
