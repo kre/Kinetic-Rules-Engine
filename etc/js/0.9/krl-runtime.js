@@ -192,7 +192,11 @@ KOBJ.registerExternalResources = function(rid, resources) {
          app.add_external_resources(resource_array);
      }
      else {
-         KOBJ.error("Ignoring Resource registration for app " + rid + " App was not registered with runtime");
+         KOBJ.add_app_config({rids:[rid]});
+         var app = KOBJ.get_application(rid);
+         app.add_external_resources(resource_array);
+         app.load_data_sets();
+//         KOBJ.error("Ignoring Resource registration for app " + rid + " App was not registered with runtime");
      }
  };
 
@@ -227,7 +231,11 @@ KOBJ.registerClosure = function(rid, data, guid) {
         app.execute_closure(guid, data);
     }
     else {
-        KOBJ.error("Ignoring Closure for app " + rid + " App was not registered with runtime")
+        KOBJ.add_app_config({rids:[rid]});
+        var app = KOBJ.get_application(rid);
+        app.execute_closure(guid, data);
+        app.load_data_sets();
+//        KOBJ.error("Ignoring Closure for app " + rid + " App was not registered with runtime")
     }
 
 };
