@@ -226,8 +226,6 @@ $result = doer($my_req_info, $krl, $empty_rule_env, $session);
 cmp_deeply($result,re(qr/varfarb=.loobyloofiddyfiddyfappap/),"defaction decl expressed correctly");
 $test_count++;
 
-ENDY:
-
 $krl =  << "_KRL_";
 ruleset postbar {
   meta {
@@ -255,6 +253,62 @@ $result = doer($my_req_info, $krl, $empty_rule_env, $session);
 
 cmp_deeply($result,re(qr/rnd.:blob/),"defaction decl expressed correctly");
 $test_count++;
+
+ENDY:
+
+$krl =  << "_KRL_";
+ruleset inline {
+  meta {
+    name "defAction"
+    description <<
+      For testing composable actions in modules
+      System tests depend on this ruleset.  
+    >>
+ 
+   configure using c = "Hello"
+   provide x
+  
+  }
+ 
+  dispatch {
+  }
+ 
+  global {
+     a = function(x) {5 + x};
+     x = defaction (y) {
+       configure using w = "FOO" and blue = "fiddyfiddyfappap"
+        farb = y + blue;
+        every {
+         notify(w,blue);
+         alert(farb);
+        }
+     };
+  }
+  rule test0 is active {
+    select using ".*" setting()
+      pre {
+        tc = time:now();
+    	}   
+    	{
+    		notify("Header","Message");
+    		x(tc);
+    	}  
+    
+  	}
+}
+_KRL_
+
+$my_req_info->{'rid'} = 'inline';
+$mod_rule_env = empty_rule_env();
+$result = doer($my_req_info, $krl, $empty_rule_env, $session);
+
+cmp_deeply($result,re(qr/varfarb=.\d{4}.\d{2}.\d{2}T\d{2}.\d{2}.\d{2}.\d{2}.\d{2}fiddyfiddyfappap/),"inline defaction");
+$test_count++;
+
+cmp_deeply($result,re(qr/kGrowl\(msg,config\).+alert\(msg\)/),"inline defaction actions expressed correctly");
+$test_count++;
+
+
 done_testing($test_count);
 
 session_cleanup($session);
