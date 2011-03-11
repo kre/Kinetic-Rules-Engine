@@ -681,18 +681,24 @@ sub build_one_action {
 	}
 
 	# Check for composable action before any other built-ins
-	my $mod_env = Kynetx::Modules::lookup_module_env($action->{'source'},$action->{'name'},$rule_env);
-	if (defined $mod_env && Kynetx::Expressions::is_defaction($mod_env) ) {
+	my $defaction;
+	if (defined $action->{'source'}) {
+		$defaction = Kynetx::Modules::lookup_module_env($action->{'source'},$action->{'name'},$rule_env);
+	} else {
+		$defaction = Kynetx::Environments::lookup_rule_env($action->{'name'},$rule_env);
+	}
+	
+	if (defined $defaction && Kynetx::Expressions::is_defaction($defaction) ) {
 		my $source = $action->{'source'};
 		my $name = $action->{'name'};
-		my $required = $mod_env->{'val'}->{'vars'} || [];
+		my $required = $defaction->{'val'}->{'vars'} || [];
 		$logger->debug("Found action ($name) in module [$source]");		
 		$logger->debug("Module requires: [", join(",",@$required),"]");
 		my $modifiers = {};
 		return build_composed_action($source, 
 			$name, 
 			$rule_env,
-			$mod_env->{'val'},
+			$defaction->{'val'},
 			$req_info,
 			$session,
 			$arg_exp_vals,
@@ -866,7 +872,7 @@ sub build_one_action {
 	}
 	else {
 		if ( $directive eq \&noop ) {
-			$logger->warn( "[action] ", $action_name, " undefined" );
+			$logger->warn( "[action] ", $action_name, " undefined" );			
 		}
 	}
 

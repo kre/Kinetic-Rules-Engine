@@ -137,10 +137,10 @@ sub authorized {
    # attempt to get the user's last tweet
    my $status = eval { $nt->verify_credentials() };
    if ($@ ) {
-#     $logger->debug("not authorized: Dumper $status");
+     $logger->trace("not authorized: ", sub {Dumper($status)});
      $result = 0;
    } else {
-#     $logger->debug("authorized: Dumper $status");
+     $logger->trace("authorized: ", sub {Dumper($status)});
      $result = 1;
    }
 
