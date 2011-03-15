@@ -95,6 +95,8 @@ sub gen_js_expr {
 		$jsexp = $expr->{'val'};
 	} elsif (/bool/) {
 		$jsexp = $expr->{'val'};
+	} elsif (/null/) {
+		$jsexp = 'null';
 	} elsif (/^undef$/) {
 		$jsexp = 'null';
 	} elsif (/^array$/) {

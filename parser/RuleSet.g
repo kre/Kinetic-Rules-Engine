@@ -1642,6 +1642,12 @@ factor returns[Object result] options { backtrack = true; }
 		tmp.put("val",$reg.result);
 		$result = tmp;
       	}
+	| nl=NULL {
+		HashMap tmp = new HashMap();
+		tmp.put("type","null");
+		tmp.put("val","__undef__");
+		$result = tmp;	
+	}
 
 	;
 
@@ -2104,8 +2110,9 @@ OTHER_OPERATORS
 	:  'pick'|'length'|'as'|'head'|'tail'|'sort'
       	|'filter'|'map'|'uc'|'lc' |'split' | 'join' | 'query'
       	| 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
-      	| 'duplicates' | 'append' | 'put' 
-      	| 'encode' | 'decode' | 'delete'
+      	| 'duplicates' | 'append' | 'put' | 'delete'
+      	| 'encode' | 'decode' 
+      	| 'typeof' | 'isnull'
       	;
 
  TRUE :'true';
@@ -2210,9 +2217,11 @@ SEEN :'seen';
 VAR_DOMAIN:  'ent' | 'app'
     ;
 
+ NULL	:	'null';
+
+
 VAR  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*
    ;
-
 
 
 INT :	' -'? '0'..'9'+

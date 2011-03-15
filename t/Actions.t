@@ -774,6 +774,8 @@ add_action_testcase(
     0
     );
 
+
+
 $krl_src = <<_KRL_;
 annotate_search_results(foo);
 _KRL_
@@ -1003,6 +1005,43 @@ add_action_testcase(
     0
     );
 
+my $fresh_req_info = Kynetx::Test::gen_req_info($rid);
+
+$config = mk_config_string(
+   [
+    {"rule_name" => 'dummy_name'},
+    {"rid" => 'cs_test'},
+    {"txn_id" => '1234'},
+    {"delay" => 5},
+    #{"nvalue" => "__undef__"},
+ ]);
+
+$krl_src = <<_KRL_;
+float_html("absolute", "top:50px", "right:50px", "Hello World!")
+ with effect = null and
+      delay = 5
+_KRL_
+
+$result = <<_JS_;
+setTimeout(function() {
+(function(uniq, cb, config, pos, top, side, text) {
+     var d = KOBJ.buildDiv(uniq, pos, top, side,config);
+     \$K(d).html(text);
+     \$K('body').append(d);
+     cb();
+ }
+ ('%uniq%',callbacks23,$config,'absolute','top:50px','right:50px','Hello World!'));
+ \$K('#kobj_%uniq%').fadeIn();
+;KOBJ.logger('timer_expired','1234','none','','success','dummy_name','cs_test');},(5*1000));
+_JS_
+
+add_action_testcase(
+    $krl_src,
+    $result,
+    $fresh_req_info,
+    'null modifier test',
+    0
+    );
 
 
 # now test choose_action
@@ -1034,6 +1073,7 @@ foreach my $case (@test_cases) {
     }
 
 }
+
 
 
 # now test build_one_action

@@ -1070,6 +1070,52 @@ sub hash_delete {
 $funcs->{'delete'} = \&hash_delete;
 
 #-----------------------------------------------------------------------------------
+# Typing methods
+#-----------------------------------------------------------------------------------
+
+sub eval_null {
+	my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+	my $logger = get_logger();
+	my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+	my $isNull = 0;
+	# Not optimizing test cases for easy debugging
+	if (defined $obj) {
+		if ($obj->{'type'} eq 'null') {
+			$isNull = 1;
+		} elsif (! defined $obj->{'val'}) {
+			$isNull = 1;
+		}
+	} else {
+		$isNull = 1;
+	}
+	
+	if ($isNull) {
+		return Kynetx::Parser::mk_expr_node('bool','true');
+	} else {
+		return Kynetx::Parser::mk_expr_node('bool','false');
+	}
+	
+}
+$funcs->{'isnull'} = \&eval_null;
+
+sub eval_type {
+	my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+	my $logger = get_logger();
+	$logger->trace("Eval type of: ", sub {Dumper($expr)});
+	my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+	my $t;
+	if (defined $obj) {
+		# Force possible(?) primitive to typed value
+		my $tv = Kynetx::Expressions::typed_value($obj);
+		$t =  $tv->{'type'};
+	} else {
+		$t = 'null';
+	}
+	return Kynetx::Parser::mk_expr_node("str",$t);
+}
+$funcs->{'typeof'} = \&eval_type;
+
+#-----------------------------------------------------------------------------------
 # make it all happen
 #-----------------------------------------------------------------------------------
 
@@ -1078,7 +1124,9 @@ sub eval_operator {
     my $logger = get_logger();
     $logger->debug("eval_operator evaluation with op -> ", $expr->{'name'});
     my $f = $funcs->{$expr->{'name'}};
-    return &$f($expr, $rule_env, $rule_name, $req_info, $session);
+    my $obj = &$f($expr, $rule_env, $rule_name, $req_info, $session);
+    $logger->trace("Operator evaled to : ", sub {Dumper($obj)});
+    return $obj;
 }
 
 sub _prune_persitent_trail {

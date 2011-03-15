@@ -160,7 +160,7 @@ my $module_rs;
 my $mod_rule_env;
 my $empty_rule_env = empty_rule_env();
 
-#goto ENDY;
+goto ENDY;
 
 $krl =  << "_KRL_";
 ruleset dueling_notifies {
@@ -254,8 +254,6 @@ $result = doer($my_req_info, $krl, $empty_rule_env, $session);
 cmp_deeply($result,re(qr/rnd.:blob/),"defaction decl expressed correctly");
 $test_count++;
 
-ENDY:
-
 $krl =  << "_KRL_";
 ruleset inline {
   meta {
@@ -306,6 +304,56 @@ cmp_deeply($result,re(qr/varfarb=.\d{4}.\d{2}.\d{2}T\d{2}.\d{2}.\d{2}.\d{2}.\d{2
 $test_count++;
 
 cmp_deeply($result,re(qr/kGrowl\(msg,config\).+alert\(msg\)/),"inline defaction actions expressed correctly");
+$test_count++;
+
+ENDY:
+
+$krl =  << "_KRL_";
+ruleset use_nulls {
+  meta {
+    name "defAction"
+    description <<
+      For testing composable actions in modules
+      System tests depend on this ruleset.  
+    >>
+ 
+   configure using c = null
+   provide x
+  
+  }
+ 
+  dispatch {
+  }
+ 
+  global {
+     a = function(x) {5 + x};
+     n = defaction (y) {
+       configure using w = null
+        farb = y + w;
+        loob = w.isnull() => "null" | "notnull";
+        every {
+         notify(loob,farb);
+        }
+     };
+  }
+  rule test0 is active {
+    select using ".*" setting()
+      pre {
+        tc = time:now();
+    	}   
+    	{
+    		n(tc);
+    	}  
+    
+  	}
+}
+_KRL_
+
+$my_req_info->{'rid'} = 'use_nulls';
+$mod_rule_env = empty_rule_env();
+$result = doer($my_req_info, $krl, $empty_rule_env, $session);
+
+cmp_deeply($result,re(qr/varloob=\'null\'/),"inline defaction");
 $test_count++;
 
 

@@ -601,7 +601,7 @@ sub build_composed_action {
 	$rule_env = $rule_env->{'env'};
 	
 	
-	
+	$logger->trace("Configuration: ", sub {Dumper($config_array)});
 	if ($source) {
 		$action_tag = $source . ":" . $name;
 	} else {
@@ -624,10 +624,14 @@ sub build_composed_action {
 		$config_array,
 		$modifiers);
 		
+	#$logger->debug("After Module Configuration: ",sub {Dumper($rule_env)});
+		
 	# decls are stored in a composable action
 	foreach my $decl (@$decls) {
 		$logger->trace("Found decl: ", sub { Dumper($decl)});
-		$js .= Kynetx::Expressions::eval_one_decl($req_info,$rule_env,$action_tag,$session,$decl);
+		my $d = Kynetx::Expressions::eval_one_decl($req_info,$rule_env,$action_tag,$session,$decl);
+		$logger->trace("Declaration: $d");
+		$js .= $d;
 	}
 	
 	my @action_block = ();	
@@ -689,7 +693,7 @@ sub build_one_action {
 	}
 	
 	if (defined $defaction && Kynetx::Expressions::is_defaction($defaction) ) {
-		my $source = $action->{'source'};
+		my $source = $action->{'source'} || "";
 		my $name = $action->{'name'};
 		my $required = $defaction->{'val'}->{'vars'} || [];
 		$logger->debug("Found action ($name) in module [$source]");		
@@ -738,10 +742,17 @@ sub build_one_action {
 	};
 
 	foreach my $m ( @{ $action->{'modifiers'} } ) {
-		$mods->{ $m->{'name'} } =
-		  Kynetx::JavaScript::gen_js_expr( $m->{'value'} );
+		$logger->debug(sub {Dumper($m)} );
+		if (defined $m->{'value'}) {
+			if ($m->{'value'}->{'type'} eq 'null') {
+				next;
+			}
+		}
+		my $v = Kynetx::JavaScript::gen_js_expr($m->{'value'});
+		$logger->debug("Modifier val: ",sub {Dumper($v)});
+		$mods->{ $m->{'name'} } =  $v;
 
-		#      $logger->debug(sub {Dumper($m)} );
+		
 
 		$config->{ $m->{'name'} } = Kynetx::Expressions::den_to_exp(
 			Kynetx::Expressions::eval_expr(

@@ -332,7 +332,7 @@ sub eval_meta {
 	my ( $req_info, $ruleset, $rule_env, $session ) = @_;
 
 	my $logger = get_logger();
-	$logger->debug("META BLOCK EVALUATION");
+	$logger->trace("META BLOCK EVALUATION");
 	my $js     = "";
 
 	my $rid = $req_info->{'rid'};
@@ -512,7 +512,7 @@ sub set_module_configuration {
 sub eval_globals {
 	my ( $req_info, $ruleset, $rule_env, $session ) = @_;
 	my $logger = get_logger();
-	$logger->debug("GLOBAL BLOCK EVALUATION");
+	$logger->trace("GLOBAL BLOCK EVALUATION");
 
 	my $js = "";
 

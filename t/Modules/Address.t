@@ -151,7 +151,7 @@ $result = Kynetx::Expressions::den_to_exp(
                        'all',
                        [$bstr]
                       ));
-$exp = '';
+$exp = undef;
 is($result,
    $exp,
    'Bad Address Format');

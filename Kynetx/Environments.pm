@@ -33,6 +33,7 @@ use strict;
 use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
+use Data::Dumper;
 
 
 use Exporter;
@@ -60,14 +61,13 @@ sub empty_rule_env {
 sub lookup_rule_env {
     my($key,$env) = @_;
 
-#    my $logger = get_logger();
-#    $logger->debug('$env has type ', ref $env);
-#    $logger->debug("Looking for $key");
+    my $logger = get_logger();
+    $logger->trace("Looking for $key");
 
     if(! defined $env || ! (ref $env eq 'HASH')) {
 	return undef;
     } elsif (defined $env->{$key}) {
-#    	$logger->debug("Found: $key");
+    	$logger->trace("Found: $key with (", $env->{$key}, ")");
 		return $env->{$key};
     } else {
 	return lookup_rule_env($key, $env->{'___sub'});

@@ -198,6 +198,8 @@ sub eval_expr {
         }
     } elsif($expr->{'type'} eq 'JS') {
 	   return  $expr ;
+    } elsif ($expr->{'type'} eq 'null') {
+    	return $expr;    
     } elsif($expr->{'type'} eq 'num') {
 	   return  $expr ;
     } elsif($expr->{'type'} eq 'regexp') {
@@ -243,8 +245,9 @@ sub eval_expr {
     } elsif($expr->{'type'} eq 'prim') {
 	   return eval_prim($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'operator') {
-       $logger->trace('[javascript::eval_expr] ', sub {Dumper($expr)});
-	   return Kynetx::Operators::eval_operator($expr, $rule_env, $rule_name, $req_info, $session);
+       $logger->trace('[eval_expr (operator)] ', sub {Dumper($expr)});
+       my $opval = Kynetx::Operators::eval_operator($expr, $rule_env, $rule_name, $req_info, $session);
+	   return $opval;
     } elsif($expr->{'type'} eq 'condexpr') {
         my $test = eval_expr($expr->{'test'}, $rule_env, $rule_name, $req_info, $session);
         return
@@ -431,12 +434,13 @@ sub eval_prim {
 
     my $vals = eval_rands($prim->{'args'}, $rule_env, $rule_name, $req_info, $session);
 
-#    my $logger = get_logger();
-
-#    $logger->debug("[eval_prim] ", sub {Dumper $vals});
-
+    my $logger = get_logger();
     my $val0 = den_to_exp($vals->[0]);
     my $val1 = den_to_exp($vals->[1]);
+
+    if ($val0 eq "__undef__" || $val1 eq "__undef__") {
+    	return mk_expr_node('null','__undef__');
+    }
 
     # FIXME: Add operators
     # FIXME: Do we need more than binary?
@@ -855,7 +859,7 @@ sub den_to_exp {
 
     return $expr unless (ref $expr eq 'HASH' && defined $expr->{'type'});
     case: for ($expr->{'type'}) {
-	/str|num|regexp|JS/ && do {
+	/str|num|regexp|JS|null/ && do {
 	    return $expr->{'val'};
 	};
 
@@ -930,8 +934,13 @@ sub exp_to_den {
 sub infer_type {
     my ($v) = @_;
     my $t;
+    
+    my $logger = get_logger();
+    $logger->trace("Infer type from: (",$v,") ",ref $v);
 
-    return 'undef' unless defined $v;
+	# Watch for side effects if something unexpected is 
+	# relying on 'undef'
+    return 'null' unless defined $v;
 
     if($v =~ m/^(\d*\.\d+|[1-9]\d+|\d)$/) { # crude type inference for primitives
 	$t = 'num' ;
@@ -943,6 +952,8 @@ sub infer_type {
 	$t = 'array';
     } elsif($v =~ m/^\$K\(.*\)/) {
 	$t = 'JS';
+    } elsif ($v eq '__undef__') {
+    	$t='null';    
     } else {
 	$t = 'str';
     }
@@ -963,10 +974,13 @@ my %literal_types = ('str' => 1,
 		     'regexp' => 1,
 		     'array' => 1,
 		     'hash' => 1,
+		     'null' => 1,
 		    );
 
 sub typed_value {
   my($val) = @_;
+  my $logger = get_logger();
+  $logger->trace("typed value recieved: ", sub {Dumper($val)});
   unless (ref $val eq 'HASH' &&
 	  defined $val->{'type'} &&
 	  $literal_types{$val->{'type'}}
