@@ -67,7 +67,8 @@ public class ParseRuleset
                         }
                     }
 //					System.out.println("Parsed: " + thefile + " in " + (System.currentTimeMillis() - start) + "ms." );
-					System.out.println(unescapeUnicode(js.toString()));
+					//System.out.println(unescapeUnicode(js.toString()));
+					System.out.println(js.toString());
 					//System.out.println("=============");
 					//System.out.println(js.toString());
 				}

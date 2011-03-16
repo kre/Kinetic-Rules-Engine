@@ -31,7 +31,8 @@ public class RubyRulesetParser
                     }
 					else
 					{
-						System.out.println(unescapeUnicode(js.toString()));
+						System.out.println(js.toString());
+//						System.out.println(unescapeUnicode(js.toString()));
 					}
 				}
 				catch(Exception e)
