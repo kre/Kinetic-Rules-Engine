@@ -11,6 +11,8 @@ function KrlApplication(app)
     // List of external resources needed for this app
     this.external_resources = null;
 
+    this.named_external_resources = {};
+
     // Data sets registered fro this app
     this.data_sets = null;
 
@@ -34,18 +36,28 @@ KrlApplication.prototype.store_data_sets = function(datasetdata)
     this.execute_pending_closures();
 };
 
+KrlApplication.prototype.get_named_resource = function(name)
+{
+    return this.named_external_resources[name]
+};
+
 /*
  Add what external resources we need for THIS app
  */
-KrlApplication.prototype.add_external_resources = function(resources)
-{
+
+KrlApplication.prototype.add_external_resources = function(resources) {
     var my_resources = this.external_resources || {};
+    myself = this
     $KOBJ.each(resources, function (index) {
         var a_resource = resources[index];
         my_resources[a_resource.url] = a_resource;
+        if (a_resource.name) {
+            myself.named_external_resources[a_resource.name] = a_resource;
+        }
     });
     this.external_resources = my_resources;
 };
+
 
 /*
  * Tells us if the datasets have been loaded

@@ -71,9 +71,11 @@ open DICT, $dict_path;
 my $what = $DICTIONARY[rand(@DICTIONARY)];
 my $who = $DICTIONARY[rand(@DICTIONARY)];
 my $where = $DICTIONARY[rand(@DICTIONARY)];
+my $yav = $DICTIONARY[rand(@DICTIONARY)];
 chomp($what);
 chomp($where);
 chomp($who);
+chomp($yav);
 
 $logger->debug("Who:   $who");
 $logger->debug("What:  $what");
@@ -124,13 +126,13 @@ $start = new Benchmark;
 Kynetx::MongoDB::update_value($cruft,$key,$value,1);
 $end = new Benchmark;
 my $base_save = timediff($end,$start);
-diag "Save to Mongo: " . $base_save->[0];
+#diag "Save to Mongo: " . $base_save->[0];
 
 $start = new Benchmark;
 Kynetx::MongoDB::push_value($cruft,$key,$value2);
 $end = new Benchmark;
 my $stack_query = timediff($end,$start);
-diag "Convert to stack: ". $stack_query->[0];
+#diag "Convert to stack: ". $stack_query->[0];
 
 $result = Kynetx::MongoDB::get_value($cruft,$key);
 $got = $result->{"value"};
@@ -141,7 +143,7 @@ $start = new Benchmark;
 Kynetx::MongoDB::push_value($cruft,$key,$value1);
 $end = new Benchmark;
 $stack_query = timediff($end,$start);
-diag "Push on existing stack: ". $stack_query->[0];
+#diag "Push on existing stack: ". $stack_query->[0];
 $result = Kynetx::MongoDB::get_value($cruft,$key);
 $got = $result->{"value"};
 $expected = [$value->{"value"},$value2->{"value"},$value1->{"value"}];
@@ -151,7 +153,7 @@ $start = new Benchmark;
 $result = Kynetx::MongoDB::pop_value($cruft,$key);
 $end = new Benchmark;
 $stack_query = timediff($end,$start);
-diag "Stack pop: ". $stack_query->[0];
+#diag "Stack pop: ". $stack_query->[0];
 $got = $result;
 $expected = $value1->{"value"};
 compare($got,$expected,"Pop value from array returns " . $value1->{"value"});
@@ -161,7 +163,7 @@ $start = new Benchmark;
 $result = Kynetx::MongoDB::pop_value($cruft,{"key" => "foop"});
 $end = new Benchmark;
 $stack_query = timediff($end,$start);
-diag "Stack pop: ". $stack_query->[0];
+#diag "Stack pop: ". $stack_query->[0];
 $got = $result;
 $expected = undef;
 compare($got,$expected,"Pop value from null array returns " . $expected);
@@ -241,8 +243,8 @@ $got = $result->{"value"};
 $end = new Benchmark;
 my $c_query = timediff($end,$start);
 compare($got,$where,"Value returned from memcached");
-diag "Mongo query: ". $m_query->[0];
-diag "Cache query: ". $c_query->[0];
+#diag "Mongo query: ". $m_query->[0];
+#diag "Cache query: ". $c_query->[0];
 
 Kynetx::Persistence::Entity::put_edatum($frid,$fken,$who,$what);
 
@@ -256,7 +258,7 @@ $got = $result->{"value"};
 $end = new Benchmark;
 $m_query = timediff($end,$start);
 compare($got,$what,"Value returned from Mongo get after (eventually consistent) update");
-diag "Mongo query: ". $m_query->[0];
+#diag "Mongo query: ". $m_query->[0];
 
 Kynetx::Persistence::Entity::delete_edatum($frid,$fken,$who);
 $expected = undef;
@@ -290,13 +292,13 @@ $got = $result->{"value"};
 
 compare($got,$what,"Get the saved value",0);
 
-diag "Stop master server now";
-sleep 5;
+#diag "Stop master server now";
+#sleep 5;
 
 $result = touch_value($cruft,$key);
 my $touch2 = $result->{"created"};
 
-cmp_ok($touch2,'>',$touch1,"Touch the creation time");
+cmp_ok($touch2,'>=',$touch1,"Touch the creation time");
 $num_tests++;
 my $three_days_ago = DateTime->now->add( days => -3 );
 $result = touch_value($cruft,$key,$three_days_ago);
@@ -304,6 +306,12 @@ $result = touch_value($cruft,$key,$three_days_ago);
 my $touch3 = $result->{"created"};
 cmp_ok($touch3,'<',$touch1,"Set the creation time (-3 days)");
 $num_tests++;
+
+$result = atomic_set($cruft,$key,'value',$yav);
+compare($result,1,"atomic set",1);
+
+$result = get_value($cruft,$key);
+compare($result->{"value"},$yav,"Check for atomic update",1);
 
 delete_value($cruft,$key);
 
@@ -313,12 +321,6 @@ $result = get_value($cruft,$key);
 compare($result->{"value"},0,"Initalize a $where to 0 (touch)",1);
 
 delete_value($cruft,$key);
-
-# get_value
-$var = {'name' => $global_iname};
-$result = get_value($dictionary,$var);
-compare($result,$kxri,"Get Value",0);
-
 
 
 

@@ -152,30 +152,22 @@ sub eval_one_decl {
 
 sub eval_decl {
     my ($req_info, $rule_env, $rule_name, $session, $decl) = @_;
-
     my $val = '0';
 
     my $logger = get_logger();
-
-#    $logger->debug("[eval_decl]: ", sub {Dumper $decl->{'rhs'}});
+    $logger->trace("decl type: ",$decl->{'type'});
+    $logger->trace("[eval_decl]: ", sub {Dumper $decl->{'rhs'}});
 
     if ($decl->{'type'} eq 'expr' ) {
-
-	my $r = eval_expr($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);
-
-#    $logger->debug("before de-denoting ", Dumper $r);
-
-	$val = den_to_exp($r);
-
+		my $r = eval_expr($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);
+       $logger->trace("before de-denoting ", Dumper $r);
+		$val = den_to_exp($r);
     } elsif ($decl->{'type'} eq 'here_doc') {
-
-	$val = eval_heredoc($decl->{'rhs'});
-
-	$logger->debug("[decl] here doc for ", $decl->{'lhs'} );
-    }
-
-#    $logger->debug("Evaling " . $rule_name.":".$decl->{'lhs'});
-#    $logger->debug("returning ", Dumper $val);
+		$val = eval_heredoc($decl->{'rhs'});	
+		$logger->trace("[decl] here doc for ", $decl->{'lhs'} );
+    } 
+    $logger->trace("Evaling " . $rule_name.":".$decl->{'lhs'});
+    $logger->trace("returning ", Dumper $val);
 
     return ($decl->{'lhs'}, $val);
 
@@ -212,13 +204,15 @@ sub eval_expr {
         }
     } elsif($expr->{'type'} eq 'JS') {
 	   return  $expr ;
+    } elsif ($expr->{'type'} eq 'null') {
+    	return $expr;    
     } elsif($expr->{'type'} eq 'num') {
 	   return  $expr ;
     } elsif($expr->{'type'} eq 'regexp') {
 	   return  $expr ;
     } elsif($expr->{'type'} eq 'var') {
 	   my $v = lookup_rule_env($expr->{'val'},$rule_env);
-	   unless (defined $v) {
+	   unless (defined $v) {	   	
 	       $logger->info("Variable '", $expr->{'val'}, "' is undefined");
 	   }
 	   $logger->trace($rule_name.':'.$expr->{'val'}, " -> ", $v, ' Type -> ', infer_type($v));
@@ -257,8 +251,9 @@ sub eval_expr {
     } elsif($expr->{'type'} eq 'prim') {
 	   return eval_prim($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'operator') {
-       $logger->trace('[javascript::eval_expr] ', sub {Dumper($expr)});
-	   return Kynetx::Operators::eval_operator($expr, $rule_env, $rule_name, $req_info, $session);
+       $logger->trace('[eval_expr (operator)] ', sub {Dumper($expr)});
+       my $opval = Kynetx::Operators::eval_operator($expr, $rule_env, $rule_name, $req_info, $session);
+	   return $opval;
     } elsif($expr->{'type'} eq 'condexpr') {
         my $test = eval_expr($expr->{'test'}, $rule_env, $rule_name, $req_info, $session);
         return
@@ -266,7 +261,7 @@ sub eval_expr {
 	           eval_expr($expr->{'then'}, $rule_env, $rule_name, $req_info, $session) :
 	           eval_expr($expr->{'else'}, $rule_env, $rule_name, $req_info, $session)
     } elsif($expr->{'type'} eq 'function') {
-        return mk_closure($expr, $rule_env);
+    	return mk_closure($expr, $rule_env);
     } elsif($expr->{'type'} eq 'simple') {
       # rearranges parse tree on the fly.  Should be removed after June 2010.
         return eval_application(mk_app_from_simple($expr), $rule_env, $rule_name,$req_info, $session);
@@ -307,7 +302,7 @@ sub eval_expr {
 	        $count = Kynetx::Persistence::get_persistent_var($domain,$req_info->{'rid'}, $session, $name);
         }
 
-        $logger->debug('[persistent_ineq] ', "$name -> $count");
+        $logger->trace('[persistent_ineq] ', "$name -> $count");
         my $v = ineq_test($expr->{'ineq'},
 		     $count,
 		     Kynetx::Expressions::den_to_exp(
@@ -427,6 +422,10 @@ sub eval_expr {
     # 	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
     #   }
     #   return mk_expr_node(infer_type($v),$v);
+    } elsif($expr->{'type'} eq 'defaction') {
+        my $aexpr = mk_action_expr($expr, $rule_env, $rule_name,$req_info, $session);
+        $logger->trace("Action expression: ", sub {Dumper($aexpr)});
+        return $aexpr;
     } else {
         $logger->error("Unknown type in eval_expr: $expr->{'type'}");
     }
@@ -441,12 +440,13 @@ sub eval_prim {
 
     my $vals = eval_rands($prim->{'args'}, $rule_env, $rule_name, $req_info, $session);
 
-#    my $logger = get_logger();
-
-#    $logger->debug("[eval_prim] ", sub {Dumper $vals});
-
+    my $logger = get_logger();
     my $val0 = den_to_exp($vals->[0]);
     my $val1 = den_to_exp($vals->[1]);
+
+    if ($val0 eq "__undef__" || $val1 eq "__undef__") {
+    	return mk_expr_node('null','__undef__');
+    }
 
     # FIXME: Add operators
     # FIXME: Do we need more than binary?
@@ -506,7 +506,7 @@ sub eval_application {
 
   # the trick to getting this right is managing env extension correctly
 
-#  $logger->debug("Env in eval_application: ", sub { Dumper $rule_env});
+  $logger->debug("Env in eval_application: ", sub { Dumper $rule_env});
 
 #  $logger->debug("Evaluation function...", sub { Dumper $expr} );
 
@@ -865,7 +865,7 @@ sub den_to_exp {
 
     return $expr unless (ref $expr eq 'HASH' && defined $expr->{'type'});
     case: for ($expr->{'type'}) {
-	/str|num|regexp|JS/ && do {
+	/str|num|regexp|JS|null/ && do {
 	    return $expr->{'val'};
 	};
 
@@ -886,7 +886,7 @@ sub den_to_exp {
 	    return [ map {den_to_exp($_)} @{ $expr->{'val'} } ];
 	};
 
-	/closure/ && do {
+	/closure|action_expr/ && do {
 	  return $expr;
 	};
 
@@ -940,8 +940,13 @@ sub exp_to_den {
 sub infer_type {
     my ($v) = @_;
     my $t;
+    
+    my $logger = get_logger();
+    $logger->trace("Infer type from: (",$v,") ",ref $v);
 
-    return 'undef' unless defined $v;
+	# Watch for side effects if something unexpected is 
+	# relying on 'undef'
+    return 'null' unless defined $v;
 
     if($v =~ m/^(\d*\.\d+|[1-9]\d+|\d)$/) { # crude type inference for primitives
 	$t = 'num' ;
@@ -953,6 +958,8 @@ sub infer_type {
 	$t = 'array';
     } elsif($v =~ m/^\$K\(.*\)/) {
 	$t = 'JS';
+    } elsif ($v eq '__undef__') {
+    	$t='null';    
     } else {
 	$t = 'str';
     }
@@ -973,10 +980,13 @@ my %literal_types = ('str' => 1,
 		     'regexp' => 1,
 		     'array' => 1,
 		     'hash' => 1,
+		     'null' => 1,
 		    );
 
 sub typed_value {
   my($val) = @_;
+  my $logger = get_logger();
+  $logger->trace("typed value recieved: ", sub {Dumper($val)});
   unless (ref $val eq 'HASH' &&
 	  defined $val->{'type'} &&
 	  $literal_types{$val->{'type'}}
@@ -986,8 +996,77 @@ sub typed_value {
   return $val
 }
 
+sub mk_action_expr {
+  my ($expr, $env)  = @_;
+  my $logger = get_logger();
+  my $blocktype = $expr->{'blocktype'} || 'every';
+  my @action_array =();
+  $logger->trace("Make action expression for: ", sub {Dumper($expr)});
+  my $sig = md5_hex(freeze $expr);
+  if (defined $expr->{'actions'}) {
+  	foreach my $action (@{$expr->{'actions'}}) {
+  		$logger->trace("Action ast: ", sub {Dumper($action)});
+  		my $label = $action->{'label'};
+  		my $a = $action->{'action'};
+  		if ($a) {
+  			$logger->debug("found action: $a->{'name'}");
+  			my $composed_action = mk_expr_node( 'action',{
+  				'label' => $label,
+  				'source' => $a->{'source'},
+  				'name' => $a->{'name'},
+  				'args' => $a->{'args'},
+  				'vars' => $a->{'vars'},
+  				'modifiers' => $a->{'modifiers'},  				
+  			});
+  			$logger->trace("Composed action: ", sub {Dumper($composed_action)});
+  			push(@action_array,$composed_action);
+  		}
+  	}
+  } 
+  return mk_expr_node('action_expr',
+  		{
+  		'blocktype' => $blocktype,
+  		'actions' => \@action_array,
+  		'vars' => $expr->{'vars'},
+		'decls' => $expr->{'decls'},
+		'configure' => $expr->{'configure'},
+		'env' => $env,
+		'sig' => $sig});
+  
+	
+}
+
+sub eval_action {
+	my ($expr,$rule_env, $rule_name, $req_info, $session) = @_;
+	my $logger = get_logger();
+	return undef unless ($expr->{'type'} eq 'action');
+	my $val = $expr->{'val'};
+	my $args = $val->{'args'};
+	my @expressed_args = ();
+	#$logger->debug("Eval action ENVIRONMENT: ", sub {Dumper($rule_env)});
+	#$logger->debug("Args: ", sub {Dumper($args)});
+	foreach my $arg (@$args) {
+		#$logger->debug("Arg: ", sub {Dumper($arg)});
+		push(@expressed_args,eval_expr($arg,$rule_env, $rule_name, $req_info, $session));
+	}
+	my $struct = {
+		'action' => {
+			'name' => $val->{'name'},
+			'source' => $val->{'source'},
+			'args' => \@expressed_args,
+			'modifiers' => $val->{'modifiers'},
+			'vars' => $val->{'vars'}
+		},
+		'label' => $val->{'label'}
+	};
+	return $struct;
+	
+}
+
 sub mk_closure {
   my ($expr, $env)  = @_;
+  my $logger = get_logger();
+  $logger->trace("Make closure for: ", sub {Dumper($expr)});
   my $sig = md5_hex(freeze $expr);
 
   return mk_expr_node('closure',
@@ -1084,6 +1163,11 @@ sub type_of {
 sub is_closure {
   my $val = shift;
   return (ref $val eq 'HASH' && defined $val->{'type'} && $val->{'type'} eq 'closure');
+}
+
+sub is_defaction {
+  my $val = shift;
+  return (ref $val eq 'HASH' && defined $val->{'type'} && $val->{'type'} eq 'action_expr');
 }
 
 # rearranges parse tree on the fly.  Should be removed after June 2010.

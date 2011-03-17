@@ -203,7 +203,8 @@ use Inline (Java => <<'END',
                     JSONObject error = new JSONObject(map);
                     return error.toString();
                 }
-                return unescapeUnicode(js.toString());
+                //return unescapeUnicode(js.toString());
+                return js.toString();
             } catch(Exception e) {
                 StringBuffer sb = new StringBuffer();
                 sb.append("Parser Exception (" + e.getMessage() + "): ");
@@ -234,7 +235,8 @@ use Inline (Java => <<'END',
                     map.put("error",elist);
                 }
                 JSONObject js = new JSONObject(map);
-                return unescapeUnicode(js.toString());
+                //return unescapeUnicode(js.toString());
+                return js.toString();
             } catch(Exception e) {
                 StringBuffer sb = new StringBuffer();
                 sb.append("Parser Exception (" + e.getMessage() + "): ");
@@ -264,7 +266,8 @@ use Inline (Java => <<'END',
                     JSONObject error = new JSONObject(map);
                     return error.toString();
                 }
-                return unescapeUnicode(js.toString());
+                //return unescapeUnicode(js.toString());
+                return js.toString();
             } catch(Exception e) {
                 StringBuffer sb = new StringBuffer();
                 sb.append("Parser Exception (" + e.getMessage() + "): ");
@@ -295,7 +298,8 @@ use Inline (Java => <<'END',
                     JSONObject error = new JSONObject(map);
                     return error.toString();
                 }
-                return unescapeUnicode(js.toString());
+                //return unescapeUnicode(js.toString());
+                return js.toString();
             } catch(Exception e) {
                 StringBuffer sb = new StringBuffer();
                 sb.append("Parser Exception (" + e.getMessage() + "): ");
@@ -325,7 +329,8 @@ use Inline (Java => <<'END',
                     JSONObject error = new JSONObject(map);
                     return error.toString();
                 }
-                return unescapeUnicode(js.toString());
+                //return unescapeUnicode(js.toString());
+                return js.toString();
             } catch(Exception e) {
                 StringBuffer sb = new StringBuffer();
                 sb.append("Parser Exception (" + e.getMessage() + "): ");
@@ -356,7 +361,8 @@ use Inline (Java => <<'END',
                     JSONObject error = new JSONObject(map);
                     return error.toString();
                 }
-                return unescapeUnicode(js.toString());
+                //return unescapeUnicode(js.toString());
+                return js.toString();
             } catch(Exception e) {
                 StringBuffer sb = new StringBuffer();
                 sb.append("Parser Exception (" + e.getMessage() + "): ");
@@ -387,7 +393,8 @@ use Inline (Java => <<'END',
                     JSONObject error = new JSONObject(map);
                     return error.toString();
                 }
-                return unescapeUnicode(js.toString());
+                //return unescapeUnicode(js.toString());
+                return js.toString();
             } catch(Exception e) {
                 return (exceptionMessage(e.getMessage()));
             }
@@ -411,7 +418,8 @@ use Inline (Java => <<'END',
                     JSONObject error = new JSONObject(map);
                     return error.toString();
                 }
-                return unescapeUnicode(js.toString());
+                //return unescapeUnicode(js.toString());
+                return js.toString();
             } catch(Exception e) {
                 StringBuffer sb = new StringBuffer();
                 sb.append("Parser Exception (" + e.getMessage() + "): ");
@@ -441,7 +449,8 @@ use Inline (Java => <<'END',
                     JSONObject error = new JSONObject(map);
                     return error.toString();
                 }
-                return unescapeUnicode(js.toString());
+                //return unescapeUnicode(js.toString());
+                return js.toString();
             } catch(Exception e) {
                 StringBuffer sb = new StringBuffer();
                 sb.append("Parser Exception (" + e.getMessage() + "): ");
@@ -471,7 +480,8 @@ use Inline (Java => <<'END',
                     JSONObject error = new JSONObject(map);
                     return error.toString();
                 }
-                return unescapeUnicode(js.toString());
+                //return unescapeUnicode(js.toString());
+                return js.toString();
             } catch(Exception e) {
                 StringBuffer sb = new StringBuffer();
                 sb.append("Parser Exception (" + e.getMessage() + "): ");
@@ -502,7 +512,8 @@ use Inline (Java => <<'END',
                     JSONObject error = new JSONObject(map);
                     return error.toString();
                 }
-                return unescapeUnicode(js.toString());
+                //return unescapeUnicode(js.toString());
+                return js.toString();
             } catch(Exception e) {
                 StringBuffer sb = new StringBuffer();
                 sb.append("Parser Exception (" + e.getMessage() + "): ");

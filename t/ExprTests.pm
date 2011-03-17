@@ -2028,6 +2028,30 @@ add_expr_testcase(
 #---------------------------------------------------------------------------------
 # user-defined functions
 #---------------------------------------------------------------------------------
+$krl_src = <<_KRL_;
+function(x,y) {
+	b = << <input type="button" value="#{y}" onclick="KOBJ.get_application('cs_test').raise_event('#{x}');"/> >>;
+	b;
+}
+_KRL_
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'function(x,y) {var b = \'<input type="button" value="\'+y+\'" onclick="KOBJ.get_application(\\\'cs_test\\\').raise_event(\\\'\'+x+\'\\\');"/>\'; return b}',
+	mk_expr_node('closure',{'vars' => ['x','y'],
+					'decls' => [ {
+         'lhs' => 'b',
+         'rhs' => ' <input type="button" value="#{y}" onclick="KOBJ.get_application(\'cs_test\').raise_event(\'#{x}\');"/> ',
+         'type' => 'here_doc'
+       }
+					],
+					'sig' => '34f46dde1a1e0f343e14c6b279f0556a',
+					'expr' => {'val' => 'b','type'=>'var'},
+					'env' => $rule_env,
+	}),
+	0
+);
+
 
 $krl_src = <<_KRL_;
 function(x) {

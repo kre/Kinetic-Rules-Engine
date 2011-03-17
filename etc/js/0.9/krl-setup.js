@@ -15,7 +15,6 @@ KOBJ['data'] = KOBJ['data'] || {};
 KOBJ['external_resources'] = {};
 
 KOBJ.in_bx_extention = false;
-KOBJ.can_ajax_post = false;
 KOBJ.default_error_stack_key = "50d2aebf1044603c39a4e36e8d90e91e";
 
 //used for overriding the document for UI actions

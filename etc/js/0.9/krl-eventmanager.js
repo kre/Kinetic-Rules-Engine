@@ -45,9 +45,11 @@ KOBJEventManager.event_fire_complete = function(guid,app)
 {
     KOBJ.loggers.events.trace("Event Fire Complete " + guid);
     var guid_info = KOBJEventManager.guid_list[guid];
+
+    // this can be caused by a postlate event raise.  We did not start the event the server did
     if(!guid_info)
     {
-        KOBJ.error("Event transaction id unknown ignoring for: " + app.app_id);
+//        KOBJ.debug("Event transaction id unknown ignoring for: " + app.app_id);
         return;
     }
 

@@ -62,6 +62,7 @@ gen_js_rands
 gen_js_callbacks
 gen_js_afterload
 gen_js_mk_cb_func
+gen_js_error
 get_js_html
 mk_js_str
 escape_js_str
@@ -94,6 +95,8 @@ sub gen_js_expr {
 		$jsexp = $expr->{'val'};
 	} elsif (/bool/) {
 		$jsexp = $expr->{'val'};
+	} elsif (/null/) {
+		$jsexp = 'null';
 	} elsif (/^undef$/) {
 		$jsexp = 'null';
 	} elsif (/^array$/) {
@@ -159,6 +162,11 @@ sub gen_js_prim {
 
 }
 
+sub get_js_error {
+	my $message = shift;
+	return '(console.log(' . $message . '))';
+}
+
 sub gen_js_condexpr {
     my $cond = shift;
 
@@ -187,7 +195,7 @@ sub gen_js_function {
       if ($d->{'type'} eq 'expr') {
 	$rhs = gen_js_expr($d->{'rhs'});
       } elsif ($d->{'type'} eq 'here_doc') {
-	$rhs = gen_js_exp(exp_to_den(eval_heredoc($d->{'rhs'})));
+	$rhs = gen_js_expr(Kynetx::Expressions::exp_to_den(Kynetx::Expressions::eval_heredoc($d->{'rhs'})));
       }
 
       $decls .= gen_js_var($d->{'lhs'}, $rhs);
