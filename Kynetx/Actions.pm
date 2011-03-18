@@ -743,22 +743,26 @@ sub build_one_action {
 
 	foreach my $m ( @{ $action->{'modifiers'} } ) {
 		$logger->debug(sub {Dumper($m)} );
-		if (defined $m->{'value'}) {
-			if ($m->{'value'}->{'type'} eq 'null') {
+		my $dobj = 
+			Kynetx::Expressions::eval_expr($m->{'value'}, $rule_env, $rule_name, $req_info, $session);
+
+		if (defined $dobj) {			
+			if ($dobj->{'type'} eq 'null') {
 				next;
 			}
 		}
 		my $v = Kynetx::JavaScript::gen_js_expr($m->{'value'});
 		$logger->debug("Modifier val: ",sub {Dumper($v)});
+		$logger->debug("Denoted val: ",sub {Dumper($dobj)});
 		$mods->{ $m->{'name'} } =  $v;
 
 		
 
-		$config->{ $m->{'name'} } = Kynetx::Expressions::den_to_exp(
-			Kynetx::Expressions::eval_expr(
-				$m->{'value'}, $rule_env, $rule_name, $req_info, $session
-			)
-		);
+		$config->{ $m->{'name'} } = Kynetx::Expressions::den_to_exp($dobj);
+#			Kynetx::Expressions::eval_expr(
+#				$m->{'value'}, $rule_env, $rule_name, $req_info, $session
+#			)
+#		);
 
 		# don't eval for sending to client.
 		push @{$js_config},
