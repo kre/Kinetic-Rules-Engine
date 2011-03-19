@@ -743,6 +743,11 @@ sub build_one_action {
 
 	foreach my $m ( @{ $action->{'modifiers'} } ) {
 		$logger->debug(sub {Dumper($m)} );
+		if (defined $m->{'value'}) {
+			if ($m->{'value'}->{'type'} eq 'null') {
+				next;
+			}
+		}
 		my $v = Kynetx::JavaScript::gen_js_expr($m->{'value'});
 		$logger->debug("Modifier val: ",sub {Dumper($v)});
 		$mods->{ $m->{'name'} } =  $v;

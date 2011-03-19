@@ -842,48 +842,24 @@ when returns[HashMap result]
 event_seq returns[HashMap result]
 @init {
 	ArrayList temp_list = new ArrayList();
-	ArrayList temp_list_2 = new ArrayList();
+	//ArrayList temp_list_2 = new ArrayList();
 }
 	:
-		eor=event_or (tb=must_be_one[sar("then","before")] eor2=event_or { temp_list_2.add($tb.text);temp_list.add(eor2);} )*
+		eor=event_or seq=must_be_one[sar("then","before","after")]    es=event_seq
 		{
-			if(temp_list.size() == 0)
-			{
-				$result = eor.result;
-			}
-			else
-			{
-				HashMap the_result = new HashMap();
-				the_result.put("type","complex_event");
-				the_result.put("op",temp_list_2.get(0).toString());
-				the_result.put("args",new ArrayList());
-				((ArrayList)the_result.get("args")).add(eor.result);
-				HashMap last = the_result;
-
-				for(int i = 0; i <temp_list.size(); i++)
-				{
-					HashMap rtmp = ((event_or_return)temp_list.get(i)).result;
-					if(i == temp_list.size() - 1)
-					{
-						((ArrayList)last.get("args")).add(rtmp);
-					}
-					else
-					{
-						HashMap tmp = new HashMap();
-						tmp.put("type","complex_event");
-						tmp.put("op",temp_list_2.get(i+1).toString());
-						tmp.put("args",new ArrayList());
-						((ArrayList)tmp.get("args")).add(rtmp);
-						((ArrayList)last.get("args")).add(tmp);
-						last = 	tmp;
-					}
-				}
-
-				$result = the_result;
-
-			}
-
-
+			HashMap the_result = new HashMap();
+			the_result.put("type","complex_event");
+			the_result.put("op",$seq.text);
+			temp_list.add(eor.result); // new
+			the_result.put("args",temp_list);
+			//((ArrayList)the_result.get("args2")).add(eor.result);
+			//the_result.put("args",new ArrayList());
+			((ArrayList)the_result.get("args")).add(es.result);
+			$result = the_result;		
+		} |
+		eor=event_or
+		{
+			$result = eor.result;
 		}
 
 	;
@@ -895,44 +871,18 @@ event_or returns[HashMap result]
 	ArrayList temp_list = new ArrayList();
 }
 	:
-		ea=event_and {temp_list.add(ea);} (OR_OR ea1=event_and { temp_list.add(ea1);})* {
-			if(temp_list.size() == 1)
-			{
-				$result = ((event_and_return)temp_list.get(0)).result;
-			}
-			else
-			{
-				HashMap the_result = new HashMap();
-				the_result.put("type","complex_event");
-				the_result.put("op","or");
-				the_result.put("args",new ArrayList());
-				((ArrayList)the_result.get("args")).add(ea.result);
-				HashMap last = the_result;
+		ea=event_and  OR_OR es=event_seq {
+			HashMap the_result = new HashMap();
+			the_result.put("type","complex_event");
+			the_result.put("op","or");
+			temp_list.add(ea.result);
+			the_result.put("args",temp_list);
+			((ArrayList)the_result.get("args")).add(es.result);
+			$result = the_result;
 
-
-				for(int i = 1; i <temp_list.size(); i++)
-				{
-					HashMap rtmp = ((event_and_return)temp_list.get(i)).result;
-					if(i == temp_list.size() - 1)
-					{
-						((ArrayList)last.get("args")).add(rtmp);
-					}
-					else
-					{
-						HashMap tmp = new HashMap();
-						tmp.put("type","complex_event");
-						tmp.put("op","or");
-						tmp.put("args",new ArrayList());
-						((ArrayList)tmp.get("args")).add(rtmp);
-						((ArrayList)last.get("args")).add(tmp);
-						last = 	tmp;
-					}
-				}
-
-				$result = the_result;
-
-			}
-
+		} |
+		ea=event_and {
+			$result=ea.result;
 		}
 	;
 event_and returns[HashMap result]
@@ -1012,8 +962,18 @@ event_prim returns[HashMap result]
 	ArrayList filters = new ArrayList();
 }
 	:
-	(custom_event)=>ce=custom_event {
-	 $result = ce.result;
+	
+	web=WEB? opt=must_be_one[sar("submit","click","dblclick","change","update")] elem=STRING on=on_expr?  set=setting? {
+		HashMap tmp = new HashMap();
+
+		tmp.put("domain",$web.text);
+		tmp.put("element",strip_string($elem.text));
+		tmp.put("type","prim_event");
+		tmp.put("vars",$set.result);
+		tmp.put("op",$opt.text);
+		tmp.put("on",$on.result);
+		$result = tmp;
+
 	}
 	| web=WEB? PAGEVIEW (spat=STRING|rpat=regex) set=setting? {
 		HashMap tmp = new HashMap();
@@ -1027,30 +987,24 @@ event_prim returns[HashMap result]
 		tmp.put("op","pageview");
 		$result = tmp;
 	}
-	| web=WEB? opt=must_be_one[sar("submit","click","dblclick","change","update")] elem=STRING on=on_expr?  set=setting? {
-		HashMap tmp = new HashMap();
-
-		tmp.put("domain",$web.text);
-		tmp.put("element",strip_string($elem.text));
-		tmp.put("type","prim_event");
-		tmp.put("vars",$set.result);
-		tmp.put("op",$opt.text);
-		tmp.put("on",$on.result);
-		$result = tmp;
-
-	}
 	| '(' evt=event_seq ')' {
 		$result=$evt.result;
 	}
+	| (custom_event)=>ce=custom_event {
+	 	$result = ce.result;
+	}
+	
+
 	;
 
 
 custom_event  returns[HashMap result]
 @init {
 	ArrayList filters = new ArrayList();
+	ArrayList exps = new ArrayList();
 }
     :
-        dom=(VAR|WEB) oper=VAR (filter=event_filter{filters.add($filter.result);})* set=setting?  {
+        dom=(VAR|WEB) oper=VAR? (filter=event_filter{filters.add($filter.result);})* set=setting?  {
 		HashMap tmp = new HashMap();
 		tmp.put("domain",$dom.text);
 		tmp.put("type","prim_event");
@@ -1060,7 +1014,26 @@ custom_event  returns[HashMap result]
 		tmp.put("filters",filters);
 		$result = tmp;
 		}
+	| dom=(VAR|PAGEVIEW) (exp=event_exp{exps.add($exp.result);})* set=setting?  {
+		HashMap tmp = new HashMap();
+		tmp.put("domain",$dom.text);
+		tmp.put("type","prim_event");
+		tmp.put("vars",$set.result);
+		tmp.put("op","expression");
+		tmp.put("exp",exps);
+		$result = tmp;
+	}
     ;
+    
+event_exp returns[Object result]
+	: e=expr {
+		//HashMap tmp = $e.result;;
+		//tmp.put("type","expr");
+		//tmp.put("rhs",$e.result);
+		//$result = tmp;
+		$result = $e.result;;
+		}
+	;
 
 event_filter returns[HashMap result]
 	: typ=VAR (sfilt=STRING | rfilt=regex) {

@@ -175,36 +175,6 @@ SKIP: {
 	'like' => ['/test_rule_4/',
 		   '/var year = 2006/']
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/bar.html",
-	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
-		 ]
-       },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
-	'type' => 'text/javascript',
-	'like' => ['/test_rule_4/',
-		  '/var year = 2006/',
-		  '/test_rule_5/'
-		 ]
-       },
-       # next series of three shows that interceding events don't matter
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/bar.html",
-	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
-		 ]
-       },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/something_else.html",
-	'type' => 'text/javascript',
-	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
-		 ]
-       },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
-	'type' => 'text/javascript',
-	'like' => ['/test_rule_4/',
-		  '/var year = 2006/',
-		  '/test_rule_5/'
-		 ]
-       },
       ];
 
     $test_count += test_event_plan($before_test_plan);

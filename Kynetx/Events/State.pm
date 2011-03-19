@@ -56,6 +56,7 @@ qw(
 mk_pageview_prim
 mk_dom_prim
 mk_gen_prim
+mk_expr_prim
 next_state
 mk_and
 mk_or
@@ -362,12 +363,13 @@ sub next_state {
 #  $logger->debug("Starting state: ", $state);
 
   my $transitions = $self->get_transitions($state);
+  $logger->debug("Transistions: ", sub {Dumper($transitions)});
 
   my $next = $self->get_default_transition($state);
   foreach my $t (@{ $transitions }) {
-#    $logger->debug("Transition type: ",$t->{'type'}, " Event type: ", $event->get_type());
+    $logger->debug("Transition type: ",$t->{'type'}, " Event type: ", $event->get_type());
     my ($match,$vals) = match($event, $t);
-#    $logger->debug("Trans vars ", sub { Dumper $t->{'vars'} });
+    $logger->debug("Trans vars ", sub { Dumper $t->{'vars'} });
     if ($match) {
       $next = $t->{'next'};
       $event->set_vars( $self->get_id(), $t->{'vars'});
@@ -380,9 +382,21 @@ sub next_state {
 
 sub match {
   my($event, $transition) = @_;
+  my $ttype = $transition->{'type'};
+  my $type = $event->get_type();
+  my $logger = get_logger();
+  my ($eedomain,$eetype) = split(/:/,$ttype);
+  my ($edomain,$etype) = split(/:/,$type);
+  $logger->debug("Looking for a ",sub {Dumper($ttype)});
+  $logger->debug("In event of : ",sub {Dumper($etype)});
 
+  return 0 unless $eedomain eq $edomain;
+  if ($eetype eq 'expression') {
+		$logger->debug("Need to eval the statement to check against $ttype");
+		return expr_eval($event,$transition);
+  }
   return 0 unless $event->isa($transition->{'type'});
-
+  
   if (defined $eval_funcs->{$event->get_type()}) {
     return $eval_funcs->{$event->get_type()}->($event, $transition);
   } else {
@@ -400,6 +414,8 @@ sub mk_prim {
   my $sm = Kynetx::Events::State->new();
   my $s1 = Data::UUID->new->create_str();
   my $s2 = Data::UUID->new->create_str();
+  my $logger = get_logger();
+  $logger->debug("Make primitive: ", sub {Dumper($test)});
 
   $sm->mk_initial($s1);
   $sm->mk_final($s2);
@@ -408,7 +424,7 @@ sub mk_prim {
 		 [{"next" => $s2,
 		   "type" => $type,
 		   "test" => $test,
-		   "vars" => $vars
+		   "vars" => $vars,
 		  }],
 		 $s1
 		);
@@ -497,13 +513,58 @@ $eval_funcs->{'change'} = \&dom_eval;
 $eval_funcs->{'update'} = \&dom_eval;
 $eval_funcs->{'dblclick'} = \&dom_eval;
 
+sub mk_expr_prim {
+  my ($domain, $op, $vars, $expr) = @_;
+  my $logger = get_logger();
+  $logger->debug("Op: ", sub {Dumper($op)});
+  $logger->debug("Vars: ", sub {Dumper($vars)});
+  $logger->debug("Expr: ", sub {Dumper($expr)});
+
+  return mk_prim($expr,
+		 $vars,
+		 "$domain:$op"
+		);	
+}
+
 sub mk_gen_prim {
   my ($domain, $op, $vars, $filters) = @_;
+  my $logger = get_logger();
+  $logger->debug("Op: ", sub {Dumper($op)});
+  $logger->debug("Vars: ", sub {Dumper($vars)});
+  $logger->debug("Filter: ", sub {Dumper($filters)});
 
   return mk_prim($filters,
 		 $vars,
 		 "$domain:$op"
 		);
+}
+
+## Event Expression
+sub expr_eval {
+	my ($event,$t) = @_;
+	my $logger = get_logger();
+	my $captures = [];
+	my $req_info = $event->get_req_info();
+	my $init_rule_env = Kynetx::Rules::mk_initial_env();
+	my $session = undef;
+	my $type = $event->get_type();
+	my ($domain,$eventid) = split(/:/,$type);
+	my $rule_env = Kynetx::Environments::extend_rule_env($eventid,1,$init_rule_env);
+	#$logger->debug("Rule env: ", sub {Dumper($rule_env)});	
+	my $expressions = $t->{'test'};
+	foreach my $expr (@$expressions) {
+		$logger->debug("Expression: ", sub {Dumper($expr)});
+		my $v = Kynetx::Expressions::den_to_exp(
+			Kynetx::Expressions::eval_expr($expr, $rule_env,,$req_info,$session));
+		$logger->debug("Expression evaled: ", sub {Dumper($v)});
+		if (defined $v && $v ne "__undef__") {
+			push(@$captures,$v);
+		} else {
+			return (0,$captures);
+		}
+	}
+	return (1,$captures);
+		
 }
 
 # this creates a target from then params names in the event spec &
@@ -517,7 +578,7 @@ sub gen_event_eval {
   my $delimeter = 'XQX';
   my $req_info = $event->get_req_info();
 
-# $logger->debug("t: ", sub {Dumper $t});
+  $logger->debug("Match transition: ", sub {Dumper $t});
 
   my $filters = $t->{'test'};
 

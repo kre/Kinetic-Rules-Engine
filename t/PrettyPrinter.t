@@ -54,10 +54,13 @@ use Kynetx::Parser qw/:all/;
 
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
+Log::Log4perl->easy_init($DEBUG);
+my $logger = get_logger();
 
 foreach my $f (@krl_files) {
     my ($fl,$krl_text) = getkrl($f);
     my $tree = parse_ruleset($krl_text);
+    $logger->debug("$fl: ", sub {Dumper($tree)});
     # compare to text with comments removed since pp can't reinsert them.
     # Use the internal perl string structure for the compare
     my $krl = decode("UTF-8",$krl_text);

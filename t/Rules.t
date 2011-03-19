@@ -1995,7 +1995,8 @@ add_testcase(
     $dummy_final_req_info,
     0
     );
-
+    
+ENDY:
 $krl_src = <<_KRL_;
 ruleset two_rules_first_raises_second {
     rule t10 is active {
@@ -3498,7 +3499,6 @@ This is another number #{z}  ',
 
 
 # test eval_use
-ENDY:
 my $empty_rule_env = empty_rule_env();
 my $mod_rule_env;
 

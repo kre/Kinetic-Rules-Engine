@@ -168,6 +168,8 @@ sub get_type {
 sub isa {
   my $self = shift;
   my $type = shift;
+  my $logger = get_logger();
+  $logger->debug("Checking: (me) ",$self->{'type'}, " for $type");
 
   return $self->{'type'} eq $type;
 }
@@ -297,6 +299,8 @@ sub change {
 sub generic {
   my $self = shift;
   my($type) = @_;
+  my $logger = get_logger();
+  $logger->debug("Generic primitive of: ",$type);
 
   $self->{'type'} = $type;
 

@@ -191,10 +191,10 @@ sub eval_expr {
 
     if ($expr->{'type'} eq 'str' ) {
     	if (utf8::is_utf8($expr->{'val'})) {
-    		$logger->debug("UTF8: ",$expr->{'val'});
+    		$logger->trace("UTF8: ",$expr->{'val'});
     	} else {
     		utf8::upgrade($expr->{'val'});
-    		$logger->debug("Not UTF8: ",$expr->{'val'});
+    		$logger->trace("Not UTF8: ",$expr->{'val'});
     	}
         if ($expr->{'val'} =~ m/\#\{(.+)\}{1}?/) {
             $logger->trace("Bee sting: ",$1);
@@ -506,7 +506,7 @@ sub eval_application {
 
   # the trick to getting this right is managing env extension correctly
 
-  $logger->debug("Env in eval_application: ", sub { Dumper $rule_env});
+  $logger->trace("Env in eval_application: ", sub { Dumper $rule_env});
 
 #  $logger->debug("Evaluation function...", sub { Dumper $expr} );
 
