@@ -45,6 +45,8 @@ my $my_req_info = Kynetx::Test::gen_req_info($rid);
 my $rule_name = 'foo';
 
 my $rule_env = Kynetx::Test::gen_rule_env();
+my $key = "farmer";
+my $data = "The rain in Spain stays mainly in the plain";
 
 
 my $session = Kynetx::Test::gen_session($r, $rid);
@@ -92,6 +94,13 @@ like(do_math($my_req_info, 'random', [999]), qr/^\d{1,3}$/, 'single digit');
 
 like(do_math($my_req_info, 'md5', ["this is a test"]), qr/^([a-f0-9]){32}$/, 'md5 returns hex string');
 like(do_math($my_req_info, 'sha1', ["this is a test"]), qr/^([a-f0-9]){40}$/, 'sha1 returns hex string');
+like(do_math($my_req_info, 'hmac_sha1', [$data,$key]), qr/^(\C)+$/, 'hmac_sha1 returns hex string');
+like(do_math($my_req_info, 'hmac_sha1_hex', [$data,$key]), qr/^([a-f0-9]){40}$/, 'hmac_sha1_hex returns hex string');
+like(do_math($my_req_info, 'hmac_sha1_base64', [$data,$key]), qr/^([a-zA-Z0-9]){27}$/, 'hmac_sha1_base64 returns hex string');
+
+like(do_math($my_req_info, 'hmac_sha256', [$data,$key]), qr/^(\C)+$/, 'hmac_sha256 returns hex string');
+like(do_math($my_req_info, 'hmac_sha256_hex', [$data,$key]), qr/^([a-f0-9]){40,80}$/, 'hmac_sha256_hex returns hex string');
+like(do_math($my_req_info, 'hmac_sha256_base64', [$data,$key]), qr/^([a-zA-Z0-9]){27,80}$/, 'hmac_sha256_base64 returns hex string');
 
 ENDY:
 like(math_handle( 'tan', [0.9]), qr/^\d+\.\d+$/, 'tangent');

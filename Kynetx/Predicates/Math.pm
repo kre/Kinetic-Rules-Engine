@@ -38,6 +38,8 @@ use Log::Log4perl qw(get_logger :levels);
 
 use Digest::MD5 qw/md5_hex/;
 use Digest::SHA1 qw/sha1_hex/;
+use Digest::SHA qw/hmac_sha1 hmac_sha1_hex hmac_sha1_base64
+				hmac_sha256 hmac_sha256_hex hmac_sha256_base64/;
 use Math::Trig;
 use Math::Trig ':radial';
 use Math::Trig ':great_circle';
@@ -117,6 +119,75 @@ sub md5 {
 	return $val;
 }
 $funcs->{'md5'} = \&md5;
+
+sub _hmac_sha1 {
+    my ($req_info, $function, $args) = @_;
+    my $logger = get_logger();
+    my $data = $args->[0];
+    my $key = $args->[1];
+    my $digest = hmac_sha1($data,$key);
+    return $digest;	
+}
+$funcs->{'hmac_sha1'} = \&_hmac_sha1;
+
+sub _hmac_sha1_hex {
+    my ($req_info, $function, $args) = @_;
+    my $logger = get_logger();
+    my $data = $args->[0];
+    my $key = $args->[1];
+    my $digest = hmac_sha1_hex($data,$key);
+    return $digest;	
+}
+$funcs->{'hmac_sha1_hex'} = \&_hmac_sha1_hex;
+
+sub _hmac_sha1_base64 {
+    my ($req_info, $function, $args) = @_;
+    my $logger = get_logger();
+    my $data = $args->[0];
+    my $key = $args->[1];
+    my $digest = hmac_sha1_base64($data,$key);
+    return $digest;	
+}
+$funcs->{'hmac_sha1_base64'} = \&_hmac_sha1_base64;
+
+
+sub _hmac_sha256 {
+    my ($req_info, $function, $args) = @_;
+    my $logger = get_logger();
+    my $data = $args->[0];
+    my $key = $args->[1];
+    my $digest = hmac_sha256($data,$key);
+    return $digest;	
+}
+$funcs->{'hmac_sha256'} = \&_hmac_sha256;
+
+sub _hmac_sha256_hex {
+    my ($req_info, $function, $args) = @_;
+    my $logger = get_logger();
+    my $data = $args->[0];
+    my $key = $args->[1];
+    my $digest = hmac_sha256_hex($data,$key);
+    return $digest;	
+}
+$funcs->{'hmac_sha256_hex'} = \&_hmac_sha256_hex;
+
+sub _hmac_sha256_base64 {
+    my ($req_info, $function, $args) = @_;
+    my $logger = get_logger();
+    my $data = $args->[0];
+    my $key = $args->[1];
+    my $digest = hmac_sha256_base64($data,$key);
+    return $digest;	
+}
+$funcs->{'hmac_sha256_base64'} = \&_hmac_sha256_base64;
+
+
+
+
+
+
+
+
 
 # standard math functions
 sub _exp {
