@@ -211,12 +211,12 @@ sub process_event_for_rid {
 
     	$logger->trace("Rule: ", Kynetx::Json::astToJson($rule));
 
-    	$logger->debug("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
+    	$logger->trace("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
 
     	next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
 
     	my $sm = $rule->{'event_sm'};
-    	$logger->debug("State machine: ", sub {Dumper($sm)});
+    	$logger->trace("State machine: ", sub {Dumper($sm)});
 
         # States stored in Mongo should be serialized
         my $current_state = get_persistent_var("ent", $rid, $session, $sm_current_name ) || $sm->get_initial();
@@ -328,7 +328,7 @@ sub compile_event_expr {
             $logger->debug(
                 "Creating Expression event for $eexpr->{'domain'}:$eexpr->{'op'}"
             );
-            $logger->debug("Eexpr: ", sub {Dumper($eexpr)});
+            $logger->trace("Eexpr: ", sub {Dumper($eexpr)});
             $sm = mk_expr_prim( $eexpr->{'domain'}, $eexpr->{'op'},
                                $eexpr->{'vars'},   $eexpr->{'exp'} );        	
         
@@ -336,7 +336,7 @@ sub compile_event_expr {
             $logger->debug(
                 "Creating primitive event for $eexpr->{'domain'}:$eexpr->{'op'}"
             );
-            $logger->debug("Eexpr: ", sub {Dumper($eexpr)});
+            $logger->trace("Eexpr: ", sub {Dumper($eexpr)});
             $sm = mk_gen_prim( $eexpr->{'domain'}, $eexpr->{'op'},
                                $eexpr->{'vars'},   $eexpr->{'filters'} );
         }
