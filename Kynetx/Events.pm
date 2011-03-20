@@ -202,37 +202,34 @@ sub process_event_for_rid {
 
     foreach my $rule ( @{ $ruleset->{'rules'} } ) {
 
-    $rule->{'state'} ||= 'active';
+    	$rule->{'state'} ||= 'active';
 
         Log::Log4perl::MDC->put( 'rule', $rule->{'name'} ); # no rule for now...
 
         my $sm_current_name = $rule->{'name'} . ':sm_current';
         my $event_list_name = $rule->{'name'} . ':event_list';
 
-        $logger->trace("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
+    	$logger->trace("Rule: ", Kynetx::Json::astToJson($rule));
 
-    #	$logger->debug("Rule: ", Kynetx::Json::astToJson($rule));
+    	$logger->trace("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
 
-    #	$logger->debug("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
+    	next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
 
-    next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
-
-    my $sm = $rule->{'event_sm'};
+    	my $sm = $rule->{'event_sm'};
+    	$logger->trace("State machine: ", sub {Dumper($sm)});
 
         # States stored in Mongo should be serialized
         my $current_state = get_persistent_var("ent", $rid, $session, $sm_current_name ) || $sm->get_initial();
 
         my $next_state = $sm->next_state( $current_state, $ev );
 
-        $logger->trace("Current: ", $current_state );
-        $logger->trace("Next: ", $next_state );
+        $logger->debug("Current: ", $current_state );
+        $logger->debug("Next: ", $next_state );
 
         # when there's a state change, store the event in the event list
         unless ( $current_state eq $next_state ) {
             my $json = $ev->serialize();
             Kynetx::Persistence::add_persistent_element("ent", $rid, $session, $event_list_name, $json );
-
-#	  $logger->debug("Event list ($event_list_name): ", sub { Dumper session_get($rid, $session, $event_list_name)});
         }
 
         if ( $sm->is_final($next_state) ) {
@@ -289,7 +286,8 @@ sub mk_event {
     my ($req_info) = @_;
 
     my $logger = get_logger();
-
+	$logger->debug("Make event for eventtype: ",$req_info->{'eventtype'} );
+	$logger->trace("Request info is: ", sub {Dumper($req_info)});
     my $ev = Kynetx::Events::Primitives->new();
     $ev->set_req_info($req_info);
     if ( $req_info->{'eventtype'} eq 'pageview' ) {
@@ -326,10 +324,19 @@ sub compile_event_expr {
         {
             $sm = mk_dom_prim( $eexpr->{'element'}, $eexpr->{'pattern'},
                                $eexpr->{'vars'},    $eexpr->{'op'} );
+        } elsif ($eexpr->{'op'} eq 'expression') {
+            $logger->debug(
+                "Creating Expression event for $eexpr->{'domain'}:$eexpr->{'op'}"
+            );
+            $logger->trace("Eexpr: ", sub {Dumper($eexpr)});
+            $sm = mk_expr_prim( $eexpr->{'domain'}, $eexpr->{'op'},
+                               $eexpr->{'vars'},   $eexpr->{'exp'} );        	
+        
         } else {
             $logger->debug(
                 "Creating primitive event for $eexpr->{'domain'}:$eexpr->{'op'}"
             );
+            $logger->trace("Eexpr: ", sub {Dumper($eexpr)});
             $sm = mk_gen_prim( $eexpr->{'domain'}, $eexpr->{'op'},
                                $eexpr->{'vars'},   $eexpr->{'filters'} );
         }

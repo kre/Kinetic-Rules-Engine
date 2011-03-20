@@ -1,4 +1,4 @@
-grammar RuleSet;
+grammar RuleSet20110131;
 options {
   output=AST;
   backtrack=true;
@@ -850,10 +850,7 @@ event_seq returns[HashMap result]
 			HashMap the_result = new HashMap();
 			the_result.put("type","complex_event");
 			the_result.put("op",$seq.text);
-			temp_list.add(eor.result); // new
-			the_result.put("args",temp_list);
-			//((ArrayList)the_result.get("args2")).add(eor.result);
-			//the_result.put("args",new ArrayList());
+			the_result.put("args",new ArrayList());
 			((ArrayList)the_result.get("args")).add(es.result);
 			$result = the_result;		
 		} |
@@ -861,7 +858,6 @@ event_seq returns[HashMap result]
 		{
 			$result = eor.result;
 		}
-
 	;
 
 
@@ -875,8 +871,7 @@ event_or returns[HashMap result]
 			HashMap the_result = new HashMap();
 			the_result.put("type","complex_event");
 			the_result.put("op","or");
-			temp_list.add(ea.result);
-			the_result.put("args",temp_list);
+			the_result.put("args",new ArrayList());
 			((ArrayList)the_result.get("args")).add(es.result);
 			$result = the_result;
 
@@ -962,18 +957,8 @@ event_prim returns[HashMap result]
 	ArrayList filters = new ArrayList();
 }
 	:
-	
-	web=WEB? opt=must_be_one[sar("submit","click","dblclick","change","update")] elem=STRING on=on_expr?  set=setting? {
-		HashMap tmp = new HashMap();
-
-		tmp.put("domain",$web.text);
-		tmp.put("element",strip_string($elem.text));
-		tmp.put("type","prim_event");
-		tmp.put("vars",$set.result);
-		tmp.put("op",$opt.text);
-		tmp.put("on",$on.result);
-		$result = tmp;
-
+	(custom_event)=>ce=custom_event {
+	 $result = ce.result;
 	}
 	| web=WEB? PAGEVIEW (spat=STRING|rpat=regex) set=setting? {
 		HashMap tmp = new HashMap();
@@ -987,14 +972,21 @@ event_prim returns[HashMap result]
 		tmp.put("op","pageview");
 		$result = tmp;
 	}
+	| web=WEB? opt=must_be_one[sar("submit","click","dblclick","change","update")] elem=STRING on=on_expr?  set=setting? {
+		HashMap tmp = new HashMap();
+
+		tmp.put("domain",$web.text);
+		tmp.put("element",strip_string($elem.text));
+		tmp.put("type","prim_event");
+		tmp.put("vars",$set.result);
+		tmp.put("op",$opt.text);
+		tmp.put("on",$on.result);
+		$result = tmp;
+
+	}
 	| '(' evt=event_seq ')' {
 		$result=$evt.result;
 	}
-	| (custom_event)=>ce=custom_event {
-	 	$result = ce.result;
-	}
-	
-
 	;
 
 
@@ -1025,17 +1017,17 @@ custom_event  returns[HashMap result]
 	}
     ;
     
-event_exp returns[Object result]
+event_exp returns[HashMap result]
 	: e=expr {
-		//HashMap tmp = $e.result;;
-		//tmp.put("type","expr");
-		//tmp.put("rhs",$e.result);
-		//$result = tmp;
-		$result = $e.result;;
+		HashMap tmp = new HashMap();
+		tmp.put("type","expr");
+		tmp.put("rhs",$e.result);
+		$result = tmp;
 		}
 	;
 
 event_filter returns[HashMap result]
+	
 	: typ=VAR (sfilt=STRING | rfilt=regex) {
 		HashMap tmp = new HashMap();
 		tmp.put("type",$typ.text);
@@ -1156,9 +1148,6 @@ expr returns[Object result]
 	: (fd=function_def {
 		$result = $fd.result;
 	}
-	| ad=action_def {
-		$result = $ad.result;
-	}
 	| c=conditional_expression  {
 		$result = $c.result;
 	})
@@ -1186,43 +1175,6 @@ function_def returns[Object result]
 		$result = tmp;
 	}
 	;
-
-action_def returns[Object result]
-@init{
-	ArrayList block_array = new ArrayList();
-	ArrayList config_list = new ArrayList();
-	HashMap actions_result = new HashMap();
-}
-	: DEFACTION LEFT_PAREN args+=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN)? (COMMA args+=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) )* RIGHT_PAREN
-		LEFT_CURL 
-		(CONFIGURE USING m=modifier { config_list.add($m.result);} (AND_AND m1=modifier {config_list.add($m1.result);})* SEMI* )*
-		decs+=decl[block_array]? (SEMI decs+=decl[block_array])* SEMI* action[actions_result]  SEMI* 
-		RIGHT_CURL 	
-	{
-		HashMap tmp = new HashMap();
-		HashMap conf = new HashMap();
-		ArrayList nargs = new ArrayList();
-		if($args != null)
-		{
-			for(int i = 0;i< $args.size();i++)
-			{
-				nargs.add(((Token)$args.get(i)).getText());
-			}
-		}
-		tmp.put("vars",nargs);
-		tmp.put("type","defaction");
-		tmp.put("decls",block_array);
-       		conf.put("configuration", config_list);
-        		tmp.put("configure",conf); 
-       		tmp.put("configure",config_list); 
-		tmp.put("blocktype",(actions_result.get("blocktype") != null ? actions_result.get("blocktype") : "every"));
-		tmp.put("actions",actions_result.get("actions"));
-		//if($e1.text != null)
-		//	tmp.put("expr",$e1.result);
-
-		$result = tmp;
-	
-	};
 
 conditional_expression returns[Object result]
 @init {
@@ -1615,12 +1567,6 @@ factor returns[Object result] options { backtrack = true; }
 		tmp.put("val",$reg.result);
 		$result = tmp;
       	}
-	| nl=NULL {
-		HashMap tmp = new HashMap();
-		tmp.put("type","null");
-		tmp.put("val","__undef__");
-		$result = tmp;	
-	}
 
 	;
 
@@ -1923,7 +1869,6 @@ REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
 
  SEMI : ';';
  FUNCTION : 'function';
- DEFACTION: 'defaction';	 
  EQUAL :'=';
 
  OR
@@ -2083,9 +2028,8 @@ OTHER_OPERATORS
 	:  'pick'|'length'|'as'|'head'|'tail'|'sort'
       	|'filter'|'map'|'uc'|'lc' |'split' | 'join' | 'query'
       	| 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
-      	| 'duplicates' | 'append' | 'put' | 'delete'
-      	| 'encode' | 'decode' 
-      	| 'typeof' | 'isnull'
+      	| 'duplicates' | 'append' | 'put' 
+      	| 'encode' | 'decode' | 'delete'
       	;
 
  TRUE :'true';
@@ -2190,11 +2134,9 @@ SEEN :'seen';
 VAR_DOMAIN:  'ent' | 'app'
     ;
 
- NULL	:	'null';
-
-
 VAR  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*
    ;
+
 
 
 INT :	' -'? '0'..'9'+

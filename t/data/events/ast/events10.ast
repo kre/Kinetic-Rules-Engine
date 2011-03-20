@@ -1,0 +1,45 @@
+// events10
+{
+  'dispatch' => [],
+  'global' => [],
+  'ruleset_name' => '10',
+  'rules' => [
+    {
+      'cond' => {
+        'type' => 'bool',
+        'val' => 'true'
+      },
+      'actions' => [
+        {
+          'action' => {
+            'source' => undef,
+            'name' => 'noop',
+            'args' => [],
+            'modifiers' => undef,
+            'vars' => undef
+          },
+          'label' => undef
+        }
+      ],
+      'blocktype' => 'every',
+      'name' => 'test0',
+      'pre' => [],
+      'post' => undef,
+      'state' => 'active',
+      'emit' => undef,
+      'callbacks' => undef,
+      'pagetype' => {
+        'event_expr' => {
+          'on' => undef,
+          'domain' => undef,
+          'type' => 'prim_event',
+          'vars' => undef,
+          'op' => 'click',
+          'element' => '#my_id'
+        },
+        'foreach' => []
+      }
+    }
+  ],
+  'meta' => {}
+}

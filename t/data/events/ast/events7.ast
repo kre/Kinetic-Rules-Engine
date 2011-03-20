@@ -1,0 +1,76 @@
+// events7
+{
+  'dispatch' => [],
+  'global' => [],
+  'ruleset_name' => '10',
+  'rules' => [
+    {
+      'cond' => {
+        'type' => 'bool',
+        'val' => 'true'
+      },
+      'actions' => [
+        {
+          'action' => {
+            'source' => undef,
+            'name' => 'noop',
+            'args' => [],
+            'modifiers' => undef,
+            'vars' => undef
+          },
+          'label' => undef
+        }
+      ],
+      'blocktype' => 'every',
+      'name' => 'test0',
+      'pre' => [],
+      'post' => undef,
+      'state' => 'active',
+      'emit' => undef,
+      'callbacks' => undef,
+      'pagetype' => {
+        'event_expr' => {
+          'args' => [
+            {
+              'domain' => undef,
+              'pattern' => '/2009/04/',
+              'type' => 'prim_event',
+              'vars' => [
+                'a'
+              ],
+              'op' => 'pageview'
+            },
+            {
+              'args' => [
+                {
+                  'domain' => undef,
+                  'pattern' => '/2009/05/',
+                  'type' => 'prim_event',
+                  'vars' => [
+                    'b'
+                  ],
+                  'op' => 'pageview'
+                },
+                {
+                  'domain' => undef,
+                  'pattern' => '/2009/06/',
+                  'type' => 'prim_event',
+                  'vars' => [
+                    'c'
+                  ],
+                  'op' => 'pageview'
+                }
+              ],
+              'type' => 'complex_event',
+              'op' => 'or'
+            }
+          ],
+          'type' => 'complex_event',
+          'op' => 'or'
+        },
+        'foreach' => []
+      }
+    }
+  ],
+  'meta' => {}
+}

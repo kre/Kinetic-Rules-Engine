@@ -362,6 +362,7 @@ sub eval_raise_statement {
           if $rid && $this_req_info->{ $rid . ':kynetx_app_version' };
 
         my $ev = Kynetx::Events::mk_event($this_req_info);
+        $logger->trace("Event is: ", sub {Dumper($ev)});
 
         # this side-effects the schedule
         Kynetx::Events::process_event_for_rid( $ev, $this_req_info, $session,
