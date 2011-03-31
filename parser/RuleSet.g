@@ -2083,7 +2083,7 @@ OTHER_OPERATORS
 	:  'pick'|'length'|'as'|'head'|'tail'|'sort'
       	|'filter'|'map'|'uc'|'lc' |'split' | 'join' | 'query'
       	| 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
-      	| 'duplicates' | 'append' | 'put' | 'delete'
+      	| 'duplicates' | 'append' | 'put' | 'delete' | 'keys'
       	| 'encode' | 'decode' 
       	| 'typeof' | 'isnull'
       	;

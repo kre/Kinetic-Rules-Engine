@@ -428,6 +428,7 @@ sub eval_expr {
         return $aexpr;
     } else {
         $logger->error("Unknown type in eval_expr: $expr->{'type'}");
+        return mk_expr_node('null','__undef__');
     }
 
 }

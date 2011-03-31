@@ -146,6 +146,7 @@ pre {
   g_h = {"hKey" : {"innerKey" : "REPLACED"}};
   i_h = {"hKey" : {"innerKey" : "innerVal"},"mKey" : "mValue"};
   j_h = { "colors of the wind" : "many","pi as array" : [3,1,4,1,5,6,9],"foo" : {"bar" : {10:"I like cheese"}}};
+  k_h = {1: {"A" : {"a":"1Aa","b":"1Ab"}},2:"qwerty","3":{"snicker":"snee", "7":5}};
   
   a_path = ["foo"];
   b_path = ["foo","bar"];
@@ -1494,7 +1495,6 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-ENDY:
 
 
 # hash operations
@@ -1728,6 +1728,73 @@ $x[$i] = {
 	  }
 	},
 	'type'=>'hash'
+};
+$d[$i] = 0;
+$i++;
+ENDY:
+
+$e[$i] = q/j_h.keys()/;
+$x[$i] = {
+	'val' => [
+	  'pi as array',
+	  'colors of the wind',
+	  'foo',
+	],
+	'type'=>'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/j_h.keys("foo")/;
+$x[$i] = {
+	'val' => [
+	  'bar',
+	],
+	'type'=>'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/j_h.keys(["foo"])/;
+$x[$i] = {
+	'val' => [
+	  'bar',
+	],
+	'type'=>'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/k_h.keys()/;
+$x[$i] = {
+	'val' => [
+	  '1',
+	  '3',
+	  '2'
+	],
+	'type'=>'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/store.keys(["store"])/;
+$x[$i] = {
+	'val' => [
+	  'bicycle',
+	  'book'
+	],
+	'type'=>'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/store.keys(["store","bicycle"])/;
+$x[$i] = {
+	'val' => [
+	  'color',
+	  'price'
+	],
+	'type'=>'array'
 };
 $d[$i] = 0;
 $i++;

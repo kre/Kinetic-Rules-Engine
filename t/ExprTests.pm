@@ -1725,6 +1725,223 @@ add_expr_testcase(
 		  0
     );
 
+
+#---------------------------------------------------------------------------------
+# Null Tests
+#---------------------------------------------------------------------------------
+
+$krl_src = <<_KRL_;
+	null
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'null',
+	mk_expr_node("null","__undef__"),
+	0
+);
+
+$krl_src = <<_KRL_;
+	1 + null
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'null',
+	mk_expr_node("null","__undef__"),
+	0
+);
+
+$krl_src = <<_KRL_;
+	"foost" + null
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'null',
+	mk_expr_node("null","__undef__"),
+	0
+);
+
+
+$krl_src = <<_KRL_;
+	(cabletron).isnull()
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'1',
+	mk_expr_node("bool","true"),
+	0
+);
+
+$krl_src = <<_KRL_;
+	("thing").isnull()
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'0',
+	mk_expr_node("bool","false"),
+	0
+);
+
+#---------------------------------------------------------------------------------
+# typeof tests
+#---------------------------------------------------------------------------------
+
+#primitives
+$krl_src = <<_KRL_;
+	(1).typeof()
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'num',
+	mk_expr_node("str","num"),
+	0
+);
+
+$krl_src = <<_KRL_;
+	("1").typeof()
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'str',
+	mk_expr_node("str","str"),
+	0
+);
+
+$krl_src = <<_KRL_;
+	(["1"]).typeof()
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'array',
+	mk_expr_node("str","array"),
+	0
+);
+
+
+$krl_src = <<_KRL_;
+	({}).typeof()
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'hash',
+	mk_expr_node("str","hash"),
+	0
+);
+
+$krl_src = <<_KRL_;
+	(null).typeof()
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'null',
+	mk_expr_node("str","null"),
+	0
+);
+
+
+# using vars from rule_env
+$krl_src = <<_KRL_;
+	city.typeof()
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'str',
+	mk_expr_node("str","str"),
+	0
+);
+
+$krl_src = <<_KRL_;
+	temp.typeof()
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'num',
+	mk_expr_node("str","num"),
+	0
+);
+
+$krl_src = <<_KRL_;
+	booltrue.typeof()
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'bool',
+	mk_expr_node("str","bool"),
+	0
+);
+
+$krl_src = <<_KRL_;
+	boolfalse.typeof()
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'bool',
+	mk_expr_node("str","bool"),
+	0
+);
+
+$krl_src = <<_KRL_;
+	c.typeof()
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'array',
+	mk_expr_node("str","array"),
+	0
+);
+
+$krl_src = <<_KRL_;
+	foop.typeof()
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'null',
+	mk_expr_node("str","null"),
+	0
+);
+
+$krl_src = <<_KRL_;
+c = null;
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'decl',
+    'var c = null;',
+    '__undef__',
+    0);
+
+
 #---------------------------------------------------------------------------------
 # functions and predicates
 #---------------------------------------------------------------------------------

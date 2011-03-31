@@ -227,36 +227,39 @@ ok(defined $my_req_info->{'status_code'}, "Status code defined");
 ok(defined $my_req_info->{'content'}, "Content defined");
 $test_count += 4;
 
+#---------------------------------
+# widgets was removed for the desert island install
+
 # with headers
-$krl_src = <<_KRL_;
-http:post("http://127.0.0.1/widgets/printenv.pl")
-     with params = {"init_host": "qa.kobj.net",
-		    "eval_host": "qa.kobj.net",
-		    "callback_host": "qa.kobj.net",
-		    "contents": "compiled",
-		    "format": "json",
-		    "version": "dev",
-                    "minnie" : "1.0"
-                   } and
-          autoraise = "example2" and 
-          headers = {"user-agent": "flipper",
-                     "X-proto": "foogle"
-                    };
-_KRL_
-
-$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
-
-# start with a fresh $req_info and $rule_env
-$my_req_info = Kynetx::Test::gen_req_info($rid);
-$rule_env = Kynetx::Test::gen_rule_env();
-
-$js = Kynetx::Actions::build_one_action(
-	    $krl,
-	    $my_req_info, 
-	    $rule_env,
-	    $session,
-	    'callback23',
-	    'dummy_name');
+#$krl_src = <<_KRL_;
+#http:post("http://127.0.0.1/widgets/printenv.pl")
+#     with params = {"init_host": "qa.kobj.net",
+#		    "eval_host": "qa.kobj.net",
+#		    "callback_host": "qa.kobj.net",
+#		    "contents": "compiled",
+#		    "format": "json",
+#		    "version": "dev",
+#                    "minnie" : "1.0"
+#                   } and
+#          autoraise = "example2" and 
+#          headers = {"user-agent": "flipper",
+#                     "X-proto": "foogle"
+#                    };
+#_KRL_
+#
+#$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#
+## start with a fresh $req_info and $rule_env
+#$my_req_info = Kynetx::Test::gen_req_info($rid);
+#$rule_env = Kynetx::Test::gen_rule_env();
+#
+#$js = Kynetx::Actions::build_one_action(
+#	    $krl,
+#	    $my_req_info, 
+#	    $rule_env,
+#	    $session,
+#	    'callback23',
+#	    'dummy_name');
 
 #is($my_req_info->{'label'}, 'example2', "label is example2"); 
 #ok(defined $my_req_info->{'content_length'}, "Content length defined");

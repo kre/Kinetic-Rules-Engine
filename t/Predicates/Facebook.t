@@ -537,7 +537,7 @@ test_facebook('metadata',$args,$expected,$description,0);
 
 ##
 $description = "search news feed";
-$expected = $empty_response;
+$expected = superhashof($list_object);
 $args = [{'type' => 'home',
     'q' => 'P Windley'
 }];
