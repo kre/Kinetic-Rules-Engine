@@ -81,6 +81,10 @@ sub add_expr_testcase {
 
 my $rule_env = Kynetx::Test::gen_rule_env();
 
+# This is a skeleton for expressions since the regular
+# expressions test file is ginormous
+ok(1);
+$test_count++;
 
 foreach my $case (@expr_testcases ) {
 	diag("KRL = ", Dumper($case->{'krl'})) if $case->{'diag'};
