@@ -595,21 +595,25 @@ sub gen_event_eval {
 
   # initializing these to delimeter ensures we'll get a match if no
   # pattern and target
-  my $pattern = $delimeter;
-  my $target = $delimeter;
+  my $pattern;
+  my $target;
   foreach my $filter (@{ $filters }) {
-    $target .= $req_info->{$filter->{'type'}} . $delimeter ;
-    $pattern .= $filter->{'pattern'} .  $delimeter ;
+    $target = $req_info->{$filter->{'type'}};
+    $pattern = $filter->{'pattern'};
+    # $logger->debug("-----------------------------------------------------");
+    # $logger->debug("filter: ", sub {Dumper $filter});
+    # $logger->debug("Target: $target; Pattern: $pattern");
+    my @this_captures;
+    if(@this_captures = $target =~ /$pattern/) {
+#      $logger->debug("Captures: ($1)", sub {Dumper @this_captures}); 
+      push (@{$captures}, @this_captures) if $1; #$1 not set if no capture
+    } else {
+      # if any of these are false, we return 0 and the empty capture list
+      return (0, []);
+    }
   }
-
-#  $logger->debug("Target: $target; Pattern: $pattern");
-
-  if(@{$captures} = $target =~ /$pattern/) {
-#    $logger->debug("Captures: ", sub {Dumper $captures});
-    return (1, $captures);
-  } else {
-    return (0, $captures);
-  }
+  $logger->debug("Final captures: ", sub {Dumper $captures});
+  return (1, $captures);
 }
 
 

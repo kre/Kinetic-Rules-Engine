@@ -228,7 +228,7 @@ sub flush_ruleset_cache {
     $memd->delete(Kynetx::Repository::make_ruleset_key($rid, $version));
 
     $r->content_type('text/html');
-    my $msg = "Rules flushed for site $rid";
+    my $msg = "Rules flushed for site $rid ($version)";
     print "<title>$msg</title><h1>$msg</h1>";
 
 }
