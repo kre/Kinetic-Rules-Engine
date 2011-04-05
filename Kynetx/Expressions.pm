@@ -184,10 +184,21 @@ sub eval_decl {
 sub eval_expr {
     my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
     my $logger = get_logger();
-    $logger->trace("[javascript] expr: ", sub { Dumper($expr) });
+    $logger->trace("Eval expr: ", sub { Dumper($expr) });
+#    my $parent = (caller(1))[3];
+#    $logger->trace("Called from -$parent- ");
 
     $rule_name ||= 'global';
     my $domain = $expr->{'domain'};
+	my $ri_rid = $req_info->{'rid'};
+	my $re_rid = $rule_env->{'ruleset_name'};
+	if (! defined $re_rid) {
+		$logger->trace("ruleset_name undefined in \$rule_env, using \$req_info");
+		$re_rid = $ri_rid;
+	}
+	if ($ri_rid ne $re_rid) {
+		$logger->debug("Module context: $ri_rid/$re_rid");
+	}
 
     if ($expr->{'type'} eq 'str' ) {
     	if (utf8::is_utf8($expr->{'val'})) {
@@ -299,7 +310,7 @@ sub eval_expr {
         # check count
         my $count = 0;
         if ($domain) {
-	        $count = Kynetx::Persistence::get_persistent_var($domain,$req_info->{'rid'}, $session, $name);
+	        $count = Kynetx::Persistence::get_persistent_var($domain,$re_rid, $session, $name);
         }
 
         $logger->trace('[persistent_ineq] ', "$name -> $count");
@@ -317,11 +328,11 @@ sub eval_expr {
         # check date, if needed
         if ($v &&
     	    defined $expr->{'within'} &&
-    	    Kynetx::Persistence::defined_persistent_var($domain,$req_info->{'rid'}, $session, $name)) {
+    	    Kynetx::Persistence::defined_persistent_var($domain,$re_rid, $session, $name)) {
 
 	       my $tv = 1;
 
-           $tv = Kynetx::Persistence::persistent_var_within($domain,$req_info->{'rid'},
+           $tv = Kynetx::Persistence::persistent_var_within($domain,$re_rid,
 		       $session,
 		       $name,
 		       Kynetx::Expressions::den_to_exp(
@@ -339,16 +350,15 @@ sub eval_expr {
         return mk_expr_node(infer_type($v),$v);
     } elsif ($expr->{'type'} eq 'seen_timeframe') {
         my $name = $expr->{'var'};
-
         $logger->debug('[seen_timeframe] ', "$name");
 
         my $v;
 
         # check date, if needed
         if (defined $expr->{'within'} &&
-	        Kynetx::Persistence::defined_persistent_var($domain,$req_info->{'rid'}, $session, $name)) {
+	        Kynetx::Persistence::defined_persistent_var($domain,$re_rid, $session, $name)) {
 	           $v = Kynetx::Persistence::persistent_element_within($domain,
-	               $req_info->{'rid'},
+	               $re_rid,
 				   $session,
 				   $name,
 				   Kynetx::Expressions::den_to_exp(
@@ -365,9 +375,9 @@ sub eval_expr {
 								      $session)),
 				   $expr->{'timeframe'}
 				  );
-        } elsif (Kynetx::Persistence::defined_persistent_var($domain,$req_info->{'rid'}, $session, $name)) {
+        } elsif (Kynetx::Persistence::defined_persistent_var($domain,$re_rid, $session, $name)) {
            # session_seen returns index (which can be 0)
-           $v = defined Kynetx::Persistence::persistent_element_index($domain,$req_info->{'rid'},
+           $v = defined Kynetx::Persistence::persistent_element_index($domain,$re_rid,
 			    $session,
 			    $name,
 			    Kynetx::Expressions::den_to_exp(
@@ -389,7 +399,7 @@ sub eval_expr {
 	                           : ($expr->{'regexp_2'},
  	                              $expr->{'regexp_1'});
       $v = Kynetx::Persistence::persistent_element_before(
-                                  $expr->{'domain'},$req_info->{'rid'},
+                                  $expr->{'domain'},$re_rid,
 				  $session,
 				  $name,
 				  Kynetx::Expressions::den_to_exp(
@@ -489,8 +499,10 @@ sub eval_prim {
 # warning: this returns a ref to an array, not an array!
 sub eval_rands {
     my ($rands, $rule_env, $rule_name, $req_info, $session) = @_;
-
     my $logger = get_logger();
+    $logger->trace("Eval rand: ", sub { Dumper($rands) });
+    my $parent = (caller(1))[3];
+    $logger->trace("Called from -$parent- ");
     $logger->trace("[javascript] rands: ", sub {Dumper($rands)});
     my @rands = map {eval_expr($_, $rule_env, $rule_name, $req_info, $session)} @{ $rands } ;
 
@@ -1009,9 +1021,10 @@ sub mk_action_expr {
   		$logger->trace("Action ast: ", sub {Dumper($action)});
   		my $label = $action->{'label'};
   		my $a = $action->{'action'};
+  		my $composed_action;
   		if ($a) {
   			$logger->debug("found action: $a->{'name'}");
-  			my $composed_action = mk_expr_node( 'action',{
+  			$composed_action = mk_expr_node( 'action',{
   				'label' => $label,
   				'source' => $a->{'source'},
   				'name' => $a->{'name'},
@@ -1019,9 +1032,20 @@ sub mk_action_expr {
   				'vars' => $a->{'vars'},
   				'modifiers' => $a->{'modifiers'},  				
   			});
-  			$logger->trace("Composed action: ", sub {Dumper($composed_action)});
-  			push(@action_array,$composed_action);
+  		} elsif (defined $action->{'emit'}) {
+  			my $emit = $action->{'emit'};
+  			my $emit_str = mk_expr_node('str',$emit);
+  			my @expressed_args = ();
+  			push(@expressed_args,$emit_str);
+  			$composed_action = mk_expr_node('action',{
+  				'label' => $label,
+  				'name' => 'send_javascript',
+  				'args' => \@expressed_args,  				
+  			});
+			#$composed_action = $action;
   		}
+  		$logger->trace("Composed action: ", sub {Dumper($composed_action)});  			
+  		push(@action_array,$composed_action);
   	}
   } 
   return mk_expr_node('action_expr',
@@ -1040,17 +1064,17 @@ sub mk_action_expr {
 sub eval_action {
 	my ($expr,$rule_env, $rule_name, $req_info, $session) = @_;
 	my $logger = get_logger();
+	my $struct;
+	my @expressed_args = ();
 	return undef unless ($expr->{'type'} eq 'action');
 	my $val = $expr->{'val'};
 	my $args = $val->{'args'};
-	my @expressed_args = ();
 	#$logger->debug("Eval action ENVIRONMENT: ", sub {Dumper($rule_env)});
-	#$logger->debug("Args: ", sub {Dumper($args)});
 	foreach my $arg (@$args) {
 		#$logger->debug("Arg: ", sub {Dumper($arg)});
 		push(@expressed_args,eval_expr($arg,$rule_env, $rule_name, $req_info, $session));
 	}
-	my $struct = {
+	$struct = {
 		'action' => {
 			'name' => $val->{'name'},
 			'source' => $val->{'source'},
