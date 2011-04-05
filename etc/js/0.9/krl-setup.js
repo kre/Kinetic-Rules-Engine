@@ -25,4 +25,5 @@ KOBJ.document = document;
 KOBJ.locationHref = null;
 KOBJ.locationHost = null;
 KOBJ.locationProtocol = null;
+KOBJ.locationHash = null;
 KOBJ.delay_execution = false;

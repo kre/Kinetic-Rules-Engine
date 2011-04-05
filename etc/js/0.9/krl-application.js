@@ -153,7 +153,7 @@ KrlApplication.prototype.page_vars_as_url = function() {
     $KOBJ.each(this.page_params, function(k, v) {
         // Because of an issue where people were passing in comma seperated list of app version we need
         // to apply a rule that if dev is found then that will be used if not found then the first one will be used.
-       
+
         if (k == our_app_id + ":kynetx_app_version")
         {
           if(v.indexOf("dev") != -1)
@@ -289,7 +289,7 @@ KrlApplication.prototype.fire_event = function(event, data, guid,domain)
     // Someone want to put some extra parameters on the url.  This is used, for example
     // in the case of page_content events.
     if (data["param_data"] != null)
-    {        
+    {
         params = params.concat(data["param_data"]);
     }
 
@@ -311,13 +311,14 @@ KrlApplication.prototype.fire_event = function(event, data, guid,domain)
         params.push({name: "element", value: data.selector});
     }
 
-
     params.push({name: "kvars", value: $KOBJ.toJSON(all_vars)});
     if(event == "pageview") {
         params.push({name: "caller", value: KOBJ.location('href')});
         params.push({name: "referer", value: KOBJ.document.referrer});
         params.push({name: "title", value: KOBJ.document.title});
+	params.push({name: "frag", value: KOBJ.location('hash')}) ;
     }
+
 
     var event_url = url + "?" +
                     $KOBJ.param(params) +

@@ -556,6 +556,7 @@ KOBJ.location = function(part) {
     if (part == "href") return KOBJ.locationHref || KOBJ.document.location.href;
     if (part == "host") return KOBJ.locationHost || KOBJ.document.location.host;
     if (part == "protocol") return KOBJ.locationProtocol || KOBJ.document.location.protocol;
+    if (part == "hash") return KOBJ.locationHash || KOBJ.document.location.hash;
 };
 
 /* Hook to log data to the server */
