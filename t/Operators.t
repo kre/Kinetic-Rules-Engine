@@ -1799,6 +1799,24 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+$e[$i] = q/k_h.keys([1,"A"])/;
+$x[$i] = {
+	'val' => [
+	  'a',
+	  'b'
+	],
+	'type'=>'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/k_h.keys([2])/;
+$x[$i] = {
+	'val' => '__undef__',
+	'type'=>'null'
+};
+$d[$i] = 0;
+$i++;
 
 # now run the tests....
 my $l = scalar @e;

@@ -494,7 +494,6 @@ EOF
 			send_directive( $req_info, $args->[0], $config );
 		},
 	},
-
 };
 
 sub build_js_load {
@@ -561,6 +560,7 @@ sub eval_action_block {
 					$session, $cb_function, $rulename );
 			}
 			elsif ( defined $action_expr->{'emit'} ) {
+				$logger->debug("EMIT action");
 				$js .= $action_expr->{'emit'} . ";\n";
 				$js .= "$cb_function();\n";
 				push( @{ $req_info->{'actions'} }, 'emit' );
@@ -636,6 +636,7 @@ sub build_composed_action {
 	
 	my @action_block = ();	
 	foreach my $action (@$actions) {
+		$logger->trace("Action array element ",sub {Dumper($action)});
 		push(@action_block,Kynetx::Expressions::eval_action($action,$rule_env, $rule_name, $req_info, $session));
 	}
 	$js .= eval_action_block(
@@ -673,6 +674,7 @@ sub build_one_action {
 	my $action_name = $action->{'name'};
 
 	my $args = $action->{'args'};
+	$logger->trace( "Build one action args: ",sub {Dumper($args)});
 
 	# parse the action args and make the expressed values
 	my $arg_exp_vals =
@@ -710,6 +712,17 @@ sub build_one_action {
 			$rule_name,
 			$cb_func_name);
 	}
+	
+	if ($action_name eq 'send_javascript') {
+		my $js_blob =$arg_exp_vals->[0];
+		$logger->trace("inject javascript: <| $js_blob |>");
+		$js .=  $js_blob . ";\n";
+		$js .= "$cb_func_name();\n";
+		push( @{ $req_info->{'actions'} }, 'send_javascript' );
+		push( @{ $req_info->{'tags'} },    '' );
+		push( @{ $req_info->{'labels'} },  $action_expr->{'label'} );
+		
+	}
 
 	my $config = {
 		"txn_id"    => $req_info->{'txn_id'},
@@ -742,7 +755,6 @@ sub build_one_action {
 	};
 
 	foreach my $m ( @{ $action->{'modifiers'} } ) {
-		$logger->debug(sub {Dumper($m)} );
 		my $dobj = 
 			Kynetx::Expressions::eval_expr($m->{'value'}, $rule_env, $rule_name, $req_info, $session);
 
@@ -752,8 +764,8 @@ sub build_one_action {
 			}
 		}
 		my $v = Kynetx::JavaScript::gen_js_expr($m->{'value'});
-		$logger->debug("Modifier val: ",sub {Dumper($v)});
-		$logger->debug("Denoted val: ",sub {Dumper($dobj)});
+		$logger->trace("Modifier val: ",sub {Dumper($v)});
+		$logger->trace("Denoted val: ",sub {Dumper($dobj)});
 		$mods->{ $m->{'name'} } =  $v;
 
 		

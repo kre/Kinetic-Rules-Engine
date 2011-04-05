@@ -1749,7 +1749,7 @@ _KRL_
 add_expr_testcase(
 	$krl_src,
 	'expr',
-	'null',
+	'_ignore_',
 	mk_expr_node("null","__undef__"),
 	0
 );
@@ -1761,7 +1761,7 @@ _KRL_
 add_expr_testcase(
 	$krl_src,
 	'expr',
-	'null',
+	'_ignore_',
 	mk_expr_node("null","__undef__"),
 	0
 );
@@ -1774,7 +1774,7 @@ _KRL_
 add_expr_testcase(
 	$krl_src,
 	'expr',
-	'1',
+	'_ignore_',
 	mk_expr_node("bool","true"),
 	0
 );
@@ -1786,7 +1786,7 @@ _KRL_
 add_expr_testcase(
 	$krl_src,
 	'expr',
-	'0',
+	'_ignore_',
 	mk_expr_node("bool","false"),
 	0
 );
@@ -1803,7 +1803,7 @@ _KRL_
 add_expr_testcase(
 	$krl_src,
 	'expr',
-	'num',
+	'_ignore_',
 	mk_expr_node("str","num"),
 	0
 );
@@ -1815,7 +1815,7 @@ _KRL_
 add_expr_testcase(
 	$krl_src,
 	'expr',
-	'str',
+	'_ignore_',
 	mk_expr_node("str","str"),
 	0
 );
@@ -1827,7 +1827,7 @@ _KRL_
 add_expr_testcase(
 	$krl_src,
 	'expr',
-	'array',
+	'_ignore_',
 	mk_expr_node("str","array"),
 	0
 );
@@ -1840,7 +1840,7 @@ _KRL_
 add_expr_testcase(
 	$krl_src,
 	'expr',
-	'hash',
+	'_ignore_',
 	mk_expr_node("str","hash"),
 	0
 );
@@ -1852,7 +1852,7 @@ _KRL_
 add_expr_testcase(
 	$krl_src,
 	'expr',
-	'null',
+	'_ignore_',
 	mk_expr_node("str","null"),
 	0
 );
@@ -1866,7 +1866,7 @@ _KRL_
 add_expr_testcase(
 	$krl_src,
 	'expr',
-	'str',
+	'_ignore_',
 	mk_expr_node("str","str"),
 	0
 );
@@ -1878,7 +1878,7 @@ _KRL_
 add_expr_testcase(
 	$krl_src,
 	'expr',
-	'num',
+	'_ignore_',
 	mk_expr_node("str","num"),
 	0
 );
@@ -1890,7 +1890,7 @@ _KRL_
 add_expr_testcase(
 	$krl_src,
 	'expr',
-	'bool',
+	'_ignore_',
 	mk_expr_node("str","bool"),
 	0
 );
@@ -1902,7 +1902,7 @@ _KRL_
 add_expr_testcase(
 	$krl_src,
 	'expr',
-	'bool',
+	'_ignore_',
 	mk_expr_node("str","bool"),
 	0
 );
@@ -1914,7 +1914,7 @@ _KRL_
 add_expr_testcase(
 	$krl_src,
 	'expr',
-	'array',
+	'_ignore_',
 	mk_expr_node("str","array"),
 	0
 );
@@ -1926,7 +1926,7 @@ _KRL_
 add_expr_testcase(
 	$krl_src,
 	'expr',
-	'null',
+	'_ignore_',
 	mk_expr_node("str","null"),
 	0
 );

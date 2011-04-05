@@ -56,6 +56,7 @@ mk_config_string
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
+my $re_rid;
 
 sub getkrl {
     my $filename = shift;
@@ -100,6 +101,7 @@ sub configure {
 sub gen_req_info {
     my($rid, $options) = @_;
     my $req_info;
+    $re_rid = $rid;
     $req_info->{'ip'} =  '72.21.203.1';
     $req_info->{'caller'} = 'http://www.windley.com/';
     $req_info->{'pool'} = APR::Pool->new;
@@ -107,14 +109,6 @@ sub gen_req_info {
     $req_info->{'rid'} = $rid;
     $req_info->{'param_names'} = ['msg','caller'];
     $req_info->{'msg'} = 'Hello World!';
-#    my $memservers = Kynetx::Configure::get_config('MEMCACHE_SERVERS');
-#    my $patience = Kynetx::Configure::get_config("LOCK_PATIENCE");
-#    $req_info->{'_lock'} = IPC::Lock::Memcached->new({
-#        "memcached_servers" => $memservers,
-#        "patience" => $patience
-#    });
-
-
 
     foreach my $k (keys %{ $options}) {
       $req_info->{$k} = $options->{$k};
@@ -127,7 +121,7 @@ sub gen_rule_env {
   my($options) = @_;
 
   my $rule_env = empty_rule_env();
-
+  
   $rule_env =  extend_rule_env(
 			       ['city','tc','temp','booltrue','boolfalse','a','b','c'],
 			       ['Blackfoot','15',20,'true','false','10','11',[5,6,4]],

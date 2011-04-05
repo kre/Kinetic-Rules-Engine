@@ -120,6 +120,8 @@ my $rule_env = extend_rule_env({
 		 ),
 
    }, $init_rule_env);
+   
+$rule_env->{'ruleset_name'} = $rid;
 
 my $session = Kynetx::Test::gen_session($r, $rid);
 session_set($rid, $session, 'my_flag');
@@ -540,7 +542,11 @@ foreach my $case (@{ $testcases } ) {
   my $result = cmp_deeply($e,
 	    $case->{'expected_val'},
 	    "Evaling " . $case->{'krl'});
-  die unless $result;
+  if (! $result ){
+  	diag("RE: ", Dumper($rule_env));
+  	die;
+  };
+  
   $test_count++;
 
 }
