@@ -170,13 +170,25 @@ id
 		  rid => 1,
 		  rule_version => 1,
 		  txn_id  => 1,
+		  kynetx_app_version => 1,
+		  element => 1,
+		  kvars => 1
 		 );
 
 #      $logger->debug("Req info: ", sub {Dumper($req_info)});
 
+      my $rid = $req_info->{'rid'};
+
       my $ps;
       foreach my $pn (@{$req_info->{'param_names'}}) {
-	$ps->{$pn} = $req_info->{$pn} unless $skip{$pn};
+	# remove the prepended RID if it's there
+	my $npn = $pn;
+        my $re = '^' . $rid . ':(.+)$';
+	if ($pn =~ /$re/) {
+	  $npn = $1;
+	}
+#	$logger->debug("Using $npn as param name");
+	$ps->{$npn} = $req_info->{$pn} unless $skip{$pn} || $skip{"$rid:$npn"};
       }
 
       return $ps;
