@@ -84,13 +84,18 @@ var_free_in_expr
 eval_ineq
 eval_pred
 eval_emit
+recursion_threshold
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 # make sure we get canonical freezes for good signatures.
 $Storable::canonical = 1;
 
-use constant FUNCTION_CALL_THRESHOLD => 1000;
+use constant FUNCTION_CALL_THRESHOLD => 100;
+
+sub recursion_threshold {
+	return FUNCTION_CALL_THRESHOLD;
+}
 
 sub eval_prelude {
     my ($req_info, $rule_env, $rule_name, $session, $pre) = @_;

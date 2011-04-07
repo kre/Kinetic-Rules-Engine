@@ -150,7 +150,7 @@ sub process_schedule {
 
 	while ( my $task = $schedule->next() ) {
 
-		#    $logger->debug("[task] ", sub { Dumper($task) });
+		$logger->debug("[task] ", sub { Dumper($task) });
 
 		$rid = $task->{'rid'};
 		unless ( $rid eq $current_rid ) {
@@ -172,7 +172,8 @@ sub process_schedule {
 			}
 
 			$req_info->{'rid'} = $rid;
-
+			#$rule_env = Kynetx::Environments::extend_rule_env("ruleset_name",$rid,$init_rule_env);
+			$init_rule_env->{'ruleset_name'} = $rid;
 			# we use this to modify the schedule on-the-fly
 			$req_info->{'schedule'} = $schedule;
 
