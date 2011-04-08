@@ -762,6 +762,15 @@ sub eval_as {
 }
 $funcs->{'as'} = \&eval_as;
 
+sub eval_typeof {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    return Kynetx::Parser::mk_expr_node('str',$obj->{'type'});
+}
+$funcs->{'typeof'} = \&eval_typeof;
+
+
 sub eval_toRegexp {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
