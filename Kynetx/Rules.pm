@@ -796,10 +796,13 @@ sub eval_rule_body {
 	# if the condition is undefined, it's true.
 	$rule->{'cond'} ||= mk_expr_node( 'bool', 'true' );
 
-	my $pred_value = Kynetx::Expressions::den_to_exp(
-		Kynetx::Expressions::eval_expr(
-			$rule->{'cond'}, $rule_env, $rule->{'name'},
-			$req_info,       $session
+	my $pred_value = Kynetx::Expressions::true_value(
+	  		   Kynetx::Expressions::eval_expr(
+			    $rule->{'cond'}, 
+			    $rule_env, 
+			    $rule->{'name'},
+			    $req_info,
+                            $session
 		)
 	);
 
