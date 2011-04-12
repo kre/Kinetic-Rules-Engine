@@ -385,11 +385,11 @@ sub eval_use {
 			  { 'type' => $u->{'resource_type'} };
 		}
 		elsif ( $u->{'type'} eq 'module' ) {
-
+			$logger->trace("module struct: ", sub {Dumper($u)});
 			# side effects the rule env.
 			( $this_js, $rule_env ) =
 			  eval_use_module( $req_info, $rule_env, $session, $u->{'name'},
-				$u->{'alias'}, $u->{'modifiers'} );
+				$u->{'alias'}, $u->{'modifiers'}, $u->{'version'});
 
 			# don't include the module JS in the results.
 			# $js .= $this_js;
@@ -406,11 +406,13 @@ sub eval_use {
 }
 
 sub eval_use_module {
-	my ( $req_info, $rule_env, $session, $name, $alias, $modifiers ) = @_;
+	my ( $req_info, $rule_env, $session, $name, $alias, $modifiers, $mversion ) = @_;
 
 	my $logger = get_logger();
 
-	my $use_ruleset = Kynetx::Rules::get_rule_set( $req_info, 1, $name );
+	# Default to the production version of modules
+	$mversion ||= 'prod';
+	my $use_ruleset = Kynetx::Rules::get_rule_set( $req_info, 1, $name, $mversion );
 
 	$logger->trace("Using ", Dumper $use_ruleset);
 
@@ -851,13 +853,13 @@ sub eval_rule_body {
 
 # this returns the right rules for the caller and site
 sub get_rule_set {
-	my ( $req_info, $localparsing, $rid ) = @_;
+	my ( $req_info, $localparsing, $rid, $ver ) = @_;
 
 	my $caller = $req_info->{'caller'};
 	$rid ||= $req_info->{'rid'};
 
 	my $logger = get_logger();
-	$logger->debug("Getting ruleset $rid for $caller");
+	$logger->debug("Getting ruleset $rid version ($ver) for $caller");
 
 	my $ruleset;
 	if ( is_ruleset_stashed( $req_info, $rid ) ) {
@@ -866,7 +868,7 @@ sub get_rule_set {
 	else {
 		$ruleset =
 		  Kynetx::Repository::get_rules_from_repository( $rid, $req_info,
-			$localparsing );
+			$localparsing,0,$ver );
 
 		# do not store ruleset in the request info here
 		# or it ends up in the session for the user

@@ -2886,7 +2886,7 @@ $re1 = extend_rule_env(['inc','x'],
 		   },
 	  'type' => 'closure'
 	 },
-	 1001],
+	 101],
 		       $rule_env);
 
 $krl_src = <<_KRL_;
@@ -2901,7 +2901,7 @@ _KRL_
 
 $js = <<_JS_;
 var inc = function(n) {return (n <= 0) ? 0 : (1 + inc((n - 1)))};
-var x = 1001;
+var x = 101;
 _JS_
 
 add_expr_testcase(

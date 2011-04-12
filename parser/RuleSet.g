@@ -1798,11 +1798,14 @@ meta_block
 		tmp.put("resource_type",$rtype.text);
 		use_list.add(tmp);
 	 })
- 	| (MODULE  modname=VAR (ALIAS alias=VAR)? (WITH m=modifier {temp_list.add($m.result);} (AND_AND m1=modifier {temp_list.add($m1.result);})*)?) {
+ 	| (MODULE  modname=VAR (VERSION ver=STRING)? (ALIAS alias=VAR)? (WITH m=modifier {temp_list.add($m.result);} (AND_AND m1=modifier {temp_list.add($m1.result);})*)?) {
 		HashMap tmp = new HashMap();
 		tmp.put("name",$modname.text);
 		tmp.put("type","module");
         tmp.put("alias",$alias.text);
+        if ($ver.text != null) {        	
+        	tmp.put("version",strip_string($ver.text));
+        }
         alias = null;
         tmp.put("modifiers",temp_list);
         temp_list = new ArrayList();
@@ -2115,6 +2118,9 @@ OTHER_OPERATORS
  PROVIDE
 	:	'provide' | 'provides'
 	;
+ VERSION
+ 	:	'version'
+ 	;
  CSS
 	:'css';
 
