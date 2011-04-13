@@ -58,17 +58,19 @@ qw(
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
-
+# $sversion allows modules to specify the version of the ruleset that is requested
+# $text requests the krl not the ast
 sub get_rules_from_repository{
 
-    my ($rid, $req_info, $localparsing, $text) = @_;
+    my ($rid, $req_info, $localparsing, $text,$sversion) = @_;
 
     my $logger = get_logger();
 
 
     # default to production for svn repo
     # defaults to production when no version specified
-    my $version = Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kynetx_app_version']) || 'prod';
+    my $version = $sversion || 
+    		Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kynetx_app_version']) || 'prod';
     $req_info->{'rule_version'} = $version;
 
     my $memd = get_memd();

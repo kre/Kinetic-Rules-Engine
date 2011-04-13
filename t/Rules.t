@@ -1996,7 +1996,7 @@ add_testcase(
     0
     );
     
-ENDY:
+
 $krl_src = <<_KRL_;
 ruleset two_rules_first_raises_second {
     rule t10 is active {
@@ -3738,14 +3738,14 @@ $test_count++;
 is(poke_mod_env("a16x78", "c", $mod_rule_env), "Hello", "key gets passed to config" );
 $test_count++;
 
-
+ENDY:
 # test module configuration
 $krl =  << "_KRL_";
 ruleset foobar {
   meta {
     key floppy "world"
     use module a16x78 alias foo with c = "FOO"
-    use module a16x78 alias bar with c = "BAR"
+    use module a16x78 version "dev" alias bar with c = "BAR"
   }
   global {
     a = foo:g();

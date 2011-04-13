@@ -75,6 +75,7 @@ our %EXPORT_TAGS = (
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 my ( $active, $test, $inactive ) = ( 0, 1, 2 );
+my $f = 0;
 
 # FIXME factor out common functionality in float and float2
 
@@ -592,7 +593,7 @@ sub build_composed_action {
 	my $logger = get_logger();
 	my $action_tag;
 	my $js = "";
-	
+		
 	my $config_array = $rule_env->{'configure'};	
 	my $decls = $rule_env->{'decls'};
 	my $actions = $rule_env->{'actions'};
@@ -632,6 +633,22 @@ sub build_composed_action {
 		my $d = Kynetx::Expressions::eval_one_decl($req_info,$rule_env,$action_tag,$session,$decl);
 		$logger->trace("Declaration: $d");
 		$js .= $d;
+	}
+
+	my $srid = $req_info->{'rid'};
+	my $orid = Kynetx::Environments::lookup_rule_env("ruleset_name",$orig_env);
+	my $crid = Kynetx::Environments::lookup_rule_env("ruleset_name",$rule_env);
+	my $rcount = $req_info->{"__recursion__"} || 0;
+	
+	if ($rcount > Kynetx::Expressions::recursion_threshold()) {
+		
+		return "{ // Deep recursion exception
+			}";
+	}	
+	if ($srid eq $crid) {
+		$rcount++;
+		$logger->debug("Rids are the same!-----------------------");
+		$req_info->{"__recursion__"} = $rcount;
 	}
 	
 	my @action_block = ();	
