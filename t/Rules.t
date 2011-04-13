@@ -838,47 +838,47 @@ add_testcase(
     );
 
 
-$krl_src = <<_KRL_;
-rule test_page_ida is active {
-   select using "/identity-policy/" setting ()
+# $krl_src = <<_KRL_;
+# rule test_page_ida is active {
+#    select using "/identity-policy/" setting ()
 
-   pre {
-       pt = page:id("product_name");
+#    pre {
+#        pt = page:id("product_name");
 
-       html = <<<p>This is the product title: #{pt}</p>       >>;
+#        html = <<<p>This is the product title: #{pt}</p>       >>;
 
-   }
+#    }
 
-   alert(html);
+#    alert(html);
 
-}
-_KRL_
+# }
+# _KRL_
 
 
-$config = mk_config_string(
-  [
-   {"rule_name" => 'test_page_ida'},
-   {"rid" => 'cs_test'},
-   {"txn_id" => 'txn_id'},
-  ]
-);
+# $config = mk_config_string(
+#   [
+#    {"rule_name" => 'test_page_ida'},
+#    {"rid" => 'cs_test'},
+#    {"txn_id" => 'txn_id'},
+#   ]
+# );
 
-$result = <<_JS_;
-(function(){
-var pt = \$K('product_name').html();
-var html = '<p>This is the product title: '+pt+'</p>';
-function callBacks () {
-};
-(function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks,$config,html));
-}());
-_JS_
+# $result = <<_JS_;
+# (function(){
+# var pt = \$K('product_name').html();
+# var html = '<p>This is the product title: '+pt+'</p>';
+# function callBacks () {
+# };
+# (function(uniq, cb, config, msg) {alert(msg);cb();}
+#  ('%uniq%',callBacks,$config,html));
+# }());
+# _JS_
 
-add_testcase(
-    $krl_src,
-    $result,
-    $dummy_final_req_info
-    );
+# add_testcase(
+#     $krl_src,
+#     $result,
+#     $dummy_final_req_info
+#     );
 
 
 $krl_src = <<_KRL_;
@@ -1348,10 +1348,10 @@ $config = mk_config_string(
 $result = <<_JS_;
 (function(){
  var z = 6;
- var w = '\\nThis is another number ' + z + '';
+ var w = '\\nThis is another number 6';
  (function(){
    var x = 2;
-   var y = '\\nThis is the number ' + x + '';
+   var y = '\\nThis is the number 2';
    function callBacks () {
    };
    (function(uniq,cb,config,msg) {
@@ -1362,7 +1362,7 @@ $result = <<_JS_;
    }());
  (function(){
    var x = 7;
-   var y = '\\nThis is the number ' + x + '';
+   var y = '\\nThis is the number 7';
    function callBacks () {
    };
    (function(uniq, cb, config, msg) {
@@ -1416,11 +1416,11 @@ $final_req_info = {
 $result = <<_JS_;
 (function(){
  var z = 6;
- var w = '\\nThis is another number ' + z + '';
+ var w = '\\nThis is another number 6';
  (function(){
    var x = 2;
    var p = [];
-   var y = '\\nThis is the number ' + p + '';
+   var y = '\\nThis is the number []';
    function callBacks () {
    };
    (function(uniq,cb,config,msg) {
@@ -1432,7 +1432,7 @@ $result = <<_JS_;
  (function(){
    var x = 7;
    var p = [];
-   var y = '\\nThis is the number ' + p + '';
+   var y = '\\nThis is the number []';
    function callBacks () {
    };
    (function(uniq, cb, config, msg) {

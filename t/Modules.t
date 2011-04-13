@@ -179,8 +179,8 @@ $test_count++;
 
 # page
 $source = "page";
-$function = "id";
-$args = ["foo"];
+$function = "env";
+$args = ["caller"];
 $result = Kynetx::Expressions::den_to_exp(
             Kynetx::Modules::eval_module($my_req_info,
 				       $rule_env,
@@ -193,8 +193,8 @@ $result = Kynetx::Expressions::den_to_exp(
 
 
 is($result,
-   '$K(\'foo\').html()',
-   'page:id("foo")');
+   'http://www.windley.com/',
+   'page:env("caller")');
 $test_count++;
 
 #diag Dumper $rule_env;

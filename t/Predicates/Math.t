@@ -146,6 +146,7 @@ like(math_handle( 'rad2grad', [3.1415962]), qr/^200\.0\d+/, 'rad2grad');
 
 like(math_handle( 'pi', []), qr/^3\.1415\d+/, 'pi');
 
+diag "Expect some error messages here as we're testing error catching";
 # catch errors
 is(math_handle( 'atanh', [-1]), undef, 'Error: Logarithm of zero');
 is(math_handle( 'cot', [0]), undef, 'Error: Divide by zero');

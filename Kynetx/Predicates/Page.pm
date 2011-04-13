@@ -76,8 +76,10 @@ sub get_pageinfo {
 var
 env
 url
-id
 );
+
+#id
+
 
     # no caching values in this datasource
 
@@ -85,9 +87,9 @@ id
     if($function eq 'var') {
 	my $vals = decode_json($req_info->{'kvars'});
 	$val = $vals->{$args->[0]};
-    } elsif ($function eq 'id') {
-	# we're really just generating JS here.
-	$val = "\$K('".$args->[0]."').html()";
+    # } elsif ($function eq 'id') {
+    # 	# we're really just generating JS here.
+    # 	$val = "\$K('".$args->[0]."').html()";
 
     } elsif($function eq 'url') {
 

@@ -625,8 +625,6 @@ sub eval_rule {
 
 	my $js = '';
 
-	#    $logger->info($rule->{'name'}, " selected...");
-
 	# uncomment to print out all the session keys.  With events there's a lot
 	#     foreach my $var (@{ session_keys($req_info->{'rid'}, $session) } ) {
 	# 	next if($var =~ m/_created$/);
@@ -641,6 +639,8 @@ sub eval_rule {
 
 # assume the rule doesn't fire.  We will change this if it EVER fires in this eval
 	$req_info->{ $rule->{'name'} . '_result' } = 'notfired';
+
+#	$logger->info("Rule pre ", sub {Dumper $rule->{'pre'}});
 
 	if ( $rule->{'pre'}
 		&& !( $rule->{'inner_pre'} || $rule->{'outer_pre'} ) )
