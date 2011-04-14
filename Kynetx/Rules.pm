@@ -857,10 +857,12 @@ sub get_rule_set {
 
 	my $caller = $req_info->{'caller'};
 	$rid ||= $req_info->{'rid'};
-	$ver ||= 'prod';
+
+# don't do this. We rely on $ver being undefined later
+#	$ver ||= 'prod';
 
 	my $logger = get_logger();
-	$logger->debug("Getting ruleset $rid version ($ver) for $caller");
+	$logger->debug("Getting ruleset $rid version for $caller");
 
 	my $ruleset;
 	if ( is_ruleset_stashed( $req_info, $rid ) ) {

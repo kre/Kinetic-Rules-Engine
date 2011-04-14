@@ -1166,7 +1166,7 @@ sub var_free_in_here_doc {
 
   my @vars = ($rhs =~ /#{([^}]+)}/g);
 
-  $logger->debug("Vars in here_doc for $rhs: ", sub {Dumper @vars});
+#  $logger->debug("Vars in here_doc for $rhs: ", sub {Dumper @vars});
 
   my $found = 0;
 
