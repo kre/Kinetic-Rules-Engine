@@ -87,7 +87,7 @@ sub get {
         "rid" => $rid,
         "key" => $var};
     my $value = Kynetx::MongoDB::get_value(COLLECTION,$key);
-    $logger->debug("GET ($var) using (",sub {Dumper($key)},") returns: ", sub {Dumper($value)});
+    $logger->trace("GET ($var) using (",sub {Dumper($key)},") returns: ", sub {Dumper($value)});
     if ($get_ts) {
         return $value->{"created"};
     } else {
@@ -144,7 +144,7 @@ sub put {
         "key"  => $var,
         "value"=> $val,
     };
-    $logger->debug("Store to $var: ",sub{Dumper($value)});
+    $logger->trace("Store to $var: ",sub{Dumper($value)});
     my $success = Kynetx::MongoDB::update_value(COLLECTION,$key,$value,1);
     $logger->debug("Failed to upsert ", sub {Dumper($key)}) unless ($success);
     return $success;
