@@ -691,17 +691,23 @@ sub build_one_action {
 	my $action_name = $action->{'name'};
 
 	my $args = $action->{'args'};
-	$logger->trace( "Build one action args: ",sub {Dumper($args)});
+#	$logger->debug( "Build one action args: ",sub {Dumper($args)});
 
 	# parse the action args and make the expressed values
-	my $arg_exp_vals =
+	my $arg_den_vals =
 	  Kynetx::Expressions::eval_rands( $args, $rule_env, $rule_name, $req_info,
 		$session );
 
+#	$logger->debug( "Build one action arg denoted vals: ",sub {Dumper($arg_exp_vals)});
+
+	my $arg_exp_vals;
 	# get the values
-	for ( @{$arg_exp_vals} ) {
-		$_ = Kynetx::Expressions::den_to_exp($_);
+	foreach my $val ( @{$arg_den_vals} ) {
+		push(@{$arg_exp_vals}, Kynetx::Expressions::den_to_exp($val));
 	}
+
+#	$logger->debug( "Build one action arg exp vals: ",sub {Dumper($arg_exp_vals)});
+
 
 	# Check for composable action before any other built-ins
 	my $defaction;
@@ -749,10 +755,15 @@ sub build_one_action {
 
 	# process overloaded functions and arg reconstruction
 	( $action_name, $args ) =
-	  choose_action( $req_info, $action_name, $args, $rule_env, $rule_name );
+	  choose_action( $req_info, $action_name, $arg_den_vals, $rule_env, $rule_name );
 
 	# this happens after we've chosen the action since it modifies args
+
+	$logger->debug("Args before conversion to JS: ", sub { Dumper $args});
+
 	$args = Kynetx::JavaScript::gen_js_rands($args);	
+
+	$logger->debug("Args after conversion to JS: ", sub { Dumper $args});
 
 	my $js_config = [];
 

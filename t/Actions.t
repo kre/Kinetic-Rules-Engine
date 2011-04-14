@@ -793,7 +793,7 @@ $result = <<_JS_;
 (function(uniq, cb, config, annotate_fn) {
     KOBJ.annotate_search_results(annotate_fn, config, cb);
 }
-('%uniq%',callbacks23,$config,foo));
+('%uniq%',callbacks23,$config,56));
 _JS_
 
 
@@ -887,7 +887,7 @@ $result = <<_JS_;
         KOBJ.page_content_event(uniq, label, selectors ,config);
         cb();
     }
-('%uniq%',callbacks23,$config ,'bob',{'google_footer' : {'selector' : '#fll', 'type' : 'text'}, 'search_links' : {'selector' : '#sbl', 'type' : 'text'}}));
+('%uniq%',callbacks23,$config ,'bob',{'search_links' : {'selector' : '#sbl', 'type' : 'text'}, 'google_footer' : {'selector' : '#fll', 'type' : 'text'}}));
 _JS_
 
 
@@ -919,7 +919,7 @@ $result = <<_JS_;
         KOBJ.page_collection_content_event(uniq, label,top_selector, parent_selector, selectors ,config);
         cb();
     }
-('%uniq%',callbacks23,{'rule_name' :'dummy_name','rid' :'cs_test','txn_id' :1234,'callback' :mycallback} ,'bob','#res','li.g',{'google_footer' : {'selector' : '#fll', 'type' : 'text'}, 'search_links' : {'selector' : '#sbl', 'type' : 'text'}}));
+('%uniq%',callbacks23,{'rule_name' :'dummy_name','rid' :'cs_test','txn_id' :1234,'callback' :mycallback} ,'bob','#res','li.g',{'search_links' : {'selector' : '#sbl', 'type' : 'text'},'google_footer' : {'selector' : '#fll', 'type' : 'text'}}));
 _JS_
 
 
