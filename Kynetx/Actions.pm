@@ -759,11 +759,11 @@ sub build_one_action {
 
 	# this happens after we've chosen the action since it modifies args
 
-	$logger->debug("Args before conversion to JS: ", sub { Dumper $args});
+#	$logger->debug("Args before conversion to JS: ", sub { Dumper $args});
 
 	$args = Kynetx::JavaScript::gen_js_rands($args);	
 
-	$logger->debug("Args after conversion to JS: ", sub { Dumper $args});
+#	$logger->debug("Args after conversion to JS: ", sub { Dumper $args});
 
 	my $js_config = [];
 
