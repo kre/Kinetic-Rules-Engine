@@ -150,7 +150,7 @@ sub process_schedule {
 
 	while ( my $task = $schedule->next() ) {
 
-		$logger->debug("[task] ", sub { Dumper($task) });
+		$logger->trace("[task] ", sub { Dumper($task) });
 
 		$rid = $task->{'rid'};
 		unless ( $rid eq $current_rid ) {
@@ -859,7 +859,7 @@ sub get_rule_set {
 	$rid ||= $req_info->{'rid'};
 
 	my $logger = get_logger();
-	$logger->debug("Getting ruleset $rid version ($ver) for $caller");
+	$logger->debug("Getting ruleset $rid  for $caller");
 
 	my $ruleset;
 	if ( is_ruleset_stashed( $req_info, $rid ) ) {

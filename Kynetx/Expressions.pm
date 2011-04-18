@@ -201,7 +201,7 @@ sub eval_expr {
 		$logger->trace("ruleset_name undefined in \$rule_env, using \$req_info");
 		$re_rid = $ri_rid;
 	}
-	if ($ri_rid ne $re_rid) {
+	if (defined $ri_rid && $ri_rid ne $re_rid) {
 		$logger->debug("Module context: $ri_rid/$re_rid");
 	}
 

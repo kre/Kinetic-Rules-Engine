@@ -40,7 +40,8 @@ use Apache2::Const;
 use Net::Twitter::Lite;
 #use Net::Twitter::OAuth;
 use Data::Dumper;
-
+use DateTime::Format::ISO8601;
+use Benchmark ':hireswallclock';
 
 
 
@@ -493,6 +494,7 @@ sub eval_twitter {
   my $logger = get_logger();
   $logger->debug("eval_twitter evaluation with function -> ", $function);
   my $f = $funcs->{$function};
+  my $start;
   if (defined $f) {
     return $f->($req_info,$rule_env,$session,$rule_name,$function,$args);
   } else {
@@ -508,6 +510,7 @@ sub eval_twitter {
       }
       my $command = "\$nt->$name(".$arg.");";
       $logger->debug("[eval_twitter] executing: $command");
+      $start = new Benchmark;
       eval $command;
     };
 
@@ -522,7 +525,11 @@ sub eval_twitter {
       }
       $tweets = $@;
     }
-#    $logger->debug("[eval_twitter] returning ", Dumper $tweets);
+    my $complete = new Benchmark;
+    my $t_diff = timediff($complete,$start);
+    my $elapsed = $t_diff->[0];
+    
+    $logger->info("[eval_twitter] took $elapsed s ");
 
 
     return $tweets;
