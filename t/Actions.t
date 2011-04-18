@@ -793,7 +793,7 @@ $result = <<_JS_;
 (function(uniq, cb, config, annotate_fn) {
     KOBJ.annotate_search_results(annotate_fn, config, cb);
 }
-('%uniq%',callbacks23,$config,56));
+('%uniq%',callbacks23,$config,foo));
 _JS_
 
 
@@ -801,7 +801,8 @@ add_action_testcase(
     $krl_src,
     $result,
     $my_req_info,
-    'annotate_search_results'
+    'annotate_search_results',
+    0
     );
 
 
@@ -829,7 +830,7 @@ add_action_testcase(
     $krl_src,
     $result,
     $my_req_info,
-    'annotate_search_results'
+    'annotate_search_results no arg'
     );
 
 $krl_src = <<_KRL_;
