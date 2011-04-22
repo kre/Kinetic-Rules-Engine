@@ -553,10 +553,12 @@ KOBJ.errorstack_submit = function(key, e, rule_info) {
 };
 
 KOBJ.location = function(part) {
+  try {
     if (part == "href") return KOBJ.locationHref || KOBJ.document.location.href;
     if (part == "host") return KOBJ.locationHost || KOBJ.document.location.host;
     if (part == "protocol") return KOBJ.locationProtocol || KOBJ.document.location.protocol;
     if (part == "hash") return KOBJ.locationHash || KOBJ.document.location.hash;
+  } catch (e) { return part + "-unavailable"; }
 };
 
 /* Hook to log data to the server */
