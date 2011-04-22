@@ -167,7 +167,7 @@ sub process_event {
         
     }
 
-    #    $logger->debug("Schedule: ", sub { Dumper $schedule });
+    $logger->debug("Schedule complete");
     
     my $js = '';
 	$js .= eval {

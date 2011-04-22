@@ -411,7 +411,8 @@ $funcs->{'csch'} = \&_csch;
 sub _atanh {
     my ($req_info, $function, $args) = @_;
     my $logger = get_logger();
-	my $val = atanh($args->[0]);
+	my $val = 'null';
+        $val = atanh($args->[0]) unless ($args->[0] == 0);
 	
 	return $val;
 }

@@ -447,9 +447,10 @@ SKIP: {
 		   '/qwb@kynetx.com/',
 		   '/"msg_id":35/',
 		  ],
-	'unlike' => ['/25/',
-		   '/15/',
+	'unlike' => ['/"msg_id":25/',
+		   '/"msg_id":15/',
 		  ],
+	'diag' => 1,
        },
       ];
 

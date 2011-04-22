@@ -165,11 +165,13 @@ sub eval_decl {
 
     if ($decl->{'type'} eq 'expr' ) {
 		my $r = eval_expr($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);
-       $logger->trace("before de-denoting ", Dumper $r);
+       $logger->trace("before de-denoting ", sub {Dumper $r});
 		$val = den_to_exp($r);
     } elsif ($decl->{'type'} eq 'here_doc') {
-		$val = eval_heredoc($decl->{'rhs'});	
-		$logger->trace("[decl] here doc for ", $decl->{'lhs'} );
+      
+		$val = eval_heredoc($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);	
+		$val = den_to_exp($val);
+		$logger->trace("[decl] here doc for ", sub{ $decl->{'lhs'} });
     } 
     $logger->trace("Evaling " . $rule_name.":".$decl->{'lhs'});
     $logger->trace("returning ", Dumper $val);
@@ -201,7 +203,7 @@ sub eval_expr {
 		$logger->trace("ruleset_name undefined in \$rule_env, using \$req_info");
 		$re_rid = $ri_rid;
 	}
-	if ($ri_rid ne $re_rid) {
+	if (defined $re_rid && defined $ri_rid && $ri_rid ne $re_rid) {
 		$logger->debug("Module context: $ri_rid/$re_rid");
 	}
 
@@ -212,12 +214,13 @@ sub eval_expr {
     		utf8::upgrade($expr->{'val'});
     		$logger->trace("Not UTF8: ",$expr->{'val'});
     	}
-        if ($expr->{'val'} =~ m/\#\{(.+)\}{1}?/) {
-            $logger->trace("Bee sting: ",$1);
-            return(eval_string($expr, $rule_env, $rule_name,$req_info, $session));
-        } else {
-	       return $expr;
-        }
+        # if ($expr->{'val'} =~ m/\#\{(.+)\}{1}?/) {
+        #     $logger->trace("Bee sting: ",$1);
+        #     return(eval_string($expr, $rule_env, $rule_name,$req_info, $session));
+        # } else {
+	#        return $expr;
+        # }
+	return eval_str($expr, $rule_env, $rule_name,$req_info, $session);
     } elsif($expr->{'type'} eq 'JS') {
 	   return  $expr ;
     } elsif ($expr->{'type'} eq 'null') {
@@ -721,6 +724,8 @@ sub eval_persistent {
 #	$logger->debug("Looking up $expr->{'domain'}:$name in ", sub{Dumper $rule_env});
 
 	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
+
+#	$logger->debug(" $expr->{'domain'}:$name -> ", sub{Dumper $v});
       }
     }
 
@@ -858,10 +863,9 @@ sub ineq_test {
 
 
 sub eval_heredoc {
-    my ($val) = @_;
-
-    # we post process when we emit the JS now, so no need to modify this further
-    return $val;
+    my ($val,$rule_env, $rule_name, $req_info, $session) = @_;
+    # process any beestrings and that's all
+    return eval_str($val,$rule_env, $rule_name, $req_info, $session);
 }
 
 sub eval_emit {
@@ -1167,23 +1171,50 @@ sub var_free_in_here_doc {
   my $found = 0;
 
   foreach my $v (@vars) {
-    $found = 1 if $v eq $var;
+    $v = Kynetx::Parser::parse_expr($v);
+    $found = 1 if var_free_in_expr($var, $v);
   }
 
   return $found;
 
 }
 
-sub eval_string {
+sub eval_str {
     my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
     my $logger = get_logger();
-    $expr->{'val'} =~ m/(.*)\#\{(.+?)\}{1}?(.*)/s;
-    my $bee_expr = Kynetx::Parser::parse_expr($2);
-    $logger->debug("parsed beesting: ", sub {Dumper($bee_expr)} );
-    my $val = $1.eval_expr($bee_expr,$rule_env, $rule_name,$req_info, $session)->{'val'}.$3;
-    return (eval_expr({'val' => $val, 'type' => 'str'}, $rule_env, $rule_name,$req_info, $session));
+    my $json = new JSON::XS;
+    my @parts;
+    my $val = '';
+    my $str = ref $expr eq 'HASH' ? $expr->{'val'} : $expr;
+#    $logger->debug("Original expr: ", sub {Dumper $str});
+    while (@parts = $str =~ m/(.*?)\#\{(.+?)\}{1}?(.*)/s) {
+#      $logger->debug("Picked apart ", sub {Dumper @parts});
+      last unless $parts[1];
+      my $bee_expr = Kynetx::Parser::parse_expr($parts[1]);
+      my $bee_val = eval_expr($bee_expr,$rule_env, $rule_name,$req_info, $session)->{'val'};
+#      $logger->debug("parsed and evaled beesting: ", sub {Dumper($bee_val)} );
+      if (ref $bee_val eq 'ARRAY' || ref $bee_val eq 'HASH') {
+	$bee_val = $json->encode($bee_val)
+      }
+      $val .= $parts[0].$bee_val;
+      $str = $parts[2];
+    }
+    $val .= $str if defined $str;
+    return Kynetx::Parser::mk_expr_node('str',$val);
 
 }
+
+# # shouldn't be used anymore
+# sub eval_string {
+#     my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
+#     my $logger = get_logger();
+#     $expr->{'val'} =~ m/(.*)\#\{(.+?)\}{1}?(.*)/s;
+#     my $bee_expr = Kynetx::Parser::parse_expr($2);
+# #    $logger->debug("parsed beesting: ", sub {Dumper($bee_expr)} );
+#     my $val = $1.eval_expr($bee_expr,$rule_env, $rule_name,$req_info, $session)->{'val'}.$3;
+#     return (eval_expr({'val' => $val, 'type' => 'str'}, $rule_env, $rule_name,$req_info, $session));
+
+# }
 
 sub type_of {
   my $dval = shift;

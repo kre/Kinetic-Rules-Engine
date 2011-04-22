@@ -333,27 +333,26 @@ add_expr_testcase(
     0);
 
 
-$krl_src = <<_KRL_;
-page:id("foo")
-_KRL_
-add_expr_testcase(
-    $krl_src,
-    'expr',
-    '$K(\'foo\').html()',
-    mk_expr_node('JS', '$K(\'foo\').html()'),
-    0);
+# $krl_src = <<_KRL_;
+# page:id("foo")
+# _KRL_
+# add_expr_testcase(
+#     $krl_src,
+#     'expr',
+#     '$K(\'foo\').html()',
+#     mk_expr_node('JS', '$K(\'foo\').html()'),
+#     0);
 
 
-$krl_src = <<_KRL_;
-page:id(city + "_ID")
-_KRL_
-add_expr_testcase(
-    $krl_src,
-    'expr',
-    '$K((city + \'_ID\')).html()',
-    mk_expr_node('JS', '$K(\'Blackfoot_ID\').html()'),
-    0);
-
+# $krl_src = <<_KRL_;
+# page:id(city + "_ID")
+# _KRL_
+# add_expr_testcase(
+#     $krl_src,
+#     'expr',
+#     '$K((city + \'_ID\')).html()',
+#     mk_expr_node('JS', '$K(\'Blackfoot_ID\').html()'),
+#     0);
 
 
 $krl_src = <<_KRL_;
@@ -2247,22 +2246,34 @@ add_expr_testcase(
 #---------------------------------------------------------------------------------
 $krl_src = <<_KRL_;
 function(x,y) {
-	b = << <input type="button" value="#{y}" onclick="KOBJ.get_application('cs_test').raise_event('#{x}');"/> >>;
+	b = x + y;
 	b;
 }
 _KRL_
 add_expr_testcase(
 	$krl_src,
 	'expr',
-	'function(x,y) {var b = \'<input type="button" value="\'+y+\'" onclick="KOBJ.get_application(\\\'cs_test\\\').raise_event(\\\'\'+x+\'\\\');"/>\'; return b}',
+	'function(x,y) {var b = (x + y); return b}',
 	mk_expr_node('closure',{'vars' => ['x','y'],
 					'decls' => [ {
          'lhs' => 'b',
-         'rhs' => ' <input type="button" value="#{y}" onclick="KOBJ.get_application(\'cs_test\').raise_event(\'#{x}\');"/> ',
-         'type' => 'here_doc'
+         'rhs' => {'args' => [
+			      {
+			       'val' => 'x',
+			       'type' => 'var'
+			      },
+			      {
+			       'val' => 'y',
+			       'type' => 'var'
+			      }
+			     ],
+		   'type' => 'prim',
+		   'op' => '+'
+		  },
+         'type' => 'expr'
        }
 					],
-					'sig' => '34f46dde1a1e0f343e14c6b279f0556a',
+					'sig' => 'e3a67271dec96c050738f32b4017100b',
 					'expr' => {'val' => 'b','type'=>'var'},
 					'env' => $rule_env,
 	}),
@@ -2427,17 +2438,6 @@ add_expr_testcase(
 #---------------------------------------------------------------------------------
 # declarations
 #---------------------------------------------------------------------------------
-
-$krl_src = <<_KRL_;
-c = page:id("foo")
-_KRL_
-add_expr_testcase(
-    $krl_src,
-    'decl',
-    'var c = $K(\'foo\').html();',
-    '$K(\'foo\').html()',
-    0);
-
 
 $krl_src = <<_KRL_;
 c = 3;
@@ -2629,7 +2629,7 @@ add_expr_testcase(
 
 
 $re1 = extend_rule_env(['c','d'],
-		       ['Hello',"\n#{c} world!"],
+		       ['Hello',"\nHello world!"],
 		       $rule_env);
 $krl_src = <<_KRL_;
 pre {
@@ -2641,7 +2641,7 @@ _KRL_
 
 $js = <<_JS_;
 var c = 'Hello';
-var d = '\\n' + c +  'world!';
+var d = '\\nHello world!';
 _JS_
 
 add_expr_testcase(
@@ -2653,8 +2653,8 @@ add_expr_testcase(
 
 $re1 = extend_rule_env(['a','b','multiline'],
             ['1','3','
-#{a}
-#{b}
+1
+3
 '],
             $rule_env);
 $krl_src = <<_KRL_;
@@ -2671,7 +2671,7 @@ _KRL_
 $js = <<_JS_;
 var a = 1;
 var b = 3;
-var multiline = '\\n'+a+'\\n'+b+'\\n';
+var multiline = '\\n1\\n3\\n';
 _JS_
 
 add_expr_testcase(
@@ -2886,7 +2886,7 @@ $re1 = extend_rule_env(['inc','x'],
 		   },
 	  'type' => 'closure'
 	 },
-	 1001],
+	 101],
 		       $rule_env);
 
 $krl_src = <<_KRL_;
@@ -2901,7 +2901,7 @@ _KRL_
 
 $js = <<_JS_;
 var inc = function(n) {return (n <= 0) ? 0 : (1 + inc((n - 1)))};
-var x = 1001;
+var x = 101;
 _JS_
 
 add_expr_testcase(

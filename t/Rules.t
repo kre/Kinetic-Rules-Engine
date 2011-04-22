@@ -246,7 +246,7 @@ $result = <<_JS_;
 var c = 'Seattle';
 function callBacks () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks,$config,('testing' + c)));
+('%uniq%',callBacks,$config,'testing Seattle'));
 }());
 _JS_
 
@@ -281,7 +281,7 @@ $result = <<_JS_;
 var c = 'Seattle';
 function callBacks () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks,$config,('testing' + c)));
+('%uniq%',callBacks,$config,'testing Seattle'));
 }());
 _JS_
 
@@ -316,7 +316,7 @@ $result = <<_JS_;
 var c = 'Seattle';
 function callBacks () {};
 (function(uniq, cb, config, msg) {alert(msg);cb();}
-('%uniq%',callBacks,$config,('testing' + c)));
+('%uniq%',callBacks,$config,'testing Seattle'));
 }());
 _JS_
 
@@ -838,54 +838,54 @@ add_testcase(
     );
 
 
-$krl_src = <<_KRL_;
-rule test_page_ida is active {
-   select using "/identity-policy/" setting ()
+# $krl_src = <<_KRL_;
+# rule test_page_ida is active {
+#    select using "/identity-policy/" setting ()
 
-   pre {
-       pt = page:id("product_name");
+#    pre {
+#        pt = page:id("product_name");
 
-       html = <<<p>This is the product title: #{pt}</p>       >>;
+#        html = <<<p>This is the product title: #{pt}</p>       >>;
 
-   }
+#    }
 
-   alert(html);
+#    alert(html);
 
-}
-_KRL_
+# }
+# _KRL_
 
 
-$config = mk_config_string(
-  [
-   {"rule_name" => 'test_page_ida'},
-   {"rid" => 'cs_test'},
-   {"txn_id" => 'txn_id'},
-  ]
-);
+# $config = mk_config_string(
+#   [
+#    {"rule_name" => 'test_page_ida'},
+#    {"rid" => 'cs_test'},
+#    {"txn_id" => 'txn_id'},
+#   ]
+# );
 
-$result = <<_JS_;
-(function(){
-var pt = \$K('product_name').html();
-var html = '<p>This is the product title: '+pt+'</p>';
-function callBacks () {
-};
-(function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks,$config,html));
-}());
-_JS_
+# $result = <<_JS_;
+# (function(){
+# var pt = \$K('product_name').html();
+# var html = '<p>This is the product title: '+pt+'</p>';
+# function callBacks () {
+# };
+# (function(uniq, cb, config, msg) {alert(msg);cb();}
+#  ('%uniq%',callBacks,$config,html));
+# }());
+# _JS_
 
-add_testcase(
-    $krl_src,
-    $result,
-    $dummy_final_req_info
-    );
+# add_testcase(
+#     $krl_src,
+#     $result,
+#     $dummy_final_req_info
+#     );
 
 
 $krl_src = <<_KRL_;
     rule emit_test_0 is active {
-        select using "/test/(.*).html" setting(pagename)
+        select using "/test/(.*).html" 
         pre {
-
+         pagename = "Hello";
 	}
 
         emit <<
@@ -906,11 +906,12 @@ $config = mk_config_string(
 
 $result = <<_JS_;
 (function(){
+var pagename = 'Hello';
 pagename.replace(/-/, ' ');
 function callBacks () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks,$config,pagename));
+ ('%uniq%',callBacks,$config,'Hello'));
 }());
 _JS_
 
@@ -925,7 +926,7 @@ $krl_src = <<_KRL_;
     rule emit_test_1 is active {
         select using "/test/(.*).html" setting(pagename)
         pre {
-
+         pagename = "Hello";
 	}
 
         emit "pagename.replace(/-/, ' ');"
@@ -946,11 +947,12 @@ $config = mk_config_string(
 
 $result = <<_JS_;
 (function(){
+var pagename = 'Hello';
 pagename.replace(/-/, ' ');
 function callBacks () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks,$config,pagename));
+ ('%uniq%',callBacks,$config,'Hello'));
 }());
 _JS_
 
@@ -991,7 +993,7 @@ var welcome = '\\nDon\\'t be false please! Be true!';
 function callBacks () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks,$config,welcome));
+ ('%uniq%',callBacks,$config,'\\nDon\\'t be false please! Be true!'));
 }());
 _JS_
 
@@ -1149,7 +1151,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,x));
+    ('%uniq%',callBacks,$config,'a'));
    }());
  (function(){
    var x = 'b';
@@ -1159,7 +1161,7 @@ $result = <<_JS_;
       alert(msg);
      cb();
     }
-    ('%uniq%',callBacks,$config,x));
+    ('%uniq%',callBacks,$config,'b'));
    }());
  }());
 _JS_
@@ -1206,7 +1208,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,(x+(y+z))));
+    ('%uniq%',callBacks,$config,11));
    }());
  (function(){
    var x = 7;
@@ -1217,7 +1219,7 @@ $result = <<_JS_;
       alert(msg);
      cb();
     }
-    ('%uniq%',callBacks,$config,(x+(y+z))));
+    ('%uniq%',callBacks,$config,21));
    }());
  }());
 _JS_
@@ -1269,7 +1271,7 @@ $result = <<_JS_;
         alert(msg);
         cb();
       }
-      ('%uniq%',callBacks,$config,(x+(y+z))));
+      ('%uniq%',callBacks,$config,8));
     }());
    (function(){
      var z = 5;
@@ -1280,7 +1282,7 @@ $result = <<_JS_;
         alert(msg);
         cb();
       }
-      ('%uniq%',callBacks,$config,(x+(y+z))));
+      ('%uniq%',callBacks,$config,10));
     }());
   }());
  (function(){
@@ -1294,7 +1296,7 @@ $result = <<_JS_;
         alert(msg);
        cb();
       }
-      ('%uniq%',callBacks,$config,(x+(y+z))));
+      ('%uniq%',callBacks,$config,23));
      }());
    (function(){
      var z = 10;
@@ -1305,7 +1307,7 @@ $result = <<_JS_;
         alert(msg);
         cb();
       }
-      ('%uniq%',callBacks,$config,(x+(y+z))));
+      ('%uniq%',callBacks,$config,25));
      }());
    }());
  }());
@@ -1348,28 +1350,28 @@ $config = mk_config_string(
 $result = <<_JS_;
 (function(){
  var z = 6;
- var w = '\\nThis is another number ' + z + '';
+ var w = '\\nThis is another number 6';
  (function(){
    var x = 2;
-   var y = '\\nThis is the number ' + x + '';
+   var y = '\\nThis is the number 2';
    function callBacks () {
    };
    (function(uniq,cb,config,msg) {
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,(x+(y+z))));
+    ('%uniq%',callBacks,$config,'2\\nThisisthenumber26'));
    }());
  (function(){
    var x = 7;
-   var y = '\\nThis is the number ' + x + '';
+   var y = '\\nThis is the number 7';
    function callBacks () {
    };
    (function(uniq, cb, config, msg) {
       alert(msg);
      cb();
     }
-    ('%uniq%',callBacks,$config,(x+(y+z))));
+    ('%uniq%',callBacks,$config,'7\\nThisisthenumber76'));
    }());
  }());
 _JS_
@@ -1416,30 +1418,30 @@ $final_req_info = {
 $result = <<_JS_;
 (function(){
  var z = 6;
- var w = '\\nThis is another number ' + z + '';
+ var w = '\\nThis is another number 6';
  (function(){
    var x = 2;
    var p = [];
-   var y = '\\nThis is the number ' + p + '';
+   var y = '\\nThis is the number []';
    function callBacks () {
    };
    (function(uniq,cb,config,msg) {
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,(x+(y+z))));
+    ('%uniq%',callBacks,$config,'2\\nThisisthenumber\[\]6'));
    }());
  (function(){
    var x = 7;
    var p = [];
-   var y = '\\nThis is the number ' + p + '';
+   var y = '\\nThis is the number []';
    function callBacks () {
    };
    (function(uniq, cb, config, msg) {
       alert(msg);
      cb();
     }
-    ('%uniq%',callBacks,$config,(x+(y+z))));
+    ('%uniq%',callBacks,$config,'7\\nThisisthenumber\[\]6'));
    }());
  }());
 _JS_
@@ -1489,7 +1491,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,v));
+    ('%uniq%',callBacks,$config,3));
    }());
  (function(){
    var k = 'a';
@@ -1502,7 +1504,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,v));
+    ('%uniq%',callBacks,$config,1));
    }());
  (function(){
    var k = 'b';
@@ -1515,7 +1517,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,v));
+    ('%uniq%',callBacks,$config,2));
    }());
  }());
 _JS_
@@ -1566,7 +1568,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,v));
+    ('%uniq%',callBacks,$config,'Horsty'));
    }());
  (function(){
    var k = 'Jam';
@@ -1577,7 +1579,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,v));
+    ('%uniq%',callBacks,$config,'Phil'));
    }());
  (function(){
    var k = 'everyone';
@@ -1588,7 +1590,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,v));
+    ('%uniq%',callBacks,$config,'Steve'));
    }());
  }());
 _JS_
@@ -1996,7 +1998,7 @@ add_testcase(
     0
     );
     
-ENDY:
+
 $krl_src = <<_KRL_;
 ruleset two_rules_first_raises_second {
     rule t10 is active {
@@ -3738,14 +3740,14 @@ $test_count++;
 is(poke_mod_env("a16x78", "c", $mod_rule_env), "Hello", "key gets passed to config" );
 $test_count++;
 
-
+ENDY:
 # test module configuration
 $krl =  << "_KRL_";
 ruleset foobar {
   meta {
     key floppy "world"
     use module a16x78 alias foo with c = "FOO"
-    use module a16x78 alias bar with c = "BAR"
+    use module a16x78 version "dev" alias bar with c = "BAR"
   }
   global {
     a = foo:g();

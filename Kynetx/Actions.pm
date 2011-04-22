@@ -691,17 +691,23 @@ sub build_one_action {
 	my $action_name = $action->{'name'};
 
 	my $args = $action->{'args'};
-	$logger->trace( "Build one action args: ",sub {Dumper($args)});
+#	$logger->debug( "Build one action args: ",sub {Dumper($args)});
 
 	# parse the action args and make the expressed values
-	my $arg_exp_vals =
+	my $arg_den_vals =
 	  Kynetx::Expressions::eval_rands( $args, $rule_env, $rule_name, $req_info,
 		$session );
 
+#	$logger->debug( "Build one action arg denoted vals: ",sub {Dumper($arg_exp_vals)});
+
+	my $arg_exp_vals;
 	# get the values
-	for ( @{$arg_exp_vals} ) {
-		$_ = Kynetx::Expressions::den_to_exp($_);
+	foreach my $val ( @{$arg_den_vals} ) {
+		push(@{$arg_exp_vals}, Kynetx::Expressions::den_to_exp($val));
 	}
+
+#	$logger->debug( "Build one action arg exp vals: ",sub {Dumper($arg_exp_vals)});
+
 
 	# Check for composable action before any other built-ins
 	my $defaction;
@@ -749,10 +755,15 @@ sub build_one_action {
 
 	# process overloaded functions and arg reconstruction
 	( $action_name, $args ) =
-	  choose_action( $req_info, $action_name, $args, $rule_env, $rule_name );
+	  choose_action( $req_info, $action_name, $arg_den_vals, $rule_env, $rule_name, $args );
 
 	# this happens after we've chosen the action since it modifies args
+
+#	$logger->debug("Args before conversion to JS: ", sub { Dumper $args});
+
 	$args = Kynetx::JavaScript::gen_js_rands($args);	
+
+#	$logger->debug("Args after conversion to JS: ", sub { Dumper $args});
 
 	my $js_config = [];
 
@@ -931,14 +942,14 @@ sub build_one_action {
 # some actions are overloaded depending on the args.  This function chooses
 # the right JS function and adjusts the arg string.
 sub choose_action {
-	my ( $req_info, $action_name, $args, $rule_env, $rule_name ) = @_;
+	my ( $req_info, $action_name, $arg_den_vals, $rule_env, $rule_name, $args ) = @_;
 	my $logger = get_logger();
 
 	my $action_suffix = "_url";
 
 	if ( $action_name eq 'float' || $action_name eq 'replace' ) {
 
-		my $last_arg = pop @$args;
+		my $last_arg = pop @$arg_den_vals;
 
 		my $url = gen_js_expr($last_arg);
 		$url =~ s/'([^']*)'/$1/;
@@ -985,22 +996,38 @@ sub choose_action {
 
 		}
 
-		push @{$args}, $last_arg;
+		push @{$arg_den_vals}, $last_arg;
 		$action_name = $action_name . $action_suffix;
-	}
-	elsif ( $action_name eq 'notify' ) {
-		if ( scalar @{$args} == 2 ) {
+	} elsif ( $action_name eq 'notify' ) {
+		if ( scalar @{$arg_den_vals} == 2 ) {
 			$action_name = 'notify_two';
 		}
 		else {
 			$action_name = 'notify_six';
 		}
+	} elsif ( $action_name eq 'annotate_search_results' ||
+		  $action_name eq 'annotate_local_search_results' 
+		) {
+
+	  # these two actions rely on the argument NOT getting eval'd because it 
+	  # has to be a JavaScript var when the JS is generated to take advantage
+	  # of the emitted JS. This functionality is deprecated
+
+	  if (scalar @{$arg_den_vals} > 0) {
+		my $last_den_arg = pop @$arg_den_vals;
+		my $last_arg = pop @$args;
+
+		$logger->debug("Replaced ", sub{Dumper $last_den_arg}, " with ", sub{Dumper $last_arg});
+	  
+		push @{$arg_den_vals}, $last_arg;
+	  }
+
 	}
 
 	#    $logger->debug("[action] $action_name with ",
 	#		   sub { join(", ", Dumper(@{$args}))});
 
-	return ( $action_name, $args );
+	return ( $action_name, $arg_den_vals );
 }
 
 # after function for floats

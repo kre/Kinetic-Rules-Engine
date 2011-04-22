@@ -801,7 +801,8 @@ add_action_testcase(
     $krl_src,
     $result,
     $my_req_info,
-    'annotate_search_results'
+    'annotate_search_results',
+    0
     );
 
 
@@ -829,7 +830,7 @@ add_action_testcase(
     $krl_src,
     $result,
     $my_req_info,
-    'annotate_search_results'
+    'annotate_search_results no arg'
     );
 
 $krl_src = <<_KRL_;
@@ -887,7 +888,7 @@ $result = <<_JS_;
         KOBJ.page_content_event(uniq, label, selectors ,config);
         cb();
     }
-('%uniq%',callbacks23,$config ,'bob',{'google_footer' : {'selector' : '#fll', 'type' : 'text'}, 'search_links' : {'selector' : '#sbl', 'type' : 'text'}}));
+('%uniq%',callbacks23,$config ,'bob',{'search_links' : {'selector' : '#sbl', 'type' : 'text'}, 'google_footer' : {'selector' : '#fll', 'type' : 'text'}}));
 _JS_
 
 
@@ -919,7 +920,7 @@ $result = <<_JS_;
         KOBJ.page_collection_content_event(uniq, label,top_selector, parent_selector, selectors ,config);
         cb();
     }
-('%uniq%',callbacks23,{'rule_name' :'dummy_name','rid' :'cs_test','txn_id' :1234,'callback' :mycallback} ,'bob','#res','li.g',{'google_footer' : {'selector' : '#fll', 'type' : 'text'}, 'search_links' : {'selector' : '#sbl', 'type' : 'text'}}));
+('%uniq%',callbacks23,{'rule_name' :'dummy_name','rid' :'cs_test','txn_id' :1234,'callback' :mycallback} ,'bob','#res','li.g',{'search_links' : {'selector' : '#sbl', 'type' : 'text'},'google_footer' : {'selector' : '#fll', 'type' : 'text'}}));
 _JS_
 
 
