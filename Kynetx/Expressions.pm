@@ -168,10 +168,11 @@ sub eval_decl {
        $logger->trace("before de-denoting ", sub {Dumper $r});
 		$val = den_to_exp($r);
     } elsif ($decl->{'type'} eq 'here_doc') {
+#      $logger->debug("[decl] here doc for ", sub{ $decl->{'lhs'} });
       
-		$val = eval_heredoc($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);	
-		$val = den_to_exp($val);
-		$logger->trace("[decl] here doc for ", sub{ $decl->{'lhs'} });
+      $val = eval_heredoc($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);	
+      $val = den_to_exp($val);
+#      $logger->debug("[decl] here doc for ", sub{ $decl->{'lhs'} });
     } 
     $logger->trace("Evaling " . $rule_name.":".$decl->{'lhs'});
     $logger->trace("returning ", Dumper $val);
