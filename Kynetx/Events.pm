@@ -53,6 +53,9 @@ use Kynetx::Events::State qw(:all);
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
+# time some thing...
+#use Benchmark qw(:hireswallclock :all) ;
+
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
@@ -139,11 +142,19 @@ sub process_event {
 
     my $req_info =
       Kynetx::Request::build_request_env( $r, $domain, $rids, $eventtype );
+    # $req_info->{'benchmarks'} = [];
+    # push(@{$req_info->{'benchmarks'}}, {'name' => 'start',
+    # 					'time' => Benchmark->new});
+
+
     Kynetx::Request::log_request_env( $logger, $req_info );
 
     # get a session, if _sid param is defined it will override cookie
     $logger->debug("Event cookie? ",$req_info->{'kntx_token'});
     my $session = process_session($r, $req_info->{'kntx_token'});
+
+    # push(@{$req_info->{'benchmarks'}}, {'name' => 'post process_session',
+    # 					'time' => Benchmark->new});
 
 
 
@@ -158,16 +169,19 @@ sub process_event {
     my $schedule = Kynetx::Scheduler->new();
 
     foreach my $rid ( split( /;/, $rids ) ) {
-    	eval {
-    		process_event_for_rid( $ev, $req_info, $session, $schedule, $rid );
-    	};
-    	if ($@) {
-    		  Kynetx::Util::handle_error("Process event failed for rid ($rid):", $@);
-    	}
-        
+      eval {
+	process_event_for_rid( $ev, $req_info, $session, $schedule, $rid );
+      };
+      if ($@) {
+	Kynetx::Util::handle_error("Process event failed for rid ($rid):", $@);
+      }
     }
 
     $logger->debug("Schedule complete");
+
+    # push(@{$req_info->{'benchmarks'}}, {'name' => "start processing schedule",
+    # 					'time' => Benchmark->new});
+
     
     my $js = '';
 	$js .= eval {
@@ -177,7 +191,31 @@ sub process_event {
    		Kynetx::Util::handle_error("Process event schedule failed: ", $@);
     }
 
+    # push(@{$req_info->{'benchmarks'}}, {'name' => "end processing schedule",
+    # 					'time' => Benchmark->new});
+
+
+
+    # push(@{$req_info->{'benchmarks'}}, {'name' => "start sending response",
+    # 					'time' => Benchmark->new});
+
     Kynetx::Response::respond( $r, $req_info, $session, $js, "Event" );
+
+    # push(@{$req_info->{'benchmarks'}}, {'name' => "end sending response",
+    # 					'time' => Benchmark->new});
+
+
+    # my $pb;
+    # my $td;
+    # foreach my $b ( @{$req_info->{'benchmarks'}}) {
+    #   if (defined $pb) {
+    # 	$td = timestr(timediff($b->{'time'},
+    # 			       $pb->{'time'}));
+    # 	$logger->info($b->{'name'}, ":\t ", $td);# unless $b->{'name'} =~ /^start/;
+    #   }
+    #   $pb = $b;
+    # }
+
 
 }
 
@@ -191,12 +229,14 @@ sub process_event_for_rid {
     my $logger = get_logger();
 
     #  $logger->debug("Req info: ", sub {Dumper $req_info} );
+    # push(@{$req_info->{'benchmarks'}}, {'name' => "start processing RID $rid",
+    # 					'time' => Benchmark->new});
+
 
     $logger->debug("Processing events for $rid");
     Log::Log4perl::MDC->put( 'site', $rid );
 
-  my $ruleset = Kynetx::Rules::get_rule_set($req_info, 1, $rid); # 1 for localparsing
-
+    my $ruleset = Kynetx::Rules::get_rule_set($req_info, 1, $rid); # 1 for localparsing
 
     #      $logger->debug("Ruleset: ", sub {Dumper $ruleset} );
 
@@ -219,55 +259,59 @@ sub process_event_for_rid {
 
     foreach my $rule ( @{ $ruleset->{'rule_lists'}->{$domain}->{$type} } ) {
 
-    	$rule->{'state'} ||= 'active';
+      $rule->{'state'} ||= 'active';
 
-        Log::Log4perl::MDC->put( 'rule', $rule->{'name'} ); # no rule for now...
+      Log::Log4perl::MDC->put( 'rule', $rule->{'name'} ); # no rule for now...
 
-        my $sm_current_name = $rule->{'name'} . ':sm_current';
-        my $event_list_name = $rule->{'name'} . ':event_list';
+      my $sm_current_name = $rule->{'name'} . ':sm_current';
+      my $event_list_name = $rule->{'name'} . ':event_list';
 
-    	$logger->trace("Rule: ", Kynetx::Json::astToJson($rule));
+      $logger->trace("Rule: ", sub {Kynetx::Json::astToJson($rule)});
 
-    	$logger->trace("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
+      $logger->trace("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
 
-    	next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
+      next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
 
-    	my $sm = $rule->{'event_sm'};
-    	$logger->trace("State machine: ", sub {Dumper($sm)});
+      my $sm = $rule->{'event_sm'};
+      $logger->trace("State machine: ", sub {Dumper($sm)});
 
-        # States stored in Mongo should be serialized
-        my $current_state = get_persistent_var("ent", $rid, $session, $sm_current_name ) || $sm->get_initial();
+      # States stored in Mongo should be serialized
+      my $current_state = get_persistent_var("ent", $rid, $session, $sm_current_name ) || $sm->get_initial();
 
-        my $next_state = $sm->next_state( $current_state, $ev );
+      my $next_state = $sm->next_state( $current_state, $ev );
 
-        $logger->debug("Current: ", $current_state );
-        $logger->debug("Next: ", $next_state );
 
-        # when there's a state change, store the event in the event list
-        unless ( $current_state eq $next_state ) {
-            my $json = $ev->serialize();
-            Kynetx::Persistence::add_persistent_element("ent", $rid, $session, $event_list_name, $json );
-        }
+#        $logger->debug("Current: ", $current_state );
+#        $logger->debug("Next: ", $next_state );
 
-        if ( $sm->is_final($next_state) ) {
+      # when there's a state change, store the event in the event list
+      unless ( $current_state eq $next_state ) {
+	$logger->debug("State change from $current_state to $next_state");
+	my $json = $ev->serialize();
+	Kynetx::Persistence::add_persistent_element("ent", $rid, $session, $event_list_name, $json );
+      } else {
+	$logger->debug("No state change from $current_state");
+      }
 
-            my $rulename = $rule->{'name'};
+      if ( $sm->is_final($next_state) ) {
 
-            $logger->debug( "Adding to schedule: ", $rid, " & ", $rulename );
-            my $task = $schedule->add( $rid, $rule, $ruleset, $req_info );
+	my $rulename = $rule->{'name'};
 
-            # get event list and reset+
-            my $event_list_name = $rulename . ':event_list';
+	$logger->debug( "Adding to schedule: ", $rid, " & ", $rulename );
+	my $task = $schedule->add( $rid, $rule, $ruleset, $req_info );
 
-            my $var_list = [];
-            my $val_list = [];
-            $logger->trace("Process sessions");
-            while ( my $json =
+	# get event list and reset+
+	my $event_list_name = $rulename . ':event_list';
+
+	my $var_list = [];
+	my $val_list = [];
+	$logger->trace("Process sessions");
+	while ( my $json =
                     consume_persistent_element("ent", $rid, $session, $event_list_name, 1) )
-            {
-
-                my $ev = Kynetx::Events::Primitives->unserialize($json);
-                $logger->trace( "Event: ", sub { Dumper $ev} );
+	  {
+	    
+	    my $ev = Kynetx::Events::Primitives->unserialize($json);
+	    $logger->trace( "Event: ", sub { Dumper $ev} );
 
                 # FIXME: what we're not doing: the event list also
                 # includes the req_info that was active when the event
@@ -275,28 +319,35 @@ sub process_event_for_rid {
                 # using the req_info from the final req...
 
                 # gather up vars and vals from all the events in the path
-                push @{$var_list}, @{ $ev->get_vars( $sm->get_id() ) };
-                push @{$val_list}, @{ $ev->get_vals( $sm->get_id() ) };
-            }
-            $schedule->annotate_task( $rid, $rulename,$task, 'vars', $var_list );
-            $schedule->annotate_task( $rid, $rulename,$task, 'vals', $val_list );
+	    push @{$var_list}, @{ $ev->get_vars( $sm->get_id() ) };
+	    push @{$val_list}, @{ $ev->get_vals( $sm->get_id() ) };
+	  }
+	$schedule->annotate_task( $rid, $rulename,$task, 'vars', $var_list );
+	$schedule->annotate_task( $rid, $rulename,$task, 'vals', $val_list );
 
-            # reset SM
-            delete_persistent_var("ent", $rid, $session, $sm_current_name );
+	# reset SM
+	delete_persistent_var("ent", $rid, $session, $sm_current_name );
 
-            # reset event list for this rule
-            delete_persistent_var("ent", $rid, $session, $event_list_name );
+	# reset event list for this rule
+	delete_persistent_var("ent", $rid, $session, $event_list_name );
+	$logger->debug("Complete task for $rulename added to schedule");
 
-        } else {
-            $logger->trace("Next state not final");
-            $logger->trace("Next state ref: ", ref $next_state);
-            if ($next_state ne "") {
-                save_persistent_var("ent", $rid, $session, $sm_current_name, $next_state );
-            }
+      } else {
+	$logger->trace("Next state not final");
+	$logger->trace("Next state ref: ", ref $next_state);
+	if ($next_state ne "") {
+	  save_persistent_var("ent", $rid, $session, $sm_current_name, $next_state );
+	}
 
-        }
+      }
 
     }
+
+    # push(@{$req_info->{'benchmarks'}}, {'name' => "end processing RID $rid",
+    # 					  'time' => Benchmark->new});
+
+
+
 }
 
 sub mk_event {

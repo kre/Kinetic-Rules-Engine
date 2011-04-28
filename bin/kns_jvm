@@ -1,0 +1,45 @@
+#!/bin/bash
+
+JAVA_HOME=/web/lib/perl/parser
+
+case "$1" in
+
+               start)
+
+               cd $JAVA_HOME;
+				rm -rf _Inline;
+               /usr/bin/perl -MInline::Java::Server=start >& /dev/null;
+				chown web:web _Inline;
+               echo "Starting JVM Server";
+               ;;
+
+               stop)
+
+               cd $JAVA_HOME;
+				rm -rf _Inline;
+               /usr/bin/perl -MInline::Java::Server=stop >& /dev/null;
+				chown web:web _Inline;
+               echo "Stopping JVM Server";
+               ;;
+
+               regen)
+
+               perl -MInline::Java::Server=stop;
+               cd $JAVA_HOME;
+				rm -rf _Inline;
+               su web -c ./myclasspath.sh;
+               su web -c ./buildjava.sh;
+               perl -MInline::Java::Server=start;
+				chown web:web _Inline;
+               echo "Java has been regenerated";
+               ;;
+
+               status)
+               pid=`pidof java`;
+               echo "JVM is running on $pid";
+               ;;
+
+               *)
+               echo $"Usage: $0 {start|stop|regen|status}"
+               RETVAL=1
+esac

@@ -626,13 +626,15 @@ sub build_composed_action {
 		$modifiers);
 		
 	#$logger->debug("After Module Configuration: ",sub {Dumper($rule_env)});
-		
+
 	# decls are stored in a composable action
 	foreach my $decl (@$decls) {
-		$logger->trace("Found decl: ", sub { Dumper($decl)});
-		my $d = Kynetx::Expressions::eval_one_decl($req_info,$rule_env,$action_tag,$session,$decl);
-		$logger->trace("Declaration: $d");
-		$js .= $d;
+
+	  $logger->debug("Evaling action declaration $decl->{'lhs'} for $name");
+	  $logger->trace("Found decl: ", sub { Dumper($decl)});
+	  my $d = Kynetx::Expressions::eval_one_decl($req_info,$rule_env,$action_tag,$session,$decl);
+	  $logger->trace("Declaration: $d");
+	  $js .= $d;
 	}
 
 	my $srid = $req_info->{'rid'};

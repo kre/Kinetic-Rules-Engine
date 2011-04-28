@@ -38,6 +38,7 @@ use warnings;
 use Log::Log4perl qw(get_logger :levels);
 use Time::HiRes qw(time);
 use Storable qw(dclone);
+#use Clone qw(clone);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
