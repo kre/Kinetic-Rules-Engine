@@ -169,6 +169,7 @@ sub clone {
 #        $logger->debug("working on: $t->{'next'} for $s");
 	push @nt,
 	  {"next" => $state_map->{$t->{'next'}},
+	   "domain" => $t->{'domain'},
 	   "type" => $t->{'type'},
 	   "vars" => $t->{'vars'},
 	   "test" => $t->{'test'},
@@ -383,15 +384,15 @@ sub next_state {
 sub match {
   my($event, $transition) = @_;
   my $ttype = $transition->{'type'};
-  my $type = $event->get_type();
+  my $etype = $event->get_type();
+  my $tdomain = $transition->{'domain'};
+  my $edomain = $event->get_domain();
   my $logger = get_logger();
-  my ($eedomain,$eetype) = split(/:/,$ttype);
-  my ($edomain,$etype) = split(/:/,$type);
   $logger->trace("Looking for a ",sub {Dumper($ttype)});
   $logger->trace("In event of : ",sub {Dumper($etype)});
 
-  return 0 unless $eedomain eq $edomain;
-  if (defined $eetype && $eetype eq 'expression') {
+  return 0 unless $tdomain eq $edomain;
+  if (defined $ttype && $ttype eq 'expression') {
 		$logger->debug("Need to eval the statement to check against $ttype");
 		return expr_eval($event,$transition);
   }
@@ -410,7 +411,7 @@ sub match {
 #-------------------------------------------------------------------------
 
 sub mk_prim {
-  my ($test, $vars, $type) = @_;
+  my ($test, $vars, $domain, $type) = @_;
   my $sm = Kynetx::Events::State->new();
   my $s1 = Data::UUID->new->create_str();
   my $s2 = Data::UUID->new->create_str();
@@ -423,6 +424,7 @@ sub mk_prim {
   $sm->add_state($s1,
 		 [{"next" => $s2,
 		   "type" => $type,
+		   "domain" => $domain,
 		   "test" => $test,
 		   "vars" => $vars,
 		  }],
@@ -446,6 +448,7 @@ sub mk_pageview_prim {
 
   return mk_prim($pattern,
 		 $vars,
+		 'web',
 		 'pageview'
 		);
 }
@@ -479,6 +482,7 @@ sub mk_dom_prim {
 
   return mk_prim([$sm_elem, $sm_pattern],
 		 $vars,
+		 'web',
 		 $type
 		);
 }
@@ -522,7 +526,8 @@ sub mk_expr_prim {
 
   return mk_prim($expr,
 		 $vars,
-		 "$domain:$op"
+		 $domain,
+		 $op
 		);	
 }
 
@@ -535,7 +540,8 @@ sub mk_gen_prim {
 
   return mk_prim($filters,
 		 $vars,
-		 "$domain:$op"
+		 $domain,
+		 $op
 		);
 }
 

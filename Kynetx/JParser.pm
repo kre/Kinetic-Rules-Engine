@@ -71,6 +71,7 @@ BEGIN {
     }
     push @jars,$pclasses;
     $ENV{CLASSPATH} = join (":",@jars);
+#    warn $ENV{CLASSPATH};
 }
 
 

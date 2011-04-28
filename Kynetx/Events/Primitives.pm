@@ -165,6 +165,19 @@ sub get_type {
   return $self->{'type'};
 }
 
+sub set_domain {
+  my $self = shift;
+  my $domain = shift;
+
+  return $self->{'domain'} = $domain;
+}
+
+sub get_domain {
+  my $self = shift;
+
+  return $self->{'domain'};
+}
+
 sub isa {
   my $self = shift;
   my $type = shift;
@@ -230,6 +243,7 @@ sub pageview {
   my $self = shift;
   my($url) = @_;
 
+  $self->{'domain'} = 'web';
   $self->{'type'} = 'pageview';
   $self->{'url'} = $url;
 
@@ -250,6 +264,7 @@ sub click {
   my $self = shift;
   my($element) = @_;
 
+  $self->{'domain'} = 'web';
   $self->{'type'} = 'click';
   $self->{'element'} = $element;
 
@@ -270,6 +285,7 @@ sub submit {
   my $self = shift;
   my($element,$url) = @_;
 
+  $self->{'domain'} = 'web';
   $self->{'type'} = 'submit';
   $self->{'element'} = $element;
   $self->{'url'} = $url;
@@ -286,6 +302,7 @@ sub change {
   my $self = shift;
   my($element) = @_;
 
+  $self->{'domain'} = 'web';
   $self->{'type'} = 'change';
   $self->{'element'} = $element;
 
@@ -298,10 +315,13 @@ sub change {
 
 sub generic {
   my $self = shift;
-  my($type) = @_;
+  my($domain, $type) = @_;
   my $logger = get_logger();
   $logger->debug("Generic primitive of: ",$type);
 
+  
+  my ($edomain,$etype) = split(/:/,$type);
+  $self->{'domain'} = $domain;
   $self->{'type'} = $type;
 
 }

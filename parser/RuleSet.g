@@ -5,7 +5,7 @@ options {
 //  memoize=true;
 //  language=C;
 //  ASTLabelType=pANTLR3_BASE_TREE;
-
+//
 }
 
 
@@ -1004,7 +1004,7 @@ custom_event  returns[HashMap result]
 	ArrayList exps = new ArrayList();
 }
     :
-        dom=(VAR|WEB) oper=VAR? (filter=event_filter{filters.add($filter.result);})* set=setting?  {
+        dom=(VAR|WEB) oper=VAR (filter=event_filter{filters.add($filter.result);})* set=setting?  {
 		HashMap tmp = new HashMap();
 		tmp.put("domain",$dom.text);
 		tmp.put("type","prim_event");
@@ -1014,12 +1014,12 @@ custom_event  returns[HashMap result]
 		tmp.put("filters",filters);
 		$result = tmp;
 		}
-	| dom=(VAR|PAGEVIEW) (exp=event_exp{exps.add($exp.result);})* set=setting?  {
+	| oper=(VAR |PAGEVIEW) (exp=event_exp{exps.add($exp.result);})* set=setting?  {
 		HashMap tmp = new HashMap();
-		tmp.put("domain",$dom.text);
+		tmp.put("domain", "web");
 		tmp.put("type","prim_event");
 		tmp.put("vars",$set.result);
-		tmp.put("op","expression");
+		tmp.put("op", $oper.text);
 		tmp.put("exp",exps);
 		$result = tmp;
 	}

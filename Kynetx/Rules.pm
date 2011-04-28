@@ -942,25 +942,27 @@ sub optimize_ruleset {
 
 	$logger->debug( "Optimizing rules for ", $ruleset->{'ruleset_name'} );
 
+	$ruleset->{'rule_lists'} = {};
 	foreach my $rule ( @{ $ruleset->{'rules'} } ) {
-		optimize_rule($rule);
+		optimize_rule($rule, $ruleset->{'rule_lists'});
 	}
+
 
 	$ruleset->{'optimization_version'} = get_optimization_version();
 
-	#    $logger->debug("Optimized ruleset ", sub { Dumper $ruleset });
+#	$logger->debug("Optimized ruleset ", sub { Dumper $ruleset });
 
 	return $ruleset;
 }
 
 # incrementing the number here will force cache reloads of rulesets with lower #'s
 sub get_optimization_version {
-	my $version = 8;
+	my $version = 9;
 	return $version;
 }
 
 sub optimize_rule {
-	my ($rule) = @_;
+	my ($rule, $rule_lists) = @_;
 
 	my $logger = get_logger();
 
@@ -979,9 +981,13 @@ sub optimize_rule {
 
 	# precompile pattern regexp
 	if ( defined $rule->{'pagetype'}->{'event_expr'}->{'op'} ) {
-		$logger->debug( "Optimizing ", $rule->{'name'} );
+		$logger->debug("Optimizing ", $rule->{'name'});
+#		$logger->debug("With rule salience list ", sub {Dumper $rule_lists} );
 		$rule->{'event_sm'} = Kynetx::Events::compile_event_expr(
-			$rule->{'pagetype'}->{'event_expr'} );
+			$rule->{'pagetype'}->{'event_expr'},
+			$rule_lists,
+			$rule
+			);
 
 		#     $rule->{'pagetype'}->{'event_expr'}->{'pattern'} =
 		#       qr!$rule->{'pagetype'}->{'event_expr'}->{'pattern'}!;

@@ -153,7 +153,7 @@ sub process_event {
 
     my $ev = mk_event($req_info);
 
-#    $logger->debug("Processing events for $rids with event ", sub {Dumper $ev});
+    $logger->debug("Processing events for $rids with event ", sub {Dumper $ev});
 
     my $schedule = Kynetx::Scheduler->new();
 
@@ -200,7 +200,24 @@ sub process_event_for_rid {
 
     #      $logger->debug("Ruleset: ", sub {Dumper $ruleset} );
 
-    foreach my $rule ( @{ $ruleset->{'rules'} } ) {
+    my $type = $ev->get_type();
+    my $domain = $ev->get_domain();
+
+    $logger->debug("Event domain is $domain and type is $type");
+#    $logger->debug("Rule list is ", sub{Dumper $ruleset->{'rule_lists'}->{$domain}->{$type}});
+
+    foreach my $d (keys %{$ruleset->{'rule_lists'}}) {
+      foreach my $t (keys %{$ruleset->{'rule_lists'}->{$d}}) {
+	$logger->debug("$d:$t -> ");
+	foreach my $r (@{$ruleset->{'rule_lists'}->{$d}->{$t}} ) {
+	  $logger->debug("\t$r->{'name'}");
+	}
+      }
+    }
+
+    $logger->debug("Selection checking for ", scalar @{ $ruleset->{'rule_lists'}->{$domain}->{$type} }, " rules") if $ruleset->{'rule_lists'}->{$domain}->{$type};
+
+    foreach my $rule ( @{ $ruleset->{'rule_lists'}->{$domain}->{$type} } ) {
 
     	$rule->{'state'} ||= 'active';
 
@@ -299,7 +316,7 @@ sub mk_event {
     } elsif ( $req_info->{'eventtype'} eq 'change' ) {
         $ev->change( $req_info->{'element'} );
     } else {
-        $ev->generic("$req_info->{'domain'}:$req_info->{'eventtype'}");
+        $ev->generic($req_info->{'domain'},$req_info->{'eventtype'});
     }
 
     return $ev;
@@ -307,71 +324,83 @@ sub mk_event {
 
 sub compile_event_expr {
 
-    my ($eexpr) = @_;
+  my ($eexpr, $rule_lists, $rule) = @_;
 
-    my $logger = get_logger();
+  my $logger = get_logger();
 
-    my $sm;
+  my $sm;
 
-    if ( $eexpr->{'type'} eq 'prim_event' ) {
-        if ( $eexpr->{'op'} eq 'pageview' ) {
-            $sm = mk_pageview_prim( $eexpr->{'pattern'}, $eexpr->{'vars'} );
-        } elsif (    $eexpr->{'op'} eq 'submit'
-                  || $eexpr->{'op'} eq 'click'
-                  || $eexpr->{'op'} eq 'dblclick'
-                  || $eexpr->{'op'} eq 'change'
-                  || $eexpr->{'op'} eq 'update' )
-        {
-            $sm = mk_dom_prim( $eexpr->{'element'}, $eexpr->{'pattern'},
+  if ( $eexpr->{'type'} eq 'prim_event' ) {
+
+    # the rule list for each domain and op is stored in the parse tree
+    # for optimizing rule selection
+    my $domain = $eexpr->{'domain'} || 'web';
+    $rule_lists->{$domain} = {} 
+      unless $rule_lists->{$domain};
+    $rule_lists->{$domain}->{$eexpr->{'op'}} = [] 
+      unless $rule_lists->{$domain}->{$eexpr->{'op'}};
+    # put the rule in the array unless it's already there
+    push(@{$rule_lists->{$domain}->{$eexpr->{'op'}}}, $rule) 
+      unless (grep {$_ eq $rule} @{$rule_lists->{$domain}->{$eexpr->{'op'}}});
+    
+    if ( $eexpr->{'op'} eq 'pageview' ) {
+      $sm = mk_pageview_prim( $eexpr->{'pattern'}, $eexpr->{'vars'} );
+    } elsif (    $eexpr->{'op'} eq 'submit'
+		 || $eexpr->{'op'} eq 'click'
+		 || $eexpr->{'op'} eq 'dblclick'
+		 || $eexpr->{'op'} eq 'change'
+		 || $eexpr->{'op'} eq 'update' )
+      {
+	$sm = mk_dom_prim( $eexpr->{'element'}, $eexpr->{'pattern'},
                                $eexpr->{'vars'},    $eexpr->{'op'} );
-        } elsif ($eexpr->{'op'} eq 'expression') {
-            $logger->debug(
-                "Creating Expression event for $eexpr->{'domain'}:$eexpr->{'op'}"
-            );
-            $logger->trace("Eexpr: ", sub {Dumper($eexpr)});
-            $sm = mk_expr_prim( $eexpr->{'domain'}, $eexpr->{'op'},
-                               $eexpr->{'vars'},   $eexpr->{'exp'} );        	
+      } elsif ($eexpr->{'op'} eq 'expression') {
+	$logger->debug(
+		       "Creating Expression event for $eexpr->{'domain'}:$eexpr->{'op'}"
+		      );
+	$logger->trace("Eexpr: ", sub {Dumper($eexpr)});
+	$sm = mk_expr_prim( $eexpr->{'domain'}, $eexpr->{'op'},
+			    $eexpr->{'vars'},   $eexpr->{'exp'} );        	
         
-        } else {
-            $logger->debug(
-                "Creating primitive event for $eexpr->{'domain'}:$eexpr->{'op'}"
-            );
-            $logger->trace("Eexpr: ", sub {Dumper($eexpr)});
-            $sm = mk_gen_prim( $eexpr->{'domain'}, $eexpr->{'op'},
-                               $eexpr->{'vars'},   $eexpr->{'filters'} );
-        }
-    } elsif ( $eexpr->{'type'} eq 'complex_event' ) {
-        if (    $eexpr->{'op'} eq 'between'
-             || $eexpr->{'op'} eq 'notbetween' )
-        {
-            my $mid   = compile_event_expr( $eexpr->{'mid'} );
-            my $first = compile_event_expr( $eexpr->{'first'} );
-            my $last  = compile_event_expr( $eexpr->{'last'} );
+      } else {
+	$logger->debug(
+	   "Creating primitive event for $eexpr->{'domain'}:$eexpr->{'op'}"
+		      );
+	$logger->trace("Eexpr: ", sub {Dumper($eexpr)});
+	$sm = mk_gen_prim( $eexpr->{'domain'}, $eexpr->{'op'},
+			   $eexpr->{'vars'},   $eexpr->{'filters'} );
+      }
+  } elsif ( $eexpr->{'type'} eq 'complex_event' ) {
+    if (    $eexpr->{'op'} eq 'between'
+	    || $eexpr->{'op'} eq 'notbetween' )
+      {
+	my $mid   = compile_event_expr( $eexpr->{'mid'}, $rule_lists, $rule );
+	my $first = compile_event_expr( $eexpr->{'first'}, $rule_lists, $rule );
+	my $last  = compile_event_expr( $eexpr->{'last'}, $rule_lists, $rule );
 
-            if ( $eexpr->{'op'} eq 'between' ) {
-                $sm = mk_between( $mid, $first, $last );
-            } elsif ( $eexpr->{'op'} eq 'notbetween' ) {
-                $sm = mk_not_between( $mid, $first, $last );
-            }
+	if ( $eexpr->{'op'} eq 'between' ) {
+	  $sm = mk_between( $mid, $first, $last );
+	} elsif ( $eexpr->{'op'} eq 'notbetween' ) {
+	  $sm = mk_not_between( $mid, $first, $last );
+	}
 
-        } else {    # other complex event
-            my $sm0 = compile_event_expr( $eexpr->{'args'}->[0] );
-            my $sm1 = compile_event_expr( $eexpr->{'args'}->[1] );
-            if ( $eexpr->{'op'} eq 'and' ) {
-                $sm = mk_and( $sm0, $sm1 );
-            } elsif ( $eexpr->{'op'} eq 'or' ) {
-                $sm = mk_or( $sm0, $sm1 );
-            } elsif ( $eexpr->{'op'} eq 'before' ) {
-                $sm = mk_before( $sm0, $sm1 );
-            } elsif ( $eexpr->{'op'} eq 'then' ) {
-                $sm = mk_then( $sm0, $sm1 );
-            }
-        }
+      } else {			# other complex event
+	my $sm0 = compile_event_expr( $eexpr->{'args'}->[0], $rule_lists, $rule );
+	my $sm1 = compile_event_expr( $eexpr->{'args'}->[1], $rule_lists, $rule );
+	if ( $eexpr->{'op'} eq 'and' ) {
+	  $sm = mk_and( $sm0, $sm1 );
+	} elsif ( $eexpr->{'op'} eq 'or' ) {
+	  $sm = mk_or( $sm0, $sm1 );
+	} elsif ( $eexpr->{'op'} eq 'before' ) {
+	  $sm = mk_before( $sm0, $sm1 );
+	} elsif ( $eexpr->{'op'} eq 'then' ) {
+	  $sm = mk_then( $sm0, $sm1 );
+	}
+      }
 
-    } else {
-        $logger->warn("Attempt to compile malformed event expression");
-    }
-    return $sm;
+  } else {
+    $logger->warn("Attempt to compile malformed event expression");
+  }
+  return $sm;
 
 }
 

@@ -135,6 +135,7 @@ my $join_sm = mk_pageview_prim(qr/www.google.com/);
 $join_sm = $join_sm->add_state("foo",
 			       [{"next" => $join_sm->get_singleton_final(),
 				 "type" => "pageview",
+				 "domain" => "web",
 				 "test" => 'www.kynetx.com',
 				}]);
 
