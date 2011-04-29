@@ -136,7 +136,8 @@ sub gen_js_expr {
     	}
     	return $jsexp;
     } else {
-    	return mk_js_str('UNTRANSLATABLE KRL EXPRESSION');
+      $logger->debug("Can't translate type: ",$expr->{'type'});
+      return mk_js_str('UNTRANSLATABLE KRL EXPRESSION');
     }
 }
 
