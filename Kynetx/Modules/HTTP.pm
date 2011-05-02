@@ -83,6 +83,8 @@ sub get_predicates {
 
 sub do_get {
   my ($req_info,$rule_env,$session,$config,$mods,$args,$vars)  = @_;
+  my $logger = get_logger();
+  $logger->debug("As Action");
   return do_http('GET',$req_info,$rule_env,$session,$config,$mods,$args,$vars);
 
 }
@@ -200,7 +202,7 @@ sub mk_http_request {
   } elsif (uc($method) eq 'GET') {
     my $full_uri = Kynetx::Util::mk_url($uri,  $params);
     $req = new HTTP::Request 'GET', $full_uri;
-#    $response = $ua->get($full_uri, $headers);
+    $response = $ua->get($full_uri, $headers);
     $logger->debug("http:get (uri): ", $full_uri);
 
   } else {
@@ -208,20 +210,21 @@ sub mk_http_request {
     return '';
   }
 
-#  $logger->debug("Headers ", Dumper $headers);
+  $logger->trace("Headers ", Dumper $headers);
 
   foreach my $k (keys %{ $headers }) {
+  	$logger->trace("HKey: $k", " => ",$headers->{$k});
     $req->header($k => $headers->{$k});
   }
 
-#  $logger->debug("Request ", Dumper $req);
+  $logger->trace("Request ", Dumper $req);
 
   $response = $ua->request($req);
 
   # $logger->debug("Vars ", sub { Dumper $vars });
   # $logger->debug("Mods ", sub { Dumper $mods });
   # $logger->debug("Config ", sub { Dumper $config });
-#  $logger->debug("Response ", sub { Dumper $response });
+  # $logger->debug("Response ", sub { Dumper $response });
 
   return $response;
 }
@@ -242,12 +245,28 @@ sub kynetx_ua {
 
 sub run_function {
     my($req_info, $function, $args) = @_;
-
+	my($credentials, $uri, $params, $headers,$rheaders);
     my $logger = get_logger();
 
     my $resp = '';
     if($function eq 'get') {
-      my $response = mk_http_request('GET', undef, $args->[0], $args->[1], $args->[2]);
+      $uri = $args->[0];
+      $params = $args->[1];
+      $headers = $args->[2];
+      $rheaders = $args->[3];
+      $credentials = undef;
+	  if (defined $args->[1] && ref $args->[1] eq "HASH"){
+	  	$logger->trace("Second arg to http:get hash, Check for named arguments");
+	  	$params = $args->[1]->{'params'} || $params;
+	  	$headers = $args->[1]->{'headers'} || $headers;
+	  	$credentials = $args->[1]->{'credentials'} || $credentials;
+	  	$rheaders = $args->[1]->{'response_headers'} || $rheaders;	  	
+	  }
+#	  $logger->debug("Params: ", sub {Dumper($params)});
+#	  $logger->debug("Headers: ", sub {Dumper($headers)});
+#	  $logger->debug("Credentials: ", sub {Dumper($credentials)});
+#	  $logger->debug("Response Headers: ", sub {Dumper($rheaders)});
+      my $response = mk_http_request('GET', $credentials, $uri, $params, $headers);
       $resp = {'content' => $response->decoded_content() || '',
 	       'status_code' => $response->code() || '',
 	       'status_line' => $response->status_line() || '',
@@ -255,8 +274,8 @@ sub run_function {
 	       'content_length' => $response->header('Content-Length') || '',
 	      };
 
-      if (defined $args->[3]) {
-	foreach my $h (@{ $args->[3] } ) {
+      if (defined $rheaders) {
+	foreach my $h (@{ $rheaders } ) {
 	  $resp->{lc($h)} = $response->header(uc($h));
 	}
       }
