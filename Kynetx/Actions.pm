@@ -649,7 +649,7 @@ sub build_composed_action {
 	}	
 	if ($srid eq $crid) {
 		$rcount++;
-		$logger->debug("Rids are the same!-----------------------");
+		$logger->trace("Rids are the same!-----------------------");
 		$req_info->{"__recursion__"} = $rcount;
 	}
 	
