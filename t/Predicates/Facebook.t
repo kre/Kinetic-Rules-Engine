@@ -197,11 +197,11 @@ my $rdesc = "Choose: $where or $who";
 
 
 #my $access_token = '116360591732083%7C1a33592a274963b96efba17a-100001078761602%7C6OFOTw6d2QVuPT723pD1j_GfnEE.';
-my $access_token = '116360591732083|30ec777ae0102eed70d58563-100001078761602|6Wwer9_uOj3isLpRwZkh7ncyPrk.';
+#my $access_token = '116360591732083|30ec777ae0102eed70d58563-100001078761602|6Wwer9_uOj3isLpRwZkh7ncyPrk.';
 my $appid = '116360591732083';
 my $test_user = '100001078761602';
 my $postid = '100001078761602_109264155786209';
-
+my $access_token = '116360591732083%7C448158f9353c108533ad95f9.1-100001078761602%7CpJeVJH72BhPGJEe07Jy1_n4aUzA';
 
 my $rule_name = "foo";
 
@@ -227,7 +227,8 @@ my $config_elements = {
             'user' => ignore(),
         }),
         'picture' => {
-            'type' => array_each(ignore())
+            'type' => array_each(ignore()),
+            'ssl' => ignore()
         },
         'search' => {
             'type' => array_each(ignore())
@@ -382,7 +383,118 @@ my $link;
 my $name;
 my $post_description;
 
+#Log::Log4perl->easy_init($DEBUG);
+
+##
+$description = "FQL call";
+$expected = [{
+  'last_name' => 'Netticks',
+  'uid' => $test_user,
+  'first_name' => 'Kay',	
+}];
+$args = ["select uid, first_name, last_name from user where uid = me()"];
+test_facebook('fql',$args,$expected,$description,0);
+
+
+##
+$description = "Use FQL call to get permissions";
+$expected = [
+  {
+    'friends_groups' => re("[01]"),
+    'friends_birthday' => re("[01]"),
+    'publish_stream' => re("[01]"),
+    'user_likes' => re("[01]"),
+    'user_interests' => re("[01]"),
+    'friends_status' => re("[01]"),
+    'user_online_presence' => re("[01]"),
+    'email' => re("[01]"),
+    'user_activities' => re("[01]"),
+    'user_status' => re("[01]"),
+    'ads_management' => re("[01]"),
+    'user_about_me' => re("[01]"),
+    'read_friendlists' => re("[01]"),
+    'user_website' => re("[01]"),
+    'read_insights' => re("[01]"),
+    'friends_likes' => re("[01]"),
+    'user_birthday' => re("[01]"),
+    'user_religion_politics' => re("[01]"),
+    'friends_about_me' => re("[01]"),
+    'user_videos' => re("[01]"),
+    'user_groups' => re("[01]"),
+    'read_requests' => re("[01]"),
+    'friends_checkins' => re("[01]"),
+    'offline_access' => re("[01]"),
+    'user_photos' => re("[01]"),
+    'friends_events' => re("[01]"),
+    'friends_hometown' => re("[01]"),
+    'rsvp_event' => re("[01]"),
+    'friends_photos' => re("[01]"),
+    'user_photo_video_tags' => re("[01]"),
+    'friends_activities' => re("[01]"),
+    'friends_relationships' => re("[01]"),
+    'friends_online_presence' => re("[01]"),
+    'sms' => re("[01]"),
+    'friends_videos' => re("[01]"),
+    'friends_location' => re("[01]"),
+    'user_events' => re("[01]"),
+    'friends_religion_politics' => re("[01]"),
+    'friends_website' => re("[01]"),
+    'manage_pages' => re("[01]"),
+    'user_hometown' => re("[01]"),
+    'friends_interests' => re("[01]"),
+    'friends_education_history' => re("[01]"),
+    'xmpp_login' => re("[01]"),
+    'friends_work_history' => re("[01]"),
+    'user_checkins' => re("[01]"),
+    'friends_notes' => re("[01]"),
+    'user_relationships' => re("[01]"),
+    'create_event' => re("[01]"),
+    'user_education_history' => re("[01]"),
+    'manage_friendlists' => re("[01]"),
+    'publish_checkins' => re("[01]"),
+    'user_work_history' => re("[01]"),
+    'friends_photo_video_tags' => re("[01]"),
+    'user_notes' => re("[01]"),
+    'user_location' => re("[01]"),
+    'read_stream' => re("[01]")
+  }
+];
+$args = [];
+test_facebook('permissions',$args,$expected,$description,0);
 #goto ENDY;
+
+##
+$description = "Use FQL call to get specific permissions";
+$expected = [{
+	"sms"=> re("[01]"),
+	"email"=> re("[01]"),
+	"friends_about_me"=> re("[01]")
+}];
+$args = [["sms","email","friends_about_me"]];
+test_facebook('permissions',$args,$expected,$description,0);
+
+
+##
+my $alex = '1615033098';
+$description = "Facebook get with id";
+$expected = $user_object;
+$expected->{'bio'} =  ignore();
+
+$args = [{'id' => $alex}];
+test_facebook('get',$args,$expected,$description,0);
+
+##
+$description = "Get object picture";
+$expected = re(qr(https:\/\/.+jpg|png|gif$));
+$args = [{'type' => 'square','return_ssl_resources' => 1}];
+test_facebook('picture',$args,$expected,$description,0);
+
+##
+$description = "Get object picture";
+$expected = re(qr(http:\/\/.+jpg|png|gif$));
+$args = [{'type' => 'square','return_ssl_resources' => 0}];
+test_facebook('picture',$args,$expected,$description,0);
+
 
 ## Get the fbid for Lehi
 my $city= "Lehi, Utah";
@@ -464,25 +576,25 @@ test_facebook('metadata',$args,$expected,$description,0);
 
 ##
 $description = "Get object picture";
-$expected = re(qr(http:\/\/.+jpg|png|gif$));
+$expected = re(qr(https:\/\/.+jpg|png|gif$));
 $args = [];
 test_facebook('picture',$args,$expected,$description,0);
 
 ##
 $description = "Get object picture";
-$expected = re(qr(http:\/\/.+jpg|png|gif$));
+$expected = re(qr(https:\/\/.+jpg|png|gif$));
 $args = [$appid];
 test_facebook('picture',$args,$expected,$description,0);
 
 ##
 $description = "Get object picture";
-$expected = re(qr(http:\/\/.+jpg|png|gif$));
+$expected = re(qr(https:\/\/.+jpg|png|gif$));
 $args = [{'type' => 'square'}];
 test_facebook('picture',$args,$expected,$description,0);
 
 ##
 $description = "Get object picture";
-$expected = re(qr(http:\/\/.+jpg|png|gif$));
+$expected = re(qr(https:\/\/.+jpg|png|gif$));
 $args = [{'type' => 'large'}];
 test_facebook('picture',$args,$expected,$description,0);
 
@@ -537,7 +649,7 @@ test_facebook('metadata',$args,$expected,$description,0);
 
 ##
 $description = "search news feed";
-$expected = superhashof($list_object);
+$expected = subhashof($list_object);
 $args = [{'type' => 'home',
     'q' => 'P Windley'
 }];
@@ -546,7 +658,7 @@ test_facebook('search',$args,$expected,$description,0);
 
 ##
 $description = "Get object picture";
-$expected = re(qr(http:\/\/.+jpg|png|gif$));
+$expected = re(qr(https:\/\/.+jpg|png|gif$));
 $args = [{'type' => 'square'},300];
 test_facebook('picture',$args,$expected,$description,0);
 
@@ -675,9 +787,6 @@ $args = [{'type' => 'post',
 }];
 test_facebook('search',$args,$expected,$description,0);
 
-ENDY:
-
-
 ##
 $description = "Facebook home/news search";
 $expected = $search_results;
@@ -686,6 +795,7 @@ $args = [{'type' => 'home',
 }];
 test_facebook('search',$args,$expected,$description,0);
 
+ENDY:
 
 Kynetx::Session::session_cleanup($session);
 
