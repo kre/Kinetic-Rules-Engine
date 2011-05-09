@@ -192,12 +192,18 @@ sub eval_decl {
 sub eval_expr {
     my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
     my $logger = get_logger();
-    $logger->trace("Eval expr: ", sub { Dumper($expr) });
+#    $logger->debug("Eval expr: ", sub { Dumper($expr) });
 #    my $parent = (caller(1))[3];
-#    $logger->trace("Called from -$parent- ");
+#    $logger->debug("Called from -$parent- ");
 
     $rule_name ||= 'global';
-    my $domain = $expr->{'domain'};
+    my $domain;
+    if (ref $expr eq "HASH" && $expr->{'type'}) {
+    	$domain = $expr->{'domain'};
+    } else {
+    	# How do we keep non-expressed values from here?
+    	return  mk_expr_node(infer_type($expr),$expr);
+    }
 	my $ri_rid = $req_info->{'rid'};
 	my $re_rid = $rule_env->{'ruleset_name'};
 	if (! defined $re_rid) {

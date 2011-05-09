@@ -911,7 +911,7 @@ pagename.replace(/-/, ' ');
 function callBacks () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks,$config,'Hello'));
+ ('%uniq%',callBacks,$config,pagename));
 }());
 _JS_
 
@@ -952,7 +952,7 @@ pagename.replace(/-/, ' ');
 function callBacks () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks,$config,'Hello'));
+ ('%uniq%',callBacks,$config,pagename));
 }());
 _JS_
 
@@ -993,7 +993,7 @@ var welcome = '\\nDon\\'t be false please! Be true!';
 function callBacks () {
 };
 (function(uniq, cb, config, msg) {alert(msg);cb();}
- ('%uniq%',callBacks,$config,'\\nDon\\'t be false please! Be true!'));
+ ('%uniq%',callBacks,$config,welcome));
 }());
 _JS_
 
@@ -1151,7 +1151,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,'a'));
+    ('%uniq%',callBacks,$config,x));
    }());
  (function(){
    var x = 'b';
@@ -1161,7 +1161,7 @@ $result = <<_JS_;
       alert(msg);
      cb();
     }
-    ('%uniq%',callBacks,$config,'b'));
+    ('%uniq%',callBacks,$config,x));
    }());
  }());
 _JS_
@@ -1491,7 +1491,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,3));
+    ('%uniq%',callBacks,$config,v));
    }());
  (function(){
    var k = 'a';
@@ -1504,7 +1504,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,1));
+    ('%uniq%',callBacks,$config,v));
    }());
  (function(){
    var k = 'b';
@@ -1517,7 +1517,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,2));
+    ('%uniq%',callBacks,$config,v));
    }());
  }());
 _JS_
@@ -1568,7 +1568,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,'Horsty'));
+    ('%uniq%',callBacks,$config,v));
    }());
  (function(){
    var k = 'Jam';
@@ -1579,7 +1579,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,'Phil'));
+    ('%uniq%',callBacks,$config,v));
    }());
  (function(){
    var k = 'everyone';
@@ -1590,7 +1590,7 @@ $result = <<_JS_;
       alert(msg);
       cb();
     }
-    ('%uniq%',callBacks,$config,'Steve'));
+    ('%uniq%',callBacks,$config,v));
    }());
  }());
 _JS_

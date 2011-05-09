@@ -157,7 +157,8 @@ sub post_to_facebook {
 
     };
 
-  $logger->debug("KRL response ", sub { Dumper $resp });
+  $logger->trace("KRL response ", sub { Dumper $resp });
+  $logger->debug("POST response: ", $resp->{'__dummy'}->{'status_line'});
 
   # side effect rule env with the response
   # should this be a denoted value?
@@ -326,13 +327,38 @@ sub get {
     my $logger = get_logger();
     my $rid    = $req_info->{'rid'};
     my $url    = build( $function, $args, $session, $rid );
-    $logger->debug( "GET URL: ", $url );
+    $logger->trace( "GET URL: ", $url );
     my $cachetime = get_cachetime($args);
     my $resp = get_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $url,
                                        $cachetime );
     return eval_response( $resp, $rid, $url, $cachetime );
 }
 $funcs->{'get'} = \&get;
+
+sub permissions {
+	my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
+    my $logger = get_logger();
+    my $rid    = $req_info->{'rid'};
+    my $url    = build( $function, $args, $session, $rid );
+    my $cachetime = get_cachetime($args);
+    my $resp = get_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $url,
+                                       $cachetime );
+    return eval_response( $resp, $rid, $url, $cachetime );		
+}
+$funcs->{'permissions'} =\&permissions;
+
+sub fql {
+	my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
+    my $logger = get_logger();
+    my $rid    = $req_info->{'rid'};
+    my $url    = build( $function, $args, $session, $rid );
+    my $cachetime = get_cachetime($args);
+    my $resp = get_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $url,
+                                       $cachetime );
+    return eval_response( $resp, $rid, $url, $cachetime );		
+}
+$funcs->{'fql'} =\&fql;
+
 
 sub ids {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
@@ -429,9 +455,18 @@ sub build {
     } elsif ( $function eq 'picture' ) {
         my $fbid = get_id( $args, $session, $rid );
         $url .= "/$fbid/picture";
+        my @qparams = ();
         my $ptype = get_type( $args, $function );
         if ($ptype) {
-            $url .= "?$ptype";
+            push(@qparams,$ptype);
+        }
+        my $ssl = get_use_ssl($args,$function);
+        if ($ssl) {
+        	push(@qparams,$ssl);
+        }
+        my $q = join('&',@qparams);
+        if ($q) {
+        	$url .= '?' . $q;
         }
         return $url;
     } elsif ( $function eq 'search' ) {
@@ -458,7 +493,49 @@ sub build {
             $url .= "/?$ids";
             return $url;
         }
+    } elsif ( $function eq 'permissions') {
+    	$url = $fconfig->{'urls'}->{'fql'};
+    	my $query = get_permissions_query($args);
+    	$url .= "?format=json&query=" . $query;
+    	return $url;
+    } elsif ($function eq 'fql') {
+    	$url = $fconfig->{'urls'}->{'fql'};
+    	my $query = get_fql_query($args);
+    	$url .="?format=json&query=" . $query;
+    	return $url;
     }
+}
+
+sub get_fql_query {
+	my ($args) = @_;
+	my $logger = get_logger();
+	if (ref $args->[0] eq "") {
+		return $args->[0];
+	}	
+}
+
+sub get_permissions_query{
+	my ($args) = @_;
+	my $logger = get_logger();
+	my @perms = ();
+	my $shash = $fconfig->{'scope'};
+	if (ref $args->[0] eq "ARRAY") {
+		my $specifics = $args->[0];
+		foreach my $key (@$specifics) {
+			if ($shash->{$key}) {
+				push(@perms,$key);
+			}
+		}
+	} else {
+		foreach my $key (keys %$shash) {
+			$logger->trace("$key");
+			push(@perms,$key);
+		}
+	}
+	my $plist = join(",",@perms);
+	my $fql_query = "select $plist from permissions where uid=me()";
+	$logger->trace("Query: ", $fql_query);
+	return $fql_query;
 }
 
 sub get_ids {
@@ -538,6 +615,24 @@ sub get_connection {
 
     }
     return undef;
+}
+
+sub get_use_ssl {
+	my ($args,$target) = @_;
+	my $logger = get_logger();
+	$logger->trace("Target: $target");
+	my $ahash = $args->[0];
+	my $ssl_string = $fconfig->{$target}->{'ssl'};
+	$logger->trace("SSL string: $ssl_string");
+	if (ref $ahash eq "HASH" && defined $ahash->{$ssl_string}) {
+		my $use="0";
+		if ($ahash->{$ssl_string}) {
+			$use = "1";
+		}
+		return $ssl_string . '=' . $use;
+	}
+	return undef;
+	
 }
 
 sub get_paging {
@@ -910,7 +1005,7 @@ sub nonce {
 }
 
 sub get_params {
-    my ( $args, $google_params, $defaults ) = @_;
+    my ( $args, $params, $defaults ) = @_;
     my $logger        = get_logger();
     my $passed_params = get_arg_hash($args);
     $logger->trace( "default params: ", sub { Dumper($defaults) } );
@@ -950,16 +1045,16 @@ sub get_params {
             }
             $logger->trace( "returned: ", $val );
             if ( defined $val ) {
-                $google_params->{$key} = $val;
+                $params->{$key} = $val;
             }
         } else {
             my $dvalue = default_value($key);
             if ($dvalue) {
-                $google_params->{$key} = $dvalue;
+                $params->{$key} = $dvalue;
             }
         }
     }
-    return $google_params;
+    return $params;
 
 }
 

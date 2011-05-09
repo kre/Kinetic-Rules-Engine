@@ -536,7 +536,7 @@ sub get_token {
         $key = $namespace;
     }
     $key .= SEP . $name;
-    $logger->debug("Get token ($key)");
+    $logger->trace("Get token ($key)");
     return Kynetx::Persistence::get_persistent_var("ent", $rid, $session, $key );
 }
 

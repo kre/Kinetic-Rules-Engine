@@ -649,7 +649,7 @@ sub build_composed_action {
 	}	
 	if ($srid eq $crid) {
 		$rcount++;
-		$logger->debug("Rids are the same!-----------------------");
+		$logger->trace("Rids are the same!-----------------------");
 		$req_info->{"__recursion__"} = $rcount;
 	}
 	
@@ -696,19 +696,40 @@ sub build_one_action {
 #	$logger->debug( "Build one action args: ",sub {Dumper($args)});
 
 	# parse the action args and make the expressed values
-	my $arg_den_vals =
-	  Kynetx::Expressions::eval_rands( $args, $rule_env, $rule_name, $req_info,
-		$session );
+	my $arg_den_vals = []; # all the denoted vals
+	my $arg_action_vals = []; # all the denoted vals unless it's a var
+	my $arg_exp_vals = []; # all the expressed vals 
+	foreach my $arg ( @{$args} ) {
+	  my $val = Kynetx::Expressions::eval_expr( $arg, 
+	              $rule_env, $rule_name, $req_info,
+		      $session );
+	  push(@{$arg_den_vals}, $val);
 
-#	$logger->debug( "Build one action arg denoted vals: ",sub {Dumper($arg_exp_vals)});
+	  if ($arg->{'type'} eq 'var') {
+	    push(@{$arg_action_vals}, $arg);
+	  } else {
+	    push(@{$arg_action_vals}, $val);
+	  }
 
-	my $arg_exp_vals;
-	# get the values
-	foreach my $val ( @{$arg_den_vals} ) {
-		push(@{$arg_exp_vals}, Kynetx::Expressions::den_to_exp($val));
+	  push(@{$arg_exp_vals}, Kynetx::Expressions::den_to_exp($val));
+
 	}
 
+#	$logger->debug( "Build one action arg denoted vals: ",sub {Dumper($arg_den_vals)});
+
 #	$logger->debug( "Build one action arg exp vals: ",sub {Dumper($arg_exp_vals)});
+
+	# process overloaded functions and arg reconstruction
+	( $action_name, $args ) =
+	  choose_action( $req_info, $action_name, $arg_action_vals, $rule_env, $rule_name, $args );
+
+	# this happens after we've chosen the action since it modifies args
+
+#	$logger->debug("Args before conversion to JS: ", sub { Dumper $args});
+
+	$args = Kynetx::JavaScript::gen_js_rands($args);	
+
+#	$logger->debug("Args after conversion to JS: ", sub { Dumper $args});
 
 
 	# Check for composable action before any other built-ins
@@ -755,17 +776,6 @@ sub build_one_action {
 		"rid"       => $req_info->{'rid'}
 	};
 
-	# process overloaded functions and arg reconstruction
-	( $action_name, $args ) =
-	  choose_action( $req_info, $action_name, $arg_den_vals, $rule_env, $rule_name, $args );
-
-	# this happens after we've chosen the action since it modifies args
-
-#	$logger->debug("Args before conversion to JS: ", sub { Dumper $args});
-
-	$args = Kynetx::JavaScript::gen_js_rands($args);	
-
-#	$logger->debug("Args after conversion to JS: ", sub { Dumper $args});
 
 	my $js_config = [];
 

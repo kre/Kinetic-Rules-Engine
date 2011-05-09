@@ -3,7 +3,6 @@
 use lib qw(/web/lib/perl);
 use strict;
 use warnings;
-
 use Test::More;
 use Test::LongString;
 
@@ -33,6 +32,8 @@ use Kynetx::FakeReq qw/:all/;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
+
+my $logger = get_logger();
 
 
 
@@ -74,6 +75,8 @@ $config = mk_config_string(
 ]);
 
 # http://epfactory.kynetx.com:3098/1/bookmarklet/aaa/dev?init_host=qa.kobj.net&eval_host=qa.kobj.net&callback_host=qa.kobj.net&contents=compiled&format=json&version=dev
+
+#goto ENDY;
 
 # set variable and raise event
 $krl_src = <<_KRL_;
@@ -462,6 +465,67 @@ like($my_req_info->{'content'}, qr/CONTENT_LENGTH="\d+"/, "Content length there"
 like($my_req_info->{'content'}, qr/CONTENT_TYPE="application\/xml"/, "Content length there");
 $test_count += 2;
 # 
+
+ENDY:
+# test the get function (expression) with a hash
+
+my $credentials = {
+	"netloc" => "rulesetmanager.kobj.net:443",
+	"realm" => "KynetxRulesetManager",
+	"username" => "kynetx",
+	"password" => "fart95"
+};
+my $params = {
+	"init_host"=> "qa.kobj.net",
+	"eval_host"=> "qa.kobj.net",
+	"callback_host"=> "qa.kobj.net",
+	"contents"=> "compiled",
+	"format"=> "json",
+	"version"=> "dev"
+};
+my $uri = "https://rulesetmanager.kobj.net/ruleset/source/cs_test/prod/krl";
+my $headers = {"X-proto" => "flipper"};
+my $rheaders = ["flipper"];
+my $opts = {"headers" => $headers,
+	"credentials" => $credentials,
+	"params" => $params,
+	"response_headers" => $rheaders
+};
+$krl_src = <<_KRL_;
+r = http:get("$uri",{
+	"credentials" : {
+		"netloc" : "rulesetmanager.kobj.net:443",
+		"realm" : "KynetxRulesetManager",
+		"username" : "kynetx",
+		"password" : "fart95"	
+	}, 
+	"params" : {"foo":"bar"},
+	"headers" : {"Upgrade": "SHTTP/1.3"},
+	"response_headers":["x-runtime","client-peer","x-powered_by"]
+});
+_KRL_
+
+$krl = Kynetx::Parser::parse_decl($krl_src);
+
+#diag(Dumper($krl));
+
+# start with a fresh $req_info and $rule_env
+$my_req_info = Kynetx::Test::gen_req_info($rid);
+$rule_env = Kynetx::Test::gen_rule_env();
+
+($v,$result) = Kynetx::Expressions::eval_decl(
+    $my_req_info,
+    $rule_env,
+    $rule_name,
+    $session,
+    $krl
+    );
+
+is($v, "r", "Get right lhs");
+#$logger->debug("Result: ", sub {Dumper($result)});
+like($result->{'content'}, qr/CS Test 1/, "Correct ruleset received");
+like($result->{'x-runtime'}, qr/0\.0\d+/, "x-runtime is there");
+$test_count += 3;
 
 
 done_testing($test_count);
