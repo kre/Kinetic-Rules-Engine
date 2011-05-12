@@ -52,6 +52,7 @@ use Kynetx::Events::State qw(:all);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
+$Data::Dumper::Terse = 1;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -69,6 +70,9 @@ our %EXPORT_TAGS = (
     ]
 );
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
+
+use constant ANY => {type => ".*",
+		     pattern => ".*"};
 
 sub handler {
     my $r = shift;
@@ -206,18 +210,26 @@ sub process_event_for_rid {
     $logger->debug("Event domain is $domain and type is $type");
 #    $logger->debug("Rule list is ", sub{Dumper $ruleset->{'rule_lists'}->{$domain}->{$type}});
 
-    foreach my $d (keys %{$ruleset->{'rule_lists'}}) {
-      foreach my $t (keys %{$ruleset->{'rule_lists'}->{$d}}) {
-	$logger->debug("$d:$t -> ");
-	foreach my $r (@{$ruleset->{'rule_lists'}->{$d}->{$t}} ) {
-	  $logger->debug("\t$r->{'name'}");
-	}
-      }
-    }
+    # prints out detailed info on rule_lists
+    # foreach my $d (keys %{$ruleset->{'rule_lists'}}) {
+    #   foreach my $t (keys %{$ruleset->{'rule_lists'}->{$d}}) {
 
-    $logger->debug("Selection checking for ", scalar @{ $ruleset->{'rule_lists'}->{$domain}->{$type} }, " rules") if $ruleset->{'rule_lists'}->{$domain}->{$type};
+    # 	$logger->debug("$d:$t -> ");
+    # 	$logger->debug("\tFilters:", sub {Dumper $ruleset->{'rule_lists'}->{$d}->{$t}->{"filters"}});
 
-    foreach my $rule ( @{ $ruleset->{'rule_lists'}->{$domain}->{$type} } ) {
+    # 	my $i = 0;
+    # 	foreach my $r (@{$ruleset->{'rule_lists'}->{$d}->{$t}->{"rulelist"}} ) {
+	  
+    # 	  $logger->debug("\t$r->{'name'}");
+    # 	}
+    #   }
+    # }
+
+    $logger->debug("Selection checking for ", scalar @{ $ruleset->{'rule_lists'}->{$domain}->{$type}->{'rulelist'} }, " rules") if $ruleset->{'rule_lists'}->{$domain}->{$type};
+
+    foreach my $rule ( @{ $ruleset->{'rule_lists'}->{$domain}->{$type}->{'rulelist'} } ) {
+
+      $logger->debug("Processing rule $rule->{'name'}");
 
     	$rule->{'state'} ||= 'active';
 
@@ -229,7 +241,7 @@ sub process_event_for_rid {
     	$logger->trace("Rule: ", Kynetx::Json::astToJson($rule));
 
     	$logger->trace("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
-
+	
     	next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
 
     	my $sm = $rule->{'event_sm'};
@@ -240,14 +252,15 @@ sub process_event_for_rid {
 
         my $next_state = $sm->next_state( $current_state, $ev );
 
-        $logger->debug("Current: ", $current_state );
-        $logger->debug("Next: ", $next_state );
+#        $logger->debug("Current: ", $current_state );
+#        $logger->debug("Next: ", $next_state );
 
         # when there's a state change, store the event in the event list
         unless ( $current_state eq $next_state ) {
-            my $json = $ev->serialize();
-            Kynetx::Persistence::add_persistent_element("ent", $rid, $session, $event_list_name, $json );
-        }
+	  my $json = $ev->serialize();
+	  Kynetx::Persistence::add_persistent_element("ent", $rid, $session, $event_list_name, $json );
+	  $logger->debug("State change for $rule->{'name'}");
+	}
 
         if ( $sm->is_final($next_state) ) {
 
@@ -335,40 +348,69 @@ sub compile_event_expr {
     # the rule list for each domain and op is stored in the parse tree
     # for optimizing rule selection
     my $domain = $eexpr->{'domain'} || 'web';
+    my $op = $eexpr->{'op'};
     $rule_lists->{$domain} = {} 
       unless $rule_lists->{$domain};
-    $rule_lists->{$domain}->{$eexpr->{'op'}} = [] 
-      unless $rule_lists->{$domain}->{$eexpr->{'op'}};
+    $rule_lists->{$domain}->{$op} = {"rulelist" => [],
+				     "filters" => [],
+				    }
+      unless $rule_lists->{$domain}->{$op};
     # put the rule in the array unless it's already there
-    push(@{$rule_lists->{$domain}->{$eexpr->{'op'}}}, $rule) 
-      unless (grep {$_ eq $rule} @{$rule_lists->{$domain}->{$eexpr->{'op'}}});
-    
-    if ( $eexpr->{'op'} eq 'pageview' ) {
+    unless (grep {$_ eq $rule} @{$rule_lists->{$domain}->{$op}->{"rulelist"}}) {
+#      $logger->debug("Putting $rule->{'name'} on the list");
+      push(@{$rule_lists->{$domain}->{$op}->{"rulelist"}}, $rule) 
+	unless $rule->{'state'} eq 'inactive';
+    }
+
+    my $filter;
+    if ( $op eq 'pageview' ) {
       $sm = mk_pageview_prim( $eexpr->{'pattern'}, $eexpr->{'vars'} );
-    } elsif (    $eexpr->{'op'} eq 'submit'
-		 || $eexpr->{'op'} eq 'click'
-		 || $eexpr->{'op'} eq 'dblclick'
-		 || $eexpr->{'op'} eq 'change'
-		 || $eexpr->{'op'} eq 'update' )
-      {
-	$sm = mk_dom_prim( $eexpr->{'element'}, $eexpr->{'pattern'},
-                               $eexpr->{'vars'},    $eexpr->{'op'} );
-      } elsif ($eexpr->{'op'} eq 'expression') {
-	$logger->debug(
-		       "Creating Expression event for $eexpr->{'domain'}:$eexpr->{'op'}"
-		      );
-	$logger->trace("Eexpr: ", sub {Dumper($eexpr)});
-	$sm = mk_expr_prim( $eexpr->{'domain'}, $eexpr->{'op'},
-			    $eexpr->{'vars'},   $eexpr->{'exp'} );        	
+
+
+      $filter = [{type => "url",
+		  pattern => $eexpr->{'pattern'} || ".*"
+		 }];
+      add_filter($filter, $rule_lists, $domain, $op, $rule);
+
+
+    } elsif ($op eq 'submit'
+	     || $op eq 'click'
+	     || $op eq 'dblclick'
+	     || $op eq 'change'
+	     || $op eq 'update' )  {
+      $sm = mk_dom_prim( $eexpr->{'element'}, $eexpr->{'pattern'},
+			 $eexpr->{'vars'},    $op );
+
+      $filter = [{type => "element",
+		  pattern => $eexpr->{'element'}
+		 }];
+      add_filter($filter, $rule_lists, $domain, $op, $rule);
+
+
+    } elsif ($op eq 'expression') {
+      $logger->debug(
+		     "Creating Expression event for $domain:$op"
+		    );
+      $logger->trace("Eexpr: ", sub {Dumper($eexpr)});
+      $sm = mk_expr_prim( $domain, $op,
+			  $eexpr->{'vars'},   $eexpr->{'exp'} );        	
+
+      add_filter([ANY], $rule_lists, $domain, $op, $rule);
         
-      } else {
-	$logger->debug(
-	   "Creating primitive event for $eexpr->{'domain'}:$eexpr->{'op'}"
+    } else {
+      $logger->debug(
+		     "Creating primitive event for $domain:$op"
 		      );
-	$logger->trace("Eexpr: ", sub {Dumper($eexpr)});
-	$sm = mk_gen_prim( $eexpr->{'domain'}, $eexpr->{'op'},
-			   $eexpr->{'vars'},   $eexpr->{'filters'} );
-      }
+      $logger->trace("Eexpr: ", sub {Dumper($eexpr)});
+      $sm = mk_gen_prim( $domain, $op,
+			 $eexpr->{'vars'},   $eexpr->{'filters'} );
+
+
+      add_filter($eexpr->{'filters'}, $rule_lists, $domain, $op, $rule);
+
+    }
+
+
   } elsif ( $eexpr->{'type'} eq 'complex_event' ) {
     if (    $eexpr->{'op'} eq 'between'
 	    || $eexpr->{'op'} eq 'notbetween' )
@@ -402,6 +444,43 @@ sub compile_event_expr {
   }
   return $sm;
 
+}
+
+sub add_filter {
+  my ($filters, $rule_lists, $domain, $op, $rule) = @_;
+
+  my $filter_array = $rule_lists->{$domain}->{$op}->{"filters"};
+
+  # my $logger = get_logger();
+  # $logger->debug("Filters: ", sub {Dumper $filters});
+
+  if (! defined $filters || scalar @{$filters} == 0) {
+    $rule_lists->{$domain}->{$op}->{"filters"} = [ANY];
+  }
+
+  # $logger->debug("Filters after: ", sub {Dumper $filters}); 
+
+  foreach my $filter ( @{$filters} ) {
+
+    # if the filter is ANY, you only need that
+    if ($filter eq ANY) {
+      $rule_lists->{$domain}->{$op}->{"filters"} = [ANY];
+#      $logger->debug("Filter array for ANY: ", sub {Dumper $filter_array});
+      last;
+    } else {
+      # if the array already has ANY on it, no reason to add anything else
+      # don't add filters twice
+      # don't add filters for inactive rules
+      unless ( $filter_array->[0] eq ANY 
+            || grep 
+	         {$_ eq $filter} 
+	         @{$rule_lists->{$domain}->{$op}->{"filters"}}  
+            || ! $rule->{'state'} eq 'inactive'
+	     ) {
+	push(@{$filter_array}, $filter) ;
+      }
+    }
+  }
 }
 
 1;

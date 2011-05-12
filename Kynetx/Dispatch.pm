@@ -114,18 +114,28 @@ sub extended_dispatch {
 	    }
 	}   
 
-	foreach my $rule (@{ $ruleset->{'rules'} }) {
-	  my $events =  flatten_event_expr($rule->{'pagetype'}->{'event_expr'}) ;
-	  $logger->debug("Events: for $rule->{'name'} ", sub {Dumper $events});
+# 	foreach my $rule (@{ $ruleset->{'rules'} }) {
+# 	  my $events =  flatten_event_expr($rule->{'pagetype'}->{'event_expr'}) ;
+# 	  $logger->debug("Events: for $rule->{'name'} ", sub {Dumper $events});
 
-	  $events = [] unless $events; # for old rules that haven't been recompiled.
-	  foreach my $e (@{$events}) {
-	    my $domain = get_domain($e);
-	    my $dispatch_info = get_dispatch_info($e);
+# 	  $events = [] unless $events; # for old rules that haven't been recompiled.
+# 	  foreach my $e (@{$events}) {
+# 	    my $domain = get_domain($e);
+# 	    my $dispatch_info = get_dispatch_info($e);
 
-#	    $logger->debug("Domain: $domain, DI: ", sub {Dumper $dispatch_info});
-	    push(@{ $r->{$domain}->{$rid} }, $dispatch_info);
-	    $logger->debug("R: ", sub {Dumper $r});
+# #	    $logger->debug("Domain: $domain, DI: ", sub {Dumper $dispatch_info});
+# 	    push(@{ $r->{$domain}->{$rid} }, $dispatch_info);
+# 	    $logger->debug("R: ", sub {Dumper $r});
+# 	  }
+# 	}
+
+	foreach my $d ( keys %{$ruleset->{'rule_lists'} }) {
+	  foreach my $t ( keys %{$ruleset->{'rule_lists'}->{$d} } ) {
+	    if (defined $ruleset->{'rule_lists'}->{$d}->{$t}->{'filters'}) {
+	    $r->{$rid}->{'events'}->{$d}->{$t} = 
+	      $ruleset->{'rule_lists'}->{$d}->{$t}->{'filters'};
+	    }
+#	    $logger->debug("Seeing ($d, $t): ", sub {Dumper $ruleset->{'rule_lists'}->{$d}->{$t}->{'filters'}});
 	  }
 	}
 
@@ -133,7 +143,7 @@ sub extended_dispatch {
     }
 
     $r = encode_json($r);
-    $logger->debug($r);
+#    $logger->debug($r);
 
     return $r;
 

@@ -272,6 +272,7 @@ SKIP: {
 		   '/var two = 2/',
 		   '/var one = 1/',
 		  ],
+       'diag' => 0
        },
        # next series of three shows that an interceding event cancels then1
        {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/then1.html",
@@ -297,6 +298,8 @@ SKIP: {
 		   '/var two = 2/',
 		   '/var one = 1/',
 		  ],
+	'diag' => 0
+
        },
       ];
 

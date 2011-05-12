@@ -63,6 +63,7 @@ sub new {
         "timestamp"    => DateTime->now->epoch(),
         "guid"         => $ug->create_str(),
         "type"         => undef,
+        "domain"         => undef,
         "vars"         => undef,
         "vals"         => undef,
         "req_info"     => undef
@@ -181,10 +182,11 @@ sub get_domain {
 sub isa {
   my $self = shift;
   my $type = shift;
+  my $domain = shift;
   my $logger = get_logger();
-  $logger->debug("Checking: (me) ",$self->{'type'}, " for $type");
+#  $logger->debug("Checking: ",$self->{'type'}, " for $type");
 
-  return $self->{'type'} eq $type;
+  return $self->{'type'} eq $type && $self->{'domain'} eq $domain;
 }
 
 

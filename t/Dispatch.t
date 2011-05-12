@@ -40,6 +40,8 @@ use APR::Pool ();
 use Cache::Memcached;
 
 
+use JSON::XS;
+
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
@@ -85,6 +87,24 @@ is_string_nows(
     "Testing dispatch function with two RIDs");
 $test_count++;
 
+is_deeply(
+    decode_json(Kynetx::Dispatch::extended_dispatch($my_req_info,"cs_test")), 
+    {"cs_test" => {
+       "domains" => ["www.google.com","www.yahoo.com","www.live.com"],
+       "events" => {
+ 	   "web" => {
+             "pageview" => [{"pattern" => "/([^/]+)/bar.html","type" => "url"},
+			    {"pattern" => "/foo/bazz.html","type" => "url"},
+			    {"pattern" => "/foo/bazz.html","type" => "url"},
+			    {"pattern" => "/fizzer/fuzzer.html","type" => "url"}
+                           ]
+		    }
+		   }
+		  }
+    },
+    "extended dispatch"
+);
+$test_count++;
 
 done_testing($test_count);
 1;

@@ -97,12 +97,13 @@ my $pe3 = $pe1;
 ok(! $pe1->different_than($pe3), '$pe1 the same as $pe3');
 $test_count++;
 
-ok(! $pe1->isa('pageview'), '$pe1 not a pageview');
+ok(! $pe1->isa('pageview', 'web'), '$pe1 not a pageview');
 $test_count++;
 
 $pe1->set_type('pageview');
+$pe1->set_domain('web');
 
-ok($pe1->isa('pageview'), '$pe1 is a pageview');
+ok($pe1->isa('pageview', 'web'), '$pe1 is a pageview');
 $test_count++;
 
 $json = $pe1->serialize();
@@ -114,7 +115,7 @@ $test_count++;
 
 $pe2->pageview('http://www.windley.com/foo/bar.html');
 
-ok($pe2->isa('pageview'), '$pe2 is a pageview');
+ok($pe2->isa('pageview', 'web'), '$pe2 is a pageview');
 $test_count++;
 
 is($pe2->url, 'http://www.windley.com/foo/bar.html', 'pageview url is correct');
@@ -129,7 +130,7 @@ $test_count++;
 my $pe4 = Kynetx::Events::Primitives->new();
 $pe4->click('foo_id');
 
-ok($pe4->isa('click'), '$pe4 is a click');
+ok($pe4->isa('click', 'web'), '$pe4 is a click');
 $test_count++;
 
 is($pe4->element, 'foo_id', 'click element is correct');
@@ -144,7 +145,7 @@ $test_count++;
 my $pe5 = Kynetx::Events::Primitives->new();
 $pe5->change('foo_id');
 
-ok($pe5->isa('change'), '$pe5 is a change');
+ok($pe5->isa('change', 'web'), '$pe5 is a change');
 $test_count++;
 
 is($pe5->element, 'foo_id', 'change element is correct');
@@ -159,7 +160,7 @@ $test_count++;
 my $pe6 = Kynetx::Events::Primitives->new();
 $pe6->submit('foo_id');
 
-ok($pe6->isa('submit'), '$pe6 is a submit');
+ok($pe6->isa('submit', 'web'), '$pe6 is a submit');
 $test_count++;
 
 is($pe6->element, 'foo_id', 'submit element is correct');

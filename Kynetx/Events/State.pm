@@ -391,12 +391,13 @@ sub match {
   $logger->trace("Looking for a ",sub {Dumper($ttype)});
   $logger->trace("In event of : ",sub {Dumper($etype)});
 
-  return 0 unless $tdomain eq $edomain;
+  return 0 unless $event->isa($ttype, $tdomain);
+
+
   if (defined $ttype && $ttype eq 'expression') {
 		$logger->debug("Need to eval the statement to check against $ttype");
 		return expr_eval($event,$transition);
   }
-  return 0 unless $event->isa($transition->{'type'});
   
   if (defined $eval_funcs->{$event->get_type()}) {
     return $eval_funcs->{$event->get_type()}->($event, $transition);
