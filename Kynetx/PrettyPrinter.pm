@@ -327,11 +327,18 @@ sub pp_dispatch {
 
     my $beg = " "x$indent;
 
-    my $o .= $beg . "domain " ;
-    $o .= '"'.$d->{'domain'}.'"';  
-    if(defined $d->{'ruleset_id'}) {
+    my $o = '';
+    if (defined $d->{'domain'}) {
+      $o .= $beg . "domain " ;
+      $o .= '"'.$d->{'domain'}.'"';  
+      if(defined $d->{'ruleset_id'}) {
 	$o .= " -> ";
 	$o .= '"'.$d->{'ruleset_id'}.'"';
+      }
+    } else {
+      $o .= $beg . "iframe " ;
+      $o .= '"'.$d->{'iframe'}.'"';  
+      
     }
     $o .= "\n";
 

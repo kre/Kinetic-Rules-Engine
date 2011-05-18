@@ -1710,9 +1710,9 @@ cachable returns[Object what]
 
 emit_block  returns[String emit_value]
 	: EMIT ( h=HTML {$emit_value = strip_wrappers("<<",">>",$h.text);}
-	|h=STRING {$emit_value = strip_string($h.text);}
-	|h=JS {$emit_value = strip_wrappers("<|","|>",$h.text);}
-	)
+   	       | h=STRING {$emit_value = strip_string($h.text);}
+	       | h=JS {$emit_value = strip_wrappers("<|","|>",$h.text);}
+           )
 	;
 meta_block
 @init {
@@ -1841,33 +1841,36 @@ dispatch_block
 @init {
 	 ArrayList dispatch_block_array = (ArrayList)rule_json.get("dispatch");
 
-	           if(dispatch_block_array == null)
-          	 {
-          	    dispatch_block_array = new ArrayList();
-          	    rule_json.put("dispatch",dispatch_block_array);
-          	 }
+     if(dispatch_block_array == null) {
+         dispatch_block_array = new ArrayList();
+         rule_json.put("dispatch",dispatch_block_array);
+     }
 
 }
 @after  {
 }
-	: must_be["dispatch"]  LEFT_CURL ( must_be["domain"] domain=STRING (RIGHT_SMALL_ARROW rsid=STRING)? {
+	: must_be["dispatch"]  LEFT_CURL ( 
+       DOMAIN domain=STRING (RIGHT_SMALL_ARROW rsid=STRING)? {
 		HashMap tmp = new HashMap();
 		tmp.put("domain",strip_string($domain.text));
-		if($rsid.text != null)
-		{
+		if($rsid.text != null) {
 			tmp.put("ruleset_id",strip_string($rsid.text));
 			rsid = null;
 
-		}
-		else
-		{
+		} else {
 			tmp.put("ruleset_id",null);
 			rsid = null;
-
-
 		}
 		dispatch_block_array.add(tmp);
-		})*
+       }
+
+      | IFRAME regexp=STRING  {
+		HashMap tmp = new HashMap();
+		tmp.put("iframe",strip_string($regexp.text));
+		dispatch_block_array.add(tmp);
+	   }
+
+      )*
 		RIGHT_CURL
 	;
 
@@ -1927,6 +1930,10 @@ REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
      ;
 
 */
+
+ IFRAME : 'iframe';
+
+ DOMAIN : 'domain';
 
  ARROW_RIGHT
 	:	'=>';

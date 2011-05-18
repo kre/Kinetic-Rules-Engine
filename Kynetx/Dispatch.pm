@@ -110,7 +110,12 @@ sub extended_dispatch {
 	    $logger->debug("Processing dispatch block for $rid");
 #	    $logger->debug(sub() {Dumper($ruleset->{'dispatch'})});
 	    foreach my $d (@{ $ruleset->{'dispatch'} }) {
+#	      $logger->debug("Seeing ", sub{Dumper $d});
+	      if (defined $d->{'domain'}) {
 		push(@{ $r->{$rid}->{'domains'} }, $d->{'domain'});
+	      } elsif (defined $d->{'iframe'}) {
+		push(@{ $r->{$rid}->{'iframes'} }, $d->{'iframe'});
+	      } 
 	    }
 	}   
 
