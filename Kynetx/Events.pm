@@ -41,6 +41,7 @@ use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Configure qw(:all);
+use Kynetx::Errors;
 use Kynetx::Request;
 use Kynetx::Rules;
 use Kynetx::Json;
@@ -93,8 +94,18 @@ sub handler {
     my ( $domain, $rid, $eventtype );
     my $eid = '';
 
-    ( $domain, $eventtype, $rid, $eid ) = $r->path_info =~
-      m!/event/([a-z+_]+)/?([a-z+_]+)?/?([A-Za-z0-9_;]*)/?([A-Z0-9-]*)?/?!;
+#    ( $domain, $eventtype, $rid, $eid ) = $r->path_info =~
+#      m!/event/([A-Za-z+_]+)/?([A-Za-z+_]+)?/?([A-Za-z0-9_;]*)/?([A-Z0-9-]*)?/?!;
+
+    my @path_components = split(/\//,$r->path_info);
+#    $logger->debug("Path components for ", $r->path_info, ": ", sub{Dumper @path_components});
+
+    
+    $domain = $path_components[2];
+    $eventtype = $path_components[3];
+    $rid = $path_components[4] || 'any';
+    $eid = $path_components[5] || '';
+
 
     # Set to be the same now one.  This will pass back the rid to the runtime
     #$eid = $rid;
@@ -150,10 +161,31 @@ sub process_event {
     my $session = process_session($r, $req_info->{'kntx_token'});
 
 
-
     # not clear we need the request env now
     #    my $req_info = Kynetx::Request::build_request_env($r, $domain, $rids);
     $req_info->{'eid'} = $eid || '';
+
+    # error checking for event domains and types
+    unless ($domain =~ m/[A-Za-z+_]+/) {
+	Kynetx::Errors::raise_error($req_info,
+				    'error',
+				    "malformed event domain $domain; must match [A-Za-z+_]+", 
+				    {'genus' => 'system',
+				     'species' => 'malformed event'
+				    }
+				   );
+      }
+
+    unless ($eventtype =~ m/[A-Za-z+_]+/) {
+	Kynetx::Errors::raise_error($req_info,
+				    'error',
+				    "malformed event type $eventtype; must match [A-Za-z+_]+", 
+				    {'genus' => 'system',
+				     'species' => 'malformed event'
+				    }
+				   );
+      }
+
 
     my $ev = mk_event($req_info);
 
@@ -162,23 +194,36 @@ sub process_event {
     my $schedule = Kynetx::Scheduler->new();
 
     foreach my $rid ( split( /;/, $rids ) ) {
-    	eval {
-    		process_event_for_rid( $ev, $req_info, $session, $schedule, $rid );
-    	};
-    	if ($@) {
-    		  Kynetx::Util::handle_error("Process event failed for rid ($rid):", $@);
-    	}
+      eval {
+	process_event_for_rid( $ev, $req_info, $session, $schedule, $rid );
+      };
+      if ($@) {
+	Kynetx::Errors::raise_error($req_info,
+				    'error',
+				    "Process event failed for rid ($rid): $@", 
+				    {'genus' => 'system',
+				     'species' => 'unknown'
+				    }
+				   );
+      }
         
     }
 
     $logger->debug("Schedule complete");
     
     my $js = '';
-	$js .= eval {
-		Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid,$req_info );
-	};
+    $js .= eval {
+      Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid,$req_info );
+    };
     if ($@) {
-   		Kynetx::Util::handle_error("Process event schedule failed: ", $@);
+      Kynetx::Errors::raise_error($req_info,
+				  'error',
+				  "Process event schedule failed: $@",
+				    {'genus' => 'system',
+				     'species' => 'unknnown'
+				    }
+
+				 );
     }
 
     Kynetx::Response::respond( $r, $req_info, $session, $js, "Event" );
@@ -194,7 +239,7 @@ sub process_event_for_rid {
 
     my $logger = get_logger();
 
-    #  $logger->debug("Req info: ", sub {Dumper $req_info} );
+   #  $logger->debug("Req info: ", sub {Dumper $req_info} );
 
     $logger->debug("Processing events for $rid");
     Log::Log4perl::MDC->put( 'site', $rid );
@@ -238,14 +283,14 @@ sub process_event_for_rid {
         my $sm_current_name = $rule->{'name'} . ':sm_current';
         my $event_list_name = $rule->{'name'} . ':event_list';
 
-    	$logger->trace("Rule: ", Kynetx::Json::astToJson($rule));
+#    	$logger->trace("Rule: ", sub {Dumper $rule});
 
-    	$logger->trace("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
+#    	$logger->trace("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
 	
     	next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
 
     	my $sm = $rule->{'event_sm'};
-    	$logger->trace("State machine: ", sub {Dumper($sm)});
+#    	$logger->debug("State machine: ", sub {Dumper($sm)});
 
         # States stored in Mongo should be serialized
         my $current_state = get_persistent_var("ent", $rid, $session, $sm_current_name ) || $sm->get_initial();
@@ -341,6 +386,8 @@ sub compile_event_expr {
 
   my $logger = get_logger();
 
+  $logger->debug("Event expression: ", sub {Dumper $eexpr});
+
   my $sm;
 
   if ( $eexpr->{'type'} eq 'prim_event' ) {
@@ -359,7 +406,7 @@ sub compile_event_expr {
     unless (grep {$_ eq $rule} @{$rule_lists->{$domain}->{$op}->{"rulelist"}}) {
 #      $logger->debug("Putting $rule->{'name'} on the list");
       push(@{$rule_lists->{$domain}->{$op}->{"rulelist"}}, $rule) 
-	unless $rule->{'state'} eq 'inactive';
+	unless (defined $rule->{'state'} && $rule->{'state'} eq 'inactive');
     }
 
     my $filter;
@@ -471,11 +518,11 @@ sub add_filter {
       # if the array already has ANY on it, no reason to add anything else
       # don't add filters twice
       # don't add filters for inactive rules
-      unless ( $filter_array->[0] eq ANY 
+      unless ((defined $filter_array->[0] && $filter_array->[0] eq ANY)
             || grep 
 	         {$_ eq $filter} 
 	         @{$rule_lists->{$domain}->{$op}->{"filters"}}  
-            || ! $rule->{'state'} eq 'inactive'
+            || (defined $rule->{'state'} && $rule->{'state'} eq 'inactive')
 	     ) {
 	push(@{$filter_array}, $filter) ;
       }

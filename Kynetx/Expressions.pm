@@ -59,8 +59,10 @@ use Kynetx::Operators;
 use Kynetx::Modules;
 use Kynetx::JavaScript;
 use Kynetx::Persistence qw(:all);
+use Kynetx::Errors;
 
 
+BEGIN{ 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
@@ -87,6 +89,7 @@ eval_emit
 recursion_threshold
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
+}
 
 # make sure we get canonical freezes for good signatures.
 $Storable::canonical = 1;
@@ -238,9 +241,9 @@ sub eval_expr {
 	   return  $expr ;
     } elsif($expr->{'type'} eq 'var') {
 	   my $v = lookup_rule_env($expr->{'val'},$rule_env);
-	   unless (defined $v) {	   	
-	       $logger->info("Variable '", $expr->{'val'}, "' is undefined");
-	   }
+	   # unless (defined $v) {	   	
+	   #     $logger->info("Variable '", $expr->{'val'}, "' is undefined");
+	   # }
 	   $logger->trace($rule_name.':'.$expr->{'val'}, " -> ", $v, ' Type -> ', infer_type($v));
 
 	   # alas, closures are the only denoted vals in the env...
@@ -551,7 +554,15 @@ sub eval_application {
 			 );
 
     unless ($closure->{'type'} eq 'closure') {
-      $logger->warn("Function not found in ", $rule_name);
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[application] function not found",
+				  {'rule_name' => $rule_name,
+				   'genus' => 'expression',
+				   'species' => 'undefined function'
+				  }
+				 );
+
+
       return mk_expr_node('str', '');
     }
 
@@ -562,7 +573,13 @@ sub eval_application {
   $req_info->{$closure->{'val'}->{'sig'}} = 0
     unless defined $req_info->{$closure->{'val'}->{'sig'}};
   if ($req_info->{$closure->{'val'}->{'sig'}} > FUNCTION_CALL_THRESHOLD) {
-    $logger->warn("Function call threshold exceeded...deep recursion?");
+    Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[application] Function call threshold exceeded (". FUNCTION_CALL_THRESHOLD .")...deep recursion?",
+				  {'rule_name' => $rule_name,
+				   'genus' => 'expression',
+				   'species' => 'recursion threshold exceeded'
+				  }
+				 );
     return mk_expr_node('num', 0);
   }
 
@@ -665,23 +682,35 @@ sub eval_array_ref {
   my $v = lookup_rule_env($expr->{'val'}->{'var_expr'},$rule_env);
 
   unless (defined $v) {
-	    $logger->warn("Variable '", $expr->{'val_expr'}, "' is undefined");
-	  }
+    Kynetx::Errors::raise_error($req_info, 'warn',
+				"[array_ref] Variable '", $expr->{'val_expr'}, "' is undefined",
+				{'rule_name' => $rule_name,
+				 'genus' => 'expression',
+				 'species' => 'array reference undefined'
+				}
+			       );
+  }
 
   unless (ref $v eq 'ARRAY') {
-	    $logger->warn("Variable '", $expr->{'val_expr'}, "' is not an array");
-	  } else {
+    Kynetx::Errors::raise_error($req_info, 'warn',
+				"[array_ref] Variable '", $expr->{'val_expr'}, "' is not an array",
+				{'rule_name' => $rule_name,
+				 'genus' => 'expression',
+				 'species' => 'type mismatch'
+				}
+			       );
+  } else {
 
-	    $logger->trace("Using array ", sub {Dumper $v}, " with index ",sub {Dumper  $expr->{'val'}->{'index'}});
+    $logger->trace("Using array ", sub {Dumper $v}, " with index ",sub {Dumper  $expr->{'val'}->{'index'}});
 
-	    my $dval = eval_expr($expr->{'val'}->{'index'},
-				 $rule_env,
-				 $rule_name,
-				 $req_info,
-				 $session);
-	    return typed_value($v->[den_to_exp($dval)])
+    my $dval = eval_expr($expr->{'val'}->{'index'},
+			 $rule_env,
+			 $rule_name,
+			 $req_info,
+			 $session);
+    return typed_value($v->[den_to_exp($dval)])
 
-	  }
+  }
 
 }
 
@@ -781,7 +810,13 @@ sub eval_pred {
 
       }
     } else {
-	$logger->warn("Invalid predicate");
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				"[pred] invalid predicate operator $pred->{'op'}",
+				{'rule_name' => $rule_name,
+				 'genus' => 'expression',
+				 'species' => 'invalid operator'
+				}
+			       );
     }
     return 0;
 

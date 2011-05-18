@@ -45,7 +45,7 @@ use Data::Dumper;
 use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Configure qw(:all);
-use Kynetx::Util qw(:all);
+use Kynetx::Errors;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -148,7 +148,7 @@ sub validate_request {
     if (! has_minimum_parameter($request)){
         my $mins = $search_index_parameters->{'minimum'};
         my $min_err = join(",",keys %$mins);
-        return merror("Request must contain one of these: $min_err");
+        return Kynetx::Errors::merror("Request must contain one of these: $min_err");
     } else {
         return 1;
     };
@@ -204,8 +204,8 @@ sub build {
 
     $logger->trace( "a_request: ", sub { Dumper($request) } );
     my $error =  validate_request($request);
-    if (mis_error($error)) {
-        return (merror($error,"Request failed validation"));
+    if (Kynetx::Errors::mis_error($error)) {
+        return (Kynetx::Errors::merror($error,"Request failed validation"));
     }  else {
         return $request;  
     }

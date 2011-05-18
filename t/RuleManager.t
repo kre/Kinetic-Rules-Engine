@@ -569,7 +569,7 @@ $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "dispatch");
 #diag $json;
 
 contains_string($json,
-	       'Invalid value [This] found should have been one of [domain]',
+	       "missing RIGHT_CURL at 'This'",
 	       "Parsing dispatch decls with syntax error");
 
 
@@ -591,7 +591,7 @@ $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "meta");
 #diag $json;
 
 contains_string($json,
-	       'required (...)+ loop did not match anything at input \'not\'',
+	       "no viable alternative at input 'not'",
 	       "Parsing meta decls with syntax error");
 
 $my_req_info->{'krl'} = $meta_key_bad;
@@ -786,7 +786,7 @@ SKIP: {
 
     is($mech->content_type(), 'text/plain');
     contains_string($mech->response()->content,
-		    'Invalid value [This] found');
+		    "missing RIGHT_CURL at 'This'");
 
 
 

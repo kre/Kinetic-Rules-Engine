@@ -117,15 +117,19 @@ sub process_rules {
 
 	# if we sort @rids we change ruleset priority
 	foreach my $rid (@rids) {
-		$logger->debug(
-			"-------------------------------------------Schedule $rid");
-		Log::Log4perl::MDC->put( 'site', $rid );
-		my $schedule = mk_schedule( $req_info, $rid );
-		$js .=
-		  eval { process_schedule( $r, $schedule, $session, $eid, $req_info ); };
-		if ($@) {
-			Kynetx::Util::handle_error( "Ruleset $rid failed: ", $@ );
-		}
+	  $logger->debug(
+			 "-------------------------------------------Schedule $rid");
+	  Log::Log4perl::MDC->put( 'site', $rid );
+	  my $schedule = mk_schedule( $req_info, $rid );
+	  $js .=
+	    eval { process_schedule( $r, $schedule, $session, $eid, $req_info ); };
+	  if ($@) {
+	    Kynetx::Errors::raise_error($req_info,
+				      $session,
+				      'error',
+				      "Ruleset $rid failed: $@"
+				     );
+	  }
 	}
 
 	Kynetx::Response::respond( $r, $req_info, $session, $js, "Ruleset" );
@@ -172,6 +176,9 @@ sub process_schedule {
 			}
 
 			$req_info->{'rid'} = $rid;
+
+
+
 			#$rule_env = Kynetx::Environments::extend_rule_env("ruleset_name",$rid,$init_rule_env);
 			$init_rule_env->{'ruleset_name'} = $rid;
 			# we use this to modify the schedule on-the-fly
@@ -179,6 +186,9 @@ sub process_schedule {
 
 			#      $ruleset = $task->{'ruleset'};
 			$ruleset = Kynetx::Rules::get_rule_set($req_info);
+
+			# rid to raise errors to
+			$req_info->{'errors_to'} = $ruleset->{'errors'};
 
 			# store so we don't have to grab it again
 			stash_ruleset( $req_info, $ruleset );
@@ -190,10 +200,10 @@ sub process_schedule {
 				)
 			  )
 			{
-				turn_on_logging();
+				Kynetx::Util::turn_on_logging();
 			}
 			else {
-				turn_off_logging();
+				Kynetx::Util::turn_off_logging();
 			}
 
 			Log::Log4perl::MDC->put( 'site', $rid );
@@ -884,10 +894,10 @@ sub get_rule_set {
 		)
 	  )
 	{
-		turn_on_logging();
+		Kynetx::Util::turn_on_logging();
 	}
 	else {
-		turn_off_logging();
+		Kynetx::Util::turn_off_logging();
 	}
 
 	$ruleset->{'rules'} ||= [];

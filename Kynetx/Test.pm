@@ -107,6 +107,7 @@ sub gen_req_info {
     $req_info->{'pool'} = APR::Pool->new;
     $req_info->{'txn_id'} = '1234';
     $req_info->{'rid'} = $rid;
+    $req_info->{'rule_version'} = 'dev';
     $req_info->{'param_names'} = ['msg','caller'];
     $req_info->{'msg'} = 'Hello World!';
 

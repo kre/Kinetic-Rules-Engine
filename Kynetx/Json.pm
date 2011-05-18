@@ -41,7 +41,7 @@ use Data::Dumper;
 
 use Kynetx::Parser; # qw/:all/;
 use Kynetx::PrettyPrinter; # qw/:all/;
-use Kynetx::Util qw ( merror );
+use Kynetx::Errors ;
 use YAML::XS;
 
 use Exporter;
@@ -125,8 +125,15 @@ sub jsonToAst_w {
         $pstruct = JSON::XS::->new->convert_blessed(1)->pretty(1)->decode($json);
     };
     if ($@ && not defined $pstruct) {
-        $logger->warn("####Invalid JSON format => parse result as string --check debug for error details");
-        $logger->debug("####JSON conversion error: ",$@);
+      # Kynetx::Errors::raise_error($req_info, 'warn',
+      # 				  "[json] conversion error: $@",
+      # 				  {'rule_name' => $rule_name,
+      # 				   'genus' => 'data',
+      # 				   'species' => 'conversion failed'
+      # 				  }
+      # 				 );
+
+        $logger->warn("####JSON conversion error: ",$@);
         $logger->debug("Source: \n##################################################\n$json");
         return $json
     } else {
@@ -248,7 +255,7 @@ sub get_path {
         push(@trail,$element);
         $result = get_items($result,$element);
         if (! $result) {
-            return merror("Path element: " . join("->",@trail)." not found");
+            return Kynetx::Errors::merror("Path element: " . join("->",@trail)." not found");
         }
     }
     return $result;
@@ -261,7 +268,7 @@ sub get_items {
     unless (ref $regexp eq 'Regexp') {
         $regexp = qr($regexp);
         unless (ref $regexp eq 'Regexp') {
-            return (merror("Regexp or string required for get_items"));
+            return (Kynetx::Errors::merror("Regexp or string required for get_items"));
         }
     }
     if (ref $obj eq 'HASH') {

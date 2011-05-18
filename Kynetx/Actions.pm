@@ -938,9 +938,16 @@ sub build_one_action {
 		push( @{ $req_info->{'labels'} }, $action_expr->{'label'} || '' );
 	}
 	else {
-		if ( $directive eq \&noop ) {
-			$logger->warn( "[action] ", $action_name, " undefined" );			
-		}
+	  if ( $directive eq \&noop ) {
+	    Kynetx::Errors::raise_error($req_info, 'warn',
+				       "[action] $action_name undefined",
+				      {'rule_name' => $rule_name,
+				       'genus' => 'action',
+				       'species' => 'undefined'
+				      }
+				     );
+
+	  }
 	}
 
 	# now run directive functions to store those

@@ -49,10 +49,7 @@ use Encode::Alias;
 use MIME::Base64;
 
 use Kynetx::Environments qw/:all/;
-use Kynetx::Util qw/
-  mis_error
-  merror
-  /;
+use Kynetx::Errors;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -221,7 +218,7 @@ sub run_function {
     my $f = $funcs->{$function};
     if ( defined $f ) {
         my $result = $f->( $req_info, $function, $args );
-        if ( mis_error($result) ) {
+        if ( Kynetx::Errors::mis_error($result) ) {
             $logger->info("request email:$function failed");
             $logger->debug( "fail: ", $result->{'DEBUG'} || '' );
             $logger->trace( "fail detail: ", $result->{'TRACE'} || '' );
