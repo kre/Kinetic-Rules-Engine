@@ -105,6 +105,8 @@ sub pp_meta_block {
 
     $o .= pp_keys($mb->{'keys'}, $indent+$g_indent) if ($mb->{'keys'}) ;
 
+    $o .= pp_errorsto($mb->{'errors'}, $indent+$g_indent) if ($mb->{'errors'}) ;
+
     $o .= pp_use($mb->{'use'}, $indent+$g_indent) if ($mb->{'use'}) ;
 
     $o .= pp_configure($mb->{'configure'}, $indent+$g_indent) if ($mb->{'configure'}) ;
@@ -225,6 +227,23 @@ sub pp_val {
     return '"'.$node.'"';
   }
 }
+
+sub pp_errorsto {
+    my ($node, $indent) = @_;
+
+    my $beg = " "x$indent;
+    
+    my $o = $beg;
+
+    $o .= "errors to ";
+    $o .= $node->{'rid'};
+
+    $o .= " version " . pp_string($node->{'version'}) if $node->{'version'};
+  
+    return $o;
+}
+
+
 
 sub pp_provide {
   my ($node, $indent) = @_;

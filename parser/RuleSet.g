@@ -1778,6 +1778,15 @@ meta_block
 		meta_block_hash.put("authz",tmp);
 	   }
 	| LOGGING onoff=(ON|OFF) {  meta_block_hash.put("logging",$onoff.text); }
+	| must_be["errors"] must_be["to"] erid=VAR (VERSION ver=STRING)? 
+       {
+		HashMap tmp = new HashMap();
+		tmp.put("rid",$erid.text);
+        if ($ver.text != null) {        	
+        	tmp.put("version",strip_string($ver.text));
+        }
+        meta_block_hash.put("errors",tmp); 
+      }
 	| SHARABLE onoff=(ON|OFF) {  meta_block_hash.put("sharing",$onoff.text); }
 	| USE ( (rtype=(CSS|JAVASCRIPT) must_be["resource"] (url=STRING | nicename=VAR)    {
 		HashMap tmp = new HashMap();
