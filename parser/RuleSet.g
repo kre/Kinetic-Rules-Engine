@@ -5,7 +5,7 @@ options {
 //  memoize=true;
 //  language=C;
 //  ASTLabelType=pANTLR3_BASE_TREE;
-//
+
 }
 
 
@@ -439,7 +439,7 @@ post_statement returns[HashMap result]
 
 raise_statement returns[HashMap result]
 	:
-	must_be["raise"] must_be_one[sar("http","explicit")] must_be["event"]  evt=expr f=for_clause? m=modifier_clause? {
+	must_be["raise"] (HTTP|EXPLICIT) must_be["event"]  evt=expr f=for_clause? m=modifier_clause? {
 		HashMap tmp = new HashMap();
 		tmp.put("event",$evt.result);
 		tmp.put("domain","explicit");
@@ -830,7 +830,8 @@ when returns[HashMap result]
 @init {
 }
 	:
-	WHEN es=event_seq {
+	//WHEN es=event_seq {
+	WHEN es=event_block {
 		HashMap tmp = new HashMap();
 		tmp.put("foreach",new ArrayList());
 		tmp.put("event_expr",$es.result);
@@ -838,6 +839,208 @@ when returns[HashMap result]
 	}
 	;
 
+event_block returns[HashMap result]
+@init {
+	ArrayList temp_list = new ArrayList();
+}
+	:
+		 el=event_logic {
+			$result = el.result;
+		}
+		| es=event_sequence {
+			$result = es.result;
+		}
+		| ea=event_arity {
+			$result = ea.result;
+		}
+		| eg=event_group {
+			$result = eg.result;
+		}
+		| et=event_at {
+			$result = et.result;
+		}
+		| ez=event_primitive {
+			$result = ez.result;
+		}
+	;
+
+event_at returns[HashMap result]
+	:
+		AT_AT LEFT_PAREN dtime=expr RIGHT_PAREN {
+			HashMap the_result = new HashMap();
+			the_result.put("op","at");
+			the_result.put("type","at_event");
+			the_result.put("args",dtime.result);
+			$result = the_result;
+		}
+	;
+	
+event_arity returns[HashMap result]
+	:
+		OR_OR elist=event_list {
+			HashMap the_result = new HashMap();
+			the_result.put("op","or");
+			the_result.put("type","arity_event");
+			the_result.put("args",elist.result);
+			$result = the_result;
+		}
+		| AND_AND elist=event_list {
+			HashMap the_result = new HashMap();
+			the_result.put("op","and");
+			the_result.put("type","arity_event");
+			the_result.put("args",elist.result);
+			$result = the_result;		
+		}
+		| op=must_be_one[sar("before","after","then")] elist=event_list {
+			HashMap the_result = new HashMap();
+			the_result.put("op",$op.text);
+			the_result.put("type","arity_event");
+			the_result.put("args",elist.result);
+			$result = the_result;
+		}
+	;
+	
+event_group returns[HashMap result]
+@init {
+	ArrayList temp_list = new ArrayList();
+}
+	:
+		op=must_be_one[sar("any","repeat","count")] num=expr? elist=event_list agg=aggregates? {
+			HashMap the_result = new HashMap();
+			the_result.put("type","group_event");
+			the_result.put("op",$op.text);
+			the_result.put("args",elist.result);
+			the_result.put("op_num",$num.result);
+			the_result.put("agg_var", $agg.result);
+			$result = the_result;
+		}
+		
+	;
+
+aggregates returns[ArrayList result] 
+@init {
+	ArrayList aggvars = new ArrayList();
+}
+	:
+		AGGREGATORS LEFT_PAREN (v=(VAR){aggvars.add($v.text);} (COMMA v2=(VAR){aggvars.add($v2.text);} )*)?  RIGHT_PAREN {
+			$result = aggvars;
+		}
+	;
+	
+event_list returns[ArrayList result]
+@init {
+	ArrayList event_list = new ArrayList();
+}
+	:
+		LEFT_PAREN (el1=event_block{event_list.add(el1.result);} (COMMA el2=event_block {event_list.add(el2.result);})*)? RIGHT_PAREN {
+			$result = event_list;
+		}
+	;
+	
+event_sequence returns[HashMap result]
+@init {
+	ArrayList temp_list = new ArrayList();
+}
+	:
+		es=event_primitive seq=must_be_one[sar("then","before","after")]    eb=event_block
+		{
+			HashMap the_result = new HashMap();
+			the_result.put("type","complex_event");
+			the_result.put("op",$seq.text);
+			temp_list.add(es.result); // new
+			the_result.put("args",temp_list);
+			//((ArrayList)the_result.get("args2")).add(eor.result);
+			//the_result.put("args",new ArrayList());
+			((ArrayList)the_result.get("args")).add(eb.result);
+			$result = the_result;		
+		}	
+		| ebtwn=event_primitive (not=NOT)? BETWEEN el=event_list {
+			HashMap the_result = new HashMap();
+			the_result.put("type","complex_result");
+			if($not.text != null)
+				the_result.put("op","notbetween");
+			else
+				the_result.put("op","between");
+			the_result.put("first",el.result.get(0));
+			the_result.put("last",el.result.get(1));
+			the_result.put("mid",ebtwn.result);
+			$result = the_result;	
+		}
+		;
+
+event_btwn returns[HashMap result]
+	:
+		ep=event_prim ((not=NOT)?  BETWEEN LEFT_PAREN es1=event_seq COMMA es2=event_seq RIGHT_PAREN)? {
+
+
+			if($es1.text == null)
+			{
+				$result = ep.result;
+			}
+			else
+			{
+				HashMap the_result = new HashMap();
+				the_result.put("type","complex_event");
+				if($not.text != null)
+					the_result.put("op","notbetween");
+				else
+					the_result.put("op","between");
+				the_result.put("first",es1.result);
+				the_result.put("last",es2.result);
+				the_result.put("mid",ep.result);
+				$result = the_result;
+
+			}
+		}
+	;
+
+
+event_logic returns[HashMap result]
+@init {
+	ArrayList temp_list = new ArrayList();
+}
+	:
+		eo = event_or2 {
+			$result = eo.result;
+		}
+		| ea = event_and2 {
+			$result = ea.result;
+		}
+	;
+	
+event_or2 returns[HashMap result]
+@init {
+	ArrayList temp_list = new ArrayList();
+}
+	:
+		e1=event_primitive OR_OR e2=event_block{
+			HashMap the_result = new HashMap();
+			the_result.put("type","compound_event");
+			the_result.put("op","or");
+			temp_list.add(e1.result);
+			the_result.put("args",temp_list);
+			((ArrayList)the_result.get("args")).add(e2.result);
+			$result = the_result;
+		}
+	
+	;
+	
+event_and2 returns[HashMap result]
+@init {
+	ArrayList temp_list = new ArrayList();
+}
+	:
+		e1=event_primitive AND_AND e2=event_block {
+			HashMap the_result = new HashMap();
+			the_result.put("type","compound_event");
+			the_result.put("op","and");
+			temp_list.add(e1.result);
+			the_result.put("args",temp_list);
+			((ArrayList)the_result.get("args")).add(e2.result);
+			$result = the_result;
+		
+		}
+	;
 
 event_seq returns[HashMap result]
 @init {
@@ -890,7 +1093,7 @@ event_and returns[HashMap result]
 	ArrayList temp_list = new ArrayList();
 }
 	:
-		e=event_btwn {temp_list.add(e);} (AND_AND e1=event_btwn { temp_list.add(e1);} )* {
+		ezz=event_btwn {temp_list.add(ezz);} (AND_AND e1=event_btwn { temp_list.add(e1);} )* {
 
 			if(temp_list.size() == 1)
 			{
@@ -902,7 +1105,7 @@ event_and returns[HashMap result]
 				the_result.put("type","complex_event");
 				the_result.put("op","and");
 				the_result.put("args",new ArrayList());
-				((ArrayList)the_result.get("args")).add(e.result);
+				((ArrayList)the_result.get("args")).add(ezz.result);
 				HashMap last = the_result;
 
 
@@ -931,31 +1134,151 @@ event_and returns[HashMap result]
 		}
 	;
 
-event_btwn returns[HashMap result]
+
+event_primitive returns[HashMap result]
+@init {
+}
+
 	:
-		ep=event_prim ((not=NOT)?  BETWEEN LEFT_PAREN es1=event_seq COMMA es2=event_seq RIGHT_PAREN)? {
-
-
-			if($es1.text == null)
-			{
-				$result = ep.result;
-			}
+		dom=(WEB)? ei = event_intrinsic {			
+			HashMap tmp = ei.result;
+			if($dom.text != null)
+				tmp.put("domain",$dom.text);
 			else
-			{
-				HashMap the_result = new HashMap();
-				the_result.put("type","complex_event");
-				if($not.text != null)
-					the_result.put("op","notbetween");
-				else
-					the_result.put("op","between");
-				the_result.put("first",es1.result);
-				the_result.put("last",es2.result);
-				the_result.put("mid",ep.result);
-				$result = the_result;
-
-			}
+				tmp.put("domain","web");
+			$result = tmp;
+		}
+		| dom=(EXPLICIT|VAR)? ee = event_explicit {
+			HashMap tmp = ee.result;
+			if($dom.text != null)
+				tmp.put("domain",$dom.text);
+			else
+				tmp.put("domain","web");
+			$result = tmp;
+		}
+		//| et = event_temporal {
+		//	$result = et.result;
+		//}
+	;
+	
+event_explicit returns[HashMap result]
+@init {
+	ArrayList filters = new ArrayList();
+	ArrayList exps = new ArrayList();
+}
+	: op=VAR (ef = event_filter{filters.add(ef.result);}(SEMI ef2=event_filter{filters.add(ef2.result);})* SEMI?)  set=setting? {
+		HashMap tmp = new HashMap();
+		//tmp.put("domain", $dom.text);
+		tmp.put("type","prim_event");
+		tmp.put("vars",$set.result);
+		tmp.put("op",$op.text);
+		tmp.put("filters",filters);
+		$result = tmp;
+	}
+	| WHERE (ee = event_expression{exps.add(ee.result);}(SEMI ee2 = event_expression{exps.add(ee2.result);})*  SEMI?) set=setting? {
+		HashMap tmp = new HashMap();
+		//tmp.put("domain",$dom.text);
+		tmp.put("type","prim_event");
+		tmp.put("vars",$set.result);
+		tmp.put("op",$op.text);
+		tmp.put("exp",exps);
+		$result = tmp;
+	}
+	| op=VAR {
+		HashMap tmp = new HashMap();
+		//tmp.put("domain", $dom.text);
+		tmp.put("type","prim_event");
+		tmp.put("op",$op.text);
+		//tmp.put("element","");
+		$result = tmp;
+	} 
+	| ef = event_filter {
+		$result = ef.result;
+	}
+	
+	
+	;
+	
+event_intrinsic returns[HashMap result]
+@init {
+}
+	:
+		ew = event_web {
+			$result = ew.result;
+		}
+		| ep = event_pageview {
+			$result = ep.result;
 		}
 	;
+	
+//	: DOT ( o=OTHER_OPERATORS LEFT_PAREN (e=expr {rexprs.add(e.result); } (',' e1=expr {rexprs.add(e1.result); } )*)? RIGHT_PAREN	{
+event_web returns[HashMap result]
+	:
+		opt=must_be_one[sar("submit","click","dblclick","change","update")] elem=STRING on=on_expr?  set=setting? {
+			HashMap tmp = new HashMap();
+			//tmp.put("domain",$dom.text);
+			tmp.put("element",strip_string($elem.text));
+			tmp.put("type","prim_event");
+			tmp.put("vars",$set.result);
+			tmp.put("op",$opt.text);
+			tmp.put("on", $on.result);
+			$result = tmp;
+		} 
+	
+	;	
+event_pageview returns[HashMap result]
+@init {
+	ArrayList filters = new ArrayList();
+	ArrayList exps = new ArrayList();
+}
+	: op=PAGEVIEW WHERE (ee = event_expression{exps.add(ee.result);}(SEMI ee2 = event_expression{exps.add(ee2.result);})* SEMI?) set=setting? {
+		HashMap tmp = new HashMap();
+		//tmp.put("domain",$dom.text);
+		tmp.put("type","prim_event");
+		tmp.put("vars",$set.result);
+		tmp.put("op",$op.text);
+		tmp.put("exp",exps);
+		$result = tmp;
+	}
+	| op=PAGEVIEW (ef = event_filter{filters.add(ef.result);}(SEMI ef2=event_filter{filters.add(ef2.result);})* SEMI?)? set=setting? {
+		HashMap tmp = new HashMap();
+		//tmp.put("domain", $dom.text);
+		tmp.put("type","prim_event");
+		tmp.put("vars",$set.result);
+		tmp.put("op",$op.text);
+		tmp.put("filters",filters);
+		$result = tmp;
+	} 
+	| op=PAGEVIEW SEMI {
+		HashMap tmp = new HashMap();
+		tmp.put("type","prim_event");
+		tmp.put("op",$op.text);
+		tmp.put("filters","__any__");
+		$result = tmp;
+	}
+	;
+	
+event_filter returns[HashMap result]
+	: typ=VAR? (sfilt=STRING | rfilt=regex) {
+		HashMap tmp = new HashMap();
+		tmp.put("type",$typ.text);
+		if($sfilt.text != null)
+			tmp.put("pattern",strip_string($sfilt.text));
+		else 
+			tmp.put("pattern",$rfilt.result);
+		$result = tmp;
+	}
+	;
+
+event_expression returns[Object result]
+	:
+		ezzz=expr {
+			$result = $ezzz.result;
+		}
+	;
+	
+
+
 
 event_prim returns[HashMap result]
 @init {
@@ -975,18 +1298,6 @@ event_prim returns[HashMap result]
 		$result = tmp;
 
 	}
-	| web=WEB? PAGEVIEW (spat=STRING|rpat=regex) set=setting? {
-		HashMap tmp = new HashMap();
-		tmp.put("domain",$web.text);
-		if($spat.text != null)
-			tmp.put("pattern",strip_string($spat.text));
-		else
-			tmp.put("pattern",$rpat.result);
-		tmp.put("type","prim_event");
-		tmp.put("vars",$set.result);
-		tmp.put("op","pageview");
-		$result = tmp;
-	}
 	| '(' evt=event_seq ')' {
 		$result=$evt.result;
 	}
@@ -1004,25 +1315,50 @@ custom_event  returns[HashMap result]
 	ArrayList exps = new ArrayList();
 }
     :
-        dom=(VAR|WEB) oper=VAR (filter=event_filter{filters.add($filter.result);})* set=setting?  {
+        dom=(VAR|WEB) oper=VAR? (filter=event_filter{filters.add($filter.result);})* set=setting?  {
 		HashMap tmp = new HashMap();
 		tmp.put("domain",$dom.text);
 		tmp.put("type","prim_event");
 			tmp.put("vars",$set.result);
 		tmp.put("op",$oper.text);
-
+		tmp.put("match","event_pageview");
 		tmp.put("filters",filters);
 		$result = tmp;
 		}
-	| oper=(VAR |PAGEVIEW) (exp=event_exp{exps.add($exp.result);})* set=setting?  {
+	| dom=PAGEVIEW (filter =event_filter{filters.add($filter.result);})* set=setting? {
 		HashMap tmp = new HashMap();
-		tmp.put("domain", "web");
+		tmp.put("domain",$dom.text);
 		tmp.put("type","prim_event");
 		tmp.put("vars",$set.result);
-		tmp.put("op", $oper.text);
-		tmp.put("exp",exps);
+		tmp.put("op","filter_list");
+		tmp.put("match","mult_event_pageview");
+		tmp.put("filters",filters);
+		$result = tmp;	
+		}
+	| web=WEB? PAGEVIEW (spat=STRING|rpat=regex)? set=setting? {
+		HashMap tmp = new HashMap();
+		tmp.put("domain",$web.text);
+		if($spat.text != null)
+			tmp.put("pattern",strip_string($spat.text));
+		else
+			tmp.put("pattern",$rpat.result);
+		tmp.put("type","prim_event");
+		tmp.put("vars",$set.result);
+		tmp.put("op","pageview");
+		tmp.put("match","base_pageview");
 		$result = tmp;
 	}
+	| dom=PAGEVIEW (exp=expr{exps.add($exp.result);})* set=setting?  {
+		HashMap tmp = new HashMap();
+		tmp.put("domain",$dom.text);
+		tmp.put("type","prim_event");
+		tmp.put("vars",$set.result);
+		tmp.put("op","expression");
+		tmp.put("exp",exps);
+		tmp.put("xmatch","expression_pageview");
+		$result = tmp;
+	}
+
     ;
     
 event_exp returns[Object result]
@@ -1033,18 +1369,6 @@ event_exp returns[Object result]
 		//$result = tmp;
 		$result = $e.result;;
 		}
-	;
-
-event_filter returns[HashMap result]
-	: typ=VAR (sfilt=STRING | rfilt=regex) {
-		HashMap tmp = new HashMap();
-		tmp.put("type",$typ.text);
-		if($sfilt.text != null)
-			tmp.put("pattern",strip_string($sfilt.text));
-		else
-			tmp.put("pattern",$rfilt.result);
-		$result = tmp;
-	}
 	;
 
 on_expr returns[Object result] : ON
@@ -1902,8 +2226,43 @@ regex returns[HashMap result]
      ;
 
 REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
-        're#' ((ESC_SEQ)=>ESC_SEQ | '\\#' | ~('#')  )* '#' ('g'|'i'|'m')*
+        're#' ((ESC_SEQ)=>ESC_SEQ | '\\#' | ~('#')  )* '#' ('g'|'i'|'m')* |
+        '#'  ((ESC_SEQ)=>ESC_SEQ | '\\#' | ~('#')  )* '#' ('g'|'i'|'m')*
 	;
+
+
+ESC_SEQ
+    :   '\\' ('b'|'d'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\'|'.'|'w'|'s'|'?'|'('|')'|'-')
+    |   UNICODE_ESC
+    |   OCTAL_ESC
+    ;
+
+/*fragment
+ESC_SEQ
+    :   '\\' ('b'|'d'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\'|'?'|'.'|'w'|'s'|'('|')'|'-')
+    |   UNICODE_ESC
+    |   OCTAL_ESC
+    ;
+*/
+
+fragment
+OCTAL_ESC
+    :   '\\' ('0'..'3') ('0'..'7') ('0'..'7')
+    |   '\\' ('0'..'7') ('0'..'7')
+    |   '\\' ('0'..'7')
+    ;
+
+fragment
+UNICODE_ESC
+    :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+    ;
+
+fragment
+HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
+
+
+
+
 
 /*regex returns[String result]
 @init {
@@ -1947,8 +2306,16 @@ REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
 
  WHEN :'when';
  OR_OR : 'or';
+ WHERE
+ 	:	 'where';
+ EXPLICIT
+ 	: 'explicit';
+
 
  AND_AND : 'and';
+ 
+ AT_AT 
+ 	:	 'at';
 
  BETWEEN : 'between';
 
@@ -2023,38 +2390,6 @@ JS
 /*fragment
 EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
   */
-fragment
-HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
-
-
-
-ESC_SEQ
-    :   '\\' ('b'|'d'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\'|'.'|'w'|'s'|'?'|'('|')'|'-')
-    |   UNICODE_ESC
-    |   OCTAL_ESC
-    ;
-
-/*fragment
-ESC_SEQ
-    :   '\\' ('b'|'d'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\'|'?'|'.'|'w'|'s'|'('|')'|'-')
-    |   UNICODE_ESC
-    |   OCTAL_ESC
-    ;
-*/
-
-fragment
-OCTAL_ESC
-    :   '\\' ('0'..'3') ('0'..'7') ('0'..'7')
-    |   '\\' ('0'..'7') ('0'..'7')
-    |   '\\' ('0'..'7')
-    ;
-
-fragment
-UNICODE_ESC
-    :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
-    ;
-
-
 
 /*
 
@@ -2090,7 +2425,9 @@ OTHER_OPERATORS
       	| 'encode' | 'decode' 
       	| 'typeof' | 'isnull'
       	;
-
+AGGREGATORS
+	: 'max' | 'min' | 'sum' | 'avg' | 'push'
+	;
  TRUE :'true';
  FALSE :'false';
  CURRENT: 'current';
@@ -2143,7 +2480,8 @@ OFF 	: 'off';
  ALIAS
 	:'alias';
 
-
+HTTP
+	: 'http';
 
  EMIT
 	:	'emit'
