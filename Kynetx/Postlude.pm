@@ -58,6 +58,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 use Kynetx::Expressions qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Events;
+use Kynetx::Errors;
 use Kynetx::Parser qw/mk_expr_node/;
 use Kynetx::Log;
 use Kynetx::Persistence qw(:all);
@@ -140,6 +141,10 @@ sub eval_post_statement {
         return
           eval_log_statement( $expr,     $session, $req_info,
                               $rule_env, $rule_name );
+    } elsif ( $expr->{'type'} eq 'error' && $test ) {
+        return
+          eval_error_statement( $expr,     $session, $req_info,
+				$rule_env, $rule_name );
     } elsif ( $expr->{'type'} eq 'control' && $test ) {
         return
           eval_control_statement( $expr,     $session, $req_info,
@@ -256,6 +261,42 @@ sub eval_log_statement {
 
     # this puts the statement in the log data for when debug is on
     $logger->debug( $msg, $log_val );
+
+    # huh?    return $msg . $log_val;
+    return $js;
+}
+
+sub eval_error_statement {
+    my ( $expr, $session, $req_info, $rule_env, $rule_name ) = @_;
+
+    my $logger = get_logger();
+
+    #    $logger->debug("eval_log_statement ", Dumper($expr));
+
+    my $js = '';
+
+    my $msg_val =
+      Kynetx::Expressions::den_to_exp(
+                 Kynetx::Expressions::eval_expr(
+                     $expr->{'what'}, $rule_env, $rule_name, $req_info, $session
+                 )
+      );
+
+    Kynetx::Errors::raise_error($req_info, 
+				$expr->{'level'} || 'warn',
+				$msg_val,
+				{'rule_name' => $rule_name,
+				 'genus' => 'user',
+				 'species' => 'error'
+				}
+			       );
+
+
+
+
+
+    # this puts the statement in the log data for when debug is on
+    $logger->debug("Explicit user error", $msg_val );
 
     # huh?    return $msg . $log_val;
     return $js;

@@ -925,7 +925,7 @@ sub pp_post_expr {
     my $o = $beg;
     if($node->{'type'} eq 'persistent') {
 	$o.= pp_persistent_expr($node);
-    } elsif($node->{'type'} eq 'log') {
+    } elsif($node->{'type'} eq 'log' || $node->{'type'} eq 'error') {
 	$o.= pp_log_statement($node);
     } elsif($node->{'type'} eq 'control') {
 	$o.= pp_control_statement($node);
@@ -992,7 +992,9 @@ sub pp_log_statement {
     
     my $o = '';
 
-    $o = 'log ' . pp_expr($node->{'what'});
+    $o = $node->{'type'};
+    $o .= " " . $node->{'level'} . " " if(defined $node->{'level'});
+    $o .= pp_expr($node->{'what'});
 
     return $o;
 
