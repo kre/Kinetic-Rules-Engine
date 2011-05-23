@@ -742,6 +742,7 @@ sub eval_persistent {
 
     } else {
 
+      # this is where module varrefs end up...
 
       my $name = $expr->{'name'};
 

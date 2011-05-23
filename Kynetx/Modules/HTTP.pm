@@ -60,11 +60,11 @@ my $predicates = {
 };
 
 my $default_actions = {
-  'post' => {'js' => '',
+  'post' => {'js' => 'NO_JS', # this action does not emit JS, used in build_one_action
 	     'before' => \&do_post,
 	     'after' => []
 	     },
-  'get' => {'js' => '',
+  'get' => {'js' => 'NO_JS', # this action does not emit JS, used in build_one_action
 	     'before' => \&do_get,
 	     'after' => []
 	     },

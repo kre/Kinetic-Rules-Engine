@@ -37,10 +37,17 @@ use warnings;
 use Log::Log4perl qw(get_logger :levels);
 
 
+use JSON::XS;
+use Storable qw/dclone freeze/;
+use Digest::MD5 qw/md5_hex/;
+use Clone qw/clone/;
+
 use Kynetx::Parser;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+
+use constant ERROR_CALL_THRESHOLD => 5;
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -51,12 +58,32 @@ our %EXPORT_TAGS = (all => [
 			     ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
+use Data::Dumper;
+$Data::Dumper::Indent = 0;
+
 
 sub raise_error {
   my ($req_info, $level, $errormsg, 
       $options
      ) = @_;
   my $logger = get_logger();
+
+  my $sig = md5_hex(freeze($options) . $errormsg);
+
+  $req_info->{$sig} = 0
+    unless defined $req_info->{$sig};
+
+  $req_info->{$sig}++;
+
+#  $logger->debug("*** $sig has value ", $req_info->{$sig}, " ***");
+
+  if ($req_info->{$sig} > ERROR_CALL_THRESHOLD) {
+    $logger->error("Error threshold exceeded");
+    return;
+  }
+
+  
+
 
   
   $errormsg ||= "An unspecified error occured";
@@ -113,6 +140,7 @@ sub raise_error {
       );
 
   my $rid;
+
   if (defined $req_info->{'errorsto'}) {
     $rid = $req_info->{'errorsto'}->{'rid'};
     if (defined $req_info->{'errorsto'}->{'version'}) {
@@ -121,11 +149,12 @@ sub raise_error {
   } else {
      $rid = $req_info->{'rid'};
   }
+  $logger->debug("Sending errors to $rid");
 
   # create an expression to pass to eval_raise_statement
   my $expr = {'type' => 'raise',
 	      'domain' => 'system',
-	      'rid' => $rid,
+	      'ruleset' => {'val'=>$rid, 'type' => 'str'},
 	      'event' => Kynetx::Parser::mk_expr_node('str','error'),
 	      'modifiers' => $ms
 	     };
@@ -139,11 +168,6 @@ sub raise_error {
 						   $rule_env,
 						   $rule_name);
 
-  # special handling follows
-  if ($errormsg =~ m/mongodb/i) {
-    Kynetx::MongoDB::init();
-    $logger->error("Caught MongoDB error, reset connection");
-  }
 }
 
 sub merror {

@@ -179,7 +179,6 @@ sub process_schedule {
 
 
 
-			#$rule_env = Kynetx::Environments::extend_rule_env("ruleset_name",$rid,$init_rule_env);
 			$init_rule_env->{'ruleset_name'} = $rid;
 			# we use this to modify the schedule on-the-fly
 			$req_info->{'schedule'} = $schedule;
@@ -188,7 +187,7 @@ sub process_schedule {
 			$ruleset = Kynetx::Rules::get_rule_set($req_info);
 
 			# rid to raise errors to
-			$req_info->{'errors_to'} = $ruleset->{'errors'};
+			$req_info->{'errorsto'} = $ruleset->{'meta'}->{'errors'};
 
 			# store so we don't have to grab it again
 			stash_ruleset( $req_info, $ruleset );
@@ -424,7 +423,7 @@ sub eval_use_module {
 	$mversion ||= 'prod';
 	my $use_ruleset = Kynetx::Rules::get_rule_set( $req_info, 1, $name, $mversion );
 
-	$logger->trace("Using ", Dumper $use_ruleset);
+	$logger->trace("Using ", sub {Dumper $use_ruleset});
 
 	my $provided_array = $use_ruleset->{'meta'}->{'provide'}->{'names'} || [];
 
@@ -444,9 +443,18 @@ sub eval_use_module {
 	$logger->debug( "Module provides: ", join(",",@{$provided_array}) );
 
 	# create the module rule_env by extending an empty env with the config
+
+	my $init_mod_env = extend_rule_env(
+                              {'_callingRID' => $req_info->{'rid'},
+			       '_callingVersion' => $req_info->{'rule_version'},
+			       '_moduleRID' =>  $name,
+			       '_moduleVersion' => $mversion,
+			       '_inModule' =>  'true',
+			      }, empty_rule_env());
+
 	my $module_rule_env =
 	  set_module_configuration( $req_info, $rule_env, $session,
-		empty_rule_env(), $configuration, $modifiers || [] );
+		$init_mod_env, $configuration, $modifiers || [] );
 
 	# put any keys in the module rule_env *before* evaling the globals
 	if ( $use_ruleset->{'meta'}->{'keys'} ) {

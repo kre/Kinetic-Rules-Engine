@@ -189,7 +189,7 @@ sub process_event {
 
     my $ev = mk_event($req_info);
 
-    $logger->debug("Processing events for $rids with event ", sub {Dumper $ev});
+#    $logger->debug("Processing events for $rids with event ", sub {Dumper $ev});
 
     my $schedule = Kynetx::Scheduler->new();
 
@@ -198,13 +198,21 @@ sub process_event {
 	process_event_for_rid( $ev, $req_info, $session, $schedule, $rid );
       };
       if ($@) {
-	Kynetx::Errors::raise_error($req_info,
-				    'error',
-				    "Process event failed for rid ($rid): $@", 
-				    {'genus' => 'system',
-				     'species' => 'unknown'
-				    }
-				   );
+	# this might lead to circular errors if raising an error causes an error
+	# Kynetx::Errors::raise_error($req_info,
+	# 			    'error',
+	# 			    "Process event failed for rid ($rid): $@", 
+	# 			    {'genus' => 'system',
+	# 			     'species' => 'unknown'
+	# 			    }
+	# 			   );
+	$logger->error("Process event failed for rid ($rid): $@");
+	# special handling follows
+	if ($@ =~ m/mongodb/i) {
+	  Kynetx::MongoDB::init();
+	  $logger->error("Caught MongoDB error, reset connection");
+	}
+
       }
         
     }
@@ -216,14 +224,19 @@ sub process_event {
       Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid,$req_info );
     };
     if ($@) {
-      Kynetx::Errors::raise_error($req_info,
-				  'error',
-				  "Process event schedule failed: $@",
-				    {'genus' => 'system',
-				     'species' => 'unknnown'
-				    }
-
-				 );
+      # Kynetx::Errors::raise_error($req_info,
+      # 				  'error',
+      # 				  "Process event schedule failed: $@",
+      # 				    {'genus' => 'system',
+      # 				     'species' => 'unknnown'
+      # 				    }
+      # 				 );
+      $logger->error("Process event schedule failed: $@");
+      # special handling follows
+      if ($@ =~ m/mongodb/i) {
+	Kynetx::MongoDB::init();
+	$logger->error("Caught MongoDB error, reset connection");
+      }
     }
 
     Kynetx::Response::respond( $r, $req_info, $session, $js, "Event" );
@@ -386,7 +399,7 @@ sub compile_event_expr {
 
   my $logger = get_logger();
 
-  $logger->debug("Event expression: ", sub {Dumper $eexpr});
+#  $logger->debug("Event expression: ", sub {Dumper $eexpr});
 
   my $sm;
 

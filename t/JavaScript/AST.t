@@ -79,9 +79,16 @@ foreach my $rule (@{$ast->get_rules($rid)}) {
 
 #diag $ast->generate_js();
 
+my $lvjs = '';
+if((Kynetx::Configure::get_config('USE_KVERIFY') || '0') == '1'){
+  $lvjs = <<_JS_;
+KOBJ.logVerify = KOBJ.logVerify || function(t,a,c){};KOBJ.logVerify('txn_id_1', 'cs_test', '127.0.0.1');
+_JS_
+}
+
+
 my $js = <<_JS_;
-KOBJ.registerClosure('cs_test', function(\$K) { (function(){var mjs = 0;var gjs = 0;var rule = 0;var rule = 1;var rule = 2;}());
-KOBJ.logVerify = KOBJ.logVerify || function(t,a,c){};KOBJ.logVerify('txn_id_1', 'cs_test', '127.0.0.1'); }, '$eid');
+KOBJ.registerClosure('cs_test', function(\$K) { (function(){var mjs = 0;var gjs = 0;var rule = 0;var rule = 1;var rule = 2;}()); $lvjs }, '$eid');
 _JS_
 
 is_string_nows($ast->generate_js(), $js, "Generating some JS");
