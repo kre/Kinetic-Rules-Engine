@@ -157,7 +157,7 @@ sub process_event {
 
     my $ev = mk_event($req_info);
 
-    $logger->debug("Processing events for $rids with event ", sub {Dumper $ev});
+    #$logger->debug("Processing events for $rids with event ", sub {Dumper $ev});
 
     my $schedule = Kynetx::Scheduler->new();
 
@@ -201,9 +201,6 @@ sub process_event_for_rid {
 
   my $ruleset = Kynetx::Rules::get_rule_set($req_info, 1, $rid); # 1 for localparsing
 
-
-    #      $logger->debug("Ruleset: ", sub {Dumper $ruleset} );
-
     my $type = $ev->get_type();
     my $domain = $ev->get_domain();
 
@@ -240,20 +237,20 @@ sub process_event_for_rid {
 
     	$logger->trace("Rule: ", Kynetx::Json::astToJson($rule));
 
-    	$logger->trace("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
+    	$logger->debug("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
 	
     	next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
 
     	my $sm = $rule->{'event_sm'};
-    	$logger->trace("State machine: ", sub {Dumper($sm)});
+    	$logger->debug("State machine: ", sub {Dumper($sm)});
 
         # States stored in Mongo should be serialized
         my $current_state = get_persistent_var("ent", $rid, $session, $sm_current_name ) || $sm->get_initial();
 
         my $next_state = $sm->next_state( $current_state, $ev );
 
-#        $logger->debug("Current: ", $current_state );
-#        $logger->debug("Next: ", $next_state );
+        $logger->debug("Current: ", $current_state );
+        $logger->debug("Next: ", $next_state );
 
         # when there's a state change, store the event in the event list
         unless ( $current_state eq $next_state ) {
@@ -331,7 +328,7 @@ sub mk_event {
     } else {
         $ev->generic($req_info->{'domain'},$req_info->{'eventtype'});
     }
-
+	$logger->debug("Event: ", sub {Dumper($ev)});
     return $ev;
 }
 
@@ -340,15 +337,15 @@ sub compile_event_expr {
   my ($eexpr, $rule_lists, $rule) = @_;
 
   my $logger = get_logger();
-
   my $sm;
-
+	$logger->debug("-----------------------------COMPILE-----------------");
   if ( $eexpr->{'type'} eq 'prim_event' ) {
 
     # the rule list for each domain and op is stored in the parse tree
     # for optimizing rule selection
     my $domain = $eexpr->{'domain'} || 'web';
     my $op = $eexpr->{'op'};
+    $logger->debug("Rule: ", sub {Dumper($rule->{'name'})});
     $rule_lists->{$domain} = {} 
       unless $rule_lists->{$domain};
     $rule_lists->{$domain}->{$op} = {"rulelist" => [],
@@ -357,22 +354,46 @@ sub compile_event_expr {
       unless $rule_lists->{$domain}->{$op};
     # put the rule in the array unless it's already there
     unless (grep {$_ eq $rule} @{$rule_lists->{$domain}->{$op}->{"rulelist"}}) {
-#      $logger->debug("Putting $rule->{'name'} on the list");
+      $logger->debug("Putting $rule->{'name'} on the list");
       push(@{$rule_lists->{$domain}->{$op}->{"rulelist"}}, $rule) 
 	unless $rule->{'state'} eq 'inactive';
     }
 
     my $filter;
     if ( $op eq 'pageview' ) {
-      $sm = mk_pageview_prim( $eexpr->{'pattern'}, $eexpr->{'vars'} );
-
-
-      $filter = [{type => "url",
-		  pattern => $eexpr->{'pattern'} || ".*"
-		 }];
-      add_filter($filter, $rule_lists, $domain, $op, $rule);
-
-
+    	$logger->debug("Pageview expression: ", sub {Dumper($eexpr)});
+    	if ($eexpr->{'pattern'} || $eexpr->{'legacy'}) {
+    		$logger->debug("Old form pageview");
+	      $sm = mk_pageview_prim( $eexpr->{'pattern'}, $eexpr->{'vars'} );
+	      $filter = [{type => "url",
+			  pattern => $eexpr->{'pattern'} || ".*"
+			 }];
+	      add_filter($filter, $rule_lists, $domain, $op, $rule);    		
+    	} elsif (defined $eexpr->{'filters'}) {
+    		$logger->debug("Pageview filter request: ", sub {Dumper($eexpr->{'filters'})});
+    		my $num = @{$eexpr->{'filters'}};
+    		$logger->debug("Num filters: $num");
+    		#
+    		# To clean up.  
+    		# select when pageview #foop# is now a special case of
+    		# select when pageview url #foop#
+    		#
+    		if ($num == 0) {
+    			my $pattern = $eexpr->{'filters'}->[0]->{'pattern'};
+    			$sm = mk_pageview_prim($pattern,$eexpr->{'vars'});
+    			$filter = [{type => "url",
+			  		pattern => $pattern || ".*"
+    			}];
+	      		add_filter($filter, $rule_lists, $domain, $op, $rule);
+    		} else {
+    			$logger->debug("Generic primitive");
+    			$sm = mk_gen_prim($domain,$op, $eexpr->{'vars'},$eexpr->{'filters'});
+    			add_filter($eexpr->{'filters'}, $rule_lists, $domain, $op, $rule);    			
+    		}
+    		$logger->debug("Created: ", sub {Dumper($sm)});
+    	} else {
+    		$logger->warn("Unknown event expression format: ", sub {Dumper($eexpr)});
+    	}
     } elsif ($op eq 'submit'
 	     || $op eq 'click'
 	     || $op eq 'dblclick'
@@ -451,8 +472,8 @@ sub add_filter {
 
   my $filter_array = $rule_lists->{$domain}->{$op}->{"filters"};
 
-  # my $logger = get_logger();
-  # $logger->debug("Filters: ", sub {Dumper $filters});
+  my $logger = get_logger();
+  $logger->debug("Filters: ", sub {Dumper $filters});
 
   if (! defined $filters || scalar @{$filters} == 0) {
     $rule_lists->{$domain}->{$op}->{"filters"} = [ANY];

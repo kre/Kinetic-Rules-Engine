@@ -21,7 +21,7 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Events qw/:all/;
@@ -72,16 +72,20 @@ rule foo is active {
 _KRL_
 
 $my_req_info->{'caller'} = "http://www.windley.com/archives/2006/09/test.html";
-$ev = mk_event($my_req_info);
+#$ev = mk_event($my_req_info);
+#
+#$ast = Kynetx::Parser::parse_rule($krl);
+#$sm = compile_event_expr($ast->{'pagetype'}->{'event_expr'},{},$ast);
+#
+#$initial = $sm->get_initial();
+#$n1 = $sm->next_state($initial, $ev);
+#$logger->debug("Initial: ", sub {Dumper($initial)});
+#$logger->debug("Next state: ", sub {Dumper($n1)});
+#$logger->debug("sm: ", sub {Dumper($sm)});
+#ok($sm->is_final($n1), "ev leads to final state");
+#$test_count++;
 
-$ast = Kynetx::Parser::parse_rule($krl);
-$sm = compile_event_expr($ast->{'pagetype'}->{'event_expr'});
-
-$initial = $sm->get_initial();
-$n1 = $sm->next_state($initial, $ev);
-ok($sm->is_final($n1), "ev leads to final state");
-$test_count++;
-
+#die;
 #diag Dumper Kynetx::Rules::optimize_rule($ast);
 
 #diag Dumper astToJson($ast);

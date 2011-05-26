@@ -151,7 +151,8 @@ sub doer {
 		$req_info		
 	);
 	
-	$logger->debug("Final javascript: $js");
+	$logger->debug("Final javascript: $js");	
+	
 	return nows($js);
 }
 # test module configuration
