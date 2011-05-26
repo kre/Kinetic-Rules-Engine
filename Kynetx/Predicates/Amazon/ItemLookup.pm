@@ -45,7 +45,7 @@ use Data::Dumper;
 use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Configure qw(:all);
-use Kynetx::Util qw(:all);
+use Kynetx::Errors;
 use Kynetx::Predicates::Amazon::ItemSearch qw/get_search_index/;
 
 use Exporter;
@@ -107,7 +107,7 @@ sub build {
     $request->{'ItemId'} = get_item($args);
     my $idtype = get_item_idtype($args);
     $request->{'IdType'}=$idtype;
-    if (mis_error($idtype)) {
+    if (Kynetx::Errors::mis_error($idtype)) {
         return $idtype;
     };
     if ($idtype ne DEFAULT_IDTYPE) {
@@ -115,7 +115,7 @@ sub build {
         # SKU requires a merchant identifier
         if ($idtype eq IDTYPE_REQUIRES_MERCHANTID) {
             my $merch_id = get_merchantid($args);
-            if (mis_error($merch_id)) {
+            if (Kynetx::Errors::mis_error($merch_id)) {
                 merror($merch_id,"Merchant ID required for idtype: ".IDTYPE_REQUIRES_MERCHANTID,0);
                 return $merch_id;
             }

@@ -383,11 +383,44 @@ sub eval_module {
 	  $val = $val->{$args->[0]};
 	}
       } else {
-	$logger->warn("Keys for $function not found");
+	Kynetx::Errors::raise_error($req_info, 'warn',
+				    "[keys] for $function not found",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'module',
+				     'species' => 'function undefined'
+				    }
+				   );
+
 	$val = '';
       }
+    } elsif ( $source eq 'meta' ) {
+#      $logger->debug("Looking up $function in ", sub {Dumper $rule_env});
+      if ($function eq 'rid') {
+	$val = $req_info->{'rid'};
+      } elsif ($function eq 'version') {
+	$val = $req_info->{'rule_version'} || 'prod';
+      } elsif ($function eq 'callingRID') {
+	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || $req_info->{'rid'};
+      } elsif ($function eq 'callingVersion') {
+	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || $req_info->{'rule_version'};
+      } elsif ($function eq 'moduleRID') {
+	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || $req_info->{'rid'};
+      } elsif ($function eq 'moduleVersion') {
+	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || $req_info->{'rule_version'};
+      } elsif ($function eq 'inModule' ) {
+	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || 0;
+      } else {
+	$val = "No meta information for $function available";
+      }
+
     } else {
-        $logger->warn("Datasource for $source not found");
+	Kynetx::Errors::raise_error($req_info, 'warn',
+				    "[module] named $source not found",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'module',
+				     'species' => 'module undefined'
+				    }
+				   );
     }
 
     $logger->trace("Datasource $source:$function -> ", sub {Dumper($val)});

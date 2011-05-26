@@ -71,12 +71,9 @@ config_logging
 turn_on_logging
 turn_off_logging
 mk_url
-merror
-mis_error
 end_slash
 bloviate
 sns_publish
-handle_error
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -189,6 +186,8 @@ sub turn_off_logging {
     }
 }
 
+
+
 # takes a counter name and makes a uniform session var name from it
 sub mk_created_session_name {
     my $name = shift;
@@ -252,52 +251,6 @@ sub mk_url {
 
 
   return $base_url;
-}
-
-sub handle_error {
-	my ($errortext, $errormsg) = @_;
-	my $logger = get_logger();
-	$logger->error("$errortext $errormsg");
-	if ($errormsg =~ m/mongodb/i) {
-		Kynetx::MongoDB::init();
-		$logger->error("Caught MongoDB error, reset connection");
-	}
-}
-
-sub merror {
-    my ($e, $v, $private) = @_;
-    my $msg='';
-    my $tag;
-    if ($private) {
-        $tag = 'TRACE';
-    } else {
-        $tag = 'DEBUG';
-    }
-    if (ref $e eq 'HASH') {
-        # Existing error hash
-        $msg =  $v;
-    } else {
-        $msg = $e;
-        $e = {'_error_' => 1};
-        if ($v) {
-            $tag = 'TRACE';
-        } else {
-            $tag = 'DEBUG';
-        }
-
-    }
-    $e->{$tag} =  $msg . "\n" . ($e->{$tag} || '');
-
-    return $e;
-}
-
-sub mis_error {
-    my ($v) = @_;
-    if (ref $v eq 'HASH' and $v->{'_error_'}) {
-        return 1;
-    } else {
-        return 0;
-    }
 }
 
 sub end_slash {

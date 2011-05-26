@@ -627,6 +627,11 @@ sub build_composed_action {
 		
 	#$logger->debug("After Module Configuration: ",sub {Dumper($rule_env)});
 
+	my $srid = $req_info->{'rid'};
+	my $orid = Kynetx::Environments::lookup_rule_env("ruleset_name",$orig_env);
+	my $crid = Kynetx::Environments::lookup_rule_env("ruleset_name",$rule_env);
+
+
 	# decls are stored in a composable action
 	foreach my $decl (@$decls) {
 
@@ -637,9 +642,6 @@ sub build_composed_action {
 	  $js .= $d;
 	}
 
-	my $srid = $req_info->{'rid'};
-	my $orid = Kynetx::Environments::lookup_rule_env("ruleset_name",$orig_env);
-	my $crid = Kynetx::Environments::lookup_rule_env("ruleset_name",$rule_env);
 	my $rcount = $req_info->{"__recursion__"} || 0;
 	
 	if ($rcount > Kynetx::Expressions::recursion_threshold()) {
@@ -647,7 +649,7 @@ sub build_composed_action {
 		return "{ // Deep recursion exception
 			}";
 	}	
-	if ($srid eq $crid) {
+	if (defined $srid && defined $crid && $srid eq $crid) {
 		$rcount++;
 		$logger->trace("Rids are the same!-----------------------");
 		$req_info->{"__recursion__"} = $rcount;
@@ -916,31 +918,44 @@ sub build_one_action {
 	  &$before( $req_info, $rule_env, $session, $config, $mods, $arg_exp_vals,
 		$action->{'vars'} );
 	$logger->debug( "Action $action_name (before) returns js: ", $js ) if $js;
-	if ( defined $action_js ) {
 
-		# apply the action function
-		$js .= "(" . $action_js . "(" . $arg_str . "));\n";
+#	$logger->debug("Action JS: $action_js");
 
-		$logger->debug( "[action] ", $action_name, ' executing with args (',
+	# the $action_js needs to be 'NO_JS' to avoid creating JS action
+	if (defined $action_js 
+          && ($action_js ne 'NO_JS')
+	   ) {
+	    # apply the action function
+	    $js .= "(" . $action_js . "(" . $arg_str . "));\n";
+	    
+	    $logger->debug( "[action] ", $action_name, ' executing with args (',
 			$arg_str, ')' );
 
-		push( @{ $req_info->{'actions'} }, $action_name );
+	    push( @{ $req_info->{'actions'} }, $action_name );
 
-		# the after functions processes the JS as a chain and replaces it.
-		foreach my $a ( @{$after} ) {
-			$js = $a->(
-				$js, $req_info, $rule_env, $session, $config, $mods,
-				$action->{'vars'}
+	    # the after functions processes the JS as a chain and replaces it.
+	    foreach my $a ( @{$after} ) {
+	      $js = $a->(
+			 $js, $req_info, $rule_env, $session, $config, $mods,
+			 $action->{'vars'}
 			);
-		}
+	    }
 
-		push( @{ $req_info->{'tags'} }, ( $mods->{'tags'} || '' ) );
-		push( @{ $req_info->{'labels'} }, $action_expr->{'label'} || '' );
+	    push( @{ $req_info->{'tags'} }, ( $mods->{'tags'} || '' ) );
+	    push( @{ $req_info->{'labels'} }, $action_expr->{'label'} || '' );
 	}
-	else {
-		if ( $directive eq \&noop ) {
-			$logger->warn( "[action] ", $action_name, " undefined" );			
-		}
+
+	if ( $directive eq \&noop 
+	  && ! defined $action_js
+	   ) {
+	  Kynetx::Errors::raise_error($req_info, 'warn',
+				      "[action] $action_name undefined",
+				      {'rule_name' => $rule_name,
+				       'genus' => 'action',
+				       'species' => 'undefined'
+				      }
+				     );
+
 	}
 
 	# now run directive functions to store those

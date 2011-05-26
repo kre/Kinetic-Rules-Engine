@@ -3660,6 +3660,55 @@ is(lookup_module_env("a16x78", "floppy", $mod_rule_env), "six", "got six" );
 $test_count++;
 
 
+$krl =  << "_KRL_";
+ruleset foobar {
+  meta {
+    use module a16x78
+  }
+  global {
+    a = a16x78:calling_rid;
+    b = a16x78:calling_ver;
+    c = a16x78:my_rid;
+    d = a16x78:my_ver;
+  }
+}
+_KRL_
+
+
+$module_rs = Kynetx::Parser::parse_ruleset($krl);
+# diag Dumper $module_rs;
+$my_req_info->{'rid'} = 'foobar';
+$mod_rule_env = empty_rule_env();
+($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
+
+($js, $mod_rule_env) = 
+    eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
+#diag Dumper $mod_rule_env;
+
+
+is(lookup_rule_env("a", $mod_rule_env), "foobar", "a is foobar" );
+$test_count++;
+
+is(lookup_rule_env("b", $mod_rule_env), "prod", "b is prod" );
+$test_count++;
+
+is(lookup_rule_env("c", $mod_rule_env), "a16x78", "c is a16x78" );
+$test_count++;
+
+is(lookup_rule_env("d", $mod_rule_env), "prod", "d id prod" );
+$test_count++;
+
+
+is(lookup_module_env("a16x78", "a", $mod_rule_env), 5, "a is 5" );
+$test_count++;
+
+is(lookup_module_env("a16x78", "floppy", $mod_rule_env), "six", "got six" );
+$test_count++;
+
+
+
+
+
 # look up in module env even though the var isn't provided...
 sub poke_mod_env {
   my($name, $key, $env) = @_;

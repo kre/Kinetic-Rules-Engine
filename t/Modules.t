@@ -197,6 +197,33 @@ is($result,
    'page:env("caller")');
 $test_count++;
 
+
+$val = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
+					 $rule_env, 
+					 $session, 
+					 $rule_name, 
+					 'meta', 
+					 'rid', 
+					 [] 
+					));
+is($val,'cs_test',"Meta data for RID");
+$test_count++;
+
+$val = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
+					 $rule_env, 
+					 $session, 
+					 $rule_name, 
+					 'meta', 
+					 'version', 
+					 [] 
+					));
+is($val,'dev',"Meta data for ruleset version");
+$test_count++;
+
+
+
 #diag Dumper $rule_env;
 
 

@@ -117,15 +117,19 @@ sub process_rules {
 
 	# if we sort @rids we change ruleset priority
 	foreach my $rid (@rids) {
-		$logger->debug(
-			"-------------------------------------------Schedule $rid");
-		Log::Log4perl::MDC->put( 'site', $rid );
-		my $schedule = mk_schedule( $req_info, $rid );
-		$js .=
-		  eval { process_schedule( $r, $schedule, $session, $eid, $req_info ); };
-		if ($@) {
-			Kynetx::Util::handle_error( "Ruleset $rid failed: ", $@ );
-		}
+	  $logger->debug(
+			 "-------------------------------------------Schedule $rid");
+	  Log::Log4perl::MDC->put( 'site', $rid );
+	  my $schedule = mk_schedule( $req_info, $rid );
+	  $js .=
+	    eval { process_schedule( $r, $schedule, $session, $eid, $req_info ); };
+	  if ($@) {
+	    Kynetx::Errors::raise_error($req_info,
+				      $session,
+				      'error',
+				      "Ruleset $rid failed: $@"
+				     );
+	  }
 	}
 
 	Kynetx::Response::respond( $r, $req_info, $session, $js, "Ruleset" );
@@ -172,13 +176,18 @@ sub process_schedule {
 			}
 
 			$req_info->{'rid'} = $rid;
-			#$rule_env = Kynetx::Environments::extend_rule_env("ruleset_name",$rid,$init_rule_env);
+
+
+
 			$init_rule_env->{'ruleset_name'} = $rid;
 			# we use this to modify the schedule on-the-fly
 			$req_info->{'schedule'} = $schedule;
 
 			#      $ruleset = $task->{'ruleset'};
 			$ruleset = Kynetx::Rules::get_rule_set($req_info);
+
+			# rid to raise errors to
+			$req_info->{'errorsto'} = $ruleset->{'meta'}->{'errors'};
 
 			# store so we don't have to grab it again
 			stash_ruleset( $req_info, $ruleset );
@@ -190,10 +199,10 @@ sub process_schedule {
 				)
 			  )
 			{
-				turn_on_logging();
+				Kynetx::Util::turn_on_logging();
 			}
 			else {
-				turn_off_logging();
+				Kynetx::Util::turn_off_logging();
 			}
 
 			Log::Log4perl::MDC->put( 'site', $rid );
@@ -414,7 +423,7 @@ sub eval_use_module {
 	$mversion ||= 'prod';
 	my $use_ruleset = Kynetx::Rules::get_rule_set( $req_info, 1, $name, $mversion );
 
-	$logger->trace("Using ", Dumper $use_ruleset);
+	$logger->trace("Using ", sub {Dumper $use_ruleset});
 
 	my $provided_array = $use_ruleset->{'meta'}->{'provide'}->{'names'} || [];
 
@@ -434,9 +443,18 @@ sub eval_use_module {
 	$logger->debug( "Module provides: ", join(",",@{$provided_array}) );
 
 	# create the module rule_env by extending an empty env with the config
+
+	my $init_mod_env = extend_rule_env(
+                              {'_callingRID' => $req_info->{'rid'},
+			       '_callingVersion' => $req_info->{'rule_version'},
+			       '_moduleRID' =>  $name,
+			       '_moduleVersion' => $mversion,
+			       '_inModule' =>  'true',
+			      }, empty_rule_env());
+
 	my $module_rule_env =
 	  set_module_configuration( $req_info, $rule_env, $session,
-		empty_rule_env(), $configuration, $modifiers || [] );
+		$init_mod_env, $configuration, $modifiers || [] );
 
 	# put any keys in the module rule_env *before* evaling the globals
 	if ( $use_ruleset->{'meta'}->{'keys'} ) {
@@ -884,10 +902,10 @@ sub get_rule_set {
 		)
 	  )
 	{
-		turn_on_logging();
+		Kynetx::Util::turn_on_logging();
 	}
 	else {
-		turn_off_logging();
+		Kynetx::Util::turn_off_logging();
 	}
 
 	$ruleset->{'rules'} ||= [];

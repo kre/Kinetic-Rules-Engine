@@ -40,10 +40,7 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 
 use Kynetx::OAuth;
-use Kynetx::Util qw(
-  merror
-  mis_error
-);
+use Kynetx::Errors;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Configure;
 use Kynetx::Memcached qw(mset_cache);
@@ -225,7 +222,7 @@ sub authorize {
     my $logger  = get_logger();
     my $version = $req_info->{'rule_version'} || 'prod';
     my $scope   = get_scope($args);
-    if ( mis_error($scope) ) {
+    if ( Kynetx::Errors::mis_error($scope) ) {
         $logger->warn( "Authorize failure: ", $scope->{'DEBUG'} );
     }
     my $app_req = get_fb_app_info( $req_info, $rule_env, $session );
@@ -405,11 +402,11 @@ sub config_info {
             if ($obj) {
                 return $obj->{$target};
             } else {
-                return merror("Facebook object ($f) not found");
+                return Kynetx::Errors::merror("Facebook object ($f) not found");
             }
         }
     }
-    return merror("Invalid $function request");
+    return Kynetx::Errors::merror("Invalid $function request");
 
 }
 
@@ -439,7 +436,7 @@ sub build {
         }
         $url .= "/$fbid";
         if ( defined $c ) {
-            if ( mis_error($c) ) {
+            if ( Kynetx::Errors::mis_error($c) ) {
                 $logger->debug( $c->{'DEBUG'} );
                 $logger->trace( $c->{'TRACE'} );
             } else {
@@ -602,7 +599,7 @@ sub get_connection {
                     $logger->debug( "get connection, ",
                                     $connection, $type, " ",
                                     sub { Dumper($type_hash) } );
-                    return merror("$connection invalid for object $type");
+                    return Kynetx::Errors::merror("$connection invalid for object $type");
                 }
             } else {
                 $logger->warn("Invalid Facebook object ($type)");
@@ -741,7 +738,7 @@ sub eval_facebook {
     if ( defined $f ) {
         my $result =
           $f->( $req_info, $rule_env, $session, $rule_name, $function, $args );
-        if ( mis_error($result) ) {
+        if ( Kynetx::Errors::mis_error($result) ) {
             $logger->warn("Facebook request failed");
             $logger->debug( "fail: ", $result->{'DEBUG'} || '' );
             $logger->trace( "fail detail: ", $result->{'TRACE'} || '' );
@@ -798,7 +795,7 @@ sub eval_response {
     } else {
         my $not_success = facebook_error_message($resp);
         return
-          merror( $not_success,
+          Kynetx::Errors::merror( $not_success,
                 "Facebook responded with error: (" . $resp->status_line . ")" );
     }
 
@@ -808,11 +805,11 @@ sub facebook_error_message {
     my ($response) = @_;
     my $ast = eval { Kynetx::Json::jsonToAst( $response->content ) };
     if ($@) {
-        return merror(
+        return Kynetx::Errors::merror(
                       "Failure parsing Facebook error: " . $response->content );
     }
     if ( $ast->{'error'} ) {
-        return merror(
+        return Kynetx::Errors::merror(
                $ast->{'error'}->{'type'} . ":" . $ast->{'error'}->{'message'} );
     }
 }
@@ -879,7 +876,7 @@ sub get_scope {
     my $logger = get_logger();
     $logger->trace( "Get scope for request ", sub { Dumper($args) } );
     unless ( defined $fconfig->{'scope'} ) {
-        return merror("Facebook config file not initialized properly");
+        return Kynetx::Errors::merror("Facebook config file not initialized properly");
     }
     my $key = $args->[0];
     my @sarray;
@@ -900,14 +897,14 @@ sub get_scope {
     } elsif ( ref $key eq '' && defined $fconfig->{'scope'}->{$key} ) {
         return $key;
     } else {
-        return merror("No scope defined for: $key");
+        return Kynetx::Errors::merror("No scope defined for: $key");
     }
 
 }
 
 sub get_endpoints {
     unless ( defined $fconfig->{'urls'} ) {
-        return merror("Facebook config file not initialized properly");
+        return Kynetx::Errors::merror("Facebook config file not initialized properly");
     }
     return $fconfig->{'urls'};
 }

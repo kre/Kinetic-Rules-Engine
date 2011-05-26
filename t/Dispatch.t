@@ -42,10 +42,6 @@ use Cache::Memcached;
 
 use JSON::XS;
 
-# most Kyentx modules require this
-use Log::Log4perl qw(get_logger :levels);
-Log::Log4perl->easy_init($INFO);
-
 use Kynetx::Test qw/:all/;
 use Kynetx::Dispatch qw/:all/;
 use Kynetx::JavaScript qw/:all/;
@@ -54,9 +50,15 @@ use Kynetx::Memcached;
 use Kynetx::FakeReq;
 
 
+# most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
+
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
+
 
 # my $numtests = 18;
 # plan tests => $numtests;
@@ -87,8 +89,12 @@ is_string_nows(
     "Testing dispatch function with two RIDs");
 $test_count++;
 
+my $json = decode_json(Kynetx::Dispatch::extended_dispatch($my_req_info,"cs_test"));
+
+#diag Dumper $json;
+
 is_deeply(
-    decode_json(Kynetx::Dispatch::extended_dispatch($my_req_info,"cs_test")), 
+    $json, 
     {"cs_test" => {
        "domains" => ["www.google.com","www.yahoo.com","www.live.com"],
        "events" => {
@@ -98,13 +104,18 @@ is_deeply(
 			    {"pattern" => "/foo/bazz.html","type" => "url"},
 			    {"pattern" => "/fizzer/fuzzer.html","type" => "url"}
                            ]
-		    }
-		   }
+		    },
+	   "system" => {
+	     "error" => [{"pattern" => ".*", "type" => ".*"}
+                        ]
+		       }
+		   },
 		  }
     },
     "extended dispatch"
 );
 $test_count++;
+
 
 done_testing($test_count);
 1;

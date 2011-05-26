@@ -52,6 +52,7 @@ use Kynetx::Authz ();
 use Kynetx::Console ();
 use Kynetx::Datasets ();
 use Kynetx::JavaScript ();
+use Kynetx::Errors ();
 use Kynetx::Expressions ();
 use Kynetx::Json ();
 use Kynetx::Log ();

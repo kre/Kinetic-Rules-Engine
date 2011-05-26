@@ -1,6 +1,5 @@
-package Kynetx::Response;
-# file: Kynetx/Response.pm
-# file: Kynetx/Predicates/Referers.pm
+#!/usr/bin/perl -w
+
 #
 # Copyright 2007-2009, Kynetx Inc.  All rights reserved.
 #
@@ -30,65 +29,35 @@ package Kynetx::Response;
 # of merchantability, whether express, implied or statutory, fitness
 # for a particular purpose, title and non-infringement.
 #
-
+use lib qw(/web/lib/perl);
 use strict;
-use warnings;
+
+# grab the test data file names
+my @krl_files = @ARGV ? @ARGV : <data/fails/*.krlb>;
+
+
+use Test::More;
+plan tests => $#krl_files+1;
+use Test::LongString;
+use Data::Dumper;
+
+use Kynetx::Test qw/:all/;
+use Kynetx::Parser qw/:all/;
 
 use Log::Log4perl qw(get_logger :levels);
+Log::Log4perl->easy_init($INFO);
+Log::Log4perl->easy_init($DEBUG);
+my $logger = get_logger();
 
-
-use Exporter;
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
-
-our $VERSION     = 1.00;
-our @ISA         = qw(Exporter);
-
-# put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [
-qw(
-) ]);
-our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
-
-use Kynetx::Session qw/session_cleanup/;
-use Kynetx::Log;
-use Kynetx::Directives;
-
-
-sub respond {
-  my ($r, $req_info, $session, $js, $realm) = @_;
-
-  my $logger = get_logger();
-
-
-  # put this in the logging DB
-  Kynetx::Log::log_rule_fire($r,
-			     $req_info,
-			     $session
-			    );
-
-
-  # finish up
-  Kynetx::Session::session_cleanup($session,$req_info);
-
-  # return the JS load to the client
-  $logger->info("$realm processing finished");
-  $logger->debug("__FLUSH__");
-
-  $logger->debug("Called with ", $r->the_request);
-
-  # heartbeat string (let's people know we returned something)
-  my $heartbeat = "// KNS " . gmtime() . "\n";
-
-  # this is where we return the JS
-  if ($req_info->{'understands_javascript'}) {
-    $logger->debug("Returning javascript from evaluation");
-    print $heartbeat, $js;
-  } else {
-    $logger->debug("Returning directives from evaluation");
-
-    print $heartbeat, Kynetx::Directives::gen_directive_document($req_info);
-  }
-
+foreach my $f (@krl_files) {
+    my ($fl,$krl_text) = getkrl($f);
+    my $result = parse_ruleset($krl_text);
+    $logger->debug("Parsed: $f: $fl");
+    $logger->debug("Error: ", sub {Dumper($result)});
+    ok(defined ($result->{'error'}), "$f: $fl")
 }
 
+
 1;
+
+

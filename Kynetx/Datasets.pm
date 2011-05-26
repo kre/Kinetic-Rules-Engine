@@ -266,7 +266,15 @@ sub unmarshal {
     my $self   = shift;
     my $logger = get_logger();
     if ( !defined $self->sourcedata or $self->sourcedata eq '' ) {
-        $logger->warn("[Datasets] No source data loaded");
+      # Kynetx::Errors::raise_error($req_info, $session,'warn',
+      # 				  "[datasets] No source data loaded"
+      # 				  {'rule_name' => $rule_name,
+      # 				   'genus' => 'data',
+      # 				   'species' => 'source unavailable'
+      # 				  }
+      # 				 );
+
+      $logger->warn("[datasets] No source data loaded");
     }
     if ( defined $self->datatype ) {
         $logger->trace( "datatype: ", $self->datatype );

@@ -105,6 +105,8 @@ sub pp_meta_block {
 
     $o .= pp_keys($mb->{'keys'}, $indent+$g_indent) if ($mb->{'keys'}) ;
 
+    $o .= pp_errorsto($mb->{'errors'}, $indent+$g_indent) if ($mb->{'errors'}) ;
+
     $o .= pp_use($mb->{'use'}, $indent+$g_indent) if ($mb->{'use'}) ;
 
     $o .= pp_configure($mb->{'configure'}, $indent+$g_indent) if ($mb->{'configure'}) ;
@@ -226,6 +228,23 @@ sub pp_val {
   }
 }
 
+sub pp_errorsto {
+    my ($node, $indent) = @_;
+
+    my $beg = " "x$indent;
+    
+    my $o = $beg;
+
+    $o .= "errors to ";
+    $o .= $node->{'rid'};
+
+    $o .= " version " . pp_string($node->{'version'}) if $node->{'version'};
+  
+    return $o;
+}
+
+
+
 sub pp_provide {
   my ($node, $indent) = @_;
 
@@ -308,11 +327,18 @@ sub pp_dispatch {
 
     my $beg = " "x$indent;
 
-    my $o .= $beg . "domain " ;
-    $o .= '"'.$d->{'domain'}.'"';  
-    if(defined $d->{'ruleset_id'}) {
+    my $o = '';
+    if (defined $d->{'domain'}) {
+      $o .= $beg . "domain " ;
+      $o .= '"'.$d->{'domain'}.'"';  
+      if(defined $d->{'ruleset_id'}) {
 	$o .= " -> ";
 	$o .= '"'.$d->{'ruleset_id'}.'"';
+      }
+    } else {
+      $o .= $beg . "iframe " ;
+      $o .= '"'.$d->{'iframe'}.'"';  
+      
     }
     $o .= "\n";
 
@@ -899,7 +925,7 @@ sub pp_post_expr {
     my $o = $beg;
     if($node->{'type'} eq 'persistent') {
 	$o.= pp_persistent_expr($node);
-    } elsif($node->{'type'} eq 'log') {
+    } elsif($node->{'type'} eq 'log' || $node->{'type'} eq 'error') {
 	$o.= pp_log_statement($node);
     } elsif($node->{'type'} eq 'control') {
 	$o.= pp_control_statement($node);
@@ -966,7 +992,9 @@ sub pp_log_statement {
     
     my $o = '';
 
-    $o = 'log ' . pp_expr($node->{'what'});
+    $o = $node->{'type'};
+    $o .= " " . $node->{'level'} . " " if(defined $node->{'level'});
+    $o .= pp_expr($node->{'what'});
 
     return $o;
 

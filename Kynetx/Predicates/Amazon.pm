@@ -45,6 +45,7 @@ use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Util qw(:all);
+use Kynetx::Errors;
 use Kynetx::Configure qw/:all/;
 use Kynetx::JSONPath qw/:all/;
 use Kynetx::Predicates::Amazon::RequestSignatureHelper;
@@ -140,8 +141,8 @@ sub eval_amazon {
         return '';
     }
 
-    if (mis_error($built)) {
-        merror($built,"Unable to build Amazon request (".$function.")");
+    if (Kynetx::Errors::mis_error($built)) {
+        Kynetx::Errors::merror($built,"Unable to build Amazon request (".$function.")");
         $logger->warn("Poorly formed request: ", sub {Dumper($args)});
         $logger->debug("fail: ", $built->{'DEBUG'} || '');
         $logger->trace("fail detail: ", $built->{'TRACE'} || '');
@@ -176,8 +177,8 @@ sub request {
     my $content;
     my $logger = get_logger();
     my $endpoint = get_endpoint($locale);
-    if (mis_error($endpoint)) {
-        return merror($endpoint,"Can't build request with bad endpoint",1);
+    if (Kynetx::Errors::mis_error($endpoint)) {
+        return Kynetx::Errors::merror($endpoint,"Can't build request with bad endpoint",1);
     }
     my $memcached_key = get_request_key($request);
     $logger->trace("Secret: ", sub {Dumper($secret)});

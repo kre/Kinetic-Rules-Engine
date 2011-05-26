@@ -102,12 +102,20 @@ sub eval_pick {
     if($rands->[0]->{'type'} eq 'str') {
 	$pattern = $rands->[0]->{'val'}
     } else {
-	$logger->warn("WARNING: pattern argument to pick not a string");
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[pick] pattern argument to pick not a string",
+				  {'rule_name' => $rule_name,
+				   'genus' => 'operator',
+				   'species' => 'type mismatch'
+				  }
+				 );
+
+#	$logger->warn("WARNING: pattern argument to pick not a string");
     }
-    $logger->trace("pattern: ", $pattern);
+#    $logger->trace("pattern: ", $pattern);
 
     my $force_array = $rands->[1]->{'val'};
-    $logger->debug("2nd arg: ", $force_array);
+#    $logger->debug("2nd arg: ", $force_array);
 
 
     my $jp = Kynetx::JSONPath->new();
@@ -400,8 +408,15 @@ sub eval_join {
     $result = join($join_val, @{$v});
 
   } else {
-    $logger->warn("Not a string: ", $join_val)
-      unless $rands->[0]->{'type'} eq 'regexp';
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[join] not a string:  $join_val",
+				  {'rule_name' => $rule_name,
+				   'genus' => 'operator',
+				   'species' => 'type mismatch'
+				  }
+				 )
+#      $logger->warn("Not a string: ", $join_val)
+	  unless $rands->[0]->{'type'} eq 'regexp';
   }
 
   return Kynetx::Expressions::typed_value($result);
@@ -497,8 +512,14 @@ sub eval_replace {
 	    $v =~ s/\$$n/${items[$_]}/g ;
 	}
       } else {
-	$logger->warn("Not a regular expression: ", $rands->[0]->{'val'})
-	  unless $rands->[0]->{'type'} eq 'regexp';
+	Kynetx::Errors::raise_error($req_info, 'warn',
+				    "[replace] not a regexp: $rands->[0]->{'val'}",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   )
+	    unless $rands->[0]->{'type'} eq 'regexp';
       }
 
 
@@ -548,7 +569,13 @@ sub eval_match {
 #	$logger->debug("Match at ", pos($v));
 
       } else {
-	$logger->warn("Not a regular expression: ", $rands->[0]->{'val'})
+	Kynetx::Errors::raise_error($req_info, 'warn',
+				    "[replace] not a regexp: $rands->[0]->{'val'}",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   )
 	  unless $rands->[0]->{'type'} eq 'regexp';
       }
 
@@ -615,10 +642,16 @@ sub eval_extract {
 #        }
 #    }
       } else {
-    $logger->warn("Not a regular expression: ", $rands->[0]->{'val'})
-      unless $rands->[0]->{'type'} eq 'regexp';
+	Kynetx::Errors::raise_error($req_info, 'warn',
+				    "[extract] not a regexp: $rands->[0]->{'val'}",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   )
+	    unless $rands->[0]->{'type'} eq 'regexp';
       }
-    $logger->debug("Items: ", sub {Dumper(@items)});
+#    $logger->debug("Items: ", sub {Dumper(@items)});
 
       return Kynetx::Expressions::typed_value(\@items);
 }
@@ -641,7 +674,13 @@ sub eval_uc {
 #        $logger->debug("toUpper: ", $v);
         return Kynetx::Expressions::typed_value($v);
     } else {
-        $logger->warn("Not a string");
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[uc] argument not a string",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   )
     }
 }
 $funcs->{'uc'} = \&eval_uc;
@@ -662,7 +701,13 @@ sub eval_lc {
 #        $logger->debug("toLower: ", $v);
         return Kynetx::Expressions::typed_value($v);
     } else {
-        $logger->warn("Not a string");
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[lc] argument not a string",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   )
     }
 }
 $funcs->{'lc'} = \&eval_lc;
@@ -693,8 +738,14 @@ sub eval_split {
     @items = split($pattern,$v);
 
   } else {
-    $logger->warn("Not a regular expression: ", $rands->[0]->{'val'})
-      unless $rands->[0]->{'type'} eq 'regexp';
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[split] argument not a regexp",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   )
+	  unless $rands->[0]->{'type'} eq 'regexp';
   }
 
   return Kynetx::Expressions::typed_value(\@items);
@@ -1023,15 +1074,30 @@ sub hash_put {
 	                    $hash->{$rkey} = $val->{$rkey};
 	                }
 	            } else {
-	                $logger->warn("Only hashes may be added using put() operator");
-	                return $obj;
+
+		      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[put] only hashes may be added using put() operator",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   );
+
+		      return $obj;
 	            }
 	        }        	
         }
         $logger->trace("New hash: ", sub {Dumper($hash)});
         return Kynetx::Expressions::typed_value($hash);
     } else {
-        $logger->warn("put() operator not supported for objects of type: $type");
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[put] operator not supported for objects of type: $type",
+				  {'rule_name' => $rule_name,
+				   'genus' => 'operator',
+				   'species' => 'type mismatch'
+				  }
+				 );
+
         return $obj;
     }
 }
@@ -1063,7 +1129,14 @@ sub hash_delete {
         }
 		return Kynetx::Expressions::typed_value($hash);
     } else {
-        $logger->warn("delete() operator not supported for objects of type: $type");
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[delete] operator not supported for objects of type: $type",
+				  {'rule_name' => $rule_name,
+				   'genus' => 'operator',
+				   'species' => 'type mismatch'
+				  }
+				 );
+
         return $obj;
     }
 }
@@ -1099,7 +1172,14 @@ sub hash_keys {
 					}
 				}				
 			} else {
-				$logger->warn("Invalid operator argument to keys() ", sub {Dumper($path->{'type'})});
+			  Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[keys] invalid operator argument",
+				  {'rule_name' => $rule_name,
+				   'genus' => 'operator',
+				   'species' => 'type mismatch'
+				  }
+				 );
+
 			}
 		} else {
 			my @keys = keys %{$obj->{'val'}};
