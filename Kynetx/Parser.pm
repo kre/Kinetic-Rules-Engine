@@ -328,7 +328,7 @@ sub parse_action {
     $rule = remove_comments($rule);
 
     my $json = ($parser->action($rule));
-    $logger->debug("Action resp: ", $json);
+    $logger->trace("Action resp: ", $json);
 
     my $result = Kynetx::Json::jsonToAst_w($json);
     if (defined $result->{'error'}) {
@@ -336,7 +336,7 @@ sub parse_action {
        $logger->error("Can't parse action: $estring");
        return $result;
     } else {
-	$logger->debug("Parsed rules");
+	$logger->trace("Parsed rules");
     }
 
     return $result;

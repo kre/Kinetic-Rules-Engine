@@ -300,15 +300,15 @@ sub process_event_for_rid {
     	next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
 
     	my $sm = $rule->{'event_sm'};
-    	$logger->debug("State machine: ", sub {Dumper($sm)});
+    	$logger->trace("State machine: ", sub {Dumper($sm)});
 
         # States stored in Mongo should be serialized
         my $current_state = get_persistent_var("ent", $rid, $session, $sm_current_name ) || $sm->get_initial();
 
         my $next_state = $sm->next_state( $current_state, $ev );
 
-        $logger->debug("Current: ", $current_state );
-        $logger->debug("Next: ", $next_state );
+        $logger->trace("Current: ", $current_state );
+        $logger->trace("Next: ", $next_state );
 
         # when there's a state change, store the event in the event list
         unless ( $current_state eq $next_state ) {
@@ -386,7 +386,7 @@ sub mk_event {
     } else {
         $ev->generic($req_info->{'domain'},$req_info->{'eventtype'});
     }
-	$logger->debug("Event: ", sub {Dumper($ev)});
+	$logger->trace("Event: ", sub {Dumper($ev)});
     return $ev;
 }
 
@@ -403,7 +403,7 @@ sub compile_event_expr {
     # for optimizing rule selection
     my $domain = $eexpr->{'domain'} || 'web';
     my $op = $eexpr->{'op'};
-    $logger->debug("Rule: ", sub {Dumper($rule->{'name'})});
+    $logger->trace("Rule: ", sub {Dumper($rule->{'name'})});
     $rule_lists->{$domain} = {} 
       unless $rule_lists->{$domain};
     $rule_lists->{$domain}->{$op} = {"rulelist" => [],
@@ -531,7 +531,7 @@ sub add_filter {
   my $filter_array = $rule_lists->{$domain}->{$op}->{"filters"};
 
   my $logger = get_logger();
-  $logger->debug("Filters: ", sub {Dumper $filters});
+  $logger->trace("Filters: ", sub {Dumper $filters});
 
   if (! defined $filters || scalar @{$filters} == 0) {
     $rule_lists->{$domain}->{$op}->{"filters"} = [ANY];

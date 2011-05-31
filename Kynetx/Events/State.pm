@@ -364,13 +364,10 @@ sub next_state {
   $logger->debug("Starting state: ", $state);
 
   my $transitions = $self->get_transitions($state);
-  $logger->debug("Transistions: ", sub {Dumper($transitions)});
+  $logger->trace("Transistions: ", sub {Dumper($transitions)});
 
   my $next = $self->get_default_transition($state);
-  foreach my $t (@{ $transitions }) {
-    $logger->debug("Transition type: ",$t->{'type'}, " Event type: ", $event->get_type());
-    $logger->debug("This transition: ", sub {Dumper($t)});
-    
+  foreach my $t (@{ $transitions }) {    
     my ($match,$vals) = match($event, $t);
     $logger->trace("Trans vars ", sub { Dumper $t->{'vars'} });
     if ($match) {
@@ -390,8 +387,8 @@ sub match {
   my $tdomain = $transition->{'domain'};
   my $edomain = $event->get_domain();
   my $logger = get_logger();
-  $logger->debug("Looking for a ",sub {Dumper($ttype)});
-  $logger->debug("In event of : ",sub {Dumper($etype)});
+#  $logger->debug("Looking for a ",sub {Dumper($ttype)});
+#  $logger->debug("In event of : ",sub {Dumper($etype)});
 
   return 0 unless $event->isa($ttype, $tdomain);
 
@@ -462,7 +459,7 @@ sub pageview_eval {
   	my ($event, $t) = @_;
   	my $logger = get_logger();
 	my $filter = $t->{'test'};
-	$logger->debug("pageview eval: ", sub {Dumper($filter)});
+	$logger->trace("pageview eval: ", sub {Dumper($filter)});
 	if (ref $filter ne "ARRAY") {
 		# Make a filter expression from the old form pageview test
 		my $pattern = $t->{'test'};
@@ -599,7 +596,6 @@ sub gen_event_eval {
   my $delimeter = 'XQX';
   my $req_info = $event->get_req_info();
 
-  $logger->debug("Match transition: ", sub {Dumper $t});
 
   my $filters = $t->{'test'};
   my $op = $t->{'type'};
@@ -611,7 +607,7 @@ sub gen_event_eval {
   foreach my $filter (@{ $filters }) {  
   	my $filter_type= $filter->{'type'};
   	# Allow different defaults for diff event types
-  	$logger->debug("Req info: ", sub{Dumper($req_info)});
+  	$logger->trace("Req info: ", sub{Dumper($req_info)});
   	if ($op eq 'pageview') {
   		if ($filter_type eq 'default') {
   			$filter_type = 'url';  			
@@ -623,8 +619,6 @@ sub gen_event_eval {
     #$target = $req_info->{$filter_type};
     #$target = $event->{$filter_type};
     $pattern = $filter->{'pattern'};
-    # $logger->debug("-----------------------------------------------------");
-    $logger->debug("filter: ", sub {Dumper $filter});
     $logger->debug("Target: $target; Pattern: $pattern");
     my @this_captures;
     if(@this_captures = $target =~ /$pattern/) {
@@ -635,7 +629,7 @@ sub gen_event_eval {
       return (0, []);
     }
   }
-  $logger->debug("Final captures: ", sub {Dumper $captures});
+  $logger->trace("Final captures: ", sub {Dumper $captures});
   return (1, $captures);
 }
 

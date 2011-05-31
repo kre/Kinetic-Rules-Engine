@@ -2,7 +2,6 @@ grammar RuleSet;
 options {
   output=AST;
   backtrack=true;
-  //backtrack=true;
 //  memoize=true;
 //  language=C;
 //  ASTLabelType=pANTLR3_BASE_TREE;
@@ -440,7 +439,8 @@ post_statement returns[HashMap result]
 
 raise_statement returns[HashMap result]
 	:
-	must_be["raise"] must_be_one[sar("http","explicit")] must_be["event"]  evt=expr f=for_clause? m=modifier_clause? {
+	//must_be["raise"] ('http'|'explicit') must_be["event"]  evt=expr f=for_clause? m=modifier_clause? {
+	 rd=RAISE  (VAR) must_be["event"]  evt=expr f=for_clause? m=modifier_clause? {
 		HashMap tmp = new HashMap();
 		tmp.put("event",$evt.result);
 		tmp.put("domain","explicit");
@@ -454,9 +454,10 @@ raise_statement returns[HashMap result]
 
 log_statement returns[HashMap result]
 	:
-	must_be["log"]  e=expr {
+    typ = must_be_one[sar("log","error")] (lev = VAR)? e=expr {
 		HashMap tmp = new HashMap();
-		tmp.put("type","log");
+		tmp.put("type",$typ.text);
+        tmp.put("level", $lev.text);
 		tmp.put("what",$e.result);
 		$result = tmp;
 	}
@@ -1094,7 +1095,7 @@ event_and returns[HashMap result]
 	ArrayList temp_list = new ArrayList();
 }
 	:
-		ezz=event_btwn {temp_list.add(ezz);} (AND_AND e1=event_btwn { temp_list.add(e1);} )* {
+		e=event_btwn {temp_list.add(e);} (AND_AND e1=event_btwn { temp_list.add(e1);} )* {
 
 			if(temp_list.size() == 1)
 			{
@@ -1106,7 +1107,7 @@ event_and returns[HashMap result]
 				the_result.put("type","complex_event");
 				the_result.put("op","and");
 				the_result.put("args",new ArrayList());
-				((ArrayList)the_result.get("args")).add(ezz.result);
+				((ArrayList)the_result.get("args")).add(e.result);
 				HashMap last = the_result;
 
 
@@ -1150,12 +1151,10 @@ event_primitive returns[HashMap result]
 			$result = tmp;
 		}
 		//| dom=(EXPLICIT|VAR)? ee = event_explicit {
-		| dom=(must_be["explicit"]|VAR)? ee = event_explicit {
+		//| dom=(must_be_one[sar("explicit","system")]|VAR)? ee = event_explicit {
+		| dom=VAR ee = event_explicit {
 			HashMap tmp = ee.result;
-			if($dom.text != null)
-				tmp.put("domain",$dom.text);
-			else
-				tmp.put("domain","explicit");
+			tmp.put("domain",$dom.text);
 			$result = tmp;
 		}
 		//| et = event_temporal {
@@ -1336,7 +1335,7 @@ custom_event  returns[HashMap result]
 	ArrayList exps = new ArrayList();
 }
     :
-        dom=(VAR|WEB) oper=VAR? (filter=event_filter{filters.add($filter.result);})* set=setting?  {
+        dom=(VAR|WEB) oper=VAR (filter=event_filter{filters.add($filter.result);})* set=setting?  {
 		HashMap tmp = new HashMap();
 		tmp.put("domain",$dom.text);
 		tmp.put("type","prim_event");
@@ -2055,8 +2054,8 @@ cachable returns[Object what]
 
 emit_block  returns[String emit_value]
 	: EMIT ( h=HTML {$emit_value = strip_wrappers("<<",">>",$h.text);}
-		|h=STRING {$emit_value = strip_string($h.text);}
-		|h=JS {$emit_value = strip_wrappers("<|","|>",$h.text);}
+   	       | h=STRING {$emit_value = strip_string($h.text);}
+	       | h=JS {$emit_value = strip_wrappers("<|","|>",$h.text);}
 	)
 	;
 meta_block
@@ -2257,43 +2256,12 @@ regex returns[HashMap result]
             $result = tmp;
         }
      ;
+     
 
 REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
         're#' ((ESC_SEQ)=>ESC_SEQ | '\\#' | ~('#')  )* '#' ('g'|'i'|'m')* |
         '#'  ((ESC_SEQ)=>ESC_SEQ | '\\#' | ~('#')  )* '#' ('g'|'i'|'m')*
 	;
-
-
-ESC_SEQ
-    :   '\\' ('b'|'d'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\'|'.'|'w'|'s'|'?'|'('|')'|'-')
-    |   UNICODE_ESC
-    |   OCTAL_ESC
-    ;
-
-/*fragment
-ESC_SEQ
-    :   '\\' ('b'|'d'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\'|'?'|'.'|'w'|'s'|'('|')'|'-')
-    |   UNICODE_ESC
-    |   OCTAL_ESC
-    ;
-*/
-
-fragment
-OCTAL_ESC
-    :   '\\' ('0'..'3') ('0'..'7') ('0'..'7')
-    |   '\\' ('0'..'7') ('0'..'7')
-    |   '\\' ('0'..'7')
-    ;
-
-fragment
-UNICODE_ESC
-    :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
-    ;
-
-fragment
-HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
-
-
 
 
 
@@ -2310,8 +2278,26 @@ HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
      ;
 
 */
+
+// EDOM 
+// 	:	(EXPLICIT | SYSTEM);
+
+// RDOM 
+// 	:	( HTTP | EXPLICIT);
+ 	
+// fragment HTTP
+// 	:	 'http';
+ 	
+// fragment EXPLICIT 
+// 	:	'explicit';
+ 	
+// fragment SYSTEM 
+// 	:	'system';
+ 		
  IFRAME : 'iframe';
  DOMAIN : 'domain';
+ RAISE 
+ 	:	 'raise';
 
  ARROW_RIGHT
 	:	'=>';
@@ -2425,6 +2411,38 @@ JS
 /*fragment
 EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
   */
+fragment
+HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
+
+
+
+ESC_SEQ
+    :   '\\' ('b'|'d'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\'|'.'|'w'|'s'|'?'|'('|')'|'-')
+    |   UNICODE_ESC
+    |   OCTAL_ESC
+    ;
+
+/*fragment
+ESC_SEQ
+    :   '\\' ('b'|'d'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\'|'?'|'.'|'w'|'s'|'('|')'|'-')
+    |   UNICODE_ESC
+    |   OCTAL_ESC
+    ;
+*/
+
+fragment
+OCTAL_ESC
+    :   '\\' ('0'..'3') ('0'..'7') ('0'..'7')
+    |   '\\' ('0'..'7') ('0'..'7')
+    |   '\\' ('0'..'7')
+    ;
+
+fragment
+UNICODE_ESC
+    :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+    ;
+
+
 
 /*
 

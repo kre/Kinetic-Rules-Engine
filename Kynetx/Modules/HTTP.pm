@@ -190,19 +190,18 @@ sub mk_http_request {
       $req->header('content-type' => $headers->{'content-type'});
     } else {
       $content = join('&', map("$_=".uri_escape_utf8($params->{$_}), keys %{ $params }));
-      $logger->debug("Encoded content: $content");
       $req->header('content-type' => "application/x-www-form-urlencoded");
        
     }
 
-
+    $logger->debug("Encoded content: ", sub {Dumper($content)});
     $req->content($content);
     $req->header('content-length' => length($content));
 
   } elsif (uc($method) eq 'GET') {
     my $full_uri = Kynetx::Util::mk_url($uri,  $params);
     $req = new HTTP::Request 'GET', $full_uri;
-    $response = $ua->get($full_uri, $headers);
+    #$response = $ua->get($full_uri, $headers);
     $logger->debug("http:get (uri): ", $full_uri);
 
   } else {
@@ -210,7 +209,7 @@ sub mk_http_request {
     return '';
   }
 
-  $logger->trace("Headers ", Dumper $headers);
+#  $logger->debug("Headers ", Dumper $headers);
 
   foreach my $k (keys %{ $headers }) {
   	$logger->trace("HKey: $k", " => ",$headers->{$k});
@@ -220,11 +219,6 @@ sub mk_http_request {
   $logger->trace("Request ", Dumper $req);
 
   $response = $ua->request($req);
-
-  # $logger->debug("Vars ", sub { Dumper $vars });
-  # $logger->debug("Mods ", sub { Dumper $mods });
-  # $logger->debug("Config ", sub { Dumper $config });
-  # $logger->debug("Response ", sub { Dumper $response });
 
   return $response;
 }
@@ -267,6 +261,7 @@ sub run_function {
 #	  $logger->debug("Credentials: ", sub {Dumper($credentials)});
 #	  $logger->debug("Response Headers: ", sub {Dumper($rheaders)});
       my $response = mk_http_request('GET', $credentials, $uri, $params, $headers);
+      
       $resp = {'content' => $response->decoded_content() || '',
 	       'status_code' => $response->code() || '',
 	       'status_line' => $response->status_line() || '',

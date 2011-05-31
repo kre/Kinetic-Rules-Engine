@@ -580,12 +580,29 @@ sub pp_event_expr {
 
     if (!defined $node->{'domain'} || $node->{'domain'} eq 'web') {
       if ($node->{'op'} eq 'pageview') {
-	if (! defined $node->{'legacy'}) {
-	  $o .= $node->{'domain'}  if $node->{'domain'};
-	  $o .= 'pageview '
-	}
-	$o .= pp_string($node->{'pattern'});
-	$o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
+		my $fpat = "";
+		my $ftype = "";
+		my $op = 'pageview';
+#		if (! defined $node->{'legacy'}) {
+#		  $o .= $node->{'domain'}  if $node->{'domain'};
+#		  $o .= 'pageview '
+#		}
+		# New AST syntax for common filter
+		$o .= $node->{'domain'} if $node->{'domain'};
+		if (defined $node->{'filters'}) {
+			my $filters = $node->{'filters'};
+			foreach my $filter (@$filters) {
+				if ($filter->{'type'} ne 'default') {
+					$ftype = $filter->{'type'} . " ";
+				}
+				$fpat = pp_string($filter->{'pattern'}) . " ";
+				$o .= $op . " " . $ftype . $fpat;
+			}
+			$o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
+		} else {
+			$o .= pp_string($node->{'pattern'});
+			$o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};			
+		}
       } elsif ($node->{'op'} eq 'submit' ||
 	       $node->{'op'} eq 'change' ||
 	       $node->{'op'} eq 'update' ||

@@ -913,6 +913,7 @@ sub get_rule_set {
 	$logger->debug(
 		"Found " . @{ $ruleset->{'rules'} } . " rules for RID $rid" );
 
+	$logger->trace("Ruleset: ", sub {Dumper($ruleset)});
 	return $ruleset;
 
 }
@@ -984,7 +985,6 @@ sub optimize_rule {
 
 	my $logger = get_logger();
 	$logger->debug("Optimizing ", $rule->{'name'});
-	$logger->debug("Rule: ", sub {Dumper($rule)});
 
 	# fix up old syntax, if needed
 	if ( $rule->{'pagetype'}->{'pattern'} ) {
