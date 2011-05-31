@@ -151,7 +151,8 @@ sub doer {
 		$req_info		
 	);
 	
-	$logger->debug("Final javascript: $js");
+	#$logger->debug("Final javascript: $js");	
+	
 	return nows($js);
 }
 # test module configuration
@@ -251,8 +252,9 @@ $my_req_info->{'rid'} = 'postbar';
 $mod_rule_env = empty_rule_env();
 $result = doer($my_req_info, $krl, $empty_rule_env, $session);
 
-cmp_deeply($result,re(qr/rnd.:blob/),"defaction decl expressed correctly");
+cmp_deeply($result,re(qr/varstink=.yes./),"Post action emits no JS");
 $test_count++;
+
 
 $krl =  << "_KRL_";
 ruleset inline {
@@ -397,7 +399,7 @@ _KRL_
 $my_req_info->{'rid'} = 'send_directive_nulls';
 $mod_rule_env = empty_rule_env();
 $result = doer($my_req_info, $krl, $empty_rule_env, $session);
-cmp_deeply($result,re(qr/varfarb=null/),"inline defaction");
+cmp_deeply($result,re(qr/varfarb=null/),"Null value passed to send_directive");
 $test_count++;
 
 

@@ -1,0 +1,49 @@
+#!/usr/bin/perl -w
+#
+use lib qw(/web/lib/perl);
+use strict;
+
+# grab the test data file names
+my @krl_files = @ARGV ? @ARGV : </web/lib/perl/t/data/events/*.krl>;
+
+use Kynetx::Parser qw/:all/;
+use Data::Dumper;
+
+use Log::Log4perl qw(get_logger :levels);
+Log::Log4perl->easy_init($INFO);
+Log::Log4perl->easy_init($DEBUG);
+my $logger = get_logger();
+
+foreach my $f (@krl_files) {
+    my ($fl,$krl_text) = getkrl($f);
+
+	$logger->debug($f);
+    my $result = Kynetx::Parser::parse_ruleset($krl_text);
+    if ( defined $result->{'error'}) {
+    	$logger->info("Failed to parse: ($f)");
+    	$logger->debug("Error: ", sub {Dumper($result)});
+    	die;
+    } else {
+    	$logger->info("Parsed: $f");
+    }
+}
+
+sub getkrl {
+    my $filename = shift;
+
+    open(KRL, "< $filename") || die "Can't open file $filename: $!\n";
+    my $first_line = <KRL>;
+    local $/ = undef;
+    my $krl = <KRL>;
+    close KRL;
+    if ($first_line =~ m%^\s*//.*%) {
+	return ($first_line,$krl);
+    } else {
+	return ("No comment", $first_line . $krl);
+    }
+
+}
+
+1;
+
+

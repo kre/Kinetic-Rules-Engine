@@ -102,7 +102,7 @@ is_deeply(
              "pageview" => [{"pattern" => "/([^/]+)/bar.html","type" => "url"},
 			    {"pattern" => "/foo/bazz.html","type" => "url"},
 			    {"pattern" => "/foo/bazz.html","type" => "url"},
-			    {"pattern" => "/fizzer/fuzzer.html","type" => "url"}
+			    {"pattern" => "/fizzer/fuzzer.html","type" => "default"}
                            ]
 		    },
 	   "system" => {

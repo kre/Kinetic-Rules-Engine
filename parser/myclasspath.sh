@@ -1,1 +1,1 @@
-export CLASSPATH=`pwd`/lib/antlr-3.2.jar:`pwd`/output/classes:.
+export CLASSPATH=`pwd`/lib/antlr-3.3-complete.jar:`pwd`/output/classes:.
