@@ -2104,7 +2104,7 @@ EXTRACT
 
 OTHER_OPERATORS
 	:  'pick'|'length'|'as'|'head'|'tail'|'sort'
-      	|'filter'|'map'|'uc'|'lc' |'split' | 'join' | 'query'
+      	|'filter'|'map'|'uc'|'lc' |'split' | 'sprintf' | 'join' | 'query' 
       	| 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
       	| 'duplicates' | 'append' | 'put' | 'delete' | 'keys'
       	| 'encode' | 'decode' 

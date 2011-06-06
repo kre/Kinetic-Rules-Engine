@@ -35,7 +35,7 @@ use strict;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 use Test::More;
@@ -768,6 +768,24 @@ $x[$i] = {
 };
 $d[$i] = 0;
 $i++;
+
+
+$e[$i] = q#a.sprintf("<% d>")#;
+$x[$i] = {
+    'val' => '< 10>',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q#phone_num.sprintf("<%12s>")#;
+$x[$i] = {
+    'val' => '<  1234567890>',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
 
 
 #
