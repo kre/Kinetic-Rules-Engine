@@ -171,7 +171,7 @@ KOBJ.registerClosure('$rid', function(\$K) { $rjs }, '$eid');
 EOF
 
   }
-
+  $logger->trace("JS is: $js");
   return $js;
 
 }

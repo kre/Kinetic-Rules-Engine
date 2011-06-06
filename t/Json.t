@@ -42,7 +42,7 @@ use Test::LongString;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Parser qw/:all/;
@@ -61,8 +61,8 @@ foreach my $f (@krl_files) {
     my $back = decode("UTF-8",jsonToKrl($json));
     my $result = is_string_nows($back, remove_comments($krl), "$f: $fl");
     if (! $result){
-    	$logger->debug($back);
-    	$logger->debug($krl_text);    	
+    	$logger->debug("Original: ", $krl_text);    	
+    	$logger->debug("Composed: ",$back);
     	die;
     }
 }

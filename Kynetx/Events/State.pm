@@ -361,14 +361,13 @@ sub next_state {
   # reset if needed
   $state = $self->get_initial() unless defined $self->get_transitions($state);
 
-#  $logger->debug("Starting state: ", $state);
+  $logger->debug("Starting state: ", $state);
 
   my $transitions = $self->get_transitions($state);
   $logger->trace("Transistions: ", sub {Dumper($transitions)});
 
   my $next = $self->get_default_transition($state);
-  foreach my $t (@{ $transitions }) {
-    $logger->trace("Transition type: ",$t->{'type'}, " Event type: ", $event->get_type());
+  foreach my $t (@{ $transitions }) {    
     my ($match,$vals) = match($event, $t);
     $logger->trace("Trans vars ", sub { Dumper $t->{'vars'} });
     if ($match) {
@@ -388,8 +387,8 @@ sub match {
   my $tdomain = $transition->{'domain'};
   my $edomain = $event->get_domain();
   my $logger = get_logger();
-  $logger->trace("Looking for a ",sub {Dumper($ttype)});
-  $logger->trace("In event of : ",sub {Dumper($etype)});
+#  $logger->debug("Looking for a ",sub {Dumper($ttype)});
+#  $logger->debug("In event of : ",sub {Dumper($etype)});
 
   return 0 unless $event->isa($ttype, $tdomain);
 
@@ -417,7 +416,7 @@ sub mk_prim {
   my $s1 = Data::UUID->new->create_str();
   my $s2 = Data::UUID->new->create_str();
   my $logger = get_logger();
-  $logger->trace("Make primitive: ", sub {Dumper($test)});
+  $logger->debug("Make primitive: ", sub {Dumper($test)});
 
   $sm->mk_initial($s1);
   $sm->mk_final($s2);
@@ -454,23 +453,24 @@ sub mk_pageview_prim {
 		);
 }
 
+# simple pattern match against default target is now a special case of the 
+# gen_event_eval
 sub pageview_eval {
-  my ($event, $t) = @_;
+  	my ($event, $t) = @_;
+  	my $logger = get_logger();
+	my $filter = $t->{'test'};
+	$logger->trace("pageview eval: ", sub {Dumper($filter)});
+	if (ref $filter ne "ARRAY") {
+		# Make a filter expression from the old form pageview test
+		my $pattern = $t->{'test'};
+		my $type = 'url';
+		$t->{'test'} = [{
+			'pattern' => $pattern,
+			'type' => $type
+		}]
+	}
 
-  sub test {my $url = shift;
-	    my $pattern = shift;
-	    my $captures = [];
-	    my $logger = get_logger();
-	    $logger->trace("Url: $url; Pattern: $pattern");
-
-	    if(@{$captures} = $url =~ /$pattern/) {
-	      return (1, $captures);
-	    } else {
-	      return (0, $captures);
-	    }
-	  };
-
-  return test($event->url(), $t->{'test'});
+  	return gen_event_eval($event,$t);
 }
 $eval_funcs->{'pageview'} = \&pageview_eval;
 
@@ -596,20 +596,30 @@ sub gen_event_eval {
   my $delimeter = 'XQX';
   my $req_info = $event->get_req_info();
 
-  $logger->trace("Match transition: ", sub {Dumper $t});
 
   my $filters = $t->{'test'};
+  my $op = $t->{'type'};
 
   # initializing these to delimeter ensures we'll get a match if no
   # pattern and target
   my $pattern;
   my $target;
-  foreach my $filter (@{ $filters }) {
-    $target = $req_info->{$filter->{'type'}};
+  foreach my $filter (@{ $filters }) {  
+  	my $filter_type= $filter->{'type'};
+  	# Allow different defaults for diff event types
+  	$logger->trace("Req info: ", sub{Dumper($req_info)});
+  	if ($op eq 'pageview') {
+  		if ($filter_type eq 'default') {
+  			$filter_type = 'url';  			
+  		} 
+  		$target = $event->{$filter_type};  		
+  	} else {
+  		$target = $req_info->{$filter_type};
+  	}
+    #$target = $req_info->{$filter_type};
+    #$target = $event->{$filter_type};
     $pattern = $filter->{'pattern'};
-    # $logger->debug("-----------------------------------------------------");
-    # $logger->debug("filter: ", sub {Dumper $filter});
-    # $logger->debug("Target: $target; Pattern: $pattern");
+    $logger->debug("Target: $target; Pattern: $pattern");
     my @this_captures;
     if(@this_captures = $target =~ /$pattern/) {
 #      $logger->debug("Captures: ($1)", sub {Dumper @this_captures}); 
@@ -619,7 +629,7 @@ sub gen_event_eval {
       return (0, []);
     }
   }
-  $logger->debug("Final captures: ", sub {Dumper $captures});
+  $logger->trace("Final captures: ", sub {Dumper $captures});
   return (1, $captures);
 }
 
