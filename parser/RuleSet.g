@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 grammar RuleSet;
 options {
   output=AST;
@@ -2622,5 +2623,4 @@ INT :	' -'? '0'..'9'+
     |   ' -'? '.' ('0'..'9')*
 
     ;
-
 

@@ -262,6 +262,14 @@ KOBJ.proto = function() {
     return (("https:" == KOBJ.location('protocol')) ? "https://" : "http://")
 };
 
+KOBJ.proto_elevate = function(src){
+	if( KOBJ.location('protocol') == "https:" ) {
+		//if running on https, make sure the resource url is https also.
+		return "https://" + src.substr(src.indexOf(":") + 3, src.length);
+	}
+	return src;
+};
+
 //this method is overridden in sandboxed environments
 KOBJ.require = function(url, callback_params) {
     // This function is defined if we are in a browser plugin
@@ -290,7 +298,7 @@ KOBJ.require = function(url, callback_params) {
         r.src = url.substring(0, KOBJ.max_url_length());
         //  We need to change to the protcol of the location url so that we do not
         // get security errors.
-        r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 3, r.src.length);
+        r.src = KOBJ.proto_elevate(r.src);
         var body = document.getElementsByTagName("body")[0] ||
                 document.getElementsByTagName("frameset")[0];
         if (body == null) {
@@ -305,7 +313,7 @@ KOBJ.require = function(url, callback_params) {
         r.src = url.substring(0, KOBJ.max_url_length());
         //  We need to change to the protcol of the location url so that we do not
         // get security errors.
-        r.src = KOBJ.proto() + r.src.substr(r.src.indexOf(":") + 3, r.src.length);
+        r.src = KOBJ.proto_elevate(r.src);
         r.type = "text/javascript";
         r.onload = r.onreadystatechange = KOBJ.url_loaded_callback;
         var body = document.getElementsByTagName("body")[0] ||

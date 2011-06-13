@@ -752,6 +752,35 @@ sub eval_split {
 }
 $funcs->{'split'} = \&eval_split;
 
+sub eval_sprintf {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+    $logger->trace("obj: ", sub { Dumper($obj) });
+
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+#    $logger->trace("obj: ", sub { Dumper($rands) });
+
+    if($obj->{'type'} eq 'str' || $obj->{'type'} eq 'num') {
+        my $v = $obj->{'val'};
+	my $format = Kynetx::Expressions::den_to_exp($rands->[0]);
+	$logger->debug("Formatting $v with $format");
+        $v = sprintf($format,$v);
+        return Kynetx::Expressions::typed_value($v);
+    } else {
+      my $msg = defined $obj ? "object undefined" 
+                             : "object not a string or number";
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[sprintf] $msg",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   )
+    }
+}
+$funcs->{'sprintf'} = \&eval_sprintf;
 
 
 
