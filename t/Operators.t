@@ -78,9 +78,9 @@ my $session = Kynetx::Test::gen_session($r, $rid);
 
 my $turl = "http://www.htmldog.com/examples/tablelayout1.html";
 my $durl = "http://www.htmldog.com/examples/darwin.html";
-diag "Fetching test content from: $turl";
+#diag "Fetching test content from: $turl";
 my $content = Kynetx::Memcached::get_remote_data($turl,3600);
-diag "Fetching test content from: $durl";
+#diag "Fetching test content from: $durl";
 my $content2 = Kynetx::Memcached::get_remote_data($durl,3600);
 
 

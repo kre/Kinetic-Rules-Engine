@@ -40,7 +40,7 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Memcached qw/:all/;
@@ -48,7 +48,7 @@ use Kynetx::Configure;
 
 my $logger = get_logger();
 
-my $numtests = 8;
+my $numtests = 11;
 plan tests => $numtests;
 
 my $config_file = "/web/etc/kns_config.yml";
@@ -86,6 +86,24 @@ SKIP: {
 	$content,
 	'"text":',
 	'Get public timeline with HTTPS');
+	
+	$content = get_remote_data("http://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-demo.txt",10);
+	Kynetx::Memcached::mset_cache('test1', $content,1);
+	my $c1 = Kynetx::Util::str_out($content);
+	my $c2 = $memd->get("test1");
+	is($c2,$c1,'Stored in memcache as chars');
+	
+	my $c3 = Kynetx::Memcached::check_cache('test1');
+	is($c3,$content,"Perl byte representation");
+	
+	
+	contains_string(
+		$c1,
+		'⡌⠁⠧⠑ ⠼⠁⠒  ⡍⠜⠇⠑⠹⠰⠎ ⡣⠕⠌',
+		'Check get_remote_data for UTF-8 correctness'
+	);
+
+    $memd->delete("test1");
 
     my $rid = 'cs_test';
     ok(!Kynetx::Memcached::is_parsing($memd, $rid), "Not parsing now");

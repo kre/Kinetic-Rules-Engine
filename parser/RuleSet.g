@@ -1142,20 +1142,21 @@ event_primitive returns[HashMap result]
 }
 
 	:
-		dom=(WEB)? ei = event_intrinsic {			
+		dom=WEB ei = event_intrinsic {			
 			HashMap tmp = ei.result;
-			if($dom.text != null)
-				tmp.put("domain",$dom.text);
-			else
-				tmp.put("domain","web");
+			tmp.put("domain","web");
 			$result = tmp;
 		}
-		//| dom=(EXPLICIT|VAR)? ee = event_explicit {
-		//| dom=(must_be_one[sar("explicit","system")]|VAR)? ee = event_explicit {
 		| dom=VAR ee = event_explicit {
 			HashMap tmp = ee.result;
 			tmp.put("domain",$dom.text);
 			$result = tmp;
+		}
+		| ei2 = event_intrinsic {
+			HashMap tmp = ei2.result;
+			tmp.put("domain","web");
+			$result = tmp;
+			
 		}
 		//| et = event_temporal {
 		//	$result = et.result;
@@ -1217,7 +1218,26 @@ event_intrinsic returns[HashMap result]
 		| ep = event_pageview {
 			$result = ep.result;
 		}
+		| eg = event_gen {
+			$result = eg.result;
+		}
 	;
+
+
+event_gen returns[HashMap result] 
+@init{
+}
+	: op=VAR set=setting? {
+		HashMap tmp = new HashMap();
+		tmp.put("op",$op.text);
+		tmp.put("type","prim_event");
+		tmp.put("vars",$set.result);
+		$result = tmp;
+	}
+	
+	;
+
+	
 	
 //	: DOT ( o=OTHER_OPERATORS LEFT_PAREN (e=expr {rexprs.add(e.result); } (',' e1=expr {rexprs.add(e1.result); } )*)? RIGHT_PAREN	{
 event_web returns[HashMap result]
@@ -1232,6 +1252,7 @@ event_web returns[HashMap result]
 			tmp.put("on", $on.result);
 			$result = tmp;
 		} 
+		
 	
 	;	
 event_pageview returns[HashMap result]
@@ -2440,6 +2461,7 @@ OCTAL_ESC
 fragment
 UNICODE_ESC
     :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+    |   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT
     ;
 
 
