@@ -1230,13 +1230,24 @@ event_intrinsic returns[HashMap result]
 
 event_gen returns[HashMap result] 
 @init{
+	ArrayList filters = new ArrayList();
 }
-	: op=VAR set=setting? {
+	//: op=VAR set=setting? {
+	//	HashMap tmp = new HashMap();
+	//	tmp.put("op",$op.text);
+	//	tmp.put("type","prim_event");
+	//	tmp.put("vars",$set.result);
+	//	$result = tmp;
+	//}
+	: op=VAR (ef = event_filter{filters.add(ef.result);})? set=setting? {
 		HashMap tmp = new HashMap();
-		tmp.put("op",$op.text);
+		//tmp.put("domain", $dom.text);
 		tmp.put("type","prim_event");
 		tmp.put("vars",$set.result);
+		tmp.put("op",$op.text);
+		tmp.put("filters",filters);
 		$result = tmp;
+	
 	}
 	
 	;
