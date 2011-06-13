@@ -454,7 +454,10 @@ raise_statement returns[HashMap result]
 
 log_statement returns[HashMap result]
 	:
-    typ = must_be_one[sar("log","error")] (lev = VAR)? e=expr {
+    typ = must_be_one[sar("log","error")] 
+           (lev = must_be_one[sar("error", "warn", "info", "debug")] e=expr |
+            e = expr)
+    {
 		HashMap tmp = new HashMap();
 		tmp.put("type",$typ.text);
         tmp.put("level", $lev.text);
