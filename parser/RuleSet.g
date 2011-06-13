@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 grammar RuleSet;
 options {
   output=AST;
@@ -455,7 +454,11 @@ raise_statement returns[HashMap result]
 
 log_statement returns[HashMap result]
 	:
-    typ = must_be_one[sar("log","error")] (lev = VAR)? e=expr {
+    typ = must_be_one[sar("log","error")] 
+           (lev = must_be_one[sar("error", "warn", "info", "debug")] e=expr |
+            e = expr)
+    {
+
 		HashMap tmp = new HashMap();
 		tmp.put("type",$typ.text);
         tmp.put("level", $lev.text);
@@ -2495,7 +2498,7 @@ EXTRACT
 
 OTHER_OPERATORS
 	:  'pick'|'length'|'as'|'head'|'tail'|'sort'
-      	|'filter'|'map'|'uc'|'lc' |'split' | 'join' | 'query'
+      	|'filter'|'map'|'uc'|'lc' |'split' | 'sprintf' | 'join' | 'query'
       	| 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
       	| 'duplicates' | 'append' | 'put' | 'delete' | 'keys'
       	| 'encode' | 'decode' 
