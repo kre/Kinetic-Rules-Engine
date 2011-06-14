@@ -31,6 +31,7 @@ package Kynetx::Util;
 #
 use strict;
 use warnings;
+use utf8;
 use lib qw(/web/lib/perl);
 
 use Log::Log4perl qw(get_logger :levels);
@@ -41,6 +42,10 @@ use Kynetx::Memcached qw(:all);
 use URI::Escape ('uri_escape_utf8');
 use Sys::Hostname;
 use Data::Dumper;
+use Encode qw(
+	encode
+	decode
+);
 
 use Kynetx::Persistence::KEN;
 use Kynetx::Predicates::Amazon::SNS qw(:all);
@@ -74,6 +79,8 @@ mk_url
 end_slash
 bloviate
 sns_publish
+str_in
+str_out
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -418,6 +425,24 @@ sub get_arg_hash {
             }
         }
     }
+}
+
+# Decode an input string
+sub str_in {
+	my ($istr) = @_;
+	my $logger = get_logger();	
+	my $struct = ref $istr;
+	if ($struct ne "") {
+		$logger->debug("Attempt to UTF-8 encode non-string ($struct)")
+	}
+	return Encode::decode("UTF-8",$istr);
+	
+}
+
+# Ensure UTF-8 encodings for outbound communications
+sub str_out {
+	my ($ostr) = @_;
+	return Encode::encode("UTF-8",$ostr);
 }
 
 sub get_params {

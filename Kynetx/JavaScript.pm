@@ -470,7 +470,8 @@ sub mk_js_str {
 	$str = escape_js_str($str);
 	$str =~ s/#{([^}]*)}/'+$1+'/g;
 	$logger->trace("escaped: ",$str);
-	utf8::decode($str);
+	#utf8::decode($str);
+	$str = Kynetx::Util::str_out($str);
 	return "'". $str . "'";
     } else {
 	return "''";

@@ -67,6 +67,7 @@ use constant RESPONSE_GROUP => 'response_group.yml';
 use constant SEARCH_INDEX_FILE => 'searchindex.yml';
 use constant FACEBOOK => '/web/etc/Facebook/facebook.yml';
 use constant MODULES => '/web/etc/module_config.yml';
+use constant SELENIUM => 'runtime_test/config/perl_selenium.yml';
 
 our $config;
 
@@ -115,6 +116,9 @@ sub configure {
 
     # General Module Catchall
     $config->{'MODULES'} = read_config(MODULES);
+    
+    # Selenium tests
+    $config->{'SELENIUM'} = read_config($config->{'KOBJ_ROOT'} .'/' . SELENIUM);
 
 
     return 1;

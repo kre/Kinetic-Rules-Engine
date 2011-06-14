@@ -31,6 +31,7 @@ package Kynetx::Memcached;
 #
 use strict;
 use warnings;
+use utf8;
 
 # for memcache config values
 use lib qw(
@@ -41,6 +42,7 @@ use Log::Log4perl qw(get_logger :levels);
 #use LWP::Simple qw(get);
 use LWP::UserAgent;
 use Kynetx::Configure;
+use Kynetx::Util qw(str_in str_out);
 use Data::Dumper;
 
 use constant DEFAULT_MEMCACHED_PORT => '11211';
@@ -107,8 +109,13 @@ sub check_cache {
         $content = $memd->get($key);
     }
     if ($content) {
-        $logger->trace("-$parent- Using cached data for $key");
-        return $content;
+        #$logger->trace("-$parent- Using cached data for $key");
+        if (ref $content eq "") {
+        	return Kynetx::Util::str_in($content);
+        } else {
+        	return $content;
+        }
+        
     }
 }
 
@@ -122,7 +129,13 @@ sub mset_cache {
     my $parent = (caller(1))[3];
     if ( $memd ) {
         $logger->trace("- $parent - Caching $key for $expire seconds");
-        my $set = $memd->set($key,$content,$expire);
+        if (ref $content eq "") {
+        	my $safe = Kynetx::Util::str_out($content);
+        	$memd->set($key,$safe,$expire);
+        } else {
+        	$memd->set($key,$content,$expire);
+        }
+        
     }
 }
 
@@ -154,7 +167,7 @@ sub get_remote_data {
     if ($memd) {
         $content = check_cache($key) ;
 	if ($content) {
-	    $logger->trace("Using cached data for $url");
+	    $logger->debug("Using cached data for $url");
 	    return $content;
 	}
     }
@@ -164,9 +177,11 @@ sub get_remote_data {
 
     my $req = HTTP::Request->new(GET => $url);
     my $res = $ua->request($req);
+    $logger->trace("Result: ", sub {Dumper($res)});
 
     if($res->is_success) {
-	$content = $res->decoded_content;
+		my $raw = $res->content;
+		$content = Kynetx::Util::str_in($raw);
     } else {
 	$content = '';
 	$logger->debug("Error retrieving $url: " . $res->status_line . "\n");

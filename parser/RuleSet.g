@@ -458,6 +458,7 @@ log_statement returns[HashMap result]
            (lev = must_be_one[sar("error", "warn", "info", "debug")] e=expr |
             e = expr)
     {
+
 		HashMap tmp = new HashMap();
 		tmp.put("type",$typ.text);
         tmp.put("level", $lev.text);
@@ -1145,20 +1146,21 @@ event_primitive returns[HashMap result]
 }
 
 	:
-		dom=(WEB)? ei = event_intrinsic {			
+		dom=WEB ei = event_intrinsic {			
 			HashMap tmp = ei.result;
-			if($dom.text != null)
-				tmp.put("domain",$dom.text);
-			else
-				tmp.put("domain","web");
+			tmp.put("domain","web");
 			$result = tmp;
 		}
-		//| dom=(EXPLICIT|VAR)? ee = event_explicit {
-		//| dom=(must_be_one[sar("explicit","system")]|VAR)? ee = event_explicit {
 		| dom=VAR ee = event_explicit {
 			HashMap tmp = ee.result;
 			tmp.put("domain",$dom.text);
 			$result = tmp;
+		}
+		| ei2 = event_intrinsic {
+			HashMap tmp = ei2.result;
+			tmp.put("domain","web");
+			$result = tmp;
+			
 		}
 		//| et = event_temporal {
 		//	$result = et.result;
@@ -1220,7 +1222,37 @@ event_intrinsic returns[HashMap result]
 		| ep = event_pageview {
 			$result = ep.result;
 		}
+		| eg = event_gen {
+			$result = eg.result;
+		}
 	;
+
+
+event_gen returns[HashMap result] 
+@init{
+	ArrayList filters = new ArrayList();
+}
+	//: op=VAR set=setting? {
+	//	HashMap tmp = new HashMap();
+	//	tmp.put("op",$op.text);
+	//	tmp.put("type","prim_event");
+	//	tmp.put("vars",$set.result);
+	//	$result = tmp;
+	//}
+	: op=VAR (ef = event_filter{filters.add(ef.result);})? set=setting? {
+		HashMap tmp = new HashMap();
+		//tmp.put("domain", $dom.text);
+		tmp.put("type","prim_event");
+		tmp.put("vars",$set.result);
+		tmp.put("op",$op.text);
+		tmp.put("filters",filters);
+		$result = tmp;
+	
+	}
+	
+	;
+
+	
 	
 //	: DOT ( o=OTHER_OPERATORS LEFT_PAREN (e=expr {rexprs.add(e.result); } (',' e1=expr {rexprs.add(e1.result); } )*)? RIGHT_PAREN	{
 event_web returns[HashMap result]
@@ -1235,6 +1267,7 @@ event_web returns[HashMap result]
 			tmp.put("on", $on.result);
 			$result = tmp;
 		} 
+		
 	
 	;	
 event_pageview returns[HashMap result]
@@ -2443,6 +2476,7 @@ OCTAL_ESC
 fragment
 UNICODE_ESC
     :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+    |   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT
     ;
 
 
@@ -2475,7 +2509,7 @@ EXTRACT
 
 OTHER_OPERATORS
 	:  'pick'|'length'|'as'|'head'|'tail'|'sort'
-      	|'filter'|'map'|'uc'|'lc' |'split' |'sprintf' | 'join' | 'query'
+      	|'filter'|'map'|'uc'|'lc' |'split' | 'sprintf' | 'join' | 'query'
       	| 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
       	| 'duplicates' | 'append' | 'put' | 'delete' | 'keys'
       	| 'encode' | 'decode' 
@@ -2603,6 +2637,4 @@ INT :	' -'? '0'..'9'+
     |   ' -'? '.' ('0'..'9')*
 
     ;
-
-
 
