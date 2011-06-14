@@ -7,9 +7,11 @@ use strict;
 
 use lib qw(/web/lib/perl);
 
-
+# header
 print "Content-type: text/plain; charset=iso-8859-1;\n";
 print "Flipper: hello world!; \n\n";
+
+# body
 foreach my $var (sort(keys(%ENV))) {
     my $val = $ENV{$var};
     $val =~ s|\n|\\n|g;

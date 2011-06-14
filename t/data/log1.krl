@@ -7,6 +7,7 @@ ruleset 10 {
 
     fired {
       log ("year: " + year);
+      
     } else {
       log "nothing going on";
     }
