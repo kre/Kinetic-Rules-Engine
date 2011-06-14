@@ -416,7 +416,7 @@ sub mk_prim {
   my $s1 = Data::UUID->new->create_str();
   my $s2 = Data::UUID->new->create_str();
   my $logger = get_logger();
-  $logger->debug("Make primitive: ", sub {Dumper($test)});
+  $logger->trace("Make primitive: ", sub {Dumper($test)});
 
   $sm->mk_initial($s1);
   $sm->mk_final($s2);
