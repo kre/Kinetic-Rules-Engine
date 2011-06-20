@@ -448,7 +448,7 @@ sub compile_event_expr {
     			$sm = mk_gen_prim($domain,$op, $eexpr->{'vars'},$eexpr->{'filters'});
     			add_filter($eexpr->{'filters'}, $rule_lists, $domain, $op, $rule);    			
     		}
-    		$logger->debug("Created: ", sub {Dumper($sm)});
+#    		$logger->debug("Created: ", sub {Dumper($sm)});
     	} else {
     		$logger->warn("Unknown event expression format: ", sub {Dumper($eexpr)});
     	}
