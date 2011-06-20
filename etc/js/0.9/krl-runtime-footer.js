@@ -11,8 +11,9 @@ $KOBJ(document).ready(function() {
         KOBJ.add_config_and_run(KOBJ_config);
     }
     if (typeof(KOBJ_configs) != "undefined") {
-        KOBJ.add_app_configs(KOBJ_configs);
-        KOBJ.runit();
+		  KOBJ.add_configs_and_run(KOBJ_configs);
+        //KOBJ.add_app_configs(KOBJ_configs);
+        //KOBJ.runit();
         //    KOBJ.add_config_and_run(KOBJ_config);
     }
 

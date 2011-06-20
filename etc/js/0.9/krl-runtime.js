@@ -32,6 +32,17 @@ KOBJ.add_config_and_run = function(app_config) {
     });
 };
 
+KOBJ.add_configs_and_run = function (app_configs) {
+	/* if someone messed up and did not send us the right data just ignore the request */
+    if (typeof(app_configs) == "unknown") {
+        return;
+    }
+
+    $KOBJ.each(app_configs, function(index) {
+        KOBJ.add_config_and_run(app_configs[index]);
+    });
+};
+
 KOBJ.add_app_configs = function(app_configs) {
 
     /* if someone messed up and did not send us the right data just ignore the request */
