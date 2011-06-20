@@ -77,7 +77,247 @@ $config = mk_config_string(
 
 # http://epfactory.kynetx.com:3098/1/bookmarklet/aaa/dev?init_host=qa.kobj.net&eval_host=qa.kobj.net&callback_host=qa.kobj.net&contents=compiled&format=json&version=dev
 
+# most basic requests
+my $test_site = "http://httpbin.org";
+my $stest_site = "https://httpbin.org";
 #goto ENDY;
+$krl_src = <<_KRL_;
+// Everything but the URI should be ignored in an http delete
+http:patch("http://www.example.com") setting(r) 
+	with 
+		params = {"foon": 45}  and
+		headers = {
+			"Content-Type" : "text/plain"
+		} and
+		credentials = {
+			"netloc" : "httpbin.org:80",
+			"realm" : "Fake Realm",
+			"username" : "foosh",
+			"password" : "qwerty"
+			
+		} and
+		response_headers = ["Connection","Accept"]
+	  
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#diag Dumper $krl;
+
+
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
+$result = lookup_rule_env('r',$rule_env);
+ok($result->{'content'} eq '', "Content undefined");
+ok($result->{'status_code'} eq '302', "Status code Found(?)");
+$test_count += 2;
+
+#goto ENDY;
+
+
+
+$krl_src = <<_KRL_;
+// Everything but the URI should be ignored in an http delete
+http:delete("$test_site/delete") setting(r) 
+	with 
+		params = {"foon": 45}  and
+		headers = {
+			"Content-Type" : "text/plain"
+		} and
+		credentials = {
+			"netloc" : "httpbin.org:80",
+			"realm" : "Fake Realm",
+			"username" : "foosh",
+			"password" : "qwerty"
+			
+		} and
+		response_headers = ["Connection","Accept"]
+	  
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#diag Dumper $krl;
+
+
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
+$result = lookup_rule_env('r',$rule_env);
+ok($result->{'content'} =~ m/data\": \"\"/, "Content undefined");
+ok($result->{'status_code'} eq '200', "Status code defined");
+$test_count += 2;
+
+#goto ENDY;
+
+
+$krl_src = <<_KRL_;
+http:put("$test_site/put") setting(r) 
+	with 
+		params = {"foon": 45}  and
+		headers = {
+			"Content-Type" : "text/plain"
+		} and
+		credentials = {
+			"netloc" : "httpbin.org:80",
+			"realm" : "Fake Realm",
+			"username" : "foosh",
+			"password" : "qwerty"
+			
+		} and
+		response_headers = ["Connection","Accept"]
+	  
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#diag Dumper $krl;
+
+
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
+$result = lookup_rule_env('r',$rule_env);
+ok(int($result->{'content_length'}) >= 449, "Content length defined");
+ok($result->{'status_code'} eq '200', "Status code defined");
+ok($result->{'content'} =~ m/data\": \"foon=45/, "Text/Plain comes back as data");
+$test_count += 3;
+
+#goto ENDY;
+
+
+$krl_src = <<_KRL_;
+http:put("$test_site/put") setting(r) 
+	with 
+		params = {"foon": 45}  and
+		headers = {
+			"Accept" : "text/plain",
+			"Cache-Control" : "no-cache"
+		} and
+		credentials = {
+			"netloc" : "httpbin.org:80",
+			"realm" : "Fake Realm",
+			"username" : "foosh",
+			"password" : "qwerty"
+			
+		} and
+		response_headers = ["Connection","Accept"]
+	  
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#diag Dumper $krl;
+
+
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
+$result = lookup_rule_env('r',$rule_env);
+ok(int($result->{'content_length'}) >= 555, "Content length defined");
+ok($result->{'status_code'} eq '200', "Status code defined");
+ok(defined $result->{'content'}, "Default Form encoding comes back as form");
+$test_count += 3;
+
+#goto ENDY;
+
+
+$krl_src = <<_KRL_;
+http:head("$test_site/get") setting(r) 
+	with 
+		params = {"foon": 45}  and
+		headers = {
+			"Accept" : "text/plain",
+			"Cache-Control" : "no-cache"
+		} and
+		credentials = {
+			"netloc" : "httpbin.org:80",
+			"realm" : "Fake Realm",
+			"username" : "foosh",
+			"password" : "qwerty"
+			
+		} and
+		response_headers = ["Connection","Accept"]
+	  
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#diag Dumper $krl;
+
+
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
+$result = lookup_rule_env('r',$rule_env);
+ok($result->{'content_length'} >= 480, "Content length defined");
+ok($result->{'status_code'} eq '200', "Status code defined");
+ok($result->{'content'} eq '', "No content back from HEAD request");
+$test_count += 3;
+
+#goto ENDY;
+
+
+
+$krl_src = <<_KRL_;
+http:get("$test_site/get") setting(r) 
+	with 
+		params = {"foon": 45}  and
+		headers = {
+			"Accept" : "text/plain",
+			"Cache-Control" : "no-cache"
+		} and
+		credentials = {
+			"netloc" : "httpbin.org:80",
+			"realm" : "Fake Realm",
+			"username" : "foosh",
+			"password" : "qwerty"
+			
+		} and
+		response_headers = ["Connection","Accept"]
+	  
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#diag Dumper $krl;
+
+
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
+$result = lookup_rule_env('r',$rule_env);
+ok($result->{'content_length'} >= 480, "Content length defined");
+ok($result->{'status_code'} eq '200', "Status code defined");
+ok($result->{'content'} =~ m/Cache-Control\": \"no-cache/, "Content back from httpbin includes request headers");
+$test_count += 3;
+
+
 
 # set variable and raise event
 $krl_src = <<_KRL_;
@@ -445,6 +685,212 @@ is($v, "r", "Get right lhs");
 like($result->{'content'}, qr/CS Test 1/, "Correct ruleset received");
 like($result->{'x-runtime'}, qr/0\.0\d+/, "x-runtime is there");
 $test_count += 3;
+
+$krl_src = <<_KRL_;
+r = http:post("$test_site/post",
+	       {
+			"credentials" : {
+				"netloc" : "httpbin.org:80",
+				"realm" : "Fake Realm",
+				"username" : "qwerty",
+				"password" : "vorpal"	
+			},
+			"params" : {"ffoosh": "Flavor enhancer"},
+			"headers" : {"Accept" : "text/plain"},
+			"response_headers" : ["Connection","Accept"]	       	
+	       });
+_KRL_
+
+$krl = Kynetx::Parser::parse_decl($krl_src);
+
+#diag(Dumper($krl));
+
+# start with a fresh $req_info and $rule_env
+$my_req_info = Kynetx::Test::gen_req_info($rid);
+$rule_env = Kynetx::Test::gen_rule_env();
+
+($v,$result) = Kynetx::Expressions::eval_decl(
+    $my_req_info,
+    $rule_env,
+    $rule_name,
+    $session,
+    $krl
+    );
+
+	
+#diag($krl->{'rhs'}->{'predicate'}  . "($v) --> " . Dumper $result);
+#$logger->debug("Content: ", sub {Dumper($result->{'content'})});
+
+is($v, "r", "Get right lhs");
+ok(defined $result->{'content_length'}, "Content length defined");
+ok(defined $result->{'status_code'}, "Status code defined");
+ok($result->{'content'} =~ m/ffoosh/, "Content defined");
+$test_count += 4;
+
+$krl_src = <<_KRL_;
+r = http:put("$test_site/put",
+	       {
+			"credentials" : {
+				"netloc" : "httpbin.org:80",
+				"realm" : "Fake Realm",
+				"username" : "qwerty",
+				"password" : "vorpal"	
+			},
+			"params" : {"ffoosh": "Flavor enhancer"},
+			"headers" : {"Accept" : "text/plain"},
+			"response_headers" : ["Connection","Accept"]	       	
+	       });
+_KRL_
+
+$krl = Kynetx::Parser::parse_decl($krl_src);
+
+#diag(Dumper($krl));
+
+# start with a fresh $req_info and $rule_env
+$my_req_info = Kynetx::Test::gen_req_info($rid);
+$rule_env = Kynetx::Test::gen_rule_env();
+
+($v,$result) = Kynetx::Expressions::eval_decl(
+    $my_req_info,
+    $rule_env,
+    $rule_name,
+    $session,
+    $krl
+    );
+
+	
+#diag($krl->{'rhs'}->{'predicate'}  . "($v) --> " . Dumper $result);
+#$logger->debug("Content: ", sub {Dumper($result->{'content'})});
+
+is($v, "r", "Get right lhs");
+ok(defined $result->{'content_length'}, "Content length defined");
+ok(defined $result->{'status_code'}, "Status code defined");
+ok($result->{'content'} =~ m/ffoosh/, "Content defined");
+$test_count += 4;
+
+$krl_src = <<_KRL_;
+r = http:head("$test_site/get",
+	       {
+			"credentials" : {
+				"netloc" : "httpbin.org:80",
+				"realm" : "Fake Realm",
+				"username" : "qwerty",
+				"password" : "vorpal"	
+			},
+			"params" : {"ffoosh": "Flavor enhancer"},
+			"headers" : {"Accept" : "text/plain"},
+			"response_headers" : ["Connection","Accept"]	       	
+	       });
+_KRL_
+
+$krl = Kynetx::Parser::parse_decl($krl_src);
+
+#diag(Dumper($krl));
+
+# start with a fresh $req_info and $rule_env
+$my_req_info = Kynetx::Test::gen_req_info($rid);
+$rule_env = Kynetx::Test::gen_rule_env();
+
+($v,$result) = Kynetx::Expressions::eval_decl(
+    $my_req_info,
+    $rule_env,
+    $rule_name,
+    $session,
+    $krl
+    );
+
+	
+#diag($krl->{'rhs'}->{'predicate'}  . "($v) --> " . Dumper $result);
+#$logger->debug("Content: ", sub {Dumper($result->{'content'})});
+
+is($v, "r", "Get right lhs");
+ok(defined $result->{'content_length'}, "Content length defined");
+ok(defined $result->{'status_code'}, "Status code defined");
+ok($result->{'content'} eq '', "No content returned for HEAD");
+$test_count += 4;
+
+$krl_src = <<_KRL_;
+r = http:delete("$test_site/delete",
+	       {
+			"credentials" : {
+				"netloc" : "httpbin.org:80",
+				"realm" : "Fake Realm",
+				"username" : "qwerty",
+				"password" : "vorpal"	
+			},
+			"params" : {"ffoosh": "Flavor enhancer"},
+			"headers" : {"Accept" : "text/plain"},
+			"response_headers" : ["Connection","Accept"]	       	
+	       });
+_KRL_
+
+$krl = Kynetx::Parser::parse_decl($krl_src);
+
+#diag(Dumper($krl));
+
+# start with a fresh $req_info and $rule_env
+$my_req_info = Kynetx::Test::gen_req_info($rid);
+$rule_env = Kynetx::Test::gen_rule_env();
+
+($v,$result) = Kynetx::Expressions::eval_decl(
+    $my_req_info,
+    $rule_env,
+    $rule_name,
+    $session,
+    $krl
+    );
+
+	
+#diag($krl->{'rhs'}->{'predicate'}  . "($v) --> " . Dumper $result);
+#$logger->debug("Content: ", sub {Dumper($result->{'content'})});
+
+is($v, "r", "Get right lhs");
+ok(defined $result->{'content_length'}, "Content length defined");
+ok(defined $result->{'status_code'}, "Status code defined");
+ok($result->{'content'} =~ m/data\": \"\"/, "No data returned for DELETE");
+$test_count += 4;
+
+ENDY:
+$krl_src = <<_KRL_;
+r = http:patch("http://www.example.com",
+	       {
+			"credentials" : {
+				"netloc" : "httpbin.org:80",
+				"realm" : "Fake Realm",
+				"username" : "qwerty",
+				"password" : "vorpal"	
+			},
+			"params" : {"ffoosh": "Flavor enhancer"},
+			"headers" : {"Accept" : "text/plain"},
+			"response_headers" : ["Connection","Accept"]	       	
+	       });
+_KRL_
+
+$krl = Kynetx::Parser::parse_decl($krl_src);
+
+#diag(Dumper($krl));
+
+# start with a fresh $req_info and $rule_env
+$my_req_info = Kynetx::Test::gen_req_info($rid);
+$rule_env = Kynetx::Test::gen_rule_env();
+
+($v,$result) = Kynetx::Expressions::eval_decl(
+    $my_req_info,
+    $rule_env,
+    $rule_name,
+    $session,
+    $krl
+    );
+
+	
+#diag($krl->{'rhs'}->{'predicate'}  . "($v) --> " . Dumper $result);
+#$logger->debug("Content: ", sub {Dumper($result->{'content'})});
+
+is($v, "r", "Get right lhs");
+ok(defined $result->{'content_length'}, "Content length defined");
+ok(defined $result->{'status_code'}, "Status code defined");
+ok($result->{'content'} eq '', "No data returned for PATCH");
+$test_count += 4;
 
 
 done_testing($test_count);

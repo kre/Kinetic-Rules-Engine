@@ -253,7 +253,7 @@ sub parse_decl {
        $logger->error("Can't parse declaration: $estring");
        return $result;
     } else {
-    $logger->debug("Parsed declaration: ",sub {Dumper($expr)});
+    $logger->trace("Parsed declaration: ",sub {Dumper($expr)});
     }
 
     return $result->{'result'};

@@ -593,14 +593,14 @@ sub eval_extract {
     my $logger = get_logger();
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
-   $logger->debug("obj: ", sub { Dumper($obj) });
+    #$logger->debug("obj: ", sub { Dumper($obj) });
     return $obj unless defined $obj;
 
     my $is_match = 0;
     my @items = ();
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-    $logger->debug("obj: ", sub { Dumper($rands) });
+    #$logger->debug("obj: ", sub { Dumper($rands) });
 
     my $v = $obj->{'val'};
 
@@ -662,7 +662,7 @@ sub eval_uc {
     my $logger = get_logger();
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 
-    $logger->trace("obj: ", sub { Dumper($obj) });
+    #$logger->trace("obj: ", sub { Dumper($obj) });
     return $obj unless defined $obj;
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);

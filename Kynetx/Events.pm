@@ -295,7 +295,7 @@ sub process_event_for_rid {
 
 #    	$logger->trace("Rule: ", sub {Dumper $rule});
 
-    	$logger->debug("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
+    	$logger->trace("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
 	
     	next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
 
@@ -419,7 +419,7 @@ sub compile_event_expr {
 
     my $filter;
     if ( $op eq 'pageview' ) {
-    	$logger->debug("Pageview expression: ", sub {Dumper($eexpr)});
+    	$logger->trace("Pageview expression: ", sub {Dumper($eexpr)});
     	if ($eexpr->{'pattern'} || $eexpr->{'legacy'}) {
     		$logger->debug("Old form pageview");
 	      $sm = mk_pageview_prim( $eexpr->{'pattern'}, $eexpr->{'vars'} );
@@ -448,7 +448,7 @@ sub compile_event_expr {
     			$sm = mk_gen_prim($domain,$op, $eexpr->{'vars'},$eexpr->{'filters'});
     			add_filter($eexpr->{'filters'}, $rule_lists, $domain, $op, $rule);    			
     		}
-#    		$logger->debug("Created: ", sub {Dumper($sm)});
+    		$logger->trace("Created: ", sub {Dumper($sm)});
     	} else {
     		$logger->warn("Unknown event expression format: ", sub {Dumper($eexpr)});
     	}
