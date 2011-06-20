@@ -145,7 +145,7 @@ SKIP: {
           diag $like;
           diag $mech->content();
           diag $test->{'url'};
-          die;
+          #die;
       }
 
     }
@@ -157,7 +157,7 @@ SKIP: {
           diag $unlike;
           diag $mech->content();
           diag $test->{'url'};
-          die;
+          #die;
       }
     }
       }

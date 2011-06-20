@@ -419,7 +419,7 @@ sub compile_event_expr {
 
     my $filter;
     if ( $op eq 'pageview' ) {
-    	$logger->debug("Pageview expression: ", sub {Dumper($eexpr)});
+    	$logger->trace("Pageview expression: ", sub {Dumper($eexpr)});
     	if ($eexpr->{'pattern'} || $eexpr->{'legacy'}) {
     		$logger->debug("Old form pageview");
 	      $sm = mk_pageview_prim( $eexpr->{'pattern'}, $eexpr->{'vars'} );
