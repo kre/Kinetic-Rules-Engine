@@ -2,7 +2,10 @@
 
 use strict;
 use warnings;
-use lib qw(/web/lib/perl);
+use lib qw(
+/web/lib/perl
+/web/etc
+);
 
 
 use Getopt::Std;
@@ -17,7 +20,8 @@ use Kynetx::Configure qw/:all/;
 # configure KNS
 Kynetx::Configure::configure();
 
-
+my $bucket_name = get_config('LOG_BUCKET') || 'k-logs';
+my $bucket_prefix = 'rawlogs/';
 
 my $web_root = get_config('WEB_ROOT') || 
     die "WEB_ROOT is undefined in the configuration";
@@ -34,12 +38,13 @@ mkdir $tmpdir unless(-e $tmpdir);
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'hm:u:vf';
+my $opt_string = 'hm:u:vfa';
 getopts( "$opt_string", \%opt ); # or &usage();
 
 my $machine = $opt{'m'} || $log_sink ; #|| 'unionstation.kobj.net';
 my $unique = $opt{'u'} || hostname;
 my $verbose = $opt{'v'};
+my $use_amazon = $opt{'a'};
 my $finalize = $opt{'f'} || 0;
 &usage() if $opt{'h'};
 
@@ -73,12 +78,35 @@ foreach my $file (@newfiles) {
     $type =~ s/^([A-Z]+).*/$1/;
 #    print "Seeing file of type $type\n" if $verbose;
 #    print "for $file, seen is true" if $seen{$type};
+    # don't take the current log file
     if($seen{$type} || $finalize) {
 	push(@files, $file);
     } else {
 	$seen{$type} = 1;
 	next;
     }
+}
+
+my ($bucket, $s3);
+if ($use_amazon) {
+  require Amazon::S3;
+  Amazon::S3->import;
+
+
+  print "Pushing files to S3\n" if $verbose;
+  # load the Amazon credentials
+  # these are not in the code repository on purpose
+  require amazon_credentials; 
+
+  $s3 = Amazon::S3->new(
+	{   aws_access_key_id     => amazon_credentials->get_key_id(),
+	    aws_secret_access_key => amazon_credentials->get_access_key()
+	}
+	);
+
+  $bucket = $s3->bucket($bucket_name) or warn $s3->err . ": " . $s3->errstr;;
+
+
 }
 
 # now process the files
@@ -92,6 +120,17 @@ for my $file (@files) {
     system "sudo /bin/mv $file $nf" || warn "Couldn't move $file: $!";
     print "gzipping $nf\n" if $verbose;
     system  "$GZIP $nf\n";
+    if ( $use_amazon ) {
+      (my $stem = $name) =~ s/\.log$//;
+      my $s3_name = "$bucket_prefix$stem-$unique.log.gz";
+      print "Adding $nf.gz to bucket as $s3_name\n" if $verbose;
+      $bucket->add_key_filename( 
+	$s3_name, # file name to store
+	$nf.".gz", # file name to load
+	{'content_type' => 'application/gzip'},
+        ) or warn $s3->err . ": " . $s3->errstr;
+
+    }
 }
 
 
@@ -127,7 +166,8 @@ Options are:
   -u U  : unique identifier for these log files (default: hostname)
   -v    : vebose
   -f    : finalize; don't skip most recent file.  Ensure Web server 
-          has been halted before using this switch.  
+          has been halted before using this switch. 
+  -a    : push logs to S3 bucket in addition to transfering to the log sink 
 
 EOF
 

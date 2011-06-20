@@ -113,15 +113,14 @@ cmp_deeply($results,bag(['Products','Categories','Suppliers']),"Entity set from 
 $args = ['http://odata.netflix.com/Catalog/'];
 $results = test_odata('entity_sets',$req_info,$rule_env,$args);
 $logger->debug("Results: ", sub {Dumper($results)});
-
-cmp_deeply($results,subbagof([
+cmp_deeply($results,bag([
     'Genres',
-    'Languages',
-    'People',
+    'Titles',
     'TitleAudioFormats',
     'TitleAwards',
-    'Titles',
-    'TitleScreenFormats'
+    'People',
+    'TitleScreenFormats',
+    'Languages'
   ]),"Entity set from Netflix.com");
 
 

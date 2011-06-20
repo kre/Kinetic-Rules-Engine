@@ -116,14 +116,14 @@ sub set_token {
 	my $key = { 'ktoken' => $ktoken };
 	my $var = 'endpoint_id';
 	my $val = $session_id;
-	$logger->debug("Set $ktoken to endpoint $session_id");
+	$logger->trace("Set $ktoken to endpoint $session_id");
 	return Kynetx::MongoDB::atomic_set(COLLECTION,$key,$var,$val);
 }
 
 sub new_token {
     my ($rid,$session,$ken,$authenticated) = @_;
     my $logger = get_logger();
-    $logger->debug("Create new token request for ",Kynetx::Session::session_id($session));
+    $logger->trace("Create new token request for ",Kynetx::Session::session_id($session));
     my $oid = MongoDB::OID->new();
     my $k1 = md5_base64($oid->to_string);
     my $k2 = md5_base64($rid);

@@ -170,7 +170,7 @@ _KRL_
 add_cache_for_testcase($krl_src, 5*60*60*24*365, "cache_dataset_for 5 years");
 
 
-plan tests => 13 + int(@cache_for_test_cases);
+plan tests => 14 + int(@cache_for_test_cases);
 
 foreach my $case (@cache_for_test_cases) {
     is(cache_dataset_for($case->{'expr'}),
@@ -389,6 +389,22 @@ _KRL_
     is_string_nows($this_js,
            $expected,
            "JS is correct");
+
+    $krl_src = <<_KRL_;
+global {
+	// google dataset below is from a bug, but it is not going to always return UTF-8
+    //dataset utf8_data:RSS <- "http://www.google.com/search?h1=en&oe=utf-8&q=kynetx&tbm=blg&output=rss&cb=664" cachable for 1 second;
+	dataset utf8_data:HTML <- "http://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-demo.txt" cachable for 1 second;
+}
+_KRL_
+
+    $krl = Kynetx::Parser::parse_global_decls($krl_src);
+#    diag Dumper($krl);
+
+    my $source = get_dataset($krl->[0],$req_info);
+    my $utf8_str = Kynetx::Util::str_in('ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ');
+	#$logger->debug($source);    
+    contains_string($source,$utf8_str,"UTF-8 datasets");
 
 
 }

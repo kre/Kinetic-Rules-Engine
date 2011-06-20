@@ -31,6 +31,7 @@
 #
 use lib qw(/web/lib/perl);
 use strict;
+use utf8;
 
 use Test::More;
 use Test::Deep;

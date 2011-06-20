@@ -78,9 +78,9 @@ my $session = Kynetx::Test::gen_session($r, $rid);
 
 my $turl = "http://www.htmldog.com/examples/tablelayout1.html";
 my $durl = "http://www.htmldog.com/examples/darwin.html";
-diag "Fetching test content from: $turl";
+#diag "Fetching test content from: $turl";
 my $content = Kynetx::Memcached::get_remote_data($turl,3600);
-diag "Fetching test content from: $durl";
+#diag "Fetching test content from: $durl";
 my $content2 = Kynetx::Memcached::get_remote_data($durl,3600);
 
 
@@ -770,6 +770,24 @@ $x[$i] = {
 };
 $d[$i] = 0;
 $i++;
+
+
+$e[$i] = q#a.sprintf("<% d>")#;
+$x[$i] = {
+    'val' => '< 10>',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q#phone_num.sprintf("<%12s>")#;
+$x[$i] = {
+    'val' => '<  1234567890>',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
 
 
 #

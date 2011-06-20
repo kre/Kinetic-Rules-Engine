@@ -86,6 +86,7 @@ use Kynetx::Modules::Twilio;
 use Kynetx::Modules::URI;
 use Kynetx::Modules::Address;
 use Kynetx::Modules::PDS;
+use Kynetx::Modules::This2That;
 
 our $name_prefix = '@@module_';
 
@@ -382,7 +383,7 @@ sub eval_module {
 	if ($args->[0]) {
 	  $val = $val->{$args->[0]};
 	}
-      } else {
+      }  else {
 	Kynetx::Errors::raise_error($req_info, 'warn',
 				    "[keys] for $function not found",
 				    {'rule_name' => $rule_name,
@@ -413,6 +414,14 @@ sub eval_module {
 	$val = "No meta information for $function available";
       }
 
+    } elsif ( $source eq 'this2that' ) {
+        $preds = Kynetx::Modules::This2That::get_predicates();
+        if ( defined $preds->{$function} ) {
+            $val = $preds->{$function}->( $req_info, $rule_env, $args );
+            $val ||= 0;
+        } else {
+            $val = Kynetx::Modules::This2That::run_function( $req_info,$function,$args );
+        }    	
     } else {
 	Kynetx::Errors::raise_error($req_info, 'warn',
 				    "[module] named $source not found",

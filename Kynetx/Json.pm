@@ -187,12 +187,12 @@ sub deserialize_regexp_objects {
 sub xmlToJson {
     my ($xmlsource) = @_;
     my $logger = get_logger();
-    #$logger->trace( "XML Source: ", $xmlsource );
+    #$logger->debug( "XML Source: ", $xmlsource );
     my $XML2JSON = XML::XML2JSON->new( module => 'JSON::XS', pretty => 1 );
     my $obj = $XML2JSON->xml2obj($xmlsource);
     $XML2JSON->sanitize($obj);
     my $json = $XML2JSON->obj2json($obj);
-    #$logger->trace( "XML2JSON: ", sub { Dumper($json) } );
+    #$logger->debug( "XML2JSON: ", sub { Dumper($json) } );
     return $obj;
 }
 

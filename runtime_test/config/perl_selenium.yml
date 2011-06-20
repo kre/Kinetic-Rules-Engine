@@ -1,0 +1,69 @@
+  test:
+    testing_servers : [ie7_windows, firefox_30_osx, firefox_windows, safari_404_osx, safari_404_windows]
+    kobj_static_js_url: "https://qa.kobj.net/js/shared/kobj-static.js"
+  
+  selenium_clients: 
+    firefox_30_osx :
+      host : "office.kynetx.com"
+      port : 4444
+      browser : "*firefox"
+      timeout: 10
+    
+#    safari_404_osx :
+#      host : "office.kynetx.com"
+#      port : 4444
+#      browser : "*safari"
+#      timeout: 10
+#        
+#    safari_404_windows :
+#      host : "bxfactory.kynetx.com"
+#      port : 4444
+#      browser : "*safari"
+#      timeout: 10
+#    
+#    ie7_windows :
+#      host : "bxfactory.kynetx.com"
+#      port : 4444
+#      browser : "*iexplore"
+#      timeout: 10
+    
+#    ie7_local_windows :
+#      host : "192.168.80.131"
+#      port : 4444
+#      browser : "*iexplore"
+#      timeout: 10
+    
+#    firefox_windows :
+#      host : "bxfactory.kynetx.com"
+#      port : 4444
+#      browser : "*firefox"
+#      timeout: 10
+    
+#    chrome_beta_windows :
+#      host : "bxfactory.kynetx.com"
+#      port : 4444
+#      browser : "*googlechrome"
+#      timeout: 10
+
+
+
+
+#Supported browsers include:
+#  *firefox
+#  *mock
+#  *firefoxproxy
+#  *pifirefox
+#  *chrome
+#  *iexploreproxy
+#  *iexplore
+#  *firefox3
+#  *safariproxy
+#  *googlechrome
+#  *konqueror
+#  *firefox2
+#  *safari
+#  *piiexplore
+#  *firefoxchrome
+#  *opera
+#  *iehta
+#  *custom

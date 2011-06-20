@@ -205,7 +205,7 @@ sub parse_ruleset {
         my $estring = join("\n",@{$result->{'error'}});
 	   $logger->error("Can't parse ruleset: $estring");
     } else {
-	   $logger->debug("Parsed rules");
+	   $logger->trace("Parsed rules");
     }
     return $result;
 }
