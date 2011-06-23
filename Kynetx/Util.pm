@@ -244,7 +244,9 @@ sub mk_url {
   my ($base_url, $url_options) = @_;
 
   my $params = join('&', map("$_=".uri_escape_utf8($url_options->{$_}), keys %{ $url_options }));
-
+  if (! defined $params) {
+  	return $base_url;
+  }
   if ($base_url =~ m/\?$/) {
     return $base_url . $params;
   } elsif ($base_url =~ m/\?/) {

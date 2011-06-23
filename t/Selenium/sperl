@@ -9,7 +9,7 @@ my $rule = File::Find::Rule->new;
 
 $rule->or(
     $rule->new->directory->name('data')->prune->discard,
-    $rule->new->file->name( '*.t' )
+    $rule->new->file->name( '*.s' )
 );
 
 my @start = @ARGV ? @ARGV : '.';

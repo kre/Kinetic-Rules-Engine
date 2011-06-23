@@ -135,9 +135,13 @@ sub handler {
 
 sub process_event {
 
-    my ( $r, $domain, $eventtype, $rids, $eid ) = @_;
+    my ( $r, $domain, $eventtype, $rids, $eid, $version ) = @_;
 
     my $logger = get_logger();
+    
+    # APR::Tables require a key (no 'keys' function)
+    my $request_rec_notes = $r->pnotes('K');
+    
     Log::Log4perl::MDC->put('events', '[global]');
 
     $logger->debug("processing event $domain/$eventtype on rulesets $rids and EID $eid");
@@ -155,10 +159,25 @@ sub process_event {
     my $req_info =
       Kynetx::Request::build_request_env( $r, $domain, $rids, $eventtype );
     Kynetx::Request::log_request_env( $logger, $req_info );
+    
+    # Extend $req_info if we have any extra information passed in through the pnotes
+    # Add the data as params
+    if (defined $request_rec_notes) {
+    	my @keys = keys (%$request_rec_notes);
+    	foreach my $key (@keys) {
+    		$req_info->{$key} = $request_rec_notes->{$key};
+    		$logger->trace("PNOTES: $key ", $request_rec_notes->{$key});
+    	}
+    	push(@{$req_info->{'param_names'}}, @keys);
+    }
 
     # get a session, if _sid param is defined it will override cookie
-    $logger->debug("Event cookie? ",$req_info->{'kntx_token'});
+    $logger->debug("KBX cookie? ",$req_info->{'kntx_token'});
     my $session = process_session($r, $req_info->{'kntx_token'});
+    
+    if (defined $version) {
+    	$req_info->{'kynetx_app_version'} = $version;
+    }
 
 
     # not clear we need the request env now
@@ -281,7 +300,7 @@ sub process_event_for_rid {
     # }
 
     $logger->debug("Selection checking for ", scalar @{ $ruleset->{'rule_lists'}->{$domain}->{$type}->{'rulelist'} }, " rules") if $ruleset->{'rule_lists'}->{$domain}->{$type};
-
+	$logger->trace("Schedule: ", sub {Dumper($schedule)});
     foreach my $rule ( @{ $ruleset->{'rule_lists'}->{$domain}->{$type}->{'rulelist'} } ) {
 
       $logger->debug("Processing rule $rule->{'name'}");
@@ -419,7 +438,7 @@ sub compile_event_expr {
 
     my $filter;
     if ( $op eq 'pageview' ) {
-    	$logger->debug("Pageview expression: ", sub {Dumper($eexpr)});
+    	$logger->trace("Pageview expression: ", sub {Dumper($eexpr)});
     	if ($eexpr->{'pattern'} || $eexpr->{'legacy'}) {
     		$logger->debug("Old form pageview");
 	      $sm = mk_pageview_prim( $eexpr->{'pattern'}, $eexpr->{'vars'} );

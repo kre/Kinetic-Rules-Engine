@@ -76,8 +76,8 @@ my $init_rule_env = empty_rule_env();
 
 my $session = Kynetx::Test::gen_session($r, $rid);
 
-my $turl = "http://www.htmldog.com/examples/tablelayout1.html";
-my $durl = "http://www.htmldog.com/examples/darwin.html";
+my $turl = "http://www.htmliseasy.com/exercises/example_06c.html";
+my $durl = "http://www.htmliseasy.com/exercises/example_02d.html";
 #diag "Fetching test content from: $turl";
 my $content = Kynetx::Memcached::get_remote_data($turl,3600);
 #diag "Fetching test content from: $durl";
@@ -102,7 +102,7 @@ pre {
   split_str = "A;B;C";
   my_url = "http://www.amazon.com/gp/products/123456789/";
   in_str = <<
-  th[colspan="2"]
+  font[size="2"]
 >>;
   my_jstr = <<
     {"www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]}
@@ -249,7 +249,7 @@ sub test_operator {
     my $result = cmp_deeply($r, $x, "Trying $e");   
     
     
-    #die unless ($result);
+    die unless ($result);
 }
 
 
@@ -1267,41 +1267,35 @@ $i++;
 my $list = Kynetx::Operators::list_extensions();
 $logger->debug("Extensions: ", sub {Dumper($list)});
 
-$e[$i] = q/q_html.query("table tr td[style],table tr th")/;
+$e[$i] = q/q_html.query("table tr td b, font[size='5']",1)/;
 $x[$i] = {
    'val' => bag(
-     '<td style="background: #ddf;">Grey Wolf</td>',
-     '<td style="background: #ddf;">Cape hunting dog</td>',
-     '<td style="background: #ddf;">Very silly big long-long named dog woof</td>',
-     '<td style="background: #ddf;">Red Fox</td>',
-     '<td style="background: #ddf;">Fennec</td>',
-     '<th>Apes</th>',
-     '<th colspan="2">Cats</th>',
-     '<th style="background: #ddf;">Dogs</th>',
-     '<th>Lemurs</th>'
+     'My tech stock picks',
+     'My tech stock picks',
+     'NAME',
+     'SYMBOL',
+     'CURRENT',
+     '52WK HI',
+     '52WK LO',
+     'P/E RATIO'
    ),
    'type' => 'array'
 };
 $d[$i] = 0;
 $i++;
 
-$e[$i] = q/html_arr.query("caption,h1")/;
+$e[$i] = q/html_arr.query(["table tr td b", "font[size='5']"])/;
 $x[$i] = {
-   'val' => [
-    '<caption>Animal groups</caption>',
-    '<h1>Charles Darwin</h1>'
-   ],
-   'type' => 'array'
-};
-$d[$i] = 0;
-$i++;
-
-$e[$i] = q/html_arr.query(["caption","h1"])/;
-$x[$i] = {
-   'val' => [
-    '<caption>Animal groups</caption>',
-    '<h1>Charles Darwin</h1>'
-   ],
+   'val' => bag(
+     '<b>52WK HI</b>', 
+     '<b>52WK LO</b>', 
+     '<b>CURRENT</b>', 
+     '<b>My tech stock picks</b>', 
+     '<b>NAME</b>', 
+     '<b>P/E RATIO</b>', 
+     '<b>SYMBOL</b>', 
+     '<font size="5"><i><b>My tech stock picks</b></i></font>'
+   ),
    'type' => 'array'
 };
 $d[$i] = 0;
@@ -1311,64 +1305,37 @@ $i++;
 $e[$i] = q/q_html.query(in_str)/;
 $x[$i] = {
    'val' => [
-    '<th colspan="2">Cats</th>'
+     '<font size="2"><b>NAME</b></font>',
+     '<font size="2"><b>SYMBOL</b></font>',
+     '<font size="2"><b>CURRENT</b></font>',
+     '<font size="2"><b>52WK HI</b></font>',
+     '<font size="2"><b>52WK LO</b></font>',
+     '<font size="2"><b>P/E RATIO</b></font>'
    ],
    'type' => 'array'
 };
 $d[$i] = 0;
 $i++;
 
-$e[$i] = q/q_html.query([in_str,"th"])/;
+
+$e[$i] = q/html_arr.query([in_str,"i"],1)/;
 $x[$i] = {
    'val' => bag(
-    '<th colspan="2">Cats</th>',
-     '<th>Apes</th>',
-     '<th style="background: #ddf;">Dogs</th>',
-     '<th>Lemurs</th>'
+     'Meet Jack',
+     'My tech stock picks',
+     'NAME',
+     'SYMBOL',
+     'CURRENT',
+     '52WK HI',
+     '52WK LO',
+     'P/E RATIO',
+     'look',
+     'little'
    ),
    'type' => 'array'
 };
 $d[$i] = 0;
 $i++;
-
-$e[$i] = q/html_arr.query([in_str,"th","h2"])/;
-$x[$i] = {
-   'val' => bag(
-     '<th>Apes</th>',
-     '<th colspan="2">Cats</th>',
-     '<th style="background: #ddf;">Dogs</th>',
-     '<th>Lemurs</th>',
-    '<h2>On the Origin of The Origin</h2>'
-   ),
-   'type' => 'array'
-};
-$d[$i] = 0;
-$i++;
-
-$e[$i] = q/q_html.query("#{in_str}")/;
-$x[$i] = {
-   'val' => [
-    '<th colspan="2">Cats</th>'
-   ],
-   'type' => 'array'
-};
-$d[$i] = 0;
-$i++;
-
-$e[$i] = q/q_html.query(meta_str)/;
-$x[$i] = {
-   'val' => [
-     '<td style="background: #ddf;">Grey Wolf</td>',
-     '<td style="background: #ddf;">Cape hunting dog</td>',
-     '<td style="background: #ddf;">Very silly big long-long named dog woof</td>',
-     '<td style="background: #ddf;">Red Fox</td>',
-     '<td style="background: #ddf;">Fennec</td>'
-   ],
-   'type' => 'array'
-};
-$d[$i] = 0;
-$i++;
-
 
 
 $e[$i] = q#my_str.extract(re/(is)/)#;
