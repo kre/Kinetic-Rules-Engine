@@ -32,6 +32,7 @@ package Kynetx;
 
 use strict;
 use warnings;
+no warnings qw(uninitialized);
 
 
 use XML::XPath;
@@ -120,9 +121,10 @@ sub handler {
       $r->status(Apache2::Const::REDIRECT);
       return Apache2::Const::REDIRECT;
     } elsif($method eq 'fb_callback' ) {
-      Kynetx::Predicates::Facebook::process_oauth_callback($r, $method, $rid);
-      $r->status(Apache2::Const::REDIRECT);
-      return Apache2::Const::REDIRECT;
+      #my $st = Kynetx::Predicates::Facebook::process_oauth_callback($r, $method, $rid, $eid);
+      my $st = Kynetx::Predicates::Google::OAuthHelper::generic_oauth_handler($r, $method, $rid, $eid);
+      $r->status($st);
+      return $st;
     } elsif($method eq 'pds_callback' ) {
       Kynetx::Modules::PDS::process_auth_callback($r, $method, $rid);
       $r->status(Apache2::Const::REDIRECT);

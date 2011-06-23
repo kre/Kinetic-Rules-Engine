@@ -49,6 +49,11 @@ use HTTP::Request::Common;
 use HTTP::Status qw(:constants);
 use HTTP::Response;
 use URI::Escape ('uri_escape','uri_unescape');
+use Apache2::Const qw(
+	HTTP_ACCEPTED
+	REDIRECT
+	);
+
 use Encode;
 use Kynetx::Persistence qw(:all);
 use Kynetx::Session qw(
@@ -56,6 +61,7 @@ use Kynetx::Session qw(
   session_delete
   session_store
   session_get
+  process_session
 );
 use Kynetx::Util;
 use Kynetx::Memcached qw(check_cache mset_cache);
@@ -229,6 +235,71 @@ sub get_access_tokens_v1 {
     }
     return;
 
+}
+
+sub set_oauth_namespace {
+	my ($method) = @_;
+	if ($method eq "fb_callback") {
+		return 'facebook';
+	}
+}
+
+sub get_oauth_endpoints {
+	my ($namespace) = @_;
+	my $config = Kynetx::Configure::get_config(uc($namespace))->{$namespace};
+	if (! defined $config) {
+		return Kynetx::Errors::merror("Facebook config file not initialized properly");
+	}
+	return $config->{'urls'};
+	
+}
+
+sub generic_oauth_handler {
+	my ( $r, $method, $rid, $eid ) = @_;
+	my $logger = get_logger();
+	$logger->debug("\n-----------------------OAuth Callback ($method)--------------------------");
+	my $authed = "true";
+	my $session = Kynetx::Session::process_session($r);
+	my $namespace = set_oauth_namespace($method);
+	$logger->debug("Session: ", sub {Dumper($session)});
+	set_auth_tokens($r, $method, $rid, $session,$namespace);
+	my $callback_hash = parse_callback($r,$method,$rid,$namespace);
+	my $req_info = $callback_hash->{'req_info'};
+    if ( $rid ne $callback_hash->{'rid'} ) {
+        $logger->warn( "Callback rid mis-match, expected: ",
+                       $rid, " got: ", $callback_hash->{'rid'} );
+    }
+    my $rule_env = {};
+    my $token_response = get_access_tokens( $req_info, $rule_env, $session, $namespace, get_oauth_endpoints($namespace),
+                       $callback_hash );
+	if ($token_response->is_success) {
+		# May need to put a test query here, but would probably have to be set
+		# in the config
+		$logger->info("Ruleset $rid authorized for $namespace");
+	} else {
+		$authed = 'false';
+		$logger->warn( "Auth failed for ", $namespace, ":$rid" );
+	}
+	my $caller = get_token($rid,$session,"oauth_callback",$namespace);
+	if (! defined $caller) {
+		# Didn't come through Kynetx Authorize method
+		# Get event op from URI
+		my $eventname = $req_info->{'caller'} || "default";
+		my $k = {
+    		'auth' => $authed,
+    		'callback_request' => $req_info->{'uri'},
+    		'access_token_response' => $token_response->decoded_content(),
+    		'atr_code' => $token_response->code,
+    		'atr_msg' => $token_response->message,
+    	};
+    	$r->pnotes('K' => $k);    
+    	Kynetx::Events::process_event($r,'oauth_callback',$eventname,$rid,$eid,$req_info->{'kynetx_app_version'});
+    	# No caller, so don't perform a redirect
+    	return Apache2::Const::HTTP_ACCEPTED;		
+	}
+	$r->headers_out->set( Location => $caller);
+	return Apache2::Const::REDIRECT;
+	
 }
 
 sub get_request_tokens {
@@ -458,7 +529,7 @@ sub post_protected_resource_v1 {
 sub set_auth_tokens {
     my ( $r, $method, $rid, $session,$namespace ) = @_;
     my $logger = get_logger();
-    $logger->trace("Set auth token session: ", sub { Dumper($session)});
+    $logger->debug("Set auth token session: ", sub { Dumper($session)});
     if ($namespace eq 'facebook') {
         return set_auth_tokens_v2($r, $method, $rid, $session, $namespace);
     } else {
@@ -689,8 +760,8 @@ sub parse_callback {
     my $rest_part =
           Kynetx::Configure::get_oauth_param( $namespace, 'callback' );
     if ($namespace eq 'facebook') {
-        if ($uri =~ m/$rest_part/) {
-            #$logger->debug("Facebook callback: $rest_part");
+        if (defined $rest_part && $uri =~ m/$rest_part/) {
+            $logger->debug("Facebook callback: $rest_part");
             if ($uri =~ m/$rest_part\/(\w+)\/(\w+)\/(.+)\/?/) {
                 $cb_obj->{'rid'} = $1;
                 # Not sure if both are needed, but Repository checks for kynetx_app_version
@@ -702,6 +773,12 @@ sub parse_callback {
             }
         } else {
             $logger->warn("Error parsing facebook callback: ",$uri);
+            $uri =~ m/.+fb_callback\/(.+)\/(.+)\/(.+)\/?/;
+            $cb_obj->{'rid'} = $1;
+            $cb_obj->{'req_info'}->{'rule_version'} = $2;
+            $cb_obj->{'req_info'}->{'kynetx_app_version'} = $2;
+            $cb_obj->{'req_info'}->{'caller'} = $3;
+            $logger->trace("Callback object: ", sub {Dumper($cb_obj)});
         }
     } else {
         $cb_obj->{'namespace'} = 'common';
@@ -715,7 +792,7 @@ sub parse_callback {
 sub make_callback_url {
     my ( $req_info, $namespace ) = @_;
     my $logger = get_logger();
-
+	$logger->debug("Namespace: $namespace");
     if ( $namespace eq 'facebook' ) {
         return _make_facebook_callback_url($req_info);
     } else {
@@ -753,9 +830,9 @@ sub _make_facebook_callback_url {
     #my $caller  = $req_info->{'caller'};
     my $caller = "dummy";
     my $host    = Kynetx::Configure::get_config('EVAL_HOST');
-    my $port    = Kynetx::Configure::get_config('OAUTH_CALLBACK_PORT');
+    my $port    = Kynetx::Configure::get_config('OAUTH_CALLBACK_PORT') || 80;
     my $rest_part =
-      Kynetx::Configure::get_oauth_param( 'facebook', 'callback' );
+      Kynetx::Configure::get_oauth_param( 'facebook', 'callback' ) || 'fb_callback';
     my $base = "http://$host:$port/ruleset/$rest_part/$rid/$version/$caller";
     $logger->trace( "OAuth callback url: ", $base );
     return $base;

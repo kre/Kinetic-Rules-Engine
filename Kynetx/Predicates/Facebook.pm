@@ -38,7 +38,11 @@ use lib qw(/web/lib/perl);
 
 use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
+use Storable qw/dclone freeze/;
+use Digest::MD5 qw/md5_hex/;
+use Clone qw/clone/;
 
+use Kynetx::Expressions qw(mk_den_str);
 use Kynetx::OAuth;
 use Kynetx::Errors;
 use Kynetx::Environments qw/:all/;
@@ -815,37 +819,53 @@ sub facebook_error_message {
 }
 
 sub process_oauth_callback {
-    my ( $r, $method, $rid ) = @_;
+    my ( $r, $method, $rid, $eid ) = @_;
+    my $oauth_status = "true";
     my $logger = get_logger();
     $logger->debug( "\n-------------------OAuth Callback ", NAMESPACE,"---------------------: " );
     my $session = process_session($r);
     set_auth_tokens( $r, $method, $rid, $session, NAMESPACE );
     my $callback_hash = parse_callback( $r, $method, $rid, NAMESPACE );
     my $req_info = $callback_hash->{'req_info'};
-#    my $session_lock = "lock-" . Kynetx::Session::session_id($session);
-#    if ($req_info->{'_lock'}->lock($session_lock)) {
-#        $logger->debug("Session lock acquired for $session_lock");
-#    } else {
-#        $logger->warn("Session lock request timed out for ",sub {Dumper($rid)});
-#    }
     if ( $rid ne $callback_hash->{'rid'} ) {
         $logger->warn( "Callback rid mis-match, expected: ",
                        $rid, " got: ", $callback_hash->{'rid'} );
     }
     my $rule_env = {};
-    get_access_tokens( $req_info, $rule_env, $session, NAMESPACE, get_endpoints(),
+    my $token_response = get_access_tokens( $req_info, $rule_env, $session, NAMESPACE, get_endpoints(),
                        $callback_hash );
+    #$logger->debug("Token response: ", sub {Dumper($token_response)});
     my $resp = test_response( $req_info, $rule_env, $session );
     if ( defined $resp && $resp->is_success() ) {
         $logger->info( "Rule $rid authorized for ", NAMESPACE );
         trim_tokens( $rid, $session, NAMESPACE );
     } else {
+    	$oauth_status = 'false';
         $logger->warn( "Auth failed for ", NAMESPACE, ":$rid" );
-
-        #blast_tokens( $rid, $session, NAMESPACE );
     }
-    my $caller = get_token($rid,$session,SESSION_CALLBACK_KEY,NAMESPACE) || $req_info->{'caller'};
-    $logger->debug("Issue redirect to: ", $caller);
+    my $caller_from_session = get_token($rid,$session,SESSION_CALLBACK_KEY,NAMESPACE);
+    my $caller_from_req_info = $req_info->{'caller'};
+    my $caller ="";
+    if (! $caller_from_session) {
+    	$logger->debug("Raise event to $caller_from_req_info");
+    	# request info is not passed to the process_event method and RequestRec ($r)
+    	# doesn't allow access to the content.  pnotes is the mod_apache method
+    	# for attaching perl variables to the RequestRec object (notes is for strings only)
+    	#
+    	# Variables are passed by ref not a copy
+    	my $eventname = $caller_from_req_info;
+    	my $k = {
+    		'auth' => $oauth_status,
+    		'callback_request' => $req_info->{'uri'},
+    		'access_token_response' => $token_response->decoded_content(),
+    		'atr_code' => $token_response->code,
+    		'atr_msg' => $token_response->message,
+    	};
+    	$r->pnotes('K' => $k);    
+    	Kynetx::Events::process_event($r,'oauth_callback',$eventname,$rid,$eid,$req_info->{'kynetx_app_version'});
+    }
+    $logger->debug("Issue redirect to: ", $caller_from_session);
+    $logger->debug("req_info: ", $caller_from_req_info);
     $r->headers_out->set( Location => $caller );
     my $redirect = $r->headers_out->get("Location");
     if ($caller ne $redirect) {

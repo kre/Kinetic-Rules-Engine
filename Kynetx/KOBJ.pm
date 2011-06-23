@@ -31,6 +31,7 @@ package Kynetx::KOBJ;
 #
 use strict;
 use warnings;
+no warnings qw(uninitialized);
 
 use File::Find::Rule;
 use Log::Log4perl qw(get_logger :levels);
@@ -89,6 +90,8 @@ sub handler {
     # get a session, if _sid param is defined it will override cookie
     my $session = Kynetx::Session::process_session($r, $req_info->{'kntx_token'});
 
+	my $sid = Kynetx::Session::session_id($session);
+	$r->subprocess_env(SID => $sid);
 
     $logger->debug("RIDs -> $rids");
 
@@ -183,7 +186,7 @@ sub handler {
 
     $logger->debug("__FLUSH__");
 
-    print $js;
+    print Kynetx::Util::str_out($js);
 
     return Apache2::Const::OK;
 
