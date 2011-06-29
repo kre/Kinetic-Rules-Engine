@@ -52,6 +52,7 @@ use URI::Escape ('uri_escape','uri_unescape');
 use Apache2::Const qw(
 	HTTP_ACCEPTED
 	REDIRECT
+	OK
 	);
 
 use Encode;
@@ -155,7 +156,7 @@ sub get_access_tokens_v2 {
     my $rid         = $req_info->{'rid'};
     my $verifier = uri_escape(get_token( $rid, $session, 'oauth_verifier', $namespace));
     my $callback = uri_escape(make_callback_url($req_info,$namespace));
-    $logger->debug("Access URL callback: ",uri_unescape($callback),"\n");
+    $logger->trace("Access URL callback: ",uri_unescape($callback),"\n");
     my $access_url = $endpoint->{'access_token_url'} || '';
     my $consumer_tokens = get_consumer_tokens($req_info,$rule_env,$session,$namespace);
     my $content;
@@ -215,7 +216,7 @@ sub get_access_tokens_v1 {
     $request->sign();
 
     my $surl = $request->to_url();
-    $logger->debug( "Access URL: ", $surl );
+    $logger->trace( "Access URL: ", $surl );
     my $ua   = LWP::UserAgent->new();
     my $resp = $ua->request( GET $surl);
 
@@ -261,7 +262,7 @@ sub generic_oauth_handler {
 	my $authed = "true";
 	my $session = Kynetx::Session::process_session($r);
 	my $namespace = set_oauth_namespace($method);
-	$logger->debug("Session: ", sub {Dumper($session)});
+	$logger->trace("Session ($namespace): ", sub {Dumper($session)});
 	set_auth_tokens($r, $method, $rid, $session,$namespace);
 	my $callback_hash = parse_callback($r,$method,$rid,$namespace);
 	my $req_info = $callback_hash->{'req_info'};
@@ -279,6 +280,7 @@ sub generic_oauth_handler {
 	} else {
 		$authed = 'false';
 		$logger->warn( "Auth failed for ", $namespace, ":$rid" );
+		$logger->trace("Token response: ", sub {Dumper($token_response)});
 	}
 	my $caller = get_token($rid,$session,"oauth_callback",$namespace);
 	if (! defined $caller) {
@@ -291,11 +293,18 @@ sub generic_oauth_handler {
     		'access_token_response' => $token_response->decoded_content(),
     		'atr_code' => $token_response->code,
     		'atr_msg' => $token_response->message,
+    		'kntx_token' => $req_info->{'kntx_token'},
+    		'g_id' => $req_info->{'kntx_token'},
     	};
-    	$r->pnotes('K' => $k);    
+    	$r->pnotes('K' => $k); 
+    	$r->content_type('text/html');
+    	print "<script>";
     	Kynetx::Events::process_event($r,'oauth_callback',$eventname,$rid,$eid,$req_info->{'kynetx_app_version'});
+    	print "</script>";
     	# No caller, so don't perform a redirect
-    	return Apache2::Const::HTTP_ACCEPTED;		
+    	#return Apache2::Const::HTTP_ACCEPTED;
+    	print '<script type="text/javascript">window.close()</script>';
+    	return Apache2::Const::OK;	
 	}
 	$r->headers_out->set( Location => $caller);
 	return Apache2::Const::REDIRECT;
@@ -327,7 +336,7 @@ sub get_request_tokens {
 
     $request->sign();
     my $surl = $request->to_url();
-    $logger->debug( "Request token url: ", $surl );
+    $logger->trace( "Request token url: ", $surl );
 
     my $ua   = LWP::UserAgent->new();
     my $resp = $ua->request( GET $surl);
@@ -338,7 +347,7 @@ sub get_request_tokens {
           ->from_post_body( $resp->content );
         my $oauth_token        = $oresp->token;
         my $oauth_token_secret = $oresp->token_secret;
-        $logger->debug("rt: $oauth_token rts: $oauth_token_secret");
+        $logger->trace("rt: $oauth_token rts: $oauth_token_secret");
         return { 'token' => $oauth_token, 'secret' => $oauth_token_secret };
     } else {
         $logger->warn(
@@ -542,7 +551,7 @@ sub set_auth_tokens_v2 {
     my $logger = get_logger();
     my $req       = Apache2::Request->new($r);
     my $verifier  = $req->param('code');
-    $logger->trace(
+    $logger->debug(
             "User returned from $namespace with verifier => $verifier" );
     $logger->trace("Auth token request returned: ", sub { Dumper($req)});
     store_token( $rid, $session, 'oauth_verifier', $verifier, $namespace);
@@ -772,7 +781,6 @@ sub parse_callback {
                 #$logger->debug("Facebook callback info for URI: $uri\n", sub {Dumper($cb_obj)});
             }
         } else {
-            $logger->warn("Error parsing facebook callback: ",$uri);
             $uri =~ m/.+fb_callback\/(.+)\/(.+)\/(.+)\/?/;
             $cb_obj->{'rid'} = $1;
             $cb_obj->{'req_info'}->{'rule_version'} = $2;
@@ -792,7 +800,7 @@ sub parse_callback {
 sub make_callback_url {
     my ( $req_info, $namespace ) = @_;
     my $logger = get_logger();
-	$logger->debug("Namespace: $namespace");
+	$logger->trace("Namespace: $namespace");
     if ( $namespace eq 'facebook' ) {
         return _make_facebook_callback_url($req_info);
     } else {
@@ -824,13 +832,12 @@ sub _make_facebook_callback_url {
     my ($req_info) = @_;
     my $logger     = get_logger();
     # req_info can be extensive
-    #$logger->debug("Callback Request Info: ", sub {Dumper($req_info)});
+    $logger->trace("Callback Request Info: ", sub {Dumper($req_info)});
     my $rid        = $req_info->{'rid'};
     my $version = $req_info->{'rule_version'} || 'prod';
-    #my $caller  = $req_info->{'caller'};
-    my $caller = "dummy";
+    my $caller  = $req_info->{'caller'} || 'dummy';
     my $host    = Kynetx::Configure::get_config('EVAL_HOST');
-    my $port    = Kynetx::Configure::get_config('OAUTH_CALLBACK_PORT') || 80;
+    my $port    = Kynetx::Configure::get_config('KNS_PORT') || 80;
     my $rest_part =
       Kynetx::Configure::get_oauth_param( 'facebook', 'callback' ) || 'fb_callback';
     my $base = "http://$host:$port/ruleset/$rest_part/$rid/$version/$caller";
