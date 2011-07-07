@@ -98,10 +98,10 @@ ruleset a685x12 {
             close_notification("#KOBJ_close_test");
         }
     }
-    rule let_it_snow is active {
-        select using ".*" setting()
-
-        let_it_snow();
-    }
+//    rule let_it_snow is active {
+//        select using ".*" setting()
+//
+//       let_it_snow();
+//    }
 
 }

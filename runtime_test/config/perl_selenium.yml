@@ -4,7 +4,7 @@
   
   selenium_clients: 
     firefox_30_osx :
-      host : "office.kynetx.com"
+      host : "macjam.kynetx.com"
       port : 4444
       browser : "*firefox"
       timeout: 10
@@ -15,11 +15,11 @@
 #      browser : "*safari"
 #      timeout: 10
 #        
-#    safari_404_windows :
-#      host : "bxfactory.kynetx.com"
-#      port : 4444
-#      browser : "*safari"
-#      timeout: 10
+    safari_404_windows :
+      host : "bxfactory.kynetx.com"
+      port : 4444
+      browser : "*safari"
+      timeout: 10
 #    
 #    ie7_windows :
 #      host : "bxfactory.kynetx.com"

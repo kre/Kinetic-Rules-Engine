@@ -52,6 +52,7 @@ use Kynetx::Console qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Directives;
+use Kynetx::Modules::OAuthModule;
 
 
 use constant DEFAULT_TEMPLATE_DIR => Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
@@ -129,6 +130,10 @@ sub handler {
       Kynetx::Modules::PDS::process_auth_callback($r, $method, $rid);
       $r->status(Apache2::Const::REDIRECT);
       return Apache2::Const::REDIRECT;
+    } elsif ($method eq 'oauth_callback') {
+    	my $st = Kynetx::Modules::OAuthModule::oauth_callback_handler($r,$method,$rid);
+    	$r->status($st);
+    	return $st;
     } elsif($method eq 'foo' ) {
 	my $uniq = int(rand 999999999);
 	$r->content_type('text/html');
