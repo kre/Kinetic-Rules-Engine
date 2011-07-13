@@ -49,6 +49,8 @@ use Kynetx::Session qw(
 	session_cleanup
 );
 use Kynetx::Persistence;
+use Kynetx::FakeReq;
+use Kynetx::Errors;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -96,11 +98,13 @@ sub get_predicates {
 sub oauth_callback_handler {
 	my ( $r, $method, $rid, $eid ) = @_;
 	my $logger = get_logger();
-	my ($cbrid,$version,$namespace);
+	my ($cbrid,$version,$namespace,$fail);
 	$logger->debug("\n-----------------------OAuth Callback ($method)--------------------------");
 	my $session = Kynetx::Session::process_session($r);
 	my $req_info = Kynetx::Request::build_request_env( $r, $method, $rid );
 	my $rule_env = Kynetx::Environments::empty_rule_env();
+    my $host    = Kynetx::Configure::get_config('EVAL_HOST');
+    my $port    = Kynetx::Configure::get_config('KNS_PORT') || 80;
 	my $uri = $r->uri();
 	if ($uri =~ m/oauth_callback\/(\w+)\/(\w+)\/(\w+)\/?/    ) {
 		$cbrid = $1;
@@ -110,36 +114,81 @@ sub oauth_callback_handler {
 	my $key = CALLBACK_ACTION_KEY . SEP . $namespace;
 	my $tokens = get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
 	my $auth_tokens = get_auth_tokens($req_info);
-	$logger->debug("Callback handler $method processed request for $namespace with token = ",
-		$auth_tokens->{'oauth_token'}, " and verifier ",$auth_tokens->{'oauth_verifier'});
-	$tokens = add_tokens($tokens,$auth_tokens);
+	my $atoken = $auth_tokens->{'oauth_token'};
+	my $verifier = $auth_tokens->{'oauth_verifier'};
 	my $ent_config_key = OAUTH_CONFIG_KEY . SEP . $namespace;
 	my $cb_action    = Kynetx::Persistence::get_persistent_var("ent", $rid, $session, $key);
 	my $oauth_config = Kynetx::Persistence::get_persistent_var("ent", $rid, $session, $ent_config_key);
-	my $endpoint = $oauth_config->{'endpoints'}->{'access_token_url'};
-	my $token_secret = $oauth_config->{'oauth_token_secret'};
-	$tokens = add_tokens($tokens,{'oauth_token_secret' => $token_secret});
-	my $access_tokens = request_access_tokens($req_info, $rule_env, $session, $namespace, $tokens, $endpoint);
-	store_access_tokens($req_info, $rule_env, $session, $namespace, $access_tokens);
-	post_process_access_tokens($req_info, $rule_env, $session, $namespace, $access_tokens);
+	
+	if (defined $atoken && defined $verifier) {
+		$logger->debug("Callback handler $method processed request for $namespace with token = ",
+			$atoken, " and verifier $verifier",);
+		$tokens = add_tokens($tokens,$auth_tokens);
+		my $endpoint = $oauth_config->{'endpoints'}->{'access_token_url'};
+		my $token_secret = $oauth_config->{'oauth_token_secret'};
+		$tokens = add_tokens($tokens,{'oauth_token_secret' => $token_secret});
+		my $access_tokens = request_access_tokens($req_info, $rule_env, $session, $namespace, $tokens, $endpoint);
+		if (mis_error($access_tokens)) {
+			$fail = $access_tokens->{'DEBUG'};
+		} else {
+			store_access_tokens($req_info, $rule_env, $session, $namespace, $access_tokens);
+			post_process_access_tokens($req_info, $rule_env, $session, $namespace, $access_tokens);					
+		}
+	} else {
+		# Callback was not authorized
+		$fail = "No verification token from OAuth authority";
+		
+	}
   
- 	if ($cb_action->{'type'} eq 'redirect') {
-		$r->headers_out->set(Location => $cb_action->{'url'});
+  	Kynetx::Persistence::delete_persistent_var("ent", $rid, $session, $key);
+	Kynetx::Persistence::delete_persistent_var("ent", $rid, $session, $ent_config_key);
+	my $redirect;
+ 	if (defined $fail){
+ 		Kynetx::Errors::raise_error($req_info,'warn',
+ 			"[OAuthModule] $fail",
+ 			{
+ 				'genus' => 'oauth',
+ 				'species' => 'callback'
+ 			}
+ 		);
+ 		$redirect = "http://$host:$port/ruleset/cb_host/$rid/$version/oauth_error";
+	} elsif ($cb_action->{'type'} eq 'redirect') {
+		$redirect = $cb_action->{'url'};
 		return Apache2::Const::REDIRECT;
 	} elsif ($cb_action->{'type'} eq 'raise') {
 		my $eventname = $cb_action->{'eventname'};
-		my $trid = $cb_action->{'target'};
-		$r->content_type('text/html');
-		print "<script>";
-    		Kynetx::Events::process_event($r,'oauth_callback',$eventname,$trid,$eid,$req_info->{'kynetx_app_version'});
-    	print "</script>";
-		print '<script type="text/javascript">window.close()</script>';
-		return Apache2::Const::OK;		
+		my $trid = $cb_action->{'target'};		
+		$redirect = "http://$host:$port/ruleset/cb_host/$rid/$version/$eventname";		
 	} else {
-		my $caller = $req_info->{'caller'} || ".";
-		$r->headers_out->set(Location => $caller);
-		return Apache2::Const::REDIRECT;
+		$redirect = $req_info->{'caller'} || ".";
 	}
+	$r->headers_out->set(Location => $redirect);
+	return Apache2::Const::REDIRECT;
+	
+}
+
+sub callback_host {
+	my ( $r, $method, $rid, $eid ) = @_;
+	my $logger = get_logger();	
+	$logger->debug("\n-----------------------Callback Host ($method)--------------------------");
+	my $session = Kynetx::Session::process_session($r);
+	my $req_info = Kynetx::Request::build_request_env( $r, $method, $rid );
+	my $rule_env = Kynetx::Environments::empty_rule_env();
+	my $eventname;
+	my $version;
+	my $uri = $r->uri();
+	if ($uri =~ m/\/(\w+)\/(\w+)$/) {
+		$version = $1;
+		$eventname = $2;
+	}
+	$r->content_type('text/html');
+	print "<html><head></head><body>";
+	print '<script src="http://init.kobj.net/js/shared/kobj-static.js">';
+	my $x = Kynetx::Events::process_event($r,'oauth_callback',$eventname,$rid,$eid,$version);
+	print '</script>';
+	print '<script type="text/javascript">window.open("","_self","");window.opener="x";window.close()</script>';
+	print " $uri -|- $eventname </body></html>";
+	return Apache2::Const::OK;
 }
 
 ##
@@ -211,6 +260,7 @@ sub request_access_tokens {
         }
     } else {
     	$logger->debug("Failed response: ", sub {Dumper($resp)});
+    	return merror("Request access token failure: $content");
     }
 	
 }

@@ -104,9 +104,10 @@ sub handler {
     } elsif($method eq 'version' ) {
 	#my $session = process_session($r);
 	show_build_num($r, $method, $rid);
-    } elsif($method eq 'locktest') {
-        lock_handle($r, $method, $rid, $eid);
-
+    } elsif($method eq 'cb_host') {
+        my $st = Kynetx::Modules::OAuthModule::callback_host($r,$method,$rid);
+    	$r->status($st);
+		return $st;
     } elsif($method eq 'twitter_callback' ) {
 	Kynetx::Modules::Twitter::process_oauth_callback($r, $method, $rid);
 	$r->status(Apache2::Const::REDIRECT);
@@ -140,7 +141,7 @@ sub handler {
 	print "$uniq";
     } elsif($method eq 'mth') {
     	test_harness($r, $method, $rid, $eid);
-    }
+    } 
 
 
     return Apache2::Const::OK;

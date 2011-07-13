@@ -258,55 +258,69 @@ sub get_oauth_endpoints {
 sub generic_oauth_handler {
 	my ( $r, $method, $rid, $eid ) = @_;
 	my $logger = get_logger();
+	my $req_info;
 	$logger->debug("\n-----------------------OAuth Callback ($method)--------------------------");
-	my $authed = "true";
+	#my $authed = "true";
+	my $fail;
+	my $redirect;
+	my $version;
 	my $session = Kynetx::Session::process_session($r);
 	my $namespace = set_oauth_namespace($method);
+    my $host    = Kynetx::Configure::get_config('EVAL_HOST');
+    my $port    = Kynetx::Configure::get_config('KNS_PORT') || 80;
 	$logger->trace("Session ($namespace): ", sub {Dumper($session)});
-	set_auth_tokens($r, $method, $rid, $session,$namespace);
-	my $callback_hash = parse_callback($r,$method,$rid,$namespace);
-	my $req_info = $callback_hash->{'req_info'};
-    if ( $rid ne $callback_hash->{'rid'} ) {
-        $logger->warn( "Callback rid mis-match, expected: ",
-                       $rid, " got: ", $callback_hash->{'rid'} );
-    }
-    my $rule_env = {};
-    my $token_response = get_access_tokens( $req_info, $rule_env, $session, $namespace, get_oauth_endpoints($namespace),
-                       $callback_hash );
-	if ($token_response->is_success) {
-		# May need to put a test query here, but would probably have to be set
-		# in the config
-		$logger->info("Ruleset $rid authorized for $namespace");
+	eval {set_auth_tokens($r, $method, $rid, $session,$namespace)};
+	if ($@) {
+		$fail = $@;
+		$req_info = Kynetx::Request::build_request_env( $r, $method, $rid );
 	} else {
-		$authed = 'false';
-		$logger->warn( "Auth failed for ", $namespace, ":$rid" );
-		$logger->trace("Token response: ", sub {Dumper($token_response)});
+		my $callback_hash = parse_callback($r,$method,$rid,$namespace);
+		$req_info = $callback_hash->{'req_info'};
+	    $version = $req_info->{'kynetx_app_version'};
+	    if ( $rid ne $callback_hash->{'rid'} ) {
+	        $logger->warn( "Callback rid mis-match, expected: ",
+	                       $rid, " got: ", $callback_hash->{'rid'} );
+	    }
+		my $rule_env = Kynetx::Environments::empty_rule_env();
+    	my $token_response = get_access_tokens( $req_info, $rule_env, $session, $namespace, get_oauth_endpoints($namespace),
+                       $callback_hash );
+		if ($token_response->is_success) {
+			$logger->info("Ruleset $rid authorized for $namespace");
+		} else {
+			$fail = "Access token request failed for $namespace:$rid";
+		}
+		$redirect = get_token($rid,$session,"oauth_callback",$namespace);
+		if (! defined $redirect) {
+			# Didn't come through Kynetx Authorize method
+			# Get event op from URI
+			my $eventname = $req_info->{'caller'} || "default";
+			$redirect = "http://$host:$port/ruleset/cb_host/$rid/$version/$eventname";
+			
+			# For passing oauth information in the future
+#			my $k = {
+#	    		'auth' => $authed,
+#	    		'callback_request' => $req_info->{'uri'},
+#	    		'access_token_response' => $token_response->decoded_content(),
+#	    		'atr_code' => $token_response->code,
+#	    		'atr_msg' => $token_response->message,
+#	    		'kntx_token' => $req_info->{'kntx_token'},
+#	    		'g_id' => $req_info->{'kntx_token'},
+#	    	};
+		}
+
 	}
-	my $caller = get_token($rid,$session,"oauth_callback",$namespace);
-	if (! defined $caller) {
-		# Didn't come through Kynetx Authorize method
-		# Get event op from URI
-		my $eventname = $req_info->{'caller'} || "default";
-		my $k = {
-    		'auth' => $authed,
-    		'callback_request' => $req_info->{'uri'},
-    		'access_token_response' => $token_response->decoded_content(),
-    		'atr_code' => $token_response->code,
-    		'atr_msg' => $token_response->message,
-    		'kntx_token' => $req_info->{'kntx_token'},
-    		'g_id' => $req_info->{'kntx_token'},
-    	};
-    	$r->pnotes('K' => $k); 
-    	$r->content_type('text/html');
-    	print "<script>";
-    	Kynetx::Events::process_event($r,'oauth_callback',$eventname,$rid,$eid,$req_info->{'kynetx_app_version'});
-    	print "</script>";
-    	# No caller, so don't perform a redirect
-    	#return Apache2::Const::HTTP_ACCEPTED;
-    	print '<script type="text/javascript">window.close()</script>';
-    	return Apache2::Const::OK;	
+	if (defined $fail) {
+		$version = $req_info->{'kynetx_app_version'};		
+		Kynetx::Errors::raise_error($req_info,'warn',
+ 			"[OAuthHelper] $fail",
+ 			{
+ 				'genus' => 'oauth',
+ 				'species' => 'callback'
+ 			}
+ 		);
+ 		$redirect = "http://$host:$port/ruleset/cb_host/$rid/$version/oauth_error";		
 	}
-	$r->headers_out->set( Location => $caller);
+	$r->headers_out->set( Location => $redirect);
 	return Apache2::Const::REDIRECT;
 	
 }
