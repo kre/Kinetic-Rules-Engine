@@ -49,7 +49,6 @@ use Kynetx::Session qw(
 	session_cleanup
 );
 use Kynetx::Persistence;
-use Kynetx::FakeReq;
 use Kynetx::Errors;
 
 use Exporter;
@@ -128,7 +127,7 @@ sub oauth_callback_handler {
 		my $token_secret = $oauth_config->{'oauth_token_secret'};
 		$tokens = add_tokens($tokens,{'oauth_token_secret' => $token_secret});
 		my $access_tokens = request_access_tokens($req_info, $rule_env, $session, $namespace, $tokens, $endpoint);
-		if (mis_error($access_tokens)) {
+		if (Kynetx::Errors::mis_error($access_tokens)) {
 			$fail = $access_tokens->{'DEBUG'};
 		} else {
 			store_access_tokens($req_info, $rule_env, $session, $namespace, $access_tokens);
