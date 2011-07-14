@@ -43,7 +43,7 @@ use Cache::Memcached;
 use JSON::XS;
 use Data::Dumper;
 
-use Kynetx::Events;
+
 use Kynetx::Rules qw(:all);
 use Kynetx::Util qw(:all);
 use Kynetx::Session qw(:all);
@@ -53,7 +53,7 @@ use Kynetx::Version qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Directives;
 use Kynetx::Modules::OAuthModule;
-
+use Kynetx::Events;
 
 use constant DEFAULT_TEMPLATE_DIR => Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
 

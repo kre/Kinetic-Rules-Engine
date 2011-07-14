@@ -45,6 +45,7 @@ use Kynetx::Memcached qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Persistence qw(save_persistent_var);
+use Apache2::Const;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 

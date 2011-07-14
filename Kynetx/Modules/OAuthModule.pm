@@ -181,12 +181,16 @@ sub callback_host {
 		$eventname = $2;
 	}
 	$r->content_type('text/html');
-	print "<html><head></head><body>";
-	print '<script src="http://init.kobj.net/js/shared/kobj-static.js">';
+	print "<html><head></head><body onload=top.close() href='javascript:void(0)' content='10'>";
+	#print "<html><head></head><body>";
+	#print '<script src="http://init.kobj.net/js/shared/kobj-static.js" type="text/javascript">';
+	print '<script>';
 	my $x = Kynetx::Events::process_event($r,'oauth_callback',$eventname,$rid,$eid,$version);
 	print '</script>';
 	print '<script type="text/javascript">window.open("","_self","");window.opener="x";window.close()</script>';
-	print " $uri -|- $eventname </body></html>";
+	#print '<script type="text/javascript">window.open("","_self","");window.opener="x";window.close()</script>';
+	#print " $uri -|- $eventname </body></html>";
+	print "</body></html>";
 	return Apache2::Const::OK;
 }
 
@@ -228,18 +232,26 @@ sub get_access_tokens {
 sub request_access_tokens {
 	my ($req_info, $rule_env, $session, $namespace, $tokens, $endpoint) = @_;
 	my $logger = get_logger();
-	my $request = Net::OAuth->request("access token")->new(
-		'consumer_key'    => $tokens->{'consumer_key'},
-        'consumer_secret' => $tokens->{'consumer_secret'},
-		'token'           => $tokens->{'oauth_token'},
-		'token_secret'    => $tokens->{'oauth_token_secret'},
-		'verifier'        => $tokens->{'oauth_verifier'},
-		'request_url'     => $endpoint,
-		'request_method'  => 'GET',
-		'signature_method' => 'HMAC-SHA1',
-		'timestamp'        => time(),
-		'nonce'            => nonce(),
-	);
+	
+	my $request;
+	
+	eval {
+		$request = Net::OAuth->request("access token")->new(
+			'consumer_key'    => $tokens->{'consumer_key'},
+	        'consumer_secret' => $tokens->{'consumer_secret'},
+			'token'           => $tokens->{'oauth_token'},
+			'token_secret'    => $tokens->{'oauth_token_secret'},
+			'verifier'        => $tokens->{'oauth_verifier'},
+			'request_url'     => $endpoint,
+			'request_method'  => 'GET',
+			'signature_method' => 'HMAC-SHA1',
+			'timestamp'        => time(),
+			'nonce'            => nonce(),
+		);
+	};
+	if ($@) {
+    	return Kynetx::Errors::merror("Request access token failure: " . $@);		
+	}
 	$request->sign();
 	my $surl = $request->to_url();
 	my $ua = LWP::UserAgent->new();
@@ -259,7 +271,7 @@ sub request_access_tokens {
         }
     } else {
     	$logger->debug("Failed response: ", sub {Dumper($resp)});
-    	return merror("Request access token failure: $content");
+    	return Kynetx::Errors::merror("Request access token failure: $content");
     }
 	
 }

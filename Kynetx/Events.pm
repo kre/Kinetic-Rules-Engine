@@ -36,7 +36,6 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
-use Kynetx::Util qw(:all);
 use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Version qw(:all);
@@ -50,6 +49,7 @@ use Kynetx::Response;
 use Kynetx::Persistence qw(:all);
 use Kynetx::Events::Primitives qw(:all);
 use Kynetx::Events::State qw(:all);
+use Kynetx::Util qw(:all);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
