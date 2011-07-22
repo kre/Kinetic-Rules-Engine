@@ -55,6 +55,8 @@ our @ISA     = qw(Exporter);
 our %EXPORT_TAGS = (
 	all => [
 		qw(
+		raise_response_event
+		make_response_object
 		  )
 	]
 );
@@ -158,24 +160,11 @@ sub do_patch {
 }
 $verbs->{'patch'} = 1;
 
-sub do_http {
-	my ( $method, $req_info, $rule_env, $session, $config, $mods, $args, $vars )
-	  = @_;
+sub make_response_object {
+	my ($response, $ro_name, $config) = @_;
 	my $logger = get_logger();
-	$logger->trace("config: ", sub {Dumper($config)});
-	$logger->trace("mods: ", sub {Dumper($mods)});
-
-	my $response = mk_http_request(
-		$method, $config->{'credentials'},
-		$args->[0], $config->{'params'} || $config->{'body'},
-		$config->{'headers'},
-	);
-
-	$logger->trace("Raw response: ", sub {Dumper($response)});
-	my $v = $vars->[0] || '__dummy';
-
 	my $resp = {
-		$v => {
+		$ro_name => {
 			'label' => $config->{'autoraise'} || '',
 			'content'        => $response->decoded_content(),
 			'status_code'    => $response->code(),
@@ -186,22 +175,26 @@ sub do_http {
 	};
 
 	if ( defined $config->{'response_headers'} ) {
+		$logger->debug("Return response_headers");
 		foreach my $h ( @{ $config->{'response_headers'} } ) {
-			$resp->{$v}->{ lc($h) } = $response->header( uc($h) );
+			if (uc($h) eq 'HEADER_FIELD_NAMES') {
+				my @names;
+				for my $n ($response->header_field_names()) {
+					push(@names, $n);
+				}
+				$resp->{$ro_name}->{ lc($h) } = \@names;
+			} else {
+				$resp->{$ro_name}->{ lc($h) } = $response->header( uc($h) );
+			}			
 		}
 	}
 	$logger->trace( "KRL response ", sub { Dumper $resp } );
+	return $resp
+}
 
-	my $r_status;
-	if ($resp) {
-		$r_status = $resp->{$v}->{'status_line'};
-	}
-	$logger->debug( "Response status: ", sub { Dumper $r_status } );
-
-	# side effect rule env with the response
-	# should this be a denoted value?
-	$rule_env = add_to_env( $resp, $rule_env ) unless $v eq '__dummy';
-
+sub raise_response_event {
+	my ( $method, $req_info, $rule_env, $session, $config, $resp, $ro_name ) = @_;
+	my $logger = get_logger();
 	my $js = '';
 	if ( defined $config->{'autoraise'} ) {
 		$logger->debug(
@@ -209,13 +202,13 @@ sub do_http {
 
 		# make modifiers in right form for raise expr
 		my $ms = [];
-		foreach my $k ( keys %{ $resp->{$v} } ) {
+		foreach my $k ( keys %{ $resp->{$ro_name} } ) {
 			push(
 				@{$ms},
 				{
 					'name' => $k,
 					'value' =>
-					  Kynetx::Expressions::mk_den_str( $resp->{$v}->{$k} ),
+					  Kynetx::Expressions::mk_den_str( $resp->{$ro_name}->{$k} ),
 				}
 			);
 		}
@@ -232,6 +225,37 @@ sub do_http {
 		  Kynetx::Postlude::eval_raise_statement( $expr, $session, $req_info,
 			$rule_env, $config->{'rule_name'} );
 	}
+	return $js;
+}
+
+sub do_http {
+	my ( $method, $req_info, $rule_env, $session, $config, $mods, $args, $vars )
+	  = @_;
+	my $logger = get_logger();
+	$logger->trace("config: ", sub {Dumper($config)});
+	$logger->trace("mods: ", sub {Dumper($mods)});
+
+	my $response = mk_http_request(
+		$method, $config->{'credentials'},
+		$args->[0], $config->{'params'} || $config->{'body'},
+		$config->{'headers'},
+	);
+
+	$logger->trace("Raw response: ", sub {Dumper($response)});
+	my $v = $vars->[0] || '__dummy';
+
+	my $resp = make_response_object($response,$v,$config);
+
+	my $r_status;
+	if ($resp) {
+		$r_status = $resp->{$v}->{'status_line'};
+	}
+	$logger->debug( "Response status: ", sub { Dumper $r_status } );
+
+	# side effect rule env with the response
+	# should this be a denoted value?
+	$rule_env = add_to_env( $resp, $rule_env ) unless $v eq '__dummy';
+	my $js = raise_response_event( $method, $req_info, $rule_env, $session, $config, $resp, $v );
 }
 
 sub mk_http_request {

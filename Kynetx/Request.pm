@@ -104,8 +104,10 @@ sub build_request_env {
 
     my @param_names = $req->param;
     foreach my $n (@param_names) {
-#	$logger->debug("Param $n -> ", $req->param($n));
-	$request_info->{$n} = $req->param($n);
+		my $enc = Kynetx::Util::str_in($req->param($n));
+		my $kenc = Kynetx::Util::str_in($n);
+		$logger->debug("Param $n -> ", $req->param($n), " ", $enc);
+		$request_info->{$n} = $enc;
     }
     $request_info->{'param_names'} = \@param_names;
 

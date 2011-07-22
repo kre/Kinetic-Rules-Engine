@@ -249,9 +249,9 @@ sub get_predicates {
 sub now {
     my ( $req_info, $function, $args ) = @_;
     my $logger = get_logger();
-    $logger->debug( "Function: $function with ", sub { Dumper($args) } );
+    $logger->trace( "Function: $function with ", sub { Dumper($args) } );
     my $now = get_local_time($req_info);
-    $logger->debug( $now->strftime("%x %X") );
+    $logger->trace( $now->strftime("%x %X") );
     if ( defined $args ) {
         if ( $args->[0] ) {
             my $p = $args->[0];
@@ -269,7 +269,7 @@ $funcs->{'now'} = \&now;
 sub new {
     my ( $req_info, $function, $args ) = @_;
     my $logger = get_logger();
-    $logger->debug( "Function: $function with ", sub { Dumper($args) } );
+    $logger->trace( "Function: $function with ", sub { Dumper($args) } );
     my $utime = $args->[0];
     if ( !defined $utime ) {
         return now();
@@ -284,21 +284,24 @@ $funcs->{'new'} = \&new;
 sub add {
     my ( $req_info, $function, $args ) = @_;
     my $logger = get_logger();
-    $logger->debug( "Function: $function with ", sub { Dumper($args) } );
+    $logger->trace( "Function: $function with ", sub { Dumper($args) } );
     if ( ref $args->[0] eq '' ) {
         my $utime = $args->[0];
         my $dt = ISO8601($utime);
         if (defined $dt) {
-            $logger->debug( "arg: ", $args->[1] );
+        	my $tz = $dt->time_zone();
+            $dt->set_time_zone('UTC');
             if ( ref $args->[1] eq 'HASH' ) {
                 $dt->add( $args->[1] );
-                $logger->debug( "plus: ", $dt );
+                if (defined $tz) {
+                	$dt->set_time_zone($tz);
+                }                
                 my $f = DateTime::Format::RFC3339->new();
-                return $f->format_datetime(ISO8601($dt));
+                return $f->format_datetime($dt);
             } else {
                 $logger->debug( "Found: ", ref $args->[1], " Requires: {<timeunit> : <number>}" );
                 my $f = DateTime::Format::RFC3339->new();
-                return $f->format_datetime(ISO8601($dt));
+                return $f->format_datetime($dt);
             }
 
         }
@@ -311,7 +314,7 @@ $funcs->{'add'} = \&add;
 sub strformat {
     my ( $req_info, $function, $args ) = @_;
     my $logger = get_logger();
-    $logger->debug( "Function: $function with ", sub { Dumper($args) } );
+    $logger->trace( "Function: $function with ", sub { Dumper($args) } );
     if ( ref $args->[0] eq '' ) {
         my $utime = $args->[0];
         my $dt = ISO8601($utime);
@@ -334,20 +337,23 @@ $funcs->{'strftime'} = \&strformat;
 sub atom {
     my ( $req_info, $function, $args ) = @_;
     my $logger = get_logger();
-    $logger->debug( "Function: $function with ", sub { Dumper($args) } );
+    my $atom_strftime = "%FT%TZ";
+    $logger->trace( "Function: $function with ", sub { Dumper($args) } );    
     if ( ref $args->[0] eq '' ) {
         my $utime = $args->[0];
         my $dt = ISO8601($utime);
+        $dt->set_time_zone('UTC');
         if (defined $dt) {
+        	my $f = DateTime::Format::RFC3339->new();
+        	$dt->set_formatter($f);
             if (defined $args->[1] ) {
                 my $p = $args->[1];
                 my $tz = $p->{'timezone'} || $p->{'tz'};
                 if ($tz) {
                     $dt->set_time_zone($tz);
-                }
+                } 
             }
-            my $f = DateTime::Format::RFC3339->new();
-            return $f->format_datetime($dt);
+            return $dt->strftime($atom_strftime);
         }
     }
 
@@ -362,6 +368,7 @@ sub ISO8601 {
     if ($@) {
         $logger->warn( "String format error: ", $@ );
     } else {
+    	my $tz = $dt->time_zone();
         return $dt;
     }
     return undef;

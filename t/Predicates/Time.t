@@ -190,18 +190,19 @@ cmp_ok($diff->seconds,'>=',$pause,"time:now()");
 my $t = Kynetx::Predicates::Time::get_time($BYU_req_info,'new',["2010-08-08"]);
 cmp_ok("$t",'eq','2010-08-08T00:00:00+00:00',"Create a new time string");
 
+my $t2 = Kynetx::Predicates::Time::get_time($BYU_req_info,'new',['2010-08-08T04:00:00+00:00']);
 $t = Kynetx::Predicates::Time::get_time($BYU_req_info,'add',["$t",{"hours"=>4}]);
-cmp_ok("$t",'eq','2010-08-08T04:00:00+00:00',"Add 4 hours");
+cmp_ok("$t",'eq',$t2,"Add 4 hours");
 
 $t = Kynetx::Predicates::Time::get_time($BYU_req_info,'strftime',["$t","%F %T"]);
 cmp_ok("$t",'eq','2010-08-08 04:00:00',"Format a datetime string");
 
-$t = Kynetx::Predicates::Time::get_time($BYU_req_info,'atom',["2010-08-08",{'tz'=>'America/Denver'}]);
-cmp_ok("$t",'eq','2010-08-08T00:00:00-06:00',"Create a new time string");
+$t = Kynetx::Predicates::Time::get_time($BYU_req_info,'atom',["2010-08-08T12:00:00-06:00"]);
+cmp_ok("$t",'eq','2010-08-08T18:00:00Z',"Create a RFC3339 time string");
 
 #Log::Log4perl->easy_init($DEBUG);
 $t = Kynetx::Predicates::Time::get_time($BYU_req_info,'strftime',["$t","%F %T",{'tz'=>'America/New_York'}]);
-cmp_ok("$t",'eq','2010-08-08 02:00:00',"Format a datetime string for Timezone America/New_York");
+cmp_ok("$t",'eq','2010-08-08 14:00:00',"Format a datetime string for Timezone America/New_York");
 $logger->debug("t: ", $t);
 
 1;

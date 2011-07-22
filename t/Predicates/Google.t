@@ -115,8 +115,10 @@ open DICT, $dict_path;
 
 my $session = Kynetx::Test::gen_session($r,'a144x16');
 
-my $atoken = '1/mL1V01Uzz-EefEevlllhjASDJzosp5giNX-AIjgAVhk';
-my $atoken_secret = 'O/ulsQfjJgEUJFs70ghkt8pf';
+my $atoken = '1/xPC6_XCDp4UDrTui9vJR9Jo9uOuZ_TIHjUGxdJ0VV1c';
+my $atoken_secret = 'EQUsSkHPrMPZ-BZ4jotxq_bQ';
+#my $atoken = '1/mL1V01Uzz-EefEevlllhjASDJzosp5giNX-AIjgAVhk';
+#my $atoken_secret = 'O/ulsQfjJgEUJFs70ghkt8pf';
 
 my $scope = {
         'url' => 'http://www.google.com/calendar/feeds/',

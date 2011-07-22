@@ -50,6 +50,7 @@ use Kynetx::Session qw(
 );
 use Kynetx::Persistence;
 use Kynetx::Errors;
+use Kynetx::Modules::HTTP;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -82,6 +83,42 @@ my $predicates = {
 my $funcs = {};
 
 my $default_actions = {
+	'post' => {
+		'js' =>
+		  'NO_JS',    # this action does not emit JS, used in build_one_action
+		'before' => \&do_opost,
+		'after'  => []
+	},
+	'put' => {
+		'js' =>
+		  'NO_JS',    # this action does not emit JS, used in build_one_action
+		'before' => \&do_oput,
+		'after'  => []
+	},
+	'get' => {
+		'js' =>
+		  'NO_JS',    # this action does not emit JS, used in build_one_action
+		'before' => \&do_oget,
+		'after'  => []
+	},
+	'head' => {
+		'js' =>
+		  'NO_JS',    # this action does not emit JS, used in build_one_action
+		'before' => \&do_ohead,
+		'after'  => []
+	},
+	'delete' => {
+		'js' =>
+		  'NO_JS',    # this action does not emit JS, used in build_one_action
+		'before' => \&do_odelete,
+		'after'  => []
+	},
+	'patch' => {
+		'js' =>
+		  'NO_JS',    # this action does not emit JS, used in build_one_action
+		'before' => \&do_opatch,
+		'after'  => []
+	},
 };
 
 sub get_resources {
@@ -92,6 +129,103 @@ sub get_actions {
 }
 sub get_predicates {
     return $predicates;
+}
+
+sub do_oget {
+	my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
+	my $logger = get_logger();
+	my $function = 'GET';
+	my $rule_name = '__action__';
+	my $v = $vars->[0] || '__dummy';
+	my $oauth_config = get_oauth_config($req_info,$rule_env,$session,$rule_name,$function,$args);
+	$oauth_config = set_config_from_action($config,$oauth_config,$v);
+	return protected_resource_request($req_info,$rule_env,$session,$rule_name,$function,
+		$oauth_config, $args)
+}
+$funcs->{'get'} = \&protected_resource_request;
+
+sub do_opost {
+	my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
+	my $logger = get_logger();
+	my $function = 'POST';
+	my $rule_name = '__action__';
+	my $v = $vars->[0] || '__dummy';
+	my $oauth_config = get_oauth_config($req_info,$rule_env,$session,$rule_name,$function,$args);
+	$oauth_config = set_config_from_action($config,$oauth_config,$v);
+	return protected_resource_request($req_info,$rule_env,$session,$rule_name,$function,
+		$oauth_config, $args)
+}
+$funcs->{'post'} = \&protected_resource_request;
+
+
+sub do_ohead {
+	my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
+	my $logger = get_logger();
+	my $function = 'HEAD';
+	my $rule_name = '__action__';
+	my $v = $vars->[0] || '__dummy';
+	my $oauth_config = get_oauth_config($req_info,$rule_env,$session,$rule_name,$function,$args);
+	$oauth_config = set_config_from_action($config,$oauth_config,$v);
+	return protected_resource_request($req_info,$rule_env,$session,$rule_name,$function,
+		$oauth_config, $args)
+}
+$funcs->{'head'} = \&protected_resource_request;
+
+sub do_oput {
+	my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
+	my $logger = get_logger();
+	my $function = 'PUT';
+	my $rule_name = '__action__';
+	my $v = $vars->[0] || '__dummy';
+	my $oauth_config = get_oauth_config($req_info,$rule_env,$session,$rule_name,$function,$args);
+	$oauth_config = set_config_from_action($config,$oauth_config,$v);
+	return protected_resource_request($req_info,$rule_env,$session,$rule_name,$function,
+		$oauth_config, $args)
+}
+$funcs->{'put'} = \&protected_resource_request;
+
+sub do_odelete {
+	my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
+	my $logger = get_logger();
+	my $function = 'DELETE';
+	my $rule_name = '__action__';
+	my $v = $vars->[0] || '__dummy';
+	my $oauth_config = get_oauth_config($req_info,$rule_env,$session,$rule_name,$function,$args);
+	$oauth_config = set_config_from_action($config,$oauth_config,$v);
+	return protected_resource_request($req_info,$rule_env,$session,$rule_name,$function,
+		$oauth_config, $args)
+}
+$funcs->{'delete'} = \&protected_resource_request;
+
+sub do_opatch {
+	my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
+	my $logger = get_logger();
+	my $function = 'PATCH';
+	my $rule_name = '__action__';
+	my $v = $vars->[0] || '__dummy';
+	my $oauth_config = get_oauth_config($req_info,$rule_env,$session,$rule_name,$function,$args);
+	$oauth_config = set_config_from_action($config,$oauth_config,$v);
+	return protected_resource_request($req_info,$rule_env,$session,$rule_name,$function,
+		$oauth_config, $args)
+}
+$funcs->{'patch'} = \&protected_resource_request;
+
+sub set_config_from_action{
+	my ($aconfig,$oconfig,$v) = @_;
+	if (defined $aconfig->{'params'}) {
+		$oconfig->{'params'} = $aconfig->{'params'};
+	}
+	if (defined $aconfig->{'body'}) {
+		$oconfig->{'body'} = $aconfig->{'body'};
+	}
+	if (defined $aconfig->{'headers'}) {
+		$oconfig->{'headers'} = $aconfig->{'headers'};
+	}
+	if (defined $aconfig->{'response_headers'}) {
+		$oconfig->{'response_headers'} = $aconfig->{'response_headers'};
+	}
+	$oconfig->{'__evar__'} = $v;
+	return $oconfig;
 }
 
 sub oauth_callback_handler {
@@ -210,9 +344,15 @@ sub store_access_tokens {
 	}
 }
 
+
 sub get_access_tokens {
-	my ($req_info, $rule_env, $session, $namespace) = @_;
+	my ($req_info, $rule_env, $session, $namespace, $oauth_config) = @_;
 	my $logger = get_logger();
+	my $passed_tokens = $oauth_config->{'access_tokens'};
+	if (defined $passed_tokens) {
+		$logger->debug("Using tokens from parameters");
+		return $passed_tokens
+	}
 	my $rid = $req_info->{'rid'};
 	my $key = ACCESS_TOKEN_KEY . SEP . $namespace;
 	my $value = Kynetx::Persistence::get_persistent_var("ent", $rid, $session, $key);
@@ -289,21 +429,35 @@ sub get_auth_tokens {
 	};
 }
 
+sub run_function {
+    my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+    my $logger = get_logger();
+    my $f = $funcs->{$function};
+    if (defined $f) {
+     	my $oauth_config = get_oauth_config($req_info,$rule_env,$session,$rule_name,$function,$args);
+     	return $f->($req_info,$rule_env,$session,$rule_name,$function,$oauth_config, $args);
+    } else {
+    	$logger->warn("Function $function not found in module PDS");
+    }
+
+    return undef;
+}
+
+
 sub get_auth_request_url {
-	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my ($req_info,$rule_env,$session,$rule_name,$function,$oauth_config, $args) = @_;
 	my $logger = get_logger();
 	my ($url);
-	my $rid = $req_info->{'rid'};
-	my $oauth_config = get_oauth_config($req_info,$rule_env,$session,$rule_name,$function,$args);
+	my $rid = $req_info->{'rid'};	
+	my $extra_params = $oauth_config->{'extra_params'};
 	my $endpoints = $oauth_config->{'endpoints'};
 	my $namespace = $oauth_config->{'namespace'};
-	my $scope = $oauth_config->{'scope'};
 	my $request_url = $endpoints->{'request_token_url'};
 	my $authorization_url = $endpoints->{'authorization_url'};
 	my $cbaction = get_callback_action($req_info,$session,$namespace,$args);
     my $tokens = get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
     my $callback = make_callback_url($req_info,$namespace);
-    my $request_tokens = get_request_tokens($tokens,$callback,$request_url);
+    my $request_tokens = get_request_tokens($tokens,$callback,$request_url,$extra_params);
     $tokens = add_tokens($tokens,$request_tokens);
     my $ent_config_key = OAUTH_CONFIG_KEY . SEP . $namespace;
     # Need the token secret for the callback
@@ -315,6 +469,131 @@ sub get_auth_request_url {
 }
 $funcs->{'get_auth_url'} = \&get_auth_request_url;
 
+sub protected_resource_request {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$oauth_config, $args) = @_;
+	my $logger = get_logger();
+	my $namespace = $oauth_config->{'namespace'};
+	my $extra_params = $oauth_config->{'extra_params'};
+	my $headers = $oauth_config->{'headers'};
+	my $url = $oauth_config->{'request_url'};
+	my $ctokens = get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
+	my $atokens = get_access_tokens($req_info, $rule_env, $session, $namespace, $oauth_config);
+	my $preq;
+	my $method = uc($function) || 'GET';
+	my $request = Net::OAuth::ProtectedResourceRequest->new(
+		'consumer_key'    => $ctokens->{'consumer_key'},
+		'consumer_secret' => $ctokens->{'consumer_secret'},
+		'token'           => $atokens->{'access_token'},
+		'token_secret'    => $atokens->{'access_token_secret'},
+		'request_url'     => $url,
+		'request_method'  => $method,
+		'signature_method' => 'HMAC-SHA1',
+		'timestamp'        => time(),
+		'nonce'            => nonce(),
+      );
+    if (defined $extra_params) {
+    	$request->extra_params($extra_params);
+    }  
+	$request->sign();
+	my $purl = $request->to_url;
+	if ($method eq 'GET') {
+		$preq = HTTP::Request->new( GET => $purl );
+		$logger->debug("Request: ", sub {Dumper($preq->as_string())});
+	} elsif ($method eq 'POST') {
+		$preq = HTTP::Request->new( POST => $purl );
+		my $content = $oauth_config->{'body'};
+		if (defined $content) {
+			$preq->content($content);
+		}
+	} elsif ($method eq 'PUT') {
+		$preq = HTTP::Request->new( PUT => $purl );
+		my $content = $oauth_config->{'body'};
+		if (defined $content) {
+			$preq->content($content);
+		}
+	} elsif ($method eq 'DELETE') {
+		$preq = HTTP::Request->new( DELETE => $purl );
+	} else {
+		$logger->warn("Method ($method) not supported for OAuth Protected Resource Request");
+	}
+	$logger->trace("Auth header: ",$request->to_authorization_header);
+	
+	foreach my $k (keys %{$headers}) {
+		$preq->header($k => $headers->{$k});
+	}
+	
+    my $ua   = LWP::UserAgent->new;
+    my $response = $ua->simple_request($preq);
+    my $v = $oauth_config->{'__evar__'} || '__default__';
+    my $resp = Kynetx::Modules::HTTP::make_response_object($response,$v,$oauth_config);
+	return $resp->{$v};
+}
+
+sub get_oauth_config {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	my $oauth_service = $args->[0];
+	my $config = {
+		'namespace' => $oauth_service
+	};
+	my $endpoints = get_oauth_urls($oauth_service);
+	
+	if (defined $endpoints) {
+		$logger->trace("OAuth urls for $oauth_service: ", sub {Dumper($endpoints)});
+		$config->{"endpoints"} = $endpoints;
+	} else {
+		# Need to save token url so callback knows what OAuth service to use
+		my $opts = $args->[1];
+		$logger->debug("Service $oauth_service undefined, check ARGS for config");
+		$config->{"endpoints"} = {
+			'request_token_url' => $opts->{'request_token_url'},
+			'authorization_url' => $opts->{'authorization_url'},
+			'access_token_url'	=> $opts->{'access_token_url'}
+		}
+		
+	}
+	
+	if (my $p = get_params($req_info,$rule_env,$session,$rule_name,$function,$args)) {
+		$config->{'extra_params'} = $p;
+	}	
+	
+	if (my $b = get_body($req_info,$rule_env,$session,$rule_name,$function,$args)) {
+		$config->{'body'} = $b;
+	}
+	
+	if (my $h = get_headers($req_info,$rule_env,$session,$rule_name,$function,$args)) {
+		$config->{'headers'} = $h;
+	}
+	
+	if (my $u = get_url($req_info,$rule_env,$session,$rule_name,$function,$args)) {
+		$config->{'request_url'} = $u;
+	}
+	
+	if (my $rh = get_response_headers($req_info,$rule_env,$session,$rule_name,$function,$args)) {
+		$config->{'response_headers'} = $rh;
+	}
+
+	if (my $rh = get_passed_tokens($req_info,$rule_env,$session,$rule_name,$function,$args)) {
+		$config->{'access_tokens'} = $rh;
+	}
+
+	return $config;
+	
+}
+
+sub get_passed_tokens {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	my $oauth_service = $args->[0];
+	
+	my $opts = $args->[1];
+	if (defined $opts) {
+		return $opts->{'access_tokens'};
+	} else {
+		return undef;
+	}
+	
+}
 sub add_tokens {
 	my ($old,$new) = @_;
 	foreach my $key (keys %$new) {
@@ -324,7 +603,7 @@ sub add_tokens {
 }
 
 sub get_request_tokens {
-	my ($tokens,$callback,$request_url) = @_;
+	my ($tokens,$callback,$request_url,$extras) = @_;
 	my $logger = get_logger();
 	my $ckey = $tokens->{'consumer_key'};
 	my $csecret = $tokens->{'consumer_secret'};
@@ -338,7 +617,9 @@ sub get_request_tokens {
                      'nonce'            => nonce(),
                      'callback'         => $callback,
     );
-    
+    if (defined $extras) {
+    	$request->extra_params($extras);
+    }
 	$request->sign();
     my $surl = $request->to_url();
     $logger->debug( "Request token url: ", $surl );
@@ -391,6 +672,7 @@ sub get_consumer_tokens {
 	
 }
 
+
 sub get_callback_action {
 	my($req_info,$session,$namespace,$args) = @_;
 	my $logger = get_logger();
@@ -433,43 +715,76 @@ sub clear_callback_action {
 	Kynetx::Persistence::delete_persistent_var("ent", $rid, $session, $key);		
 }
 
-sub get_oauth_config {
+
+
+sub get_params {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
 	my $logger = get_logger();
 	my $oauth_service = $args->[0];
-	my $config = {
-		'namespace' => $oauth_service
-	};
-	$logger->debug("Get OAuth Request URL for $oauth_service");
-	my $endpoints = get_oauth_urls($oauth_service);
 	
-	if (defined $endpoints) {
-		$logger->trace("OAuth urls for $oauth_service: ", sub {Dumper($endpoints)});
-		$config->{"endpoints"} = $endpoints;
+	my $opts = $args->[1];
+	if (defined $opts) {
+		return $opts->{'params'};
 	} else {
-		# Need to save token url so callback knows what OAuth service to use
-		my $opts = $args->[1];
-		$logger->debug("Service $oauth_service undefined, check ARGS for config");
-		$config->{"endpoints"} = {
-			'request_token_url' => $opts->{'request_token_url'},
-			'authorization_url' => $opts->{'authorization_url'},
-			'access_token_url'	=> $opts->{'access_token_url'}
-		}
-		
+		return undef;
 	}
+}
+
+
+sub get_url {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	my $oauth_service = $args->[0];
 	
-	my $scope = get_oauth_scope($req_info,$rule_env,$session,$rule_name,$function,$args);
-	$config->{'scope'} = $scope;
+	my $opts = $args->[1];
+	if (defined $opts) {
+		return $opts->{'url'};
+	} else {
+		return undef;
+	}
+}
+
+sub get_body {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	my $oauth_service = $args->[0];
 	
-	return $config;
+	my $opts = $args->[1];
+	if (defined $opts) {
+		return $opts->{'body'};
+	} else {
+		return undef;
+	}
 	
 }
 
-sub get_oauth_scope {
+sub get_headers {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
-	# haven't implemented scopes yet
-	return undef;
+	my $logger = get_logger();
+	my $oauth_service = $args->[0];
+	
+	my $opts = $args->[1];
+	if (defined $opts) {
+		return $opts->{'headers'};
+	} else {
+		return undef;
+	}
+	
 }
+
+sub get_response_headers {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	my $oauth_service = $args->[0];
+	
+	my $opts = $args->[1];
+	if (defined $opts) {
+		return $opts->{'response_headers'};
+	} else {
+		return undef;
+	}	
+}
+
 
 sub get_oauth_urls {
 	my ($oauth_service) = @_;
@@ -479,19 +794,6 @@ sub get_oauth_urls {
 	return $config->{$oauth_service}->{'urls'}	
 }
 
-
-sub run_function {
-    my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
-    my $logger = get_logger();
-    my $f = $funcs->{$function};
-    if (defined $f) {
-     	return $f->($req_info,$rule_env,$session,$rule_name,$function,$args);
-    } else {
-    	$logger->warn("Function $function not found in module PDS");
-    }
-
-    return undef;
-}
 
 
 sub nonce {
