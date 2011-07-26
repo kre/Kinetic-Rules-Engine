@@ -137,11 +137,12 @@ my $filter_out = {
 
 sub to_directive {
   my $self = shift;
+  my $eid = shift;
 
   my $ol = $self->options();
 
   my $options;
-  my $meta;
+  my $meta = {'eid', $eid};
   foreach my $k (keys %{$ol}) {
     if ($filter_out->{$k}) {
       $meta->{$k} = $ol->{$k};
@@ -163,7 +164,9 @@ sub gen_directive_document {
 
   my $logger = get_logger();
 
-  my @directives = map {$_->to_directive()} @{$req_info->{'directives'}};
+  my $eid = $req_info->{'eid'};
+
+  my @directives = map {$_->to_directive($eid)} @{$req_info->{'directives'}};
 
   my $directive_doc = {'directives' => \@directives,
 		      };

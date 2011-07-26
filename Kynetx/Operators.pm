@@ -831,7 +831,7 @@ sub eval_as {
         my $tmp = Kynetx::Expressions::den_to_exp($obj);
         $logger->trace("EXP: ", sub {Dumper($tmp)});
         #my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
-        my $json = JSON::XS::->new->convert_blessed(1)->encode($tmp);
+        my $json = JSON::XS::->new->convert_blessed(1)->allow_nonref->encode($tmp);
         $logger->trace("JSON: ", $json);
         $obj->{'type'} = "str";
         $obj->{'val'} = $json;
@@ -866,7 +866,7 @@ sub eval_encode {
     my $tmp = Kynetx::Expressions::den_to_exp($obj);
     $logger->trace("EXP: ", sub {Dumper($tmp)});
     #my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
-    my $json = JSON::XS::->new->convert_blessed(1)->encode($tmp);
+    my $json = JSON::XS::->new->convert_blessed(1)->allow_nonref->encode($tmp);
     $logger->trace("JSON: ", $json);
     $obj->{'type'} = "str";
     $obj->{'val'} = $json;

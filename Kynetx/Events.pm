@@ -107,8 +107,6 @@ sub handler {
     $eid = $path_components[5] || '';
 
 
-    # Set to be the same now one.  This will pass back the rid to the runtime
-    #$eid = $rid;
     if ($domain eq 'version') {
       $logger->debug("returning version info for event API");
     } else {

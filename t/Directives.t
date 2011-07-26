@@ -88,9 +88,9 @@ is_deeply($my_req_info->{'directives'}->[2]->options(),
 	 );
 $test_count++;
 
-#diag (Dumper to_directive($my_req_info->{'directives'}->[2]));
+#diag (Dumper to_directive($my_req_info->{'directives'}->[2], $my_req_info->{'eid'}));
 
-is_deeply(to_directive($my_req_info->{'directives'}->[2]),
+is_deeply(to_directive($my_req_info->{'directives'}->[2], $my_req_info->{'eid'}),
 	  {'options' => {'a' => 5,
 			 'b' => [
 				 'a',
@@ -98,7 +98,7 @@ is_deeply(to_directive($my_req_info->{'directives'}->[2]),
 				]
 			},
 	   'name' => 'data',
-	   'meta' => undef
+	   'meta' => {'eid' => '0123456789abcdef'},
 	  });
 $test_count++;
 

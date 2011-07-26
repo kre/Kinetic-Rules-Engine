@@ -70,7 +70,9 @@ sub get_rules_from_repository{
     # default to production for svn repo
     # defaults to production when no version specified
     my $version = $sversion || 
-    		Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kynetx_app_version']) || 'prod';
+                  Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kynetx_app_version']) || 
+                  Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kinetic_app_version']) || 
+		  'prod';
     $req_info->{'rule_version'} = $version;
 
     my $memd = get_memd();
