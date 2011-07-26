@@ -191,12 +191,10 @@ $js = Kynetx::Actions::build_one_action(
 	    'dummy_name');
 
 $result = lookup_rule_env('r',$rule_env);
-ok(int($result->{'content_length'}) >= 449, "Content length defined");
+ok(int($result->{'content_length'}) > 0, "Content length defined");
 ok($result->{'status_code'} eq '200', "Status code defined");
 ok($result->{'content'} =~ m/data\": \"foon=45/, "Text/Plain comes back as data");
 $test_count += 3;
-
-#goto ENDY;
 
 
 $krl_src = <<_KRL_;
@@ -231,7 +229,7 @@ $js = Kynetx::Actions::build_one_action(
 	    'dummy_name');
 
 $result = lookup_rule_env('r',$rule_env);
-ok(int($result->{'content_length'}) >= 555, "Content length defined");
+ok(int($result->{'content_length'}) > 0, "Content length defined");
 ok($result->{'status_code'} eq '200', "Status code defined");
 ok(defined $result->{'content'}, "Default Form encoding comes back as form");
 $test_count += 3;
@@ -271,7 +269,7 @@ $js = Kynetx::Actions::build_one_action(
 	    'dummy_name');
 
 $result = lookup_rule_env('r',$rule_env);
-ok($result->{'content_length'} >= 480, "Content length defined");
+ok($result->{'content_length'} > 0, "Content length defined");
 ok($result->{'status_code'} eq '200', "Status code defined");
 ok($result->{'content'} eq '', "No content back from HEAD request");
 $test_count += 3;
@@ -312,7 +310,7 @@ $js = Kynetx::Actions::build_one_action(
 	    'dummy_name');
 
 $result = lookup_rule_env('r',$rule_env);
-ok($result->{'content_length'} >= 480, "Content length defined");
+ok($result->{'content_length'} > 0, "Content length defined");
 ok($result->{'status_code'} eq '200', "Status code defined");
 ok($result->{'content'} =~ m/Cache-Control\": \"no-cache/, "Content back from httpbin includes request headers");
 $test_count += 3;

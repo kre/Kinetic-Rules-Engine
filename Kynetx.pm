@@ -32,6 +32,7 @@ package Kynetx;
 
 use strict;
 use warnings;
+no warnings qw(uninitialized);
 
 
 use XML::XPath;
@@ -42,7 +43,7 @@ use Cache::Memcached;
 use JSON::XS;
 use Data::Dumper;
 
-use Kynetx::Events;
+
 use Kynetx::Rules qw(:all);
 use Kynetx::Util qw(:all);
 use Kynetx::Session qw(:all);
@@ -51,7 +52,8 @@ use Kynetx::Console qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Directives;
-
+use Kynetx::Modules::OAuthModule;
+use Kynetx::Events;
 
 use constant DEFAULT_TEMPLATE_DIR => Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
 
@@ -102,9 +104,10 @@ sub handler {
     } elsif($method eq 'version' ) {
 	#my $session = process_session($r);
 	show_build_num($r, $method, $rid);
-    } elsif($method eq 'locktest') {
-        lock_handle($r, $method, $rid, $eid);
-
+    } elsif($method eq 'cb_host') {
+        my $st = Kynetx::Modules::OAuthModule::callback_host($r,$method,$rid);
+    	$r->status($st);
+		return $st;
     } elsif($method eq 'twitter_callback' ) {
 	Kynetx::Modules::Twitter::process_oauth_callback($r, $method, $rid);
 	$r->status(Apache2::Const::REDIRECT);
@@ -120,20 +123,25 @@ sub handler {
       $r->status(Apache2::Const::REDIRECT);
       return Apache2::Const::REDIRECT;
     } elsif($method eq 'fb_callback' ) {
-      Kynetx::Predicates::Facebook::process_oauth_callback($r, $method, $rid);
-      $r->status(Apache2::Const::REDIRECT);
-      return Apache2::Const::REDIRECT;
+      #my $st = Kynetx::Predicates::Facebook::process_oauth_callback($r, $method, $rid, $eid);
+      my $st = Kynetx::Predicates::Google::OAuthHelper::generic_oauth_handler($r, $method, $rid, $eid);
+      $r->status($st);
+      return $st;
     } elsif($method eq 'pds_callback' ) {
       Kynetx::Modules::PDS::process_auth_callback($r, $method, $rid);
       $r->status(Apache2::Const::REDIRECT);
       return Apache2::Const::REDIRECT;
+    } elsif ($method eq 'oauth_callback') {
+    	my $st = Kynetx::Modules::OAuthModule::oauth_callback_handler($r,$method,$rid);
+    	$r->status($st);
+    	return $st;
     } elsif($method eq 'foo' ) {
 	my $uniq = int(rand 999999999);
 	$r->content_type('text/html');
 	print "$uniq";
     } elsif($method eq 'mth') {
     	test_harness($r, $method, $rid, $eid);
-    }
+    } 
 
 
     return Apache2::Const::OK;

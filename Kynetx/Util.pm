@@ -81,6 +81,7 @@ bloviate
 sns_publish
 str_in
 str_out
+body_to_hash
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -544,6 +545,17 @@ sub sns_publish {
     $hash->{kAWSSecretKey()} = $secret;
     my $sns = Kynetx::Predicates::Amazon::SNS->new($hash);
     $sns->publish();
+}
+
+sub body_to_hash {
+	my ($str) = @_;
+	my $ret = {};
+	my @parts = split(/&/,$str);
+	foreach my $kvpair (@parts) {
+		my ($k,$v) = split(/=/,$kvpair);
+		$ret->{$k} = $v;
+	}
+	return $ret;
 }
 
 

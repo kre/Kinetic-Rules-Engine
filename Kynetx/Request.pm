@@ -104,21 +104,14 @@ sub build_request_env {
 
     my @param_names = $req->param;
     foreach my $n (@param_names) {
-#	$logger->debug("Param $n -> ", $req->param($n));
-	$request_info->{$n} = $req->param($n);
+		my $enc = Kynetx::Util::str_in($req->param($n));
+		my $kenc = Kynetx::Util::str_in($n);
+		$logger->debug("Param $n -> ", $req->param($n), " ", $enc);
+		$request_info->{$n} = $enc;
     }
     $request_info->{'param_names'} = \@param_names;
 
     set_capabilities($request_info);
-
-#    my $patience = Kynetx::Configure::get_config("LOCK_PATIENCE");
-#    my $l_ttl = Kynetx::Configure::get_config("LOCK_TTL");
-#    my $memservers = Kynetx::Configure::get_config('MEMCACHE_SERVERS');
-#    $request_info->{'_lock'} = IPC::Lock::Memcached->new({
-#        "memcached_servers" => $memservers,
-#        "patience" => $patience,
-#        "ttl" => $l_ttl,
-#    });
 
     $logger->debug("Returning request information");
 
@@ -178,7 +171,8 @@ sub set_capabilities {
       $req_info->{'domain'}  eq 'eval' || # old style evaluation
       ($req_info->{'domain'} eq 'web' &&
        ! defined $capspec->{'web'}->{'capabilities'}->{'understands_javascript'}
-      )
+      ) ||
+      $req_info->{'domain'} eq 'oauth_callback'
      ) {
     $req_info->{'understands_javascript'} = 1;
   }

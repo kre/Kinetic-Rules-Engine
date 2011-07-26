@@ -87,6 +87,7 @@ use Kynetx::Modules::URI;
 use Kynetx::Modules::Address;
 use Kynetx::Modules::PDS;
 use Kynetx::Modules::This2That;
+use Kynetx::Modules::OAuthModule;
 
 our $name_prefix = '@@module_';
 
@@ -369,6 +370,14 @@ sub eval_module {
             $val ||= 0;
         } else {
             $val = Kynetx::Modules::PDS::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
+        }    	
+    } elsif ( $source eq 'oauthmodule' ) {
+        $preds = Kynetx::Modules::OAuthModule::get_predicates();
+        if ( defined $preds->{$function} ) {
+            $val = $preds->{$function}->( $req_info, $rule_env, $args );
+            $val ||= 0;
+        } else {
+            $val = Kynetx::Modules::OAuthModule::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
         }    	
     } elsif ( $source eq 'keys' ) {
       # return the right key if it exists
