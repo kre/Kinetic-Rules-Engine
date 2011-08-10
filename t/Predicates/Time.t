@@ -40,7 +40,7 @@ use Data::Dumper;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 
 use LWP::Simple;
@@ -53,7 +53,7 @@ use Kynetx::Predicates::Time qw/:all/;
 
 my $preds = Kynetx::Predicates::Time::get_predicates();
 my @pnames = keys (%{ $preds } );
-plan tests => 22 + int(@pnames);
+plan tests => 26 + int(@pnames);
 
 
 my $NYU_req_info;
@@ -203,8 +203,25 @@ cmp_ok("$t",'eq','2010-08-08T18:00:00Z',"Create a RFC3339 time string");
 #Log::Log4perl->easy_init($DEBUG);
 $t = Kynetx::Predicates::Time::get_time($BYU_req_info,'strftime',["$t","%F %T",{'tz'=>'America/New_York'}]);
 cmp_ok("$t",'eq','2010-08-08 14:00:00',"Format a datetime string for Timezone America/New_York");
-$logger->debug("t: ", $t);
 
+$t2 = Kynetx::Predicates::Time::get_time($BYU_req_info,'new',['08:00:00']);
+
+$t = Kynetx::Predicates::Time::get_time($BYU_req_info,'compare',["$rightnow","$t2"]);
+my $dt1 = DateTime::Format::ISO8601->parse_datetime($rightnow);
+my $dt2 = DateTime::Format::ISO8601->parse_datetime($t2);
+cmp_ok($t,'eq',DateTime->compare($dt1,$dt2),"Time only and compare");
+
+$t = Kynetx::Predicates::Time::get_time($BYU_req_info,'add',["$rightnow",{"hours"=>4}]);
+$t2 = Kynetx::Predicates::Time::get_time($BYU_req_info,'add',["$rightnow",{"hours"=>-4}]);
+
+$t = Kynetx::Predicates::Time::get_time($BYU_req_info,'compare',["$t","$rightnow"]);
+cmp_ok($t,'eq',1,"compare +4hours");
+
+$t = Kynetx::Predicates::Time::get_time($BYU_req_info,'compare',["$t2","$rightnow"]);
+cmp_ok($t,'eq',-1,"compare -4hours");
+
+$t = Kynetx::Predicates::Time::get_time($BYU_req_info,'compare',["$rightnow","$rightnow"]);
+cmp_ok($t,'eq',0,"compare same time");
 1;
 
 

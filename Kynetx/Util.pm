@@ -433,12 +433,20 @@ sub get_arg_hash {
 # Decode an input string
 sub str_in {
 	my ($istr) = @_;
+	my $dstr;
 	my $logger = get_logger();	
 	my $struct = ref $istr;
 	if ($struct ne "") {
 		$logger->debug("Attempt to UTF-8 encode non-string ($struct)")
 	}
-	return Encode::decode("UTF-8",$istr);
+	eval {
+		$dstr = Encode::decode("UTF-8",$istr);
+	};
+	if ($@) {
+		$logger->debug("Source string not UTF-8 encoded");
+		$dstr = $istr;
+	}
+	return $dstr;
 	
 }
 

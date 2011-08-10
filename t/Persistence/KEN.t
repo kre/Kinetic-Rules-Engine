@@ -42,7 +42,7 @@ use Apache::Session::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 use Kynetx::Test qw/:all/;
@@ -86,18 +86,18 @@ $logger->debug("r: ", sub {Dumper($r)});
 
 my $session = process_session($r);
 
-$description = "No token. Create a new KEN";
-my $nken = Kynetx::Persistence::KEN::get_ken($session,$srid);
-testit($nken,re($ken_re),$description);
-my $key = {
-  "ken" => $nken
-};
-
-my $got = Kynetx::MongoDB::get_value("tokens",$key);
-
-
-$temp_token = $got->{'ktoken'};
-$tsession = $got->{'endpoint_id'};
+#$description = "No token. Create a new KEN";
+#my $nken = Kynetx::Persistence::KEN::get_ken($session,$srid);
+#testit($nken,re($ken_re),$description);
+#my $key = {
+#  "ken" => $nken
+#};
+#
+#my $got = Kynetx::MongoDB::get_value("tokens",$key);
+#
+#
+#$temp_token = $got->{'ktoken'};
+#$tsession = $got->{'endpoint_id'};
 
 #diag $temp_token;
 #diag $tsession;

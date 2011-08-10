@@ -334,6 +334,42 @@ sub strformat {
 }
 $funcs->{'strftime'} = \&strformat;
 
+sub compare {
+	my ( $req_info, $function, $args ) = @_;
+	my $logger = get_logger();
+	my $t1 = $args->[0];
+	my $t2 = $args->[1];
+	my $error = undef;
+	if (defined $t1 and defined $t2) {
+		my $dt1 = eval {ISO8601($t1)};
+		my $dt2 = eval {ISO8601($t2)};
+		if ($@) {
+			$error .= 'time module, conversion error: ' . $@;
+		}
+		if (defined $dt1 and defined $dt2) {
+			$dt1->set_time_zone('UTC');
+			$dt2->set_time_zone('UTC');
+			return DateTime->compare($dt1,$dt2);
+		} else {
+			$error .= "Invalid time comparison: (". $dt1 . "/" . $dt2 . ")";
+		}
+	} else {
+		$error .= 'function time:compare requires two arguments';
+	}
+	if (defined $error) {
+		Kynetx::Errors::raise_error($req_info,
+			'warn',
+			$error,
+			{
+				'genus' => 'system',
+				'species' => 'time module'
+			}
+			);		
+	}
+	return undef;
+}
+$funcs->{'compare'} = \&compare;
+
 sub atom {
     my ( $req_info, $function, $args ) = @_;
     my $logger = get_logger();
@@ -366,9 +402,15 @@ sub ISO8601 {
     my $dt;
     eval { $dt = DateTime::Format::ISO8601->parse_datetime($utime) };
     if ($@) {
-        $logger->warn( "String format error: ", $@ );
+    	eval {$dt = DateTime::Format::ISO8601->parse_time($utime)};
+        if ($@) {
+        	$logger->warn( "String format error: ", $@ );
+        	$logger->debug("Format: $dt");
+        } else {
+        	return $dt;
+        }
     } else {
-    	my $tz = $dt->time_zone();
+    	#my $tz = $dt->time_zone();
         return $dt;
     }
     return undef;
