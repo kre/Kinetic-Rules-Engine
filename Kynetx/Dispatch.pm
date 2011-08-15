@@ -101,6 +101,7 @@ sub extended_dispatch {
 
     
     foreach my $rid (@rids) {
+	$req_info->{'rid'} = $rid;
 
 	my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
 
