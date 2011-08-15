@@ -160,7 +160,7 @@ my $atom_t = {
     'id' => ignore(),
     'openSearch$itemsPerPage' => $atom_element,
     'title' => $atom_element,
-    'twitter$warning' => ignore(),
+    #'twitter$warning' => ignore(),
     'updated' => ignore,
 };
 
@@ -397,6 +397,7 @@ _KRL_
 #    contains_string(encode_json($ds),
 #		    '{"page":1,"query":"windley","completed_in":',
 #		    "JSON twitter search");
+# $logger->debug(sub{Dumper($ds)});
 
     cmp_deeply($ds,$atom_f,"XML->JSON conversion");
 

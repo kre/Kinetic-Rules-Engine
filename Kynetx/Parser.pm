@@ -174,6 +174,11 @@ sub remove_comments {
     return $ruleset;
 
 }
+sub utf8_parse_ruleset {
+	my ($u_ruleset) = @_;
+	my $enc = Kynetx::Util::str_in($u_ruleset);
+	return parse_ruleset($enc);
+}
 
 sub parse_ruleset {
     my ($ruleset) = @_;
@@ -401,7 +406,7 @@ sub parse_global_decls {
     #my $encap = $element;#_encapsulate($element);
 
     my $json = $parser->global($element);
-    $logger->debug(Dumper($json));
+    $logger->trace(Dumper($json));
     my $result = Kynetx::Json::jsonToAst_w($json);
 
 #    $logger->debug(Dumper($result));

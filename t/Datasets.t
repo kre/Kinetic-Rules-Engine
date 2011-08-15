@@ -34,6 +34,7 @@ use strict;
 
 use Test::More;
 use Test::LongString;
+use Test::Deep;
 use Data::Dumper;
 use LWP::UserAgent;
 use LWP::Simple;
@@ -287,14 +288,13 @@ _KRL_
 
     $args = ["&q=iphone"];
 
- #   diag Dumper($rule_env);
+#   diag Dumper($rule_env);
 
 #    diag Dumper($krl);
-
-    contains_string(get_datasource($rule_env,$args,"twitter_search"),
-		    'kntx({"results":[{',
+	my $source = get_datasource($rule_env,$args,"twitter_search");
+    cmp_deeply($source,
+		    re('kntx\(\{.*"results":\[\{'),
 		    "JSON twitter search with param in spec");
-
 
 
     $krl_src = <<_KRL_;
@@ -313,8 +313,8 @@ _KRL_
 
 #    diag Dumper($krl);
 
-    contains_string(get_datasource($rule_env,$args,"twitter_search"),
-		    'kntx({"results":[{',
+    cmp_deeply(get_datasource($rule_env,$args,"twitter_search"),
+		    re('kntx\(\{.*"results":\[\{'),
 		    "JSON twitter search with multiple params");
 
 
@@ -341,8 +341,8 @@ _KRL_
 # http://search.twitter.com/search.json?callback=kntx&q=byu
 
 
-    contains_string(get_datasource($rule_env,$args,"twitter_search"),
-		    'kntx({"results":[{',
+    cmp_deeply(get_datasource($rule_env,$args,"twitter_search"),
+		    re('kntx\(\{.*"results":\[\{'),
 		    "JSON twitter search with multiple params");
 
 
@@ -367,8 +367,8 @@ _KRL_
 # http://search.twitter.com/search.json?callback=kntx&q=byu
 
 
-    contains_string(get_datasource($rule_env,$args,"twitter_search"),
-		    'kntx({"results":[{',
+    cmp_deeply(get_datasource($rule_env,$args,"twitter_search"),
+		    re('kntx\(\{.*"results":\[\{'),
 		    "JSON twitter search with multiple params");
 
 

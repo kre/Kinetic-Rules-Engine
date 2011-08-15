@@ -28,7 +28,7 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test;
 use Kynetx::Predicates::Google;
@@ -89,6 +89,7 @@ my $keys =
 
 
 my $rightnow = Kynetx::Predicates::Time::get_time($my_req_info,'now',[{'timezone'=>'America/Denver'}]);
+#my $rightnow = Kynetx::Predicates::Time::get_time($my_req_info,'now',[]);
 my $dow = Kynetx::Predicates::Time::get_time($my_req_info,'strftime',[$rightnow,"%u"
 ]);
 #my $doww = Kynetx::Predicates::Time::get_time($my_req_info,'strftime',[$rightnow,"%d %w"]);
@@ -106,8 +107,14 @@ my $afri_morn = Kynetx::Predicates::Time::get_time($my_req_info,'atom',
     ["$fri_morn"]);
     #["$fri_morn",{'tz'=>'America/Denver'}]);
 my $afri_aft = Kynetx::Predicates::Time::get_time($my_req_info,'atom',
-    ["$fri_aft",{'tz'=>'America/Denver'}]);
+    #["$fri_aft",{'tz'=>'America/Denver'}]);
+    ["$fri_aft"]);
 
+#$logger->debug($fri_morn);
+#$logger->debug($afri_morn);
+#$logger->debug($fri_aft);
+#$logger->debug($afri_aft);
+#die;
 my $dict_path = "/usr/share/dict/words";
 my @DICTIONARY;
 open DICT, $dict_path;
@@ -115,10 +122,12 @@ open DICT, $dict_path;
 
 my $session = Kynetx::Test::gen_session($r,'a144x16');
 
-my $atoken = '1/xPC6_XCDp4UDrTui9vJR9Jo9uOuZ_TIHjUGxdJ0VV1c';
-my $atoken_secret = 'EQUsSkHPrMPZ-BZ4jotxq_bQ';
+#my $atoken = '1/xPC6_XCDp4UDrTui9vJR9Jo9uOuZ_TIHjUGxdJ0VV1c';
+#my $atoken_secret = 'EQUsSkHPrMPZ-BZ4jotxq_bQ';
 #my $atoken = '1/mL1V01Uzz-EefEevlllhjASDJzosp5giNX-AIjgAVhk';
 #my $atoken_secret = 'O/ulsQfjJgEUJFs70ghkt8pf';
+my $atoken = '1/IJ5C9U5Jz5bm47ifvpZ7z4bprUZkN88KfghyWwoR9Pg';
+my $atoken_secret = 'q_F57TrgZoZljCneEMGrgLZa';
 
 my $scope = {
         'url' => 'http://www.google.com/calendar/feeds/',
@@ -327,7 +336,7 @@ $expected->{'entry'} = superhashof({
     %{$expected->{'entry'}},
     %$temp,
 });
-$args = { "feed" => "event", "userid" => 'kynetxtest@gmail.com',"eventid" => "$created_event_id"
+$args = { "feed" => "event", "userid" => 'solargroovey@gmail.com',"eventid" => "$created_event_id"
 };
 test_google('calendar','get',$args,$expected,$description,0);
 
