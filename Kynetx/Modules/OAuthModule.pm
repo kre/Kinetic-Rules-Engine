@@ -119,12 +119,20 @@ my $default_actions = {
 		'before' => \&do_opatch,
 		'after'  => []
 	},
+	'delete_token' => {
+		'js' =>
+		  'NO_JS',    # this action does not emit JS, used in build_one_action
+		'before' => \&delete_token,
+		'after'  => []
+	},
 };
 
 sub get_resources {
     return     {};
 }
 sub get_actions {
+	my $logger = get_logger();
+	$logger->trace("OAuthModule Actions: ", sub {Dumper(keys %$default_actions)});
     return $default_actions;
 }
 sub get_predicates {
@@ -210,6 +218,42 @@ sub do_opatch {
 }
 $funcs->{'patch'} = \&protected_resource_request;
 
+sub has_token {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$oauth_config, $args) = @_;
+	my $logger = get_logger();
+	my $oauth_service = $args->[0];
+	my $atokens = get_access_tokens($req_info, $rule_env, $session, $oauth_service, $oauth_config);
+	$logger->trace("Atokens: ", sub {Dumper($atokens)});
+	if (defined $atokens) {
+		if (defined $atokens->{'access_token_secret'} && $atokens->{'access_token_secret'} ne '') {
+			return 1;
+		}
+	} 
+	return 0;
+}
+$funcs->{'has_token'} = \&has_token;
+
+sub get_token {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$oauth_config, $args) = @_;
+	my $logger = get_logger();
+	my $oauth_service = $args->[0];
+	my $atokens = get_access_tokens($req_info, $rule_env, $session, $oauth_service, $oauth_config);
+	return $atokens;
+}
+$funcs->{'_get_token'} = \&get_token;
+
+sub delete_token {
+	my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
+	my $logger = get_logger();
+	my $oauth_service = $args->[0];
+	my $rid = $req_info->{'rid'};
+	my $key = ACCESS_TOKEN_KEY . SEP . $oauth_service;
+	$logger->debug("Delete token request: $key");
+	Kynetx::Persistence::delete_persistent_var("ent",$rid, $session, $key);	
+	return undef;
+}
+
+
 sub set_config_from_action{
 	my ($aconfig,$oconfig,$v) = @_;
 	if (defined $aconfig->{'params'}) {
@@ -270,7 +314,6 @@ sub oauth_callback_handler {
 	} else {
 		# Callback was not authorized
 		$fail = "No verification token from OAuth authority";
-		
 	}
   
   	Kynetx::Persistence::delete_persistent_var("ent", $rid, $session, $key);
@@ -284,7 +327,9 @@ sub oauth_callback_handler {
  				'species' => 'callback'
  			}
  		);
- 		$redirect = "http://$host:$port/ruleset/cb_host/$rid/$version/oauth_error";
+ 		my $base = "http://$host:$port/ruleset/cb_host/$rid/$version/oauth_error";
+ 		my $p = {'error' => $fail};
+ 		$redirect = Kynetx::Util::mk_url($base,$p);
 	} elsif ($cb_action->{'type'} eq 'redirect') {
 		$redirect = $cb_action->{'url'};
 		return Apache2::Const::REDIRECT;
@@ -339,6 +384,7 @@ sub store_access_tokens {
 	my $r = Kynetx::Persistence::save_persistent_var("ent",$rid, $session, $key, $atokens);
 	if (defined $r) {
 		$logger->debug("Stored access token $key for $namespace");
+		$logger->trace("Tokens: ", sub {Dumper($atokens)});
 	} else {
 		$logger->debug("Failed to save access token $key for $namespace")
 	}

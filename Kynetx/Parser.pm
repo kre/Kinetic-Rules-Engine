@@ -186,7 +186,7 @@ sub parse_ruleset {
     my $logger = get_logger();
     $logger->trace("[parser::parse_ruleset] passed: ", sub {Dumper($ruleset)});
 
-    $ruleset = remove_comments($ruleset);
+    #$ruleset = remove_comments($ruleset);
 
     $logger->trace("[parser::parse_ruleset] after comments: ", sub {Dumper($ruleset)});
     my $json = $parser->ruleset($ruleset);

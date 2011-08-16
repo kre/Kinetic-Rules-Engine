@@ -886,8 +886,8 @@ sub build_one_action {
 		elsif ( $action->{'source'} eq 'twilio' ) {
 			$actions = Kynetx::Modules::Twilio::get_actions();
 		}
-		elsif ( $action->{'source'} eq 'pds' ) {
-			$actions = Kynetx::Modules::PDS::get_actions();
+		elsif ( $action->{'source'} eq 'oauthmodule' ) {
+			$actions = Kynetx::Modules::OAuthModule::get_actions();
 		}
 	}
 	else {
