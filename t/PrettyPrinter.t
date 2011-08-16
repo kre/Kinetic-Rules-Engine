@@ -71,7 +71,7 @@ foreach my $f (@krl_files) {
 
 my ($fl,$krl_text);
 
-($fl, $krl_text) = getkrl("data/comment1.krl");
+($fl, $krl_text) = getkrl("data/comment1.krl_");
 my $krl = decode("UTF-8",$krl_text);
 #diag $krl;
 #diag remove_comments($krl);
