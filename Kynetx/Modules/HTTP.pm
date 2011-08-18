@@ -280,8 +280,10 @@ sub mk_http_request {
 		if ( defined $headers->{'content-type'} ) {
 			$content = $params;
 			$req->header( 'content-type' => $headers->{'content-type'} );
-		}
-		else {
+		} elsif (defined $headers->{'Content-Type'}) {
+			$content = $params;
+			$req->header( 'content-type' => $headers->{'Content-Type'} );			
+		} else {
 			$content = join(
 				'&',
 				map( "$_=" . uri_escape_utf8( $params->{$_} ), keys %{$params} )
@@ -289,6 +291,17 @@ sub mk_http_request {
 			$req->header(
 				'content-type' => "application/x-www-form-urlencoded" );
 
+		}
+		if (ref $content ne "") {
+			my $temp;
+			eval {
+				$temp = Kynetx::Json::astToJson($content);
+			};
+			if ($@) {
+				$content = "Not string, not json"
+			} else {
+				$content = $temp;
+			}
 		}
 
 		$logger->trace( "Encoded content: ", sub { Dumper($content) } );
@@ -357,6 +370,9 @@ sub run_function {
 		$headers     = $args->[1]->{'headers'}          || $headers;
 		$credentials = $args->[1]->{'credentials'}      || $credentials;
 		$rheaders    = $args->[1]->{'response_headers'} || $rheaders;
+		if (defined $args->[1]->{'body'}) {
+			$params = $args->[1]->{'body'};
+		}
 	}
 	
 

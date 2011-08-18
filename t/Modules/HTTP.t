@@ -16,7 +16,7 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
@@ -163,7 +163,7 @@ $test_count += 2;
 $krl_src = <<_KRL_;
 http:put("$test_site/put") setting(r) 
 	with 
-		params = {"foon": 45}  and
+		body = '{"foon" +> 45}'  and
 		headers = {
 			"Content-Type" : "text/plain"
 		} and
@@ -191,9 +191,10 @@ $js = Kynetx::Actions::build_one_action(
 	    'dummy_name');
 
 $result = lookup_rule_env('r',$rule_env);
+$logger->debug(sub {Dumper($result)});
 ok(int($result->{'content_length'}) > 0, "Content length defined");
 ok($result->{'status_code'} eq '200', "Status code defined");
-ok($result->{'content'} =~ m/data\": \"foon=45/, "Text/Plain comes back as data");
+ok($result->{'content'} =~ m/data\": \"{/, "Text/Plain comes back as data");
 $test_count += 3;
 
 

@@ -669,7 +669,7 @@ action[HashMap result]
 	;
 
 conditional_action[HashMap result]
-	: IF e=expr THEN unconditional_action[result]	 {
+	: IF e=expr must_be["then"] unconditional_action[result]	 {
 		if($e.text == null)
 		{
 			HashMap tmp = new HashMap();
@@ -757,7 +757,7 @@ modifier_clause returns[ArrayList result]
 	;
 
 modifier returns[HashMap result]
-	: name=VAR EQUAL(e=expr | j=JS) {
+	: name=(VAR|REPLACE|MATCH|EXTRACT|OTHER_OPERATORS) EQUAL(e=expr | j=JS) {
 		HashMap tmp2 = new HashMap();
 
 		HashMap tmp = new HashMap();
@@ -930,23 +930,9 @@ event_arity returns[HashMap result]
 			the_result.put("args",elist.result);
 			$result = the_result;		
 		}
-		| THEN elist=event_list {
+		| op=must_be_one[sar("before","after","then")] elist=event_list {
 			HashMap the_result = new HashMap();
-			the_result.put("op","then");
-			the_result.put("type","arity_event");
-			the_result.put("args",elist.result);
-			$result = the_result;		
-		}
-		| BEFORE elist=event_list {
-			HashMap the_result = new HashMap();
-			the_result.put("op","before");
-			the_result.put("type","arity_event");
-			the_result.put("args",elist.result);
-			$result = the_result;		
-		}
-		| AFTER elist=event_list {
-			HashMap the_result = new HashMap();
-			the_result.put("op","after");
+			the_result.put("op",$op.text);
 			the_result.put("type","arity_event");
 			the_result.put("args",elist.result);
 			$result = the_result;		
@@ -1012,7 +998,7 @@ event_sequence returns[HashMap result]
 	ArrayList temp_list = new ArrayList();
 }
 	:
-		ea=event_primitive op=(AFTER|BEFORE|THEN) eb=event_block {
+		ea=event_primitive op=must_be_one[sar("before","after","then")] eb=event_block {
 			HashMap the_result = new HashMap();
 			the_result.put("type","complex_event");
 			the_result.put("op",$op.text);
@@ -1022,7 +1008,7 @@ event_sequence returns[HashMap result]
 			$result = the_result;		
 		
 		}
-		| eabw=event_between op=(AFTER|BEFORE|THEN) eb=event_block {
+		| eabw=event_between op=must_be_one[sar("before","after","then")] eb=event_block {
 			HashMap the_result = new HashMap();
 			the_result.put("type","complex_event");
 			the_result.put("op",$op.text);
@@ -1128,27 +1114,27 @@ event_and2 returns[HashMap result]
 		}
 	;
 
-event_block_prime returns[HashMap result]
-@init {
-	ArrayList temp_list = new ArrayList();
-	//ArrayList temp_list_2 = new ArrayList();
-}
-	:
-		eor=event_block BEFORE es=event_block {
-			HashMap the_result = new HashMap();
-			the_result.put("type","complex_event");
-			the_result.put("op","before");
-			temp_list.add(eor.result); // new
-			the_result.put("args",temp_list);
-			((ArrayList)the_result.get("args")).add(es.result);
-			$result = the_result;		
-		} |
-		eor=event_block
-		{
-			$result = eor.result;
-		}
-
-	;
+//event_block_prime returns[HashMap result]
+//@init {
+//	ArrayList temp_list = new ArrayList();
+//	//ArrayList temp_list_2 = new ArrayList();
+//}
+//	:
+//		eor=event_block BEFORE es=event_block {
+//			HashMap the_result = new HashMap();
+//			the_result.put("type","complex_event");
+//			the_result.put("op","before");
+//			temp_list.add(eor.result); // new
+//			the_result.put("args",temp_list);
+//			((ArrayList)the_result.get("args")).add(es.result);
+//			$result = the_result;		
+//		} |
+//		eor=event_block
+//		{
+//			$result = eor.result;
+//		}
+//
+//	;
 
 
 
@@ -1158,7 +1144,7 @@ event_seq returns[HashMap result]
 	//ArrayList temp_list_2 = new ArrayList();
 }
 	:
-		eor=event_or seq=(BEFORE|THEN|AFTER)    es=event_seq
+		eor=event_or seq=must_be_one[sar("before","after","then")]    es=event_seq
 		{
 			HashMap the_result = new HashMap();
 			the_result.put("type","complex_event");
@@ -1858,7 +1844,7 @@ unary_expr  returns[Object result] options { backtrack = true; }
 
 	      	$result = tmp;
 	}
-	| SEEN rx_1=expr op=(BEFORE|AFTER) rx_2=expr  must_be["in"] vd=VAR_DOMAIN ':' v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) {
+	| SEEN rx_1=expr op=must_be_one[sar("before","after")] rx_2=expr  must_be["in"] vd=VAR_DOMAIN ':' v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) {
       	      	HashMap tmp = new HashMap();
 	      	tmp.put("type","seen_compare");
 	      	tmp.put("domain",$vd.text);
@@ -2472,14 +2458,14 @@ REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
 // EXPLICIT
 // 	: 'explicit';
 
- AFTER 
- 	:	 'after';
- 	
- BEFORE 
- 	:	 'before';
+// AFTER 
+//	:	 'after';
+// 	
+// BEFORE 
+// 	:	 'before';
  
- THEN
- 	:	'then';
+// THEN
+// 	:	'then';
  	
  AND_AND : 'and';
  
@@ -2618,6 +2604,10 @@ REPLACE
 
 EXTRACT
     : 'extract';
+    
+//ADVERBS
+//	: 'after' | 'before' | 'then'
+//	;
 
 OTHER_OPERATORS
 	:  'pick'|'length'|'as'|'head'|'tail'|'sort'
