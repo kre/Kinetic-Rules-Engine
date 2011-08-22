@@ -494,6 +494,7 @@ sub get_auth_request_url {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$oauth_config, $args) = @_;
 	my $logger = get_logger();
 	my ($url);
+	my $fail = undef;
 	my $rid = $req_info->{'rid'};	
 	my $extra_params = $oauth_config->{'extra_params'};
 	my $endpoints = $oauth_config->{'endpoints'};
@@ -504,7 +505,17 @@ sub get_auth_request_url {
     my $tokens = get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
     my $callback = make_callback_url($req_info,$namespace);
     my $request_tokens = get_request_tokens($tokens,$callback,$request_url,$extra_params);
-    $tokens = add_tokens($tokens,$request_tokens);
+    if (Kynetx::Errors::mis_error($request_tokens)) {
+ 		Kynetx::Errors::raise_error($req_info,'warn',
+ 			"[OAuthModule] " . $request_tokens->{'DEBUG'},
+ 			{
+ 				'genus' => 'oauth',
+ 				'species' => 'callback'
+ 			}
+ 		);
+ 		return undef;
+	}
+	$tokens = add_tokens($tokens,$request_tokens);
     my $ent_config_key = OAUTH_CONFIG_KEY . SEP . $namespace;
     # Need the token secret for the callback
     $oauth_config->{'oauth_token_secret'} = $tokens->{'oauth_token_secret'};
@@ -685,6 +696,9 @@ sub get_request_tokens {
         	'oauth_token' => $oauth_token,
         	'oauth_token_secret' => $oauth_token_secret
         };
+    } else {
+    	my $fail = $resp->code() . "," . $resp->status_line() . "," . $resp->decoded_content();
+		return Kynetx::Errors::merror($fail);
     }
 }
 

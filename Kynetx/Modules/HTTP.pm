@@ -309,13 +309,9 @@ sub mk_http_request {
 		$req->header( 'content-length' => length($content) );
 
 	}
-	elsif ( $method eq 'GET' || $method eq 'HEAD') {
+	elsif ( $method eq 'GET' || $method eq 'HEAD' || $method eq 'DELETE') {
 		my $full_uri = Kynetx::Util::mk_url( $uri, $params );
 		$req = new HTTP::Request $method, $full_uri;
-	}
-	elsif ($method eq 'DELETE') {
-		my $delete_uri = Kynetx::Util::mk_url($uri);
-		$req = new HTTP::Request $method, $delete_uri;
 	}
 	else {
 		$logger->warn("Bad method ($method) called in do_http");
@@ -326,7 +322,7 @@ sub mk_http_request {
 		$req->header( $k => $headers->{$k} );
 	}
 
-	$logger->trace( "Request ", Dumper $req);
+	$logger->debug( "Request ", Dumper $req);
 
 	$response = $ua->request($req);
 

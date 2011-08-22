@@ -16,7 +16,7 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
@@ -80,7 +80,10 @@ $config = mk_config_string(
 # most basic requests
 my $test_site = "http://httpbin.org";
 my $stest_site = "https://httpbin.org";
+
 #goto ENDY;
+
+
 $krl_src = <<_KRL_;
 // Everything but the URI should be ignored in an http delete
 http:patch("http://www.example.com") setting(r) 
@@ -116,9 +119,6 @@ $result = lookup_rule_env('r',$rule_env);
 ok($result->{'content'} eq '', "Content undefined");
 ok($result->{'status_code'} eq '302', "Status code Found(?)");
 $test_count += 2;
-
-#goto ENDY;
-
 
 
 $krl_src = <<_KRL_;
@@ -685,8 +685,56 @@ like($result->{'content'}, qr/CS Test 1/, "Correct ruleset received");
 like($result->{'x-runtime'}, qr/0\.0\d+/, "x-runtime is there");
 $test_count += 3;
 
+#$krl_src = <<_KRL_;
+#r = http:post("$test_site/post",
+#	       {
+#			"credentials" : {
+#				"netloc" : "httpbin.org:80",
+#				"realm" : "Fake Realm",
+#				"username" : "qwerty",
+#				"password" : "vorpal"	
+#			},
+#			"params" : {"ffoosh": "Flavor enhancer"},
+#			"headers" : {"Accept" : "text/plain"},
+#			"response_headers" : ["Connection","Accept"]	       	
+#	       });
+#_KRL_
 $krl_src = <<_KRL_;
 r = http:post("$test_site/post",
+	       {
+			"body" : {"key1": "value1"},
+			"headers" : {"content-type" : "application/json"}	       	
+	       });
+_KRL_
+$krl = Kynetx::Parser::parse_decl($krl_src);
+
+#diag(Dumper($krl));
+
+# start with a fresh $req_info and $rule_env
+$my_req_info = Kynetx::Test::gen_req_info($rid);
+$rule_env = Kynetx::Test::gen_rule_env();
+
+($v,$result) = Kynetx::Expressions::eval_decl(
+    $my_req_info,
+    $rule_env,
+    $rule_name,
+    $session,
+    $krl
+    );
+
+	
+#diag($krl->{'rhs'}->{'predicate'}  . "($v) --> " . Dumper $result);
+#$logger->debug("Content: ", sub {Dumper($result->{'content'})});
+
+is($v, "r", "Get right lhs");
+ok(defined $result->{'content_length'}, "Content length defined");
+ok(defined $result->{'status_code'}, "Status code defined");
+ok($result->{'content'} =~ m/value1/, "Content defined");
+$test_count += 4;
+
+
+$krl_src = <<_KRL_;
+r = http:put("$test_site/put",
 	       {
 			"credentials" : {
 				"netloc" : "httpbin.org:80",
@@ -735,8 +783,8 @@ r = http:put("$test_site/put",
 				"username" : "qwerty",
 				"password" : "vorpal"	
 			},
-			"params" : {"ffoosh": "Flavor enhancer"},
-			"headers" : {"Accept" : "text/plain"},
+			"body" : "Some formatted data",
+			"headers" : {"Content-Type" : "text/plain"},
 			"response_headers" : ["Connection","Accept"]	       	
 	       });
 _KRL_
@@ -764,7 +812,7 @@ $rule_env = Kynetx::Test::gen_rule_env();
 is($v, "r", "Get right lhs");
 ok(defined $result->{'content_length'}, "Content length defined");
 ok(defined $result->{'status_code'}, "Status code defined");
-ok($result->{'content'} =~ m/ffoosh/, "Content defined");
+ok($result->{'content'} =~ m/Some formatted/, "Content defined");
 $test_count += 4;
 
 $krl_src = <<_KRL_;
@@ -849,7 +897,6 @@ ok(defined $result->{'status_code'}, "Status code defined");
 ok($result->{'content'} =~ m/data\": \"\"/, "No data returned for DELETE");
 $test_count += 4;
 
-ENDY:
 $krl_src = <<_KRL_;
 r = http:patch("http://www.example.com",
 	       {

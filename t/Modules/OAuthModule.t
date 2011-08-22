@@ -365,6 +365,15 @@ $args = ['google', {
 	
 $result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'put',$args);
 $logger->trace("Response: ", sub {Dumper($result)});
+if ($result->{'status_code'} == 302) {
+	#$logger->info("Response: ", sub {Dumper($result)});
+	my $redirect = $result->{'location'};
+	my $uri = URI->new( $redirect ); 
+	my %query = $uri->query_form;
+	$args->[1]->{'params'}->{'gsessionid'} = $query{'gsessionid'};
+	$result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'post',$args);
+	
+}
 $description = "Update a calendar entry";
 cmp_deeply($result->{'status_code'},'200',$description);
 $test_count++;
@@ -395,6 +404,15 @@ if ($result->{'status_code'} == 302) {
 	
 }
 $logger->trace("Delete Response: ", sub {Dumper($result)});
+if ($result->{'status_code'} == 302) {
+	#$logger->info("Response: ", sub {Dumper($result)});
+	my $redirect = $result->{'location'};
+	my $uri = URI->new( $redirect ); 
+	my %query = $uri->query_form;
+	$args->[1]->{'params'}->{'gsessionid'} = $query{'gsessionid'};
+	$result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'post',$args);
+	
+}
 $description = "Delete a calendar entry";
 cmp_deeply($result->{'status_code'},'200',$description);
 $test_count++;
