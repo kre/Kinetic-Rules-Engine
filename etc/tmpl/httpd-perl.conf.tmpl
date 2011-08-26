@@ -129,6 +129,11 @@ ServerAdmin <TMPL_VAR NAME=SERVER_ADMIN>
 
 ServerName <TMPL_VAR NAME=HOSTNAME>:80
 
+# Added by QWB to protect against CVE-2011-3192
+RequestHeader unset Range
+
+# Added 
+
 DocumentRoot "/web/htdocs"
 
 <Directory />
