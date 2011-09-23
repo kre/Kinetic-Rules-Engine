@@ -1,3 +1,7 @@
+// This file is part of the Kinetic Rules Engine (KRE).
+// Copyright (C) 2007-2011 Kynetx, Inc.
+// Licensed under: GNU Public License version 2 or later
+
 //window['$KOBJ'] = $$KOBJ;
 
 if (typeof($K) == 'undefined') {
@@ -6,7 +10,7 @@ if (typeof($K) == 'undefined') {
 
 window['KOBJ'] = { name: "KRL Runtime Library",
     version: '0.9',
-    copyright: "Copyright 2007-2009, Kynetx Inc.  All Rights reserved."
+    copyright: "Portions of this file are part of the Kinetic Rules Engine (KRE). Copyright (C) 2007-2011 Kynetx, Inc. Licensed under: GNU Public License version 2 or later."
 };
 
 KOBJ['extra_page_vars'] = {};

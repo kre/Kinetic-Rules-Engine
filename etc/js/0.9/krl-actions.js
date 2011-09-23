@@ -1,3 +1,7 @@
+// This file is part of the Kinetic Rules Engine (KRE).
+// Copyright (C) 2007-2011 Kynetx, Inc.
+// Licensed under: GNU Public License version 2 or later
+
 KOBJ.raise_event_action = function (uniq, event_name, config) {
     var app = KOBJ.get_application(config.rid);
     app.raise_event(event_name, config["parameters"], config["app_id"]);

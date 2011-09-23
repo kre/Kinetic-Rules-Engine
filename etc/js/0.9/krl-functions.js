@@ -1,3 +1,7 @@
+// This file is part of the Kinetic Rules Engine (KRE).
+// Copyright (C) 2007-2011 Kynetx, Inc.
+// Licensed under: GNU Public License version 2 or later
+
 /* Injects a javascript fragment into the page */
 // TODO: Remove only used by the widget weather.pl
 KOBJ.fragment = function(base_url) {
