@@ -98,6 +98,113 @@ chomp($key3);
 my $skey = "buildtrail";
 my $expected;
 
+
+#Hash insert
+my $dummy_hash = {
+	'a' => '1.1',
+	'b' => {
+		'c' => '2.1',
+		'e' => '2.2',
+		'f' => {
+			'g' => ['3.a','3.b','3.c','3.d'],
+			'h' => 5
+		}
+	},
+	'd' =>'1.3'	
+};
+
+my $hash_varname = "aaBaa";
+$start = new Benchmark;
+$result = Kynetx::Persistence::Application::put($rid1,$hash_varname,$dummy_hash);
+$end = new Benchmark;
+if (ref $result eq "HASH") {
+	$result = $result->{"ok"};
+}
+my $qtime = timediff($end,$start);
+diag "Save to Mongo: " . $qtime->[0];
+$logger->debug("Result: ", sub {Dumper($result)});
+testit($result,6,"Insert hash data for $rid1",0);
+
+$start = new Benchmark;
+$result = Kynetx::Persistence::Application::get($rid1,$hash_varname);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+#diag "Get from array: " . $qtime->[0];
+testit($result,$dummy_hash,"Retrieve hash data for $rid1/$hash_varname",0);
+
+# Hash operations
+my $path = ['d'];
+$start = new Benchmark;
+$result = Kynetx::Persistence::Application::get_hash_app_element($rid1,$hash_varname,$path);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+testit($result,1.3,"Retrieve hash data element for $rid1/$hash_varname",0);
+diag "Get hash element: " . $qtime->[0];
+
+
+
+my $insert = 'snickersnee';
+$start = new Benchmark;
+$result = Kynetx::Persistence::Application::put_hash_app_element($rid1,$hash_varname,$path,$insert);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "Insert scalar element: " . $qtime->[0];
+
+$start = new Benchmark;
+$result = Kynetx::Persistence::Application::get_hash_app_element($rid1,$hash_varname,$path);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+testit($result,$insert,"Check the insert a",0);
+diag "Scalar request " . $qtime->[0];
+
+my $subhash = {
+	'ping' => 'pong',
+	'x' => {
+		'd' => 1.3
+	}
+};
+
+#Log::Log4perl->easy_init($DEBUG);
+
+$start = new Benchmark;
+$result = Kynetx::Persistence::Application::put_hash_app_element($rid1,$hash_varname,$path,$subhash);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+diag "Insert hash element: " . $qtime->[0];
+$start = new Benchmark;
+$result = Kynetx::Persistence::Application::get_hash_app_element($rid1,$hash_varname,$path);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+testit($result,$subhash,"Check the insert b",0);
+
+
+$start = new Benchmark;
+$result = Kynetx::Persistence::Application::get($rid1,$hash_varname);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+$logger->debug("All of it: ", sub {Dumper($result)});
+
+$path = ['d','x','d'];
+$start = new Benchmark;
+$result = Kynetx::Persistence::Application::get_hash_app_element($rid1,$hash_varname,$path);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+testit($result,1.3,"Check the insert c",0);
+$logger->debug("insert c: ", sub {Dumper($result)});
+
+$path = ['d','x'];
+$start = new Benchmark;
+$result = Kynetx::Persistence::Application::get_hash_app_element($rid1,$hash_varname,$path);
+$end = new Benchmark;
+$qtime = timediff($end,$start);
+testit($result,$subhash->{'x'},"Check the insert d",0);
+
+Kynetx::Persistence::Application::delete_hash_app_element($rid1,$hash_varname,$path);
+$result = Kynetx::Persistence::Application::get_hash_app_element($rid1,$hash_varname,$path);
+testit($result,undef,"Delete an element",0);
+
+
+
 # basic Application getter/setter
 $start = new Benchmark;
 $result = Kynetx::Persistence::Application::put($rid1,$skey,$key2);

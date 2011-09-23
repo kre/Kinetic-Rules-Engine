@@ -170,8 +170,16 @@ sub eval_persistent_expr {
     my $domain = $expr->{'domain'};
 
     if ( $expr->{'action'} eq 'clear' ) {
+    	#### Persistent destroy
         delete_persistent_var( $domain,$req_info->{'rid'}, $session, $expr->{'name'} );
-    } elsif ( $expr->{'action'} eq 'set' ) {
+		} elsif ( $expr->{'action'} eq 'clear_hash_element' ) {
+    		$logger->trace("Clear: ", sub {Dumper($expr)});
+    		my $name = $expr->{'name'};
+    		my $path_r = $expr->{'hash_element'};
+    		my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $path_r);
+			Kynetx::Persistence::delete_persistent_hash_element($domain,$req_info->{'rid'},$session,$name,$path);
+	    } elsif ( $expr->{'action'} eq 'set' ) {
+    	#### Persistent setter
         $logger->trace( "expr: ", sub { Dumper($expr) } );
         my $value;
         if ( $expr->{'value'} ) {
@@ -190,7 +198,29 @@ sub eval_persistent_expr {
             $logger->trace( "Set called for ", $expr->{'name'}, " as flag" );
             save_persistent_var($domain, $req_info->{'rid'}, $session, $expr->{'name'} );
         }
-
+    } elsif ($expr->{'action'} eq 'set_hash') {
+    	my $name = $expr->{'name'};
+    	my $path_r = $expr->{'hash_element'};
+    	my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $path_r);
+    	if (! defined $path) {
+    		$logger->error("Hash key for $name is undefined");
+    		return $js;
+    	}
+    	my $value = Kynetx::Expressions::den_to_exp(
+                    	Kynetx::Expressions::eval_expr(
+                        	$expr->{'value'}, $rule_env, $rule_name,
+                        	$req_info,        $session
+                    ));
+        if (! defined $value) {
+        	$logger->error("Hash Operation error: $name Value may not be null (use clear to remove key) ");
+        	return $js;
+        }
+		Kynetx::Persistence::save_persistent_hash_element($domain,
+				$req_info->{'rid'},
+				$session,
+				$name,
+				$path,
+				$value);
     } elsif ( $expr->{'action'} eq 'iterator' ) {
         my $op = $expr->{'op'};
         $op =~ s/^\s+//;
@@ -211,7 +241,7 @@ sub eval_persistent_expr {
         increment_persistent_var( $domain, $req_info->{'rid'}, $session, $expr->{'name'}, $by,
                                  $from );
     } elsif ( $expr->{'action'} eq 'forget' ) {
-            delete_persistent_element($domain, $req_info->{'rid'}, $session, $expr->{'name'},
+            delete_trail_element($domain, $req_info->{'rid'}, $session, $expr->{'name'},
                             $expr->{'regexp'} );
     } elsif ( $expr->{'action'} eq 'mark' ) {
         my $url =
@@ -225,7 +255,7 @@ sub eval_persistent_expr {
           : $req_info->{'caller'};
 
         #	    $logger->debug("Marking trail $expr->{'name'} with $url");
-        add_persistent_element($domain, $req_info->{'rid'}, $session, $expr->{'name'}, $url );
+        add_trail_element($domain, $req_info->{'rid'}, $session, $expr->{'name'}, $url );
     } else {
         $logger->error(
                       "Bad action in persistent expression: $expr->{'action'}");

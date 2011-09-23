@@ -185,7 +185,20 @@ sub gen_rule_env {
 sub gen_session {
     my($r, $rid, $options) = @_;
     my $session = process_session($r, $options->{'sid'});
-
+    my $test_hash = {
+		'a' => '1.1',
+		'b' => {
+			'c' => '2.1',
+			'e' => '2.2',
+			'f' => {
+				'g' => ['3.a','3.b','3.c','3.d'],
+				'h' => 5
+			}
+		},
+		'd' =>'1.3'	
+	};
+	
+	
     Kynetx::Persistence::save_persistent_var("ent",$rid, $session, 'archive_pages_old', 3);
     my $three_days_ago = DateTime->now->add( days => -3 );
     Kynetx::Persistence::touch_persistent_var("ent",$rid, $session, 'archive_pages_old', $three_days_ago);
@@ -196,10 +209,11 @@ sub gen_session {
     Kynetx::Persistence::save_persistent_var("ent",$rid, $session, 'archive_pages_now2', 3);
 
     Kynetx::Persistence::delete_persistent_var("ent",$rid, $session, 'my_trail');
-    Kynetx::Persistence::add_persistent_element("ent",$rid, $session, 'my_trail', "http://www.windley.com/foo.html");
-    Kynetx::Persistence::add_persistent_element("ent",$rid, $session, 'my_trail', "http://www.kynetx.com/foo.html");
-    Kynetx::Persistence::add_persistent_element("ent",$rid, $session, 'my_trail', "http://www.windley.com/bar.html");
-
+    Kynetx::Persistence::add_trail_element("ent",$rid, $session, 'my_trail', "http://www.windley.com/foo.html");
+    Kynetx::Persistence::add_trail_element("ent",$rid, $session, 'my_trail', "http://www.kynetx.com/foo.html");
+    Kynetx::Persistence::add_trail_element("ent",$rid, $session, 'my_trail', "http://www.windley.com/bar.html");
+	
+	Kynetx::Persistence::save_persistent_var("ent",$rid, $session, 'tHash', $test_hash);
 
     Kynetx::Persistence::delete_persistent_var("ent",$rid, $session, 'my_flag');
 
@@ -240,9 +254,9 @@ sub gen_app_session {
     Kynetx::Persistence::save_persistent_var("ent",$rid, $req_info->{'appsession'}, 'app_count_now2', 3);
 
     Kynetx::Persistence::delete_persistent_var("ent",$rid, $req_info->{'appsession'}, 'app_trail');
-    Kynetx::Persistence::add_persistent_element("ent",$rid, $req_info->{'appsession'}, 'app_trail', "http://www.windley.com/foo.html");
-    Kynetx::Persistence::add_persistent_element("ent",$rid, $req_info->{'appsession'}, 'app_trail', "http://www.kynetx.com/foo.html");
-    Kynetx::Persistence::add_persistent_element("ent",$rid, $req_info->{'appsession'}, 'app_trail', "http://www.windley.com/bar.html");
+    Kynetx::Persistence::add_trail_element("ent",$rid, $req_info->{'appsession'}, 'app_trail', "http://www.windley.com/foo.html");
+    Kynetx::Persistence::add_trail_element("ent",$rid, $req_info->{'appsession'}, 'app_trail', "http://www.kynetx.com/foo.html");
+    Kynetx::Persistence::add_trail_element("ent",$rid, $req_info->{'appsession'}, 'app_trail', "http://www.windley.com/bar.html");
 
 
     Kynetx::Persistence::delete_persistent_var("ent",$rid, $req_info->{'appsession'}, 'app_flag');

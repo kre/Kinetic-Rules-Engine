@@ -117,7 +117,13 @@ sub set_token {
 	my $var = 'endpoint_id';
 	my $val = $session_id;
 	$logger->trace("Set $ktoken to endpoint $session_id");
-	return Kynetx::MongoDB::atomic_set(COLLECTION,$key,$var,$val);
+	my $find_and_modify = {
+		'query' => { 'ktoken' => $ktoken },
+		'update' => {'$set' => {$var => $val}},
+		'new' => 'true'
+	};
+	#return Kynetx::MongoDB::atomic_set(COLLECTION,$key,$var,$val);
+	return Kynetx::MongoDB::find_and_modify(COLLECTION,$find_and_modify);
 }
 
 sub new_token {
@@ -182,11 +188,14 @@ sub delete_token {
     	$var = {"endpoint_id" => $session_id};
     }
     
-    my $result = Kynetx::MongoDB::delete_value(COLLECTION,$var);
-    my $additional_ref = COLLECTION .$session_id;
-    $logger->info("Deleting $ktoken for $session_id");
+    my $result = Kynetx::MongoDB::delete_value(COLLECTION,$var);    
+    $logger->info("Deleting token $ktoken");
     # We store the token in cache to quickly get the ken
-    Kynetx::Memcached::flush_cache($additional_ref);
+    if (defined $session_id) {
+    	my $additional_ref = COLLECTION .$session_id;
+    	Kynetx::Memcached::flush_cache($additional_ref);
+    }
+   
 }
 
 

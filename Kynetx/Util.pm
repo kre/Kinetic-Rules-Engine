@@ -42,6 +42,11 @@ use Kynetx::Memcached qw(:all);
 use URI::Escape ('uri_escape_utf8');
 use Sys::Hostname;
 use Data::Dumper;
+use Data::Diver qw(
+	DiveVal
+	DiveRef
+);
+use Storable qw(dclone);
 use Encode qw(
 	encode
 	decode
@@ -566,6 +571,79 @@ sub body_to_hash {
 	return $ret;
 }
 
+sub hash_to_elements {
+	my ($hash, $ancestors) = @_;
+	my $logger = get_logger();
+	my @elements = ();
+	if (ref $hash eq "HASH") {
+		foreach my $key (keys %$hash) {
+			my $acopy;
+			if (defined $ancestors) {
+				$acopy = dclone $ancestors;
+			} else {
+				$acopy = ();
+			}
+			push(@$acopy,$key);
+			my $val = hash_to_elements($hash->{$key},$acopy);
+			if (ref $val eq 'HASH') {
+				push(@elements,$val);
+			} elsif (ref $val eq 'ARRAY') {
+				@elements = (@elements,@$val);
+			}
+			
+		}
+		return \@elements;
+	} else {
+		my $struct = {
+			'ancestors' => $ancestors,
+			'value' => $hash
+		};
+		return $struct;
+	}
+}
+
+sub elements_to_hash {
+	my ($array_of_elements) = @_;
+	my $logger = get_logger();
+	my $hash = {};
+	foreach my $element (@$array_of_elements) {
+		my $value = $element->{'value'};
+		my $path = $element->{'ancestors'};
+		$logger->trace("Val: ", $value);
+#		_set_path($path,$value,$hash);
+		DiveVal($hash, @$path) = $value;
+	}
+	return $hash;
+}
+
+sub normalize_path {
+	my ($req_info, $rule_env, $rule_name, $session, $path) = @_;
+	my $logger = get_logger();
+	my @normalized = ();
+	return undef unless (defined $path);
+	if ($path->{'type'} eq "array") {
+		foreach my $element (@{$path->{'val'}}) {
+			my $norm_key = Kynetx::Expressions::den_to_exp(
+			   	Kynetx::Expressions::eval_expr($element,
+					$rule_env,
+				    $rule_name,
+				    $req_info,
+				    $session) );
+			push(@normalized,$norm_key);
+		}
+	} else {
+		my $norm_key = Kynetx::Expressions::den_to_exp(
+			Kynetx::Expressions::eval_expr($path,
+				$rule_env,
+				$rule_name,
+				$req_info,
+				$session) );
+		push(@normalized,$norm_key);
+	} 	
+	return \@normalized;
+	
+	
+}
 
 
 1;

@@ -263,6 +263,8 @@ sub eval_expr {
 			     $session)  ) ;
     } elsif($expr->{'type'} eq 'array_ref') {
 	   return eval_array_ref($expr, $rule_env, $rule_name, $req_info, $session);
+    } elsif($expr->{'type'} eq 'hash_ref') {
+    	return eval_hash_ref($expr, $rule_env, $rule_name, $req_info, $session);
     } elsif($expr->{'type'} eq 'hashraw') {
 	   return  mk_expr_node('hash',
 			     eval_hash_raw($expr->{'val'},
@@ -375,7 +377,7 @@ sub eval_expr {
         # check date, if needed
         if (defined $expr->{'within'} &&
 	        Kynetx::Persistence::defined_persistent_var($domain,$re_rid, $session, $name)) {
-	           $v = Kynetx::Persistence::persistent_element_within($domain,
+	           $v = Kynetx::Persistence::trail_element_within($domain,
 	               $re_rid,
 				   $session,
 				   $name,
@@ -395,7 +397,7 @@ sub eval_expr {
 				  );
         } elsif (Kynetx::Persistence::defined_persistent_var($domain,$re_rid, $session, $name)) {
            # session_seen returns index (which can be 0)
-           $v = defined Kynetx::Persistence::persistent_element_index($domain,$re_rid,
+           $v = defined Kynetx::Persistence::trail_element_index($domain,$re_rid,
 			    $session,
 			    $name,
 			    Kynetx::Expressions::den_to_exp(
@@ -416,7 +418,7 @@ sub eval_expr {
 				      $expr->{'regexp_2'})
 	                           : ($expr->{'regexp_2'},
  	                              $expr->{'regexp_1'});
-      $v = Kynetx::Persistence::persistent_element_before(
+      $v = Kynetx::Persistence::trail_element_before(
                                   $expr->{'domain'},$re_rid,
 				  $session,
 				  $name,
@@ -714,6 +716,38 @@ sub eval_array_ref {
 
 }
 
+sub eval_hash_ref {
+	my($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+	my $logger = get_logger();	
+	my $v = lookup_rule_env($expr->{'var_expr'},$rule_env);
+  	unless (defined $v) {
+  		$logger->debug("Undefined");
+	    Kynetx::Errors::raise_error($req_info, 'warn',
+			"[hash_ref] Variable '", $expr->{'var_expr'}, "' is undefined",
+			{'rule_name' => $rule_name,
+			 'genus' => 'expression',
+			 'species' => 'hash reference undefined'
+			});
+	}
+  	unless (ref $v eq "HASH") {
+	    Kynetx::Errors::raise_error($req_info, 'warn',
+			"[hash_ref] Variable '", $expr->{'var_expr'}, "' is not a hash",
+			{'rule_name' => $rule_name,
+			 'genus' => 'expression',
+			 'species' => 'type mismatch'
+			});
+	} else {
+   		$logger->debug("Using hash ", sub {Dumper $v}, " with key ",sub {Dumper  $expr->{'hash_key'}->{'val'}});
+		my $kval = den_to_exp(eval_expr($expr->{'hash_key'},
+			$rule_env,
+			$rule_name,
+			$req_info,
+			$session));
+   		return typed_value($v->{$kval});
+	}
+	return undef;
+}
+
 
 sub eval_persistent {
     my($req_info, $rule_env, $rule_name, $session, $expr) = @_;
@@ -740,29 +774,30 @@ sub eval_persistent {
 							   $idx);
       $logger->debug("[persistent trail] $expr->{'name'} at $idx -> $v");
 
+    } elsif (defined $expr->{'hash_key'}) {
+    	#Persistent hash ref
+    	if ($expr->{'domain'} eq 'ent' || $expr->{'domain'} eq 'app') {
+	    	my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $expr->{'hash_key'});
+	    	$logger->debug("Path normalized: ", sub {Dumper($path)});
+	    	my $var = $expr->{'var_expr'};
+	    	$v = Kynetx::Persistence::get_persistent_hash_element($domain,$req_info->{'rid'},$session,$var,$path);
+    	} else {
+    		$logger->warn("Hash indexes only implemented for persistent variables");
+    	}
+    } elsif (defined $expr->{'index'}) {
+    	#Persistent array ref
+    	
     } else {
-
       # this is where module varrefs end up...
-
       my $name = $expr->{'name'};
-
       $logger->debug("Evaling qualified variable ", $expr->{'domain'}, ":", $expr->{'name'});
-
       if ($expr->{'domain'} eq 'ent' || $expr->{'domain'} eq 'app') {
-	# FIXME: not sure I like setting to 0 by default
-	$v = Kynetx::Persistence::get_persistent_var($domain,
+			# FIXME: not sure I like setting to 0 by default
+			$v = Kynetx::Persistence::get_persistent_var($domain,
 						     $req_info->{'rid'}, $session, $name) || 0;
-	$logger->debug("[persistent] $expr->{'domain'}:$name -> $v");
-	# $v = session_defined($req_info->{'rid'}, $session, $name) &&
-	#   session_get($req_info->{'rid'}, $session, $name);
-
+			$logger->debug("[persistent] $expr->{'domain'}:$name -> $v");
       } else {
-
-#	$logger->debug("Looking up $expr->{'domain'}:$name in ", sub{Dumper $rule_env});
-
-	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
-
-#	$logger->debug(" $expr->{'domain'}:$name -> ", sub{Dumper $v});
+			$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
       }
     }
 

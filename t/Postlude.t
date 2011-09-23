@@ -34,8 +34,8 @@ use Kynetx::MongoDB;
 use Kynetx::Persistence qw(
     get_persistent_var
     save_persistent_var
-    contains_persistent_element
-    add_persistent_element
+    contains_trail_element
+    add_trail_element
     delete_persistent_var
 );
 
@@ -104,6 +104,135 @@ use constant FIRED => 1;
 use constant NOTFIRED => 0;
 
 my $domain = "ent";
+#Log::Log4perl->easy_init($DEBUG);
+
+my $description = "Insert a hash element (creating the hash)";
+$krl_src = <<_KRL_;
+fired {
+  set ent:hTest{"a"} 1.2345
+} 
+_KRL_
+
+my $expected = {
+	'a' => 1.2345
+};
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+$result = get_persistent_var($domain,$rid, $session, 'hTest');
+$logger->debug("Result: ", sub {Dumper($result)});
+cmp_deeply($result,
+   $expected,
+   $description
+  );
+$test_count++;
+
+$description = "Insert a hash element (sub hash)";
+$krl_src = <<_KRL_;
+fired {
+  set ent:hTest{"c"} {"b" : [1,2,3]}
+} 
+_KRL_
+
+$expected = {
+  'c' => {
+    'b' => [
+      1,
+      2,
+      3
+    ]
+  },
+	'a' => 1.2345
+};
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+$result = get_persistent_var($domain,$rid, $session, 'hTest');
+$logger->debug("Result: ", sub {Dumper($result)});
+cmp_deeply($result,
+   $expected,
+   $description
+  );
+$test_count++;
+
+
+
+
+$description = "Insert a hash element (sub hash)";
+$krl_src = <<_KRL_;
+fired {
+  clear ent:hTest{["a"]} 
+} 
+_KRL_
+
+$expected = {
+  'c' => {
+    'b' => [
+      1,
+      2,
+      3
+    ]
+  },
+};
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+$result = get_persistent_var($domain,$rid, $session, 'hTest');
+$logger->debug("Result: ", sub {Dumper($result)});
+cmp_deeply($result,
+   $expected,
+   $description
+  );
+$test_count++;
+
+
+$description = "Insert a hash element (empty hash)";
+$krl_src = <<_KRL_;
+fired {
+  set ent:hTest{["c","b"]} []
+} 
+_KRL_
+
+$expected = {
+  'c' => {
+    'b' => []
+  },
+};
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+$result = get_persistent_var($domain,$rid, $session, 'hTest');
+$logger->debug("Result: ", sub {Dumper($result)});
+cmp_deeply($result,
+   $expected,
+   $description
+  );
+$test_count++;
+
+$description = "Insert a hash element (empty hash)";
+$krl_src = <<_KRL_;
+fired {
+  set ent:hTest{["c","d"]} ["Vitamin water", "Hoo", "Hah"]
+} 
+_KRL_
+
+$expected = {
+  'c' => {
+    'b' => [],
+    'd' => ["Vitamin water", "Hoo", "Hah"]
+  },
+};
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+$result = get_persistent_var($domain,$rid, $session, 'hTest');
+$logger->debug("Result: ", sub {Dumper($result)});
+cmp_deeply($result,
+   $expected,
+   $description
+  );
+$test_count++;
+
+
+
+delete_persistent_var($domain,$rid,$session,'hTest');
+
+
 
 $krl_src = <<_KRL_;
 fired {
@@ -175,20 +304,20 @@ fired {
 _KRL_
 
 run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
-is(contains_persistent_element($domain,$rid, $session, 'my_trail',"testing"),
+is(contains_trail_element($domain,$rid, $session, 'my_trail',"testing"),
    3,
    'testing added'
   );
 $test_count++;
 
-is(contains_persistent_element($domain,$rid, $session, 'my_trail',"windley"),
+is(contains_trail_element($domain,$rid, $session, 'my_trail',"windley"),
    0,
    'windley pushed down'
   );
 $test_count++;
 
 run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
-is(contains_persistent_element($domain,$rid, $session, 'my_trail',"windley"),
+is(contains_trail_element($domain,$rid, $session, 'my_trail',"windley"),
    0,
    'testing forgotten'
   );
@@ -426,7 +555,7 @@ ok(get_persistent_var($domain,$rid, $session, 'my_flag'),
 $test_count++;
 
 # seed the trail with an element
-add_persistent_element($domain,$rid,$session,'my_trail',"windley");
+add_trail_element($domain,$rid,$session,'my_trail',"windley");
 
 $krl_src = <<_KRL_;
 fired {
@@ -437,20 +566,20 @@ fired {
 _KRL_
 
 run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
-is(contains_persistent_element($domain,$rid, $session, 'my_trail',"testing"),
+is(contains_trail_element($domain,$rid, $session, 'my_trail',"testing"),
    1,
    'testing added'
   );
 $test_count++;
 
-is(contains_persistent_element($domain,$rid, $session, 'my_trail',"windley"),
+is(contains_trail_element($domain,$rid, $session, 'my_trail',"windley"),
    0,
    'windley pushed down'
   );
 $test_count++;
 
 run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
-is(contains_persistent_element($domain,$rid, $session, 'my_trail',"windley"),
+is(contains_trail_element($domain,$rid, $session, 'my_trail',"windley"),
    0,
    'testing forgotten'
   );

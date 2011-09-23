@@ -13,6 +13,7 @@ use DateTime;
 use APR::URI;
 use APR::Pool ();
 use Cache::Memcached;
+use Clone qw(clone);
 
 
 # most Kyentx modules require this
@@ -100,6 +101,8 @@ $logger->trace("What:  $what");
 $logger->trace("Who:   $who");
 $logger->trace("Where: $where");
 
+goto ENDY;
+
 ######### The way this works, you could loop these tests over
 ######### Entity and Application variables, but I'm keeping them linear for now
 
@@ -174,7 +177,7 @@ $expected = bag(
     [$where, re(qr/\d+/)],
     [$num + $incr, re(qr/\d+/)]);
 $start = new Benchmark;
-add_persistent_element($domain,$rid,$session,$var,$val);
+add_trail_element($domain,$rid,$session,$var,$val);
 $got = get_persistent_var($domain,$rid,$session,$var);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
@@ -194,7 +197,7 @@ $var = "this_trail";
 $val = $where;
 $expected = bag([$where, re(qr/\d+/)]);
 $start = new Benchmark;
-add_persistent_element($domain,$rid,$session,$var,$val);
+add_trail_element($domain,$rid,$session,$var,$val);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
 #diag "$description: ". $qtime->[0];
@@ -212,7 +215,7 @@ $expected = bag(
     [$who, re(qr/\d+/)],
 );
 $start = new Benchmark;
-add_persistent_element($domain,$rid,$session,$var,$val);
+add_trail_element($domain,$rid,$session,$var,$val);
 $got = get_persistent_var($domain,$rid,$session,$var);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
@@ -231,7 +234,7 @@ $expected = bag(
     [$what, re(qr/\d+/)],
 );
 $start = new Benchmark;
-add_persistent_element($domain,$rid,$session,$var,$val);
+add_trail_element($domain,$rid,$session,$var,$val);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
 #diag "$description: ". $qtime->[0];
@@ -244,7 +247,7 @@ $description = "Check for element in trail";
 $var = "this_trail";
 $val = $who;
 $start = new Benchmark;
-$got = contains_persistent_element($domain,$rid,$session,$var,$val);
+$got = contains_trail_element($domain,$rid,$session,$var,$val);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
 #diag "$description: ". $qtime->[0];
@@ -256,7 +259,7 @@ $var = "this_trail";
 $val = $who;
 #$expected = [re(qr(\d+)),re(qr(\d\d\d+) )];
 $start = new Benchmark;
-$got = persistent_element_before($domain,$rid,$session,$var,$who,$what);
+$got = trail_element_before($domain,$rid,$session,$var,$who,$what);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
 #diag "$description: ". $qtime->[0];
@@ -272,7 +275,7 @@ $description = "Check for $val within $timevalue $timeframe";
 $var = "this_trail";
 #$expected = [re(qr(\d+)),re(qr(\d\d\d+) )];
 $start = new Benchmark;
-$got = persistent_element_within($domain,$rid,$session,$var,$val,$timevalue,$timeframe);
+$got = trail_element_within($domain,$rid,$session,$var,$val,$timevalue,$timeframe);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
 #diag "$description: ". $qtime->[0];
@@ -286,7 +289,7 @@ $description = "Check for $val within $timevalue $timeframe";
 $var = "this_trail";
 #$expected = [re(qr(\d+)),re(qr(\d\d\d+) )];
 $start = new Benchmark;
-$got = persistent_element_within($domain,$rid,$session,$var,$val,$timevalue,$timeframe);
+$got = trail_element_within($domain,$rid,$session,$var,$val,$timevalue,$timeframe);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
 #diag "$description: ". $qtime->[0];
@@ -302,7 +305,7 @@ $expected = bag(
     [$what, re(qr/\d+/)],
 );
 $start = new Benchmark;
-$got = delete_persistent_element($domain,$rid,$session,$var,$val);
+$got = delete_trail_element($domain,$rid,$session,$var,$val);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
 #diag "$description: ". $qtime->[0];
@@ -344,7 +347,7 @@ for my $i (0 .. $stack_size) {
         "index" => $i,
         $i => $who
     };
-    add_persistent_element($domain,$rid,$session,$var,$struct);
+    add_trail_element($domain,$rid,$session,$var,$struct);
 }
 
 $description = "Shift a value off the stack";
@@ -353,7 +356,7 @@ $expected = {
     0 => $who
 };
 $start = new Benchmark;
-$got = consume_persistent_element($domain,$rid,$session,$var,1);
+$got = consume_trail_element($domain,$rid,$session,$var,1);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
 #diag "$description: ". $qtime->[0];
@@ -367,7 +370,7 @@ $expected = {
     $stack_size => $who
 };
 $start = new Benchmark;
-$got = consume_persistent_element($domain,$rid,$session,$var,0);
+$got = consume_trail_element($domain,$rid,$session,$var,0);
 cmp_deeply($got,$expected,$description);
 $end = new Benchmark;
 $qtime = timediff($end,$start);
@@ -379,7 +382,7 @@ $expected = {
     "index" => $stack_size-1,
     $stack_size-1 => $who
 };
-$got = consume_persistent_element($domain,$rid,$session,$var,0);
+$got = consume_trail_element($domain,$rid,$session,$var,0);
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
@@ -452,7 +455,7 @@ $val = $where;
 $expected = bag(
     [$where, re(qr/\d+/)],
     [$num + $incr, re(qr/\d+/)]);
-add_persistent_element($domain,$rid,$session,$var,$val);
+add_trail_element($domain,$rid,$session,$var,$val);
 $start = new Benchmark;
 $got = get_persistent_var($domain,$rid,$session,$var);
 $end = new Benchmark;
@@ -471,7 +474,7 @@ $description = "Start a new trail";
 $var = "this_trail";
 $val = $where;
 $expected = bag([$where, re(qr/\d+/)]);
-add_persistent_element($domain,$rid,$session,$var,$val);
+add_trail_element($domain,$rid,$session,$var,$val);
 $got = get_persistent_var($domain,$rid,$session,$var);
 cmp_deeply($got,$expected,$description);
 $test_count++;
@@ -486,7 +489,7 @@ $expected = bag(
     [$where, re(qr/\d+/)],
     [$who, re(qr/\d+/)],
 );
-add_persistent_element($domain,$rid,$session,$var,$val);
+add_trail_element($domain,$rid,$session,$var,$val);
 $got = get_persistent_var($domain,$rid,$session,$var);
 cmp_deeply($got,$expected,$description);
 $test_count++;
@@ -501,7 +504,7 @@ $expected = bag(
     [$who, re(qr/\d+/)],
     [$what, re(qr/\d+/)],
 );
-add_persistent_element($domain,$rid,$session,$var,$val);
+add_trail_element($domain,$rid,$session,$var,$val);
 $got = get_persistent_var($domain,$rid,$session,$var);
 cmp_deeply($got,$expected,$description);
 $test_count++;
@@ -512,7 +515,7 @@ $description = "Check for element in trail";
 $var = "this_trail";
 $val = $who;
 #$expected = [re(qr(\d+)),re(qr(\d\d\d+) )];
-$got = contains_persistent_element($domain,$rid,$session,$var,$val);
+$got = contains_trail_element($domain,$rid,$session,$var,$val);
 cmp_deeply(1,num($got),$description);
 $test_count++;
 
@@ -520,7 +523,7 @@ $description = "Check for $who before $what in trail";
 $var = "this_trail";
 $val = $who;
 #$expected = [re(qr(\d+)),re(qr(\d\d\d+) )];
-$got = persistent_element_before($domain,$rid,$session,$var,$who,$what);
+$got = trail_element_before($domain,$rid,$session,$var,$who,$what);
 cmp_deeply(1,$got,$description);
 $test_count++;
 
@@ -530,7 +533,7 @@ $val = $who;
 $description = "Check for $val within $timevalue $timeframe";
 $var = "this_trail";
 #$expected = [re(qr(\d+)),re(qr(\d\d\d+) )];
-$got = persistent_element_within($domain,$rid,$session,$var,$val,$timevalue,$timeframe);
+$got = trail_element_within($domain,$rid,$session,$var,$val,$timevalue,$timeframe);
 cmp_deeply($got,1,$description);
 $test_count++;
 
@@ -539,7 +542,7 @@ $val = $where;
 $description = "Check for $val within $timevalue $timeframe";
 $var = "this_trail";
 #$expected = [re(qr(\d+)),re(qr(\d\d\d+) )];
-$got = persistent_element_within($domain,$rid,$session,$var,$val,$timevalue,$timeframe);
+$got = trail_element_within($domain,$rid,$session,$var,$val,$timevalue,$timeframe);
 cmp_deeply($got,0,$description);
 $test_count++;
 
@@ -550,7 +553,7 @@ $expected = bag(
     [$where, re(qr/\d+/)],
     [$what, re(qr/\d+/)],
 );
-$got = delete_persistent_element($domain,$rid,$session,$var,$val);
+$got = delete_trail_element($domain,$rid,$session,$var,$val);
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
@@ -580,7 +583,7 @@ for my $i (0 .. $stack_size) {
         "index" => $i,
         $i => $who
     };
-    add_persistent_element($domain,$rid,$session,$var,$struct);
+    add_trail_element($domain,$rid,$session,$var,$struct);
 }
 
 $description = "Shift a value off the stack";
@@ -588,7 +591,7 @@ $expected = {
     "index" => 0,
     0 => $who
 };
-$got = consume_persistent_element($domain,$rid,$session,$var,1);
+$got = consume_trail_element($domain,$rid,$session,$var,1);
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
@@ -597,7 +600,7 @@ $expected = {
     "index" => $stack_size,
     $stack_size => $who
 };
-$got = consume_persistent_element($domain,$rid,$session,$var,0);
+$got = consume_trail_element($domain,$rid,$session,$var,0);
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
@@ -607,7 +610,7 @@ $expected = {
     "index" => $stack_size-1,
     $stack_size-1 => $who
 };
-$got = consume_persistent_element($domain,$rid,$session,$var,0);
+$got = consume_trail_element($domain,$rid,$session,$var,0);
 cmp_deeply($got,$expected,$description);
 $test_count++;
 
@@ -618,6 +621,136 @@ cmp_deeply($got,undef,$description);
 $test_count++;
 
 ENDY:
+
+# Hash referencing operations
+#Log::Log4perl->easy_init($DEBUG);
+
+my $tricky_hash = {
+	'a' => 1.1,
+	'b' => [
+		'c' => 2,
+		'e' => 3,
+		'f' => {
+			'g' => 4,
+			'h' => [4, 6, 7]
+		}
+	],
+	'i' => {
+		'j' => 8.1,
+		'k' => [9, 10, 11],
+		'l' => {
+			'm' => 12,
+			'o' => 'monkeys'
+		}
+	},
+	'p' => 'dummy'
+};
+
+my $subhash = {
+	'ping' => 'pong',
+	'x' => {
+		'd' => 1.3
+	}
+};
+
+my $hash_var = "aaBaa";
+
+foreach my $domain ('ent', 'app') {
+	$logger->debug($domain);
+	my $result;
+	my $description;
+	my $path;
+	my $replace;
+	my $dupe;
+	
+	diag "Inserting new HASH ($domain)";
+	$description = "insert the whole hash ($domain)";
+	$result = Kynetx::Persistence::save_persistent_var($domain,$rid,$session,$hash_var,$tricky_hash);
+	cmp_deeply($result,$tricky_hash,$description);
+	$test_count++;
+	
+	$description = "Pull the hash out ($domain)";
+	$result = Kynetx::Persistence::get_persistent_var($domain,$rid,$session,$hash_var);
+	cmp_deeply($result,$tricky_hash,$description);
+	$test_count++;
+	
+	$description = "Pull an element (scalar) ($domain)";
+	$path = ['a'];
+	$result = Kynetx::Persistence::get_persistent_hash_element($domain,$rid,$session,$hash_var,$path);
+	cmp_deeply($result,$tricky_hash->{'a'},$description);
+	$test_count++;
+
+	$description = "Pull an element (hash) ($domain)";
+	$path = ['i', 'l'];
+	$result = Kynetx::Persistence::get_persistent_hash_element($domain,$rid,$session,$hash_var,$path);
+	cmp_deeply($result,$tricky_hash->{'i'}->{'l'},$description);
+	$test_count++;
+
+	$description = "Pull an element (array) ($domain)";
+	$path = ['i', 'k'];
+	$result = Kynetx::Persistence::get_persistent_hash_element($domain,$rid,$session,$hash_var,$path);
+	cmp_deeply($result,$tricky_hash->{'i'}->{'k'},$description);
+	$test_count++;
+	
+	$description = "Insert an element ($domain)";
+	$replace = "frumptious";
+	$dupe = clone ($tricky_hash);
+	$dupe->{'new'} = $replace;
+	$path = ['new'];
+	Kynetx::Persistence::save_persistent_hash_element($domain,$rid,$session,$hash_var,$path,$replace);
+	$result = Kynetx::Persistence::get_persistent_var($domain,$rid,$session,$hash_var);
+	cmp_deeply($result,$dupe,$description);
+	$test_count++;
+	
+	$description = "Replace a hash element (scalar) ($domain)";
+	$dupe->{'i'} = $replace;
+	$path = ['i'];
+	Kynetx::Persistence::save_persistent_hash_element($domain,$rid,$session,$hash_var,$path,$replace);
+	$result = Kynetx::Persistence::get_persistent_var($domain,$rid,$session,$hash_var);
+	cmp_deeply($result,$dupe,$description);
+	$test_count++;
+	
+	$description = "Insert an element (hash) ($domain)";
+	$replace = $subhash;
+	$dupe->{'newer'} = $replace;
+	$path = ['newer'];
+	Kynetx::Persistence::save_persistent_hash_element($domain,$rid,$session,$hash_var,$path,$replace);
+	$result = Kynetx::Persistence::get_persistent_var($domain,$rid,$session,$hash_var);
+	cmp_deeply($result,$dupe,$description);
+	$test_count++;
+	
+	$description = "Replace a hash element (hash) ($domain)";
+	$dupe->{'i'} = $replace;
+	$path = ['i'];
+	Kynetx::Persistence::save_persistent_hash_element($domain,$rid,$session,$hash_var,$path,$replace);
+	$result = Kynetx::Persistence::get_persistent_var($domain,$rid,$session,$hash_var);
+	cmp_deeply($result,$dupe,$description);
+	$test_count++;
+	
+	$description = "Delete a hash element ($domain)";
+	delete $dupe->{'i'};
+	$path = ['i'];
+	Kynetx::Persistence::delete_persistent_hash_element($domain,$rid,$session,$hash_var,$path,$replace);
+	$result = Kynetx::Persistence::get_persistent_var($domain,$rid,$session,$hash_var);
+	cmp_deeply($result,$dupe,$description);
+	$test_count++;
+	
+	#### Clean up
+	
+	$description = "Delete value ($hash_var) from mongo ($domain)";
+	delete_persistent_var($domain,$rid,$session,$hash_var);
+	$got = get_persistent_var($domain,$rid,$session,$hash_var);
+	cmp_deeply($got,undef,$description);
+	$test_count++;
+	
+	$description = "Check that hash elements are deleted ($domain)";
+	$path = ['a'];
+	$got = get_persistent_var($domain,$rid,$session,$hash_var,$path);
+	cmp_deeply($got,undef,$description);
+	$test_count++;
+	
+}
+
 
 
 done_testing($test_count);

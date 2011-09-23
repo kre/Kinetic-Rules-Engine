@@ -289,7 +289,7 @@ sub mk_http_request {
 				map( "$_=" . uri_escape_utf8( $params->{$_} ), keys %{$params} )
 			);
 			$req->header(
-				'content-type' => "application/x-www-form-urlencoded" );
+				'content-type' => "application/x-www-form-urlencoded charset=UTF-8" );
 
 		}
 		if (ref $content ne "") {
@@ -322,7 +322,7 @@ sub mk_http_request {
 		$req->header( $k => $headers->{$k} );
 	}
 
-	$logger->debug( "Request ", Dumper $req);
+	$logger->trace( "Request ", Dumper $req);
 
 	$response = $ua->request($req);
 
