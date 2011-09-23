@@ -43,6 +43,8 @@ use Kynetx::Memcached qw(
 use MongoDB;
 use MongoDB::OID;
 
+use Clone qw(clone);
+
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
@@ -84,6 +86,45 @@ sub get {
         return $value->{"value"};
     }
 
+}
+
+sub get_hash_app_element {
+    my ($rid,$var,$hvar,$get_ts) = @_;
+    my $logger = get_logger();
+    my $key = {
+        "rid" => $rid,
+        "key" => $var};
+    my $value = Kynetx::MongoDB::get_hash_element(COLLECTION,$key,$hvar);
+    $logger->debug("GET ($var) using (",sub {Dumper($key)},") returns: ", sub {Dumper($value)});
+    if (defined $value && $get_ts) {
+        return $value->{"created"};
+    } else {
+        return $value->{"value"};
+    }
+	
+}
+
+sub delete_hash_app_element {
+    my ($rid,$var,$hvar) = @_;
+    my $logger = get_logger();
+    my $key = {
+        "rid" => $rid,
+        "key" => $var};
+    Kynetx::MongoDB::delete_hash_element(COLLECTION,$key,$hvar);	
+}
+
+sub put_hash_app_element {
+	my ($rid,$var,$hvar,$val) = @_;
+	my $logger = get_logger();
+	my $key = {
+        "rid" => $rid,
+        "key" => $var
+	};
+	my $value = {
+		'value' => $val
+	};
+	my $success = Kynetx::MongoDB::put_hash_element(COLLECTION,$key,$hvar,$value);
+	return $success;	
 }
 
 sub pop {
@@ -129,11 +170,8 @@ sub put {
     my $key = {
         "rid" => $rid,
         "key" => $var};
-    my $value = {
-        "rid"  => $rid,
-        "key"  => $var,
-        "value"=> $val,
-    };
+    my $value = clone ($key);
+    $value->{'value'} = $val,
     $logger->trace("Store to $var: ",sub{Dumper($value)});
     my $success = Kynetx::MongoDB::update_value(COLLECTION,$key,$value,1);
     $logger->debug("Failed to upsert ", sub {Dumper($key)}) unless ($success);

@@ -56,6 +56,8 @@ ruleset 10 {
 	  x = (((not x) || (not y)) == (not (x && y)));
 	  x = a[5];
 	  x = vari[(x+6)];
+	  x = myHash{"d"};
+	  x = myHash{[a, 1.1]};
 	}
 	alert("Hello");
 

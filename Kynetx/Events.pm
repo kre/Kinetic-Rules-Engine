@@ -319,7 +319,7 @@ sub process_event_for_rid {
         # when there's a state change, store the event in the event list
         unless ( $current_state eq $next_state ) {
 	  my $json = $ev->serialize();
-	  Kynetx::Persistence::add_persistent_element("ent", $rid, $session, $event_list_name, $json );
+	  Kynetx::Persistence::add_trail_element("ent", $rid, $session, $event_list_name, $json );
 	  $logger->debug("State change for $rule->{'name'}");
 	}
 
@@ -337,7 +337,7 @@ sub process_event_for_rid {
             my $val_list = [];
             $logger->trace("Process sessions");
             while ( my $json =
-                    consume_persistent_element("ent", $rid, $session, $event_list_name, 1) )
+                    consume_trail_element("ent", $rid, $session, $event_list_name, 1) )
             {
 
                 my $ev = Kynetx::Events::Primitives->unserialize($json);

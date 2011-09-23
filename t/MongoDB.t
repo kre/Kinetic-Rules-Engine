@@ -27,6 +27,7 @@ use Data::Dumper;
 use MongoDB;
 use Cache::Memcached;
 use Benchmark ':hireswallclock';
+use Clone qw(clone);
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
@@ -111,10 +112,200 @@ my $value2 = {
     "value" => $where
 };
 
+#Hash insert
+my $dummy_hash = {
+	'a' => '1.1',
+	'b' => {
+		'c' => '2.1',
+		'e' => '2.2',
+		'f' => {
+			'g' => ['3.a','3.b','3.c','3.d'],
+			'h' => 5
+		}
+	},
+	'd' =>'1.3'	
+};
+
+my $tricky_hash = {
+	'a' => 1.1,
+	'b' => [
+		'c' => 2,
+		'e' => 3,
+		'f' => {
+			'g' => 4,
+			'h' => [4, 6, 7]
+		}
+	],
+};
+
+my $hash_var = "aaBaa";
+#Log::Log4perl->easy_init($TRACE);
+
+#Kynetx::MongoDB::insert_hash($cruft,{'key' => $hash_var},$dummy_hash);
+Kynetx::MongoDB::update_value($cruft,{'key' => $hash_var},{'key' => $hash_var, 'value' => $dummy_hash});
+$result = Kynetx::MongoDB::get_value($cruft,{'key' => $hash_var});
+
+$logger->debug("R: ", sub {Dumper($result)});
+compare($result->{'value'},$dummy_hash,"Hash save/get orthogonal",0);
+
+# insert a new value
+$expected = clone($dummy_hash);
+my $nval =  "Stinky McStinkelton";
+$expected->{'b'}->{'z'} = $nval;
+Kynetx::MongoDB::put_hash_element($cruft,{'key' => $hash_var},['b','z'],{'key' => $hash_var, 'value' => $nval});
+$result = Kynetx::MongoDB::get_value($cruft,{'key' => $hash_var});
+compare($result->{'value'},$expected,"Insert a new leaf",0);
+$logger->debug("R: ", sub {Dumper($result)});
+
+#replace a value with a sub-hash
+my $sub_hash = {
+	'fs0' => 'sub hash 0',
+	'fs1' => 'sub hash 1',
+	'fs2' => [1 , "13", 1.2, "apple"]
+};
+$expected->{'b'}->{'f'} = $sub_hash;
+Kynetx::MongoDB::put_hash_element($cruft,{'key' => $hash_var},['b','f'],{'key' => $hash_var, 'value' =>$sub_hash});
+$result = Kynetx::MongoDB::get_value($cruft,{'key' => $hash_var});
+compare($result->{'value'},$expected,"Insert a new branch",0);
+$logger->debug("R: ", sub {Dumper($result)});
+
+
+# change a value
+$nval =  3.141569;
+$expected->{'b'}->{'c'} = $nval;
+Kynetx::MongoDB::put_hash_element($cruft,{'key' => $hash_var},['b','c'],{'key' => $hash_var, 'value' => $nval});
+$result = Kynetx::MongoDB::get_value($cruft,{'key' => $hash_var});
+compare($result->{'value'},$expected,"Change a leaf",0);
+$logger->debug("R: ", sub {Dumper($result)});
+
+# change a value
+delete $expected->{'b'}->{'f'}->{'fs0'};
+Kynetx::MongoDB::delete_hash_element($cruft,{'key' => $hash_var},['b','f','fs0']);
+$result = Kynetx::MongoDB::get_value($cruft,{'key' => $hash_var});
+compare($result->{'value'},$expected,"Delete a leaf",0);
+$logger->debug("R: ", sub {Dumper($result)});
+
+my $duplicate = 'aCCa';
+Kynetx::MongoDB::put_hash_element($cruft,{'key' => $duplicate},[],{'key' => $duplicate, 'value' => $dummy_hash});
+$result = Kynetx::MongoDB::get_value($cruft,{'key' => $duplicate});
+compare($result->{'value'},$dummy_hash,"Create a new hash",1);
+$logger->debug("R: ", sub {Dumper($result)});
+
+$result = Kynetx::MongoDB::get_hash_element($cruft,{'key' => $duplicate},['b','e'],{'key' => $duplicate, 'value' => $dummy_hash});
+compare($result->{'value'},2.2,"Create a new hash",1);
+$logger->debug("R: ", sub {Dumper($result)});
+
+$result = Kynetx::MongoDB::get_hash_element($cruft,{'key' => $duplicate},[]);
+compare($result->{'value'},$dummy_hash,"Create a new hash",1);
+
+my $tricky = "bOb";
+Kynetx::MongoDB::update_value($cruft,{'key' => $tricky},{'key' => $tricky, 'value' => $tricky_hash});
+$result = Kynetx::MongoDB::get_value($cruft,{'key' => $tricky});
+$logger->debug("R: ", sub {Dumper($result)});
+compare($result->{'value'},$tricky_hash,"Hash within an array?",0);
+
+
+delete_value($cruft,{'key' => $duplicate});
+delete_value($cruft,{'key' => $hash_var});
+delete_value($cruft,{'key' => $tricky});
+
+# prepopulate dummy values for FIND_AND_MODIFY
+my $find_and_modify;
+my @keys = ();
+foreach my $val ($who,$what,$where) {
+	my $t = time();
+	my $k = {
+		"key" => $t
+	};
+	my $v = {
+		"key" => $t,
+		"value" => $val
+	};
+	Kynetx::MongoDB::update_value($cruft,$k,$v,1);
+	push(@keys,$t);
+	sleep 1;
+}
+
+my $description = "Find and remove";
+my $first = pop(@keys);
+$find_and_modify = {
+	'query' => {'key' => $first},
+	'remove' => 'true',
+	#'new' => 'true'
+};
+$result = Kynetx::MongoDB::find_and_modify($cruft,$find_and_modify);
+my $del = $result->{'value'};
+
+$logger->debug("fnm: ", sub {Dumper($result)});
+compare($del,$where,$description);
+
+$description = "Find and Modify, return original value";
+my $modify = "foosh";
+my $second = pop(@keys);
+$find_and_modify = {
+	'query' => {'key' => $second},
+	'update' => {'$set' => {'value' => $modify}},
+};
+$result = Kynetx::MongoDB::find_and_modify($cruft,$find_and_modify);
+my $old = $result->{'value'};
+$logger->debug("fnm: ", sub {Dumper($result)});
+compare($old,$what,$description);
+
+$description = "Find and Modify, touch";
+my $now = time;
+$find_and_modify = {
+	'query' => {'key' => $second},
+	'update' => {'$set' => {'modified' => $now}},
+	'new' => 'true'
+};
+$result = Kynetx::MongoDB::find_and_modify($cruft,$find_and_modify);
+$logger->debug("fnm: ", sub {Dumper($result)});
+compare($result->{'value'},$modify,$description . " (same value)");
+compare($result->{'modified'}, $now,$description . " (new modified)");
+
+$description = "Insert new value with FNM";
+$find_and_modify = {
+	'query' => {'key' => $first - $second},
+	'update' => {'$set' => {'value' => $del}},
+	'new' => 'true',
+	'upsert' => 'true'
+};
+$start = new Benchmark;
+$result = Kynetx::MongoDB::find_and_modify($cruft,$find_and_modify);
+$end = new Benchmark;
+my $base_save = timediff($end,$start);
+#diag "Find and modify: " . $base_save->[0];
+
+delete_value($cruft,{'key' => $first - $second});
+
+
+$description = "Cleanup";
+$find_and_modify = {
+	'query' => {'key' => $second},
+	'remove' => 'true',
+	'new' => 'true',
+};
+$start = new Benchmark;
+$result = Kynetx::MongoDB::find_and_modify($cruft,$find_and_modify);
+$end = new Benchmark;
+$base_save = timediff($end,$start);
+diag "Find and modify (delete): " . $base_save->[0];
+$logger->debug("fnm: ", sub {Dumper($result)});
+
+
+
+my $third = pop(@keys);
+$start = new Benchmark;
+delete_value($cruft,{'key' => $third});
+$end = new Benchmark;
+$base_save = timediff($end,$start);
+diag "Regular Delete: " . $base_save->[0];
+
+$logger->debug("fnm: ", sub {Dumper($result)});
 $start = new Benchmark;
 Kynetx::MongoDB::update_value($cruft,$key,$value,1);
 $end = new Benchmark;
-my $base_save = timediff($end,$start);
+$base_save = timediff($end,$start);
 #diag "Save to Mongo: " . $base_save->[0];
 
 $start = new Benchmark;
@@ -296,13 +487,6 @@ my $touch3 = $result->{"created"};
 cmp_ok($touch3,'<',$touch1,"Set the creation time (-3 days)");
 $num_tests++;
 
-$result = atomic_set($cruft,$key,'value',$yav);
-compare($result,1,"atomic set",1);
-
-$result = get_value($cruft,$key);
-compare($result->{"value"},$yav,"Check for atomic update",1);
-
-delete_value($cruft,$key);
 
 $key->{"key"} = $where;
 touch_value($cruft,$key);
@@ -318,8 +502,9 @@ sub compare {
     if ($diag) {
         $logger->debug("Test: $description: ", sub {Dumper($got)});
     }
-    cmp_deeply($got,$expected,$description);
+    my $r = cmp_deeply($got,$expected,$description);
     $num_tests++;
+    die unless ($r);
 }
 
 plan tests => $num_tests;

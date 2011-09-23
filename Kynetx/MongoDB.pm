@@ -31,7 +31,9 @@ use LWP::UserAgent;
 use Data::Dumper;
 use MongoDB qw(:all);
 use Clone qw(clone);
-
+use Data::Diver qw(
+	Dive
+);
 
 use Kynetx::Configure;
 use Kynetx::Json;
@@ -62,7 +64,10 @@ delete_value
 make_keystring
 get_cache
 set_cache
-atomic_set
+get_hash_element
+put_hash_element
+delete_hash_element
+
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -93,8 +98,8 @@ sub init {
 		if ($@) {
 			$logger->debug($@);
 		} else {
-			$MONGO->get_master();
-			$logger->debug("Master is $host ");#, sub {Dumper($MONGO->get_master())});
+			my $master = $MONGO->{'_master'}->{'host'};
+			$logger->trace("Master is $master");
 			return;
 		}
 		
@@ -127,13 +132,64 @@ sub get_collection {
     return $c;
 }
 
+sub get_hash_element {
+	my ($collection, $vKey,$hKey) = @_;
+	my $logger = get_logger();
+	my $key = clone $vKey;
+    my $c = get_collection($collection);
+	if (defined $hKey && ref $hKey eq "ARRAY") {
+		if (scalar @$hKey > 0) {
+			$key->{'hashkey'} = {'$all' => $hKey};
+		}
+	}  
+	$logger->trace("Element key: ", sub {Dumper($key)});  
+    my $cursor = $c->find($key);
+	if  ($cursor->has_next) {
+		my @array_of_elements = ();
+		my $last_updated = 0;
+		while (my $object = $cursor->next) {
+			if (defined $object->{'serialize'}) {
+				# old style hash
+				my $ast = Kynetx::Json::jsonToAst($object->{'value'});
+				$logger->debug("Found old-style ", ref $ast, " to deserialize");
+				$object->{'value'} = $ast;
+				return $object;
+			} elsif (! defined $object->{'hashkey'}) {
+				# Somehow we pulled a non-hash ref
+				$logger->warn("Hash Element requested, but found something else");
+				return $object;
+			}
+			my $v = $object->{'value'};
+			my $kv = $object->{'hashkey'};
+			my $ts = $object->{'created'};
+			if ($ts > $last_updated) {
+				$last_updated = $ts;
+			}
+			push(@array_of_elements, {
+				'ancestors' => $kv,
+				'value' => $v
+			});
+		}
+		# reassemble (vivify) the hash from the elements
+		my $frankenstein = Kynetx::Util::elements_to_hash(\@array_of_elements);
+		$logger->trace("vivified: ", sub {Dumper($frankenstein)});
+		my $value = Dive($frankenstein,@$hKey);
+		my $composed_hash = clone ($vKey);
+		$composed_hash->{'value'} = $value;
+		$composed_hash->{'created'} = $last_updated;
+		return $composed_hash;					
+	} else {
+		return undef;
+	}
+}
+
+
+
 sub get_value {
     my ($collection,$var) = @_;
     my $logger = get_logger();
     my $keystring = make_keystring($collection,$var);
     my $cached = get_cache($collection,$var);
-    my $parent = (caller(1))[3] || "TOP LEVEL";
-    $logger->trace("Called from $parent");
     if (defined $cached) {
         $logger->trace("Found $collection variable in cache (",sub {Dumper($cached)},",");
         return $cached;
@@ -142,18 +198,55 @@ sub get_value {
     }
     my $c = get_collection($collection);
     if ($c) {
-        my $result = $c->find_one($var);
-        $logger->trace("FindOne query: ",sub {Dumper($var)}," returns: ",sub {Dumper($result)});
-        if (defined $result) {
-            if ($result->{"serialize"}) {
-                my $ast = Kynetx::Json::jsonToAst($result->{"value"});
-                $logger->trace("Found a ", ref $ast," to deserialize");
-                $result->{"value"} = $ast;
-            }
-            $logger->trace("Save $keystring to memcache");
-            set_cache($collection,$var,$result);
+        my $cursor = $c->find($var);
+        if  ($cursor->has_next) {
+        	$logger->trace("Elements to retrieve: ", $cursor->count);
+       		if ($cursor->count == 1) {
+	        	my $result = $cursor->next();
+	        	if (defined $result and $result->{'serialize'}) {
+	            	my $ast = Kynetx::Json::jsonToAst($result->{"value"});
+                	$logger->trace("Found a old style", ref $ast," to deserialize");
+                	$result->{"value"} = $ast;	        		
+	        	} elsif (defined $result and $result->{'hashkey'}) {
+	        		my $hash = Kynetx::Util::elements_to_hash([{
+	        			'ancestors' => $result->{'hashkey'},
+	        			'value' => $result->{'value'}
+	        		}]);
+	        		my $composed_hash = clone ($var);
+	        		$composed_hash->{'value'} = $hash;
+	        		$composed_hash->{'created'} = $result->{'created'};
+	        		return $composed_hash;
+	        	}
+	            $logger->trace("Save $keystring to memcache");
+	            set_cache($collection,$var,$result);
+	            return $result;
+	        } else {
+	        	my $composed_hash = clone ($var);
+	        	my @array_of_elements = ();
+	        	my $last_updated = 0;
+	        	while (my $object = $cursor->next) {
+	        		my $v = $object->{'value'};
+	        		my $kv = $object->{'hashkey'};
+	        		my $ts = $object->{'created'};
+	        		if ($ts > $last_updated) {
+	        			$last_updated = $ts;
+	        		}
+	        		push(@array_of_elements,{
+						'ancestors' => $kv,
+						'value' => $v
+	        		});
+	        	}
+	        	my $hash = Kynetx::Util::elements_to_hash(\@array_of_elements);
+	        	$logger->trace("Resurrected: ", sub {Dumper($hash)});
+	        	$composed_hash->{'value'} = $hash;
+	        	$composed_hash->{'created'} = $last_updated;
+	        	return $composed_hash;
+	        }
+        	
+        } else {
+        	return undef;
         }
-        return $result;
+        
 
     } else {
         $logger->info("Could not access collection: $collection");
@@ -274,28 +367,44 @@ sub push_value {
     }
 }
 
-sub atomic_set {
-    my ($collection,$key,$var,$val) = @_;
-    my $logger = get_logger();
-    my $serialize = 0;
-    my $set_val;     
-    if (ref $val eq "HASH") {
-        $serialize = 1;
-        my $json = Kynetx::Json::astToJson($val);
-        $set_val = {'$set' =>{$var => $json,'serialize' =>1}};
-        $logger->trace("Store (serialized): ",$val);
-    } else {
-    	$set_val = {'$set' =>{$var => $val}};
-    }
-	my $c = get_collection($collection);
-	my $status = $c->update($key,$set_val);
-    if ($status) {
-        clear_cache($collection,$key);
-        return $status;
-    } else {
-        $logger->warn("Failed to insert in $collection: ", sub {Dumper($val)});
-        return undef;
-    }
+
+# find_and_modify uses the generic run_command function of the mongo library
+# limit the parameters passed in to avoid passing in random commands
+# (Such commands *should* have been filtered long before)
+sub find_and_modify {
+	my ($collection,$query) = @_;
+	my @options = ("query","sort","remove","update","new","fields","upsert");
+	my $logger = get_logger();
+	my $db = get_mongo();
+	my $command = {
+		"findAndModify" => $collection
+	};
+	$logger->trace("Query: ", ref $query, sub {Dumper($query)});
+	if (ref $query eq 'HASH') {
+		foreach my $key (@options) {
+			#$logger->trace("Key: $key");
+			if (defined $query->{$key}) {
+				$command->{$key} = $query->{$key};
+				#$logger->trace("Val: ", sub {Dumper($query->{$key})});
+			}
+		}
+	}
+	$logger->debug("Composed command: ", sub {Dumper($command)});
+	my $status = $db->run_command($command);
+	
+	# Something may have changed in the database so flush data from memcache in case
+	# $query should have the key so we can flush the cache
+	if (defined $command->{'query'}) {
+		clear_cache($collection,$command->{'query'});		
+	}
+	if (defined $status && $status->{'ok'}) {
+		return $status->{'value'};
+	} else {
+		$logger->debug("Query failed: ", sub {Dumper($status)});
+		return undef;
+	}
+	
+		
 }
 
 sub update_value {
@@ -305,10 +414,7 @@ sub update_value {
     my $serialize = 0;
     my $timestamp = DateTime->now->epoch;
     if (ref $val->{"value"} eq "HASH") {
-        $serialize = 1;
-        my $json = Kynetx::Json::astToJson($val->{"value"});
-        $val->{"value"} = $json;
-        $logger->trace("Store (serialized): ",$val->{"value"});
+        return put_hash_element($collection,$var,[],$val);
     }
     $val->{"serialize"} = $serialize;
     $val->{"created"}   = $timestamp;
@@ -324,6 +430,85 @@ sub update_value {
         return undef;
     }
 
+}
+
+# Delete all references to $var so we can do a bulk insert
+sub put_hash {
+	my ($collection,$var,$val,$upsert,$multi,$safe) = @_;
+	my $logger = get_logger();
+	delete_value($collection,$var);
+    my $timestamp = DateTime->now->epoch;
+	my @batch_elements=();
+	my $array_of_hash_elements = Kynetx::Util::hash_to_elements($val->{'value'});
+	foreach my $element (@$array_of_hash_elements) {
+		my $object = clone ($var);
+		my $hash_key = $element->{'ancestors'};
+		my $value = $element->{'value'};
+		$object->{'hashkey'} = $hash_key;
+		$object->{'value'} = $value;
+		$object->{'created'} = $timestamp;
+		push(@batch_elements,$object);		
+	}
+	my $c = get_collection($collection);
+	my @ids = $c->batch_insert(\@batch_elements);
+	$logger->trace("Inserted ",scalar @ids," hash elements");
+	return scalar @ids == scalar @$array_of_hash_elements;
+}
+
+sub put_hash_element {
+	my ($collection,$vKey,$hKey,$val) = @_;
+	my $logger = get_logger();
+	my $timestamp = DateTime->now->epoch;
+    my $c = get_collection($collection);
+	if (ref $hKey eq 'ARRAY') {
+		delete_hash_element($collection,$vKey,$hKey);		
+		my @adds = ();
+		my $a_of_hash_elements = Kynetx::Util::hash_to_elements($val->{'value'},$hKey);
+		if (ref $a_of_hash_elements ne "ARRAY") {
+			push(@adds, $a_of_hash_elements);
+		} else {
+			@adds = @$a_of_hash_elements;
+		}
+		my @batch_elements = ();
+		my $timestamp = DateTime->now->epoch;
+		foreach my $element (@adds) {
+			my $object = clone $vKey;
+			$object->{'hashkey'} = $element->{'ancestors'};
+			$object->{'value'} = $element->{'value'};
+			$object->{'created'} = $timestamp;
+			push(@batch_elements,$object);
+		}
+		my @ids = $c->batch_insert(\@batch_elements);
+		$logger->debug("Inserted ",scalar @ids," hash element(s)");
+		return scalar @ids;
+	}
+}
+
+sub delete_hash_element {
+	my ($collection,$vKey,$hKey) = @_;
+	my $logger = get_logger();
+	# Protect me from doing something stupid
+	if (ref $vKey eq "HASH") {
+		if ((defined $vKey->{'key'}) && ($vKey->{'key'} ne "")) {
+			my $del = clone ($vKey);
+		    my $c = get_collection($collection);
+			if (ref $hKey eq 'ARRAY' && scalar @$hKey > 0) {
+				$del->{'hashkey'} = {'$all' => $hKey};
+			}
+			my $success = $c->remove($del,{'safe' => 1});
+			if (defined $success) {
+				if ($success->{'ok'}) {
+					my $count = $success->{'n'};
+					$logger->debug("Deleted $count hash element(s) from ", $del->{'key'});
+				} else {
+					$logger->debug("Mongodb error trying to delete ", sub {Dumper($del)},
+						" error msg: ", $success->{'err'});
+				}
+			} else {
+				$logger->warn("Mongodb error trying to delete ", sub {Dumper($del)});
+			}
+		}
+	}
 }
 
 sub mongo_error {

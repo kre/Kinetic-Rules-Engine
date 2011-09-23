@@ -145,6 +145,68 @@ testit($result,$expected,"shift value from array",0);
 
 Kynetx::Persistence::Entity::delete_edatum($rid1,$ken,$skey);
 
+#Hash insert
+my $dummy_hash = {
+	'a' => '1.1',
+	'b' => {
+		'c' => '2.1',
+		'e' => '2.2',
+		'f' => {
+			'g' => ['3.a','3.b','3.c','3.d'],
+			'h' => 5
+		}
+	},
+	'd' =>'1.3'	
+};
+#Log::Log4perl->easy_init($TRACE);
+
+my $hash_varname = "aaBaa";
+$start = new Benchmark;
+$result = Kynetx::Persistence::Entity::put_edatum($rid1,$ken,$hash_varname,$dummy_hash);
+$logger->info("Result: ", sub {Dumper($result)});
+$end = new Benchmark;
+#if (ref $result eq "HASH") {
+#	$result = $result->{"ok"};
+#}
+
+
+$qtime = timediff($end,$start);
+diag "Save to Mongo: " . $qtime->[0];
+$logger->info("Result: ", sub {Dumper($result)});
+testit($result,6,"Insert hash data for $rid1/$ken",1);
+
+$result = Kynetx::Persistence::Entity::get_edatum($rid1,$ken,$hash_varname);
+testit($result,$dummy_hash,"Reconstituted hash",0);
+
+my $path = ['d'];
+$result = Kynetx::Persistence::Entity::get_hash_edatum($rid1,$ken, $hash_varname,$path);
+testit($result,1.3,"Get a single hash element");
+
+Kynetx::Persistence::Entity::put_hash_edatum($rid1,$ken,$hash_varname,$path,"Fiddlesticks");
+$result = Kynetx::Persistence::Entity::get_hash_edatum($rid1,$ken, $hash_varname,$path);
+testit($result,"Fiddlesticks","Get a single hash element");
+$logger->debug("Result: ", sub {Dumper($result)});
+
+my $subhash = {
+	'pi' => 3.14156,
+	'opts' => ['yes', 'no']
+};
+
+Kynetx::Persistence::Entity::put_hash_edatum($rid1,$ken,$hash_varname,$path,$subhash);
+$result = Kynetx::Persistence::Entity::get_hash_edatum($rid1,$ken, $hash_varname,$path);
+testit($result,$subhash,"Get a single hash element--which happens to be a hash");
+$logger->debug("Result: ", sub {Dumper($result)});
+
+Kynetx::Persistence::Entity::delete_hash_edatum($rid1,$ken,$hash_varname,$path);
+$result = Kynetx::Persistence::Entity::get_hash_edatum($rid1,$ken, $hash_varname,$path);
+testit($result,undef,"delete a hash element");
+$logger->debug("Result: ", sub {Dumper($result)});
+
+
+Kynetx::Persistence::Entity::delete_edatum($rid1,$ken,$hash_varname);
+$result = Kynetx::Persistence::Entity::get_edatum($rid1,$ken,$hash_varname);
+testit($result,undef,"Deleted all hash ref",0);
+
 
 # stack operations as trail
 
@@ -199,7 +261,6 @@ testit($result,1,"Insert to new store $ridR",0);
 $result = Kynetx::Persistence::Entity::get_edatum($ridR,$ken,$key1);
 testit($result,$key3,"Retrieve data for $ridR/$ken/$key1",0);
 
-Log::Log4perl->easy_init($DEBUG);
 
 $result = Kynetx::Persistence::Entity::touch_edatum($ridR,$ken,$key3);
 testit($result,0,"Touch a variable");
@@ -216,7 +277,8 @@ sub testit {
         $logger->debug("$description : ",sub {Dumper($got)});
     }
     $num_tests++;
-    cmp_deeply($got,$expected,$description);
+    my $r = cmp_deeply($got,$expected,$description);
+    die unless ($r);
 }
 
 plan tests => $num_tests;
