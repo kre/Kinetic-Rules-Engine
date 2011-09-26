@@ -31,6 +31,7 @@ use JSON::XS;
 use Storable qw/dclone freeze/;
 use Digest::MD5 qw/md5_hex/;
 use Clone qw/clone/;
+use Data::Diver qw(Dive);
 
 use Kynetx::Parser qw/:all/;
 use Kynetx::JParser;
@@ -726,13 +727,21 @@ sub eval_hash_ref {
 			 'species' => 'type mismatch'
 			});
 	} else {
-   		$logger->debug("Using hash ", sub {Dumper $v}, " with key ",sub {Dumper  $expr->{'hash_key'}->{'val'}});
+   		$logger->trace("Using hash ", sub {Dumper $v}, " with key ",sub {Dumper  $expr->{'hash_key'}->{'val'}});
 		my $kval = den_to_exp(eval_expr($expr->{'hash_key'},
 			$rule_env,
 			$rule_name,
 			$req_info,
 			$session));
-   		return typed_value($v->{$kval});
+			$logger->debug("Key resolves to: ",sub {Dumper($kval)});
+			
+		my $element;
+		if (ref $kval eq "ARRAY") {
+			$element = Dive($v,@$kval); 
+		} else {
+			$element = $v->{$kval};
+		}
+   		return typed_value($element);
 	}
 	return undef;
 }
