@@ -956,8 +956,22 @@ sub pp_persistent_expr {
 
     if($node->{'action'} eq 'set') {
 	$o .= 'set ' . pp_var_domain($node->{'domain'}, $node->{'name'});
+    } elsif($node->{'action'} eq 'set_hash') {
+    	$o .= 'set ' . pp_var_domain($node->{'domain'}, $node->{'name'});
+    	$o .= '{' . pp_expr($node->{'hash_element'}) . '} ';
+    	$o .= pp_expr($node->{'value'});
+    } elsif($node->{'action'} eq 'set_array') {
+    	$o .= 'set ' . pp_var_domain($node->{'domain'}, $node->{'name'});
+    	$o .= '[' . pp_expr($node->{'array_index'}) . '] ';
+    	$o .= pp_expr($node->{'value'});
     } elsif($node->{'action'} eq 'clear') {
 	$o .= 'clear ' . pp_var_domain($node->{'domain'}, $node->{'name'});
+    } elsif($node->{'action'} eq 'clear_hash_element') {
+		$o .= 'clear ' . pp_var_domain($node->{'domain'}, $node->{'name'});
+		$o .= '{'. pp_expr($node->{'hash_element'}) . '}';
+    } elsif($node->{'action'} eq 'clear_array_element') {
+		$o .= 'clear ' . pp_var_domain($node->{'domain'}, $node->{'name'});
+		$o .= '['. pp_expr($node->{'array_index'}) . ']';
     } elsif($node->{'action'} eq 'iterator') {
 	$o .= join(' ',
 		   (pp_var_domain($node->{'domain'}, $node->{'name'}),
@@ -1067,6 +1081,9 @@ sub pp_expr {
 	};
 	/^array_ref$/ && do {
 	    return  $expr->{'val'}->{'var_expr'} . '['. pp_expr($expr->{'val'}->{'index'}) . ']';
+	};
+	/^hash_ref$/ && do {
+	    return  $expr->{'var_expr'} . '{'. pp_expr($expr->{'hash_key'}) . '}';
 	};
 	/hashraw/ && do {
 	    return  "{" . join(', ', pp_hash_lines($expr->{'val'})) . "}" ;

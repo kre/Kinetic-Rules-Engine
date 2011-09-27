@@ -42,13 +42,13 @@ our %EXPORT_TAGS = (
         get_persistent_var
         touch_persistent_var
         defined_persistent_var
-        delete_persistent_element
-        add_persistent_element
-        contains_persistent_element
-        persistent_element_before
-        persistent_element_within
-        persistent_element_index
-        consume_persistent_element
+        delete_trail_element
+        add_trail_element
+        contains_trail_element
+        trail_element_before
+        trail_element_within
+        trail_element_index
+        consume_trail_element
           )
     ]
 );
@@ -77,6 +77,17 @@ sub delete_persistent_var {
     }
 }
 
+sub delete_persistent_hash_element {
+    my ($domain,$rid,$session,$varname,$path) = @_;
+    my $logger = get_logger();
+    if ($domain eq 'ent') {
+        my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+        Kynetx::Persistence::Entity::delete_hash_edatum($rid,$ken,$varname,$path);
+    } elsif ($domain eq 'app') {
+        Kynetx::Persistence::Application::delete_hash_app_element($rid,$varname,$path);
+    }
+}
+
 sub save_persistent_var {
     my ($domain,$rid,$session,$varname,$value) = @_;
     my $op_name = "";
@@ -102,6 +113,18 @@ sub save_persistent_var {
     } else {
         return undef;
     }
+}
+
+sub save_persistent_hash_element {
+	my ($domain,$rid,$session,$varname,$path,$value) = @_;
+	my $logger = get_logger();
+	my $status;
+	if ($domain eq 'ent') {
+		my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+		$status = Kynetx::Persistence::Entity::put_hash_edatum($rid,$ken,$varname,$path,$value);
+	} else {
+		$status = Kynetx::Persistence::Application::put_hash_app_element($rid,$varname,$path,$value);
+	}
 }
 
 
@@ -137,7 +160,22 @@ sub get_persistent_var {
     } else {
         return undef;
     }
+}
 
+# See if I can avoid writing a timestamp request
+#   my ($domain,$rid,$session,$varname,$path,$ts) = @_;
+sub get_persistent_hash_element {
+	my ($domain,$rid,$session,$varname,$path) = @_;
+	my $logger = get_logger();
+	my $val;
+	if ($domain eq 'ent') {
+        my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+        $val = Kynetx::Persistence::Entity::get_hash_edatum($rid,$ken,$varname,$path);
+    } elsif ($domain eq 'app') {
+        $val = Kynetx::Persistence::Application::get_hash_app_element($rid,$varname,$path);
+    }
+    return $val;
+	
 }
 
 sub defined_persistent_var {
@@ -182,7 +220,7 @@ sub touch_persistent_var {
 
 # Trails
 # see MongoDB $pop
-sub delete_persistent_element {
+sub delete_trail_element {
     my ($domain, $rid, $session, $varname, $regexp) = @_;
     my $logger = get_logger();
     $logger->trace("Forget /$regexp/ from $varname");
@@ -206,7 +244,7 @@ sub delete_persistent_element {
 }
 
 # MongoDB has an atomic $push operation that could simplify this method
-sub add_persistent_element {
+sub add_trail_element {
     my ($domain, $rid, $session, $varname, $value) = @_;
     my $logger = get_logger();
     $logger->trace("Push $domain","var onto $varname");
@@ -222,7 +260,7 @@ sub add_persistent_element {
 
 }
 
-sub consume_persistent_element {
+sub consume_trail_element {
     my ($domain, $rid, $session, $varname, $direction) = @_;
     my $logger = get_logger();
     my $op_name = $direction ?  "Shift" : "Pop";
@@ -243,7 +281,7 @@ sub consume_persistent_element {
 
 }
 
-sub persistent_element_index {
+sub trail_element_index {
     my ($domain,$rid,$session,$varname,$regexp)= @_;
     my $logger = get_logger();
     $logger->trace("Index $varname for ",sub {Dumper($regexp)});
@@ -278,11 +316,11 @@ sub persistent_element_history {
     return $result;
 }
 
-sub contains_persistent_element {
+sub contains_trail_element {
     my ($domain,$rid,$session,$varname,$regexp)= @_;
     my $logger = get_logger();
     $logger->trace("Check $varname for ",sub {Dumper($regexp)});
-    my $res = persistent_element_index($domain,$rid,$session,$varname,$regexp);
+    my $res = trail_element_index($domain,$rid,$session,$varname,$regexp);
     if (defined $res) {
         return $res->[0];
     } else {
@@ -290,20 +328,20 @@ sub contains_persistent_element {
     }
 }
 
-sub persistent_element_before {
+sub trail_element_before {
     my ($domain,$rid,$session,$varname,$regexp1,$regexp2)= @_;
     my $logger = get_logger();
     $logger->trace("Check $varname for ",sub {Dumper($regexp1)}, " before ", sub {Dumper($regexp2)});
-    my $first = persistent_element_index($domain,$rid,$session,$varname,$regexp1);
-    my $second = persistent_element_index($domain,$rid,$session,$varname,$regexp2);
+    my $first = trail_element_index($domain,$rid,$session,$varname,$regexp1);
+    my $second = trail_element_index($domain,$rid,$session,$varname,$regexp2);
     return $first->[0] < $second->[0];
 }
 
-sub persistent_element_within {
+sub trail_element_within {
     my ($domain,$rid,$session,$varname,$regexp,$timevalue,$timeframe)= @_;
     my $logger = get_logger();
     $logger->trace("Check $varname for ",sub {Dumper($regexp)}, " within ", sub {Dumper($timevalue)}, ",",sub {Dumper($timeframe)});
-    my $element_index = persistent_element_index($domain,$rid,$session,$varname,$regexp);
+    my $element_index = trail_element_index($domain,$rid,$session,$varname,$regexp);
     return undef unless (defined $element_index);
     my $desired = DateTime->from_epoch(epoch => $element_index->[1]);
     $desired->add($timeframe => $timevalue);

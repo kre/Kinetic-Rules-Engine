@@ -545,6 +545,10 @@ click_link returns[HashMap result]
 
 persistent_expr returns[HashMap result]
 	:
+	//pse=persistent_set_element {
+	//	$result = $pse.result;
+	//}
+	//| 
 	pc=persistent_clear  {
 		$result = $pc.result;
 	}
@@ -563,9 +567,27 @@ persistent_expr returns[HashMap result]
    	;
 
 
-persistent_clear returns[HashMap result]
+persistent_clear returns[HashMap result] 
 	:
-	CLEAR  dm=VAR_DOMAIN COLON name=VAR {
+	CLEAR  dm=VAR_DOMAIN COLON name=VAR LEFT_CURL (hk=expr)? RIGHT_CURL{
+		HashMap tmp = new HashMap();
+		tmp.put("action","clear_hash_element");
+		tmp.put("name",$name.text);
+		tmp.put("domain",$dm.text);
+		tmp.put("type","persistent");
+		tmp.put("hash_element",$hk.result);
+		$result = tmp;
+	}
+	| CLEAR  dm=VAR_DOMAIN COLON name=VAR LEFT_BRACKET (idx=expr)? RIGHT_BRACKET {
+		HashMap tmp = new HashMap();
+		tmp.put("action","clear_array_element");
+		tmp.put("name",$name.text);
+		tmp.put("domain",$dm.text);
+		tmp.put("type","persistent");
+		tmp.put("array_index",$idx.result);
+		$result = tmp;
+	}	
+	| CLEAR  dm=VAR_DOMAIN COLON name=VAR {
 		HashMap tmp = new HashMap();
 		tmp.put("action","clear");
 		tmp.put("name",$name.text);
@@ -573,11 +595,34 @@ persistent_clear returns[HashMap result]
 		tmp.put("type","persistent");
 		$result = tmp;
 	}
+
+
 	;
 
-persistent_set returns[HashMap result]
+persistent_set returns[HashMap result] 
     :
-    SET dm=VAR_DOMAIN COLON name=VAR v=set_to? {
+    SET dm=VAR_DOMAIN COLON name=VAR LEFT_CURL (hk=expr)? RIGHT_CURL  vh=expr {
+    	HashMap tmp = new HashMap();
+    	tmp.put("action","set_hash");
+        tmp.put("name",$name.text);
+        tmp.put("domain",$dm.text);
+        tmp.put("value",$vh.result);
+        tmp.put("type","persistent");
+        tmp.put("hash_element",$hk.result);
+        $result = tmp;
+    }
+    | SET dm=VAR_DOMAIN COLON name=VAR LEFT_BRACKET (idx=expr)? RIGHT_BRACKET va=expr {
+    	HashMap tmp = new HashMap();
+    	tmp.put("action","set_array");
+        tmp.put("name",$name.text);
+        tmp.put("domain",$dm.text);
+        tmp.put("value",$va.result);
+        tmp.put("type","persistent");
+        tmp.put("array_index",$idx.result);
+        $result = tmp;
+    	
+    }
+    | SET dm=VAR_DOMAIN COLON name=VAR v=set_to? {
         HashMap tmp = new HashMap();
         tmp.put("action","set");
         tmp.put("name",$name.text);
@@ -586,7 +631,7 @@ persistent_set returns[HashMap result]
         tmp.put("type","persistent");
         $result = tmp;
 
-    }
+    }     
     ;
 
 persistent_iterate returns[HashMap result]
@@ -1988,7 +2033,7 @@ operator returns[String oper,ArrayList exprs]
 //	 'i'|'g'|'m'
 
 // TODO: REGEX needs to be added      | REGEXP
-factor returns[Object result] options { backtrack = true; }
+factor returns[Object result] options {backtrack=true;}
 @init {
       ArrayList exprs2 = new ArrayList();
 
@@ -2030,6 +2075,32 @@ factor returns[Object result] options { backtrack = true; }
 
 		tmp.put("val",val);
 		$result = tmp;
+      }
+      | n=namespace bv=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) LEFT_BRACKET e=expr RIGHT_BRACKET  {
+      		HashMap tmp = new HashMap();
+			HashMap val = new HashMap();
+			HashMap index = new HashMap();
+			index.putAll((HashMap)$e.result);
+			val.put("var_expr",$bv.text);
+			val.put("index",index);
+			tmp.put("type","persistent");
+			tmp.put("val",val);
+			$result = tmp;
+      }
+      | bv=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) LEFT_CURL k=hash_key RIGHT_CURL  {
+      		HashMap tmp = new HashMap();
+			tmp.put("var_expr",$bv.text);
+			tmp.put("hash_key",$k.result);
+			tmp.put("type","hash_ref");
+			$result = tmp;
+      }
+      | n=namespace bv=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) LEFT_CURL k=hash_key RIGHT_CURL  {
+      		HashMap tmp = new HashMap();
+	      	tmp.put("domain",$n.text.substring(0,$n.text.length() - 1));
+			tmp.put("var_expr",$bv.text);
+			tmp.put("hash_key",$k.result);
+			tmp.put("type","persistent");
+			$result = tmp;
       }
       | n=namespace p=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN|VERSION) LEFT_PAREN (e=expr { exprs2.add($e.result); } ( COMMA e=expr { exprs2.add($e.result);})* )? RIGHT_PAREN  {
 	      	HashMap tmp = new HashMap();
@@ -2134,8 +2205,13 @@ timeframe returns[Object result,String time]
 	}
 
 	;
-
-
+hash_key returns[Object result]
+	: k=expr {
+		$result = $k.result;
+	}
+	
+	;
+		
 hash_line  returns[HashMap result]
 	: s=expr COLON e=expr  {
 		HashMap tmp = new HashMap();
@@ -2521,6 +2597,8 @@ ADD_OP: '+'|'-';
  FORGET: 'forget';
  MARK:'mark';
  SET: 'set';
+ SETE
+ 	:	'sete';
  CLEAR: 'clear';
 
  COUNTER_OP: '+='

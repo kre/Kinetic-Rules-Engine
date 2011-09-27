@@ -42,6 +42,7 @@ use Kynetx::Memcached qw(
 );
 use MongoDB;
 use MongoDB::OID;
+use Clone qw(clone);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -88,6 +89,53 @@ sub get_edatum {
 
 }
 
+sub get_hash_edatum {
+    my ($rid,$ken,$var,$hkey,$get_ts) = @_;
+    my $logger = get_logger();
+    my $key = {
+        "ken" => $ken,
+        "rid" => $rid,
+        "key" => $var};
+    my $value = Kynetx::MongoDB::get_hash_element(COLLECTION,$key,$hkey);
+    if (defined $value){
+    	if ($get_ts) {
+        	return $value->{"created"};
+    	} else {
+        	return $value->{"value"};
+    	}
+    } else {
+    	return undef;
+    }
+	
+}
+
+sub put_hash_edatum {
+	my ($rid,$ken,$var,$hvar,$val) = @_;
+	my $logger = get_logger();
+	my $key = {
+        "ken" => $ken,
+        "rid" => $rid,
+        "key" => $var
+	};
+	my $value = {
+		'value' => $val
+	};
+	my $success = Kynetx::MongoDB::put_hash_element(COLLECTION,$key,$hvar,$value);
+	return $success;	
+}
+
+sub delete_hash_edatum {
+	my ($rid,$ken,$var,$hvar) = @_;
+	my $logger = get_logger();
+	my $key = {
+        "ken" => $ken,
+        "rid" => $rid,
+        "key" => $var
+	};
+	Kynetx::MongoDB::delete_hash_element(COLLECTION,$key,$hvar);
+	
+}
+
 sub get_created {
     my ($rid,$ken,$var) = @_;
     return get_edatum($rid,$ken,$var,1);
@@ -116,6 +164,7 @@ sub push_edatum {
     return $success;
 }
 
+
 sub pop_edatum {
     my ($rid,$ken,$var,$direction) = @_;
     my $logger = get_logger();
@@ -139,12 +188,8 @@ sub put_edatum {
         "ken" => $ken,
         "rid" => $rid,
         "key" => $var};
-    my $value = {
-        "ken"  => $ken,
-        "rid"  => $rid,
-        "key"  => $var,
-        "value"=> $val,
-    };
+    my $value = clone $key;
+    $value->{"value"} = $val,
     my $success = Kynetx::MongoDB::update_value(COLLECTION,$key,$value,1);
     $logger->debug("Failed to upsert ", sub {Dumper($key)}) unless ($success);
     return $success;
