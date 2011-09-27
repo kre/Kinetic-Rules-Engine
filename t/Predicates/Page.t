@@ -191,11 +191,18 @@ my $params = {
 
 is_deeply(get_pageinfo($my_req_info, 'params', []), $params, "Params gives all");
 
+is(get_pageinfo($my_req_info, 'param', ['msg']), $params->{'msg'}, "Param");
+
+
+is_deeply(get_pageinfo($my_req_info, 'attrs', []), $params, "Attrs gives all");
+
+is(get_pageinfo($my_req_info, 'attr', ['msg']), $params->{'msg'}, "Attr");
+
 is(get_pageinfo($my_req_info, 'env', ['g_id']),
    $session_id,
    'event:env("g_id")');
 
-done_testing(23 + int(@pnames));
+done_testing(26 + int(@pnames));
 
 
 1;

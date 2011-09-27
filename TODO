@@ -1,3 +1,10 @@
+
+
+* Move Kynetx directory to KRE
+* Move Kynetx.pm inside KRE directory
+
+
+------- OLD
 * add pragma to rule set for caller domain as a security check
 * add action for list reordering
 * add predicates to check direction of user-select stock symbols

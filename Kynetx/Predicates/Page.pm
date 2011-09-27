@@ -145,7 +145,7 @@ url
 	    $val = $req_info->{$args->[0]};
 	}
 
-    } elsif($function eq 'param') {
+    } elsif($function eq 'param' || $function eq 'attr') {
 
       # rulespaced env parameters
       if($req_info->{'rid'} && defined $req_info->{$req_info->{'rid'}.':'.$args->[0]}) {
@@ -155,7 +155,7 @@ url
 	$val = $req_info->{$args->[0]};
       }
 
-    } elsif($function eq 'params') {
+    } elsif($function eq 'params' || $function eq 'attrs') {
 
       my %skip = (
 		  rid => 1,
