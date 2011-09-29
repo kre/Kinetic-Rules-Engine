@@ -98,6 +98,16 @@ $rule_env = extend_rule_env("g","a",$rule_env);
 
 
 ################# Insert tests here
+$krl_src = <<_KRL_;
+myHash{["b", "f", "g",1]}
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    'myHash{["b", "f", "g", 1]}',
+    mk_expr_node('str', '3.b'),
+    0);;
+
 
 $krl_src = <<_KRL_;
 c[1]
@@ -182,6 +192,7 @@ add_expr_testcase(
     0);
 
 ################### Above this line
+ENDY:
 
 foreach my $case (@expr_testcases ) {
 	diag("KRL = ", Dumper($case->{'krl'})) if $case->{'diag'};

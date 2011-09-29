@@ -77,6 +77,7 @@ sns_publish
 str_in
 str_out
 body_to_hash
+bin_reg
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -632,6 +633,26 @@ sub normalize_path {
 	} 	
 	return \@normalized;
 	
+	
+}
+
+# converts a string to a perl regexp which
+# is valid in /$reg/ constructs
+sub bin_reg {
+	my ($reg_string) = @_;
+	my $logger = get_logger();
+	my $re = undef;
+    if ($reg_string =~ m/^#.+#$/ ) {
+    	my $composed = "qr$reg_string";
+    	$re = eval $composed;
+    	if ($@) {
+    		$logger->warn("Unable to compile $reg_string as regexp");
+    		return undef;
+    	}    	
+    } else {
+    	$re = qr/$reg_string/;
+    }
+	return $re;
 	
 }
 
