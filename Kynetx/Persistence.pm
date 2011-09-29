@@ -285,7 +285,7 @@ sub consume_trail_element {
 sub trail_element_index {
     my ($domain,$rid,$session,$varname,$regexp)= @_;
     my $logger = get_logger();
-    $logger->debug("Index $varname for ",sub {Dumper($regexp)});
+    $logger->trace("Index $varname for ",sub {Dumper($regexp)});
     my $trail = get_persistent_var($domain,$rid,$session,$varname);
     my $re = bin_reg($regexp);
     my $index = undef;
@@ -336,14 +336,13 @@ sub trail_element_before {
     $logger->trace("Check $varname for ",sub {Dumper($regexp1)}, " before ", sub {Dumper($regexp2)});
     my $first = trail_element_index($domain,$rid,$session,$varname,$regexp1);
     my $second = trail_element_index($domain,$rid,$session,$varname,$regexp2);
-    $logger->debug("1: ", sub {Dumper($first)}, " 2: ", sub {Dumper($second)});
     return $first->[0] < $second->[0];
 }
 
 sub trail_element_within {
     my ($domain,$rid,$session,$varname,$regexp,$timevalue,$timeframe)= @_;
     my $logger = get_logger();
-    $logger->debug("Check $varname for ",sub {Dumper($regexp)}, " within ", sub {Dumper($timevalue)}, ",",sub {Dumper($timeframe)});
+    $logger->trace("Check $varname for ",sub {Dumper($regexp)}, " within ", sub {Dumper($timevalue)}, ",",sub {Dumper($timeframe)});
     my $element_index = trail_element_index($domain,$rid,$session,$varname,$regexp);
     return undef unless (defined $element_index);
     my $desired = DateTime->from_epoch(epoch => $element_index->[1]);
