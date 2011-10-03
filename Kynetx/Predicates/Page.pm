@@ -91,11 +91,13 @@ url
 	    $req_info->{'caller_url'}->{'hostname'} = $parsed_url->hostname;
 	    $req_info->{'caller_url'}->{'path'} = $parsed_url->path;
 
-	    my $hostname = $parsed_url->hostname;
+	    my $hostname = $parsed_url->hostname || "";
 	    my @components = split(/\./, $hostname);
+	    my $c2 = $components[-2];
+	    my $c1 = $components[-1];
 	    $req_info->{'caller_url'}->{'domain'} =
-	          $components[-2] . '.' . $components[-1];
-	    $req_info->{'caller_url'}->{'tld'} = $components[-1];
+	          $c2 . '.' . $c1;
+	    $req_info->{'caller_url'}->{'tld'} = $c1;
 
 	    if ($parsed_url->port) {
 		$req_info->{'caller_url'}->{'port'} = $parsed_url->port;

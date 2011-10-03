@@ -68,7 +68,7 @@ sub gen_js_expr {
     my $expr = shift;
 
     my $logger = get_logger();
-	#$logger->debug("Seeing ", sub {Dumper $expr});
+	$logger->trace("Seeing ", sub {Dumper $expr});
 	
 	my $jsexp = undef;
 	local $_ = $expr->{'type'};
@@ -206,11 +206,11 @@ sub gen_js_function {
 
 sub gen_js_rands {
     my ($rands) = @_;
+    my $logger = get_logger();
+    $logger->trace("Args: ", sub { join(", ", @{$rands}) });
 
     my @rands = map {gen_js_expr($_)} @{ $rands } ;
 
-#    my $logger = get_logger();
-#    $logger->debug("Args: ", sub { join(", ", @rands) });
 
     return \@rands;
 

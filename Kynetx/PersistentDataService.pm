@@ -73,7 +73,7 @@ sub handler {
       $r->path_info =~
 	m!/(get|store|version)(?:/([A-Za-z0-9_;]+)/([A-Za-z0-9_]+)/([A-Za-z0-9_;]+)/?)?!;
 
-    $logger->debug("processing method $method on RID $rid and session $sid with vars $vars");
+    $logger->debug("processing method $method on RID $rid and session $sid with vars ",$vars || "");
     Log::Log4perl::MDC->put('site', $rid);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
 

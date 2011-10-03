@@ -85,8 +85,7 @@ sub extend_rule_env {
 	my($keys, $vals, $env) = @_;
 	my $new_env = {'___sub' =>$env};
 
-#    my $logger = get_logger();
-#    $logger->debug('$keys has type ', ref $keys);
+    my $logger = get_logger();
 
 	if(ref $keys eq 'ARRAY' && ref $vals eq 'ARRAY') {
 	    $new_env->{'___vars'} = $keys;

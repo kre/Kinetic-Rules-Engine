@@ -614,7 +614,7 @@ sub process_one_global_block {
 				$rule_env->{$var} = $val;
 			}
 		} else {
-			$logger->debug("Fell through: Expr: $g->{'type'}");
+			$logger->debug("Fell through: Expr: ",$g->{'type'} || "");
 		}
 		$js .= $this_js;
 	}
@@ -716,7 +716,6 @@ sub eval_foreach {
 		  Kynetx::Expressions::eval_expr( $foreach_list[0]->{'expr'},
 			$rule_env, $rule->{'name'}, $req_info, $session );
 
-		#    $logger->debug("Foreach ", sub { Dumper $foreach_list[0] });
 
 		my $vars = $foreach_list[0]->{'var'};
 
@@ -730,7 +729,7 @@ sub eval_foreach {
 
 			# array of single value arrays
 			$valarray =
-			  [ map { [ Kynetx::Expressions::den_to_exp($_) ] }
+			  [ map { [ Kynetx::Expressions::exp_to_den($_) ] }
 				  @{ $valarray->{'val'} } ];
 		}
 		elsif ( $valarray->{'type'} eq 'hash' ) {
@@ -739,14 +738,12 @@ sub eval_foreach {
 			my @va;
 			foreach my $k ( keys %{ $valarray->{'val'} } ) {
 				push @va,
-				  [
-					$k,
-					Kynetx::Expressions::den_to_exp( $valarray->{'val'}->{$k} )
+				  [	Kynetx::Expressions::exp_to_den($k),	 
+				  	Kynetx::Expressions::exp_to_den($valarray->{'val'}->{$k}) 
 				  ];
 			}
 			$valarray = \@va;
 
-			#      $logger->debug("Valarray ", sub {Dumper $valarray});
 		}
 		else {
 			$logger->debug(
@@ -754,37 +751,35 @@ sub eval_foreach {
 			);
 
 			# make an array of arrays
-			$valarray = [ [ Kynetx::Expressions::den_to_exp($valarray) ] ];
+			$valarray = [ [ Kynetx::Expressions::exp_to_den($valarray) ] ];
 		}
-
-		#    $logger->debug("Valarray ", sub {Dumper $valarray});
 
 		my $i = 0;
 		foreach my $val ( @{$valarray} ) {
 
-			#      $logger->debug("Evaluating rule body with " . Dumper($val));
+			$logger->trace("Evaluating rule body with " . Dumper($val));
 
 			$logger->debug(
-				"----------- foreach iteration " . $i++ . " -------------\n" );
-
+				"----------- foreach iteration " . $i++ . " \n" );
+				
 			my $vjs = Kynetx::JavaScript::gen_js_var_list(
 				$vars,
 				[
 					map {
-						Kynetx::JavaScript::gen_js_expr(
-							Kynetx::Expressions::typed_value($_) )
+						Kynetx::JavaScript::gen_js_expr($_ )
 					  } @{$val}
 				]
 			);
 
-			#      $logger->debug("Vars ", sub {Dumper $vars});
-			#      $logger->debug("Vals ", sub {Dumper $val});
+			my $dvals = [map {Kynetx::Expressions::den_to_exp($_)} @{$val}];
+			$logger->trace("Vals: ", sub {Dumper($val)});			
+			$logger->trace("dvals: ", sub {Dumper($dvals)});
 
 			# we recurse in side this loop to handle nested foreach statements
 			$fjs .= mk_turtle(
 				$vjs
 				  . eval_foreach(
-					$r, $req_info, extend_rule_env( $vars, $val, $rule_env ),
+					$r, $req_info, extend_rule_env( $vars, $dvals, $rule_env ),
 					$session, $rule, cdr(@foreach_list)
 				  )
 			);
@@ -1034,7 +1029,7 @@ sub optimize_pre {
 		}
 	}
 
-	$logger->debug( "[rules::optimize_pre] foreach vars: ",
+	$logger->trace( "[rules::optimize_pre] foreach vars: ",
 		sub { Dumper(@vars) } );
 
 	foreach my $decl ( @{ $rule->{'pre'} } ) {

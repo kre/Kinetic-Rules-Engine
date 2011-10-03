@@ -96,7 +96,7 @@ sub get_useragent {
 	my($cards, $selector, $version) = ($1, $2, $3);
 
 	$logger->debug("UserAgent: ", $ua_string);
-	$logger->debug("Endpoint info:  $cards, $selector, $version");
+	$logger->debug("Endpoint info:  ",$cards,", ", $selector,", ", $version);
 	my $ua = HTML::ParseBrowser->new($ua_string);
 
 

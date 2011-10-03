@@ -323,7 +323,7 @@ sub eval_expr {
 	        $count = Kynetx::Persistence::get_persistent_var($domain,$re_rid, $session, $name);
         }
 
-        $logger->trace('[persistent_ineq] ', "$name -> $count");
+        $logger->trace('[persistent_ineq] ', $name || ""," -> ",$count);
         my $v = ineq_test($expr->{'ineq'},
 		     $count,
 		     Kynetx::Expressions::den_to_exp(
@@ -360,7 +360,7 @@ sub eval_expr {
         return mk_expr_node(infer_type($v),$v);
     } elsif ($expr->{'type'} eq 'seen_timeframe') {
         my $name = $expr->{'var'};
-        $logger->debug('[seen_timeframe] ', "$name");
+        $logger->trace('[seen_timeframe] ', "$name");
 
         my $v;
 
@@ -733,7 +733,7 @@ sub eval_hash_ref {
 			$rule_name,
 			$req_info,
 			$session));
-			$logger->debug("Key resolves to: ",sub {Dumper($kval)});
+			$logger->trace("Key resolves to: ",sub {Dumper($kval)});
 			
 		my $element;
 		if (ref $kval eq "ARRAY") {
@@ -770,7 +770,7 @@ sub eval_persistent {
 							   $session,
 							   $expr->{'name'},
 							   $idx);
-      $logger->debug("[persistent trail] $expr->{'name'} at $idx -> $v");
+      $logger->debug("[persistent trail] ",$expr->{'name'} || ""," at ",$idx ||""," -> ",$v || "");
 
     } elsif (defined $expr->{'hash_key'}) {
     	#Persistent hash ref
@@ -888,6 +888,8 @@ sub ineq_test {
 
     my $logger = get_logger();
 #    $logger->debug("[ineq_test] $rand0 $op $rand1");
+	$rand0 = undef unless (defined $rand0);
+	$rand1 = undef unless (defined $rand1);
 
     if ($op eq '<=') {
 	return $rand0 <= $rand1;
@@ -1084,7 +1086,7 @@ my %literal_types = ('str' => 1,
 sub typed_value {
   my($val) = @_;
   my $logger = get_logger();
-  $logger->trace("typed value recieved: ", sub {Dumper($val)});
+  $logger->trace("typed value received: ", sub {Dumper($val)});
   unless (ref $val eq 'HASH' &&
 	  defined $val->{'type'} &&
 	  $literal_types{$val->{'type'}}
@@ -1270,7 +1272,7 @@ sub eval_str {
       my $bee_val = eval_expr($bee_expr,$rule_env, $rule_name,$req_info, $session)->{'val'};
 #      $logger->debug("parsed and evaled beesting: ", sub {Dumper($bee_val)} );
       if (ref $bee_val eq 'ARRAY' || ref $bee_val eq 'HASH') {
-	$bee_val = $json->encode($bee_val)
+	$bee_val = $json->encode($bee_val) || "";
       }
       $val .= $parts[0].$bee_val;
       $str = $parts[2];
