@@ -309,16 +309,23 @@ sub oauth_callback_handler {
 	Kynetx::Persistence::delete_persistent_var("ent", $rid, $session, $ent_config_key);
 	my $redirect;
  	if (defined $fail){
- 		Kynetx::Errors::raise_error($req_info,'warn',
- 			"[OAuthModule] $fail",
- 			{
- 				'genus' => 'oauth',
- 				'species' => 'callback'
- 			}
- 		);
+# 		Kynetx::Errors::raise_error($req_info,'warn',
+# 			"[OAuthModule] $fail",
+# 			{
+# 				'genus' => 'oauth',
+# 				'species' => 'callback'
+# 			}
+# 		);
+ 		$logger->debug("Make redirect-------------------------------");
+ 		if ($host eq "127.0.0.1") {
+ 			my $s = $r->server();
+ 			$port = "8082";#$s->port;
+ 			$host = $r->hostname;
+ 		}
  		my $base = "http://$host:$port/ruleset/cb_host/$rid/$version/oauth_error";
- 		my $p = {'error' => $fail};
+ 		my $p = {'error' => "\'$fail\'"};
  		$redirect = Kynetx::Util::mk_url($base,$p);
+ 		$logger->debug("Redirect: $redirect");
 	} elsif ($cb_action->{'type'} eq 'redirect') {
 		$redirect = $cb_action->{'url'};
 		return Apache2::Const::REDIRECT;
@@ -348,16 +355,50 @@ sub callback_host {
 		$version = $1;
 		$eventname = $2;
 	}
+	my $mode = Kynetx::Configure::get_config("RUN_MODE");
+	my $servers = Kynetx::Configure::get_config($mode);
+	my $kns_port = $servers->{"KNS_PORT"};
+	my $s = $r->server();
+	my $port = $s->port;
+	my $n = $s->server_hostname();
+	if (defined $kns_port) {
+		$kns_port = ':' . $kns_port;
+	} else {
+		$kns_port = '';
+	}
+	my $init_host = $servers->{"INIT_HOST"} . $kns_port;
+	my $cb_host = $servers->{"CB_HOST"} . $kns_port;
+	my $eval_host = $servers->{"EVAL_HOST"} . $kns_port;
+	my $krl_host = $servers->{"KRL_HOST"} . $kns_port;
+	
+	my $sconfig = {
+		'eval_host' => $eval_host,
+		'callback_host' => $cb_host,
+		'init_host' => $init_host,
+		
+	};
+	my $stag = {
+		'init' => $sconfig,
+		"$rid:kynetx_app_version" => $version,
+		"rids" => [$rid],
+		"$rid:site_tag" => "true"		
+	};
+	
+	my $json = Kynetx::Json::encode_json($stag);
+	
 	$r->content_type('text/html');
 	print "<html><head></head><body onload=top.close() href='javascript:void(0)' content='10'>";
 	#print "<html><head></head><body>";
-	#print '<script src="http://init.kobj.net/js/shared/kobj-static.js" type="text/javascript">';
-	print '<script>';
-	my $x = Kynetx::Events::process_event($r,'oauth_callback',$eventname,$rid,$eid,$version);
-	print '</script>';
 	print '<script type="text/javascript">window.open("","_self","");window.opener="x";window.close()</script>';
-	#print '<script type="text/javascript">window.open("","_self","");window.opener="x";window.close()</script>';
-	#print " $uri -|- $eventname </body></html>";
+	print '<script type="text/javascript">';
+	print 'var d = document;';
+	print 'var s = d.createElement("script");';
+	print 's.text=\'KOBJ_config=' . $json . '\';';
+	print 'd.body.appendChild(s);';
+	print 'var l = d.createElement("script");';
+	print 'l.src=\'http://init.kobj.net/js/shared/kobj-static.js\';';
+	print 'd.body.appendChild(l);';
+	print '</script>';
 	print "</body></html>";
 	return Apache2::Const::OK;
 }
