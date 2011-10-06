@@ -487,17 +487,29 @@ sub dom_eval {
 		  my $logger = get_logger();
 
 
-		  $logger->trace("Evaluating event $event_elem against SM $sm_elem");
+		  $logger->debug("Evaluating event $event_elem against SM $sm_elem");
 
 		  my $req_info = $event->get_req_info();
 		  my $form_data = $req_info->{'KOBJ_form_data'} if $req_info->{'KOBJ_form_data'};
-#		  if ($event_elem eq $sm_elem && $url =~ /$pattern/) {
-		  if ($event_elem eq $sm_elem) {
-		    return(1, $form_data);
+
+		  my $captures = [];
+		  my @this_captures;
+		  if(@this_captures = $event_elem =~ /$sm_elem/) {
+	   #      $logger->debug("Captures: ($1)", sub {Dumper @this_captures}); 
+		    push (@{$captures}, @this_captures) if $1; #$1 not set if no capture
 		  } else {
-		    return(0, []);
+		    # if any of these are false, we return 0 and the empty capture list
+		    return (0, []);
 		  }
-	  };
+#    $logger->trace("Final captures: ", sub {Dumper $captures});
+		  return (1, $captures);
+
+		  # if ($event_elem eq $sm_elem) {
+		  #   return(1, $form_data);
+		  # } else {
+		  #   return(0, []);
+		  # }
+		};
 
   return $test->($event->element(), $t->{'test'}->[0], $event->url(), $t->{'test'}->[1]);
 }
