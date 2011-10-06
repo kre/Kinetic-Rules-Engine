@@ -361,7 +361,7 @@ $test_count++;
 my $ev5 = Kynetx::Events::Primitives->new();
 $ev5->submit("#my_form");
 
-#diag Dumper $ev5;
+diag Dumper $ev5;
 
 # test the pageview prim SMs
 my $sm5 = mk_dom_prim("#my_form", '', '', 'submit');
@@ -375,7 +375,27 @@ ok($sm5->is_final($next), "ev5 leads to final state");
 $test_count++;
 
 $next = $sm5->next_state($initial, $ev2);
-ok($sm5->is_initial($next), "ev2 does not lead to initial state");
+ok($sm5->is_initial($next), "ev2 leads to initial state");
+$test_count++;
+
+
+# test the dom element pattern
+
+my $ev6 = Kynetx::Events::Primitives->new();
+$ev6->submit("#your_form");
+
+my $sm6 = mk_dom_prim("#my_.*", '', '', 'submit');
+
+#diag Dumper $sm6;
+
+$initial = $sm6->get_initial();
+
+$next = $sm6->next_state($initial, $ev5);
+ok($sm6->is_final($next), "ev6 leads to final state");
+$test_count++;
+
+$next = $sm6->next_state($initial, $ev6);
+ok($sm6->is_initial($next), "ev6 leads to initial state");
 $test_count++;
 
 
