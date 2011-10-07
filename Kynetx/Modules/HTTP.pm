@@ -278,7 +278,7 @@ sub mk_http_request {
 				map( "$_=" . uri_escape_utf8( $params->{$_} ), keys %{$params} )
 			);
 			$req->header(
-				'content-type' => "application/x-www-form-urlencoded charset=UTF-8" );
+				'content-type' => "application/x-www-form-urlencoded; charset=UTF-8" );
 
 		}
 		if (ref $content ne "") {
