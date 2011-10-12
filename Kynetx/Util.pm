@@ -45,12 +45,15 @@ use Encode qw(
 use Kynetx::Persistence::KEN;
 
 if (-e Kynetx::Configure::get_config('WEB_ROOT')."/etc/amazon_credentials.pm") {
-  use Kynetx::Predicates::Amazon::SNS qw(:all);
-  use Kynetx::Predicates::Amazon::RequestSignatureHelper qw(
+  require Kynetx::Predicates::Amazon::SNS;
+  Kynetx::Predicates::Amazon::SNS->import;
+  require Kynetx::Predicates::Amazon::RequestSignatureHelper;
+  Kynetx::Predicates::Amazon::RequestSignatureHelper->import qw(
 							     kAWSAccessKeyId
 							     kAWSSecretKey
 							  );
-  use amazon_credentials qw(
+  require amazon_credentials;
+  amazon_credentials->import qw(
 			     get_key_id
 			     get_access_key
 			  );
