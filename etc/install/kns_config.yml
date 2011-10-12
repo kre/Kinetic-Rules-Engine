@@ -123,6 +123,8 @@ KNS_ERROR_MSG: KRE has experienced an error in processing the request.  We have 
 
 # log data to kverify for analytics validation. 1 enables, 0 disables
 USE_KVERIFY: 0
+KVERIFY_DOMAIN: ""
+
 
 # serve runtime from cloudfront
 USE_CLOUDFRONT: 0
