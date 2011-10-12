@@ -1,0 +1,190 @@
+# kns_config.yml
+
+# This is the configuration file for KNS.  
+#  - format id YAML
+#  - there are no optional parameters.  
+
+#
+# configure memcache
+#
+memcache:
+
+  # IP addresses all the hosts that are running memcached
+  mcd_hosts:
+    - 127.0.0.1
+
+  # Port that memcached machines are listenting on (11211 is the default)
+  mcd_port: 11211
+
+#
+# configure session servers
+#
+sessions:
+
+  # IP addresses all the hosts that are running memcachedb (sessions)
+  session_hosts:
+    - 127.0.0.1
+
+  # Port that memcached machines are listenting on 
+  # 11211 is the default for memcached
+  # 21201 is the default for memcachedb
+  session_port: 11211
+
+# mongo DB Configuration Parameters
+MONGO_HOST: 127.0.0.1
+MONGO_PORT: 27017
+MONGO_DB: kynetx
+
+# The home directory
+WEB_ROOT: /web
+
+# Where KOBJ is installed
+KOBJ_ROOT: /web/lib/perl
+
+# where should Apache direct people when it wants to give an address?
+SERVER_ADMIN: you@localhost
+
+# runmode: production or development
+# controls which of the configs we'll use below
+# in development mode, the IP address of the client is faked, etc.
+RUN_MODE: development
+
+# debug: on or off 
+# turn on detailed debugging logs.  Recommendd off in production
+DEBUG: on
+
+production: 
+  # hostnames
+  #just the full hostnames.  
+  INIT_HOST: init.kobj.net
+  CB_HOST: log.kobj.net
+  EVAL_HOST: cs.kobj.net
+  KRL_HOST: krl.kobj.net
+
+  # domain that the cookie will be set in for sessions.
+  #  should be usable by all KNS servers
+  COOKIE_DOMAIN: kobj.net
+
+development:
+  #just the full hostnames.  
+  INIT_HOST: 127.0.0.1
+  CB_HOST: 127.0.0.1
+  EVAL_HOST: 127.0.0.1
+  KRL_HOST: 127.0.0.1
+
+  COOKIE_DOMAIN: 127.0.0.1
+
+  # INIT_HOST: 64.55.47.131
+  # CB_HOST: 64.55.47.131
+  # EVAL_HOST: 64.55.47.131
+  # KRL_HOST: 64.55.47.131
+
+  # defaults to 80 if undefined
+#  KNS_PORT: 80
+
+
+# # if these are not defined, then default is EVAL_HOST and 80
+#OAUTH_CALLBACK_HOST: 64.55.47.131
+#OAUTH_CALLBACK_PORT: 80
+
+# OAuth config block. These are required for OAuth to work - QWB
+oauth:
+  callback:
+    google: google_callback
+    twitter: twitter_callback
+    kpds: kpds_callback
+    facebook: fb_callback
+    linkedin: li_callback
+
+# Rule repository configuration
+#  type: svn or api 
+#  RULE_REPOSITORY_TYPE: svn
+RULE_REPOSITORY_TYPE: svn
+
+# SVN repository
+# pattern: URL|username|password
+# no trailing slash on URL
+RULE_REPOSITORY: http://127.0.0.1/rules/client/|<uid>|<passwd>
+
+# rotation period for logs (cronolog based)
+# pattern: #period (e.g. 1hour, 5min)
+LOG_PERIOD: 1hour
+
+# maximum apache processes to run per instance
+#  dev boxes typically need 1, production boxes more
+MAX_SERVERS: 1
+
+# page to redirect to for access to the server other than to the API
+KNS_LANDING_PAGE: http://www.kynetx.com
+
+# this is the message the KNS system will return when it encounters an 
+# unrecoverable error
+KNS_ERROR_MSG: KRE has experienced an error in processing the request.  We have logged this error and will respond to it.  
+
+# log data to kverify for analytics validation. 1 enables, 0 disables
+USE_KVERIFY: 0
+
+# serve runtime from cloudfront
+USE_CLOUDFRONT: 0
+
+# URL for the runtime library file to redirect to is USE_CLOUDFRONT is 1
+# if USE_CLOUDFRONT is 0, then this is ignored.  
+RUNTIME_LIB_NAME: 
+
+# default time to cache datasets for when no time period is specified
+CACHEABLE_THRESHOLD: 86400              #24 hours
+
+# machine to rsync log files to. 
+# logs are placed in directory named "logs" in the account named by LOG_ACCOUNT
+LOG_SINK: 127.0.0.1
+
+# account on LOG_SINK to rsync to
+# an account with this name should exist on LOG_SINK
+# a public SSH cert for LOG_ACCOUNT should be on all KNS machines
+LOG_ACCOUNT: web
+
+# root directory for Datasets.pm data
+#
+DATA_ROOT: /web/data/client
+
+# Constant declarations taken from KOBJ.pm
+DEFAULT_SERVER_ROOT:  kobj.net
+DEFAULT_ACTION_PREFIX: kobj-cs
+DEFAULT_LOG_PREFIX: kobj-log
+DEFAULT_ACTION_HOST: 127.0.0.1
+DEFAULT_LOG_HOST: 127.0.0.1
+DEFAULT_JS_ROOT: /web/lib/perl/etc/js
+
+# Test IP for development testing
+TEST_IP: 72.21.203.1            # Seattle (Amazon)
+#TEST_IP: 128.122.108.71        # New York (NYU)
+#TEST_IP: 128.187.16.242        # Utah (BYU)
+
+# KRE will send errors to ErrorStack if provided with a stack key. Level defaults to 'WARN'
+ERRORSTACK_KEY: '<eskey>'
+ERRORSTACK_LEVEL: 'WARN'
+
+# What user agent string should the platform return?
+HTTP_USER_AGENT: 'Kynetx/1.0'
+# HTTP method timeout in seconds (used in Actions/HTTP.pm)
+HTTP_TIMEOUT: 5
+
+# lock timer values
+LOCK_PATIENCE: 20
+LOCK_TTL: 20
+
+# ignore this for now...
+capabilities:
+  web:
+    minor: 0
+    major: 0
+    capabilities:
+      understands_javascript: true
+  email:
+    major: 0
+    minor: 8
+  mail:
+    major: 0
+    minor: 8
+    
+
