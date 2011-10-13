@@ -23,7 +23,6 @@ use strict;
 use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
-use SVN::Client;
 use APR::URI;
 use Encode;
 
@@ -171,6 +170,10 @@ sub get_rules_from_repository{
       }
 
     } elsif ($rule_repo_type eq 'svn') {
+
+      require SVN::Client;
+      SVN::Client->import;
+
 
       # FIXME: all this complicated SVN code could be replaced by nicer WebDAV
       #        code and refactored to work with code from Memcached.pm
