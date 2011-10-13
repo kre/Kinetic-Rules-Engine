@@ -41,6 +41,7 @@ use Encode qw(
 	encode
 	decode
 );
+use Kynetx::Configure;
 
 use Kynetx::Persistence::KEN;
 
