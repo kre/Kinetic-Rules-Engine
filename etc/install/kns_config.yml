@@ -97,14 +97,16 @@ oauth:
     linkedin: li_callback
 
 # Rule repository configuration
-#  type: svn or api 
+#  type: svn or api or file
 #  RULE_REPOSITORY_TYPE: svn
-RULE_REPOSITORY_TYPE: svn
+RULE_REPOSITORY_TYPE: file
 
-# SVN repository
+# Ruleset repository
 # pattern: URL|username|password
 # no trailing slash on URL
-RULE_REPOSITORY: http://127.0.0.1/rules/client/|<uid>|<passwd>
+# just the path to the repo for file acceee
+# svn: RULE_REPOSITORY: http://127.0.0.1/rules/client/|<uid>|<passwd>
+RULE_REPOSITORY: /web/rulesets
 
 # rotation period for logs (cronolog based)
 # pattern: #period (e.g. 1hour, 5min)

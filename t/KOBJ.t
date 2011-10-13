@@ -67,9 +67,6 @@ Kynetx::Configure::configure();
 
 my $test_count = 0;
 
-# dispatch
-my $svn_conn = "http://krl.kobj.net/rules/client/|cs|fizzbazz";
-
 my $dn = "http://127.0.0.1/js";
 
 my $ruleset = $rid;

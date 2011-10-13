@@ -45,7 +45,8 @@ use Kynetx::Configure;
 
 use Kynetx::Persistence::KEN;
 
-if (-e Kynetx::Configure::get_config('WEB_ROOT')."/etc/amazon_credentials.pm") {
+# FIXME: hard coded path
+if (-e "/web/etc/amazon_credentials.pm") {
   require Kynetx::Predicates::Amazon::SNS;
   Kynetx::Predicates::Amazon::SNS->import;
   require Kynetx::Predicates::Amazon::RequestSignatureHelper;
