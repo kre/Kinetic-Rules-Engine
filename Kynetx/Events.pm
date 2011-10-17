@@ -36,6 +36,11 @@ use Kynetx::Json;
 use Kynetx::Scheduler;
 use Kynetx::Response;
 use Kynetx::Persistence qw(:all);
+use Kynetx::Persistence::UserState qw(
+	get_current_state
+	set_current_state
+	delete_current_state
+);
 use Kynetx::Events::Primitives qw(:all);
 use Kynetx::Events::State qw(:all);
 use Kynetx::Util qw(:all);
@@ -269,22 +274,22 @@ sub process_event_for_rid {
     my $domain = $ev->get_domain();
 
     $logger->debug("Event domain is $domain and type is $type");
-#    $logger->debug("Rule list is ", sub{Dumper $ruleset->{'rule_lists'}->{$domain}->{$type}});
+    $logger->debug("Rule list is ", sub{Dumper $ruleset->{'rule_lists'}->{$domain}->{$type}});
 
     # prints out detailed info on rule_lists
-    # foreach my $d (keys %{$ruleset->{'rule_lists'}}) {
-    #   foreach my $t (keys %{$ruleset->{'rule_lists'}->{$d}}) {
+     foreach my $d (keys %{$ruleset->{'rule_lists'}}) {
+       foreach my $t (keys %{$ruleset->{'rule_lists'}->{$d}}) {
 
-    # 	$logger->debug("$d:$t -> ");
-    # 	$logger->debug("\tFilters:", sub {Dumper $ruleset->{'rule_lists'}->{$d}->{$t}->{"filters"}});
+     	$logger->debug("$d:$t -> ");
+     	$logger->debug("\tFilters:", sub {Dumper $ruleset->{'rule_lists'}->{$d}->{$t}->{"filters"}});
 
-    # 	my $i = 0;
-    # 	foreach my $r (@{$ruleset->{'rule_lists'}->{$d}->{$t}->{"rulelist"}} ) {
+     	my $i = 0;
+     	foreach my $r (@{$ruleset->{'rule_lists'}->{$d}->{$t}->{"rulelist"}} ) {
 	  
-    # 	  $logger->debug("\t$r->{'name'}");
-    # 	}
-    #   }
-    # }
+     	  $logger->debug("\t$r->{'name'}");
+     	}
+       }
+     }
 
     $logger->debug("Selection checking for ", scalar @{ $ruleset->{'rule_lists'}->{$domain}->{$type}->{'rulelist'} }, " rules") if $ruleset->{'rule_lists'}->{$domain}->{$type};
 	$logger->trace("Schedule: ", sub {Dumper($schedule)});
@@ -299,19 +304,19 @@ sub process_event_for_rid {
         my $sm_current_name = $rule->{'name'} . ':sm_current';
         my $event_list_name = $rule->{'name'} . ':event_list';
 
-#    	$logger->trace("Rule: ", sub {Dumper $rule});
+    	$logger->debug("Rule: ", sub {Dumper $rule});
 
-    	$logger->trace("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
+    	$logger->debug("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
 	
     	next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
 
     	my $sm = $rule->{'event_sm'};
-    	$logger->trace("State machine: ", sub {Dumper($sm)});
+    	$logger->debug("State machine: ", sub {Dumper($sm)});
 
         # States stored in Mongo should be serialized
-        my $current_state = get_persistent_var("ent", $rid, $session, $sm_current_name ) || $sm->get_initial();
+        my $current_state = get_current_state($rid, $session, $rule->{'name'} ) || $sm->get_initial();
 
-        my $next_state = $sm->next_state( $current_state, $ev );
+        my $next_state = $sm->next_state( $current_state, $ev,$rid, $session, $rule->{'name'} );
 
         $logger->trace("Current: ", $current_state );
         $logger->trace("Next: ", $next_state );
@@ -356,7 +361,7 @@ sub process_event_for_rid {
             $schedule->annotate_task( $rid, $rulename,$task, 'vals', $val_list );
 
             # reset SM
-            delete_persistent_var("ent", $rid, $session, $sm_current_name );
+            delete_current_state($rid, $session, $rule->{'name'} );
 
             # reset event list for this rule
             delete_persistent_var("ent", $rid, $session, $event_list_name );
@@ -365,7 +370,7 @@ sub process_event_for_rid {
             $logger->trace("Next state not final");
             $logger->trace("Next state ref: ", ref $next_state);
             if ($next_state ne "") {
-                save_persistent_var("ent", $rid, $session, $sm_current_name, $next_state );
+                set_current_state($rid, $session, $rule->{'name'}, $next_state );
             }
 
         }
@@ -519,13 +524,27 @@ sub compile_event_expr {
 	  $sm = mk_or( $sm0, $sm1 );
 	} elsif ( $eexpr->{'op'} eq 'before' ) {
 	  $sm = mk_before( $sm0, $sm1 );
+	} elsif ( $eexpr->{'op'} eq 'after' ) {
+	  $sm = mk_before( $sm1, $sm0 );
 	} elsif ( $eexpr->{'op'} eq 'then' ) {
 	  $sm = mk_then( $sm0, $sm1 );
 	}
       }
-
+  } elsif ($eexpr->{'type'} eq 'group_event') {
+  	my $op_num = Kynetx::Expressions::den_to_exp($eexpr->{'op_num'});
+  	if ($eexpr->{'op'} eq 'repeat') {
+  		my $sm0 = compile_event_expr( $eexpr->{'args'}->[0], $rule_lists, $rule );  		
+  		$sm = mk_repeat($sm0,$op_num);
+  	} elsif ($eexpr->{'op'} eq 'count') {
+  		my $sm0 = compile_event_expr( $eexpr->{'args'}->[0], $rule_lists, $rule );
+  		$sm = mk_count($sm0,$op_num);
+  	} else {
+  		$logger->warn("Unknown event operation: ", $eexpr->{'op'});
+  	}
+  	  
   } else {
     $logger->warn("Attempt to compile malformed event expression");
+    $logger->debug("E.expression: ", sub {Dumper($eexpr)});
   }
   return $sm;
 

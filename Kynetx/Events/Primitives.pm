@@ -317,7 +317,12 @@ sub generic {
 
 }
 
-
+sub null_event {
+	my $self = shift;
+	my ($domain) = @_;
+	$self->{'domain'} = $domain,
+	$self->{'type'} = '__null__'
+}
 
 
 1;

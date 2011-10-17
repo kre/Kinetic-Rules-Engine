@@ -79,7 +79,7 @@ our $CACHETIME = 60;
 our $DBREF;
 our $COLLECTION_REF;
 
-use constant SAFE => 1;
+use constant SAFE => 0;
 
 sub init {
     my $logger = get_logger();
@@ -389,7 +389,7 @@ sub find_and_modify {
 			}
 		}
 	}
-	$logger->debug("Composed command: ", sub {Dumper($command)});
+	$logger->trace("Composed command: ", sub {Dumper($command)});
 	my $status = $db->run_command($command);
 	
 	# Something may have changed in the database so flush data from memcache in case
@@ -479,7 +479,7 @@ sub put_hash_element {
 			push(@batch_elements,$object);
 		}
 		my @ids = $c->batch_insert(\@batch_elements);
-		$logger->debug("Inserted ",scalar @ids," hash element(s)");
+		$logger->trace("Inserted ",scalar @ids," hash element(s)");
 		return scalar @ids;
 	}
 }
@@ -499,7 +499,7 @@ sub delete_hash_element {
 			if (defined $success) {
 				if ($success->{'ok'}) {
 					my $count = $success->{'n'};
-					$logger->debug("Deleted $count hash element(s) from ", $del->{'key'});
+					$logger->trace("Deleted $count hash element(s) from ", $del->{'key'});
 				} else {
 					$logger->debug("Mongodb error trying to delete ", sub {Dumper($del)},
 						" error msg: ", $success->{'err'});
@@ -519,9 +519,10 @@ sub mongo_error {
 sub delete_value {
     my ($collection,$var) = @_;
     my $logger = get_logger();
-    $logger->trace("Deleting from $collection: ", sub {Dumper($var)});
+    $logger->debug("Deleting from $collection: ", sub {Dumper($var)});
     my $c = get_collection($collection);
-    my $success = $c->remove($var,{"safe" => SAFE});
+    #my $success = $c->remove($var,{"safe" => SAFE});
+    my $success = $c->remove($var,{"safe" => 1});
     clear_cache($collection,$var);
     if (!$success ) {
         $logger->debug("Delete error: ", mongo_error());

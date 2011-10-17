@@ -164,7 +164,7 @@ SKIP: {
           diag $like;
           diag $mech->content();
           diag $test->{'url'};
-          #die;
+          die;
       }
 
     }
@@ -187,7 +187,20 @@ SKIP: {
     # tests in an event plan are order dependent since events are order dependent.
     # Each plan is running different events in order to test a specific
     #   scenario defined in the rule's select statement
-
+    
+    my $after_test_plan = 
+       [{'url' => "$dn/web/pageview/a144x132?caller=http://www.windley.com/first.html",
+	'type' => 'text/javascript',
+	'like' => ['/first page/']
+       },
+       {'url' => "$dn/web/pageview/a144x132?caller=http://www.windley.com/second.html",
+	'type' => 'text/javascript',
+	'like' => ['/second after first/',
+		 ]
+       }];
+    
+    $test_count += test_event_plan($after_test_plan);
+    
     my $before_test_plan =
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
 	'type' => 'text/javascript',

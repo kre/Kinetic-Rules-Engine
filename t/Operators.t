@@ -85,6 +85,7 @@ pre {
   h = [1,2,1,3,4,3,5,4,6,5];
   i = [7,3,5,2,1,6];
   j = [{"a" : 1, "b" : 2, "c": 3}, {"a" : 4, "b" : 5, "c": 6}, {"a" : 7, "b" : 8, "c": 9}];
+  k = [100, 1, 10, 1000, 21, 92];
   foo = "I like cheese";
   my_str = "This is a string";
   phone_num = "1234567890";
@@ -241,8 +242,66 @@ sub test_operator {
     die unless ($result);
 }
 
+##
+# sort
+##
+$e[$i] = q#c.sort()#;
+$x[$i] = {
+   'val' => [4,5,6],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#f.sort()#;
+$x[$i] = {
+   'val' => [1,2,3,4,5,6,7],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#[6,4,5].sort()#;
+$x[$i] = {
+   'val' => [4,5,6],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#c.sort("reverse")#;
+$x[$i] = {
+   'val' => [6,5,4],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#k.sort("numeric")#;
+$x[$i] = {
+   'val' => [1,10, 21,92,100,1000],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#k.sort("ciremun")#;
+$x[$i] = {
+   'val' => [1000,100,92,21,10,1],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
 
 #goto ENDY;
+
+##
+# pick
+##
 
 $e[$i] = q/store.pick("$.store.book[*].author")/;
 $x[$i] = {
@@ -823,41 +882,6 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-
-$e[$i] = q#c.sort()#;
-$x[$i] = {
-   'val' => [4,5,6],
-   'type' => 'array'
-};
-$d[$i]  = 0;
-$i++;
-
-
-$e[$i] = q#f.sort()#;
-$x[$i] = {
-   'val' => [1,2,3,4,5,6,7],
-   'type' => 'array'
-};
-$d[$i]  = 0;
-$i++;
-
-
-$e[$i] = q#[6,4,5].sort()#;
-$x[$i] = {
-   'val' => [4,5,6],
-   'type' => 'array'
-};
-$d[$i]  = 0;
-$i++;
-
-
-$e[$i] = q#c.sort("reverse")#;
-$x[$i] = {
-   'val' => [6,5,4],
-   'type' => 'array'
-};
-$d[$i]  = 0;
-$i++;
 
 $e[$i] = q#c.sort(function(a,b){b > a})#;
 $x[$i] = {
@@ -1745,7 +1769,6 @@ $x[$i] = {
 };
 $d[$i] = 0;
 $i++;
-ENDY:
 
 $e[$i] = q/j_h.keys()/;
 $x[$i] = {
@@ -1831,6 +1854,9 @@ $x[$i] = {
 };
 $d[$i] = 0;
 $i++;
+
+ENDY:
+
 
 # now run the tests....
 my $l = scalar @e;

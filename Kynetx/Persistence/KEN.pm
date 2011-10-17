@@ -76,6 +76,7 @@ sub _ken_query {
     return undef;
 }
 
+
 sub get_ken {
     my ($session,$rid,$domain) = @_;
     my $logger = get_logger();
@@ -152,16 +153,27 @@ sub get_ken_value {
     return $valid->{$key};
 }
 
+sub touch_ken {
+	my ($ken,$ts) = @_;
+    my $logger = get_logger();
+    my $oid = MongoDB::OID->new(value => $ken);
+    my $active = $ts || DateTime->now->epoch;
+    my $kpds = Kynetx::MongoDB::get_collection(COLLECTION);
+    my $touch = $kpds->update({"_id" => $oid},{'$set' => {"last_active" => $active}});
+}
+
 sub get_ken_defaults {
     my $oid = MongoDB::OID->new();
     my $new_id = $oid->to_string();
     my $username = "_$new_id";
+    my $created = DateTime->now->epoch;
     my $dflt = {
         "username" => $username,
         "_id" => $oid,
         "firstname" => "",
         "lastname" => "",
-        "password" => "*"
+        "password" => "*",
+        "created" => $created
     };
     return $dflt;
 }

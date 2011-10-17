@@ -27,6 +27,8 @@ use Log::Log4perl qw(get_logger :levels);
 
 use Data::UUID;
 use Kynetx::Json qw(:all);
+use Kynetx::Environments qw(empty_rule_env);
+use Kynetx::Persistence::UserState;
 use Clone;
 
 use Data::Dumper;
@@ -53,6 +55,8 @@ mk_before
 mk_then
 mk_between
 mk_not_between
+mk_repeat
+mk_count
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -126,6 +130,10 @@ sub add_state {
   my($name, $transitions, $default) = @_;
 
   my $logger = get_logger();
+#  $logger->debug("Add state: ");
+#  $logger->debug("Name: ", $name);
+#  $logger->debug("Transitions: ", sub {Dumper($transitions)});
+#  $logger->debug("Default: ", sub {Dumper($default)});
 
   $logger->warn("adding a state that already exists") if defined $self->{'transitions'}->{$name};
 
@@ -152,19 +160,31 @@ sub clone {
   # now build the clone
   my $nsm = Kynetx::Events::State->new();
   foreach my $s (@{$self->get_states()}) {
-
     my @nt;
     foreach my $t (@{$self->get_transitions($s)}) {
-#        $logger->debug("working on: $t->{'next'} for $s");
-	push @nt,
-	  {"next" => $state_map->{$t->{'next'}},
-	   "domain" => $t->{'domain'},
-	   "type" => $t->{'type'},
-	   "vars" => $t->{'vars'},
-	   "test" => $t->{'test'},
-	  };
-
+        $logger->trace("working on: $t->{'next'} for $s");
+		push @nt,
+		  {"next" => $state_map->{$t->{'next'}},
+		   "domain" => $t->{'domain'},
+		   "type" => $t->{'type'},
+		   "vars" => $t->{'vars'},
+		   "test" => $t->{'test'},
+		  };
     }
+		
+	# Keep the group states sync'd
+	foreach my $group_state (keys %{$self->{'group'}}) {
+		$logger->trace("Group state clone: $group_state ", sub {Dumper($self->{'group'}->{$group_state})});
+		my ($count,$group_type) = @{$self->{'group'}->{$group_state}};
+		$logger->trace("C: $count  gt: $group_type");		
+  		if ($group_type eq 'count') {
+  			$nsm->add_count($state_map->{$group_state},$count);
+  		} elsif ($group_type eq 'repeat') {
+  			$nsm->add_repeat($state_map->{$group_state},$count);
+  		}  		
+	}
+    
+    
     $nsm->add_state($state_map->{$s},
 		    \@nt,
 		    $state_map->{$self->get_default_transition($s)});
@@ -185,25 +205,50 @@ sub join_states {
   my ($s1, $s2) = @_;
 
   my $logger = get_logger();
-  $logger->trace("Joining $s1 & $s2");
+  $logger->debug("Joining $s1 & $s2");
 
   my $ns = Data::UUID->new->create_str();
-
+  $logger->trace("Transitions for $s1 ",sub {Dumper($self->get_transitions($s1))});
+  $logger->trace("Transitions for $s2 ",sub {Dumper($self->get_transitions($s2))});
   my @nt;
   push(@nt, @{$self->get_transitions($s1)});
   push(@nt, @{$self->get_transitions($s2)});
-
+  
   $self->add_state($ns,
 		   \@nt,
 		   $ns);
 
-#  $logger->debug("New transitions added: ", Dumper $self->get_transitions($ns));
+  $logger->trace("New transitions added: ", Dumper $self->get_transitions($ns));
 
+
+  # Find any group transitions
+  foreach my $group_state (keys %{$self->{'group'}}) {
+	if ($group_state eq $s1 || $group_state eq $s2) {
+		$logger->trace("Group state clone: $group_state ", sub {Dumper($self->{'group'}->{$group_state})});
+		my ($count,$group_type) = @{$self->{'group'}->{$group_state}};
+		$logger->trace("C: $count  gt: $group_type");		
+  		if ($group_type eq 'count') {
+  			$self->add_count($ns,$count);
+  		} elsif ($group_type eq 'repeat') {
+  			$self->add_repeat($ns,$count);
+  		}  		
+		
+	  }
+	}
+  
+  
+
+  # rename any transitions that were joined
   foreach my $s (@{$self->get_states()}) {
     foreach my $t (@{$self->get_transitions($s)}) {
-      $t->{'next'} = $ns if $t->{'next'} eq $s1 || $t->{'next'} eq $s2
-    }
+      if ($t->{'next'} eq $s1 || $t->{'next'} eq $s2){
+      	$t->{'next'} = $ns;
+      }
+    }    
   }
+
+
+  
   delete $self->{'transitions'}->{$s1};
   delete $self->{'transitions'}->{$s2};
 
@@ -343,29 +388,66 @@ sub set_default_transition {
 my $eval_funcs = {};
 
 sub next_state {
-  my $self = shift;
-  my($state, $event) = @_;
-  my $logger = get_logger();
+	my $self = shift;
+	my($state, $event, $rid, $session, $rulename) = @_;
+	my $logger = get_logger();
+	
+	# reset if needed
+	$state = $self->get_initial() unless defined $self->get_transitions($state);
+	
+	$logger->debug("Current: $state");
+	$logger->trace("This state machine: ", sub {Dumper($self)});
 
-  # reset if needed
-  $state = $self->get_initial() unless defined $self->get_transitions($state);
+	my $transitions = $self->get_transitions($state);
+	$logger->trace("Transistions: ", sub {Dumper($transitions)});
 
-  $logger->debug("Starting state: ", $state);
-
-  my $transitions = $self->get_transitions($state);
-  $logger->trace("Transistions: ", sub {Dumper($transitions)});
-
-  my $next = $self->get_default_transition($state);
-  foreach my $t (@{ $transitions }) {    
-    my ($match,$vals) = match($event, $t);
-    $logger->trace("Trans vars ", sub { Dumper $t->{'vars'} });
-    if ($match) {
-      $next = $t->{'next'};
-      $event->set_vars( $self->get_id(), $t->{'vars'});
-      $event->set_vals($self->get_id(), $vals);
-    }
-  }
-  return $next;
+	my $next = $self->get_default_transition($state);
+	my $flushed = 0;
+	my $gstate;
+	my $count;
+	my $grouped = undef;
+	my $group_transitions = $self->{'group'};
+	$logger->trace("Group transitions: ", sub {Dumper($group_transitions)});
+	foreach my $t (@{ $transitions }) {  
+		my $next_transition = $t->{'next'};
+		$logger->trace("Next: $next_transition");
+		if (defined $group_transitions && $group_transitions->{$next_transition}) {
+			($count,$gstate) = @{$group_transitions->{$next_transition}};
+		} else {
+			$count = undef;
+			$gstate = undef;
+		}
+		$logger->trace("Group state: ", $gstate);
+		my ($match,$vals) = match($event, $t);
+		if ($match) {			
+	  		if (defined $gstate) {
+	    		#$logger->trace("THIS IS A GROUPED TRANSITION! ($count)");
+	    		# match and next_transition is a group
+	    		my $counter = Kynetx::Persistence::UserState::inc_group_counter($rid,$session,$rulename,$next_transition);
+				$logger->trace("Counter struct: ", sub {Dumper($counter)});
+				my $iters = $counter->{$t->{'next'}};
+				$logger->trace("Grouped transition iters: ", sub {Dumper($iters)});							
+				if ($iters >= $count) {
+					$next = $t->{'next'};
+					$logger->trace("Transition to next state is a null so process immediately");
+					my $null_state = Kynetx::Events::Primitives->new();
+					$null_state->null_event($gstate);
+					$next = $self->next_state($next,$null_state,$rid,$session,$rulename);
+				} else {
+					#$logger->trace("Need ", sub{Dumper($count - $iters)}, " more $grouped(s)");
+				}
+	       	} else {
+	    		$logger->trace("NORMAL TRANSITION");
+	      		$next = $t->{'next'};
+	      		$event->set_vars( $self->get_id(), $t->{'vars'});
+	      		$event->set_vals($self->get_id(), $vals);
+	    	}
+		} elsif ($gstate eq 'repeat' && ! $flushed) {
+			Kynetx::Persistence::UserState::reset_group_counter($rid,$session,$rulename,$next_transition);
+			$flushed = 1;
+		}
+	}
+	return $next;
 
 }
 
@@ -376,14 +458,12 @@ sub match {
   my $tdomain = $transition->{'domain'};
   my $edomain = $event->get_domain();
   my $logger = get_logger();
-#  $logger->debug("Looking for a ",sub {Dumper($ttype)});
-#  $logger->debug("In event of : ",sub {Dumper($etype)});
-
+  $logger->trace("Looking for a ",sub {Dumper($ttype)});
+  $logger->trace("In event of : ",sub {Dumper($etype)});
   return 0 unless $event->isa($ttype, $tdomain);
 
-
   if (defined $ttype && $ttype eq 'expression') {
-		$logger->debug("Need to eval the statement to check against $ttype");
+		$logger->trace("Need to eval the statement to check against $ttype");
 		return expr_eval($event,$transition);
   }
   
@@ -431,6 +511,7 @@ sub mk_prim {
 #-------------------------------------------------------------------------
 # pageview
 #-------------------------------------------------------------------------
+
 
 sub mk_pageview_prim {
   my ($pattern, $vars) = @_;
@@ -617,13 +698,10 @@ sub gen_event_eval {
   	} else {
   		$target = $req_info->{$filter_type};
   	}
-    #$target = $req_info->{$filter_type};
-    #$target = $event->{$filter_type};
     $pattern = $filter->{'pattern'};
     $logger->debug("Target: $target; Pattern: $pattern");
     my @this_captures;
     if(@this_captures = $target =~ /$pattern/) {
-#      $logger->debug("Captures: ($1)", sub {Dumper @this_captures}); 
       push (@{$captures}, @this_captures) if $1; #$1 not set if no capture
     } else {
       # if any of these are false, we return 0 and the empty capture list
@@ -686,56 +764,46 @@ sub mk_or {
 
   # we don't want this modifying the original SM
   my $sm1 = $osm1->clone();
+  #$logger->debug("Original A: ", sub {Dumper($osm1)});
+  #$logger->debug("Cloned A: ",sub {Dumper($sm1)});
+
   my $sm2 = $osm2->clone();
+  #$logger->debug("Cloned B: ",sub {Dumper($sm2)});
 
   my $nsm = Kynetx::Events::State->new();
   foreach my $sm ($sm1, $sm2) {
+    # add each state transition
     foreach my $s (@{$sm->get_states()}) {
       $nsm->add_state($s,
 		      $sm->get_transitions($s),
 		      $sm->get_default_transition($s)
 		    );
+	  if ($sm->{'group'}->{$s}) {
+	  	#$logger->debug("Found this group transition: ", sub {Dumper($sm->{'group'}->{$s})});
+	  	my ($num,$type) = @{$sm->{'group'}->{$s}};
+		if ($type eq 'count') {
+			$nsm->add_count($s,$num);
+		} elsif ($type eq 'repeat') {
+			$nsm->add_repeat($s,$num);
+		} 	
+	  	
+	  }
     }
+    # add each grouped transition
   }
 
   my $ni = $nsm->join_states($sm1->get_initial(), $sm2->get_initial());
+  
   $nsm->mk_initial($ni);
-  $logger->trace("new initial state $ni");
 
   my $nf = $nsm->join_states($sm1->get_singleton_final(),
 			     $sm2->get_singleton_final());
 
   $nsm->mk_final($nf);
-  $logger->trace("new final state $nf");
 
   return $nsm;
 }
 
-sub mk_before {
-  my($osm1, $osm2) = @_;
-
-  my $logger = get_logger();
-
-  # we don't want this modifying the original SM
-  my $sm1 = $osm1->clone();
-  my $sm2 = $osm2->clone();
-
-  my $nsm = Kynetx::Events::State->new();
-  foreach my $sm ($sm1, $sm2) {
-    foreach my $s (@{$sm->get_states()}) {
-      $nsm->add_state($s,
-		      $sm->get_transitions($s),
-		      $sm->get_default_transition($s)
-		    );
-    }
-  }
-
-  $nsm->mk_initial($sm1->get_initial());
-  $nsm->join_states($sm1->get_singleton_final(), $sm2->get_initial());
-  $nsm->mk_final($sm2->get_singleton_final());
-
-  return $nsm;
-}
 
 sub mk_then {
   my($osm1, $osm2) = @_;
@@ -766,6 +834,90 @@ sub mk_then {
 
   return $nsm;
 }
+
+sub mk_before {
+  my($osm1, $osm2) = @_;
+
+  my $logger = get_logger();
+
+  # we don't want this modifying the original SM
+  my $sm1 = $osm1->clone();
+  my $sm2 = $osm2->clone();
+
+  my $nsm = Kynetx::Events::State->new();
+  foreach my $sm ($sm1, $sm2) {
+    foreach my $s (@{$sm->get_states()}) {
+      $nsm->add_state($s,
+		      $sm->get_transitions($s),
+		      $sm->get_default_transition($s)
+		    );
+    }
+  }
+
+  $nsm->mk_initial($sm1->get_initial());
+  $nsm->join_states($sm1->get_singleton_final(), $sm2->get_initial());
+  $nsm->mk_final($sm2->get_singleton_final());
+
+  return $nsm;
+}
+
+#-------------------------------------------------------------------------
+# group state machines
+#-------------------------------------------------------------------------
+
+sub mk_count {
+	my ($osm,$num) = @_;
+	my $logger = get_logger();
+	$logger->debug("-----Make count state machine-----");
+	
+	my $sm = $osm->clone();
+	my $null = mk_null('count',$num);
+
+	
+	my $nsm = Kynetx::Events::State->new();
+	foreach my $sm ($sm,$null)	{
+		foreach my $s (@{$sm->get_states()}) {
+			$nsm->add_state($s,
+				$sm->get_transitions($s),
+				$sm->get_default_transition($s)
+				);
+		}
+	}
+	$nsm->mk_initial($sm->get_initial());	
+	
+	my $mid = $nsm->join_states($sm->get_singleton_final(),$null->get_initial());
+	
+	$nsm->set_default_transition($mid,$sm->get_initial());
+	$nsm->mk_final($null->get_singleton_final());	
+	$nsm->add_count($mid,$num);
+	
+	return $nsm;
+}
+
+sub mk_repeat {
+	my ($osm,$num) = @_;
+	my $logger = get_logger();
+	
+	my $sm = $osm->clone();
+	my $null = mk_null('repeat',$num);
+	
+	my $nsm = Kynetx::Events::State->new();
+	foreach my $sm ($sm,$null)	{
+		foreach my $s (@{$sm->get_states()}) {
+			$nsm->add_state($s,
+				$sm->get_transitions($s),
+				$sm->get_default_transition($s)
+			);
+		}
+	}
+	$nsm->mk_initial($sm->get_initial());
+	my $mid = $nsm->join_states($sm->get_singleton_final(),$null->get_initial());
+	$nsm->set_default_transition($mid,$sm->get_initial());
+	$nsm->mk_final($null->get_singleton_final());
+	$nsm->add_repeat($mid,$num);
+	return $nsm;
+}
+
 
 # a between b & c
 sub mk_between {
@@ -830,6 +982,60 @@ sub mk_not_between {
   return $nsm;
 }
 
+
+sub mk_null {
+	my ($source,$count) = @_;
+	$source = $source || "null";
+	my $sm = Kynetx::Events::State->new();
+  	my $s1 = Data::UUID->new->create_str();
+  	my $s2 = Data::UUID->new->create_str();
+  	my $logger = get_logger();
+  	$logger->trace("Make Null Transition: ");
+
+  	$sm->mk_initial($s1);
+  	$sm->mk_final($s2);
+  	
+  	my $struct = {"next" => $s2,
+  			"type" => "__null__",
+  			"domain" => $source
+  	};
+  	
+  	if ($count) {
+  		$struct->{'count'} = $count
+  	}
+  	
+  	$sm->add_state($s1,
+  		[$struct],
+  		$s1
+  	);
+  	
+  	$sm->add_state($s2,
+  		[],
+  		$s2
+  	);
+  	
+  	return $sm;
+	
+}
+
+sub add_repeat {
+  my $self = shift;
+  my $name = shift;
+  my $num = shift;
+  $self->{'group'}->{$name} = [$num,'repeat'];
+  
+  return $self;
+}
+
+
+sub add_count {
+  my $self = shift;
+  my $name = shift;
+  my $num = shift;
+  $self->{'group'}->{$name} = [$num,'count'];
+  
+  return $self;
+}
 
 
 1;

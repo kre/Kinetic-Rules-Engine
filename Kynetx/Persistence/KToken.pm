@@ -139,6 +139,7 @@ sub new_token {
     };
     my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0);
     if ($status) {
+        Kynetx::Persistence::KEN::touch_ken($ken);
         return $ktoken;
     } else {
         $logger->warn("Token request error: ", mongo_error());
@@ -161,6 +162,8 @@ sub is_valid_token {
     my $valid = token_query({"ktoken" => $ktoken});
 	if ($valid){
         $logger->trace("Token is valid");
+        my $ken = $valid->{'ken'};
+        Kynetx::Persistence::KEN::touch_ken($ken);
         return $valid;
     } else {
         return 0;

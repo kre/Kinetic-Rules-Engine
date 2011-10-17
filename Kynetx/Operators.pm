@@ -207,42 +207,42 @@ sub eval_sort {
 
       my $dval = Kynetx::Expressions::eval_expr($expr->{'args'}->[0], $rule_env, $rule_name,$req_info, $session) if (int(@{$expr->{'args'}}) > 0);
 
-      if (defined $dval && Kynetx::Expressions::den_to_exp($dval) eq 'reverse') {
-	my @a = sort {$b cmp $a} @{$eval};
-	$v = \@a;
+      if (defined $dval && lc(Kynetx::Expressions::den_to_exp($dval)) eq 'reverse') {
+		my @a = sort {$b cmp $a} @{$eval};
+		$v = \@a;
+      } elsif (defined $dval && lc(Kynetx::Expressions::den_to_exp($dval)) eq 'numeric') {
+      	my @a = sort {$a <=> $b} @{$eval};
+		$v = \@a;
+      } elsif (defined $dval && lc(Kynetx::Expressions::den_to_exp($dval)) eq 'ciremun') {
+      	my @a = sort {$b <=> $a} @{$eval};
+		$v = \@a;
       } elsif (defined $dval && Kynetx::Expressions::type_of($dval) eq 'closure') {
+		my @a = sort {
+		  	my $app = {'type' => 'app',
+			     'function_expr' => $expr->{'args'}->[0],
+			     'args' => [Kynetx::Expressions::typed_value($a),
+					Kynetx::Expressions::typed_value($b)]};
+	
+		  	my $r = Kynetx::Expressions::den_to_exp(
+		    	Kynetx::Expressions::eval_application($app,
+							  $rule_env,
+							  $rule_name,
+							  $req_info,
+							  $session));
+	
+	#	  	$logger->debug("Sort function returned ",Dumper $r);
+	
+		  	return $r;
+			} @{$eval};
 
+		$v = \@a;
 
-	my @a = sort {
-	  my $app = {'type' => 'app',
-		     'function_expr' => $expr->{'args'}->[0],
-		     'args' => [Kynetx::Expressions::typed_value($a),
-				Kynetx::Expressions::typed_value($b)]};
-
-	  my $r = Kynetx::Expressions::den_to_exp(
-	    Kynetx::Expressions::eval_application($app,
-						  $rule_env,
-						  $rule_name,
-						  $req_info,
-						  $session));
-
-#	  $logger->debug("Sort function returned ",Dumper $r);
-
-	  return $r;
-
-
-	} @{$eval};
-
-	$v = \@a;
-
-#	$logger->debug("Array after sort ",Dumper $v);
-
-
+#		$logger->debug("Array after sort ",Dumper $v);
 
       } else {
-	my @a = sort {$a cmp $b} @{$eval};
+		my @a = sort {$a cmp $b} @{$eval};
 #        $logger->debug("Array after sorting ",Dumper @a);
-	$v = \@a;
+		$v = \@a;
       }
 
     } else {

@@ -60,6 +60,7 @@ my $test_count = 0;
 my $r = Kynetx::Test::configure();
 
 my $rid = 'cs_test';
+my $session = Kynetx::Test::gen_session($r, $rid);
 
 # test choose_action and args
 
@@ -85,6 +86,126 @@ $ev4->pageview("http://www.yahoo.com/");
 
 # test the pageview prim SMs
 my $sm1 = mk_pageview_prim(qr/www.windley.com/);
+my $sm2 = mk_pageview_prim(qr#/(..)/(a)#, ['vv','bb']);
+
+my $initial = $sm1->get_initial();
+my $next;
+#my $next = $sm1->next_state($initial, $ev1);
+#ok($sm1->is_final($next), "ev1 leads to final state");
+#$test_count++;
+#
+#$next = $sm1->next_state($initial, $ev2);
+#ok($sm1->is_initial($next), "ev2 does not lead to initial state");
+#$test_count++;
+
+my $rpt = mk_repeat($sm1,3);
+
+$logger->debug("SM repeat: ", sub {Dumper($rpt)});
+$initial = $rpt->get_initial();
+
+$logger->debug("Initial state (repeat): $initial");
+$next = $rpt->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($rpt->is_final($next),0, "First matching event, no transition");
+$test_count++;
+$logger->debug("Next state (repeat): $next f: ",$rpt->is_final($next));
+
+
+$next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($rpt->is_final($next),0, "Second matching event, no transition");
+$test_count++;
+$logger->debug("Next state (2): $next f: ",$rpt->is_final($next));
+
+$next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($rpt->is_final($next),1, "Third matching event, is final");
+$test_count++;
+$logger->debug("Next state (3): $next f: ",$rpt->is_final($next));
+
+Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
+$next = Kynetx::Persistence::UserState::get_current_state($rid,$session,$rule_name);
+$next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($rpt->is_final($next),0, "Fourth matching event, counter is reset");
+$test_count++;
+
+$next = $rpt->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($rpt->is_final($next),0, "Other event, counter is reset");
+$test_count++;
+
+
+$next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($rpt->is_final($next),0, "First matching event, counter increments");
+$test_count++;
+$next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($rpt->is_final($next),0, "Second matching event, counter increments");
+$test_count++;
+$next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($rpt->is_final($next),1, "Third matching event, is final");
+$test_count++;
+my $final = $rpt->is_final($next);
+
+Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
+
+my $sm_count = mk_count($sm1,3);
+$initial = $sm_count->get_initial();
+$logger->debug("Count sm: ", sub {Dumper($sm_count)});
+
+
+$logger->debug("Count initial: ", sub {Dumper($initial)});
+$next = $sm_count->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_count->is_final($next),0, "bFirst matching event, no transition");
+$test_count++;
+
+$next = $sm_count->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_count->is_final($next),0, "bsecond matching event, no transition");
+$test_count++;
+
+$next = $sm_count->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_count->is_final($next),0, "Ignore extraneous event, no transition");
+$test_count++;
+
+
+$logger->debug("Count initial: ", sub {Dumper($initial)});
+$next = $sm_count->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_count->is_final($next),1, "bThird matching event, transition");
+$test_count++;
+$logger->debug("Final: ", $final);
+
+Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
+
+## Compound count expression
+#diag "mk_count A";
+my $sm_count_A = mk_count($sm1,3);
+$logger->debug("A: ", sub {Dumper($sm_count_A)});
+
+#diag "mk_count B";
+my $sm_count_B = mk_count($sm2,2);
+$logger->debug("B: ", sub {Dumper($sm_count_B)});
+
+#diag "A or B";
+my $sm_compound_count = mk_or($sm_count_A,$sm_count_B);
+
+$logger->debug("Compound count state machine: ", sub {Dumper($sm_compound_count)});
+
+$initial = $sm_compound_count->get_initial();
+$logger->debug("Compound initial: ", sub {Dumper($initial)});
+$next = $sm_compound_count->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+my $mid = $next;
+
+
+$logger->debug("Compound initial: ", sub {Dumper($next)});
+$next = $sm_compound_count->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+
+$next = $sm_compound_count->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match B, no transition");
+$test_count++;
+
+$next = $sm_compound_count->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),1, "Compound match B, Transition");
+$test_count++;
+
 
 my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm1);
 my $deserialized = Kynetx::Events::State->unserialize($json);
@@ -93,19 +214,6 @@ $test_count++;
 
 # if we believe in our serialization, put our money...
 $sm1 = $deserialized;
-
-my $initial = $sm1->get_initial();
-
-my $next = $sm1->next_state($initial, $ev1);
-ok($sm1->is_final($next), "ev1 leads to final state");
-$test_count++;
-
-$next = $sm1->next_state($initial, $ev2);
-ok($sm1->is_initial($next), "ev2 does not lead to initial state");
-$test_count++;
-
-# test the pageview prim SMs
-my $sm2 = mk_pageview_prim(qr#/(..)/(a)#, ['vv','bb']);
 
 $initial = $sm2->get_initial();
 $next = $sm2->next_state($initial, $ev2);
@@ -361,7 +469,7 @@ $test_count++;
 my $ev5 = Kynetx::Events::Primitives->new();
 $ev5->submit("#my_form");
 
-diag Dumper $ev5;
+#diag Dumper $ev5;
 
 # test the pageview prim SMs
 my $sm5 = mk_dom_prim("#my_form", '', '', 'submit');
@@ -398,7 +506,7 @@ $next = $sm6->next_state($initial, $ev6);
 ok($sm6->is_initial($next), "ev6 leads to initial state");
 $test_count++;
 
-
+ENDY:
 
 done_testing($test_count);
 
