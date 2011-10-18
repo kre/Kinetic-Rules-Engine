@@ -237,6 +237,23 @@ sub after_now {
 
 }
 
+sub from_pairs {
+	my ($pairs) = @_;
+	my $logger = get_logger();
+	my $parm = {};
+	if (ref $pairs ne "ARRAY") {
+		$logger->warn("Expecting array of k/v pairs");
+	}
+	foreach my $kv_pair (@$pairs) {
+		my ($k,$v) = split(/=/,$kv_pair);
+		if (defined $k && defined $v) {
+			$v =~ s/(^"|"$)//g;
+			$parm->{$k} = $v;
+		}
+	}
+	return $parm;
+}
+
 sub mk_url {
   my ($base_url, $url_options) = @_;
 

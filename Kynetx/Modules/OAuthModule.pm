@@ -718,19 +718,28 @@ sub get_request_tokens {
 
     if ( $resp->is_success() ) {
         my $oresp;
+        my $oauth_token;
+        my $oauth_token_secret;
         eval { $oresp =
           Net::OAuth->response('request token')
           ->from_post_body( $resp->content );
         };
         if ($@) {
         	my @pairs = split '&', $resp->content;
+        	$logger->trace("Pairs: ", sub {Dumper(@pairs)});
+        	my $parms = Kynetx::Util::from_pairs(\@pairs);
+        	$oauth_token        = $parms->{'oauth_token'};
+        	$oauth_token_secret = $parms->{'oauth_token_secret'};
+        } else {
+        	$oauth_token        = $oresp->token;
+        	$oauth_token_secret = $oresp->token_secret;
+        	
         }
-        my $oauth_token        = $oresp->token;
-        my $oauth_token_secret = $oresp->token_secret;
         return {
         	'oauth_token' => $oauth_token,
         	'oauth_token_secret' => $oauth_token_secret
         };
+        
     } else {
     	my $fail = $resp->code() . "," . $resp->status_line() . "," . $resp->decoded_content();
 		return Kynetx::Errors::merror($fail);
