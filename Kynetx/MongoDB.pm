@@ -519,7 +519,7 @@ sub mongo_error {
 sub delete_value {
     my ($collection,$var) = @_;
     my $logger = get_logger();
-    $logger->debug("Deleting from $collection: ", sub {Dumper($var)});
+    $logger->trace("Deleting from $collection: ", sub {Dumper($var)});
     my $c = get_collection($collection);
     #my $success = $c->remove($var,{"safe" => SAFE});
     my $success = $c->remove($var,{"safe" => 1});

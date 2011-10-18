@@ -164,7 +164,7 @@ SKIP: {
           diag $like;
           diag $mech->content();
           diag $test->{'url'};
-          die;
+          #die;
       }
 
     }

@@ -274,7 +274,7 @@ sub process_event_for_rid {
     my $domain = $ev->get_domain();
 
     $logger->debug("Event domain is $domain and type is $type");
-    $logger->debug("Rule list is ", sub{Dumper $ruleset->{'rule_lists'}->{$domain}->{$type}});
+    $logger->trace("Rule list is ", sub{Dumper $ruleset->{'rule_lists'}->{$domain}->{$type}});
 
     # prints out detailed info on rule_lists
      foreach my $d (keys %{$ruleset->{'rule_lists'}}) {
@@ -304,14 +304,14 @@ sub process_event_for_rid {
         my $sm_current_name = $rule->{'name'} . ':sm_current';
         my $event_list_name = $rule->{'name'} . ':event_list';
 
-    	$logger->debug("Rule: ", sub {Dumper $rule});
+    	$logger->trace("Rule: ", sub {Dumper $rule});
 
     	$logger->debug("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
 	
     	next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
 
     	my $sm = $rule->{'event_sm'};
-    	$logger->debug("State machine: ", sub {Dumper($sm)});
+    	$logger->trace("State machine: ", sub {Dumper($sm)});
 
         # States stored in Mongo should be serialized
         my $current_state = get_current_state($rid, $session, $rule->{'name'} ) || $sm->get_initial();

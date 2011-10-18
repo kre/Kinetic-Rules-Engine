@@ -70,7 +70,7 @@ sub get_current_state {
     my ($rid,$session,$rulename) = @_;
     my $logger = get_logger();
     my $state_key = $rulename . ':sm_current';
-    $logger->debug("Get SM current: ", $state_key);
+    $logger->trace("Get SM current: ", $state_key);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $key = {
         "ken" => $ken,
@@ -84,7 +84,7 @@ sub set_current_state {
     my ($rid,$session,$rulename,$val) = @_;
     my $logger = get_logger();
     my $state_key = $rulename . ':sm_current';
-    $logger->debug("Set SM current: ", $state_key);
+    $logger->trace("Set SM current: ", $state_key);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
     my $key = {
         "ken" => $ken,
@@ -103,7 +103,7 @@ sub delete_current_state {
     my ($rid,$session,$rulename) = @_;
     my $logger = get_logger();
     my $state_key = $rulename . ':sm_current';
-    $logger->debug("Del SM current: ", $state_key);
+    $logger->trace("Del SM current: ", $state_key);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $key = {
         "ken" => $ken,
@@ -122,7 +122,7 @@ sub get_event_env {
         "ken" => $ken,
 		"rulename" => $rulename
 	};
-    $logger->debug("Get event env: ", $rid);
+    $logger->trace("Get event env: ", $rid);
     my $value = Kynetx::MongoDB::get_value(EVCOLLECTION,$key);
 	return $value;	
 }
@@ -130,7 +130,7 @@ sub get_event_env {
 sub reset_event_env {
 	my ($rid,$session,$rulename) = @_;
     my $logger = get_logger();
-    $logger->debug("Reset event env: ", $rid);
+    $logger->trace("Reset event env: ", $rid);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
     my $key = {
         "rid" => $rid,

@@ -717,9 +717,14 @@ sub get_request_tokens {
     $logger->trace("Resp: ", sub {Dumper($resp)});
 
     if ( $resp->is_success() ) {
-        my $oresp =
+        my $oresp;
+        eval { $oresp =
           Net::OAuth->response('request token')
           ->from_post_body( $resp->content );
+        };
+        if ($@) {
+        	my @pairs = split '&', $resp->content;
+        }
         my $oauth_token        = $oresp->token;
         my $oauth_token_secret = $oresp->token_secret;
         return {
