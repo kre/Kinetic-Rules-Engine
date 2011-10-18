@@ -90,7 +90,8 @@ use constant FB_AUTH_URL   => "https://graph.facebook.com/oauth/authorize";
 use constant FB_ACCESS_URL => "https://graph.facebook.com/oauth/access_token";
 use constant NAMESPACE     => "facebook";
 use constant SESSION_CALLBACK_KEY => "oauth_callback";
-my $fconfig    = Kynetx::Configure::get_config('FACEBOOK')->{'facebook'};
+my $fconfig_base    = Kynetx::Configure::get_config('FACEBOOK') || {'facebook' => {}};
+my $fconfig    = $fconfig_base->{'facebook'};
 my %predicates = ();
 
 my $actions = {

@@ -41,17 +41,25 @@ use Encode qw(
 	encode
 	decode
 );
+use Kynetx::Configure;
 
 use Kynetx::Persistence::KEN;
-use Kynetx::Predicates::Amazon::SNS qw(:all);
-use Kynetx::Predicates::Amazon::RequestSignatureHelper qw(
-  kAWSAccessKeyId
-  kAWSSecretKey
-);
-use amazon_credentials qw(
-  get_key_id
-  get_access_key
-);
+
+# FIXME: hard coded path
+if (-e "/web/etc/amazon_credentials.pm") {
+  require Kynetx::Predicates::Amazon::SNS;
+  Kynetx::Predicates::Amazon::SNS->import;
+  require Kynetx::Predicates::Amazon::RequestSignatureHelper;
+  Kynetx::Predicates::Amazon::RequestSignatureHelper->import qw(
+							     kAWSAccessKeyId
+							     kAWSSecretKey
+							  );
+  require amazon_credentials;
+  amazon_credentials->import qw(
+			     get_key_id
+			     get_access_key
+			  );
+}
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);

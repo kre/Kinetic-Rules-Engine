@@ -23,7 +23,6 @@ use strict;
 use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
-use SVN::Client;
 use APR::URI;
 use Encode;
 
@@ -100,9 +99,9 @@ sub get_rules_from_repository{
 
     my $ext;
     my $krl;
-    # defaults to SVN so things keep working
+    # defaults to file
     my $rule_repo_type =
-          Kynetx::Configure::get_config('RULE_REPOSITORY_TYPE') || 'svn';
+          Kynetx::Configure::get_config('RULE_REPOSITORY_TYPE') || 'file';
 
     my $repo_info = Kynetx::Configure::get_config('RULE_REPOSITORY');
 
@@ -170,7 +169,11 @@ sub get_rules_from_repository{
 	$ruleset = jsonToAst($result);
       }
 
-    } else { # default is svn
+    } elsif ($rule_repo_type eq 'svn') {
+
+      require SVN::Client;
+      SVN::Client->import;
+
 
       # FIXME: all this complicated SVN code could be replaced by nicer WebDAV
       #        code and refactored to work with code from Memcached.pm
@@ -230,6 +233,26 @@ sub get_rules_from_repository{
 	$ruleset = jsonToAst($krl);
       }
 
+    } else { # default to file
+    
+      my $fn = "$repo_info/$rid.krl";
+      my $result;
+      $logger->debug("Using filesystem for repo. Looking for $fn");
+      if(-e $fn) {
+	open(RS, $fn ) ||
+		    $logger->error("Can't open file $fn: $!\n");
+	local $/ = undef;
+	$result = <RS>;
+	close RS;
+      }
+
+      if (defined $result) {
+	$ruleset = Kynetx::Parser::parse_ruleset($result);
+      } else {
+	$ruleset =  make_empty_ruleset($rid, $fn);
+      }
+
+
     }
 
     $logger->debug("Clearing parsing semaphore for $rs_key");
@@ -266,7 +289,7 @@ sub get_svn_conn {
     } else {
 	$svn_url = 'svn://127.0.0.1/rules/client/';
 	$username = 'web';
-	$passwd = 'foobar';
+	$passwd = 'nopass';
     }
 
 
@@ -317,6 +340,8 @@ sub make_ruleset_key {
   my ($rid, $version) = @_;
   return "ruleset:$version:$rid";
 }
+
+
 
 
 1;

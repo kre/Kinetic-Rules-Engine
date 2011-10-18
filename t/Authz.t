@@ -113,7 +113,7 @@ _KRL_
 
 $pt = Kynetx::Parser::parse_ruleset($krl);
 
-ok(!is_authorized($rid,$pt,$session),"authz request without settion fails");
+ok(!is_authorized($rid,$pt,$session),"authz request without session fails");
 $test_count++;
 
 
@@ -142,7 +142,7 @@ _KRL_
 $pt = Kynetx::Parser::parse_ruleset($krl);
 #diag Dumper $pt;
 
-ok(is_authorized($rid,$pt,$session),"authz request with settion works");
+ok(is_authorized($rid,$pt,$session),"authz request with session works");
 $test_count++;
 
 $krl = <<_KRL_;

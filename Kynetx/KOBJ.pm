@@ -279,6 +279,7 @@ EOF
 
         # we don't store client datasets anymore. Historical...
 
+        # FIXME: hard coded path
 	my $data_root = "/web/data/client/$rid";
 
 	# add in datasets  The datasets param is a filter
@@ -303,7 +304,7 @@ EOF
 		$js .= "KOBJ.$dataset = ";
 		$js .= <JSON>;
 		$js .= ";\n";
-		close JS;
+		close JSON;
 	    }
 	}
 

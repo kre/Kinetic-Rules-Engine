@@ -181,8 +181,11 @@ sub get_oauth_param {
 
 sub read_config {
     my ($filename) = @_;
-    my $config = YAML::XS::LoadFile($filename) ||
+    my $config;
+    if ( -e $filename ) {
+      $config = YAML::XS::LoadFile($filename) ||
 	warn "Can't open configuration file $filename: $!";
+    }
     return $config;
 }
 

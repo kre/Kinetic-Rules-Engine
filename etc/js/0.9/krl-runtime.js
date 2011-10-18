@@ -267,7 +267,7 @@ KOBJ.runit = function() {
 
 
 KOBJ.logVerify = function(txn, appid, cluster) {
-    KOBJ.getwithimage(KOBJ.proto() + "kverify.appspot.com/log?txn=" + txn + "&appid=" + appid + "&cluster=" + cluster);
+    KOBJ.getwithimage(KOBJ.proto() + KOBJ.kverify_domain+"/log?txn=" + txn + "&appid=" + appid + "&cluster=" + cluster);
 };
 
 KOBJ.proto = function() {
