@@ -26,7 +26,7 @@ use DateTime;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 my $logger = get_logger();
@@ -99,104 +99,39 @@ $rule_env = extend_rule_env("g","a",$rule_env);
 
 ################# Insert tests here
 $krl_src = <<_KRL_;
-myHash{["b", "f", "g",1]}
+[5, -1, temp]
 _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    'myHash{["b", "f", "g", 1]}',
-    mk_expr_node('str', '3.b'),
-    0);;
-
-
-$krl_src = <<_KRL_;
-c[1]
-_KRL_
-add_expr_testcase(
-    $krl_src,
-    'expr',
-    'c[1]',
-    mk_expr_node('num', 6),
-    0);;
-
-$krl_src = <<_KRL_;
-myHash{"d"}
-_KRL_
-add_expr_testcase(
-    $krl_src,
-    'expr',
-    'myHash{"d"}',
-    mk_expr_node('num', '1.3'),
-    0);
-    
-    
-$krl_src = <<_KRL_;
-myHash{"b"}
-_KRL_
-add_expr_testcase(
-    $krl_src,
-    'expr',
-    'myHash{"b"}',
-    mk_expr_node('hash', {
-    'e' => '2.2',
-    'c' => '2.1',
-    'f' => {
-      'h' => 5,
-      'g' => [
-        '3.a',
-        '3.b',
-        '3.c',
-        '3.d'
-      ]
-    }}),
+    "[5, -1, temp]",
+     mk_expr_node('array', [mk_expr_node('num', 5),
+ 			    mk_expr_node('num', -1),
+ 			    mk_expr_node('num', 20)]),
     0);
 
+my $re_ = superhashof({
+	'some_numbers' => [1, 0, -1, 1.2, 1.0001 ]
+});
 $krl_src = <<_KRL_;
-myHash{g}
+pre {
+	some_numbers = [1, 0, -1, 1.2, 1.0001];
+}
 _KRL_
 add_expr_testcase(
     $krl_src,
-    'expr',
-    'myHash{g}',
-    mk_expr_node('num',1.1),
+    'pre',
+    "[1, 0, -1, 1.2, 1.0001]",
+     $re_,
     0);
 
-$krl_src = <<_KRL_;
-ent:tHash{g}
-_KRL_
-add_expr_testcase(
-    $krl_src,
-    'expr',
-    'ent:tHash{g}',
-    mk_expr_node('num',1.1),
-    0);
-
-$krl_src = <<_KRL_;
-ent:tHash{"a"}
-_KRL_
-add_expr_testcase(
-    $krl_src,
-    'expr',
-    'ent:tHash{"a"}',
-    mk_expr_node('num',1.1),
-    0);
-
-$krl_src = <<_KRL_;
-ent:tHash{["b","f","g"]}
-_KRL_
-add_expr_testcase(
-    $krl_src,
-    'expr',
-    'ent:tHash{["b","f","g"]}',
-    mk_expr_node('array',['3.a','3.b','3.c','3.d']),
-    0);
 
 ################### Above this line
 ENDY:
 
 foreach my $case (@expr_testcases ) {
 	diag("KRL = ", Dumper($case->{'krl'})) if $case->{'diag'};
-	my ($e,$val);
+	my ($e,$val,$js);
 	if ($case->{'type'} eq 'expr') {
     	$val = Kynetx::Parser::parse_expr($case->{'krl'});
     	diag("AST = ", Dumper($val)) if $case->{'diag'};
@@ -205,7 +140,16 @@ foreach my $case (@expr_testcases ) {
 			   $rule_name,
 			   $my_req_info,
 			   $session);
-	}
+	} elsif ($case->{'type'} eq 'pre') {
+    	$val = Kynetx::Parser::parse_pre($case->{'krl'});
+    	($js,$e) = Kynetx::Expressions::eval_prelude($my_req_info,
+						 $rule_env,
+						 $rule_name,
+						 $session,
+						 $val) ;
+		diag("JS = $js") if $case->{'diag'};
+  	}
+  	
 	diag("Expr = ", Dumper($e)) if $case->{'diag'};
 	my $result = cmp_deeply($e,
 		    $case->{'expected_val'},

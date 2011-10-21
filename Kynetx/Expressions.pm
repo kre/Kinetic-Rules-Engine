@@ -130,7 +130,7 @@ sub eval_one_decl {
 
   my $logger= get_logger();
 
-  my($var, $val) = eval_decl($req_info, $rule_env, $rule_name, $session, $decl);
+  my($var, $val,$type) = eval_decl($req_info, $rule_env, $rule_name, $session, $decl);
 
   # yes, this is cheating and breaking the abstraction, but it's fast...
   $rule_env->{$var} = $val;
@@ -140,6 +140,10 @@ sub eval_one_decl {
   # clone to avoid aliasing to the data structure in the env
   my  $nval = clone $val;
   $nval = Kynetx::Expressions::exp_to_den($nval);
+  my $ntype = type_of($nval);
+  if ($type eq "str" && $ntype eq 'num') {
+  	$nval->{'type'} = 'str';
+  }
 
   my $jsval = Kynetx::JavaScript::gen_js_expr($nval);
 #  $logger->debug("[eval_one_decl] after denoting:", sub{Dumper $nval}, "JS Val: ", sub{Dumper($jsval)});
@@ -151,6 +155,7 @@ sub eval_one_decl {
 sub eval_decl {
     my ($req_info, $rule_env, $rule_name, $session, $decl) = @_;
     my $val = '0';
+    my $type = undef;
 
     my $logger = get_logger();
     $logger->trace("decl type: ",$decl->{'type'});
@@ -159,7 +164,9 @@ sub eval_decl {
     if ($decl->{'type'} eq 'expr' ) {
 		my $r = eval_expr($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);
        $logger->trace("before de-denoting ", sub {Dumper $r});
-		$val = den_to_exp($r);
+       $logger->trace("Typed value: ", sub {Dumper(type_of($r))});
+       $type = type_of($r);
+	   $val = den_to_exp($r);
     } elsif ($decl->{'type'} eq 'here_doc') {
 #      $logger->debug("[decl] here doc for ", sub{ $decl->{'lhs'} });
       
@@ -170,7 +177,7 @@ sub eval_decl {
     $logger->trace("Evaling " . $rule_name.":".$decl->{'lhs'});
     $logger->trace("returning ", Dumper $val);
 
-    return ($decl->{'lhs'}, $val);
+    return ($decl->{'lhs'}, $val,$type);
 
 }
 
@@ -1009,7 +1016,7 @@ sub exp_to_den {
       #   defined $expr->{'val'}
       # since it allows the val to be undef
       if ($keys[1] eq 'val' ) {
-	return $expr
+		return $expr
       }
     }
 
@@ -1019,19 +1026,17 @@ sub exp_to_den {
       my %r;
       foreach my $k (keys %{ $expr }) {
 	    $r{$k} = exp_to_den($expr->{$k});
-	}
-	return {'type' => $type,
-		'val' => \%r}
-
+	  }
+	  return {'type' => $type,
+		      'val' => \%r}
     } elsif(ref $expr eq 'ARRAY') {
-	my @res = map {exp_to_den($_)} @{ $expr };
-	$expr = \@res;
-	return {'type' => $type,
-		'val' => $expr}
+	  my @res = map {exp_to_den($_)} @{ $expr };
+	  $expr = \@res;
+	  return {'type' => $type,
+		      'val' => $expr}
     } else {
-	return {'type' => $type,
-		'val' => $expr}
-#return $expr
+	  return {'type' => $type,
+		      'val' => $expr}
     }
 
 }
@@ -1048,7 +1053,7 @@ sub infer_type {
 	# relying on 'undef'
     return 'null' unless defined $v;
 
-    if($v =~ m/^(\d*\.\d+|[1-9]\d+|\d)$/) { # crude type inference for primitives
+    if($v =~ m/^[+|-]?(\d*\.\d+|[1-9]\d+|\d)$/) { # crude type inference for primitives
 	$t = 'num' ;
     } elsif($v =~ m/^(true|false)$/) {
 	$t = 'bool';
@@ -1296,7 +1301,12 @@ sub eval_str {
 
 sub type_of {
   my $dval = shift;
-  return $dval->{'type'};
+  if (ref $dval eq "HASH") {
+  	return $dval->{'type'};
+  } else {
+  	return undef;
+  }
+  
 }
 
 sub is_closure {

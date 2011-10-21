@@ -2485,7 +2485,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'decl',
-    'var c = \'-5\';',
+    'var c = -5;',
     '-5',
     0);
 
@@ -2688,8 +2688,8 @@ pre {
 _KRL_
 
 $js = <<_JS_;
-var a = 1;
-var b = 3;
+var a = '1';
+var b = '3';
 var multiline = '\\n1\\n3\\n';
 _JS_
 
@@ -2935,6 +2935,9 @@ $re1 = extend_rule_env(['a','b'],
 		       [{'y'=> 5},[{'y' => 5}]],
 		       $rule_env);
 
+#--------------------------------------------------------------------------------
+# hash/struct testing
+#--------------------------------------------------------------------------------
 
 
 $krl_src = <<_KRL_;
@@ -3022,6 +3025,98 @@ add_expr_testcase(
     0
    );
 
+$krl_src = <<_KRL_;
+myHash{["b", "f", "g",1]}
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    '{}',
+    mk_expr_node('str', '3.b'),
+    0);;
+
+
+$krl_src = <<_KRL_;
+c[1]
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    'c[1]',
+    mk_expr_node('num', 6),
+    0);;
+
+$krl_src = <<_KRL_;
+myHash{"d"}
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    '{}',
+    mk_expr_node('num', '1.3'),
+    0);
+    
+    
+$krl_src = <<_KRL_;
+myHash{"b"}
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    '{}',
+    mk_expr_node('hash', {
+    'e' => '2.2',
+    'c' => '2.1',
+    'f' => {
+      'h' => 5,
+      'g' => [
+        '3.a',
+        '3.b',
+        '3.c',
+        '3.d'
+      ]
+    }}),
+    0);
+
+$krl_src = <<_KRL_;
+myHash{g}
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    '{}',
+    mk_expr_node('num',1.1),
+    0);
+
+$krl_src = <<_KRL_;
+ent:tHash{g}
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    "'UNTRANSLATABLE KRL EXPRESSION'",
+    mk_expr_node('num',1.1),
+    0);
+
+$krl_src = <<_KRL_;
+ent:tHash{"a"}
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    "'UNTRANSLATABLE KRL EXPRESSION'",
+    mk_expr_node('num',1.1),
+    0);
+
+$krl_src = <<_KRL_;
+ent:tHash{["b","f","g"]}
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    "'UNTRANSLATABLE KRL EXPRESSION'",
+    mk_expr_node('array',['3.a','3.b','3.c','3.d']),
+    0);
 
 	 
 #----------------------------------------------------------------------------

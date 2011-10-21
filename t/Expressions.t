@@ -138,6 +138,22 @@ my $rule_env = extend_rule_env({
 		 ),
 
    }, $init_rule_env);
+
+$rule_env = extend_rule_env("myHash",{
+	'a' => '1.1',
+	'b' => {
+		'c' => '2.1',
+		'e' => '2.2',
+		'f' => {
+			'g' => ['3.a','3.b','3.c','3.d'],
+			'h' => 5
+		}
+	},
+	'd' =>'1.3'	
+},$rule_env);
+
+$rule_env = extend_rule_env("g","a",$rule_env);
+
    
 $rule_env->{'ruleset_name'} = $rid;
 
