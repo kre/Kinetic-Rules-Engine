@@ -87,6 +87,7 @@ $ev4->pageview("http://www.yahoo.com/");
 # test the pageview prim SMs
 my $sm1 = mk_pageview_prim(qr/www.windley.com/);
 my $sm2 = mk_pageview_prim(qr#/(..)/(a)#, ['vv','bb']);
+my $sm3 = mk_pageview_prim(qr/www.google.com/);
 
 my $initial = $sm1->get_initial();
 my $next;
@@ -99,14 +100,22 @@ my $next;
 #$test_count++;
 
 my $rpt = mk_repeat($sm1,3);
-
+my $copy = Kynetx::Events::State::clone($rpt);
 $logger->debug("SM repeat: ", sub {Dumper($rpt)});
+#$logger->debug("SM repeat clone: ", sub {Dumper($copy)});
+
+
+
+
 $initial = $rpt->get_initial();
 
 $logger->debug("Initial state (repeat): $initial");
 $next = $rpt->next_state($initial,$ev1,$rid,$session,$rule_name);
 cmp_deeply($rpt->is_final($next),0, "First matching event, no transition");
 $test_count++;
+
+
+
 $logger->debug("Next state (repeat): $next f: ",$rpt->is_final($next));
 
 
@@ -114,6 +123,7 @@ $next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
 cmp_deeply($rpt->is_final($next),0, "Second matching event, no transition");
 $test_count++;
 $logger->debug("Next state (2): $next f: ",$rpt->is_final($next));
+
 
 $next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
 cmp_deeply($rpt->is_final($next),1, "Third matching event, is final");
@@ -131,16 +141,20 @@ cmp_deeply($rpt->is_final($next),0, "Other event, counter is reset");
 $test_count++;
 
 
+
 $next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
 cmp_deeply($rpt->is_final($next),0, "First matching event, counter increments");
 $test_count++;
+
 $next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
 cmp_deeply($rpt->is_final($next),0, "Second matching event, counter increments");
 $test_count++;
+
 $next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
 cmp_deeply($rpt->is_final($next),1, "Third matching event, is final");
 $test_count++;
 my $final = $rpt->is_final($next);
+
 
 Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
 
@@ -169,6 +183,7 @@ cmp_deeply($sm_count->is_final($next),1, "bThird matching event, transition");
 $test_count++;
 $logger->debug("Final: ", $final);
 
+
 Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
 
 ## Compound count expression
@@ -183,20 +198,20 @@ $logger->debug("B: ", sub {Dumper($sm_count_B)});
 #diag "A or B";
 my $sm_compound_count = mk_or($sm_count_A,$sm_count_B);
 
-$logger->debug("Compound count state machine: ", sub {Dumper($sm_compound_count)});
+$logger->debug("Compound (or) count state machine: ", sub {Dumper($sm_compound_count)});
 
 $initial = $sm_compound_count->get_initial();
 $logger->debug("Compound initial: ", sub {Dumper($initial)});
 $next = $sm_compound_count->next_state($initial,$ev1,$rid,$session,$rule_name);
 cmp_deeply($sm_compound_count->is_final($next),0, "Compound match A, no transition");
 $test_count++;
-my $mid = $next;
 
 
-$logger->debug("Compound initial: ", sub {Dumper($next)});
+
 $next = $sm_compound_count->next_state($next,$ev1,$rid,$session,$rule_name);
 cmp_deeply($sm_compound_count->is_final($next),0, "Compound match A, no transition");
 $test_count++;
+
 
 $next = $sm_compound_count->next_state($next,$ev2,$rid,$session,$rule_name);
 cmp_deeply($sm_compound_count->is_final($next),0, "Compound match B, no transition");
@@ -205,6 +220,299 @@ $test_count++;
 $next = $sm_compound_count->next_state($next,$ev2,$rid,$session,$rule_name);
 cmp_deeply($sm_compound_count->is_final($next),1, "Compound match B, Transition");
 $test_count++;
+
+$logger->debug("Compound initial: ", sub {Dumper($next)});
+
+
+Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
+
+my $skey = "count3Aandcount2B";
+
+$sm_compound_count = Kynetx::Memcached::check_cache($skey);
+#$sm_compound_count = undef;
+if (defined $sm_compound_count) {
+	$sm_compound_count = Kynetx::Events::State->unserialize($sm_compound_count);
+} else {
+	$sm_compound_count = mk_and($sm_count_A,$sm_count_B);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm_compound_count);
+	Kynetx::Memcached::mset_cache($skey,$json,36000);
+}
+
+# A and B
+$logger->debug("Compound (and) count state machine: ", sub {Dumper($sm_compound_count)});
+
+$initial = $sm_compound_count->get_initial();
+$logger->debug("Compound initial: ", sub {Dumper($initial)});
+$next = $sm_compound_count->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+
+$next = $sm_compound_count->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match B, no transition");
+$test_count++;
+
+
+
+$next = $sm_compound_count->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+
+
+$next = $sm_compound_count->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+
+
+$next = $sm_compound_count->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+
+
+$next = $sm_compound_count->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),1, "Compound match B, A and B transition");
+$test_count++;
+
+$logger->debug("Current: $next");
+
+Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
+# A then B
+$skey = "AthenB";
+$sm_compound_count = Kynetx::Memcached::check_cache($skey);
+#$sm_compound_count = undef;
+if (defined $sm_compound_count) {
+	$sm_compound_count = Kynetx::Events::State->unserialize($sm_compound_count);
+} else {
+	$sm_compound_count = mk_then($sm_count_A,$sm_count_B);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm_compound_count);
+	Kynetx::Memcached::mset_cache($skey,$json,36000);
+}
+$logger->debug("Compound (then) count state machine: ", sub {Dumper($sm_compound_count)});
+
+
+$initial = $sm_compound_count->get_initial();
+$logger->debug("Compound initial: ", sub {Dumper($initial)});
+$next = $sm_compound_count->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+
+
+$next = $sm_compound_count->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+
+
+$next = $sm_compound_count->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match B, no transition");
+$test_count++;
+
+
+$next = $sm_compound_count->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+
+$next = $sm_compound_count->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match B, no transition");
+$test_count++;
+
+
+
+$next = $sm_compound_count->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),1, "Compound match B, A then B transition");
+$test_count++;
+
+$logger->debug("Next: $next");
+
+Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
+# A before B
+$skey = "AbeforeB";
+$sm_compound_count = Kynetx::Memcached::check_cache($skey);
+#$sm_compound_count = undef;
+if (defined $sm_compound_count) {
+	$sm_compound_count = Kynetx::Events::State->unserialize($sm_compound_count);
+} else {
+	$sm_compound_count = mk_before($sm_count_A,$sm_count_B);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm_compound_count);
+	Kynetx::Memcached::mset_cache($skey,$json,36000);
+}
+$logger->debug("Compound (before) count state machine: ", sub {Dumper($sm_compound_count)});
+
+
+$initial = $sm_compound_count->get_initial();
+$logger->debug("Compound initial: ", sub {Dumper($initial)});
+$next = $sm_compound_count->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+
+$next = $sm_compound_count->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+
+
+$next = $sm_compound_count->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match B, no transition");
+$test_count++;
+
+
+
+$next = $sm_compound_count->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match A, A before B transition");
+$test_count++;
+
+
+$next = $sm_compound_count->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),0, "Compound match B, no transition");
+$test_count++;
+
+
+$next = $sm_compound_count->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_count->is_final($next),1, "Compound match B, Final state");
+$test_count++;
+
+$logger->debug("next: ", sub {Dumper($next)});
+
+Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
+# x between A and B
+my $sm_compound_between = mk_between($sm3, $sm_count_A, $sm_count_B);
+$logger->debug("Compound (before) count state machine: ", sub {Dumper($sm_compound_between)});
+
+$initial = $sm_compound_between->get_initial();
+$next = $sm_compound_between->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_between->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+
+$next = $sm_compound_between->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_between->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+
+$next = $sm_compound_between->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_between->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+
+$next = $sm_compound_between->next_state($next,$ev3,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_between->is_final($next),0, "Compound match x, no transition");
+$test_count++;
+
+$next = $sm_compound_between->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_between->is_final($next),0, "Compound match B, no transition");
+$test_count++;
+
+$next = $sm_compound_between->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_between->is_final($next),1, "Compound match B, x between A and B transition");
+$test_count++;
+
+
+Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
+# x not between A and B
+$sm_compound_between = mk_not_between($sm3, $sm_count_A, $sm_count_B);
+$logger->debug("Compound (before) count state machine: ", sub {Dumper($sm_compound_between)});
+
+$initial = $sm_compound_between->get_initial();
+$next = $sm_compound_between->next_state($initial,$ev3,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_between->is_final($next),0, "x, not between A and B");
+$test_count++;
+
+
+$next = $sm_compound_between->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_between->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+
+$next = $sm_compound_between->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_between->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+
+$next = $sm_compound_between->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_between->is_final($next),0, "Compound match A, no transition");
+$test_count++;
+
+$next = $sm_compound_between->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_between->is_final($next),0, "Compound match B, no transition");
+$test_count++;
+
+
+$next = $sm_compound_between->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_between->is_final($next),1, "Compound match B, x between A and B transition");
+$test_count++;
+
+
+Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
+# repeat 3 (a or b)
+my $sm_compound_repeat = mk_repeat(mk_or($sm1,$sm2),3);
+$logger->debug("Repeat 3 (a or b) state machine: ", sub {Dumper($sm_compound_repeat)});
+$initial = $sm_compound_repeat->get_initial();
+
+$next = $sm_compound_repeat->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_repeat->is_final($next),0, "match a(1), no transition");
+$test_count++;
+
+$next = $sm_compound_repeat->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_repeat->is_final($next),0, "match b(1), no transition");
+$test_count++;
+
+$next = $sm_compound_repeat->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_repeat->is_final($next),1, "match b(1), no transition");
+$test_count++;
+
+
+Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
+
+$skey = "repeat3aandb";
+
+$sm_compound_repeat = Kynetx::Memcached::check_cache($skey);
+#$sm_compound_repeat = undef;
+if (defined $sm_compound_repeat) {
+	$sm_compound_repeat = Kynetx::Events::State->unserialize($sm_compound_repeat);
+} else {
+	$sm_compound_repeat = mk_repeat(mk_and($sm1,$sm2),3);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm_compound_repeat);
+	Kynetx::Memcached::mset_cache($skey,$json,36000);
+}
+# repeat 3 (a and b)
+#my $tmp = mk_and($sm1,$sm2);
+#my $sm_compound_repeat = mk_repeat($tmp,3);
+#$logger->debug("(a and b) state machine: ", sub {Dumper($tmp)});
+
+$logger->debug("Repeat 3 (a and b) state machine: ", sub {Dumper($sm_compound_repeat)});
+$initial = $sm_compound_repeat->get_initial();
+
+$next = $sm_compound_repeat->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_repeat->is_final($next),0, "match a(1), no transition");
+$test_count++;
+$logger->debug("Current: $next");
+
+$next = $sm_compound_repeat->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_repeat->is_final($next),0, "match b(1), no transition");
+$test_count++;
+
+$logger->debug("Current: $next");
+
+
+$next = $sm_compound_repeat->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_repeat->is_final($next),0, "match b(1), no transition");
+$test_count++;
+
+$logger->debug("Current: $next");
+
+$next = $sm_compound_repeat->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_repeat->is_final($next),0, "match b(1), no transition");
+$test_count++;
+
+$logger->debug("Current: $next");
+
+$next = $sm_compound_repeat->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_repeat->is_final($next),0, "match b(1), no transition");
+$test_count++;
+
+$logger->debug("Current: $next");
+$next = $sm_compound_repeat->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($sm_compound_repeat->is_final($next),1, "match b(1), no transition");
+$test_count++;
+
+
+############
+#goto ENDY;
+############
+
+
 
 
 my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm1);
@@ -244,7 +552,7 @@ ok($smc->is_initial($next), "ev2 leads to initial state in clone");
 $test_count++;
 
 # do it again
-my $sm3 = mk_pageview_prim(qr/www.google.com/);
+$sm3 = mk_pageview_prim(qr/www.google.com/);
 $initial = $sm3->get_initial();
 
 $next = $sm3->next_state($initial, $ev3);
