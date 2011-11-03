@@ -138,9 +138,12 @@ sub validate_request {
         my $mins = $search_index_parameters->{'minimum'};
         my $min_err = join(",",keys %$mins);
         return Kynetx::Errors::merror("Request must contain one of these: $min_err");
-    } else {
-        return 1;
+    } 
+    
+    if (! $request->{'AssociateTag'}) {
+        return Kynetx::Errors::merror("Request must include associate_tag");
     };
+    return 1;
 }
 
 sub has_minimum_parameter {
@@ -165,6 +168,7 @@ sub build {
     $logger->trace( "isearch: ", sub { Dumper($args) } );
     $request->{'Operation'}='ItemSearch';
     $request->{'ResponseGroup'}=get_response_groups($args);
+    $request->{'AssociateTag'} = Kynetx::Predicates::Amazon::get_associate_tag($args);
     my $search_index = get_search_index($locale,$args,$a_parm);
     $logger->trace("SearchIndex: ",$search_index);
     my $item_search_node = 
@@ -191,7 +195,7 @@ sub build {
         }
     }
 
-    $logger->trace( "a_request: ", sub { Dumper($request) } );
+    $logger->debug( "a_request: ", sub { Dumper($request) } );
     my $error =  validate_request($request);
     if (Kynetx::Errors::mis_error($error)) {
         return (Kynetx::Errors::merror($error,"Request failed validation"));

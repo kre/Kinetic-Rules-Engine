@@ -61,6 +61,8 @@ my $r = Kynetx::Test::configure();
 
 my $rid = 'cs_test';
 my $session = Kynetx::Test::gen_session($r, $rid);
+my $initial;
+my $next;
 
 # test choose_action and args
 
@@ -84,20 +86,230 @@ $ev3->pageview("http://www.google.com/");
 my $ev4 = Kynetx::Events::Primitives->new();
 $ev4->pageview("http://www.yahoo.com/");
 
-# test the pageview prim SMs
-my $sm1 = mk_pageview_prim(qr/www.windley.com/);
-my $sm2 = mk_pageview_prim(qr#/(..)/(a)#, ['vv','bb']);
-my $sm3 = mk_pageview_prim(qr/www.google.com/);
+my $flush = 1;
 
-my $initial = $sm1->get_initial();
-my $next;
-#my $next = $sm1->next_state($initial, $ev1);
-#ok($sm1->is_final($next), "ev1 leads to final state");
-#$test_count++;
+# test the pageview prim SMs
+my $skey = "sm1";
+my $sm1 = Kynetx::Memcached::check_cache($skey);
+
+if (defined $sm1  && ! $flush) {
+	$sm1 = Kynetx::Events::State->unserialize($sm1);
+} else {
+	$sm1 = mk_pageview_prim(qr/www.windley.com/);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm1);
+	Kynetx::Memcached::mset_cache($skey,$json);
+}
+
+
+$skey = "sm2";
+my $sm2 = Kynetx::Memcached::check_cache($skey);
+if (defined $sm2 && ! $flush) {
+	$sm2 = Kynetx::Events::State->unserialize($sm2);
+} else {
+	$sm2 = mk_pageview_prim(qr#/(..)/(a)#, ['vv','bb']);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm2);
+	Kynetx::Memcached::mset_cache($skey,$json);
+}
+
+
+$skey = "sm3";
+my $sm3 = Kynetx::Memcached::check_cache($skey);
+if (defined $sm3  && ! $flush) {
+	$sm3 = Kynetx::Events::State->unserialize($sm3);
+} else {
+	$sm3 = mk_pageview_prim(qr/www.google.com/);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm3);
+	Kynetx::Memcached::mset_cache($skey,$json);
+}
+
+$skey = "and1";
+my $and1 = Kynetx::Memcached::check_cache($skey);
+if (defined $and1  && ! $flush) {
+	$and1 = Kynetx::Events::State->unserialize($and1);
+} else {
+	$and1 = mk_and($sm2,$sm3);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($and1);
+	Kynetx::Memcached::mset_cache($skey,$json);
+}
+
+$skey = "and2";
+my $and2 = Kynetx::Memcached::check_cache($skey);
+if (defined $and2  && ! $flush) {
+	$and2 = Kynetx::Events::State->unserialize($and2);
+} else {
+	$and2 = mk_and($sm1,$sm3);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($and2);
+	Kynetx::Memcached::mset_cache($skey,$json);
+}
+
+$skey = "and3";
+my $and3 = Kynetx::Memcached::check_cache($skey);
+if (defined $and3  && ! $flush) {
+	$and3 = Kynetx::Events::State->unserialize($and3);
+} else {
+	$and3 = mk_and($sm1,$sm2);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($and3);
+	Kynetx::Memcached::mset_cache($skey,$json);
+}
+
+
+$skey = "andor1";
+my $andor1 = Kynetx::Memcached::check_cache($skey);
+#$andor1 = undef;
+if (defined $andor1  && ! $flush ) {
+	$andor1 = Kynetx::Events::State->unserialize($andor1);
+} else {
+	$andor1 = mk_or($and1,$and2);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($andor1);
+	Kynetx::Memcached::mset_cache($skey,$json);
+}
+
+$logger->debug("--------------------------------------andor1: ", sub {Dumper($andor1)});
+
+
+$logger->debug("New: ", sub {Dumper($andor1)});
+#$andor1->optimize();
+$logger->debug("Opt: ", sub {Dumper($andor1)});
+
+$initial = $andor1->get_initial();
+
+$logger->debug("Initial state (andor1): $initial");
+$next = $andor1->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($andor1->is_final($next),0, "non matching event, no transition");
+$test_count++;
+
+isnt($next,$initial, "state has changed");
+$test_count++;
+
+my $temp = $next;
+
+$next = $andor1->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($andor1->is_final($next),0, "matching event, not final");
+$test_count++;
+
+is($next,$temp,"AB combo not valid, stay in state");
+$test_count++;
+
+
+is($next,$temp, "Not a matching transition, state remains same");
+$test_count++;
+
+$next = $andor1->next_state($next,$ev3,$rid,$session,$rule_name);
+cmp_deeply($andor1->is_final($next),1, "matching event, final");
+$test_count++;
+
+#Log::Log4perl->easy_init($DEBUG);
+
+$skey = "andor2";
+my $andor2 = Kynetx::Memcached::check_cache($skey);
+#$andor2 = undef;
+if (defined $andor2  && ! $flush) {
+	$andor2 = Kynetx::Events::State->unserialize($andor2);
+} else {
+	$andor2 = mk_or($andor1,$and3);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($andor2);
+	Kynetx::Memcached::mset_cache($skey,$json);
+}
+$logger->debug("andor1: ", sub {Dumper($andor1)});
+$logger->debug("andor2: ", sub {Dumper($andor2)});
+
+$initial = $andor2->get_initial();
+
+$logger->debug("Initial state (andor2): $initial");
+$next = $andor2->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($andor2->is_final($next),0, "Matching event, not final");
+$test_count++;
+
+isnt($initial,$next,"Not initial");
+$test_count++;
+
+$temp = $next;
+
+$next = $andor2->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($andor2->is_final($next),0, "Double event, not final");
+$test_count++;
+
+is($temp,$next,"Double event, no transition");
+$test_count++;
+
+$next = $andor2->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($andor2->is_final($next),1, "match event, is final");
+$test_count++;
+
+
+my @sm_arry;
+push(@sm_arry, $sm1);
+push(@sm_arry, $sm2);
+push(@sm_arry, $sm3);
+
+
+
+$skey = "any2of3";
+my $any = Kynetx::Memcached::check_cache($skey);
+$any = undef;
+if (defined $any) {
+	$any = Kynetx::Events::State->unserialize($any);
+} else {
+	$any = mk_any(\@sm_arry,2);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($any);
+	Kynetx::Memcached::mset_cache($skey,$json,36000);
+}
+$logger->debug("Any 2 of 3: ", sub {Dumper($any)});
+
+$initial = $any->get_initial();
+
+$logger->debug("Initial state (any): $initial");
+$next = $any->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($any->is_final($next),0, "Matching event, not final");
+$test_count++;
+
+isnt($initial,$next,"Not initial");
+$test_count++;
+
+$temp = $next;
+
+$next = $any->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($any->is_final($next),0, "Double event, not final");
+$test_count++;
+
+is($temp,$next,"Double event, no transition");
+$test_count++;
+
+$next = $any->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($any->is_final($next),1, "match event, is final");
+$test_count++;
+
+
+##################
+#goto ENDY;
+##################
 #
-#$next = $sm1->next_state($initial, $ev2);
-#ok($sm1->is_initial($next), "ev2 does not lead to initial state");
+#$initial = $any->get_initial();
+#
+#my $t = $any->get_transitions($initial);
+#my $test = $t->[0]->{'test'};
+#$logger->debug("Trannys: ", sub {Dumper($t)});
+#my $hash;
+#map {$hash->{$_->{'test'}} +=1 } @$t;
+#$logger->debug("mapped: ", sub {Dumper($hash)});
+#for my $t1 (@$t) {
+#	my $hit = $test cmp $t1->{'test'};
+#	
+#	$logger->debug($t1->{'next'}, " ", sub {Dumper($t1->{'test'})}, " $hit");
+#}
+#$logger->debug("States: ", sub {Dumper($any->get_states())});
+#
+###########
+#goto ENDY;
+###########
+#
+#$initial = $any->get_initial();
+#$next = $any->next_state($initial,$ev1,$rid,$session,$rule_name);
+#cmp_deeply($any->is_final($next),0, "Any (A), no transition");
 #$test_count++;
+#$logger->debug("State: $next");
+
+
 
 my $rpt = mk_repeat($sm1,3);
 my $copy = Kynetx::Events::State::clone($rpt);
@@ -226,7 +438,7 @@ $logger->debug("Compound initial: ", sub {Dumper($next)});
 
 Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
 
-my $skey = "count3Aandcount2B";
+$skey = "count3Aandcount2B";
 
 $sm_compound_count = Kynetx::Memcached::check_cache($skey);
 #$sm_compound_count = undef;

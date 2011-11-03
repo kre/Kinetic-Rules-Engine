@@ -112,13 +112,12 @@ sub check_cache {
 sub mset_cache {
     my ($key,$content,$expire) = @_;
     my $logger = get_logger();
-    if (not defined $expire || $expire < 1) {
+    if (! defined $expire || $expire < 1) {
         $expire = 10 * 60;
     }
     my $memd = get_memd();
     my $parent = (caller(1))[3];
     if ( $memd ) {
-        $logger->trace("- $parent - Caching $key for $expire seconds");
         if (ref $content eq "") {
         	my $safe = Kynetx::Util::str_out($content);
         	$memd->set($key,$safe,$expire);

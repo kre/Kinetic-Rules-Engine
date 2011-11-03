@@ -164,7 +164,7 @@ sub process_event {
     }
 
     # get a session, if _sid param is defined it will override cookie
-    $logger->debug("KBX cookie? ",$req_info->{'kntx_token'});
+    $logger->trace("KBX cookie? ",$req_info->{'kntx_token'});
     my $session = process_session($r, $req_info->{'kntx_token'});
     
     if (defined $version) {
@@ -306,7 +306,7 @@ sub process_event_for_rid {
 
     	$logger->trace("Rule: ", sub {Dumper $rule});
 
-    	$logger->debug("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
+    	$logger->trace("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
 	
     	next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
 
@@ -325,7 +325,7 @@ sub process_event_for_rid {
         unless ( $current_state eq $next_state ) {
 	  my $json = $ev->serialize();
 	  Kynetx::Persistence::add_trail_element("ent", $rid, $session, $event_list_name, $json );
-	  $logger->debug("State change for $rule->{'name'}");
+	  $logger->trace("State change for $rule->{'name'}");
 	}
 
         if ( $sm->is_final($next_state) ) {
@@ -439,9 +439,9 @@ sub compile_event_expr {
 			 }];
 	      add_filter($filter, $rule_lists, $domain, $op, $rule);    		
     	} elsif (defined $eexpr->{'filters'}) {
-    		$logger->debug("Pageview filter request: ", sub {Dumper($eexpr->{'filters'})});
+    		$logger->trace("Pageview filter request: ", sub {Dumper($eexpr->{'filters'})});
     		my $num = @{$eexpr->{'filters'}};
-    		$logger->debug("Num filters: $num");
+    		$logger->trace("Num filters: $num");
     		#
     		# To clean up.  
     		# select when pageview #foop# is now a special case of
@@ -455,7 +455,7 @@ sub compile_event_expr {
     			}];
 	      		add_filter($filter, $rule_lists, $domain, $op, $rule);
     		} else {
-    			$logger->debug("Generic primitive");
+    			$logger->trace("Generic primitive");
     			$sm = mk_gen_prim($domain,$op, $eexpr->{'vars'},$eexpr->{'filters'});
     			add_filter($eexpr->{'filters'}, $rule_lists, $domain, $op, $rule);    			
     		}
@@ -478,7 +478,7 @@ sub compile_event_expr {
 
 
     } elsif ($op eq 'expression') {
-      $logger->debug(
+      $logger->trace(
 		     "Creating Expression event for $domain:$op"
 		    );
       $logger->trace("Eexpr: ", sub {Dumper($eexpr)});
@@ -488,7 +488,7 @@ sub compile_event_expr {
       add_filter([ANY], $rule_lists, $domain, $op, $rule);
         
     } else {
-      $logger->debug(
+      $logger->trace(
 		     "Creating primitive event for $domain:$op"
 		      );
       $logger->trace("Eexpr: ", sub {Dumper($eexpr)});
@@ -538,13 +538,25 @@ sub compile_event_expr {
   	} elsif ($eexpr->{'op'} eq 'count') {
   		my $sm0 = compile_event_expr( $eexpr->{'args'}->[0], $rule_lists, $rule );
   		$sm = mk_count($sm0,$op_num);
+  	} elsif ($eexpr->{'op'} eq 'any') {
+  		$logger->trace("Event Expression: ", sub {Dumper($eexpr->{'args'})});
+  		if (ref $eexpr->{'args'} eq "ARRAY") {
+  			my @event_array = ();
+  			my $num = Kynetx::Expressions::den_to_exp($eexpr->{'op_num'});
+  			foreach my $sm_element (@{$eexpr->{'args'}}) {
+  				$logger->trace("Eventex: ", sub {Dumper($sm_element)});
+  				my $tsm = compile_event_expr( $sm_element, $rule_lists, $rule );
+  				push(@event_array,$tsm);
+  				$sm = mk_any(\@event_array,$num);
+  			}
+  		}
   	} else {
   		$logger->warn("Unknown event operation: ", $eexpr->{'op'});
   	}
   	  
   } else {
     $logger->warn("Attempt to compile malformed event expression");
-    $logger->debug("E.expression: ", sub {Dumper($eexpr)});
+    $logger->trace("E.expression: ", sub {Dumper($eexpr)});
   }
   return $sm;
 
