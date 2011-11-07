@@ -58,6 +58,11 @@ mk_not_between
 mk_repeat
 mk_count
 mk_any
+mk_and_n
+mk_or_n
+mk_before_n
+mk_after_n
+mk_then_n
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -231,11 +236,11 @@ sub optimize_transitions {
 	foreach my $t (@{$self->get_transitions($state)}) {
 		my $sig = _tsig($t);
 		if ($hash->{$sig}) {
-			$logger->trace("Duped sig: $sig");
+			$logger->debug("Duped sig: $sig");
 			if ($hash->{$sig}->{'next'} eq $t->{'next'}) {
-				$logger->trace("Destination dupe: ", $t->{'next'});
+				$logger->debug("Destination dupe: ", $t->{'next'});
 			} else {
-				$logger->trace("Add filters of ",$t->{'next'});
+				$logger->debug("Add filters of ",$t->{'next'});
 				$self->optimize_transitions($hash->{$sig}->{'next'},$t->{'next'});
 			}
 		} else {
@@ -245,7 +250,7 @@ sub optimize_transitions {
 	my @new_t = values (%{$hash});
 	my $count =  scalar (@{$self->get_transitions($state)}) - scalar (@new_t);
 	if ($count > 0) {
-		$logger->trace("$count transitions pruned");
+		$logger->debug("$count transitions pruned");
 		$self->{'transitions'}->{$state} = \@new_t;		
 	}
 	
@@ -994,6 +999,57 @@ sub mk_before {
 }
 
 #-------------------------------------------------------------------------
+# arity
+#-------------------------------------------------------------------------
+sub mk_and_n {
+	my ($sm_array) = @_;
+	my $logger = get_logger();
+	my $num = scalar(@{$sm_array});
+	return mk_any($sm_array,$num);
+}
+
+
+sub mk_or_n {
+	my ($sm_array) = @_;
+	my $logger = get_logger();
+	my $nsm = $sm_array->[0];
+	for (my $i = 1; $i < scalar(@{$sm_array}); $i++) {
+		my $c = $nsm->clone();
+		$nsm = mk_or($c,$sm_array->[$i]);
+	}
+	return $nsm;
+}
+
+sub mk_before_n {
+	my ($sm_array) = @_;
+	my $logger = get_logger();
+	my $nsm = $sm_array->[0];
+	for (my $i = 1; $i < scalar(@{$sm_array}); $i++) {
+		my $c = $nsm->clone();
+		$nsm = mk_before($c,$sm_array->[$i]);
+	}
+	return $nsm;
+}
+
+sub mk_after_n {
+	my ($sm_array) = @_;
+	my $logger = get_logger();
+	my @rev = reverse (@$sm_array);
+	return mk_before_n(\@rev);
+}
+
+sub mk_then_n {
+	my ($sm_array) = @_;
+	my $logger = get_logger();
+	my $nsm = $sm_array->[0];
+	for (my $i = 1; $i < scalar(@{$sm_array}); $i++) {
+		my $c = $nsm->clone();
+		$nsm = mk_then($c,$sm_array->[$i]);
+	}
+	return $nsm;
+}
+
+#-------------------------------------------------------------------------
 # group state machines
 #-------------------------------------------------------------------------
 sub mk_any {
@@ -1001,14 +1057,14 @@ sub mk_any {
 	my $logger = get_logger();
 	# make an array of inidices
 	my @set = Kynetx::Util::any_matrix(scalar(@$sm_array),$num);
-	$logger->trace("Matrix: ", sub {Dumper(@set)});
+	$logger->debug("ANY $num of N (indices combinations): ", sub {Dumper(@set)});
 	my @or_array = ();
 	for my $x (@set) {
 		my $xi = pop @$x;
 		my $nsm = $sm_array->[$xi];
 		foreach my $y (@$x) {
-			my $nsmp = $nsm->clone();
-			$nsm = mk_and($nsmp,$sm_array->[$y]);
+			my $nsma = $nsm->clone();
+			$nsm = mk_before($nsma,$sm_array->[$y]);
 		}
 		push(@or_array,$nsm);
 	}
@@ -1215,7 +1271,12 @@ sub _tsig {
 	if (defined $transition->{'test'}) {
 		if (ref $transition->{'test'} eq "ARRAY"){
 			foreach my $test (@{$transition->{'test'}}) {
-				my $pattern = YAML::XS::Dump $test->{'pattern'};
+				my $pattern;
+				if (ref $test eq "HASH") {
+					$pattern = YAML::XS::Dump $test->{'pattern'};
+				} else {
+					$pattern = YAML::XS::Dump $test;
+				}
 				my $type = $test->{'type'};
 				push(@sigarray,$type);
 				push(@sigarray,$pattern);

@@ -688,13 +688,33 @@ sub bin_reg {
 
 sub any_matrix {
 	my ($n, $k) = @_;
+	my $logger = get_logger();
 	# check memcached for 
 	my @n = ();
 	for (my $i = 0; $i < $n; $i++) {
 		push(@n,$i);
 	}
+	if ($k < $n) {
+		my $hash = {};
+		my @combos = Math::Combinatorics::combine($k, @n);
+		#$logger->debug("Combos: ", sub {Dumper(@combos)});
+		foreach my $element (@combos) {
+			#$logger->debug(" combo: ", sub {Dumper($element)});
+			my @permutes = Math::Combinatorics::permute(@{$element});
+			foreach my $path (@permutes) {
+				#$logger->debug("  p: ", sub {Dumper($path)});
+				my $pstr = join(",",@$path);
+				$hash->{$pstr} = $path;
+			}			
+		}
+		#$logger->debug("Final: ", sub {Dumper($hash)});
+		return values %{$hash};
+	} elsif ($k == $n) {
+		return Math::Combinatorics::permute(@n);
+	} else {
+		$logger->warn("Invalid permutation requested $k:$n");
+	}
 	
-	return Math::Combinatorics::combine($k, @n);
 }
 
 #----------------------------------------

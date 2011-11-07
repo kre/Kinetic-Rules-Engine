@@ -547,13 +547,30 @@ sub compile_event_expr {
   				$logger->trace("Eventex: ", sub {Dumper($sm_element)});
   				my $tsm = compile_event_expr( $sm_element, $rule_lists, $rule );
   				push(@event_array,$tsm);
-  				$sm = mk_any(\@event_array,$num);
   			}
+  			$sm = mk_any(\@event_array,$num);
   		}
-  	} else {
-  		$logger->warn("Unknown event operation: ", $eexpr->{'op'});
-  	}
-  	  
+	  	} else {
+	  		$logger->warn("Unknown event operation: ", $eexpr->{'op'});
+	  	}
+  } elsif ($eexpr->{'type'} eq 'arity_event') {
+  	  $logger->debug("E.expression: ", sub {Dumper($eexpr)});
+		my @event_array = ();
+		foreach my $sm_element (@{$eexpr->{'args'}}) {
+			my $tsm = compile_event_expr( $sm_element, $rule_lists, $rule );
+			push(@event_array,$tsm);
+		}
+		if ( $eexpr->{'op'} eq 'and' ) {
+			$sm = mk_and_n(\@event_array);
+		} elsif ($eexpr->{'op'} eq 'or') {
+			$sm = mk_or_n(\@event_array);
+		} elsif ($eexpr->{'op'} eq 'before') {
+			$sm = mk_before_n(\@event_array);
+		} elsif ($eexpr->{'op'} eq 'after') {
+			$sm = mk_after_n(\@event_array);
+		} elsif ($eexpr->{'op'} eq 'then') {
+			$sm = mk_then_n(\@event_array);
+		}
   } else {
     $logger->warn("Attempt to compile malformed event expression");
     $logger->trace("E.expression: ", sub {Dumper($eexpr)});

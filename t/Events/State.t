@@ -63,6 +63,7 @@ my $rid = 'cs_test';
 my $session = Kynetx::Test::gen_session($r, $rid);
 my $initial;
 my $next;
+my $temp;
 
 # test choose_action and args
 
@@ -71,8 +72,6 @@ my $my_req_info = Kynetx::Test::gen_req_info($rid);
 my $rule_name = 'foo';
 
 my $rule_env = Kynetx::Test::gen_rule_env();
-
-my $session = Kynetx::Test::gen_session($r, $rid);
 
 my $ev1 = Kynetx::Events::Primitives->new();
 $ev1->pageview($my_req_info->{'caller'});
@@ -87,6 +86,7 @@ my $ev4 = Kynetx::Events::Primitives->new();
 $ev4->pageview("http://www.yahoo.com/");
 
 my $flush = 1;
+
 
 # test the pageview prim SMs
 my $skey = "sm1";
@@ -121,6 +121,205 @@ if (defined $sm3  && ! $flush) {
 	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm3);
 	Kynetx::Memcached::mset_cache($skey,$json);
 }
+
+my @sm_arry;
+push(@sm_arry, $sm1);
+push(@sm_arry, $sm2);
+push(@sm_arry, $sm3);
+
+my $thenmany = mk_then_n(\@sm_arry);
+$logger->debug("then Many: ", sub {Dumper($thenmany)});
+$initial = $thenmany->get_initial();
+
+$next = $thenmany->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($thenmany->is_final($next),0, "Matching event, not final");
+$test_count++;
+
+isnt($next,$initial,"Event match, transition");
+$test_count++;
+
+$next = $thenmany->next_state($initial,$ev3,$rid,$session,$rule_name);
+cmp_deeply($thenmany->is_final($next),0, "non event, not final");
+$test_count++;
+
+is($next,$initial,"Event match, reset to initial");
+$test_count++;
+
+$next = $thenmany->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($thenmany->is_final($next),0, "Matching event, not final");
+$test_count++;
+
+isnt($next,$initial,"Event match, transition");
+$test_count++;
+
+$temp = $next;
+$next = $thenmany->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($thenmany->is_final($next),0, "Matching event, not final");
+$test_count++;
+
+is($next,$initial,"No match, reset to initial");
+$test_count++;
+
+$temp = $next;
+$next = $thenmany->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($thenmany->is_final($next),0, "Matching event, not final");
+$test_count++;
+
+isnt($next,$initial,"first match, transition");
+$test_count++;
+
+$temp = $next;
+$next = $thenmany->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($thenmany->is_final($next),0, "Matching event, not final");
+$test_count++;
+
+isnt($next,$temp,"second match, transition");
+$test_count++;
+
+$next = $thenmany->next_state($next,$ev3,$rid,$session,$rule_name);
+cmp_deeply($thenmany->is_final($next),1, "3rd Matching event, final");
+$test_count++;
+
+
+my $aftermany = mk_after_n(\@sm_arry);
+$logger->debug("after Many: ", sub {Dumper($aftermany)});
+$initial = $aftermany->get_initial();
+
+$next = $aftermany->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($aftermany->is_final($next),0, "non event, not final");
+$test_count++;
+
+is($next,$initial,"no match state, no transition");
+$test_count++;
+
+$next = $aftermany->next_state($initial,$ev3,$rid,$session,$rule_name);
+cmp_deeply($aftermany->is_final($next),0, "first event, not final");
+$test_count++;
+
+isnt($next,$initial,"Event match, transition");
+$test_count++;
+
+$temp = $next;
+
+$next = $aftermany->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($aftermany->is_final($next),0, "non event, not final");
+$test_count++;
+
+is($next,$temp,"no match state, no transition");
+$test_count++;
+
+$temp = $next;
+
+
+$next = $aftermany->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($aftermany->is_final($next),0, "Match, not final");
+$test_count++;
+
+isnt($next,$temp,"Event match, transition");
+$test_count++;
+
+$next = $aftermany->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($aftermany->is_final($next),1, "Match, final");
+$test_count++;
+
+
+my $beforemany = mk_before_n(\@sm_arry);
+$logger->debug("before Many: ", sub {Dumper($beforemany)});
+$initial = $beforemany->get_initial();
+
+$next = $beforemany->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($beforemany->is_final($next),0, "first event, not final");
+$test_count++;
+
+isnt($next,$initial,"Matching state, transition");
+$test_count++;
+
+$temp = $next;
+
+$next = $beforemany->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($beforemany->is_final($next),0, "no match, not final");
+$test_count++;
+
+is($next,$temp,"no match state, transition");
+$test_count++;
+
+$temp = $next;
+
+$next = $beforemany->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($beforemany->is_final($next),0, "match, not final");
+$test_count++;
+
+isnt($next,$temp,"match state, transition");
+$test_count++;
+
+$next = $beforemany->next_state($next,$ev3,$rid,$session,$rule_name);
+cmp_deeply($beforemany->is_final($next),1, "match, is final");
+$test_count++;
+
+my $ormany = mk_or_n(\@sm_arry);
+
+$logger->debug("or Many: ", sub {Dumper($ormany)});
+
+$initial = $ormany->get_initial();
+
+$next = $ormany->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($ormany->is_final($next),1, "matching event, final");
+$test_count++;
+
+$next = $ormany->next_state($initial,$ev2,$rid,$session,$rule_name);
+cmp_deeply($ormany->is_final($next),1, "matching event, final");
+$test_count++;
+
+$next = $ormany->next_state($initial,$ev3,$rid,$session,$rule_name);
+cmp_deeply($ormany->is_final($next),1, "matching event, final");
+$test_count++;
+
+
+
+$skey = "andmany";
+my $andmany = Kynetx::Memcached::check_cache($skey);
+
+if (defined $andmany  && ! $flush) {
+	$andmany = Kynetx::Events::State->unserialize($andmany);
+} else {
+	$andmany = mk_and_n(\@sm_arry);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($andmany);
+	Kynetx::Memcached::mset_cache($skey,$json);
+}
+
+$logger->debug("and Many: ", sub {Dumper($andmany)});
+
+$initial = $andmany->get_initial();
+
+$logger->debug("Initial state (andmany): $initial");
+$next = $andmany->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($andmany->is_final($next),0, "matching event, no transition");
+$test_count++;
+
+$logger->debug("Next: $next");
+
+isnt($next,$initial,"Matching state, transition");
+$test_count++;
+
+
+$temp = $next;
+$next = $andmany->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($andmany->is_final($next),0, "non matching event, no transition");
+$test_count++;
+$logger->debug("Next: $next");
+
+is($next,$temp,"Repeat A, state remains the same");
+$test_count++;
+
+$temp = $next;
+$next = $andmany->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($andmany->is_final($next),0, "non matching event, no transition");
+$test_count++;
+isnt($next,$temp,"Matching state, transition");
+$test_count++;
+$logger->debug("Next: $next");
+
+
 
 $skey = "and1";
 my $and1 = Kynetx::Memcached::check_cache($skey);
@@ -181,7 +380,7 @@ $test_count++;
 isnt($next,$initial, "state has changed");
 $test_count++;
 
-my $temp = $next;
+$temp = $next;
 
 $next = $andor1->next_state($next,$ev2,$rid,$session,$rule_name);
 cmp_deeply($andor1->is_final($next),0, "matching event, not final");
@@ -237,7 +436,7 @@ cmp_deeply($andor2->is_final($next),1, "match event, is final");
 $test_count++;
 
 
-my @sm_arry;
+@sm_arry = ();
 push(@sm_arry, $sm1);
 push(@sm_arry, $sm2);
 push(@sm_arry, $sm3);
@@ -255,6 +454,12 @@ if (defined $any) {
 	Kynetx::Memcached::mset_cache($skey,$json,36000);
 }
 $logger->debug("Any 2 of 3: ", sub {Dumper($any)});
+
+###########
+#goto ENDY;
+###########
+
+
 
 $initial = $any->get_initial();
 
@@ -278,37 +483,6 @@ $test_count++;
 $next = $any->next_state($next,$ev2,$rid,$session,$rule_name);
 cmp_deeply($any->is_final($next),1, "match event, is final");
 $test_count++;
-
-
-##################
-#goto ENDY;
-##################
-#
-#$initial = $any->get_initial();
-#
-#my $t = $any->get_transitions($initial);
-#my $test = $t->[0]->{'test'};
-#$logger->debug("Trannys: ", sub {Dumper($t)});
-#my $hash;
-#map {$hash->{$_->{'test'}} +=1 } @$t;
-#$logger->debug("mapped: ", sub {Dumper($hash)});
-#for my $t1 (@$t) {
-#	my $hit = $test cmp $t1->{'test'};
-#	
-#	$logger->debug($t1->{'next'}, " ", sub {Dumper($t1->{'test'})}, " $hit");
-#}
-#$logger->debug("States: ", sub {Dumper($any->get_states())});
-#
-###########
-#goto ENDY;
-###########
-#
-#$initial = $any->get_initial();
-#$next = $any->next_state($initial,$ev1,$rid,$session,$rule_name);
-#cmp_deeply($any->is_final($next),0, "Any (A), no transition");
-#$test_count++;
-#$logger->debug("State: $next");
-
 
 
 my $rpt = mk_repeat($sm1,3);
