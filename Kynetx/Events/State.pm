@@ -235,12 +235,13 @@ sub optimize_transitions {
 	my $hash = {};
 	foreach my $t (@{$self->get_transitions($state)}) {
 		my $sig = _tsig($t);
+		$logger->trace("Sig: $sig");
 		if ($hash->{$sig}) {
-			$logger->debug("Duped sig: $sig");
+			$logger->trace("  Duped sig");
 			if ($hash->{$sig}->{'next'} eq $t->{'next'}) {
-				$logger->debug("Destination dupe: ", $t->{'next'});
+				$logger->trace("Destination dupe: ", $t->{'next'});
 			} else {
-				$logger->debug("Add filters of ",$t->{'next'});
+				$logger->trace("Add filters of ",$t->{'next'});
 				$self->optimize_transitions($hash->{$sig}->{'next'},$t->{'next'});
 			}
 		} else {
@@ -496,7 +497,7 @@ sub next_state {
 	# reset if needed
 	$state = $self->get_initial() unless defined $self->get_transitions($state);
 	
-	$logger->trace("Current: $state");
+	$logger->debug("Current: $state");
 	$logger->trace("This state machine: ", sub {Dumper($self)});
 
 	my $transitions = $self->get_transitions($state);
@@ -570,8 +571,8 @@ sub match {
   my $tdomain = $transition->{'domain'};
   my $edomain = $event->get_domain();
   my $logger = get_logger();
-  $logger->trace("Looking for a ",sub {Dumper($ttype)});
-  $logger->trace("In event of : ",sub {Dumper($etype)});
+  $logger->debug("Looking for a ",sub {Dumper($ttype)});
+  $logger->debug("In event of : ",sub {Dumper($etype)});
   return 0 unless $event->isa($ttype, $tdomain);
 
   if (defined $ttype && $ttype eq 'expression') {
@@ -1268,8 +1269,13 @@ sub _tsig {
 	$logger->trace("transition (sig): ", sub {Dumper($transition)});
 	#start with simple filter match 
 	my @sigarray = ();
-	if (defined $transition->{'test'}) {
-		if (ref $transition->{'test'} eq "ARRAY"){
+	if (ref $transition eq "HASH") {
+		push(@sigarray,$transition->{'domain'});
+		push(@sigarray,$transition->{'type'});
+		if (defined $transition->{'counter'}) {
+			push(@sigarray,$transition->{'counter'})
+		}
+		if (ref $transition->{'test'} eq "ARRAY") {
 			foreach my $test (@{$transition->{'test'}}) {
 				my $pattern;
 				if (ref $test eq "HASH") {
@@ -1277,17 +1283,15 @@ sub _tsig {
 				} else {
 					$pattern = YAML::XS::Dump $test;
 				}
-				my $type = $test->{'type'};
-				push(@sigarray,$type);
 				push(@sigarray,$pattern);
 			}
 		} else {
-			push(@sigarray,'url');
 			push(@sigarray, YAML::XS::Dump $transition->{'test'});
 		}
-		
-		return join("__",@sigarray);
+	} else {
+		$logger->warn("Non hash transition unexpected");
 	}
+	return join("__",@sigarray);
 	
 }
 

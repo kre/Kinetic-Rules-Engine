@@ -45,6 +45,7 @@ use Kynetx::Environments qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
 use Kynetx::Events::Primitives qw/:all/;
+use Kynetx::Events qw(compile_event_expr);
 
 
 use Kynetx::FakeReq qw/:all/;
@@ -85,7 +86,71 @@ $ev3->pageview("http://www.google.com/");
 my $ev4 = Kynetx::Events::Primitives->new();
 $ev4->pageview("http://www.yahoo.com/");
 
+my $evc0 = Kynetx::Events::Primitives->new();
+$evc0->click(".panelNavAdd.*");
+
+my $evc1 = Kynetx::Events::Primitives->new();
+$evc1->generic("web","news_search");
+
+my $evc2 = Kynetx::Events::Primitives->new();
+$evc2->generic("explicit","news_search");
+
 my $flush = 1;
+my $edast = {
+          'timeframe' => undef,
+          'args' => [
+            {
+              'domain' => 'explicit',
+              'type' => 'prim_event',
+              'vars' => undef,
+              'op' => 'news_search'
+            },
+            {
+              'domain' => 'web',
+              'filters' => [],
+              'type' => 'prim_event',
+              'vars' => undef,
+              'op' => 'news_search'
+            }
+          ],
+          'type' => 'complex_event',
+          'op' => 'or'
+        };
+        
+
+my $smEd0 = mk_dom_prim(".panelNavAdd.*", undef,undef,"click" );
+$logger->debug("Ed event: ", sub {Dumper($smEd0)});
+
+$initial = $smEd0->get_initial();
+
+$next = $smEd0->next_state($initial,$evc0,$rid,$session,$rule_name);
+
+$logger->debug("Ed final: ",$smEd0->is_final($next));
+cmp_deeply($smEd0->is_final($next),1, "Matching event, not final");
+$test_count++;
+
+my $edsm1 = Kynetx::Events::compile_event_expr($edast,{});
+
+$logger->debug("Ehting: ", sub{Dumper($edsm1)});
+
+
+
+# test for events in different domains but with same label
+$initial = $edsm1->get_initial();
+$next = $edsm1->next_state($initial,$evc1,$rid,$session,$rule_name);
+cmp_deeply($edsm1->is_final($next),1, "Matching eventfinal");
+$test_count++;
+
+$next = $edsm1->next_state($initial,$evc2,$rid,$session,$rule_name);
+cmp_deeply($edsm1->is_final($next),1, "Matching eventfinal");
+$test_count++;
+
+$next = $edsm1->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($edsm1->is_final($next),0, "No match");
+$test_count++;
+
+cmp_deeply($initial,$next, "Stays in initial state");
+$test_count++;
 
 
 # test the pageview prim SMs
