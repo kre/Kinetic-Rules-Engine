@@ -20,7 +20,7 @@
 #
 use lib qw(/web/lib/perl);
 use strict;
-#use warnings;
+use warnings;
 #use diagnostics;
 
 use Test::More;
@@ -36,6 +36,7 @@ use Cache::Memcached;
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
+no warnings 'uninitialized';
 Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
 
@@ -95,7 +96,215 @@ $evc1->generic("web","news_search");
 my $evc2 = Kynetx::Events::Primitives->new();
 $evc2->generic("explicit","news_search");
 
-my $flush = 1;
+###############
+#Log::Log4perl->easy_init($DEBUG);
+###############
+
+my $vals = [3, 7, 9, 12, 6];
+my @evagg = ();
+
+foreach my $val (@{$vals}) {
+	my $ev = Kynetx::Events::Primitives->new();
+	$ev->generic("car","moving");
+	my $req_info = Kynetx::Test::gen_req_info($rid,{'distance' => $val});
+	$ev->set_req_info($req_info);
+	push (@evagg,$ev);
+}
+my $filter = [
+                {
+                  'pattern' => '(\\d+)',
+                  'type' => 'distance'
+                }
+              ];
+my $sm0 =  mk_gen_prim('car','moving',undef,$filter);
+
+my $id = 'mx';
+
+my $agg = {
+	'agg_op' => 'sum',
+	'vars' => [
+		{
+		'type' => 'var',
+		'val' => $id
+		}
+	]
+};
+
+$logger->debug("simple event: ", sub{Dumper($sm0)} );
+
+$initial = $sm0->get_initial();
+
+$next = $sm0->next_state($initial,$evagg[0],$rid,$session,$rule_name);
+cmp_deeply($sm0->is_final($next),1, "Matching eventfinal");
+$test_count++;
+
+my $acount = mk_count($sm0,3,$agg);
+$logger->debug("agg event: ", sub{Dumper($acount)} );
+
+$initial = $acount->get_initial();
+
+$next = $acount->next_state($initial,$evagg[0],'stu', $session, $rule_name);
+
+$next = $acount->next_state($initial,$evagg[1],'stu', $session, $rule_name);
+
+$next = $acount->next_state($initial,$evagg[2],'stu', $session, $rule_name);
+
+cmp_deeply($acount->is_final($next),1, "Matching eventfinal");
+$test_count++;
+$logger->debug("agg val: ", sub{Dumper($evagg[2])} );
+cmp_deeply($evagg[2]->{'vals'}, {$acount->{'id'}=>[19]}, "Sum");
+$test_count++;
+
+@evagg = ();
+
+foreach my $val (@{$vals}) {
+	my $ev = Kynetx::Events::Primitives->new();
+	$ev->generic("car","moving");
+	my $req_info = Kynetx::Test::gen_req_info($rid,{'distance' => $val});
+	$ev->set_req_info($req_info);
+	push (@evagg,$ev);
+}
+
+$agg = {
+	'agg_op' => 'min',
+	'vars' => [
+		{
+		'type' => 'var',
+		'val' => $id
+		}
+	]
+};
+
+$acount = mk_count($sm0,3,$agg);
+$logger->debug("agg event: ", sub{Dumper($acount)} );
+
+$initial = $acount->get_initial();
+
+$next = $acount->next_state($initial,$evagg[0],'stu', $session, $rule_name);
+
+$next = $acount->next_state($initial,$evagg[1],'stu', $session, $rule_name);
+
+$next = $acount->next_state($initial,$evagg[2],'stu', $session, $rule_name);
+
+cmp_deeply($acount->is_final($next),1, "Matching eventfinal");
+$test_count++;
+$logger->debug("agg val: ", sub{Dumper($evagg[2])} );
+cmp_deeply($evagg[2]->{'vals'}, {$acount->{'id'}=>[3]}, "min");
+$test_count++;
+
+@evagg = ();
+
+foreach my $val (@{$vals}) {
+	my $ev = Kynetx::Events::Primitives->new();
+	$ev->generic("car","moving");
+	my $req_info = Kynetx::Test::gen_req_info($rid,{'distance' => $val});
+	$ev->set_req_info($req_info);
+	push (@evagg,$ev);
+}
+
+$agg = {
+	'agg_op' => 'max',
+	'vars' => [
+		{
+		'type' => 'var',
+		'val' => $id
+		}
+	]
+};
+
+$acount = mk_count($sm0,3,$agg);
+$logger->debug("agg event: ", sub{Dumper($acount)} );
+
+$initial = $acount->get_initial();
+
+$next = $acount->next_state($initial,$evagg[0],'stu', $session, $rule_name);
+
+$next = $acount->next_state($initial,$evagg[1],'stu', $session, $rule_name);
+
+$next = $acount->next_state($initial,$evagg[2],'stu', $session, $rule_name);
+
+cmp_deeply($acount->is_final($next),1, "Matching eventfinal");
+$test_count++;
+$logger->debug("agg val: ", sub{Dumper($evagg[2])} );
+cmp_deeply($evagg[2]->{'vals'}, {$acount->{'id'}=>[9]}, "max");
+$test_count++;
+
+
+@evagg = ();
+
+foreach my $val (@{$vals}) {
+	my $ev = Kynetx::Events::Primitives->new();
+	$ev->generic("car","moving");
+	my $req_info = Kynetx::Test::gen_req_info($rid,{'distance' => $val});
+	$ev->set_req_info($req_info);
+	push (@evagg,$ev);
+}
+
+$agg = {
+	'agg_op' => 'avg',
+	'vars' => [
+		{
+		'type' => 'var',
+		'val' => $id
+		}
+	]
+};
+
+$acount = mk_count($sm0,3,$agg);
+$logger->debug("agg event: ", sub{Dumper($acount)} );
+
+$initial = $acount->get_initial();
+
+$next = $acount->next_state($initial,$evagg[0],'stu', $session, $rule_name);
+
+$next = $acount->next_state($initial,$evagg[1],'stu', $session, $rule_name);
+
+$next = $acount->next_state($initial,$evagg[2],'stu', $session, $rule_name);
+
+cmp_deeply($acount->is_final($next),1, "Matching eventfinal");
+$test_count++;
+$logger->debug("agg val: ", sub{Dumper($evagg[2])} );
+cmp_deeply($evagg[2]->{'vals'}, {$acount->{'id'}=>[19/3]}, "avg");
+$test_count++;
+
+@evagg = ();
+
+foreach my $val (@{$vals}) {
+	my $ev = Kynetx::Events::Primitives->new();
+	$ev->generic("car","moving");
+	my $req_info = Kynetx::Test::gen_req_info($rid,{'distance' => $val});
+	$ev->set_req_info($req_info);
+	push (@evagg,$ev);
+}
+
+$agg = {
+	'agg_op' => 'push',
+	'vars' => [
+		{
+		'type' => 'var',
+		'val' => $id
+		}
+	]
+};
+
+$acount = mk_count($sm0,3,$agg);
+$logger->debug("agg event: ", sub{Dumper($acount)} );
+
+$initial = $acount->get_initial();
+
+$next = $acount->next_state($initial,$evagg[0],'stu', $session, $rule_name);
+
+$next = $acount->next_state($initial,$evagg[1],'stu', $session, $rule_name);
+
+$next = $acount->next_state($initial,$evagg[2],'stu', $session, $rule_name);
+
+cmp_deeply($acount->is_final($next),1, "Matching eventfinal");
+$test_count++;
+$logger->debug("agg val: ", sub{Dumper($evagg[2])} );
+cmp_deeply($evagg[2]->{'vals'}, {$acount->{'id'}=>[[3,7,9]]}, "push");
+$test_count++;
+
+my $flush = 0;
 my $edast = {
           'timeframe' => undef,
           'args' => [
@@ -130,9 +339,6 @@ cmp_deeply($smEd0->is_final($next),1, "Matching event, not final");
 $test_count++;
 
 my $edsm1 = Kynetx::Events::compile_event_expr($edast,{});
-
-$logger->debug("Ehting: ", sub{Dumper($edsm1)});
-
 
 
 # test for events in different domains but with same label
@@ -237,6 +443,7 @@ $temp = $next;
 $next = $thenmany->next_state($next,$ev2,$rid,$session,$rule_name);
 cmp_deeply($thenmany->is_final($next),0, "Matching event, not final");
 $test_count++;
+$logger->debug("Cap event: ", sub {Dumper($ev2)});
 
 isnt($next,$temp,"second match, transition");
 $test_count++;
@@ -550,12 +757,17 @@ cmp_deeply($any->is_final($next),1, "match event, is final");
 $test_count++;
 
 
-my $rpt = mk_repeat($sm1,3);
-my $copy = Kynetx::Events::State::clone($rpt);
+$skey = "repeat";
+my $rpt = Kynetx::Memcached::check_cache($skey);
+if (defined $rpt) {
+	$rpt = Kynetx::Events::State->unserialize($rpt);
+} else {
+	$rpt = mk_repeat($sm1,3);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($rpt);
+	Kynetx::Memcached::mset_cache($skey,$json,36000);
+}
+
 $logger->debug("SM repeat: ", sub {Dumper($rpt)});
-#$logger->debug("SM repeat clone: ", sub {Dumper($copy)});
-
-
 
 
 $initial = $rpt->get_initial();
@@ -575,11 +787,73 @@ cmp_deeply($rpt->is_final($next),0, "Second matching event, no transition");
 $test_count++;
 $logger->debug("Next state (2): $next f: ",$rpt->is_final($next));
 
+$temp = $next;
 
 $next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
 cmp_deeply($rpt->is_final($next),1, "Third matching event, is final");
 $test_count++;
 $logger->debug("Next state (3): $next f: ",$rpt->is_final($next));
+
+my $event_list_name = $rule_name . ':event_list';
+
+$rpt->reset_state($rid,$session,$rule_name,$event_list_name,$temp,$next);
+
+
+$next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($rpt->is_final($next),1, "Third matching event, is final");
+$test_count++;
+$logger->debug("Next state (3): $next f: ",$rpt->is_final($next));
+
+$next = $rpt->reset_state($rid,$session,$rule_name,$event_list_name,$temp,$next);
+
+$next = $rpt->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($rpt->is_final($next),0, "No match resets state");
+$test_count++;
+
+cmp_deeply($rpt->get_initial(),$next, "No match resets state to initial");
+$test_count++;
+
+$logger->debug("No match: $next f: ",$rpt->is_final($next));
+
+$next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($rpt->is_final($next),0, "new matching event, no transition");
+$test_count++;
+$logger->debug("New start: $next f: ",$rpt->is_final($next));
+
+
+$next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($rpt->is_final($next),0, "2nd matching event, no transition");
+$test_count++;
+$logger->debug("2nd: $next f: ",$rpt->is_final($next));
+
+$next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($rpt->is_final($next),1, "3nd matching event, is final");
+$test_count++;
+$logger->debug("3nd: $next f: ",$rpt->is_final($next));
+
+if ($rpt->is_final($next)) {
+	$next = $rpt->reset_state($rid,$session,$rule_name,$event_list_name,$temp,$next);	
+}
+
+$next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($rpt->is_final($next),1, "4th matching event, is final");
+$test_count++;
+
+if ($rpt->is_final($next)) {
+	$next = $rpt->reset_state($rid,$session,$rule_name,$event_list_name,$temp,$next);	
+}
+
+$next = $rpt->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($rpt->is_final($next),1, "5th matching event, is final");
+$test_count++;
+
+$logger->debug("3nd: $next f: ",$rpt->is_final($next));
+Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
+
+###############
+#goto ENDY;
+###############
+
 
 Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
 $next = Kynetx::Persistence::UserState::get_current_state($rid,$session,$rule_name);
@@ -917,10 +1191,6 @@ if (defined $sm_compound_repeat) {
 	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm_compound_repeat);
 	Kynetx::Memcached::mset_cache($skey,$json,36000);
 }
-# repeat 3 (a and b)
-#my $tmp = mk_and($sm1,$sm2);
-#my $sm_compound_repeat = mk_repeat($tmp,3);
-#$logger->debug("(a and b) state machine: ", sub {Dumper($tmp)});
 
 $logger->debug("Repeat 3 (a and b) state machine: ", sub {Dumper($sm_compound_repeat)});
 $initial = $sm_compound_repeat->get_initial();
@@ -957,11 +1227,6 @@ $logger->debug("Current: $next");
 $next = $sm_compound_repeat->next_state($next,$ev1,$rid,$session,$rule_name);
 cmp_deeply($sm_compound_repeat->is_final($next),1, "match b(1), no transition");
 $test_count++;
-
-
-############
-#goto ENDY;
-############
 
 
 

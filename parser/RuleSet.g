@@ -1023,13 +1023,17 @@ event_group returns[HashMap result]
 		
 	;
 
-aggregates returns[ArrayList result] 
+aggregates returns[HashMap result] 
 @init {
 	ArrayList aggvars = new ArrayList();
 }
 	:
-		AGGREGATORS LEFT_PAREN (v=(VAR){aggvars.add($v.text);} (COMMA v2=(VAR){aggvars.add($v2.text);} )*)?  RIGHT_PAREN {
-			$result = aggvars;
+	//:	          SETTING LEFT_PAREN (v=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN){sresult.add($v.text);} (COMMA v2=(VAR|LIKE|OTHER_OPERATORS|REPLACE|EXTRACT|MATCH|VAR_DOMAIN){sresult.add($v2.text);} )*)? RIGHT_PAREN {
+		aop = AGGREGATORS LEFT_PAREN (v=expr {aggvars.add($v.result);} (COMMA v2=expr {aggvars.add($v2.result);} )*)?  RIGHT_PAREN {
+			HashMap tmp = new HashMap();
+			tmp.put("agg_op",$aop.text);
+			tmp.put("vars",aggvars); 
+			$result = tmp;
 		}
 	;
 	

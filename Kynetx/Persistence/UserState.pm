@@ -58,6 +58,8 @@ qw(
 	delete_current_state
 	inc_group_counter
 	reset_group_counter
+	shift_group_counter
+	push_aggregator
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
 
@@ -166,16 +168,28 @@ sub inc_group_counter {
 	return $val;
 }
 
-sub reset_group_counter {
-	my ($rid,$session,$rulename,$state) = @_;
+sub push_aggregator {
+	my ($rid,$session,$rulename,$state,$vals) = @_;
+	my $logger = get_logger();
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $query = {
 		"rid" => $rid,
 		"ken" => $ken,
 		"rulename" => $rulename
 	};
+	my @val = ();
+	if (ref $vals eq "ARRAY") {
+		@val = @{$vals};
+	} else {
+		$logger->debug("Vals is: ", sub {Dumper($vals)});
+		push(@val, $vals);
+	}
+	my $a_object =  {
+		"timestamp"    => DateTime->now->epoch(),
+		'val' => @val
+	};
 	my $update = {
-		'$set' => {"$state" => 0}
+		'$push' => {"$state" => $a_object}
 	};
 	my $new = 'true';
 	my $upsert = 'true';
@@ -189,6 +203,58 @@ sub reset_group_counter {
 	};
 	my $val = Kynetx::MongoDB::find_and_modify(EVCOLLECTION,$fnmod);
 	return $val;
+	
+}
+
+sub reset_group_counter {
+	my ($rid,$session,$rulename,$state) = @_;
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $query = {
+		"rid" => $rid,
+		"ken" => $ken,
+		"rulename" => $rulename
+	};
+	my $update = {
+		'$set' => {"$state" => []}
+	};
+	my $new = 'true';
+	my $upsert = 'true';
+	my $fields = {"$state" => 1, '_id' => 0};
+	my $fnmod = {
+		'query' => $query,
+		'update' => $update,
+		'new' => $new,
+		'upsert' => $upsert,
+		'fields' => $fields
+	};
+	my $val = Kynetx::MongoDB::find_and_modify(EVCOLLECTION,$fnmod);
+	return $val;
+}
+
+sub shift_group_counter {
+	my ($rid,$session,$rulename,$state,$current,$null_state) = @_;
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $query = {
+		"rid" => $rid,
+		"ken" => $ken,
+		"rulename" => $rulename
+	};
+	my $update = {
+		'$pop' => {"$state" => -1},
+		'$set' => {"__repeat__.$current" => "$null_state"}
+	};
+	my $new = 'true';
+	my $upsert = 'true';
+	my $fields = {"$state" => 1, '_id' => 0};
+	my $fnmod = {
+		'query' => $query,
+		'update' => $update,
+		'new' => $new,
+		'upsert' => $upsert,
+		'fields' => $fields
+	};
+	my $val = Kynetx::MongoDB::find_and_modify(EVCOLLECTION,$fnmod);
+	return $val;	
 }
 
 1;

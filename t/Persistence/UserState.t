@@ -76,30 +76,24 @@ my $mystate = "foobarbean";
 my $result;
 $result = Kynetx::Persistence::UserState::reset_event_env($rid,$session);
 
-$result = Kynetx::Persistence::UserState::inc_group_counter($rid,$session,$rule_name,$mystate);
+$result = Kynetx::Persistence::UserState::push_aggregator($rid,$session,$rule_name,$mystate,1);
 
 $logger->debug("Inc'd: ", sub {Dumper($result)});
 
-cmp_deeply($result->{$mystate},1,'Increment a group state from empty env');
+cmp_deeply(scalar (@{$result->{$mystate}}),1,'Increment a group state from empty env');
 $test_count++;
 
 
-$result = Kynetx::Persistence::UserState::inc_group_counter($rid,$session,$rule_name,$mystate);
-$result = Kynetx::Persistence::UserState::inc_group_counter($rid,$session,$rule_name,$mystate);
-cmp_deeply($result->{$mystate},3,'Incremented 3 times');
+$result = Kynetx::Persistence::UserState::push_aggregator($rid,$session,$rule_name,$mystate,2);
+$result = Kynetx::Persistence::UserState::push_aggregator($rid,$session,$rule_name,$mystate,3);
+cmp_deeply(scalar (@{$result->{$mystate}}),3,'Incremented 3 times');
 $test_count++;
 
 
 $result = Kynetx::Persistence::UserState::reset_group_counter($rid,$session,$rule_name,$mystate);
-cmp_deeply($result->{$mystate},0,'State count reset');
+$logger->info("state: ", sub {Dumper($result)});
+cmp_deeply(scalar (@{$result->{$mystate}}),0,'State count reset');
 $test_count++;
-
-$result = Kynetx::Persistence::UserState::get_event_env($rid,$session,$rule_name);
-$logger->debug("Inc'd: ", sub {Dumper($result)});
-
-cmp_deeply($result->{$mystate},0,'State count reset');
-$test_count++;
-
 
 done_testing($test_count);
 

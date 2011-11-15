@@ -280,13 +280,13 @@ sub process_event_for_rid {
      foreach my $d (keys %{$ruleset->{'rule_lists'}}) {
        foreach my $t (keys %{$ruleset->{'rule_lists'}->{$d}}) {
 
-     	$logger->debug("$d:$t -> ");
-     	$logger->debug("\tFilters:", sub {Dumper $ruleset->{'rule_lists'}->{$d}->{$t}->{"filters"}});
+     	$logger->trace("$d:$t -> ");
+     	$logger->trace("\tFilters:", sub {Dumper $ruleset->{'rule_lists'}->{$d}->{$t}->{"filters"}});
 
      	my $i = 0;
      	foreach my $r (@{$ruleset->{'rule_lists'}->{$d}->{$t}->{"rulelist"}} ) {
 	  
-     	  $logger->debug("\t$r->{'name'}");
+     	  $logger->trace("\t$r->{'name'}");
      	}
        }
      }
@@ -361,10 +361,11 @@ sub process_event_for_rid {
             $schedule->annotate_task( $rid, $rulename,$task, 'vals', $val_list );
 
             # reset SM
-            delete_current_state($rid, $session, $rule->{'name'} );
-
-            # reset event list for this rule
-            delete_persistent_var("ent", $rid, $session, $event_list_name );
+            $sm->reset_state($rid, $session, $rule->{'name'},$event_list_name,$current_state,$next_state);
+#            delete_current_state($rid, $session, $rule->{'name'} );
+#
+#            # reset event list for this rule
+#            delete_persistent_var("ent", $rid, $session, $event_list_name );
 
         } else {
             $logger->trace("Next state not final");
@@ -423,6 +424,7 @@ sub compile_event_expr {
       unless $rule_lists->{$domain}->{$op};
     # put the rule in the array unless it's already there
     unless (grep {$_ eq $rule} @{$rule_lists->{$domain}->{$op}->{"rulelist"}}) {
+      no warnings 'uninitialized';
       $logger->debug("Putting $rule->{'name'} on the list");
       push(@{$rule_lists->{$domain}->{$op}->{"rulelist"}}, $rule) 
 	unless (defined $rule->{'state'} && $rule->{'state'} eq 'inactive');
@@ -532,12 +534,13 @@ sub compile_event_expr {
       }
   } elsif ($eexpr->{'type'} eq 'group_event') {
   	my $op_num = Kynetx::Expressions::den_to_exp($eexpr->{'op_num'});
+  	my $agg_vars = $eexpr->{'agg_var'};
   	if ($eexpr->{'op'} eq 'repeat') {
   		my $sm0 = compile_event_expr( $eexpr->{'args'}->[0], $rule_lists, $rule );  		
-  		$sm = mk_repeat($sm0,$op_num);
+  		$sm = mk_repeat($sm0,$op_num,$agg_vars);
   	} elsif ($eexpr->{'op'} eq 'count') {
   		my $sm0 = compile_event_expr( $eexpr->{'args'}->[0], $rule_lists, $rule );
-  		$sm = mk_count($sm0,$op_num);
+  		$sm = mk_count($sm0,$op_num,$agg_vars);
   	} elsif ($eexpr->{'op'} eq 'any') {
   		$logger->trace("Event Expression: ", sub {Dumper($eexpr->{'args'})});
   		if (ref $eexpr->{'args'} eq "ARRAY") {
@@ -548,7 +551,7 @@ sub compile_event_expr {
   				my $tsm = compile_event_expr( $sm_element, $rule_lists, $rule );
   				push(@event_array,$tsm);
   			}
-  			$sm = mk_any(\@event_array,$num);
+  			$sm = mk_any(\@event_array,$num,$agg_vars);
   		}
 	  	} else {
 	  		$logger->warn("Unknown event operation: ", $eexpr->{'op'});
