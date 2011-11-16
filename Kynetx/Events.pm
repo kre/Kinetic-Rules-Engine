@@ -205,8 +205,11 @@ sub process_event {
     my $schedule = Kynetx::Scheduler->new();
 
     foreach my $rid ( split( /;/, $rids ) ) {
+
+      my $rid_info = Kynetx::Events::mk_rid_info($req_info, $rid);
+
       eval {
-	process_event_for_rid( $ev, $req_info, $session, $schedule, $rid );
+	process_event_for_rid( $ev, $req_info, $session, $schedule, $rid_info );
       };
       if ($@) {
 	# this might lead to circular errors if raising an error causes an error
@@ -259,16 +262,18 @@ sub process_event_for_rid {
     my $req_info = shift;
     my $session  = shift;
     my $schedule = shift;
-    my $rid      = shift;
+    my $rid_info = shift;
 
     my $logger = get_logger();
+
+    my $rid = $rid_info->{'rid'};
 
    #  $logger->debug("Req info: ", sub {Dumper $req_info} );
 
     $logger->debug("Processing events for $rid");
     Log::Log4perl::MDC->put( 'site', $rid );
 
-  my $ruleset = Kynetx::Rules::get_rule_set($req_info, 1, $rid); # 1 for localparsing
+    my $ruleset = Kynetx::Rules::get_rule_set($req_info, 1, $rid); # 1 for localparsing
 
     my $type = $ev->get_type();
     my $domain = $ev->get_domain();
@@ -292,7 +297,7 @@ sub process_event_for_rid {
      }
 
     $logger->debug("Selection checking for ", scalar @{ $ruleset->{'rule_lists'}->{$domain}->{$type}->{'rulelist'} }, " rules") if $ruleset->{'rule_lists'}->{$domain}->{$type};
-	$logger->trace("Schedule: ", sub {Dumper($schedule)});
+    $logger->trace("Schedule: ", sub {Dumper($schedule)});
     foreach my $rule ( @{ $ruleset->{'rule_lists'}->{$domain}->{$type}->{'rulelist'} } ) {
 
       $logger->debug("Processing rule $rule->{'name'}");
@@ -382,7 +387,7 @@ sub mk_event {
     my ($req_info) = @_;
 
     my $logger = get_logger();
-	$logger->debug("Make event for eventtype: ",$req_info->{'eventtype'} );
+	$logger->debug("Make event for ",$req_info->{'domain'},"/",$req_info->{'eventtype'} );
 	$logger->trace("Request info is: ", sub {Dumper($req_info)});
     my $ev = Kynetx::Events::Primitives->new();
     $ev->set_req_info($req_info);
@@ -586,5 +591,19 @@ sub add_filter {
     }
   }
 }
+
+sub mk_rid_info {
+  my($req_info,$rid) = @_;
+
+  my $version = $req_info->{"$rid:kynetx_app_version"} || 
+    $req_info->{"$rid:kinetic_app_version"} || 
+      'prod';
+
+
+  return {'rid' => $rid,
+	  'kinetic_app_version' => $version};
+}
+		   
+
 
 1;

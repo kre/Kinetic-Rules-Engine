@@ -25,6 +25,7 @@ use warnings;
 use Log::Log4perl qw(get_logger :levels);
 
 use JSON::XS;
+use Test::Deep::NoTest qw(cmp_set eq_deeply set);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -81,67 +82,150 @@ sub simple_dispatch {
 sub extended_dispatch {
     my($req_info, $rids) = @_;
 
-    my $logger = get_logger();
-    $logger->debug("Returning dispatch sites for $rids");
+    my $r = calculate_dispatch($req_info, $rids);
 
-    my $r = {};
-
-    my @rids = split(/;/,$rids);
-    
-
-    
-    foreach my $rid (@rids) {
-	$req_info->{'rid'} = $rid;
-
-	my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
-
-	$r->{$rid} = {};
-
-	if( defined $ruleset && $ruleset->{'dispatch'} ) {
-	    $logger->debug("Processing dispatch block for $rid");
-#	    $logger->debug(sub() {Dumper($ruleset->{'dispatch'})});
-	    foreach my $d (@{ $ruleset->{'dispatch'} }) {
-#	      $logger->debug("Seeing ", sub{Dumper $d});
-	      if (defined $d->{'domain'}) {
-		push(@{ $r->{$rid}->{'domains'} }, $d->{'domain'});
-	      } elsif (defined $d->{'iframe'}) {
-		push(@{ $r->{$rid}->{'iframes'} }, $d->{'iframe'});
-	      } 
-	    }
-	}   
-
-# 	foreach my $rule (@{ $ruleset->{'rules'} }) {
-# 	  my $events =  flatten_event_expr($rule->{'pagetype'}->{'event_expr'}) ;
-# 	  $logger->debug("Events: for $rule->{'name'} ", sub {Dumper $events});
-
-# 	  $events = [] unless $events; # for old rules that haven't been recompiled.
-# 	  foreach my $e (@{$events}) {
-# 	    my $domain = get_domain($e);
-# 	    my $dispatch_info = get_dispatch_info($e);
-
-# #	    $logger->debug("Domain: $domain, DI: ", sub {Dumper $dispatch_info});
-# 	    push(@{ $r->{$domain}->{$rid} }, $dispatch_info);
-# 	    $logger->debug("R: ", sub {Dumper $r});
-# 	  }
-# 	}
-
-	foreach my $d ( keys %{$ruleset->{'rule_lists'} }) {
-	  foreach my $t ( keys %{$ruleset->{'rule_lists'}->{$d} } ) {
-	    if (defined $ruleset->{'rule_lists'}->{$d}->{$t}->{'filters'}) {
-	    $r->{$rid}->{'events'}->{$d}->{$t} = 
-	      $ruleset->{'rule_lists'}->{$d}->{$t}->{'filters'};
-	    }
-#	    $logger->debug("Seeing ($d, $t): ", sub {Dumper $ruleset->{'rule_lists'}->{$d}->{$t}->{'filters'}});
-	  }
-	}
-
-
-    }
-
+    delete $r->{'event_rids'}; # doesn't belong in the dispatch API return result
     $r = encode_json($r);
 #    $logger->debug($r);
 
     return $r;
+
+}
+
+sub calculate_rid_list {
+  my($req_info) = @_;
+
+  my $rids = $req_info->{'rids'};
+
+  my $logger = get_logger();
+  $logger->debug("Returning ruleset list for ", $req_info->{'domain'},"/",$req_info->{'eventtype'});
+
+  my $r = {};
+#  $r->{'event_rids'} = {};
+
+  # we use same credentials as the rule repository
+  my $repo_info = Kynetx::Configure::get_config('RULE_REPOSITORY');
+  my ($base_url,$username,$passwd) = split(/\|/, $repo_info);
+
+    
+  # get accout info
+  my $app_url = Kynetx::Configure::get_config('USER_RIDS_URL');
+  my $acct_url = $app_url."/".$req_info->{'id_token'};
+  my $req = HTTP::Request->new(GET => $acct_url);
+  $req->authorization_basic($username, $passwd);
+  my $ua = LWP::UserAgent->new;
+  my $rid_list = decode_json($ua->request($req)->{'_content'})->{'rids'};
+
+
+  foreach my $rid_info (@{$rid_list}) {
+
+    my $rid = $rid_info->{'rid'};
+
+    $req_info->{'rid'} = $rid;
+
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info, $rid_info->{'kinetic_app_version'});
+
+    $r->{$rid} = process_dispatch_list($rid, $ruleset);
+
+    foreach my $d ( @{$r->{$rid}->{'domains'} }) {
+      $r->{$rid}->{'domain'}->{$d} = 1;
+    }
+
+
+    foreach my $d ( keys %{$ruleset->{'rule_lists'} }) {
+      foreach my $t ( keys %{$ruleset->{'rule_lists'}->{$d} } ) {
+	push(@{$r->{$d}->{$t}}, $rid_info);
+      }
+    }
+  }
+  return $r;
+}
+    
+
+sub calculate_dispatch {
+
+  my($req_info) = @_;
+
+  my $rids = $req_info->{'rids'};
+
+  my $logger = get_logger();
+  $logger->debug("Returning dispatch sites for $rids");
+
+  my $r = {};
+  $r->{'event_rids'} = {};
+  $r->{'events'} = {};
+
+#  my @rids = split(/;/,$rids);
+    
+  foreach my $rid_info (@{$rids}) {
+
+    my $rid = $rid_info->{'rid'};
+
+    $req_info->{'rid'} = $rid;
+
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info, $rid_info->{'kinetic_app_version'});
+
+    $r->{$rid} = process_dispatch_list($rid, $ruleset);
+
+
+    foreach my $d ( keys %{$ruleset->{'rule_lists'} }) {
+      foreach my $t ( keys %{$ruleset->{'rule_lists'}->{$d} } ) {
+	push(@{$r->{'event_rids'}->{$d}->{$t}}, $rid);
+	if (defined $ruleset->{'rule_lists'}->{$d}->{$t}->{'filters'}) {
+	  $r->{$rid}->{'events'}->{$d}->{$t} = 
+	    $ruleset->{'rule_lists'}->{$d}->{$t}->{'filters'};
+	  # we only want the patterns if they aren't there already
+	  foreach my $p ( @{ $ruleset->{'rule_lists'}->{$d}->{$t}->{'filters'} } ) {
+	    if (!defined $r->{'events'}->{$d}->{$t}) {
+	      #		    $logger->debug("Adding ($d, $t) ", Dumper $p);
+	      $r->{'events'}->{$d}->{$t} = [$p];
+	    } else {
+	      if (!deep_member($p, $r->{'events'}->{$d}->{$t})) {
+		#		      $logger->debug("Was ($d, $t)", Dumper $r->{'events'}->{$d}->{$t});
+		push(@{$r->{'events'}->{$d}->{$t}},
+		     $p
+		    );	
+		#		      $logger->debug("Now ($d, $t)", Dumper $r->{'events'}->{$d}->{$t});
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }
+  return $r;
+}
+
+sub deep_member {
+  my($element, $array) = @_;
+  my $result = 0;
+  foreach my $e ( @{$array} ) {
+    if (eq_deeply($element, $e)) {
+      $result = 1;
+    }
+  }
+  return $result;
+}
+
+sub process_dispatch_list {
+  my($rid,$ruleset) = @_;
+  my $logger = get_logger();
+  $logger->debug("Processing dispatch informaion for $rid");
+
+  my $r = {};
+  if( defined $ruleset && $ruleset->{'dispatch'} ) {
+    $logger->debug("Processing dispatch block for $rid");
+    #	    $logger->debug(sub() {Dumper($ruleset->{'dispatch'})});
+    foreach my $d (@{ $ruleset->{'dispatch'} }) {
+      #	      $logger->debug("Seeing ", sub{Dumper $d});
+      if (defined $d->{'domain'}) {
+	push(@{ $r->{'domains'} }, $d->{'domain'});
+      } elsif (defined $d->{'iframe'}) {
+	push(@{ $r->{'iframes'} }, $d->{'iframe'});
+      } 
+    }
+  }   
+  return $r;
 
 }
 

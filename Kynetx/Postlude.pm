@@ -425,8 +425,11 @@ sub eval_raise_statement {
         $logger->trace("Event is: ", sub {Dumper($ev)});
 
         # this side-effects the schedule
+
+	my $rid_info = Kynetx::Events::mk_rid_info($req_info, $rid);
+
         Kynetx::Events::process_event_for_rid( $ev, $this_req_info, $session,
-                                               $schedule, $rid, );
+                                               $schedule, $rid_info );
     }
 
     return $js;

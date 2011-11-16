@@ -43,35 +43,51 @@ set_capabilities
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 sub build_request_env {
-    my ($r, $method, $rids, $eventtype) = @_;
+    my ($r, $method, $rids, $eventtype, $id_token) = @_;
 
     my $logger = get_logger();
 
     # grab request params
     my $req = Apache2::Request->new($r);
 
+    my $domain = $req->param('_domain') || $method || 'web';
+    $eventtype = $req->param('_name') || $eventtype || 'pageview';
+
+    # we rely on this being undef if nothing passed in
+    $rids = $req->param('_rids') || $rids;
+
+    # endpoint identifier
+    my $epi = $req->param('_epi') || 'any';
+    # endpoint location
+    my $epl = $req->param('_epl') || 'none';
+
+
     # build initial envv
     my $ug = new Data::UUID;
 
-    my $caller = $req->param('caller') || $r->headers_in->{'Referer'} ||  '';
+    my $caller = $req->param('url') || $req->param('caller') || $r->headers_in->{'Referer'} ||  '';
+
+
     my $cookie = $r->headers_in->{'Cookie'};
     $cookie =~ s/^.*[;]?SESSION_ID=(\w*)[;]?.*$/$1/ if(defined $cookie);
+
 
     my $request_info = {
 
 	host => $r->connection->get_remote_host || $req->param('host') || '',
 	caller => $caller,  # historical
 	page => $caller,
+	url => $caller,
 	now => time,
-        rids => $rids,
-	site => $rids, #historical
-	# this will get overridden with a single RID later
-	rid => $rids,
-
-	method => $method,
+	method => $domain,
 	# this is also determines the endpint capability type
-	domain => $method,
+	domain => $domain,
 	eventtype => $eventtype,
+
+	id_token => $id_token,
+
+	epl => $epl,
+	epi => $epi,
 
 	hostname => $r->hostname(),
 	ip => $r->connection->remote_ip() || '0.0.0.0',
@@ -94,12 +110,33 @@ sub build_request_env {
 
     my @param_names = $req->param;
     foreach my $n (@param_names) {
-		my $enc = Kynetx::Util::str_in($req->param($n));
-		my $kenc = Kynetx::Util::str_in($n);
-		$logger->debug("Param $n -> ", $req->param($n), " ", $enc);
-		$request_info->{$n} = $enc;
+      my $enc = Kynetx::Util::str_in($req->param($n));
+      my $kenc = Kynetx::Util::str_in($n);
+      $logger->debug("Param $n -> ", $req->param($n), " ", $enc);
+      $request_info->{$n} = $enc;
     }
+
     $request_info->{'param_names'} = \@param_names;
+
+    # handle explicit $rids
+    if (defined $rids)  {
+      my $rid_array = [];
+      foreach my $rid (split(/;/,$rids)) {
+
+	my $rid_info = Kynetx::Events::mk_rid_info($request_info, $rid);
+
+	push(@{ $rid_array }, $rid_info);
+      }
+      $rids = $rid_array;
+    }
+
+    $request_info->{'rids'} = $rids;
+    $request_info->{'site'} = $rids; #historical
+    # this will get overridden with a single RID later
+    $request_info->{'rid'} = undef;
+
+
+
 
     set_capabilities($request_info);
 
@@ -123,7 +160,14 @@ sub log_request_env {
     if($logger->is_debug()) {
 	foreach my $entry (keys %{ $request_info }) {
 	    my $value = $request_info->{$entry};
-	    if (ref $value eq 'ARRAY') {
+	    if ($entry eq 'rids' ||
+		$entry eq 'site' ||
+		$entry eq 'rid'
+	       ) {
+	      if (ref $value eq 'ARRAY') {
+		$value = rid_list_as_string($value);
+	      } 
+	    } elsif (ref $value eq 'ARRAY') {
 	        my @tmp = map {substr($_,0,50)} @$value;
 	        $value = '[' . join(',',@tmp) . ']';
 	    } else {
@@ -144,6 +188,20 @@ sub log_request_env {
     }
 
 
+}
+
+sub rid_list_as_string {
+  my($rid_list) = @_;
+  my $tmp = [];
+  my $result = $rid_list;
+  if (ref $rid_list eq 'ARRAY') {
+    foreach my $rid_info ( @{ $rid_list } ) {
+      push(@{ $tmp }, $rid_info->{'rid'}.':'.$rid_info->{'kinetic_app_version'});
+    }
+    $result = '[' . join(', ',@{ $tmp }) . ']';
+  }
+  # if it's not an array, assume it's a string and just return it.
+  return $result;
 }
 
 

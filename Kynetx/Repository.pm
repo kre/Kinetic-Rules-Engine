@@ -51,7 +51,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 # $text requests the krl not the ast
 sub get_rules_from_repository{
 
-    my ($rid, $req_info, $localparsing, $text,$sversion) = @_;
+    my ($rid, $req_info, $sversion, $localparsing, $text) = @_;
 
     my $logger = get_logger();
 

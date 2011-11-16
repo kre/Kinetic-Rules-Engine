@@ -151,7 +151,7 @@ sub parse_performance {
     my $logger = get_logger();
     my $runs = 1;
     my $start = new Benchmark;
-    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info,1,1);
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info,undef,1,1);
     if ($ruleset) {
         my $r_repos = new Benchmark;
         my $repo_diff = timediff($r_repos,$start);

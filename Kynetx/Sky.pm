@@ -1,0 +1,270 @@
+package Kynetx::Sky;
+# file: Kynetx/Sky.pm
+#
+# This file is part of the Kinetic Rules Engine (KRE)
+# Copyright (C) 2007-2011 Kynetx, Inc. 
+#
+# KRE is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of
+# the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+# PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public
+# License along with this program; if not, write to the Free
+# Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+# MA 02111-1307 USA
+#
+
+use strict;
+use warnings;
+
+use Log::Log4perl qw(get_logger :levels);
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
+use JSON::XS;
+
+use Kynetx::Version;
+use Kynetx::Events;
+use Kynetx::Session;
+use Kynetx::Memcached;
+use Kynetx::Dispatch;
+
+
+use Exporter;
+use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+
+our $VERSION     = 1.00;
+our @ISA         = qw(Exporter);
+
+# put exported names inside the "qw"
+our %EXPORT_TAGS = (all => [ 
+qw(
+) ]);
+our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
+
+
+
+sub handler {
+    my $r = shift;
+
+    # configure logging for production, development, etc.
+    Kynetx::Util::config_logging($r);
+
+    my $logger = get_logger();
+
+    $r->content_type('text/javascript');
+
+    $logger->debug(
+"\n\n------------------------------ begin EVENT evaluation with SKY API---------------------"
+    );
+    $logger->debug("Initializing memcached");
+    Kynetx::Memcached->init();
+
+    my ( $domain, $eventtype, $eid, $rids, $id_token );
+
+    $r->subprocess_env(START_TIME => Time::HiRes::time);
+
+    # path looks like: /sky/event/<id_token>/<eid>?_domain=...&_name=...&...
+
+    my @path_components = split(/\//,$r->path_info);
+    
+    # 0 = "sky"
+    # 1 = "event"
+    $id_token = $path_components[2];
+    $eid = $path_components[3] || '';
+
+    # optional...usually passed in as parameters
+    $domain = $path_components[4];  
+    $eventtype = $path_components[5];
+
+    # just show the version and exit if that's what's called for
+    if ( $id_token eq 'version' ) {
+      $logger->debug("returning version info for Sky event API");
+      Kynetx::Version::show_build_num($r);
+      exit();
+    }
+
+    if(Kynetx::Configure::get_config('RUN_MODE') eq 'development') {
+      # WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
+      my $test_ip = Kynetx::Configure::get_config('TEST_IP');
+      $r->connection->remote_ip($test_ip);
+      $logger->debug("In development mode using IP address ", $r->connection->remote_ip());
+    }
+
+
+    # build the request data structure. No RIDs yet. (undef)
+    my $req_info =
+      Kynetx::Request::build_request_env($r, $domain, $rids, $eventtype, $id_token);
+
+
+    # use the calculated values...
+    $domain = $req_info->{'domain'};
+    $eventtype = $req_info->{'eventtype'};
+
+    # store these for later logging
+    $r->subprocess_env( DOMAIN    => $domain );
+    $r->subprocess_env( EVENTTYPE => $eventtype );
+    Log::Log4perl::MDC->put( 'site', "[no rid]" );
+    Log::Log4perl::MDC->put( 'rule', '[global]' );    # no rule for now...
+
+
+    # error checking for event domains and types
+    # we need to set the RID to a global rid???
+    unless ($domain =~ m/[A-Za-z+_]+/) {
+	Kynetx::Errors::raise_error($req_info,
+				    'error',
+				    "malformed event domain $domain; must match [A-Za-z+_]+", 
+				    {'genus' => 'system',
+				     'species' => 'malformed event'
+				    }
+				   );
+      }
+
+    unless ($eventtype =~ m/[A-Za-z+_]+/) {
+	Kynetx::Errors::raise_error($req_info,
+				    'error',
+				    "malformed event type $eventtype; must match [A-Za-z+_]+", 
+				    {'genus' => 'system',
+				     'species' => 'malformed event'
+				    }
+				   );
+      }
+
+
+    # get a session, if _sid param is defined it will override cookie
+    $logger->debug("KBX cookie? ",$req_info->{'kntx_token'});
+    my $session = Kynetx::Session::process_session($r, $req_info->{'kntx_token'});
+
+    my($rid_list, $unfiltered_rid_list, $domain_test);
+
+    # if rids were given in request, just use them. Otherwise, calculate them
+    if (defined $req_info->{'_rids'}) {
+      $rid_list = $req_info->{'rids'};
+      
+      # this likely takes too long...or maybe not...
+
+      foreach my $rid_info (@{$rid_list}) {
+
+	my $rid = $rid_info->{'rid'};
+	my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info, $rid_info->{'kinetic_app_version'});
+
+	my $dispatch_list = Kynetx::Dispatch::process_dispatch_list($rid, $ruleset);
+
+	foreach my $d ( @{$dispatch_list->{'domains'} }) {
+	  $domain_test->{$rid}->{'domain'}->{$d} = 1;
+	}
+      }
+
+
+    } else {
+
+      # get RIDS. They're stored by id_token since that's what we have
+      my $memd =  Kynetx::Memcached::get_memd();
+      $unfiltered_rid_list = $memd->get($id_token);
+
+      if (! defined $unfiltered_rid_list) {
+	$unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info);
+
+	# cache this here...
+
+
+      }
+
+      # this can be a big list...
+      # $logger->error("Rids for $id_token: ", sub {Dumper ($unfiltered_rid_list)});
+
+      # filter $unfiltered_rid_list for saliant rulesets
+      $rid_list = $unfiltered_rid_list->{$domain}->{$eventtype} || [];
+      
+      $domain_test = $unfiltered_rid_list;
+
+      $req_info->{'rids'} = $rid_list;
+       
+    }
+
+    $logger->error("Rids for $domain/$eventtype: ", sub {Dumper ($rid_list)});
+
+    Kynetx::Request::log_request_env( $logger, $req_info );
+
+    my $ev = Kynetx::Events::mk_event($req_info);
+
+    my $schedule = Kynetx::Scheduler->new();
+
+
+    $logger->debug("processing event $domain/$eventtype");
+
+    my $hostname;
+    if ($domain eq 'web') {
+      my $parsed_url = APR::URI->parse($req_info->{'pool'}, $req_info->{'url'});
+      $hostname = $parsed_url->hostname;
+    }
+
+    foreach my $rid_info ( @{ $rid_list }) {
+
+      # check dispatch if domain is web
+      my $rid = $rid_info->{'rid'};
+      if ($domain eq 'web'&&
+	  ! $domain_test->{$rid}->{'domain'}->{$hostname}
+	 ) {
+	$logger->debug("Skipping $rid due to domain mismatch");
+	next;
+      }
+
+      eval {
+	Kynetx::Events::process_event_for_rid( $ev, $req_info, $session, $schedule, $rid_info );
+      };
+      if ($@) {
+	# this might lead to circular errors if raising an error causes an error
+	# Kynetx::Errors::raise_error($req_info,
+	# 			    'error',
+	# 			    "Process event failed for rid ($rid): $@", 
+	# 			    {'genus' => 'system',
+	# 			     'species' => 'unknown'
+	# 			    }
+	# 			   );
+	$logger->error("Process event failed for rid ($rid): $@");
+	# special handling follows
+	if ($@ =~ m/mongodb/i) {
+	  Kynetx::MongoDB::init();
+	  $logger->error("Caught MongoDB error, reset connection");
+	}
+
+      }
+        
+    }
+
+    $logger->debug("Schedule complete");
+
+    my $js = '';
+    $js .= eval {
+      Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid,$req_info );
+    };
+    if ($@) {
+      # Kynetx::Errors::raise_error($req_info,
+      # 				  'error',
+      # 				  "Process event schedule failed: $@",
+      # 				    {'genus' => 'system',
+      # 				     'species' => 'unknnown'
+      # 				    }
+      # 				 );
+      $logger->error("Process event schedule failed: $@");
+      # special handling follows
+      if ($@ =~ m/mongodb/i) {
+	Kynetx::MongoDB::init();
+	$logger->error("Caught MongoDB error, reset connection");
+      }
+    }
+
+    Kynetx::Response::respond( $r, $req_info, $session, $js, "Event" );
+
+    return Apache2::Const::OK;
+}
+
+
+1;

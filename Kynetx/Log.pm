@@ -51,10 +51,10 @@ sub log_rule_fire {
 
     my $logger = get_logger();
 
-    $logger->debug("[logging] Storing logging data for " . $request_info->{'rids'} );
+    $logger->debug("[logging] Storing logging data");
 
 
-    $r->subprocess_env(SITE => $request_info->{'rids'});
+    $r->subprocess_env(SITE => Kynetx::Request::rid_list_as_string($request_info->{'rids'}));
 
     $r->subprocess_env(RULE_NAMES =>
 		       join(',', @{ $request_info->{'names'} } )

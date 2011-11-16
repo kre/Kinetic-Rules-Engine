@@ -37,6 +37,7 @@ use Kynetx::JavaScript qw/:all/;
 use Kynetx::Repository;
 use Kynetx::Memcached;
 use Kynetx::FakeReq;
+use Kynetx::Errors;
 
 
 # most Kyentx modules require this
@@ -69,6 +70,11 @@ my $my_req_info = Kynetx::Test::gen_req_info($rid);
 Kynetx::Configure::configure();
 
 
+$my_req_info->{'rids'} = [{'rid' => 'cs_test',
+			   'kinetic_app_version' => 'prod'},
+			  {'rid' => 'cs_test_authz',
+			   'kinetic_app_version' => 'prod'}];
+
 my $test_count = 0;
 
 
@@ -78,31 +84,197 @@ is_string_nows(
     "Testing dispatch function with two RIDs");
 $test_count++;
 
-my $json = decode_json(Kynetx::Dispatch::extended_dispatch($my_req_info,"cs_test"));
+my $json = decode_json(Kynetx::Dispatch::extended_dispatch($my_req_info));
 
 #diag Dumper $json;
 
 is_deeply(
-    $json, 
-    {"cs_test" => {
-       "domains" => ["www.google.com","www.yahoo.com","www.live.com"],
-       "events" => {
- 	   "web" => {
-             "pageview" => [{"pattern" => "/([^/]+)/bar.html","type" => "url"},
-			    {"pattern" => "/foo/bazz.html","type" => "url"},
-			    {"pattern" => "/foo/bazz.html","type" => "url"},
-			    {"pattern" => "/fizzer/fuzzer.html","type" => "default"}
-                           ]
-		    },
-	   "system" => {
-	     "error" => [{"pattern" => ".*", "type" => ".*"}
-                        ]
-		       }
-		   },
-		  }
-    },
-    "extended dispatch"
+    $json, decode_json <<_EOF_
+{
+   "events":{
+      "web":{
+         "pageview":[
+            {
+               "pattern":"/([^/]+)/bar.html",
+               "type":"url"
+            },
+            {
+               "pattern":"/foo/bazz.html",
+               "type":"url"
+            },
+            {
+               "pattern":"/fizzer/fuzzer.html",
+               "type":"default"
+            },
+            {
+               "pattern":"/foo/bar.html",
+               "type":"url"
+            }
+         ]
+      }, 
+      "system":{
+         "error":[
+            {
+               "pattern":".*",
+               "type":".*"
+            }
+         ]
+      }
+   },
+   "cs_test_authz":{
+      "events":{
+         "web":{
+            "pageview":[
+               {
+                  "pattern":"/foo/bar.html",
+                  "type":"url"
+               }
+            ]
+         }
+      }
+   },
+   "cs_test":{
+      "domains":[
+         "www.google.com",
+         "www.yahoo.com",
+         "www.live.com"
+      ],
+      "events":{
+         "web":{
+            "pageview":[
+               {
+                  "pattern":"/([^/]+)/bar.html",
+                  "type":"url"
+               },
+               {
+                  "pattern":"/foo/bazz.html",
+                  "type":"url"
+               },
+               {
+                  "pattern":"/foo/bazz.html",
+                  "type":"url"
+               },
+               {
+                  "pattern":"/fizzer/fuzzer.html",
+                  "type":"default"
+               }
+            ]
+         },
+         "system":{
+            "error":[
+               {
+                  "pattern":".*",
+                  "type":".*"
+               }
+            ]
+         }
+      }
+   }
+}
+_EOF_
 );
+
+$test_count++;
+
+my $result = Kynetx::Dispatch::calculate_dispatch($my_req_info);
+
+is_deeply($result,
+{
+   "cs_test_authz"=>{
+      "events"=>{
+         "web"=>{
+            "pageview"=>[
+               {
+                  "pattern"=>"/foo/bar.html",
+                  "type"=>"url"
+               }
+            ]
+         }
+      }
+   },
+   "event_rids"=>{
+      "web"=>{
+         "pageview"=>[
+            "cs_test",
+            "cs_test_authz"
+         ]
+      },
+      "system"=>{
+         "error"=>[
+            "cs_test"
+         ]
+      }
+   },
+   "events"=>{
+      "web"=>{
+         "pageview"=>[
+            {
+               "pattern"=>"/([^/]+)/bar.html",
+               "type"=>"url"
+            },
+            {
+               "pattern"=>"/foo/bazz.html",
+               "type"=>"url"
+            },
+            {
+               "pattern"=>"/fizzer/fuzzer.html",
+               "type"=>"default"
+            },
+            {
+               "pattern"=>"/foo/bar.html",
+               "type"=>"url"
+            }
+         ]
+      },
+      "system"=>{
+         "error"=>[
+            {
+               "pattern"=>".*",
+               "type"=>".*"
+            }
+         ]
+      }
+   },
+   "cs_test"=>{
+      "domains"=>[
+         "www.google.com",
+         "www.yahoo.com",
+         "www.live.com"
+      ],
+      "events"=>{
+         "web"=>{
+            "pageview"=>[
+               {
+                  "pattern"=>"/([^/]+)/bar.html",
+                  "type"=>"url"
+               },
+               {
+                  "pattern"=>"/foo/bazz.html",
+                  "type"=>"url"
+               },
+               {
+                  "pattern"=>"/foo/bazz.html",
+                  "type"=>"url"
+               },
+               {
+                  "pattern"=>"/fizzer/fuzzer.html",
+                  "type"=>"default"
+               }
+            ]
+         },
+         "system"=>{
+            "error"=>[
+               {
+                  "pattern"=>".*",
+                  "type"=>".*"
+               }
+            ]
+         }
+      }
+   }
+} 
+);
+
 $test_count++;
 
 

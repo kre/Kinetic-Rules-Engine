@@ -873,8 +873,7 @@ sub get_rule_set {
 	}
 	else {
 		$ruleset =
-		  Kynetx::Repository::get_rules_from_repository( $rid, $req_info,
-			$localparsing,0,$ver );
+		  Kynetx::Repository::get_rules_from_repository( $rid, $req_info,$ver,$localparsing,0);
 
 		# do not store ruleset in the request info here
 		# or it ends up in the session for the user

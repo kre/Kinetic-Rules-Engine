@@ -70,10 +70,6 @@ sub raise_error {
     $logger->error("Error threshold exceeded");
     return;
   }
-
-  
-
-
   
   $errormsg ||= "An unspecified error occured";
   $level ||= "debug";
