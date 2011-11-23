@@ -40,6 +40,8 @@ use Kynetx::Test qw/:all/;
 use Kynetx::Repository qw/:all/;
 use Kynetx::JavaScript qw/:all/;
 use Kynetx::Memcached qw/:all/;
+use Kynetx::Rids qw/:all/;
+
 
 
 
@@ -73,12 +75,13 @@ SKIP: {
     # this number must reflect the number of test in this SKIP block
     my $how_many = 1;
 
-    my $site = 'cs_test'; # the test site.  
+    my $rid_info = mk_rid_info($req_info, 'cs_test'); # the test rid_info.  
+    $req_info->{'rid'} = $rid_info;
 
     my $rules ;
     eval {
 
-      $rules = Kynetx::Repository::get_rules_from_repository($site, $req_info);
+      $rules = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
 	
     };
     skip "Can't get repository connection", $how_many if $@;
@@ -96,18 +99,18 @@ SKIP: {
 
     my ($rules0, $rules1);
 
-    my $site = 'cs_test'; # the test site.  
+    my $rid_info = mk_rid_info($req_info, 'cs_test'); # the test rid_info.  
+    $req_info->{'rid'} = $rid_info;
 
     $logger->debug("Testing that rules are identical");
-    $rules0 = Kynetx::Repository::get_rules_from_repository($site, $req_info);
+    $rules0 = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
 
-    $site = 'cs_test'; # the test site.  
     eval {
 
-	$rules1 = Kynetx::Rules::get_rules_from_repository($site, $req_info);
+	$rules1 = Kynetx::Rules::get_rules_from_repository($rid_info, $req_info);
 	
     };
-    skip "Can't get rules for $site", $how_many if $@;
+    skip "Can't get rules for ", get_rid($rid_info), " ", $how_many if $@;
 
     is_deeply($rules0->{'rules'}, $rules1->{'rules'});
 

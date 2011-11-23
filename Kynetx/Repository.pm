@@ -37,6 +37,7 @@ use Kynetx::Memcached qw(:all);
 use Kynetx::Json qw(:all);
 use Kynetx::Predicates::Page;
 use Kynetx::Rules;
+use Kynetx::Rids qw(:all);
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -51,16 +52,19 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 # $text requests the krl not the ast
 sub get_rules_from_repository{
 
-    my ($rid, $req_info, $sversion, $localparsing, $text) = @_;
+    my ($rid_info, $req_info, $sversion, $localparsing, $text) = @_;
 
     my $logger = get_logger();
 
+    my $rid = get_rid($rid_info);
 
     # default to production for svn repo
     # defaults to production when no version specified
+    # use specified version first
     my $version = $sversion || 
-                  Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kynetx_app_version']) || 
-                  Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kinetic_app_version']) || 
+                    get_version($rid_info) ||
+		      Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kynetx_app_version']) || 
+			  Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kinetic_app_version']) || 
 		  'prod';
     $req_info->{'rule_version'} = $version;
 

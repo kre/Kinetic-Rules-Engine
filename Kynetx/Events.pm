@@ -31,6 +31,7 @@ use Kynetx::Version qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Errors;
 use Kynetx::Request;
+use Kynetx::Rids qw/:all/;
 use Kynetx::Rules;
 use Kynetx::Json;
 use Kynetx::Scheduler;
@@ -94,7 +95,8 @@ sub handler {
     my @path_components = split(/\//,$r->path_info);
 #    $logger->debug("Path components for ", $r->path_info, ": ", sub{Dumper @path_components});
 
-    
+    # 0 = "blue"
+    # 1 = "event|flush"
     $domain = $path_components[2];
     $eventtype = $path_components[3];
     $rid = $path_components[4] || 'any';
@@ -149,7 +151,15 @@ sub process_event {
     }
 
     my $req_info =
-      Kynetx::Request::build_request_env( $r, $domain, $rids, $eventtype );
+      Kynetx::Request::build_request_env($r, 
+					 $domain, 
+					 $rids, 
+					 $eventtype, 
+					 $eid,  
+					 {'api' => 'blue'
+					 });
+
+
     Kynetx::Request::log_request_env( $logger, $req_info );
     
     # Extend $req_info if we have any extra information passed in through the pnotes
@@ -206,7 +216,7 @@ sub process_event {
 
     foreach my $rid ( split( /;/, $rids ) ) {
 
-      my $rid_info = Kynetx::Events::mk_rid_info($req_info, $rid);
+      my $rid_info = mk_rid_info($req_info, $rid);
 
       eval {
 	process_event_for_rid( $ev, $req_info, $session, $schedule, $rid_info );
@@ -232,10 +242,10 @@ sub process_event {
     }
 
     $logger->debug("Schedule complete");
-    
+    my $dd = Kynetx::Response->create_directive_doc($req_info->{'eid'});
     my $js = '';
     $js .= eval {
-      Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid,$req_info );
+      Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid,$req_info, $dd );
     };
     if ($@) {
       # Kynetx::Errors::raise_error($req_info,
@@ -253,7 +263,7 @@ sub process_event {
       }
     }
 
-    Kynetx::Response::respond( $r, $req_info, $session, $js, "Event" );
+    Kynetx::Response::respond( $r, $req_info, $session, $js, $dd, "Event" );
 
 }
 
@@ -266,7 +276,7 @@ sub process_event_for_rid {
 
     my $logger = get_logger();
 
-    my $rid = $rid_info->{'rid'};
+    my $rid = get_rid($rid_info);
 
    #  $logger->debug("Req info: ", sub {Dumper $req_info} );
 
@@ -282,19 +292,19 @@ sub process_event_for_rid {
     $logger->trace("Rule list is ", sub{Dumper $ruleset->{'rule_lists'}->{$domain}->{$type}});
 
     # prints out detailed info on rule_lists
-     foreach my $d (keys %{$ruleset->{'rule_lists'}}) {
-       foreach my $t (keys %{$ruleset->{'rule_lists'}->{$d}}) {
+     # foreach my $d (keys %{$ruleset->{'rule_lists'}}) {
+     #   foreach my $t (keys %{$ruleset->{'rule_lists'}->{$d}}) {
 
-     	$logger->debug("$d:$t -> ");
-     	$logger->debug("\tFilters:", sub {Dumper $ruleset->{'rule_lists'}->{$d}->{$t}->{"filters"}});
+     # 	$logger->debug("$d:$t -> ");
+     # 	$logger->debug("\tFilters:", sub {Dumper $ruleset->{'rule_lists'}->{$d}->{$t}->{"filters"}});
 
-     	my $i = 0;
-     	foreach my $r (@{$ruleset->{'rule_lists'}->{$d}->{$t}->{"rulelist"}} ) {
+     # 	my $i = 0;
+     # 	foreach my $r (@{$ruleset->{'rule_lists'}->{$d}->{$t}->{"rulelist"}} ) {
 	  
-     	  $logger->debug("\t$r->{'name'}");
-     	}
-       }
-     }
+     # 	  $logger->debug("\t$r->{'name'}");
+     # 	}
+     #   }
+     # }
 
     $logger->debug("Selection checking for ", scalar @{ $ruleset->{'rule_lists'}->{$domain}->{$type}->{'rulelist'} }, " rules") if $ruleset->{'rule_lists'}->{$domain}->{$type};
     $logger->trace("Schedule: ", sub {Dumper($schedule)});
@@ -591,19 +601,6 @@ sub add_filter {
     }
   }
 }
-
-sub mk_rid_info {
-  my($req_info,$rid) = @_;
-
-  my $version = $req_info->{"$rid:kynetx_app_version"} || 
-    $req_info->{"$rid:kinetic_app_version"} || 
-      'prod';
-
-
-  return {'rid' => $rid,
-	  'kinetic_app_version' => $version};
-}
-		   
 
 
 1;

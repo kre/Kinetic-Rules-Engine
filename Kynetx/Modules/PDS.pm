@@ -29,6 +29,7 @@ use Kynetx::Session qw(
 	process_session
 	session_cleanup
 );
+use Kynetx::Rids qw(:all);
 
 
 use Exporter;
@@ -145,7 +146,7 @@ sub get_predicates {
 sub authenticate {
 	my ($req_info,$rule_env,$session,$config,$mods)  = @_;
 	my $logger= get_logger();
-	my $rid = $req_info->{'rid'};
+	my $rid = get_rid($req_info->{'rid'});
  	my $ruleset_name = $req_info->{"$rid:ruleset_name"};
 	my $name = $req_info->{"$rid:name"};
 	my $author = $req_info->{"$rid:author"};
@@ -174,7 +175,7 @@ EOF
 
 sub authenticated {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args)  = @_;
-	my $rid = $req_info->{'rid'};
+	my $rid = get_rid($req_info->{'rid'});
  	my $logger = get_logger();
  	return Kynetx::Persistence::KToken::is_authenticated($session,$rid);
 }
@@ -182,7 +183,7 @@ $funcs->{'authenticated'} = \&authenticated;
 
 sub revoke_session {
 	my ($js,$req_info,$rule_env,$session,$rule_name,$function,$args)  = @_;
-	my $rid = $req_info->{'rid'};
+	my $rid = get_rid($req_info->{'rid'});
  	my $logger = get_logger();
 	my $token = Kynetx::Persistence::KToken::get_token($session,$rid)->{'ktoken'};
 	my $session_id = Kynetx::Session::session_id($session);

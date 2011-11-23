@@ -38,6 +38,7 @@ use Kynetx::Persistence qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Environments qw(:all);
+use Kynetx::Rids qw(:all);
 use Kynetx::Util qw(:all);
 use Kynetx::Keys;
 
@@ -100,7 +101,7 @@ sub authorized {
  my ($req_info,$rule_env,$session,$rule_name,$function,$args)  = @_;
  my $logger = get_logger();
 
- my $rid = $req_info->{'rid'};
+ my $rid = get_rid($req_info->{'rid'});
 
  $logger->debug("Authorizing twitter access for rule $rule_name in $rid");
 
@@ -146,7 +147,7 @@ sub user_id {
   my ($req_info,$rule_env,$session,$rule_name,$function,$args)  = @_;
   my $logger = get_logger();
 
-  my $rid = $req_info->{'rid'};
+  my $rid = get_rid($req_info->{'rid'});
   my $access_tokens =  get_access_tokens($req_info, $rule_env, $rid, $session);
 
   return $access_tokens->{'user_id'};
@@ -159,7 +160,7 @@ sub authorize {
 
  my $logger= get_logger();
 
- my $rid = $req_info->{'rid'};
+ my $rid = get_rid($req_info->{'rid'});
  my $ruleset_name = $req_info->{"$rid:ruleset_name"};
  my $name = $req_info->{"$rid:name"};
  my $author = $req_info->{"$rid:author"};
@@ -178,7 +179,7 @@ sub authorize {
  my $caller =
  my $callback_url = mk_url($base_cb_url,
 			   {'caller',$req_info->{'caller'},
-			    "$rid:kynetx_app_version", $version});
+			    "$rid:kinetic_app_version", $version});
 
  $logger->debug("requesting authorization URL with callback_url = $callback_url");
  my $auth_url = $nt->get_authorization_url(callback => $callback_url);
@@ -511,7 +512,7 @@ sub eval_twitter {
       }
       $tweets = $@;
     }
-#    $logger->debug("[eval_twitter] returning ", Dumper $tweets);
+    #$logger->debug("[eval_twitter] returning ", Dumper $tweets);
 
 
     return $tweets;
@@ -524,7 +525,7 @@ sub twitter {
 
   my $logger = get_logger();
 
-  my $rid = $req_info->{'rid'};
+  my $rid = get_rid($req_info->{'rid'});
 
   my $consumer_tokens=get_consumer_tokens($req_info, $rule_env);
 #  $logger->debug("Consumer tokens: ", Dumper $consumer_tokens);
@@ -551,9 +552,9 @@ sub get_consumer_tokens {
   my($req_info, $rule_env) = @_;
   my $consumer_tokens;
   my $logger = get_logger();
-  my $rid = $req_info->{'rid'};
+  my $rid_info = $req_info->{'rid'};
   unless ($consumer_tokens = Kynetx::Keys::get_key($req_info, $rule_env, 'twitter')) {
-    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
     $consumer_tokens = $ruleset->{'meta'}->{'keys'}->{'twitter'};
 
     Kynetx::Keys::insert_key($req_info, $rule_env, 'twitter', $consumer_tokens)

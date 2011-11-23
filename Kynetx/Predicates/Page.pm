@@ -43,6 +43,7 @@ use JSON::XS;
 
 use Kynetx::Util qw(:all);
 use Kynetx::Memcached qw(:all);
+use Kynetx::Rids qw(:all);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -69,6 +70,7 @@ url
 
 #id
 
+    my $rid = get_rid($req_info->{'rid'});
 
     # no caching values in this datasource
 
@@ -140,9 +142,10 @@ url
 	# FIXME: uncomment after Azigo implements ruleset changes
 	#return '' unless $allowed{$args->[0]};
 
+
 	# rulespaced env parameters
-	if($req_info->{'rid'} && defined $req_info->{$req_info->{'rid'}.':'.$args->[0]}) {
-	    $val = $req_info->{$req_info->{'rid'}.':'.$args->[0]};
+	if($rid && defined $req_info->{$rid.':'.$args->[0]}) {
+	    $val = $req_info->{$rid.':'.$args->[0]};
 	} elsif(defined $req_info->{$args->[0]}) {
 	    $val = $req_info->{$args->[0]};
 	}
@@ -150,8 +153,8 @@ url
     } elsif($function eq 'param' || $function eq 'attr') {
 
       # rulespaced env parameters
-      if($req_info->{'rid'} && defined $req_info->{$req_info->{'rid'}.':'.$args->[0]}) {
-	$val = $req_info->{$req_info->{'rid'}.':'.$args->[0]};
+      if($rid && defined $req_info->{$rid.':'.$args->[0]}) {
+	$val = $req_info->{$rid.':'.$args->[0]};
       } else {
 	# event params don't have rid namespacing
 	$val = $req_info->{$args->[0]};

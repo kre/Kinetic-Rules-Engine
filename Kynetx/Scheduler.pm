@@ -98,10 +98,12 @@ sub next {
 			$self->{'current_rule'} )
 		{
 			my $rn = $self->{$rid}->{'rules'}->[ $self->{'current_rule'} ];
-			$logger->debug("Rules name: ", $rn);
+			Log::Log4perl::MDC->put( 'rule', $rn );
+			$logger->debug("Rule name: ", $rn);
 			$r = $self->{$rid}->{$rn};
 			if (defined $r && scalar(@$r)>0) {
 				my $task = shift(@$r);
+				Log::Log4perl::MDC->put( 'site', $rid);	
 				$logger->debug("Tasks: ",scalar(@$r));
 				$logger->debug("Schedule iterator returning ",
 					$task->{'rule'}->{'name'},
@@ -110,6 +112,7 @@ sub next {
 					" and current rule count ",
 					$self->{'current_rule'}
 				);
+	
 				$logger->debug("Found: (",$task->{'_ts'},") ",$task->{'req_info'}->{'num'});
 				return $task;
 			} else {

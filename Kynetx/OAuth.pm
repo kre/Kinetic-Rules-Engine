@@ -35,6 +35,7 @@ use LWP::UserAgent;
 use HTTP::Request::Common;
 
 use Kynetx::Session qw/:all/;
+use Kynetx::Rids qw/:all/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -56,7 +57,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 # $namespace is the name the Parser assigns to keys in the keys from the meta block
 #
 
-my ($namespace,$req_info,$session,$rid, $rule_env);
+my ($namespace,$req_info,$session,$rid, $rid_info,$rule_env);
 
 sub new {
   my $class  = shift;
@@ -70,9 +71,9 @@ sub new {
   $rule_env = $re;
   
 
-  $rid = $req_info->{'rid'};
+  $rid_info = $req_info->{'rid'};
+  $rid = get_rid($rid_info);
 
-#  my $tokens = session_get($rid, $session, $namespace.':access_tokens');
   my $tokens = get_access_tokens();
 
   $logger->debug("Tokens: ", sub { Dumper $tokens});
@@ -121,7 +122,7 @@ sub get_consumer_tokens {
   my $consumer_tokens;
   my $logger = get_logger();
   unless ($consumer_tokens = Kynetx::Keys::get_key($req_info, $rule_env, $namespace) ) {
-    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
 #    $logger->debug("Got ruleset: ", Dumper $ruleset);
     $consumer_tokens = $ruleset->{'meta'}->{'keys'}->{$namespace};
     Kynetx::Keys::insert_key($req_info, $rule_env, $namespace, $consumer_tokens);

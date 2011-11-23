@@ -44,6 +44,7 @@ use Kynetx::Util qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Repository;
 use Kynetx::Request qw(:all);
+use Kynetx::Rids qw(:all);
 use Kynetx::Environments qw(:all);
 use Kynetx::Postlude;
 
@@ -121,11 +122,11 @@ sub process_action {
 
     my $req = Apache2::Request->new($r);
 
-    $req_info->{'rid'} = $req->param('rid');
+    my $rid_info = mk_rid_info($req_info, $req->param('rid'));
 
 #    Kynetx::Request::log_request_env($logger, $req_info);
 
-    process_callbacks(get_ruleset($req_info->{'rid'},
+    process_callbacks(get_ruleset($rid_info,
 				  $req_info),
 		      $req->param('rule'),
 		      $req->param('sense'),
@@ -140,7 +141,7 @@ sub process_action {
     $r->subprocess_env(METHOD => 'callback');
     $r->subprocess_env(RIDS => $req_info->{'site'});
     $r->subprocess_env(SITE => $req_info->{'site'});
-    $r->subprocess_env(RID => $req_info->{'rid'});
+    $r->subprocess_env(RID => get_rid($req_info->{'rid'}));
 
     # make sure we use the one sent, not the one for this interaction
     $r->subprocess_env(TXN_ID => $req->param('txn_id'));
@@ -177,7 +178,7 @@ sub process_action {
 
     }
 
-    $logger->info("Processing callback for site " . $req_info->{'rid'} . " and rule " . $req->param('rule'));
+    $logger->info("Processing callback for RID " . get_rid($req_info->{'rid'}) . " and rule " . $req->param('rule'));
 
     $r->subprocess_env(TOTAL_SECS => Time::HiRes::time -
 	$r->subprocess_env('START_TIME'));

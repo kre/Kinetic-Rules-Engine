@@ -32,6 +32,7 @@ use Digest::MD5 qw/md5_hex/;
 use Clone qw/clone/;
 
 use Kynetx::Parser;
+use Kynetx::Rids qw/:all/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -113,12 +114,6 @@ sub raise_error {
       );
 
   push( @{$ms}, 
-	{'name' => 'rid',
-	 'value' => mk_den_str($req_info->{'rid'}),
-	}
-      );
-
-  push( @{$ms}, 
 	{'name' => 'rule_name',
 	 'value' => mk_den_str($rule_name),
 	}
@@ -132,7 +127,7 @@ sub raise_error {
       $rid .= "." . $req_info->{'errorsto'}->{'version'};
     }
   } else {
-     $rid = $req_info->{'rid'};
+     $rid = get_rid($req_info->{'rid'});
   }
   $logger->debug("Sending errors to $rid");
 

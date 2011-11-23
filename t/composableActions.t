@@ -47,6 +47,8 @@ use Kynetx::Modules qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
 use Kynetx::Persistence qw/:all/;
+use Kynetx::Response qw/:all/;
+use Kynetx::Rids qw/:all/;
 
 
 use Kynetx::FakeReq;
@@ -116,7 +118,9 @@ sub doer {
 	my ($req_info,$krl,$rule_env,$session) = @_;
 	my $logger = get_logger();
 	my $rs = Kynetx::Parser::parse_ruleset($krl);
-	my $ruleset_rid = $rs->{'ruleset_name'};
+	my $rid_info = mk_rid_info($req_info,$rs->{'ruleset_name'});
+
+	
 	$req_info->{'eventtype'} = 'pageview';
 	$req_info->{'domain'} = 'web';
 	
@@ -130,14 +134,17 @@ sub doer {
 		$req_info,
 		$session,
 		$schedule,
-		$ruleset_rid
+		$rid_info
 	);
+
+	my $dd = Kynetx::Response->create_directive_doc($req_info->{'eid'});
 	
 	my $js = Kynetx::Rules::process_schedule($r,
 		$schedule,
 		$session,
 		time,
-		$req_info		
+		$req_info,
+		$dd
 	);
 	
 	#$logger->debug("Final javascript: $js");	
@@ -170,7 +177,7 @@ ruleset dueling_notifies {
 }
 _KRL_
 
-$my_req_info->{'rid'} = 'dueling_notifies';
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'dueling_notifies');
 $mod_rule_env = empty_rule_env();
 $result = doer($my_req_info, $krl, $empty_rule_env, $session);
 
@@ -209,7 +216,7 @@ ruleset foobar {
 }
 _KRL_
 
-$my_req_info->{'rid'} = 'foobar';
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
 $mod_rule_env = empty_rule_env();
 $result = doer($my_req_info, $krl, $empty_rule_env, $session);
 
@@ -237,7 +244,7 @@ ruleset postbar {
 }
 _KRL_
 
-$my_req_info->{'rid'} = 'postbar';
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'postbar');
 $mod_rule_env = empty_rule_env();
 $result = doer($my_req_info, $krl, $empty_rule_env, $session);
 
@@ -287,7 +294,7 @@ ruleset inline {
 }
 _KRL_
 
-$my_req_info->{'rid'} = 'inline';
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'inline');
 $mod_rule_env = empty_rule_env();
 $result = doer($my_req_info, $krl, $empty_rule_env, $session);
 
@@ -340,7 +347,7 @@ _KRL_
 
 
 
-$my_req_info->{'rid'} = 'use_nulls';
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'use_nulls');
 $mod_rule_env = empty_rule_env();
 $result = doer($my_req_info, $krl, $empty_rule_env, $session);
 
@@ -385,7 +392,7 @@ ruleset send_directive_nulls {
 }
 _KRL_
 
-$my_req_info->{'rid'} = 'send_directive_nulls';
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'send_directive_nulls');
 $mod_rule_env = empty_rule_env();
 $result = doer($my_req_info, $krl, $empty_rule_env, $session);
 cmp_deeply($result,re(qr/varfarb=null/),"Null value passed to send_directive");
@@ -439,7 +446,7 @@ ruleset inline {
 }
 _KRL_
 
-$my_req_info->{'rid'} = 'inline';
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'inline');
 $mod_rule_env = empty_rule_env();
 $result = doer($my_req_info, $krl, $empty_rule_env, $session);
 

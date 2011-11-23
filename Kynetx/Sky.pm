@@ -70,25 +70,18 @@ sub handler {
 
     $r->subprocess_env(START_TIME => Time::HiRes::time);
 
-    # path looks like: /sky/event/<id_token>/<eid>?_domain=...&_name=...&...
+    # path looks like: /sky/{event|flush}/{version|<id_token>}/<eid>?_domain=...&_name=...&...
 
     my @path_components = split(/\//,$r->path_info);
     
     # 0 = "sky"
-    # 1 = "event"
+    # 1 = "event|flush"
     $id_token = $path_components[2];
     $eid = $path_components[3] || '';
 
     # optional...usually passed in as parameters
     $domain = $path_components[4];  
     $eventtype = $path_components[5];
-
-    # just show the version and exit if that's what's called for
-    if ( $id_token eq 'version' ) {
-      $logger->debug("returning version info for Sky event API");
-      Kynetx::Version::show_build_num($r);
-      exit();
-    }
 
     if(Kynetx::Configure::get_config('RUN_MODE') eq 'development') {
       # WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
@@ -100,8 +93,26 @@ sub handler {
 
     # build the request data structure. No RIDs yet. (undef)
     my $req_info =
-      Kynetx::Request::build_request_env($r, $domain, $rids, $eventtype, $id_token);
+      Kynetx::Request::build_request_env($r, 
+					 $domain, 
+					 $rids, 
+					 $eventtype, 
+					 $eid, 
+					 {'api' => 'sky',
+					  'id_token' => $id_token
+					 });
 
+
+    # just show the version and exit if that's what's called for
+    if ( $id_token eq 'version' ) {
+      $logger->debug("returning version info for Sky event API");
+      Kynetx::Version::show_build_num($r);
+      exit();
+    } elsif ($path_components[1]  eq 'flush' ) {
+      # /sky/flush/<id_token>...
+      flush_ridlist_cache($r, $id_token);
+      exit();
+    }
 
     # use the calculated values...
     $domain = $req_info->{'domain'};
@@ -152,7 +163,7 @@ sub handler {
       foreach my $rid_info (@{$rid_list}) {
 
 	my $rid = $rid_info->{'rid'};
-	my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info, $rid_info->{'kinetic_app_version'});
+	my $ruleset = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info, $rid_info->{'kinetic_app_version'});
 
 	my $dispatch_list = Kynetx::Dispatch::process_dispatch_list($rid, $ruleset);
 
@@ -164,17 +175,7 @@ sub handler {
 
     } else {
 
-      # get RIDS. They're stored by id_token since that's what we have
-      my $memd =  Kynetx::Memcached::get_memd();
-      $unfiltered_rid_list = $memd->get($id_token);
-
-      if (! defined $unfiltered_rid_list) {
-	$unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info);
-
-	# cache this here...
-
-
-      }
+      $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info);
 
       # this can be a big list...
       # $logger->error("Rids for $id_token: ", sub {Dumper ($unfiltered_rid_list)});
@@ -207,9 +208,10 @@ sub handler {
 
     foreach my $rid_info ( @{ $rid_list }) {
 
-      # check dispatch if domain is web
+      # check dispatch if domain is web and rids weren't specified
       my $rid = $rid_info->{'rid'};
       if ($domain eq 'web'&&
+	  ! $req_info->{'explicit_rids'} &&
 	  ! $domain_test->{$rid}->{'domain'}->{$hostname}
 	 ) {
 	$logger->debug("Skipping $rid due to domain mismatch");
@@ -236,14 +238,13 @@ sub handler {
 	}
 
       }
-        
     }
 
     $logger->debug("Schedule complete");
-
+    my $dd = Kynetx::Response->create_directive_doc($req_info->{'eid'});
     my $js = '';
     $js .= eval {
-      Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid,$req_info );
+      Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid,$req_info, $dd );
     };
     if ($@) {
       # Kynetx::Errors::raise_error($req_info,
@@ -261,10 +262,23 @@ sub handler {
       }
     }
 
-    Kynetx::Response::respond( $r, $req_info, $session, $js, "Event" );
+    Kynetx::Response::respond( $r, $req_info, $session, $js, $dd, "Event" );
 
     return Apache2::Const::OK;
 }
+
+
+sub flush_ridlist_cache {
+    my ($r, $id_token) = @_;
+
+    Kynetx::Dispatch::clear_rid_list($id_token);
+
+    $r->content_type('text/html');
+    my $msg = "RID List flushed for $id_token";
+    print "<title>$msg</title><h1>$msg</h1>";
+
+}
+
 
 
 1;

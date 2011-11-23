@@ -31,6 +31,7 @@ use Kynetx::Session;
 use Kynetx::Actions::LetItSnow;
 use Kynetx::Actions::JQueryUI;
 use Kynetx::Actions::FlippyLoo;
+use Kynetx::Rids qw/:all/;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -380,9 +381,6 @@ sub eval_module {
         }    	
     } elsif ( $source eq 'keys' ) {
       # return the right key if it exists
-      # my $ruleset = Kynetx::Repository::get_rules_from_repository($req_info->{'rid'}, $req_info);
-      # my $keys = $ruleset->{'meta'}->{'keys'};
-
       $val = Kynetx::Keys::get_key($req_info, $rule_env, $function);
 
       $logger->debug("Returning keys for $function");
@@ -405,17 +403,17 @@ sub eval_module {
     } elsif ( $source eq 'meta' ) {
 #      $logger->debug("Looking up $function in ", sub {Dumper $rule_env});
       if ($function eq 'rid') {
-	$val = $req_info->{'rid'};
+	$val = get_rid($req_info->{'rid'});
       } elsif ($function eq 'version') {
-	$val = $req_info->{'rule_version'} || 'prod';
+	$val = get_version($req_info->{'rid'});
       } elsif ($function eq 'callingRID') {
-	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || $req_info->{'rid'};
+	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || get_rid($req_info->{'rid'});
       } elsif ($function eq 'callingVersion') {
-	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || $req_info->{'rule_version'};
+	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || get_version($req_info->{'rid'});
       } elsif ($function eq 'moduleRID') {
-	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || $req_info->{'rid'};
+	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || get_rid($req_info->{'rid'});
       } elsif ($function eq 'moduleVersion') {
-	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || $req_info->{'rule_version'};
+	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || get_version($req_info->{'rid'});
       } elsif ($function eq 'inModule' ) {
 	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || 0;
       } else {
@@ -452,16 +450,17 @@ sub eval_module {
 sub lookup_module_env {
   my ($name,$key,$env) = @_;
   my $logger = get_logger();
-  #$logger->debug("Find ($key) in [$name]");
+  $logger->debug("Find ($key) in [$name]");
   $name = $name || "";
   my $provided = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name . '_provided', $env);
-#  $logger->debug("Module's environment: ",sub {Dumper($provided)});
+  #$logger->debug("Module's environment: ",sub {Dumper($provided)});
 
   my $r;
   if ($provided->{$key}) {
     my $mod_env = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name, $env);
     $r = Kynetx::Environments::lookup_rule_env($key, $mod_env);
   }
+#  $logger->debug("Returning val for $key in [$name]");
             
   return $r;
 }

@@ -42,9 +42,65 @@ use Kynetx::Session qw/session_cleanup/;
 use Kynetx::Log;
 use Kynetx::Directives;
 
+sub create_directive_doc {
+  my $invocant = shift;
+  my $eid = shift;
+  my $class = ref($invocant) || $invocant;
+  my $self = {'directives' => [],
+	      'eid' => $eid,
+	     };
+  bless($self, $class); # consecrate
+  return $self;
+}
+
+
+sub add {
+  my $self = shift;
+  my $directive = shift;
+
+  my $logger = get_logger();
+  $logger->debug("Adding new directive ", $directive->type());
+
+  return push(@{$self->{'directives'}}, $directive);
+}
+
+sub directives {
+  my $self = shift;
+  return $self->{'directives'};
+}
+
+sub gen_directive_document {
+  my $self = shift;
+
+  my $logger = get_logger();
+
+  my $eid = $self->{'eid'};
+
+  my @directives = map {$_->to_directive($eid)} @{$self->{'directives'}};
+
+  my $directive_doc = {'directives' => \@directives,
+		      };
+  
+#  $logger->debug("Directives ", sub {Dumper $directive_doc });
+#  return JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(0)->encode(
+#	   $directive_doc
+#        );
+  return JSON::XS::->new->convert_blessed(1)->pretty(0)->encode(
+	   $directive_doc
+        );
+}
+
+# sub gen_directive_document {
+#   my $self = shift;
+#   my $resp = '';
+#   foreach my $dir (@{ $self->{'directives'}} ) {
+#     $resp .= $dir->gen_directive_document();
+#   }
+#   return $resp;
+# }
 
 sub respond {
-  my ($r, $req_info, $session, $js, $realm) = @_;
+  my ($r, $req_info, $session, $js, $dd, $realm) = @_;
 
   my $logger = get_logger();
 
@@ -75,7 +131,7 @@ sub respond {
   } else {
     $logger->debug("Returning directives from evaluation");
 
-    print $heartbeat, Kynetx::Directives::gen_directive_document($req_info);
+    print $heartbeat, $dd->gen_directive_document();
   }
 
 }

@@ -92,6 +92,10 @@ $platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'prod
 my $dn = "http://$platform/sky/event";
 
 my $ruleset = 'cs_test_1';
+my $token = 'a3a23a70-f2a9-012e-4216-00163e411455';
+my $other_token = '44d92880-f2ca-012e-427d-00163e411455';
+
+my $test_explicit_rid = 0;
 
 my $mech = Test::WWW::Mechanize->new();
 
@@ -123,6 +127,8 @@ SKIP: {
 	  #$mech->get_ok($test->{'url'});
 	  $resp = $mech->get($test->{'url'});
 	}
+
+	diag $test->{'url'} if $test->{'diag'};
 
 	#    like($mech->status(), /2../, 'Status OK');
 	#    $tc++;
@@ -170,30 +176,30 @@ SKIP: {
     #   scenario defined in the rule's select statement
     
     my $after_test_plan = 
-       [{'url' => "$dn/web/pageview/a144x132?caller=http://www.windley.com/first.html",
+       [{'url' => "$dn/$token?_rids=a144x132&_domain=web&_name=pageview&caller=http://www.windley.com/first.html",
 	'type' => 'text/javascript',
 	'like' => ['/first page/']
        },
-       {'url' => "$dn/web/pageview/a144x132?caller=http://www.windley.com/second.html",
+       {'url' => "$dn/$token?_rids=a144x132&_domain=web&_name=pageview&caller=http://www.windley.com/second.html",
 	'type' => 'text/javascript',
 	'like' => ['/second after first/',
 		 ]
        }];
     
-    $test_count += test_event_plan($after_test_plan);
+    $test_count += test_event_plan($after_test_plan) if $test_explicit_rid;
     
     my $before_test_plan =
-      [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
+      [{'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/archives/2006/foo.html",
 	'type' => 'text/javascript',
 	'like' => ['/test_rule_4/',
 		   '/var year = 2006/']
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/bar.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/archives/2006/bar.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		 ]
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/archives/2006/foo.html",
 	'type' => 'text/javascript',
 	'like' => ['/test_rule_4/',
 		  '/var year = 2006/',
@@ -201,17 +207,17 @@ SKIP: {
 		 ]
        },
        # next series of three shows that interceding events don't matter
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/bar.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/archives/2006/bar.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		 ]
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/something_else.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/something_else.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		 ]
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/archives/2006/foo.html",
 	'type' => 'text/javascript',
 	'like' => ['/test_rule_4/',
 		  '/var year = 2006/',
@@ -220,37 +226,37 @@ SKIP: {
        },
       ];
 
-    $test_count += test_event_plan($before_test_plan);
+    $test_count += test_event_plan($before_test_plan) if $test_explicit_rid;
 
     my $and_test_plan =
-      [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and1.html",
+      [{'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/and1.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/']
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and2.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/and2.html",
 	'type' => 'text/javascript',
 	'like' => ['/test_rule_and/',
 		 ]
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and2.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/and2.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/']
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and2.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/and2.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/']
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/and1.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/and1.html",
 	'type' => 'text/javascript',
 	'like' => ['/test_rule_and/',
 		  ]
        },
       ];
 
-    $test_count += test_event_plan($and_test_plan);
+    $test_count += test_event_plan($and_test_plan) if $test_explicit_rid;
 
     my $or_test_plan =
-      [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/or1.html",
+      [{'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/or1.html",
 	'type' => 'text/javascript',
 'like' => ['/test_rule_or/',
 		   '/var num = 1/',
@@ -258,7 +264,7 @@ SKIP: {
 	'unlike' => ['/var num = 2/',
 		  ],
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/or2.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/or2.html",
 	'type' => 'text/javascript',
 	'like' => ['/test_rule_or/',
 		   '/var num = 2/',
@@ -268,10 +274,10 @@ SKIP: {
        },
       ];
 
-    $test_count += test_event_plan($or_test_plan);
+    $test_count += test_event_plan($or_test_plan) if $test_explicit_rid;
 
     my $then_test_plan =
-      [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/then1.html",
+      [{'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/then1.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
@@ -279,7 +285,7 @@ SKIP: {
 		     '/var one = 1/',
 		  ],
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/then2.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/then2.html",
 	'type' => 'text/javascript',
 	'like' => ['/test_rule_then/',
 		   '/var two = 2/',
@@ -288,7 +294,7 @@ SKIP: {
        'diag' => 0
        },
        # next series of three shows that an interceding event cancels then1
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/then1.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/then1.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
@@ -296,7 +302,7 @@ SKIP: {
 		     '/var one = 1/',
 		  ],
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/something_else.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/something_else.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
@@ -304,7 +310,7 @@ SKIP: {
 		     '/var one = 1/',
 		  ],
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/then2.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/then2.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/'],
 	'unlike' => ['/test_rule_then/',
@@ -316,10 +322,10 @@ SKIP: {
        },
       ];
 
-    $test_count += test_event_plan($then_test_plan);
+    $test_count += test_event_plan($then_test_plan) if $test_explicit_rid;
 
     my $between_test_plan =
-      [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/first.html",
+      [{'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/first.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
@@ -328,7 +334,7 @@ SKIP: {
 		     "/var c = 't'/",
 		  ],
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/mid.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/mid.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
@@ -337,7 +343,7 @@ SKIP: {
 		     "/var c = 't'/",
 		  ],
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/last.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/last.html",
 	'type' => 'text/javascript',
 	'like' => ["/test_rule_between/",
 		   "/var a = 't'/",
@@ -346,7 +352,7 @@ SKIP: {
 		  ],
        },
        # without intervening 'mid' event, should not fire
-      {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/first.html",
+      {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/first.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
@@ -355,7 +361,7 @@ SKIP: {
 		     "/var c = 't'/",
 		  ],
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/last.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/last.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
@@ -366,12 +372,12 @@ SKIP: {
        },
       ];
 
-    $test_count += test_event_plan($between_test_plan);
+    $test_count += test_event_plan($between_test_plan) if $test_explicit_rid;
 
 
     my $not_between_test_plan =
        # with intervening 'mid' event, should not fire
-      [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/firstn.html",
+      [{'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/firstn.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
@@ -380,7 +386,7 @@ SKIP: {
 		     "/var c = 't'/",
 		  ],
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/midn.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/midn.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
@@ -390,7 +396,7 @@ SKIP: {
 		  ],
        },
        # without intervening 'mid' event, should  fire
-      {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/firstn.html",
+      {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/firstn.html",
 	'type' => 'text/javascript',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
@@ -398,7 +404,7 @@ SKIP: {
 		     "/var c = 't'/",
 		  ],
        },
-       {'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/lastn.html",
+       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/lastn.html",
 	'type' => 'text/javascript',
 	'like' => ["/test_rule_notbetween/",
 		   "/var a = 't'/",
@@ -408,10 +414,10 @@ SKIP: {
        },
       ];
 
-    $test_count += test_event_plan($not_between_test_plan);
+    $test_count += test_event_plan($not_between_test_plan) if $test_explicit_rid;
 
     my $multi_test_plan =
-      [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.google.com/search",
+      [{'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.google.com/search",
 	'type' => 'text/javascript',
 	'like' => ['/test_rule_google_1/',
 		   '/test_rule_google_2/',
@@ -421,11 +427,11 @@ SKIP: {
        },
       ];
 
-    $test_count += test_event_plan($multi_test_plan);
+    $test_count += test_event_plan($multi_test_plan) if $test_explicit_rid;
 
 
     my $email_test_plan =
-      [{'url' => "$dn/mail/received/cs_test_1",
+      [{'url' => "$dn/$token?_domain=mail&_name=received&_rids=cs_test_1",
 	'type' => 'text/javascript',
 	'like' => ['/forward/',
 		   '/pjw@kynetx.com/',
@@ -436,7 +442,7 @@ SKIP: {
 		    ],
 	'diag' => 0,
        },
-       {'url' => $dn .'/mail/received/cs_test_1?from=swf@windley.com',
+       {'url' => "$dn/$token" .'?_domain=mail&_name=received&_rids=cs_test_1&from=swf@windley.com',
 	'type' => 'text/javascript',
 	'like' => ['/forward/',
 		   '/"msg_id":25/',
@@ -446,7 +452,7 @@ SKIP: {
 		  ],
 	'diag' => 0,
        },
-       {'url' => $dn .'/mail/received/cs_test_1?from=pjw@windley.org&to=swf@fulling.org&subj=Hey Phil you rock!',
+       {'url' => "$dn/$token" .'?_domain=mail&_name=received&_rids=cs_test_1&from=pjw@windley.org&to=swf@fulling.org&subj=Hey Phil you rock!',
 	'type' => 'text/javascript',
 	'like' => ['/forward/',
 		   '/"name":"Phil"/',
@@ -457,7 +463,7 @@ SKIP: {
 		  ],
 	'diag' => 0,
        },
-       {'url' => "$dn/mail/sent/cs_test_1",
+       {'url' => "$dn/$token?_domain=mail&_name=sent&_rids=cs_test_1",
 	'type' => 'text/javascript',
 	'like' => ['/send/',
 		   '/qwb@kynetx.com/',
@@ -470,7 +476,96 @@ SKIP: {
        },
       ];
 
-    $test_count += test_event_plan($email_test_plan);
+    $test_count += test_event_plan($email_test_plan) if $test_explicit_rid;
+
+
+    my $no_rid_email_test_plan =
+      [{'url' => "$dn/$token?_domain=mail&_name=received",
+	'type' => 'text/javascript',
+	'like' => ['/forward/',
+		   '/pjw@kynetx.com/',
+		   '/"msg_id":15/',
+		  ],
+	'unlike' => ['/"msg_id":25/',
+		     '/"msg_id":35/',
+		    ],
+	'diag' => 0,
+       },
+       {'url' => "$dn/$token" .'?_domain=mail&_name=received&from=swf@windley.com',
+	'type' => 'text/javascript',
+	'like' => ['/forward/',
+		   '/"msg_id":25/',
+		   '/"address":"swf"/',
+		  ],
+	'unlike' => ['/"msg_id":35/',
+		  ],
+	'diag' => 0,
+       },
+       {'url' => "$dn/$token" .'?_domain=mail&_name=received&from=pjw@windley.org&to=swf@fulling.org&subj=Hey Phil you rock!',
+	'type' => 'text/javascript',
+	'like' => ['/forward/',
+		   '/"name":"Phil"/',
+		   '/"address":"pjw"/',
+		   '/"msg_id":27/',
+		  ],
+	'unlike' => ['/"msg_id":35/',
+		  ],
+	'diag' => 0,
+       },
+       {'url' => "$dn/$token?_domain=mail&_name=sent",
+	'type' => 'text/javascript',
+	'like' => ['/send/',
+		   '/qwb@kynetx.com/',
+		   '/"msg_id":35/',
+		  ],
+	'unlike' => ['/"msg_id":25/',
+		   '/"msg_id":15/',
+		  ],
+	'diag' => 0,
+       },
+      ];
+
+    $test_count += test_event_plan($no_rid_email_test_plan);
+
+    my $val = int(rand(100)); # random number < 100
+
+    my $no_rid_multi_token_test_plan =
+      [{'url' => "$dn/$token?_domain=token&_type=new_value&value=$val",
+	'type' => 'text/javascript',
+	'like' => ['/"directives":\[\]/',
+		  ],
+	'unlike' => [],
+	'diag' => 0,
+       },
+       {'url' => "$dn/$other_token?_domain=token&_type=need_value",
+	'type' => 'text/javascript',
+	'like' => ["/value is $val/",
+		  ],
+	'unlike' => [],
+	'diag' => 0,
+
+       },
+      ];
+
+    $test_count += test_event_plan($no_rid_multi_token_test_plan);
+
+    my $no_rid_multi_rule_test_plan =
+      [{'url' => "$dn/$token/123456789?_domain=d1&_type=t1",
+	'type' => 'text/javascript',
+	'like' => ['/"name":"see_two_1"/',
+		   '/"name":"see_two_2"/',
+		   '/{"opt_3":"one"}/',
+		   '/{"opt_1":"two"}/',
+		   '/"eid":"123456789"/',
+		  ],
+	'unlike' => [],
+	'diag' => 0,
+
+       },
+      ];
+
+    $test_count += test_event_plan($no_rid_multi_rule_test_plan);
+
 
 
 #     my $submit_test_plan =
@@ -485,6 +580,73 @@ SKIP: {
 #       ];
 
 #     $test_count += test_event_plan($submit_test_plan);
+
+#
+# these tests are for raising explicit events in postlude
+#
+
+    # test an explicit event raised for a specified RID
+    my $explicit_event_specific_rid_test_plan =
+      [{'url' => "$dn/$token/123456789?_domain=web&_type=pageview&url=http://www.google.com/fizzer/fuzzer.html",
+	'type' => 'text/javascript',
+	'like' => ["/'rule_name' :'test_rule_4'/",
+		   "/'rule_name' :'test_explicit'/",
+		  ],
+	'unlike' => [],
+	'diag' => 0,
+
+       },
+      ];
+
+    $test_count += test_event_plan($explicit_event_specific_rid_test_plan);
+
+    # test an explicit event for a set of installed apps
+    my $explicit_event_explicit_test_plan =
+      [{'url' => "$dn/$token/123456789?_domain=web&_type=pageview&url=http://www.google.com/test_rule_5/",
+	'type' => 'text/javascript',
+	'like' => ["/'rule_name' :'test_rule_5'/",
+		   "/'rule_name' :'test_explicit'/",
+		  ],
+	'unlike' => [],
+	'diag' => 0,
+
+       },
+      ];
+
+    $test_count += test_event_plan($explicit_event_explicit_test_plan);
+
+    # make sure rules in current RID and other RIDs get raised
+    my $explicit_event_nonspecific_rid_test_plan =
+      [{'url' => "$dn/$token/123456789?_domain=web&_type=pageview&url=http://www.google.com/test_rule_6/",
+	'type' => 'text/javascript',
+	'like' => ["/'rule_name' :'test_rule_6'/",
+		   "/'rule_name' :'test_rule_7'/",
+		   "/'rule_name' :'test_rule_other_7'/",
+		  ],
+	'unlike' => [],
+	'diag' => 0,
+
+       },
+      ];
+
+    $test_count += test_event_plan($explicit_event_nonspecific_rid_test_plan);
+
+    # make sure rules only current RID rules are raised when it's specified
+    my $only_current_specific_rid_test_plan =
+      [{'url' => "$dn/$token/123456789?_domain=web&_type=pageview&url=http://www.google.com/test_rule_8/",
+	'type' => 'text/javascript',
+	'like' => ["/'rule_name' :'test_rule_8'/",
+		   "/'rule_name' :'test_rule_7'/",
+		  ],
+	'unlike' => [	
+		     "/'rule_name' :'test_rule_other_7'/",
+		    ],
+	'diag' => 0,
+
+       },
+      ];
+
+    $test_count += test_event_plan($only_current_specific_rid_test_plan);
 
 
   }

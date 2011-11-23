@@ -27,6 +27,7 @@ use Log::Log4perl qw(get_logger :levels);
 
 use Kynetx::JavaScript::AST qw/:all/;
 use Kynetx::Environments qw/:all/;
+use Kynetx::Rids qw/:all/;
 
 
 use Exporter;
@@ -73,7 +74,10 @@ sub insert_key {
 
   my $logger = get_logger();
 
-  $logger->debug("Storing key $key -> $value");
+  my $rid = get_rid($req_info->{'rid'});
+
+  $logger->debug("Storing key $key ($rid) -> $value");
+
 
   my $generate_js  = {'errorstack' => 1,
 		      'googleanalytics' => 1,
@@ -81,7 +85,6 @@ sub insert_key {
 		     
   my $js = '';
 
-  my $rid = $req_info->{'rid'};
 
   $req_info->{$rid.':key:'.$key} = $value;
 
@@ -95,23 +98,16 @@ sub insert_key {
       $value . "';\n";
   }
 
-  # this is how things used to be...
-  # if ($k eq 'twitter') {
-  #   $req_info->{$rid.':key:twitter'} = $ruleset->{'meta'}->{'keys'}->{$k};
-  # } elsif ($k eq 'amazon') {
-  #   $req_info->{$rid.':key:amazon'} = $ruleset->{'meta'}->{'keys'}->{$k};
-  # } else { # googleanalytics, errorstack
-  #   $js .= KOBJ_ruleset_obj($ruleset->{'ruleset_name'}). ".keys.$k = '" .
-  # 	$ruleset->{'meta'}->{'keys'}->{$k} . "';\n";
-  # }
-  
   return ($js, $rule_env);
 
 }
 
 sub get_key {
   my ($req_info, $rule_env, $key) = @_;
-  my $rid = $req_info->{'rid'};
+  my $rid = get_rid($req_info->{'rid'});
+
+  # my $logger = get_logger();
+  # $logger->debug("Rid: $rid, Key: $key");
 
 #  return $req_info->{$rid.':key:'.$key};
 

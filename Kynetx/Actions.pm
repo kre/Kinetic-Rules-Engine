@@ -35,6 +35,7 @@ use Kynetx::Environments qw(:all);
 use Kynetx::Session q/:all/;
 use Kynetx::Log q/:all/;
 use Kynetx::Json q/:all/;
+use Kynetx::Rids q/:all/;
 use Kynetx::Modules::Twitter;
 use Kynetx::Modules::PDS;
 use Kynetx::Actions::LetItSnow;
@@ -480,15 +481,16 @@ EOF
 	send_directive => {
 		directive => sub {
 			my $req_info = shift;
+			my $dd = shift;
 			my $config   = shift;
 			my $args     = shift;
-			send_directive( $req_info, $args->[0], $config );
+			send_directive($req_info, $dd, $args->[0], $config );
 		},
 	},
 };
 
 sub build_js_load {
-	my ( $rule, $req_info, $rule_env, $session ) = @_;
+	my ( $rule, $req_info, $dd, $rule_env, $session ) = @_;
 
 	my $logger = get_logger();
 
@@ -504,7 +506,7 @@ sub build_js_load {
 		foreach my $sense ( 'success', 'failure' ) {
 			$cb .= gen_js_callbacks( $rule->{'callbacks'}->{$sense},
 				$req_info->{'txn_id'}, $sense, $rule->{'name'},
-				$req_info->{'rid'} );
+				get_rid($req_info->{'rid'}) );
 		}
 	}
 
@@ -516,19 +518,21 @@ sub build_js_load {
 	
 	$js .= eval_action_block(
 		$req_info,
+		$dd,
 		$rule_env,
 		$session,
 		$rule->{'blocktype'},
 		$rule->{'actions'},
 		$rule->{'name'},
-		$cb_func_name);
+		$cb_func_name
+               );
 
 	return $js;
 
 }
 
 sub eval_action_block {
-	my ($req_info,$rule_env,$session, $blocktype,$action_block,$rulename,$cb_function) = @_;
+	my ($req_info, $dd, $rule_env,$session, $blocktype,$action_block,$rulename,$cb_function) = @_;
 	my $logger = get_logger();	
 	my $js = "";
 	
@@ -547,7 +551,7 @@ sub eval_action_block {
 			# tack on this loop's js
 			if ( defined $action_expr->{'action'} ) {
 				$js .=
-				  build_one_action( $action_expr, $req_info, $rule_env,
+				  build_one_action( $action_expr, $req_info, $dd, $rule_env,
 					$session, $cb_function, $rulename );
 			}
 			elsif ( defined $action_expr->{'emit'} ) {
@@ -568,7 +572,7 @@ sub eval_action_block {
 		my $choice = int( rand($action_num) );
 		$logger->debug("chose $choice of $action_num");
 		$js .= build_one_action( $action_block->[$choice],
-			$req_info, $rule_env, $session, $cb_function, $rulename);
+			$req_info, $dd, $rule_env, $session, $cb_function, $rulename);
 
 	}
 	else {
@@ -578,7 +582,7 @@ sub eval_action_block {
 }
 
 sub build_composed_action {
-	my ($source,$name,$orig_env, $rule_env,$req_info,$session,$args,$modifiers,$rule_name,
+	my ($source,$name,$orig_env, $rule_env,$req_info, $dd, $session,$args,$modifiers,$rule_name, 
 			$cb_func_name) = @_;
 	my $logger = get_logger();
 	my $action_tag;
@@ -617,7 +621,7 @@ sub build_composed_action {
 		
 	#$logger->debug("After Module Configuration: ",sub {Dumper($rule_env)});
 
-	my $srid = $req_info->{'rid'};
+	my $srid = get_rid($req_info->{'rid'});
 	my $orid = Kynetx::Environments::lookup_rule_env("ruleset_name",$orig_env);
 	my $crid = Kynetx::Environments::lookup_rule_env("ruleset_name",$rule_env);
 
@@ -652,6 +656,7 @@ sub build_composed_action {
 	}
 	$js .= eval_action_block(
 		$req_info,
+	        $dd,
 		$rule_env,
 		$session,
 		$blocktype,
@@ -665,7 +670,7 @@ sub build_composed_action {
 
 sub build_one_action {
 	my (
-		$action_expr, $req_info,     $rule_env,
+		$action_expr, $req_info,     $dd, $rule_env,
 		$session,     $cb_func_name, $rule_name
 	) = @_;
 
@@ -713,7 +718,7 @@ sub build_one_action {
 
 	# process overloaded functions and arg reconstruction
 	( $action_name, $args ) =
-	  choose_action( $req_info, $action_name, $arg_action_vals, $rule_env, $rule_name, $args );
+	  choose_action( $req_info, $dd, $action_name, $arg_action_vals, $rule_env, $rule_name, $args );
 
 	# this happens after we've chosen the action since it modifies args
 
@@ -744,6 +749,7 @@ sub build_one_action {
 			$rule_env,
 			$defaction->{'val'},
 			$req_info,
+			$dd,
 			$session,
 			$arg_exp_vals,
 			$action->{'modifiers'},
@@ -949,7 +955,7 @@ sub build_one_action {
 	}
 
 	# now run directive functions to store those
-	$directive->( $req_info, $config, $arg_exp_vals );
+	$directive->($req_info, $dd, $config, $arg_exp_vals );
 
 	Kynetx::JavaScript::AST::register_resources( $req_info, $resources );
 
@@ -959,7 +965,7 @@ sub build_one_action {
 # some actions are overloaded depending on the args.  This function chooses
 # the right JS function and adjusts the arg string.
 sub choose_action {
-	my ( $req_info, $action_name, $arg_den_vals, $rule_env, $rule_name, $args ) = @_;
+	my ( $req_info, $dd, $action_name, $arg_den_vals, $rule_env, $rule_name, $args ) = @_;
 	my $logger = get_logger();
 
 	my $action_suffix = "_url";
@@ -1118,7 +1124,7 @@ sub handle_delay {
 		  . $req_info->{'txn_id'} . "',"
 		  . "'none', '', 'success', '"
 		  . $rule_name . "','"
-		  . $req_info->{'rid'} . "');";
+		  . get_rid($req_info->{'rid'}) . "');";
 
 		$js .= $delay_cb;    # add in automatic log of delay expiration
 

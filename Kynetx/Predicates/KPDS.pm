@@ -39,6 +39,7 @@ use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Util qw(:all);
+use Kynetx::Rids qw(:all);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -104,7 +105,7 @@ sub authorized {
  my ($req_info,$rule_env,$session,$rule_name,$function,$args)  = @_;
  my $logger = get_logger();
 
- my $rid = $req_info->{'rid'};
+ my $rid = get_rid($req_info->{'rid'});
 
  $logger->debug("Checking KPDS access for rule $rule_name in $rid");
 
@@ -148,7 +149,7 @@ sub authorize {
 
  my $nt = Kynetx::OAuth->new(NAMESPACE, $req_info, $rule_env, $session, $urls);
 
- my $rid = $req_info->{'rid'};
+ my $rid = get_rid($req_info->{'rid'});
 
  my $base_cb_url = 'http://' .
                    Kynetx::Configure::get_config('OAUTH_CALLBACK_HOST').

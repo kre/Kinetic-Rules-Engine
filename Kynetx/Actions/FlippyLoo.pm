@@ -25,6 +25,7 @@ use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
+use Kynetx::Rids qw(:all);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -78,7 +79,7 @@ sub handle_delay {
        $req_info->{'txn_id'} . "'," .
 	 "'none', '', 'success', '" .
 	   $rule_name . "','".
-	     $req_info->{'rid'} .
+	     get_rid($req_info->{'rid'}) .
 	       "');";
 
    $js .= $delay_cb;  # add in automatic log of delay expiration

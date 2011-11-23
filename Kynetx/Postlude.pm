@@ -46,8 +46,9 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 use Kynetx::Expressions qw/:all/;
 use Kynetx::Session qw/:all/;
-use Kynetx::Events;
+use Kynetx::Rids qw/:all/;
 use Kynetx::Errors;
+use Kynetx::Dispatch;
 use Kynetx::Parser qw/mk_expr_node/;
 use Kynetx::Log;
 use Kynetx::Persistence qw(:all);
@@ -160,13 +161,13 @@ sub eval_persistent_expr {
 
     if ( $expr->{'action'} eq 'clear' ) {
     	#### Persistent destroy
-        delete_persistent_var( $domain,$req_info->{'rid'}, $session, $expr->{'name'} );
+        delete_persistent_var( $domain,get_rid($req_info->{'rid'}), $session, $expr->{'name'} );
 		} elsif ( $expr->{'action'} eq 'clear_hash_element' ) {
     		$logger->trace("Clear: ", sub {Dumper($expr)});
     		my $name = $expr->{'name'};
     		my $path_r = $expr->{'hash_element'};
     		my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $path_r);
-			Kynetx::Persistence::delete_persistent_hash_element($domain,$req_info->{'rid'},$session,$name,$path);
+			Kynetx::Persistence::delete_persistent_hash_element($domain,get_rid($req_info->{'rid'}),$session,$name,$path);
 	    } elsif ( $expr->{'action'} eq 'set' ) {
     	#### Persistent setter
         $logger->trace( "expr: ", sub { Dumper($expr) } );
@@ -182,10 +183,10 @@ sub eval_persistent_expr {
         }
         if ($value) {
             $logger->trace( "Set value ", $expr->{'name'}, " to $value" );
-            save_persistent_var($domain, $req_info->{'rid'}, $session, $expr->{'name'}, $value );
+            save_persistent_var($domain, get_rid($req_info->{'rid'}), $session, $expr->{'name'}, $value );
         } else {
             $logger->trace( "Set called for ", $expr->{'name'}, " as flag" );
-            save_persistent_var($domain, $req_info->{'rid'}, $session, $expr->{'name'} );
+            save_persistent_var($domain, get_rid($req_info->{'rid'}), $session, $expr->{'name'} );
         }
     } elsif ($expr->{'action'} eq 'set_hash') {
     	my $name = $expr->{'name'};
@@ -205,7 +206,7 @@ sub eval_persistent_expr {
         	return $js;
         }
 		Kynetx::Persistence::save_persistent_hash_element($domain,
-				$req_info->{'rid'},
+				get_rid($req_info->{'rid'}),
 				$session,
 				$name,
 				$path,
@@ -227,10 +228,10 @@ sub eval_persistent_expr {
                      $expr->{'from'}, $rule_env, $rule_name, $req_info, $session
                  )
           );
-        increment_persistent_var( $domain, $req_info->{'rid'}, $session, $expr->{'name'}, $by,
+        increment_persistent_var( $domain, get_rid($req_info->{'rid'}), $session, $expr->{'name'}, $by,
                                  $from );
     } elsif ( $expr->{'action'} eq 'forget' ) {
-            delete_trail_element($domain, $req_info->{'rid'}, $session, $expr->{'name'},
+            delete_trail_element($domain, get_rid($req_info->{'rid'}), $session, $expr->{'name'},
                             $expr->{'regexp'} );
     } elsif ( $expr->{'action'} eq 'mark' ) {
         my $url =
@@ -244,7 +245,7 @@ sub eval_persistent_expr {
           : $req_info->{'caller'};
 
         #	    $logger->debug("Marking trail $expr->{'name'} with $url");
-        add_trail_element($domain, $req_info->{'rid'}, $session, $expr->{'name'}, $url );
+        add_trail_element($domain, get_rid($req_info->{'rid'}), $session, $expr->{'name'}, $url );
     } else {
         $logger->error(
                       "Bad action in persistent expression: $expr->{'action'}");
@@ -327,7 +328,7 @@ sub eval_control_statement {
     my $js = '';
 
     if ( $expr->{'statement'} eq 'last' ) {
-        $req_info->{ $req_info->{'rid'} . ':__KOBJ_EXEC_LAST' } = 1;
+        $req_info->{ get_rid($req_info->{'rid'}) . ':__KOBJ_EXEC_LAST' } = 1;
     }
 
     return $js;
@@ -341,6 +342,8 @@ sub eval_raise_statement {
     my $js = '';
 
 #    $logger->debug("Event Expr: ", sub {Dumper($expr)});
+
+    # event name can be an expression
     my $event_name = Kynetx::Expressions::den_to_exp(
         eval_expr_with_default(
                                $expr->{'event'},
@@ -358,82 +361,104 @@ sub eval_raise_statement {
     };
 
     foreach my $m ( @{ $expr->{'modifiers'} } ) {
-        $new_req_info->{ $m->{'name'} } =
-          Kynetx::Expressions::den_to_exp(
-                   Kynetx::Expressions::eval_expr(
-                       $m->{'value'}, $rule_env, $rule_name, $req_info, $session
-                   )
-          );
+      my $val = Kynetx::Expressions::den_to_exp(
+		  Kynetx::Expressions::eval_expr(
+                    $m->{'value'}, $rule_env, $rule_name, $req_info, $session
+                  )
+		);
+      $new_req_info->{ $m->{'name'} } = $val;
 
     }
+ 
+    # use the calculated versions
+    my $domain = $new_req_info->{'domain'};
+    my $eventtype = $new_req_info->{'eventtype'};
 
-    #    my $rid = $expr->{'ruleset'}->{'rid'} || $req_info->{'rid'}
-    my $rids = Kynetx::Expressions::den_to_exp(
-        eval_expr_with_default(
-                                $expr->{'ruleset'},
-                                $req_info->{'rid'},    # default value
-                                $rule_env,
-                                $rule_name,
-                                $req_info,
-                                $session
-        )
-    );
+    
+    my $rid_info_list;
 
-    # normalize
-    unless ( ref $rids eq 'ARRAY' ) {
+    # if there was a calculated ridlist, use it. Otherwise get salience
+    if (defined $expr->{'ruleset'} ||
+	(defined $req_info->{'api'} && 
+	 $req_info->{'api'} eq 'blue')  # this is what we do for blue
+       ) {
+
+      # rid list can be an expression
+      my $rids = Kynetx::Expressions::den_to_exp(
+    		    eval_expr_with_default(
+			$expr->{'ruleset'},
+ 		        # default value is current ruleset
+			get_rid($req_info->{'rid'}).".".get_version($req_info->{'rid'}),    
+			$rule_env,
+			$rule_name,
+			$req_info,
+			$session
+		       )
+		);
+      
+      # normalize, if it's not an array, make it one
+      unless ( ref $rids eq 'ARRAY' ) {
         $rids = [$rids];
+      }
+
+      foreach my $rid_and_ver (map { split( /\./, $_, 2 ) } @{$rids}) {
+	my ( $rid, $ver );
+	if ( ref $rid_and_ver eq 'ARRAY' ) {
+	  ( $rid, $ver ) = @{$rid_and_ver};
+	} else {
+	  ( $rid, $ver ) = ( $rid_and_ver, 0 );
+	}
+	push(@{ $rid_info_list }, 
+	     mk_rid_info($req_info, $rid, {'version' => $ver})
+	    );
+	
+      }
+      
+    } else {
+      my $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info);
+      $rid_info_list = $unfiltered_rid_list->{$domain}->{$eventtype} || [];
     }
 
-    foreach my $rid_and_ver ( map { split( /\./, $_, 2 ) } @{$rids} ) {
 
-        my ( $rid, $ver );
-        if ( ref $rid_and_ver eq 'ARRAY' ) {
-            ( $rid, $ver ) = @{$rid_and_ver};
-        } else {
-            ( $rid, $ver ) = ( $rid_and_ver, 0 );
-        }
+    foreach my $rid_and_ver (  @{$rid_info_list} ) {
 
-        $logger->debug(
-               "Raising explicit event $expr->{'domain'}:$event_name for $rid");
+      my $rid = get_rid($rid_and_ver);
+      my $ver = get_version($rid_and_ver);
 
-        my $schedule = $req_info->{'schedule'};
+      if ( $ver =~ /v\d+/ ) {
+	$ver =~ s/v(\d+)/$1/;
+      }
+      $logger->debug(
+               "Raising explicit event $domain:$eventtype for $rid:$ver");
+
+      my $schedule = $req_info->{'schedule'};
 
         # merge in the incoming request info
-        my $this_req_info =
-          Kynetx::Request::merge_req_env( $req_info, $new_req_info );
+      my $this_req_info =
+	Kynetx::Request::merge_req_env( $req_info, $new_req_info );
 
-        if ($ver) {
+      # make sure this is right
+      $this_req_info->{'rid'} = 
+	mk_rid_info($this_req_info, 
+		    $rid,
+		    {'version' => $ver});
 
-            # remove the v from numeric version numbers
-            if ( $ver =~ /v\d+/ ) {
-                $ver =~ s/v(\d+)/$1/;
-            }
-            $this_req_info->{ $rid . ':kynetx_app_version' } = $ver;
-        } else {
+      
+      my $ev = Kynetx::Events::mk_event($this_req_info);
+      $logger->trace("Event is: ", sub {Dumper($ev)});
 
-# if we're raising an event on a new RID and we don't have a version ensure it's in the same mode (dev or production)
-            if ( $req_info->{ $req_info->{'rid'} . ':kynetx_app_version' } ) {
-                $this_req_info->{ $rid . ':kynetx_app_version' } =
-                  $req_info->{ $req_info->{'rid'} . ':kynetx_app_version' };
-            }
-        }
-        $logger->debug( "Raising explicit event for RID $rid, version "
-                        . $this_req_info->{ $rid . ':kynetx_app_version' } )
-          if $rid && $this_req_info->{ $rid . ':kynetx_app_version' };
-
-        my $ev = Kynetx::Events::mk_event($this_req_info);
-        $logger->trace("Event is: ", sub {Dumper($ev)});
-
-        # this side-effects the schedule
-
-	my $rid_info = Kynetx::Events::mk_rid_info($req_info, $rid);
-
-        Kynetx::Events::process_event_for_rid( $ev, $this_req_info, $session,
-                                               $schedule, $rid_info );
+      # this side-effects the schedule
+      #	$logger->debug("Ready to process event...");
+      Kynetx::Events::process_event_for_rid( $ev, 
+					     $this_req_info, 
+					     $session,
+					     $schedule, 
+					     $this_req_info->{'rid'}
+					   );
     }
 
     return $js;
-}
+  }
 
 sub eval_expr_with_default {
     my ( $expr, $default, $rule_env, $rule_name, $req_info, $session ) = @_;

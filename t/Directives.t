@@ -35,8 +35,10 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
+use Kynetx::Response qw/:all/;
 use Kynetx::Directives qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Session qw/:all/;
@@ -69,46 +71,50 @@ my $session = Kynetx::Test::gen_session($r, $rid);
 
 my $test_count = 0;
 
+my $dd = Kynetx::Response->create_directive_doc();
 
 
 send_directive($my_req_info, 
+	       $dd,
 	       "emit_js", 
 	       {'js' => 'var domain = $K(obj).data("domain");'});
 
-is($my_req_info->{'directives'}->[0]->type(), "emit_js");
+is($dd->directives()->[0]->type(), "emit_js");
 $test_count++;
 
 
-is_deeply($my_req_info->{'directives'}->[0]->options(), 
+is_deeply($dd->directives()->[0]->options(), 
 	  {'js' => 'var domain = $K(obj).data("domain");'}
   );
 $test_count++;
 
 
 emit_js($my_req_info, 
+	$dd,
 	'var domain = $K(obj).data("domain");');
 
 
-is_deeply($my_req_info->{'directives'}->[0]->options()->{'js'}, 
-	  $my_req_info->{'directives'}->[1]->options()->{'js'}, 
+is_deeply($dd->directives()->[0]->options()->{'js'}, 
+	  $dd->directives()->[1]->options()->{'js'}, 
 	 );
 $test_count++;
 
 my $vars = {'a' => 5, 'b' => ['a', 'foo']};
 
 send_data($my_req_info,
+	  $dd,
 	  $vars
 	 );
 
 
-is_deeply($my_req_info->{'directives'}->[2]->options(), 
+is_deeply($dd->directives()->[2]->options(), 
 	  $vars
 	 );
 $test_count++;
 
 #diag (Dumper to_directive($my_req_info->{'directives'}->[2], $my_req_info->{'eid'}));
 
-is_deeply(to_directive($my_req_info->{'directives'}->[2], $my_req_info->{'eid'}),
+is_deeply(to_directive($dd->directives()->[2], $my_req_info->{'eid'}),
 	  {'options' => {'a' => 5,
 			 'b' => [
 				 'a',

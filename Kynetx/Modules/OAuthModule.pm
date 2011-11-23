@@ -38,6 +38,7 @@ use Kynetx::Session qw(
 	session_cleanup
 );
 use Kynetx::Persistence;
+use Kynetx::Rids qw/:all/;
 use Kynetx::Errors;
 use Kynetx::Modules::HTTP;
 
@@ -235,7 +236,7 @@ sub delete_token {
 	my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
 	my $logger = get_logger();
 	my $oauth_service = $args->[0];
-	my $rid = $req_info->{'rid'};
+	my $rid = get_rid($req_info->{'rid'});
 	my $key = ACCESS_TOKEN_KEY . SEP . $oauth_service;
 	$logger->debug("Delete token request: $key");
 	Kynetx::Persistence::delete_persistent_var("ent",$rid, $session, $key);	
@@ -262,8 +263,9 @@ sub set_config_from_action{
 }
 
 sub oauth_callback_handler {
-	my ( $r, $method, $rid, $eid ) = @_;
+	my ( $r, $method, $rid_info, $eid ) = @_;
 	my $logger = get_logger();
+	my $rid = get_rid($rid_info);
 	my ($cbrid,$version,$namespace,$fail);
 	$logger->debug("\n-----------------------OAuth Callback ($method)--------------------------");
 	my $session = Kynetx::Session::process_session($r);
@@ -342,8 +344,9 @@ sub oauth_callback_handler {
 }
 
 sub callback_host {
-	my ( $r, $method, $rid, $eid ) = @_;
+	my ( $r, $method, $rid_info, $eid ) = @_;
 	my $logger = get_logger();	
+	my $rid = get_rid($rid_info);
 	$logger->debug("\n-----------------------Callback Host ($method)--------------------------");
 	my $session = Kynetx::Session::process_session($r);
 	my $req_info = Kynetx::Request::build_request_env( $r, $method, $rid );
@@ -409,7 +412,7 @@ sub callback_host {
 sub store_access_tokens {
 	my ($req_info, $rule_env, $session, $namespace, $atokens) = @_;
 	my $logger = get_logger();
-	my $rid = $req_info->{'rid'};
+	my $rid = get_rid($req_info->{'rid'});
 	my $key = ACCESS_TOKEN_KEY . SEP . $namespace;
 	my $r = Kynetx::Persistence::save_persistent_var("ent",$rid, $session, $key, $atokens);
 	if (defined $r) {
@@ -429,7 +432,7 @@ sub get_access_tokens {
 		$logger->debug("Using tokens from parameters");
 		return $passed_tokens
 	}
-	my $rid = $req_info->{'rid'};
+	my $rid = get_rid($req_info->{'rid'});
 	my $key = ACCESS_TOKEN_KEY . SEP . $namespace;
 	my $value = Kynetx::Persistence::get_persistent_var("ent", $rid, $session, $key);
 	return $value;
@@ -525,7 +528,7 @@ sub get_auth_request_url {
 	my $logger = get_logger();
 	my ($url);
 	my $fail = undef;
-	my $rid = $req_info->{'rid'};	
+	my $rid = get_rid($req_info->{'rid'});	
 	my $extra_params = $oauth_config->{'extra_params'};
 	my $endpoints = $oauth_config->{'endpoints'};
 	my $namespace = $oauth_config->{'namespace'};
@@ -577,10 +580,10 @@ sub protected_resource_request {
 		'signature_method' => 'HMAC-SHA1',
 		'timestamp'        => time(),
 		'nonce'            => nonce(),
-      );
-    if (defined $extra_params) {
-    	$request->extra_params($extra_params);
-    }  
+	       );
+	if (defined $extra_params) {
+	  $request->extra_params($extra_params);
+	}  
 	$request->sign();
 	my $purl = $request->to_url;
 	if ($method eq 'GET') {
@@ -749,7 +752,7 @@ sub get_request_tokens {
 sub make_callback_url {
     my ( $req_info, $namespace ) = @_;
     my $logger = get_logger();
-    my $rid     = $req_info->{'rid'};
+    my $rid     = get_rid($req_info->{'rid'});
     my $version = $req_info->{'rule_version'} || 'prod';
     my $caller  = $req_info->{'caller'} || 'dummy';
     my $host    = Kynetx::Configure::get_config('EVAL_HOST');
@@ -764,11 +767,11 @@ sub make_callback_url {
 sub get_consumer_tokens {
 	my ( $req_info, $rule_env, $session, $namespace ) = @_;
 	my $logger = get_logger();
-	my $rid    = $req_info->{'rid'};
+	my $rid_info   = $req_info->{'rid'};
 	my $consumer_tokens;
 	unless ( $consumer_tokens = Kynetx::Keys::get_key($req_info, $rule_env, $namespace) ) {
         my $ruleset =
-          Kynetx::Repository::get_rules_from_repository( $rid, $req_info );
+          Kynetx::Repository::get_rules_from_repository( $rid_info, $req_info );
         $consumer_tokens = $ruleset->{'meta'}->{'keys'}->{$namespace};
 		Kynetx::Keys::insert_key($req_info, $rule_env, $namespace, $consumer_tokens);
     }
@@ -780,7 +783,7 @@ sub get_consumer_tokens {
 sub get_callback_action {
 	my($req_info,$session,$namespace,$args) = @_;
 	my $logger = get_logger();
-	my $rid = $req_info->{'rid'};
+	my $rid = get_rid($req_info->{'rid'});
 	my ($eventname,$targetrid,$cbaction);
 	my $key = CALLBACK_ACTION_KEY . SEP . $namespace;
 	
@@ -814,7 +817,7 @@ sub get_callback_action {
 
 sub clear_callback_action {
 	my($req_info,$session,$namespace,$args) = @_;
-	my $rid = $req_info->{'rid'};
+	my $rid = get_rid($req_info->{'rid'});
 	my $key = CALLBACK_ACTION_KEY . SEP . $namespace;
 	Kynetx::Persistence::delete_persistent_var("ent", $rid, $session, $key);		
 }
@@ -918,7 +921,7 @@ sub post_process_access_tokens {
 	my ($req_info, $rule_env, $session, $namespace, $atokens) = @_;
 	my $logger = get_logger();
 	$logger->trace("pTokens: ", sub {Dumper($atokens)});
-	my $rid = $req_info->{'rid'};
+	my $rid = get_rid($req_info->{'rid'});
 	if ($namespace eq 'twitter') {
 		my $params = Kynetx::Util::body_to_hash($atokens->{'__content'});
 		Kynetx::Modules::Twitter::store_access_tokens(

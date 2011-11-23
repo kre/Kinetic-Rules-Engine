@@ -41,7 +41,7 @@ use Kynetx::Actions qw/:all/;
 
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 my $logger = get_logger();
 
 my $test_num = 0;
@@ -125,10 +125,11 @@ _KRL_
 $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
 #diag Dumper $krl;
 
-
+my $dd = undef; # don't need real directive doc
 my $js = Kynetx::Actions::build_one_action(
 	    $krl,
 	    $req_info, 
+	    $dd,
 	    $rule_env,
 	    $session,
 	    'callback23',

@@ -75,7 +75,8 @@ my $rl;
 #----------- start over -------------------
 $my_req_info->{'schedule'} = Kynetx::Scheduler->new();
 
-Kynetx::Errors::raise_error($my_req_info, 'warn',
+Kynetx::Errors::raise_error($my_req_info, 
+			    'warn',
 			    "[keys] invalid operator argument",
 			    {'rule_name' => $rule_name,
 			     'genus' => 'flipper',

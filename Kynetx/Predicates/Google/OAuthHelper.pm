@@ -53,6 +53,7 @@ use Kynetx::Session qw(
   session_get
   process_session
 );
+use Kynetx::Rids qw/:all/;
 use Kynetx::Util;
 use Kynetx::Memcached qw(check_cache mset_cache);
 
@@ -90,7 +91,7 @@ use constant FLOW_TYPE => "web_server";
 
 sub get_authorization_message {
     my ( $req_info, $rule_env, $session, $args, $namespace, $endpoints, $scope ) = @_;
-    my $rid = $req_info->{'rid'};
+    my $rid = get_rid($req_info->{'rid'});
     my ($uauth_url) =
       get_userauth_url( $req_info, $rule_env,
 			$session, $args, $namespace, $endpoints,
@@ -101,7 +102,7 @@ sub get_authorization_message {
 sub get_userauth_url {
     my ( $req_info, $rule_env, $session, $args, $namespace, $endpoints, $scope ) = @_;
     my $logger      = get_logger();
-    my $rid         = $req_info->{'rid'};
+    my $rid         = get_rid($req_info->{'rid'});
     my $request_url = $endpoints->{'authorization_url'};
     my $consumer_tokens =
       get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
@@ -142,7 +143,7 @@ sub get_access_tokens_v2 {
     my ($req_info,$rule_env,$session,$namespace,$endpoint,$callback_hash) = @_;
     my $logger = get_logger();
     $logger->trace("Session: ", sub {Dumper($session)});
-    my $rid         = $req_info->{'rid'};
+    my $rid         = get_rid($req_info->{'rid'});
     my $verifier = uri_escape(get_token( $rid, $session, 'oauth_verifier', $namespace));
     my $callback = uri_escape(make_callback_url($req_info,$namespace));
     $logger->trace("Access URL callback: ",uri_unescape($callback),"\n");
@@ -180,7 +181,7 @@ sub get_access_tokens_v1 {
     my $logger = get_logger();
     $logger->trace("Get Access Tokens v1");
     $logger->trace( "Endpoints: ", sub { Dumper($endpoints) } );
-    my $rid         = $req_info->{'rid'};
+    my $rid         = get_rid($req_info->{'rid'});
     my $request_url = $endpoints->{'access_token_url'};
     my $consumer_tokens =
       get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
@@ -317,7 +318,7 @@ sub generic_oauth_handler {
 sub get_request_tokens {
     my ( $req_info, $rule_env, $session, $args, $namespace, $endpoints, $scope ) = @_;
     my $logger      = get_logger();
-    my $rid         = $req_info->{'rid'};
+    my $rid         = get_rid($req_info->{'rid'});
     my $request_url = $endpoints->{'request_token_url'};
     $logger->debug( "request url: ", $request_url );
 #    $logger->debug( "Rule env: ", sub { Dumper($rule_env) } );
@@ -376,7 +377,7 @@ sub get_protected_resource_v2 {
     my ( $req_info, $rule_env, $session, $namespace, $url,$cache) = @_;
     my $logger = get_logger();
     $logger->debug("Protected Request URL: ",$url);
-    my $rid    = $req_info->{'rid'};
+    my $rid    = get_rid($req_info->{'rid'});
     if ($cache) {
         my $key = $rid.":".$url;
         $logger->debug("Check cache for $key");
@@ -408,7 +409,7 @@ sub get_protected_resource_v2 {
 sub get_protected_resource_v1 {
     my ( $req_info, $rule_env, $session, $namespace, $url, $scope ) = @_;
     my $logger = get_logger();
-    my $rid    = $req_info->{'rid'};
+    my $rid    = get_rid($req_info->{'rid'});
     my $consumer_tokens =
       get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
     my $token = get_token( $rid, $session, 'access_token', $namespace, $scope );
@@ -471,7 +472,7 @@ sub post_protected_resource_v2 {
     my ( $req_info, $rule_env, $session, $namespace, $url, $content ) = @_;
     my $logger = get_logger();
     $logger->debug("URL: ", $url);
-    my $rid    = $req_info->{'rid'};
+    my $rid    = get_rid($req_info->{'rid'});
     my $access_token = get_token( $rid, $session, 'access_token', $namespace);
     my $hreq = HTTP::Request->new(POST => $url);
     if ($content) {
@@ -488,7 +489,7 @@ sub post_protected_resource_v2 {
 sub post_protected_resource_v1 {
     my ( $req_info, $rule_env, $session, $namespace, $scope, $url, $content ) = @_;
     my $logger = get_logger();
-    my $rid    = $req_info->{'rid'};
+    my $rid    = get_rid($req_info->{'rid'});
     my $consumer_tokens =
       get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
     my $token = get_token( $rid, $session, 'access_token', $namespace, $scope );
@@ -748,10 +749,10 @@ sub get_consumer_tokens {
     my ( $req_info, $rule_env, $session, $namespace ) = @_;
     my $logger = get_logger();
     my $consumer_tokens;
-    my $rid    = $req_info->{'rid'};
+    my $rid    = get_rid($req_info->{'rid'});
     unless ( $consumer_tokens = Kynetx::Keys::get_key($req_info, $rule_env, $namespace) ) {
         my $ruleset =
-          Kynetx::Repository::get_rules_from_repository( $rid, $req_info );
+          Kynetx::Repository::get_rules_from_repository( $req_info->{'rid'}, $req_info );
         $consumer_tokens = $ruleset->{'meta'}->{'keys'}->{$namespace};
 	Kynetx::Keys::insert_key($req_info, $rule_env, $namespace, $consumer_tokens);
       }
@@ -795,7 +796,7 @@ sub parse_callback {
         $cb_obj->{'namespace'} = 'common';
         $cb_obj->{'caller'}    = $req->param('caller');
         $cb_obj->{'verifier'}  = uri_escape($req->param('code'));
-        $cb_obj->{'version'}   = $cb_obj->{'req_info'}->{'rule_version'} || 'prod';
+        $cb_obj->{'version'}   = get_version($cb_obj->{'req_info'}->{'rid'});
     }
     return $cb_obj;
 }
@@ -807,8 +808,8 @@ sub make_callback_url {
     if ( $namespace eq 'facebook' ) {
         return _make_facebook_callback_url($req_info);
     } else {
-        my $rid     = $req_info->{'rid'};
-        my $version = $req_info->{'rule_version'} || 'prod';
+        my $rid     = get_rid($req_info->{'rid'});
+        my $version = get_version($req_info->{'rid'}) ;
         my $caller  = $req_info->{'caller'};
         #my $caller = "caller";
         my $host    = Kynetx::Configure::get_config('EVAL_HOST');
@@ -836,8 +837,8 @@ sub _make_facebook_callback_url {
     my $logger     = get_logger();
     # req_info can be extensive
     $logger->trace("Callback Request Info: ", sub {Dumper($req_info)});
-    my $rid        = $req_info->{'rid'};
-    my $version = $req_info->{'rule_version'} || 'prod';
+    my $rid        = get_rid($req_info->{'rid'});
+    my $version = get_version($req_info->{'rid'});
     my $caller  = $req_info->{'caller'} || 'dummy';
     my $host    = Kynetx::Configure::get_config('EVAL_HOST');
     my $port    = Kynetx::Configure::get_config('KNS_PORT') || 80;

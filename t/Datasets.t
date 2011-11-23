@@ -37,7 +37,7 @@ use APR::Pool ();
 use Log::Log4perl qw(get_logger :levels);
 #Log::Log4perl->easy_init($WARN);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 my $logger = get_logger();
 
@@ -46,12 +46,13 @@ use Kynetx::Datasets qw/:all/;
 use Kynetx::JavaScript qw/:all/;
 use Kynetx::Parser qw/:all/;
 use Kynetx::Configure;
+use Kynetx::Rids qw/:all/;
 
 Kynetx::Configure::configure();
 
 my $req_info;
 $req_info->{'referer'} = 'http://www.byu.edu'; # Utah (BYU)
-$req_info->{'rid'} = 'cs_test';
+$req_info->{'rid'} = mk_rid_info($req_info,'cs_test');
 $req_info->{'pool'} = APR::Pool->new;
 
 
@@ -390,7 +391,7 @@ _KRL_
     $krl = Kynetx::Parser::parse_global_decls($krl_src);
 #    diag Dumper($krl);
 
-    my $source = get_dataset($krl->[0],$req_info);
+    $source = get_dataset($krl->[0],$req_info);
     my $utf8_str = Kynetx::Util::str_in('ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ');
 	#$logger->debug($source);    
     contains_string($source,$utf8_str,"UTF-8 datasets");

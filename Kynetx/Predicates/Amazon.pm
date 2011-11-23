@@ -34,6 +34,7 @@ use Kynetx::Session qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::Util qw(:all);
+use Kynetx::Rids qw(:all);
 use Kynetx::Errors;
 use Kynetx::Configure qw/:all/;
 use Kynetx::JSONPath qw/:all/;
@@ -147,7 +148,7 @@ sub get_amazon_tokens {
     my ($req_info, $rule_env) = @_;
     my $amazon_tokens;
     my $logger = get_logger();
-    my $rid    = $req_info->{'rid'};
+    my $rid    = get_rid($req_info->{'rid'});
     unless ( $amazon_tokens = Kynetx::Keys::get_key($req_info, $rule_env, 'amazon')  ) {
         my $ruleset =
           Kynetx::Repository::get_rules_from_repository( $rid, $req_info );

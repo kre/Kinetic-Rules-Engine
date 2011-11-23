@@ -34,7 +34,7 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
@@ -43,6 +43,7 @@ use Kynetx::Environments qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
 use Kynetx::Expressions qw/:all/;
+use Kynetx::Response qw/:all/;
 
 
 use Kynetx::FakeReq qw/:all/;
@@ -52,7 +53,6 @@ use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
 my $logger = get_logger();
-
 
 
 my $preds = Kynetx::Modules::HTTP::get_predicates();
@@ -101,6 +101,8 @@ my $stest_site = "https://httpbin.org";
 
 #goto ENDY;
 
+my $dd = Kynetx::Response->create_directive_doc($my_req_info->{'eid'});
+
 
 $krl_src = <<_KRL_;
 // Everything but the URI should be ignored in an http delete
@@ -128,6 +130,7 @@ $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the firs
 $js = Kynetx::Actions::build_one_action(
 	    $krl,
 	    $my_req_info, 
+	    $dd,
 	    $rule_env,
 	    $session,
 	    'callback23',
@@ -165,6 +168,7 @@ $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the firs
 $js = Kynetx::Actions::build_one_action(
 	    $krl,
 	    $my_req_info, 
+	    $dd,
 	    $rule_env,
 	    $session,
 	    'callback23',
@@ -203,6 +207,7 @@ $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the firs
 $js = Kynetx::Actions::build_one_action(
 	    $krl,
 	    $my_req_info, 
+	    $dd,
 	    $rule_env,
 	    $session,
 	    'callback23',
@@ -242,6 +247,7 @@ $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the firs
 $js = Kynetx::Actions::build_one_action(
 	    $krl,
 	    $my_req_info, 
+	    $dd,
 	    $rule_env,
 	    $session,
 	    'callback23',
@@ -282,6 +288,7 @@ $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the firs
 $js = Kynetx::Actions::build_one_action(
 	    $krl,
 	    $my_req_info, 
+	    $dd,
 	    $rule_env,
 	    $session,
 	    'callback23',
@@ -316,6 +323,7 @@ http:get("$test_site/get") setting(r)
 	  
 _KRL_
 
+
 $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
 #diag Dumper $krl;
 
@@ -323,6 +331,7 @@ $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the firs
 $js = Kynetx::Actions::build_one_action(
 	    $krl,
 	    $my_req_info, 
+	    $dd,
 	    $rule_env,
 	    $session,
 	    'callback23',
@@ -333,7 +342,6 @@ ok($result->{'content_length'} > 0, "Content length defined");
 ok($result->{'status_code'} eq '200', "Status code defined");
 ok($result->{'content'} =~ m/Cache-Control\": \"no-cache/, "Content back from httpbin includes request headers");
 $test_count += 3;
-
 
 
 # set variable and raise event
@@ -356,6 +364,7 @@ $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the firs
 $js = Kynetx::Actions::build_one_action(
 	    $krl,
 	    $my_req_info, 
+	    $dd,
 	    $rule_env,
 	    $session,
 	    'callback23',
@@ -396,6 +405,7 @@ $rule_env = Kynetx::Test::gen_rule_env();
 $js = Kynetx::Actions::build_one_action(
 	    $krl,
 	    $my_req_info, 
+	    $dd,
 	    $rule_env,
 	    $session,
 	    'callback23',
@@ -437,6 +447,7 @@ $rule_env = Kynetx::Test::gen_rule_env();
 $js = Kynetx::Actions::build_one_action(
 	    $krl,
 	    $my_req_info, 
+	    $dd,
 	    $rule_env,
 	    $session,
 	    'callback23',
@@ -477,6 +488,7 @@ $rule_env = Kynetx::Test::gen_rule_env();
 $js = Kynetx::Actions::build_one_action(
 	    $krl,
 	    $my_req_info, 
+	    $dd,
 	    $rule_env,
 	    $session,
 	    'callback23',
@@ -514,6 +526,7 @@ $rule_env = Kynetx::Test::gen_rule_env();
 $js = Kynetx::Actions::build_one_action(
 	    $krl,
 	    $my_req_info, 
+	    $dd,
 	    $rule_env,
 	    $session,
 	    'callback23',
@@ -547,6 +560,7 @@ $rule_env = Kynetx::Test::gen_rule_env();
 $js = Kynetx::Actions::build_one_action(
 	    $krl,
 	    $my_req_info, 
+	    $dd,
 	    $rule_env,
 	    $session,
 	    'callback23',
@@ -632,6 +646,7 @@ $rule_env = Kynetx::Test::gen_rule_env();
 $js = Kynetx::Actions::build_one_action(
 	    $krl,
 	    $my_req_info, 
+	    $dd,
 	    $rule_env,
 	    $session,
 	    'callback23',

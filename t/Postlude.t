@@ -608,6 +608,11 @@ delete_persistent_var($domain,$rid,$session,'my_trail');
 delete_persistent_var($domain,$rid,$session,'my_flag');
 delete_persistent_var($domain,$rid,$session,'archive_pages_now');
 
+
+#
+# raise tested in Rules.t
+# 
+
 done_testing($test_count);
 
 

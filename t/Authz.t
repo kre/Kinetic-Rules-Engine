@@ -43,6 +43,7 @@ use Kynetx::Environments qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
 use Kynetx::Parser qw/:all/;
+use Kynetx::Rids qw/:all/;
 use Kynetx::Rules qw/:all/;
 use Kynetx::Expressions qw/:all/;
 use Kynetx::Util qw/:all/;
@@ -80,7 +81,7 @@ my $rule_name = 'foo';
 
 my $rule_env = Kynetx::Test::gen_rule_env();
 
-my $session = Kynetx::Test::gen_session($r, $rid);
+my $session = Kynetx::Test::gen_session($r, $rid, {'sid' => rand(100000000000)});
 
 my $krl = <<_KRL_;
 ruleset $rid {
@@ -112,6 +113,8 @@ ruleset $rid {
 _KRL_
 
 $pt = Kynetx::Parser::parse_ruleset($krl);
+
+#diag Dumper $session;
 
 ok(!is_authorized($rid,$pt,$session),"authz request without session fails");
 $test_count++;
@@ -166,7 +169,7 @@ like($authorize_message,
 $test_count++;
 
 # this uses the ruleset cs_test_authz from the repo
-my $rl = Kynetx::Rules::mk_schedule($another_req_info, 'cs_test_authz');
+my $rl = Kynetx::Rules::mk_schedule($another_req_info, mk_rid_info($another_req_info,'cs_test_authz'));
 #diag Dumper $rl;
 my $js = Kynetx::Rules::process_schedule($r, $rl, $session, time);
 
@@ -181,7 +184,7 @@ unlike($js,
      'authz ruleset does ask for activation');
 $test_count++;
 
-$rl = Kynetx::Rules::mk_schedule($my_req_info, $rid, $pt);
+$rl = Kynetx::Rules::mk_schedule($my_req_info, mk_rid_info($my_req_info,$rid), $pt);
 #diag Dumper $my_req_info;
 $js = Kynetx::Rules::process_schedule($r, $rl, $session, time);
 #diag $js;

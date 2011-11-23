@@ -51,6 +51,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 #use Kynetx::JavaScript qw/:all/;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::Environments qw/:all/;
+use Kynetx::Rids qw/:all/;
 
 our $AUTOLOAD;
 
@@ -196,7 +197,7 @@ sub _load_dataset {
                              "/",
                              (
                                 Kynetx::Configure::get_config('DATA_ROOT'),
-                                $req_info->{'rid'}, $source_name
+                                get_rid($req_info->{'rid'}), $source_name
                              )
         );
         $self->source($source_name);

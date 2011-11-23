@@ -40,6 +40,7 @@ use Kynetx::Memcached qw(:all);
 use Kynetx::Console qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Configure qw(:all);
+use Kynetx::Rids qw(:all);
 use Kynetx::Directives;
 use Kynetx::Modules::OAuthModule;
 use Kynetx::Events;
@@ -218,6 +219,9 @@ sub flush_ruleset_cache {
     # default to production for svn repo
     # defaults to production when no version specified
 
+
+    #FIXME: This needs to be put in Repository.pm
+
     my $version = Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kynetx_app_version']) || 'prod';
 
     $logger->debug("[flush] flushing rules for $rid ($version version)");
@@ -244,7 +248,9 @@ sub describe_ruleset {
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
     # no locking
 
-    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
+    my $rid_info = mk_rid_info($req_info, $rid);
+
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
 
     my $numrules = @{ $ruleset->{'rules'} } + 0;
 

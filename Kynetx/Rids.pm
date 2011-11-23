@@ -1,6 +1,5 @@
-package Kynetx::Actions::LetItSnow;
-# file: Kynetx/Actions/LetItSnow.pm
-# file: Kynetx/Predicates/Referers.pm
+package Kynetx::Rids;
+# file: Kynetx/Rids.pm
 #
 # This file is part of the Kinetic Rules Engine (KRE)
 # Copyright (C) 2007-2011 Kynetx, Inc. 
@@ -20,12 +19,11 @@ package Kynetx::Actions::LetItSnow;
 # Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 # MA 02111-1307 USA
 #
+
 use strict;
 use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
-
-use Kynetx::Rids qw(:all);
 
 
 use Exporter;
@@ -37,59 +35,36 @@ our @ISA         = qw(Exporter);
 # put exported names inside the "qw"
 our %EXPORT_TAGS = (all => [ 
 qw(
+    mk_rid_info
+    get_rid
+    get_version
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
+sub mk_rid_info {
+  my($req_info,$rid, $options) = @_;
 
-my $default_actions = {
-    let_it_snow => {
-		    'js' => <<EOF,
-    function(uniq, cb, config) {
-	KOBJ.letitsnow(config);
-	cb();
-}
-EOF
-		    'after' => [ \&handle_delay ]
-
-	}
-};
+  my $version = 
+       $options->{'version'} ||
+	 $req_info->{"$rid:kynetx_app_version"} || 
+	   $req_info->{"$rid:kinetic_app_version"} || 
+	     'prod';
 
 
-sub get_resources {
-    return {};
+  return {'rid' => $rid,
+	  'kinetic_app_version' => $version};
 }
 
-sub get_actions {
-    return $default_actions;
+sub get_rid {
+  my($rid_info) = @_;
+  return $rid_info->{'rid'};
 }
 
-my %predicates = ( );
-
-sub get_predicates {
-    return \%predicates;
+sub get_version {
+  my($rid_info) = @_;
+  return $rid_info->{'kinetic_app_version'} || 'prod';
 }
 
-sub handle_delay {
- my ($js,$req_info,$rule_env,$session,$config,$mods)  = @_;
-
- if (defined $mods && $mods->{'delay'}) {
-   my $rule_name = $config->{'rule_name'};
-   my $delay_cb =
-     ";KOBJ.logger('timer_expired', '" .
-       $req_info->{'txn_id'} . "'," .
-	 "'none', '', 'success', '" .
-	   $rule_name . "','".
-	     get_rid($req_info->{'rid'}) .
-	       "');";
-
-   $js .= $delay_cb;  # add in automatic log of delay expiration
-
-   $js = "setTimeout(function() { $js },  ($mods->{'delay'} * 1000) ); \n";
- }
-
- return $js;
-
-}
 
 
 1;

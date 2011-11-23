@@ -40,6 +40,7 @@ use Kynetx::Session qw/:all/;
 use Kynetx::Util qw/:all/;
 use Kynetx::JavaScript qw/:all/;
 use Kynetx::Json qw/:all/;
+use Kynetx::Rids qw/:all/;
 
 # put exported names inside the "qw"
 our %EXPORT_TAGS = (all => [
@@ -52,13 +53,18 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 sub is_authorized {
   my ($rid, $ruleset, $session) = @_;
 
+  # $rid is real RID, not rid_info...
+
+#  my $logger = get_logger();
+
   my $authorized = 1;
   # if there's no authz directive, we're authorized
   if (defined $ruleset->{'meta'}->{'authz'}) {
     my $type = $ruleset->{'meta'}->{'authz'}->{'type'};
     my $level = $ruleset->{'meta'}->{'authz'}->{'level'};
     my $tokens = get_authz_tokens($session);
-    if ($tokens->{$rid}) {
+#    $logger->debug("Got tokens ", sub { Dumper $tokens});
+    if (defined $tokens && $tokens->{$rid}) {
       if ($tokens->{$rid}->{'type'} eq $type &&
 	  $tokens->{$rid}->{'level'} eq $level) {
 	$authorized = 1;
@@ -82,7 +88,7 @@ sub authorize_message {
   my $js = '';
 
 
-  my $rid = $req_info->{'rid'};
+  my $rid = get_rid($req_info->{'rid'});
 
   my $ruleset_name = $ruleset->{'ruleset_name'} || 'unknown';
   my $name = $ruleset->{'meta'}->{'name'} || 'unknown';

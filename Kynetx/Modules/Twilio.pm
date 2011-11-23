@@ -56,172 +56,204 @@ my $default_actions = {
   'say' => {
         directive => sub {
           my $req_info = shift;
+	  my $dd = shift;
           my $config = shift;
           my $args = shift;
           $config->{'text'} = $args->[0];
           send_directive($req_info,
-          	'say',
-          	$config);
-        }
-	 	 },
+			 $dd,
+			 'say',
+			 $config);
+               }
+	   },
   'play' => {
         directive => sub {
           my $req_info = shift;
+	  my $dd = shift;
           my $config = shift;
           my $args = shift;
           $config->{'url'} = $args->[0];
           send_directive($req_info,
-            'play',
-            $config);
+			 $dd,
+			 'play',
+			 $config);
         }
      },
   'sms' => {
         directive => sub {
           my $req_info = shift;
+	  my $dd = shift;
           my $config = shift;
           my $args = shift;
           $config->{'text'} = $args->[0];
           send_directive($req_info,
-          	'sms',
-          	$config);
+			 $dd,
+			 'sms',
+			 $config);
         }
 	 },
   'record' => {
         directive => sub {
           my $req_info = shift;
+	  my $dd = shift;
           my $config = shift;
           my $args = shift;
           $config->{'action'} = $args->[0];
           send_directive($req_info,
-          	'record',
-          	$config);
+			 $dd,
+			 'record',
+			 $config);
         }
 	 },
   'hangup' => {
         directive => sub {
           my $req_info = shift;
+	  my $dd = shift;
           my $config = shift;
           my $args = shift;
           send_directive($req_info,
-          	'hangup',
-          	$config);
+			 $dd,
+			 'hangup',
+			 $config);
         }
 	 },
   'redirect' => {
         directive => sub {
           my $req_info = shift;
+	  my $dd = shift;
           my $config = shift;
           my $args = shift;
           $config->{'url'} = $args->[0];
           send_directive($req_info,
-          	'redirect',
-          	$config);
+			 $dd,
+			 'redirect',
+			 $config);
         }
 	 },
   'reject' => {
         directive => sub {
           my $req_info = shift;
+	  my $dd = shift;
           my $config = shift;
           my $args = shift;
           send_directive($req_info,
-          	'reject',
-          	$config);
+			 $dd,
+			 'reject',
+			 $config);
         }
 	 },
   'pause' => {
         directive => sub {
           my $req_info = shift;
+	  my $dd = shift;
           my $config = shift;
           my $args = shift;
           $config->{'length'} = $args->[0];
           send_directive($req_info,
-          	'pause',
-          	$config);
+			 $dd,
+			 'pause',
+			 $config);
         }
 	 },
   'gather_start' => {
         directive => sub {
           my $req_info = shift;
+	  my $dd = shift;
           my $config = shift;
           my $args = shift;
           $config->{'action'} = $args->[0];
           send_directive($req_info,
-          	'gather_start',
-          	$config);
+			 $dd,
+			 'gather_start',
+			 $config);
         }
 	 },
   'gather_stop' => {
         directive => sub {
           my $req_info = shift;
+	  my $dd = shift;
           my $config = shift;
           my $args = shift;
           send_directive($req_info,
-          	'gather_stop',
-          	$config);
+			 $dd,
+			 'gather_stop',
+			 $config);
         }
 	 },
   'dial' => {
         directive => sub {
           my $req_info = shift;
+	  my $dd = shift;
           my $config = shift;
           my $args = shift;
           $config->{'number'} = $args->[0];
           send_directive($req_info,
-          	'dial',
-          	$config);
+			 $dd,
+			 'dial',
+			 $config);
         }
 	 },
   'dial_conference' => {
         directive => sub {
           my $req_info = shift;
+	  my $dd = shift;
           my $config = shift;
           my $args = shift;
           $config->{'name'} = $args->[0];
           send_directive($req_info,
-          	'dial_conference',
-          	$config);
+			 $dd,
+			 'dial_conference',
+			 $config);
         }
 	 },
   'dial_start' => {
         directive => sub {
           my $req_info = shift;
+	  my $dd = shift;
           my $config = shift;
           my $args = shift;
           send_directive($req_info,
-          	'dial_start',
-          	$config);
+			 $dd,
+			 'dial_start',
+			 $config);
         }
 	 },
   'dial_stop' => {
         directive => sub {
           my $req_info = shift;
+	  my $dd = shift;
           my $config = shift;
           my $args = shift;
           send_directive($req_info,
-            'dial_stop',
-            $config);
+			 $dd,
+			 'dial_stop',
+			 $config);
         }
      },
   'number' => {
         directive => sub {
           my $req_info = shift;
+	  my $dd = shift;
           my $config = shift;
           my $args = shift;
           $config->{'number'} = $args->[0];
           send_directive($req_info,
-          	'number',
-          	$config);
+			 $dd,
+			 'number',
+			 $config);
         }
 	 },
   'raw_response' => {
         directive => sub {
           my $req_info = shift;
+	  my $dd = shift;
           my $config = shift;
           my $args = shift;
           $config->{'xml'} = $args->[0];
           send_directive($req_info,
-          	'raw_response',
-          	$config);
+			 $dd,
+			 'raw_response',
+			 $config);
         }
 	 },
 

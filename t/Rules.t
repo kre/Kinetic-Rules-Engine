@@ -47,6 +47,8 @@ use Kynetx::Modules qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
 use Kynetx::Persistence qw/:all/;
+use Kynetx::Response qw/:all/;
+use Kynetx::Rids qw/:all/;
 
 
 use Kynetx::FakeReq;
@@ -191,7 +193,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'test_1'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -224,7 +226,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'test_2'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -260,7 +262,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'test_3'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -295,7 +297,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'test_4'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -364,7 +366,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'test_flag_1'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -440,7 +442,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'test_5a'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -485,7 +487,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'test_6'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -554,7 +556,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'test_trail_1'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -593,7 +595,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'test_trail_2'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -656,7 +658,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'test_trail_4'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -693,7 +695,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'test_trail_5'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -754,7 +756,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'test_trail_7'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -803,7 +805,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'test_8'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -847,7 +849,7 @@ add_testcase(
 # $config = mk_config_string(
 #   [
 #    {"rule_name" => 'test_page_ida'},
-#    {"rid" => 'cs_test'},
+#    {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
 #    {"txn_id" => 'txn_id'},
 #   ]
 # );
@@ -887,7 +889,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'emit_test_0'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -927,7 +929,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'emit_test_1'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -969,7 +971,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'extended_quote_test'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1005,7 +1007,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'april2008'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1071,7 +1073,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foreach_0'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1124,7 +1126,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foreach_01'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1178,7 +1180,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foreach_1'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1236,7 +1238,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foreach_2'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1329,7 +1331,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foreach_here'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1392,7 +1394,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foreach_here'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1459,7 +1461,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foreach_hash_1'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1539,7 +1541,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foreach_hash_2'},
-   {"rid" => 'foozle'},
+   {"rid" => {'rid' => 'foozle','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1604,7 +1606,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'april2008'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1646,7 +1648,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foo'},
-   {"rid" => 'global_expr_0'},
+   {"rid" => {'rid' => 'global_expr_0','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1688,7 +1690,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't0'},
-   {"rid" => 'global_expr_1'},
+   {"rid" => {'rid' => 'global_expr_1','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1741,7 +1743,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foo'},
-   {"rid" => 'meta_0'},
+   {"rid" => {'rid' => 'meta_0','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1785,7 +1787,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't0'},
-   {"rid" => 'two_rules_both_fire'},
+   {"rid" => {'rid' => 'two_rules_both_fire','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1794,7 +1796,7 @@ $config = mk_config_string(
 $config2 = mk_config_string(
   [
    {"rule_name" => 't1'},
-   {"rid" => 'two_rules_both_fire'},
+   {"rid" => {'rid' => 'two_rules_both_fire','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1848,7 +1850,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't0'},
-   {"rid" => 'two_rules_first_fires'},
+   {"rid" => {'rid' => 'two_rules_first_fires','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1896,7 +1898,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't8'},
-   {"rid" => 'two_rules_both_fire'},
+   {"rid" => {'rid' => 'two_rules_both_fire','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1905,7 +1907,7 @@ $config = mk_config_string(
 $config2 = mk_config_string(
   [
    {"rule_name" => 't9'},
-   {"rid" => 'two_rules_both_fire'},
+   {"rid" => {'rid' => 'two_rules_both_fire','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -1961,7 +1963,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't10'},
-   {"rid" => 'two_rules_both_fire'},
+   {"rid" => {'rid' => 'two_rules_both_fire','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -1988,13 +1990,17 @@ add_testcase(
     );
     
 
+# the following tests don't know about installed apps and this can't handle 
+$my_req_info->{'api'} = 'blue';
+
+
 $krl_src = <<_KRL_;
 ruleset two_rules_first_raises_second {
     rule t10 is active {
       select when pageview ".*"
       noop();
       fired {
-        raise explicit event foo;
+        raise explicit event foo for two_rules_first_raises_second
       }
     }
     rule t12 is active {
@@ -2010,7 +2016,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't10'},
-   {"rid" => 'two_rules_first_raises_second'},
+   {"rid" => {'rid' => 'two_rules_first_raises_second','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -2019,7 +2025,7 @@ $config = mk_config_string(
 $config2 = mk_config_string(
   [
    {"rule_name" => 't12'},
-   {"rid" => 'two_rules_first_raises_second'},
+   {"rid" => {'rid' => 'two_rules_first_raises_second','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -2056,8 +2062,8 @@ ruleset two_rules_first_raises_second_twice {
       select when pageview ".*"
       noop();
       fired {
-        raise explicit event foo;
-        raise explicit event foo;
+        raise explicit event foo for two_rules_first_raises_second_twice;
+        raise explicit event foo for two_rules_first_raises_second_twice;
       }
     }
     rule t12 is active {
@@ -2073,7 +2079,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't10'},
-   {"rid" => 'two_rules_first_raises_second_twice'},
+   {"rid" => {'rid' => 'two_rules_first_raises_second_twice','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -2082,7 +2088,7 @@ $config = mk_config_string(
 $config2 = mk_config_string(
   [
    {"rule_name" => 't12'},
-   {"rid" => 'two_rules_first_raises_second_twice'},
+   {"rid" => {'rid' => 'two_rules_first_raises_second_twice','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -2128,7 +2134,7 @@ ruleset two_rules_first_raises_second_with_expr {
       select when pageview ".*"
       noop();
       fired {
-        raise explicit event "f"+"ood";
+        raise explicit event "f"+"ood" for two_rules_first_raises_second_with_expr ;
       }
     }
     rule t12 is active {
@@ -2144,7 +2150,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't10'},
-   {"rid" => 'two_rules_first_raises_second_with_expr'},
+   {"rid" => {'rid' => 'two_rules_first_raises_second_with_expr','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -2153,7 +2159,7 @@ $config = mk_config_string(
 $config2 = mk_config_string(
   [
    {"rule_name" => 't12'},
-   {"rid" => 'two_rules_first_raises_second_with_expr'},
+   {"rid" => {'rid' => 'two_rules_first_raises_second_with_expr','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -2207,7 +2213,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't10'},
-   {"rid" => 'two_rules_first_raises_second_with_for'},
+   {"rid" => {'rid' => 'two_rules_first_raises_second_with_for','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -2216,7 +2222,7 @@ $config = mk_config_string(
 $config2 = mk_config_string(
   [
    {"rule_name" => 't12'},
-   {"rid" => 'two_rules_first_raises_second_with_for'},
+   {"rid" => {'rid' => 'two_rules_first_raises_second_with_for','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -2271,7 +2277,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't10'},
-   {"rid" => 'two_rules_first_raises_second_with_for_expr'},
+   {"rid" => {'rid' => 'two_rules_first_raises_second_with_for_expr','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -2280,7 +2286,7 @@ $config = mk_config_string(
 $config2 = mk_config_string(
   [
    {"rule_name" => 't12'},
-   {"rid" => 'two_rules_first_raises_second_with_for_expr'},
+   {"rid" => {'rid' => 'two_rules_first_raises_second_with_for_expr','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -2334,7 +2340,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't10'},
-   {"rid" => 'two_rules_first_raises_second_with_for_array'},
+   {"rid" => {'rid' => 'two_rules_first_raises_second_with_for_array','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -2343,7 +2349,7 @@ $config = mk_config_string(
 $config2 = mk_config_string(
   [
    {"rule_name" => 't12'},
-   {"rid" => 'two_rules_first_raises_second_with_for_array'},
+   {"rid" => {'rid' => 'two_rules_first_raises_second_with_for_array','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -2398,7 +2404,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't10'},
-   {"rid" => 'two_rules_second_not_raised'},
+   {"rid" => {'rid' => 'two_rules_second_not_raised','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -2407,7 +2413,7 @@ $config = mk_config_string(
 $config2 = mk_config_string(
   [
    {"rule_name" => 't12'},
-   {"rid" => 'two_rules_second_not_raised'},
+   {"rid" => {'rid' => 'two_rules_second_not_raised','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -2456,7 +2462,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 't10'},
-   {"rid" => 'two_rules_second_not_raised_with_for_expr'},
+   {"rid" => {'rid' => 'two_rules_second_not_raised_with_for_expr','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -2465,7 +2471,7 @@ $config = mk_config_string(
 $config2 = mk_config_string(
   [
    {"rule_name" => 't12'},
-   {"rid" => 'two_rules_second_not_raised_with_for_expr'},
+   {"rid" => {'rid' => 'two_rules_second_not_raised_with_for_expr','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
  );
@@ -2501,11 +2507,13 @@ foreach my $case (@test_cases) {
 #   }
 
   my $ruleset_rid = $case->{'expr'}->{'ruleset_name'} || $rid;
-#  diag "Testing $ruleset_rid";
+#  diag "######################## Testing $ruleset_rid";
   # note that gen_req_info has been redefined
   my $req_info = local_gen_req_info($ruleset_rid);
   $req_info->{'eventtype'} = 'pageview';
   $req_info->{'domain'} = 'web';
+
+  my $dd = Kynetx::Response->create_directive_doc($req_info->{'eid'});
 
   if($case->{'type'} eq 'ruleset') {
 
@@ -2521,18 +2529,22 @@ foreach my $case (@test_cases) {
 
     #diag("Processing events for $req_info->{'rid'} ($ruleset_rid)");
 
+    my $rid_info = Kynetx::Rids::mk_rid_info($req_info, $ruleset_rid);
+
     Kynetx::Events::process_event_for_rid($ev,
 					  $req_info,
 					  $session,
 					  $schedule,
-					  $ruleset_rid
+					  $rid_info
 					 );
+
 
     $js = Kynetx::Rules::process_schedule($r,
 					  $schedule,
 					  $session,
 					  time,
-					  $req_info
+					  $req_info,
+					  $dd
 					 );
 
 
@@ -2543,7 +2555,9 @@ foreach my $case (@test_cases) {
 				   $rule_env,
 				   $case->{'session'},
 				   $case->{'expr'},
-				   '');
+				   '',
+				   $dd
+				  );
 
   } else {
     diag "WARNING: No test run! Case must be either rule or ruleset"
@@ -2665,7 +2679,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foo'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -2708,7 +2722,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foo'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -2749,7 +2763,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foo'},
-   {"rid" => 'dataset0'},
+   {"rid" => {'rid' => 'dataset0','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -2794,7 +2808,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foo'},
-   {"rid" => 'dataset0'},
+   {"rid" => {'rid' => 'dataset0','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -2862,7 +2876,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'foo'},
-   {"rid" => 'dataset0'},
+   {"rid" => {'rid' => 'dataset0','kinetic_app_version' => 'dev'}},
    {"txn_id" => 'txn_id'},
   ]
 );
@@ -3601,7 +3615,7 @@ $mod_rule_env = empty_rule_env();
     eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
 
 
-#diag Dumper $mod_rule_env;
+# diag Dumper $mod_rule_env;
 
 is(lookup_rule_env("x", $mod_rule_env), 5, "x is 5 from flippy" );
 $test_count++;
@@ -3624,9 +3638,11 @@ ruleset foobar {
 _KRL_
 
 
+
 $module_rs = Kynetx::Parser::parse_ruleset($krl);
-# diag Dumper $module_rs;
-$my_req_info->{'rid'} = 'foobar';
+
+#diag Dumper $module_rs;
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
 $mod_rule_env = empty_rule_env();
 ($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
 
@@ -3666,7 +3682,7 @@ _KRL_
 
 $module_rs = Kynetx::Parser::parse_ruleset($krl);
 # diag Dumper $module_rs;
-$my_req_info->{'rid'} = 'foobar';
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
 $mod_rule_env = empty_rule_env();
 ($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
 
@@ -3725,7 +3741,7 @@ _KRL_
 
 $module_rs = Kynetx::Parser::parse_ruleset($krl);
 # diag Dumper $module_rs;
-$my_req_info->{'rid'} = 'foobar';
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
 $mod_rule_env = empty_rule_env();
 ($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
 
@@ -3762,7 +3778,7 @@ _KRL_
 
 $module_rs = Kynetx::Parser::parse_ruleset($krl);
 # diag Dumper $module_rs;
-$my_req_info->{'rid'} = 'foobar';
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
 $mod_rule_env = empty_rule_env();
 ($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
 
@@ -3797,7 +3813,7 @@ _KRL_
 
 $module_rs = Kynetx::Parser::parse_ruleset($krl);
 # diag Dumper $module_rs;
-$my_req_info->{'rid'} = 'foobar';
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
 $mod_rule_env = empty_rule_env();
 ($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
 

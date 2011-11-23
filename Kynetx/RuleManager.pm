@@ -41,6 +41,7 @@ use Kynetx::OParser;
 use Kynetx::Parser qw(:all);
 use Kynetx::PrettyPrinter qw(:all);
 use Kynetx::Request qw(:all);
+use Kynetx::Rids qw(:all);
 use Kynetx::Json qw/:all/;
 use Kynetx::Util qw(:all);
 use Kynetx::Version qw/:all/;
@@ -151,7 +152,8 @@ sub parse_performance {
     my $logger = get_logger();
     my $runs = 1;
     my $start = new Benchmark;
-    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info,undef,1,1);
+    my $rid_info = mk_rid_info($req_info, $rid);
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info,undef,1,1);
     if ($ruleset) {
         my $r_repos = new Benchmark;
         my $repo_diff = timediff($r_repos,$start);

@@ -33,6 +33,7 @@ use Kynetx::Memcached qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
 use Kynetx::Persistence qw(:all);
+use Kynetx::Rids qw(:all);
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -96,15 +97,17 @@ sub gen_req_info {
     $req_info->{'caller'} = 'http://www.windley.com/';
     $req_info->{'pool'} = APR::Pool->new;
     $req_info->{'txn_id'} = '1234';
-    $req_info->{'rid'} = $rid;
+    $req_info->{$rid.':kinetic_app_version'} = 'dev';
     $req_info->{'eid'} = '0123456789abcdef';
-    $req_info->{'rule_version'} = 'dev';
     $req_info->{'param_names'} = ['msg','caller'];
     $req_info->{'msg'} = 'Hello World!';
 
     foreach my $k (keys %{ $options}) {
       $req_info->{$k} = $options->{$k};
     }
+
+    $req_info->{'rid'} = mk_rid_info($req_info,$rid);
+
 
     return $req_info;
 }
@@ -215,9 +218,9 @@ sub gen_app_session {
 
     my $logger = get_logger();
 
-    $logger->debug("Generating test app session for $req_info->{'rid'}");
+    $logger->debug("Generating test app session for get_rid($req_info->{'rid'})");
 
-    my $rid = $req_info->{'rid'};
+    my $rid = get_rid($req_info->{'rid'});
 
     # NOTE: NONE OF THIS WORKS!!!
 

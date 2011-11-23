@@ -26,8 +26,13 @@ use Data::Dumper;
 use Log::Log4perl qw(get_logger :levels);
 use IPC::Lock::Memcached;
 
+use Kynetx::Rids;
+
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+
+
+
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -43,7 +48,7 @@ set_capabilities
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 sub build_request_env {
-    my ($r, $method, $rids, $eventtype, $id_token) = @_;
+    my ($r, $method, $rids, $eventtype, $eid, $options) = @_;
 
     my $logger = get_logger();
 
@@ -51,15 +56,20 @@ sub build_request_env {
     my $req = Apache2::Request->new($r);
 
     my $domain = $req->param('_domain') || $method || 'web';
-    $eventtype = $req->param('_name') || $eventtype || 'pageview';
+    $eventtype = $req->param('_type') || $req->param('_name') || $eventtype || 'pageview';
 
     # we rely on this being undef if nothing passed in
     $rids = $req->param('_rids') || $rids;
+    my $explicit_rids = defined $req->param('_rids');
 
     # endpoint identifier
     my $epi = $req->param('_epi') || 'any';
     # endpoint location
     my $epl = $req->param('_epl') || 'none';
+
+    # manage optional params
+    my $id_token = $options->{'id_token'};
+    my $api = $options->{'api'} || 'ruleset';
 
 
     # build initial envv
@@ -83,8 +93,11 @@ sub build_request_env {
 	# this is also determines the endpint capability type
 	domain => $domain,
 	eventtype => $eventtype,
+        eid => $eid,
 
 	id_token => $id_token,
+
+	explicit_rids => $explicit_rids,
 
 	epl => $epl,
 	epi => $epi,
@@ -123,7 +136,7 @@ sub build_request_env {
       my $rid_array = [];
       foreach my $rid (split(/;/,$rids)) {
 
-	my $rid_info = Kynetx::Events::mk_rid_info($request_info, $rid);
+	my $rid_info = Kynetx::Rids::mk_rid_info($request_info, $rid);
 
 	push(@{ $rid_array }, $rid_info);
       }
@@ -179,6 +192,8 @@ sub log_request_env {
 
 	    }
 	  # print out first 50 chars of the request string
+	  $entry = 'undef' unless defined $entry;
+	  $value = 'undef' unless defined $value;
 	  $logger->debug("$entry:$value");
 
 	}

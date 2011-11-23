@@ -40,6 +40,7 @@ use JSON::XS;
 use Kynetx::Util qw(:all);
 use Kynetx::Version qw(:all);
 use Kynetx::Request qw(:all);
+use Kynetx::Rids qw(:all);
 use Kynetx::Repository;
 use Kynetx::Memcached qw(:all);
 use Kynetx::Datasets qw(:all);
@@ -157,7 +158,7 @@ sub handler {
 	  $js = Kynetx::Dispatch::simple_dispatch($req_info, $rids);
 
 	} elsif ($api eq 'init') {
-	  $js = Kynetx::Dispatch::extended_dispatch($req_info, $rids);
+	  $js = Kynetx::Dispatch::extended_dispatch($req_info);
 	}
 
 	$r->content_type('text/plain');
@@ -206,14 +207,16 @@ sub get_js_file {
 # turn the datasets from a ruleset into JS
 sub get_datasets {
     my ($req_info) = @_;
-    my $rid = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
 
     my $logger = get_logger();
     $logger->debug("Getting ruleset for $rid");
 
     my $js = '';
 
-    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
+
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
 
     if( $ruleset->{'global'} ) {
 	$logger->debug("Processing decls for $rid");
@@ -249,9 +252,9 @@ sub datasets {
 
 
     foreach my $rid (@rids) {
-	$req_info->{'rid'} = $rid;
-	$js .= get_datasets($req_info) ;
-	$js .= <<EOF
+      $req_info->{'rid'} = mk_rid_info($req_info,$rid);
+      $js .= get_datasets($req_info) ;
+      $js .= <<EOF
 KOBJ.registerDataSet('$rid', []);
 EOF
     }

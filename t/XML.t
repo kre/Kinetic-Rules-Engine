@@ -50,12 +50,13 @@ use Kynetx::Configure;
 use Kynetx::FakeReq qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Rules qw/:all/;
+use Kynetx::Rids qw/:all/;
 
 Kynetx::Configure::configure();
 
 my $req_info;
 $req_info->{'referer'} = 'http://www.byu.edu'; # Utah (BYU)
-$req_info->{'rid'} = 'cs_test';
+$req_info->{'rid'} = mk_rid_info($req_info,'cs_test');
 $req_info->{'pool'} = APR::Pool->new;
 $req_info->{'caller'} = 'http://www.baconsalt.com';
 $req_info->{'txn_id'} = 'xml_tn_id';

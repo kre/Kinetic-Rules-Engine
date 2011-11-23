@@ -75,7 +75,7 @@ SKIP: {
 
     $mech->title_is('Show Context');
 
-    $mech->content_like('/Context for Client ID cs_test/');
+    $mech->content_like('/Context for Client ID \[cs_test:prod\]/');
     $mech->content_like('/Active rules.+2/s');
     $mech->content_contains('test_rule_2');
     $mech->content_contains('will not fire');
@@ -83,14 +83,14 @@ SKIP: {
 
     # test CONSOLE function
     my $url_console_2 = "$ruleset_base/console/$ruleset?caller=http://www.windley.com/foo/bar.html";
-    #diag "Testing console with $url_console_2";
+#    diag "Testing console with $url_console_2";
 
     $mech->get_ok($url_console_2);
     is($mech->content_type(), 'text/html');
 
     $mech->title_is('Show Context');
 
-    $mech->content_like('/Context for Client ID cs_test/');
+    $mech->content_like('/Context for Client ID \[cs_test:prod\]/');
     $mech->content_like('/Active rules.+\d+/s');
     $mech->content_contains('test_rule_1');
     $mech->content_contains('will fire');
@@ -100,7 +100,7 @@ SKIP: {
     # test DESCRIBE function
     my $url_describe_1 = "$ruleset_base/describe/$ruleset";
 
-    #diag "Testing console with $url_describe_1";
+#    diag "Testing console with $url_describe_1";
 
     $mech->get_ok($url_describe_1);
     is($mech->content_type(), 'text/html');
@@ -144,7 +144,7 @@ SKIP: {
     # test DESCRIBE function
     my $url_describe_4 = "$ruleset_base/describe/$ruleset?$ruleset:kynetx_app_version=dev&flavor=json";
 
-    diag "Testing console with $url_describe_4";
+#    diag "Testing console with $url_describe_4";
 
     $mech->get_ok($url_describe_4);
     is($mech->content_type(), 'text/plain');

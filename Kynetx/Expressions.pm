@@ -49,6 +49,7 @@ use Kynetx::Operators;
 use Kynetx::Modules;
 use Kynetx::JavaScript;
 use Kynetx::Persistence qw(:all);
+use Kynetx::Rids qw(:all);
 use Kynetx::Errors;
 
 
@@ -204,9 +205,9 @@ sub eval_expr {
     	# How do we keep non-expressed values from here?
     	return  mk_expr_node(infer_type($expr),$expr);
     }
-	my $ri_rid = $req_info->{'rid'};
-	my $re_rid = $rule_env->{'ruleset_name'};
-	if (! defined $re_rid) {
+    my $ri_rid = get_rid($req_info->{'rid'});
+    my $re_rid = $rule_env->{'ruleset_name'};
+    if (! defined $re_rid) {
 		$logger->trace("ruleset_name undefined in \$rule_env, using \$req_info");
 		$re_rid = $ri_rid;
 	}
@@ -433,22 +434,6 @@ sub eval_expr {
 							       $session))  				    
 				 ) ? 0 : 1; # ensure 0 returned for testing
       return mk_expr_node(infer_type($v),$v);
-    # } elsif ($expr->{'type'} eq 'persistent') {
-    #   my $name = $expr->{'name'};
-    #   my $v;
-
-    #   $logger->debug("Evaling qualified variable ", $expr->{'domain'}, ":", $expr->{'name'});
-
-    #   if ($expr->{'domain'} eq 'ent') {
-    # 	$v = session_defined($req_info->{'rid'}, $session, $name) &&
-    # 	  session_get($req_info->{'rid'}, $session, $name);
-
-    #   } elsif ($expr->{'domain'} eq 'app') {
-    # 	$v = undef;
-    #   } else {
-    # 	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
-    #   }
-    #   return mk_expr_node(infer_type($v),$v);
     } elsif($expr->{'type'} eq 'defaction') {
         my $aexpr = mk_action_expr($expr, $rule_env, $rule_name,$req_info, $session);
         $logger->trace("Action expression: ", sub {Dumper($aexpr)});
@@ -773,7 +758,7 @@ sub eval_persistent {
 
 
       $v = Kynetx::Persistence::persistent_element_history($domain,
-							   $req_info->{'rid'},
+							   get_rid($req_info->{'rid'}),
 							   $session,
 							   $expr->{'name'},
 							   $idx);
@@ -785,7 +770,7 @@ sub eval_persistent {
 	    	my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $expr->{'hash_key'});
 	    	$logger->debug("Path normalized: ", sub {Dumper($path)});
 	    	my $var = $expr->{'var_expr'};
-	    	$v = Kynetx::Persistence::get_persistent_hash_element($domain,$req_info->{'rid'},$session,$var,$path);
+	    	$v = Kynetx::Persistence::get_persistent_hash_element($domain,get_rid($req_info->{'rid'}),$session,$var,$path);
     	} else {
     		$logger->warn("Hash indexes only implemented for persistent variables");
     	}
@@ -797,12 +782,14 @@ sub eval_persistent {
       my $name = $expr->{'name'};
       $logger->debug("Evaling qualified variable ", $expr->{'domain'}, ":", $expr->{'name'});
       if ($expr->{'domain'} eq 'ent' || $expr->{'domain'} eq 'app') {
-			# FIXME: not sure I like setting to 0 by default
-			$v = Kynetx::Persistence::get_persistent_var($domain,
-						     $req_info->{'rid'}, $session, $name) || 0;
-			$logger->debug("[persistent] $expr->{'domain'}:$name -> $v");
+	# FIXME: not sure I like setting to 0 by default
+	$v = Kynetx::Persistence::get_persistent_var($domain,
+						     get_rid($req_info->{'rid'}), 
+						     $session, 
+						     $name) || 0;
+	$logger->debug("[persistent] $expr->{'domain'}:$name -> $v");
       } else {
-			$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
+	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
       }
     }
 

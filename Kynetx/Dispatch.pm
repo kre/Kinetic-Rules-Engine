@@ -27,6 +27,10 @@ use Log::Log4perl qw(get_logger :levels);
 use JSON::XS;
 use Test::Deep::NoTest qw(cmp_set eq_deeply set);
 
+
+use Kynetx::Rids qw/:all/;
+use Kynetx::Memcached qw/:all/;
+
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
@@ -57,10 +61,12 @@ sub simple_dispatch {
 
     foreach my $rid (@rids) {
 
-	my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info);
+      my $rid_info = mk_rid_info($req_info, $rid);
+
+      my $ruleset = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
 
 
-	if( defined $ruleset && $ruleset->{'dispatch'} ) {
+      if( defined $ruleset && $ruleset->{'dispatch'} ) {
 	    $logger->debug("Processing dispatch block for $rid");
 #	    $logger->debug(sub() {Dumper($ruleset->{'dispatch'})});
 	    $r->{$rid} = [];
@@ -80,9 +86,9 @@ sub simple_dispatch {
 }
 
 sub extended_dispatch {
-    my($req_info, $rids) = @_;
+    my($req_info) = @_;
 
-    my $r = calculate_dispatch($req_info, $rids);
+    my $r = calculate_dispatch($req_info);
 
     delete $r->{'event_rids'}; # doesn't belong in the dispatch API return result
     $r = encode_json($r);
@@ -100,6 +106,22 @@ sub calculate_rid_list {
   my $logger = get_logger();
   $logger->debug("Returning ruleset list for ", $req_info->{'domain'},"/",$req_info->{'eventtype'});
 
+  my $id_token = $req_info->{'id_token'};
+
+  unless (defined $id_token) {
+    $logger->debug("No ID token, returning empty rid_list");
+    return {};
+  }
+
+  my $memd = get_memd();
+  my $rid_list_key = mk_ridlist_key($id_token);
+
+  my $rid_list = $memd->get($rid_list_key);
+
+  if ($rid_list) {
+    return $rid_list;
+  }
+
   my $r = {};
 #  $r->{'event_rids'} = {};
 
@@ -114,16 +136,14 @@ sub calculate_rid_list {
   my $req = HTTP::Request->new(GET => $acct_url);
   $req->authorization_basic($username, $passwd);
   my $ua = LWP::UserAgent->new;
-  my $rid_list = decode_json($ua->request($req)->{'_content'})->{'rids'};
+  $rid_list = decode_json($ua->request($req)->{'_content'})->{'rids'};
 
 
   foreach my $rid_info (@{$rid_list}) {
 
-    my $rid = $rid_info->{'rid'};
+    my $rid = get_rid($rid_info);
 
-    $req_info->{'rid'} = $rid;
-
-    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info, $rid_info->{'kinetic_app_version'});
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info, $rid_info->{'kinetic_app_version'});
 
     $r->{$rid} = process_dispatch_list($rid, $ruleset);
 
@@ -138,7 +158,19 @@ sub calculate_rid_list {
       }
     }
   }
+
+  # cache this...
+  $memd->set($rid_list_key, $r);
+
   return $r;
+}
+
+sub clear_rid_list {
+  my($id_token) = @_;
+  my $logger = get_logger();
+  $logger->debug("[flush] flushing RID list for $id_token");
+  my $memd = get_memd();
+  $memd->delete(mk_ridlist_key($id_token));
 }
     
 
@@ -159,11 +191,9 @@ sub calculate_dispatch {
     
   foreach my $rid_info (@{$rids}) {
 
-    my $rid = $rid_info->{'rid'};
+    my $rid = get_rid($rid_info);
 
-    $req_info->{'rid'} = $rid;
-
-    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid, $req_info, $rid_info->{'kinetic_app_version'});
+    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info, $rid_info->{'kinetic_app_version'});
 
     $r->{$rid} = process_dispatch_list($rid, $ruleset);
 
@@ -278,6 +308,11 @@ sub get_dispatch_info {
   } else {
     return {};
   }
+}
+
+sub mk_ridlist_key {
+  my ($id_token) = @_;
+  return "ridlist:$id_token";
 }
 
 1;

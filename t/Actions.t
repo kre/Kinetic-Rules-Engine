@@ -236,7 +236,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'dummy_name'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version'=>'dev'}},
    {"txn_id" => '1234'},
 ]);
 
@@ -270,7 +270,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'dummy_name'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => '1234'},
    {"foo" => 5},
 ]);
@@ -292,7 +292,8 @@ add_action_testcase(
     $krl_src,
     $result,
     $my_req_info,
-    'Basic replace_html action with one modifier'
+    'Basic replace_html action with one modifier',
+    0
     );
 
 
@@ -305,7 +306,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'dummy_name'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => '1234'},
    {"foo" => {type => 'JS',
               val => '(2+3)'}
@@ -344,7 +345,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'dummy_name'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => '1234'},
   ]);
 
@@ -379,7 +380,7 @@ _KRL_
 $config = mk_config_string(
  [
   {"rule_name" => 'dummy_name'},
-  {"rid" => 'cs_test'},
+  {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
   {"txn_id" => '1234'},
   {"effect" => "slide"},
  ]);
@@ -416,7 +417,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'dummy_name'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => '1234'},
    {"effect" => "slide"},
    {"delay" => 5},
@@ -454,7 +455,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'dummy_name'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => '1234'},
    {"effect" => 'blind'},
  ]);
@@ -489,7 +490,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'dummy_name'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => '1234'},
    {"draggable" => {'type' => 'JS',
                      'val' => 'true'}},
@@ -524,7 +525,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'dummy_name'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => '1234'},
    {"draggable" => {'type' => 'JS',
                      'val' => 'true'}},
@@ -564,7 +565,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'dummy_name'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => '1234'},
    {"effect" => "onpageexit"},
   ]);
@@ -605,7 +606,7 @@ _KRL_
 $config = mk_config_string(
    [
     {"rule_name" => 'dummy_name'},
-    {"rid" => 'cs_test'},
+    {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
     {"txn_id" => '1234'},
    ]);
 
@@ -646,7 +647,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'dummy_name'},
-   {"rid" => 'cs_test' },
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'} },
    {"txn_id" => '1234'},
   ]);
 
@@ -675,7 +676,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'dummy_name'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => '1234'},
   ]);
 
@@ -699,7 +700,7 @@ add_action_testcase(
 $config = mk_config_string(
   [
    {"rule_name" => 'dummy_name'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => '1234'},
    {"delay" => 5},
   ]);
@@ -730,7 +731,7 @@ add_action_testcase(
 $config = mk_config_string(
    [
     {"rule_name" => 'dummy_name'},
-    {"rid" => 'cs_test'},
+    {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
     {"txn_id" => '1234'},
     {"tabLocation" => "left"},
     {"pathToTabImage" => "http://wpaoli.building58.com/wp-content/uploads/2009/09/contact_tab.gif"},
@@ -772,7 +773,7 @@ _KRL_
 $config = mk_config_string(
   [
    {"rule_name" => 'dummy_name'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
    {"txn_id" => '1234'},
   ]
 );
@@ -802,7 +803,7 @@ _KRL_
 $config = mk_config_string(
    [
     {"rule_name" => 'dummy_name'},
-    {"rid" => 'cs_test'},
+    {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
     {"txn_id" => '1234'},
   ]);
 
@@ -830,7 +831,7 @@ _KRL_
 $config = mk_config_string(
    [
     {"rule_name" => 'dummy_name'},
-    {"rid" => 'cs_test'},
+    {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
     {"txn_id" => '1234'},
     {"remote" => 'http://chevelle.caandb.com/annotate_remote.php?jsoncallback=?'},
    ]);
@@ -867,7 +868,7 @@ _KRL_
 $config = mk_config_string(
  [
   {"rule_name" => 'dummy_name'},
-  {"rid" => 'cs_test'},
+  {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
   {"txn_id" => '1234'},
  ]);
 
@@ -899,7 +900,7 @@ _KRL_
 $config = mk_config_string(
  [
   {"rule_name" => 'dummy_name'},
-  {"rid" => 'cs_test'},
+  {"rid" => {'rid'=> 'cs_test','kinetic_app_version' => 'dev'}},
   {"txn_id" => '1234'}
  ]);
 
@@ -909,7 +910,7 @@ $result = <<_JS_;
         KOBJ.page_collection_content_event(uniq, label,top_selector, parent_selector, selectors ,config);
         cb();
     }
-('%uniq%',callbacks23,{'rule_name' :'dummy_name','rid' :'cs_test','txn_id' :1234,'callback' :mycallback} ,'bob','#res','li.g',{'search_links' : {'selector' : '#sbl', 'type' : 'text'},'google_footer' : {'selector' : '#fll', 'type' : 'text'}}));
+('%uniq%',callbacks23,{'rule_name' :'dummy_name','rid' : {'rid':'cs_test','kinetic_app_version':'dev'},'txn_id' :1234,'callback' :mycallback} ,'bob','#res','li.g',{'search_links' : {'selector' : '#sbl', 'type' : 'text'},'google_footer' : {'selector' : '#fll', 'type' : 'text'}}));
 _JS_
 
 
@@ -932,7 +933,7 @@ _KRL_
 $config = mk_config_string(
  [
   {"rule_name" => 'dummy_name'},
-  {"rid" => 'cs_test'},
+  {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
   {"txn_id" => '1234'},
   {"app_id" => 'aaaa'},
   {"parameters" => {"aaa" => "bbb" }}
@@ -968,7 +969,7 @@ _KRL_
 $config = mk_config_string(
  [
   {"rule_name" => 'dummy_name'},
-  {"rid" => 'cs_test'},
+  {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
   {"txn_id" => '1234'},
   {"parameters" => {"aaa" => "bbb" }}
  ]);
@@ -1000,7 +1001,7 @@ my $fresh_req_info = Kynetx::Test::gen_req_info($rid);
 $config = mk_config_string(
    [
     {"rule_name" => 'dummy_name'},
-    {"rid" => 'cs_test'},
+    {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'dev'}},
     {"txn_id" => '1234'},
     {"delay" => 5},
     #{"nvalue" => "__undef__"},
@@ -1041,8 +1042,11 @@ foreach my $case (@test_cases) {
     my $in_args = gen_js_rands( $case->{'args'} );
     diag("In ", Dumper($in_args)) if $case->{'diag'};
 
+    my $dd = undef; # don't need real directive doc
+
     ($action, $args) =
 	choose_action($case->{'req_info'},
+		      $dd,
 		      $case->{'name'},
 		      $case->{'args'},
                       {}, # empty rule env
@@ -1068,12 +1072,16 @@ foreach my $case (@test_cases) {
 
 # now test build_one_action
 foreach my $case (@action_test_cases) {
+
+
     diag(Dumper($case))  if $case->{'diag'};
 
+    my $dd = undef; # don't need a real directives doc
     my $js =
 	Kynetx::Actions::build_one_action(
 	    $case->{'expr'},
 	    $case->{'req_info'},
+	    $dd,
 	    extend_rule_env(['uniq_id', 'uniq'], ['kobj_23','23'],
 		extend_rule_env(['actions','labels','tags'],[[],[],[]],$rule_env)),
 	    $session,
@@ -1087,12 +1095,11 @@ foreach my $case (@action_test_cases) {
     my $expected = $case->{'expected'};
     $expected =~ s/%uniq%/$case->{'req_info'}->{'uniq'}/g;
 
-    my $result = is_string_nows(
-	$js,
-	$expected,
-	"build_one_action: $desc");
-	my $logger = get_logger();
-	die unless ($result);
+    my $result = is_string_nows($js,
+				$expected,
+				"build_one_action: $desc");
+    my $logger = get_logger();
+    die unless ($result);
 
 }
 

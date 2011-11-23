@@ -193,7 +193,7 @@ my $user_timeline = eval_twitter($my_req_info,
 				    'user_timeline',
 				    [{'count' => 1}]
 				   );
-#$logger->debug("Friends timeline: ", $friends_timeline);
+#$logger->debug("User timeline: ", sub {Dumper $user_timeline});
 
 
 is(int @{ $user_timeline }, 1, "Getting back 1 returns");
@@ -244,7 +244,7 @@ my ($config, $krl_src, $krl, $result);
 $config = mk_config_string(
   [
    {"rule_name" => 'dummy_name'},
-   {"rid" => 'cs_test'},
+   {"rid" => {'rid' => 'cs_test','kinetic_app_version' => 'prod'}},
    {"txn_id" => '1234'},
 ]);
 
@@ -258,9 +258,11 @@ $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the firs
 #diag Dumper $krl;
 
 
+my $dd = undef; # don't need real directive doc
 $js = Kynetx::Actions::build_one_action(
 	    $krl,
 	    $my_req_info, 
+	    $dd,
 	    $rule_env,
 	    $session,
 	    'callback23',

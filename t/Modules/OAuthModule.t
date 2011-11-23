@@ -44,6 +44,7 @@ use Kynetx::Test qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
+use Kynetx::Rids qw(:all);
 use Kynetx::Rules qw(:all);
 use Kynetx::Persistence;
 
@@ -223,14 +224,14 @@ $test_count++;
 $description = "Check that the callback has been saved";
 $args = [$namespace];
 
-$result = Kynetx::Persistence::get_persistent_var('ent',$my_req_info->{'rid'},$session,CALLBACK_ACTION_KEY.SEP.$namespace);
+$result = Kynetx::Persistence::get_persistent_var('ent',get_rid($my_req_info->{'rid'}),$session,CALLBACK_ACTION_KEY.SEP.$namespace);
 cmp_deeply($result,$expected,$description);
 $test_count++;
 
 $description = "Clear callback";
 $expected = undef;
 Kynetx::Modules::OAuthModule::clear_callback_action($my_req_info,$session,$namespace,$args);
-$result = Kynetx::Persistence::get_persistent_var('ent',$my_req_info->{'rid'},$session,CALLBACK_ACTION_KEY.SEP.$namespace);
+$result = Kynetx::Persistence::get_persistent_var('ent',get_rid($my_req_info->{'rid'}),$session,CALLBACK_ACTION_KEY.SEP.$namespace);
 cmp_deeply($result,$expected,$description);
 $test_count++;
 

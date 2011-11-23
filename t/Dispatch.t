@@ -23,6 +23,7 @@ use strict;
 
 use Test::More;
 use Test::LongString;
+use Test::Deep;
 
 use APR::URI;
 use APR::Pool ();
@@ -86,10 +87,9 @@ $test_count++;
 
 my $json = decode_json(Kynetx::Dispatch::extended_dispatch($my_req_info));
 
-#diag Dumper $json;
+diag Dumper $json;
 
-is_deeply(
-    $json, decode_json <<_EOF_
+my $expected = decode_json <<_EOF_;
 {
    "events":{
       "web":{
@@ -172,9 +172,15 @@ is_deeply(
    }
 }
 _EOF_
-);
 
-$test_count++;
+
+for my $f ( [sub {return $_[0]->{events}->{web}->{pageview}->[0]},
+	    ]
+	  ) {
+  is(&$f($json), &$f($expected), &$f($expected));
+  $test_count++;
+}
+
 
 my $result = Kynetx::Dispatch::calculate_dispatch($my_req_info);
 

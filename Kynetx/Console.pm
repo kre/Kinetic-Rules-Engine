@@ -34,6 +34,7 @@ use Kynetx::Session qw(:all);
 use Kynetx::Environments qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Rules qw(:all);
+use Kynetx::Rids qw(:all);
 use Kynetx::Modules qw(:all);
 use Kynetx::Expressions qw(:all);
 use Kynetx::Predicates::Location qw(:all);
@@ -110,6 +111,7 @@ sub show_context {
     $logger->info("Displaying context data for site " . $req_info->{'site'});
 
     # side effects environment with precondition pattern values
+    $req_info->{'rid'} = mk_rid_info($req_info,$rid);
     my $ruleset = 
 	get_rule_set($req_info);
 
@@ -171,7 +173,7 @@ sub show_context {
     my $context_template = HTML::Template->new(filename => $template,
 					       die_on_bad_params => 0);
 
-    $context_template->param(site => $req_info->{'site'});
+    $context_template->param(site => Kynetx::Request::rid_list_as_string($req_info->{'site'}));
     $context_template->param(caller => $req_info->{'caller'});
 
     my @client_info = (       
@@ -179,7 +181,7 @@ sub show_context {
 	  value => $req_info->{'hostname'}},
 
 	{ name => 'Client ID', 
-	  value => $req_info->{'site'}},
+	  value => Kynetx::Request::rid_list_as_string($req_info->{'site'})},
 
 	{ name => 'Client calling page',
 	  value => $req_info->{'caller'}},

@@ -57,9 +57,10 @@ sub new {
 	"options"      => undef,
     };
     bless($self, $class); # consecrate
-    $logger->debug("Created new directive with: ",$type);
+    $logger->debug("Created new directive with: ", $type);
     return $self;
 }
+
 
 sub type {
   my $self = shift;
@@ -81,35 +82,43 @@ sub options {
 sub send_directive {
   my $logger = get_logger();
   my $req_info = shift;
+  my $dir_doc = shift;
   my $name = shift;
   my $opts = shift;
   my $direct = Kynetx::Directives->new($name);
   $logger->trace("Directive options are: ", sub {Dumper($opts)});
   $direct->set_options($opts);
-  push @{$req_info->{'directives'}}, $direct;
+  $dir_doc->add($direct);
+#  push @{$req_info->{'directives'}}, $direct;
 }
 
 sub emit_js {
   my $req_info = shift;
+  my $dir_doc = shift;
   my $js = shift;
   send_directive($req_info,
+		 $dir_doc,
 		 "emit_js",
 		 {'js' => $js});
 }
 
 sub send_data {
   my $req_info = shift;
+  my $dir_doc = shift;
   my $data = shift;
   send_directive($req_info,
+		 $dir_doc,
 		 "data",
 		 $data);
 }
 
 sub send_raw {
   my $req_info = shift;
+  my $dir_doc = shift;
   my $data = shift;
   my $type = shift;
   send_directive($req_info,
+		 $dir_doc,
 		 "raw",
 		 {'content' => $data,
 		  'type' => $type
@@ -148,25 +157,5 @@ sub to_directive {
 }
 
 
-sub gen_directive_document {
-  my $req_info = shift;
-
-  my $logger = get_logger();
-
-  my $eid = $req_info->{'eid'};
-
-  my @directives = map {$_->to_directive($eid)} @{$req_info->{'directives'}};
-
-  my $directive_doc = {'directives' => \@directives,
-		      };
-  
-#  $logger->debug("Directives ", sub {Dumper $directive_doc });
-#  return JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(0)->encode(
-#	   $directive_doc
-#        );
-  return JSON::XS::->new->convert_blessed(1)->pretty(0)->encode(
-	   $directive_doc
-        );
-}
 
 1;

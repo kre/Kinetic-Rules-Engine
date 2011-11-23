@@ -32,6 +32,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Kynetx::Session qw/session_id/;
 use Kynetx::Util qw/mk_url/;
+use Kynetx::Rids qw/:all/;
 
 
 our $VERSION     = 1.00;
@@ -119,7 +120,7 @@ sub explicit_callback {
 
   my $logger = get_logger();
 
-  $logger->debug("[explicit callback] Storing explicit logging data for " . $req_info->{'rid'} );
+  $logger->debug("[explicit callback] Storing explicit logging data for " . get_rid($req_info->{'rid'}) );
 
   my $callback_url = 'http://' . Kynetx::Configure::get_config("CB_HOST") . '/callback/?';
 
@@ -129,7 +130,7 @@ sub explicit_callback {
 		    'sense' => 'success',
 		    'message' => $message,
 		    'rule' => $rule_name,
-		    'rid' => $req_info->{'rid'}
+		    'rid' => get_rid($req_info->{'rid'})
 		   };
 
   $callback_url = mk_url($callback_url, $cb_options );

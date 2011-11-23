@@ -44,9 +44,11 @@ my $default_actions = {
     forward => {
       directive => sub {
 	my $req_info = shift;
+	my $dd = shift;
 	my $config = shift;
 	my $args = shift;
 	send_directive($req_info,
+		       $dd,
 		       'forward',
 		       $config);
       },
@@ -54,9 +56,11 @@ my $default_actions = {
     send => {
       directive => sub {
 	my $req_info = shift;
+	my $dd = shift;
 	my $config = shift;
 	my $args = shift;
 	send_directive($req_info,
+		       $dd,
 		       'send',
 		       $config);
       },
@@ -64,9 +68,11 @@ my $default_actions = {
     reply => {
       directive => sub {
 	my $req_info = shift;
+	my $dd = shift;
 	my $config = shift;
 	my $args = shift;
 	send_directive($req_info,
+		       $dd,
 		       'reply',
 		       $config);
       },
@@ -74,9 +80,11 @@ my $default_actions = {
     delete => {
       directive => sub {
 	my $req_info = shift;
+	my $dd = shift;
 	my $config = shift;
 	my $args = shift;
 	send_directive($req_info,
+		       $dd,
 		       'delete',
 		       $config);
       },

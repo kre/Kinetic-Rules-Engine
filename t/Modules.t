@@ -199,6 +199,9 @@ $val = Kynetx::Expressions::den_to_exp(
 is($val,'cs_test',"Meta data for RID");
 $test_count++;
 
+#diag "###########################";
+#diag Dumper $my_req_info;
+
 $val = Kynetx::Expressions::den_to_exp(
             Kynetx::Modules::eval_module($my_req_info, 
 					 $rule_env, 
