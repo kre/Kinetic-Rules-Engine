@@ -36,6 +36,7 @@ use Data::Diver qw(
 	DiveVal
 	DiveRef
 );
+use Math::Combinatorics qw(combine);
 use Storable qw(dclone);
 use Encode qw(
 	encode
@@ -86,6 +87,10 @@ str_in
 str_out
 body_to_hash
 bin_reg
+any_matrix
+union
+has
+intersection
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -681,5 +686,73 @@ sub bin_reg {
 	
 }
 
+sub any_matrix {
+	my ($n, $k) = @_;
+	my $logger = get_logger();
+	# check memcached for 
+	my @n = ();
+	for (my $i = 0; $i < $n; $i++) {
+		push(@n,$i);
+	}
+	if ($k < $n) {
+		my $hash = {};
+		my @combos = Math::Combinatorics::combine($k, @n);
+		#$logger->debug("Combos: ", sub {Dumper(@combos)});
+		foreach my $element (@combos) {
+			#$logger->debug(" combo: ", sub {Dumper($element)});
+			my @permutes = Math::Combinatorics::permute(@{$element});
+			foreach my $path (@permutes) {
+				#$logger->debug("  p: ", sub {Dumper($path)});
+				my $pstr = join(",",@$path);
+				$hash->{$pstr} = $path;
+			}			
+		}
+		#$logger->debug("Final: ", sub {Dumper($hash)});
+		return values %{$hash};
+	} elsif ($k == $n) {
+		return Math::Combinatorics::permute(@n);
+	} else {
+		$logger->warn("Invalid permutation requested $k:$n");
+	}
+	
+}
+
+#----------------------------------------
+# raw set operations
+#----------------------------------------
+
+sub union {
+	my ($a, $b) = @_;
+	my %hash;
+    foreach (@{$a}) {
+        $hash{$_}++;
+    }
+    foreach (@{$b}) {
+        $hash{$_}++;
+    }
+    my @set = sort keys %hash;
+	return @set;	
+}
+
+sub intersection {
+	my ($a, $b) = @_;
+	my %hash;
+    foreach (@{$a}) {
+        $hash{$_}++;
+    }
+    foreach (@{$b}) {
+        $hash{$_}++;
+    }
+    my @set = grep {$hash{$_}>1} keys %hash;
+    return @set;	
+}
+
+sub has {
+	my ($a, $b) = @_;
+    my $sub_set = scalar @{$b};
+    my @x_set = intersection($a,$b);
+    my $intr = scalar @x_set;
+    return ($sub_set == $intr);	
+}
 
 1;

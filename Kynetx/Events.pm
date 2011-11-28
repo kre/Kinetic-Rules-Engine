@@ -174,7 +174,7 @@ sub process_event {
     }
 
     # get a session, if _sid param is defined it will override cookie
-    $logger->debug("KBX cookie? ",$req_info->{'kntx_token'});
+    $logger->trace("KBX cookie? ",$req_info->{'kntx_token'});
     my $session = process_session($r, $req_info->{'kntx_token'});
     
     if (defined $version) {
@@ -321,7 +321,7 @@ sub process_event_for_rid {
 
     	$logger->trace("Rule: ", sub {Dumper $rule});
 
-    	$logger->debug("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
+    	$logger->trace("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
 	
     	next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
 
@@ -340,7 +340,7 @@ sub process_event_for_rid {
         unless ( $current_state eq $next_state ) {
 	  my $json = $ev->serialize();
 	  Kynetx::Persistence::add_trail_element("ent", $rid, $session, $event_list_name, $json );
-	  $logger->debug("State change for $rule->{'name'}");
+	  $logger->trace("State change for $rule->{'name'}");
 	}
 
         if ( $sm->is_final($next_state) ) {
@@ -376,10 +376,11 @@ sub process_event_for_rid {
             $schedule->annotate_task( $rid, $rulename,$task, 'vals', $val_list );
 
             # reset SM
-            delete_current_state($rid, $session, $rule->{'name'} );
-
-            # reset event list for this rule
-            delete_persistent_var("ent", $rid, $session, $event_list_name );
+            $sm->reset_state($rid, $session, $rule->{'name'},$event_list_name,$current_state,$next_state);
+#            delete_current_state($rid, $session, $rule->{'name'} );
+#
+#            # reset event list for this rule
+#            delete_persistent_var("ent", $rid, $session, $event_list_name );
 
         } else {
             $logger->trace("Next state not final");
@@ -438,6 +439,7 @@ sub compile_event_expr {
       unless $rule_lists->{$domain}->{$op};
     # put the rule in the array unless it's already there
     unless (grep {$_ eq $rule} @{$rule_lists->{$domain}->{$op}->{"rulelist"}}) {
+      no warnings 'uninitialized';
       $logger->debug("Putting $rule->{'name'} on the list");
       push(@{$rule_lists->{$domain}->{$op}->{"rulelist"}}, $rule) 
 	unless (defined $rule->{'state'} && $rule->{'state'} eq 'inactive');
@@ -454,9 +456,9 @@ sub compile_event_expr {
 			 }];
 	      add_filter($filter, $rule_lists, $domain, $op, $rule);    		
     	} elsif (defined $eexpr->{'filters'}) {
-    		$logger->debug("Pageview filter request: ", sub {Dumper($eexpr->{'filters'})});
+    		$logger->trace("Pageview filter request: ", sub {Dumper($eexpr->{'filters'})});
     		my $num = @{$eexpr->{'filters'}};
-    		$logger->debug("Num filters: $num");
+    		$logger->trace("Num filters: $num");
     		#
     		# To clean up.  
     		# select when pageview #foop# is now a special case of
@@ -470,7 +472,7 @@ sub compile_event_expr {
     			}];
 	      		add_filter($filter, $rule_lists, $domain, $op, $rule);
     		} else {
-    			$logger->debug("Generic primitive");
+    			$logger->trace("Generic primitive");
     			$sm = mk_gen_prim($domain,$op, $eexpr->{'vars'},$eexpr->{'filters'});
     			add_filter($eexpr->{'filters'}, $rule_lists, $domain, $op, $rule);    			
     		}
@@ -493,7 +495,7 @@ sub compile_event_expr {
 
 
     } elsif ($op eq 'expression') {
-      $logger->debug(
+      $logger->trace(
 		     "Creating Expression event for $domain:$op"
 		    );
       $logger->trace("Eexpr: ", sub {Dumper($eexpr)});
@@ -503,7 +505,7 @@ sub compile_event_expr {
       add_filter([ANY], $rule_lists, $domain, $op, $rule);
         
     } else {
-      $logger->debug(
+      $logger->trace(
 		     "Creating primitive event for $domain:$op"
 		      );
       $logger->trace("Eexpr: ", sub {Dumper($eexpr)});
@@ -547,19 +549,49 @@ sub compile_event_expr {
       }
   } elsif ($eexpr->{'type'} eq 'group_event') {
   	my $op_num = Kynetx::Expressions::den_to_exp($eexpr->{'op_num'});
+  	my $agg_vars = $eexpr->{'agg_var'};
   	if ($eexpr->{'op'} eq 'repeat') {
   		my $sm0 = compile_event_expr( $eexpr->{'args'}->[0], $rule_lists, $rule );  		
-  		$sm = mk_repeat($sm0,$op_num);
+  		$sm = mk_repeat($sm0,$op_num,$agg_vars);
   	} elsif ($eexpr->{'op'} eq 'count') {
   		my $sm0 = compile_event_expr( $eexpr->{'args'}->[0], $rule_lists, $rule );
-  		$sm = mk_count($sm0,$op_num);
-  	} else {
-  		$logger->warn("Unknown event operation: ", $eexpr->{'op'});
-  	}
-  	  
+  		$sm = mk_count($sm0,$op_num,$agg_vars);
+  	} elsif ($eexpr->{'op'} eq 'any') {
+  		$logger->trace("Event Expression: ", sub {Dumper($eexpr->{'args'})});
+  		if (ref $eexpr->{'args'} eq "ARRAY") {
+  			my @event_array = ();
+  			my $num = Kynetx::Expressions::den_to_exp($eexpr->{'op_num'});
+  			foreach my $sm_element (@{$eexpr->{'args'}}) {
+  				$logger->trace("Eventex: ", sub {Dumper($sm_element)});
+  				my $tsm = compile_event_expr( $sm_element, $rule_lists, $rule );
+  				push(@event_array,$tsm);
+  			}
+  			$sm = mk_any(\@event_array,$num,$agg_vars);
+  		}
+	  	} else {
+	  		$logger->warn("Unknown event operation: ", $eexpr->{'op'});
+	  	}
+  } elsif ($eexpr->{'type'} eq 'arity_event') {
+  	  $logger->debug("E.expression: ", sub {Dumper($eexpr)});
+		my @event_array = ();
+		foreach my $sm_element (@{$eexpr->{'args'}}) {
+			my $tsm = compile_event_expr( $sm_element, $rule_lists, $rule );
+			push(@event_array,$tsm);
+		}
+		if ( $eexpr->{'op'} eq 'and' ) {
+			$sm = mk_and_n(\@event_array);
+		} elsif ($eexpr->{'op'} eq 'or') {
+			$sm = mk_or_n(\@event_array);
+		} elsif ($eexpr->{'op'} eq 'before') {
+			$sm = mk_before_n(\@event_array);
+		} elsif ($eexpr->{'op'} eq 'after') {
+			$sm = mk_after_n(\@event_array);
+		} elsif ($eexpr->{'op'} eq 'then') {
+			$sm = mk_then_n(\@event_array);
+		}
   } else {
     $logger->warn("Attempt to compile malformed event expression");
-    $logger->debug("E.expression: ", sub {Dumper($eexpr)});
+    $logger->trace("E.expression: ", sub {Dumper($eexpr)});
   }
   return $sm;
 

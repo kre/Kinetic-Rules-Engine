@@ -55,6 +55,7 @@ our %EXPORT_TAGS = (
         qw(
         search
         get_parameters
+        get_associate_tag
         )
     ]
 );
@@ -207,6 +208,8 @@ sub get_request_key {
 
 }
 
+
+
 # stolen from RequestSignatureHelp::escape
 sub escape {
     my ($stmt) = @_;
@@ -227,6 +230,22 @@ sub get_locale{
         $locale = $args->{'locale'};
     }
     return $locale;
+}
+
+sub get_associate_tag {
+    my ($args) = @_;
+    my $logger = get_logger();
+	my $atag;
+	if ($args->{'associate_tag'}) {
+		$atag = $args->{'associate_tag'};
+	} elsif ($args->{'associatetag'}) {
+		$atag = $args->{'associatetag'};
+	} elsif ($args->{'AssociateTag'}) {
+		$atag = $args->{'AssociateTag'};
+	} else {
+		$atag = "none";
+	}
+	return $atag;
 }
 
 # Convenience functions

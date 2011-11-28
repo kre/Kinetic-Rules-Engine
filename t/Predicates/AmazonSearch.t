@@ -127,6 +127,8 @@ key amazon {
 }
 _KRL_
 
+my $atag = "solargroovyor-20";
+
 my $krl_ruleset=<<_KRL_;
 ruleset amz_10 {
     meta {
@@ -157,6 +159,7 @@ $args = [{
     'locale' => 'us',
     'index' => 'all',
     'Keywords'=>"radio flyer",
+    'associate_tag' => $atag
 }];
 
 push(@test_args,$args);

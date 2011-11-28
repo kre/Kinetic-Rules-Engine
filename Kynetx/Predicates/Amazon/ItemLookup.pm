@@ -96,6 +96,7 @@ sub build {
     $request->{'ItemId'} = get_item($args);
     my $idtype = get_item_idtype($args);
     $request->{'IdType'}=$idtype;
+    $request->{'AssociateTag'} = Kynetx::Predicates::Amazon::get_associate_tag($args);
     if (Kynetx::Errors::mis_error($idtype)) {
         return $idtype;
     };

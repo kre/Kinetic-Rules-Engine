@@ -28,7 +28,12 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::UUID;
 use Kynetx::Json qw(:all);
 use Kynetx::Environments qw(empty_rule_env);
-use Kynetx::Persistence::UserState;
+use Kynetx::Persistence::UserState qw(
+	get_current_state
+	set_current_state
+	delete_current_state
+);
+use Kynetx::Persistence qw(:all);
 use Clone;
 
 use Data::Dumper;
@@ -57,6 +62,13 @@ mk_between
 mk_not_between
 mk_repeat
 mk_count
+mk_any
+mk_and_n
+mk_or_n
+mk_before_n
+mk_after_n
+mk_then_n
+reset_state
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -115,7 +127,7 @@ sub unserialize {
                 bless($s_struct,$class);
             })->decode($json);
     if (! defined $hash || ref $hash eq "") {
-        $logger->debug("Error attempting to unserialize State object, Source: ", sub {Dumper($json)});
+        $logger->trace("Error attempting to unserialize State object, Source: ", sub {Dumper($json)});
         return undef;
     }
 
@@ -189,6 +201,90 @@ sub clone {
   return $nsm;
 }
 
+sub optimize {
+	my $self = shift;
+	my $logger = get_logger();
+	
+	# Check all the states
+	my $initial = $self->get_initial();
+	my @final_set = keys %{$self->get_final()};
+	my @set_of_states = ();
+	$self->optimize_transitions($initial);
+	
+	$self->follow($initial,\@set_of_states);
+		
+	foreach my $s (@{$self->get_states()}) {
+		my @tmp = ($s);
+		#  Check for default states that can't be reached from $initial
+		if (! Kynetx::Util::has(\@set_of_states,\@tmp)) {
+			$logger->debug("UNREACHABLE $s");
+  			delete $self->{'__default__'}->{$s};  
+  			delete $self->{'transitions'}->{$s};
+  			next;			
+		}
+		
+	}
+		
+}
+
+sub optimize_transitions {
+	my $self = shift;
+	my $state = shift;
+	my $pruned = shift;
+	my $logger = get_logger();
+	if (defined $pruned) {
+		# add all the transitions from the pruned path to this
+		foreach my $t (@{$self->get_transitions($pruned)}) {
+			$self->add_transition($state,$t);
+		}		
+	}
+	my $hash = {};
+	foreach my $t (@{$self->get_transitions($state)}) {
+		my $sig = _tsig($t);
+		$logger->trace("Sig: $sig");
+		if ($hash->{$sig}) {
+			$logger->trace("  Duped sig");
+			if ($hash->{$sig}->{'next'} eq $t->{'next'}) {
+				$logger->trace("Destination dupe: ", $t->{'next'});
+			} else {
+				$logger->trace("Add filters of ",$t->{'next'});
+				$self->optimize_transitions($hash->{$sig}->{'next'},$t->{'next'});
+			}
+		} else {
+			$hash->{$sig} = $t;
+		}
+	}
+	my @new_t = values (%{$hash});
+	my $count =  scalar (@{$self->get_transitions($state)}) - scalar (@new_t);
+	if ($count > 0) {
+		$logger->debug("$count transitions pruned");
+		$self->{'transitions'}->{$state} = \@new_t;		
+	}
+	
+}
+
+
+
+sub follow {
+	my $self = shift;
+	my $start = shift;
+	my $s_of_s = shift;
+	my $logger= get_logger();
+	my @temp = ($start);
+	if (Kynetx::Util::has($s_of_s,\@temp)) {
+		# seen this state, don't loop
+		return;
+	} else {
+		push(@$s_of_s, $start);
+		foreach my $t (@{$self->get_transitions($start)}) {
+			if (defined $t->{'next'}) {
+				$self->follow($t->{'next'},$s_of_s);
+			}
+		}
+	}
+	
+}
+
 # This function makes some big assumptions.
 #  1. That initial and final states are all that are being joined
 #  2. That default transitions for initial states are always to the initial state.
@@ -205,8 +301,18 @@ sub join_states {
   $logger->trace("Transitions for $s1 ",sub {Dumper($self->get_transitions($s1))});
   $logger->trace("Transitions for $s2 ",sub {Dumper($self->get_transitions($s2))});
   my @nt;
-  push(@nt, @{$self->get_transitions($s1)});
-  push(@nt, @{$self->get_transitions($s2)});
+  my $nt1 = $self->get_transitions($s1);
+  $logger->trace("$s1");
+#  for my $t (@$nt1) {
+#  	$logger->trace($t->{'next'}, " ", sub {Dumper($t->{'test'})});
+#  }
+  my $nt2 = $self->get_transitions($s2);  
+  $logger->trace("$s2");
+#  for my $ta (@$nt2) {
+#  	$logger->trace($ta->{'next'}, " ", sub {Dumper($ta->{'test'})});
+#  }
+  push(@nt, @{$nt1});
+  push(@nt, @{$nt2});
   
   $self->add_state($ns,
 		   \@nt,
@@ -348,6 +454,9 @@ sub get_states {
 sub get_transitions {
   my $self = shift;
   my $state = shift;
+  my $logger = get_logger();
+  #$logger->trace("Existing transitions for state: $state");
+  #$logger->trace("$state: ", sub {Dumper($self->{'transitions'}->{$state})});
   return $self->{'transitions'}->{$state} || undef;
 }
 
@@ -366,17 +475,14 @@ sub set_default_transition {
   $self->{'__default__'}->{$name} = $new;
 }
 
-# sub add_transition {
-#   my $self = shift;
-#   my($name, $token, $new) = @_;
-
-#   my $logger = get_logger();
-
-#   $logger->warn("adding a transition that already exists") if defined $self->{'transitions'}->{$name}->{$token};
-
-#   $self->{'transitions'}->{$name}->{$token} = $new;
-# }
-
+sub add_transition {
+	my $self = shift;
+	my $state = shift;
+	my $transition = shift;
+	my $logger = get_logger();
+	$logger->trace("Adding: ", sub {Dumper($transition)});
+	push(@{$self->{'transitions'}->{$state}},$transition);	
+}
 
 #-------------------------------------------------------------------------
 # calculate next state
@@ -424,21 +530,41 @@ sub next_state {
 				$logger->trace("Transition options: ", sub{Dumper($null_transition)});
 				my $counterid = $null_transition->{'counter'};
 				my $count = $null_transition->{'count'};
-	    		my $counter = Kynetx::Persistence::UserState::inc_group_counter($rid,$session,$rulename,$counterid);
+				my $agg_op = $null_transition->{'vars'}->{'agg_op'};
+				my @agg_var = ();
+				foreach my $var (@{$null_transition->{'vars'}->{'vars'}}) {
+					push(@agg_var,$var->{'val'});
+				}
+				#my $agg_var = Kynetx::Expressions::den_to_exp($null_transition->{'vars'}->{'vars'});
+				$vals = ["__null__"] unless (defined $agg_op);
+	    		my $counter = Kynetx::Persistence::UserState::push_aggregator($rid,$session,$rulename,$counterid,$vals);
+				$logger->trace("match val: ", sub {Dumper($vals)});
 				$logger->trace("Counter struct: ", sub {Dumper($counter)});
-				my $iters = $counter->{$counterid};
-				$logger->trace("Grouped transition iters: ", sub {Dumper($iters)});							
-				if ($iters >= $count) {
+				#$logger->trace("Agg ops: ($agg_op) ", sub {Dumper(@agg_var)});
+				my @iters = check_time($counter->{$counterid});
+				$logger->trace("Grouped transition iters: ", sub {Dumper(@iters)});							
+				if (scalar (@iters) >= $count) {
 					$logger->trace("Transition to next state is a null so process immediately $next");
 					$next = $self->get_transitions($next_transition);
-					$logger->trace("Transition options: ", sub{Dumper($next)});
+					if (defined $agg_op) {						
+						my $agg_val = aggregate($agg_op,\@iters);
+						$logger->trace("aggs: ", sub{Dumper($agg_val)});
+	      				$event->set_vars( $self->get_id(), \@agg_var);
+	      				$event->set_vals($self->get_id(), [$agg_val]);
+					}
+					
+					if ($null_transition->{'domain'} eq 'repeat') {
+						Kynetx::Persistence::UserState::shift_group_counter($rid,$session,$rulename,$counterid,$state,$next_transition);
+						$logger->trace("Shift counter: $counterid");
+					} else {
+						Kynetx::Persistence::UserState::reset_group_counter($rid,$session,$rulename,$counterid);						
+						$logger->trace("Reset counter: $counterid");
+					}
 					$next = $next->[0]->{'next'};
-					$logger->trace("Reset counter: $counterid");
-					Kynetx::Persistence::UserState::reset_group_counter($rid,$session,$rulename,$counterid);
 					return $next;
 				} else {
 					$logger->trace("Group match current: $state");
-					$logger->trace("Need ", sub{Dumper($count - $iters)}, " more $next_transition(s)");
+					$logger->trace("Need ", sub{Dumper($count - scalar (@iters))}, " more $next_transition(s)");
 					$next = $self->get_default_transition($next_transition);
 					return $next;
 				}
@@ -463,6 +589,84 @@ sub next_state {
 	return $next;
 
 }
+
+sub check_time {
+	my ($count_array,$timeframe) = @_;
+	my $logger = get_logger();
+	$timeframe = 0 unless (defined $timeframe);
+	my @rarray = ();
+	$logger->trace("array: ", sub {Dumper($count_array)});
+	$logger->trace("tf: $timeframe");
+	foreach my $instance (@{$count_array}) {
+		if ($instance->{'timestamp'} > $timeframe) {
+			push (@rarray,$instance->{'val'})
+		}
+	}
+	$logger->trace("array: ", sub {Dumper(@rarray)});
+	return @rarray;
+	
+}
+
+sub aggregate {
+	my ($op,$array) = @_;
+	if ($op eq "sum") {
+		return _sum($array);
+	} elsif ($op eq "min") {
+		return _min($array);
+	} elsif ($op eq "max") {
+		return _max($array);
+	} elsif ($op eq "avg") {
+		return _avg($array);
+	} elsif ($op eq "push") {
+		return $array;
+	}
+	
+}
+
+sub _sum {
+	my ($array) = @_;
+	my $sum = 0;
+	foreach my $elem (@{$array}) {
+		$sum += $elem;
+	}
+	return $sum;
+}
+
+sub _max {
+	my ($array) = @_;
+	my $max = undef;
+	foreach my $elem (@{$array}) {
+		if (! defined $max) {
+			$max = $elem;
+		} elsif ($elem > $max) {
+			$max = $elem;
+		}
+	}
+	return $max;
+	
+}
+
+sub _min {
+	my ($array) = @_;
+	my $min = undef;
+	foreach my $elem (@{$array}) {
+		if (! defined $min) {
+			$min = $elem;
+		} elsif ($elem < $min) {
+			$min = $elem;
+		}
+	}
+	return $min;
+	
+}
+
+sub _avg {
+	my ($array) = @_;
+	my $sum = _sum($array);
+	my $num = scalar(@{$array});
+	return $sum / $num;	
+}
+
 
 sub match {
   my($event, $transition) = @_;
@@ -581,7 +785,7 @@ sub dom_eval {
 		  my $logger = get_logger();
 
 
-		  $logger->debug("Evaluating event $event_elem against SM $sm_elem");
+		  $logger->trace("Evaluating event $event_elem against SM $sm_elem");
 
 		  my $req_info = $event->get_req_info();
 		  my $form_data = $req_info->{'KOBJ_form_data'} if $req_info->{'KOBJ_form_data'};
@@ -768,6 +972,7 @@ sub mk_and {
 			     $sm4->get_singleton_final());
   $nsm->mk_final($nf);
   $logger->trace("new final state $nf");
+  $nsm->optimize();
 
   return $nsm;
 }
@@ -807,7 +1012,7 @@ sub mk_or {
 			     $sm2->get_singleton_final());
 
   $nsm->mk_final($nf);
-
+  $nsm->optimize();
   return $nsm;
 }
 
@@ -899,16 +1104,92 @@ sub mk_before {
 }
 
 #-------------------------------------------------------------------------
+# arity
+#-------------------------------------------------------------------------
+sub mk_and_n {
+	my ($sm_array) = @_;
+	my $logger = get_logger();
+	my $num = scalar(@{$sm_array});
+	return mk_any($sm_array,$num);
+}
+
+
+sub mk_or_n {
+	my ($sm_array) = @_;
+	my $logger = get_logger();
+	my $nsm = $sm_array->[0];
+	for (my $i = 1; $i < scalar(@{$sm_array}); $i++) {
+		my $c = $nsm->clone();
+		$nsm = mk_or($c,$sm_array->[$i]);
+	}
+	return $nsm;
+}
+
+sub mk_before_n {
+	my ($sm_array) = @_;
+	my $logger = get_logger();
+	my $nsm = $sm_array->[0];
+	for (my $i = 1; $i < scalar(@{$sm_array}); $i++) {
+		my $c = $nsm->clone();
+		$nsm = mk_before($c,$sm_array->[$i]);
+	}
+	return $nsm;
+}
+
+sub mk_after_n {
+	my ($sm_array) = @_;
+	my $logger = get_logger();
+	my @rev = reverse (@$sm_array);
+	return mk_before_n(\@rev);
+}
+
+sub mk_then_n {
+	my ($sm_array) = @_;
+	my $logger = get_logger();
+	my $nsm = $sm_array->[0];
+	for (my $i = 1; $i < scalar(@{$sm_array}); $i++) {
+		my $c = $nsm->clone();
+		$nsm = mk_then($c,$sm_array->[$i]);
+	}
+	return $nsm;
+}
+
+#-------------------------------------------------------------------------
 # group state machines
 #-------------------------------------------------------------------------
+sub mk_any {
+	my ($sm_array,$num,$agg) = @_;
+	my $logger = get_logger();
+	# make an array of inidices
+	my @set = Kynetx::Util::any_matrix(scalar(@$sm_array),$num);
+	$logger->trace("ANY $num of N (indices combinations): ", sub {Dumper(@set)});
+	my @or_array = ();
+	for my $x (@set) {
+		my $xi = pop @$x;
+		my $nsm = $sm_array->[$xi];
+		foreach my $y (@$x) {
+			my $nsma = $nsm->clone();
+			$nsm = mk_before($nsma,$sm_array->[$y]);
+		}
+		push(@or_array,$nsm);
+	}
+	$logger->trace("Ors: ", sub {Dumper(@or_array)});
+	my $nsm = pop @or_array;
+	for my $a_sm (@or_array) {
+		my $nsmp = $nsm->clone();
+		$nsm = mk_or($nsmp,$a_sm);
+	}
+  	$nsm->optimize();
+	return $nsm;
+}
 
 sub mk_count {
-	my ($osm,$num) = @_;
+	my ($osm,$num,$agg) = @_;
 	my $logger = get_logger();
 	$logger->trace("-----Make count state machine-----");
 	
 	my $sm = $osm->clone();
-	my $null = mk_null('count',$num);
+	my $null = mk_null('count',$num,$agg);
 
 	
 	my $nsm = Kynetx::Events::State->new();
@@ -932,7 +1213,7 @@ sub mk_count {
 }
 
 sub mk_repeat {
-	my ($osm,$num) = @_;
+	my ($osm,$num,$agg) = @_;
 	my $logger = get_logger();
 	
 	my $sm = $osm->clone();
@@ -1029,7 +1310,7 @@ sub mk_not_between {
 
 
 sub mk_null {
-	my ($source,$count) = @_;
+	my ($source,$count,$vars) = @_;
 	$source = $source || "null";
 	my $sm = Kynetx::Events::State->new();
   	my $s1 = Data::UUID->new->create_str();
@@ -1048,6 +1329,10 @@ sub mk_null {
   	
   	if ($count) {
   		$struct->{'count'} = $count
+  	}
+  	
+  	if (defined $vars) {
+  		$struct->{'vars'} = $vars;
   	}
   	
   	$struct->{'counter'} = $counter;
@@ -1085,5 +1370,68 @@ sub add_count {
   return $self;
 }
 
+
+sub _tsig {
+	my ($transition) = @_;
+	my $logger = get_logger();
+	$logger->trace("transition (sig): ", sub {Dumper($transition)});
+	#start with simple filter match 
+	my @sigarray = ();
+	if (ref $transition eq "HASH") {
+		push(@sigarray,$transition->{'domain'});
+		push(@sigarray,$transition->{'type'});
+		if (defined $transition->{'counter'}) {
+			push(@sigarray,$transition->{'counter'})
+		}
+		if (ref $transition->{'test'} eq "ARRAY") {
+			foreach my $test (@{$transition->{'test'}}) {
+				my $pattern;
+				if (ref $test eq "HASH") {
+					$pattern = YAML::XS::Dump $test->{'pattern'};
+				} else {
+					$pattern = YAML::XS::Dump $test;
+				}
+				push(@sigarray,$pattern);
+			}
+		} else {
+			push(@sigarray, YAML::XS::Dump $transition->{'test'});
+		}
+	} else {
+		$logger->warn("Non hash transition unexpected");
+	}
+	return join("__",@sigarray);
+	
+}
+
+sub reset_state {
+	my $self = shift;
+	my ($rid,$session,$rulename, $event_list_name,$current, $next) = @_;
+	my $logger = get_logger();
+	
+	if ($self->is_final($next)) {
+		$logger->trace("Final state: $next");
+		my $transitions = $self->get_transitions($current);
+		
+		$logger->trace("transitions: $current", sub {Dumper($transitions)});
+		if (defined $self->{'null'}) {
+			# If the state machine doesn't have a group transition, don't
+			# bother checking the userstate
+			my $ee = Kynetx::Persistence::UserState::get_event_env($rid,$session,$rulename);
+			$logger->trace("Reset grouped state: ", sub {Dumper($ee)});
+			if (defined $ee->{'__repeat__'}->{$current}) {
+				$logger->trace("Transition through null just happened: ",$ee->{'__repeat__'}->{$current});
+				Kynetx::Persistence::UserState::set_current_state($rid,$session,$rulename,$current);
+				return $current;
+			}
+		}
+		Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rulename);
+		delete_persistent_var("ent",$rid,$session,$event_list_name);
+	} else {
+		$logger->warn("[reset_state] $next is not final");
+	}
+	
+	return $self->get_initial();
+	
+}
 
 1;

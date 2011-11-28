@@ -476,17 +476,29 @@ sub request_access_tokens {
 	my $ua = LWP::UserAgent->new();
     my $resp = $ua->request( GET $surl);
     my $content = $resp->decoded_content();
-	$logger->trace("Response: ", sub {Dumper($content)});
+	
     if ( $resp->is_success() ) {
-        my $oresp =
-          Net::OAuth->response('access token')
-          ->from_post_body( $resp->content );
-        my $oauth_token        = $oresp->token;
-        my $oauth_token_secret = $oresp->token_secret;
+        my $oresp;
+        my $oauth_token;
+        my $oauth_token_secret;
+        eval {
+        	$oresp = Net::OAuth->response('access token')->from_post_body( $resp->content );
+            $oauth_token        = $oresp->token;
+            $oauth_token_secret = $oresp->token_secret;
+        };
+        if ($@) {
+        	$logger->debug("OAuthModule parsing error: $@");
+        	$logger->debug("Response: ", sub {Dumper($content)});
+        	my @pairs = split '&', $resp->content;
+        	$logger->trace("Pairs: ", sub {Dumper(@pairs)});
+        	my $parms = Kynetx::Util::from_pairs(\@pairs);
+        	$oauth_token        = $parms->{'oauth_token'};
+        	$oauth_token_secret = $parms->{'oauth_token_secret'};
+        }
         return {
-        	'access_token' => $oauth_token,
-        	'access_token_secret' => $oauth_token_secret,
-        	'__content' => $content
+	    	'access_token' => $oauth_token,
+	    	'access_token_secret' => $oauth_token_secret,
+	    	'__content' => $content
         }
     } else {
     	$logger->debug("Failed response: ", sub {Dumper($resp)});
@@ -640,6 +652,7 @@ sub get_oauth_config {
 			'authorization_url' => $opts->{'authorization_url'},
 			'access_token_url'	=> $opts->{'access_token_url'}
 		}
+		
 		
 	}
 	
