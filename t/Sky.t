@@ -64,6 +64,7 @@ my $r = Kynetx::Test::configure();
 
 my $rid = 'cs_test';
 
+
 # test choose_action and args
 
 my $my_req_info = Kynetx::Test::gen_req_info($rid);
@@ -92,6 +93,11 @@ $platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'prod
 my $dn = "http://$platform/sky/event";
 
 my $ruleset = 'cs_test_1';
+#
+# Many of these tests rely on the rulesets (cs_test, cs_test_1, etc.) installed
+# in the Kynetx account owned by kre_test@kynetx.com. The following tokens were 
+# provisioned for that account:
+#
 my $token = 'a3a23a70-f2a9-012e-4216-00163e411455';
 my $other_token = '44d92880-f2ca-012e-427d-00163e411455';
 

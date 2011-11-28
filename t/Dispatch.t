@@ -87,7 +87,7 @@ $test_count++;
 
 my $json = decode_json(Kynetx::Dispatch::extended_dispatch($my_req_info));
 
-diag Dumper $json;
+#diag Dumper $json;
 
 my $expected = decode_json <<_EOF_;
 {
@@ -173,18 +173,22 @@ my $expected = decode_json <<_EOF_;
 }
 _EOF_
 
+my $a = [sub {return $_[0]->{events}->{system}->{error};},
+	 sub {return $_[0]->{events}->{web}->{pageview}->[0];},
+	 sub {return $_[0]->{cs_test}->{domains};},
+	 sub {return $_[0]->{cs_test}->{events}->{web}->{pageview}->[2];},
+	];
 
-for my $f ( [sub {return $_[0]->{events}->{web}->{pageview}->[0]},
-	    ]
-	  ) {
-  is(&$f($json), &$f($expected), &$f($expected));
+for my $f ( @{$a} ) {
+  my $res = &$f($expected);
+  is_deeply(&$f($json), $res, Dumper $res);
   $test_count++;
 }
 
 
 my $result = Kynetx::Dispatch::calculate_dispatch($my_req_info);
 
-is_deeply($result,
+$expected = 
 {
    "cs_test_authz"=>{
       "events"=>{
@@ -278,10 +282,25 @@ is_deeply($result,
          }
       }
    }
-} 
-);
+} ;
 
-$test_count++;
+
+$a = [sub {return $_[0]->{event_rids}->{web}->{pageview};},
+      sub {return $_[0]->{cs_test}->{domains};},
+      sub {return $_[0]->{cs_test}->{events}->{web}->{pageview}->[2];},
+     ];
+
+for my $f ( @{$a} ) {
+  my $res = &$f($expected);
+  is_deeply(&$f($result), $res, Dumper $res);
+  $test_count++;
+}
+
+
+
+#is_deeply($result, $foo);
+
+#$test_count++;
 
 
 done_testing($test_count);

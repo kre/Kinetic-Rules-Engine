@@ -75,6 +75,7 @@ my $session = Kynetx::Test::gen_session($r, $rid);
 my $mystate = "foobarbean";
 my $result;
 $result = Kynetx::Persistence::UserState::reset_event_env($rid,$session);
+$result = Kynetx::Persistence::UserState::reset_group_counter($rid,$session,$rule_name,$mystate);
 
 $result = Kynetx::Persistence::UserState::inc_group_counter($rid,$session,$rule_name,$mystate);
 

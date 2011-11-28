@@ -31,6 +31,7 @@ use URI::Escape;
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
+use Kynetx::Rids qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Parser qw/mk_expr_node/;
 
@@ -182,39 +183,39 @@ sub make_response_object {
 }
 
 sub raise_response_event {
-	my ( $method, $req_info, $rule_env, $session, $config, $resp, $ro_name ) = @_;
-	my $logger = get_logger();
-	my $js = '';
-	if ( defined $config->{'autoraise'} ) {
-		$logger->debug(
-			"http library autoraising event with label $config->{'autoraise'}");
+  my ( $method, $req_info, $rule_env, $session, $config, $resp, $ro_name ) = @_;
+  my $logger = get_logger();
+  my $js = '';
+  if ( defined $config->{'autoraise'} ) {
+    $logger->debug(
+		   "http library autoraising event with label $config->{'autoraise'}");
 
-		# make modifiers in right form for raise expr
-		my $ms = [];
-		foreach my $k ( keys %{ $resp->{$ro_name} } ) {
-			push(
-				@{$ms},
-				{
-					'name' => $k,
-					'value' =>
-					  Kynetx::Expressions::mk_den_str( $resp->{$ro_name}->{$k} ),
-				}
-			);
-		}
+    # make modifiers in right form for raise expr
+    my $ms = [];
+    foreach my $k ( keys %{ $resp->{$ro_name} } ) {
+      push(
+	   @{$ms},
+	   {
+	    'name' => $k,
+	    'value' =>
+	    Kynetx::Expressions::mk_den_str( $resp->{$ro_name}->{$k} ),
+	   }
+	  );
+    }
 
-		# create an expression to pass to eval_raise_statement
-		my $expr = {
-			'type'      => 'raise',
-			'domain'    => 'http',
-			'rid'       => $config->{'rid'},
-			'event'     => mk_expr_node( 'str', lc($method) ),
-			'modifiers' => $ms,
-		};
-		$js .=
-		  Kynetx::Postlude::eval_raise_statement( $expr, $session, $req_info,
-			$rule_env, $config->{'rule_name'} );
-	}
-	return $js;
+    # create an expression to pass to eval_raise_statement
+    my $expr = {
+		'type'      => 'raise',
+		'domain'    => 'http',
+		'ruleset'   => get_rid($config->{'rid'}),
+		'event'     => mk_expr_node( 'str', lc($method) ),
+		'modifiers' => $ms,
+	       };
+    $js .=
+      Kynetx::Postlude::eval_raise_statement( $expr, $session, $req_info,
+					      $rule_env, $config->{'rule_name'} );
+  }
+  return $js;
 }
 
 sub do_http {
