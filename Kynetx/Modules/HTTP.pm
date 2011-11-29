@@ -207,7 +207,7 @@ sub raise_response_event {
     my $expr = {
 		'type'      => 'raise',
 		'domain'    => 'http',
-		'ruleset'   => get_rid($config->{'rid'}),
+		'ruleset'   => $config->{'rid'},
 		'event'     => mk_expr_node( 'str', lc($method) ),
 		'modifiers' => $ms,
 	       };
