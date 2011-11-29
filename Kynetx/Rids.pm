@@ -38,6 +38,8 @@ qw(
     mk_rid_info
     get_rid
     get_version
+    parse_rid_list
+    print_rids
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -66,5 +68,42 @@ sub get_version {
 }
 
 
+# a string rid list looks like "foo.234;bar.dev"
+# alternately, we might get an array of strings ["foo.234"; "bar.dev"]
+sub parse_rid_list {
+  my($req_info, $rid_list) = @_;
+  # if not array, assume its a semicolon delimited string
+  unless ( ref $rid_list eq 'ARRAY') {
+    $rid_list = [split(/;/, $rid_list)];
+  }
+  # normalize, split might not always return an array, make it one
+  # unless ( ref $rid_list eq 'ARRAY' ) {
+  #   $rid_list = [$rid_list];
+  # }
+  my $rid_info_list;
+  foreach my $rid_and_ver (map { split( /\./, $_, 2 ) } @{$rid_list}) {
+    my ( $rid, $ver );
+    if ( ref $rid_and_ver eq 'ARRAY' ) {
+      ( $rid, $ver ) = @{$rid_and_ver};
+    } else {
+      ( $rid, $ver ) = ( $rid_and_ver, 0 );
+    }
+    push(@{ $rid_info_list }, 
+	 mk_rid_info($req_info, $rid, {'version' => $ver})
+	);
+	
+  }
+  return $rid_info_list;
+}
+
+# prints an array of rid_info hashes as "foo.234;bar.dev"
+sub print_rids {
+  my($rid_info) = @_;
+  my $res = "";
+  foreach my $rid ( @{$rid_info}) {
+    $res .= get_rid($rid).".".get_version($rid).";";
+  }
+  return $res;
+}
 
 1;

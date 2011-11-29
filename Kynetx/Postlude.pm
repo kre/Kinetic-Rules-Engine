@@ -374,9 +374,8 @@ sub eval_raise_statement {
     my $domain = $new_req_info->{'domain'};
     my $eventtype = $new_req_info->{'eventtype'};
 
-    
     my $rid_info_list;
-
+    
     # if there was a calculated ridlist, use it. Otherwise get salience
     if (defined $expr->{'ruleset'} ||
 	(defined $req_info->{'api'} && 
@@ -396,23 +395,25 @@ sub eval_raise_statement {
 		       )
 		);
       
-      # normalize, if it's not an array, make it one
-      unless ( ref $rids eq 'ARRAY' ) {
-        $rids = [$rids];
-      }
 
-      foreach my $rid_and_ver (map { split( /\./, $_, 2 ) } @{$rids}) {
-	my ( $rid, $ver );
-	if ( ref $rid_and_ver eq 'ARRAY' ) {
-	  ( $rid, $ver ) = @{$rid_and_ver};
-	} else {
-	  ( $rid, $ver ) = ( $rid_and_ver, 0 );
-	}
-	push(@{ $rid_info_list }, 
-	     mk_rid_info($req_info, $rid, {'version' => $ver})
-	    );
+      $rid_info_list = Kynetx::Rids::parse_rid_list($req_info, $rids);
+
+      # # normalize, if it's not an array, make it one
+      # unless ( ref $rids eq 'ARRAY' ) {
+      #   $rids = [$rids];
+      # }
+      # foreach my $rid_and_ver (map { split( /\./, $_, 2 ) } @{$rids}) {
+      # 	my ( $rid, $ver );
+      # 	if ( ref $rid_and_ver eq 'ARRAY' ) {
+      # 	  ( $rid, $ver ) = @{$rid_and_ver};
+      # 	} else {
+      # 	  ( $rid, $ver ) = ( $rid_and_ver, 0 );
+      # 	}
+      # 	push(@{ $rid_info_list }, 
+      # 	     mk_rid_info($req_info, $rid, {'version' => $ver})
+      # 	    );
 	
-      }
+      # }
       
     } else {
       my $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info);

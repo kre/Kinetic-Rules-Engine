@@ -118,24 +118,22 @@ sub calculate_rid_list {
 
   my $rid_list = $memd->get($rid_list_key);
 
-  if ($rid_list) {
+  if ($rid_list) { 
+    $logger->debug("Using cached rid_list");
     return $rid_list;
   }
 
   my $r = {};
 #  $r->{'event_rids'} = {};
 
-  # we use same credentials as the rule repository
-  my $repo_info = Kynetx::Configure::get_config('RULE_REPOSITORY');
-  my ($base_url,$username,$passwd) = split(/\|/, $repo_info);
-
-    
   # get accout info
-  my $app_url = Kynetx::Configure::get_config('USER_RIDS_URL');
+  my $user_rids_info = Kynetx::Configure::get_config('USER_RIDS_URL');
+  my ($app_url,$username,$passwd) = split(/\|/, $user_rids_info);
   my $acct_url = $app_url."/".$req_info->{'id_token'};
   my $req = HTTP::Request->new(GET => $acct_url);
   $req->authorization_basic($username, $passwd);
   my $ua = LWP::UserAgent->new;
+  $logger->debug("Retrieving rid_list");
   $rid_list = decode_json($ua->request($req)->{'_content'})->{'rids'};
 
 

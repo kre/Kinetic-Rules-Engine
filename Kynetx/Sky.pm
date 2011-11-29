@@ -189,7 +189,7 @@ sub handler {
        
     }
 
-    $logger->error("Rids for $domain/$eventtype: ", sub {Dumper ($rid_list)});
+    $logger->error("Rids for $domain/$eventtype: ", sub {Kynetx::Rids::print_rids($rid_list)});
 
     Kynetx::Request::log_request_env( $logger, $req_info );
 
