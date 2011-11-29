@@ -654,6 +654,23 @@ SKIP: {
 
     $test_count += test_event_plan($only_current_specific_rid_test_plan);
 
+    # make sure rules only current RID rules are raised when it's specified
+    my $only_current_meta_rid_test_plan =
+      [{'url' => "$dn/$token/123456789?_domain=web&_type=pageview&url=http://www.google.com/test_rule_9/",
+	'type' => 'text/javascript',
+	'like' => ["/'rule_name' :'test_rule_9'/",
+		   "/'rule_name' :'test_rule_7'/",
+		  ],
+	'unlike' => [	
+		     "/'rule_name' :'test_rule_other_7'/",
+		    ],
+	'diag' => 0,
+
+       },
+      ];
+
+    $test_count += test_event_plan($only_current_meta_rid_test_plan);
+
 
   }
 

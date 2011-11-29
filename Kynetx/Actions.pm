@@ -771,7 +771,7 @@ sub build_one_action {
 	my $config = {
 		"txn_id"    => $req_info->{'txn_id'},
 		"rule_name" => $rule_name,
-		"rid"       => $req_info->{'rid'}
+		"rid"       => get_rid($req_info->{'rid'})
 	};
 
 
