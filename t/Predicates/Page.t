@@ -182,6 +182,9 @@ is(get_pageinfo($my_req_info, 'url', ['port']),
    80,
    'page:url path & query path');
 
+is(get_pageinfo($my_req_info, 'env', ['rid']), 'cs_test', 'page:env("rid")');
+is(get_pageinfo($my_req_info, 'env', ['ip']), '72.21.203.1', 'page:env("ip")');
+is(get_pageinfo($my_req_info, 'env', ['rule_version']), 'dev', 'page:env("dev")');
 
 my $params = {
    'msg' => 'Hello World!',
@@ -202,7 +205,7 @@ is(get_pageinfo($my_req_info, 'env', ['g_id']),
    $session_id,
    'event:env("g_id")');
 
-done_testing(26 + int(@pnames));
+done_testing(29 + int(@pnames));
 
 
 1;

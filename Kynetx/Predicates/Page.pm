@@ -146,6 +146,10 @@ url
 	# rulespaced env parameters
 	if($rid && defined $req_info->{$rid.':'.$args->[0]}) {
 	    $val = $req_info->{$rid.':'.$args->[0]};
+	} elsif(defined $req_info->{'rid'} && $args->[0] eq 'rid') {
+	    $val = get_rid($req_info->{'rid'});
+	} elsif(defined $req_info->{'rid'} && $args->[0] eq 'rule_version') {
+	    $val = get_version($req_info->{'rid'});
 	} elsif(defined $req_info->{$args->[0]}) {
 	    $val = $req_info->{$args->[0]};
 	}
@@ -173,7 +177,7 @@ url
 
 #      $logger->debug("Req info: ", sub {Dumper($req_info)});
 
-      my $rid = $req_info->{'rid'};
+      my $rid = get_rid($req_info->{'rid'});
 
       my $ps;
       foreach my $pn (@{$req_info->{'param_names'}}) {
