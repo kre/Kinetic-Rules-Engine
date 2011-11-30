@@ -418,6 +418,14 @@ sub eval_raise_statement {
     } else {
       my $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info);
       $rid_info_list = $unfiltered_rid_list->{$domain}->{$eventtype} || [];
+      my $found = 0;
+      foreach my $rid( @{ $rid_info_list }) {
+	$found = 1 if (get_rid($rid) eq get_rid($req_info->{'rid'}) &&
+		       get_version($rid) eq get_version($req_info->{'rid'}));
+      }
+      unless ( $found ) {
+	push(@{ $rid_info_list }, $req_info->{'rid'});
+      }
     }
 
 

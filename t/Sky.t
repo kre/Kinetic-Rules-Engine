@@ -673,6 +673,61 @@ SKIP: {
 
 
   }
+    # make sure rules in current RID gets raised
+    my $explicit_event_nonspecific_rid_current_test_plan =
+      [{'url' => "$dn/$token/123456789?_domain=web&_type=pageview&_rids=a1856x4&url=http://www.google.com/test_rule_20",
+	'type' => 'text/javascript',
+	'like' => ["/'rule_name' :'test_rule_20'/",
+		   "/'rule_name' :'test_rule_21'/",
+		  ],
+	'unlike' => ["/'rule_name' :'test_rule_7'/",
+],
+	'diag' => 0,
+
+       },
+      ];
+
+    $test_count += test_event_plan($explicit_event_nonspecific_rid_current_test_plan);
+
+    # make sure rules in current RID gets raised
+    my $explicit_event_nonspecific_rid_current_other_test_plan =
+      [{'url' => "$dn/$token/123456789?_domain=web&_type=pageview&_rids=a1856x4&url=http://www.google.com/test_rule_23",
+	'type' => 'text/javascript',
+	'like' => ["/'rule_name' :'test_rule_22'/",
+		   "/'rule_name' :'test_rule_7'/",
+		  ],
+	'unlike' => [],
+	'diag' => 0,
+
+       },
+      ];
+
+    $test_count += test_event_plan($explicit_event_nonspecific_rid_current_other_test_plan);
+
+
+    my $persistent_with_rids_test_plan =
+      [{'url' => "$dn/$token?_domain=flip&_name=init&_rids=a1856x3",
+	'type' => 'text/javascript',
+	'like' => ['/"name":"init"/',
+		   '/"rule_name":"A"/',
+		  ],
+	'unlike' => [
+		    ],
+	'diag' => 0,
+       },
+       {'url' => "$dn/$token?_domain=flip&_name=restore_state&_rids=a1856x3",
+	'type' => 'text/javascript',
+	'like' => ['/"name":"results"/',
+		   '/"state":\["single","news","facebook","twitter","map"\]/',
+		  ],
+	'unlike' => [
+		    ],
+	'diag' => 0,
+       },
+      ];
+
+    $test_count += test_event_plan($persistent_with_rids_test_plan);
+
 
 
 done_testing($test_count);
