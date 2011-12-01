@@ -92,7 +92,9 @@ sub extended_dispatch {
 
     delete $r->{'event_rids'}; # doesn't belong in the dispatch API return result
     $r = encode_json($r);
-#    $logger->debug($r);
+
+    # my $logger = get_logger();
+    # $logger->debug($r);
 
     return $r;
 
@@ -179,7 +181,7 @@ sub calculate_dispatch {
   my $rids = $req_info->{'rids'};
 
   my $logger = get_logger();
-  $logger->debug("Returning dispatch sites for $rids");
+  $logger->debug("Returning dispatch sites for ", Kynetx::Rids::print_rids($rids));
 
   my $r = {};
   $r->{'event_rids'} = {};

@@ -55,7 +55,7 @@ sub log_rule_fire {
     $logger->debug("[logging] Storing logging data");
 
 
-    $r->subprocess_env(SITE => Kynetx::Request::rid_list_as_string($request_info->{'rids'}));
+    $r->subprocess_env(SITE => Kynetx::Rids::print_rids($request_info->{'rids'}));
 
     $r->subprocess_env(RULE_NAMES =>
 		       join(',', @{ $request_info->{'names'} } )

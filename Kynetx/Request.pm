@@ -178,7 +178,7 @@ sub log_request_env {
 		$entry eq 'rid'
 	       ) {
 	      if (ref $value eq 'ARRAY') {
-		$value = rid_list_as_string($value);
+		$value = Kynetx::Rids::print_rids($value);
 	      } 
 	    } elsif (ref $value eq 'ARRAY') {
 	        my @tmp = map {substr($_,0,50)} @$value;
@@ -204,21 +204,6 @@ sub log_request_env {
 
 
 }
-
-sub rid_list_as_string {
-  my($rid_list) = @_;
-  my $tmp = [];
-  my $result = $rid_list;
-  if (ref $rid_list eq 'ARRAY') {
-    foreach my $rid_info ( @{ $rid_list } ) {
-      push(@{ $tmp }, $rid_info->{'rid'}.':'.$rid_info->{'kinetic_app_version'});
-    }
-    $result = '[' . join(', ',@{ $tmp }) . ']';
-  }
-  # if it's not an array, assume it's a string and just return it.
-  return $result;
-}
-
 
 sub set_capabilities {
   my $req_info = shift;

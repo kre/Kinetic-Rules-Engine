@@ -74,7 +74,8 @@ sub handler {
     # for later logging
     $r->subprocess_env(METHOD => $method);
 
-    my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $method);
+#    my $req_info = Kynetx::Request::build_request_env($r, 'initialize', $method);
+    my $req_info = Kynetx::Request::build_request_env($r, $method, $rids);
     
     Kynetx::Request::log_request_env($logger, $req_info);
 
@@ -84,7 +85,7 @@ sub handler {
 	my $sid = Kynetx::Session::session_id($session);
 	$r->subprocess_env(SID => $sid);
 
-    $logger->debug("RIDs -> $rids");
+#    $logger->debug("RIDs -> $rids");
 
     my $js_version = Kynetx::Configure::get_config('JS_VERSION');
     my $js_root = Kynetx::Configure::get_config('DEFAULT_JS_ROOT');
@@ -154,14 +155,16 @@ sub handler {
 
     } elsif($method eq 'dispatch') {
 
-	if ($api eq 'js') {
-	  $js = Kynetx::Dispatch::simple_dispatch($req_info, $rids);
+      if ($api eq 'js') {
+	$logger->info("Simple dispatch for API '$api' ");	
+	$js = Kynetx::Dispatch::simple_dispatch($req_info, $rids);
+	
+      } elsif ($api eq 'init') {
+	$logger->info("Extended dispatch for API '$api' ");
+	$js = Kynetx::Dispatch::extended_dispatch($req_info);
+      }
 
-	} elsif ($api eq 'init') {
-	  $js = Kynetx::Dispatch::extended_dispatch($req_info);
-	}
-
-	$r->content_type('text/plain');
+      $r->content_type('text/plain');
 
 
     } elsif($method eq 'datasets') {

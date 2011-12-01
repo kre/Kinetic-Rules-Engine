@@ -173,7 +173,7 @@ sub show_context {
     my $context_template = HTML::Template->new(filename => $template,
 					       die_on_bad_params => 0);
 
-    $context_template->param(site => Kynetx::Request::rid_list_as_string($req_info->{'site'}));
+    $context_template->param(site => Kynetx::Rids::print_rids($req_info->{'site'}));
     $context_template->param(caller => $req_info->{'caller'});
 
     my @client_info = (       
@@ -181,7 +181,7 @@ sub show_context {
 	  value => $req_info->{'hostname'}},
 
 	{ name => 'Client ID', 
-	  value => Kynetx::Request::rid_list_as_string($req_info->{'site'})},
+	  value => Kynetx::Rids::print_rids($req_info->{'site'})},
 
 	{ name => 'Client calling page',
 	  value => $req_info->{'caller'}},

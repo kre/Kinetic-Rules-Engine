@@ -27,6 +27,7 @@ use Test::WWW::Mechanize;
 
 use LWP::UserAgent;
 use Cache::Memcached;
+use JSON::XS;
 
 use Apache2::Const;
 use APR::URI;
@@ -38,6 +39,9 @@ use Kynetx::KOBJ;
 use Kynetx::Repository;
 use Kynetx::Memcached;
 use Kynetx::FakeReq;
+
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
 
 
 use Log::Log4perl qw(get_logger :levels);
@@ -68,12 +72,15 @@ Kynetx::Configure::configure();
 my $test_count = 0;
 
 my $dn = "http://127.0.0.1/js";
+my $init_dn = "http://127.0.0.1/blue/init";
 
 my $ruleset = $rid;
 
 
 
 my $mech = Test::WWW::Mechanize->new();
+
+Kynetx::Util::turn_off_logging();
 
 SKIP: {
     my $ua = LWP::UserAgent->new;
@@ -116,13 +123,38 @@ SKIP: {
 
     # dispatch
     my $url_version_4 = "$dn/dispatch/cs_test;cs_test_1/";
-    diag "Testing dispatch with $url_version_4";
+#    diag "Testing dispatch with $url_version_4";
 
     $mech->get_ok($url_version_4);
     is($mech->content_type(), 'text/plain');
 
     $mech->content_like(qr/www\.windley\.com.*www\.yahoo\.com/s);
     $test_count += 3;
+
+    my $url_version_4a = "$init_dn/dispatch/cs_test/";
+#    diag "Testing dispatch with $url_version_4a";
+    
+    $mech->get_ok($url_version_4a);
+    $test_count += 1;
+
+    my $content = decode_json(Kynetx::Parser::remove_comments($mech->content()));
+
+    my $expected = decode_json <<_EOF_;
+{"events":{"web":{"pageview":[{"pattern":"/([^/]+)/bar.html","type":"url"},{"pattern":"/foo/bazz.html","type":"url"},{"pattern":"/fizzer/fuzzer.html","type":"default"}]},"system":{"error":[{"pattern":".*","type":".*"}]}},"cs_test":{"domains":["www.google.com","www.yahoo.com","www.live.com"],"events":{"web":{"pageview":[{"pattern":"/([^/]+)/bar.html","type":"url"},{"pattern":"/foo/bazz.html","type":"url"},{"pattern":"/foo/bazz.html","type":"url"},{"pattern":"/fizzer/fuzzer.html","type":"default"}]},"system":{"error":[{"pattern":".*","type":".*"}]}}}}
+_EOF_
+
+    my $a = [sub {return $_[0]->{events}->{system}->{error};},
+	     sub {return $_[0]->{events}->{web}->{pageview}->[0];},
+	     sub {return $_[0]->{cs_test}->{domains};},
+	     sub {return $_[0]->{cs_test}->{events}->{web}->{pageview}->[2];},
+	    ];
+
+    for my $f ( @{$a} ) {
+      my $res = &$f($expected);
+      is_deeply(&$f($content), $res, Dumper $res);
+      $test_count++;
+    }
+
 
     # datasets
     my $url_version_5 = "$dn/datasets/cs_test;cs_test_1/";
