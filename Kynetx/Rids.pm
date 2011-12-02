@@ -44,7 +44,7 @@ qw(
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 sub mk_rid_info {
-  my($req_info,$rid, $options) = @_;
+  my($req_info,$rid, $options) = @_; 
 
   my $version = 
        $options->{'version'} ||
