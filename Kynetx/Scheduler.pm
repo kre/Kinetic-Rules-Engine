@@ -160,12 +160,16 @@ sub add {
 	my $rule     = shift;
 	my $ruleset  = shift;
 	my $req_info = shift;
+	my $options  = shift;
+
+	my $ridver = $options->{'ridver'} || 'prod';
 
 	my $rulename = $rule->{'name'};
 
 	my $logger = get_logger();
 	#$logger->debug("Adding: ",$req_info->{'num'});
-	my $task = mk_task( $rid, $ruleset, $rule, $req_info );
+	$logger->debug("Adding task for: $rid.$ridver.$rulename");
+	my $task = mk_task( $rid, $ridver, $ruleset, $rule, $req_info );
 
 	# if the RID is alread a key, just add to the rule list
 	if ( !defined $self->{$rid} ) {
@@ -185,6 +189,7 @@ sub add {
 
 sub mk_task {
 	my $rid      = shift;
+	my $ver      = shift;
 	my $ruleset  = shift;
 	my $rule     = shift;
 	my $req_info = shift || {};
@@ -192,6 +197,7 @@ sub mk_task {
 		'ruleset'  => $ruleset,
 		'rule'     => $rule,
 		'rid'      => $rid,
+		'ver'      => $ver,
 		'req_info' => (dclone $req_info),
 		'_ts'      => time,
 	};
@@ -211,6 +217,17 @@ sub get_rule {
 sub get_rid {
 	my $task = shift;
 	return $task->{'rid'};
+}
+
+sub get_ver {
+	my $task = shift;
+	return $task->{'ver'};
+}
+
+sub set_ver {
+	my $task = shift;
+	my $ver = shift;
+	$task->{'ver'} = $ver;
 }
 
 1;

@@ -146,8 +146,8 @@ sub increment_persistent_var {
 
 sub get_persistent_var {
     my ($domain,$rid,$session,$varname,$gcreated) = @_;
-    my $logger = get_logger();
-    $logger->trace("Get $domain","var: $varname");
+    # my $logger = get_logger();
+    # $logger->debug("Get $domain"," var: $varname");
     my $val = undef;
     if ($domain eq 'ent') {
         my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);

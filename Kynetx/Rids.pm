@@ -96,12 +96,18 @@ sub parse_rid_list {
   return $rid_info_list;
 }
 
+sub print_rid_info {
+  my($rid_info) = @_;
+
+  return get_rid($rid_info).".".get_version($rid_info)
+}
+
 # prints an array of rid_info hashes as "foo.234;bar.dev"
 sub print_rids {
   my($rid_info) = @_;
   my $res = "";
   foreach my $rid ( @{$rid_info}) {
-    $res .= get_rid($rid).".".get_version($rid).";";
+    $res .= print_rid_info($rid).";";
   }
   return $res;
 }

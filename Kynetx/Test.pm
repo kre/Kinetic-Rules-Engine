@@ -106,7 +106,9 @@ sub gen_req_info {
       $req_info->{$k} = $options->{$k};
     }
 
-    $req_info->{'rid'} = mk_rid_info($req_info,$rid);
+    my $ver = $options->{'ridver'} || 'prod';
+
+    $req_info->{'rid'} = mk_rid_info($req_info,$rid, {'version' => $ver});
 
 
     return $req_info;
