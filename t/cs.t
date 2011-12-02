@@ -42,6 +42,7 @@ use Kynetx::Rids qw/:all/;
 use Kynetx::Test qw/:all/;
 
 # configure KNS
+
 Kynetx::Configure::configure();
 
 Kynetx::Memcached->init();

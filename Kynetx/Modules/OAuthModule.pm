@@ -263,9 +263,8 @@ sub set_config_from_action{
 }
 
 sub oauth_callback_handler {
-	my ( $r, $method, $rid_info, $eid ) = @_;
+	my ( $r, $method, $rid, $eid ) = @_;
 	my $logger = get_logger();
-	my $rid = get_rid($rid_info);
 	my ($cbrid,$version,$namespace,$fail);
 	$logger->debug("\n-----------------------OAuth Callback ($method)--------------------------");
 	my $session = Kynetx::Session::process_session($r);
@@ -344,12 +343,12 @@ sub oauth_callback_handler {
 }
 
 sub callback_host {
-	my ( $r, $method, $rid_info, $eid ) = @_;
+	my ( $r, $method, $rid, $eid ) = @_;
 	my $logger = get_logger();	
-	my $rid = get_rid($rid_info);
 	$logger->debug("\n-----------------------Callback Host ($method)--------------------------");
 	my $session = Kynetx::Session::process_session($r);
 	my $req_info = Kynetx::Request::build_request_env( $r, $method, $rid );
+	
 	my $rule_env = Kynetx::Environments::empty_rule_env();
 	my $eventname;
 	my $version;

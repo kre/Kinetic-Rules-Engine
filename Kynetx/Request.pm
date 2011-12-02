@@ -146,7 +146,7 @@ sub build_request_env {
     $request_info->{'rids'} = $rids;
     $request_info->{'site'} = $rids; #historical
     # this will get overridden with a single RID later
-    $request_info->{'rid'} = undef;
+    $request_info->{'rid'} = $rids->[0];
 
 
 
@@ -157,6 +157,7 @@ sub build_request_env {
 
     return $request_info;
 }
+
 
 sub merge_req_env {
   my $first = shift;

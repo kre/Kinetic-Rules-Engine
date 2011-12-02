@@ -150,16 +150,16 @@ sub process_schedule {
     #		$logger->debug("[task] ", sub { Dumper($task) });
 
     $rid = $task->{'rid'};
-#    $logger->debug("Next rid ", sub{ Dumper $rid});
 
     unless ( $rid eq $current_rid ) {
-
       #context switch
       # we only do this when there's a new RID
       
       # save info from last context
 
       $ast->add_resources( $current_rid, $req_info->{'resources'} );
+
+#      $logger->debug("Task request: ", Dumper $task->{'req_info'});
 
       # set up new context
       if ($req_info) {
@@ -169,7 +169,8 @@ sub process_schedule {
 	$req_info = $task->{'req_info'};
       }
 
-      $req_info->{'rid'} = mk_rid_info($req_info,$rid);
+      $req_info->{'rid'} = mk_rid_info($req_info,$rid, {'version' => $task->{'ver'}});
+      $logger->debug("Seeing RID ", Dumper Kynetx::Rids::print_rid_info($req_info->{'rid'}));
 
 
       $init_rule_env->{'ruleset_name'} = $rid;
@@ -855,18 +856,19 @@ sub eval_rule_body {
 sub get_rule_set {
 	my ( $req_info, $localparsing, $rid, $ver ) = @_;
 
-	my $caller = $req_info->{'caller'};
+	my $caller = $req_info->{'caller'} || 'unknown';
 	$rid ||= get_rid($req_info->{'rid'});
+	$ver ||= get_version($req_info->{'rid'});
 
 # don't do this. We rely on $ver being undefined later
 #	$ver ||= 'prod';
 
 	my $logger = get_logger();
-	$logger->debug("Getting ruleset $rid version for $caller");
+	$logger->debug("Getting ruleset $rid.$ver for $caller");
 
 	my $ruleset;
-	if ( is_ruleset_stashed( $req_info, $rid ) ) {
-		$ruleset = grab_ruleset( $req_info, $rid );
+	if ( is_ruleset_stashed( $req_info, $rid, $ver ) ) {
+		$ruleset = grab_ruleset( $req_info, $rid, $ver );
 	}
 	else {
 	  my $rid_info = mk_rid_info($req_info, $rid);
@@ -893,7 +895,7 @@ sub get_rule_set {
 	$ruleset->{'rules'} ||= [];
 
 	$logger->debug(
-		"Found " . @{ $ruleset->{'rules'} } . " rules for RID $rid" );
+		"Found " . @{ $ruleset->{'rules'} } . " rules for RID $rid.$ver" );
 
 	$logger->trace("Ruleset: ", sub {Dumper($ruleset)});
 	return $ruleset;
@@ -903,18 +905,19 @@ sub get_rule_set {
 sub stash_ruleset {
 	my ( $req_info, $ruleset ) = @_;
 	my $rid = get_rid($req_info->{'rid'});
-	$req_info->{$rid}->{'ruleset'} = $ruleset;
+	my $ver = get_version($req_info->{'rid'}) || 'prod';
+	$req_info->{"$rid.$ver"}->{'ruleset'} = $ruleset;
 }
 
 sub grab_ruleset {
-	my ( $req_info, $rid ) = @_;
-	return $req_info->{$rid}->{'ruleset'};
+	my ( $req_info, $rid, $ver ) = @_;
+	return $req_info->{"$rid.$ver"}->{'ruleset'};
 }
 
 sub is_ruleset_stashed {
-	my ( $req_info, $rid ) = @_;
-	return defined $req_info->{$rid}
-	  && defined $req_info->{$rid}->{'ruleset'};
+	my ( $req_info, $rid, $ver ) = @_;
+	return defined $req_info->{"$rid.$ver"}
+	  && defined $req_info->{"$rid.$ver"}->{'ruleset'};
 }
 
 sub select_rule {
@@ -1134,7 +1137,7 @@ sub mk_schedule {
 
 	$req_info->{'rid'} = $rid_info;    # override with the one we're working on
 
-	$logger->info( "Processing rules for RID $rid");
+	$logger->info( "Processing rules for RID ", Kynetx::Rids::print_rid_info($rid_info));
 
 	$ruleset = get_rule_set($req_info) unless defined $ruleset;
 
@@ -1147,7 +1150,7 @@ sub mk_schedule {
 
 			my $rulename = $rule->{'name'};
 			$logger->debug("Rule $rulename is selected");
-			my $task = $schedule->add( $rid, $rule, $ruleset, $req_info );
+			my $task = $schedule->add( $rid, $rule, $ruleset, $req_info, {'ridver' => get_version($rid_info)} );
 
 			my $vars = Kynetx::Actions::get_precondition_vars($rule);
 

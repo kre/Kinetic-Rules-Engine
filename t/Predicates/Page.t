@@ -67,7 +67,7 @@ my $rule_env = Kynetx::Test::gen_rule_env();
 
 my $session = Kynetx::Test::gen_session($r, $rid);
 my $session_id = Kynetx::Session::session_id($session);
-my $options = {'g_id' => $session_id};
+my $options = {'g_id' => $session_id, 'ridver' => 'dev'};
 my $my_req_info = Kynetx::Test::gen_req_info($rid,$options);
 
 

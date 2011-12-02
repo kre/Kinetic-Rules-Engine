@@ -72,6 +72,7 @@ sub handler {
     my $eid = '';
 
     ($method,$rid,$eid) = $r->path_info =~ m!/([a-z+_]+)/([A-Za-z0-9_;]*)/?(\d+)?!;
+
     $logger->debug("Performing $method method on rulesets $rid and EID $eid");
     Log::Log4perl::MDC->put('site', $rid);
     Log::Log4perl::MDC->put('rule', '[global]');  # no rule for now...
@@ -79,6 +80,8 @@ sub handler {
     # store these for later logging
     $r->subprocess_env(METHOD => $method);
     $r->subprocess_env(RIDS => $rid);
+
+
 
     # at some point we need a better dispatch function
     if($method eq 'eval') {
@@ -95,9 +98,10 @@ sub handler {
 	#my $session = process_session($r);
 	show_build_num($r, $method, $rid);
     } elsif($method eq 'cb_host') {
-        my $st = Kynetx::Modules::OAuthModule::callback_host($r,$method,$rid);
-    	$r->status($st);
-		return $st;
+
+      my $st = Kynetx::Modules::OAuthModule::callback_host($r,$method, $rid);
+      $r->status($st);
+      return $st;
     } elsif($method eq 'twitter_callback' ) {
 	Kynetx::Modules::Twitter::process_oauth_callback($r, $method, $rid);
 	$r->status(Apache2::Const::REDIRECT);

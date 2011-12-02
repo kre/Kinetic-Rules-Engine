@@ -283,7 +283,7 @@ sub process_event_for_rid {
     $logger->debug("Processing events for $rid");
     Log::Log4perl::MDC->put( 'site', $rid );
 
-    my $ruleset = Kynetx::Rules::get_rule_set($req_info, 1, $rid); # 1 for localparsing
+    my $ruleset = Kynetx::Rules::get_rule_set($req_info, 1, $rid, get_version($rid_info)); # 1 for localparsing
 
     my $type = $ev->get_type();
     my $domain = $ev->get_domain();
@@ -347,8 +347,8 @@ sub process_event_for_rid {
 
             my $rulename = $rule->{'name'};
 
-            $logger->debug( "Adding to schedule: ", $rid, " & ", $rulename );
-            my $task = $schedule->add( $rid, $rule, $ruleset, $req_info );
+            $logger->debug( "Adding to schedule: ", Kynetx::Rids::print_rid_info($rid_info), " & ", $rulename );
+            my $task = $schedule->add( $rid, $rule, $ruleset, $req_info, {'ridver' => get_version($rid_info)} );
 
             # get event list and reset+
             my $event_list_name = $rulename . ':event_list';

@@ -102,6 +102,7 @@ sub local_gen_req_info {
 				    {'ip' =>  '72.21.203.1',
 				     'txn_id' => 'txn_id',
 				     'caller' => 'http://www.google.com/search',
+				     'ridver' => 'dev',
 				    });
 }
 
@@ -1589,8 +1590,7 @@ _JS_
 add_testcase(
     $krl_src,
     $result,
-    $dummy_final_req_info,
-    0
+    $dummy_final_req_info
     );
 
 
@@ -2513,6 +2513,8 @@ foreach my $case (@test_cases) {
   $req_info->{'eventtype'} = 'pageview';
   $req_info->{'domain'} = 'web';
 
+#  diag "################## testing ", Kynetx::Rids::print_rid_info($req_info->{'rid'}), " ################################";
+
   my $dd = Kynetx::Response->create_directive_doc($req_info->{'eid'});
 
   if($case->{'type'} eq 'ruleset') {
@@ -2521,6 +2523,7 @@ foreach my $case (@test_cases) {
 				 Kynetx::Rules::optimize_ruleset($case->{'expr'})
 				);
 
+    
     my $ev = Kynetx::Events::mk_event($req_info);
 
     #diag("Processing events for $req_info->{'rid'} with event ", sub {Dumper $ev});
@@ -2631,6 +2634,8 @@ sub test_datafeeds {
     my $krl = Kynetx::Parser::parse_ruleset($src);
 
     my $req_info = local_gen_req_info($krl->{'ruleset_name'});
+
+#  diag "################## testing ", Kynetx::Rids::print_rid_info($req_info->{'rid'}), " ################################";
 
     Kynetx::Rules::stash_ruleset($req_info,
 				 Kynetx::Rules::optimize_ruleset($krl)

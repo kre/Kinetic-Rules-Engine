@@ -63,7 +63,7 @@ my $rid = 'cs_test';
 
 # test choose_action and args
 
-my $my_req_info = Kynetx::Test::gen_req_info($rid);
+my $my_req_info = Kynetx::Test::gen_req_info($rid, {'ridver' => 'dev'});
 
 my $rule_name = 'foo';
 

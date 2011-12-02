@@ -121,17 +121,17 @@ SKIP: {
 
     # get val
     my $url_version_2 = "$dn/get/$rid/$sid/a_count/";
-    diag "Testing console with $url_version_2";
+    diag "Testing pds with $url_version_2";
     $mech->get_ok($url_version_2);
     is($mech->content_type(), 'text/javascript');
     $content = Kynetx::Parser::remove_comments($mech->content());
-#    diag "Found ", $mech->content();
+ #    diag "Found ", $content;
     is_deeply(JSON::XS->new->utf8->decode($content), {'a_count' => 5}, "got a single val");
     $test_count += 3;
 
     # post different #
     my $url_version_4 = "$dn/store/$rid/$sid/a_count/";
-#    diag "Testing console with $url_version_4";
+#    diag "Testing pds with $url_version_4";
     $mech->post_ok($url_version_4, ['val' => 10]);
     is($mech->content_type(), 'text/javascript');
     $content = Kynetx::Parser::remove_comments($mech->content());
@@ -142,7 +142,7 @@ SKIP: {
 
     # post json
     $url_version_4 = "$dn/store/$rid/$sid/a_count/";
-#    diag "Testing console with $url_version_4";
+#    diag "Testing pds with $url_version_4";
     $mech->post_ok($url_version_4, [val => '{"foo": {"type": "required", "level": "user"}}']);
     is($mech->content_type(), 'text/javascript');
 
