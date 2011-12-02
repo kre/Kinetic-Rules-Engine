@@ -220,17 +220,27 @@ sub flush_ruleset_cache {
     # defaults to production when no version specified
 
 
+    # Kynetx::Request::log_request_env( $logger, $req_info );
+
     #FIXME: This needs to be put in Repository.pm
 
-    my $version = Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kynetx_app_version']) || 'prod';
+    # my $version = Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kynetx_app_version']) || 'prod';
 
-    $logger->debug("[flush] flushing rules for $rid ($version version)");
     my $memd = get_memd();
-    $memd->delete(Kynetx::Repository::make_ruleset_key($rid, $version));
+    my $msg = '';
+    foreach my $rid_info ( @{$req_info->{'rids'} }) {
 
+      my $rid = Kynetx::Rids::get_rid($rid_info);
+      my $version = Kynetx::Rids::get_version($rid_info);
+
+      $logger->debug("[flush] flushing rules for $rid (version $version)");
+      $memd->delete(Kynetx::Repository::make_ruleset_key($rid, $version));
+
+      $msg .= "Rules flushed for site $rid (version $version)<br/>";
+    }
     $r->content_type('text/html');
-    my $msg = "Rules flushed for site $rid ($version)";
-    print "<title>$msg</title><h1>$msg</h1>";
+
+    print "<title>Flushing Ruleset Cache</title><h1>Flushing Ruleset Cache</h1><p>$msg</p>";
 
 }
 
