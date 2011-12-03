@@ -143,8 +143,8 @@ SKIP: {
 {"events":{"web":{"pageview":[{"pattern":"/([^/]+)/bar.html","type":"url"},{"pattern":"/foo/bazz.html","type":"url"},{"pattern":"/fizzer/fuzzer.html","type":"default"}]},"system":{"error":[{"pattern":".*","type":".*"}]}},"cs_test":{"domains":["www.google.com","www.yahoo.com","www.live.com"],"events":{"web":{"pageview":[{"pattern":"/([^/]+)/bar.html","type":"url"},{"pattern":"/foo/bazz.html","type":"url"},{"pattern":"/foo/bazz.html","type":"url"},{"pattern":"/fizzer/fuzzer.html","type":"default"}]},"system":{"error":[{"pattern":".*","type":".*"}]}}}}
 _EOF_
 
-    my $a = [sub {return $_[0]->{events}->{system}->{error};},
-	     sub {return $_[0]->{events}->{web}->{pageview}->[0];},
+    my $a = [#sub {return $_[0]->{events}->{system}->{error};},
+	     #sub {return $_[0]->{events}->{web}->{pageview}->[0];},
 	     sub {return $_[0]->{cs_test}->{domains};},
 	     sub {return $_[0]->{cs_test}->{events}->{web}->{pageview}->[2];},
 	    ];

@@ -173,8 +173,8 @@ my $expected = decode_json <<_EOF_;
 }
 _EOF_
 
-my $a = [sub {return $_[0]->{events}->{system}->{error};},
-	 sub {return $_[0]->{events}->{web}->{pageview}->[0];},
+my $a = [#sub {return $_[0]->{events}->{system}->{error};},
+	 #sub {return $_[0]->{events}->{web}->{pageview}->[0];},
 	 sub {return $_[0]->{cs_test}->{domains};},
 	 sub {return $_[0]->{cs_test}->{events}->{web}->{pageview}->[2];},
 	];

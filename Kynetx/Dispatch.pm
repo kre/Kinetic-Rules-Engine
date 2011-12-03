@@ -91,6 +91,7 @@ sub extended_dispatch {
     my $r = calculate_dispatch($req_info);
 
     delete $r->{'event_rids'}; # doesn't belong in the dispatch API return result
+    delete $r->{'events'}; # don't need this yet.
     $r = encode_json($r);
 
     # my $logger = get_logger();
