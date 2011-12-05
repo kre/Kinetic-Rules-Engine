@@ -91,6 +91,7 @@ any_matrix
 union
 has
 intersection
+to_seconds
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -753,6 +754,27 @@ sub has {
     my @x_set = intersection($a,$b);
     my $intr = scalar @x_set;
     return ($sub_set == $intr);	
+}
+
+sub to_seconds {
+	my ($num,$period) = @_;
+	my $seconds = 0;
+	if ( $period eq 'years' ) {
+		$seconds = $num * 60 * 60 * 24 * 365;
+	} elsif ( $period eq 'months' ) {
+		$seconds = $num * 60 * 60 * 24 * 30;
+	} elsif ( $period eq 'weeks' ) {
+		$seconds = $num * 60 * 60 * 24 * 7;
+	} elsif ( $period eq 'days' ) {
+		$seconds = $num * 60 * 60 * 24;
+	} elsif ( $period eq 'hours' ) {
+		$seconds = $num * 60 * 60;
+	} elsif ( $period eq 'minutes' ) {
+		$seconds = $num * 60;
+	} elsif ( $period eq 'seconds' ) {
+		$seconds = $num;
+	}
+	return $seconds;
 }
 
 1;

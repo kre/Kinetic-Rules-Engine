@@ -58,7 +58,8 @@ qw(
 	delete_current_state
 	inc_group_counter
 	reset_group_counter
-	shift_group_counter
+	get_timer_start
+	repeat_group_counter
 	push_aggregator
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
@@ -231,7 +232,7 @@ sub reset_group_counter {
 	return $val;
 }
 
-sub shift_group_counter {
+sub repeat_group_counter {
 	my ($rid,$session,$rulename,$state,$current,$null_state) = @_;
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $query = {
@@ -255,6 +256,20 @@ sub shift_group_counter {
 	};
 	my $val = Kynetx::MongoDB::find_and_modify(EVCOLLECTION,$fnmod);
 	return $val;	
+}
+
+sub get_timer_start {
+	my ($rid,$session,$rulename,$start) = @_;
+	my $logger = get_logger();
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $query = {
+		"rid" => $rid,
+		"ken" => $ken,
+		"rulename" => $rulename
+	};
+	#$logger->debug("Mongo query is: ", sub{Dumper($query)}); 	
+    my $value = Kynetx::MongoDB::get_value(EVCOLLECTION,$query);
+	return $value->{$start};	
 }
 
 1;

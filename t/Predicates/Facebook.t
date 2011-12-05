@@ -531,7 +531,7 @@ $logger->trace("Found city id: ", $city_id);
 
 ## Get the correct id for Windley
 $description = "Facebook user search";
-$expected = {'data' => array_each($user_object)};
+$expected = superhashof({'data' => array_each($user_object)});
 $args = [{'type' => 'user',
     'q' => 'phil windley'
 }];

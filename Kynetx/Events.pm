@@ -589,11 +589,20 @@ sub compile_event_expr {
 		} elsif ($eexpr->{'op'} eq 'then') {
 			$sm = mk_then_n(\@event_array);
 		}
-  } else {
-    $logger->warn("Attempt to compile malformed event expression");
-    $logger->trace("E.expression: ", sub {Dumper($eexpr)});
-  }
-  return $sm;
+	}
+	else {
+		$logger->warn("Attempt to compile malformed event expression");
+		$logger->trace( "E.expression: ", sub { Dumper($eexpr) } );
+	}
+	#  Check to see whether there was a within condition placed upon this event expression
+	if (defined $eexpr->{'timeframe'}) {
+		my $period = $eexpr->{'timeframe'};
+		my $num = Kynetx::Expressions::den_to_exp( $eexpr->{'within'} );
+		my $seconds = int(Kynetx::Util::to_seconds($num, $period));
+		$logger->debug("Set a timeframe for ",$eexpr->{'op'}, " of $seconds (s)");
+		$sm->timeframe($seconds);
+	}
+	return $sm;
 
 }
 

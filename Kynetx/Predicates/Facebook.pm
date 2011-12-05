@@ -36,6 +36,7 @@ use Kynetx::OAuth;
 use Kynetx::Errors;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Configure;
+use Kynetx::Rids qw/:all/;
 use Kynetx::Memcached qw(mset_cache);
 use Kynetx::Session qw(
   process_session
@@ -128,7 +129,8 @@ my $funcs = {};
 
 sub post_to_facebook {
     my ( $req_info, $rule_env, $session, $config, $mods, $args,$vars ) = @_;
-    my $rid     = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $logger  = get_logger();
     my $version = $req_info->{'rule_version'} || 'prod';
     my $url     = build( 'post', $args );
@@ -212,7 +214,8 @@ sub build_post_content {
 
 sub authorize {
     my ( $req_info, $rule_env, $session, $config, $mods, $args ) = @_;
-    my $rid     = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $logger  = get_logger();
     my $version = $req_info->{'rule_version'} || 'prod';
     my $scope   = get_scope($args);
@@ -252,7 +255,8 @@ sub authorize {
 
 sub authorized {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
-    my $rid    = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $logger = get_logger();
     my $access_token = get_token( $rid, $session, 'access_token', NAMESPACE );
     if ($access_token) {
@@ -276,7 +280,8 @@ $funcs->{'authorized'} = \&authorized;
 sub metadata {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
     my $logger    = get_logger();
-    my $rid       = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $url       = build( $function, $args, $session, $rid );
     my $cachetime = get_cachetime($args);
     my $resp = get_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $url,
@@ -289,7 +294,8 @@ $funcs->{'metadata'} = \&metadata;
 sub picture {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
     my $logger    = get_logger();
-    my $rid       = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $url       = build( $function, $args, $session, $rid );
     my $cachetime = get_cachetime($args);
     my $resp = get_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $url,
@@ -302,7 +308,8 @@ $funcs->{'picture'} = \&picture;
 sub search {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
     my $logger    = get_logger();
-    my $rid       = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $url       = build( $function, $args, $session, $rid );
     my $cachetime = get_cachetime($args);
     $logger->debug( "Search URL: ", $url );
@@ -316,7 +323,8 @@ $funcs->{'search'} = \&search;
 sub get {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
     my $logger = get_logger();
-    my $rid    = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $url    = build( $function, $args, $session, $rid );
     $logger->trace( "GET URL: ", $url );
     my $cachetime = get_cachetime($args);
@@ -329,7 +337,8 @@ $funcs->{'get'} = \&get;
 sub permissions {
 	my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
     my $logger = get_logger();
-    my $rid    = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $url    = build( $function, $args, $session, $rid );
     my $cachetime = get_cachetime($args);
     my $resp = get_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $url,
@@ -341,7 +350,8 @@ $funcs->{'permissions'} =\&permissions;
 sub fql {
 	my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
     my $logger = get_logger();
-    my $rid    = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $url    = build( $function, $args, $session, $rid );
     my $cachetime = get_cachetime($args);
     my $resp = get_protected_resource( $req_info, $rule_env, $session, NAMESPACE, $url,
@@ -354,7 +364,8 @@ $funcs->{'fql'} =\&fql;
 sub ids {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
     my $logger = get_logger();
-    my $rid    = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $url    = build( $function, $args, $session, $rid );
     $logger->debug( "GET URL: ", $url );
     my $cachetime = get_cachetime($args);
@@ -712,7 +723,7 @@ sub get_id {
             }
         }
     }
-    my $token = get_token( $rid, $session, 'access_token', NAMESPACE );
+    my $token = get_token( $rid, $session, 'access_token', NAMESPACE )|| "";
     $token =~ m/\d+\|\w+-(\d+)|.+/;
     my $fbid = $1;
     $logger->trace( "Found id: ", $fbid, " in token" );
@@ -921,7 +932,8 @@ sub get_endpoints {
 
 sub facebook_msg {
     my ( $req_info, $auth_url, $app_name, $app_link ) = @_;
-    my $rid          = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $ruleset_name = $req_info->{"$rid:ruleset_name"};
     my $name         = $req_info->{"$rid:name"};
     my $author       = $req_info->{"$rid:author"};
