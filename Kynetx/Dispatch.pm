@@ -91,7 +91,6 @@ sub extended_dispatch {
     my $r = calculate_dispatch($req_info);
 
     delete $r->{'event_rids'}; # doesn't belong in the dispatch API return result
-    delete $r->{'events'}; # don't need this yet.
     $r = encode_json($r);
 
     # my $logger = get_logger();
@@ -102,7 +101,7 @@ sub extended_dispatch {
 }
 
 sub calculate_rid_list {
-  my($req_info) = @_;
+  my($req_info, $session) = @_;
 
   my $rids = $req_info->{'rids'};
 
@@ -116,62 +115,82 @@ sub calculate_rid_list {
     return {};
   }
 
+  my $r = {};
+
+  my $ken = Kynetx::Persistence::get_ken($session, "", "web"); # empty rid
+
   my $memd = get_memd();
-  my $rid_list_key = mk_ridlist_key($id_token);
+  my $rid_list_key = mk_ridlist_key($ken);
 
   my $rid_list = $memd->get($rid_list_key);
 
+
   if ($rid_list) { 
-    $logger->debug("Using cached rid_list");
-    return $rid_list;
+    $logger->debug("Using cached rid_list ", rid_info_string($rid_list));
+
+  } else {
+    # get accout info
+    my $user_rids_info = Kynetx::Configure::get_config('USER_RIDS_URL');
+    my ($app_url,$username,$passwd) = split(/\|/, $user_rids_info);
+    my $acct_url = $app_url."/".$req_info->{'id_token'};
+    my $req = HTTP::Request->new(GET => $acct_url);
+    $req->authorization_basic($username, $passwd);
+    my $ua = LWP::UserAgent->new;
+    $rid_list = decode_json($ua->request($req)->{'_content'})->{'rids'};
+
+    $logger->debug("Retrieved rid_list ", print_rids($rid_list));
+
+    # cache this...
+    $memd->set($rid_list_key, $rid_list);
+  
+     
   }
 
-  my $r = {};
-#  $r->{'event_rids'} = {};
+  my $eventtree_key = mk_eventtree_key($rid_list);
 
-  # get accout info
-  my $user_rids_info = Kynetx::Configure::get_config('USER_RIDS_URL');
-  my ($app_url,$username,$passwd) = split(/\|/, $user_rids_info);
-  my $acct_url = $app_url."/".$req_info->{'id_token'};
-  my $req = HTTP::Request->new(GET => $acct_url);
-  $req->authorization_basic($username, $passwd);
-  my $ua = LWP::UserAgent->new;
-  $logger->debug("Retrieving rid_list");
-  $rid_list = decode_json($ua->request($req)->{'_content'})->{'rids'};
+  $r = $memd->get($eventtree_key);
 
+  if (defined $r) { 
+    $logger->debug("Using cached eventtree");
+  } else {
+    foreach my $rid_info (@{$rid_list}) {
 
-  foreach my $rid_info (@{$rid_list}) {
+      my $rid = get_rid($rid_info);
 
-    my $rid = get_rid($rid_info);
+      my $ruleset = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info, $rid_info->{'kinetic_app_version'});
 
-    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info, $rid_info->{'kinetic_app_version'});
+      $r->{$rid} = process_dispatch_list($rid, $ruleset);
 
-    $r->{$rid} = process_dispatch_list($rid, $ruleset);
-
-    foreach my $d ( @{$r->{$rid}->{'domains'} }) {
-      $r->{$rid}->{'domain'}->{$d} = 1;
-    }
+      foreach my $d ( @{$r->{$rid}->{'domains'} }) {
+	$r->{$rid}->{'domain'}->{$d} = 1;
+      }
 
 
-    foreach my $d ( keys %{$ruleset->{'rule_lists'} }) {
-      foreach my $t ( keys %{$ruleset->{'rule_lists'}->{$d} } ) {
-	push(@{$r->{$d}->{$t}}, $rid_info);
+      foreach my $d ( keys %{$ruleset->{'rule_lists'} }) {
+	foreach my $t ( keys %{$ruleset->{'rule_lists'}->{$d} } ) {
+	  push(@{$r->{$d}->{$t}}, $rid_info);
+	}
       }
     }
-  }
+    $logger->debug("Calculating the event tree");
 
-  # cache this...
-  $memd->set($rid_list_key, $r);
+#    $logger->debug("Caching the Event Tree: ", sub { Dumper $r });
+
+    # cache this...
+#    $memd->set($eventtree_key, $r);
+
+  }
 
   return $r;
 }
 
 sub clear_rid_list {
-  my($id_token) = @_;
+  my($session) = @_;
   my $logger = get_logger();
-  $logger->debug("[flush] flushing RID list for $id_token");
+  $logger->debug("[flush] flushing RID list for ",Kynetx::Session::session_id($session));
+  my $ken = Kynetx::Persistence::get_ken($session, "", "web");
   my $memd = get_memd();
-  $memd->delete(mk_ridlist_key($id_token));
+  $memd->delete(mk_ridlist_key($ken));
 }
     
 
@@ -314,6 +333,11 @@ sub get_dispatch_info {
 sub mk_ridlist_key {
   my ($id_token) = @_;
   return "ridlist:$id_token";
+}
+
+sub mk_eventtree_key {
+  my ($rid_list) = @_;
+  return Digest::MD5::md5_hex(rid_info_string($rid_list));
 }
 
 1;

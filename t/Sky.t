@@ -128,13 +128,13 @@ SKIP: {
 	my $resp;
 	if (defined $test->{'method'} && $test->{'method'} eq 'post') {
 
-	  $resp = $mech->get($test->{'url'});
+	  $resp = $mech->post($test->{'url'});
 	} else {
 	  #$mech->get_ok($test->{'url'});
 	  $resp = $mech->get($test->{'url'});
 	}
 
-	diag $test->{'url'} if $test->{'diag'};
+	diag $test->{'url'};# if $test->{'diag'};
 
 	#    like($mech->status(), /2../, 'Status OK');
 	#    $tc++;

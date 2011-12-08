@@ -40,6 +40,7 @@ qw(
     get_version
     parse_rid_list
     print_rids
+    rid_info_string
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -65,6 +66,11 @@ sub get_rid {
 sub get_version {
   my($rid_info) = @_;
   return $rid_info->{'kinetic_app_version'} || 'prod';
+}
+
+sub get_versionnum {
+  my($rid_info) = @_;
+  return $rid_info->{'version'};
 }
 
 
@@ -100,6 +106,15 @@ sub print_rid_info {
   my($rid_info) = @_;
 
   return get_rid($rid_info).".".get_version($rid_info)
+}
+
+sub rid_info_string {
+  my($rid_info_list) = @_;
+  my $res = "";
+  foreach my $rid_info ( @{$rid_info_list}) {
+    $res .= get_rid($rid_info).".".get_versionnum($rid_info).';';
+  }
+  return $res;
 }
 
 # prints an array of rid_info hashes as "foo.234;bar.dev"

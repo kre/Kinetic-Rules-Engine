@@ -224,7 +224,7 @@ sub flush_ruleset_cache {
     # defaults to production when no version specified
 
 
-    # Kynetx::Request::log_request_env( $logger, $req_info );
+#    Kynetx::Request::log_request_env( $logger, $req_info );
 
     #FIXME: This needs to be put in Repository.pm
 

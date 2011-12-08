@@ -103,17 +103,6 @@ sub handler {
 					 });
 
 
-    # just show the version and exit if that's what's called for
-    if ( $id_token eq 'version' ) {
-      $logger->debug("returning version info for Sky event API");
-      Kynetx::Version::show_build_num($r);
-      exit();
-    } elsif ($path_components[1]  eq 'flush' ) {
-      # /sky/flush/<id_token>...
-      flush_ridlist_cache($r, $id_token);
-      exit();
-    }
-
     # use the calculated values...
     $domain = $req_info->{'domain'};
     $eventtype = $req_info->{'eventtype'};
@@ -123,6 +112,23 @@ sub handler {
     $r->subprocess_env( EVENTTYPE => $eventtype );
     Log::Log4perl::MDC->put( 'site', "[no rid]" );
     Log::Log4perl::MDC->put( 'rule', '[global]' );    # no rule for now...
+
+
+    # get a session
+    $logger->debug("KBX cookie? ",$req_info->{'kntx_token'});
+    my $session = Kynetx::Session::process_session($r, $req_info->{'kntx_token'});
+
+
+    # just show the version and exit if that's what's called for
+    if ( $id_token eq 'version' ) {
+      $logger->debug("returning version info for Sky event API");
+      Kynetx::Version::show_build_num($r);
+      exit();
+    } elsif ($path_components[1]  eq 'flush' ) {
+      # /sky/flush/<id_token>...
+      flush_ridlist_cache($r, $session);
+      exit();
+    }
 
 
     # error checking for event domains and types
@@ -148,10 +154,6 @@ sub handler {
       }
 
 
-    # get a session, if _sid param is defined it will override cookie
-    $logger->debug("KBX cookie? ",$req_info->{'kntx_token'});
-    my $session = Kynetx::Session::process_session($r, $req_info->{'kntx_token'});
-
     my($rid_list, $unfiltered_rid_list, $domain_test);
 
     # if rids were given in request, just use them. Otherwise, calculate them
@@ -175,7 +177,7 @@ sub handler {
 
     } else {
 
-      $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info);
+      $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info, $session);
 
       # this can be a big list...
       # $logger->error("Rids for $id_token: ", sub {Dumper ($unfiltered_rid_list)});
@@ -189,7 +191,7 @@ sub handler {
        
     }
 
-    $logger->error("Rids for $domain/$eventtype: ", sub {Kynetx::Rids::print_rids($rid_list)});
+    $logger->info("Rids for $domain/$eventtype: ", sub {Kynetx::Rids::print_rids($rid_list)});
 
     Kynetx::Request::log_request_env( $logger, $req_info );
 
@@ -269,12 +271,12 @@ sub handler {
 
 
 sub flush_ridlist_cache {
-    my ($r, $id_token) = @_;
+    my ($r, $session) = @_;
 
-    Kynetx::Dispatch::clear_rid_list($id_token);
+    Kynetx::Dispatch::clear_rid_list($session);
 
     $r->content_type('text/html');
-    my $msg = "RID List flushed for $id_token";
+    my $msg = "RID List flushed for " . Kynetx::Session::session_id($session);
     print "<title>$msg</title><h1>$msg</h1>";
 
 }
