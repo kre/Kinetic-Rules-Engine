@@ -188,6 +188,15 @@ sub clone {
 	if ($self->is_null($s)) {
 		$nsm->set_null($state_map->{$s});
 	}	
+	
+	if (defined $self->{'__timeframe__'}->{$s}) {
+		my $seconds = $self->{'__timeframe__'}->{$s}->{'seconds'};
+		my $start = $state_map->{$self->{'__timeframe__'}->{$s}->{'start'}};
+		$nsm->{'__timeframe__'}->{$state_map->{$s}} = {
+			'seconds' => $seconds,
+			'start' => $start
+		};
+	}
     
     
     $nsm->add_state($state_map->{$s},
@@ -338,7 +347,28 @@ sub join_states {
   		$self->set_default_transition($n,$ns);
   	}
   }
+  
+  # Timeframe merge/rename
+  $logger->trace("Timeframe: ",  sub {Dumper($self->{'__timeframe__'})});
+  foreach my $tf (keys %{$self->{'__timeframe__'}}) {
+  	$logger->trace("Check: $tf for join match");
+  	my $seconds = $self->{'__timeframe__'}->{$tf}->{'seconds'};
+  	my $start = $self->{'__timeframe__'}->{$tf}->{'start'};
+  	if ($start eq $s1 || $start eq $s2) {
+  		$logger->trace("Start matches: $start");
+  		$start = $ns;
+  		$self->{'__timeframe__'}->{$tf}->{'start'} = $start;
+  	} elsif ($tf eq $s1 || $tf eq $s2) {
+  		$logger->trace("Final matches: $tf");
+  		$self->{'__timeframe__'}->{$ns} = {
+  			'start' => $start,
+  			'seconds' => $seconds
+  		};
+  	}
+  }
 
+  delete $self->{'__timeframe__'}->{$s1};
+  delete $self->{'__timeframe__'}->{$s2};
   delete $self->{'__default__'}->{$s1};
   delete $self->{'__default__'}->{$s2};  
   delete $self->{'transitions'}->{$s1};
@@ -393,6 +423,10 @@ sub is_null {
 	}
 }
 
+sub is_timed {
+	my $self = shift;
+}
+
 sub mk_final {
   my $self = shift;
   my $name = shift;
@@ -406,6 +440,13 @@ sub set_null {
 	my $self = shift;
 	my $name = shift;
 	$self->{'null'}->{$name} = 1;
+}
+
+sub set_timeframe {
+	my $self = shift;
+	my $name = shift;
+	my $timeframe = shift;
+	$self->{'__timeframe__'}->{$name} = $timeframe;
 }
 
 sub get_final {
@@ -444,6 +485,31 @@ sub is_final {
 
 }
 
+sub is_start_time {
+	my $self = shift;
+	my $state = shift;
+	if (defined $self->{'__timeframe__'}) {
+		foreach my $tf (keys %{$self->{'__timeframe__'}}) {
+		  	my $start = $self->{'__timeframe__'}->{$tf}->{'start'};
+		  	if ($start eq $state) {
+		  		return 1;
+		  	}
+		}
+	}
+	return 0;
+}
+
+sub is_end_time {
+	my $self = shift;
+	my $state = shift;
+	if (defined $self->{'__timeframe__'}) {
+		if (defined $self->{'__timeframe__'}->{$state}) {
+			return $self->{'__timeframe__'}->{$state};
+		}
+	}
+	return 0;
+}
+
 
 sub get_states {
   my $self = shift;
@@ -459,6 +525,8 @@ sub get_transitions {
   #$logger->trace("$state: ", sub {Dumper($self->{'transitions'}->{$state})});
   return $self->{'transitions'}->{$state} || undef;
 }
+
+
 
 sub get_default_transition {
   my $self = shift;
@@ -482,6 +550,19 @@ sub add_transition {
 	my $logger = get_logger();
 	$logger->trace("Adding: ", sub {Dumper($transition)});
 	push(@{$self->{'transitions'}->{$state}},$transition);	
+}
+
+sub timeframe {
+	my $self = shift;
+	my $seconds = shift;
+	my $initial = $self->get_initial();
+	my $final = $self->get_singleton_final();
+	my $timing = {
+		'start' => $initial,
+		'seconds' => $seconds
+	};
+	$self->{'__timeframe__'}->{$final} = $timing;
+	
 }
 
 #-------------------------------------------------------------------------
@@ -525,6 +606,12 @@ sub next_state {
 		$logger->trace("Filter: ", $t->{'test'});		
 		my ($match,$vals) = match($event, $t);
 		if ($match) {
+			my $start_clock;
+			my $end_clock;
+			if ($self->is_start_time($state)) {
+				$logger->debug("Begin timed transaction");
+				$start_clock = "__timeframe__";
+			}
 	  		if ($isnull) {
 	    		$logger->trace("THIS IS A NULL TRANSITION!");	    		
 				$logger->trace("Transition options: ", sub{Dumper($null_transition)});
@@ -535,13 +622,18 @@ sub next_state {
 				foreach my $var (@{$null_transition->{'vars'}->{'vars'}}) {
 					push(@agg_var,$var->{'val'});
 				}
-				#my $agg_var = Kynetx::Expressions::den_to_exp($null_transition->{'vars'}->{'vars'});
-				$vals = ["__null__"] unless (defined $agg_op);
+				unless (defined $agg_op) {
+					if (defined $start_clock) {
+						$vals = ["__timeframe__"] 
+					} else {
+						$vals = ["__null__"]
+					}
+				};
 	    		my $counter = Kynetx::Persistence::UserState::push_aggregator($rid,$session,$rulename,$counterid,$vals);
 				$logger->trace("match val: ", sub {Dumper($vals)});
 				$logger->trace("Counter struct: ", sub {Dumper($counter)});
-				#$logger->trace("Agg ops: ($agg_op) ", sub {Dumper(@agg_var)});
-				my @iters = check_time($counter->{$counterid});
+				my $stime = $self->is_end_time($null_transition->{'next'});
+				my @iters = check_time($counter->{$counterid},$stime);
 				$logger->trace("Grouped transition iters: ", sub {Dumper(@iters)});							
 				if (scalar (@iters) >= $count) {
 					$logger->trace("Transition to next state is a null so process immediately $next");
@@ -554,7 +646,7 @@ sub next_state {
 					}
 					
 					if ($null_transition->{'domain'} eq 'repeat') {
-						Kynetx::Persistence::UserState::shift_group_counter($rid,$session,$rulename,$counterid,$state,$next_transition);
+						Kynetx::Persistence::UserState::repeat_group_counter($rid,$session,$rulename,$counterid,$state,$next_transition);
 						$logger->trace("Shift counter: $counterid");
 					} else {
 						Kynetx::Persistence::UserState::reset_group_counter($rid,$session,$rulename,$counterid);						
@@ -564,13 +656,35 @@ sub next_state {
 					return $next;
 				} else {
 					$logger->trace("Group match current: $state");
-					$logger->trace("Need ", sub{Dumper($count - scalar (@iters))}, " more $next_transition(s)");
+					$logger->debug("Need ", sub{Dumper($count - scalar (@iters))}, " more $next_transition(s)");
 					$next = $self->get_default_transition($next_transition);
 					return $next;
 				}
 	       	} else {
-	    		$logger->trace("NORMAL TRANSITION");
+	    		$logger->debug("NORMAL TRANSITION");
+	    		if (defined $start_clock) {
+	    			my $counter = Kynetx::Persistence::UserState::push_aggregator($rid,$session,$rulename,$state,[$start_clock]);
+	    			#$logger->debug("Set start time for $state: ", sub {Dumper($counter)});
+	    		}
 	      		$next = $t->{'next'};
+	      		if (my $timeframe = $self->is_end_time($next)) {
+	      			my $etime = DateTime->now->epoch();
+	      			#$logger->debug("Is end time $etime: ", sub {Dumper($timeframe)});
+	      			my $start = $timeframe->{'start'};
+	      			#$logger->debug("Start is $start");
+	      			my $num = $timeframe->{'seconds'};
+	      			my $thing = Kynetx::Persistence::UserState::get_timer_start($rid,$session,$rulename,$start);
+	      			#$logger->debug("Counter: ",  sub {Dumper($thing)});
+	      			my $stime = $thing->[0]->{'timestamp'};
+	      			my $diff = $etime - $stime;
+	      			#$logger->debug("Elapsed: $diff");
+	      			
+	      			if ($diff > $num) {
+	      				$logger->debug("Failed timeframe, needed $num or less: got $diff");
+	      				Kynetx::Persistence::UserState::reset_group_counter($rid,$session,$rulename,$start);
+	      				return $self->get_default_transition($start);
+	      			}
+	      		}
 	      		$event->set_vars( $self->get_id(), $t->{'vars'});
 	      		$event->set_vals($self->get_id(), $vals);
 	      		return $next;
@@ -592,14 +706,21 @@ sub next_state {
 
 sub check_time {
 	my ($count_array,$timeframe) = @_;
+	my $min_time;
 	my $logger = get_logger();
-	$timeframe = 0 unless (defined $timeframe);
+	if (defined $timeframe && ref $timeframe eq "HASH") {
+		$min_time = DateTime->now->epoch - $timeframe->{'seconds'};
+	} else {
+		$min_time = 0;
+	};
 	my @rarray = ();
-	$logger->trace("array: ", sub {Dumper($count_array)});
-	$logger->trace("tf: $timeframe");
+	$logger->trace("MIN TIME: $min_time");
 	foreach my $instance (@{$count_array}) {
-		if ($instance->{'timestamp'} > $timeframe) {
+		if ($instance->{'timestamp'} >= $min_time) {
+			$logger->trace(" ts: ", $instance->{'timestamp'});
 			push (@rarray,$instance->{'val'})
+		} else {
+			$logger->trace(" miss: ", $instance->{'timestamp'});
 		}
 	}
 	$logger->trace("array: ", sub {Dumper(@rarray)});
@@ -960,6 +1081,11 @@ sub mk_and {
     foreach my $n (keys %{$sm->{'null'}}) {
     	$nsm->set_null($n);
     }
+    
+    # add timed transition
+    foreach my $tf (keys %{$sm->{'__timeframe__'}}) {
+    	$nsm->set_timeframe($tf, $sm->{'__timeframe__'}->{$tf});
+    }
   }
 
   my $ni = $nsm->join_states($sm1->get_initial(), $sm3->get_initial());
@@ -1001,6 +1127,10 @@ sub mk_or {
     # add each grouped transition
     foreach my $n (keys %{$sm->{'null'}}) {
     	$nsm->set_null($n);
+    }
+    # add timed transition
+    foreach my $tf (keys %{$sm->{'__timeframe__'}}) {
+    	$nsm->set_timeframe($tf, $sm->{'__timeframe__'}->{$tf});
     }
   }
 
@@ -1060,6 +1190,10 @@ sub mk_then {
     foreach my $n (keys %{$sm->{'null'}}) {
     	$nsm->set_null($n);
     }
+    # add timed transition
+    foreach my $tf (keys %{$sm->{'__timeframe__'}}) {
+    	$nsm->set_timeframe($tf, $sm->{'__timeframe__'}->{$tf});
+    }
   }
 
   $nsm->mk_initial($sm1->get_initial());
@@ -1093,6 +1227,10 @@ sub mk_before {
     # add each grouped transition
     foreach my $n (keys %{$sm->{'null'}}) {
     	$nsm->set_null($n);
+    }
+    # add timed transition
+    foreach my $tf (keys %{$sm->{'__timeframe__'}}) {
+    	$nsm->set_timeframe($tf, $sm->{'__timeframe__'}->{$tf});
     }
   }
 
@@ -1260,6 +1398,10 @@ sub mk_between {
     foreach my $n (keys %{$sm->{'null'}}) {
     	$nsm->set_null($n);
     }
+    # add timed transition
+    foreach my $tf (keys %{$sm->{'__timeframe__'}}) {
+    	$nsm->set_timeframe($tf, $sm->{'__timeframe__'}->{$tf});
+    }
   }
 
   $nsm->mk_initial($b->get_initial());
@@ -1292,6 +1434,10 @@ sub mk_not_between {
     # add each grouped transition
     foreach my $n (keys %{$sm->{'null'}}) {
     	$nsm->set_null($n);
+    }
+    # add timed transition
+    foreach my $tf (keys %{$sm->{'__timeframe__'}}) {
+    	$nsm->set_timeframe($tf, $sm->{'__timeframe__'}->{$tf});
     }
   }
 

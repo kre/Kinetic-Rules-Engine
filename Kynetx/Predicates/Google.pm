@@ -32,6 +32,7 @@ use Kynetx::OAuth;
 use Kynetx::Util;
 use Kynetx::Configure;
 use Kynetx::Memcached;
+use Kynetx::Rids qw/:all/;
 use Kynetx::Predicates::Google::OAuthHelper qw(get_authorization_message
           get_tokens_by_oauth_token
           get_token
@@ -111,7 +112,8 @@ my $funcs = {};
 
 sub authorize {
     my ( $req_info, $rule_env, $session, $config, $mods, $args ) = @_;
-    my $rid       = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $logger    = get_logger();
     my $version   = $req_info->{'rule_version'} || 'prod';
     my $scope     = get_google_scope($args);
@@ -134,7 +136,8 @@ sub authorized {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
     my $logger = get_logger();
     $logger->debug( "Args: ",          sub { Dumper($args) } );
-    my $rid    = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $scope  = get_google_scope($args);
     $logger->trace( "Session tokens: ", sub { Dumper($session) } );
     $logger->debug( "Scope: ",          sub { Dumper($scope) } );
@@ -165,7 +168,8 @@ $funcs->{'authorized'} = \&authorized;
 sub get {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
     my $logger = get_logger();
-    my $rid    = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $scope  = get_google_scope($args);
     my $common = $google_config->{'params'}->{'common'};
     my $gparm;
@@ -180,7 +184,8 @@ $funcs->{'get'} = \&get;
 sub raw_get {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
     my $logger = get_logger();
-    my $rid    = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $scope  = get_google_scope($args);
     my $scope_url;
     if ( $scope->{'surl'} ) {
@@ -205,7 +210,8 @@ $funcs->{'rget'} = \&raw_get;
 sub add {
     my ( $req_info, $rule_env, $session, $rule_name, $function, $args ) = @_;
     my $logger = get_logger();
-    my $rid    = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $scope  = get_google_scope($args);
     my $scope_url;
     if ( $scope->{'surl'} ) {
@@ -260,7 +266,8 @@ sub get_consumer_tokens {
     my ($req_info, $rule_env) = @_;
     my $consumer_tokens;
     my $logger = get_logger();
-    my $rid    = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     unless ( $consumer_tokens = Kynetx::Keys::get_key($req_info, $rule_env, 'google')  ) {
         my $ruleset =
           Kynetx::Repository::get_rules_from_repository( $rid, $req_info );
@@ -309,7 +316,8 @@ sub process_oauth_callback {
 sub test_request {
     my ( $req_info, $rule_env, $session, $scope ) = @_;
     my $logger = get_logger();
-    my $rid    = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $turl   = $scope->{'turl'};
     if ($turl) {
         return
@@ -392,7 +400,8 @@ sub get_request_token_url {
 
 sub google_msg {
     my ( $req_info, $scope, $auth_url ) = @_;
-    my $rid          = $req_info->{'rid'};
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
     my $ruleset_name = $req_info->{"$rid:ruleset_name"};
     my $name         = $req_info->{"$rid:name"};
     my $author       = $req_info->{"$rid:author"};

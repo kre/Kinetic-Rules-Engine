@@ -66,6 +66,7 @@ my $session = Kynetx::Test::gen_session($r, $rid);
 my $initial;
 my $next;
 my $temp;
+my $flush = 0;
 
 # test choose_action and args
 
@@ -96,9 +97,183 @@ $evc1->generic("web","news_search");
 my $evc2 = Kynetx::Events::Primitives->new();
 $evc2->generic("explicit","news_search");
 
+# test the pageview prim SMs
+my $skey = "sm1";
+my $sm1 = Kynetx::Memcached::check_cache($skey);
+
+if (defined $sm1  && ! $flush) {
+	$sm1 = Kynetx::Events::State->unserialize($sm1);
+} else {
+	$sm1 = mk_pageview_prim(qr/www.windley.com/);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm1);
+	Kynetx::Memcached::mset_cache($skey,$json);
+}
+
+
+$skey = "sm2";
+my $sm2 = Kynetx::Memcached::check_cache($skey);
+if (defined $sm2 && ! $flush) {
+	$sm2 = Kynetx::Events::State->unserialize($sm2);
+} else {
+	$sm2 = mk_pageview_prim(qr#/(..)/(a)#, ['vv','bb']);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm2);
+	Kynetx::Memcached::mset_cache($skey,$json);
+}
+
+
+$skey = "sm3";
+my $sm3 = Kynetx::Memcached::check_cache($skey);
+if (defined $sm3  && ! $flush) {
+	$sm3 = Kynetx::Events::State->unserialize($sm3);
+} else {
+	$sm3 = mk_pageview_prim(qr/www.google.com/);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm3);
+	Kynetx::Memcached::mset_cache($skey,$json);
+}
+
+
 ###############
 #Log::Log4perl->easy_init($DEBUG);
 ###############
+
+$skey = "timed_and";
+my $timed = Kynetx::Memcached::check_cache($skey);
+
+if (defined $timed  && ! $flush) {
+	$timed = Kynetx::Events::State->unserialize($timed);
+} else {
+	$timed = mk_and($sm1,$sm2);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($timed);
+	Kynetx::Memcached::mset_cache($skey,$json);
+}
+$timed->timeframe(1);
+
+#$logger->debug("Timed: ", sub {Dumper($timed)});
+$initial = $timed->get_initial();
+$next = $timed->next_state($initial,$ev1,$rid,$session,$rule_name);
+sleep(2);
+$next = $timed->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($timed->is_final($next),0, "Failed timeframe");
+$test_count++;
+
+cmp_deeply($next,$initial,"State returns to initial");
+$test_count++;
+
+
+
+$next = $timed->next_state($initial,$ev2,$rid,$session,$rule_name);
+cmp_deeply($timed->is_final($next),0, "New timeframe");
+$test_count++;
+
+
+isnt($next,$initial,"Started from beginning");
+$test_count++;
+
+$next = $timed->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($timed->is_final($next),1, "No delay so should be final");
+$test_count++;
+
+Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
+
+#######
+#goto ENDY;
+#######
+
+#######
+# Refresh state counter
+#######
+Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
+
+
+
+my $t_count = mk_count($sm1,3);
+$t_count->timeframe(3);
+$initial = $t_count->get_initial();
+$logger->debug("Count sm: ", sub {Dumper($t_count)});
+
+
+$logger->debug("Count initial: ", sub {Dumper($initial)});
+$next = $t_count->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($t_count->is_final($next),0, "First matching event, no transition");
+$test_count++;
+
+sleep(2);
+
+$next = $t_count->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($t_count->is_final($next),0, "another matching event, no transition");
+$test_count++;
+
+sleep(2);
+
+$next = $t_count->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($t_count->is_final($next),0, "Third matching event, first timed out, no transition");
+$test_count++;
+
+$next = $t_count->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($t_count->is_final($next),1, "Third matching event in timeframe: transition");
+$test_count++;
+
+#$next = $t_count->next_state($initial,$ev1,$rid,$session,$rule_name);
+#cmp_deeply($t_count->is_final($next),1, "third matching event, is final");
+#$test_count++;
+
+
+$flush = 0;
+$skey = "count3aandb";
+my $c_count = Kynetx::Memcached::check_cache($skey);
+if (defined $c_count && ! $flush) {
+	$c_count = Kynetx::Events::State->unserialize($c_count);
+} else {
+	$c_count = mk_and($t_count,$sm2);
+	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($c_count);
+	Kynetx::Memcached::mset_cache($skey,$json);
+}
+
+$initial = $c_count->get_initial();
+$logger->debug("Timed count/compound and: ", sub {Dumper($c_count)});
+
+#######
+# Refresh state counter
+#######
+Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
+
+
+$logger->debug("Count initial: ", sub {Dumper($initial)});
+$next = $c_count->next_state($initial,$ev1,$rid,$session,$rule_name);
+cmp_deeply($c_count->is_final($next),0, "First matching event, no transition");
+$test_count++;
+$logger->debug("1st A: $next");
+
+sleep(2);
+
+$next = $c_count->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($c_count->is_final($next),0, "another matching event, no transition");
+$test_count++;
+$logger->debug("2nd A: $next");
+
+
+$next = $c_count->next_state($next,$ev2,$rid,$session,$rule_name);
+cmp_deeply($c_count->is_final($next),0, "EV2: no transition yet ");
+$test_count++;
+$logger->debug("1st B: $next");
+
+
+
+sleep(2);
+
+$next = $c_count->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($c_count->is_final($next),0, "Third matching event, first timed out, no transition");
+$test_count++;
+$logger->debug("3rd A (timeout): $next");
+
+$next = $c_count->next_state($next,$ev1,$rid,$session,$rule_name);
+cmp_deeply($c_count->is_final($next),1, "Third matching event in timeframe and B");
+$test_count++;
+
+
+#-----------------------------
+# Aggregates
+#-----------------------------
 
 my $vals = [3, 7, 9, 12, 6];
 my @evagg = ();
@@ -110,6 +285,7 @@ foreach my $val (@{$vals}) {
 	$ev->set_req_info($req_info);
 	push (@evagg,$ev);
 }
+
 my $filter = [
                 {
                   'pattern' => '(\\d+)',
@@ -154,6 +330,32 @@ $test_count++;
 $logger->debug("agg val: ", sub{Dumper($evagg[2])} );
 cmp_deeply($evagg[2]->{'vals'}, {$acount->{'id'}=>[19]}, "Sum");
 $test_count++;
+
+#######
+# Refresh state counter
+#######
+Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rule_name);
+
+my $agg_and_time = $acount->clone();
+$agg_and_time->timeframe(3);
+
+$initial = $agg_and_time->get_initial();
+$next = $agg_and_time->next_state($initial,$evagg[0],'stu', $session, $rule_name);
+sleep 2;
+$next = $agg_and_time->next_state($initial,$evagg[1],'stu', $session, $rule_name);
+sleep 2;
+$next = $agg_and_time->next_state($initial,$evagg[2],'stu', $session, $rule_name);
+cmp_deeply($agg_and_time->is_final($next),0, "Expired event");
+$test_count++;
+$next = $agg_and_time->next_state($initial,$evagg[3],'stu', $session, $rule_name);
+cmp_deeply($agg_and_time->is_final($next),1, "Matching eventfinal");
+$test_count++;
+
+$logger->debug("agg val2: ", sub{Dumper($evagg[2])} );
+$logger->debug("agg val3: ", sub{Dumper($evagg[3])} );
+cmp_deeply($evagg[3]->{'vals'}, {$agg_and_time->{'id'}=>[28]}, "Timed Sum");
+$test_count++;
+
 
 @evagg = ();
 
@@ -304,7 +506,6 @@ $logger->debug("agg val: ", sub{Dumper($evagg[2])} );
 cmp_deeply($evagg[2]->{'vals'}, {$acount->{'id'}=>[[3,7,9]]}, "push");
 $test_count++;
 
-my $flush = 0;
 my $edast = {
           'timeframe' => undef,
           'args' => [
@@ -359,39 +560,6 @@ cmp_deeply($initial,$next, "Stays in initial state");
 $test_count++;
 
 
-# test the pageview prim SMs
-my $skey = "sm1";
-my $sm1 = Kynetx::Memcached::check_cache($skey);
-
-if (defined $sm1  && ! $flush) {
-	$sm1 = Kynetx::Events::State->unserialize($sm1);
-} else {
-	$sm1 = mk_pageview_prim(qr/www.windley.com/);
-	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm1);
-	Kynetx::Memcached::mset_cache($skey,$json);
-}
-
-
-$skey = "sm2";
-my $sm2 = Kynetx::Memcached::check_cache($skey);
-if (defined $sm2 && ! $flush) {
-	$sm2 = Kynetx::Events::State->unserialize($sm2);
-} else {
-	$sm2 = mk_pageview_prim(qr#/(..)/(a)#, ['vv','bb']);
-	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm2);
-	Kynetx::Memcached::mset_cache($skey,$json);
-}
-
-
-$skey = "sm3";
-my $sm3 = Kynetx::Memcached::check_cache($skey);
-if (defined $sm3  && ! $flush) {
-	$sm3 = Kynetx::Events::State->unserialize($sm3);
-} else {
-	$sm3 = mk_pageview_prim(qr/www.google.com/);
-	my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($sm3);
-	Kynetx::Memcached::mset_cache($skey,$json);
-}
 
 my @sm_arry;
 push(@sm_arry, $sm1);
@@ -726,10 +894,6 @@ if (defined $any) {
 	Kynetx::Memcached::mset_cache($skey,$json,36000);
 }
 $logger->debug("Any 2 of 3: ", sub {Dumper($any)});
-
-###########
-#goto ENDY;
-###########
 
 
 
