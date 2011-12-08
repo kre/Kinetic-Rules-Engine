@@ -157,12 +157,12 @@ url
     } elsif($function eq 'param' || $function eq 'attr') {
 
       # rulespaced env parameters
-      if($rid && defined $req_info->{$rid.':'.$args->[0]}) {
-	$val = $req_info->{$rid.':'.$args->[0]};
-      } else {
+      if (defined $req_info->{$args->[0]}) {
 	# event params don't have rid namespacing
 	$val = $req_info->{$args->[0]};
-      }
+      } elsif($rid && defined $req_info->{$rid.':'.$args->[0]}) {
+	$val = $req_info->{$rid.':'.$args->[0]};
+      } 
 
     } elsif($function eq 'params' || $function eq 'attrs') {
 
@@ -172,6 +172,7 @@ url
 		  txn_id  => 1,
 		  kynetx_app_version => 1,
 		  element => 1,
+
 		  kvars => 1
 		 );
 
