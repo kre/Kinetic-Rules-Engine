@@ -1630,6 +1630,8 @@ jQuery.event = {
 			handleObj.type = type;
 			handleObj.guid = handler.guid;
 
+			var msg = JSON.stringify(events);
+			console.log("Event object: " + msg);
 			// Get the current list of functions bound to this event
 			var handlers = events[ type ],
 				special = jQuery.event.special[ type ] || {};

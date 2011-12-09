@@ -617,10 +617,18 @@ sub protected_resource_request {
 	} else {
 		$logger->warn("Method ($method) not supported for OAuth Protected Resource Request");
 	}
-	$logger->trace("Auth header: ",$request->to_authorization_header);
+	$logger->debug("Auth header: ",$request->to_authorization_header);
+	$logger->debug("url: ",$request->request_url);
 	
 	foreach my $k (keys %{$headers}) {
-		$preq->header($k => $headers->{$k});
+		if (lc($k) eq 'authorization') {
+			$preq->header($k => $request->to_authorization_header);
+			$preq->uri($request->request_url);
+			#$dummy = 1;
+		} else {
+			$preq->header($k => $headers->{$k});
+		}
+		
 	}
 	
     my $ua   = LWP::UserAgent->new;
