@@ -415,7 +415,7 @@ sub eval_use_module {
 
   # Default to the production version of modules
   $mversion ||= 'prod';
-  my $use_ruleset = Kynetx::Rules::get_rule_set( $req_info, 1, $name, $mversion );
+  my $use_ruleset = Kynetx::Rules::get_rule_set( $req_info, 1, $name, $mversion, {'in_module' => 1} );
 
   $logger->trace("Using ", sub {Dumper $use_ruleset});
 
@@ -854,7 +854,7 @@ sub eval_rule_body {
 
 # this returns the right rules for the caller and site
 sub get_rule_set {
-	my ( $req_info, $localparsing, $rid, $ver ) = @_;
+	my ( $req_info, $localparsing, $rid, $ver, $options ) = @_;
 
 	my $caller = $req_info->{'caller'} || 'unknown';
 	$rid ||= get_rid($req_info->{'rid'});
@@ -879,17 +879,18 @@ sub get_rule_set {
 		# or it ends up in the session for the user
 	}
 
-	if (
-		(
-			   $ruleset->{'meta'}->{'logging'}
-			&& $ruleset->{'meta'}->{'logging'} eq "on"
-		)
-	  )
-	{
-		Kynetx::Util::turn_on_logging();
-	}
-	else {
-		Kynetx::Util::turn_off_logging();
+	# if we're not in a module, set up logging
+	if (!  $options->{'in_module'}) {
+	  if (
+	      (
+	       $ruleset->{'meta'}->{'logging'}
+	       && $ruleset->{'meta'}->{'logging'} eq "on" 
+	      )
+	     ) {
+	    Kynetx::Util::turn_on_logging();
+	  } else {
+	    Kynetx::Util::turn_off_logging();
+	  }
 	}
 
 	$ruleset->{'rules'} ||= [];

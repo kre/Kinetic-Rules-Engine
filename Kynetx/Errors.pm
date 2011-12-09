@@ -58,7 +58,7 @@ sub raise_error {
      ) = @_;
   my $logger = get_logger();
 
-  my $sig = md5_hex(freeze($options) . $errormsg);
+  my $sig = md5_hex(freeze($options||{}) . $errormsg);
 
   $req_info->{$sig} = 0
     unless defined $req_info->{$sig};

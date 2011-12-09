@@ -703,8 +703,8 @@ sub eval_hash_ref {
 	my $logger = get_logger();	
 	my $v = lookup_rule_env($expr->{'var_expr'},$rule_env);
   	unless (defined $v) {
-  		$logger->debug("Undefined");
-	    Kynetx::Errors::raise_error($req_info, 'warn',
+	  $logger->debug("Undefined map variable: ", $expr->{'var_expr'});
+	  Kynetx::Errors::raise_error($req_info, 'warn',
 			"[hash_ref] Variable '", $expr->{'var_expr'}, "' is undefined",
 			{'rule_name' => $rule_name,
 			 'genus' => 'expression',
