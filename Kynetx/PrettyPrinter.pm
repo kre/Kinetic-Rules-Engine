@@ -578,7 +578,7 @@ sub pp_event_expr {
 #		  $o .= 'pageview '
 #		}
 		# New AST syntax for common filter
-		$o .= $node->{'domain'} if $node->{'domain'};
+		$o .= $node->{'domain'} . " " if $node->{'domain'};
 		if (defined $node->{'filters'}) {
 			my $filters = $node->{'filters'};
 			foreach my $filter (@$filters) {
@@ -605,12 +605,20 @@ sub pp_event_expr {
 	$o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
       }
     } elsif ($node->{'domain'} eq 'mail') {
-      $o .= $node->{'domain'} ;
+      $o .= $node->{'domain'} . " ";
       $o .= $node->{'op'} . ' ';
       foreach my $f (@{ $node->{'filters'} }) {
 	$o .= $f->{'type'} . ' ' . pp_string($f->{'pattern'}) . ' ' ;
       }
       $o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
+    } else {
+      $o .= $node->{'domain'} . " ";
+      $o .= $node->{'op'} . ' ';
+      foreach my $f (@{ $node->{'filters'} }) {
+	$o .= $f->{'type'} . ' ' . pp_string($f->{'pattern'}) . ' ' ;
+      }
+      $o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
+     
     }
 
   }
@@ -1056,6 +1064,7 @@ sub pp_raise_statement {
 sub pp_expr {
     my $expr = shift;
 
+    return '' unless defined $expr->{'type'};
 
     case: for ($expr->{'type'}) {
 	/str/ && do {

@@ -823,7 +823,7 @@ modifier_clause returns[ArrayList result]
 	;
 
 modifier returns[HashMap result]
-	: name=(VAR|REPLACE|MATCH|EXTRACT|OTHER_OPERATORS) EQUAL(e=expr | j=JS) {
+	: name=(VAR|REPLACE|MATCH|EXTRACT|OTHER_OPERATORS|SPECIAL_MODIFIERS) EQUAL(e=expr | j=JS) {
 		HashMap tmp2 = new HashMap();
 
 		HashMap tmp = new HashMap();
@@ -2695,6 +2695,7 @@ UNICODE_ESC
 MULT_OP: '*'|'/'|'%'
 	;
 
+SPECIAL_MODIFIERS : '_api' | '_rids';
 
 DOT
 	:	 '.';
