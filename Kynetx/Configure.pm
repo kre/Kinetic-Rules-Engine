@@ -65,14 +65,22 @@ our $config;
 sub configure {
     my($filename) = @_;
 
+
+
     $config = read_config($filename || DEFAULT_CONFIG_FILE);
 
-    # this is stuff for config that we don't put in the config file
-    $config->{'JS_VERSION'} = '0.9';
-    $config->{'DEFAULT_JS_ROOT'} = $config->{'KOBJ_ROOT'} . '/etc/js';
-    $config->{'FRAG_HOST'} = 'frag.kobj.net';
+    # begin defaults
+    $config->{'JS_VERSION'} ||= '0.9';
+    $config->{'FRAG_HOST'} ||= 'frag.kobj.net';
+    $config->{'MAX_SERVERS'} ||= '10';
+    $config->{'MAX_REQUESTS_PER_CHILD'} ||= '50';
+
+    # end defaults
+
 
     $config->{'DEFAULT_TEMPLATE_DIR'} = $config->{'KOBJ_ROOT'} . '/etc/tmpl';
+
+    $config->{'DEFAULT_JS_ROOT'} = $config->{'KOBJ_ROOT'} . '/etc/js';
 
     # note that Apache::Session::Memecached wants a space delimited string
     $config->{'SESSION_SERVERS'} =

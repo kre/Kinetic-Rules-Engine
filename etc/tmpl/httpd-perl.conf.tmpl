@@ -70,8 +70,8 @@ LockFile "logs/accept.lock"
     StartServers          1
     MinSpareServers       1
     MaxSpareServers       5
-    MaxClients      <TMPL_VAR NAME=MAX_SERVERS>
-    MaxRequestsPerChild   5000
+    MaxClients      	  <TMPL_VAR NAME=MAX_SERVERS>
+    MaxRequestsPerChild   <TMPL_VAR NAME=MAX_REQUESTS_PER_CHILD>
 </IfModule>
 
 # worker MPM
