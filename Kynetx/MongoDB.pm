@@ -34,6 +34,10 @@ use Clone qw(clone);
 use Data::Diver qw(
 	Dive
 );
+use Devel::Size qw(
+  size
+  total_size
+);
 
 use Kynetx::Configure;
 use Kynetx::Json;
@@ -67,7 +71,7 @@ set_cache
 get_hash_element
 put_hash_element
 delete_hash_element
-
+validate
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -78,6 +82,7 @@ our $MONGO_DB = "kynetx";
 our $CACHETIME = 60;
 our $DBREF;
 our $COLLECTION_REF;
+our $MONGO_MAX_SIZE = 838860;
 
 use constant SAFE => 0;
 
@@ -88,6 +93,7 @@ sub init {
     $MONGO_PORT = Kynetx::Configure::get_config('MONGO_PORT') || $MONGO_PORT;
     $MONGO_DB = Kynetx::Configure::get_config('MONGO_DB') || $MONGO_DB;
     $CACHETIME = Kynetx::Configure::get_config('MONGO_CACHETIME') || $CACHETIME;
+    $MONGO_MAX_SIZE = Kynetx::Configure::get_config('MONGO_MAX_SIZE') || $MONGO_MAX_SIZE;
 
     my @hosts = split(",",$MONGO_SERVER);
 	$logger->debug("Initializing MongoDB connection");
@@ -130,6 +136,14 @@ sub get_collection {
     	$logger->warn("Get Collection error: ",$@);
     }
     return $c;
+}
+
+sub get_array_element {
+	my ($collection, $key,$index) = @_;
+	my $logger = get_logger();
+    my $c = get_collection($collection);
+    my $element = $c->find_one({'key' => $key},{'value'=>{'$slice'=>[$index,1]}});
+    return $element;
 }
 
 sub get_hash_element {
@@ -407,6 +421,20 @@ sub find_and_modify {
 		
 }
 
+sub validate {
+	my ($val) = @_;
+	my $logger = get_logger();
+	my $size = Devel::Size::total_size($val);
+	if ($size > $MONGO_MAX_SIZE) {
+		$logger->debug("Value is larger than $MONGO_MAX_SIZE bytes");
+		return 0;
+	} else {
+		return 1;
+	}
+	
+	
+}
+
 sub update_value {
     my ($collection,$var,$val,$upsert,$multi,$safe) = @_;
     my $logger = get_logger();
@@ -453,6 +481,10 @@ sub put_hash {
 	my @ids = $c->batch_insert(\@batch_elements);
 	$logger->trace("Inserted ",scalar @ids," hash elements");
 	return scalar @ids == scalar @$array_of_hash_elements;
+}
+
+sub put_array {
+	
 }
 
 sub put_hash_element {

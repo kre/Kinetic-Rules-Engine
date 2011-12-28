@@ -88,6 +88,7 @@ my $value;
 my $cruft = "cruft";
 my $start;
 my $end;
+my $base_save;
 
 # Check Database
 @result = $mdb->collection_names();
@@ -132,14 +133,42 @@ my $tricky_hash = {
 		'c' => 2,
 		'e' => 3,
 		'f' => {
-			'g' => 4,
+			'g' => 4, 
 			'h' => [4, 6, 7]
 		}
 	],
 };
 
 my $hash_var = "aaBaa";
-#Log::Log4perl->easy_init($TRACE);
+Log::Log4perl->easy_init($DEBUG);
+
+my $array_val = ['a','b','c','d','e','f','g',];
+my $array_var = "abcd";
+
+$logger->debug("Save Array: ", sub {Dumper($array_val)});
+$start = new Benchmark;
+Kynetx::MongoDB::update_value($cruft,{'key' => $array_var},{'key' => $array_var, 'value' => $array_val},1);
+$end = new Benchmark;
+$base_save = timediff($end,$start);
+diag "Save to Mongo: " . $base_save->[0];
+
+$start = new Benchmark;
+$result = Kynetx::MongoDB::get_array_element($cruft,$array_var,2);
+$result = $result->{'value'};
+$end = new Benchmark;
+$base_save = timediff($end,$start);
+diag "Element retrieval: " . $base_save->[0];
+$logger->debug( "Fourth element: ", sub {Dumper($result)});
+
+$start = new Benchmark;
+$result = Kynetx::MongoDB::get_value($cruft,{'key' => $array_var});
+$result = $result->{'value'}->[2];
+$end = new Benchmark;
+$base_save = timediff($end,$start);
+diag "Element retrieval: " . $base_save->[0];
+$logger->debug( "Fourth element: ", sub {Dumper($result)});
+
+goto ENDY;
 
 #Kynetx::MongoDB::insert_hash($cruft,{'key' => $hash_var},$dummy_hash);
 Kynetx::MongoDB::update_value($cruft,{'key' => $hash_var},{'key' => $hash_var, 'value' => $dummy_hash});
@@ -273,7 +302,7 @@ $find_and_modify = {
 $start = new Benchmark;
 $result = Kynetx::MongoDB::find_and_modify($cruft,$find_and_modify);
 $end = new Benchmark;
-my $base_save = timediff($end,$start);
+$base_save = timediff($end,$start);
 #diag "Find and modify: " . $base_save->[0];
 
 delete_value($cruft,{'key' => $first - $second});
@@ -496,7 +525,6 @@ compare($result->{"value"},0,"Initalize a $where to 0 (touch)",1);
 delete_value($cruft,$key);
 
 
-
 sub compare {
     my ($got,$expected,$description,$diag) =@_;
     if ($diag) {
@@ -506,6 +534,9 @@ sub compare {
     $num_tests++;
     die unless ($r);
 }
+
+ENDY:
+
 
 plan tests => $num_tests;
 
