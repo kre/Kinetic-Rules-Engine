@@ -35,25 +35,34 @@ use Compress::Zlib;
 use DateTime;
 use Data::Dumper;
 
-# global options
-use vars qw/ %opt /;
-my $opt_string = 'hv:r:au';
-getopts( "$opt_string", \%opt ); # or &usage();
-&usage() if $opt{'h'};
-
 
 use Kynetx::Configure qw/:all/;
 
 # FIXME: don't hardcode this...
 use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
 use constant DEFAULT_JS_VERSION => '0.9';
+use constant DEFAULT_JQUERY_VERSION => '1.4.2';
 
+
+
+
+# global options
+use vars qw/ %opt /;
+my $opt_string = '?hv:r:auj:';
+getopts( "$opt_string", \%opt ); # or &usage();
+&usage() if $opt{'h'} || $opt{'?'};
 
 # configure KNS
 Kynetx::Configure::configure();
 
 # use production mode to generate the file if sending to Amazon
 Kynetx::Configure::set_run_mode('production') if $opt{'a'};
+
+
+my $js_version = $opt{'v'} || DEFAULT_JS_VERSION;
+my $js_root = $opt{'r'} || DEFAULT_JS_ROOT;
+my $jquery_version = $opt{'j'} || DEFAULT_JQUERY_VERSION;
+my $minify = !$opt{'u'};
 
 
 my $dt = DateTime->now;
@@ -63,35 +72,34 @@ my $hstamp = $dt->hms('');
 my $kobj_file = "kobj-static-".$dstamp.$hstamp.".js";
 
 
-
-my @js_files = qw(
-krl-external-resource.js
-krl-data-set.js
-krl-application.js
-krl-runtime-header.js
-frameworks/jquery/1.4.2/jquery.js
-jquery_noconflict.js
-frameworks/jquery_sprintf/1.0.3/jquery_sprintf.js
-frameworks/json/1.2/jquery.json-1.2.js
-frameworks/bg_iframe/1.0/jquery.bgiframe.js
-frameworks/kgrowl/1.0/kgrowl-1.0.js
-frameworks/snowfall/1.0/snowfall.jquery.js
-krl-setup.js
-krl-runtime.js.tmpl
-krl-actions.js
-krl-functions.js
-frameworks/dom_watch/1.0/krl-domwatch.js
-frameworks/dom_watch/2.0/krl-domwatch.js
-frameworks/perc_and_annotate/1.0/krl-annotate.js
-frameworks/perc_and_annotate/1.0/krl-percolation.js
-frameworks/sidetab/1.0/krl-sidetab.js
-formfill.js
-krl-runtime.js
-krl-eventmanager.js
-frameworks/log4js/1.4/log4javascript_uncompressed.js
-krl-logging.js
-krl-snoop.js
-krl-runtime-footer.js
+my @js_files = (
+"krl-external-resource.js",
+"krl-data-set.js",
+"krl-application.js",
+"krl-runtime-header.js",
+"frameworks/jquery/$jquery_version/jquery.js",
+"jquery_noconflict.js",
+"frameworks/jquery_sprintf/1.0.3/jquery_sprintf.js",
+"frameworks/json/1.2/jquery.json-1.2.js",
+"frameworks/bg_iframe/1.0/jquery.bgiframe.js",
+"frameworks/kgrowl/1.0/kgrowl-1.0.js",
+"frameworks/snowfall/1.0/snowfall.jquery.js",
+"krl-setup.js",
+"krl-runtime.js.tmpl",
+"krl-actions.js",
+"krl-functions.js",
+"frameworks/dom_watch/1.0/krl-domwatch.js",
+"frameworks/dom_watch/2.0/krl-domwatch.js",
+"frameworks/perc_and_annotate/1.0/krl-annotate.js",
+"frameworks/perc_and_annotate/1.0/krl-percolation.js",
+"frameworks/sidetab/1.0/krl-sidetab.js",
+"formfill.js",
+"krl-runtime.js",
+"krl-eventmanager.js",
+"frameworks/log4js/1.4/log4javascript_uncompressed.js",
+"krl-logging.js",
+"krl-snoop.js",
+"krl-runtime-footer.js",
 );
 
 my $foo = <<_krl_;
@@ -99,9 +107,6 @@ my $foo = <<_krl_;
 _krl_
 
 
-my $js_version = $opt{'v'} || DEFAULT_JS_VERSION;
-my $js_root = $opt{'r'} || DEFAULT_JS_ROOT;
-my $minify = !$opt{'u'};
 
 my $js = "";
 $js .= "window['kobj_ts'] = '$dstamp$hstamp';";
@@ -264,7 +269,8 @@ Options:
    -a       : store to S3 only in production mode
    -u       : don't minify the file during publish
    -r DIR   : use DIR as the root directory for JS files
-   -v V     : use V as the verion number
+   -v V     : use V as the runtime version number
+   -j V     : use V as the jquery version number
 
 
 EOF

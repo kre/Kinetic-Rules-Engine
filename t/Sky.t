@@ -103,7 +103,7 @@ my $other_token = '44d92880-f2ca-012e-427d-00163e411455';
 
 my $test_explicit_rid = 0;
 
-my $mech = Test::WWW::Mechanize->new();
+my $mech = Test::WWW::Mechanize->new(cookie_jar => undef);
 
 # should be empty
 #diag Dumper $mech->cookie_jar();
@@ -136,14 +136,15 @@ SKIP: {
 
 	diag $test->{'url'};# if $test->{'diag'};
 
+	# Sky doesn't depend on cookies. Uses token in URL
 	#    like($mech->status(), /2../, 'Status OK');
 	#    $tc++;
-	ok($resp->header('Set-Cookie'), 'has cookie header');
-	$tc++;
+#	ok($resp->header('Set-Cookie'), 'has cookie header');
+#	$tc++;
 	#    diag "Response header: ", $resp->as_string();
-	#    diag "Cookies: ", Dumper $mech->cookie_jar;
-	like($mech->cookie_jar->as_string(), qr/SESSION_ID/, 'cookie was accepted');
-    $tc++;
+#	    diag "Cookies: ", Dumper $mech->cookie_jar;
+#	like($mech->cookie_jar->as_string(), qr/SESSION_ID/, 'cookie was accepted');
+#    $tc++;
 
 
 	diag $mech->content() if $test->{'diag'};
@@ -727,6 +728,32 @@ SKIP: {
       ];
 
     $test_count += test_event_plan($persistent_with_rids_test_plan);
+
+
+    my $battery_set_test_plan =
+      [{'url' => "$dn/$token?_domain=smartphone&_name=battery_set&_rids=a1856x6&percent=83",
+	'type' => 'text/javascript',
+	'like' => ['/"name":"log"/',
+		   '/"rule_name":"record_level"/',
+		   '/"battery":"83"/',
+		  ],
+	'unlike' => [
+		    ],
+	'diag' => 0,
+       },
+       {'url' => "$dn/$token?_domain=smartphone&_name=battery_read&_rids=a1856x6",
+	'type' => 'text/javascript',
+	'like' => ['/"name":"log"/',
+		   '/"rule_name":"read_back"/',
+		   '/"read_battery":"83"/',
+		  ],
+	'unlike' => [
+		    ],
+	'diag' => 0,
+       },
+      ];
+
+    $test_count += test_event_plan($battery_set_test_plan);
 
 
 

@@ -6,7 +6,7 @@ var Pilot = {
     kynetx_js_host: 'init.kobj.net',
 //  required_scripts: ['prototype','effects','dragdrop','kobj-extras'],
     required_scripts: ['kobj-static'],
-    kobj_version: '0.9',
+    kobj_version: '1.0',
     myip: '',
 
   // ex cookie:
@@ -175,9 +175,9 @@ var Pilot = {
          body.appendChild(doc.createTextNode("\n"));
          body.appendChild(script);
 
-#	 var proto = (("https:" == window._content.location.protocol) ? "https://" : "http://");
+	 var proto = (("https:" == window._content.location.protocol) ? "https://" : "http://");
 
-#	 this.kynetx_js_host = proto + init_host;
+	 this.kynetx_js_host = proto + init_host;
 
 	 // Add required js libraries once
          for (var r = 0; r < this.required_scripts.length; r++) {
@@ -186,16 +186,14 @@ var Pilot = {
            script.src = this.kynetx_js_host + '/js/shared/' + this.required_scripts[r] + '.js';
            body.appendChild(doc.createTextNode("\n"));
            body.appendChild(script);
-           }
-
-
+	 }
        }
-       body.appendChild(doc.createTextNode("\n"));
+	 body.appendChild(doc.createTextNode("\n"));
      }
   },
 
   add: function() {
-    new_site = {}
+    new_site = {};
     new_site['domain'] = prompt("Enter the domain (ie www.target.com) that you wish to Kynetxify:","");
     new_site['site_id'] = prompt("Enter the Kynetx site id:","1");
     new_site['datasets'] = prompt("Enter any data sets (comma separated):","");
@@ -264,50 +262,18 @@ var Pilot = {
     alert('Sites cleared out.');
   },
 
-//   getLocationInfo: function(url, request, cb) {
-//     var http = new XMLHttpRequest();
-//     // pjw commented out the next line...
-//     //http.open("GET","http://127.0.01/js/geoip.js",true);
-//     http.onreadystatechange = function(){
-//       if (http.readyState==4) var resp = http.responseText; // get the response if it was a success
-//       if(resp != null){
-//         eval("var info = " + resp); // turn the string of JSON into a real JSON object
-//         // is there a better XUL solution than putting each one in a menuitem?
-//         // display them all
-//         document.getElementById('location_info_ip_context_menu').style.display = 'block';
-//         document.getElementById('location_info_country_name_context_menu').style.display = 'block';
-//         document.getElementById('location_info_country_code_context_menu').style.display = 'block';
-//         document.getElementById('location_info_region_context_menu').style.display = 'block';
-//         document.getElementById('location_info_city_context_menu').style.display = 'block';
-//         document.getElementById('location_info_postal_code_context_menu').style.display = 'block';
-//         document.getElementById('location_info_dma_code_context_menu').style.display = 'block';
-//         document.getElementById('location_info_area_code_context_menu').style.display = 'block';
-//         document.getElementById('location_info_context_menu').style.display = 'none';
-//         // give them labels
-//         document.getElementById('location_info_ip_context_menu').label = "IP: " + info.ip_addr;
-//         document.getElementById('location_info_country_name_context_menu').label = "Country: " + info.country_name;
-//         document.getElementById('location_info_country_code_context_menu').label = "Country Code: " + info.country_code;
-//         document.getElementById('location_info_region_context_menu').label = "Region: " + info.region;
-//         document.getElementById('location_info_city_context_menu').label = "City: " + info.city;
-//         document.getElementById('location_info_postal_code_context_menu').label = "Postal Code: " + info.postal_code;
-//         document.getElementById('location_info_dma_code_context_menu').label = "DMA Code: " + info.dma_code;
-//         document.getElementById('location_info_area_code_context_menu').label = "Area Code: " + info.area_code;
-//       } else {
-//         document.getElementById('location_info_context_menu').label = 'N/A';
-//         document.getElementById('location_info_context_menu').style.display = 'block';
-//         document.getElementById('location_info_ip_context_menu').style.display = 'none';
-//         document.getElementById('location_info_country_name_context_menu').style.display = 'none';
-//         document.getElementById('location_info_country_code_context_menu').style.display = 'none';
-//         document.getElementById('location_info_region_context_menu').style.display = 'none';
-//         document.getElementById('location_info_city_context_menu').style.display = 'none';
-//         document.getElementById('location_info_postal_code_context_menu').style.display = 'none';
-//         document.getElementById('location_info_dma_code_context_menu').style.display = 'none';
-//         document.getElementById('location_info_area_code_context_menu').style.display = 'none';
-//       }
-//     };
-//     http.send(null);
-//   }
+};
 
+try {
+  Pilot.init();
+}catch(e){
+  try{
+    if(e.stack){
+      Components.utils.reportError(e.stack);
+    }
+    // Show the error console.
+    toJavaScriptConsole();
+  }finally{
+    throw e;
+  }
 }
-
-Pilot.init();

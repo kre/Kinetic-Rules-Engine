@@ -116,7 +116,8 @@ sub handler {
 
     # get a session
     $logger->debug("KBX cookie? ",$req_info->{'kntx_token'});
-    my $session = Kynetx::Session::process_session($r, $req_info->{'kntx_token'});
+#    my $session = Kynetx::Session::process_session($r, $req_info->{'kntx_token'});
+    my $session = Kynetx::Session::process_session($r, undef, $req_info->{'id_token'});
 
 
     # just show the version and exit if that's what's called for
@@ -183,15 +184,17 @@ sub handler {
       # $logger->error("Rids for $id_token: ", sub {Dumper ($unfiltered_rid_list)});
 
       # filter $unfiltered_rid_list for saliant rulesets
+
       $rid_list = $unfiltered_rid_list->{$domain}->{$eventtype} || [];
       
-      $domain_test = $unfiltered_rid_list;
+      $domain_test = $unfiltered_rid_list->{'ridlist'};
+#      $logger->error("Domain test for $id_token: ", sub {Dumper ($domain_test)});
 
       $req_info->{'rids'} = $rid_list;
        
     }
 
-    $logger->info("Rids for $domain/$eventtype: ", sub {Kynetx::Rids::print_rids($rid_list)});
+#    $logger->info("Rids for $domain/$eventtype: ", sub {Kynetx::Rids::print_rids($rid_list)});
 
     Kynetx::Request::log_request_env( $logger, $req_info );
 
@@ -212,11 +215,11 @@ sub handler {
 
       # check dispatch if domain is web and rids weren't specified
       my $rid = $rid_info->{'rid'};
-      if ($domain eq 'web'&&
+      if ($domain eq 'web'&& $eventtype eq 'pageview' &&
 	  ! $req_info->{'explicit_rids'} &&
-	  ! $domain_test->{$rid}->{'domain'}->{$hostname}
+	  ! $domain_test->{$rid}->{'domains'}->{$hostname}
 	 ) {
-	$logger->debug("Skipping $rid due to domain mismatch");
+	$logger->debug("Skipping $rid due to domain mismatch for $hostname");
 	next;
       }
 

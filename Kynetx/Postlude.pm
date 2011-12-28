@@ -394,6 +394,7 @@ sub eval_raise_statement {
 	 $req_info->{'api'} eq 'blue')  # this is what we do for blue
        ) {
 
+      $logger->debug("Processing postlude with BLUE api");
       # rid list can be an expression
       my $rids = Kynetx::Expressions::den_to_exp(
     		    eval_expr_with_default(
@@ -428,6 +429,7 @@ sub eval_raise_statement {
       # }
       
     } else {
+      $logger->debug("Processing postlude with SKY api");
       my $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info);
       $rid_info_list = $unfiltered_rid_list->{$domain}->{$eventtype} || [];
       my $found = 0;

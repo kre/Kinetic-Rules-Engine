@@ -88,6 +88,7 @@ sub handler {
 #    $logger->debug("RIDs -> $rids");
 
     my $js_version = Kynetx::Configure::get_config('JS_VERSION');
+    $logger->debug("Using JS version $js_version");
     my $js_root = Kynetx::Configure::get_config('DEFAULT_JS_ROOT');
 
     my $not_secure = ! (($r->headers_in->{'X-Secure'} || '') eq 'Yes');
