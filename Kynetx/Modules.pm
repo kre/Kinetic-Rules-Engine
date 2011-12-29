@@ -416,6 +416,8 @@ sub eval_module {
 	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || get_version($req_info->{'rid'});
       } elsif ($function eq 'inModule' ) {
 	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || 0;
+      } elsif ($function eq 'hostname' ) {
+	$val = Kynetx::Util::get_hostname();
       } else {
 	$val = "No meta information for $function available";
       }

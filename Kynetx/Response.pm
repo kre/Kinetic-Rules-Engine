@@ -41,6 +41,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 use Kynetx::Session qw/session_cleanup/;
 use Kynetx::Log;
 use Kynetx::Directives;
+use Kynetx::Util;
 
 sub create_directive_doc {
   my $invocant = shift;
@@ -122,7 +123,7 @@ sub respond {
   $logger->debug("Called with ", $r->the_request);
 
   # heartbeat string (let's people know we returned something)
-  my $heartbeat = "// KNS " . gmtime() . "\n";
+  my $heartbeat = "// KNS " . gmtime() . " (" . Kynetx::Util::get_hostname() . ")\n";
 
   # this is where we return the JS
   if ($req_info->{'understands_javascript'}) {
