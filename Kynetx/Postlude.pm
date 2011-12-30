@@ -277,7 +277,7 @@ sub eval_log_statement {
     }
 
     # call the callback server here with a HTTP GET
-    $js = Kynetx::Log::explicit_callback( $req_info, $rule_name, $log_val );
+#    $js = Kynetx::Log::explicit_callback( $req_info, $rule_name, $log_val );
 
     # this puts the statement in the log data for when debug is on
     $logger->debug( $msg, $log_val );
