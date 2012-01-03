@@ -124,9 +124,22 @@ sub eval_post_statement {
     }
 
     if ( $expr->{'type'} eq 'persistent' && $test ) {
-        return
-          eval_persistent_expr( $expr,     $session, $req_info,
-                                $rule_env, $rule_name );
+    	my $p_expr = eval_persistent_expr( $expr,     $session, $req_info,
+                              $rule_env, $rule_name );
+    	if (Kynetx::Errors::mis_error($p_expr)) {
+            	Kynetx::Errors::raise_error($req_info, 
+					$expr->{'level'} || 'error',
+					$p_expr->{'DEBUG'},
+					{'rule_name' => $rule_name,
+				 	'genus' => 'user',
+				 	'species' => 'error'
+					}
+			      );
+    		
+    	} else {
+    		return $p_expr;
+    	}
+        
     } elsif ( $expr->{'type'} eq 'log' && $test ) {
         return
           eval_log_statement( $expr,     $session, $req_info,
@@ -154,7 +167,7 @@ sub eval_persistent_expr {
 
     my $logger = get_logger();
 
-    #    $logger->debug("[post] ", $expr->{'type'});
+    # $logger->debug("[post] ", sub {Dumper($expr)});
 
     my $js = '';
     my $domain = $expr->{'domain'};
@@ -183,7 +196,13 @@ sub eval_persistent_expr {
         }
         if ($value) {
             $logger->trace( "Set value ", $expr->{'name'}, " to $value" );
-            save_persistent_var($domain, get_rid($req_info->{'rid'}), $session, $expr->{'name'}, $value );
+            if (Kynetx::MongoDB::validate($value)) {
+            	save_persistent_var($domain, get_rid($req_info->{'rid'}), $session, $expr->{'name'}, $value );
+            } else {
+            	my $msg = $expr->{'name'} . " is too large";
+            	return Kynetx::Errors::merror($msg);
+            }
+            
         } else {
             $logger->trace( "Set called for ", $expr->{'name'}, " as flag" );
             save_persistent_var($domain, get_rid($req_info->{'rid'}), $session, $expr->{'name'} );
@@ -205,12 +224,17 @@ sub eval_persistent_expr {
         	$logger->error("Hash Operation error: $name Value may not be null (use clear to remove key) ");
         	return $js;
         }
-		Kynetx::Persistence::save_persistent_hash_element($domain,
-				get_rid($req_info->{'rid'}),
-				$session,
-				$name,
-				$path,
-				$value);
+        if (Kynetx::MongoDB::validate($value)) {
+			Kynetx::Persistence::save_persistent_hash_element($domain,
+					get_rid($req_info->{'rid'}),
+					$session,
+					$name,
+					$path,
+					$value);
+        } else {
+            	my $msg = $expr->{'name'} . " is too large";
+            	return Kynetx::Errors::merror($msg);        	
+        }
     } elsif ( $expr->{'action'} eq 'iterator' ) {
         my $op = $expr->{'op'};
         $op =~ s/^\s+//;

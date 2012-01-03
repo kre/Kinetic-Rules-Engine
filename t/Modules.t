@@ -23,6 +23,7 @@ use strict;
 
 use Test::More;
 use Test::LongString;
+use Sys::Hostname;
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
@@ -212,6 +213,21 @@ $val = Kynetx::Expressions::den_to_exp(
 					 [] 
 					));
 is($val,'dev',"Meta data for ruleset version");
+$test_count++;
+
+
+$val = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
+					 $rule_env, 
+					 $session, 
+					 $rule_name, 
+					 'meta', 
+					 'hostname', 
+					 [] 
+					));
+
+
+is($val,hostname,"Hostname");
 $test_count++;
 
 

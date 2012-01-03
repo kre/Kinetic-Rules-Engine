@@ -551,11 +551,15 @@ sub default_value {
 
 }
 
+sub get_hostname {
+   return hostname || "No hostname found";
+ }
+
 sub bloviate {
     my ($message) = @_;
     my $logger = get_logger();
     my $directive = Kynetx::Directives->new("log");
-    my $host = hostname || "No hostname found";
+    my $host = get_hostname();
     my $timestamp = DateTime->now;
     my $options = {
         'data' => $message,

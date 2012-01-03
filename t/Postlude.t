@@ -124,6 +124,40 @@ use constant NOTFIRED => 0;
 my $domain = "ent";
 #Log::Log4perl->easy_init($DEBUG);
 
+# array
+my $dict_path = "/usr/share/dict/words";
+my @DICTIONARY;
+open DICT, $dict_path;
+@DICTIONARY = <DICT>;
+
+my $big_val = [];
+my $max = 1000000;
+for (my $i = 0; $i < $max; $i++) {
+	my $yav = $DICTIONARY[rand(@DICTIONARY)];
+	chomp($yav);
+	push(@$big_val,$yav);	
+}
+
+my $big_e = extend_rule_env({'foosh' => $big_val},$rule_env);
+
+my $expr = {
+  'domain' => 'ent',
+  'test' => undef,
+  'value' => {
+    'type' => 'var',
+    'val' => 'foosh'
+  },
+  'action' => 'set',
+  'name' => 'kvstore',
+  'type' => 'persistent'
+};
+
+$result = Kynetx::Postlude::eval_persistent_expr($expr,$session,$my_req_info,$big_e,"cs_test");
+#$logger->debug("Result: ", sub {Dumper($result)});
+cmp_deeply($result->{'_error_'},1,"set persistent variable which is too large");
+$test_count++;
+#goto ENDY;
+
 my $description = "Insert a hash element (creating the hash)";
 $krl_src = <<_KRL_;
 fired {
@@ -602,6 +636,8 @@ is(contains_trail_element($domain,$rid, $session, 'my_trail',"windley"),
    'testing forgotten'
   );
 $test_count++;
+
+ENDY:
 
 # Clean up testing data
 delete_persistent_var($domain,$rid,$session,'my_trail');
