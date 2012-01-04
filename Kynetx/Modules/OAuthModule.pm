@@ -620,7 +620,13 @@ sub protected_resource_request {
 	$logger->trace("Auth header: ",$request->to_authorization_header);
 	
 	foreach my $k (keys %{$headers}) {
-		$preq->header($k => $headers->{$k});
+		#$preq->header($k => $headers->{$k});
+		if (lc($k) eq 'authorization') {
+			$preq->header($k =>$request->to_authorization_header);
+			$preq->uri($request->request_url());
+		} else {
+			$preq->header($k => $headers->{$k});
+		}
 	}
 	
     my $ua   = LWP::UserAgent->new;
