@@ -523,6 +523,24 @@ $description = "Make a self contained Google Contacts request";
 cmp_deeply($result->{'status_code'},'200',$description);
 $test_count++;
 
+$args = [$namespace, {
+		'url' => $aurl,
+		'headers' => {
+			'Content-type'  => 'application/atom+xml',
+			#'Content-type'  => 'text/jsonc',
+			'GData-Version' => "2.0"
+		},
+		'params' => {
+			'alt' => 'json'
+		},
+		'response_headers' => ['Location'],
+	}];
+
+$result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'get',$args);
+$logger->debug("Response: ", sub {Dumper($result)});
+$description = "Make a self contained Google Contacts request";
+cmp_deeply($result->{'status_code'},'401',$description);
+$test_count++;
 
 
 #if ($result->{'status_code'} eq '302') {
