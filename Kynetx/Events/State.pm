@@ -22,6 +22,7 @@ package Kynetx::Events::State;
 #
 use strict;
 use warnings;
+no warnings qw(uninitialized);
 
 use Log::Log4perl qw(get_logger :levels);
 

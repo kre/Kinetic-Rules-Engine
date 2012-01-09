@@ -22,6 +22,8 @@ package Kynetx::Rules;
 #
 use strict;
 use warnings;
+no warnings qw(uninitialized);
+
 
 use Data::UUID;
 use Log::Log4perl qw(get_logger :levels);

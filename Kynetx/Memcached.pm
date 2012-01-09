@@ -21,6 +21,8 @@ package Kynetx::Memcached;
 #
 use strict;
 use warnings;
+no warnings qw(uninitialized);
+
 use utf8;
 
 # for memcache config values

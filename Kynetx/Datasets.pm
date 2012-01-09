@@ -234,7 +234,9 @@ sub _load_datasource {
         $source_url .= join( '&', ( sort @params ) );
     } else {
         $logger->trace( "[Datasets] datasource args: ", sub { Dumper $args });
-        $source_url .= $args->[0];
+        if (defined $args->[0]) {
+        	$source_url .= $args->[0];
+        }
     }
     $self->source($source_url);
     $self->sourcedata(

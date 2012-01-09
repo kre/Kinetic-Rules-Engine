@@ -22,6 +22,8 @@ package Kynetx::Expressions;
 #
 use strict;
 use warnings;
+no warnings qw(uninitialized);
+
 use utf8;
 
 use Log::Log4perl qw(get_logger :levels);

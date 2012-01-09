@@ -21,6 +21,8 @@ package Kynetx::Predicates::Useragent;
 #
 use strict;
 use warnings;
+no warnings qw(uninitialized);
+
 
 use Log::Log4perl qw(get_logger :levels);
 use HTML::ParseBrowser;

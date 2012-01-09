@@ -2781,7 +2781,7 @@ OFF 	: 'off';
 	;
 
  CACHABLE
-	:'cachable'
+	:'cachable' | 'cacheable'
 	;
 
  FOR

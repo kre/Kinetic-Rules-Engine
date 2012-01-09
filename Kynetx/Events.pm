@@ -321,7 +321,7 @@ sub process_event_for_rid {
 
     	$logger->trace("Rule: ", sub {Dumper $rule});
 
-    	$logger->trace("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
+    	$logger->debug("Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'});
 	
     	next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
 
@@ -414,6 +414,12 @@ sub mk_event {
         $ev->generic($req_info->{'domain'},$req_info->{'eventtype'});
     }
 	$logger->trace("Event: ", sub {Dumper($ev)});
+	
+	foreach my $p (@{$req_info->{'param_names'}}) {
+		if (defined $req_info->{$p}) {
+			$ev->{$p} = $req_info->{$p};
+		}
+	}
     return $ev;
 }
 
