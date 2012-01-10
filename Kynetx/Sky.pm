@@ -115,7 +115,7 @@ sub handler {
 
 
     # get a session
-    $logger->debug("KBX cookie? ",$req_info->{'kntx_token'});
+    $logger->debug("KBX token ",$req_info->{'id_token'});
 #    my $session = Kynetx::Session::process_session($r, $req_info->{'kntx_token'});
     my $session = Kynetx::Session::process_session($r, undef, $req_info->{'id_token'});
 
@@ -224,6 +224,7 @@ sub handler {
       }
 
       eval {
+	$logger->debug("Processing event for $rid");
 	Kynetx::Events::process_event_for_rid( $ev, $req_info, $session, $schedule, $rid_info );
       };
       if ($@) {

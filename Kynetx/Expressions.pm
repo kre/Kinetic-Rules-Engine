@@ -85,10 +85,12 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 # make sure we get canonical freezes for good signatures.
 $Storable::canonical = 1;
 
-use constant FUNCTION_CALL_THRESHOLD => 100;
+#use constant FUNCTION_CALL_THRESHOLD => 100;
+
+my $function_call_threshold = Kynetx::Configure::get_config('FUNCTION_CALL_THRESHOLD') || 100;
 
 sub recursion_threshold {
-	return FUNCTION_CALL_THRESHOLD;
+	return $function_call_threshold;
 }
 
 sub eval_prelude {
@@ -556,12 +558,12 @@ sub eval_application {
 
   $req_info->{$closure->{'val'}->{'sig'}} = 0
     unless defined $req_info->{$closure->{'val'}->{'sig'}};
-  if ($req_info->{$closure->{'val'}->{'sig'}} > FUNCTION_CALL_THRESHOLD) {
+  if ($req_info->{$closure->{'val'}->{'sig'}} > $function_call_threshold) {
     Kynetx::Errors::raise_error($req_info, 'warn',
-				  "[application] Function call threshold exceeded (". FUNCTION_CALL_THRESHOLD .")...deep recursion?",
+				  "[application] Function call threshold exceeded (". $function_call_threshold .")...deep recursion?",
 				  {'rule_name' => $rule_name,
 				   'genus' => 'expression',
-				   'species' => 'recursion threshold exceeded'
+				   'species' => 'function call threshold exceeded'
 				  }
 				 );
     return mk_expr_node('num', 0);

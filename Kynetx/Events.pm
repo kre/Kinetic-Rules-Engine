@@ -375,6 +375,8 @@ sub process_event_for_rid {
             $schedule->annotate_task( $rid, $rulename,$task, 'vars', $var_list );
             $schedule->annotate_task( $rid, $rulename,$task, 'vals', $val_list );
 
+            $logger->debug( "Completed adding to schedule: ", Kynetx::Rids::print_rid_info($rid_info), " & ", $rulename );
+
             # reset SM
             $sm->reset_state($rid, $session, $rule->{'name'},$event_list_name,$current_state,$next_state);
 #            delete_current_state($rid, $session, $rule->{'name'} );

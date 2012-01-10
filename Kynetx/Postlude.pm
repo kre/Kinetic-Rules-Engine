@@ -383,6 +383,7 @@ sub eval_raise_statement {
 		   'http' => 1,
 		   'system' => 1,
 		   'notification' => 1 ,
+		   'pds' => 1 ,
 		   'error' => 1,
 		  };
 
@@ -455,6 +456,8 @@ sub eval_raise_statement {
     } else {
       $logger->debug("Processing postlude with SKY api");
       my $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info);
+
+#      $logger->debug("Looking at rid_list ", sub { Dumper $unfiltered_rid_list} );
       $rid_info_list = $unfiltered_rid_list->{$domain}->{$eventtype} || [];
       my $found = 0;
       foreach my $rid( @{ $rid_info_list }) {
