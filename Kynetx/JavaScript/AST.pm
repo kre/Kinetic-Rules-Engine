@@ -22,6 +22,8 @@ package Kynetx::JavaScript::AST;
 #
 use strict;
 use warnings;
+no warnings qw(uninitialized);
+
 
 use Log::Log4perl qw(get_logger :levels);
 

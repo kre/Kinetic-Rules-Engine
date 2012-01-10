@@ -21,6 +21,8 @@ package Kynetx::MongoDB;
 #
 use strict;
 use warnings;
+no warnings qw(uninitialized);
+
 
 use lib qw(
   /web/lib/perl

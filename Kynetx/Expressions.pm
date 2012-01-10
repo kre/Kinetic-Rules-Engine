@@ -22,6 +22,8 @@ package Kynetx::Expressions;
 #
 use strict;
 use warnings;
+no warnings qw(uninitialized);
+
 use utf8;
 
 use Log::Log4perl qw(get_logger :levels);
@@ -216,7 +218,7 @@ sub eval_expr {
 	if (defined $re_rid && defined $ri_rid && $ri_rid ne $re_rid) {
 		$logger->debug("Module context: $ri_rid/$re_rid");
 	}
-
+	
     if ($expr->{'type'} eq 'str' ) {
     	if (utf8::is_utf8($expr->{'val'})) {
     		$logger->trace("UTF8: ",$expr->{'val'});
@@ -325,12 +327,19 @@ sub eval_expr {
 		     $expr, $rule_name);
         return $v;
     } elsif ($expr->{'type'} eq 'persistent_ineq') {
+		my $moduleRid = Kynetx::Environments::lookup_rule_env('_moduleRID', $rule_env);
+		my $rid = get_rid($req_info->{'rid'});
+		$logger->debug("**********module Rid: $moduleRid");
+		$logger->debug("**********calling Rid: $rid");
+		if (defined $moduleRid) {
+			$rid = $moduleRid;
+		}
         my $name = $expr->{'var'};
 
         # check count
         my $count = 0;
         if ($domain) {
-	        $count = Kynetx::Persistence::get_persistent_var($domain,$re_rid, $session, $name);
+	        $count = Kynetx::Persistence::get_persistent_var($domain,$rid, $session, $name);
         }
 
         $logger->trace('[persistent_ineq] ', $name || ""," -> ",$count);
@@ -348,11 +357,11 @@ sub eval_expr {
         # check date, if needed
         if ($v &&
     	    defined $expr->{'within'} &&
-    	    Kynetx::Persistence::defined_persistent_var($domain,$re_rid, $session, $name)) {
+    	    Kynetx::Persistence::defined_persistent_var($domain,$rid, $session, $name)) {
 
 	       my $tv = 1;
 
-           $tv = Kynetx::Persistence::persistent_var_within($domain,$re_rid,
+           $tv = Kynetx::Persistence::persistent_var_within($domain,$rid,
 		       $session,
 		       $name,
 		       Kynetx::Expressions::den_to_exp(
@@ -747,7 +756,17 @@ sub eval_persistent {
 
     my $logger = get_logger();
     my $v = 0;
+    
     my $domain = $expr->{'domain'};
+	my $inModule = Kynetx::Environments::lookup_rule_env('_inModule', $rule_env) || 0;
+	my $moduleRid = Kynetx::Environments::lookup_rule_env('_moduleRID', $rule_env);
+	my $rid = get_rid($req_info->{'rid'});
+	$logger->debug("**********in module: $inModule");
+	$logger->debug("**********module Rid: $moduleRid");
+	$logger->debug("**********calling Rid: $rid");
+	if (defined $moduleRid) {
+		$rid = $moduleRid;
+	}
 
     if (defined $expr->{'offset'}) {
 
@@ -760,7 +779,7 @@ sub eval_persistent {
 
 
       $v = Kynetx::Persistence::persistent_element_history($domain,
-							   get_rid($req_info->{'rid'}),
+							   $rid,
 							   $session,
 							   $expr->{'name'},
 							   $idx);
@@ -772,7 +791,7 @@ sub eval_persistent {
 	    	my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $expr->{'hash_key'});
 	    	$logger->debug("Path normalized: ", sub {Dumper($path)});
 	    	my $var = $expr->{'var_expr'};
-	    	$v = Kynetx::Persistence::get_persistent_hash_element($domain,get_rid($req_info->{'rid'}),$session,$var,$path);
+	    	$v = Kynetx::Persistence::get_persistent_hash_element($domain,$rid,$session,$var,$path);
     	} else {
     		$logger->warn("Hash indexes only implemented for persistent variables");
     	}
@@ -786,7 +805,7 @@ sub eval_persistent {
       if ($expr->{'domain'} eq 'ent' || $expr->{'domain'} eq 'app') {
 	# FIXME: not sure I like setting to 0 by default
 	$v = Kynetx::Persistence::get_persistent_var($domain,
-						     get_rid($req_info->{'rid'}), 
+						     $rid, 
 						     $session, 
 						     $name) || 0;
 	$logger->debug("[persistent] $expr->{'domain'}:$name -> $v");

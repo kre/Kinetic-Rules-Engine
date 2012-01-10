@@ -581,7 +581,9 @@ sub protected_resource_request {
 	my $atokens = get_access_tokens($req_info, $rule_env, $session, $namespace, $oauth_config);
 	my $preq;
 	my $method = uc($function) || 'GET';
-	my $request = Net::OAuth::ProtectedResourceRequest->new(
+	my $request;
+	eval {
+		$request = Net::OAuth::ProtectedResourceRequest->new(
 		'consumer_key'    => $ctokens->{'consumer_key'},
 		'consumer_secret' => $ctokens->{'consumer_secret'},
 		'token'           => $atokens->{'access_token'},
@@ -592,6 +594,20 @@ sub protected_resource_request {
 		'timestamp'        => time(),
 		'nonce'            => nonce(),
 	       );
+	};
+	if ($@) {
+		my $v = $oauth_config->{'__evar__'} || '__default__';
+		my $e_response = {
+				'content' => $@,
+				'status_code' => HTTP::Status::RC_UNAUTHORIZED,
+				'status_line' => HTTP::Status::status_message(HTTP::Status::RC_UNAUTHORIZED),
+				'Content-Type' => 'text/plain',
+				'Content-Length' => length($@)
+				
+		};
+    	return $e_response;		
+	}
+	
 	if (defined $extra_params) {
 	  $request->extra_params($extra_params);
 	}  
@@ -620,7 +636,13 @@ sub protected_resource_request {
 	$logger->trace("Auth header: ",$request->to_authorization_header);
 	
 	foreach my $k (keys %{$headers}) {
-		$preq->header($k => $headers->{$k});
+		#$preq->header($k => $headers->{$k});
+		if (lc($k) eq 'authorization') {
+			$preq->header($k =>$request->to_authorization_header);
+			$preq->uri($request->request_url());
+		} else {
+			$preq->header($k => $headers->{$k});
+		}
 	}
 	
     my $ua   = LWP::UserAgent->new;
