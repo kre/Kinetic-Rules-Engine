@@ -81,6 +81,9 @@ DEBUG: on
 # maximum apache processes to run per instance (25 recommended for 1Gb RAM)
 MAX_SERVERS: 25
 
+MAX_REQUESTS_PER_CHILD: 100
+
+
 # page to redirect to for access to the server other than to the API
 KNS_LANDING_PAGE: http://www.kynetx.com/kobj/index.html
 

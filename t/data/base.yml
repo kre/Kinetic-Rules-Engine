@@ -29,4 +29,8 @@ DEFAULT_LOG_HOST: #ignore
 DEFAULT_JS_ROOT: #ignore
 ERRORSTACK_KEY: #ignore
 ERRORSTACK_LEVEL: #ignore
+# these are defaults at the start of configure() that need overwriting
+JS_VERSION: 1.0
+MAX_REQUESTS_PER_CHILD: 100
+MAX_SERVERS: 1
 
