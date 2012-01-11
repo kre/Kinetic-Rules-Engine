@@ -38,10 +38,10 @@ use Data::Dumper;
 
 use Kynetx::Configure qw/:all/;
 
-# FIXME: don't hardcode this...
-use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
-use constant DEFAULT_JS_VERSION => '0.9';
-use constant DEFAULT_JQUERY_VERSION => '1.4.2';
+## FIXME: don't hardcode this...
+#use constant DEFAULT_JS_ROOT => '/web/lib/perl/etc/js';
+#use constant DEFAULT_JS_VERSION => '0.9';
+#use constant DEFAULT_JQUERY_VERSION => '1.4.2';
 
 
 
@@ -59,11 +59,12 @@ Kynetx::Configure::configure();
 Kynetx::Configure::set_run_mode('production') if $opt{'a'};
 
 
-my $js_version = $opt{'v'} || DEFAULT_JS_VERSION;
-my $js_root = $opt{'r'} || DEFAULT_JS_ROOT;
-my $jquery_version = $opt{'j'} || DEFAULT_JQUERY_VERSION;
+my $js_version = $opt{'v'} || Kynetx::Configure::get_config("JS_VERSION");
+my $js_root = $opt{'r'} || Kynetx::Configure::get_config("DEFAULT_JS_ROOT");
+my $jquery_version = $opt{'j'} || Kynetx::Configure::get_config("JQUERY_VERSION");
 my $minify = !$opt{'u'};
 
+die "Javascript/JQuery defaults not found in config" unless (defined $js_version && defined $jquery_version);
 
 my $dt = DateTime->now;
 my $dstamp = $dt->ymd('');
