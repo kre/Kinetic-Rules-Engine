@@ -321,6 +321,36 @@ sub gen_js_predexpr {
 	  $expr->{'args'}->[1]->{'type'} = 'regexp'
 	}
 	return gen_js_expr($expr->{'args'}->[0]) . '.match(' . gen_js_expr($expr->{'args'}->[1]) . ')';
+      } elsif ($expr->{'op'} eq '><') {
+
+	my $array_js = '($KOBJ.inArray(' .
+	                     gen_js_expr($expr->{'args'}->[1]) . ',' .
+	                     gen_js_expr($expr->{'args'}->[0]) . ') != -1) ';
+
+	my $v1 = gen_js_expr($expr->{'args'}->[1]);
+	$v1 =~ s/'([\w\d]+)'/$1/;
+
+#(function(){var tmp = {"a": 1, "b" : 2};return typeof(tmp.a) !== 'undefined'}())
+
+	my $map_js = '(function(){var tmp = ' . 
+                         gen_js_expr($expr->{'args'}->[0]) . 
+                       ';return (typeof(tmp.' . $v1 . ") !== 'undefined')}())";
+
+	if ($expr->{'args'}->[0]->{'type'} eq 'array') {
+	  return $array_js;
+	} elsif ($expr->{'args'}->[0]->{'type'} eq 'hash') {
+	  return $map_js;
+	} else {
+
+	  return '((' . gen_js_expr($expr->{'args'}->[0]) . ' instanceof Array) ? ' .
+	    $array_js . ' : '  . $map_js . ')'
+
+      
+	}
+
+
+
+	
       } else {
 	return  '('. join(' ' . gen_js_ineq_op($expr->{'op'}) . ' ',
 			  @{ gen_js_rands($expr->{'args'}) }) . ')'  ;

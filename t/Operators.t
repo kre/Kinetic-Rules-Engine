@@ -441,7 +441,52 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-$e[$i] = q/store.pick("$..book[?(@.title ne 'Moby Dick')]")/;
+$e[$i] = q#store.pick("$..book[?(@.title like '/M\w+ D\w+/')]")#;
+$x[$i] = {
+'val' =>
+     {
+       'price' => '8.99',
+       'isbn' => '0-553-21311-3',
+       'title' => 'Moby Dick',
+       'author' => 'Herman Melville',
+       'category' => 'fiction'
+     },
+   'type' => 'hash'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#store.pick("$..book[?(@.title like '/^m\w+/i')]")#;
+$x[$i] = {
+'val' =>
+     {
+       'price' => '8.99',
+       'isbn' => '0-553-21311-3',
+       'title' => 'Moby Dick',
+       'author' => 'Herman Melville',
+       'category' => 'fiction'
+     },
+   'type' => 'hash'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#store.pick("$..book[?(@.price == 8.99)]")#;
+$x[$i] = {
+'val' =>
+     {
+       'price' => '8.99',
+       'isbn' => '0-553-21311-3',
+       'title' => 'Moby Dick',
+       'author' => 'Herman Melville',
+       'category' => 'fiction'
+     },
+   'type' => 'hash'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q/store.pick("$..book[?(@.title neq 'Moby Dick')]")/;
 $x[$i] = {
 'val' => [
      {
@@ -479,6 +524,47 @@ $x[$i] = {
 };
 $d[$i]  = 0;
 $i++;
+
+
+$e[$i] = q/store.pick("$..book[?(@.price != 8.99)]")/;
+$x[$i] = {
+'val' => [
+     {
+       'ratings' => [
+         1,
+         3,
+         2,
+         10
+       ],
+       'price' => '8.95',
+       'title' => 'Sayings of the Century',
+       'author' => 'Nigel Rees',
+       'category' => 'reference'
+     },
+     {
+       'ratings' => [
+         'good',
+         'bad',
+         'lovely'
+       ],
+       'price' => '12.99',
+       'title' => 'Sword of Honour',
+       'author' => 'Evelyn Waugh',
+       'category' => 'fiction'
+     },
+     {
+       'price' => '22.99',
+       'isbn' => '0-395-19395-8',
+       'title' => 'The Lord of the Rings',
+       'author' => 'J. R. R. Tolkien',
+       'category' => 'fiction'
+     }
+   ],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
 
 $e[$i] = q/store.pick("$.store..price")/;
 $x[$i] = {

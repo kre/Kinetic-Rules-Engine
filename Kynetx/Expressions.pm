@@ -880,6 +880,8 @@ sub eval_ineq {
 	map {Kynetx::Expressions::eval_expr($_, $rule_env, $rule_name, $req_info, $session)}
 	  @{ $pred->{'args'} };
 
+    
+
     if (ineq_test($pred->{'op'}, den_to_exp($results[0]), den_to_exp($results[1]))) {
       return Kynetx::Parser::mk_expr_node('num',1);
     }  else {
@@ -902,9 +904,9 @@ sub ineq_test {
     my($op, $rand0, $rand1) = @_;
 
     my $logger = get_logger();
-#    $logger->debug("[ineq_test] $rand0 $op $rand1");
-	$rand0 = undef unless (defined $rand0);
-	$rand1 = undef unless (defined $rand1);
+    $logger->debug("[ineq_test] $rand0 $op $rand1");
+    $rand0 = undef unless (defined $rand0);
+    $rand1 = undef unless (defined $rand1);
 
     if ($op eq '<=') {
 	return $rand0 <= $rand1;
@@ -918,8 +920,8 @@ sub ineq_test {
 	return $rand0 == $rand1;
     } elsif($op eq '!=') {
 	return $rand0 != $rand1;
-    } elsif($op eq 'neq') {
-	    return ! ($rand0 eq $rand1);
+    } elsif($op eq 'neq' || $op eq 'ne') { # 'ne' for use in JSONPath
+      return ! ($rand0 eq $rand1);
     } elsif($op eq 'eq') {
 	return $rand0 eq $rand1;
     } elsif($op eq 'like') {
@@ -928,7 +930,7 @@ sub ineq_test {
       # the KRL AST.
 
       # for backward compatibility, make strings look like KRL regexp
-      $rand1 = "/$rand1/" unless $rand1 =~ m#^/[^/]+/#;
+      $rand1 = "/$rand1/" unless $rand1 =~ m![#/][^/#]+[/#]!;
 
       # FIXME: This is code that should be shared with replace in Operators.pm
 
@@ -945,12 +947,49 @@ sub ineq_test {
       my $re = qr/(?$embedable_modifiers)$pattern/;
 #	my $re = qr!$rand1!;
 
-      $logger->debug("Matching string $rand0 with $pattern & modifiers $modifiers: $re");
+#      $logger->debug("Matching string $rand0 with $pattern & modifiers $modifiers: $re");
 
       # g modifier does nothing here...
       return $rand0 =~ /$re/;
 
+    } elsif ($op eq '><') {
+
+      my $result = 0;
+
+      my $rand_type = 'STRING';
+      if($rand1 =~ m/^\d+$/) {
+	$rand_type = 'NUMBER';
+      }
+
+      if(ref $rand0 eq 'HASH') {
+	$result = exists ($rand0->{$rand1});
+      } elsif (ref $rand0 eq 'ARRAY') {
+	foreach my $mem (@{ $rand0 }) {
+#	  $logger->debug("  Searching: is $mem eq to $rand1?");
+	  if ($mem =~ m/^\d+$/ && $rand_type eq 'NUMBER') {
+	    $result = $mem == $rand1;
+	    last if $result;
+	  } else {
+#	    $result = $mem =~ m/$rand1/;
+	    $result = ($mem eq $rand1);
+	    # if ($mem eq $rand1) {
+	    #   $result = $rand0;
+	    # }
+	    last if $result;
+	  }
+	}
+      }  elsif(defined $rand0) {
+#	$logger->debug("Comparing $rand0 and $rand1");
+	if ($rand0 =~ m/^\d+$/ && $rand_type eq 'NUMBER') {
+	  $result = $rand0 == $rand1;
+	} elsif ($rand0) {
+	  $result = $rand0 eq $rand1;
+	}
+      }
+#      $logger->debug("Returning ", sub { Dumper $result});
+      return $result;
     }
+
 }
 
 

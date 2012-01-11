@@ -335,11 +335,12 @@ sub eval_query() {
 	} else {
 	    my $obj_type = ref($obj);
 	    my ($name, $op, $rand) = 
-		($loc =~ m/@\.([a-zA-Z0-9_-]*)\s*(><|<|>|<=|>=|==|!=|eq|ne)\s*["|']?([^'"]*)['|"]?/);
+		($loc =~ m/@\.([a-zA-Z0-9_-]*)\s*(><|<|>|<=|>=|==|!=|eq|neq|ne|like)\s*["|']?([^'"]*)['|"]?/);
 
 	    my $o = $name ? $obj->{$name} : $obj;
 
 #	    $logger->debug("Filtering ", sub {Dumper($o)});
+#	    $logger->debug("$o // $op // $rand");
 #	    $logger->debug("$name // $op // $rand");
 	    my $rand_type = 'STRING';
 	    if($rand =~ m/^\d+$/) {
@@ -347,55 +348,58 @@ sub eval_query() {
 	    }
 	    my $result = 0;
 
- 	    case: for ($op) {
-		/^<$/ && do {
-		    $result = $o < $rand;
-		};
-		/^>$/ && do {
-		    $result = $o > $rand;
-		};
-		/^<=$/ && do {
-		    $result = $o <= $rand;
-		};
-		/^>=$/ && do {
-		    $result = $o >= $rand;
-		};
-		/^==$/ && do {
-		    $result = $o == $rand;
-		};
-		/^!=$/ && do {
-		    $result = $o != $rand;
-		};
-		/^eq$/ && do {
-		    $result = $o eq $rand;
-		};
-		/^ne$/ && do {
-		    $result = $o ne $rand;
-		};
-		/^><$/ && do {
-		    if(ref $o eq 'HASH') {
-			$result = exists ($o->{$rand});
-		    } elsif (ref $o eq 'ARRAY') {
-			foreach my $mem (@{ $o }) {
-#			    $logger->debug("Searching in $name: is $mem eq to $rand?");
-			    if ($mem =~ m/^\d+$/ && $rand_type eq 'NUMBER') {
-				$result = $mem == $rand;
-				last if $result;
-			    } else {
-				$result = $mem =~ m/$rand/;
-				last if $result;
-			    }
-			}
-		    } elsif(defined $o) {
-#			$logger->debug("Comparing $o and $rand");
-			if ($o =~ m/^\d+$/ && $rand_type eq 'NUMBER') {
-			    $result = $o == $rand;
-			} elsif ($o) {
-			    $result = $o =~ m/$rand/;
-			}
-		    }
-		};
-	    }
+#  	    case: for ($op) {
+# 		/^<$/ && do {
+# 		    $result = $o < $rand;
+# 		};
+# 		/^>$/ && do {
+# 		    $result = $o > $rand;
+# 		};
+# 		/^<=$/ && do {
+# 		    $result = $o <= $rand;
+# 		};
+# 		/^>=$/ && do {
+# 		    $result = $o >= $rand;
+# 		};
+# 		/^==$/ && do {
+# 		    $result = $o == $rand;
+# 		};
+# 		/^!=$/ && do {
+# 		    $result = $o != $rand;
+# 		};
+# 		/^eq$/ && do {
+# 		    $result = $o eq $rand;
+# 		};
+# 		/^ne$/ && do {
+# 		    $result = $o ne $rand;
+# 		};
+# 		/^><$/ && do {
+# 		    if(ref $o eq 'HASH') {
+# 			$result = exists ($o->{$rand});
+# 		    } elsif (ref $o eq 'ARRAY') {
+# 			foreach my $mem (@{ $o }) {
+# #			    $logger->debug("Searching in $name: is $mem eq to $rand?");
+# 			    if ($mem =~ m/^\d+$/ && $rand_type eq 'NUMBER') {
+# 				$result = $mem == $rand;
+# 				last if $result;
+# 			    } else {
+# 				$result = $mem =~ m/$rand/;
+# 				last if $result;
+# 			    }
+# 			}
+# 		    } elsif(defined $o) {
+# #			$logger->debug("Comparing $o and $rand");
+# 			if ($o =~ m/^\d+$/ && $rand_type eq 'NUMBER') {
+# 			    $result = $o == $rand;
+# 			} elsif ($o) {
+# 			    $result = $o =~ m/$rand/;
+# 			}
+# 		    }
+#		};
+#	  }
+	    $result = Kynetx::Expressions::ineq_test($op, $o, $rand);
+
+	    
 #	    $logger->debug("Result of $op is ", $result ? "true" : "not true");
 	    return $result ;
 

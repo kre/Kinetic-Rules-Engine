@@ -149,12 +149,12 @@ $rule_env = extend_rule_env("myHash",{
 			'h' => 5
 		}
 	},
-	'd' =>'1.3'	
+	'd' =>'1.3'
 },$rule_env);
 
 $rule_env = extend_rule_env("g","a",$rule_env);
+	
 
-   
 $rule_env->{'ruleset_name'} = $rid;
 
 my $session = Kynetx::Test::gen_session($r, $rid);
