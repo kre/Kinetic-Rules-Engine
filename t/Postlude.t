@@ -637,17 +637,75 @@ is(contains_trail_element($domain,$rid, $session, 'my_trail',"windley"),
   );
 $test_count++;
 
-ENDY:
+
+
+#
+# raise functionality tested in Rules.t
+# 
+
+# testing attributes clause
+$krl_src = <<_KRL_;
+always {
+  raise explicit event foo attributes {"b": 2, "c": 3};
+} 
+_KRL_
+
+my ($krl, $res, $src);
+
+$krl = Kynetx::Parser::parse_post($krl_src);
+
+chomp $krl;
+
+# fix it up for what eval_post_expr expects
+$krl = {'post' => $krl};
+#diag Dumper $krl;
+
+$res = eval_post_expr($krl,
+		      $session,
+		      $my_req_info,
+		      $rule_env,
+		      1);
+
+is($my_req_info->{'b'}, 2, "attributes correctly stored");
+is($my_req_info->{'c'}, 3, "attributes correctly stored");
+$test_count += 2;
+
+
+# testing modifiers clause
+$krl_src = <<_KRL_;
+always {
+  raise explicit event foo with 
+   x = 5 and
+   y = 6
+} 
+_KRL_
+
+$krl = Kynetx::Parser::parse_post($krl_src);
+
+chomp $krl;
+
+# fix it up for what eval_post_expr expects
+$krl = {'post' => $krl};
+#diag Dumper $krl;
+
+$res = eval_post_expr($krl,
+		      $session,
+		      $my_req_info,
+		      $rule_env,
+		      1);
+
+is($my_req_info->{'x'}, 5, "attributes correctly stored (with)");
+is($my_req_info->{'y'}, 6, "attributes correctly stored (with)");
+$test_count += 2;
+
 
 # Clean up testing data
 delete_persistent_var($domain,$rid,$session,'my_trail');
 delete_persistent_var($domain,$rid,$session,'my_flag');
 delete_persistent_var($domain,$rid,$session,'archive_pages_now');
 
+ENDY:
 
-#
-# raise tested in Rules.t
-# 
 
 done_testing($test_count);
 

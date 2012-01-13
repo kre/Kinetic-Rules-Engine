@@ -397,6 +397,7 @@ sub eval_raise_statement {
                          'domain'    => $expr->{'domain'}
     };
 
+    # with clause
     foreach my $m ( @{ $expr->{'modifiers'} } ) {
       my $val = Kynetx::Expressions::den_to_exp(
 		  Kynetx::Expressions::eval_expr(
@@ -407,6 +408,19 @@ sub eval_raise_statement {
 
     }
  
+    # attributes clause
+    my $attrs = Kynetx::Expressions::den_to_exp(
+		  Kynetx::Expressions::eval_expr(
+                    $expr->{'attributes'}, 
+		    $rule_env, 
+		    $rule_name, 
+                    $req_info, 
+                   $session
+                  ));
+    foreach my $k ( keys %{ $attrs } ) {
+      $new_req_info->{ $k } =  $attrs->{$k};
+    }
+ 
     # use the calculated versions
     my $domain = $new_req_info->{'domain'};
     my $eventtype = $new_req_info->{'eventtype'};
@@ -415,8 +429,8 @@ sub eval_raise_statement {
     
     # if there was a calculated ridlist, use it. Otherwise get salience
     if (defined $expr->{'ruleset'} ||
-	(defined $req_info->{'api'} && 
-	 $req_info->{'api'} eq 'blue')  # this is what we do for blue
+	(defined $req_info->{'_api'} && 
+	 $req_info->{'_api'} eq 'blue')  # this is what we do for blue
        ) {
 
       $logger->debug("Processing postlude with BLUE api");

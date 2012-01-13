@@ -1991,7 +1991,7 @@ add_testcase(
     
 
 # the following tests don't know about installed apps and this can't handle 
-$my_req_info->{'api'} = 'blue';
+$my_req_info->{'_api'} = 'blue';
 
 
 $krl_src = <<_KRL_;

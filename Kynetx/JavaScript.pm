@@ -330,6 +330,8 @@ sub gen_js_predexpr {
 	my $v1 = gen_js_expr($expr->{'args'}->[1]);
 	$v1 =~ s/'([\w\d]+)'/$1/;
 
+
+# need local scoping for the new var
 #(function(){var tmp = {"a": 1, "b" : 2};return typeof(tmp.a) !== 'undefined'}())
 
 	my $map_js = '(function(){var tmp = ' . 

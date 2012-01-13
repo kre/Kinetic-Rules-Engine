@@ -101,6 +101,8 @@ sub build_request_env {
 
 	epl => $epl,
 	epi => $epi,
+	
+        _api => $api,
 
 	hostname => $r->hostname(),
 	ip => $r->connection->remote_ip() || '0.0.0.0',
