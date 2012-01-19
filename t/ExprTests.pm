@@ -1289,6 +1289,79 @@ add_expr_testcase(
     );
 
 #
+# Membership
+#
+
+$krl_src = <<_KRL_;
+[5,6,7] >< 6
+_KRL_
+add_expr_testcase($krl_src,
+		  'expr',
+		  "(\$KOBJ.inArray(6,[5,6,7])!=-1)",
+		  mk_expr_node('num',    1),
+		  0
+    );
+
+$krl_src = <<_KRL_;
+[5,6,7] >< 3
+_KRL_
+add_expr_testcase(
+    $krl_src,
+'expr',
+		  "(\$KOBJ.inArray(3,[5,6,7])!=-1)",
+		  mk_expr_node('num',    0),
+		  0
+    );
+
+
+$krl_src = <<_KRL_;
+store.pick("\$..price") >< 8.95
+_KRL_
+add_expr_testcase(
+    $krl_src,
+'expr',
+		  '_ignore_',
+		  mk_expr_node('num',    1),
+		  0
+    );
+
+
+$krl_src = <<_KRL_;
+myHash >< "a"
+_KRL_
+add_expr_testcase(
+    $krl_src,
+'expr',
+		  "((myHash instanceof Array) ? (\$KOBJ.inArray('a',myHash) != -1)  : (function(){var tmp = myHash;return (typeof(tmp.a) !== 'undefined')}()))",
+		  mk_expr_node('num',    1),
+		  0
+    );
+
+$krl_src = <<_KRL_;
+myHash >< "fizzle"
+_KRL_
+add_expr_testcase(
+    $krl_src,
+'expr',
+		  "((myHash instanceof Array) ? (\$KOBJ.inArray('fizzle',myHash) != -1)  : (function(){var tmp = myHash;return (typeof(tmp.fizzle) !== 'undefined')}()))",
+		  mk_expr_node('num',    0),
+		  0
+    );
+
+$krl_src = <<_KRL_;
+{"a": 1, "b" : 2} >< "a"
+_KRL_
+add_expr_testcase(
+    $krl_src,
+'expr',
+		  "(({'a' : 1, 'b' : 2} instanceof Array) ? (\$KOBJ.inArray('a',{'a' : 1, 'b' : 2}) != -1)  : (function(){var tmp = {'a' : 1, 'b' : 2};return (typeof(tmp.a) !== 'undefined')}()))
+",
+		  mk_expr_node('num',    1),
+		  0
+    );
+
+
+#
 # Booleans
 #
 

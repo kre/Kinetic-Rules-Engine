@@ -101,6 +101,8 @@ sub build_request_env {
 
 	epl => $epl,
 	epi => $epi,
+	
+        _api => $api,
 
 	hostname => $r->hostname(),
 	ip => $r->connection->remote_ip() || '0.0.0.0',
@@ -159,6 +161,7 @@ sub build_request_env {
 }
 
 
+# merge multiple request environments, last wins
 sub merge_req_env {
   my $first = shift;
   foreach my $req (@_) {

@@ -1053,7 +1053,11 @@ sub pp_raise_statement {
     if($node->{'ruleset'}) {
       $o .= ' for ' . pp_expr($node->{'ruleset'});
     }
-    $o .= pp_modifier_clause($node, $indent);
+    if (defined $node->{'modifiers'}) {
+      $o .= pp_modifier_clause($node, $indent);
+    } elsif (defined $node->{'attributes'} ) {
+      $o .= ' attributes ' . pp_expr($node->{'attributes'}, $indent);
+    }
     return $o;
 
   }

@@ -75,11 +75,11 @@ sub get_rules_from_repository{
     # wait if this ruleset's being parsed now
     my $counter = 0;
     while (Kynetx::Memcached::is_parsing($memd, $rs_key) &&
-	   $counter < 120 # don't wait forever
+	   $counter < 6 # don't wait forever
 	  ) {
       sleep 1;
       $counter++;
-      $logger->debug("Parsing semaphore hold: $counter") if ($counter % 10) == 0;
+      $logger->info("Parsing semaphore hold: $counter") if ($counter % 2) == 0;
     }
 
     my $ruleset = $memd->get($rs_key);
@@ -88,7 +88,7 @@ sub get_rules_from_repository{
 	$ruleset->{'optimization_version'} &&
 	$ruleset->{'optimization_version'} == Kynetx::Rules::get_optimization_version() &&
 	! $text) {
-      $logger->debug("Using cached ruleset for $rid ($version) with key ", make_ruleset_key($rid, $version), " & optimization version ", $ruleset->{'optimization_version'} );
+      $logger->debug("Using cached ruleset for $rid ($version) with key $rs_key & optimization version ", $ruleset->{'optimization_version'} );
 
 
       return $ruleset;

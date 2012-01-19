@@ -277,10 +277,11 @@ sub process_event_for_rid {
     my $logger = get_logger();
 
     my $rid = get_rid($rid_info);
+    my $ver = get_version($rid_info);
 
    #  $logger->debug("Req info: ", sub {Dumper $req_info} );
 
-    $logger->debug("Processing events for $rid");
+    $logger->debug("Processing events for $rid:$ver");
     Log::Log4perl::MDC->put( 'site', $rid );
 
     my $ruleset = Kynetx::Rules::get_rule_set($req_info, 1, $rid, get_version($rid_info)); # 1 for localparsing

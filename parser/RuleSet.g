@@ -461,13 +461,14 @@ post_statement returns[HashMap result]
 raise_statement returns[HashMap result]
 	:
 	//must_be["raise"] ('http'|'explicit'|'notification') must_be["event"]  evt=expr f=for_clause? m=modifier_clause? {
-	 rd=RAISE  dom=VAR must_be["event"]  evt=expr f=for_clause? m=modifier_clause? {
+	 rd=RAISE  dom=VAR must_be["event"]  evt=expr f=for_clause? (m=modifier_clause| must_be["attributes"] attrs=expr)? {
 		HashMap tmp = new HashMap();
 		tmp.put("event",$evt.result);
 		tmp.put("domain", $dom.text);
 		tmp.put("type","raise");
         tmp.put("ruleset",$f.result);
         tmp.put("modifiers",$m.result);
+        tmp.put("attributes",$attrs.result);
 
 		$result = tmp;
 	}
@@ -2589,7 +2590,7 @@ REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
 	:('JSON'|'XML'|'RSS'|'HTML');
 
 LIKE	:	'like';
-PREDOP: '<=' | '>=' | '<' | '>' | '==' | '!=' | 'eq' | 'neq';
+PREDOP: '<=' | '>=' | '<' | '>' | '==' | '!=' | 'eq' | 'neq' | '><';
 
 ADD_OP: '+'|'-';
 

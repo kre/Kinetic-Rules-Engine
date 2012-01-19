@@ -392,11 +392,13 @@ sub eval_raise_statement {
     }
 
 
+    # build a new request
     my $new_req_info = {
                          'eventtype' => $event_name,
                          'domain'    => $expr->{'domain'}
     };
 
+    # with clause
     foreach my $m ( @{ $expr->{'modifiers'} } ) {
       my $val = Kynetx::Expressions::den_to_exp(
 		  Kynetx::Expressions::eval_expr(
@@ -407,16 +409,31 @@ sub eval_raise_statement {
 
     }
  
+    # attributes clause
+    if ( defined $expr->{'attributes'}) {
+      my $attrs = Kynetx::Expressions::den_to_exp(
+  		    Kynetx::Expressions::eval_expr(
+                      $expr->{'attributes'}, 
+		      $rule_env, 
+		      $rule_name, 
+                      $req_info, 
+                      $session
+                    ));
+      foreach my $k ( keys %{ $attrs } ) {
+        $new_req_info->{ $k } =  $attrs->{$k};
+      }
+    }
+ 
     # use the calculated versions
     my $domain = $new_req_info->{'domain'};
     my $eventtype = $new_req_info->{'eventtype'};
 
-    my $rid_info_list;
+    my ($rid_info_list, $unfiltered_rid_list);
     
     # if there was a calculated ridlist, use it. Otherwise get salience
     if (defined $expr->{'ruleset'} ||
-	(defined $req_info->{'api'} && 
-	 $req_info->{'api'} eq 'blue')  # this is what we do for blue
+	(defined $req_info->{'_api'} && 
+	 $req_info->{'_api'} eq 'blue')  # this is what we do for blue
        ) {
 
       $logger->debug("Processing postlude with BLUE api");
@@ -455,25 +472,49 @@ sub eval_raise_statement {
       
     } else {
       $logger->debug("Processing postlude with SKY api");
-      my $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info);
+      $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info);
 
 #      $logger->debug("Looking at rid_list ", sub { Dumper $unfiltered_rid_list} );
       $rid_info_list = $unfiltered_rid_list->{$domain}->{$eventtype} || [];
+
+      # this needs to be done better; 
+      # ensure that the current RID.ver is on the list. restar
       my $found = 0;
-      foreach my $rid( @{ $rid_info_list }) {
-	$found = 1 if (get_rid($rid) eq get_rid($req_info->{'rid'}) &&
-		       get_version($rid) eq get_version($req_info->{'rid'}));
+      foreach my $rid ( @{ $rid_info_list }) {
+       	$found = 1 if (get_rid($rid) eq get_rid($req_info->{'rid'}) &&
+       		       get_version($rid) eq get_version($req_info->{'rid'}));
       }
       unless ( $found ) {
-	push(@{ $rid_info_list }, $req_info->{'rid'});
+      	push(@{ $rid_info_list }, $req_info->{'rid'});
       }
     }
 
 
+    # merge in the incoming request info
+    my $this_req_info =
+	Kynetx::Request::merge_req_env( $req_info, $new_req_info );
+
     foreach my $rid_and_ver (  @{$rid_info_list} ) {
+
 
       my $rid = get_rid($rid_and_ver);
       my $ver = get_version($rid_and_ver);
+
+      # trying to track down the version becoming the rid
+      if ($rid eq 'prod' || $rid eq 'dev') {
+
+	$logger->info("rid_info_list: ", sub { Dumper $rid_info_list },
+		      "\nunfiltered_rid_list: ", sub { Dumper $unfiltered_rid_list },
+		      "\nrid_and_ver: ", sub {Dumper $rid_and_ver},
+		      "\nreq_info: ", sub {Dumper $req_info }
+		     );
+
+	next;
+		      
+
+
+      }
+
 
       if ( $ver =~ /v\d+/ ) {
 	$ver =~ s/v(\d+)/$1/;
@@ -482,10 +523,6 @@ sub eval_raise_statement {
                "Raising explicit event $domain:$eventtype for $rid:$ver");
 
       my $schedule = $req_info->{'schedule'};
-
-        # merge in the incoming request info
-      my $this_req_info =
-	Kynetx::Request::merge_req_env( $req_info, $new_req_info );
 
       # make sure this is right
       $this_req_info->{'rid'} = 
