@@ -428,7 +428,7 @@ sub eval_raise_statement {
     my $domain = $new_req_info->{'domain'};
     my $eventtype = $new_req_info->{'eventtype'};
 
-    my $rid_info_list;
+    my ($rid_info_list, $unfiltered_rid_list);
     
     # if there was a calculated ridlist, use it. Otherwise get salience
     if (defined $expr->{'ruleset'} ||
@@ -472,7 +472,7 @@ sub eval_raise_statement {
       
     } else {
       $logger->debug("Processing postlude with SKY api");
-      my $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info);
+      $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info);
 
 #      $logger->debug("Looking at rid_list ", sub { Dumper $unfiltered_rid_list} );
       $rid_info_list = $unfiltered_rid_list->{$domain}->{$eventtype} || [];
@@ -504,7 +504,9 @@ sub eval_raise_statement {
       if ($rid eq 'prod' || $rid eq 'dev') {
 
 	$logger->info("rid_info_list: ", sub { Dumper $rid_info_list },
-		      "req_info: ", sub {Dumper $req_info }
+		      "\nunfiltered_rid_list: ", sub { Dumper $unfiltered_rid_list },
+		      "\nrid_and_ver: ", sub {Dumper $rid_and_ver},
+		      "\nreq_info: ", sub {Dumper $req_info }
 		     );
 
 	next;
