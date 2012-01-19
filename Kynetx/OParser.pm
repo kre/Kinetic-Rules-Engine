@@ -20,7 +20,7 @@ package Kynetx::OParser;
 # MA 02111-1307 USA
 #
 use strict;
-use warnings;
+#use warnings;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);

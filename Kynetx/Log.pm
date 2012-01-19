@@ -20,7 +20,7 @@ package Kynetx::Log;
 # MA 02111-1307 USA
 #
 use strict;
-use warnings;
+#use warnings;
 no warnings qw(uninitialized);
 
 use Log::Log4perl qw(get_logger :levels);

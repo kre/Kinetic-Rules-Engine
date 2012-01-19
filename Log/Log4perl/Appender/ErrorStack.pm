@@ -4,7 +4,7 @@ package Log::Log4perl::Appender::ErrorStack;
 
 our @ISA = qw(Log::Log4perl::Appender);
 
-use warnings;
+#use warnings;
 #
 # This file is part of the Kinetic Rules Engine (KRE)
 # Copyright (C) 2007-2011 Kynetx, Inc. 

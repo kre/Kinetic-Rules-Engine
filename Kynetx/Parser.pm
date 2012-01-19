@@ -20,7 +20,7 @@ package Kynetx::Parser;
 # MA 02111-1307 USA
 #
 use strict;
-use warnings;
+#use warnings;
 use utf8;
 
 use Exporter;

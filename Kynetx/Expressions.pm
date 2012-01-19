@@ -21,8 +21,8 @@ package Kynetx::Expressions;
 # MA 02111-1307 USA
 #
 use strict;
-use warnings;
-no warnings qw(uninitialized);
+#use warnings;
+#no warnings qw(uninitialized);
 
 use utf8;
 

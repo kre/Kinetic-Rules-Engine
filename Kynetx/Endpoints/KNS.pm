@@ -20,7 +20,7 @@ package Kynetx::Endpoints::KNS;
 # MA 02111-1307 USA
 #
 use strict;
-use warnings;
+#use warnings;
 use utf8;
 
 use lib qw(/web/lib/perl);

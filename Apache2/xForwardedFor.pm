@@ -19,7 +19,7 @@ package Apache2::xForwardedFor;
 # MA 02111-1307 USA
 #
 use strict;
-use warnings;
+#use warnings;
 
 use constant DEBUG=> $ENV{'xForwardedFor_DEBUG'} || 0;
 use constant TEST=> $ENV{'xForwardedFor_TEST'} || 0; # note that there are 2 testing levels TEST>1 will set the required additional header

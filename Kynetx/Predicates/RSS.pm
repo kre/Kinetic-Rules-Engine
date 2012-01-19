@@ -22,7 +22,7 @@ package Kynetx::Predicates::RSS;
 # MA 02111-1307 USA
 #
 use strict;
-use warnings;
+#use warnings;
 
 use lib qw(../../);
 

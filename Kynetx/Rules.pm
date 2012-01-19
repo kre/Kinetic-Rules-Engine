@@ -21,7 +21,7 @@ package Kynetx::Rules;
 # MA 02111-1307 USA
 #
 use strict;
-use warnings;
+#use warnings;
 no warnings qw(uninitialized);
 
 

@@ -21,6 +21,7 @@
 #
 use strict;
 use lib qw(/web/lib/perl);
+no warnings;
 
 
 # preload all mp2 modules

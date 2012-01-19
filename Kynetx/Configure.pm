@@ -20,7 +20,7 @@ package Kynetx::Configure;
 # MA 02111-1307 USA
 #
 use strict;
-use warnings;
+#use warnings;
 
 use YAML::XS;
 

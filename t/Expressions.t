@@ -21,8 +21,6 @@
 use lib qw(/web/lib/perl /web/lib/perl/t);
 use strict;
 
-no warnings 'recursion';
-
 use Test::More;
 use Test::LongString;
 use Test::Deep;
