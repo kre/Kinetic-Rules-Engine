@@ -20,7 +20,7 @@ package Kynetx::Persistence::Entity;
 # MA 02111-1307 USA
 #
 use strict;
-use warnings;
+#use warnings;
 use lib qw(
     /web/lib/perl
 );

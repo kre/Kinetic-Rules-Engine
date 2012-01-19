@@ -22,7 +22,7 @@ package Kynetx::Scheduler;
 # MA 02111-1307 USA
 #
 use strict;
-use warnings;
+#use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 use Time::HiRes qw(time);

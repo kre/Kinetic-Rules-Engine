@@ -20,7 +20,7 @@ package Kynetx::KOBJ;
 # MA 02111-1307 USA
 #
 use strict;
-use warnings;
+#use warnings;
 no warnings qw(uninitialized);
 
 use File::Find::Rule;

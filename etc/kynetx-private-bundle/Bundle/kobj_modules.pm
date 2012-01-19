@@ -20,7 +20,7 @@ package Bundle::kobj_modules;
 # MA 02111-1307 USA
 #
 use strict;
-use warnings;
+#use warnings;
 
 $VERSION = '1.00';
 

@@ -21,7 +21,7 @@ package Kynetx::Rids;
 #
 
 use strict;
-use warnings;
+#use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 

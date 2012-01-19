@@ -20,7 +20,7 @@ package Kynetx::Util;
 # MA 02111-1307 USA
 #
 use strict;
-use warnings;
+#use warnings;
 use utf8;
 use lib qw(/web/lib/perl);
 
@@ -102,7 +102,6 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 sub config_logging {
     my ($r) = @_;
     # we can use the 'debug' config parameter to force detailed logging
-
     my $appender = Log::Log4perl::Appender->new(
 	"Log::Dispatch::File",
 	filename => "/web/logs/detail_log",
