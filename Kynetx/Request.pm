@@ -161,6 +161,7 @@ sub build_request_env {
 }
 
 
+# merge multiple request environments, last wins
 sub merge_req_env {
   my $first = shift;
   foreach my $req (@_) {
