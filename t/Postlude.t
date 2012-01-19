@@ -704,6 +704,30 @@ delete_persistent_var($domain,$rid,$session,'my_trail');
 delete_persistent_var($domain,$rid,$session,'my_flag');
 delete_persistent_var($domain,$rid,$session,'archive_pages_now');
 
+
+my($rids, $ruleset, $rid_info_list);
+
+$ruleset = undef;
+
+$rids = Kynetx::Expressions::den_to_exp(
+    	 Kynetx::Postlude::eval_expr_with_default(
+			$ruleset,
+ 		        # default value is current ruleset
+			Kynetx::Rids::get_rid($my_req_info->{'rid'}).".".Kynetx::Rids::get_version($my_req_info->{'rid'}),    
+			$rule_env,
+			$rule_name,
+			$my_req_info,
+			$session
+		       )
+		);
+
+is($rids, 'cs_test.prod', "default works");
+$test_count += 1;
+
+     
+
+
+
 ENDY:
 
 

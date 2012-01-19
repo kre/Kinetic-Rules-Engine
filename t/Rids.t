@@ -74,10 +74,25 @@ my $session = Kynetx::Test::gen_session($r, $rid);
 my $test_count = 0;
 
 
+my($rid_info_list);
+
+$rid_info_list = Kynetx::Rids::parse_rid_list($my_req_info, ['cs_test.prod','cs_fuzz.dev']);
+
+is_deeply($rid_info_list, 
+[
+  {
+    'rid' => 'cs_test',
+    'kinetic_app_version' => 'prod'
+  },
+  {
+    'rid' => 'cs_fuzz',
+    'kinetic_app_version' => 'dev'
+  }
+], "parsing works");
 
 
 
-ok(1,"dummy test");
+
 $test_count++;
 
 

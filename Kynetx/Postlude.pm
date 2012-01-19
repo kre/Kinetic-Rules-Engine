@@ -431,10 +431,10 @@ sub eval_raise_statement {
     my ($rid_info_list, $unfiltered_rid_list);
     
     # if there was a calculated ridlist, use it. Otherwise get salience
-    if (defined $expr->{'ruleset'} ||
-	(defined $req_info->{'_api'} && 
-	 $req_info->{'_api'} eq 'blue')  # this is what we do for blue
-       ) {
+    if (defined $expr->{'ruleset'}            ||
+	(defined $new_req_info->{'_api'} &&   # allow us to force sky
+	 $new_req_info->{'_api'} eq 'blue')
+       ) {   # this is what we do for blue
 
       $logger->debug("Processing postlude with BLUE api");
       # rid list can be an expression
@@ -501,19 +501,16 @@ sub eval_raise_statement {
       my $ver = get_version($rid_and_ver);
 
       # trying to track down the version becoming the rid
-      if ($rid eq 'prod' || $rid eq 'dev') {
+      # I think this is solved...[PJW]
+      # if ($rid eq 'prod' || $rid eq 'dev') {
 
-	$logger->info("rid_info_list: ", sub { Dumper $rid_info_list },
-		      "\nunfiltered_rid_list: ", sub { Dumper $unfiltered_rid_list },
-		      "\nrid_and_ver: ", sub {Dumper $rid_and_ver},
-		      "\nreq_info: ", sub {Dumper $req_info }
-		     );
-
-	next;
-		      
-
-
-      }
+      # 	$logger->info("rid_info_list: ", sub { Dumper $rid_info_list },
+      # 		      "\nunfiltered_rid_list: ", sub { Dumper $unfiltered_rid_list },
+      # 		      "\nrid_and_ver: ", sub {Dumper $rid_and_ver},
+      # 		      "\nreq_info: ", sub {Dumper $req_info }
+      # 		     );
+      # 	next;
+      # }
 
 
       if ( $ver =~ /v\d+/ ) {
