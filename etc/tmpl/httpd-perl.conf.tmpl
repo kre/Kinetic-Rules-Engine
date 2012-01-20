@@ -316,6 +316,8 @@ PerlRequire <TMPL_VAR NAME=KOBJ_ROOT>/startup-krl.pl
 PerlRequire <TMPL_VAR NAME=KOBJ_ROOT>/startup.pl
 </TMPL_IF>
 
+PerlWarn <TMPL_VAR NAME=PERL_WARNINGS>
+
 # support client IP address in XFF header, if needed
 # PerlSetVar  xForwardedForRequire 1  # only work behind a proxy...
 PerlPostReadRequestHandler Apache2::xForwardedFor
