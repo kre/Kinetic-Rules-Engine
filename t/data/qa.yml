@@ -79,7 +79,7 @@ LOG_PERIOD: 1hour
 DEBUG: on
 
 # maximum apache processes to run per instance (25 recommended for 1Gb RAM)
-MAX_SERVERS: 1
+MAX_SERVERS: 5
 
 MAX_REQUESTS_PER_CHILD: 100
 
