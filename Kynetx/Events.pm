@@ -174,9 +174,8 @@ sub process_event {
     }
 
     # get a session, if _sid param is defined it will override cookie
-    $logger->trace("KBX cookie? ",$req_info->{'kntx_token'});
-    my $session = process_session($r, $req_info->{'kntx_token'});
-    
+    my $session = process_session($r);
+
     if (defined $version) {
     	$req_info->{'kynetx_app_version'} = $version;
     }

@@ -68,7 +68,8 @@ sub build_request_env {
     my $epl = $req->param('_epl') || 'none';
 
     # manage optional params
-    my $id_token = $options->{'id_token'};
+    # The ID token comes in as a header in Blue API
+    my $id_token = $options->{'id_token'} || $r->headers_in->{'Kobj-Session'};
     my $api = $options->{'api'} || 'ruleset';
 
 
