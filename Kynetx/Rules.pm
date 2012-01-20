@@ -153,6 +153,14 @@ sub process_schedule {
 
     $rid = $task->{'rid'};
 
+    # set up new context for this task
+    if ($req_info) {
+      Kynetx::Request::merge_req_env( $req_info,
+				      $task->{'req_info'} );
+    } else {
+      $req_info = $task->{'req_info'};
+    }
+
     unless ( $rid eq $current_rid ) {
       #context switch
       # we only do this when there's a new RID
@@ -163,13 +171,6 @@ sub process_schedule {
 
 #      $logger->debug("Task request: ", Dumper $task->{'req_info'});
 
-      # set up new context
-      if ($req_info) {
-	Kynetx::Request::merge_req_env( $req_info,
-					$task->{'req_info'} );
-      } else {
-	$req_info = $task->{'req_info'};
-      }
 
       $req_info->{'rid'} = mk_rid_info($req_info,$rid, {'version' => $task->{'ver'}});
       $logger->debug("Seeing RID ", Dumper Kynetx::Rids::print_rid_info($req_info->{'rid'}));

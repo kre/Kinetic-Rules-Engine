@@ -308,10 +308,10 @@ sub process_event_for_rid {
      # }
 
     $logger->debug("Selection checking for ", scalar @{ $ruleset->{'rule_lists'}->{$domain}->{$type}->{'rulelist'} }, " rules") if $ruleset->{'rule_lists'}->{$domain}->{$type};
-    $logger->trace("Schedule: ", sub {Dumper($schedule)});
+#    $logger->debug("Schedule: ", sub {Dumper($schedule)});
     foreach my $rule ( @{ $ruleset->{'rule_lists'}->{$domain}->{$type}->{'rulelist'} } ) {
 
-      $logger->debug("Processing rule $rule->{'name'}");
+      $logger->debug("Should we schedule rule $rule->{'name'}?");
 
     	$rule->{'state'} ||= 'active';
 
@@ -377,6 +377,9 @@ sub process_event_for_rid {
             $schedule->annotate_task( $rid, $rulename,$task, 'vals', $val_list );
 
             $logger->debug( "Completed adding to schedule: ", Kynetx::Rids::print_rid_info($rid_info), " & ", $rulename );
+
+#	    $logger->debug("Schedule: ", sub {Dumper($schedule)});
+
 
             # reset SM
             $sm->reset_state($rid, $session, $rule->{'name'},$event_list_name,$current_state,$next_state);

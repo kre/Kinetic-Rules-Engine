@@ -436,7 +436,7 @@ sub eval_raise_statement {
 	 $new_req_info->{'_api'} eq 'blue')
        ) {   # this is what we do for blue
 
-      $logger->debug("Processing postlude with BLUE api");
+      $logger->debug("Processing raise with BLUE api");
       # rid list can be an expression
       my $rids = Kynetx::Expressions::den_to_exp(
     		    eval_expr_with_default(
@@ -471,7 +471,7 @@ sub eval_raise_statement {
       # }
       
     } else {
-      $logger->debug("Processing postlude with SKY api");
+      $logger->debug("Processing raise with SKY api");
       $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info);
 
 #      $logger->debug("Looking at rid_list ", sub { Dumper $unfiltered_rid_list} );
@@ -489,10 +489,13 @@ sub eval_raise_statement {
       }
     }
 
+#    $logger->debug("New req env: ", sub{Dumper $new_req_info});
 
     # merge in the incoming request info
     my $this_req_info =
 	Kynetx::Request::merge_req_env( $req_info, $new_req_info );
+
+
 
     foreach my $rid_and_ver (  @{$rid_info_list} ) {
 
@@ -521,6 +524,7 @@ sub eval_raise_statement {
 
       my $schedule = $req_info->{'schedule'};
 
+
       # make sure this is right
       $this_req_info->{'rid'} = 
 	mk_rid_info($this_req_info, 
@@ -530,6 +534,8 @@ sub eval_raise_statement {
       
       my $ev = Kynetx::Events::mk_event($this_req_info);
       $logger->trace("Event is: ", sub {Dumper($ev)});
+
+#    $logger->debug("Using req env: ", sub{Dumper $this_req_info});
 
       # this side-effects the schedule
       #	$logger->debug("Ready to process event...");

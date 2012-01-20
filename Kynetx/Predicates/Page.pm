@@ -164,6 +164,8 @@ url
 	$val = $req_info->{$rid.':'.$args->[0]};
       } 
 
+      $logger->debug("Event attr ", $args->[0], " -> ", $val);
+
     } elsif($function eq 'params' || $function eq 'attrs') {
 
       my %skip = (

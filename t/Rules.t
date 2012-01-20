@@ -2496,6 +2496,72 @@ add_testcase(
     );
 
 
+# not with explicit for expr
+$krl_src = <<_KRL_;
+ruleset two_raises_with_diff_attributes {
+    rule t10 is active {
+      select when pageview ".*"
+      noop();
+      fired {
+        raise explicit event food with foo = 5;
+        raise explicit event food with foo = 6;
+      }
+    }
+    rule t12 is active {
+      select when explicit food
+      pre {
+        x = event:attr("foo");
+      }
+      noop();
+    }
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 't10'},
+   {"rid" => 'two_raises_with_diff_attributes'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$config2 = mk_config_string(
+  [
+   {"rule_name" => 't12'},
+   {"rid" => 'two_raises_with_diff_attributes'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$js = <<_JS_;
+    (function(){
+       (function(){
+	  function callBacks(){};
+	  (function(uniq,cb,config){cb();}('%uniq%',callBacks,{'rule_name':'t10','rid':'two_raises_with_diff_attributes','txn_id':'txn_id'}));
+	}());
+       (function(){
+	  var x=5;
+	  function callBacks(){};
+	  (function(uniq,cb,config){cb();}('%uniq%',callBacks,{'rule_name':'t12','rid':'two_raises_with_diff_attributes','txn_id':'txn_id'}));
+	}());
+       (function(){
+	  var x=6;
+	  function callBacks(){};
+	  (function(uniq,cb,config){cb();}('%uniq%',callBacks,{'rule_name':'t12','rid':'two_raises_with_diff_attributes','txn_id':'txn_id'}));
+	}());
+     }());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $js,
+    $dummy_final_req_info,
+    0
+    );
+
+
 
 # now test each test case twice
 foreach my $case (@test_cases) {
