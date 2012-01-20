@@ -418,6 +418,15 @@ sub eval_module {
 	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || 0;
       } elsif ($function eq 'hostname' ) {
 	$val = Kynetx::Util::get_hostname();
+      } elsif ($function eq 'rulesetName' ) {
+	my $rid = get_rid($req_info->{'rid'});
+	$val = $req_info->{"$rid:name"};
+      } elsif ($function eq 'rulesetAuthor' ) {
+	my $rid = get_rid($req_info->{'rid'});
+	$val = $req_info->{"$rid:author"};
+      } elsif ($function eq 'rulesetDescription' ) {
+	my $rid = get_rid($req_info->{'rid'});
+	$val = $req_info->{"$rid:description"};
       } else {
 	$val = "No meta information for $function available";
       }

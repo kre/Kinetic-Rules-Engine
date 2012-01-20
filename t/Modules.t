@@ -64,7 +64,12 @@ my $rid = 'cs_test';
 
 # test choose_action and args
 
-my $my_req_info = Kynetx::Test::gen_req_info($rid, {'ridver' => 'dev'});
+my $my_req_info = Kynetx::Test::gen_req_info($rid, 
+					     {'ridver' => 'dev',
+					      "$rid:name" => 'rule_1',
+					      "$rid:author" => 'Web-san',
+					      "$rid:description" => "A ruleset for testing"
+					     });
 
 my $rule_name = 'foo';
 
@@ -228,6 +233,49 @@ $val = Kynetx::Expressions::den_to_exp(
 
 
 is($val,hostname,"Hostname");
+$test_count++;
+
+$val = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
+					 $rule_env, 
+					 $session, 
+					 $rule_name, 
+					 'meta', 
+					 'rulesetName', 
+					 [] 
+					));
+
+
+is($val,"rule_1","rulesetName");
+$test_count++;
+
+
+$val = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
+					 $rule_env, 
+					 $session, 
+					 $rule_name, 
+					 'meta', 
+					 'rulesetAuthor', 
+					 [] 
+					));
+
+
+is($val,"Web-san","rulesetAuthor");
+$test_count++;
+
+$val = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
+					 $rule_env, 
+					 $session, 
+					 $rule_name, 
+					 'meta', 
+					 'rulesetDescription', 
+					 [] 
+					));
+
+
+is($val,"A ruleset for testing","rulesetDescription");
 $test_count++;
 
 
