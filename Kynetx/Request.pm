@@ -174,7 +174,7 @@ sub merge_req_env {
   }
   return $first
 }
-
+ 
 sub log_request_env {
     my ($logger, $request_info) = @_;
     if($logger->is_debug()) {
