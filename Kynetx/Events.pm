@@ -306,8 +306,14 @@ sub process_event_for_rid {
      #   }
      # }
 
-    $logger->debug("Selection checking for ", scalar @{ $ruleset->{'rule_lists'}->{$domain}->{$type}->{'rulelist'} }, " rules") if $ruleset->{'rule_lists'}->{$domain}->{$type};
+    if ($ruleset->{'rule_lists'}->{$domain}->{$type}) {
+      $logger->debug("Selection checking for ", scalar @{ $ruleset->{'rule_lists'}->{$domain}->{$type}->{'rulelist'} }, " rules") ;
+    } else {
+      $logger->debug("No rules in $rid.$ver match event $domain:$type");
+    }
 #    $logger->debug("Schedule: ", sub {Dumper($schedule)});
+
+
     foreach my $rule ( @{ $ruleset->{'rule_lists'}->{$domain}->{$type}->{'rulelist'} } ) {
 
       $logger->debug("Should we schedule rule $rule->{'name'}?");

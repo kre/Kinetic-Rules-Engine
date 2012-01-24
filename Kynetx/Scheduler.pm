@@ -90,6 +90,8 @@ sub next {
 
 	my $logger = get_logger();
 
+#	$logger->debug("[schedule] ", sub { Dumper $self});
+
 	if ( scalar( @{ $self->{'rids'} } ) > $self->{'current_rid'} )
 	{
 		my $rid = $self->{'rids'}->[ $self->{'current_rid'} ];
@@ -183,6 +185,7 @@ sub add {
 		push( @{ $self->{$rid}->{$rulename} }, $task );
 		push( @{ $self->{$rid}->{'rules'} },   $rulename );
 	}
+#	$logger->debug("Schedule: ", sub { Dumper $self });
 	return $task;
 
 }

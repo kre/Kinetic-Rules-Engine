@@ -524,7 +524,6 @@ sub eval_raise_statement {
 
       my $schedule = $req_info->{'schedule'};
 
-
       # make sure this is right
       $this_req_info->{'rid'} = 
 	mk_rid_info($this_req_info, 

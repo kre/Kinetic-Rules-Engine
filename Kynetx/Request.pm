@@ -165,9 +165,11 @@ sub build_request_env {
 # merge multiple request environments, last wins
 sub merge_req_env {
   my $first = shift;
+
+  # don't overwrite the schedule or bad things happen...
   foreach my $req (@_) {
     foreach my $k (keys %{$req}) {
-      $first->{$k} = $req->{$k};
+      $first->{$k} = $req->{$k} unless $k eq 'schedule';
     }
   }
   return $first

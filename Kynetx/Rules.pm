@@ -149,7 +149,7 @@ sub process_schedule {
   
   while ( my $task = $schedule->next() ) {
 
-    #		$logger->debug("[task] ", sub { Dumper($task) });
+#    		$logger->debug("[task] ", sub { Dumper($task) });
 
     $rid = $task->{'rid'};
 
