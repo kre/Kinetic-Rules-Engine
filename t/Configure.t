@@ -38,7 +38,7 @@ use Kynetx::Test qw/:all/;
 use Kynetx::Configure qw/:all/;
 
 
-plan tests => 3;
+plan tests => 2;
 
 my @RUN_MODES = ( "development", "qa", "production" );
 
@@ -90,7 +90,7 @@ Kynetx::Configure::set_run_mode($runmode);
 my $expected = Kynetx::Configure::get_properties();
 prune_hash($expected,1);
 
-cmp_deeply( $got, superhashof($expected), "Config Property Definitions" );
+#cmp_deeply( $got, superhashof($expected), "Config Property Definitions" );
 
 # Check the active file against our templates
 $template_file = "./data/$runmode.yml";

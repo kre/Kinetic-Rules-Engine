@@ -80,6 +80,26 @@ sub token_query {
     return Kynetx::MongoDB::get_value(COLLECTION,$var);
 }
 
+#sub get_token {
+#    my ($session, $rid,$domain) = @_;
+#    my $logger = get_logger();
+#    my $session_id = Kynetx::Session::session_id($session);
+#    $domain = $domain || "web";
+#    my $var;
+#    $logger->trace("Get token for session: $session_id");
+#    # There might be other ways to find a token for other endpoint domains
+#    if ($domain eq "web") {
+#        # Check mongo.tokens for any tokens for a matching sessionid
+#        $var = {
+#            "endpoint_id" => $session_id,
+#        };
+#    } else {
+#        # default is to check mongo for session
+#
+#    }
+#    return token_query($var);
+#}
+
 sub get_token {
     my ($session, $rid,$domain) = @_;
     my $logger = get_logger();
@@ -97,7 +117,7 @@ sub get_token {
         # default is to check mongo for session
 
     }
-    return token_query($var);
+	return Kynetx::MongoDB::get_singleton(COLLECTION,$var);	
 }
 
 sub set_token {

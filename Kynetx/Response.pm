@@ -126,6 +126,7 @@ sub respond {
   my $heartbeat = "// KNS " . gmtime() . " (" . Kynetx::Util::get_hostname() . ")\n";
 
   # this is where we return the JS
+  binmode(STDOUT, ":encoding(UTF-8)");
   if ($req_info->{'understands_javascript'}) {
     $logger->debug("Returning javascript from evaluation");
     print $heartbeat, $js;
