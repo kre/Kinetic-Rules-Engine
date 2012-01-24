@@ -26,11 +26,12 @@ use Test::Deep;
 use Data::Dumper;
 use MongoDB;
 use Apache::Session::Memcached;
+use Benchmark ':hireswallclock';
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 use Kynetx::Test qw/:all/;
@@ -71,6 +72,7 @@ my $token;
 my $tokenb;
 my $ts1;
 my $ts2;
+my ($start,$end,$base_save);
 
 my $org_token = Kynetx::MongoDB::delete_value("tokens",{'endpoint_id' => $session_id});
 $logger->debug("Original: ", sub {Dumper($org_token)});
@@ -82,22 +84,50 @@ testit($token,undef,$description,0);
 
 $description = "Token is created";
 $token = Kynetx::Persistence::KToken::new_token($rid,$session,$ken);
-testit($token,re($tok_re),$description,0);
+testit($token,re($tok_re),$description,1);
 
 my $key = {
   "ktoken" => $token
 };
+
+#my $got;
 my $got = Kynetx::MongoDB::get_value("tokens",$key);
 $ts1 = $got->{"last_active"};
-#diag "Token last accessed: $ts1";
+##diag "Token last accessed: $ts1";
 
 $description = "Check that token is valid";
 $result = Kynetx::Persistence::KToken::is_valid_token($token,$session_id);
 testit($result->{"last_active"},$ts1,$description,0);
 
 $description = "Check token from session";
+$start = new Benchmark;
 $tokenb = Kynetx::Persistence::KToken::get_token($session,$rid);
-testit($token,$tokenb->{'ktoken'},$description,0);
+$end = new Benchmark;
+testit($token,$tokenb->{'ktoken'},$description,1);
+$base_save = timediff($end,$start);
+diag "Straight retrieval: " . $base_save->[0];
+
+sleep 2;
+
+#$description = "Make findAndModify token request";
+#$start = new Benchmark;
+#my $tokent = Kynetx::Persistence::KToken::get_token_touch($session,$rid);
+#$end = new Benchmark;
+#testit($tokenb->{'ktoken'},$tokent->{'ktoken'},$description,1);
+#$base_save = timediff($end,$start);
+#diag "FnM retrieval: " . $base_save->[0];
+#
+#$tokent = Kynetx::Persistence::KToken::get_token_touch($session,$rid);
+#$logger->debug("Modded access? ", sub {Dumper($tokent)});
+
+$description = "Check cached token";
+$start = new Benchmark;
+$tokenb = Kynetx::Persistence::KToken::get_token($session,$rid);
+$end = new Benchmark;
+testit($token,$tokenb->{'ktoken'},$description,1);
+$base_save = timediff($end,$start);
+diag "cache retrieval: " . $base_save->[0];
+
 
 $description = "Delete the token, check Mongo";
 Kynetx::Persistence::KToken::delete_token($token);

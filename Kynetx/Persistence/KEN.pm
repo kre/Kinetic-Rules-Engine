@@ -69,7 +69,8 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
 sub _ken_query {
     my ($var,$collection) = @_;
     $collection = $collection || COLLECTION;
-    my $result = Kynetx::MongoDB::get_value($collection,$var);
+    #my $result = Kynetx::MongoDB::get_value($collection,$var);
+    my $result = Kynetx::MongoDB::get_singleton($collection,$var);
     if ($result) {
         return $result->{"ken"};
     }
@@ -149,7 +150,8 @@ sub get_ken_value {
 #    my $KENS = Kynetx::MongoDB::get_collection(COLLECTION);
     my $oid = MongoDB::OID->new(value => $ken);
 #    my $valid = $KENS->find_one({"_id" => $oid});
-    my $valid = Kynetx::MongoDB::get_value(COLLECTION,{"_id" => $oid});
+    #my $valid = Kynetx::MongoDB::get_value(COLLECTION,{"_id" => $oid});
+    my $valid = Kynetx::MongoDB::get_singleton(COLLECTION,{"_id" => $oid});
     return $valid->{$key};
 }
 
