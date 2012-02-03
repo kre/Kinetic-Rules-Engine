@@ -94,7 +94,17 @@ sub process_session {
     
     # Check to see if the UBX has sent us a token
     $ubx_token = $r->headers_in->{'Kobj-Session'};
-    $ubx_token = $tk if defined $tk;
+    #$ubx_token = $tk if defined $tk;
+
+    if (defined $tk) {
+      $logger->info("Explicit token: (SKY) $tk");
+      if ($tk ne "") {
+	$ubx_token = $tk;
+      } else {
+	$logger->warn("Empty Explicit Token received");
+	$ubx_token = undef;
+      }
+    }
     
     if (defined $ubx_token) {
       my $token;
