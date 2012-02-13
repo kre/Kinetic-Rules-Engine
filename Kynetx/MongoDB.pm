@@ -33,6 +33,7 @@ use LWP::UserAgent;
 use Data::Dumper;
 use MongoDB qw(:all);
 use Clone qw(clone);
+use Benchmark ':hireswallclock';
 use Data::Diver qw(
 	Dive
 );
@@ -388,7 +389,7 @@ sub push_value {
 # limit the parameters passed in to avoid passing in random commands
 # (Such commands *should* have been filtered long before)
 sub find_and_modify {
-	my ($collection,$query) = @_;
+	my ($collection,$query,$verbose) = @_;
 	my @options = ("query","sort","remove","update","new","fields","upsert");
 	my $logger = get_logger();
 	my $db = get_mongo();
@@ -414,13 +415,52 @@ sub find_and_modify {
 		clear_cache($collection,$command->{'query'});		
 	}
 	if (defined $status && $status->{'ok'}) {
-		return $status->{'value'};
+		if ($verbose) {
+			return $status;
+		} else {
+			return $status->{'value'};
+		}
+		
 	} else {
 		$logger->debug("Query failed: ", sub {Dumper($status)});
 		return undef;
 	}
 	
 		
+}
+
+# find and modify only operates on a max of one document, so it won't work
+# for hashed variables
+sub get_singleton {
+	my ($collection, $var) = @_;
+	my $logger = get_logger();
+    my $keystring = make_keystring($collection,$var);
+    my $cached = get_cache($collection,$var);
+    if (defined $cached) {
+        $logger->trace("Found $collection variable in cache (",sub {Dumper($cached)},",");
+        return $cached;
+    }  else {
+        $logger->trace("$keystring not in cache");
+    }
+	my $ts = DateTime->now->epoch;
+	my $update = {
+		'$inc' => {'accesses' => 1},
+		'$set' => {'last_active' => $ts}
+	};
+	
+	my $fnmod = {
+		'query' => $var,
+		'update' => $update,
+	};
+	my $result = find_and_modify($collection,$fnmod,1);          
+    $logger->trace("Status: ", sub {Dumper($result)});
+	if (defined $result->{"value"}) {
+		set_cache($collection,$var,$result->{"value"});
+		return $result->{"value"};		
+	} else {
+		return undef;
+	}
+	
 }
 
 sub validate {
@@ -593,6 +633,19 @@ sub set_cache {
     my $keystring = make_keystring($collection,$var);
     $logger->trace("Mongo set_cache $keystring from $parent: ", sub {Dumper($value)});
     Kynetx::Memcached::mset_cache($keystring,$value,$CACHETIME);
+#	if ($collection eq 'tokens') {
+#		$logger->debug("Touch token", sub {Dumper($var)});
+#		my $start = new Benchmark;
+#		
+#		my $ts =  DateTime->now->epoch;
+#		my $c = get_collection($collection);
+#		my $update = {'$set' => {'last_active' => $ts}};
+#    	$c->update($var,$update,{"upsert" => 1,"multiple" => 1});
+#		my $end = new Benchmark;
+#		my $base_save = timediff($end,$start);
+#		$logger->debug( "Save to Mongo: " . $base_save->[0]);
+#		
+#	}
 }
 
 sub clear_cache {

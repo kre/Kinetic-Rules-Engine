@@ -79,7 +79,8 @@ sub get_current_state {
         "ken" => $ken,
         "rid" => $rid,
         "key" => $state_key};
-    my $value = Kynetx::MongoDB::get_value(COLLECTION,$key);
+    #my $value = Kynetx::MongoDB::get_value(COLLECTION,$key);
+    my $value = Kynetx::MongoDB::get_singleton(COLLECTION,$key);
     return $value->{"value"};
 }
 
@@ -126,7 +127,8 @@ sub get_event_env {
 		"rulename" => $rulename
 	};
     $logger->trace("Get event env: ", $rid);
-    my $value = Kynetx::MongoDB::get_value(EVCOLLECTION,$key);
+    #my $value = Kynetx::MongoDB::get_value(EVCOLLECTION,$key);
+    my $value = Kynetx::MongoDB::get_singleton(EVCOLLECTION,$key);
 	return $value;	
 }
 
