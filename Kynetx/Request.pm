@@ -55,6 +55,8 @@ sub build_request_env {
     # grab request params
     my $req = Apache2::Request->new($r);
 
+$logger->debug("Raw request ", sub { Dumper $req->body() });
+
     my $domain = $req->param('_domain') || $method || 'web';
     $eventtype = $req->param('_type') || $req->param('_name') || $eventtype || 'pageview';
 

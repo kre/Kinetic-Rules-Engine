@@ -138,16 +138,21 @@ sub calculate_rid_list {
       my $user_rids_info = Kynetx::Configure::get_config('USER_RIDS_URL');
       my ($app_url,$username,$passwd) = split(/\|/, $user_rids_info);
       my $acct_url = $app_url."/".$req_info->{'id_token'};
+#      $logger->debug("Using ridlist URL: $acct_url");
       my $req = HTTP::Request->new(GET => $acct_url);
       $req->authorization_basic($username, $passwd);
       my $ua = LWP::UserAgent->new;
-      $rid_list = decode_json($ua->request($req)->{'_content'})->{'rids'};
+      my $response = decode_json($ua->request($req)->{'_content'});
+      if ($response->{'validtoken'}) {
+	$rid_list = $response->{'rids'};
 
-      $logger->debug("Retrieved rid_list ", print_rids($rid_list));
+	$logger->debug("Retrieved rid_list: ", print_rids($rid_list));
 
-      # cache this...
-      $memd->set($rid_list_key, $rid_list);
-  
+	# cache this...
+	$memd->set($rid_list_key, $rid_list) ;
+      } else {
+	$logger->debug("Invalid token: $req_info->{'id_token'}. No RID list retrieved");	
+      }
      
     }
 

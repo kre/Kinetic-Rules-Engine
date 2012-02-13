@@ -761,9 +761,12 @@ sub eval_persistent {
 	my $inModule = Kynetx::Environments::lookup_rule_env('_inModule', $rule_env) || 0;
 	my $moduleRid = Kynetx::Environments::lookup_rule_env('_moduleRID', $rule_env);
 	my $rid = get_rid($req_info->{'rid'});
-	$logger->debug("**********in module: $inModule");
-	$logger->debug("**********module Rid: $moduleRid");
-	$logger->debug("**********calling Rid: $rid");
+        if ($inModule) {
+          $logger->debug("Evaling persistent in module: $moduleRid");
+        } 
+	$logger->trace("**********in module: $inModule");
+	$logger->trace("**********module Rid: $moduleRid");
+	$logger->trace("**********calling Rid: $rid");
 	if (defined $moduleRid) {
 		$rid = $moduleRid;
 	}
@@ -789,8 +792,8 @@ sub eval_persistent {
     	#Persistent hash ref
     	if ($expr->{'domain'} eq 'ent' || $expr->{'domain'} eq 'app') {
 	    	my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $expr->{'hash_key'});
-	    	$logger->debug("Path normalized: ", sub {Dumper($path)});
 	    	my $var = $expr->{'var_expr'};
+	    	$logger->debug("Looking of value in persistent $var with path: ", sub {Dumper($path)});
 	    	$v = Kynetx::Persistence::get_persistent_hash_element($domain,$rid,$session,$var,$path);
     	} else {
     		$logger->warn("Hash indexes only implemented for persistent variables");

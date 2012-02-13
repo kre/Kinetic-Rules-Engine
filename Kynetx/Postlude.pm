@@ -472,7 +472,7 @@ sub eval_raise_statement {
       
     } else {
       $logger->debug("Processing raise with SKY api");
-      $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info);
+      $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info, $session);
 
 #      $logger->debug("Looking at rid_list ", sub { Dumper $unfiltered_rid_list} );
       $rid_info_list = $unfiltered_rid_list->{$domain}->{$eventtype} || [];
