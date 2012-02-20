@@ -164,7 +164,7 @@ url
 	$val = $req_info->{$rid.':'.$args->[0]};
       } 
 
-      $logger->debug("event:attr(", $args->[0], ") -> ", $val);
+      $logger->debug("page:attr(", $args->[0], ") -> ", $val);
 
     } elsif($function eq 'params' || $function eq 'attrs') {
 

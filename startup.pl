@@ -64,6 +64,10 @@ use Data::UUID ();
 use Apache::DBI ();
 use DBI ();
 
+# AnyEvent
+#use AnyEvent ();
+#use AnyEvent:HTTP ();
+
 #use SVN::Client;
 
 # preload Kynetx code
