@@ -428,6 +428,14 @@ sub eval_raise_statement {
     my $domain = $new_req_info->{'domain'};
     my $eventtype = $new_req_info->{'eventtype'};
 
+#    $logger->debug("New req env: ", sub{Dumper $new_req_info});
+
+    # merge in the incoming request info
+    my $this_req_info =
+	Kynetx::Request::merge_req_env( $req_info, $new_req_info );
+
+
+
     my ($rid_info_list, $unfiltered_rid_list);
     
     # if there was a calculated ridlist, use it. Otherwise get salience
@@ -472,7 +480,7 @@ sub eval_raise_statement {
       
     } else {
       $logger->debug("Processing raise with SKY api");
-      $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($req_info, $session);
+      $unfiltered_rid_list = Kynetx::Dispatch::calculate_rid_list($this_req_info, $session);
 
 #      $logger->debug("Looking at rid_list ", sub { Dumper $unfiltered_rid_list} );
       $rid_info_list = $unfiltered_rid_list->{$domain}->{$eventtype} || [];
@@ -481,19 +489,14 @@ sub eval_raise_statement {
       # ensure that the current RID.ver is on the list. restar
       my $found = 0;
       foreach my $rid ( @{ $rid_info_list }) {
-       	$found = 1 if (get_rid($rid) eq get_rid($req_info->{'rid'}) &&
-       		       get_version($rid) eq get_version($req_info->{'rid'}));
+       	$found = 1 if (get_rid($rid) eq get_rid($this_req_info->{'rid'}) &&
+       		       get_version($rid) eq get_version($this_req_info->{'rid'}));
       }
       unless ( $found ) {
-      	push(@{ $rid_info_list }, $req_info->{'rid'});
+      	push(@{ $rid_info_list }, $this_req_info->{'rid'});
       }
     }
 
-#    $logger->debug("New req env: ", sub{Dumper $new_req_info});
-
-    # merge in the incoming request info
-    my $this_req_info =
-	Kynetx::Request::merge_req_env( $req_info, $new_req_info );
 
 
 
