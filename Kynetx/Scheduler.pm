@@ -106,7 +106,7 @@ sub next {
 			if (defined $r && scalar(@$r)>0) {
 				my $task = shift(@$r);
 				Log::Log4perl::MDC->put( 'site', $rid);	
-				$logger->debug("Tasks: ",scalar(@$r));
+#				$logger->debug("Tasks: ",scalar(@$r));
 				$logger->debug("Schedule iterator returning ",
 					$task->{'rule'}->{'name'},
 					" with current RID count ",
@@ -115,7 +115,7 @@ sub next {
 					$self->{'current_rule'}
 				);
 	
-				$logger->debug("Found: (",$task->{'_ts'},") ",$task->{'req_info'}->{'num'});
+#				$logger->debug("Found: (",$task->{'_ts'},") ",$task->{'req_info'}->{'num'});
 				return $task;
 			} else {
 				$self->{'current_rule'}++;

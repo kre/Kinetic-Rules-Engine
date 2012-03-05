@@ -758,18 +758,18 @@ sub eval_persistent {
     my $v = 0;
     
     my $domain = $expr->{'domain'};
-	my $inModule = Kynetx::Environments::lookup_rule_env('_inModule', $rule_env) || 0;
-	my $moduleRid = Kynetx::Environments::lookup_rule_env('_moduleRID', $rule_env);
-	my $rid = get_rid($req_info->{'rid'});
-        if ($inModule) {
-          $logger->debug("Evaling persistent in module: $moduleRid");
-        } 
-	$logger->trace("**********in module: $inModule");
-	$logger->trace("**********module Rid: $moduleRid");
-	$logger->trace("**********calling Rid: $rid");
-	if (defined $moduleRid) {
-		$rid = $moduleRid;
-	}
+    my $inModule = Kynetx::Environments::lookup_rule_env('_inModule', $rule_env) || 0;
+    my $moduleRid = Kynetx::Environments::lookup_rule_env('_moduleRID', $rule_env);
+    my $rid = get_rid($req_info->{'rid'});
+    if ($inModule) {
+      $logger->debug("Evaling persistent in module: $moduleRid");
+    } 
+    $logger->trace("**********in module: $inModule");
+    $logger->trace("**********module Rid: $moduleRid");
+    $logger->trace("**********calling Rid: $rid");
+    if (defined $moduleRid) {
+      $rid = $moduleRid;
+    }
 
     if (defined $expr->{'offset'}) {
 
@@ -804,7 +804,6 @@ sub eval_persistent {
     } else {
       # this is where module varrefs end up...
       my $name = $expr->{'name'};
-      $logger->debug("Evaling qualified variable ", $expr->{'domain'}, ":", $expr->{'name'});
       if ($expr->{'domain'} eq 'ent' || $expr->{'domain'} eq 'app') {
 	# FIXME: not sure I like setting to 0 by default
 	$v = Kynetx::Persistence::get_persistent_var($domain,
@@ -814,6 +813,7 @@ sub eval_persistent {
 	$logger->debug("[persistent] $expr->{'domain'}:$name -> $v");
       } else {
 	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
+        $logger->debug("[module reference] $expr->{'domain'}:$name->$v");
       }
     }
 

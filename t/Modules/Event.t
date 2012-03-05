@@ -68,6 +68,7 @@ my $session_id = Kynetx::Session::session_id($session);
 
 
 my $token = 'a3a23a70-f2a9-012e-4216-00163e411455';
+my $other_token = '44d92880-f2ca-012e-427d-00163e411455';
 
 
 my $options = {'g_id' => $session_id, 
@@ -120,6 +121,14 @@ is(get_eventinfo($my_req_info, 'env', ['rid']),
    $rid,
    'event:env("rid")');
 $test_count++;
+
+
+# my $subscriptions = [{'token' => $token},
+# 		     {'token' => $other_token}];
+
+# foreach my $sm ( @{$subscriptions}) {
+#   Kynetx::Modules::Event::send_event($sm, 'notification', 'status');
+# }
 
 
 done_testing($test_count);

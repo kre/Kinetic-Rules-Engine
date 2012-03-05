@@ -419,11 +419,15 @@ post_alternate returns[ArrayList result]
 	};
 
 post_statement returns[HashMap result]
-	: ((pe=persistent_expr
-  	| rs=raise_statement
-	| l=log_statement
-	| las=must_be["last"])
-	(IF ie=expr)?) {
+@init {
+	HashMap tmp_gc = new HashMap();
+}
+	: (( pe=persistent_expr
+   	   | rs=raise_statement
+	   | l=log_statement
+	   | las=must_be["last"]) (gc=guard_clause {  tmp_gc = $gc.result;  } )?)
+    {
+//	(IF ie=expr)?) {
 		if($pe.text != null)
 		 	$result = $pe.result ;
 
@@ -441,22 +445,40 @@ post_statement returns[HashMap result]
 		 	$result = tmp;
 		}
 
-		if($ie.text != null)
-		{
-		    if($result == null)
-			    $result = new HashMap();
-			$result.put("test",$ie.result);
-		}
-		else
-		{
-		    if($result == null)
-			    $result = new HashMap();
-			$result.put("test",null);
+        if($gc.text != null) {
+            $result.put("test", tmp_gc);
+        } else {
+            $result.put("test",null);       
+        }
 
-		}
 	}
 
   	;
+
+
+guard_clause returns[HashMap result]
+    : (  IF ie=expr
+      |  (ON fin=VAR)
+      ) {
+
+         // if($result == null)
+         //     $result = new HashMap();
+       
+		 HashMap tmp = new HashMap();
+		 if($ie.text != null) {
+			tmp.put("type","if");
+		 	tmp.put("expr", $ie.result);
+		 } else if ($fin.text != null) {
+			tmp.put("type","on");
+			tmp.put("value",$fin.text);
+         } else {
+		 	tmp = null;
+		 }
+         $result = tmp;
+
+//        $result = "foobar";
+    }
+    ;
 
 raise_statement returns[HashMap result]
 	:

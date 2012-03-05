@@ -112,15 +112,18 @@ sub eval_post_statement {
 
     #default to true if not present
     my $test = 1;
-    if ( defined $expr->{'test'} ) {
+    if ( defined $expr->{'test'} && 
+	 (defined $expr->{'test'}->{'type'} && 
+	   $expr->{'test'}->{'type'} eq 'if')
+       ) {
         $test =
           Kynetx::Expressions::den_to_exp(
                  Kynetx::Expressions::eval_expr(
-                     $expr->{'test'}, $rule_env, $rule_name, $req_info, $session
+                     $expr->{'test'}->{'expr'}, $rule_env, $rule_name, $req_info, $session
                  )
           );
 
-        $logger->debug( "[post] Evaluating statement test", $test );
+        $logger->debug( "[post] Evaluating statement guard. Result->", $test );
     }
 
     if ( $expr->{'type'} eq 'persistent' && $test ) {

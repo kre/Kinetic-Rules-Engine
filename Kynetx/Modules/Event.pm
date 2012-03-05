@@ -174,53 +174,84 @@ env
 sub send_event {
   my($req_info, $config, $args) = @_;
 
-  # assume $args->[0] is array of subscription maps
-
-  # A subscription list is an array of subscription maps (SM):
-
-  #   subscriptions =
-  #     [{"name":"Phil",
+  # assume $args->[0] is a subscription map (SM)
+  #   subscription_map =
+  #    {"name":"Phil",
   # 	"phone":"8013625611",
   # 	"token":"072a3730-2e8a-012f-d2db-00163e411455",
   # 	"calendar":"https://www.google.com/calendar/..."
-  # 	"type" : "alert"
-  #      },
-  #      {"name":"John",
-  # 	"phone":"8016023200",
-  # 	"token":"fc435280-2b40-012f-cfea-00163e411455",
-  # 	"calendar":"https://www.google.com/calendar/..."
-  #      }
-  #     ];
+  #    };
 
-  # How you get a subscription list depends on a lot of things. It can
-  #   contain many things, but only some of them matter to the event:send()
-  #     action as defined below. Of course, KRL can be used to manipulate the
-  # 	subscription list in various ways.
+  # Only some of the records in the SM matter to the event:send()
+  # action as defined below. Of course, KRL can be used to manipulate the
+  # SM in various ways.
 
-  # 	  The only thing a subscription map MUST contain is a token OR an ESL.
-  # 	    Everything else is optional.
+  # The only thing a subscription map MUST contain is a token OR an ESL.
+  # Everything else is optional.
 
-  # 	      You send events with the send action in the events space:
+  # You send events with the send action in the events space:
 
-  # 	    event:send(subscriptions, event_domain, event_type) with
+  # 	    event:send(subscription_map, event_domain, event_type) with
   # 		attrs  = ...	#  map of event attributes
-  # 	        domain_key = ... # key in SM giving domain for this event, overrides event_domain if override = true; default "domain"
-  # 		type_key = ... # key in SM giving type for this event,overrides event_type if override = true; defaul "type"
-  # 		override = ... # boolean, false means use specified event for all subscribers; default false
-  # 		attrs  = ... #  map of event attributes
   # 		token_key = ...	#  key for token in SM, "token" is default
   # 		esl_key = ...	#  key for ESL in SM, "esl" is default; if token and esl are both present, esl wins
-  # 		attr_key = ... #  key for attributes in SM, merged w/ attr; overrides specified attr if override = true
-
-  # 	  So, you could simply:
+  # So, you could simply:
 
 
-  #   event:send(channel_id,
+  #   event:send(subscription_map,
   # 	         "notification",
   # 	         "status"
   #   	        ) 
 
+  my $logger = get_logger();
 
+  my $timeout = 5; # seconds
+
+  my $sm = $args->[0];
+
+  my $esl = $sm->{'esl'} ||
+            $sm->{$config->{'esl_key'}} ||
+	    mk_sky_esl($sm->{'token'} || $sm->{$config->{'token_key'}});
+
+  my $attrs = $config->{'attrs'};
+
+
+  # merge in the domain and type
+  $attrs->{'_domain'} = $args->[1];
+  $attrs->{'_type'} = $args->[2];
+
+  
+  # my $body = join('&', map( "$_=" . uri_escape_utf8( $attrs->{$_} ), keys %{$attrs} )
+  # 		   );
+  # $req->header(
+  # 				'content-type' => "application/x-www-form-urlencoded; charset=UTF-8" );
+
+  # AnyEvent::HTTP::http_request(
+  #    'POST' => $esl,
+  #    'headers' => {'content-type' => 'application/json'},
+  #    'timeout' => $timeout,
+  #    'body' => encode($attrs),
+  #    sub {
+  #      my ($body, $hdr) = @_;
+  #      unless ($hdr->{Status} =~ /^2/) {
+  #         $logger->debug("event:send(), $hdr->{Status} $hdr->{Reason}\n");
+  #      }
+  #    }
+  # );
+
+}
+
+
+sub mk_sky_esl {
+  my($token) = @_;
+
+  return "http://" + join("/",
+            [Kynetx::Configure::get_config('EVAL_HOST'), # cs.kobj.net
+	     "sky",
+	     "event",
+	     $token,          # channel ID
+	     rand(999999999)  # eid
+            ]);
 }
 
 1;
