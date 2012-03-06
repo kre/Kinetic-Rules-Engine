@@ -32,6 +32,7 @@ use Log::Log4perl qw(get_logger :levels);
 use LWP::UserAgent;
 use Data::Dumper;
 use MongoDB qw(:all);
+use MongoDB::GridFS;
 use Clone qw(clone);
 use Benchmark ':hireswallclock';
 use Data::Diver qw(
@@ -527,6 +528,26 @@ sub put_hash {
 
 sub put_array {
 	
+}
+
+sub put_blob {
+	my ($fh,$meta) = @_;
+	my $db = get_mongo();
+	my $grid = $db->get_gridfs();
+	my $id =  $grid->insert($fh,$meta);
+	if (defined $id) {
+		return $id->value;
+	} else {
+		return undef;
+	}		
+}
+
+sub get_blob {
+	my ($id) = @_;
+	my $db = get_mongo();
+	my $grid = $db->get_gridfs();
+	my $file = $grid->get($id);
+	return $file;
 }
 
 sub put_hash_element {

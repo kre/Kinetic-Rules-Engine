@@ -25,6 +25,7 @@ use strict;
 
 use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
+use Data::UUID;
 
 use Kynetx::Json;
 

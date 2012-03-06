@@ -47,6 +47,7 @@ our %EXPORT_TAGS = (
 		qw(
 		raise_response_event
 		make_response_object
+		mk_http_request
 		  )
 	]
 );
