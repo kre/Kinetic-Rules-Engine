@@ -72,6 +72,7 @@ use Kynetx::Predicates::RSS;
 use Kynetx::Predicates::Facebook;
 use Kynetx::Modules::Twitter;
 use Kynetx::Modules::Email;
+use Kynetx::Modules::Event;
 use Kynetx::Modules::HTTP;
 use Kynetx::Modules::Twilio;
 use Kynetx::Modules::URI;
@@ -80,6 +81,7 @@ use Kynetx::Modules::PDS;
 use Kynetx::Modules::This2That;
 use Kynetx::Modules::OAuthModule;
 use Kynetx::Modules::Random;
+
 
 our $name_prefix = '@@module_';
 
@@ -152,7 +154,7 @@ sub eval_module {
                                                 $req_info,  $rule_env, $session,
                                                 $rule_name, $function, $args );
         }
-    } elsif ( $source eq 'page' || $source eq 'event' ) {
+    } elsif ( $source eq 'page' ) {
 
 
         $preds = Kynetx::Predicates::Page::get_predicates();
@@ -162,6 +164,17 @@ sub eval_module {
         } else {
             $val = Kynetx::Predicates::Page::get_pageinfo( $req_info, $function,
                                                            $args );
+        }
+
+    } elsif ( $source eq 'event' ) {
+
+
+        $preds = Kynetx::Modules::Event::get_predicates();
+        if ( defined $preds->{$function} ) {
+            $val = $preds->{$function}->( $req_info, $rule_env, $args );
+            $val ||= 0;
+        } else {
+            $val = Kynetx::Modules::Event::get_eventinfo( $req_info, $function, $args );
         }
 
     } elsif ( $source eq 'math' ) {

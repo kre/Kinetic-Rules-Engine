@@ -146,11 +146,12 @@ sub increment_persistent_var {
 
 sub get_persistent_var {
     my ($domain,$rid,$session,$varname,$gcreated) = @_;
-    # my $logger = get_logger();
+#    my $logger = get_logger();
     # $logger->debug("Get $domain"," var: $varname");
     my $val = undef;
     if ($domain eq 'ent') {
         my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+#	$logger->debug("RID: $rid\nKEN: $ken\nVarname: $varname");
         $val = Kynetx::Persistence::Entity::get_edatum($rid,$ken,$varname,$gcreated);
     } elsif ($domain eq 'app') {
         $val = Kynetx::Persistence::Application::get($rid,$varname,$gcreated);

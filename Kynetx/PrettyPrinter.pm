@@ -949,7 +949,13 @@ sub pp_post_expr {
     }
 
     if (defined $node->{'test'}) {
-      $o .= ' if ' . pp_expr($node->{'test'}) 
+      if (defined $node->{'test'}->{'type'} && 
+	  $node->{'test'}->{'type'} eq 'if') {
+	$o .= ' if ' . pp_expr($node->{'test'}->{'expr'}) ;
+      } elsif (defined $node->{'test'}->{'type'} && 
+	       $node->{'test'}->{'type'} eq 'on' ) {
+	$o .= ' on '. $node->{'test'}->{'value'};
+      }
     }
 
 

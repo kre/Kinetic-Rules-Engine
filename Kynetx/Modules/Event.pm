@@ -1,6 +1,5 @@
-package Kynetx::Predicates::Page;
-# file: Kynetx/Predicates/Page.pm
-# file: Kynetx/Predicates/Referers.pm
+package Kynetx::Modules::Event;
+# file: Kynetx/Modules/Event.pm
 #
 # This file is part of the Kinetic Rules Engine (KRE)
 # Copyright (C) 2007-2011 Kynetx, Inc. 
@@ -20,8 +19,9 @@ package Kynetx::Predicates::Page;
 # Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 # MA 02111-1307 USA
 #
+
 use strict;
-#use warnings;
+use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
@@ -33,9 +33,9 @@ our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [
+our %EXPORT_TAGS = (all => [ 
 qw(
-get_pageinfo
+get_eventinfo
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -49,98 +49,57 @@ use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
 
-my %predicates = ( );
+my $predicates = {
+};
 
 sub get_predicates {
-    return \%predicates;
+    return $predicates;
 }
 
 
-sub get_pageinfo {
+my $actions = {
+    send => {
+      directive => \&send_event
+    },
+};
+
+sub get_actions {
+    return $actions;
+}
+
+
+sub get_eventinfo {
     # $field is on of the valid GeoIP record field names
     my ($req_info, $function, $args) = @_;
 
     my $logger = get_logger();
 
     my @field_names = qw(
-var
+param
+params
+attr
+attrs
 env
-url
 );
 
-#id
+    my $val = '';
 
     my $rid = get_rid($req_info->{'rid'});
 
     # no caching values in this datasource
 
-    my $val = '';
-    if($function eq 'var') {
-	my $vals = decode_json($req_info->{'kvars'});
-	$val = $vals->{$args->[0]};
-    # } elsif ($function eq 'id') {
-    # 	# we're really just generating JS here.
-    # 	$val = "\$K('".$args->[0]."').html()";
-
-    } elsif($function eq 'url') {
-
-	my $parsed_url = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});
-	my $part = $args->[0];
-
-
-	if(not defined $req_info->{'caller_url'}->{$part}) {
-	    $req_info->{'caller_url'}->{'protocol'} = $parsed_url->scheme;
-	    $req_info->{'caller_url'}->{'hostname'} = $parsed_url->hostname;
-	    $req_info->{'caller_url'}->{'path'} = $parsed_url->path;
-
-	    my $hostname = $parsed_url->hostname || "";
-	    my @components = split(/\./, $hostname);
-	    my $c2 = $components[-2];
-	    my $c1 = $components[-1];
-	    $req_info->{'caller_url'}->{'domain'} =
-	          $c2 . '.' . $c1;
-	    $req_info->{'caller_url'}->{'tld'} = $c1;
-
-	    if ($parsed_url->port) {
-		$req_info->{'caller_url'}->{'port'} = $parsed_url->port;
-	    } else {
-	      if ($parsed_url->scheme eq 'http') {
-		$req_info->{'caller_url'}->{'port'} = 80;
-	      } else {
-		$req_info->{'caller_url'}->{'port'} = 443;
-	      }
-	    }
-
-	    $req_info->{'caller_url'}->{'query'} = $parsed_url->query;
-
-
-	    if($logger->is_debug()) {
-		foreach my $k (keys %{ $req_info->{'caller_url'} }) {
-		    $logger->debug("Referer piece ($k): " .
-				   $req_info->{'caller_url'}->{$k}, "\n"
-			) if $req_info->{'caller_url'}->{$k};
-		}
-	    }
-
-	}
-
-	$val = $req_info->{'caller_url'}->{$part};
-
-    } elsif($function eq 'env') {
+    if($function eq 'env') {
 
 	my %allowed = (
-	    caller => 1,
 	    ip => 1,
-	    referer => 1,
 	    rid => 1,
-	    rule_version => 1,
-	    title => 1,
 	    txn_id  => 1,
-	    g_id => 1,
 	    );
 
-	# FIXME: uncomment after Azigo implements ruleset changes
-	#return '' unless $allowed{$args->[0]};
+	if ( ! defined $allowed{$args->[0]} ) {
+	  $logger->debug($args->[0], " is not an allowed environment variable");
+	  return 0;
+	} ;
 
 
 	# rulespaced env parameters
@@ -164,7 +123,7 @@ url
 	$val = $req_info->{$rid.':'.$args->[0]};
       } 
 
-      $logger->debug("page:attr(", $args->[0], ") -> ", $val);
+      $logger->debug("event:attr(", $args->[0], ") -> ", $val);
 
     } elsif($function eq 'params' || $function eq 'attrs') {
 
@@ -174,7 +133,6 @@ url
 		  txn_id  => 1,
 		  kynetx_app_version => 1,
 		  element => 1,
-
 		  kvars => 1
 		 );
 
@@ -196,12 +154,104 @@ url
 
       return $ps;
 
+    } elsif($function eq 'channel') {
+      if ($args->[0] eq 'id') {
+	$val = $req_info->{'id_token'};
+      } else {
+	$logger->debug("Unknown channel operation: $args->[0]");
+      }
+      
+
     } else {
       $logger->error("Unknown function $function");
     }
 
     return $val;
 
+}
+
+
+sub send_event {
+  my($req_info, $config, $args) = @_;
+
+  # assume $args->[0] is a subscription map (SM)
+  #   subscription_map =
+  #    {"name":"Phil",
+  # 	"phone":"8013625611",
+  # 	"token":"072a3730-2e8a-012f-d2db-00163e411455",
+  # 	"calendar":"https://www.google.com/calendar/..."
+  #    };
+
+  # Only some of the records in the SM matter to the event:send()
+  # action as defined below. Of course, KRL can be used to manipulate the
+  # SM in various ways.
+
+  # The only thing a subscription map MUST contain is a token OR an ESL.
+  # Everything else is optional.
+
+  # You send events with the send action in the events space:
+
+  # 	    event:send(subscription_map, event_domain, event_type) with
+  # 		attrs  = ...	#  map of event attributes
+  # 		token_key = ...	#  key for token in SM, "token" is default
+  # 		esl_key = ...	#  key for ESL in SM, "esl" is default; if token and esl are both present, esl wins
+  # So, you could simply:
+
+
+  #   event:send(subscription_map,
+  # 	         "notification",
+  # 	         "status"
+  #   	        ) 
+
+  my $logger = get_logger();
+
+  my $timeout = 5; # seconds
+
+  my $sm = $args->[0];
+
+  my $esl = $sm->{'esl'} ||
+            $sm->{$config->{'esl_key'}} ||
+	    mk_sky_esl($sm->{'token'} || $sm->{$config->{'token_key'}});
+
+  my $attrs = $config->{'attrs'};
+
+
+  # merge in the domain and type
+  $attrs->{'_domain'} = $args->[1];
+  $attrs->{'_type'} = $args->[2];
+
+  
+  # my $body = join('&', map( "$_=" . uri_escape_utf8( $attrs->{$_} ), keys %{$attrs} )
+  # 		   );
+  # $req->header(
+  # 				'content-type' => "application/x-www-form-urlencoded; charset=UTF-8" );
+
+  # AnyEvent::HTTP::http_request(
+  #    'POST' => $esl,
+  #    'headers' => {'content-type' => 'application/json'},
+  #    'timeout' => $timeout,
+  #    'body' => encode($attrs),
+  #    sub {
+  #      my ($body, $hdr) = @_;
+  #      unless ($hdr->{Status} =~ /^2/) {
+  #         $logger->debug("event:send(), $hdr->{Status} $hdr->{Reason}\n");
+  #      }
+  #    }
+  # );
+
+}
+
+
+sub mk_sky_esl {
+  my($token) = @_;
+
+  return "http://" + join("/",
+            [Kynetx::Configure::get_config('EVAL_HOST'), # cs.kobj.net
+	     "sky",
+	     "event",
+	     $token,          # channel ID
+	     rand(999999999)  # eid
+            ]);
 }
 
 1;

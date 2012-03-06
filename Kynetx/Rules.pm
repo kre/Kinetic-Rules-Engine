@@ -151,7 +151,7 @@ sub process_schedule {
 
 #    		$logger->debug("[task] ", sub { Dumper($task) });
 
-    $rid = $task->{'rid'};
+#    $logger->debug("RID from task is $rid");
 
     # set up new context for this task
     if ($req_info) {
@@ -160,6 +160,11 @@ sub process_schedule {
     } else {
       $req_info = $task->{'req_info'};
     }
+
+    $rid = $task->{'rid'};
+    $req_info->{'rid'} = mk_rid_info($req_info,$rid, {'version' => $task->{'ver'}});
+    $logger->debug("Using RID ", Kynetx::Rids::print_rid_info($req_info->{'rid'}));
+
 
     unless ( $rid eq $current_rid ) {
       #context switch
@@ -172,8 +177,6 @@ sub process_schedule {
 #      $logger->debug("Task request: ", Dumper $task->{'req_info'});
 
 
-      $req_info->{'rid'} = mk_rid_info($req_info,$rid, {'version' => $task->{'ver'}});
-      $logger->debug("Seeing RID ", Dumper Kynetx::Rids::print_rid_info($req_info->{'rid'}));
 
 
       $init_rule_env->{'ruleset_name'} = $rid;
@@ -965,7 +968,7 @@ sub optimize_ruleset {
 
 # incrementing the number here will force cache reloads of rulesets with lower #'s
 sub get_optimization_version {
-	my $version = 9;
+	my $version = 10;
 	return $version;
 }
 

@@ -638,6 +638,44 @@ is(contains_trail_element($domain,$rid, $session, 'my_trail',"windley"),
 $test_count++;
 
 
+# conditions
+
+$krl_src = <<_KRL_;
+fired {
+  last
+}
+_KRL_
+
+$my_req_info = Kynetx::Test::gen_req_info($rid); # reset
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+ok($my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last modified req_info");
+$test_count++;
+
+
+$krl_src = <<_KRL_;
+fired {
+  last if true
+}
+_KRL_
+
+$my_req_info = Kynetx::Test::gen_req_info($rid); # reset
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+ok($my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last modified req_info when true");
+$test_count++;
+
+$krl_src = <<_KRL_;
+fired {
+  last if false
+}
+_KRL_
+
+$my_req_info = Kynetx::Test::gen_req_info($rid); # reset
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+ok(! defined $my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last not modified req_info when false");
+$test_count++;
+
+
+
 
 #
 # raise functionality tested in Rules.t
