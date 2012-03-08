@@ -124,7 +124,22 @@ sub eval_post_statement {
           );
 
         $logger->debug( "[post] Evaluating statement guard. Result->", $test );
+    } elsif ( defined $expr->{'test'} && 
+	 (defined $expr->{'test'}->{'type'} && 
+	  $expr->{'test'}->{'type'} eq 'on' &&
+	  $expr->{'test'}->{'value'} eq 'final' 
+	 )
+       ) {
+
+      if (Kynetx::Request::get_final_flag($req_info)) {
+	$test = 1;
+	Kynetx::Request::clr_final_flag($req_info);
+      } else {
+	$test = 0;
+      }
+      $logger->debug( "[post] Checking if final; Result->", $test );
     }
+
 
     if ( $expr->{'type'} eq 'persistent' && $test ) {
     	my $p_expr = eval_persistent_expr( $expr,     $session, $req_info,
@@ -308,7 +323,12 @@ sub eval_log_statement {
 
     # this puts the statement in the log data for when debug is on
     $logger->debug( $msg, $log_val );
-
+    $js = join("", 
+               "KOBJ.log('",
+	       $msg,
+	       $log_val,
+	       "');"
+	      );
     # huh?    return $msg . $log_val;
     return $js;
 }

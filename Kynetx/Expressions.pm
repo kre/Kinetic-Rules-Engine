@@ -764,9 +764,9 @@ sub eval_persistent {
     if ($inModule) {
       $logger->debug("Evaling persistent in module: $moduleRid");
     } 
-    $logger->trace("**********in module: $inModule");
-    $logger->trace("**********module Rid: $moduleRid");
-    $logger->trace("**********calling Rid: $rid");
+    # $logger->trace("**********in module: $inModule");
+    # $logger->trace("**********module Rid: $moduleRid");
+    # $logger->trace("**********calling Rid: $rid");
     if (defined $moduleRid) {
       $rid = $moduleRid;
     }

@@ -5,10 +5,15 @@ use strict;
 use File::Find::Rule;
 use Test::Harness qw(&runtests);
 
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
+
 my $rule = File::Find::Rule->new;
 
 $rule->or(
     $rule->new->directory->name('data')->prune->discard,
+    $rule->new->file->name( 'hostname.t' )->prune->discard,
     $rule->new->file->name( '*.t' )
 );
 
@@ -18,5 +23,10 @@ my @files;
 for ( @start ) {
     push( @files, (-d) ? $rule->in($_) : $_ );
 }
+
+# make sure dev/hostname is first...
+unshift ( @files, 'dev/hostname.t');
+
+#print Dumper @files;
 
 runtests(@files);

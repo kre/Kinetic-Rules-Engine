@@ -164,6 +164,40 @@ $logger->debug("Raw request ", sub { Dumper $req->body() });
 }
 
 
+### condvar
+sub set_condvar {
+  my($self, $cv) = @_;
+
+  $self->{'condvar'} = $cv;
+}
+
+sub get_condvar {
+  my($self) = @_;
+
+  return $self->{'condvar'};
+}
+
+### final
+sub set_final_flag {
+  my($self) = @_;
+
+  $self->{Kynetx::Rids::get_rid($self->{rid})}->{'final_flag'} = 1;
+}
+
+sub clr_final_flag {
+  my($self) = @_;
+
+  undef $self->{Kynetx::Rids::get_rid($self->{rid})}->{'final_flag'};
+}
+
+sub get_final_flag {
+  my($self) = @_;
+
+  return $self->{Kynetx::Rids::get_rid($self->{rid})}->{'final_flag'};
+}
+
+
+
 # merge multiple request environments, last wins
 sub merge_req_env {
   my $first = shift;

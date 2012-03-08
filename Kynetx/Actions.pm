@@ -736,6 +736,11 @@ sub build_one_action {
 	} else {
 		$defaction = Kynetx::Environments::lookup_rule_env($action->{'name'},$rule_env);
 	}
+
+	unless ( defined $defaction ) {
+	  my $mname = defined $action->{'source'} ? "$action->{'source'}:" : "" ;
+	  $logger->debug("$mname$action->{'name'} not found as user defined module...");
+	}
 	
 	if (defined $defaction && Kynetx::Expressions::is_defaction($defaction) ) {
 		my $source = $action->{'source'} || "";
@@ -841,40 +846,8 @@ sub build_one_action {
 		if ( $action->{'source'} eq 'twitter' ) {
 			$actions = Kynetx::Modules::Twitter::get_actions();
 		}
-		elsif ( $action->{'source'} eq 'kpds' ) {
-			$actions = Kynetx::Predicates::KPDS::get_actions();
-		}
-		elsif ( $action->{'source'} eq 'amazon' ) {
-			$actions = Kynetx::Predicates::Amazon::get_actions();
-		}
-		elsif ( $action->{'source'} eq 'google' ) {
-			$actions = Kynetx::Predicates::Google::get_actions();
-		}
-		elsif ( $action->{'source'} eq 'facebook' ) {
-			$actions = Kynetx::Predicates::Facebook::get_actions();
-		}
-		elsif ( $action->{'source'} eq 'snow' ) {
-			$actions   = Kynetx::Actions::LetItSnow::get_actions();
-			$resources = Kynetx::Actions::LetItSnow::get_resources();
-		}
-		elsif ( $action->{'source'} eq 'jquery_ui' ) {
-			$actions   = Kynetx::Actions::JQueryUI::get_actions();
-			$resources = Kynetx::Actions::JQueryUI::get_resources();
-		}
-		elsif ( $action->{'source'} eq 'annotate' ) {
-			$actions   = Kynetx::Actions::Annotate::get_actions();
-			$resources = Kynetx::Actions::Annotate::get_resources();
-		}
-		elsif ( $action->{'source'} eq 'flippy_loo' ) {
-			$actions   = Kynetx::Actions::FlippyLoo::get_actions();
-			$resources = Kynetx::Actions::FlippyLoo::get_resources();
-		}
-		elsif ( $action->{'source'} eq 'email' ) {
-			$actions   = Kynetx::Actions::Email::get_actions();
-			$resources = Kynetx::Actions::Email::get_resources();
-		}
-		elsif ( $action->{'source'} eq 'odata' ) {
-			$actions = Kynetx::Predicates::OData::get_actions();
+		elsif ( $action->{'source'} eq 'event' ) {
+			$actions = Kynetx::Modules::Event::get_actions();
 		}
 		elsif ( $action->{'source'} eq 'http' ) {
 			$actions = Kynetx::Modules::HTTP::get_actions();
@@ -885,6 +858,41 @@ sub build_one_action {
 		elsif ( $action->{'source'} eq 'oauthmodule' ) {
 			$actions = Kynetx::Modules::OAuthModule::get_actions();
 		}
+		elsif ( $action->{'source'} eq 'email' ) {
+			$actions   = Kynetx::Actions::Email::get_actions();
+			$resources = Kynetx::Actions::Email::get_resources();
+		}
+		elsif ( $action->{'source'} eq 'amazon' ) {
+			$actions = Kynetx::Predicates::Amazon::get_actions();
+		}
+		elsif ( $action->{'source'} eq 'annotate' ) {
+			$actions   = Kynetx::Actions::Annotate::get_actions();
+			$resources = Kynetx::Actions::Annotate::get_resources();
+		}
+		elsif ( $action->{'source'} eq 'google' ) {
+			$actions = Kynetx::Predicates::Google::get_actions();
+		}
+		elsif ( $action->{'source'} eq 'facebook' ) {
+			$actions = Kynetx::Predicates::Facebook::get_actions();
+		}
+		elsif ( $action->{'source'} eq 'jquery_ui' ) {
+			$actions   = Kynetx::Actions::JQueryUI::get_actions();
+			$resources = Kynetx::Actions::JQueryUI::get_resources();
+		}
+		elsif ( $action->{'source'} eq 'odata' ) {
+			$actions = Kynetx::Predicates::OData::get_actions();
+		}
+		elsif ( $action->{'source'} eq 'kpds' ) {
+			$actions = Kynetx::Predicates::KPDS::get_actions();
+		}
+		elsif ( $action->{'source'} eq 'snow' ) {
+			$actions   = Kynetx::Actions::LetItSnow::get_actions();
+			$resources = Kynetx::Actions::LetItSnow::get_resources();
+		}
+		# elsif ( $action->{'source'} eq 'flippy_loo' ) {
+		# 	$actions   = Kynetx::Actions::FlippyLoo::get_actions();
+		# 	$resources = Kynetx::Actions::FlippyLoo::get_resources();
+		# }
 	}
 	else {
 		$actions = $default_actions;
@@ -904,11 +912,11 @@ sub build_one_action {
 		$directive = \&noop;
 	}
 
-	# I really hate this but in order to make it this is what must
-	# be done. Once impact is done we can remove this at some point.
-	if ( $action_name eq "flippyloo" ) {
-		$resources = Kynetx::Actions::FlippyLoo::get_resources();
-	}
+	# # I really hate this but in order to make it this is what must
+	# # be done. Once impact is done we can remove this at some point.
+	# if ( $action_name eq "flippyloo" ) {
+	# 	$resources = Kynetx::Actions::FlippyLoo::get_resources();
+	# }
 
 	$js .=
 	  &$before( $req_info, $rule_env, $session, $config, $mods, $arg_exp_vals,

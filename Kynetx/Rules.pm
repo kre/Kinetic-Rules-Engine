@@ -29,6 +29,7 @@ use Data::UUID;
 use Log::Log4perl qw(get_logger :levels);
 use JSON::XS;
 use Digest::MD5 qw(md5 md5_hex);
+use AnyEvent;
 
 use Kynetx::Parser qw(:all);
 use Kynetx::PrettyPrinter qw(:all);
@@ -674,8 +675,12 @@ sub eval_rule {
 	$rule->{'pagetype'}->{'foreach'} = []
 	  unless defined $rule->{'pagetype'}->{'foreach'};
 
+	# clear the final flag before we get started...
+	Kynetx::Request::clr_final_flag($req_info);
+
 	$js .=
 	  eval_foreach( $r, $req_info, $rule_env, $session, $rule, $dd,
+		scalar @{ $rule->{'pagetype'}->{'foreach'} }, # final_count
 		@{ $rule->{'pagetype'}->{'foreach'} } );
 
 	# save things for logging
@@ -700,97 +705,130 @@ sub eval_rule {
 
 # recursive function on foreach list.
 sub eval_foreach {
-	my ( $r, $req_info, $rule_env, $session, $rule, $dd, @foreach_list ) = @_;
+  my ( $r, $req_info, $rule_env, $session, $rule, $dd, $final_count, @foreach_list ) = @_;
 
-	my $logger = get_logger();
+  my $logger = get_logger();
 
-	my $fjs = '';
+  my $fjs = '';
 
-	# $logger->debug("In foreach with " . Dumper(@foreach_list));
-
-	if ( @foreach_list == 0 ) {
-
-		$fjs = eval_rule_body( $r, $req_info, $rule_env, $session, $rule, $dd );
-
-	}
-	else {
-
-		# expr has to result in array of prims
-		my $valarray =
-		  Kynetx::Expressions::eval_expr( $foreach_list[0]->{'expr'},
-			$rule_env, $rule->{'name'}, $req_info, $session );
+  # $logger->debug("In foreach with " . Dumper(@foreach_list));
 
 
-		my $vars = $foreach_list[0]->{'var'};
+  # set condition var for AnyEvent, check after loop...
+  my $cv = AnyEvent->condvar();
+  Kynetx::Request::set_condvar($req_info,$cv);
 
-		# FIXME: not sure why we have to do this.
-		unless ( ref $vars eq 'ARRAY' ) {
-			$vars = [$vars];
-		}
+  $cv->begin();
 
-		# loop below expects array of arrays
-		if ( $valarray->{'type'} eq 'array' ) {
+  if ( @foreach_list == 0 ) {
 
-			# array of single value arrays
-			$valarray =
-			  [ map { [ Kynetx::Expressions::exp_to_den($_) ] }
-				  @{ $valarray->{'val'} } ];
-		}
-		elsif ( $valarray->{'type'} eq 'hash' ) {
+# test for final time through loop
+# To understand how final works, imagine this foreach structure:
+#   foreach [1,2,4] setting (x)
+#     foreach [5,6] setting (y)
+# 
+# $final_count will start with the value 2
+#
+# The following table shows what happens to $final_count
+#  
+#   x  y  final x?  final y?  sum  $final_count - sum
+# ------------------------------------------------------
+#   1  5     0        0        0            2
+#   1  6     0        1        1            1
+#   2  5     0        0        0            2
+#   2  6     0        1        1            1
+#   4  5     1        0        1            1
+#   4  6     1        1        2            0
 
-			# turn hash into array of two element arrays
-			my @va;
-			foreach my $k ( keys %{ $valarray->{'val'} } ) {
-				push @va,
-				  [	Kynetx::Expressions::exp_to_den($k),	 
-				  	Kynetx::Expressions::exp_to_den($valarray->{'val'}->{$k}) 
-				  ];
-			}
-			$valarray = \@va;
+    if ($final_count == 0) {
+      Kynetx::Request::set_final_flag($req_info);
+    }
 
-		}
-		else {
-			$logger->debug(
+    $fjs = eval_rule_body( $r, $req_info, $rule_env, $session, $rule, $dd );
+
+  } else {
+
+    # expr has to result in array of prims
+    my $valarray =
+      Kynetx::Expressions::eval_expr( $foreach_list[0]->{'expr'},
+				      $rule_env, $rule->{'name'}, $req_info, $session );
+
+
+    my $vars = $foreach_list[0]->{'var'};
+    
+    # FIXME: not sure why we have to do this.
+    unless ( ref $vars eq 'ARRAY' ) {
+      $vars = [$vars];
+    }
+    
+    # loop below expects array of arrays
+    if ( $valarray->{'type'} eq 'array' ) {
+
+      # array of single value arrays
+      $valarray =
+	[ map { [ Kynetx::Expressions::exp_to_den($_) ] }
+	  @{ $valarray->{'val'} } ];
+    } elsif ( $valarray->{'type'} eq 'hash' ) {
+
+      # turn hash into array of two element arrays
+      my @va;
+      foreach my $k ( keys %{ $valarray->{'val'} } ) {
+	push @va,
+	  [	Kynetx::Expressions::exp_to_den($k),	 
+		Kynetx::Expressions::exp_to_den($valarray->{'val'}->{$k}) 
+	  ];
+      }
+      $valarray = \@va;
+
+    } else {
+      $logger->debug(
 "Foreach expression does not yield array or hash; creating array from singleton"
-			);
+		    );
+      
+      # make an array of arrays
+      $valarray = [ [ Kynetx::Expressions::exp_to_den($valarray) ] ];
+    }
 
-			# make an array of arrays
-			$valarray = [ [ Kynetx::Expressions::exp_to_den($valarray) ] ];
-		}
+    my $i = 0;
+    foreach my $val ( @{$valarray} ) {
 
-		my $i = 0;
-		foreach my $val ( @{$valarray} ) {
+      $logger->trace("Evaluating rule body with " . Dumper($val));
 
-			$logger->trace("Evaluating rule body with " . Dumper($val));
-
-			$logger->debug(
-				"----------- foreach iteration " . $i++ . " \n" );
+      $logger->debug("----------- foreach iteration " . $i++ . " \n" );
 				
-			my $vjs = Kynetx::JavaScript::gen_js_var_list(
-				$vars,
-				[
-					map {
-						Kynetx::JavaScript::gen_js_expr($_ )
-					  } @{$val}
-				]
-			);
+      my $vjs = Kynetx::JavaScript::gen_js_var_list(
+		  $vars,
+		  [
+		   map {
+		     Kynetx::JavaScript::gen_js_expr($_ )
+		     } @{$val}
+		  ]
+		);
 
-			my $dvals = [map {Kynetx::Expressions::den_to_exp($_)} @{$val}];
-			$logger->trace("Vals: ", sub {Dumper($val)});			
-			$logger->trace("dvals: ", sub {Dumper($dvals)});
+      my $dvals = [map {Kynetx::Expressions::den_to_exp($_)} @{$val}];
+      $logger->trace("Vals: ", sub {Dumper($val)});			
+      $logger->trace("dvals: ", sub {Dumper($dvals)});
 
-			# we recurse in side this loop to handle nested foreach statements
-			$fjs .= mk_turtle(
-				$vjs
-				  . eval_foreach(
-					$r, $req_info, extend_rule_env( $vars, $dvals, $rule_env ),
-					$session, $rule, $dd, cdr(@foreach_list)
-				  )
-			);
-		}
-	}
+      my $new_count = $final_count;
+      if ($i == scalar(@{$valarray}) ) {
+	# this will only get to 0 when we're final
+	$new_count--;
+      }
 
-	return $fjs;
+      # we recurse in side this loop to handle nested foreach statements
+      $fjs .= mk_turtle($vjs
+			. eval_foreach($r, $req_info, 
+				       extend_rule_env( $vars, $dvals, $rule_env ),
+				       $session, $rule, $dd, 
+				       $new_count, cdr(@foreach_list)
+				      )
+		       );
+    }
+  }
+
+  $cv = $cv->end;
+
+  return $fjs;
 }
 
 sub eval_rule_body {

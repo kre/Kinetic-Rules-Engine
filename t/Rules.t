@@ -33,6 +33,9 @@ use LWP::Simple;
 use LWP::UserAgent;
 use JSON::XS;
 use APR::Pool ();
+use AnyEvent ();
+use AnyEvent::HTTP ();
+
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Parser qw/:all/;
@@ -2559,6 +2562,257 @@ add_testcase(
     $js,
     $dummy_final_req_info,
     0
+    );
+
+##
+## tests for send_event, specifically does the AnyEvent stuff hang together
+##
+$krl_src = <<_KRL_;
+rule foreach_sendevent is active {
+  select when pageview "http://www.google.com" setting ()
+   foreach [{"esl":"http://www.google.com"},
+            {"esl":"http://www.yahoo.com"}
+           ] setting (url)
+    pre {
+    }
+    event:send(url,"foo","bar") with
+     post = "flipper"
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foreach_sendevent'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
+
+
+
+$result = <<_JS_;
+(function(){
+ (function(){
+    var url={'esl':'http://www.google.com'};
+    function callBacks(){};}
+  ());
+ (function(){
+    var url={'esl':'http://www.yahoo.com'};
+    function callBacks(){};}
+  ());
+ }())
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $dummy_final_req_info
+    );
+
+
+
+##
+## final tests with foreach
+##
+$krl_src = <<_KRL_;
+rule foreach_final is active {
+  select when pageview "http://www.google.com" setting ()
+   foreach [1,2,4] setting (x)
+    pre {
+    }
+    noop();
+    fired {
+      log "Hello World " + x on final
+    }
+}
+_KRL_
+
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foreach_final'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
+
+$result = <<_JS_;
+(function(){
+ (function(){
+   var x = 1;
+   function callBacks () {
+   };
+   (function(uniq,cb,config) {
+      cb();
+    }
+    ('%uniq%',callBacks,$config));
+   }());
+ (function(){
+   var x = 2;
+   function callBacks () {
+   };
+   (function(uniq, cb, config) {
+     cb();
+    }
+    ('%uniq%',callBacks,$config));
+   }());
+ (function(){
+   var x = 4;
+   function callBacks () {
+   };
+   (function(uniq, cb, config) {
+      cb();
+    }
+    ('%uniq%',callBacks,$config));
+   KOBJ.log('Explicit log value: Hello World 4');
+  }());
+ }());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $dummy_final_req_info
+    );
+
+
+$krl_src = <<_KRL_;
+rule foreach2_final is active {
+  select when pageview "http://www.google.com" setting ()
+   foreach [1,2,4] setting (x)
+    foreach [5,6] setting (y)
+    pre {
+    }
+    noop();
+    fired {
+      log "Hello World " + x + y on final
+    }
+}
+_KRL_
+
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foreach2_final'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
+
+$result = <<_JS_;
+(function(){
+ (function(){
+   var x = 1;
+   (function(){
+     var y = 5;
+     function callBacks () {
+     };
+     (function(uniq,cb,config) {
+        cb();
+      }
+      ('%uniq%',callBacks,$config));
+     }());
+   (function(){
+     var y = 6;
+     function callBacks () {
+     };
+     (function(uniq,cb,config) {
+        cb();
+      }
+      ('%uniq%',callBacks,$config));
+     }());
+    }());
+ (function(){
+   var x = 2;
+   (function(){
+     var y = 5;
+     function callBacks () {
+     };
+     (function(uniq, cb, config) {
+       cb();
+      }
+      ('%uniq%',callBacks,$config));
+     }());
+   (function(){
+     var y = 6;
+     function callBacks () {
+     };
+     (function(uniq, cb, config) {
+       cb();
+      }
+      ('%uniq%',callBacks,$config));
+     }());
+   }());
+ (function(){
+   var x = 4;
+   (function(){
+     var y = 5; 
+     function callBacks () {
+     };
+     (function(uniq, cb, config) {
+        cb();
+      }
+      ('%uniq%',callBacks,$config));
+    }());
+   (function(){
+     var y = 6;
+     function callBacks () {
+     };
+     (function(uniq, cb, config) {
+        cb();
+      }
+      ('%uniq%',callBacks,$config));
+     KOBJ.log('Explicit log value: Hello World 10');
+    }());
+  }());
+ }());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $dummy_final_req_info
+    );
+
+
+# should be trivially final
+$krl_src = <<_KRL_;
+rule trivial_final is active {
+  select when pageview "http://www.google.com" setting ()
+    pre {
+    }
+    noop();
+    fired {
+      log "Hello World " on final
+    }
+}
+_KRL_
+
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'trivial_final'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
+
+$result = <<_JS_;
+(function(){
+   function callBacks () {
+   };
+   (function(uniq,cb,config) {
+      cb();
+    }
+    ('%uniq%',callBacks,$config));
+   KOBJ.log('Explicit log value: Hello World');
+}());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $dummy_final_req_info
     );
 
 
