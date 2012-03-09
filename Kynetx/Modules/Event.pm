@@ -214,9 +214,14 @@ sub send_event {
 
   my $esl_key = $config->{'esl_key'} || '_UNDEFINED_KEY_';
 
+  my $token = $sm->{'cid'} || 
+              $sm->{$config->{'cid_key'}} || 
+              $sm->{'token'} || 
+	      $sm->{$config->{'token_key'}};
+
   my $esl = $sm->{'esl'} ||
             $sm->{$esl_key} ||
-	    mk_sky_esl($sm->{'token'} || $sm->{$config->{'token_key'}});
+	    mk_sky_esl($token);
 
   my $attrs = $config->{'attrs'};
 
@@ -282,7 +287,7 @@ sub mk_sky_esl {
  	       "sky",
 	       "event",
 	       $token,          # channel ID
-	       rand(999999999)  # eid
+	       int(rand(999999999))  # eid
          );
 }
 

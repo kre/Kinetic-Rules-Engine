@@ -165,6 +165,82 @@ _KRL_
 	    'callback23',
 	    'dummy_name');
 
+
+# $result = lookup_rule_env('r',$rule_env);
+# ok($result->{'content'} eq '', "Content undefined");
+# ok($result->{'status_code'} eq '302', "Status code Found(?)");
+# $test_count += 2;
+
+#  diag $js;
+
+}
+
+$subscriptions = [{'cid' => $token},
+		  {'cid' => $other_token}];
+
+foreach my $sm ( @{$subscriptions}) {
+
+
+  my $sm_json = encode_json($sm);
+
+  $krl_src = <<_KRL_;
+event:send($sm_json, "notification", "status")
+   with attrs = {"priority" : "2",
+                 "appliaction" : "Flipper"
+                }
+_KRL_
+
+  $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#  diag Dumper $krl;
+
+  $js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
+
+# $result = lookup_rule_env('r',$rule_env);
+# ok($result->{'content'} eq '', "Content undefined");
+# ok($result->{'status_code'} eq '302', "Status code Found(?)");
+# $test_count += 2;
+
+#  diag $js;
+
+}
+
+$subscriptions = [{'flip' => $token},
+		  {'flip' => $other_token}];
+
+foreach my $sm ( @{$subscriptions}) {
+
+
+  my $sm_json = encode_json($sm);
+
+  $krl_src = <<_KRL_;
+event:send($sm_json, "notification", "status")
+   with attrs = {"priority" : "2",
+                 "appliaction" : "Flipper"
+                }
+    and cid_key = "flip"
+_KRL_
+
+  $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#  diag Dumper $krl;
+
+  $js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
+
 # $result = lookup_rule_env('r',$rule_env);
 # ok($result->{'content'} eq '', "Content undefined");
 # ok($result->{'status_code'} eq '302', "Status code Found(?)");
