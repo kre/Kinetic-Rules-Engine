@@ -124,7 +124,7 @@ sub process_session {
 	  		$logger->debug("Old cookie was: $old_cookie");
 	  		$logger->debug("New session is: $cookie");
 	  		Kynetx::Persistence::KToken::set_token($ubx_token,$cookie);
-	  		Kynetx::Persistence::KToken::delete_token(undef,$old_cookie,undef);    			    		
+	  		#Kynetx::Persistence::KToken::delete_token(undef,$old_cookie,undef);    			    		
 		} else {
 	  		$logger->debug("Tokens are the same");
 		}
