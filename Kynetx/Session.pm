@@ -92,37 +92,44 @@ sub process_session {
     $cookie = $ck if $ck;  # override, used for testing and _sid param
     $logger->debug("Passed cookie: ", $cookie);
     
-    # Check to see if the UBX has sent us a token
-    $ubx_token = $r->headers_in->{'Kobj-Session'};
-    #$ubx_token = $tk if defined $tk;
-
+	# was an explicit token passed?
     if (defined $tk) {
       $logger->info("Explicit token: (SKY) $tk");
       if ($tk ne "") {
-	$ubx_token = $tk;
+		my $token = Kynetx::Persistence::KToken::is_valid_token($tk);
+		if ($token) {
+			# Stored session is forfeit in sky instance
+			$cookie = new_session_id();
+			Kynetx::Persistence::KToken::set_token($token,$cookie);
+			#my $session = { "_session_id" => $cookie};
+			# but, don't set a new cookie session
+			#return $session;			
+		}
       } else {
-	$logger->warn("Empty Explicit Token received");
-	$ubx_token = undef;
+		$logger->warn("Empty Explicit Token received");
       }
     }
+    
+    # Check to see if the UBX has sent us a token
+    $ubx_token = $r->headers_in->{'Kobj-Session'};
     
     if (defined $ubx_token) {
       my $token;
       if ($token = Kynetx::Persistence::KToken::is_valid_token($ubx_token)) {
-	$logger->info("Received valid token: $ubx_token");
-	my $tcookie = $token->{"endpoint_id"};
-	if ($tcookie ne $cookie) {
-	  my $old_cookie = $cookie;
-	  $cookie = new_session_id();
-	  $logger->debug("Old cookie was: $old_cookie");
-	  $logger->debug("New session is: $cookie");
-	  Kynetx::Persistence::KToken::set_token($ubx_token,$cookie);
-	  Kynetx::Persistence::KToken::delete_token(undef,$old_cookie,undef);    			    		
-	} else {
-	  $logger->debug("Tokens are the same");
-	}
+		$logger->info("Received valid token: $ubx_token");
+		my $tcookie = $token->{"endpoint_id"};
+		if ($tcookie ne $cookie) {
+	  		my $old_cookie = $cookie;
+	  		$cookie = new_session_id();
+	  		$logger->debug("Old cookie was: $old_cookie");
+	  		$logger->debug("New session is: $cookie");
+	  		Kynetx::Persistence::KToken::set_token($ubx_token,$cookie);
+	  		Kynetx::Persistence::KToken::delete_token(undef,$old_cookie,undef);    			    		
+		} else {
+	  		$logger->debug("Tokens are the same");
+		}
       } else {
-	$logger->debug("Invalid token: ", $ubx_token);
+		$logger->debug("Invalid token: ", $ubx_token);
       }
     }
 
