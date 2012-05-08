@@ -45,6 +45,8 @@ use Kynetx::Directives;
 use Kynetx::Modules::OAuthModule;
 use Kynetx::Events;
 
+use Metrics::Datapoint;
+
 use constant DEFAULT_TEMPLATE_DIR => Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
 
 # Make this global so we can use memcache all over
@@ -94,6 +96,8 @@ sub handler {
 	show_context($r, $method, $rid);
     } elsif($method eq 'describe' ) {
 	describe_ruleset($r, $method, $rid);
+    } elsif($method eq 'tenx' ) {
+	metric($r, $method, $rid);
     } elsif($method eq 'version' ) {
 	#my $session = process_session($r);
 	show_build_num($r, $method, $rid);
@@ -327,4 +331,92 @@ sub describe_ruleset {
 	$r->content_type('text/html');
 	print $test_template->output;
     }
+}
+    
+sub metric {
+    my ($r, $method, $rid) = @_;
+
+    my $logger = get_logger();
+
+    my $req = Apache2::Request->new($r);
+    my $flavor = $req->param('flavor') || 'html';
+    
+    my ($path) = $r->path_info() =~ m!/tenx/(.*)!;
+    my @series = split(/\//,$path);
+    #my $method = shift @series;
+    $logger->debug("Paths: ",sub {Dumper(@series)});
+
+
+    my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
+	my $template = DEFAULT_TEMPLATE_DIR . "/metrics.tmpl";
+	my $test_template = HTML::Template->new(filename => $template);
+	my @series_loop = ();
+	foreach my $s (@series) {
+		$logger->debug("Series: ", $s);
+		my ($sname,$xname,$yname) = split(/;/,$s);
+		$sname = $sname || "";
+		$xname = $xname || "timestamp";
+		$yname = $yname || "realtime";
+		my $sumX=	0;
+		my $sumY=	0;
+		my $sumX2 = 0;
+		my $sumXY = 0;
+		my $maxX = 0;
+		my $loop_struct = {
+			'SERIES_NAME' => $sname
+		};
+		my $result = Metrics::Datapoint::get_data($sname);
+		my @loop = ();
+		#$logger-debug("Result: ", sub {Dumper($result)});
+		for (my $i =0; $i< scalar(@{$result}) -1;$i++) {
+			my $dp = $result->[$i];
+			if (defined $dp) {
+				my $x = $dp->get_metric("var_size")|| 0;
+				my $y = int($dp->get_metric("realtime") * 1000 || 0);
+				my $struct = {
+					'x' => $x,
+					'y' => $y
+				};
+				push(@loop,$struct);
+				$sumX += $x;
+				$sumY += $y;
+				$sumX2 += ($x * $x);
+				$sumXY += ($x * $y);	
+				if ($x > $maxX) {
+					$maxX=$x;
+				}			
+			}
+		}
+		my $n = scalar(@{$result});
+		my $b = ($sumXY -($sumX * $sumY)/$n)/($sumX2 - ($sumX * $sumX)/$n);
+		my $a = undef;
+		while (! defined $a && $n > 0) {
+			my $rPoint = rand($n);
+			my $dp1 = $result->[$rPoint];
+			if (defined $dp1) {
+				my $x = $dp1->get_metric("var_size")|| 0;
+				my $y = int($dp1->get_metric("realtime") * 1000 || 0);
+				$a = $y - $b*$x;
+			} 
+		}
+		$logger->debug("S: $sname a: ", $a , " b: ", $b);
+		
+		$loop_struct->{'SERIES_DATA'} = \@loop;
+		my $last = $result->[scalar @$result -1];
+		$loop_struct->{'LASTx'} = $last->get_metric("var_size")        || 0;
+		$loop_struct->{'LASTy'} = $last->get_metric("realtime") * 1000 || 0;
+		$loop_struct->{'REGRESSION_NAME'} = $sname;
+		$loop_struct->{'X0'} = 0;
+		$loop_struct->{'Y0'} = int($a + .5);
+		$loop_struct->{'Xn'} = int($maxX + .5);
+		$loop_struct->{'Yn'} = int($a + $b * $maxX + .5);
+		#$test_template->param(LASTx => $last->get_metric("var_size")|| 0);
+		#$test_template->param(LASTy => int($last->get_metric("realtime") * 1000 || 0));
+		CORE::push(@series_loop,$loop_struct);		
+	}
+	$test_template->param("SERIES_LOOP" => \@series_loop);
+	$r->content_type('text/html');
+	print $test_template->output;
+    
+    
 }

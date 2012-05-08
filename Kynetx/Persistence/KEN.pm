@@ -87,7 +87,10 @@ sub get_ken {
     my $ktoken = Kynetx::Persistence::KToken::get_token($session,$rid,$domain);
     if ($ktoken) {
         $logger->trace("Token found: ",sub {Dumper($ktoken)});
-        return $ktoken->{'ken'};
+        # update the KEN so we can do a better job of determining stale KENS
+        $ken = $ktoken->{'ken'};
+        touch_ken($ken);
+        return $ken;
     }
     $ken = new_ken() unless ($ken);
 
@@ -159,9 +162,10 @@ sub touch_ken {
 	my ($ken,$ts) = @_;
     my $logger = get_logger();
     my $oid = MongoDB::OID->new(value => $ken);
-    my $active = $ts || DateTime->now->epoch;
-    my $kpds = Kynetx::MongoDB::get_collection(COLLECTION);
-    my $touch = $kpds->update({"_id" => $oid},{'$set' => {"last_active" => $active}});
+    Kynetx::MongoDB::get_singleton(COLLECTION,{"_id" => $oid});
+#    my $active = $ts || DateTime->now->epoch;
+#    my $kpds = Kynetx::MongoDB::get_collection(COLLECTION);
+#    my $touch = $kpds->update({"_id" => $oid},{'$set' => {"last_active" => $active}});
 }
 
 sub get_ken_defaults {

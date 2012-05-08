@@ -140,7 +140,7 @@ my $tricky_hash = {
 };
 
 my $hash_var = "aaBaa";
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 my $array_val = ['a','b','c','d','e','f','g',];
 my $array_var = "abcd";
