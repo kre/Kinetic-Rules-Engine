@@ -756,6 +756,20 @@ SKIP: {
     $test_count += test_event_plan($battery_set_test_plan);
 
 
+    my $discovery_test_plan =
+      [{'url' => "$dn/$token?_rids=a1856x7",
+    	'type' => 'text/javascript',
+    	'like' => ['/"rule_name":"discovery_hello"/',
+    		  ],
+    	'unlike' => [
+    		    ],
+    	'diag' => 0,
+       },
+      ];
+
+    $test_count += test_event_plan($discovery_test_plan);
+
+
 
 done_testing($test_count);
 
