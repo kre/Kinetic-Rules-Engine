@@ -487,6 +487,19 @@ EOF
 			send_directive($req_info, $dd, $args->[0], $config );
 		},
 	},
+	send_raw => {
+		directive => sub {
+			my $req_info = shift;
+			my $logger= get_logger();
+			my $dd = shift;
+			my $config   = shift;
+			my $args     = shift;
+			$req_info->{'send_raw'} = 1;
+			$logger->debug("Send Raw called!");
+			$config->{'is_raw'} = 1;
+			send_directive($req_info, $dd, $args->[0], $config );
+		},
+	},
 };
 
 sub build_js_load {
