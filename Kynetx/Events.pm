@@ -111,6 +111,7 @@ sub handler {
 
     Log::Log4perl::MDC->put( 'site', $rid );
     Log::Log4perl::MDC->put( 'rule', '[global]' );    # no rule for now...
+    Log::Log4perl::MDC->put( 'eid', $eid );    # identify event
 
     # store these for later logging
     $r->subprocess_env( DOMAIN    => $domain );
