@@ -567,6 +567,13 @@ sub eval_application {
 
   $req_info->{$closure->{'val'}->{'sig'}} = 0
     unless defined $req_info->{$closure->{'val'}->{'sig'}};
+
+  # FIXME: remove this after we find problem...
+  $logger->debug("Sig: ", $closure->{'val'}->{'sig'}, 
+		 " Count: ", $req_info->{$closure->{'val'}->{'sig'}}, 
+		 " Threshold: ", $function_call_threshold);
+
+
   if ($req_info->{$closure->{'val'}->{'sig'}} > $function_call_threshold) {
     Kynetx::Errors::raise_error($req_info, 'warn',
 				  "[application] Function call threshold exceeded (". $function_call_threshold .")...deep recursion?",
