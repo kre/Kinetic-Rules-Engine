@@ -60,6 +60,9 @@ $Data::Dumper::Indent = 1;
 
 my $logger = get_logger();
 my $r = Kynetx::Test::configure();
+my $dp;
+$dp = new Kynetx::Metrics::Datapoint;
+$dp->start_timer();
 
 my $rid = 'cs_test';
 
@@ -508,6 +511,8 @@ SKIP: {
 
   }
 
+$dp->stop_timer();
+$logger->info("Events: ", $dp->get_metric("realtime"));
 
 done_testing($test_count);
 

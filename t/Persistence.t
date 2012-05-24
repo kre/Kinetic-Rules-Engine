@@ -53,7 +53,7 @@ use Kynetx::Configure;
 use Kynetx::Memcached;
 use Kynetx::MongoDB;
 use Benchmark ':hireswallclock';
-
+use Kynetx::Metrics::Datapoint;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
@@ -68,6 +68,9 @@ Kynetx::Memcached->init();
 # Basic MongoDB commands
 $logger->debug("Initializing mongoDB");
 Kynetx::MongoDB::init();
+	my $dp;
+	$dp = new Kynetx::Metrics::Datapoint;
+	$dp->start_timer();
 
 my $kobj_root = Kynetx::Configure::get_config('KOBJ_ROOT');
 $logger->debug("KOBJ root: $kobj_root");
@@ -769,6 +772,8 @@ foreach my $domain ('ent', 'app') {
 	
 }
 
+	$dp->stop_timer();
+	$logger->info("Persistence: ", $dp->get_metric("realtime"));
 
 
 done_testing($test_count);

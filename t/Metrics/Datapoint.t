@@ -33,7 +33,7 @@ use Kynetx::Session qw/:all/;
 use Kynetx::FakeReq;
 use DateTime;
 use Data::Dumper;
-use Metrics::Datapoint qw(:all);
+use Kynetx::Metrics::Datapoint qw(:all);
 use Cache::Memcached;
 use Benchmark ':hireswallclock';
 use Clone qw(clone);
@@ -46,8 +46,8 @@ use APR::Pool ();
 
 
 use Log::Log4perl qw(get_logger :levels);
-#Log::Log4perl->easy_init($DEBUG);
 Log::Log4perl->easy_init($INFO);
+Log::Log4perl->easy_init($DEBUG);
 my $logger = get_logger();
 
 Kynetx::Configure::configure();	
@@ -56,18 +56,25 @@ Kynetx::MongoDB::init();
 
 Kynetx::Memcached->init();
 
+my $dict_path = "/usr/share/dict/words";
+my @DICTIONARY;
+open DICT, $dict_path;
+@DICTIONARY = <DICT>;
 
 my $num_test = 0;
-my $rid = "time_test";
+my $rid = $DICTIONARY[rand(@DICTIONARY)];
+chop $rid;
 my $session = int(rand(1000000));
+my $rulename = $DICTIONARY[rand(@DICTIONARY)];
+chop $rulename;
 
 my $req_info = Kynetx::Test::gen_req_info($rid);
 my $rule_env = Kynetx::Test::gen_rule_env();
 
 my $ts = DateTime->now->epoch();
-my $dp = new Metrics::Datapoint;
+my $dp = new Kynetx::Metrics::Datapoint;
 
-my $dp1 = new Metrics::Datapoint;
+my $dp1 = new Kynetx::Metrics::Datapoint;
 is($ts - $dp->timestamp < 1,1,"Timestamp set");
 $num_test++;
 
@@ -125,9 +132,23 @@ $logger->debug("Tags: ", sub {Dumper(@tags)});
 cmp_deeply($result,bag(@tags),"Add array to tags");
 $num_test++;
 
-$dp->series($$);
+$dp->series('smoke');
+
+$dp->push("rid",$rid);
+$dp->push("rulename",$rulename);
+
+
+$dp->tick();
+my $max = int(rand(10000));
+for (my $i = 0; $i < $max; $i++){
+	$dp->tick();
+}
+$dp->tick(1);
+
+$logger->debug("Count: ", $dp->count);
 
 $dp->store();
+$logger->debug(sub{Dumper($req_info)});
 
 done_testing($num_test);
 

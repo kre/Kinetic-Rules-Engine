@@ -33,7 +33,7 @@ use Kynetx::Session qw/:all/;
 use Kynetx::FakeReq;
 use DateTime;
 use Data::Dumper;
-use Metrics::TENX qw(:all);
+use Kynetx::Metrics::TENX qw(:all);
 use Cache::Memcached;
 use Benchmark ':hireswallclock';
 use Clone qw(clone);
@@ -48,6 +48,7 @@ use APR::Pool ();
 use Log::Log4perl qw(get_logger :levels);
 #Log::Log4perl->easy_init($DEBUG);
 Log::Log4perl->easy_init($INFO);
+Log::Log4perl->easy_init($TRACE);
 my $logger = get_logger();
 
 Kynetx::Configure::configure();
@@ -59,17 +60,7 @@ Kynetx::Memcached->init();
 
 my $num_test = 1;
 my $rid = "time_test";
-my $session = int(rand(1000000));
-
-my $req_info = Kynetx::Test::gen_req_info($rid);
-my $rule_env = Kynetx::Test::gen_rule_env();
-my $rule_envb = in_time($req_info,$rule_env,$rid,$session,"foooooooooooooooooooooooooooooooooooooo");
-$rule_envb = in_time($req_info,$rule_envb,$rid,$session,"Barrrrrrrrrrrrrrrrrrrrrr");
-my $result = Kynetx::Environments::lookup_rule_env("v10x",$rule_envb);
-$logger->debug("preEnv: ", sub { Dumper($rule_envb)});
-$logger->debug("postEnv: ", sub { Dumper($result)});
-
- 
+my $session = int(rand(1000000)); 
 
 ok(1);
 

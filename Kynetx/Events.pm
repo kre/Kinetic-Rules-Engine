@@ -49,6 +49,7 @@ use Kynetx::Util qw(:all);
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 $Data::Dumper::Terse = 1;
+use Kynetx::Metrics::Datapoint;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -77,6 +78,8 @@ sub handler {
     Kynetx::Util::config_logging($r);
 
     my $logger = get_logger();
+    my $metric = new Kynetx::Metrics::Datapoint();
+	$metric->start_timer();
 
     $r->content_type('text/javascript');
 
@@ -101,7 +104,10 @@ sub handler {
     $eventtype = $path_components[3];
     $rid = $path_components[4] || 'any';
     $eid = $path_components[5] || '';
-
+    $metric->eid($eid);
+    $metric->rid($rid);
+	$metric->push('domain',$domain);
+	$metric->push('eventtype',$eventtype);
 
     if ($domain eq 'version') {
       $logger->debug("returning version info for event API");
@@ -121,9 +127,10 @@ sub handler {
     if ( $domain eq 'version' ) {
         show_build_num($r);
     } else {
+    	$metric->series("blue-event");
         process_event( $r, $domain, $eventtype, $rid, $eid );
     }
-
+	$metric->stop_and_store();
     return Apache2::Const::OK;
 }
 
@@ -362,12 +369,14 @@ sub process_event_for_rid {
             my $var_list = [];
             my $val_list = [];
             $logger->trace("Process sessions");
-            while ( my $json =
-                    consume_trail_element("ent", $rid, $session, $event_list_name, 1) )
+#            while ( my $json =
+#                    consume_trail_element("ent", $rid, $session, $event_list_name, 1) )
+            while ( my $ev =
+                    Kynetx::Events::Primitives->unserialize(consume_trail_element("ent", $rid, $session, $event_list_name, 1)) )
             {
 
-                my $ev = Kynetx::Events::Primitives->unserialize($json);
-                $logger->trace( "Event: ", sub { Dumper $ev} );
+                #my $ev = Kynetx::Events::Primitives->unserialize($json);
+                $logger->debug( "Event: ", sub { Dumper $ev} );
 
                 # FIXME: what we're not doing: the event list also
                 # includes the req_info that was active when the event

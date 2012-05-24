@@ -271,10 +271,12 @@ sub consume_trail_element {
     if ($domain eq 'ent') {
         my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
         $result = Kynetx::Persistence::Entity::pop_edatum($rid,$ken,$varname,$direction);
-        $logger->trace("$op_name returned: ", sub {Dumper($result)});
     } elsif ($domain eq 'app') {
         $result = Kynetx::Persistence::Application::pop($rid,$varname,$direction);
     }
+    
+    $logger->debug("consume_trail_element $op_name returned: ", sub {Dumper($result)});
+
     if ($result) {
         return $result->[0];
     } else {

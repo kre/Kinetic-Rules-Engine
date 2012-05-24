@@ -69,7 +69,7 @@ my $turl = "http://www.htmliseasy.com/exercises/example_06c.html";
 my $durl = "http://www.htmliseasy.com/exercises/example_02d.html";
 #diag "Fetching test content from: $turl";
 my $content = Kynetx::Memcached::get_remote_data($turl,3600);
-diag "Content for q_html: " , $content;
+#diag "Content for q_html: " , $content;
 #diag "Fetching test content from: $durl";
 my $content2 = Kynetx::Memcached::get_remote_data($durl,3600);
 

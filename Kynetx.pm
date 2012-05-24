@@ -45,7 +45,7 @@ use Kynetx::Directives;
 use Kynetx::Modules::OAuthModule;
 use Kynetx::Events;
 
-use Metrics::Datapoint;
+use Kynetx::Metrics::Datapoint;
 
 use constant DEFAULT_TEMPLATE_DIR => Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
 
@@ -61,7 +61,11 @@ sub handler {
     Kynetx::Util::config_logging($r);
 
     my $logger = get_logger();
-
+    
+    # Request timer
+    my $metric = new Kynetx::Metrics::Datapoint();
+	$metric->start_timer();
+	
     $r->content_type('text/javascript');
 
 
@@ -74,6 +78,9 @@ sub handler {
     my $eid = '';
 
     ($method,$rid,$eid) = $r->path_info =~ m!/([a-z+_]+)/([A-Za-z0-9_;]*)/?(\d+)?!;
+    
+    $metric->eid($eid);
+    $metric->rid($rid);
 
     $logger->debug("Performing $method method on rulesets $rid and EID $eid");
     Log::Log4perl::MDC->put('site', $rid);
@@ -87,9 +94,11 @@ sub handler {
 
     # at some point we need a better dispatch function
     if($method eq 'eval') {
-	process_rules($r, $method, $rid, $eid);
+    	$metric->series("blue-eval");
+		process_rules($r, $method, $rid, $eid);
     } elsif($method eq 'event') {
-	Kynetx::Events::process_event($r, $method, $rid, $eid);
+    	$metric->series("blue-event");
+		Kynetx::Events::process_event($r, $method, $rid, $eid);
     } elsif($method eq 'flush' ) {
 	flush_ruleset_cache($r, $method, $rid);
     } elsif($method eq 'console') {
@@ -102,36 +111,49 @@ sub handler {
 	#my $session = process_session($r);
 	show_build_num($r, $method, $rid);
     } elsif($method eq 'cb_host') {
-
+		$metric->series("oauth_host_callback");
       my $st = Kynetx::Modules::OAuthModule::callback_host($r,$method, $rid);
       $r->status($st);
+      $metric->stop_and_store();
       return $st;
     } elsif($method eq 'twitter_callback' ) {
+		$metric->series("twitter_callback");
 	Kynetx::Modules::Twitter::process_oauth_callback($r, $method, $rid);
 	$r->status(Apache2::Const::REDIRECT);
+      $metric->stop_and_store();
 	return Apache2::Const::REDIRECT;
 
     } elsif($method eq 'kpds_callback' ) {
+		$metric->series("KPDS_callback");
       Kynetx::Predicates::KPDS::process_oauth_callback($r, $method, $rid);
       $r->status(Apache2::Const::REDIRECT);
+      $metric->stop_and_store();
       return Apache2::Const::REDIRECT;
 
     } elsif($method eq 'google_callback' ) {
+		$metric->series("google_callback");
       Kynetx::Predicates::Google::process_oauth_callback($r, $method, $rid);
       $r->status(Apache2::Const::REDIRECT);
+      $metric->stop_and_store();
       return Apache2::Const::REDIRECT;
     } elsif($method eq 'fb_callback' ) {
       #my $st = Kynetx::Predicates::Facebook::process_oauth_callback($r, $method, $rid, $eid);
+		$metric->series("facebook_callback");
       my $st = Kynetx::Predicates::Google::OAuthHelper::generic_oauth_handler($r, $method, $rid, $eid);
       $r->status($st);
+       $metric->stop_and_store();
       return $st;
     } elsif($method eq 'pds_callback' ) {
+		$metric->series("pds_callback");
       Kynetx::Modules::PDS::process_auth_callback($r, $method, $rid);
       $r->status(Apache2::Const::REDIRECT);
+      $metric->stop_and_store();
       return Apache2::Const::REDIRECT;
     } elsif ($method eq 'oauth_callback') {
+		$metric->series("oauth_callback");
     	my $st = Kynetx::Modules::OAuthModule::oauth_callback_handler($r,$method,$rid);
     	$r->status($st);
+      $metric->stop_and_store();
     	return $st;
     } elsif($method eq 'foo' ) {
 	my $uniq = int(rand 999999999);
@@ -141,7 +163,7 @@ sub handler {
     	test_harness($r, $method, $rid, $eid);
     } 
 
-
+    $metric->stop_and_store();
     return Apache2::Const::OK;
 }
 
@@ -334,89 +356,6 @@ sub describe_ruleset {
 }
     
 sub metric {
-    my ($r, $method, $rid) = @_;
-
-    my $logger = get_logger();
-
-    my $req = Apache2::Request->new($r);
-    my $flavor = $req->param('flavor') || 'html';
-    
-    my ($path) = $r->path_info() =~ m!/tenx/(.*)!;
-    my @series = split(/\//,$path);
-    #my $method = shift @series;
-    $logger->debug("Paths: ",sub {Dumper(@series)});
-
-
-    my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
-	my $template = DEFAULT_TEMPLATE_DIR . "/metrics.tmpl";
-	my $test_template = HTML::Template->new(filename => $template);
-	my @series_loop = ();
-	foreach my $s (@series) {
-		$logger->debug("Series: ", $s);
-		my ($sname,$xname,$yname) = split(/;/,$s);
-		$sname = $sname || "";
-		$xname = $xname || "timestamp";
-		$yname = $yname || "realtime";
-		my $sumX=	0;
-		my $sumY=	0;
-		my $sumX2 = 0;
-		my $sumXY = 0;
-		my $maxX = 0;
-		my $loop_struct = {
-			'SERIES_NAME' => $sname
-		};
-		my $result = Metrics::Datapoint::get_data($sname);
-		my @loop = ();
-		#$logger-debug("Result: ", sub {Dumper($result)});
-		for (my $i =0; $i< scalar(@{$result}) -1;$i++) {
-			my $dp = $result->[$i];
-			if (defined $dp) {
-				my $x = $dp->get_metric("var_size")|| 0;
-				my $y = int($dp->get_metric("realtime") * 1000 || 0);
-				my $struct = {
-					'x' => $x,
-					'y' => $y
-				};
-				push(@loop,$struct);
-				$sumX += $x;
-				$sumY += $y;
-				$sumX2 += ($x * $x);
-				$sumXY += ($x * $y);	
-				if ($x > $maxX) {
-					$maxX=$x;
-				}			
-			}
-		}
-		my $n = scalar(@{$result});
-		my $b = ($sumXY -($sumX * $sumY)/$n)/($sumX2 - ($sumX * $sumX)/$n);
-		my $a = undef;
-		while (! defined $a && $n > 0) {
-			my $rPoint = rand($n);
-			my $dp1 = $result->[$rPoint];
-			if (defined $dp1) {
-				my $x = $dp1->get_metric("var_size")|| 0;
-				my $y = int($dp1->get_metric("realtime") * 1000 || 0);
-				$a = $y - $b*$x;
-			} 
-		}
-		$logger->debug("S: $sname a: ", $a , " b: ", $b);
-		
-		$loop_struct->{'SERIES_DATA'} = \@loop;
-		my $last = $result->[scalar @$result -1];
-		$loop_struct->{'LASTx'} = $last->get_metric("var_size")        || 0;
-		$loop_struct->{'LASTy'} = $last->get_metric("realtime") * 1000 || 0;
-		$loop_struct->{'REGRESSION_NAME'} = $sname;
-		$loop_struct->{'X0'} = 0;
-		$loop_struct->{'Y0'} = int($a + .5);
-		$loop_struct->{'Xn'} = int($maxX + .5);
-		$loop_struct->{'Yn'} = int($a + $b * $maxX + .5);
-		#$test_template->param(LASTx => $last->get_metric("var_size")|| 0);
-		#$test_template->param(LASTy => int($last->get_metric("realtime") * 1000 || 0));
-		CORE::push(@series_loop,$loop_struct);		
-	}
-	$test_template->param("SERIES_LOOP" => \@series_loop);
-	$r->content_type('text/html');
-	print $test_template->output;
     
     
 }
