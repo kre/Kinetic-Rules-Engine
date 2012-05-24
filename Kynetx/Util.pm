@@ -119,7 +119,7 @@ sub config_logging {
 #	    "%d %p %F{1} %X{site} %X{rule} %m%n");
     my $layout =
     Log::Log4perl::Layout::PatternLayout->new(
-        "%r %p %F{1} %X{site} %X{rule} %m%n");
+        "%r %X{eid} %p %F{1} %X{site} %X{rule} %m%n");
 
     $appender->layout($layout);
 

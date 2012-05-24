@@ -119,6 +119,7 @@ sub handler {
     $r->subprocess_env( EVENTTYPE => $eventtype );
     Log::Log4perl::MDC->put( 'site', "[no rid]" );
     Log::Log4perl::MDC->put( 'rule', '[global]' );    # no rule for now...
+    Log::Log4perl::MDC->put( 'eid', $eid );    # identify event
 
 
     # get a session

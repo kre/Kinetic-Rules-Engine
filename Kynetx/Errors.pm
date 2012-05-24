@@ -37,7 +37,7 @@ use Kynetx::Rids qw/:all/;
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
-use constant ERROR_CALL_THRESHOLD => 5;
+# use constant ERROR_CALL_THRESHOLD => 5;
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -50,6 +50,8 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 0;
+
+my $ERROR_RAISE_THRESHOLD = Kynetx::Configure::get_config('ERROR_RAISE_THRESHOLD') || 1;
 
 
 sub raise_error {
@@ -67,13 +69,13 @@ sub raise_error {
 
 #  $logger->debug("*** $sig has value ", $req_info->{$sig}, " ***");
 
-  if ($req_info->{$sig} > ERROR_CALL_THRESHOLD) {
-    $logger->error("Error threshold exceeded");
-    return;
-  }
-  
   $errormsg ||= "An unspecified error occured";
   $level ||= "debug";
+
+  if ($req_info->{$sig} > $ERROR_RAISE_THRESHOLD) {
+    $logger->error("Error threshold exceeded; not raising error event for $errormsg");
+    return;
+  }
 
   my $genus = $options->{'genus'} || 'general';
   my $species = $options->{'species'} || 'general';
@@ -88,6 +90,7 @@ sub raise_error {
     $logger->debug($errormsg);
   }
 
+  
 
   # make modifiers in right form for raise expr
   my $ms = [];
