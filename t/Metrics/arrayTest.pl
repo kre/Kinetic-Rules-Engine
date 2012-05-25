@@ -41,7 +41,7 @@ use Kynetx::Configure;
 use Kynetx::MongoDB qw(:all);
 use Kynetx::Memcached;
 use Kynetx::Expressions;
-use Metrics::Datapoint;
+use Kynetx::Metrics::Datapoint;
 use Devel::Size;
 
 my $logger = get_logger();
@@ -106,10 +106,10 @@ my $tsize;
 my $var;
 
 # init the datapoints
-my $put = new Metrics::Datapoint({series => "array_test_put"});
-my $get = new Metrics::Datapoint({series => "array_test_get"});
-my $del = new Metrics::Datapoint({series => "array_test_del"});
-my $update = new Metrics::Datapoint({series => "array_test_upd"});
+my $put = new Kynetx::Metrics::Datapoint({series => "array_test_put"});
+my $get = new Kynetx::Metrics::Datapoint({series => "array_test_get"});
+my $del = new Kynetx::Metrics::Datapoint({series => "array_test_del"});
+my $update = new Kynetx::Metrics::Datapoint({series => "array_test_upd"});
 
 $asize = 100;
 $var = $varp . $asize;
@@ -124,7 +124,7 @@ $put->store;
 $logger->debug("R: ",sub {Dumper($result)});
 
 $asize = 500;
-$put = new Metrics::Datapoint({series => "array_test_put"});
+$put = new Kynetx::Metrics::Datapoint({series => "array_test_put"});
 $var = $varp . $asize;
 $array_ref = build_array($asize);
 $tsize = Devel::Size::total_size($array_ref);
@@ -136,7 +136,7 @@ $put->stop_timer;
 $put->store;
 
 $asize = 1000;
-$put = new Metrics::Datapoint({series => "array_test_put"});
+$put = new Kynetx::Metrics::Datapoint({series => "array_test_put"});
 $var = $varp . $asize;
 $array_ref = build_array($asize);
 $tsize = Devel::Size::total_size($array_ref);
@@ -148,7 +148,7 @@ $put->stop_timer;
 $put->store;
 
 $asize = 5000;
-$put = new Metrics::Datapoint({series => "array_test_put"});
+$put = new Kynetx::Metrics::Datapoint({series => "array_test_put"});
 $var = $varp . $asize;
 $array_ref = build_array($asize);
 $tsize = Devel::Size::total_size($array_ref);
@@ -161,7 +161,7 @@ $put->store;
 
 
 $asize = 10000;
-$put = new Metrics::Datapoint({series => "array_test_put"});
+$put = new Kynetx::Metrics::Datapoint({series => "array_test_put"});
 $var = $varp . $asize;
 $array_ref = build_array($asize);
 $tsize = Devel::Size::total_size($array_ref);
@@ -173,7 +173,7 @@ $put->stop_timer;
 $put->store;
 
 $asize = 50000;
-$put = new Metrics::Datapoint({series => "array_test_put"});
+$put = new Kynetx::Metrics::Datapoint({series => "array_test_put"});
 $var = $varp . $asize;
 $array_ref = build_array($asize);
 $tsize = Devel::Size::total_size($array_ref);
@@ -186,7 +186,7 @@ $put->store;
 
 
 $asize = 100000;
-$put = new Metrics::Datapoint({series => "array_test_put"});
+$put = new Kynetx::Metrics::Datapoint({series => "array_test_put"});
 $var = $varp . $asize;
 $array_ref = build_array($asize);
 $tsize = Devel::Size::total_size($array_ref);
@@ -210,7 +210,7 @@ $get->push("var_size",$tsize);
 $get->store;
 
 $asize = 500;
-$get = new Metrics::Datapoint({series => "array_test_get"});
+$get = new Kynetx::Metrics::Datapoint({series => "array_test_get"});
 $var = $varp . $asize;
 $get->tags($asize);
 $get->start_timer;
@@ -221,7 +221,7 @@ $get->push("var_size",$tsize);
 $get->store;
 
 $asize = 1000;
-$get = new Metrics::Datapoint({series => "array_test_get"});
+$get = new Kynetx::Metrics::Datapoint({series => "array_test_get"});
 $var = $varp . $asize;
 $get->tags($asize);
 $get->start_timer;
@@ -232,7 +232,7 @@ $get->push("var_size",$tsize);
 $get->store;
 
 $asize = 5000;
-$get = new Metrics::Datapoint({series => "array_test_get"});
+$get = new Kynetx::Metrics::Datapoint({series => "array_test_get"});
 $var = $varp . $asize;
 $get->tags($asize);
 $get->start_timer;
@@ -243,7 +243,7 @@ $get->push("var_size",$tsize);
 $get->store;
 
 $asize = 10000;
-$get = new Metrics::Datapoint({series => "array_test_get"});
+$get = new Kynetx::Metrics::Datapoint({series => "array_test_get"});
 $var = $varp . $asize;
 $get->tags($asize);
 $get->start_timer;
@@ -254,7 +254,7 @@ $get->push("var_size",$tsize);
 $get->store;
 
 $asize = 50000;
-$get = new Metrics::Datapoint({series => "array_test_get"});
+$get = new Kynetx::Metrics::Datapoint({series => "array_test_get"});
 $var = $varp . $asize;
 $get->tags($asize);
 $get->start_timer;
@@ -266,7 +266,7 @@ $get->store;
 
 
 $asize = 100000;
-$get = new Metrics::Datapoint({series => "array_test_get"});
+$get = new Kynetx::Metrics::Datapoint({series => "array_test_get"});
 $var = $varp . $asize;
 $get->tags($asize);
 $get->start_timer;
@@ -287,7 +287,7 @@ $del->push("var_size",0);
 $del->store;
 
 $asize = 500;
-$del = new Metrics::Datapoint({series => "array_test_del"});
+$del = new Kynetx::Metrics::Datapoint({series => "array_test_del"});
 $var = $varp . $asize;
 $del->tags($asize);
 $del->start_timer;
@@ -298,7 +298,7 @@ $del->store;
 
 
 $asize = 1000;
-$del = new Metrics::Datapoint({series => "array_test_del"});
+$del = new Kynetx::Metrics::Datapoint({series => "array_test_del"});
 $var = $varp . $asize;
 $del->tags($asize);
 $del->start_timer;
@@ -308,7 +308,7 @@ $del->push("var_size",0);
 $del->store;
 
 $asize = 5000;
-$del = new Metrics::Datapoint({series => "array_test_del"});
+$del = new Kynetx::Metrics::Datapoint({series => "array_test_del"});
 $var = $varp . $asize;
 $del->tags($asize);
 $del->start_timer;
@@ -319,7 +319,7 @@ $del->store;
 
 
 $asize = 10000;
-$del = new Metrics::Datapoint({series => "array_test_del"});
+$del = new Kynetx::Metrics::Datapoint({series => "array_test_del"});
 $var = $varp . $asize;
 $del->tags($asize);
 $del->start_timer;
@@ -329,7 +329,7 @@ $del->push("var_size",0);
 $del->store;
 
 $asize = 50000;
-$del = new Metrics::Datapoint({series => "array_test_del"});
+$del = new Kynetx::Metrics::Datapoint({series => "array_test_del"});
 $var = $varp . $asize;
 $del->tags($asize);
 $del->start_timer;
@@ -340,7 +340,7 @@ $del->store;
 
 
 $asize = 100000;
-$del = new Metrics::Datapoint({series => "array_test_del"});
+$del = new Kynetx::Metrics::Datapoint({series => "array_test_del"});
 $var = $varp . $asize;
 $del->tags($asize);
 $del->start_timer;
@@ -349,7 +349,7 @@ $del->stop_timer;
 $del->push("var_size",0);
 $del->store;
 
-$result = Metrics::Datapoint::get_data("array_test_put");
+$result = Kynetx::Metrics::Datapoint::get_data("array_test_put");
 for (my $i =0; $i< scalar(@{$result}) -1;$i++) {	
 		 my $dp = $result->[$i];
 		 $logger->debug("$i ", sub {Dumper($dp)});
