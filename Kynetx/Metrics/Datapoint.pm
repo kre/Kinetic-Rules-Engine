@@ -58,6 +58,7 @@ our $AUTOLOAD;
 
 use constant COLLECTION => "metrics";
 use constant INTERVAL   => 1;
+use constant NUMPOINTS => 1000;
 
 my %fields = (
 	vars      => undef,
@@ -354,6 +355,7 @@ sub get_data {
 	if ( defined $series ) {
 		$key = { "series" => $series };
 	}
+	my $cnt = 0;
 	my $cursor = $c->find($key);
 	if ( $cursor->has_next ) {
 		my @array_of_datapoints = ();
@@ -376,6 +378,9 @@ sub get_data {
 			}
 			$dp->push( \@vars, \@vals );
 			CORE::push( @array_of_datapoints, $dp );
+			if ($cnt++ > NUMPOINTS) {
+				last;
+			}
 		}
 		return \@array_of_datapoints;
 	}
