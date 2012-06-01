@@ -606,6 +606,9 @@ sub eval_application {
 				    $closure->{'val'}->{'env'});
 
 
+  # need to increment counter here since prelude might recurse
+  $req_info->{$closure->{'val'}->{'sig'}}++;
+
   # this extends the env a second time
   my($js, $decls_env) =  eval_prelude($req_info,
 				      $closure_env,
@@ -615,8 +618,6 @@ sub eval_application {
 
 #  $logger->debug("Env: ", Dumper $decls_env);
 #  $logger->debug("Env lookup: ", lookup_rule_env('n', $decls_env));
-
-  $req_info->{$closure->{'val'}->{'sig'}}++;
 
   return eval_expr($closure->{'val'}->{'expr'},
 		   $decls_env,
