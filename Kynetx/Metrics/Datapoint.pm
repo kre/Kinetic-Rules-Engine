@@ -316,7 +316,7 @@ sub store {
 		"rulename" => $self->{'rulename'},
 		"path"	   => $self->{'path'}
 	};
-	_update($obj);
+	#_update($obj);
 }
 
 sub stop_and_store {
