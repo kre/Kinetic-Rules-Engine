@@ -440,6 +440,8 @@ sub eval_module {
       } elsif ($function eq 'rulesetDescription' ) {
 	my $rid = get_rid($req_info->{'rid'});
 	$val = $req_info->{"$rid:description"};
+      } elsif ($function eq 'eci' ) {
+	$val = $req_info->{"id_token"};
       } else {
 	$val = "No meta information for $function available";
       }

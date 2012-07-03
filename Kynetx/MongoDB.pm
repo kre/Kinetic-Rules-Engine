@@ -92,7 +92,9 @@ use constant SAFE => 0;
 
 sub init {
     my $logger = get_logger();
-
+#	if ($MONGO) {
+#		return;
+#	}
     $MONGO_SERVER = Kynetx::Configure::get_config('MONGO_HOST') || $MONGO_SERVER;
     $MONGO_PORT = Kynetx::Configure::get_config('MONGO_PORT') || $MONGO_PORT;
     $MONGO_DB = Kynetx::Configure::get_config('MONGO_DB') || $MONGO_DB;

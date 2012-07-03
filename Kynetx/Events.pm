@@ -49,6 +49,7 @@ use Kynetx::Util qw(:all);
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 $Data::Dumper::Terse = 1;
+use Kynetx::Metrics::Datapoint;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -70,6 +71,8 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 use constant ANY => {type => ".*",
 		     pattern => ".*"};
 
+my $event_list_threshold = Kynetx::Configure::get_config('EVENT_LIST_THRESHOLD') || 100;
+
 sub handler {
     my $r = shift;
 
@@ -77,6 +80,8 @@ sub handler {
     Kynetx::Util::config_logging($r);
 
     my $logger = get_logger();
+    my $metric = new Kynetx::Metrics::Datapoint();
+	$metric->start_timer();
 
     $r->content_type('text/javascript');
 
@@ -101,7 +106,10 @@ sub handler {
     $eventtype = $path_components[3];
     $rid = $path_components[4] || 'any';
     $eid = $path_components[5] || '';
-
+    $metric->eid($eid);
+    $metric->rid($rid);
+	$metric->push('domain',$domain);
+	$metric->push('eventtype',$eventtype);
 
     if ($domain eq 'version') {
       $logger->debug("returning version info for event API");
@@ -111,6 +119,7 @@ sub handler {
 
     Log::Log4perl::MDC->put( 'site', $rid );
     Log::Log4perl::MDC->put( 'rule', '[global]' );    # no rule for now...
+    Log::Log4perl::MDC->put( 'eid', $eid );    # identify event
 
     # store these for later logging
     $r->subprocess_env( DOMAIN    => $domain );
@@ -121,9 +130,10 @@ sub handler {
     if ( $domain eq 'version' ) {
         show_build_num($r);
     } else {
+    	$metric->series("blue-event");
         process_event( $r, $domain, $eventtype, $rid, $eid );
+		$metric->stop_and_store();
     }
-
     return Apache2::Const::OK;
 }
 
@@ -362,21 +372,34 @@ sub process_event_for_rid {
             my $var_list = [];
             my $val_list = [];
             $logger->trace("Process sessions");
-            while ( my $json =
-                    consume_trail_element("ent", $rid, $session, $event_list_name, 1) )
+#            while ( my $json =
+#                    consume_trail_element("ent", $rid, $session, $event_list_name, 1) )
+
+	    my $event_list_count = 0;
+            while ( my $ev =
+                    Kynetx::Events::Primitives->unserialize(
+		      consume_trail_element("ent", $rid, $session, $event_list_name, 1)) 
+		  )
             {
 
-                my $ev = Kynetx::Events::Primitives->unserialize($json);
-                $logger->trace( "Event: ", sub { Dumper $ev} );
 
-                # FIXME: what we're not doing: the event list also
-                # includes the req_info that was active when the event
-                # came in.  We're not doing anything with it--simply
-                # using the req_info from the final req...
+	      $logger->debug("Event list count: $event_list_count; threshold: $event_list_threshold");
+	      if ($event_list_count++ > $event_list_threshold) {
+		$logger->warn("Event list threshold exceeded for $rid:$rulename. Last event in event list: ", sub { Dumper $ev });
+		last;
+	      }
 
-                # gather up vars and vals from all the events in the path
-                push @{$var_list}, @{ $ev->get_vars( $sm->get_id() ) };
-                push @{$val_list}, @{ $ev->get_vals( $sm->get_id() ) };
+	      #my $ev = Kynetx::Events::Primitives->unserialize($json);
+	      #                $logger->debug( "Event: ", sub { Dumper $ev} );
+
+	      # FIXME: what we're not doing: the event list also
+	      # includes the req_info that was active when the event
+	      # came in.  We're not doing anything with it--simply
+	      # using the req_info from the final req...
+
+	      # gather up vars and vals from all the events in the path
+	      push @{$var_list}, @{ $ev->get_vars( $sm->get_id() ) };
+	      push @{$val_list}, @{ $ev->get_vals( $sm->get_id() ) };
             }
             $schedule->annotate_task( $rid, $rulename,$task, 'vars', $var_list );
             $schedule->annotate_task( $rid, $rulename,$task, 'vals', $val_list );

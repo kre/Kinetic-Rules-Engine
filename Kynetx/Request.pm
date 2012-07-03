@@ -55,10 +55,14 @@ sub build_request_env {
     # grab request params
     my $req = Apache2::Request->new($r);
 
-$logger->debug("Raw request ", sub { Dumper $req->body() });
+#$logger->debug("Raw request ", sub { Dumper $req->body() });
 
-    my $domain = $req->param('_domain') || $method || 'web';
-    $eventtype = $req->param('_type') || $req->param('_name') || $eventtype || 'pageview';
+    my $domain = $req->param('_domain') || $method || 'discovery';
+    $eventtype = $req->param('_type') || $req->param('_name') || $eventtype || 'hello';
+
+    if ($domain eq "discovery" && $eventtype eq "hello") {
+      $logger->debug("No domain:type given; defaulting to discovery:hello");
+    }
 
     # we rely on this being undef if nothing passed in
     $rids = $req->param('_rids') || $rids;
@@ -162,6 +166,40 @@ $logger->debug("Raw request ", sub { Dumper $req->body() });
 
     return $request_info;
 }
+
+
+### condvar
+sub set_condvar {
+  my($self, $cv) = @_;
+
+  $self->{'condvar'} = $cv;
+}
+
+sub get_condvar {
+  my($self) = @_;
+
+  return $self->{'condvar'};
+}
+
+### final
+sub set_final_flag {
+  my($self) = @_;
+
+  $self->{Kynetx::Rids::get_rid($self->{rid})}->{'final_flag'} = 1;
+}
+
+sub clr_final_flag {
+  my($self) = @_;
+
+  undef $self->{Kynetx::Rids::get_rid($self->{rid})}->{'final_flag'};
+}
+
+sub get_final_flag {
+  my($self) = @_;
+
+  return $self->{Kynetx::Rids::get_rid($self->{rid})}->{'final_flag'};
+}
+
 
 
 # merge multiple request environments, last wins

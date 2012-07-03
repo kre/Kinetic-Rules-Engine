@@ -96,33 +96,46 @@ sub process_session {
     $ubx_token = $r->headers_in->{'Kobj-Session'};
     #$ubx_token = $tk if defined $tk;
 
+    # Sky flow
     if (defined $tk) {
       $logger->info("Explicit token: (SKY) $tk");
       if ($tk ne "") {
-	$ubx_token = $tk;
+        my $token;
+        if ($token = Kynetx::Persistence::KToken::is_valid_token($tk)) {
+            $logger->info("Received valid SKY token: ", $tk);
+            # Set the session ID for this SKY token
+            my $sky_session = $token->{"endpoint_id"};
+            my $session = {"_session_id" => $sky_session};
+            return $session;
+        } else {
+            $logger->info("Invalid SKY token received: ", $tk);   
+        }
       } else {
-	$logger->warn("Empty Explicit Token received");
-	$ubx_token = undef;
+        $logger->warn("Empty Explicit Token received");
+        $ubx_token = undef;
       }
     }
     
+    # UBX flow
     if (defined $ubx_token) {
       my $token;
       if ($token = Kynetx::Persistence::KToken::is_valid_token($ubx_token)) {
-	$logger->info("Received valid token: $ubx_token");
-	my $tcookie = $token->{"endpoint_id"};
-	if ($tcookie ne $cookie) {
-	  my $old_cookie = $cookie;
-	  $cookie = new_session_id();
-	  $logger->debug("Old cookie was: $old_cookie");
-	  $logger->debug("New session is: $cookie");
-	  Kynetx::Persistence::KToken::set_token($ubx_token,$cookie);
-	  Kynetx::Persistence::KToken::delete_token(undef,$old_cookie,undef);    			    		
-	} else {
-	  $logger->debug("Tokens are the same");
-	}
+        $logger->info("Received valid token: $ubx_token");
+        my $tcookie = $token->{"endpoint_id"};
+        if ($tcookie ne $cookie) {
+            my $old_cookie = $cookie;
+            $cookie = new_session_id();
+            $logger->debug("Old cookie was: $old_cookie");
+            $logger->debug("New session is: $cookie");
+            Kynetx::Persistence::KToken::set_token($ubx_token,$cookie);
+            if (! $tk) {
+                Kynetx::Persistence::KToken::delete_token(undef,$old_cookie,undef);                       
+            }
+        } else {
+            $logger->debug("Tokens are the same");
+        }
       } else {
-	$logger->debug("Invalid token: ", $ubx_token);
+        $logger->debug("Invalid token: ", $ubx_token);
       }
     }
 
@@ -132,10 +145,10 @@ sub process_session {
 
 
     if (defined $cookie) {
-		$logger->info("Using session id: ", $cookie );
+        $logger->info("Using session id: ", $cookie );
     } else {
-		$cookie = new_session_id(); 	
-		$logger->info("No session id found, created $cookie" );
+        $cookie = new_session_id();   
+        $logger->info("No session id found, created $cookie" );
     }
     
     my $session= { "_session_id" => $cookie};    
@@ -151,9 +164,9 @@ sub process_session {
     # might be a new session, so lets give them their cookie back
     #  with an updated expiration
     my $session_cookie =
-	"SESSION_ID=$session->{_session_id};path=/;domain=" .
-	Kynetx::Configure::get_config('COOKIE_DOMAIN') .
-	';expires=' . $expires; #Mon, 31-Dec-2012 00:00:00 GMT';
+        "SESSION_ID=$session->{_session_id};path=/;domain=" .
+        Kynetx::Configure::get_config('COOKIE_DOMAIN') .
+        ';expires=' . $expires; #Mon, 31-Dec-2012 00:00:00 GMT';
     $logger->debug("Sending cookie: ", $session_cookie);
     $r->headers_out->add('Set-Cookie' => $session_cookie);
 
@@ -162,16 +175,16 @@ sub process_session {
 }
 
 sub new_session_id {
-	my $length = 32;
-	my $tmp = substr(Digest::MD5::md5_hex(Digest::MD5::md5_hex(time(). {}. rand(). $$)), 0, $length);
-	my $session= { "_session_id" => $tmp};
-	my $token = Kynetx::Persistence::KToken::get_token($session,"","web");
-	if ($token) {
-		# Get another session ID because somehow this one has been used already
-		return new_session_id();
-	} else {
-		return $tmp;
-	}
+  my $length = 32;
+  my $tmp = substr(Digest::MD5::md5_hex(Digest::MD5::md5_hex(time(). {}. rand(). $$)), 0, $length);
+  my $session= { "_session_id" => $tmp};
+  my $token = Kynetx::Persistence::KToken::get_token($session,"","web");
+  if ($token) {
+    # Get another session ID because somehow this one has been used already
+    return new_session_id();
+  } else {
+    return $tmp;
+  }
 }
 
 sub tie_servers {
@@ -190,11 +203,11 @@ sub tie_servers {
 
 
     tie %{$session}, 'Apache::Session::Memcached', $cookie, {
-	Servers => $mem_servers,
-	NoRehash => 1,
-	Readonly => 0,
-	Debug => 0,
-	CompressThreshold => 10_000
+  Servers => $mem_servers,
+  NoRehash => 1,
+  Readonly => 0,
+  Debug => 0,
+  CompressThreshold => 10_000
     };
 
     return $session;
@@ -249,9 +262,9 @@ sub session_touch {
     $session->{$rid}->{$var} = 0 unless exists $session->{$rid}->{$var};
 
     if(defined $dt) {
-	$session->{$rid}->{$var.'_created'} = $dt->epoch;
+  $session->{$rid}->{$var.'_created'} = $dt->epoch;
     } else {
-	$session->{$rid}->{$var.'_created'} = DateTime->now->epoch;
+  $session->{$rid}->{$var.'_created'} = DateTime->now->epoch;
     }
 
     return $session->{$rid}->{$var};
@@ -298,8 +311,8 @@ sub session_within {
     my $logger = get_logger();
 
     my $desired = DateTime->from_epoch(
-	epoch => session_created($rid, $session, $var)
-	);
+  epoch => session_created($rid, $session, $var)
+  );
 
 #    $logger->debug("[session:$var] created ", $desired->datetime());
 
@@ -308,9 +321,9 @@ sub session_within {
     $desired->add( $timeframe => $timevalue );
 
     $logger->debug("[session:$var] ",
-		   $timeframe, " -> ", $timevalue,
-		   ' desired ', $desired->datetime()
-	);
+       $timeframe, " -> ", $timevalue,
+       ' desired ', $desired->datetime()
+  );
 
     return Kynetx::Util::after_now($desired);
 }
@@ -319,21 +332,21 @@ sub session_inc_by_from {
     my ($rid, $session, $var, $val, $from) = @_;
     my $logger = get_logger();
     if(session_defined($rid, $session, $var)) {
-	my $old = session_get($rid, $session, $var);
-	session_store($rid, $session, $var, $old + $val);
-	$logger->debug("iterating session var ",
-		       $var,
-		       " from ",
-		       $old,
-		       " by ",
-		       $val);
+  my $old = session_get($rid, $session, $var);
+  session_store($rid, $session, $var, $old + $val);
+  $logger->debug("iterating session var ",
+           $var,
+           " from ",
+           $old,
+           " by ",
+           $val);
 
     } else {
-	session_store($rid, $session, $var, $from);
-	$logger->debug("initializing session var ",
-		       $var,
-		       " to ",
-		       $from);
+  session_store($rid, $session, $var, $from);
+  $logger->debug("initializing session var ",
+           $var,
+           " to ",
+           $from);
     }
     return session_get($rid, $session, $var);
 }
@@ -369,29 +382,29 @@ sub session_push {
     my $tuple = [$val, DateTime->now->epoch];
     if (session_defined($rid, $session, $var)) {
 
-	my $s = session_get($rid, $session, $var);
-	if(ref $s eq 'ARRAY') {
-	    unshift @{ $s }, $tuple;
-	    # store the array after slicing it to the right length
-	    if(scalar @{$s} >= MAX_STACK_SIZE) {
-		delete $s->[MAX_STACK_SIZE]
-	    }
-	    $res = session_store($rid, $session, $var, $s);
-	    $logger->debug("Pushing $val onto $var");
-	} else {
-	    # not sure what to do but make a stack of it.
-	    $res = session_store($rid, $session, $var,
-				 [$tuple,
-				  [$s, session_created($rid, $session, $var)]
-				 ]);
-	    $logger->debug("Pushing $val onto $var with previous");
+  my $s = session_get($rid, $session, $var);
+  if(ref $s eq 'ARRAY') {
+      unshift @{ $s }, $tuple;
+      # store the array after slicing it to the right length
+      if(scalar @{$s} >= MAX_STACK_SIZE) {
+    delete $s->[MAX_STACK_SIZE]
+      }
+      $res = session_store($rid, $session, $var, $s);
+      $logger->debug("Pushing $val onto $var");
+  } else {
+      # not sure what to do but make a stack of it.
+      $res = session_store($rid, $session, $var,
+         [$tuple,
+          [$s, session_created($rid, $session, $var)]
+         ]);
+      $logger->debug("Pushing $val onto $var with previous");
 
-	}
+  }
 
     } else {
 
-	$res = session_store($rid, $session, $var, [$tuple]);
-	$logger->debug("Pushing $val onto $var as new trail");
+  $res = session_store($rid, $session, $var, [$tuple]);
+  $logger->debug("Pushing $val onto $var as new trail");
 
     }
 
@@ -404,8 +417,8 @@ sub session_pop {
     my $res = undef;
     my $s = session_get($rid, $session, $var);
     if(ref $s eq 'ARRAY') {
-	   $res = shift @{ $s };
-	   session_store($rid,$session,$var,$s);
+     $res = shift @{ $s };
+     session_store($rid,$session,$var,$s);
     }
     return $res->[0]; # just the value
 }
@@ -420,8 +433,8 @@ sub session_next {
     $logger->debug("[Session next] session: ", sub {Dumper($s)});
     if(ref $s eq 'ARRAY') {
        $logger->debug("[Session_next] is Array");
-	   $res = pop @{ $s };
-	   session_store($rid,$session,$var,$s);
+     $res = pop @{ $s };
+     session_store($rid,$session,$var,$s);
     }
     return $res->[0]; # just the value
 }
@@ -432,7 +445,7 @@ sub session_history {
     my $res = undef;
     my $s = session_get($rid, $session, $var);
     if(ref $s eq 'ARRAY') {
-	   $res = $s->[$index];
+     $res = $s->[$index];
     }
     return $res->[0];
 }
@@ -446,17 +459,17 @@ sub session_seen_proto {
     my $s = session_get($rid, $session, $var);
 
     for my $i (0..@{$s}-1){
-	if($s->[$i]->[0] =~ /$regexp/) {
-	    $res = $i;
-	    last;
-	}
+  if($s->[$i]->[0] =~ /$regexp/) {
+      $res = $i;
+      last;
+  }
     }
 #    $logger->debug("Found ". $s->[$res]->[0]) if defined $res;
     # return index and date created
     if(defined $res) {
-	return [$res, $s->[$res]->[1]];
+  return [$res, $s->[$res]->[1]];
     } else {
-	return undef;
+  return undef;
     }
 }
 
@@ -477,8 +490,8 @@ sub session_seen_within {
     return 0 unless (defined $seen->[0]);
 
     my $desired = DateTime->from_epoch(
-	epoch => $seen->[1]
-	);
+  epoch => $seen->[1]
+  );
 
     $logger->debug("[session:$var] created ", $desired->datetime());
 
@@ -487,9 +500,9 @@ sub session_seen_within {
     $desired->add( $timeframe => $timevalue );
 
     $logger->debug("[session:$var] ",
-		   $timeframe, " -> ", $timevalue,
-		   ' desired ', $desired->datetime()
-	);
+       $timeframe, " -> ", $timevalue,
+       ' desired ', $desired->datetime()
+  );
 
     return Kynetx::Util::after_now($desired);
 }

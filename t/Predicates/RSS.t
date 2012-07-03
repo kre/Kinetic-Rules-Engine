@@ -63,7 +63,7 @@ ruleset txml {
 Dataset manipulation             >>
         logging on    }
     global {
-        dataset feed_data:RSS <- "http://rss.news.yahoo.com/rss/mostviewed" cachable for 30 minutes;
+        dataset feed_data:RSS <- "http://feeds.finance.yahoo.com/rss/2.0/category-stocks?region=US&lang=en-US" cachable for 30 minutes;
      }
     rule txml_rule is active {
         select using ".*" setting ()
@@ -148,13 +148,13 @@ my $r = Kynetx::Test::configure();
 my $session = Kynetx::Test::gen_session($r, $rid);
 
 
-my $req_info = Kynetx::Test::gen_req_info();
+my $req_info = Kynetx::Test::gen_req_info($rid);
 my $rule_env = Kynetx::Test::gen_rule_env();
 
     $krl_src = <<_KRL_;
 global {
    dataset fizz_data:RSS <- "http://cyber.law.harvard.edu/rss/examples/rss2sample.xml";
-   dataset feed_data:RSS <- "http://rss.news.yahoo.com/rss/mostviewed";
+   dataset feed_data:RSS <- "http://feeds.finance.yahoo.com/rss/2.0/category-stocks?region=US&lang=en-US";
 }
 _KRL_
     $krl = Kynetx::Parser::parse_global_decls($krl_src);

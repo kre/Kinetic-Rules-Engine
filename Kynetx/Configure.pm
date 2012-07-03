@@ -23,7 +23,7 @@ use strict;
 #use warnings;
 
 use YAML::XS;
-
+ 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
@@ -121,6 +121,11 @@ sub configure {
 
     # OAuth URLS
     $config->{'OAUTH'} = read_config(OAUTH_CONFIG_FILE);
+    
+    # Values for metrics
+    my @host = split(/\./,`hostname`);
+    $config->{'METRICS'}->{'HOSTNAME'} = $host[0];
+    $config->{'METRICS'}->{'PROC'} = $$;
 
     return 1;
 }

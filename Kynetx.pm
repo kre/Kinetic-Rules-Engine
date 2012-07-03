@@ -45,6 +45,8 @@ use Kynetx::Directives;
 use Kynetx::Modules::OAuthModule;
 use Kynetx::Events;
 
+use Kynetx::Metrics::Datapoint;
+
 use constant DEFAULT_TEMPLATE_DIR => Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
 
 # Make this global so we can use memcache all over
@@ -59,7 +61,11 @@ sub handler {
     Kynetx::Util::config_logging($r);
 
     my $logger = get_logger();
-
+    
+    # Request timer
+    my $metric = new Kynetx::Metrics::Datapoint();
+	$metric->start_timer();
+	
     $r->content_type('text/javascript');
 
 
@@ -72,6 +78,9 @@ sub handler {
     my $eid = '';
 
     ($method,$rid,$eid) = $r->path_info =~ m!/([a-z+_]+)/([A-Za-z0-9_;]*)/?(\d+)?!;
+    
+    $metric->eid($eid);
+    $metric->rid($rid);
 
     $logger->debug("Performing $method method on rulesets $rid and EID $eid");
     Log::Log4perl::MDC->put('site', $rid);
@@ -85,58 +94,76 @@ sub handler {
 
     # at some point we need a better dispatch function
     if($method eq 'eval') {
-	process_rules($r, $method, $rid, $eid);
+    	$metric->series("blue-eval");
+		process_rules($r, $method, $rid, $eid);
+    	$metric->stop_and_store();
     } elsif($method eq 'event') {
-	Kynetx::Events::process_event($r, $method, $rid, $eid);
+    	$metric->series("blue-event");
+		Kynetx::Events::process_event($r, $method, $rid, $eid);
+    	$metric->stop_and_store();
     } elsif($method eq 'flush' ) {
 	flush_ruleset_cache($r, $method, $rid);
     } elsif($method eq 'console') {
 	show_context($r, $method, $rid);
     } elsif($method eq 'describe' ) {
 	describe_ruleset($r, $method, $rid);
+    } elsif($method eq 'tenx' ) {
+	metric($r, $method, $rid);
     } elsif($method eq 'version' ) {
 	#my $session = process_session($r);
 	show_build_num($r, $method, $rid);
     } elsif($method eq 'cb_host') {
-
-      my $st = Kynetx::Modules::OAuthModule::callback_host($r,$method, $rid);
-      $r->status($st);
-      return $st;
+		$metric->series("oauth_host_callback");
+      	my $st = Kynetx::Modules::OAuthModule::callback_host($r,$method, $rid);
+      	$r->status($st);
+      	$metric->stop_and_store();
+      	return $st;
     } elsif($method eq 'twitter_callback' ) {
-	Kynetx::Modules::Twitter::process_oauth_callback($r, $method, $rid);
-	$r->status(Apache2::Const::REDIRECT);
-	return Apache2::Const::REDIRECT;
+		$metric->series("twitter_callback");
+		Kynetx::Modules::Twitter::process_oauth_callback($r, $method, $rid);
+		$r->status(Apache2::Const::REDIRECT);
+      	$metric->stop_and_store();
+		return Apache2::Const::REDIRECT;
 
     } elsif($method eq 'kpds_callback' ) {
-      Kynetx::Predicates::KPDS::process_oauth_callback($r, $method, $rid);
-      $r->status(Apache2::Const::REDIRECT);
-      return Apache2::Const::REDIRECT;
+		$metric->series("KPDS_callback");
+      	Kynetx::Predicates::KPDS::process_oauth_callback($r, $method, $rid);
+      	$r->status(Apache2::Const::REDIRECT);
+      	$metric->stop_and_store();
+      	return Apache2::Const::REDIRECT;
 
     } elsif($method eq 'google_callback' ) {
-      Kynetx::Predicates::Google::process_oauth_callback($r, $method, $rid);
-      $r->status(Apache2::Const::REDIRECT);
-      return Apache2::Const::REDIRECT;
+		$metric->series("google_callback");
+      	Kynetx::Predicates::Google::process_oauth_callback($r, $method, $rid);
+      	$r->status(Apache2::Const::REDIRECT);
+      	$metric->stop_and_store();
+      	return Apache2::Const::REDIRECT;
     } elsif($method eq 'fb_callback' ) {
       #my $st = Kynetx::Predicates::Facebook::process_oauth_callback($r, $method, $rid, $eid);
-      my $st = Kynetx::Predicates::Google::OAuthHelper::generic_oauth_handler($r, $method, $rid, $eid);
-      $r->status($st);
+		$metric->series("facebook_callback");
+      	my $st = Kynetx::Predicates::Google::OAuthHelper::generic_oauth_handler($r, $method, $rid, $eid);
+      	$r->status($st);
+       	$metric->stop_and_store();
       return $st;
     } elsif($method eq 'pds_callback' ) {
-      Kynetx::Modules::PDS::process_auth_callback($r, $method, $rid);
-      $r->status(Apache2::Const::REDIRECT);
-      return Apache2::Const::REDIRECT;
+		$metric->series("pds_callback");
+      	Kynetx::Modules::PDS::process_auth_callback($r, $method, $rid);
+      	$r->status(Apache2::Const::REDIRECT);
+      	$metric->stop_and_store();
+      	return Apache2::Const::REDIRECT;
     } elsif ($method eq 'oauth_callback') {
+		$metric->series("oauth_callback");
     	my $st = Kynetx::Modules::OAuthModule::oauth_callback_handler($r,$method,$rid);
     	$r->status($st);
+      	$metric->stop_and_store();
     	return $st;
     } elsif($method eq 'foo' ) {
-	my $uniq = int(rand 999999999);
-	$r->content_type('text/html');
-	print "$uniq";
+		my $uniq = int(rand 999999999);
+		$r->content_type('text/html');
+		print "$uniq";
     } elsif($method eq 'mth') {
     	test_harness($r, $method, $rid, $eid);
     } 
-
 
     return Apache2::Const::OK;
 }
@@ -327,4 +354,9 @@ sub describe_ruleset {
 	$r->content_type('text/html');
 	print $test_template->output;
     }
+}
+    
+sub metric {
+    
+    
 }

@@ -21,40 +21,53 @@
 use lib qw(/web/lib/perl);
 use strict;
 
-# grab the test data file names
-my @krl_files = @ARGV ? @ARGV : <data/*.krl>;
-
 use Test::More;
-plan tests => $#krl_files+1;
-use Test::LongString;
 
-# most Kyentx modules require this
-use Log::Log4perl qw(get_logger :levels);
-Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+use Test::LongString;
+use Test::Deep;
+use Apache::Session::Memcached;
 
 use Kynetx::Test qw/:all/;
-use Kynetx::Parser qw/:all/;
-use Kynetx::Json qw/:all/;
+use Kynetx::Util qw/:all/;
+use Kynetx::Session qw/:all/;
+use Kynetx::FakeReq;
+use DateTime;
 use Data::Dumper;
-use Encode;
+use Kynetx::Metrics::TENX qw(:all);
+use Cache::Memcached;
+use Benchmark ':hireswallclock';
+use Clone qw(clone);
+use Kynetx::Test qw/:all/;
+use Kynetx::Configure;
+use Kynetx::MongoDB qw(:all);
+use Kynetx::Memcached;
+use APR::URI qw/:all/;
+use APR::Pool ();
 
+
+use Log::Log4perl qw(get_logger :levels);
+#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($INFO);
+Log::Log4perl->easy_init($TRACE);
 my $logger = get_logger();
 
-# test the round trip KRL -> Json -> KRL
-foreach my $f (@krl_files) {
-    my ($fl,$krl_text) = getkrl($f);
-    my $json = krlToJson($krl_text);
-    # Use the internal perl string structure for the compare
-    my $krl = decode("UTF-8",$krl_text);
-    my $back = decode("UTF-8",jsonToKrl($json));
-    my $result = is_string_nows($back, remove_comments($krl), "$f: $fl");
-    if (! $result){
-    	$logger->debug("Original: ", $krl_text);    	
-    	$logger->debug("Composed: ",$back);
-    	die;
-    }
-}
+Kynetx::Configure::configure();
+
+Kynetx::MongoDB::init();
+
+Kynetx::Memcached->init();
+
+
+my $num_test = 1;
+my $rid = "time_test";
+my $session = int(rand(1000000)); 
+
+ok(1);
+
+
+
+
+done_testing($num_test);
 
 1;
 

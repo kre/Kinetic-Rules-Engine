@@ -29,6 +29,7 @@ use Apache::Session::Memcached;
 use APR::URI;
 use APR::Pool ();
 
+use JSON::XS;
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
@@ -76,8 +77,11 @@ my $options = {'g_id' => $session_id,
 	       'id_token' => $token};
 my $my_req_info = Kynetx::Test::gen_req_info($rid,$options);
 
+my $dd = Kynetx::Response->create_directive_doc($my_req_info->{'eid'});
 
 my %rule_env = ();
+
+my $logger = get_logger();
 
 my $test_count = int(@pnames);
 
@@ -123,12 +127,132 @@ is(get_eventinfo($my_req_info, 'env', ['rid']),
 $test_count++;
 
 
-# my $subscriptions = [{'token' => $token},
-# 		     {'token' => $other_token}];
+# set up AnyEvent
+my $cv = AnyEvent->condvar();
+Kynetx::Request::set_condvar($my_req_info,$cv);
 
-# foreach my $sm ( @{$subscriptions}) {
-#   Kynetx::Modules::Event::send_event($sm, 'notification', 'status');
-# }
+
+
+$cv->begin(sub { shift->send("All threads complete") });
+
+my $subscriptions = [{'token' => $token},
+ 		     {'token' => $other_token}];
+
+my ($krl, $krl_src, $js);
+
+
+foreach my $sm ( @{$subscriptions}) {
+
+
+  my $sm_json = encode_json($sm);
+
+  $krl_src = <<_KRL_;
+event:send($sm_json, "notification", "status")
+   with attrs = {"priority" : "2",
+                 "appliaction" : "Flipper"
+                }
+_KRL_
+
+  $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#  diag Dumper $krl;
+
+  $js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
+
+# $result = lookup_rule_env('r',$rule_env);
+# ok($result->{'content'} eq '', "Content undefined");
+# ok($result->{'status_code'} eq '302', "Status code Found(?)");
+# $test_count += 2;
+
+#  diag $js;
+
+}
+
+$subscriptions = [{'cid' => $token},
+		  {'cid' => $other_token}];
+
+foreach my $sm ( @{$subscriptions}) {
+
+
+  my $sm_json = encode_json($sm);
+
+  $krl_src = <<_KRL_;
+event:send($sm_json, "notification", "status")
+   with attrs = {"priority" : "2",
+                 "appliaction" : "Flipper"
+                }
+_KRL_
+
+  $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#  diag Dumper $krl;
+
+  $js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
+
+# $result = lookup_rule_env('r',$rule_env);
+# ok($result->{'content'} eq '', "Content undefined");
+# ok($result->{'status_code'} eq '302', "Status code Found(?)");
+# $test_count += 2;
+
+#  diag $js;
+
+}
+
+$subscriptions = [{'flip' => $token},
+		  {'flip' => $other_token}];
+
+foreach my $sm ( @{$subscriptions}) {
+
+
+  my $sm_json = encode_json($sm);
+
+  $krl_src = <<_KRL_;
+event:send($sm_json, "notification", "status")
+   with attrs = {"priority" : "2",
+                 "appliaction" : "Flipper"
+                }
+    and cid_key = "flip"
+_KRL_
+
+  $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#  diag Dumper $krl;
+
+  $js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
+
+# $result = lookup_rule_env('r',$rule_env);
+# ok($result->{'content'} eq '', "Content undefined");
+# ok($result->{'status_code'} eq '302', "Status code Found(?)");
+# $test_count += 2;
+
+#  diag $js;
+
+}
+
+
+$cv->end;
+$logger->debug($cv->recv);
 
 
 done_testing($test_count);

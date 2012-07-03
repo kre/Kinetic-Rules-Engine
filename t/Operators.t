@@ -69,6 +69,7 @@ my $turl = "http://www.htmliseasy.com/exercises/example_06c.html";
 my $durl = "http://www.htmliseasy.com/exercises/example_02d.html";
 #diag "Fetching test content from: $turl";
 my $content = Kynetx::Memcached::get_remote_data($turl,3600);
+#diag "Content for q_html: " , $content;
 #diag "Fetching test content from: $durl";
 my $content2 = Kynetx::Memcached::get_remote_data($durl,3600);
 
@@ -1374,76 +1375,84 @@ $i++;
 my $list = Kynetx::Operators::list_extensions();
 $logger->debug("Extensions: ", sub {Dumper($list)});
 
-$e[$i] = q/q_html.query("table tr td b, font[size='5']",1)/;
-$x[$i] = {
-   'val' => bag(
-     'My tech stock picks',
-     'My tech stock picks',
-     'NAME',
-     'SYMBOL',
-     'CURRENT',
-     '52WK HI',
-     '52WK LO',
-     'P/E RATIO'
-   ),
-   'type' => 'array'
-};
-$d[$i] = 0;
-$i++;
+if ($content) {      
+    
+    $e[$i] = q/q_html.query("table tr td b, font[size='5']",1)/;
+    $x[$i] = {
+       'val' => bag(
+         'My tech stock picks',
+         'My tech stock picks',
+         'NAME',
+         'SYMBOL',
+         'CURRENT',
+         '52WK HI',
+         '52WK LO',
+         'P/E RATIO'
+       ),
+       'type' => 'array'
+    };
+    $d[$i] = 0;
+    $i++;
+    
+    $e[$i] = q/q_html.query(in_str)/;
+    $x[$i] = {
+       'val' => [
+         '<font size="2"><b>NAME</b></font>',
+         '<font size="2"><b>SYMBOL</b></font>',
+         '<font size="2"><b>CURRENT</b></font>',
+         '<font size="2"><b>52WK HI</b></font>',
+         '<font size="2"><b>52WK LO</b></font>',
+         '<font size="2"><b>P/E RATIO</b></font>'
+       ],
+       'type' => 'array'
+    };
+    $d[$i] = 0;
+    $i++;
 
-$e[$i] = q/html_arr.query(["table tr td b", "font[size='5']"])/;
-$x[$i] = {
-   'val' => bag(
-     '<b>52WK HI</b>', 
-     '<b>52WK LO</b>', 
-     '<b>CURRENT</b>', 
-     '<b>My tech stock picks</b>', 
-     '<b>NAME</b>', 
-     '<b>P/E RATIO</b>', 
-     '<b>SYMBOL</b>', 
-     '<font size="5"><i><b>My tech stock picks</b></i></font>'
-   ),
-   'type' => 'array'
-};
-$d[$i] = 0;
-$i++;
+} else {
+    $logger->debug("Skipped tests to $turl");   
+}
 
-
-$e[$i] = q/q_html.query(in_str)/;
-$x[$i] = {
-   'val' => [
-     '<font size="2"><b>NAME</b></font>',
-     '<font size="2"><b>SYMBOL</b></font>',
-     '<font size="2"><b>CURRENT</b></font>',
-     '<font size="2"><b>52WK HI</b></font>',
-     '<font size="2"><b>52WK LO</b></font>',
-     '<font size="2"><b>P/E RATIO</b></font>'
-   ],
-   'type' => 'array'
-};
-$d[$i] = 0;
-$i++;
-
-
-$e[$i] = q/html_arr.query([in_str,"i"],1)/;
-$x[$i] = {
-   'val' => bag(
-     'Meet Jack',
-     'My tech stock picks',
-     'NAME',
-     'SYMBOL',
-     'CURRENT',
-     '52WK HI',
-     '52WK LO',
-     'P/E RATIO',
-     'look',
-     'little'
-   ),
-   'type' => 'array'
-};
-$d[$i] = 0;
-$i++;
-
+if ($content2 && $content) {
+    $e[$i] = q/html_arr.query(["table tr td b", "font[size='5']"])/;
+    $x[$i] = {
+       'val' => bag(
+         '<b>52WK HI</b>', 
+         '<b>52WK LO</b>', 
+         '<b>CURRENT</b>', 
+         '<b>My tech stock picks</b>', 
+         '<b>NAME</b>', 
+         '<b>P/E RATIO</b>', 
+         '<b>SYMBOL</b>', 
+         '<font size="5"><i><b>My tech stock picks</b></i></font>'
+       ),
+       'type' => 'array'
+    };
+    $d[$i] = 0;
+    $i++;
+    
+    
+    $e[$i] = q/html_arr.query([in_str,"i"],1)/;
+    $x[$i] = {
+       'val' => bag(
+         'Meet Jack',
+         'My tech stock picks',
+         'NAME',
+         'SYMBOL',
+         'CURRENT',
+         '52WK HI',
+         '52WK LO',
+         'P/E RATIO',
+         'look',
+         'little'
+       ),
+       'type' => 'array'
+    };
+    $d[$i] = 0;
+    $i++;
+} else {
+    $logger->debug("Skipped tests based upon: ",$turl);   
+}
 
 $e[$i] = q#my_str.extract(re/(is)/)#;
 $x[$i] = {

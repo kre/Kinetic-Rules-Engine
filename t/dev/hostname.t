@@ -20,41 +20,56 @@
 #
 use lib qw(/web/lib/perl);
 use strict;
-
-# grab the test data file names
-my @krl_files = @ARGV ? @ARGV : <data/*.krl>;
+use warnings;
 
 use Test::More;
-plan tests => $#krl_files+1;
 use Test::LongString;
+use Test::WWW::Mechanize;
+use Cache::Memcached;
+
+use Socket;
+
+
+use Kynetx::Configure qw/:all/;
+use Kynetx::Test qw/:all/;
+use Kynetx::FakeReq qw/:all/;
+
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
 
-use Kynetx::Test qw/:all/;
-use Kynetx::Parser qw/:all/;
-use Kynetx::Json qw/:all/;
 use Data::Dumper;
-use Encode;
+$Data::Dumper::Indent = 1;
 
 my $logger = get_logger();
 
-# test the round trip KRL -> Json -> KRL
-foreach my $f (@krl_files) {
-    my ($fl,$krl_text) = getkrl($f);
-    my $json = krlToJson($krl_text);
-    # Use the internal perl string structure for the compare
-    my $krl = decode("UTF-8",$krl_text);
-    my $back = decode("UTF-8",jsonToKrl($json));
-    my $result = is_string_nows($back, remove_comments($krl), "$f: $fl");
-    if (! $result){
-    	$logger->debug("Original: ", $krl_text);    	
-    	$logger->debug("Composed: ",$back);
-    	die;
-    }
-}
+my $r = Kynetx::Test::configure();
+
+my $test_count = 0;
+
+# the purpose of this test is to ensure that the platform, which many other tests
+# rely on, is reachable and warn when it is not. 
+
+diag "Running in " . Kynetx::Configure::get_config('RUN_MODE') . " mode";
+
+my $platform = '127.0.0.1';
+#my $platform = 'flipperoo.com';
+$platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
+$platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
+diag "Using $platform for testing";
+
+my $ip_address;
+my @packed_ip = gethostbyname($platform);
+if (defined $packed_ip[0]) {
+  $ip_address = $packed_ip[0];
+} 
+
+ok(defined $ip_address, "Is the needed platform available?");
+$test_count++;
+
+done_testing($test_count);
 
 1;
 

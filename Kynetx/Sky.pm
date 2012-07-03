@@ -57,6 +57,8 @@ sub handler {
     Kynetx::Util::config_logging($r);
 
     my $logger = get_logger();
+    my $metric = new Kynetx::Metrics::Datapoint();
+	$metric->start_timer();
 
     $r->content_type('text/javascript');
 
@@ -106,12 +108,18 @@ sub handler {
     # use the calculated values...
     $domain = $req_info->{'domain'};
     $eventtype = $req_info->{'eventtype'};
+    
+    $metric->eid($eid);
+    $metric->event({
+    	'domain' => $domain,
+    	'type' => $eventtype});
 
     # store these for later logging
     $r->subprocess_env( DOMAIN    => $domain );
     $r->subprocess_env( EVENTTYPE => $eventtype );
     Log::Log4perl::MDC->put( 'site', "[no rid]" );
     Log::Log4perl::MDC->put( 'rule', '[global]' );    # no rule for now...
+    Log::Log4perl::MDC->put( 'eid', $eid );    # identify event
 
 
     # get a session
@@ -222,11 +230,17 @@ sub handler {
 	$logger->debug("Skipping $rid due to domain mismatch for $hostname");
 	next;
       }
-
+	  my $ev_metric = new Kynetx::Metrics::Datapoint( {
+	  	'rid' => $rid,
+	  	'eid' => $eid,
+	  	'series' => 'sky-event-rid'
+	  });
+	  $ev_metric->start_timer();
       eval {
 	$logger->debug("Processing event for $rid");
 	Kynetx::Events::process_event_for_rid( $ev, $req_info, $session, $schedule, $rid_info );
       };
+      $ev_metric->stop_and_store();
       if ($@) {
 	# this might lead to circular errors if raising an error causes an error
 	# Kynetx::Errors::raise_error($req_info,
@@ -249,9 +263,17 @@ sub handler {
     $logger->debug("Schedule complete");
     my $dd = Kynetx::Response->create_directive_doc($req_info->{'eid'});
     my $js = '';
+    my $s_metric = new Kynetx::Metrics::Datapoint( {
+	  	'eid' => $req_info->{'eid'},
+	  	'series' => 'sky-event-schedule'
+	  });
+    $s_metric->rid($domain ."/" . $eventtype);
+    $s_metric->start_timer();
     $js .= eval {
       Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid,$req_info, $dd );
     };
+    $s_metric->stop_and_store();
+    
     if ($@) {
       # Kynetx::Errors::raise_error($req_info,
       # 				  'error',
@@ -267,6 +289,8 @@ sub handler {
 	$logger->error("Caught MongoDB error, reset connection");
       }
     }
+    
+    $metric->stop_and_store();
 
     Kynetx::Response::respond( $r, $req_info, $session, $js, $dd, "Event" );
 

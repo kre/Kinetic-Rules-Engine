@@ -135,8 +135,21 @@ USE_CLOUDFRONT: 0
 # if USE_CLOUDFRONT is 0, then this is ignored.  
 RUNTIME_LIB_NAME: 
 
+
+##
+## Thresholds for circuit breakers
+##
 # default time to cache datasets for when no time period is specified
 CACHEABLE_THRESHOLD: 86400              #24 hours
+
+# default number of recursions a function call can make
+FUNCTION_CALL_THRESHOLD: 100
+
+# default errors with the same message before we stop raising events
+ERROR_RAISE_THRESHOLD: 1
+
+# default even list threshold. This defines the maximim number of events a rule can be dependent on
+EVENT_LIST_THRESHOLD: 100
 
 # machine to rsync log files to. 
 # logs are placed in directory named "logs" in the account named by LOG_ACCOUNT

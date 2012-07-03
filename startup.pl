@@ -65,8 +65,10 @@ use Apache::DBI ();
 use DBI ();
 
 # AnyEvent
-#use AnyEvent ();
-#use AnyEvent:HTTP ();
+use AnyEvent ();
+use AnyEvent::HTTP ();
+
+use URI::Escape ();
 
 #use SVN::Client;
 

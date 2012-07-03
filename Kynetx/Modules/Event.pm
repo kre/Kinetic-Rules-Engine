@@ -40,6 +40,7 @@ get_eventinfo
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 use JSON::XS;
+use AnyEvent::HTTP;
 
 use Kynetx::Util qw(:all);
 use Kynetx::Memcached qw(:all);
@@ -172,7 +173,7 @@ env
 
 
 sub send_event {
-  my($req_info, $config, $args) = @_;
+  my($req_info, $dd, $config, $args) = @_;
 
   # assume $args->[0] is a subscription map (SM)
   #   subscription_map =
@@ -205,13 +206,22 @@ sub send_event {
 
   my $logger = get_logger();
 
-  my $timeout = 5; # seconds
+  my $timeout = 2; # seconds
 
   my $sm = $args->[0];
 
+  $logger->debug("Subscription map: ", sub { Dumper $sm });
+
+  my $esl_key = $config->{'esl_key'} || '_UNDEFINED_KEY_';
+
+  my $token = $sm->{'cid'} || 
+              $sm->{$config->{'cid_key'}} || 
+              $sm->{'token'} || 
+	      $sm->{$config->{'token_key'}};
+
   my $esl = $sm->{'esl'} ||
-            $sm->{$config->{'esl_key'}} ||
-	    mk_sky_esl($sm->{'token'} || $sm->{$config->{'token_key'}});
+            $sm->{$esl_key} ||
+	    mk_sky_esl($token);
 
   my $attrs = $config->{'attrs'};
 
@@ -220,24 +230,51 @@ sub send_event {
   $attrs->{'_domain'} = $args->[1];
   $attrs->{'_type'} = $args->[2];
 
+  my $cv = Kynetx::Request::get_condvar($req_info);
+  $cv->begin;
   
-  # my $body = join('&', map( "$_=" . uri_escape_utf8( $attrs->{$_} ), keys %{$attrs} )
-  # 		   );
-  # $req->header(
-  # 				'content-type' => "application/x-www-form-urlencoded; charset=UTF-8" );
+  my $body = join('&', 
+		  map( "$_=" . URI::Escape::uri_escape_utf8( $attrs->{$_} ), 
+		       keys %{$attrs} 
+		     )
+		 );
 
-  # AnyEvent::HTTP::http_request(
-  #    'POST' => $esl,
-  #    'headers' => {'content-type' => 'application/json'},
-  #    'timeout' => $timeout,
-  #    'body' => encode($attrs),
-  #    sub {
-  #      my ($body, $hdr) = @_;
-  #      unless ($hdr->{Status} =~ /^2/) {
-  #         $logger->debug("event:send(), $hdr->{Status} $hdr->{Reason}\n");
-  #      }
-  #    }
-  # );
+  $logger->debug("Sending event $args->[1]:$args->[2] to ESL $esl");
+
+  my $request;
+  $request = AnyEvent::HTTP::http_request(
+      'POST' => $esl,
+      'headers' => {'content-type' => 
+		      "application/x-www-form-urlencoded; charset=UTF-8"},
+      'timeout' => $timeout,
+      'body' => $body,
+      sub {
+        my ($body, $hdr) = @_;
+
+#	$logger->debug("Making HTTP post to $esl");
+
+	if ($hdr->{Status} =~ /^2/) {
+	  $logger->debug("event:send() success for $esl");
+	  # this is where we would parse returned directives and add them to $dd
+        } else {
+
+	  my $err_msg = "event:send() failed for $esl, ($hdr->{Status}) $hdr->{Reason}";
+	  $logger->debug($err_msg);
+
+	  # I'd like to do this, but don't have $session
+	  # Kynetx::Errors::raise_error($req_info,
+	  # 			      $session,
+	  # 			      'error',
+	  # 			      $err_msg
+	  # 			     );
+
+	}
+        undef $request;
+        $cv->end;
+
+      }
+   );
+
 
 }
 
@@ -245,13 +282,13 @@ sub send_event {
 sub mk_sky_esl {
   my($token) = @_;
 
-  return "http://" + join("/",
-            [Kynetx::Configure::get_config('EVAL_HOST'), # cs.kobj.net
-	     "sky",
-	     "event",
-	     $token,          # channel ID
-	     rand(999999999)  # eid
-            ]);
+  return "http://" . 
+     join("/", Kynetx::Configure::get_config('EVAL_HOST'), # cs.kobj.net
+ 	       "sky",
+	       "event",
+	       $token,          # channel ID
+	       int(rand(999999999))  # eid
+         );
 }
 
 1;

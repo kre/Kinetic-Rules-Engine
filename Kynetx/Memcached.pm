@@ -66,10 +66,11 @@ sub init {
     my($class) = @_;
 
     my $logger = get_logger();
+    my $parent = (caller(1))[3];
 
     $MEMSERVERS = Kynetx::Configure::get_config('MEMCACHE_SERVERS');
 
-    $logger->debug("Initializing memcached: ", join(" ", @{ $MEMSERVERS }));
+    $logger->debug("Initializing memcached ($parent): ", join(" ", @{ $MEMSERVERS }));
 
     # don't set compress threshold.  Compression uses MemGzip which doesn't
     # handle UTF chars correctly.

@@ -567,6 +567,13 @@ sub eval_application {
 
   $req_info->{$closure->{'val'}->{'sig'}} = 0
     unless defined $req_info->{$closure->{'val'}->{'sig'}};
+
+  # FIXME: remove this after we find problem...
+  $logger->debug("Sig: ", $closure->{'val'}->{'sig'}, 
+		 " Count: ", $req_info->{$closure->{'val'}->{'sig'}}, 
+		 " Threshold: ", $function_call_threshold);
+
+
   if ($req_info->{$closure->{'val'}->{'sig'}} > $function_call_threshold) {
     Kynetx::Errors::raise_error($req_info, 'warn',
 				  "[application] Function call threshold exceeded (". $function_call_threshold .")...deep recursion?",
@@ -599,6 +606,9 @@ sub eval_application {
 				    $closure->{'val'}->{'env'});
 
 
+  # need to increment counter here since prelude might recurse
+  $req_info->{$closure->{'val'}->{'sig'}}++;
+
   # this extends the env a second time
   my($js, $decls_env) =  eval_prelude($req_info,
 				      $closure_env,
@@ -608,8 +618,6 @@ sub eval_application {
 
 #  $logger->debug("Env: ", Dumper $decls_env);
 #  $logger->debug("Env lookup: ", lookup_rule_env('n', $decls_env));
-
-  $req_info->{$closure->{'val'}->{'sig'}}++;
 
   return eval_expr($closure->{'val'}->{'expr'},
 		   $decls_env,
@@ -764,9 +772,9 @@ sub eval_persistent {
     if ($inModule) {
       $logger->debug("Evaling persistent in module: $moduleRid");
     } 
-    $logger->trace("**********in module: $inModule");
-    $logger->trace("**********module Rid: $moduleRid");
-    $logger->trace("**********calling Rid: $rid");
+    # $logger->trace("**********in module: $inModule");
+    # $logger->trace("**********module Rid: $moduleRid");
+    # $logger->trace("**********calling Rid: $rid");
     if (defined $moduleRid) {
       $rid = $moduleRid;
     }

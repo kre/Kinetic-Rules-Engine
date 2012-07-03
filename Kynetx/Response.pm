@@ -24,7 +24,8 @@ use strict;
 #use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
-
+use Data::Dumper;
+use HTML::Template;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -100,6 +101,42 @@ sub gen_directive_document {
 #   return $resp;
 # }
 
+sub gen_raw_document {
+	my $self = shift;
+	my $logger = get_logger();
+	my $eid = $self->{'eid'};
+	my @directives = map {$_->to_directive($eid)} @{$self->{'directives'}};
+	my $head = '';
+	my $body ='';
+	my $string = '';
+	my $type = undef;
+	foreach my $rawd (@directives) {
+		$type = $rawd->{'name'};
+		$logger->debug("directive: ", sub {Dumper($rawd)});
+		if ($rawd->{'options'}->{'is_raw'}) {
+			if (defined $rawd->{'options'}->{'body'}) {
+				$body .= $rawd->{'options'}->{'body'};
+			}
+			if (defined $rawd->{'options'}->{'head'}) {
+				$head .= $rawd->{'options'}->{'head'};
+			}
+		}
+	}
+	$logger->debug("Type: ", $type);
+	$logger->debug("Body: ", $body);
+	$logger->debug("Head: ", $head);
+	if ($type eq "text/html") {
+		my $tdir = Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
+		my $template = "$tdir/raw.tmpl";
+		my $rtemplate = HTML::Template->new(filename => $template);
+		$rtemplate->param("HEAD_CONTENT" => $head);
+		$rtemplate->param("BODY_CONTENT" => $body);
+		print $rtemplate->output();
+		return ($type, $rtemplate->output());
+	}
+	return $string;
+}
+
 sub respond {
   my ($r, $req_info, $session, $js, $dd, $realm) = @_;
 
@@ -127,7 +164,11 @@ sub respond {
 
   # this is where we return the JS
   binmode(STDOUT, ":encoding(UTF-8)");
-  if ($req_info->{'understands_javascript'}) {
+  if ($req_info->{'send_raw'}) {
+  	my ($ct,$obj) = $dd->gen_raw_document();
+  	$r->content_type("text/html");
+  	$logger->debug("Raw: ", sub {Dumper($obj)});
+  }  elsif ($req_info->{'understands_javascript'}) {
     $logger->debug("Returning javascript from evaluation");
     print $heartbeat, $js;
   } else {
