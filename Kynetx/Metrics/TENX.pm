@@ -85,14 +85,26 @@ sub handler {
     	scatter_plot($r,$method,$path);
     } elsif ($method eq 'bar') {
     	bar_plot($r,$method,$path);
+    } elsif ($method eq 'ctl') {
+    	control();
     }
     
     return Apache2::Const::OK;
 
 }
 
+sub control {
+	my @ctrl = ('/web/bin/apachectl', 'graceful');
+	system(@ctrl) == 0
+		or die "Could not execute $ctrl[0]";
+}
+
 sub filter {
 	my ($dp,$req) = @_;
+	my $logger = get_logger();
+	if ($req->param('kib') && $req->param('kib') ne $dp->mhostname) {
+	 	return 0;			
+	}
 	return 1;
 }
 
