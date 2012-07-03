@@ -68,7 +68,8 @@ my $my_req_info = Kynetx::Test::gen_req_info($rid,
 					     {'ridver' => 'dev',
 					      "$rid:name" => 'rule_1',
 					      "$rid:author" => 'Web-san',
-					      "$rid:description" => "A ruleset for testing"
+					      "$rid:description" => "A ruleset for testing",
+					      'id_token' => 'flipperoo!!',
 					     });
 
 my $rule_name = 'foo';
@@ -276,6 +277,22 @@ $val = Kynetx::Expressions::den_to_exp(
 
 
 is($val,"A ruleset for testing","rulesetDescription");
+$test_count++;
+
+
+
+$val = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
+					 $rule_env, 
+					 $session, 
+					 $rule_name, 
+					 'meta', 
+					 'eci', 
+					 [] 
+					));
+
+
+is($val,"flipperoo!!","Testing ECI");
 $test_count++;
 
 
