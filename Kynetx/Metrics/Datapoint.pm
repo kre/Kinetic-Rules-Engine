@@ -86,7 +86,7 @@ sub new {
 
 	# general initializations
 	my $c = Kynetx::Configure::get_config('METRICS');
-	$logger->debug( "Config: ", sub { Dumper($c) } );
+	#$logger->debug( "Config: ", sub { Dumper($c) } );
 	my $ug = new Data::UUID;
 	$self->{'id'}        = $ug->create_str();
 	$self->{'timestamp'} = DateTime->now->epoch();
@@ -316,7 +316,7 @@ sub store {
 		"rulename" => $self->{'rulename'},
 		"path"	   => $self->{'path'}
 	};
-	#_update($obj);
+	_update($obj);
 }
 
 sub stop_and_store {

@@ -181,9 +181,8 @@ sub is_valid_token {
     my $logger = get_logger();
     my $valid = token_query({"ktoken" => $ktoken});
 	if ($valid){
-        $logger->trace("Token is valid");
+        $logger->debug("Token is valid");
         my $ken = $valid->{'ken'};
-        Kynetx::Persistence::KEN::touch_ken($ken);
         return $valid;
     } else {
         return 0;

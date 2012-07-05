@@ -56,6 +56,7 @@ use DateTime::Format::ISO8601;
 
 Kynetx::Configure::configure();
 Log::Log4perl->easy_init($INFO);
+Log::Log4perl->easy_init($DEBUG);
 my $logger = get_logger();
 
 my $run_mode = Kynetx::Configure::get_config('RUN_MODE');
