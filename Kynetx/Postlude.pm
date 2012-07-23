@@ -58,7 +58,7 @@ use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
 sub eval_post_expr {
-    my ( $rule, $session, $req_info, $rule_env, $fired ) = @_;
+    my ( $rule, $session, $req_info, $rule_env, $fired, $execenv ) = @_;
 
     my $js = '';
 
@@ -89,7 +89,7 @@ sub eval_post_expr {
             " ",
             map {
                 eval_post_statement( $_, $session, $req_info, $rule_env,
-                                     $rule->{'name'} )
+                                     $rule->{'name'}, $execenv )
               } @{$cons}
         );
     } else {
@@ -98,7 +98,7 @@ sub eval_post_expr {
             " ",
             map {
                 eval_post_statement( $_, $session, $req_info, $rule_env,
-                                     $rule->{'name'} )
+                                     $rule->{'name'}, $execenv )
               } @{$alt}
         );
     }
@@ -106,7 +106,7 @@ sub eval_post_expr {
 }
 
 sub eval_post_statement {
-    my ( $expr, $session, $req_info, $rule_env, $rule_name ) = @_;
+    my ( $expr, $session, $req_info, $rule_env, $rule_name, $execenv ) = @_;
 
     my $logger = get_logger();
 

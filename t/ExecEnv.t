@@ -71,13 +71,21 @@ my $rule_env = Kynetx::Test::gen_rule_env();
 
 my $session = Kynetx::Test::gen_session($r, $rid);
 
+my $execenv = Kynetx::ExecEnv::build_exec_env();
+
 my $test_count = 0;
 
 
 
+$execenv->set_condvar("test");
+is($execenv->get_condvar(), "test", 'set_condvar and get_condvar work together');
+$test_count++;
 
+$execenv->set_result("eci1", 5);
+is($execenv->get_result("eci1"), 5, 'set_result and get_result work together');
+$test_count++;
 
-ok(1,"dummy test");
+is_deeply($execenv->get_results(), {"eci1",5}, 'set_result and get_results work together');
 $test_count++;
 
 

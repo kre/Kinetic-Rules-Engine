@@ -684,7 +684,6 @@ sub eval_rule {
 	# set condition var for AnyEvent, check after loop...
 	my $cv = AnyEvent->condvar();
 	Kynetx::ExecEnv::set_condvar($execenv,$cv);
-#	$cv->begin();
 	$cv->begin(sub { shift->send("All threads complete") });
 
 	$js .=
@@ -917,7 +916,7 @@ sub eval_rule_body {
 
 	$js .=
 	  Kynetx::Postlude::eval_post_expr( $rule, $session, $req_info, $rule_env,
-		$fired )
+		$fired, $execenv)
 	  if ( defined $rule->{'post'} );
 
 	return $js;

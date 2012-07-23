@@ -264,6 +264,10 @@ _KRL_
 $cv->end;
 $logger->debug($cv->recv);
 
+# while (my ($k, $v) = each (%{$execenv->get_results()})) {
+#   diag "$k: ". Dumper($v)  . "\n";
+# }
+
 
 done_testing($test_count);
 

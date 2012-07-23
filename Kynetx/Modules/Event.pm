@@ -252,6 +252,11 @@ sub send_event {
         my ($body, $hdr) = @_;
 
 #	$logger->debug("Making HTTP post to $esl");
+	$execenv->set_result($esl,
+			     {'status' => $hdr->{Status},
+			      'reason' => $hdr->{Reason},
+			      'result' => $body,
+			     });
 
 	if ($hdr->{Status} =~ /^2/) {
 	  $logger->debug("event:send() success for $esl");
