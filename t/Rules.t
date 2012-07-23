@@ -52,6 +52,7 @@ use Kynetx::Configure qw/:all/;
 use Kynetx::Persistence qw/:all/;
 use Kynetx::Response qw/:all/;
 use Kynetx::Rids qw/:all/;
+use Kynetx::ExecEnv qw/:all/;
 
 
 use Kynetx::FakeReq;
@@ -60,7 +61,7 @@ use Log::Log4perl::Level;
 #use Log::Log4perl::Appender::FileLogger;
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($WARN);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -158,7 +159,7 @@ sub add_testcase {
 		       'type' => $type,
 		       'final_req_info' => $final_req_info,
 		       'diag' => $diag
-	 }
+		      }
 	 );
 }
 
@@ -1766,6 +1767,55 @@ add_testcase(
      );
 
 
+##
+## tests for send_event, specifically does the AnyEvent stuff hang together
+##
+$krl_src = <<_KRL_;
+rule foreach_sendevent is active {
+  select when pageview "http://www.google.com" setting ()
+   foreach [{"esl":"http://www.google.com"},
+            {"esl":"http://www.yahoo.com"}
+           ] setting (url)
+    pre {
+    }
+    event:send(url,"foo","bar") with
+     post = "flipper"
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'foreach_sendevent'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
+
+
+
+$result = <<_JS_;
+(function(){
+ (function(){
+    var url={'esl':'http://www.google.com'};
+    function callBacks(){};}
+  ());
+ (function(){
+    var url={'esl':'http://www.yahoo.com'};
+    function callBacks(){};}
+  ());
+ }())
+_JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $dummy_final_req_info,
+    1
+    );
+
+
+
+
 #
 # control statements in rulesets
 #
@@ -2564,52 +2614,6 @@ add_testcase(
     0
     );
 
-##
-## tests for send_event, specifically does the AnyEvent stuff hang together
-##
-$krl_src = <<_KRL_;
-rule foreach_sendevent is active {
-  select when pageview "http://www.google.com" setting ()
-   foreach [{"esl":"http://www.google.com"},
-            {"esl":"http://www.yahoo.com"}
-           ] setting (url)
-    pre {
-    }
-    event:send(url,"foo","bar") with
-     post = "flipper"
-}
-_KRL_
-
-$config = mk_config_string(
-  [
-   {"rule_name" => 'foreach_sendevent'},
-   {"rid" => 'cs_test'},
-   {"txn_id" => 'txn_id'},
-  ]
-);
-
-
-
-$result = <<_JS_;
-(function(){
- (function(){
-    var url={'esl':'http://www.google.com'};
-    function callBacks(){};}
-  ());
- (function(){
-    var url={'esl':'http://www.yahoo.com'};
-    function callBacks(){};}
-  ());
- }())
-_JS_
-
-add_testcase(
-    $krl_src,
-    $result,
-    $dummy_final_req_info
-    );
-
-
 
 ##
 ## final tests with foreach
@@ -2827,7 +2831,7 @@ foreach my $case (@test_cases) {
 #   }
 
   my $ruleset_rid = $case->{'expr'}->{'ruleset_name'} || $rid;
-#  diag "######################## Testing $ruleset_rid";
+  diag "######################## Testing $ruleset_rid" if $case->{'diag'};
   # note that gen_req_info has been redefined
   my $req_info = local_gen_req_info($ruleset_rid);
   $req_info->{'eventtype'} = 'pageview';

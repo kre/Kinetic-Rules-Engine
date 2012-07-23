@@ -275,7 +275,7 @@ sub consume_trail_element {
         $result = Kynetx::Persistence::Application::pop($rid,$varname,$direction);
     }
     
-    $logger->debug("consume_trail_element $op_name returned: ", sub {Dumper($result)});
+#    $logger->debug("consume_trail_element $op_name returned: ", sub {Dumper($result)});
 
     if ($result) {
         return $result->[0];

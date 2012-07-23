@@ -173,7 +173,7 @@ env
 
 
 sub send_event {
-  my($req_info, $dd, $config, $args) = @_;
+  my($req_info, $dd, $config, $args, $execenv) = @_;
 
   # assume $args->[0] is a subscription map (SM)
   #   subscription_map =
@@ -230,7 +230,7 @@ sub send_event {
   $attrs->{'_domain'} = $args->[1];
   $attrs->{'_type'} = $args->[2];
 
-  my $cv = Kynetx::Request::get_condvar($req_info);
+  my $cv = Kynetx::ExecEnv::get_condvar($execenv);
   $cv->begin;
   
   my $body = join('&', 

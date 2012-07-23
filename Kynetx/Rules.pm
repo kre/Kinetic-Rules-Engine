@@ -52,6 +52,7 @@ use Kynetx::Environments qw(:all);
 use Kynetx::Directives;
 use Kynetx::Postlude;
 use Kynetx::Response;
+use Kynetx::ExecEnv;
 
 use Kynetx::JavaScript::AST qw/:all/;
 
@@ -678,10 +679,29 @@ sub eval_rule {
 	# clear the final flag before we get started...
 	Kynetx::Request::clr_final_flag($req_info);
 
+	my $execenv = Kynetx::ExecEnv::build_exec_env();
+
+	# set condition var for AnyEvent, check after loop...
+	my $cv = AnyEvent->condvar();
+	Kynetx::ExecEnv::set_condvar($execenv,$cv);
+#	$cv->begin();
+	$cv->begin(sub { shift->send("All threads complete") });
+
 	$js .=
-	  eval_foreach( $r, $req_info, $rule_env, $session, $rule, $dd,
-		scalar @{ $rule->{'pagetype'}->{'foreach'} }, # final_count
-		@{ $rule->{'pagetype'}->{'foreach'} } );
+	  eval_foreach( $r, 
+			$req_info, 
+			$rule_env, 
+			$session, 
+			$rule, 
+			$dd,
+			scalar @{ $rule->{'pagetype'}->{'foreach'} }, # final_count
+			$execenv,
+			@{$rule->{'pagetype'}->{'foreach'} },
+               );
+
+	$cv->end;
+	$logger->debug($cv->recv);
+
 
 	# save things for logging
 	push(
@@ -705,20 +725,23 @@ sub eval_rule {
 
 # recursive function on foreach list.
 sub eval_foreach {
-  my ( $r, $req_info, $rule_env, $session, $rule, $dd, $final_count, @foreach_list ) = @_;
+  my ( $r, 
+       $req_info, 
+       $rule_env, 
+       $session, 
+       $rule, 
+       $dd, 
+       $final_count, 
+       $execenv,
+       @foreach_list # this needs to be last
+     ) = @_;
 
   my $logger = get_logger();
 
   my $fjs = '';
 
-  # $logger->debug("In foreach with " . Dumper(@foreach_list));
+  $logger->debug("In foreach with " . Dumper(@foreach_list));
 
-
-  # set condition var for AnyEvent, check after loop...
-  my $cv = AnyEvent->condvar();
-  Kynetx::Request::set_condvar($req_info,$cv);
-
-  $cv->begin();
 
   if ( @foreach_list == 0 ) {
 
@@ -739,12 +762,14 @@ sub eval_foreach {
 #   2  6     0        1        1            1
 #   4  5     1        0        1            1
 #   4  6     1        1        2            0
+#
+# this is what makes "on final" work in postlude
 
     if ($final_count == 0) {
       Kynetx::Request::set_final_flag($req_info);
     }
 
-    $fjs = eval_rule_body( $r, $req_info, $rule_env, $session, $rule, $dd );
+    $fjs = eval_rule_body( $r, $req_info, $rule_env, $session, $rule, $dd, $execenv );
 
   } else {
 
@@ -817,22 +842,25 @@ sub eval_foreach {
 
       # we recurse in side this loop to handle nested foreach statements
       $fjs .= mk_turtle($vjs
-			. eval_foreach($r, $req_info, 
+			. eval_foreach($r, 
+				       $req_info, 
 				       extend_rule_env( $vars, $dvals, $rule_env ),
-				       $session, $rule, $dd, 
-				       $new_count, cdr(@foreach_list)
+				       $session, 
+				       $rule, 
+				       $dd, 
+				       $new_count, 
+				       $execenv,
+				       cdr(@foreach_list),
 				      )
 		       );
     }
   }
 
-  $cv = $cv->end;
-
   return $fjs;
 }
 
 sub eval_rule_body {
-	my ( $r, $req_info, $rule_env, $session, $rule, $dd ) = @_;
+	my ( $r, $req_info, $rule_env, $session, $rule, $dd, $execenv ) = @_;
 
 	my $logger = get_logger();
 
@@ -866,8 +894,7 @@ sub eval_rule_body {
 
 	 # combine the inner_tentive JS, with the generated JS and wrap in a closure
 		$js = $inner_tentative_js
-		  . Kynetx::Actions::build_js_load( $rule, $req_info, $dd, $rule_env,
-			$session );
+		  . Kynetx::Actions::build_js_load( $rule, $req_info, $dd, $rule_env, $session, $execenv );
 
 		$fired = 1;
 
