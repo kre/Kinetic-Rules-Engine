@@ -230,7 +230,7 @@ sub send_event {
   $attrs->{'_domain'} = $args->[1];
   $attrs->{'_type'} = $args->[2];
 
-  my $cv = Kynetx::ExecEnv::get_condvar($execenv);
+  my $cv = $execenv->get_condvar();
   $cv->begin;
   
   my $body = join('&', 
@@ -255,7 +255,7 @@ sub send_event {
 	$execenv->set_result($esl,
 			     {'status' => $hdr->{Status},
 			      'reason' => $hdr->{Reason},
-			      'result' => $body,
+			      'body' => $body,
 			     });
 
 	if ($hdr->{Status} =~ /^2/) {

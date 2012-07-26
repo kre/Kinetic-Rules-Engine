@@ -683,7 +683,7 @@ sub eval_rule {
 
 	# set condition var for AnyEvent, check after loop...
 	my $cv = AnyEvent->condvar();
-	Kynetx::ExecEnv::set_condvar($execenv,$cv);
+	$execenv->set_condvar($cv);
 	$cv->begin(sub { shift->send("All threads complete") });
 
 	$js .=
@@ -698,9 +698,21 @@ sub eval_rule {
 			@{$rule->{'pagetype'}->{'foreach'} },
                );
 
+	# handle possible asynchronous calls
 	$cv->end;
 	$logger->debug($cv->recv);
-
+	my $thread_results = $execenv->get_results();
+	if ( scalar @{$thread_results} > 0 ) {
+	  Kynetx::Modules::System::raise_system_event(
+                   $req_info, 
+		   $rule->{'name'},
+                   'send_complete', 
+  	           [{'name' => 'send_results',
+		     'value' => $thread_results
+		    }
+                   ]
+	  );
+	}
 
 	# save things for logging
 	push(
@@ -739,7 +751,7 @@ sub eval_foreach {
 
   my $fjs = '';
 
-  $logger->debug("In foreach with " . Dumper(@foreach_list));
+#  $logger->debug("In foreach with " . Dumper(@foreach_list)) if @foreach_list;
 
 
   if ( @foreach_list == 0 ) {
