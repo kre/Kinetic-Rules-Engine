@@ -124,7 +124,7 @@ env
 	$val = $req_info->{$rid.':'.$args->[0]};
       } 
 
-      $logger->debug("event:attr(", $args->[0], ") -> ", $val);
+      $logger->debug("event:attr(", $args->[0], ") -> ", Dumper $val);
 
     } elsif($function eq 'params' || $function eq 'attrs') {
 

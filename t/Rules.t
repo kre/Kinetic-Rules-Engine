@@ -53,7 +53,6 @@ use Kynetx::Persistence qw/:all/;
 use Kynetx::Response qw/:all/;
 use Kynetx::Rids qw/:all/;
 use Kynetx::ExecEnv qw/:all/;
-use Kynetx::Modules::System qw/:all/;
 
 
 use Kynetx::FakeReq;
@@ -1816,13 +1815,13 @@ $result = <<_JS_;
  ());
  (function(){
   (function(){
-   var status=200;
+   var status=%uniq%;
    function callBacks(){};
    (function(uniq,cb,config){cb();}
     ('%uniq%',callBacks,$config));}
    ());
   (function(){
-   var status=200;
+   var status=%uniq%;
    function callBacks(){};
    (function(uniq,cb,config){cb();}
     ('%uniq%',callBacks,$config));}
@@ -3858,6 +3857,10 @@ This is another number #{z}  ',
 ], "Extended quotes", 0);
 
 
+diag "#######################################################################";
+diag "# MODULES";
+diag "#######################################################################";
+
 # test eval_use
 my $empty_rule_env = empty_rule_env();
 my $mod_rule_env;
@@ -3917,9 +3920,10 @@ _KRL_
 $module_rs = Kynetx::Parser::parse_ruleset($krl);
 #diag Dumper $module_rs;
 $mod_rule_env = empty_rule_env();
+diag Dumper $empty_rule_env;
 ($js, $mod_rule_env) = Kynetx::Rules::eval_use($my_req_info, $module_rs, $empty_rule_env);
 
-is(lookup_module_env("flipper", "a", $mod_rule_env), 5, "a is 5" );
+is(lookup_module_env("flipper", "a", $mod_rule_env), 5, "a is 5 again" );
 $test_count++;
 
 is(lookup_module_env("flipper", "b", $mod_rule_env), undef, "b is undef" );
@@ -4184,6 +4188,94 @@ is(lookup_rule_env("b", $mod_rule_env), "BAR", "b is BAR" );
 $test_count++;
 
 
+# test module configuration
+$krl =  << "_KRL_";
+ruleset foobar {
+  meta {
+    use module a1856x9 alias flip
+  }
+  global {
+    x = flip:a1;
+  }
+}
+_KRL_
+
+
+$module_rs = Kynetx::Parser::parse_ruleset($krl);
+# diag Dumper $module_rs;
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
+$mod_rule_env = empty_rule_env();
+($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
+
+($js, $mod_rule_env) = 
+    eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
+#diag Dumper $mod_rule_env;
+
+
+is(lookup_rule_env("x", $mod_rule_env), 5, "a1 propogates a" );
+$test_count++;
+
+
+
+# test module configuration
+$krl =  << "_KRL_";
+ruleset foobar {
+  meta {
+    use module a1856x10 alias flop
+  }
+  global {
+    x = flop:a2;
+  }
+}
+_KRL_
+
+
+$module_rs = Kynetx::Parser::parse_ruleset($krl);
+# diag Dumper $module_rs;
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
+$mod_rule_env = empty_rule_env();
+($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
+
+($js, $mod_rule_env) = 
+    eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
+#diag Dumper $mod_rule_env;
+
+
+is(lookup_rule_env("x", $mod_rule_env), 5, "a2 propogates a1 propogates a" );
+$test_count++;
+
+
+#diag "#################### module_use_module ########################";
+
+$krl =  << "_KRL_";
+ruleset foobar {
+  meta {
+    use module a1856x11 alias flop
+  }
+  global {
+    x = flop:b;
+    y = flop:a1;
+  }
+}
+_KRL_
+
+
+$module_rs = Kynetx::Parser::parse_ruleset($krl);
+# diag Dumper $module_rs;
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
+$mod_rule_env = empty_rule_env();
+($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
+
+($js, $mod_rule_env) = 
+    eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
+#diag Dumper $mod_rule_env;
+
+
+is(lookup_rule_env("x", $mod_rule_env), 186, "No module recursion" );
+$test_count++;
+
+is(lookup_rule_env("y", $mod_rule_env), undef, "No module recursion" );
+$test_count++;
 
 
 

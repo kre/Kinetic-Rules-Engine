@@ -56,9 +56,13 @@ use Kynetx::ExecEnv;
 
 use Kynetx::JavaScript::AST qw/:all/;
 
+use Kynetx::Modules::System qw/:all/;
+
 use Kynetx::Actions::LetItSnow;
 use Kynetx::Actions::JQueryUI;
 use Kynetx::Actions::FlippyLoo;
+
+use Storable qw(dclone);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -420,6 +424,32 @@ sub eval_use_module {
   my ( $req_info, $rule_env, $session, $name, $alias, $modifiers, $mversion ) = @_;
 
   my $logger = get_logger();
+  my $js = '';
+  my $this_js;
+
+  #  module hierarchy can look like this:
+  #
+  #  a -> b
+  #  |
+  #  +--> b
+  #
+  # but not this
+  #
+  # a -> b -> b ...
+  # 
+  # or this
+  #
+  # a -> b -> c -> ... -> b
+  #
+
+  # sanity check, we're not in a big loop
+  foreach my $module_name (@{ lookup_rule_env('_module_list', $rule_env) || [] }) {
+    $logger->debug("Seeing $module_name for $name");
+    if ($module_name eq $name) {
+      $logger->debug("$name has already been used as a module");
+      return ($js, $rule_env);
+    }
+  }
 
   # Default to the production version of modules
   $mversion ||= 'prod';
@@ -434,8 +464,6 @@ sub eval_use_module {
     $provided->{$name} = 1;
   }
 
-  my $js = '';
-  my $this_js;
 
   my $namespace_name = $Kynetx::Modules::name_prefix . ( $alias || $name );
 
@@ -446,6 +474,9 @@ sub eval_use_module {
 
   # create the module rule_env by extending an empty env with the config
 
+  my @mod_list = @{$rule_env->{'_module_list'} || []};
+  push(@mod_list, $name);
+
   my $init_mod_env = extend_rule_env(
 				     {
 				      '_callingRID' => get_rid($req_info->{'rid'}),
@@ -453,11 +484,15 @@ sub eval_use_module {
 				      '_moduleRID' =>  $name,
 				      '_moduleVersion' => $mversion,
 				      '_inModule' =>  'true',
+				      '_module_list' => \@mod_list,
+
 				     }, empty_rule_env());
 
   my $module_rule_env =
     set_module_configuration( $req_info, $rule_env, $session,
 			      $init_mod_env, $configuration, $modifiers || [] );
+
+#  $logger->debug("Module env ", Dumper $module_rule_env);
 
   # put any keys in the module rule_env *before* evaling the globals
   if ( $use_ruleset->{'meta'}->{'keys'} ) {
@@ -467,6 +502,13 @@ sub eval_use_module {
     $js .= $this_js;
   }
 
+  
+  if ( $use_ruleset->{'meta'}->{'use'} ) {
+    ( $this_js, $module_rule_env ) =
+      eval_use( $req_info, $use_ruleset, $module_rule_env, $session,
+		$use_ruleset->{'meta'}->{'use'} );
+    $js .= $this_js;
+  }
 
   # eval the module's global block
   if ( $use_ruleset->{'global'} ) {
