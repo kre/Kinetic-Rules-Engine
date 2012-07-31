@@ -585,14 +585,23 @@ sub delete_hash_element {
 	my ($collection,$vKey,$hKey) = @_;
 	my $logger = get_logger();
 	# Protect me from doing something stupid
+	$logger->trace("Delete element of ",sub {Dumper($vKey)});
+	$logger->trace("Delete actual element ",sub {Dumper($hKey)});
+	
 	if (ref $vKey eq "HASH") {
-		if ((defined $vKey->{'key'}) && ($vKey->{'key'} ne "")) {
+		if (
+			((defined $vKey->{'key'}) 
+				&& ($vKey->{'key'} ne ""))
+			|| 	((defined $vKey->{'ken'}) 
+				&& ($vKey->{'ken'} ne ""))
+			) {
 			my $del = clone ($vKey);
 		    my $c = get_collection($collection);
 			if (ref $hKey eq 'ARRAY' && scalar @$hKey > 0) {
 				$del->{'hashkey'} = {'$all' => $hKey};
 			}
 			my $success = $c->remove($del,{'safe' => 1});
+			$logger->trace("Delete results ",sub {Dumper($success)});
 			if (defined $success) {
 				if ($success->{'ok'}) {
 					my $count = $success->{'n'};
@@ -604,7 +613,11 @@ sub delete_hash_element {
 			} else {
 				$logger->warn("Mongodb error trying to delete ", sub {Dumper($del)});
 			}
+		} else {
+			$logger->trace("Key not valid");
 		}
+	} else {
+		$logger->trace("Key not a hash");
 	}
 }
 

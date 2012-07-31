@@ -423,7 +423,8 @@ post_statement returns[HashMap result]
 	HashMap tmp_gc = new HashMap();
 }
 	: (( pe=persistent_expr
-   	   | rs=raise_statement
+	   | x=xdi_expr
+   	 | rs=raise_statement
 	   | l=log_statement
 	   | las=must_be["last"]) (gc=guard_clause {  tmp_gc = $gc.result;  } )?)
     {
@@ -436,6 +437,9 @@ post_statement returns[HashMap result]
 
 		if($rs.text != null)
 		 	$result = $rs.result ;
+		 	
+		if($x.text != null)
+		  $result = $x.result;
 
 		if($las.text != null)
 		{
@@ -565,6 +569,28 @@ click_link returns[HashMap result]
 	}
 	;
 
+xdi_expr returns[HashMap result]
+  :
+  xr=xdi_raw {
+    $result = $xr.result;
+  }
+  
+  
+  ;
+  
+xdi_raw returns[HashMap result]
+  :
+  x=XDI {
+    HashMap tmp = new HashMap();
+      tmp.put("action","xdi_message");
+      tmp.put("name","message");
+      tmp.put("domain","xdi");
+      tmp.put("type","xdi-persistent");
+      tmp.put("value",strip_wrappers("<[","]>",$x.text));          
+			$result = tmp;
+  }
+  ;
+  
 
 persistent_expr returns[HashMap result]
 	:
@@ -846,7 +872,7 @@ modifier_clause returns[ArrayList result]
 	;
 
 modifier returns[HashMap result]
-	: name=(VAR|REPLACE|MATCH|EXTRACT|OTHER_OPERATORS|SPECIAL_MODIFIERS) EQUAL(e=expr | j=JS) {
+	: name=(VAR|REPLACE|MATCH|EXTRACT|OTHER_OPERATORS|SPECIAL_MODIFIERS) EQUAL(e=expr | j=JS | x=XDI) {
 		HashMap tmp2 = new HashMap();
 
 		HashMap tmp = new HashMap();
@@ -854,11 +880,16 @@ modifier returns[HashMap result]
 		{
 			tmp2.put("value",$e.result);
 		}
-		else
+		else if($x.text != null)
 		{
-			tmp.put("type","JS");
-			tmp.put("val",strip_wrappers("<|","|>",$j.text));
-			tmp2.put("value",tmp);
+      tmp.put("type","XDI");
+      tmp.put("val",strip_wrappers("<[","]>",$x.text));
+      tmp2.put("value",tmp);
+		} else {
+      tmp.put("type","JS");
+      tmp.put("val",strip_wrappers("<|","|>",$j.text));
+      tmp2.put("value",tmp);
+		  
 		}
 
 		tmp2.put("name",$name.text);
@@ -1700,6 +1731,11 @@ decl[ArrayList  block_array]
 			tmp.put("rhs",strip_wrappers("<|","|>",$jval.text));
 			tmp.put("type","JS");
 		}
+//    else if($x.text != null)
+//    {
+//      tmp.put("type","XDI");
+//      tmp.put("rhs",strip_wrappers("<[","]>",$x.text));
+//    }
 		else
 		{
 			tmp.put("type","expr");
@@ -2084,10 +2120,16 @@ factor returns[Object result] options {backtrack=true;}
 		$result = tmp;
 	}
       | bv= (TRUE| FALSE)  {
-      		HashMap tmp = new HashMap();
+    HashMap tmp = new HashMap(); 		
 		tmp.put("type","bool");
 		tmp.put("val",$bv.text);
 		$result = tmp;
+	}
+	| xdi=XDI {
+      HashMap tmp = new HashMap();
+      tmp.put("type","xdi");
+      tmp.put("val",strip_wrappers("<[","]>",$xdi.text));
+      $result = tmp;
 	}
       | bv=(VAR|OTHER_OPERATORS|LIKE|REPLACE|EXTRACT|MATCH|VAR_DOMAIN) LEFT_BRACKET e=expr RIGHT_BRACKET  {
       		HashMap tmp = new HashMap();
@@ -2667,7 +2709,11 @@ HTML
 JS
 	: '<|' ( options {greedy=false;} : . )* '|>'
 	;
-
+	
+XDI
+  : '<[' ( options {greedy=false;} : . )* ']>'
+	;
+	
 /*fragment
 EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
   */

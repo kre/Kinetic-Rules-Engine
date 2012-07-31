@@ -449,6 +449,11 @@ sub eval_expr {
         my $aexpr = mk_action_expr($expr, $rule_env, $rule_name,$req_info, $session);
         $logger->trace("Action expression: ", sub {Dumper($aexpr)});
         return $aexpr;
+    } elsif($expr->{'type'} eq 'xdi') {
+    	$logger->debug("XDI request");
+    	my $xdi_expr = eval_xdi($expr->{'val'},$rule_env,$rule_name,$req_info,$session);
+    	$logger->debug("XDI request: ", sub {Dumper($xdi_expr)});
+    	return $xdi_expr;
     } else {
         $logger->error("Unknown type in eval_expr: $expr->{'type'}");
         return mk_expr_node('null','__undef__');
@@ -456,7 +461,51 @@ sub eval_expr {
 
 }
 
-
+sub eval_xdi {
+	my ($xdi_statement, $rule_env, $rule_name, $req_info, $session) = @_;
+	my $logger = get_logger();
+	
+	# Default graph url
+	my $url = "http://10.0.1.194:8080/xdi/mem-graph";
+	
+	# Kynetx source graph
+	my $from_graph = Kynetx::Configure::get_config('XDI_SOURCE');
+	if (! defined $from_graph) {
+		$logger->warn("XDI Server not configured");
+		return undef;
+	}
+	
+	# developer inumber 
+	my $from = Kynetx::Keys::get_key($req_info,$rule_env,'xdi');
+	my $f_inum = $from->{'inumber'};
+	$logger->debug("Request XDI: ",sub {Dumper($from)});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session);
+	$logger->debug("Ken: $ken");
+	my $xdi_info = Kynetx::Persistence::KXDI::get_xdi($ken);
+	$logger->debug("XDI: ", sub {Dumper($xdi_info)});
+	if (defined $xdi_info) {
+		# KEN's XDI info
+		my $to = $xdi_info->{'inumber'};
+		my $xdi_endpoint = $xdi_info->{'endpoint'};
+		my $xdi_conf = {
+			from_graph => $from_graph,
+			from => $f_inum,
+			to_graph => $to,
+			link_contract => $to
+		};
+		my $xdi = new HTTP::XDI($xdi_conf);
+		$xdi->connect;
+		# Override the target graph URL for the moment
+		$xdi->set_server_url($url);
+		$xdi->get($xdi_statement);
+		my $result = $xdi->post;
+		return $result;
+	} else {
+		$logger->warn("No XDI source configured for user");
+		return undef;
+	}
+	
+}
 
 
 sub eval_prim {
