@@ -314,6 +314,66 @@ sub eval_filter {
 }
 $funcs->{'filter'} = \&eval_filter;
 
+sub eval_collect {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+
+    my $obj =
+      Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
+
+    my $v = 0;
+    if ($obj->{'type'} eq 'array' && int(@{$expr->{'args'}}) > 0) {
+
+      my $eval = Kynetx::Expressions::den_to_exp($obj);
+
+      my $dval = Kynetx::Expressions::eval_expr($expr->{'args'}->[0], $rule_env, $rule_name,$req_info, $session);
+
+      if (Kynetx::Expressions::type_of($dval) eq 'closure') {
+
+
+	my $a = {};
+	foreach my $av (@{$eval}) {
+
+
+	  my $den_av = Kynetx::Expressions::exp_to_den($av);
+
+#	  $logger->debug("The value: ", sub { Dumper( $av ) });
+#	  $logger->debug("The denoted value: ", sub { Dumper( $den_av ) });
+
+	  my $app = {'type' => 'app',
+		     'function_expr' => $expr->{'args'}->[0],
+		     'args' => [$den_av]};
+
+	  my $r = Kynetx::Expressions::den_to_exp(
+	    Kynetx::Expressions::eval_application($app,
+						  $rule_env,
+						  $rule_name,
+						  $req_info,
+						  $session));
+
+	  $a->{$r} = [] unless $a->{$r};
+	  push(@{$a->{$r}}, $av);
+
+	}
+
+	$v = $a;
+
+
+      } else {
+	$logger->debug("collect used with non-function argument");
+      }
+    } else {
+      $logger->debug("collect used in non-array context or without argument");
+    }
+
+    return Kynetx::Expressions::typed_value($v);
+
+}
+$funcs->{'collect'} = \&eval_collect;
+
 sub eval_map {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();

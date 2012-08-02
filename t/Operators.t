@@ -90,6 +90,7 @@ pre {
   edo = [{"a" : 2}, {"b" : 26}, {"c" : 5}, {"d" : 16}, {"e": 29}];
   //edo = [{"a bc" : 15}, {"b ad" : 26}, {"c" : 5}, {"d" : 16}, {"e": 2}];
   //edo = [{'crazy chicken' :1}, {'massaman curry ***' :5}, {'pad thai' :3}, {'chinese' :1}, {'j dogs' :2}, {'thai pad' :2}, {'el pollo loco' :1}, {'jcw pastrami burger' :1}, {'costco pizza' :1}, {'jimmy johns' :3}];
+  employees = [{'name' : 'Ron', 'dept': 'marketing'}, {'name' : 'Steve', 'dept' : 'executive'}, {'name': 'Mark', 'dept': 'engr'}];
   foo = "I like cheese";
   my_str = "This is a string";
   phone_num = "1234567890";
@@ -1025,6 +1026,67 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
+
+$e[$i] = q#f.filter(function(a){a < 5})#;
+$x[$i] = {
+   'val' => [4,3,2,1],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+#
+# collect
+#
+$e[$i] = q#f.collect(function(a){(a < 5) => "x" | "y"})#;
+$x[$i] = {
+   'val' => {'x' => [4,3,2,1],
+	     'y' => [7,5,6]},
+   'type' => 'hash'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#f.collect(function(a){(a % 2) => "odd" | "even"})#;
+$x[$i] = {
+   'val' => {'even' => [4,2,6],
+	     'odd' => [7,3,5,1]},
+   'type' => 'hash'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#employees.collect(function(a){a{"dept"}})#;
+$x[$i] = {
+   'val' => {'marketing' => [
+			    {
+			     'dept' => 'marketing',
+			     'name' => 'Ron'
+			    }
+			   ],
+	     'engr' => [
+			{
+			 'dept' => 'engr',
+			 'name' => 'Mark'
+			}
+		       ],
+	     'executive' => [
+			     {
+			      'dept' => 'executive',
+			      'name' => 'Steve'
+			     }
+			    ]
+	    },
+   'type' => 'hash'
+};
+$d[$i]  = 0;
+$i++;
+
+
+
+#
+# map
+#
 
 $e[$i] = q#j.map(function(a){a.pick("$..b")})#;
 $x[$i] = {
