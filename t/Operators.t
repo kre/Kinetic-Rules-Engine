@@ -87,6 +87,9 @@ pre {
   i = [7,3,5,2,1,6];
   j = [{"a" : 1, "b" : 2, "c": 3}, {"a" : 4, "b" : 5, "c": 6}, {"a" : 7, "b" : 8, "c": 9}];
   k = [100, 1, 10, 1000, 21, 92];
+  edo = [{"a" : 2}, {"b" : 26}, {"c" : 5}, {"d" : 16}, {"e": 29}];
+  //edo = [{"a bc" : 15}, {"b ad" : 26}, {"c" : 5}, {"d" : 16}, {"e": 2}];
+  //edo = [{'crazy chicken' :1}, {'massaman curry ***' :5}, {'pad thai' :3}, {'chinese' :1}, {'j dogs' :2}, {'thai pad' :2}, {'el pollo loco' :1}, {'jcw pastrami burger' :1}, {'costco pizza' :1}, {'jimmy johns' :3}];
   foo = "I like cheese";
   my_str = "This is a string";
   phone_num = "1234567890";
@@ -977,6 +980,25 @@ $x[$i] = {
 };
 $d[$i]  = 0;
 $i++;
+
+
+$e[$i] = q#edo.sort(function(a,b) {
+		      (a{a.keys().head()} <=> b{b.keys().head()})
+                    }
+	           )#;
+$x[$i] = {
+   'val' => [  {'a' => 2},
+	       {'c' => 5},
+	       {'d' => 16},
+	       {'b' => 26},
+	       {'e' => 29}
+	    ],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
 
 $e[$i] = q#f.filter(function(a){a < 5})#;
 $x[$i] = {
@@ -1896,6 +1918,24 @@ $x[$i] = {
 };
 $d[$i] = 0;
 $i++;
+
+# $e[$i] = q/j_h.keys().head()/;
+# $x[$i] = {
+# 	'val' => 'pi as array',
+# 	'type'=>'str'
+# };
+# $d[$i] = 0;
+# $i++;
+
+# $e[$i] = q/j_h{j_h.keys().head()}/;
+# $x[$i] = {
+# 	'val' => [3,1,4,1,5,6,9],
+# 	'type'=>'array'
+# };
+# $d[$i] = 0;
+# $i++;
+
+
 
 $e[$i] = q/k_h.keys()/;
 $x[$i] = {

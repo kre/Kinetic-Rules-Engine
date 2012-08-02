@@ -1288,6 +1288,80 @@ add_expr_testcase(
 		  0
     );
 
+
+#
+# comparison
+# 
+
+$krl_src = <<_KRL_;
+6 <=> 7
+_KRL_
+add_expr_testcase(
+    $krl_src,
+		  'expr',
+		  "(6 < 7 ? -1 : (6 > 7 ? 1 : 0))",
+		  mk_expr_node('num',    -1),
+		  0
+    );
+
+$krl_src = <<_KRL_;
+temp <=> temp
+_KRL_
+add_expr_testcase(
+    $krl_src,
+		  'expr',
+		  "(temp<temp?-1:(temp>temp?1:0))",
+		  mk_expr_node('num',    0),
+		  0
+    );
+
+
+$krl_src = <<_KRL_;
+7 <=> 6
+_KRL_
+add_expr_testcase(
+    $krl_src,
+		  'expr',
+		  "(7 < 6 ? -1 : (7 > 6 ? 1 : 0))",
+		  mk_expr_node('num',    1),
+		  0
+    );
+
+$krl_src = <<_KRL_;
+string1 cmp string2
+_KRL_
+add_expr_testcase(
+    $krl_src,
+		  'expr',
+		  "(string1 < string2 ? -1 : (string1 > string2 ? 1 : 0))",
+		  mk_expr_node('num',    -1),
+		  0
+    );
+
+$krl_src = <<_KRL_;
+string1 cmp string1
+_KRL_
+add_expr_testcase(
+    $krl_src,
+		  'expr',
+		  "(string1<string1?-1:(string1>string1?1:0))",
+		  mk_expr_node('num',    0),
+		  0
+    );
+
+
+$krl_src = <<_KRL_;
+string2 cmp string1
+_KRL_
+add_expr_testcase(
+    $krl_src,
+		  'expr',
+		  "(string2 < string1 ? -1 : (string2 > string1 ? 1 : 0))",
+		  mk_expr_node('num',    1),
+		  0
+    );
+
+
 #
 # Membership
 #

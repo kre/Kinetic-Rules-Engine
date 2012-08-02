@@ -891,9 +891,11 @@ sub eval_ineq {
 	map {Kynetx::Expressions::eval_expr($_, $rule_env, $rule_name, $req_info, $session)}
 	  @{ $pred->{'args'} };
 
+    my $r = ineq_test($pred->{'op'}, den_to_exp($results[0]), den_to_exp($results[1]));
     
-
-    if (ineq_test($pred->{'op'}, den_to_exp($results[0]), den_to_exp($results[1]))) {
+    if ( $pred->{'op'} eq '<=>' || $pred->{'op'} eq 'cmp') {
+      return Kynetx::Parser::mk_expr_node('num',$r);
+    } elsif ($r) {
       return Kynetx::Parser::mk_expr_node('num',1);
     }  else {
       return Kynetx::Parser::mk_expr_node('num',0);
@@ -935,6 +937,10 @@ sub ineq_test {
       return ! ($rand0 eq $rand1);
     } elsif($op eq 'eq') {
 	return $rand0 eq $rand1;
+    } elsif($op eq '<=>') {
+	return $rand0 <=> $rand1;
+    } elsif($op eq 'cmp') {
+	return $rand0 cmp $rand1;
     } elsif($op eq 'like') {
 
       # Note: this relies on the fact that a regular expression looks like a string inside
@@ -1148,8 +1154,8 @@ my %literal_types = ('str' => 1,
 
 sub typed_value {
   my($val) = @_;
-  my $logger = get_logger();
-  $logger->trace("typed value received: ", sub {Dumper($val)});
+#  my $logger = get_logger();
+#  $logger->trace("typed value received: ", sub {Dumper($val)});
   unless (ref $val eq 'HASH' &&
 	  defined $val->{'type'} &&
 	  $literal_types{$val->{'type'}}

@@ -223,6 +223,7 @@ sub eval_sort {
 			     'args' => [Kynetx::Expressions::typed_value($a),
 					Kynetx::Expressions::typed_value($b)]};
 	
+
 		  	my $r = Kynetx::Expressions::den_to_exp(
 		    	Kynetx::Expressions::eval_application($app,
 							  $rule_env,
@@ -230,7 +231,7 @@ sub eval_sort {
 							  $req_info,
 							  $session));
 	
-	#	  	$logger->debug("Sort function returned ",Dumper $r);
+#		  	$logger->debug("Sort function returned ",Dumper $r);
 	
 		  	return $r;
 			} @{$eval};
@@ -241,7 +242,7 @@ sub eval_sort {
 
       } else {
 		my @a = sort {$a cmp $b} @{$eval};
-#        $logger->debug("Array after sorting ",Dumper @a);
+        $logger->debug("Array after sorting ",Dumper @a);
 		$v = \@a;
       }
 

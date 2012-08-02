@@ -350,7 +350,13 @@ sub gen_js_predexpr {
       
 	}
 
+      } elsif ($expr->{'op'} eq '<=>' || $expr->{'op'} eq 'cmp') {
 
+	my $a = gen_js_expr($expr->{'args'}->[0]) ;
+        my $b = gen_js_expr($expr->{'args'}->[1]) ;
+ 
+	return 
+          "($a < $b ? -1 : ($a > $b ? 1 : 0))"
 
 	
       } else {

@@ -95,6 +95,8 @@ $logger->debug("global dec",sub {Dumper($krl)});
 my $init_rule_env = Kynetx::Test::gen_rule_env(
    {'datasource:'.$krl->[0]->{'name'} => $krl->[0],
     'city2' => 'Seattle',
+    'string1' => "aab",
+    'string2' => "abb",
    });
 
 my $rule_env = extend_rule_env({
