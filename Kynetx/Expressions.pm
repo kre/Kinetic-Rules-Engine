@@ -619,6 +619,8 @@ sub eval_application {
 #  $logger->debug("Env: ", Dumper $decls_env);
 #  $logger->debug("Env lookup: ", lookup_rule_env('n', $decls_env));
 
+# $logger->debug("Evaling expression for function ", sub {Dumper $closure->{'val'}->{'expr'}});
+
   return eval_expr($closure->{'val'}->{'expr'},
 		   $decls_env,
 		   $rule_name,
@@ -724,15 +726,16 @@ sub eval_hash_ref {
   	unless (defined $v) {
 	  $logger->debug("Undefined map variable: ", $expr->{'var_expr'});
 	  Kynetx::Errors::raise_error($req_info, 'warn',
-			"[hash_ref] Variable '", $expr->{'var_expr'}, "' is undefined",
+			"[hash_ref] Variable '". $expr->{'var_expr'}. "' is undefined",
 			{'rule_name' => $rule_name,
 			 'genus' => 'expression',
 			 'species' => 'hash reference undefined'
 			});
 	}
   	unless (ref $v eq "HASH") {
-	    Kynetx::Errors::raise_error($req_info, 'warn',
-			"[hash_ref] Variable '", $expr->{'var_expr'}, "' is not a hash",
+	  $logger->debug("map variable isn't a map: ", $expr->{'var_expr'});
+	  Kynetx::Errors::raise_error($req_info, 'warn',
+			"[hash_ref] Variable '". $expr->{'var_expr'}. "' is not a hash",
 			{'rule_name' => $rule_name,
 			 'genus' => 'expression',
 			 'species' => 'type mismatch'

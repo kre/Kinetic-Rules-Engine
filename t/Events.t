@@ -495,6 +495,22 @@ SKIP: {
     $test_count += test_event_plan($email_test_plan);
 
 
+    my $email_with_regexp_test_plan =
+      [{'url' => $dn .'/mail/received/cs_test_1?from=swf@foobar.com',
+	'type' => 'text/javascript',
+	'like' => ['/forward/',
+		   '/"msg_id":65/',
+		   '/"address":"swf"/',
+		  ],
+	'unlike' => ['/"msg_id":35/',
+		  ],
+	'diag' => 0,
+       },
+      ];
+
+    $test_count += test_event_plan($email_with_regexp_test_plan);
+
+
 #     my $submit_test_plan =
 #       [{'url' => "$dn/web/submit/cs_test_1",
 # 	'method' => 'post',

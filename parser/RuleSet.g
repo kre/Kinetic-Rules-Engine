@@ -2738,12 +2738,13 @@ EXTRACT
 
 OTHER_OPERATORS
 	:  'pick'|'length'|'as'|'head'|'tail'|'sort'
-      	|'filter'|'collect'|'map'|'uc'|'lc' |'split' | 'sprintf' | 'join' | 'query'
-      	| 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
-      	| 'duplicates' | 'append' | 'put' | 'delete' | 'keys'
-      	| 'encode' | 'decode' 
-      	| 'typeof' | 'isnull'
-      	;
+    | 'filter'|'collect'|'map'|'reduce'|'reverse' 
+    | 'uc'|'lc' |'split' | 'sprintf' | 'join' | 'query'
+    | 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
+    | 'duplicates' | 'append' | 'put' | 'delete' | 'keys'
+    | 'encode' | 'decode' 
+    | 'typeof' | 'isnull'
+    ;
 AGGREGATORS
 	: 'max' | 'min' | 'sum' | 'avg' | 'push'
 	;

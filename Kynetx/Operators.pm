@@ -30,6 +30,7 @@ use Clone qw(clone);
 use Kynetx::Expressions;
 use Kynetx::JSONPath ;
 use Kynetx::PrettyPrinter;
+use Kynetx::Util qw/split_re/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -436,6 +437,111 @@ sub eval_map {
 
 }
 $funcs->{'map'} = \&eval_map;
+
+sub eval_reduce {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+
+    my $obj =
+      Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
+
+    my $v = 0;
+    if ($obj->{'type'} eq 'array' && int(@{$expr->{'args'}}) > 0) {
+
+      my $obj_val = Kynetx::Expressions::den_to_exp($obj);
+
+      my $dval;
+      if (defined $expr->{'args'}->[1]) {
+	$dval = Kynetx::Expressions::eval_expr($expr->{'args'}->[1], $rule_env, $rule_name,$req_info, $session);
+	push(@{$obj_val}, $dval);
+      } else {
+	$dval = 0;
+      }
+                 
+
+      my $op_fn = Kynetx::Expressions::eval_expr($expr->{'args'}->[0], $rule_env, $rule_name,$req_info, $session);
+      unless (Kynetx::Expressions::type_of($op_fn) eq 'closure') {
+	$logger->debug("reduce used with non-function argument");
+	return $dval;
+      }
+       
+
+      my $obj_length = scalar @{$obj_val};
+
+      my $result;
+      if ($obj_length == 0) {
+	$result = $dval;
+      } else {
+	my @rev_obj_val = reverse @{$obj_val};
+	$result = Kynetx::Expressions::exp_to_den(shift @rev_obj_val);
+	foreach my $av (@rev_obj_val) {
+
+	  $logger->debug("Result so far ", sub {Dumper $result});
+	  $logger->debug("Next value ", sub {Dumper Kynetx::Expressions::exp_to_den($av)});
+
+	  my $app = {'type' => 'app',
+		     'function_expr' => $op_fn,
+		     'args' => [$result, 
+				Kynetx::Expressions::exp_to_den($av),
+			       ]};
+
+	  $result = 
+	    Kynetx::Expressions::eval_application($app,
+						  $rule_env,
+						  $rule_name,
+						  $req_info,
+						  $session);
+	}
+	
+	
+      }
+
+      $v = Kynetx::Expressions::den_to_exp($result);
+
+      $logger->debug("Reduced array ", sub {Dumper $v});
+
+    } else {
+      $logger->debug("reduce used in non-array context or without argument");
+    }
+
+    return Kynetx::Expressions::typed_value($v);
+
+}
+$funcs->{'reduce'} = \&eval_reduce;
+
+
+sub eval_reverse {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+
+    my $obj =
+      Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
+
+    my $v;
+    if ($obj->{'type'} eq 'array') {
+
+      my $obj_val = Kynetx::Expressions::den_to_exp($obj);
+      my @rev_obj_val = reverse @{$obj_val};
+      $v = \@rev_obj_val;
+
+    } else {
+      $logger->debug("reverse used in non-array context");
+    }
+
+#    $logger->debug("Reversed array ", sub {Dumper $v});
+
+
+    return Kynetx::Expressions::typed_value($v);
+
+  }
+$funcs->{'reverse'} = \&eval_reverse;
+
 
 sub eval_join {
   my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
@@ -1349,11 +1455,5 @@ sub list_extensions {
     return \%extensions;
 }
 
-sub split_re {
-  my($val) = @_;
-
-  my ($pattern, $modifiers) = $val =~ m%(?:re){0,1}[/#](.+)[/#]([igm]{0,3})%;
-  return ($pattern, $modifiers);
-}
 
 1;
