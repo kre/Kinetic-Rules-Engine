@@ -456,9 +456,9 @@ sub eval_reduce {
       my $dval;
       if (defined $expr->{'args'}->[1]) {
 	$dval = Kynetx::Expressions::eval_expr($expr->{'args'}->[1], $rule_env, $rule_name,$req_info, $session);
-	push(@{$obj_val}, $dval);
+	unshift(@{$obj_val}, $dval);
       } else {
-	$dval = 0;
+	$dval = Kynetx::Expressions::exp_to_den(0);
       }
                  
 
@@ -475,9 +475,8 @@ sub eval_reduce {
       if ($obj_length == 0) {
 	$result = $dval;
       } else {
-	my @rev_obj_val = reverse @{$obj_val};
-	$result = Kynetx::Expressions::exp_to_den(shift @rev_obj_val);
-	foreach my $av (@rev_obj_val) {
+	$result = Kynetx::Expressions::exp_to_den(shift @{$obj_val});
+	foreach my $av (@{$obj_val}) {
 
 	  $logger->debug("Result so far ", sub {Dumper $result});
 	  $logger->debug("Next value ", sub {Dumper Kynetx::Expressions::exp_to_den($av)});

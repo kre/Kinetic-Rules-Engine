@@ -1176,7 +1176,7 @@ $i++;
 
 $e[$i] = q#c.reduce(function(a,b){a - b})#;
 $x[$i] = {
-   'val' => -3,
+   'val' => -7,
    'type' => 'num'
 };
 $d[$i]  = 0;
