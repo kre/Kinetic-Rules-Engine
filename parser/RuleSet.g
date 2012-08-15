@@ -2191,7 +2191,9 @@ factor returns[Object result] options {backtrack=true;}
 
 	      	$result = tmp;
       }
-      | LEFT_PAREN e=expr  RIGHT_PAREN { $result=$e.result; }
+      | LEFT_PAREN e=expr  RIGHT_PAREN { 
+            $result=$e.result; 
+      }
       | v=(VAR|OTHER_OPERATORS|REPLACE|EXTRACT|MATCH|VAR_DOMAIN)   {
       		HashMap tmp = new HashMap();
 		tmp.put("type","var");

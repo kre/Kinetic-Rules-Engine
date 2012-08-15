@@ -1336,13 +1336,13 @@ sub eval_str {
     my @parts;
     my $val = '';
     my $str = ref $expr eq 'HASH' ? $expr->{'val'} : $expr;
-#    $logger->debug("Original expr: ", sub {Dumper $str});
+    $logger->debug("Original expr: ", sub {Dumper $str});
     while (@parts = $str =~ m/(.*?)\#\{(.+?)\}{1}?(.*)/s) {
-#      $logger->debug("Picked apart ", sub {Dumper @parts});
+      $logger->debug("Picked apart ", sub {Dumper @parts});
       last unless $parts[1];
       my $bee_expr = Kynetx::Parser::parse_expr($parts[1]);
       my $bee_val = eval_expr($bee_expr,$rule_env, $rule_name,$req_info, $session)->{'val'};
-#      $logger->debug("parsed and evaled beesting: ", sub {Dumper($bee_val)} );
+      $logger->debug("parsed and evaled beesting: ", sub {Dumper($bee_val)} );
       if (ref $bee_val eq 'ARRAY' || ref $bee_val eq 'HASH') {
 	$bee_val = $json->encode($bee_val) || "";
       }

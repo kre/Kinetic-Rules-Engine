@@ -2517,6 +2517,33 @@ add_expr_testcase(
     0);
 
 
+$krl_src = <<_KRL_;
+function() {
+  d = << Count is #{ent:my_count} >>;
+  "Count is #{ent:my_count}"
+}
+_KRL_
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	"function() {var d = 'Count is 0'; return 'Count is ' + 'UNTRANSLATABLE KRL EXPRESSION'+''}",
+	mk_expr_node('closure',{'vars' => [],
+				'decls' => [ 
+       {
+         'lhs' => 'd',
+         'rhs' => ' Count is #{ent:my_count} ',
+         'type' => 'here_doc'
+       }
+
+					   ],
+					'sig' => 'b762cedd25052718f90b2540841e859d',
+					'expr' => {'val' => 'Count is #{ent:my_count}','type'=>'str'},
+					'env' => $rule_env,
+	}),
+	0
+);
+
+
 # requires foo to be defined in env as function above
 $krl_src = <<_KRL_;
 foo(5)
@@ -2742,6 +2769,16 @@ add_expr_testcase(
     0);
 
 
+
+$krl_src = <<_KRL_;
+d = "#{ent:my_count}"
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'decl',
+    "var d = '2';",
+    2,
+    0);
 
 
 #--------------------------------------------------------------------------------
@@ -3264,6 +3301,9 @@ add_expr_testcase(
     "'UNTRANSLATABLE KRL EXPRESSION'",
     mk_expr_node('array',['3.a','3.b','3.c','3.d']),
     0);
+
+
+
 
 	 
 #----------------------------------------------------------------------------
