@@ -1336,7 +1336,7 @@ sub eval_str {
     my @parts;
     my $val = '';
     my $str = ref $expr eq 'HASH' ? $expr->{'val'} : $expr;
-    $logger->debug("Original expr: ", sub {Dumper $str});
+#    $logger->debug("Original expr: ", sub {Dumper $str});
     while (@parts = $str =~ m/(.*?)\#\{(.+?)\}{1}?(.*)/s) {
       $logger->debug("Picked apart ", sub {Dumper @parts});
       last unless $parts[1];

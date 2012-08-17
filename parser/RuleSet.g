@@ -2746,6 +2746,7 @@ OTHER_OPERATORS
     | 'duplicates' | 'append' | 'put' | 'delete' | 'keys'
     | 'encode' | 'decode' 
     | 'typeof' | 'isnull'
+    | 'log'
     ;
 AGGREGATORS
 	: 'max' | 'min' | 'sum' | 'avg' | 'push'

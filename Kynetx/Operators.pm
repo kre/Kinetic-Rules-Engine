@@ -1422,6 +1422,21 @@ sub eval_type {
 $funcs->{'typeof'} = \&eval_type;
 
 
+sub eval_log {
+  my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+  my $logger = get_logger();
+  my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+  my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+  my $msg = '';
+  if (defined $rands->[0] && $rands->[0] ) {
+    my $msg = Kynetx::Expressions::den_to_exp($rands->[0])
+  }
+  $logger->debug( $msg, ref $obj eq 'HASH' || 
+		        ref $obj eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($obj) : $obj );
+}
+$funcs->{'log'} = \&eval_log;
+
+
 
 #-----------------------------------------------------------------------------------
 # make it all happen

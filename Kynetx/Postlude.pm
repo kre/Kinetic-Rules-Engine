@@ -44,6 +44,8 @@ our %EXPORT_TAGS = (
 );
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
+use JSON::XS;
+
 use Kynetx::Expressions qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Rids qw/:all/;
@@ -322,7 +324,8 @@ sub eval_log_statement {
 #    $js = Kynetx::Log::explicit_callback( $req_info, $rule_name, $log_val );
 
     # this puts the statement in the log data for when debug is on
-    $logger->debug( $msg, $log_val );
+    $logger->debug( $msg, ref $log_val eq 'HASH' || 
+		          ref $log_val eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($log_val) : $log_val );
     $js = join("", 
                "KOBJ.log('",
 	       $msg,
