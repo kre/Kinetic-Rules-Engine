@@ -2138,6 +2138,21 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+
+
+##
+## klog
+##
+$e[$i] = q#c.reverse().klog("Value of reversed array: ").join(";")#;
+$x[$i] = {
+   'val' => "6;5;4",
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
+
+
 ENDY:
 
 

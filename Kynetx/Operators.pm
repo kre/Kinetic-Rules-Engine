@@ -1428,13 +1428,15 @@ sub eval_log {
   my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
   my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
   my $msg = '';
-  if (defined $rands->[0] && $rands->[0] ) {
-    my $msg = Kynetx::Expressions::den_to_exp($rands->[0])
-  }
+  if (defined $rands->[0]  ) {
+    $msg = Kynetx::Expressions::den_to_exp($rands->[0])
+  } 
+  my $val = Kynetx::Expressions::den_to_exp($obj);
   $logger->debug( $msg, ref $obj eq 'HASH' || 
-		        ref $obj eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($obj) : $obj );
+		        ref $obj eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($val) : $val );
+  return $obj;
 }
-$funcs->{'log'} = \&eval_log;
+$funcs->{'klog'} = \&eval_log;
 
 
 
