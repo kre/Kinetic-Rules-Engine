@@ -163,8 +163,8 @@ sub eval_decl {
     my $type = undef;
 
     my $logger = get_logger();
-    $logger->trace("decl type: ",$decl->{'type'});
-    $logger->trace("[eval_decl]: ", sub {Dumper $decl->{'rhs'}});
+#    $logger->debug("decl type: ",$decl->{'type'});
+#    $logger->debug("[eval_decl]: ", sub {Dumper $decl->{'rhs'}});
 
     if ($decl->{'type'} eq 'expr' ) {
 		my $r = eval_expr($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);
@@ -821,7 +821,7 @@ sub eval_persistent {
 						     $rid, 
 						     $session, 
 						     $name) || 0;
-	$logger->debug("[persistent] $expr->{'domain'}:$name -> $v");
+#	$logger->debug("[persistent] $expr->{'domain'}:$name -> ", sub {Dumper $v});
       } else {
 	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
         $logger->debug("[module reference] $expr->{'domain'}:$name->$v");

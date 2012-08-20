@@ -194,28 +194,28 @@ sub eval_persistent_expr {
 
     if ( $expr->{'action'} eq 'clear' ) {
     	#### Persistent destroy
-        delete_persistent_var( $domain,get_rid($req_info->{'rid'}), $session, $expr->{'name'} );
-		} elsif ( $expr->{'action'} eq 'clear_hash_element' ) {
-    		$logger->trace("Clear: ", sub {Dumper($expr)});
-    		my $name = $expr->{'name'};
-    		my $path_r = $expr->{'hash_element'};
-    		my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $path_r);
-			Kynetx::Persistence::delete_persistent_hash_element($domain,get_rid($req_info->{'rid'}),$session,$name,$path);
-	    } elsif ( $expr->{'action'} eq 'set' ) {
-    	#### Persistent setter
-        $logger->trace( "expr: ", sub { Dumper($expr) } );
-        my $value;
-        if ( $expr->{'value'} ) {
-            $value =
-              Kynetx::Expressions::den_to_exp(
-                                    Kynetx::Expressions::eval_expr(
-                                        $expr->{'value'}, $rule_env, $rule_name,
-                                        $req_info,        $session
-                                    )
-              );
-        }
-        if ($value) {
-            $logger->trace( "Set value ", $expr->{'name'}, " to $value" );
+      delete_persistent_var( $domain,get_rid($req_info->{'rid'}), $session, $expr->{'name'} );
+    } elsif ( $expr->{'action'} eq 'clear_hash_element' ) {
+      $logger->trace("Clear: ", sub {Dumper($expr)});
+      my $name = $expr->{'name'};
+      my $path_r = $expr->{'hash_element'};
+      my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $path_r);
+      Kynetx::Persistence::delete_persistent_hash_element($domain,get_rid($req_info->{'rid'}),$session,$name,$path);
+    } elsif ( $expr->{'action'} eq 'set' ) {
+      #### Persistent setter
+      $logger->trace( "expr: ", sub { Dumper($expr) } );
+      my $value;
+      if ( $expr->{'value'} ) {
+	$value =
+	  Kynetx::Expressions::den_to_exp(
+					  Kynetx::Expressions::eval_expr(
+					 $expr->{'value'}, $rule_env, $rule_name,
+									 $req_info,        $session
+									)
+					 );
+      }
+      if ($value) {
+	$logger->trace( "Set value ", $expr->{'name'}, " to $value" );
             if (Kynetx::MongoDB::validate($value)) {
             	save_persistent_var($domain, get_rid($req_info->{'rid'}), $session, $expr->{'name'}, $value );
             } else {
