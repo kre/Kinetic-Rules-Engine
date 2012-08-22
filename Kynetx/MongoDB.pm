@@ -417,7 +417,7 @@ sub find_and_modify {
 	if (defined $command->{'query'}) {
 		clear_cache($collection,$command->{'query'});		
 	}
-	if (defined $status && $status->{'ok'}) {
+	if (defined $status && ref $status eq 'HASH' && $status->{'ok'}) {
 		if ($verbose) {
 			return $status;
 		} else {
