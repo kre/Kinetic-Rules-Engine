@@ -688,7 +688,7 @@ sub eval_array_ref {
 
   unless (defined $v) {
     Kynetx::Errors::raise_error($req_info, 'warn',
-				"[array_ref] Variable '", $expr->{'val_expr'}, "' is undefined",
+				"[array_ref] Variable '". $expr->{'val_expr'}. "' is undefined",
 				{'rule_name' => $rule_name,
 				 'genus' => 'expression',
 				 'species' => 'array reference undefined'
@@ -698,7 +698,7 @@ sub eval_array_ref {
 
   unless (ref $v eq 'ARRAY') {
     Kynetx::Errors::raise_error($req_info, 'warn',
-				"[array_ref] Variable '", $expr->{'val_expr'}, "' is not an array",
+				"[array_ref] Variable '". $expr->{'val_expr'}. "' is not an array",
 				{'rule_name' => $rule_name,
 				 'genus' => 'expression',
 				 'species' => 'type mismatch'
