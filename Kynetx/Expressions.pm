@@ -840,48 +840,32 @@ sub eval_pred {
 
 #    $logger->debug("[eval_pred] ", Dumper $pred);
 
-    my @results =
-	map {Kynetx::Expressions::eval_expr($_, $rule_env, $rule_name, $req_info, $session)}
-	  @{ $pred->{'args'} };
-
-    @results = map {den_to_exp($_)} @results;
-
-#    $logger->debug("[eval_pred] Rand values: ", Dumper @results);
-
     $logger->debug("Complex predicate: ", $pred->{'op'});
 
-    if($pred->{'op'} eq '&&') {
-	my $first = shift @results;
-	for (@results) {
-	    $first = $first && $_;
-	}
-	return mk_expr_node('num',$first);
+    my $val = 0;
+    foreach my $p ( @{ $pred->{'args'} } ) {
+      my $result = den_to_exp(Kynetx::Expressions::eval_expr($p, $rule_env, $rule_name, $req_info, $session));
 
-    } elsif($pred->{'op'} eq '||') {
-	my $first = shift @results;
-	for (@results) {
-	    $first = $first || $_;
+      if($pred->{'op'} eq '&&') {
+	$val = $result;
+	if (! $result ) {
+	  last;
+	} 
+      } elsif($pred->{'op'} eq '||') {
+	$val = $result;
+	if ( $result ) {
+	  last;
+	} 
+      } elsif($pred->{'op'} eq 'negation') {
+	if ($result) {
+	  $val = 0;
+	} else {
+	  $val = 1;
 	}
-	return mk_expr_node('num',$first);
-    } elsif($pred->{'op'} eq 'negation') {
-      if ($results[0]) {
-	return
-	    mk_expr_node('num', 0);
-      } else {
-	return
-	    mk_expr_node('num', 1);
-
       }
-    } else {
-      Kynetx::Errors::raise_error($req_info, 'warn',
-				"[pred] invalid predicate operator $pred->{'op'}",
-				{'rule_name' => $rule_name,
-				 'genus' => 'expression',
-				 'species' => 'invalid operator'
-				}
-			       );
     }
-    return 0;
+    return exp_to_den($val)
+
 
 }
 
