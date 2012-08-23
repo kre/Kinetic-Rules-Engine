@@ -31,7 +31,7 @@ use Apache::Session::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 use Kynetx::Test qw/:all/;
@@ -75,21 +75,6 @@ $logger->debug("r: ", sub {Dumper($r)});
 
 my $session = process_session($r);
 
-#$description = "No token. Create a new KEN";
-#my $nken = Kynetx::Persistence::KEN::get_ken($session,$srid);
-#testit($nken,re($ken_re),$description);
-#my $key = {
-#  "ken" => $nken
-#};
-#
-#my $got = Kynetx::MongoDB::get_value("tokens",$key);
-#
-#
-#$temp_token = $got->{'ktoken'};
-#$tsession = $got->{'endpoint_id'};
-
-#diag $temp_token;
-#diag $tsession;
 
 # Set the session, find a KEN
 $r = new Kynetx::FakeReq();
@@ -101,29 +86,22 @@ my $session_ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
 $logger->debug("Ken session: ",$session_ken);
 testit($session_ken,re($ken_re),$description,0);
 
+# insert a token
+my $generated = Kynetx::Persistence::KToken::create_token($session_ken,"Dummy");
+
 
 # Ignore the session, just use the UBX
 $description = "Check the token database for ($static_token)";
 $r = new Kynetx::FakeReq();
-$r->_set_ubx_token($static_token);
+$r->_set_ubx_token($generated);
 $session = process_session($r);
-$ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
-testit($ken,$ubx_ken,$description);
+$result = Kynetx::Persistence::KEN::get_ken($session,$frid);
+testit($result,$session_ken,$description);
 
-$tsession = Kynetx::Session::session_id($session);
-#diag "$tsession";
-# Ignore the session, just use the UBX
-$description = "Check the token database for ($static_token)";
-$r = new Kynetx::FakeReq();
-$r->_set_ubx_token($static_token);
-$session = process_session($r,$tsession);
-$ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
-testit($ken,$ubx_ken,$description);
+$description = "Clean up and delete KEN";
+diag $description;
+Kynetx::Persistence::KEN::delete_ken($session_ken);
 
-#$description = "Clean up and delete KEN";
-#Kynetx::Persistence::KEN::delete_ken($nken);
-#$got = Kynetx::MongoDB::get_value("kens",$key);
-#testit($got,undef,$description);
 
 sub testit {
     my ($got,$expected,$description,$debug) = @_;
