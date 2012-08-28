@@ -769,6 +769,19 @@ SKIP: {
 
     $test_count += test_event_plan($discovery_test_plan);
 
+    my $event_send_test_plan =
+      [{'url' => "$dn/$token?_domain=flip&_type=flop&_rids=a1856x12",
+    	'type' => 'text/javascript',
+    	'like' => ['/"status":"\d\d\d".*"status":"\d\d\d"/',
+    		  ],
+    	'unlike' => [
+    		    ],
+    	'diag' => 0,
+       },
+      ];
+
+    $test_count += test_event_plan($event_send_test_plan);
+
 
 
 done_testing($test_count);

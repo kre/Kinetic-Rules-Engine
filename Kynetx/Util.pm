@@ -92,6 +92,7 @@ union
 has
 intersection
 to_seconds
+split_re
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -780,5 +781,11 @@ sub to_seconds {
 	return $seconds;
 }
 
+sub split_re {
+  my($val) = @_;
+
+  my ($pattern, $modifiers) = $val =~ m%(?:re){0,1}[/#](.+)[/#]([igm]{0,3})%;
+  return ($pattern, $modifiers);
+}
 
 1;

@@ -98,7 +98,7 @@ sub save_persistent_var {
     }
 
     my $logger = get_logger();
-    $logger->trace("Save $domain","var: $varname$op_name");
+#    $logger->debug("Save $domain","var: $varname$op_name", " Value: $value");
     my $status;
     if ($domain eq 'ent') {
         $logger->trace("Session after before KEN query: ", sub {Dumper($session)});
@@ -146,8 +146,8 @@ sub increment_persistent_var {
 
 sub get_persistent_var {
     my ($domain,$rid,$session,$varname,$gcreated) = @_;
-#    my $logger = get_logger();
-    # $logger->debug("Get $domain"," var: $varname");
+    my $logger = get_logger();
+    $logger->debug("Get $domain"," var: $varname");
     my $val = undef;
     if ($domain eq 'ent') {
         my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
@@ -157,6 +157,7 @@ sub get_persistent_var {
         $val = Kynetx::Persistence::Application::get($rid,$varname,$gcreated);
     }
 
+    $logger->debug("Persistent $domain:$varname -> $val");
     if (defined $val) {
         return $val;
     } else {
@@ -275,7 +276,7 @@ sub consume_trail_element {
         $result = Kynetx::Persistence::Application::pop($rid,$varname,$direction);
     }
     
-    $logger->debug("consume_trail_element $op_name returned: ", sub {Dumper($result)});
+#    $logger->debug("consume_trail_element $op_name returned: ", sub {Dumper($result)});
 
     if ($result) {
         return $result->[0];

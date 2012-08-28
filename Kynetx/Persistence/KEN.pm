@@ -108,19 +108,25 @@ sub ken_lookup_by_token {
         $logger->trace("Found KEN in memcache: $ken");
     } else {
         $logger->trace("Check mongo for token: $ktoken");
-        $ken = mongo_has_ken($ktoken);
+	    my $var = {
+	        'ktoken' => $ktoken
+	    };
+	    my $result = Kynetx::Persistence::KToken::token_query($var);
+	    if ($result) {
+	        return $result->{"ken"};
+	    } else {
+	    	return undef;
+	    }
+       
     }
-    return $ken;
 }
 
 sub mongo_has_ken {
-    my ($ktoken) = @_;
-    my $var = {
-        'ktoken' => $ktoken
-    };
-    my $result = Kynetx::Persistence::KToken::token_query($var);
-    if ($result) {
-        return $result->{"ken"};
+    my ($ken) = @_;
+    my $oid = MongoDB::OID->new(value => $ken);
+    my $valid = Kynetx::MongoDB::get_singleton(COLLECTION,{"_id" => $oid});
+    if (defined $valid && ref $valid eq "HASH") {
+    	return $valid->{"_id"}->{'value'};
     }
     return undef;
 }
@@ -187,6 +193,7 @@ sub get_ken_defaults {
 # This is nuculear--primarily for cleaning up after smoke tests
 sub delete_ken {
     my ($ken) = @_;
+    my $logger = get_logger();
     my $kpds = Kynetx::MongoDB::get_collection(COLLECTION);
     my $oid = MongoDB::OID->new("value" => $ken);
     my $var = {"_id" => $oid};

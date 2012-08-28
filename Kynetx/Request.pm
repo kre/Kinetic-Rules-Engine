@@ -168,19 +168,6 @@ sub build_request_env {
 }
 
 
-### condvar
-sub set_condvar {
-  my($self, $cv) = @_;
-
-  $self->{'condvar'} = $cv;
-}
-
-sub get_condvar {
-  my($self) = @_;
-
-  return $self->{'condvar'};
-}
-
 ### final
 sub set_final_flag {
   my($self) = @_;

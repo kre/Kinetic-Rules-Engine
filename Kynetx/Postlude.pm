@@ -44,6 +44,8 @@ our %EXPORT_TAGS = (
 );
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
+use JSON::XS;
+
 use Kynetx::Expressions qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Rids qw/:all/;
@@ -58,7 +60,7 @@ use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
 sub eval_post_expr {
-    my ( $rule, $session, $req_info, $rule_env, $fired ) = @_;
+    my ( $rule, $session, $req_info, $rule_env, $fired, $execenv ) = @_;
 
     my $js = '';
 
@@ -89,7 +91,7 @@ sub eval_post_expr {
             " ",
             map {
                 eval_post_statement( $_, $session, $req_info, $rule_env,
-                                     $rule->{'name'} )
+                                     $rule->{'name'}, $execenv )
               } @{$cons}
         );
     } else {
@@ -98,7 +100,7 @@ sub eval_post_expr {
             " ",
             map {
                 eval_post_statement( $_, $session, $req_info, $rule_env,
-                                     $rule->{'name'} )
+                                     $rule->{'name'}, $execenv )
               } @{$alt}
         );
     }
@@ -106,7 +108,7 @@ sub eval_post_expr {
 }
 
 sub eval_post_statement {
-    my ( $expr, $session, $req_info, $rule_env, $rule_name ) = @_;
+    my ( $expr, $session, $req_info, $rule_env, $rule_name, $execenv ) = @_;
 
     my $logger = get_logger();
 
@@ -192,28 +194,28 @@ sub eval_persistent_expr {
 
     if ( $expr->{'action'} eq 'clear' ) {
     	#### Persistent destroy
-        delete_persistent_var( $domain,get_rid($req_info->{'rid'}), $session, $expr->{'name'} );
-		} elsif ( $expr->{'action'} eq 'clear_hash_element' ) {
-    		$logger->trace("Clear: ", sub {Dumper($expr)});
-    		my $name = $expr->{'name'};
-    		my $path_r = $expr->{'hash_element'};
-    		my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $path_r);
-			Kynetx::Persistence::delete_persistent_hash_element($domain,get_rid($req_info->{'rid'}),$session,$name,$path);
-	    } elsif ( $expr->{'action'} eq 'set' ) {
-    	#### Persistent setter
-        $logger->trace( "expr: ", sub { Dumper($expr) } );
-        my $value;
-        if ( $expr->{'value'} ) {
-            $value =
-              Kynetx::Expressions::den_to_exp(
-                                    Kynetx::Expressions::eval_expr(
-                                        $expr->{'value'}, $rule_env, $rule_name,
-                                        $req_info,        $session
-                                    )
-              );
-        }
-        if ($value) {
-            $logger->trace( "Set value ", $expr->{'name'}, " to $value" );
+      delete_persistent_var( $domain,get_rid($req_info->{'rid'}), $session, $expr->{'name'} );
+    } elsif ( $expr->{'action'} eq 'clear_hash_element' ) {
+      $logger->trace("Clear: ", sub {Dumper($expr)});
+      my $name = $expr->{'name'};
+      my $path_r = $expr->{'hash_element'};
+      my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $path_r);
+      Kynetx::Persistence::delete_persistent_hash_element($domain,get_rid($req_info->{'rid'}),$session,$name,$path);
+    } elsif ( $expr->{'action'} eq 'set' ) {
+      #### Persistent setter
+      $logger->trace( "expr: ", sub { Dumper($expr) } );
+      my $value;
+      if ( $expr->{'value'} ) {
+	$value =
+	  Kynetx::Expressions::den_to_exp(
+					  Kynetx::Expressions::eval_expr(
+					 $expr->{'value'}, $rule_env, $rule_name,
+									 $req_info,        $session
+									)
+					 );
+      }
+      if ($value) {
+	$logger->trace( "Set value ", $expr->{'name'}, " to $value" );
             if (Kynetx::MongoDB::validate($value)) {
             	save_persistent_var($domain, get_rid($req_info->{'rid'}), $session, $expr->{'name'}, $value );
             } else {
@@ -322,7 +324,8 @@ sub eval_log_statement {
 #    $js = Kynetx::Log::explicit_callback( $req_info, $rule_name, $log_val );
 
     # this puts the statement in the log data for when debug is on
-    $logger->debug( $msg, $log_val );
+    $logger->debug( $msg, ref $log_val eq 'HASH' || 
+		          ref $log_val eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($log_val) : $log_val );
     $js = join("", 
                "KOBJ.log('",
 	       $msg,

@@ -52,12 +52,17 @@ use Kynetx::Environments qw(:all);
 use Kynetx::Directives;
 use Kynetx::Postlude;
 use Kynetx::Response;
+use Kynetx::ExecEnv;
 
 use Kynetx::JavaScript::AST qw/:all/;
+
+use Kynetx::Modules::System qw/:all/;
 
 use Kynetx::Actions::LetItSnow;
 use Kynetx::Actions::JQueryUI;
 use Kynetx::Actions::FlippyLoo;
+
+use Storable qw(dclone);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -419,6 +424,32 @@ sub eval_use_module {
   my ( $req_info, $rule_env, $session, $name, $alias, $modifiers, $mversion ) = @_;
 
   my $logger = get_logger();
+  my $js = '';
+  my $this_js;
+
+  #  module hierarchy can look like this:
+  #
+  #  a -> b
+  #  |
+  #  +--> b
+  #
+  # but not this
+  #
+  # a -> b -> b ...
+  # 
+  # or this
+  #
+  # a -> b -> c -> ... -> b
+  #
+
+  # sanity check, we're not in a big loop
+  foreach my $module_name (@{ lookup_rule_env('_module_list', $rule_env) || [] }) {
+    $logger->debug("Seeing $module_name for $name");
+    if ($module_name eq $name) {
+      $logger->debug("$name has already been used as a module");
+      return ($js, $rule_env);
+    }
+  }
 
   # Default to the production version of modules
   $mversion ||= 'prod';
@@ -433,8 +464,6 @@ sub eval_use_module {
     $provided->{$name} = 1;
   }
 
-  my $js = '';
-  my $this_js;
 
   my $namespace_name = $Kynetx::Modules::name_prefix . ( $alias || $name );
 
@@ -445,6 +474,9 @@ sub eval_use_module {
 
   # create the module rule_env by extending an empty env with the config
 
+  my @mod_list = @{$rule_env->{'_module_list'} || []};
+  push(@mod_list, $name);
+
   my $init_mod_env = extend_rule_env(
 				     {
 				      '_callingRID' => get_rid($req_info->{'rid'}),
@@ -452,11 +484,15 @@ sub eval_use_module {
 				      '_moduleRID' =>  $name,
 				      '_moduleVersion' => $mversion,
 				      '_inModule' =>  'true',
+				      '_module_list' => \@mod_list,
+
 				     }, empty_rule_env());
 
   my $module_rule_env =
     set_module_configuration( $req_info, $rule_env, $session,
 			      $init_mod_env, $configuration, $modifiers || [] );
+
+#  $logger->debug("Module env ", Dumper $module_rule_env);
 
   # put any keys in the module rule_env *before* evaling the globals
   if ( $use_ruleset->{'meta'}->{'keys'} ) {
@@ -466,6 +502,13 @@ sub eval_use_module {
     $js .= $this_js;
   }
 
+  
+  if ( $use_ruleset->{'meta'}->{'use'} ) {
+    ( $this_js, $module_rule_env ) =
+      eval_use( $req_info, $use_ruleset, $module_rule_env, $session,
+		$use_ruleset->{'meta'}->{'use'} );
+    $js .= $this_js;
+  }
 
   # eval the module's global block
   if ( $use_ruleset->{'global'} ) {
@@ -678,10 +721,40 @@ sub eval_rule {
 	# clear the final flag before we get started...
 	Kynetx::Request::clr_final_flag($req_info);
 
+	my $execenv = Kynetx::ExecEnv::build_exec_env();
+
+	# set condition var for AnyEvent, check after loop...
+	my $cv = AnyEvent->condvar();
+	$execenv->set_condvar($cv);
+	$cv->begin(sub { shift->send("All threads complete") });
+
 	$js .=
-	  eval_foreach( $r, $req_info, $rule_env, $session, $rule, $dd,
-		scalar @{ $rule->{'pagetype'}->{'foreach'} }, # final_count
-		@{ $rule->{'pagetype'}->{'foreach'} } );
+	  eval_foreach( $r, 
+			$req_info, 
+			$rule_env, 
+			$session, 
+			$rule, 
+			$dd,
+			scalar @{ $rule->{'pagetype'}->{'foreach'} }, # final_count
+			$execenv,
+			@{$rule->{'pagetype'}->{'foreach'} },
+               );
+
+	# handle possible asynchronous calls
+	$cv->end;
+	$logger->debug($cv->recv);
+	my $thread_results = $execenv->get_results();
+	if ( scalar @{$thread_results} > 0 ) {
+	  Kynetx::Modules::System::raise_system_event(
+                   $req_info, 
+		   $rule->{'name'},
+                   'send_complete', 
+  	           [{'name' => 'send_results',
+		     'value' => $thread_results
+		    }
+                   ]
+	  );
+	}
 
 	# save things for logging
 	push(
@@ -705,20 +778,23 @@ sub eval_rule {
 
 # recursive function on foreach list.
 sub eval_foreach {
-  my ( $r, $req_info, $rule_env, $session, $rule, $dd, $final_count, @foreach_list ) = @_;
+  my ( $r, 
+       $req_info, 
+       $rule_env, 
+       $session, 
+       $rule, 
+       $dd, 
+       $final_count, 
+       $execenv,
+       @foreach_list # this needs to be last
+     ) = @_;
 
   my $logger = get_logger();
 
   my $fjs = '';
 
-  # $logger->debug("In foreach with " . Dumper(@foreach_list));
+#  $logger->debug("In foreach with " . Dumper(@foreach_list)) if @foreach_list;
 
-
-  # set condition var for AnyEvent, check after loop...
-  my $cv = AnyEvent->condvar();
-  Kynetx::Request::set_condvar($req_info,$cv);
-
-  $cv->begin();
 
   if ( @foreach_list == 0 ) {
 
@@ -739,12 +815,14 @@ sub eval_foreach {
 #   2  6     0        1        1            1
 #   4  5     1        0        1            1
 #   4  6     1        1        2            0
+#
+# this is what makes "on final" work in postlude
 
     if ($final_count == 0) {
       Kynetx::Request::set_final_flag($req_info);
     }
 
-    $fjs = eval_rule_body( $r, $req_info, $rule_env, $session, $rule, $dd );
+    $fjs = eval_rule_body( $r, $req_info, $rule_env, $session, $rule, $dd, $execenv );
 
   } else {
 
@@ -817,22 +895,25 @@ sub eval_foreach {
 
       # we recurse in side this loop to handle nested foreach statements
       $fjs .= mk_turtle($vjs
-			. eval_foreach($r, $req_info, 
+			. eval_foreach($r, 
+				       $req_info, 
 				       extend_rule_env( $vars, $dvals, $rule_env ),
-				       $session, $rule, $dd, 
-				       $new_count, cdr(@foreach_list)
+				       $session, 
+				       $rule, 
+				       $dd, 
+				       $new_count, 
+				       $execenv,
+				       cdr(@foreach_list),
 				      )
 		       );
     }
   }
 
-  $cv = $cv->end;
-
   return $fjs;
 }
 
 sub eval_rule_body {
-	my ( $r, $req_info, $rule_env, $session, $rule, $dd ) = @_;
+	my ( $r, $req_info, $rule_env, $session, $rule, $dd, $execenv ) = @_;
 
 	my $logger = get_logger();
 
@@ -866,8 +947,7 @@ sub eval_rule_body {
 
 	 # combine the inner_tentive JS, with the generated JS and wrap in a closure
 		$js = $inner_tentative_js
-		  . Kynetx::Actions::build_js_load( $rule, $req_info, $dd, $rule_env,
-			$session );
+		  . Kynetx::Actions::build_js_load( $rule, $req_info, $dd, $rule_env, $session, $execenv );
 
 		$fired = 1;
 
@@ -890,7 +970,7 @@ sub eval_rule_body {
 
 	$js .=
 	  Kynetx::Postlude::eval_post_expr( $rule, $session, $req_info, $rule_env,
-		$fired )
+		$fired, $execenv)
 	  if ( defined $rule->{'post'} );
 
 	return $js;

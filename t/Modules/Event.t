@@ -41,6 +41,7 @@ use Kynetx::Modules::Event qw/:all/;
 use Kynetx::JavaScript qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
+use Kynetx::ExecEnv qw/:all/;
 
 
 use Kynetx::FakeReq qw/:all/;
@@ -55,7 +56,9 @@ my @pnames = keys (%{ $preds } );
 
 my $r = Kynetx::Test::configure();
 
+
 my $rid = 'cs_test';
+my $execenv = Kynetx::ExecEnv::build_exec_env();
 
 # test choose_action and args
 
@@ -129,7 +132,8 @@ $test_count++;
 
 # set up AnyEvent
 my $cv = AnyEvent->condvar();
-Kynetx::Request::set_condvar($my_req_info,$cv);
+
+Kynetx::ExecEnv::set_condvar($execenv,$cv);
 
 
 
@@ -163,7 +167,9 @@ _KRL_
 	    $rule_env,
 	    $session,
 	    'callback23',
-	    'dummy_name');
+	    'dummy_name',
+	    $execenv
+           );
 
 
 # $result = lookup_rule_env('r',$rule_env);
@@ -200,7 +206,9 @@ _KRL_
 	    $rule_env,
 	    $session,
 	    'callback23',
-	    'dummy_name');
+	    'dummy_name',
+            $execenv
+           );
 
 
 # $result = lookup_rule_env('r',$rule_env);
@@ -238,7 +246,9 @@ _KRL_
 	    $rule_env,
 	    $session,
 	    'callback23',
-	    'dummy_name');
+	    'dummy_name',
+	    $execenv
+           );
 
 
 # $result = lookup_rule_env('r',$rule_env);
@@ -253,6 +263,10 @@ _KRL_
 
 $cv->end;
 $logger->debug($cv->recv);
+
+# while (my ($k, $v) = each (%{$execenv->get_results()})) {
+#   diag "$k: ". Dumper($v)  . "\n";
+# }
 
 
 done_testing($test_count);

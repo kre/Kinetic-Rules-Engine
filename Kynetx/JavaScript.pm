@@ -350,7 +350,13 @@ sub gen_js_predexpr {
       
 	}
 
+      } elsif ($expr->{'op'} eq '<=>' || $expr->{'op'} eq 'cmp') {
 
+	my $a = gen_js_expr($expr->{'args'}->[0]) ;
+        my $b = gen_js_expr($expr->{'args'}->[1]) ;
+ 
+	return 
+          "($a < $b ? -1 : ($a > $b ? 1 : 0))"
 
 	
       } else {
@@ -490,10 +496,20 @@ sub mk_js_str {
 	my $str = join(" ",@_);
 	$logger->trace("joined: ",$str);
 	$str = escape_js_str($str);
-	$str =~ s/#{([^}]*)}/'+$1+'/g;
-	$logger->trace("escaped: ",$str);
-	#utf8::decode($str);
-	$str = Kynetx::Util::str_out($str);
+
+	# for things that look like vars, replace with the var and concatenatino
+	$str =~ s/#{([A-Za-z0-9_]*)}/'+$1+'/g;
+
+	# for everything else, try to eval the expression;
+	# doesn't always work because there's no rule_env
+#	$str = Kynetx::Expressions::den_to_exp(Kynetx::Expressions::eval_str($str));
+
+	$str =~ s/#{([^}]*)}/'+'UNTRANSLATABLE KRL EXPRESSION'+'/g;
+	
+
+#	$logger->debug("escaped: ",sub { Dumper $str});
+	# #utf8::decode($str);
+	# $str = Kynetx::Util::str_out($str);
 	return "'". $str . "'";
     } else {
 	return "''";

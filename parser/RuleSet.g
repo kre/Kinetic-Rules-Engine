@@ -2233,7 +2233,9 @@ factor returns[Object result] options {backtrack=true;}
 
 	      	$result = tmp;
       }
-      | LEFT_PAREN e=expr  RIGHT_PAREN { $result=$e.result; }
+      | LEFT_PAREN e=expr  RIGHT_PAREN { 
+            $result=$e.result; 
+      }
       | v=(VAR|OTHER_OPERATORS|REPLACE|EXTRACT|MATCH|VAR_DOMAIN)   {
       		HashMap tmp = new HashMap();
 		tmp.put("type","var");
@@ -2654,7 +2656,7 @@ REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
 	:('JSON'|'XML'|'RSS'|'HTML');
 
 LIKE	:	'like';
-PREDOP: '<=' | '>=' | '<' | '>' | '==' | '!=' | 'eq' | 'neq' | '><';
+PREDOP: '<=' | '>=' | '<' | '>' | '==' | '!=' | 'eq' | 'neq' | '><' | '<=>' | 'cmp';
 
 ADD_OP: '+'|'-';
 
@@ -2784,12 +2786,15 @@ EXTRACT
 
 OTHER_OPERATORS
 	:  'pick'|'length'|'as'|'head'|'tail'|'sort'
-      	|'filter'|'map'|'uc'|'lc' |'split' | 'sprintf' | 'join' | 'query'
-      	| 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
-      	| 'duplicates' | 'append' | 'put' | 'delete' | 'keys'
-      	| 'encode' | 'decode' 
-      	| 'typeof' | 'isnull'
-      	;
+    | 'filter'|'collect'|'map'|'reduce'|'reverse' 
+    | 'uc'|'lc' |'split' | 'sprintf' | 'join' | 'query'
+    | 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
+    | 'duplicates' | 'append' | 'put' | 'delete' | 'keys'
+    | 'encode' | 'decode' 
+    | 'typeof' | 'isnull'
+    | 'klog'
+    ;
+
 AGGREGATORS
 	: 'max' | 'min' | 'sum' | 'avg' | 'push'
 	;

@@ -503,7 +503,7 @@ EOF
 };
 
 sub build_js_load {
-	my ( $rule, $req_info, $dd, $rule_env, $session ) = @_;
+	my ( $rule, $req_info, $dd, $rule_env, $session, $execenv ) = @_;
 
 	my $logger = get_logger();
 
@@ -537,7 +537,8 @@ sub build_js_load {
 		$rule->{'blocktype'},
 		$rule->{'actions'},
 		$rule->{'name'},
-		$cb_func_name
+		$cb_func_name,
+		$execenv
                );
 
 	return $js;
@@ -545,7 +546,7 @@ sub build_js_load {
 }
 
 sub eval_action_block {
-	my ($req_info, $dd, $rule_env,$session, $blocktype,$action_block,$rulename,$cb_function) = @_;
+	my ($req_info, $dd, $rule_env,$session, $blocktype,$action_block,$rulename,$cb_function, $execenv) = @_;
 	my $logger = get_logger();	
 	my $js = "";
 	
@@ -564,8 +565,7 @@ sub eval_action_block {
 			# tack on this loop's js
 			if ( defined $action_expr->{'action'} ) {
 				$js .=
-				  build_one_action( $action_expr, $req_info, $dd, $rule_env,
-					$session, $cb_function, $rulename );
+				  build_one_action( $action_expr, $req_info, $dd, $rule_env, $session, $cb_function, $rulename, $execenv );
 			}
 			elsif ( defined $action_expr->{'emit'} ) {
 				$logger->debug("EMIT action");
@@ -585,7 +585,7 @@ sub eval_action_block {
 		my $choice = int( rand($action_num) );
 		$logger->debug("chose $choice of $action_num");
 		$js .= build_one_action( $action_block->[$choice],
-			$req_info, $dd, $rule_env, $session, $cb_function, $rulename);
+			$req_info, $dd, $rule_env, $session, $cb_function, $rulename, $execenv);
 
 	}
 	else {
@@ -595,8 +595,7 @@ sub eval_action_block {
 }
 
 sub build_composed_action {
-	my ($source,$name,$orig_env, $rule_env,$req_info, $dd, $session,$args,$modifiers,$rule_name, 
-			$cb_func_name) = @_;
+	my ($source,$name,$orig_env, $rule_env,$req_info, $dd, $session,$args,$modifiers,$rule_name, $cb_func_name, $execenv) = @_;
 	my $logger = get_logger();
 	my $action_tag;
 	my $js = "";
@@ -675,7 +674,9 @@ sub build_composed_action {
 		$blocktype,
 		\@action_block,
 		$rule_name,
-		$cb_func_name);
+		$cb_func_name, 
+		$execenv
+	       );
 		
 	return $js;
 }
@@ -684,7 +685,8 @@ sub build_composed_action {
 sub build_one_action {
 	my (
 		$action_expr, $req_info,     $dd, $rule_env,
-		$session,     $cb_func_name, $rule_name
+		$session,     $cb_func_name, $rule_name,
+	        $execenv
 	) = @_;
 
 	my $logger = get_logger();
@@ -772,7 +774,8 @@ sub build_one_action {
 			$arg_exp_vals,
 			$action->{'modifiers'},
 			$rule_name,
-			$cb_func_name);
+			$cb_func_name,
+			$execenv);
 	}
 	
 	if ($action_name eq 'send_javascript') {
@@ -976,7 +979,8 @@ sub build_one_action {
 	}
 
 	# now run directive functions to store those
-	$directive->($req_info, $dd, $config, $arg_exp_vals );
+	# added $execenv, but didn't modify all directives to accept it...
+	$directive->($req_info, $dd, $config, $arg_exp_vals, $execenv);
 
 	Kynetx::JavaScript::AST::register_resources( $req_info, $resources );
 
