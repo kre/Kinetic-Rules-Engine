@@ -63,13 +63,89 @@ $Data::Dumper::Terse = 1;
 
 use ExprTests qw/:all/;
 
+$logger->debug("Initializing memcached");
+Kynetx::Memcached->init();
 
-my $r = Kynetx::Test::configure();
+# Basic MongoDB commands
+$logger->debug("Initializing mongoDB");
+Kynetx::MongoDB::init();
+
+my $r = new Kynetx::FakeReq();
+$r->_delete_session();
+my $session = process_session($r);
+
 my $krl_src;
 my $rid = 'abcd1234';
 my $rule_name = 'foo';
 my $test_count=0;
-my $session = Kynetx::Test::gen_session($r, $rid);
+my $result;
+
+# get a random words
+$logger->debug("Get random words");
+
+my $dict_path = "/usr/share/dict/words";
+my @DICTIONARY;
+open DICT, $dict_path;
+@DICTIONARY = <DICT>;
+
+my $secret = $DICTIONARY[rand(@DICTIONARY)];
+chop $secret;
+
+$rid = $DICTIONARY[rand(@DICTIONARY)];
+chop $rid;
+
+my $random = $DICTIONARY[rand(@DICTIONARY)];
+chop $random;
+
+
+# $dken is an anonymous ken that I will clean out after the tests
+my $dken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+
+# Configure the XDI account
+my $rnum = int (rand(1000));
+my $iname = '=tester';
+my $inumber = '=!000333' .$rnum;
+my $endpoint = "http://10.0.1.194:8080/xdi/users/" . $inumber;
+
+my $struct = {
+	'endpoint' => $endpoint,
+	'inumber'  => $inumber,
+	'iname'    => $iname,
+	'secret'   => $secret
+};
+
+Kynetx::Persistence::KXDI::put_xdi($dken,$struct);
+my $kxdi = Kynetx::Persistence::KXDI::get_xdi($dken);
+
+# create the xdi account
+Kynetx::Persistence::KXDI::provision_xdi_for_kynetx($dken);
+
+
+
+Kynetx::Persistence::KXDI::add_link_contract($dken,$rid);
+$result = Kynetx::Persistence::KXDI::check_link_contract($dken,$rid);
+
+$logger->debug("root link contract: $result");
+die unless $result;
+
+$result = Kynetx::Persistence::KXDI::check_link_contract($dken,$rid);
+
+$logger->debug("root link contract: $result");
+die unless $result;
+
+
+my ($c,$msg) = Kynetx::Persistence::KXDI::xdi_message($kxdi);
+my $subject = "$inumber+secret_phrase";
+my $str = "($subject/!/(data:,$random))";
+$msg->add($str);
+$result = $c->post($msg);
+
+$logger->debug("Add message: ",sub {Dumper($result)});
+
+($c,$msg) = Kynetx::Persistence::KXDI::xdi_message($kxdi);
+$msg->get($subject);
+$result = $c->post($msg);
+$logger->debug("Get message: ",sub {Dumper($result)});
 
 my $my_req_info = Kynetx::Test::gen_req_info($rid,
     {#'ip' => '128.187.16.242', # Utah (BYU)
@@ -82,35 +158,6 @@ my $my_req_info = Kynetx::Test::gen_req_info($rid,
    );
 my $rule_env = Kynetx::Test::gen_rule_env();
    
-   
-########## Set XDI keys
-my ($js, $krl, $ast, $value);
-
-$krl = <<"_KRL_";
-ruleset foo {
-  meta {
-    name "Ruleset for Orphans"
-    description <<
-Ruleset for testing something or other.
->>
-
-    key xdi {
-      "iname": "=pjw",
-      "inumber" : "=!1111"
-    }
-  }
-}
-_KRL_
-
-$ast = Kynetx::Parser::parse_ruleset($krl);
-
-($js, $rule_env) = Kynetx::Keys::process_keys($my_req_info,
-					      $rule_env, 
-					      $ast);
-					    
-my $developer_xdi = Kynetx::Keys::get_key($my_req_info,
-			       $rule_env, 
-			       'xdi');
 
 
 my @expr_testcases;
@@ -127,23 +174,29 @@ sub add_expr_testcase {
     }
 
 my $iname = "=mark";
-my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-$logger->debug("Ken: $ken");
-my $kpds = Kynetx::Persistence::KXDI::create_xdi_from_iname($ken, $iname);
-
-$logger->debug("XDI stuff: ", sub {Dumper($kpds)});
 
 $krl_src = <<_KRL_;
-<[\@kynetx]>
+<[$subject]>
 _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    '@kynetx',
-     mk_expr_node('xdi', '@kynetx'),
-    1);
+     undef,
+     mk_expr_node('hash', {
+    	$subject . '/!' => [$random]
+    }),
+    0);
 
 
+$krl_src = <<_KRL_;
+<[()]>
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+     undef,
+     mk_expr_node('null', '__undef__'),
+    0);
 ################### Above this line
 ok(1);
 $test_count++;
@@ -168,6 +221,25 @@ foreach my $case (@expr_testcases ) {
 	$test_count++;
 	
 }
+
+#goto ENDY;
+
+# Clean up anonymous KENS
+my $ken_struct = {
+	"ken" => $dken
+};
+$result = Kynetx::MongoDB::get_singleton('kens',$ken_struct);
+if (defined $result && ref $result eq "HASH") {
+	my $username = $result->{'username'};
+	if ($username =~ m/^_/) {
+		$logger->debug("Ken is anonymous");
+		Kynetx::Persistence::KEN::delete_ken($dken);
+		Kynetx::Persistence::KPDS::delete_kpds($dken);
+		Kynetx::Persistence::KXDI::delete_xdi($dken);
+	}	
+}
+
+ENDY:
 
 session_cleanup($session);
 

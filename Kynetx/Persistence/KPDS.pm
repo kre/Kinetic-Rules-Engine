@@ -70,8 +70,14 @@ sub get_kpds_element {
 		my $key = {
 			"ken" => $ken
 		};
+		my $c_key = _keyvar($ken,$hkey);
+		my $cache = Kynetx::MongoDB::get_cache(COLLECTION,$c_key);
+		if (defined $cache) {
+			return $cache;
+		}
 		my $result = Kynetx::MongoDB::get_hash_element(COLLECTION,$key,$hkey);
 		if (defined $result && ref $result eq "HASH") {
+			Kynetx::MongoDB::set_cache(COLLECTION,$c_key,$result->{"value"});
 			return $result->{"value"};
 		} else {
 			return undef;
@@ -92,9 +98,14 @@ sub put_kpds_element {
 	my $value = {
 		'value' => $val
 	};
-	$logger->debug("Insert: $ken");
+	$logger->debug("Insert: $ken at ", sub {Dumper($hkey)});
 	my $success = Kynetx::MongoDB::put_hash_element(COLLECTION,$key,$hkey,$value);
 	$logger->debug("Response: ", sub {Dumper($success)});
+	Kynetx::MongoDB::clear_cache(COLLECTION,_keyvar($ken,$hkey));
+	if ($hkey > 1) {
+		$logger->debug("Flush upstream");
+		Kynetx::MongoDB::clear_cache(COLLECTION,_keyvar($ken,[$hkey->[0]]));
+	}
 	return $success;
 	
 }
@@ -125,6 +136,20 @@ sub delete_kpds {
 		Kynetx::MongoDB::delete_value(COLLECTION,$key);
 	}
 	
+}
+
+sub _keyvar {
+	my ($key,$hkey) = @_;
+	my $struct = {
+		'a' => $key
+	};
+	my $index = 0;
+	foreach my $element (@{$hkey}) {
+		my $k = 'b' . $index++;
+		$struct->{$k} = $element;
+	}
+	
+	return $struct;
 }
 
 1;

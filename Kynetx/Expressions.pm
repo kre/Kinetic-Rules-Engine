@@ -35,6 +35,8 @@ use Digest::MD5 qw/md5_hex/;
 use Clone qw/clone/;
 use Data::Diver qw(Dive);
 
+use XDI;
+
 use Kynetx::Parser qw/:all/;
 use Kynetx::JParser;
 use Kynetx::Datasets;
@@ -464,46 +466,22 @@ sub eval_expr {
 sub eval_xdi {
 	my ($xdi_statement, $rule_env, $rule_name, $req_info, $session) = @_;
 	my $logger = get_logger();
-	
-	# Default graph url
-	my $url = "http://10.0.1.194:8080/xdi/mem-graph";
-	
-	# Kynetx source graph
-	my $from_graph = Kynetx::Configure::get_config('XDI_SOURCE');
-	if (! defined $from_graph) {
-		$logger->warn("XDI Server not configured");
-		return undef;
-	}
-	
-	# developer inumber 
-	my $from = Kynetx::Keys::get_key($req_info,$rule_env,'xdi');
-	my $f_inum = $from->{'inumber'};
-	$logger->debug("Request XDI: ",sub {Dumper($from)});
 	my $ken = Kynetx::Persistence::KEN::get_ken($session);
-	$logger->debug("Ken: $ken");
-	my $xdi_info = Kynetx::Persistence::KXDI::get_xdi($ken);
-	$logger->debug("XDI: ", sub {Dumper($xdi_info)});
-	if (defined $xdi_info) {
-		# KEN's XDI info
-		my $to = $xdi_info->{'inumber'};
-		my $xdi_endpoint = $xdi_info->{'endpoint'};
-		my $xdi_conf = {
-			from_graph => $from_graph,
-			from => $f_inum,
-			to_graph => $to,
-			link_contract => $to
-		};
-		my $xdi = new HTTP::XDI($xdi_conf);
-		$xdi->connect;
-		# Override the target graph URL for the moment
-		$xdi->set_server_url($url);
-		$xdi->get($xdi_statement);
-		my $result = $xdi->post;
-		return $result;
+	my $rid = get_rid_from_context($rule_env,$req_info);
+	my $kxdi = Kynetx::Persistence::KXDI::get_xdi($ken);
+	my ($c,$msg) = Kynetx::Persistence::KXDI::xdi_message($kxdi,$rid);
+	$logger->debug("Link_contract: ", $msg->link_contract);
+	$logger->debug("KXDI: ", sub {Dumper($kxdi)});
+	
+	$msg->get($xdi_statement);
+	$logger->debug("XDI message (eval): ", $msg->to_string);
+	my $result =  $c->post($msg);
+	if (defined $result) {
+		return mk_expr_node(infer_type($result),$result)
 	} else {
-		$logger->warn("No XDI source configured for user");
-		return undef;
+		return mk_expr_node('null','__undef__');
 	}
+	
 	
 }
 

@@ -22,6 +22,8 @@ use lib qw(/web/lib/perl);
 use strict;
 use utf8;
 
+no warnings ('uninitialized');
+
 use Test::More;
 use Test::Deep;
 use Data::Dumper;
@@ -82,6 +84,19 @@ my $session = process_session($r);
 # Set the session, find a KEN
 $r = new Kynetx::FakeReq();
 $r->_set_session($tsession);
+# get a random words
+$logger->debug("Get random words");
+
+my $dict_path = "/usr/share/dict/words";
+my @DICTIONARY;
+open DICT, $dict_path;
+@DICTIONARY = <DICT>;
+
+my $frid = $DICTIONARY[rand(@DICTIONARY)];
+chop $frid;
+
+my $secret = $DICTIONARY[rand(@DICTIONARY)];
+chop $secret;
 
 $session = process_session($r);
 $description = "Find KEN from session";
@@ -89,23 +104,113 @@ my $session_ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
 $logger->debug("Ken session: ",$session_ken);
 testit($session_ken,re($ken_re),$description,0);
 
-my $iname = "=mark";
+# Configure the XDI account
+my $rnum = int (rand(100));
+my $iname = '=tester';
+my $inumber = '=!000333' .$rnum;
+my $endpoint = "http://10.0.1.194:8080/xdi/users/" . $inumber;
 
 $description = "Insert an XDI record into the KPDS";
-$result = Kynetx::Persistence::KXDI::create_xdi_from_iname($session_ken,$iname);
-testit($result,3,$description,0);
+$result = Kynetx::Persistence::KXDI::create_xdi_from_iname($session_ken,$iname,$secret);
+testit($result,4,$description,0);
 
 $description = "Get the XDI record for $session_ken";
 my $expected = {
 	'endpoint' => re(/https?:/),
 	'inumber'  => re(/^!=.+/),
-	'iname'    => $iname
+	'iname'    => $iname,
+	'secret'   => $secret
 };
 
 $result = Kynetx::Persistence::KXDI::get_xdi($session_ken);
 testit($result,$expected,$description,0);
+$logger->debug("Tester: ", sub {Dumper($result)});
 
-$logger->debug("XDI: ", sub {Dumper($result)});
+Kynetx::Persistence::KXDI::put_inumber($session_ken,$inumber);
+
+Kynetx::Persistence::KXDI::put_endpoint($session_ken,$endpoint);
+
+$expected->{'inumber'} = $inumber;
+$expected->{'endpoint'} = $endpoint; 
+
+$description = "Test put inumber";
+$result = Kynetx::Persistence::KXDI::get_inumber($session_ken);
+testit($result,$inumber,$description,0);
+
+$description = "Test put endpoint";
+$result = Kynetx::Persistence::KXDI::get_endpoint($session_ken);
+testit($result,$endpoint,$description,0);
+
+$description = "Test cache busted";
+$result = Kynetx::Persistence::KXDI::get_xdi($session_ken);
+testit($result,$expected,$description,0);
+
+$description = "Test cache";
+my $kxdi = Kynetx::Persistence::KXDI::get_xdi($session_ken);
+testit($kxdi,$result,$description,0);
+
+$description = "Check registry";
+my $xdi_exists = Kynetx::Persistence::KXDI::check_registry_for_account($inumber);
+$logger->debug("Check reg: ", sub {Dumper($result)});
+
+SKIP: {
+	skip "$inumber already exists in registry", 9 if $xdi_exists;
+	
+	$description = "Add a registry entry to /registry";
+	$result = Kynetx::Persistence::KXDI::provision_xdi_for_kynetx($session_ken);
+	testit($result,1,$description,0);
+		
+	my ($c,$msg) = Kynetx::Persistence::KXDI::xdi_message($kxdi);
+	$logger->debug("Message to user xdi: ",$msg->to_string );
+	$logger->debug("KXDI: ",sub {Dumper($kxdi)} );
+	$msg->get('()');
+	$result = $c->post($msg);
+	$logger->debug("msg resp: ",sub {Dumper($result)} );
+	
+	my $not_created = $result ? 0 : 1;
+	$description = "Account created";
+	testit($not_created,0,$description,0);
+	
+	SKIP: {
+		skip "Account was not created",8 if $not_created;
+		
+		$description = "Account created (query response)";
+		testit(ref $result, 'HASH',$description,0);
+		
+		$description = "Account created (correct inumber)";
+		testit($result->{'$do/$is$do'},[$inumber],$description,0);
+
+		$description = "check a link contract for root";
+		$result = Kynetx::Persistence::KXDI::check_link_contract($session_ken);
+		testit($result,1,$description,0);
+
+		$description = "Query for an XDI account that doesn't exist";
+		$result = Kynetx::Persistence::KXDI::get_xdi('fakeken');
+		testit($result,undef,$description,0);
+		
+		
+		$description = "check a link contract for fake ruleset";
+		$result = Kynetx::Persistence::KXDI::check_link_contract($session_ken,$frid);
+		testit($result,0,$description,0);
+				
+		$description = "add a link contract for fake ruleset";
+		$expected = {};
+		$result = Kynetx::Persistence::KXDI::add_link_contract($session_ken,$frid);
+		testit($result,$expected,$description,0);
+		
+		$description = "Check that link contract was created";
+		$result = Kynetx::Persistence::KXDI::check_link_contract($session_ken,$frid);
+		testit($result,1,$description,0);
+		
+		$description = "Delete xdi graph and registry";
+		$result = Kynetx::Persistence::KXDI::delete_xdi($session_ken);
+		testit($result,1,$description,0);
+
+	}
+	
+}
+
+
 
 # Clean up anonymous KENS
 my $ken_struct = {
@@ -116,6 +221,7 @@ if (defined $result && ref $result eq "HASH") {
 	my $username = $result->{'username'};
 	if ($username =~ m/^_/) {
 		$logger->debug("Ken is anonymous");
+		#Kynetx::Persistence::KXDI::delete_xdi($session_ken);
 		Kynetx::Persistence::KEN::delete_ken($session_ken);
 		Kynetx::Persistence::KPDS::delete_kpds($session_ken);
 	}
@@ -131,7 +237,8 @@ sub testit {
         $logger->debug("$description : ",sub {Dumper($got)});
     }
     $num_tests++;
-    cmp_deeply($got,$expected,$description);
+    my $result = cmp_deeply($got,$expected,$description);
+    die unless $result;
 }
 ENDY:
 session_cleanup($session);
