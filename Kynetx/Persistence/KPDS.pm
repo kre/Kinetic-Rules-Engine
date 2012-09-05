@@ -119,6 +119,11 @@ sub delete_kpds_element {
 		};
 		if (defined $hkey) {
 			Kynetx::MongoDB::delete_hash_element(COLLECTION,$key,$hkey);
+			Kynetx::MongoDB::clear_cache(COLLECTION,_keyvar($ken,$hkey));
+			if ($hkey > 1) {
+				$logger->debug("Flush upstream");
+				Kynetx::MongoDB::clear_cache(COLLECTION,_keyvar($ken,[$hkey->[0]]));
+			}
 		} else {
 			$logger->warn("Attempted to delete $key in ", COLLECTION, " (use delete_kpds(<KEN>) )");
 		}

@@ -451,7 +451,7 @@ sub eval_expr {
         my $aexpr = mk_action_expr($expr, $rule_env, $rule_name,$req_info, $session);
         $logger->trace("Action expression: ", sub {Dumper($aexpr)});
         return $aexpr;
-    } elsif($expr->{'type'} eq 'xdi') {
+    } elsif($expr->{'type'} eq 'XDI') {
     	$logger->debug("XDI request");
     	my $xdi_expr = eval_xdi($expr->{'val'},$rule_env,$rule_name,$req_info,$session);
     	$logger->debug("XDI request: ", sub {Dumper($xdi_expr)});

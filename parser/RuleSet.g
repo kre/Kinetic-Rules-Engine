@@ -2127,7 +2127,7 @@ factor returns[Object result] options {backtrack=true;}
 	}
 	| xdi=XDI {
       HashMap tmp = new HashMap();
-      tmp.put("type","xdi");
+      tmp.put("type","XDI");
       tmp.put("val",strip_wrappers("<[","]>",$xdi.text));
       $result = tmp;
 	}
