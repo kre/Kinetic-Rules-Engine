@@ -35,6 +35,8 @@ use Digest::MD5 qw/md5_hex/;
 use Clone qw/clone/;
 use Data::Diver qw(Dive);
 
+use XDI;
+
 use Kynetx::Parser qw/:all/;
 use Kynetx::JParser;
 use Kynetx::Datasets;
@@ -449,6 +451,11 @@ sub eval_expr {
         my $aexpr = mk_action_expr($expr, $rule_env, $rule_name,$req_info, $session);
         $logger->trace("Action expression: ", sub {Dumper($aexpr)});
         return $aexpr;
+    } elsif($expr->{'type'} eq 'XDI') {
+    	$logger->debug("XDI request");
+    	my $xdi_expr = eval_xdi($expr->{'val'},$rule_env,$rule_name,$req_info,$session);
+    	$logger->debug("XDI request: ", sub {Dumper($xdi_expr)});
+    	return $xdi_expr;
     } else {
         $logger->error("Unknown type in eval_expr: $expr->{'type'}");
         return mk_expr_node('null','__undef__');
@@ -456,7 +463,27 @@ sub eval_expr {
 
 }
 
-
+sub eval_xdi {
+	my ($xdi_statement, $rule_env, $rule_name, $req_info, $session) = @_;
+	my $logger = get_logger();
+	my $ken = Kynetx::Persistence::KEN::get_ken($session);
+	my $rid = get_rid_from_context($rule_env,$req_info);
+	my $kxdi = Kynetx::Persistence::KXDI::get_xdi($ken);
+	my ($c,$msg) = Kynetx::Persistence::KXDI::xdi_message($kxdi,$rid);
+	$logger->debug("Link_contract: ", $msg->link_contract);
+	$logger->debug("KXDI: ", sub {Dumper($kxdi)});
+	
+	$msg->get($xdi_statement);
+	$logger->debug("XDI message (eval): ", $msg->to_string);
+	my $result =  $c->post($msg);
+	if (defined $result) {
+		return mk_expr_node(infer_type($result),$result)
+	} else {
+		return mk_expr_node('null','__undef__');
+	}
+	
+	
+}
 
 
 sub eval_prim {

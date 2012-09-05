@@ -262,14 +262,12 @@ my $html_re = re(qr(http[s]?:\/\/) );
 
 
 my $test_metadata = {
-  'link' => "http://www.facebook.com/profile.php?id=$test_user",
   'timezone' => re(qr(-?\d\d?)),
   'education' => ignore(),
   'name' => 'Kay Netticks',
   'last_name' => 'Netticks',
   'email' => $email_re,
   'updated_time' => ignore(),
-  'type' => 'user',
   'metadata' => ignore(),
   'id' => $test_user,
   'about' => ignore(),
@@ -356,10 +354,10 @@ my $search_results = superhashof({
 });
 
 my $list_object = {
-    'paging' => {
-        'previous' => $html_re,
-        'next' => $html_re
-    },
+#    'paging' => {
+#        'previous' => $html_re,
+#        'next' => $html_re
+#    },
     'data' => array_each(ignore())
 };
 
@@ -586,6 +584,7 @@ $expected = superhashof($test_metadata);
 $args = [$test_user];
 test_facebook('metadata',$args,$expected,$description,0);
 
+
 ##
 #$description = "Get alternate object metadata";
 #$expected =  superhashof($post_meta);
@@ -618,20 +617,20 @@ test_facebook('picture',$args,$expected,$description,0);
 
 ##
 $description = "Facebook get album for default user";
-$expected = $list_object;
+$expected = superhashof($list_object);
 $args = [{'connection' => 'albums'}];
 test_facebook('get',$args,$expected,$description,0);
 
 
 ##
 $description = "Facebook get feed for default user";
-$expected = $list_object;
+$expected = superhashof($list_object);
 $args = [{'connection' => 'feed','fields' => "id"}];
 test_facebook('get',$args,$expected,$description,0);
 
 ##
 $description = "Facebook get home for default user";
-$expected = $list_object;
+$expected = superhashof($list_object);
 $args = [{'connection' => 'home'}];#,'type'=>'user'}];
 test_facebook('get',$args,$expected,$description,0);
 
@@ -773,15 +772,7 @@ test_facebook('search',$args,$expected,$description,0);
 ##
 my $link_id = '511048495_446064733495';
 $description = "Facebook get messages for link";
-$expected = superhashof({'data' => array_each({
-    'from' => {
-        'name' => ignore(),
-        'id' => ignore()
-    },
-    'created_time' => ignore(),
-    'id' => ignore(),
-    'message' => ignore(),
-})});
+$expected = superhashof({'data' => array_each(ignore)});
 $args = [{'id'=>$link_id,'connection' => 'comments'}];
 test_facebook('get',$args,$expected,$description,0);
 

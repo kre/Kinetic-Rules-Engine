@@ -781,7 +781,6 @@ sub to_seconds {
 	return $seconds;
 }
 
-
 sub split_re {
   my($val) = @_;
 
