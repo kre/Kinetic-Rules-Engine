@@ -124,7 +124,7 @@ env
 	$val = $req_info->{$rid.':'.$args->[0]};
       } 
 
-      $logger->debug("event:attr(", $args->[0], ") -> ", $val);
+      $logger->debug("event:attr(", $args->[0], ") -> ", Dumper $val);
 
     } elsif($function eq 'params' || $function eq 'attrs') {
 
@@ -230,7 +230,7 @@ sub send_event {
   $attrs->{'_domain'} = $args->[1];
   $attrs->{'_type'} = $args->[2];
 
-  my $cv = Kynetx::ExecEnv::get_condvar($execenv);
+  my $cv = $execenv->get_condvar();
   $cv->begin;
   
   my $body = join('&', 
@@ -252,6 +252,11 @@ sub send_event {
         my ($body, $hdr) = @_;
 
 #	$logger->debug("Making HTTP post to $esl");
+	$execenv->set_result($esl,
+			     {'status' => $hdr->{Status},
+			      'reason' => $hdr->{Reason},
+			      'body' => $body,
+			     });
 
 	if ($hdr->{Status} =~ /^2/) {
 	  $logger->debug("event:send() success for $esl");

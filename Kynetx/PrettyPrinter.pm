@@ -678,6 +678,10 @@ sub pp_decl {
     } elsif($node->{'type'} eq 'JS') { 
 	$o .= $node->{'lhs'} . " = ";
 	$o .= pp_JS($node->{'rhs'});
+    } elsif($node->{'type'} eq 'xdi') {
+    	$logger->info("Type: xdi");
+    	$o .= $node->{'lhs'} . " = ";
+    	$o .= pp_XDI($node->{'rhs'});
     }
   
     return $o;
@@ -1086,6 +1090,9 @@ sub pp_expr {
 	/JS/ && do {
 	    return  pp_JS($expr->{'val'}) ;
 	};
+	/XDI/ && do {
+		return pp_XDI($expr->{'val'});
+	};
 	/regexp/ && do {
 	    return  're'.$expr->{'val'} ;
 	};
@@ -1266,6 +1273,11 @@ sub pp_hash_line {
 sub pp_JS {
   my $js = shift;
   return '<|' . $js . '|>';
+}
+
+sub pp_XDI {
+	my $xdi = shift;
+	return '<[' . $xdi .']>';
 }
 
 

@@ -40,7 +40,7 @@ Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
-use Kynetx::ExecEnv qw/:all/;
+use Kynetx::Modules::System qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
@@ -54,6 +54,8 @@ $Data::Dumper::Indent = 1;
 
 
 
+my $preds = Kynetx::Modules::System::get_predicates();
+my @pnames = keys (%{ $preds } );
 
 
 
@@ -71,21 +73,20 @@ my $rule_env = Kynetx::Test::gen_rule_env();
 
 my $session = Kynetx::Test::gen_session($r, $rid);
 
-my $execenv = Kynetx::ExecEnv::build_exec_env();
-
 my $test_count = 0;
 
 
+# check that predicates at least run without error
+my @dummy_arg = (0);
+foreach my $pn (@pnames) {
+    ok(&{$preds->{$pn}}($my_req_info, $rule_env,\@dummy_arg) ? 1 : 1, "$pn runs");
+    $test_count++;
+}
 
-$execenv->set_condvar("test");
-is($execenv->get_condvar(), "test", 'set_condvar and get_condvar work together');
-$test_count++;
 
-$execenv->set_result("eci1", 5);
-# is($execenv->get_result("eci1"), 5, 'set_result and get_result work together');
-# $test_count++;
 
-is_deeply($execenv->get_results(), [{'esl' => "eci1",'result' => 5}], 'set_result and get_results work together');
+
+ok(1,"dummy test");
 $test_count++;
 
 

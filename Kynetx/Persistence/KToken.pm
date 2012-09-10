@@ -48,6 +48,7 @@ use MongoDB::OID;
 use Digest::MD5 qw(
     md5_base64
 );
+use Data::UUID;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -136,6 +137,35 @@ sub set_token {
 	return Kynetx::MongoDB::find_and_modify(COLLECTION,$find_and_modify);
 }
 
+sub create_token {
+	my ($ken, $label,$type, $auth) = @_;
+	my $logger = get_logger();
+	my $ug = new Data::UUID;
+	my $ktoken = $ug->create_str();
+	my $oid = MongoDB::OID->new();
+	my $lastactive = DateTime->now->epoch;
+	$type = $type || "KRE";
+    my $var = {
+        "ktoken" => $ktoken,
+    };
+	my $token = {
+        "ken" => $ken,
+        "ktoken" => $ktoken,
+        "_id" => $oid,
+        "last_active" => $lastactive,
+        "endpoint_id" => $ktoken,
+        "authenticated" => $auth,
+        "endpoint_type" => $type,
+    };
+    my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0);
+    if ($status) {
+        Kynetx::Persistence::KEN::touch_ken($ken);
+        return $ktoken;
+    } else {
+        $logger->warn("Token request error: ", mongo_error());
+    }
+}
+
 sub new_token {
     my ($rid,$session,$ken,$authenticated) = @_;
     my $logger = get_logger();
@@ -206,9 +236,9 @@ sub delete_token {
     if (defined $session_id) {
     	my $additional_ref = COLLECTION .$session_id;
     	Kynetx::Memcached::flush_cache($additional_ref);
-    }
-   
+    }   
 }
+
 
 
 1;

@@ -87,6 +87,11 @@ pre {
   i = [7,3,5,2,1,6];
   j = [{"a" : 1, "b" : 2, "c": 3}, {"a" : 4, "b" : 5, "c": 6}, {"a" : 7, "b" : 8, "c": 9}];
   k = [100, 1, 10, 1000, 21, 92];
+  m = [76];
+  edo = [{"a" : 2}, {"b" : 26}, {"c" : 5}, {"d" : 16}, {"e": 29}];
+  //edo = [{"a bc" : 15}, {"b ad" : 26}, {"c" : 5}, {"d" : 16}, {"e": 2}];
+  //edo = [{'crazy chicken' :1}, {'massaman curry ***' :5}, {'pad thai' :3}, {'chinese' :1}, {'j dogs' :2}, {'thai pad' :2}, {'el pollo loco' :1}, {'jcw pastrami burger' :1}, {'costco pizza' :1}, {'jimmy johns' :3}];
+  employees = [{'name' : 'Ron', 'dept': 'marketing'}, {'name' : 'Steve', 'dept' : 'executive'}, {'name': 'Mark', 'dept': 'engr'}];
   foo = "I like cheese";
   my_str = "This is a string";
   phone_num = "1234567890";
@@ -978,6 +983,25 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
+
+$e[$i] = q#edo.sort(function(a,b) {
+		      (a{a.keys().head()} <=> b{b.keys().head()})
+                    }
+	           )#;
+$x[$i] = {
+   'val' => [  {'a' => 2},
+	       {'c' => 5},
+	       {'d' => 16},
+	       {'b' => 26},
+	       {'e' => 29}
+	    ],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
+
 $e[$i] = q#f.filter(function(a){a < 5})#;
 $x[$i] = {
    'val' => [4,3,2,1],
@@ -1004,6 +1028,67 @@ $d[$i]  = 0;
 $i++;
 
 
+$e[$i] = q#f.filter(function(a){a < 5})#;
+$x[$i] = {
+   'val' => [4,3,2,1],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+#
+# collect
+#
+$e[$i] = q#f.collect(function(a){(a < 5) => "x" | "y"})#;
+$x[$i] = {
+   'val' => {'x' => [4,3,2,1],
+	     'y' => [7,5,6]},
+   'type' => 'hash'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#f.collect(function(a){(a % 2) => "odd" | "even"})#;
+$x[$i] = {
+   'val' => {'even' => [4,2,6],
+	     'odd' => [7,3,5,1]},
+   'type' => 'hash'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#employees.collect(function(a){a{"dept"}})#;
+$x[$i] = {
+   'val' => {'marketing' => [
+			    {
+			     'dept' => 'marketing',
+			     'name' => 'Ron'
+			    }
+			   ],
+	     'engr' => [
+			{
+			 'dept' => 'engr',
+			 'name' => 'Mark'
+			}
+		       ],
+	     'executive' => [
+			     {
+			      'dept' => 'executive',
+			      'name' => 'Steve'
+			     }
+			    ]
+	    },
+   'type' => 'hash'
+};
+$d[$i]  = 0;
+$i++;
+
+
+
+#
+# map
+#
+
 $e[$i] = q#j.map(function(a){a.pick("$..b")})#;
 $x[$i] = {
    'val' => [2,5,8],
@@ -1029,6 +1114,91 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
+##
+## reduce
+##
+
+$e[$i] = q#c.reduce(function(a,b){a + b})#;
+$x[$i] = {
+   'val' => 15,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#c.reduce(function(a,b){a + b}, 10)#;
+$x[$i] = {
+   'val' => 25,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#d.reduce(function(a,b){a + b})#;
+$x[$i] = {
+   'val' => 0,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#d.reduce(function(a,b){a + b}, 15)#;
+$x[$i] = {
+   'val' => 15,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#m.reduce(function(a,b){a + b})#;
+$x[$i] = {
+   'val' => 76,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#m.reduce(function(a,b){a + b}, 15)#;
+$x[$i] = {
+   'val' => 91,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#j.reduce(function(a,b){a * b{"a"}}, 1)#;
+$x[$i] = {
+   'val' => 28,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#c.reduce(function(a,b){a - b})#;
+$x[$i] = {
+   'val' => -7,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+
+
+##
+## reverse
+##
+$e[$i] = q#c.reverse()#;
+$x[$i] = {
+   'val' => [6,5,4],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
+##
+## join
+##
 $e[$i] = q#c.join(";")#;
 $x[$i] = {
    'val' => '4;5;6',
@@ -1897,6 +2067,24 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+# $e[$i] = q/j_h.keys().head()/;
+# $x[$i] = {
+# 	'val' => 'pi as array',
+# 	'type'=>'str'
+# };
+# $d[$i] = 0;
+# $i++;
+
+# $e[$i] = q/j_h{j_h.keys().head()}/;
+# $x[$i] = {
+# 	'val' => [3,1,4,1,5,6,9],
+# 	'type'=>'array'
+# };
+# $d[$i] = 0;
+# $i++;
+
+
+
 $e[$i] = q/k_h.keys()/;
 $x[$i] = {
 	'val' => [
@@ -1949,6 +2137,21 @@ $x[$i] = {
 };
 $d[$i] = 0;
 $i++;
+
+
+
+##
+## klog
+##
+$e[$i] = q#c.reverse().klog("Value of reversed array: ").join(";")#;
+$x[$i] = {
+   'val' => "6;5;4",
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
+
 
 ENDY:
 

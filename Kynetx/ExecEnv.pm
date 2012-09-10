@@ -58,6 +58,8 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 sub build_exec_env {
     my $logger = get_logger();
+    return bless {'threadresults' => [],
+		 };
 }
 
 ### condvar
@@ -71,6 +73,27 @@ sub get_condvar {
   my($self) = @_;
 
   return $self->{'condvar'};
+}
+
+### results
+sub get_results {
+  my($self, $key) = @_;
+  return $self->{'threadresults'};
+}  
+
+# sub get_result {
+#   my($self, $key) = @_;
+#   defined $key || warn 'get_result needs a key';
+#   return $self->{'threadresults'}->{$key};   
+# }  
+
+sub set_result {
+  my($self, $key, $value) = @_;
+  (defined $key && defined $value) || warn 'set_result needs a key and value';
+  push(@{ $self->{'threadresults'}}, 
+       {'esl' => $key,
+	'result' => $value}
+      );
 }
 
 

@@ -35,6 +35,8 @@ use Digest::MD5 qw/md5_hex/;
 use Clone qw/clone/;
 use Data::Diver qw(Dive);
 
+use XDI;
+
 use Kynetx::Parser qw/:all/;
 use Kynetx::JParser;
 use Kynetx::Datasets;
@@ -163,8 +165,8 @@ sub eval_decl {
     my $type = undef;
 
     my $logger = get_logger();
-    $logger->trace("decl type: ",$decl->{'type'});
-    $logger->trace("[eval_decl]: ", sub {Dumper $decl->{'rhs'}});
+#    $logger->debug("decl type: ",$decl->{'type'});
+#    $logger->debug("[eval_decl]: ", sub {Dumper $decl->{'rhs'}});
 
     if ($decl->{'type'} eq 'expr' ) {
 		my $r = eval_expr($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);
@@ -449,6 +451,11 @@ sub eval_expr {
         my $aexpr = mk_action_expr($expr, $rule_env, $rule_name,$req_info, $session);
         $logger->trace("Action expression: ", sub {Dumper($aexpr)});
         return $aexpr;
+    } elsif($expr->{'type'} eq 'XDI') {
+    	$logger->debug("XDI request");
+    	my $xdi_expr = eval_xdi($expr->{'val'},$rule_env,$rule_name,$req_info,$session);
+    	$logger->debug("XDI request: ", sub {Dumper($xdi_expr)});
+    	return $xdi_expr;
     } else {
         $logger->error("Unknown type in eval_expr: $expr->{'type'}");
         return mk_expr_node('null','__undef__');
@@ -456,7 +463,27 @@ sub eval_expr {
 
 }
 
-
+sub eval_xdi {
+	my ($xdi_statement, $rule_env, $rule_name, $req_info, $session) = @_;
+	my $logger = get_logger();
+	my $ken = Kynetx::Persistence::KEN::get_ken($session);
+	my $rid = get_rid_from_context($rule_env,$req_info);
+	my $kxdi = Kynetx::Persistence::KXDI::get_xdi($ken);
+	my ($c,$msg) = Kynetx::Persistence::KXDI::xdi_message($kxdi,$rid);
+	$logger->debug("Link_contract: ", $msg->link_contract);
+	$logger->debug("KXDI: ", sub {Dumper($kxdi)});
+	
+	$msg->get($xdi_statement);
+	$logger->debug("XDI message (eval): ", $msg->to_string);
+	my $result =  $c->post($msg);
+	if (defined $result) {
+		return mk_expr_node(infer_type($result),$result)
+	} else {
+		return mk_expr_node('null','__undef__');
+	}
+	
+	
+}
 
 
 sub eval_prim {
@@ -619,6 +646,8 @@ sub eval_application {
 #  $logger->debug("Env: ", Dumper $decls_env);
 #  $logger->debug("Env lookup: ", lookup_rule_env('n', $decls_env));
 
+# $logger->debug("Evaling expression for function ", sub {Dumper $closure->{'val'}->{'expr'}});
+
   return eval_expr($closure->{'val'}->{'expr'},
 		   $decls_env,
 		   $rule_name,
@@ -686,7 +715,7 @@ sub eval_array_ref {
 
   unless (defined $v) {
     Kynetx::Errors::raise_error($req_info, 'warn',
-				"[array_ref] Variable '", $expr->{'val_expr'}, "' is undefined",
+				"[array_ref] Variable '". $expr->{'val_expr'}. "' is undefined",
 				{'rule_name' => $rule_name,
 				 'genus' => 'expression',
 				 'species' => 'array reference undefined'
@@ -696,7 +725,7 @@ sub eval_array_ref {
 
   unless (ref $v eq 'ARRAY') {
     Kynetx::Errors::raise_error($req_info, 'warn',
-				"[array_ref] Variable '", $expr->{'val_expr'}, "' is not an array",
+				"[array_ref] Variable '". $expr->{'val_expr'}. "' is not an array",
 				{'rule_name' => $rule_name,
 				 'genus' => 'expression',
 				 'species' => 'type mismatch'
@@ -724,15 +753,16 @@ sub eval_hash_ref {
   	unless (defined $v) {
 	  $logger->debug("Undefined map variable: ", $expr->{'var_expr'});
 	  Kynetx::Errors::raise_error($req_info, 'warn',
-			"[hash_ref] Variable '", $expr->{'var_expr'}, "' is undefined",
+			"[hash_ref] Variable '". $expr->{'var_expr'}. "' is undefined",
 			{'rule_name' => $rule_name,
 			 'genus' => 'expression',
 			 'species' => 'hash reference undefined'
 			});
 	}
   	unless (ref $v eq "HASH") {
-	    Kynetx::Errors::raise_error($req_info, 'warn',
-			"[hash_ref] Variable '", $expr->{'var_expr'}, "' is not a hash",
+	  $logger->debug("map variable isn't a map: ", $expr->{'var_expr'});
+	  Kynetx::Errors::raise_error($req_info, 'warn',
+			"[hash_ref] Variable '". $expr->{'var_expr'}. "' is not a hash",
 			{'rule_name' => $rule_name,
 			 'genus' => 'expression',
 			 'species' => 'type mismatch'
@@ -818,7 +848,7 @@ sub eval_persistent {
 						     $rid, 
 						     $session, 
 						     $name) || 0;
-	$logger->debug("[persistent] $expr->{'domain'}:$name -> $v");
+#	$logger->debug("[persistent] $expr->{'domain'}:$name -> ", sub {Dumper $v});
       } else {
 	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
         $logger->debug("[module reference] $expr->{'domain'}:$name->$v");
@@ -837,48 +867,32 @@ sub eval_pred {
 
 #    $logger->debug("[eval_pred] ", Dumper $pred);
 
-    my @results =
-	map {Kynetx::Expressions::eval_expr($_, $rule_env, $rule_name, $req_info, $session)}
-	  @{ $pred->{'args'} };
-
-    @results = map {den_to_exp($_)} @results;
-
-#    $logger->debug("[eval_pred] Rand values: ", Dumper @results);
-
     $logger->debug("Complex predicate: ", $pred->{'op'});
 
-    if($pred->{'op'} eq '&&') {
-	my $first = shift @results;
-	for (@results) {
-	    $first = $first && $_;
-	}
-	return mk_expr_node('num',$first);
+    my $val = 0;
+    foreach my $p ( @{ $pred->{'args'} } ) {
+      my $result = den_to_exp(Kynetx::Expressions::eval_expr($p, $rule_env, $rule_name, $req_info, $session));
 
-    } elsif($pred->{'op'} eq '||') {
-	my $first = shift @results;
-	for (@results) {
-	    $first = $first || $_;
+      if($pred->{'op'} eq '&&') {
+	$val = $result;
+	if (! $result ) {
+	  last;
+	} 
+      } elsif($pred->{'op'} eq '||') {
+	$val = $result;
+	if ( $result ) {
+	  last;
+	} 
+      } elsif($pred->{'op'} eq 'negation') {
+	if ($result) {
+	  $val = 0;
+	} else {
+	  $val = 1;
 	}
-	return mk_expr_node('num',$first);
-    } elsif($pred->{'op'} eq 'negation') {
-      if ($results[0]) {
-	return
-	    mk_expr_node('num', 0);
-      } else {
-	return
-	    mk_expr_node('num', 1);
-
       }
-    } else {
-      Kynetx::Errors::raise_error($req_info, 'warn',
-				"[pred] invalid predicate operator $pred->{'op'}",
-				{'rule_name' => $rule_name,
-				 'genus' => 'expression',
-				 'species' => 'invalid operator'
-				}
-			       );
     }
-    return 0;
+    return exp_to_den($val)
+
 
 }
 
@@ -891,9 +905,11 @@ sub eval_ineq {
 	map {Kynetx::Expressions::eval_expr($_, $rule_env, $rule_name, $req_info, $session)}
 	  @{ $pred->{'args'} };
 
+    my $r = ineq_test($pred->{'op'}, den_to_exp($results[0]), den_to_exp($results[1]));
     
-
-    if (ineq_test($pred->{'op'}, den_to_exp($results[0]), den_to_exp($results[1]))) {
+    if ( $pred->{'op'} eq '<=>' || $pred->{'op'} eq 'cmp') {
+      return Kynetx::Parser::mk_expr_node('num',$r);
+    } elsif ($r) {
       return Kynetx::Parser::mk_expr_node('num',1);
     }  else {
       return Kynetx::Parser::mk_expr_node('num',0);
@@ -935,6 +951,10 @@ sub ineq_test {
       return ! ($rand0 eq $rand1);
     } elsif($op eq 'eq') {
 	return $rand0 eq $rand1;
+    } elsif($op eq '<=>') {
+	return $rand0 <=> $rand1;
+    } elsif($op eq 'cmp') {
+	return $rand0 cmp $rand1;
     } elsif($op eq 'like') {
 
       # Note: this relies on the fact that a regular expression looks like a string inside
@@ -1148,8 +1168,8 @@ my %literal_types = ('str' => 1,
 
 sub typed_value {
   my($val) = @_;
-  my $logger = get_logger();
-  $logger->trace("typed value received: ", sub {Dumper($val)});
+#  my $logger = get_logger();
+#  $logger->trace("typed value received: ", sub {Dumper($val)});
   unless (ref $val eq 'HASH' &&
 	  defined $val->{'type'} &&
 	  $literal_types{$val->{'type'}}
@@ -1329,11 +1349,11 @@ sub eval_str {
     my $str = ref $expr eq 'HASH' ? $expr->{'val'} : $expr;
 #    $logger->debug("Original expr: ", sub {Dumper $str});
     while (@parts = $str =~ m/(.*?)\#\{(.+?)\}{1}?(.*)/s) {
-#      $logger->debug("Picked apart ", sub {Dumper @parts});
+      $logger->debug("Picked apart ", sub {Dumper @parts});
       last unless $parts[1];
       my $bee_expr = Kynetx::Parser::parse_expr($parts[1]);
       my $bee_val = eval_expr($bee_expr,$rule_env, $rule_name,$req_info, $session)->{'val'};
-#      $logger->debug("parsed and evaled beesting: ", sub {Dumper($bee_val)} );
+      $logger->debug("parsed and evaled beesting: ", sub {Dumper($bee_val)} );
       if (ref $bee_val eq 'ARRAY' || ref $bee_val eq 'HASH') {
 	$bee_val = $json->encode($bee_val) || "";
       }

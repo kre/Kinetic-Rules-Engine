@@ -35,6 +35,7 @@ use Kynetx::Persistence::UserState qw(
 	delete_current_state
 );
 use Kynetx::Persistence qw(:all);
+use Kynetx::Util qw(split_re);
 use Clone;
 
 use Data::Dumper;
@@ -615,7 +616,7 @@ sub next_state {
 			}
 	  		if ($isnull) {
 	    		$logger->trace("THIS IS A NULL TRANSITION!");	    		
-				$logger->trace("Transition options: ", sub{Dumper($null_transition)});
+				$logger->debug("Transition options: ", sub{Dumper($null_transition)});
 				my $counterid = $null_transition->{'counter'};
 				my $count = $null_transition->{'count'};
 				my $agg_op = $null_transition->{'vars'}->{'agg_op'};
@@ -640,10 +641,10 @@ sub next_state {
 					$logger->trace("Transition to next state is a null so process immediately $next");
 					$next = $self->get_transitions($next_transition);
 					if (defined $agg_op) {						
-						my $agg_val = aggregate($agg_op,\@iters);
-						$logger->trace("aggs: ", sub{Dumper($agg_val)});
-	      				$event->set_vars( $self->get_id(), \@agg_var);
-	      				$event->set_vals($self->get_id(), [$agg_val]);
+					  my $agg_val = aggregate($agg_op,\@iters);
+					  $logger->trace("aggs: ", sub{Dumper(@agg_var, $agg_val)});
+					  $event->set_vars( $self->get_id(), \@agg_var);
+					  $event->set_vals($self->get_id(), [$agg_val]);
 					}
 					
 					if ($null_transition->{'domain'} eq 'repeat') {
@@ -1018,29 +1019,50 @@ sub gen_event_eval {
   my $req_info = $event->get_req_info();
 
 
+#  $logger->debug("General filter test for event");
+
   my $filters = $t->{'test'};
   my $op = $t->{'type'};
+
+#$logger->debug("Seeing: ", sub{Dumper $t});
 
   # initializing these to delimeter ensures we'll get a match if no
   # pattern and target
   my $pattern;
   my $target;
   foreach my $filter (@{ $filters }) {  
-  	my $filter_type= $filter->{'type'};
-  	# Allow different defaults for diff event types
-  	$logger->trace("Req info: ", sub{Dumper($req_info)});
-  	if ($op eq 'pageview') {
-  		if ($filter_type eq 'default') {
-  			$filter_type = 'url';  			
-  		} 
-  		$target = $event->{$filter_type};  		
-  	} else {
-  		$target = $req_info->{$filter_type};
-  	}
+    my $filter_type= $filter->{'type'};
+#    $logger->debug(sub { Dumper $filter });
+    # Allow different defaults for diff event types
+    $logger->trace("Req info: ", sub{Dumper($req_info)});
+    if ($op eq 'pageview') {
+      if ($filter_type eq 'default') {
+	$filter_type = 'url';  			
+      } 
+      $target = $event->{$filter_type};  		
+    } else {
+      $target = $req_info->{$filter_type};
+    }
     $pattern = $filter->{'pattern'};
+
+    if (ref $pattern eq 'HASH' && $pattern->{type} eq 'regexp') {
+
+      my $modifiers;
+
+      ($pattern, $modifiers) = split_re($pattern->{'val'});
+
+      $modifiers = $modifiers || '';
+
+      my $embedable_modifiers = $modifiers;
+      $embedable_modifiers =~ s/g//;
+
+      $pattern = qr/(?$embedable_modifiers)$pattern/;
+
+
+    }
     $logger->debug("Target: $target; Pattern: $pattern");
     my @this_captures;
-    if(@this_captures = $target =~ /$pattern/) {
+    if(@this_captures = $target =~ m/$pattern/) {
       push (@{$captures}, @this_captures) if $1; #$1 not set if no capture
     } else {
       # if any of these are false, we return 0 and the empty capture list
@@ -1356,7 +1378,7 @@ sub mk_repeat {
 	my $logger = get_logger();
 	
 	my $sm = $osm->clone();
-	my $null = mk_null('repeat',$num);
+	my $null = mk_null('repeat',$num, $agg);
 	
 	my $nsm = Kynetx::Events::State->new();
 	foreach my $sm ($sm,$null)	{

@@ -32,7 +32,7 @@ use Apache::Session::Memcached;
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
 Log::Log4perl->easy_init($DEBUG);
-#Log::Log4perl->easy_init($TRACE);
+Log::Log4perl->easy_init($TRACE);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Configure;
@@ -41,6 +41,7 @@ use Kynetx::FakeReq qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::MongoDB;
 use Kynetx::Persistence::KEN qw/:all/;
+use Kynetx::Persistence::KPDS qw/:all/;
 use Kynetx::Persistence::KToken qw(:all);
 my $logger = get_logger();
 my $num_tests = 0;
@@ -68,6 +69,7 @@ my $ubx_bad = "TESTTOKEN_NEVERDELETE";
 my $ubx_ken = "4d544a412c15431307000001";
 my $temp_token;
 my $tsession;
+my $result;
 
 my $r = new Kynetx::FakeReq();
 $r->_delete_session();
@@ -86,22 +88,44 @@ my $session_ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
 $logger->debug("Ken session: ",$session_ken);
 testit($session_ken,re($ken_re),$description,0);
 
-# insert a token
-my $generated = Kynetx::Persistence::KToken::create_token($session_ken,"Dummy");
+$description = "Insert a KPDS value";
+my $hash_path = ['pds_type'];
+my $value = 'xdi';
+$result = Kynetx::Persistence::KPDS::put_kpds_element($session_ken,$hash_path,$value);
+testit($result,1,$description,0);
+
+$description = "Get a KPDS value";
+$result = Kynetx::Persistence::KPDS::get_kpds_element($session_ken,$hash_path);
+testit($result,$value,$description,0);
+$logger->debug("Got: ", sub {Dumper($result)});
+
+$description = "Delete a KPDS value";
+$result = Kynetx::Persistence::KPDS::delete_kpds_element($session_ken,$hash_path);
 
 
-# Ignore the session, just use the UBX
-$description = "Check the token database for ($static_token)";
-$r = new Kynetx::FakeReq();
-$r->_set_ubx_token($generated);
-$session = process_session($r);
-$result = Kynetx::Persistence::KEN::get_ken($session,$frid);
-testit($result,$session_ken,$description);
+$description = "Check database for deleted value";
+$result = Kynetx::Persistence::KPDS::get_kpds_element($session_ken,$hash_path);
+testit($result,undef,$description,0);
+$logger->debug("Got: ", sub {Dumper($result)});
 
-$description = "Clean up and delete KEN";
-diag $description;
-Kynetx::Persistence::KEN::delete_ken($session_ken);
 
+# Clean up anonymous KENS
+my $ken_struct = {
+	"ken" => $session_ken
+};
+$result = Kynetx::MongoDB::get_singleton('kens',$ken_struct);
+if (defined $result && ref $result eq "HASH") {
+	my $username = $result->{'username'};
+	if ($username =~ m/^_/) {
+		$logger->debug("Ken is anonymous");
+		Kynetx::Persistence::KEN::delete_ken($session_ken);
+		Kynetx::Persistence::KPDS::delete_kpds($session_ken);
+	}
+	
+}
+
+
+$logger->debug("Ken struct: ", sub {Dumper($result)});
 
 sub testit {
     my ($got,$expected,$description,$debug) = @_;

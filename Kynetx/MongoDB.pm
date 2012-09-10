@@ -153,54 +153,54 @@ sub get_array_element {
 }
 
 sub get_hash_element {
-	my ($collection, $vKey,$hKey) = @_;
-	my $logger = get_logger();
-	my $key = clone $vKey;
-    my $c = get_collection($collection);
-	if (defined $hKey && ref $hKey eq "ARRAY") {
-		if (scalar @$hKey > 0) {
-			$key->{'hashkey'} = {'$all' => $hKey};
-		}
-	}  
-	$logger->trace("Element key: ", sub {Dumper($key)});  
-    my $cursor = $c->find($key);
-	if  ($cursor->has_next) {
-		my @array_of_elements = ();
-		my $last_updated = 0;
-		while (my $object = $cursor->next) {
-			if (defined $object->{'serialize'}) {
-				# old style hash
-				my $ast = Kynetx::Json::jsonToAst($object->{'value'});
-				$logger->debug("Found old-style ", ref $ast, " to deserialize");
-				$object->{'value'} = $ast;
-				return $object;
-			} elsif (! defined $object->{'hashkey'}) {
-				# Somehow we pulled a non-hash ref
-				$logger->warn("Hash Element requested, but found something else");
-				return $object;
-			}
-			my $v = $object->{'value'};
-			my $kv = $object->{'hashkey'};
-			my $ts = $object->{'created'};
-			if ($ts > $last_updated) {
-				$last_updated = $ts;
-			}
-			push(@array_of_elements, {
+  my ($collection, $vKey,$hKey) = @_;
+  my $logger = get_logger();
+  my $key = clone $vKey;
+  my $c = get_collection($collection);
+  if (defined $hKey && ref $hKey eq "ARRAY") {
+    if (scalar @$hKey > 0) {
+      $key->{'hashkey'} = {'$all' => $hKey};
+    }
+  }  
+  $logger->trace("Element key: ", sub {Dumper($key)});  
+  my $cursor = $c->find($key);
+  if  ($cursor->has_next) {
+    my @array_of_elements = ();
+    my $last_updated = 0;
+    while (my $object = $cursor->next) {
+      if (defined $object->{'serialize'}) {
+	# old style hash
+	my $ast = Kynetx::Json::jsonToAst($object->{'value'});
+	$logger->debug("Found old-style ", ref $ast, " to deserialize");
+	$object->{'value'} = $ast;
+	return $object;
+      } elsif (! defined $object->{'hashkey'}) {
+	# Somehow we pulled a non-hash ref
+	$logger->warn("Hash Element requested, but found something else");
+	return $object;
+      }
+      my $v = $object->{'value'};
+      my $kv = $object->{'hashkey'};
+      my $ts = $object->{'created'};
+      if ($ts > $last_updated) {
+	$last_updated = $ts;
+      }
+      push(@array_of_elements, {
 				'ancestors' => $kv,
 				'value' => $v
-			});
-		}
-		# reassemble (vivify) the hash from the elements
-		my $frankenstein = Kynetx::Util::elements_to_hash(\@array_of_elements);
-		$logger->trace("vivified: ", sub {Dumper($frankenstein)});
-		my $value = Dive($frankenstein,@$hKey);
-		my $composed_hash = clone ($vKey);
-		$composed_hash->{'value'} = $value;
-		$composed_hash->{'created'} = $last_updated;
-		return $composed_hash;					
-	} else {
-		return undef;
-	}
+			       });
+    }
+    # reassemble (vivify) the hash from the elements
+    my $frankenstein = Kynetx::Util::elements_to_hash(\@array_of_elements);
+    $logger->trace("vivified: ", sub {Dumper($frankenstein)});
+    my $value = Dive($frankenstein,@$hKey);
+    my $composed_hash = clone ($vKey);
+    $composed_hash->{'value'} = $value;
+    $composed_hash->{'created'} = $last_updated;
+    return $composed_hash;					
+  } else {
+    return undef;
+  }
 }
 
 
@@ -417,7 +417,7 @@ sub find_and_modify {
 	if (defined $command->{'query'}) {
 		clear_cache($collection,$command->{'query'});		
 	}
-	if (defined $status && $status->{'ok'}) {
+	if (defined $status && ref $status eq 'HASH' && $status->{'ok'}) {
 		if ($verbose) {
 			return $status;
 		} else {
@@ -585,14 +585,23 @@ sub delete_hash_element {
 	my ($collection,$vKey,$hKey) = @_;
 	my $logger = get_logger();
 	# Protect me from doing something stupid
+	$logger->trace("Delete element of ",sub {Dumper($vKey)});
+	$logger->trace("Delete actual element ",sub {Dumper($hKey)});
+	
 	if (ref $vKey eq "HASH") {
-		if ((defined $vKey->{'key'}) && ($vKey->{'key'} ne "")) {
+		if (
+			((defined $vKey->{'key'}) 
+				&& ($vKey->{'key'} ne ""))
+			|| 	((defined $vKey->{'ken'}) 
+				&& ($vKey->{'ken'} ne ""))
+			) {
 			my $del = clone ($vKey);
 		    my $c = get_collection($collection);
 			if (ref $hKey eq 'ARRAY' && scalar @$hKey > 0) {
 				$del->{'hashkey'} = {'$all' => $hKey};
 			}
 			my $success = $c->remove($del,{'safe' => 1});
+			$logger->trace("Delete results ",sub {Dumper($success)});
 			if (defined $success) {
 				if ($success->{'ok'}) {
 					my $count = $success->{'n'};
@@ -604,7 +613,11 @@ sub delete_hash_element {
 			} else {
 				$logger->warn("Mongodb error trying to delete ", sub {Dumper($del)});
 			}
+		} else {
+			$logger->trace("Key not valid");
 		}
+	} else {
+		$logger->trace("Key not a hash");
 	}
 }
 
@@ -654,7 +667,7 @@ sub set_cache {
     my $logger = get_logger();
     my $parent = (caller(1))[3];
     my $keystring = make_keystring($collection,$var);
-    $logger->trace("Mongo set_cache $keystring from $parent: ", sub {Dumper($value)});
+    $logger->debug("Mongo set_cache $keystring from $parent: ", sub {Dumper($value)});
     Kynetx::Memcached::mset_cache($keystring,$value,$CACHETIME);
 #	if ($collection eq 'tokens') {
 #		$logger->debug("Touch token", sub {Dumper($var)});

@@ -144,8 +144,12 @@ my $session = Kynetx::Test::gen_session($r,'a144x16');
 #my $atoken_secret = 'EQUsSkHPrMPZ-BZ4jotxq_bQ';
 #my $atoken = '1/mL1V01Uzz-EefEevlllhjASDJzosp5giNX-AIjgAVhk';
 #my $atoken_secret = 'O/ulsQfjJgEUJFs70ghkt8pf';
-my $atoken = '1/IJ5C9U5Jz5bm47ifvpZ7z4bprUZkN88KfghyWwoR9Pg';
-my $atoken_secret = 'q_F57TrgZoZljCneEMGrgLZa';
+#my $atoken = '1/IJ5C9U5Jz5bm47ifvpZ7z4bprUZkN88KfghyWwoR9Pg';
+#my $atoken_secret = 'q_F57TrgZoZljCneEMGrgLZa';
+my $atoken = '1/_alfSmGQAUmDKqD4wepgaxGZtxip_WUsJQ5mJ67H4UQ';
+my $atoken_secret = 'XzCcCpLi1Z__SaQJy6lO8CPP';
+
+
 
 my $scope = {
         'url' => 'http://www.google.com/calendar/feeds/',

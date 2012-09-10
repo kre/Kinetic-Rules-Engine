@@ -1288,6 +1288,80 @@ add_expr_testcase(
 		  0
     );
 
+
+#
+# comparison
+# 
+
+$krl_src = <<_KRL_;
+6 <=> 7
+_KRL_
+add_expr_testcase(
+    $krl_src,
+		  'expr',
+		  "(6 < 7 ? -1 : (6 > 7 ? 1 : 0))",
+		  mk_expr_node('num',    -1),
+		  0
+    );
+
+$krl_src = <<_KRL_;
+temp <=> temp
+_KRL_
+add_expr_testcase(
+    $krl_src,
+		  'expr',
+		  "(temp<temp?-1:(temp>temp?1:0))",
+		  mk_expr_node('num',    0),
+		  0
+    );
+
+
+$krl_src = <<_KRL_;
+7 <=> 6
+_KRL_
+add_expr_testcase(
+    $krl_src,
+		  'expr',
+		  "(7 < 6 ? -1 : (7 > 6 ? 1 : 0))",
+		  mk_expr_node('num',    1),
+		  0
+    );
+
+$krl_src = <<_KRL_;
+string1 cmp string2
+_KRL_
+add_expr_testcase(
+    $krl_src,
+		  'expr',
+		  "(string1 < string2 ? -1 : (string1 > string2 ? 1 : 0))",
+		  mk_expr_node('num',    -1),
+		  0
+    );
+
+$krl_src = <<_KRL_;
+string1 cmp string1
+_KRL_
+add_expr_testcase(
+    $krl_src,
+		  'expr',
+		  "(string1<string1?-1:(string1>string1?1:0))",
+		  mk_expr_node('num',    0),
+		  0
+    );
+
+
+$krl_src = <<_KRL_;
+string2 cmp string1
+_KRL_
+add_expr_testcase(
+    $krl_src,
+		  'expr',
+		  "(string2 < string1 ? -1 : (string2 > string1 ? 1 : 0))",
+		  mk_expr_node('num',    1),
+		  0
+    );
+
+
 #
 # Membership
 #
@@ -2443,6 +2517,33 @@ add_expr_testcase(
     0);
 
 
+$krl_src = <<_KRL_;
+function() {
+  d = << Count is #{ent:my_count} >>;
+  "Count is #{ent:my_count}"
+}
+_KRL_
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	"function() {var d = 'Count is 0'; return 'Count is ' + 'UNTRANSLATABLE KRL EXPRESSION'+''}",
+	mk_expr_node('closure',{'vars' => [],
+				'decls' => [ 
+       {
+         'lhs' => 'd',
+         'rhs' => ' Count is #{ent:my_count} ',
+         'type' => 'here_doc'
+       }
+
+					   ],
+					'sig' => 'b762cedd25052718f90b2540841e859d',
+					'expr' => {'val' => 'Count is #{ent:my_count}','type'=>'str'},
+					'env' => $rule_env,
+	}),
+	0
+);
+
+
 # requires foo to be defined in env as function above
 $krl_src = <<_KRL_;
 foo(5)
@@ -2668,6 +2769,16 @@ add_expr_testcase(
     0);
 
 
+
+$krl_src = <<_KRL_;
+d = "#{ent:my_count}"
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'decl',
+    "var d = '2';",
+    2,
+    0);
 
 
 #--------------------------------------------------------------------------------
@@ -3004,13 +3115,123 @@ add_expr_testcase(
     0);
 
 
+
+
+#-------------------------------------------------------------------------------
+# predicate guards
+#-------------------------------------------------------------------------------
+
+
+
+$krl_src = <<_KRL_;
+pre {
+  a3 = [4,5,6];
+  b3 = a3.length() > 0 && a3[0];
+}
+_KRL_
+
+$js = <<_JS_;
+var a3 = [4,5,6];
+var b3 = 4;
+_JS_
+
+$re1 = extend_rule_env(['a3','b3'],
+		       [[4,5,6],4],
+		       $rule_env);
+
+
+add_expr_testcase(
+    $krl_src,
+    'pre',
+    $js,
+    $re1,
+    0);
+
+
+
+$krl_src = <<_KRL_;
+pre {
+  a3 = [];
+  b3 = a3.length() > 0 && a3[0];
+}
+_KRL_
+
+$js = <<_JS_;
+var a3 = [];
+var b3 = 0;
+_JS_
+
+$re1 = extend_rule_env(['a3','b3'],
+		       [[],0],
+		       $rule_env);
+
+
+add_expr_testcase(
+    $krl_src,
+    'pre',
+    $js,
+    $re1,
+    0);
+
+
+$krl_src = <<_KRL_;
+pre {
+  a3 = [4,5,6];
+  b3 = a3.length() > 0 || 6;
+}
+_KRL_
+
+$js = <<_JS_;
+var a3 = [4,5,6];
+var b3 = 1;
+_JS_
+
+$re1 = extend_rule_env(['a3','b3'],
+		       [[4,5,6],1],
+		       $rule_env);
+
+
+add_expr_testcase(
+    $krl_src,
+    'pre',
+    $js,
+    $re1,
+    0);
+
+
+
+$krl_src = <<_KRL_;
+pre {
+  a3 = [];
+  b3 = a3.length() > 0 || 6;
+}
+_KRL_
+
+$js = <<_JS_;
+var a3 = [];
+var b3 = 6;
+_JS_
+
+$re1 = extend_rule_env(['a3','b3'],
+		       [[],6],
+		       $rule_env);
+
+
+add_expr_testcase(
+    $krl_src,
+    'pre',
+    $js,
+    $re1,
+    0);
+
+
+
+#-------------------------------------------------------------------------------
+# hash/struct testing
+#-------------------------------------------------------------------------------
 $re1 = extend_rule_env(['a','b'],
 		       [{'y'=> 5},[{'y' => 5}]],
 		       $rule_env);
-
-#--------------------------------------------------------------------------------
-# hash/struct testing
-#--------------------------------------------------------------------------------
 
 
 $krl_src = <<_KRL_;
@@ -3190,6 +3411,9 @@ add_expr_testcase(
     "'UNTRANSLATABLE KRL EXPRESSION'",
     mk_expr_node('array',['3.a','3.b','3.c','3.d']),
     0);
+
+
+
 
 	 
 #----------------------------------------------------------------------------
