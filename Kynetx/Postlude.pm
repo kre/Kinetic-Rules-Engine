@@ -408,6 +408,7 @@ sub eval_raise_statement {
     my $allowed = {'explicit' => 1,
 		   'http' => 1,
 		   'system' => 1,
+		   'cloudos' => 1,
 		   'notification' => 1 ,
 		   'pds' => 1 ,
 		   'error' => 1,
