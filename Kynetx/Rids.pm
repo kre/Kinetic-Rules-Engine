@@ -43,6 +43,7 @@ qw(
     parse_rid_list
     print_rids
     rid_info_string
+    get_rid_from_context
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -135,5 +136,24 @@ sub print_rids {
   }
   return $res;
 }
+
+sub get_rid_from_context {
+	my ($rule_env,$req_info) = @_;
+	my $logger = get_logger();
+    my $inModule = Kynetx::Environments::lookup_rule_env('_inModule', $rule_env) || 0;
+    my $moduleRid = Kynetx::Environments::lookup_rule_env('_moduleRID', $rule_env);
+    my $rid = get_rid($req_info->{'rid'});
+    if ($inModule) {
+      $logger->debug("Evaling persistent in module: $moduleRid");
+    } 
+    # $logger->trace("**********in module: $inModule");
+    # $logger->trace("**********module Rid: $moduleRid");
+    # $logger->trace("**********calling Rid: $rid");
+    if (defined $moduleRid) {
+      $rid = $moduleRid;
+    }
+	return $rid;
+}
+
 
 1;

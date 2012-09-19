@@ -139,7 +139,7 @@ sub config_logging {
       my $hostname = Sys::Hostname::hostname();
       my $es_layout =
 	Log::Log4perl::Layout::PatternLayout->new(
-	    "<b>$hostname</b> %d %p %F{1} %X{site} <em>%X{rule}</em> <code>%m%n</code>");
+	    "%X{site}:%X{rule} ($hostname) %d %p %F{1} %m%n");
       my $es_appender = Log::Log4perl::Appender->new(
 						     "Log::Log4perl::Appender::ErrorStack",
 						     name => 'ErrorStack',
@@ -780,7 +780,6 @@ sub to_seconds {
 	}
 	return $seconds;
 }
-
 
 sub split_re {
   my($val) = @_;
