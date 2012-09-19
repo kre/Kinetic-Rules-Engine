@@ -128,11 +128,6 @@ $result = Kynetx::Persistence::KXDI::check_link_contract($dken,$rid);
 $logger->debug("root link contract: $result");
 die unless $result;
 
-$result = Kynetx::Persistence::KXDI::check_link_contract($dken,$rid);
-
-$logger->debug("root link contract: $result");
-die unless $result;
-
 
 my ($c,$msg) = Kynetx::Persistence::KXDI::xdi_message($kxdi);
 my $subject = "$inumber+secret_phrase";

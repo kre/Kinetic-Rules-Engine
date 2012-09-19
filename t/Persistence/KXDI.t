@@ -29,6 +29,7 @@ use Test::Deep;
 use Data::Dumper;
 use MongoDB;
 use Apache::Session::Memcached;
+use APR::Pool ();
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
@@ -40,11 +41,13 @@ use Kynetx::Test qw/:all/;
 use Kynetx::Configure;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::FakeReq qw/:all/;
+use Kynetx::Environments qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::MongoDB;
 use Kynetx::Persistence::KEN qw/:all/;
 use Kynetx::Persistence::KXDI qw/:all/;
 use Kynetx::Persistence::KToken qw(:all);
+use Kynetx::Modules;
 my $logger = get_logger();
 my $num_tests = 0;
 my $result;
@@ -63,16 +66,18 @@ my $ken_re = qr([0-9|a-f]{16});
 my $ken;
 my $description;
 
-my $rid = "cs_test";
+my $rid = "xdi_test";
 my $frid = "not_cs_test";
 my $static_token = "247fe820-1782-012e-dbbc-525445a0543c";
 my $srid = "token_tests";
 my $ubx_bad = "TESTTOKEN_NEVERDELETE";
 my $ubx_ken = "4d544a412c15431307000001";
+my $rule_name = "cr_xdi";
 my $temp_token;
 my $tsession;
 my $from;
 my $to_graph;
+my $args;
 
 my $r = new Kynetx::FakeReq();
 $r->_delete_session();
@@ -84,6 +89,10 @@ my $session = process_session($r);
 # Set the session, find a KEN
 $r = new Kynetx::FakeReq();
 $r->_set_session($tsession);
+
+my $req_info = Kynetx::Test::gen_req_info($rid);
+my $rule_env = Kynetx::Test::gen_rule_env();
+
 # get a random words
 $logger->debug("Get random words");
 
@@ -156,9 +165,26 @@ $logger->debug("Check reg: ", sub {Dumper($result)});
 SKIP: {
 	skip "$inumber already exists in registry", 9 if $xdi_exists;
 	
+#	$description = "Add a registry entry to /registry";
+#	$result = Kynetx::Persistence::KXDI::provision_xdi_for_kynetx($session_ken);
+#	testit($result,1,$description,0);
+	
+####### Use module function call to create an XDI account
+	$args = [];
 	$description = "Add a registry entry to /registry";
-	$result = Kynetx::Persistence::KXDI::provision_xdi_for_kynetx($session_ken);
+	$result = Kynetx::Expressions::den_to_exp(
+		Kynetx::Modules::eval_module(
+			$req_info,
+			$rule_env,
+			$session,
+			$rule_name,
+			"xdi",
+			"create_new_graph",
+			$args
+		)
+	);
 	testit($result,1,$description,0);
+	
 		
 	my ($c,$msg) = Kynetx::Persistence::KXDI::xdi_message($kxdi);
 	$logger->debug("Message to user xdi: ",$msg->to_string );
@@ -193,13 +219,28 @@ SKIP: {
 		$result = Kynetx::Persistence::KXDI::check_link_contract($session_ken,$frid);
 		testit($result,0,$description,0);
 				
+#		$description = "add a link contract for fake ruleset";
+#		$expected = {};
+#		$result = Kynetx::Persistence::KXDI::add_link_contract($session_ken,$frid);
+#		testit($result,$expected,$description,0);
+
 		$description = "add a link contract for fake ruleset";
-		$expected = {};
-		$result = Kynetx::Persistence::KXDI::add_link_contract($session_ken,$frid);
-		testit($result,$expected,$description,0);
+		$args = [];
+		$result = Kynetx::Expressions::den_to_exp(
+			Kynetx::Modules::eval_module(
+				$req_info,
+				$rule_env,
+				$session,
+				$rule_name,
+				"xdi",
+				"set_link_contract",
+				$args
+			)
+		);
+		
 		
 		$description = "Check that link contract was created";
-		$result = Kynetx::Persistence::KXDI::check_link_contract($session_ken,$frid);
+		$result = Kynetx::Persistence::KXDI::check_link_contract($session_ken,$rid);
 		testit($result,1,$description,0);
 		
 		$description = "Delete xdi graph and registry";
@@ -209,6 +250,8 @@ SKIP: {
 	}
 	
 }
+
+
 
 
 

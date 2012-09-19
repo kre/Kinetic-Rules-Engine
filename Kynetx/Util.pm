@@ -93,6 +93,7 @@ has
 intersection
 to_seconds
 split_re
+ll
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -786,6 +787,11 @@ sub split_re {
 
   my ($pattern, $modifiers) = $val =~ m%(?:re){0,1}[/#](.+)[/#]([igm]{0,3})%;
   return ($pattern, $modifiers);
+}
+
+sub ll {
+	my $logger = get_logger();
+	$logger->debug(@_);
 }
 
 1;
