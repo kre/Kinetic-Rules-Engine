@@ -44,6 +44,7 @@ use Kynetx::Errors;
 use Kynetx::Persistence::KToken;
 use Kynetx::Persistence::KEN;
 use Kynetx::Persistence::KPDS;
+use Kynetx::Rids qw(get_rid);
 use MongoDB;
 use MongoDB::OID;
 
@@ -61,12 +62,90 @@ our @ISA         = qw(Exporter);
 # put exported names inside the "qw"
 our %EXPORT_TAGS = (all => [
 qw(
+	get_predicates
+	get_resources
+	get_actions
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
 
 use constant PDS => "XDI";
 
+#### Module functions
+my $predicates = {
+};
 
+my $default_actions = {
+};
+
+
+
+sub get_resources {
+    return {};
+}
+sub get_actions {
+    return $default_actions;
+}
+sub get_predicates {
+    return $predicates;
+}
+
+my $funcs = {};
+
+sub run_function {
+    my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+
+    my $logger = get_logger();
+    $logger->trace("Function:", sub {Dumper($function)});
+    my $resp = undef;
+    my $f = $funcs->{$function};
+    if (defined $f) {
+    	eval {
+    		$resp = $f->( $req_info,$rule_env,$session,$rule_name,$function,$args );
+    	};
+    	if ($@) {
+    		$logger->warn("XDI error: $@");
+    		return undef;
+    	} else {
+    		return $resp;
+    	}
+    } else {
+    	$logger->debug("Function ($function) undefined in module XDI");
+    }
+
+    return $resp;
+}
+
+sub _set_link_contract {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $target = $args->[0];
+	return add_link_contract($ken,$rid,$target);
+	
+}
+$funcs->{'set_link_contract'} = \&_set_link_contract;
+
+sub _create_new_graph {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	if (ref $args->[0] eq "HASH") {
+		my $hash =  $args->[0];
+		if ($hash->{"iname"}) {
+			my $iname = $hash->{"iname"};
+			my $secret = $hash->{"secret"};
+			return undef unless (create_xdi_from_iname($ken,$iname,$secret));
+		}
+	}
+	
+	
+	return provision_xdi_for_kynetx($ken);
+	
+}
+$funcs->{'create_new_graph'} = \&_create_new_graph;
+
+
+# not exposed as module
 sub put_iname {
 	my ($ken,$iname) = @_;
 	if (defined $iname) {
@@ -191,15 +270,18 @@ sub delete_xdi {
 	my $logger = get_logger();
 	my $kxdi = get_xdi($ken);
 	my $inumber = $kxdi->{'inumber'};
-	if (delete_registry_entry($inumber)) {
-		$logger->debug("Deleted registry for $inumber");			
-		if (delete_xdi_graph($ken)) {
-			$logger->debug("Deleted graph for $inumber");
-			put_installed($ken,0);
-			return 1;
-		} else {
-			$logger->debug("Failed to delete xdi graph ($inumber)");
-		}
+	my $iname = $kxdi->{'iname'};
+	if (delete_registry_entry($inumber,$iname)) {
+		$logger->debug("Deleted registry for $inumber");
+		put_installed($ken,0);	
+		return 1;		
+#		if (delete_xdi_graph($ken)) {
+#			$logger->debug("Deleted graph for $inumber");
+#			put_installed($ken,0);
+#			return 1;
+#		} else {
+#			$logger->debug("Failed to delete xdi graph ($inumber)");
+#		}
 	} else {
 		$logger->debug("Failed to delete $inumber from registry");
 	}
@@ -236,7 +318,7 @@ sub check_registry_for_account {
 }
 
 sub delete_registry_entry {
-	my ($inumber) = @_;
+	my ($inumber,$iname) = @_;
 	my $logger=get_logger();
 	my $kxdi = Kynetx::Configure::get_config('xdi');
 	$kxdi->{'target'} = $kxdi->{'registry'};
@@ -244,10 +326,15 @@ sub delete_registry_entry {
 	# Need to reset the url to the registry url
 	$c->server($kxdi->{'registry'});
 	$msg->del('('. $inumber . ')');
+	$msg->del( $inumber );
 	my $str = '(' . $kxdi->{'inumber'} . '/+user/(' . $inumber . '))';
 	$msg->del($str);
-	$str = '(()/()/(' . $inumber . '))';
-	$msg->del($str);
+#	$str = '' . $inumber . '$($secret)$!($token)';
+#	$msg->del($str);
+	if ($iname) {
+		$str = '(' . $iname .')';
+		$msg->del($str);
+	}
 	$logger->debug("Delete from registry: ", $msg->to_string);
 	eval {
 		my $result = $c->post($msg);
@@ -309,7 +396,7 @@ sub add_registry_entry {
 	$msg->add($str);
 	
 	# add shared secret for account
-	$str = '(' . $inumber . '$secret$!($token)/!/(data:,' . $secret . '))';
+	$str = '(' . $inumber . '$($secret)$!($token)/!/(data:,' . $secret . '))';
 	$msg->add($str);
 	
 	# add an entry for account lookup
@@ -378,7 +465,8 @@ sub add_link_contract {
 	my $kxdi = get_xdi($ken);
 	if (defined $kxdi) {
 		my ($c,$msg) = xdi_message($kxdi);
-		my $lc = _lc_assign($kxdi->{'inumber'},$rid);
+		$target = $target || $kxdi->{'inumber'};
+		my $lc = _lc_assign($target,$rid);
 		$msg->add($lc)	;
 		my $t = $c->post($msg);	
 		if (defined $t) {
@@ -392,8 +480,7 @@ sub add_link_contract {
 	} else {
 		$logger->warn("KEN not configured for XDI");
 	}
-	
-	
+	return undef;
 }
 
 sub check_link_contract {
