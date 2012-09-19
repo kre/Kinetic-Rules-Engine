@@ -43,6 +43,9 @@ register_resources
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
 
 sub new {
   my $invocant = shift;
@@ -50,6 +53,8 @@ sub new {
   my $class = ref($invocant) || $invocant;
   my $self = {'eid' => $eid,
 	      'rids' => [],
+              'context_id' => undef,
+	      'contexts' => {},
 	     };
   bless($self, $class); # consecrate
   return $self;
@@ -79,6 +84,33 @@ sub add_rid_js {
   
 }
 
+sub get_context_id {
+  my $self = shift;
+  return $self->{'context_id'};
+}
+
+sub get_context {
+  my $self = shift;
+  my $cid = shift;
+  return $self->{'contexts'}->{$cid};
+}
+
+sub update_context {
+  my $self = shift;
+  my $rid = shift;
+  if (! defined $self->{'context_id'}) {
+    $self->{'context_id'} = 0;
+  } else {
+    $self->{'context_id'}++;
+  }
+  $self->{'contexts'}->{$self->{'context_id'}} = {'rules' => [],
+						  'rid' => $rid,
+						 };
+}
+
+
+
+
 sub get_global {
   my $self = shift;
   my $rid = shift;
@@ -105,15 +137,15 @@ sub get_ruleset {
 
 sub get_rules {
   my $self = shift;
-  my $rid = shift;
-  return $self->{$rid}->{'rules'};
+  my $context_id = shift;
+  return $self->{'contexts'}->{$context_id}->{'rules'};
 }
 
 sub add_rule_js {
   my $self = shift;
   my $rid = shift;
   my $js = shift;
-  push @{$self->{$rid}->{'rules'}}, $js;
+  push @{$self->{'contexts'}->{$self->get_context_id()}->{'rules'}}, $js;
 }
 
 sub add_resources {
@@ -129,13 +161,20 @@ sub generate_js {
   my $logger = get_logger();
 
   my $js = '';
-  foreach my $rid (@{$self->{'rids'}}) {
+  
+  # degenerate case where the ruleset was empty (no schedule)
+  return $js unless defined $self->get_context_id();
 
-    $logger->debug("Generating JS for $rid");
+  foreach my $context_id (0..$self->get_context_id()) {
+
+    my $context = $self->get_context($context_id);
+    my $rid = $context->{'rid'};
+#    $logger->debug("The context ", sub {Dumper $self});
+    $logger->debug("Generating JS for $rid in context $context_id");
 
     my $rjs = '';
 
-    foreach my $rule_js (@{$self->get_rules($rid)}) {
+    foreach my $rule_js (@{$self->get_rules($context_id)}) {
       $rjs .= $rule_js;
     }
 

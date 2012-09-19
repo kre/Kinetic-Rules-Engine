@@ -3187,8 +3187,10 @@ test_datafeeds(
     0
     );
 
+
+
 $krl_src = <<_KRL_;
-ruleset dataset0 {
+ruleset dataset28 {
     global {
        datasource twitter_search <- "http://search.twitter.com/search.json";
     }

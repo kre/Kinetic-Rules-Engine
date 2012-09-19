@@ -72,6 +72,7 @@ my $eid = time;
 my $txn_id = 'txn_id_1';
 
 my $ast = Kynetx::JavaScript::AST->new($eid);
+$ast->update_context($rid);
 
 is($ast->get_eid(), $eid, "EID is right");
 $test_count++;
@@ -88,8 +89,9 @@ $ast->add_rule_js($rid, "var rule = 0;");
 $ast->add_rule_js($rid, "var rule = 1;");
 $ast->add_rule_js($rid, "var rule = 2;");
 
+my $context_id = $ast->get_context_id();
 my $i = 0;
-foreach my $rule (@{$ast->get_rules($rid)}) {
+foreach my $rule (@{$ast->get_rules($context_id)}) {
   is($rule, "var rule = $i;", "Rule $i");
   $i++;
   $test_count++;
@@ -111,6 +113,21 @@ _JS_
 
 is_string_nows($ast->generate_js(), $js, "Generating some JS");
 $test_count++;
+
+$ast->update_context($rid);
+$ast->add_rule_js($rid, "var rule = 3;");
+$ast->add_rule_js($rid, "var rule = 4;");
+$ast->add_rule_js($rid, "var rule = 5;");
+
+$js = <<_JS_;
+KOBJ.registerClosure('cs_test', function(\$K) { (function(){var mjs = 0;var gjs = 0;var rule = 0;var rule = 1;var rule = 2;}()); $lvjs }, '$eid');
+KOBJ.registerClosure('cs_test', function(\$K) { (function(){var mjs = 0;var gjs = 0;var rule = 3;var rule = 4;var rule = 5;}()); $lvjs }, '$eid');
+_JS_
+
+is_string_nows($ast->generate_js(), $js, "Generating some JS");
+$test_count++;
+#diag $ast->generate_js();
+
 
 done_testing($test_count);
 

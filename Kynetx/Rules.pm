@@ -180,6 +180,15 @@ sub process_schedule {
 
       $ast->add_resources( $current_rid, $req_info->{'resources'} );
 
+
+      # for each context switch, we need a new place to put the JS
+      # that is generated for the rules in that context so that we
+      # can create JS in the order in which the rules execute. At the
+      # same time, we want to avoid re-executing and re-generating
+      # the JS for meta and global blocks.
+      # updated context counter
+      $ast->update_context($rid);
+
 #      $logger->debug("Task request: ", Dumper $task->{'req_info'});
 
 
