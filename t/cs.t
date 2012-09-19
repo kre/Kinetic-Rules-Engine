@@ -305,7 +305,7 @@ SKIP: {
     $mech->content_contains('kobj_weather');
 
     # globals
-    $mech->content_contains('var foobar = 4;');
+    $mech->content_contains('var foobar = 5;');
 
     $mech->content_contains(q/KOBJ['data']['public_timeline'] = [/);
     $mech->content_lacks("KOBJ['data']['cached_timeline'] =");
