@@ -144,6 +144,13 @@ sub _create_new_graph {
 }
 $funcs->{'create_new_graph'} = \&_create_new_graph;
 
+sub _has_xdi_account {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	return get_installed($ken);
+}
+$funcs->{'has_account'} = \&_has_xdi_account;
 
 # not exposed as module
 sub put_iname {

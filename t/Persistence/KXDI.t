@@ -219,10 +219,6 @@ SKIP: {
 		$result = Kynetx::Persistence::KXDI::check_link_contract($session_ken,$frid);
 		testit($result,0,$description,0);
 				
-#		$description = "add a link contract for fake ruleset";
-#		$expected = {};
-#		$result = Kynetx::Persistence::KXDI::add_link_contract($session_ken,$frid);
-#		testit($result,$expected,$description,0);
 
 		$description = "add a link contract for fake ruleset";
 		$args = [];
