@@ -667,7 +667,7 @@ sub set_cache {
     my $logger = get_logger();
     my $parent = (caller(1))[3];
     my $keystring = make_keystring($collection,$var);
-    $logger->trace("Mongo set_cache $keystring from $parent: ", sub {Dumper($value)});
+#    $logger->debug("Mongo set_cache $keystring from $parent: ", sub {Dumper($value)});
     Kynetx::Memcached::mset_cache($keystring,$value,$CACHETIME);
 #	if ($collection eq 'tokens') {
 #		$logger->debug("Touch token", sub {Dumper($var)});

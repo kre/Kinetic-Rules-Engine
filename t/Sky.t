@@ -136,32 +136,24 @@ SKIP: {
 
 	diag $test->{'url'};# if $test->{'diag'};
 
-	# Sky doesn't depend on cookies. Uses token in URL
-	#    like($mech->status(), /2../, 'Status OK');
-	#    $tc++;
-#	ok($resp->header('Set-Cookie'), 'has cookie header');
-#	$tc++;
-	#    diag "Response header: ", $resp->as_string();
-#	    diag "Cookies: ", Dumper $mech->cookie_jar;
-#	like($mech->cookie_jar->as_string(), qr/SESSION_ID/, 'cookie was accepted');
-#    $tc++;
-
 
 	diag $mech->content() if $test->{'diag'};
 	is($mech->content_type(), $test->{'type'});
 	$tc += 1;
+
 	foreach my $like (@{$test->{'like'}}) {
 	  my $resp = $mech->content_like($like);
 	  if ($resp){
 	    $tc++;
 	  } else {
-	    diag $like;
 	    diag $mech->content();
+	    diag $like;
 	    diag $test->{'url'};
 	    die;
 	  }
 
 	}
+
 	foreach my $unlike (@{$test->{'unlike'}}) {
 	  my $resp = $mech->content_unlike($unlike);
 	  if ($resp){
@@ -704,6 +696,19 @@ SKIP: {
       ];
 
     $test_count += test_event_plan($explicit_event_nonspecific_rid_current_other_test_plan);
+
+    # test javascript generation order
+    my $explicit_event_javascript_generation_test_plan =
+      [{'url' => "$dn/$token/123456789?_domain=web&_type=pageview&url=http://www.windley.com/test_rule_init_1/",
+	'type' => 'text/javascript',
+	'like' => [qr/Init.*Over.*Out/s],
+	'unlike' => [],
+	'diag' => 0,
+
+       },
+      ];
+
+    $test_count += test_event_plan($explicit_event_javascript_generation_test_plan);
 
 
     my $persistent_with_rids_test_plan =
