@@ -547,7 +547,7 @@ sub get_auth_request_url {
 	my $authorization_url = $endpoints->{'authorization_url'};
 	my $cbaction = get_callback_action($req_info,$session,$namespace,$args);
     my $tokens = get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
-    my $callback = make_callback_url($req_info,$namespace);
+    my $callback = make_callback_url($req_info,$namespace, $args);
     my $request_tokens = get_request_tokens($tokens,$callback,$request_url,$extra_params);
     if (Kynetx::Errors::mis_error($request_tokens)) {
  		Kynetx::Errors::raise_error($req_info,'warn',
@@ -784,7 +784,7 @@ sub get_request_tokens {
 }
 
 sub make_callback_url {
-    my ( $req_info, $namespace ) = @_;
+    my ( $req_info, $namespace, $args ) = @_;
     my $logger = get_logger();
     my $rid     = get_rid($req_info->{'rid'});
     my $version = $req_info->{'rule_version'} || 'prod';
@@ -792,7 +792,14 @@ sub make_callback_url {
     my $host    = Kynetx::Configure::get_config('EVAL_HOST');
     my $port    = Kynetx::Configure::get_config('KNS_PORT') || 80;
     my $handler = CALLBACK;
-    my $callback = "http://$host:$port/ruleset/$handler/$rid/$version/$namespace";
+    my $protocol = 'http';
+    my $opts = $args->[1];
+    if (defined $opts) {
+    	if ($opts->{'use_https'} || $opts->{'secure'}) {
+    		$protocol = 'https';
+    	}
+    }
+    my $callback = "$protocol://$host:$port/ruleset/$handler/$rid/$version/$namespace";
     $logger->debug( "OAuth callback url: ", $callback );
     return $callback;    
 }

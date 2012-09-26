@@ -237,11 +237,21 @@ $test_count++;
 
 $args = ['twitter'];
 
+$description = "Get auth url";
 $result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'get_auth_url',$args);
+cmp_deeply($result,re(qr(^https://api.twitter.com/oauth/authorize\?oauth_token=\w+&hd=default$)),$description);
+$test_count++;
 
 $logger->debug("Returns: ", sub {Dumper($result)});
-#die;
-#done_testing($test_count + int(@pnames));
+
+# Test use_https option
+$args = ['twitter',{
+	'use_https' => 1
+}];
+$result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'get_auth_url',$args);
+cmp_deeply($result,re(qr(^https://api.twitter.com/oauth/authorize\?oauth_token=\w+&hd=default$)),$description);
+$test_count++;
+$logger->debug("Return auth URL: ", sub {Dumper($result)});
 
 
 ### Test with google
