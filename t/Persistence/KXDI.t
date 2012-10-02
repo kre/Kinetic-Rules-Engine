@@ -34,7 +34,7 @@ use APR::Pool ();
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 use Kynetx::Test qw/:all/;
@@ -117,7 +117,7 @@ testit($session_ken,re($ken_re),$description,0);
 my $rnum = int (rand(100));
 my $iname = '=tester';
 my $inumber = '=!000333' .$rnum;
-my $endpoint = "http://10.0.1.194:8080/xdi/users/" . $inumber;
+my $endpoint = Kynetx::Configure::get_config('xdi')->{'users'}->{'endpoint'} . $inumber;
 
 $description = "Insert an XDI record into the KPDS";
 $result = Kynetx::Persistence::KXDI::create_xdi_from_iname($session_ken,$iname,$secret);
