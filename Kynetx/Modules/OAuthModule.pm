@@ -797,6 +797,7 @@ sub make_callback_url {
     if (defined $opts) {
     	if ($opts->{'use_https'} || $opts->{'secure'}) {
     		$protocol = 'https';
+    		$port = Kynetx::Configure::get_config('KNS_SECURE_PORT') || 443;
     	}
     }
     my $callback = "$protocol://$host:$port/ruleset/$handler/$rid/$version/$namespace";
