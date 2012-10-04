@@ -29,6 +29,7 @@ use HTTP::Request::Common;
 use HTTP::Status qw(:constants);
 use HTTP::Response;
 use Apache2::Const;
+use APR::URI;
 
 use Net::OAuth;
 $Net::OAuth::PROTOCOL_VERSION = Net::OAuth::PROTOCOL_VERSION_1_0A;
@@ -272,11 +273,20 @@ sub oauth_callback_handler {
 	my $rule_env = Kynetx::Environments::empty_rule_env();
     my $host    = Kynetx::Configure::get_config('EVAL_HOST');
     my $port    = Kynetx::Configure::get_config('KNS_PORT') || 80;
+    my $protocol = "http";
 	my $uri = $r->uri();
 	if ($uri =~ m/oauth_callback\/(\w+)\/(\w+)\/(\w+)\/?/    ) {
 		$cbrid = $1;
 		$version = $2;
 		$namespace = $3;
+	}
+	my $parsed_url = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});
+	if (defined $parsed_url && $parsed_url->scheme eq 'http') {
+		$port    = Kynetx::Configure::get_config('KNS_PORT') || 80;
+		$protocol = "http";
+	} else {
+		$protocol = 'https';
+    	$port = Kynetx::Configure::get_config('KNS_SECURE_PORT') || 443;
 	}
 	my $key = CALLBACK_ACTION_KEY . SEP . $namespace;
 	my $tokens = get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
@@ -323,7 +333,8 @@ sub oauth_callback_handler {
  			$port = "8082";#$s->port;
  			$host = $r->hostname;
  		}
- 		my $base = "http://$host:$port/ruleset/cb_host/$rid/$version/oauth_error";
+ 		
+ 		my $base = "$protocol://$host:$port/ruleset/cb_host/$rid/$version/oauth_error";
  		my $p = {'error' => "\'$fail\'"};
  		$redirect = Kynetx::Util::mk_url($base,$p);
  		$logger->debug("Redirect: $redirect");
@@ -333,7 +344,7 @@ sub oauth_callback_handler {
 	} elsif ($cb_action->{'type'} eq 'raise') {
 		my $eventname = $cb_action->{'eventname'};
 		my $trid = $cb_action->{'target'};		
-		$redirect = "http://$host:$port/ruleset/cb_host/$rid/$version/$eventname";		
+		$redirect = "$protocol://$host:$port/ruleset/cb_host/$rid/$version/$eventname";		
 	} else {
 		$redirect = $req_info->{'caller'} || ".";
 	}
