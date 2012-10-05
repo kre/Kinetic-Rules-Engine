@@ -71,6 +71,10 @@ sub raise_error {
 
   $errormsg ||= "An unspecified error occured";
   $level ||= "debug";
+  
+  if ($errormsg =~ m/send_javascript/) {
+  	return;
+  }
 
   if ($req_info->{$sig} > $ERROR_RAISE_THRESHOLD) {
     $logger->error("Error threshold exceeded; not raising error event for $errormsg");

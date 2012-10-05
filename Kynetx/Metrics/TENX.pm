@@ -123,6 +123,12 @@ sub get_datapoints {
 		$yname = $yname || "realtime";
 		my $result = Kynetx::Metrics::Datapoint::get_data($sname);
 		my @loop = ();
+		if (! defined $result) {
+			$logger->warn("Result is undef");
+			return undef;
+		} else {
+			$logger->info("Result is defined: ", ref $result);
+		}
 		for (my $i =0; $i< scalar(@{$result}) -1;$i++) {
 			my $dp = $result->[$i];
 			if (filter($dp,$req)) {

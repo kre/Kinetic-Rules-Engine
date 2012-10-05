@@ -355,6 +355,7 @@ sub get_data {
 	if ( defined $series ) {
 		$key = { "series" => $series };
 	}
+	$logger->debug("Key: ",sub {Dumper($key)});
 	my $cnt = 0;
 	my $cursor = $c->find($key);
 	if ( $cursor->has_next ) {
