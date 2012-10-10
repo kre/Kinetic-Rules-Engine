@@ -2138,6 +2138,99 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+## values
+
+$e[$i] = q/j_h.values()/;
+$x[$i] = {
+	'val' => [[3,1,4,1,5,6,9],
+		  "many",
+		  {"bar" => {10 =>"I like cheese"}}
+		 ],
+	'type'=>'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/j_h.values("foo")/;
+$x[$i] = {
+	'val' => [
+	  {10 => "I like cheese"}
+	],
+	'type'=>'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/j_h.values(["foo"])/;
+$x[$i] = {
+	'val' => [
+	  {10 => "I like cheese"}
+	],
+	'type'=>'array'
+};
+$d[$i] = 0;
+$i++;
+
+# $e[$i] = q/j_h.values().head()/;
+# $x[$i] = {
+# 	'val' => 'pi as array',
+# 	'type'=>'str'
+# };
+# $d[$i] = 0;
+# $i++;
+
+# $e[$i] = q/j_h{j_h.values().head()}/;
+# $x[$i] = {
+# 	'val' => [3,1,4,1,5,6,9],
+# 	'type'=>'array'
+# };
+# $d[$i] = 0;
+# $i++;
+
+
+
+$e[$i] = q/k_h.values()/;
+$x[$i] = {
+	'val' => [
+		  {"A" => {"a" => "1Aa","b"=>"1Ab"}},
+		  {"snicker" => "snee", "7" => 5},
+		  "qwerty",
+	],
+	'type'=>'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/store.values(["store","bicycle"])/;
+$x[$i] = {
+	'val' => [
+		  "red",
+		  19.95
+	],
+	'type'=>'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/k_h.values([1,"A"])/;
+$x[$i] = {
+	'val' => [
+	  '1Aa',
+	  '1Ab'
+	],
+	'type'=>'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/k_h.values([2])/;
+$x[$i] = {
+	'val' => '__undef__',
+	'type'=>'null'
+};
+$d[$i] = 0;
+$i++;
+
 
 
 ##
@@ -2171,5 +2264,4 @@ for ($j = 0; $j < $i; $j++) {
 
 
 1;
-
 

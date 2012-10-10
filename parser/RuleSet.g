@@ -2789,7 +2789,7 @@ OTHER_OPERATORS
     | 'filter'|'collect'|'map'|'reduce'|'reverse' 
     | 'uc'|'lc' |'split' | 'sprintf' | 'join' | 'query'
     | 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
-    | 'duplicates' | 'append' | 'put' | 'delete' | 'keys'
+    | 'duplicates' | 'append' | 'put' | 'delete' | 'keys' | 'values'
     | 'encode' | 'decode' 
     | 'typeof' | 'isnull'
     | 'klog'

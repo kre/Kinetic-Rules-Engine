@@ -1375,6 +1375,54 @@ sub hash_keys {
 }
 $funcs->{'keys'} = \&hash_keys;
 
+sub hash_values {
+	my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+    my $type = $obj->{'type'};
+	if ($type eq 'hash') {
+		if (defined $rands->[0] && $rands->[0] ) {
+			my $path = Kynetx::Expressions::den_to_exp($rands->[0]);
+			if (ref $path eq '') {
+				my $sub_hash = $obj->{'val'}->{$path};
+				if (defined $sub_hash && ref $sub_hash eq "HASH") {
+					my @values = values %{$sub_hash};
+					return Kynetx::Parser::mk_expr_node('array',\@values);
+				}				
+			} elsif (ref $path eq "ARRAY") {
+				my $temp = clone ($obj->{'val'});
+				my $path_str = join("",@$path);
+				my $match = "";
+				foreach my $element (@$path) {
+					$match .= $element;
+					$temp = $temp->{$element};					
+					if (defined $temp && ref $temp eq "HASH") {
+						if ( $path_str eq $match) {
+							my @values = values %{$temp};
+							return Kynetx::Parser::mk_expr_node('array',\@values);
+						} 
+					}
+				}				
+			} else {
+			  Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[values] invalid operator argument",
+				  {'rule_name' => $rule_name,
+				   'genus' => 'operator',
+				   'species' => 'type mismatch'
+				  }
+				 );
+
+			}
+		} else {
+			my @values = values %{$obj->{'val'}};
+			return Kynetx::Parser::mk_expr_node('array',\@values);
+		}
+	}
+	return Kynetx::Parser::mk_expr_node('null','__undef__');
+}
+$funcs->{'values'} = \&hash_values;
+
 #-----------------------------------------------------------------------------------
 # Typing methods
 #-----------------------------------------------------------------------------------
