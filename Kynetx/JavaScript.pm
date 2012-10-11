@@ -121,12 +121,12 @@ sub gen_js_expr {
 
     if (defined $jsexp) {
     	if ($jsexp eq '') {
-    		$logger->debug("Empty expression: ",$expr->{'type'});
+    		#$logger->debug("Empty expression: ",$expr->{'type'});
     		return mk_js_str('UNTRANSLATABLE KRL EXPRESSION');
     	}
     	return $jsexp;
     } else {
-      $logger->debug("Can't translate type: ",$expr->{'type'});
+#      $logger->debug("Can't translate type: ",$expr->{'type'});
       return mk_js_str('UNTRANSLATABLE KRL EXPRESSION');
     }
 }

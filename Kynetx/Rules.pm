@@ -30,6 +30,8 @@ use Log::Log4perl qw(get_logger :levels);
 use JSON::XS;
 use Digest::MD5 qw(md5 md5_hex);
 use AnyEvent;
+use Storable qw/freeze/;
+
 
 use Kynetx::Parser qw(:all);
 use Kynetx::PrettyPrinter qw(:all);
@@ -143,13 +145,14 @@ sub process_schedule {
   
   my $logger = get_logger();
 
-  my $init_rule_env = Kynetx::Rules::mk_initial_env();
 
   my $ast = Kynetx::JavaScript::AST->new($eid);
-  my ( $ruleset, $mjs, $gjs, $rule_env, $rid );
+  my ( $ruleset, $rule_env, $rid );
 
   $rid = '';
   my $current_rid = '';
+
+  my $env_stash = {};
 
   #$logger->debug("Schedule: ", Dumper($schedule));
   
@@ -192,9 +195,8 @@ sub process_schedule {
 #      $logger->debug("Task request: ", Dumper $task->{'req_info'});
 
 
+      
 
-
-      $init_rule_env->{'ruleset_name'} = $rid;
       # we use this to modify the schedule on-the-fly
       $req_info->{'schedule'} = $schedule;
 
@@ -213,29 +215,19 @@ sub process_schedule {
 	   && $ruleset->{'meta'}->{'logging'} eq "on"
 	  )
 	 ) {
+	$logger->debug("Turning on logging for $rid");
 	Kynetx::Util::turn_on_logging();
       } else {
+	$logger->debug("Turning off logging for $rid");
 	Kynetx::Util::turn_off_logging();
       }
 
       Log::Log4perl::MDC->put( 'site', $rid );
       $logger->info( "Processing rules for RID " . $rid );
 
-      # generate JS for meta
-      ( $mjs, $rule_env ) =
-	eval_meta( $req_info, $ruleset, $init_rule_env, $session );
+      $rule_env = get_rule_env($req_info, $ruleset, $session, 
+			       $ast, $env_stash);
 
-      $logger->debug("Processing globals for ruleset");
-
-      # handle globals, start js build, extend $rule_env
-      ( $gjs, $rule_env ) =
-	eval_globals( $req_info, $ruleset, $rule_env, $session );
-
-      #      $logger->debug("Rule env after globals: ", Dumper $rule_env);
-      #    $logger->debug("Global JS: ", $gjs);
-
-      $ast->add_rid_js( $rid, $mjs, $gjs, $ruleset,
-			$req_info->{'txn_id'} );
 
       $req_info->{'rule_count'}     = 0;
       $req_info->{'selected_rules'} = [];
@@ -354,7 +346,7 @@ sub process_schedule {
 }
 
 sub eval_meta {
-	my ( $req_info, $ruleset, $rule_env, $session ) = @_;
+	my ( $req_info, $ruleset, $rule_env, $session, $env_stash ) = @_;
 
 	my $logger = get_logger();
 	$logger->trace("META BLOCK EVALUATION");
@@ -379,7 +371,7 @@ sub eval_meta {
 	if ( $ruleset->{'meta'}->{'use'} ) {
 		( $this_js, $rule_env ) =
 		  eval_use( $req_info, $ruleset, $rule_env, $session,
-			$ruleset->{'meta'}->{'use'} );
+			 $env_stash );
 		$js .= $this_js;
 	}
 
@@ -390,7 +382,7 @@ sub eval_meta {
 }
 
 sub eval_use {
-	my ( $req_info, $ruleset, $rule_env, $session ) = @_;
+	my ( $req_info, $ruleset, $rule_env, $session, $env_stash ) = @_;
 
 	my $logger = get_logger();
 	my $js     = "";
@@ -410,10 +402,13 @@ sub eval_use {
 		}
 		elsif ( $u->{'type'} eq 'module' ) {
 			$logger->trace("module struct: ", sub {Dumper($u)});
+
+
+#			$logger->debug("Doing module ", sub {Dumper $env_stash});
 			# side effects the rule env.
 			( $this_js, $rule_env ) =
 			  eval_use_module( $req_info, $rule_env, $session, $u->{'name'},
-				$u->{'alias'}, $u->{'modifiers'}, $u->{'version'});
+				$u->{'alias'}, $u->{'modifiers'}, $u->{'version'}, $env_stash);
 
 			# don't include the module JS in the results.
 			# $js .= $this_js;
@@ -430,63 +425,79 @@ sub eval_use {
 }
 
 sub eval_use_module {
-  my ( $req_info, $rule_env, $session, $name, $alias, $modifiers, $mversion ) = @_;
+  my ( $req_info, $rule_env, $session, $name, $alias, $modifiers, $mversion, $env_stash ) = @_;
 
+  
   my $logger = get_logger();
-  my $js = '';
-  my $this_js;
 
-  #  module hierarchy can look like this:
-  #
-  #  a -> b
-  #  |
-  #  +--> b
-  #
-  # but not this
-  #
-  # a -> b -> b ...
-  # 
-  # or this
-  #
-  # a -> b -> c -> ... -> b
-  #
 
-  # sanity check, we're not in a big loop
-  foreach my $module_name (@{ lookup_rule_env('_module_list', $rule_env) || [] }) {
-    $logger->debug("Seeing $module_name for $name");
-    if ($module_name eq $name) {
-      $logger->debug("$name has already been used as a module");
-      return ($js, $rule_env);
+  my $module_sig = md5_hex($name . $mversion . $alias . freeze $modifiers);
+
+#  $logger->debug("Module sig $module_sig", sub {Dumper $env_stash});
+
+  # if (! defined $env_stash->{$module_sig}) { 
+
+
+    $logger->debug("----- Loading Module $name -------");
+
+    my $js = '';
+    my $this_js;
+
+
+
+
+
+    #  module hierarchy can look like this:
+    #
+    #  a -> b
+    #  |
+    #  +--> b
+    #
+    # but not this
+    #
+    # a -> b -> b ...
+    # 
+    # or this
+    #
+    # a -> b -> c -> ... -> b
+    #
+
+    # sanity check, we're not in a big loop
+    foreach my $module_name (@{ lookup_rule_env('_module_list', $rule_env) || [] }) {
+      $logger->debug("Seeing module $module_name for $name");
+      if ($module_name eq $name) {
+	$logger->debug("$name has already been used as a module");
+	return ($js, $rule_env);
+      }
     }
-  }
 
-  # Default to the production version of modules
-  $mversion ||= 'prod';
-  my $use_ruleset = Kynetx::Rules::get_rule_set( $req_info, 1, $name, $mversion, {'in_module' => 1} );
+    # Default to the production version of modules
+    $mversion ||= 'prod';
+    my $use_ruleset = Kynetx::Rules::get_rule_set( $req_info, 1, $name, $mversion, {'in_module' => 1} );
 
-  $logger->trace("Using ", sub {Dumper $use_ruleset});
+    $logger->trace("Using ", sub {Dumper $use_ruleset});
 
-  my $provided_array = $use_ruleset->{'meta'}->{'provide'}->{'names'} || [];
+    my $provided_array = $use_ruleset->{'meta'}->{'provide'}->{'names'} || [];
 
-  my $provided = {};
-  foreach my $name ( @{$provided_array} ) {
-    $provided->{$name} = 1;
-  }
+    my $provided = {};
+    foreach my $name ( @{$provided_array} ) {
+      $provided->{$name} = 1;
+    }
 
 
-  my $namespace_name = $Kynetx::Modules::name_prefix . ( $alias || $name );
+    my $namespace_name = $Kynetx::Modules::name_prefix . ( $alias || $name );
 
-  my $configuration = $use_ruleset->{'meta'}->{'configure'}->{'configuration'}
+    my $configuration = $use_ruleset->{'meta'}->{'configure'}->{'configuration'}
     || [];
-  $logger->trace( "conf ",     Dumper $configuration);
-  $logger->debug( "Module provides: ", join(",",@{$provided_array}) );
+    $logger->trace( "conf ",     sub{Dumper $configuration});
+    $logger->debug( "Module provides: ", sub {join(",",@{$provided_array})} );
 
-  # create the module rule_env by extending an empty env with the config
+    # create the module rule_env by extending an empty env with the config
 
-  my @mod_list = @{$rule_env->{'_module_list'} || []};
-  push(@mod_list, $name);
+    my @mod_list = @{$rule_env->{'_module_list'} || []};
+    push(@mod_list, $name);
 
-  my $init_mod_env = extend_rule_env(
+    my $init_mod_env = extend_rule_env(
 				     {
 				      '_callingRID' => get_rid($req_info->{'rid'}),
 				      '_callingVersion' => $req_info->{'rule_version'},
@@ -497,43 +508,53 @@ sub eval_use_module {
 
 				     }, empty_rule_env());
 
-  my $module_rule_env =
-    set_module_configuration( $req_info, $rule_env, $session,
-			      $init_mod_env, $configuration, $modifiers || [] );
+    my $module_rule_env =
+      set_module_configuration( $req_info, $rule_env, $session,
+				$init_mod_env, $configuration, $modifiers || [] );
 
 #  $logger->debug("Module env ", Dumper $module_rule_env);
 
-  # put any keys in the module rule_env *before* evaling the globals
-  if ( $use_ruleset->{'meta'}->{'keys'} ) {
-    ( $this_js, $module_rule_env ) =
-      Kynetx::Keys::process_keys( $req_info, $module_rule_env,
-				  $use_ruleset );
-    $js .= $this_js;
-  }
+    # put any keys in the module rule_env *before* evaling the globals
+    if ( $use_ruleset->{'meta'}->{'keys'} ) {
+      ( $this_js, $module_rule_env ) =
+	Kynetx::Keys::process_keys( $req_info, $module_rule_env,
+				    $use_ruleset );
+      $js .= $this_js;
+    }
 
   
-  if ( $use_ruleset->{'meta'}->{'use'} ) {
-    ( $this_js, $module_rule_env ) =
-      eval_use( $req_info, $use_ruleset, $module_rule_env, $session,
-		$use_ruleset->{'meta'}->{'use'} );
-    $js .= $this_js;
-  }
+    if ( $use_ruleset->{'meta'}->{'use'} ) {
+      ( $this_js, $module_rule_env ) =
+	eval_use( $req_info, $use_ruleset, $module_rule_env, $session, $env_stash );
+      $js .= $this_js;
+    }
 
-  # eval the module's global block
-  if ( $use_ruleset->{'global'} ) {
-    ( $js, $module_rule_env ) =
-      process_one_global_block( $req_info, $use_ruleset->{'global'},
-				$module_rule_env, $session, $namespace_name, $provided );
-
+    # eval the module's global block
+    if ( $use_ruleset->{'global'} ) {
+      ( $js, $module_rule_env ) =
+	process_one_global_block( $req_info, $use_ruleset->{'global'},
+				  $module_rule_env, $session, $namespace_name, $provided );
 
 
-  }
 
-  $rule_env = extend_rule_env( $namespace_name, $module_rule_env,
-			       extend_rule_env( $namespace_name . '_provided', $provided, $rule_env )
-			     );
+    }
 
-  return ( $js, $rule_env );    # ignore this for modules...
+    $rule_env = extend_rule_env( $namespace_name, $module_rule_env,
+				 extend_rule_env( $namespace_name . '_provided', $provided, $rule_env )
+			       );
+ 
+  #   $env_stash->{$module_sig}->{'js'} = $js;
+  #   $env_stash->{$module_sig}->{'rule_env'} = $rule_env;
+
+  # } else {
+  #   $logger->debug("----------------Using cached module $name with signature $module_sig--------");
+  # }
+
+  # return ($env_stash->{$module_sig}->{'js'},
+  # 	  $env_stash->{$module_sig}->{'rule_env'}
+  # 	 );
+
+  return($js, $rule_env);	
 
 }
 
@@ -710,9 +731,12 @@ sub eval_rule {
 
 #	$logger->info("Rule pre ", sub {Dumper $rule->{'pre'}});
 
-	if ( $rule->{'pre'}
+	if ( scalar @{$rule->{'pre'}} > 0
 		&& !( $rule->{'inner_pre'} || $rule->{'outer_pre'} ) )
 	{
+
+	  $logger->debug("Pre optimization ", sub {Dumper $rule->{'pre'}}, sub {Dumper $rule->{'inner_pre'}}, sub {Dumper $rule->{'outer_pre'}});
+
 		$logger->debug("Rule not pre optimized...");
 		optimize_pre($rule);
 	}
@@ -1052,6 +1076,51 @@ sub is_ruleset_stashed {
 	my ( $req_info, $rid, $ver ) = @_;
 	return defined $req_info->{"$rid.$ver"}
 	  && defined $req_info->{"$rid.$ver"}->{'ruleset'};
+}
+
+sub get_rule_env {
+  my ($req_info, $ruleset, $session, $ast, $env_stash) = @_;
+  
+  my $logger = get_logger();
+
+  my $rid = get_rid($req_info->{'rid'});
+  my $ver = get_version($req_info->{'rid'}) || 'prod';
+
+  if (! defined $env_stash->{$rid.$ver}) {
+
+    $logger->debug("No rule env found for $rid...generating");
+
+    my ($mjs, $gjs, $rule_env);
+
+    my $init_rule_env = Kynetx::Rules::mk_initial_env();
+
+    $init_rule_env->{'ruleset_name'} = $rid;
+
+    # generate JS for meta
+    ( $mjs, $rule_env ) =
+	eval_meta( $req_info, $ruleset, $init_rule_env, $session, $env_stash );
+
+    $logger->debug("Processing globals for ruleset $rid");
+
+    # handle globals, start js build, extend $rule_env
+    ( $gjs, $rule_env ) =
+      eval_globals( $req_info, $ruleset, $rule_env, $session );
+
+    #      $logger->debug("Rule env after globals: ", Dumper $rule_env);
+    #    $logger->debug("Global JS: ", $gjs);
+
+    $ast->add_rid_js( $rid, $mjs, $gjs, $ruleset,
+		      $req_info->{'txn_id'} );
+
+    $env_stash->{$rid.$ver} = $rule_env;
+
+
+  }
+
+  $logger->debug("Returning rule env for $rid");
+
+  return $env_stash->{$rid.$ver};
+  
 }
 
 sub select_rule {

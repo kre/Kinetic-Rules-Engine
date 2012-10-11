@@ -44,7 +44,6 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 my $S_TAG =  "__primitives__";
 
-
 sub new {
     my $invocant = shift;
     my $class = ref($invocant) || $invocant;
