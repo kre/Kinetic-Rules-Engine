@@ -44,6 +44,7 @@ use Kynetx::Persistence::KEN;
 use Kynetx::Environments;
 use Kynetx::Request;
 use Kynetx::Metrics::Datapoint;
+use Kynetx::Json;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -87,6 +88,8 @@ sub handler {
     	bar_plot($r,$method,$path);
     } elsif ($method eq 'ctl') {
     	control();
+    } elsif ($method eq 'col') {
+    	column_plot($r,$method,$path);
     }
     
     return Apache2::Const::OK;
@@ -102,8 +105,16 @@ sub control {
 sub filter {
 	my ($dp,$req) = @_;
 	my $logger = get_logger();
-	if ($req->param('kib') && $req->param('kib') ne $dp->mhostname) {
-	 	return 0;			
+	my @params = $req->param;
+	foreach my $p (@params) {
+		my $a = $req->param($p);
+		my $b = $dp->{$p};
+		if (defined $b) {
+			if ($a ne $b) {
+				return 0;
+			}
+		}
+		
 	}
 	return 1;
 }
@@ -116,22 +127,29 @@ sub get_datapoints {
 	my @series = split(/\//,$path);
 	foreach my $s (@series) {
 		my ($sname,$xname,$yname) = split(/;/,$s);
-		$logger->debug("Xname: ", $xname);
 		$logger->debug("Series: ", $s);
+		$logger->debug("sname: ", $sname);
+		$logger->debug("Xname: ", $xname);
+		$logger->debug("Yname: ", $yname);
 		$sname = $sname || "";
 		$xname = $xname || "timestamp";
 		$yname = $yname || "realtime";
 		my $result = Kynetx::Metrics::Datapoint::get_data($sname);
-		my @loop = ();
-		for (my $i =0; $i< scalar(@{$result}) -1;$i++) {
-			my $dp = $result->[$i];
-			if (filter($dp,$req)) {
-				push(@loop,$dp);
+		if (defined $result) {
+			$logger->debug("Num points: ", scalar @{$result});
+			my @loop = ();
+			foreach my $dp (@{$result}) {
+				if (filter($dp,$req)) {
+					push(@loop,$dp);
+				}			
 			}
+			$logger->debug("Filtered points: ", scalar @loop);
+			$dp_struct->{$sname}->{'data'} = \@loop;
+			$dp_struct->{$sname}->{'x'} = $xname;
+			$dp_struct->{$sname}->{'y'} = $yname;					
+		} else {
+			$logger->debug("No data for $sname,$xname,$yname");
 		}
-		$dp_struct->{$sname}->{'data'} = \@loop;
-		$dp_struct->{$sname}->{'x'} = $xname;
-		$dp_struct->{$sname}->{'y'} = $yname;		
 	}
 	return $dp_struct;
 }
@@ -169,27 +187,74 @@ sub bar_plot {
 		my $yname = $dp_struct->{$s}->{'y'} || "count";
 		my $sname = $s;		
 		my $data = $dp_struct->{$s}->{'data'};
-		$data = prune($data,$req);
+		#$data = prune($data,$req);
 		my @cats = ();
 		my @yvals = ();
 		for (my $i = 0;$i < (scalar @{$data})-1; $i++) {
 			my $dp = $data->[$i];
-			$logger->debug("DP $i: ", sub {Dumper($dp)});
 			if (defined $dp) {
-				my $x = $dp->get_metric($xname) || $dp->$xname;
-				my $y = $dp->get_metric($yname) || $dp->count;
+				my $x = $dp->{$xname};
+				my $y = $dp->{$yname} || $dp->{'count'};
+				$logger->debug("DP $i: $xname: $x $yname: $y");
 				push(@cats,{'x' => $x});
 				push(@yvals,{'y'=> $y});
 			}
 		}
 		my $last = $data->[(scalar @{$data}) -1];
 		$test_template->param("CATEGORIES" => \@cats);
-		$test_template->param("LASTx" => $last->get_metric($xname) || $last->$xname);
-		$test_template->param("LASTy" => $last->get_metric($yname) || $last->count);
+		$test_template->param("LASTx" => $last->{$xname});
+		$test_template->param("LASTy" => $last->{$yname} || $last->{'count'});
 		$test_template->param("YVALUES" => \@yvals);
 	}	
 	$r->content_type('text/html');
 	print $test_template->output;	
+}
+
+sub column_plot {
+	my ($r, $method,$path) = @_;
+    my $logger = get_logger();
+    my $req_info = Kynetx::Request::build_request_env($r, $method, "TENX");
+	my $req = Apache2::Request->new($r);
+	my $template = DEFAULT_TEMPLATE_DIR . "/col_metrics.tmpl";
+	my $test_template = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+	my $dp_struct = get_datapoints($r,$path);
+	my @series_loop = ();
+	foreach my $s (keys %{$dp_struct}) {
+		my @loop = ();
+		my $xname = $dp_struct->{$s}->{'x'} || "timestamp";
+		my $yname = $dp_struct->{$s}->{'y'} || "count";
+		my $sname = $s;		
+		my $data = $dp_struct->{$s}->{'data'};
+		#$data = prune($data,$req);
+		my @cats = ();
+		my @yvals = ();
+		my $points;
+		for (my $i = 0;$i < (scalar @{$data})-1; $i++) {
+			my $dp = $data->[$i];
+			if (defined $dp) {
+				my $x = $dp->{$xname};
+				my $y = $dp->{$yname} || $dp->{'count'};
+				my $id = $dp->{"id"};
+				$logger->debug("DP $i: $xname: $x $yname: $y");
+				my $ystr = "{y: $y, id: \'$id\' }";
+				my $xstr = "\'$x\'";
+				push(@cats,$xstr);
+				push(@yvals,$ystr);
+				$points->{$id} = $dp;
+			}
+		}
+		my $catstr = '[' . join(",",@cats) . "]";
+		my $ystr	= '['. join(",",@yvals). "]";
+		my $pstr = Kynetx::Json::astToJson($points);
+		$test_template->param("CATEGORIES" => $catstr);
+		$test_template->param("yname" => $yname); 
+		$test_template->param("yval" => $ystr); 
+		$test_template->param("point" => $pstr); 
+#		$test_template->param("LASTy" => $last->{$yname} || $last->{'count'});
+#		$test_template->param("YVALUES" => \@yvals);
+	}	
+	$r->content_type('text/html');
+	print $test_template->output;		
 }
 
 sub scatter_plot {

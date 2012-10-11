@@ -59,6 +59,7 @@ sub handler {
     my $logger = get_logger();
     my $metric = new Kynetx::Metrics::Datapoint();
 	$metric->start_timer();
+	$metric->series("sky");
 
     $r->content_type('text/javascript');
 
@@ -85,6 +86,12 @@ sub handler {
     $domain = $path_components[4];  
     $eventtype = $path_components[5];
 
+    $metric->eid($eid);
+    $metric->event({
+    	'domain' => $domain,
+    	'type' => $eventtype});
+    $metric->token($id_token);
+    	
     if(Kynetx::Configure::get_config('RUN_MODE') eq 'development') {
       # WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
       my $test_ip = Kynetx::Configure::get_config('TEST_IP');
@@ -109,10 +116,6 @@ sub handler {
     $domain = $req_info->{'domain'};
     $eventtype = $req_info->{'eventtype'};
     
-    $metric->eid($eid);
-    $metric->event({
-    	'domain' => $domain,
-    	'type' => $eventtype});
 
     # store these for later logging
     $r->subprocess_env( DOMAIN    => $domain );

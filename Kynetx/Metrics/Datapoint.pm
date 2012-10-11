@@ -75,6 +75,7 @@ my %fields = (
 	rulename  => undef,
 	path	  => undef,
 	event	  => undef,
+	token	  => undef,
 
 );
 
@@ -296,6 +297,8 @@ sub tick {
 	return $self->{'count'};
 }
 
+
+
 sub store {
 	my $self = shift;
 	my $hash;
@@ -314,8 +317,13 @@ sub store {
 		"eid"      => $self->{'eid'},
 		"rid"	   => $self->{'rid'},
 		"rulename" => $self->{'rulename'},
-		"path"	   => $self->{'path'}
+		"path"	   => $self->{'path'},
+		"token"    => $self->{'token'}
 	};
+	if (defined $self->{'event'}) {
+		$obj->{"eventdomain"} = $self->{'event'}->{'domain'};
+		$obj->{"eventtype"} = $self->{'event'}->{'type'};
+	}
 	_update($obj);
 }
 
@@ -348,7 +356,7 @@ sub add_tag {
 }
 
 sub get_data {
-	my ($series) = @_;
+	my ($series,$limits) = @_;
 	my $logger   = get_logger();
 	my $c        = Kynetx::MongoDB::get_collection(COLLECTION);
 	my $key;
@@ -356,34 +364,80 @@ sub get_data {
 		$key = { "series" => $series };
 	}
 	my $cnt = 0;
-	my $cursor = $c->find($key);
+	my $order = -1;
+	my $limit = 50;
+	if (defined $limits) {
+		$order = $limits->{'sort_order'} || $order;
+		$limit = $limits->{'limit'} || $limit;
+	}	
+	my $cursor = $c->find($key)->sort({'$natural' => $order})->limit($limit);
 	if ( $cursor->has_next ) {
 		my @array_of_datapoints = ();
 		while ( my $obj = $cursor->next ) {
-			my @vars;
-			my @vals;
-			my $dp = new Kynetx::Metrics::Datapoint();
-			$dp->id( $obj->{"_id"}->{"value"} );
-			$dp->mproc( $obj->{"proc"} );
-			$dp->mhostname( $obj->{"hostname"} );
-			$dp->add_tag( $obj->{'tags'} );
-			$dp->timestamp( $obj->{"ts"} );
-			$dp->series( $obj->{"series"} );
-			$dp->count($obj->{"count"});
-			$dp->eid($obj->{"eid"});
-			$dp->rid($obj->{"rid"});
-			foreach my $var ( keys %{ $obj->{'metric'} } ) {
-				CORE::push( @vars, $var );
-				CORE::push( @vals, $obj->{"metric"}->{$var} );
+			my $dp;
+			foreach my $key (keys %{$obj}) {
+				if ($key eq "metric") {
+					foreach my $mkey (keys %{$obj->{$key}}) {
+						$dp->{$mkey} = $obj->{$key}->{$mkey};
+					}
+				} elsif ($key eq "tags") {
+					foreach my $t (@{$obj->{$key}}) {
+						$dp->{$t} = 1;
+					}
+				} elsif (ref $obj->{$key} eq "") {
+					$dp->{$key} = $obj->{$key};
+				} elsif ($key eq "_id") {
+					$dp->{"id"} = $obj->{$key}->{'value'};
+				}
 			}
-			$dp->push( \@vars, \@vals );
-			CORE::push( @array_of_datapoints, $dp );
-			if ($cnt++ > NUMPOINTS) {
-				last;
-			}
+			$logger->debug("P: ", sub {Dumper($dp)});
+			CORE::push(@array_of_datapoints,$dp);
 		}
 		return \@array_of_datapoints;
+	} else {
+		$logger->debug("No data");
+		return undef;
 	}
 }
+
+#
+#sub get_data {
+#	my ($series) = @_;
+#	my $logger   = get_logger();
+#	my $c        = Kynetx::MongoDB::get_collection(COLLECTION);
+#	my $key;
+#	if ( defined $series ) {
+#		$key = { "series" => $series };
+#	}
+#	my $cnt = 0;
+#	my $cursor = $c->find($key);
+#	if ( $cursor->has_next ) {
+#		my @array_of_datapoints = ();
+#		while ( my $obj = $cursor->next ) {
+#			my @vars;
+#			my @vals;
+#			my $dp = new Kynetx::Metrics::Datapoint();
+#			$dp->id( $obj->{"_id"}->{"value"} );
+#			$dp->mproc( $obj->{"proc"} );
+#			$dp->mhostname( $obj->{"hostname"} );
+#			$dp->add_tag( $obj->{'tags'} );
+#			$dp->timestamp( $obj->{"ts"} );
+#			$dp->series( $obj->{"series"} );
+#			$dp->count($obj->{"count"});
+#			$dp->eid($obj->{"eid"});
+#			$dp->rid($obj->{"rid"});
+#			foreach my $var ( keys %{ $obj->{'metric'} } ) {
+#				CORE::push( @vars, $var );
+#				CORE::push( @vals, $obj->{"metric"}->{$var} );
+#			}
+#			$dp->push( \@vars, \@vals );
+#			CORE::push( @array_of_datapoints, $dp );
+#			if ($cnt++ > NUMPOINTS) {
+#				last;
+#			}
+#		}
+#		return \@array_of_datapoints;
+#	}
+#}
 
 1;
