@@ -731,7 +731,7 @@ sub eval_rule {
 
 #	$logger->info("Rule pre ", sub {Dumper $rule->{'pre'}});
 
-	if ( scalar @{$rule->{'pre'}} > 0
+	if ( $rule->{'pre'} && scalar @{$rule->{'pre'}} > 0
 		&& !( $rule->{'inner_pre'} || $rule->{'outer_pre'} ) )
 	{
 

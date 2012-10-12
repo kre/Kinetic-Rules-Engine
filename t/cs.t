@@ -266,7 +266,7 @@ SKIP: {
     # sets search referer
     my $url_4 = "$ruleset_base/eval/$rid/1231363179515.js?caller=http%3A//www.windley.com/foo/bazz.html&referer=http%3A//www.google.com/&kvars={%22foo%22%3A%205%2C%20%22bar%22%3A%20%22fizz%22%2C%20%22bizz%22%3A%20[1%2C%202%2C%203]}&title=Phil%20Windleys%20Technometria";
 
-#    diag "Testing eval with $url_4";
+    diag "Testing eval with $url_4";
     $mech->get_ok($url_4);
 
 
@@ -284,7 +284,7 @@ SKIP: {
     # globals
     $mech->content_contains('var foobar = 4;');
 
-    $mech->content_contains(q/KOBJ['data']['public_timeline'] = [/);
+    $mech->content_contains(q/KOBJ['data']['public_timeline'] = {/);
     $mech->content_lacks("KOBJ['data']['cached_timeline'] =");
     $test_count += 10;
 
@@ -307,7 +307,7 @@ SKIP: {
     # globals
     $mech->content_contains('var foobar = 5;');
 
-    $mech->content_contains(q/KOBJ['data']['public_timeline'] = [/);
+    $mech->content_contains(q/KOBJ['data']['public_timeline'] = {/);
     $mech->content_lacks("KOBJ['data']['cached_timeline'] =");
     $test_count += 8;
 
