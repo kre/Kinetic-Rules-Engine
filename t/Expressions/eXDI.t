@@ -41,7 +41,7 @@ use DateTime;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 my $logger = get_logger();
@@ -97,15 +97,18 @@ chop $rid;
 my $random = $DICTIONARY[rand(@DICTIONARY)];
 chop $random;
 
+my $isub = $DICTIONARY[rand(@DICTIONARY)];
+chop $isub;
 
 # $dken is an anonymous ken that I will clean out after the tests
 my $dken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 
 # Configure the XDI account
-my $rnum = int (rand(1000));
-my $iname = '=tester';
-my $inumber = '=!000333' .$rnum;
-my $endpoint = "http://10.0.1.194:8080/xdi/users/" . $inumber;
+my $oid = MongoDB::OID->new();
+my $xdi = Kynetx::Configure::get_config('xdi');
+my $inumber = $xdi->{'users'}->{'inumber'} . '!'. $oid->to_string();
+my $endpoint = $xdi->{'users'}->{'endpoint'} . $inumber;
+my $iname = $xdi->{'users'}->{'iname'} . '*' . $isub;
 
 my $struct = {
 	'endpoint' => $endpoint,
@@ -126,7 +129,7 @@ Kynetx::Persistence::KXDI::add_link_contract($dken,$rid);
 $result = Kynetx::Persistence::KXDI::check_link_contract($dken,$rid);
 
 $logger->debug("root link contract: $result");
-die unless $result;
+#die;# unless $result;
 
 
 my ($c,$msg) = Kynetx::Persistence::KXDI::xdi_message($kxdi);
