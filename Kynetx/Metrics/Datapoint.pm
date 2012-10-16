@@ -363,6 +363,7 @@ sub get_data {
 	if ( defined $series ) {
 		$key = { "series" => $series };
 	}
+	$logger->debug("Key: ",sub {Dumper($key)});
 	my $cnt = 0;
 	my $order = -1;
 	my $limit = 50;

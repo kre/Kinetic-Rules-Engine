@@ -45,6 +45,7 @@ use Kynetx::Persistence::KToken;
 use Kynetx::Persistence::KEN;
 use Kynetx::Persistence::KPDS;
 use Kynetx::Rids qw(get_rid);
+use Kynetx::Util qw(ll);
 use MongoDB;
 use MongoDB::OID;
 
@@ -127,6 +128,11 @@ $funcs->{'set_link_contract'} = \&_set_link_contract;
 
 sub _create_new_graph {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	if (_has_xdi_account($req_info,$rule_env,$session,$rule_name,$function,$args)) {
+		$logger->warn("Can not create, XDI account configured");
+		return undef;
+	}
 	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	if (ref $args->[0] eq "HASH") {
@@ -134,7 +140,24 @@ sub _create_new_graph {
 		if ($hash->{"iname"}) {
 			my $iname = $hash->{"iname"};
 			my $secret = $hash->{"secret"};
-			return undef unless (create_xdi_from_iname($ken,$iname,$secret));
+			#return undef unless (create_xdi_from_iname($ken,$iname,$secret));
+			#create an inumber and endpoint if they aren't provided
+			my $inumber = $hash->{"inumber"};
+			my $target = $hash->{'endpoint'};
+			if (! $inumber) {
+				my $oid = MongoDB::OID->new();
+				my $xdi = Kynetx::Configure::get_config('xdi');
+				$inumber = $xdi->{'users'}->{'inumber'} . '!'. $oid->to_string();
+				$target = $xdi->{'users'}->{'endpoint'} . $inumber;
+				$iname = $xdi->{'users'}->{'iname'} . '*' . $iname;
+			}
+			my $kxdi = {				
+				'endpoint' => $target,
+				'inumber'  => $inumber,
+				'iname'    => $iname,
+				'secret'   => $secret
+			};
+			put_xdi($ken,$kxdi);
 		}
 	}
 	
@@ -143,6 +166,531 @@ sub _create_new_graph {
 	
 }
 $funcs->{'create_new_graph'} = \&_create_new_graph;
+
+
+sub _flush_xdi {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $kxdi = get_xdi($ken);
+	# Check for inumber
+	if ($kxdi) {
+		if (check_registry_for_inumber($kxdi->{'inumber'})) {
+			if (check_registry_for_iname($kxdi->{'iname'})) {
+				delete_registry_entry($kxdi->{'inumber'},$kxdi->{'iname'})
+			} else {
+				delete_registry_entry($kxdi->{'inumber'})
+			}
+			
+		}
+		delete_xdi($ken);
+	}
+	return _has_xdi_account($req_info,$rule_env,$session,$rule_name,$function,$args);
+}
+
+$funcs->{'flush_xdi'} = \&_flush_xdi;
+
+sub _lookup {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	if (ref $args->[0] eq "") {
+		my $iname = $args->[0];
+		my $local = $args->[1];
+		if ($iname && defined $local) {
+			my $xdi = Kynetx::Configure::get_config('xdi');
+			$iname = $xdi->{'users'}->{'iname'} . '*' . $iname;
+			return check_registry_for_iname($iname);
+		} else {
+			my $ref = XDI::Connection::iname_lookup($iname);
+			$logger->debug("Lookup: ", sub {Dumper($ref)});
+			return $ref;
+		}
+	}
+	return undef;
+	
+}
+$funcs->{'lookup'} = \&_lookup;
+
+sub _tuple {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger=get_logger();
+	if (defined $args->[0] && ref $args->[0] eq 'HASH')	{
+		my $graph = $args->[0];
+		if (defined $args->[1] && ref $args->[1] eq 'ARRAY') {
+			my $tuple = $args->[1];
+			$logger->debug("Tuple: ", sub {Dumper($tuple)});
+			my $result = XDI::pick_xdi_tuple($graph,$tuple);
+			$logger->debug("result: ", sub {Dumper($result)});
+			return $result;
+		}
+	} else {
+		$logger->debug("arg must be an XDI graph");
+	}
+	return undef;
+}
+$funcs->{'tuple'} = \&_tuple;
+
+sub _has_xdi_account {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	return get_installed($ken);
+}
+$funcs->{'has_account'} = \&_has_xdi_account;
+
+sub _iname {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	return get_iname($ken);	
+}
+$funcs->{'iname'} = \&_iname;
+
+sub _inumber {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	return get_inumber($ken);	
+	
+}
+$funcs->{'inumber'} = \&_inumber;
+
+sub _add {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $logger = get_logger();
+	if (defined $args->[0] && ref $args->[0] eq 'ARRAY') {
+		my $kxdi = Kynetx::Persistence::KXDI::get_xdi($ken);
+		my ($c,$msg) = Kynetx::Persistence::KXDI::xdi_message($kxdi);
+		$logger->debug("Link_contract: ", $msg->link_contract);
+		$logger->debug("KXDI: ", sub {Dumper($kxdi)});
+		
+		foreach my $op (@{$args->[0]}) {
+			$msg->add('(' . $op . ')');
+		}
+		
+		my $result = $c->post($msg);;
+		
+		$logger->debug("Result: ", sub {Dumper($result)});
+		return $result;
+	}	
+}
+$funcs->{'add'} = \&_add;
+
+sub _get {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $logger = get_logger();
+	if (defined $args->[0] ) {
+		my $kxdi = Kynetx::Persistence::KXDI::get_xdi($ken);
+		my ($c,$msg) = Kynetx::Persistence::KXDI::xdi_message($kxdi);
+		if (ref $args->[0] eq 'ARRAY'){
+			foreach my $op (@{$args->[0]}) {
+				$msg->get( $op );
+			}
+		} elsif (ref $args->[0] eq '') {
+			$msg->get($args->[0]);
+		}
+		if (defined $args->[1] && $args->[1] eq "textonly") {
+			return $msg->to_string();
+		} else {
+			if (defined $args->[1] && $args->[1] eq "context") {
+				$c->context(1);
+			}
+			my $result = $c->post($msg);
+			$logger->debug("Message: ", $msg->to_string);
+			$logger->debug("Result: ", sub {Dumper($result)});
+			return $result;
+		}
+	}
+	
+}
+$funcs->{'get'} = \&_get;
+
+sub _has_definition {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	if (defined $args->[0] & ref $args->[0] eq "") {
+		return get_definition($ken,$args->[0]);
+	} else {
+		return 0;
+	}
+	
+}
+$funcs->{'has_definition'} = \&_has_definition;
+
+sub _set_definition {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	if (defined $args->[0] & ref $args->[0] eq "") {
+		my $previous = get_definition($ken,$args->[0]);
+		put_definition($ken,$args->[0],1);
+		return $previous;
+	} else {
+		return undef;
+	}
+}
+$funcs->{'set_definition'} = \&_set_definition;
+
+         
+sub _clear_definition {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	if (defined $args->[0] & ref $args->[0] eq "") {
+		my $previous = get_definition($ken,$args->[0]);
+		put_definition($ken,$args->[0],undef);
+		return $previous;
+	} else {
+		return undef;
+	}
+}
+$funcs->{'clear_definition'} = \&_clear_definition;
+
+sub __get_global_definitions {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $kxdi = Kynetx::Configure::get_config('xdi');
+	my ($c,$msg) = xdi_message($kxdi);
+	my $logger = get_logger();
+	# Need to reset the url to the registry url
+	$c->server($kxdi->{'registry'});
+	$c->context(1);
+	$msg->get('()');
+	my $graph;
+	eval {
+		$graph = $c->post($msg);
+	};
+	if ($@) {
+		$logger->debug("Failed to get global definitions $@");
+		return undef;
+	} else {
+		ll(sub {Dumper($graph)});
+	}
+	my $tuples = XDI::tuples($graph,[qr"^\+\(\+\w+\)$",'$is+',undef]);
+	ll(sub{Dumper($tuples)});
+	my $globals;
+	foreach my $definition (@{$tuples}) {
+		my $name = $definition->[0];
+		my $mult = $definition->[2] eq "+" ? 'entity' : 'attribute'; 
+		my $locs = _definition_locales($graph,$name);
+		foreach my $locale (@{$locs}) {
+			my $defhash;
+			my @fields = ();
+			my $key = $name . $locale;
+			$defhash->{'key'} = $key;
+			$defhash->{'label'}  = $name;
+			$defhash->{'locale'} = $locale;
+			$defhash->{'mtype'}   = $mult;
+			if ($mult eq 'attribute') {
+				my $field_def = get_field_def($graph,$name,$locale);
+				push(@fields,$field_def);
+			}
+			$defhash->{'fields'} = \@fields;
+			$globals->{$key} = $defhash;
+		}
+	}
+	ll("defs: ", sub{Dumper($globals)});
+	return $globals;	
+}
+$funcs->{'global_definitions'} = \&__get_global_definitions;
+
+sub get_local_definitions {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $kxdi = Kynetx::Configure::get_config('xdi');
+	return ();	
+}
+$funcs->{'local_definitions'} = \&get_local_definitions;
+
+sub get_field_def {
+	my ($graph,$name,$locale) = @_;
+	my $field_def;
+	$field_def->{"field_type"} = get_field_type($graph,$name);
+	$field_def->{"description"} = get_field_description($graph,$name,$locale);
+	$field_def->{"contexts"} = get_field_contexts($graph,$name);
+	$field_def->{"label"} = get_field_label($graph,$name,$locale);
+	$field_def->{"name"} = $name;
+	return $field_def;
+}
+
+sub get_field_label {
+	my ($graph,$def,$lang) = @_;
+	my $subject = $def . $lang . '$lang$!($label)';
+	my $keys = XDI::get_equivalent($graph,$subject);
+	if (defined $keys) {
+		return XDI::get_literal($graph,$keys);		
+	}
+	return undef;
+}
+
+
+sub get_field_contexts {
+	my ($graph,$name) = @_;
+	my $contexts = XDI::get_context($graph,$name);
+	return $contexts;
+}
+
+sub get_field_description {
+	my ($graph,$name,$locale) = @_;
+	my $subject = $name . $locale .'$lang$!($desc)';
+	my $equiv = XDI::get_equivalent($graph,$subject);
+	my $key = $equiv->[0];
+	if (defined $key)  {
+		return XDI::get_literal($graph,$key);		
+	}
+	return "";
+}
+
+sub _get_desc {
+	my ($graph,$def,$lang) = @_;
+	my $subject = $def . $lang . '$lang$!($desc)';
+	my $keys = _get_equivalent($graph,$subject);
+	if (defined $keys) {
+		return _get_literal($graph,$keys);		
+	}
+	return undef;
+}
+
+
+sub get_field_type {
+	my ($graph,$name) = @_;
+	my $tuple = XDI::tuples($graph,[$name,'$is+',undef]);
+	# only one type
+	my $value = $tuple->[0]->[2];
+	$value =~ m/^\+(.+)\!$/;
+	return $1;
+}
+
+
+
+sub _get_global_definitions {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $kxdi = Kynetx::Configure::get_config('xdi');
+	my ($c,$msg) = xdi_message($kxdi);
+	my $logger = get_logger();
+	# Need to reset the url to the registry url
+	$c->server($kxdi->{'registry'});
+	$c->context(1);
+	if (defined $args->[0]) {
+		if (ref $args->[0] eq "") {
+			$msg->get($args->[0]);
+			my $graph;
+			eval {
+				$graph = $c->post($msg);
+			};
+			if ($@) {
+				$logger->debug("Failed to get definition for $args->[0] $@");
+				return undef;
+			}
+			return $graph;
+		}
+	} else {
+		$msg->get('()');
+		my $graph;
+		eval {
+			$graph = $c->post($msg);
+		};
+		if ($@) {
+			$logger->debug("Failed to get global definitions $@");
+			return undef;
+		} else {
+			ll(sub {Dumper($graph)});
+			if (! defined $args->[0]) {
+				my $tuple = XDI::pick_xdi_tuple($graph,['()','()',undef]);
+				my @roots = ();
+				foreach my $element (@{$tuple->[2]}) {
+					if ($element =~ m/^\+\(\+\w+\)$/) {
+						push (@roots,$element);
+					}
+				}
+				# prune for just the $is+ definitions
+				my @defs = ();
+				foreach my $root (@roots) {
+					my $test = XDI::pick_xdi_tuple($graph,[$root,'$is+',undef]);
+					if ($test) {
+						push(@defs,$root);
+					}
+				}
+				
+				# pick out the languages defined
+				my @langs = _definition_locales($graph);
+				
+				# Build the definition objects
+				my $struct;
+				foreach my $def (@defs) {
+					#my $desc = _get_desc($graph,$def);
+					foreach my $lang (@langs) {
+						ll("Build $def $lang");
+						my $build = _build_def($graph,$def,$lang);
+						if (defined $build) {
+							$struct->{"$def$lang"} = $build;
+						}
+					}
+					
+				}
+				return $struct;			
+			}
+		}	
+			
+	}
+}
+
+sub _build_def {
+	my ($graph,$def,$lang) = @_;
+	my $label = _get_label($graph,$def,$lang);
+	my $struct;
+	if (defined $label) {
+		ll("Label is $label");
+		$struct->{'locale'} = $lang;
+		$struct->{'label'} = $label;
+		$struct->{'description'} = _get_desc($graph,$def,$lang);
+		$struct->{'multiplicity'} = _get_multiplicity($graph,$def);
+		$struct->{'subject'} = $def;
+	}
+	
+	if (defined $struct) {
+		return $struct
+	} else {
+		return undef;
+	}
+	
+}
+
+sub _get_multiplicity {
+	my ($graph,$key) = @_;
+	my $values = _tuples($graph,[$key,'$is+',undef]);
+	if (defined $values) {
+		my $mult = $values->[0]->[2];
+		return $mult;
+	}
+	return undef;
+		
+}
+
+sub _get_literal {
+	my ($graph,$keys) = @_;
+	my @results = ();
+	if (ref $keys eq "ARRAY") {
+		foreach	my $key (@$keys) {
+			my $values = _tuples($graph,[$key,'!',undef]);
+			ll(Dumper($values));
+			if (defined $values) {
+				foreach my $element (@{$values}) {
+					ll("found literal: $element");
+					push(@results,$element->[2]);
+				}
+			}
+			
+		}	
+		if (scalar(@results) == 1) {
+			return $results[0];
+		} elsif (scalar(@results) > 1) {
+			return \@results;
+		} 		
+	}
+	return undef;
+}
+
+sub _literal {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	my $graph = $args->[0];
+	my $key = $args->[1];
+	$logger->debug("Find eq: $key");
+	if (ref $graph eq "HASH" and ref $key eq "") {
+		return _get_literal($graph,[$key]);
+	} else {
+		$logger->debug("Required arguments: <xdi hash>,<key>");
+		return undef;
+	}
+}
+$funcs->{'literal'} = \&_literal;
+
+
+sub _get_equivalent {
+	my ($graph,$key) = @_;
+	my @results = ();
+	my $values = _tuples($graph,[$key,'$is',undef]);
+	if (defined $values) {
+		foreach my $element (@{$values}) {
+			push(@results,$element->[2]);
+		}
+		return \@results;
+	}
+	return undef;
+}
+
+sub _equivalents {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	my $graph = $args->[0];
+	my $key = $args->[1];
+	$logger->debug("Find eq: $key");
+	if (ref $graph eq "HASH" and ref $key eq "") {
+		return _get_equivalent($graph,$key);
+	} else {
+		$logger->debug("Required arguments: <xdi hash>,<key>");
+		return undef;
+	}
+}
+$funcs->{'equivalents'} = \&_equivalents;
+
+sub _get_property {
+	my ($graph,$key) = @_;
+	my @results = ();
+	my $values = _tuples($graph,[$key,'()',undef]);
+	if (defined $values) {
+		foreach my $element (@{$values}) {
+			push(@results,$element->[2]);
+		}
+		return \@results;
+	}
+	return undef;	
+}
+
+sub _get_class {
+	my ($graph,$key) = @_;
+	my @results = ();
+	my $values = _tuples($graph,[$key,'$is()',undef]);
+	if (defined $values) {
+		foreach my $element (@{$values}) {
+			foreach my $cl (@{$element->[2]}) {
+				push(@results,$cl);
+				ll("found class: $cl");
+			}
+		}
+		ll(Dumper @results);
+		return \@results;
+	}
+	return undef;	
+}
+
+sub _classes {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	my $graph = $args->[0];
+	my $key = $args->[1];
+	$logger->debug("Find eq: $key");
+	if (ref $graph eq "HASH" and ref $key eq "") {
+		my $result = _get_class($graph,$key);
+		
+		ll((ref $result) . " " . (Dumper $result));
+		return $result;
+	} else {
+		$logger->debug("Required arguments: <xdi hash>,<key>");
+		return undef;
+	}
+}
+$funcs->{'classes'} = \&_classes;
 
 
 # not exposed as module
@@ -235,6 +783,21 @@ sub put_xdi {
 	Kynetx::Persistence::KPDS::put_kpds_element($ken,$hash_path,$struct);
 }
 
+sub put_definition {
+	my ($ken,$defname,$status) = @_;
+	my $hash_path = [PDS, 'definitions', $defname];
+	Kynetx::Persistence::KPDS::put_kpds_element($ken,$hash_path,$status);
+}
+
+sub get_definition {
+	my ($ken,$defname) = @_;
+	my $hash_path = [PDS, 'definitions', $defname];
+	Kynetx::Persistence::KPDS::get_kpds_element($ken,$hash_path);
+}
+
+
+
+
 sub create_xdi_from_iname {
 	my ($ken, $iname,$secret) = @_;
 	my $logger = get_logger();
@@ -262,7 +825,7 @@ sub create_xdi {
 	my $logger = get_logger();
 	my $kxdi = get_xdi($ken);
 	my $inumber = $kxdi->{'inumber'};
-	add_registry_entry($ken) unless (check_registry_for_account($inumber));	
+	add_registry_entry($ken) unless (check_registry_for_inumber($inumber));	
 }
 
 sub delete_xdi {
@@ -289,7 +852,7 @@ sub delete_xdi {
 }
 
 # special case xdi query against the XDI account registry
-sub check_registry_for_account {
+sub check_registry_for_inumber {
 	my ($inumber) = @_;
 	my $logger = get_logger();
 	my $kxdi = Kynetx::Configure::get_config('xdi');
@@ -298,8 +861,7 @@ sub check_registry_for_account {
 	# Need to reset the url to the registry url
 	$c->server($kxdi->{'registry'});
 	$c->context(1);
-	my $str = '(' . $kxdi->{'inumber'} . '/+user/($))';
-	$str = '()';
+	my $str = '()';
 	$msg->get($str);
 	my $result = $c->post($msg);
 	$logger->trace("Check registry: ",sub {Dumper($result)});
@@ -316,6 +878,29 @@ sub check_registry_for_account {
 	}
 	return 0;	
 }
+
+sub check_registry_for_iname {
+	my ($iname) = @_;
+	my $logger = get_logger();
+	my $kxdi = Kynetx::Configure::get_config('xdi');
+	$kxdi->{'target'} = $kxdi->{'registry'};
+	my ($c,$msg) = xdi_message($kxdi);
+	$c->server($kxdi->{'registry'});
+	$c->context(1);
+	my $str = '(' . $iname.  ')';
+	$msg->get($str);
+	ll($msg->to_string);
+	my $result = $c->post($msg);
+	ll(Dumper $result);
+	my $tuple = XDI::pick_xdi_tuple($result,[$str,'$is',undef]);
+	if (defined $tuple) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+
 
 sub delete_registry_entry {
 	my ($inumber,$iname) = @_;
@@ -354,7 +939,7 @@ sub delete_xdi_graph {
 	my $kxdi = get_xdi($ken);
 	my $inumber = $kxdi->{'inumber'};
 	
-	if (check_registry_for_account($inumber)) {
+	if (check_registry_for_inumber($inumber)) {
 		$logger->error("Delete XDI registry entry before removing graph");
 	} else {
 		my ($c,$msg) = xdi_message($kxdi);
@@ -396,7 +981,7 @@ sub add_registry_entry {
 	$msg->add($str);
 	
 	# add shared secret for account
-	$str = '(' . $inumber . '$($secret)$!($token)/!/(data:,' . $secret . '))';
+	$str = '(' . $inumber . '$secret$!($token)/!/(data:,' . $secret . '))';
 	$msg->add($str);
 	
 	# add an entry for account lookup
@@ -424,7 +1009,7 @@ sub provision_xdi_for_kynetx {
 		return 0;
 	}
 	if (defined $kxdi) {
-		my $status = check_registry_for_account($inumber);
+		my $status = check_registry_for_inumber($inumber);
 		if ($status) {
 			$logger->warn("Account for ", $kxdi->{'iname'}, " already exists in registry");
 			return undef;
@@ -603,6 +1188,68 @@ sub _lc_permission {
 	#(=!626D.C20C.74EB.BAEA$do/$get/=!626D.C20C.74EB.BAEA)
 	my $string = "($target\$do/\$get/$target)";
 	return $string
+}
+
+sub _tuples {
+	my ($graph,$match) = @_;
+	my $logger = get_logger();
+	my @matches = ();
+	ll("Search [ $match->[0], $match->[1], $match->[2] ]");
+	ll("Search graph: " . Dumper($graph));
+	foreach my $key (sort keys %{$graph}) {
+		my ($subject,$predicate,$value);
+		if ($key =~ m/^(.+)\/(.+)$/) {
+			$subject = $1;
+			$predicate = $2;			
+			if (scalar(@{$graph->{$key}}) == 1) {
+
+				$value = $graph->{$key}->[0];
+			} else {
+				$value = $graph->{$key};
+			}
+
+			#ll("[tuples] Try: $key $value");
+			# match field 0
+			if (defined $match->[0]) {
+				if (ref $match->[0] eq "Regexp") {
+					next unless ($subject =~ m/$match->[0]/);
+				} elsif ($subject ne $match->[0]) {
+					next;
+				} 
+			}
+			
+
+			if (defined $match->[1]) {
+				if (ref $match->[1] eq "Regexp") {
+					next unless ($predicate =~ m/$match->[1]/);
+				} elsif ($predicate ne $match->[1]) {
+					next;
+				} 
+			}
+
+			if (defined $match->[2]) {
+				if (ref $match->[2] eq "Regexp") {
+					next unless ($value =~ m/$match->[2]/);
+				} elsif ($value ne $match->[2]) {
+					next;
+				} 
+			}
+			ll("Found: [$subject, $predicate, $value]");
+			push(@matches, [$subject,$predicate,$value]);
+		}
+	}
+	return \@matches;	
+}
+
+sub _definition_locales {
+	my ($graph) = @_;
+	my $tups = XDI::tuples($graph,[qr(^\+[a-z]+),'()','$lang']);
+	my $lang;
+	foreach my $element (@{$tups}) {			
+		$lang->{$element->[0]} = 1;
+	}
+	my @keys = keys %{$lang};
+	return \@keys;	
 }
 
 

@@ -107,6 +107,9 @@ chop $frid;
 my $secret = $DICTIONARY[rand(@DICTIONARY)];
 chop $secret;
 
+my $isub = $DICTIONARY[rand(@DICTIONARY)];
+chop $isub;
+
 $session = process_session($r);
 $description = "Find KEN from session";
 my $session_ken = Kynetx::Persistence::KEN::get_ken($session,$frid);
@@ -114,14 +117,20 @@ $logger->debug("Ken session: ",$session_ken);
 testit($session_ken,re($ken_re),$description,0);
 
 # Configure the XDI account
-my $rnum = int (rand(100));
-my $iname = '=tester';
-my $inumber = '=!000333' .$rnum;
-my $endpoint = Kynetx::Configure::get_config('xdi')->{'users'}->{'endpoint'} . $inumber;
+my $oid = MongoDB::OID->new();
+my $xdi = Kynetx::Configure::get_config('xdi');
+my $inumber = $xdi->{'users'}->{'inumber'} . '!'. $oid->to_string();
+my $endpoint = $xdi->{'users'}->{'endpoint'} . $inumber;
+my $iname = $xdi->{'users'}->{'iname'} . '*' . $isub;
 
-$description = "Insert an XDI record into the KPDS";
-$result = Kynetx::Persistence::KXDI::create_xdi_from_iname($session_ken,$iname,$secret);
-testit($result,4,$description,0);
+my $struct = {
+	'endpoint' => $endpoint,
+	'inumber'  => $inumber,
+	'iname'    => $iname,
+	'secret'   => $secret
+};
+
+Kynetx::Persistence::KXDI::put_xdi($session_ken,$struct);
 
 $description = "Get the XDI record for $session_ken";
 my $expected = {
@@ -159,7 +168,7 @@ my $kxdi = Kynetx::Persistence::KXDI::get_xdi($session_ken);
 testit($kxdi,$result,$description,0);
 
 $description = "Check registry";
-my $xdi_exists = Kynetx::Persistence::KXDI::check_registry_for_account($inumber);
+my $xdi_exists = Kynetx::Persistence::KXDI::check_registry_for_inumber($inumber);
 $logger->debug("Check reg: ", sub {Dumper($result)});
 
 SKIP: {
@@ -219,10 +228,6 @@ SKIP: {
 		$result = Kynetx::Persistence::KXDI::check_link_contract($session_ken,$frid);
 		testit($result,0,$description,0);
 				
-#		$description = "add a link contract for fake ruleset";
-#		$expected = {};
-#		$result = Kynetx::Persistence::KXDI::add_link_contract($session_ken,$frid);
-#		testit($result,$expected,$description,0);
 
 		$description = "add a link contract for fake ruleset";
 		$args = [];

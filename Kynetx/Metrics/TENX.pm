@@ -135,6 +135,7 @@ sub get_datapoints {
 		$xname = $xname || "timestamp";
 		$yname = $yname || "realtime";
 		my $result = Kynetx::Metrics::Datapoint::get_data($sname);
+<<<<<<< HEAD
 		if (defined $result) {
 			$logger->debug("Num points: ", scalar @{$result});
 			my @loop = ();
@@ -142,6 +143,19 @@ sub get_datapoints {
 				if (filter($dp,$req)) {
 					push(@loop,$dp);
 				}			
+=======
+		my @loop = ();
+		if (! defined $result) {
+			$logger->warn("Result is undef");
+			return undef;
+		} else {
+			$logger->info("Result is defined: ", ref $result);
+		}
+		for (my $i =0; $i< scalar(@{$result}) -1;$i++) {
+			my $dp = $result->[$i];
+			if (filter($dp,$req)) {
+				push(@loop,$dp);
+>>>>>>> XDI
 			}
 			$logger->debug("Filtered points: ", scalar @loop);
 			$dp_struct->{$sname}->{'data'} = \@loop;
