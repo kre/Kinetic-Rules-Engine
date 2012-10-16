@@ -3867,6 +3867,9 @@ diag "#######################################################################";
 my $empty_rule_env = empty_rule_env();
 my $mod_rule_env;
 
+my $ast = Kynetx::JavaScript::AST->new('13893139103801');
+
+
 $krl =  << "_KRL_";
 ruleset foobar {
   meta {
@@ -3882,7 +3885,8 @@ _KRL_
 
 my $module_rs = Kynetx::Parser::parse_ruleset($krl);
 #diag Dumper $module_rs;
-($js, $mod_rule_env) = Kynetx::Rules::eval_use($my_req_info, $module_rs, $empty_rule_env);
+my $env_stash = {};
+($js, $mod_rule_env) = Kynetx::Rules::eval_use($my_req_info, $module_rs, $empty_rule_env, $env_stash);
 
 # diag Dumper $mod_rule_env;
 
@@ -3922,8 +3926,8 @@ _KRL_
 $module_rs = Kynetx::Parser::parse_ruleset($krl);
 #diag Dumper $module_rs;
 $mod_rule_env = empty_rule_env();
-diag Dumper $empty_rule_env;
-($js, $mod_rule_env) = Kynetx::Rules::eval_use($my_req_info, $module_rs, $empty_rule_env);
+#diag Dumper $empty_rule_env;
+($js, $mod_rule_env) = Kynetx::Rules::eval_use($my_req_info, $module_rs, $empty_rule_env, $env_stash);
 
 is(lookup_module_env("flipper", "a", $mod_rule_env), 5, "a is 5 again" );
 $test_count++;
@@ -3947,7 +3951,7 @@ _KRL_
 $module_rs = Kynetx::Parser::parse_ruleset($krl);
 #diag Dumper $module_rs;
 $mod_rule_env = empty_rule_env();
-($js, $mod_rule_env) = Kynetx::Rules::eval_use($my_req_info, $module_rs, $empty_rule_env);
+($js, $mod_rule_env) = Kynetx::Rules::eval_use($my_req_info, $module_rs, $empty_rule_env, $env_stash);
 
 #diag Dumper $mod_rule_env;
 
@@ -3970,10 +3974,20 @@ _KRL_
 
 $module_rs = Kynetx::Parser::parse_ruleset($krl);
 #diag Dumper $module_rs;
-$mod_rule_env = empty_rule_env();
-($js, $mod_rule_env) = Kynetx::Rules::eval_use($my_req_info, $module_rs, $empty_rule_env);
-($js, $mod_rule_env) = 
-    eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
+
+
+#diag Dumper $env_stash;
+
+$mod_rule_env = Kynetx::Rules::get_rule_env($my_req_info, $module_rs, $session, 
+					    $ast, $env_stash);
+
+
+
+
+# $mod_rule_env = empty_rule_env();
+# ($js, $mod_rule_env) = Kynetx::Rules::eval_use($my_req_info, $module_rs, $empty_rule_env, $env_stash);
+# ($js, $mod_rule_env) = 
+#     eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
 
 
 # diag Dumper $mod_rule_env;
@@ -4005,7 +4019,7 @@ $module_rs = Kynetx::Parser::parse_ruleset($krl);
 #diag Dumper $module_rs;
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
 $mod_rule_env = empty_rule_env();
-($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
+($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session, $env_stash);
 
 ($js, $mod_rule_env) = 
     eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
@@ -4045,7 +4059,7 @@ $module_rs = Kynetx::Parser::parse_ruleset($krl);
 # diag Dumper $module_rs;
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
 $mod_rule_env = empty_rule_env();
-($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
+($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session, $env_stash);
 
 ($js, $mod_rule_env) = 
     eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
@@ -4104,7 +4118,7 @@ $module_rs = Kynetx::Parser::parse_ruleset($krl);
 # diag Dumper $module_rs;
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
 $mod_rule_env = empty_rule_env();
-($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
+($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session, $env_stash);
 
 ($js, $mod_rule_env) = 
     eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
@@ -4141,7 +4155,7 @@ $module_rs = Kynetx::Parser::parse_ruleset($krl);
 # diag Dumper $module_rs;
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
 $mod_rule_env = empty_rule_env();
-($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
+($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session, $env_stash);
 
 ($js, $mod_rule_env) = 
     eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
@@ -4176,7 +4190,7 @@ $module_rs = Kynetx::Parser::parse_ruleset($krl);
 # diag Dumper $module_rs;
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
 $mod_rule_env = empty_rule_env();
-($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
+($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session, $env_stash);
 
 ($js, $mod_rule_env) = 
     eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
@@ -4206,11 +4220,23 @@ _KRL_
 $module_rs = Kynetx::Parser::parse_ruleset($krl);
 # diag Dumper $module_rs;
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
-$mod_rule_env = empty_rule_env();
-($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
 
-($js, $mod_rule_env) = 
-    eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
+diag "GO";
+$mod_rule_env = Kynetx::Rules::get_rule_env($my_req_info, $module_rs, $session, 
+					    $ast, $env_stash);
+
+
+
+# $mod_rule_env = empty_rule_env();
+
+# diag "GO", Dumper $env_stash;
+
+# ($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session, $env_stash);
+
+# diag "DONE";
+
+# ($js, $mod_rule_env) = 
+#     eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
 #diag Dumper $mod_rule_env;
 
 
@@ -4236,7 +4262,7 @@ $module_rs = Kynetx::Parser::parse_ruleset($krl);
 # diag Dumper $module_rs;
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
 $mod_rule_env = empty_rule_env();
-($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
+($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session, $env_stash);
 
 ($js, $mod_rule_env) = 
     eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
@@ -4266,7 +4292,7 @@ $module_rs = Kynetx::Parser::parse_ruleset($krl);
 # diag Dumper $module_rs;
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
 $mod_rule_env = empty_rule_env();
-($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session);
+($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session, $env_stash);
 
 ($js, $mod_rule_env) = 
     eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);

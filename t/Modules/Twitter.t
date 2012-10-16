@@ -215,16 +215,16 @@ is(int @{ $home_timeline }, 12, "Getting back some home timeline returns");
 $test_count++;
 
 
-my $public_timeline = eval_twitter($my_req_info,
-				 $rule_env,
-				 $session,
-				 'foo',
-				 'public_timeline',
-				 []
-				);
+# my $public_timeline = eval_twitter($my_req_info,
+# 				 $rule_env,
+# 				 $session,
+# 				 'foo',
+# 				 'public_timeline',
+# 				 []
+# 				);
 
-is(int @{ $public_timeline }, 20, "Getting back some public timeline returns");
-$test_count++;
+# is(int @{ $public_timeline }, 20, "Getting back some public timeline returns");
+# $test_count++;
 
 
 # this seems hard to make reliable with test account

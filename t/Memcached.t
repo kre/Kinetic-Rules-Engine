@@ -64,16 +64,16 @@ SKIP: {
     is($memd->get("test1"), undef, "Did it get deleted?");
 
 
-    my $content = get_remote_data('http://twitter.com/statuses/public_timeline.json',1);
+    my $content = get_remote_data('http://www.google.com/calendar/feeds/developer-calendar@google.com/public/full?alt=json&orderby=starttime&max-results=15&singleevents=true&sortorder=ascending&futureevents=true',1);
     contains_string(
 	$content,
-	'"text":',
+	'"title":',
 	'Get public timeline');
     
-    $content = get_remote_data('https://twitter.com/statuses/public_timeline.json',1);
+    $content = get_remote_data('https://www.google.com/calendar/feeds/developer-calendar@google.com/public/full?alt=json&orderby=starttime&max-results=15&singleevents=true&sortorder=ascending&futureevents=true',1);
     contains_string(
 	$content,
-	'"text":',
+	'"title":',
 	'Get public timeline with HTTPS');
 	
 	$content = get_remote_data("http://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-demo.txt",10);
