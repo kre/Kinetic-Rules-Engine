@@ -24,8 +24,13 @@ use strict;
 
 use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
+use Kynetx::Util qw(ll);
 
 use XML::XML2JSON;
+use MIME::Base64 qw(
+	encode_base64url
+	decode_base64url
+);
 
 
 use Exporter;
@@ -136,5 +141,49 @@ sub _xml2json {
     return undef;
 }
 $funcs->{'xml2json'} = \&_xml2json;
+
+sub _string2base64 {
+    my ($req_info, $function, $args) = @_;
+    my $string = $args->[0];
+    my $eol;
+    if (defined $args->[1]) {
+    	$eol = $args->[1];
+    } else {
+    	$eol = "";
+    }
+    return MIME::Base64::encode_base64($string,$eol);
+}
+$funcs->{'string2base64'} = \&_string2base64;
+$funcs->{'encodeBase64'} = \&_string2base64;
+
+sub _url2base64 {
+    my ($req_info, $function, $args) = @_;
+    my $string = $args->[0];
+    my $eol;
+    if (defined $args->[1]) {
+    	$eol = $args->[1];
+    } else {
+    	$eol = "";
+    }
+    return MIME::Base64::encode_base64url($string,$eol);
+}
+$funcs->{'url2base64'} = \&_url2base64;
+
+
+sub _base642string {
+    my ($req_info, $function, $args) = @_;
+    my $string = $args->[0];
+	return MIME::Base64::decode_base64($string);	
+}
+$funcs->{'base642string'} = \&_base642string;
+$funcs->{'decodeBase64'} = \&_base642string;
+
+sub _base642url {
+    my ($req_info, $function, $args) = @_;
+    my $string = $args->[0];
+	return MIME::Base64::decode_base64url($string);	
+}
+$funcs->{'base642url'} = \&_base642url;
+
 
 1;

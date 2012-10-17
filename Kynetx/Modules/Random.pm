@@ -146,4 +146,11 @@ sub rphoto {
 }
 $funcs->{'photo'} = \&rphoto;
 
+sub _uuid {
+	my ($req_info, $function, $args) = @_;
+	my $ug = new Data::UUID;
+	return $ug->create_str();	
+}
+$funcs->{'uuid'} = \&_uuid;
+
 1;

@@ -186,6 +186,27 @@ $logger->debug("Random photo: ", sub {Dumper($result)});
 cmp_deeply($result->{'media$content'}->[0]->{'url'},re(qr/https?:\/\/\w+/),$description);
 $test_count++;
 
+$description = "UUID string";
+$source = 'random';
+$function = 'uuid';
+$args = [];
+my $regexp = '\w{8}-\w{4}-\w{4}-\w{4}-\w{12}';
+
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+                      
+$logger->debug("UUID string: ", sub {Dumper($result)});
+cmp_deeply($result,re($regexp),$description);
+$test_count++;
+
+
 done_testing($test_count);
 
 

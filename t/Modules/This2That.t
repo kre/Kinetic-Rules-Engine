@@ -258,7 +258,7 @@ $test_count++;
 cmp_deeply($result,$dJSON, $description);
 
 # Put it all together now
-my $dJSON = '{"sample_dataset":{"tree":[{"cost":{},"@name":"Lemon Tree","harvest_time":{"#PCDATA":"3 Days"}},{"cost":{},"@name":"Acai Tree","harvest_time":{"#PCDATA":"2 Days"}}]}}';
+$dJSON = '{"sample_dataset":{"tree":[{"cost":{},"@name":"Lemon Tree","harvest_time":{"#PCDATA":"3 Days"}},{"cost":{},"@name":"Acai Tree","harvest_time":{"#PCDATA":"2 Days"}}]}}';
 $description = "Multiple options";
 $args = [$XML,{
 	'private_attributes' => ['encoding','version'],
@@ -278,10 +278,83 @@ $result = Kynetx::Expressions::den_to_exp(
                       ));
 $test_count++;
 cmp_deeply($result,$dJSON, $description);
+
+
+# base64 methods
+$description = "Encode to base64";
+$function = "string2base64";
+my $plaintext = "SuperDuper: ascii";
+my $expected = 'U3VwZXJEdXBlcjogYXNjaWk=';
+$args = [$plaintext];
+
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+$test_count++;
+cmp_deeply($result,$expected, $description);
+
+$description = "Decode from base64";
+$function = "base642string";
+my $base64 = 'U3VwZXJEdXBlcjogYXNjaWk=';
+$expected = "SuperDuper: ascii";
+$args = [$base64];
+ 
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+$test_count++;
+cmp_deeply($result,$expected, $description);
+
+$description = "URL safe encode to base64";
+$function = "url2base64";
+$plaintext = "3+4/7 = 1";
+$expected = 'Mys0LzcgPSAx';
+$args = [$plaintext];
+
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+$test_count++;
+cmp_deeply($result,$expected, $description);
+
+$description = "URL safe decode from base64";
+$function = "base642url";
+$base64 = 'Mys0LzcgPSAx';
+$expected = '3+4/7 = 1';
+$args = [$base64];
+
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+$test_count++;
+cmp_deeply($result,$expected, $description);
+
+
 done_testing($test_count);
-
-
-
 1;
 
 

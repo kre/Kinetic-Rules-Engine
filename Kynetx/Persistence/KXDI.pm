@@ -390,15 +390,55 @@ sub __get_global_definitions {
 			if ($mult eq 'attribute') {
 				my $field_def = get_field_def($graph,$name,$locale);
 				push(@fields,$field_def);
+				$defhash->{'fields'} = \@fields;				
+			} else {
+				ll("Name: $name");
+				my $keys = XDI::get_context($graph,$name);
+				$defhash->{'entity_contexts'} = $keys;
+				$defhash->{'fields'} = get_entity_fields($graph,$name,$locale);
 			}
-			$defhash->{'fields'} = \@fields;
 			$globals->{$key} = $defhash;
 		}
 	}
+	#ll("defs: ", sub{Dumper($globals->{'+(+addr)+en'})});
 	ll("defs: ", sub{Dumper($globals)});
 	return $globals;	
 }
 $funcs->{'global_definitions'} = \&__get_global_definitions;
+
+sub get_entity_fields {
+	my ($graph,$key,$locale) = @_;
+	my @return = ();
+	my $tuples = XDI::tuples($graph,[$key,'()',undef]);
+	my @ordinals = ();
+	foreach my $ord (@{$tuples->[0]->[2]}) {
+		if ($ord =~ m/^\$\*(\d+)$/) {
+			push(@ordinals,$1);
+		}
+	}
+	@ordinals = sort @ordinals;
+	foreach my $inOrder (@ordinals) {
+		my $okey = $key . '$*' . $inOrder;
+		my $equiv = XDI::get_equivalent($graph,$okey);
+		my $fkey = $equiv->[0];
+		my $nkey = $fkey.'$!($*)';
+		my $num = XDI::get_literal($graph,$nkey);
+		my ($min,$max) = split(/-/,$num);
+		my $count = (defined $max) ? $max : $min;
+		my $field = substr $fkey, length($key);
+		my $isLiteral = XDI::tuples($graph,[$field,'$is+',undef])->[0]->[2];
+		if ($isLiteral ne "+") {
+			my $def = get_field_def($graph,$field,$locale);
+			for(my $i = 0; $i < $count;$i++) {
+				my $copy = clone $def;
+				push(@return,$copy);
+			}
+		}
+		
+		
+	}
+	return \@return;
+}
 
 sub get_local_definitions {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
