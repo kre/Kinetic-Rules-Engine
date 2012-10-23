@@ -265,11 +265,13 @@ sub _add {
 		my ($c,$msg) = Kynetx::Persistence::KXDI::xdi_message($kxdi);
 		$logger->debug("Link_contract: ", $msg->link_contract);
 		$logger->debug("KXDI: ", sub {Dumper($kxdi)});
-		
-		foreach my $op (@{$args->[0]}) {
-			$msg->add('(' . $op . ')');
+		if (ref $args->[0] eq 'ARRAY'){
+			foreach my $op (@{$args->[0]}) {
+				$msg->add('(' . $op . ')');
+			}
+		} elsif (ref $args->[0] eq '') {
+			$msg->add('(' . $args->[0] . ')');
 		}
-		
 		my $result = $c->post($msg);;
 		
 		$logger->debug("Result: ", sub {Dumper($result)});
@@ -308,6 +310,66 @@ sub _get {
 	
 }
 $funcs->{'get'} = \&_get;
+
+sub _mod {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $logger = get_logger();
+	if (defined $args->[0] ) {
+		my $kxdi = Kynetx::Persistence::KXDI::get_xdi($ken);
+		my ($c,$msg) = Kynetx::Persistence::KXDI::xdi_message($kxdi);
+		if (ref $args->[0] eq 'ARRAY'){
+			foreach my $op (@{$args->[0]}) {
+				$msg->mod( $op );
+			}
+		} elsif (ref $args->[0] eq '') {
+			$msg->mod($args->[0]);
+		}
+		if (defined $args->[1] && $args->[1] eq "textonly") {
+			return $msg->to_string();
+		} else {
+			my $result = $c->post($msg);
+			$logger->debug("Message: ", $msg->to_string);
+			$logger->debug("Result: ", sub {Dumper($result)});
+			return $result;
+		}
+	}
+	
+}
+$funcs->{'mod'} = \&_mod;
+
+sub _del {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $logger = get_logger();
+	if (defined $args->[0] ) {
+		my $kxdi = Kynetx::Persistence::KXDI::get_xdi($ken);
+		my ($c,$msg) = Kynetx::Persistence::KXDI::xdi_message($kxdi);
+		if (ref $args->[0] eq 'ARRAY'){
+			foreach my $op (@{$args->[0]}) {
+				$msg->del( $op );
+			}
+		} elsif (ref $args->[0] eq '') {
+			$msg->del($args->[0]);
+		}
+		if (defined $args->[1] && $args->[1] eq "textonly") {
+			return $msg->to_string();
+		} else {
+			if (defined $args->[1] && $args->[1] eq "context") {
+				$c->context(1);
+			}
+			my $result = $c->post($msg);
+			$logger->debug("Message: ", $msg->to_string);
+			$logger->debug("Result: ", sub {Dumper($result)});
+			return $result;
+		}
+	}
+	
+}
+$funcs->{'del'} = \&_del;
+
 
 sub _has_definition {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
@@ -616,29 +678,6 @@ sub _get_multiplicity {
 		
 }
 
-sub _get_literal {
-	my ($graph,$keys) = @_;
-	my @results = ();
-	if (ref $keys eq "ARRAY") {
-		foreach	my $key (@$keys) {
-			my $values = _tuples($graph,[$key,'!',undef]);
-			ll(Dumper($values));
-			if (defined $values) {
-				foreach my $element (@{$values}) {
-					ll("found literal: $element");
-					push(@results,$element->[2]);
-				}
-			}
-			
-		}	
-		if (scalar(@results) == 1) {
-			return $results[0];
-		} elsif (scalar(@results) > 1) {
-			return \@results;
-		} 		
-	}
-	return undef;
-}
 
 sub _literal {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
@@ -646,14 +685,42 @@ sub _literal {
 	my $graph = $args->[0];
 	my $key = $args->[1];
 	$logger->debug("Find eq: $key");
-	if (ref $graph eq "HASH" and ref $key eq "") {
-		return _get_literal($graph,[$key]);
+	my @results = ();
+	if (ref $graph eq "HASH") {
+		my $values = XDI::tuples($graph,[$key,'!',undef]);
+		if (defined $values) {
+			foreach my $element (@{$values}) {
+				
+			}
+		}
 	} else {
 		$logger->debug("Required arguments: <xdi hash>,<key>");
 		return undef;
 	}
 }
 $funcs->{'literal'} = \&_literal;
+
+sub _all_literals {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	my $graph = $args->[0];
+	my $values = XDI::tuples($graph,[qr/.+/,'!',undef]);
+	$logger->debug("val: ",Dumper($values));
+	my @results = ();
+	if (defined $values) {
+		foreach my $element (@{$values}) {
+			
+			my $struct = {
+				'key' => $element->[0],
+				'value' => $element->[2]
+			};
+			push(@results,$struct);
+		}
+	}
+	$logger->debug(Dumper(@results));
+	return \@results;
+}
+$funcs->{'all_literals'} = \&_all_literals;
 
 
 sub _get_equivalent {
