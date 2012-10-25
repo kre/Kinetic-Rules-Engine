@@ -76,6 +76,20 @@ my $predicates = {
 };
 
 my $default_actions = {
+    'authorize' => {
+        js => <<EOF,
+function(uniq, cb, config) {
+  \$K.kGrowl.defaults.header = "Authorize XDI Access";
+  if(typeof config === 'object') {
+    \$K.extend(\$K.kGrowl.defaults,config);
+  }
+  \$K.kGrowl(KOBJ_xdi_notice);
+  cb();
+}
+EOF
+        before => \&authorize
+    }
+	
 };
 
 
@@ -267,11 +281,13 @@ sub _add {
 		$logger->debug("KXDI: ", sub {Dumper($kxdi)});
 		if (ref $args->[0] eq 'ARRAY'){
 			foreach my $op (@{$args->[0]}) {
+				
 				$msg->add('(' . $op . ')');
 			}
 		} elsif (ref $args->[0] eq '') {
 			$msg->add('(' . $args->[0] . ')');
 		}
+		$logger->debug("Message: ", $msg->to_string());
 		my $result = $c->post($msg);;
 		
 		$logger->debug("Result: ", sub {Dumper($result)});
@@ -418,13 +434,16 @@ sub __get_global_definitions {
 	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $kxdi = Kynetx::Configure::get_config('xdi');
+	$kxdi->{'endpoint'} = $kxdi->{'registry'};
+	ll("Lookup");
 	my ($c,$msg) = xdi_message($kxdi);
 	my $logger = get_logger();
 	# Need to reset the url to the registry url
-	$c->server($kxdi->{'registry'});
+	#$c->server($kxdi->{'registry'});
 	$c->context(1);
 	$msg->get('()');
 	my $graph;
+	ll("Query:");
 	eval {
 		$graph = $c->post($msg);
 	};
@@ -506,10 +525,108 @@ sub get_local_definitions {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
 	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-	my $kxdi = Kynetx::Configure::get_config('xdi');
-	return ();	
+	my $kxdi = Kynetx::Persistence::KXDI::get_xdi($ken);
+	my $inumber = $kxdi->{"inumber"};
+	my ($c,$msg) = Kynetx::Persistence::KXDI::xdi_message($kxdi);
+	$c->context(1);
+	
+	$msg->get('()');
+	my $graph = $c->post($msg);
+	my $key = "^\+\($inumber)";
+	my $tuples = XDI::tuples($graph,[qr/\+\(/,'$is+',undef]);
+	my ($name,$locale,$desc,$label);
+	my $defs;
+	foreach my $defArray (@{$tuples}) {
+		my $key = $defArray->[0];
+		my $value = $defArray->[2];
+		if ($key =~ m/\+\(\+\((\w+)\)\)/) {
+			$name->{$1} = 1;
+		}
+		if ($value =~ m/\+(\w+)\$lang/) {
+			$locale->{$1} = 1;
+		}
+	}
+	my @names = keys %{$name};
+	my @locales = keys %{$locale};
+	foreach my $defname (@names) {
+		foreach my $loc (@locales) {
+			my $lhash;
+			my @fields;
+			my $key = $defname . $loc; 
+			my $label = $defname . " +" . $loc;
+			my $field_def;
+			my $tkey = "+($inumber)+(+($defname))/\$is+";
+			my $lkey = "label";
+			my $l = XDI::tuples($graph,[qr/$defname.+label/,'!',undef]);
+			my $d = XDI::tuples($graph,[qr/$defname.+desc/,'!',undef]);
+			
+			ll("Label search: ",Dumper $l);
+			my $datatype = $graph->{$tkey};
+			$field_def->{"field_type"} = $datatype->[0];
+			$field_def->{"label"} = $l->[0]->[2];
+			$field_def->{"name"} = $defname;
+			$field_def->{"description"} = $d->[0]->[2];
+			push(@fields,$field_def);
+			$lhash->{'fields'} = \@fields;
+			$lhash->{'key'} = $key;
+			$lhash->{'label'} = $label;
+			$lhash->{'locale'} = $loc;
+			$defs->{$key} = $lhash;
+		}
+	}
+	return $defs;	
 }
 $funcs->{'local_definitions'} = \&get_local_definitions;
+#	$field_def->{"field_type"} = get_field_type($graph,$name);
+#	$field_def->{"description"} = get_field_description($graph,$name,$locale);
+#	$field_def->{"contexts"} = get_field_contexts($graph,$name);
+#	$field_def->{"label"} = get_field_label($graph,$name,$locale);
+#	$field_def->{"name"} = $name;
+
+sub _get_locales {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $kxdi = Kynetx::Configure::get_config('xdi');
+	$kxdi->{'endpoint'} = $kxdi->{'registry'};
+	my ($c,$msg) = xdi_message($kxdi);
+	my $logger = get_logger();
+	# Need to reset the url to the registry url
+	$c->context(1);
+	$msg->get('$(+locale)');
+	my $graph;
+	eval {
+		$graph = $c->post($msg);
+	};
+	if ($@) {
+		$logger->debug("Failed to get global definitions $@");
+		return undef;
+	} 
+	
+	my $tuples = XDI::tuples($graph,["\$\(\+locale\)",'()',undef]);
+	my @result = ();
+	my $indices = $tuples->[0]->[2];
+	foreach my $index (@{$indices}) {
+		#build the exact key
+		my $numkey = '$(+locale)' . $index;
+		my $elements =  $graph->{$numkey . '/()'};
+		my $lobj;
+		foreach my $element (@{$elements}) {
+			my $numIndex = $numkey . $element;
+			my $i = $graph->{$numIndex . '/()'}->[0];
+			my $fkey = $numIndex . $i . '/!';
+			$lobj->{$element} = $graph->{$fkey}->[0];
+		}
+		push(@result,$lobj);
+	}
+	# sort by the value of the first element
+	@result = sort {$a->{(sort keys %{$a})[0]} cmp $b->{(sort keys %{$b})[0]}} @result;
+	
+	return \@result		
+}
+$funcs->{'locales'} = \&_get_locales;
+
+
 
 sub get_field_def {
 	my ($graph,$name,$locale) = @_;
@@ -572,79 +689,6 @@ sub get_field_type {
 
 
 
-sub _get_global_definitions {
-	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
-	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
-	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-	my $kxdi = Kynetx::Configure::get_config('xdi');
-	my ($c,$msg) = xdi_message($kxdi);
-	my $logger = get_logger();
-	# Need to reset the url to the registry url
-	$c->server($kxdi->{'registry'});
-	$c->context(1);
-	if (defined $args->[0]) {
-		if (ref $args->[0] eq "") {
-			$msg->get($args->[0]);
-			my $graph;
-			eval {
-				$graph = $c->post($msg);
-			};
-			if ($@) {
-				$logger->debug("Failed to get definition for $args->[0] $@");
-				return undef;
-			}
-			return $graph;
-		}
-	} else {
-		$msg->get('()');
-		my $graph;
-		eval {
-			$graph = $c->post($msg);
-		};
-		if ($@) {
-			$logger->debug("Failed to get global definitions $@");
-			return undef;
-		} else {
-			ll(sub {Dumper($graph)});
-			if (! defined $args->[0]) {
-				my $tuple = XDI::pick_xdi_tuple($graph,['()','()',undef]);
-				my @roots = ();
-				foreach my $element (@{$tuple->[2]}) {
-					if ($element =~ m/^\+\(\+\w+\)$/) {
-						push (@roots,$element);
-					}
-				}
-				# prune for just the $is+ definitions
-				my @defs = ();
-				foreach my $root (@roots) {
-					my $test = XDI::pick_xdi_tuple($graph,[$root,'$is+',undef]);
-					if ($test) {
-						push(@defs,$root);
-					}
-				}
-				
-				# pick out the languages defined
-				my @langs = _definition_locales($graph);
-				
-				# Build the definition objects
-				my $struct;
-				foreach my $def (@defs) {
-					#my $desc = _get_desc($graph,$def);
-					foreach my $lang (@langs) {
-						ll("Build $def $lang");
-						my $build = _build_def($graph,$def,$lang);
-						if (defined $build) {
-							$struct->{"$def$lang"} = $build;
-						}
-					}
-					
-				}
-				return $struct;			
-			}
-		}	
-			
-	}
-}
 
 sub _build_def {
 	my ($graph,$def,$lang) = @_;
@@ -1260,6 +1304,7 @@ sub xdi_message {
 			'from' => $from,
 			'from_graph' => $from_graph
 		});
+		ll("Connect: t-$target s-$endpoint");
 		my $c = $xdi->connect({
 			'target' => $target,
 			'secret' => $secret,
@@ -1357,6 +1402,57 @@ sub _definition_locales {
 	}
 	my @keys = keys %{$lang};
 	return \@keys;	
+}
+
+sub _xdi_message {
+    my ( $req_info, $iname ) = @_;
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
+    my $ruleset_name = $req_info->{"$rid:ruleset_name"};
+    my $name         = $req_info->{"$rid:name"};
+    my $author       = $req_info->{"$rid:author"};
+    my $description  = $req_info->{"$rid:description"};
+	my $divId = "KOBJ_xdi_notice";
+	my $msg = <<EOF;
+<div id="$divId">
+<p>The application</p>
+<p>$name ($rid)</p>
+<p> from $author is requesting that you authorize your XDI server to share your personal information with it.  </p>
+<blockquote><b>Description:</b>$description</blockquote>
+<p>
+The application will not have access to your XDI security information.  Please enter your XDI password so Kynetx can verify your ownership and create a link contract for <strong>$rid</strong>.  
+You can cancel now by clicking "No Thanks" below.  Note: if you cancel, this application may not work properly.
+</p>
+<div>
+	<label>Secret</label>
+	<input type="password" id="xdiPassword" placeholder="XDI password">
+</div>
+<div style="color: #000; background-color: #FFF; -moz-border-radius: 5px; -webkit-border-radius: 5px; padding: 10px;margin:10px;text-align:center;font-size:18px;"cursor": "pointer"">
+<button type="button" onclick="return false;">Share my personal cloud</a></div>
+
+<div style="color: #FFF; background-color: #F33; -moz-border-radius: 5px; -webkit-border-radius: 5px; padding: 10px;margin:10px;text-align:center;font-size:18px;"cursor": "pointer"" onclick="javascript:KOBJ.close_notification('#$divId')">No Thanks!</div>
+</div>
+EOF
+
+    return ( $divId, $msg );
+}
+
+sub authorize {
+    my ( $req_info, $rule_env, $session, $config, $mods, $args ) = @_;
+    my $rid_info = $req_info->{'rid'};
+    my $rid = get_rid($rid_info);
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $kxdi = Kynetx::Configure::get_config('xdi');
+	my $iname = $kxdi->{'iname'};
+    my $logger  = get_logger();
+    
+    my ( $divId, $msg ) =
+    	_xdi_message( $req_info, $iname );
+    my $js =
+      Kynetx::JavaScript::gen_js_var( $divId,Kynetx::JavaScript::mk_js_str($msg) );
+      
+    return $js;
+		
 }
 
 
