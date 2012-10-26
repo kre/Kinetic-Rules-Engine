@@ -77,29 +77,10 @@ sub token_query {
     my ($var) = @_;
     my $logger = get_logger();
     my $parent = (caller(1))[3];
-    $logger->trace("Called from -$parent- with ",sub {Dumper($var)});
+    #$logger->trace("Called from -$parent- with ",sub {Dumper($var)});
     return Kynetx::MongoDB::get_value(COLLECTION,$var);
 }
 
-#sub get_token {
-#    my ($session, $rid,$domain) = @_;
-#    my $logger = get_logger();
-#    my $session_id = Kynetx::Session::session_id($session);
-#    $domain = $domain || "web";
-#    my $var;
-#    $logger->trace("Get token for session: $session_id");
-#    # There might be other ways to find a token for other endpoint domains
-#    if ($domain eq "web") {
-#        # Check mongo.tokens for any tokens for a matching sessionid
-#        $var = {
-#            "endpoint_id" => $session_id,
-#        };
-#    } else {
-#        # default is to check mongo for session
-#
-#    }
-#    return token_query($var);
-#}
 
 sub get_token {
     my ($session, $rid,$domain) = @_;
@@ -165,6 +146,24 @@ sub create_token {
         $logger->warn("Token request error: ", mongo_error());
     }
 }
+
+# this should be okay for small numbers of tokens
+sub compare_token_kens {
+	my ($tokens) = @_;
+	my $logger = get_logger();
+	my $base_ken;
+	foreach my $token (@{$tokens}) {
+		my $val = Kynetx::Persistence::KEN::ken_lookup_by_token($token);
+		if (! defined $base_ken) {
+			$base_ken = $val
+		} elsif ($base_ken ne $val) {
+			return 0;
+		}
+	}
+	return 1;
+	
+}
+
 
 sub new_token {
     my ($rid,$session,$ken,$authenticated) = @_;
