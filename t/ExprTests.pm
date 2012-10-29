@@ -3016,7 +3016,8 @@ var fact = function(n) {return (n <= 0) ? 1 : (n * fact((n - 1)))};
 var x = 120;
 _JS_
 
-my $function_call_threshold = Kynetx::Configure::get_config("FUNCTION_CALL_THRESHOLD") || 101;
+my $function_call_threshold = Kynetx::Configure::get_config("FUNCTION_CALL_THRESHOLD") || 100;
+$function_call_threshold++;
 
 add_expr_testcase(
     $krl_src,
