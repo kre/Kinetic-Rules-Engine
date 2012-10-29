@@ -71,6 +71,7 @@ $Data::Dumper::Terse = 1;
 
 use Kynetx::Parser qw/:all/;
 use Kynetx::Environments qw/:all/;
+use Kynetx::Configure;
 
 
 
@@ -3015,6 +3016,8 @@ var fact = function(n) {return (n <= 0) ? 1 : (n * fact((n - 1)))};
 var x = 120;
 _JS_
 
+my $function_call_threshold = Kynetx::Configure::get_config("FUNCTION_CALL_THRESHOLD") || 101;
+
 add_expr_testcase(
     $krl_src,
     'pre',
@@ -3089,7 +3092,7 @@ $re1 = extend_rule_env(['inc','x'],
 		   },
 	  'type' => 'closure'
 	 },
-	 101],
+	 $function_call_threshold],
 		       $rule_env);
 
 $krl_src = <<_KRL_;
@@ -3104,7 +3107,7 @@ _KRL_
 
 $js = <<_JS_;
 var inc = function(n) {return (n <= 0) ? 0 : (1 + inc((n - 1)))};
-var x = 101;
+var x = $function_call_threshold;
 _JS_
 
 add_expr_testcase(
