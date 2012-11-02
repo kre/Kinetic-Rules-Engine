@@ -45,6 +45,7 @@ use Kynetx::Actions::FlippyLoo;
 use Kynetx::Actions::Email;
 use Kynetx::Directives qw/:all/;
 use Kynetx::Modules::ECI;
+use Kynetx::Modules::OAuthModule;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -862,6 +863,9 @@ sub build_one_action {
 	if ( defined $action->{'source'} ) {
 		if ( $action->{'source'} eq 'eci' ) {
 			$actions = Kynetx::Modules::ECI::get_actions();
+		}
+		elsif ( $action->{'source'} eq 'oauthmodule' ) {
+			$actions = Kynetx::Modules::OAuthModule::get_actions();
 		}
 		elsif ( $action->{'source'} eq 'twitter' ) {
 			$actions = Kynetx::Modules::Twitter::get_actions();

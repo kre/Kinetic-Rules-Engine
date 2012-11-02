@@ -232,9 +232,9 @@ sub _tuple {
 		my $graph = $args->[0];
 		if (defined $args->[1] && ref $args->[1] eq 'ARRAY') {
 			my $tuple = $args->[1];
-			$logger->debug("Tuple: ", sub {Dumper($tuple)});
+			#$logger->debug("Tuple: ", sub {Dumper($tuple)});
 			my $result = XDI::pick_xdi_tuple($graph,$tuple);
-			$logger->debug("result: ", sub {Dumper($result)});
+			#$logger->debug("result: ", sub {Dumper($result)});
 			return $result;
 		}
 	} else {
@@ -277,8 +277,8 @@ sub _add {
 	if (defined $args->[0] && ref $args->[0] eq 'ARRAY') {
 		my $kxdi = Kynetx::Persistence::KXDI::get_xdi($ken);
 		my ($c,$msg) = Kynetx::Persistence::KXDI::xdi_message($kxdi);
-		$logger->debug("Link_contract: ", $msg->link_contract);
-		$logger->debug("KXDI: ", sub {Dumper($kxdi)});
+		#$logger->debug("Link_contract: ", $msg->link_contract);
+		#$logger->debug("KXDI: ", sub {Dumper($kxdi)});
 		if (ref $args->[0] eq 'ARRAY'){
 			foreach my $op (@{$args->[0]}) {
 				
@@ -287,10 +287,10 @@ sub _add {
 		} elsif (ref $args->[0] eq '') {
 			$msg->add('(' . $args->[0] . ')');
 		}
-		$logger->debug("Message: ", $msg->to_string());
+		#$logger->debug("Message: ", $msg->to_string());
 		my $result = $c->post($msg);;
 		
-		$logger->debug("Result: ", sub {Dumper($result)});
+		#$logger->debug("Result: ", sub {Dumper($result)});
 		return $result;
 	}	
 }
@@ -318,8 +318,8 @@ sub _get {
 				$c->context(1);
 			}
 			my $result = $c->post($msg);
-			$logger->debug("Message: ", $msg->to_string);
-			$logger->debug("Result: ", sub {Dumper($result)});
+			#$logger->debug("Message: ", $msg->to_string);
+			#$logger->debug("Result: ", sub {Dumper($result)});
 			return $result;
 		}
 	}
@@ -346,8 +346,8 @@ sub _mod {
 			return $msg->to_string();
 		} else {
 			my $result = $c->post($msg);
-			$logger->debug("Message: ", $msg->to_string);
-			$logger->debug("Result: ", sub {Dumper($result)});
+			#$logger->debug("Message: ", $msg->to_string);
+			#$logger->debug("Result: ", sub {Dumper($result)});
 			return $result;
 		}
 	}
@@ -377,8 +377,8 @@ sub _del {
 				$c->context(1);
 			}
 			my $result = $c->post($msg);
-			$logger->debug("Message: ", $msg->to_string);
-			$logger->debug("Result: ", sub {Dumper($result)});
+			#$logger->debug("Message: ", $msg->to_string);
+			#$logger->debug("Result: ", sub {Dumper($result)});
 			return $result;
 		}
 	}
@@ -512,6 +512,11 @@ sub get_entity_fields {
 			my $def = get_field_def($graph,$field,$locale);
 			for(my $i = 0; $i < $count;$i++) {
 				my $copy = clone $def;
+				if ($i < $min) {
+					$copy->{"required"} = 1;
+				} else {
+					$copy->{"required"} = 0;
+				}
 				push(@return,$copy);
 			}
 		}
@@ -749,7 +754,7 @@ sub _all_literals {
 	my $logger = get_logger();
 	my $graph = $args->[0];
 	my $values = XDI::tuples($graph,[qr/.+/,'!',undef]);
-	$logger->debug("val: ",Dumper($values));
+	#$logger->debug("val: ",Dumper($values));
 	my @results = ();
 	if (defined $values) {
 		foreach my $element (@{$values}) {
@@ -761,7 +766,7 @@ sub _all_literals {
 			push(@results,$struct);
 		}
 	}
-	$logger->debug(Dumper(@results));
+	#$logger->debug(Dumper(@results));
 	return \@results;
 }
 $funcs->{'all_literals'} = \&_all_literals;
@@ -1173,7 +1178,7 @@ sub provision_xdi_for_kynetx {
 				my ($c,$msg) = xdi_message($kxdi);
 				$msg->add(_lc_do($lc));
 				$msg->add(_lc_permission($lc,'$all'));
-				$logger->debug("Add base permissions for Kynetx: ",$msg->to_string);
+				#$logger->debug("Add base permissions for Kynetx: ",$msg->to_string);
 				eval {
 					$c->post($msg);
 				};
@@ -1209,7 +1214,7 @@ sub add_link_contract {
 			$lc =~ m/^\((.*?)\$do\/\$is\$do\/(.+)\)$/;
 			my $lc_target = $1;
 			my $lc_entity = $2;
-			$logger->debug("Link contract: $lc $1 $2");
+			#$logger->debug("Link contract: $lc $1 $2");
 			put_link_contract($ken,$lc_entity,$lc_target);
 		}
 		return $t;
@@ -1225,7 +1230,7 @@ sub check_link_contract {
 	my $kxdi = get_xdi($ken);
 	if (defined $kxdi) {
 		my ($c,$msg) = xdi_message($kxdi);
-		$logger->debug("KXDI: ", sub {Dumper($kxdi)});
+		#$logger->debug("KXDI: ", sub {Dumper($kxdi)});
 		my $lc_statement;
 		# until meta link contracts are enabled messages are going
 		# to be sent as the graph owner (target)
@@ -1239,9 +1244,9 @@ sub check_link_contract {
 			$lc_statement = '$do';
 		}
 		$msg->get($lc_statement);
-		$logger->debug("Check lc message: ",$msg->to_string());
+		#$logger->debug("Check lc message: ",$msg->to_string());
 		my $result = $c->post($msg);
-		$logger->debug("Result: ",sub {Dumper($result)});
+		#$logger->debug("Result: ",sub {Dumper($result)});
 		if (defined $result) {
 			my $lc_from;
 			if (defined $rid) {
@@ -1251,18 +1256,18 @@ sub check_link_contract {
 				$lc_from = $from;
 			}
 			my $tuple = XDI::pick_xdi_tuple($result,[$lc_statement,'$is$do']);
-			$logger->debug("Result: ",sub {Dumper($tuple)});
+			#$logger->debug("Result: ",sub {Dumper($tuple)});
 			if (defined $tuple) {
 				my $is_array = $tuple->[2];
 				if (ref $is_array eq 'ARRAY') {			
 					foreach my $element (@{$is_array}) {
-						$logger->debug("compare: $element $lc_from");
+						#$logger->debug("compare: $element $lc_from");
 						if ($element eq $lc_from) {
 							return 1;
 						}
 					}
 				} elsif (ref $is_array eq '') {
-					$logger->debug("compare: $is_array $lc_from");
+					#$logger->debug("compare: $is_array $lc_from");
 					if ($is_array eq $lc_from) {
 						return 1;
 					}

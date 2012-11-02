@@ -76,6 +76,7 @@ sub handler {
     my $method;
     my $rid;
     my $eid = '';
+    $logger->debug($r->path_info);
 
     ($method,$rid,$eid) = $r->path_info =~ m!/([a-z+_]+)/([A-Za-z0-9_;]*)/?(\d+)?!;
     
@@ -115,6 +116,12 @@ sub handler {
     } elsif($method eq 'cb_host') {
 		$metric->series("oauth_host_callback");
       	my $st = Kynetx::Modules::OAuthModule::callback_host($r,$method, $rid);
+      	$r->status($st);
+      	$metric->stop_and_store();
+      	return $st;
+    } elsif($method eq 'oauth_facebook') {
+		$metric->series("oauth_host_callback");
+      	my $st = Kynetx::Modules::OAuthModule::facebook_callback_handler($r,$method, $rid);
       	$r->status($st);
       	$metric->stop_and_store();
       	return $st;

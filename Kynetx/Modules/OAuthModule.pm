@@ -28,8 +28,9 @@ use LWP::UserAgent;
 use HTTP::Request::Common;
 use HTTP::Status qw(:constants);
 use HTTP::Response;
-use Apache2::Const;
+use Apache2::Const qw(HTTP_BAD_REQUEST OK REDIRECT);
 use APR::URI;
+use URI::Escape;
 
 use Net::OAuth;
 $Net::OAuth::PROTOCOL_VERSION = Net::OAuth::PROTOCOL_VERSION_1_0A;
@@ -63,6 +64,8 @@ use constant CALLBACK_ACTION_KEY => "__callback_action";
 use constant CALLBACK => "oauth_callback";
 use constant OAUTH_CONFIG_KEY => "oauth_config";
 use constant ACCESS_TOKEN_KEY => "oauth_access_token";
+use constant OAUTH_REDIRECT => "oauth_redirect";
+use constant OAUTH2 => "oauth2";
 
 
 use Data::Dumper;
@@ -114,6 +117,36 @@ my $default_actions = {
 		'js' =>
 		  'NO_JS',    # this action does not emit JS, used in build_one_action
 		'before' => \&delete_token,
+		'after'  => []
+	},
+	'authorize_facebook_dialog' => {
+		'js' =><<EOF,
+function(uniq, cb, config, selector) {
+  \$K.kGrowl.defaults.header = "<p id='KOBJ_oauthmodule_facebook_header'>Authorize Facebook Access</p>";
+  if(typeof config === 'object') {
+    \$K.extend(\$K.kGrowl.defaults,config);
+  }
+  
+  if (selector) {
+  	console.log("Sel: " + selector);
+  	\$K(selector).html(KOBJ_oauthmodule_facebook_notice);
+  } else {
+  	\$K.kGrowl(KOBJ_oauthmodule_facebook_notice);
+  	if (\$K('body').popover) {
+  		console.log("Bootstrap is available");
+  		\$K("#KOBJ_oauthmodule_facebook_notice_appname").wrap("<strong />");
+  		\$K("#KOBJ_oauthmodule_facebook_notice_rid").addClass("muted");
+  		\$K("#KOBJ_oauthmodule_facebook_notice_yes").addClass("btn btn-primary btn-small");
+  		\$K("#KOBJ_oauthmodule_facebook_notice_no").addClass("btn btn-warning btn-small");
+  	} else {
+  		console.log("Bootstrap not found");
+  	}
+  }
+  
+  cb();
+}
+EOF
+		'before' => \&auth_facebook_dialog,
 		'after'  => []
 	},
 };
@@ -224,6 +257,34 @@ sub has_token {
 }
 $funcs->{'has_token'} = \&has_token;
 
+sub has_oauth2_token {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$oauth_config, $args) = @_;
+	my $logger = get_logger();
+	my $rid = get_rid($req_info->{'rid'});
+	my $namespace = $args->[0];	    		
+	my $key = OAUTH2 . SEP . $namespace;
+	my $token = Kynetx::Persistence::get_persistent_var("ent",$rid, $session, $key);
+	$logger->debug("Namespace: $namespace  Key: $key  Token: $token");
+	if (defined $token) {
+		return 1;
+	}
+	return 0;
+}
+$funcs->{'has_oauth2_token'} = \&has_oauth2_token;
+
+
+sub get_oauth2_token {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$oauth_config, $args) = @_;
+	my $rid = get_rid($req_info->{'rid'});
+	my $logger = get_logger();
+	my $namespace = $args->[0];	    		
+	my $key = OAUTH2 . SEP . $namespace;
+	my $token = Kynetx::Persistence::get_persistent_var("ent",$rid, $session, $key);
+	#$logger->debug("Namespace: $namespace  Key: $key  Token: $token");
+	return $token;
+}
+$funcs->{'get_oauth2_token'} = \&get_oauth2_token;
+
 sub get_token {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$oauth_config, $args) = @_;
 	my $logger = get_logger();
@@ -261,6 +322,286 @@ sub set_config_from_action{
 	}
 	$oconfig->{'__evar__'} = $v;
 	return $oconfig;
+}
+
+sub get_auth_request_url {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$oauth_config, $args) = @_;
+	my $logger = get_logger();
+	my ($url);
+	my $fail = undef;
+	my $rid = get_rid($req_info->{'rid'});	
+	my $extra_params = $oauth_config->{'extra_params'};
+	my $endpoints = $oauth_config->{'endpoints'};
+	my $namespace = $oauth_config->{'namespace'};
+	my $request_url = $endpoints->{'request_token_url'};
+	my $authorization_url = $endpoints->{'authorization_url'};
+	my $cbaction = get_callback_action($req_info,$session,$namespace,$args);
+    my $tokens = get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
+    my $callback = make_callback_url($req_info,$namespace, $args);
+    my $request_tokens = get_request_tokens($tokens,$callback,$request_url,$extra_params);
+    if (Kynetx::Errors::mis_error($request_tokens)) {
+ 		Kynetx::Errors::raise_error($req_info,'warn',
+ 			"[OAuthModule] " . $request_tokens->{'DEBUG'},
+ 			{
+ 				'genus' => 'oauth',
+ 				'species' => 'callback'
+ 			}
+ 		);
+ 		return undef;
+	}
+	$tokens = add_tokens($tokens,$request_tokens);
+    my $ent_config_key = OAUTH_CONFIG_KEY . SEP . $namespace;
+    # Need the token secret for the callback
+    $oauth_config->{'oauth_token_secret'} = $tokens->{'oauth_token_secret'};
+    $oauth_config->{'callback'} = $callback;
+    Kynetx::Persistence::save_persistent_var("ent", $rid, $session, $ent_config_key, $oauth_config);
+    $url = $authorization_url. '?oauth_token=' . $request_tokens->{'oauth_token'} . '&hd=default';
+	return $url;	
+}
+$funcs->{'get_auth_url'} = \&get_auth_request_url;
+
+sub auth_facebook_dialog {
+	my ($req_info,$rule_env,$session,$config,$mods,$args, $vars)  = @_;
+	my $rid = get_rid($req_info->{'rid'});
+	my $ruleset_name = $req_info->{"$rid:ruleset_name"};
+	my $name = $req_info->{"$rid:name"};
+	my $author = $req_info->{"$rid:author"};
+	my $description = $req_info->{"$rid:description"};
+	my $auth_url = get_facebook_auth_url($req_info,$rule_env,$session,$config,$mods,$args, $vars);
+	
+	my $msg =  <<EOF;
+<div id="KOBJ_oauthmodule_facebook_notice">
+<p id="KOBJ_oauthmodule_facebook_notice_rid_info">The application 
+<span id="KOBJ_oauthmodule_facebook_notice_appname">$name</span> (<span id="KOBJ_oauthmodule_facebook_notice_rid">$rid</span>) from 
+$author is requesting that you authorize Facebook to share your Facebook information</p>
+<blockquote id="KOBJ_oauthmodule_facebook_notice_rid_desc"><b>Description:</b>$description</blockquote>
+<p id="KOBJ_oauthmodule_facebook_notice_rid_request">
+The application will not have access to your login credentials at Facebook, 
+but will have access to a token that will allow it to make requests on Facebook on your behalf.  
+If you click "Take me to Facebook" below, you will taken to Facebook and asked to authorize this 
+application.  You can cancel at that point or now by clicking "No Thanks" below.  
+Note: if you cancel, this application may not work properly. 
+After you have authorized this application, you will be redirected back to this page.</p>
+<div>
+	<a id="KOBJ_oauthmodule_facebook_notice_yes" href="$auth_url">Take me to Facebook</a>
+	<a id="KOBJ_oauthmodule_facebook_notice_no" href="#" onclick="javascript:KOBJ.close_notification('#KOBJ_oauthmodule_facebook_notice');return false;">No Thanks!</a>
+</div>
+EOF
+	
+	my $js =  Kynetx::JavaScript::gen_js_var('KOBJ_oauthmodule_facebook_notice',
+		   Kynetx::JavaScript::mk_js_str($msg));
+
+	return $js
+	
+	
+}
+
+
+sub make_facebook_callback {
+    my ( $req_info, $namespace, $config ) = @_;
+    my $logger = get_logger();
+    my $rid     = get_rid($req_info->{'rid'});
+    my $version = $req_info->{'rule_version'} || 'prod';
+    my $host    = Kynetx::Configure::get_config('EVAL_HOST');
+    my $port    = Kynetx::Configure::get_config('KNS_PORT') || 80;
+    my $handler = "oauth_facebook";
+    my $protocol = 'http';
+    if (defined $config) {
+    	if ($config->{'use_https'} || $config->{'secure'}) {
+    		$protocol = 'https';
+    		$port = Kynetx::Configure::get_config('KNS_SECURE_PORT') || 443;
+    	}
+    }
+    my $callback = uri_escape_utf8("$protocol://$host:$port/ruleset/$handler/$rid/$version/$namespace");
+    $logger->debug( "OAuth callback url: ", $callback );
+    return $callback;    
+}
+
+
+sub make_callback_url {
+    my ( $req_info, $namespace, $args ) = @_;
+    my $logger = get_logger();
+    my $rid     = get_rid($req_info->{'rid'});
+    my $version = $req_info->{'rule_version'} || 'prod';
+    my $caller  = $req_info->{'caller'} || 'dummy';
+    my $host    = Kynetx::Configure::get_config('EVAL_HOST');
+    my $port    = Kynetx::Configure::get_config('KNS_PORT') || 80;
+    my $handler = CALLBACK;
+    my $protocol = 'http';
+    my $opts = $args->[1];
+    if (defined $opts) {
+    	if ($opts->{'use_https'} || $opts->{'secure'}) {
+    		$protocol = 'https';
+    		$port = Kynetx::Configure::get_config('KNS_SECURE_PORT') || 443;
+    	}
+    }
+    my $callback = "$protocol://$host:$port/ruleset/$handler/$rid/$version/$namespace";
+    $logger->debug( "OAuth callback url: ", $callback );
+    return $callback;    
+}
+
+
+sub facebook_auth_url {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$oauth_config, $args) = @_;
+	my $logger = get_logger();
+	my ($url);
+	my $fail = undef;
+	my $rid = get_rid($req_info->{'rid'});	
+
+}
+
+
+sub get_facebook_auth_url {
+	my ($req_info,$rule_env,$session,$config,$mods,$args, $vars)  = @_;
+    my $rid     = get_rid($req_info->{'rid'});
+	my $logger=get_logger();
+	#$logger->debug("conf: ", sub {Dumper($config)});
+	#$logger->debug("mod: ", sub {Dumper($mods)});
+	#$logger->debug("arg: ", sub {Dumper($args)});
+	#$logger->debug("var: ", sub {Dumper($vars)});
+	my $caller  = $req_info->{'caller'} || 'dummy';
+	
+	my ($url,$scope,$namespace,$token,$redirect,$oauth_access_url);
+	if (defined $config->{"request_token_url"}) {
+		$url = $config->{"request_token_url"};
+	} else {
+		$url = "http://www.facebook.com/dialog/oauth";
+	}
+	if (defined $config->{"scope"}) {
+		$scope = $config->{"scope"};
+	} else {
+		$url = "read_stream";
+	}
+	if (defined $config->{"namespace"}) {
+		$namespace = $config->{"namespace"};
+	} else {
+		$namespace = "facebook";
+	}
+	if (defined $config->{"client_id"}) {
+		$token = $config->{"client_id"};
+	} else {
+		my $tokens = get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
+		$logger->debug("$namespace : ", sub {Dumper($tokens)});
+		$token = $tokens->{"consumer_key"} || $tokens->{"client_id"};
+	}
+	if (defined $config->{"redirect"}) {
+		$redirect = $config->{"redirect"}
+	} else {
+		$redirect = $caller;
+	}
+	
+	if (defined $config->{"access_url"}) {
+		$oauth_access_url = $config->{"access_url"};
+	} else {
+		$oauth_access_url = 'https://graph.facebook.com/oauth/access_token?';
+	}
+	my $oid = MongoDB::OID->new();
+    my $state = $oid->to_string();
+	my $callback= make_facebook_callback( $req_info, $namespace, $config );
+	my $ent_config_key = OAUTH_CONFIG_KEY . SEP . $namespace;
+	my $eci = Kynetx::Persistence::KToken::get_token($session,$rid)->{'ktoken'};
+	my $key = OAUTH_REDIRECT . SEP . $namespace;
+	my $struct = {
+		$state => $redirect,
+		'access_url' => $oauth_access_url,
+		'callback' => $callback
+	};
+	Kynetx::Persistence::save_persistent_var("ent",$rid, $session, $key, $struct);
+	Kynetx::Persistence::save_persistent_var("app",$rid, $session, $state, $eci);
+	
+	#$logger->debug("Saved OAuth request origin: ", sub {Dumper($struct)});
+	#$logger->debug("ECI: ", sub {Dumper($eci)});
+	
+	my $aurl = $url . '?client_id=' . $token . "&redirect_uri=" . $callback . "&state=" . $state . "&scope=" . $scope;
+	return $aurl;
+	
+}
+
+
+# callback method for facebooks pseudo OAuth 2.0 
+sub facebook_callback_handler {
+	my ( $r, $method, $rid, $eid ) = @_;
+	my $logger = get_logger();
+	my ($cbrid,$version,$fail);
+	my @junk = ();
+	my $session = Kynetx::Session::process_session($r);
+	$logger->debug("\n-----------------------OAuth Callback ($method)--------------------------");
+	my $req_info = Kynetx::Request::build_request_env( $r, $method, $rid );
+	my $rule_env = Kynetx::Environments::empty_rule_env();
+    my $host    = Kynetx::Configure::get_config('EVAL_HOST');
+    my $port    = Kynetx::Configure::get_config('KNS_PORT') || 80;
+    my $protocol = "http";
+    my $uri = $r->uri();
+    my @elements = split(/\//,$uri);
+    my $namespace = pop @elements;
+    #$logger->debug("Namespace: $namespace", sub {Dumper(@elements)});
+	my $parsed_url = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});
+	if (defined $parsed_url && $parsed_url->scheme eq 'http') {
+		$port    = Kynetx::Configure::get_config('KNS_PORT') || 80;
+		$protocol = "http";
+	} else {
+		$protocol = 'https';
+    	$port = Kynetx::Configure::get_config('KNS_SECURE_PORT') || 443;
+	}
+	my $key = OAUTH_REDIRECT . SEP . $namespace;
+	#$logger->debug("redirect key: $key");
+	my $code  = $req_info->{'code'};
+	my $state = $req_info->{'state'};
+	my $ent_cache = Kynetx::Persistence::get_persistent_var("ent", $rid, $session, $key);
+	my $redirect = $ent_cache->{$state};
+	if (defined $redirect) {
+		my $oauth_access_url = $ent_cache->{'access_url'};	
+		my $callback = 	$ent_cache->{'callback'};
+		my $eci = Kynetx::Persistence::get_persistent_var("app", $rid, $session, $state);
+		Kynetx::Persistence::delete_persistent_var("app", $rid, $session, $state);
+		Kynetx::Persistence::delete_persistent_var("ent", $rid, $session, $key);				
+	    my $consumer_tokens = get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
+	    my $secret = $consumer_tokens->{'consumer_secret'};
+	    my $client_id = $consumer_tokens->{'client_id'} || $consumer_tokens->{'consumer_key'};
+	    
+	    my $token_request = $oauth_access_url;
+	    $token_request .= "client_id=" . $client_id;
+	    $token_request .= "\&redirect_uri=". $callback;
+	    $token_request .= "\&client_secret=" . $secret;
+	    $token_request .= "\&code=" . $code;
+		
+		my $ua = LWP::UserAgent->new();
+	    my $resp = $ua->request( GET $token_request);
+	    my $content = $resp->decoded_content();
+		
+	    if ( $resp->is_success() ) {
+	    	my $content = $resp->content();
+	    	my @pairs = split(/&/,$content);
+	    	my $params;
+	    	foreach my $parm (@pairs) {
+	    		my ($key,$value) = split(/=/,$parm);
+	    		$params->{$key} = $value;
+	    	}
+	    	my $fb_token = $params->{'access_token'};
+	    	#$logger->debug("TOKEN: $fb_token ###################");
+	    	if (defined $fb_token) {
+	    		my $key = OAUTH2 . SEP . $namespace;
+	    		Kynetx::Persistence::save_persistent_var("ent",$rid, $session, $key, $fb_token);
+	    	}
+	    } else {
+	    	$logger->debug("Failed response: ", sub {Dumper($resp)});
+	    	return Kynetx::Errors::merror("Request access token failure: $content");
+	    }
+		push(@junk,$code);
+		push(@junk,$state);
+		push(@junk,$redirect);
+	    push(@junk,$secret);		
+		push(@junk,$eci);
+		push(@junk,$token_request);
+		$r->headers_out->set(Location => $redirect);
+		return Apache2::Const::REDIRECT;		
+	} else {
+		$logger->warn("In facebook token request returned <state> not equal to requested state");
+		return Apache2::Const::HTTP_BAD_REQUEST;
+	}
+	
+	Kynetx::Util::page_dump($r,$req_info,$session,@junk);
+	return Apache2::Const::OK;
 }
 
 sub oauth_callback_handler {
@@ -545,41 +886,6 @@ sub run_function {
 }
 
 
-sub get_auth_request_url {
-	my ($req_info,$rule_env,$session,$rule_name,$function,$oauth_config, $args) = @_;
-	my $logger = get_logger();
-	my ($url);
-	my $fail = undef;
-	my $rid = get_rid($req_info->{'rid'});	
-	my $extra_params = $oauth_config->{'extra_params'};
-	my $endpoints = $oauth_config->{'endpoints'};
-	my $namespace = $oauth_config->{'namespace'};
-	my $request_url = $endpoints->{'request_token_url'};
-	my $authorization_url = $endpoints->{'authorization_url'};
-	my $cbaction = get_callback_action($req_info,$session,$namespace,$args);
-    my $tokens = get_consumer_tokens( $req_info, $rule_env, $session, $namespace );
-    my $callback = make_callback_url($req_info,$namespace, $args);
-    my $request_tokens = get_request_tokens($tokens,$callback,$request_url,$extra_params);
-    if (Kynetx::Errors::mis_error($request_tokens)) {
- 		Kynetx::Errors::raise_error($req_info,'warn',
- 			"[OAuthModule] " . $request_tokens->{'DEBUG'},
- 			{
- 				'genus' => 'oauth',
- 				'species' => 'callback'
- 			}
- 		);
- 		return undef;
-	}
-	$tokens = add_tokens($tokens,$request_tokens);
-    my $ent_config_key = OAUTH_CONFIG_KEY . SEP . $namespace;
-    # Need the token secret for the callback
-    $oauth_config->{'oauth_token_secret'} = $tokens->{'oauth_token_secret'};
-    $oauth_config->{'callback'} = $callback;
-    Kynetx::Persistence::save_persistent_var("ent", $rid, $session, $ent_config_key, $oauth_config);
-    $url = $authorization_url. '?oauth_token=' . $request_tokens->{'oauth_token'} . '&hd=default';
-	return $url;	
-}
-$funcs->{'get_auth_url'} = \&get_auth_request_url;
 
 sub protected_resource_request {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$oauth_config, $args) = @_;
@@ -683,9 +989,7 @@ sub get_oauth_config {
 			'request_token_url' => $opts->{'request_token_url'},
 			'authorization_url' => $opts->{'authorization_url'},
 			'access_token_url'	=> $opts->{'access_token_url'}
-		}
-		
-		
+		}		
 	}
 	
 	if (my $p = get_params($req_info,$rule_env,$session,$rule_name,$function,$args)) {
