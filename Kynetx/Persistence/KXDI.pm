@@ -435,7 +435,7 @@ sub __get_global_definitions {
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $kxdi = Kynetx::Configure::get_config('xdi');
 	$kxdi->{'endpoint'} = $kxdi->{'registry'};
-	ll("Lookup");
+	#ll("Lookup");
 	my ($c,$msg) = xdi_message($kxdi);
 	my $logger = get_logger();
 	# Need to reset the url to the registry url
@@ -443,7 +443,7 @@ sub __get_global_definitions {
 	$c->context(1);
 	$msg->get('()');
 	my $graph;
-	ll("Query:");
+	#ll("Query:");
 	eval {
 		$graph = $c->post($msg);
 	};
@@ -451,10 +451,10 @@ sub __get_global_definitions {
 		$logger->debug("Failed to get global definitions $@");
 		return undef;
 	} else {
-		ll(sub {Dumper($graph)});
+		#ll(sub {Dumper($graph)});
 	}
 	my $tuples = XDI::tuples($graph,[qr"^\+\(\+\w+\)$",'$is+',undef]);
-	ll(sub{Dumper($tuples)});
+	#ll(sub{Dumper($tuples)});
 	my $globals;
 	foreach my $definition (@{$tuples}) {
 		my $name = $definition->[0];
@@ -473,7 +473,7 @@ sub __get_global_definitions {
 				push(@fields,$field_def);
 				$defhash->{'fields'} = \@fields;				
 			} else {
-				ll("Name: $name");
+				#ll("Name: $name");
 				my $keys = XDI::get_context($graph,$name);
 				$defhash->{'entity_contexts'} = $keys;
 				$defhash->{'fields'} = get_entity_fields($graph,$name,$locale);
@@ -482,7 +482,7 @@ sub __get_global_definitions {
 		}
 	}
 	#ll("defs: ", sub{Dumper($globals->{'+(+addr)+en'})});
-	ll("defs: ", sub{Dumper($globals)});
+	#ll("defs: ", sub{Dumper($globals)});
 	return $globals;	
 }
 $funcs->{'global_definitions'} = \&__get_global_definitions;
@@ -565,7 +565,7 @@ sub get_local_definitions {
 			my $l = XDI::tuples($graph,[qr/$defname.+label/,'!',undef]);
 			my $d = XDI::tuples($graph,[qr/$defname.+desc/,'!',undef]);
 			
-			ll("Label search: ",Dumper $l);
+			#ll("Label search: ",Dumper $l);
 			my $datatype = $graph->{$tkey};
 			$field_def->{"field_type"} = $datatype->[0];
 			$field_def->{"label"} = $l->[0]->[2];
@@ -700,7 +700,7 @@ sub _build_def {
 	my $label = _get_label($graph,$def,$lang);
 	my $struct;
 	if (defined $label) {
-		ll("Label is $label");
+		#ll("Label is $label");
 		$struct->{'locale'} = $lang;
 		$struct->{'label'} = $label;
 		$struct->{'description'} = _get_desc($graph,$def,$lang);
@@ -813,6 +813,23 @@ sub _get_property {
 	return undef;	
 }
 
+sub _properties {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	my $graph = $args->[0];
+	my $key = $args->[1];
+	$logger->debug("Find eq: $key");
+	if (ref $graph eq "HASH" and ref $key eq "") {
+		my $result = _get_property($graph,$key);
+		return $result;
+	} else {
+		$logger->debug("Required arguments: <xdi hash>,<key>");
+		return undef;
+	}
+}
+$funcs->{'properties'} = \&_properties;
+
+
 sub _get_class {
 	my ($graph,$key) = @_;
 	my @results = ();
@@ -821,10 +838,10 @@ sub _get_class {
 		foreach my $element (@{$values}) {
 			foreach my $cl (@{$element->[2]}) {
 				push(@results,$cl);
-				ll("found class: $cl");
+				#ll("found class: $cl");
 			}
 		}
-		ll(Dumper @results);
+		#ll(Dumper @results);
 		return \@results;
 	}
 	return undef;	
@@ -839,7 +856,7 @@ sub _classes {
 	if (ref $graph eq "HASH" and ref $key eq "") {
 		my $result = _get_class($graph,$key);
 		
-		ll((ref $result) . " " . (Dumper $result));
+		#ll((ref $result) . " " . (Dumper $result));
 		return $result;
 	} else {
 		$logger->debug("Required arguments: <xdi hash>,<key>");
@@ -1045,9 +1062,9 @@ sub check_registry_for_iname {
 	$c->context(1);
 	my $str = '(' . $iname.  ')';
 	$msg->get($str);
-	ll($msg->to_string);
+	#ll($msg->to_string);
 	my $result = $c->post($msg);
-	ll(Dumper $result);
+	#ll(Dumper $result);
 	my $tuple = XDI::pick_xdi_tuple($result,[$str,'$is',undef]);
 	if (defined $tuple) {
 		return 1;
@@ -1309,7 +1326,7 @@ sub xdi_message {
 			'from' => $from,
 			'from_graph' => $from_graph
 		});
-		ll("Connect: t-$target s-$endpoint");
+		#ll("Connect: t-$target s-$endpoint");
 		my $c = $xdi->connect({
 			'target' => $target,
 			'secret' => $secret,
@@ -1347,12 +1364,12 @@ sub _lc_permission {
 	return $string
 }
 
+
 sub _tuples {
 	my ($graph,$match) = @_;
 	my $logger = get_logger();
 	my @matches = ();
-	ll("Search [ $match->[0], $match->[1], $match->[2] ]");
-	ll("Search graph: " . Dumper($graph));
+	$logger->debug("Search [ $match->[0], $match->[1], $match->[2] ]");
 	foreach my $key (sort keys %{$graph}) {
 		my ($subject,$predicate,$value);
 		if ($key =~ m/^(.+)\/(.+)$/) {
@@ -1391,12 +1408,31 @@ sub _tuples {
 					next;
 				} 
 			}
-			ll("Found: [$subject, $predicate, $value]");
+			#ll("Found: [$subject, $predicate, $value]");
 			push(@matches, [$subject,$predicate,$value]);
 		}
 	}
 	return \@matches;	
 }
+
+sub _get_tuples {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger=get_logger();
+	if (defined $args->[0] && ref $args->[0] eq 'HASH')	{
+		my $graph = $args->[0];
+		if (defined $args->[1] && ref $args->[1] eq 'ARRAY') {
+			my $tuple = $args->[1];
+			my $result = XDI::pick_xdi_tuple($graph,$tuple);
+			return $result;
+		}
+	} else {
+		$logger->debug("arg must be an XDI graph");
+	}
+	return undef;
+}
+$funcs->{'tuples'} = \&_get_tuples;
+
+
 
 sub _definition_locales {
 	my ($graph) = @_;
