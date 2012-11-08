@@ -42,6 +42,7 @@ use Devel::Size qw(
   size
   total_size
 );
+use Digest::MD5 qw(md5_base64);
 
 use Kynetx::Configure;
 use Kynetx::Json;
@@ -640,15 +641,15 @@ sub delete_value {
     return $success;
 }
 
-sub make_keystring {
-    my ($collection,$var) = @_;
-    my $keystring = $collection;
-    foreach my $key (sort (keys %$var)) {
-    	if ($var->{$key}) {
-    		$keystring .= $var->{$key};
-    	}        
-    }
-    return $keystring;
+sub get_cache_for_map {
+	my ($ken,$collection,$var) = @_;
+	my $lookup_key = "_map_" . $ken;
+	my $mcache_prefix = Kynetx::Memcached::check_cache($lookup_key);
+	if (defined $mcache_prefix) {
+		$var->{"cachemap"} = $mcache_prefix;
+		return get_cache($collection,$var);
+	}
+	return undef;
 }
 
 sub get_cache {
@@ -662,26 +663,27 @@ sub get_cache {
     }
 }
 
+sub set_cache_for_map {
+	my ($ken,$collection,$var,$value) = @_;
+	my $lookup_key = "_map_" . $ken;
+	my $mcache_prefix =  time();
+	Kynetx::Memcached::mset_cache($lookup_key,$mcache_prefix,$CACHETIME);
+	$var->{"cachemap"} = $mcache_prefix;
+	set_cache($collection,$var,$value);
+}
+
 sub set_cache {
     my ($collection,$var,$value) = @_;
     my $logger = get_logger();
     my $parent = (caller(1))[3];
     my $keystring = make_keystring($collection,$var);
-#    $logger->debug("Mongo set_cache $keystring from $parent: ", sub {Dumper($value)});
     Kynetx::Memcached::mset_cache($keystring,$value,$CACHETIME);
-#	if ($collection eq 'tokens') {
-#		$logger->debug("Touch token", sub {Dumper($var)});
-#		my $start = new Benchmark;
-#		
-#		my $ts =  DateTime->now->epoch;
-#		my $c = get_collection($collection);
-#		my $update = {'$set' => {'last_active' => $ts}};
-#    	$c->update($var,$update,{"upsert" => 1,"multiple" => 1});
-#		my $end = new Benchmark;
-#		my $base_save = timediff($end,$start);
-#		$logger->debug( "Save to Mongo: " . $base_save->[0]);
-#		
-#	}
+}
+
+sub clear_cache_for_map {
+	my ($ken) = @_;
+	my $lookup_key = "_map_" . $ken;
+	Kynetx::Memcached::flush_cache($lookup_key);
 }
 
 sub clear_cache {
@@ -689,6 +691,18 @@ sub clear_cache {
     my $keystring = make_keystring($collection,$var);
     Kynetx::Memcached::flush_cache($keystring);
 }
+
+sub make_keystring {
+    my ($collection,$var) = @_;
+    my $keystring = $collection;
+    foreach my $key (sort (keys %$var)) {
+    	if ($var->{$key}) {
+    		$keystring .= $var->{$key};
+    	}        
+    }
+    return md5_base64($keystring);
+}
+
 
 
 1;

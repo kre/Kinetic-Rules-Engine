@@ -418,27 +418,6 @@ sub make_facebook_callback {
 }
 
 
-sub make_callback_url {
-    my ( $req_info, $namespace, $args ) = @_;
-    my $logger = get_logger();
-    my $rid     = get_rid($req_info->{'rid'});
-    my $version = $req_info->{'rule_version'} || 'prod';
-    my $caller  = $req_info->{'caller'} || 'dummy';
-    my $host    = Kynetx::Configure::get_config('EVAL_HOST');
-    my $port    = Kynetx::Configure::get_config('KNS_PORT') || 80;
-    my $handler = CALLBACK;
-    my $protocol = 'http';
-    my $opts = $args->[1];
-    if (defined $opts) {
-    	if ($opts->{'use_https'} || $opts->{'secure'}) {
-    		$protocol = 'https';
-    		$port = Kynetx::Configure::get_config('KNS_SECURE_PORT') || 443;
-    	}
-    }
-    my $callback = "$protocol://$host:$port/ruleset/$handler/$rid/$version/$namespace";
-    $logger->debug( "OAuth callback url: ", $callback );
-    return $callback;    
-}
 
 
 sub facebook_auth_url {

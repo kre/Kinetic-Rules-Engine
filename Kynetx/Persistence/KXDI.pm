@@ -718,7 +718,7 @@ sub _build_def {
 
 sub _get_multiplicity {
 	my ($graph,$key) = @_;
-	my $values = _tuples($graph,[$key,'$is+',undef]);
+	my $values = XDI::tuples($graph,[$key,'$is+',undef]);
 	if (defined $values) {
 		my $mult = $values->[0]->[2];
 		return $mult;
@@ -775,7 +775,7 @@ $funcs->{'all_literals'} = \&_all_literals;
 sub _get_equivalent {
 	my ($graph,$key) = @_;
 	my @results = ();
-	my $values = _tuples($graph,[$key,'$is',undef]);
+	my $values = XDI::tuples($graph,[$key,'$is',undef]);
 	if (defined $values) {
 		foreach my $element (@{$values}) {
 			push(@results,$element->[2]);
@@ -803,7 +803,7 @@ $funcs->{'equivalents'} = \&_equivalents;
 sub _get_property {
 	my ($graph,$key) = @_;
 	my @results = ();
-	my $values = _tuples($graph,[$key,'()',undef]);
+	my $values = XDI::tuples($graph,[$key,'()',undef]);
 	if (defined $values) {
 		foreach my $element (@{$values}) {
 			push(@results,$element->[2]);
@@ -833,7 +833,7 @@ $funcs->{'properties'} = \&_properties;
 sub _get_class {
 	my ($graph,$key) = @_;
 	my @results = ();
-	my $values = _tuples($graph,[$key,'$is()',undef]);
+	my $values = XDI::tuples($graph,[$key,'$is()',undef]);
 	if (defined $values) {
 		foreach my $element (@{$values}) {
 			foreach my $cl (@{$element->[2]}) {
@@ -1365,56 +1365,6 @@ sub _lc_permission {
 }
 
 
-sub _tuples {
-	my ($graph,$match) = @_;
-	my $logger = get_logger();
-	my @matches = ();
-	$logger->debug("Search [ $match->[0], $match->[1], $match->[2] ]");
-	foreach my $key (sort keys %{$graph}) {
-		my ($subject,$predicate,$value);
-		if ($key =~ m/^(.+)\/(.+)$/) {
-			$subject = $1;
-			$predicate = $2;			
-			if (scalar(@{$graph->{$key}}) == 1) {
-
-				$value = $graph->{$key}->[0];
-			} else {
-				$value = $graph->{$key};
-			}
-
-			#ll("[tuples] Try: $key $value");
-			# match field 0
-			if (defined $match->[0]) {
-				if (ref $match->[0] eq "Regexp") {
-					next unless ($subject =~ m/$match->[0]/);
-				} elsif ($subject ne $match->[0]) {
-					next;
-				} 
-			}
-			
-
-			if (defined $match->[1]) {
-				if (ref $match->[1] eq "Regexp") {
-					next unless ($predicate =~ m/$match->[1]/);
-				} elsif ($predicate ne $match->[1]) {
-					next;
-				} 
-			}
-
-			if (defined $match->[2]) {
-				if (ref $match->[2] eq "Regexp") {
-					next unless ($value =~ m/$match->[2]/);
-				} elsif ($value ne $match->[2]) {
-					next;
-				} 
-			}
-			#ll("Found: [$subject, $predicate, $value]");
-			push(@matches, [$subject,$predicate,$value]);
-		}
-	}
-	return \@matches;	
-}
-
 sub _get_tuples {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
 	my $logger=get_logger();
@@ -1422,7 +1372,7 @@ sub _get_tuples {
 		my $graph = $args->[0];
 		if (defined $args->[1] && ref $args->[1] eq 'ARRAY') {
 			my $tuple = $args->[1];
-			my $result = XDI::pick_xdi_tuple($graph,$tuple);
+			my $result = XDI::tuples($graph,$tuple);
 			return $result;
 		}
 	} else {

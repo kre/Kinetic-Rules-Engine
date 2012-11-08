@@ -71,13 +71,16 @@ sub get_kpds_element {
 			"ken" => $ken
 		};
 		my $c_key = _keyvar($ken,$hkey);
-		my $cache = Kynetx::MongoDB::get_cache(COLLECTION,$c_key);
+		my $cache = Kynetx::MongoDB::get_cache_for_map($ken,COLLECTION,$c_key);
 		if (defined $cache) {
+			$logger->debug("Cached value (",sub {Dumper($c_key)},"): ", sub {Dumper($cache)});
 			return $cache;
+		} else {
+			$logger->debug("Cached miss (",sub {Dumper($c_key)},"): ");
 		}
 		my $result = Kynetx::MongoDB::get_hash_element(COLLECTION,$key,$hkey);
 		if (defined $result && ref $result eq "HASH") {
-			Kynetx::MongoDB::set_cache(COLLECTION,$c_key,$result->{"value"});
+			Kynetx::MongoDB::set_cache_for_map($ken,COLLECTION,$c_key,$result->{"value"});
 			return $result->{"value"};
 		} else {
 			return undef;
@@ -98,13 +101,13 @@ sub put_kpds_element {
 	my $value = {
 		'value' => $val
 	};
-	$logger->debug("Insert: $ken at ", sub {Dumper($hkey)});
+	$logger->trace("Insert: $ken at ", sub {Dumper($hkey)});
 	my $success = Kynetx::MongoDB::put_hash_element(COLLECTION,$key,$hkey,$value);
-	$logger->debug("Response: ", sub {Dumper($success)});
-	Kynetx::MongoDB::clear_cache(COLLECTION,_keyvar($ken,$hkey));
+	$logger->trace("Response: ", sub {Dumper($success)});
+	Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,_keyvar($ken,$hkey));
 	if ($hkey > 1) {
-		$logger->debug("Flush upstream");
-		Kynetx::MongoDB::clear_cache(COLLECTION,_keyvar($ken,[$hkey->[0]]));
+		$logger->trace("Flush upstream");
+		Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,_keyvar($ken,[$hkey->[0]]));
 	}
 	return $success;
 	
@@ -118,11 +121,12 @@ sub delete_kpds_element {
 			"ken" => $ken
 		};
 		if (defined $hkey) {
+			$logger->debug("Delete element: ", sub {Dumper($hkey)});
 			Kynetx::MongoDB::delete_hash_element(COLLECTION,$key,$hkey);
-			Kynetx::MongoDB::clear_cache(COLLECTION,_keyvar($ken,$hkey));
+			Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,_keyvar($ken,$hkey));
 			if ($hkey > 1) {
-				$logger->debug("Flush upstream");
-				Kynetx::MongoDB::clear_cache(COLLECTION,_keyvar($ken,[$hkey->[0]]));
+				$logger->debug("Flush upstream ", sub {Dumper(_keyvar($ken,[$hkey->[0]]))});
+				Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,_keyvar($ken,[$hkey->[0]]));
 			}
 		} else {
 			$logger->warn("Attempted to delete $key in ", COLLECTION, " (use delete_kpds(<KEN>) )");
