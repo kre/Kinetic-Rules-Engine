@@ -202,10 +202,23 @@ sub to_post {
 	my $token = lookup_rule_env('_token_',$event_env);
 	my $uri = mk_uri($domain,$name,$token);
 	my $creds = {};
-	my $params = {};
+	my $params = get_params_from_event($ev);
 	my $headers = {};
 	my $response = Kynetx::Modules::HTTP::mk_http_request('POST', $creds,$uri,$params,$headers);
 	$logger->debug("Post response: ", sub {Dumper($response)});
+}
+
+sub get_params_from_event {
+        my ($ev) = @_;
+        my $params = {};
+        my $keys = $ev->get_vars($ev->guid());
+        my $values = $ev->get_vals($ev->guid());
+
+        for (my $i = 0; $i < @$keys; $i++){
+                $params->{@$keys[$i]} = @$values[$i];
+        }
+
+        return $params;
 }
 
 sub mk_uri {
