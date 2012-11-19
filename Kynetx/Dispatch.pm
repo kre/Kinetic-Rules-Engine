@@ -30,6 +30,7 @@ use Test::Deep::NoTest qw(cmp_set eq_deeply set);
 
 use Kynetx::Rids qw/:all/;
 use Kynetx::Memcached qw/:all/;
+use Kynetx::Modules::PCI;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -100,6 +101,43 @@ sub extended_dispatch {
     return $r;
 
 }
+sub get_ridlist {
+	my ($req_info, $id_token, $ken) = @_;
+    my $logger = get_logger();
+    my $rid = get_rid($req_info->{'rid'});		
+	my $rid_list_key = mk_ridlist_key($ken);
+	my $memd = get_memd();
+	my $rid_struct = Kynetx::Modules::PCI::_installed_rulesets("_null_",$rid,[$id_token]);
+	my $rid_list = $rid_struct->{'rids'};
+	if (defined $rid_list) {
+		
+	} else {
+		# get accout info
+      my $user_rids_info = Kynetx::Configure::get_config('USER_RIDS_URL');
+      my ($app_url,$username,$passwd) = split(/\|/, $user_rids_info);
+      my $acct_url = $app_url."/".$req_info->{'id_token'};
+      $logger->debug("Using ridlist URL: $acct_url");
+      my $req = HTTP::Request->new(GET => $acct_url);
+      $req->authorization_basic($username, $passwd);
+      my $ua = LWP::UserAgent->new;
+      my $response = {};
+      eval {
+		$response = decode_json($ua->request($req)->{'_content'});
+      };
+      if ($@) {
+		$logger->debug("Non-JSON response from $acct_url");
+      }
+      if ($response->{'validtoken'}) {
+		$rid_list = $response->{'rids'};
+		# cache this...
+		$memd->set($rid_list_key, $rid_list) ;
+		return $rid_list;
+      } else {
+		$logger->debug("Invalid token: $req_info->{'id_token'}. No RID list retrieved");	
+      }
+		
+	}
+}    
 
 sub calculate_rid_list {
   my($req_info, $session) = @_;
@@ -134,31 +172,9 @@ sub calculate_rid_list {
       $logger->debug("Using cached rid_list ", rid_info_string($rid_list));
 
     } else {
-      # get accout info
-      my $user_rids_info = Kynetx::Configure::get_config('USER_RIDS_URL');
-      my ($app_url,$username,$passwd) = split(/\|/, $user_rids_info);
-      my $acct_url = $app_url."/".$req_info->{'id_token'};
-#     $logger->debug("Using ridlist URL: $acct_url");
-      my $req = HTTP::Request->new(GET => $acct_url);
-      $req->authorization_basic($username, $passwd);
-      my $ua = LWP::UserAgent->new;
-      my $response = {};
-      eval {
-	$response = decode_json($ua->request($req)->{'_content'});
-      };
-      if ($@) {
-	$logger->debug("Non-JSON response from $acct_url");
-      }
-      if ($response->{'validtoken'}) {
-	$rid_list = $response->{'rids'};
+		$rid_list = get_ridlist($req_info, $id_token);
+		$logger->debug("Retrieved rid_list: ", print_rids($rid_list));
 
-	$logger->debug("Retrieved rid_list: ", print_rids($rid_list));
-
-	# cache this...
-	$memd->set($rid_list_key, $rid_list) ;
-      } else {
-	$logger->debug("Invalid token: $req_info->{'id_token'}. No RID list retrieved");	
-      }
      
     }
 
@@ -208,7 +224,8 @@ sub clear_rid_list {
   my $memd = get_memd();
   $memd->delete(mk_ridlist_key($ken));
 }
-    
+
+
 
 sub calculate_dispatch {
 

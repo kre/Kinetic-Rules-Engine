@@ -62,6 +62,8 @@ get_kpds_record
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
 
 use constant COLLECTION => "kpds";
+use constant DEV => "credentials";
+use constant RID => "ridlist";
 
 sub get_kpds_element {
 	my ($ken,$hkey) = @_;
@@ -73,10 +75,10 @@ sub get_kpds_element {
 		my $c_key = _keyvar($ken,$hkey);
 		my $cache = Kynetx::MongoDB::get_cache_for_map($ken,COLLECTION,$c_key);
 		if (defined $cache) {
-			$logger->debug("Cached value (",sub {Dumper($c_key)},"): ", sub {Dumper($cache)});
+			$logger->trace("Cached value (",sub {Dumper($c_key)},"): ", sub {Dumper($cache)});
 			return $cache;
 		} else {
-			$logger->debug("Cached miss (",sub {Dumper($c_key)},"): ");
+			$logger->trace("Cached miss (",sub {Dumper($c_key)},"): ");
 		}
 		my $result = Kynetx::MongoDB::get_hash_element(COLLECTION,$key,$hkey);
 		if (defined $result && ref $result eq "HASH") {
@@ -101,9 +103,7 @@ sub put_kpds_element {
 	my $value = {
 		'value' => $val
 	};
-	$logger->trace("Insert: $ken at ", sub {Dumper($hkey)});
 	my $success = Kynetx::MongoDB::put_hash_element(COLLECTION,$key,$hkey,$value);
-	$logger->trace("Response: ", sub {Dumper($success)});
 	Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,_keyvar($ken,$hkey));
 	if ($hkey > 1) {
 		$logger->trace("Flush upstream");
@@ -113,6 +113,78 @@ sub put_kpds_element {
 	
 }
 
+sub push_kpds_set_element {
+	my ($ken,$hkey,$val) = @_;
+	my $logger = get_logger();
+	my $query = {
+		"ken" => $ken,
+		"hashkey" => $hkey
+	};
+	my $update;
+	if (ref $val eq "ARRAY") {
+		$update = {
+			'$addToSet' => {'value' => {'$each' => $val}}
+		}
+	} else {
+		$update = {
+			'$addToSet' =>{"value" => $val}
+		};
+	}
+	 
+	my $new = 'true';
+	my $upsert = 'true';
+	my $fields = { "value"=>1, "_id" => 0};
+	my $fnmod = {
+		'query' => $query,
+		'update' => $update,
+		'new' => $new,
+		'upsert' => $upsert,
+		#'fields' => $fields
+	};
+	$logger->trace("query: ", sub {Dumper($fnmod)});
+	my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod);
+	Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,_keyvar($ken,$hkey));
+	$logger->trace("fnm: ", sub {Dumper($result)});
+	return $result;
+}
+
+sub remove_kpds_set_element {
+	my ($ken,$hkey,$val) = @_;
+	my $logger = get_logger();
+	my $query = {
+		"ken" => $ken,
+		"hashkey" => $hkey
+	};
+	my $update;
+	if (ref $val eq "ARRAY") {
+		$update = {
+			'$pullAll' => {'value' =>  $val}
+		}
+	} else {
+		$update = {
+			'$pull' =>{"value" => $val}
+		};
+	}
+	 
+	my $new = 'true';
+	my $upsert = 'true';
+	my $fields = { "value"=>1, "_id" => 0};
+	my $fnmod = {
+		'query' => $query,
+		'update' => $update,
+		'new' => $new,
+		'upsert' => $upsert,
+		#'fields' => $fields
+	};
+	$logger->trace("query: ", sub {Dumper($fnmod)});
+	my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod);
+	Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,_keyvar($ken,$hkey));
+	$logger->trace("fnm: ", sub {Dumper($result)});
+	return $result;
+}
+
+
+
 sub delete_kpds_element {
 	my ($ken,$hkey) = @_;
 	my $logger = get_logger();
@@ -121,11 +193,11 @@ sub delete_kpds_element {
 			"ken" => $ken
 		};
 		if (defined $hkey) {
-			$logger->debug("Delete element: ", sub {Dumper($hkey)});
+			$logger->trace("Delete element: ", sub {Dumper($hkey)});
 			Kynetx::MongoDB::delete_hash_element(COLLECTION,$key,$hkey);
 			Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,_keyvar($ken,$hkey));
 			if ($hkey > 1) {
-				$logger->debug("Flush upstream ", sub {Dumper(_keyvar($ken,[$hkey->[0]]))});
+				$logger->trace("Flush upstream ", sub {Dumper(_keyvar($ken,[$hkey->[0]]))});
 				Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,_keyvar($ken,[$hkey->[0]]));
 			}
 		} else {
@@ -144,8 +216,8 @@ sub delete_kpds {
 		};
 		Kynetx::MongoDB::delete_value(COLLECTION,$key);
 	}
-	
 }
+
 
 sub _keyvar {
 	my ($key,$hkey) = @_;
@@ -160,5 +232,89 @@ sub _keyvar {
 	
 	return $struct;
 }
+########################### Account Management Methods
+sub delete_cloud {
+	my ($ken,$cascade) = @_;
+	my $logger = get_logger();
+	if ($cascade) {
+		my $dependents = Kynetx::Persistence::KPDS::get_kpds_element($ken,['dependents']);	
+		foreach my $depnd (@{$dependents}) {
+	    	delete_cloud($depnd,$cascade);
+		}		
+	}
+	$logger->trace("Delete: $ken");
+	Kynetx::Persistence::KEN::delete_ken($ken);
+	Kynetx::Persistence::KPDS::delete_kpds($ken);
+	my $channels = Kynetx::Persistence::KToken::list_tokens($ken);
+	$logger->trace("Tokens to delete:", sub {Dumper($channels)});
+	foreach my $token (@{$channels}) {
+		my $eci = $token->{'cid'};
+		$logger->trace("Delete: $eci");
+		Kynetx::Persistence::KToken::delete_token($eci)
+	}	
+}
+
+sub link_dependent_cloud {
+	my ($ken,$dependent) = @_;
+	my $hkey = ['dependents'];
+	Kynetx::Persistence::KPDS::push_kpds_set_element($ken,$hkey,$dependent);	
+}
+
+
+########################### KPDS Ruleset Methods
+sub add_ruleset {
+	my ($ken,$ridlist) = @_;
+	my $logger=get_logger();
+	my $keypath = [RID];
+	my $result = push_kpds_set_element($ken,$keypath,$ridlist);
+	$logger->trace("Set: ", sub {Dumper($result)});
+	return $result;
+}
+
+sub get_rulesets {
+	my ($ken) = @_;
+	my $logger=get_logger();
+	my $keypath = [RID];
+	my $result = get_kpds_element($ken,$keypath);
+	$logger->trace("list: ", sub {Dumper($result)});
+	return $result;		
+}
+
+sub remove_ruleset {
+	my ($ken,$ridlist) = @_;
+	my $logger=get_logger();
+	my $keypath = [RID];
+	my $result = remove_kpds_set_element($ken,$keypath,$ridlist);
+	$logger->trace("remove: ", sub {Dumper($result)});
+	return $result;
+}
+
+########################### KPDS Developer Methods
+sub get_developer_permissions {
+	my ($ken,$devkey,$permkey) = @_;
+	my $keypath = [DEV,$devkey, @{$permkey}];
+	my $logger = get_logger();
+	$logger->trace("Hash path: ", sub {Dumper($keypath)});
+	my $val = Kynetx::Persistence::KPDS::get_kpds_element($ken,$keypath) || 0;
+	return $val;
+}
+
+sub set_developer_permissions {
+	my ($ken,$devkey,$permkey,$value) = @_;
+	my $keypath = [DEV,$devkey, @{$permkey}];
+	my $logger = get_logger();
+	$logger->trace("Hash path: ", sub {Dumper($keypath)});
+	my $result = Kynetx::Persistence::KPDS::put_kpds_element($ken,$keypath,$value);
+	my $check = Kynetx::Persistence::KPDS::get_kpds_element($ken,$keypath);
+	return $result;
+}
+
+sub revoke_developer_key {
+	my ($ken,$devkey) = @_;
+	my $logger = get_logger();
+	my $keypath = [DEV,$devkey];
+	Kynetx::Persistence::KPDS::delete_kpds_element($ken,$keypath);
+}
+
 
 1;

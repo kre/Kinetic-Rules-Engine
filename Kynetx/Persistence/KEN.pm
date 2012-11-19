@@ -72,7 +72,10 @@ sub _ken_query {
     #my $result = Kynetx::MongoDB::get_value($collection,$var);
     my $result = Kynetx::MongoDB::get_singleton($collection,$var);
     if ($result) {
-        return $result->{"ken"};
+        my $mongoId = $result->{'_id'};
+        if (defined $mongoId) {
+        	return $mongoId->to_string;
+        }
     }
     return undef;
 }
@@ -97,6 +100,29 @@ sub get_ken {
     # A new token must be created
     Kynetx::Persistence::KToken::new_token($rid,$session,$ken);
     return $ken;
+}
+
+sub ken_lookup_by_username {
+	my ($username) = @_;
+	if (! defined $username || $username eq "") {
+		return undef;
+	}
+	my $key = {
+		'username' => $username
+	};
+	return Kynetx::Persistence::KEN::_ken_query($key);
+}
+
+
+sub ken_lookup_by_userid {
+	my ($userid) = @_;
+	if (! defined $userid || $userid eq "") {
+		return undef;
+	}
+	my $key = {
+		'user_id' => $userid
+	};
+	return Kynetx::Persistence::KEN::_ken_query($key);
 }
 
 
@@ -131,6 +157,28 @@ sub mongo_has_ken {
     return undef;
 }
 
+sub get_authorizing_password {
+	my ($ken) = @_;
+	my $logger = get_logger();
+	my $oid = MongoDB::OID->new(value => $ken);
+	my $key = {"_id" => $oid};
+	my $obj = Kynetx::MongoDB::get_singleton(COLLECTION,$key);
+	if (defined $obj) {
+		$logger->trace("KEN: ", sub {Dumper($obj)});
+		my $password = $obj->{'password'};
+		# unauthorized accounts
+		if (! defined $password ||	$password eq "" ||	$password eq "*") {
+			my $parent = $obj->{'parent'};
+			if ($parent) {
+				return get_authorizing_password($parent);
+			}
+		} else {
+			return $password;
+		}
+		
+	}
+	return undef;
+}
 
 
 sub _validate_ken {
@@ -156,10 +204,7 @@ sub new_ken {
 sub get_ken_value {
     my ($ken,$key) = @_;
     my $logger = get_logger();
-#    my $KENS = Kynetx::MongoDB::get_collection(COLLECTION);
     my $oid = MongoDB::OID->new(value => $ken);
-#    my $valid = $KENS->find_one({"_id" => $oid});
-    #my $valid = Kynetx::MongoDB::get_value(COLLECTION,{"_id" => $oid});
     my $valid = Kynetx::MongoDB::get_singleton(COLLECTION,{"_id" => $oid});
     return $valid->{$key};
 }
@@ -169,9 +214,6 @@ sub touch_ken {
     my $logger = get_logger();
     my $oid = MongoDB::OID->new(value => $ken);
     Kynetx::MongoDB::get_singleton(COLLECTION,{"_id" => $oid});
-#    my $active = $ts || DateTime->now->epoch;
-#    my $kpds = Kynetx::MongoDB::get_collection(COLLECTION);
-#    my $touch = $kpds->update({"_id" => $oid},{'$set' => {"last_active" => $active}});
 }
 
 sub get_ken_defaults {

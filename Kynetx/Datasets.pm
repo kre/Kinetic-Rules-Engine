@@ -180,7 +180,12 @@ sub _load_dataset {
     my ($req_info)  = @_;
     my $source_name = $self->source;
     my $logger      = get_logger();
-
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $metric = new Kynetx::Metrics::Datapoint();
+	$metric->series("datasets");
+    $metric->rid($rid);
+	$metric->start_timer();
+	
     # If it is not formatted like an URL request, assume it is a file
     if ( $source_name =~ m#^(http|https)://# ) {
 
@@ -203,7 +208,7 @@ sub _load_dataset {
         $self->source($source_name);
         $self->sourcedata( Kynetx::Memcached::get_cached_file($source_name) );
     }
-
+	$metric->stop_and_store();
     #$logger->debug("[_load_dataset] source =>",$self->sourcedata);
 
 }

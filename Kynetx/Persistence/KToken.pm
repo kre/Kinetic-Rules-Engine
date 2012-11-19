@@ -118,8 +118,9 @@ sub set_token {
 	return Kynetx::MongoDB::find_and_modify(COLLECTION,$find_and_modify);
 }
 
+# Slightly different format for ECI tokens
 sub create_token {
-	my ($ken, $label,$type, $auth) = @_;
+	my ($ken, $label,$type) = @_;
 	my $logger = get_logger();
 	my $ug = new Data::UUID;
 	my $ktoken = $ug->create_str();
@@ -135,7 +136,7 @@ sub create_token {
         "_id" => $oid,
         "last_active" => $lastactive,
         "endpoint_id" => $ktoken,
-        "authenticated" => $auth,
+        "label" => $label,
         "endpoint_type" => $type,
     };
     my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0);
@@ -236,6 +237,26 @@ sub delete_token {
     	my $additional_ref = COLLECTION .$session_id;
     	Kynetx::Memcached::flush_cache($additional_ref);
     }   
+}
+
+sub list_tokens {
+	my ($ken) = @_;
+	my $logger = get_logger();
+	my $tquery = {'ken' => $ken};
+	my $c = Kynetx::MongoDB::get_collection(COLLECTION);
+	$logger->trace("Query: ", sub {Dumper($tquery)});
+	my $cursor = $c->find($tquery);
+	if ($cursor->has_next()) {
+		$logger->trace("Found some");
+		my @tokens_array = ();
+		while (my $obj = $cursor->next) {
+			my $eci = $obj->{'ktoken'};
+			$logger->trace("Found: $eci");
+			my $label = $obj->{'label'};
+			push(@tokens_array,{'name' => $label,'cid' => $eci});
+		}
+		return \@tokens_array; 
+	}
 }
 
 

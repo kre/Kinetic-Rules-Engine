@@ -353,6 +353,28 @@ sub touch_value {
     return get_value($collection,$var);
 }
 
+sub counter {
+	my ($name) = @_;
+	my $collection = 'dictionary'; # static collection
+	my $query = {
+		"_id" => $name
+	};
+	my $update = {
+		'$inc' => {"next" => 1}
+	};
+	my $new = 'true';
+	my $upsert = 'true';
+	my $fnmod = {
+		'query' => $query,
+		'update' => $update,
+		'new' => $new,
+		'upsert' => $upsert,
+	};
+	my $result = Kynetx::MongoDB::find_and_modify($collection,$fnmod);
+	return $result->{"next"};
+	
+}
+
 sub push_value {
     my ($collection,$var,$val,$as_trail) = @_;
     my $logger = get_logger();

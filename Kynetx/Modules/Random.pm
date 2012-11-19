@@ -99,7 +99,9 @@ sub run_function {
 sub rword {
 	my ($req_info, $function, $args) = @_;
     my $logger = get_logger();
-    return $DICTIONARY[rand(@DICTIONARY)];
+    my $word = $DICTIONARY[rand(@DICTIONARY)];
+    chop $word;
+    return $word;
 }
 $funcs->{'word'} = \&rword;
 
