@@ -52,6 +52,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 use Kynetx::Memcached qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Rids qw/:all/;
+use Kynetx::Metrics::Datapoint;
 
 our $AUTOLOAD;
 

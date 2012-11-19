@@ -34,7 +34,7 @@ use Kynetx::Events;
 use Kynetx::Session;
 use Kynetx::Memcached;
 use Kynetx::Dispatch;
-
+use Kynetx::Metrics::Datapoint;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
