@@ -54,10 +54,9 @@ $logger->debug("Sample Ruleset: $fl");
 my $uHan = "隻氣墊船裝滿晒鱔";
 my $oHan = Kynetx::Util::str_out($uHan);
 
-my $req_info;
-$req_info->{'referer'} = 'http://www.byu.edu'; # Utah (BYU)
-$req_info->{'rid'} = 'cs_test';
-$req_info->{'pool'} = APR::Pool->new;
+my $rid = 'cs_test';
+my $req_info = Kynetx::Test::gen_req_info($rid);
+
 
 
 # Parser rulesets
@@ -104,11 +103,9 @@ $test_num++;
 #
 my $r = Kynetx::Test::configure();
 
-my $rid = 'cs_test';
 
 # test choose_action and args
 
-$req_info = Kynetx::Test::gen_req_info($rid);
 
 my $rule_name = 'foo';
 
