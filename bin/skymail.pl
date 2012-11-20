@@ -253,7 +253,7 @@ sub parse_event_mail {
 		$logger->debug("Part: ", $epart->content_type);
 		my $ct = $epart->content_type;
 		my $payload = $epart->body;
-		if ($ct =~ m/text\/plain/ ) {
+		if ($ct =~ m/text\/plain/i ) {
 			$logger->debug("Text", $epart->body);
 			my $pair = {
 				$ct => $payload
