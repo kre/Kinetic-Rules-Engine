@@ -239,6 +239,9 @@ sub handler {
 	  	'series' => 'sky-event-rid'
 	  });
 	  $ev_metric->start_timer();
+	  my $ktoken = Kynetx::Persistence::KToken::get_token($session);
+	  $ev_metric->token($ktoken->{'ktoken'});
+	  
       eval {
 	$logger->debug("Processing event for $rid");
 	Kynetx::Events::process_event_for_rid( $ev, $req_info, $session, $schedule, $rid_info );
@@ -271,6 +274,8 @@ sub handler {
 	  	'series' => 'sky-event-schedule'
 	  });
     $s_metric->rid($domain ."/" . $eventtype);
+	my $ktoken = Kynetx::Persistence::KToken::get_token($session);
+	$s_metric->token($ktoken->{'ktoken'});
     $s_metric->start_timer();
     $js .= eval {
       Kynetx::Rules::process_schedule( $r, $schedule, $session, $eid,$req_info, $dd );

@@ -327,6 +327,51 @@ sub _get {
 }
 $funcs->{'get'} = \&_get;
 
+sub _raw {
+	my ($endpoint,$xdistring,$context) = @_;
+	my $logger = get_logger();
+	my $request = HTTP::Request->new( 'POST', $endpoint);
+	my $ua = new LWP::UserAgent;
+	my $cheader = 'application/xdi+json';
+	if (defined $context) {
+		$cheader .= ';contexts=1';
+	}
+	$request->header('accept' => $cheader);
+	$request->content($xdistring);
+	my $response = $ua->request($request);
+	my $code = $response->code;
+	if ($response->is_success()) {
+		my $struct;
+		eval {
+			$struct = JSON::XS::->new->pretty(1)->decode($response->content);
+		};
+		if ($@ && not defined $struct) {
+			return {
+				'error' => "Invalid XDI JSON response"
+			};
+		} else {
+			return $struct;
+		}
+	} else {
+		return {
+			'code' => $code,
+			'status' => $response->status_line
+		};
+	}
+	
+}
+
+sub raw {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $logger = get_logger();
+	my $endpoint = $args->[0];
+	my $xdistring = $args->[1];
+	return _raw($endpoint,$xdistring,$args->[2]);
+}
+$funcs->{'raw'} = \&raw;
+
 sub _mod {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
 	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});

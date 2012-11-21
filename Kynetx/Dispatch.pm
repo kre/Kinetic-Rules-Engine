@@ -110,7 +110,35 @@ sub get_ridlist {
 	my $rid_struct = Kynetx::Modules::PCI::_installed_rulesets("_null_",$rid,[$id_token]);
 	my $rid_list = $rid_struct->{'rids'};
 	if (defined $rid_list) {
-		
+		my $temp = ();
+		foreach my $ridstring (@{$rid_list}) {
+			my $rid;
+			my $ver = 1;
+			my $kver = "prod";
+			my @ridinfo = split(/\./,$ridstring);
+			if (length(@ridinfo) == 1) {
+				$rid = $ridinfo[0];
+			} elsif (length(@ridinfo) == 2) {
+				$rid = $ridinfo[0];
+				my $alt = $ridinfo[1];
+				if ($alt =~ m/^\d+$/) {
+					$ver = $alt;
+				} else {
+					$kver = $alt;
+				}
+			} elsif (length(@ridinfo) > 2) {
+				$rid = $ridinfo[0];
+				$ver = $ridinfo[1];
+				$kver = $ridinfo[2];
+			}
+			my $map = {
+				"rid" => $rid,
+				"version" => $ver,
+				"kinetic_app_version" => $kver
+			};
+			push (@{$temp},$map);
+		}
+		$rid_list = $temp;
 	} else {
 		# get accout info
       my $user_rids_info = Kynetx::Configure::get_config('USER_RIDS_URL');
@@ -129,6 +157,7 @@ sub get_ridlist {
       }
       if ($response->{'validtoken'}) {
 		$rid_list = $response->{'rids'};
+		$logger->info("Rid struct: ", sub {Dumper($rid_list)});
 		# cache this...
 		$memd->set($rid_list_key, $rid_list) ;
 		return $rid_list;

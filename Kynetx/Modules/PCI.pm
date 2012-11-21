@@ -466,6 +466,7 @@ sub set_permissions {
 	return undef	
 	
 }
+$funcs->{'set_permissions'} = \&set_permissions;
 
 sub clear_permissions {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
@@ -491,6 +492,7 @@ sub clear_permissions {
 	return undef	
 	
 }
+$funcs->{'clear_permissions'} = \&clear_permissions;
 
 sub get_permissions {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
@@ -514,6 +516,7 @@ sub get_permissions {
 	return 0	
 	
 }
+$funcs->{'get_permissions'} = \&get_permissions;
 
 sub developer_key {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
@@ -539,6 +542,7 @@ sub developer_key {
 	}
 	return undef;
 }
+$funcs->{'create_developer_key'} = \&developer_key;
 
 
 

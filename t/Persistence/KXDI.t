@@ -123,6 +123,10 @@ my $inumber = $xdi->{'users'}->{'inumber'} . '!'. $oid->to_string();
 my $endpoint = $xdi->{'users'}->{'endpoint'} . $inumber;
 my $iname = $xdi->{'users'}->{'iname'} . '*' . $isub;
 
+my $raw_xdi;
+my $raw_response;
+my $raw_endpoint;
+
 my $struct = {
 	'endpoint' => $endpoint,
 	'inumber'  => $inumber,
@@ -199,15 +203,23 @@ SKIP: {
 	$logger->debug("Message to user xdi: ",$msg->to_string );
 	$logger->debug("KXDI: ",sub {Dumper($kxdi)} );
 	$msg->get('()');
+	$raw_xdi = $msg->to_string;
 	$result = $c->post($msg);
+	$raw_response = $result;
+	$raw_endpoint = $kxdi->{'endpoint'};
 	$logger->debug("msg resp: ",sub {Dumper($result)} );
 	
 	my $not_created = $result ? 0 : 1;
 	$description = "Account created";
 	testit($not_created,0,$description,0);
 	
+	$description = "Try raw xdi request";
+	$result = Kynetx::Persistence::KXDI::_raw($raw_endpoint,$raw_xdi);
+	testit($result,$raw_response,$description,0);
+	
+	
 	SKIP: {
-		skip "Account was not created",8 if $not_created;
+		skip "Account was not created",8 if $not_created;		
 		
 		$description = "Account created (query response)";
 		testit(ref $result, 'HASH',$description,0);
@@ -251,7 +263,7 @@ SKIP: {
 		$description = "Delete xdi graph and registry";
 		$result = Kynetx::Persistence::KXDI::delete_xdi($session_ken);
 		testit($result,1,$description,0);
-
+		
 	}
 	
 }
