@@ -90,6 +90,7 @@ our $COLLECTION_REF;
 our $MONGO_MAX_SIZE = 838860;
 
 use constant SAFE => 0;
+use constant RETRIES => 5;
 
 sub init {
     my $logger = get_logger();
@@ -120,13 +121,25 @@ sub init {
 
 }
 
+
 sub get_mongo {
+	my ($retry) = @_;
     my $logger = get_logger();
     init unless $MONGO;
     my $db;
     eval {$db = $MONGO->get_database($MONGO_DB)}; 
     if ($@) {
-    	$logger->warn("Get Mongo error: ",$@);
+    	$retry = 1 unless ($retry);
+    	if ($retry < RETRIES) {
+    		$logger->debug("Get Mongo error: ",$@);
+    		return get_mongo($retry++);    		
+    	} elsif ($retry == RETRIES) {
+    		$logger->warn("Get Mongo error: ",$@);
+    		init;
+    		return get_mongo($retry++); 
+    	} else {
+    		$logger->error("No connection to MongoDB")
+    	}    	
     }
     return $db;
 }

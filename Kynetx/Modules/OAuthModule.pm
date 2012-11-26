@@ -911,7 +911,7 @@ sub protected_resource_request {
 	my $purl = $request->to_url;
 	if ($method eq 'GET') {
 		$preq = HTTP::Request->new( GET => $purl );
-		$logger->debug("Request: ", sub {Dumper($preq->as_string())});
+		$logger->trace("Request: ", sub {Dumper($preq->as_string())});
 	} elsif ($method eq 'POST') {
 		$preq = HTTP::Request->new( POST => $purl );
 		my $content = $oauth_config->{'body'};

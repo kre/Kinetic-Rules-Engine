@@ -152,7 +152,7 @@ sub process_schedule {
 
 	my $env_stash = {};
 
-	$logger->debug( "Schedule: ", Dumper($schedule) );
+	#$logger->debug( "Schedule: ", Dumper($schedule) );
 
 	while ( my $task = $schedule->next() ) {
 		my $task_metric =
@@ -177,7 +177,7 @@ sub process_schedule {
 		$logger->info( "Using RID ",
 			Kynetx::Rids::print_rid_info( $req_info->{'rid'} ) );
 			
-		$task_metric->rid(Kynetx::Rids::print_rid_info( $req_info->{'rid'} ));
+		$task_metric->rid(get_rid( $req_info->{'rid'} ));
 		my $ktoken = Kynetx::Persistence::KToken::get_token($session);
 		$task_metric->token($ktoken->{'ktoken'});
 		unless ( $rid eq $current_rid ) {

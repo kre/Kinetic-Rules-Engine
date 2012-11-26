@@ -356,21 +356,17 @@ sub add_tag {
 }
 
 sub get_data {
-	my ($series,$limits) = @_;
+	my ($key,$limits) = @_;
 	my $logger   = get_logger();
 	my $c        = Kynetx::MongoDB::get_collection(COLLECTION);
-	my $key;
-	if ( defined $series ) {
-		$key = { "series" => $series };
-	}
-	$logger->debug("Key: ",sub {Dumper($key)});
 	my $cnt = 0;
 	my $order = -1;
-	my $limit = 50;
-	if (defined $limits) {
-		$order = $limits->{'sort_order'} || $order;
-		$limit = $limits->{'limit'} || $limit;
+	my $limit = 1000;
+	if (defined $limits) {	
+		$order = $limits->param('sort_order') || $order;
+		$limit = $limits->param('limit') || $limit;
 	}	
+	$logger->debug("Key: ", sub {Dumper($key)});
 	my $cursor = $c->find($key)->sort({'$natural' => $order})->limit($limit);
 	if ( $cursor->has_next ) {
 		my @array_of_datapoints = ();
@@ -391,7 +387,7 @@ sub get_data {
 					$dp->{"id"} = $obj->{$key}->{'value'};
 				}
 			}
-			$logger->debug("P: ", sub {Dumper($dp)});
+			$logger->trace("P: ", sub {Dumper($dp)});
 			CORE::push(@array_of_datapoints,$dp);
 		}
 		return \@array_of_datapoints;

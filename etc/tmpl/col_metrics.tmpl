@@ -13,7 +13,8 @@
 			chart = new Highcharts.Chart({
 				chart: {
 					renderTo: 'container',
-					type: 'column'		
+					type: 'column',
+					zoomType: 'xy'		
 					},
 				credits: {
 					text: 'TENX'
@@ -80,6 +81,7 @@
 					}
 				},	
 				series: [{
+				    name: '<TMPL_VAR NAME="sname">',
 					data: <TMPL_VAR NAME="yval">
 				}]	
 			});

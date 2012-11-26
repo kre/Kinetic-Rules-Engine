@@ -37,6 +37,7 @@ use Apache2::Const qw(OK);
 use Apache2::ServerUtil;
 use Sys::Hostname;
 use HTML::Template;
+use DateTime::Format::RFC3339;
 
 use Kynetx::Memcached qw(:all);
 use Kynetx::Configure;
@@ -45,6 +46,7 @@ use Kynetx::Environments;
 use Kynetx::Request;
 use Kynetx::Metrics::Datapoint;
 use Kynetx::Json;
+use Kynetx::Predicates::Time;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -90,7 +92,7 @@ sub handler {
     	control();
     } elsif ($method eq 'col') {
     	column_plot($r,$method,$path);
-    }
+    } 
     
     return Apache2::Const::OK;
 
@@ -107,12 +109,18 @@ sub filter {
 	my $logger = get_logger();
 	my @params = $req->param;
 	foreach my $p (@params) {
+		next if ($p eq "limit");
+		next if ($p eq "sort_order");
 		my $a = $req->param($p);
 		my $b = $dp->{$p};
+		$logger->trace("Check for $p: $a");
+		$logger->trace("            : $b");
 		if (defined $b) {
 			if ($a ne $b) {
 				return 0;
 			}
+		} else {
+			return 0;
 		}
 		
 	}
@@ -127,14 +135,20 @@ sub get_datapoints {
 	my @series = split(/\//,$path);
 	foreach my $s (@series) {
 		my ($sname,$xname,$yname) = split(/;/,$s);
+		my $key;
 		$logger->debug("Series: ", $s);
+		if ($sname eq "any") {
+			$key = {};
+		} else {
+			$key =  { "series" => $sname };
+		}
 		$logger->debug("sname: ", $sname);
 		$logger->debug("Xname: ", $xname);
 		$logger->debug("Yname: ", $yname);
 		$sname = $sname || "";
 		$xname = $xname || "timestamp";
-		$yname = $yname || "realtime";
-		my $result = Kynetx::Metrics::Datapoint::get_data($sname);
+		$yname = $yname || "realtime"; 
+		my $result = Kynetx::Metrics::Datapoint::get_data($key,$req);
 		if (defined $result) {
 			$logger->debug("Num points: ", scalar @{$result});
 			my @loop = ();
@@ -236,12 +250,12 @@ sub column_plot {
 				my $x = $dp->{$xname};
 				my $y = $dp->{$yname} || $dp->{'count'};
 				my $id = $dp->{"id"};
-				$logger->debug("DP $i: $xname: $x $yname: $y");
+				$logger->trace("DP $i: $xname: $x $yname: $y");
 				my $ystr = "{y: $y, id: \'$id\' }";
 				my $xstr = "\'$x\'";
 				push(@cats,$xstr);
 				push(@yvals,$ystr);
-				$points->{$id} = $dp;
+				$points->{$id} = pretty_point($dp);
 			}
 		}
 		my $catstr = '[' . join(",",@cats) . "]";
@@ -251,12 +265,58 @@ sub column_plot {
 		$test_template->param("yname" => $yname); 
 		$test_template->param("yval" => $ystr); 
 		$test_template->param("point" => $pstr); 
-#		$test_template->param("LASTy" => $last->{$yname} || $last->{'count'});
-#		$test_template->param("YVALUES" => \@yvals);
+		$test_template->param("sname" => $s);
 	}	
 	$r->content_type('text/html');
 	print $test_template->output;		
 }
+
+sub any_plot {
+	my ($r, $method,$path) = @_;
+    my $logger = get_logger();
+    my $req_info = Kynetx::Request::build_request_env($r, $method, "TENX");
+	my $req = Apache2::Request->new($r);
+	my $template = DEFAULT_TEMPLATE_DIR . "/col_metrics.tmpl";
+	my $test_template = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+	my $dp_struct = get_datapoints($r,$path);
+	my @series_loop = ();
+	foreach my $s (keys %{$dp_struct}) {
+		my @loop = ();
+		my $xname = $dp_struct->{$s}->{'x'} || "timestamp";
+		my $yname = $dp_struct->{$s}->{'y'} || "count";
+		my $sname = $s;		
+		my $data = $dp_struct->{$s}->{'data'};
+		#$data = prune($data,$req);
+		my @cats = ();
+		my @yvals = ();
+		my $points;
+		for (my $i = 0;$i < (scalar @{$data})-1; $i++) {
+			my $dp = $data->[$i];
+			if (defined $dp) {
+				my $x = $dp->{$xname};
+				my $y = $dp->{$yname} || $dp->{'count'};
+				my $id = $dp->{"id"};
+				$logger->trace("DP $i: $xname: $x $yname: $y");
+				my $ystr = "{y: $y, id: \'$id\' }";
+				my $xstr = "\'$x\'";
+				push(@cats,$xstr);
+				push(@yvals,$ystr);
+				$points->{$id} = pretty_point($dp);
+			}
+		}
+		my $catstr = '[' . join(",",@cats) . "]";
+		my $ystr	= '['. join(",",@yvals). "]";
+		my $pstr = Kynetx::Json::astToJson($points);
+		$test_template->param("CATEGORIES" => $catstr);
+		$test_template->param("yname" => $yname); 
+		$test_template->param("yval" => $ystr); 
+		$test_template->param("point" => $pstr); 
+		$test_template->param("sname" => $s);
+	}	
+	$r->content_type('text/html');
+	print $test_template->output;		
+}
+
 
 sub scatter_plot {
 	my ($r, $method,$path) = @_;
@@ -346,7 +406,25 @@ sub scatter_plot {
 	print $test_template->output;
 }
 
-1;
+sub pretty_point {
+	my $point = shift;
+	my $pretty;
+	foreach my $key (keys %{$point}) {
+		next if ($key eq "id");
+		next unless ($point->{$key});
+		if ($key eq "ts") {
+			my $dt =  DateTime->from_epoch( 'epoch' => $point->{$key});			
+        	if (defined $dt) {
+        		$dt->set_time_zone('America/Denver');
+        		my $f = DateTime::Format::RFC3339->new();
+            	$pretty->{'ts'} =  $dt->strftime("%FT%TZ");
+        	}
+		} else {
+			$pretty->{$key} = $point->{$key};
+		}
+	}
+	return $pretty;
+}
 
 
 1;

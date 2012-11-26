@@ -83,7 +83,7 @@ _exit
 use constant E_DOM  => "email";
 use constant E_NAME => "received";
 
-my $opt_string = 'hlas:m:v:T:S:P:D:N:';
+my $opt_string = 'hv:';
 getopts( "$opt_string", \%opt );
 &usage() if $opt{'h'};
 
@@ -106,12 +106,19 @@ my $mail_server = new Net::SMTP::Server('localhost',25) ||
 	croak("Unable to start mail server: $!\n");
 
 my %children;
-$SIG{CHLD} = 'IGNORE';	
+sub REAPER {
+	my $child;
+	while ($child = waitpid(-1,WNOHANG)) {
+    	$children{$child} = $?;
+    }
+	$SIG{CHLD} = \&REAPER;
+}
+$SIG{CHLD} = \&REAPER;
 
 while (my $conn= $mail_server->accept) {
 	my $client = new Net::SMTP::Server::Client($conn) ||
 		croak("Unable to create client connection: $!\n");
-		
+				
 	my $cpid = fork();
 	$children{$cpid} = 1;
 	unless ($cpid) {
@@ -126,8 +133,12 @@ while (my $conn= $mail_server->accept) {
 			$email_token =~ s/^<?(.+)>?$/$1/;
 			my ($to) = split(/\@/,$email_token);
 			my ($namespace,$token,$domain,$name) = split(/\./,$to);
-			$logger->debug("TOKEN: $token");
-			next unless (defined $token && check_token($token));
+			unless (defined $token && check_token($token)){
+				$token |= "";
+				$logger->debug("Invalid token ($token)");
+				next;
+			};
+			$logger->debug("verified: $token");
 			my $ev = build_event($namespace,$token,$domain,$name,$parm);
 			if ($ev) {
 				mediate($ev);
@@ -174,7 +185,7 @@ sub build_event {
 	}
 	$event->set_vars($event->guid(),\@vars);
 	$event->set_vals($event->guid(),\@vals);
-	$logger->debug("Created event: ", sub {Dumper($event)});
+	$logger->trace("Created event: ", sub {Dumper($event)});
 	return $event;
 }
 
@@ -202,10 +213,10 @@ sub to_post {
 	my $token = lookup_rule_env('_token_',$event_env);
 	my $uri = mk_uri($domain,$name,$token);
 	my $creds = {};
-	my $params = {};
+	my $params = get_params_from_event($ev);
 	my $headers = {};
 	my $response = Kynetx::Modules::HTTP::mk_http_request('POST', $creds,$uri,$params,$headers);
-	$logger->debug("Post response: ", sub {Dumper($response)});
+	$logger->trace("Post response: ", sub {Dumper($response)});
 }
 
 sub mk_uri {
@@ -230,6 +241,19 @@ sub check_token {
 	return 1;
 }
 
+sub get_params_from_event {
+        my ($ev) = @_;
+        my $params = {};
+        my $keys = $ev->get_vars($ev->guid());
+        my $values = $ev->get_vals($ev->guid());
+
+        for (my $i = 0; $i < @$keys; $i++){
+                $params->{@$keys[$i]} = @$values[$i];
+        }
+
+        return $params;
+}
+
 
 
 sub parse_event_mail {
@@ -238,10 +262,10 @@ sub parse_event_mail {
 	my @p=();
 	foreach my $epart ($email->parts()) {
 		$logger->debug("Part: ", $epart->content_type);
-		my $ct = $epart->content_type;
+		my $ct = $epart->content_type || "";
 		my $payload = $epart->body;
-		if ($ct =~ m/text\/plain/ ) {
-			$logger->debug("Text", $epart->body);
+		if ($ct =~ m/text\/plain/i ) {
+			$logger->trace("Text", $epart->body);
 			my $pair = {
 				$ct => $payload
 			};
@@ -257,13 +281,13 @@ sub parse_event_mail {
 			}
 		} elsif ($ct =~ /image\/.+/) {
 			$logger->debug("Received image: ",$epart->filename);
-			$logger->debug("body: ",$epart->body_raw);
-			$logger->debug("Part: ", $epart->content_type);
-			$logger->debug("Struct: ", $epart->debug_structure());
-			my $b64decode = MIME::Base64::decode_base64($epart->body);
-			open my $tmp, '+>', "/tmp/foo$$";
-			print $tmp $b64decode;
-			close $tmp;
+			$logger->trace("body: ",$epart->body_raw);
+			$logger->trace("Part: ", $epart->content_type);
+			$logger->trace("Struct: ", $epart->debug_structure());
+#			my $b64decode = MIME::Base64::decode_base64($epart->body);
+#			open my $tmp, '+>', "/tmp/foo$$";
+#			print $tmp $b64decode;
+#			close $tmp;
 			#my $b64encode = MIME::Base64::encode_base64($epart->body);
 			#$logger->debug("Base 64: ",sub {Dumper($b64encode)});
 		}
@@ -283,24 +307,11 @@ sub usage {
     print STDERR <<EOF;
 $header
 
-Manage KNS via SNS
+Manage Email event handler interface
 
 Options:
 
     -h                          : display this message
-    -l                          : List topics
-    -a                          : List all subscriptions
-    -s <topic>                  : List subscriptions by Topic
-    -v 0 | 1 | 2                : show detailed output (use -vv for highest level of detail)
-    -m <count | stats | rid>    : Send a 'cache status' message (requires: -T <topic>)
-
- *SNS management*
-
-    -T <topic>                                  : Create SNS Topic
-    -D <topic>                                  : Delete SNS Topic
-    -S <IP address[:port] | email> -T <topic>   : Subscribe to Topic
-    -P http | https | email                     : Protocol to use for subscription
-    -N <displayname>                            : Change DisplayName (default: AWS Notifications)
 
 EOF
     exit;
