@@ -161,7 +161,7 @@ sub process_schedule {
 		$task_metric->start_timer();
 		$task_metric->push($task->{'vars'},$task->{'vals'});
 
-		$logger->info( "[task] ", sub { Dumper($task) } );
+		$logger->trace( "[task] ", sub { Dumper($task) } );
 
 		# set up new context for this task
 		if ($req_info) {
@@ -174,7 +174,7 @@ sub process_schedule {
 		$rid = $task->{'rid'};
 		$req_info->{'rid'} =
 		  mk_rid_info( $req_info, $rid, { 'version' => $task->{'ver'} } );
-		$logger->info( "Using RID ",
+		$logger->debug( "Using RID ",
 			Kynetx::Rids::print_rid_info( $req_info->{'rid'} ) );
 			
 		$task_metric->rid(get_rid( $req_info->{'rid'} ));
@@ -227,7 +227,7 @@ sub process_schedule {
 			}
 
 			Log::Log4perl::MDC->put( 'site', $rid );
-			$logger->info( "Processing rules for RID " . $rid );
+			$logger->debug( "Processing rules for RID " . $rid );
 
 			$rule_env =
 			  get_rule_env( $req_info, $ruleset, $session, $ast, $env_stash );
@@ -843,7 +843,7 @@ sub eval_rule {
 	push( @{ $req_info->{'all_labels'} },  $req_info->{'labels'} );
 	push( @{ $req_info->{'all_tags'} },    $req_info->{'tags'} );
 	
-	$logger->info("Actions: ", sub {Dumper($req_info->{'actions'})});
+	$logger->debug("Actions: ", sub {Dumper($req_info->{'actions'})});
 	foreach my $action (@{$req_info->{'actions'}}) {
 		$rule_metric->tag($action);
 	}
@@ -1016,7 +1016,7 @@ sub eval_rule_body {
 	my $fired = 0;
 	if ($pred_value) {
 
-		$logger->info("fired");
+		$logger->debug("fired");
 
 		# this is the main event.  The browser has asked for a
 		# chunk of Javascrip and this is where we deliver...
@@ -1035,7 +1035,7 @@ sub eval_rule_body {
 
 	}
 	else {
-		$logger->info("did not fire");
+		$logger->debug("did not fire");
 
 		$fired = 0;
 
@@ -1384,7 +1384,7 @@ sub mk_schedule {
 
 	$req_info->{'rid'} = $rid_info;    # override with the one we're working on
 
-	$logger->info( "Processing rules for RID ",
+	$logger->debug( "Processing rules for RID ",
 		Kynetx::Rids::print_rid_info($rid_info) );
 
 	$ruleset = get_rule_set($req_info) unless defined $ruleset;
