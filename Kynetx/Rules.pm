@@ -140,7 +140,7 @@ sub process_rules {
 # added $req_info to args because the $req_info from task is now a copy
 # so it doesn't have all_actions built up with all of the actions in the request
 sub process_schedule {
-	my ( $r, $schedule, $session, $eid, $req_info, $dd ) = @_;
+	my ( $r, $schedule, $session, $eid, $req_info, $dd, $overmetric ) = @_;
 
 	my $logger = get_logger();
 
@@ -153,8 +153,12 @@ sub process_schedule {
 	my $env_stash = {};
 
 	#$logger->debug( "Schedule: ", Dumper($schedule) );
-
+	my $ktoken = Kynetx::Persistence::KToken::get_token($session);
 	while ( my $task = $schedule->next() ) {
+		if (defined $overmetric) {
+			my $c = $overmetric->count;
+			$overmetric->count(++$c);
+		}
 		my $task_metric =
 		  new Kynetx::Metrics::Datapoint( { 'series' => 'schedule-task' } );
 		
@@ -178,15 +182,20 @@ sub process_schedule {
 			Kynetx::Rids::print_rid_info( $req_info->{'rid'} ) );
 			
 		$task_metric->rid(get_rid( $req_info->{'rid'} ));
-		my $ktoken = Kynetx::Persistence::KToken::get_token($session);
 		$task_metric->token($ktoken->{'ktoken'});
+	
 		unless ( $rid eq $current_rid ) {
+			my $r_metric =
+	  			new Kynetx::Metrics::Datapoint( { 'series' => 'schedule-task-contextswitch' } );
+			$r_metric->start_timer();
+			$r_metric->rid(get_rid( $req_info->{'rid'} ));
+			$r_metric->token($ktoken->{'ktoken'});
+			$r_metric->eid($req_info->{'eid'});
 
 			#context switch
 			# we only do this when there's a new RID
 
 			# save info from last context
-
 			$ast->add_resources( $current_rid, $req_info->{'resources'} );
 
 			# for each context switch, we need a new place to put the JS
@@ -237,6 +246,8 @@ sub process_schedule {
 
 			$current_rid = $rid;
 			$logger->debug("Context switch complete; processing $current_rid");
+			$r_metric->stop_and_store();
+			
 		}    # done with context
 
 		my $rule      = $task->{'rule'};
@@ -266,6 +277,12 @@ sub process_schedule {
 				&& $req_info->{'mode'} eq 'test' )
 		  )
 		{    # optimize??
+			my $o_metric =
+	  			new Kynetx::Metrics::Datapoint( { 'series' => 'schedule-task-optimize' } );
+			$o_metric->start_timer();
+			$o_metric->rid(get_rid( $req_info->{'rid'} ));
+			$o_metric->token($ktoken->{'ktoken'});
+			$o_metric->eid($req_info->{'eid'});
 
 			$req_info->{'rule_count'}++;
 
@@ -296,6 +313,7 @@ sub process_schedule {
 
 				$cap++;
 			}
+			$o_metric->stop_and_store();
 
 #my $new_req_info = Kynetx::Request::merge_req_env($req_info, $task->{'req_info'});
 			my $new_req_info =
@@ -309,6 +327,12 @@ sub process_schedule {
 				)
 			  )
 			{
+			my $er_metric =
+	  			new Kynetx::Metrics::Datapoint( { 'series' => 'schedule-task-evalrule' } );
+			$er_metric->start_timer();
+			$er_metric->rid(get_rid( $req_info->{'rid'} ));
+			$er_metric->token($ktoken->{'ktoken'});
+			$er_metric->eid($req_info->{'eid'});
 
 				$js = eval {
 					eval_rule(
@@ -327,10 +351,10 @@ sub process_schedule {
 				if ($@) {
 					$logger->error( "Ruleset $rid failed: ", $@ );
 				}
+			$er_metric->stop_and_store();
 
 			}
 			else {
-
 				$logger->debug("Sending activation notice for $rid");
 				$js = eval {
 					Kynetx::Authz::authorize_message( $task->{'req_info'},
@@ -445,6 +469,13 @@ sub eval_use_module {
 	) = @_;
 
 	my $logger = get_logger();
+	my $ktoken = Kynetx::Persistence::KToken::get_token($session);
+	my $metric =
+		new Kynetx::Metrics::Datapoint( { 'series' => 'eval-use-module' } );
+	$metric->start_timer();
+	$metric->rid(get_rid( $req_info->{'rid'} ));
+	$metric->token($ktoken->{'ktoken'});
+	$metric->eid($req_info->{'eid'});
 
 	my $module_sig = md5_hex( $name . $mversion . $alias . freeze $modifiers);
 
@@ -557,17 +588,7 @@ sub eval_use_module {
 		extend_rule_env( $namespace_name . '_provided', $provided, $rule_env )
 	);
 
-	#   $env_stash->{$module_sig}->{'js'} = $js;
-	#   $env_stash->{$module_sig}->{'rule_env'} = $rule_env;
-
-# } else {
-#   $logger->debug("----------------Using cached module $name with signature $module_sig--------");
-# }
-
-	# return ($env_stash->{$module_sig}->{'js'},
-	# 	  $env_stash->{$module_sig}->{'rule_env'}
-	# 	 );
-
+	$metric->stop_and_store();
 	return ( $js, $rule_env );
 
 }
@@ -1331,45 +1352,7 @@ sub mk_initial_env {
 	return $rule_env;
 }
 
-# sub mk_rule_list {
-#   # third param is optional and not used in production--testing
-#   my ($req_info, $rid, $ruleset) = @_;
 
-#   my $logger = get_logger();
-
-#   $req_info->{'rid'} = $rid; # override with the one we're working on
-
-#   $logger->info("Processing rules for site " . $req_info->{'rid'});
-
-#   $ruleset = get_rule_set($req_info) unless defined $ruleset;
-
-#   my $rl = {'ruleset' => $ruleset,
-# 	    'rules' => [],
-# 	    'req_info' => $req_info
-# 	   };
-
-#   foreach my $rule (@{$ruleset->{'rules'}}) {
-
-#     # test and capture here
-#     my($selected, $vals) = select_rule($req_info->{'caller'}, $rule);
-
-#     if ($selected) {
-
-# 	push @{$rl->{'rules'}}, $rule;
-
-# 	my $vars = Kynetx::Actions::get_precondition_vars($rule);
-# 	$rl->{$rule->{'name'}} = {'req_info' => {},
-# 				  'vars' => $vars,
-# 				  'vals' => $vals
-# 				 };
-#     }
-#   }
-
-#  $logger->debug("Rule List: ", sub {Dumper $rl->{'rules'}});
-
-#   return $rl;
-
-# }
 
 sub mk_schedule {
 

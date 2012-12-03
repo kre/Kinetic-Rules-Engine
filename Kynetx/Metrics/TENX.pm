@@ -152,9 +152,15 @@ sub get_datapoints {
 		if (defined $result) {
 			$logger->debug("Num points: ", scalar @{$result});
 			my @loop = ();
+			my $pmax = 1000;
+			my $count = 0;
 			foreach my $dp (@{$result}) {
 				if (filter($dp,$req)) {
+					$count++;					
 					push(@loop,$dp);
+					if ($count >= $pmax) {
+						last;
+					}
 				}			
 
 			}
@@ -260,7 +266,13 @@ sub column_plot {
 		}
 		my $catstr = '[' . join(",",@cats) . "]";
 		my $ystr	= '['. join(",",@yvals). "]";
-		my $pstr = Kynetx::Json::astToJson($points);
+		my $pstr;
+		eval {
+			$pstr = Kynetx::Json::astToJson($points)
+		};
+		if ($@ && not defined $pstr) {
+			$pstr = "n/a";
+		}
 		$test_template->param("CATEGORIES" => $catstr);
 		$test_template->param("yname" => $yname); 
 		$test_template->param("yval" => $ystr); 
@@ -392,13 +404,6 @@ sub scatter_plot {
 		$loop_struct->{'LASTx'} = $last->get_metric($xname)        || 0;
 		$loop_struct->{'LASTy'} = $last->get_metric($yname) * 1000 || 0;
 		$loop_struct->{'LASTid'} = $last->id;
-#		$loop_struct->{'REGRESSION_NAME'} = $s . "regression";
-#		$loop_struct->{'X0'} = 0;
-#		$loop_struct->{'Y0'} = int($a + .5);
-#		$loop_struct->{'Xn'} = int($maxX + .5);
-#		$loop_struct->{'Yn'} = int($a + $b * $maxX + .5);
-		#$test_template->param(LASTx => $last->get_metric("var_size")|| 0);
-		#$test_template->param(LASTy => int($last->get_metric("realtime") * 1000 || 0));
 		CORE::push(@series_loop,$loop_struct);		
 	}
 	$test_template->param("SERIES_LOOP" => \@series_loop);

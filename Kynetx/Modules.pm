@@ -471,6 +471,14 @@ sub eval_module {
         } else {
             $val = Kynetx::Persistence::KXDI::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
         }    	
+    } elsif ( $source eq 'rsm' ) {
+        $preds = Kynetx::Modules::RSM::get_predicates();
+        if ( defined $preds->{$function} ) {
+            $val = $preds->{$function}->( $req_info,$rule_env,$session,$rule_name,$function,$args );
+            $val ||= 0;
+        } else {
+            $val = Kynetx::Modules::RSM::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
+        }    	
     } else {
 	Kynetx::Errors::raise_error($req_info, 'warn',
 				    "[module] named $source not found",
