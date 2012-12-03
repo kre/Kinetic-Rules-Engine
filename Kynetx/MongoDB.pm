@@ -84,7 +84,7 @@ our $MONGO;
 our $MONGO_SERVER = "127.0.0.1";
 our $MONGO_PORT = "27017";
 our $MONGO_DB = "kynetx";
-our $CACHETIME = 60;
+our $CACHETIME = 180;
 our $DBREF;
 our $COLLECTION_REF;
 our $MONGO_MAX_SIZE = 838860;
@@ -288,6 +288,52 @@ sub get_value {
     }
 }
 
+sub atomic_pop_value {
+	my ($collection,$var,$direction) = @_;
+	my $logger = get_logger();
+	$direction |= -1;
+    my $c = get_collection($collection);
+    my $cursor = $c->find($var,{"value" => {'$slice' => [0,1]}});
+    $logger->debug("# In mongo: ", $cursor->count);	
+    my $result;
+    if ($cursor->has_next) {
+		my $object = $cursor->next;   
+		$logger->debug("Cursor: ", sub {Dumper($object)});
+		$result = $object->{'value'}->[0];	
+    } else {
+    	$logger->debug("Cursor empty ");
+    }
+	$c->update($var,{'$pop' => {"value" => -1}});
+	clear_cache($collection,$var);
+	if (defined $result) {
+		return $result;
+	} else {
+		return undef;
+	}
+}
+
+sub atomic_push_value {
+	my ($collection,$var,$value) = @_;
+	my $logger = get_logger();
+    my $c = get_collection($collection);
+    my $result = $c->update($var,{'$push' => {"value" => $value}},{"safe" => SAFE,'upsert' => 1});
+#    my $db = get_mongo();
+#    $logger->debug("Atomic push: ", sub {Dumper($db->last_error())});	
+#    $logger->debug("Atomic push: $collection");	
+#    $logger->debug("Atomic push result: ", sub {Dumper($result)});	
+#    my $cursor = $c->find($var);
+#    $logger->debug("In mongo: ", $cursor->count);	
+#    if ($cursor->has_next) {
+#		while (my $object = $cursor->next) {    
+#			$logger->debug("Cursor: ", sub {Dumper($object)});
+#			
+#		}
+#    } else {
+#    	$logger->debug("Cursor empty ");
+#    }
+#    
+#    die;	 
+}
 
 ##
 #   Default is to POP variable from end of stack
@@ -422,6 +468,29 @@ sub push_value {
         return $status;
     }
 }
+
+sub type_data {
+    my ($collection,$var) = @_;
+    my $var_list;
+    my $c = get_collection($collection);
+  	my $cursor = $c->find($var);
+  	if  ($cursor->has_next) {
+    	while (my $object = $cursor->next) {
+    		my $key = $object->{'key'};
+    		next if ($var_list->{$key});
+    		next if ($key=~ m/:event_list$|:sm_current$/);
+    		if (defined $object->{'hashkey'}) {
+    			$var_list->{$key} = 'hash';
+    		} else {
+    			$var_list->{$key} = Kynetx::Expressions::infer_type($object->{'value'})
+    		}
+    		
+    	}
+  	}
+  	return $var_list;
+	
+}
+
 
 
 # find_and_modify uses the generic run_command function of the mongo library

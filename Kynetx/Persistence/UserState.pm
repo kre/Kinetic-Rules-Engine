@@ -67,20 +67,35 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
 use constant COLLECTION => "edata";
 use constant EVCOLLECTION => "events";
 use constant EEKEY => "__event_env__";
+use constant STATE_COLLECTION => "userstate";
 
 
 sub get_current_state {
     my ($rid,$session,$rulename) = @_;
     my $logger = get_logger();
     my $state_key = $rulename . ':sm_current';
-    $logger->trace("Get SM current: ", $state_key);
+    $logger->debug("Get SM current: ", $state_key);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $key = {
         "ken" => $ken,
         "rid" => $rid,
         "key" => $state_key};
     #my $value = Kynetx::MongoDB::get_value(COLLECTION,$key);
-    my $value = Kynetx::MongoDB::get_singleton(COLLECTION,$key);
+    my $value;
+    $value = Kynetx::MongoDB::get_singleton(STATE_COLLECTION,$key);
+	if (defined $value) {
+		$logger->debug("$state_key found in ",STATE_COLLECTION,sub {Dumper($value)});
+	} else {
+		$logger->debug("$state_key not found in ",STATE_COLLECTION);
+		$value = Kynetx::MongoDB::get_singleton(COLLECTION,$key);
+		if (defined $value) {
+			$logger->debug("Found $state_key in ", COLLECTION);
+			$logger->debug("Copy state to ",STATE_COLLECTION);
+			set_current_state($rid,$session,$rulename,$value);
+			purge_state_from_edata($rid,$session,$rulename);
+		}
+	};
+    
     return $value->{"value"};
 }
 
@@ -97,7 +112,7 @@ sub set_current_state {
     
     my $value = clone $key;
     $value->{"value"} = $val;
-	my $success = Kynetx::MongoDB::update_value(COLLECTION,$key,$value,1,0,1);
+	my $success = Kynetx::MongoDB::update_value(STATE_COLLECTION,$key,$value,1,0,1);
     $logger->debug("Failed to upsert ", sub {Dumper($key)}) unless ($success);
     return $success;
 	
@@ -113,8 +128,21 @@ sub delete_current_state {
         "ken" => $ken,
         "rid" => $rid,
         "key" => $state_key};
-    Kynetx::MongoDB::delete_value(COLLECTION,$key);
+    Kynetx::MongoDB::delete_value(STATE_COLLECTION,$key);
     reset_event_env($rid,$session,$rulename);	
+}
+
+sub purge_state_from_edata {
+    my ($rid,$session,$rulename) = @_;
+    my $logger = get_logger();
+    my $state_key = $rulename . ':sm_current';
+    $logger->trace("Del SM current: ", $state_key);
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $key = {
+        "ken" => $ken,
+        "rid" => $rid,
+        "key" => $state_key};
+    Kynetx::MongoDB::delete_value(COLLECTION,$key);	
 }
 
 sub get_event_env {
@@ -273,5 +301,60 @@ sub get_timer_start {
     my $value = Kynetx::MongoDB::get_value(EVCOLLECTION,$query);
 	return $value->{$start};	
 }
+
+sub next_event_from_list {
+	my ($rid,$session,$event_list_name) = @_;
+    my $logger = get_logger();
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $query = {
+		"rid" => $rid,
+		"ken" => $ken,
+		"key" => $event_list_name		
+	};
+	my $result = Kynetx::MongoDB::atomic_pop_value(STATE_COLLECTION,$query);
+	if (defined $result) {
+		$logger->debug("$event_list_name found in ",STATE_COLLECTION, sub {Dumper($result)});
+		return $result;
+	} else {
+		my $val = Kynetx::MongoDB::get_value(COLLECTION,$query);
+		if (defined $val) {
+			my $object = $val->{'value'};
+			$logger->debug("$event_list_name found in ",COLLECTION,sub {Dumper($object)});
+			if (ref $object eq "ARRAY") {
+				$result = shift @{$object};
+				#put what is left of the event list into STATE_COLLECTION
+				Kynetx::MongoDB::atomic_push_value(STATE_COLLECTION,$query,$object);
+				Kynetx::MongoDB::delete_value(COLLECTION,$query);
+			} else {
+				$result = $object;
+			}
+			return $result;
+		} else {
+			$logger->debug("Event list not found");
+			return undef;
+		}
+		
+	}
+	return $result;
+	
+}
+
+sub add_event_to_list {
+	my ($rid, $session,	$event_list_name, $json) = @_;
+    my $logger = get_logger();
+    my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+    my $query = {
+		"rid" => $rid,
+		"ken" => $ken,
+		"key" => $event_list_name		    	
+    };
+    $logger->debug("Add event to $event_list_name: ", sub {Dumper($query)});
+    $logger->debug("$event_list_name is: $json");
+    my $status = Kynetx::MongoDB::atomic_push_value(STATE_COLLECTION,$query,$json);
+    $logger->debug("Add returned: ", sub {Dumper($status)});
+    my $temp = Kynetx::MongoDB::get_value(STATE_COLLECTION,$query);
+    $logger->debug("State Collection query: ", sub {Dumper($temp)});
+}
+
 
 1;

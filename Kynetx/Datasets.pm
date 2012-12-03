@@ -185,6 +185,7 @@ sub _load_dataset {
 	my $metric = new Kynetx::Metrics::Datapoint();
 	$metric->series("datasets");
     $metric->rid($rid);
+    $metric->eid($req_info->{'eid'});
 	$metric->start_timer();
 	
     # If it is not formatted like an URL request, assume it is a file
