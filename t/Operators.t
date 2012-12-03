@@ -936,6 +936,38 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+$e[$i] = q!my_str.substr(5)!;
+$x[$i] = {
+    'val' => 'is a string',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q!my_str.substr(5, 4)!;
+$x[$i] = {
+    'val' => 'is a',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q!my_str.substr(25)!;
+$x[$i] = {
+    'val' => undef,
+    'type' => 'null'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q!my_str.substr(5, -5)!;
+$x[$i] = {
+    'val' => 'is a s',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
 
 
 #

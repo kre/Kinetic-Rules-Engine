@@ -938,6 +938,43 @@ sub eval_sprintf {
 }
 $funcs->{'sprintf'} = \&eval_sprintf;
 
+sub eval_substr {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+    # $logger->trace("obj: ", sub { Dumper($obj) });
+
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+#    $logger->trace("obj: ", sub { Dumper($rands) });
+
+    if($obj->{'type'} eq 'str') {
+        my $v = $obj->{'val'};
+	my $offset = Kynetx::Expressions::den_to_exp($rands->[0]);
+	$logger->debug("Finding substring of  $v");
+
+	if (defined $rands->[1])  {
+	  my $length = Kynetx::Expressions::den_to_exp($rands->[1]);
+	  $v = substr($v, $offset, $length);
+	} else {
+  	  $v = substr($v, $offset);
+	}
+
+        return Kynetx::Expressions::typed_value($v);
+    } else {
+      my $msg = defined $obj ? "object undefined" 
+                             : "object not a string";
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[sprintf] $msg",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   )
+    }
+}
+$funcs->{'substr'} = \&eval_substr;
+
 
 
 
