@@ -53,6 +53,7 @@ use Kynetx::Environments qw/:all/;
 use Kynetx::Rids qw/:all/;
 use Kynetx::MongoDB;
 use Benchmark ':hireswallclock';
+no warnings "redefine";
 
 our $AUTOLOAD;
 

@@ -21,9 +21,9 @@ package Kynetx::RuleManager;
 # MA 02111-1307 USA
 #
 use strict;
-#use warnings;
 use lib qw(/web/lib/perl);
 use utf8;
+use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 
@@ -58,6 +58,8 @@ use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Apache2::Const qw(FORBIDDEN OK);
+
+no warnings 'redefine';
 
 our $VERSION = 1.00;
 our @ISA     = qw(Exporter);

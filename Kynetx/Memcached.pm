@@ -21,7 +21,7 @@ package Kynetx::Memcached;
 #
 use strict;
 #use warnings;
-no warnings qw(uninitialized);
+no warnings qw(uninitialized numeric);
 
 use utf8;
 

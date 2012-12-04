@@ -21,7 +21,7 @@ package Kynetx::MongoDB;
 #
 use strict;
 #use warnings;
-no warnings qw(uninitialized);
+no warnings 'all';
 
 
 use lib qw(
