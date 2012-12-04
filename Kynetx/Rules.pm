@@ -515,11 +515,18 @@ sub eval_use_module {
 	}
 
 	# Default to the production version of modules
+	my $rmetric =
+		new Kynetx::Metrics::Datapoint( { 'series' => 'module-get-ruleset' } );
+	$rmetric->start_timer();
+	$rmetric->rid(get_rid( $req_info->{'rid'} ));
+	$rmetric->token($ktoken->{'ktoken'});
+	$rmetric->eid($req_info->{'eid'});
 	$mversion ||= 'prod';
 	my $use_ruleset =
 	  Kynetx::Rules::get_rule_set( $req_info, 1, $name, $mversion,
 		{ 'in_module' => 1 } );
 
+	$rmetric->stop_and_store();
 	$logger->trace( "Using ", sub { Dumper $use_ruleset} );
 
 	my $provided_array = $use_ruleset->{'meta'}->{'provide'}->{'names'} || [];
@@ -542,6 +549,12 @@ sub eval_use_module {
 	my @mod_list = @{ $rule_env->{'_module_list'} || [] };
 	push( @mod_list, $name );
 
+	my $emetric =
+		new Kynetx::Metrics::Datapoint( { 'series' => 'module-extend-env' } );
+	$emetric->start_timer();
+	$emetric->rid(get_rid( $req_info->{'rid'} ));
+	$emetric->token($ktoken->{'ktoken'});
+	$emetric->eid($req_info->{'eid'});
 	my $init_mod_env = extend_rule_env(
 		{
 			'_callingRID'     => get_rid( $req_info->{'rid'} ),
@@ -554,6 +567,7 @@ sub eval_use_module {
 		},
 		empty_rule_env()
 	);
+	$emetric->stop_and_store();
 
 	my $module_rule_env =
 	  set_module_configuration( $req_info, $rule_env, $session, $init_mod_env,
@@ -569,24 +583,45 @@ sub eval_use_module {
 		$js .= $this_js;
 	}
 
+	my $umetric =
+		new Kynetx::Metrics::Datapoint( { 'series' => 'module-eval-use' } );
+	$umetric->start_timer();
+	$umetric->rid(get_rid( $req_info->{'rid'} ));
+	$umetric->token($ktoken->{'ktoken'});
+	$umetric->eid($req_info->{'eid'});
 	if ( $use_ruleset->{'meta'}->{'use'} ) {
 		( $this_js, $module_rule_env ) =
 		  eval_use( $req_info, $use_ruleset, $module_rule_env, $session,
 			$env_stash );
 		$js .= $this_js;
 	}
+	$umetric->stop_and_store();
 
 	# eval the module's global block
+	my $gmetric =
+		new Kynetx::Metrics::Datapoint( { 'series' => 'module-eval-use' } );
+	$gmetric->start_timer();
+	$gmetric->rid(get_rid( $req_info->{'rid'} ));
+	$gmetric->token($ktoken->{'ktoken'});
+	$gmetric->eid($req_info->{'eid'});
 	if ( $use_ruleset->{'global'} ) {
 		( $js, $module_rule_env ) =
 		  process_one_global_block( $req_info, $use_ruleset->{'global'},
 			$module_rule_env, $session, $namespace_name, $provided );
 
 	}
+	$gmetric->stop_and_store();
 
+	my $emetric2 =
+		new Kynetx::Metrics::Datapoint( { 'series' => 'module-extend-env-final' } );
+	$emetric2->start_timer();
+	$emetric2->rid(get_rid( $req_info->{'rid'} ));
+	$emetric2->token($ktoken->{'ktoken'});
+	$emetric2->eid($req_info->{'eid'});
 	$rule_env = extend_rule_env( $namespace_name, $module_rule_env,
 		extend_rule_env( $namespace_name . '_provided', $provided, $rule_env )
 	);
+	$emetric2->stop_and_store();
 
 	$metric->stop_and_store();
 	return ( $js, $rule_env );

@@ -294,11 +294,11 @@ sub atomic_pop_value {
 	$direction |= -1;
     my $c = get_collection($collection);
     my $cursor = $c->find($var,{"value" => {'$slice' => [0,1]}});
-    $logger->debug("# In mongo: ", $cursor->count);	
+    $logger->trace("# In mongo: ", $cursor->count);	
     my $result;
     if ($cursor->has_next) {
 		my $object = $cursor->next;   
-		$logger->debug("Cursor: ", sub {Dumper($object)});
+		$logger->trace("Cursor: ", sub {Dumper($object)});
 		$result = $object->{'value'}->[0];	
     } else {
     	$logger->debug("Cursor empty ");
@@ -317,22 +317,6 @@ sub atomic_push_value {
 	my $logger = get_logger();
     my $c = get_collection($collection);
     my $result = $c->update($var,{'$push' => {"value" => $value}},{"safe" => SAFE,'upsert' => 1});
-#    my $db = get_mongo();
-#    $logger->debug("Atomic push: ", sub {Dumper($db->last_error())});	
-#    $logger->debug("Atomic push: $collection");	
-#    $logger->debug("Atomic push result: ", sub {Dumper($result)});	
-#    my $cursor = $c->find($var);
-#    $logger->debug("In mongo: ", $cursor->count);	
-#    if ($cursor->has_next) {
-#		while (my $object = $cursor->next) {    
-#			$logger->debug("Cursor: ", sub {Dumper($object)});
-#			
-#		}
-#    } else {
-#    	$logger->debug("Cursor empty ");
-#    }
-#    
-#    die;	 
 }
 
 ##

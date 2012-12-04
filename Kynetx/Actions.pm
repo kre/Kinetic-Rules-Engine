@@ -945,7 +945,7 @@ sub build_one_action {
 	$js .=
 	  &$before( $req_info, $rule_env, $session, $config, $mods, $arg_exp_vals,
 		$action->{'vars'} );
-	$logger->debug( "Action $action_name (before) returns js: ", $js ) if $js;
+	$logger->trace( "Action $action_name (before) returns js: ", $js ) if $js;
 
 #	$logger->debug("Action JS: $action_js");
 

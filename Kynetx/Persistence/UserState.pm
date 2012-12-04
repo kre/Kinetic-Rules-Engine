@@ -84,7 +84,7 @@ sub get_current_state {
     my $value;
     $value = Kynetx::MongoDB::get_singleton(STATE_COLLECTION,$key);
 	if (defined $value) {
-		$logger->debug("$state_key found in ",STATE_COLLECTION,sub {Dumper($value)});
+		$logger->trace("$state_key found in ",STATE_COLLECTION,sub {Dumper($value)});
 	} else {
 		$logger->debug("$state_key not found in ",STATE_COLLECTION);
 		$value = Kynetx::MongoDB::get_singleton(COLLECTION,$key);
@@ -313,13 +313,13 @@ sub next_event_from_list {
 	};
 	my $result = Kynetx::MongoDB::atomic_pop_value(STATE_COLLECTION,$query);
 	if (defined $result) {
-		$logger->debug("$event_list_name found in ",STATE_COLLECTION, sub {Dumper($result)});
+		$logger->trace("$event_list_name found in ",STATE_COLLECTION, sub {Dumper($result)});
 		return $result;
 	} else {
 		my $val = Kynetx::MongoDB::get_value(COLLECTION,$query);
 		if (defined $val) {
 			my $object = $val->{'value'};
-			$logger->debug("$event_list_name found in ",COLLECTION,sub {Dumper($object)});
+			$logger->trace("$event_list_name found in ",COLLECTION,sub {Dumper($object)});
 			if (ref $object eq "ARRAY") {
 				$result = shift @{$object};
 				#put what is left of the event list into STATE_COLLECTION
@@ -348,12 +348,12 @@ sub add_event_to_list {
 		"ken" => $ken,
 		"key" => $event_list_name		    	
     };
-    $logger->debug("Add event to $event_list_name: ", sub {Dumper($query)});
-    $logger->debug("$event_list_name is: $json");
+    $logger->trace("Add event to $event_list_name: ", sub {Dumper($query)});
+    $logger->trace("$event_list_name is: $json");
     my $status = Kynetx::MongoDB::atomic_push_value(STATE_COLLECTION,$query,$json);
-    $logger->debug("Add returned: ", sub {Dumper($status)});
+    $logger->debug("Add event to list returned: ", sub {Dumper($status)});
     my $temp = Kynetx::MongoDB::get_value(STATE_COLLECTION,$query);
-    $logger->debug("State Collection query: ", sub {Dumper($temp)});
+    $logger->trace("State Collection query: ", sub {Dumper($temp)});
 }
 
 

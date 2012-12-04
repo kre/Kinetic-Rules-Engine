@@ -281,8 +281,8 @@ sub process_event {
 
 		# special handling follows
 		if ( $@ =~ m/mongodb/i ) {
-			Kynetx::MongoDB::init();
-			$logger->error("Caught MongoDB error, reset connection");
+				#Kynetx::MongoDB::init();
+				$logger->error("Caught MongoDB error, reset connection disabled");
 		}
 	}
 
