@@ -471,7 +471,7 @@ sub eval_use_module {
 	my $logger = get_logger();
 	my $ktoken = Kynetx::Persistence::KToken::get_token($session);
 	my $metric =
-		new Kynetx::Metrics::Datapoint( { 'series' => 'eval-use-module' } );
+		new Kynetx::Metrics::Datapoint( { 'series' => 'use-module' } );
 	$metric->start_timer();
 	$metric->rid(get_rid( $req_info->{'rid'} ));
 	$metric->token($ktoken->{'ktoken'});
@@ -599,7 +599,7 @@ sub eval_use_module {
 
 	# eval the module's global block
 	my $gmetric =
-		new Kynetx::Metrics::Datapoint( { 'series' => 'module-eval-use' } );
+		new Kynetx::Metrics::Datapoint( { 'series' => 'module-eval-global' } );
 	$gmetric->start_timer();
 	$gmetric->rid(get_rid( $req_info->{'rid'} ));
 	$gmetric->token($ktoken->{'ktoken'});
