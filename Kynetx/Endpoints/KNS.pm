@@ -118,6 +118,7 @@ sub parse_message {
                         $logger->debug("key: $cache_key");
                         my $result = $memd->delete($cache_key);
 
+
                    } else {
                        $log = "[SNS request] Flush cache";
                        $memd->flush_all;

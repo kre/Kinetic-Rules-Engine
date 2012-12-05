@@ -463,168 +463,213 @@ sub eval_use {
 }
 
 sub eval_use_module {
-	my (
-		$req_info, $rule_env,  $session,  $name,
-		$alias,    $modifiers, $mversion, $env_stash
-	) = @_;
+  my (
+      $req_info, $rule_env,  $session,  $name,
+      $alias,    $modifiers, $mversion, $env_stash
+     ) = @_;
 
-	my $logger = get_logger();
-	my $ktoken = Kynetx::Persistence::KToken::get_token($session);
-	my $metric =
-		new Kynetx::Metrics::Datapoint( { 'series' => 'eval-use-module' } );
-	$metric->start_timer();
-	$metric->rid(get_rid( $req_info->{'rid'} ));
-	$metric->token($ktoken->{'ktoken'});
-	$metric->eid($req_info->{'eid'});
+  my $logger = get_logger();
+  my $ktoken = Kynetx::Persistence::KToken::get_token($session);
+  my $metric =
+    new Kynetx::Metrics::Datapoint( { 'series' => 'eval-use-module' } );
+  $metric->start_timer();
+  $metric->rid(get_rid( $req_info->{'rid'} ));
+  $metric->token($ktoken->{'ktoken'});
+  $metric->eid($req_info->{'eid'});
 
-	my $module_sig = md5_hex( $name . $mversion . $alias . freeze $modifiers);
+  $mversion ||= 'prod';
+  my $module_sig = md5_hex( $name . $mversion . $alias . freeze $modifiers);
 
-	#  $logger->debug("Module sig $module_sig", sub {Dumper $env_stash});
+	
+  my $memd = get_memd();
 
-	# if (! defined $env_stash->{$module_sig}) {
+  my $re_key = "rule_env_".$module_sig;
+  my $pr_key = "provided_".$module_sig;
+  my $js_key = "js_".$module_sig;
+  my $module_cache = $memd->get_multi($re_key, $pr_key, $js_key);
+  my $module_rule_env = $module_cache->{$re_key};
+  my $provided = $module_cache->{$pr_key} || {};
+  my $js = $module_cache->{$js_key} || '';
 
-	$logger->debug("----- Loading Module $name -------");
+  my $namespace_name = $Kynetx::Modules::name_prefix . ( $alias || $name );
 
-	my $js = '';
-	my $this_js;
+  if (! defined $module_rule_env) {
 
-	#  module hierarchy can look like this:
-	#
-	#  a -> b
-	#  |
-	#  +--> b
-	#
-	# but not this
-	#
-	# a -> b -> b ...
-	#
-	# or this
-	#
-	# a -> b -> c -> ... -> b
-	#
 
-	# sanity check, we're not in a big loop
-	foreach my $module_name (
-		@{ lookup_rule_env( '_module_list', $rule_env ) || [] } )
-	{
-		$logger->debug("Seeing module $module_name for $name");
-		if ( $module_name eq $name ) {
-			$logger->debug("$name has already been used as a module");
-			return ( $js, $rule_env );
-		}
+    #  $logger->debug("Module sig $module_sig", sub {Dumper $env_stash});
+
+    # if (! defined $env_stash->{$module_sig}) {
+
+    $logger->debug("----- Loading Module $name.$mversion -------");
+
+    my $js = '';
+    my $this_js;
+
+    #  module hierarchy can look like this:
+    #
+    #  a -> b
+    #  |
+    #  +--> b
+    #
+    # but not this
+    #
+    # a -> b -> b ...
+    #
+    # or this
+    #
+    # a -> b -> c -> ... -> b
+    #
+    
+    # sanity check, we're not in a big loop
+    foreach my $module_name (
+	    @{ lookup_rule_env( '_module_list', $rule_env ) || [] } )
+      {
+	$logger->debug("Seeing module $module_name for $name");
+	if ( $module_name eq $name ) {
+	  $logger->debug("$name has already been used as a module");
+	  return ( $js, $rule_env );
 	}
+      }
 
-	# Default to the production version of modules
-	my $rmetric =
-		new Kynetx::Metrics::Datapoint( { 'series' => 'module-get-ruleset' } );
-	$rmetric->start_timer();
-	$rmetric->rid(get_rid( $req_info->{'rid'} ));
-	$rmetric->token($ktoken->{'ktoken'});
-	$rmetric->eid($req_info->{'eid'});
-	$mversion ||= 'prod';
-	my $use_ruleset =
-	  Kynetx::Rules::get_rule_set( $req_info, 1, $name, $mversion,
-		{ 'in_module' => 1 } );
+    # Default to the production version of modules
+    my $rmetric =
+      new Kynetx::Metrics::Datapoint( { 'series' => 'module-get-ruleset' } );
+    $rmetric->start_timer();
+    $rmetric->rid(get_rid( $req_info->{'rid'} ));
+    $rmetric->token($ktoken->{'ktoken'});
+    $rmetric->eid($req_info->{'eid'});
+    my $use_ruleset =
+      Kynetx::Rules::get_rule_set( $req_info, 1, $name, $mversion,
+				   { 'in_module' => 1 } );
+    
+    $rmetric->stop_and_store();
+    $logger->trace( "Using ", sub { Dumper $use_ruleset} );
 
-	$rmetric->stop_and_store();
-	$logger->trace( "Using ", sub { Dumper $use_ruleset} );
+#    my $provided_array = $use_ruleset->{'meta'}->{'provide'}->{'names'} || [];
+#
+#    foreach my $name ( @{$provided_array} ) {
+#      $provided->{$name} = 1;
+#    }
+# replaced with...
+    $provided = {map {$_ => 1} @{$use_ruleset->{'meta'}->{'provide'}->{'names'} || []}};
 
-	my $provided_array = $use_ruleset->{'meta'}->{'provide'}->{'names'} || [];
+    my $configuration = $use_ruleset->{'meta'}->{'configure'}->{'configuration'}
+      || [];
+#    $logger->trace( "conf ", sub { Dumper $configuration} );
+    $logger->debug( "Module provides: ",
+		    sub { join( ",", @{$use_ruleset->{'meta'}->{'provide'}->{'names'} || []} ) } );
 
-	my $provided = {};
-	foreach my $name ( @{$provided_array} ) {
-		$provided->{$name} = 1;
-	}
+    # create the module rule_env by extending an empty env with the config
+    
+    my @mod_list = @{ $rule_env->{'_module_list'} || [] };
+    push( @mod_list, $name );
 
-	my $namespace_name = $Kynetx::Modules::name_prefix . ( $alias || $name );
-
-	my $configuration = $use_ruleset->{'meta'}->{'configure'}->{'configuration'}
-	  || [];
-	$logger->trace( "conf ", sub { Dumper $configuration} );
-	$logger->debug( "Module provides: ",
-		sub { join( ",", @{$provided_array} ) } );
-
-	# create the module rule_env by extending an empty env with the config
-
-	my @mod_list = @{ $rule_env->{'_module_list'} || [] };
-	push( @mod_list, $name );
-
-	my $emetric =
-		new Kynetx::Metrics::Datapoint( { 'series' => 'module-extend-env' } );
-	$emetric->start_timer();
-	$emetric->rid(get_rid( $req_info->{'rid'} ));
-	$emetric->token($ktoken->{'ktoken'});
-	$emetric->eid($req_info->{'eid'});
-	my $init_mod_env = extend_rule_env(
-		{
-			'_callingRID'     => get_rid( $req_info->{'rid'} ),
-			'_callingVersion' => $req_info->{'rule_version'},
+    my $emetric =
+      new Kynetx::Metrics::Datapoint( { 'series' => 'module-extend-env' } );
+    $emetric->start_timer();
+    $emetric->rid(get_rid( $req_info->{'rid'} ));
+    $emetric->token($ktoken->{'ktoken'});
+    $emetric->eid($req_info->{'eid'});
+    my $init_mod_env = extend_rule_env(
+            {
+#			'_callingRID'     => get_rid( $req_info->{'rid'} ),
+#			'_callingVersion' => $req_info->{'rule_version'},
 			'_moduleRID'      => $name,
 			'_moduleVersion'  => $mversion,
 			'_inModule'       => 'true',
 			'_module_list'    => \@mod_list,
+            },
+            empty_rule_env()
+      );
+    $emetric->stop_and_store();
 
-		},
-		empty_rule_env()
-	);
-	$emetric->stop_and_store();
+    $module_rule_env =
+      set_module_configuration( $req_info, $rule_env, $session, $init_mod_env,
+				$configuration, $modifiers || [] );
 
-	my $module_rule_env =
-	  set_module_configuration( $req_info, $rule_env, $session, $init_mod_env,
-		$configuration, $modifiers || [] );
+    #  $logger->debug("Module env ", Dumper $module_rule_env);
+    
+    # put any keys in the module rule_env *before* evaling the globals
+    if ( $use_ruleset->{'meta'}->{'keys'} ) {
+      ( $this_js, $module_rule_env ) =
+	Kynetx::Keys::process_keys( $req_info, $module_rule_env,
+				    $use_ruleset );
+      $js .= $this_js;
+    }
 
-	#  $logger->debug("Module env ", Dumper $module_rule_env);
+    my $umetric =
+      new Kynetx::Metrics::Datapoint( { 'series' => 'module-eval-use' } );
+    $umetric->start_timer();
+    $umetric->rid(get_rid( $req_info->{'rid'} ));
+    $umetric->token($ktoken->{'ktoken'});
+    $umetric->eid($req_info->{'eid'});
+    if ( $use_ruleset->{'meta'}->{'use'} ) {
+      ( $this_js, $module_rule_env ) =
+	eval_use( $req_info, $use_ruleset, $module_rule_env, $session,
+		  $env_stash );
+      $js .= $this_js;
+    }
+    $umetric->stop_and_store();
 
-	# put any keys in the module rule_env *before* evaling the globals
-	if ( $use_ruleset->{'meta'}->{'keys'} ) {
-		( $this_js, $module_rule_env ) =
-		  Kynetx::Keys::process_keys( $req_info, $module_rule_env,
-			$use_ruleset );
-		$js .= $this_js;
-	}
+    # eval the module's global block
+    my $gmetric =
+      new Kynetx::Metrics::Datapoint( { 'series' => 'module-eval-use' } );
+    $gmetric->start_timer();
+    $gmetric->rid(get_rid( $req_info->{'rid'} ));
+    $gmetric->token($ktoken->{'ktoken'});
+    $gmetric->eid($req_info->{'eid'});
+    my $is_cachable;
+    if ( $use_ruleset->{'global'} ) {
+      ( $js, $module_rule_env, $is_cachable ) =
+	process_one_global_block( $req_info, $use_ruleset->{'global'},
+				  $module_rule_env, $session, $namespace_name, $provided );
 
-	my $umetric =
-		new Kynetx::Metrics::Datapoint( { 'series' => 'module-eval-use' } );
-	$umetric->start_timer();
-	$umetric->rid(get_rid( $req_info->{'rid'} ));
-	$umetric->token($ktoken->{'ktoken'});
-	$umetric->eid($req_info->{'eid'});
-	if ( $use_ruleset->{'meta'}->{'use'} ) {
-		( $this_js, $module_rule_env ) =
-		  eval_use( $req_info, $use_ruleset, $module_rule_env, $session,
-			$env_stash );
-		$js .= $this_js;
-	}
-	$umetric->stop_and_store();
+    }
+    $gmetric->stop_and_store();
 
-	# eval the module's global block
-	my $gmetric =
-		new Kynetx::Metrics::Datapoint( { 'series' => 'module-eval-use' } );
-	$gmetric->start_timer();
-	$gmetric->rid(get_rid( $req_info->{'rid'} ));
-	$gmetric->token($ktoken->{'ktoken'});
-	$gmetric->eid($req_info->{'eid'});
-	if ( $use_ruleset->{'global'} ) {
-		( $js, $module_rule_env ) =
-		  process_one_global_block( $req_info, $use_ruleset->{'global'},
-			$module_rule_env, $session, $namespace_name, $provided );
+    my $emetric2 =
+      new Kynetx::Metrics::Datapoint( { 'series' => 'module-extend-env-final' } );
+    $emetric2->start_timer();
+    $emetric2->rid(get_rid( $req_info->{'rid'} ));
+    $emetric2->token($ktoken->{'ktoken'}); 
+    $emetric2->eid($req_info->{'eid'});
 
-	}
-	$gmetric->stop_and_store();
+    if ($is_cachable) {
+      $logger->debug("Caching rule env for module $name");
+      $memd->set($js_key, $js);
+      $memd->set($pr_key, $provided);
+      $memd->set($re_key, $module_rule_env);
 
-	my $emetric2 =
-		new Kynetx::Metrics::Datapoint( { 'series' => 'module-extend-env-final' } );
-	$emetric2->start_timer();
-	$emetric2->rid(get_rid( $req_info->{'rid'} ));
-	$emetric2->token($ktoken->{'ktoken'});
-	$emetric2->eid($req_info->{'eid'});
-	$rule_env = extend_rule_env( $namespace_name, $module_rule_env,
-		extend_rule_env( $namespace_name . '_provided', $provided, $rule_env )
-	);
-	$emetric2->stop_and_store();
+      # build a list of module sigs associated with a rid/version
+      my $cache_key = "msigs_".Kynetx::Repository::make_ruleset_key($name, $mversion);
 
-	$metric->stop_and_store();
-	return ( $js, $rule_env );
+      my $msig_list = $memd->get($cache_key);
+      $msig_list->{$module_sig} = 1;
+      $memd->set($cache_key, $msig_list);
+
+
+    } else {
+       $logger->debug("Module $name is not cachable...");
+    }
+
+    $emetric2->stop_and_store();
+
+  } else {
+
+#    $logger->debug("Cached module env ", sub {Dumper $module_rule_env});
+#    $logger->debug("Cached provided hash ", sub{Dumper $provided});
+ 
+    $logger->debug("Using cached rule env for $name.$mversion");
+  }
+
+
+  $rule_env = extend_rule_env( $namespace_name, $module_rule_env,
+			       extend_rule_env( $namespace_name . '_provided', $provided, $rule_env )
+			     );
+
+  $metric->stop_and_store();
+
+  return ( $js, $rule_env );
 
 }
 
@@ -689,102 +734,110 @@ sub eval_globals {
 	my $js = "";
 
 	my $temp_js = '';
+	my $is_cachable; 
 	if ( $ruleset->{'global'} ) {
-		( $temp_js, $rule_env ) =
+		( $temp_js, $rule_env, $is_cachable ) =
 		  process_one_global_block( $req_info, $ruleset->{'global'}, $rule_env,
 			$session );
 		$js .= $temp_js;
 	}
 
-	return ( $js, $rule_env );
+	return ( $js, $rule_env, $is_cachable );
 
 }
 
 sub process_one_global_block {
-	my ( $req_info, $globals, $rule_env, $session, $namespace ) = @_;
-	my $logger = get_logger();
+  my ( $req_info, $globals, $rule_env, $session, $namespace ) = @_;
+  my $logger = get_logger();
 
-	my $js = "";
+  my $js = "";
 
-	# make this act like let* not let
-	my @vars;
-	foreach my $g ( @{$globals} ) {
-		$g->{'lhs'} = $g->{'name'} unless ( defined $g->{'lhs'} );
-		if ( defined $g->{'lhs'} ) {
-			if ( defined $g->{'type'} && $g->{'type'} eq 'datasource' ) {
-				push @vars, 'datasource:' . $g->{'lhs'};
-			}
-			else {
-				push @vars, $g->{'lhs'};
-			}
-		}
+  my $cachable = 1;
+
+  # make this act like let* not let
+  my @vars;
+  foreach my $g ( @{$globals} ) {
+    $g->{'lhs'} = $g->{'name'} unless ( defined $g->{'lhs'} );
+    if ( defined $g->{'lhs'} ) {
+      if ( defined $g->{'type'} && $g->{'type'} eq 'datasource' ) {
+	push @vars, 'datasource:' . $g->{'lhs'};
+      }
+      else {
+	push @vars, $g->{'lhs'};
+      }
+    }
+  }
+
+  my @empty_vals = map { '' } @vars;
+  $rule_env = extend_rule_env( \@vars, \@empty_vals, $rule_env );
+
+  my $ns = $namespace || "";
+  $logger->debug("Namespaced: $ns");
+  $logger->debug( "Global vars: ", join( ", ", @vars ) );
+
+  foreach my $g ( @{$globals} ) {
+    my $this_js = '';
+    my $var     = '';
+    my $val     = 0;
+    if ( !defined $namespace ) {
+      
+      # only want these when we're not loading a module
+      if ( $g->{'emit'} ) {    # emit
+	$this_js =
+	  Kynetx::Expressions::eval_emit( $g->{'emit'} ) . "\n";
+      }
+      elsif ( defined $g->{'type'} && $g->{'type'} eq 'css' ) {
+	$this_js = "KOBJ.css("
+	  . Kynetx::JavaScript::mk_js_str( $g->{'content'} ) . ");\n";
+      }
+    }
+    if ( defined $g->{'type'}
+	 && ( $g->{'type'} eq 'expr' || $g->{'type'} eq 'here_doc' ) )
+      {
+	$logger->trace("Must be a decl: Expr: $g->{'type'}");
+	
+	# side-effects the rule-env
+	$this_js = Kynetx::Expressions::eval_one_decl( $req_info, $rule_env,
+						       'global', $session, $g );
+
+
+	$cachable &&= Kynetx::Expressions::cachable_decl($g);
+
+
+	$logger->trace( "Show rule_env side effects: ",
+			sub { Dumper($rule_env) } );
+	
+      }
+    elsif ( defined $g->{'type'} && $g->{'type'} eq 'datasource' ) {
+      $rule_env->{ 'datasource:' . $g->{'lhs'} } = $g;
+    }
+    elsif ( defined $g->{'type'} && $g->{'type'} eq 'dataset' ) {
+      my $new_ds = Kynetx::Datasets->new($g);
+      if ( !$new_ds->is_global() ) {
+	$new_ds->load($req_info);
+	$new_ds->unmarshal();
+	$this_js = $new_ds->make_javascript();
+	$var     = $new_ds->name;
+	if ( defined $new_ds->json ) {
+	  $val = $new_ds->json;
 	}
-
-	my @empty_vals = map { '' } @vars;
-	$rule_env = extend_rule_env( \@vars, \@empty_vals, $rule_env );
-
-	my $ns = $namespace || "";
-	$logger->debug("Namespaced: $ns");
-	$logger->debug( "Global vars: ", join( ", ", @vars ) );
-
-	foreach my $g ( @{$globals} ) {
-		my $this_js = '';
-		my $var     = '';
-		my $val     = 0;
-		if ( !defined $namespace ) {
-
-			# only want these when we're not loading a module
-			if ( $g->{'emit'} ) {    # emit
-				$this_js =
-				  Kynetx::Expressions::eval_emit( $g->{'emit'} ) . "\n";
-			}
-			elsif ( defined $g->{'type'} && $g->{'type'} eq 'css' ) {
-				$this_js = "KOBJ.css("
-				  . Kynetx::JavaScript::mk_js_str( $g->{'content'} ) . ");\n";
-			}
-		}
-		if ( defined $g->{'type'}
-			&& ( $g->{'type'} eq 'expr' || $g->{'type'} eq 'here_doc' ) )
-		{
-			$logger->trace("Must be a decl: Expr: $g->{'type'}");
-
-			# side-effects the rule-env
-			$this_js = Kynetx::Expressions::eval_one_decl( $req_info, $rule_env,
-				'global', $session, $g );
-			$logger->trace( "Show rule_env side effects: ",
-				sub { Dumper($rule_env) } );
-
-		}
-		elsif ( defined $g->{'type'} && $g->{'type'} eq 'datasource' ) {
-			$rule_env->{ 'datasource:' . $g->{'lhs'} } = $g;
-		}
-		elsif ( defined $g->{'type'} && $g->{'type'} eq 'dataset' ) {
-			my $new_ds = Kynetx::Datasets->new($g);
-			if ( !$new_ds->is_global() ) {
-				$new_ds->load($req_info);
-				$new_ds->unmarshal();
-				$this_js = $new_ds->make_javascript();
-				$var     = $new_ds->name;
-				if ( defined $new_ds->json ) {
-					$val = $new_ds->json;
-				}
-				else {
-					$val = $new_ds->sourcedata;
-				}
-
-			 #($this_js, $var, $val) = mk_dataset_js($g, $req_info, $rule_env);
-			 # yes, this is cheating and breaking the abstraction, but it's fast
-				$rule_env->{$var} = $val;
-			}
-		}
-		else {
-			$logger->debug( "Fell through: Expr: ", $g->{'type'} || "" );
-		}
-		$js .= $this_js;
+	else {
+	  $val = $new_ds->sourcedata;
 	}
-	$logger->trace( " rule_env: ", Dumper($rule_env) );
+	
+	#($this_js, $var, $val) = mk_dataset_js($g, $req_info, $rule_env);
+	# yes, this is cheating and breaking the abstraction, but it's fast
+	$rule_env->{$var} = $val;
+      }
+    }
+    else {
+      $logger->debug( "Fell through: Expr: ", $g->{'type'} || "" );
+    }
+    $js .= $this_js;
+  }
+  $logger->trace( " rule_env: ", sub {Dumper($rule_env)} );
 
-	return ( $js, $rule_env );
+  return ( $js, $rule_env, $cachable );
 }
 
 sub eval_rule {

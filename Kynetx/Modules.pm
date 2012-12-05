@@ -429,9 +429,9 @@ sub eval_module {
       } elsif ($function eq 'version') {
 	$val = get_version($req_info->{'rid'});
       } elsif ($function eq 'callingRID') {
-	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || get_rid($req_info->{'rid'});
+	$val = get_rid($req_info->{'rid'});
       } elsif ($function eq 'callingVersion') {
-	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || get_version($req_info->{'rid'});
+	$val = get_version($req_info->{'rid'});
       } elsif ($function eq 'moduleRID') {
 	$val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || get_rid($req_info->{'rid'});
       } elsif ($function eq 'moduleVersion') {

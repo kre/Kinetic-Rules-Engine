@@ -169,11 +169,11 @@ sub eval_decl {
 #    $logger->debug("[eval_decl]: ", sub {Dumper $decl->{'rhs'}});
 
     if ($decl->{'type'} eq 'expr' ) {
-		my $r = eval_expr($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);
-       $logger->trace("before de-denoting ", sub {Dumper $r});
-       $logger->trace("Typed value: ", sub {Dumper(type_of($r))});
-       $type = type_of($r);
-	   $val = den_to_exp($r);
+      my $r = eval_expr($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);
+#       $logger->trace("before de-denoting ", sub {Dumper $r});
+#       $logger->trace("Typed value: ", sub {Dumper(type_of($r))});
+      $type = type_of($r);
+      $val = den_to_exp($r);
     } elsif ($decl->{'type'} eq 'here_doc') {
 #      $logger->debug("[decl] here doc for ", sub{ $decl->{'lhs'} });
       
@@ -181,8 +181,8 @@ sub eval_decl {
       $val = den_to_exp($val);
 #      $logger->debug("[decl] here doc for ", sub{ $decl->{'lhs'} });
     } 
-    $logger->trace("Evaling " . $rule_name.":".$decl->{'lhs'});
-    $logger->trace("returning ", Dumper $val);
+#    $logger->trace("Evaling " . $rule_name.":".$decl->{'lhs'});
+#    $logger->trace("returning ", sub{ Dumper $val });
 
     return ($decl->{'lhs'}, $val,$type);
 
@@ -331,8 +331,9 @@ sub eval_expr {
     } elsif ($expr->{'type'} eq 'persistent_ineq') {
 		my $moduleRid = Kynetx::Environments::lookup_rule_env('_moduleRID', $rule_env);
 		my $rid = get_rid($req_info->{'rid'});
-		$logger->debug("**********module Rid: $moduleRid");
-		$logger->debug("**********calling Rid: $rid");
+		$logger->debug("**********module Rid: " . ($moduleRid || 'none')
+);
+		$logger->debug("**********calling Rid: " .  ($rid || 'none'));
 		if (defined $moduleRid) {
 			$rid = $moduleRid;
 		}
@@ -1273,6 +1274,10 @@ sub mk_closure {
 		      });
 }
 
+#
+# funcs for calculating whether a var is free in an expression
+#
+
 sub var_free_in_expr {
     my ($var, $expr) = @_;
 
@@ -1340,6 +1345,84 @@ sub var_free_in_here_doc {
 
 }
 
+#
+# funcs for calculating whether an expression contains persistents
+#  used in determining whether rule envs can be cached
+#
+
+sub cachable_decl {
+    my ($decl) = @_;
+
+    return cachable_expr($decl->{'rhs'});
+}
+
+sub cachable_expr {
+  my ($expr) = @_;
+  # my $logger = get_logger();
+  # $logger->debug("cachable_expr of type ", $expr->{'type'});
+  if ($expr->{'type'} eq 'function' || 
+      $expr->{'type'} eq 'defaction' ||
+      $expr->{'type'} eq 'num' ||
+      $expr->{'type'} eq 'regexp' ||
+      $expr->{'type'} eq 'var' ||
+      $expr->{'type'} eq 'bool' ||
+      $expr->{'type'} eq 'str'
+     ) {
+    return 1;
+  } elsif ( $expr->{'type'} eq 'condexpr'  ) {
+    return cachable_expr($expr->{'test'}) && 
+           cachable_expr($expr->{'then'}) &&
+	   cachable_expr($expr->{'else'}); 
+  } elsif($expr->{'type'} eq 'operator') {
+    return cachable_expr($expr->{'obj'}) &&
+           all_cachable($expr->{'args'})
+  } elsif($expr->{'type'} eq 'prim') {
+    return all_cachable($expr->{'args'})
+  } elsif($expr->{'type'} eq 'array_ref') {
+    return cachable_expr($expr->{'val'}->{'index'})
+  } elsif($expr->{'type'} eq 'array') {
+    return all_cachable($expr->{'val'});
+  } elsif($expr->{'type'} eq 'hash_ref') {
+    return cachable_expr($expr->{'hash_key'})
+  } elsif($expr->{'type'} eq 'hashraw') {
+    return all_cachable([map {$_->{'rhs'}} @{$expr->{'val'}}])
+  } elsif($expr->{'type'} eq 'app') {
+    return cachable_expr($expr->{'function_expr'}) &&
+           all_cachable($expr->{'args'})
+  } elsif($expr->{'type'} eq 'qualified' && $expr->{'source'} eq 'keys'
+	  # ! ( $expr->{'source'} eq 'meta'    ||
+	  #     $expr->{'source'} eq 'weather' ||
+	  #     $expr->{'source'} eq 'geoip'   ||
+	  #     $expr->{'source'} eq 'twitter' ||
+	  #     $expr->{'source'} eq 'random'  ||
+	  #     $expr->{'source'} eq 'xdi'     ||
+	  #     $expr->{'source'} eq 'rss'     ||
+	  #     $expr->{'source'} eq 'ent'     ||
+	  #     $expr->{'source'} eq 'app' )
+	 ) {
+    return 1;
+  } elsif($expr->{'type'} eq 'persistent' && 
+          ! ($expr->{'domain'} eq 'ent' || $expr->{'domain'} eq 'app')
+	 ) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+sub all_cachable {
+  my ($expr_list) = @_;
+  my $cachable = 1;
+  foreach my $expr ( @{$expr_list} ) {
+    $cachable &&= cachable_expr($expr)
+  }
+  return $cachable;
+}
+
+
+#
+# handle beestings
+#
 sub eval_str {
     my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
     my $logger = get_logger();

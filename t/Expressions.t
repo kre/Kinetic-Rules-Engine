@@ -435,6 +435,30 @@ check_free("v", $k, "bee stings");
 check_not_free("v", 'x = << This is a test #{y} of something >>', "different bee sting");
 
 
+#
+# cachable
+#
+sub check_cachable {
+   my($sense, $expr, $etype) = @_;
+
+   my $ptree = Kynetx::Parser::parse_decl($expr);
+
+#   diag Dumper $ptree;
+
+   $test_count++;
+   if ($sense eq 'is') {
+     ok(Kynetx::Expressions::cachable_decl($ptree),  $etype . " is cachable " );
+   } else {
+     ok(!Kynetx::Expressions::cachable_decl($ptree),  $etype . " is not cachable " );
+     
+   }
+ }
+
+
+check_cachable('is', 'f = function(x){ 5 }', 'function');
+check_cachable('is not', 'x = ent:x', 'entity');
+
+
 ##
 ## exp_to_den
 ##

@@ -82,29 +82,29 @@ sub extend_rule_env {
 
     if(@_ == 3) {
 
-	my($keys, $vals, $env) = @_;
-	my $new_env = {'___sub' =>$env};
+      my($keys, $vals, $env) = @_;
+      my $new_env = {'___sub' =>$env};
 
-    my $logger = get_logger();
+      my $logger = get_logger();
 
-	if(ref $keys eq 'ARRAY' && ref $vals eq 'ARRAY') {
-	    $new_env->{'___vars'} = $keys;
-	    my $i = 0;
-	    foreach my $key (@{ $keys}) {
-		$new_env->{$key} = $vals->[$i++];
-	    }
-	} elsif(ref $keys eq 'SCALAR' || ref $keys eq '') {
-	    $new_env->{'___vars'} = [$keys];
-	    $new_env->{$keys} = $vals;
+      if(ref $keys eq 'ARRAY' && ref $vals eq 'ARRAY') {
+	$new_env->{'___vars'} = $keys;
+	my $i = 0;
+	foreach my $key (@{ $keys}) {
+	  $new_env->{$key} = $vals->[$i++];
 	}
+      } elsif(ref $keys eq 'SCALAR' || ref $keys eq '') {
+	$new_env->{'___vars'} = [$keys];
+	$new_env->{$keys} = $vals;
+      }
 
-	return $new_env;
+      return $new_env;
 
     } elsif(@_ == 2) {
 	my($hash, $env) = @_;
 	my $new_env = {'___sub' =>$env};
 
-#    my $logger = get_logger();
+#    my $logger = get_logger(); 
 #    $logger->debug('$keys has type ', ref $keys);
 
 	if(ref $hash eq 'HASH') {

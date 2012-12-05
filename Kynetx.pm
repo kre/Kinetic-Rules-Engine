@@ -274,6 +274,25 @@ sub flush_ruleset_cache {
       $logger->debug("[flush] flushing rules for $rid (version $version)");
       $memd->delete(Kynetx::Repository::make_ruleset_key($rid, $version));
 
+
+      my $msig_cache_key = "msigs_".Kynetx::Repository::make_ruleset_key($rid, $version);
+
+      my $msig_list = $memd->get($msig_cache_key);
+      if (defined $msig_list) {
+	$logger->debug("Flushing module environments for $rid.$version ", sub {Dumper $msig_list});
+	foreach my $sig (keys %{$msig_list}) {
+
+	  my $re_key = "rule_env_".$sig;
+	  my $pr_key = "provided_".$sig;
+	  my $js_key = "js_".$sig;
+	  $memd->delete($re_key);
+	  $memd->delete($pr_key);
+	  $memd->delete($js_key);
+	}
+	$memd->delete($msig_cache_key);
+      }
+
+
       $msg .= "Rules flushed for site $rid (version $version)<br/>";
     }
     $r->content_type('text/html');

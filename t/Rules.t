@@ -61,7 +61,7 @@ use Log::Log4perl::Level;
 #use Log::Log4perl::Appender::FileLogger;
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($WARN);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -3870,6 +3870,7 @@ my $mod_rule_env;
 my $ast = Kynetx::JavaScript::AST->new('13893139103801');
 
 
+#diag "############ use a16x78 #################";
 $krl =  << "_KRL_";
 ruleset foobar {
   meta {
@@ -3912,6 +3913,7 @@ is(lookup_rule_env("z", $mod_rule_env), 'kynetx', "get kynetx back as query");
 $test_count++;
 
 
+#diag "############ use a16x78 alias flipper #################";
 $krl =  << "_KRL_";
 ruleset foobar {
   meta {
@@ -3937,6 +3939,7 @@ $test_count++;
 
 
 
+#diag "############ use a16x78 alias flipper #################";
 $krl =  << "_KRL_";
 ruleset foobar {
   meta {
@@ -3958,6 +3961,7 @@ $mod_rule_env = empty_rule_env();
 is(lookup_rule_env("x", $mod_rule_env), undef, "x is undef" );
 $test_count++;
 
+#diag "############ use a16x78 alias flipper and flopper #################";
 # use the same module twice 
 $krl =  << "_KRL_";
 ruleset foobar {
@@ -3999,6 +4003,7 @@ is(lookup_rule_env("y", $mod_rule_env), 5, "y is 5 from floppy" );
 $test_count++;
 
 
+#diag "############ use a16x78 #################";
 $krl =  << "_KRL_";
 ruleset foobar {
   meta {
@@ -4029,7 +4034,7 @@ $mod_rule_env = empty_rule_env();
 is(lookup_rule_env("a", $mod_rule_env), "world", "a is world" );
 $test_count++;
 
-is(lookup_rule_env("b", $mod_rule_env), "hello", "a is world" );
+is(lookup_rule_env("b", $mod_rule_env), "hello", "b is hello" );
 $test_count++;
 
 
@@ -4040,16 +4045,17 @@ is(lookup_module_env("a16x78", "floppy", $mod_rule_env), "six", "got six" );
 $test_count++;
 
 
+#diag "############ use a16x78 #################";
 $krl =  << "_KRL_";
 ruleset foobar {
   meta {
     use module a16x78
   }
   global {
-    a = a16x78:calling_rid;
-    b = a16x78:calling_ver;
-    c = a16x78:my_rid;
-    d = a16x78:my_ver;
+    a = a16x78:calling_rid();
+    b = a16x78:calling_ver();
+    c = a16x78:my_rid();
+    d = a16x78:my_ver();
   }
 }
 _KRL_
@@ -4061,11 +4067,11 @@ $my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
 $mod_rule_env = empty_rule_env();
 ($js, $mod_rule_env) = Kynetx::Rules::eval_meta($my_req_info, $module_rs, $empty_rule_env, $session, $env_stash);
 
-($js, $mod_rule_env) = 
+($js, $mod_rule_env) =  
     eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
 #diag Dumper $mod_rule_env;
 
-
+#diag Dumper $my_req_info;
 is(lookup_rule_env("a", $mod_rule_env), "foobar", "a is foobar" );
 $test_count++;
 
@@ -4099,6 +4105,7 @@ sub poke_mod_env {
 
 
 # test module configuration
+#diag "############ use a16x78 with c and d configured #################";
 $krl =  << "_KRL_";
 ruleset foobar {
   meta {
@@ -4137,6 +4144,7 @@ is(poke_mod_env("a16x78", "d", $mod_rule_env), undef, "key gets passed to config
 $test_count++;
 
 
+#diag "############ use a16x78 #################";
 # test module configuration
 $krl =  << "_KRL_";
 ruleset foobar {
@@ -4170,6 +4178,8 @@ is(poke_mod_env("a16x78", "c", $mod_rule_env), "Hello", "key gets passed to conf
 $test_count++;
 
 ENDY:
+#diag "############ use a16x78 alias foo with c configured #################";
+#diag "############ use a16x78 alias bar with c configured #################";
 # test module configuration
 $krl =  << "_KRL_";
 ruleset foobar {
@@ -4221,7 +4231,6 @@ $module_rs = Kynetx::Parser::parse_ruleset($krl);
 # diag Dumper $module_rs;
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
 
-diag "GO";
 $mod_rule_env = Kynetx::Rules::get_rule_env($my_req_info, $module_rs, $session, 
 					    $ast, $env_stash);
 
@@ -4305,6 +4314,136 @@ $test_count++;
 is(lookup_rule_env("y", $mod_rule_env), undef, "No module recursion" );
 $test_count++;
 
+
+diag "GO";
+# check globals for cachability
+my $is_cachable;
+
+$krl =  << "_KRL_";
+ruleset foobar {
+  global {
+    x = ent:a;
+  }
+}
+_KRL_
+
+$module_rs = Kynetx::Parser::parse_ruleset($krl);
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
+$mod_rule_env = empty_rule_env();
+$is_cachable = 0;
+
+($js, $mod_rule_env, $is_cachable) = 
+    eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
+ok(! $is_cachable, "entity isn't cachable");
+$test_count++;
+
+$krl =  << "_KRL_";
+ruleset foobar {
+  global {
+    y = meta:currentRID();
+  }
+}
+_KRL_
+
+$module_rs = Kynetx::Parser::parse_ruleset($krl);
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
+$mod_rule_env = empty_rule_env();
+$is_cachable = 0;
+
+($js, $mod_rule_env, $is_cachable) = 
+    eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
+ok(! $is_cachable, "meta isn't cachable");
+$test_count++;
+
+$krl =  << "_KRL_";
+ruleset foobar {
+  global {
+    x = 5;
+    y = "This is a string!";
+    y1 = true;
+    w = defaction(x){ noop() };
+    z = function(x){ 5 + x };
+    datasource twitter_search <- "http://search.twitter.com/search.json";
+  }
+}
+_KRL_
+
+$module_rs = Kynetx::Parser::parse_ruleset($krl);
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
+$mod_rule_env = empty_rule_env();
+$is_cachable = 0;
+
+($js, $mod_rule_env, $is_cachable) = 
+    eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
+ok($is_cachable, "Functions and datasources are cachable");
+$test_count++;
+
+$krl =  << "_KRL_";
+ruleset foobar {
+  global {
+    x = a => "string" | ent:a;
+  }
+}
+_KRL_
+
+$module_rs = Kynetx::Parser::parse_ruleset($krl);
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
+$mod_rule_env = empty_rule_env();
+$is_cachable = 0;
+
+($js, $mod_rule_env, $is_cachable) = 
+    eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
+ok(! $is_cachable, "entity vars are not cachable");
+$test_count++;
+
+$krl =  << "_KRL_";
+ruleset foobar {
+  global {
+    x = a => "string" | 5;
+    y = x.filter(function(x){true});
+    z = x + 5;
+    y1 = [5, 23, x];
+    x1 = y1[x + 6];
+    z1 = {"a" : 5, "b": "flipper", "c": {"d":5, "e":4}};
+    z2 = z1{x}
+  }
+}
+_KRL_
+
+$module_rs = Kynetx::Parser::parse_ruleset($krl);
+#diag Dumper $module_rs;
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
+$mod_rule_env = empty_rule_env();
+$is_cachable = 0;
+
+($js, $mod_rule_env, $is_cachable) = 
+    eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
+ok($is_cachable, "Conditionals are cachable");
+$test_count++;
+
+$krl =  << "_KRL_";
+ruleset foobar {
+  global {
+    z2 = flub:x
+  }
+}
+_KRL_
+
+$module_rs = Kynetx::Parser::parse_ruleset($krl);
+#diag Dumper $module_rs;
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
+$mod_rule_env = empty_rule_env();
+$is_cachable = 0;
+
+($js, $mod_rule_env, $is_cachable) = 
+    eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
+ok($is_cachable, "Module calls are cachable");
+$test_count++;
+
+
+#
+# module cache flushing
+#
 
 
 
