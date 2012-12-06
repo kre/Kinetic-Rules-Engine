@@ -142,7 +142,8 @@ sub handler {
 	else {
 		$metric->series("blue-event");
 		process_event( $r, $domain, $eventtype, $rid, $eid );
-		$metric->stop_and_store();
+		#$metric->stop_and_store();
+		$metric->stop_timer();
 	}
 	return Apache2::Const::OK;
 }

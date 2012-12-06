@@ -160,7 +160,7 @@ sub process_schedule {
 			$overmetric->count(++$c);
 		}
 		my $task_metric =
-		  new Kynetx::Metrics::Datapoint( { 'series' => 'schedule-task' } );
+		  new Kynetx::Metrics::Datapoint( { 'series' => 'ps-task' } );
 		
 		$task_metric->start_timer();
 		$task_metric->push($task->{'vars'},$task->{'vals'});
@@ -186,9 +186,9 @@ sub process_schedule {
 	
 		unless ( $rid eq $current_rid ) {
 			my $r_metric =
-	  			new Kynetx::Metrics::Datapoint( { 'series' => 'schedule-task-contextswitch' } );
+	  			new Kynetx::Metrics::Datapoint( { 'series' => 'ps-task-contextswitch' } );
 			$r_metric->start_timer();
-			$r_metric->rid(get_rid( $req_info->{'rid'} ));
+			$r_metric->rid($rid);
 			$r_metric->token($ktoken->{'ktoken'});
 			$r_metric->eid($req_info->{'eid'});
 
@@ -196,7 +196,14 @@ sub process_schedule {
 			# we only do this when there's a new RID
 
 			# save info from last context
+			my $r_metric2 =
+	  			new Kynetx::Metrics::Datapoint( { 'series' => 'ps-task-contextswitch-add-resource' } );
+			$r_metric2->start_timer();
+			$r_metric2->rid($rid);
+			$r_metric2->token($ktoken->{'ktoken'});
+			$r_metric2->eid($req_info->{'eid'});
 			$ast->add_resources( $current_rid, $req_info->{'resources'} );
+			$r_metric2->stop_and_store();
 
 			# for each context switch, we need a new place to put the JS
 			# that is generated for the rules in that context so that we
@@ -204,7 +211,14 @@ sub process_schedule {
 			# same time, we want to avoid re-executing and re-generating
 			# the JS for meta and global blocks.
 			# updated context counter
+			my $r_metric3 =
+	  			new Kynetx::Metrics::Datapoint( { 'series' => 'ps-task-contextswitch-update_context' } );
+			$r_metric3->start_timer();
+			$r_metric3->rid($rid);
+			$r_metric3->token($ktoken->{'ktoken'});
+			$r_metric3->eid($req_info->{'eid'});
 			$ast->update_context($rid);
+			$r_metric3->stop_and_store();
 
 			#      $logger->debug("Task request: ", Dumper $task->{'req_info'});
 
@@ -218,7 +232,14 @@ sub process_schedule {
 			$req_info->{'errorsto'} = $ruleset->{'meta'}->{'errors'};
 
 			# store so we don't have to grab it again
+			my $r_metric4 =
+	  			new Kynetx::Metrics::Datapoint( { 'series' => 'ps-task-contextswitch-stash-ruleset' } );
+			$r_metric4->start_timer();
+			$r_metric4->rid($rid);
+			$r_metric4->token($ktoken->{'ktoken'});
+			$r_metric4->eid($req_info->{'eid'});
 			stash_ruleset( $req_info, $ruleset );
+			$r_metric4->stop_and_store();
 
 			if (
 				(
@@ -238,8 +259,15 @@ sub process_schedule {
 			Log::Log4perl::MDC->put( 'site', $rid );
 			$logger->debug( "Processing rules for RID " . $rid );
 
+			my $r_metric5 =
+	  			new Kynetx::Metrics::Datapoint( { 'series' => 'ps-task-contextswitch-get-rule-env' } );
+			$r_metric5->start_timer();
+			$r_metric5->rid($rid);
+			$r_metric5->token($ktoken->{'ktoken'});
+			$r_metric5->eid($req_info->{'eid'});
 			$rule_env =
 			  get_rule_env( $req_info, $ruleset, $session, $ast, $env_stash );
+			$r_metric5->stop_and_store();
 
 			$req_info->{'rule_count'}     = 0;
 			$req_info->{'selected_rules'} = [];
@@ -278,7 +306,7 @@ sub process_schedule {
 		  )
 		{    # optimize??
 			my $o_metric =
-	  			new Kynetx::Metrics::Datapoint( { 'series' => 'schedule-task-optimize' } );
+	  			new Kynetx::Metrics::Datapoint( { 'series' => 'ps-task-optimize' } );
 			$o_metric->start_timer();
 			$o_metric->rid(get_rid( $req_info->{'rid'} ));
 			$o_metric->token($ktoken->{'ktoken'});
@@ -328,7 +356,7 @@ sub process_schedule {
 			  )
 			{
 			my $er_metric =
-	  			new Kynetx::Metrics::Datapoint( { 'series' => 'schedule-task-evalrule' } );
+	  			new Kynetx::Metrics::Datapoint( { 'series' => 'ps-task-evalrule' } );
 			$er_metric->start_timer();
 			$er_metric->rid(get_rid( $req_info->{'rid'} ));
 			$er_metric->token($ktoken->{'ktoken'});
@@ -471,7 +499,7 @@ sub eval_use_module {
   my $logger = get_logger();
   my $ktoken = Kynetx::Persistence::KToken::get_token($session);
   my $metric =
-    new Kynetx::Metrics::Datapoint( { 'series' => 'eval-use-module' } );
+    new Kynetx::Metrics::Datapoint( { 'series' => 'use-module' } );
   $metric->start_timer();
   $metric->rid(get_rid( $req_info->{'rid'} ));
   $metric->token($ktoken->{'ktoken'});
@@ -479,7 +507,6 @@ sub eval_use_module {
 
   $mversion ||= 'prod';
   my $module_sig = md5_hex( $name . $mversion . $alias . freeze $modifiers);
-
 	
   my $memd = get_memd();
 
@@ -1446,6 +1473,11 @@ sub mk_schedule {
 
 	# third param is optional and not used in production--testing
 	my ( $req_info, $rid_info, $ruleset ) = @_;
+	my $metric =
+		new Kynetx::Metrics::Datapoint( { 'series' => 'make-schedule' } );
+	$metric->start_timer();
+	$metric->rid(get_rid( $req_info->{'rid'} ));
+	$metric->eid($req_info->{'eid'});
 
 	my $rid = get_rid($rid_info);
 
@@ -1482,7 +1514,7 @@ sub mk_schedule {
 	}
 
 	#  $logger->debug("Schedule: ", sub {Dumper $schedule});
-
+	$metric->stop_and_store();
 	return $schedule;
 
 }

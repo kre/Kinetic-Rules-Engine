@@ -82,6 +82,7 @@ sub run_function {
 	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
     my $logger = get_logger();
     my $resp = undef;
+    $logger->trace("run_function called with $function");
     my $f = $funcs->{$function};
     if (defined $f) {
     	eval {
@@ -529,6 +530,7 @@ sub developer_key {
 		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
 		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
 	}
+	$logger->trace("Create developer key for $ken");
 	return undef unless ($ken);
 	my $syskey = syskey();
 	if (system_authorized($req_info, $rule_env, $session)) {		
@@ -539,6 +541,8 @@ sub developer_key {
 		my $digest = hmac_sha256_base64($data,$syskey);
 		_default_permissions($ken,$digest);
 		return $digest;
+	} else {
+		$logger->warn("Account not authorized for developer keys");
 	}
 	return undef;
 }
@@ -600,12 +604,15 @@ sub create_system_key {
 sub check_system_key {
 	my ($key) = @_;
 	my $logger = get_logger();
+	$logger->trace("Key in: " ,$key);
 	my $syskey = syskey();
 	my $de64 = MIME::Base64::decode_base64url($key);
 	my $packed = pack('H*', $de64);
 	my $decoded = RC4($syskey,$packed);
+	$logger->trace("Decoded: " ,$decoded);
 	my ($id,$phrase) = split(/\|\|/,$decoded);
 	my $test = get_pass_phrase($id);
+	$logger->trace("Pass phrase: " ,$test);
 	if (defined $test && $test eq $phrase) {
 		return 1;
 	} else {

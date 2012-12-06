@@ -83,6 +83,7 @@ use Kynetx::Modules::OAuthModule;
 use Kynetx::Modules::Random;
 use Kynetx::Persistence::KXDI;
 use Kynetx::Modules::ECI;
+use Kynetx::Modules::PCI;
 
 
 our $name_prefix = '@@module_';
@@ -139,6 +140,14 @@ sub eval_module {
             $val ||= 0;
         } else {
             $val = Kynetx::Modules::ECI::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
+        }
+    } elsif ( $source eq 'pci' ) {    
+        $preds = Kynetx::Modules::PCI::get_predicates();
+        if ( defined $preds->{$function} ) {
+            $val = $preds->{$function}->( $req_info,$rule_env,$session,$rule_name,$function,$args );
+            $val ||= 0;
+        } else {
+            $val = Kynetx::Modules::PCI::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
         }
     } elsif ( $source eq 'datasource' ) {    # do first since most common
         my $rs =
