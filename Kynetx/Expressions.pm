@@ -1401,6 +1401,11 @@ sub cachable_expr {
 	  #     $expr->{'source'} eq 'app' )
 	 ) {
     return 1;
+  } elsif($expr->{'type'} eq 'qualified' && 
+	  $expr->{'source'} eq 'meta' && 
+	  $expr->{'predicate'} eq 'rid'
+	 ) {
+    return 1;
   } elsif($expr->{'type'} eq 'persistent' && 
           ! ($expr->{'domain'} eq 'ent' || $expr->{'domain'} eq 'app')
 	 ) {

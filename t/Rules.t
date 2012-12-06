@@ -4440,6 +4440,45 @@ $is_cachable = 0;
 ok($is_cachable, "Module calls are cachable");
 $test_count++;
 
+$krl =  << "_KRL_";
+ruleset foobar {
+  global {
+    z2 = meta:rid();
+  }
+}
+_KRL_
+
+$module_rs = Kynetx::Parser::parse_ruleset($krl);
+#diag Dumper $module_rs;
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
+$mod_rule_env = empty_rule_env();
+$is_cachable = 0;
+
+($js, $mod_rule_env, $is_cachable) = 
+    eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
+ok($is_cachable, "meta:rid() cachable");
+$test_count++;
+
+
+$krl =  << "_KRL_";
+ruleset foobar {
+  global {
+    z2 = meta:currentRID();
+  }
+}
+_KRL_
+
+$module_rs = Kynetx::Parser::parse_ruleset($krl);
+#diag Dumper $module_rs;
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
+$mod_rule_env = empty_rule_env();
+$is_cachable = 0;
+
+($js, $mod_rule_env, $is_cachable) = 
+    eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
+ok(!$is_cachable, "meta:currentRID() not cachable");
+$test_count++;
+
 
 #
 # module cache flushing
