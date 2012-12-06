@@ -63,6 +63,7 @@ sub handler {
 	my $metric = new Kynetx::Metrics::Datapoint();
 	$metric->start_timer();
 	$metric->series("sky");
+	$metric->path($r->path_info);
 
 	$r->content_type('text/javascript');
 

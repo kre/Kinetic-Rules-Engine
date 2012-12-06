@@ -35,7 +35,7 @@ $Data::Dumper::Indent = 1;
 use Log::Log4perl qw(get_logger :levels);
 use Kynetx::Session qw(:all);
 use Kynetx::Configure qw(:all);
-use Kynetx::MongoDB qw(:all);
+use Kynetx::MongoDB qw(:all $CACHETIME);
 use Kynetx::Memcached qw(
     check_cache
     mset_cache
@@ -73,7 +73,7 @@ sub get_kpds_element {
 			"ken" => $ken
 		};
 		my $c_key = _keyvar($ken,$hkey);
-		my $cache = Kynetx::MongoDB::get_cache_for_map($ken,COLLECTION,$c_key);
+		my $cache = get_cache_for_map($ken,COLLECTION,$c_key);
 		if (defined $cache) {
 			$logger->trace("Cached value (",sub {Dumper($c_key)},"): ", sub {Dumper($cache)});
 			return $cache;
@@ -82,7 +82,7 @@ sub get_kpds_element {
 		}
 		my $result = Kynetx::MongoDB::get_hash_element(COLLECTION,$key,$hkey);
 		if (defined $result && ref $result eq "HASH") {
-			Kynetx::MongoDB::set_cache_for_map($ken,COLLECTION,$c_key,$result->{"value"});
+			set_cache_for_map($ken,COLLECTION,$c_key,$result->{"value"});
 			return $result->{"value"};
 		} else {
 			return undef;
@@ -104,10 +104,10 @@ sub put_kpds_element {
 		'value' => $val
 	};
 	my $success = Kynetx::MongoDB::put_hash_element(COLLECTION,$key,$hkey,$value);
-	Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,_keyvar($ken,$hkey));
+	clear_cache_for_map($ken,COLLECTION,_keyvar($ken,$hkey));
 	if ($hkey > 1) {
 		$logger->trace("Flush upstream");
-		Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,_keyvar($ken,[$hkey->[0]]));
+		clear_cache_for_map($ken,COLLECTION,_keyvar($ken,[$hkey->[0]]));
 	}
 	return $success;
 	
@@ -143,7 +143,7 @@ sub push_kpds_set_element {
 	};
 	$logger->trace("query: ", sub {Dumper($fnmod)});
 	my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod);
-	Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,_keyvar($ken,$hkey));
+	clear_cache_for_map($ken,COLLECTION,_keyvar($ken,$hkey));
 	$logger->trace("fnm: ", sub {Dumper($result)});
 	return $result;
 }
@@ -178,7 +178,7 @@ sub remove_kpds_set_element {
 	};
 	$logger->trace("query: ", sub {Dumper($fnmod)});
 	my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod);
-	Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,_keyvar($ken,$hkey));
+	clear_cache_for_map($ken,COLLECTION,_keyvar($ken,$hkey));
 	$logger->trace("fnm: ", sub {Dumper($result)});
 	return $result;
 }
@@ -195,10 +195,10 @@ sub delete_kpds_element {
 		if (defined $hkey) {
 			$logger->trace("Delete element: ", sub {Dumper($hkey)});
 			Kynetx::MongoDB::delete_hash_element(COLLECTION,$key,$hkey);
-			Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,_keyvar($ken,$hkey));
+			clear_cache_for_map($ken,COLLECTION,_keyvar($ken,$hkey));
 			if ($hkey > 1) {
 				$logger->trace("Flush upstream ", sub {Dumper(_keyvar($ken,[$hkey->[0]]))});
-				Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,_keyvar($ken,[$hkey->[0]]));
+				clear_cache_for_map($ken,COLLECTION,_keyvar($ken,[$hkey->[0]]));
 			}
 		} else {
 			$logger->warn("Attempted to delete $key in ", COLLECTION, " (use delete_kpds(<KEN>) )");
@@ -232,6 +232,36 @@ sub _keyvar {
 	
 	return $struct;
 }
+
+
+########################### Caching functions for KPDS/KEN based maps
+sub get_cache_for_map {
+	my ($ken,$collection,$var) = @_;
+	my $lookup_key = "_map_" . $ken;
+	my $mcache_prefix = Kynetx::Memcached::check_cache($lookup_key);
+	if (defined $mcache_prefix) {
+		$var->{"cachemap"} = $mcache_prefix;
+		return Kynetx::MongoDB::get_cache($collection,$var);
+	}
+	return undef;
+}
+
+sub set_cache_for_map {
+	my ($ken,$collection,$var,$value) = @_;
+	my $lookup_key = "_map_" . $ken;
+	my $mcache_prefix =  time();
+	Kynetx::Memcached::mset_cache($lookup_key,$mcache_prefix,$CACHETIME);
+	$var->{"cachemap"} = $mcache_prefix;
+	Kynetx::MongoDB::set_cache($collection,$var,$value);
+}
+
+sub clear_cache_for_map {
+	my ($ken) = @_;
+	my $lookup_key = "_map_" . $ken;
+	Kynetx::Memcached::flush_cache($lookup_key);
+}
+
+
 ########################### Account Management Methods
 sub delete_cloud {
 	my ($ken,$cascade) = @_;

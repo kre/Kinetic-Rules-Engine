@@ -77,6 +77,7 @@ get_hash_element
 put_hash_element
 delete_hash_element
 validate
+$CACHETIME
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -729,16 +730,6 @@ sub delete_value {
     return $success;
 }
 
-sub get_cache_for_map {
-	my ($ken,$collection,$var) = @_;
-	my $lookup_key = "_map_" . $ken;
-	my $mcache_prefix = Kynetx::Memcached::check_cache($lookup_key);
-	if (defined $mcache_prefix) {
-		$var->{"cachemap"} = $mcache_prefix;
-		return get_cache($collection,$var);
-	}
-	return undef;
-}
 
 sub get_cache {
     my ($collection,$var) = @_;
@@ -751,27 +742,12 @@ sub get_cache {
     }
 }
 
-sub set_cache_for_map {
-	my ($ken,$collection,$var,$value) = @_;
-	my $lookup_key = "_map_" . $ken;
-	my $mcache_prefix =  time();
-	Kynetx::Memcached::mset_cache($lookup_key,$mcache_prefix,$CACHETIME);
-	$var->{"cachemap"} = $mcache_prefix;
-	set_cache($collection,$var,$value);
-}
-
 sub set_cache {
     my ($collection,$var,$value) = @_;
     my $logger = get_logger();
     my $parent = (caller(1))[3];
     my $keystring = make_keystring($collection,$var);
     Kynetx::Memcached::mset_cache($keystring,$value,$CACHETIME);
-}
-
-sub clear_cache_for_map {
-	my ($ken) = @_;
-	my $lookup_key = "_map_" . $ken;
-	Kynetx::Memcached::flush_cache($lookup_key);
 }
 
 sub clear_cache {
