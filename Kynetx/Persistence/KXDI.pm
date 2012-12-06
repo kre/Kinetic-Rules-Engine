@@ -151,11 +151,9 @@ sub _create_new_graph {
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	if (ref $args->[0] eq "HASH") {
 		my $hash =  $args->[0];
-		if ($hash->{"iname"}) {
+		if (defined $hash and ref $hash eq "HASH") {
 			my $iname = $hash->{"iname"};
 			my $secret = $hash->{"secret"};
-			#return undef unless (create_xdi_from_iname($ken,$iname,$secret));
-			#create an inumber and endpoint if they aren't provided
 			my $inumber = $hash->{"inumber"};
 			my $target = $hash->{'endpoint'};
 			if (! $inumber) {
@@ -175,11 +173,55 @@ sub _create_new_graph {
 		}
 	}
 	
-	
-	return provision_xdi_for_kynetx($ken);
+	my $thing = provision_xdi_for_kynetx($ken);
+	if  ($thing) {
+		return $thing;
+	} else {
+		$logger->warn("Failed to create xdi graph for ", get_inumber($ken));
+		$logger->debug(sub {Dumper(get_xdi($ken))});
+		delete_xdi($ken);
+		return undef;
+	};
 	
 }
 $funcs->{'create_new_graph'} = \&_create_new_graph;
+
+sub _make_link {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $ken = Kynetx::Persistence::KEN::get_ken($session);
+	if (ref $args->[0] eq "HASH") {
+		my $hash = $args->[0];
+		my $iname = $hash->{"iname"};
+		my $secret = $hash->{"secret"};
+		my $inumber = $hash->{"inumber"};
+		my $target = $hash->{'endpoint'};
+		unless (defined $target) {
+			# look up the graph information
+			my $tuple;
+			if (defined $iname) {
+				$tuple = XDI::Connection::iname_lookup($iname);
+				$inumber = $tuple->[1];
+			} elsif (defined $inumber) {
+				$tuple = XDI::Connection::inumber_lookup($inumber);
+			} else {
+				return undef;
+			}
+			$target = $tuple->[2];
+		}
+		my $kxdi = {				
+			'endpoint' => $target,
+			'inumber'  => $inumber,
+			'iname'    => $iname,
+			'secret'   => $secret
+		};
+		put_xdi($ken,$kxdi);
+		return 1;
+	}
+	return undef;
+	
+}
+$funcs->{'create_link'} = \&_make_link;
+
 
 
 sub _flush_xdi {
@@ -215,7 +257,7 @@ sub _lookup {
 			$iname = $xdi->{'users'}->{'iname'} . '*' . $iname;
 			return check_registry_for_iname($iname);
 		} else {
-			my $ref = XDI::Connection::iname_lookup($iname);
+			my $ref = XDI::Connection::lookup($iname);
 			$logger->debug("Lookup: ", sub {Dumper($ref)});
 			return $ref;
 		}
@@ -248,7 +290,10 @@ sub _has_xdi_account {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
 	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-	return get_installed($ken);
+	if (get_installed($ken)){
+		return check_registry_for_inumber(get_inumber($ken));
+	};
+	return 0;
 }
 $funcs->{'has_account'} = \&_has_xdi_account;
 
@@ -1056,13 +1101,6 @@ sub delete_xdi {
 		$logger->debug("Deleted registry for $inumber");
 		put_installed($ken,0);	
 		return 1;		
-#		if (delete_xdi_graph($ken)) {
-#			$logger->debug("Deleted graph for $inumber");
-#			put_installed($ken,0);
-#			return 1;
-#		} else {
-#			$logger->debug("Failed to delete xdi graph ($inumber)");
-#		}
 	} else {
 		$logger->debug("Failed to delete $inumber from registry");
 	}
@@ -1191,11 +1229,14 @@ sub add_registry_entry {
 	my $secret = $kxdi->{'secret'};
 	
 	# add entry to graph
-	my $str = '(()/()/(' . $inumber . '))';
-	$msg->add($str);
+	my $str;
 	
 	# associate inumber with iname
-	$str = '((' .$iname . ')/$is/(' . $inumber . '))';
+	if (defined $iname) {
+		$str = '((' . $iname . ')/$is/(' . $inumber . '))';
+	} else {
+		$str = '(()/()/(' . $inumber . '))';
+	}
 	$msg->add($str);
 	
 	# add shared secret for account
@@ -1205,14 +1246,18 @@ sub add_registry_entry {
 	# add an entry for account lookup
 	$str = '(' . $kregistry->{'inumber'} . '/+user/(' . $inumber .'))';
 	$msg->add($str);
-	$logger->debug ("Add to registry: ", $msg->to_string);
+	my $status;
 	eval {
-		$c->post($msg)
+		$status = $c->post($msg)
 	};
+	
 	if ($@) {
 		$logger->debug("Failed to create account in registry $@");
 		return undef;
-	} else {
+	} elsif (!defined $status) {
+		$logger->debug("Failed to create account in registry $@");
+		return undef;
+	}else {
 		return 1;
 	}
 }
@@ -1233,6 +1278,7 @@ sub provision_xdi_for_kynetx {
 			return undef;
 		} else {
 			$status = add_registry_entry($ken);
+			
 			if ($status) {
 				my $kynetx = Kynetx::Configure::get_config('xdi')->{'inumber'};
 				my $lc = get_link_contract($ken,$kynetx) || $inumber;
@@ -1249,11 +1295,13 @@ sub provision_xdi_for_kynetx {
 					return undef;
 				} else {
 					put_installed($ken,1);
-				}
-				
+					return 1;
+				}				
+			} else {
+				return undef;
 			}
 		}		
-		return 1;
+		
 	} else {
 		$logger->warn("KEN not configured for XDI");
 		return undef;

@@ -101,7 +101,7 @@ my @DICTIONARY;
 open DICT, $dict_path;
 @DICTIONARY = <DICT>;
 
-my $frid = $DICTIONARY[rand(@DICTIONARY)];
+$frid = $DICTIONARY[rand(@DICTIONARY)];
 chop $frid;
 
 my $secret = $DICTIONARY[rand(@DICTIONARY)];
