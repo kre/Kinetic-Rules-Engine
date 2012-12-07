@@ -1352,8 +1352,18 @@ sub var_free_in_here_doc {
 
 sub cachable_decl {
     my ($decl) = @_;
+    # my $logger = get_logger();
+    # $logger->debug("cachable_decl of type ", $decl->{'type'});
 
-    return cachable_expr($decl->{'rhs'});
+    if ($decl->{'type'} eq 'expr' ) {
+      return cachable_expr($decl->{'rhs'});
+    } elsif ($decl->{'type'} eq 'here_doc') {
+      return 1;
+    } else {
+      return 0;
+    }
+
+
 }
 
 sub cachable_expr {

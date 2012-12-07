@@ -816,6 +816,10 @@ sub process_one_global_block {
       elsif ( defined $g->{'type'} && $g->{'type'} eq 'css' ) {
 	$this_js = "KOBJ.css("
 	  . Kynetx::JavaScript::mk_js_str( $g->{'content'} ) . ");\n";
+
+	$cachable &&= 1
+
+
       }
     }
     if ( defined $g->{'type'}
@@ -837,6 +841,9 @@ sub process_one_global_block {
       }
     elsif ( defined $g->{'type'} && $g->{'type'} eq 'datasource' ) {
       $rule_env->{ 'datasource:' . $g->{'lhs'} } = $g;
+
+      $cachable &&= 1
+
     }
     elsif ( defined $g->{'type'} && $g->{'type'} eq 'dataset' ) {
       my $new_ds = Kynetx::Datasets->new($g);

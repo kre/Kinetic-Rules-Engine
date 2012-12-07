@@ -4363,6 +4363,23 @@ ruleset foobar {
     y1 = true;
     w = defaction(x){ noop() };
     z = function(x){ 5 + x };
+  }
+}
+_KRL_
+
+$module_rs = Kynetx::Parser::parse_ruleset($krl);
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
+$mod_rule_env = empty_rule_env();
+$is_cachable = 0;
+
+($js, $mod_rule_env, $is_cachable) = 
+    eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
+ok($is_cachable, "Functions are cachable");
+$test_count++;
+
+$krl =  << "_KRL_";
+ruleset foobar {
+  global {
     datasource twitter_search <- "http://search.twitter.com/search.json";
   }
 }
@@ -4375,7 +4392,7 @@ $is_cachable = 0;
 
 ($js, $mod_rule_env, $is_cachable) = 
     eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
-ok($is_cachable, "Functions and datasources are cachable");
+ok($is_cachable, "Datasources are cachable");
 $test_count++;
 
 $krl =  << "_KRL_";
@@ -4477,6 +4494,27 @@ $is_cachable = 0;
 ($js, $mod_rule_env, $is_cachable) = 
     eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
 ok(!$is_cachable, "meta:currentRID() not cachable");
+$test_count++;
+
+$krl =  << "_KRL_";
+ruleset foobar {
+  global {
+    z2 = <<
+<p>This is a here doc</p>
+>>;
+  }
+}
+_KRL_
+
+$module_rs = Kynetx::Parser::parse_ruleset($krl);
+#diag Dumper $module_rs;
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
+$mod_rule_env = empty_rule_env();
+$is_cachable = 0;
+
+($js, $mod_rule_env, $is_cachable) = 
+    eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
+ok($is_cachable, "here_docs are cachable");
 $test_count++;
 
 
