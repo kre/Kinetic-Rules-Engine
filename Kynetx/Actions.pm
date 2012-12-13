@@ -842,6 +842,7 @@ sub build_one_action {
 		  Kynetx::JavaScript::gen_js_hash_item( $m->{'name'}, $m->{'value'} );
 	}
 
+	#    $logger->debug("Modifiers ", sub { Dumper $mods});
 	#    $logger->debug("JS config ", sub { Dumper $js_config});
 	#    $logger->debug("Perl config ", sub { Dumper $config});
 
@@ -935,12 +936,6 @@ sub build_one_action {
 		$after     = [];
 		$directive = \&noop;
 	}
-
-	# # I really hate this but in order to make it this is what must
-	# # be done. Once impact is done we can remove this at some point.
-	# if ( $action_name eq "flippyloo" ) {
-	# 	$resources = Kynetx::Actions::FlippyLoo::get_resources();
-	# }
 
 	$js .=
 	  &$before( $req_info, $rule_env, $session, $config, $mods, $arg_exp_vals,
