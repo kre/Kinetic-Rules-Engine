@@ -226,6 +226,7 @@ sub do_http {
 	$logger->trace("config: ", sub {Dumper($config)});
 	$logger->trace("mods: ", sub {Dumper($mods)});
 
+
 	my $response = mk_http_request(
 		$method, $config->{'credentials'},
 		$args->[0], $config->{'params'} || $config->{'body'},
@@ -260,6 +261,8 @@ sub mk_http_request {
 
 	my $req;
 	my $response;
+
+
 	$method = uc($method);
 	if ( $method eq 'POST' || $method eq 'PUT' || $method eq 'PATCH') {
 		
@@ -283,6 +286,7 @@ sub mk_http_request {
 				'content-type' => "application/x-www-form-urlencoded; charset=UTF-8" );
 
 		}
+		$logger->debug("Unencoded content: ", sub { Dumper($content) } );
 		if (ref $content ne "") {
 			my $temp;
 			eval {
@@ -295,7 +299,7 @@ sub mk_http_request {
 			}
 		}
 
-		$logger->trace( "Encoded content: ", sub { Dumper($content) } );
+		$logger->debug( "Encoded content: ", sub { Dumper($content) } );
 		$req->content($content);
 		$req->header( 'content-length' => length($content) );
 

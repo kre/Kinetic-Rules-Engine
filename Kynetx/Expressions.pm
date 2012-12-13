@@ -82,6 +82,7 @@ eval_ineq
 eval_pred
 eval_emit
 recursion_threshold
+boolify
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 }
@@ -209,7 +210,7 @@ sub eval_expr {
     	$domain = $expr->{'domain'};
     } else {
     	# How do we keep non-expressed values from here?
-    	return  mk_expr_node(infer_type($expr),$expr);
+    	return  exp_to_den($expr);
     }
     my $ri_rid = get_rid($req_info->{'rid'});
     my $re_rid = $rule_env->{'ruleset_name'};
@@ -319,7 +320,7 @@ sub eval_expr {
     } elsif($expr->{'type'} eq 'persistent' ||
 	    $expr->{'type'} eq 'trail_history' ) {
             my $v = eval_persistent($req_info, $rule_env, $rule_name, $session, $expr);
-            return mk_expr_node(infer_type($v),$v);
+            return mk_den_value($v);
     } elsif($expr->{'type'} eq 'pred') {
         my $v = eval_pred($req_info, $rule_env, $session,
 			$expr, $rule_name);
@@ -377,9 +378,9 @@ sub eval_expr {
 		      );
 
 
-	       $v = $v && $tv;
+	       $v = boolify($v && $tv);
         }
-        return mk_expr_node(infer_type($v),$v);
+        return exp_to_den($v);
     } elsif ($expr->{'type'} eq 'seen_timeframe') {
         my $name = $expr->{'var'};
         $logger->trace('[seen_timeframe] ', "$name");
@@ -420,7 +421,7 @@ sub eval_expr {
 							       $session))
 			   ) ? 1 : 0;
         }
-        return mk_expr_node(infer_type($v),$v);
+        return exp_to_den(boolify($v));
 
     } elsif ($expr->{'type'} eq 'seen_compare') {
       my $name = $expr->{'var'};
@@ -447,7 +448,7 @@ sub eval_expr {
 							       $req_info,
 							       $session))  				    
 				 ) ? 0 : 1; # ensure 0 returned for testing
-      return mk_expr_node(infer_type($v),$v);
+      return exp_to_den(boolify($v));
     } elsif($expr->{'type'} eq 'defaction') {
         my $aexpr = mk_action_expr($expr, $rule_env, $rule_name,$req_info, $session);
         $logger->trace("Action expression: ", sub {Dumper($aexpr)});
@@ -478,7 +479,7 @@ sub eval_xdi {
 	$logger->debug("XDI message (eval): ", $msg->to_string);
 	my $result =  $c->post($msg);
 	if (defined $result) {
-		return mk_expr_node(infer_type($result),$result)
+		return exp_to_den($result)
 	} else {
 		return mk_expr_node('null','__undef__');
 	}
@@ -832,7 +833,7 @@ sub eval_persistent {
     	if ($expr->{'domain'} eq 'ent' || $expr->{'domain'} eq 'app') {
 	    	my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $expr->{'hash_key'});
 	    	my $var = $expr->{'var_expr'};
-	    	$logger->debug("Looking of value in persistent $var with path: ", sub {Dumper($path)});
+	    	$logger->debug("Value in persistent $var with path: ", sub {Dumper($path)});
 	    	$v = Kynetx::Persistence::get_persistent_hash_element($domain,$rid,$session,$var,$path);
     	} else {
     		$logger->warn("Hash indexes only implemented for persistent variables");
@@ -852,7 +853,7 @@ sub eval_persistent {
 #	$logger->debug("[persistent] $expr->{'domain'}:$name -> ", sub {Dumper $v});
       } else {
 	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
-        $logger->debug("[module reference] $expr->{'domain'}:$name->$v");
+        $logger->debug("[module reference] ", sub {"$expr->{'domain'}:$name->$v"});
       }
     }
 
@@ -886,9 +887,9 @@ sub eval_pred {
 	} 
       } elsif($pred->{'op'} eq 'negation') {
 	if ($result) {
-	  $val = 0;
+	  $val = JSON::XS::false;
 	} else {
-	  $val = 1;
+	  $val = JSON::XS::true;
 	}
       }
     }
@@ -911,9 +912,9 @@ sub eval_ineq {
     if ( $pred->{'op'} eq '<=>' || $pred->{'op'} eq 'cmp') {
       return Kynetx::Parser::mk_expr_node('num',$r);
     } elsif ($r) {
-      return Kynetx::Parser::mk_expr_node('num',1);
+      return Kynetx::Parser::mk_expr_node('bool','true');
     }  else {
-      return Kynetx::Parser::mk_expr_node('num',0);
+      return Kynetx::Parser::mk_expr_node('bool','false');
     }
 
 }
@@ -1056,7 +1057,8 @@ sub den_to_exp {
 	};
 
 	/bool/ && do {
-	    return $expr->{'val'} eq 'true' ? 1 : 0;
+	    return $expr->{'val'} eq 'true' ? JSON::XS::true : JSON::XS::false;
+#	    return $expr->{'val'} eq 'true' ? 1 : 0;
 	};
 
 	/hash/ && do {
@@ -1081,6 +1083,17 @@ sub den_to_exp {
     }
 
 }
+
+# used to return a boolean rep from a predicate
+sub boolify {
+  my($expr) = @_;
+  if ($expr == 1 || $expr == 0) {
+    return $expr ? JSON::XS::true : JSON::XS::false;
+  } else {
+    return $expr;
+  }
+}
+
 
 sub exp_to_den {
     my ($expr) = @_;
@@ -1113,6 +1126,13 @@ sub exp_to_den {
 	  $expr = \@res;
 	  return {'type' => $type,
 		      'val' => $expr}
+    } elsif (JSON::XS::is_bool $expr  ) {
+
+      return {'type' => 'bool',
+   	      'val' => $expr ? 'true' : 'false'
+	     }
+      
+
     } else {
 	  return {'type' => $type,
 		      'val' => $expr}
@@ -1120,19 +1140,28 @@ sub exp_to_den {
 
 }
 
+sub mk_den_value {
+  my($val) = @_;
+  return Kynetx::Parser::mk_expr_node(infer_type($val),$val);
+}
+
+
+
 # crude type inference for prims
 sub infer_type {
     my ($v) = @_;
     my $t;
     
     my $logger = get_logger();
-    $logger->trace("Infer type from: (",$v,") ",ref $v);
+#    $logger->debug("Infer type from: (",$v,") ",ref $v);
 
 	# Watch for side effects if something unexpected is 
 	# relying on 'undef'
     return 'null' unless defined $v;
 
-    if($v =~ m/^[+|-]?(\d*\.\d+|[1-9]\d+|\d)$/) { # crude type inference for primitives
+    if ( ref $v eq 'JSON::XS::Boolean') {
+      $t = 'bool';
+    } elsif($v =~ m/^[+|-]?(\d*\.\d+|[1-9]\d+|\d)$/) { # crude type inference for primitives
 	$t = 'num' ;
     } elsif($v =~ m/^(true|false)$/) {
 	$t = 'bool';

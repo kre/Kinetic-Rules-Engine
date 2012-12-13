@@ -550,7 +550,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(3 <= 5)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -561,7 +561,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(5 <= 3)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -572,7 +572,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(5 <= 5)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -583,7 +583,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(6 >= 4)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -594,7 +594,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(4 >= 6)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -605,7 +605,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(6 >= 6)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -616,7 +616,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "((6 + 5) >= (4 + 3))",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -627,7 +627,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "((6 + 5) <= (4 + 3))",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -638,7 +638,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(3 < 5)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -649,7 +649,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(5 < 3)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -660,7 +660,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(5 < 5)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -671,7 +671,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(6 > 4)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -682,7 +682,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(6 < 4)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -693,7 +693,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(6 > 6)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -704,7 +704,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "((6 + 5) > (4 + 3))",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -715,7 +715,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "((6 + 5) < (4 + 3))",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -727,7 +727,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(5 == 5)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -738,7 +738,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(6 != 4)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -749,7 +749,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(5 != 5)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -760,7 +760,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(6 == 4)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -772,7 +772,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(5 == 5)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -783,7 +783,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "((6 + 3) != ((4 * 44) + 3))",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -794,7 +794,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "((4 * 5) == (5 * 4))",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -805,7 +805,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "((3* (4 + 5)) == ((3 * 5) + (3 * 4)))",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -820,7 +820,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(3 <= temp)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -831,7 +831,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(temp <= 3)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -842,7 +842,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(temp <= temp)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -853,7 +853,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(temp >= 4)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -864,7 +864,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(4 >= temp)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -875,7 +875,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(temp >= temp)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -886,7 +886,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "((temp + 5) >= (temp + 3))",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -897,7 +897,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "((temp + 5) <= (temp + 3))",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -908,7 +908,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(3 < temp)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -919,7 +919,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(temp < 3)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -930,7 +930,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(temp < temp)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -941,7 +941,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(temp > 4)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -952,7 +952,7 @@ add_expr_testcase(
 		  $krl_src,
 		  'expr',
 		  "(temp < 4)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -963,7 +963,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(temp > temp)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -974,7 +974,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "((temp + 5) > (temp + 3))",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -985,7 +985,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "((temp + 5) < (temp + 3))",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -997,7 +997,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(temp == temp)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1008,7 +1008,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(temp != 4)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1019,7 +1019,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(temp != temp)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1030,7 +1030,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(temp == 4)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1042,7 +1042,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(temp == temp)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1053,7 +1053,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "((temp + 3) != ((temp * 44) + 3))",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1064,7 +1064,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "((4 * temp) == (temp * 4))",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1075,7 +1075,7 @@ add_expr_testcase(
 		  $krl_src,
 		  'expr',
 		  "((3* (4 + temp)) == ((3 * temp) + (3 * 4)))",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1090,7 +1090,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "('foo' == 'foo')",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1101,7 +1101,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "('foo' == 'bar')",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1113,7 +1113,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "('foo' != 'foo')",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1125,7 +1125,7 @@ add_expr_testcase(
 'expr',
 		  "('foo' !=
  'bar')",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1137,7 +1137,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(city == 'Blackfoot')",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1148,7 +1148,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "('foo' == city)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1160,7 +1160,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "('Blackfoot' != city)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1171,7 +1171,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(city != 'bar')",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1185,7 +1185,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "'foobar'.match(/foo.*/)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1196,7 +1196,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "'foobar'.match(/foo.*/)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1207,7 +1207,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "'bar'.match(/.*bar/)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1218,7 +1218,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "'bar'.match(/.*bar/)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1229,7 +1229,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "'foobar'.match(/^bar/)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1240,7 +1240,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "'bar'.match(/foo.*/)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1251,7 +1251,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "'bar'.match(/foo.*/)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1263,7 +1263,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "'Bar'.match(/bar/)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1274,7 +1274,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "'Bar'.match(/bar/)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1285,7 +1285,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "'Bar'.match(/bar/i)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1312,7 +1312,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  "(temp<temp?-1:(temp>temp?1:0))",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('num', 0),
 		  0
     );
 
@@ -1324,7 +1324,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  "(7 < 6 ? -1 : (7 > 6 ? 1 : 0))",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('num', 1),
 		  0
     );
 
@@ -1346,7 +1346,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  "(string1<string1?-1:(string1>string1?1:0))",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('num', 0),
 		  0
     );
 
@@ -1358,7 +1358,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  "(string2 < string1 ? -1 : (string2 > string1 ? 1 : 0))",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('num', 1),
 		  0
     );
 
@@ -1373,7 +1373,7 @@ _KRL_
 add_expr_testcase($krl_src,
 		  'expr',
 		  "(\$KOBJ.inArray(6,[5,6,7])!=-1)",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1384,7 +1384,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "(\$KOBJ.inArray(3,[5,6,7])!=-1)",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1396,7 +1396,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1408,7 +1408,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "((myHash instanceof Array) ? (\$KOBJ.inArray('a',myHash) != -1)  : (function(){var tmp = myHash;return (typeof(tmp.a) !== 'undefined')}()))",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1419,7 +1419,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  "((myHash instanceof Array) ? (\$KOBJ.inArray('fizzle',myHash) != -1)  : (function(){var tmp = myHash;return (typeof(tmp.fizzle) !== 'undefined')}()))",
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1431,7 +1431,7 @@ add_expr_testcase(
 'expr',
 		  "(({'a' : 1, 'b' : 2} instanceof Array) ? (\$KOBJ.inArray('a',{'a' : 1, 'b' : 2}) != -1)  : (function(){var tmp = {'a' : 1, 'b' : 2};return (typeof(tmp.a) !== 'undefined')}()))
 ",
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1447,7 +1447,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '(true == true)',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1458,7 +1458,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '(true == false)',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1470,7 +1470,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '(true != true)',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1481,7 +1481,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '(true != false)',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1515,7 +1515,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
     '(true && true)',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -1526,7 +1526,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
     '(true && false)',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool',    'false'),
 		  0
     );
 
@@ -1537,7 +1537,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
     '(false && true)',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool',    'false'),
 		  0
     );
 
@@ -1549,7 +1549,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
     '(false && false)',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool',    'false'),
 		  0
     );
 
@@ -1561,7 +1561,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
     '(true||true)',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -1572,7 +1572,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
     '(true||false)',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -1583,7 +1583,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
     '(false||true)',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -1595,7 +1595,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
     '(false||false)',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool',    'false'),
 		  0
     );
 
@@ -1609,7 +1609,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
         '!true',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool',    'false'),
 		  0
     );
 
@@ -1620,7 +1620,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
         '!false',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -1631,7 +1631,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
     '(!true||!true)',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool',    'false'),
 		  0
     );
 
@@ -1642,7 +1642,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
     '(!true||!false)',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -1653,7 +1653,7 @@ add_expr_testcase(
 		  $krl_src,
 		  'expr',
 		  '(!false||!true)',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -1665,7 +1665,7 @@ add_expr_testcase(
 		  $krl_src,
 		  'expr',
 		  '(!false||!false)',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -1723,7 +1723,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1736,7 +1736,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1750,7 +1750,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1764,7 +1764,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1777,7 +1777,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1788,7 +1788,7 @@ _KRL_
 add_expr_testcase($krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1800,7 +1800,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1812,7 +1812,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1824,7 +1824,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1836,7 +1836,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1848,7 +1848,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1861,7 +1861,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -1874,7 +1874,7 @@ add_expr_testcase(
     $krl_src,
 'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -1887,7 +1887,7 @@ add_expr_testcase(
 		  $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('num', 1),
 		  0
     );
 
@@ -2120,7 +2120,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2131,7 +2131,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool',    'false'),
 		  0
     );
 
@@ -2142,7 +2142,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2153,7 +2153,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2165,7 +2165,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2177,7 +2177,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',   'true'),
 		  0
     );
 
@@ -2188,7 +2188,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2199,7 +2199,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2211,7 +2211,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2222,7 +2222,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2233,7 +2233,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2245,7 +2245,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2256,7 +2256,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool',    'false'),
 		  0
     );
 
@@ -2267,7 +2267,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2278,7 +2278,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2289,7 +2289,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2300,7 +2300,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2311,7 +2311,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2322,7 +2322,7 @@ add_expr_testcase(
 		  $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2333,7 +2333,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2344,7 +2344,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool',    'true'),
 		  0
     );
 
@@ -2358,7 +2358,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -2369,7 +2369,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -2381,7 +2381,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -2392,7 +2392,7 @@ add_expr_testcase(
     $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -2403,7 +2403,7 @@ add_expr_testcase(
 		  $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -2553,7 +2553,7 @@ add_expr_testcase(
 		  $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    0),
+		  mk_expr_node('bool', 'false'),
 		  0
     );
 
@@ -2565,7 +2565,7 @@ add_expr_testcase(
 		  $krl_src,
 		  'expr',
 		  '_ignore_',
-		  mk_expr_node('num',    1),
+		  mk_expr_node('bool', 'true'),
 		  0
     );
 
@@ -3162,11 +3162,11 @@ _KRL_
 
 $js = <<_JS_;
 var a3 = [];
-var b3 = 0;
+var b3 = false;
 _JS_
 
 $re1 = extend_rule_env(['a3','b3'],
-		       [[],0],
+		       [[],JSON::XS::false],
 		       $rule_env);
 
 
@@ -3187,11 +3187,11 @@ _KRL_
 
 $js = <<_JS_;
 var a3 = [4,5,6];
-var b3 = 1;
+var b3 = true;
 _JS_
 
 $re1 = extend_rule_env(['a3','b3'],
-		       [[4,5,6],1],
+		       [[4,5,6],JSON::XS::true],
 		       $rule_env);
 
 
@@ -3415,7 +3415,6 @@ add_expr_testcase(
     "'UNTRANSLATABLE KRL EXPRESSION'",
     mk_expr_node('array',['3.a','3.b','3.c','3.d']),
     0);
-
 
 
 
