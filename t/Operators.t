@@ -662,16 +662,16 @@ $i++;
 
 $e[$i] = q/store.pick("$..book[?(@.ratings)]").length() > 0/;
 $x[$i] = {
-'val' => 1,
-'type' => 'num'
+'val' => 'true',
+'type' => 'bool'
 };
 $d[$i]  = 0;
 $i++;
 
 $e[$i] = q/store.pick("$..book[?(@.ratings)]").length() > 3/;
 $x[$i] = {
-'val' => 0,
-'type' => 'num'
+'val' => 'false',
+'type' => 'bool'
 };
 $d[$i]  = 0;
 $i++;
