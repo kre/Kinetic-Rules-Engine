@@ -171,7 +171,7 @@ sub add_expr_testcase {
 			    });
     }
 
-my $iname = "=mark";
+$iname = "=mark";
 
 $krl_src = <<_KRL_;
 <[$subject]>
@@ -181,7 +181,7 @@ add_expr_testcase(
     'expr',
      undef,
      mk_expr_node('hash', {
-    	$subject . '/!' => [$random]
+    	$subject . '/!' => mk_expr_node('array',[mk_expr_node('str',$random)])
     }),
     0);
 

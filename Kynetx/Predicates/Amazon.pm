@@ -262,11 +262,11 @@ sub jsonlookup {
 sub good_response {
     my ($amz_response) = @_;
     my $logger = get_logger();
+    my $den = Kynetx::Expressions::den_to_exp($amz_response);
     my $result='';
     my $pattern = '$..Items.Request.IsValid';
-    $result = jsonlookup($amz_response,$pattern);
-    $logger->trace("json result: ",sub {Dumper($result)});
-    if (ref $amz_response ne 'HASH') {
+    $result = jsonlookup($den,$pattern);
+    if (ref $den ne 'HASH') {
         return 0;
     }
     if (! defined $result) {

@@ -304,7 +304,6 @@ foreach my $case (@test_args) {
         my $error = Kynetx::Predicates::Amazon::get_error_msg($ds);
         $logger->debug("Error: ", sub {Dumper($error)});
         $logger->debug("Args: ",sub {Dumper(Kynetx::Predicates::Amazon::get_request_args($ds))});
-
     }else {
         $logger->debug("Good result: ", sub {Dumper($ds)});
         my $titems = Kynetx::Predicates::Amazon::total_items($ds);
