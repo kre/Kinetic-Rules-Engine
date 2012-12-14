@@ -912,12 +912,12 @@ sub eval_rule {
 		&& !( $rule->{'inner_pre'} || $rule->{'outer_pre'} ) )
 	{
 
-		$logger->debug(
-			"Pre optimization ",
-			sub { Dumper $rule->{'pre'} },
-			sub { Dumper $rule->{'inner_pre'} },
-			sub { Dumper $rule->{'outer_pre'} }
-		);
+		# $logger->debug(
+		# 	"Pre optimization ",
+		# 	sub { Dumper $rule->{'pre'} },
+		# 	sub { Dumper $rule->{'inner_pre'} },
+		# 	sub { Dumper $rule->{'outer_pre'} }
+		# );
 
 		$logger->debug("Rule not pre optimized...");
 		optimize_pre($rule);

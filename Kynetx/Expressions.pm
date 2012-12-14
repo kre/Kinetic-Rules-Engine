@@ -249,7 +249,7 @@ sub eval_expr {
 	   # unless (defined $v) {	   	
 	   #     $logger->info("Variable '", $expr->{'val'}, "' is undefined");
 	   # }
-	   $logger->trace($rule_name.':'.$expr->{'val'}, " -> ", $v, ' Type -> ', infer_type($v));
+#	   $logger->debug($rule_name.':'.$expr->{'val'}, " -> ", $v, ' Type -> ', infer_type($v));
 
 	   # alas, closures are the only denoted vals in the env...
     	if (ref $v eq 'HASH' && defined $v->{'type'} && $v->{'type'} eq 'closure') {
@@ -773,13 +773,13 @@ sub eval_hash_ref {
 			 'species' => 'type mismatch'
 			});
 	} else {
-   		$logger->trace("Using hash ", sub {Dumper $v}, " with key ",sub {Dumper  $expr->{'hash_key'}->{'val'}});
+#   		$logger->debug("Using hash ", sub {Dumper $v}, " with key ",sub {Dumper  $expr->{'hash_key'}->{'val'}});
 		my $kval = den_to_exp(eval_expr($expr->{'hash_key'},
 			$rule_env,
 			$rule_name,
 			$req_info,
 			$session));
-			$logger->trace("Key resolves to: ",sub {Dumper($kval)});
+#			$logger->debug("Key resolves to: ",sub {Dumper($kval)});
 			
 		my $element;
 		if (ref $kval eq "ARRAY") {
@@ -929,9 +929,9 @@ sub true_value {
 
   my $e = den_to_exp($d);
 
-  # my $logger = get_logger();
-  # $logger->debug("True value den: ", sub {Dumper $d});
-  # $logger->debug("True value exp: ", sub {Dumper $e});
+ # my $logger = get_logger();
+ # $logger->debug("True value den: ", sub {Dumper $d});
+ # $logger->debug("True value exp: ", sub {Dumper $e});
 
   return
     ($d->{'type'} eq 'bool' && $e eq 'true') || $e;
@@ -1173,7 +1173,7 @@ sub infer_type {
 	# relying on 'undef'
     return 'null' unless defined $v;
 
-    if ( ref $v eq 'JSON::XS::Boolean') {
+    if (JSON::XS::is_bool $v ) {
       $t = 'bool';
     } elsif($v =~ m/^[+|-]?(\d*\.\d+|[1-9]\d+|\d)$/) { # crude type inference for primitives
 	$t = 'num' ;
@@ -1218,7 +1218,7 @@ sub typed_value {
 	  defined $val->{'type'} &&
 	  $literal_types{$val->{'type'}}
 	 ) {
-    $val = Kynetx::Parser::mk_expr_node(infer_type($val),$val);
+    $val = mk_den_value($val);
   }
   return $val
 }

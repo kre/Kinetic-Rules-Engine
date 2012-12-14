@@ -1101,19 +1101,48 @@ function callBacks(){};
 
 _JS_
 
+add_testcase(
+    $krl_src,
+    $result,
+    $dummy_final_req_info
+    );
 
-# $result = <<_JS_;
-# (function(){
-# var startTest=[8,10,12,14];
-# var exists=true;
-# var doesExist='Itdoesexist!';
-# function callBacks () {
-# };
-#  (function(uniq,cb,config){cb();}
-#   ('%uniq%',callBacks,$config));
-#  }());
-# });
-# _JS_
+
+
+$krl_src = <<_KRL_;
+rule valid is active {
+  select when pageview ".*" setting ()
+  pre {
+    struct = {"valid" : true};
+
+    validAuth = struct{"valid"};
+    isValid = (validAuth) => "Valid" | "Not valid";
+ }
+ noop();
+}
+_KRL_
+
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'valid'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
+
+$result = <<_JS_;
+(function(){
+var struct={'valid':true};
+var validAuth=true;
+var isValid='Valid';
+function callBacks(){};
+(function(uniq,cb,config){cb();}
+  ('%uniq%',callBacks,$config));
+}());
+
+_JS_
+
 
 add_testcase(
     $krl_src,
