@@ -143,7 +143,7 @@ sub eval_one_decl {
   # yes, this is cheating and breaking the abstraction, but it's fast...
   $rule_env->{$var} = $val;
 
-#  $logger->debug("[eval_pre] $var -> ", sub {Dumper $val}) if (defined $val);
+#  $logger->debug("[eval_one_decl] $var -> ", sub {Dumper $val}) if (defined $val);
 
   # clone to avoid aliasing to the data structure in the env
   my  $nval = clone $val;
@@ -255,7 +255,7 @@ sub eval_expr {
     	if (ref $v eq 'HASH' && defined $v->{'type'} && $v->{'type'} eq 'closure') {
     	  return $v;
     	} else {
-    	  return  mk_expr_node(infer_type($v),$v);
+    	  return  mk_den_value($v);
     	}
     } elsif($expr->{'type'} eq 'bool') {
 	   return  $expr ;
@@ -291,7 +291,10 @@ sub eval_expr {
        my $opval = Kynetx::Operators::eval_operator($expr, $rule_env, $rule_name, $req_info, $session);
 	   return $opval;
     } elsif($expr->{'type'} eq 'condexpr') {
+
+#      $logger->debug("condexpr: ", sub { Dumper $expr});
         my $test = eval_expr($expr->{'test'}, $rule_env, $rule_name, $req_info, $session);
+#      $logger->debug("condexpr test value: ", sub { Dumper $test});
         return
 	       true_value($test) ?
 	           eval_expr($expr->{'then'}, $rule_env, $rule_name, $req_info, $session) :
@@ -925,6 +928,10 @@ sub true_value {
   my ($d) = @_;
 
   my $e = den_to_exp($d);
+
+  # my $logger = get_logger();
+  # $logger->debug("True value den: ", sub {Dumper $d});
+  # $logger->debug("True value exp: ", sub {Dumper $e});
 
   return
     ($d->{'type'} eq 'bool' && $e eq 'true') || $e;

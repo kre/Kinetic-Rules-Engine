@@ -1061,6 +1061,67 @@ add_testcase(
     );
 
 
+
+$krl_src = <<_KRL_;
+rule delete is active {
+  select when pageview ".*" setting ()
+  pre {
+    startTest = [
+        "8",
+        "10",
+        "12",
+        "14"
+    ];
+ 
+    exists = startTest.has("10");
+    doesExist = exists => "It does exist!" | "It does not exist!";
+ }
+ noop();
+}
+_KRL_
+
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 'delete'},
+   {"rid" => 'cs_test'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
+
+$result = <<_JS_;
+(function(){
+var startTest=[8,10,12,14];
+var exists=true;
+var doesExist='Itdoesexist!';
+function callBacks(){};
+(function(uniq,cb,config){cb();}
+  ('%uniq%',callBacks,$config));
+}());
+
+_JS_
+
+
+# $result = <<_JS_;
+# (function(){
+# var startTest=[8,10,12,14];
+# var exists=true;
+# var doesExist='Itdoesexist!';
+# function callBacks () {
+# };
+#  (function(uniq,cb,config){cb();}
+#   ('%uniq%',callBacks,$config));
+#  }());
+# });
+# _JS_
+
+add_testcase(
+    $krl_src,
+    $result,
+    $dummy_final_req_info
+    );
+
+
 ##
 ## foreach tests
 ##
