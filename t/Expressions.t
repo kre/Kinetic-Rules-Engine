@@ -343,7 +343,7 @@ SKIP: {
     my $ds_function = mk_datasource_function('datasource','"?q=rootbeer"', 0);
     $logger->debug("Got $ds_function");
     contains_string(encode_json(&{$ds_function}('twitter_search')),
-		    '{"since_id_str":"0","page":1,"completed_in":',
+		    '{"since_id_str":"0","page":1',
 		    'user defined datasource');
 
 }

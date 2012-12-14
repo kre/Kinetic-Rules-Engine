@@ -210,7 +210,7 @@ sub eval_expr {
     	$domain = $expr->{'domain'};
     } else {
     	# How do we keep non-expressed values from here?
-    	return  exp_to_den($expr);
+    	return  mk_den_value($expr);
     }
     my $ri_rid = get_rid($req_info->{'rid'});
     my $re_rid = $rule_env->{'ruleset_name'};
@@ -380,7 +380,7 @@ sub eval_expr {
 
 	       $v = boolify($v && $tv);
         }
-        return exp_to_den($v);
+        return mk_den_value($v);
     } elsif ($expr->{'type'} eq 'seen_timeframe') {
         my $name = $expr->{'var'};
         $logger->trace('[seen_timeframe] ', "$name");
@@ -421,7 +421,7 @@ sub eval_expr {
 							       $session))
 			   ) ? 1 : 0;
         }
-        return exp_to_den(boolify($v));
+        return mk_den_value(boolify($v));
 
     } elsif ($expr->{'type'} eq 'seen_compare') {
       my $name = $expr->{'var'};
@@ -448,7 +448,7 @@ sub eval_expr {
 							       $req_info,
 							       $session))  				    
 				 ) ? 0 : 1; # ensure 0 returned for testing
-      return exp_to_den(boolify($v));
+      return mk_den_value(boolify($v));
     } elsif($expr->{'type'} eq 'defaction') {
         my $aexpr = mk_action_expr($expr, $rule_env, $rule_name,$req_info, $session);
         $logger->trace("Action expression: ", sub {Dumper($aexpr)});
@@ -893,7 +893,9 @@ sub eval_pred {
 	}
       }
     }
-    return exp_to_den($val)
+
+    $logger->debug("Complex predicate value: ", $val);
+    return mk_den_value(boolify($val))
 
 
 }
@@ -1142,7 +1144,12 @@ sub exp_to_den {
 
 sub mk_den_value {
   my($val) = @_;
-  return Kynetx::Parser::mk_expr_node(infer_type($val),$val);
+  if (JSON::XS::is_bool $val  ) {
+      return Kynetx::Parser::mk_expr_node('bool',
+					  $val ? 'true' : 'false');
+    } else {
+        return Kynetx::Parser::mk_expr_node(infer_type($val),$val);
+    }
 }
 
 

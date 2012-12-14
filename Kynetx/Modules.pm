@@ -501,7 +501,7 @@ sub eval_module {
     $logger->trace("Datasource $source:$function -> ", sub {Dumper($val)});
 
 #    return $val;
-    return  Kynetx::Expressions::exp_to_den($val);
+    return  Kynetx::Expressions::mk_den_value($val);
 
 }
 
