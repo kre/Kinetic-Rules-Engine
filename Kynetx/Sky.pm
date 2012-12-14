@@ -64,6 +64,11 @@ sub handler {
 	$metric->start_timer();
 	$metric->series("sky");
 	$metric->path($r->path_info);
+	my $req = Apache2::Request->new($r);
+	my @params = $req->param;
+	if (scalar @params > 0){
+	  $metric->add_tag(join(",",@params));
+	}
 
 	$r->content_type('text/javascript');
 
@@ -196,7 +201,7 @@ sub handler {
 		foreach my $rid_info ( @{$rid_list} ) {
 
 			my $rid = $rid_info->{'rid'};
-			$metric->tag($rid);
+			$metric->add_tag($rid);
 			my $ruleset =
 			  Kynetx::Repository::get_rules_from_repository( $rid_info,
 				$req_info, $rid_info->{'kinetic_app_version'} );

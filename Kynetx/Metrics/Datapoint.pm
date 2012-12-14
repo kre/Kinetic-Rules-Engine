@@ -346,7 +346,7 @@ sub add_tag {
 	my $logger = get_logger();
 	my $tag    = shift;
 	if ( ref $tag eq "ARRAY" ) {
-		$logger->debug( "Is array: ", sub { Dumper($tag) } );
+		$logger->trace( "Is array: ", sub { Dumper($tag) } );
 		my @temp = ( @{ $self->{"tags"} }, @$tag );
 		$self->{"tags"} = \@temp;
 	}
@@ -362,12 +362,12 @@ sub get_data {
 	my $c        = Kynetx::MongoDB::get_collection(COLLECTION);
 	my $cnt = 0;
 	my $order = -1;
-	my $limit = 1000;
+	my $limit = 15000;
 	if (defined $limits) {	
-		$order = $limits->param('sort_order') || $order;
-		$limit = $limits->param('limit') || $limit;
+		$order = $limits->{'sort_order'} || $order;
+		$limit = $limits->{'limit'} || $limit;
 	}	
-	$logger->debug("Key: ", sub {Dumper($key)});
+	$logger->trace("Key: ", sub {Dumper($key)});
 	my $cursor = $c->find($key)->sort({'$natural' => $order})->limit($limit);
 	if ( $cursor->has_next ) {
 		my @array_of_datapoints = ();
@@ -379,9 +379,7 @@ sub get_data {
 						$dp->{$mkey} = $obj->{$key}->{$mkey};
 					}
 				} elsif ($key eq "tags") {
-					foreach my $t (@{$obj->{$key}}) {
-						$dp->{$t} = 1;
-					}
+					$dp->{$key} = join(",",@{$obj->{$key}})
 				} elsif (ref $obj->{$key} eq "") {
 					$dp->{$key} = $obj->{$key};
 				} elsif ($key eq "_id") {

@@ -203,7 +203,7 @@ sub process_schedule {
 			$r_metric2->token($ktoken->{'ktoken'});
 			$r_metric2->eid($req_info->{'eid'});
 			$ast->add_resources( $current_rid, $req_info->{'resources'} );
-			$r_metric2->stop_and_store();
+			$r_metric2->stop_timer();
 
 			# for each context switch, we need a new place to put the JS
 			# that is generated for the rules in that context so that we
@@ -218,7 +218,7 @@ sub process_schedule {
 			$r_metric3->token($ktoken->{'ktoken'});
 			$r_metric3->eid($req_info->{'eid'});
 			$ast->update_context($rid);
-			$r_metric3->stop_and_store();
+			$r_metric3->stop_timer();
 
 			#      $logger->debug("Task request: ", Dumper $task->{'req_info'});
 
@@ -239,7 +239,7 @@ sub process_schedule {
 			$r_metric4->token($ktoken->{'ktoken'});
 			$r_metric4->eid($req_info->{'eid'});
 			stash_ruleset( $req_info, $ruleset );
-			$r_metric4->stop_and_store();
+			$r_metric4->stop_timer();
 
 			if (
 				(
@@ -341,7 +341,7 @@ sub process_schedule {
 
 				$cap++;
 			}
-			$o_metric->stop_and_store();
+			$o_metric->stop_timer();
 
 #my $new_req_info = Kynetx::Request::merge_req_env($req_info, $task->{'req_info'});
 			my $new_req_info =
@@ -608,7 +608,7 @@ sub eval_use_module {
             },
             empty_rule_env()
       );
-    $emetric->stop_and_store();
+    $emetric->stop_timer();
 
     $module_rule_env =
       set_module_configuration( $req_info, $rule_env, $session, $init_mod_env,
@@ -679,7 +679,7 @@ sub eval_use_module {
        $logger->debug("Module $name is not cachable...");
     }
 
-    $emetric2->stop_and_store();
+    $emetric2->stop_timer();
 
   } else {
 

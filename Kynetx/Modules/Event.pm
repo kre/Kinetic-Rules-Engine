@@ -44,6 +44,7 @@ use AnyEvent::HTTP;
 
 use Kynetx::Util qw(:all);
 use Kynetx::Memcached qw(:all);
+use Kynetx::Metrics::Datapoint;
 use Kynetx::Rids qw(:all);
 
 use Data::Dumper;
@@ -205,7 +206,18 @@ sub send_event {
   #   	        ) 
 
   my $logger = get_logger();
-
+  my $metric = new Kynetx::Metrics::Datapoint();
+  $metric->start_timer();
+  $metric->series("send-event");
+  $metric->eid($req_info->{'eid'});
+  $metric->rid(get_rid( $req_info->{'rid'} ));
+  $metric->token($req_info->{'id_token'});
+  $metric->event(
+			{
+				'domain' => $args->[1],
+				'type'   => $args->[2]
+			}
+		);  
   my $timeout = 2; # seconds
 
   my $sm = $args->[0];
@@ -224,7 +236,7 @@ sub send_event {
 	    mk_sky_esl($token);
 
   my $attrs = $config->{'attrs'};
-
+  $metric->add_tag(keys %{$attrs} );
 
   # merge in the domain and type
   $attrs->{'_domain'} = $args->[1];
@@ -257,9 +269,9 @@ sub send_event {
 			      'reason' => $hdr->{Reason},
 			      'body' => $body,
 			     });
-
 	if ($hdr->{Status} =~ /^2/) {
 	  $logger->debug("event:send() success for $esl");
+	  
 	  # this is where we would parse returned directives and add them to $dd
         } else {
 
@@ -279,7 +291,7 @@ sub send_event {
 
       }
    );
-
+	$metric->stop_and_store();
 
 }
 

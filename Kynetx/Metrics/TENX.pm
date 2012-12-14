@@ -35,6 +35,7 @@ use Data::Dumper;
 use URI::Escape ('uri_escape_utf8');
 use Apache2::Const qw(OK);
 use Apache2::ServerUtil;
+use Apache2::Request;
 use Sys::Hostname;
 use HTML::Template;
 use DateTime::Format::RFC3339;
@@ -60,6 +61,7 @@ qw(
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 use constant DEFAULT_TEMPLATE_DIR => Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
+use constant MAX_POINTS => 1500;
 
 #my $s = Apache2::ServerUtil->server;
 
@@ -81,7 +83,7 @@ sub handler {
     #my ($method,$rid,$eid) = $r->path_info =~ m!/([a-z+_]+)/([A-Za-z0-9_;]*)/?(\d+)?!;
     my ($method,$path) = $r->path_info() =~ m!/([a-z+_]+)/(.*)!;
 
-	$logger->debug($r->path_info());
+	$logger->trace($r->path_info());
 
 
     if($method eq 'scatter') {
@@ -92,7 +94,9 @@ sub handler {
     	control();
     } elsif ($method eq 'col') {
     	column_plot($r,$method,$path);
-    } 
+    } elsif ($method eq 'any') {
+    	any_plot($r,$method,$path);
+    }
     
     return Apache2::Const::OK;
 
@@ -127,6 +131,32 @@ sub filter {
 	return 1;
 }
 
+sub _filter {
+	my ($dp,$filter) = @_;
+	my $logger = get_logger();
+	#$logger->debug("Filter: ", sub {Dumper($filter)});
+	foreach my $p (keys %{$filter}) {
+		next if ($p eq "limit");
+		next if ($p eq "sort_order");
+		my $a = $filter->{$p};
+		my $b = $dp->{$p};
+		$logger->trace("Check for $p: $a");
+		my $re = qr(^$a$);
+		if (defined $b) {
+			$b = "$b";
+		$logger->trace("            : $b");
+			if ($a ne $b) {
+				return 0;
+			}
+		} else {
+			return 0;
+		}
+		
+	}
+	return 1;
+}
+
+
 sub get_datapoints {
 	my ($r,$path) = @_;
 	my $logger = get_logger();
@@ -142,15 +172,15 @@ sub get_datapoints {
 		} else {
 			$key =  { "series" => $sname };
 		}
-		$logger->debug("sname: ", $sname);
-		$logger->debug("Xname: ", $xname);
-		$logger->debug("Yname: ", $yname);
+		$logger->trace("sname: ", $sname);
+		$logger->trace("Xname: ", $xname);
+		$logger->trace("Yname: ", $yname);
 		$sname = $sname || "";
 		$xname = $xname || "timestamp";
 		$yname = $yname || "realtime"; 
 		my $result = Kynetx::Metrics::Datapoint::get_data($key,$req);
 		if (defined $result) {
-			$logger->debug("Num points: ", scalar @{$result});
+			$logger->trace("Num points: ", scalar @{$result});
 			my @loop = ();
 			my $pmax = 1000;
 			my $count = 0;
@@ -175,6 +205,8 @@ sub get_datapoints {
 	return $dp_struct;
 }
 
+
+
 sub prune {
 	my ($dp_array,$req) = @_;
 	my $logger = get_logger();
@@ -182,7 +214,7 @@ sub prune {
 	if ($req->param('last')) {
 		my $num = $req->param('last');
 		$num = $size - $num;
-		$logger->debug("Last: $num");
+		$logger->trace("Last: $num");
 		my @temp = @{$dp_array}[$num..$size];
 		return \@temp;
 	} elsif ($req->param('first')) {
@@ -216,7 +248,7 @@ sub bar_plot {
 			if (defined $dp) {
 				my $x = $dp->{$xname};
 				my $y = $dp->{$yname} || $dp->{'count'};
-				$logger->debug("DP $i: $xname: $x $yname: $y");
+				$logger->trace("DP $i: $xname: $x $yname: $y");
 				push(@cats,{'x' => $x});
 				push(@yvals,{'y'=> $y});
 			}
@@ -283,50 +315,177 @@ sub column_plot {
 	print $test_template->output;		
 }
 
+sub _get_datapoints {
+	my ($key,$limits,$filter) = @_;
+	my $logger = get_logger();
+	my ($count,$matrix);
+	my $ulimit = 100000;
+	$limits->{'limit'} = $limits->{'limit'} || 1500;
+	$logger->trace("filter gd: ", sub {Dumper($filter)});
+	do {
+		$logger->trace("Limit: ", sub {Dumper($limits)});
+		my $result = Kynetx::Metrics::Datapoint::get_data($key,$limits);
+		if (defined $result) {
+			$count = 0;
+			$matrix = {};
+			foreach my $dp (@{$result}) {
+				#last unless ($count < MAX_POINTS);
+				last unless ($count < $limits);
+				my $series = $dp->{'series'};
+				$matrix->{$series}->{'data'} = () unless (defined $matrix->{$series}->{'data'});
+				push(@{$matrix->{$series}->{'data'}},$dp);
+				$count++;
+			}
+		}
+		$limits->{'limit'}	*= 2;	
+		$logger->trace("New limit: ", sub {Dumper($limits)});
+	} while ($count == 0 && $limits->{'limit'} < $ulimit);
+	return $matrix;
+}
+
+
+sub get_series {
+	my ($path,$queryp) = @_;
+    my $logger = get_logger();
+    $logger->trace("get series");
+    my ($limits,$filter);
+    my $defx = 'ts';
+    my $defy = 'realtime';
+    my $graph = {};
+	my ($restpart,$querypart) = split(/\?/,$path);
+	foreach my $key (keys (%{$queryp})) {
+		my $value=$queryp->{$key};
+    	$logger->trace("KV: ",$key,"/",$value);
+		if (defined $key && defined $value) {
+			if ($key eq 'limit') {
+				$limits->{$key} = $value;
+			} else {
+				$filter->{$key} = $value;
+			}
+		}
+	}
+	
+	my @series = split(/\//,$restpart);
+	my $key = {};
+	my $labels;
+	if (scalar @series > 1) {
+		my @slist;
+		foreach my $s (@series) {
+			my ($sname,$xname,$yname) = split(/;/,$s);
+			my $element = {
+				'series' => $sname
+			};
+			push(@slist,$element);
+			$labels->{$sname}->{'xname'} = $xname || $defx;
+			$labels->{$sname}->{'yname'} = $yname || $defy;
+		}
+		$key = {'$or' => \@slist};
+	} elsif (scalar @series == 1) {
+		my ($sname,$xname,$yname) = split(/;/,$series[0]);
+		$key = {
+			'series' => $sname
+		} unless ($sname eq 'any');
+		$labels->{$sname}->{'xname'} = $xname || $defx;
+		$labels->{$sname}->{'yname'} = $yname || $defy;
+	}
+	foreach my $f (keys %{$filter}) {
+	  $key->{$f} = $filter->{$f};
+	}
+	$graph = _get_datapoints($key,$limits,$filter);
+	$logger->trace("Labels: ", sub {Dumper($labels)});
+	foreach my $label (keys %{$labels}){
+		$logger->trace("$label: ", sub {Dumper($labels->{$label})});
+		$graph->{$label}->{'xname'} = $labels->{$label}->{'xname'};
+		$graph->{$label}->{'yname'} = $labels->{$label}->{'yname'};
+		
+	}
+	return $graph;
+	
+}
+
 sub any_plot {
 	my ($r, $method,$path) = @_;
     my $logger = get_logger();
     my $req_info = Kynetx::Request::build_request_env($r, $method, "TENX");
+	my $template = DEFAULT_TEMPLATE_DIR . "/any_metrics.tmpl";
 	my $req = Apache2::Request->new($r);
-	my $template = DEFAULT_TEMPLATE_DIR . "/col_metrics.tmpl";
+	my @params = $req->param;
+	my $filter;
+	foreach my $p (@params) {
+		$filter->{$p} = $req->param($p);
+	}
 	my $test_template = HTML::Template->new(filename => $template,die_on_bad_params => 0);
-	my $dp_struct = get_datapoints($r,$path);
-	my @series_loop = ();
-	foreach my $s (keys %{$dp_struct}) {
-		my @loop = ();
-		my $xname = $dp_struct->{$s}->{'x'} || "timestamp";
-		my $yname = $dp_struct->{$s}->{'y'} || "count";
-		my $sname = $s;		
-		my $data = $dp_struct->{$s}->{'data'};
-		#$data = prune($data,$req);
-		my @cats = ();
-		my @yvals = ();
-		my $points;
-		for (my $i = 0;$i < (scalar @{$data})-1; $i++) {
-			my $dp = $data->[$i];
-			if (defined $dp) {
-				my $x = $dp->{$xname};
-				my $y = $dp->{$yname} || $dp->{'count'};
-				my $id = $dp->{"id"};
-				$logger->trace("DP $i: $xname: $x $yname: $y");
-				my $ystr = "{y: $y, id: \'$id\' }";
-				my $xstr = "\'$x\'";
-				push(@cats,$xstr);
-				push(@yvals,$ystr);
-				$points->{$id} = pretty_point($dp);
+	my $graph = get_series($path,$filter);
+	my @series_data = ();
+	my $points;
+	my @series = keys %{$graph};
+	my @population;
+	if (scalar @series == 1) {
+	  @population = ();
+	} else {
+	  @population = undef;
+	}
+	foreach my $s (@series) {
+		my $struct;		
+		$struct->{'name'} = $s;
+		my $xname = $graph->{$s}->{'xname'} || $graph->{'any'}->{'xname'};
+		my $yname = $graph->{$s}->{'yname'} || $graph->{'any'}->{'yname'};
+		#$logger->debug("$s: ", sub {Dumper($graph->{$s})});
+		my @data = ();
+		foreach my $point (@{$graph->{$s}->{'data'}}) {
+			#$logger->debug("$xname, $yname, p: ", sub {Dumper($point)});
+			my $x = $point->{$xname};
+			my $y = $point->{$yname};
+			my $id = $point->{'id'};
+			$y = int($y * 1000);
+			push(@data,{
+				'id' => $id,
+				'y' => $y,
+				'x' => $x * 1
+			});
+			$points->{$id} = pretty_point($point);
+			if (scalar @series == 1) {
+			  push(@population,$y);
 			}
 		}
-		my $catstr = '[' . join(",",@cats) . "]";
-		my $ystr	= '['. join(",",@yvals). "]";
-		my $pstr = Kynetx::Json::astToJson($points);
-		$test_template->param("CATEGORIES" => $catstr);
-		$test_template->param("yname" => $yname); 
-		$test_template->param("yval" => $ystr); 
-		$test_template->param("point" => $pstr); 
-		$test_template->param("sname" => $s);
-	}	
+		$struct->{'data'} = \@data;
+		if (scalar(@data) > 0) {
+			push(@series_data,$struct);		
+		}
+		
+	}
+	my $empty_set = "[{
+	  'name' : 'No Data',
+	  'xname' : '$graph->{'any'}->{'xname'}',
+	  'yname' : '$graph->{'any'}->{'yname'}',
+	  'data' : []
+	}]";
+	
+	my $data;
+	my $pstr;
+	$logger->trace("Data: ", sub {Dumper(@series_data)});
+	if (! @series_data) {
+	  $logger->debug("No data");
+	  $data = $empty_set; #Kynetx::Json::encode_json(@empty_set);
+	  $pstr = '[]';
+	  $logger->trace("Encoded");
+	} else {
+	  $logger->trace("Some data: ", sub {Dumper($points)});
+	  $data = Kynetx::Json::encode_json(\@series_data);
+	  $pstr = Kynetx::Json::astToJson($points);
+	}
+	my $num_points = scalar (keys %{$points});
+	$logger->trace("Population: ", scalar @population);
+	
+	
+	$test_template->param("numpoints" => $num_points);
+	$test_template->param("BANDS" => plotBands(\@population));
+
+	$test_template->param("DATA" => $data);
+	$test_template->param("point" => $pstr);
 	$r->content_type('text/html');
-	print $test_template->output;		
+	print $test_template->output;
+	
 }
 
 
@@ -374,7 +533,7 @@ sub scatter_plot {
 #					my $m = $dp->get_metric($key);
 #					$struct->{'metric'}->{$key} = $m unless ($benchmark_vars{$key} && $dp->get_metric($key) == 0) 
 #				}
-				$logger->debug("dp $i: ", sub {Dumper($struct)});
+				$logger->trace("dp $i: ", sub {Dumper($struct)});
 				push(@loop,$struct);
 				$sumX += $x;
 				$sumY += $y;
@@ -398,7 +557,7 @@ sub scatter_plot {
 				$a = $y - $b*$x;
 			} 
 		}
-		$logger->debug("S: $sname a: ", $a , " b: ", $b);		
+		$logger->trace("S: $sname a: ", $a , " b: ", $b);		
 		$loop_struct->{'SERIES_DATA'} = \@loop;
 		my $last = $data->[scalar @$data -1];
 		$loop_struct->{'LASTx'} = $last->get_metric($xname)        || 0;
@@ -415,7 +574,7 @@ sub pretty_point {
 	my $point = shift;
 	my $pretty;
 	foreach my $key (keys %{$point}) {
-		next if ($key eq "id");
+		#next if ($key eq "id");
 		next unless ($point->{$key});
 		if ($key eq "ts") {
 			my $dt =  DateTime->from_epoch( 'epoch' => $point->{$key});			
@@ -429,6 +588,120 @@ sub pretty_point {
 		}
 	}
 	return $pretty;
+}
+
+sub plotBands {
+  my $points = shift;
+  if (scalar @{$points} > 0) {
+    my $stats = population_stats($points);
+    if (defined $stats) {
+      return $stats;    
+    }
+  }
+  return "[]";
+  
+}
+
+sub population_stats {
+  my $points = shift;
+  my $logger = get_logger();
+  my $sum=0;
+  my $maxP = 0;
+  my @squares = ();
+  my @bands = ();
+  my $count = scalar @{$points};
+  foreach my $p (@{$points}) {
+    $sum += $p;
+    $maxP = $p unless ($maxP > $p);
+  }
+  my $mean = $sum / $count;
+  $logger->trace("Mean: ", $mean);
+  foreach my $p (@{$points}) {
+    my $mean_diff = $p - $mean;
+    push(@squares,$mean_diff*$mean_diff);
+  }
+  $sum = 0;
+  foreach my $md (@squares) {
+    $sum += $md;
+  }
+  my $psd = sqrt($sum/$count);
+  $logger->trace("stnd dev: ", $psd);
+  
+  my $color_bands = {
+    'odd' => "rgba(68,170,213,0.1)",
+    'even'=> "rgba(0,0,0,0)"
+  };
+  
+  #positive bands
+  $mean = int($mean);
+  $psd = int($psd);
+  my $nth = 0;
+  for (my $y = $mean;$y <= $maxP;$y += $psd) {
+    my $from = $y;
+    my $to = $y + $psd;
+    my $color = ($nth % 2 == 0) ?  'odd' : 'even';
+    
+    my $label;
+    if ($nth == 0) {
+      $label = '+mean';
+      $nth++;
+    } else {
+      $label = $nth++ . "th deviation";
+    } 
+    my $band = {
+      'from' => $from,
+      'to' => $to,
+      'color' => $color_bands->{$color},
+      'label' => {
+          'text' => $label,
+          'style' => {
+            'color' => '#606060'
+          }
+      }
+    };
+    push(@bands,$band);
+  }
+
+  #negative bands
+  $nth = 0;
+  for (my $y = $mean;$y > 0;$y -= $psd) {
+    my $from = $y;
+    my $to = $y - $psd;
+    if ($to < 0) {
+      $to = 0;
+    }
+    my $color = ($nth % 2 == 0) ? 'odd' : 'even';
+    my $label;
+    if ($nth ==0) {
+      $label = "-mean";
+      $nth++;
+    } else {
+      $label = $nth++ . "th deviation";
+    } 
+    my $band = {
+      'from' => $from,
+      'to' => $to,
+      'color' => $color_bands->{$color},
+      'label' => {
+          'text' => $label,
+          'style' => {
+            'color' => '#606060'
+          }
+      }
+    };
+    push(@bands,$band);
+  }
+  
+  my $mean_line = {
+      'from' => $mean -25,
+      'to' => $mean + 25,
+      'color' => "rgba(255,0,0,0.5)"
+  };
+  push(@bands,$mean_line);
+  
+  my $str = Kynetx::Json::encode_json(\@bands);
+  return $str;
+  
 }
 
 
