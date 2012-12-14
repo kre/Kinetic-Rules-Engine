@@ -233,6 +233,9 @@ sub eval_sort {
 							  $session));
 	
 #		  	$logger->debug("Sort function returned ",Dumper $r);
+			if (JSON::XS::is_bool $r) {
+			  $r = $r ? 1 : 0;
+			}
 	
 		  	return $r;
 			} @{$eval};

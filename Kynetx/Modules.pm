@@ -127,7 +127,7 @@ sub eval_module {
     # function name and predicates are linked into that one function
     # and this big if-then-else can go away.  Data driven FTW!
     #
-    
+
     # get the values, the code below doesn't like denoted values. 
     for (@{ $args }) {
       $_ = Kynetx::Expressions::den_to_exp($_);
@@ -137,7 +137,7 @@ sub eval_module {
         $preds = Kynetx::Modules::ECI::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info,$rule_env,$session,$rule_name,$function,$args );
-            $val ||= 0;
+	    $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::ECI::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
         }
@@ -145,7 +145,7 @@ sub eval_module {
         $preds = Kynetx::Modules::PCI::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info,$rule_env,$session,$rule_name,$function,$args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::PCI::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
         }
@@ -165,7 +165,7 @@ sub eval_module {
         $preds = Kynetx::Modules::Twitter::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val =
               Kynetx::Modules::Twitter::eval_twitter(
@@ -178,7 +178,7 @@ sub eval_module {
         $preds = Kynetx::Predicates::Page::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Predicates::Page::get_pageinfo( $req_info, $function,
                                                            $args );
@@ -190,7 +190,7 @@ sub eval_module {
         $preds = Kynetx::Modules::Event::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::Event::get_eventinfo( $req_info, $function, $args );
         }
@@ -199,7 +199,7 @@ sub eval_module {
         $preds = Kynetx::Predicates::Math::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val =
               Kynetx::Predicates::Math::do_math( $req_info, $function, $args );
@@ -208,7 +208,7 @@ sub eval_module {
         $preds = Kynetx::Predicates::Weather::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val =
               Kynetx::Predicates::Weather::get_weather( $req_info, $function );
@@ -217,7 +217,7 @@ sub eval_module {
         $preds = Kynetx::Predicates::Demographics::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val =
               Kynetx::Predicates::Demographics::get_demographics( $req_info,
@@ -227,7 +227,7 @@ sub eval_module {
         $preds = Kynetx::Predicates::Location::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val =
               Kynetx::Predicates::Location::get_geoip( $req_info, $function );
@@ -236,7 +236,7 @@ sub eval_module {
         $preds = Kynetx::Predicates::Markets::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val =
               Kynetx::Predicates::Markets::get_stocks( $req_info, $args->[0],
@@ -246,7 +246,7 @@ sub eval_module {
         $preds = Kynetx::Predicates::Referers::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val =
               Kynetx::Predicates::Referers::get_referer( $req_info, $function );
@@ -255,7 +255,7 @@ sub eval_module {
         $preds = Kynetx::Predicates::MediaMarkets::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Predicates::MediaMarkets::get_mediamarket( $req_info,
                                                                     $function );
@@ -264,7 +264,7 @@ sub eval_module {
         $preds = Kynetx::Predicates::Useragent::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Predicates::Useragent::get_useragent( $req_info,
                                                                  $function );
@@ -273,7 +273,7 @@ sub eval_module {
         $preds = Kynetx::Predicates::Time::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val =
               Kynetx::Predicates::Time::get_time( $req_info, $function, $args );
@@ -282,7 +282,7 @@ sub eval_module {
         $preds = Kynetx::Modules::HTTP::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::HTTP::run_function( $req_info, $function,
                                                         $args );
@@ -291,7 +291,7 @@ sub eval_module {
         $preds = Kynetx::Modules::URI::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::URI::run_function( $req_info, $function,
                                                         $args );
@@ -300,7 +300,7 @@ sub eval_module {
         $preds = Kynetx::Modules::Address::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::Address::run_function( $req_info, $function,
                                                         $args );
@@ -309,7 +309,7 @@ sub eval_module {
         $preds = Kynetx::Modules::Twilio::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::Twilio::run_function( $req_info, $function,
                                                         $args );
@@ -318,7 +318,7 @@ sub eval_module {
         $preds = Kynetx::Modules::Email::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::Email::run_function( $req_info, $function,
                                                          $args );
@@ -327,7 +327,7 @@ sub eval_module {
         $preds = Kynetx::Predicates::KPDS::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val =
               Kynetx::Predicates::KPDS::eval_kpds(
@@ -338,7 +338,7 @@ sub eval_module {
         $preds = Kynetx::Predicates::Amazon::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Predicates::Amazon::eval_amazon($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
@@ -346,7 +346,7 @@ sub eval_module {
         $preds = Kynetx::Predicates::RSS::get_predicates();
         if (defined $preds->{$function}) {
             $val = $preds->{$function}->($req_info,$rule_env,$args);
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Predicates::RSS::eval_rss($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
@@ -354,7 +354,7 @@ sub eval_module {
         $preds = Kynetx::Predicates::Google::get_predicates();
         if (defined $preds->{$function}) {
             $val = $preds->{$function}->($req_info,$rule_env,$args);
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Predicates::Google::eval_google($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
@@ -362,27 +362,27 @@ sub eval_module {
         $preds = Kynetx::Predicates::Facebook::get_predicates();
         if (defined $preds->{$function}) {
             $val = $preds->{$function}->($req_info,$rule_env,$args);
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Predicates::Facebook::eval_facebook($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
-    } elsif ( $source eq 'snow' ) {
-        $preds = Kynetx::Actions::LetItSnow::get_predicates();
-        $val = $preds->{$function}->( $req_info, $rule_env, $args );
-        $val ||= 0;
+    # } elsif ( $source eq 'snow' ) {
+    #     $preds = Kynetx::Actions::LetItSnow::get_predicates();
+    #     $val = $preds->{$function}->( $req_info, $rule_env, $args );
+    #     $val = Kynetx::Expressions::boolify($val || 0);
     } elsif ( $source eq 'jquery_ui' ) {
         $preds = Kynetx::Actions::JQueryUI::get_predicates();
         $val = $preds->{$function}->( $req_info, $rule_env, $args );
-        $val ||= 0;
-    } elsif ( $source eq 'flippy_loo' ) {
-        $preds = Kynetx::Actions::FlippyLoo::get_predicates();
-        $val = $preds->{$function}->( $req_info, $rule_env, $args );
-        $val ||= 0;
+        $val = Kynetx::Expressions::boolify($val || 0);
+    # } elsif ( $source eq 'flippy_loo' ) {
+    #     $preds = Kynetx::Actions::FlippyLoo::get_predicates();
+    #     $val = $preds->{$function}->( $req_info, $rule_env, $args );
+    #     $val = Kynetx::Expressions::boolify($val || 0);
     } elsif ( $source eq 'odata' ) {
         $preds = Kynetx::Predicates::OData::get_predicates();
         if (defined $preds->{$function}) {
             $val = $preds->{$function}->($req_info,$rule_env,$args);
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Predicates::OData::eval_odata($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
@@ -390,7 +390,7 @@ sub eval_module {
         $preds = Kynetx::Modules::PDS::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::PDS::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
         }    	
@@ -398,7 +398,7 @@ sub eval_module {
         $preds = Kynetx::Modules::Random::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::Random::run_function( $req_info,$function,$args );
         }    	
@@ -406,7 +406,7 @@ sub eval_module {
         $preds = Kynetx::Modules::OAuthModule::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::OAuthModule::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
         }    	
@@ -468,7 +468,7 @@ sub eval_module {
         $preds = Kynetx::Modules::This2That::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::This2That::run_function( $req_info,$function,$args );
         }    	
@@ -476,7 +476,7 @@ sub eval_module {
         $preds = Kynetx::Persistence::KXDI::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info,$rule_env,$session,$rule_name,$function,$args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Persistence::KXDI::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
         }    	
@@ -484,7 +484,7 @@ sub eval_module {
         $preds = Kynetx::Modules::RSM::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info,$rule_env,$session,$rule_name,$function,$args );
-            $val ||= 0;
+            $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::RSM::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
         }    	
@@ -501,9 +501,7 @@ sub eval_module {
     $logger->trace("Datasource $source:$function -> ", sub {Dumper($val)});
 
 #    return $val;
-    return  Kynetx::Expressions::mk_expr_node(
-    		 Kynetx::Expressions::infer_type($val),
-    		 $val);
+    return  Kynetx::Expressions::exp_to_den($val);
 
 }
 

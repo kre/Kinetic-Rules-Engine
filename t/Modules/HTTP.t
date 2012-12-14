@@ -181,11 +181,12 @@ $test_count += 2;
 
 #goto ENDY;
 
-
 $krl_src = <<_KRL_;
 http:put("$test_site/put") setting(r) 
 	with 
-		body = '{"foon" +> 45}'  and
+		body = "{'foo': 45,
+                         'bar': true
+                        }"  and
 		headers = {
 			"Content-Type" : "text/plain"
 		} and
@@ -221,13 +222,15 @@ ok($result->{'content'} =~ m/data\": \"{/, "Text/Plain comes back as data");
 $test_count += 3;
 
 
+#diag "######################## PUT ########################";
 $krl_src = <<_KRL_;
 http:put("$test_site/put") setting(r) 
 	with 
-		params = {"foon": 45}  and
+		params = {"foon": 45, "bar": true}  and
 		headers = {
 			"Accept" : "text/plain",
-			"Cache-Control" : "no-cache"
+			"Cache-Control" : "no-cache",
+                        "Content-Type" : "application/json"
 		} and
 		credentials = {
 			"netloc" : "httpbin.org:80",
