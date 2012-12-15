@@ -405,8 +405,8 @@ sub get_series {
 
 sub any_plot {
 	my ($r, $method,$path) = @_;
-    my $logger = get_logger();
-    my $req_info = Kynetx::Request::build_request_env($r, $method, "TENX");
+  my $logger = get_logger();
+  my $req_info = Kynetx::Request::build_request_env($r, $method, "TENX");
 	my $template = DEFAULT_TEMPLATE_DIR . "/any_metrics.tmpl";
 	my $req = Apache2::Request->new($r);
 	my @params = $req->param;
@@ -430,10 +430,10 @@ sub any_plot {
 		$struct->{'name'} = $s;
 		my $xname = $graph->{$s}->{'xname'} || $graph->{'any'}->{'xname'};
 		my $yname = $graph->{$s}->{'yname'} || $graph->{'any'}->{'yname'};
-		#$logger->debug("$s: ", sub {Dumper($graph->{$s})});
+		$logger->debug("$s: ", sub {Dumper($graph->{$s})});
 		my @data = ();
 		foreach my $point (@{$graph->{$s}->{'data'}}) {
-			#$logger->debug("$xname, $yname, p: ", sub {Dumper($point)});
+			$logger->trace("$xname, $yname, p: ", sub {Dumper($point)});
 			my $x = $point->{$xname};
 			my $y = $point->{$yname};
 			my $id = $point->{'id'};
@@ -447,6 +447,8 @@ sub any_plot {
 			if (scalar @series == 1) {
 			  push(@population,$y);
 			}
+		  #$logger->debug("$id : $x, $y");
+			
 		}
 		$struct->{'data'} = \@data;
 		if (scalar(@data) > 0) {
@@ -463,19 +465,17 @@ sub any_plot {
 	
 	my $data;
 	my $pstr;
-	$logger->trace("Data: ", sub {Dumper(@series_data)});
+	#$logger->debug("Data: ", sub {Dumper(@series_data)});
 	if (! @series_data) {
 	  $logger->debug("No data");
 	  $data = $empty_set; #Kynetx::Json::encode_json(@empty_set);
 	  $pstr = '[]';
 	  $logger->trace("Encoded");
 	} else {
-	  $logger->trace("Some data: ", sub {Dumper($points)});
-	  $data = Kynetx::Json::encode_json(\@series_data);
-	  $pstr = Kynetx::Json::astToJson($points);
+	  $data = encode_json(\@series_data);
+	  $pstr = encode_json($points);
 	}
 	my $num_points = scalar (keys %{$points});
-	$logger->trace("Population: ", scalar @population);
 	
 	
 	$test_template->param("numpoints" => $num_points);
@@ -484,6 +484,7 @@ sub any_plot {
 	$test_template->param("DATA" => $data);
 	$test_template->param("point" => $pstr);
 	$r->content_type('text/html');
+	
 	print $test_template->output;
 	
 }
@@ -592,7 +593,8 @@ sub pretty_point {
 
 sub plotBands {
   my $points = shift;
-  if (scalar @{$points} > 0) {
+  my $logger = get_logger();
+  if (scalar @{$points} > 1) {
     my $stats = population_stats($points);
     if (defined $stats) {
       return $stats;    
@@ -615,7 +617,7 @@ sub population_stats {
     $maxP = $p unless ($maxP > $p);
   }
   my $mean = $sum / $count;
-  $logger->trace("Mean: ", $mean);
+  $logger->debug("Mean: ", $mean);
   foreach my $p (@{$points}) {
     my $mean_diff = $p - $mean;
     push(@squares,$mean_diff*$mean_diff);
@@ -625,7 +627,7 @@ sub population_stats {
     $sum += $md;
   }
   my $psd = sqrt($sum/$count);
-  $logger->trace("stnd dev: ", $psd);
+  $logger->debug("stnd dev: ", $psd);
   
   my $color_bands = {
     'odd' => "rgba(68,170,213,0.1)",
@@ -699,7 +701,7 @@ sub population_stats {
   };
   push(@bands,$mean_line);
   
-  my $str = Kynetx::Json::encode_json(\@bands);
+  my $str = encode_json(\@bands);
   return $str;
   
 }
