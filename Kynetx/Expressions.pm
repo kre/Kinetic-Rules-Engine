@@ -1096,7 +1096,13 @@ sub den_to_exp {
 # used to return a boolean rep from a predicate
 sub boolify {
   my($expr) = @_;
-  if ($expr == 1 || $expr == 0) {
+  # my $logger = get_logger();
+  # $logger->debug("boolifying ", sub {Dumper $expr});
+  # slower than direct test, but doesn't cause errors
+
+#  if ($expr == 0 || $expr == 1) {
+  if ($expr =~ m/^[01]$/) {
+#  if ($expr) {
     return $expr ? JSON::XS::true : JSON::XS::false;
   } else {
     return $expr;

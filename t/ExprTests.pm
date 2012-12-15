@@ -1601,6 +1601,40 @@ add_expr_testcase(
 
 
 
+$krl_src = <<_KRL_;
+string1 || string2
+_KRL_
+add_expr_testcase(
+    $krl_src,
+'expr',
+    '(string1||string2)',
+		  mk_expr_node('str',    'aab'),
+		  0
+    );
+
+$krl_src = <<_KRL_;
+false || string2
+_KRL_
+add_expr_testcase(
+    $krl_src,
+'expr',
+    '(false||string2)',
+		  mk_expr_node('str',    'abb'),
+		  0
+    );
+
+$krl_src = <<_KRL_;
+true || string2
+_KRL_
+add_expr_testcase(
+    $krl_src,
+'expr',
+    '(true||string2)',
+		  mk_expr_node('bool',    'true'),
+		  0
+    );
+
+
 
 $krl_src = <<_KRL_;
 not true

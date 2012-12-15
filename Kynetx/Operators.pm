@@ -105,17 +105,19 @@ sub eval_pick {
     }
 #    $logger->trace("pattern: ", $pattern);
 
-    my $force_array = $rands->[1]->{'val'};
+    my $force_array = Kynetx::Expressions::true_value($rands->[1]);
+#    my $force_array = $rands->[1]->{'val'};
 #    $logger->debug("2nd arg: ", $force_array);
 
 
     my $jp = Kynetx::JSONPath->new();
     my $v = $jp->run($obj, $pattern);
+
+    $logger->debug("[pick] obj after processing pick: ", sub { Dumper($v) });
     if ($force_array) {
         return Kynetx::Expressions::typed_value($v);
     }
 
-    $logger->debug("[pick] obj after processing pick: ", sub { Dumper($v) });
 
 #    $logger->debug("[pick] Rule env after: ", sub { Dumper($rule_env) });
 
