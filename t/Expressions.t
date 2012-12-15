@@ -600,6 +600,24 @@ _KRL_
 is(eval_str_test($krl_src), "23.99 is the price in Seattle", $krl_src);
 $test_count++;
 
+
+# ---------------booily -------------------------
+is(Kynetx::Expressions::boolify(1), JSON::XS::true, "boolify for 1");
+$test_count++;
+
+is(Kynetx::Expressions::boolify(0), JSON::XS::false, "boolify for 0");
+$test_count++;
+
+is(Kynetx::Expressions::boolify(10), 10, "boolify for 10");
+$test_count++;
+
+is(Kynetx::Expressions::boolify(""), "", "boolify for empty string");
+$test_count++;
+
+is(Kynetx::Expressions::boolify("flipper"), "flipper", "boolify for string");
+$test_count++;
+
+
 #diag "----------------------------------------------------------";
 
 
