@@ -1330,8 +1330,8 @@ sub mk_closure {
 sub var_free_in_expr {
     my ($var, $expr) = @_;
 
-#    my $logger = get_logger();
-#    $logger->debug("Rule env: ", sub { Dumper($rule_env) });
+    my $logger = get_logger();
+    $logger->debug("Var free?: ", sub { Dumper($var) }, sub { Dumper($expr) });
 
     if ($expr->{'type'} eq 'str' ) {
 	return 0;
@@ -1347,9 +1347,14 @@ sub var_free_in_expr {
     } elsif($expr->{'type'} eq 'array') {
       return at_least_one($expr->{'val'}, $var);
     } elsif($expr->{'type'} eq 'prim' ||
-	    $expr->{'type'} eq 'pred' ||
-	    $expr->{'type'} eq 'qualified') {
+	    $expr->{'type'} eq 'pred') {
 	return at_least_one($expr->{'args'}, $var);
+    } elsif($expr->{'type'} eq 'qualified') {
+      if ($expr->{'source'} eq 'math' && $expr->{'predicate'} eq 'random') {
+	return 1
+      } else {
+	return at_least_one($expr->{'args'}, $var);
+      }
     } elsif($expr->{'type'} eq 'operator') {
 	return  var_free_in_expr($var, $expr->{'obj'}) ||
  	        at_least_one($expr->{'args'}, $var);

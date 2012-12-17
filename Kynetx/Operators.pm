@@ -73,7 +73,7 @@ sub eval_pick {
     my $logger = get_logger();
 
 #    $logger->debug("expr: ", sub { Dumper($expr)});
-    $logger->trace("[pick] rule_env: ", sub { Dumper($rule_env) });
+#    $logger->trace("[pick] rule_env: ", sub { Dumper($rule_env) });
 
     my $int = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
     # if you don't clone this, it modified the rule env

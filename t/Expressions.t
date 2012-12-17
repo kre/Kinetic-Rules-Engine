@@ -367,7 +367,9 @@ $test_count += 10;
 ## var_free_in_expr
 ##
 sub check_free {
-   my($var, $expr, $etype) = @_;
+   my($var, $expr, $etype, $diag) = @_;
+
+   diag "------------------------ var_free_in_expr() ----------------------" if $diag;
 
    my $ptree = Kynetx::Parser::parse_decl($expr);
 
@@ -376,14 +378,14 @@ sub check_free {
      $ptree = $ptree->{'rhs'};
    }
 
-   #diag Dumper $ptree;
+  diag Dumper $ptree if $diag;
 
   $test_count++;
    ok(var_free_in_expr($var, $ptree), $var . " occurs free in "  . $etype);
  }
 
 sub check_not_free {
-   my($var, $expr, $etype) = @_;
+   my($var, $expr, $etype, $diag) = @_;
 
    my $ptree = Kynetx::Parser::parse_decl($expr);
 
@@ -391,6 +393,9 @@ sub check_not_free {
      # only care about rhs of non-here_doc decls
      $ptree = $ptree->{'rhs'};
    }
+
+   diag Dumper $ptree if $diag;
+
    $test_count++;
    ok(!var_free_in_expr($var, $ptree), $var . " does not occur free in " . $etype);
  }
@@ -424,6 +429,8 @@ check_free("v", 'q = weather:sunny(v)', "qualified predicate");
 check_free("v", 'q = (v) => 3 | x', "conditional test");
 check_free("v", 'q = (r) => v | 3', "conditional then");
 check_free("v", 'q = (s) => 3 | v', "conditional else");
+
+check_free("math:random()", 'q = math:random()', "math:random", 0);
 
 my $k = <<EOF;
 x = <<
