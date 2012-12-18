@@ -21,6 +21,7 @@
 use lib qw(/web/lib/perl);
 use strict;
 use warnings;
+
 use Test::More;
 use Test::LongString;
 use Test::Deep;
@@ -99,6 +100,7 @@ $config = mk_config_string(
    {"txn_id" => '1234'},
 ]);
 
+
 # get a random words
 $logger->debug("Get random words");
 
@@ -128,7 +130,7 @@ $test_count++;
 $logger->debug("match: $result");
 my $keys = {'root' => $system_key};
 
-# these are twitter consumer tokens
+# system authorized tokens
 ($js, $rule_env) = 
  Kynetx::Keys::insert_key(
   $my_req_info,
@@ -251,6 +253,7 @@ $test_count++;
   $dev_creds);
   
   
+  
 $description = "Use embedded keys to identify developer and permissions";
 $result = Kynetx::Modules::PCI::developer_authorized($my_req_info,$rule_env,$session,['cloud', 'auth']);
 is($result,1,$description);
@@ -260,6 +263,9 @@ $description = "Use embedded keys to identify developer and lack of permissions"
 $result = Kynetx::Modules::PCI::developer_authorized($my_req_info,$rule_env,$session,['cloud', 'create']);
 is($result,0,$description);
 $test_count++;
+
+#$logger->debug("Account authorizations: ");
+
 
 $description = "Authorize KEN for username $uname";
 $result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[$uname,$password]);
@@ -276,9 +282,19 @@ $result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_env,$sessi
 is($result,1,$description);
 $test_count++;
 
+my ($jst, $rule_envt) = 
+ Kynetx::Keys::insert_key(
+  $my_req_info,
+  $rule_env,
+  'system_credentials',
+  $keys);
+
+$expected = {
+  'nid' => $uid
+};
 $description = "Authorize KEN with hash userid";
-$result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[{'user_id' => $uid},$password]);
-is($result,1,$description);
+$result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_envt,$session,$rule_name,"foo",[{'user_id' => $uid},$password]);
+cmp_deeply($result,$expected,$description);
 $test_count++;
 
 $description = "Throw in a fail for fun";
