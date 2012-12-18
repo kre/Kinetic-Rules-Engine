@@ -176,7 +176,7 @@ sub new_account {
 	}
 	return undef;
 }
-$funcs->{'new_cloud'} = \&_new_cloud;
+$funcs->{'new_cloud'} = \&new_account;
 
 
 
