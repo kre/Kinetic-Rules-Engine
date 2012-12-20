@@ -23,15 +23,17 @@ use strict;
 
 use Test::More;
 use Test::LongString;
+use Test::Deep;
 
 use APR::URI;
 use APR::Pool ();
+use Data::Dumper;
 
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Cache::Memcached;
 
@@ -41,6 +43,7 @@ use Kynetx::Repository qw/:all/;
 use Kynetx::JavaScript qw/:all/;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::Rids qw/:all/;
+use Kynetx::Parser qw/:all/;
 
 
 
@@ -55,7 +58,7 @@ $no_referer_req_info->{'pool'} = APR::Pool->new;
 my %rule_env = ();
 
 
-plan tests => 2;
+plan tests => 5;
 
 
 #
@@ -66,8 +69,13 @@ plan tests => 2;
 Kynetx::Configure::configure();
 
 Kynetx::Memcached->init();
-
 my $logger = get_logger();
+
+sub get_local_rule {
+  my $filename = shift;
+  
+}
+
 
 # this test relies on a ruleset being available for site 10.
 SKIP: {
@@ -85,7 +93,6 @@ SKIP: {
 	
     };
     skip "Can't get repository connection", $how_many if $@;
-
     ok(exists $rules->{'ruleset_name'});
 
 }
@@ -107,14 +114,45 @@ SKIP: {
 
     eval {
 
-	$rules1 = Kynetx::Rules::get_rules_from_repository($rid_info, $req_info);
+	   $rules1 = Kynetx::Rules::get_rules_from_repository($rid_info, $req_info);
 	
     };
-    skip "Can't get rules for ", get_rid($rid_info), " ", $how_many if $@;
+    skip "Can't get rules for " . get_rid($rid_info).  " ", $how_many if $@;
 
     is_deeply($rules0->{'rules'}, $rules1->{'rules'});
 
 }
+
+my $description = "Get a ruleset from github (raw)";
+my $local_file = 'data/action5.krl';
+my ($fl,$krl_text) = getkrl($local_file);
+my $ast = parse_ruleset($krl_text);
+my $rulename = $ast->{"ruleset_name"};
+my $uri = "https://raw.github.com/kre/Kinetic-Rules-Engine/master/t/" . $local_file;
+my $rid_info = mk_rid_info($req_info,$rulename);
+$rid_info->{'uri'} = $uri;
+$req_info->{'rid'} = $rid_info;
+my $rules = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
+#$logger->debug("Rule: ", sub {Dumper($rules)});
+cmp_deeply($rules,$ast,$description);
+
+
+my $file_uri = "file://$local_file";
+$description = "Check local filesystem for ruleset";
+$rid_info->{'uri'} = $file_uri;
+$rules = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
+cmp_deeply($rules,$ast,$description);
+
+
+my $xdi_uri = 'xri://=!7F81.A40.9F16.59BB!50ac25bd69983c9526020000+cloudOS$*(+ruleset)$!1';
+$description = "Check XDI for ruleset";
+$rid_info->{'uri'} = $xdi_uri;
+$rid_info->{'username'} =  '=!7F81.A40.9F16.59BB!50ac25bd69983c9526020000';
+$rid_info->{'password'} =  'caroteel';
+$rules = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
+#$logger->debug("Rule: ", sub {Dumper($rules)});
+cmp_deeply($rules,$ast,$description);
+
 
 1;
 

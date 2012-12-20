@@ -40,6 +40,10 @@ qw(
     mk_rid_info
     get_rid
     get_version
+    get_uri
+    get_username
+    get_password
+    get_header
     parse_rid_list
     print_rids
     rid_info_string
@@ -74,6 +78,30 @@ sub get_version {
 sub get_versionnum {
   my($rid_info) = @_;
   return $rid_info->{'version'};
+}
+
+sub get_uri {
+  my ($rid_info) = @_;
+  return $rid_info->{'uri'}
+}
+
+sub get_username {
+  my ($rid_info) = @_;
+  return $rid_info->{'username'}
+}
+
+sub get_password {
+  my ($rid_info) = @_;
+  return $rid_info->{'password'}
+}
+
+sub get_header {
+  my ($rid_info,$header) = @_;
+  if (defined $header) {
+    return $rid_info->{'headers'}->{$header};
+  } else {
+    return $rid_info->{'headers'};
+  }
 }
 
 
