@@ -767,6 +767,33 @@ sub make_keystring {
     return md5_base64($keystring);
 }
 
+########################### Caching functions for KPDS/KEN based maps
+sub get_cache_for_map {
+	my ($ken,$collection,$var) = @_;
+	my $lookup_key = "_map_" . $ken;
+	my $mcache_prefix = Kynetx::Memcached::check_cache($lookup_key);
+	if (defined $mcache_prefix) {
+		$var->{"cachemap"} = $mcache_prefix;
+		return Kynetx::MongoDB::get_cache($collection,$var);
+	}
+	return undef;
+}
+
+sub set_cache_for_map {
+	my ($ken,$collection,$var,$value) = @_;
+	my $lookup_key = "_map_" . $ken;
+	my $mcache_prefix =  time();
+	Kynetx::Memcached::mset_cache($lookup_key,$mcache_prefix,$CACHETIME);
+	$var->{"cachemap"} = $mcache_prefix;
+	Kynetx::MongoDB::set_cache($collection,$var,$value);
+}
+
+sub clear_cache_for_map {
+	my ($ken) = @_;
+	my $lookup_key = "_map_" . $ken;
+	Kynetx::Memcached::flush_cache($lookup_key);
+}
+
 
 
 1;

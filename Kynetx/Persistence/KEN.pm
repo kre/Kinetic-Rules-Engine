@@ -119,6 +119,7 @@ sub ken_lookup_by_userid {
 	if (! defined $userid || $userid eq "") {
 		return undef;
 	}
+	$userid *=1;
 	my $key = {
 		'user_id' => $userid
 	};

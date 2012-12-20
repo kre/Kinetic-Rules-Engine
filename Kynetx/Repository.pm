@@ -346,6 +346,4 @@ sub make_ruleset_key {
 }
 
 
-
-
 1;

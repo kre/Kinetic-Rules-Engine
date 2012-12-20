@@ -133,10 +133,9 @@ sub handler {
     } elsif ( $method eq "flushdata" ) {
         $result = flush_data( $req_info, $method, $rid );
         $type = 'text/html';
-    } elsif ( $method eq "perf" ) {
-        $logger->debug("Performance testing $method, $rid");
-        $result = parse_performance( $req_info, $method, $rid );
-        $type = 'text/plain';
+    } elsif ( $method eq "register" ) {
+        $result = register_ruleset($r);
+        $type = 'text/html';
     }
 
     $logger->debug("__FLUSH__");
@@ -147,52 +146,6 @@ sub handler {
     return Apache2::Const::OK;
 }
 
-sub parse_performance {
-    my ( $req_info, $method, $rid ) = @_;
-    my ($t_repository,$t_newparser,$t_parseruleset,$t_oparse);
-    my ($s_parser,$s_oparser,$s_overall,$e_newparser);
-    my $logger = get_logger();
-    my $runs = 1;
-    my $start = new Benchmark;
-    my $rid_info = mk_rid_info($req_info, $rid);
-    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info,undef,1,1);
-    if ($ruleset) {
-        my $r_repos = new Benchmark;
-        my $repo_diff = timediff($r_repos,$start);
-        $t_repository = $repo_diff->[0];
-        my $p= Kynetx::JParser::get_antlr_parser();
-        my $r_parser = new Benchmark;
-        my $rp_diff = timediff($r_parser,$r_repos);
-        $t_newparser = $rp_diff->[0];
-        my $p_str = $p->ruleset($ruleset);
-    $logger->debug("Ruleset: **", $p_str,"**");
-        my $parsed = new Benchmark;
-        my $pd_diff = timediff($parsed,$r_parser);
-        $t_parseruleset = $pd_diff->[0];
-        my $status = is_parsed($p_str);
-        if ($status eq 'OK') {
-            $s_parser = $status;
-            $s_overall = $status;
-            $e_newparser = '';
-        } else {
-            $s_parser = 'FAIL';
-            $e_newparser = $status;
-        }
-        return "$t_repository,$t_newparser,$t_parseruleset,$s_parser,$e_newparser";
-    } else {
-        return parse_api($req_info, $method,'ruleset');
-    }
-}
-
-sub old_parser {
-    my ($ruleset) = @_;
-    my $result = Kynetx::OParser::parse_ruleset($ruleset);
-    if (defined ($result->{'error'})) {
-        return "FAIL";
-    } else {
-        return "OK";
-    }
-}
 
 sub is_parsed {
     my ($p_str) = @_;
@@ -450,6 +403,10 @@ sub flush_data {
     return $response;
 
 
+}
+
+sub register_ruleset {
+  
 }
 
 1;
