@@ -180,7 +180,7 @@ sub parse_ruleset {
 
     $logger->trace("[parser::parse_ruleset] after comments: ", sub {Dumper($ruleset)});
     my $json = $parser->ruleset($ruleset);
-    #$logger->debug("Result: ",$json);
+    #$logger->info("Result: ",$json);
     my $result;
     eval {
         $result = Kynetx::Json::jsonToAst($json);

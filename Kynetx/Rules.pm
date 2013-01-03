@@ -847,10 +847,12 @@ sub process_one_global_block {
     }
     elsif ( defined $g->{'type'} && $g->{'type'} eq 'dataset' ) {
       my $new_ds = Kynetx::Datasets->new($g);
-      if ( !$new_ds->is_global() ) {
+# by commenting this out, we put the JS for the dataset directly in the generate JS
+#      if ( !$new_ds->is_global() ) {
 	$new_ds->load($req_info);
 	$new_ds->unmarshal();
 	$this_js = $new_ds->make_javascript();
+#      $logger->debug("Javascript for dataset declaration ", $new_ds->name, " -> ", $this_js);
 	$var     = $new_ds->name;
 	if ( defined $new_ds->json ) {
 	  $val = $new_ds->json;
@@ -862,7 +864,7 @@ sub process_one_global_block {
 	#($this_js, $var, $val) = mk_dataset_js($g, $req_info, $rule_env);
 	# yes, this is cheating and breaking the abstraction, but it's fast
 	$rule_env->{$var} = $val;
-      }
+ #     }
     }
     else {
       $logger->debug( "Fell through: Expr: ", $g->{'type'} || "" );

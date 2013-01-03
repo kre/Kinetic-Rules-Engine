@@ -30,7 +30,7 @@ use Log::Log4perl qw(get_logger :levels);
 
 use Data::Dumper;
 use JSON::XS;
-use Storable qw/dclone freeze/;
+use Storable qw/freeze/;
 use Digest::MD5 qw/md5_hex/;
 use Clone qw/clone/;
 use Data::Diver qw(Dive);
@@ -196,7 +196,6 @@ sub eval_decl {
 # evaluation of expressions
 # returns denoted value
 #
-#  dclone used to ensure we return a new copy, not a pointer to the env
 sub eval_expr {
     my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
     my $logger = get_logger();
@@ -1331,7 +1330,7 @@ sub var_free_in_expr {
     my ($var, $expr) = @_;
 
     my $logger = get_logger();
-    $logger->debug("Var free?: ", sub { Dumper($var) }, sub { Dumper($expr) });
+#    $logger->debug("Var free?: ", sub { Dumper($var) }, sub { Dumper($expr) });
 
     if ($expr->{'type'} eq 'str' ) {
 	return 0;
