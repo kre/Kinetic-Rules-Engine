@@ -1016,7 +1016,7 @@ sub gen_event_eval {
   my $captures = [];
 
   my $delimeter = 'XQX';
-  my $req_info = $event->get_req_info();
+#  my $req_info = $event->get_req_info();
 
 
 #  $logger->debug("General filter test for event");
@@ -1034,14 +1034,15 @@ sub gen_event_eval {
     my $filter_type= $filter->{'type'};
 #    $logger->debug(sub { Dumper $filter });
     # Allow different defaults for diff event types
-    $logger->trace("Req info: ", sub{Dumper($req_info)});
+#    $logger->trace("Req info: ", sub{Dumper($req_info)});
     if ($op eq 'pageview') {
       if ($filter_type eq 'default') {
 	$filter_type = 'url';  			
       } 
       $target = $event->{$filter_type};  		
     } else {
-      $target = $req_info->{$filter_type};
+      $target = $event->{$filter_type};  		
+#      $target = $req_info->{$filter_type};
     }
     $pattern = $filter->{'pattern'};
 

@@ -107,7 +107,6 @@ $test_count++;
 
 my $params = {
    'msg' => 'Hello World!',
-   'caller' => 'http://www.windley.com/'
  };
 
 

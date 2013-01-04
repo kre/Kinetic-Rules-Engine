@@ -43,6 +43,9 @@ use Kynetx::RuleManager qw/:all/;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::Json;
 
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+
 
 use Kynetx::Configure;
 
@@ -57,7 +60,7 @@ my $numtests = 81;
 my $nonskippable = 15;
 plan tests => $numtests;
 
-my $my_req_info;
+my $my_req_info = {};
 
 my $r = new Kynetx::FakeReq();
 
@@ -483,17 +486,23 @@ my $mech = Test::WWW::Mechanize->new();
 #goto ENDY;
 
 # check the API calls
-$my_req_info->{'krl'} = $test_ruleset;
+
+
+
+Kynetx::Request::add_event_attr($my_req_info,'krl',$test_ruleset);
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "ruleset");
+
 $ast = Kynetx::Json::jsonToAst_w($json);
+
 $east = Kynetx::Json::jsonToAst_w($test_json_ruleset);
 
 cmp_deeply($ast,
 	       $east,
 	       "Parsing a ruleset");
 
-$my_req_info->{'krl'} = $test_ruleset_bad;
+
+Kynetx::Request::add_event_attr($my_req_info,'krl', $test_ruleset_bad);
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "ruleset");
 diag $json;
 
@@ -504,7 +513,7 @@ contains_string($json,
 
 
 # test rule api
-$my_req_info->{'krl'} = $test_rule;
+Kynetx::Request::add_event_attr($my_req_info,'krl', $test_rule);
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "rule");
 $ast = Kynetx::Json::jsonToAst_w($json);
@@ -515,7 +524,7 @@ cmp_deeply($ast,
 	"Parsing a rule");
 
 
-$my_req_info->{'krl'} = $test_rule_bad;
+Kynetx::Request::add_event_attr($my_req_info,'krl', $test_rule_bad);
 #diag $my_req_info->{'krl'};
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "rule");
@@ -526,7 +535,7 @@ contains_string($json,
 
 
 
-$my_req_info->{'krl'} = $test_global;
+Kynetx::Request::add_event_attr($my_req_info,'krl', $test_global);
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "global");
 
@@ -534,7 +543,7 @@ is_string_nows($json,
 	       $test_json_global,
 	       "Parsing global decls");
 
-$my_req_info->{'krl'} = $test_global_bad;
+Kynetx::Request::add_event_attr($my_req_info,'krl', $test_global_bad);
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "global");
 
@@ -542,7 +551,7 @@ contains_string($json,
 	       'Invalid value [datastink] found',
 	       "Parsing global decls with syntax error");
 
-$my_req_info->{'krl'} = $test_dispatch;
+Kynetx::Request::add_event_attr($my_req_info,'krl', $test_dispatch);
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "dispatch");
 
@@ -551,7 +560,7 @@ is_string_nows($json,
 	       "Parsing dispatch decls");
 
 
-$my_req_info->{'krl'} = $test_dispatch_bad;
+Kynetx::Request::add_event_attr($my_req_info,'krl', $test_dispatch_bad);
 #diag $my_req_info->{'krl'};
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "dispatch");
@@ -562,7 +571,7 @@ contains_string($json,
 	       "Parsing dispatch decls with syntax error");
 
 
-$my_req_info->{'krl'} = $test_meta;
+Kynetx::Request::add_event_attr($my_req_info,'krl', $test_meta);
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "meta");
 #diag $json;
@@ -573,7 +582,7 @@ is_string_nows($json,
 
 
 
-$my_req_info->{'krl'} = $test_meta_bad;
+Kynetx::Request::add_event_attr($my_req_info,'krl', $test_meta_bad);
 #diag $my_req_info->{'krl'};
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "meta");
@@ -583,7 +592,7 @@ contains_string($json,
 	       'error',
 	       "Parsing meta decls with syntax error");
 
-$my_req_info->{'krl'} = $meta_key_bad;
+Kynetx::Request::add_event_attr($my_req_info,'krl', $meta_key_bad);
 #diag $my_req_info->{'krl'};
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "meta");
@@ -596,7 +605,7 @@ contains_string($json,
 
 # check the unparse API calls
 my $krl;
-$my_req_info->{'ast'} = $test_json_ruleset;
+Kynetx::Request::add_event_attr($my_req_info,'ast', $test_json_ruleset);
 
 $krl = Kynetx::RuleManager::unparse_api($my_req_info, "unparse", "ruleset");
 
@@ -605,7 +614,7 @@ is_string_nows($krl,
 	       "Unparsing a ruleset");
 
 
-$my_req_info->{'ast'} = $test_json_rule;
+Kynetx::Request::add_event_attr($my_req_info,'ast', $test_json_rule);
 
 $krl = Kynetx::RuleManager::unparse_api($my_req_info, "unparse", "rule");
 
@@ -613,7 +622,7 @@ is_string_nows($krl,
 	       $test_rule_body,
 	       "Unparsing a rule");
 
-$my_req_info->{'ast'} = $test_json_global;
+Kynetx::Request::add_event_attr($my_req_info,'ast', $test_json_global);
 
 $krl = Kynetx::RuleManager::unparse_api($my_req_info, "unparse", "global");
 
@@ -622,7 +631,7 @@ is_string_nows($krl,
 	       "Unparsing a global");
 
 
-$my_req_info->{'ast'} = $test_json_dispatch;
+Kynetx::Request::add_event_attr($my_req_info,'ast', $test_json_dispatch);
 
 $krl = Kynetx::RuleManager::unparse_api($my_req_info, "unparse", "dispatch");
 
@@ -631,7 +640,7 @@ is_string_nows($krl,
 	       "Unparsing a dispatch");
 
 
-$my_req_info->{'ast'} = $test_json_meta;
+Kynetx::Request::add_event_attr($my_req_info,'ast', $test_json_meta);
 
 $krl = Kynetx::RuleManager::unparse_api($my_req_info, "unparse", "meta");
 
@@ -656,7 +665,7 @@ SKIP: {
 
     # test version function
     my $url_version_1 = "$dn/version/$ruleset";
-    diag "Testing console with $url_version_1";
+#    diag "Testing console with $url_version_1";
 
     $mech->get_ok($url_version_1);
     is($mech->content_type(), 'text/html');
@@ -675,7 +684,7 @@ SKIP: {
 
     # validate
     my $url_version_3 = "$dn/validate/$ruleset";
-    #diag "Testing validate with $url_version_3";
+#    diag "Testing validate with $url_version_3";
 
     $mech->get_ok($url_version_3);
     $mech->field('rule',$test_ruleset);

@@ -140,6 +140,10 @@ my %predicates = (
 	my $domain = get_referer_data($req_info,'domain');
 	$domain =~ s#^www\.(.*)$#$1# if($domain =~ m#^www\.#);
 
+	my $logger = get_logger();
+	$logger->debug("Refered domain: ", $domain);
+
+
 	return $search_engines{$domain};
     },
 
@@ -163,12 +167,12 @@ my %predicates = (
 
 	my $referer_domain = get_referer_data($req_info,'domain') ||'';
 
-	my $parsed_url = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});
+	my $parsed_url = URI->new($req_info->{'caller'});
 
 	my $logger = get_logger();
-	$logger->debug("Refered domain: $referer_domain, hostname: ", $parsed_url->hostname);
+	$logger->debug("Refered domain: $referer_domain, hostname: ", $parsed_url->host);
 
-	return !($referer_domain eq $parsed_url->hostname);
+	return !($referer_domain eq $parsed_url->host);
     },
 
     'local_referer' => sub {
@@ -177,12 +181,12 @@ my %predicates = (
 	my $referer_domain = get_referer_data($req_info,'domain');
 
 	if (defined $referer_domain) {
-	    my $parsed_url = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});
+	    my $parsed_url = URI->new($req_info->{'caller'});
 
 	    my $logger = get_logger();
-	    $logger->debug("Refered domain: $referer_domain, hostname: ", $parsed_url->hostname);
+	    $logger->debug("Refered domain: $referer_domain, hostname: ", $parsed_url->host);
 
-	    return ($referer_domain eq $parsed_url->hostname);
+	    return ($referer_domain eq $parsed_url->host);
 
 	} else {
 	    # referer is undefined for local referer
@@ -221,6 +225,8 @@ sub get_referer_data {
     
     if(not defined $req_info->{'referer_data'}->{$field}) {
 
+      my $logger = get_logger();
+
 	my $url = $req_info->{'referer'};
 	if(! defined ($url)) {
 	    # if referer isn't set, then this is a local referer
@@ -228,11 +234,11 @@ sub get_referer_data {
 	    return undef;
 	}
 
-	my $parsed_url = APR::URI->parse($req_info->{'pool'}, $url);
+	my $parsed_url = URI->new($url);
 
 #	$url =~ m|(\w+)://([^/:]+)(:\d+)?/([^?]*)(\?.*)?|; 
 	$req_info->{'referer_data'}->{'protocol'} = $parsed_url->scheme;
-	$req_info->{'referer_data'}->{'domain'} = $parsed_url->hostname;
+	$req_info->{'referer_data'}->{'domain'} = $parsed_url->host;
 	$req_info->{'referer_data'}->{'path'} = $parsed_url->path;
 
 	if ($parsed_url->port) { 
@@ -243,7 +249,6 @@ sub get_referer_data {
 
 	$req_info->{'referer_data'}->{'query'} = $parsed_url->query;
 
-	my $logger = get_logger();
 
 	if($logger->is_debug()) {
 	    foreach my $k (keys %{ $req_info->{'referer_data'} }) {

@@ -127,14 +127,15 @@ sub event_rule_env {
 	my ($event) = @_;
 	my $logger = get_logger();
 	my $kvHash;
-	my $req_info = $event->get_req_info();
+#	my $req_info = $event->get_req_info();
 	my $env = empty_rule_env();
 	
 	# Set the tag for explicit events
 	my $type = $event->get_type();
 	my ($domain,$eventid) = split(/:/,$type);
 	$kvHash->{$eventid} = 1;
-	$kvHash->{'url'} = $req_info->{'caller'};
+#	$kvHash->{'url'} = $req_info->{'caller'};
+	$kvHash->{'url'} = $event->{'url'};
 	return add_to_env($kvHash,$env);
 	#return $env;
 }

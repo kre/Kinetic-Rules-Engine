@@ -25,6 +25,7 @@ use strict;
 
 use Log::Log4perl qw(get_logger :levels);
 use JSON::XS;
+use URI;
 
 use Kynetx::Util qw(:all);
 use Kynetx::JavaScript qw(:all);
@@ -1007,24 +1008,28 @@ sub choose_action {
 
 		$logger->debug( "URL: ", $url );
 
-		my $pool = $req_info->{'pool'} ||= APR::Pool->new;
+		# my $pool = $req_info->{'pool'} ||= APR::Pool->new;
 
-		my $parsed_url = APR::URI->parse( $req_info->{'pool'}, $url );
-		my $parsed_caller =
-		  APR::URI->parse( $req_info->{'pool'}, $req_info->{'caller'} );
+		# my $parsed_url = APR::URI->parse( $req_info->{'pool'}, $url );
+		# my $parsed_caller =
+		#   APR::URI->parse( $req_info->{'pool'}, $req_info->{'caller'} );
+
+		my $parsed_url = URI->new($url);
+		my $parsed_caller = URI->new($req_info->{'caller'});
+
 
 		# URL not relative and not equal to caller
 		if (
-			$parsed_url->hostname
-			&& (   $parsed_url->hostname ne $parsed_caller->hostname
+			$parsed_url =~ m#(http|https)://# 
+			&& (   $parsed_url->host ne $parsed_caller->host
 				|| $parsed_url->port   ne $parsed_caller->port
 				|| $parsed_url->scheme ne $parsed_caller->scheme )
 		  )
 		{
 
 			$logger->debug(
-				"[action] URL domain is ", $parsed_url->hostname,
-				" & caller domain is ",    $parsed_caller->hostname
+				"[action] URL domain is ", $parsed_url->host(),
+				" & caller domain is ",    $parsed_caller->host()
 			);
 
 			$action_suffix = "_html";
@@ -1179,8 +1184,8 @@ sub handle_popup {
 sub get_precondition_test {
 	my $rule = shift;
 
-	$rule->{'pagetype'}->{'event_expr'}->{'pattern'}
-	  || $rule->{'pagetype'}->{'pattern'};
+	$rule->{'pagetype'}->{'event_expr'}->{'pattern'} || 
+	$rule->{'pagetype'}->{'pattern'};
 }
 
 sub get_precondition_vars {

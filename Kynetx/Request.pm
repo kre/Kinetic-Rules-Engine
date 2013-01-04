@@ -114,7 +114,7 @@ sub build_request_env {
 	hostname => $r->hostname(),
 	ip => $r->connection->remote_ip() || '0.0.0.0',
 	ua => $r->headers_in->{'User-Agent'} || '',
-	pool => $r->pool,
+#	pool => $r->pool,
 	uri => $r->uri(),
 
 	# set the default major and minor version for this endpoint
@@ -129,16 +129,20 @@ sub build_request_env {
 	directives => [],
 	};
 
-
-    my @param_names = $req->param;
-    foreach my $n (@param_names) {
+    my @req_params = $req->param;
+    foreach my $n (@req_params) {
       my $enc = Kynetx::Util::str_in($req->param($n));
-      my $kenc = Kynetx::Util::str_in($n);
       $logger->debug("Param $n -> ", $req->param($n), " ", $enc);
-      $request_info->{$n} = $enc;
+      my $not_attr = {'_rids' => 1,
+		      'referer' => 1
+		     };
+      if ( $not_attr->{$n}) {
+	$request_info->{$n} = $enc
+      } else {
+	add_event_attr($request_info, $n, $enc);
+      }
     }
 
-    $request_info->{'param_names'} = \@param_names;
 
     # handle explicit $rids
     if (defined $rids)  {
@@ -165,6 +169,29 @@ sub build_request_env {
     $logger->debug("Returning request information");
 
     return $request_info;
+}
+
+# mutates $req_info with a new event_attribute
+sub add_event_attr {
+ my($req_info, $attr_name, $attr_val) = @_;
+ $req_info->{'event_attrs'}->{$attr_name} = $attr_val;
+ push(@{$req_info->{'event_attrs'}->{'attr_names'}}, $attr_name);
+}
+
+
+sub get_attr_names {
+  my($req_info) = @_;
+  return $req_info->{'event_attrs'}->{'attr_names'};
+}
+
+sub get_attrs {
+  my($req_info) = @_;
+  return $req_info->{'event_attrs'};
+}
+
+sub get_attr {
+  my($req_info, $name) = @_;
+  return $req_info->{'event_attrs'}->{$name};
 }
 
 

@@ -52,8 +52,8 @@ sub mk_rid_info {
 
   my $version = 
        $options->{'version'} ||
-	 $req_info->{"$rid:kynetx_app_version"} || 
-	   $req_info->{"$rid:kinetic_app_version"} || 
+	 Kynetx::Request::get_attr($req_info,"$rid:kynetx_app_version") || 
+	   Kynetx::Request::get_attr($req_info,"$rid:kinetic_app_version") || 
 	     'prod';
 
 

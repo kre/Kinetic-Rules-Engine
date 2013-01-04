@@ -30,3 +30,5 @@ unshift ( @files, 'dev/hostname.t');
 #print Dumper @files;
 
 runtests(@files);
+
+print "Done with all tests\n";

@@ -84,16 +84,16 @@ url
 
     } elsif($function eq 'url') {
 
-	my $parsed_url = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});
+	my $parsed_url = URI->new($req_info->{'caller'});
 	my $part = $args->[0];
 
 
 	if(not defined $req_info->{'caller_url'}->{$part}) {
 	    $req_info->{'caller_url'}->{'protocol'} = $parsed_url->scheme;
-	    $req_info->{'caller_url'}->{'hostname'} = $parsed_url->hostname;
+	    $req_info->{'caller_url'}->{'hostname'} = $parsed_url->host;
 	    $req_info->{'caller_url'}->{'path'} = $parsed_url->path;
 
-	    my $hostname = $parsed_url->hostname || "";
+	    my $hostname = $parsed_url->host || "";
 	    my @components = split(/\./, $hostname);
 	    my $c2 = $components[-2];
 	    my $c1 = $components[-1];
@@ -156,45 +156,49 @@ url
 
     } elsif($function eq 'param' || $function eq 'attr') {
 
+      $val = Kynetx::Modules::Event::get_eventinfo($req_info, $function, $args);
+
       # rulespaced env parameters
-      if (defined $req_info->{$args->[0]}) {
-	# event params don't have rid namespacing
-	$val = $req_info->{$args->[0]};
-      } elsif($rid && defined $req_info->{$rid.':'.$args->[0]}) {
-	$val = $req_info->{$rid.':'.$args->[0]};
-      } 
+      # if (defined $req_info->{$args->[0]}) {
+      # 	# event params don't have rid namespacing
+      # 	$val = $req_info->{$args->[0]};
+      # } elsif($rid && defined $req_info->{$rid.':'.$args->[0]}) {
+      # 	$val = $req_info->{$rid.':'.$args->[0]};
+      # } 
 
       $logger->debug("page:attr(", $args->[0], ") -> ", $val);
 
     } elsif($function eq 'params' || $function eq 'attrs') {
 
-      my %skip = (
-		  rid => 1,
-		  rule_version => 1,
-		  txn_id  => 1,
-		  kynetx_app_version => 1,
-		  element => 1,
+      $val = Kynetx::Modules::Event::get_eventinfo($req_info, $function, $args);
 
-		  kvars => 1
-		 );
+#       my %skip = (
+# 		  rid => 1,
+# 		  rule_version => 1,
+# 		  txn_id  => 1,
+# 		  kynetx_app_version => 1,
+# 		  element => 1,
 
-#      $logger->debug("Req info: ", sub {Dumper($req_info)});
+# 		  kvars => 1
+# 		 );
 
-      my $rid = get_rid($req_info->{'rid'});
+# #      $logger->debug("Req info: ", sub {Dumper($req_info)});
 
-      my $ps;
-      foreach my $pn (@{$req_info->{'param_names'}}) {
-	# remove the prepended RID if it's there
-	my $npn = $pn;
-        my $re = '^' . $rid . ':(.+)$';
-	if ($pn =~ /$re/) {
-	  $npn = $1;
-	}
-#	$logger->debug("Using $npn as param name");
-	$ps->{$npn} = $req_info->{$pn} unless $skip{$pn} || $skip{"$rid:$npn"};
-      }
+#       my $rid = get_rid($req_info->{'rid'});
 
-      return $ps;
+#       my $ps;
+#       foreach my $pn (@{$req_info->{'param_names'}}) {
+# 	# remove the prepended RID if it's there
+# 	my $npn = $pn;
+#         my $re = '^' . $rid . ':(.+)$';
+# 	if ($pn =~ /$re/) {
+# 	  $npn = $1;
+# 	}
+# #	$logger->debug("Using $npn as param name");
+# 	$ps->{$npn} = $req_info->{$pn} unless $skip{$pn} || $skip{"$rid:$npn"};
+#       }
+
+      return $val;
 
     } else {
       $logger->error("Unknown function $function");

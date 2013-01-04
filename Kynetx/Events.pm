@@ -457,7 +457,7 @@ sub mk_event {
 		$req_info->{'domain'}, "/", $req_info->{'eventtype'} );
 	$logger->trace( "Request info is: ", sub { Dumper($req_info) } );
 	my $ev = Kynetx::Events::Primitives->new();
-	$ev->set_req_info($req_info);
+#	$ev->set_req_info($req_info);
 	if ( $req_info->{'eventtype'} eq 'pageview' ) {
 		$ev->pageview( $req_info->{'caller'} );
 	}
@@ -473,13 +473,18 @@ sub mk_event {
 	else {
 		$ev->generic( $req_info->{'domain'}, $req_info->{'eventtype'} );
 	}
-	$logger->trace( "Event: ", sub { Dumper($ev) } );
 
-	foreach my $p ( @{ $req_info->{'param_names'} } ) {
-		if ( defined $req_info->{$p} ) {
-			$ev->{$p} = $req_info->{$p};
-		}
+	my $attr_names = Kynetx::Request::get_attr_names($req_info);
+#	$logger->debug("Attr names: ", sub {Dumper $attr_names});
+        # this used to be stored in a req_info object in the event. Now we store it direct
+	foreach my $p ( @{ $attr_names } ) {
+	  my $val = Kynetx::Request::get_attr($req_info,$p);
+	  if ( defined $val ) {
+	    $ev->{$p} = $val;
+	  }
 	}
+
+#	$logger->debug( "Event: ", sub { Dumper($ev) } );
 	return $ev;
 }
 

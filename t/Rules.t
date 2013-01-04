@@ -32,7 +32,7 @@ use Cache::Memcached;
 use LWP::Simple;
 use LWP::UserAgent;
 use JSON::XS;
-use APR::Pool ();
+#use APR::Pool ();
 use AnyEvent ();
 use AnyEvent::HTTP ();
 
@@ -153,14 +153,14 @@ sub add_testcase {
 
 
     push(@test_cases, {'expr' => $pt,
-		       'val' => $expected,
-		       'session' => $session,
-		       'src' =>  $str,
-		       'type' => $type,
-		       'final_req_info' => $final_req_info,
-		       'diag' => $diag
-		      }
-	 );
+    		       'val' => $expected,
+    		       'session' => $session,
+    		       'src' =>  $str,
+    		       'type' => $type,
+    		       'final_req_info' => $final_req_info,
+    		       'diag' => $diag
+    		      }
+    	 );
 }
 
 
@@ -183,6 +183,9 @@ sub add_json_testcase {
 }
 
 #goto ENDY;
+
+
+
 #
 # note if the rules don't have unique names, you can get rule environment cross
 # contamination
@@ -2041,6 +2044,8 @@ add_testcase(
     );
 
 
+
+
 $krl_src = <<_KRL_;
 ruleset two_rules_both_fire {
     rule t8 is active {
@@ -2106,6 +2111,9 @@ add_testcase(
     0
     );
 
+
+
+
 $krl_src = <<_KRL_;
 ruleset two_rules_both_fire {
     rule t10 is active {
@@ -2149,13 +2157,20 @@ function callBacks () {
 _JS_
 
 
-add_testcase(
-    $krl_src,
-    $js,
-    $dummy_final_req_info,
-    0
-    );
+ add_testcase(
+     $krl_src,
+     $js,
+     $dummy_final_req_info,
+     0
+     );
     
+
+ENDY:
+
+
+
+
+
 
 # the following tests don't know about installed apps and this can't handle 
 $my_req_info->{'_api'} = 'blue';
@@ -2293,6 +2308,7 @@ add_testcase(
     );
 
 
+####
 
 # now with expressions
 $krl_src = <<_KRL_;
@@ -2420,6 +2436,7 @@ add_testcase(
     0
     );
 
+###
 
 # now with explicit for and expr
 $krl_src = <<_KRL_;
@@ -2606,6 +2623,7 @@ add_testcase(
     );
 
 
+
 # not with explicit for expr
 $krl_src = <<_KRL_;
 ruleset two_rules_second_not_raised_with_for_expr {
@@ -2727,6 +2745,8 @@ add_testcase(
     $dummy_final_req_info,
     0
     );
+
+
 
 
 ##
@@ -2935,6 +2955,75 @@ add_testcase(
 
 
 
+$krl_src = <<_KRL_;
+ruleset two_rules_both_fire {
+    rule t10 is active {
+      select using ".*" setting ()
+      pre {
+        x = 3
+      }
+      noop();
+      fired {
+        last if(x==4)
+      }
+    }
+    rule t11 is active {
+      select using ".*" setting ()
+      pre {
+      }
+      noop();
+    }
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 't10'},
+   {"rid" => 'two_rules_both_fire'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+$config2 = mk_config_string(
+  [
+   {"rule_name" => 't11'},
+   {"rid" => 'two_rules_both_fire'},
+   {"txn_id" => 'txn_id'},
+  ]
+);
+
+
+
+$js = <<_JS_;
+(function(){
+(function(){
+var x = 3;
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config));
+}());
+(function(){
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config2));
+}());
+}());
+_JS_
+
+
+ add_testcase(
+     $krl_src,
+     $js,
+     $dummy_final_req_info,
+     0
+     );
+    
+
+
+
+
 # now test each test case twice
 foreach my $case (@test_cases) {
 
@@ -2965,13 +3054,13 @@ foreach my $case (@test_cases) {
     
     my $ev = Kynetx::Events::mk_event($req_info);
 
-    #diag("Processing events for $req_info->{'rid'} with event ", sub {Dumper $ev});
+#    diag("Processing events for $req_info->{'rid'} with event ", Dumper $ev);
 
     my $schedule = Kynetx::Scheduler->new();
 
     #diag("Processing events for $req_info->{'rid'} ($ruleset_rid)");
 
-    my $rid_info = Kynetx::Rids::mk_rid_info($req_info, $ruleset_rid);
+    my $rid_info = Kynetx::Rids::mk_rid_info($req_info, $ruleset_rid, {'version' => 'dev'});
 
     Kynetx::Events::process_event_for_rid($ev,
 					  $req_info,
@@ -3052,7 +3141,9 @@ foreach my $case (@test_cases) {
 
 }
 
-#diag "Starting tests of global decls with data feeds";
+
+
+diag "Starting tests of global decls with data feeds";
 
 #
 # global decls with data sources
@@ -3070,6 +3161,8 @@ sub test_datafeeds {
  SKIP: {
 
     skip "No server available", 1 if ($no_server_available);
+
+
     my $krl = Kynetx::Parser::parse_ruleset($src);
 
     my $req_info = local_gen_req_info($krl->{'ruleset_name'});
@@ -3080,6 +3173,7 @@ sub test_datafeeds {
 				 Kynetx::Rules::optimize_ruleset($krl)
 				);
 
+#    diag "############## Testing ", Dumper $req_info;
 
     my $schedule = Kynetx::Rules::mk_schedule($req_info,
 					      $req_info->{'rid'},
@@ -3088,7 +3182,8 @@ sub test_datafeeds {
     my $val = Kynetx::Rules::process_schedule($r,
 					      $schedule,
 					      $session,
-					      time
+					      time,
+					      $req_info
 					     );
 
     diag $val if $diag;
@@ -3108,88 +3203,88 @@ sub test_datafeeds {
   }
 }
 
-$krl_src = <<_KRL_;
-ruleset cs_test {
-    global {
-	dataset global_decl_0 <- "aaa.json";
-    }
-    rule foo is active {
-     select using ".*"
-     noop();
-    }
-}
-_KRL_
+# $krl_src = <<_KRL_;
+# ruleset cs_test {
+#     global {
+# 	dataset global_decl_0 <- "aaa.json";
+#     }
+#     rule foo is active {
+#      select using ".*"
+#      noop();
+#     }
+# }
+# _KRL_
 
-$config = mk_config_string(
-  [
-   {"rule_name" => 'foo'},
-   {"rid" => 'cs_test'},
-   {"txn_id" => 'txn_id'},
-  ]
-);
+# $config = mk_config_string(
+#   [
+#    {"rule_name" => 'foo'},
+#    {"rid" => 'cs_test'},
+#    {"txn_id" => 'txn_id'},
+#   ]
+# );
 
-$js = <<_JS_;
-(function(){
-KOBJ['data']['global_decl_0'] = {"www.barnesandnoble.com":[
-	       {"link":"http://aaa.com/barnesandnoble",
-		"text":"AAA members sav emoney!",
-		"type":"AAA"}]
-          };
-(function(){
- function callBacks(){};
- (function(uniq,cb,config){cb();}
-  ('%uniq%',callBacks,$config));
- }());
-}());
-_JS_
+# $js = <<_JS_;
+# (function(){
+# KOBJ['data']['global_decl_0'] = {"www.barnesandnoble.com":[
+# 	       {"link":"http://aaa.com/barnesandnoble",
+# 		"text":"AAA members sav emoney!",
+# 		"type":"AAA"}]
+#           };
+# (function(){
+#  function callBacks(){};
+#  (function(uniq,cb,config){cb();}
+#   ('%uniq%',callBacks,$config));
+#  }());
+# }());
+# _JS_
 
-test_datafeeds(
-    0, # this test can run without a server
-    $krl_src,
-    $js,
-    $dummy_final_req_info,
-    0);
-
-
-$krl_src = <<_KRL_;
-ruleset cs_test {
-    global {
-	dataset global_decl_1 <- "test_data";
-    }
-    rule foo is active {
-     select using ".*"
-     noop();
-    }
-}
-_KRL_
-
-$config = mk_config_string(
-  [
-   {"rule_name" => 'foo'},
-   {"rid" => 'cs_test'},
-   {"txn_id" => 'txn_id'},
-  ]
-);
+# test_datafeeds(
+#     0, # this test can run without a server
+#     $krl_src,
+#     $js,
+#     $dummy_final_req_info,
+#     0);
 
 
-$js = <<_JS_;
-(function(){
-KOBJ['data']['global_decl_1'] = 'here is some test data!\\n';
-(function(){
- function callBacks(){};
- (function(uniq,cb,config){cb();}
-  ('%uniq%',callBacks,$config));
- }());
-}());
-_JS_
+# $krl_src = <<_KRL_;
+# ruleset cs_test {
+#     global {
+# 	dataset global_decl_1 <- "test_data";
+#     }
+#     rule foo is active {
+#      select using ".*"
+#      noop();
+#     }
+# }
+# _KRL_
 
-test_datafeeds(
-    $no_server_available,
-    $krl_src,
-    $js,
-    $dummy_final_req_info,
-    0
-    );
+# $config = mk_config_string(
+#   [
+#    {"rule_name" => 'foo'},
+#    {"rid" => 'cs_test'},
+#    {"txn_id" => 'txn_id'},
+#   ]
+# );
+
+
+# $js = <<_JS_;
+# (function(){
+# KOBJ['data']['global_decl_1'] = 'here is some test data!\\n';
+# (function(){
+#  function callBacks(){};
+#  (function(uniq,cb,config){cb();}
+#   ('%uniq%',callBacks,$config));
+#  }());
+# }());
+# _JS_
+
+# test_datafeeds(
+#     $no_server_available,
+#     $krl_src,
+#     $js,
+#     $dummy_final_req_info,
+#     0
+#     );
 
 
 $krl_src = <<_KRL_;
@@ -3385,6 +3480,8 @@ session_delete($rid,$session,'archive_pages_now');
 session_delete($rid,$session,'archive_pages_now2');
 session_delete($rid,$session,'my_flag');
 session_delete($rid,$session,'my_trail');
+
+
 
 
 #
@@ -3949,6 +4046,7 @@ This is another number #{z}  ',
 ], "Extended quotes", 0);
 
 
+
 diag "#######################################################################";
 diag "# MODULES";
 diag "#######################################################################";
@@ -4267,7 +4365,6 @@ $test_count++;
 is(poke_mod_env("a16x78", "c", $mod_rule_env), "Hello", "key gets passed to config" );
 $test_count++;
 
-ENDY:
 #diag "############ use a16x78 alias foo with c configured #################";
 #diag "############ use a16x78 alias bar with c configured #################";
 # test module configuration
@@ -4616,12 +4713,16 @@ $test_count++;
 
 #diag "Test cases: " . int(@test_cases) . " and others: " . $test_count;
 
+#diag Dumper $my_req_info;
+
 
 done_testing($test_count);
 
 session_cleanup($session);
 
 diag("Safe to ignore warnings about unintialized values & unrecognized escapes");
+
+
 
 sub mk_reg_exp {
   my $val = shift;

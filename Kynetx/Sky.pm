@@ -247,9 +247,11 @@ sub handler {
 
 	my $hostname;
 	if ( $domain eq 'web' ) {
-		my $parsed_url =
-		  APR::URI->parse( $req_info->{'pool'}, $req_info->{'url'} );
-		$hostname = $parsed_url->hostname;
+		# my $parsed_url =
+		#   APR::URI->parse( $req_info->{'pool'}, $req_info->{'url'} );
+		# $hostname = $parsed_url->hostname;
+	  my $parsed_url= URI->new($req_info->{'url'} );
+	  $hostname = $parsed_url->host();
 	}
 
 	foreach my $rid_info ( @{$rid_list} ) {

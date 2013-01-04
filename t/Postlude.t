@@ -704,8 +704,8 @@ $res = eval_post_expr($krl,
 		      $rule_env,
 		      1);
 
-is($my_req_info->{'b'}, 2, "attributes correctly stored");
-is($my_req_info->{'c'}, 3, "attributes correctly stored");
+is(Kynetx::Request::get_attr($my_req_info,'b'), 2, "attributes correctly stored");
+is(Kynetx::Request::get_attr($my_req_info,'c'), 3, "attributes correctly stored");
 $test_count += 2;
 
 
@@ -732,8 +732,8 @@ $res = eval_post_expr($krl,
 		      $rule_env,
 		      1);
 
-is($my_req_info->{'x'}, 5, "attributes correctly stored (with)");
-is($my_req_info->{'y'}, 6, "attributes correctly stored (with)");
+is(Kynetx::Request::get_attr($my_req_info,'x'), 5, "attributes correctly stored (with)");
+is(Kynetx::Request::get_attr($my_req_info,'y'), 6, "attributes correctly stored (with)");
 $test_count += 2;
 
 

@@ -88,7 +88,7 @@ sub get_token {
     my $session_id = Kynetx::Session::session_id($session);
     $domain = $domain || "web";
     my $var;
-    $logger->trace("Get token for session: $session_id");
+    $logger->trace("Get token for session: ",  sub {$session_id});
     # There might be other ways to find a token for other endpoint domains
     if ($domain eq "web") {
         # Check mongo.tokens for any tokens for a matching sessionid

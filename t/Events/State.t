@@ -281,10 +281,12 @@ my @evagg = ();
 foreach my $val (@{$vals}) {
 	my $ev = Kynetx::Events::Primitives->new();
 	$ev->generic("car","moving");
-	my $req_info = Kynetx::Test::gen_req_info($rid,{'distance' => $val});
-	$ev->set_req_info($req_info);
+	# my $req_info = Kynetx::Test::gen_req_info($rid);
+	# $ev->set_req_info($req_info);
+        $ev->{'distance'} = $val;
 	push (@evagg,$ev);
 }
+
 
 my $filter = [
                 {
@@ -362,8 +364,9 @@ $test_count++;
 foreach my $val (@{$vals}) {
 	my $ev = Kynetx::Events::Primitives->new();
 	$ev->generic("car","moving");
-	my $req_info = Kynetx::Test::gen_req_info($rid,{'distance' => $val});
-	$ev->set_req_info($req_info);
+	# my $req_info = Kynetx::Test::gen_req_info($rid,{'distance' => $val});
+	# $ev->set_req_info($req_info);
+	$ev->{'distance'} = $val;
 	push (@evagg,$ev);
 }
 
@@ -399,8 +402,9 @@ $test_count++;
 foreach my $val (@{$vals}) {
 	my $ev = Kynetx::Events::Primitives->new();
 	$ev->generic("car","moving");
-	my $req_info = Kynetx::Test::gen_req_info($rid,{'distance' => $val});
-	$ev->set_req_info($req_info);
+	# my $req_info = Kynetx::Test::gen_req_info($rid,{'distance' => $val});
+	# $ev->set_req_info($req_info);
+	$ev->{'distance'} = $val;
 	push (@evagg,$ev);
 }
 
@@ -437,8 +441,9 @@ $test_count++;
 foreach my $val (@{$vals}) {
 	my $ev = Kynetx::Events::Primitives->new();
 	$ev->generic("car","moving");
-	my $req_info = Kynetx::Test::gen_req_info($rid,{'distance' => $val});
-	$ev->set_req_info($req_info);
+	# my $req_info = Kynetx::Test::gen_req_info($rid,{'distance' => $val});
+	# $ev->set_req_info($req_info);
+	$ev->{'distance'} = $val;
 	push (@evagg,$ev);
 }
 
@@ -474,8 +479,9 @@ $test_count++;
 foreach my $val (@{$vals}) {
 	my $ev = Kynetx::Events::Primitives->new();
 	$ev->generic("car","moving");
-	my $req_info = Kynetx::Test::gen_req_info($rid,{'distance' => $val});
-	$ev->set_req_info($req_info);
+	# my $req_info = Kynetx::Test::gen_req_info($rid,{'distance' => $val});
+	# $ev->set_req_info($req_info);
+	$ev->{'distance'} = $val;
 	push (@evagg,$ev);
 }
 

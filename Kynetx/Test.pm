@@ -34,6 +34,7 @@ use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
 use Kynetx::Persistence qw(:all);
 use Kynetx::Rids qw(:all);
+use Kynetx::Request qw(:all);
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -90,20 +91,31 @@ sub configure {
 }
 
 sub gen_req_info {
-    my($rid, $options) = @_;
+    my($rid, $options, $event_attrs) = @_;
     my $req_info;
     $re_rid = $rid;
     $req_info->{'ip'} =  '72.21.203.1';
-    $req_info->{'caller'} = 'http://www.windley.com/';
-    $req_info->{'pool'} = APR::Pool->new;
+#    $req_info->{'caller'} = 'http://www.windley.com/';
+#    $req_info->{'pool'} = APR::Pool->new;
     $req_info->{'txn_id'} = '1234';
     $req_info->{$rid.':kinetic_app_version'} = 'dev';
     $req_info->{'eid'} = '0123456789abcdef';
-    $req_info->{'param_names'} = ['msg','caller'];
-    $req_info->{'msg'} = 'Hello World!';
+
+
+    Kynetx::Request::add_event_attr($req_info, 'msg', 'Hello World!');
+#    Kynetx::Request::add_event_attr($req_info, 'caller', 'http://www.windley.com/');
+
+    $req_info->{'caller'} = 'http://www.windley.com/';
+
+    # $req_info->{'param_names'} = ['msg','caller'];
+    # $req_info->{'msg'} = 'Hello World!';
 
     foreach my $k (keys %{ $options}) {
-      $req_info->{$k} = $options->{$k};
+      $req_info->{$k} = $options->{$k}; 
+    }
+
+    foreach my $k (keys %{ $event_attrs}) {
+      Kynetx::Request::add_event_attr($req_info, $k, $options->{$k});
     }
 
     my $ver = $options->{'ridver'} || 'prod';

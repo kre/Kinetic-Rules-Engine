@@ -244,6 +244,7 @@ sub eval_module {
         }
     } elsif ( $source eq 'referer' ) {
         $preds = Kynetx::Predicates::Referers::get_predicates();
+
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
             $val = Kynetx::Expressions::boolify($val || 0);

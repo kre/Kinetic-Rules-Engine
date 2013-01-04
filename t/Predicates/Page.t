@@ -26,9 +26,6 @@ use Test::LongString;
 use Cache::Memcached;
 use Apache::Session::Memcached;
 
-use APR::URI;
-use APR::Pool ();
-
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
@@ -141,7 +138,7 @@ is(get_pageinfo($my_req_info, 'url', ['query']),
    'page:url windley.com query');
 
 is(get_pageinfo($my_req_info, 'url', ['path']),
-   undef,
+   '',
    'page:url windley.com path');
 
 is(get_pageinfo($my_req_info, 'url', ['port']),
@@ -188,7 +185,6 @@ is(get_pageinfo($my_req_info, 'env', ['rule_version']), 'dev', 'page:env("dev")'
 
 my $params = {
    'msg' => 'Hello World!',
-   'caller' => 'http://www.windley.com/foo?x=y&foog=goog'
  };
 
 

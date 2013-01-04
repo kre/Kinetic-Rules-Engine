@@ -374,16 +374,18 @@ $js = Kynetx::Actions::build_one_action(
 	    'dummy_name');
 
 $result = lookup_rule_env('r',$rule_env);
+#diag Dumper $result;
 is($result->{'label'}, "example", "Label is example");
 ok(defined $result->{'content_length'}, "Content length defined");
 ok(defined $result->{'status_code'}, "Status code defined");
 ok(defined $result->{'content'}, "Content defined");
 $test_count += 4;
 
-is($my_req_info->{'label'}, 'example', "label is example");
-ok(defined $my_req_info->{'content_length'}, "Content length defined");
-ok(defined $my_req_info->{'status_code'}, "Status code defined");
-ok(defined $my_req_info->{'content'}, "Content defined");
+#diag Dumper $my_req_info;
+is(Kynetx::Request::get_attr($my_req_info,'label'), 'example', "label is example in my_req_info");
+ok(defined Kynetx::Request::get_attr($my_req_info,'content_length'), "Content length defined in my_req_info");
+ok(defined Kynetx::Request::get_attr($my_req_info,'status_code'), "Status code defined in my_req_info");
+ok(defined Kynetx::Request::get_attr($my_req_info,'content'), "Content defined in my_req_info");
 $test_count += 4;
 
 # set variable but don't raise event
@@ -423,9 +425,9 @@ ok(defined $result->{'content'}, "Content defined");
 $test_count += 4;
 
 # shouldn't be in the req_info because no event fired
-ok(!defined $my_req_info->{'content_length'}, "Content length defined");
-ok(!defined $my_req_info->{'status_code'}, "Status code defined");
-ok(!defined $my_req_info->{'content'}, "Content defined");
+ok(!defined Kynetx::Request::get_attr($my_req_info,'content_length'), "Content length defined");
+ok(!defined Kynetx::Request::get_attr($my_req_info,'status_code'), "Status code defined");
+ok(!defined Kynetx::Request::get_attr($my_req_info,'content'), "Content defined");
 $test_count += 3;
 
 # now raise event, but don't set variable
@@ -459,10 +461,10 @@ $js = Kynetx::Actions::build_one_action(
 ok(! defined lookup_rule_env('r',$rule_env), "r is NOT defined");
 $test_count += 1;
 
-is($my_req_info->{'label'}, 'example', "label is example");
-ok(defined $my_req_info->{'content_length'}, "Content length defined");
-ok(defined $my_req_info->{'status_code'}, "Status code defined");
-ok(defined $my_req_info->{'content'}, "Content defined");
+is(Kynetx::Request::get_attr($my_req_info,'label'), 'example', "label is example");
+ok(defined Kynetx::Request::get_attr($my_req_info,'content_length'), "Content length defined");
+ok(defined Kynetx::Request::get_attr($my_req_info,'status_code'), "Status code defined");
+ok(defined Kynetx::Request::get_attr($my_req_info,'content'), "Content defined");
 $test_count += 4;
 
 # with headers
@@ -497,10 +499,10 @@ $js = Kynetx::Actions::build_one_action(
 	    'callback23',
 	    'dummy_name');
 
-is($my_req_info->{'label'}, 'example2', "label is example2");
-ok(defined $my_req_info->{'content_length'}, "Content length defined");
-ok(defined $my_req_info->{'status_code'}, "Status code defined");
-ok(defined $my_req_info->{'content'}, "Content defined");
+is(Kynetx::Request::get_attr($my_req_info,'label'), 'example2', "label is example2");
+ok(defined Kynetx::Request::get_attr($my_req_info,'content_length'), "Content length defined");
+ok(defined Kynetx::Request::get_attr($my_req_info,'status_code'), "Status code defined");
+ok(defined Kynetx::Request::get_attr($my_req_info,'content'), "Content defined");
 $test_count += 4;
 
 # with headers
@@ -535,10 +537,10 @@ $js = Kynetx::Actions::build_one_action(
 	    'callback23',
 	    'dummy_name');
 
-is($my_req_info->{'label'}, 'example2', "label is example2"); 
-ok(defined $my_req_info->{'content_length'}, "Content length defined");
-ok(defined $my_req_info->{'status_code'}, "Status code defined");
-ok(defined $my_req_info->{'content'}, "Content defined");
+is(Kynetx::Request::get_attr($my_req_info,'label'), 'example2', "label is example2"); 
+ok(defined Kynetx::Request::get_attr($my_req_info,'content_length'), "Content length defined");
+ok(defined Kynetx::Request::get_attr($my_req_info,'status_code'), "Status code defined");
+ok(defined Kynetx::Request::get_attr($my_req_info,'content'), "Content defined");
 $test_count += 4;
  
 # try GET
@@ -576,10 +578,10 @@ ok(defined $result->{'status_code'}, "rule_env: Status code defined");
 ok(defined $result->{'content'}, "rule_env: Content defined");
 $test_count += 4;
 
-is($my_req_info->{'label'}, 'example', "req_info: label is example");
-ok(defined $my_req_info->{'content_length'}, "req_info: Content length defined");
-ok(defined $my_req_info->{'status_code'}, "req_info: Status code defined");
-ok(defined $my_req_info->{'content'}, "req_info: Content defined");
+is(Kynetx::Request::get_attr($my_req_info,'label'), 'example', "req_info: label is example");
+ok(defined Kynetx::Request::get_attr($my_req_info,'content_length'), "req_info: Content length defined");
+ok(defined Kynetx::Request::get_attr($my_req_info,'status_code'), "req_info: Status code defined");
+ok(defined Kynetx::Request::get_attr($my_req_info,'content'), "req_info: Content defined");
 $test_count += 4;
 
 
@@ -601,6 +603,7 @@ $krl = Kynetx::Parser::parse_decl($krl_src);
 
 # start with a fresh $req_info and $rule_env
 $my_req_info = Kynetx::Test::gen_req_info($rid);
+
 $rule_env = Kynetx::Test::gen_rule_env();
 
 ($v,$result) = Kynetx::Expressions::eval_decl(
@@ -655,10 +658,10 @@ $js = Kynetx::Actions::build_one_action(
 	    'callback23',
 	    'dummy_name');
 
-is($my_req_info->{'label'}, 'example2', "label is example2"); 
-ok(defined $my_req_info->{'content_length'}, "Content length defined");
-ok(defined $my_req_info->{'status_code'}, "Status code defined");
-ok(defined $my_req_info->{'content'}, "Content defined");
+is(Kynetx::Request::get_attr($my_req_info,'label'), 'example2', "label is example2"); 
+ok(defined Kynetx::Request::get_attr($my_req_info,'content_length'), "Content length defined");
+ok(defined Kynetx::Request::get_attr($my_req_info,'status_code'), "Status code defined");
+ok(defined Kynetx::Request::get_attr($my_req_info,'content'), "Content defined");
 $test_count += 4;
 
 # test the get function (expression) with a hash

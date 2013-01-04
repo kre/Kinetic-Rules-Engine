@@ -169,10 +169,14 @@ sub process_schedule {
 
 		# set up new context for this task
 		if ($req_info) {
-			Kynetx::Request::merge_req_env( $req_info, $task->{'req_info'} );
+
+		  my $task_req_info = {'event_attrs' => $task->{'req_info'}};
+#		  $logger->debug("Task attributes ", sub {Dumper $task_req_info});
+		  Kynetx::Request::merge_req_env( $req_info, $task_req_info );
 		}
 		else {
-			$req_info = $task->{'req_info'};
+		  $logger->warn("Warning: We are processing a schedule with no request info object!!!");
+		  $req_info = $task->{'req_info'};
 		}
 
 		$rid = $task->{'rid'};
@@ -847,8 +851,8 @@ sub process_one_global_block {
     }
     elsif ( defined $g->{'type'} && $g->{'type'} eq 'dataset' ) {
       my $new_ds = Kynetx::Datasets->new($g);
-# by commenting this out, we put the JS for the dataset directly in the generate JS
-#      if ( !$new_ds->is_global() ) {
+# by commenting this test out, we put the JS for the dataset directly in the generate JS
+      if ( !$new_ds->is_global() ) {
 	$new_ds->load($req_info);
 	$new_ds->unmarshal();
 	$this_js = $new_ds->make_javascript();
@@ -864,7 +868,7 @@ sub process_one_global_block {
 	#($this_js, $var, $val) = mk_dataset_js($g, $req_info, $rule_env);
 	# yes, this is cheating and breaking the abstraction, but it's fast
 	$rule_env->{$var} = $val;
- #     }
+     }
     }
     else {
       $logger->debug( "Fell through: Expr: ", $g->{'type'} || "" );
@@ -962,6 +966,7 @@ sub eval_rule {
 	$logger->debug( $cv->recv );
 	my $thread_results = $execenv->get_results();
 	if ( scalar @{$thread_results} > 0 ) {
+#	  $logger->debug("req_info: ", sub {Dumper $req_info});
 		Kynetx::Modules::System::raise_system_event(
 			$req_info,
 			$rule->{'name'},
@@ -1266,6 +1271,8 @@ sub grab_ruleset {
 
 sub is_ruleset_stashed {
 	my ( $req_info, $rid, $ver ) = @_;
+	my $logger = get_logger();
+#	$logger->debug("Stashed ($rid.$ver)? ", sub {Dumper $req_info}); 
 	return defined $req_info->{"$rid.$ver"}
 	  && defined $req_info->{"$rid.$ver"}->{'ruleset'};
 }
@@ -1321,11 +1328,12 @@ sub select_rule {
 
 	# test the pattern, captured values are stored in @captures
 
+#	$logger->debug("Rule ", sub {Dumper $rule});
 	my $pattern_regexp = Kynetx::Actions::get_precondition_test($rule);
-	$logger->debug( "Selection pattern: $rule->{'name'} ", $pattern_regexp );
+	$logger->debug( "Selection pattern for $rule->{'name'}: ", $pattern_regexp );
 
 	my $captures = [];
-	if ( @{$captures} = $caller =~ $pattern_regexp ) {
+	if ( $pattern_regexp && ( @{$captures} = $caller =~ $pattern_regexp ) ) {
 		return ( 1, $captures );
 	}
 	else {
@@ -1478,6 +1486,7 @@ sub mk_initial_env {
 
 
 
+# fakes a schedule for old style processing.
 sub mk_schedule {
 
 	# third param is optional and not used in production--testing
@@ -1503,6 +1512,8 @@ sub mk_schedule {
 
 	foreach my $rule ( @{ $ruleset->{'rules'} } ) {
 
+#	  $logger->debug("req_info: ", sub { Dumper $req_info });
+
 		# test and capture here
 		my ( $selected, $vals ) = select_rule( $req_info->{'caller'}, $rule );
 
@@ -1523,6 +1534,7 @@ sub mk_schedule {
 	}
 
 	#  $logger->debug("Schedule: ", sub {Dumper $schedule});
+#	$logger->debug("Req_info at end of mk_schedule(): ", sub {Dumper $req_info});
 	$metric->stop_and_store();
 	return $schedule;
 

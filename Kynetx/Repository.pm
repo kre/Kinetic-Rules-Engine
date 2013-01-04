@@ -61,10 +61,12 @@ sub get_rules_from_repository{
     # default to production for svn repo
     # defaults to production when no version specified
     # use specified version first
+
+#    $logger->debug("req_info: ", sub { Dumper $req_info });
     my $version = $sversion || 
                     get_version($rid_info) ||
-		      Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kynetx_app_version']) || 
-			  Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kinetic_app_version']) || 
+		      Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', [$rid.':kynetx_app_version']) || 
+			  Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', [$rid.':kinetic_app_version']) || 
 		  'prod';
     $req_info->{'rule_version'} = $version;
 
@@ -120,8 +122,11 @@ sub get_rules_from_repository{
       my ($base_url,$username,$passwd) = split(/\|/, $repo_info);
 
 
-      my $parsed_url = APR::URI->parse($req_info->{'pool'}, $base_url);
-      my $hostname = $parsed_url->hostname;
+      # my $parsed_url = APR::URI->parse($req_info->{'pool'}, $base_url);
+      # my $hostname = $parsed_url->hostname;
+
+      my $url = URI->new($base_url);
+      my $hostname = $url->host();
 
       # FIXME: this ought to be using code from Memcached.pm
       #        that requires refactoring svn code below and fixing

@@ -40,6 +40,7 @@ Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
+use Kynetx::Request qw/:all/;
 use Kynetx::Rids qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Session qw/:all/;

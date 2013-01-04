@@ -25,8 +25,8 @@ use Test::More;
 use Test::LongString;
 use Test::WWW::Mechanize;
 
-use APR::URI;
-use APR::Pool ();
+# use APR::URI;
+# use APR::Pool ();
 use Cache::Memcached;
 
 use Log::Log4perl qw(get_logger :levels);
@@ -116,7 +116,7 @@ SKIP: {
     # test DESCRIBE function
     my $url_describe_1 = "$ruleset_base/describe/$rid";
 
-#    diag "Testing console with $url_describe_1";
+    #diag "Testing console with $url_describe_1";
 
     $mech->get_ok($url_describe_1);
     is($mech->content_type(), 'text/html');
@@ -146,7 +146,7 @@ SKIP: {
     # test DESCRIBE function
     my $url_describe_3 = "$ruleset_base/describe/$rid?$rid:kynetx_app_version=dev";
 
-    #diag "Testing console with $url_describe_3";
+    diag "Testing console with $url_describe_3";
 
     $mech->get_ok($url_describe_3);
     is($mech->content_type(), 'text/html');
@@ -266,7 +266,7 @@ SKIP: {
     # sets search referer
     my $url_4 = "$ruleset_base/eval/$rid/1231363179515.js?caller=http%3A//www.windley.com/foo/bazz.html&referer=http%3A//www.google.com/&kvars={%22foo%22%3A%205%2C%20%22bar%22%3A%20%22fizz%22%2C%20%22bizz%22%3A%20[1%2C%202%2C%203]}&title=Phil%20Windleys%20Technometria";
 
-    diag "Testing eval with $url_4";
+#    diag "Testing eval with $url_4";
     $mech->get_ok($url_4);
 
 
@@ -282,7 +282,7 @@ SKIP: {
     $mech->content_contains('kobj_weather');
 
     # globals
-    $mech->content_contains('var foobar = 4;');
+    $mech->content_contains('var foobar = 5;');
 
     $mech->content_contains(q/KOBJ['data']['public_timeline'] = {/);
     $mech->content_lacks("KOBJ['data']['cached_timeline'] =");
@@ -292,6 +292,7 @@ SKIP: {
     my $url_4a = "$event_base/web/pageview/$rid/1231363179515.js?caller=http%3A//www.windley.com/foo/bazz.html&referer=http%3A//www.google.com/&kvars={%22foo%22%3A%205%2C%20%22bar%22%3A%20%22fizz%22%2C%20%22bizz%22%3A%20[1%2C%202%2C%203]}&title=Phil%20Windleys%20Technometria";
 
 #    diag "Testing eval with $url_4a";
+
 
     $mech->get_ok($url_4a);
 

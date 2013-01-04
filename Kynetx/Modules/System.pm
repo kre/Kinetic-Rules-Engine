@@ -64,11 +64,12 @@ sub raise_system_event {
 
   # make modifiers in right form for raise expr
   my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+  my $ver = Kynetx::Rids::get_version($req_info->{'rid'});
 
   # create an expression to pass to eval_raise_statement
   my $expr = {'type' => 'raise',
 	      'domain' => 'system',
-	      'ruleset' => {'val'=>$rid, 'type' => 'str'},
+	      'ruleset' => {'val'=>$rid.".".$ver, 'type' => 'str'},
 	      'event' => Kynetx::Parser::mk_expr_node('str',$event_type),
 	      'modifiers' => $attributes
 	     };

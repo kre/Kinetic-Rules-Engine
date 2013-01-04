@@ -118,9 +118,10 @@ env
     } elsif($function eq 'param' || $function eq 'attr') {
 
       # rulespaced env parameters
-      if (defined $req_info->{$args->[0]}) {
+      my $attr = Kynetx::Request::get_attr($req_info, $args->[0]);
+      if (defined $attr) {
 	# event params don't have rid namespacing
-	$val = $req_info->{$args->[0]};
+	$val = $attr;
       } elsif($rid && defined $req_info->{$rid.':'.$args->[0]}) {
 	$val = $req_info->{$rid.':'.$args->[0]};
       } 
@@ -143,16 +144,23 @@ env
       my $rid = get_rid($req_info->{'rid'});
 
       my $ps;
-      foreach my $pn (@{$req_info->{'param_names'}}) {
+      my $names = Kynetx::Request::get_attr_names($req_info);
+      foreach my $pn (@{$names}) {
 	# remove the prepended RID if it's there
 	my $npn = $pn;
         my $re = '^' . $rid . ':(.+)$';
 	if ($pn =~ /$re/) {
 	  $npn = $1;
+#	  $logger->debug("Using $npn as param name");
+	  $ps->{$npn} = $req_info->{$pn} unless $skip{$pn} || $skip{"$rid:$npn"};
+	} else {
+	  $ps->{$pn} = Kynetx::Request::get_attr($req_info,$pn) unless $skip{$pn};
+#	  $logger->debug("Adding: ", sub {Dumper Kynetx::Request::get_attr($req_info,$pn)}, " for ", $pn);
+
 	}
-#	$logger->debug("Using $npn as param name");
-	$ps->{$npn} = $req_info->{$pn} unless $skip{$pn} || $skip{"$rid:$npn"};
       }
+
+#      $logger->debug("Attrs: ", sub {Dumper $ps});
 
       return $ps;
 

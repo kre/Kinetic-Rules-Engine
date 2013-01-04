@@ -24,9 +24,8 @@ use strict;
 use Test::More;
 use Test::LongString;
 
-use APR::URI;
-use APR::Pool ();
-
+# use APR::URI;
+# use APR::Pool ();
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
@@ -47,10 +46,7 @@ use Kynetx::Rids qw/:all/;
 
 my $req_info;
 $req_info->{'referer'} = 'http://www.byu.edu'; # Utah (BYU)
-$req_info->{'pool'} = APR::Pool->new;
 
-my $no_referer_req_info;
-$no_referer_req_info->{'pool'} = APR::Pool->new;
 
 my %rule_env = ();
 

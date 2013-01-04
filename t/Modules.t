@@ -187,6 +187,7 @@ $result = Kynetx::Expressions::den_to_exp(
 				       $args
 				      ));
 
+#diag Dumper $my_req_info;
 
 is($result,
    'http://www.windley.com/',

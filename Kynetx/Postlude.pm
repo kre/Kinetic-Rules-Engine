@@ -432,7 +432,8 @@ sub eval_raise_statement {
                     $m->{'value'}, $rule_env, $rule_name, $req_info, $session
                   )
 		);
-      $new_req_info->{ $m->{'name'} } = $val;
+      Kynetx::Request::add_event_attr($new_req_info,  $m->{'name'}, $val);
+#      $new_req_info->{ $m->{'name'} } = $val;
 
     }
  
@@ -447,7 +448,8 @@ sub eval_raise_statement {
                       $session
                     ));
       foreach my $k ( keys %{ $attrs } ) {
-        $new_req_info->{ $k } =  $attrs->{$k};
+	Kynetx::Request::add_event_attr($new_req_info, $k, $attrs->{$k})
+#        $new_req_info->{ $k } =  $attrs->{$k};
       }
     }
  
@@ -462,6 +464,7 @@ sub eval_raise_statement {
 	Kynetx::Request::merge_req_env( $req_info, $new_req_info );
 
 
+#    $logger->debug("[eval_raise] req_info: ", sub { Dumper $this_req_info} );
 
     my ($rid_info_list, $unfiltered_rid_list);
     
@@ -487,6 +490,7 @@ sub eval_raise_statement {
       
 
       $rid_info_list = Kynetx::Rids::parse_rid_list($req_info, $rids);
+      $logger->debug("RID List: ", sub {Dumper $rid_info_list} );
 
       # # normalize, if it's not an array, make it one
       # unless ( ref $rids eq 'ARRAY' ) {
@@ -583,7 +587,7 @@ sub eval_expr_with_default {
     my ( $expr, $default, $rule_env, $rule_name, $req_info, $session ) = @_;
     my $logger = get_logger();
 
-    #  $logger->debug("Raise exp ", sub{ Dumper($expr) });
+#      $logger->debug("Raise exp ", sub{ Dumper($expr) });
 
     my $val;
     if ( defined $expr ) {
@@ -605,7 +609,7 @@ sub eval_expr_with_default {
           mk_expr_node( Kynetx::Expressions::infer_type($default), $default );
     }
 
-    #  $logger->debug("Raise result ", sub{ Dumper($val) });
+#      $logger->debug("Raise result ", sub{ Dumper($val) });
     return $val;
 
 }

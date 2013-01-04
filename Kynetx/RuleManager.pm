@@ -227,14 +227,17 @@ sub validate_rule {
       . "/validate_rule.tmpl";
     my $test_template = HTML::Template->new( filename => $template );
 
+
+    $logger->debug("[validate_rule] req_info: ", sub {Dumper $req_info});
+
     # fill in the parameters
     $test_template->param( ACTION_URL => $req_info->{'uri'} );
 
     my $result = "";
     my $type   = "";
 
-    my $rule   = $req_info->{'rule'}   || '';
-    my $flavor = $req_info->{'flavor'} || '';
+    my $rule   = Kynetx::Request::get_attr($req_info,'rule')   || '';
+    my $flavor = Kynetx::Request::get_attr($req_info,'flavor') || '';
     my ( $json, $tree );
     if ($rule) {
 
@@ -280,8 +283,8 @@ sub pp_json {
     # fill in the parameters
     $test_template->param( ACTION_URL => $req_info->{'uri'} );
 
-    my $json = $req_info->{'json'};
-    my $type = $req_info->{'type'};
+    my $json = Kynetx::Request::get_attr($req_info,'json');
+    my $type = Kynetx::Request::get_attr($req_info,'type');
     my ($krl);
     if ($json) {
 
@@ -307,9 +310,11 @@ sub parse_api {
 
     my $logger = get_logger();
 
-    my $krl = $req_info->{'krl'};
+    $logger->debug( "[parse_api] req_info: ", sub {Dumper $req_info} );
 
-    $logger->debug( "KRL: ", $krl );
+    my $krl = Kynetx::Request::get_attr($req_info,'krl');
+
+#    $logger->debug( "KRL: ", $krl );
 
     my $json = "";
     if ($krl) {
@@ -358,7 +363,7 @@ sub unparse_api {
 
     my $logger = get_logger();
 
-    my $json = $req_info->{'ast'};
+    my $json = Kynetx::Request::get_attr($req_info,'ast');
 
     #$logger->debug( "KRL: ", $json );
 

@@ -33,8 +33,6 @@ Log::Log4perl->easy_init($INFO);
 use LWP::Simple;
 use XML::XPath;
 use DateTime;
-use APR::URI;
-use APR::Pool ();
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Parser qw/:all/;
@@ -53,10 +51,8 @@ plan tests => 7 + int(@pnames);
 my $BYU_req_info;
 $BYU_req_info->{'referer'} = 'http://www.byu.edu'; # Utah (BYU)
 $BYU_req_info->{'caller'} = 'http://www.windley.com'; 
-$BYU_req_info->{'pool'} = APR::Pool->new;
 
 my $no_referer_req_info;
-$no_referer_req_info->{'pool'} = APR::Pool->new;
 $no_referer_req_info->{'caller'} = 'http://www.windley.com'; 
 
 my %rule_env = ();

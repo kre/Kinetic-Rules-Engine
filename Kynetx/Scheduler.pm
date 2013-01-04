@@ -26,8 +26,8 @@ use strict;
 
 use Log::Log4perl qw(get_logger :levels);
 use Time::HiRes qw(time);
-use Storable qw(dclone);
-#use Clone qw(clone);
+#use Storable qw(dclone);
+use Clone qw(clone);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -201,7 +201,7 @@ sub mk_task {
 		'rule'     => $rule,
 		'rid'      => $rid,
 		'ver'      => $ver,
-		'req_info' => (dclone $req_info),
+		'req_info' => (clone Kynetx::Request::get_attrs($req_info)),
 		'_ts'      => time,
 	};
 }
