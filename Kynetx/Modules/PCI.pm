@@ -176,7 +176,7 @@ sub new_account {
 	}
 	return undef;
 }
-$funcs->{'new_cloud'} = \&_new_cloud;
+$funcs->{'new_cloud'} = \&new_account;
 
 
 
@@ -207,7 +207,9 @@ $funcs->{'delete_cloud'} = \&delete_account;
 sub account_authorized {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
 	my $logger = get_logger();
-	return 0 unless (developer_authorized($req_info,$rule_env,$session,['cloud','auth']));
+	return 0 unless (
+	 developer_authorized($req_info,$rule_env,$session,['cloud','auth']) ||
+	 system_authorized($req_info, $rule_env, $session));
 	my $arg1 = $args->[0];
 	my $arg2 = $args->[1];
 	my ($ken,$password);
@@ -236,7 +238,20 @@ sub account_authorized {
 	$logger->warn("Unable to locate KEN: ",sub {Dumper($arg1)}) unless ($ken);
 	$logger->trace(" Ken: $ken");
 	$logger->trace("Pass: $password");
-	return _auth_ken($ken,$password);
+	my $result = _auth_ken($ken,$password);
+	if ($result) {
+	  if (system_authorized($req_info, $rule_env, $session)) {
+	    #$logger->debug("System auth'd return user_id");
+	    my $nid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
+	    return {
+	      'nid' => $nid
+	    };
+	  } else {
+	    return 1;
+	  }
+	} else {
+	  return 0
+	}
 }
 $funcs->{'auth'} = \&account_authorized;
 
@@ -637,6 +652,7 @@ sub developer_authorized {
 	my ($req_info, $rule_env, $session, $permission_path) = @_;
 	my $logger = get_logger();
 	my $keys = Kynetx::Keys::get_key($req_info,$rule_env,CREDENTIALS);
+	#$logger->debug("Keys: ", sub {Dumper($keys)});
 	if (defined $keys and ref $keys eq "HASH") {
 		my $token = $keys->{'developer_eci'};
 		my $cred = $keys->{'developer_secret'};
