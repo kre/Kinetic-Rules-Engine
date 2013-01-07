@@ -75,9 +75,11 @@ my $my_req_info = Kynetx::Test::gen_req_info($rid,
      'caller' => 'http://www.windley.com/archives/2008/07?q=foo',
      'kvars' => '{"foo": 5, "bar": "fizz", "bizz": [1, 2, 3]}',
      'foozle' => 'Foo',
-     "$rid:datasets" => "aaa,aaawa,ebates"
     }
    );
+
+Kynetx::Request::add_event_attr($my_req_info,  "$rid:datasets", "aaa,aaawa,ebates");
+
 
 my $krl_src;
 

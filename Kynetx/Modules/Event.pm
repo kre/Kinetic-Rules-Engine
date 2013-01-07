@@ -117,15 +117,6 @@ env
 
     } elsif($function eq 'param' || $function eq 'attr') {
 
-      # # rulespaced env parameters
-      # my $attr = Kynetx::Request::get_attr($req_info, $args->[0]);
-      # if (defined $attr) {
-      # 	# event params don't have rid namespacing
-      # 	$val = $attr;
-      # } elsif($rid && defined Kynetx::Request::get_attr($req_info, $rid.':'.$args->[0])) {
-      # 	$val = Kynetx::Request::get_attr($req_info, $rid.':'.$args->[0]);
-      # } 
-
       $val = get_attr($req_info, $rid, $args->[0]);
 
       $logger->debug("event:attr(", $args->[0], ") -> ", Dumper $val);
@@ -184,11 +175,16 @@ env
 sub get_attr {
  my ($req_info, $rid, $name) = @_;
  # rulespaced env parameters
+
+ my $logger = get_logger();
+
  my ($val, $attr);
+
+ $rid ||= get_rid($req_info->{'rid'});
  if ($attr = Kynetx::Request::get_attr($req_info, $name)) {
    # event params don't have rid namespacing
    $val = $attr;
- } elsif($attr = Kynetx::Request::get_attr($req_info, $rid.':'.$name)) {
+ } elsif($attr = Kynetx::Request::get_attr($req_info, $rid . ':'.$name)) {
    $val = $attr;
  } 
  return $val
