@@ -291,6 +291,17 @@ sub mk_url {
   return $base_url;
 }
 
+
+sub get_host {
+  my($url) = @_;
+  my $hostname = '';
+  if (defined $url) {
+    my $parsed_url= URI->new($url );
+    $hostname = $parsed_url->host() 
+      if $parsed_url->scheme() eq 'http' || $parsed_url->scheme() eq 'https';
+  }
+}
+
 sub end_slash {
     my ($url_str)= @_;
     my $logger = get_logger();

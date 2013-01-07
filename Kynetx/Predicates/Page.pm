@@ -84,6 +84,8 @@ url
 
     } elsif($function eq 'url') {
 
+
+      return '' unless $req_info->{'caller'};
 	my $parsed_url = URI->new($req_info->{'caller'});
 	my $part = $args->[0];
 

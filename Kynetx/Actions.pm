@@ -1014,23 +1014,27 @@ sub choose_action {
 		# my $parsed_caller =
 		#   APR::URI->parse( $req_info->{'pool'}, $req_info->{'caller'} );
 
-		my $parsed_url = URI->new($url);
-		my $parsed_caller = URI->new($req_info->{'caller'});
-
-
+		
 		# URL not relative and not equal to caller
-		if (
-			$parsed_url =~ m#(http|https)://# 
-			&& (   $parsed_url->host ne $parsed_caller->host
-				|| $parsed_url->port   ne $parsed_caller->port
-				|| $parsed_url->scheme ne $parsed_caller->scheme )
-		  )
-		{
+		my $unique_and_abs = 0;
+		if ( $url =~ m#(http|https)://# &&  
+		     $req_info->{'caller'} =~ m#(http|https)://# ) {
+		  my $parsed_url = URI->new($url);
+		  my $parsed_caller = URI->new($req_info->{'caller'});
+		  $unique_and_abs =  $parsed_url->host   ne $parsed_caller->host
+		                  || $parsed_url->port   ne $parsed_caller->port
+		                  || $parsed_url->scheme ne $parsed_caller->scheme;
 
-			$logger->debug(
-				"[action] URL domain is ", $parsed_url->host(),
-				" & caller domain is ",    $parsed_caller->host()
-			);
+		  $logger->debug(
+		      "[action] URL domain is ", $parsed_url->host(),
+  		      " & caller domain is ",    $parsed_caller->host()
+		  );
+
+		}
+
+
+		if ($unique_and_abs) {
+
 
 			$action_suffix = "_html";
 

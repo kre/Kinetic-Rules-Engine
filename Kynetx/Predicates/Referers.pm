@@ -167,6 +167,8 @@ my %predicates = (
 
 	my $referer_domain = get_referer_data($req_info,'domain') ||'';
 
+	return 0 unless $req_info->{'caller'};
+
 	my $parsed_url = URI->new($req_info->{'caller'});
 
 	my $logger = get_logger();
@@ -181,6 +183,10 @@ my %predicates = (
 	my $referer_domain = get_referer_data($req_info,'domain');
 
 	if (defined $referer_domain) {
+
+	  return 1 unless $req_info->{'caller'};
+
+
 	    my $parsed_url = URI->new($req_info->{'caller'});
 
 	    my $logger = get_logger();

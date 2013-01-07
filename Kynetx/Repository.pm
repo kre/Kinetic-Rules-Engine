@@ -125,8 +125,7 @@ sub get_rules_from_repository{
       # my $parsed_url = APR::URI->parse($req_info->{'pool'}, $base_url);
       # my $hostname = $parsed_url->hostname;
 
-      my $url = URI->new($base_url);
-      my $hostname = $url->host();
+      my $hostname = Kynetx::Util::get_host($base_url);
 
       # FIXME: this ought to be using code from Memcached.pm
       #        that requires refactoring svn code below and fixing

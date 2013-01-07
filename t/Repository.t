@@ -106,7 +106,7 @@ SKIP: {
 	$rules1 = Kynetx::Rules::get_rules_from_repository($rid_info, $req_info);
 	
     };
-    skip "Can't get rules for ", get_rid($rid_info), " ", $how_many if $@;
+    skip "Can't get rules for " . get_rid($rid_info) . " ", $how_many if $@;
 
     is_deeply($rules0->{'rules'}, $rules1->{'rules'});
 
