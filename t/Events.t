@@ -511,18 +511,33 @@ SKIP: {
     $test_count += test_event_plan($email_with_regexp_test_plan);
 
 
-#     my $submit_test_plan =
-#       [{'url' => "$dn/web/submit/cs_test_1",
-# 	'method' => 'post',
-# 	'post_data' => {'fname' => 'John', 'lname' => 'Doe'},
-# 	'type' => 'text/javascript',
-# 	'like' => ["/var form_data = {'fname': 'John', 'lname': 'Doe'}/",
-# 		   "/submit_rule/"
-# 		  ],
-#        },
-#       ];
+     my $submit_test_plan =
+       [{'url' => "$dn/web/submit/cs_test_1?element=%23my_form&login=foo&cs_test_1:flop=goo",
+ 	'type' => 'text/javascript',
+ 	'like' => ["/var foobar = 4/",
+ 		   "/var foo = 'foo'/",
+ 		   "/var bar = 'goo'/",
+ 		   "/test_rule_submit/"
+ 		  ],
+	'diag' => 0,
+        },
+       ];
 
-#     $test_count += test_event_plan($submit_test_plan);
+     $test_count += test_event_plan($submit_test_plan);
+
+     my $submit_test_plan =
+       [{'url' => "$dn/web/submit/cs_test_1?element=%23form_2&login=foo&cs_test_1:flop=goo",
+ 	'type' => 'text/javascript',
+ 	'like' => ["/var foobar = 4/",
+ 		   "/var foo = 'flop: goo'/",
+ 		   "/var foo = 'login: foo'/",
+ 		   "/test_rule_submit_2/"
+ 		  ],
+	'diag' => 0,
+        },
+       ];
+
+     $test_count += test_event_plan($submit_test_plan);
 
 
   }
