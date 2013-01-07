@@ -86,6 +86,10 @@ sub raise_error {
 
   my $rule_name = $options->{'rule_name'} || 'system';
 
+  my $error_rid = $options->{'error_rid'} || 
+                    Kynetx::Rids::print_rid_info(
+	  	      Kynetx::Rids::get_current_rid_info($req_info));
+
   if ($level eq 'error') {
     $logger->error($errormsg);
   } elsif ($level eq 'warn') {
@@ -123,6 +127,12 @@ sub raise_error {
   push( @{$ms}, 
 	{'name' => 'rule_name',
 	 'value' => mk_den_str($rule_name),
+	}
+      );
+
+  push( @{$ms}, 
+	{'name' => 'error_rid',
+	 'value' => mk_den_str($error_rid),
 	}
       );
 

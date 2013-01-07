@@ -61,6 +61,11 @@ sub mk_rid_info {
 	  'kinetic_app_version' => $version};
 }
 
+sub get_current_rid_info {
+  my($req_info) = @_;
+  return $req_info->{'rid'}
+}
+
 sub get_rid {
   my($rid_info) = @_;
   return $rid_info->{'rid'};

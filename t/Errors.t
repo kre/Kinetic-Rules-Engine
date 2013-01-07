@@ -98,6 +98,33 @@ $test_count++;
 #----------- start over -------------------
 $my_req_info->{'schedule'} = Kynetx::Scheduler->new();
 
+Kynetx::Errors::raise_error($my_req_info, 
+			    'warn',
+			    "[keys] invalid operator argument",
+			    {'rule_name' => $rule_name,
+			     'genus' => 'flopper',
+			     'species' => 'type mismatch'
+			    }
+			   );
+
+
+#diag Dumper $my_req_info->{'schedule'};
+
+$rl = []; 
+while (my $task = $my_req_info->{'schedule'}->next()) {
+#	$logger->debug("Task: ",sub {Dumper($task)});
+	push(@{ $rl }, $task->{'req_info'}->{'error_rid'});	
+}
+
+
+is_deeply($rl, ['cs_test.prod'], "see the RID the error is from");
+$test_count++;
+
+
+
+#----------- start over -------------------
+$my_req_info->{'schedule'} = Kynetx::Scheduler->new();
+
 Kynetx::Errors::raise_error($my_req_info, 'warn',
 			    "[keys] invalid operator argument",
 			    {'rule_name' => $rule_name,
