@@ -871,7 +871,7 @@ sub eval_lc {
 }
 $funcs->{'lc'} = \&eval_lc;
 
-sub eval_ucfirst {
+sub eval_capitalize {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
@@ -887,7 +887,7 @@ sub eval_ucfirst {
         return Kynetx::Expressions::typed_value($v);
     } else {
       Kynetx::Errors::raise_error($req_info, 'warn',
-				  "[ucfirst] argument not a string",
+				  "[capitalize] argument not a string",
 				    {'rule_name' => $rule_name,
 				     'genus' => 'operator',
 				     'species' => 'type mismatch'
@@ -895,7 +895,7 @@ sub eval_ucfirst {
 				   )
     }
 }
-$funcs->{'ucfirst'} = \&eval_ucfirst;
+$funcs->{'capitalize'} = \&eval_capitalize;
 
 sub eval_trim {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
