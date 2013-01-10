@@ -208,7 +208,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    '-5 + 4',
+    '(-5 + 4)',
     mk_expr_node('num', -1),
     0);
 
@@ -218,7 +218,7 @@ _KRL_
 add_expr_testcase(
     $krl_src,
     'expr',
-    '4 + -5',
+    '(4 + -5)',
     mk_expr_node('num', -1),
     0);
 
