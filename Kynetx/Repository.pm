@@ -137,18 +137,35 @@ sub get_rules_from_repository {
     $logger->debug("Check default repository");
     my $repo = Kynetx::Configure::get_config('RULE_REPOSITORY');
     my ($base_url,$username,$password) = split(/\|/, $repo);
-    $logger->debug("URL: $base_url");
+    $logger->trace("URL: $base_url");
     my $rs_url = join('/', ($base_url, $rid, $version, 'krl/'));
     $rid_info->{'uri'} = $rs_url;
     $rid_info->{'username'} = $username;
     $rid_info->{'password'} = $password;
+    $logger->trace("Rid info: ", sub {Dumper($rid_info)});
     $ruleset = Kynetx::Repository::HTTP::get_ruleset($rid_info);
     
   }
   Kynetx::Memcached::clr_parsing_flag($memd,$rs_key);
   if (defined $ruleset) {
     $req_info->{'rule_version'} = $version;
-    return Kynetx::Parser::parse_ruleset($ruleset);
+    $ruleset = Kynetx::Parser::parse_ruleset($ruleset);
+    unless($ruleset->{'ruleset_name'} eq 'norulesetbythatappid' || 
+      defined $ruleset->{'error'}) {
+        $ruleset = Kynetx::Rules::optimize_ruleset($ruleset);
+        $logger->debug("Found rules  for $rid");
+        $logger->debug("Caching ruleset for $rid using key $rs_key");
+        $memd->set($rs_key,$ruleset);
+      } else {
+        if ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid') {
+          $logger->error("Ruleset $rid not found");
+      } elsif (defined $ruleset->{'error'}) {
+          $logger->error("Ruleset parsing error for $rid: ", sub {Dumper ($ruleset->{'error'})});
+      } else {
+          $logger->error("Unspecified ruleset repository error for $rid");
+      }
+      }
+    return $ruleset;
   } else {
     $logger->warn("Failed to recover ruleset for $rid, creating empty ruleset");
     return make_empty_ruleset($rid);
@@ -156,6 +173,11 @@ sub get_rules_from_repository {
 
 }
 
+sub flush {
+  my ($rid,$version) = @_;
+  my $rs_key = make_ruleset_key( $rid, $version );
+  Kynetx::Memcached::flush_cache($rs_key);
+}
 
 sub make_empty_ruleset {
   my ( $rid ) = @_;

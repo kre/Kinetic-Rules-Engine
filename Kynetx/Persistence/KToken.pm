@@ -220,6 +220,7 @@ sub is_valid_token {
     }
 }
 
+
 sub delete_token {
     my ($ktoken,$session_id,$rid) = @_;
     my $var;
@@ -238,6 +239,21 @@ sub delete_token {
     	Kynetx::Memcached::flush_cache($additional_ref);
     }   
 }
+
+sub delete_ken_tokens {
+  my ($ken) = @_;
+  my $logger = get_logger();
+  my $list = list_tokens($ken);
+  my $count = 0;
+  foreach my $element (@{$list}) {
+    my $token = $element->{'cid'};
+    delete_token($token);
+    $count++;
+  }
+  $logger->debug("Deleted ($count) tokens for $ken");
+}
+
+
 
 sub list_tokens {
 	my ($ken) = @_;

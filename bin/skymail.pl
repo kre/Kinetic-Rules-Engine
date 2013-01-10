@@ -54,21 +54,6 @@ use Kynetx::Environments qw(
 use Kynetx::Modules::HTTP qw(mk_http_request);
 use DateTime::Format::ISO8601;
 
-Kynetx::Configure::configure();
-Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
-my $logger = get_logger();
-
-my $run_mode = Kynetx::Configure::get_config('RUN_MODE');
-my $event_host = Kynetx::Configure::get_config($run_mode)->{'EVAL_HOST'};
-
-$logger->info("Run mode: $run_mode");
-$logger->info("Event host: $event_host");
-
-# Basic MongoDB commands
-$logger->debug("Initializing mongoDB");
-Kynetx::MongoDB::init();
-
 use vars qw(
   %opt
 );
@@ -79,49 +64,77 @@ use POSIX qw(
 :sys_wait_h
 _exit
 );
+use Proc::PID::File;
+use Proc::Daemon;
+use File::Spec;
+
 
 use constant E_DOM  => "email";
 use constant E_NAME => "received";
+
+use constant LOG_DIR => '/var/log/skymail';
+use constant LOG_FILE => 'skymail.log';
+use constant PIDDIR => LOG_DIR;
+
+our $ME = $0; $ME =~ s|.*/||;
+our $PIDFILE = "/$ME.pid";
+
+sub dienice ($);
+
+startDaemon();
+my $logger = get_logger();
+my $appender = Log::Log4perl::Appender->new(
+  "Log::Dispatch::File",
+  filename => File::Spec->catfile(LOG_DIR,LOG_FILE),
+  mode     => "append",
+);
+$logger->add_appender($appender);
+$logger = get_log();
+
+Kynetx::Configure::configure();
+
+my $run_mode = Kynetx::Configure::get_config('RUN_MODE');
+my $event_host = Kynetx::Configure::get_config($run_mode)->{'EVAL_HOST'};
+$logger->info("Run mode: $run_mode");
+$logger->info("Event host: $event_host");
+
+
+# Basic MongoDB commands
+$logger->debug("Initializing mongoDB");
+Kynetx::MongoDB::init();
+
 
 my $opt_string = 'hv:';
 getopts( "$opt_string", \%opt );
 &usage() if $opt{'h'};
 
-if ( exists $opt{'v'} && $opt{'v'} eq '2' ) {
-    Log::Log4perl->easy_init($TRACE);
-    $logger->trace("Verbose output enabled");
-
-} elsif ( exists $opt{'v'} && $opt{'v'} eq '1' ) {
-    Log::Log4perl->easy_init($DEBUG);
-    $logger->debug("Detailed output enabled: ");
-} elsif ( exists $opt{'v'} && $opt{'v'} eq '0' ) {
-
-    # no logging
-} elsif ( exists $opt{'v'} ) {
-    usage("Requires a log level: $0 -v <0 | 1 | 2>");
-}
-
-
 my $mail_server = new Net::SMTP::Server('localhost',25) ||
-	croak("Unable to start mail server: $!\n");
+	$logger->fatal("Unable to start mail server: $!\n");
+	
 
 my %children;
-sub REAPER {
-	my $child;
-	while ($child = waitpid(-1,WNOHANG)) {
-    	$children{$child} = $?;
-    }
-	$SIG{CHLD} = \&REAPER;
-}
-$SIG{CHLD} = \&REAPER;
+$SIG{CHLD} = 'IGNORE';	
+
+$SIG{INT}  = sub { my $logger = get_log();$logger->warn("Caught SIGINT:  exiting gracefully"); };
+$SIG{QUIT} = sub { my $logger = get_log();$logger->warn("Caught SIGQUIT:  exiting gracefully"); };
+$SIG{HUP}  = sub { my $logger = get_log();$logger->warn("Caught SIGHUP:  exiting gracefully"); };
+$SIG{RTMIN} = \&rtmin_h;
+
+sub rtmin_h { 
+  my $logger = get_log();$logger->warn("Caught SIGRTMIN"); 
+};	
 
 while (my $conn= $mail_server->accept) {
+	
 	my $client = new Net::SMTP::Server::Client($conn) ||
-		croak("Unable to create client connection: $!\n");
+		dienice("Unable to create client connection: $!\n");
 				
 	my $cpid = fork();
+	$logger->debug("CPID: $cpid");
 	$children{$cpid} = 1;
+	
 	unless ($cpid) {
+	  my $line;
 		my $pid = $$;
 		$logger->debug("Connection on port 25 ($pid)");
 		$client->process();
@@ -144,12 +157,13 @@ while (my $conn= $mail_server->accept) {
 				mediate($ev);
 			}
 		}
-		
+		waitpid($pid,0);
 		_exit(0);
 	}
-	
 	$logger->debug("Connection passed to process: $cpid");
 }
+
+$logger->debug("Stopping skymail.pl");
 
 sub build_event {
 	my ($namespace,$token,$domain,$name,$parm) = @_;
@@ -301,6 +315,44 @@ sub mediator {
 	my ($token,$domain,$name,$payload) = @_;
 }
 
+sub startDaemon {
+  eval {Proc::Daemon::Init();};
+  my $nlogger = get_log();
+  if ($@) {
+    dienice("Unable to start skymail daemon: $@");
+  }
+  
+  eval {Proc::PID::File->running({
+      name => $ME,
+      debug => 1,
+      verify =>1
+  })};
+  
+  if ($@) {
+    dienice("Skymail already running") 
+  } 
+  
+}
+
+sub dienice ($){
+  my ($package, $filename, $line) = caller;
+  my $logger = get_log();
+  $logger->fatal("$_[0] at line $line in $filename");
+  croak($_[0]);
+  die $_[0];
+}
+
+sub get_log {
+  Log::Log4perl->easy_init($DEBUG);  
+  my $logger = Log::Log4perl::get_logger();
+  my $appender = Log::Log4perl::Appender->new(
+    "Log::Dispatch::File",
+    filename => File::Spec->catfile(LOG_DIR,LOG_FILE),
+    mode     => "append",
+  );
+  $logger->add_appender($appender);
+  return $logger;
+}
 
 sub usage {
     my ($header) = @_;

@@ -33,6 +33,7 @@ use LWP::UserAgent;
 use Data::Dumper;
 use MongoDB qw(:all);
 use MongoDB::GridFS;
+use Tie::IxHash;
 use Clone qw(clone);
 use Benchmark ':hireswallclock';
 use Data::Diver qw(
@@ -292,7 +293,7 @@ sub get_value {
 sub atomic_pop_value {
 	my ($collection,$var,$direction) = @_;
 	my $logger = get_logger();
-	$direction |= -1;
+	$direction ||= -1;
     my $c = get_collection($collection);
     my $cursor = $c->find($var,{"value" => {'$slice' => [0,1]}});
     $logger->trace("# In mongo: ", $cursor->count);	
@@ -477,7 +478,6 @@ sub type_data {
 }
 
 
-
 # find_and_modify uses the generic run_command function of the mongo library
 # limit the parameters passed in to avoid passing in random commands
 # (Such commands *should* have been filtered long before)
@@ -545,6 +545,7 @@ sub get_singleton {
 		'query' => $var,
 		'update' => $update,
 	};
+	$logger->trace("Find and modify:" , sub {Dumper($fnmod)});
 	my $result = find_and_modify($collection,$fnmod,1);          
     $logger->trace("Status: ", sub {Dumper($result)});
 	if (defined $result->{"value"}) {
@@ -721,7 +722,6 @@ sub delete_value {
     my $logger = get_logger();
     $logger->trace("Deleting from $collection: ", sub {Dumper($var)});
     my $c = get_collection($collection);
-    #my $success = $c->remove($var,{"safe" => SAFE});
     my $success = $c->remove($var,{"safe" => 1});
     clear_cache($collection,$var);
     if (!$success ) {
@@ -767,6 +767,46 @@ sub make_keystring {
     return md5_base64($keystring);
 }
 
+########################### Caching functions for KPDS/KEN based maps
+sub get_cache_for_map {
+	my ($key,$collection,$var) = @_;
+	my $lookup_key = "_map_" . $key;
+	my $mcache_prefix = Kynetx::Memcached::check_cache($lookup_key);
+	if (defined $mcache_prefix) {
+		$var->{"cachemap"} = $mcache_prefix;
+		return Kynetx::MongoDB::get_cache($collection,$var);
+	}
+	return undef;
+}
+
+sub set_cache_for_map {
+	my ($key,$collection,$var,$value) = @_;
+	my $lookup_key = "_map_" . $key;
+	my $mcache_prefix =  time();
+	Kynetx::Memcached::mset_cache($lookup_key,$mcache_prefix,$CACHETIME);
+	$var->{"cachemap"} = $mcache_prefix;
+	Kynetx::MongoDB::set_cache($collection,$var,$value);
+}
+
+sub clear_cache_for_map {
+	my ($key) = @_;
+	my $lookup_key = "_map_" . $key;
+	Kynetx::Memcached::flush_cache($lookup_key);
+}
+
+sub map_key {
+	my ($key,$hkey) = @_;
+	my $struct = {
+		'a' => $key
+	};
+	my $index = 0;
+	foreach my $element (@{$hkey}) {
+		my $k = 'b' . $index++;
+		$struct->{$k} = $element;
+	}
+	
+	return $struct;
+}
 
 
 1;

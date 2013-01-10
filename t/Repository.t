@@ -126,15 +126,16 @@ SKIP: {
 my $description = "Get a ruleset from github (raw)";
 my $local_file = 'data/action5.krl';
 my ($fl,$krl_text) = getkrl($local_file);
-my $ast = parse_ruleset($krl_text);
+my $ast = Kynetx::Rules::optimize_ruleset(parse_ruleset($krl_text));
+$ast->{'rules'}->[0]->{'event_sm'} = ignore();
 my $rulename = $ast->{"ruleset_name"};
 my $uri = "https://raw.github.com/kre/Kinetic-Rules-Engine/master/t/" . $local_file;
 my $rid_info = mk_rid_info($req_info,$rulename);
 $rid_info->{'uri'} = $uri;
 $req_info->{'rid'} = $rid_info;
 my $rules = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
-#$logger->debug("Rule: ", sub {Dumper($rules)});
-cmp_deeply($rules,$ast,$description);
+#$logger->debug("Rule: ", sub {Dumper($rules->{'rules'})});
+cmp_deeply($rules->{'rules'},$ast->{'rules'},$description);
 
 
 my $file_uri = "file://$local_file";
