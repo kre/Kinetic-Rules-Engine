@@ -27,7 +27,7 @@ use Data::Dumper;
 use Kynetx::Util qw(ll);
 use Kynetx::Rids qw/:all/;
 use Kynetx::Environments qw/:all/;
-
+use Kynetx::Modules::Random;
 use Digest::SHA qw/hmac_sha1 hmac_sha1_hex hmac_sha1_base64
 				hmac_sha256 hmac_sha256_hex hmac_sha256_base64/;
 use Crypt::RC4::XS;
@@ -149,12 +149,17 @@ sub new_account {
 	    		} else {
 	    			$dflt->{$key} = _hash_password($pass);
 	    		}
-	    		
 	    	} else {
 	    		$dflt->{$key} = $options->{$key};
 	    	}
 	    	
 	    }
+      # Check that the final username is unique
+      my $found = Kynetx::Persistence::KEN::ken_lookup_by_username($dflt->{'username'});
+      if ($found) {
+        $logger->warn($dflt->{'username'}, " is already in use");
+        return undef;
+      }
 	    if (defined $parent) {
 	    	$logger->trace("Parent: ", sub {Dumper($parent)});
 	    	$dflt->{'parent'} = $parent;
@@ -195,6 +200,7 @@ sub delete_account {
     			$cascade =  $args->[1]->{"cascade"};
     		}
     		Kynetx::Persistence::KPDS::delete_cloud($ken,$cascade);
+    		return 1;
     	} else {
     		$logger->debug("ECI: $eci not valid ", sub {Dumper($valid)});
     	}
@@ -208,8 +214,8 @@ sub account_authorized {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
 	my $logger = get_logger();
 	return 0 unless (
-	 developer_authorized($req_info,$rule_env,$session,['cloud','auth']) ||
-	 system_authorized($req_info, $rule_env, $session));
+	 system_authorized($req_info, $rule_env, $session) ||
+	 developer_authorized($req_info,$rule_env,$session,['cloud','auth']));
 	my $arg1 = $args->[0];
 	my $arg2 = $args->[1];
 	my ($ken,$password);
@@ -255,6 +261,103 @@ sub account_authorized {
 }
 $funcs->{'auth'} = \&account_authorized;
 
+sub set_account_password {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	return 0 unless ( system_authorized($req_info, $rule_env, $session) ||
+	 developer_authorized($req_info,$rule_env,$session,['cloud','auth']));
+	my ($ken,$new_password,$old_password);
+  if (scalar @{$args} ==2) {
+    # use the current session
+    my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+    $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+    $new_password = $args->[1];
+    $old_password = $args->[0];
+  } elsif (scalar @{$args}==3) {
+    my $uid = $args->[0];
+		if (ref $uid eq "") {
+			# Default arguments are <username>,<password>
+			my $username = $uid;
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_username($username);
+		} elsif (ref $uid eq "HASH") {
+			if ($uid->{'username'}) {
+				$ken = Kynetx::Persistence::KEN::ken_lookup_by_username($uid->{'username'});
+			} elsif ($uid->{'user_id'}) {
+				$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($uid->{'user_id'});
+			} elsif ($uid->{'eci'}) {
+				$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($uid->{'eci'});
+			}
+		}
+    $new_password = $args->[2];
+    $old_password = $args->[1];
+  } else {
+    $logger->warn("Set Password args invalid: ", sub {join(",",@{$args})});
+    return undef;
+  }
+  my $p_match = _auth_ken($ken,$old_password);
+  if ($p_match) {
+    my $hash = _hash_password($new_password);
+    return Kynetx::Persistence::KEN::set_authorizing_password($ken,$hash);
+  } else {
+    $logger->debug("Failed to authenticate");
+    return 0;
+  }
+  
+}
+$funcs->{'set_password'} = \&set_account_password;
+
+sub reset_account_password {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	return 0 unless ( system_authorized($req_info, $rule_env, $session));
+	my ($ken,$new_password);
+  if (scalar @{$args} ==1) {
+    # use the current session
+    my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+    $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+    $new_password = $args->[0];
+  } elsif (scalar @{$args}==2) {
+    my $uid = $args->[0];
+		if (ref $uid eq "") {
+			# Default arguments are <username>,<password>
+			my $username = $uid;
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_username($username);
+		} elsif (ref $uid eq "HASH") {
+			if ($uid->{'username'}) {
+				$ken = Kynetx::Persistence::KEN::ken_lookup_by_username($uid->{'username'});
+			} elsif ($uid->{'user_id'}) {
+				$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($uid->{'user_id'});
+			} elsif ($uid->{'eci'}) {
+				$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($uid->{'eci'});
+			}
+		}
+    $new_password = $args->[1];
+  } else {
+    $logger->warn("Reset Password args invalid: ", sub {join(",",@{$args})});
+    return undef;
+  }
+  my $hash = _hash_password($new_password);
+  return Kynetx::Persistence::KEN::set_authorizing_password($ken,$hash);
+  
+}
+$funcs->{'reset_password'} = \&reset_account_password;
+
+sub check_username {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	return 0 unless ( system_authorized($req_info, $rule_env, $session));
+  my $uid = $args->[0];
+  $logger->debug("Check for username ($uid)");
+  if (defined $uid) {
+    my $ken = Kynetx::Persistence::KEN::ken_lookup_by_username($uid);
+    if ($ken) {
+      return 1;
+    }
+  }
+  return 0;
+}
+$funcs->{'exists'} = \&check_username;
+
 ############################# Rulesets
 
 sub add_ruleset_to_account {
@@ -264,7 +367,8 @@ sub add_ruleset_to_account {
 	my $arg1 = $args->[0];
 	my $arg2 = $args->[1];
 	my @ridlist = ();
-	my $ken;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
 	if (defined $arg2) {
 		if (ref $arg2 eq "ARRAY") {
 			@ridlist = @{$arg2};
@@ -280,7 +384,7 @@ sub add_ruleset_to_account {
 		#ll("eci");
 		$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
 	}
-	if ($ken && length(@ridlist) >= 1) {
+	if ($ken && scalar @{$args} >= 1) {
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
 		my $installed = Kynetx::Persistence::KPDS::add_ruleset($ken,\@ridlist);
 		return {
@@ -300,7 +404,8 @@ sub remove_ruleset_from_account {
 	my $arg1 = $args->[0];
 	my $arg2 = $args->[1];
 	my @ridlist = ();
-	my $ken;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
 	if (defined $arg2) {
 		if (ref $arg2 eq "ARRAY") {
 			@ridlist = @{$arg2};
@@ -316,7 +421,7 @@ sub remove_ruleset_from_account {
 		#ll("eci");
 		$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
 	}
-	if ($ken && length(@ridlist) >= 1) {
+	if ($ken && scalar @{$args} >= 1) {
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
 		my $installed = Kynetx::Persistence::KPDS::remove_ruleset($ken,\@ridlist);
 		return {
@@ -330,16 +435,8 @@ sub remove_ruleset_from_account {
 $funcs->{'delete_ruleset'} = \&remove_ruleset_from_account;
 
 sub _installed_rulesets {
-	my ($sken,$rid,$args) = @_;
+	my ($ken) = @_;
 	my $logger = get_logger();
-	my $ken;
-	if (defined $args->[0]) {
-		# eci
-		$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($args->[0]);
-	} else {
-		# current user
-		$ken = $sken;
-	}
 	if ($ken) {
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
 		my $installed = Kynetx::Persistence::KPDS::get_rulesets($ken);
@@ -359,9 +456,19 @@ sub installed_rulesets {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
 	my $logger = get_logger();
 	return 0 unless (developer_authorized($req_info,$rule_env,$session,['ruleset','show']));
-    my $rid = get_rid($req_info->{'rid'});		
-	my $sken = Kynetx::Persistence::KEN::get_ken($session,$rid);	
-	return _installed_rulesets($sken,$rid,$args);
+  my $rid = get_rid($req_info->{'rid'});		
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);;
+	my $arg1 = $args->[0];
+	if (defined $arg1) {
+		if ($arg1 =~ m/^\d+$/) {
+			#ll("userid");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg1);
+		} else {
+			#ll("eci");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
+		}		
+	}	
+	return _installed_rulesets($ken);
 }
 $funcs->{'list_ruleset'} = \&installed_rulesets;
 $funcs->{'list_rulesets'} = \&installed_rulesets;
@@ -392,8 +499,8 @@ sub new_eci {
 				$type = $arg2->{'eci_type'};
 		} 
 	}
-	$token_name |= "Generic ECI channel";
-	$type |= 'PCI';
+	$token_name ||= "Generic ECI channel";
+	$type ||= 'PCI';
 	if ($ken) {
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');	
 		my $eci =  Kynetx::Persistence::KToken::create_token($ken,$token_name,$type);	
@@ -413,7 +520,19 @@ sub destroy_eci {
 	return 0 unless (developer_authorized($req_info,$rule_env,$session,['eci','destroy']));
 	my $ken;
 	my $arg1 = $args->[0];
-	$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
+	if (! defined $arg1) {
+		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+	} else {
+		# Check to see if it is an eci or a userid
+		if ($arg1 =~ m/^\d+$/) {
+			#ll("userid");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg1);
+		} else {
+			#ll("eci");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
+		}		
+	}	
 	if ($ken) {
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');	
 		Kynetx::Persistence::KToken::delete_token($arg1);	
@@ -432,7 +551,19 @@ sub list_eci {
 	return 0 unless (developer_authorized($req_info,$rule_env,$session,['eci','show']));
 	my $ken;
 	my $arg1 = $args->[0];
-	$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg1);
+	if (! defined $arg1) {
+		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+	} else {
+		# Check to see if it is an eci or a userid
+		if ($arg1 =~ m/^\d+$/) {
+			#ll("userid");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg1);
+		} else {
+			#ll("eci");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
+		}		
+	}	
 	if ($ken) {
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');	
 		my $channels = Kynetx::Persistence::KToken::list_tokens($ken);
@@ -589,6 +720,7 @@ sub _hash_password {
 	my ($string) = @_;
 	my $soid = Kynetx::Configure::get_config('PCI_PASSWORD');
 	my $salt = get_pass_phrase($soid);
+	$string = $string || '';
 	my $digest = hmac_sha256_base64($string,$salt);
 	return $digest;	
 }
@@ -596,6 +728,7 @@ sub _hash_password {
 
 sub _auth_ken {
 	my ($ken,$string) = @_;
+	my $logger = get_logger();
 	my $hashed = Kynetx::Persistence::KEN::get_authorizing_password($ken);
 	my $passed = _hash_password($string);
 	if ($hashed eq $passed) {
@@ -606,6 +739,7 @@ sub _auth_ken {
 }
 
 sub create_system_key {
+  my $logger=get_logger();
 	my $syskey = syskey();
 	my $id = make_pass_phrase();
 	my $phrase = get_pass_phrase($id);
@@ -618,6 +752,7 @@ sub create_system_key {
 
 sub check_system_key {
 	my ($key) = @_;
+	return 0 unless (defined $key);
 	my $logger = get_logger();
 	$logger->trace("Key in: " ,$key);
 	my $syskey = syskey();
@@ -654,11 +789,10 @@ sub developer_authorized {
 	my $keys = Kynetx::Keys::get_key($req_info,$rule_env,CREDENTIALS);
 	#$logger->debug("Keys: ", sub {Dumper($keys)});
 	if (defined $keys and ref $keys eq "HASH") {
-		my $token = $keys->{'developer_eci'};
+		my $token = $keys->{'developer_eci'} || '';
 		my $cred = $keys->{'developer_secret'};
 		my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($token);
 		my $permission = Kynetx::Persistence::KPDS::get_developer_permissions($ken,$cred,$permission_path);	
-		$logger->trace("Permission for $token: ", sub {Dumper($permission)});
 		return $permission;
 	} else {
 		return 0;
@@ -672,9 +806,7 @@ sub syskey {
 	my $salt = Kynetx::Configure::get_config('PCI_KEY');
 	my $phrase = get_pass_phrase();
 	my $syskey = unpack ('H*', "$salt" ^ "$phrase");
-	$logger->trace("Actual: $syskey");
 	$syskey = hmac_sha256_base64($syskey,$salt);
-	$logger->trace("Test: $syskey");
 	return $syskey;
 }
 

@@ -44,7 +44,8 @@ use Kynetx::Errors;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
+my $logger = get_logger();
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -185,8 +186,9 @@ for my $f ( @{$a} ) {
   $test_count++;
 }
 
-
 my $result = Kynetx::Dispatch::calculate_dispatch($my_req_info);
+
+#diag Dumper $result;
 
 $expected = 
 {

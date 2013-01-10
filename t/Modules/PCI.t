@@ -36,7 +36,7 @@ use Storable 'dclone';
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
@@ -122,13 +122,13 @@ my $rrid2 = $DICTIONARY[rand(@DICTIONARY)];
 chomp($rrid2);
 
 my $system_key = Kynetx::Modules::PCI::create_system_key($result);
-$logger->debug("Key: $system_key");
 $description = "Create and verify system key";
 $result = Kynetx::Modules::PCI::check_system_key($system_key);
 is($result,1,$description);
 $test_count++;
-$logger->debug("match: $result");
 my $keys = {'root' => $system_key};
+
+my $count = 0;
 
 # system authorized tokens
 ($js, $rule_env) = 
@@ -219,6 +219,7 @@ $result = Kynetx::Modules::PCI::set_permissions($my_req_info,$rule_env,$session,
 is($result,1,$description);
 $test_count++;
 
+
 $description = "Create a new account";
 my $password = "Flooply";
 $args = {
@@ -233,16 +234,36 @@ $test_count++;
 $eci = $result->{'cid'};
 $uid = $result->{'nid'};
 
+$description = "Check for username exists";
+$args = $uname;
+$result = Kynetx::Modules::PCI::check_username($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+is($result,1,$description);
+$test_count++;
+
+
+$description = "Check for username exists (false)";
+my $new_uname = $uname . '-dep';
+$args = $new_uname;
+$result = Kynetx::Modules::PCI::check_username($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+is($result,0,$description);
+$test_count++;
 
 $description = "Create a dependent account";
 $args = {
-	"username" => $uname . '-dep',
+	"username" => $new_uname,
 	"firstname" => "",
 	"lastname" => "",
 	"password" => "",
 };
 $result = Kynetx::Modules::PCI::new_account($my_req_info,$rule_env,$session,$rule_name,"foo",[$eci,$args]);
 isnt($result,undef,$description);
+$test_count++;
+
+$description = "Check for username exists (true)";
+my $new_uname = $uname . '-dep';
+$args = $new_uname;
+$result = Kynetx::Modules::PCI::check_username($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+is($result,1,$description);
 $test_count++;
 
 ($js, $rule_env) = 
@@ -264,7 +285,7 @@ $result = Kynetx::Modules::PCI::developer_authorized($my_req_info,$rule_env,$ses
 is($result,0,$description);
 $test_count++;
 
-#$logger->debug("Account authorizations: ");
+$logger->debug("Account authorizations: ");
 
 
 $description = "Authorize KEN for username $uname";
@@ -297,9 +318,33 @@ $result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_envt,$sess
 cmp_deeply($result,$expected,$description);
 $test_count++;
 
-$description = "Throw in a fail for fun";
-$result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[{'user_id' => $uid},$password . "B"]);
+my $new_password = "babylon";
+$expected = 1;
+$description = "Change Password with username";
+$result = Kynetx::Modules::PCI::set_account_password($my_req_info,$rule_envt,$session,$rule_name,"foo",[$uname,$password,$new_password]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Authorize KEN for new password";
+$result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[$uname,$new_password]);
+is($result,1,$description);
+$test_count++;
+
+$description = "Fail the old password";
+$result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[$uname,$password]);
 is($result,0,$description);
+$test_count++;
+
+$new_password = "ResetME";
+$expected = 1;
+$description = "Reset Password with username";
+$result = Kynetx::Modules::PCI::reset_account_password($my_req_info,$rule_envt,$session,$rule_name,"foo",[$uname,$new_password]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Authorize KEN for reset password";
+$result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[$uname,$new_password]);
+is($result,1,$description);
 $test_count++;
 
 ####### RULESETS
@@ -373,7 +418,7 @@ $description = "Add an ECI";
 $expected = {
 	'nid' => $uid,
 	'name' => "Generic ECI channel",
-	'cid' => re($uuid_re)
+	'cid' => re(qr/$uuid_re/)
 };
 $result = Kynetx::Modules::PCI::new_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$eci]);
 cmp_deeply($result,$expected,$description);
@@ -384,7 +429,7 @@ $description = "Add an ECI";
 $expected = {
 	'nid' => $uid,
 	'name' => "Generic ECI channel",
-	'cid' => re($uuid_re)
+	'cid' => re(qr/$uuid_re/)
 };
 $result = Kynetx::Modules::PCI::new_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$uid]);
 cmp_deeply($result,$expected,$description);
@@ -392,12 +437,25 @@ $test_count++;
 
 push(@new_eci, $result->{'cid'});
 
+$description = "Add a named ECI";
+$expected = {
+	'nid' => $uid,
+	'name' => $uname,
+	'cid' => re(qr/$uuid_re/)
+};
+$result = Kynetx::Modules::PCI::new_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$uid,{'name' => $uname}]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+push(@new_eci, $result->{'cid'});
+
+
 $description = "Show eci for $uid";
 $expected = {
 	'nid' => $uid,
 	'channels' => array_each({
-		'name' => re(/\w+/),
-		'cid' => re($uuid_re)
+		'name' => re(qr/\w+/),
+		'cid' => re(qr/$uuid_re/)
 	})
 };
 $result = Kynetx::Modules::PCI::list_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$uid]);
@@ -408,15 +466,15 @@ $description = "delete eci for $uid";
 my $eciD = $new_eci[0];
 $result = Kynetx::Modules::PCI::destroy_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$eciD]);
 my $string = Kynetx::Json::astToJson($result);
-isnt($result,re(/$eci/),$description);
+isnt($result,re(qr/$eci/),$description);
 $test_count++;
 
 $description = "Show eci for $uid";
 $expected = {
 	'nid' => $uid,
 	'channels' => array_each({
-		'name' => re(/\w+/),
-		'cid' => re($uuid_re)
+		'name' => re(qr/\w+/),
+		'cid' => re(qr/$uuid_re/)
 	})
 };
 $result = Kynetx::Modules::PCI::list_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$uid]);
