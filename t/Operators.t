@@ -94,6 +94,7 @@ pre {
   employees = [{'name' : 'Ron', 'dept': 'marketing'}, {'name' : 'Steve', 'dept' : 'executive'}, {'name': 'Mark', 'dept': 'engr'}];
   foo = "I like cheese";
   my_str = "This is a string";
+  spacey_str = "    spaces     \n";
   phone_num = "1234567890";
   split_str = "A;B;C";
   my_url = "http://www.amazon.com/gp/products/123456789/";
@@ -1001,9 +1002,17 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
-$e[$i] = q!my_str.lc().ucfirst()!;
+$e[$i] = q!my_str.lc().capitalize()!;
 $x[$i] = {
     'val' => 'This is a string',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q!spacey_str.trim()!;
+$x[$i] = {
+    'val' => 'spaces',
     'type' => 'str'
 };
 $d[$i] = 0;

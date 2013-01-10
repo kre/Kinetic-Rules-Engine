@@ -828,8 +828,6 @@ sub eval_uc {
     #$logger->trace("obj: ", sub { Dumper($obj) });
     return $obj unless defined $obj;
 
-    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-#    $logger->trace("obj: ", sub { Dumper($rands) });
 
     if($obj->{'type'} eq 'str') {
         my $v = $obj->{'val'};
@@ -855,8 +853,6 @@ sub eval_lc {
 
     $logger->trace("obj: ", sub { Dumper($obj) });
 
-    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-#    $logger->trace("obj: ", sub { Dumper($rands) });
 
     if($obj->{'type'} eq 'str') {
         my $v = $obj->{'val'};
@@ -883,8 +879,6 @@ sub eval_ucfirst {
     #$logger->trace("obj: ", sub { Dumper($obj) });
     return $obj unless defined $obj;
 
-#    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-#    $logger->trace("obj: ", sub { Dumper($rands) });
 
     if($obj->{'type'} eq 'str') {
         my $v = $obj->{'val'};
@@ -902,6 +896,32 @@ sub eval_ucfirst {
     }
 }
 $funcs->{'ucfirst'} = \&eval_ucfirst;
+
+sub eval_trim {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+    #$logger->trace("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
+
+    if($obj->{'type'} eq 'str') {
+        my $v = $obj->{'val'};
+	$v =~ s/^\s+//;
+	$v =~ s/\s+$//;
+#        $logger->debug("toUpper: ", $v);
+        return Kynetx::Expressions::typed_value($v);
+    } else {
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[trim] argument not a string",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   )
+    }
+}
+$funcs->{'trim'} = \&eval_trim;
 
 sub eval_split {
   my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
