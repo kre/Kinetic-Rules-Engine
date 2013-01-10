@@ -141,7 +141,9 @@ sub get_config {
     }
 }
 
-
+sub get_version {
+  return $VERSION;
+}
 
 sub set_run_mode {
     my ($mode) = @_;

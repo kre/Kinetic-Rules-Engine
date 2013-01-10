@@ -1,8 +1,9 @@
 package Kynetx::Repository;
+
 # file: Kynetx/Repository.pm
 #
 # This file is part of the Kinetic Rules Engine (KRE)
-# Copyright (C) 2007-2011 Kynetx, Inc. 
+# Copyright (C) 2007-2011 Kynetx, Inc.
 #
 # KRE is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -20,6 +21,7 @@ package Kynetx::Repository;
 # MA 02111-1307 USA
 #
 use strict;
+
 #use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
@@ -31,33 +33,34 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
-
+use Digest::MD5 qw(md5_base64);
 
 use Kynetx::Memcached qw(:all);
 use Kynetx::Json qw(:all);
 use Kynetx::Predicates::Page;
 use Kynetx::Rules;
 use Kynetx::Rids qw(:all);
+use Kynetx::Repository::HTTP;
+use Kynetx::Repository::File;
+use Kynetx::Repository::XDI;
 
-our $VERSION     = 1.00;
-our @ISA         = qw(Exporter);
+our $VERSION = 1.00;
+our @ISA     = qw(Exporter);
 
 # put exported names inside the "qw"
-our %EXPORT_TAGS = (all => [
-qw(
-) ]);
-our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
+our %EXPORT_TAGS = (
+  all => [
+    qw(
+      )
+  ]
+);
+our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 # $sversion allows modules to specify the version of the ruleset that is requested
 # $text requests the krl not the ast
-sub get_rules_from_repository{
+sub get_rules_from_repository {
 
-    my ($rid_info, $req_info, $sversion, $localparsing, $text) = @_;
-
-    my $logger = get_logger();
-
-    my $rid = get_rid($rid_info);
-
+<<<<<<< HEAD
     # default to production for svn repo
     # defaults to production when no version specified
     # use specified version first
@@ -69,32 +72,80 @@ sub get_rules_from_repository{
 			  Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', [$rid.':kinetic_app_version']) || 
 		  'prod';
     $req_info->{'rule_version'} = $version;
+=======
+  my ( $rid_info, $req_info, $sversion, $localparsing, $text ) = @_;
+>>>>>>> github10
 
-    my $memd = get_memd();
+  my $logger = get_logger();
 
-    my $rs_key = make_ruleset_key($rid, $version);
+  my $rid = get_rid($rid_info);
 
-    # wait if this ruleset's being parsed now
-    my $counter = 0;
-    while (Kynetx::Memcached::is_parsing($memd, $rs_key) &&
-	   $counter < 6 # don't wait forever
-	  ) {
-      sleep 1;
-      $counter++;
-      $logger->info("Parsing semaphore hold: $counter") if ($counter % 2) == 0;
+  # default to production for svn repo
+  # defaults to production when no version specified
+  # use specified version first
+  my $version =
+       $sversion
+    || get_version($rid_info)
+    || Kynetx::Predicates::Page::get_pageinfo( $req_info, 'param',
+    ['kynetx_app_version'] )
+    || Kynetx::Predicates::Page::get_pageinfo( $req_info, 'param',
+    ['kinetic_app_version'] )
+    || 'prod';
+  $req_info->{'rule_version'} = $version;
+
+  my $memd = get_memd();
+
+  my $rs_key = make_ruleset_key( $rid, $version );
+
+  # wait if this ruleset's being parsed now
+  my $counter = 0;
+  while (
+    Kynetx::Memcached::is_parsing( $memd, $rs_key )
+    && $counter < 6    # don't wait forever
+    )
+  {
+    sleep 1;
+    $counter++;
+    $logger->info("Parsing semaphore hold: $counter") if ( $counter % 2 ) == 0;
+  }
+
+  my $ruleset = $memd->get($rs_key);
+
+  if ( $ruleset
+    && $ruleset->{'optimization_version'}
+    && $ruleset->{'optimization_version'} ==
+    Kynetx::Rules::get_optimization_version()
+    && !$text )
+  {
+    $logger->debug(
+"Using cached ruleset for $rid ($version) with key $rs_key & optimization version ",
+      $ruleset->{'optimization_version'}
+    );
+
+    return $ruleset;
+  }
+
+
+  # this gets cleared when we're done
+  $logger->debug("Setting parsing semaphore for $rs_key");
+  Kynetx::Memcached::set_parsing_flag( $memd, $rs_key );
+  my $uri = get_uri($rid_info);
+  my $result;
+  
+  if (defined $uri) {
+    my $parsed_uri = APR::URI->parse($req_info->{'pool'}, $uri);
+    my $scheme = $parsed_uri->scheme;
+    if ($scheme =~ m/http/) {
+      $logger->debug("HTTP repository");
+      $ruleset = Kynetx::Repository::HTTP::get_ruleset($rid_info);
+    } elsif ($scheme =~ m/file/) {
+      $logger->debug("File repository");
+      $ruleset = Kynetx::Repository::File::get_ruleset($rid_info);
+    } elsif ($scheme =~ m/xri/) {
+      $logger->debug("XDI repository");
+      $ruleset = Kynetx::Repository::XDI::get_ruleset($rid_info);
     }
-
-    my $ruleset = $memd->get($rs_key);
-
-    if ($ruleset &&
-	$ruleset->{'optimization_version'} &&
-	$ruleset->{'optimization_version'} == Kynetx::Rules::get_optimization_version() &&
-	! $text) {
-      $logger->debug("Using cached ruleset for $rid ($version) with key $rs_key & optimization version ", $ruleset->{'optimization_version'} );
-
-
-      return $ruleset;
-    }
+<<<<<<< HEAD
 #     if ($ruleset &&
 # 	$ruleset->{'optimization_version'} &&
 # 	$ruleset->{'optimization_version'} < Kynetx::Rules::get_optimization_version()) {
@@ -242,100 +293,58 @@ sub get_rules_from_repository{
       }
 
     } else { # default to file
+=======
+>>>>>>> github10
     
-      my $fn = "$repo_info/$rid.krl";
-      my $result;
-      $logger->debug("Using filesystem for repo. Looking for $fn");
-      if(-e $fn) {
-	open(RS, $fn ) ||
-		    $logger->error("Can't open file $fn: $!\n");
-	local $/ = undef;
-	$result = <RS>;
-	close RS;
-      }
-
-      if (defined $result) {
-	$ruleset = Kynetx::Parser::parse_ruleset($result);
+  } else {
+    # Try the default repository if $rid_info is not fully configured
+    $logger->debug("Check default repository");
+    my $repo = Kynetx::Configure::get_config('RULE_REPOSITORY');
+    my ($base_url,$username,$password) = split(/\|/, $repo);
+    $logger->trace("URL: $base_url");
+    my $rs_url = join('/', ($base_url, $rid, $version, 'krl/'));
+    $rid_info->{'uri'} = $rs_url;
+    $rid_info->{'username'} = $username;
+    $rid_info->{'password'} = $password;
+    $logger->trace("Rid info: ", sub {Dumper($rid_info)});
+    $ruleset = Kynetx::Repository::HTTP::get_ruleset($rid_info);
+    
+  }
+  Kynetx::Memcached::clr_parsing_flag($memd,$rs_key);
+  if (defined $ruleset) {
+    $req_info->{'rule_version'} = $version;
+    $ruleset = Kynetx::Parser::parse_ruleset($ruleset);
+    unless($ruleset->{'ruleset_name'} eq 'norulesetbythatappid' || 
+      defined $ruleset->{'error'}) {
+        $ruleset = Kynetx::Rules::optimize_ruleset($ruleset);
+        $logger->debug("Found rules  for $rid");
+        $logger->debug("Caching ruleset for $rid using key $rs_key");
+        $memd->set($rs_key,$ruleset);
       } else {
-	$ruleset =  make_empty_ruleset($rid, $fn);
-      }
-
-
-    }
-
-    $logger->debug("Clearing parsing semaphore for $rs_key");
-    Kynetx::Memcached::clr_parsing_flag($memd, $rs_key);
-
-    unless ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid' ||
-	    defined $ruleset->{'error'}) {
-      $ruleset = Kynetx::Rules::optimize_ruleset($ruleset);
-
-      $logger->debug("Found rules for $rid");
-
-      $logger->debug("Caching ruleset for $rid using key $rs_key");
-      $memd->set($rs_key, $ruleset);
-    } else {
-      if ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid') {
-	$logger->error("Ruleset $rid not found");
+        if ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid') {
+          $logger->error("Ruleset $rid not found");
       } elsif (defined $ruleset->{'error'}) {
-	$logger->error("Ruleset parsing error for $rid: ", sub {Dumper ($ruleset->{'error'})});
+          $logger->error("Ruleset parsing error for $rid: ", sub {Dumper ($ruleset->{'error'})});
       } else {
-	$logger->error("Unspecified ruleset repository error for $rid");
+          $logger->error("Unspecified ruleset repository error for $rid");
       }
-    }
+      }
     return $ruleset;
+  } else {
+    $logger->warn("Failed to recover ruleset for $rid, creating empty ruleset");
+    return make_empty_ruleset($rid);
+  }
 
 }
 
-sub get_svn_conn {
-    my($svn_conn) = @_;
-    my $logger = get_logger();
-
-    my ($svn_url,$username,$passwd);
-    if ($svn_conn) {
-	($svn_url,$username,$passwd) = split(/\|/, $svn_conn);
-    } else {
-	$svn_url = 'svn://127.0.0.1/rules/client/';
-	$username = 'web';
-	$passwd = 'nopass';
-    }
-
-
-    $logger->debug("Connecting to rule repository at $svn_url");
-
-
-    my $simple_prompt = sub {
-	my $cred = shift;
-	my $realm = shift;
-	my $default_username = shift;
-	my $may_save = shift;
-	my $pool = shift;
-
-	$cred->username($username);
-	$cred->password($passwd);
-    };
-
-    # returns a list with the connection and the URL
-    # This message:
-    # Permission denied: Can't open file '/root/.subversion/servers': Permission denied at /web/lib/perl/Kynetx/Repository.pm line 140\
-    # means that the Web server is looking in /root/ instead of /web/
-    # where it has permissions.  Web server should be started with HOME=/web
-    return (new SVN::Client(
-		auth => [SVN::Client::get_simple_provider(),
-			 SVN::Client::get_simple_prompt_provider($simple_prompt,2),
-			 SVN::Client::get_username_provider()]
-	    ),
-	    $svn_url)
-
-
-
-  }
+sub flush {
+  my ($rid,$version) = @_;
+  my $rs_key = make_ruleset_key( $rid, $version );
+  Kynetx::Memcached::flush_cache($rs_key);
+}
 
 sub make_empty_ruleset {
-  my ($rid, $url) = @_;
-
-  my $logger = get_logger();
-  $logger->error("Error retrieving $url; returning empty ruleset\n");
+  my ( $rid ) = @_;
   my $json = <<JSON;
 {"global":[],"dispatch":[],"ruleset_name":"$rid","rules":[],"meta":{}}
 JSON
@@ -345,11 +354,10 @@ JSON
 }
 
 sub make_ruleset_key {
-  my ($rid, $version) = @_;
-  return "ruleset:$version:$rid";
+  my ( $rid, $version ) = @_;
+  my $opt = Kynetx::Rules::get_optimization_version();
+  my $keystring =  "ruleset:$opt:$version:$rid";
+  return md5_base64($keystring);
 }
-
-
-
 
 1;

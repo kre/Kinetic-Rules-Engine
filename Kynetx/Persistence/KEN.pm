@@ -119,6 +119,7 @@ sub ken_lookup_by_userid {
 	if (! defined $userid || $userid eq "") {
 		return undef;
 	}
+	$userid *=1;
 	my $key = {
 		'user_id' => $userid
 	};
@@ -156,7 +157,27 @@ sub mongo_has_ken {
     }
     return undef;
 }
-
+sub set_authorizing_password {
+	my ($ken,$password_hash) = @_;
+	my $logger = get_logger();
+	my $oid = MongoDB::OID->new(value => $ken);
+	my $key = {"_id" => $oid};
+  my $update = {
+		'$inc' => {'accesses' => 1},
+		'$set' => {'password' => $password_hash}
+	};
+	my $fnmod = {
+	  'query' => $key,
+	  'update' => $update
+	};
+  my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod,1);          
+	if (defined $result->{"value"}) {
+	  Kynetx::MongoDB::clear_cache(COLLECTION,$key);
+	  return 1;
+	}
+	return 0;
+  
+}
 sub get_authorizing_password {
 	my ($ken) = @_;
 	my $logger = get_logger();
@@ -206,6 +227,7 @@ sub get_ken_value {
     my $logger = get_logger();
     my $oid = MongoDB::OID->new(value => $ken);
     my $valid = Kynetx::MongoDB::get_singleton(COLLECTION,{"_id" => $oid});
+    $logger->trace("Ken: ", sub {Dumper($valid)});
     return $valid->{$key};
 }
 
