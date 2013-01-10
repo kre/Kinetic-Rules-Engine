@@ -1001,6 +1001,14 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+$e[$i] = q!my_str.lc().ucfirst()!;
+$x[$i] = {
+    'val' => 'This is a string',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
 
 
 #
