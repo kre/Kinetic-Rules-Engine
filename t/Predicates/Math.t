@@ -36,7 +36,7 @@ use Data::Dumper;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Predicates::Math qw/:all/;
@@ -222,6 +222,11 @@ is(math_handle( 'int', [2.999]), 2, 'int');
 is(math_handle( 'abs', [-2]), 2, 'absolute value');
 like(math_handle( 'log', [7.389]), qr/^1\.99\d+$/, 'logarithm');
 like(math_handle( 'sqrt', [7.389]), qr/^2\.7\d+$/, 'square root');
+like(math_handle( 'power', [2, 8]), qr/^256$/, 'power');
+like(math_handle( 'ceiling', [2.78]), qr/^3$/, 'ceiling');
+like(math_handle( 'floor', [2.78]), qr/^2$/, 'floor');
+like(math_handle( 'round', [2.1]), qr/^2$/, 'round');
+like(math_handle( 'round', [2.7]), qr/^3$/, 'round');
 
 
 done_testing();
