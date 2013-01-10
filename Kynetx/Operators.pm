@@ -145,8 +145,10 @@ sub eval_length {
     my $v = 0;
     if ($obj->{'type'} eq 'array') {
 	$v = @{ $obj->{'val'} } + 0;
+    } elsif ($obj->{'type'} eq 'str') {
+	$v = length($obj->{'val'});
     } else {
-      $logger->debug("length used in non-array context");
+      $logger->debug("length used in non-array or non-string context");
     }
 
     return Kynetx::Expressions::typed_value($v);
