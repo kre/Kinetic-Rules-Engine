@@ -2785,7 +2785,7 @@ EXTRACT
 //	;
 
 OTHER_OPERATORS
-	:  'pick'|'length'|'as'|'head'|'tail'|'sort'
+	: 'pick'|'length'|'as'|'head'|'tail'|'sort'|'index'
     | 'filter'|'collect'|'map'|'reduce'|'reverse' 
     | 'substr'| 'uc'|'lc' | 'capitalize' | 'split' | 'sprintf' | 'join' | 'query' | 'trim'
     | 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
