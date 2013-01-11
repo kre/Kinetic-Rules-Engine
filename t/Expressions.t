@@ -177,6 +177,65 @@ my $url_timeout = 1;
 #   my ($req_info, $rule_env, $rule_name, $session, $decl) = @_;
 
 
+#diag "----------------------------------------------------------";
+
+sub eval_str_test {
+  my ($str) = @_; 
+#  diag "Orig str: ", Dumper $str;
+  my $parsed_str = Kynetx::Parser::parse_decl($str)->{'rhs'};
+#  diag "Parsed str: ", Dumper $parsed_str;
+  return Kynetx::Expressions::eval_str(
+       $parsed_str,
+       $rule_env,
+       $rule_name,
+       $my_req_info,
+       $session)->{'val'};
+}
+
+$krl_src = <<_KRL_;
+x = "My city is #{city} Idaho"
+_KRL_
+is(eval_str_test($krl_src), "My city is Blackfoot Idaho", $krl_src);
+$test_count++;
+
+$krl_src = <<_KRL_;
+x = "My city is #{city}"
+_KRL_
+is(eval_str_test($krl_src), "My city is Blackfoot", $krl_src);
+$test_count++;
+
+$krl_src = <<_KRL_;
+x = "#{city} is my city"
+_KRL_
+is(eval_str_test($krl_src), "Blackfoot is my city", $krl_src);
+$test_count++;
+
+$krl_src = <<_KRL_;
+x = "#{city} is my city and #{city2} is not"
+_KRL_
+is(eval_str_test($krl_src), "Blackfoot is my city and Seattle is not", $krl_src);
+$test_count++;
+
+$krl_src = <<_KRL_;
+x = "#{city + city2} is my city"
+_KRL_
+is(eval_str_test($krl_src), "BlackfootSeattle is my city", $krl_src);
+$test_count++;
+
+$krl_src = <<_KRL_;
+x = <<#{b + store.pick("\$..book[1].price")} is the price>>
+_KRL_
+is(eval_str_test($krl_src), "23.99 is the price", $krl_src);
+$test_count++;
+
+$krl_src = <<_KRL_;
+x = <<#{b + store.pick("\$..book[1].price")} is the price in #{city2}>>
+_KRL_
+is(eval_str_test($krl_src), "23.99 is the price in Seattle", $krl_src);
+$test_count++;
+
+
+
 
 sub mk_datasource_function {
     my ($source, $args, $diag) = @_;
@@ -551,64 +610,6 @@ test_exp_to_den(
 );
 
 #---------------------------------------------------
-
-#diag "----------------------------------------------------------";
-
-sub eval_str_test {
-  my ($str) = @_; 
-#  diag "Orig str: ", Dumper $str;
-  my $parsed_str = Kynetx::Parser::parse_decl($str)->{'rhs'};
-#  diag "Parsed str: ", Dumper $parsed_str;
-  return Kynetx::Expressions::eval_str(
-       $parsed_str,
-       $rule_env,
-       $rule_name,
-       $my_req_info,
-       $session)->{'val'};
-}
-
-$krl_src = <<_KRL_;
-x = "My city is #{city} Idaho"
-_KRL_
-is(eval_str_test($krl_src), "My city is Blackfoot Idaho", $krl_src);
-$test_count++;
-
-$krl_src = <<_KRL_;
-x = "My city is #{city}"
-_KRL_
-is(eval_str_test($krl_src), "My city is Blackfoot", $krl_src);
-$test_count++;
-
-$krl_src = <<_KRL_;
-x = "#{city} is my city"
-_KRL_
-is(eval_str_test($krl_src), "Blackfoot is my city", $krl_src);
-$test_count++;
-
-$krl_src = <<_KRL_;
-x = "#{city} is my city and #{city2} is not"
-_KRL_
-is(eval_str_test($krl_src), "Blackfoot is my city and Seattle is not", $krl_src);
-$test_count++;
-
-$krl_src = <<_KRL_;
-x = "#{city + city2} is my city"
-_KRL_
-is(eval_str_test($krl_src), "BlackfootSeattle is my city", $krl_src);
-$test_count++;
-
-$krl_src = <<_KRL_;
-x = <<#{b + store.pick("\$..book[1].price")} is the price>>
-_KRL_
-is(eval_str_test($krl_src), "23.99 is the price", $krl_src);
-$test_count++;
-
-$krl_src = <<_KRL_;
-x = <<#{b + store.pick("\$..book[1].price")} is the price in #{city2}>>
-_KRL_
-is(eval_str_test($krl_src), "23.99 is the price in Seattle", $krl_src);
-$test_count++;
-
 
 # ---------------booily -------------------------
 is(Kynetx::Expressions::boolify(1), JSON::XS::true, "boolify for 1");

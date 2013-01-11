@@ -600,9 +600,8 @@ sub eval_application {
     unless defined $req_info->{$closure->{'val'}->{'sig'}};
 
   # FIXME: remove this after we find problem...
-  $logger->debug("Sig: ", $closure->{'val'}->{'sig'}, 
-		 " Count: ", $req_info->{$closure->{'val'}->{'sig'}}, 
-		 " Threshold: ", $function_call_threshold);
+  $logger->debug("Executing function with sig: ", $closure->{'val'}->{'sig'}, 
+  		 " Count: ", $req_info->{$closure->{'val'}->{'sig'}});
 
 
   if ($req_info->{$closure->{'val'}->{'sig'}} > $function_call_threshold) {
@@ -1491,42 +1490,76 @@ sub all_cachable {
 #
 # handle beestings
 #
+# sub eval_str {
+#     my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
+#     my $logger = get_logger();
+#     my $json = new JSON::XS;
+#     my @parts;
+#     my $val = '';
+#     my $str = ref $expr eq 'HASH' ? $expr->{'val'} : $expr;
+# #    $logger->debug("Original expr: ", sub {Dumper $str});
+#     while (@parts = $str =~ m/(.*?)\#\{(.+?)\}{1}?(.*)/s) {
+# #      $logger->debug("Picked apart ", sub {Dumper @parts});
+#       last unless $parts[1];
+#       my $bee_expr = Kynetx::Parser::parse_expr($parts[1]);
+#       my $bee_val = eval_expr($bee_expr,$rule_env, $rule_name,$req_info, $session)->{'val'};
+# #      $logger->debug("parsed and evaled beesting: ", sub {Dumper($bee_val)} );
+#       if (ref $bee_val eq 'ARRAY' || ref $bee_val eq 'HASH') {
+# 	$bee_val = $json->encode($bee_val) || "";
+#       }
+#       $val .= $parts[0].$bee_val;
+#       $str = $parts[2];
+#     }
+#     $val .= $str if defined $str;
+#     return Kynetx::Parser::mk_expr_node('str',$val);
+
+# }
+
 sub eval_str {
     my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
     my $logger = get_logger();
     my $json = new JSON::XS;
-    my @parts;
     my $val = '';
+    my @parts;
     my $str = ref $expr eq 'HASH' ? $expr->{'val'} : $expr;
 #    $logger->debug("Original expr: ", sub {Dumper $str});
-    while (@parts = $str =~ m/(.*?)\#\{(.+?)\}{1}?(.*)/s) {
-#      $logger->debug("Picked apart ", sub {Dumper @parts});
-      last unless $parts[1];
-      my $bee_expr = Kynetx::Parser::parse_expr($parts[1]);
-      my $bee_val = eval_expr($bee_expr,$rule_env, $rule_name,$req_info, $session)->{'val'};
-#      $logger->debug("parsed and evaled beesting: ", sub {Dumper($bee_val)} );
-      if (ref $bee_val eq 'ARRAY' || ref $bee_val eq 'HASH') {
-	$bee_val = $json->encode($bee_val) || "";
+    my $str_sig = md5_hex($str);
+
+    my $string_array = [];
+    my $expr_array = [];
+
+    if (defined $req_info->{'string_stash'}->{$rule_name}->{$str_sig}) {
+      $string_array = $req_info->{'string_stash'}->{$str_sig}->{'str_array'};
+      $expr_array = $req_info->{'string_stash'}->{$str_sig}->{'expr_array'};
+    } else {
+       
+      my $count = 0;
+      while (@parts = $str =~ m/(.*?)\#\{(.+?)\}{1}?(.*)/s) {
+	#      $logger->debug("Picked apart ", sub {Dumper @parts});
+	last unless $parts[1];
+	my $bee_expr = Kynetx::Parser::parse_expr($parts[1]);
+	my $label = "_____EXPR____".$count++;
+	push (@{ $string_array }, ($parts[0], $label));
+	push( @{ $expr_array }, $bee_expr);
+	$str = $parts[2];
       }
-      $val .= $parts[0].$bee_val;
-      $str = $parts[2];
+      push (@{ $string_array }, $str) if (defined $str);
+   
+      #    $logger->debug("*****My string ", sub {Dumper $string_array},sub {Dumper $expr_array}, sub {Dumper @vals});
+
+      $req_info->{'string_stash'}->{$str_sig}->{'str_array'} = $string_array;
+      $req_info->{'string_stash'}->{$str_sig}->{'expr_array'} = $expr_array;
     }
-    $val .= $str if defined $str;
+
+    my @vals = map {my $v = eval_expr($_,$rule_env, $rule_name,$req_info, $session)->{'val'};
+                    (ref $v eq 'ARRAY' || ref $v eq 'HASH') ? $json->encode($v) || "" : $v
+		   } @{$expr_array};
+    $val = join('',map {$_ =~ m#^_____EXPR____(\d+)$# ? $vals[$1] : $_ } @{ $string_array});
     return Kynetx::Parser::mk_expr_node('str',$val);
 
 }
 
-# # shouldn't be used anymore
-# sub eval_string {
-#     my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
-#     my $logger = get_logger();
-#     $expr->{'val'} =~ m/(.*)\#\{(.+?)\}{1}?(.*)/s;
-#     my $bee_expr = Kynetx::Parser::parse_expr($2);
-# #    $logger->debug("parsed beesting: ", sub {Dumper($bee_expr)} );
-#     my $val = $1.eval_expr($bee_expr,$rule_env, $rule_name,$req_info, $session)->{'val'}.$3;
-#     return (eval_expr({'val' => $val, 'type' => 'str'}, $rule_env, $rule_name,$req_info, $session));
 
-# }
 
 sub type_of {
   my $dval = shift;
