@@ -203,6 +203,26 @@ add_expr_testcase(
     0);
 
 $krl_src = <<_KRL_;
+ -5 + 4
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    '(-5 + 4)',
+    mk_expr_node('num', -1),
+    0);
+
+$krl_src = <<_KRL_;
+ 4 + -5
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    '(4 + -5)',
+    mk_expr_node('num', -1),
+    0);
+
+$krl_src = <<_KRL_;
 "foo" + "bar"
 _KRL_
 add_expr_testcase(

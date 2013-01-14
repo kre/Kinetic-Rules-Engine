@@ -26,6 +26,7 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 #use Storable qw(dclone);
 use Clone qw(clone);
+use List::MoreUtils;
 
 use Kynetx::Expressions;
 use Kynetx::JSONPath ;
@@ -145,8 +146,10 @@ sub eval_length {
     my $v = 0;
     if ($obj->{'type'} eq 'array') {
 	$v = @{ $obj->{'val'} } + 0;
+    } elsif ($obj->{'type'} eq 'str') {
+	$v = length($obj->{'val'});
     } else {
-      $logger->debug("length used in non-array context");
+      $logger->debug("length used in non-array or non-string context");
     }
 
     return Kynetx::Expressions::typed_value($v);
@@ -565,7 +568,6 @@ sub eval_join {
   if($obj->{'type'} eq 'array' &&
      $rands->[0]->{'type'} eq 'str') {
 
-    # get capture vars first
     $result = join($join_val, @{$v});
 
   } else {
@@ -576,8 +578,6 @@ sub eval_join {
 				   'species' => 'type mismatch'
 				  }
 				 )
-#      $logger->warn("Not a string: ", $join_val)
-	  unless $rands->[0]->{'type'} eq 'regexp';
   }
 
   return Kynetx::Expressions::typed_value($result);
@@ -617,6 +617,78 @@ sub eval_append {
 }
 $funcs->{'append'} = \&eval_append;
 
+sub eval_index {
+  my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+  my $logger = get_logger();
+  my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#   $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
+
+  my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+    $logger->debug("rands: ", sub { Dumper($rands) });
+
+  my $arg_type = Kynetx::Expressions::type_of($rands->[0]);
+  unless ( $arg_type eq 'str' 
+        || $arg_type eq 'num' 
+        || $arg_type eq 'regexp' 
+        || $arg_type eq 'bool' 
+         ) {
+    
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[index] argument not an simple type",
+				  {'rule_name' => $rule_name,
+				   'genus' => 'operator',
+				   'species' => 'type mismatch'
+				  }
+				 );
+      return Kynetx::Expressions::typed_value(-1);
+  }
+
+  my $result;
+
+  if($obj->{'type'} eq 'array') {
+
+#    $logger->debug("Looking for ", sub{ Dumper Kynetx::Expressions::den_to_exp($rands->[0]) });
+
+    # get capture vars first
+    $result = List::MoreUtils::first_index {val_eq($_, Kynetx::Expressions::den_to_exp($rands->[0]))}  @{$obj->{'val'}};
+
+  } else {
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[index] object not an array",
+				  {'rule_name' => $rule_name,
+				   'genus' => 'operator',
+				   'species' => 'type mismatch'
+				  }
+				 )
+  }
+
+
+
+  $logger->debug("Index result: ", $result);
+
+  return Kynetx::Expressions::typed_value($result);
+}
+$funcs->{'index'} = \&eval_index;
+
+
+sub val_eq {
+  my($first, $second) = @_;
+
+  my $logger = get_logger();
+  $logger->debug("First ", sub {Dumper $first});
+  $logger->debug("Second ", sub {Dumper $second});
+  if (JSON::XS::is_bool $first && 
+      JSON::XS::is_bool $second) {
+    return ! ($first xor $second)  # both false or both true
+  } elsif (JSON::XS::is_bool $first ||  
+           JSON::XS::is_bool $second)  { # one is bool and other is not
+    return 0
+  } else {
+    return $first eq $second;
+  }
+}
 
 #-----------------------------------------------------------------------------------
 # string operators
@@ -826,8 +898,6 @@ sub eval_uc {
     #$logger->trace("obj: ", sub { Dumper($obj) });
     return $obj unless defined $obj;
 
-    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-#    $logger->trace("obj: ", sub { Dumper($rands) });
 
     if($obj->{'type'} eq 'str') {
         my $v = $obj->{'val'};
@@ -853,8 +923,6 @@ sub eval_lc {
 
     $logger->trace("obj: ", sub { Dumper($obj) });
 
-    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-#    $logger->trace("obj: ", sub { Dumper($rands) });
 
     if($obj->{'type'} eq 'str') {
         my $v = $obj->{'val'};
@@ -872,6 +940,58 @@ sub eval_lc {
     }
 }
 $funcs->{'lc'} = \&eval_lc;
+
+sub eval_capitalize {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+    #$logger->trace("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
+
+
+    if($obj->{'type'} eq 'str') {
+        my $v = $obj->{'val'};
+        $v = ucfirst($v);
+#        $logger->debug("toUpper: ", $v);
+        return Kynetx::Expressions::typed_value($v);
+    } else {
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[capitalize] argument not a string",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   )
+    }
+}
+$funcs->{'capitalize'} = \&eval_capitalize;
+
+sub eval_trim {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+    #$logger->trace("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
+
+    if($obj->{'type'} eq 'str') {
+        my $v = $obj->{'val'};
+	$v =~ s/^\s+//;
+	$v =~ s/\s+$//;
+#        $logger->debug("toUpper: ", $v);
+        return Kynetx::Expressions::typed_value($v);
+    } else {
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[trim] argument not a string",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   )
+    }
+}
+$funcs->{'trim'} = \&eval_trim;
 
 sub eval_split {
   my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;

@@ -109,6 +109,42 @@ sub md5 {
 }
 $funcs->{'md5'} = \&md5;
 
+sub _power {
+    my ($req_info, $function, $args) = @_;
+    my $logger = get_logger();
+	my $val = $args->[0] ** $args->[1];
+	
+	return $val;
+}
+$funcs->{'power'} = \&_power;
+
+sub _ceiling {
+    my ($req_info, $function, $args) = @_;
+    my $logger = get_logger();
+	my $val = int($args->[0]+0.99);
+	
+	return $val;
+}
+$funcs->{'ceiling'} = \&_ceiling;
+
+sub _floor {
+    my ($req_info, $function, $args) = @_;
+    my $logger = get_logger();
+	my $val = int($args->[0]);
+	
+	return $val;
+}
+$funcs->{'floor'} = \&_floor;
+
+sub _round {
+    my ($req_info, $function, $args) = @_;
+    my $logger = get_logger();
+	my $val = int($args->[0]+0.5);
+	
+	return $val;
+}
+$funcs->{'round'} = \&_round;
+
 sub _hmac_sha1 {
     my ($req_info, $function, $args) = @_;
     my $logger = get_logger();

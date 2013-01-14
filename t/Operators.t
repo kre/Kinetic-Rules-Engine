@@ -88,12 +88,16 @@ pre {
   j = [{"a" : 1, "b" : 2, "c": 3}, {"a" : 4, "b" : 5, "c": 6}, {"a" : 7, "b" : 8, "c": 9}];
   k = [100, 1, 10, 1000, 21, 92];
   m = [76];
+
+  mixed_array = [1, 'abe', re/foo.*/, true, false, 56];
+
   edo = [{"a" : 2}, {"b" : 26}, {"c" : 5}, {"d" : 16}, {"e": 29}];
   //edo = [{"a bc" : 15}, {"b ad" : 26}, {"c" : 5}, {"d" : 16}, {"e": 2}];
   //edo = [{'crazy chicken' :1}, {'massaman curry ***' :5}, {'pad thai' :3}, {'chinese' :1}, {'j dogs' :2}, {'thai pad' :2}, {'el pollo loco' :1}, {'jcw pastrami burger' :1}, {'costco pizza' :1}, {'jimmy johns' :3}];
   employees = [{'name' : 'Ron', 'dept': 'marketing'}, {'name' : 'Steve', 'dept' : 'executive'}, {'name': 'Mark', 'dept': 'engr'}];
   foo = "I like cheese";
   my_str = "This is a string";
+  spacey_str = "    spaces     \n";
   phone_num = "1234567890";
   split_str = "A;B;C";
   my_url = "http://www.amazon.com/gp/products/123456789/";
@@ -993,6 +997,30 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+$e[$i] = q!my_str.length()!;
+$x[$i] = {
+    'val' => 16,
+    'type' => 'num'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q!my_str.lc().capitalize()!;
+$x[$i] = {
+    'val' => 'This is a string',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q!spacey_str.trim()!;
+$x[$i] = {
+    'val' => 'spaces',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
 
 
 #
@@ -1318,6 +1346,97 @@ $x[$i] = {
 };
 $d[$i]  = 0;
 $i++;
+
+#------------------------------------------------------------------
+# index
+#------------------------------------------------------------------
+
+$e[$i] = q#k.index(21)#;
+$x[$i] = {
+   'val' => 4,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#c.index(5)#;
+$x[$i] = {
+   'val' => 1,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#c.index(10)#;
+$x[$i] = {
+   'val' => -1,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#my_str.split(re/ /).index('a')#;
+$x[$i] = {
+   'val' => 2,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#my_str.split(re/ /).index('st')#;
+$x[$i] = {
+   'val' => -1,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+#   mixed_array = [1, 'abe', re/foo.*/, true, false, 56];
+$e[$i] = q#mixed_array.index(1)#;
+$x[$i] = {
+   'val' => 0,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+
+#   mixed_array = [1, 'abe', re/foo.*/, true, false, 56];
+$e[$i] = q#mixed_array.index('abe')#;
+$x[$i] = {
+   'val' => 1,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+#   mixed_array = [1, 'abe', re/foo.*/, true, false, 56];
+$e[$i] = q#mixed_array.index(re/foo.*/)#;
+$x[$i] = {
+   'val' => 2,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+#   mixed_array = [1, 'abe', re/foo.*/, true, false, 56];
+$e[$i] = q#mixed_array.index(true)#;
+$x[$i] = {
+   'val' => 3,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+#   mixed_array = [1, 'abe', re/foo.*/, true, false, 56];
+$e[$i] = q#mixed_array.index(false)#;
+$x[$i] = {
+   'val' => 4,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
 
 
 #------------------------------------------------------------------

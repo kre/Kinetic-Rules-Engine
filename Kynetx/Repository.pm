@@ -119,7 +119,7 @@ sub get_rules_from_repository {
   my $result;
   
   if (defined $uri) {
-    my $parsed_uri = APR::URI->parse($req_info->{'pool'}, $uri);
+    my $parsed_uri = URI->new($uri);
     my $scheme = $parsed_uri->scheme;
     if ($scheme =~ m/http/) {
       $logger->debug("HTTP repository");
