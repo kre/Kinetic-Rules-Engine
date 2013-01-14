@@ -172,7 +172,7 @@ sub get_rules_from_repository {
 
 }
 
-sub flush_cache {
+sub flush_ruleset {
   my ($rid,$version) = @_;
   my $rs_key = make_ruleset_key( $rid, $version );
   Kynetx::Memcached::flush_cache($rs_key);
