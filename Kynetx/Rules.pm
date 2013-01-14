@@ -1362,7 +1362,7 @@ sub optimize_ruleset {
 
 # incrementing the number here will force cache reloads of rulesets with lower #'s
 sub get_optimization_version {
-	my $version = 10;
+	my $version = 11;
 	return $version;
 }
 
@@ -1406,6 +1406,8 @@ sub optimize_rule {
 	# break up pre, if needed
 	optimize_pre($rule);
 
+#	$logger->debug("Optimized rule ", sub {Dumper $rule });
+
 	return $rule;
 }
 
@@ -1413,11 +1415,6 @@ sub optimize_pre {
 	my ($rule) = @_;
 	my $logger = get_logger();
 	my @varlist = map { $_->{'var'} } @{ $rule->{'pagetype'}->{'foreach'} };
-
-	# don't need this, but I love it.
-	# 	  my %is_var;
-	# 	  # create a hash for testing whether a var is defined or not
-	# 	  @is_var{@vars} = (1) x @vars;
 
 	my @vars;
 	foreach my $v (@varlist) {
@@ -1434,8 +1431,15 @@ sub optimize_pre {
 
 	foreach my $decl ( @{ $rule->{'pre'} } ) {
 
-		# check if any of the vars occur free in the rhs
 		$logger->trace( "[rules::optimize_pre] decl: ", sub { Dumper($decl) } );
+		# optimize here_docs
+		if ( $decl->{'type'} eq 'here_doc') {
+		  my ($string_array, $expr_array) = Kynetx::Expressions::optimize_here_doc($decl->{'rhs'});
+		  $decl->{'string_array'} = $string_array;
+		  $decl->{'expr_array'} = $expr_array;
+		}
+
+		# check if any of the vars occur free in the rhs
 		my $dependent = 0;
 		foreach my $v (@vars) {
 
@@ -1445,12 +1449,12 @@ sub optimize_pre {
 			{
 				$dependent = 1;
 			}
-			elsif ( $decl->{'type'} eq 'here_doc'
+			elsif ( $decl->{'type'} eq 'here_doc' 
 				&& Kynetx::Expressions::var_free_in_expr( $v, $decl ) )
 			{
 				$dependent = 1;
 			}
-		}
+		      }
 		if ($dependent) {
 			push( @{ $rule->{'inner_pre'} }, $decl );
 			push( @vars,                     $decl->{'lhs'} ); # collect new var

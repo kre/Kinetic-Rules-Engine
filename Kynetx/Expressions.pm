@@ -165,7 +165,7 @@ sub eval_decl {
     my $val = '0';
     my $type = undef;
 
-    my $logger = get_logger();
+#    my $logger = get_logger();
 #    $logger->debug("decl type: ",$decl->{'type'});
 #    $logger->debug("[eval_decl]: ", sub {Dumper $decl->{'rhs'}});
 
@@ -176,11 +176,10 @@ sub eval_decl {
       $type = type_of($r);
       $val = den_to_exp($r);
     } elsif ($decl->{'type'} eq 'here_doc') {
-#      $logger->debug("[decl] here doc for ", sub{ $decl->{'lhs'} });
+#      $logger->debug("[decl] here doc for ", sub{ Dumper $decl });
       
-      $val = eval_heredoc($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);	
+      $val = eval_heredoc($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session, $decl->{'string_array'}, $decl->{'expr_array'});	
       $val = den_to_exp($val);
-#      $logger->debug("[decl] here doc for ", sub{ $decl->{'lhs'} });
     } 
 #    $logger->trace("Evaling " . $rule_name.":".$decl->{'lhs'});
 #    $logger->trace("returning ", sub{ Dumper $val });
@@ -543,11 +542,11 @@ sub eval_prim {
 # warning: this returns a ref to an array, not an array!
 sub eval_rands {
     my ($rands, $rule_env, $rule_name, $req_info, $session) = @_;
-    my $logger = get_logger();
-    $logger->trace("Eval rand: ", sub { Dumper($rands) });
-    my $parent = (caller(1))[3];
-    $logger->trace("Called from -$parent- ");
-    $logger->trace("[javascript] rands: ", sub {Dumper($rands)});
+#    my $logger = get_logger();
+#    $logger->trace("Eval rand: ", sub { Dumper($rands) });
+    # my $parent = (caller(1))[3];
+    # $logger->trace("Called from -$parent- ");
+    # $logger->trace("[javascript] rands: ", sub {Dumper($rands)});
     my @rands = map {eval_expr($_, $rule_env, $rule_name, $req_info, $session)} @{ $rands } ;
 
     return \@rands;
@@ -1034,12 +1033,6 @@ sub ineq_test {
 
 
 
-sub eval_heredoc {
-    my ($val,$rule_env, $rule_name, $req_info, $session) = @_;
-    # process any beestrings and that's all
-    return eval_str($val,$rule_env, $rule_name, $req_info, $session);
-}
-
 sub eval_emit {
     my ($val) = @_;
 
@@ -1490,68 +1483,52 @@ sub all_cachable {
 #
 # handle beestings
 #
-# sub eval_str {
-#     my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
-#     my $logger = get_logger();
-#     my $json = new JSON::XS;
-#     my @parts;
-#     my $val = '';
-#     my $str = ref $expr eq 'HASH' ? $expr->{'val'} : $expr;
-# #    $logger->debug("Original expr: ", sub {Dumper $str});
-#     while (@parts = $str =~ m/(.*?)\#\{(.+?)\}{1}?(.*)/s) {
-# #      $logger->debug("Picked apart ", sub {Dumper @parts});
-#       last unless $parts[1];
-#       my $bee_expr = Kynetx::Parser::parse_expr($parts[1]);
-#       my $bee_val = eval_expr($bee_expr,$rule_env, $rule_name,$req_info, $session)->{'val'};
-# #      $logger->debug("parsed and evaled beesting: ", sub {Dumper($bee_val)} );
-#       if (ref $bee_val eq 'ARRAY' || ref $bee_val eq 'HASH') {
-# 	$bee_val = $json->encode($bee_val) || "";
-#       }
-#       $val .= $parts[0].$bee_val;
-#       $str = $parts[2];
-#     }
-#     $val .= $str if defined $str;
-#     return Kynetx::Parser::mk_expr_node('str',$val);
 
-# }
+sub eval_heredoc {
+    my ($val,$rule_env, $rule_name, $req_info, $session, $string_array, $expr_array) = @_;
+    # process any beestrings and that's all
+    return eval_str($val,$rule_env, $rule_name, $req_info, $session, $string_array, $expr_array);
+}
+
+
 
 sub eval_str {
-    my ($expr, $rule_env, $rule_name,$req_info, $session) = @_;
+    my ($expr, $rule_env, $rule_name,$req_info, $session, $string_array, $expr_array) = @_;
     my $logger = get_logger();
-    my $json = new JSON::XS;
     my $val = '';
-    my @parts;
+
+
+
+    my $json = new JSON::XS;
+
     my $str = ref $expr eq 'HASH' ? $expr->{'val'} : $expr;
-#    $logger->debug("Original expr: ", sub {Dumper $str});
+
+#    $logger->debug("Original expr: ", sub {Dumper $expr});
     my $str_sig = md5_hex($str);
 
-    my $string_array = [];
-    my $expr_array = [];
+    $string_array ||= [];
+    $expr_array ||= [];
 
-    if (defined $req_info->{'string_stash'}->{$rule_name}->{$str_sig}) {
+    if (defined $req_info->{'string_stash'}->{$str_sig}) {
       $string_array = $req_info->{'string_stash'}->{$str_sig}->{'str_array'};
       $expr_array = $req_info->{'string_stash'}->{$str_sig}->{'expr_array'};
     } else {
-       
-      my $count = 0;
-      while (@parts = $str =~ m/(.*?)\#\{(.+?)\}{1}?(.*)/s) {
-	#      $logger->debug("Picked apart ", sub {Dumper @parts});
-	last unless $parts[1];
-	my $bee_expr = Kynetx::Parser::parse_expr($parts[1]);
-	my $label = "_____EXPR____".$count++;
-	push (@{ $string_array }, ($parts[0], $label));
-	push( @{ $expr_array }, $bee_expr);
-	$str = $parts[2];
-      }
-      push (@{ $string_array }, $str) if (defined $str);
-   
-      #    $logger->debug("*****My string ", sub {Dumper $string_array},sub {Dumper $expr_array}, sub {Dumper @vals});
 
+#      $logger->debug("[eval_str] string_array -> ", sub {Dumper $string_array});
+       
+      if (scalar @{$string_array} == 0) {
+#	$logger->debug("Optimizing string");
+	($string_array, $expr_array) = optimize_here_doc($str);
+      }
+      
       $req_info->{'string_stash'}->{$str_sig}->{'str_array'} = $string_array;
       $req_info->{'string_stash'}->{$str_sig}->{'expr_array'} = $expr_array;
     }
 
+
+
     my @vals = map {my $v = eval_expr($_,$rule_env, $rule_name,$req_info, $session)->{'val'};
+#		    $logger->debug("Seeing ", sub {Dumper $v});
                     (ref $v eq 'ARRAY' || ref $v eq 'HASH') ? $json->encode($v) || "" : $v
 		   } @{$expr_array};
     $val = join('',map {$_ =~ m#^_____EXPR____(\d+)$# ? $vals[$1] : $_ } @{ $string_array});
@@ -1559,6 +1536,31 @@ sub eval_str {
 
 }
 
+sub optimize_here_doc {
+  my($str) = @_;
+  my $logger = get_logger();
+
+#  $str = ref $str eq 'HASH' ? $str->{'val'} : $str;
+  my @parts;
+  my $string_array = [];
+  my $expr_array = [];
+  my $count = 0;
+  while (@parts = $str =~ m/(.*?)\#\{(.+?)\}{1}?(.*)/s) {
+    #      $logger->debug("Picked apart ", sub {Dumper @parts});
+    last unless $parts[1];
+    my $bee_expr = Kynetx::Parser::parse_expr($parts[1]);
+    my $label = "_____EXPR____".$count++;
+    push (@{ $string_array }, ($parts[0], $label));
+    push( @{ $expr_array }, $bee_expr);
+    $str = $parts[2];
+  }
+  push (@{ $string_array }, $str) if (defined $str);
+   
+#   $logger->debug("*****My string ", sub {Dumper $string_array},sub {Dumper $expr_array});
+
+  return ($string_array, $expr_array);
+
+}
 
 
 sub type_of {

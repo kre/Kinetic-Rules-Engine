@@ -32,7 +32,6 @@ use Cache::Memcached;
 use LWP::Simple;
 use LWP::UserAgent;
 use JSON::XS;
-#use APR::Pool ();
 use AnyEvent ();
 use AnyEvent::HTTP ();
 
@@ -3085,7 +3084,7 @@ foreach my $case (@test_cases) {
 				   $req_info,
 				   $rule_env,
 				   $case->{'session'},
-				   $case->{'expr'},
+				   Kynetx::Rules::optimize_rule($case->{'expr'}),
 				   '',
 				   $dd
 				  );
@@ -4022,13 +4021,31 @@ check_optimize($krl_src,
      },
      'lhs' => 'tweetUser',
      'type' => 'expr'
-   },
-   {
+ },
+ {
      'rhs' => '
 This is the number #{tweetUser} and #{x}   ',
      'lhs' => 'y',
-     'type' => 'here_doc'
-   }
+     'type' => 'here_doc',
+  'string_array' =>  [
+		      '
+This is the number ',
+		      '_____EXPR____0',
+		      ' and ',
+		      '_____EXPR____1',
+		      '   '
+		     ],
+  'expr_array' => [
+		   {
+		    'type' => 'var',
+		    'val' => 'tweetUser'
+		   },
+		   {
+		    'type' => 'var',
+		    'val' => 'x'
+		   }
+		  ]
+ }
 ],[{
      'rhs' => {
        'val' => 6,
@@ -4041,7 +4058,19 @@ This is the number #{tweetUser} and #{x}   ',
      'rhs' => '
 This is another number #{z}  ',
      'lhs' => 'w',
-     'type' => 'here_doc'
+     'type' => 'here_doc',
+     'string_array' => [
+			'
+This is another number ',
+			'_____EXPR____0',
+			'  '
+		       ],
+    'expr_array' => [
+		     {
+		      'type' => 'var',
+		      'val' => 'z'
+		     }
+		    ]
    }
 ], "Extended quotes", 0);
 
