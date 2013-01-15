@@ -279,7 +279,7 @@ sub flush_ruleset_cache {
 
       my $msig_list = $memd->get($msig_cache_key);
       if (defined $msig_list) {
-	$logger->debug("Flushing module environments for $rid.$version ", sub {Dumper $msig_list});
+	$logger->debug("Flushing module environments for $rid.$version ($msig_cache_key) ", sub {Dumper $msig_list});
 	foreach my $sig (keys %{$msig_list}) {
 
 	  my $re_key = "rule_env_".$sig;

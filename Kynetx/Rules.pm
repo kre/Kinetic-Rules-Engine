@@ -522,9 +522,18 @@ sub eval_use_module {
   my $provided = $module_cache->{$pr_key} || {};
   my $js = $module_cache->{$js_key} || '';
 
+  # build a list of module sigs associated with a calling rid/version
+  my $msig_list_cache_key = 
+	"msigs_".Kynetx::Repository::make_ruleset_key(
+						      Kynetx::Rids::get_rid($req_info->{'rid'}),
+						      Kynetx::Rids::get_version($req_info->{'rid'})
+						     );
+  my $msig_list = $memd->get($msig_list_cache_key);
+
+
   my $namespace_name = $Kynetx::Modules::name_prefix . ( $alias || $name );
 
-  if (! defined $module_rule_env) {
+  if (! (defined $module_rule_env && $msig_list->{$module_sig})) {
 
 
     #  $logger->debug("Module sig $module_sig", sub {Dumper $env_stash});
@@ -666,21 +675,19 @@ sub eval_use_module {
     $emetric2->eid($req_info->{'eid'});
 
     if ($is_cachable) {
-      $logger->debug("Caching rule env for module $name");
+      $logger->debug("Caching rule env for module $name.$mversion");
       $memd->set($js_key, $js);
       $memd->set($pr_key, $provided);
       $memd->set($re_key, $module_rule_env);
 
-      # build a list of module sigs associated with a rid/version
-      my $cache_key = "msigs_".Kynetx::Repository::make_ruleset_key($name, $mversion);
-
-      my $msig_list = $memd->get($cache_key);
       $msig_list->{$module_sig} = 1;
-      $memd->set($cache_key, $msig_list);
+
+      $memd->set($msig_list_cache_key, $msig_list);
+#      $logger->debug("Storing module sig for $name.$mversion ($msig_list_cache_key) ", sub {Dumper $msig_list});
 
 
     } else {
-       $logger->debug("Module $name is not cachable...");
+       $logger->debug("Module $name.$mversion is not cachable...");
     }
 
     $emetric2->stop_timer();
@@ -690,7 +697,7 @@ sub eval_use_module {
 #    $logger->debug("Cached module env ", sub {Dumper $module_rule_env});
 #    $logger->debug("Cached provided hash ", sub{Dumper $provided});
  
-    $logger->debug("Using cached rule env for $name.$mversion");
+    $logger->debug("Using cached rule env for module $name.$mversion");
   }
 
 

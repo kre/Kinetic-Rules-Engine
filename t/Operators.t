@@ -1021,6 +1021,32 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+$e[$i] = q!"a".range("z").length()!;
+$x[$i] = {
+    'val' => 26,
+    'type' => 'num'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q!(0).range(3)!;
+$x[$i] = {
+    'val' => [0, 1, 2, 3],
+    'type' => 'array'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q!(0).range(3).reduce(function(a,b){a + b})!;
+$x[$i] = {
+    'val' => 6,
+    'type' => 'num'
+};
+$d[$i] = 0;
+$i++;
+
+
+
 
 
 #

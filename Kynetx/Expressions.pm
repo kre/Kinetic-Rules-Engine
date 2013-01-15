@@ -149,7 +149,7 @@ sub eval_one_decl {
   my  $nval = clone $val;
   $nval = Kynetx::Expressions::exp_to_den($nval);
   my $ntype = type_of($nval);
-  if ($type eq "str" && $ntype eq 'num') {
+  if (defined $type && $type eq "str" && $ntype eq 'num') {
   	$nval->{'type'} = 'str';
   }
 
@@ -931,7 +931,7 @@ sub true_value {
  # $logger->debug("True value exp: ", sub {Dumper $e});
 
   return
-    ($d->{'type'} eq 'bool' && $e eq 'true') || $e;
+    (defined $d && $d->{'type'} eq 'bool' && $e eq 'true') || $e;
 
 }
 
