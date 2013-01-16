@@ -90,6 +90,8 @@ my $my_req_info = Kynetx::Test::gen_req_info($rid);
 
 my $session = Kynetx::Test::gen_session($r, $rid);
 
+my $memd = get_memd();
+
 
 my $krl_src;
 my $js;
@@ -4468,6 +4470,14 @@ $mod_rule_env = Kynetx::Rules::get_rule_env($my_req_info, $module_rs, $session,
 is(lookup_rule_env("x", $mod_rule_env), 5, "a1 propogates a" );
 $test_count++;
 
+# flush the cache of any cached modules
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
+Kynetx::Modules::RuleEnv::delete_module_caches($my_req_info, $memd);
+
+my $msig_list = Kynetx::Modules::RuleEnv::get_msig_list($my_req_info, $memd);
+#diag Dumper $msig_list;
+is((keys %{$msig_list})+0, 0, "no modules are cached after flushing before ruleset runs");
+$test_count++;
 
 
 # test module configuration
@@ -4496,6 +4506,21 @@ $mod_rule_env = empty_rule_env();
 
 is(lookup_rule_env("x", $mod_rule_env), 5, "a2 propogates a1 propogates a" );
 $test_count++;
+
+
+#### testing module caching here (depends on previous tests)
+
+$msig_list = Kynetx::Modules::RuleEnv::get_msig_list($my_req_info, $memd);
+#diag Dumper $msig_list;
+is((keys %{$msig_list})+0, 3, "modules are cached");
+$test_count++;
+
+# now flush it
+Kynetx::Modules::RuleEnv::delete_module_caches($my_req_info, $memd);
+$msig_list = Kynetx::Modules::RuleEnv::get_msig_list($my_req_info, $memd);
+is((keys %{$msig_list})+0, 0, "no modules are cached after flushing");
+$test_count++;
+
 
 
 #diag "#################### module_use_module ########################";

@@ -58,6 +58,7 @@ use Kynetx::ExecEnv;
 use Kynetx::JavaScript::AST qw/:all/;
 
 use Kynetx::Modules::System qw/:all/;
+use Kynetx::Modules::RuleEnv qw/:all/;
 
 use Kynetx::Actions::LetItSnow;
 use Kynetx::Actions::JQueryUI;
@@ -514,22 +515,15 @@ sub eval_use_module {
 	
   my $memd = get_memd();
 
-  my $re_key = "rule_env_".$module_sig;
-  my $pr_key = "provided_".$module_sig;
-  my $js_key = "js_".$module_sig;
-  my $module_cache = $memd->get_multi($re_key, $pr_key, $js_key);
-  my $module_rule_env = $module_cache->{$re_key};
-  my $provided = $module_cache->{$pr_key} || {};
-  my $js = $module_cache->{$js_key} || '';
+  my $module_cache = Kynetx::Modules::RuleEnv::get_module_cache($module_sig, $memd);
+  my $module_rule_env = $module_cache->{Kynetx::Modules::RuleEnv::get_re_key($module_sig)};
+  my $provided = $module_cache->{Kynetx::Modules::RuleEnv::get_pr_key($module_sig)} || {};
+  my $js = $module_cache->{Kynetx::Modules::RuleEnv::get_js_key($module_sig)} || '';
+
 
   # build a list of module sigs associated with a calling rid/version
-  my $msig_list_cache_key = 
-	"msigs_".Kynetx::Repository::make_ruleset_key(
-						      Kynetx::Rids::get_rid($req_info->{'rid'}),
-						      Kynetx::Rids::get_version($req_info->{'rid'})
-						     );
-  my $msig_list = $memd->get($msig_list_cache_key);
-
+  my $msig_list = Kynetx::Modules::RuleEnv::get_msig_list($req_info, $memd);
+			   
 
   my $namespace_name = $Kynetx::Modules::name_prefix . ( $alias || $name );
 
@@ -675,16 +669,9 @@ sub eval_use_module {
     $emetric2->eid($req_info->{'eid'});
 
     if ($is_cachable) {
-      $logger->debug("Caching rule env for module $name.$mversion");
-      $memd->set($js_key, $js);
-      $memd->set($pr_key, $provided);
-      $memd->set($re_key, $module_rule_env);
 
-      $msig_list->{$module_sig} = 1;
-
-      $memd->set($msig_list_cache_key, $msig_list);
-#      $logger->debug("Storing module sig for $name.$mversion ($msig_list_cache_key) ", sub {Dumper $msig_list});
-
+      Kynetx::Modules::RuleEnv::set_module_cache($module_sig, $req_info, $memd,
+						 $js, $provided, $module_rule_env);
 
     } else {
        $logger->debug("Module $name.$mversion is not cachable...");

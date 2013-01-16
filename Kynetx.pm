@@ -43,6 +43,7 @@ use Kynetx::Configure qw(:all);
 use Kynetx::Rids qw(:all);
 use Kynetx::Directives;
 use Kynetx::Modules::OAuthModule;
+use Kynetx::Modules::RuleEnv;
 use Kynetx::Events;
 
 use Kynetx::Metrics::Datapoint;
@@ -275,23 +276,7 @@ sub flush_ruleset_cache {
       $memd->delete(Kynetx::Repository::make_ruleset_key($rid, $version));
 
 
-      my $msig_cache_key = "msigs_".Kynetx::Repository::make_ruleset_key($rid, $version);
-
-      my $msig_list = $memd->get($msig_cache_key);
-      if (defined $msig_list) {
-	$logger->debug("Flushing module environments for $rid.$version ($msig_cache_key) ", sub {Dumper $msig_list});
-	foreach my $sig (keys %{$msig_list}) {
-
-	  my $re_key = "rule_env_".$sig;
-	  my $pr_key = "provided_".$sig;
-	  my $js_key = "js_".$sig;
-	  $memd->delete($re_key);
-	  $memd->delete($pr_key);
-	  $memd->delete($js_key);
-	}
-	$memd->delete($msig_cache_key);
-      }
-
+      Kynetx::Modules::RuleEnv::delete_module_caches($req_info, $memd);
 
       $msg .= "Rules flushed for site $rid (version $version)<br/>";
     }
