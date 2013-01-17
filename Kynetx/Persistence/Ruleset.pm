@@ -256,10 +256,10 @@ sub get_rid_index {
 }
 
 sub create_rid {
-  my ($ken,$prefix) = @_;
+  my ($ken,$prefix,$uri) = @_;
   my $logger = get_logger();
   my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
-  if (defined $prefix){
+  if (defined $prefix && $prefix ne ""){
     $prefix .= $userid
   } else {
     $prefix = 'a' . $userid;
@@ -271,6 +271,9 @@ sub create_rid {
     'rid_index' => $rid_index,
     'prefix' => $prefix
   };
+  if (defined $uri && ref $uri eq "") {
+    $registry->{'uri'} = $uri;
+  }
   put_registry_element($rid,[],$registry);
   return $rid;   
 }

@@ -46,6 +46,7 @@ use Kynetx::Actions::FlippyLoo;
 use Kynetx::Actions::Email;
 use Kynetx::Directives qw/:all/;
 use Kynetx::Modules::ECI;
+use Kynetx::Modules::RSM;
 use Kynetx::Modules::OAuthModule;
 
 use Exporter;
@@ -881,8 +882,8 @@ sub build_one_action {
 		elsif ( $action->{'source'} eq 'twilio' ) {
 			$actions = Kynetx::Modules::Twilio::get_actions();
 		}
-		elsif ( $action->{'source'} eq 'oauthmodule' ) {
-			$actions = Kynetx::Modules::OAuthModule::get_actions();
+		elsif ( $action->{'source'} eq 'rsm' ) {
+			$actions = Kynetx::Modules::RSM::get_actions();
 		}
 		elsif ( $action->{'source'} eq 'email' ) {
 			$actions   = Kynetx::Actions::Email::get_actions();

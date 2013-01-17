@@ -97,6 +97,7 @@ sub get_rules_from_repository {
 
   my $ruleset = $memd->get($rs_key);
 
+  # check cache for ruleset
   if ( $ruleset
     && $ruleset->{'optimization_version'}
     && $ruleset->{'optimization_version'} ==
@@ -115,36 +116,7 @@ sub get_rules_from_repository {
   # this gets cleared when we're done
   $logger->debug("Setting parsing semaphore for $rs_key");
   Kynetx::Memcached::set_parsing_flag( $memd, $rs_key );
-  my $uri = get_uri($rid_info);
-  my $result;
-  
-  if (defined $uri) {
-    my $parsed_uri = URI->new($uri);
-    my $scheme = $parsed_uri->scheme;
-    if ($scheme =~ m/http/) {
-      $logger->debug("HTTP repository");
-      $ruleset = Kynetx::Repository::HTTP::get_ruleset($rid_info);
-    } elsif ($scheme =~ m/file/) {
-      $logger->debug("File repository");
-      $ruleset = Kynetx::Repository::File::get_ruleset($rid_info);
-    } elsif ($scheme =~ m/xri/) {
-      $logger->debug("XDI repository");
-      $ruleset = Kynetx::Repository::XDI::get_ruleset($rid_info);
-    }
-    
-  } else {
-    # Try the default repository if $rid_info is not fully configured
-    $logger->debug("Check default repository");
-    my $repo = Kynetx::Configure::get_config('RULE_REPOSITORY');
-    my ($base_url,$username,$password) = split(/\|/, $repo);
-    $logger->debug("URL: $base_url");
-    my $rs_url = join('/', ($base_url, $rid, $version, 'krl/'));
-    $rid_info->{'uri'} = $rs_url;
-    $rid_info->{'username'} = $username;
-    $rid_info->{'password'} = $password;
-    $ruleset = Kynetx::Repository::HTTP::get_ruleset($rid_info);
-    
-  }
+  $ruleset = get_ruleset_krl($rid_info,$version);
   Kynetx::Memcached::clr_parsing_flag($memd,$rs_key);
   if (defined $ruleset) {
     $req_info->{'rule_version'} = $version;
@@ -193,6 +165,39 @@ sub make_ruleset_key {
   my $opt = Kynetx::Rules::get_optimization_version();
   my $keystring =  "ruleset:$opt:$version:$rid";
   return md5_base64($keystring);
+}
+
+sub get_ruleset_krl {
+    my ($rid_info,$version) = @_; 
+    my $logger = get_logger();
+    my $rid = get_rid($rid_info);
+    my $uri = get_uri($rid_info);
+    if (defined $uri) {
+      my $parsed_uri = URI->new($uri);
+      my $scheme = $parsed_uri->scheme;
+      if ($scheme =~ m/http/) {
+        $logger->debug("HTTP repository");
+        return Kynetx::Repository::HTTP::get_ruleset($rid_info);
+      } elsif ($scheme =~ m/file/) {
+        $logger->debug("File repository");
+        return Kynetx::Repository::File::get_ruleset($rid_info);
+      } elsif ($scheme =~ m/xri/) {
+        $logger->debug("XDI repository");
+        return Kynetx::Repository::XDI::get_ruleset($rid_info);
+      }      
+    } else {
+        # Try the default repository if $rid_info is not fully configured
+        $logger->debug("Check default repository");
+        my $repo = Kynetx::Configure::get_config('RULE_REPOSITORY');
+        my ($base_url,$username,$password) = split(/\|/, $repo);
+        $logger->debug("URL: $base_url");
+        my $rs_url = join('/', ($base_url, $rid, $version, 'krl/'));
+        $rid_info->{'uri'} = $rs_url;
+        $rid_info->{'username'} = $username;
+        $rid_info->{'password'} = $password;
+        return Kynetx::Repository::HTTP::get_ruleset($rid_info);      
+    }
+    return undef;
 }
 
 1;

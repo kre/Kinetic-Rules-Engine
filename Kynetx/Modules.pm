@@ -84,6 +84,7 @@ use Kynetx::Modules::Random;
 use Kynetx::Persistence::KXDI;
 use Kynetx::Modules::ECI;
 use Kynetx::Modules::PCI;
+use Kynetx::Modules::RSM;
 
 
 our $name_prefix = '@@module_';
@@ -148,6 +149,14 @@ sub eval_module {
             $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::PCI::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
+        }
+    } elsif ( $source eq 'rsm' ) {    
+        $preds = Kynetx::Modules::RSM::get_predicates();
+        if ( defined $preds->{$function} ) {
+            $val = $preds->{$function}->( $req_info,$rule_env,$session,$rule_name,$function,$args );
+            $val = Kynetx::Expressions::boolify($val || 0);
+        } else {
+            $val = Kynetx::Modules::RSM::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
         }
     } elsif ( $source eq 'datasource' ) {    # do first since most common
         my $rs =
