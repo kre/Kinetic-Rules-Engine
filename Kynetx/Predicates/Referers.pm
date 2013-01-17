@@ -167,7 +167,8 @@ my %predicates = (
 
 	my $referer_domain = get_referer_data($req_info,'domain') ||'';
 
-	return 0 unless $req_info->{'caller'};
+	return 0 unless $req_info->{'caller'} && 
+	                $req_info->{'caller'} =~ m#^http#;
 
 	my $parsed_url = URI->new($req_info->{'caller'});
 
@@ -233,17 +234,19 @@ sub get_referer_data {
 
       my $logger = get_logger();
 
-	my $url = $req_info->{'referer'};
-	if(! defined ($url)) {
-	    # if referer isn't set, then this is a local referer
-	    $req_info->{'referer_data'}->{'local_referer'} = 1;
-	    return undef;
-	}
+      my $url = $req_info->{'referer'};
+      if(! defined ($url) ) {
+	# if referer isn't set, then this is a local referer
+	$req_info->{'referer_data'}->{'local_referer'} = 1;
+	return undef;
+      }
 
-	my $parsed_url = URI->new($url);
+      my $parsed_url = URI->new($url);
 
 #	$url =~ m|(\w+)://([^/:]+)(:\d+)?/([^?]*)(\?.*)?|; 
-	$req_info->{'referer_data'}->{'protocol'} = $parsed_url->scheme;
+      $req_info->{'referer_data'}->{'protocol'} = $parsed_url->scheme;
+
+      if ($req_info->{'referer_data'}->{'protocol'} =~ m#^http#) {
 	$req_info->{'referer_data'}->{'domain'} = $parsed_url->host;
 	$req_info->{'referer_data'}->{'path'} = $parsed_url->path;
 
@@ -254,17 +257,17 @@ sub get_referer_data {
 	}
 
 	$req_info->{'referer_data'}->{'query'} = $parsed_url->query;
+      }
 
-
-	if($logger->is_debug()) {
-	    foreach my $k (keys %{ $req_info->{'referer_data'} }) {
-	    $logger->debug("Referer piece ($k): " . 
-			   $req_info->{'referer_data'}->{$k}, "\n"
-		) if $req_info->{'referer_data'}->{$k};
-	    }
+      
+      if($logger->is_debug()) {
+	foreach my $k (keys %{ $req_info->{'referer_data'} }) {
+	  $logger->debug("Referer piece ($k): " . 
+			 $req_info->{'referer_data'}->{$k}, "\n"
+			) if $req_info->{'referer_data'}->{$k};
 	}
+      }
 	
-
     }
 
     return $req_info->{'referer_data'}->{$field};

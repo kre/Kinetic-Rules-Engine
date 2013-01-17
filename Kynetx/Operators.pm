@@ -1063,6 +1063,40 @@ sub eval_sprintf {
 }
 $funcs->{'sprintf'} = \&eval_sprintf;
 
+sub eval_range {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+    $logger->trace("obj: ", sub { Dumper($obj) });
+
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+#    $logger->trace("obj: ", sub { Dumper($rands) });
+
+    if(($obj->{'type'} eq 'str' || $obj->{'type'} eq 'num') &&
+       $obj->{'type'} eq $rands->[0]->{'type'}
+       ){
+        my $from = $obj->{'val'};
+	my $to = Kynetx::Expressions::den_to_exp($rands->[0]);
+	$logger->debug("Creating array from $from to $to");
+        my @v = ($from..$to);
+
+#	$logger->debug("Generated array: ", sub {Dumper \@v});
+        return Kynetx::Expressions::typed_value(\@v);
+    } else {
+      my $msg = defined $obj ? "object undefined" 
+                             : "object not a string or number";
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[range] $msg",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   )
+    }
+}
+$funcs->{'range'} = \&eval_range;
+
 sub eval_substr {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
@@ -1090,7 +1124,7 @@ sub eval_substr {
       my $msg = defined $obj ? "object undefined" 
                              : "object not a string";
       Kynetx::Errors::raise_error($req_info, 'warn',
-				  "[sprintf] $msg",
+				  "[substr] $msg",
 				    {'rule_name' => $rule_name,
 				     'genus' => 'operator',
 				     'species' => 'type mismatch'

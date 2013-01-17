@@ -32,7 +32,6 @@ use Cache::Memcached;
 use LWP::Simple;
 use LWP::UserAgent;
 use JSON::XS;
-#use APR::Pool ();
 use AnyEvent ();
 use AnyEvent::HTTP ();
 
@@ -90,6 +89,8 @@ my $my_req_info = Kynetx::Test::gen_req_info($rid);
 #diag Dumper $rule_env;
 
 my $session = Kynetx::Test::gen_session($r, $rid);
+
+my $memd = get_memd();
 
 
 my $krl_src;
@@ -3085,7 +3086,7 @@ foreach my $case (@test_cases) {
 				   $req_info,
 				   $rule_env,
 				   $case->{'session'},
-				   $case->{'expr'},
+				   Kynetx::Rules::optimize_rule($case->{'expr'}),
 				   '',
 				   $dd
 				  );
@@ -4022,13 +4023,31 @@ check_optimize($krl_src,
      },
      'lhs' => 'tweetUser',
      'type' => 'expr'
-   },
-   {
+ },
+ {
      'rhs' => '
 This is the number #{tweetUser} and #{x}   ',
      'lhs' => 'y',
-     'type' => 'here_doc'
-   }
+     'type' => 'here_doc',
+  'string_array' =>  [
+		      '
+This is the number ',
+		      '_____EXPR____0',
+		      ' and ',
+		      '_____EXPR____1',
+		      '   '
+		     ],
+  'expr_array' => [
+		   {
+		    'type' => 'var',
+		    'val' => 'tweetUser'
+		   },
+		   {
+		    'type' => 'var',
+		    'val' => 'x'
+		   }
+		  ]
+ }
 ],[{
      'rhs' => {
        'val' => 6,
@@ -4041,7 +4060,19 @@ This is the number #{tweetUser} and #{x}   ',
      'rhs' => '
 This is another number #{z}  ',
      'lhs' => 'w',
-     'type' => 'here_doc'
+     'type' => 'here_doc',
+     'string_array' => [
+			'
+This is another number ',
+			'_____EXPR____0',
+			'  '
+		       ],
+    'expr_array' => [
+		     {
+		      'type' => 'var',
+		      'val' => 'z'
+		     }
+		    ]
    }
 ], "Extended quotes", 0);
 
@@ -4439,6 +4470,14 @@ $mod_rule_env = Kynetx::Rules::get_rule_env($my_req_info, $module_rs, $session,
 is(lookup_rule_env("x", $mod_rule_env), 5, "a1 propogates a" );
 $test_count++;
 
+# flush the cache of any cached modules
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
+Kynetx::Modules::RuleEnv::delete_module_caches($my_req_info, $memd);
+
+my $msig_list = Kynetx::Modules::RuleEnv::get_msig_list($my_req_info, $memd);
+#diag Dumper $msig_list;
+is((keys %{$msig_list})+0, 0, "no modules are cached after flushing before ruleset runs");
+$test_count++;
 
 
 # test module configuration
@@ -4467,6 +4506,21 @@ $mod_rule_env = empty_rule_env();
 
 is(lookup_rule_env("x", $mod_rule_env), 5, "a2 propogates a1 propogates a" );
 $test_count++;
+
+
+#### testing module caching here (depends on previous tests)
+
+$msig_list = Kynetx::Modules::RuleEnv::get_msig_list($my_req_info, $memd);
+#diag Dumper $msig_list;
+is((keys %{$msig_list})+0, 3, "modules are cached");
+$test_count++;
+
+# now flush it
+Kynetx::Modules::RuleEnv::delete_module_caches($my_req_info, $memd);
+$msig_list = Kynetx::Modules::RuleEnv::get_msig_list($my_req_info, $memd);
+is((keys %{$msig_list})+0, 0, "no modules are cached after flushing");
+$test_count++;
+
 
 
 #diag "#################### module_use_module ########################";

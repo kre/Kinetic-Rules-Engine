@@ -58,6 +58,7 @@ use Kynetx::ExecEnv;
 use Kynetx::JavaScript::AST qw/:all/;
 
 use Kynetx::Modules::System qw/:all/;
+use Kynetx::Modules::RuleEnv qw/:all/;
 
 use Kynetx::Actions::LetItSnow;
 use Kynetx::Actions::JQueryUI;
@@ -514,17 +515,19 @@ sub eval_use_module {
 	
   my $memd = get_memd();
 
-  my $re_key = "rule_env_".$module_sig;
-  my $pr_key = "provided_".$module_sig;
-  my $js_key = "js_".$module_sig;
-  my $module_cache = $memd->get_multi($re_key, $pr_key, $js_key);
-  my $module_rule_env = $module_cache->{$re_key};
-  my $provided = $module_cache->{$pr_key} || {};
-  my $js = $module_cache->{$js_key} || '';
+  my $module_cache = Kynetx::Modules::RuleEnv::get_module_cache($module_sig, $memd);
+  my $module_rule_env = $module_cache->{Kynetx::Modules::RuleEnv::get_re_key($module_sig)};
+  my $provided = $module_cache->{Kynetx::Modules::RuleEnv::get_pr_key($module_sig)} || {};
+  my $js = $module_cache->{Kynetx::Modules::RuleEnv::get_js_key($module_sig)} || '';
+
+
+  # build a list of module sigs associated with a calling rid/version
+  my $msig_list = Kynetx::Modules::RuleEnv::get_msig_list($req_info, $memd);
+			   
 
   my $namespace_name = $Kynetx::Modules::name_prefix . ( $alias || $name );
 
-  if (! defined $module_rule_env) {
+  if (! (defined $module_rule_env && $msig_list->{$module_sig})) {
 
 
     #  $logger->debug("Module sig $module_sig", sub {Dumper $env_stash});
@@ -666,21 +669,12 @@ sub eval_use_module {
     $emetric2->eid($req_info->{'eid'});
 
     if ($is_cachable) {
-      $logger->debug("Caching rule env for module $name");
-      $memd->set($js_key, $js);
-      $memd->set($pr_key, $provided);
-      $memd->set($re_key, $module_rule_env);
 
-      # build a list of module sigs associated with a rid/version
-      my $cache_key = "msigs_".Kynetx::Repository::make_ruleset_key($name, $mversion);
-
-      my $msig_list = $memd->get($cache_key);
-      $msig_list->{$module_sig} = 1;
-      $memd->set($cache_key, $msig_list);
-
+      Kynetx::Modules::RuleEnv::set_module_cache($module_sig, $req_info, $memd,
+						 $js, $provided, $module_rule_env);
 
     } else {
-       $logger->debug("Module $name is not cachable...");
+       $logger->debug("Module $name.$mversion is not cachable...");
     }
 
     $emetric2->stop_timer();
@@ -690,7 +684,7 @@ sub eval_use_module {
 #    $logger->debug("Cached module env ", sub {Dumper $module_rule_env});
 #    $logger->debug("Cached provided hash ", sub{Dumper $provided});
  
-    $logger->debug("Using cached rule env for $name.$mversion");
+    $logger->debug("Using cached rule env for module $name.$mversion");
   }
 
 
@@ -1362,7 +1356,7 @@ sub optimize_ruleset {
 
 # incrementing the number here will force cache reloads of rulesets with lower #'s
 sub get_optimization_version {
-	my $version = 10;
+	my $version = 11;
 	return $version;
 }
 
@@ -1406,6 +1400,8 @@ sub optimize_rule {
 	# break up pre, if needed
 	optimize_pre($rule);
 
+#	$logger->debug("Optimized rule ", sub {Dumper $rule });
+
 	return $rule;
 }
 
@@ -1413,11 +1409,6 @@ sub optimize_pre {
 	my ($rule) = @_;
 	my $logger = get_logger();
 	my @varlist = map { $_->{'var'} } @{ $rule->{'pagetype'}->{'foreach'} };
-
-	# don't need this, but I love it.
-	# 	  my %is_var;
-	# 	  # create a hash for testing whether a var is defined or not
-	# 	  @is_var{@vars} = (1) x @vars;
 
 	my @vars;
 	foreach my $v (@varlist) {
@@ -1434,8 +1425,15 @@ sub optimize_pre {
 
 	foreach my $decl ( @{ $rule->{'pre'} } ) {
 
-		# check if any of the vars occur free in the rhs
 		$logger->trace( "[rules::optimize_pre] decl: ", sub { Dumper($decl) } );
+		# optimize here_docs
+		if ( $decl->{'type'} eq 'here_doc') {
+		  my ($string_array, $expr_array) = Kynetx::Expressions::optimize_here_doc($decl->{'rhs'});
+		  $decl->{'string_array'} = $string_array;
+		  $decl->{'expr_array'} = $expr_array;
+		}
+
+		# check if any of the vars occur free in the rhs
 		my $dependent = 0;
 		foreach my $v (@vars) {
 
@@ -1445,12 +1443,12 @@ sub optimize_pre {
 			{
 				$dependent = 1;
 			}
-			elsif ( $decl->{'type'} eq 'here_doc'
+			elsif ( $decl->{'type'} eq 'here_doc' 
 				&& Kynetx::Expressions::var_free_in_expr( $v, $decl ) )
 			{
 				$dependent = 1;
 			}
-		}
+		      }
 		if ($dependent) {
 			push( @{ $rule->{'inner_pre'} }, $decl );
 			push( @vars,                     $decl->{'lhs'} ); # collect new var
