@@ -35,7 +35,7 @@ use Storable 'dclone';
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
@@ -113,6 +113,7 @@ my $hval = {
 	"a" => 1
 };
 my $jsval = '$K(function(x) = 5;)';
+my @rids = ();
 
 my $expected;
 
@@ -151,7 +152,7 @@ $expected = 'a' . $nid . 'x';
 $result = Kynetx::Modules::RSM::run_function($my_req_info,$rule_env,$session,$rule_name,$function_name,$args);
 cmp_deeply($result,re(qr/^$expected/),$description);
 $test_count++;
-
+push(@rids,$result);
 $rid = $result;
 
 #  This *could* fail if the same random word is picked from the dictionary (wouldn't end 'x0')
@@ -162,6 +163,7 @@ $expected = $prefix . $nid . 'x0';
 $result = Kynetx::Modules::RSM::run_function($my_req_info,$rule_env,$session,$rule_name,$function_name,$args);
 cmp_deeply($result,re(qr/^$expected/),$description);
 $test_count++;
+push(@rids,$result);
 
 $description = "Register a new ruleset";
 my $local_file = 'data/action5.krl';
@@ -189,6 +191,7 @@ $js = Kynetx::Actions::build_one_action(
 $result = lookup_rule_env('myRid',$rule_env);
 cmp_deeply($result->{'rid'},re(qr/$prefix$nid/),$description);
 $test_count++;
+push(@rids,$result->{'rid'});
 
 my $new_rid = $result->{'rid'};
 
@@ -235,6 +238,7 @@ $js = Kynetx::Actions::build_one_action(
 $result = lookup_rule_env('myRid',$rule_env);
 cmp_deeply($result->{'rid'},re(qr/a$nid/),$description);
 $test_count++;
+push(@rids,$result->{'rid'});
 
 $new_rid = $result->{'rid'};
 
@@ -256,8 +260,37 @@ $result = lookup_rule_env('isValid',$rule_env);
 cmp_deeply(ref $result,"ARRAY",$description);
 $test_count++;
 
-$logger->debug("Result: ", sub {Dumper($result)});
+$description = "Update the ruleset with a new URI and validate";
+$local_file = 'data/action7.krl';
+$uri = "file://$local_file";
+$krl_src = <<_KRL_;
+  rsm:update("$new_rid") setting (isUpdate)
+    with 
+      uri = "$uri";
+_KRL_
 
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+$result = lookup_rule_env('isUpdate',$rule_env);
+cmp_deeply($result,1,$description);
+$test_count++;
+
+$description = "List of owners rulesets";
+$result = Kynetx::Persistence::Ruleset::get_rulesets_by_owner($session_ken);
+cmp_deeply($result,superbagof(@rids),$description);
+$test_count++;
+
+for my $d_rid (@{$result}) {
+  $logger->debug("Delete $d_rid");
+  Kynetx::Persistence::Ruleset::delete_registry($d_rid);
+}
 
 done_testing($test_count);
 

@@ -48,6 +48,7 @@ qw(
     print_rids
     rid_info_string
     get_rid_from_context
+    get_rid_info_from_registry
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -63,6 +64,12 @@ sub mk_rid_info {
 
   return {'rid' => $rid,
 	  'kinetic_app_version' => $version};
+}
+
+sub get_rid_info_by_rid {
+  my ($rid) = @_;
+  my $rid_object = Kynetx::Persistence::Ruleset::get_rid_info($rid);
+  return $rid_object;
 }
 
 sub get_current_rid_info {

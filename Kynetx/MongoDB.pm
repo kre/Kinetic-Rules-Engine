@@ -290,6 +290,29 @@ sub get_value {
     }
 }
 
+sub get_list {
+  my ($collection,$var) = @_;
+  my $logger = get_logger();
+  my $keystring = make_keystring($collection,$var);
+  my $cached = get_cache($collection,$var);
+  if (defined $cached) {
+      $logger->trace("Found $collection variable in cache (",sub {Dumper($cached)},",");
+      return $cached;
+  }  else {
+      $logger->trace("$keystring not in cache");
+  }
+  my $c = get_collection($collection);
+  my @rlist;
+  if ($c) {
+    my $cursor = $c->find($var);
+    while (my $object = $cursor->next) {
+        push(@rlist,$object);
+    }
+    return \@rlist;
+  }
+  return undef;
+}
+
 sub atomic_pop_value {
 	my ($collection,$var,$direction) = @_;
 	my $logger = get_logger();

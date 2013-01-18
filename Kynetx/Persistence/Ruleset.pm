@@ -278,4 +278,29 @@ sub create_rid {
   return $rid;   
 }
 
+#################### Utility functions
+
+sub get_rulesets_by_owner {
+  my ($ken) = @_;
+  my $logger = get_logger();
+  my $key = {
+    '$and' => [
+      {'hashkey' => ['owner']},
+      {'value' => $ken}
+    ]
+  };
+  my $result = Kynetx::MongoDB::get_list(COLLECTION,$key);
+  $logger->trace("list: ", sub {Dumper($result)});
+  my @rids = ();
+  if (ref $result eq "ARRAY") {
+    for my $rs (@{$result}) {
+      if (ref $rs eq "HASH"){
+        my $rid = $rs->{'rid'};
+        push(@rids,$rid);
+      }
+    }
+  }
+  return \@rids;
+}
+
 1;

@@ -27,7 +27,8 @@ use Data::Dumper;
 use Kynetx::Rids qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Persistence::Ruleset qw/:all/;
-
+use Kynetx::Memcached qw(:all);
+use Kynetx::Rids qw(:all);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -162,6 +163,19 @@ sub entkeys {
 }
 $funcs->{'entity_keys'} = \&entkeys;
 
+sub is_owner {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+	my $logger = get_logger();
+	my $rid = get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+  if ( Kynetx::Modules::PCI::system_authorized($req_info, $rule_env, $session) ) {
+      
+  }
+	
+}
+$funcs->{'is_owner'} = \&is_owner;
+
+
 ##################### Actions
 sub do_register {
   my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
@@ -170,28 +184,34 @@ sub do_register {
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
   my $v = $vars->[0] || '__dummy';
   
-  $logger->debug("Var: ",$v);
-  $logger->debug("Mods: ", sub {Dumper($mods)});
-  $logger->debug("Config: ", sub {Dumper($config)});
-  $logger->debug("Args: ", sub {Dumper($args)});
   my $prefix = $config->{'prefix'} || undef;
   my $uri = $args->[0];
   if (defined $uri) {
     my $new_rid = Kynetx::Persistence::Ruleset::create_rid($ken,$prefix,$uri);
-    if (defined $config->{'headers'}) {
-      my $headers = $config->{'headers'};
-      if (ref $headers eq "HASH") {
-        Kynetx::Persistence::Ruleset::put_registry_element($new_rid,['headers'],$headers)
+    for my $key (keys %{$config}) {
+      if ($key eq 'headers') {
+        my $headers = $config->{'headers'};
+        if (ref $headers eq "HASH") {
+          Kynetx::Persistence::Ruleset::put_registry_element($new_rid,['headers'],$headers)
+        }
+      } else {
+        if ($key eq 'rule_name' ||
+            $key eq 'rid' ||
+            $key eq 'txn_id' ||
+            $key eq 'target' ||
+            $key eq 'autoraise') {
+          next;
+        } else {
+          Kynetx::Persistence::Ruleset::put_registry_element($new_rid,[$key],$config->{$key});
+        }
       }
     }
-    if (defined $config->{'flush_code'}) {
-      Kynetx::Persistence::Ruleset::put_registry_element($new_rid,['flush_code'],$config->{'flush_code'});
-    }
+    
     my $rid_object = Kynetx::Persistence::Ruleset::get_rid_info($new_rid);
-    $logger->debug("Created this: ", sub {Dumper($rid_object)});
+    $logger->trace("Created this: ", sub {Dumper($rid_object)});
     my $response = response_object($v,$rid_object);
     $rule_env = add_to_env( $response, $rule_env ) unless $v eq '__dummy';
-    my $js = raise_response_event($req_info, $rule_env, $session, $config, $response, $v );
+    my $js = raise_response_event('register',$req_info, $rule_env, $session, $config, $response, $v );
     return $js;
     
   }  
@@ -200,7 +220,34 @@ sub do_register {
 
 sub do_flush {
   my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
+  my $logger = get_logger();
+  my $rid = get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+  my $flush_rid = $args->[0];
+  
+  my $rid_info = Kynetx::Persistence::Ruleset::get_rid_info($flush_rid);
+  
+  # Accounts allowed to modify a ruleset
+  #  root
+  #  developer
+  #  provides ruleset pin
+  my $pin = $config->{'flush_code'};
+  my $rpin = $rid_info->{'flush_code'};
+  my $owner = $rid_info->{'owner'};
+  my $response;
+  if (
+    Kynetx::Modules::PCI::system_authorized($req_info, $rule_env, $session) ||
+    (Kynetx::Modules::PCI::developer_authorized($req_info,$rule_env,$session,['ruleset','create']) && $ken eq $owner) ||
+    $pin eq $pin    
+  ) {
+    _flush($flush_rid);
+  }else {
+    my $str = "Not authorized to modify $flush_rid";
+    $logger->warn($str);
+  }
 }
+
+
 sub do_validate {
   my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
   my $logger = get_logger();
@@ -217,9 +264,86 @@ sub do_validate {
 }
 sub do_update {
   my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
+  my $logger = get_logger();
+  my $rid = get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+  my $v = $vars->[0] || '__dummy';
+  my $mod_rid = $args->[0];
+  
+  my $rid_info = Kynetx::Persistence::Ruleset::get_rid_info($mod_rid);
+  
+  # Accounts allowed to modify a ruleset
+  #  root
+  #  developer
+  #  provides ruleset pin
+  my $pin = $config->{'flush_code'};
+  my $rpin = $rid_info->{'flush_code'};
+  my $owner = $rid_info->{'owner'};
+  my $response;
+  if (
+    Kynetx::Modules::PCI::system_authorized($req_info, $rule_env, $session) ||
+    (Kynetx::Modules::PCI::developer_authorized($req_info,$rule_env,$session,['ruleset','create']) && $ken eq $owner) ||
+    $pin eq $pin    
+  ) {
+    for my $key (keys %{$config}) {
+      # Can't change these values
+      next if (
+        $key eq "owner" ||
+        $key eq "rid_index" ||
+        $key eq "rid" || 
+        $key eq "prefix"
+      );
+      if ($config->{$key} eq "") {
+        Kynetx::Persistence::Ruleset::delete_registry_element($mod_rid, [$key]);
+      } else {
+        Kynetx::Persistence::Ruleset::put_registry_element($mod_rid,[$key],$config->{$key})
+      }
+    }
+    
+    # Now try to validate the ruleset
+    my $valid = _validate($mod_rid);
+    $response = {
+      $v => $valid
+    };
+    if ( $valid == 1) {
+      # Flush the ruleset
+      _flush($mod_rid);
+    }
+    
+  } else {
+    my $str = "Not authorized to modify $mod_rid";
+    $response = {
+      $v => $str
+    };
+    $logger->warn($str);
+  }
+  $rule_env = add_to_env( $response, $rule_env ) unless $v eq '__dummy';
+  my $js = raise_response_event($req_info, $rule_env, $session, $config, $response, $v );
+  return $js;
+  
 }
 sub do_delete {
   my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
+  my $rid = get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+  my $flush_rid = $args->[0];
+  
+  my $rid_info = Kynetx::Persistence::Ruleset::get_rid_info($flush_rid);
+  
+  # Accounts allowed to modify a ruleset
+  #  root
+  #  developer
+  #  provides ruleset pin
+  my $pin = $config->{'flush_code'};
+  my $rpin = $rid_info->{'flush_code'};
+  my $owner = $rid_info->{'owner'};
+  my $response;
+  if (
+    Kynetx::Modules::PCI::system_authorized($req_info, $rule_env, $session) ||
+    (Kynetx::Modules::PCI::developer_authorized($req_info,$rule_env,$session,['ruleset','create']) && $ken eq $owner)
+  ) {
+    Kynetx::Persistence::Ruleset::delete_registry($flush_rid);
+  }
 }
 
 ##################### Private
@@ -245,7 +369,37 @@ sub response_object {
 }
 
 sub raise_response_event {
-  return "";
+  my ($method, $req_info, $rule_env, $session, $config, $resp, $ro_name ) = @_;
+  my $logger = get_logger();
+  my $rid = get_rid($req_info->{'rid'});
+  my $js = '';
+  if ( defined $config->{'autoraise'} ) {
+    $logger->debug(
+		   "http library autoraising event with label $config->{'autoraise'}");
+
+    # make modifiers in right form for raise expr
+    my $ms = [];
+    foreach my $k ( keys %{ $resp->{$ro_name} } ) {
+      push( @{$ms}, {
+	     'name' => $k,
+	     'value' =>
+	       Kynetx::Expressions::mk_den_str( $resp->{$ro_name}->{$k} ),
+	     }
+	    );
+    }
+  
+    # create an expression to pass to eval_raise_statement
+    my $expr = {
+    	'type'      => 'raise',
+    	'domain'    => 'rsm',
+    	'ruleset'   => $config->{'target'} || $rid,
+    	'event'     => mk_expr_node( 'str', lc($method) ),
+    	'modifiers' => $ms,
+    };
+    $js .= Kynetx::Postlude::eval_raise_statement( $expr, $session, $req_info,
+  				   $rule_env, $config->{'rule_name'} );
+  }
+  return $js;
 }
 
 sub _entkeys {
@@ -256,6 +410,21 @@ sub _entkeys {
 		'ken' => $ken
 	};
 	return Kynetx::MongoDB::type_data($collection,$key);
+}
+
+sub _flush {
+  my ($rid) = @_;
+  my $logger = get_logger();
+  unless ($rid){
+    return 0 
+  };
+  # Create a dummy req_info object for the RuleEnv.pm methods
+  my $req_info = Kynetx::Test::gen_req_info($rid);
+  my $version = Kynetx::Rids::get_version(Kynetx::Rids::get_current_rid_info($req_info));
+  my $memd = get_memd();
+  $logger->debug("[flush] flushing rules for $rid (version $version)");
+  $memd->delete(Kynetx::Repository::make_ruleset_key($rid, $version));  
+  Kynetx::Modules::RuleEnv::delete_module_caches($req_info,$memd);
 }
 
 sub _validate {
@@ -298,5 +467,6 @@ sub _validate {
      return 1;
    }
 }
+
 
 1;
