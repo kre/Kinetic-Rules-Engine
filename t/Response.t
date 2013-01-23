@@ -42,6 +42,7 @@ use Kynetx::Response qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
+use Kynetx::Persistence::Ruleset qw/:all/;
 
 
 use Kynetx::FakeReq qw/:all/;

@@ -396,44 +396,6 @@ sub get_data {
 	}
 }
 
-#
-#sub get_data {
-#	my ($series) = @_;
-#	my $logger   = get_logger();
-#	my $c        = Kynetx::MongoDB::get_collection(COLLECTION);
-#	my $key;
-#	if ( defined $series ) {
-#		$key = { "series" => $series };
-#	}
-#	my $cnt = 0;
-#	my $cursor = $c->find($key);
-#	if ( $cursor->has_next ) {
-#		my @array_of_datapoints = ();
-#		while ( my $obj = $cursor->next ) {
-#			my @vars;
-#			my @vals;
-#			my $dp = new Kynetx::Metrics::Datapoint();
-#			$dp->id( $obj->{"_id"}->{"value"} );
-#			$dp->mproc( $obj->{"proc"} );
-#			$dp->mhostname( $obj->{"hostname"} );
-#			$dp->add_tag( $obj->{'tags'} );
-#			$dp->timestamp( $obj->{"ts"} );
-#			$dp->series( $obj->{"series"} );
-#			$dp->count($obj->{"count"});
-#			$dp->eid($obj->{"eid"});
-#			$dp->rid($obj->{"rid"});
-#			foreach my $var ( keys %{ $obj->{'metric'} } ) {
-#				CORE::push( @vars, $var );
-#				CORE::push( @vals, $obj->{"metric"}->{$var} );
-#			}
-#			$dp->push( \@vars, \@vals );
-#			CORE::push( @array_of_datapoints, $dp );
-#			if ($cnt++ > NUMPOINTS) {
-#				last;
-#			}
-#		}
-#		return \@array_of_datapoints;
-#	}
-#}
+
 
 1;

@@ -40,6 +40,7 @@ use Kynetx::Repository qw/:all/;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::Rids qw/:all/;
 use Kynetx::Test qw/:all/;
+use Kynetx::Persistence::Ruleset qw/:all/;
 
 # configure KNS
 

@@ -207,7 +207,7 @@ sub do_register {
       }
     }
     
-    my $rid_object = Kynetx::Persistence::Ruleset::get_rid_info($new_rid);
+    my $rid_object = Kynetx::Persistence::Ruleset::rid_from_ruleset($new_rid);
     $logger->trace("Created this: ", sub {Dumper($rid_object)});
     my $response = response_object($v,$rid_object);
     $rule_env = add_to_env( $response, $rule_env ) unless $v eq '__dummy';
@@ -225,7 +225,7 @@ sub do_flush {
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
   my $flush_rid = $args->[0];
   
-  my $rid_info = Kynetx::Persistence::Ruleset::get_rid_info($flush_rid);
+  my $rid_info = Kynetx::Persistence::Ruleset::rid_from_ruleset($flush_rid);
   
   # Accounts allowed to modify a ruleset
   #  root
@@ -270,7 +270,7 @@ sub do_update {
   my $v = $vars->[0] || '__dummy';
   my $mod_rid = $args->[0];
   
-  my $rid_info = Kynetx::Persistence::Ruleset::get_rid_info($mod_rid);
+  my $rid_info = Kynetx::Persistence::Ruleset::rid_from_ruleset($mod_rid);
   
   # Accounts allowed to modify a ruleset
   #  root
@@ -328,7 +328,7 @@ sub do_delete {
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
   my $flush_rid = $args->[0];
   
-  my $rid_info = Kynetx::Persistence::Ruleset::get_rid_info($flush_rid);
+  my $rid_info = Kynetx::Persistence::Ruleset::rid_from_ruleset($flush_rid);
   
   # Accounts allowed to modify a ruleset
   #  root
@@ -433,7 +433,7 @@ sub _validate {
   unless ($rid){
     return 0 
   };
-  my $rid_info = Kynetx::Persistence::Ruleset::get_rid_info($rid);
+  my $rid_info = Kynetx::Persistence::Ruleset::rid_from_ruleset($rid);
   my $ruleset = Kynetx::Repository::get_ruleset_krl($rid_info);
   eval {
     $ruleset = Kynetx::Parser::parse_ruleset($ruleset);

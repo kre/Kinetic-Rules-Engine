@@ -58,8 +58,11 @@ our @ISA         = qw(Exporter);
 # put exported names inside the "qw"
 our %EXPORT_TAGS = (all => [
 qw(
+  rid_from_ruleset
+  get_registry
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
+our @EXPORT = qw(&rid_from_ruleset);
 
 use constant COLLECTION => "ruleset";
 
@@ -229,11 +232,13 @@ sub get_registry {
 	return undef;
 }
 
-sub get_rid_info {
+sub rid_from_ruleset {
   my ($rid) = @_;
+  my $logger = get_logger();
   my $rid_info;
   my $result = get_registry($rid);
   if (defined $result) {
+    $logger->info("Rid info: ",sub {Dumper($result)});
     $rid_info = $result->{'value'};
     $rid_info->{'rid'} = $result->{'rid'};
     return $rid_info;

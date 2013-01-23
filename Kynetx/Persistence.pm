@@ -157,7 +157,7 @@ sub get_persistent_var {
         $val = Kynetx::Persistence::Application::get($rid,$varname,$gcreated);
     }
 
-    $logger->debug("Persistent $domain:$varname -> $val");
+    $logger->debug("Persistent ",$domain,":",$varname," -> ",$val);
     if (defined $val) {
         return $val;
     } else {

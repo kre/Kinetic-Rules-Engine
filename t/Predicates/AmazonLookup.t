@@ -52,6 +52,7 @@ use Kynetx::Json;
 use Kynetx::PrettyPrinter;
 use Kynetx::FakeReq;
 use Kynetx::Modules;
+use Kynetx::Persistence::Ruleset qw/:all/;
 
 
 use Data::Dumper;

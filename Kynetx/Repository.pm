@@ -40,6 +40,7 @@ use Kynetx::Json qw(:all);
 use Kynetx::Predicates::Page;
 use Kynetx::Rules;
 use Kynetx::Rids qw(:all);
+use Kynetx::Persistence::Ruleset qw(:all);
 use Kynetx::Repository::HTTP;
 use Kynetx::Repository::File;
 use Kynetx::Repository::XDI;
@@ -64,14 +65,14 @@ sub get_rules_from_repository {
 
   my $logger = get_logger();
 
-  my $rid = get_rid($rid_info);
+  my $rid = Kynetx::Rids::get_rid($rid_info);
 
   # default to production for svn repo
   # defaults to production when no version specified
   # use specified version first
   my $version =
        $sversion
-    || get_version($rid_info)
+    || Kynetx::Rids::get_version($rid_info)
     || Kynetx::Predicates::Page::get_pageinfo( $req_info, 'param',
     ['kynetx_app_version'] )
     || Kynetx::Predicates::Page::get_pageinfo( $req_info, 'param',
@@ -79,7 +80,7 @@ sub get_rules_from_repository {
     || 'prod';
   $req_info->{'rule_version'} = $version;
 
-  my $memd = get_memd();
+  my $memd = Kynetx::Memcached::get_memd();
 
   my $rs_key = make_ruleset_key( $rid, $version );
 
@@ -170,7 +171,7 @@ sub make_ruleset_key {
 sub get_ruleset_krl {
     my ($rid_info,$version) = @_; 
     my $logger = get_logger();
-    my $rid = get_rid($rid_info);
+    my $rid = Kynetx::Rids::get_rid($rid_info);
     my $uri = get_uri($rid_info);
     if (defined $uri) {
       my $parsed_uri = URI->new($uri);

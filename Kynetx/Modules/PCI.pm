@@ -358,6 +358,23 @@ sub check_username {
 }
 $funcs->{'exists'} = \&check_username;
 
+sub list_children {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	return 0 unless ( system_authorized($req_info, $rule_env, $session));
+  my $uid = $args->[0];
+  $logger->debug("Check for username ($uid)");
+  if (defined $uid) {
+    my $ken = Kynetx::Persistence::KEN::ken_lookup_by_username($uid);
+    if ($ken) {
+      return 1;
+    }
+  }
+  return 0;
+}
+$funcs->{'list_children'} = \&list_children;
+
+
 ############################# Rulesets
 
 sub add_ruleset_to_account {
