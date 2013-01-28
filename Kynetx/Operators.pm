@@ -611,7 +611,7 @@ sub eval_append {
   my @result = @{$array1};
   push(@result, @{$array2});
 
-  $logger->debug("Append result: ", sub {Dumper @result});
+  $logger->trace("Append result: ", sub {Dumper @result});
 
   return Kynetx::Expressions::typed_value(\@result);
 }
@@ -677,8 +677,8 @@ sub val_eq {
   my($first, $second) = @_;
 
   my $logger = get_logger();
-  $logger->debug("First ", sub {Dumper $first});
-  $logger->debug("Second ", sub {Dumper $second});
+  $logger->trace("First ", sub {Dumper $first});
+  $logger->trace("Second ", sub {Dumper $second});
   if (JSON::XS::is_bool $first && 
       JSON::XS::is_bool $second) {
     return ! ($first xor $second)  # both false or both true

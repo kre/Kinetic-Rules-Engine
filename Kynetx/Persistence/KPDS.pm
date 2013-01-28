@@ -73,6 +73,7 @@ sub get_kpds_element {
 			"ken" => $ken
 		};
 		my $c_key = Kynetx::MongoDB::map_key($ken,$hkey);
+		$logger->trace("Map key: ", sub {Dumper($c_key)});
 		my $cache = Kynetx::MongoDB::get_cache_for_map($ken,COLLECTION,$c_key);
 		if (defined $cache) {
 			$logger->trace("Cached value (",sub {Dumper($c_key)},"): ", sub {Dumper($cache)});

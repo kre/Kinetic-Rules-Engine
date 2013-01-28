@@ -234,6 +234,8 @@ $test_count++;
 $eci = $result->{'cid'};
 $uid = $result->{'nid'};
 
+$logger->debug("Username: ", sub {Dumper($uname)});
+
 $description = "Check for username exists";
 $args = $uname;
 $result = Kynetx::Modules::PCI::check_username($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
@@ -259,11 +261,63 @@ $result = Kynetx::Modules::PCI::new_account($my_req_info,$rule_env,$session,$rul
 isnt($result,undef,$description);
 $test_count++;
 
+my $eci2 = $result->{'cid'};
+$logger->debug("Dep: ",sub {Dumper($eci2)});
+
+$description = "Create another dependent account";
+$args = {
+	"username" => "$new_uname" . 2,
+	"firstname" => "",
+	"lastname" => "",
+	"password" => "",
+};
+$result = Kynetx::Modules::PCI::new_account($my_req_info,$rule_env,$session,$rule_name,"foo",[$eci,$args]);
+isnt($result,undef,$description);
+$test_count++;
+
+$description = "Create a dependent account to a dependent account";
+$args = {
+	"username" => "$new_uname" . "dep",
+	"firstname" => "",
+	"lastname" => "",
+	"password" => "",
+};
+$result = Kynetx::Modules::PCI::new_account($my_req_info,$rule_env,$session,$rule_name,"foo",[$eci2,$args]);
+isnt($result,undef,$description);
+$test_count++;
+
+
 $description = "Check for username exists (true)";
-my $new_uname = $uname . '-dep';
+$new_uname = $uname . '-dep';
 $args = $new_uname;
 $result = Kynetx::Modules::PCI::check_username($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
 is($result,1,$description);
+$test_count++;
+
+$description = "Get child accounts";
+$expected = [[ignore(),$new_uname,"_LOGIN"],[ignore(),$new_uname.2,"_LOGIN"]];
+$args = {'username' => $uname};
+$result = Kynetx::Modules::PCI::list_children($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Get child accounts of child";
+$expected = [[ignore(),$new_uname."dep","_LOGIN"]];
+$args = {'username' => $new_uname};
+$result = Kynetx::Modules::PCI::list_children($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Get parent of top level account";
+$args = $eci;
+$result = Kynetx::Modules::PCI::list_parent($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+is($result,undef,$description);
+$test_count++;
+
+$description = "Get parent of dependent account";
+$args = $eci2;
+$result = Kynetx::Modules::PCI::list_parent($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+isnt($result,undef,$description);
 $test_count++;
 
 ($js, $rule_env) = 

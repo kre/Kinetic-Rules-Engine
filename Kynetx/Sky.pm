@@ -64,8 +64,13 @@ sub handler {
 	$metric->start_timer();
 	$metric->series("sky");
 	$metric->path($r->path_info);
+	$metric->mem_stats();
 	my $req = Apache2::Request->new($r);
 	my @params = $req->param;
+	for my $parm (@params) {
+	  my $val = $req->param($parm);
+	  $metric->push($parm,$val);
+	}
 	if (scalar @params > 0){
 	  $metric->add_tag(join(",",@params));
 	}

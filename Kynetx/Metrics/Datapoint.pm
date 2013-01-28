@@ -60,6 +60,7 @@ our $AUTOLOAD;
 use constant COLLECTION => "metrics";
 use constant INTERVAL   => 1;
 use constant NUMPOINTS => 1000;
+use constant PVAL_LIMIT => 25;
 
 my %fields = (
 	vars      => undef,
@@ -68,7 +69,7 @@ my %fields = (
 	timestamp => undef,
 	tags      => undef,
 	id        => undef,
-	mproc     => undef,
+	proc     => undef,
 	mhostname => undef,
 	count     => 0,
 	eid       => undef,
@@ -77,7 +78,7 @@ my %fields = (
 	path	  => undef,
 	event	  => undef,
 	token	  => undef,
-
+  memfree => undef
 );
 
 sub new {
@@ -93,7 +94,7 @@ sub new {
 	$self->{'id'}        = $ug->create_str();
 	$self->{'timestamp'} = DateTime->now->epoch();
 	$self->{"series"}    = "__undef__";
-	$self->{"mproc"}     = $c->{'PROC'};
+	$self->{"proc"}     = $c->{'PROC'};
 	$self->{"mhostname"} = $c->{'HOSTNAME'};
 	@{ $self->{"vars"} } = ();
 	@{ $self->{"vals"} } = ();
@@ -114,7 +115,6 @@ sub new {
 			die "Initialization failed. Args not passed as a hash";
 		}
 	}
-
 	return $self;
 }
 
@@ -210,18 +210,26 @@ sub push {
 		if ( $l1 == $l2 ) {
 			my $i;
 			for ( $i = 0 ; $i < $l1 ; $i++ ) {
-				push( @vars, $var->[$i] );
-				push( @vals, $val->[$i] );
+				push( @vars, _schop($var->[$i]) );
+				push( @vals, _schop($val->[$i]) );
 			}
 			$self->{"vars"} = \@vars;
 			$self->{"vals"} = \@vals;
 		}
 	}
 	elsif ( ref $var eq '' && ref $val eq '' ) {
-		push( @{ $self->{"vars"} }, $var );
-		push( @{ $self->{"vals"} }, $val );
+		push( @{ $self->{"vars"} }, _schop($var) );
+		push( @{ $self->{"vals"} }, _schop($val) );
 	}
 
+}
+
+sub _schop {
+  my ($str) = @_;
+  $str = "$str";
+  my $len = length($str);
+  my $slen = ($len > PVAL_LIMIT) ? PVAL_LIMIT : $len;
+  return substr $str, 0,$slen;  
 }
 
 sub get_metric {
@@ -267,7 +275,7 @@ sub tick {
 	else {
 		my $id = 'eid';
 		if ( !defined $self->eid ) {
-			my $val = $self->{'mproc'} . '-' . int( rand(10000) );
+			my $val = $self->{'proc'} . '-' . int( rand(10000) );
 			$self->eid($val);
 			$logger->debug("EID: $val");
 		}
@@ -276,7 +284,7 @@ sub tick {
 		my $obj = {
 			"series"   => $self->{"series"} . "-ticks",
 			"hostname" => $self->{"mhostname"},
-			"proc"     => $self->{'mproc'},
+			"proc"     => $self->{'proc'},
 			"count"    => $self->{'count'},
 			"eid"      => $self->{'eid'},
 			'rid'      => $rid,
@@ -313,13 +321,14 @@ sub store {
 		"series"   => $self->{"series"},
 		"tags"     => $self->{"tags"},
 		"hostname" => $self->{"mhostname"},
-		"proc"     => $self->{'mproc'},
+		"proc"     => $self->{'proc'},
 		"count"    => $self->{'count'},
 		"eid"      => $self->{'eid'},
 		"rid"	   => $self->{'rid'},
 		"rulename" => $self->{'rulename'},
 		"path"	   => $self->{'path'},
-		"token"    => $self->{'token'}
+		"token"    => $self->{'token'},
+		"memfree"  => $self->{'memfree'}
 	};
 	if (defined $self->{'event'}) {
 		$obj->{"eventdomain"} = $self->{'event'}->{'domain'};
@@ -367,7 +376,7 @@ sub get_data {
 		$order = $limits->{'sort_order'} || $order;
 		$limit = $limits->{'limit'} || $limit;
 	}	
-	$logger->trace("Key: ", sub {Dumper($key)});
+	$logger->debug("Key: ", sub {Dumper($key)});
 	my $cursor = $c->find($key)->sort({'$natural' => $order})->limit($limit);
 	if ( $cursor->has_next ) {
 		my @array_of_datapoints = ();
@@ -396,6 +405,27 @@ sub get_data {
 	}
 }
 
+sub mem_stats {
+  my $self = shift;
+  my @fields = ('Cached','SwapCached','SwapFree','Committed_AS');
+  my $logger=get_logger();
+  $logger->trace("ADD DATAPOINT Memstats");
+  my $mem_info = "/proc/meminfo";
+  open(my $mem_stats,"<",$mem_info) || die "Can not open $mem_info";
+  my $hash;
+  while (my $stat = <$mem_stats>) {
+    my ($key,$val) = split(/:/,$stat);
+    $val =~ s/^\s+|\s+$//g;
+    $hash->{$key} = $val;
+  }
+  $self->memfree($hash->{'MemFree'});
+  for my $stat (@fields) {
+    my $val = $hash->{$stat};
+    $self->push($stat,$val);
+    $logger->trace("K: $stat V: $val");
+  }
+  return $self->memfree();
+}
 
 
 1;

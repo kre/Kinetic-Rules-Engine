@@ -953,7 +953,7 @@ sub build_one_action {
 	    # apply the action function
 	    $js .= "(" . $action_js . "(" . $arg_str . "));\n";
 	    
-	    $logger->debug( "[action] ", $action_name, ' executing with args (',
+	    $logger->trace( "[action] ", $action_name, ' executing with args (',
 			$arg_str, ')' );
 
 	    push( @{ $req_info->{'actions'} }, $action_name );

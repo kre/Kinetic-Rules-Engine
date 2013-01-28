@@ -24,6 +24,7 @@ use strict;
 no warnings qw(uninitialized);
 use utf8;
 use lib qw(/web/lib/perl);
+use POSIX qw(INT_MAX);
 
 use XML::XPath;
 use LWP::Simple;
@@ -48,6 +49,7 @@ use Kynetx::Request;
 use Kynetx::Metrics::Datapoint;
 use Kynetx::Json;
 use Kynetx::Predicates::Time;
+use Kynetx::Persistence::Ruleset;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -62,6 +64,7 @@ qw(
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 use constant DEFAULT_TEMPLATE_DIR => Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
 use constant MAX_POINTS => 1500;
+use constant MIN_POINTS => 10;
 
 #my $s = Apache2::ServerUtil->server;
 
@@ -419,18 +422,17 @@ sub any_plot {
 	my @series_data = ();
 	my $points;
 	my @series = keys %{$graph};
-	my @population;
-	if (scalar @series == 1) {
-	  @population = ();
-	} else {
-	  @population = undef;
-	}
+	my $population;
+	my $minX = INT_MAX;
+	my $maxX = 0;
 	foreach my $s (@series) {
+    my @temp;
 		my $struct;		
 		$struct->{'name'} = $s;
+		$struct->{'type'} = 'scatter';
 		my $xname = $graph->{$s}->{'xname'} || $graph->{'any'}->{'xname'};
 		my $yname = $graph->{$s}->{'yname'} || $graph->{'any'}->{'yname'};
-		$logger->debug("$s: ", sub {Dumper($graph->{$s})});
+		$logger->trace("$s: ", sub {Dumper($graph->{$s})});
 		my @data = ();
 		foreach my $point (@{$graph->{$s}->{'data'}}) {
 			$logger->trace("$xname, $yname, p: ", sub {Dumper($point)});
@@ -438,21 +440,27 @@ sub any_plot {
 			my $y = $point->{$yname};
 			my $id = $point->{'id'};
 			$y = int($y * 1000);
+			if (defined $x) {
+			  $minX = $x if ($x < $minX);
+			  $maxX = $x if ($x > $maxX);
+			}
 			push(@data,{
 				'id' => $id,
 				'y' => $y,
 				'x' => $x * 1
 			});
 			$points->{$id} = pretty_point($point);
-			if (scalar @series == 1) {
-			  push(@population,$y);
+			if ($s ne "any") {
+			  push(@temp,$y);
 			}
-		  #$logger->debug("$id : $x, $y");
 			
 		}
 		$struct->{'data'} = \@data;
 		if (scalar(@data) > 0) {
 			push(@series_data,$struct);		
+		}
+		if (scalar(@temp)> MIN_POINTS) {
+		  $population->{$s} = \@temp;
 		}
 		
 	}
@@ -465,13 +473,33 @@ sub any_plot {
 	
 	my $data;
 	my $pstr;
-	#$logger->debug("Data: ", sub {Dumper(@series_data)});
 	if (! @series_data) {
 	  $logger->debug("No data");
 	  $data = $empty_set; #Kynetx::Json::encode_json(@empty_set);
 	  $pstr = '[]';
 	  $logger->trace("Encoded");
 	} else {
+	  if (scalar keys %{$population} < 2) {
+  	  foreach my $series (keys %{$population}) {
+  	    my $data = $population->{$series};
+  	    $logger->debug("Size: ", scalar @{$data});
+  	    my $mean = mean_series($data,$minX,$maxX);
+  	    if (defined $mean) {
+  	      $mean->{'name'} = $series . "-mean";
+  	      $mean->{'type'} = 'line';
+  	      push(@series_data,$mean);
+  	    }
+  	    my $median = median_series($data,$minX,$maxX);
+  	    if (defined $median) {
+  	      $median->{'name'} = $series . "-median";
+  	      $median->{'type'} = 'line';
+  	      push(@series_data,$median);
+  	    }
+  	    
+  	    
+  	  }
+	    
+	  }
 	  $data = encode_json(\@series_data);
 	  $pstr = encode_json($points);
 	}
@@ -479,7 +507,7 @@ sub any_plot {
 	
 	
 	$test_template->param("numpoints" => $num_points);
-	$test_template->param("BANDS" => plotBands(\@population));
+	$test_template->param("BANDS" => plotBands($population));
 
 	$test_template->param("DATA" => $data);
 	$test_template->param("point" => $pstr);
@@ -489,87 +517,192 @@ sub any_plot {
 	
 }
 
-
 sub scatter_plot {
-	my ($r, $method,$path) = @_;
-    my $logger = get_logger();
-    my $req_info = Kynetx::Request::build_request_env($r, $method, "TENX");
-	my $template = DEFAULT_TEMPLATE_DIR . "/altmetrics.tmpl";
-	my $test_template = HTML::Template->new(filename => $template,die_on_bad_params => 0);
-	my $dp_struct = get_datapoints($r,$path);
-	my @series_loop = ();
-	foreach my $s (keys %{$dp_struct}) {
-		my $sumX=	0;
-		my $sumY=	0;
-		my $sumX2 = 0;
-		my $sumXY = 0;
-		my $maxX = 0;
-		my $loop_struct = {
-			'SERIES_NAME' => $s
-		};
-		my @loop = ();
-		my $xname = $dp_struct->{$s}->{'x'} || "var_size";
-		my $yname = $dp_struct->{$s}->{'y'} || "realtime";
-		my $sname = $s;
-		my $data = $dp_struct->{$s}->{'data'};
-		for (my $i = 0;$i < scalar @{$data}; $i++){
-			my $dp = $data->[$i];
-			if (defined $dp) {
-				my $x = $dp->get_metric($xname)|| 0;
-				my $y = int($dp->get_metric($yname) * 1000 || 0);
-				my $id = $dp->id;
-				my $proc = $dp->mproc;
-				my $hostname = $dp->mhostname;
-				my $ts = $dp->timestamp;
-				my $struct = {
-					'x' => $x,
-					'y' => $y,
-					'id' => $id,
-					'proc' => $proc,
-					'hostname' => $hostname,
-					'timestamp' => $ts,
-				};
-#				foreach my $key (@{$dp->vars}) {
-#					$logger->debug("BM: ", sub {Dumper(%benchmark_vars)});					
-#					my $m = $dp->get_metric($key);
-#					$struct->{'metric'}->{$key} = $m unless ($benchmark_vars{$key} && $dp->get_metric($key) == 0) 
-#				}
-				$logger->trace("dp $i: ", sub {Dumper($struct)});
-				push(@loop,$struct);
-				$sumX += $x;
-				$sumY += $y;
-				$sumX2 += ($x * $x);
-				$sumXY += ($x * $y);	
-				if ($x > $maxX) {
-					$maxX=$x;
-				}			
-			}
-		}
-		my $n = scalar(@{$data});
-		my $b;# = ($sumXY -($sumX * $sumY)/$n)/($sumX2 - ($sumX * $sumX)/$n);
-		#my $b = ($sumXY -($sumX * $sumY)/$n)/($sumX2 - ($sumX * $sumX)/$n);
-		my $a = undef;
-		while (! defined $a && $n > 0) {
-			my $rPoint = rand($n);
-			my $dp1 = $data->[$rPoint];
-			if (defined $dp1) {
-				my $x = $dp1->get_metric($xname)|| 0;
-				my $y = int($dp1->get_metric($yname) * 1000 || 0);
-				$a = $y - $b*$x;
-			} 
-		}
-		$logger->trace("S: $sname a: ", $a , " b: ", $b);		
-		$loop_struct->{'SERIES_DATA'} = \@loop;
-		my $last = $data->[scalar @$data -1];
-		$loop_struct->{'LASTx'} = $last->get_metric($xname)        || 0;
-		$loop_struct->{'LASTy'} = $last->get_metric($yname) * 1000 || 0;
-		$loop_struct->{'LASTid'} = $last->id;
-		CORE::push(@series_loop,$loop_struct);		
+  	my ($r, $method,$path) = @_;
+  my $logger = get_logger();
+  my $req_info = Kynetx::Request::build_request_env($r, $method, "TENX");
+	my $template = DEFAULT_TEMPLATE_DIR . "/scatter_metrics.tmpl";
+	my $req = Apache2::Request->new($r);
+	my @params = $req->param;
+	my $filter;
+	foreach my $p (@params) {
+		$filter->{$p} = $req->param($p);
 	}
-	$test_template->param("SERIES_LOOP" => \@series_loop);
+	my $test_template = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+	my $graph = get_series($path,$filter);
+	my @series_data = ();
+	my $points;
+	my @series = keys %{$graph};
+	my $population;
+	my $minX = INT_MAX;
+	my $maxX = 0;
+	foreach my $s (@series) {
+    my @temp;
+		my $struct;		
+		$struct->{'name'} = $s;
+		$struct->{'type'} = 'scatter';
+		my $xname = $graph->{$s}->{'xname'} || $graph->{'any'}->{'xname'};
+		my $yname = $graph->{$s}->{'yname'} || $graph->{'any'}->{'yname'};
+		$test_template->param("XAXIS" => $xname);
+		$test_template->param("YAXIS" => $yname);
+		$logger->trace("$s: ", sub {Dumper($graph->{$s})});
+		my @data = ();
+		foreach my $point (@{$graph->{$s}->{'data'}}) {
+			$logger->trace("$xname, $yname, p: ", sub {Dumper($point)});
+			my $x = $point->{$xname};
+			my $y = $point->{$yname};
+			my $id = $point->{'id'};
+			$y = int($y * 1000);
+			if (defined $x) {
+			  $minX = $x if ($x < $minX);
+			  $maxX = $x if ($x > $maxX);
+			}
+			push(@data,{
+				'id' => $id,
+				'y' => $y,
+				'x' => $x * 1
+			});
+			$points->{$id} = pretty_point($point);
+			if ($s ne "any") {
+			  push(@temp,{
+  				'y' => $y,
+  				'x' => $x * 1
+			  });
+			}
+			
+		}
+		$struct->{'data'} = \@data;
+		if (scalar(@data) > 0) {
+			push(@series_data,$struct);		
+		}
+		if (scalar(@temp)> MIN_POINTS) {
+		  $population->{$s} = \@temp;
+		}
+		
+	}
+	my $empty_set = "[{
+	  'name' : 'No Data',
+	  'xname' : '$graph->{'any'}->{'xname'}',
+	  'yname' : '$graph->{'any'}->{'yname'}',
+	  'data' : []
+	}]";
+	
+	my $data;
+	my $pstr;
+	if (! @series_data) {
+	  $logger->debug("No data");
+	  $data = $empty_set; #Kynetx::Json::encode_json(@empty_set);
+	  $pstr = '[]';
+	  $logger->trace("Encoded");
+	} else {
+	  if (scalar keys %{$population} < 2) {
+  	  foreach my $series (keys %{$population}) {
+  	    my $data = $population->{$series};
+  	    $logger->debug("Size: ", scalar @{$data});
+  	    my $regression = regression_series($data);
+  	    if (defined $regression) {
+  	      $regression->{'name'} = $series . "-regression ". $regression->{'name'};
+  	      $regression->{'type'} = 'line';
+  	      push(@series_data,$regression);
+  	    }  	      	    
+  	  }
+	    
+	  }
+	  $data = encode_json(\@series_data);
+	  $pstr = encode_json($points);
+	}
+	my $num_points = scalar (keys %{$points});
+	
+	
+	$test_template->param("numpoints" => $num_points);
+	$test_template->param("DATA" => $data);
+	$test_template->param("point" => $pstr);
 	$r->content_type('text/html');
+	
 	print $test_template->output;
+  
 }
+
+#sub scatter_plot {
+#	my ($r, $method,$path) = @_;
+#    my $logger = get_logger();
+#    my $req_info = Kynetx::Request::build_request_env($r, $method, "TENX");
+#	my $template = DEFAULT_TEMPLATE_DIR . "/altmetrics.tmpl";
+#	my $test_template = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+#	my $dp_struct = get_datapoints($r,$path);
+#	my @series_loop = ();
+#	foreach my $s (keys %{$dp_struct}) {
+#		my $sumX=	0;
+#		my $sumY=	0;
+#		my $sumX2 = 0;
+#		my $sumXY = 0;
+#		my $maxX = 0;
+#		my $loop_struct = {
+#			'SERIES_NAME' => $s
+#		};
+#		my @loop = ();
+#		my $xname = $dp_struct->{$s}->{'x'} || "var_size";
+#		my $yname = $dp_struct->{$s}->{'y'} || "realtime";
+#		my $sname = $s;
+#		my $data = $dp_struct->{$s}->{'data'};
+#		for (my $i = 0;$i < scalar @{$data}; $i++){
+#			my $dp = $data->[$i];
+#			if (defined $dp) {
+#				my $x = $dp->get_metric($xname)|| 0;
+#				my $y = int($dp->get_metric($yname) * 1000 || 0);
+#				my $id = $dp->id;
+#				my $proc = $dp->mproc;
+#				my $hostname = $dp->mhostname;
+#				my $ts = $dp->timestamp;
+#				my $struct = {
+#					'x' => $x,
+#					'y' => $y,
+#					'id' => $id,
+#					'proc' => $proc,
+#					'hostname' => $hostname,
+#					'timestamp' => $ts,
+#				};
+##				foreach my $key (@{$dp->vars}) {
+##					$logger->debug("BM: ", sub {Dumper(%benchmark_vars)});					
+##					my $m = $dp->get_metric($key);
+##					$struct->{'metric'}->{$key} = $m unless ($benchmark_vars{$key} && $dp->get_metric($key) == 0) 
+##				}
+#				$logger->trace("dp $i: ", sub {Dumper($struct)});
+#				push(@loop,$struct);
+#				$sumX += $x;
+#				$sumY += $y;
+#				$sumX2 += ($x * $x);
+#				$sumXY += ($x * $y);	
+#				if ($x > $maxX) {
+#					$maxX=$x;
+#				}			
+#			}
+#		}
+#		my $n = scalar(@{$data});
+#		my $b;# = ($sumXY -($sumX * $sumY)/$n)/($sumX2 - ($sumX * $sumX)/$n);
+#		#my $b = ($sumXY -($sumX * $sumY)/$n)/($sumX2 - ($sumX * $sumX)/$n);
+#		my $a = undef;
+#		while (! defined $a && $n > 0) {
+#			my $rPoint = rand($n);
+#			my $dp1 = $data->[$rPoint];
+#			if (defined $dp1) {
+#				my $x = $dp1->get_metric($xname)|| 0;
+#				my $y = int($dp1->get_metric($yname) * 1000 || 0);
+#				$a = $y - $b*$x;
+#			} 
+#		}
+#		$logger->trace("S: $sname a: ", $a , " b: ", $b);		
+#		$loop_struct->{'SERIES_DATA'} = \@loop;
+#		my $last = $data->[scalar @$data -1];
+#		$loop_struct->{'LASTx'} = $last->get_metric($xname)        || 0;
+#		$loop_struct->{'LASTy'} = $last->get_metric($yname) * 1000 || 0;
+#		$loop_struct->{'LASTid'} = $last->id;
+#		CORE::push(@series_loop,$loop_struct);		
+#	}
+#	$test_template->param("SERIES_LOOP" => \@series_loop);
+#	$r->content_type('text/html');
+#	print $test_template->output;
+#}
 
 sub pretty_point {
 	my $point = shift;
@@ -592,13 +725,17 @@ sub pretty_point {
 }
 
 sub plotBands {
-  my $points = shift;
+  my $population = shift;
   my $logger = get_logger();
-  if (scalar @{$points} > 1) {
-    my $stats = population_stats($points);
+  my @series = keys %{$population};
+  $logger->debug("Plot bands");
+  if (scalar @series == 1) {
+    my $stats = population_stats($population->{$series[0]});
     if (defined $stats) {
       return $stats;    
     }
+  } else {
+    $logger->debug("No bands: ", scalar @series);
   }
   return "[]";
   
@@ -607,6 +744,7 @@ sub plotBands {
 sub population_stats {
   my $points = shift;
   my $logger = get_logger();
+  $logger->debug("Stats");
   my $sum=0;
   my $maxP = 0;
   my @squares = ();
@@ -693,18 +831,114 @@ sub population_stats {
     };
     push(@bands,$band);
   }
-  
-  my $mean_line = {
-      'from' => $mean -25,
-      'to' => $mean + 25,
-      'color' => "rgba(255,0,0,0.5)"
-  };
-  push(@bands,$mean_line);
-  
+    
   my $str = encode_json(\@bands);
   return $str;
   
 }
 
+sub mean_series {
+  my ($points,$min,$max) = @_;
+  my $count = scalar @{$points};
+  my $sum = 0;
+  for my $point (@{$points}) {
+    $sum += $point;
+  }
+  my $mean = 0;
+  if (defined $count && $count != 0) {
+    $mean =  $sum / $count;
+  } 
+  return undef if ($mean == 0);
+  my $series = {
+    'data' => [[$min,$mean*1],[$max,$mean*1]],
+    'marker' => {
+      'enabled' => 0,
+      'states' => {
+        'hover' => {
+          'enabled' => 0
+        }
+      }
+    }
+  };
+  return $series;
+}
+
+sub median_series {
+  my ($points,$min,$max) = @_;
+  my $median;
+  my @sorted = sort @{$points};
+  my $length = scalar @sorted;
+  my $mid_point = $length / 2;
+  if ($mid_point == (int $mid_point)) {
+    $median = ($sorted[$mid_point] + $sorted[$mid_point + 1])/2;  
+  } else {
+    $median = $sorted[int $mid_point + 1];
+  }
+  my $series = {
+    'data' => [[$min,$median*1],[$max,$median*1]],
+    'marker' => {
+      'enabled' => 0
+    }
+  };
+  return $series;
+}
+
+sub regression_series {
+  my ($points) = @_;
+  my $logger = get_logger();
+	my $sumX=	0;
+	my $sumY=	0;
+	my $sumX2 = 0;
+	my $sumY2 = 0;
+	my $sumXY = 0;
+	my $maxX = 0;
+	my $minX = $points->[0]->{'x'};
+	for my $p (@{$points}) {
+	  my $x = $p->{'x'};
+	  my $y = $p->{'y'};
+		$sumX += $x;
+		$sumY += $y;
+		if ($x > $maxX) {
+		  $maxX = $x;
+		}
+		if ($x < $minX) {
+		  $minX = $x;
+		}
+	}
+	my $n = scalar(@{$points});
+	my $xmean = $sumX / $n;
+	my $ymean = $sumY / $n;
+	for my $p (@{$points}) {
+	  my $x = $p->{'x'};
+	  my $y = $p->{'y'};
+	  my $xd = $x - $xmean;
+	  my $yd = $y - $ymean;
+	  $sumX2 += ($xd * $xd);
+	  $sumXY += ($xd * $yd);
+	  $sumY2 += ($yd * $yd);	  
+	}
+	my $b1 = $sumXY / $sumX2;
+	my $b0 = $ymean -($b1 * $xmean);
+	my $r2 = ($sumXY * $sumXY) / ($sumX2 * $sumY2);
+	my $r2p = int ($r2 * 100);
+	my $y0 = $b0 + ($b1*$minX);
+	my $yn = $b0 + ($b1*$maxX);
+  my $series = {
+    'data' => [[$minX,$y0],[$maxX,$yn]],
+    'name' => "(R2 = \%$r2p)",
+    'marker' => {
+      'enabled' => 0,
+      'states' => {
+        'hover' => {
+          'enabled' => 0
+        }
+      }
+    }
+  };
+  return $series;
+	
+
+  
+}
 
 1;

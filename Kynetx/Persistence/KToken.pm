@@ -275,6 +275,31 @@ sub list_tokens {
 	}
 }
 
+sub get_default_token {
+  my ($ken) = @_;
+  my $key = {
+    'ken' => $ken,
+    'label' => '_LOGIN'
+  };
+  my $result = Kynetx::MongoDB::get_value(COLLECTION,$key);
+  if (defined $result) {
+    return $result->{'ktoken'};
+  }
+  return undef;
+}
 
+sub get_oldest_token {
+  my ($ken) = @_;
+  my $key = {
+    'ken' => $ken
+  };
+  my $tokens = Kynetx::MongoDB::get_matches(COLLECTION,$key);
+  my @sorted = sort _cmp_token @{$tokens};
+  return $sorted[0]->{'ktoken'};
+}
+
+sub _cmp_token {
+  return  ($a->{'ken'} cmp $b->{'ken'} || $a->{'created'} <=> $b->{'created'});
+}
 
 1;

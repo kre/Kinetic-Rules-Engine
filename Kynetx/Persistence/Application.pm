@@ -95,7 +95,7 @@ sub get_hash_app_element {
         "rid" => $rid,
         "key" => $var};
     my $value = Kynetx::MongoDB::get_hash_element(COLLECTION,$key,$hvar);
-    $logger->debug("GET ($var) using (",sub {Dumper($key)},") returns: ", sub {Dumper($value)});
+    $logger->trace("GET ($var) using (",sub {Dumper($key)},") returns: ", sub {Dumper($value)});
     if (defined $value && $get_ts) {
         return $value->{"created"};
     } else {

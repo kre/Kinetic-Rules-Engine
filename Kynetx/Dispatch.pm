@@ -149,7 +149,7 @@ sub get_ridlist {
     my $user_rids_info = Kynetx::Configure::get_config('USER_RIDS_URL');
     my ( $app_url, $username, $passwd ) = split( /\|/, $user_rids_info );
     my $acct_url = $app_url . "/" . $req_info->{'id_token'};
-    $logger->debug("Using ridlist URL: $acct_url");
+    $logger->info("Using ridlist URL: $acct_url");
     my $req = HTTP::Request->new( GET => $acct_url );
     $req->authorization_basic( $username, $passwd );
     my $ua       = LWP::UserAgent->new;

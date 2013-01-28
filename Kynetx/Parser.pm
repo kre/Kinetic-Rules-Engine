@@ -224,7 +224,7 @@ sub parse_expr {
        $logger->error("Can't parse expression: $estring");
        return $result;
     } else {
-    $logger->debug("Parsed expression: ",sub {Dumper($expr)});
+    $logger->trace("Parsed expression: ",sub {Dumper($expr)});
     }
 
     return $result->{'result'};

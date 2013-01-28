@@ -79,6 +79,7 @@ put_hash_element
 delete_hash_element
 validate
 $CACHETIME
+get_matches
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -219,7 +220,18 @@ sub get_hash_element {
   }
 }
 
-
+sub get_matches {
+  my ($collection,$var) = @_;
+  my $logger = get_logger();
+  my $keystring = make_keystring($collection,$var);
+  my $c = get_collection($collection);
+  my $cursor = $c->find($var);
+  my $obj_array = ();
+  while (my $object = $cursor->next) {
+    push(@{$obj_array},$object)
+  } 
+  return $obj_array; 
+}
 
 sub get_value {
     my ($collection,$var) = @_;
