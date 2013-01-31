@@ -29,6 +29,7 @@ use Log::Log4perl::Level;
 use Log::Log4perl::Appender::ErrorStack;
 
 use Kynetx::Memcached qw(:all);
+use Kynetx::Rids;
 use URI::Escape ('uri_escape_utf8');
 use Sys::Hostname;
 use Data::Dumper;
@@ -803,6 +804,26 @@ sub split_re {
 sub ll {
 	my $logger = get_logger();
 	$logger->debug(@_);
+}
+
+
+# see Kynetx::Test::gen_req_info
+sub dummy_req_info {
+  my($rid, $options, $event_attrs) = @_;
+  my $req_info;
+  $req_info->{'txn_id'} = '1234';
+  $req_info->{$rid.':kinetic_app_version'} = 'dev';
+  $req_info->{'eid'} = '0123456789abcdef';
+  Kynetx::Request::add_event_attr($req_info, 'msg', '_fake_request_info');
+  $req_info->{'caller'} = 'http://www.windley.com/';foreach my $k (keys %{ $options}) {
+    $req_info->{$k} = $options->{$k}; 
+  }
+  foreach my $k (keys %{ $event_attrs}) {
+    Kynetx::Request::add_event_attr($req_info, $k, $options->{$k});
+  }
+  my $ver = $options->{'ridver'} || 'prod';
+  $req_info->{'rid'} = Kynetx::Rids::mk_rid_info($req_info,$rid, {'version' => $ver});
+  return $req_info;
 }
 
 1;

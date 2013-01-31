@@ -29,6 +29,7 @@ use Kynetx::Environments qw/:all/;
 use Kynetx::Persistence::Ruleset qw/:all/;
 use Kynetx::Memcached qw(:all);
 use Kynetx::Rids qw(:all);
+use Kynetx::Util;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -372,7 +373,7 @@ sub do_import {
     $rid_to_import = $args->[0];
     $version = $config->{'version'} || 0;
     $app_version = $config->{'kinetic_app_version'} || 'prod';
-    my $dummy_ri = Kynetx::Test::gen_req_info($rid_to_import);
+    my $dummy_ri = Kynetx::Util::dummy_req_info($rid_to_import);
     my $rid_info = Kynetx::Rids::mk_rid_info($dummy_ri,$rid_to_import,{'version' => $app_version});
     $rid_info->{'version'} = $version;
     my $registry = Kynetx::Persistence::Ruleset::import_legacy_ruleset($ken,$rid_info);
@@ -475,7 +476,7 @@ sub _flush {
     return 0 
   };
   # Create a dummy req_info object for the RuleEnv.pm methods
-  my $req_info = Kynetx::Test::gen_req_info($rid);
+  my $req_info = Kynetx::Util::dummy_req_info($rid);
   my $version = Kynetx::Rids::get_version(Kynetx::Rids::get_current_rid_info($req_info));
   my $memd = get_memd();
   $logger->debug("[flush] flushing rules for $rid (version $version)");
