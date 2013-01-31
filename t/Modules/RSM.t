@@ -24,6 +24,7 @@ use warnings;
 use Test::More;
 use Test::LongString;
 use Test::Deep;
+use Test::WWW::Mechanize;
 
 use Apache::Session::Memcached;
 use DateTime;
@@ -71,6 +72,14 @@ my $rid = 'may_delete';
 my $my_req_info = Kynetx::Test::gen_req_info($rid);
 my $session_token = "4E68C51C-551F-11E2-AC38-F1C2D835B985";
 
+$logger->debug("Initializing memcached");
+Kynetx::Memcached->init();
+
+# Basic MongoDB commands
+$logger->debug("Initializing mongoDB");
+Kynetx::MongoDB::init();
+
+
 my $rule_name = 'foo';
 
 my $rule_env = Kynetx::Test::gen_rule_env();
@@ -85,6 +94,16 @@ my $test_count = 0;
 
 my($config, $mods, $args, $krl, $krl_src, $js, $result, $v);
 my ($description,$function_name);
+
+my $platform = '127.0.0.1';
+$platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
+$platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
+my $dn = "http://$platform/blue/event";
+
+my $ruleset = 'cs_test_1';
+
+my $mech = Test::WWW::Mechanize->new();
+
 
 # check that predicates at least run without error
 my @dummy_arg = (0);
@@ -101,8 +120,11 @@ open DICT, $dict_path;
 my $rnd = $DICTIONARY[rand(@DICTIONARY)];
 chomp($rnd);
 
+$rnd =~ s/\s//g;
+
 my $prefix = $DICTIONARY[rand(@DICTIONARY)];
 chomp($prefix);
+$prefix =~ s/\s//g;
 
 $rid .= $rnd;
 
@@ -148,7 +170,7 @@ $test_count++;
 $description = "Create an empty ruleset registration";
 $function_name = "new_ruleset";
 $args = [];
-$expected = 'a' . $nid . 'x';
+$expected = 'b' . $nid . 'x';
 $result = Kynetx::Modules::RSM::run_function($my_req_info,$rule_env,$session,$rule_name,$function_name,$args);
 cmp_deeply($result,re(qr/^$expected/),$description);
 $test_count++;
@@ -193,6 +215,8 @@ cmp_deeply($result->{'rid'},re(qr/$prefix$nid/),$description);
 $test_count++;
 push(@rids,$result->{'rid'});
 
+
+
 my $new_rid = $result->{'rid'};
 
 $description = "Validate the new ruleset";
@@ -236,7 +260,7 @@ $js = Kynetx::Actions::build_one_action(
 	    'callback23',
 	    'dummy_name');
 $result = lookup_rule_env('myRid',$rule_env);
-cmp_deeply($result->{'rid'},re(qr/a$nid/),$description);
+cmp_deeply($result->{'rid'},re(qr/b$nid/),$description);
 $test_count++;
 push(@rids,$result->{'rid'});
 
@@ -261,8 +285,8 @@ cmp_deeply(ref $result,"ARRAY",$description);
 $test_count++;
 
 $description = "Update the ruleset with a new URI and validate";
-$local_file = 'data/action7.krl';
-$uri = "file://$local_file";
+$local_file = '';
+$uri = "file://data/action7.krl";
 $krl_src = <<_KRL_;
   rsm:update("$new_rid") setting (isUpdate)
     with 
@@ -281,6 +305,71 @@ $js = Kynetx::Actions::build_one_action(
 $result = lookup_rule_env('isUpdate',$rule_env);
 cmp_deeply($result,1,$description);
 $test_count++;
+
+$result = Kynetx::Persistence::Ruleset::get_registry($new_rid);
+
+$description = "Import a dev ruleset from Kynetx Repo";
+$expected = 'https://rulesetmanager.kobj.net/ruleset/source/a144x154/dev/krl/';
+my $import_rid = 'a144x154';
+$krl_src = <<_KRL_;
+  rsm:import("$import_rid") setting (isImport)
+    with 
+      kinetic_app_version = "dev";
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+$result = lookup_rule_env('isImport',$rule_env);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+push(@rids,$import_rid);
+
+my $test_url = "$dn/web/pageview/$import_rid?caller=http://www.windley.com/archives/2006/foo.html";
+$description = "Check that dev version was registered";
+$mech->get($test_url);
+$result = $mech->content();
+cmp_deeply($result,re(qr/Hal.+Hal/),$description);
+$test_count++;
+
+# Clear out the dev ruleset
+Kynetx::Persistence::Ruleset::delete_registry($import_rid);
+$description = "Import a prod ruleset from Kynetx Repo";
+$expected = 1;
+$import_rid = 'a144x154';
+$krl_src = <<_KRL_;
+  rsm:import("$import_rid") setting (isImport)
+    with 
+      kinetic_app_version = "prod" and
+      force = 1;;
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+$result = lookup_rule_env('isImport',$rule_env);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$test_url = "$dn/web/pageview/$import_rid?caller=http://www.windley.com/archives/2006/foo.html";
+$description = "Check that prod version was registered";
+$mech->get($test_url);
+$result = $mech->content();
+cmp_deeply($result,re(qr/Dave.+Dave/),$description);
+$test_count++;
+
 
 $description = "List of owners rulesets";
 $result = Kynetx::Persistence::Ruleset::get_rulesets_by_owner($session_ken);

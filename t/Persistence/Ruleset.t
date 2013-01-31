@@ -32,7 +32,7 @@ use APR::Pool ();
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 use Kynetx::Test qw/:all/;
@@ -139,7 +139,7 @@ my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
 
 $logger->debug("Developer ken: $ken User: $userid");
 $description = "First generic rid";
-$expected = 'a' . $userid .'x0';
+$expected = 'b' . $userid .'x0';
 $rid = Kynetx::Persistence::Ruleset::create_rid($ken);
 is($rid,$expected,$description);
 $test_count++;
@@ -148,7 +148,7 @@ $test_count++;
 $logger->debug("Rid: $rid");
 
 $description = "Second generic rid";
-$expected = 'a' . $userid .'x1';
+$expected = 'b' . $userid .'x1';
 $rid = Kynetx::Persistence::Ruleset::create_rid($ken);
 is($rid,$expected,$description);
 $test_count++;

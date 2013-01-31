@@ -91,8 +91,7 @@ sub get_registry_element {
 	} else {
 		$logger->warn("rid undefined in ruleset registry request");
  		return undef;		
-	}
-	
+	}	
 }
 
 sub put_registry_element {
@@ -107,7 +106,6 @@ sub put_registry_element {
 	my $success = Kynetx::MongoDB::put_hash_element(COLLECTION,$key,$hkey,$value);
 	Kynetx::MongoDB::clear_cache_for_map($rid,COLLECTION,Kynetx::MongoDB::map_key($rid,$hkey));
 	if ($hkey > 1) {
-		$logger->trace("Flush upstream");
 		Kynetx::MongoDB::clear_cache_for_map($rid,COLLECTION,Kynetx::MongoDB::map_key($rid,[$hkey->[0]]));
 	}
 	return $success;
@@ -227,7 +225,9 @@ sub get_registry {
 		my $key = {
 			"rid" => $rid
 		};
+		my $hkey = [];
 		return Kynetx::MongoDB::get_value(COLLECTION,$key);
+		#return Kynetx::Persistence::Ruleset::get_registry_element($key,$hkey);
 	}
 	return undef;
 }
@@ -238,7 +238,6 @@ sub rid_from_ruleset {
   my $rid_info;
   my $result = get_registry($rid);
   if (defined $result) {
-    $logger->info("Rid info: ",sub {Dumper($result)});
     $rid_info = $result->{'value'};
     $rid_info->{'rid'} = $result->{'rid'};
     return $rid_info;
@@ -267,7 +266,7 @@ sub create_rid {
   if (defined $prefix && $prefix ne ""){
     $prefix .= $userid
   } else {
-    $prefix = 'a' . $userid;
+    $prefix = 'b' . $userid;
   };
   my $rid_index = get_rid_index($ken,$userid,$prefix); 
   my $rid = $prefix . "x" . $rid_index;
@@ -284,6 +283,59 @@ sub create_rid {
 }
 
 #################### Utility functions
+
+sub import_legacy_ruleset {
+  my ($ken,$rid_info) = @_;
+  my $logger = get_logger();
+  my $rid = Kynetx::Rids::get_rid($rid_info);
+  if (get_registry($rid)) {
+    return undef;
+  }
+  my $version = Kynetx::Rids::get_version($rid_info);
+  my $version_num = Kynetx::Rids::get_versionnum($rid_info);
+  my $repo = Kynetx::Configure::get_config('RULE_REPOSITORY');
+  my ($base_url,$username,$password) = split(/\|/, $repo);
+  my $rs_url = join('/', ($base_url, $rid, $version, 'krl/'));
+  my $registry = {
+    'owner' => $ken,
+    'version' => $version_num,
+    'kinetic_app_version'  => $version || 'prod',
+    'uri' => $rs_url,
+    'username' => $username,
+    'password' => $password
+  };
+  put_registry_element($rid,[],$registry);
+  return get_registry($rid);
+}
+
+sub increment_version {
+  my ($rid) =@_;
+	my $logger = get_logger();
+  my $hkey = ['version'];
+	my $query = {
+		"rid" => $rid,
+		"hashkey" => $hkey
+	};
+	my $update ={
+	  '$inc' =>{"value" => 1}
+  };
+	 
+	my $new = 'true';
+	my $upsert = 'true';
+	my $fields = { "value"=>1, "_id" => 0};
+	my $fnmod = {
+		'query' => $query,
+		'update' => $update,
+		'new' => $new,
+		'upsert' => $upsert,
+		#'fields' => $fields
+	};
+	$logger->trace("query: ", sub {Dumper($fnmod)});
+	my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod);
+	Kynetx::MongoDB::clear_cache_for_map($rid,COLLECTION,Kynetx::MongoDB::map_key($rid,$hkey));
+	return $result;
+  
+} 
 
 sub get_rulesets_by_owner {
   my ($ken) = @_;

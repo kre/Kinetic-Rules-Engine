@@ -88,6 +88,12 @@ my $default_actions = {
 		'before' => \&do_delete,
 		'after'  => []
 	},
+	'import' => {
+		'js' =>
+		  'NO_JS',    # this action does not emit JS, used in build_one_action
+		'before' => \&do_import,
+		'after'  => []
+	},
 	
 };
 
@@ -208,7 +214,6 @@ sub do_register {
     }
     
     my $rid_object = Kynetx::Persistence::Ruleset::rid_from_ruleset($new_rid);
-    $logger->trace("Created this: ", sub {Dumper($rid_object)});
     my $response = response_object($v,$rid_object);
     $rule_env = add_to_env( $response, $rule_env ) unless $v eq '__dummy';
     my $js = raise_response_event('register',$req_info, $rule_env, $session, $config, $response, $v );
@@ -265,6 +270,7 @@ sub do_validate {
 sub do_update {
   my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
   my $logger = get_logger();
+  
   my $rid = get_rid($req_info->{'rid'});
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
   my $v = $vars->[0] || '__dummy';
@@ -285,7 +291,7 @@ sub do_update {
     (Kynetx::Modules::PCI::developer_authorized($req_info,$rule_env,$session,['ruleset','create']) && $ken eq $owner) ||
     $pin eq $pin    
   ) {
-    for my $key (keys %{$config}) {
+    for my $key (keys %{$mods}) {
       # Can't change these values
       next if (
         $key eq "owner" ||
@@ -293,13 +299,21 @@ sub do_update {
         $key eq "rid" || 
         $key eq "prefix"
       );
-      if ($config->{$key} eq "") {
+      # Ignore default action modifiers
+      next if (
+        $key eq "effect" ||
+        $key eq "delay" ||
+        $key eq "draggable" ||
+        $key eq "scrollable"
+      );
+      if ($mods->{$key} eq "") {
+      #if ($config->{$key} eq "") {
         Kynetx::Persistence::Ruleset::delete_registry_element($mod_rid, [$key]);
       } else {
         Kynetx::Persistence::Ruleset::put_registry_element($mod_rid,[$key],$config->{$key})
       }
     }
-    
+    Kynetx::Persistence::Ruleset::increment_version($mod_rid); 
     # Now try to validate the ruleset
     my $valid = _validate($mod_rid);
     $response = {
@@ -346,6 +360,48 @@ sub do_delete {
   }
 }
 
+sub do_import {
+  my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
+  my $logger = get_logger();
+  my $rid = get_rid($req_info->{'rid'});
+  #$logger->debug("Rid: $rid");
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+  my $v = $vars->[0] || '__dummy';
+  if (Kynetx::Modules::PCI::system_authorized($req_info, $rule_env, $session)|| $rid eq "may_delete") {
+    my ($rid_to_import,$version,$app_version);
+    $rid_to_import = $args->[0];
+    $version = $config->{'version'} || 0;
+    $app_version = $config->{'kinetic_app_version'} || 'prod';
+    my $dummy_ri = Kynetx::Test::gen_req_info($rid_to_import);
+    my $rid_info = Kynetx::Rids::mk_rid_info($dummy_ri,$rid_to_import,{'version' => $app_version});
+    $rid_info->{'version'} = $version;
+    my $registry = Kynetx::Persistence::Ruleset::import_legacy_ruleset($ken,$rid_info);
+    $logger->trace("registry: ", sub {Dumper($registry)});
+    my $response = {
+      $v => $registry->{'value'}->{'uri'}
+    };
+    if ($config->{'force'}) {
+      my $valid = _validate($rid_to_import);
+      $response = {
+        $v => $valid
+      };
+      if ( $valid == 1) {
+        # Flush the ruleset
+        _flush($rid_to_import);
+      } else {
+        Kynetx::Persistence::Ruleset::delete_registry($rid_to_import);
+      }
+      
+    }
+    $rule_env = add_to_env( $response, $rule_env ) unless $v eq '__dummy';
+    my $js = raise_response_event($req_info, $rule_env, $session, $config, $response, $v );
+    return $js;
+  } else {
+    $logger->warn("Only root can import rulesets");
+    return '';
+  }
+}
+
 ##################### Private
 sub _appkeys {
 	my ($rid) = @_;
@@ -375,7 +431,7 @@ sub raise_response_event {
   my $js = '';
   if ( defined $config->{'autoraise'} ) {
     $logger->debug(
-		   "http library autoraising event with label $config->{'autoraise'}");
+		   "RSM module autoraising event with label $config->{'autoraise'}");
 
     # make modifiers in right form for raise expr
     my $ms = [];
@@ -449,7 +505,7 @@ sub _validate {
           push(@errors,$str);
           $logger->error($str);
         } elsif (defined $ruleset->{'error'}) {
-          my $str = "Ruleset parsing error for $rid";
+          my $str = "Ruleset parsing error for $rid: ";
           push(@errors,$str);
           $logger->error($str);
             if (ref $ruleset->{'error'} eq "ARRAY") {

@@ -419,7 +419,10 @@ sub list_parent {
   if (defined $parent){
     my $token = Kynetx::Persistence::KToken::get_default_token($ken);
     $token = Kynetx::Persistence::KToken::get_oldest_token($ken) unless ($token);
-    return $token;
+    my $username = Kynetx::Persistence::KEN::get_ken_value($ken,'username');
+    my $label = Kynetx::Persistence::KToken::token_query({'ktoken' => $token})->{'label'};
+    my $tmp = [$token,$username,$label];
+    return $tmp;
   }
   return undef;
   

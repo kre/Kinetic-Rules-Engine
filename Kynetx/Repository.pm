@@ -93,7 +93,6 @@ sub get_rules_from_repository {
   {
     sleep 1;
     $counter++;
-    $logger->info("Parsing semaphore hold: $counter") if ( $counter % 2 ) == 0;
   }
 
   my $ruleset = $memd->get($rs_key);
@@ -132,7 +131,7 @@ sub get_rules_from_repository {
         if ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid') {
           $logger->error("Ruleset $rid not found");
       } elsif (defined $ruleset->{'error'}) {
-          $logger->error("Ruleset parsing error for $rid: ", sub {Dumper ($ruleset->{'error'})});
+          $logger->error("Ruleset parsing error for $rid: ");
       } else {
           $logger->error("Unspecified ruleset repository error for $rid");
       }
