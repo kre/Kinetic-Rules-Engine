@@ -44,6 +44,7 @@ use Kynetx::Persistence::Ruleset qw(:all);
 use Kynetx::Repository::HTTP;
 use Kynetx::Repository::File;
 use Kynetx::Repository::XDI;
+use Kynetx::Persistence::Ruleset;
 
 our $VERSION = 1.00;
 our @ISA     = qw(Exporter);
@@ -195,6 +196,8 @@ sub get_ruleset_krl {
         $rid_info->{'uri'} = $rs_url;
         $rid_info->{'username'} = $username;
         $rid_info->{'password'} = $password;
+        # Populate the RSM with the legacy ruleset
+        #Kynetx::Persistence::Ruleset::import_legacy_ruleset(undef,$rid_info);
         return Kynetx::Repository::HTTP::get_ruleset($rid_info);      
     }
     return undef;

@@ -514,13 +514,12 @@ sub facebook_callback_handler {
     my @elements = split(/\//,$uri);
     my $namespace = pop @elements;
     #$logger->debug("Namespace: $namespace", sub {Dumper(@elements)});
-	my $parsed_url = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});
-	if (defined $parsed_url && $parsed_url->scheme eq 'http') {
+  if ($uri =~ m#http://#) {
 		$port    = Kynetx::Configure::get_config('KNS_PORT') || 80;
 		$protocol = "http";
-	} else {
+	} elsif ($uri =~ m#https://#) {
 		$protocol = 'https';
-    	$port = Kynetx::Configure::get_config('KNS_SECURE_PORT') || 443;
+    $port = Kynetx::Configure::get_config('KNS_SECURE_PORT') || 443;
 	}
 	my $key = OAUTH_REDIRECT . SEP . $namespace;
 	#$logger->debug("redirect key: $key");
@@ -600,11 +599,10 @@ sub oauth_callback_handler {
 		$version = $2;
 		$namespace = $3;
 	}
-	my $parsed_url = APR::URI->parse($req_info->{'pool'}, $req_info->{'caller'});
-	if (defined $parsed_url && $parsed_url->scheme eq 'http') {
+  if ($uri =~ m#http://#) {
 		$port    = Kynetx::Configure::get_config('KNS_PORT') || 80;
 		$protocol = "http";
-	} else {
+	} elsif ($uri =~ m#https://#) {
 		$protocol = 'https';
     	$port = Kynetx::Configure::get_config('KNS_SECURE_PORT') || 443;
 	}
@@ -640,13 +638,6 @@ sub oauth_callback_handler {
 	Kynetx::Persistence::delete_persistent_var("ent", $rid, $session, $ent_config_key);
 	my $redirect;
  	if (defined $fail){
-# 		Kynetx::Errors::raise_error($req_info,'warn',
-# 			"[OAuthModule] $fail",
-# 			{
-# 				'genus' => 'oauth',
-# 				'species' => 'callback'
-# 			}
-# 		);
  		$logger->debug("Make redirect-------------------------------");
  		if ($host eq "127.0.0.1") {
  			my $s = $r->server();
