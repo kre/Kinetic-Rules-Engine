@@ -230,7 +230,7 @@ sub calculate_rid_list {
         $rid_info->{'kinetic_app_version'} );
 
       my $dispatch_info = process_dispatch_list( $rid, $ruleset );
-      $logger->debug( "Domain ", sub { Dumper $dispatch_info } );
+#      $logger->debug( "Domain ", sub { Dumper $dispatch_info } );
       foreach my $d ( @{ $dispatch_info->{'domains'} } ) {
         $r->{'ridlist'}->{$rid}->{'domains'}->{$d} = 1;
       }

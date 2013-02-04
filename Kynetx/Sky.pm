@@ -192,16 +192,38 @@ sub handler {
 
 	my ( $rid_list, $unfiltered_rid_list, $domain_test );
 
+	# this can be a big list...
+	$unfiltered_rid_list =
+	  Kynetx::Dispatch::calculate_rid_list( $req_info, $session );
+
+	$logger->debug("Calculated RID list: ", sub { join(', ', keys %{$unfiltered_rid_list->{'ridlist'}}) });
+
 	# if rids were given in request, just use them. Otherwise, calculate them
+
 	if ( defined $req_info->{'_rids'} ) {
 		$rid_list = $req_info->{'rids'};
 
+		$logger->debug("Rid list before ", sub {Dumper  $rid_list });
 		# this likely takes too long...or maybe not...
+
+		my $new_rid_list = [];
 
 		foreach my $rid_info ( @{$rid_list} ) {
 
 			my $rid = $rid_info->{'rid'};
+
+			# Don't execute unless given rid is installed. 
+			unless ( defined $unfiltered_rid_list->{'ridlist'}->{$rid}
+                              || Kynetx::Configure::get_config('ALLOW_ALL_RULESETS')
+
+                               ) {
+			  $logger->debug("Not executing $rid because it isn't installed or has no rules");
+			  next;
+			}
+
 			$metric->add_tag($rid);
+
+			push(@{$new_rid_list}, $rid_info);
 			my $ruleset =
 			  Kynetx::Repository::get_rules_from_repository( $rid_info,
 				$req_info, $rid_info->{'kinetic_app_version'} );
@@ -213,15 +235,16 @@ sub handler {
 				$domain_test->{$rid}->{'domain'}->{$d} = 1;
 			}
 		}
+		# only use those that pass the filter (installed)
+		$req_info->{'rids'} = $new_rid_list;
+		$rid_list = $new_rid_list;
+
+		$logger->debug("Rid list after ", sub {Dumper  $rid_list });
+
 
 	}
 	else {
 
-		$unfiltered_rid_list =
-		  Kynetx::Dispatch::calculate_rid_list( $req_info, $session );
-
-  # this can be a big list...
-  # $logger->error("Rids for $id_token: ", sub {Dumper ($unfiltered_rid_list)});
 
 		# filter $unfiltered_rid_list for saliant rulesets
 

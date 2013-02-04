@@ -240,7 +240,9 @@ sub log_request_env {
 	       ) {
 	      if (ref $value eq 'ARRAY') {
 		$value = Kynetx::Rids::print_rids($value);
-	      } 
+	      } elsif ( ref $value eq 'HASH' ) {
+		$value = Kynetx::Rids::print_rid_info($value);
+	      }
 	    } elsif ($entry eq 'event_attrs') {
 	      $value = "{";
 	      while ( my ($k, $v) = each %{  $request_info->{$entry} }) {
