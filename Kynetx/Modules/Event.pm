@@ -119,7 +119,7 @@ env
 
       $val = get_attr($req_info, $rid, $args->[0]);
 
-      $logger->debug("event:attr(", $args->[0], ") -> ", Dumper $val);
+      $logger->trace("event:attr(", $args->[0], ") -> ", Dumper $val);
 
     } elsif($function eq 'params' || $function eq 'attrs') {
 
@@ -151,7 +151,7 @@ env
 
       }
 
-      $logger->debug("event:attrs() -> ", sub {Dumper $ps});
+      $logger->trace("event:attrs() -> ", sub {Dumper $ps});
 
       return $ps;
 

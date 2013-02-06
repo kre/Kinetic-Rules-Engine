@@ -7,6 +7,12 @@ etc/amazon_credentials.pm
 /current_engine.diff
 _*
 parser/output/*
+parser/lib*
+parser/*.g
+parser/*.jar
+!parser/RuleSet.g
 .includepath
 .metadata
 /.settings
+*.bak
+/i386-linux*

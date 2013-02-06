@@ -46,6 +46,7 @@ use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
 use Kynetx::Events::Primitives qw/:all/;
 use Kynetx::Persistence::UserState qw/:all/;
+use Kynetx::Persistence::Ruleset qw/:all/;
 
 
 use Kynetx::FakeReq qw/:all/;

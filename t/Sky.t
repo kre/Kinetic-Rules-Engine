@@ -668,13 +668,12 @@ SKIP: {
   }
     # make sure rules in current RID gets raised
     my $explicit_event_nonspecific_rid_current_test_plan =
-      [{'url' => "$dn/$token/123456789?_domain=web&_type=pageview&_rids=a1856x4&url=http://www.google.com/test_rule_20",
+      [{'url' => "$dn/$token/123456789?_domain=web&_type=pageview&_rids=a1856x8&url=http://www.google.com/test_rule_20",
 	'type' => 'text/javascript',
-	'like' => ["/'rule_name' :'test_rule_20'/",
-		   "/'rule_name' :'test_rule_21'/",
+	'like' => ["/'rule_name' :'hello_world'/",
 		  ],
 	'unlike' => ["/'rule_name' :'test_rule_7'/",
-],
+		    ],
 	'diag' => 0,
 
        },
@@ -685,12 +684,12 @@ SKIP: {
     # make sure rules in current RID gets raised
     my $explicit_event_nonspecific_rid_current_other_test_plan =
       [{'url' => "$dn/$token/123456789?_domain=web&_type=pageview&_rids=a1856x4&url=http://www.google.com/test_rule_23",
-	'type' => 'text/javascript',
-	'like' => ["/'rule_name' :'test_rule_22'/",
-		   "/'rule_name' :'test_rule_7'/",
-		  ],
-	'unlike' => [],
-	'diag' => 0,
+    	'type' => 'text/javascript',
+    	'like' => ["/'rule_name' :'test_rule_22'/",
+    		   "/'rule_name' :'test_rule_7'/",
+    		  ],
+    	'unlike' => [],
+    	'diag' => 0,
 
        },
       ];

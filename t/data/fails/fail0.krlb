@@ -1,0 +1,19 @@
+ruleset fail0 {
+    rule test0 is active {
+        select when pageview ".*"
+        pre {
+		  x = 5;
+		  x = -5;
+		  x = "test";
+		  x = "1234567890";
+		  x = true;
+		  x = false;
+		  x = re/f|g+/i;
+		  x = foo(5);
+		  x = foo(5,"hello").borscht();
+		  x = (4 + 5);
+		}
+	alert("Hello");
+
+    }
+}

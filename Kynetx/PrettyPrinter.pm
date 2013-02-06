@@ -679,7 +679,6 @@ sub pp_decl {
 	$o .= $node->{'lhs'} . " = ";
 	$o .= pp_JS($node->{'rhs'});
     } elsif($node->{'type'} eq 'xdi') {
-    	$logger->info("Type: xdi");
     	$o .= $node->{'lhs'} . " = ";
     	$o .= pp_XDI($node->{'rhs'});
     }

@@ -42,6 +42,7 @@ use Kynetx::Test qw/:all/;
 use Kynetx::RuleManager qw/:all/;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::Json;
+use Kynetx::Persistence::Ruleset qw/:all/;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;

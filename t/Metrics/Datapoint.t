@@ -41,6 +41,7 @@ use Kynetx::Test qw/:all/;
 use Kynetx::Configure;
 use Kynetx::MongoDB qw(:all);
 use Kynetx::Memcached;
+use Kynetx::Persistence::Ruleset qw/:all/;
 use APR::URI qw/:all/;
 use APR::Pool ();
 

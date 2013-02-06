@@ -91,6 +91,8 @@ sub get_memcached_servers {
     return join(" ", $MEMSERVERS);
 }
 
+# this could be made more efficient by using add to check
+# but the result is used in MondoDB.pm, so we'd have to change that. 
 sub check_cache {
     my ($key) = @_;
     my $content;

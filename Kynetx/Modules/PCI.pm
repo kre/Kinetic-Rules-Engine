@@ -358,6 +358,77 @@ sub check_username {
 }
 $funcs->{'exists'} = \&check_username;
 
+sub list_children {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	return 0 unless ( system_authorized($req_info, $rule_env, $session));
+	my $ken;
+  my $uid = $args->[0];
+  if (defined $uid) {
+    if (ref $uid eq "HASH") {
+			if ($uid->{'username'}) {
+				$ken = Kynetx::Persistence::KEN::ken_lookup_by_username($uid->{'username'});
+			} elsif ($uid->{'user_id'}) {
+				$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($uid->{'user_id'});
+			} elsif ($uid->{'eci'}) {
+				$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($uid->{'eci'});
+			}      
+    } else {
+      if ($uid =~ m/^\d+$/) {
+		    #ll("userid");
+		    $ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($uid);
+	     } else {
+		    #ll("eci");
+		    $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($uid);
+	     }      
+    }
+  } else {
+    my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	  $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+  }
+  
+  if ($ken) {
+    my $blob = ();
+    my $key = ['dependents'];
+    my $children = Kynetx::Persistence::KPDS::get_kpds_element($ken,['dependents']);
+    if (defined $children && ref $children eq "ARRAY") {
+      foreach my $child (@{$children}) {
+        my $username = Kynetx::Persistence::KEN::get_ken_value($child,'username');
+        my $token = Kynetx::Persistence::KToken::get_default_token($child);
+        $token = Kynetx::Persistence::KToken::get_oldest_token($child) unless ($token);
+        my $label = Kynetx::Persistence::KToken::token_query({'ktoken' => $token})->{'label'};
+        my $tmp = [$token,$username,$label];
+        push(@{$blob},$tmp);
+      }
+      return $blob;
+    }
+    return $children;
+  }
+  
+  return undef;
+}
+$funcs->{'list_children'} = \&list_children;
+
+sub list_parent {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	return 0 unless ( system_authorized($req_info, $rule_env, $session));
+  my $uid = $args->[0];
+  my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($uid);
+  my $parent = Kynetx::Persistence::KEN::get_ken_value($ken,'parent');
+  if (defined $parent){
+    my $token = Kynetx::Persistence::KToken::get_default_token($ken);
+    $token = Kynetx::Persistence::KToken::get_oldest_token($ken) unless ($token);
+    my $username = Kynetx::Persistence::KEN::get_ken_value($ken,'username');
+    my $label = Kynetx::Persistence::KToken::token_query({'ktoken' => $token})->{'label'};
+    my $tmp = [$token,$username,$label];
+    return $tmp;
+  }
+  return undef;
+  
+}
+$funcs->{'list_parent'} = \&list_parent;
+
 ############################# Rulesets
 
 sub add_ruleset_to_account {
@@ -518,21 +589,9 @@ $funcs->{'new_eci'} = \&new_eci;
 sub destroy_eci {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
 	return 0 unless (developer_authorized($req_info,$rule_env,$session,['eci','destroy']));
-	my $ken;
+	
 	my $arg1 = $args->[0];
-	if (! defined $arg1) {
-		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
-		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
-	} else {
-		# Check to see if it is an eci or a userid
-		if ($arg1 =~ m/^\d+$/) {
-			#ll("userid");
-			$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg1);
-		} else {
-			#ll("eci");
-			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
-		}		
-	}	
+	my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
 	if ($ken) {
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');	
 		Kynetx::Persistence::KToken::delete_token($arg1);	
@@ -810,8 +869,10 @@ sub syskey {
 	return $syskey;
 }
 
-
-
+sub _primary_eci {
+  my ($ken) = @_;
+  
+}
 
 sub get_pass_phrase {
 	my ($did) = @_;

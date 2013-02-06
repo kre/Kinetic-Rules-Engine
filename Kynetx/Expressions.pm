@@ -939,7 +939,7 @@ sub ineq_test {
     my($op, $rand0, $rand1) = @_;
 
     my $logger = get_logger();
-    $logger->debug("[ineq_test] $rand0 $op $rand1");
+    $logger->trace("[ineq_test] $rand0 $op $rand1");
     $rand0 = undef unless (defined $rand0);
     $rand1 = undef unless (defined $rand1);
 

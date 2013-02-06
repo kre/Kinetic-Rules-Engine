@@ -58,7 +58,6 @@ sub get_ruleset {
     $file =~ s/file:\/\///;
     my $repo = Kynetx::Configure::get_config('FILE_REPOSITORY');
     my $filename = $repo . $file;
-    $logger->debug("File repository: $filename");
     if (-e $filename) {
       open(RS,$filename) || $logger->warn("Can't open file $filename: $!\n");
       local $/ = undef;

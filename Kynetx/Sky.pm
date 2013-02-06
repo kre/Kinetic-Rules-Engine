@@ -64,8 +64,13 @@ sub handler {
 	$metric->start_timer();
 	$metric->series("sky");
 	$metric->path($r->path_info);
+	$metric->mem_stats();
 	my $req = Apache2::Request->new($r);
 	my @params = $req->param;
+	for my $parm (@params) {
+	  my $val = $req->param($parm);
+	  $metric->push($parm,$val);
+	}
 	if (scalar @params > 0){
 	  $metric->add_tag(join(",",@params));
 	}
@@ -203,7 +208,7 @@ sub handler {
 	if ( defined $req_info->{'_rids'} ) {
 		$rid_list = $req_info->{'rids'};
 
-		$logger->debug("Rid list before ", sub {Dumper  $rid_list });
+#		$logger->debug("Rid list before ", sub {Dumper  $rid_list });
 		# this likely takes too long...or maybe not...
 
 		my $new_rid_list = [];
@@ -217,7 +222,7 @@ sub handler {
                               || Kynetx::Configure::get_config('ALLOW_ALL_RULESETS')
 
                                ) {
-			  $logger->debug("Not executing $rid because it isn't installed or has no rules");
+			  $logger->debug("Excluding $rid from RID list because it isn't installed or has no rules");
 			  next;
 			}
 
@@ -239,7 +244,7 @@ sub handler {
 		$req_info->{'rids'} = $new_rid_list;
 		$rid_list = $new_rid_list;
 
-		$logger->debug("Rid list after ", sub {Dumper  $rid_list });
+#		$logger->debug("Rid list after ", sub {Dumper  $rid_list });
 
 
 	}

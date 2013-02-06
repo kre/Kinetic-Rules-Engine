@@ -180,7 +180,7 @@ sub parse_ruleset {
 
     $logger->trace("[parser::parse_ruleset] after comments: ", sub {Dumper($ruleset)});
     my $json = $parser->ruleset($ruleset);
-    #$logger->info("Result: ",$json);
+    $logger->trace("Result: ",$json);
     my $result;
     eval {
         $result = Kynetx::Json::jsonToAst($json);
@@ -224,7 +224,7 @@ sub parse_expr {
        $logger->error("Can't parse expression: $estring");
        return $result;
     } else {
-    $logger->debug("Parsed expression: ",sub {Dumper($expr)});
+    $logger->trace("Parsed expression: ",sub {Dumper($expr)});
     }
 
     return $result->{'result'};
