@@ -108,6 +108,9 @@ sub get_ridlist {
   my ( $req_info, $id_token, $ken ) = @_;
   my $logger     = get_logger();
   my $rid        = get_rid( $req_info->{'rid'} );
+  unless ($ken) {
+    $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($id_token);
+  }
   my $rid_struct = Kynetx::Modules::PCI::_installed_rulesets($ken);
   my $rid_list   = $rid_struct->{'rids'};
   if ( defined $rid_list ) {
@@ -219,8 +222,8 @@ sub calculate_rid_list {
       } 
     }
   } else { 
-
-    $rid_list = get_ridlist( $req_info, $id_token, $ken );
+    $rid_list = get_ridlist( $req_info, $id_token,$ken );
+#    $logger->debug( "Retrieved rid_list: ", print_rids($rid_list) );
 
     # update key
     $eventtree_key = mk_eventtree_key($rid_list);
