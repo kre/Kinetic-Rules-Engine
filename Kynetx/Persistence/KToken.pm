@@ -136,7 +136,7 @@ sub create_token {
         "_id" => $oid,
         "last_active" => $lastactive,
         "endpoint_id" => $ktoken,
-        "label" => $label,
+        "token_name" => $label,
         "endpoint_type" => $type,
     };
     my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0);
@@ -267,8 +267,9 @@ sub list_tokens {
 		my @tokens_array = ();
 		while (my $obj = $cursor->next) {
 			my $eci = $obj->{'ktoken'};
+			$logger->trace("Found: ", sub {Dumper($obj)});
 			$logger->trace("Found: $eci");
-			my $label = $obj->{'label'};
+			my $label = $obj->{'token_name'};
 			push(@tokens_array,{'name' => $label,'cid' => $eci});
 		}
 		return \@tokens_array; 
@@ -279,7 +280,7 @@ sub get_default_token {
   my ($ken) = @_;
   my $key = {
     'ken' => $ken,
-    'label' => '_LOGIN'
+    'token_name' => '_LOGIN'
   };
   my $result = Kynetx::MongoDB::get_value(COLLECTION,$key);
   if (defined $result) {

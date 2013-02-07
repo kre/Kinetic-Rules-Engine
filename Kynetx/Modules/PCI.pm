@@ -607,7 +607,9 @@ $funcs->{'delete_eci'} = \&destroy_eci;
 
 sub list_eci {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
-	return 0 unless (developer_authorized($req_info,$rule_env,$session,['eci','show']));
+	my $logger=get_logger();
+	return 0 unless (system_authorized($req_info, $rule_env, $session) ||
+	 developer_authorized($req_info,$rule_env,$session,['eci','show']));
 	my $ken;
 	my $arg1 = $args->[0];
 	if (! defined $arg1) {
@@ -635,6 +637,36 @@ sub list_eci {
 	return undef;
 }
 $funcs->{'list_eci'} = \&list_eci;
+
+sub get_primary_eci {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+	my $logger=get_logger();
+	return 0 unless (system_authorized($req_info, $rule_env, $session) ||
+	 developer_authorized($req_info,$rule_env,$session,['eci','show']));
+	my $ken;
+	my $arg1 = $args->[0];
+	if (! defined $arg1) {
+		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+	} else {
+		# Check to see if it is an eci or a userid
+		if ($arg1 =~ m/^\d+$/) {
+			#ll("userid");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg1);
+		} else {
+			#ll("eci");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
+		}		
+	}	
+	if ($ken) {
+    my $primary = Kynetx::Persistence::KToken::get_default_token($ken);
+    $primary = Kynetx::Persistence::KToken::get_oldest_token($ken) unless ($primary);
+    return $primary;
+	}
+	return undef;
+}
+$funcs->{'session_token'} = \&get_primary_eci;
+
 
 ############################# Security/Authorizations
 
