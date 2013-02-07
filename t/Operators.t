@@ -154,6 +154,10 @@ pre {
   b_path = ["foo","bar"];
   c_path = ["foo",10,"bar"];
   d_path = ["hKey","innerKey"];
+
+  map1 = {"a": 4, "b" : 6, "c" : 7, "d": 2};
+  map2 = {"a": 4, "b" : [4,5,6], "c" : 7, "d": 2};
+
 }
 
 _KRL_
@@ -1147,6 +1151,44 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
+
+$e[$i] = q#map1.filter(function(k,v){v > 5})#;
+$x[$i] = {
+   'val' => {"b" => 6, "c" => 7},
+   'type' => 'hash'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#map1.filter(function(k,v){k eq "a"})#;
+$x[$i] = {
+   'val' => {"a" => 4},
+   'type' => 'hash'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#map2.filter(function(k,v){v > 5})#;
+$x[$i] = {
+   'val' => {"b" => [4,5,6], "c" => 7},
+   'type' => 'hash'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#map2.filter(function(k,v){v.typeof() eq 'num' && v > 5})#;
+$x[$i] = {
+   'val' => {"c" => 7},
+   'type' => 'hash'
+};
+$d[$i]  = 0;
+$i++;
+
+
+
+
 #
 # collect
 #
@@ -1224,6 +1266,119 @@ $x[$i] = {
 };
 $d[$i]  = 0;
 $i++;
+
+$e[$i] = q#map1.map(function(k,v){v + 2})#;
+$x[$i] = {
+   'val' => {"a" => 6, "b" => 8, "c" => 9, "d" => 4},
+   'type' => 'hash'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#map2.map(function(k,v){v.typeof() eq 'num' => v + 2 | 2})#;
+$x[$i] = {
+   'val' => {"a" => 6, "b" => 2, "c" => 9, "d" => 4},
+   'type' => 'hash'
+};
+$d[$i]  = 0;
+$i++;
+
+
+##
+## pairwise
+##
+
+$e[$i] = q#[c,c].pairwise(function(a,b){a + b})#;
+$x[$i] = {
+   'val' => [8,10,12],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
+##
+## any
+##
+
+$e[$i] = q#c.any(function(a){a > 5})#;
+$x[$i] = {
+   'val' => 'true',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#c.any(function(a){a > 25})#;
+$x[$i] = {
+   'val' => 'false',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
+
+##
+## none
+##
+
+$e[$i] = q#c.none(function(a){a > 5})#;
+$x[$i] = {
+   'val' => 'false',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#c.none(function(a){a > 25})#;
+$x[$i] = {
+   'val' => 'true',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
+##
+## all
+##
+
+$e[$i] = q#c.all(function(a){a > 5})#;
+$x[$i] = {
+   'val' => 'false',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#c.all(function(a){a < 25})#;
+$x[$i] = {
+   'val' => 'true',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
+
+##
+## notall
+##
+
+$e[$i] = q#c.notall(function(a){a > 5})#;
+$x[$i] = {
+   'val' => 'true',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#c.notall(function(a){a < 25})#;
+$x[$i] = {
+   'val' => 'false',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
 
 ##
 ## reduce

@@ -2786,8 +2786,8 @@ EXTRACT
 
 OTHER_OPERATORS
 	: 'pick'|'length'|'as'|'head'|'tail'|'sort'|'index'
-    | 'filter'|'collect'|'map'|'reduce'|'reverse' | 'range'
-    | 'substr'| 'uc'|'lc' | 'capitalize' | 'split' | 'sprintf' | 'join' | 'query' | 'trim'
+    | 'filter'|'collect'|'map'|'reduce'|'reverse' | 'range' | 'pairwise'| 'any' | 'all' | 'none' | 'notall'
+    | 'substr'| 'uc'|'lc' | 'capitalize' | 'split' | 'sprintf' | 'join' | 'query' | 'trim' 
     | 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once'
     | 'duplicates' | 'append' | 'put' | 'delete' | 'keys' | 'values'
     | 'encode' | 'decode' 

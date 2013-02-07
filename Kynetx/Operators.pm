@@ -275,7 +275,10 @@ sub eval_filter {
     return $obj unless defined $obj;
 
     my $v = 0;
-    if ($obj->{'type'} eq 'array' && int(@{$expr->{'args'}}) > 0) {
+    if (($obj->{'type'} eq 'array' ||
+	 $obj->{'type'} eq 'hash') 
+     && int(@{$expr->{'args'}}) > 0
+       ) {
 
       my $eval = Kynetx::Expressions::den_to_exp($obj);
 
@@ -283,39 +286,86 @@ sub eval_filter {
 
       if (Kynetx::Expressions::type_of($dval) eq 'closure') {
 
+	if ($obj->{'type'} eq 'array') {
 
-	my $a = [];
-	foreach my $av (@{$eval}) {
+	  my @a = grep 
+	    {my $app = {'type' => 'app',
+		       'function_expr' => $expr->{'args'}->[0],
+		       'args' => [Kynetx::Expressions::exp_to_den($_)]};
+
+	     Kynetx::Expressions::den_to_exp(
+  		      Kynetx::Expressions::eval_application($app,
+							    $rule_env,
+							    $rule_name,
+							    $req_info,
+							    $session));
+	   } @{$eval};
+
+	  $v = \@a;
+	  
+
+# the preceding grep replaced this
+# 	  my $a = [];
+# 	  foreach my $av (@{$eval}) {
 
 
-	  my $den_av = Kynetx::Expressions::exp_to_den($av);
+# 	    my $den_av = Kynetx::Expressions::exp_to_den($av);
 
-#	  $logger->debug("The value: ", sub { Dumper( $av ) });
-#	  $logger->debug("The denoted value: ", sub { Dumper( $den_av ) });
+# #	  $logger->debug("The value: ", sub { Dumper( $av ) });
+# #	  $logger->debug("The denoted value: ", sub { Dumper( $den_av ) });
 
-	  my $app = {'type' => 'app',
-		     'function_expr' => $expr->{'args'}->[0],
-		     'args' => [$den_av]};
+# 	    my $app = {'type' => 'app',
+# 		       'function_expr' => $expr->{'args'}->[0],
+# 		       'args' => [$den_av]};
 
-	  my $r = Kynetx::Expressions::den_to_exp(
-	    Kynetx::Expressions::eval_application($app,
-						  $rule_env,
-						  $rule_name,
-						  $req_info,
-						  $session));
+# 	    my $r = Kynetx::Expressions::den_to_exp(
+#   		      Kynetx::Expressions::eval_application($app,
+# 							    $rule_env,
+# 							    $rule_name,
+# 							    $req_info,
+# 							    $session));
 
-	  push(@{$a}, $av) if $r;
+# 	    push(@{$a}, $av) if $r;
+#	  }
+#        $v = $a;
 
+
+	} else {
+
+	  my @ks = keys %{$eval};
+	  my @vs = values %{$eval};
+
+	  my @a = List::MoreUtils::pairwise
+	    {my $app = {'type' => 'app',
+			'function_expr' => $expr->{'args'}->[0],
+			'args' => [Kynetx::Expressions::exp_to_den($a),
+				   Kynetx::Expressions::exp_to_den($b)
+				  ]
+		       };
+
+	     my $r = Kynetx::Expressions::den_to_exp(
+  		      Kynetx::Expressions::eval_application($app,
+							    $rule_env,
+							    $rule_name,
+							    $req_info,
+							    $session));
+             $r ? ($a, $b) : ();
+	     
+	    } @ks, @vs
+	   ;
+
+	  my %h = @a;
+#	  $logger->debug("Filter of map returns: ", sub {Dumper \%h});
+	  $v = \%h;
 	}
 
-	$v = $a;
 
 
       } else {
 	$logger->debug("filter used with non-function argument");
       }
     } else {
-      $logger->debug("filter used in non-array context or without argument");
+      $logger->debug("filter used in non-array or non-map context or without argument");
     }
 
     return Kynetx::Expressions::typed_value($v);
@@ -394,6 +444,118 @@ sub eval_map {
     return $obj unless defined $obj;
 
     my $v = 0;
+    if (($obj->{'type'} eq 'array' ||
+	 $obj->{'type'} eq 'hash') 
+     && int(@{$expr->{'args'}}) > 0
+       ) {
+
+      my $eval = Kynetx::Expressions::den_to_exp($obj);
+
+      my $dval = Kynetx::Expressions::eval_expr($expr->{'args'}->[0], $rule_env, $rule_name,$req_info, $session);
+
+      if (Kynetx::Expressions::type_of($dval) eq 'closure') {
+
+	if ($obj->{'type'} eq 'array') {
+	  my @a = map 
+	    {my $app = {'type' => 'app',
+			'function_expr' => $expr->{'args'}->[0],
+			'args' => [Kynetx::Expressions::exp_to_den($_)]};
+
+	     Kynetx::Expressions::den_to_exp(
+  		      Kynetx::Expressions::eval_application($app,
+							    $rule_env,
+							    $rule_name,
+							    $req_info,
+							    $session));
+	   } @{$eval};
+
+	  $v = \@a;
+
+
+# we used to do this instead of using map
+# 	my $a = [];
+# 	foreach my $av (@{$eval}) {
+
+# #	  $logger->debug("Mapping onto ", sub {Dumper $av});
+
+
+# 	  my $den_av = Kynetx::Expressions::exp_to_den($av);
+
+# #	  $logger->debug("Denoted as ", sub {Dumper $den_av});
+
+# 	  my $app = {'type' => 'app',
+# 		     'function_expr' => $expr->{'args'}->[0],
+# 		     'args' => [$den_av]};
+
+# 	  my $r = Kynetx::Expressions::den_to_exp(
+# 	    Kynetx::Expressions::eval_application($app,
+# 						  $rule_env,
+# 						  $rule_name,
+# 						  $req_info,
+# 						  $session));
+
+# #	  $logger->debug("Result is ", sub {Dumper $r});
+
+# 	  push(@{$a}, $r);
+
+# 	}
+
+# 	$v = $a;
+
+#	$logger->debug("Array after sort ",Dumper $v);
+	} else {
+
+	  my @ks = keys %{$eval};
+	  my @vs = values %{$eval};
+
+	  my @a = List::MoreUtils::pairwise
+	    {my $app = {'type' => 'app',
+			'function_expr' => $expr->{'args'}->[0],
+			'args' => [Kynetx::Expressions::exp_to_den($a),
+				   Kynetx::Expressions::exp_to_den($b)
+				  ]
+		       };
+
+	     my $r = Kynetx::Expressions::den_to_exp(
+  		      Kynetx::Expressions::eval_application($app,
+							    $rule_env,
+							    $rule_name,
+							    $req_info,
+							    $session));
+             ($a, $r);
+	     
+	    } @ks, @vs
+	   ;
+
+	  my %h = @a;
+#	  $logger->debug("Filter of map returns: ", sub {Dumper \%h});
+	  $v = \%h;
+	}
+
+
+      } else {
+	$logger->debug("map used with non-function argument");
+      }
+    } else {
+      $logger->debug("map used in non-array or non-map context or without argument");
+    }
+
+    return Kynetx::Expressions::typed_value($v);
+
+}
+$funcs->{'map'} = \&eval_map;
+
+sub eval_pairwise {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+
+    my $obj =
+      Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
+
+    my $v;
     if ($obj->{'type'} eq 'array' && int(@{$expr->{'args'}}) > 0) {
 
       my $eval = Kynetx::Expressions::den_to_exp($obj);
@@ -402,49 +564,42 @@ sub eval_map {
 
       if (Kynetx::Expressions::type_of($dval) eq 'closure') {
 
-	my $a = [];
-	foreach my $av (@{$eval}) {
 
-#	  $logger->debug("Mapping onto ", sub {Dumper $av});
+	  my @a = List::MoreUtils::pairwise
+	    {my $app = {'type' => 'app',
+			'function_expr' => $expr->{'args'}->[0],
+			'args' => [Kynetx::Expressions::exp_to_den($a),
+				   Kynetx::Expressions::exp_to_den($b)
+				  ]
+		       };
 
+	     Kynetx::Expressions::den_to_exp(
+  		      Kynetx::Expressions::eval_application($app,
+							    $rule_env,
+							    $rule_name,
+							    $req_info,
+							    $session));
+	    } @{$eval->[0]}, @{$eval->[1]};
 
-	  my $den_av = Kynetx::Expressions::exp_to_den($av);
+	  $v = \@a
 
-#	  $logger->debug("Denoted as ", sub {Dumper $den_av});
-
-	  my $app = {'type' => 'app',
-		     'function_expr' => $expr->{'args'}->[0],
-		     'args' => [$den_av]};
-
-	  my $r = Kynetx::Expressions::den_to_exp(
-	    Kynetx::Expressions::eval_application($app,
-						  $rule_env,
-						  $rule_name,
-						  $req_info,
-						  $session));
-
-#	  $logger->debug("Result is ", sub {Dumper $r});
-
-	  push(@{$a}, $r);
-
+	} else {
+	  $logger->debug("pairwise used with non-function argument");
 	}
 
-	$v = $a;
-
-#	$logger->debug("Array after sort ",Dumper $v);
-
-
-      } else {
-	$logger->debug("map used with non-function argument");
-      }
     } else {
-      $logger->debug("map used in non-array context or without argument");
+      $logger->debug("pairwise used in non-array context");
     }
+
+#    $logger->debug("Pairwise array ", sub {Dumper $v});
+
 
     return Kynetx::Expressions::typed_value($v);
 
-}
-$funcs->{'map'} = \&eval_map;
+  }
+$funcs->{'pairwise'} = \&eval_pairwise;
+
+
 
 sub eval_reduce {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
@@ -520,6 +675,7 @@ sub eval_reduce {
 $funcs->{'reduce'} = \&eval_reduce;
 
 
+
 sub eval_reverse {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
@@ -548,6 +704,237 @@ sub eval_reverse {
 
   }
 $funcs->{'reverse'} = \&eval_reverse;
+
+sub eval_any {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+
+    my $obj =
+      Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
+
+    my $v;
+    if ($obj->{'type'} eq 'array' && int(@{$expr->{'args'}}) > 0) {
+
+      my $eval = Kynetx::Expressions::den_to_exp($obj);
+
+      my $dval = Kynetx::Expressions::eval_expr($expr->{'args'}->[0], $rule_env, $rule_name,$req_info, $session);
+
+      if (Kynetx::Expressions::type_of($dval) eq 'closure') {
+
+	$v = List::MoreUtils::any
+	    {my $app = {'type' => 'app',
+			'function_expr' => $expr->{'args'}->[0],
+			'args' => [Kynetx::Expressions::exp_to_den($_)
+				  ]
+		       };
+
+	     Kynetx::Expressions::den_to_exp(
+  		      Kynetx::Expressions::eval_application($app,
+							    $rule_env,
+							    $rule_name,
+							    $req_info,
+							    $session));
+	    } @{$eval};
+
+
+
+      } else {
+
+	$logger->debug("any used with non-function argument");
+      }
+
+
+    } else {
+      $logger->debug("any used in non-array context");
+    }
+
+#    $logger->debug("Any array ", sub {Dumper $v});
+
+
+    if ($v) {
+      return Kynetx::Expressions::mk_expr_node('bool','true');
+    } else {
+      return Kynetx::Expressions::mk_expr_node('bool','false');
+    }
+
+  }
+$funcs->{'any'} = \&eval_any;
+
+
+sub eval_none {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+
+    my $obj =
+      Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
+
+    my $v;
+    if ($obj->{'type'} eq 'array' && int(@{$expr->{'args'}}) > 0) {
+
+      my $eval = Kynetx::Expressions::den_to_exp($obj);
+
+      my $dval = Kynetx::Expressions::eval_expr($expr->{'args'}->[0], $rule_env, $rule_name,$req_info, $session);
+
+      if (Kynetx::Expressions::type_of($dval) eq 'closure') {
+
+	$v = List::MoreUtils::none
+	    {my $app = {'type' => 'app',
+			'function_expr' => $expr->{'args'}->[0],
+			'args' => [Kynetx::Expressions::exp_to_den($_)
+				  ]
+		       };
+
+	     Kynetx::Expressions::den_to_exp(
+  		      Kynetx::Expressions::eval_application($app,
+							    $rule_env,
+							    $rule_name,
+							    $req_info,
+							    $session));
+	    } @{$eval};
+
+
+
+      } else {
+
+	$logger->debug("none used with non-function argument");
+      }
+
+
+    } else {
+      $logger->debug("none used in non-array context");
+    }
+
+#    $logger->debug("None array ", sub {Dumper $v});
+
+
+    if ($v) {
+      return Kynetx::Expressions::mk_expr_node('bool','true');
+    } else {
+      return Kynetx::Expressions::mk_expr_node('bool','false');
+    }
+
+  }
+$funcs->{'none'} = \&eval_none;
+
+sub eval_all {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+
+    my $obj =
+      Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
+
+    my $v;
+    if ($obj->{'type'} eq 'array' && int(@{$expr->{'args'}}) > 0) {
+
+      my $eval = Kynetx::Expressions::den_to_exp($obj);
+
+      my $dval = Kynetx::Expressions::eval_expr($expr->{'args'}->[0], $rule_env, $rule_name,$req_info, $session);
+
+      if (Kynetx::Expressions::type_of($dval) eq 'closure') {
+
+	$v = List::MoreUtils::all
+	    {my $app = {'type' => 'app',
+			'function_expr' => $expr->{'args'}->[0],
+			'args' => [Kynetx::Expressions::exp_to_den($_)
+				  ]
+		       };
+
+	     Kynetx::Expressions::den_to_exp(
+  		      Kynetx::Expressions::eval_application($app,
+							    $rule_env,
+							    $rule_name,
+							    $req_info,
+							    $session));
+	    } @{$eval};
+
+
+
+      } else {
+
+	$logger->debug("all used with non-function argument");
+      }
+
+
+    } else {
+      $logger->debug("all used in non-array context");
+    }
+
+#    $logger->debug("All array ", sub {Dumper $v});
+
+
+    if ($v) {
+      return Kynetx::Expressions::mk_expr_node('bool','true');
+    } else {
+      return Kynetx::Expressions::mk_expr_node('bool','false');
+    }
+
+  }
+$funcs->{'all'} = \&eval_all;
+
+sub eval_notall {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+
+    my $obj =
+      Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+#    $logger->debug("obj: ", sub { Dumper($obj) });
+    return $obj unless defined $obj;
+
+    my $v;
+    if ($obj->{'type'} eq 'array' && int(@{$expr->{'args'}}) > 0) {
+
+      my $eval = Kynetx::Expressions::den_to_exp($obj);
+
+      my $dval = Kynetx::Expressions::eval_expr($expr->{'args'}->[0], $rule_env, $rule_name,$req_info, $session);
+
+      if (Kynetx::Expressions::type_of($dval) eq 'closure') {
+
+	$v = List::MoreUtils::notall
+	    {my $app = {'type' => 'app',
+			'function_expr' => $expr->{'args'}->[0],
+			'args' => [Kynetx::Expressions::exp_to_den($_)
+				  ]
+		       };
+
+	     Kynetx::Expressions::den_to_exp(
+  		      Kynetx::Expressions::eval_application($app,
+							    $rule_env,
+							    $rule_name,
+							    $req_info,
+							    $session));
+	    } @{$eval};
+
+
+
+      } else {
+
+	$logger->debug("notall used with non-function argument");
+      }
+
+
+    } else {
+      $logger->debug("notall used in non-array context");
+    }
+
+
+    if ($v) {
+      return Kynetx::Expressions::mk_expr_node('bool','true');
+    } else {
+      return Kynetx::Expressions::mk_expr_node('bool','false');
+    }
+
+  }
+$funcs->{'notall'} = \&eval_notall;
 
 
 sub eval_join {

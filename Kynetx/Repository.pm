@@ -168,6 +168,18 @@ sub make_ruleset_key {
   return md5_base64($keystring);
 }
 
+sub is_ruleset_cached { 
+  my ( $rid, $version, $memd ) = @_;
+  my $rs_key = Kynetx::Repository::make_ruleset_key( $rid, $version );
+  # add() returns true if it could store and only stores if not already there
+  if ( $memd->add($rs_key, 'not a ruleset') ) {
+    $memd->delete($rs_key);
+    return 0;
+  } else {
+    return 1;
+  }
+}
+
 sub get_ruleset_krl {
     my ($rid_info,$version) = @_; 
     my $logger = get_logger();
