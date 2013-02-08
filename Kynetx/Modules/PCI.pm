@@ -396,7 +396,7 @@ sub list_children {
         my $username = Kynetx::Persistence::KEN::get_ken_value($child,'username');
         my $token = Kynetx::Persistence::KToken::get_default_token($child);
         $token = Kynetx::Persistence::KToken::get_oldest_token($child) unless ($token);
-        my $label = Kynetx::Persistence::KToken::token_query({'ktoken' => $token})->{'label'};
+        my $label = Kynetx::Persistence::KToken::token_query({'ktoken' => $token})->{'token_name'};
         my $tmp = [$token,$username,$label];
         push(@{$blob},$tmp);
       }
@@ -420,7 +420,7 @@ sub list_parent {
     my $token = Kynetx::Persistence::KToken::get_default_token($ken);
     $token = Kynetx::Persistence::KToken::get_oldest_token($ken) unless ($token);
     my $username = Kynetx::Persistence::KEN::get_ken_value($ken,'username');
-    my $label = Kynetx::Persistence::KToken::token_query({'ktoken' => $token})->{'label'};
+    my $label = Kynetx::Persistence::KToken::token_query({'ktoken' => $token})->{'token_name'};
     my $tmp = [$token,$username,$label];
     return $tmp;
   }
