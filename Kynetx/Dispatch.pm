@@ -176,6 +176,7 @@ sub get_ridlist {
     else {
       $logger->debug(
         "Invalid token: $req_info->{'id_token'}. No RID list retrieved");
+        return [];
     }
 
   }
