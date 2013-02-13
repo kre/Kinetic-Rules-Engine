@@ -309,7 +309,7 @@ $test_count++;
 $result = Kynetx::Persistence::Ruleset::get_registry($new_rid);
 
 $description = "Import a ruleset from Kynetx Repo";
-$expected = 'https://rulesetmanager.kobj.net/ruleset/source/a144x154/prod/krl/';
+$expected = qr#https?://rulesetmanager.kobj.net/ruleset/source/a144x154/prod/krl/#;
 my $import_rid = 'a144x154';
 $krl_src = <<_KRL_;
   rsm:import("$import_rid") setting (isImport)
@@ -325,7 +325,7 @@ $js = Kynetx::Actions::build_one_action(
 	    'callback23',
 	    'dummy_name');
 $result = lookup_rule_env('isImport',$rule_env);
-cmp_deeply($result,$expected,$description);
+cmp_deeply($result,re($expected),$description);
 $test_count++;
 push(@rids,$import_rid);
 

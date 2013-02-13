@@ -377,7 +377,7 @@ sub do_import {
     my $rid_info = Kynetx::Rids::mk_rid_info($dummy_ri,$rid_to_import,{'version' => $app_version});
     $rid_info->{'version'} = $version;
     my $registry = Kynetx::Persistence::Ruleset::import_legacy_ruleset($ken,$rid_info);
-    $logger->debug("registry: ", sub {Dumper($registry)});
+    $logger->debug("registry: ", sub {Dumper($registry->{'uri'})});
     my $response = {
       $v => $registry->{'value'}->{'uri'}
     };
