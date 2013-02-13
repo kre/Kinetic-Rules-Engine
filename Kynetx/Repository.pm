@@ -117,8 +117,11 @@ sub get_rules_from_repository {
   # this gets cleared when we're done
   $logger->debug("Setting parsing semaphore for $rs_key");
   Kynetx::Memcached::set_parsing_flag( $memd, $rs_key );
+  
   $ruleset = get_ruleset_krl($rid_info,$version);
+  
   Kynetx::Memcached::clr_parsing_flag($memd,$rs_key);
+  
   if (defined $ruleset) {
     $req_info->{'rule_version'} = $version;
     $ruleset = Kynetx::Parser::parse_ruleset($ruleset);

@@ -61,18 +61,25 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 sub mk_rid_info {
   my ( $req_info, $rid, $options ) = @_;
+  my $logger = get_logger();
+  my $fqrid = $rid;
+  
+  $logger->debug("Make rid info for $rid");
+  
+  my $version = $options->{'version'}
+      || Kynetx::Request::get_attr( $req_info, "$rid:kynetx_app_version" )
+      || Kynetx::Request::get_attr( $req_info, "$rid:kinetic_app_version" );
+      
+  if(defined $version) {
+    $fqrid = $fqrid . '.' . $version;
+  } else {
+    $version = 'prod'
+  }
 
-  my $rid_info = get_rid_info_by_rid($rid);
+  my $rid_info = get_rid_info_by_rid($fqrid);
   if ( defined $rid_info ) {
     return $rid_info;
-  }
-  else {
-    my $version =
-         $options->{'version'}
-      || Kynetx::Request::get_attr( $req_info, "$rid:kynetx_app_version" )
-      || Kynetx::Request::get_attr( $req_info, "$rid:kinetic_app_version" )
-      || 'prod';
-
+  } else {
     return {
       'rid'                 => $rid,
       'kinetic_app_version' => $version
@@ -83,7 +90,9 @@ sub mk_rid_info {
 
 sub get_rid_info_by_rid {
   my ($rid) = @_;
+  my $logger = get_logger();  
   my $rid_object = Kynetx::Persistence::Ruleset::rid_from_ruleset($rid);
+  $logger->debug("Get rid ($rid) info from registry: ",sub {Dumper($rid_object)});
   return $rid_object;
 }
 

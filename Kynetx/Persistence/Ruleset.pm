@@ -291,20 +291,33 @@ sub import_legacy_ruleset {
   if (get_registry($rid)) {
     return undef;
   }
-  my $version = Kynetx::Rids::get_version($rid_info);
-  my $version_num = Kynetx::Rids::get_versionnum($rid_info);
+  my @ridlist = ('prod', 'dev');
   my $repo = Kynetx::Configure::get_config('RULE_REPOSITORY');
   my ($base_url,$username,$password) = split(/\|/, $repo);
-  my $rs_url = join('/', ($base_url, $rid, $version, 'krl/'));
-  my $registry = {
-    'owner' => $ken,
-    'version' => $version_num,
-    'kinetic_app_version'  => $version || 'prod',
-    'uri' => $rs_url,
+  my $d_url = join('/', ($base_url, $rid, 'prod', 'krl/'));
+  my $default = {
+    'uri' => $d_url,
     'username' => $username,
     'password' => $password
   };
-  put_registry_element($rid,[],$registry);
+  if (defined $ken) {
+    $default->{'owner'} = $ken,      
+  }
+  put_registry_element($rid,[],$default);
+  for my $version (@ridlist) {
+    my $fqrid = $rid;
+      $fqrid .= '.' . $version;
+    my $rs_url = join('/', ($base_url, $rid, $version, 'krl/'));
+    my $registry = {
+      'uri' => $rs_url,
+      'username' => $username,
+      'password' => $password
+    };
+    if (defined $ken) {
+      $registry->{'owner'} = $ken,      
+    }
+    put_registry_element($fqrid,[],$registry);    
+  }    
   return get_registry($rid);
 }
 

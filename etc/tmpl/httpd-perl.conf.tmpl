@@ -361,6 +361,10 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 LogFormat "%h %t %{METHOD}e %{RIDS}e %{TXN_ID}e [%{RULE_NAMES}e] [%{RESULTS}e]" RSE
 CustomLog "|/web/sbin/cronolog --period=1day --symlink=/web/logs/billing_log /web/logs/kynetx/AUDIT-%Y%m%d-%H%M.log" RSE env=RSE
 
+# rule logging for CLOUDID
+LogFormat "%h %t %{TOTAL_SECS}e %{METHOD}e %{RIDS}e %{TXN_ID}e \"%{CALLER}e\" %{SID}e \"%{REFERER}e\" \"%{TITLE}e\" [%{RULE_NAMES}e] [%{RESULTS}e] [%{ACTIONS}e] [%{TAGS}e] [%{LABELS}e] " CLOUD
+CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/cloud_log /web/logs/kynetx/CLOUD-%Y%m%d-%H%M.log" CLOUD env=CLOUD
+
 ExtendedStatus On
 <Location /server-status>
 SetHandler server-status
@@ -394,6 +398,18 @@ Allow from .kobj.net
   PerlHandler Kynetx::Metrics::TENX
 
 </LocationMatch>
+
+<LocationMatch /cloudid/>
+  # P3P compressed policy header
+  Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
+
+  # env var to turn on rule logging
+  PerlSetEnv CLOUD 1
+  SetHandler perl-script
+  PerlHandler Kynetx::Cloud 
+
+</LocationMatch>
+
 
 
 
