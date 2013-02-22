@@ -50,6 +50,8 @@ package Kynetx::FakeReq;
 use strict;
 #use warnings;
 
+our $AUTOLOAD;
+
 #
 # This package simulates a mod_perl request object for testing
 #
@@ -115,5 +117,22 @@ sub _set_ubx_token {
 	my ($newtoken) = @_;
 	$token = $newtoken;
 }
+
+sub AUTOLOAD {
+    my $self   = shift;
+    my $type   = ref($self)
+      or die "($AUTOLOAD): $self is not an object";
+    my $name = $AUTOLOAD;
+    $name =~ s/.*://;
+
+    if (@_) {
+        return $self->{$name} = shift;
+    } else {
+        return $self->{$name};
+    }
+}
+
+sub DESTROY { }
+
 
 1;
