@@ -499,7 +499,6 @@ EOF
 			my $config   = shift;
 			my $args     = shift;
 			$req_info->{'send_raw'} = 1;
-			$logger->debug("Send Raw called!");
 			$config->{'is_raw'} = 1;
 			send_directive($req_info, $dd, $args->[0], $config );
 		},

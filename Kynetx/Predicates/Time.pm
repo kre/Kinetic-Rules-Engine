@@ -324,6 +324,21 @@ sub strformat {
 }
 $funcs->{'strftime'} = \&strformat;
 
+sub httpformat {
+    my ( $req_info, $function, $args ) = @_;
+    my $logger = get_logger();
+    $logger->trace( "Function: $function with ", sub { Dumper($args) } );
+    if ( ref $args->[0] eq '' ) {
+        my $utime = $args->[0];
+        my $dt = ISO8601($utime);
+        $dt->set_time_zone('UTC');
+        $logger->trace("iso8601 date: ", sub {Dumper($dt)});
+        return $dt->strftime('%a, %d %b %Y %H:%M:%S GMT');
+    }
+
+}
+$funcs->{'httptime'} = \&httpformat;
+
 sub compare {
 	my ( $req_info, $function, $args ) = @_;
 	my $logger = get_logger();
