@@ -103,7 +103,18 @@ sub get_current_rid_info {
 
 sub get_rid {
   my ($rid_info) = @_;
-  return $rid_info->{'rid'};
+  if (ref $rid_info eq "HASH") {
+    return _clean($rid_info->{'rid'});
+  } else {
+    return _clean($rid_info)
+  }
+  
+}
+
+sub _clean {
+  my ($rid) = @_;
+  my ($crid,$extra) = split(/\./,$rid,2);
+  return $crid;
 }
 
 sub get_version {
