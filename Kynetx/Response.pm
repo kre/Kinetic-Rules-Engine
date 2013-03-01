@@ -26,7 +26,7 @@ use strict;
 use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 use HTML::Template;
-use Apache2::Const qw/OK REDIRECT/;
+use Apache2::Const -compile => qw/OK :http/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -116,16 +116,17 @@ sub gen_raw_document {
 	  my $headers = $raw->{'headers'};
 	  my $content = $raw->{'content'};
 	  my $content_type = $directive->{'name'};
-	  $status = 'OK' unless ($status); 
-	  if ($status eq "OK") {
+	  $status = 'HTTP_OK' unless ($status); 
+	  if ($status eq "HTTP_OK") {
 	    	  $r->content_type($content_type);
 	    	  for my $hkey (keys %{$headers}) {
     	      $r->headers_out->add($hkey => $headers->{$hkey});
-    	      $logger->trace("Header: $hkey Value: $headers->{$hkey}");
+    	      #$logger->debug("Header: $hkey Value: $headers->{$hkey}");
   	     }
 	    	  	    
 	  } else {
   	    for my $hkey (keys %{$headers}) {
+  	      #$logger->debug("EHeader: $hkey EValue: $headers->{$hkey}");
   	      if ($hkey eq 'Location') {
   	        $r->headers_out->set($hkey => $headers->{$hkey});
   	      } else {
@@ -141,7 +142,7 @@ sub gen_raw_document {
 	  }
 	  
     $r->status(Apache2::Const->$status);
-    return Apache2::Const->$status;
+    return Apache2::Const::OK;
 	} else {
 	  $logger->warn("Multiple directives not implemented for send_raw");
 	}
