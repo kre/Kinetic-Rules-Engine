@@ -119,7 +119,7 @@ sub get_ridlist {
     foreach my $ridstring ( @{$rid_list} ) {
       my $rid;
       my $ver     = 1;
-      my $kver    = "prod";
+      my $kver    = Kynetx::Rids::version_default();
       my @ridinfo = split( /\./, $ridstring );
       if ( length(@ridinfo) == 1 ) {
         $rid = $ridinfo[0];

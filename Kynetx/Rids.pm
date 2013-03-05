@@ -53,6 +53,7 @@ our %EXPORT_TAGS = (
       get_rid_from_context
       get_rid_info_from_registry
       get_rid_info_by_rid
+      version_default
       )
   ]
 );
@@ -62,21 +63,18 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 sub mk_rid_info {
   my ( $req_info, $rid, $options ) = @_;
   my $logger = get_logger();
-  my $fqrid = $rid;
   
   $logger->trace("Make rid info for $rid");
   
   my $version = $options->{'version'}
       || Kynetx::Request::get_attr( $req_info, "$rid:kynetx_app_version" )
-      || Kynetx::Request::get_attr( $req_info, "$rid:kinetic_app_version" );
-      
-  if(defined $version) {
-    $fqrid = $fqrid . '.' . $version;
-  } else {
-    $version = 'prod'
-  }
+      || Kynetx::Request::get_attr( $req_info, "$rid:kinetic_app_version" )
+      || Kynetx::Rids::version_default();
+  
 
-  my $rid_info = get_rid_info_by_rid($fqrid);
+  my $rid_info = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($rid,$version);
+  
+  $logger->trace("MK_RID_INFO found: ", sub {Dumper($rid_info)});
   if ( defined $rid_info ) {
     return $rid_info;
   } else {
@@ -88,13 +86,17 @@ sub mk_rid_info {
   }
 }
 
-sub get_rid_info_by_rid {
-  my ($rid) = @_;
-  my $logger = get_logger();  
-  my $rid_object = Kynetx::Persistence::Ruleset::rid_from_ruleset($rid);
-  $logger->trace("Get rid ($rid) info from registry: ",sub {Dumper($rid_object)});
-  return $rid_object;
+sub to_rid_info {
+  my ($fqrid) = @_;
+  my ($rid,$ver) = split(/\./,$fqrid,2);
+  $ver ||= Kynetx::Rids::version_default();
+  return {
+    'rid'                 => $rid,
+    'kinetic_app_version' => $ver
+  };
+  
 }
+
 
 sub get_current_rid_info {
   my ($req_info) = @_;
@@ -103,6 +105,9 @@ sub get_current_rid_info {
 
 sub get_rid {
   my ($rid_info) = @_;
+  my $logger = get_logger();
+  my $parent = (caller(1))[3];
+  $logger->trace("Get rid ($parent): ", sub {Dumper($rid_info)});
   if (ref $rid_info eq "HASH") {
     return _clean($rid_info->{'rid'});
   } else {
@@ -113,13 +118,38 @@ sub get_rid {
 
 sub _clean {
   my ($rid) = @_;
-  my ($crid,$extra) = split(/\./,$rid,2);
-  return $crid;
+  my ($crid,$extra);
+  if ($rid =~ m/\./) {
+    ($crid,$extra) = split(/\./,$rid,2);
+    return $crid;
+  } 
+  return $rid;
+  
 }
 
 sub get_version {
   my ($rid_info) = @_;
-  return $rid_info->{'kinetic_app_version'} || 'prod';
+  my $logger = get_logger();
+  my $parent = (caller(1))[3];
+  $logger->trace("Get rid ($parent): ", sub {Dumper($rid_info)});
+  return $rid_info->{'kinetic_app_version'} || Kynetx::Rids::version_default();
+}
+
+sub get_fqrid {
+  my ($rid_info) = @_;
+  my $logger = get_logger();
+  my $parent = (caller(1))[3];
+  $logger->trace("Get fqrid ($parent): ", sub {Dumper($rid_info)});
+  my $rid = get_rid($rid_info);
+  my $ver = get_version($rid_info);
+  return $rid . '.' . $ver;
+}
+
+sub make_fqrid {
+  my ($rid,$tag) = @_;
+  $tag = version_default() unless ($tag);
+  my $fqrid = $rid . '.' . $tag;
+  return $fqrid;
 }
 
 sub get_versionnum {
@@ -129,7 +159,12 @@ sub get_versionnum {
 
 sub get_uri {
   my ($rid_info) = @_;
-  return $rid_info->{'uri'};
+  if (ref $rid_info eq "HASH") {
+    return $rid_info->{'uri'};
+  } else {
+    return undef;
+  }
+  
 }
 
 sub get_username {
@@ -190,8 +225,9 @@ sub parse_rid_list {
 
 sub print_rid_info {
   my ($rid_info) = @_;
-
-  return get_rid($rid_info) . "." . get_version($rid_info);
+  my $rid = get_rid($rid_info);
+  my $ver = get_version($rid_info);
+  return make_fqrid($rid,$ver);
 }
 
 sub rid_info_string {
@@ -232,6 +268,15 @@ sub get_rid_from_context {
     $rid = $moduleRid;
   }
   return $rid;
+}
+
+sub version_default {
+  my $default = Kynetx::Configure::get_config('KNS_DEFAULT_VERSION');
+  if ($default) {
+    return $default
+  } else {
+    return 'prod';
+  }
 }
 
 1;

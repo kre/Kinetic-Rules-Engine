@@ -46,6 +46,7 @@ use Kynetx::Configure qw/:all/;
 use Kynetx::Parser qw/:all/;
 use Kynetx::Expressions qw/:all/;
 use Kynetx::FakeReq qw/:all/;
+use Kynetx::Rids;
 use Kynetx::Configure;
 use Kynetx::Memcached;
 use Kynetx::MongoDB;
@@ -79,11 +80,14 @@ my $test_count = 0;
 
 my $r = Kynetx::Test::configure();
 
+
 # foreach my $k (sort @{Kynetx::Configure::config_keys()}) {
 #   diag "$k => ", Kynetx::Configure::get_config($k);
 # }
 
 my $rid = 'cs_test';
+my $version_default = Kynetx::Rids::version_default();
+my $fqrid = Kynetx::Rids::make_fqrid($rid,$version_default);
 
 # test choose_action and args
 
@@ -759,7 +763,7 @@ $rids = Kynetx::Expressions::den_to_exp(
 		       )
 		);
 
-is($rids, 'cs_test.prod', "default works");
+is($rids, $fqrid, "default works");
 $test_count += 1;
 
      

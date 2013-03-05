@@ -821,7 +821,7 @@ sub dummy_req_info {
   foreach my $k (keys %{ $event_attrs}) {
     Kynetx::Request::add_event_attr($req_info, $k, $options->{$k});
   }
-  my $ver = $options->{'ridver'} || 'prod';
+  my $ver = $options->{'ridver'} || Kynetx::Rids::version_default();
   $req_info->{'rid'} = Kynetx::Rids::mk_rid_info($req_info,$rid, {'version' => $ver});
   return $req_info;
 }

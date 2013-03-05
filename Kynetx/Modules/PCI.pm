@@ -487,9 +487,9 @@ sub add_ruleset_to_account {
 		my $legacy = Kynetx::Dispatch::old_repository($req_info,$id_token,$ken);
 		for my $ruleset (@{$legacy}) {
 		  my $orid = $ruleset->{'rid'};
-		  my $over = $ruleset->{'kinetic_app_version'} || 'prod';
+		  my $over = $ruleset->{'kinetic_app_version'} || Kynetx::Rids::version_default();
 		  if ($orid) {
-		    my $fqrid = $orid . '.' . $over;
+		    my $fqrid = Kynetx::Rids::make_fqrid($orid,$over);
 		    Kynetx::Persistence::KPDS::add_ruleset($ken,$fqrid);
 		  }
 		}
