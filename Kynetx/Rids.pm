@@ -64,7 +64,7 @@ sub mk_rid_info {
   my $logger = get_logger();
   my $fqrid = $rid;
   
-  $logger->debug("Make rid info for $rid");
+  $logger->trace("Make rid info for $rid");
   
   my $version = $options->{'version'}
       || Kynetx::Request::get_attr( $req_info, "$rid:kynetx_app_version" )
@@ -92,7 +92,7 @@ sub get_rid_info_by_rid {
   my ($rid) = @_;
   my $logger = get_logger();  
   my $rid_object = Kynetx::Persistence::Ruleset::rid_from_ruleset($rid);
-  $logger->debug("Get rid ($rid) info from registry: ",sub {Dumper($rid_object)});
+  $logger->trace("Get rid ($rid) info from registry: ",sub {Dumper($rid_object)});
   return $rid_object;
 }
 
@@ -103,7 +103,18 @@ sub get_current_rid_info {
 
 sub get_rid {
   my ($rid_info) = @_;
-  return $rid_info->{'rid'};
+  if (ref $rid_info eq "HASH") {
+    return _clean($rid_info->{'rid'});
+  } else {
+    return _clean($rid_info)
+  }
+  
+}
+
+sub _clean {
+  my ($rid) = @_;
+  my ($crid,$extra) = split(/\./,$rid,2);
+  return $crid;
 }
 
 sub get_version {

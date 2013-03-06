@@ -32,6 +32,7 @@ use Kynetx::Expressions;
 use Kynetx::JSONPath ;
 use Kynetx::PrettyPrinter;
 use Kynetx::Util qw/split_re/;
+use Kynetx::Sets qw(:all);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -1661,56 +1662,27 @@ sub _to_sets {
 sub set_intersection {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
-    my ($a,$b) = _to_sets($expr, $rule_env, $rule_name, $req_info, $session);
-    my %hash;
-    $logger->trace("Set a: ",sub {Dumper($a)});
-    $logger->trace("Set b: ",sub {Dumper($b)});
-    foreach (@{$a}) {
-        $hash{$_}++;
-    }
-    foreach (@{$b}) {
-        $hash{$_}++;
-    }
-    $logger->trace("Intersect: ", sub {Dumper(sort keys %hash)});
-    my @set = grep {$hash{$_}>1} keys %hash;
-    return Kynetx::Expressions::typed_value(\@set);
+    my ($a,$b) = Kynetx::Sets::from_operator($expr, $rule_env, $rule_name, $req_info, $session);
+    my $set = Kynetx::Sets::intersection($a,$b);
+    return Kynetx::Expressions::typed_value($set);
 }
 $funcs->{'intersection'} = \&set_intersection;
 
 sub set_union {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
-    my ($a,$b) = _to_sets($expr, $rule_env, $rule_name, $req_info, $session);
-    my %hash;
-    $logger->trace("Set a: ",sub {Dumper($a)});
-    $logger->trace("Set b: ",sub {Dumper($b)});
-    foreach (@{$a}) {
-        $hash{$_}++;
-    }
-    foreach (@{$b}) {
-        $hash{$_}++;
-    }
-    my @set = sort keys %hash;
-    return Kynetx::Expressions::typed_value(\@set);
-
+    my ($a,$b) = Kynetx::Sets::from_operator($expr, $rule_env, $rule_name, $req_info, $session);
+    my $set = Kynetx::Sets::union($a,$b);
+    return Kynetx::Expressions::typed_value($set);
 }
 $funcs->{'union'} = \&set_union;
 
 sub set_difference {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
-    my ($a,$b) = _to_sets($expr, $rule_env, $rule_name, $req_info, $session);
-    my %hash;
-    $logger->trace("Set a: ",sub {Dumper($a)});
-    $logger->trace("Set b: ",sub {Dumper($b)});
-    foreach(@{$a}) {
-        $hash{$_} = 1;
-    }
-    foreach(@{$b}) {
-        delete $hash{$_};
-    }
-    my @set = sort keys %hash;
-    return Kynetx::Expressions::typed_value(\@set);
+    my ($a,$b) = Kynetx::Sets::from_operator($expr, $rule_env, $rule_name, $req_info, $session);
+    my $set = Kynetx::Sets::difference($a,$b);
+    return Kynetx::Expressions::typed_value($set);
 
 }
 $funcs->{'difference'} = \&set_difference;
@@ -1718,13 +1690,9 @@ $funcs->{'difference'} = \&set_difference;
 sub set_has {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
-    my ($a,$b) = _to_sets($expr, $rule_env, $rule_name, $req_info, $session);
-    my $sub_set = scalar @{$b};
-    my $x_set = set_intersection($expr, $rule_env, $rule_name, $req_info, $session);
-    my $intr = scalar @{$x_set->{'val'}};
-    $logger->trace("Set b: ",$sub_set);
-    $logger->trace("xsect: ",$intr);
-    if ($sub_set == $intr) {
+    my ($a,$b) = Kynetx::Sets::from_operator($expr, $rule_env, $rule_name, $req_info, $session);
+    my $set = Kynetx::Sets::has($a,$b);
+    if ($set) {
       return Kynetx::Expressions::mk_expr_node('bool','true');
     } else {
       return Kynetx::Expressions::mk_expr_node('bool','false');
@@ -1737,44 +1705,27 @@ $funcs->{'subset'} = \&set_has;
 sub set_once {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
-    my ($a,$b) = _to_sets($expr, $rule_env, $rule_name, $req_info, $session);
-    my %hash;
-    foreach (@{$a}) {
-        $hash{$_}++;
-    }
-    my @set = grep {$hash{$_}==1 } keys %hash;
-    return Kynetx::Expressions::typed_value(\@set);
-
+    my ($a,$b) = Kynetx::Sets::from_operator($expr, $rule_env, $rule_name, $req_info, $session);
+    my $set = Kynetx::Sets::once($a);
+    return Kynetx::Expressions::typed_value($set);
 }
 $funcs->{'once'} = \&set_once;
 
 sub set_duplicates {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
-    my ($a,$b) = _to_sets($expr, $rule_env, $rule_name, $req_info, $session);
-    my %hash;
-    foreach (@{$a}) {
-        $hash{$_}++;
-    }
-    my @set = grep {$hash{$_} > 1} keys %hash;
-
-    return Kynetx::Expressions::typed_value(\@set);
-
+    my ($a,$b) = Kynetx::Sets::from_operator($expr, $rule_env, $rule_name, $req_info, $session);
+    my $set = Kynetx::Sets::duplicates($a);
+    return Kynetx::Expressions::typed_value($set);
 }
 $funcs->{'duplicates'} = \&set_duplicates;
 
 sub set_unique {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
-    my ($a,$b) = _to_sets($expr, $rule_env, $rule_name, $req_info, $session);
-    my %hash;
-    foreach (@{$a}) {
-        $hash{$_}++;
-    }
-    my @set = sort keys %hash;
-
-    return Kynetx::Expressions::typed_value(\@set);
-
+    my ($a,$b) = Kynetx::Sets::from_operator($expr, $rule_env, $rule_name, $req_info, $session);
+    my $set = Kynetx::Sets::unique($a);
+    return Kynetx::Expressions::typed_value($set);
 }
 $funcs->{'unique'} = \&set_unique;
 

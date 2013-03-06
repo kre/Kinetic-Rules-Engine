@@ -159,18 +159,22 @@ sub old_repository {
   my $logger = get_logger();
   my $user_rids_info = Kynetx::Configure::get_config('USER_RIDS_URL');
   my ( $app_url, $username, $passwd ) = split( /\|/, $user_rids_info );
-  my $acct_url = $app_url . "/" . $req_info->{'id_token'};
+  my $token = $req_info->{'id_token'} || "";
+  my $acct_url = $app_url . "/" . $token ;
   $logger->info("Using ridlist URL: $acct_url");
   my $req = HTTP::Request->new( GET => $acct_url );
   $req->authorization_basic( $username, $passwd );
   my $ua       = LWP::UserAgent->new;
   my $response = {};
   my $rid_list;
-  eval { $response = decode_json( $ua->request($req)->{'_content'} ); };
-
+  my $content;
+  eval { $content = $ua->request($req)->{'_content'};};
   if ($@) {
-    $logger->debug("Non-JSON response from $acct_url");
+    $logger->debug("Request to $acct_url failed");
+  } elsif ($content) {
+    eval { $response = decode_json( $content ); };
   }
+  
   if ( $response->{'validtoken'} ) {
     $rid_list = $response->{'rids'};
     #$logger->debug( "Rid struct: ", Kynetx::Rids::print_rids($rid_list));
@@ -183,7 +187,7 @@ sub old_repository {
   }
   else {
     $logger->debug(
-      "Invalid token: $req_info->{'id_token'}. No RID list retrieved");
+      "Invalid token: ($token). No RID list retrieved");
       return [];
   }
   

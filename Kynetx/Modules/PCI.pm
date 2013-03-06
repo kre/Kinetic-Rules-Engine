@@ -55,7 +55,30 @@ $Data::Dumper::Indent = 1;
 use constant CREDENTIALS => "system_credentials";
 
 
+# format of list_tokens is array of {'cid' => val, 'name' => val}
 my $predicates = {
+  'is_related' => sub {
+    my ($req_info, $rule_env, $args) = @_;
+    my $logger = get_logger();
+    my $source = $args->[0];
+    my $collection = $args->[1];
+    my @group = ();
+    my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($source);
+    my $ken_tokens = Kynetx::Persistence::KToken::list_tokens($ken);
+    my %hash; map {$hash{$_->{'cid'}}++}  @{$ken_tokens};
+    my @ktokens = keys %hash;
+    if (ref $collection eq "ARRAY") {
+      @group = @{$collection};
+    } elsif (defined $collection && ref $collection eq "") {
+      push(@group, $collection);
+    }
+    my $set = Kynetx::Sets::intersection(\@ktokens,\@group);
+    if (scalar @{$set} >= 1) {
+      return 1
+    } else {
+      return 0;
+    }
+  }
 };
 
 my $default_actions = {
