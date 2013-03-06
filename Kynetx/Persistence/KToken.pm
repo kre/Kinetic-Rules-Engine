@@ -274,6 +274,7 @@ sub list_tokens {
 		}
 		return \@tokens_array; 
 	}
+	return undef;
 }
 
 sub get_default_token {

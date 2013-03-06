@@ -66,6 +66,7 @@ use constant COLLECTION => "edata";
 sub touch_edatum {
     my ($rid,$ken,$var,$ts) = @_;
     my $logger = get_logger();
+    $rid = Kynetx::Rids::get_rid($rid);
     my $key = {
         "ken" => $ken,
         "rid" => $rid,
@@ -76,6 +77,7 @@ sub touch_edatum {
 sub get_edatum {
     my ($rid,$ken,$var,$get_ts) = @_;
     my $logger = get_logger();
+    $rid = Kynetx::Rids::get_rid($rid);
     my $key = {
         "ken" => $ken,
         "rid" => $rid,
@@ -92,6 +94,7 @@ sub get_edatum {
 sub get_hash_edatum {
     my ($rid,$ken,$var,$hkey,$get_ts) = @_;
     my $logger = get_logger();
+    $rid = Kynetx::Rids::get_rid($rid);
     my $key = {
         "ken" => $ken,
         "rid" => $rid,
@@ -112,6 +115,7 @@ sub get_hash_edatum {
 sub put_hash_edatum {
 	my ($rid,$ken,$var,$hvar,$val) = @_;
 	my $logger = get_logger();
+    $rid = Kynetx::Rids::get_rid($rid);
 	my $key = {
         "ken" => $ken,
         "rid" => $rid,
@@ -127,6 +131,7 @@ sub put_hash_edatum {
 sub delete_hash_edatum {
 	my ($rid,$ken,$var,$hvar) = @_;
 	my $logger = get_logger();
+  $rid = Kynetx::Rids::get_rid($rid);
 	my $key = {
         "ken" => $ken,
         "rid" => $rid,
@@ -144,6 +149,7 @@ sub get_created {
 sub push_edatum {
     my ($rid,$ken,$var,$val,$as_trail) = @_;
     my $logger = get_logger();
+    $rid = Kynetx::Rids::get_rid($rid);
     my $key = {
         "ken" => $ken,
         "rid" => $rid,
@@ -168,6 +174,7 @@ sub push_edatum {
 sub pop_edatum {
     my ($rid,$ken,$var,$direction) = @_;
     my $logger = get_logger();
+    $rid = Kynetx::Rids::get_rid($rid);
     my $key = {
         "ken" => $ken,
         "rid" => $rid,
@@ -184,6 +191,7 @@ sub pop_edatum {
 sub put_edatum {
     my ($rid,$ken,$var,$val,$expires) = @_;
     my $logger = get_logger();
+    $rid = Kynetx::Rids::get_rid($rid);
     my $key = {
         "ken" => $ken,
         "rid" => $rid,
@@ -198,6 +206,7 @@ sub put_edatum {
 sub delete_edatum {
     my ($rid,$ken,$var) = @_;
     my $logger = get_logger();
+    $rid = Kynetx::Rids::get_rid($rid);
     my $key = {
         "ken" => $ken,
         "rid" => $rid,

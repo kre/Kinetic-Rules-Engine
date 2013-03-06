@@ -46,6 +46,7 @@ our %EXPORT_TAGS = (
     qw(
       simple_dispatch
       extended_dispatch
+      old_repository
       )
   ]
 );
@@ -148,34 +149,43 @@ sub get_ridlist {
     $rid_list = $temp;
   }
   else {
-
-    # get accout info
-    my $user_rids_info = Kynetx::Configure::get_config('USER_RIDS_URL');
-    my ( $app_url, $username, $passwd ) = split( /\|/, $user_rids_info );
-    my $acct_url = $app_url . "/" . $req_info->{'id_token'};
-    $logger->info("Using ridlist URL: $acct_url");
-    my $req = HTTP::Request->new( GET => $acct_url );
-    $req->authorization_basic( $username, $passwd );
-    my $ua       = LWP::UserAgent->new;
-    my $response = {};
-    eval { $response = decode_json( $ua->request($req)->{'_content'} ); };
-
-    if ($@) {
-      $logger->debug("Non-JSON response from $acct_url");
-    }
-    if ( $response->{'validtoken'} ) {
-      $rid_list = $response->{'rids'};
-#      $logger->info( "Rid struct: ", Kynetx::Rids::print_rids($rid_list));
-
-      return $rid_list;
-    }
-    else {
-      $logger->debug(
-        "Invalid token: $req_info->{'id_token'}. No RID list retrieved");
-        return [];
-    }
-
+    return old_repository($req_info, $id_token, $ken);
   }
+}
+
+sub old_repository {
+  my ($req_info, $id_token, $ken) = @_;
+  # get account info
+  my $logger = get_logger();
+  my $user_rids_info = Kynetx::Configure::get_config('USER_RIDS_URL');
+  my ( $app_url, $username, $passwd ) = split( /\|/, $user_rids_info );
+  my $token = $req_info->{'id_token'} || "";
+  my $acct_url = $app_url . "/" . $token ;
+  $logger->info("Using ridlist URL: $acct_url");
+  my $req = HTTP::Request->new( GET => $acct_url );
+  $req->authorization_basic( $username, $passwd );
+  my $ua       = LWP::UserAgent->new;
+  my $response = {};
+  my $rid_list;
+  my $content;
+  eval { $content = $ua->request($req)->{'_content'};};
+  if ($@) {
+    $logger->debug("Request to $acct_url failed");
+  } elsif ($content) {
+    eval { $response = decode_json( $content ); };
+  }
+  
+  if ( $response->{'validtoken'} ) {
+    $rid_list = $response->{'rids'};
+    #$logger->debug( "Rid struct: ", Kynetx::Rids::print_rids($rid_list));
+    return $rid_list;
+  }
+  else {
+    $logger->debug(
+      "Invalid token: ($token). No RID list retrieved");
+      return [];
+  }
+  
 }
 
 sub calculate_rid_list {
@@ -202,35 +212,33 @@ sub calculate_rid_list {
   my $rid_list_key = mk_ridlist_key($ken);
 
   my $rid_list = $memd->get($rid_list_key);
-
   my $eventtree_key = mk_eventtree_key($rid_list);
 
   if ($rid_list) {
     $logger->debug( "Using cached rid_list ", print_rids($rid_list) );
 
-    # if a ruleset isn't cached, then it was flushed and the event tree
-    # should be recalculated
-    foreach my $rid_info ( @{$rid_list} ) {
-      if (! Kynetx::Repository::is_ruleset_cached( get_rid($rid_info), 
-						     get_version($rid_info), 
-						     $memd ) ) {
-	$logger->debug("Flushing event tree because of ruleset flush");
-	delete_stashed_eventtree($req_info, $memd, $eventtree_key);
-	last;
-      } 
-    }
   } else { 
     $rid_list = get_ridlist( $req_info, $id_token,$ken );
-#    $logger->debug( "Retrieved rid_list: ", print_rids($rid_list) );
+    $logger->debug( "Retrieved rid_list: ", print_rids($rid_list) );
 
+    # cache this...
     $memd->set( $rid_list_key, $rid_list );
 
     # update key
     $eventtree_key = mk_eventtree_key($rid_list);
-
-    $logger->debug( "Using new rid_list: ", print_rids($rid_list) );
   }
 
+  # if a ruleset isn't cached, then it was flushed and the event tree
+  # should be recalculated
+  foreach my $rid_info ( @{$rid_list} ) {
+    if (! Kynetx::Repository::is_ruleset_cached( get_rid($rid_info), 
+					     get_version($rid_info), 
+					     $memd ) ) {
+    	$logger->debug("Flushing event tree because of ruleset flush");
+    	delete_stashed_eventtree($req_info, $memd, $eventtree_key);
+    	last;
+    } 
+  }
 
   if ( is_eventtree_stashed($req_info, $memd, $eventtree_key) ) {
     $logger->debug("Using stashed eventtree");

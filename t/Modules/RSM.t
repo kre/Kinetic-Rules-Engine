@@ -36,7 +36,7 @@ use Storable 'dclone';
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
@@ -308,13 +308,11 @@ $test_count++;
 
 $result = Kynetx::Persistence::Ruleset::get_registry($new_rid);
 
-$description = "Import a dev ruleset from Kynetx Repo";
-$expected = 'https://rulesetmanager.kobj.net/ruleset/source/a144x154/dev/krl/';
+$description = "Import a ruleset from Kynetx Repo";
+$expected = qr#https?://rulesetmanager.kobj.net/ruleset/source/a144x154/prod/krl/#;
 my $import_rid = 'a144x154';
 $krl_src = <<_KRL_;
   rsm:import("$import_rid") setting (isImport)
-    with 
-      kinetic_app_version = "dev";
 _KRL_
 
 $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
@@ -327,44 +325,27 @@ $js = Kynetx::Actions::build_one_action(
 	    'callback23',
 	    'dummy_name');
 $result = lookup_rule_env('isImport',$rule_env);
-cmp_deeply($result,$expected,$description);
+cmp_deeply($result,re($expected),$description);
 $test_count++;
 push(@rids,$import_rid);
 
+
 my $test_url = "$dn/web/pageview/$import_rid?caller=http://www.windley.com/archives/2006/foo.html";
-$description = "Check that dev version was registered";
+$description = "Check that prod version was registered and is default";
+$mech->get($test_url);
+$result = $mech->content();
+cmp_deeply($result,re(qr/Dave.+Dave/),$description);
+$test_count++;
+
+$test_url = "$dn/web/pageview/$import_rid?caller=http://www.windley.com/archives/2006/foo.html&$import_rid:kinetic_app_version=dev";
+$description = "Check that dev version was registered and can be accessed";
 $mech->get($test_url);
 $result = $mech->content();
 cmp_deeply($result,re(qr/Hal.+Hal/),$description);
 $test_count++;
 
-# Clear out the dev ruleset
-Kynetx::Persistence::Ruleset::delete_registry($import_rid);
-$description = "Import a prod ruleset from Kynetx Repo";
-$expected = 1;
-$import_rid = 'a144x154';
-$krl_src = <<_KRL_;
-  rsm:import("$import_rid") setting (isImport)
-    with 
-      kinetic_app_version = "prod" and
-      force = 1;;
-_KRL_
-
-$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
-$js = Kynetx::Actions::build_one_action(
-	    $krl,
-	    $my_req_info, 
-	    $dd,
-	    $rule_env,
-	    $session,
-	    'callback23',
-	    'dummy_name');
-$result = lookup_rule_env('isImport',$rule_env);
-cmp_deeply($result,$expected,$description);
-$test_count++;
-
-$test_url = "$dn/web/pageview/$import_rid?caller=http://www.windley.com/archives/2006/foo.html";
-$description = "Check that prod version was registered";
+$test_url = "$dn/web/pageview/$import_rid?caller=http://www.windley.com/archives/2006/foo.html&$import_rid:kinetic_app_version=prod";
+$description = "Specify the prod version in the event url";
 $mech->get($test_url);
 $result = $mech->content();
 cmp_deeply($result,re(qr/Dave.+Dave/),$description);

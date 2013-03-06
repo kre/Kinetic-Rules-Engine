@@ -86,7 +86,6 @@ sub send_directive {
   my $name = shift;
   my $opts = shift;
   my $direct = Kynetx::Directives->new($name);
-  $logger->trace("Directive options are: ", sub {Dumper($opts)});
   $direct->set_options($opts);
   $dir_doc->add($direct);
 #  push @{$req_info->{'directives'}}, $direct;

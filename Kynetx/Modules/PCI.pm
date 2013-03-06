@@ -55,7 +55,30 @@ $Data::Dumper::Indent = 1;
 use constant CREDENTIALS => "system_credentials";
 
 
+# format of list_tokens is array of {'cid' => val, 'name' => val}
 my $predicates = {
+  'is_related' => sub {
+    my ($req_info, $rule_env, $args) = @_;
+    my $logger = get_logger();
+    my $source = $args->[0];
+    my $collection = $args->[1];
+    my @group = ();
+    my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($source);
+    my $ken_tokens = Kynetx::Persistence::KToken::list_tokens($ken);
+    my %hash; map {$hash{$_->{'cid'}}++}  @{$ken_tokens};
+    my @ktokens = keys %hash;
+    if (ref $collection eq "ARRAY") {
+      @group = @{$collection};
+    } elsif (defined $collection && ref $collection eq "") {
+      push(@group, $collection);
+    }
+    my $set = Kynetx::Sets::intersection(\@ktokens,\@group);
+    if (scalar @{$set} >= 1) {
+      return 1
+    } else {
+      return 0;
+    }
+  }
 };
 
 my $default_actions = {
@@ -458,6 +481,19 @@ sub add_ruleset_to_account {
 	if ($ken && scalar @{$args} >= 1) {
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
 		my $installed = Kynetx::Persistence::KPDS::add_ruleset($ken,\@ridlist);
+		
+		# Grab installed rulesets from legacy repository
+		my $id_token = Kynetx::Persistence::KToken::get_default_token($ken);
+		my $legacy = Kynetx::Dispatch::old_repository($req_info,$id_token,$ken);
+		for my $ruleset (@{$legacy}) {
+		  my $orid = $ruleset->{'rid'};
+		  my $over = $ruleset->{'kinetic_app_version'} || 'prod';
+		  if ($orid) {
+		    my $fqrid = $orid . '.' . $over;
+		    Kynetx::Persistence::KPDS::add_ruleset($ken,$fqrid);
+		  }
+		}
+		
 		return {
 			'nid' => $userid,
 			'rids' => $installed->{'value'}

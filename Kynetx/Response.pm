@@ -26,6 +26,7 @@ use strict;
 use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 use HTML::Template;
+use Apache2::Const -compile => qw/OK :http/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -102,39 +103,49 @@ sub gen_directive_document {
 # }
 
 sub gen_raw_document {
-	my $self = shift;
+	my ($self, $r) = @_;
 	my $logger = get_logger();
 	my $eid = $self->{'eid'};
 	my @directives = map {$_->to_directive($eid)} @{$self->{'directives'}};
-	my $head = '';
-	my $body ='';
-	my $string = '';
-	my $type = undef;
-	foreach my $rawd (@directives) {
-		$type = $rawd->{'name'};
-		$logger->debug("directive: ", sub {Dumper($rawd)});
-		if ($rawd->{'options'}->{'is_raw'}) {
-			if (defined $rawd->{'options'}->{'body'}) {
-				$body .= $rawd->{'options'}->{'body'};
-			}
-			if (defined $rawd->{'options'}->{'head'}) {
-				$head .= $rawd->{'options'}->{'head'};
-			}
-		}
+	if (scalar @directives == 1) {
+	  my $directive = $directives[0];
+	  $logger->trace("Directive: ", sub {Dumper($directive)});
+	  my $raw = $directive->{'options'};
+	  my $status = $raw->{'status'};
+	  $logger->trace("Status: ",sub {Dumper($status)});
+	  my $headers = $raw->{'headers'};
+	  my $content = $raw->{'content'};
+	  my $content_type = $directive->{'name'};
+	  $status = 'HTTP_OK' unless ($status); 
+	  if ($status eq "HTTP_OK") {
+	    	  $r->content_type($content_type);
+	    	  for my $hkey (keys %{$headers}) {
+    	      $r->headers_out->add($hkey => $headers->{$hkey});
+    	      #$logger->debug("Header: $hkey Value: $headers->{$hkey}");
+  	     }
+	    	  	    
+	  } else {
+  	    for my $hkey (keys %{$headers}) {
+  	      #$logger->debug("EHeader: $hkey EValue: $headers->{$hkey}");
+  	      if ($hkey eq 'Location') {
+  	        $r->headers_out->set($hkey => $headers->{$hkey});
+  	      } else {
+  	        $r->err_headers_out->add($hkey => $headers->{$hkey});
+  	      }
+  	      
+  	    }
+  	    
+	    
+	  }
+	  if ($content) {
+	    print $content;
+	  }
+	  
+    $r->status(Apache2::Const->$status);
+    return Apache2::Const::OK;
+	} else {
+	  $logger->warn("Multiple directives not implemented for send_raw");
 	}
-	$logger->debug("Type: ", $type);
-	$logger->debug("Body: ", $body);
-	$logger->debug("Head: ", $head);
-	if ($type eq "text/html") {
-		my $tdir = Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
-		my $template = "$tdir/raw.tmpl";
-		my $rtemplate = HTML::Template->new(filename => $template);
-		$rtemplate->param("HEAD_CONTENT" => $head);
-		$rtemplate->param("BODY_CONTENT" => $body);
-		print $rtemplate->output();
-		return ($type, $rtemplate->output());
-	}
-	return $string;
 }
 
 sub respond {
@@ -157,7 +168,7 @@ sub respond {
   $logger->info("$realm processing finished");
   $logger->debug("__FLUSH__");
 
-  $logger->debug("Called with ", $r->the_request);
+  $logger->trace("Called with ", $r->the_request);
 
   # heartbeat string (let's people know we returned something)
   my $heartbeat = "// KNS " . gmtime() . " (" . Kynetx::Util::get_hostname() . ")\n";
@@ -165,9 +176,8 @@ sub respond {
   # this is where we return the JS
   binmode(STDOUT, ":encoding(UTF-8)");
   if ($req_info->{'send_raw'}) {
-  	my ($ct,$obj) = $dd->gen_raw_document();
-  	$r->content_type("text/html");
-  	$logger->debug("Raw: ", sub {Dumper($obj)});
+    $logger->debug("Returning raw directive");
+  	return $dd->gen_raw_document($r);
   }  elsif ($req_info->{'understands_javascript'}) {
     $logger->debug("Returning javascript from evaluation");
     print $heartbeat, $js;
@@ -178,5 +188,10 @@ sub respond {
   }
 
 }
+
+sub gen_raw_headers {
+  my $self = shift;
+}
+
 
 1;

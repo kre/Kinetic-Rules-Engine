@@ -535,6 +535,25 @@ $result = Kynetx::Modules::PCI::list_eci($my_req_info,$rule_env,$session,$rule_n
 cmp_deeply($result,$expected,$description);
 $test_count++;
 
+####### Predicates (after ECIs have been created)
+# check that predicates at least run without error
+my $temp_ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($uid);
+my @token_list = map {$_->{'cid'}} @{Kynetx::Persistence::KToken::list_tokens($temp_ken)};
+
+$description = "Check is_related (match)";
+@dummy_arg = ($eci,\@token_list);
+$expected = 1;
+$result = &{$preds->{'is_related'}}($my_req_info, $rule_env,\@dummy_arg);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Check is_related (no match)";
+@dummy_arg = ($eci2,\@token_list);
+$expected = 0;
+$result = &{$preds->{'is_related'}}($my_req_info, $rule_env,\@dummy_arg);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
 ####### CLEANUP
 
 Kynetx::Persistence::KPDS::revoke_developer_key($session_ken,$dk2);
