@@ -117,9 +117,11 @@ chomp($uname);
 
 my $rrid1 = $DICTIONARY[rand(@DICTIONARY)];
 chomp($rrid1);
+$rrid1 = Kynetx::Rids::make_fqrid($rrid1);
 
 my $rrid2 = $DICTIONARY[rand(@DICTIONARY)];
 chomp($rrid2);
+$rrid2 = Kynetx::Rids::make_fqrid($rrid2);
 
 my $system_key = Kynetx::Modules::PCI::create_system_key($result);
 $description = "Create and verify system key";
