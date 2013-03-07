@@ -174,7 +174,7 @@ sub authorize {
                    ':'.Kynetx::Configure::get_config('OAUTH_CALLBACK_PORT') .
                    "/ruleset/twitter_callback/$rid?";
 
- my $version = $req_info->{'rule_version'} || 'prod';
+ my $version = $req_info->{'rule_version'} || Kynetx::Rids::version_default();
 
  my $caller =
  my $callback_url = mk_url($base_cb_url,
@@ -529,7 +529,7 @@ sub twitter {
 
   my $consumer_tokens=get_consumer_tokens($req_info, $rule_env);
 #  $logger->debug("Consumer tokens: ", Dumper $consumer_tokens);
-  my $nt = Net::Twitter::Lite->new(traits => [qw/API::REST OAuth/], %{ $consumer_tokens}) ;
+  my $nt = Net::Twitter::Lite->new(traits => [qw/API::REST OAuth/], %{ $consumer_tokens},legacy_lists_api => 0) ;
 
   my $access_tokens =  get_access_tokens($req_info, $rule_env, $rid, $session);
   if (defined $access_tokens &&

@@ -510,7 +510,7 @@ sub eval_use_module {
   $metric->token($ktoken->{'ktoken'});
   $metric->eid($req_info->{'eid'});
 
-  $mversion ||= 'prod';
+  $mversion ||= Kynetx::Rids::version_default();
   my $module_sig = md5_hex( $name . $mversion . $alias . freeze $modifiers);
 	
   my $memd = get_memd();
@@ -1206,7 +1206,7 @@ sub get_rule_set {
 	$ver ||= get_version( $req_info->{'rid'} );
 
 	# don't do this. We rely on $ver being undefined later
-	#	$ver ||= 'prod';
+	#	$ver ||= Kynetx::Rids::version_default();
 
 	my $logger = get_logger();
 	$logger->debug("Getting ruleset $rid.$ver for $caller");
@@ -1254,7 +1254,7 @@ sub get_rule_set {
 sub stash_ruleset {
 	my ( $req_info, $ruleset ) = @_;
 	my $rid = get_rid( $req_info->{'rid'} );
-	my $ver = get_version( $req_info->{'rid'} ) || 'prod';
+	my $ver = get_version( $req_info->{'rid'} ) || Kynetx::Rids::version_default();
 	$req_info->{"$rid.$ver"}->{'ruleset'} = $ruleset;
 }
 
@@ -1277,7 +1277,7 @@ sub get_rule_env {
 	my $logger = get_logger();
 
 	my $rid = get_rid( $req_info->{'rid'} );
-	my $ver = get_version( $req_info->{'rid'} ) || 'prod';
+	my $ver = get_version( $req_info->{'rid'} ) || Kynetx::Rids::version_default();
 
 	if ( !defined $env_stash->{ $rid . $ver } ) {
 

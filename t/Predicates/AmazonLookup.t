@@ -413,6 +413,7 @@ $args = [{
 push(@lookup_args,$args);
 
 
+my $wait = 1;
 # item lookups
 foreach my $case (@lookup_args) {
     $logger->trace("Item lookup args: ",sub {Dumper($case)});
@@ -420,9 +421,16 @@ foreach my $case (@lookup_args) {
         'amz_test','amazon','item_lookup',$case);
     my $good = Kynetx::Predicates::Amazon::good_response($ds);
     if (! $good) {
-        my $error = Kynetx::Predicates::Amazon::get_error_msg($ds);
-        $logger->warn("Error: ", sub {Dumper($error)});
-        $logger->warn("Args: ",sub {Dumper(Kynetx::Predicates::Amazon::get_request_args($ds))});
+        # Amazon returns a service unavailable for too many responses, too quickly
+        sleep $wait++;
+        $ds = Kynetx::Modules::eval_module($my_req_info,$rule_env,$session,
+          'amz_test','amazon','item_lookup',$case);
+        $good = Kynetx::Predicates::Amazon::good_response($ds);
+        if (! $good) {
+          my $error = Kynetx::Predicates::Amazon::get_error_msg($ds);
+          $logger->warn("Error: ", sub {Dumper($error)});
+          $logger->warn("Args: ",sub {Dumper(Kynetx::Predicates::Amazon::get_request_args($ds))});
+        }
     }else {
         $logger->debug("Good result: ", sub {Dumper(Kynetx::Json::astToJson($ds))});
     }

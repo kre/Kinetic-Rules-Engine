@@ -110,7 +110,7 @@ sub handler {
     # Did not insert lock here since these functions don't seem to be
     # consumers of persistent variables
 
-    $req_info->{'kynetx_app_version'} = $version || 'prod';
+    $req_info->{'kynetx_app_version'} = $version || Kynetx::Rids::version_default();
     Kynetx::Request::log_request_env( $logger, $req_info );
 
     my ( $result, $type );
@@ -158,7 +158,7 @@ sub is_parsed {
         $ast = Kynetx::Json::jsonToAst($json);
     };
 
-    $logger->debug("Result: ",sub {Dumper($ast)});
+    $logger->trace("Result: ",sub {Dumper($ast)});
     if (ref $ast eq "HASH") {
         if ($ast->{'error'}) {
             my $rstr = join('|', @{$ast->{'error'}});
