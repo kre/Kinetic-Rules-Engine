@@ -236,7 +236,7 @@ sub send_event {
 				'type'   => $args->[2]
 			}
 		);  
-  my $timeout = 2; # seconds
+  my $timeout = 10; # seconds
 
   my $sm = $args->[0];
 
@@ -270,6 +270,7 @@ sub send_event {
 		 );
 
   $logger->debug("Sending event $args->[1]:$args->[2] to ESL $esl");
+  $logger->debug("ESL $esl body: $body");
 
   my $request;
   $request = AnyEvent::HTTP::http_request(
@@ -288,12 +289,12 @@ sub send_event {
 			      'body' => $body,
 			     });
 	if ($hdr->{Status} =~ /^2/) {
-	  $logger->debug("event:send() success for $esl");
+	  $logger->debug("####################event:send() success for $esl");
 	  
 	  # this is where we would parse returned directives and add them to $dd
         } else {
 
-	  my $err_msg = "event:send() failed for $esl, ($hdr->{Status}) $hdr->{Reason}";
+	  my $err_msg = "!!!!!!!!!!!!!!!!!!!!!event:send() failed for $esl, ($hdr->{Status}) $hdr->{Reason}";
 	  $logger->debug($err_msg);
 
 	  # I'd like to do this, but don't have $session
