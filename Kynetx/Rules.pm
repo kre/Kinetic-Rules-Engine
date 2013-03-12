@@ -1234,10 +1234,10 @@ sub get_rule_set {
 			)
 		  )
 		{
-			#Kynetx::Util::turn_on_logging();
+			Kynetx::Util::turn_on_logging();
 		}
 		else {
-			#Kynetx::Util::turn_off_logging();
+			Kynetx::Util::turn_off_logging();
 		}
 	}
 

@@ -91,7 +91,7 @@ sub mk_rid_info {
 
 sub to_rid_info {
   my ($fqrid) = @_;
-  my $logger = get_logger();
+#  my $logger = get_logger();
 #  my $parent = (caller(1))[3];
 #  $logger->debug("Get rid ($parent): $fqrid");
   my ($rid,$ver) = split(/\./,$fqrid,2);
@@ -113,7 +113,7 @@ sub get_current_rid_info {
 sub get_rid {
   my ($rid_info) = @_;
   my $logger = get_logger();
-  my $parent = (caller(1))[3];
+  #my $parent = (caller(1))[3];
   #$logger->trace("Get rid ($parent): ", sub {Dumper($rid_info)});
   if (ref $rid_info eq "HASH") {
     return _clean($rid_info->{'rid'});
