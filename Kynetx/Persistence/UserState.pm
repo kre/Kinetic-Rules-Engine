@@ -314,46 +314,48 @@ sub get_timer_start {
 }
 
 sub next_event_from_list {
-	my ($rid,$session,$event_list_name) = @_;
-    my $logger = get_logger();
-	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-    $rid = Kynetx::Rids::get_rid($rid);
-	my $query = {
-		"rid" => $rid,
-		"ken" => $ken,
-		"key" => $event_list_name		
-	};
-	my $result = Kynetx::MongoDB::atomic_pop_value(STATE_COLLECTION,$query);
-	if (defined $result) {
-		$logger->trace("$event_list_name found in ",STATE_COLLECTION, sub {Dumper($result)});
-		return $result;
-	} else {
-		my $val = Kynetx::MongoDB::get_value(COLLECTION,$query);
-		if (defined $val) {
-			my $object = $val->{'value'};
-			$logger->trace("$event_list_name found in ",COLLECTION,sub {Dumper($object)});
-			if (ref $object eq "ARRAY") {
-				$result = shift @{$object};
-				#put what is left of the event list into STATE_COLLECTION
-				Kynetx::MongoDB::atomic_push_value(STATE_COLLECTION,$query,$object);
-				Kynetx::MongoDB::delete_value(COLLECTION,$query);
-			} else {
-				$result = $object;
-			}
-			return $result;
-		} else {
-			$logger->debug("Event list not found");
-			return undef;
-		}
-		
-	}
-	return $result;
+  my ($rid,$session,$event_list_name) = @_;
+  my $logger = get_logger();
+  $logger->debug("In next_event_from_list");
+  my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+  $rid = Kynetx::Rids::get_rid($rid);
+  my $query = {
+	       "rid" => $rid,
+	       "ken" => $ken,
+	       "key" => $event_list_name		
+	      };
+  my $result = Kynetx::MongoDB::atomic_pop_value(STATE_COLLECTION,$query);
+  if (defined $result) {
+    $logger->trace("$event_list_name found in ",STATE_COLLECTION, sub {Dumper($result)});
+    $logger->debug("Event list found");
+    return $result;
+  } else {
+    my $val = Kynetx::MongoDB::get_value(COLLECTION,$query);
+    if (defined $val) {
+      my $object = $val->{'value'};
+      $logger->trace("$event_list_name found in ",COLLECTION,sub {Dumper($object)});
+      if (ref $object eq "ARRAY") {
+	$result = shift @{$object};
+	#put what is left of the event list into STATE_COLLECTION
+	Kynetx::MongoDB::atomic_push_value(STATE_COLLECTION,$query,$object);
+	Kynetx::MongoDB::delete_value(COLLECTION,$query);
+      } else {
+	$result = $object;
+      }
+      return $result;
+    } else {
+      $logger->debug("Event list not found");
+      return undef;
+    }
+  }
+  return $result;
 	
 }
 
 sub add_event_to_list {
 	my ($rid, $session,	$event_list_name, $json) = @_;
     my $logger = get_logger();
+    $logger->debug("In add_event_to_list");
     my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
     $rid = Kynetx::Rids::get_rid($rid);
     my $query = {
@@ -364,8 +366,8 @@ sub add_event_to_list {
     $logger->trace("Add event to $event_list_name: ", sub {Dumper($query)});
     $logger->trace("$event_list_name is: $json");
     my $status = Kynetx::MongoDB::atomic_push_value(STATE_COLLECTION,$query,$json);
-    $logger->debug("Add event to list returned: ", sub {Dumper($status)});
     my $temp = Kynetx::MongoDB::get_value(STATE_COLLECTION,$query);
+    $logger->debug("Add event to list returned: ", sub {Dumper($status)});
     $logger->trace("State Collection query: ", sub {Dumper($temp)});
 }
 

@@ -324,7 +324,7 @@ sub process_event_for_rid {
 		@{ $ruleset->{'rule_lists'}->{$domain}->{$type}->{'rulelist'} } )
 	{
 
-		$logger->debug("Should we schedule rule $rule->{'name'}?");
+		$logger->debug("***** Should we schedule rule $rule->{'name'}?");
 
 		$rule->{'state'} ||= 'active';
 
@@ -393,21 +393,20 @@ sub process_event_for_rid {
 			  )
 			{
 
-				$logger->debug("Event list count: $event_list_count; threshold: $event_list_threshold");
-				if ( $event_list_count++ > $event_list_threshold ) {
-					$logger->warn("Event list threshold exceeded for $rid:$rulename. Last event in event list: ",
-						sub { Dumper $ev });
-					last;
-				}
+			  $logger->debug("Event list count: $event_list_count; threshold: $event_list_threshold");
+			  if ( $event_list_count++ > $event_list_threshold ) {
+			    $logger->warn("Event list threshold exceeded for $rid:$rulename. Last event in event list: ",
+					  sub { Dumper $ev });
+			    last;
+			  }
+			  # FIXME: what we're not doing: the event list also
+			  # includes the req_info that was active when the event
+			  # came in.  We're not doing anything with it--simply
+			  # using the req_info from the final req...
 
-				# FIXME: what we're not doing: the event list also
-				# includes the req_info that was active when the event
-				# came in.  We're not doing anything with it--simply
-				# using the req_info from the final req...
-
-				# gather up vars and vals from all the events in the path
-				push @{$var_list}, @{ $ev->get_vars( $sm->get_id() ) };
-				push @{$val_list}, @{ $ev->get_vals( $sm->get_id() ) };
+			  # gather up vars and vals from all the events in the path
+			  push @{$var_list}, @{ $ev->get_vars( $sm->get_id() ) };
+			  push @{$val_list}, @{ $ev->get_vals( $sm->get_id() ) };
 			}
 			$schedule->annotate_task( $rid, $rulename, $task, 'vars',
 				$var_list );
