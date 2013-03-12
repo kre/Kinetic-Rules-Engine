@@ -92,10 +92,11 @@ sub mk_rid_info {
 sub to_rid_info {
   my ($fqrid) = @_;
   my $logger = get_logger();
-  my $parent = (caller(1))[3];
-  $logger->debug("Get rid ($parent): $fqrid");
+#  my $parent = (caller(1))[3];
+#  $logger->debug("Get rid ($parent): $fqrid");
   my ($rid,$ver) = split(/\./,$fqrid,2);
   $ver ||= Kynetx::Rids::version_default();
+  $ver = _clean($ver);
   return {
     'rid'                 => $rid,
     'kinetic_app_version' => $ver
