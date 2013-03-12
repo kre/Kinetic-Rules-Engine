@@ -32,7 +32,7 @@ use Data::Dumper;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Cache::Memcached;
 
@@ -127,17 +127,21 @@ $ast->{'rules'}->[0]->{'event_sm'} = ignore();
 my $rulename = $ast->{"ruleset_name"};
 my $uri = "https://raw.github.com/kre/Kinetic-Rules-Engine/master/t/" . $local_file;
 my $rid_info = mk_rid_info($req_info,$rulename);
+
+$logger->debug(".t mk_rid_info: ", sub {Dumper($rid_info)});
+
+
 $rid_info->{'uri'} = $uri;
 $req_info->{'rid'} = $rid_info;
-my $rules = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
-#$logger->debug("Rule: ", sub {Dumper($rules->{'rules'})});
-cmp_deeply($rules->{'rules'},$ast->{'rules'},$description);
+my $ruleset = Kynetx::Repository::get_ruleset_krl($rid_info);
+my $result = Kynetx::Rules::optimize_ruleset(parse_ruleset($ruleset));
+cmp_deeply($result,$ast,$description);
 
 
 my $file_uri = "file://$local_file";
 $description = "Check local filesystem for ruleset";
 $rid_info->{'uri'} = $file_uri;
-$rules = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
+my $rules = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
 cmp_deeply($rules,$ast,$description);
 
 
@@ -150,6 +154,7 @@ $rules = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
 #$logger->debug("Rule: ", sub {Dumper($rules)});
 cmp_deeply($rules,$ast,$description);
 
+ENDY:
 
 1;
 

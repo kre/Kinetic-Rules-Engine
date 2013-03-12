@@ -164,7 +164,7 @@ sub add {
 	my $req_info = shift;
 	my $options  = shift;
 
-	my $ridver = $options->{'ridver'} || 'prod';
+	my $ridver = $options->{'ridver'} || Kynetx::Rids::version_default();
 
 	my $rulename = $rule->{'name'};
 

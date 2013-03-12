@@ -58,11 +58,11 @@ our @ISA         = qw(Exporter);
 # put exported names inside the "qw"
 our %EXPORT_TAGS = (all => [
 qw(
-  rid_from_ruleset
+  rid_info_from_ruleset
   get_registry
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
-our @EXPORT = qw(&rid_from_ruleset);
+our @EXPORT = qw(&rid_info_from_ruleset);
 
 use constant COLLECTION => "ruleset";
 
@@ -227,19 +227,25 @@ sub get_registry {
 		};
 		my $hkey = [];
 		return Kynetx::MongoDB::get_value(COLLECTION,$key);
-		#return Kynetx::Persistence::Ruleset::get_registry_element($key,$hkey);
 	}
 	return undef;
 }
 
-sub rid_from_ruleset {
-  my ($rid) = @_;
+sub rid_info_from_ruleset {
+  my ($rid,$tag) = @_;
   my $logger = get_logger();
+  $tag = $tag || Kynetx::Rids::version_default();
+  
+  $logger->trace("Tag is : $tag");
+  #make sure we have a clean rid
+  $rid = Kynetx::Rids::get_rid($rid);
+  my $fqrid = $rid . '.' . $tag;
   my $rid_info;
-  my $result = get_registry($rid);
+  my $result = get_registry($fqrid);
   if (defined $result) {
     $rid_info = $result->{'value'};
-    $rid_info->{'rid'} = $result->{'rid'};
+    $rid_info->{'rid'} = $rid;
+    $rid_info->{'kinetic_app_version'} = $tag;
     return $rid_info;
   }
   return undef;
@@ -268,8 +274,10 @@ sub create_rid {
   } else {
     $prefix = 'b' . $userid;
   };
+  # There is always a 'prod' ruleset
+  my $default = 'prod';
   my $rid_index = get_rid_index($ken,$userid,$prefix); 
-  my $rid = $prefix . "x" . $rid_index;
+  my $rid = $prefix . "x" . $rid_index . '.' . $default;
   my $registry = {
     'owner' => $ken,
     'rid_index' => $rid_index,
@@ -280,6 +288,29 @@ sub create_rid {
   }
   put_registry_element($rid,[],$registry);
   return $rid;   
+}
+
+sub fork_rid {
+  my ($ken,$rid,$tag,$uri) = @_;
+  my $logger = get_logger();
+  return undef unless ($tag);
+  my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
+  my $fqrid = $rid . '.' . $tag;
+  my $exists = get_registry($fqrid);
+  if ($exists) {
+    $logger->warn("Registry entry: $fqrid already exists. Use RSM module to modify");
+    return undef;
+  }
+  my $registry = {
+    'owner' => $ken    
+  };
+  
+  if (defined $uri && ref $uri eq "") {
+    $registry->{'uri'} = $uri;
+  }
+  
+  put_registry_element($fqrid,[],$registry);
+  return $fqrid;  
 }
 
 #################### Utility functions
@@ -293,17 +324,8 @@ sub import_legacy_ruleset {
   }
   my @ridlist = ('prod', 'dev');
   my $repo = Kynetx::Configure::get_config('RULE_REPOSITORY');
-  my ($base_url,$username,$password) = split(/\|/, $repo);
-  my $d_url = join('/', ($base_url, $rid, 'prod', 'krl/'));
-  my $default = {
-    'uri' => $d_url,
-    'username' => $username,
-    'password' => $password
-  };
-  if (defined $ken) {
-    $default->{'owner'} = $ken,      
-  }
-  put_registry_element($rid,[],$default);
+  my ($base_url,$username,$password) = split(/\|/, $repo);  
+  #put_registry_element($rid,[],$default);
   for my $version (@ridlist) {
     my $fqrid = $rid;
       $fqrid .= '.' . $version;
@@ -317,8 +339,10 @@ sub import_legacy_ruleset {
       $registry->{'owner'} = $ken,      
     }
     put_registry_element($fqrid,[],$registry);    
-  }    
-  return get_registry($rid);
+  }   
+  # return the default registry 
+  my $drid = Kynetx::Rids::make_fqrid($rid);
+  return get_registry($drid);
 }
 
 sub increment_version {

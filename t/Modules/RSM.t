@@ -36,7 +36,7 @@ use Storable 'dclone';
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
@@ -99,6 +99,7 @@ my $platform = '127.0.0.1';
 $platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
 $platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
 my $dn = "http://$platform/blue/event";
+my $platform_default = Kynetx::Rids::version_default();
 
 my $ruleset = 'cs_test_1';
 
@@ -187,6 +188,8 @@ cmp_deeply($result,re(qr/^$expected/),$description);
 $test_count++;
 push(@rids,$result);
 
+$logger->debug("From run func: $result");
+
 $description = "Register a new ruleset";
 my $local_file = 'data/action5.krl';
 my $uri = "https://raw.github.com/kre/Kinetic-Rules-Engine/master/t/" . $local_file;
@@ -213,20 +216,27 @@ $js = Kynetx::Actions::build_one_action(
 $result = lookup_rule_env('myRid',$rule_env);
 cmp_deeply($result->{'rid'},re(qr/$prefix$nid/),$description);
 $test_count++;
-push(@rids,$result->{'rid'});
-
+push(@rids,$result->{'rid'} . '.prod');
 
 
 my $new_rid = $result->{'rid'};
 
+$logger->debug("Rid: $new_rid");
+
+# The default rid created is called tag
+my $fqrid = Kynetx::Rids::make_fqrid($new_rid,'prod');
+
 $description = "Validate the new ruleset";
-$result = Kynetx::Modules::RSM::_validate($result->{'rid'});
+my $rid_info = Kynetx::Rids::to_rid_info($fqrid);
+$logger->debug("Rid_t: ",sub {Dumper($rid_info)});
+$result = Kynetx::Modules::RSM::_validate($rid_info);
 cmp_deeply($result,1,$description);
 $test_count++;
 
+
 $description = "Use action to validate the new ruleset";
 $krl_src = <<_KRL_;
-  rsm:validate("$new_rid") setting (isValid);
+  rsm:validate("$fqrid") setting (isValid);
 _KRL_
 
 $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
@@ -241,7 +251,6 @@ $js = Kynetx::Actions::build_one_action(
 $result = lookup_rule_env('isValid',$rule_env);
 cmp_deeply($result,1,$description);
 $test_count++;
-
 
 $description = "Register a bad ruleset";
 $local_file = 'data/fails/fail0.krlb';
@@ -262,13 +271,16 @@ $js = Kynetx::Actions::build_one_action(
 $result = lookup_rule_env('myRid',$rule_env);
 cmp_deeply($result->{'rid'},re(qr/b$nid/),$description);
 $test_count++;
-push(@rids,$result->{'rid'});
+push(@rids,$result->{'rid'} . '.prod');
+
 
 $new_rid = $result->{'rid'};
 
+$fqrid = Kynetx::Rids::make_fqrid($new_rid,'prod');
+
 $description = "Use action to invalidate the bad ruleset";
 $krl_src = <<_KRL_;
-  rsm:validate("$new_rid") setting (isValid);
+  rsm:validate("$fqrid") setting (isValid);
 _KRL_
 
 $krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
@@ -284,11 +296,12 @@ $result = lookup_rule_env('isValid',$rule_env);
 cmp_deeply(ref $result,"ARRAY",$description);
 $test_count++;
 
+
 $description = "Update the ruleset with a new URI and validate";
 $local_file = '';
 $uri = "file://data/action7.krl";
 $krl_src = <<_KRL_;
-  rsm:update("$new_rid") setting (isUpdate)
+  rsm:update("$fqrid") setting (isUpdate)
     with 
       uri = "$uri";
 _KRL_
@@ -303,13 +316,15 @@ $js = Kynetx::Actions::build_one_action(
 	    'callback23',
 	    'dummy_name');
 $result = lookup_rule_env('isUpdate',$rule_env);
+$logger->debug("$description: ", sub {Dumper($result)});
 cmp_deeply($result,1,$description);
 $test_count++;
 
 $result = Kynetx::Persistence::Ruleset::get_registry($new_rid);
 
+
 $description = "Import a ruleset from Kynetx Repo";
-$expected = qr#https?://rulesetmanager.kobj.net/ruleset/source/a144x154/prod/krl/#;
+$expected = qr#https?://rulesetmanager.kobj.net/ruleset/source/a144x154/$platform_default/krl/#;
 my $import_rid = 'a144x154';
 $krl_src = <<_KRL_;
   rsm:import("$import_rid") setting (isImport)
@@ -327,15 +342,24 @@ $js = Kynetx::Actions::build_one_action(
 $result = lookup_rule_env('isImport',$rule_env);
 cmp_deeply($result,re($expected),$description);
 $test_count++;
-push(@rids,$import_rid);
+push(@rids,$import_rid . '.prod');
+push(@rids,$import_rid . '.dev');
 
 
 my $test_url = "$dn/web/pageview/$import_rid?caller=http://www.windley.com/archives/2006/foo.html";
-$description = "Check that prod version was registered and is default";
+
+$description = "Check that $platform_default version was registered and is default";
+
+if ($platform_default eq 'prod') {
+  $expected = re(qr/Dave.+Dave/);
+} else {
+  $expected = re(qr/Hal.+Hal/);
+}
 $mech->get($test_url);
 $result = $mech->content();
-cmp_deeply($result,re(qr/Dave.+Dave/),$description);
+cmp_deeply($result,$expected,$description);
 $test_count++;
+
 
 $test_url = "$dn/web/pageview/$import_rid?caller=http://www.windley.com/archives/2006/foo.html&$import_rid:kinetic_app_version=dev";
 $description = "Check that dev version was registered and can be accessed";
@@ -352,6 +376,7 @@ cmp_deeply($result,re(qr/Dave.+Dave/),$description);
 $test_count++;
 
 
+
 $description = "List of owners rulesets";
 $result = Kynetx::Persistence::Ruleset::get_rulesets_by_owner($session_ken);
 cmp_deeply($result,superbagof(@rids),$description);
@@ -361,6 +386,8 @@ for my $d_rid (@{$result}) {
   $logger->debug("Delete $d_rid");
   Kynetx::Persistence::Ruleset::delete_registry($d_rid);
 }
+
+ENDY:
 
 done_testing($test_count);
 

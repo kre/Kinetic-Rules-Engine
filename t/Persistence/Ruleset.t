@@ -86,6 +86,9 @@ my $my_req_info = Kynetx::Test::gen_req_info($rid);
 my $session = process_session($r);
 my $session_ken = Kynetx::Persistence::KEN::get_ken($session);
 $logger->debug("Session Ken: ", $session_ken);
+my $root_rid;
+my $local_file;
+my $uri;
 
 # get a random words
 $logger->debug("Get random words");
@@ -139,23 +142,34 @@ my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
 
 $logger->debug("Developer ken: $ken User: $userid");
 $description = "First generic rid";
-$expected = 'b' . $userid .'x0';
+$root_rid = 'b' . $userid .'x0';
+$expected = $root_rid . '.prod';
 $rid = Kynetx::Persistence::Ruleset::create_rid($ken);
 is($rid,$expected,$description);
 $test_count++;
+
+$description = "Create a branch rid";
+my $branch = 'foo';
+$expected = $root_rid . '.' . $branch;
+$local_file = 'data/action4.krl';
+$uri = "https://raw.github.com/kre/Kinetic-Rules-Engine/master/t/" . $local_file;
+$rid = Kynetx::Persistence::Ruleset::fork_rid($ken,$root_rid,$branch,$uri);
+is($rid,$expected,$description);
+$test_count++;
+$logger->debug("Rid: $rid");
 
 
 $logger->debug("Rid: $rid");
 
 $description = "Second generic rid";
-$expected = 'b' . $userid .'x1';
+$expected = 'b' . $userid .'x1.prod';
 $rid = Kynetx::Persistence::Ruleset::create_rid($ken);
 is($rid,$expected,$description);
 $test_count++;
 
 $logger->debug("Rid: $rid");
 $description = "First prefix rid ($prefix)";
-$expected = $prefix . $userid .'x0';
+$expected = $prefix . $userid .'x0.prod';
 $rid = Kynetx::Persistence::Ruleset::create_rid($ken,$prefix);
 is($rid,$expected,$description);
 $test_count++;
@@ -163,7 +177,8 @@ $test_count++;
 $logger->debug("Rid: $rid");
 
 $description = "Second prefix rid ($prefix)";
-$expected = $prefix . $userid .'x1';
+$root_rid = $prefix . $userid .'x1';
+$expected = $root_rid . '.prod';
 $rid = Kynetx::Persistence::Ruleset::create_rid($ken,$prefix);
 is($rid,$expected,$description);
 $test_count++;
@@ -184,8 +199,8 @@ cmp_deeply($result,$expected,$description);
 $test_count++;
 $logger->debug("Registry: ", sub {Dumper($result)});
 
-my $local_file = 'data/action5.krl';
-my $uri = "https://raw.github.com/kre/Kinetic-Rules-Engine/master/t/" . $local_file;
+$local_file = 'data/action5.krl';
+$uri = "https://raw.github.com/kre/Kinetic-Rules-Engine/master/t/" . $local_file;
 $expected->{'value'}->{'uri'} = $uri;
 Kynetx::Persistence::Ruleset::put_registry_element($rid,['uri'],$uri);
 $result = Kynetx::Persistence::Ruleset::get_registry($rid);
@@ -194,7 +209,7 @@ $test_count++;
 $logger->debug("Registry: ", sub {Dumper($result)});
 
 $description = "Based on rid_info, get the ast";
-my $rid_info = Kynetx::Persistence::Ruleset::rid_from_ruleset($rid);
+my $rid_info = Kynetx::Rids::to_rid_info($rid);
 my ($fl,$krl_text) = getkrl($local_file);
 my $ast = Kynetx::Rules::optimize_ruleset(parse_ruleset($krl_text));
 # Optimization creates a state machine with different values
@@ -204,7 +219,40 @@ my $rules = Kynetx::Repository::get_rules_from_repository($rid_info, $my_req_inf
 cmp_deeply($rules,$ast,$description);
 $test_count++;
 
+my $oast = $ast;
 
+$description = "Create a branch rid for 2nd prefix";
+$branch = 'goo';
+$expected = $root_rid . '.' . $branch;
+$local_file = 'data/action9.krl';
+$uri = "https://raw.github.com/kre/Kinetic-Rules-Engine/master/t/" . $local_file;
+$rid = Kynetx::Persistence::Ruleset::fork_rid($ken,$root_rid,$branch,$uri);
+is($rid,$expected,$description);
+$test_count++;
+$logger->debug("Rid: $rid");
+
+$description = "Based on branch, get the ast";
+$rid_info = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($rid,$branch);
+($fl,$krl_text) = getkrl($local_file);
+$ast = Kynetx::Rules::optimize_ruleset(parse_ruleset($krl_text));
+#$logger->debug("AST: ", sub {Dumper($ast)});
+# Optimization creates a state machine with different values
+$ast->{'rules'}->[0]->{'event_sm'} = ignore();
+$my_req_info = Kynetx::Test::gen_req_info($rid);
+$rules = Kynetx::Repository::get_rules_from_repository($rid_info, $my_req_info);
+cmp_deeply($rules,$ast,$description);
+$test_count++;
+
+$description = "Compare the branch's ast to the production ast";
+isnt($rules,$oast,$description);
+$test_count++;
+
+
+$result = Kynetx::Persistence::Ruleset::get_rulesets_by_owner($ken);
+$logger->debug("Rids: ", sub {Dumper($result)});
+for my $key (@{$result}) {
+  Kynetx::Persistence::Ruleset::delete_registry($key);
+}
 
 
 # Clean up anonymous KENS

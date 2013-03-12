@@ -188,7 +188,13 @@ sub request {
     $logger->debug("Sending request to URL: $url");
 
     $content = Kynetx::Memcached::get_remote_data($url,120,$memcached_key);
-    my $converted = Kynetx::Json::xmlToJson($content);
+    my $converted;
+    eval {
+      $converted = Kynetx::Json::xmlToJson($content);
+    };
+#    if ($@) {
+#      return Kynetx::Errors::merror($endpoint,$@,1);
+#    }
     Kynetx::Json::collapse($converted);
     return $converted;
 }

@@ -113,13 +113,14 @@ sub get_ridlist {
     $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($id_token);
   }
   my $rid_struct = Kynetx::Modules::PCI::_installed_rulesets($ken);
+  $logger->debug("Struct: ", sub {Dumper($rid_struct)});
   my $rid_list   = $rid_struct->{'rids'};
   if ( defined $rid_list ) {
     my $temp = ();
     foreach my $ridstring ( @{$rid_list} ) {
       my $rid;
       my $ver     = 1;
-      my $kver    = "prod";
+      my $kver    = Kynetx::Rids::version_default();
       my @ridinfo = split( /\./, $ridstring );
       if ( length(@ridinfo) == 1 ) {
         $rid = $ridinfo[0];
@@ -178,11 +179,6 @@ sub old_repository {
   if ( $response->{'validtoken'} ) {
     $rid_list = $response->{'rids'};
     #$logger->debug( "Rid struct: ", Kynetx::Rids::print_rids($rid_list));
-
-    # cache this...
-    my $rid_list_key = mk_ridlist_key($ken);
-    my $memd         = get_memd();
-    $memd->set( $rid_list_key, $rid_list );
     return $rid_list;
   }
   else {
@@ -217,6 +213,7 @@ sub calculate_rid_list {
   my $rid_list_key = mk_ridlist_key($ken);
 
   my $rid_list = $memd->get($rid_list_key);
+  
   my $eventtree_key = mk_eventtree_key($rid_list);
 
   if ($rid_list) {
@@ -225,7 +222,7 @@ sub calculate_rid_list {
   } else { 
     $rid_list = get_ridlist( $req_info, $id_token,$ken );
     $logger->debug( "Retrieved rid_list: ", print_rids($rid_list) );
-
+    $memd->set( $rid_list_key, $rid_list );
     # update key
     $eventtree_key = mk_eventtree_key($rid_list);
   }

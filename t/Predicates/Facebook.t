@@ -759,12 +759,12 @@ $args = [{'id' => $post_id}];
 test_facebook('get',$args,$expected,$description,0);
 
 ##
-$description = "Facebook post search with paging (limit,offset)";
+# Offset is no longer supported for post search
+$description = "Facebook post search with paging (limit)";
 $expected = superhashof({'data' => array_each($post_object)});
 $args = [{'type' => 'post',
     'q' => 'windley',
-    'limit' =>3,
-    'offset' =>27
+    'limit' =>3
 }];
 test_facebook('search',$args,$expected,$description,0);
 
@@ -854,11 +854,17 @@ sub sift_data {
 sub test_facebook {
     my ($function,$args,$expected,$description,$debug) = @_;
     $gcal_tests++;
+    if ($debug) {
+      Log::Log4perl->easy_init($DEBUG);
+      
+    }
     my $json = Kynetx::Predicates::Facebook::eval_facebook($my_req_info,$rule_env,$session,$rule_name,$function,$args);
     if ($debug) {
         $logger->info($description);
         $logger->info("Returned from eval_facebook: ", sub { Dumper($json)});
+        Log::Log4perl->easy_init($INFO);
     }
+    
     cmp_deeply($json,$expected,$description);
     return $json;
 }

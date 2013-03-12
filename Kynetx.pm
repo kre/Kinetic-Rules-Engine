@@ -263,7 +263,7 @@ sub flush_ruleset_cache {
 
     #FIXME: This needs to be put in Repository.pm
 
-    # my $version = Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kynetx_app_version']) || 'prod';
+    # my $version = Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kynetx_app_version']) || Kynetx::Rids::version_default();
 
     my $memd = get_memd();
     my $msg = '';

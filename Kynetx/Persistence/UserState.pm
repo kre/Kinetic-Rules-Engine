@@ -76,6 +76,7 @@ sub get_current_state {
     my $state_key = $rulename . ':sm_current';
     $logger->debug("Get SM current: ", $state_key);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+  $rid = Kynetx::Rids::get_rid($rid);
 	my $key = {
         "ken" => $ken,
         "rid" => $rid,
@@ -102,6 +103,7 @@ sub get_current_state {
 sub set_current_state {
     my ($rid,$session,$rulename,$val) = @_;
     my $logger = get_logger();
+    $rid = Kynetx::Rids::get_rid($rid);
     my $state_key = $rulename . ':sm_current';
     $logger->trace("Set SM current: ", $state_key);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
@@ -121,6 +123,7 @@ sub set_current_state {
 sub delete_current_state {
     my ($rid,$session,$rulename) = @_;
     my $logger = get_logger();
+    $rid = Kynetx::Rids::get_rid($rid);
     my $state_key = $rulename . ':sm_current';
     $logger->trace("Del SM current: ", $state_key);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
@@ -135,6 +138,7 @@ sub delete_current_state {
 sub purge_state_from_edata {
     my ($rid,$session,$rulename) = @_;
     my $logger = get_logger();
+    $rid = Kynetx::Rids::get_rid($rid);
     my $state_key = $rulename . ':sm_current';
     $logger->trace("Del SM current: ", $state_key);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
@@ -148,6 +152,7 @@ sub purge_state_from_edata {
 sub get_event_env {
 	my ($rid,$session,$rulename) = @_;
     my $logger = get_logger();
+    $rid = Kynetx::Rids::get_rid($rid);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $key = {		
         "rid" => $rid,
@@ -165,6 +170,7 @@ sub reset_event_env {
     my $logger = get_logger();
     $logger->trace("Reset event env: ", $rid);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+    $rid = Kynetx::Rids::get_rid($rid);
     my $key = {
         "rid" => $rid,
         "ken" => $ken,
@@ -176,6 +182,7 @@ sub reset_event_env {
 
 sub inc_group_counter {
 	my ($rid,$session,$rulename,$state) = @_;
+    $rid = Kynetx::Rids::get_rid($rid);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $query = {
 		"rid" => $rid,
@@ -202,6 +209,7 @@ sub inc_group_counter {
 sub push_aggregator {
 	my ($rid,$session,$rulename,$state,$vals) = @_;
 	my $logger = get_logger();
+    $rid = Kynetx::Rids::get_rid($rid);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $query = {
 		"rid" => $rid,
@@ -240,6 +248,7 @@ sub push_aggregator {
 sub reset_group_counter {
 	my ($rid,$session,$rulename,$state) = @_;
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+    $rid = Kynetx::Rids::get_rid($rid);
 	my $query = {
 		"rid" => $rid,
 		"ken" => $ken,
@@ -264,6 +273,7 @@ sub reset_group_counter {
 
 sub repeat_group_counter {
 	my ($rid,$session,$rulename,$state,$current,$null_state) = @_;
+    $rid = Kynetx::Rids::get_rid($rid);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $query = {
 		"rid" => $rid,
@@ -292,6 +302,7 @@ sub get_timer_start {
 	my ($rid,$session,$rulename,$start) = @_;
 	my $logger = get_logger();
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+    $rid = Kynetx::Rids::get_rid($rid);
 	my $query = {
 		"rid" => $rid,
 		"ken" => $ken,
@@ -306,6 +317,7 @@ sub next_event_from_list {
 	my ($rid,$session,$event_list_name) = @_;
     my $logger = get_logger();
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+    $rid = Kynetx::Rids::get_rid($rid);
 	my $query = {
 		"rid" => $rid,
 		"ken" => $ken,
@@ -343,6 +355,7 @@ sub add_event_to_list {
 	my ($rid, $session,	$event_list_name, $json) = @_;
     my $logger = get_logger();
     my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+    $rid = Kynetx::Rids::get_rid($rid);
     my $query = {
 		"rid" => $rid,
 		"ken" => $ken,
