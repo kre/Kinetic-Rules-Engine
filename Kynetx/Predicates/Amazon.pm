@@ -140,8 +140,9 @@ sub eval_amazon {
         return [];
     }
 
-    $logger->trace("send this query: ", sub {Dumper($a_request)});
+    $logger->debug("send this query: ", sub {Dumper($a_request)});
     $a_response = request($locale,$secret,$a_request);
+    return $a_response;
 }
 
 
@@ -188,7 +189,10 @@ sub request {
     $logger->debug("Sending request to URL: $url");
 
     $content = Kynetx::Memcached::get_remote_data($url,120,$memcached_key);
-    my $converted = Kynetx::Json::xmlToJson($content);
+    my $converted;
+    eval {
+      $converted = Kynetx::Json::xmlToJson($content)
+    };
     Kynetx::Json::collapse($converted);
     return $converted;
 }

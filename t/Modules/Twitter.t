@@ -120,7 +120,8 @@ isnt(Kynetx::Modules::Twitter::authorized($my_req_info, $rule_env, $session, $ru
      "random calls aren't authorized");
 $test_count++;
 
-contains_string(Kynetx::Modules::Twitter::authorize($my_req_info, $rule_env, $session, {},{}), "http://twitter.com/oauth/authorize?oauth_token", "authorize gets a URL");
+my $result = Kynetx::Modules::Twitter::authorize($my_req_info, $rule_env, $session, {},{});
+contains_string($result, "https://api.twitter.com/oauth/authorize?oauth_token", "authorize gets a URL");
 $test_count++;
 
 #2009/12/31 14:25:59 DEBUG Twitter.pm a16x42 [global] Exchanged request tokens for access tokens. access_token => 100844323-hNmGVEQlEblWGkof2gLFi3d97sQtc4LkoVAID0s1 & secret => quUCMtOgcKAm2iaDXAuTGwo4XiJ8AP93HllPaMOGk & user_id = 100844323 & screen_name = kynetx_test

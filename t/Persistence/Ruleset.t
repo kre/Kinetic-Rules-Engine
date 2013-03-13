@@ -194,7 +194,7 @@ $test_count++;
 $logger->debug("Registry: ", sub {Dumper($result)});
 
 $description = "Based on rid_info, get the ast";
-my $rid_info = Kynetx::Persistence::Ruleset::rid_from_ruleset($rid);
+my $rid_info = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($rid);
 my ($fl,$krl_text) = getkrl($local_file);
 my $ast = Kynetx::Rules::optimize_ruleset(parse_ruleset($krl_text));
 # Optimization creates a state machine with different values
