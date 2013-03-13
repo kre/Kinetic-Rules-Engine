@@ -46,6 +46,7 @@ use Kynetx::Environments qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::Configure qw/:all/;
+use Kynetx::Rids qw/:all/;
 
 
 use Kynetx::FakeReq qw/:all/;
@@ -80,9 +81,12 @@ my $memd = get_memd();
 
 my $module_sig = "sldakdjdhakjdja";
 
+my $mod_name = "flip";
+my $mod_ver = "per";
+
 my ($js, $provided, $mod_rule_env) = ("some js", ["a", "b"], {"a" => 1, "b" => 4});
 
-Kynetx::Modules::RuleEnv::set_module_cache($module_sig, $my_req_info, $memd, $js, $provided, $mod_rule_env);
+Kynetx::Modules::RuleEnv::set_module_cache($module_sig, $my_req_info, $memd, $js, $provided, $mod_rule_env, $mod_name, $mod_ver);
 
 my $module_cache = Kynetx::Modules::RuleEnv::get_module_cache($module_sig, $memd);
 
@@ -105,7 +109,7 @@ my $module_sig_2 = "rwurwriuwroqieu";
 
 ($js, $provided, $mod_rule_env) = ("some other js", ["c", "d"], {"j" => 1, "k" => 4});
 
-Kynetx::Modules::RuleEnv::set_module_cache($module_sig_2, $my_req_info, $memd, $js, $provided, $mod_rule_env);
+Kynetx::Modules::RuleEnv::set_module_cache($module_sig_2, $my_req_info, $memd, $js, $provided, $mod_rule_env, $mod_name, $mod_ver);
 
 
 $module_cache = Kynetx::Modules::RuleEnv::get_module_cache($module_sig_2, $memd);
@@ -148,6 +152,44 @@ is_deeply(Kynetx::Modules::RuleEnv::get_module_cache($module_sig_2, $memd),
 ok(!defined Kynetx::Modules::RuleEnv::get_msig_list($my_req_info, $memd), 
    "Nothing defined module sig list");
 $test_count += 3;
+
+
+# the module list should still be there (i.e. haven't flushed it)
+my $mod_re_list = Kynetx::Modules::RuleEnv::get_mod_re_list($mod_name, $mod_ver, $memd);
+
+ok($mod_re_list->{$module_sig}, "Module sig is still there for module");
+
+ok($mod_re_list->{$module_sig_2}, "Module sig 2 is there for module");
+
+ok(! $mod_re_list->{"not a module sig"}, "Unknown module sig isn't there for module");
+
+$test_count += 3;
+
+
+##
+## save the old rid before we change it to the module in the req. 
+my $old_rid = $my_req_info->{'rid'};
+$my_req_info->{'rid'} = Kynetx::Rids::mk_rid_info($my_req_info,$mod_name, {'version' => $mod_ver});
+
+Kynetx::Modules::RuleEnv::delete_module_caches($my_req_info, $memd);
+
+
+# all undefined now!
+is_deeply(Kynetx::Modules::RuleEnv::get_module_cache($module_sig, $memd),
+	  {},
+	  "Nothing defined for first module sig");
+is_deeply(Kynetx::Modules::RuleEnv::get_module_cache($module_sig_2, $memd), 
+	  {},
+	  "Nothing defined for second module sig");
+ok(!defined Kynetx::Modules::RuleEnv::get_mod_re_list($mod_name, $mod_ver, $memd), 
+   "Nothing defined module sig list");
+$test_count += 3;
+
+
+##
+## put the rid back
+##
+$my_req_info->{'rid'} = $old_rid;
 
 
 

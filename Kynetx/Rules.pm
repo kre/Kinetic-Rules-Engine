@@ -669,9 +669,10 @@ sub eval_use_module {
     $emetric2->eid($req_info->{'eid'});
 
     if ($is_cachable) {
+      $logger->debug("Caching module $name.$mversion...");
 
       Kynetx::Modules::RuleEnv::set_module_cache($module_sig, $req_info, $memd,
-						 $js, $provided, $module_rule_env);
+						 $js, $provided, $module_rule_env, $name, $mversion);
 
     } else {
        $logger->debug("Module $name.$mversion is not cachable...");

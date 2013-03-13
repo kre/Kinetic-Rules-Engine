@@ -1413,7 +1413,7 @@ sub cachable_decl {
 
 sub cachable_expr {
   my ($expr) = @_;
-  # my $logger = get_logger();
+  my $logger = get_logger();
   # $logger->debug("cachable_expr of type ", $expr->{'type'});
   if ($expr->{'type'} eq 'function' || 
       $expr->{'type'} eq 'defaction' ||
@@ -1456,9 +1456,11 @@ sub cachable_expr {
 	  #     $expr->{'source'} eq 'app' )
 	 ) {
     return 1;
-  } elsif($expr->{'type'} eq 'qualified' && 
+  } elsif($expr->{'type'} eq 'qualified' && (
 	  $expr->{'source'} eq 'meta' && 
-	  $expr->{'predicate'} eq 'rid'
+	  ($expr->{'predicate'} eq 'rid' || 
+	   $expr->{'predicate'} eq 'moduleRID'
+	  ))
 	 ) {
     return 1;
   } elsif($expr->{'type'} eq 'persistent' && 
@@ -1466,6 +1468,7 @@ sub cachable_expr {
 	 ) {
     return 1;
   } else {
+    $logger->debug("Module not cachable because expression has type ", $expr->{'type'});
     return 0;
   }
 }
