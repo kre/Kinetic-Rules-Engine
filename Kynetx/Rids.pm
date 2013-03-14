@@ -62,39 +62,22 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 sub mk_rid_info {
   my ( $req_info, $rid, $options ) = @_;
   my $logger = get_logger();
-  my $fqrid = $rid;
+  my $arid = _clean($rid);
+  my $fqrid;
   
   $logger->trace("Make rid info for $rid");
   
   my $version = $options->{'version'}
       || Kynetx::Request::get_attr( $req_info, "$rid:kynetx_app_version" )
       || Kynetx::Request::get_attr( $req_info, "$rid:kinetic_app_version" );
-      
-  if(defined $version) {
-    $fqrid = $fqrid . '.' . $version;
-  } else {
-    $version = 'prod'
-  }
-
-  my $rid_info = get_rid_info_by_rid($fqrid);
-  if ( defined $rid_info ) {
-    return $rid_info;
-  } else {
+          
+  $version = default_version() unless (defined $version);
     return {
-      'rid'                 => $rid,
+      'rid'                 => $arid,
       'kinetic_app_version' => $version
     };
-
-  }
 }
 
-sub get_rid_info_by_rid {
-  my ($rid) = @_;
-  my $logger = get_logger();  
-  my $rid_object = Kynetx::Persistence::Ruleset::rid_from_ruleset($rid);
-  $logger->trace("Get rid ($rid) info from registry: ",sub {Dumper($rid_object)});
-  return $rid_object;
-}
 
 sub get_current_rid_info {
   my ($req_info) = @_;
@@ -113,8 +96,12 @@ sub get_rid {
 
 sub _clean {
   my ($rid) = @_;
-  my ($crid,$extra) = split(/\./,$rid,2);
-  return $crid;
+  my $logger = get_logger();  
+  if ($rid) {
+    my ($crid,$extra) = split(/\./,$rid,2);
+    return $crid;    
+  }
+  return undef;
 }
 
 sub get_version {
@@ -232,6 +219,30 @@ sub get_rid_from_context {
     $rid = $moduleRid;
   }
   return $rid;
+}
+
+sub default_version {
+  my $default = Kynetx::Configure::get_config('KNS_DEFAULT_VERSION');
+  if ($default) {
+    return $default;
+  } else {
+    return 'prod';
+  }
+}
+
+sub get_fqrid {
+  my ($rid_info) = @_;
+  my $rid = get_rid($rid_info);
+  my $version = get_version($rid_info);
+  my $fqrid = mk_fqrid($rid,$version);
+  return $fqrid;
+}
+
+sub mk_fqrid {
+  my ($rid,$ver) = @_;
+  my $logger = get_logger();
+  my $fqrid = $rid . '.' . $ver;
+  return $fqrid
 }
 
 1;

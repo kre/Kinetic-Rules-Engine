@@ -759,12 +759,12 @@ $args = [{'id' => $post_id}];
 test_facebook('get',$args,$expected,$description,0);
 
 ##
-$description = "Facebook post search with paging (limit,offset)";
+# offset no longer supported
+$description = "Facebook post search with paging (limit)";
 $expected = superhashof({'data' => array_each($post_object)});
 $args = [{'type' => 'post',
     'q' => 'windley',
-    'limit' =>3,
-    'offset' =>27
+    'limit' =>3
 }];
 test_facebook('search',$args,$expected,$description,0);
 

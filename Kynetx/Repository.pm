@@ -166,8 +166,10 @@ JSON
 
 sub make_ruleset_key {
   my ( $rid, $version ) = @_;
+  my $logger = get_logger();
   my $opt = Kynetx::Rules::get_optimization_version();
   my $keystring =  "ruleset:$opt:$version:$rid";
+  $logger->trace("Keystring: $keystring");
   return md5_base64($keystring);
 }
 
@@ -186,8 +188,16 @@ sub is_ruleset_cached {
 sub get_ruleset_krl {
     my ($rid_info,$version) = @_; 
     my $logger = get_logger();
+    my $fqrid = Kynetx::Rids::get_fqrid($rid_info);
+    
+    # Check to see if there is a Repository record
+    my $repository_record = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($fqrid);
+    if ($repository_record) {
+      $rid_info = $repository_record;
+    }
     my $rid = Kynetx::Rids::get_rid($rid_info);
-    my $uri = get_uri($rid_info);
+    $version = Kynetx::Rids::get_version($rid_info) unless ($version);
+    my $uri = Kynetx::Rids::get_uri($rid_info);
     if (defined $uri) {
       my $parsed_uri = URI->new($uri);
       my $scheme = $parsed_uri->scheme;

@@ -96,7 +96,7 @@ foreach my $pn (@pnames) {
 
 
 foreach my $uas (@ua_strings) {
-#    diag $uas->[0];
+    diag $uas->[0];
    
     $BYU_req_info->{'useragent'} = undef; # set it up for another try
     $BYU_req_info->{'ua'} = $uas->[0];
