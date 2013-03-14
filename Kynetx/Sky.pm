@@ -37,6 +37,7 @@ use Kynetx::Session;
 use Kynetx::Memcached;
 use Kynetx::Dispatch;
 use Kynetx::Metrics::Datapoint;
+use Apache2::Const -compile => qw(OK DECLINED);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -54,10 +55,34 @@ our %EXPORT_TAGS = (
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 sub handler {
-	my $r = shift;
-
+	my $r = shift;	
+	
 	# configure logging for production, development, etc.
 	Kynetx::Util::config_logging($r);
+	my $logger = get_logger();
+	
+	my $req = Apache2::Request->new($r);
+  if ($req->param('_async'))	{
+    $logger->debug(
+      "\n\n------------------------------ Asynchronous evaluation---------"
+	   );
+    $r->pool->cleanup_register(\&_handler,$r);
+    return Apache2::Const::OK;
+  } else {
+    $logger->debug(
+      "\n\n------------------------------ Synchronous evaluation----------"
+	   );
+    _handler($r);
+    return Apache2::Const::OK;
+    
+  }
+}
+
+sub _handler {
+  my ($r) = @_;
+  
+	# configure logging for production, development, etc.
+	#Kynetx::Util::config_logging($r);
 
 	my $logger = get_logger();
 	my $metric = new Kynetx::Metrics::Datapoint();
@@ -380,7 +405,6 @@ sub handler {
 	Kynetx::Response::respond( $r, $req_info, $session, $js, $dd, "Event" );
 	$metric->stop_and_store();
 
-	return Apache2::Const::OK;
 }
 
 sub flush_ridlist_cache {

@@ -259,6 +259,7 @@ sub send_event {
   # merge in the domain and type
   $attrs->{'_domain'} = $args->[1];
   $attrs->{'_type'} = $args->[2];
+  $attrs->{'_async'} = 1;
 
   my $cv = $execenv->get_condvar();
   $cv->begin;
@@ -288,12 +289,12 @@ sub send_event {
 			      'body' => $body,
 			     });
 	if ($hdr->{Status} =~ /^2/) {
-	  $logger->debug("event:send() success for $esl");
+	  $logger->debug("------------------------ event:send() success for $esl");
 	  
 	  # this is where we would parse returned directives and add them to $dd
         } else {
 
-	  my $err_msg = "event:send() failed for $esl, ($hdr->{Status}) $hdr->{Reason}";
+	  my $err_msg = "------------------------ event:send() failed for $esl, ($hdr->{Status}) $hdr->{Reason}";
 	  $logger->debug($err_msg);
 
 	  # I'd like to do this, but don't have $session
