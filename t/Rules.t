@@ -74,7 +74,6 @@ my $r = Kynetx::Test::configure();
 
 
 my $rid = 'cs_test';
-my $version_default = Kynetx::Rids::version_default();
 
 # test choose_action and args
 
@@ -4079,9 +4078,9 @@ This is another number ',
 
 
 
-#diag "#######################################################################";
-#diag "# MODULES";
-#diag "#######################################################################";
+diag "#######################################################################";
+diag "# MODULES";
+diag "#######################################################################";
 
 # test eval_use
 my $empty_rule_env = empty_rule_env();
@@ -4129,9 +4128,8 @@ is(lookup_rule_env("y", $mod_rule_env),
    "get 10 back applying f to 4");
 $test_count++;
 
-# This test is still using the twitter v1 api
-#is(lookup_rule_env("z", $mod_rule_env), 'kynetx', "get kynetx back as query");
-#$test_count++;
+is(lookup_rule_env("z", $mod_rule_env), 'kynetx', "get kynetx back as query");
+$test_count++;
 
 
 #diag "############ use a16x78 alias flipper #################";
@@ -4296,13 +4294,13 @@ $mod_rule_env = empty_rule_env();
 is(lookup_rule_env("a", $mod_rule_env), "foobar", "a is foobar" );
 $test_count++;
 
-is(lookup_rule_env("b", $mod_rule_env), $version_default, "b is $version_default" );
+is(lookup_rule_env("b", $mod_rule_env), "prod", "b is prod" );
 $test_count++;
 
 is(lookup_rule_env("c", $mod_rule_env), "a16x78", "c is a16x78" );
 $test_count++;
 
-is(lookup_rule_env("d", $mod_rule_env), $version_default, "d id $version_default" );
+is(lookup_rule_env("d", $mod_rule_env), "prod", "d id prod" );
 $test_count++;
 
 

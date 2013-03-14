@@ -68,8 +68,7 @@ my $ruleset_base = "http://$broot:$bport/ruleset";
 my $event_base = "http://$broot:$bport/blue/event";
 
 my $rid = 'cs_test';
-my $version_default = Kynetx::Rids::version_default();
-my $fqrid = Kynetx::Rids::make_fqrid($rid,$version_default);
+
 my $mech = Test::WWW::Mechanize->new();
 
 diag "Using ruleset base: $ruleset_base";
@@ -93,7 +92,7 @@ SKIP: {
 
 #    $mech->title_is('Show Context');
 
-    $mech->content_like("/Context for Client ID $fqrid/");
+    $mech->content_like('/Context for Client ID cs_test.prod/');
     $mech->content_like('/Active rules.+2/s');
     $mech->content_contains('test_rule_2');
     $mech->content_contains('will not fire');
@@ -108,7 +107,7 @@ SKIP: {
 
     $mech->title_is('Show Context');
 
-    $mech->content_like("/Context for Client ID $fqrid/");
+    $mech->content_like('/Context for Client ID cs_test.prod/');
     $mech->content_like('/Active rules.+\d+/s');
     $mech->content_contains('test_rule_1');
     $mech->content_contains('will fire');
@@ -125,7 +124,7 @@ SKIP: {
 
     $mech->title_is('Describe Ruleset cs_test');
 
-    $mech->content_like('/"ruleset_version"\s*:\s*"(' . $version_default . '|\d+)"/s');
+    $mech->content_like('/"ruleset_version"\s*:\s*"(prod|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
     $mech->content_like('/"ruleset_id"\s*:\s*"[^"]+"/s');
     $test_count += 6;
@@ -139,7 +138,7 @@ SKIP: {
     $mech->get_ok($url_describe_2);
     is($mech->content_type(), 'text/plain');
 
-    $mech->content_like('/"ruleset_version"\s*:\s*"(' . $version_default . '|\d+)"/s');
+    $mech->content_like('/"ruleset_version"\s*:\s*"(prod|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
     $mech->content_like('/"ruleset_id"\s*:\s*"[^"]+"/s');
     $test_count += 5;
@@ -185,7 +184,7 @@ SKIP: {
     $req_info->{'rid'} = $rid_info;
     my $rules =  Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
 
-    my $rs_key = Kynetx::Repository::make_ruleset_key('cs_test', $version_default);
+    my $rs_key = Kynetx::Repository::make_ruleset_key('cs_test', 'prod');
     my $ruleset = $memd->get($rs_key);
     ok(defined $ruleset, "Ruleset is cached");
 

@@ -154,6 +154,9 @@ sub process_event {
 
 	my $logger = get_logger();
 
+	# APR::Tables require a key (no 'keys' function)
+	my $request_rec_notes = $r->pnotes('K');
+
 	Log::Log4perl::MDC->put( 'events', '[global]' );
 
 	$logger->debug(
@@ -176,13 +179,21 @@ sub process_event {
 
 	Kynetx::Request::log_request_env( $logger, $req_info );
 
+# Extend $req_info if we have any extra information passed in through the pnotes
+# Add the data as params
+	if ( defined $request_rec_notes ) {
+		my @keys = keys(%$request_rec_notes);
+		foreach my $key (@keys) {
+			$req_info->{$key} = $request_rec_notes->{$key};
+			$logger->trace( "PNOTES: $key ", $request_rec_notes->{$key} );
+		}
+		push( @{ $req_info->{'param_names'} }, @keys );
+	}
 
 	# get a session, if _sid param is defined it will override cookie
 	my $session = process_session($r);
 
 	if ( defined $version ) {
-	  my $parent = (caller(1))[3];
-	  $logger->debug("Version is passed in from $parent");
 		$req_info->{'kynetx_app_version'} = $version;
 	}
 
@@ -292,7 +303,7 @@ sub process_event_for_rid {
 	my $rid = get_rid($rid_info);
 	my $ver = get_version($rid_info);
 
-	#$logger->debug("Req info: ", sub {Dumper $req_info} );
+	#  $logger->debug("Req info: ", sub {Dumper $req_info} );
 
 	$logger->debug("Processing events for $rid:$ver");
 	Log::Log4perl::MDC->put( 'site', $rid );

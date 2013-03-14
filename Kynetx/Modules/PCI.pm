@@ -465,16 +465,11 @@ sub add_ruleset_to_account {
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
 	if (defined $arg2) {
 		if (ref $arg2 eq "ARRAY") {
-    	# make rid_info out of rid arguments	
-    	for my $element (@{$arg2}) {
-    	  my $rid_info = Kynetx::Rids::to_rid_info($element);
-    	  push(@ridlist,$rid_info);
-    	}
+			@ridlist = @{$arg2};
 		} elsif (ref $arg2 eq "") {
-			push(@ridlist,Kynetx::Rids::to_rid_info($arg2));
+			push(@ridlist,$arg2);
 		}
-	}
-	
+	}	
 	# Check to see if it is an eci or a userid
 	if ($arg1 =~ m/^\d+$/) {
 		#ll("userid");
@@ -487,17 +482,17 @@ sub add_ruleset_to_account {
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
 		my $installed = Kynetx::Persistence::KPDS::add_ruleset($ken,\@ridlist);
 		
-#		# Grab installed rulesets from legacy repository
-#		my $id_token = Kynetx::Persistence::KToken::get_default_token($ken);
-#		my $legacy = Kynetx::Dispatch::old_repository($req_info,$id_token,$ken);
-#		for my $ruleset (@{$legacy}) {
-#		  my $orid = $ruleset->{'rid'};
-#		  my $over = $ruleset->{'kinetic_app_version'} || Kynetx::Rids::version_default();
-#		  if ($orid) {
-#		    my $fqrid = Kynetx::Rids::make_fqrid($orid,$over);
-#		    Kynetx::Persistence::KPDS::add_ruleset($ken,$fqrid);
-#		  }
-#		}
+		# Grab installed rulesets from legacy repository
+		my $id_token = Kynetx::Persistence::KToken::get_default_token($ken);
+		my $legacy = Kynetx::Dispatch::old_repository($req_info,$id_token,$ken);
+		for my $ruleset (@{$legacy}) {
+		  my $orid = $ruleset->{'rid'};
+		  my $over = $ruleset->{'kinetic_app_version'} || 'prod';
+		  if ($orid) {
+		    my $fqrid = $orid . '.' . $over;
+		    Kynetx::Persistence::KPDS::add_ruleset($ken,$fqrid);
+		  }
+		}
 		
 		return {
 			'nid' => $userid,

@@ -115,7 +115,7 @@ sub authorize {
     my $rid_info = $req_info->{'rid'};
     my $rid = get_rid($rid_info);
     my $logger    = get_logger();
-    my $version   = $req_info->{'rule_version'} || Kynetx::Rids::version_default();
+    my $version   = $req_info->{'rule_version'} || 'prod';
     my $scope     = get_google_scope($args);
     my $endpoints = get_google_endpoints($scope);
 

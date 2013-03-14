@@ -36,7 +36,7 @@ use Storable 'dclone';
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
@@ -117,11 +117,9 @@ chomp($uname);
 
 my $rrid1 = $DICTIONARY[rand(@DICTIONARY)];
 chomp($rrid1);
-$rrid1 = Kynetx::Rids::make_fqrid($rrid1);
 
 my $rrid2 = $DICTIONARY[rand(@DICTIONARY)];
 chomp($rrid2);
-$rrid2 = Kynetx::Rids::make_fqrid($rrid2);
 
 my $system_key = Kynetx::Modules::PCI::create_system_key($result);
 $description = "Create and verify system key";

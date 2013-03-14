@@ -68,9 +68,6 @@ my $session = Kynetx::Test::gen_session($r, $rid);
 
 my $test_count = 0;
 
-my $version_default = Kynetx::Rids::version_default();
-my $fqrid = Kynetx::Rids::make_fqrid($rid,$version_default);
-
 my $logger = get_logger();
 
 my $rl;
@@ -120,7 +117,7 @@ while (my $task = $my_req_info->{'schedule'}->next()) {
 }
 
 
-is_deeply($rl, [$fqrid], "see the RID the error is from");
+is_deeply($rl, ['cs_test.prod'], "see the RID the error is from");
 $test_count++;
 
 

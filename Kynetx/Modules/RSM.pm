@@ -54,9 +54,7 @@ my $predicates = {
     my ($req_info, $rule_env, $args) = @_;
     my $logger = get_logger();
     $logger->debug("Arg to is_valid: $args->[0]");
-    my $rid = $args->[0];
-    my $rid_info = Kynetx::Rids::to_rid_info($rid);
-    return _validate($rid_info) == 1;
+    return _validate($args->[0]) == 1;
   }
 };
 
@@ -95,12 +93,6 @@ my $default_actions = {
 		'js' =>
 		  'NO_JS',    # this action does not emit JS, used in build_one_action
 		'before' => \&do_import,
-		'after'  => []
-	},
-	'fork' => {
-		'js' =>
-		  'NO_JS',    # this action does not emit JS, used in build_one_action
-		'before' => \&do_fork,
 		'after'  => []
 	},
 	
@@ -222,7 +214,7 @@ sub do_register {
       }
     }
     
-    my $rid_object = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($new_rid,'prod');
+    my $rid_object = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($new_rid);
     my $response = response_object($v,$rid_object);
     $rule_env = add_to_env( $response, $rule_env ) unless $v eq '__dummy';
     my $js = raise_response_event('register',$req_info, $rule_env, $session, $config, $response, $v );
@@ -268,9 +260,7 @@ sub do_validate {
   my $rid = get_rid($req_info->{'rid'});
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
   my $v = $vars->[0] || '__dummy';
-  my $fqrid = $args->[0];
-  my $rid_info = Kynetx::Rids::to_rid_info($fqrid);
-  my $valid = _validate($rid_info);
+  my $valid = _validate($args->[0]);
   my $response = {
       $v => $valid
   };
@@ -285,10 +275,9 @@ sub do_update {
   my $rid = get_rid($req_info->{'rid'});
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
   my $v = $vars->[0] || '__dummy';
-  #my $mod_rid = ;
-  my $fqrid = $args->[0];
-  my $rid_info = Kynetx::Rids::to_rid_info($fqrid);
+  my $mod_rid = $args->[0];
   
+  my $rid_info = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($mod_rid);
   
   # Accounts allowed to modify a ruleset
   #  root
@@ -298,8 +287,6 @@ sub do_update {
   my $rpin = $rid_info->{'flush_code'};
   my $owner = $rid_info->{'owner'};
   my $response;
-  $logger->debug("URI: ",$config->{'uri'});
-  $logger->debug("Rid: ",sub {Dumper($rid_info)});
   if (
     Kynetx::Modules::PCI::system_authorized($req_info, $rule_env, $session) ||
     (Kynetx::Modules::PCI::developer_authorized($req_info,$rule_env,$session,['ruleset','create']) && $ken eq $owner) ||
@@ -322,25 +309,24 @@ sub do_update {
       );
       if ($mods->{$key} eq "") {
       #if ($config->{$key} eq "") {
-        Kynetx::Persistence::Ruleset::delete_registry_element($fqrid, [$key]);
+        Kynetx::Persistence::Ruleset::delete_registry_element($mod_rid, [$key]);
       } else {
-        Kynetx::Persistence::Ruleset::put_registry_element($fqrid,[$key],$config->{$key})
+        Kynetx::Persistence::Ruleset::put_registry_element($mod_rid,[$key],$config->{$key})
       }
     }
-    Kynetx::Persistence::Ruleset::increment_version($fqrid);
-    $rid_info = Kynetx::Rids::to_rid_info($fqrid); 
+    Kynetx::Persistence::Ruleset::increment_version($mod_rid); 
     # Now try to validate the ruleset
-    my $valid = _validate($rid_info);
+    my $valid = _validate($mod_rid);
     $response = {
       $v => $valid
     };
     if ( $valid == 1) {
       # Flush the ruleset
-      _flush($rid_info);
+      _flush($mod_rid);
     }
     
   } else {
-    my $str = "Not authorized to modify $fqrid";
+    my $str = "Not authorized to modify $mod_rid";
     $response = {
       $v => $str
     };
@@ -355,8 +341,9 @@ sub do_delete {
   my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
   my $rid = get_rid($req_info->{'rid'});
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-  my $rid_info = Kynetx::Rids::to_rid_info($args->[0]);
-  my $fqrid = Kynetx::Rids::get_fqrid($rid_info);
+  my $flush_rid = $args->[0];
+  
+  my $rid_info = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($flush_rid);
   
   # Accounts allowed to modify a ruleset
   #  root
@@ -370,56 +357,9 @@ sub do_delete {
     Kynetx::Modules::PCI::system_authorized($req_info, $rule_env, $session) ||
     (Kynetx::Modules::PCI::developer_authorized($req_info,$rule_env,$session,['ruleset','create']) && $ken eq $owner)
   ) {
-    Kynetx::Persistence::Ruleset::delete_registry($fqrid);
+    Kynetx::Persistence::Ruleset::delete_registry($flush_rid);
   }
 }
-
-sub do_fork {
-  my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
-  my $logger = get_logger();
-  
-  my $rid = get_rid($req_info->{'rid'});
-	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-  my $v = $vars->[0] || '__dummy';
-  my $fqrid = $args->[0];
-  my $branch = $args->[1];
-  
-  my $rid_info = Kynetx::Rids::get_rid_info_by_rid($fqrid);
-  my $rid_root = Kynetx::Rids::get_rid($rid_info);
-  
-  # Accounts allowed to modify a ruleset
-  #  root
-  #  developer
-  #  provides ruleset pin
-  my $pin = $config->{'flush_code'};
-  my $rpin = $rid_info->{'flush_code'};
-  my $owner = $rid_info->{'owner'};
-  my $response;
-  if (
-    Kynetx::Modules::PCI::system_authorized($req_info, $rule_env, $session) ||
-    (Kynetx::Modules::PCI::developer_authorized($req_info,$rule_env,$session,['ruleset','create']) && $ken eq $owner) ||
-    $pin eq $pin    
-  ) {
-    my $uri = $mods->{'uri'};
-    if ($mods->{'owner'}) {
-      
-    }
-    my $valid = Kynetx::Persistence::Ruleset::fork_rid($ken,$rid_root,$branch,$uri);
-    $response = {
-      $v => $valid
-    };    
-  } else {
-    my $str = "Not authorized to fork $fqrid";
-    $response = {
-      $v => $str
-    };
-    $logger->warn($str);
-  }
-  $rule_env = add_to_env( $response, $rule_env ) unless $v eq '__dummy';
-  my $js = raise_response_event($req_info, $rule_env, $session, $config, $response, $v );
-  return $js;
-}
-
 
 sub do_import {
   my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
@@ -432,7 +372,7 @@ sub do_import {
     my ($rid_to_import,$version,$app_version);
     $rid_to_import = $args->[0];
     $version = $config->{'version'} || 0;
-    $app_version = $config->{'kinetic_app_version'} || Kynetx::Rids::version_default();
+    $app_version = $config->{'kinetic_app_version'} || 'prod';
     my $dummy_ri = Kynetx::Util::dummy_req_info($rid_to_import);
     my $rid_info = Kynetx::Rids::mk_rid_info($dummy_ri,$rid_to_import,{'version' => $app_version});
     $rid_info->{'version'} = $version;
@@ -442,7 +382,7 @@ sub do_import {
       $v => $registry->{'value'}->{'uri'}
     };
     if ($config->{'force'}) {
-      my $valid = _validate($rid_info);
+      my $valid = _validate($rid_to_import);
       $response = {
         $v => $valid
       };
@@ -545,16 +485,16 @@ sub _flush {
 }
 
 sub _validate {
-  my ($rid_info) = @_;
+  my ($rid) = @_;
   my $logger = get_logger();
-  unless ($rid_info){
+  unless ($rid){
     return 0 
   };
+  my $rid_info = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($rid);
   my $ruleset = Kynetx::Repository::get_ruleset_krl($rid_info);
   eval {
     $ruleset = Kynetx::Parser::parse_ruleset($ruleset);
   };
-  my $fqrid = Kynetx::Rids::get_fqrid($rid_info);
   if ($@) {
     $logger->debug("Failed to validate ($@): ", sub {Dumper($rid_info)});
     return 0;
@@ -562,11 +502,11 @@ sub _validate {
       defined $ruleset->{'error'}) {
         my @errors = ();
         if ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid') {
-          my $str = "Ruleset $fqrid not found";
+          my $str = "Ruleset $rid not found";
           push(@errors,$str);
           $logger->error($str);
         } elsif (defined $ruleset->{'error'}) {
-          my $str = "Ruleset parsing error for $fqrid: ";
+          my $str = "Ruleset parsing error for $rid: ";
           push(@errors,$str);
           $logger->error($str);
             if (ref $ruleset->{'error'} eq "ARRAY") {
@@ -575,7 +515,7 @@ sub _validate {
               }
             }
         } else {
-          my $str = "Unspecified ruleset repository error for $fqrid";
+          my $str = "Unspecified ruleset repository error for $rid";
           push(@errors,$str);
           $logger->error($str);
         }

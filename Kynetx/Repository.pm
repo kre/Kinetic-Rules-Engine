@@ -78,7 +78,7 @@ sub get_rules_from_repository {
     ['kynetx_app_version'] )
     || Kynetx::Predicates::Page::get_pageinfo( $req_info, 'param',
     ['kinetic_app_version'] )
-    || Kynetx::Rids::version_default();
+    || 'prod';
   $req_info->{'rule_version'} = $version;
 
   my $memd = Kynetx::Memcached::get_memd();
@@ -118,8 +118,7 @@ sub get_rules_from_repository {
   $logger->debug("Setting parsing semaphore for $rs_key");
   Kynetx::Memcached::set_parsing_flag( $memd, $rs_key );
   
-  $ruleset = get_ruleset_krl($rid_info);
-  $logger->trace("KRL returned: $ruleset");
+  $ruleset = get_ruleset_krl($rid_info,$version);
   
   Kynetx::Memcached::clr_parsing_flag($memd,$rs_key);
   
@@ -167,8 +166,10 @@ JSON
 
 sub make_ruleset_key {
   my ( $rid, $version ) = @_;
+  my $logger = get_logger();
   my $opt = Kynetx::Rules::get_optimization_version();
   my $keystring =  "ruleset:$opt:$version:$rid";
+  $logger->trace("Keystring: $keystring");
   return md5_base64($keystring);
 }
 
@@ -185,18 +186,18 @@ sub is_ruleset_cached {
 }
 
 sub get_ruleset_krl {
-    my ($rid_info) = @_; 
+    my ($rid_info,$version) = @_; 
     my $logger = get_logger();
+    my $fqrid = Kynetx::Rids::get_fqrid($rid_info);
     
-    # Get the latest config from the Ruleset registry
-    my $ruleset_rid = Kynetx::Rids::get_rid($rid_info);
-    my $ruleset_ver = Kynetx::Rids::get_version($rid_info);
-    my $registry_info = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($ruleset_rid,$ruleset_ver);    
-    
-    if ($registry_info) {
-      $rid_info = $registry_info;
-    } 
-    my $uri = get_uri($rid_info);
+    # Check to see if there is a Repository record
+    my $repository_record = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($fqrid);
+    if ($repository_record) {
+      $rid_info = $repository_record;
+    }
+    my $rid = Kynetx::Rids::get_rid($rid_info);
+    $version = Kynetx::Rids::get_version($rid_info) unless ($version);
+    my $uri = Kynetx::Rids::get_uri($rid_info);
     if (defined $uri) {
       my $parsed_uri = URI->new($uri);
       my $scheme = $parsed_uri->scheme;
@@ -213,11 +214,9 @@ sub get_ruleset_krl {
     } else {
         # Try the default repository if $rid_info is not fully configured
         $logger->debug("Check default repository");
-        my $rid = Kynetx::Rids::get_rid($rid_info);
-        my $version = Kynetx::Rids::get_version($rid_info);
         my $repo = Kynetx::Configure::get_config('RULE_REPOSITORY');
         my ($base_url,$username,$password) = split(/\|/, $repo);
-        $logger->trace("URL: $base_url");
+        $logger->debug("URL: $base_url");
         my $rs_url = join('/', ($base_url, $rid, $version, 'krl/'));
         $rid_info->{'uri'} = $rs_url;
         $rid_info->{'username'} = $username;

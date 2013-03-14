@@ -73,8 +73,6 @@ sub build_request_env {
   # we rely on this being undef if nothing passed in
   $rids = $req->param('_rids') || $rids;
   my $explicit_rids = defined $req->param('_rids');
-  
-  $logger->debug("BRE Rids: ", sub {Dumper($rids)});
 
   # endpoint identifier
   my $epi = $req->param('_epi') || 'any';
@@ -144,9 +142,7 @@ sub build_request_env {
   my @req_params = $req->param;
   foreach my $n (@req_params) {
     my $enc = Kynetx::Util::str_in( $req->param($n) );
-    if ( ref $req->param($n) eq "" ) {
-      $logger->debug( "Param $n -> ", $req->param($n), " ", $enc );
-    }
+    $logger->debug( "Param $n -> ", $req->param($n), " ", $enc );
     my $not_attr = {
       '_rids'   => 1,
       'referer' => 1
@@ -208,24 +204,19 @@ sub get_attr {
 ### final
 sub set_final_flag {
   my ($self) = @_;
-  my $logger = get_logger();
-  $logger->debug("set final");
+
   $self->{ Kynetx::Rids::get_rid( $self->{rid} ) }->{'final_flag'} = 1;
 }
 
 sub clr_final_flag {
   my ($self) = @_;
-  my $logger = get_logger();
-  $logger->debug("clear final");
 
   undef $self->{ Kynetx::Rids::get_rid( $self->{rid} ) }->{'final_flag'};
 }
 
 sub get_final_flag {
   my ($self) = @_;
-  my $logger = get_logger();
-  $logger->debug("get final");
-  
+
   return $self->{ Kynetx::Rids::get_rid( $self->{rid} ) }->{'final_flag'};
 }
 
@@ -253,9 +244,8 @@ sub log_request_env {
       {
         if ( ref $value eq 'ARRAY' ) {
           $value = Kynetx::Rids::print_rids($value);
-        }
-        elsif ( ref $value eq 'HASH' ) {
-          $value = Kynetx::Rids::print_rid_info($value);
+	} elsif ( ref $value eq 'HASH' ) {
+	  $value = Kynetx::Rids::print_rid_info($value);
         }
       }
       elsif ( $entry eq 'event_attrs' ) {

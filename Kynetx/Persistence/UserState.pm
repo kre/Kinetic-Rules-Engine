@@ -76,7 +76,6 @@ sub get_current_state {
     my $state_key = $rulename . ':sm_current';
     $logger->debug("Get SM current: ", $state_key);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-  $rid = Kynetx::Rids::get_rid($rid);
 	my $key = {
         "ken" => $ken,
         "rid" => $rid,
@@ -103,7 +102,6 @@ sub get_current_state {
 sub set_current_state {
     my ($rid,$session,$rulename,$val) = @_;
     my $logger = get_logger();
-    $rid = Kynetx::Rids::get_rid($rid);
     my $state_key = $rulename . ':sm_current';
     $logger->trace("Set SM current: ", $state_key);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
@@ -123,7 +121,6 @@ sub set_current_state {
 sub delete_current_state {
     my ($rid,$session,$rulename) = @_;
     my $logger = get_logger();
-    $rid = Kynetx::Rids::get_rid($rid);
     my $state_key = $rulename . ':sm_current';
     $logger->trace("Del SM current: ", $state_key);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
@@ -138,7 +135,6 @@ sub delete_current_state {
 sub purge_state_from_edata {
     my ($rid,$session,$rulename) = @_;
     my $logger = get_logger();
-    $rid = Kynetx::Rids::get_rid($rid);
     my $state_key = $rulename . ':sm_current';
     $logger->trace("Del SM current: ", $state_key);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
@@ -152,7 +148,6 @@ sub purge_state_from_edata {
 sub get_event_env {
 	my ($rid,$session,$rulename) = @_;
     my $logger = get_logger();
-    $rid = Kynetx::Rids::get_rid($rid);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $key = {		
         "rid" => $rid,
@@ -170,7 +165,6 @@ sub reset_event_env {
     my $logger = get_logger();
     $logger->trace("Reset event env: ", $rid);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-    $rid = Kynetx::Rids::get_rid($rid);
     my $key = {
         "rid" => $rid,
         "ken" => $ken,
@@ -182,7 +176,6 @@ sub reset_event_env {
 
 sub inc_group_counter {
 	my ($rid,$session,$rulename,$state) = @_;
-    $rid = Kynetx::Rids::get_rid($rid);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $query = {
 		"rid" => $rid,
@@ -209,7 +202,6 @@ sub inc_group_counter {
 sub push_aggregator {
 	my ($rid,$session,$rulename,$state,$vals) = @_;
 	my $logger = get_logger();
-    $rid = Kynetx::Rids::get_rid($rid);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $query = {
 		"rid" => $rid,
@@ -248,7 +240,6 @@ sub push_aggregator {
 sub reset_group_counter {
 	my ($rid,$session,$rulename,$state) = @_;
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-    $rid = Kynetx::Rids::get_rid($rid);
 	my $query = {
 		"rid" => $rid,
 		"ken" => $ken,
@@ -273,7 +264,6 @@ sub reset_group_counter {
 
 sub repeat_group_counter {
 	my ($rid,$session,$rulename,$state,$current,$null_state) = @_;
-    $rid = Kynetx::Rids::get_rid($rid);
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $query = {
 		"rid" => $rid,
@@ -302,7 +292,6 @@ sub get_timer_start {
 	my ($rid,$session,$rulename,$start) = @_;
 	my $logger = get_logger();
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-    $rid = Kynetx::Rids::get_rid($rid);
 	my $query = {
 		"rid" => $rid,
 		"ken" => $ken,
@@ -315,41 +304,39 @@ sub get_timer_start {
 
 sub next_event_from_list {
   my ($rid,$session,$event_list_name) = @_;
-  my $logger = get_logger();
-  $logger->debug("In next_event_from_list");
-  my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-  $rid = Kynetx::Rids::get_rid($rid);
-  my $query = {
-	       "rid" => $rid,
-	       "ken" => $ken,
-	       "key" => $event_list_name		
-	      };
-  my $result = Kynetx::MongoDB::atomic_pop_value(STATE_COLLECTION,$query);
-  if (defined $result) {
-    $logger->trace("$event_list_name found in ",STATE_COLLECTION, sub {Dumper($result)});
-    $logger->debug("Event list found");
-    return $result;
-  } else {
-    my $val = Kynetx::MongoDB::get_value(COLLECTION,$query);
-    if (defined $val) {
-      my $object = $val->{'value'};
-      $logger->trace("$event_list_name found in ",COLLECTION,sub {Dumper($object)});
-      if (ref $object eq "ARRAY") {
-	$result = shift @{$object};
-	#put what is left of the event list into STATE_COLLECTION
-	Kynetx::MongoDB::atomic_push_value(STATE_COLLECTION,$query,$object);
-	Kynetx::MongoDB::delete_value(COLLECTION,$query);
-      } else {
-	$result = $object;
-      }
-      return $result;
-    } else {
-      $logger->debug("Event list not found");
-      return undef;
-    }
-  }
-  return $result;
-	
+    my $logger = get_logger();
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $query = {
+		"rid" => $rid,
+		"ken" => $ken,
+		"key" => $event_list_name		
+	};
+	my $result = Kynetx::MongoDB::atomic_pop_value(STATE_COLLECTION,$query);
+	if (defined $result) {
+		$logger->trace("$event_list_name found in ",STATE_COLLECTION, sub {Dumper($result)});
+		return $result;
+	} else {
+		my $val = Kynetx::MongoDB::get_value(COLLECTION,$query);
+		if (defined $val) {
+			my $object = $val->{'value'};
+			$logger->trace("$event_list_name found in ",COLLECTION,sub {Dumper($object)});
+			if (ref $object eq "ARRAY") {
+				$result = shift @{$object};
+				#put what is left of the event list into STATE_COLLECTION
+				Kynetx::MongoDB::atomic_push_value(STATE_COLLECTION,$query,$object);
+				Kynetx::MongoDB::delete_value(COLLECTION,$query);
+			} else {
+				$result = $object;
+			}
+			return $result;
+		} else {
+			$logger->debug("Event list not found");
+			return undef;
+		}
+		
+	}
+	return $result;
+
 }
 
 sub add_event_to_list {
@@ -357,7 +344,6 @@ sub add_event_to_list {
     my $logger = get_logger();
     $logger->debug("In add_event_to_list");
     my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-    $rid = Kynetx::Rids::get_rid($rid);
     my $query = {
 		"rid" => $rid,
 		"ken" => $ken,
