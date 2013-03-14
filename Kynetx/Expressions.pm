@@ -1458,8 +1458,8 @@ sub cachable_expr {
     return 1;
   } elsif($expr->{'type'} eq 'qualified' && (
 	  $expr->{'source'} eq 'meta' && 
-	  ($expr->{'predicate'} eq 'rid' || 
-	   $expr->{'predicate'} eq 'moduleRID'
+	  ($expr->{'predicate'} eq 'rid' 
+	  #|| $expr->{'predicate'} eq 'moduleRID'
 	  ))
 	 ) {
     return 1;
