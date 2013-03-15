@@ -225,12 +225,7 @@ sub calculate_rid_list {
   } else { 
     $rid_list = get_ridlist( $req_info, $id_token,$ken );
     $logger->debug( "Retrieved rid_list: ", print_rids($rid_list) );
-<<<<<<< HEAD
-    # cache this...
-    $memd->set( $rid_list_key, $rid_list );
-=======
 
->>>>>>> 8e4ec6454ffc32a3c04dec9527606e7f55b8a3b7
     # update key
     $eventtree_key = mk_eventtree_key($rid_list);
   }
