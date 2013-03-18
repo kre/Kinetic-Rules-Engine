@@ -303,7 +303,7 @@ sub get_timer_start {
 }
 
 sub next_event_from_list {
-	my ($rid,$session,$event_list_name) = @_;
+  my ($rid,$session,$event_list_name) = @_;
     my $logger = get_logger();
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $query = {
@@ -336,12 +336,13 @@ sub next_event_from_list {
 		
 	}
 	return $result;
-	
+
 }
 
 sub add_event_to_list {
 	my ($rid, $session,	$event_list_name, $json) = @_;
     my $logger = get_logger();
+    $logger->debug("In add_event_to_list");
     my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
     my $query = {
 		"rid" => $rid,
@@ -351,8 +352,8 @@ sub add_event_to_list {
     $logger->trace("Add event to $event_list_name: ", sub {Dumper($query)});
     $logger->trace("$event_list_name is: $json");
     my $status = Kynetx::MongoDB::atomic_push_value(STATE_COLLECTION,$query,$json);
-    $logger->debug("Add event to list returned: ", sub {Dumper($status)});
     my $temp = Kynetx::MongoDB::get_value(STATE_COLLECTION,$query);
+    $logger->debug("Add event to list returned: ", sub {Dumper($status)});
     $logger->trace("State Collection query: ", sub {Dumper($temp)});
 }
 

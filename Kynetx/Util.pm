@@ -95,6 +95,7 @@ intersection
 to_seconds
 split_re
 ll
+correct_bool
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -806,6 +807,16 @@ sub ll {
 	$logger->debug(@_);
 }
 
+# used to prepare internal values for URI encoding
+sub correct_bool {
+  my($val) = @_;
+  # if a JSON bool value, return true or false; otherwise return unchanged.  
+  if (JSON::XS::is_bool $val) {
+    return $val ? 'true' : 'false'
+  } else {
+    return $val
+  }
+}
 
 # see Kynetx::Test::gen_req_info
 sub dummy_req_info {

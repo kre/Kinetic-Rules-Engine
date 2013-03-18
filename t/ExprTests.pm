@@ -3471,6 +3471,43 @@ add_expr_testcase(
     0);
 
 
+$re1 = extend_rule_env(['foo','stringFoo'],
+		       [[["test",80],["foo",100]],
+			'[["test",80],["foo",100]]'
+		       ],
+		       $rule_env);
+
+
+$krl_src = <<_KRL_;
+pre {
+  foo = [["test", 80], ["foo", 100]];
+  stringFoo = foo.encode(); 
+}
+_KRL_
+
+$js = <<_JS_;
+var foo = [['test', 80], ['foo', 100]];
+var stringFoo ='[["test", 80], ["foo", 100]]';
+_JS_
+
+add_expr_testcase(
+    $krl_src,
+    'pre',
+    $js,
+    $re1,
+    0
+   );
+
+$krl_src = <<_KRL_;
+myHash{["b", "f", "g",1]}
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    '{}',
+    mk_expr_node('str', '3.b'),
+    0);;
+
 
 	 
 #----------------------------------------------------------------------------

@@ -89,6 +89,9 @@ pre {
   k = [100, 1, 10, 1000, 21, 92];
   m = [76];
 
+  simple_a_of_a = [["test", 80], ["foo", 100]];
+  simple_map = {"test": 80, "foo": 100};
+
   mixed_array = [1, 'abe', re/foo.*/, true, false, 56];
 
   edo = [{"a" : 2}, {"b" : 26}, {"c" : 5}, {"d" : 16}, {"e": 29}];
@@ -2130,6 +2133,24 @@ $x[$i] = {
 };
 $d[$i] = 0;
 $i++;
+
+##en
+$e[$i] = q/simple_map.encode()/;
+$x[$i] = {
+    'val' => '{"test":80,"foo":100}',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/simple_a_of_a.encode()/;
+$x[$i] = {
+    'val' => '[["test",80],["foo",100]]',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
 
 
 # New pick argument to retain array

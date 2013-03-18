@@ -240,7 +240,7 @@ sub send_event {
 
   my $sm = $args->[0];
 
-  $logger->debug("Subscription map: ", sub { Dumper $sm });
+#  $logger->debug("Subscription map: ", sub { Dumper $sm });
 
   my $esl_key = $config->{'esl_key'} || '_UNDEFINED_KEY_';
 
@@ -254,6 +254,8 @@ sub send_event {
 	    mk_sky_esl($token);
 
   my $attrs = $config->{'attrs'};
+
+#  $logger->debug("Attributes as given: ", sub { Dumper $attrs});
   $metric->add_tag(keys %{$attrs} );
 
   # merge in the domain and type
@@ -265,12 +267,15 @@ sub send_event {
   $cv->begin;
   
   my $body = join('&', 
-		  map( "$_=" . URI::Escape::uri_escape_utf8( $attrs->{$_} ), 
+		  map( "$_=" . URI::Escape::uri_escape_utf8( correct_bool($attrs->{$_}) ), 
 		       keys %{$attrs} 
 		     )
 		 );
 
   $logger->debug("Sending event $args->[1]:$args->[2] to ESL $esl");
+
+#  $logger->debug("Body of event: ", sub { Dumper $body});
+
 
   my $request;
   $request = AnyEvent::HTTP::http_request(
@@ -313,6 +318,7 @@ sub send_event {
 	$metric->stop_and_store();
 
 }
+
 
 
 sub mk_sky_esl {
