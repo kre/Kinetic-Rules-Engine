@@ -110,10 +110,15 @@ sub get_ridlist {
   my $logger     = get_logger();
   my $rid        = get_rid( $req_info->{'rid'} );
   unless ($ken) {
+    $logger->debug("Find ken from token: $id_token");
     $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($id_token);
   }
   my $rid_struct = Kynetx::Modules::PCI::_installed_rulesets($ken);
+  $logger->debug("Token: $id_token");
+  $logger->debug("Ken: $ken");
   my $rid_list   = $rid_struct->{'rids'};
+  $logger->debug("Rid struct: ", sub {Dumper($rid_struct)});
+  $logger->debug("Rid list: ", sub {Dumper($rid_list)});
   if ( defined $rid_list ) {
     my $temp = ();
     foreach my $ridstring ( @{$rid_list} ) {
