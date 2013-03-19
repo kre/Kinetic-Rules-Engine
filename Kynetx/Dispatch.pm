@@ -152,6 +152,11 @@ sub get_ridlist {
       push( @{$temp}, $map );
     }
     $rid_list = $temp;
+    # cache this...
+    my $rid_list_key = mk_ridlist_key($ken);
+    my $memd         = get_memd();
+    $memd->set( $rid_list_key, $rid_list );
+    return $rid_list;
   }
   else {
     return old_repository($req_info, $id_token, $ken);

@@ -483,16 +483,16 @@ sub add_ruleset_to_account {
 		my $installed = Kynetx::Persistence::KPDS::add_ruleset($ken,\@ridlist);
 		
 		# Grab installed rulesets from legacy repository
-		my $id_token = Kynetx::Persistence::KToken::get_default_token($ken);
-		my $legacy = Kynetx::Dispatch::old_repository($req_info,$id_token,$ken);
-		for my $ruleset (@{$legacy}) {
-		  my $orid = $ruleset->{'rid'};
-		  my $over = $ruleset->{'kinetic_app_version'} || 'prod';
-		  if ($orid) {
-		    my $fqrid = $orid . '.' . $over;
-		    Kynetx::Persistence::KPDS::add_ruleset($ken,$fqrid);
-		  }
-		}
+#		my $id_token = Kynetx::Persistence::KToken::get_default_token($ken);
+#		my $legacy = Kynetx::Dispatch::old_repository($req_info,$id_token,$ken);
+#		for my $ruleset (@{$legacy}) {
+#		  my $orid = $ruleset->{'rid'};
+#		  my $over = $ruleset->{'kinetic_app_version'} || 'prod';
+#		  if ($orid) {
+#		    my $fqrid = $orid . '.' . $over;
+#		    Kynetx::Persistence::KPDS::add_ruleset($ken,$fqrid);
+#		  }
+#		}
 		
 		return {
 			'nid' => $userid,
