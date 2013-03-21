@@ -153,9 +153,9 @@ sub get_ridlist {
     }
     $rid_list = $temp;
     # cache this...
-    my $rid_list_key = mk_ridlist_key($ken);
-    my $memd         = get_memd();
-    $memd->set( $rid_list_key, $rid_list );
+    #my $rid_list_key = mk_ridlist_key($ken);
+    #my $memd         = get_memd();
+    #$memd->set( $rid_list_key, $rid_list );
     return $rid_list;
   }
   else {
