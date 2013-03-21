@@ -190,9 +190,9 @@ sub old_repository {
     #$logger->debug( "Rid struct: ", Kynetx::Rids::print_rids($rid_list));
 
     # cache this...
-    my $rid_list_key = mk_ridlist_key($ken);
-    my $memd         = get_memd();
-    $memd->set( $rid_list_key, $rid_list );
+    #my $rid_list_key = mk_ridlist_key($ken);
+    #my $memd         = get_memd();
+    #$memd->set( $rid_list_key, $rid_list );
     return $rid_list;
   }
   else {
