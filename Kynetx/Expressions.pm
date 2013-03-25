@@ -32,6 +32,7 @@ use Data::Dumper;
 use JSON::XS;
 use Storable qw/freeze/;
 use Digest::MD5 qw/md5_hex/;
+use Encode qw/encode_utf8/;
 use Clone qw/clone/;
 use Data::Diver qw(Dive);
 
@@ -1507,7 +1508,7 @@ sub eval_str {
     my $str = ref $expr eq 'HASH' ? $expr->{'val'} : $expr;
 
 #    $logger->debug("Original expr: ", sub {Dumper $expr});
-    my $str_sig = md5_hex($str);
+    my $str_sig = md5_hex(encode_utf8($str));
 
     $string_array ||= [];
     $expr_array ||= [];
