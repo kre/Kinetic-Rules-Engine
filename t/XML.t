@@ -247,7 +247,7 @@ add_cache_for_testcase($krl_src, 5*60*60*24*365, "cache_dataset_for 5 years");
 # aaa.json
     $krl_src = <<_KRL_;
 global {
-   dataset fizz_data:JSON <- "http://frag.kobj.net/clients/cs_test/aaa.json";
+   dataset fizz_data:JSON <- "http://cs.kobj.net/blue/event/web/pageview/a144x165";
 }
 _KRL_
 add_dataset_example_testcase($krl_src,get_local_file("aaa.json"),"URL file: aaa.json",0);
@@ -255,7 +255,7 @@ add_dataset_example_testcase($krl_src,get_local_file("aaa.json"),"URL file: aaa.
 # books.json
     $krl_src = <<_KRL_;
 global {
-   dataset fozz_data:JSON <- "http://frag.kobj.net/clients/cs_test/books.json";
+   dataset fozz_data:JSON <- "http://cs.kobj.net/blue/event/web/pageview/a144x166";
 }
 _KRL_
 add_dataset_example_testcase($krl_src,get_local_file("books.json"),"URL file: books.json",0);
@@ -263,7 +263,7 @@ add_dataset_example_testcase($krl_src,get_local_file("books.json"),"URL file: bo
 # ktut.json
     $krl_src = <<_KRL_;
 global {
-   dataset fazz_data:JSON <- "http://frag.kobj.net/clients/cs_test/ktut.json";
+   dataset fazz_data:JSON <- "http://cs.kobj.net/blue/event/web/pageview/a144x167";
 }
 _KRL_
 add_dataset_example_testcase($krl_src,get_local_file("ktut.json"),"URL file: ktut.json",0);
@@ -271,7 +271,7 @@ add_dataset_example_testcase($krl_src,get_local_file("ktut.json"),"URL file: ktu
 # aaa.json
     $krl_src = <<_KRL_;
 global {
-   dataset fuzz_data <- "http://frag.kobj.net/clients/cs_test/aaa.json";
+   dataset fuzz_data <- "http://cs.kobj.net/blue/event/web/pageview/a144x165";
 }
 _KRL_
 add_dataset_example_testcase($krl_src,get_local_file("aaa.json"),"URL file: aaa.json",0);
@@ -279,7 +279,7 @@ add_dataset_example_testcase($krl_src,get_local_file("aaa.json"),"URL file: aaa.
 # books.json
     $krl_src = <<_KRL_;
 global {
-   dataset fozz_data:JSON <- "http://frag.kobj.net/clients/cs_test/books.json" cachable;
+   dataset fozz_data:JSON <- "http://cs.kobj.net/blue/event/web/pageview/a144x166" cachable;
 }
 _KRL_
 add_dataset_example_testcase($krl_src,get_local_file("books.json"),"URL file: books.json",0);
@@ -287,7 +287,7 @@ add_dataset_example_testcase($krl_src,get_local_file("books.json"),"URL file: bo
 # ktut.json
     $krl_src = <<_KRL_;
 global {
-   dataset fazz_data:JSON <- "http://frag.kobj.net/clients/cs_test/ktut.json" cachable for 30 minutes;
+   dataset fazz_data:JSON <- "http://cs.kobj.net/blue/event/web/pageview/a144x167" cachable for 30 minutes;
 }
 _KRL_
 add_dataset_example_testcase($krl_src,get_local_file("ktut.json"),"URL file: ktut.json",0);
@@ -295,7 +295,7 @@ add_dataset_example_testcase($krl_src,get_local_file("ktut.json"),"URL file: ktu
 # books.xml
     $krl_src = <<_KRL_;
 global {
-   dataset fixx_data:XML <- "http://frag.kobj.net/clients/cs_test/books.xml";
+   dataset fixx_data:XML <- "http://cs.kobj.net/blue/event/web/pageview/a144x164";
 }
 _KRL_
 add_dataset_example_testcase($krl_src,get_local_file("books.xml"),"URL file: books.xml",0);
@@ -303,7 +303,7 @@ add_dataset_example_testcase($krl_src,get_local_file("books.xml"),"URL file: boo
 # books.xml
     $krl_src = <<_KRL_;
 global {
-   dataset fixx_data:XML <- "http://frag.kobj.net/clients/cs_test/books.xml" cachable for 5 weeks;
+   dataset fixx_data:XML <- "http://cs.kobj.net/blue/event/web/pageview/a144x164" cachable for 5 weeks;
 }
 _KRL_
 add_dataset_example_testcase($krl_src,get_local_file("books.xml"),"URL file: books.xml",0);
@@ -323,8 +323,8 @@ is_string_nows(get_dataset($krl->[0],$req_info),get_local_file("books.xml"),"Loc
 
 $krl_src = <<_KRL_;
 global {
-   dataset fizz_data:XML <- "http://frag.kobj.net/clients/cs_test/books.xml";
-   dataset fozz_data:XML <- "http://frag.kobj.net/clients/cs_test/books.xml" cachable;
+   dataset fizz_data:XML <- "http://cs.kobj.net/blue/event/web/pageview/a144x164";
+   dataset fozz_data:XML <- "http://cs.kobj.net/blue/event/web/pageview/a144x164" cachable;
 }
 _KRL_
 $krl = Kynetx::Parser::parse_global_decls($krl_src);
@@ -339,7 +339,7 @@ my ($rule_env, $args);
 SKIP: {
     my $ua = LWP::UserAgent->new;
 
-    my $check_url = "http://frag.kobj.net/clients/cs_test/books.xml";
+    my $check_url = "http://cs.kobj.net/blue/event/web/pageview/a144x164";
 
 #    diag "Checking $check_url";
     my $response = $ua->get($check_url);
@@ -347,7 +347,7 @@ SKIP: {
 
     $krl_src = <<_KRL_;
 global {
-   dataset fizz_data:XML <- "http://frag.kobj.net/clients/cs_test/books.xml";
+   dataset fizz_data:XML <- "http://cs.kobj.net/blue/event/web/pageview/a144x164";
 }
 _KRL_
     $krl = Kynetx::Parser::parse_global_decls($krl_src);

@@ -145,7 +145,7 @@ SKIP: {
 
 
     # test DESCRIBE function
-    my $url_describe_3 = "$ruleset_base/describe/$rid?$rid:kynetx_app_version=dev";
+    my $url_describe_3 = "$ruleset_base/describe/$rid?$rid:kinetic_app_version=dev";
 
     diag "Testing console with $url_describe_3";
 
@@ -159,7 +159,7 @@ SKIP: {
 
 
     # test DESCRIBE function
-    my $url_describe_4 = "$ruleset_base/describe/$rid?$rid:kynetx_app_version=dev&flavor=json";
+    my $url_describe_4 = "$ruleset_base/describe/$rid?$rid:kinetic_app_version=dev&flavor=json";
 
 #    diag "Testing console with $url_describe_4";
 
@@ -280,7 +280,7 @@ SKIP: {
     # test_rule_3 shouldn't fire...inactive
     $mech->content_unlike('/test_rule_3/s');
 
-    $mech->content_contains('kobj_weather');
+    #$mech->content_contains('kobj_weather');
 
     # globals
     $mech->content_contains('var foobar = 5;');
@@ -304,14 +304,14 @@ SKIP: {
     $mech->content_like('/function callBacks/');
     $mech->content_like('/function\(uniq, cb,.+function\(uniq, cb,/s');
 
-    $mech->content_contains('kobj_weather');
+    #$mech->content_contains('kobj_weather');
 
     # globals
     $mech->content_contains('var foobar = 5;');
 
     $mech->content_contains(q/KOBJ['data']['public_timeline'] = {/);
     $mech->content_lacks("KOBJ['data']['cached_timeline'] =");
-    $test_count += 8;
+    $test_count += 6;
 
     my $url_5 = "$ruleset_base/eval/$rid/1237475272090.js?caller=http%3A//search.barnesandnoble.com/booksearch/isbnInquiry.asp%3FEAN%3D9781400066940&referer=http%3A//www.barnesandnoble.com/index.asp&kvars=&title=Stealing MySpace, Julia Angwin, Book - Barnes & Noble";
 

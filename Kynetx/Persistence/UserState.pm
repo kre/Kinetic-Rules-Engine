@@ -316,26 +316,30 @@ sub next_event_from_list {
 		$logger->trace("$event_list_name found in ",STATE_COLLECTION, sub {Dumper($result)});
 		return $result;
 	} else {
-		my $val = Kynetx::MongoDB::get_value(COLLECTION,$query);
-		if (defined $val) {
-			my $object = $val->{'value'};
-			$logger->trace("$event_list_name found in ",COLLECTION,sub {Dumper($object)});
-			if (ref $object eq "ARRAY") {
-				$result = shift @{$object};
-				#put what is left of the event list into STATE_COLLECTION
-				Kynetx::MongoDB::atomic_push_value(STATE_COLLECTION,$query,$object);
-				Kynetx::MongoDB::delete_value(COLLECTION,$query);
-			} else {
-				$result = $object;
-			}
-			return $result;
-		} else {
-			$logger->debug("Event list not found");
-			return undef;
-		}
-		
+	  $logger->debug("Event list not found");
+	  return undef;
 	}
-	return $result;
+#	} else {
+#		my $val = Kynetx::MongoDB::get_value(COLLECTION,$query);
+#		if (defined $val) {
+#			my $object = $val->{'value'};
+#			$logger->trace("$event_list_name found in ",COLLECTION,sub {Dumper($object)});
+#			if (ref $object eq "ARRAY") {
+#				$result = shift @{$object};
+#				#put what is left of the event list into STATE_COLLECTION
+#				Kynetx::MongoDB::atomic_push_value(STATE_COLLECTION,$query,$object);
+#				Kynetx::MongoDB::delete_value(COLLECTION,$query);
+#			} else {
+#				$result = $object;
+#			}
+#			return $result;
+#		} else {
+#			$logger->debug("Event list not found");
+#			return undef;
+#		}
+#		
+#	}
+#	return $result;
 
 }
 
@@ -352,9 +356,9 @@ sub add_event_to_list {
     $logger->trace("Add event to $event_list_name: ", sub {Dumper($query)});
     $logger->trace("$event_list_name is: $json");
     my $status = Kynetx::MongoDB::atomic_push_value(STATE_COLLECTION,$query,$json);
-    my $temp = Kynetx::MongoDB::get_value(STATE_COLLECTION,$query);
-    $logger->debug("Add event to list returned: ", sub {Dumper($status)});
-    $logger->trace("State Collection query: ", sub {Dumper($temp)});
+#    my $temp = Kynetx::MongoDB::get_value(STATE_COLLECTION,$query);
+#    $logger->debug("Add event to list returned: ", sub {Dumper($status)});
+#    $logger->trace("State Collection query: ", sub {Dumper($temp)});
 }
 
 
