@@ -36,7 +36,7 @@ use Storable 'dclone';
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
@@ -46,6 +46,7 @@ use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
 use Kynetx::Expressions qw/:all/;
 use Kynetx::Response qw/:all/;
+use Kynetx::Persistence::KPDS qw/:all/;
 
 
 use Kynetx::FakeReq qw/:all/;
@@ -234,7 +235,7 @@ $test_count++;
 $eci = $result->{'cid'};
 $uid = $result->{'nid'};
 
-$logger->debug("Username: ", sub {Dumper($uname)});
+$logger->trace("Username: ", sub {Dumper($uname)});
 
 $description = "Check for username exists";
 $args = $uname;
@@ -262,7 +263,7 @@ isnt($result,undef,$description);
 $test_count++;
 
 my $eci2 = $result->{'cid'};
-$logger->debug("Dep: ",sub {Dumper($eci2)});
+$logger->trace("Dep: ",sub {Dumper($eci2)});
 
 $description = "Create another dependent account";
 $args = {
@@ -274,6 +275,7 @@ $args = {
 $result = Kynetx::Modules::PCI::new_account($my_req_info,$rule_env,$session,$rule_name,"foo",[$eci,$args]);
 isnt($result,undef,$description);
 $test_count++;
+my $eci3 = $result->{'cid'};
 
 $description = "Create a dependent account to a dependent account";
 $args = {
@@ -320,13 +322,43 @@ $result = Kynetx::Modules::PCI::list_parent($my_req_info,$rule_env,$session,$rul
 isnt($result,undef,$description);
 $test_count++;
 
+$description = "Get parent of dependent account";
+$args = $eci3;
+$result = Kynetx::Modules::PCI::list_parent($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+isnt($result,undef,$description);
+$test_count++;
+
+
+$description = "Change owner of account";
+$args = [$eci3,$eci2];
+$result = Kynetx::Modules::PCI::set_parent($my_req_info,$rule_env,$session,$rule_name,"foo",$args);
+my $p_account = Kynetx::Modules::PCI::list_parent($my_req_info,$rule_env,$session,$rule_name,"foo",[$eci3]);
+$logger->trace("New parent: ",sub {Dumper($p_account)});
+
+$description = "Is child added to $eci2";
+$expected = bag([ignore(),$new_uname . 2,"_LOGIN"],
+                [ignore(),$new_uname. "dep","_LOGIN"]);
+$args = $eci2;
+$result = Kynetx::Modules::PCI::list_children($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+$logger->trace("Children of $eci2: ", sub {Dumper($result)});
+
+$description = "Is child removed from $eci";
+$expected = [[ignore(),$new_uname,"_LOGIN"]];
+$args = $eci;
+$result = Kynetx::Modules::PCI::list_children($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+$logger->trace("Children of $eci: ", sub {Dumper($result)});  
+  
+  
 ($js, $rule_env) = 
  Kynetx::Keys::insert_key(
   $my_req_info,
   $rule_env,
   'system_credentials',
   $dev_creds);
-  
   
   
 $description = "Use embedded keys to identify developer and permissions";
@@ -339,7 +371,7 @@ $result = Kynetx::Modules::PCI::developer_authorized($my_req_info,$rule_env,$ses
 is($result,0,$description);
 $test_count++;
 
-$logger->debug("Account authorizations: ");
+$logger->trace("Account authorizations: ");
 
 
 $description = "Authorize KEN for username $uname";
