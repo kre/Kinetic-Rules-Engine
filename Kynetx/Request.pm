@@ -82,7 +82,7 @@ sub build_request_env {
 
   # manage optional params
   # The ID token comes in as a header in Blue API
-  my $id_token = $options->{'id_token'} || $r->headers_in->{'Kobj-Session'};
+  my $id_token = $options->{'id_token'} || $req->param('_eci') || $r->headers_in->{'Kobj-Session'};
   my $api      = $options->{'api'}      || 'ruleset';
 
   # build initial envv
@@ -145,6 +145,7 @@ sub build_request_env {
     $logger->debug( "Param $n -> ", $req->param($n), " ", $enc );
     my $not_attr = {
       '_rids'   => 1,
+      '_eci'   => 1,
       'referer' => 1
     };
     if ( $not_attr->{$n} ) {

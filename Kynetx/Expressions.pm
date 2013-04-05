@@ -617,8 +617,18 @@ sub eval_application {
 
 #  $logger->debug("Evaling args ", sub {Dumper $expr->{'args'}});
 
+  my $arg_vals;
+  my $arg_names;
+  if (ref $expr->{'args'} eq 'HASH') { 
+    $arg_vals = [values (%{  $expr->{'args'} })];
+    $arg_names = [keys (%{  $expr->{'args'} })];
+  } else { # array
+     $arg_vals = $expr->{'args'};
+     $arg_names = $closure->{'val'}->{'vars'}
+  }
 
-  my $args = Kynetx::Expressions::eval_rands($expr->{'args'},
+
+  my $args = Kynetx::Expressions::eval_rands($arg_vals,
 					      $rule_env,
 					      $rule_name,
 					      $req_info,
@@ -631,7 +641,7 @@ sub eval_application {
 
 #  $logger->debug("Executing function with args ", sub {Dumper $nargs});
 
-  my $closure_env = extend_rule_env($closure->{'val'}->{'vars'},
+  my $closure_env = extend_rule_env($arg_names,
 				    $nargs,
 				    $closure->{'val'}->{'env'});
 
