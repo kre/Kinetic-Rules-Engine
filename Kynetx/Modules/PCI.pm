@@ -26,13 +26,14 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 use Kynetx::Util qw(ll);
 use Kynetx::Rids qw/:all/;
-use Kynetx::Environments qw/:all/;
-use Kynetx::Modules::Random;
+#use Kynetx::Environments qw/:all/;
+#use Kynetx::Modules::Random;
 use Digest::SHA qw/hmac_sha1 hmac_sha1_hex hmac_sha1_base64
 				hmac_sha256 hmac_sha256_hex hmac_sha256_base64/;
 use Crypt::RC4::XS;
 use Email::MIME;
 use Encode;
+use Kynetx::Keys qw/:all/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -451,6 +452,31 @@ sub list_parent {
   
 }
 $funcs->{'list_parent'} = \&list_parent;
+
+sub set_parent {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	return 0 unless ( system_authorized($req_info, $rule_env, $session));
+	my $eci = $args->[0];
+	my $new_owner_eci = $args->[1];
+	$logger->debug("T eci: $eci");
+	$logger->debug("D eci: $new_owner_eci");	
+	my $target_ken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
+	my $new_ken = Kynetx::Persistence::KEN::ken_lookup_by_token($new_owner_eci);
+	my $parent = Kynetx::Persistence::KEN::get_ken_value($target_ken,'parent');
+	$logger->debug("T ken: $target_ken");
+	$logger->debug("D ken: $new_ken");	
+	$logger->debug("Parent ken: $parent");	
+	if ($parent eq $new_ken) {
+	  return $new_owner_eci;
+	} else {
+	  Kynetx::Persistence::KPDS::link_dependent_cloud($new_ken,$target_ken);
+	  Kynetx::Persistence::KPDS::unlink_dependent_cloud($parent,$target_ken);
+	  return Kynetx::Persistence::KToken::get_default_token($new_ken);
+	}
+  
+}
+$funcs->{'set_parent'} = &set_parent;
 
 ############################# Rulesets
 
@@ -978,5 +1004,6 @@ sub make_pass_phrase {
 	}
 	return undef;
 }
+
 
 1;

@@ -236,6 +236,12 @@ sub delete_cloud {
 	Kynetx::Persistence::KToken::delete_ken_tokens($ken);
 }
 
+sub unlink_dependent_cloud {
+  my ($parent,$target) = @_;
+  my $hkey = ['dependents'];
+  Kynetx::Persistence::KPDS::remove_kpds_set_element($parent,$hkey,$target);
+}
+
 sub link_dependent_cloud {
 	my ($ken,$dependent) = @_;
 	my $hkey = ['dependents'];

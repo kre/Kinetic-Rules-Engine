@@ -37,7 +37,8 @@
 						point: { 
 							events: {
 								click: function(event) {
-									var id = event.currentTarget.config.id;
+								    //console.log(event.currentTarget);
+									var id = event.currentTarget.id;
 									var s = foo[id];
 									var str = "<table>";
 									var main_ref = window.location.href;
@@ -103,7 +104,8 @@
 					},
 				tooltip: {
 					formatter: function() {
-					    var id = this.point.config.id;
+					    //console.log(this.point);
+					    var id = this.point.id;
 						//console.log(foo[id]);
 						return '<b>' + this.series.name + '</b><br/>' + 
 							this.x + ' : ' + this.y + ' ';

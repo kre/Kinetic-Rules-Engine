@@ -70,8 +70,8 @@ for my $module ( @mods ) {
     $modules{$module} = 1 unless $pragmas->{$module};
 }
 
-
-@mods = keys %modules;
+# Sort this because smoke dev/use.t hates when PCI.pm comes first
+@mods = sort keys %modules;
 
 #diag("Using the following modules");
 #diag(join "\n", @mods);
@@ -81,6 +81,7 @@ plan tests => ($#mods+1);
 
 
 for my $module ( @mods ) {
+    #diag $module;
     require_ok($module);
 }
 
