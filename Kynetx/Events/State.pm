@@ -1577,6 +1577,7 @@ sub reset_state {
 	my $self = shift;
 	my ($rid,$session,$rulename, $event_list_name,$current, $next) = @_;
 	my $logger = get_logger();
+  $logger->debug("In reset_state");
 	
 	if ($self->is_final($next)) {
 		$logger->trace("Final state: $next");
