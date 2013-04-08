@@ -513,6 +513,7 @@ sub eval_module {
 				     'species' => 'module undefined'
 				    }
 				   );
+        ###TAKE ME OUT; once we see the rule env for this
 	$logger->info("Didn't find $function for $source in ", sub{ Dumper $rule_env });
 
     }
