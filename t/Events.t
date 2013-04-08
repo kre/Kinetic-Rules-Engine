@@ -525,7 +525,7 @@ SKIP: {
 
      $test_count += test_event_plan($submit_test_plan);
 
-     my $submit_test_plan =
+     $submit_test_plan =
        [{'url' => "$dn/web/submit/cs_test_1?element=%23form_2&login=foo&cs_test_1:flop=goo",
  	'type' => 'text/javascript',
  	'like' => ["/var foobar = 4/",
