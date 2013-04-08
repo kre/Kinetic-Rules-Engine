@@ -239,9 +239,11 @@ sub get_value {
     my $cached = get_cache($collection,$var);
     if (defined $cached) {
         $logger->trace("Found $collection variable in cache (",sub {Dumper($cached)},",");
+        $logger->debug("Found $collection variable in cache");
         return $cached;
     }  else {
         $logger->trace("$keystring not in cache");
+        $logger->debug("$collection variable NOT cached");
     }
     my $c = get_collection($collection);
     if ($c) {
