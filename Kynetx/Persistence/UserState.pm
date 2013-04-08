@@ -129,7 +129,7 @@ sub delete_current_state {
         "rid" => $rid,
         "key" => $state_key};
     Kynetx::MongoDB::delete_value(STATE_COLLECTION,$key);
-    reset_event_env($rid,$session,$rulename);	
+    reset_event_env($rid,$session,$rulename, $ken);	
 }
 
 sub purge_state_from_edata {
@@ -161,10 +161,12 @@ sub get_event_env {
 }
 
 sub reset_event_env {
-	my ($rid,$session,$rulename) = @_;
+	my ($rid,$session,$rulename, $ken) = @_;
+
+    $ken ||= Kynetx::Persistence::KEN::get_ken($session,$rid);
+    
     my $logger = get_logger();
     $logger->trace("Reset event env: ", $rid);
-	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
     my $key = {
         "rid" => $rid,
         "ken" => $ken,
