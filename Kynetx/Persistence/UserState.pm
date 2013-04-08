@@ -307,9 +307,9 @@ sub get_timer_start {
 }
 
 sub next_event_from_list {
-  my ($rid,$session,$event_list_name) = @_;
-    my $logger = get_logger();
-	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+  my ($rid,$session,$event_list_name,$ken) = @_;
+  my $logger = get_logger();
+	$ken ||= Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $query = {
 		"rid" => $rid,
 		"ken" => $ken,
@@ -348,10 +348,10 @@ sub next_event_from_list {
 }
 
 sub add_event_to_list {
-	my ($rid, $session,	$event_list_name, $json) = @_;
+	my ($rid, $session,	$event_list_name, $json, $ken) = @_;
     my $logger = get_logger();
     $logger->debug("In add_event_to_list");
-    my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+    $ken ||= Kynetx::Persistence::KEN::get_ken($session,$rid);
     my $query = {
 		"rid" => $rid,
 		"ken" => $ken,

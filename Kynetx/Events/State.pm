@@ -1575,10 +1575,10 @@ sub _tsig {
 
 sub reset_state {
 	my $self = shift;
-	my ($rid,$session,$rulename, $event_list_name,$current, $next) = @_;
+	my ($rid,$session,$rulename, $event_list_name,$current,$next,$ken) = @_;
 	my $logger = get_logger();
 
-	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+	my $ken ||= Kynetx::Persistence::KEN::get_ken($session,$rid);
 
   $logger->debug("In reset_state");
 	
