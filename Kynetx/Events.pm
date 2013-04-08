@@ -312,6 +312,9 @@ sub process_event_for_rid {
 	  Kynetx::Rules::get_rule_set( $req_info, 1, $rid, get_version($rid_info) )
 	  ;    # 1 for localparsing
 
+  my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+  $logger->debug("Got the ken: ", sub { Dumper $ken });
+
 	my $type   = $ev->get_type();
 	my $domain = $ev->get_domain();
 
@@ -354,7 +357,7 @@ sub process_event_for_rid {
 		$logger->trace( "State machine: ", sub { Dumper($sm) } );
 
 		# States stored in Mongo should be serialized
-		my $current_state = get_current_state( $rid, $session, $rule->{'name'} )
+		my $current_state = get_current_state( $rid, $session, $rule->{'name'}, $ken)
 		  || $sm->get_initial();
 
 		my $next_state =
@@ -367,7 +370,7 @@ sub process_event_for_rid {
 		# when there's a state change, store the event in the event list
 		unless ( $current_state eq $next_state ) {
 			my $json = $ev->serialize();
-			Kynetx::Persistence::UserState::add_event_to_list($rid, $session,$event_list_name, $json );
+			Kynetx::Persistence::UserState::add_event_to_list($rid, $session,$event_list_name, $json, $ken);
 			$logger->trace("State change for $rule->{'name'}");
 		}
 
@@ -398,7 +401,7 @@ sub process_event_for_rid {
 			while (
 				my $ev = Kynetx::Events::Primitives->unserialize(
 					Kynetx::Persistence::UserState::next_event_from_list(
-						$rid, $session, $event_list_name
+						$rid, $session, $event_list_name, $ken
 					)
 				)
 			  )
@@ -430,9 +433,11 @@ sub process_event_for_rid {
 				" & ", $rulename
 			);
 
+
+
 			# reset SM
 			$sm->reset_state( $rid, $session, $rule->{'name'}, $event_list_name,
-				$current_state, $next_state );
+				$current_state, $next_state, $ken);
 
 		}
 		else {
@@ -440,7 +445,7 @@ sub process_event_for_rid {
 			$logger->trace( "Next state ref: ", ref $next_state );
 			if ( $next_state ne "" ) {
 				set_current_state( $rid, $session, $rule->{'name'},
-					$next_state );
+					$next_state, $ken);
 			}
 
 		}

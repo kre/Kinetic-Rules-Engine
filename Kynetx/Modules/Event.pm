@@ -313,9 +313,10 @@ sub send_event {
         undef $request;
         $cv->end;
 
+	      $metric->stop_and_store();
+
       }
    );
-	$metric->stop_and_store();
 
 }
 
