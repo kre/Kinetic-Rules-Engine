@@ -71,15 +71,15 @@ use constant STATE_COLLECTION => "userstate";
 
 
 sub get_current_state {
-    my ($rid,$session,$rulename) = @_;
+    my ($rid,$session,$rulename,$ken) = @_;
     my $logger = get_logger();
     my $state_key = $rulename . ':sm_current';
     $logger->debug("Get SM current: ", $state_key);
-	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-	my $key = {
-        "ken" => $ken,
-        "rid" => $rid,
-        "key" => $state_key};
+    $ken ||= Kynetx::Persistence::KEN::get_ken($session,$rid);
+    my $key = {
+          "ken" => $ken,
+          "rid" => $rid,
+          "key" => $state_key};
     #my $value = Kynetx::MongoDB::get_value(COLLECTION,$key);
     my $value;
     $value = Kynetx::MongoDB::get_singleton(STATE_COLLECTION,$key);
@@ -91,7 +91,7 @@ sub get_current_state {
 		if (defined $value) {
 			$logger->debug("Found $state_key in ", COLLECTION);
 			$logger->debug("Copy state to ",STATE_COLLECTION);
-			set_current_state($rid,$session,$rulename,$value);
+			set_current_state($rid,$session,$rulename,$value,$ken);
 			purge_state_from_edata($rid,$session,$rulename);
 		}
 	};
@@ -100,11 +100,11 @@ sub get_current_state {
 }
 
 sub set_current_state {
-    my ($rid,$session,$rulename,$val) = @_;
+    my ($rid,$session,$rulename,$val,$ken) = @_;
     my $logger = get_logger();
     my $state_key = $rulename . ':sm_current';
     $logger->trace("Set SM current: ", $state_key);
-	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+    $ken ||= Kynetx::Persistence::KEN::get_ken($session,$rid);
     my $key = {
         "ken" => $ken,
         "rid" => $rid,
@@ -119,15 +119,15 @@ sub set_current_state {
 }
 
 sub delete_current_state {
-    my ($rid,$session,$rulename) = @_;
+    my ($rid,$session,$rulename,$ken) = @_;
     my $logger = get_logger();
     my $state_key = $rulename . ':sm_current';
     $logger->trace("Del SM current: ", $state_key);
-	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-	my $key = {
-        "ken" => $ken,
-        "rid" => $rid,
-        "key" => $state_key};
+    $ken ||= Kynetx::Persistence::KEN::get_ken($session,$rid);
+    my $key = {
+          "ken" => $ken,
+          "rid" => $rid,
+          "key" => $state_key};
     Kynetx::MongoDB::delete_value(STATE_COLLECTION,$key);
     reset_event_env($rid,$session,$rulename, $ken);	
 }
@@ -146,18 +146,20 @@ sub purge_state_from_edata {
 }
 
 sub get_event_env {
-	my ($rid,$session,$rulename) = @_;
-    my $logger = get_logger();
-	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-	my $key = {		
-        "rid" => $rid,
-        "ken" => $ken,
-		"rulename" => $rulename
-	};
-    $logger->trace("Get event env: ", $rid);
-    #my $value = Kynetx::MongoDB::get_value(EVCOLLECTION,$key);
-    my $value = Kynetx::MongoDB::get_singleton(EVCOLLECTION,$key);
-	return $value;	
+  my ($rid,$session,$rulename,$ken) = @_;
+  my $logger = get_logger();
+
+  $ken ||= Kynetx::Persistence::KEN::get_ken($session,$rid);
+
+  my $key = {		
+    "rid" => $rid,
+    "ken" => $ken,
+    "rulename" => $rulename
+  };
+  $logger->trace("Get event env: ", $rid);
+  #my $value = Kynetx::MongoDB::get_value(EVCOLLECTION,$key);
+  my $value = Kynetx::MongoDB::get_singleton(EVCOLLECTION,$key);
+  return $value;	
 }
 
 sub reset_event_env {

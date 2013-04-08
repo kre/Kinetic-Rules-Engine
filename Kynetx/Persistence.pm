@@ -67,11 +67,11 @@ $Data::Dumper::Indent = 1;
 
 
 sub delete_persistent_var {
-    my ($domain,$rid,$session,$varname) = @_;
+    my ($domain,$rid,$session,$varname,$ken) = @_;
     my $logger = get_logger();
     $logger->trace("Delete $domain","var: $varname");
     if ($domain eq 'ent') {
-        my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+        $ken ||= Kynetx::Persistence::KEN::get_ken($session,$rid);
         Kynetx::Persistence::Entity::delete_edatum($rid,$ken,$varname);
     } elsif ($domain eq 'app') {
         Kynetx::Persistence::Application::delete($rid,$varname);

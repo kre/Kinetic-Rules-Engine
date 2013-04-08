@@ -1577,6 +1577,9 @@ sub reset_state {
 	my $self = shift;
 	my ($rid,$session,$rulename, $event_list_name,$current, $next) = @_;
 	my $logger = get_logger();
+
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+
   $logger->debug("In reset_state");
 	
 	if ($self->is_final($next)) {
@@ -1587,16 +1590,16 @@ sub reset_state {
 		if (defined $self->{'null'}) {
 			# If the state machine doesn't have a group transition, don't
 			# bother checking the userstate
-			my $ee = Kynetx::Persistence::UserState::get_event_env($rid,$session,$rulename);
+			my $ee = Kynetx::Persistence::UserState::get_event_env($rid,$session,$rulename,$ken);
 			$logger->trace("Reset grouped state: ", sub {Dumper($ee)});
 			if (defined $ee->{'__repeat__'}->{$current}) {
 				$logger->trace("Transition through null just happened: ",$ee->{'__repeat__'}->{$current});
-				Kynetx::Persistence::UserState::set_current_state($rid,$session,$rulename,$current);
+				Kynetx::Persistence::UserState::set_current_state($rid,$session,$rulename,$current,$ken);
 				return $current;
 			}
 		}
     $logger->debug("Deleting current state");
-		Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rulename);
+		Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rulename,$ken);
 		delete_persistent_var("ent",$rid,$session,$event_list_name);
     $logger->debug("Current state deleted");
 	} else {
