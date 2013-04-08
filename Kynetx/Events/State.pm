@@ -1578,7 +1578,7 @@ sub reset_state {
 	my ($rid,$session,$rulename, $event_list_name,$current,$next,$ken) = @_;
 	my $logger = get_logger();
 
-	my $ken ||= Kynetx::Persistence::KEN::get_ken($session,$rid);
+	$ken ||= Kynetx::Persistence::KEN::get_ken($session,$rid);
 
   $logger->debug("In reset_state");
 	
