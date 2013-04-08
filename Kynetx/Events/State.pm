@@ -1600,7 +1600,7 @@ sub reset_state {
 		}
     $logger->debug("Deleting current state");
 		Kynetx::Persistence::UserState::delete_current_state($rid,$session,$rulename,$ken);
-		delete_persistent_var("ent",$rid,$session,$event_list_name);
+		delete_persistent_var("ent",$rid,$session,$event_list_name,$ken);
     $logger->debug("Current state deleted");
 	} else {
 		$logger->warn("[reset_state] $next is not final");
