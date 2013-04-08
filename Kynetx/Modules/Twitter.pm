@@ -174,7 +174,7 @@ sub authorize {
                    ':'.Kynetx::Configure::get_config('OAUTH_CALLBACK_PORT') .
                    "/ruleset/twitter_callback/$rid?";
 
- my $version = $req_info->{'rule_version'} || Kynetx::Rids::version_default();
+ my $version = $req_info->{'rule_version'} || 'prod';
 
  my $caller =
  my $callback_url = mk_url($base_cb_url,

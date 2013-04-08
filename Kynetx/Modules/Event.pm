@@ -240,7 +240,7 @@ sub send_event {
 
   my $sm = $args->[0];
 
-  $logger->debug("Subscription map: ", sub { Dumper $sm });
+#  $logger->debug("Subscription map: ", sub { Dumper $sm });
 
   my $esl_key = $config->{'esl_key'} || '_UNDEFINED_KEY_';
 
@@ -254,22 +254,28 @@ sub send_event {
 	    mk_sky_esl($token);
 
   my $attrs = $config->{'attrs'};
+
+#  $logger->debug("Attributes as given: ", sub { Dumper $attrs});
   $metric->add_tag(keys %{$attrs} );
 
   # merge in the domain and type
   $attrs->{'_domain'} = $args->[1];
   $attrs->{'_type'} = $args->[2];
+  $attrs->{'_async'} = 1;
 
   my $cv = $execenv->get_condvar();
   $cv->begin;
   
   my $body = join('&', 
-		  map( "$_=" . URI::Escape::uri_escape_utf8( $attrs->{$_} ), 
+		  map( "$_=" . URI::Escape::uri_escape_utf8( correct_bool($attrs->{$_}) ), 
 		       keys %{$attrs} 
 		     )
 		 );
 
   $logger->debug("Sending event $args->[1]:$args->[2] to ESL $esl");
+
+#  $logger->debug("Body of event: ", sub { Dumper $body});
+
 
   my $request;
   $request = AnyEvent::HTTP::http_request(
@@ -288,12 +294,12 @@ sub send_event {
 			      'body' => $body,
 			     });
 	if ($hdr->{Status} =~ /^2/) {
-	  $logger->debug("event:send() success for $esl");
+	  $logger->debug("------------------------ event:send() success for $esl");
 	  
 	  # this is where we would parse returned directives and add them to $dd
         } else {
 
-	  my $err_msg = "event:send() failed for $esl, ($hdr->{Status}) $hdr->{Reason}";
+	  my $err_msg = "------------------------ event:send() failed for $esl, ($hdr->{Status}) $hdr->{Reason}";
 	  $logger->debug($err_msg);
 
 	  # I'd like to do this, but don't have $session
@@ -313,6 +319,7 @@ sub send_event {
    );
 
 }
+
 
 
 sub mk_sky_esl {

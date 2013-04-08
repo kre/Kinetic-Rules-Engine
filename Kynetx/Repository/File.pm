@@ -63,7 +63,6 @@ sub get_ruleset {
       local $/ = undef;
       $ruleset = <RS>;
       close RS;
-      $logger->debug("Read from $filename: $ruleset");
     }
     return encode("UTF-8",$ruleset);
 

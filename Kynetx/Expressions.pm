@@ -32,6 +32,7 @@ use Data::Dumper;
 use JSON::XS;
 use Storable qw/freeze/;
 use Digest::MD5 qw/md5_hex/;
+use Encode qw/encode_utf8/;
 use Clone qw/clone/;
 use Data::Diver qw(Dive);
 
@@ -616,8 +617,18 @@ sub eval_application {
 
 #  $logger->debug("Evaling args ", sub {Dumper $expr->{'args'}});
 
+  my $arg_vals;
+  my $arg_names;
+  if (ref $expr->{'args'} eq 'HASH') { 
+    $arg_vals = [values (%{  $expr->{'args'} })];
+    $arg_names = [keys (%{  $expr->{'args'} })];
+  } else { # array
+     $arg_vals = $expr->{'args'};
+     $arg_names = $closure->{'val'}->{'vars'}
+  }
 
-  my $args = Kynetx::Expressions::eval_rands($expr->{'args'},
+
+  my $args = Kynetx::Expressions::eval_rands($arg_vals,
 					      $rule_env,
 					      $rule_name,
 					      $req_info,
@@ -630,7 +641,7 @@ sub eval_application {
 
 #  $logger->debug("Executing function with args ", sub {Dumper $nargs});
 
-  my $closure_env = extend_rule_env($closure->{'val'}->{'vars'},
+  my $closure_env = extend_rule_env($arg_names,
 				    $nargs,
 				    $closure->{'val'}->{'env'});
 
@@ -1413,7 +1424,7 @@ sub cachable_decl {
 
 sub cachable_expr {
   my ($expr) = @_;
-  # my $logger = get_logger();
+  my $logger = get_logger();
   # $logger->debug("cachable_expr of type ", $expr->{'type'});
   if ($expr->{'type'} eq 'function' || 
       $expr->{'type'} eq 'defaction' ||
@@ -1456,9 +1467,11 @@ sub cachable_expr {
 	  #     $expr->{'source'} eq 'app' )
 	 ) {
     return 1;
-  } elsif($expr->{'type'} eq 'qualified' && 
+  } elsif($expr->{'type'} eq 'qualified' && (
 	  $expr->{'source'} eq 'meta' && 
-	  $expr->{'predicate'} eq 'rid'
+	  ($expr->{'predicate'} eq 'rid' 
+	  #|| $expr->{'predicate'} eq 'moduleRID'
+	  ))
 	 ) {
     return 1;
   } elsif($expr->{'type'} eq 'persistent' && 
@@ -1466,6 +1479,7 @@ sub cachable_expr {
 	 ) {
     return 1;
   } else {
+    $logger->debug("Module not cachable because expression has type ", $expr->{'type'});
     return 0;
   }
 }
@@ -1504,7 +1518,7 @@ sub eval_str {
     my $str = ref $expr eq 'HASH' ? $expr->{'val'} : $expr;
 
 #    $logger->debug("Original expr: ", sub {Dumper $expr});
-    my $str_sig = md5_hex($str);
+    my $str_sig = md5_hex(encode_utf8($str));
 
     $string_array ||= [];
     $expr_array ||= [];

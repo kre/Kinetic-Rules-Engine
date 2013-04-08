@@ -68,8 +68,7 @@ my $ruleset_base = "http://$broot:$bport/ruleset";
 my $event_base = "http://$broot:$bport/blue/event";
 
 my $rid = 'cs_test';
-my $version_default = Kynetx::Rids::version_default();
-my $fqrid = Kynetx::Rids::make_fqrid($rid,$version_default);
+
 my $mech = Test::WWW::Mechanize->new();
 
 diag "Using ruleset base: $ruleset_base";
@@ -93,7 +92,7 @@ SKIP: {
 
 #    $mech->title_is('Show Context');
 
-    $mech->content_like("/Context for Client ID $fqrid/");
+    $mech->content_like('/Context for Client ID cs_test.prod/');
     $mech->content_like('/Active rules.+2/s');
     $mech->content_contains('test_rule_2');
     $mech->content_contains('will not fire');
@@ -108,7 +107,7 @@ SKIP: {
 
     $mech->title_is('Show Context');
 
-    $mech->content_like("/Context for Client ID $fqrid/");
+    $mech->content_like('/Context for Client ID cs_test.prod/');
     $mech->content_like('/Active rules.+\d+/s');
     $mech->content_contains('test_rule_1');
     $mech->content_contains('will fire');
@@ -125,7 +124,7 @@ SKIP: {
 
     $mech->title_is('Describe Ruleset cs_test');
 
-    $mech->content_like('/"ruleset_version"\s*:\s*"(' . $version_default . '|\d+)"/s');
+    $mech->content_like('/"ruleset_version"\s*:\s*"(prod|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
     $mech->content_like('/"ruleset_id"\s*:\s*"[^"]+"/s');
     $test_count += 6;
@@ -139,14 +138,14 @@ SKIP: {
     $mech->get_ok($url_describe_2);
     is($mech->content_type(), 'text/plain');
 
-    $mech->content_like('/"ruleset_version"\s*:\s*"(' . $version_default . '|\d+)"/s');
+    $mech->content_like('/"ruleset_version"\s*:\s*"(prod|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
     $mech->content_like('/"ruleset_id"\s*:\s*"[^"]+"/s');
     $test_count += 5;
 
 
     # test DESCRIBE function
-    my $url_describe_3 = "$ruleset_base/describe/$rid?$rid:kynetx_app_version=dev";
+    my $url_describe_3 = "$ruleset_base/describe/$rid?$rid:kinetic_app_version=dev";
 
     diag "Testing console with $url_describe_3";
 
@@ -160,7 +159,7 @@ SKIP: {
 
 
     # test DESCRIBE function
-    my $url_describe_4 = "$ruleset_base/describe/$rid?$rid:kynetx_app_version=dev&flavor=json";
+    my $url_describe_4 = "$ruleset_base/describe/$rid?$rid:kinetic_app_version=dev&flavor=json";
 
 #    diag "Testing console with $url_describe_4";
 
@@ -185,7 +184,7 @@ SKIP: {
     $req_info->{'rid'} = $rid_info;
     my $rules =  Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
 
-    my $rs_key = Kynetx::Repository::make_ruleset_key('cs_test', $version_default);
+    my $rs_key = Kynetx::Repository::make_ruleset_key('cs_test', 'prod');
     my $ruleset = $memd->get($rs_key);
     ok(defined $ruleset, "Ruleset is cached");
 
@@ -281,7 +280,7 @@ SKIP: {
     # test_rule_3 shouldn't fire...inactive
     $mech->content_unlike('/test_rule_3/s');
 
-    $mech->content_contains('kobj_weather');
+    #$mech->content_contains('kobj_weather');
 
     # globals
     $mech->content_contains('var foobar = 5;');
@@ -305,14 +304,14 @@ SKIP: {
     $mech->content_like('/function callBacks/');
     $mech->content_like('/function\(uniq, cb,.+function\(uniq, cb,/s');
 
-    $mech->content_contains('kobj_weather');
+    #$mech->content_contains('kobj_weather');
 
     # globals
     $mech->content_contains('var foobar = 5;');
 
     $mech->content_contains(q/KOBJ['data']['public_timeline'] = {/);
     $mech->content_lacks("KOBJ['data']['cached_timeline'] =");
-    $test_count += 8;
+    $test_count += 6;
 
     my $url_5 = "$ruleset_base/eval/$rid/1237475272090.js?caller=http%3A//search.barnesandnoble.com/booksearch/isbnInquiry.asp%3FEAN%3D9781400066940&referer=http%3A//www.barnesandnoble.com/index.asp&kvars=&title=Stealing MySpace, Julia Angwin, Book - Barnes & Noble";
 

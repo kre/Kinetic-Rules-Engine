@@ -32,10 +32,17 @@ $Data::Dumper::Indent = 1;
 use JSON::XS;
 
 use Kynetx::Version;
-use Kynetx::Events;
-use Kynetx::Session;
-use Kynetx::Memcached;
+use Kynetx::Rules;
+use Kynetx::Response;
 use Kynetx::Dispatch;
+use Kynetx::Directives;
+use Kynetx::Configure;
+use Kynetx::Environments;
+use Kynetx::Modules;
+use Kynetx::Session;
+use Kynetx::Expressions;
+use Kynetx::Memcached;
+
 use Kynetx::Metrics::Datapoint;
 
 use Exporter;
@@ -71,16 +78,16 @@ sub handler {
 	$logger->debug("Initializing memcached");
 	Kynetx::Memcached->init();
 
-	my ( $domain, $eventtype, $eid, $rids, $id_token );
+	my ($rids);
 	$r->subprocess_env( START_TIME => Time::HiRes::time );
 
-# path looks like: /sky/{event|flush}/{version|<id_token>}/<eid>?_domain=...&_name=...&...
+	# path looks like: /sky/{event|flush}/{version|<id_token>}/<eid>?_domain=...&_name=...&...
 
 	my @path_components = split( /\//, $r->path_info );
-  my $method;
-  my $rid;
-  my $eid = '';
-  my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
+
+	my $req_info = Kynetx::Request::build_request_env($r, $path_components[4], $rids);
+
+
 
 	if ( Kynetx::Configure::get_config('RUN_MODE') eq 'development' ) {
 
@@ -93,25 +100,180 @@ sub handler {
 
 
 	# store these for later logging
-	if ( $id_token eq 'version' ) {
-		$logger->debug("returning version info for Sky event API");
+	if ($path_components[2] eq 'version' ) {
+		$logger->debug("returning version info for Sky cloud API");
 		Kynetx::Version::show_build_num($r);
 		exit();
 	}
-	elsif ( $path_components[1] eq 'flush' ) {
+	elsif ( $path_components[2] eq 'flush' ) {
+	  # nothing to flush for now
+	}
+	else { # doing cloud 
 
-	}	else {
-    print join " ", @path_components;
+
+	  # get a session, if _sid param is defined it will override cookie
+	  my $session = Kynetx::Session::process_session($r, undef,  $req_info->{'id_token'});
+
+
+	  my ($module_alias, $version) = split(/\./,$path_components[2]);
+	  my $rid = unalias($module_alias);
+
+	  $req_info->{'module_name'} = $rid;
+	  $req_info->{'module_version'} = $version;
+	  $req_info->{'module_alias'} = $module_alias;
+	  $req_info->{'function_name'} = $path_components[3];
+
+	  Kynetx::Request::log_request_env( $logger, $req_info );
+
+	  my $dd = Kynetx::Response->create_directive_doc( $req_info->{'eid'} );
+
+	  my $result = eval_ruleset_function($req_info, $session, $dd);
+
+	  my $js = "";
+	  Kynetx::Response::respond( $r, $req_info, $session, $js, $dd, "Cloud API" );
 
 	}
-  my $heartbeat = "// KNS " . gmtime() . " (" . Kynetx::Util::get_hostname() . ")\n";
-  print $heartbeat;
-#    $logger->info("Rids for $domain/$eventtype: ", sub {Kynetx::Rids::print_rids($rid_list)});
-
-	Kynetx::Request::log_request_env( $logger, $req_info );
+	$logger->info("Processed Cloud API for ". $r->path_info);
 
 
 	return Apache2::Const::OK;
+}
+
+
+sub eval_ruleset_function {
+  my($req_info, $session, $dd) = @_;
+  
+  my $logger = get_logger();
+
+  # TODO: check that this is installed
+
+  # this can be a big list...
+  my $unfiltered_rid_list =
+    Kynetx::Dispatch::calculate_rid_list( $req_info, $session );
+
+  my $ruleset =
+      Kynetx::Rules::get_rule_set( $req_info, 1, 
+				   $req_info->{'module_name'}, 
+				   $req_info->{'module_version'}
+				 );
+
+#  $logger->debug("Ridlist: ", sub { Dumper $unfiltered_rid_list->{'ridlist'} } );
+
+
+
+  $logger->debug("Sharing is: ", sub { Dumper $ruleset->{'meta'}->{'sharing'} } );
+
+  my $result = "";
+
+
+  if ( !defined $ruleset->{'meta'}->{'sharing'} 
+    || $ruleset->{'meta'}->{'sharing'} eq "off" 
+     ) {
+
+    $result = {"error" => 100,
+	       "error_str" => "Sharing not on for module $req_info->{'module_alias'}"
+	      };
+
+  } 
+  elsif (! ( defined $unfiltered_rid_list->{'ridlist'}->{$req_info->{'module_name'}}
+	  || Kynetx::Configure::get_config('ALLOW_ALL_RULESETS')
+           )
+	) {
+    $logger->debug("$req_info->{'module_name'} is not installed");
+    $result = {"error" => 102,
+	       "error_str" => "Module $req_info->{'module_alias'} is not installed for user"
+	      };
+
+  }
+  else {
+     
+
+    my $rule_env = Kynetx::Rules::mk_initial_env();
+
+    my $env_stash = {};
+    my $modifiers= [];
+
+    $rule_env = Kynetx::Rules::eval_use_module( $req_info, $rule_env, $session, 
+						$req_info->{'module_name'},
+						$req_info->{'module_alias'}, $modifiers, 
+						$req_info->{'module_version'}, $env_stash );
+
+
+    # $logger->debug("Env: ", sub{Dumper $rule_env});
+    
+    my $rule_name = "empty_rule";
+
+    my $closure = Kynetx::Modules::lookup_module_env($req_info->{'module_alias'}, 
+						     $req_info->{'function_name'}, 
+						     $rule_env);
+
+    #$logger->debug("Closure: ", sub{Dumper $closure});
+
+    if ( defined $closure 
+      && $closure->{'type'} eq 'closure'
+       ) {
+
+  
+      my $attrs  = Kynetx::Request::get_attrs($req_info) || {};
+      delete $attrs->{'attr_names'};
+
+      my $expr = {'function_expr' => $closure,
+		  'args' => $attrs,
+		  'name' => $req_info->{'function_name'}
+		 };
+
+      # $logger->debug("Expr: ", sub{Dumper $expr});
+      $result = Kynetx::Expressions::den_to_exp(
+	  	  Kynetx::Expressions::eval_application($expr, $rule_env, $rule_name,
+							$req_info, $session));
+
+    } else {
+      $result = {"error" => 101,
+		 "error_str" => "Function $req_info->{'function_name'} does not exist"
+		};
+       
+    }
+
+
+  }
+
+
+
+#  $logger->debug("Result: ", sub{Dumper $result});
+ 
+  my $json = JSON::XS->new->allow_nonref;
+  $result = $json->encode( $result );
+  my $opts = {'is_raw' => 1,
+	      'content' => $result ,
+	     };
+  $req_info->{'send_raw'} = 1;
+  my $content_type = "application/json";
+
+  Kynetx::Directives::send_directive($req_info, $dd, $content_type, $opts );
+
+  return $result;
+
+}
+
+
+sub unalias {
+  my($alias) = @_;
+  my $module_aliases = {"pds" => "a169x676",
+			"cloudos" => "a169x625",
+			"notify" => "a16x161",
+			"squaretag" => "a41x178",
+			"mythings" => "a169x667",
+		       };
+  my $logger = get_logger();
+
+  my $rid;
+  if ($module_aliases->{$alias}) {
+    $rid = $module_aliases->{$alias};
+  } else {
+    $rid = $alias;
+  }
+  $logger->debug("[unalias] : $alias -> $rid");
+  return $rid;
 }
 
 

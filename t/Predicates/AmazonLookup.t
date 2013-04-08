@@ -413,7 +413,7 @@ $args = [{
 push(@lookup_args,$args);
 
 
-my $wait = 1;
+my $wait = 3;
 # item lookups
 foreach my $case (@lookup_args) {
     $logger->trace("Item lookup args: ",sub {Dumper($case)});
@@ -428,8 +428,8 @@ foreach my $case (@lookup_args) {
         $good = Kynetx::Predicates::Amazon::good_response($ds);
         if (! $good) {
           my $error = Kynetx::Predicates::Amazon::get_error_msg($ds);
-          $logger->warn("Error: ", sub {Dumper($error)});
-          $logger->warn("Args: ",sub {Dumper(Kynetx::Predicates::Amazon::get_request_args($ds))});
+          $logger->debug("Error: ", sub {Dumper($error)});
+          $logger->debug("Args: ",sub {Dumper(Kynetx::Predicates::Amazon::get_request_args($ds))});
         }
     }else {
         $logger->debug("Good result: ", sub {Dumper(Kynetx::Json::astToJson($ds))});

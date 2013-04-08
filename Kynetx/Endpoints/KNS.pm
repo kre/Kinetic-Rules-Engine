@@ -112,7 +112,7 @@ sub parse_message {
                if ($action eq 'flush') {
                    my $memd = get_memd();
                    if ($rid) {
-                        my $version = $ast->{'options'}->{'version'} || Kynetx::Rids::version_default();
+                        my $version = $ast->{'options'}->{'version'} || 'prod';
                         $log = "[SNS request] flushing rules for $rid ($version version)";
                         my $cache_key = Kynetx::Repository::make_ruleset_key($rid, $version);
                         $logger->debug("key: $cache_key");

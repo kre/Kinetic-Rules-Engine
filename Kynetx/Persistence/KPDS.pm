@@ -236,6 +236,12 @@ sub delete_cloud {
 	Kynetx::Persistence::KToken::delete_ken_tokens($ken);
 }
 
+sub unlink_dependent_cloud {
+  my ($parent,$target) = @_;
+  my $hkey = ['dependents'];
+  Kynetx::Persistence::KPDS::remove_kpds_set_element($parent,$hkey,$target);
+}
+
 sub link_dependent_cloud {
 	my ($ken,$dependent) = @_;
 	my $hkey = ['dependents'];
@@ -247,22 +253,11 @@ sub link_dependent_cloud {
 sub add_ruleset {
 	my ($ken,$ridlist) = @_;
 	my $logger=get_logger();
-	# Take list of rid_info and transform into fqrid
-	my @fqrid_list = ();
-	if (ref $ridlist eq "ARRAY") {
-	  for my $element (@{$ridlist}) {
-	    push (@fqrid_list,Kynetx::Rids::get_fqrid($element))
-	  }	  
-	} elsif (ref $ridlist eq "") {
-	  push(@fqrid_list,Kynetx::Rids::get_fqrid($ridlist))
-	}	
 	my $keypath = [RID];
-	my $result = push_kpds_set_element($ken,$keypath,\@fqrid_list);
+	my $result = push_kpds_set_element($ken,$keypath,$ridlist);
 	$logger->trace("Set: ", sub {Dumper($result)});
 	return $result;
 }
-
-
 
 sub get_rulesets {
 	my ($ken) = @_;

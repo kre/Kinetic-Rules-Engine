@@ -66,7 +66,6 @@ use constant COLLECTION => "appdata";
 sub touch {
     my ($rid,$var,$ts) = @_;
     my $logger = get_logger();
-    $rid = Kynetx::Rids::get_rid($rid);
     my $key = {
         "rid" => $rid,
         "key" => $var};
@@ -76,7 +75,6 @@ sub touch {
 sub get {
     my ($rid,$var,$get_ts) = @_;
     my $logger = get_logger();
-    $rid = Kynetx::Rids::get_rid($rid);
     my $key = {
         "rid" => $rid,
         "key" => $var};
@@ -93,7 +91,6 @@ sub get {
 sub get_hash_app_element {
     my ($rid,$var,$hvar,$get_ts) = @_;
     my $logger = get_logger();
-    $rid = Kynetx::Rids::get_rid($rid);
     my $key = {
         "rid" => $rid,
         "key" => $var};
@@ -110,7 +107,6 @@ sub get_hash_app_element {
 sub delete_hash_app_element {
     my ($rid,$var,$hvar) = @_;
     my $logger = get_logger();
-    $rid = Kynetx::Rids::get_rid($rid);
     my $key = {
         "rid" => $rid,
         "key" => $var};
@@ -120,7 +116,6 @@ sub delete_hash_app_element {
 sub put_hash_app_element {
 	my ($rid,$var,$hvar,$val) = @_;
 	my $logger = get_logger();
-    $rid = Kynetx::Rids::get_rid($rid);
 	my $key = {
         "rid" => $rid,
         "key" => $var
@@ -135,7 +130,6 @@ sub put_hash_app_element {
 sub pop {
     my ($rid,$var,$direction) = @_;
     my $logger = get_logger();
-    $rid = Kynetx::Rids::get_rid($rid);
     my $key = {
         "rid" => $rid,
         "key" => $var};
@@ -150,7 +144,6 @@ sub pop {
 sub push {
     my ($rid,$var,$val,$as_trail) = @_;
     my $logger = get_logger();
-    $rid = Kynetx::Rids::get_rid($rid);
     my $key = {
         "rid" => $rid,
         "key" => $var};
@@ -165,7 +158,6 @@ sub push {
 
 sub get_created {
     my ($rid,$var) = @_;
-    $rid = Kynetx::Rids::get_rid($rid);
     return get($rid,$var,1);
 }
 
@@ -175,7 +167,6 @@ sub get_created {
 sub put {
     my ($rid,$var,$val,$expires) = @_;
     my $logger = get_logger();
-    $rid = Kynetx::Rids::get_rid($rid);
     my $key = {
         "rid" => $rid,
         "key" => $var};
@@ -189,7 +180,6 @@ sub put {
 
 sub delete {
     my ($rid,$var) = @_;
-    $rid = Kynetx::Rids::get_rid($rid);
     my $logger = get_logger();
     my $key = {
         "rid" => $rid,

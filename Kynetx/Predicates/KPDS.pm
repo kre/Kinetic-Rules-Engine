@@ -156,7 +156,7 @@ sub authorize {
    	           ':'.Kynetx::Configure::get_config('OAUTH_CALLBACK_PORT') .
 		   "/ruleset/kpds_callback/$rid?";
 
- my $version = $req_info->{'rule_version'} || Kynetx::Rids::version_default();
+ my $version = $req_info->{'rule_version'} || 'prod';
 
  my $callback_url = mk_url($base_cb_url,
 		   {'caller',$req_info->{'caller'},

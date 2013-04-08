@@ -132,7 +132,7 @@ sub post_to_facebook {
     my $rid_info = $req_info->{'rid'};
     my $rid = get_rid($rid_info);
     my $logger  = get_logger();
-    my $version = $req_info->{'rule_version'} || Kynetx::Rids::version_default();
+    my $version = $req_info->{'rule_version'} || 'prod';
     my $url     = build( 'post', $args );
     my $content = build_post_content($args);
     my $response =
@@ -217,7 +217,7 @@ sub authorize {
     my $rid_info = $req_info->{'rid'};
     my $rid = get_rid($rid_info);
     my $logger  = get_logger();
-    my $version = $req_info->{'rule_version'} || Kynetx::Rids::version_default();
+    my $version = $req_info->{'rule_version'} || 'prod';
     my $scope   = get_scope($args);
     if ( Kynetx::Errors::mis_error($scope) ) {
         $logger->warn( "Authorize failure: ", $scope->{'DEBUG'} );

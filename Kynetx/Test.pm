@@ -118,7 +118,7 @@ sub gen_req_info {
       Kynetx::Request::add_event_attr($req_info, $k, $options->{$k});
     }
 
-    my $ver = $options->{'ridver'} || Kynetx::Rids::version_default();
+    my $ver = $options->{'ridver'} || 'prod';
 
     $req_info->{'rid'} = mk_rid_info($req_info,$rid, {'version' => $ver});
 

@@ -198,7 +198,7 @@ my ($rule_env, $args);
 SKIP: {
     my $ua = LWP::UserAgent->new;
 
-    my $check_url = "http://frag.kobj.net/clients/cs_test/aaa.json";
+    my $check_url = "http://cs.kobj.net/blue/event/web/pageview/a144x165";
 
 #    diag "Checking $check_url";
     my $response = $ua->get($check_url);
@@ -206,7 +206,7 @@ SKIP: {
 
     $krl_src = <<_KRL_;
 global {
-   dataset fizz_data <- "http://frag.kobj.net/clients/cs_test/aaa.json";
+   dataset fizz_data <- "http://cs.kobj.net/blue/event/web/pageview/a144x165";
 }
 _KRL_
     $krl = Kynetx::Parser::parse_global_decls($krl_src);
@@ -364,7 +364,7 @@ _KRL_
 
     $krl_src = <<_KRL_;
 global {
-   dataset fizz_data:HTML <- "http://frag.kobj.net/clients/cs_test/aaa.json";
+   dataset fizz_data:HTML <- "http://cs.kobj.net/blue/event/web/pageview/a144x165";
 }
 _KRL_
     $krl = Kynetx::Parser::parse_global_decls($krl_src);

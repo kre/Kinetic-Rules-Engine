@@ -26,13 +26,14 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 use Kynetx::Util qw(ll);
 use Kynetx::Rids qw/:all/;
-use Kynetx::Environments qw/:all/;
-use Kynetx::Modules::Random;
+#use Kynetx::Environments qw/:all/;
+#use Kynetx::Modules::Random;
 use Digest::SHA qw/hmac_sha1 hmac_sha1_hex hmac_sha1_base64
 				hmac_sha256 hmac_sha256_hex hmac_sha256_base64/;
 use Crypt::RC4::XS;
 use Email::MIME;
 use Encode;
+use Kynetx::Keys qw/:all/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -452,6 +453,31 @@ sub list_parent {
 }
 $funcs->{'list_parent'} = \&list_parent;
 
+sub set_parent {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	return 0 unless ( system_authorized($req_info, $rule_env, $session));
+	my $eci = $args->[0];
+	my $new_owner_eci = $args->[1];
+	$logger->debug("T eci: $eci");
+	$logger->debug("D eci: $new_owner_eci");	
+	my $target_ken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
+	my $new_ken = Kynetx::Persistence::KEN::ken_lookup_by_token($new_owner_eci);
+	my $parent = Kynetx::Persistence::KEN::get_ken_value($target_ken,'parent');
+	$logger->debug("T ken: $target_ken");
+	$logger->debug("D ken: $new_ken");	
+	$logger->debug("Parent ken: $parent");	
+	if ($parent eq $new_ken) {
+	  return $new_owner_eci;
+	} else {
+	  Kynetx::Persistence::KPDS::link_dependent_cloud($new_ken,$target_ken);
+	  Kynetx::Persistence::KPDS::unlink_dependent_cloud($parent,$target_ken);
+	  return Kynetx::Persistence::KToken::get_default_token($new_ken);
+	}
+  
+}
+$funcs->{'set_parent'} = &set_parent;
+
 ############################# Rulesets
 
 sub add_ruleset_to_account {
@@ -465,16 +491,11 @@ sub add_ruleset_to_account {
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
 	if (defined $arg2) {
 		if (ref $arg2 eq "ARRAY") {
-    	# make rid_info out of rid arguments	
-    	for my $element (@{$arg2}) {
-    	  my $rid_info = Kynetx::Rids::to_rid_info($element);
-    	  push(@ridlist,$rid_info);
-    	}
+			@ridlist = @{$arg2};
 		} elsif (ref $arg2 eq "") {
-			push(@ridlist,Kynetx::Rids::to_rid_info($arg2));
+			push(@ridlist,$arg2);
 		}
-	}
-	
+	}	
 	# Check to see if it is an eci or a userid
 	if ($arg1 =~ m/^\d+$/) {
 		#ll("userid");
@@ -487,14 +508,14 @@ sub add_ruleset_to_account {
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
 		my $installed = Kynetx::Persistence::KPDS::add_ruleset($ken,\@ridlist);
 		
-#		# Grab installed rulesets from legacy repository
+		# Grab installed rulesets from legacy repository
 #		my $id_token = Kynetx::Persistence::KToken::get_default_token($ken);
 #		my $legacy = Kynetx::Dispatch::old_repository($req_info,$id_token,$ken);
 #		for my $ruleset (@{$legacy}) {
 #		  my $orid = $ruleset->{'rid'};
-#		  my $over = $ruleset->{'kinetic_app_version'} || Kynetx::Rids::version_default();
+#		  my $over = $ruleset->{'kinetic_app_version'} || 'prod';
 #		  if ($orid) {
-#		    my $fqrid = Kynetx::Rids::make_fqrid($orid,$over);
+#		    my $fqrid = $orid . '.' . $over;
 #		    Kynetx::Persistence::KPDS::add_ruleset($ken,$fqrid);
 #		  }
 #		}
@@ -983,5 +1004,6 @@ sub make_pass_phrase {
 	}
 	return undef;
 }
+
 
 1;

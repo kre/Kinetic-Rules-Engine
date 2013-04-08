@@ -177,7 +177,7 @@ sub respond {
   binmode(STDOUT, ":encoding(UTF-8)");
   if ($req_info->{'send_raw'}) {
     $logger->debug("Returning raw directive");
-  	return $dd->gen_raw_document($r);
+    return $dd->gen_raw_document($r);
   }  elsif ($req_info->{'understands_javascript'}) {
     $logger->debug("Returning javascript from evaluation");
     print $heartbeat, $js;

@@ -34,6 +34,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use Kynetx::Rids qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::Parser qw/mk_expr_node/;
+use Kynetx::Util qw(correct_bool);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -280,7 +281,7 @@ sub mk_http_request {
 		} else {
 			$content = join(
 				'&',
-				map( "$_=" . uri_escape_utf8( $params->{$_} ), keys %{$params} )
+				map( "$_=" . uri_escape_utf8( correct_bool($params->{$_}) ), keys %{$params} )
 			);
 			$req->header(
 				'content-type' => "application/x-www-form-urlencoded; charset=UTF-8" );

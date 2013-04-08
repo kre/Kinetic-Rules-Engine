@@ -201,14 +201,7 @@ sub process_schedule {
 			# we only do this when there's a new RID
 
 			# save info from last context
-			my $r_metric2 =
-	  			new Kynetx::Metrics::Datapoint( { 'series' => 'ps-task-contextswitch-add-resource' } );
-			$r_metric2->start_timer();
-			$r_metric2->rid($rid);
-			$r_metric2->token($ktoken->{'ktoken'});
-			$r_metric2->eid($req_info->{'eid'});
 			$ast->add_resources( $current_rid, $req_info->{'resources'} );
-			$r_metric2->stop_timer();
 
 			# for each context switch, we need a new place to put the JS
 			# that is generated for the rules in that context so that we
@@ -216,14 +209,7 @@ sub process_schedule {
 			# same time, we want to avoid re-executing and re-generating
 			# the JS for meta and global blocks.
 			# updated context counter
-			my $r_metric3 =
-	  			new Kynetx::Metrics::Datapoint( { 'series' => 'ps-task-contextswitch-update_context' } );
-			$r_metric3->start_timer();
-			$r_metric3->rid($rid);
-			$r_metric3->token($ktoken->{'ktoken'});
-			$r_metric3->eid($req_info->{'eid'});
 			$ast->update_context($rid);
-			$r_metric3->stop_timer();
 
 			#      $logger->debug("Task request: ", Dumper $task->{'req_info'});
 
@@ -237,14 +223,7 @@ sub process_schedule {
 			$req_info->{'errorsto'} = $ruleset->{'meta'}->{'errors'};
 
 			# store so we don't have to grab it again
-			my $r_metric4 =
-	  			new Kynetx::Metrics::Datapoint( { 'series' => 'ps-task-contextswitch-stash-ruleset' } );
-			$r_metric4->start_timer();
-			$r_metric4->rid($rid);
-			$r_metric4->token($ktoken->{'ktoken'});
-			$r_metric4->eid($req_info->{'eid'});
 			stash_ruleset( $req_info, $ruleset );
-			$r_metric4->stop_timer();
 
 			if (
 				(
@@ -310,12 +289,6 @@ sub process_schedule {
 				&& $req_info->{'mode'} eq 'test' )
 		  )
 		{    # optimize??
-			my $o_metric =
-	  			new Kynetx::Metrics::Datapoint( { 'series' => 'ps-task-optimize' } );
-			$o_metric->start_timer();
-			$o_metric->rid(get_rid( $req_info->{'rid'} ));
-			$o_metric->token($ktoken->{'ktoken'});
-			$o_metric->eid($req_info->{'eid'});
 
 			$req_info->{'rule_count'}++;
 
@@ -346,9 +319,7 @@ sub process_schedule {
 
 				$cap++;
 			}
-			$o_metric->stop_timer();
 
-#my $new_req_info = Kynetx::Request::merge_req_env($req_info, $task->{'req_info'});
 			my $new_req_info =
 			  Kynetx::Request::merge_req_env( $task->{'req_info'}, $req_info );
 
@@ -510,7 +481,7 @@ sub eval_use_module {
   $metric->token($ktoken->{'ktoken'});
   $metric->eid($req_info->{'eid'});
 
-  $mversion ||= Kynetx::Rids::version_default();
+  $mversion ||= 'prod';
   my $module_sig = md5_hex( $name . $mversion . $alias . freeze $modifiers);
 	
   my $memd = get_memd();
@@ -669,9 +640,10 @@ sub eval_use_module {
     $emetric2->eid($req_info->{'eid'});
 
     if ($is_cachable) {
+      $logger->debug("Caching module $name.$mversion...");
 
       Kynetx::Modules::RuleEnv::set_module_cache($module_sig, $req_info, $memd,
-						 $js, $provided, $module_rule_env);
+						 $js, $provided, $module_rule_env, $name, $mversion);
 
     } else {
        $logger->debug("Module $name.$mversion is not cachable...");
@@ -1206,7 +1178,7 @@ sub get_rule_set {
 	$ver ||= get_version( $req_info->{'rid'} );
 
 	# don't do this. We rely on $ver being undefined later
-	#	$ver ||= Kynetx::Rids::version_default();
+	#	$ver ||= 'prod';
 
 	my $logger = get_logger();
 	$logger->debug("Getting ruleset $rid.$ver for $caller");
@@ -1254,7 +1226,7 @@ sub get_rule_set {
 sub stash_ruleset {
 	my ( $req_info, $ruleset ) = @_;
 	my $rid = get_rid( $req_info->{'rid'} );
-	my $ver = get_version( $req_info->{'rid'} ) || Kynetx::Rids::version_default();
+	my $ver = get_version( $req_info->{'rid'} ) || 'prod';
 	$req_info->{"$rid.$ver"}->{'ruleset'} = $ruleset;
 }
 
@@ -1277,7 +1249,7 @@ sub get_rule_env {
 	my $logger = get_logger();
 
 	my $rid = get_rid( $req_info->{'rid'} );
-	my $ver = get_version( $req_info->{'rid'} ) || Kynetx::Rids::version_default();
+	my $ver = get_version( $req_info->{'rid'} ) || 'prod';
 
 	if ( !defined $env_stash->{ $rid . $ver } ) {
 

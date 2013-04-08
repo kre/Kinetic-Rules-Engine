@@ -97,12 +97,30 @@ sub get_msig_cache_key {
 
 }
 
+sub get_mod_re_list {
+  my ($name, $version, $memd) = @_;
+
+  return $memd->get(get_mod_re_cache_key($name, $version));
+
+}
+
+
+sub get_mod_re_cache_key {
+  my ($name, $version) = @_;
+
+  return "mod_re_".Kynetx::Repository::make_ruleset_key($name, $version);
+
+}
+
+
 sub set_module_cache {
-  my($module_sig, $req_info, $memd, $js, $provided, $module_rule_env) = @_;
+  my($module_sig, $req_info, $memd, $js, $provided, $module_rule_env, $name, $version) = @_;
   $memd->set(get_js_key($module_sig), $js);
   $memd->set(get_pr_key($module_sig), $provided);
   $memd->set(get_re_key($module_sig), $module_rule_env);
 
+  # each ruleset that uses a module has a different copy of the rule_env
+  # stored so we have to record this sig for the calling rid.version
   my $msig_list = get_msig_list($req_info, $memd);
   $msig_list->{$module_sig} = 1;
 
@@ -110,6 +128,17 @@ sub set_module_cache {
   my $msig_list_cache_key = get_msig_cache_key($req_info);
 
   $memd->set($msig_list_cache_key, $msig_list);
+  # we also need to do the same thing for the module itself. Whenever the module is flushed
+  # we need to know all the rule_env caches for it
+  my $mod_re_list = get_mod_re_list($name, $version, $memd);
+  $mod_re_list->{$module_sig} = 1;
+
+  # build a list of module sigs associated with a calling rid/version
+  my $mod_re_cache_key = get_mod_re_cache_key($name, $version);
+
+  $memd->set($mod_re_cache_key, $mod_re_list);
+  
+
 }
 
 
@@ -127,7 +156,7 @@ sub delete_module_caches {
   my $msig_list = get_msig_list($req_info, $memd);
 
   if (defined $msig_list) {
-    $logger->debug("Flushing module environments for $rid.$version with module signatures ", sub {Dumper $msig_list});
+    $logger->debug("Flushing module environments for $rid.$version as a caller with module signatures ", sub {Dumper $msig_list});
     foreach my $sig (keys %{$msig_list}) {
 
       $memd->delete(get_re_key($sig));
@@ -135,6 +164,22 @@ sub delete_module_caches {
       $memd->delete(get_js_key($sig));
     }
     $memd->delete($msig_list_cache_key);
+  }
+
+  # if this is a module, there might be caches to delete as well
+  my $mod_re_cache_key = get_mod_re_cache_key($rid, $version);
+
+  my $mod_re_list = get_mod_re_list($rid, $version, $memd);
+
+  if (defined $mod_re_list) {
+    $logger->debug("Flushing module environments for $rid.$version as a module with module signatures ", sub {Dumper $mod_re_list});
+    foreach my $sig (keys %{$mod_re_list}) {
+
+      $memd->delete(get_re_key($sig));
+      $memd->delete(get_pr_key($sig));
+      $memd->delete(get_js_key($sig));
+    }
+    $memd->delete($mod_re_cache_key);
   }
 
 }
