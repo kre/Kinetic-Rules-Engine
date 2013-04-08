@@ -513,6 +513,8 @@ sub eval_module {
 				     'species' => 'module undefined'
 				    }
 				   );
+	$logger->info("Didn't find $function for $source in ", sub{ Dumper $rule_env });
+
     }
 
     $logger->trace("Datasource $source:$function -> ", sub {Dumper($val)});
