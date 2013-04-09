@@ -10,6 +10,7 @@ parser/output/*
 parser/lib*
 parser/*.g
 parser/*.jar
+parser/semantic.cache
 !parser/RuleSet.g
 .includepath
 .metadata

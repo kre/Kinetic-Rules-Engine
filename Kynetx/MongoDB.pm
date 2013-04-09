@@ -265,6 +265,7 @@ sub get_value {
         return $cached;
     }  else {
         $logger->trace("$keystring not in cache");
+        $logger->debug("$collection variable NOT cached");
     }
     my $c = get_collection($collection);
     if ($c) {
@@ -284,7 +285,7 @@ sub get_value {
 	        		}]);
 	        		my $composed_hash = clone ($var);
 	        		$composed_hash->{'value'} = $hash;
-	        		$composed_hash->{'created'} = $result->{'created'} * 1;
+	        		$composed_hash->{'created'} = $result->{'created'};
 	        		return $composed_hash;
 	        	}
 	            $logger->trace("Save $keystring to memcache");
@@ -794,9 +795,7 @@ sub get_cache {
     my ($collection,$var) = @_;
     my $logger = get_logger();
     my $keystring = make_keystring($collection,$var);
-    if ($collection eq 'edata') {
-      $logger->trace("Cache keystring (get) $keystring: ", sub {Dumper($var)});      
-    }
+    $logger->trace("Cache keystring (get) $keystring: ", sub {Dumper($var)});
     my $result = Kynetx::Memcached::check_cache($keystring);
     if (defined $result) {
         return $result;

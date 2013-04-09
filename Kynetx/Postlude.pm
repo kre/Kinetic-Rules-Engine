@@ -529,7 +529,7 @@ sub eval_raise_statement {
     }
 
 
-
+    my $saved_rid = $req_info->{'rid'};
 
     foreach my $rid_and_ver (  @{$rid_info_list} ) {
 
@@ -579,6 +579,14 @@ sub eval_raise_statement {
 					     $this_req_info->{'rid'}
 					   );
     }
+
+    # something seems to be side-effecting $req_info even tho we don't pass it in...
+    # this is a hack. What else is being changed? 
+    $req_info->{'rid'} = $saved_rid;
+
+    # this we know about...
+    Log::Log4perl::MDC->put( 'site', Kynetx::Rids::get_rid($saved_rid) );
+
 
     return $js;
   }
