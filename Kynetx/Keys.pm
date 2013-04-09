@@ -119,6 +119,11 @@ sub get_key {
 
 sub mk_key {
   my ($rid, $key) = @_;
+#  my $logger = get_logger();
+#  $logger->info("Rid: $rid, Key: $key Np: $name_prefix");
+  #$rid = $rid || '';
+  #$key = $key || '';
+  #$name_prefix = $name_prefix || '';
   return join(':', @{[$name_prefix,$rid,$key]});
 }
 

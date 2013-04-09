@@ -50,6 +50,7 @@ use Digest::MD5 qw(
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use constant COLLECTION => "kens";
+use constant KCACHETIME => 300;
 
 
 our $VERSION     = 1.00;
@@ -85,7 +86,10 @@ sub get_ken {
     my ($session,$rid,$domain) = @_;
     my $logger = get_logger();
     $logger->trace("KEN Request");
-    my $ken = undef;
+    my $ken = get_cached_ken($session);
+    if (defined $ken) {
+      return $ken;
+    }
     $logger->warn("get_ken called with invalid session: ", sub {Dumper($session)}) unless ($session);
     my $ktoken = Kynetx::Persistence::KToken::get_token($session,$rid,$domain);
     if ($ktoken) {
@@ -93,12 +97,14 @@ sub get_ken {
         # update the KEN so we can do a better job of determining stale KENS
         $ken = $ktoken->{'ken'};
         touch_ken($ken);
+        cache_ken($session,$ken);
         return $ken;
     }
     $ken = new_ken() unless ($ken);
 
     # A new token must be created
     Kynetx::Persistence::KToken::new_token($rid,$session,$ken);
+    cache_ken($session,$ken);    
     return $ken;
 }
 
@@ -253,6 +259,31 @@ sub get_ken_defaults {
     };
     return $dflt;
 }
+
+sub make_ken_cache_keystring {
+  my ($session) = @_;
+  my $keystring = "_ken_cache_" . $session;
+  return $keystring;
+}
+
+sub get_cached_ken {
+  my ($session) = @_;
+  my $key = make_ken_cache_keystring($session);
+  my $result = Kynetx::Memcached::check_cache($key);
+  if (defined $result) {
+      return $result;
+  } else {
+      return undef;
+  }
+  
+}
+
+sub cache_ken {
+  my ($session,$ken) = @_;
+  my $key = make_ken_cache_keystring($session);
+  Kynetx::Memcached::mset_cache($key,$ken,KCACHETIME);
+}
+
 
 # This is nuculear--primarily for cleaning up after smoke tests
 sub delete_ken {

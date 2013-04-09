@@ -73,17 +73,13 @@ sub get_registry_element {
 		my $key = {
 			"rid" => $rid
 		};
-		my $c_key = Kynetx::MongoDB::map_key($rid,$hkey);
-		my $cache = Kynetx::MongoDB::get_cache_for_map($rid,COLLECTION,$c_key);
+		my $cache = Kynetx::MongoDB::get_cache_for_hash(COLLECTION,$key,$hkey);
 		if (defined $cache) {
-			$logger->trace("Cached value (",sub {Dumper($c_key)},"): ", sub {Dumper($cache)});
 			return $cache;
-		} else {
-			$logger->trace("Cached miss (",sub {Dumper($c_key)},"): ");
-		}
+		} 
 		my $result = Kynetx::MongoDB::get_hash_element(COLLECTION,$key,$hkey);
 		if (defined $result && ref $result eq "HASH") {
-			Kynetx::MongoDB::set_cache_for_map($rid,COLLECTION,$c_key,$result->{"value"});
+			Kynetx::MongoDB::set_cache_for_hash(COLLECTION,$key,$hkey,$result->{"value"});
 			return $result->{"value"};
 		} else {
 			return undef;
@@ -143,8 +139,10 @@ sub push_registry_set_element {
 	};
 	$logger->trace("query: ", sub {Dumper($fnmod)});
 	my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod);
-	Kynetx::MongoDB::clear_cache_for_map($rid,COLLECTION,Kynetx::MongoDB::map_key($rid,$hkey));
-	$logger->trace("fnm: ", sub {Dumper($result)});
+	my $cachekey = {
+	  'rid' => $rid
+	};
+	Kynetx::MongoDB::clear_cache(COLLECTION,$cachekey);
 	return $result;
 }
 
@@ -178,8 +176,10 @@ sub remove_registry_set_element {
 	};
 	$logger->trace("query: ", sub {Dumper($fnmod)});
 	my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod);
-	Kynetx::MongoDB::clear_cache_for_map($rid,COLLECTION,Kynetx::MongoDB::map_key($rid,$hkey));
-	$logger->trace("fnm: ", sub {Dumper($result)});
+	my $cachekey = {
+	  'rid' => $rid
+	};
+	Kynetx::MongoDB::clear_cache(COLLECTION,$cachekey);
 	return $result;
 }
 
@@ -195,11 +195,7 @@ sub delete_registry_element {
 		if (defined $hkey) {
 			$logger->trace("Delete element: ", sub {Dumper($hkey)});
 			Kynetx::MongoDB::delete_hash_element(COLLECTION,$key,$hkey);
-			Kynetx::MongoDB::clear_cache_for_map($rid,COLLECTION,Kynetx::MongoDB::map_key($rid,$hkey));
-			if ($hkey > 1) {
-				$logger->trace("Flush upstream ", sub {Dumper(Kynetx::MongoDB::map_key($rid,[$hkey->[0]]))});
-				Kynetx::MongoDB::clear_cache_for_map($rid,COLLECTION,Kynetx::MongoDB::map_key($rid,[$hkey->[0]]));
-			}
+    	Kynetx::MongoDB::clear_cache(COLLECTION,$key);
 		} else {
 			$logger->warn("Attempted to delete $rid in ", COLLECTION, " (use delete_registry(<rid>) )");
 		}
@@ -215,6 +211,7 @@ sub delete_registry {
 			"rid" => $rid
 		};
 		Kynetx::MongoDB::delete_value(COLLECTION,$key);
+		Kynetx::MongoDB::clear_cache(COLLECTION,$key);
 	}
 }
 
@@ -227,7 +224,6 @@ sub get_registry {
 		};
 		my $hkey = [];
 		return Kynetx::MongoDB::get_value(COLLECTION,$key);
-		#return Kynetx::Persistence::Ruleset::get_registry_element($key,$hkey);
 	}
 	return undef;
 }

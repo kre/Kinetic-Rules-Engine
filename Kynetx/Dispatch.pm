@@ -32,7 +32,7 @@ use Test::Deep::NoTest qw(cmp_set eq_deeply set);
 use Kynetx::Repository;
 use Kynetx::Rids qw/:all/;
 use Kynetx::Memcached qw/:all/;
-use Kynetx::Modules::PCI;
+#use Kynetx::Modules::PCI;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);

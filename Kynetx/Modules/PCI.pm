@@ -461,18 +461,31 @@ sub set_parent {
 	my $new_owner_eci = $args->[1];
 	$logger->debug("T eci: $eci");
 	$logger->debug("D eci: $new_owner_eci");	
-	my $target_ken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
-	my $new_ken = Kynetx::Persistence::KEN::ken_lookup_by_token($new_owner_eci);
-	my $parent = Kynetx::Persistence::KEN::get_ken_value($target_ken,'parent');
-	$logger->debug("T ken: $target_ken");
-	$logger->debug("D ken: $new_ken");	
-	$logger->debug("Parent ken: $parent");	
-	if ($parent eq $new_ken) {
-	  return $new_owner_eci;
+	if ($eci && $new_owner_eci) {
+	  my $target_ken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
+  	my $new_ken = Kynetx::Persistence::KEN::ken_lookup_by_token($new_owner_eci);
+  	my $parent = Kynetx::Persistence::KEN::get_ken_value($target_ken,'parent');
+  	$logger->debug("T ken: $target_ken");
+  	$logger->debug("D ken: $new_ken");	
+  	$logger->debug("Parent ken: $parent");	
+  	if ($target_ken && $new_ken) {
+    	if ($parent eq $new_ken) {
+    	  return $new_owner_eci;
+    	} else {
+    	  Kynetx::Persistence::KPDS::link_dependent_cloud($new_ken,$target_ken);
+    	  if ($parent) {
+    	    Kynetx::Persistence::KPDS::unlink_dependent_cloud($parent,$target_ken);
+    	  }    	  
+    	  return Kynetx::Persistence::KToken::get_default_token($new_ken);
+    	}  	  
+  	} else {
+  	  $logger->debug("No aaccount associated with ECI");
+  	  return undef;
+  	}
+	  
 	} else {
-	  Kynetx::Persistence::KPDS::link_dependent_cloud($new_ken,$target_ken);
-	  Kynetx::Persistence::KPDS::unlink_dependent_cloud($parent,$target_ken);
-	  return Kynetx::Persistence::KToken::get_default_token($new_ken);
+	  $logger->debug("set_parent requires two ecis");
+	  return undef;
 	}
   
 }
