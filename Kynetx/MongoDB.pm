@@ -107,7 +107,7 @@ sub init {
     $MONGO_MAX_SIZE = Kynetx::Configure::get_config('MONGO_MAX_SIZE') || $MONGO_MAX_SIZE;
 
     my @hosts = split(",",$MONGO_SERVER);
-	$logger->debug("Initializing MongoDB connection");
+	$logger->debug("Initializing MongoDB connection (cache $CACHETIME)");
 	foreach my $host (@hosts) {
 		eval {
 			$MONGO = MongoDB::Connection->new(host => $host,find_master =>1,query_timeout =>5000);
@@ -174,33 +174,53 @@ sub get_hash_element {
   my $logger = get_logger();
   my $key = clone $vKey;
   my $c = get_collection($collection);
+  
+  # Check for hash of full object
+    #my $keystring = make_keystring($collection,$vKey);
+    
+    my $cached = get_cache_for_hash($collection,$vKey,$hKey);
+    if (defined $cached) {        
+        $logger->trace("Found in cache ",sub {Dumper(@{$hKey})}, sub {Dumper($cached)});
+        return $cached;
+    } else {
+        $cached = get_cache($collection,$vKey);
+        if (defined $cached) {
+          $logger->trace("Found in root cache ");
+          my $value = Dive($cached->{'value'},@$hKey); 
+          return {
+            'value' => $value
+          };
+        }
+    }
+    $logger->trace("Cache not found");
+  
   if (defined $hKey && ref $hKey eq "ARRAY") {
     if (scalar @$hKey > 0) {
       $key->{'hashkey'} = {'$all' => $hKey};
     }
   }  
-  $logger->trace("Element key: ", sub {Dumper($key)});  
+  $logger->trace("Element key: ", sub {Dumper($key)});
   my $cursor = $c->find($key);
   if  ($cursor->has_next) {
     my @array_of_elements = ();
     my $last_updated = 0;
     while (my $object = $cursor->next) {
       if (defined $object->{'serialize'}) {
-	# old style hash
-	my $ast = Kynetx::Json::jsonToAst($object->{'value'});
-	$logger->debug("Found old-style ", ref $ast, " to deserialize");
-	$object->{'value'} = $ast;
-	return $object;
+      	# old style hash
+      	my $ast = Kynetx::Json::jsonToAst($object->{'value'});
+      	$logger->debug("Found old-style ", ref $ast, " to deserialize");
+      	$object->{'value'} = $ast;
+      	return $object;
       } elsif (! defined $object->{'hashkey'}) {
-	# Somehow we pulled a non-hash ref
-	$logger->warn("Hash Element requested, but found something else");
-	return $object;
+      	# Somehow we pulled a non-hash ref
+      	$logger->warn("Hash Element requested, but found something else");
+      	return $object;
       }
       my $v = $object->{'value'};
       my $kv = $object->{'hashkey'};
       my $ts = $object->{'created'};
       if ($ts > $last_updated) {
-	$last_updated = $ts;
+	       $last_updated = $ts;
       }
       push(@array_of_elements, {
 				'ancestors' => $kv,
@@ -209,10 +229,13 @@ sub get_hash_element {
     }
     # reassemble (vivify) the hash from the elements
     my $frankenstein = Kynetx::Util::elements_to_hash(\@array_of_elements);
+    $logger->trace("Dive for ", sub {Dumper($hKey)});
     my $value = Dive($frankenstein,@$hKey);
     my $composed_hash = clone ($vKey);
     $composed_hash->{'value'} = $value;
-    $composed_hash->{'created'} = $last_updated;
+    $composed_hash->{'created'} = $last_updated *1;
+    $logger->trace("Set cache for hash element", sub {Dumper($hKey)});
+    set_cache_for_hash($collection,$vKey,$hKey,$composed_hash);
     return $composed_hash;					
   } else {
     return undef;
@@ -238,7 +261,7 @@ sub get_value {
     my $keystring = make_keystring($collection,$var);
     my $cached = get_cache($collection,$var);
     if (defined $cached) {
-        $logger->trace("Found $collection variable in cache (",sub {Dumper($cached)},",");
+        $logger->trace("Found $collection variable $keystring in cache");
         return $cached;
     }  else {
         $logger->trace("$keystring not in cache");
@@ -261,7 +284,7 @@ sub get_value {
 	        		}]);
 	        		my $composed_hash = clone ($var);
 	        		$composed_hash->{'value'} = $hash;
-	        		$composed_hash->{'created'} = $result->{'created'};
+	        		$composed_hash->{'created'} = $result->{'created'} * 1;
 	        		return $composed_hash;
 	        	}
 	            $logger->trace("Save $keystring to memcache");
@@ -284,9 +307,10 @@ sub get_value {
 	        		});
 	        	}
 	        	my $hash = Kynetx::Util::elements_to_hash(\@array_of_elements);
-	        	$logger->trace("Resurrected: ", sub {Dumper($hash)});
+	        	$logger->trace("Resurrected: $keystring");
 	        	$composed_hash->{'value'} = $hash;
-	        	$composed_hash->{'created'} = $last_updated;
+	        	$composed_hash->{'created'} = $last_updated *1;
+	        	set_cache($collection,$var,$composed_hash);
 	        	return $composed_hash;
 	        }
         	
@@ -702,6 +726,7 @@ sub put_hash_element {
 		}
 		my @ids = $c->batch_insert(\@batch_elements);
 		$logger->trace("Inserted ",scalar @ids," hash element(s)");
+		clear_cache($collection,$vKey);
 		return scalar @ids;
 	}
 }
@@ -719,6 +744,7 @@ sub delete_hash_element {
 		  || ((defined $vKey->{'rid'}) 
 				&& ($vKey->{'rid'} ne ""))
 			) {
+			  clear_cache($collection,$vKey);
 			my $del = clone ($vKey);
 		    my $c = get_collection($collection);
 			if (ref $hKey eq 'ARRAY' && scalar @$hKey > 0) {
@@ -768,13 +794,13 @@ sub get_cache {
     my ($collection,$var) = @_;
     my $logger = get_logger();
     my $keystring = make_keystring($collection,$var);
-    $logger->trace("Cache keystring (get) $keystring: ", sub {Dumper($var)});
+    if ($collection eq 'edata') {
+      $logger->trace("Cache keystring (get) $keystring: ", sub {Dumper($var)});      
+    }
     my $result = Kynetx::Memcached::check_cache($keystring);
     if (defined $result) {
-        $logger->trace("Cache found: ", sub {Dumper($result)});
         return $result;
     } else {
-        $logger->trace("not found");
         return undef;
     }
 }
@@ -784,51 +810,79 @@ sub set_cache {
     my $logger = get_logger();
     my $parent = (caller(1))[3];
     my $keystring = make_keystring($collection,$var);
-    $logger->trace("Cache keystring (set) $keystring: ", sub {Dumper($var)});
     Kynetx::Memcached::mset_cache($keystring,$value,$CACHETIME);
 }
 
 sub clear_cache {
     my ($collection,$var) = @_;
+    my $logger= get_logger();
     my $keystring = make_keystring($collection,$var);
+    $logger->trace("Clear cache for: $keystring");
     Kynetx::Memcached::flush_cache($keystring);
+    #clear any reference to hash parts as well
+    clear_cache_for_hash($collection,$var);
 }
 
 sub make_keystring {
     my ($collection,$var) = @_;
+    my $logger = get_logger();
     my $keystring = $collection;
     foreach my $key (sort (keys %$var)) {
     	if ($var->{$key}) {
     		$keystring .= $var->{$key};
     	}        
     }
-    return md5_base64($keystring);
+    $logger->trace("Keystring: $keystring");
+    my $encode = md5_base64($keystring);
+    $logger->trace("Encoded keystring: $encode");
+    return $encode;
 }
 
 ########################### Caching functions for KPDS/KEN based maps
-sub get_cache_for_map {
-	my ($key,$collection,$var) = @_;
+sub clear_cache_for_hash {
+	my ($collection,$var) = @_;
+	my $logger=get_logger();
+  my $key = make_keystring($collection,$var);
+	my $lookup_key = "_map_" . $key;
+	$logger->trace("Lookup key for cache map: ", $lookup_key);
+	Kynetx::Memcached::flush_cache($lookup_key);
+}
+
+sub get_cache_for_hash {
+	my ($collection,$var,$path) = @_;
 	my $logger = get_logger();
+	my $key = make_keystring($collection,$var);
 	my $lookup_key = "_map_" . $key;
 	my $mcache_prefix = Kynetx::Memcached::check_cache($lookup_key);
+	my $dupe = clone $var;
 	$logger->trace("$lookup_key: ", sub {Dumper($mcache_prefix)});
 	if (defined $mcache_prefix) {
-		$var->{"cachemap"} = $mcache_prefix;
-		return Kynetx::MongoDB::get_cache($collection,$var);
+		$dupe->{"cachemap"} = $mcache_prefix;
+		$dupe->{"hashpath"} = $path;
+		return Kynetx::MongoDB::get_cache($collection,$dupe);
 	}
 	return undef;
 }
 
-sub set_cache_for_map {
-	my ($key,$collection,$var,$value) = @_;
+
+sub set_cache_for_hash {
+	my ($collection,$var,$path,$value) = @_;
 	my $logger = get_logger();
+	my $key = make_keystring($collection,$var);
+	$logger->trace("Var: ",sub {Dumper($var)});
+	$logger->trace("Calculated keystring in scfh: $key");
+	$logger->trace("SCFH: ", sub {Dumper($path)});
 	my $lookup_key = "_map_" . $key;
 	my $mcache_prefix =  time();
 	Kynetx::Memcached::mset_cache($lookup_key,$mcache_prefix,$CACHETIME);
 	$logger->trace("Set master $lookup_key: ($mcache_prefix)");
 	$var->{"cachemap"} = $mcache_prefix;
+	$var->{"hashpath"} = $path;
 	Kynetx::MongoDB::set_cache($collection,$var,$value);
 }
+
+# map methods deprecated
+#TODO: Clean up userstate and kpds
 
 sub clear_cache_for_map {
 	my ($key) = @_;
@@ -838,10 +892,34 @@ sub clear_cache_for_map {
 	Kynetx::Memcached::flush_cache($lookup_key);
 }
 
+sub set_cache_for_map {
+	my ($key,$collection,$var,$value) = @_;
+	my $logger = get_logger();
+	my $lookup_key = "_map_" . $key;
+	my $mcache_prefix =  time();
+	Kynetx::Memcached::mset_cache($lookup_key,$mcache_prefix,$CACHETIME);
+	$var->{"cachemap"} = $mcache_prefix;
+	Kynetx::MongoDB::set_cache($collection,$var,$value);
+}
+
+sub get_cache_for_map {
+	my ($key,$collection,$var) = @_;
+	my $logger = get_logger();
+	my $lookup_key = "_map_" . $key;
+	my $mcache_prefix = Kynetx::Memcached::check_cache($lookup_key);
+	if (defined $mcache_prefix) {
+		$var->{"cachemap"} = $mcache_prefix;
+		return Kynetx::MongoDB::get_cache($collection,$var);
+	}
+	return undef;
+}
+
+
+
 sub map_key {
 	my ($key,$hkey) = @_;
-	my $logger = get_logger();
-	my $struct = {
+	my $logger = get_logger();  	
+  my $struct = {
 		'a' => $key
 	};
 	my $index = 0;
@@ -849,7 +927,6 @@ sub map_key {
 		my $k = 'b' . $index++;
 		$struct->{$k} = $element;
 	}
-	$logger->trace("Map Key: ", sub {Dumper($struct)});
 	return $struct;
 }
 

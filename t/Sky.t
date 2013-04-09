@@ -42,25 +42,27 @@ Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
-use Kynetx::Events qw/:all/;
-use Kynetx::Sky qw/:all/;
-use Kynetx::Environments qw/:all/;
-use Kynetx::Session qw/:all/;
-use Kynetx::Configure qw/:all/;
-
-use Kynetx::Json qw/:all/;
-
-use Kynetx::Parser;
-use Kynetx::Rules;
-
 use Kynetx::FakeReq qw/:all/;
+#use Kynetx::Events qw/:all/;
+#use Kynetx::Sky qw/:all/;
+#use Kynetx::Environments qw/:all/;
+#use Kynetx::Session qw/:all/;
+#use Kynetx::Configure qw/:all/;
+#
+#use Kynetx::Json qw/:all/;
+#
+#use Kynetx::Parser;
+#use Kynetx::Rules;
+
 
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
-my $logger = get_logger();
 my $r = Kynetx::Test::configure();
+
+#Kynetx::Util::config_logging($r);
+my $logger = get_logger();
 
 my $rid = 'cs_test';
 

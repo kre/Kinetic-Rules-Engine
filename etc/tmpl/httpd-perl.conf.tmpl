@@ -365,6 +365,10 @@ CustomLog "|/web/sbin/cronolog --period=1day --symlink=/web/logs/billing_log /we
 LogFormat "%h %t %{TOTAL_SECS}e %{METHOD}e %{RIDS}e %{TXN_ID}e \"%{CALLER}e\" %{SID}e \"%{REFERER}e\" \"%{TITLE}e\" [%{RULE_NAMES}e] [%{RESULTS}e] [%{ACTIONS}e] [%{TAGS}e] [%{LABELS}e] " CLOUD
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/cloud_log /web/logs/kynetx/CLOUD-%Y%m%d-%H%M.log" CLOUD env=CLOUD
 
+# rule logging for OAUTH
+LogFormat "%h %t %{TOTAL_SECS}e %{METHOD}e %{RIDS}e %{TXN_ID}e \"%{CALLER}e\" %{SID}e \"%{REFERER}e\" \"%{TITLE}e\" [%{RULE_NAMES}e] [%{RESULTS}e] [%{ACTIONS}e] [%{TAGS}e] [%{LABELS}e] " OAUTH
+CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/oauth_log /web/logs/kynetx/OAUTH-%Y%m%d-%H%M.log" OAUTH env=OAUTH
+
 ExtendedStatus On
 <Location /server-status>
 SetHandler server-status
@@ -473,6 +477,17 @@ Allow from .kobj.net
 
 </LocationMatch>
 
+<LocationMatch /oauth/>
+  # P3P compressed policy header
+  Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
+
+  # env var to turn on rule logging
+  PerlSetEnv OAUTH 1
+  SetHandler perl-script
+  PerlHandler Kynetx::OAuth::OAuth20
+
+</LocationMatch>
+
 
 <LocationMatch /js/>
 
@@ -517,6 +532,8 @@ Allow from .kobj.net
   PerlHandler Kynetx::PersistentDataService
 
 </LocationMatch>
+
+
 
 <LocationMatch /manage/>
 

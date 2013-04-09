@@ -35,7 +35,7 @@ use Kynetx::Version;
 use Kynetx::Events;
 use Kynetx::Session;
 use Kynetx::Memcached;
-use Kynetx::Dispatch;
+#use Kynetx::Dispatch;
 use Kynetx::Metrics::Datapoint;
 use Apache2::Const -compile => qw(OK DECLINED);
 
