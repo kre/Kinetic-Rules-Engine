@@ -300,7 +300,7 @@ sub mk_http_request {
 			}
 		}
 
-		$logger->debug( "Encoded content: ", sub { Dumper($content) } );
+#		$logger->debug( "Encoded content: ", sub { Dumper($content) } );
 		$req->content($content);
 		$req->header( 'content-length' => length($content) );
 
