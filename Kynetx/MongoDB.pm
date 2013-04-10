@@ -358,14 +358,14 @@ sub get_list_and_clear {
   my $cached = get_cache($collection,$var);
   if (defined $cached) {
 #      $logger->trace("Found $collection variable in cache (",sub {Dumper($cached)},",");
-      return $cached->{'value'};
+    clear_cache($collection,$var);
+    return $cached->{'value'};
   }  else {
 #      $logger->trace("$keystring not in cache");
   }
   my $c = get_collection($collection);
   my $val = get_value($collection,$var)->{'value'};
   delete_value($collection,$var);
-  clear_cache($collection,$var);
 # $logger->debug("## Seeing val of ", sub{Dumper $val});
   return $val
 }
