@@ -203,6 +203,7 @@ SKIP: {
        }];
     
     $test_count += test_event_plan($after_test_plan);
+
     
     my $before_test_plan =
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",

@@ -236,8 +236,15 @@ sub merge_req_env {
 
 sub log_request_env {
   my ( $logger, $request_info ) = @_;
+
+  my $skip = {"KOBJ.ridlist" => 1,
+	     };
+  
   if ( $logger->is_debug() ) {
     foreach my $entry ( keys %{$request_info} ) {
+
+      next if $skip->{$entry};
+
       my $value = $request_info->{$entry};
       if ( $entry eq 'rids'
         || $entry eq 'site'

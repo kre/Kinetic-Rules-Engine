@@ -27,6 +27,7 @@ use lib qw(
 
 
 use Log::Log4perl qw(get_logger :levels);
+use Digest::MD5 qw(md5 md5_hex);
 use DateTime;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -37,8 +38,9 @@ use Kynetx::Session qw(:all);
 use Kynetx::Configure qw(:all);
 use Kynetx::MongoDB qw(:all);
 use Kynetx::Memcached qw(
-    check_cache
-    mset_cache
+check_cache
+mset_cache
+get_memd
 );
 use MongoDB;
 use MongoDB::OID;
@@ -302,38 +304,80 @@ sub get_timer_start {
 	return $value->{$start};	
 }
 
+sub get_event_list {
+  my ($rid,$session,$event_list_name) = @_;
+#  my $logger = get_logger();
+  my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+  my $query = {
+	       "rid" => $rid,
+	       "ken" => $ken,
+	       "key" => $event_list_name		
+	      };
+  my $list = Kynetx::MongoDB::get_list_and_clear(STATE_COLLECTION,$query); 
+#  $logger->debug("Returning event list: ", sub {Dumper $list});
+  return $list;
+}
+
+
 sub next_event_from_list {
   my ($rid,$session,$event_list_name) = @_;
     my $logger = get_logger();
-	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-	my $query = {
+#  $logger->debug("Getting KEN");
+  my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+#  $logger->debug("Found KEN");
+  my $query = {
 		"rid" => $rid,
 		"ken" => $ken,
 		"key" => $event_list_name		
-	};
-	my $result = Kynetx::MongoDB::atomic_pop_value(STATE_COLLECTION,$query);
-	if (defined $result) {
-		$logger->trace("$event_list_name found in ",STATE_COLLECTION, sub {Dumper($result)});
-		return $result;
-	} else {
-	  $logger->debug("Event list not found");
-	  return undef;
-	}
+	      };
+#  $logger->debug("making query for $event_list_name");
+
+  my $result;
+
+  # my $memd = get_memd();
+  # my $sig = md5_hex( $rid.$ken.$event_list_name);
+  # my $cached_list;
+  # $cached_list = $memd->get($sig);
+  # if ($cached_list) {
+  #   $logger->debug("Old list: ", sub{Dumper $cached_list});
+  #   $result = pop @{$cached_list};
+  #   $logger->debug("New list: ", sub{Dumper $cached_list});
+  #   $memd->set($sig, $cached_list); # since we popped, restore
+  #   $logger->debug("Returning cached result: ", sub{Dumper $result});
+  #   if (! $result eq "___end_token___") {
+  #     return $result;
+  #   } else {
+  #     return undef;
+  #   }
+  # }
+  # else {
+    $result = Kynetx::MongoDB::atomic_pop_value(STATE_COLLECTION,$query);
+    if (defined $result) {
+#      $logger->debug("Returning stored result: ", sub{Dumper $result});
+#      $logger->trace("$event_list_name found in ",STATE_COLLECTION, sub {Dumper($result)});
+      return $result;
+    } else {
+#      $logger->debug("Event list not found");
+      return undef;
+    }
+#  }
 }
 
 sub add_event_to_list {
-	my ($rid, $session,	$event_list_name, $json) = @_;
-    my $logger = get_logger();
-    $logger->debug("In add_event_to_list");
-    my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-    my $query = {
-		"rid" => $rid,
-		"ken" => $ken,
-		"key" => $event_list_name		    	
-    };
-    $logger->trace("Add event to $event_list_name: ", sub {Dumper($query)});
-    $logger->trace("$event_list_name is: $json");
-    my $status = Kynetx::MongoDB::atomic_push_value(STATE_COLLECTION,$query,$json);
+  my ($rid, $session,	$event_list_name, $json) = @_;
+  my $logger = get_logger();
+  my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+  my $query = {
+	       "rid" => $rid,
+	       "ken" => $ken,
+	       "key" => $event_list_name		    	
+	      };
+
+#  $logger->debug("Adding to event list", sub {Dumper $json}, " and ", sub{Dumper $query});
+
+  # $logger->trace("Add event to $event_list_name: ", sub {Dumper($query)});
+  # $logger->trace("$event_list_name is: $json");
+  my $status = Kynetx::MongoDB::atomic_push_value(STATE_COLLECTION,$query,$json);
 }
 
 
