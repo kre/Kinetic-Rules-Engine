@@ -548,15 +548,19 @@ sub eval_use_module {
 				   { 'in_module' => 1 } );
     
     $rmetric->stop_and_store();
-    $logger->trace( "Using ", sub { Dumper $use_ruleset} );
+#    $logger->trace( "Using ", sub { Dumper $use_ruleset} );
 
-#    my $provided_array = $use_ruleset->{'meta'}->{'provide'}->{'names'} || [];
-#
-#    foreach my $name ( @{$provided_array} ) {
-#      $provided->{$name} = 1;
-#    }
+    my $provided_array = $use_ruleset->{'meta'}->{'provide'}->{'names'} || [];
+
+    foreach my $name ( @{$provided_array} ) {
+      $provided->{$name} = 1;
+    }
 # replaced with...
-    $provided = {map {$_ => 1} @{$use_ruleset->{'meta'}->{'provide'}->{'names'} || []}};
+#    $provided = {map {$_ => 1} @{$use_ruleset->{'meta'}->{'provide'}->{'names'} || []}};
+
+    if (scalar @{$provided_array} < 1) {
+      $logger->debug("WARNING: module $name provides no functions" );
+    }
 
     my $configuration = $use_ruleset->{'meta'}->{'configure'}->{'configuration'}
       || [];
