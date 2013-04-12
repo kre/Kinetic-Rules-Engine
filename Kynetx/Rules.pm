@@ -596,7 +596,6 @@ sub eval_use_module {
       set_module_configuration( $req_info, $rule_env, $session, $init_mod_env,
 				$configuration, $modifiers || [] );
 
-    #  $logger->debug("Module env ", Dumper $module_rule_env);
     
     # put any keys in the module rule_env *before* evaling the globals
     if ( $use_ruleset->{'meta'}->{'keys'} ) {
@@ -619,6 +618,9 @@ sub eval_use_module {
       $js .= $this_js;
     }
     $umetric->stop_and_store();
+
+#    $logger->debug("Module env ", Dumper $module_rule_env);
+
 
     # eval the module's global block
     my $gmetric =
@@ -660,7 +662,7 @@ sub eval_use_module {
 #    $logger->debug("Cached module env ", sub {Dumper $module_rule_env});
 #    $logger->debug("Cached provided hash ", sub{Dumper $provided});
  
-    $logger->debug("Using cached rule env for module $name.$mversion");
+    $logger->debug("Using cached rule env for module $name.$mversion with signature $module_sig");
   }
 
 

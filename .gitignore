@@ -6,6 +6,7 @@ etc/amazon_credentials.pm
 /.project
 /current_engine.diff
 _*
+krl
 parser/output/*
 parser/lib*
 parser/*.g

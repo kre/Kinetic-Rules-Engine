@@ -134,7 +134,18 @@ sub eval_module {
       $_ = Kynetx::Expressions::den_to_exp($_);
     }
 
-    if ( $source eq 'eci' ) {
+    if ( $source eq 'event' ) {
+
+
+        $preds = Kynetx::Modules::Event::get_predicates();
+        if ( defined $preds->{$function} ) {
+            $val = $preds->{$function}->( $req_info, $rule_env, $args );
+            $val = Kynetx::Expressions::boolify($val || 0);
+        } else {
+            $val = Kynetx::Modules::Event::get_eventinfo( $req_info, $function, $args );
+        }
+
+      } elsif ( $source eq 'eci' ) {
         $preds = Kynetx::Modules::ECI::get_predicates();
         if ( defined $preds->{$function} ) {
             $val = $preds->{$function}->( $req_info,$rule_env,$session,$rule_name,$function,$args );
@@ -170,6 +181,46 @@ sub eval_module {
         } else {
             $val = $new_ds->sourcedata;
         }
+    } elsif ( $source eq 'meta' ) {
+      my ($registry_rid,$r,$v);
+#      $logger->debug("Looking up $function in ", sub {Dumper $rule_env});
+      if ($function eq 'rid') {
+        $registry_rid = get_rid($req_info->{'rid'});
+        ($r,$v) = split(/\./,$registry_rid);
+        $val = $r;
+      } elsif ($function eq 'version') {
+	      $val = get_version($req_info->{'rid'});
+      } elsif ($function eq 'callingRID') {
+	      $registry_rid = get_rid($req_info->{'rid'});
+	      ($r,$v) = split(/\./,$registry_rid);
+        $val = $r;
+      } elsif ($function eq 'callingVersion') {
+	      $val = get_version($req_info->{'rid'});
+      } elsif ($function eq 'moduleRID') {
+	       $registry_rid = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || get_rid($req_info->{'rid'});
+	      ($r,$v) = split(/\./,$registry_rid);
+        $val = $r;
+      } elsif ($function eq 'moduleVersion') {
+	     $val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || get_version($req_info->{'rid'});
+      } elsif ($function eq 'inModule' ) {
+	     $val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || 0;
+      } elsif ($function eq 'rulesetName' ) {
+	     my $rid = get_rid($req_info->{'rid'});
+	     $val = $req_info->{"$rid:name"};
+      } elsif ($function eq 'rulesetAuthor' ) {
+	     my $rid = get_rid($req_info->{'rid'});
+	     $val = $req_info->{"$rid:author"};
+      } elsif ($function eq 'rulesetDescription' ) {
+	     my $rid = get_rid($req_info->{'rid'});
+	     $val = $req_info->{"$rid:description"};
+      } elsif ($function eq 'eci' ) {
+	     $val = $req_info->{"id_token"};
+      } elsif ($function eq 'host' ||  $function eq 'hostname' ) {
+	$val = Kynetx::Configure::get_config('EVAL_HOST');
+      } else {
+	     $val = "No meta information for $function available";
+      }
+
     } elsif ( $source eq 'twitter' ) {
         $preds = Kynetx::Modules::Twitter::get_predicates();
         if ( defined $preds->{$function} ) {
@@ -191,17 +242,6 @@ sub eval_module {
         } else {
             $val = Kynetx::Predicates::Page::get_pageinfo( $req_info, $function,
                                                            $args );
-        }
-
-    } elsif ( $source eq 'event' ) {
-
-
-        $preds = Kynetx::Modules::Event::get_predicates();
-        if ( defined $preds->{$function} ) {
-            $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val = Kynetx::Expressions::boolify($val || 0);
-        } else {
-            $val = Kynetx::Modules::Event::get_eventinfo( $req_info, $function, $args );
         }
 
     } elsif ( $source eq 'math' ) {
@@ -441,46 +481,6 @@ sub eval_module {
 
 	$val = '';
       }
-    } elsif ( $source eq 'meta' ) {
-      my ($registry_rid,$r,$v);
-#      $logger->debug("Looking up $function in ", sub {Dumper $rule_env});
-      if ($function eq 'rid') {
-        $registry_rid = get_rid($req_info->{'rid'});
-        ($r,$v) = split(/\./,$registry_rid);
-        $val = $r;
-      } elsif ($function eq 'version') {
-	      $val = get_version($req_info->{'rid'});
-      } elsif ($function eq 'callingRID') {
-	      $registry_rid = get_rid($req_info->{'rid'});
-	      ($r,$v) = split(/\./,$registry_rid);
-        $val = $r;
-      } elsif ($function eq 'callingVersion') {
-	      $val = get_version($req_info->{'rid'});
-      } elsif ($function eq 'moduleRID') {
-	       $registry_rid = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || get_rid($req_info->{'rid'});
-	      ($r,$v) = split(/\./,$registry_rid);
-        $val = $r;
-      } elsif ($function eq 'moduleVersion') {
-	     $val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || get_version($req_info->{'rid'});
-      } elsif ($function eq 'inModule' ) {
-	     $val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || 0;
-      } elsif ($function eq 'hostname' ) {
-	     $val = Kynetx::Util::get_hostname();
-      } elsif ($function eq 'rulesetName' ) {
-	     my $rid = get_rid($req_info->{'rid'});
-	     $val = $req_info->{"$rid:name"};
-      } elsif ($function eq 'rulesetAuthor' ) {
-	     my $rid = get_rid($req_info->{'rid'});
-	     $val = $req_info->{"$rid:author"};
-      } elsif ($function eq 'rulesetDescription' ) {
-	     my $rid = get_rid($req_info->{'rid'});
-	     $val = $req_info->{"$rid:description"};
-      } elsif ($function eq 'eci' ) {
-	     $val = $req_info->{"id_token"};
-      } else {
-	     $val = "No meta information for $function available";
-      }
-
     } elsif ( $source eq 'this2that' ) {
         $preds = Kynetx::Modules::This2That::get_predicates();
         if ( defined $preds->{$function} ) {

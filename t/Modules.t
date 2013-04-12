@@ -223,19 +223,6 @@ is($val,'dev',"Meta data for ruleset version");
 $test_count++;
 
 
-$val = Kynetx::Expressions::den_to_exp(
-            Kynetx::Modules::eval_module($my_req_info, 
-					 $rule_env, 
-					 $session, 
-					 $rule_name, 
-					 'meta', 
-					 'hostname', 
-					 [] 
-					));
-
-
-is($val,hostname,"Hostname");
-$test_count++;
 
 $val = Kynetx::Expressions::den_to_exp(
             Kynetx::Modules::eval_module($my_req_info, 
@@ -296,6 +283,35 @@ $val = Kynetx::Expressions::den_to_exp(
 is($val,"flipperoo!!","Testing ECI");
 $test_count++;
 
+$val = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
+					 $rule_env, 
+					 $session, 
+					 $rule_name, 
+					 'meta', 
+					 'host', 
+					 [] 
+					));
+
+my $host = Kynetx::Configure::get_config('EVAL_HOST');
+
+is($val, $host,"Testing meta:host()");
+$test_count++;
+
+
+$val = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
+					 $rule_env, 
+					 $session, 
+					 $rule_name, 
+					 'meta', 
+					 'hostname', 
+					 [] 
+					));
+
+
+is($val,$host,"meta:hostname()");
+$test_count++;
 
 
 #diag Dumper $rule_env;

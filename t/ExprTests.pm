@@ -3174,6 +3174,56 @@ add_expr_testcase(
 
 
 
+# what happens if I beesting a function?
+$re1 = extend_rule_env(['f','x'],
+		       [{'val' => {
+				   'sig' => 'fc6fff86ffd3a7246e1fe3fce5f6c426',
+				   'expr' =>  {
+					       'args' => [
+							  {
+							   'type' => 'var',
+							   'val' => 'x'
+							  },
+							  {
+							   'type' => 'num',
+							   'val' => 1
+							  }
+							 ],
+					       'type' => 'prim',
+					       'op' => '+'
+					      },
+				   'env' => Test::Deep::ignore(),
+				   'vars' => [
+					      'x'
+					     ],
+				   'decls' => []
+				  },
+			 'type' => 'closure'
+			},
+			"This is my string: ***non-scalar cannot be inserted in string***"],
+		       $rule_env);
+
+$krl_src = <<_KRL_;
+pre {
+    f = function(x){x + 1};
+    x = "This is my string: #{f}";
+}
+_KRL_
+
+
+$js = <<_JS_;
+var f = function(x){return(x + 1)};
+var x = 'This is my string: ***non-scalar cannot be inserted in string***';
+_JS_
+
+add_expr_testcase(
+    $krl_src,
+    'pre',
+    $js,
+    $re1,
+    0);
+
+
 
 #-------------------------------------------------------------------------------
 # predicate guards

@@ -1470,7 +1470,7 @@ sub cachable_expr {
   } elsif($expr->{'type'} eq 'qualified' && (
 	  $expr->{'source'} eq 'meta' && 
 	  ($expr->{'predicate'} eq 'rid' 
-	  #|| $expr->{'predicate'} eq 'moduleRID'
+	   || $expr->{'predicate'} eq 'moduleRID'
 	  ))
 	 ) {
     return 1;
@@ -1538,13 +1538,20 @@ sub eval_str {
       $req_info->{'string_stash'}->{$str_sig}->{'str_array'} = $string_array;
       $req_info->{'string_stash'}->{$str_sig}->{'expr_array'} = $expr_array;
     }
+    
 
+    my @vals;
 
+    foreach my $ex (@{$expr_array}) {
+      my $d = eval_expr($ex,$rule_env, $rule_name,$req_info, $session);
+      my $v = $d->{'val'};
+#      $logger->debug("Seeing ", sub {Dumper $v});
+#      $v = (defined $d->{'type'} && $d->{'type'} eq 'closure') ? '__FUNCTION__' : $v;
+      $v = (ref $v eq 'ARRAY' || ref $v eq 'HASH') ? '***non-scalar cannot be inserted in string***' : $v;
+#      push @vals, (ref $v eq 'ARRAY' || ref $v eq 'HASH') ? $json->encode($v) || "" : $v
+      push @vals, $v
 
-    my @vals = map {my $v = eval_expr($_,$rule_env, $rule_name,$req_info, $session)->{'val'};
-#		    $logger->debug("Seeing ", sub {Dumper $v});
-                    (ref $v eq 'ARRAY' || ref $v eq 'HASH') ? $json->encode($v) || "" : $v
-		   } @{$expr_array};
+    } ;
     $val = join('',map {$_ =~ m#^_____EXPR____(\d+)$# ? $vals[$1] : $_ } @{ $string_array});
     return Kynetx::Parser::mk_expr_node('str',$val);
 
