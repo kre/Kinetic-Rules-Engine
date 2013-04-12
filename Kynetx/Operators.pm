@@ -285,14 +285,18 @@ sub eval_filter {
 
       my $dval = Kynetx::Expressions::eval_expr($expr->{'args'}->[0], $rule_env, $rule_name,$req_info, $session);
 
+#      $logger->debug("function in filter: ", sub{ Dumper $dval->{'val'}->{'expr'}});
+
       if (Kynetx::Expressions::type_of($dval) eq 'closure') {
 
 	if ($obj->{'type'} eq 'array') {
 
 	  my @a = grep 
 	    {my $app = {'type' => 'app',
-		       'function_expr' => $expr->{'args'}->[0],
+		       'function_expr' => $dval,
 		       'args' => [Kynetx::Expressions::exp_to_den($_)]};
+
+
 
 	     Kynetx::Expressions::den_to_exp(
   		      Kynetx::Expressions::eval_application($app,
@@ -300,6 +304,10 @@ sub eval_filter {
 							    $rule_name,
 							    $req_info,
 							    $session));
+
+	     # reset run count for function since not recursive
+	     $req_info->{$dval->{'val'}->{'sig'}} = 0
+
 	   } @{$eval};
 
 	  $v = \@a;

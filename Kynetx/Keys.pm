@@ -76,7 +76,7 @@ sub insert_key {
 
   my $rid = get_rid($req_info->{'rid'});
 
-  $logger->debug("Storing key $key ($rid) -> $value");
+  $logger->debug("Storing key $key ($rid)");
 
 
   my $generate_js  = {'errorstack' => 1,
