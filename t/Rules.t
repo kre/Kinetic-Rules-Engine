@@ -1481,7 +1481,7 @@ rule foreach_here is active {
     pre {
       p = x.pick("\$..foo");
       y = <<
-This is the number #{p}>>;
+This is the number #{p.encode()}>>;
       z = 6;
       w = <<
 This is another number #{z}>>;
