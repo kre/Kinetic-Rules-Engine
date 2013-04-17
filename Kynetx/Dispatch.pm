@@ -109,6 +109,12 @@ sub get_ridlist {
   my ( $req_info, $id_token, $ken ) = @_;
   my $logger     = get_logger();
   my $rid        = get_rid( $req_info->{'rid'} );
+
+  if (is_ridlist_stashed($req_info)) {
+    $logger->debug("Using stashed RID list");
+    return grab_ridlist($req_info);
+  }
+
   unless ($ken) {
     $logger->trace("Find ken from token: $id_token");
     $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($id_token);
@@ -152,10 +158,7 @@ sub get_ridlist {
       push( @{$temp}, $map );
     }
     $rid_list = $temp;
-    # cache this...
-    #my $rid_list_key = mk_ridlist_key($ken);
-    #my $memd         = get_memd();
-    #$memd->set( $rid_list_key, $rid_list );
+    stash_ridlist($req_info, $rid_list);
     return $rid_list;
   }
   else {
@@ -502,6 +505,27 @@ sub delete_stashed_eventtree {
   my ($req_info, $memd, $eventtree_key) = @_;
 #  return defined $req_info->{"KOBJ.eventtree"};
   $memd->delete($eventtree_key);
+}
+
+
+sub stash_ridlist {
+  my ( $req_info, $ridlist ) = @_;
+  $req_info->{"KOBJ.ridlist"} = $ridlist;
+}
+
+sub grab_ridlist {
+  my ($req_info) = @_;
+  return $req_info->{"KOBJ.ridlist"};
+}
+
+sub is_ridlist_stashed {
+  my ($req_info) = @_;
+  return defined $req_info->{"KOBJ.ridlist"};
+}
+
+sub delete_stashed_ridlist {
+  my ($req_info) = @_;
+  undef $req_info->{"KOBJ.ridlist"};
 }
 
 1;

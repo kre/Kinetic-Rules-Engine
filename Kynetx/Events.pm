@@ -229,7 +229,7 @@ sub process_event {
 	my $ev = mk_event($req_info);
 
    #$logger->debug("Processing events for $rids with event ", sub {Dumper $ev});
-
+	
 	my $schedule = Kynetx::Scheduler->new();
 
 	foreach my $rid ( split( /;/, $rids ) ) {
@@ -262,7 +262,9 @@ sub process_event {
 
 	}
 
-	$logger->debug("Schedule complete");
+
+	$logger->debug("\n----***----- Schedule Complete ----***-----");
+
 	my $dd = Kynetx::Response->create_directive_doc( $req_info->{'eid'} );
 	my $js = '';
 	$js .= eval {
@@ -368,7 +370,7 @@ sub process_event_for_rid {
 		unless ( $current_state eq $next_state ) {
 			my $json = $ev->serialize();
 			Kynetx::Persistence::UserState::add_event_to_list($rid, $session,$event_list_name, $json );
-			$logger->trace("State change for $rule->{'name'}");
+			$logger->debug("State change for $rule->{'name'}");
 		}
 
 		if ( $sm->is_final($next_state) ) {
@@ -389,20 +391,20 @@ sub process_event_for_rid {
 
 			my $var_list = [];
 			my $val_list = [];
-			$logger->trace("Process sessions");
 
 #            while ( my $json =
 #                    consume_trail_element("ent", $rid, $session, $event_list_name, 1) )
 
 			my $event_list_count = 0;
-			while (
-				my $ev = Kynetx::Events::Primitives->unserialize(
-					Kynetx::Persistence::UserState::next_event_from_list(
-						$rid, $session, $event_list_name
-					)
-				)
-			  )
-			{
+
+			my $event_list = Kynetx::Persistence::UserState::get_event_list(
+						$rid, $session, $event_list_name);
+
+#			$logger->debug("Event list: ", sub{Dumper $event_list});
+
+			foreach my $raw_ev ( @{ $event_list } ) {
+
+			  my $ev = Kynetx::Events::Primitives->unserialize($raw_ev);
 
 			  $logger->debug("Event list count: $event_list_count; threshold: $event_list_threshold");
 			  if ( $event_list_count++ > $event_list_threshold ) {
@@ -415,10 +417,12 @@ sub process_event_for_rid {
 			  # came in.  We're not doing anything with it--simply
 			  # using the req_info from the final req...
 
+
 			  # gather up vars and vals from all the events in the path
 			  push @{$var_list}, @{ $ev->get_vars( $sm->get_id() ) };
 			  push @{$val_list}, @{ $ev->get_vals( $sm->get_id() ) };
 			}
+
 			$schedule->annotate_task( $rid, $rulename, $task, 'vars',
 				$var_list );
 			$schedule->annotate_task( $rid, $rulename, $task, 'vals',
@@ -436,13 +440,14 @@ sub process_event_for_rid {
 
 		}
 		else {
-			$logger->trace("Next state not final");
-			$logger->trace( "Next state ref: ", ref $next_state );
+#			$logger->debug("Setting current state");
+#			$logger->trace( "Next state ref: ", ref $next_state );
 			if ( $next_state ne "" ) {
 				set_current_state( $rid, $session, $rule->{'name'},
 					$next_state );
 			}
 
+#			$logger->debug("Next state not final");
 		}
 
 	}

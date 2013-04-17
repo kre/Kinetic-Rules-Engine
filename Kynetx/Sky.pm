@@ -294,6 +294,8 @@ sub _handler {
 
 	my $ev = Kynetx::Events::mk_event($req_info);
 
+	$logger->debug("\n----***----- Start scheduling ----***-----");
+
 	my $schedule = Kynetx::Scheduler->new();
 
 	$logger->debug("processing event $domain/$eventtype");
@@ -358,7 +360,8 @@ sub _handler {
 		}
 	}
 
-	$logger->debug("Schedule complete");
+	$logger->debug("\n----***----- Schedule complete ----***-----");
+
 	my $dd       = Kynetx::Response->create_directive_doc( $req_info->{'eid'} );
 	my $js       = '';
 	my $s_metric = new Kynetx::Metrics::Datapoint(

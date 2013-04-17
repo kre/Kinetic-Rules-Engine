@@ -76,7 +76,7 @@ sub insert_key {
 
   my $rid = get_rid($req_info->{'rid'});
 
-  $logger->debug("Storing key $key ($rid) -> $value");
+  $logger->debug("Storing key $key ($rid)");
 
 
   my $generate_js  = {'errorstack' => 1,
@@ -86,7 +86,7 @@ sub insert_key {
   my $js = '';
 
 
-  $req_info->{$rid.':key:'.$key} = $value;
+#  $req_info->{$rid.':key:'.$key} = $value;
 
   $rule_env = extend_rule_env(mk_key($rid,$key),
 			      $value, 
@@ -124,7 +124,9 @@ sub mk_key {
   #$rid = $rid || '';
   #$key = $key || '';
   #$name_prefix = $name_prefix || '';
-  return join(':', @{[$name_prefix,$rid,$key]});
+#  return join(':', @{[$name_prefix,$rid,$key]});
+  # don't need the rid now that we're in rule_envs
+  return join(':', @{[$name_prefix,$key]});
 }
 
 1;

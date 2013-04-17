@@ -336,9 +336,11 @@ sub get_list {
       $logger->trace("$keystring not in cache");
   }
   my $c = get_collection($collection);
+  my $val = get_value($collection,$var)->{'value'};
   my @rlist;
   if ($c) {
     my $cursor = $c->find($var);
+#    $logger->debug("# In mongo: ", $cursor->count);	
     while (my $object = $cursor->next) {
         push(@rlist,$object);
     }
@@ -346,6 +348,26 @@ sub get_list {
   }
   return undef;
 }
+
+sub get_list_and_clear {
+  my ($collection,$var) = @_;
+#  my $logger = get_logger();
+  my $keystring = make_keystring($collection,$var);
+  my $cached = get_cache($collection,$var);
+  if (defined $cached) {
+#      $logger->trace("Found $collection variable in cache (",sub {Dumper($cached)},",");
+    clear_cache($collection,$var);
+    return $cached->{'value'};
+  }  else {
+#      $logger->trace("$keystring not in cache");
+  }
+  my $c = get_collection($collection);
+  my $val = get_value($collection,$var)->{'value'};
+  delete_value($collection,$var);
+# $logger->debug("## Seeing val of ", sub{Dumper $val});
+  return $val
+}
+
 
 sub atomic_pop_value {
 	my ($collection,$var,$direction) = @_;
@@ -375,6 +397,7 @@ sub atomic_push_value {
 	my ($collection,$var,$value) = @_;
 	my $logger = get_logger();
     my $c = get_collection($collection);
+    clear_cache($collection,$var);
     my $result = $c->update($var,{'$push' => {"value" => $value}},{"safe" => SAFE,'upsert' => 1});
 }
 

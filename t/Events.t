@@ -109,9 +109,9 @@ $test_count++;
 my $platform = '127.0.0.1';
 $platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
 $platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
-$platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox
-');
+$platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox');
 
+### NOTE: if the platform isn't right, then cookies won't work and these tests will fail
 
 my $dn = "http://$platform/blue/event";
 
@@ -205,6 +205,7 @@ SKIP: {
        }];
     
     $test_count += test_event_plan($after_test_plan);
+
     
     my $before_test_plan =
       [{'url' => "$dn/web/pageview/cs_test_1?caller=http://www.windley.com/archives/2006/foo.html",
@@ -550,5 +551,7 @@ $logger->info("Events: ", $dp->get_metric("realtime"));
 done_testing($test_count);
 
 1;
+
+
 
 

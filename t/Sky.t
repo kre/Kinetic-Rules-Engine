@@ -64,7 +64,6 @@ $Data::Dumper::Indent = 1;
 my $r = Kynetx::Test::configure();
 
 #Kynetx::Util::config_logging($r);
-my $logger = get_logger();
 
 my $rid = 'cs_test';
 

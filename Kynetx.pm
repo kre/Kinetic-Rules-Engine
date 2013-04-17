@@ -272,7 +272,7 @@ sub flush_ruleset_cache {
       my $rid = Kynetx::Rids::get_rid($rid_info);
       my $version = Kynetx::Rids::get_version($rid_info);
 
-      $logger->warn("[flush] flushing rules for $rid (version $version)");
+      $logger->info("[flush] flushing rules for $rid (version $version)");
       $memd->delete(Kynetx::Repository::make_ruleset_key($rid, $version));
 
 
