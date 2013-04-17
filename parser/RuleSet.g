@@ -2451,6 +2451,7 @@ meta_block
         tmp.put("alias",$alias.text);
         if ($ver.text != null) {        	
         	tmp.put("version",strip_string($ver.text));
+            $ver = null;
         }
         alias = null;
         tmp.put("modifiers",temp_list);

@@ -1,0 +1,127 @@
+<html>
+<head>
+<title>Describe Ruleset <TMPL_VAR NAME=RULESET_ID></title>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/highcharts-more.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
+<script>
+	var foo = <TMPL_VAR NAME="point">;
+$(function () {
+    $('#container').highcharts({
+
+				chart: {
+					type: 'boxplot',
+					zoomType : 'xy'
+					},
+				credits: {
+					text: 'TENX'
+				},
+				title : {
+					text: "TENX (<small>" + <TMPL_VAR NAME="numpoints"> + " points</small>)"
+					},
+				xAxis : {
+					labels: {
+						rotation: -45,
+						align: 'right'
+					},
+					type : 'category',
+					title : {
+						text : 'Host'
+					},	
+					categories : <TMPL_VAR NAME=CATEGORIES>				
+				},
+				yAxis: {
+					title : {
+						text : 'Duration (ms)'
+					}
+				},	
+				plotOptions : {
+					boxplot : {
+						//fillColor: '#F0F0E0',
+			    		//lineWidth: 4,
+			    		//medianColor: '#0C5DA5',
+			    		//medianWidth: 5,
+			    		//stemColor: '#A63400',
+			    		//stemDashStyle: 'solid',
+			    		//stemWidth: 4,
+			    		//whiskerColor: '#3D9200',
+			    		//whiskerLength: '20%',
+			    		//whiskerWidth: 5,
+			    		tooltip : {
+			    			headerFormat : '<em>{point.key}</em><br/>{point.id}<br/>'
+			    		}
+					},
+					scatter : {
+						marker : {
+							radius : 3,
+							hover : {
+								enabled : true,
+								
+							}
+						},
+						cursor : 'pointer',
+						point : {
+							events :  {
+							click: function(event) {
+							    //console.log(event.currentTarget);
+								var id = event.currentTarget.id;
+								var s = foo[id];
+								var str = "<table>";
+								var main_ref = window.location.href;
+								
+								var series = "";
+								var any_ref = main_ref;
+								if (s.hasOwnProperty('series')) {
+									var a = 'any';
+									var b = s['series'];
+									any_ref = main_ref.replace(b,a);
+								}
+								var re = /\?/;
+								var sep = '?';
+								var match = re.exec(any_ref);
+								if (match) {
+									sep = "&";
+								}
+								any_ref = any_ref + sep;
+								//str = str + "<tr><td colspan=2>" + any_ref + "</td></tr>";
+								for(var prop in s) {
+									if(s.hasOwnProperty(prop)) {
+									    var eRef = any_ref + prop + "=" + s[prop];
+										var x = "<tr><td>" + prop + "</td><td><a href=\""+ eRef +"\">" + s[prop] + "</a></td></tr>";
+										str = str + x;
+									}
+										
+								}
+								str = str + "</table>";
+								$("#reporting").html(str);
+								}
+							}
+						}
+					}
+				},	
+				series: <TMPL_VAR NAME=DATA>
+			});
+});</script>
+
+</head>
+<body>
+
+<p>
+<div id="container" style="width: 100%; height: 400px">
+</div>
+<div id="reporting"></div>
+
+<pre>
+<code>
+
+</code>
+</pre>
+
+</p>
+
+
+
+
+</body>
+</html>

@@ -51,14 +51,14 @@ sub empty_rule_env {
 sub lookup_rule_env {
     my($key,$env) = @_;
 
-    my $logger = get_logger();
-    $logger->trace("Looking for $key");
+#    my $logger = get_logger();
+#    $logger->debug("Looking for $key");
 
     if(! defined $env || ! (ref $env eq 'HASH')) {
 	return undef;
     } elsif (defined $env->{$key}) {
-    	$logger->trace("Found: $key with (", $env->{$key}, ")");
-		return $env->{$key};
+#    	$logger->debug("Found: $key with (", sub{ Dumper $env->{$key} }, ")");
+	return $env->{$key};
     } else {
 	return lookup_rule_env($key, $env->{'___sub'});
     }

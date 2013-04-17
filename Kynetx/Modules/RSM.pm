@@ -175,7 +175,7 @@ sub is_owner {
 	my $logger = get_logger();
 	my $rid = get_rid($req_info->{'rid'});
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-  if ( Kynetx::Modules::PCI::system_authorized($req_info, $rule_env, $session) ) {
+  if ( Kynetx::Modules::PCI::pci_authorized($req_info, $rule_env, $session) ) {
       
   }
 	
@@ -242,7 +242,7 @@ sub do_flush {
   my $owner = $rid_info->{'owner'};
   my $response;
   if (
-    Kynetx::Modules::PCI::system_authorized($req_info, $rule_env, $session) ||
+    Kynetx::Modules::PCI::pci_authorized($req_info, $rule_env, $session) ||
     (Kynetx::Modules::PCI::developer_authorized($req_info,$rule_env,$session,['ruleset','create']) && $ken eq $owner) ||
     $pin eq $pin    
   ) {
@@ -288,7 +288,7 @@ sub do_update {
   my $owner = $rid_info->{'owner'};
   my $response;
   if (
-    Kynetx::Modules::PCI::system_authorized($req_info, $rule_env, $session) ||
+    Kynetx::Modules::PCI::pci_authorized($req_info, $rule_env, $session) ||
     (Kynetx::Modules::PCI::developer_authorized($req_info,$rule_env,$session,['ruleset','create']) && $ken eq $owner) ||
     $pin eq $pin    
   ) {
@@ -354,7 +354,7 @@ sub do_delete {
   my $owner = $rid_info->{'owner'};
   my $response;
   if (
-    Kynetx::Modules::PCI::system_authorized($req_info, $rule_env, $session) ||
+    Kynetx::Modules::PCI::pci_authorized($req_info, $rule_env, $session) ||
     (Kynetx::Modules::PCI::developer_authorized($req_info,$rule_env,$session,['ruleset','create']) && $ken eq $owner)
   ) {
     Kynetx::Persistence::Ruleset::delete_registry($flush_rid);
@@ -368,7 +368,7 @@ sub do_import {
   #$logger->debug("Rid: $rid");
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
   my $v = $vars->[0] || '__dummy';
-  if (Kynetx::Modules::PCI::system_authorized($req_info, $rule_env, $session)|| $rid eq "may_delete") {
+  if (Kynetx::Modules::PCI::pci_authorized($req_info, $rule_env, $session)|| $rid eq "may_delete") {
     my ($rid_to_import,$version,$app_version);
     $rid_to_import = $args->[0];
     $version = $config->{'version'} || 0;

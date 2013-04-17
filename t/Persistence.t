@@ -73,15 +73,14 @@ Kynetx::MongoDB::init();
 	$dp->start_timer();
 
 my $kobj_root = Kynetx::Configure::get_config('KOBJ_ROOT');
-$logger->debug("KOBJ root: $kobj_root");
+$logger->trace("KOBJ root: $kobj_root");
 
 my $test_count = 0;
 my $stack_size = 5;
 my $start;
 my $end;
 my $qtime;
-
-my $r = Kynetx::Test::configure();
+my $tsession;
 
 my $rid = 'cs_test';
 
@@ -93,10 +92,15 @@ my $rule_name = 'foo';
 
 my $rule_env = Kynetx::Test::gen_rule_env();
 
-#my $session = Kynetx::Test::gen_session($r, $rid);
-my $session = Kynetx::Session::process_session($r);
-$logger->trace("Initial session:",sub {Dumper($session)});
-#Kynetx::Test::gen_app_session($r, $my_req_info);
+my $r = new Kynetx::FakeReq();
+$r->_delete_session();
+
+# Set the session, find a KEN
+$r = new Kynetx::FakeReq();
+$r->_set_session($tsession);
+
+my $session = process_session($r);
+my $session_ken = Kynetx::Persistence::KEN::get_ken($session);
 
 my $dict_path = "/usr/share/dict/words";
 my @DICTIONARY;
@@ -110,10 +114,12 @@ chomp($what);
 chomp($where);
 chomp($who);
 
+my $hash_var_name = $DICTIONARY[rand(@DICTIONARY)];
+chomp($hash_var_name);
+
 my ($got, $expected, $description);
 my ($domain,$var,$val,$from);
 my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-$logger->trace("New ken session:",sub {Dumper($session)});
 my $key = {
     "ken" => $ken,
     "rid" => $rid,
@@ -122,7 +128,7 @@ $logger->trace("What:  $what");
 $logger->trace("Who:   $who");
 $logger->trace("Where: $where");
 
-goto ENDY;
+#goto ENDY;
 
 ######### The way this works, you could loop these tests over
 ######### Entity and Application variables, but I'm keeping them linear for now
@@ -146,11 +152,11 @@ $qtime = timediff($end,$start);
 #diag "First save: " . $qtime->[0];
 cmp_deeply($got,$val,$description);
 $test_count++;
-$logger->debug("Post save session:",sub {Dumper($session)});
+$logger->trace("Post save session:",sub {Dumper($session)});
 
 $description = "Check $var for $val";
 my $result = Kynetx::MongoDB::get_value("edata",$key);
-$logger->debug("$description: ",sub {Dumper($result)});
+$logger->trace("$description: ",sub {Dumper($result)});
 $got = $result->{"value"};
 cmp_deeply($got,$val,$description);
 $test_count++;
@@ -166,7 +172,7 @@ $test_count++;
 
 $description = "Retrieve creation time from ($var)";
 $got = get_persistent_var($domain,$rid,$session,$var,1);
-cmp_deeply($got,re(qr/[0..9]+/),$description);
+cmp_deeply($got,re(qr/[0-9]+/),$description);
 $test_count++;
 
 $description = "Delete value ($var) from mongo";
@@ -363,7 +369,7 @@ $test_count++;
 #Log::Log4perl->easy_init($DEBUG);
 $var = "stack";
 for my $i (0 .. $stack_size) {
-    $logger->debug($i);
+    $logger->trace($i);
     my $struct = {
         "index" => $i,
         $i => $who
@@ -440,7 +446,7 @@ $test_count++;
 
 $description = "Retrieve creation time from ($var)";
 $got = get_persistent_var($domain,$rid,$session,$var,1);
-cmp_deeply($got,re(qr/[0..9]+/),$description);
+cmp_deeply($got,re(qr/[0-9]+/),$description);
 $test_count++;
 
 $description = "Delete value from mongo";
@@ -599,7 +605,7 @@ $test_count++;
 #Log::Log4perl->easy_init($DEBUG);
 $var = "stack";
 for my $i (0 .. $stack_size) {
-    $logger->debug($i);
+    $logger->trace($i);
     my $struct = {
         "index" => $i,
         $i => $who
@@ -674,17 +680,38 @@ my $subhash = {
 	}
 };
 
-my $hash_var = "aaBaa";
+my $hash_var = $hash_var_name;
+
 
 foreach my $domain ('ent', 'app') {
-	$logger->debug($domain);
+	$logger->trace($domain);
 	my $result;
 	my $description;
 	my $path;
 	my $replace;
 	my $dupe;
+	my $keystring;
+	my $collection;
+	my $map_key;
+	my $ent_key;
 	
-	diag "Inserting new HASH ($domain)";
+	if ($domain eq 'ent') {
+	  $collection = 'edata';
+	  $ent_key = {
+  	 'rid'=> $rid,
+  	 'key' => $hash_var_name,
+  	 'ken' => $session_ken
+  	};
+	} else {
+	  $collection = 'appdata';
+	  $ent_key = {
+  	 'rid'=> $rid,
+  	 'key' => $hash_var_name
+  	};
+	  
+	}
+	
+	#diag "Inserting new HASH ($domain)";
 	$description = "insert the whole hash ($domain)";
 	$result = Kynetx::Persistence::save_persistent_var($domain,$rid,$session,$hash_var,$tricky_hash);
 	cmp_deeply($result,$tricky_hash,$description);
@@ -694,24 +721,38 @@ foreach my $domain ('ent', 'app') {
 	$result = Kynetx::Persistence::get_persistent_var($domain,$rid,$session,$hash_var);
 	cmp_deeply($result,$tricky_hash,$description);
 	$test_count++;
+		
+	$description = "Pull the hash from cache ($domain)";
+	$result = Kynetx::Persistence::get_persistent_var($domain,$rid,$session,$hash_var);
+	cmp_deeply($result,$tricky_hash,$description);
+	$test_count++;
+	
+	$description = "Check cache directly";
+	#diag $description;
+	$keystring = Kynetx::MongoDB::make_keystring($collection,$ent_key);
+	$result = Kynetx::MongoDB::get_cache($collection,$ent_key);
+	cmp_deeply($result->{'value'},$tricky_hash,$description);
+	$test_count++;
 	
 	$description = "Pull an element (scalar) ($domain)";
 	$path = ['a'];
 	$result = Kynetx::Persistence::get_persistent_hash_element($domain,$rid,$session,$hash_var,$path);
 	cmp_deeply($result,$tricky_hash->{'a'},$description);
 	$test_count++;
-
+	
 	$description = "Pull an element (hash) ($domain)";
 	$path = ['i', 'l'];
 	$result = Kynetx::Persistence::get_persistent_hash_element($domain,$rid,$session,$hash_var,$path);
 	cmp_deeply($result,$tricky_hash->{'i'}->{'l'},$description);
 	$test_count++;
 
+
 	$description = "Pull an element (array) ($domain)";
 	$path = ['i', 'k'];
 	$result = Kynetx::Persistence::get_persistent_hash_element($domain,$rid,$session,$hash_var,$path);
 	cmp_deeply($result,$tricky_hash->{'i'}->{'k'},$description);
 	$test_count++;
+	
 	
 	$description = "Insert an element ($domain)";
 	$replace = "frumptious";
@@ -723,19 +764,84 @@ foreach my $domain ('ent', 'app') {
 	cmp_deeply($result,$dupe,$description);
 	$test_count++;
 	
-	$description = "Replace a hash element (scalar) ($domain)";
-	$dupe->{'i'} = $replace;
-	$path = ['i'];
-	Kynetx::Persistence::save_persistent_hash_element($domain,$rid,$session,$hash_var,$path,$replace);
+	$description = "Get the element again ($domain)";
 	$result = Kynetx::Persistence::get_persistent_var($domain,$rid,$session,$hash_var);
 	cmp_deeply($result,$dupe,$description);
 	$test_count++;
+	
+	$description = "Replace an element";
+	$replace = "day";
+	$path = ['new'];
+	$dupe->{'new'} = $replace;
+	Kynetx::Persistence::save_persistent_hash_element($domain,$rid,$session,$hash_var,$path,$replace);
+	$result = Kynetx::Persistence::get_persistent_hash_element($domain,$rid,$session,$hash_var,$path);
+	cmp_deeply($result,$replace,$description);
+	$test_count++;
+	
+	$description = "Check cache directly for hash element";
+	$result = Kynetx::MongoDB::get_cache_for_hash($collection,$ent_key,$path);
+	cmp_deeply($result->{'value'},$replace,$description);
+	$test_count++;
+	
+
+	$description = "Replace a hash element (scalar) ($domain)";
+	$replace = $DICTIONARY[rand(@DICTIONARY)];
+  chomp($replace);
+	$dupe->{'i'} = $replace;
+	$path = ['i'];
+	Kynetx::Persistence::save_persistent_hash_element($domain,$rid,$session,$hash_var,$path,$replace);
+
+  #diag "New value for 'i' ($replace)";
+
+	$description = "Check cache directly for hash element (not found)";
+	$result = Kynetx::MongoDB::get_cache_for_hash($collection,$ent_key,$path);
+	cmp_deeply($result,undef,$description);
+	$test_count++;
+	
+  $description = "Get just the updated value";
+	$result = Kynetx::Persistence::get_persistent_hash_element($domain,$rid,$session,$hash_var,$path);
+	cmp_deeply($result,$replace,$description);
+	$test_count++;
+	
+	$description = "Check cache directly for hash element (found)";
+	$result = Kynetx::MongoDB::get_cache_for_hash($collection,$ent_key,$path);
+	cmp_deeply($result->{'value'},$replace,$description);
+	$test_count++;
+	
+	$description = "Check cache for full object (not found)";
+	$result = Kynetx::MongoDB::get_cache($collection,$ent_key);
+	cmp_deeply($result,undef,$description);
+	$test_count++;
+	
+	$description = "Get the full object from mongo";
+	$result = Kynetx::Persistence::get_persistent_var($domain,$rid,$session,$hash_var);
+	$logger->trace("Object: ", sub {Dumper($result)});
+	cmp_deeply($result,$dupe,$description);
+	$test_count++;
+	
+	$description = "Check cache for full object (found)";
+	$result = Kynetx::MongoDB::get_cache($collection,$ent_key);
+	cmp_deeply($result->{'value'},$dupe,$description);
+	$test_count++;	
 	
 	$description = "Insert an element (hash) ($domain)";
 	$replace = $subhash;
 	$dupe->{'newer'} = $replace;
 	$path = ['newer'];
 	Kynetx::Persistence::save_persistent_hash_element($domain,$rid,$session,$hash_var,$path,$replace);
+	
+	$description = "Hash Element cache empty";
+	$result = Kynetx::MongoDB::get_cache_for_hash($collection,$ent_key,$path);
+	cmp_deeply($result,undef,$description);
+	$test_count++;
+	
+	$description = "Hash Object cache empty";
+	$result = Kynetx::MongoDB::get_cache($collection,$ent_key);
+	cmp_deeply($result,undef,$description);
+	$test_count++;
+	
+	
+	$description = "Get Object from mongo";
 	$result = Kynetx::Persistence::get_persistent_var($domain,$rid,$session,$hash_var);
 	cmp_deeply($result,$dupe,$description);
 	$test_count++;
@@ -773,7 +879,11 @@ foreach my $domain ('ent', 'app') {
 }
 
 	$dp->stop_timer();
-	$logger->info("Persistence: ", $dp->get_metric("realtime"));
+	$logger->info("Smoke time: ", $dp->get_metric("realtime"));
+
+FINAL:
+	
+Kynetx::Persistence::KEN::delete_ken($session_ken);
 
 
 done_testing($test_count);

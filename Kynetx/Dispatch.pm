@@ -32,7 +32,7 @@ use Test::Deep::NoTest qw(cmp_set eq_deeply set);
 use Kynetx::Repository;
 use Kynetx::Rids qw/:all/;
 use Kynetx::Memcached qw/:all/;
-use Kynetx::Modules::PCI;
+#use Kynetx::Modules::PCI;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -167,6 +167,7 @@ sub old_repository {
   my ($req_info, $id_token, $ken) = @_;
   # get account info
   my $logger = get_logger();
+  $logger->debug("Using old repository for $id_token");
   my $user_rids_info = Kynetx::Configure::get_config('USER_RIDS_URL');
   my ( $app_url, $username, $passwd ) = split( /\|/, $user_rids_info );
   my $token = $req_info->{'id_token'} || "";

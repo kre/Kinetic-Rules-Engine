@@ -513,9 +513,13 @@ sub eval_module {
 				     'species' => 'module undefined'
 				    }
 				   );
+        ###TAKE ME OUT; once we see the rule env for this
+#	$logger->debug("Didn't find $function for $source in ", sub{ Dumper $rule_env });
+	$logger->debug("Didn't find $function for $source; raising error event");
+
     }
 
-    $logger->trace("Datasource $source:$function -> ", sub {Dumper($val)});
+#    $logger->trace("Datasource $source:$function -> ", sub {Dumper($val)});
 
 #    return $val;
     return  Kynetx::Expressions::mk_den_value($val);
@@ -524,11 +528,11 @@ sub eval_module {
 
 sub lookup_module_env {
   my ($name,$key,$env) = @_;
-  my $logger = get_logger();
-  #$logger->debug("Find ($key) in [$name]");
+#  my $logger = get_logger();
+#  $logger->debug("Find ($key) in [$name]");
   $name = $name || "";
   my $provided = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name . '_provided', $env);
-  #$logger->debug("Module's environment: ",sub {Dumper($provided)});
+#  $logger->debug("Module's environment: ",sub {Dumper($provided)});
 
   my $r;
   if ($provided->{$key}) {

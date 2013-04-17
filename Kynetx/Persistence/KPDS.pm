@@ -58,12 +58,14 @@ our @ISA         = qw(Exporter);
 our %EXPORT_TAGS = (all => [
 qw(
 get_kpds_record
+get_callbacks
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
 
 use constant COLLECTION => "kpds";
 use constant DEV => "credentials";
 use constant RID => "ridlist";
+use constant OAUTH => "oauth";
 
 sub get_kpds_element {
 	my ($ken,$hkey) = @_;
@@ -72,18 +74,13 @@ sub get_kpds_element {
 		my $key = {
 			"ken" => $ken
 		};
-		my $c_key = Kynetx::MongoDB::map_key($ken,$hkey);
-		$logger->trace("Map key: ", sub {Dumper($c_key)});
-		my $cache = Kynetx::MongoDB::get_cache_for_map($ken,COLLECTION,$c_key);
+		my $cache = Kynetx::MongoDB::get_cache_for_hash(COLLECTION,$key,$hkey);
 		if (defined $cache) {
-			$logger->trace("Cached value (",sub {Dumper($c_key)},"): ", sub {Dumper($cache)});
 			return $cache;
-		} else {
-			$logger->trace("Cached miss (",sub {Dumper($c_key)},"): ");
-		}
+		} 
 		my $result = Kynetx::MongoDB::get_hash_element(COLLECTION,$key,$hkey);
 		if (defined $result && ref $result eq "HASH") {
-			Kynetx::MongoDB::set_cache_for_map($ken,COLLECTION,$c_key,$result->{"value"});
+			Kynetx::MongoDB::set_cache_for_hash(COLLECTION,$key,$hkey,$result->{"value"});
 			return $result->{"value"};
 		} else {
 			return undef;
@@ -105,11 +102,8 @@ sub put_kpds_element {
 		'value' => $val
 	};
 	my $success = Kynetx::MongoDB::put_hash_element(COLLECTION,$key,$hkey,$value);
-	Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,Kynetx::MongoDB::map_key($ken,$hkey));
-	if ($hkey > 1) {
-		$logger->trace("Flush upstream");
-		Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,Kynetx::MongoDB::map_key($ken,[$hkey->[0]]));
-	}
+	Kynetx::MongoDB::clear_cache(COLLECTION,$key);
+	
 	return $success;
 	
 }
@@ -144,7 +138,10 @@ sub push_kpds_set_element {
 	};
 	$logger->trace("query: ", sub {Dumper($fnmod)});
 	my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod);
-	Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,Kynetx::MongoDB::map_key($ken,$hkey));
+	my $cachekey = {
+	  'ken' => $ken
+	};
+	Kynetx::MongoDB::clear_cache(COLLECTION,$cachekey);
 	$logger->trace("fnm: ", sub {Dumper($result)});
 	return $result;
 }
@@ -179,8 +176,10 @@ sub remove_kpds_set_element {
 	};
 	$logger->trace("query: ", sub {Dumper($fnmod)});
 	my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod);
-	Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,Kynetx::MongoDB::map_key($ken,$hkey));
-	$logger->trace("fnm: ", sub {Dumper($result)});
+	my $cachekey = {
+	  'ken' => $ken
+	};
+	Kynetx::MongoDB::clear_cache(COLLECTION,$cachekey);
 	return $result;
 }
 
@@ -196,11 +195,7 @@ sub delete_kpds_element {
 		if (defined $hkey) {
 			$logger->trace("Delete element: ", sub {Dumper($hkey)});
 			Kynetx::MongoDB::delete_hash_element(COLLECTION,$key,$hkey);
-			Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,Kynetx::MongoDB::map_key($ken,$hkey));
-			if ($hkey > 1) {
-				$logger->trace("Flush upstream ", sub {Dumper(Kynetx::MongoDB::map_key($ken,[$hkey->[0]]))});
-				Kynetx::MongoDB::clear_cache_for_map($ken,COLLECTION,Kynetx::MongoDB::map_key($ken,[$hkey->[0]]));
-			}
+    	Kynetx::MongoDB::clear_cache(COLLECTION,$key);
 		} else {
 			$logger->warn("Attempted to delete $key in ", COLLECTION, " (use delete_kpds(<KEN>) )");
 		}
@@ -216,6 +211,7 @@ sub delete_kpds {
 			"ken" => $ken
 		};
 		Kynetx::MongoDB::delete_value(COLLECTION,$key);
+		Kynetx::MongoDB::clear_cache(COLLECTION,$key);
 	}
 }
 
@@ -246,6 +242,33 @@ sub link_dependent_cloud {
 	my ($ken,$dependent) = @_;
 	my $hkey = ['dependents'];
 	Kynetx::Persistence::KPDS::push_kpds_set_element($ken,$hkey,$dependent);	
+}
+########################### KPDS OAuth Methods
+sub add_callback {
+	my ($ken,$dev_eci,$callback_list) = @_;
+	my $logger = get_logger();
+	my $keypath = [OAUTH, $dev_eci, 'callbacks'];
+	my $result = push_kpds_set_element($ken,$keypath,$callback_list);
+	$logger->debug("Set: ", sub {Dumper($result)});
+	return $result;    
+}
+
+sub remove_callback {
+	my ($ken,$dev_eci,$callback_list) = @_;
+	my $logger=get_logger();
+	my $keypath = [OAUTH, $dev_eci, 'callbacks'];
+	my $result = remove_kpds_set_element($ken,$keypath,$callback_list);
+	$logger->debug("remove: ", sub {Dumper($result)});
+	return $result;
+}
+
+sub get_callbacks {
+	my ($ken, $dev_eci) = @_;
+	my $logger=get_logger();
+	my $keypath = [OAUTH, $dev_eci, 'callbacks'];
+	my $result = get_kpds_element($ken,$keypath);
+	$logger->debug("list: ", sub {Dumper($result)});
+	return $result;		
 }
 
 

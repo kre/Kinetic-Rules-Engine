@@ -156,7 +156,7 @@ sub delete_module_caches {
   my $msig_list = get_msig_list($req_info, $memd);
 
   if (defined $msig_list) {
-    $logger->debug("Flushing module environments for $rid.$version as a caller with module signatures ", sub {Dumper $msig_list});
+    $logger->warn("Flushing module environments for $rid.$version as a caller with module signatures ", sub {Dumper $msig_list});
     foreach my $sig (keys %{$msig_list}) {
 
       $memd->delete(get_re_key($sig));
@@ -172,7 +172,7 @@ sub delete_module_caches {
   my $mod_re_list = get_mod_re_list($rid, $version, $memd);
 
   if (defined $mod_re_list) {
-    $logger->debug("Flushing module environments for $rid.$version as a module with module signatures ", sub {Dumper $mod_re_list});
+    $logger->warn("Flushing module environments for $rid.$version as a module with module signatures ", sub {Dumper $mod_re_list});
     foreach my $sig (keys %{$mod_re_list}) {
 
       $memd->delete(get_re_key($sig));

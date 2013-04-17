@@ -140,7 +140,7 @@ my $count = 0;
   $keys);
 
 $description = "Check system key";
-$result = Kynetx::Modules::PCI::system_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[]);
+$result = Kynetx::Modules::PCI::pci_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[]);
 isnt($result,undef,$description);
 $test_count++;
 
@@ -569,6 +569,9 @@ $test_count++;
 
 ####### Predicates (after ECIs have been created)
 # check that predicates at least run without error
+Log::Log4perl->easy_init($DEBUG);
+
+
 my $temp_ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($uid);
 my @token_list = map {$_->{'cid'}} @{Kynetx::Persistence::KToken::list_tokens($temp_ken)};
 
@@ -581,6 +584,24 @@ $test_count++;
 
 $description = "Check is_related (no match)";
 @dummy_arg = ($eci2,\@token_list);
+$expected = 0;
+$result = &{$preds->{'is_related'}}($my_req_info, $rule_env,\@dummy_arg);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Jessie test";
+my $static_eci = "D808DAC2-84E6-11E2-B4CC-22BD87B7806A";
+my @t_list = ("D808DAC2-84E6-11E2-B4CC-22BD87B7806A");
+@dummy_arg = ($static_eci,\@t_list);
+$expected = 1;
+$result = &{$preds->{'is_related'}}($my_req_info, $rule_env,\@dummy_arg);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Jessie test2";
+$static_eci = "D808DAC2-84E6-11E2-B4CC-22BD87B7806A";
+@t_list = ("D808DAC2-84E6-11E2-B4CC-22BD87B7806B");
+@dummy_arg = ($static_eci,\@t_list);
 $expected = 0;
 $result = &{$preds->{'is_related'}}($my_req_info, $rule_env,\@dummy_arg);
 cmp_deeply($result,$expected,$description);

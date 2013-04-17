@@ -109,6 +109,8 @@ $test_count++;
 my $platform = '127.0.0.1';
 $platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
 $platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
+$platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox
+');
 
 
 my $dn = "http://$platform/blue/event";
@@ -525,7 +527,7 @@ SKIP: {
 
      $test_count += test_event_plan($submit_test_plan);
 
-     my $submit_test_plan =
+     $submit_test_plan =
        [{'url' => "$dn/web/submit/cs_test_1?element=%23form_2&login=foo&cs_test_1:flop=goo",
  	'type' => 'text/javascript',
  	'like' => ["/var foobar = 4/",

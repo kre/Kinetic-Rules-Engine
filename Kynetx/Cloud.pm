@@ -110,6 +110,11 @@ sub handler {
 	}
 	else { # doing cloud 
 
+	  # store these for later logging
+	  Log::Log4perl::MDC->put( 'site',  $path_components[2]);
+	  Log::Log4perl::MDC->put( 'rule', $path_components[3] );    # function.
+	  Log::Log4perl::MDC->put( 'eid', "Sky Cloud API" );    # no eid
+
 
 	  # get a session, if _sid param is defined it will override cookie
 	  my $session = Kynetx::Session::process_session($r, undef,  $req_info->{'id_token'});
@@ -148,16 +153,21 @@ sub eval_ruleset_function {
   # TODO: check that this is installed
 
   # this can be a big list...
-  my $unfiltered_rid_list =
-    Kynetx::Dispatch::calculate_rid_list( $req_info, $session );
+  # my $unfiltered_rid_list =
+  #   Kynetx::Dispatch::calculate_rid_list( $req_info, $session );
+
+  my $ken = Kynetx::Persistence::get_ken( $session, "", "web" );   # empty rid
+  my $rid_list = Kynetx::Dispatch::get_ridlist( $req_info, $req_info->{'id_token'}, $ken );
+  my $rid_list_hash = {map { $_->{'rid'} => 1 } @{ $rid_list }};
+
+#  $logger->debug("Ridlist: ", sub { Dumper $rid_list_hash } );
+
 
   my $ruleset =
       Kynetx::Rules::get_rule_set( $req_info, 1, 
 				   $req_info->{'module_name'}, 
 				   $req_info->{'module_version'}
 				 );
-
-#  $logger->debug("Ridlist: ", sub { Dumper $unfiltered_rid_list->{'ridlist'} } );
 
 
 
@@ -175,7 +185,7 @@ sub eval_ruleset_function {
 	      };
 
   } 
-  elsif (! ( defined $unfiltered_rid_list->{'ridlist'}->{$req_info->{'module_name'}}
+  elsif (! ( defined $rid_list_hash->{$req_info->{'module_name'}}
 	  || Kynetx::Configure::get_config('ALLOW_ALL_RULESETS')
            )
 	) {
