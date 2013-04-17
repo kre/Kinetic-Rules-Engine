@@ -109,6 +109,8 @@ $test_count++;
 my $platform = '127.0.0.1';
 $platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
 $platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
+$platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox
+');
 
 
 my $dn = "http://$platform/blue/event";

@@ -477,15 +477,30 @@ Allow from .kobj.net
 
 </LocationMatch>
 
-<LocationMatch /oauth/>
+<LocationMatch /oauth/authorize>
+  # P3P compressed policy header
+  Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
+
+  # env var to turn on rule logging
+  PerlSetEnv OAUTH 1
+  PerlAccessHandler Kynetx::OAuth::OAuthorize
+  SetHandler perl-script
+  PerlHandler Kynetx::OAuth::OAuth20
+</LocationMatch>
+
+<LocationMatch /oauth/access_token>
   # P3P compressed policy header
   Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
 
   # env var to turn on rule logging
   PerlSetEnv OAUTH 1
   SetHandler perl-script
-  PerlHandler Kynetx::OAuth::OAuth20
-
+  PerlAccessHandler Kynetx::OAuth::OAccess
+  PerlAuthenHandler Kynetx::OAuth::OAuthenticate
+  PerlResponseHandler Kynetx::OAuth::OAccessToken
+  AuthName Kynetx
+  AuthType Basic
+  Require valid-user
 </LocationMatch>
 
 

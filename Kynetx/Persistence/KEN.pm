@@ -64,6 +64,7 @@ qw(
     has_ken
     new_ken
     ken_lookup_by_token
+    ken_lookup_by_username
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
 

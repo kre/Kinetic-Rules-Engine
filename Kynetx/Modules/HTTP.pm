@@ -259,6 +259,7 @@ sub mk_http_request {
 	my $ua = kynetx_ua($credentials);
 
 	$logger->debug("Method is $method & URI is $uri");
+	$logger->debug("User agent: ", sub {Dumper($ua)});
 
 	my $req;
 	my $response;

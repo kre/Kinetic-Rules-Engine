@@ -58,12 +58,14 @@ our @ISA         = qw(Exporter);
 our %EXPORT_TAGS = (all => [
 qw(
 get_kpds_record
+get_callbacks
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
 
 use constant COLLECTION => "kpds";
 use constant DEV => "credentials";
 use constant RID => "ridlist";
+use constant OAUTH => "oauth";
 
 sub get_kpds_element {
 	my ($ken,$hkey) = @_;
@@ -240,6 +242,33 @@ sub link_dependent_cloud {
 	my ($ken,$dependent) = @_;
 	my $hkey = ['dependents'];
 	Kynetx::Persistence::KPDS::push_kpds_set_element($ken,$hkey,$dependent);	
+}
+########################### KPDS OAuth Methods
+sub add_callback {
+	my ($ken,$dev_eci,$callback_list) = @_;
+	my $logger = get_logger();
+	my $keypath = [OAUTH, $dev_eci, 'callbacks'];
+	my $result = push_kpds_set_element($ken,$keypath,$callback_list);
+	$logger->debug("Set: ", sub {Dumper($result)});
+	return $result;    
+}
+
+sub remove_callback {
+	my ($ken,$dev_eci,$callback_list) = @_;
+	my $logger=get_logger();
+	my $keypath = [OAUTH, $dev_eci, 'callbacks'];
+	my $result = remove_kpds_set_element($ken,$keypath,$callback_list);
+	$logger->debug("remove: ", sub {Dumper($result)});
+	return $result;
+}
+
+sub get_callbacks {
+	my ($ken, $dev_eci) = @_;
+	my $logger=get_logger();
+	my $keypath = [OAUTH, $dev_eci, 'callbacks'];
+	my $result = get_kpds_element($ken,$keypath);
+	$logger->debug("list: ", sub {Dumper($result)});
+	return $result;		
 }
 
 

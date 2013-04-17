@@ -67,7 +67,9 @@ sub init {
 
     my $logger = get_logger();
     my $parent = (caller(1))[3];
-
+    
+    return if ($MEMD);
+    
     $MEMSERVERS = Kynetx::Configure::get_config('MEMCACHE_SERVERS');
 
     $logger->debug("Initializing memcached ($parent): ", join(" ", @{ $MEMSERVERS }));

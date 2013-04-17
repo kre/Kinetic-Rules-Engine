@@ -105,7 +105,9 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 # set up logging
 sub config_logging {
     my ($r) = @_;
-    # we can use the 'debug' config parameter to force detailed logging
+    if(Log::Log4perl->initialized()) {
+      return     
+    } # we can use the 'debug' config parameter to force detailed logging
     my $appender = Log::Log4perl::Appender->new(
 	"Log::Dispatch::File",
 	filename => "/web/logs/detail_log",
