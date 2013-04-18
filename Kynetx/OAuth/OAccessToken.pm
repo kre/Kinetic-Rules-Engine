@@ -109,7 +109,9 @@ sub handler {
   # so far so good, now create the official token
   my $token = Kynetx::Modules::PCI::create_oauth_token($cid,$oauth_user,$secret);
   $logger->debug("Token: $token");
-  my $oauth_eci = Kynetx::Modules::PCI::create_oauth_indexed_eci($oauth_user,$token,$eci);
+  my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($oauth_user);
+  my $oauth_eci = Kynetx::Modules::PCI::create_oauth_indexed_eci($ken,$token,$eci);
+  $logger->debug("OECI: $oauth_eci");
   
   # Server response
   $r->content_type('application/json;charset=UTF-8');

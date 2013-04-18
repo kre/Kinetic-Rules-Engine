@@ -316,6 +316,21 @@ $result = $mech->post($base,[
 
 ll($mech->content());
 
+$description = "Check to see that OAuth eci maps to access_token and ken";
+my $json = Kynetx::Json::decode_json($mech->content());
+my $otoken = $json->{'access_token'};
+my $oeci = Kynetx::Modules::PCI::get_oauth_token_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$otoken]);
+$expected = Kynetx::Persistence::KEN::ken_lookup_by_token($u_eci);
+$result = Kynetx::Persistence::KEN::ken_lookup_by_token($oeci);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Look up OAuth ECIs by developer eci";
+$expected = [$oeci];
+$result = Kynetx::Modules::PCI::get_developer_oauth_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
 done_testing($test_count);
 
 

@@ -281,13 +281,66 @@ sub get_default_token {
   my ($ken) = @_;
   my $key = {
     'ken' => $ken,
-    'token_name' => '_LOGIN'
+    'token_name' => '_LOGIN'    
   };
   my $result = Kynetx::MongoDB::get_value(COLLECTION,$key);
   if (defined $result) {
     return $result->{'ktoken'};
   }
   return undef;
+}
+
+sub get_token_by_token_name {
+  my ($name) = @_;
+  my $key = {
+    'token_name' => $name
+  };
+  my $result = Kynetx::MongoDB::get_value(COLLECTION,$key);
+  if (defined $result) {
+    return $result->{'ktoken'};
+  }
+  return undef;
+}
+
+sub get_token_by_token_type {
+	my ($type) = @_;
+	my $logger = get_logger();
+	my $tquery = {'endpoint_type' => $type};
+	my $c = Kynetx::MongoDB::get_collection(COLLECTION);
+	$logger->trace("Query: ", sub {Dumper($tquery)});
+	my $cursor = $c->find($tquery);
+	if ($cursor->has_next()) {
+		$logger->trace("Found some");
+		my @tokens_array = ();
+		while (my $obj = $cursor->next) {
+			my $eci = $obj->{'ktoken'};
+			push(@tokens_array,$eci);
+		}
+		return \@tokens_array; 
+	}
+	return undef;
+}
+  
+sub get_token_by_ken_and_label {
+	my ($ken,$name) = @_;
+	my $logger = get_logger();
+	my $tquery = {
+	  'ken' => $ken,
+	  'token_name' => $name
+	};
+	my $c = Kynetx::MongoDB::get_collection(COLLECTION);
+	$logger->trace("Query: ", sub {Dumper($tquery)});
+	my $cursor = $c->find($tquery);
+	if ($cursor->has_next()) {
+		$logger->trace("Found some");
+		my @tokens_array = ();
+		while (my $obj = $cursor->next) {
+			my $eci = $obj->{'ktoken'};
+			push(@tokens_array,$eci);
+		}
+		return \@tokens_array; 
+	}
+	return undef;  
 }
 
 sub get_oldest_token {

@@ -717,6 +717,36 @@ sub list_eci {
 }
 $funcs->{'list_eci'} = \&list_eci;
 
+sub list_eci_by_name {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+	my $logger=get_logger();
+	return 0 unless (pci_authorized($req_info, $rule_env, $session) ||
+	 developer_authorized($req_info,$rule_env,$session,['eci','show']));
+	my $ken;
+	my $arg1 = $args->[0];
+	my $name = $args->[1];
+	if (! defined $arg1) {
+		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+	} else {
+		# Check to see if it is an eci or a userid
+		if ($arg1 =~ m/^\d+$/) {
+			#ll("userid");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg1);
+		} else {
+			#ll("eci");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
+		}		
+	}	
+	if ($ken) {
+		my $channels = Kynetx::Persistence::KToken::get_token_by_ken_and_label($ken,$name);
+		return $channels;
+	}
+	return undef;
+}
+$funcs->{'list_eci_by_name'} = \&list_eci_by_name;
+
+
 sub get_primary_eci {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
 	my $logger=get_logger();
@@ -745,6 +775,32 @@ sub get_primary_eci {
 	return undef;
 }
 $funcs->{'session_token'} = \&get_primary_eci;
+$funcs->{'login_eci'} = \&get_primary_eci;
+
+
+sub get_oauth_token_eci {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+	my $logger=get_logger();
+	return 0 unless (pci_authorized($req_info, $rule_env, $session) ||
+	 developer_authorized($req_info,$rule_env,$session,['oauth','access_token']));
+	my $ken;
+	my $oauth_token = $args->[0];
+  my $primary = Kynetx::Persistence::KToken::get_token_by_token_name($oauth_token);
+  return $primary
+}
+$funcs->{'oauth_eci'} = \&get_oauth_token_eci;
+
+sub get_developer_oauth_eci {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+	my $logger=get_logger();
+	return 0 unless (pci_authorized($req_info, $rule_env, $session) ||
+	 developer_authorized($req_info,$rule_env,$session,['oauth','access_token']));
+	my $developer_eci = $args->[0];
+	my $type = 'OAUTH-' . $developer_eci;
+  my $primary = Kynetx::Persistence::KToken::get_token_by_token_type($type);
+  return $primary
+}
+$funcs->{'list_oauth_eci'} = \&get_developer_oauth_eci;
 
 ############################# ECI
 
@@ -978,6 +1034,7 @@ sub create_oauth_indexed_eci {
   my ($ken,$token_name,$developer_eci) = @_;
   my $type = 'OAUTH-' . $developer_eci;
   my $eci =  Kynetx::Persistence::KToken::create_token($ken,$token_name,$type);
+  return $eci;
 }
 
 sub developer_key {
