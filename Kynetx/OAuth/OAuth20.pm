@@ -53,6 +53,7 @@ our @ISA     = qw(Exporter);
 our %EXPORT_TAGS = (
     all => [
         qw(
+        query_param
           )
     ]
 );
@@ -66,10 +67,13 @@ sub handler {
     Log::Log4perl::MDC->put('rule', '[OAuth Main]');
     my $logger=get_logger('Kynetx');
 
-    $logger->debug("Create Access Token");
-    $logger->debug("User: ",$r->user);
-    $logger->debug("Auth: ",$r->notes->get("is_authenticated"));
-    return Apache2::Const::OK;
+    $logger->debug("OAuth2.0 Main");
+    $logger->debug("Args: ",$r->args);
+    $logger->debug("URI: ",$r->unparsed_uri());
+    
+    # We shouldn't ever get here because the user
+    # should be redirected before the PerlRequestHandler is ever called
+    return Apache2::Const::HTTP_BAD_REQUEST;
 }
 
 sub config_logging {
@@ -77,5 +81,19 @@ sub config_logging {
   my $appender = Log::Log4perl::Appender->new();
 }
 
+sub query_param {
+  my ($qstring,$key) = @_;
+  $qstring = URI::Escape::uri_unescape($qstring);
+  my $params;
+  my @pairs = split(/\&/,$qstring);
+  $params = Kynetx::Util::from_pairs(\@pairs);
+  return $params->{$key};
+}
 
+sub post_param {
+  my ($r,$key) = @_;
+  my $logger= get_logger();
+  my $req = Apache2::Request->new($r);
+  return $req->param($key);  
+}
 1;

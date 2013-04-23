@@ -118,7 +118,7 @@ sub handler {
   $r->headers_out->set('Cache-Control' => 'no-store');
   $r->headers_out->set('Pragma' => 'no-cache');
   $r->status(Apache2::Const::HTTP_OK);
-  print "{\n \"access_token\":\"$token\"\n}";
+  print "{\n \"access_token\":\"$token\",\n \"OAUTH_ECI\":\"$oauth_eci\"\n}";
   return Apache2::Const::OK;
 }
 

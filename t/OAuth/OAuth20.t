@@ -28,12 +28,16 @@ use Test::Deep;
 use Test::WWW::Mechanize;
 
 use Apache::Session::Memcached;
+use Apache2::Const qw(:common :http M_GET M_POST);
 use DateTime;
 use APR::URI;
 use APR::Pool ();
 use Cache::Memcached;
 use Storable 'dclone';
-use URI::Escape ('uri_escape_utf8');
+use URI::Escape qw(
+  uri_unescape
+  uri_escape_utf8
+);
 
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
@@ -276,30 +280,78 @@ cmp_deeply($result,$expected,$description);
 $test_count++;
 
 # Test the oauth authorize link
+require LWP::UserAgent;
+my $ua = LWP::UserAgent->new;
+$ua->max_redirect(1);
 my $oauth_request_uri = $result;
 my $state;
+my $bad_oauth_request;
 if ($oauth_request_uri =~ m/state=([0-9|a-z|A-Z|_]+)/) {
   $state = $1;
 }
 
-ll("Request uri: ",$oauth_request_uri);
-my $mech = Test::WWW::Mechanize->new(cookie_jar => undef);
-$result = $mech->get($oauth_request_uri);
+#  building the request uri from scratch;
+my $client_id = $d_eci;
+my $response_type = 'code';
+my $redirect = $cb[0];
 
-$description = "Response has developer ECI";
-$expected = re(qr/name="oauthClient" value="$d_eci/);
-cmp_deeply($result->content(),$expected,$description);
+$description = "POST not allowed";
+$bad_oauth_request = test_request_url();
+$expected = Apache2::Const::HTTP_METHOD_NOT_ALLOWED;
+$result = $ua->post($bad_oauth_request);
+cmp_deeply($result->code(),$expected,$description);
 $test_count++;
 
-$description = "Response has correct redirect";
-$expected = re(qr/name="oauthRedirect" value="$cb[0]/);
-cmp_deeply($result->content(),$expected,$description);
+$description = "Bad ECI";
+$bad_oauth_request = test_request_url('foo',$response_type,$state,$redirect);
+$expected = Apache2::Const::FORBIDDEN;
+$result = $ua->get($bad_oauth_request);
+cmp_deeply($result->code(),$expected,$description);
 $test_count++;
 
-$description = "Response has correct state";
-$expected = re(qr/name="oauthState" value="$state/);
-cmp_deeply($result->content(),$expected,$description);
+$description = "Bad redirect URI";
+$bad_oauth_request = test_request_url($client_id,$response_type,$state,"http://www.foo.com/");
+$expected = Apache2::Const::HTTP_BAD_REQUEST;
+$result = $ua->get($bad_oauth_request);
+cmp_deeply($result->code(),$expected,$description);
 $test_count++;
+
+$ua->max_redirect(0);
+$description = "Bad response request";
+$bad_oauth_request = test_request_url($client_id,'request',$state,$redirect);
+$expected = Apache2::Const::HTTP_MOVED_TEMPORARILY;
+$result = $ua->get($bad_oauth_request);
+cmp_deeply($result->code(),$expected,$description);
+$test_count++;
+
+$description = "Redirected location uses redirect url for error response";
+$expected = re(qr/^$redirect.+error=unsupported_response_type/);
+cmp_deeply(uri_unescape($result->header('Location')),$expected,$description);
+$test_count++;
+
+$description = "Check the redirect constructed by PCI";
+$expected = Apache2::Const::HTTP_MOVED_TEMPORARILY;
+$result = $ua->get($oauth_request_uri);
+cmp_deeply($result->code(),$expected,$description);
+$test_count++;
+
+
+#goto ENDY;
+#
+#$description = "Response has developer ECI";
+#$expected = re(qr/name="oauthClient" value="$d_eci/);
+#cmp_deeply($result->content(),$expected,$description);
+#$test_count++;
+#
+#$description = "Response has correct redirect";
+#$expected = re(qr/name="oauthRedirect" value="$cb[0]/);
+#cmp_deeply($result->content(),$expected,$description);
+#$test_count++;
+#
+#$description = "Response has correct state";
+#$expected = re(qr/name="oauthState" value="$state/);
+#cmp_deeply($result->content(),$expected,$description);
+#$test_count++;
 
 # test the Access Token
 my $access_token_code = Kynetx::Modules::PCI::oauth_authorization_code($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci,$u_eci,$dev_key]);
@@ -307,22 +359,25 @@ my $base = Kynetx::Configure::get_config('oauth_server')->{'access'} || "oauth_n
 ll($access_token_code);
 ll($base);
 
-$result = $mech->post($base,[
+$result = $ua->post($base,[
   'grant_type' => 'authorization_code',
   'code' => $access_token_code,
   'redirect_uri' => $cb[0],
   'client_id' => $d_eci
 ]);
 
-ll($mech->content());
-
 $description = "Check to see that OAuth eci maps to access_token and ken";
-my $json = Kynetx::Json::decode_json($mech->content());
+my $json = Kynetx::Json::decode_json($result->content());
 my $otoken = $json->{'access_token'};
 my $oeci = Kynetx::Modules::PCI::get_oauth_token_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$otoken]);
 $expected = Kynetx::Persistence::KEN::ken_lookup_by_token($u_eci);
 $result = Kynetx::Persistence::KEN::ken_lookup_by_token($oeci);
 cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Return the USER OAuth ECI";
+my $user_OECI = $json->{'OAUTH_ECI'};
+cmp_deeply($user_OECI,$oeci,$description);
 $test_count++;
 
 $description = "Look up OAuth ECIs by developer eci";
@@ -331,8 +386,96 @@ $result = Kynetx::Modules::PCI::get_developer_oauth_eci($my_req_info,$rule_env,$
 cmp_deeply($result,$expected,$description);
 $test_count++;
 
-done_testing($test_count);
+BAIL_OUT("OAuth Token Fail") unless $otoken;
+my $platform = '127.0.0.1';
+$platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
+$platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
+$platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox');
 
+# Now with the OAuth token make a protected request
+
+# GET
+my $function = "get_setting_all";
+my $ruleset = "pds";
+my $params = ["_eci=$u_eci" ];
+my $protected_url = "http://$platform/oauth/cloud/$ruleset/$function?".
+		   join("&", @{$params});
+
+push(@{$params},"access_token=$otoken");		   
+my $query_url = "http://$platform/oauth/cloud/$ruleset/$function?".
+		   join("&", @{$params});
+		   
+my $netloc = $platform . ":80";
+my $realm = 'Kynetx';
+
+$description = "Pass token in the query";
+$result = $ua->get($query_url);
+cmp_deeply($result->is_success(),1,$description);
+$test_count++;
+
+$params = ["_eci=$u_eci",'access_token=CaptainCrunch'];
+$query_url = "http://$platform/oauth/cloud/$ruleset/$function?".
+		   join("&", @{$params});
+$description = "Pass a bad token in the query";
+$result = $ua->get($query_url);
+cmp_deeply($result->is_success(),'',$description);
+$test_count++;
+
+# POST
+$params = {
+  "_eci"=> $u_eci,
+  'access_token' => $otoken
+};
+
+$description = "send a POST request";
+$result = $ua->post("http://$platform/oauth/cloud/$ruleset/$function", $params);
+cmp_deeply($result->is_success(),1,$description);
+$test_count++;
+
+$params->{'access_token'} = 'CountChockula';
+$description = "send a bad POST request";
+$result = $ua->post("http://$platform/oauth/cloud/$ruleset/$function", $params);
+cmp_deeply($result->is_success(),'',$description);
+$test_count++;
+
+# Check header for tokens
+$ua->default_header('Authorization' => "Bearer $otoken");
+
+$description = "Make a PRR with valid token";
+$result = $ua->get($protected_url);
+cmp_deeply($result->is_success(),1,$description);
+$test_count++;
+
+$description = "Make a PRR with an invalid token in header";
+$ua->default_header('Authorization' => "Bearer flooply");
+$result = $ua->get($protected_url);
+cmp_deeply($result->code(),401,$description);
+$test_count++;
+
+
+
+sub test_request_url {
+  my ($client_id,$response_type,$state,$rd_uri) = @_;
+  my $base = Kynetx::Configure::get_config('oauth_server')->{'authorize'};
+  my $params;
+  if (defined $response_type) {
+    $params->{'response_type'} = $response_type;
+  }
+  if (defined $client_id) {
+    $params->{'client_id'} = $client_id;
+  }
+  if (defined $state){
+    $params->{'state'} = $state
+  }    
+  if (defined $rd_uri) {
+    $params->{'redirect_uri'} = $rd_uri;
+  }
+  return Kynetx::Util::mk_url($base,$params);
+}
+
+ENDY:
+
+done_testing($test_count);
 
 
 1;

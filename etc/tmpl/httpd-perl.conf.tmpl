@@ -483,7 +483,7 @@ Allow from .kobj.net
 
   # env var to turn on rule logging
   PerlSetEnv OAUTH 1
-  PerlAccessHandler Kynetx::OAuth::OAuthorize
+  PerlAccessHandler Kynetx::OAuth::RequestToken
   SetHandler perl-script
   PerlHandler Kynetx::OAuth::OAuth20
 </LocationMatch>
@@ -503,6 +503,20 @@ Allow from .kobj.net
   Require valid-user
 </LocationMatch>
 
+<LocationMatch /oauth/cloud/>
+  # P3P compressed policy header
+  Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
+
+  # env var to turn on rule logging
+  PerlSetEnv EVENT 1
+  SetHandler perl-script
+  PerlAccessHandler Kynetx::OAuth::ProtectedResourceRequest
+  PerlAuthenHandler Kynetx::OAuth::OAuthenticate
+  PerlResponseHandler Kynetx::Cloud
+  AuthName Kynetx
+  AuthType Basic
+  Require valid-user
+</LocationMatch>
 
 <LocationMatch /js/>
 
