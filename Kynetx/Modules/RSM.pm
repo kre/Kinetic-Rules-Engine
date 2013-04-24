@@ -55,6 +55,20 @@ my $predicates = {
     my $logger = get_logger();
     $logger->debug("Arg to is_valid: $args->[0]");
     return _validate($args->[0]) == 1;
+  },
+  'is_owner' => sub {
+    my ($req_info, $rule_env, $args) = @_;
+  	my $logger = get_logger();
+    my $eci = $args->[0];
+    my $rid = $args->[1];
+    my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
+    my $rid_info = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($rid);
+    if (defined $ken && defined $rid_info) {
+      if ($rid_info->{'owner'} eq $ken) {
+        return 1;
+      } 
+    }
+    return 0;    
   }
 };
 
@@ -170,17 +184,15 @@ sub entkeys {
 }
 $funcs->{'entity_keys'} = \&entkeys;
 
-sub is_owner {
+
+sub owner_rulesets {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
-	my $logger = get_logger();
-	my $rid = get_rid($req_info->{'rid'});
-	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-  if ( Kynetx::Modules::PCI::pci_authorized($req_info, $rule_env, $session) ) {
-      
-  }
-	
+  my $eci = $args->[0];
+  my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
+  my $result = Kynetx::Persistence::Ruleset::get_rulesets_by_owner($ken);
+  return $result;
 }
-$funcs->{'is_owner'} = \&is_owner;
+$funcs->{'list_rulesets'} = \&is_owner;
 
 
 ##################### Actions

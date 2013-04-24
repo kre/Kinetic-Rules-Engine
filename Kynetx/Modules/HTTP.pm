@@ -288,7 +288,7 @@ sub mk_http_request {
 				'content-type' => "application/x-www-form-urlencoded; charset=UTF-8" );
 
 		}
-		$logger->debug("Unencoded content: ", sub { Dumper($content) } );
+		#$logger->debug("Unencoded content: ", sub { Dumper($content) } );
 		if (ref $content ne "") {
 			my $temp;
 			eval {

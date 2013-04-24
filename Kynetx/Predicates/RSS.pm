@@ -125,8 +125,11 @@ my %predicates = (
     'random' => sub {
         my ( $req_info, $rule_env, $args ) = @_;
         my $items = get_items( $args->[0] );
-        my $count = int(@$items);
-        return $items->[ int( rand($count) ) ];
+        if (defined $items && ref $items eq "ARRAY") {
+          my $count = int(@$items);
+          return $items->[ int( rand($count) ) ];
+        }
+        return undef;
 
     },
 );
@@ -207,7 +210,7 @@ sub item_elements {
         # Check to see if we have a whole feed or a single item
         # if we have provided the item through KRL the 'item'
         # container won't exist
-        if ( ref $rss eq "ARRAY" || $ilist ) {
+        if ( ref $rss eq "ARRAY" || ref $ilist eq "ARRAY") {
             my @elements;
             my @ret_array;
             if ( ref $rss eq "ARRAY" ) {

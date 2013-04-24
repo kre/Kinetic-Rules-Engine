@@ -40,7 +40,7 @@ use Kynetx::Configure qw/:all/;
 
 plan tests => 2;
 
-my @RUN_MODES = ( "development", "qa", "production" );
+my @RUN_MODES = ( "development", "qa", "production", "sandbox" );
 
 sub prune_hash {
 	my ($hash,$trim) = @_;
