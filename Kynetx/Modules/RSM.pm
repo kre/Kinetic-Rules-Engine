@@ -198,7 +198,7 @@ sub owner_rulesets {
   my $result = Kynetx::Persistence::Ruleset::get_rulesets_by_owner($ken);
   return $result;
 }
-$funcs->{'list_rulesets'} = \&is_owner;
+$funcs->{'list_rulesets'} = \&owner_rulesets;
 
 
 ##################### Actions
