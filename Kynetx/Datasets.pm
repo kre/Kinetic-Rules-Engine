@@ -274,7 +274,7 @@ sub unmarshal {
       # 				  }
       # 				 );
 
-      $logger->warn("[datasets] No source data loaded");
+      $logger->debug("[datasets] No source data loaded");
     }
     if ( defined $self->datatype ) {
         $logger->trace( "datatype: ", $self->datatype );
