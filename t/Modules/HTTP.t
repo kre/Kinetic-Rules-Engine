@@ -96,8 +96,9 @@ $config = mk_config_string(
 # http://epfactory.kynetx.com:3098/1/bookmarklet/aaa/dev?init_host=qa.kobj.net&eval_host=qa.kobj.net&callback_host=qa.kobj.net&contents=compiled&format=json&version=dev
 
 # most basic requests
-my $test_site = "http://www.httpbin.org";
-my $stest_site = "https://www.httpbin.org";
+# It looks like www.httpbin.org was dropped in favor of httpbin.org
+my $test_site = "http://httpbin.org";
+my $stest_site = "https://httpbin.org";
 
 #goto ENDY;
 

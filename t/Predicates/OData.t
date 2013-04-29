@@ -98,19 +98,19 @@ cmp_deeply($results,bag(['Products','Categories','Suppliers']),"Entity set from 
 
 
 
-
-$args = ['http://odata.netflix.com/Catalog/'];
-$results = test_odata('entity_sets',$req_info,$rule_env,$args);
-$logger->debug("Results: ", sub {Dumper($results)});
-cmp_deeply($results,bag([
-    'Genres',
-    'Titles',
-    'TitleAudioFormats',
-    'TitleAwards',
-    'People',
-    'TitleScreenFormats',
-    'Languages'
-  ]),"Entity set from Netflix.com");
+# Netflix ODATA feed discontinued
+#$args = ['http://odata.netflix.com  /Catalog/'];
+#$results = test_odata('entity_sets',$req_info,$rule_env,$args);
+#$logger->debug("Results: ", sub {Dumper($results)});
+#cmp_deeply($results,bag([
+#    'Genres',
+#    'Titles',
+#    'TitleAudioFormats',
+#    'TitleAwards',
+#    'People',
+#    'TitleScreenFormats',
+#    'Languages'
+#  ]),"Entity set from Netflix.com");
 
 
 
@@ -303,21 +303,21 @@ cmp_deeply($got,$expected,$test_name);
 
 
 
-
-$args = ['http://odata.netflix.com/Catalog/','Titles',{'$filter' =>
-    'Type eq \'Movie\' and Instant/Available eq true and (Rating eq \'G\' or Rating eq \'PG-13\' or Rating eq \'PG\')',
-    '$top' => 2,
-    '$orderby' => 'AverageRating desc',
-    '$select' => ['Name','Synopsis','AverageRating'],
-
-}];
-$test_name = "Netflix instant movies with filter, Top 2";
-$results = test_odata('get',$req_info,$rule_env,$args);
-$got = $results;
-$expected = superhashof({'d'=>array_each(superhashof({'Synopsis'=>ignore(),
-    'Name'=>ignore(),
-    'AverageRating'=>ignore()}))});
-cmp_deeply($got,$expected,$test_name);
+# Netflix ODATA catalog is discontinued
+#$args = ['http://odata.netflix.com/Catalog/','Titles',{'$filter' =>
+#    'Type eq \'Movie\' and Instant/Available eq true and (Rating eq \'G\' or Rating eq \'PG-13\' or Rating eq \'PG\')',
+#    '$top' => 2,
+#    '$orderby' => 'AverageRating desc',
+#    '$select' => ['Name','Synopsis','AverageRating'],
+#
+#}];
+#$test_name = "Netflix instant movies with filter, Top 2";
+#$results = test_odata('get',$req_info,$rule_env,$args);
+#$got = $results;
+#$expected = superhashof({'d'=>array_each(superhashof({'Synopsis'=>ignore(),
+#    'Name'=>ignore(),
+#    'AverageRating'=>ignore()}))});
+#cmp_deeply($got,$expected,$test_name);
 
 
 my $app_name = "amz_test";

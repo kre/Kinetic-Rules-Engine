@@ -138,7 +138,7 @@ sub gen_raw_document {
 	    
 	  }
 	  if ($content) {
-	    print $content;
+	    $r->print( $content);
 	  }
 	  
     $r->status(Apache2::Const->$status);

@@ -139,7 +139,7 @@ my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
 
 $logger->debug("Developer ken: $ken User: $userid");
 $description = "First generic rid";
-$expected = 'b' . $userid .'x0';
+$expected = 'b' . $userid .'x0.prod';
 $rid = Kynetx::Persistence::Ruleset::create_rid($ken);
 is($rid,$expected,$description);
 $test_count++;
@@ -148,14 +148,14 @@ $test_count++;
 $logger->debug("Rid: $rid");
 
 $description = "Second generic rid";
-$expected = 'b' . $userid .'x1';
+$expected = 'b' . $userid .'x1.prod';
 $rid = Kynetx::Persistence::Ruleset::create_rid($ken);
 is($rid,$expected,$description);
 $test_count++;
 
 $logger->debug("Rid: $rid");
 $description = "First prefix rid ($prefix)";
-$expected = $prefix . $userid .'x0';
+$expected = $prefix . $userid .'x0.prod';
 $rid = Kynetx::Persistence::Ruleset::create_rid($ken,$prefix);
 is($rid,$expected,$description);
 $test_count++;
@@ -163,7 +163,7 @@ $test_count++;
 $logger->debug("Rid: $rid");
 
 $description = "Second prefix rid ($prefix)";
-$expected = $prefix . $userid .'x1';
+$expected = $prefix . $userid .'x1.prod';
 $rid = Kynetx::Persistence::Ruleset::create_rid($ken,$prefix);
 is($rid,$expected,$description);
 $test_count++;
@@ -194,7 +194,7 @@ $test_count++;
 $logger->debug("Registry: ", sub {Dumper($result)});
 
 $description = "Based on rid_info, get the ast";
-my $rid_info = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($rid);
+my $rid_info = Kynetx::Persistence::Ruleset::get_ruleset_info($rid);
 my ($fl,$krl_text) = getkrl($local_file);
 my $ast = Kynetx::Rules::optimize_ruleset(parse_ruleset($krl_text));
 # Optimization creates a state machine with different values

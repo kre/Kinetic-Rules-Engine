@@ -211,7 +211,7 @@ my $home_timeline = eval_twitter($my_req_info,
 				 'home_timeline',
 				 [{'count' => 12}]
 				);
-
+diag Dumper($home_timeline);
 is(int @{ $home_timeline }, 12, "Getting back some home timeline returns");
 $test_count++;
 

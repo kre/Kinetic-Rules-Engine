@@ -362,10 +362,16 @@ sub get_list_and_clear {
 #      $logger->trace("$keystring not in cache");
   }
   my $c = get_collection($collection);
-  my $val = get_value($collection,$var)->{'value'};
-  delete_value($collection,$var);
-# $logger->debug("## Seeing val of ", sub{Dumper $val});
-  return $val
+  my $result = get_value($collection,$var);
+  if (defined $result) {
+    my $val = $result->{'value'};
+    delete_value($collection,$var);
+    # $logger->debug("## Seeing val of ", sub{Dumper $val});
+    return $val
+  } else {
+    return undef;
+  }
+  
 }
 
 
@@ -729,6 +735,7 @@ sub put_hash_element {
 	my $timestamp = DateTime->now->epoch;
     my $c = get_collection($collection);
 	if (ref $hKey eq 'ARRAY') {
+	  return unless verify_hash_path($hKey);
 		delete_hash_element($collection,$vKey,$hKey);		
 		my @adds = ();
 		my $a_of_hash_elements = Kynetx::Util::hash_to_elements($val->{'value'},$hKey);
@@ -950,6 +957,12 @@ sub map_key {
 	return $struct;
 }
 
-
+sub verify_hash_path {
+  my ($map) = @_;
+  foreach my $path_key (@{$map}) {
+    return 0 unless (defined $path_key);
+  }
+  return 1;
+}
 1;
 

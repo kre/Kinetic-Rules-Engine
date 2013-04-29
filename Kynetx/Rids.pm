@@ -36,6 +36,8 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 our $VERSION = 1.00;
 our @ISA     = qw(Exporter);
 
+use Kynetx::Memcached;
+
 # put exported names inside the "qw"
 our %EXPORT_TAGS = (
   all => [
@@ -62,7 +64,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 sub mk_rid_info {
   my ( $req_info, $rid, $options ) = @_;
   my $logger = get_logger();
-  my $arid = _clean($rid);
+  my $arid = strip_version($rid);
   my $fqrid;
   
   $logger->trace("Make rid info for $rid");
@@ -87,14 +89,14 @@ sub get_current_rid_info {
 sub get_rid {
   my ($rid_info) = @_;
   if (ref $rid_info eq "HASH") {
-    return _clean($rid_info->{'rid'});
+    return strip_version($rid_info->{'rid'});
   } else {
-    return _clean($rid_info)
+    return strip_version($rid_info)
   }
   
 }
 
-sub _clean {
+sub strip_version {
   my ($rid) = @_;
   my $logger = get_logger();  
   if ($rid) {
@@ -185,7 +187,9 @@ sub rid_info_string {
   my ($rid_info_list) = @_;
   my $res = "";
   foreach my $rid_info ( @{$rid_info_list} ) {
-    $res .= get_rid($rid_info) . "." . get_versionnum($rid_info) . ';';
+    # versionnum is not available for legacy rules from Accounts repository
+    #$res .= get_rid($rid_info) . "." . get_versionnum($rid_info) . ';';
+    $res .= get_rid($rid_info) . "." . get_version($rid_info) . ';';
   }
   return $res;
 }
@@ -243,6 +247,14 @@ sub mk_fqrid {
   my $logger = get_logger();
   my $fqrid = $rid . '.' . $ver;
   return $fqrid
+}
+
+sub fq_to_rid_info {
+  my ($fqrid) = @_;
+  my $rid = strip_version($fqrid);
+  my $version = $fqrid;
+  $version =~ s/^($rid\.).+//;
+  
 }
 
 1;

@@ -365,6 +365,7 @@ $result = $ua->post($base,[
   'redirect_uri' => $cb[0],
   'client_id' => $d_eci
 ]);
+$logger->debug("Return: ",$result->decoded_content());
 
 $description = "Check to see that OAuth eci maps to access_token and ken";
 my $json = Kynetx::Json::decode_json($result->content());
@@ -418,6 +419,7 @@ $query_url = "http://$platform/oauth/cloud/$ruleset/$function?".
 		   join("&", @{$params});
 $description = "Pass a bad token in the query";
 $result = $ua->get($query_url);
+$logger->info("response: ",sub {Dumper($result)});
 cmp_deeply($result->is_success(),'',$description);
 $test_count++;
 

@@ -306,7 +306,33 @@ $result = lookup_rule_env('isUpdate',$rule_env);
 cmp_deeply($result,1,$description);
 $test_count++;
 
-$result = Kynetx::Persistence::Ruleset::get_registry($new_rid);
+#$result = Kynetx::Persistence::Ruleset::get_registry($new_rid);
+$description = "Fork a ruleset";
+my $branch = "vitrified";
+my $root = Kynetx::Rids::strip_version($new_rid);
+$expected = $root . '.' . $branch;
+$uri = "file://data/action9.krl";
+
+$krl_src = <<_KRL_;
+  rsm:fork("$new_rid") setting (isFork)
+    with 
+      uri = "$uri" and
+      branch = "$branch";
+_KRL_
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+$result = lookup_rule_env('isFork',$rule_env);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+#goto ENDY;
 
 $description = "Import a ruleset from Kynetx Repo";
 $expected = qr#https?://rulesetmanager.kobj.net/ruleset/source/a144x154/prod/krl/#;
@@ -351,6 +377,7 @@ $result = $mech->content();
 cmp_deeply($result,re(qr/Dave.+Dave/),$description);
 $test_count++;
 
+ENDY: 
 
 $description = "List of owners rulesets";
 $result = Kynetx::Persistence::Ruleset::get_rulesets_by_owner($session_ken);

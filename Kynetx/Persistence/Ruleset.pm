@@ -58,11 +58,11 @@ our @ISA         = qw(Exporter);
 # put exported names inside the "qw"
 our %EXPORT_TAGS = (all => [
 qw(
-  rid_info_from_ruleset
+  get_ruleset_info
   get_registry
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
-our @EXPORT = qw(&rid_info_from_ruleset);
+our @EXPORT = qw(&get_ruleset_info);
 
 use constant COLLECTION => "ruleset";
 
@@ -228,15 +228,15 @@ sub get_registry {
 	return undef;
 }
 
-sub rid_info_from_ruleset {
+sub get_ruleset_info {
   my ($rid) = @_;
   my $logger = get_logger();
-  my $rid_info;
+  my $ruleset;
   my $result = get_registry($rid);
   if (defined $result) {
-    $rid_info = $result->{'value'};
-    $rid_info->{'rid'} = $result->{'rid'};
-    return $rid_info;
+    $ruleset = $result->{'value'};
+    $ruleset->{'rid'} = $result->{'rid'};
+    return $ruleset;
   }
   return undef;
   
@@ -266,6 +266,8 @@ sub create_rid {
   };
   my $rid_index = get_rid_index($ken,$userid,$prefix); 
   my $rid = $prefix . "x" . $rid_index;
+  # new rids are always .prod versions
+  $rid .= '.prod';
   my $registry = {
     'owner' => $ken,
     'rid_index' => $rid_index,
@@ -276,6 +278,28 @@ sub create_rid {
   }
   put_registry_element($rid,[],$registry);
   return $rid;   
+}
+
+sub fork_rid {
+  my ($ken,$fqrid,$branch,$uri) = @_;
+  my $logger = get_logger();
+  $logger->debug("Fork KEN: $ken");
+  $logger->debug("Fork RID: $fqrid");
+  $logger->debug("Fork Branch: $branch");
+  $logger->debug("Fork URI: $uri");
+  my $ruleset = get_ruleset_info($fqrid);
+  my $root = Kynetx::Rids::strip_version($fqrid);
+  my $nq_rid = $root . '.' . $branch;
+  my $exists = get_registry($nq_rid);
+  if (defined $exists) {
+    return undef;
+  }
+  my $default = {
+    'uri' => $uri,
+    'owner' => $ken
+  };
+  put_registry_element($nq_rid,[],$default);
+  return $nq_rid;
 }
 
 #################### Utility functions

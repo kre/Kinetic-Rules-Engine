@@ -62,7 +62,7 @@ my $predicates = {
     my $eci = $args->[0];
     my $rid = $args->[1];
     my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
-    my $rid_info = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($rid);
+    my $rid_info = Kynetx::Persistence::Ruleset::get_ruleset_info($rid);
     if (defined $ken && defined $rid_info) {
       if ($rid_info->{'owner'} eq $ken) {
         return 1;
@@ -107,6 +107,12 @@ my $default_actions = {
 		'js' =>
 		  'NO_JS',    # this action does not emit JS, used in build_one_action
 		'before' => \&do_import,
+		'after'  => []
+	},
+	'fork' => {
+		'js' =>
+		  'NO_JS',    # this action does not emit JS, used in build_one_action
+		'before' => \&do_fork,
 		'after'  => []
 	},
 	
@@ -226,7 +232,7 @@ sub do_register {
       }
     }
     
-    my $rid_object = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($new_rid);
+    my $rid_object = Kynetx::Persistence::Ruleset::get_ruleset_info($new_rid);
     my $response = response_object($v,$rid_object);
     $rule_env = add_to_env( $response, $rule_env ) unless $v eq '__dummy';
     my $js = raise_response_event('register',$req_info, $rule_env, $session, $config, $response, $v );
@@ -243,7 +249,7 @@ sub do_flush {
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
   my $flush_rid = $args->[0];
   
-  my $rid_info = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($flush_rid);
+  my $rid_info = Kynetx::Persistence::Ruleset::get_ruleset_info($flush_rid);
   
   # Accounts allowed to modify a ruleset
   #  root
@@ -289,7 +295,7 @@ sub do_update {
   my $v = $vars->[0] || '__dummy';
   my $mod_rid = $args->[0];
   
-  my $rid_info = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($mod_rid);
+  my $rid_info = Kynetx::Persistence::Ruleset::get_ruleset_info($mod_rid);
   
   # Accounts allowed to modify a ruleset
   #  root
@@ -302,7 +308,7 @@ sub do_update {
   if (
     Kynetx::Modules::PCI::pci_authorized($req_info, $rule_env, $session) ||
     (Kynetx::Modules::PCI::developer_authorized($req_info,$rule_env,$session,['ruleset','create']) && $ken eq $owner) ||
-    $pin eq $pin    
+    $pin eq $rpin    
   ) {
     for my $key (keys %{$mods}) {
       # Can't change these values
@@ -355,7 +361,7 @@ sub do_delete {
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
   my $flush_rid = $args->[0];
   
-  my $rid_info = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($flush_rid);
+  my $rid_info = Kynetx::Persistence::Ruleset::get_ruleset_info($flush_rid);
   
   # Accounts allowed to modify a ruleset
   #  root
@@ -372,6 +378,60 @@ sub do_delete {
     Kynetx::Persistence::Ruleset::delete_registry($flush_rid);
   }
 }
+
+sub do_fork {
+  my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
+  my $logger = get_logger();
+  my $rid = get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+  my $v = $vars->[0] || '__dummy';
+  my $fqrid = $args->[0];
+  my $ruleset = Kynetx::Persistence::Ruleset::get_ruleset_info($fqrid);  
+  return undef unless (defined $ruleset); 
+  # Accounts allowed to modify a ruleset
+  #  root
+  #  developer
+  #  provides ruleset pin
+  my $pin = $config->{'flush_code'};
+  my $rpin = $ruleset->{'flush_code'};
+  my $owner = $ruleset->{'owner'};
+  my $rid_root = Kynetx::Rids::strip_version($fqrid);
+  my $response;
+  if (
+    Kynetx::Modules::PCI::pci_authorized($req_info, $rule_env, $session) ||
+    (Kynetx::Modules::PCI::developer_authorized($req_info,$rule_env,$session,['ruleset','create']) && $ken eq $owner) ||
+    $pin eq $rpin    
+  ) {
+    $logger->debug("Allow fork of $fqrid");
+    my $uri = $config->{'uri'};
+    my $branch = $config->{'branch'};
+    
+    $logger->debug("Uri: $uri");
+    $logger->debug("Branch: $branch");
+    return undef unless (defined $uri && defined $branch);
+    if ($config->{'owner'}) {
+      my $o_eci = $config->{'owner'};
+      $owner = Kynetx::Persistence::KEN::ken_lookup_by_token($o_eci);
+      
+    }
+    $logger->debug("Owner: $owner");
+    return undef unless (defined $owner);
+    my $valid = Kynetx::Persistence::Ruleset::fork_rid($owner,$rid_root,$branch,$uri);
+    $response = {
+      $v => $valid
+    };    
+  } else {
+    my $str = "Not authorized to fork $fqrid";
+    $response = {
+      $v => $str
+    };
+    $logger->warn($str);
+  }
+  $rule_env = add_to_env( $response, $rule_env ) unless $v eq '__dummy';
+  my $js = raise_response_event($req_info, $rule_env, $session, $config, $response, $v );
+  return $js;
+}
+
 
 sub do_import {
   my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
@@ -502,7 +562,7 @@ sub _validate {
   unless ($rid){
     return 0 
   };
-  my $rid_info = Kynetx::Persistence::Ruleset::rid_info_from_ruleset($rid);
+  my $rid_info = Kynetx::Persistence::Ruleset::get_ruleset_info($rid);
   my $ruleset = Kynetx::Repository::get_ruleset_krl($rid_info);
   eval {
     $ruleset = Kynetx::Parser::parse_ruleset($ruleset);
