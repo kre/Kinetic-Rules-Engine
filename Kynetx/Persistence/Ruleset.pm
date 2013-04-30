@@ -73,13 +73,13 @@ sub get_registry_element {
 		my $key = {
 			"rid" => $rid
 		};
-		my $cache = Kynetx::MongoDB::get_cache_for_hash(COLLECTION,$key,$hkey);
-		if (defined $cache) {
-			return $cache;
-		} 
+#		my $cache = Kynetx::MongoDB::get_cache_for_hash(COLLECTION,$key,$hkey);
+#		if (defined $cache) {
+#			return $cache;
+#		} 
 		my $result = Kynetx::MongoDB::get_hash_element(COLLECTION,$key,$hkey);
 		if (defined $result && ref $result eq "HASH") {
-			Kynetx::MongoDB::set_cache_for_hash(COLLECTION,$key,$hkey,$result->{"value"});
+			#Kynetx::MongoDB::set_cache_for_hash(COLLECTION,$key,$hkey,$result->{"value"});
 			return $result->{"value"};
 		} else {
 			return undef;
@@ -99,11 +99,8 @@ sub put_registry_element {
 	my $value = {
 		'value' => $val
 	};
+	$logger->debug("Hash: ", sub {Dumper($hkey)});
 	my $success = Kynetx::MongoDB::put_hash_element(COLLECTION,$key,$hkey,$value);
-	Kynetx::MongoDB::clear_cache_for_map($rid,COLLECTION,Kynetx::MongoDB::map_key($rid,$hkey));
-	if ($hkey > 1) {
-		Kynetx::MongoDB::clear_cache_for_map($rid,COLLECTION,Kynetx::MongoDB::map_key($rid,[$hkey->[0]]));
-	}
 	return $success;
 	
 }
@@ -195,7 +192,6 @@ sub delete_registry_element {
 		if (defined $hkey) {
 			$logger->trace("Delete element: ", sub {Dumper($hkey)});
 			Kynetx::MongoDB::delete_hash_element(COLLECTION,$key,$hkey);
-    	Kynetx::MongoDB::clear_cache(COLLECTION,$key);
 		} else {
 			$logger->warn("Attempted to delete $rid in ", COLLECTION, " (use delete_registry(<rid>) )");
 		}
@@ -211,7 +207,6 @@ sub delete_registry {
 			"rid" => $rid
 		};
 		Kynetx::MongoDB::delete_value(COLLECTION,$key);
-		Kynetx::MongoDB::clear_cache(COLLECTION,$key);
 	}
 }
 
@@ -312,6 +307,7 @@ sub import_legacy_ruleset {
     return undef;
   }
   my @ridlist = ('prod', 'dev');
+  my @rids = ();
   my $repo = Kynetx::Configure::get_config('RULE_REPOSITORY');
   my ($base_url,$username,$password) = split(/\|/, $repo);
   my $d_url = join('/', ($base_url, $rid, 'prod', 'krl/'));
@@ -323,7 +319,7 @@ sub import_legacy_ruleset {
   if (defined $ken) {
     $default->{'owner'} = $ken,      
   }
-  put_registry_element($rid,[],$default);
+  #put_registry_element($rid,[],$default);
   for my $version (@ridlist) {
     my $fqrid = $rid;
       $fqrid .= '.' . $version;
@@ -336,9 +332,10 @@ sub import_legacy_ruleset {
     if (defined $ken) {
       $registry->{'owner'} = $ken,      
     }
-    put_registry_element($fqrid,[],$registry);    
+    put_registry_element($fqrid,[],$registry);   
+    push(@rids,$fqrid); 
   }    
-  return get_registry($rid);
+  return \@rids;
 }
 
 sub increment_version {

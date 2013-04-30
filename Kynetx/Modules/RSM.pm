@@ -115,6 +115,12 @@ my $default_actions = {
 		'before' => \&do_fork,
 		'after'  => []
 	},
+	'create' => {
+		'js' =>
+		  'NO_JS',    # this action does not emit JS, used in build_one_action
+		'before' => \&do_create,
+		'after'  => []
+	},
 	
 };
 
@@ -181,6 +187,7 @@ sub make_ruleset_id {
 }
 $funcs->{'new_ruleset'} = \&make_ruleset_id;
 
+
 sub entkeys {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
 	my $logger = get_logger();
@@ -200,6 +207,17 @@ sub owner_rulesets {
 }
 $funcs->{'list_rulesets'} = \&owner_rulesets;
 
+sub get_ruleset {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+  my $fqrid = $args->[0];
+  if (Kynetx::Modules::PCI::pci_authorized($req_info, $rule_env, $session)) {
+      my $result = _sanitize_ruleset(Kynetx::Persistence::Ruleset::get_ruleset_info($fqrid));
+      return $result;    
+  }
+  return undef;
+}
+$funcs->{'get_ruleset'} = \&get_ruleset;
+
 
 ##################### Actions
 sub do_register {
@@ -213,6 +231,7 @@ sub do_register {
   my $uri = $args->[0];
   if (defined $uri) {
     my $new_rid = Kynetx::Persistence::Ruleset::create_rid($ken,$prefix,$uri);
+    $logger->debug("Rid created: $new_rid");
     for my $key (keys %{$config}) {
       if ($key eq 'headers') {
         my $headers = $config->{'headers'};
@@ -232,8 +251,8 @@ sub do_register {
       }
     }
     
-    my $rid_object = Kynetx::Persistence::Ruleset::get_ruleset_info($new_rid);
-    my $response = response_object($v,$rid_object);
+    my $ruleset = _sanitize_ruleset(Kynetx::Persistence::Ruleset::get_ruleset_info($new_rid));
+    my $response = response_object($v,$ruleset);
     $rule_env = add_to_env( $response, $rule_env ) unless $v eq '__dummy';
     my $js = raise_response_event('register',$req_info, $rule_env, $session, $config, $response, $v );
     return $js;
@@ -242,6 +261,67 @@ sub do_register {
   return '';
 }
 
+sub do_create {
+  my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
+  my $logger = get_logger();
+  my $rid = get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+  my $v = $vars->[0] || '__dummy';  
+  my $rid_root = $args->[0];
+  return '' if ($rid_root =~ m/\./);
+  my $fqrid = $rid_root . '.' . Kynetx::Rids::default_version();
+  my $exists = Kynetx::Persistence::Ruleset::get_ruleset_info($fqrid);
+  my $err_str;
+  if (defined $exists) {
+    $err_str = "Ruleset $fqrid already exists, use update or fork to modify";
+  }elsif (Kynetx::Modules::PCI::pci_authorized($req_info, $rule_env, $session) )  {
+    my $owner;
+    my $uri;
+    my $headers;
+    my $ruleset;
+    for my $key (keys %{$config}) {
+      next if ($key eq 'rule_name' ||
+            $key eq 'rid' ||
+            $key eq 'txn_id' ||
+            $key eq 'target' ||
+            $key eq 'autoraise');
+      # Special Cases
+      if ($key eq 'owner') {
+        my $eci = $config->{$key};
+        $owner = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
+      } elsif ($key eq 'uri') {
+        $uri = $config->{$key};
+      } elsif ($key eq 'headers') {
+        $headers = $config->{$key};
+      } else {
+        $ruleset->{$key} = $config->{$key};
+      }
+    } 
+    if (defined $owner && defined $uri) {
+      $ruleset->{'owner'} = $owner;
+      $ruleset->{'uri'} = $uri;
+      if (ref $headers eq "HASH") {
+        $ruleset->{'headers'} = $headers;
+      }
+      Kynetx::Persistence::Ruleset::put_registry_element($fqrid,[],$ruleset);
+      my $_ruleset = _sanitize_ruleset(Kynetx::Persistence::Ruleset::get_ruleset_info($fqrid));
+      my $response = response_object($v,$_ruleset);
+      $rule_env = add_to_env( $response, $rule_env ) unless $v eq '__dummy';
+      my $js = raise_response_event('register',$req_info, $rule_env, $session, $config, $response, $v );
+      return $js;
+    } else {
+      $err_str = "Create action requires 'owner' and 'uri'";
+    }  
+  } else {
+    $err_str = "Not authorized to create $rid_root";
+  }
+  if (defined $err_str) {
+    $logger->warn($err_str);
+  }
+  return '';
+}
+
+
 sub do_flush {
   my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
   my $logger = get_logger();
@@ -249,15 +329,15 @@ sub do_flush {
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
   my $flush_rid = $args->[0];
   
-  my $rid_info = Kynetx::Persistence::Ruleset::get_ruleset_info($flush_rid);
+  my $ruleset = Kynetx::Persistence::Ruleset::get_ruleset_info($flush_rid);
   
   # Accounts allowed to modify a ruleset
   #  root
   #  developer
   #  provides ruleset pin
   my $pin = $config->{'flush_code'};
-  my $rpin = $rid_info->{'flush_code'};
-  my $owner = $rid_info->{'owner'};
+  my $rpin = $ruleset->{'flush_code'};
+  my $owner = $ruleset->{'owner'};
   my $response;
   if (
     Kynetx::Modules::PCI::pci_authorized($req_info, $rule_env, $session) ||
@@ -295,15 +375,15 @@ sub do_update {
   my $v = $vars->[0] || '__dummy';
   my $mod_rid = $args->[0];
   
-  my $rid_info = Kynetx::Persistence::Ruleset::get_ruleset_info($mod_rid);
+  my $ruleset = Kynetx::Persistence::Ruleset::get_ruleset_info($mod_rid);
   
   # Accounts allowed to modify a ruleset
   #  root
   #  developer
   #  provides ruleset pin
   my $pin = $config->{'flush_code'};
-  my $rpin = $rid_info->{'flush_code'};
-  my $owner = $rid_info->{'owner'};
+  my $rpin = $ruleset->{'flush_code'};
+  my $owner = $ruleset->{'owner'};
   my $response;
   if (
     Kynetx::Modules::PCI::pci_authorized($req_info, $rule_env, $session) ||
@@ -361,15 +441,15 @@ sub do_delete {
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
   my $flush_rid = $args->[0];
   
-  my $rid_info = Kynetx::Persistence::Ruleset::get_ruleset_info($flush_rid);
+  my $ruleset = Kynetx::Persistence::Ruleset::get_ruleset_info($flush_rid);
   
   # Accounts allowed to modify a ruleset
   #  root
   #  developer
   #  provides ruleset pin
   my $pin = $config->{'flush_code'};
-  my $rpin = $rid_info->{'flush_code'};
-  my $owner = $rid_info->{'owner'};
+  my $rpin = $ruleset->{'flush_code'};
+  my $owner = $ruleset->{'owner'};
   my $response;
   if (
     Kynetx::Modules::PCI::pci_authorized($req_info, $rule_env, $session) ||
@@ -414,7 +494,6 @@ sub do_fork {
       $owner = Kynetx::Persistence::KEN::ken_lookup_by_token($o_eci);
       
     }
-    $logger->debug("Owner: $owner");
     return undef unless (defined $owner);
     my $valid = Kynetx::Persistence::Ruleset::fork_rid($owner,$rid_root,$branch,$uri);
     $response = {
@@ -448,10 +527,9 @@ sub do_import {
     my $dummy_ri = Kynetx::Util::dummy_req_info($rid_to_import);
     my $rid_info = Kynetx::Rids::mk_rid_info($dummy_ri,$rid_to_import,{'version' => $app_version});
     $rid_info->{'version'} = $version;
-    my $registry = Kynetx::Persistence::Ruleset::import_legacy_ruleset($ken,$rid_info);
-    $logger->debug("registry: ", sub {Dumper($registry->{'uri'})});
+    my $list = Kynetx::Persistence::Ruleset::import_legacy_ruleset($ken,$rid_info);
     my $response = {
-      $v => $registry->{'value'}->{'uri'}
+      $v => $list
     };
     if ($config->{'force'}) {
       my $valid = _validate($rid_to_import);
@@ -494,6 +572,7 @@ sub response_object {
     'obj' => $rid_object
   };
   $ro->{$event_var} = $thing;
+  $logger->debug("Response object: ", sub {Dumper($ro)});
   return $ro;
 }
 
@@ -562,13 +641,13 @@ sub _validate {
   unless ($rid){
     return 0 
   };
-  my $rid_info = Kynetx::Persistence::Ruleset::get_ruleset_info($rid);
-  my $ruleset = Kynetx::Repository::get_ruleset_krl($rid_info);
+  my $_ruleset = _sanitize_ruleset(Kynetx::Persistence::Ruleset::get_ruleset_info($rid));
+  my $ruleset = Kynetx::Repository::get_ruleset_krl($_ruleset);
   eval {
     $ruleset = Kynetx::Parser::parse_ruleset($ruleset);
   };
   if ($@) {
-    $logger->debug("Failed to validate ($@): ", sub {Dumper($rid_info)});
+    $logger->debug("Failed to validate ($@): ", sub {Dumper($_ruleset)});
     return 0;
   } elsif ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid' || 
       defined $ruleset->{'error'}) {
@@ -597,5 +676,11 @@ sub _validate {
    }
 }
 
+sub _sanitize_ruleset {
+  my ($ruleset) = @_;
+  delete $ruleset->{'owner'};
+  delete $ruleset->{'password'};
+  return $ruleset;
+}
 
 1;

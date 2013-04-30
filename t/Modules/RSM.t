@@ -215,7 +215,7 @@ cmp_deeply($result->{'rid'},re(qr/$prefix$nid/),$description);
 $test_count++;
 push(@rids,$result->{'rid'});
 
-
+#die;
 
 my $new_rid = $result->{'rid'};
 
@@ -335,8 +335,9 @@ $test_count++;
 #goto ENDY;
 
 $description = "Import a ruleset from Kynetx Repo";
-$expected = qr#https?://rulesetmanager.kobj.net/ruleset/source/a144x154/prod/krl/#;
+#$expected = qr#https?://rulesetmanager.kobj.net/ruleset/source/a144x154/prod/krl/#;
 my $import_rid = 'a144x154';
+$expected = ["$import_rid.prod","$import_rid.dev"];
 $krl_src = <<_KRL_;
   rsm:import("$import_rid") setting (isImport)
 _KRL_
@@ -351,9 +352,11 @@ $js = Kynetx::Actions::build_one_action(
 	    'callback23',
 	    'dummy_name');
 $result = lookup_rule_env('isImport',$rule_env);
-cmp_deeply($result,re($expected),$description);
+
+$logger->debug("Result: ", sub {Dumper($result)});
+cmp_deeply($result,bag(@{$expected}),$description);
 $test_count++;
-push(@rids,$import_rid);
+push(@rids,"$import_rid.prod");
 
 
 my $test_url = "$dn/web/pageview/$import_rid?caller=http://www.windley.com/archives/2006/foo.html";
@@ -375,6 +378,99 @@ $description = "Specify the prod version in the event url";
 $mech->get($test_url);
 $result = $mech->content();
 cmp_deeply($result,re(qr/Dave.+Dave/),$description);
+$test_count++;
+
+$description = "Create a new ruleset, fail rids with '.' embedded";
+my $absolute_rid = 'mayor.quimby';
+$uri = "file://data/action9.krl";
+$krl_src = <<_KRL_;
+  rsm:create("$absolute_rid") setting (isCreated)
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+$result = lookup_rule_env('isCreated',$rule_env);
+
+$logger->debug("Create: ", sub {Dumper($result)});
+cmp_deeply($result,undef,$description);
+$test_count++;
+
+
+$description = "Create requires root";
+$absolute_rid = 'mayor_quimby';
+my $eci = Kynetx::Persistence::KToken::get_oldest_token($session_ken);
+$krl_src = <<_KRL_;
+  rsm:create("$absolute_rid") setting (isCreated)
+    with
+      owner = "$eci" and
+      flush_code = "4111" and 
+      headers = {
+			 "Accept" : "text/plain",
+			 "Cache-Control" : "no-cache"
+		  } and 
+		  uri = "$uri";
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+$result = lookup_rule_env('isCreated',$rule_env);
+
+$logger->debug("Create: ", sub {Dumper($result)});
+cmp_deeply($result,undef,$description);
+$test_count++;
+
+# Create a system key
+my $system_key = Kynetx::Modules::PCI::create_system_key($result);
+my $keys = {'root' => $system_key};
+# system authorized tokens
+($js, $rule_env) = 
+ Kynetx::Keys::insert_key(
+  $my_req_info,
+  $rule_env,
+  'system_credentials',
+  $keys);
+
+$description = "Create a specific rid";
+$absolute_rid = 'mayor_quimby';
+$krl_src = <<_KRL_;
+  rsm:create("$absolute_rid") setting (isCreated)
+    with
+      owner = "$eci" and
+      flush_code = "4111" and 
+      headers = {
+			 "Accept" : "text/plain",
+			 "Cache-Control" : "no-cache"
+		  } and 
+		  uri = "$uri";
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+$result = lookup_rule_env('isCreated',$rule_env);
+
+$logger->debug("Create: ", sub {Dumper($result)});
+cmp_deeply($result->{'obj'}->{'uri'},$uri,$description);
 $test_count++;
 
 ENDY: 
