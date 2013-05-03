@@ -106,6 +106,14 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 sub config_logging {
     my ($r) = @_;
     if(Log::Log4perl->initialized()) {
+      my $logger = get_logger();
+      my $mode = Kynetx::Configure::get_config('RUN_MODE');
+      my $debug = Kynetx::Configure::get_config('DEBUG');
+      if($mode eq 'development' || $debug eq 'on') {
+        $logger->level($DEBUG);
+      } elsif($mode eq 'production') {
+        $logger->level($WARN);
+      }
       return     
     } # we can use the 'debug' config parameter to force detailed logging
     my $appender = Log::Log4perl::Appender->new(
