@@ -67,6 +67,9 @@ sub handler {
 	Kynetx::Util::config_logging($r);
 
 	my $logger = get_logger();
+	eval {
+		 $logger->remove_appender('ConsoleLogger');
+	};
 	my $req = Apache2::Request->new($r);
 	my @params = $req->param;
 
