@@ -211,7 +211,7 @@ sub _load_dataset {
         $self->sourcedata( Kynetx::Memcached::get_cached_file($source_name) );
     }
 	$metric->stop_and_store();
-    #$logger->debug("[_load_dataset] source =>",$self->sourcedata);
+    #$logger->trace("[_load_dataset] source =>",$self->sourcedata);
 
 }
 
@@ -274,37 +274,37 @@ sub unmarshal {
       # 				  }
       # 				 );
 
-      $logger->debug("[datasets] No source data loaded");
+      $logger->trace("[datasets] No source data loaded");
     }
     if ( defined $self->datatype ) {
         $logger->trace( "datatype: ", $self->datatype );
         my $switch = $self->datatype;
         if ( $switch eq 'JSON' ) {
-            $logger->debug(   "[Datasets] Parse "
+            $logger->trace(   "[Datasets] Parse "
                             . $self->type . ":"
                             . $self->name
                             . " as JSON" );
             $self->_unmarshal_json();
         } elsif ( $switch eq 'XML' ) {
-            $logger->debug(   "[Datasets] Parse "
+            $logger->trace(   "[Datasets] Parse "
                             . $self->type . ":"
                             . $self->name
                             . " as XML" );
             $self->_unmarshal_xml();
         } elsif ( $switch eq 'RSS' ) {
-            $logger->debug(   "[Datasets] Parse "
+            $logger->trace(   "[Datasets] Parse "
                             . $self->type . ":"
                             . $self->name
                             . " as RSS" );
             $self->_unmarshal_xml();
         } elsif ( $switch eq 'HTML' ) {
-            $logger->debug(   "[Datasets] Parse "
+            $logger->trace(   "[Datasets] Parse "
                             . $self->type . ":"
                             . $self->name
                             . " as HTML" );
             $self->_unmarshal_string();
         } else {
-            $logger->debug(   "[Datasets] Parse "
+            $logger->trace(   "[Datasets] Parse "
                             . $self->type . ":"
                             . $self->name
                             . " as STRING" );
@@ -372,7 +372,7 @@ sub _unmarshal_json {
     };
     if ($@) {
         $self->json(undef);
-        $logger->debug(
+        $logger->trace(
                      "[Datasets] Invalid JSON format => parse result as string",
                      sub { Dumper(@_) } );
     } else {
