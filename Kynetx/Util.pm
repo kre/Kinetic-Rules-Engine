@@ -193,7 +193,7 @@ sub turn_on_logging {
 	);
 
 
-    $logger->add_appender($appender);
+    #$logger->add_appender($appender);
 
     # don't write detailed logs unless we're already in debug mode
     $logger->remove_appender('FileLogger') unless $logger->is_debug();
