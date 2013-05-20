@@ -166,7 +166,12 @@ sub respond {
 
   # return the JS load to the client
   $logger->info("$realm processing finished");
-  $logger->debug("__FLUSH__");
+  
+  # Send any ErrorStack warnings/errors if a KEY is configured
+  my $stack_key = Kynetx::Configure::get_config('ERRORSTACK_KEY');
+  if (defined $stack_key) {
+    $logger->debug("__FLUSH__");
+  }
 
   $logger->trace("Called with ", $r->the_request);
 

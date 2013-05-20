@@ -107,9 +107,12 @@ use Log::Log4perl::Appender::ErrorStack ();
 srand (time ^ $$ ^ unpack "%L*", `ps axww | gzip -f`);
 # srand( time() ^ ($$ + ($$ <<15)) );
 
+# filter chatty stderr msgs
+use Log::Log4perl::ApacheStdErr;
+tie *STDERR, "Log::Log4perl::ApacheStdErr";
+
 # configure KNS
 Kynetx::Configure::configure();
-Kynetx::Util::init_logging();
 
 
 1;
