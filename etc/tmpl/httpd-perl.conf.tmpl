@@ -366,7 +366,7 @@ LogFormat "%h %t %{TOTAL_SECS}e %{METHOD}e %{RIDS}e %{TXN_ID}e \"%{CALLER}e\" %{
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/cloud_log /web/logs/kynetx/CLOUD-%Y%m%d-%H%M.log" CLOUD env=CLOUD
 
 # rule logging for OAUTH
-LogFormat "%h %t %{TOTAL_SECS}e %{METHOD}e %{RIDS}e %{TXN_ID}e \"%{CALLER}e\" %{SID}e \"%{REFERER}e\" \"%{TITLE}e\" [%{RULE_NAMES}e] [%{RESULTS}e] [%{ACTIONS}e] [%{TAGS}e] [%{LABELS}e] " OAUTH
+LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %{X-Forwarded-For}i %{METHOD}e" OAUTH
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/oauth_log /web/logs/kynetx/OAUTH-%Y%m%d-%H%M.log" OAUTH env=OAUTH
 
 ExtendedStatus On

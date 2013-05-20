@@ -56,6 +56,7 @@ use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
 use constant CREDENTIALS => "system_credentials";
+use constant EXPIRES_IN => "ttl1";
 
 
 # format of list_tokens is array of {'cid' => val, 'name' => val}
@@ -1111,9 +1112,13 @@ sub auth_ken {
 }
 
 sub create_system_key {
+  my ($conf_key) = @_;
   my $logger=get_logger();
+  $logger->debug("Make system key");
 	my $syskey = syskey();
-	my $id = make_pass_phrase();
+	my $id = make_pass_phrase($conf_key);
+	return undef unless (defined $id);
+  $logger->debug("Make system key from $id");
 	my $phrase = get_pass_phrase($id);
 	my $data = $id . '||' . $phrase;
 	my $encrypted = RC4($syskey,$data);
@@ -1208,6 +1213,12 @@ sub get_pass_phrase {
 }
 
 sub make_pass_phrase {
+  my ($conf_key) = @_;
+  my $logger=get_logger();
+  if (defined $conf_key) {
+		  my $salt = Kynetx::Configure::get_config('PCI_KEY');
+		  return undef unless ($conf_key eq $salt);
+	}	
 	my $word1 = Kynetx::Modules::Random::rword();
 	my $word2 = Kynetx::Modules::Random::rword();
 	my $oid = MongoDB::OID->new();
@@ -1219,8 +1230,11 @@ sub make_pass_phrase {
 	my $result = Kynetx::MongoDB::update_value('dictionary', $key,$value,1,0,1);
 	if (defined $result && ref $result eq "HASH") {
 		my $id = $result->{'upserted'};
-		return $id->to_string()
-	}
+		my $id_val = $id->to_string();
+		$logger->debug("Make passphrase ($id_val) $phrase expire");
+		Kynetx::MongoDB::set_ttl('dictionary',EXPIRES_IN,$id_val) unless (defined $conf_key);
+		return $id_val;
+	}		
 	return undef;
 }
 

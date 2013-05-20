@@ -26,6 +26,7 @@ use YAML::XS;
  
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
+use Log::Log4perl qw(get_logger :levels :easy);
 
 
 use Exporter;
@@ -127,9 +128,41 @@ sub configure {
     $config->{'METRICS'}->{'HOSTNAME'} = $host[0];
     $config->{'METRICS'}->{'PROC'} = $$;
 
+    config_logging();
     return 1;
 }
 
+sub config_logging {
+  my $conf_file = Kynetx::Configure::get_config('LOG_CONF') || '/web/etc/log.conf';
+  if (Log::Log4perl->initialized()) {
+    my $logger = Log::Log4perl::get_logger();
+    $logger->debug("Logging ",Log::Log4perl::Level::to_level($logger->level()));
+  } else {
+    my $hostname = Sys::Hostname::hostname();
+    Log::Log4perl->init_once($conf_file);
+    Log::Log4perl::MDC->put( 'hostname', $hostname );
+    my $appenders = Log::Log4perl->appenders();
+    my $logger = Log::Log4perl::get_logger('');
+    my $threshold = get_log_threshold();
+    $logger->level(Log::Log4perl::Level::to_priority($threshold));
+  }
+
+}
+
+sub get_log_threshold {
+  my $mode = Kynetx::Configure::get_config('RUN_MODE');
+  my $debug = Kynetx::Configure::get_config('DEBUG');
+  if ($debug eq 'on') {
+    return "DEBUG"
+  } elsif ($debug eq 'off') {
+    return "WARN"
+  } elsif ($mode eq 'development') {
+    return "DEBUG"
+  } else {
+    return "WARN"
+  }
+  
+}
 
 
 sub get_config {

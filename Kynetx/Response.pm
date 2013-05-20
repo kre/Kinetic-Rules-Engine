@@ -180,6 +180,10 @@ sub respond {
     return $dd->gen_raw_document($r);
   }  elsif ($req_info->{'understands_javascript'}) {
     $logger->debug("Returning javascript from evaluation");
+    if ($logger->is_debug()) {
+      $logger->debug("__SCREEN__");
+    }
+    
     print $heartbeat, $js;
   } else {
     $logger->debug("Returning directives from evaluation");

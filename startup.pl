@@ -109,7 +109,7 @@ srand (time ^ $$ ^ unpack "%L*", `ps axww | gzip -f`);
 
 # configure KNS
 Kynetx::Configure::configure();
-
+Kynetx::Util::init_logging();
 
 
 1;

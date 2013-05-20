@@ -122,7 +122,7 @@ chomp($rrid1);
 my $rrid2 = $DICTIONARY[rand(@DICTIONARY)];
 chomp($rrid2);
 
-my $system_key = Kynetx::Modules::PCI::create_system_key($result);
+my $system_key = Kynetx::Modules::PCI::create_system_key();
 $description = "Create and verify system key";
 $result = Kynetx::Modules::PCI::check_system_key($system_key);
 is($result,1,$description);
@@ -207,13 +207,14 @@ $result = Kynetx::Modules::PCI::clear_permissions($my_req_info,$rule_env,$sessio
 is($result,0,$description);
 $test_count++;
 
+Log::Log4perl->easy_init($DEBUG);
 
 $keypath = ['ruleset','destroy'];
 $description = "get a single permission";
 $result = Kynetx::Modules::PCI::get_permissions($my_req_info,$rule_env,$session,$rule_name,"foo",[$new_token,$dk2,$keypath]);
 is($result,0,$description);
 $test_count++;
-
+Log::Log4perl->easy_init($INFO);
 $keypath = ['ruleset','destroy'];
 $description = "Set a single permission";
 $result = Kynetx::Modules::PCI::set_permissions($my_req_info,$rule_env,$session,$rule_name,"foo",[$new_token,$dk2,$keypath]);

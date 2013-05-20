@@ -100,10 +100,25 @@ correct_bool
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
+sub init_logging {
+#  my $conf_file = Kynetx::Configure::get_config('LOG_CONF') || '/web/etc/log.conf';
+#  if (Log::Log4perl->initialized()) {
+#    my $logger = get_logger();
+#    $logger->debug("Logging already initialized");
+#  } else {
+#    Log::Log4perl->init_once($conf_file);
+#  }
+#  my $appenders = Log::Log4perl->appenders();
+#  foreach my $key (keys %{$appenders}) {
+#    print STDERR $key
+#  }
+  return 1;
+}
 
 
 # set up logging
 sub config_logging {
+  return;
     my ($r) = @_;
     if(Log::Log4perl->initialized()) {
       my $logger = get_logger();
@@ -177,44 +192,21 @@ sub config_logging {
 
 
 sub turn_on_logging {
-
-    my $logger = get_logger('Kynetx');
-
-    # match any newline not at the end of the string
-    my $re = qr%\n(?!$)%;
-    my $appender = Log::Log4perl::Appender->new(
-	"Log::Dispatch::Screen",
-	stderr => 0,
-	name => "ConsoleLogger",
-	callbacks => sub{my (%h) = @_;
-			 $h{'message'} =~ s%$re%\n//%gs;
-			 return $h{'message'};
-	}
-	);
-
-
-    #$logger->add_appender($appender);
-
-    # don't write detailed logs unless we're already in debug mode
-    $logger->remove_appender('FileLogger') unless $logger->is_debug();
-    $logger->level($DEBUG);
-
-    # Layouts
-    my $layout =
-	Log::Log4perl::Layout::PatternLayout->new(
-	    "// %d %p %F{1} %X{site} %X{rule} %m%n"
-	);
-    $appender->layout($layout);
-
+  my $appenderName = "Screen";
+  my $threshold = Kynetx::Configure::get_log_threshold();
+  my $level = Log::Log4perl::Level::to_priority($threshold);
+  my $appender =  $Log::Log4perl::Logger::APPENDER_BY_NAME{$appenderName};
+  if (defined $appender) {
+    $appender->threshold($level);
+  }
 }
 
 sub turn_off_logging {
-    my $logger = get_logger('Kynetx');
-    # this is cheating.  Removing an appender that doesn't exist
-    # causes an error.  This traps it
-    eval {
-      $logger->remove_appender('ConsoleLogger');
-    }
+  my $appenderName = "Screen";
+  my $appender =  $Log::Log4perl::Logger::APPENDER_BY_NAME{$appenderName};
+  if (defined $appender) {
+    $appender->threshold($OFF);
+  }
 }
 
 
@@ -309,8 +301,11 @@ sub get_host {
   my $hostname = '';
   if (defined $url) {
     my $parsed_url= URI->new($url );
-    $hostname = $parsed_url->host() 
+    if ($parsed_url) {
+      $hostname = $parsed_url->host() 
       if $parsed_url->scheme() eq 'http' || $parsed_url->scheme() eq 'https';
+    }
+    
   }
 }
 
