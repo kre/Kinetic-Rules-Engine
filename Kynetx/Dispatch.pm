@@ -230,7 +230,8 @@ sub calculate_rid_list {
 
   my $rid_list_key = mk_ridlist_key($ken);
 
-  my $rid_list = $memd->get($rid_list_key);
+  #my $rid_list = $memd->get($rid_list_key);
+  my $rid_list = undef;
   my $eventtree_key = mk_eventtree_key($rid_list);
 
   if ($rid_list) {
@@ -246,15 +247,15 @@ sub calculate_rid_list {
 
   # if a ruleset isn't cached, then it was flushed and the event tree
   # should be recalculated
-  foreach my $rid_info ( @{$rid_list} ) {
-    if (! Kynetx::Repository::is_ruleset_cached( get_rid($rid_info), 
-					     get_version($rid_info), 
-					     $memd ) ) {
-    	$logger->debug("Flushing event tree because of ruleset flush");
-    	delete_stashed_eventtree($req_info, $memd, $eventtree_key);
-    	last;
-    } 
-  }
+#  foreach my $rid_info ( @{$rid_list} ) {
+#    if (! Kynetx::Repository::is_ruleset_cached( get_rid($rid_info), 
+#					     get_version($rid_info), 
+#					     $memd ) ) {
+#    	$logger->debug("Flushing event tree because of ruleset flush");
+#    	delete_stashed_eventtree($req_info, $memd, $eventtree_key);
+#    	last;
+#    } 
+#  }
 
   if ( is_eventtree_stashed($req_info, $memd, $eventtree_key) ) {
     $logger->debug("Using stashed eventtree");
@@ -498,7 +499,8 @@ sub grab_eventtree {
 sub is_eventtree_stashed {
   my ($req_info, $memd, $eventtree_key) = @_;
 #  return defined $req_info->{"KOBJ.eventtree"};
-  return defined $memd->get($eventtree_key);
+  #return defined $memd->get($eventtree_key);
+  return 0;
 }
 
 sub delete_stashed_eventtree {
@@ -520,7 +522,8 @@ sub grab_ridlist {
 
 sub is_ridlist_stashed {
   my ($req_info) = @_;
-  return defined $req_info->{"KOBJ.ridlist"};
+  return 0;
+  #return defined $req_info->{"KOBJ.ridlist"};
 }
 
 sub delete_stashed_ridlist {
