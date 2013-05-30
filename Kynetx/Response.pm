@@ -166,7 +166,12 @@ sub respond {
 
   # return the JS load to the client
   $logger->info("$realm processing finished");
-  $logger->debug("__FLUSH__");
+  
+  # Send any ErrorStack warnings/errors if a KEY is configured
+  my $stack_key = Kynetx::Configure::get_config('ERRORSTACK_KEY');
+  if (defined $stack_key) {
+    $logger->debug("__FLUSH__");
+  }
 
   $logger->trace("Called with ", $r->the_request);
 
@@ -176,10 +181,14 @@ sub respond {
   # this is where we return the JS
   binmode(STDOUT, ":encoding(UTF-8)");
   if ($req_info->{'send_raw'}) {
-    $logger->debug("Returning raw directive");
+    #$logger->debug("Returning raw directive");
     return $dd->gen_raw_document($r);
   }  elsif ($req_info->{'understands_javascript'}) {
     $logger->debug("Returning javascript from evaluation");
+    if ($logger->is_debug()) {
+      $logger->debug("__SCREEN__");
+    }
+    
     print $heartbeat, $js;
   } else {
     $logger->debug("Returning directives from evaluation");

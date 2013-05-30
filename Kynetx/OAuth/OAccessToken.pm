@@ -75,6 +75,9 @@ sub handler {
   Log::Log4perl::MDC->put('rule', '[OAccessToken]');
   
   my $logger = get_logger('Kynetx');
+  eval {
+     $logger->remove_appender('ConsoleLogger');
+  };
   # get the client-supplied credentials
   $logger->debug("Access Token Request handler");
   

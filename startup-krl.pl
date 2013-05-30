@@ -84,6 +84,7 @@ use Kynetx::PrettyPrinter ();
 #use Kynetx::Util ();
 use Kynetx::Version ();
 use Kynetx::Configure ();
+use Log::Dispatch::Email ();
 
 
 # initialize Log4perl
@@ -94,6 +95,9 @@ srand (time ^ $$ ^ unpack "%L*", `ps axww | gzip -f`);
 # srand( time() ^ ($$ + ($$ <<15)) );
 
 # configure KNS
+use Log::Log4perl::ApacheStdErr;
+
+tie *STDERR, "Log::Log4perl::ApacheStdErr";
 Kynetx::Configure::configure();
 
 1;

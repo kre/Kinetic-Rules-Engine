@@ -90,10 +90,10 @@ sub handler {
 
 	$r->content_type('text/javascript');
 
-	$logger->debug(
+	$logger->trace(
 "\n\n------------------------------ begin EVENT evaluation-----------------------------"
 	);
-	$logger->debug("Initializing memcached");
+	$logger->trace("Initializing memcached");
 	Kynetx::Memcached->init();
 
 	my ( $domain, $rid, $eventtype );
@@ -104,7 +104,7 @@ sub handler {
 
 	my @path_components = split( /\//, $r->path_info );
 
-#    $logger->debug("Path components for ", $r->path_info, ": ", sub{Dumper @path_components});
+#    $logger->trace("Path components for ", $r->path_info, ": ", sub{Dumper @path_components});
 
 	# 0 = "blue"
 	# 1 = "event|flush"
@@ -118,10 +118,10 @@ sub handler {
 	$metric->push( 'eventtype', $eventtype );
 
 	if ( $domain eq 'version' ) {
-		$logger->debug("returning version info for event API");
+		$logger->trace("returning version info for event API");
 	}
 	else {
-		$logger->debug(
+		$logger->trace(
 			"processing event $domain/$eventtype on rulesets $rid and EID $eid"
 		);
 	}
@@ -159,7 +159,7 @@ sub process_event {
 
 	Log::Log4perl::MDC->put( 'events', '[global]' );
 
-	$logger->debug(
+	$logger->trace(
 		"processing event $domain/$eventtype on rulesets $rids and EID $eid");
 
 	$r->subprocess_env( START_TIME => Time::HiRes::time );
@@ -169,7 +169,7 @@ sub process_event {
 		# WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
 		my $test_ip = Kynetx::Configure::get_config('TEST_IP');
 		$r->connection->remote_ip($test_ip);
-		$logger->debug( "In development mode using IP address ",
+		$logger->trace( "In development mode using IP address ",
 			$r->connection->remote_ip() );
 	}
 
@@ -228,7 +228,7 @@ sub process_event {
 
 	my $ev = mk_event($req_info);
 
-   #$logger->debug("Processing events for $rids with event ", sub {Dumper $ev});
+   #$logger->trace("Processing events for $rids with event ", sub {Dumper $ev});
 	
 	my $schedule = Kynetx::Scheduler->new();
 
@@ -263,7 +263,7 @@ sub process_event {
 	}
 
 
-	$logger->debug("\n----***----- Schedule Complete ----***-----");
+	$logger->trace("\n----***----- Schedule Complete ----***-----");
 
 	my $dd = Kynetx::Response->create_directive_doc( $req_info->{'eid'} );
 	my $js = '';
@@ -305,9 +305,9 @@ sub process_event_for_rid {
 	my $rid = get_rid($rid_info);
 	my $ver = get_version($rid_info);
 
-	#  $logger->debug("Req info: ", sub {Dumper $req_info} );
+	#  $logger->trace("Req info: ", sub {Dumper $req_info} );
 
-	$logger->debug("Processing events for $rid:$ver");
+	$logger->trace("Processing events for $rid:$ver");
 	Log::Log4perl::MDC->put( 'site', $rid );
 
 	my $ruleset =
@@ -317,12 +317,12 @@ sub process_event_for_rid {
 	my $type   = $ev->get_type();
 	my $domain = $ev->get_domain();
 
-	$logger->debug("Event domain is $domain and type is $type");
+	$logger->trace("Event domain is $domain and type is $type");
 	$logger->trace( "Rule list is ",
 		sub { Dumper $ruleset->{'rule_lists'}->{$domain}->{$type} } );
 
 	if ( $ruleset->{'rule_lists'}->{$domain}->{$type} ) {
-		$logger->debug(
+		$logger->trace(
 			"Selection checking for ",
 			scalar
 			  @{ $ruleset->{'rule_lists'}->{$domain}->{$type}->{'rulelist'} },
@@ -330,14 +330,14 @@ sub process_event_for_rid {
 		);
 	}
 	else {
-		$logger->debug("No rules in $rid.$ver match event $domain:$type");
+		$logger->trace("No rules in $rid.$ver match event $domain:$type");
 	}
 
 	foreach my $rule (
 		@{ $ruleset->{'rule_lists'}->{$domain}->{$type}->{'rulelist'} } )
 	{
 
-		$logger->debug("***** Should we schedule rule $rule->{'name'}?");
+		$logger->trace("***** Should we schedule rule $rule->{'name'}?");
 
 		$rule->{'state'} ||= 'active';
 
@@ -348,7 +348,7 @@ sub process_event_for_rid {
 
 		$logger->trace( "Rule: ", sub { Dumper $rule} );
 
-		$logger->debug( "Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'} );
+		$logger->trace( "Op: ", $rule->{'pagetype'}->{'event_expr'}->{'op'} );
 
 		next unless defined $rule->{'pagetype'}->{'event_expr'}->{'op'};
 
@@ -370,14 +370,14 @@ sub process_event_for_rid {
 		unless ( $current_state eq $next_state ) {
 			my $json = $ev->serialize();
 			Kynetx::Persistence::UserState::add_event_to_list($rid, $session,$event_list_name, $json );
-			$logger->debug("State change for $rule->{'name'}");
+			$logger->trace("State change for $rule->{'name'}");
 		}
 
 		if ( $sm->is_final($next_state) ) {
 
 			my $rulename = $rule->{'name'};
 
-			$logger->debug(
+			$logger->trace(
 				"Adding to schedule: ",
 				Kynetx::Rids::print_rid_info($rid_info),
 				" & ", $rulename
@@ -400,13 +400,13 @@ sub process_event_for_rid {
 			my $event_list = Kynetx::Persistence::UserState::get_event_list(
 						$rid, $session, $event_list_name);
 
-#			$logger->debug("Event list: ", sub{Dumper $event_list});
+#			$logger->trace("Event list: ", sub{Dumper $event_list});
 
 			foreach my $raw_ev ( @{ $event_list } ) {
 
 			  my $ev = Kynetx::Events::Primitives->unserialize($raw_ev);
 
-			  $logger->debug("Event list count: $event_list_count; threshold: $event_list_threshold");
+			  $logger->trace("Event list count: $event_list_count; threshold: $event_list_threshold");
 			  if ( $event_list_count++ > $event_list_threshold ) {
 			    $logger->warn("Event list threshold exceeded for $rid:$rulename. Last event in event list: ",
 					  sub { Dumper $ev });
@@ -428,7 +428,7 @@ sub process_event_for_rid {
 			$schedule->annotate_task( $rid, $rulename, $task, 'vals',
 				$val_list );
 
-			$logger->debug(
+			$logger->trace(
 				"Completed adding to schedule: ",
 				Kynetx::Rids::print_rid_info($rid_info),
 				" & ", $rulename
@@ -440,14 +440,14 @@ sub process_event_for_rid {
 
 		}
 		else {
-#			$logger->debug("Setting current state");
+#			$logger->trace("Setting current state");
 #			$logger->trace( "Next state ref: ", ref $next_state );
 			if ( $next_state ne "" ) {
 				set_current_state( $rid, $session, $rule->{'name'},
 					$next_state );
 			}
 
-#			$logger->debug("Next state not final");
+#			$logger->trace("Next state not final");
 		}
 
 	}
@@ -457,7 +457,7 @@ sub mk_event {
 	my ($req_info) = @_;
 
 	my $logger = get_logger();
-	$logger->debug( "Make event for ",
+	$logger->trace( "Make event for ",
 		$req_info->{'domain'}, "/", $req_info->{'eventtype'} );
 	$logger->trace( "Request info is: ", sub { Dumper($req_info) } );
 	my $ev = Kynetx::Events::Primitives->new();
@@ -479,7 +479,7 @@ sub mk_event {
 	}
 
 	my $attr_names = Kynetx::Request::get_attr_names($req_info);
-#	$logger->debug("Attr names: ", sub {Dumper $attr_names});
+#	$logger->trace("Attr names: ", sub {Dumper $attr_names});
         # this used to be stored in a req_info object in the event. Now we store it direct
 	foreach my $p ( @{ $attr_names } ) {
 	  my $val = Kynetx::Request::get_attr($req_info,$p);
@@ -488,7 +488,7 @@ sub mk_event {
 	  }
 	}
 
-#	$logger->debug( "Event: ", sub { Dumper($ev) } );
+#	$logger->trace( "Event: ", sub { Dumper($ev) } );
 	return $ev;
 }
 
@@ -519,7 +519,7 @@ sub compile_event_expr {
 			@{ $rule_lists->{$domain}->{$op}->{"rulelist"} } )
 		{
 			no warnings 'uninitialized';
-			$logger->debug("Putting $rule->{'name'} on the list");
+			$logger->trace("Putting $rule->{'name'} on the list");
 			push( @{ $rule_lists->{$domain}->{$op}->{"rulelist"} }, $rule )
 			  unless ( defined $rule->{'state'}
 				&& $rule->{'state'} eq 'inactive' );
@@ -529,7 +529,7 @@ sub compile_event_expr {
 		if ( $op eq 'pageview' ) {
 			$logger->trace( "Pageview expression: ", sub { Dumper($eexpr) } );
 			if ( $eexpr->{'pattern'} || $eexpr->{'legacy'} ) {
-				$logger->debug("Old form pageview");
+				$logger->trace("Old form pageview");
 				$sm = mk_pageview_prim( $eexpr->{'pattern'}, $eexpr->{'vars'} );
 				$filter = [
 					{
@@ -689,7 +689,7 @@ sub compile_event_expr {
 		}
 	}
 	elsif ( $eexpr->{'type'} eq 'arity_event' ) {
-		$logger->debug( "E.expression: ", sub { Dumper($eexpr) } );
+		$logger->trace( "E.expression: ", sub { Dumper($eexpr) } );
 		my @event_array = ();
 		foreach my $sm_element ( @{ $eexpr->{'args'} } ) {
 			my $tsm = compile_event_expr( $sm_element, $rule_lists, $rule );
@@ -721,7 +721,7 @@ sub compile_event_expr {
 		my $period  = $eexpr->{'timeframe'};
 		my $num     = Kynetx::Expressions::den_to_exp( $eexpr->{'within'} );
 		my $seconds = int( Kynetx::Util::to_seconds( $num, $period ) );
-		$logger->debug( "Set a timeframe for ",
+		$logger->trace( "Set a timeframe for ",
 			$eexpr->{'op'}, " of $seconds (s)" );
 		$sm->timeframe($seconds);
 	}
@@ -741,7 +741,7 @@ sub add_filter {
 		$rule_lists->{$domain}->{$op}->{"filters"} = [ANY];
 	}
 
-	# $logger->debug("Filters after: ", sub {Dumper $filters});
+	# $logger->trace("Filters after: ", sub {Dumper $filters});
 
 	foreach my $filter ( @{$filters} ) {
 
@@ -749,7 +749,7 @@ sub add_filter {
 		if ( $filter eq ANY ) {
 			$rule_lists->{$domain}->{$op}->{"filters"} = [ANY];
 
-	#      $logger->debug("Filter array for ANY: ", sub {Dumper $filter_array});
+	#      $logger->trace("Filter array for ANY: ", sub {Dumper $filter_array});
 			last;
 		}
 		else {

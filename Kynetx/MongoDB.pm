@@ -44,6 +44,7 @@ use Devel::Size qw(
   total_size
 );
 use Digest::MD5 qw(md5_base64);
+use DateTime;
 
 use Kynetx::Configure;
 use Kynetx::Json;
@@ -652,10 +653,33 @@ sub validate {
 		return 0;
 	} else {
 		return 1;
-	}
-	
-	
+	}	
 }
+
+####### TTL operations
+
+# never cache
+sub get_ttl {
+  my ($collection,$var) = @_;
+  
+}
+
+sub set_ttl {
+  my ($collection, $ttl_index, $oid) = @_;
+  my $logger = get_logger();
+  $logger->debug("SET TTL: $collection $ttl_index $oid");
+  my $c = get_collection($collection);
+  my $id = MongoDB::OID->new(value => $oid);
+	my $key = {
+		"_id" => $id
+	};
+	my $val = {
+	  '$set' => {$ttl_index => DateTime->now}
+	};
+	$c->update($key,$val);	   
+}
+
+#######
 
 sub update_value {
     my ($collection,$var,$val,$upsert,$multi,$safe) = @_;
@@ -823,7 +847,10 @@ sub get_cache {
     my ($collection,$var) = @_;
     my $logger = get_logger();
     my $keystring = make_keystring($collection,$var);
-    $logger->trace("Cache keystring (get) $keystring: ", sub {Dumper($var)});
+  	if ($collection eq "edata") {
+  	  $logger->debug("get cache keystring (get) $keystring: ", sub {Dumper($var)});
+  	}
+    
     my $result = Kynetx::Memcached::check_cache($keystring);
     if (defined $result) {
         return $result;
@@ -837,6 +864,9 @@ sub set_cache {
     my $logger = get_logger();
     my $parent = (caller(1))[3];
     my $keystring = make_keystring($collection,$var);
+  	if ($collection eq "edata") {
+  	  $logger->debug("set key cache: $keystring $value");
+  	}
     Kynetx::Memcached::mset_cache($keystring,$value,$CACHETIME);
 }
 
@@ -844,7 +874,10 @@ sub clear_cache {
     my ($collection,$var) = @_;
     my $logger= get_logger();
     my $keystring = make_keystring($collection,$var);
-    $logger->trace("Clear cache for: $keystring");
+  	if ($collection eq "kpds") {
+  	   $logger->debug("Clear cache for: $keystring");
+  	}
+    
     Kynetx::Memcached::flush_cache($keystring);
     #clear any reference to hash parts as well
     clear_cache_for_hash($collection,$var);
@@ -880,6 +913,10 @@ sub get_cache_for_hash {
 	my $logger = get_logger();
 	my $key = make_keystring($collection,$var);
 	my $lookup_key = "_map_" . $key;
+	if ($collection eq "kpds") {
+	  $logger->debug("list key cache: $lookup_key");
+	}
+	
 	my $mcache_prefix = Kynetx::Memcached::check_cache($lookup_key);
 	my $dupe = clone $var;
 	$logger->trace("$lookup_key: ", sub {Dumper($mcache_prefix)});
@@ -897,12 +934,18 @@ sub set_cache_for_hash {
 	my $logger = get_logger();
 	my $key = make_keystring($collection,$var);
 	$logger->trace("Var: ",sub {Dumper($var)});
-	$logger->trace("Calculated keystring in scfh: $key");
+	if ($collection eq "kpds") {
+	  $logger->debug("Calculated keystring in scfh list key: $key");
+	}
+	
 	$logger->trace("SCFH: ", sub {Dumper($path)});
 	my $lookup_key = "_map_" . $key;
 	my $mcache_prefix =  time();
 	Kynetx::Memcached::mset_cache($lookup_key,$mcache_prefix,$CACHETIME);
-	$logger->trace("Set master $lookup_key: ($mcache_prefix)");
+	if ($collection eq "kpds") {
+	  $logger->debug("Set master $lookup_key: ($mcache_prefix)");
+	}
+	
 	$var->{"cachemap"} = $mcache_prefix;
 	$var->{"hashpath"} = $path;
 	Kynetx::MongoDB::set_cache($collection,$var,$value);

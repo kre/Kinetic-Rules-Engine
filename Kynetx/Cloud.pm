@@ -67,15 +67,18 @@ sub handler {
 	Kynetx::Util::config_logging($r);
 
 	my $logger = get_logger();
+	eval {
+		 $logger->remove_appender('ConsoleLogger');
+	};
 	my $req = Apache2::Request->new($r);
 	my @params = $req->param;
 
 	$r->content_type('text/javascript');
 
-	$logger->debug(
+	$logger->trace(
 "\n\n------------------------------ begin ID evaluation with CLOUDID API---------------------"
 	);
-	$logger->debug("Initializing memcached");
+	$logger->trace("Initializing memcached");
 	Kynetx::Memcached->init();
 
 	my ($rids);
@@ -94,14 +97,14 @@ sub handler {
 		# WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
 		my $test_ip = Kynetx::Configure::get_config('TEST_IP');
 		$r->connection->remote_ip($test_ip);
-		$logger->debug( "In development mode using IP address ",
+		$logger->trace( "In development mode using IP address ",
 			$r->connection->remote_ip() );
 	}
 
 
 	# store these for later logging
 	if ($path_components[2] eq 'version' ) {
-		$logger->debug("returning version info for Sky cloud API");
+		$logger->trace("returning version info for Sky cloud API");
 		Kynetx::Version::show_build_num($r);
 		exit();
 	}
@@ -160,7 +163,7 @@ sub eval_ruleset_function {
   my $rid_list = Kynetx::Dispatch::get_ridlist( $req_info, $req_info->{'id_token'}, $ken );
   my $rid_list_hash = {map { $_->{'rid'} => 1 } @{ $rid_list }};
 
-#  $logger->debug("Ridlist: ", sub { Dumper $rid_list_hash } );
+#  $logger->trace("Ridlist: ", sub { Dumper $rid_list_hash } );
 
 
   my $ruleset =
@@ -171,7 +174,7 @@ sub eval_ruleset_function {
 
 
 
-  $logger->debug("Sharing is: ", sub { Dumper $ruleset->{'meta'}->{'sharing'} } );
+  $logger->trace("Sharing is: ", sub { Dumper $ruleset->{'meta'}->{'sharing'} } );
 
   my $result = "";
 
@@ -189,7 +192,7 @@ sub eval_ruleset_function {
 	  || Kynetx::Configure::get_config('ALLOW_ALL_RULESETS')
            )
 	) {
-    $logger->debug("$req_info->{'module_name'} is not installed");
+    $logger->trace("$req_info->{'module_name'} is not installed");
     $result = {"error" => 102,
 	       "error_str" => "Module $req_info->{'module_alias'} is not installed for user"
 	      };
@@ -209,7 +212,7 @@ sub eval_ruleset_function {
 						$req_info->{'module_version'}, $env_stash );
 
 
-    # $logger->debug("Env: ", sub{Dumper $rule_env});
+    # $logger->trace("Env: ", sub{Dumper $rule_env});
     
     my $rule_name = "empty_rule";
 
@@ -217,7 +220,7 @@ sub eval_ruleset_function {
 						     $req_info->{'function_name'}, 
 						     $rule_env);
 
-    #$logger->debug("Closure: ", sub{Dumper $closure});
+    #$logger->trace("Closure: ", sub{Dumper $closure});
 
     if ( defined $closure 
       && $closure->{'type'} eq 'closure'
@@ -232,7 +235,7 @@ sub eval_ruleset_function {
 		  'name' => $req_info->{'function_name'}
 		 };
 
-      # $logger->debug("Expr: ", sub{Dumper $expr});
+      # $logger->trace("Expr: ", sub{Dumper $expr});
       $result = Kynetx::Expressions::den_to_exp(
 	  	  Kynetx::Expressions::eval_application($expr, $rule_env, $rule_name,
 							$req_info, $session));
@@ -249,7 +252,7 @@ sub eval_ruleset_function {
 
 
 
-#  $logger->debug("Result: ", sub{Dumper $result});
+#  $logger->trace("Result: ", sub{Dumper $result});
  
   my $json = JSON::XS->new->allow_nonref;
   $result = $json->encode( $result );
@@ -282,7 +285,7 @@ sub unalias {
   } else {
     $rid = $alias;
   }
-  $logger->debug("[unalias] : $alias -> $rid");
+  $logger->trace("[unalias] : $alias -> $rid");
   return $rid;
 }
 

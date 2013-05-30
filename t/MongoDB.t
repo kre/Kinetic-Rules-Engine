@@ -168,7 +168,7 @@ $base_save = timediff($end,$start);
 diag "Element retrieval: " . $base_save->[0];
 $logger->debug( "Fourth element: ", sub {Dumper($result)});
 
-goto ENDY;
+#goto ENDY;
 
 #Kynetx::MongoDB::insert_hash($cruft,{'key' => $hash_var},$dummy_hash);
 Kynetx::MongoDB::update_value($cruft,{'key' => $hash_var},{'key' => $hash_var, 'value' => $dummy_hash});
@@ -425,15 +425,18 @@ $value = {
 };
 
 $got = Kynetx::MongoDB::make_keystring("edata",$key);
-$expected = "edata$fken$who$frid";
-
-compare($got,$expected,"Entity cache key");
+#$expected = "edata$fken$who$frid";
+#
+#compare($got,$expected,"Entity cache key");
 
 Kynetx::Persistence::Entity::put_edatum($frid,$fken,$who,$where);
 
 $expected = undef;
 $got = Kynetx::MongoDB::get_cache("edata",$key);
 compare($got,$expected,"Not in memcache yet");
+
+Log::Log4perl->easy_init($DEBUG);
+
 
 $start = new Benchmark;
 $result = Kynetx::MongoDB::get_value("edata",$key);
