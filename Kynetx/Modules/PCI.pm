@@ -27,7 +27,7 @@ use Data::Dumper;
 use Kynetx::Util qw(ll);
 use Kynetx::Rids qw/:all/;
 #use Kynetx::Environments qw/:all/;
-#use Kynetx::Modules::Random;
+use Kynetx::Modules::Random;
 use Digest::SHA qw/hmac_sha1 hmac_sha1_hex hmac_sha1_base64
 				hmac_sha256 hmac_sha256_hex hmac_sha256_base64/;
 use Crypt::RC4::XS;

@@ -46,6 +46,11 @@ use Kynetx::Util qw(:all);
 use Kynetx::Memcached qw(:all);
 use Kynetx::Metrics::Datapoint;
 use Kynetx::Rids qw(:all);
+use Kynetx::Persistence::KToken;
+use Kynetx::Persistence::SchedEv;
+use Kynetx::Persistence::KEN;
+use Kynetx::ExecEnv;
+use Kynetx::Modules::HTTP;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -224,19 +229,6 @@ sub send_event {
   #   	        ) 
 
   my $logger = get_logger();
-  my $metric = new Kynetx::Metrics::Datapoint();
-  $metric->start_timer();
-  $metric->series("send-event");
-  $metric->eid($req_info->{'eid'});
-  $metric->rid(get_rid( $req_info->{'rid'} ));
-  $metric->token($req_info->{'id_token'});
-  $metric->event(
-			{
-				'domain' => $args->[1],
-				'type'   => $args->[2]
-			}
-		);  
-  my $timeout = 2; # seconds
 
   my $sm = $args->[0];
 
@@ -255,14 +247,89 @@ sub send_event {
 
   my $attrs = $config->{'attrs'};
 
-#  $logger->debug("Attributes as given: ", sub { Dumper $attrs});
-  $metric->add_tag(keys %{$attrs} );
-
   # merge in the domain and type
   $attrs->{'_domain'} = $args->[1];
   $attrs->{'_type'} = $args->[2];
   $attrs->{'_async'} = 1;
+  
+  $logger->debug("Sending event $args->[1]:$args->[2] to ESL $esl");
+  _send_event($attrs,$execenv,$esl);
+  
+}
 
+sub send_scheduled_event {
+  my ($schedId) = @_;
+  my $logger = get_logger();
+  my $schedEvent = Kynetx::Persistence::SchedEv::get_sched_ev($schedId);
+  return undef unless ($schedEvent);
+  
+  # Create a subscription map
+  #
+  # 1. check that the ken is still valid
+  # 2. create a token because sky uses tokens
+  # 3. add a ttl to it to make it temporary
+  #
+  my $ken = $schedEvent->{'ken'};
+  my $valid = Kynetx::Persistence::KEN::get_ken_value($ken,'_id');
+  return undef unless ($valid);
+  my $token = Kynetx::Persistence::KToken::create_token($ken,'_schedev_','_temporary_');
+  Kynetx::Persistence::KToken::set_ttl($token,'ttl5');
+  my $sm = {
+    'token' => $token
+  };    
+  
+  # Create an ExecEnv
+  my $execenv = Kynetx::ExecEnv::build_exec_env();
+	my $cv = AnyEvent->condvar();
+	$execenv->set_condvar($cv);
+	
+	# Build the esl
+  my $esl = mk_sky_esl($token);
+  
+  $logger->trace("ESL: $esl");
+  
+  # Create the event attributes
+  # merge in the domain and type
+  my $attrs;
+  $attrs->{'_domain'} = $schedEvent->{'domain'};
+  $attrs->{'_type'} = $schedEvent->{'event_name'};
+  #$attrs->{'_async'} = 0;
+  
+  # merge stored attrs
+  my $sched_attrs = $schedEvent->{'event_attrs'};
+  if (defined $sched_attrs && ref $sched_attrs eq "HASH") {
+    for my $key (keys %{$sched_attrs}) {
+      my $val = $sched_attrs->{$key};
+      if (ref $val ne "") {
+        my $json;
+        eval {
+          $json = Kynetx::Json::encode_json($val);
+        };
+        if ($@ && not defined $json) {
+          $logger->debug("JSON encoding error $@");
+          $val = "__CONTENT_NOT_JSON_COMPLIANT__";
+        } else {
+          $val = $json;
+        }
+      }
+      $attrs->{$key} = $val;
+    }
+  }
+  my $method = 'POST';
+  my $credentials = undef;
+  my $uri = $esl;
+  my $params = $attrs;
+  my $headers = undef;
+  my $responce = Kynetx::Modules::HTTP::mk_http_request($method, $credentials, $uri, $params, $headers);
+  
+  $logger->trace("Response: ", sub {Dumper($responce)});
+  return ($schedEvent, $esl, $responce);
+}
+
+sub _send_event {
+  my ($attrs,$execenv,$esl) = @_;
+  my $logger = get_logger();
+  my $timeout = 2; # seconds
   my $cv = $execenv->get_condvar();
   $cv->begin;
   
@@ -272,9 +339,8 @@ sub send_event {
 		     )
 		 );
 
-  $logger->debug("Sending event $args->[1]:$args->[2] to ESL $esl");
 
-#  $logger->debug("Body of event: ", sub { Dumper $body});
+  $logger->trace("Body of event: ", sub { Dumper $body});
 
 
   my $request;
@@ -293,6 +359,8 @@ sub send_event {
 			      'reason' => $hdr->{Reason},
 			      'body' => $body,
 			     });
+			     my $ilogger = get_logger();
+			     $ilogger->debug("HDR: ", sub {Dumper($hdr)});
 	if ($hdr->{Status} =~ /^2/) {
 	  $logger->debug("------------------------ event:send() success for $esl");
 	  
@@ -315,10 +383,8 @@ sub send_event {
 
       }
    );
-	$metric->stop_and_store();
-
+  
 }
-
 
 
 sub mk_sky_esl {

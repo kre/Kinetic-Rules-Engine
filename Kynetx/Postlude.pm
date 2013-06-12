@@ -54,7 +54,7 @@ use Kynetx::Dispatch;
 use Kynetx::Parser qw/mk_expr_node/;
 use Kynetx::Log;
 use Kynetx::Persistence qw(:all);
-
+use Kynetx::Persistence::SchedEv;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -175,6 +175,10 @@ sub eval_post_statement {
     } elsif ( $expr->{'type'} eq 'raise' && $test ) {
         return
           eval_raise_statement( $expr,     $session, $req_info,
+                                $rule_env, $rule_name );
+    } elsif ( $expr->{'type'} eq 'schedule' && $test ) {
+        return
+          eval_schedule_statement( $expr,     $session, $req_info,
                                 $rule_env, $rule_name );
     } else {
         return '';
@@ -384,6 +388,113 @@ sub eval_control_statement {
     return $js;
 }
 
+sub _eventname {
+  my ($expr, $session, $req_info, $rule_env, $rule_name) = @_;
+  my $logger = get_logger();
+  return Kynetx::Expressions::den_to_exp(
+        eval_expr_with_default(
+                               $expr->{'event'},
+                               'foo',              # default value can't be seen
+                               $rule_env,
+                               $rule_name,
+                               $req_info,
+                               $session
+        )
+    );
+  
+}
+
+sub _domainname {
+  my ($expr) = @_;
+  my $allowed = {'explicit' => 1,
+	   'http' => 1,
+	   'system' => 1,
+	   'cloudos' => 1,
+	   'notification' => 1 ,
+	   'pds' => 1 ,
+	   'error' => 1,
+	  };
+  if ($allowed->{$expr->{'domain'}}) {
+    return $expr->{'domain'}
+  } else {
+    return 'explicit'
+  }
+}
+
+sub eval_schedule_statement {
+    my ( $expr, $session, $req_info, $rule_env, $rule_name ) = @_;
+    my $logger = get_logger();
+    my $js = '';
+    my $rid = get_rid($req_info->{'rid'});
+    my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+    my $event_name = _eventname($expr, $session, $req_info, $rule_env, $rule_name);
+    my $domain = _domainname($expr);
+    
+    #get modifiers
+    my $mods;
+    foreach my $m ( @{ $expr->{'modifiers'} } ) {
+      my $val = Kynetx::Expressions::den_to_exp(
+		    Kynetx::Expressions::eval_expr($m->{'value'}, $rule_env, $rule_name, $req_info, $session )
+		  );
+		  $mods->{$m->{'name'}} = $val;
+    }
+    
+    # attributes clause
+    if ( defined $expr->{'attributes'}) {
+      my $attrs = Kynetx::Expressions::den_to_exp(
+  		    Kynetx::Expressions::eval_expr(
+            $expr->{'attributes'}, 
+  		      $rule_env, 
+  		      $rule_name, 
+            $req_info, 
+            $session));
+      foreach my $k ( keys %{ $attrs } ) {
+	       $mods->{$k} = $attrs->{$k};
+      }
+    }
+    
+    # Choose singleton or repeating event
+    my $sched_id;
+    my $timespec = $expr->{'timespec'};
+    if ($timespec->{'repeat'}) {
+      my $val = Kynetx::Expressions::den_to_exp(
+                  Kynetx::Expressions::eval_expr(
+                    $timespec->{'repeat'}, 
+                    $rule_env, 
+                    $rule_name, 
+                    $req_info, 
+                    $session 
+                  )
+                );
+      $sched_id =   Kynetx::Persistence::SchedEv::repeating_event($ken,$rid,$domain,$event_name,$val,$mods);  
+      if ($sched_id) {
+        $logger->debug("Create repeating event $domain / $event_name, first occurance $val")
+      }      
+    } else {
+      my $once;
+      my $val = Kynetx::Expressions::den_to_exp(
+            Kynetx::Expressions::eval_expr(
+              $timespec->{'once'}, 
+              $rule_env, 
+              $rule_name, 
+              $req_info, 
+              $session 
+            )
+          );
+      if ($val) {
+        $once = $val;
+      } else {
+        $once = Kynetx::Predicates::Time::now();
+      }
+      $sched_id = Kynetx::Persistence::SchedEv::single_event($ken,$rid,$domain,$event_name,$val,$mods);
+      if ($sched_id) {
+        $logger->debug("Create single event $domain / $event_name at $val")
+      }      
+    }
+    $logger->debug("Created scheduled event ($sched_id)"); 
+    return $js;
+}
+
 sub eval_raise_statement {
     my ( $expr, $session, $req_info, $rule_env, $rule_name ) = @_;
 
@@ -394,30 +505,8 @@ sub eval_raise_statement {
 #    $logger->debug("Event Expr: ", sub {Dumper($expr)});
 
     # event name can be an expression
-    my $event_name = Kynetx::Expressions::den_to_exp(
-        eval_expr_with_default(
-                               $expr->{'event'},
-                               'foo',              # default value can't be seen
-                               $rule_env,
-                               $rule_name,
-                               $req_info,
-                               $session
-        )
-    );
-
-    my $allowed = {'explicit' => 1,
-		   'http' => 1,
-		   'system' => 1,
-		   'cloudos' => 1,
-		   'notification' => 1 ,
-		   'pds' => 1 ,
-		   'error' => 1,
-		  };
-
-    unless ( $allowed->{$expr->{'domain'}} ) {
-      $expr->{'domain'} = 'explicit';
-    }
-
+    my $event_name = _eventname($expr, $session, $req_info, $rule_env, $rule_name);
+    $expr->{'domain'} = _domainname($expr);
 
     # build a new request
     my $new_req_info = {

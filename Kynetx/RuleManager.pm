@@ -201,8 +201,9 @@ sub validate_rule {
         $tree = Kynetx::Parser::parse_ruleset($rule);
 
         if ( defined $tree->{'error'} ) {
-            warn $tree->{'error'};
-            $test_template->param( ERROR => $tree->{'error'} );
+	    $logger->debug("Error -> ", sub {Dumper $tree->{'error'}});
+	    my $error_str = join('<br/>', @{$tree->{'error'}});
+            $test_template->param( ERROR => $error_str );
         } else {
             $json = krlToJson($rule);
             $test_template->param( JSON => $json );

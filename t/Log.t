@@ -77,25 +77,25 @@ $logger->error("error");
 $logger->fatal("fatal");  
 
 Kynetx::Util::turn_on_logging();
-diag "Debug";
-$logger->debug("debug");
-diag "Info";
-$logger->info("info");
-diag "warn";
-$logger->warn("warn");
-diag "error";
-$logger->error("error");
-diag "fatal";
-$logger->fatal("fatal"); 
-
-$logger->log($TRACE, "...");
-$logger->log($DEBUG, "debug...");
-$logger->log($INFO, "info...");
-$logger->log($WARN, "warn...");
-$logger->log($ERROR, "error...");
-$logger->log($FATAL, "fatal...");
-
-$logger->debug("__SCREEN__");
+#diag "Debug";
+#$logger->debug("debug");
+#diag "Info";
+#$logger->info("info");
+#diag "warn";
+#$logger->warn("warn");
+#diag "error";
+#$logger->error("error");
+#diag "fatal";
+#$logger->fatal("fatal"); 
+#
+#$logger->log($TRACE, "...");
+#$logger->log($DEBUG, "debug...");
+#$logger->log($INFO, "info...");
+#$logger->log($WARN, "warn...");
+#$logger->log($ERROR, "error...");
+#$logger->log($FATAL, "fatal...");
+#
+#$logger->debug("__SCREEN__");
 
 done_testing($num_tests);
 1;

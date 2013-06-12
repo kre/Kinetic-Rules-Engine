@@ -27,6 +27,9 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 use DateTime::Format::ISO8601;
 
+# why wasn't this required earlier
+use DateTime::Format::RFC3339;
+
 use Kynetx::Predicates::Weather qw(get_weather);
 
 use Exporter;
@@ -457,6 +460,34 @@ sub get_local_time {
 
     return $now;
 
+}
+
+# Default to a timezone that is specified in options
+sub get_timezone {
+  my ($req_info,$options) = @_;
+  my $logger = get_logger();
+  my $tz;
+  if (defined $options && ref $options eq "HASH") {
+    if ($options->{'timezone'}) {
+      $tz = $options->{'timezone'};
+    } elsif ($options->{'tz'}) {
+      $tz = $options->{'tz'};
+    }
+  }
+  if ($tz) {
+    return $tz;
+  } else {
+    $tz = get_weather( $req_info, 'timezone' );
+    $logger->debug( "Timezone ", $tz );
+
+    # FIXME: need to do better with time zones
+    $tz =~ s#E.T#America/New_York#;
+    $tz =~ s#C.T#America/Chicago#;
+    $tz =~ s#M.T#America/Denver#;
+    $tz =~ s#P.T#America/Los_Angeles#;
+    return $tz
+  }
+  return undef;
 }
 
 sub local_time_between {

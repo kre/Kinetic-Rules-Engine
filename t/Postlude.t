@@ -737,6 +737,71 @@ is(Kynetx::Request::get_attr($my_req_info,'y'), 6, "attributes correctly stored 
 $test_count += 2;
 
 
+# schedule repeat/at
+my $alt_rid = "schedev_test";
+my $sched_req_info = Kynetx::Test::gen_req_info($alt_rid);
+my $ename = $DICTIONARY[rand(@DICTIONARY)];
+my $sdomain = "notification";
+chomp($ename);
+my @now = localtime(time);
+my $min = $now[1] + 1;
+
+$description = "Add a repeating schedEv";
+$krl_src = <<_KRL_;
+always {
+  schedule $sdomain event $ename repeat "$min * * * *"
+   with 
+     x = 5 and
+     y = 6
+} 
+_KRL_
+
+$krl = Kynetx::Parser::parse_post($krl_src);
+
+chomp $krl;
+$krl = {'post' => $krl};
+$res = eval_post_expr($krl,
+		      $session,
+		      $sched_req_info,
+		      $rule_env,
+		      1);
+
+my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+my $key = {
+  'source' => $alt_rid
+};
+my @expected = [ignore(),"$sdomain/$ename","repeat",$alt_rid,ignore()]; 
+$result = Kynetx::Persistence::SchedEv::schedev_query($ken,$key);
+$logger->debug("SchedEv Query: ", sub { Dumper($result)});
+cmp_deeply($result,superbagof(@expected),$description);
+$test_count++;
+
+#Log::Log4perl->easy_init($DEBUG);
+$description = "Add a one time event";
+$krl_src = <<_KRL_;
+always {
+  schedule $sdomain event $ename at time:add(time:now(),{"minutes" : 1})
+   with 
+     x = 5 and
+     y = 6
+} 
+_KRL_
+$krl = Kynetx::Parser::parse_post($krl_src);
+
+chomp $krl;
+$krl = {'post' => $krl};
+$res = eval_post_expr($krl,
+		      $session,
+		      $sched_req_info,
+		      $rule_env,
+		      1);
+@expected = [ignore(),"$sdomain/$ename","once",$alt_rid,ignore()]; 
+$result = Kynetx::Persistence::SchedEv::schedev_query($ken,$key);
+$logger->debug("SchedEv Query: ", sub { Dumper($result)});
+cmp_deeply($result,superbagof(@expected),$description);
+$test_count++;
+#Log::Log4perl->easy_init($INFO);
+
 # Clean up testing data
 delete_persistent_var($domain,$rid,$session,'my_trail');
 delete_persistent_var($domain,$rid,$session,'my_flag');

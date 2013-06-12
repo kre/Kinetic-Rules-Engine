@@ -392,6 +392,16 @@ Allow from .kobj.net
 
 </LocationMatch>
 
+<LocationMatch /sky/schedule/>
+  # P3P compressed policy header
+  Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
+
+  # env var to turn on rule logging
+  PerlSetEnv EVENT 1
+  SetHandler perl-script
+  PerlHandler Kynetx::Persistence::SchedEv
+</LocationMatch>
+
 <LocationMatch /sky/cloud/>
   # P3P compressed policy header
   Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
@@ -448,6 +458,8 @@ Allow from .kobj.net
   SetHandler perl-script
   PerlHandler Kynetx::Endpoints
 </LocationMatch>
+
+
 
 </TMPL_IF>
 <TMPL_IF NAME="API_CALLBACK">
