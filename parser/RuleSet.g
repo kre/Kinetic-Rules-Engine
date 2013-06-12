@@ -426,6 +426,7 @@ post_statement returns[HashMap result]
 	   | x=xdi_expr
    	 | rs=raise_statement
 	   | l=log_statement
+	   | sch=schedule_statement
 	   | las=must_be["last"]) (gc=guard_clause {  tmp_gc = $gc.result;  } )?)
     {
 //	(IF ie=expr)?) {
@@ -437,6 +438,9 @@ post_statement returns[HashMap result]
 
 		if($rs.text != null)
 		 	$result = $rs.result ;
+		
+		if($sch.text != null)
+		  $result = $sch.result;
 		 	
 		if($x.text != null)
 		  $result = $x.result;
@@ -499,6 +503,22 @@ raise_statement returns[HashMap result]
 		$result = tmp;
 	}
 	;
+	
+schedule_statement returns[HashMap result]
+  :
+   rd=SCHEDULE  dom=VAR must_be["event"]  evt=expr sched=schedule_clause? (m=modifier_clause| must_be["attributes"] attrs=expr)? {
+    HashMap tmp = new HashMap();
+    tmp.put("event",$evt.result);
+    tmp.put("domain", $dom.text);
+    tmp.put("type","schedule");
+    tmp.put("timespec",$sched.result);
+    tmp.put("modifiers",$m.result);
+    tmp.put("attributes",$attrs.result);
+
+    $result = tmp;
+  }
+  ;
+  
 
 log_statement returns[HashMap result]
 	:
@@ -531,6 +551,7 @@ callbacks returns[HashMap result]
 		$result = tmp;
 	}
 	;
+	
 success returns[ArrayList result]
 @init {
 	ArrayList tmp_list = new ArrayList();
@@ -754,7 +775,28 @@ for_clause returns[Object result]
 		$result = $v.result;
 	}
 	;
+	
+schedule_clause returns[HashMap result]
+  
+  :
+    AT_AT (ex=expr | str=STRING) {
+	    HashMap tmp = new HashMap();    
+	    if ($str.text != null)
+	      tmp.put("once",strip_string($str.text));
+	    else
+	      tmp.put("once",$ex.result);
+	    $result = tmp; }
+	    
+   | must_be["repeat"] (ex=expr | str=STRING) {
+	    HashMap tmp = new HashMap();    
+	    if ($str.text != null)
+	      tmp.put("repeat",strip_string($str.text));
+	    else
+	      tmp.put("repeat",$ex.result);
+	    $result = tmp; } 
+  ;
 
+  
 ridversion returns[String result]
     : DOT rv=VAR
     {
@@ -2593,6 +2635,7 @@ REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
  DOMAIN : 'domain';
  RAISE 
  	:	 'raise';
+ SCHEDULE : 'schedule';
 
  ARROW_RIGHT
 	:	'=>';

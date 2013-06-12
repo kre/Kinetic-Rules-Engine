@@ -35,6 +35,7 @@ use Kynetx::Configure qw/:all/;
 use Kynetx::Persistence qw(:all);
 use Kynetx::Rids qw(:all);
 use Kynetx::Request qw(:all);
+use Kynetx::Modules::PCI qw(:all);
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -268,6 +269,42 @@ sub gen_app_session {
 
     Kynetx::Persistence::delete_persistent_var("ent",$rid, $req_info->{'appsession'}, 'app_flag');
 
+}
+
+sub gen_user {
+  my ($req_info,$rule_env,$session,$uname) = @_;
+  my $js;
+  # This system key auto expires
+  my $system_key = Kynetx::Modules::PCI::create_system_key();
+  if (Kynetx::Modules::PCI::check_system_key($system_key)){
+    my $keys = {'root' => $system_key};
+    ($js, $rule_env) = 
+     Kynetx::Keys::insert_key(
+      $req_info,
+      $rule_env,
+      'system_credentials',
+      $keys);
+    my $args = {
+      "username" => $uname,
+      "firstname" => "Test",
+      "lastname" => "Test.pm",
+      "password" => "*",
+    };
+    my $rule_name = "test_pm";
+    my $account = Kynetx::Modules::PCI::new_account($req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+    my $eci = $account->{'cid'};
+    my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
+    if ($ken) {
+      return $ken
+    }
+  }
+  return undef;
+}
+
+sub flush_test_user {
+  my ($ken,$username) = @_;
+  Kynetx::MongoDB::flush_user($ken,$username);
+  
 }
 
 sub mk_config_string {

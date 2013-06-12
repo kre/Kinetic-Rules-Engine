@@ -33,6 +33,7 @@ use LWP::UserAgent;
 use Data::Dumper;
 use MongoDB qw(:all);
 use MongoDB::GridFS;
+use MongoDB::Code;
 use Tie::IxHash;
 use Clone qw(clone);
 use Benchmark ':hireswallclock';
@@ -264,7 +265,7 @@ sub get_value {
         return $cached;
     }  else {
         $logger->trace("$keystring not in cache");
-        $logger->debug("$collection variable NOT cached");
+        $logger->trace("$collection variable NOT cached");
     }
     my $c = get_collection($collection);
     if ($c) {
@@ -564,6 +565,33 @@ sub type_data {
 	
 }
 
+sub unique_elements {
+  my ($collection,$key,$filter) = @_;
+	my $logger = get_logger();
+	my $db = get_mongo();
+	$filter = {} unless (defined $filter);
+	my $command = [
+	  'distinct' => $collection,
+	  'key' => $key,
+	  'query' => $filter
+	];
+	$logger->trace("Query: ", sub {Dumper($command)});
+	my $result = $db->run_command($command);
+	$logger->trace("Uniques: ", sub {Dumper($result)});
+	if ($result && $result->{'ok'}) {
+	  return $result->{'values'};
+	}
+	
+}
+
+sub count_elements {
+  my ($collection,$key) = @_;
+  my $logger = get_logger();
+  my $c = get_collection($collection);
+  my $count = $c->find($key)->count;
+  $logger->trace("Found $count elements for ", sub {Dumper($key)});
+  return $count;
+}
 
 # find_and_modify uses the generic run_command function of the mongo library
 # limit the parameters passed in to avoid passing in random commands
@@ -586,9 +614,9 @@ sub find_and_modify {
 			}
 		}
 	}
-	$logger->trace("Composed command: ", sub {Dumper($command)});
+	#$logger->debug("Composed command: ", sub {Dumper($command)});
 	my $status = $db->run_command($command);
-	
+	#$logger->debug("Status: ",sub {Dumper($status)});
 	# Something may have changed in the database so flush data from memcache in case
 	# $query should have the key so we can flush the cache
 	if (defined $command->{'query'}) {
@@ -848,7 +876,7 @@ sub get_cache {
     my $logger = get_logger();
     my $keystring = make_keystring($collection,$var);
   	if ($collection eq "edata") {
-  	  $logger->debug("get cache keystring (get) $keystring: ", sub {Dumper($var)});
+  	  $logger->trace("get cache keystring (get) $keystring: ", sub {Dumper($var)});
   	}
     
     my $result = Kynetx::Memcached::check_cache($keystring);
@@ -865,7 +893,7 @@ sub set_cache {
     my $parent = (caller(1))[3];
     my $keystring = make_keystring($collection,$var);
   	if ($collection eq "edata") {
-  	  $logger->debug("set key cache: $keystring $value");
+  	  $logger->trace("set key cache: $keystring $value");
   	}
     Kynetx::Memcached::mset_cache($keystring,$value,$CACHETIME);
 }
@@ -875,7 +903,7 @@ sub clear_cache {
     my $logger= get_logger();
     my $keystring = make_keystring($collection,$var);
   	if ($collection eq "kpds") {
-  	   $logger->debug("Clear cache for: $keystring");
+  	   $logger->trace("Clear cache for: $keystring");
   	}
     
     Kynetx::Memcached::flush_cache($keystring);
@@ -914,7 +942,7 @@ sub get_cache_for_hash {
 	my $key = make_keystring($collection,$var);
 	my $lookup_key = "_map_" . $key;
 	if ($collection eq "kpds") {
-	  $logger->debug("list key cache: $lookup_key");
+	  $logger->trace("list key cache: $lookup_key");
 	}
 	
 	my $mcache_prefix = Kynetx::Memcached::check_cache($lookup_key);
@@ -935,7 +963,7 @@ sub set_cache_for_hash {
 	my $key = make_keystring($collection,$var);
 	$logger->trace("Var: ",sub {Dumper($var)});
 	if ($collection eq "kpds") {
-	  $logger->debug("Calculated keystring in scfh list key: $key");
+	  $logger->trace("Calculated keystring in scfh list key: $key");
 	}
 	
 	$logger->trace("SCFH: ", sub {Dumper($path)});
@@ -943,7 +971,7 @@ sub set_cache_for_hash {
 	my $mcache_prefix =  time();
 	Kynetx::Memcached::mset_cache($lookup_key,$mcache_prefix,$CACHETIME);
 	if ($collection eq "kpds") {
-	  $logger->debug("Set master $lookup_key: ($mcache_prefix)");
+	  $logger->trace("Set master $lookup_key: ($mcache_prefix)");
 	}
 	
 	$var->{"cachemap"} = $mcache_prefix;
@@ -1007,5 +1035,98 @@ sub verify_hash_path {
   }
   return 1;
 }
+
+# Mongo Perl client returns _id as an object
+# flatten it out
+sub normalize {
+  my ($struct) = @_;
+  if (ref $struct eq "HASH") {
+    if ($struct->{'_id'}) {
+      $struct->{'_id'} = $struct->{'_id'}->{'value'};
+    }
+  }
+  return $struct
+}
+
+# Data cleanup functions.
+# 
+sub flush_user {
+  my ($ken,$username) = @_;
+  my $logger = get_logger();
+  my $collection = get_collection('kens');
+  my $mid = MongoDB::OID->new(value => $ken);  
+  my $key = {
+    '_id' => $mid,
+    'username' =>$username
+  };
+  my $result = $collection->count($key);
+  $logger->trace("Found ($result) for $username");
+  if ($result == 1) {
+    _delete_edata($ken);
+    _delete_tokens($ken);
+    _delete_kpds($ken);
+    _delete_userstate($ken);
+    _delete_scheduled_events($ken);
+    _delete_ken($ken);
+  } else {
+    $logger->warn("User $username not flushed: matched $result records");
+  }
+  
+}
+sub _delete_edata {
+  my ($ken) = @_;
+  my $collection = get_collection('edata');
+  my $key = {
+      'ken' => $ken,
+  };
+  my $result = $collection->remove($key);
+}
+
+sub _delete_tokens {
+  my ($ken) = @_;
+  my $collection = get_collection('tokens');
+  my $key = {
+    'ken' => $ken
+  };
+  my $result = $collection->remove($key);
+}
+
+sub _delete_userstate {
+  my ($ken) = @_;
+  my $collection = get_collection('userstate');
+  my $key = {
+    'ken' => $ken
+  };
+  my $result = $collection->remove($key);  
+}
+
+sub _delete_scheduled_events {
+  my ($ken) = @_;
+  my $collection = get_collection('schedev');
+  my $key = {
+    'ken' => $ken
+  };
+  my $result = $collection->remove($key);  
+}
+
+sub _delete_ken {
+  my ($ken) = @_;
+  my $collection = get_collection('kens');
+  my $mid = MongoDB::OID->new(value => $ken);
+  my $key = {
+    '_id' => $mid
+  };
+  my $result = $collection->remove($key);  
+}
+
+sub _delete_kpds {
+  my ($ken) = @_;
+  my $collection = get_collection('kpds');
+  my $key = {
+    'ken' => $ken
+  };
+  my $result = $collection->remove($key);  
+}
+
 1;
 

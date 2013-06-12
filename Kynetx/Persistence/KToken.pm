@@ -118,6 +118,25 @@ sub set_token {
 	return Kynetx::MongoDB::find_and_modify(COLLECTION,$find_and_modify);
 }
 
+sub get_token_id {
+  my ($token) = @_;
+  my $key = {
+    'ktoken' => $token
+  };
+  my $id = undef;
+  my $result = Kynetx::MongoDB::get_singleton(COLLECTION,$key);
+  if ($result && $result->{'_id'}) {
+    $id = $result->{'_id'}->{'value'};    
+  }
+  return $id;
+}
+
+sub set_ttl {
+  my ($token,$ttl_index) = @_;
+  my $oid = Kynetx::Persistence::KToken::get_token_id($token);
+  Kynetx::MongoDB::set_ttl(COLLECTION,$ttl_index,$oid);
+}
+
 # Slightly different format for ECI tokens
 sub create_token {
 	my ($ken, $label,$type) = @_;
