@@ -949,8 +949,9 @@ sub pp_post_expr {
 	$o.= pp_control_statement($node);
     } elsif($node->{'type'} eq 'raise') {
 	$o.= pp_raise_statement($node, $indent);
+    } elsif($node->{'type'} eq 'schedule') {
+	$o.= pp_schedule_statement($node, $indent);
     }
-
     if (defined $node->{'test'}) {
       if (defined $node->{'test'}->{'type'} && 
 	  $node->{'test'}->{'type'} eq 'if') {
@@ -1071,7 +1072,39 @@ sub pp_raise_statement {
 
   }
 
+sub pp_schedule_statement {
+    my ($node, $indent) = @_;
+    
+    my $o = '';
 
+    $o .= join(' ',
+	       @{['schedule',
+		  $node->{'domain'},
+		  'event',
+		  pp_expr($node->{'event'})]
+	       });
+    if($node->{'timespec'}) {
+      $o .= pp_timespec($node->{'timespec'});
+    }
+    if (defined $node->{'modifiers'}) {
+      $o .= pp_modifier_clause($node, $indent);
+    } elsif (defined $node->{'attributes'} ) {
+      $o .= ' attributes ' . pp_expr($node->{'attributes'}, $indent);
+    }
+    return $o;
+
+  }
+
+sub pp_timespec {
+  my ($node) = @_;
+  my $o = '';
+  if ($node->{'once'}) {
+    $o .= ' at ' . pp_expr($node->{'once'});
+  } else {
+    $o .= ' repeat ' . pp_expr($node->{'repeat'});
+  }
+  return $o;
+}
 
 # expressions below
 sub pp_expr {

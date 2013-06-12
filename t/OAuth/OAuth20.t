@@ -419,7 +419,6 @@ $query_url = "http://$platform/oauth/cloud/$ruleset/$function?".
 		   join("&", @{$params});
 $description = "Pass a bad token in the query";
 $result = $ua->get($query_url);
-$logger->info("response: ",sub {Dumper($result)});
 cmp_deeply($result->is_success(),'',$description);
 $test_count++;
 
