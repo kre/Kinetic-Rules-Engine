@@ -63,9 +63,6 @@ use DateTime::Format::ISO8601;
 use vars qw(
   %opt
 );
-use Net::SMTP::Server;
-use Net::SMTP::Server::Client;
-use Email::MIME;
 use POSIX qw(
 :sys_wait_h
 _exit
