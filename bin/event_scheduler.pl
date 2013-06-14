@@ -92,6 +92,11 @@ our $PIDDIR = "/var/run";
 our $PIDFILE = "$PIDDIR/$ME.pid";
 our $CRONDIR = "$PIDDIR/scron";
 
+### check to see if host is configured for the scheduler
+unless (-d $CRONDIR && -d LOG_DIR) {
+  dienice("Host is not configured for scheduler")
+}
+
 startDaemon();
 
 my $logger = get_log();
