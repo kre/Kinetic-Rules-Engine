@@ -456,7 +456,15 @@ sub get_local_time {
     # FIXME: this code has the potential of breaking badly when the server
     # clock/timzone is not set right...
     my $now = DateTime->now;
-    $now->set_time_zone($tz) if defined $tz;
+    if (defined $tz) {
+      eval {
+        $now->set_time_zone($tz)
+      };
+      if ($@) {
+        $logger->warn("Error: set time zone $tz: $@")
+      }
+    }
+    
 
     return $now;
 
