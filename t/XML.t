@@ -365,64 +365,65 @@ _KRL_
     is_string_nows($this_js,
 		   $expected,
 		   "is the JS Correct?");
-
-    $krl_src = <<_KRL_;
-global {
-   datasource twitter_search:XML <- "http://search.twitter.com/search.atom";
-}
-_KRL_
-    $krl = Kynetx::Parser::parse_global_decls($krl_src);
-
-
-    $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
-
-    $args = ["?q=windley"];
-
-#    diag Dumper($rule_env);
-
-#    diag Dumper($krl);
-
-    my $ds = get_datasource($rule_env,$args,"twitter_search");
-
-#    contains_string(encode_json($ds),
-#		    '{"page":1,"query":"windley","completed_in":',
-#		    "JSON twitter search");
-# $logger->debug(sub{Dumper($ds)});
-
-    cmp_deeply($ds,$atom_f,"XML->JSON conversion");
-
-
-    $krl_src = <<_KRL_;
-global {
-   datasource twitter_search :XML <- "http://search.twitter.com/search.atom" cachable for 30 minutes;
-}
-_KRL_
-    $krl = Kynetx::Parser::parse_global_decls($krl_src);
-
-
-    $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
-
-    $args = ["?q=kynetx"];
-    $ds = get_datasource($rule_env,$args,"twitter_search");
-    cmp_deeply($ds,$atom_f,"XML->JSON conversion with CACHE tag");
-
-    $krl_src = <<_KRL_;
-global {
-   datasource twitter_search <- "http://search.twitter.com/search.atom";
-}
-_KRL_
-    $krl = Kynetx::Parser::parse_global_decls($krl_src);
-
-
-    $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
-    $args = ["?q=iphone&rpp=2"];
-    my $dsr = lookup_rule_env('datasource:twitter_search',$rule_env);
-    $ds = Kynetx::Datasets->new($dsr);
-    $ds->load($req_info,$args);
-    $ds->unmarshal();
-
-
-    cmp_deeply($ds->sourcedata,$atom_string_re,"XML->JSON mis-conversion");
+		   
+################### Twitter no longer supports XML
+#    $krl_src = <<_KRL_;
+#global {
+#   datasource twitter_search:XML <- "http://search.twitter.com/search.atom";
+#}
+#_KRL_
+#    $krl = Kynetx::Parser::parse_global_decls($krl_src);
+#
+#
+#    $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
+#
+#    $args = ["?q=windley"];
+#
+##    diag Dumper($rule_env);
+#
+##    diag Dumper($krl);
+#
+#    my $ds = get_datasource($rule_env,$args,"twitter_search");
+#
+##    contains_string(encode_json($ds),
+##		    '{"page":1,"query":"windley","completed_in":',
+##		    "JSON twitter search");
+## $logger->debug(sub{Dumper($ds)});
+#
+#    cmp_deeply($ds,$atom_f,"XML->JSON conversion");
+#
+#
+#    $krl_src = <<_KRL_;
+#global {
+#   datasource twitter_search :XML <- "http://search.twitter.com/search.atom" cachable for 30 minutes;
+#}
+#_KRL_
+#    $krl = Kynetx::Parser::parse_global_decls($krl_src);
+#
+#
+#    $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
+#
+#    $args = ["?q=kynetx"];
+#    $ds = get_datasource($rule_env,$args,"twitter_search");
+#    cmp_deeply($ds,$atom_f,"XML->JSON conversion with CACHE tag");
+#
+#    $krl_src = <<_KRL_;
+#global {
+#   datasource twitter_search <- "http://search.twitter.com/search.atom";
+#}
+#_KRL_
+#    $krl = Kynetx::Parser::parse_global_decls($krl_src);
+#
+#
+#    $rule_env->{'datasource:'.$krl->[0]->{'name'}} = $krl->[0];
+#    $args = ["?q=iphone&rpp=2"];
+#    my $dsr = lookup_rule_env('datasource:twitter_search',$rule_env);
+#    $ds = Kynetx::Datasets->new($dsr);
+#    $ds->load($req_info,$args);
+#    $ds->unmarshal();
+#
+#
+#    cmp_deeply($ds->sourcedata,$atom_string_re,"XML->JSON mis-conversion");
 }
 
 
@@ -444,7 +445,7 @@ foreach my $case (@dataset_examples) {
 
 
 
-plan tests => 8 + int(@cache_for_test_cases) + int(@dataset_examples) + int(@ruleset_testcases);
+plan tests => 5 + int(@cache_for_test_cases) + int(@dataset_examples) + int(@ruleset_testcases);
 
 sub get_local_file {
     my($name) = @_;

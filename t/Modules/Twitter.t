@@ -27,7 +27,7 @@ use Test::LongString;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Apache2::Const;
 use APR::URI;
@@ -139,6 +139,8 @@ Kynetx::Modules::Twitter::store_access_tokens($rid, $session,
        $screen_name
     );
 
+
+
 my $rate_limit_status = eval_twitter($my_req_info,
 				 $rule_env,
 				 $session,
@@ -147,12 +149,17 @@ my $rate_limit_status = eval_twitter($my_req_info,
 				 []
 				);
 
-diag "Rate limit status: $rate_limit_status->{'remaining_hits'} of $rate_limit_status->{'hourly_limit'} ";
+#rate limits are now monitored per service
+my $search_limits = $rate_limit_status->{'resources'}->{'search'}->{'/search/tweets'};
 
-like($rate_limit_status->{'reset_time_in_seconds'}, qr/^\d+$/, "reset_time is a number");
+$logger->debug("search rate limit: ", sub {Dumper($search_limits)});
+
+diag "Rate limit status: $search_limits->{'remaining'} of $search_limits->{'limit'} ";
+
+like($search_limits->{'reset'}, qr/^\d+$/, "reset_time is a number");
 $test_count++;
 
-like($rate_limit_status->{'remaining_hits'}, qr/^\d+$/, "remaining_hits is a number");
+like($search_limits->{'remaining'}, qr/^\d+$/, "remaining_hits is a number");
 $test_count++;
 
 
@@ -173,11 +180,22 @@ my $friends_timeline = eval_twitter($my_req_info,
 				    $rule_env,
 				    $session,
 				    'foo',
-				    'friends_timeline',
-				    [{'count' => 2}]
+				    'home_timeline',
+				    [{'count' => 2}]				    
 				   );
-#$logger->debug("Friends timeline: ", $friends_timeline);
+				   
+$logger->debug("Friends timeline: ", $friends_timeline);
 
+#my $nt = Kynetx::Modules::Twitter::twitter($my_req_info,
+#				    $rule_env,
+#				    $session);
+#				    
+#my $tweets = $nt->home_timeline();
+#$logger->debug("Tweets: ", sub {Dumper($tweets)});
+#
+#$tweets = $nt->home_timeline({'count' => 2});
+#$logger->debug("Tweets + count: ", sub {Dumper($tweets)});
+#
 #diag Dumper $friends_timeline;
 
 
@@ -186,6 +204,7 @@ $test_count++;
 
 like($friends_timeline->[0]->{'user'}->{'friends_count'}, qr/\d+/, "Friend count is a number");
 $test_count++;
+
 
 my $user_timeline = eval_twitter($my_req_info,
 				    $rule_env,
@@ -211,7 +230,6 @@ my $home_timeline = eval_twitter($my_req_info,
 				 'home_timeline',
 				 [{'count' => 12}]
 				);
-diag Dumper($home_timeline);
 is(int @{ $home_timeline }, 12, "Getting back some home timeline returns");
 $test_count++;
 

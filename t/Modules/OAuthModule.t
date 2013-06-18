@@ -466,7 +466,7 @@ my $anontoken = {
 };
 #Kynetx::Modules::OAuthModule::store_access_tokens($my_req_info,$rule_env,$session,$onamespace,$anontoken);
 
-my $turl = 'https://api.twitter.com/1/statuses/user_timeline.json';
+my $turl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
 $args = [$onamespace, {
 		'url' => $turl,
 		'params' => {

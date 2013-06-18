@@ -26,7 +26,7 @@ use Log::Log4perl qw(get_logger :levels);
 
 use Apache2::Const;
 
-use Net::Twitter::Lite;
+use Net::Twitter::Lite::WithAPIv1_1;
 #use Net::Twitter::OAuth;
 use Data::Dumper;
 
@@ -529,7 +529,7 @@ sub twitter {
 
   my $consumer_tokens=get_consumer_tokens($req_info, $rule_env);
 #  $logger->debug("Consumer tokens: ", Dumper $consumer_tokens);
-  my $nt = Net::Twitter::Lite->new(traits => [qw/API::REST OAuth/], %{ $consumer_tokens},legacy_lists_api => 0) ;
+  my $nt = Net::Twitter::Lite::WithAPIv1_1->new(traits => [qw/API::REST OAuth/], %{ $consumer_tokens},legacy_lists_api => 0) ;
 
   my $access_tokens =  get_access_tokens($req_info, $rule_env, $rid, $session);
   if (defined $access_tokens &&
