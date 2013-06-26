@@ -23,11 +23,13 @@ use strict;
 
 use Test::More;
 use Test::LongString;
+use Test::Deep;
 use Cache::Memcached;
 use Apache::Session::Memcached;
 
 use APR::URI;
 use APR::Pool ();
+use LWP::UserAgent;
 
 use JSON::XS;
 
@@ -42,6 +44,13 @@ use Kynetx::JavaScript qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
 use Kynetx::ExecEnv qw/:all/;
+
+# required for schedev tests
+use Kynetx::Predicates::Time;
+use Kynetx::Modules::Random;
+use Kynetx::Util qw(ll);
+use Kynetx::Persistence::SchedEv;
+use Kynetx::Persistence::KEN;
 
 
 use Kynetx::FakeReq qw/:all/;
@@ -263,11 +272,94 @@ _KRL_
 $cv->end;
 $logger->debug($cv->recv);
 
-# while (my ($k, $v) = each (%{$execenv->get_results()})) {
-#   diag "$k: ". Dumper($v)  . "\n";
-# }
+# Tests for the scheduled events methods in Event
+#Log::Log4perl->easy_init($DEBUG);
+my $uname = Kynetx::Modules::Random::rword();
+my $user_ken = Kynetx::Test::gen_user($my_req_info,$rule_env,$session,$uname);
+my $sky_token = Kynetx::Persistence::KToken::get_default_token($user_ken);
+my $sky_session = Kynetx::Session::process_session($r,undef,$sky_token);
+my $platform = '127.0.0.1';
+$platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
+$platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
+$platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox');
+my $dn = "http://$platform/sky/schedule/";
+
+my $domain;
+my $eventname;
+my $timespec;
+my $attr;
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =  localtime(time);
+my $now = Kynetx::Predicates::Time::now($my_req_info,'ad_hoc');
+$domain = 'notification';
+my $ename1 = '_test_' . Kynetx::Modules::Random::rword();
+my $ename2 = '_test_' . Kynetx::Modules::Random::rword();
+my $tsmin = $min + 2;
+if ($tsmin > 59) {
+  $tsmin = $tsmin - 59;
+}
+
+my $description = "Create a new recurring event";
+$timespec = "$tsmin * * * *";
+$attr->{'timezone'} = 'America/Denver';
+my $sched_id = Kynetx::Persistence::SchedEv::repeating_event($user_ken,$rid,$domain,$ename1,$timespec,$attr);
+#ll("Created: $sched_id");
+my $schedEv = Kynetx::Persistence::SchedEv::get_sched_ev($sched_id);
+#ll("$sched_id: ", sub {Dumper($schedEv)});
+
+$description = "Check event list";
+my $schedev1 = [$sched_id,"$domain/$ename1",'repeat',$rid,re(qr/\d{10}/)];
+my $expected = [$schedev1];
+cmp_deeply(get_eventinfo($my_req_info, 'get_list', [],$sky_session), $expected, $description);
+$test_count++;
+
+$description = "Single Event";
+$timespec = Kynetx::Predicates::Time::add($my_req_info,"foo",[$now,{hours => 5}]);
+$sched_id = Kynetx::Persistence::SchedEv::single_event($user_ken,$rid,$domain,$ename2,$timespec,$attr);
+isnt($sched_id,undef,$description);
+$test_count++;
+my $single_event_id = $sched_id;
+
+$description = "Check event list (repeat and single)";
+my $schedev2 = [$sched_id,"$domain/$ename2",'once',$rid,re(qr/\d{10}/)];
+$expected = bag($schedev2,$schedev1);
+my $result = get_eventinfo($my_req_info, 'get_list', [],$sky_session);
+#ll("$sched_id: ", sub {Dumper($result)});
+cmp_deeply($result, $expected, $description);
+$test_count++;
+
+# Check that the single event can be called
+my $url = $dn . $single_event_id;
+my $ua = LWP::UserAgent->new;
+
+$description = "A send event can be built from a schedEv";
+$result = $ua->get($url);
+is($result->code(),'200',$description);
+$test_count++;
+
+sleep 2; 
+
+$description = "Get history of single event";
+$result = get_eventinfo($my_req_info, 'get_history', [$single_event_id],$sky_session);
+#ll("history $sched_id: ", sub {Dumper($result)});
+is($result->{'code'},'200',$description);
+$test_count++;
 
 
+$description = "Delete the single event";
+$expected = 1;
+$result = get_eventinfo($my_req_info, 'delete', [$sched_id],$sky_session);
+#ll("delete $sched_id: ", sub {Dumper($result)});
+cmp_deeply($result, $expected, $description);
+$test_count++;
+
+$description = "Check the event list";
+$expected = [$schedev1];
+$result = get_eventinfo($my_req_info, 'get_list', [],$sky_session);
+#ll("List: ", sub {Dumper($result)});
+cmp_deeply($result, $expected, $description);
+$test_count++;
+
+Kynetx::Test::flush_test_user($user_ken,$uname);
 done_testing($test_count);
 
 

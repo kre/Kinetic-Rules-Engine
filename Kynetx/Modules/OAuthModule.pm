@@ -651,7 +651,7 @@ sub oauth_callback_handler {
  		$logger->debug("Redirect: $redirect");
 	} elsif ($cb_action->{'type'} eq 'redirect') {
 		$redirect = $cb_action->{'url'};
-		return Apache2::Const::REDIRECT;
+		#return Apache2::Const::REDIRECT;
 	} elsif ($cb_action->{'type'} eq 'raise') {
 		my $eventname = $cb_action->{'eventname'};
 		my $trid = $cb_action->{'target'};		

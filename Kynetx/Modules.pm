@@ -142,7 +142,7 @@ sub eval_module {
             $val = $preds->{$function}->( $req_info, $rule_env, $args );
             $val = Kynetx::Expressions::boolify($val || 0);
         } else {
-            $val = Kynetx::Modules::Event::get_eventinfo( $req_info, $function, $args );
+            $val = Kynetx::Modules::Event::get_eventinfo( $req_info, $function, $args, $session );
         }
 
       } elsif ( $source eq 'eci' ) {

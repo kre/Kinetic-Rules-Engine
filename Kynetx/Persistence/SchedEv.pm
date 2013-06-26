@@ -249,6 +249,19 @@ sub get_sched_ev {
   return Kynetx::MongoDB::normalize($result);
 }
 
+sub delete_sched_ev {
+  my ($schedEv_id,$ken,$rid) = @_;
+  my $logger = get_logger();
+	my $mongoid = MongoDB::OID->new("value" => $schedEv_id);
+	my $mongo_key = {
+		"_id" => $mongoid,
+		"ken" => $ken,
+		"source" => $rid
+	};
+  my $result = Kynetx::MongoDB::delete_value(COLLECTION,$mongo_key);
+  return $result;
+}
+
 sub count_by_cron_id {
   my $logger = get_logger();
   my $key = 'cron_id',
@@ -292,12 +305,12 @@ sub schedev_query {
   my $c = Kynetx::MongoDB::get_collection(COLLECTION);
   if (ref $key eq "HASH") {
     $key->{'ken'} = $ken;
-    $logger->debug("Key: ", sub {Dumper($key)});
+    $logger->trace("Key: ", sub {Dumper($key)});
     my @list = ();
     my $cursor = $c->find($key);
     while (my $object = $cursor->next) {
       my $mongoid = $object->{'_id'}->{'value'};
-      $logger->debug("ID: $mongoid");
+      $logger->trace("ID: $mongoid");
       my $etype;
       if ($object->{'once'}) {
         $etype = 'once'
@@ -372,7 +385,7 @@ sub single_event {
     $doc->{'event_attrs'} = $attr;
   }
   
-  $logger->debug("Doc: ", sub {Dumper($doc)});
+  $logger->trace("Doc: ", sub {Dumper($doc)});
   my $sched_event_id = put_sched_ev($doc);
   return $sched_event_id;  
 }
@@ -405,7 +418,7 @@ sub repeating_event {
   my $next = $cron->next($dt)->epoch();
   
   $logger->debug("Orig: " , $cron->original);
-  $logger->debug("Time: ",$next);  
+  $logger->debug("Next time: ",$next);  
   my $doc = {
     'ken' => $ken,
     'source' => $rid,
@@ -419,7 +432,7 @@ sub repeating_event {
     $doc->{'event_attrs'} = $attr;
   }
   
-  $logger->debug("Doc: ", sub {Dumper($doc)});
+  $logger->trace("Doc: ", sub {Dumper($doc)});
   my $sched_event_id = put_sched_ev($doc);
   return $sched_event_id;
 }
