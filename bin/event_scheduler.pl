@@ -79,7 +79,7 @@ use constant LOG_FILE => 'scheduler.log';
 #use constant PIDDIR => LOG_DIR;
 use constant LOOKAHEAD => 5;
 use constant TIMEOUT => 60 * LOOKAHEAD * 2;
-use constant SKIP => 10;
+use constant SKIP => 4;
 use constant JOB_MAX => 100;
 
 our $ME = $0; $ME =~ s|.*/||; $ME =~ s|\.pl||;
@@ -136,7 +136,8 @@ my $platform = '127.0.0.1';
 $platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
 $platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
 $platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox');
-our $dn = "http://$platform";
+#our $dn = "http://$platform";
+our $dn = "http://cs.kobj.net";
 
 my $run = 1;
 my $jobs = 0;
@@ -155,35 +156,52 @@ sub main() {
     cron_loop();
     once_loop();
     
-    sleep 5;  
+    sleep 30;  
   }  
 }
+
 
 sub consolidate_cron_processes {
   my $logger = get_log();
   $logger->warn("CRON event consolidation requested");
-  my $result = Kynetx::Persistence::SchedEv::count_by_cron_id();
-  my $num_jobs = scalar keys %{$result};
-  if ($num_jobs > 1) {
-    for my $cron_id (keys %{$result}) {
-      my $count = $result->{$cron_id};
-      if ($count < JOB_MAX) {
-        $logger->debug("Flush $cron_id");
-        if (kill QUIT => $cron_id) {
-          my $key = {
-          'cron_id' => $cron_id
-          };
-          Kynetx::Persistence::SchedEv::clear_cron_ids($key);          
+  if (-d $CRONDIR) {
+    my $counts = Kynetx::Persistence::SchedEv::count_by_cron_id();
+    opendir DIR, $CRONDIR or dienice("cannot open dir $CRONDIR $!");
+    my @files = readdir DIR;
+    closedir DIR;
+    foreach my $f (@files) {
+      if ($f =~ m/^cron-(\d+)-\d+\.pid$/) {
+        my $own_pid = $1;
+        my $marker = "";
+        if ($own_pid == $$) {
+          $marker = "->";
         }
+        $logger->debug("$marker$f $1 $$ ",$counts->{$own_pid});
+        my $file = $CRONDIR .'/'. $f;
+        my $fh = IO::File->new();
+        if ($fh->open("< $file")) {
+          my $fpid = <$fh>;
+          chop $fpid;
+          my $num = $counts->{$fpid};
+          $logger->debug("\t$fpid $num");
+          if (defined $num && $num >= 5) {
+            $logger->debug("Leave $fpid in place");
+          } else {
+            if (kill QUIT => $fpid){
+              unlink($file);
+            } else {
+              $logger->debug("No process $fpid for $file, delete manually");
+            }
+            
+          }
+                
+          
+        }
+        $fh->close();
+        
       }
     }
-    
-  } else {
-    $logger->debug("Only $num_jobs cron process to clear");
   }
-  
-  $cron_num=0;
-  $once_num=0;
 }
 
 
@@ -210,11 +228,29 @@ sub safeExit {
   my $logger = get_log();
   my $pid = $$;
   $logger->debug("Pid: $pid releasing $0");
-  Proc::PID::File->release({
-      debug => 0,
-      #name => $ME 
-      name => $0 
-  });
+  my $release_key = {'$or' => [
+    {'cron_id' => $pid},
+    {'cron_id' => "$pid"}
+    ]    
+  };
+  eval {
+    Kynetx::Persistence::SchedEv::clear_cron_ids($release_key);
+  };
+  if ($@) {
+    dienice("Problem clearing cron_id for $pid: $@");
+  } 
+  
+  eval {
+    Proc::PID::File->release({
+        debug => 0,
+        #name => $ME 
+        name => $0 
+    });    
+  };
+  if ($@) {
+    dienice("Problem releasing $0: $@");
+  } 
+  
   $exit_code = $exit_code || 0;
   _exit(0);
 }
@@ -348,17 +384,22 @@ sub once_loop {
           $logger->debug("Once events left to process ($events)");
           for my $test_id (keys %{$map}) {
             my $obj = $map->{$test_id};
-            my $o_epoch = _get_scheduled_time($obj,'once');
-            if ($o_epoch <= $now) {
-              $logger->debug("Launch $test_id");
-              cron_dispatcher($test_id,'type' => 'send once');
-              delete $map->{$test_id};
-            } else {
-              if (! defined $sleep_until){
-                $sleep_until = $o_epoch;
-              } elsif ($o_epoch < $sleep_until) {
-                $sleep_until = $o_epoch;
+            if (defined $obj) {
+              my $o_epoch = _get_scheduled_time($obj,'once');
+              if ($o_epoch <= $now) {
+                $logger->debug("Launch $test_id");
+                cron_dispatcher($test_id,'type' => 'send once');
+                delete $map->{$test_id};
+              } else {
+                if (! defined $sleep_until){
+                  $sleep_until = $o_epoch;
+                } elsif ($o_epoch < $sleep_until) {
+                  $sleep_until = $o_epoch;
+                }
               }
+              
+            } else {
+              $logger->debug("$test_id not found in process map");
             }
           }        
           my $sleep_time = $sleep_until - $now;
@@ -382,7 +423,6 @@ sub once_loop {
       }
 
       waitpid($spid,0);
-      $logger->debug("Wait Pid");
       safeExit(0);      
     }
     $logger->debug("Passed $num_events events to once process $cpid");
@@ -435,9 +475,9 @@ sub cron_loop {
       $cron->run(detach => 1,pid_file => $cronpid);
       my $cpid = get_pid($cronpid);
       chomp($cpid);
-      $logger->debug("Started cron batch ",$jobs++, " as process $cpid");
+      $logger->debug("Started cron batch ",$jobs++, " as process $cpid");      
       foreach my $sched_id (@{$cron_list}) {
-        Kynetx::Persistence::SchedEv::update_lock($sched_id,$pid,$cpid);
+        Kynetx::Persistence::SchedEv::update_lock($sched_id,$pid,$cpid*1);
       }
       push(@child,$cronpid);
     } else {

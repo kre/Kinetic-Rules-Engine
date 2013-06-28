@@ -351,8 +351,12 @@ sub clear_cron_ids {
   my $logger = get_logger();
   my $c = Kynetx::MongoDB::get_collection(COLLECTION);
   my $result = $c->update($key,{'$unset' => {cron_id => 1}},{multiple => 1,safe => 1});
-  $logger->debug("Result: ",sub {Dumper($result)});
-  return $result;
+  if (defined $result) {
+    my $num = $result->{'n'};
+    $logger->debug("Found ($num) to clear for : ",sub {Dumper($key)});
+    return $num;
+  }
+  return 0;
 }
 
 sub single_event {
