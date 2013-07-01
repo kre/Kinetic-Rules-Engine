@@ -161,6 +161,20 @@ pre {
   map1 = {"a": 4, "b" : 6, "c" : 7, "d": 2};
   map2 = {"a": 4, "b" : [4,5,6], "c" : 7, "d": 2};
 
+  edo_func = function(a,b) {
+		      (a{a.keys().head()} <=> b{b.keys().head()})
+                    };
+
+  newsfeed = {"N7" : {"updated" : "2013-06-20T14:03:00-06:00"},
+              "N2" : {"updated" : "2013-06-19T14:03:00-06:00"},
+              "N5" : {"updated" : "2013-06-21T14:03:00-06:00"}};
+
+  newsItemCmp = function(a,b) {
+		  atime = time:strftime(newsfeed{[a, "updated"]}, "%s");
+		  btime = time:strftime(newsfeed{[b, "updated"]}, "%s");
+ 		  (atime <=> btime)
+		};
+
 }
 
 _KRL_
@@ -312,6 +326,55 @@ $x[$i] = {
 };
 $d[$i]  = 0;
 $i++;
+
+
+$e[$i] = q#c.sort(function(a,b){b > a})#;
+$x[$i] = {
+   'val' => [6,5,4],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#edo.sort(function(a,b) {
+		      (a{a.keys().head()} <=> b{b.keys().head()})
+                    }
+	           )#;
+$x[$i] = {
+   'val' => [  {'a' => 2},
+	       {'c' => 5},
+	       {'d' => 16},
+	       {'b' => 26},
+	       {'e' => 29}
+	    ],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#edo.sort(edo_func)#;
+$x[$i] = {
+   'val' => [  {'a' => 2},
+	       {'c' => 5},
+	       {'d' => 16},
+	       {'b' => 26},
+	       {'e' => 29}
+	    ],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#newsfeed.keys().sort(newsItemCmp)#;
+$x[$i] = {
+   'val' => ["N2", "N7", "N5"],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
 
 
 #goto ENDY;
@@ -1092,31 +1155,6 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-
-$e[$i] = q#c.sort(function(a,b){b > a})#;
-$x[$i] = {
-   'val' => [6,5,4],
-   'type' => 'array'
-};
-$d[$i]  = 0;
-$i++;
-
-
-$e[$i] = q#edo.sort(function(a,b) {
-		      (a{a.keys().head()} <=> b{b.keys().head()})
-                    }
-	           )#;
-$x[$i] = {
-   'val' => [  {'a' => 2},
-	       {'c' => 5},
-	       {'d' => 16},
-	       {'b' => 26},
-	       {'e' => 29}
-	    ],
-   'type' => 'array'
-};
-$d[$i]  = 0;
-$i++;
 
 
 
