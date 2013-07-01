@@ -97,6 +97,12 @@ unless (-d $CRONDIR && -d LOG_DIR) {
   dienice("Host is not configured for scheduler")
 }
 
+if ($ARGV[0] eq "status") {
+  my $status = isRunning();
+  print "Running: $status\n";
+  exit ($status);
+}
+
 startDaemon();
 
 my $logger = get_log();
@@ -145,6 +151,7 @@ my @child = ();
 my $cron_num = 0;
 my $once_num = 0;
 
+
 main();
 
 $logger->debug("Stopping $ME");
@@ -188,9 +195,10 @@ sub consolidate_cron_processes {
             $logger->debug("Leave $fpid in place");
           } else {
             if (kill QUIT => $fpid){
-              unlink($file);
+              
             } else {
-              $logger->debug("No process $fpid for $file, delete manually");
+              $logger->debug("No process $fpid for $file, remove file");
+              unlink($file);
             }
             
           }
@@ -259,6 +267,10 @@ sub get_pid {
   my $in;open($in, shift ) && return scalar <$in>;
 }
 
+sub isRunning {
+  return Proc::PID::File->running({debug => 0,name => $ME})
+}
+
 sub startDaemon {
   my $nlogger = get_log();
   
@@ -287,7 +299,7 @@ sub dienice ($){
   my ($package, $filename, $line) = caller;
   my $logger = get_log();
   $logger->fatal("$_[0] at line $line in $filename");
-  croak($_[0]);
+  #croak($_[0]);
   die $_[0];
 }
 
