@@ -230,6 +230,9 @@ sub eval_sort {
 			     'args' => [Kynetx::Expressions::typed_value($a),
 					Kynetx::Expressions::typed_value($b)]};
 	
+			# reset run count for function since not recursive
+			$req_info->{$dval->{'val'}->{'sig'}} = 0;
+
 
 		  	my $r = Kynetx::Expressions::den_to_exp(
 		    	Kynetx::Expressions::eval_application($app,
