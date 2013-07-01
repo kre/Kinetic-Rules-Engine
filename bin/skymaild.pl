@@ -146,53 +146,45 @@ my $once_num = 0;
 my $mail_server = new Net::SMTP::Server('localhost',25) ||
 	$logger->fatal("Unable to start mail server: $!\n");
 
-main();
-
-$logger->debug("Stopping $ME");
-
-safeExit(0);
-
-sub main() {
-  while (my $conn= $mail_server->accept) {
-   my $client = new Net::SMTP::Server::Client($conn) ||
-		  dienice("Unable to create client connection: $!\n");   
-   my $cpid = fork();
-	 $logger->debug("CPID: $cpid");
-	 $children{$cpid} = 1;  
-	 
-  	unless ($cpid) {
-  	  my $line;
-  		my $pid = $$;
-  		$logger->debug("Connection on port 25 ($pid)");
-  		$client->process();
-  		my $source = $client->{FROM};
-  		my $msg = $client->{MSG};
-  		my $parm = parse_event_mail($msg);
-  		foreach my $email_token (@{$client->{TO}}) {
-  			$logger->debug("Parse email: $email_token");
-  			$email_token =~ s/^<?(.+)>?$/$1/;
-  			my ($to) = split(/\@/,$email_token);
-  			my ($namespace,$token,$domain,$name) = split(/\./,$to);
-  			unless (defined $token && check_token($token)){
-  				$token |= "";
-  				$logger->debug("Invalid token ($token)");
-  				next;
-  			};
-  			$logger->debug("verified: $token");
-  			my $ev = build_event($namespace,$token,$domain,$name,$parm);
-  			if ($ev) {
-  				mediate($ev);
-  			}
-  		}
-  		waitpid($pid,0);
-  		_exit(0);
-  	}
-  	$logger->debug("Connection passed to process: $cpid");	 
-  }  
-}
+while (my $conn= $mail_server->accept) {
+ my $client = new Net::SMTP::Server::Client($conn) ||
+	  dienice("Unable to create client connection: $!\n");   
+ my $cpid = fork();
+ $logger->debug("CPID: $cpid");
+ $children{$cpid} = 1;  
+ 
+	unless ($cpid) {
+	  my $line;
+		my $pid = $$;
+		$logger->debug("Connection on port 25 ($pid)");
+		$client->process();
+		my $source = $client->{FROM};
+		my $msg = $client->{MSG};
+		my $parm = parse_event_mail($msg);
+		foreach my $email_token (@{$client->{TO}}) {
+			$logger->debug("Parse email: $email_token");
+			$email_token =~ s/^<?(.+)>?$/$1/;
+			my ($to) = split(/\@/,$email_token);
+			my ($namespace,$token,$domain,$name) = split(/\./,$to);
+			unless (defined $token && check_token($token)){
+				$token |= "";
+				$logger->debug("Invalid token ($token)");
+				next;
+			};
+			$logger->debug("verified: $token");
+			my $ev = build_event($namespace,$token,$domain,$name,$parm);
+			if ($ev) {
+				mediate($ev);
+			}
+		}
+		waitpid($pid,0);
+		_exit(0);
+	}
+	$logger->debug("Connection passed to process: $cpid");	 
+}  
 
 
-
+safeExit(1);
 
 sub sighup {
   my $logger = get_log();
