@@ -230,6 +230,9 @@ sub eval_sort {
 			     'args' => [Kynetx::Expressions::typed_value($a),
 					Kynetx::Expressions::typed_value($b)]};
 	
+			# reset run count for function since not recursive
+			$req_info->{$dval->{'val'}->{'sig'}} = 0;
+
 
 		  	my $r = Kynetx::Expressions::den_to_exp(
 		    	Kynetx::Expressions::eval_application($app,
@@ -410,6 +413,11 @@ sub eval_collect {
 #	  $logger->debug("The value: ", sub { Dumper( $av ) });
 #	  $logger->debug("The denoted value: ", sub { Dumper( $den_av ) });
 
+	  # reset run count for function since not recursive
+	  $req_info->{$dval->{'val'}->{'sig'}} = 0;
+
+
+
 	  my $app = {'type' => 'app',
 		     'function_expr' => $expr->{'args'}->[0],
 		     'args' => [$den_av]};
@@ -469,6 +477,10 @@ sub eval_map {
 			'function_expr' => $expr->{'args'}->[0],
 			'args' => [Kynetx::Expressions::exp_to_den($_)]};
 
+	     # reset run count for function since not recursive
+	     $req_info->{$dval->{'val'}->{'sig'}} = 0;
+
+
 	     Kynetx::Expressions::den_to_exp(
   		      Kynetx::Expressions::eval_application($app,
 							    $rule_env,
@@ -523,6 +535,11 @@ sub eval_map {
 				   Kynetx::Expressions::exp_to_den($b)
 				  ]
 		       };
+
+	     # reset run count for function since not recursive
+	     $req_info->{$dval->{'val'}->{'sig'}} = 0;
+
+
 
 	     my $r = Kynetx::Expressions::den_to_exp(
   		      Kynetx::Expressions::eval_application($app,
@@ -580,6 +597,11 @@ sub eval_pairwise {
 				   Kynetx::Expressions::exp_to_den($b)
 				  ]
 		       };
+
+	     # reset run count for function since not recursive
+	     $req_info->{$dval->{'val'}->{'sig'}} = 0;
+
+
 
 	     Kynetx::Expressions::den_to_exp(
   		      Kynetx::Expressions::eval_application($app,
@@ -657,6 +679,11 @@ sub eval_reduce {
 		     'args' => [$result, 
 				Kynetx::Expressions::exp_to_den($av),
 			       ]};
+
+	  # reset run count for function since not recursive
+	  $req_info->{$dval->{'val'}->{'sig'}} = 0 if $dval->{'type'} eq 'closure';
+
+
 
 	  $result = 
 	    Kynetx::Expressions::eval_application($app,
@@ -739,6 +766,9 @@ sub eval_any {
 				  ]
 		       };
 
+	     # reset run count for function since not recursive
+	     $req_info->{$dval->{'val'}->{'sig'}} = 0;
+
 	     Kynetx::Expressions::den_to_exp(
   		      Kynetx::Expressions::eval_application($app,
 							    $rule_env,
@@ -798,6 +828,10 @@ sub eval_none {
 				  ]
 		       };
 
+	     # reset run count for function since not recursive
+	     $req_info->{$dval->{'val'}->{'sig'}} = 0;
+
+
 	     Kynetx::Expressions::den_to_exp(
   		      Kynetx::Expressions::eval_application($app,
 							    $rule_env,
@@ -856,6 +890,10 @@ sub eval_all {
 				  ]
 		       };
 
+	     # reset run count for function since not recursive
+	     $req_info->{$dval->{'val'}->{'sig'}} = 0;
+
+
 	     Kynetx::Expressions::den_to_exp(
   		      Kynetx::Expressions::eval_application($app,
 							    $rule_env,
@@ -913,6 +951,9 @@ sub eval_notall {
 			'args' => [Kynetx::Expressions::exp_to_den($_)
 				  ]
 		       };
+
+	     # reset run count for function since not recursive
+	     $req_info->{$dval->{'val'}->{'sig'}} = 0;
 
 	     Kynetx::Expressions::den_to_exp(
   		      Kynetx::Expressions::eval_application($app,
