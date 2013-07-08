@@ -1533,6 +1533,60 @@ sub eval_range {
 }
 $funcs->{'range'} = \&eval_range;
 
+sub eval_slice {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+    $logger->trace("obj: ", sub { Dumper($obj) });
+
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+    if(($obj->{'type'} eq 'array') &&
+      $rands->[0]->{'type'} eq 'num' ){
+      my $upper;
+      my $lower = 0;
+      my $source = clone ($obj->{'val'});
+      my $num_elements = scalar @{$source};
+      if (defined $rands->[1] && $rands->[1]->{'type'} eq 'num') {
+        $lower = Kynetx::Expressions::den_to_exp($rands->[0]);
+        $upper = Kynetx::Expressions::den_to_exp($rands->[1]);
+      } else {
+        $upper = Kynetx::Expressions::den_to_exp($rands->[0]);
+      }
+      if ((abs($lower) >= $num_elements) ||
+        (abs($upper) >= $num_elements) ||
+        ($lower < 0) ||
+        ($upper < 0) ||
+        ($lower > $upper)
+      ) {
+        my $msg = "array index ($lower,$upper) out of bounds";
+        Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[slice] $msg",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'OOB'
+				    }
+				   );
+        return undef;
+      }
+      
+      my @v = @{$source}[$lower .. $upper];
+      return Kynetx::Expressions::typed_value(\@v);
+    } else {
+      my $msg = defined $obj ? "object undefined" 
+                             : "object not an array";
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[slice] $msg",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   )
+    }
+}
+$funcs->{'slice'} = \&eval_slice;
+
+
 sub eval_substr {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();

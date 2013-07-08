@@ -2660,7 +2660,37 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
+##
+## slice
+##
+$e[$i] = q#g_s.slice(1,4)#;
+$x[$i] = {
+   'val' => ['tomato','tomato','tomato','sprouts'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
 
+$e[$i] = q#g_s.slice(2)#;
+$x[$i] = {
+   'val' => ['corn','tomato','tomato'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#g_s.slice(14)#;
+$x[$i] = undef;
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#g_s.slice(0,0)#;
+$x[$i] = {
+   'val' => ['corn'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
 
 ENDY:
 
