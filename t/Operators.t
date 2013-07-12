@@ -175,6 +175,12 @@ pre {
  		  (atime <=> btime)
 		};
 
+  add_n = function(n) { 
+            function(x) {
+               x + n
+            }
+          };
+
 }
 
 _KRL_
@@ -1342,7 +1348,16 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
+$e[$i] = q#(0).range(4).map(add_n(1000))#;
+$x[$i] = {
+   'val' => [1000, 1001, 1002, 1003, 1004],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
 
+
+#goto ENDY;
 
 
 ##
