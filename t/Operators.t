@@ -24,7 +24,7 @@ use strict;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 use Test::More;
@@ -1227,9 +1227,6 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
-
-
-
 #
 # collect
 #
@@ -1279,6 +1276,7 @@ $i++;
 
 
 
+
 #
 # map
 #
@@ -1323,6 +1321,16 @@ $x[$i] = {
 };
 $d[$i]  = 0;
 $i++;
+
+$e[$i] = q#(0).range(4).map(function(x){x+1000})#;
+$x[$i] = {
+   'val' => [1000, 1001, 1002, 1003, 1004],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
 
 
 ##
@@ -1501,6 +1509,8 @@ $x[$i] = {
 };
 $d[$i]  = 0;
 $i++;
+
+
 
 
 ##

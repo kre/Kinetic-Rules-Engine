@@ -315,32 +315,6 @@ sub eval_filter {
 	  $v = \@a;
 	  
 
-# the preceding grep replaced this
-# 	  my $a = [];
-# 	  foreach my $av (@{$eval}) {
-
-
-# 	    my $den_av = Kynetx::Expressions::exp_to_den($av);
-
-# #	  $logger->debug("The value: ", sub { Dumper( $av ) });
-# #	  $logger->debug("The denoted value: ", sub { Dumper( $den_av ) });
-
-# 	    my $app = {'type' => 'app',
-# 		       'function_expr' => $expr->{'args'}->[0],
-# 		       'args' => [$den_av]};
-
-# 	    my $r = Kynetx::Expressions::den_to_exp(
-#   		      Kynetx::Expressions::eval_application($app,
-# 							    $rule_env,
-# 							    $rule_name,
-# 							    $req_info,
-# 							    $session));
-
-# 	    push(@{$a}, $av) if $r;
-#	  }
-#        $v = $a;
-
-
 	} else {
 
 	  my @ks = keys %{$eval};
@@ -348,11 +322,15 @@ sub eval_filter {
 
 	  my @a = List::MoreUtils::pairwise
 	    {my $app = {'type' => 'app',
-			'function_expr' => $expr->{'args'}->[0],
+#			'function_expr' => $expr->{'args'}->[0],
+			'function_expr' => $dval,
 			'args' => [Kynetx::Expressions::exp_to_den($a),
 				   Kynetx::Expressions::exp_to_den($b)
 				  ]
 		       };
+
+	     # reset run count for function since not recursive
+	     $req_info->{$dval->{'val'}->{'sig'}} = 0;
 
 	     my $r = Kynetx::Expressions::den_to_exp(
   		      Kynetx::Expressions::eval_application($app,
@@ -419,7 +397,8 @@ sub eval_collect {
 
 
 	  my $app = {'type' => 'app',
-		     'function_expr' => $expr->{'args'}->[0],
+#		     'function_expr' => $expr->{'args'}->[0],
+		     'function_expr' => $dval,
 		     'args' => [$den_av]};
 
 	  my $r = Kynetx::Expressions::den_to_exp(
@@ -474,7 +453,7 @@ sub eval_map {
 	if ($obj->{'type'} eq 'array') {
 	  my @a = map 
 	    {my $app = {'type' => 'app',
-			'function_expr' => $expr->{'args'}->[0],
+			'function_expr' => $dval,
 			'args' => [Kynetx::Expressions::exp_to_den($_)]};
 
 	     # reset run count for function since not recursive
@@ -492,37 +471,6 @@ sub eval_map {
 	  $v = \@a;
 
 
-# we used to do this instead of using map
-# 	my $a = [];
-# 	foreach my $av (@{$eval}) {
-
-# #	  $logger->debug("Mapping onto ", sub {Dumper $av});
-
-
-# 	  my $den_av = Kynetx::Expressions::exp_to_den($av);
-
-# #	  $logger->debug("Denoted as ", sub {Dumper $den_av});
-
-# 	  my $app = {'type' => 'app',
-# 		     'function_expr' => $expr->{'args'}->[0],
-# 		     'args' => [$den_av]};
-
-# 	  my $r = Kynetx::Expressions::den_to_exp(
-# 	    Kynetx::Expressions::eval_application($app,
-# 						  $rule_env,
-# 						  $rule_name,
-# 						  $req_info,
-# 						  $session));
-
-# #	  $logger->debug("Result is ", sub {Dumper $r});
-
-# 	  push(@{$a}, $r);
-
-# 	}
-
-# 	$v = $a;
-
-#	$logger->debug("Array after sort ",Dumper $v);
 	} else {
 
 	  my @ks = keys %{$eval};
@@ -530,7 +478,7 @@ sub eval_map {
 
 	  my @a = List::MoreUtils::pairwise
 	    {my $app = {'type' => 'app',
-			'function_expr' => $expr->{'args'}->[0],
+			'function_expr' => $dval,
 			'args' => [Kynetx::Expressions::exp_to_den($a),
 				   Kynetx::Expressions::exp_to_den($b)
 				  ]
@@ -681,7 +629,7 @@ sub eval_reduce {
 			       ]};
 
 	  # reset run count for function since not recursive
-	  $req_info->{$dval->{'val'}->{'sig'}} = 0 if $dval->{'type'} eq 'closure';
+	  $req_info->{$op_fn->{'val'}->{'sig'}} = 0 if $op_fn->{'type'} eq 'closure';
 
 
 
