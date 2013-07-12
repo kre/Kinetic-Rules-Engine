@@ -377,6 +377,18 @@ $i++;
 
 
 
+
+$e[$i] = q#newsfeed.keys().sort(function(a,b) {
+ 		  newsfeed{[a, "updated"]} cmp newsfeed{[b, "updated"]}
+		})#;
+$x[$i] = {
+   'val' => ["N2", "N7", "N5"],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+
 #goto ENDY;
 
 ##

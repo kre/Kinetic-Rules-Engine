@@ -227,6 +227,7 @@ sub eval_sort {
 		my @a = sort {
 		  	my $app = {'type' => 'app',
 			     'function_expr' => $dval,
+# $expr->{'args'}->[0],
 			     'args' => [Kynetx::Expressions::typed_value($a),
 					Kynetx::Expressions::typed_value($b)]};
 	
@@ -540,7 +541,7 @@ sub eval_pairwise {
 
 	  my @a = List::MoreUtils::pairwise
 	    {my $app = {'type' => 'app',
-			'function_expr' => $expr->{'args'}->[0],
+			'function_expr' => $dval,
 			'args' => [Kynetx::Expressions::exp_to_den($a),
 				   Kynetx::Expressions::exp_to_den($b)
 				  ]
@@ -709,7 +710,7 @@ sub eval_any {
 
 	$v = List::MoreUtils::any
 	    {my $app = {'type' => 'app',
-			'function_expr' => $expr->{'args'}->[0],
+			'function_expr' => $dval,
 			'args' => [Kynetx::Expressions::exp_to_den($_)
 				  ]
 		       };
@@ -771,7 +772,7 @@ sub eval_none {
 
 	$v = List::MoreUtils::none
 	    {my $app = {'type' => 'app',
-			'function_expr' => $expr->{'args'}->[0],
+			'function_expr' => $dval,
 			'args' => [Kynetx::Expressions::exp_to_den($_)
 				  ]
 		       };
@@ -833,7 +834,7 @@ sub eval_all {
 
 	$v = List::MoreUtils::all
 	    {my $app = {'type' => 'app',
-			'function_expr' => $expr->{'args'}->[0],
+			'function_expr' => $dval,
 			'args' => [Kynetx::Expressions::exp_to_den($_)
 				  ]
 		       };
@@ -895,7 +896,7 @@ sub eval_notall {
 
 	$v = List::MoreUtils::notall
 	    {my $app = {'type' => 'app',
-			'function_expr' => $expr->{'args'}->[0],
+			'function_expr' => $dval,
 			'args' => [Kynetx::Expressions::exp_to_den($_)
 				  ]
 		       };
