@@ -226,7 +226,7 @@ sub eval_sort {
       } elsif (defined $dval && Kynetx::Expressions::type_of($dval) eq 'closure') {
 		my @a = sort {
 		  	my $app = {'type' => 'app',
-			     'function_expr' => $expr->{'args'}->[0],
+			     'function_expr' => $dval,
 			     'args' => [Kynetx::Expressions::typed_value($a),
 					Kynetx::Expressions::typed_value($b)]};
 	
