@@ -60,7 +60,7 @@ sub handler {
 	# configure logging for production, development, etc.
 	Kynetx::Util::config_logging($r);
 	my $logger = get_logger();
-	
+		
 	my $req = Apache2::Request->new($r);
   if ($req->param('_async'))	{
     $logger->debug(
