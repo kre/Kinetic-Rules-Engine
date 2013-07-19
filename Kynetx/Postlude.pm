@@ -514,6 +514,11 @@ sub eval_raise_statement {
                          'domain'    => $expr->{'domain'}
     };
 
+
+    Kynetx::Request::add_event_attr($new_req_info,  
+				    '_generatedby', 
+				    Kynetx::Rids::print_rid_info($req_info->{'rid'}));
+
     # with clause
     foreach my $m ( @{ $expr->{'modifiers'} } ) {
       my $val = Kynetx::Expressions::den_to_exp(

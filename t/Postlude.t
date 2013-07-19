@@ -734,7 +734,9 @@ $res = eval_post_expr($krl,
 
 is(Kynetx::Request::get_attr($my_req_info,'x'), 5, "attributes correctly stored (with)");
 is(Kynetx::Request::get_attr($my_req_info,'y'), 6, "attributes correctly stored (with)");
-$test_count += 2;
+is(Kynetx::Request::get_attr($my_req_info,'_generatedby'), 'cs_test.prod', '_generatedby attribute correct');
+$test_count += 3;
+
 
 
 # schedule repeat/at
