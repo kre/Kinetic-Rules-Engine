@@ -516,8 +516,8 @@ sub eval_raise_statement {
 
 
     Kynetx::Request::add_event_attr($new_req_info,  
-				    '_generatedby', 
-				    Kynetx::Rids::print_rid_info($req_info->{'rid'}));
+     				    '_generatedby', 
+     				    Kynetx::Rids::print_rid_info($req_info->{'rid'}));
 
     # with clause
     foreach my $m ( @{ $expr->{'modifiers'} } ) {
@@ -551,7 +551,7 @@ sub eval_raise_statement {
     my $domain = $new_req_info->{'domain'};
     my $eventtype = $new_req_info->{'eventtype'};
 
-#    $logger->debug("New req env: ", sub{Dumper $new_req_info});
+    #$logger->debug("New req env: ", sub{Dumper $new_req_info});
 
     # merge in the incoming request info
     my $this_req_info =
@@ -581,10 +581,9 @@ sub eval_raise_statement {
 			$session
 		       )
 		);
-      
 
       $rid_info_list = Kynetx::Rids::parse_rid_list($req_info, $rids);
-      $logger->debug("RID List: ", sub {Dumper $rid_info_list} );
+      $logger->debug("RID List to raise event for: ", sub {Dumper $rid_info_list} );
 
       # # normalize, if it's not an array, make it one
       # unless ( ref $rids eq 'ARRAY' ) {

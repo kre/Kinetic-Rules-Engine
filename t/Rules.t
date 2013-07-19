@@ -2183,7 +2183,7 @@ ruleset two_rules_first_raises_second {
       select when pageview ".*"
       noop();
       fired {
-        raise explicit event foo for two_rules_first_raises_second
+        raise explicit event foo for 'two_rules_first_raises_second.dev'
       }
     }
     rule t12 is active {
@@ -2245,8 +2245,8 @@ ruleset two_rules_first_raises_second_twice {
       select when pageview ".*"
       noop();
       fired {
-        raise explicit event foo for two_rules_first_raises_second_twice;
-        raise explicit event foo for two_rules_first_raises_second_twice;
+        raise explicit event foo for 'two_rules_first_raises_second_twice.dev';
+        raise explicit event foo for 'two_rules_first_raises_second_twice.dev';
       }
     }
     rule t12 is active {
@@ -2318,7 +2318,7 @@ ruleset two_rules_first_raises_second_with_expr {
       select when pageview ".*"
       noop();
       fired {
-        raise explicit event "f"+"ood" for two_rules_first_raises_second_with_expr ;
+        raise explicit event "f"+"ood" for 'two_rules_first_raises_second_with_expr.dev' ;
       }
     }
     rule t12 is active {
@@ -2381,7 +2381,7 @@ ruleset two_rules_first_raises_second_with_for {
       select when pageview ".*"
       noop();
       fired {
-        raise explicit event "f"+"ood" for two_rules_first_raises_second_with_for;
+        raise explicit event "f"+"ood" for 'two_rules_first_raises_second_with_for.dev';
       }
     }
     rule t12 is active {
@@ -2446,7 +2446,7 @@ ruleset two_rules_first_raises_second_with_for_expr {
       select when pageview ".*"
       noop();
       fired {
-        raise explicit event "f"+"ood" for "two_rules_first_raises" + "_second_with_for_expr";
+        raise explicit event "f"+"ood" for "two_rules_first_raises" + "_second_with_for_expr.dev";
       }
     }
     rule t12 is active {
@@ -2509,7 +2509,7 @@ ruleset two_rules_first_raises_second_with_for_array {
       select when pageview ".*"
       noop();
       fired {
-        raise explicit event "f"+"ood" for ["two_rules_first_raises" + "_second_with_for_array"];
+        raise explicit event "f"+"ood" for ["two_rules_first_raises" + "_second_with_for_array.dev"];
       }
     }
     rule t12 is active {
@@ -2632,7 +2632,7 @@ ruleset two_rules_second_not_raised_with_for_expr {
       select when pageview ".*"
       noop();
       fired {
-        raise explicit event "dr"+"ool" for "two_rules" + "_second_not_raised_with_for_expr";
+        raise explicit event "dr"+"ool" for "two_rules" + "_second_not_raised_with_for_expr.dev";
       }
     }
     rule t12 is active {
