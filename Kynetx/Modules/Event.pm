@@ -448,12 +448,7 @@ sub delete_scheduled_event {
     my $ken = Kynetx::Persistence::KEN::get_ken( $session, $rid );
     my $status = Kynetx::Persistence::SchedEv::delete_sched_ev( $sched_id, $ken,$rid );
     $logger->debug("Delete $sched_id ");
-    if (defined $status && ref $status eq "HASH") {
-      return $status->{'ok'};
-    } else {
-      $logger->warn("Delete request response undefined: ", sub {Dumper($status)});
-      return undef;
-    }
+    return $status;
   }
   else {
     $logger->warn("Event list requested, but session not provided");
