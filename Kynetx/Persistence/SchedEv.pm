@@ -259,7 +259,30 @@ sub delete_sched_ev {
 		"source" => $rid
 	};
   my $result = Kynetx::MongoDB::delete_value(COLLECTION,$mongo_key);
-  return $result;
+  if (defined $result && ref $result eq "HASH") {
+    if ($result->{'ok'}) {
+      return $result->{'n'};
+    }
+  }
+  
+  return 0;
+}
+
+sub delete_entity_sched_ev {
+  my ($ken,$rid) = @_;
+  my $key = {
+    'ken' => $ken,
+    'source' => $rid
+  };
+  my $list = get_schedev_list($key);
+  my $count = 0;
+  foreach my $id (@{$list}) {
+    my $status = delete_sched_ev($id,$ken,$rid);
+    if ($status) {
+      $count++;
+    }
+  }
+  return $count;
 }
 
 sub count_by_cron_id {

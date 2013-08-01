@@ -573,6 +573,9 @@ sub remove_ruleset_from_account {
 	if ($ken && scalar @{$args} >= 1) {
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
 		my $installed = Kynetx::Persistence::KPDS::remove_ruleset($ken,\@ridlist);
+		foreach my $orid (@ridlist) {
+		  Kynetx::Persistence::SchedEv::delete_entity_sched_ev($ken,$orid)
+		}
 		return {
 			'nid' => $userid,
 			'rids' => $installed->{'value'}
