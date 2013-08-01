@@ -926,6 +926,16 @@ sub make_keystring {
     return $encode;
 }
 
+sub make_path_keystring {
+  my ($path) = @_;
+  if (ref $path eq "ARRAY") {
+    return join("_",@{$path});
+  } else {
+    return time();
+  }
+}
+
+
 ########################### Caching functions for KPDS/KEN based maps
 sub clear_cache_for_hash {
 	my ($collection,$var) = @_;
@@ -948,9 +958,10 @@ sub get_cache_for_hash {
 	my $mcache_prefix = Kynetx::Memcached::check_cache($lookup_key);
 	my $dupe = clone $var;
 	$logger->trace("$lookup_key: ", sub {Dumper($mcache_prefix)});
-	if (defined $mcache_prefix) {
+	if (defined $mcache_prefix && ref $path eq "ARRAY") {
+	  my $hashpath = make_path_keystring($path);
 		$dupe->{"cachemap"} = $mcache_prefix;
-		$dupe->{"hashpath"} = $path;
+		$dupe->{"hashpath"} = $hashpath;
 		return Kynetx::MongoDB::get_cache($collection,$dupe);
 	}
 	return undef;
@@ -961,6 +972,8 @@ sub set_cache_for_hash {
 	my ($collection,$var,$path,$value) = @_;
 	my $logger = get_logger();
 	my $key = make_keystring($collection,$var);
+	my $hashpath = make_path_keystring($path);
+	
 	$logger->trace("Var: ",sub {Dumper($var)});
 	if ($collection eq "kpds") {
 	  $logger->trace("Calculated keystring in scfh list key: $key");
@@ -975,7 +988,7 @@ sub set_cache_for_hash {
 	}
 	
 	$var->{"cachemap"} = $mcache_prefix;
-	$var->{"hashpath"} = $path;
+	$var->{"hashpath"} = $hashpath;
 	Kynetx::MongoDB::set_cache($collection,$var,$value);
 }
 

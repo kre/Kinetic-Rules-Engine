@@ -169,6 +169,15 @@ sub _url2base64 {
 }
 $funcs->{'url2base64'} = \&_url2base64;
 
+sub _hash2sortedArray {
+  my ($req_info, $function, $args) = @_;
+  my $exp = $args->[0];
+  my @sorted;
+  if (defined $exp and ref $exp eq 'HASH') {
+    
+  }
+}
+
 
 sub _base642string {
     my ($req_info, $function, $args) = @_;
