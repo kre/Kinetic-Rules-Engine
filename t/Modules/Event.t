@@ -331,7 +331,6 @@ $test_count++;
 my $url = $dn . $single_event_id;
 my $ua = LWP::UserAgent->new;
 
-diag $url;
 
 $description = "A send event can be built from a schedEv";
 $result = $ua->get($url);

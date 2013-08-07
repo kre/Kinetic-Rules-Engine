@@ -27,6 +27,7 @@ use strict;
 use Data::Dumper;
 use Log::Log4perl qw(get_logger :levels);
 use IPC::Lock::Memcached;
+use JSON::XS;
 
 use Kynetx::Rids;
 
@@ -57,7 +58,19 @@ sub build_request_env {
   # grab request params
   my $req = Apache2::Request->new($r);
 
-  #$logger->debug("Raw request ", sub { Dumper $req->body() });
+# $logger->debug("Raw request ", sub { Dumper $r });
+
+  my $content_type = $r->headers_in->{'Content-Type'};
+
+  if ($content_type eq 'application/json') {
+#    my $params = JSON::XS::->new->convert_blessed(1)->pretty(1)->decode($req->body() || "{}");
+#    $logger->debug("JSON: ", sub{Dumper $params});
+    $logger->info("*************  KRE does not support Content-type 'application/json' yet. This probably isn't doing what you expect. ***************");
+
+    # you'd think you could just grab the POST body and parse it here, setting the 
+    # params as necessary. Unfortunately, it's not that simple since parsing the request
+    # with Apache2::Request doesn't work and destroys the body...
+  }
 
   my $domain = $req->param('_domain') || $method || 'discovery';
   $eventtype =

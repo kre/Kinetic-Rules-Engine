@@ -111,6 +111,16 @@ my $mech = Test::WWW::Mechanize->new(cookie_jar => undef);
 # should be empty
 #diag Dumper $mech->cookie_jar();
 
+sub post_json {
+    my ($mech, $json, $url) = @_;
+    my $req = HTTP::Request->new(POST => $url);
+    $req->header('Content-Type'=>'application/json');
+    $req->content($json);
+    return $mech->request($req);
+}
+
+
+
 diag "Warning: running these tests on a host without memcache support is slow...";
 SKIP: {
     my $ua = LWP::UserAgent->new;
@@ -129,8 +139,16 @@ SKIP: {
 	$logger->debug( "Requesting: ". $test->{'url'});
 	my $resp;
 	if (defined $test->{'method'} && $test->{'method'} eq 'post') {
+	  if (defined $test->{'param_type'} && 
+	      defined $test->{'body'} && 
+	      $test->{'param_type'} eq 'application/json') {
 
-	  $resp = $mech->post($test->{'url'});
+	    $resp = post_json($mech, Kynetx::Json::astToJson($test->{'body'}), $test->{'url'});
+	    
+	  } else {
+	    $resp = $mech->post($test->{'url'});
+	  }
+
 	} else {
 	  #$mech->get_ok($test->{'url'});
 	  $resp = $mech->get($test->{'url'});
@@ -789,8 +807,55 @@ SKIP: {
     $test_count += test_event_plan($event_send_test_plan);
 
 
+    # test JSON in body for params
+
+
+    my $json_battery_set_test_plan =
+      [{'url' => "$dn/$token",
+	'type' => 'text/javascript',
+	'method' => 'post',
+	'param_type' => 'application/json',
+	'body' => {'_domain' => 'smartphone',
+		   '_name' => 'battery_set',
+		   '_rids' => 'a1856x6',
+		   'percent' => '74'
+		  },
+	'like' => ['/"name":"log"/',
+		   '/"rule_name":"record_level"/',
+		   '/"battery":"74"/',
+		  ],
+	'unlike' => [
+		    ],
+	'diag' => 0,
+       },
+       {'url' => "$dn/$token",
+	'type' => 'text/javascript',
+	'method' => 'post',
+	'param_type' => 'application/json',
+	'body' => {'_domain' => 'smartphone',
+		   '_name' => 'battery_read',
+		   '_rids' => 'a1856x6'
+		  },
+	'like' => ['/"name":"log"/',
+		   '/"rule_name":"read_back"/',
+		   '/"read_battery":"74"/',
+		  ],
+	'unlike' => [
+		    ],
+	'diag' => 0,
+       },
+      ];
+
+# this tests Content-Type: application/json, which doesn't yet work....
+#    $test_count += test_event_plan($json_battery_set_test_plan);
+
+
 
 done_testing($test_count);
+
+
+
+
 
 1;
 
