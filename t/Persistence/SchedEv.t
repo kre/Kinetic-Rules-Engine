@@ -50,6 +50,7 @@ my $logger = get_logger();
 my $num_tests = 0;
 my $result;
 my ($start,$end,$qtime);
+my $num_events = 0;
 
 # configure KNS
 Kynetx::Configure::configure();
@@ -102,6 +103,7 @@ my $sched_id = Kynetx::Persistence::SchedEv::repeating_event($user_ken,$rid,$dom
 isnt($sched_id,undef,$description);
 $num_tests++;
 $logger->debug("SchedEv: $sched_id");
+$num_events++;
 
 $description = "Check that event is saved to database";
 my $schedEv = Kynetx::Persistence::SchedEv::get_sched_ev($sched_id);
@@ -114,6 +116,7 @@ $timespec = $now;
 $sched_id = Kynetx::Persistence::SchedEv::single_event($user_ken,$rid,$domain,$eventname,$timespec,$attr);
 isnt($sched_id,undef,$description);
 $num_tests++;
+$num_events++;
 
 $description = "Check that single event is saved to database";
 $schedEv = Kynetx::Persistence::SchedEv::get_sched_ev($sched_id);
@@ -127,6 +130,7 @@ $sched_id = Kynetx::Persistence::SchedEv::single_event($user_ken,$rid,$domain,$e
 $schedEv = Kynetx::Persistence::SchedEv::get_sched_ev($sched_id);
 is($schedEv->{'next_schedule'} > $e_time,1,$description);
 $num_tests++;
+$num_events++;
 
 my $sent_event_name = "slartibartfast";
 $attr = {
@@ -144,6 +148,7 @@ $sched_id = Kynetx::Persistence::SchedEv::single_event($user_ken,$rid,$domain,$s
 $schedEv = Kynetx::Persistence::SchedEv::get_sched_ev($sched_id);
 is($schedEv->{'next_schedule'} ,$e_time,$description);
 $num_tests++;
+$num_events++;
 
 # save this SchedEv id for testing later
 my $recurring_event = $sched_id;
@@ -168,7 +173,25 @@ $result = Kynetx::Modules::Event::send_scheduled_event('_fake_');
 is($result,undef,$description);
 $num_tests++;
 
-#http://127.0.0.1/sky/schedule/51b782d90eb1fad2280d0000
+my $key = {
+  "ken" => $user_ken,
+  "source" => $rid
+};
+$description = "Look for scheduled events";
+$result = Kynetx::Persistence::SchedEv::get_schedev_list($key);
+cmp_deeply(scalar @{$result},$num_events,$description);
+$num_tests++;
+$logger->debug("SchedEvs: ", sub {Dumper($result)});
+
+$description = "Delete scheduled events for an entity";
+$result = Kynetx::Persistence::SchedEv::delete_entity_sched_ev($user_ken,$rid);
+cmp_deeply($result,$num_events,$description);
+$num_tests++;
+
+$description = "No schedEv left";
+$result = Kynetx::Persistence::SchedEv::get_schedev_list($key);
+cmp_deeply(scalar @{$result},0,$description);
+$num_tests++;
 
 Kynetx::Test::flush_test_user($user_ken,$uname);
 
