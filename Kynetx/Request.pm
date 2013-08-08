@@ -50,6 +50,21 @@ our %EXPORT_TAGS = (
 );
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
+sub retrieve_json_from_post {
+    my ($r)  = @_;
+    my $len  = $r->headers_in()->get('Content-Length');
+
+    return "{}" if($r->method ne 'POST');
+
+    my ($buf, $content);
+
+    while( $r->read($buf,$len) ){
+        $content .= $buf;
+    }
+
+    return $content;
+}
+
 sub build_request_env {
   my ( $r, $method, $rids, $eventtype, $eid, $options ) = @_;
 
@@ -62,20 +77,35 @@ sub build_request_env {
 
   my $content_type = $r->headers_in->{'Content-Type'};
 
+  my $req_params = {};
+
+  my @req_param_keys = $req->param;
+  foreach my $k (@req_param_keys) {
+    $req_params->{$k} = $req->param($k);
+  }
+
+  my $body_params;
   if ($content_type eq 'application/json') {
-#    my $params = JSON::XS::->new->convert_blessed(1)->pretty(1)->decode($req->body() || "{}");
-#    $logger->debug("JSON: ", sub{Dumper $params});
-    $logger->info("*************  KRE does not support Content-type 'application/json' yet. This probably isn't doing what you expect. ***************");
+
+    my $body = retrieve_json_from_post($r);
+#    $logger->debug("Body: ", $body);
+    $body_params = JSON::XS::->new->convert_blessed(1)->pretty(1)->decode($body || "{}");
+    $logger->debug("Body JSON: ", sub{Dumper $body_params});
 
     # you'd think you could just grab the POST body and parse it here, setting the 
     # params as necessary. Unfortunately, it's not that simple since parsing the request
     # with Apache2::Request doesn't work and destroys the body...
   }
 
-  my $domain = $req->param('_domain') || $method || 'discovery';
+  foreach my $k ( keys %{$body_params}) {
+    $req_params->{$k} = $body_params->{$k};
+  }
+  
+
+  my $domain = $req_params->{'_domain'} || $method || 'discovery';
   $eventtype =
-       $req->param('_type')
-    || $req->param('_name')
+       $req_params->{'_type'}
+    || $req_params->{'_name'}
     || $eventtype
     || 'hello';
 
@@ -84,26 +114,26 @@ sub build_request_env {
   }
 
   # we rely on this being undef if nothing passed in
-  $rids = $req->param('_rids') || $rids;
-  my $explicit_rids = defined $req->param('_rids');
+  $rids = $req_params->{'_rids'} || $rids;
+  my $explicit_rids = defined $req_params->{'_rids'};
 
   # endpoint identifier
-  my $epi = $req->param('_epi') || 'any';
+  my $epi = $req_params->{'_epi'} || 'any';
 
   # endpoint location
-  my $epl = $req->param('_epl') || 'none';
+  my $epl = $req_params->{'_epl'} || 'none';
 
   # manage optional params
   # The ID token comes in as a header in Blue API
-  my $id_token = $options->{'id_token'} || $req->param('_eci') || $r->headers_in->{'Kobj-Session'};
+  my $id_token = $options->{'id_token'} || $req_params->{'_eci'} || $r->headers_in->{'Kobj-Session'};
   my $api      = $options->{'api'}      || 'ruleset';
 
   # build initial envv
   my $ug = new Data::UUID;
 
   my $caller =
-       $req->param('url')
-    || $req->param('caller')
+       $req_params->{'url'}
+    || $req_params->{'caller'}
     || $r->headers_in->{'Referer'}
     || '';
 
@@ -112,7 +142,7 @@ sub build_request_env {
 
   my $request_info = {
 
-    host => $r->connection->get_remote_host || $req->param('host') || '',
+    host => $r->connection->get_remote_host || $req_params->{'host'} || '',
     caller => $caller,    # historical
     page   => $caller,
     url    => $caller,
@@ -152,10 +182,9 @@ sub build_request_env {
     directives => [],
   };
 
-  my @req_params = $req->param;
-  foreach my $n (@req_params) {
-    my $enc = Kynetx::Util::str_in( $req->param($n) );
-    $logger->debug( "Param $n -> ", $req->param($n), " ", $enc );
+  foreach my $n (keys %{$req_params}) {
+    my $enc = Kynetx::Util::str_in( $req_params->{$n} );
+    $logger->debug( "Param $n -> ", $req_params->{$n}, " ", $enc );
     my $not_attr = {
       '_rids'   => 1,
       '_eci'   => 1,

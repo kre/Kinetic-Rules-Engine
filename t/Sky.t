@@ -847,7 +847,7 @@ SKIP: {
       ];
 
 # this tests Content-Type: application/json, which doesn't yet work....
-#    $test_count += test_event_plan($json_battery_set_test_plan);
+    $test_count += test_event_plan($json_battery_set_test_plan);
 
 
 
