@@ -31,7 +31,7 @@ use MIME::Base64 qw(
 	encode_base64url
 	decode_base64url
 );
-
+use Data::Diver qw( Dive DiveRef DiveError );
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -171,12 +171,60 @@ $funcs->{'url2base64'} = \&_url2base64;
 
 sub _hash2sortedArray {
   my ($req_info, $function, $args) = @_;
-  my $exp = $args->[0];
+  my $logger = get_logger();
   my @sorted;
-  if (defined $exp and ref $exp eq 'HASH') {
-    
+  my @index;
+  my @values;
+  my $obj = $args->[0];
+  my $opts = $args->[1]; 
+  my $path = $opts->{'path'} || \[];
+  my $numeric = $opts->{'numeric'};
+  if (defined $obj) {
+    if (ref $obj eq "HASH") {
+
+      # Schwartzian Transform
+      @sorted = map {
+        $_->[1]                           # return the key only from [cmp_val, key]
+      } sort {                            # sort based on cmp_val
+        if (defined $numeric) {           # allow dev to force numeric sort
+          $a->[0] <=> $b->[0]
+        } else {
+          $a->[0] <=> $b->[0] ||          # NaN != NaN
+          $a->[0] cmp $b->[0]
+        }        
+      } map {
+        [Dive($obj->{$_},@{$path}),$_]    # Construct a temp array of [cmp_val, key]
+      } keys %{$obj}
+    } 
+  } 
+  if (defined $opts->{'reverse'}) {
+    @sorted = reverse @sorted;
   }
+  if (defined $opts->{'index'} || defined $opts->{'limit'}) {
+    my @temp = @sorted;
+    my $size = scalar @temp - 1;
+    my $limit = $size;
+    my $i = 0;
+    
+    if (defined $opts->{'limit'}) {
+      $limit = $opts->{'limit'} -1;
+    }
+    
+    if (defined $opts->{'index'}) {
+      $i = $opts->{'index'}
+    }
+    
+    my $j = $i + $limit;
+    if ($j > $size) {
+      $j = $size;
+    }
+    $logger->trace("indices:  $i .. $j");
+    @sorted = @temp[$i .. $j];
+  }
+  $logger->trace("sort: ", sub {Dumper(@sorted)});
+  return \@sorted;
 }
+$funcs->{'hash_transform'} = \&_hash2sortedArray;
 
 
 sub _base642string {

@@ -353,8 +353,325 @@ $result = Kynetx::Expressions::den_to_exp(
 $test_count++;
 cmp_deeply($result,$expected, $description);
 
+my $json;
+while (<DATA>) {
+  $json .= $_;
+}
+#Log::Log4perl->easy_init($DEBUG);
+
+my $complex = Kynetx::Json::decode_json($json);
+my $opts;
+
+$logger->debug("Hash: ", sub {Dumper($complex)});
+
+$description = "Convert hash into array sorted by alpha value";
+$function = "hash_transform";
+$opts = {
+  'path' => ['topping', 2, 'id']
+};
+$expected = ['0003','0002','0001','0004'];
+
+$args = [$complex,$opts];
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+
+cmp_deeply($result,$expected, $description);
+$test_count++;
+
+$description = "Convert hash into array sorted by num value";
+$function = "hash_transform";
+$opts = {
+  'path' => ['ppc'],
+  'numeric' => 1
+};
+$expected = ['0001','0004','0002','0003'];
+
+$args = [$complex,$opts];
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+
+cmp_deeply($result,$expected, $description);
+$test_count++;
+
+# twitter auth token
+my $onamespace = "anon";
+my $js;
+my $anontoken = {
+	'access_token' => '100844323-XqQfRm33tQqp54mmhKCfNF9VIOaxVISrIYTOTXOy',
+	'access_token_secret' => 'QdGk4MGc2RiNuD5MHjL5GVk9m1h3SsooGeMWfUQb7f0'
+};
+
+my $keys = {
+	'consumer_key' => 'jPlIPAk1gbigEtonC2yNA',
+   	'consumer_secret' => '3HNb7NhKuqRIm2BuxKPSg6JYvMtLahvkMt6Std5SO0'
+};
+
+# these are anonymous consumer tokens
+($js, $rule_env) = 
+ Kynetx::Keys::insert_key(
+  $my_req_info,
+  $rule_env,
+  $onamespace,
+  $keys);
+
+my $turl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
+my $num_t = 50;
+my $user_id = "13524182"; #Dave Wiegel
+$args = [$onamespace, {
+		'url' => $turl,
+		'params' => {
+			'include_entities' => 'true',
+			'include_rts' => 'true',
+			'user_id' => $user_id,
+			'count' => $num_t,
+			'trim_user' => 1
+		},
+		'access_tokens' => $anontoken
+	}];
+
+$result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'get',$args);
+
+my $twit_array = Kynetx::Json::decode_json($result->{'content'});
+my $t_hash;
+my $i = 0;
+foreach my $tweet (@{$twit_array}) {
+   $t_hash->{'a' . $i++} = $tweet;
+}
+
+
+$description = "Sort tweets by retweet count";
+$function = "hash_transform";
+$opts = {
+  'path' => ['retweet_count'],
+  'numeric' => 1
+};
+$expected = scalar (@{$twit_array});
+
+$args = [$t_hash,$opts];
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+
+cmp_deeply(scalar @{$result},$expected, $description);
+$test_count++;
+
+$description = "Make sure that array is sorted";
+my $a = $t_hash->{$result->[0]}->{'retweet_count'};
+my $b = $t_hash->{$result->[1]}->{'retweet_count'};
+my $c = $t_hash->{$result->[scalar @{$result} - 1]}->{'retweet_count'};
+cmp_deeply($a <= $b && $b <= $c,1, $description);
+$test_count++;
+$logger->debug("Normal sort: $a <= $b <= $c");
+
+$description = "Check reverse sort";
+$opts = {
+  'path' => ['retweet_count'],
+  'numeric' => 1,
+  'reverse' => 1
+};
+$args = [$t_hash,$opts];
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+$a = $t_hash->{$result->[0]}->{'retweet_count'};
+$b = $t_hash->{$result->[1]}->{'retweet_count'};
+$c = $t_hash->{$result->[scalar @{$result} - 1]}->{'retweet_count'};
+cmp_deeply($a >= $b && $b >= $c,1, $description);
+$test_count++;
+$logger->debug("Reverse sort: $a >= $b >= $c");
+my $rsorted = $result;
+
+$description = "Check limit option";
+my $l = 5;
+$opts = {
+  'path' => ['retweet_count'],
+  'numeric' => 1,
+  'reverse' => 1,
+  'limit' => $l
+};
+$args = [$t_hash,$opts];
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+cmp_deeply(scalar @{$result},$l, $description);
+$test_count++;
+
+$description = "Check index option";
+my $index = 5;
+$opts = {
+  'path' => ['retweet_count'],
+  'numeric' => 1,
+  'reverse' => 1,
+  'index' => $index
+};
+$args = [$t_hash,$opts];
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+cmp_deeply(scalar @{$result},scalar (keys %{$t_hash}) - $index, $description);
+$test_count++;
+
+$description = "Check index and limit option (slice)";
+my $index = 5;
+$opts = {
+  'path' => ['retweet_count'],
+  'numeric' => 1,
+  'reverse' => 1,
+  'index' => $index,
+  'limit' => $l
+};
+$args = [$t_hash,$opts];
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+cmp_deeply(scalar @{$result},$l, $description);
+$test_count++;
+
+cmp_deeply($result->[0],$rsorted->[$index], $description);
+$test_count++;
 
 done_testing($test_count);
-1;
 
+__DATA__
+
+{
+	"0001" : {
+		"type": "donut",
+		"name": "Cake",
+		"ppu": 0.45,
+		"ppc": 1,
+		"batters":
+			{
+				"batter":
+					[
+						{ "id": "1001", "type": "Regular" },
+						{ "id": "1002", "type": "Chocolate" },
+						{ "id": "1003", "type": "Blueberry" },
+						{ "id": "1004", "type": "Devil's Food" }
+					]
+			},
+		"topping":
+			[
+				{ "id": "5001", "type": "None" },
+				{ "id": "5002", "type": "Glazed" },
+				{ "id": "5005", "type": "Sugar" },
+				{ "id": "5007", "type": "Powdered Sugar" },
+				{ "id": "5006", "type": "Chocolate with Sprinkles" },
+				{ "id": "5003", "type": "Chocolate" },
+				{ "id": "5004", "type": "Maple" }
+			]
+	},
+	"0002" : 	{
+		"type": "donut",
+		"name": "Raised",
+		"ppu": 0.55,
+		"ppc": 10,
+		"batters":
+			{
+				"batter":
+					[
+						{ "id": "1001", "type": "Regular" }
+					]
+			},
+		"topping":
+			[
+				{ "id": "5001", "type": "None" },
+				{ "id": "5002", "type": "Glazed" },
+				{ "id": "5005", "type": "Sugar" },
+				{ "id": "5003", "type": "Chocolate" },
+				{ "id": "5004", "type": "Maple" }
+			]
+	},
+  "0003":	{
+		"type": "donut",
+		"name": "Old Fashioned",
+		"ppu": 0.551,
+		"ppc": 100,
+		"batters":
+			{
+				"batter":
+					[
+						{ "id": "1001", "type": "Regular" },
+						{ "id": "1002", "type": "Chocolate" }
+					]
+			},
+		"topping":
+			[
+				{ "id": "5001", "type": "None" },
+				{ "id": "5002", "type": "Glazed" },
+				{ "id": "5003", "type": "Chocolate" },
+				{ "id": "5004", "type": "Maple" }
+			]
+	},
+		"0004" : {
+		"type": "muffin",
+		"name": "Poppy seed",
+		"ppu": 0.75,
+		"ppc": 2,
+		"batters":
+			{
+				"batter":
+					[
+						{ "id": "1001", "type": "Regular" },
+						{ "id": "1002", "type": "Chocolate" },
+						{ "id": "1003", "type": "Blueberry" },
+						{ "id": "1004", "type": "Devil's Food" }
+					]
+			},
+		"topping":
+			[
+				{ "id": "5001", "type": "None" },
+				{ "id": "5002", "type": "Glazed" },
+				{ "id": "5005", "type": "Sugar" },
+				{ "id": "5007", "type": "Powdered Sugar" },
+				{ "id": "5006", "type": "Chocolate with Sprinkles" },
+				{ "id": "5003", "type": "Chocolate" },
+				{ "id": "5004", "type": "Maple" }
+			]
+	}	
+}
 
