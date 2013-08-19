@@ -32,6 +32,7 @@ use DateTime;
 use APR::URI;
 use APR::Pool ();
 use Cache::Memcached;
+use DateTime;
 
 
 # most Kyentx modules require this
@@ -353,59 +354,6 @@ $result = Kynetx::Expressions::den_to_exp(
 $test_count++;
 cmp_deeply($result,$expected, $description);
 
-my $json;
-while (<DATA>) {
-  $json .= $_;
-}
-#Log::Log4perl->easy_init($DEBUG);
-
-my $complex = Kynetx::Json::decode_json($json);
-my $opts;
-
-$logger->debug("Hash: ", sub {Dumper($complex)});
-
-$description = "Convert hash into array sorted by alpha value";
-$function = "hash_transform";
-$opts = {
-  'path' => ['topping', 2, 'id']
-};
-$expected = ['0003','0002','0001','0004'];
-
-$args = [$complex,$opts];
-$result = Kynetx::Expressions::den_to_exp(
-            Kynetx::Modules::eval_module($my_req_info,
-                       $rule_env,
-                       $session,
-                       $rule_name,
-                       $source,
-                       $function,
-                       $args
-                      ));
-
-cmp_deeply($result,$expected, $description);
-$test_count++;
-
-$description = "Convert hash into array sorted by num value";
-$function = "hash_transform";
-$opts = {
-  'path' => ['ppc'],
-  'numeric' => 1
-};
-$expected = ['0001','0004','0002','0003'];
-
-$args = [$complex,$opts];
-$result = Kynetx::Expressions::den_to_exp(
-            Kynetx::Modules::eval_module($my_req_info,
-                       $rule_env,
-                       $session,
-                       $rule_name,
-                       $source,
-                       $function,
-                       $args
-                      ));
-
-cmp_deeply($result,$expected, $description);
-$test_count++;
 
 # twitter auth token
 my $onamespace = "anon";
@@ -453,11 +401,177 @@ foreach my $tweet (@{$twit_array}) {
 }
 
 
+######################
+#Log::Log4perl->easy_init($DEBUG);
+######################
+my ($path,$path2,$opts,$l,$c);
+$path = 'retweet_count';
+$description = "Sorted Array function";
+$opts = {
+  'path' => [$path],
+  'reverse' => 1,
+};
+$function = 'transform';
+$args = [$twit_array,$opts];
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+
+cmp_deeply(
+  $result->[0]->{$path} >= $result->[1]->{$path} &&
+  $result->[0]->{$path} >= $result->[$l -1]->{$path},
+  1, $description);
+$test_count++;
+
+#t_display($result,[$path]);
+
+$path = 'retweet_count';
+$path2 = 'favorite_count';
+$description = "Sorted Array function,2 field sort";
+$opts = [{
+  'path' => [$path],
+  'reverse' => 1,
+  },
+  {
+    'path' => [$path2]
+  }
+
+];
+$function = 'transform';
+$args = [$twit_array,$opts];
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+
+cmp_deeply(
+  $result->[0]->{$path} >= $result->[1]->{$path} &&
+  $result->[0]->{$path} >= $result->[$l -1]->{$path},
+  1, $description);
+$test_count++;
+
+#t_display($result,[$path,$path2]);
+
+$path = 'created_at';
+$description = "Sorted Array function, date";
+my $format = '%a %b %d %H:%M:%S %z %Y';
+$opts = {
+  'path' => [$path],
+  'compare' => 'datetime',
+  'date_format' => $format
+  
+};
+$function = 'transform';
+$args = [$twit_array,$opts];
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+
+$a = Kynetx::KTime->parse_datetime($result->[0]->{$path},$format)->epoch;
+$b = Kynetx::KTime->parse_datetime($result->[1]->{$path},$format)->epoch;
+$c = Kynetx::KTime->parse_datetime($result->[$l -1]->{$path},$format)->epoch;
+cmp_deeply(
+   $a <= $b && $b <= $c,
+  1, $description);
+$test_count++;
+
+#t_display($result,[$path]);
+
+$path = 'retweet_count';
+$path2 = 'created_at';
+$description = "Sorted Array function,2 field sort, number & datetime";
+$format = '%a %b %d %H:%M:%S %z %Y';
+$opts = [{
+  'path' => [$path],
+  'reverse' => 1,
+  },
+  {
+    'path' => [$path2],
+    'compare' => 'datetime',
+    'date_format' => $format
+  }
+
+];
+$function = 'transform';
+$args = [$twit_array,$opts];
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+cmp_deeply(
+  $result->[0]->{$path} >= $result->[1]->{$path} &&
+  $result->[0]->{$path} >= $result->[$l -1]->{$path},
+  1, $description);
+$test_count++;
+
+
+
+#t_display($result,[$path,$path2]);
+$path = 'retweet_count';
+$path2 = 'created_at';
+$format = '%a %b %d %H:%M:%S %z %Y';
+$description = "Sorted Array function,2 field sort, number & datetime";
+$opts = [{
+  'path' => [$path],
+  'reverse' => 1,
+  'compare' => 'string'
+  },
+  {
+    'path' => [$path2],
+    'compare' => 'datetime',
+    'date_format' => $format
+  }
+
+];
+$function = 'transform';
+$args = [$twit_array,$opts];
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+
+$a = $result->[0]->{$path};
+$b = $result->[1]->{$path};
+$c = $result->[$l -1]->{$path};
+cmp_deeply(
+   $a cmp $b && $b cmp $c,
+  1, $description);
+$test_count++;
+
+
 $description = "Sort tweets by retweet count";
-$function = "hash_transform";
+$function = "transform";
 $opts = {
   'path' => ['retweet_count'],
-  'numeric' => 1
+  'compare' => 'numeric',
+  'reverse' => 1
 };
 $expected = scalar (@{$twit_array});
 
@@ -475,90 +589,24 @@ $result = Kynetx::Expressions::den_to_exp(
 cmp_deeply(scalar @{$result},$expected, $description);
 $test_count++;
 
-$description = "Make sure that array is sorted";
-my $a = $t_hash->{$result->[0]}->{'retweet_count'};
-my $b = $t_hash->{$result->[1]}->{'retweet_count'};
-my $c = $t_hash->{$result->[scalar @{$result} - 1]}->{'retweet_count'};
-cmp_deeply($a <= $b && $b <= $c,1, $description);
-$test_count++;
-$logger->debug("Normal sort: $a <= $b <= $c");
 
-$description = "Check reverse sort";
-$opts = {
-  'path' => ['retweet_count'],
-  'numeric' => 1,
-  'reverse' => 1
-};
-$args = [$t_hash,$opts];
-$result = Kynetx::Expressions::den_to_exp(
-            Kynetx::Modules::eval_module($my_req_info,
-                       $rule_env,
-                       $session,
-                       $rule_name,
-                       $source,
-                       $function,
-                       $args
-                      ));
-$a = $t_hash->{$result->[0]}->{'retweet_count'};
-$b = $t_hash->{$result->[1]}->{'retweet_count'};
-$c = $t_hash->{$result->[scalar @{$result} - 1]}->{'retweet_count'};
-cmp_deeply($a >= $b && $b >= $c,1, $description);
-$test_count++;
-$logger->debug("Reverse sort: $a >= $b >= $c");
-my $rsorted = $result;
-
-$description = "Check limit option";
-my $l = 5;
-$opts = {
-  'path' => ['retweet_count'],
-  'numeric' => 1,
-  'reverse' => 1,
-  'limit' => $l
-};
-$args = [$t_hash,$opts];
-$result = Kynetx::Expressions::den_to_exp(
-            Kynetx::Modules::eval_module($my_req_info,
-                       $rule_env,
-                       $session,
-                       $rule_name,
-                       $source,
-                       $function,
-                       $args
-                      ));
-cmp_deeply(scalar @{$result},$l, $description);
+is(($t_hash->{$result->[0]}->{$path} >= $t_hash->{$result->[1]}->{$path}) &&
+    ($t_hash->{$result->[0]}->{$path} >= $t_hash->{$result->[$l -1]}->{$path}),1, $description);
 $test_count++;
 
-$description = "Check index option";
-my $index = 5;
-$opts = {
-  'path' => ['retweet_count'],
-  'numeric' => 1,
-  'reverse' => 1,
-  'index' => $index
-};
-$args = [$t_hash,$opts];
-$result = Kynetx::Expressions::den_to_exp(
-            Kynetx::Modules::eval_module($my_req_info,
-                       $rule_env,
-                       $session,
-                       $rule_name,
-                       $source,
-                       $function,
-                       $args
-                      ));
-cmp_deeply(scalar @{$result},scalar (keys %{$t_hash}) - $index, $description);
-$test_count++;
 
 $description = "Check index and limit option (slice)";
-my $index = 5;
+my $index = 10;
+$l = 10;
 $opts = {
   'path' => ['retweet_count'],
-  'numeric' => 1,
-  'reverse' => 1,
+  'compare' => 'numeric'
+};
+my $gopts = {
   'index' => $index,
   'limit' => $l
 };
-$args = [$t_hash,$opts];
+$args = [$t_hash,$opts,$gopts];
 $result = Kynetx::Expressions::den_to_exp(
             Kynetx::Modules::eval_module($my_req_info,
                        $rule_env,
@@ -568,13 +616,60 @@ $result = Kynetx::Expressions::den_to_exp(
                        $function,
                        $args
                       ));
-cmp_deeply(scalar @{$result},$l, $description);
+                      
+                   
+is(($t_hash->{$result->[0]}->{$path} >= $t_hash->{$result->[1]}->{$path}) &&
+    ($t_hash->{$result->[0]}->{$path} >= $t_hash->{$result->[$l -1]}->{$path}),'', $description);
 $test_count++;
 
-cmp_deeply($result->[0],$rsorted->[$index], $description);
-$test_count++;
 
+
+
+#h_display($t_hash,$result,[$path]);
+
+######################
+#goto ENDY;
+######################
+
+ENDY:
 done_testing($test_count);
+
+sub h_display {
+  my ($hash,$tweets,$fields) = @_;
+  $logger->debug("Sample: ",sub {Dumper($hash->{$tweets->[0]})});
+  my $header = "id\t\t";
+  foreach my $f (@{$fields}) {
+    $header .= "$f\t"
+  }
+  $logger->debug($header);
+  foreach my $tweet (@{$tweets}) {
+    my $id = $hash->{$tweet}->{'id'};
+    my $row = "$id\t\t";
+    foreach my $f (@{$fields}) {
+      $row .= $hash->{$tweet}->{$f}."\t"
+    }
+    $logger->debug($row);
+  }
+  
+}
+
+sub t_display {
+  my ($tweets,$fields) = @_;
+  $logger->debug("Sample: ",sub {Dumper($tweets->[0])});
+  my $header = "id\t\t";
+  foreach my $f (@{$fields}) {
+    $header .= "$f\t"
+  }
+  $logger->debug($header);
+  foreach my $tweet (@{$tweets}) {
+    my $id = $tweet->{'id'};
+    my $row = "$id\t\t";
+    foreach my $f (@{$fields}) {
+      $row .= $tweet->{$f}."\t"
+    }
+    $logger->debug($row);
+  }
+}
 
 __DATA__
 

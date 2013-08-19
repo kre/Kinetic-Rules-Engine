@@ -20,11 +20,12 @@ package Kynetx::Modules::This2That;
 # MA 02111-1307 USA
 #
 use strict;
-#use warnings;
+use warnings;
 
 use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 use Kynetx::Util qw(ll);
+use Kynetx::KTime;
 
 use XML::XML2JSON;
 use MIME::Base64 qw(
@@ -169,49 +170,100 @@ sub _url2base64 {
 }
 $funcs->{'url2base64'} = \&_url2base64;
 
-sub _hash2sortedArray {
+
+
+sub _cmp {
+  my ($a, $b, $path,$constraint) = @_;
+  my $logger = get_logger();
+  $constraint ||= "";
+  my $aVal = Dive($a,@{$path});
+  my $bVal = Dive($b,@{$path});
+  $logger->trace("A: $aVal B: $bVal");
+  if (ref $constraint eq "HASH" && defined $constraint->{'compare'}  ) {
+    if ($constraint->{'compare'} eq "numeric") {           # allow dev to force numeric sort
+      $logger->trace("Numeric");
+      return $aVal <=> $bVal
+    } elsif ($constraint->{'compare'} eq "datetime") {
+      $logger->trace("datetime");
+      my $dtA;
+      my $dtB;
+      if (defined $constraint->{'date_format'}) {
+        my $df = $constraint->{'date_format'};
+        eval {
+          $dtA = Kynetx::KTime->parse_datetime($aVal,$df);
+          $dtB = Kynetx::KTime->parse_datetime($bVal,$df);
+        };
+        
+      } else {
+        eval {
+          $dtA = Kynetx::KTime->parse_datetime($aVal);
+          $dtB = Kynetx::KTime->parse_datetime($bVal);
+        };
+        
+      }
+      if ($@) {
+        $logger->debug("Error. Using string comparison instead of datetime",$@);
+        return $aVal cmp $bVal
+      } else {
+        return $dtA->epoch() <=> $dtB->epoch()
+      }
+    } elsif ($constraint->{'compare'} eq "string") {
+      $logger->trace("string");
+      return $aVal cmp $bVal
+    } else {
+      $logger->trace("default");
+      return $aVal <=> $bVal ||          # NaN != NaN
+             $aVal cmp $bVal
+      
+    }    
+  } else {
+      $logger->trace("default");
+      return $aVal <=> $bVal ||          # NaN != NaN
+             $aVal cmp $bVal
+      
+    }
+
+  
+}
+sub _hash_transform {
   my ($req_info, $function, $args) = @_;
   my $logger = get_logger();
   my @sorted;
   my @index;
   my @values;
   my $obj = $args->[0];
-  my $opts = $args->[1]; 
-  my $path = $opts->{'path'} || \[];
-  my $numeric = $opts->{'numeric'};
-  if (defined $obj) {
-    if (ref $obj eq "HASH") {
-
-      # Schwartzian Transform
-      @sorted = map {
-        $_->[1]                           # return the key only from [cmp_val, key]
-      } sort {                            # sort based on cmp_val
-        if (defined $numeric) {           # allow dev to force numeric sort
-          $a->[0] <=> $b->[0]
-        } else {
-          $a->[0] <=> $b->[0] ||          # NaN != NaN
-          $a->[0] cmp $b->[0]
-        }        
-      } map {
-        [Dive($obj->{$_},@{$path}),$_]    # Construct a temp array of [cmp_val, key]
-      } keys %{$obj}
-    } 
-  } 
-  if (defined $opts->{'reverse'}) {
-    @sorted = reverse @sorted;
+  my $sort_ops = $args->[1]; 
+  my $global_ops = $args->[2];
+  
+  if (ref $sort_ops eq "HASH") {
+    # single sort param enclose in hash
+    push(@index,$sort_ops);
+  } elsif(ref $sort_ops eq "ARRAY") {
+    @index = @{$sort_ops};
   }
-  if (defined $opts->{'index'} || defined $opts->{'limit'}) {
+  return undef unless (scalar @index >= 1);
+  
+  if (ref $obj eq "HASH") {
+    @sorted = _hsort($obj,\@index);
+  } elsif (ref $obj eq "ARRAY") {
+    @sorted = _asort($obj,\
+    @index);
+  } else {
+    return undef;
+  }
+  
+  if (defined $global_ops->{'index'} || defined $global_ops->{'limit'}) {
     my @temp = @sorted;
     my $size = scalar @temp - 1;
     my $limit = $size;
     my $i = 0;
     
-    if (defined $opts->{'limit'}) {
-      $limit = $opts->{'limit'} -1;
+    if (defined $global_ops->{'limit'}) {
+      $limit = $global_ops->{'limit'} -1;
     }
     
-    if (defined $opts->{'index'}) {
-      $i = $opts->{'index'}
+    if (defined $global_ops->{'index'}) {
+      $i = $global_ops->{'index'}
     }
     
     my $j = $i + $limit;
@@ -224,7 +276,54 @@ sub _hash2sortedArray {
   $logger->trace("sort: ", sub {Dumper(@sorted)});
   return \@sorted;
 }
-$funcs->{'hash_transform'} = \&_hash2sortedArray;
+$funcs->{'hash_transform'} = \&_hash_transform;
+$funcs->{'transform'} = \&_hash_transform;
+
+sub _recursive_sort {
+  my ($a,$b,$opts) = @_;
+  my $logger = get_logger();
+  my @optsArray = @{$opts};
+  
+  my $c_opts = shift @optsArray;
+  $logger->trace("Received options: ", sub {Dumper(@optsArray)});
+  $logger->trace("Current options: ", sub {Dumper($c_opts)});
+  my $path = $c_opts->{'path'};
+  my $sort_direction = $c_opts->{'reverse'} ? -1 : 1;
+  my $compare = _cmp($a,$b,$path,$c_opts);
+  $compare *= $sort_direction;
+  if ($compare == 0 && scalar @optsArray > 0) {
+    return _recursive_sort($a,$b,\@optsArray)
+  } else {
+    return $compare;
+  }
+}
+
+sub _asort {
+  my ($obj,$opts) = @_;
+  my $logger = get_logger();
+  $logger->debug("array sort");
+  return sort {                            
+      _recursive_sort($a,$b,$opts);
+    } @{$obj};
+}
+
+sub _hsort {
+  my ($obj,$opts) = @_;
+  my $logger = get_logger();
+  $logger->debug("hash sort");
+
+  # Schwartzian Transform
+  my @sorted = map {
+    $_->[1]                           # return the key only from [cmp_val, key]
+  } sort {                            # sort based on cmp_val
+    _recursive_sort($a->[0],$b->[0],$opts);      
+  } map {
+    [$obj->{$_},$_]                   # Construct a temp array of [cmp_val, key]
+  } keys %{$obj};
+  
+  return @sorted;
+}
+
 
 
 sub _base642string {
