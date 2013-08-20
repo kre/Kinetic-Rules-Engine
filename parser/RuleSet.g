@@ -2408,8 +2408,11 @@ meta_block
 	 HashMap keys_map = new HashMap();
 	 HashMap key_values = new HashMap();
      ArrayList provide_list = new ArrayList();
+     ArrayList pkey_list = new ArrayList();
+     ArrayList prid_list = new ArrayList();
      ArrayList config_list = new ArrayList();
      ArrayList temp_list = new ArrayList();
+     
 
 }
 @after  {
@@ -2505,7 +2508,18 @@ meta_block
       	tmp.put("names",provide_list);
         meta_block_hash.put("provide",tmp); 
         }
-
+    | PROVIDE op=OTHER_OPERATORS k=VAR {  pkey_list.add($k.text); } (COMMA k2=VAR { pkey_list.add($k2.text);})*  
+    	must_be["to"] r=VAR {  prid_list.add($r.text); } (COMMA r2=VAR { prid_list.add($r2.text);})*
+       {
+          HashMap tmp = new HashMap();
+          if(!$op.text.equals("keys") )
+          {
+	throw new InvalidToken("Found [" + $op.text + "] should have been keys", input);
+          }
+          tmp.put("provides_keys",pkey_list);
+          tmp.put("provides_rids",prid_list);
+          meta_block_hash.put("module_keys",tmp);
+        }
     | CONFIGURE USING  m=modifier {config_list.add($m.result);} (AND_AND m1=modifier {config_list.add($m1.result);})* {
       	HashMap tmp = new HashMap();
       	tmp.put("configuration", config_list);
