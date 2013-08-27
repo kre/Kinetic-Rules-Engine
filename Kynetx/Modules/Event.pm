@@ -278,7 +278,18 @@ sub send_scheduled_event {
   my ($schedId)  = @_;
   my $logger     = get_logger();
   my $schedEvent = Kynetx::Persistence::SchedEv::get_sched_ev($schedId);
+  
   return undef unless ($schedEvent);
+  
+  my $lockdown = Kynetx::Configure::get_config('SCHEDEV_PERIOD') || 599;  
+  my $last = $schedEvent->{'last'};
+  if (defined $last) {
+    my $fired = $last->{'fired'};
+    my $elapsed = time() - $fired;
+    if ($elapsed < $lockdown) {
+      return undef
+    }
+  }
 
   # Create a subscription map
   #

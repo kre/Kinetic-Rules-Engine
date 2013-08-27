@@ -433,7 +433,7 @@ sub eval_use {
 	my $use = $ruleset->{'meta'}->{'use'};
 
 	my $rid = get_rid( $req_info->{'rid'} );
-
+	
 	my $this_js;
 
 	foreach my $u ( @{$use} ) {
@@ -445,7 +445,6 @@ sub eval_use {
 		}
 		elsif ( $u->{'type'} eq 'module' ) {
 			$logger->trace( "module struct: ", sub { Dumper($u) } );
-
 			#			$logger->debug("Doing module ", sub {Dumper $env_stash});
 			# side effects the rule env.
 			( $this_js, $rule_env ) =
@@ -466,6 +465,11 @@ sub eval_use {
 	return ( $js, $rule_env );
 }
 
+sub _module_sig {
+  my ($name,$alias,    $modifiers, $mversion) = @_;
+  return md5_hex( $name . $mversion . $alias . freeze $modifiers);      
+}
+
 sub eval_use_module {
   my (
       $req_info, $rule_env,  $session,  $name,
@@ -482,14 +486,22 @@ sub eval_use_module {
   $metric->eid($req_info->{'eid'});
 
   $mversion ||= 'prod';
-  my $module_sig = md5_hex( $name . $mversion . $alias . freeze $modifiers);
+  my $module_sig = _module_sig($name,$alias,$modifiers, $mversion);
+  
+  #md5_hex( $name . $mversion . $alias . freeze $modifiers);
 	
   my $memd = get_memd();
+  
+  my $self_rid = get_rid( $req_info->{'rid'} );
+  my $mod_rid = $name;
+  
+  $logger->trace("$self_rid uses $mod_rid");
 
   my $module_cache = Kynetx::Modules::RuleEnv::get_module_cache($module_sig, $memd);
   my $module_rule_env = $module_cache->{Kynetx::Modules::RuleEnv::get_re_key($module_sig)};
   my $provided = $module_cache->{Kynetx::Modules::RuleEnv::get_pr_key($module_sig)} || {};
   my $js = $module_cache->{Kynetx::Modules::RuleEnv::get_js_key($module_sig)} || '';
+  my $export_keys = $module_cache->{Kynetx::Modules::RuleEnv::get_export_keys_key($module_sig)} || {};
 
 
   # build a list of module sigs associated with a calling rid/version
@@ -537,17 +549,10 @@ sub eval_use_module {
       }
 
     # Default to the production version of modules
-    my $rmetric =
-      new Kynetx::Metrics::Datapoint( { 'series' => 'module-get-ruleset' } );
-    $rmetric->start_timer();
-    $rmetric->rid(get_rid( $req_info->{'rid'} ));
-    $rmetric->token($ktoken->{'ktoken'});
-    $rmetric->eid($req_info->{'eid'});
     my $use_ruleset =
       Kynetx::Rules::get_rule_set( $req_info, 1, $name, $mversion,
 				   { 'in_module' => 1 } );
     
-    $rmetric->stop_and_store();
 #    $logger->trace( "Using ", sub { Dumper $use_ruleset} );
 
     my $provided_array = $use_ruleset->{'meta'}->{'provide'}->{'names'} || [];
@@ -573,12 +578,6 @@ sub eval_use_module {
     my @mod_list = @{ $rule_env->{'_module_list'} || [] };
     push( @mod_list, $name );
 
-    my $emetric =
-      new Kynetx::Metrics::Datapoint( { 'series' => 'module-extend-env' } );
-    $emetric->start_timer();
-    $emetric->rid(get_rid( $req_info->{'rid'} ));
-    $emetric->token($ktoken->{'ktoken'});
-    $emetric->eid($req_info->{'eid'});
     my $init_mod_env = extend_rule_env(
             {
 #			'_callingRID'     => get_rid( $req_info->{'rid'} ),
@@ -590,7 +589,6 @@ sub eval_use_module {
             },
             empty_rule_env()
       );
-    $emetric->stop_timer();
 
     $module_rule_env =
       set_module_configuration( $req_info, $rule_env, $session, $init_mod_env,
@@ -604,31 +602,37 @@ sub eval_use_module {
 				    $use_ruleset );
       $js .= $this_js;
     }
+    
+    # Check to see if this module exposes any keys to external ruleset
+    if ($use_ruleset->{'meta'}->{'module_keys'}) {
+      my $key_permissions = $use_ruleset->{'meta'}->{'module_keys'};
+      $logger->trace("Exposing keys to parent rid: $self_rid");
+      my $permitted = $key_permissions->{'provides_rids'};
+      if (defined $permitted) {
+        if (Kynetx::Sets::has($permitted,[$self_rid])) {
+          $logger->debug("Ruleset $self_rid is permitted by $name");
+          foreach my $obj (@{$key_permissions->{'provides_keys'}}) {
+            my $tuple = ();
+            push(@{$tuple},$name);
+            push (@{$tuple},Kynetx::Keys::get_key($req_info,$module_rule_env,$obj));
+            $export_keys->{$obj} = $tuple;
+          }
+        }
+      }
+    }
+    
 
-    my $umetric =
-      new Kynetx::Metrics::Datapoint( { 'series' => 'module-eval-use' } );
-    $umetric->start_timer();
-    $umetric->rid(get_rid( $req_info->{'rid'} ));
-    $umetric->token($ktoken->{'ktoken'});
-    $umetric->eid($req_info->{'eid'});
     if ( $use_ruleset->{'meta'}->{'use'} ) {
       ( $this_js, $module_rule_env ) =
 	eval_use( $req_info, $use_ruleset, $module_rule_env, $session,
 		  $env_stash );
       $js .= $this_js;
     }
-    $umetric->stop_and_store();
 
 #    $logger->debug("Module env ", Dumper $module_rule_env);
 
 
     # eval the module's global block
-    my $gmetric =
-      new Kynetx::Metrics::Datapoint( { 'series' => 'module-eval-use' } );
-    $gmetric->start_timer();
-    $gmetric->rid(get_rid( $req_info->{'rid'} ));
-    $gmetric->token($ktoken->{'ktoken'});
-    $gmetric->eid($req_info->{'eid'});
     my $is_cachable;
     if ( $use_ruleset->{'global'} ) {
       ( $js, $module_rule_env, $is_cachable ) =
@@ -636,26 +640,18 @@ sub eval_use_module {
 				  $module_rule_env, $session, $namespace_name, $provided );
 
     }
-    $gmetric->stop_and_store();
 
-    my $emetric2 =
-      new Kynetx::Metrics::Datapoint( { 'series' => 'module-extend-env-final' } );
-    $emetric2->start_timer();
-    $emetric2->rid(get_rid( $req_info->{'rid'} ));
-    $emetric2->token($ktoken->{'ktoken'}); 
-    $emetric2->eid($req_info->{'eid'});
 
     if ($is_cachable) {
       $logger->debug("Caching module $name.$mversion...");
 
       Kynetx::Modules::RuleEnv::set_module_cache($module_sig, $req_info, $memd,
-						 $js, $provided, $module_rule_env, $name, $mversion);
+						 $js, $provided, $module_rule_env, $export_keys, $name, $mversion);
 
     } else {
        $logger->debug("Module $name.$mversion is not cachable...");
     }
 
-    $emetric2->stop_timer();
 
   } else {
 
@@ -669,6 +665,20 @@ sub eval_use_module {
   $rule_env = extend_rule_env( $namespace_name, $module_rule_env,
 			       extend_rule_env( $namespace_name . '_provided', $provided, $rule_env )
 			     );
+			     
+	# Place the exported keys in the current key environment		     
+  foreach my $kkey (keys %{$export_keys}) {
+    my $tuple = $export_keys->{$kkey};
+    my $source = $tuple->[0];
+    my $val = $tuple->[1];
+    my $this_js;
+    $logger->debug("Module $name exports key $kkey");
+    ($this_js, $rule_env) = Kynetx::Keys::insert_key($req_info, 
+					$rule_env, 
+					$kkey, 
+					$val);
+    $js .= $this_js;
+  }
 
   $metric->stop_and_store();
 

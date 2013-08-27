@@ -34,6 +34,7 @@ use LWP::UserAgent;
 use JSON::XS;
 use AnyEvent ();
 use AnyEvent::HTTP ();
+use Storable qw(dclone);
 
 
 use Kynetx::Test qw/:all/;
@@ -72,6 +73,7 @@ my $r = Kynetx::Test::configure();
 #config_logging($r);
 #Kynetx::Util::turn_off_logging();
 
+my $logger = get_logger();
 
 my $rid = 'cs_test';
 
@@ -98,6 +100,8 @@ my $js;
 my $test_count;
 my $config;
 my $config2;
+
+goto ENDY;
 
 #diag "_____________________________START TEST____________________________";
 sub local_gen_req_info {
@@ -2166,7 +2170,7 @@ _JS_
      );
     
 
-ENDY:
+
 
 
 
@@ -4764,15 +4768,46 @@ ok($is_cachable, "here_docs are cachable");
 $test_count++;
 
 
-#
-# module cache flushing
-#
+####### META test provide keys value
 
+ENDY:
 
+###########
+Log::Log4perl->easy_init($DEBUG);
+###########
 
-#diag "Test cases: " . int(@test_cases) . " and others: " . $test_count;
+## these rulesets are tied together because of the provide keys restriction on rids
+my $provide = 'a144x171';
+my $uses = 'a144x172';
+my $version = 'prod';
 
-#diag Dumper $my_req_info;
+my $rid_info = mk_rid_info($my_req_info,$provide);
+my $source_module = Kynetx::Repository::get_ruleset_krl($rid_info,$version);
+my $source_ast = Kynetx::Parser::parse_ruleset($source_module);
+my $source_provided = $source_ast->{'meta'}->{'module_keys'}->{'provides_keys'};
+
+my $meta_req_info = Kynetx::Test::gen_req_info($uses);
+$rid_info = mk_rid_info($meta_req_info,$uses);
+my $u_krl = Kynetx::Repository::get_ruleset_krl($rid_info,$version);
+my $u_rule_env = empty_rule_env();
+$module_rs = Kynetx::Parser::parse_ruleset($u_krl);
+($js,$u_rule_env) = Kynetx::Rules::eval_meta($meta_req_info,$module_rs,$u_rule_env,$session);
+
+foreach my $key_provided (@{$source_provided}) {
+  my $description = "Check that shared keys ($key_provided) are equal";
+  my $sk_val = $source_ast->{'meta'}->{'keys'}->{$key_provided};
+  my $module_val = Kynetx::Keys::get_key($meta_req_info,$u_rule_env,$key_provided);
+  $logger->debug("S: $key_provided SV: $sk_val MV: $module_val");
+  cmp_deeply($module_val,$sk_val,$description);
+  $test_count++;
+}
+
+my $description = "Check that private key not exported";
+my $local = 'd';
+my $local_val = Kynetx::Keys::get_key($meta_req_info,$u_rule_env,$local);
+cmp_deeply($local_val,$module_rs->{'meta'}->{'keys'}->{$local},$description);
+$test_count++;
+
 
 
 done_testing($test_count);

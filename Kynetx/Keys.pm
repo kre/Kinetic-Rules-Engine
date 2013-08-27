@@ -86,7 +86,7 @@ sub insert_key {
   my $js = '';
 
 
-#  $req_info->{$rid.':key:'.$key} = $value;
+  $req_info->{$rid.':key:'.$key} = $value;
 
   $rule_env = extend_rule_env(mk_key($rid,$key),
 			      $value, 

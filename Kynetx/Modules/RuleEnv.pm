@@ -57,7 +57,16 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 sub get_module_cache {
   my($module_sig, $memd) = @_;
 
-  return $memd->get_multi(get_re_key($module_sig), get_pr_key($module_sig), get_js_key($module_sig));
+  return $memd->get_multi(
+            get_re_key($module_sig), 
+            get_pr_key($module_sig), 
+            get_js_key($module_sig),
+            get_export_keys_key($module_sig));
+}
+
+sub get_export_keys_key {
+  my($module_sig) = @_;
+  return "export_keys_".$module_sig;  
 }
 
 sub get_re_key {
@@ -99,25 +108,34 @@ sub get_msig_cache_key {
 
 sub get_mod_re_list {
   my ($name, $version, $memd) = @_;
-
-  return $memd->get(get_mod_re_cache_key($name, $version));
+  my $logger = get_logger();
+  my $mod_re_cache_key = get_mod_re_cache_key($name, $version);
+  $logger->trace("get_mod_re_list: $mod_re_cache_key");
+  my $val = $memd->get($mod_re_cache_key);
+  $logger->trace("mod_re_list: ", sub {Dumper($val)});
+  return $val;
 
 }
 
 
 sub get_mod_re_cache_key {
   my ($name, $version) = @_;
+  my $logger = get_logger();
+  my $mod_re_cache_key = "mod_re_".Kynetx::Repository::make_ruleset_key($name, $version);
+  $logger->trace("make key ($name,$version): ", sub {Dumper($mod_re_cache_key)});
 
-  return "mod_re_".Kynetx::Repository::make_ruleset_key($name, $version);
+  return $mod_re_cache_key;
 
 }
 
 
 sub set_module_cache {
-  my($module_sig, $req_info, $memd, $js, $provided, $module_rule_env, $name, $version) = @_;
+  my($module_sig, $req_info, $memd, $js, $provided, $module_rule_env, $export_keys, $name, $version) = @_;
+  my $logger = get_logger();
   $memd->set(get_js_key($module_sig), $js);
   $memd->set(get_pr_key($module_sig), $provided);
   $memd->set(get_re_key($module_sig), $module_rule_env);
+  $memd->set(get_export_keys_key($module_sig), $export_keys);
 
   # each ruleset that uses a module has a different copy of the rule_env
   # stored so we have to record this sig for the calling rid.version
@@ -132,9 +150,10 @@ sub set_module_cache {
   # we need to know all the rule_env caches for it
   my $mod_re_list = get_mod_re_list($name, $version, $memd);
   $mod_re_list->{$module_sig} = 1;
-
+  $logger->trace("mod_re_list: ",sub {Dumper($mod_re_list)});
   # build a list of module sigs associated with a calling rid/version
   my $mod_re_cache_key = get_mod_re_cache_key($name, $version);
+  $logger->trace("mod_re_cache_key: ",sub {Dumper($mod_re_cache_key)});
 
   $memd->set($mod_re_cache_key, $mod_re_list);
   
@@ -162,6 +181,7 @@ sub delete_module_caches {
       $memd->delete(get_re_key($sig));
       $memd->delete(get_pr_key($sig));
       $memd->delete(get_js_key($sig));
+      $memd->delete(get_export_keys_key($sig));
     }
     $memd->delete($msig_list_cache_key);
   }
@@ -178,6 +198,7 @@ sub delete_module_caches {
       $memd->delete(get_re_key($sig));
       $memd->delete(get_pr_key($sig));
       $memd->delete(get_js_key($sig));
+      $memd->delete(get_export_keys_key($sig));
     }
     $memd->delete($mod_re_cache_key);
   }

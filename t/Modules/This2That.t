@@ -38,7 +38,7 @@ use DateTime;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Modules::This2That qw/:all/;
@@ -422,7 +422,8 @@ $result = Kynetx::Expressions::den_to_exp(
                        $function,
                        $args
                       ));
-
+                      
+$l = scalar @{$result};
 cmp_deeply(
   $result->[0]->{$path} >= $result->[1]->{$path} &&
   $result->[0]->{$path} >= $result->[$l -1]->{$path},
@@ -454,7 +455,8 @@ $result = Kynetx::Expressions::den_to_exp(
                        $function,
                        $args
                       ));
-
+                      
+$l = scalar @{$result};
 cmp_deeply(
   $result->[0]->{$path} >= $result->[1]->{$path} &&
   $result->[0]->{$path} >= $result->[$l -1]->{$path},
@@ -483,7 +485,8 @@ $result = Kynetx::Expressions::den_to_exp(
                        $function,
                        $args
                       ));
-
+                      
+$l = scalar @{$result};
 $a = Kynetx::KTime->parse_datetime($result->[0]->{$path},$format)->epoch;
 $b = Kynetx::KTime->parse_datetime($result->[1]->{$path},$format)->epoch;
 $c = Kynetx::KTime->parse_datetime($result->[$l -1]->{$path},$format)->epoch;
@@ -520,6 +523,8 @@ $result = Kynetx::Expressions::den_to_exp(
                        $function,
                        $args
                       ));
+$l = scalar @{$result};
+
 cmp_deeply(
   $result->[0]->{$path} >= $result->[1]->{$path} &&
   $result->[0]->{$path} >= $result->[$l -1]->{$path},
@@ -556,12 +561,17 @@ $result = Kynetx::Expressions::den_to_exp(
                        $function,
                        $args
                       ));
-
+                      
+$l = scalar @{$result};
 $a = $result->[0]->{$path};
 $b = $result->[1]->{$path};
-$c = $result->[$l -1]->{$path};
+$c = $result->[$l - 1]->{$path};
+
+$logger->debug("A: $a");
+$logger->debug("B: $b");
+$logger->debug("C: $c");
 cmp_deeply(
-   $a cmp $b && $b cmp $c,
+   "$a" ge "$b" && "$b" ge "$c",
   1, $description);
 $test_count++;
 
@@ -586,7 +596,9 @@ $result = Kynetx::Expressions::den_to_exp(
                        $args
                       ));
 
-cmp_deeply(scalar @{$result},$expected, $description);
+$l = scalar @{$result};
+
+cmp_deeply($l,$expected, $description);
 $test_count++;
 
 

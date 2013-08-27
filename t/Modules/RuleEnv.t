@@ -55,6 +55,7 @@ use Kynetx::FakeReq qw/:all/;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
+my $logger = get_logger();
 
 
 
@@ -83,10 +84,11 @@ my $module_sig = "sldakdjdhakjdja";
 
 my $mod_name = "flip";
 my $mod_ver = "per";
+my $export_keys = {'a' => "ksdfoidifif"};
 
 my ($js, $provided, $mod_rule_env) = ("some js", ["a", "b"], {"a" => 1, "b" => 4});
 
-Kynetx::Modules::RuleEnv::set_module_cache($module_sig, $my_req_info, $memd, $js, $provided, $mod_rule_env, $mod_name, $mod_ver);
+Kynetx::Modules::RuleEnv::set_module_cache($module_sig, $my_req_info, $memd, $js, $provided, $mod_rule_env,$export_keys, $mod_name, $mod_ver);
 
 my $module_cache = Kynetx::Modules::RuleEnv::get_module_cache($module_sig, $memd);
 
@@ -101,15 +103,21 @@ is($module_cache->{Kynetx::Modules::RuleEnv::get_js_key($module_sig)},
 is_deeply($module_cache->{Kynetx::Modules::RuleEnv::get_pr_key($module_sig)},
 	  $provided,
 	  "Module provided matches");
-$test_count += 3;
+	  
+is_deeply($module_cache->{Kynetx::Modules::RuleEnv::get_export_keys_key($module_sig)},
+  $export_keys,
+  "Export keys match");
+  
+$test_count += 4;
 
 # test with second module sig
 
 my $module_sig_2 = "rwurwriuwroqieu";
 
 ($js, $provided, $mod_rule_env) = ("some other js", ["c", "d"], {"j" => 1, "k" => 4});
+$export_keys = {'b' => 'notthisone'};
 
-Kynetx::Modules::RuleEnv::set_module_cache($module_sig_2, $my_req_info, $memd, $js, $provided, $mod_rule_env, $mod_name, $mod_ver);
+Kynetx::Modules::RuleEnv::set_module_cache($module_sig_2, $my_req_info, $memd, $js, $provided, $mod_rule_env, $export_keys,$mod_name, $mod_ver);
 
 
 $module_cache = Kynetx::Modules::RuleEnv::get_module_cache($module_sig_2, $memd);
@@ -125,7 +133,11 @@ is($module_cache->{Kynetx::Modules::RuleEnv::get_js_key($module_sig_2)},
 is_deeply($module_cache->{Kynetx::Modules::RuleEnv::get_pr_key($module_sig_2)},
 	  $provided,
 	  "Module provided matches again");
-$test_count += 3;
+	  
+is_deeply($module_cache->{Kynetx::Modules::RuleEnv::get_export_keys_key($module_sig_2)},
+  $export_keys,
+  "Export keys match again");
+$test_count += 4;
 
 # test module sig list
 
@@ -138,6 +150,7 @@ ok($msig_list->{$module_sig_2}, "Module sig 2 is there");
 ok(! $msig_list->{"not a module sig"}, "Unknown module sig isn't there");
 
 $test_count += 3;
+
 
 Kynetx::Modules::RuleEnv::delete_module_caches($my_req_info, $memd);
 
