@@ -80,7 +80,7 @@ use constant LOG_FILE => 'scheduler.log';
 use constant LOOKAHEAD => 5;
 use constant TIMEOUT => 60 * LOOKAHEAD * 2;
 use constant SKIP => 4;
-use constant JOB_MAX => 100;
+use constant JOB_MAX => 50;
 
 our $ME = $0; $ME =~ s|.*/||; $ME =~ s|\.pl||;
 
