@@ -171,11 +171,18 @@ sub main() {
 sub clean {
   my $logger = get_log();
   $logger->warn("USR2 signal handler");
+  my ($p_name,$p_self,$p_parent) = proc_info();
+  
+}
+
+sub proc_info {
+  my $logger = get_log();
   my $pgrp = getpgrp(0);
   my $ppid = getppid();
   $logger->debug("Process $0");
   $logger->debug("Process group: $pgrp");
   $logger->debug("Process parent: $ppid");
+  return ($0,$pgrp,$ppid);
   
 }
 
@@ -245,7 +252,7 @@ sub sighup {
 sub safeExit {
   my ($exit_code) = @_;
   my $logger = get_log();
-  my $pid = $$;
+  my ($p_name,$pid,$p_parent) = proc_info();
   $logger->debug("Pid: $pid releasing $0");
   my $release_key = {'$or' => [
     {'cron_id' => $pid},
@@ -253,25 +260,12 @@ sub safeExit {
     ]    
   };
   eval {
-    Kynetx::Persistence::SchedEv::clear_cron_ids($release_key);
+    my $num = Kynetx::Persistence::SchedEv::clear_cron_ids($release_key);
+    $logger->debug("Released ($num) scheduled events");
   };
-  if ($@) {
-    dienice("Problem clearing cron_id for $pid: $@");
-  } 
-  
-  eval {
-    Proc::PID::File->release({
-        debug => 0,
-        #name => $ME 
-        name => $0 
-    });    
-  };
-  if ($@) {
-    dienice("Problem releasing $0: $@");
-  } 
   
   $exit_code = $exit_code || 0;
-  _exit(0);
+  exit $exit_code;
 }
 
 sub get_pid {
@@ -340,16 +334,30 @@ sub REAPER { 1 until waitpid(-1 , WNOHANG) == -1 };
 sub cron_dispatcher {
   my ($id,@args) = @_;
   my $logger = get_log();
-  my $url = "$dn/sky/schedule/$id";
-  $logger->debug("Call: ",$url);
-  my $ua = LWP::UserAgent->new();
-  my $req = new HTTP::Request 'POST', $url;
-  my $response = $ua->request($req);
-  $logger->debug("Args: ",join(" ",@args));
-  $logger->debug("Code: ",$response->code());
-  $logger->debug("Status: ",$response->status_line());
+  
+  my ($p_name,$p_self,$p_parent) = proc_info();
+  
+  if (has_parent($p_parent)) {
+    my $url = "$dn/sky/schedule/$id/$p_self";
+    $logger->debug("Call: ",$url);
+    my $ua = LWP::UserAgent->new();
+    my $req = new HTTP::Request 'POST', $url;
+    my $response = $ua->request($req);
+    $logger->debug("Args: ",join(" ",@args));
+    $logger->debug("Code: ",$response->code());
+    $logger->debug("Status: ",$response->status_line());    
+  } else {
+    $logger->debug("Parent process ($p_parent) not found");
+    safeExit(1);
+  }
   
   
+  
+}
+
+sub has_parent {
+  my ($parent) = @_;
+  return kill 'ZERO', $parent;
 }
 
 sub once_loop {

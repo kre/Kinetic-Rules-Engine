@@ -96,8 +96,13 @@ sub _handler {
 	# 0 = "sky"
 	# 1 = "schedule"
 	my $sched_id = $path_components[2];
-	
+	my $proc_id = $path_components[3];
 	$logger->debug("--------SchedEv Id: $sched_id-----------");
+	
+	if (defined $proc_id) {
+	  return Apache2::Const::OK unless (sched_verify($sched_id,$proc_id));
+	}
+	
 	my ($schedEv, $esl, $event_response) = Kynetx::Modules::Event::send_scheduled_event($sched_id);
 	my ($code,$status);
 	my $now = time();
@@ -320,6 +325,18 @@ sub set_cron_id {
   };
   my $result = $c->update($key,$update,{multiple => 1});
   $logger->debug("Set $c_id: ", sub {Dumper($result)});  
+}
+
+sub sched_verify {
+  my ($schedEv_id,$cron_id) = @_;
+  my $logger = get_logger();
+  my $schedev = get_sched_ev($schedEv_id);
+  my $active_cron_id = $schedev->{'cron_id'};
+  if ($active_cron_id == $cron_id) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 sub schedev_query {
