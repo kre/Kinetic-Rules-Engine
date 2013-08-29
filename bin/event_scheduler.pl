@@ -133,16 +133,16 @@ getopts( "$opt_string", \%opt );
 my %children;
 $SIG{CHLD} = 'IGNORE';	
 
-$SIG{INT}  = sub { my $logger = get_log();$logger->warn("Caught SIGINT:  exiting gracefully");safeExit() };
-$SIG{QUIT} = sub { my $logger = get_log();$logger->warn("Caught SIGQUIT:  exiting gracefully");safeExit() };
+$SIG{INT}  = \&sighup;
+$SIG{QUIT} = \&sighup;
 $SIG{HUP}  = \&sighup;
 $SIG{USR1} = \&consolidate_cron_processes;
+$SIG{USR2} = \&clean;
 
 my $platform = '127.0.0.1';
 $platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
 $platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
 $platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox');
-#our $dn = "http://$platform";
 our $dn = "http://cs.kobj.net";
 
 my $run = 1;
@@ -167,6 +167,17 @@ sub main() {
   }  
 }
 
+
+sub clean {
+  my $logger = get_log();
+  $logger->warn("USR2 signal handler");
+  my $pgrp = getpgrp(0);
+  my $ppid = getppid();
+  $logger->debug("Process $0");
+  $logger->debug("Process group: $pgrp");
+  $logger->debug("Process parent: $ppid");
+  
+}
 
 sub consolidate_cron_processes {
   my $logger = get_log();
