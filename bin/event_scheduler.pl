@@ -484,7 +484,7 @@ sub cron_loop {
     $logger->debug("Found $num_events cron events");
     $cron_num = 0;
   }
-  
+  my $limit = 0;
   if ($num_events > 0) {
     my $cron = new Schedule::Cron(\&cron_dispatcher,processprefix => "perl_cron");  
     foreach my $sched_id (@{$cron_list}) {
@@ -497,22 +497,28 @@ sub cron_loop {
           my $timespec = $schedEv->{'timespec'};
           $logger->trace("Cron: ",$timespec);          
           $cron->add_entry($timespec,$schedId => $next);
+          $limit++;
         } 
-      }  
-    }
-    # Fork the cron process so it starts 
-    my $cronpid = "$CRONDIR/cron-$pid-$jobs.pid";
-    if ($cron->list_entries()) {
-      $cron->run(detach => 1,pid_file => $cronpid);
-      my $cpid = get_pid($cronpid);
-      chomp($cpid);
-      $logger->debug("Started cron batch ",$jobs++, " as process $cpid");      
-      foreach my $sched_id (@{$cron_list}) {
-        Kynetx::Persistence::SchedEv::update_lock($sched_id,$pid,$cpid*1);
+          
+      } 
+      if ($limit >= JOB_MAX) {
+        # Fork the cron process so it starts 
+        my $cronpid = "$CRONDIR/cron-$pid-$jobs.pid";
+        $limit = 0;
+        if ($cron->list_entries()) {
+          $cron->run(detach => 1,pid_file => $cronpid);
+          my $cpid = get_pid($cronpid);
+          chomp($cpid);
+          $logger->debug("Started cron batch ",$jobs++, " as process $cpid");      
+          foreach my $sched_id (@{$cron_list}) {
+            Kynetx::Persistence::SchedEv::update_lock($sched_id,$pid,$cpid*1);
+          }
+          push(@child,$cronpid);
+        } else {
+          $logger->debug("No cron jobs to run")
+        }
+        $cron = new Schedule::Cron(\&cron_dispatcher,processprefix => "perl_cron"); 
       }
-      push(@child,$cronpid);
-    } else {
-      $logger->debug("No cron jobs to run")
     }
     
   }  
