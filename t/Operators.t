@@ -1551,6 +1551,20 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
+$e[$i] = q#d.join(";")#;
+$x[$i] = {
+   'val' => '',
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
+
+
+
+##
+## append
+##
 $e[$i] = q#a_s.append(b_s)#;
 $x[$i] = {
    'val' => ['apple','pear','orange','tomato',

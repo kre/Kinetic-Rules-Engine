@@ -807,6 +807,22 @@ SKIP: {
     $test_count += test_event_plan($event_send_test_plan);
 
 
+    # uninstalled ruleset
+    # this doesn't do anything yet....
+    my $event_send_test_plan =
+      [{'url' => "$dn/$token?_domain=flip&_type=flop&_rids=a16x60",
+    	'type' => 'text/javascript',
+    	'like' => [
+    		  ],
+    	'unlike' => [
+    		    ],
+    	'diag' => 0,
+       },
+      ];
+
+    $test_count += test_event_plan($event_send_test_plan);
+
+
     # test JSON in body for params
 
 

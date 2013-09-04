@@ -102,11 +102,15 @@ sub build_request_env {
   }
   
 
-  my $domain = $req_params->{'_domain'} || $method || 'discovery';
+  my $domain = 
+       $method                   # give path component precedence
+    || $req_params->{'_domain'} 
+    || 'discovery';
+
   $eventtype =
-       $req_params->{'_type'}
+       $eventtype                # give path component precedence
+    || $req_params->{'_type'}
     || $req_params->{'_name'}
-    || $eventtype
     || 'hello';
 
   if ( $domain eq "discovery" && $eventtype eq "hello" ) {
@@ -242,6 +246,17 @@ sub get_attrs {
 sub get_attr {
   my ( $req_info, $name ) = @_;
   return $req_info->{'event_attrs'}->{$name};
+}
+
+# events
+sub get_event_domain {
+  my ( $req_info ) = @_;
+  return $req_info->{'domain'}
+}
+
+sub get_event_type {
+  my ( $req_info ) = @_;
+  return $req_info->{'eventtype'}
 }
 
 ### final

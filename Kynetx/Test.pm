@@ -122,6 +122,8 @@ sub gen_req_info {
     my $ver = $options->{'ridver'} || 'prod';
 
     $req_info->{'rid'} = mk_rid_info($req_info,$rid, {'version' => $ver});
+    $req_info->{'eventtype'} = 'hello';
+    $req_info->{'domain'} = 'discovery';
 
 
     return $req_info;

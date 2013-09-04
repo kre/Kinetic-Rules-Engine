@@ -65,6 +65,7 @@ my $rule_env = Kynetx::Test::gen_rule_env();
 
 my $session = Kynetx::Test::gen_session($r, $rid);
 
+$my_req_info->{'domain'} = 'web';
 set_capabilities($my_req_info);
 
 ok($my_req_info->{'understands_javascript'}, "Web understands JS");
