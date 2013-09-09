@@ -148,9 +148,12 @@ sub gen_js_var_list {
 sub gen_js_prim {
     my $prim = shift;
 
-    return '(' .join(' ' . $prim->{'op'} . ' ', @{ gen_js_rands($prim->{'args'}) }) . ')';
-
-
+    if ( $prim->{'op'} eq 'NEG') {
+      my $rands = gen_js_rands($prim->{'args'});
+      return '-'.$rands->[0];
+    } else {
+      return '(' .join(' ' . $prim->{'op'} . ' ', @{ gen_js_rands($prim->{'args'}) }) . ')';
+    }
 }
 
 sub get_js_error {

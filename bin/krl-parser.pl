@@ -115,7 +115,7 @@ if($lex_only) {
     }
 
     if(defined $tree->{'error'}) {
-	warn "Parse error in $filename: \n" . $tree->{'error'};
+	warn "Parse error in $filename: \n" , join("\n ", @{$tree->{'error'}});
     } else {
 	if ($output_json) {
 	    print encode_json($tree), "\n";

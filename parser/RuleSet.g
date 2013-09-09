@@ -1969,7 +1969,7 @@ add_expr returns[Object result]
 	boolean found_op = false;
 	ArrayList result = new ArrayList();
 }
-	: me1=mult_expr  (op=(ADD_OP|REX) me2=mult_expr  {
+	: me1=mult_expr  (op=('+'|'-'|REX) me2=mult_expr  {
 		found_op = true;
 		if(result.isEmpty())
 		{
@@ -1997,6 +1997,19 @@ unary_expr  returns[Object result] options { backtrack = true; }
 	      	tmp.put("type","pred");
 	      	tmp.put("op","negation");
 	      	ArrayList tmpar = new ArrayList();
+	      	tmpar.add($ue.result);
+	      	tmp.put("args",tmpar);
+	      	$result = tmp;
+	}
+	| '-' ue=unary_expr {
+      	   	HashMap tmp = new HashMap();
+	      	tmp.put("type","prim");
+	      	tmp.put("op","NEG");
+            // HashMap zero = new HashMap();
+            // zero.put("type","num");
+            // zero.put("val", 0);
+	      	ArrayList tmpar = new ArrayList();
+//	      	tmpar.add(zero);
 	      	tmpar.add($ue.result);
 	      	tmp.put("args",tmpar);
 	      	$result = tmp;
@@ -2716,7 +2729,7 @@ REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
 LIKE	:	'like';
 PREDOP: '<=' | '>=' | '<' | '>' | '==' | '!=' | 'eq' | 'neq' | '><' | '<=>' | 'cmp';
 
-ADD_OP: '+'|'-';
+//ADD_OP: '+'|'-';
 
  CALLBACKS : 'callbacks';
  SUCCESS : 'success';
@@ -2966,13 +2979,15 @@ VAR  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*
    ;
 
 
-INT :	' -'? '0'..'9'+
+INT :	DIGIT+
     ;
 
 
  FLOAT
-    :   ' -'? ('0'..'9')+ '.' ('0'..'9')*
-    |   ' -'? '.' ('0'..'9')*
+    :    DIGIT+ '.' DIGIT*
+    |    '.' DIGIT+
 
     ;
 
+fragment
+DIGIT: '0'..'9';
