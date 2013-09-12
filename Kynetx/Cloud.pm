@@ -97,7 +97,7 @@ sub handler {
 		# WARNING: THIS CHANGES THE USER'S IP NUMBER FOR TESTING!!
 		my $test_ip = Kynetx::Configure::get_config('TEST_IP');
 		$r->connection->remote_ip($test_ip);
-		$logger->trace( "In development mode using IP address ",
+		$logger->debug( "In development mode using IP address ",
 			$r->connection->remote_ip() );
 	}
 
@@ -188,11 +188,19 @@ sub eval_ruleset_function {
 	      };
 
   } 
+  elsif (! $req_info->{'id_token'}
+	) {
+    $logger->debug("No ECI defined");
+    $result = {"error" => 103,
+	       "error_str" => "No ECI defined"
+	      };
+
+  }
   elsif (! ( defined $rid_list_hash->{$req_info->{'module_name'}}
 	  || Kynetx::Configure::get_config('ALLOW_ALL_RULESETS')
            )
 	) {
-    $logger->trace("$req_info->{'module_name'} is not installed");
+    $logger->debug("$req_info->{'module_name'} is not installed");
     $result = {"error" => 102,
 	       "error_str" => "Module $req_info->{'module_alias'} is not installed for user"
 	      };
