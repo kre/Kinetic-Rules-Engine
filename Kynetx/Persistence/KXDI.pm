@@ -381,7 +381,8 @@ sub _raw {
 	if (defined $context) {
 		$cheader .= ';contexts=1';
 	}
-	$request->header('accept' => $cheader);
+    # xdi server requires a Content-Type of application/json+xdi or it will not respond properly.
+	$request->header('accept' => $cheader, 'content-type' => 'application/json+xdi');
 	$request->content($xdistring);
 	my $response = $ua->request($request);
 	my $code = $response->code;
