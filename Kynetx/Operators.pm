@@ -1536,6 +1536,48 @@ sub eval_slice {
 $funcs->{'slice'} = \&eval_slice;
 
 
+sub eval_splice {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+    $logger->trace("obj: ", sub { Dumper($obj) });
+
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+    if(($obj->{'type'} eq 'array') &&
+      $rands->[0]->{'type'} eq 'num' &&
+      $rands->[1]->{'type'} eq 'num' ){
+      my $start = Kynetx::Expressions::den_to_exp($rands->[0]);
+      my $end = Kynetx::Expressions::den_to_exp($rands->[1]);
+      my $source = clone ($obj->{'val'});
+      my @v;
+      if (defined $rands->[2] &&
+	  $rands->[2]->{'type'} eq 'array') {
+	splice @{$source}, $start, $end, @{Kynetx::Expressions::den_to_exp($rands->[2])};
+
+      } elsif (defined $rands->[2]) {
+	splice @{$source}, $start, $end, Kynetx::Expressions::den_to_exp($rands->[2]);
+
+      }  else {
+	splice @{$source}, $start, $end;
+      }
+      return Kynetx::Expressions::typed_value($source);
+      
+    } else {
+      my $msg = defined $obj ? "object undefined" 
+                             : "object not an array";
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[slice] $msg",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   )
+    }
+}
+$funcs->{'splice'} = \&eval_splice;
+
+
 sub eval_substr {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
