@@ -46,6 +46,7 @@ getkrl
 trim
 nows
 mk_config_string
+gen_root_env
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
@@ -277,28 +278,32 @@ sub gen_user {
   my ($req_info,$rule_env,$session,$uname) = @_;
   my $js;
   # This system key auto expires
-  my $system_key = Kynetx::Modules::PCI::create_system_key();
-  if (Kynetx::Modules::PCI::check_system_key($system_key)){
-    my $keys = {'root' => $system_key};
-    ($js, $rule_env) = 
-     Kynetx::Keys::insert_key(
-      $req_info,
-      $rule_env,
-      'system_credentials',
-      $keys);
-    my $args = {
-      "username" => $uname,
-      "firstname" => "Test",
-      "lastname" => "Test.pm",
-      "password" => "*",
-    };
-    my $rule_name = "test_pm";
-    my $account = Kynetx::Modules::PCI::new_account($req_info,$rule_env,$session,$rule_name,"foo",[$args]);
-    my $eci = $account->{'cid'};
-    my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
-    if ($ken) {
-      return $ken
+  my $rule_name = "test_gen_user";
+  unless (Kynetx::Modules::PCI::pci_authorized($req_info,$rule_env,$session,$rule_name,"foo",[])) {
+    my $system_key = Kynetx::Modules::PCI::create_system_key();
+    if (Kynetx::Modules::PCI::check_system_key($system_key)){
+      my $keys = {'root' => $system_key};
+      ($js, $rule_env) = 
+       Kynetx::Keys::insert_key(
+        $req_info,
+        $rule_env,
+        'system_credentials',
+        $keys);    
+    } else {
+      return undef;
     }
+  }
+  my $args = {
+    "username" => $uname,
+    "firstname" => "Test",
+    "lastname" => "Test.pm",
+    "password" => "*",
+  };
+  my $account = Kynetx::Modules::PCI::new_account($req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+  my $eci = $account->{'cid'};
+  my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
+  if ($ken) {
+    return $ken
   }
   return undef;
 }
@@ -307,6 +312,49 @@ sub flush_test_user {
   my ($ken,$username) = @_;
   Kynetx::MongoDB::flush_user($ken,$username);
   
+}
+
+sub gen_root_env {
+  my ($req_info, $rule_env,$session) = @_;
+  my $rule_name = "test_env";
+  my $system_key = Kynetx::Modules::PCI::create_system_key();
+  if (Kynetx::Modules::PCI::check_system_key($system_key)) {
+    my $keys =  { 'root' => $system_key };
+    my ($js,$root_env)=  Kynetx::Keys::insert_key(
+      $req_info,
+      $rule_env,
+      'system_credentials',
+      $keys);
+    if (Kynetx::Modules::PCI::pci_authorized($req_info,$root_env,$session,$rule_name,"foo",[])) {
+      return $root_env;
+    } else {
+      return undef;
+    }
+  } else {
+    return undef;
+  }
+  
+}
+
+sub gen_dev_env {
+  my ($req_info, $rule_env,$session,$eci) = @_;
+  my $rule_name = "dev_env";
+  my $secret = Kynetx::Modules::PCI::developer_key($req_info,$rule_env,$session,$rule_name,"foo",[$eci]);
+  my $dev_cred = {
+    'developer_eci' => $eci,
+    'developer_secret' => $secret
+  };
+  my ($js, $dev_env) = 
+        Kynetx::Keys::insert_key(
+          $req_info,
+          $rule_env,
+          'system_credentials',
+          $dev_cred);
+  if (Kynetx::Modules::PCI::developer_authorized($req_info,$dev_env,$session,['cloud', 'auth'])) {
+    return ($dev_env,$secret);
+  } else {
+    return undef;
+  }
 }
 
 sub mk_config_string {

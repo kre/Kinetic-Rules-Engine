@@ -399,6 +399,7 @@ Allow from .kobj.net
   PerlSetEnv EVENT 1
   SetHandler perl-script
   PerlHandler Kynetx::Sky
+  PerlLogHandler Kynetx::Persistence::DevLog
 
 </LocationMatch>
 
@@ -410,6 +411,7 @@ Allow from .kobj.net
   PerlSetEnv EVENT 1
   SetHandler perl-script
   PerlHandler Kynetx::Persistence::SchedEv
+  PerlLogHandler Kynetx::Persistence::DevLog
 </LocationMatch>
 
 <LocationMatch /sky/cloud/>
@@ -420,6 +422,7 @@ Allow from .kobj.net
   PerlSetEnv EVENT 1
   SetHandler perl-script
   PerlHandler Kynetx::Cloud
+  PerlLogHandler Kynetx::Persistence::DevLog
 
 </LocationMatch>
 
@@ -446,6 +449,7 @@ Allow from .kobj.net
   PerlSetEnv KOBJ 1
   SetHandler perl-script
   PerlHandler Kynetx::Events
+  PerlLogHandler Kynetx::Persistence::DevLog
 
 </LocationMatch>
 
@@ -458,6 +462,7 @@ Allow from .kobj.net
   PerlSetEnv KOBJ 1
   SetHandler perl-script
   PerlHandler Kynetx
+  PerlLogHandler Kynetx::Persistence::DevLog
 
 </LocationMatch>
 
@@ -496,6 +501,7 @@ Allow from .kobj.net
   PerlSetEnv INIT 1
   SetHandler perl-script
   PerlHandler Kynetx::KOBJ
+  PerlLogHandler Kynetx::Persistence::DevLog
 
 </LocationMatch>
 

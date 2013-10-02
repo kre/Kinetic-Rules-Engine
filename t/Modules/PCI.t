@@ -25,6 +25,7 @@ use warnings;
 use Test::More;
 use Test::LongString;
 use Test::Deep;
+use Test::WWW::Mechanize;
 
 use Apache::Session::Memcached;
 use DateTime;
@@ -47,6 +48,7 @@ use Kynetx::Configure qw/:all/;
 use Kynetx::Expressions qw/:all/;
 use Kynetx::Response qw/:all/;
 use Kynetx::Persistence::KPDS qw/:all/;
+use Kynetx::Persistence::DevLog qw/:all/;
 
 
 use Kynetx::FakeReq qw/:all/;
@@ -607,6 +609,103 @@ $expected = 0;
 $result = &{$preds->{'is_related'}}($my_req_info, $rule_env,\@dummy_arg);
 cmp_deeply($result,$expected,$description);
 $test_count++;
+
+
+######################### Logging tests
+
+Log::Log4perl->easy_init($DEBUG);
+
+my ($root_env,$username, $user_ken,$user_eci, $dev_ken,$dev_eci,$dev_env, $dev_secret);
+my ($log_eci,$fqurl,$base_url,$ruleset,$opts,$mech,$eid,$dn,$platform);
+$platform = '127.0.0.1';
+$platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
+$platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
+$platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox');
+
+$root_env= Kynetx::Test::gen_root_env($my_req_info,$rule_env,$session);
+
+$username = $DICTIONARY[rand(@DICTIONARY)];
+chomp($username);
+
+$user_ken = Kynetx::Test::gen_user($my_req_info,$root_env,$session,$username);
+$user_eci = Kynetx::Persistence::KToken::get_oldest_token($user_ken);
+
+$dev_ken = $session_ken;
+$dev_eci = Kynetx::Persistence::KToken::create_token($dev_ken,"_null_","temp");
+($dev_env,$dev_secret) = Kynetx::Test::gen_dev_env($my_req_info,$root_env,$session,$dev_eci);
+
+$ruleset = "a144x132";
+$eid = time;
+$mech = Test::WWW::Mechanize->new(cookie_jar => undef);
+$dn = "http://$platform/sky/event";
+$base_url = "$dn/$user_eci/$eid";
+
+########### Logging admin
+
+$description = "Developer test environment created";
+isnt($dev_env,undef,$description);
+$test_count++;
+
+$description = "Add permissions to view logs";
+$keypath = ['ruleset','log'];
+$result = Kynetx::Modules::PCI::set_permissions($my_req_info,$root_env,$session,$rule_name,"foo",[$dev_eci,$dev_secret,$keypath]);
+is($result,1,$description);
+$test_count++;
+
+$description = "get a single permission";
+$result = Kynetx::Modules::PCI::get_permissions($my_req_info,$root_env,$session,$rule_name,"foo",[$dev_eci,$dev_secret,$keypath]);
+is($result,1,$description);
+$test_count++;
+
+############ Logging methods
+$description = "Activate logging for test_user";
+$args = [$user_eci];
+$log_eci = Kynetx::Modules::PCI::logging_eci($my_req_info,$root_env,$session,$rule_name,'foo',$args);
+isnt($log_eci,undef,$description);
+$test_count++;
+
+$description="Logging now set for test_user";
+$result = Kynetx::Modules::PCI::get_logging($my_req_info,$root_env,$session,$rule_name,'foo',$args);
+is($result,1,$description);
+$test_count++;
+
+$description = "de-activate logging for test_user";
+$args = [$user_eci];
+Kynetx::Modules::PCI::clear_logging($my_req_info,$root_env,$session,$rule_name,'foo',$args);
+$result = Kynetx::Modules::PCI::get_logging($my_req_info,$root_env,$session,$rule_name,'foo',$args);
+is($result,0,$description);
+$test_count++;
+
+$description = "Create a new, active logging eci";
+$log_eci = Kynetx::Modules::PCI::logging_eci($my_req_info,$root_env,$session,$rule_name,'foo',$args);
+isnt($log_eci,undef,$description);
+$test_count++;
+
+# It doesn't actually have to fire the rule
+# An uninstalled ruleset generates debug of it's own
+$description = "URL generates debug";
+$fqurl = "$base_url/web/pageview";
+$opts = {
+  '_rids' => $ruleset,
+  'caller' => "http://www.windley.com/first.html"  
+};
+$expected = re(qr/$ruleset/);
+$result = $mech->get(Kynetx::Util::mk_url($fqurl,$opts));
+cmp_deeply($result->code,200,$description);
+$test_count++;
+
+sleep 1;
+
+$description = "Log created for ruleset";
+$args = [$log_eci];
+$result = Kynetx::Modules::PCI::get_log_messages($my_req_info,$dev_env,$session,$rule_name,'foo',$args);
+my $id = (keys %{$result})[0];
+cmp_deeply($result->{$id}->{'log_text'},$expected,$description);
+$test_count++;
+
+
+Log::Log4perl->easy_init($INFO);
+
 
 ####### CLEANUP
 

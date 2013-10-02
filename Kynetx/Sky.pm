@@ -173,7 +173,7 @@ sub _handler {
 	Log::Log4perl::MDC->put( 'site', "[no rid]" );
 	Log::Log4perl::MDC->put( 'rule', '[global]' );    # no rule for now...
 	Log::Log4perl::MDC->put( 'eid',  $eid );          # identify event
-
+       
 	# get a session
 	$logger->info( "KBX token ", $req_info->{'id_token'} );
 
