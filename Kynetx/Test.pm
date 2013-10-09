@@ -47,8 +47,50 @@ trim
 nows
 mk_config_string
 gen_root_env
-) ]);
-our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
+platform
+gen_user
+rword
+) ],
+vars => [
+  qw(
+    $root_env
+    $username
+    $user_ken
+    $user_eci
+    $dev_ken
+    $dev_eci
+    $dev_env
+    $dev_secret
+    $description
+    $result
+    @results
+    $expected
+    $args
+    $uuid_re
+    $platform
+  )
+]);
+our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} },@{$EXPORT_TAGS{'vars'}}) ;
+
+
+our (
+  $root_env,
+  $username, 
+  $user_ken,
+  $user_eci, 
+  $dev_ken,
+  $dev_eci,
+  $dev_env, 
+  $dev_secret,
+  $description,
+  $result,
+  @results,
+  $expected,
+  $args,
+  $platform
+);
+
+our $uuid_re = "^[A-F|0-9]{8}\-[A-F|0-9]{4}\-[A-F|0-9]{4}\-[A-F|0-9]{4}\-[A-F|0-9]{12}\$";
 
 my $re_rid;
 
@@ -374,6 +416,23 @@ sub mk_config_string {
   return  '{' . join(",", @items) . '}';
 }
 
+sub platform {
+  my $platform = '127.0.0.1';
+  $platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
+  $platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
+  $platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox');
+  return $platform;
+}
 
+sub rword {
+  my $dict_path = "/usr/share/dict/words";
+  my @DICTIONARY;
+  open DICT, $dict_path;
+  @DICTIONARY = <DICT>;
+  my $word = $DICTIONARY[rand(@DICTIONARY)];
+  chomp($word);
+  close DICT;
+  return $word;
+}
 
 1;

@@ -177,6 +177,8 @@ sub new_account {
 	    		} else {
 	    			$dflt->{$key} = _hash_password($pass);
 	    		}
+	    	} elsif ($key eq "cloudnumber"){
+	    	    $dflt->{"username"} = $options->{$key};
 	    	} else {
 	    		$dflt->{$key} = $options->{$key};
 	    	}
@@ -456,6 +458,34 @@ sub list_parent {
   
 }
 $funcs->{'list_parent'} = \&list_parent;
+
+sub get_account_username {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	return 0 unless ( pci_authorized($req_info, $rule_env, $session) ||
+	 developer_authorized($req_info,$rule_env,$session,['cloud','auth']));
+	my $ken;
+	my $arg0 = $args->[0];
+  if (! defined $arg0) {
+		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+	} else {
+		# Check to see if it is an eci or a userid
+		if ($arg0 =~ m/^\d+$/) {
+			ll("userid $arg0");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg0);
+		} else {
+			ll("eci $arg0");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg0);
+		}					
+	}
+	if (defined $ken) {
+	  return Kynetx::Persistence::KEN::get_ken_value($ken,'username');
+	}
+	return undef;
+}
+$funcs->{'get_username'} = \&get_account_username;
+$funcs->{'cloudnumber'} = \&get_account_username;
 
 sub set_parent {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
