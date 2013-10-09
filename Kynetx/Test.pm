@@ -435,4 +435,11 @@ sub rword {
   return $word;
 }
 
+sub add_test_rule {
+  my ($req_info,$rule_env,$session,$user_eci,$rid) = @_;
+  my $rule_name = "add_test_rule";
+  my $function_name = "_null_";
+  return Kynetx::Modules::PCI::add_ruleset_to_account($req_info,$rule_env,$session,$rule_name,"foo",[$user_eci,$rid]);
+}
+
 1;

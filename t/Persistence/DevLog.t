@@ -132,6 +132,8 @@ $num_tests++;
 $base_url = "$dn/$test_eci/$eid";
 
 
+
+
 ##############################################################
 #
 # DevLog
@@ -175,8 +177,9 @@ $opts = {
   'caller' => "http://www.windley.com/first.html"  
 };
 $expected = re(qr/test_rule_first/);
-$resp = $mech->get(Kynetx::Util::mk_url($fqurl,$opts));
-cmp_deeply($resp->content,$expected,$description);
+my $turl = Kynetx::Util::mk_url($fqurl,$opts);
+$resp = $mech->get_ok($turl,$opts,$description);
+#cmp_deeply($resp->content,$expected,$description);
 $num_tests++;
 
 # Logging is not "safe", give mongo a second to catch up

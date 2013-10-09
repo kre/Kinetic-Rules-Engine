@@ -74,7 +74,7 @@ sub get_mongo {
 			$MONGOp = MongoDB::Connection->new(host => $host,find_master =>1,query_timeout =>5000);
   		};
   		if ($@) {
-  			carp $@;
+  			#carp $@;
   		} else {
   			last;
   		}
@@ -151,7 +151,7 @@ sub do_expire {
   my $max = $self->{'maxlogs'} || MAXLOG;
   my $c = $self->get_collection();
   my $num = $self->count_logs($eci);
-  carp "$num of Max: $max ";
+  #carp "$num of Max: $max ";
   if ($num > $max) {
     my $ttl = $self->{'ttl'} || TTL_INDEX . "";
     my $key = {'$and' => [{'eci' => $eci},{$ttl => {'$exists' => 0}}]};
