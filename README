@@ -1,29 +1,12 @@
+To install the KRE checkout the krl_install repository from:
 
-- make sure that the KOBJ_ROOT environment var is set in the .bashrc
-  file
+  git@github.com:solargroovy/krl_install.git
 
-- set the WEB_ROOT environment variable
+Use the command:
+  git clone git@github.com:solargroovy/krl_install.git
 
-- Generate httpd-perl.conf using bin/install-httpd-conf.pl
+This will download the scripts and files necessary to install KRE.  
 
-- You need to install
+Detailed instructions are in the README.md file in the krl_install repository
 
-  Apache
-  mod_perl
-  Geo::IP (www.maxmind.com)
-  LWP::Simple - CPAN
-  DateTime - CPAN
-  XML::XPath - CPAN
-  SVN::Client - use  sudo yum install subversion-perl
-  HOP::Parser - CPAN
-  HOP::Lexer - CPAN
-  Log::Log4perl - CPAN
-  HTML::Template - CPAN
-  File::Find::Rule - CPAN
-  Test::LongString - CPAN
-
-  Running t/smoke dev/use.t will ensure you've got all the
-  right libraries
-
-- Set up an SVN user for the rules repository
-  -- make sure it starts automatically (use chkconfig)
+The install process has been verified for 64 bit Centos 6.2
