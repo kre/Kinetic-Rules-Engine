@@ -4,8 +4,13 @@ ruleset 10 {
         select using "/test/" setting()
         pre {
 
-	  x = 5;
-	  x = -5;
+	  x = 5 ;
+	  x = (6-5);
+          x = -5;
+          x = -(4+5);
+          x = 0.9;
+          x = -0.9;
+          x = -.9;
 	  x = "test";
           x = "1234567890";
 	  x = true;
@@ -33,7 +38,8 @@ ruleset 10 {
 	  x = {"x": [3,4,5],
  	       "y": {"x": "hello",
 	             "y": "world"}};
-	  x = [{"x": 5}];
+	  x = [{"x":5}];
+	  x = [{"x":-5}];
           x = ent:vv;
 	  x = app:vv;
 	  x = current ent:vv;

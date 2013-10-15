@@ -46,8 +46,51 @@ getkrl
 trim
 nows
 mk_config_string
-) ]);
-our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
+gen_root_env
+platform
+gen_user
+rword
+) ],
+vars => [
+  qw(
+    $root_env
+    $username
+    $user_ken
+    $user_eci
+    $dev_ken
+    $dev_eci
+    $dev_env
+    $dev_secret
+    $description
+    $result
+    @results
+    $expected
+    $args
+    $uuid_re
+    $platform
+  )
+]);
+our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} },@{$EXPORT_TAGS{'vars'}}) ;
+
+
+our (
+  $root_env,
+  $username, 
+  $user_ken,
+  $user_eci, 
+  $dev_ken,
+  $dev_eci,
+  $dev_env, 
+  $dev_secret,
+  $description,
+  $result,
+  @results,
+  $expected,
+  $args,
+  $platform
+);
+
+our $uuid_re = "^[A-F|0-9]{8}\-[A-F|0-9]{4}\-[A-F|0-9]{4}\-[A-F|0-9]{4}\-[A-F|0-9]{12}\$";
 
 my $re_rid;
 
@@ -122,6 +165,8 @@ sub gen_req_info {
     my $ver = $options->{'ridver'} || 'prod';
 
     $req_info->{'rid'} = mk_rid_info($req_info,$rid, {'version' => $ver});
+    $req_info->{'eventtype'} = 'hello';
+    $req_info->{'domain'} = 'discovery';
 
 
     return $req_info;
@@ -275,28 +320,32 @@ sub gen_user {
   my ($req_info,$rule_env,$session,$uname) = @_;
   my $js;
   # This system key auto expires
-  my $system_key = Kynetx::Modules::PCI::create_system_key();
-  if (Kynetx::Modules::PCI::check_system_key($system_key)){
-    my $keys = {'root' => $system_key};
-    ($js, $rule_env) = 
-     Kynetx::Keys::insert_key(
-      $req_info,
-      $rule_env,
-      'system_credentials',
-      $keys);
-    my $args = {
-      "username" => $uname,
-      "firstname" => "Test",
-      "lastname" => "Test.pm",
-      "password" => "*",
-    };
-    my $rule_name = "test_pm";
-    my $account = Kynetx::Modules::PCI::new_account($req_info,$rule_env,$session,$rule_name,"foo",[$args]);
-    my $eci = $account->{'cid'};
-    my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
-    if ($ken) {
-      return $ken
+  my $rule_name = "test_gen_user";
+  unless (Kynetx::Modules::PCI::pci_authorized($req_info,$rule_env,$session,$rule_name,"foo",[])) {
+    my $system_key = Kynetx::Modules::PCI::create_system_key();
+    if (Kynetx::Modules::PCI::check_system_key($system_key)){
+      my $keys = {'root' => $system_key};
+      ($js, $rule_env) = 
+       Kynetx::Keys::insert_key(
+        $req_info,
+        $rule_env,
+        'system_credentials',
+        $keys);    
+    } else {
+      return undef;
     }
+  }
+  my $args = {
+    "username" => $uname,
+    "firstname" => "Test",
+    "lastname" => "Test.pm",
+    "password" => "*",
+  };
+  my $account = Kynetx::Modules::PCI::new_account($req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+  my $eci = $account->{'cid'};
+  my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
+  if ($ken) {
+    return $ken
   }
   return undef;
 }
@@ -305,6 +354,49 @@ sub flush_test_user {
   my ($ken,$username) = @_;
   Kynetx::MongoDB::flush_user($ken,$username);
   
+}
+
+sub gen_root_env {
+  my ($req_info, $rule_env,$session) = @_;
+  my $rule_name = "test_env";
+  my $system_key = Kynetx::Modules::PCI::create_system_key();
+  if (Kynetx::Modules::PCI::check_system_key($system_key)) {
+    my $keys =  { 'root' => $system_key };
+    my ($js,$root_env)=  Kynetx::Keys::insert_key(
+      $req_info,
+      $rule_env,
+      'system_credentials',
+      $keys);
+    if (Kynetx::Modules::PCI::pci_authorized($req_info,$root_env,$session,$rule_name,"foo",[])) {
+      return $root_env;
+    } else {
+      return undef;
+    }
+  } else {
+    return undef;
+  }
+  
+}
+
+sub gen_dev_env {
+  my ($req_info, $rule_env,$session,$eci) = @_;
+  my $rule_name = "dev_env";
+  my $secret = Kynetx::Modules::PCI::developer_key($req_info,$rule_env,$session,$rule_name,"foo",[$eci]);
+  my $dev_cred = {
+    'developer_eci' => $eci,
+    'developer_secret' => $secret
+  };
+  my ($js, $dev_env) = 
+        Kynetx::Keys::insert_key(
+          $req_info,
+          $rule_env,
+          'system_credentials',
+          $dev_cred);
+  if (Kynetx::Modules::PCI::developer_authorized($req_info,$dev_env,$session,['cloud', 'auth'])) {
+    return ($dev_env,$secret);
+  } else {
+    return undef;
+  }
 }
 
 sub mk_config_string {
@@ -324,6 +416,30 @@ sub mk_config_string {
   return  '{' . join(",", @items) . '}';
 }
 
+sub platform {
+  my $platform = '127.0.0.1';
+  $platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
+  $platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
+  $platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox');
+  return $platform;
+}
 
+sub rword {
+  my $dict_path = "/usr/share/dict/words";
+  my @DICTIONARY;
+  open DICT, $dict_path;
+  @DICTIONARY = <DICT>;
+  my $word = $DICTIONARY[rand(@DICTIONARY)];
+  chomp($word);
+  close DICT;
+  return $word;
+}
+
+sub add_test_rule {
+  my ($req_info,$rule_env,$session,$user_eci,$rid) = @_;
+  my $rule_name = "add_test_rule";
+  my $function_name = "_null_";
+  return Kynetx::Modules::PCI::add_ruleset_to_account($req_info,$rule_env,$session,$rule_name,"foo",[$user_eci,$rid]);
+}
 
 1;

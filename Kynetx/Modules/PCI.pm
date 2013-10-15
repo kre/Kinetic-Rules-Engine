@@ -35,6 +35,7 @@ use Email::MIME;
 use MIME::Base64 ();
 use Encode;
 use Kynetx::Keys qw/:all/;
+#use Kynetx::Persistence::DevLog qw/:all/;
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -176,6 +177,8 @@ sub new_account {
 	    		} else {
 	    			$dflt->{$key} = _hash_password($pass);
 	    		}
+	    	} elsif ($key eq "cloudnumber"){
+	    	    $dflt->{"username"} = $options->{$key};
 	    	} else {
 	    		$dflt->{$key} = $options->{$key};
 	    	}
@@ -456,6 +459,34 @@ sub list_parent {
 }
 $funcs->{'list_parent'} = \&list_parent;
 
+sub get_account_username {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	return 0 unless ( pci_authorized($req_info, $rule_env, $session) ||
+	 developer_authorized($req_info,$rule_env,$session,['cloud','auth']));
+	my $ken;
+	my $arg0 = $args->[0];
+  if (! defined $arg0) {
+		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+	} else {
+		# Check to see if it is an eci or a userid
+		if ($arg0 =~ m/^\d+$/) {
+			ll("userid $arg0");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg0);
+		} else {
+			ll("eci $arg0");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg0);
+		}					
+	}
+	if (defined $ken) {
+	  return Kynetx::Persistence::KEN::get_ken_value($ken,'username');
+	}
+	return undef;
+}
+$funcs->{'get_username'} = \&get_account_username;
+$funcs->{'cloudnumber'} = \&get_account_username;
+
 sub set_parent {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
 	my $logger = get_logger();
@@ -499,7 +530,8 @@ $funcs->{'set_parent'} = \&set_parent;
 sub add_ruleset_to_account {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
 	my $logger = get_logger();
-	return 0 unless (developer_authorized($req_info,$rule_env,$session,['ruleset','create']));
+	return 0 unless (pci_authorized($req_info, $rule_env, $session) ||
+	   developer_authorized($req_info,$rule_env,$session,['ruleset','create']));
 	my $arg1 = $args->[0];
 	my $arg2 = $args->[1];
 	my @ridlist = ();
@@ -521,6 +553,7 @@ sub add_ruleset_to_account {
 		$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
 	}
 	if ($ken && scalar @{$args} >= 1) {
+	  
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
 		my $installed = Kynetx::Persistence::KPDS::add_ruleset($ken,\@ridlist);
 		
@@ -625,6 +658,112 @@ sub installed_rulesets {
 $funcs->{'list_ruleset'} = \&installed_rulesets;
 $funcs->{'list_rulesets'} = \&installed_rulesets;
 
+############################# Logging
+
+sub logging_eci {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+	my $logger = get_logger();
+	return 0 unless (pci_authorized($req_info, $rule_env, $session));
+	my $ken;
+	my ($token_name,$type);
+	my $arg1 = $args->[0];
+	if (! defined $arg1) {
+		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+	} else {
+		# Check to see if it is an eci or a userid
+		if ($arg1 =~ m/^\d+$/) {
+			ll("userid $arg1");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg1);
+		} else {
+			ll("eci $arg1");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
+		}					
+	}
+	if ($ken) {
+	 return Kynetx::Persistence::DevLog::create_logging_eci($ken);
+	}
+	return undef;
+	
+}
+$funcs->{'set_logging'} = \&logging_eci;
+
+sub clear_logging {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+	my $logger = get_logger();
+	return 0 unless (pci_authorized($req_info, $rule_env, $session));
+	my $ken;
+	my ($token_name,$type);
+	my $arg1 = $args->[0];
+	if (! defined $arg1) {
+		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+	} else {
+		# Check to see if it is an eci or a userid
+		if ($arg1 =~ m/^\d+$/) {
+			ll("userid $arg1");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg1);
+		} else {
+			ll("eci $arg1");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
+		}					
+	}
+	if ($ken) {
+	 return Kynetx::Persistence::DevLog::clear_logging_eci($ken);
+	}
+	return undef;
+	
+}
+$funcs->{'clear_logging'} = \&clear_logging;
+
+
+sub get_logging {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+	my $logger = get_logger();
+	return 0 unless (pci_authorized($req_info, $rule_env, $session));
+	my $ken;
+	my ($token_name,$type);
+	my $arg1 = $args->[0];
+	if (! defined $arg1) {
+		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+	} else {
+		# Check to see if it is an eci or a userid
+		if ($arg1 =~ m/^\d+$/) {
+			ll("userid $arg1");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg1);
+		} else {
+			ll("eci $arg1");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
+		}					
+	}
+	if ($ken) {
+	 return Kynetx::Persistence::DevLog::has_logging($ken);
+	}
+	return undef;
+	
+}
+$funcs->{'get_logging'} = \&get_logging;
+
+sub get_log_messages {
+	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+	my $logger = get_logger();
+	return 0 unless (pci_authorized($req_info, $rule_env, $session) ||
+	 developer_authorized($req_info,$rule_env,$session,['ruleset','log'])  );
+	my $ken;
+	my ($token_name,$type);
+	my $arg1 = $args->[0];
+	$logger->debug("log eci: $arg1");
+	my $list = Kynetx::Persistence::DevLog::get_all_msg($arg1);
+	if (defined $list) {
+	 return $list;  
+	}
+	return undef;	
+}
+$funcs->{'get_logs'} = \&get_log_messages;
+
+
+
 ############################# ECI
 sub new_eci {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
@@ -667,6 +806,7 @@ sub new_eci {
 	return undef;
 }
 $funcs->{'new_eci'} = \&new_eci;
+
 
 
 sub destroy_eci {
@@ -1040,6 +1180,8 @@ sub create_oauth_indexed_eci {
   my $eci =  Kynetx::Persistence::KToken::create_token($ken,$token_name,$type);
   return $eci;
 }
+
+
 
 sub developer_key {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;

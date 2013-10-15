@@ -1080,11 +1080,21 @@ sub flush_user {
     _delete_kpds($ken);
     _delete_userstate($ken);
     _delete_scheduled_events($ken);
+    _delete_devlog($ken);
     _delete_ken($ken);
   } else {
     $logger->warn("User $username not flushed: matched $result records");
   }
   
+}
+
+sub _delete_devlog {
+  my ($ken) = @_;
+  my $collection = get_collection('devlog');
+  my $key = {
+      'ken' => $ken,
+  };
+  my $result = $collection->remove($key);  
 }
 sub _delete_edata {
   my ($ken) = @_;

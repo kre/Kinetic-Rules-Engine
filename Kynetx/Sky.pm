@@ -173,7 +173,7 @@ sub _handler {
 	Log::Log4perl::MDC->put( 'site', "[no rid]" );
 	Log::Log4perl::MDC->put( 'rule', '[global]' );    # no rule for now...
 	Log::Log4perl::MDC->put( 'eid',  $eid );          # identify event
-
+       
 	# get a session
 	$logger->info( "KBX token ", $req_info->{'id_token'} );
 
@@ -248,6 +248,18 @@ sub _handler {
 
                                ) {
 			  $logger->debug("Excluding $rid from RID list because it isn't installed or has no rules");
+
+			  # this doesn't do any good without a ruleset to handle...
+			  Kynetx::Errors::raise_error($req_info,
+			  		    'error',
+			  		    "Ruleset $rid is not installed",
+			  		    {'genus' => 'system',
+			  		     'species' => 'ruleset_not_installed'
+			  		    },
+#					    {'error_rid' => ''} # what should go here? 
+			  		   );
+
+			  
 			  next;
 			}
 

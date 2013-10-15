@@ -126,7 +126,7 @@ sub get_eventinfo {
 
     $val = get_attr( $req_info, $rid, $args->[0] );
 
-    $logger->trace( "event:attr(", $args->[0], ") -> ", Dumper $val);
+    $logger->trace( "event:attr(", $args->[0], ") -> ", sub {Dumper $val});
 
   }
   elsif ( $function eq 'params' || $function eq 'attrs' ) {
@@ -173,6 +173,20 @@ sub get_eventinfo {
     else {
       $logger->debug("Unknown channel operation: $args->[0]");
     }
+
+  }
+  elsif ( $function eq 'type' || $function eq 'name' ) {
+
+    $val = Kynetx::Request::get_event_type( $req_info );
+
+    $logger->trace( "event:type() -> ", $val);
+
+  }
+  elsif ( $function eq 'domain'  ) {
+
+    $val = Kynetx::Request::get_event_domain( $req_info );
+
+    $logger->trace( "event:domain() -> ", $val);
 
   }
   elsif ( defined $funcs->{$function} ) {

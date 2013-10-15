@@ -39,7 +39,7 @@ use Cache::Memcached;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Cloud qw/:all/;
@@ -80,7 +80,14 @@ sub build_url {
   my $ruleset = $opts->{'ruleset'} || 'pds';
   my $function = $opts->{'function'};
 
-  my $params = ["_eci=". ($opts->{'eci'} || $eci) ];
+  my $params;
+  if ($opts->{'noeci'}) {
+    $params = [];
+    delete $opts->{'noeci'};
+  } else {
+    $params = ["_eci=". ($opts->{'eci'} || $eci) ];
+  }
+
   foreach my $pk ( keys %{$opts->{'params'} } ) {
     unshift(@{ $params }, "$pk=".$opts->{'params'}->{$pk});
   }
@@ -174,6 +181,20 @@ SKIP: {
 			    }),
 	 'type' => 'application/json',
 	 'like' => ['/"error":100/']
+	},
+	{'url' => build_url({'function' => 'get_setting_all',
+			     'noeci'   => 1
+			    }),
+	 'type' => 'application/json',
+	 'like' => ['/"error":103/'],
+         'diag' => 0
+	},
+	{'url' => build_url({'function' => 'get_setting_all',
+                             'ruleset' => 'pdsx',
+			    }),
+	 'type' => 'application/json',
+	 'like' => ['/"error":102/'],
+         'diag' => 0
 	},
        ];
     

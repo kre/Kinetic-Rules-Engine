@@ -1551,6 +1551,20 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
+$e[$i] = q#d.join(";")#;
+$x[$i] = {
+   'val' => '',
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
+
+
+
+##
+## append
+##
 $e[$i] = q#a_s.append(b_s)#;
 $x[$i] = {
    'val' => ['apple','pear','orange','tomato',
@@ -2724,6 +2738,76 @@ $i++;
 $e[$i] = q#g_s.slice(0,0)#;
 $x[$i] = {
    'val' => ['corn'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+##
+## splice
+##
+
+
+  # a_s = ['apple','pear','orange','tomato'];
+  # b_s = ['string bean','corn','carrot','tomato','spinach'];
+  # c_s = ['wheat','barley','corn','rice'];
+  # d_s = ['','pear','corn'];
+  # e_s = '';
+  # f_s = ['corn','tomato'];
+  # g_s = ['corn','tomato','tomato','tomato','sprouts','lettuce','sprouts'];
+
+
+$e[$i] = q#g_s.splice(1,4)#;
+$x[$i] = {
+   'val' => ['corn','lettuce','sprouts'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#g_s.splice(2,0,f_s)#;
+$x[$i] = {
+   'val' => ['corn','tomato','corn','tomato','tomato','tomato','sprouts','lettuce','sprouts'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#g_s.splice(2,0,'liver')#;
+$x[$i] = {
+   'val' => ['corn','tomato','liver','tomato','tomato','sprouts','lettuce','sprouts'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#g_s.splice(2,2,f_s)#;
+$x[$i] = {
+   'val' => ['corn','tomato','corn','tomato','sprouts','lettuce','sprouts'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#g_s.splice(2,3,f_s)#;
+$x[$i] = {
+   'val' => ['corn','tomato','corn','tomato','lettuce','sprouts'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#g_s.splice(2,10)#;
+$x[$i] = {
+   'val' => ['corn','tomato'],
+   'type' => 'array'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#g_s.splice(2,10,f_s)#;
+$x[$i] = {
+   'val' => ['corn','tomato','corn','tomato'],
    'type' => 'array'
 };
 $d[$i]  = 0;

@@ -125,7 +125,6 @@ $test_count++;
 is(get_eventinfo($my_req_info, 'param', ['msg']), $params->{'msg'}, "Param");
 $test_count++;
 
-
 is_deeply(get_eventinfo($my_req_info, 'attrs', []), $params, "Attrs gives all");
 $test_count++;
 
@@ -136,6 +135,17 @@ is(get_eventinfo($my_req_info, 'env', ['rid']),
    $rid,
    'event:env("rid")');
 $test_count++;
+
+is(get_eventinfo($my_req_info, 'type', []),
+   Kynetx::Request::get_event_type($my_req_info),
+   'event:type()');
+$test_count++;
+
+is(get_eventinfo($my_req_info, 'domain', []),
+   Kynetx::Request::get_event_domain($my_req_info),
+   'event:domain()');
+$test_count++;
+
 
 
 # set up AnyEvent

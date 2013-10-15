@@ -533,6 +533,10 @@ sub eval_prim {
 	    return {'type' => 'num',
 		    'val' => $val0 % $val1};
 	};
+	/NEG/ && do {
+	    return {'type' => 'num',
+		    'val' => -$val0};
+	};
     }
 
     return 0;

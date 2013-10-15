@@ -1284,7 +1284,12 @@ sub pp_var_domain {
 sub pp_prim {
     my $prim = shift;
 
-    return '('. join(' ' . $prim->{'op'} . ' ', pp_rands($prim->{'args'})) . ')';
+    if ( $prim->{'op'} eq 'NEG') {
+      my @rands = pp_rands($prim->{'args'});
+      return '-'.$rands[0];
+    } else {
+      return '('. join(' ' . $prim->{'op'} . ' ', pp_rands($prim->{'args'})) . ')';
+    }
 
     
 }
