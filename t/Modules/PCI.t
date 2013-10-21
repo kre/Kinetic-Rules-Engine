@@ -37,7 +37,6 @@ use Storable 'dclone';
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
@@ -78,6 +77,7 @@ my $my_req_info = Kynetx::Test::gen_req_info($rid);
 my $rule_name = 'foo';
 
 my $rule_env = Kynetx::Test::gen_rule_env();
+my $blank_env = Kynetx::Test::gen_rule_env();
 
 my $session = Kynetx::Test::gen_session($r, $rid);
 
@@ -142,9 +142,21 @@ my $count = 0;
   $keys);
 
 $description = "Check system key";
-$result = Kynetx::Modules::PCI::pci_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[]);
-isnt($result,undef,$description);
+$result = Kynetx::Modules::PCI::pci_authorized($my_req_info,$rule_env,$session,[]);
+isnt($result,0,$description);
 $test_count++;
+
+$description = "Check empty key";
+$result = Kynetx::Modules::PCI::pci_authorized($my_req_info,$blank_env,$session,[]);
+is($result,0,$description);
+$test_count++;
+
+$description = "Check explicit key";
+$result = Kynetx::Modules::PCI::pci_authorized($my_req_info,$blank_env,$session,$keys);
+is($result,1,$description);
+$test_count++;
+
+
 
 # System level operations
 
@@ -209,7 +221,6 @@ $result = Kynetx::Modules::PCI::clear_permissions($my_req_info,$rule_env,$sessio
 is($result,0,$description);
 $test_count++;
 
-Log::Log4perl->easy_init($DEBUG);
 
 $keypath = ['ruleset','destroy'];
 $description = "get a single permission";
@@ -246,6 +257,20 @@ $result = Kynetx::Modules::PCI::check_username($my_req_info,$rule_env,$session,$
 is($result,1,$description);
 $test_count++;
 
+
+$description = "Check for username exists, explicit permissions 2nd";
+$args = [$uname,$keys];
+$result = Kynetx::Modules::PCI::check_username($my_req_info,$blank_env,$session,$rule_name,"foo",$args);
+is($result,1,$description);
+$test_count++;
+
+$description = "Check for username exists, explicit permissions 1st";
+$args = [$keys,$uname];
+$result = Kynetx::Modules::PCI::check_username($my_req_info,$blank_env,$session,$rule_name,"foo",$args);
+is($result,1,$description);
+$test_count++;
+
+Log::Log4perl->easy_init($INFO);
 
 $description = "Check for username exists (false)";
 my $new_uname = $uname . '-dep';
@@ -424,6 +449,47 @@ $result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_env,$sessi
 is($result,0,$description);
 $test_count++;
 
+
+my $test_pci_auth_password = "foomanchoo";
+$description = "Try to set password without credentials";
+$expected = 0;
+$result = Kynetx::Modules::PCI::set_account_password($my_req_info,$blank_env,$session,$rule_name,"foo",[$uname,$new_password,$test_pci_auth_password]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Password not set";
+$result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[$uname,$new_password]);
+is($result,1,$description);
+$test_count++;
+
+$description = "Try to set password with explicit credentials";
+$expected = 1;
+$result = Kynetx::Modules::PCI::set_account_password($my_req_info,$blank_env,$session,$rule_name,"foo",[$uname,$new_password,$test_pci_auth_password,$keys]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Password is set (with explicit credentials)";
+$expected = { 'nid' => ignore() };
+$result = Kynetx::Modules::PCI::account_authorized($my_req_info,$blank_env,$session,$rule_name,"foo",[$uname,$keys,$test_pci_auth_password]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Set \$new_password with order sensitive parameters";
+$expected = 1;
+$result = Kynetx::Modules::PCI::set_account_password($my_req_info,$blank_env,$session,$rule_name,"foo",[$keys,$uname,$test_pci_auth_password,$new_password]);
+is($result,1,$description);
+$test_count++;
+
+$description = "Fail the old password";
+$result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[$uname,$test_pci_auth_password]);
+is($result,0,$description);
+$test_count++;
+
+$description = "Pass the expected password";
+$result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[$uname,$new_password]);
+is($result,1,$description);
+$test_count++;
+
 $new_password = "ResetME";
 $expected = 1;
 $description = "Reset Password with username";
@@ -572,8 +638,6 @@ $test_count++;
 
 ####### Predicates (after ECIs have been created)
 # check that predicates at least run without error
-Log::Log4perl->easy_init($DEBUG);
-
 
 my $temp_ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($uid);
 my @token_list = map {$_->{'cid'}} @{Kynetx::Persistence::KToken::list_tokens($temp_ken)};
@@ -612,8 +676,6 @@ $test_count++;
 
 
 ######################### Logging tests
-
-Log::Log4perl->easy_init($DEBUG);
 
 my ($root_env,$username, $user_ken,$user_eci, $dev_ken,$dev_eci,$dev_env, $dev_secret);
 my ($log_eci,$fqurl,$base_url,$ruleset,$opts,$mech,$eid,$dn,$platform);
