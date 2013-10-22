@@ -94,7 +94,7 @@ sub log {
   my $msg = $params{'message'};
   
     
-  if (Log::Log4perl::Level::to_priority($params{'log4p_level'}) >= $self->{'level'}) {
+  if (Log::Log4perl::Level::to_priority($params{'log4p_level'}) >= $DEBUG) {
     push(@{$self->{'buffer'}},$msg);
   }
   
