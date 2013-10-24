@@ -92,7 +92,7 @@ sub handler {
     my $client_id = Kynetx::OAuth::OAuth20::query_param($qstring,'client_id');
     $logger->debug("Client ID: $client_id");
     my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($client_id);
-    $logger->debug("KEN: $ken");
+    $logger->trace("KEN: $ken");
     if ($ken) {
       $r->notes->set('client_id',$client_id);
       $r->push_handlers(PerlAccessHandler => \&sort_response_type);

@@ -144,7 +144,7 @@ sub config_logging {
     my $appenders = Log::Log4perl->appenders();
     my $logger = Log::Log4perl::get_logger('');
     my $threshold = get_log_threshold();
-    $logger->level(Log::Log4perl::Level::to_priority($threshold));
+    #$logger->level(Log::Log4perl::Level::to_priority($threshold));
   }
 
 }
@@ -152,6 +152,7 @@ sub config_logging {
 sub get_log_threshold {
   my $mode = Kynetx::Configure::get_config('RUN_MODE');
   my $debug = Kynetx::Configure::get_config('DEBUG');
+  #return "DEBUG";
   if ($debug eq 'on') {
     return "DEBUG"
   } elsif ($debug eq 'off') {
