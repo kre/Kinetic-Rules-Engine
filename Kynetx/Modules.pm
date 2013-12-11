@@ -213,6 +213,8 @@ sub eval_module {
       } elsif ($function eq 'rulesetDescription' ) {
 	     my $rid = get_rid($req_info->{'rid'});
 	     $val = $req_info->{"$rid:description"};
+      } elsif ($function eq 'ruleName' ) {
+	     $val = $rule_name;
       } elsif ($function eq 'eci' ) {
 	     $val = $req_info->{"id_token"};
       } elsif ($function eq 'host' ||  $function eq 'hostname' ) {

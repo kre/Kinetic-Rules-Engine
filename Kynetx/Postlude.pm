@@ -413,6 +413,8 @@ sub _domainname {
 	   'notification' => 1 ,
 	   'pds' => 1 ,
 	   'error' => 1,
+	   'gtour' => 1,
+	   'test' => 1,
 	  };
   if ($allowed->{$expr->{'domain'}}) {
     return $expr->{'domain'}

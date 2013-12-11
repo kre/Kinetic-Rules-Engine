@@ -283,6 +283,21 @@ $val = Kynetx::Expressions::den_to_exp(
 is($val,"flipperoo!!","Testing ECI");
 $test_count++;
 
+
+
+
+$val = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
+					 $rule_env, 
+					 $session, 
+					 $rule_name, 
+					 'meta', 
+					 'ruleName', 
+					 [] 
+					));
+is($val,'foo',"Meta data for Rule");
+$test_count++;
+
 $val = Kynetx::Expressions::den_to_exp(
             Kynetx::Modules::eval_module($my_req_info, 
 					 $rule_env, 

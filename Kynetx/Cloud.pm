@@ -285,6 +285,7 @@ sub unalias {
 			"squaretag" => "a41x178",
 			"mythings" => "a169x667",
                         "pdsx" => "a369x202",
+			"gtour" => "b501810x1",
 		       };
   my $logger = get_logger();
 
