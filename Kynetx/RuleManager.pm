@@ -213,7 +213,20 @@ sub validate_rule {
 
     if ( $flavor eq 'json' ) {
         $type = 'text/plain';
-        $result = $json || $tree->{'error'};
+	if (defined $tree->{'error'}) {
+	  $json = astToJson({'status' => 'error',
+			       'result' => join("\n", @{$tree->{'error'}})
+                              });
+            
+	} else {
+	  $json = <<_EOF_;
+{'status' : 'success',
+ 'result' : 
+  $json}
+_EOF_
+	}
+	
+        $result = $json;
     } else {
 
         # print the page
