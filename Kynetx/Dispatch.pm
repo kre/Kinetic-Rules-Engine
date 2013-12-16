@@ -243,6 +243,7 @@ sub calculate_rid_list {
 
     # update key
     $eventtree_key = mk_eventtree_key($rid_list);
+    $logger->debug("eventtree_key: ", $eventtree_key);
   }
 
   # if a ruleset isn't cached, then it was flushed and the event tree
@@ -292,11 +293,12 @@ sub calculate_rid_list {
     }
     $logger->debug("Calculating and stashing the event tree ");
 
-    #    $logger->debug("Event Tree: ", sub { Dumper $r });
+#    $logger->debug("Event Tree: ", sub { Dumper $r });
 
     # cache this...
     #    $memd->set($eventtree_key, $r);
 
+    $logger->debug("eventtree_key: ", $eventtree_key);
     stash_eventtree( $req_info, $r, $memd, $eventtree_key);
 
   }
@@ -400,7 +402,7 @@ sub process_dispatch_list {
 
   my $r = {};
   if ( defined $ruleset && $ruleset->{'dispatch'} ) {
-    $logger->debug("Processing dispatch block for $rid");
+    $logger->debug("[process_dispatch_list] Processing dispatch block for $rid");
     foreach my $d ( @{ $ruleset->{'dispatch'} } ) {
       $logger->trace( "Seeing ", sub { Dumper $d} );
       if ( defined $d->{'domain'} ) {
@@ -499,8 +501,8 @@ sub grab_eventtree {
 sub is_eventtree_stashed {
   my ($req_info, $memd, $eventtree_key) = @_;
 #  return defined $req_info->{"KOBJ.eventtree"};
-  #return defined $memd->get($eventtree_key);
-  return 0;
+  return defined $memd->get($eventtree_key);
+#  return 0;
 }
 
 sub delete_stashed_eventtree {
