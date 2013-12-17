@@ -222,6 +222,16 @@ sub error_redirect {
 	return Apache2::Const::HTTP_MOVED_TEMPORARILY;          
 }
 
+sub custom_error {
+  my ($r,$hcode,$code,$description) = @_;
+  $r->content_type('application/json;charset=UTF-8');
+  $r->headers_out->set('Cache-Control' => 'no-store');
+  $r->headers_out->set('Pragma' => 'no-cache');
+  $r->status($hcode);
+  $r->custom_response($hcode, "{\n \"error\":\"$code\",\n \"error_description\":\"$description\"\n}");
+  return $hcode;
+}
+
 sub auth_user {
   my ($r) = @_;
     

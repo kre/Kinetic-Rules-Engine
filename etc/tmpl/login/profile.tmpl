@@ -1,0 +1,30 @@
+  <!-- ========================================================================================= -->    
+  		<div data-role="page" id="profile">
+	  		<div data-role="dialog" class="dialog-actionsheet ui-page ui-body-a ui-dialog ui-overlay-a
+	  				ui-page-active" data-url="/login" data-external-page="true" tabindex="0" 
+	  				data-overlay-theme="a" data-title="KMCP landing page" style="min-height: 380px;">  			 
+	  				<div data-role="content-primary" data-theme="a" class="ui-corner-top ui-corner-bottom ui-content ui-body-a" role="main">	  					  
+	  					<div data-role="controlgroup" data-type="horizontal" data-mini="true"
+	  						style="text-align:right;">
+	  						
+							<a href="#" data-rel="dialog" data-transition="slidedown" 
+									data-theme="a" data-corners="true" data-shadow="true" data-iconshadow="true"
+									data-mini="true" data-wrapperels="span" 
+									class="ui-shadow ui-btn-up-b ui-corner-left">
+								<TMPL_VAR NAME="USERNAME">
+							</a>&nbsp;
+							<a href="<TMPL_VAR NAME="PLATFORM">/login/logout" data-rel="dialog" data-transition="slidedown" 
+									data-theme="a" data-corners="true" data-shadow="true" data-iconshadow="true"
+									data-mini="true" data-ajax="false" data-wrapperels="span" class="ui-shadow">
+								logout
+							</a>
+								
+						</div>						
+						
+					</div>
+					<div data-role="content-secondary" data-theme="a" 
+							class="ui-corner-top ui-corner-bottom ui-content ui-body-a">
+						<TMPL_VAR NAME="PAGEFORM">
+					</div>
+				</div>					
+  		</div>

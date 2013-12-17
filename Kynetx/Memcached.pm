@@ -133,6 +133,7 @@ sub mset_cache {
         }
         
     }
+    $logger->debug("Check cache for $key: ",$memd->get($key));
 }
 
 sub flush_cache {

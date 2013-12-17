@@ -103,7 +103,6 @@ sub put_kpds_element {
 	};
 	my $success = Kynetx::MongoDB::put_hash_element(COLLECTION,$key,$hkey,$value);
 	Kynetx::MongoDB::clear_cache(COLLECTION,$key);
-	
 	return $success;
 	
 }
@@ -271,6 +270,32 @@ sub get_callbacks {
 	return $result;		
 }
 
+sub add_app_info {
+	my ($ken,$dev_eci,$app_info) = @_;
+	my $logger = get_logger();
+	my $keypath = [OAUTH, $dev_eci, 'app_info'];
+	my $result = put_kpds_element($ken,$keypath,$app_info);
+	$logger->debug("Set: ", sub {Dumper($result)});
+	return $result;      
+}
+
+sub get_app_info {
+	my ($ken, $dev_eci) = @_;
+	my $logger=get_logger();
+	my $keypath = [OAUTH, $dev_eci, 'app_info'];
+	my $result = get_kpds_element($ken,$keypath);
+	$logger->debug("list: ", sub {Dumper($result)});
+	return $result;		  
+}
+
+sub remove_app_info {
+	my ($ken,$dev_eci) = @_;
+	my $logger=get_logger();
+	my $keypath = [OAUTH, $dev_eci, 'app_info'];
+	my $result = delete_kpds_element($ken,$keypath);
+	$logger->debug("remove: ", sub {Dumper($result)});
+	return $result;
+}
 
 ########################### KPDS Ruleset Methods
 sub add_ruleset {
@@ -318,6 +343,24 @@ sub set_developer_permissions {
 	my $result = Kynetx::Persistence::KPDS::put_kpds_element($ken,$keypath,$value);
 	my $check = Kynetx::Persistence::KPDS::get_kpds_element($ken,$keypath);
 	return $result;
+}
+
+sub set_developer_secret {
+  my ($ken,$eci,$secret) = @_;
+  my $keypath = [DEV, $eci, 'secret'];
+  my $ekey = $ken ^ $eci;
+  my $encoded = Kynetx::Modules::PCI::_obfuscate($ekey,$secret);
+  my $result = Kynetx::Persistence::KPDS::put_kpds_element($ken,$keypath,$encoded);
+  return $result;
+}
+
+sub get_developer_secret {
+  my ($ken,$eci) = @_;
+  my $keypath = [DEV, $eci, 'secret'];
+  my $val = Kynetx::Persistence::KPDS::get_kpds_element($ken,$keypath);
+  my $ekey = $ken ^ $eci;
+  my $decoded = Kynetx::Modules::PCI::_fuscate($ekey,$val);
+  return $decoded;
 }
 
 sub revoke_developer_key {

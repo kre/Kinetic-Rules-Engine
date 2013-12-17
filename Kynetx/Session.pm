@@ -232,6 +232,9 @@ sub session_cleanup {
 
 sub session_id {
     my ($session) = @_;
+    my $logger = get_logger();
+    my $parent = (caller(1))[3];
+    $logger->debug("Session parent: $parent");
     return $session->{_session_id};
 }
 

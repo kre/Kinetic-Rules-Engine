@@ -139,11 +139,17 @@ sub set_ttl {
 
 # Slightly different format for ECI tokens
 sub create_token {
-	my ($ken, $label,$type) = @_;
+	my ($ken, $label,$type, $session) = @_;
 	my $logger = get_logger();
 	my $ug = new Data::UUID;
 	my $ktoken = $ug->create_str();
 	my $oid = MongoDB::OID->new();
+	my $e_id;
+	if ($session) {
+	  $e_id = $session->{"_session_id"};
+	} else {
+	  $e_id = $ktoken;
+	}
 	my $lastactive = DateTime->now->epoch;
 	$type = $type || "KRE";
     my $var = {
@@ -154,7 +160,7 @@ sub create_token {
         "ktoken" => $ktoken,
         "_id" => $oid,
         "last_active" => $lastactive,
-        "endpoint_id" => $ktoken,
+        "endpoint_id" => $e_id,
         "token_name" => $label,
         "endpoint_type" => $type,
     };
@@ -251,7 +257,7 @@ sub delete_token {
     }
     
     my $result = Kynetx::MongoDB::delete_value(COLLECTION,$var);    
-    $logger->info("Deleting token $ktoken");
+    $logger->debug("Deleting token $ktoken");
     # We store the token in cache to quickly get the ken
     if (defined $session_id) {
     	my $additional_ref = COLLECTION .$session_id;

@@ -1,0 +1,49 @@
+  <!-- ========================================================================================= -->    
+  		<div data-role="page" id="profile">
+	  		<div data-role="dialog" class="dialog-actionsheet ui-page ui-body-a ui-dialog ui-overlay-a
+	  				ui-page-active" data-url="/login" data-external-page="true" tabindex="0" 
+	  				data-overlay-theme="a" data-title="KMCP landing page" style="min-height: 380px;">  			 
+	  				<div data-role="content-primary" data-theme="a" class="ui-corner-top ui-corner-bottom ui-content ui-body-a" role="main">	  					  
+						<form action="<TMPL_VAR NAME="PLATFORM">/login/create" method="post" data-url="<TMPL_VAR NAME="PLATFORM">/login/create>" data-external-page="true" data-ajax="false">
+							<h3>Create a new account</h3>
+							<div style="padding:10px 20px;" data-mini="true" data-role="controlgroup">
+								<div data-role="fieldcontain" class="ui-body ui-br">
+									<label for="uun" class="ui-input-text" data-theme="b">Username:</label>
+						      		<input type="text" name="username" id="uun" value="" placeholder="username" data-theme="b" data-mini="true" class="ui-input-text ui-body-b ui-corner-all ui-shadow-inset">
+								</div>
+								<div data-role="fieldcontain" class="ui-body ui-br">
+									<label for="upa" class="ui-input-text" data-theme="b">Password:</label>
+						      		<input type="password" name="passwd" id="upa" value="<TMPL_VAR NAME="EMAIL">" placeholder="email" data-theme="b" data-mini="true" class="ui-input-text ui-body-b ui-corner-all ui-shadow-inset">
+								</div>
+								<div data-role="fieldcontain" class="ui-body ui-br">
+									<label for="upa2" class="ui-input-text" data-theme="b">&nbsp;</label>
+						      		<input type="password" name="passwd2" id="upa2" value="" placeholder="" data-theme="b" data-mini="true" class="ui-input-text ui-body-b ui-corner-all ui-shadow-inset">
+								</div>
+								<div data-role="fieldcontain" class="ui-body ui-br">
+									<label for="uem" class="ui-input-text" data-theme="b">Email:</label>
+						      		<input type="text" name="email" id="uem" value="<TMPL_VAR NAME="EMAIL">" placeholder="email" data-theme="b" data-mini="true" class="ui-input-text ui-body-b ui-corner-all ui-shadow-inset">
+								</div>
+								<div data-role="fieldcontain" class="ui-field-contain ui-body ui-br">
+							      <label for="ufn" class=" ui-input-text">First Name:</label>
+							      <input type="text" name="fname" id="ufn" value="<TMPL_VAR NAME="FNAME">" data-theme="b" data-mini="true" class="ui-input-text ui-body-b ui-corner-all ui-shadow-inset">
+								</div>
+								<div data-role="fieldcontain" class="ui-field-contain ui-body ui-br">
+							      <label for="uln" class="ui-input-text">Last Name:</label>
+							      <input type="text" name="lname" id="uln" value="<TMPL_VAR NAME="LNAME">" data-theme="b" data-mini="true" class="ui-input-text ui-body-b ui-corner-all ui-shadow-inset">
+								<div>
+							</div>
+							<div class="ui-body" data-corners="true">
+								<fieldset class="ui-grid-a"> 
+									<div class="ui-block-a">
+								  		<button type="submit" data-inline="true" data-theme="a"  data-mini="true" class="ui-btn-hidden" aria-disabled="false">Update</button>
+								  	</div>
+								  <div class="ui-block-b">
+								  		<a href="#" data-role="button" data-inline="true" data-rel="back" data-mini="true" class="ui-btn-hidden" aria-disabled="false">Cancel</a>
+									</div>
+								</fieldset>
+							</div>
+						</form>	  											
+						
+					</div>					
+				</div>					
+  		</div>
