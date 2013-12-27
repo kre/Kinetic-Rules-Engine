@@ -623,7 +623,15 @@ sub build_composed_action {
 	my $rsize = scalar(@$required);
 	
 	if ($psize < $rsize) {
-		return gen_js_error("$action_tag requires $rsize arguments, you passed ($psize)");
+	  $logger->warn("Argument mismatch. $action_tag requires $rsize arguments, you passed ($psize)");
+	  Kynetx::Errors::raise_error($req_info, 'error',
+				      "[action] Argument mismatch. $action_tag requires $rsize arguments, you passed ($psize)",
+				      {'rule_name' => $rule_name,
+				       'genus' => 'action',
+				       'species' => 'argument_number_mismatch'
+				      }
+				     );
+	  
 	}
 	$rule_env = extend_rule_env($required,$args,$rule_env);
 	
