@@ -307,19 +307,23 @@ sub calculate_rid_list {
 }
 
 sub clear_rid_list {
-  my ($session) = @_;
+  my ($session, $req_info) = @_;
   my $logger = get_logger();
-  $logger->debug( "[flush] flushing RID list for ",
-    Kynetx::Session::session_id($session) );
+  my $session_token = Kynetx::Session::session_id($session);
+  $logger->debug( "[flush] flushing RID list for ", $session_token);
   my $ken = Kynetx::Persistence::get_ken( $session, "", "web" );
   my $memd = get_memd();
 
-  my $rid_list = $memd->get( mk_ridlist_key($ken) );
+#  my $rid_list = $memd->get( mk_ridlist_key($ken) );
+
+  my $rid_list = get_ridlist( $req_info, $session_token,$ken );
+
 
   $memd->delete( mk_ridlist_key($ken) );
 
-  $logger->debug("Flushing event tree because RID list changed");
-  delete_stashed_eventtree({}, $memd, mk_eventtree_key($rid_list));
+  my $etk = mk_eventtree_key($rid_list);
+  $logger->debug("Flushing event tree because RID list changed for ", $etk);
+  delete_stashed_eventtree({}, $memd, $etk);
 
 }
 

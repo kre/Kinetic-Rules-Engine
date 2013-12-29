@@ -190,7 +190,7 @@ sub _handler {
 	elsif ( $path_components[1] eq 'flush' ) {
 
 		# /sky/flush/<id_token>...
-		flush_ridlist_cache( $r, $session );
+		flush_ridlist_cache( $r, $session, $req_info );
 		exit();
 	}
 
@@ -423,9 +423,9 @@ sub _handler {
 }
 
 sub flush_ridlist_cache {
-	my ( $r, $session ) = @_;
+	my ( $r, $session, $req_info ) = @_;
 
-	Kynetx::Dispatch::clear_rid_list($session);
+	Kynetx::Dispatch::clear_rid_list($session, $req_info);
 
 	$r->content_type('text/html');
 	my $msg = "RID List flushed for " . Kynetx::Session::session_id($session);

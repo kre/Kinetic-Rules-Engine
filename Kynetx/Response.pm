@@ -176,7 +176,8 @@ sub respond {
   $logger->trace("Called with ", $r->the_request);
 
   # heartbeat string (let's people know we returned something)
-  my $heartbeat = "// KNS " . gmtime() . " (" . Kynetx::Util::get_hostname() . ")\n";
+#  my $heartbeat = "// KNS " . gmtime() . " (" . Kynetx::Util::get_hostname() . ")\n";
+  my $heartbeat = "";
 
   # this is where we return the JS
   binmode(STDOUT, ":encoding(UTF-8)");
@@ -192,6 +193,8 @@ sub respond {
     print $heartbeat, $js;
   } else {
     $logger->debug("Returning directives from evaluation");
+
+    $r->content_type('application/json');
 
     print $heartbeat, $dd->gen_directive_document();
   }
