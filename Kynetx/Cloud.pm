@@ -127,6 +127,7 @@ sub handler {
 	  my $rid = unalias($module_alias);
 
 	  $req_info->{'module_name'} = $rid;
+	  $req_info->{'rid'} = Kynetx::Rids::mk_rid_info( $req_info, $rid );
 	  $req_info->{'module_version'} = $version;
 	  $req_info->{'module_alias'} = $module_alias;
 	  $req_info->{'function_name'} = $path_components[3];
