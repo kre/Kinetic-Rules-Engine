@@ -28,6 +28,8 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use Log::Log4perl qw(get_logger :levels);
 use IPC::Lock::Memcached;
 
+use Clone qw(clone);
+
 use Kynetx::Environments qw/:all/;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::Session qw/:all/;
@@ -440,6 +442,96 @@ sub add_test_rule {
   my $rule_name = "add_test_rule";
   my $function_name = "_null_";
   return Kynetx::Modules::PCI::add_ruleset_to_account($req_info,$rule_env,$session,$rule_name,"foo",[$user_eci,$rid]);
+}
+
+
+sub enchilada {
+  my ($rid,$rulename,$rules) = @_;
+  my $test_environment;
+  
+  ### Defaults
+  $rid = "test_rid" unless ($rid);
+  $rulename = "test_rulename" unless ($rulename);
+  
+  $test_environment->{'rid'} = $rid;
+  $test_environment->{'rulename'} = $rulename;
+    
+  my $eid = time;
+  $test_environment->{'eid'} = $eid;
+  
+  ### Environments
+  my $request_info = gen_req_info($rid);
+  my $rule_env = gen_rule_env();
+  my $r = configure();
+  my $session = gen_session($r,$rid);
+  my $anon = Kynetx::Persistence::KEN::get_ken($session,$rid);
+  
+  $test_environment->{'req_info'} = $request_info;
+  $test_environment->{'rule_env'} = $rule_env;
+  $test_environment->{'r'} = $r;
+  $test_environment->{'session'} = $session;
+  $test_environment->{'anonymous_user'} = $anon;
+  
+  $test_environment->{'platform'} = platform();
+  
+  ### Users
+  my $username = rword();
+  my $password = rword();
+  
+  $test_environment->{'username'} = $username;
+  $test_environment->{'password'} = $password;
+  
+  my $root_env = gen_root_env($request_info,$rule_env,$session);
+  my $user_ken = gen_user($request_info,$root_env,$session,$username);
+  my $user_eci = Kynetx::Persistence::KToken::get_oldest_token($user_ken);
+  
+  $test_environment->{'root_env'} = $root_env;
+  $test_environment->{'user_ken'} = $user_ken;
+  $test_environment->{'user_eci'} = $user_eci;
+  
+  my $sky_request = make_sky_request_info($request_info,$user_eci,'web','pageview');
+  
+  $test_environment->{'sky_request_info'} = $sky_request;
+  
+  if ($rules && ref $rules eq "ARRAY") {    
+    my $args = [$user_eci,@{$rules}];
+    Kynetx::Modules::PCI::add_ruleset_to_account($request_info,$root_env,$session,$rulename,"foo",$args);    
+  }
+  
+  return $test_environment;
+}
+
+sub make_sky_request_info {
+  my ($req_info,$id_token,$domain,$eventtype) = @_;
+  my $sky_info = clone $req_info;
+  $sky_info->{'_api'} = 'sky';
+  $sky_info->{'domain'} = $domain || 'web';
+  $sky_info->{'eventtype'} = $eventtype || 'submit';
+  $sky_info->{'id_token'} = $id_token;
+  return $sky_info;
+}
+
+sub validate_env {
+  my ($test_env) = @_;
+  my $num_tests = 0;
+  my $req_info = $test_env->{'req_info'};
+  my $rule_env = $test_env->{'root_env'};
+  my $session = $test_env->{'session'};
+  my $rulename = $test_env->{'rulename'};
+  
+  my ($description,$result,$expected);
+  
+  $description = "Validate root environment";
+  $result = Kynetx::Modules::PCI::pci_authorized($req_info,$rule_env,$session,$rulename,"foo",[]);
+  Test::More::is($result,1,$description);
+  $num_tests++;
+  
+  $description = "KEN and ECI match";
+  my $ken = $test_env->{'user_ken'};
+  my $eci = $test_env->{'user_eci'};
+  my $eken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
+  Test::More::is($ken,$eken,$description);
+  $num_tests++;
 }
 
 1;

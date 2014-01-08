@@ -338,7 +338,6 @@ sub get_list {
       $logger->trace("$keystring not in cache");
   }
   my $c = get_collection($collection);
-  my $val = get_value($collection,$var)->{'value'};
   my @rlist;
   if ($c) {
     my $cursor = $c->find($var);

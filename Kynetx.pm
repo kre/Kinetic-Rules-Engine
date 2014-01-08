@@ -277,6 +277,8 @@ sub flush_ruleset_cache {
 
 
       Kynetx::Modules::RuleEnv::delete_module_caches($req_info, $memd);
+      my $fqrid = Kynetx::Rids::get_fqrid($rid_info);
+      Kynetx::Persistence::Ruleset::touch_ruleset($fqrid);
 
       $msg .= "Rules flushed for site $rid (version $version)<br/>";
     }

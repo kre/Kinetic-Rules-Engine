@@ -106,7 +106,7 @@ sub check_cache {
         $content = $memd->get($key);
     }
     if ($content) {
-        #$logger->trace("-$parent- Using cached data for $key");
+        $logger->trace("-$parent- Using cached data for $key");
         if (ref $content eq "") {
         	return Kynetx::Util::str_in($content);
         } else {
@@ -133,7 +133,7 @@ sub mset_cache {
         }
         
     }
-    $logger->debug("Check cache for $key: ",$memd->get($key));
+    $logger->trace("Set cache for $key: ",sub {Dumper($memd->get($key))});
 }
 
 sub flush_cache {
@@ -164,7 +164,7 @@ sub get_remote_data {
     if ($memd) {
         $content = check_cache($key) ;
 	if ($content) {
-	    $logger->debug("Using cached data for $url");
+	    $logger->trace("Using cached data for $url");
 	    return $content;
 	}
     }
@@ -181,7 +181,7 @@ sub get_remote_data {
 		$content = Kynetx::Util::str_in($raw);
     } else {
 	$content = '';
-	$logger->debug("Error retrieving $url: " . $res->status_line . "\n");
+	$logger->trace("Error retrieving $url: " . $res->status_line . "\n");
     }
 
     if($memd && $res->is_success) {

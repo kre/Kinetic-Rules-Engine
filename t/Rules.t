@@ -4773,7 +4773,7 @@ $test_count++;
 ENDY:
 
 ###########
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 ###########
 
 ## these rulesets are tied together because of the provide keys restriction on rids

@@ -757,7 +757,7 @@ sub build_one_action {
 
 	unless ( defined $defaction ) {
 	  my $mname = defined $action->{'source'} ? "$action->{'source'}:" : "" ;
-	  $logger->debug("$mname$action->{'name'} not found as user defined module...");
+	  $logger->trace("$mname$action->{'name'} not found as user defined module...");
 	}
 	
 	if (defined $defaction && Kynetx::Expressions::is_defaction($defaction) ) {

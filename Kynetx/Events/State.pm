@@ -663,7 +663,7 @@ sub next_state {
 					return $next;
 				}
 	       	} else {
-	    		$logger->debug("NORMAL TRANSITION");
+	    		$logger->trace("NORMAL TRANSITION");
 	    		if (defined $start_clock) {
 	    			my $counter = Kynetx::Persistence::UserState::push_aggregator($rid,$session,$rulename,$state,[$start_clock]);
 	    			#$logger->debug("Set start time for $state: ", sub {Dumper($counter)});

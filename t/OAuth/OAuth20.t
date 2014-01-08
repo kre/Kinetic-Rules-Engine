@@ -471,153 +471,103 @@ cmp_deeply($result->code(),401,$description);
 $test_count++;
 
 
-ENDY:
+# MEH - I started with building a restful interface but that 
+# had limitations when I needed to build the user authorization piece
+# and I decided that it was not central to the idea of an centralized CloudOS OAuth service
 
-##############################################################
+#$description = "Test username available";
+#$query = {
+#  "username" => $username
+#};
+#$base_url = $dn . "/available";
 #
-# Create the request environment
+#$logger->debug("URL: $base_url");
+#$response = $ua->post($base_url,$query);
+#$json = $response->content;
+#$result = Kynetx::Json::jsonToAst_w($json);
+#cmp_deeply($result->{'available'},1,$description);
+#$test_count++;
 #
-##############################################################
-
-my ($anon,$mech,$dn,$base_url,$eid,$username,$query,$post,$response);
-$rid = "test_user";
-$rule_name = "foo";
-$ruleset = "a144x132";
-$eid = time;
-$my_req_info = Kynetx::Test::gen_req_info($rid);
-$rule_env = Kynetx::Test::gen_rule_env();
-$r = Kynetx::Test::configure();
-$session = Kynetx::Test::gen_session($r,$rid);
-$anon = Kynetx::Persistence::KEN::get_ken($session,$rid);
-
-$dn = "http://$platform/login";
-
-
-$username =  $DICTIONARY[rand(@DICTIONARY)];
-chomp($username);
-
-$password =  $DICTIONARY[rand(@DICTIONARY)];
-chomp($password);
-
-my $root_env = Kynetx::Test::gen_root_env($my_req_info,$rule_env,$session);
-
-$description = "Is root env";
-$result = Kynetx::Modules::PCI::pci_authorized($my_req_info,$root_env,$session,$rule_name,"foo",[]);
-is($result,1,$description);
-$test_count++;
-
-
-
-
-##################################### Begin Login portal
-Log::Log4perl->easy_init($DEBUG);
-
-# get a clean ua
-$ua = LWP::UserAgent->new;
-$ua->max_redirect(1);
-
-my $portal_redirect = "http://$platform/blue/event/web/redirect_catcher/a144x175/";
-Kynetx::Modules::PCI::add_oauth_callback($my_req_info,$root_env,$session,$rule_name,"foo",[$d_eci,$portal_redirect]);
-$result = Kynetx::Modules::PCI::list_callback($my_req_info,$root_env,$session,$rule_name,"foo",[$d_eci]);
-$logger->debug("Developer: $d_eci");
-$logger->debug("Developer key: $dev_key");
-
-$logger->debug("Callbacks defined: ", sub {Dumper($result)});
-
-
-$description = "Test username available";
-$query = {
-  "username" => $username
-};
-$base_url = $dn . "/available";
-
-$logger->debug("URL: $base_url");
-$response = $ua->post($base_url,$query);
-$json = $response->content;
-$result = Kynetx::Json::jsonToAst_w($json);
-cmp_deeply($result->{'available'},1,$description);
-$test_count++;
-
-
-
-my $test_user = Kynetx::Test::gen_user($my_req_info,$root_env,$session,$username);
-$description = "Create test user";
-isnt($test_user,undef,$description);
-$test_count++;
-
-####################################
-# Set password for test user
-Kynetx::Modules::PCI::_set_password($test_user,$password);
-
-
-$description = "Test username un-available";
-$response = $ua->post($base_url,$query);
-$json = $response->content;
-$result = Kynetx::Json::jsonToAst_w($json);
-cmp_deeply($result->{'available'},0,$description);
-$test_count++;
-
-
-$description = "Test login fail";
-my $bad_password = "shibboleth";
-$post = {
-  'user' => $username,
-  'pass' => $bad_password
-};
-$base_url = $dn . "/signin";
-$response = $ua->post($base_url,$post);
-cmp_deeply($response->code,'401',$description);
-$test_count++;
-
-$description = "Test login pass";
-$post = {
-  'user' => $username,
-  'pass' => $password
-};
-$base_url = $dn . "/signin";
-$response = $ua->post($base_url,$post);
-cmp_deeply($response->code,'200',$description);
-$test_count++;
-
-$description = "Returns token on signin pass";
-$expected = {
-  'eci' => re(qr/$uuid_re/)
-};
-$json = $response->content;
-$result = Kynetx::Json::jsonToAst_w($json);
-cmp_deeply($result,$expected,$description);
-$test_count++;
-my $test_eci = $result->{'eci'};
-$logger->debug("Token: $test_eci");
-
-$description = "Check login status by eci";
-$base_url = $dn . "/status";
-$post = {
-  'eci' => $test_eci
-};
-$response = $ua->post($base_url,$post);
-$json = $response->content;
-$result = Kynetx::Json::jsonToAst_w($json);
-cmp_deeply($result->{'status'},1,$description);
-$test_count++;
-
-$description = "Log an account off";
-$base_url = $dn . "/logout";
-$ua->post($base_url,$post);
-$base_url = $dn . "/status";
-$post = {
-  'eci' => $test_eci
-};
-$response = $ua->post($base_url,$post);
-$json = $response->content;
-$result = Kynetx::Json::jsonToAst_w($json);
-cmp_deeply($result->{'status'},0,$description);
-$test_count++;
-
-
-Log::Log4perl->easy_init($INFO);
-##################################### End Login portal
-
+#
+#
+#$test_user = Kynetx::Test::gen_user($my_req_info,$root_env,$session,$username);
+#$description = "Create test user";
+#isnt($test_user,undef,$description);
+#$test_count++;
+#
+#####################################
+## Set password for test user
+#Kynetx::Modules::PCI::_set_password($test_user,$password);
+#
+#
+#$description = "Test username un-available";
+#$response = $ua->post($base_url,$query);
+#$json = $response->content;
+#$result = Kynetx::Json::jsonToAst_w($json);
+#cmp_deeply($result->{'available'},0,$description);
+#$test_count++;
+#
+#
+#$description = "Test login fail";
+#my $bad_password = "shibboleth";
+#$post = {
+#  'user' => $username,
+#  'pass' => $bad_password
+#};
+#$base_url = $dn . "/signin";
+#$response = $ua->post($base_url,$post);
+#cmp_deeply($response->code,'401',$description);
+#$test_count++;
+#
+#$description = "Test login pass";
+#$post = {
+#  'user' => $username,
+#  'pass' => $password
+#};
+#$base_url = $dn . "/signin";
+#$response = $ua->post($base_url,$post);
+#cmp_deeply($response->code,'200',$description);
+#$test_count++;
+#
+#$description = "Returns token on signin pass";
+#$expected = {
+#  'eci' => re(qr/$uuid_re/)
+#};
+#$json = $response->content;
+#$result = Kynetx::Json::jsonToAst_w($json);
+#cmp_deeply($result,$expected,$description);
+#$test_count++;
+#$test_eci = $result->{'eci'};
+#$logger->debug("Token: $test_eci");
+#
+#$description = "Check login status by eci";
+#$base_url = $dn . "/status";
+#$post = {
+#  'eci' => $test_eci
+#};
+#$response = $ua->post($base_url,$post);
+#$json = $response->content;
+#$result = Kynetx::Json::jsonToAst_w($json);
+#cmp_deeply($result->{'status'},1,$description);
+#$test_count++;
+#
+#$description = "Log an account off";
+#$base_url = $dn . "/logout";
+#$ua->post($base_url,$post);
+#$base_url = $dn . "/status";
+#$post = {
+#  'eci' => $test_eci
+#};
+#$response = $ua->post($base_url,$post);
+#$json = $response->content;
+#$result = Kynetx::Json::jsonToAst_w($json);
+#cmp_deeply($result->{'status'},0,$description);
+#$test_count++;
+#
+#
+#Log::Log4perl->easy_init($INFO);
+###################################### End Login portal
+#
 
 sub test_request_url {
   my ($client_id,$response_type,$state,$rd_uri) = @_;
@@ -638,7 +588,6 @@ sub test_request_url {
   return Kynetx::Util::mk_url($base,$params);
 }
 
-Kynetx::Test::flush_test_user($test_user,$username);
 done_testing($test_count);
 
 

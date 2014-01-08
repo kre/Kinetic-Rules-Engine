@@ -78,10 +78,10 @@ sub handler {
   my @params = $req->param;
   my @path_components = split( /\//, $r->path_info );
   my $id_token = $path_components[2];
-  $logger->debug("Token: $id_token");
+  $logger->trace("Token: $id_token");
 	my $eid = $path_components[3] || '';
   my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($id_token);
-  $logger->debug("KEN: $ken");
+  $logger->trace("KEN: $ken");
   if ($ken) {
     my $list = Kynetx::Persistence::KToken::get_token_by_ken_and_label($ken, TOKEN_NAME);
     my $logging_token = $list->[0];

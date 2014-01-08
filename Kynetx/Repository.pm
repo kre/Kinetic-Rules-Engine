@@ -105,7 +105,7 @@ sub get_rules_from_repository {
     Kynetx::Rules::get_optimization_version()
     && !$text )
   {
-    $logger->debug(
+    $logger->trace(
 "Using cached ruleset for $rid ($version) with key $rs_key & optimization version ",
       $ruleset->{'optimization_version'}
     );
@@ -115,7 +115,7 @@ sub get_rules_from_repository {
 
 
   # this gets cleared when we're done
-  $logger->debug("Setting parsing semaphore for $rs_key");
+  $logger->trace("Setting parsing semaphore for $rs_key");
   Kynetx::Memcached::set_parsing_flag( $memd, $rs_key );
   
   $ruleset = get_ruleset_krl($rid_info,$version);
@@ -129,7 +129,7 @@ sub get_rules_from_repository {
       defined $ruleset->{'error'}) {
         $ruleset = Kynetx::Rules::optimize_ruleset($ruleset);
         $logger->debug("Found rules  for $rid");
-        $logger->debug("Caching ruleset for $rid using key $rs_key");
+        $logger->trace("Caching ruleset for $rid using key $rs_key");
         $memd->set($rs_key,$ruleset);
       } else {
         if ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid') {
@@ -190,7 +190,7 @@ sub get_ruleset_krl {
     my $logger = get_logger();
     my $fqrid = Kynetx::Rids::get_fqrid($rid_info);
     
-    $logger->debug("FQRID: $fqrid");
+    $logger->trace("FQRID: $fqrid");
     # Check to see if there is a Repository record
     my $repository_record = Kynetx::Persistence::Ruleset::get_ruleset_info($fqrid);
     #$logger->debug("From repository: ",sub {Dumper($repository_record)});
@@ -204,13 +204,13 @@ sub get_ruleset_krl {
       my $parsed_uri = URI->new($uri);
       my $scheme = $parsed_uri->scheme;
       if ($scheme =~ m/http/) {
-        $logger->debug("HTTP repository");
+        $logger->trace("HTTP repository");
         return Kynetx::Repository::HTTP::get_ruleset($rid_info);
       } elsif ($scheme =~ m/file/) {
-        $logger->debug("File repository");
+        $logger->trace("File repository");
         return Kynetx::Repository::File::get_ruleset($rid_info);
       } elsif ($scheme =~ m/xri/) {
-        $logger->debug("XDI repository");
+        $logger->trace("XDI repository");
         return Kynetx::Repository::XDI::get_ruleset($rid_info);
       }      
     } else {
@@ -218,7 +218,7 @@ sub get_ruleset_krl {
         $logger->debug("Check default repository");
         my $repo = Kynetx::Configure::get_config('RULE_REPOSITORY');
         my ($base_url,$username,$password) = split(/\|/, $repo);
-        $logger->debug("URL: $base_url");
+        $logger->trace("URL: $base_url");
         my $rs_url = join('/', ($base_url, $rid, $version, 'krl/'));
         $rid_info->{'uri'} = $rs_url;
         $rid_info->{'username'} = $username;

@@ -263,7 +263,6 @@ sub newaccount {
   $logger->debug("New account page: ");
   my $template = DEFAULT_TEMPLATE_DIR . "/login/create.tmpl";
 	my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
-	return $dialog->output();
 }
 
 sub authorize_app {

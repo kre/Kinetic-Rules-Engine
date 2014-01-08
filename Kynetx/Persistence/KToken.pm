@@ -165,6 +165,8 @@ sub create_token {
         "endpoint_type" => $type,
     };
     my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0);
+    $logger->debug("Token struct: ", sub {Dumper($token)});
+    $logger->debug("Token status: ", sub {Dumper($status)});
     if ($status) {
         Kynetx::Persistence::KEN::touch_ken($ken);
         return $ktoken;

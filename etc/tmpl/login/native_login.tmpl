@@ -10,10 +10,10 @@
 						  <h3>Please sign in</h3>
 						  <TMPL_VAR NAME="LOGIN_ERROR">
 				          <label for="un" class="ui-hidden-accessible ui-input-text">Username:</label>
-				          <input type="text" name="user" id="un" value="<TMPL_VAR NAME="STICKY_USER">" placeholder="username" data-theme="b" data-mini="true" class="ui-input-text ui-body-b ui-corner-all ui-shadow-inset">
+				          <input type="text" name="user" id="un" value="" placeholder="username" data-theme="b" data-mini="true" class="ui-input-text ui-body-b ui-corner-all ui-shadow-inset">
 		
 				          <label for="pw" class="ui-hidden-accessible ui-input-text">Password:</label>
-				          <input type="password" name="pass" id="pw" value="" placeholder="password" data-theme="b"  data-mini="true" class="ui-input-text ui-body-b ui-corner-all ui-shadow-inset">
+				          <input type="password" name="pass" id="pw" value="<TMPL_VAR NAME="STICKY_USER">" placeholder="password" data-theme="b"  data-mini="true" class="ui-input-text ui-body-b ui-corner-all ui-shadow-inset">
 		
 				    	  <button type="submit" data-inline="true" data-theme="b"  data-mini="true" class="ui-btn-hidden" aria-disabled="false">Sign in</button>
 				    	  <a href="#" data-role="button" data-inline="true" data-rel="back" data-mini="true" class="ui-btn-hidden" aria-disabled="false">Cancel</a>
