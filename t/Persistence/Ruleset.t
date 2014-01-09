@@ -102,6 +102,10 @@ chomp($uname);
 my $rule_name = $DICTIONARY[rand(@DICTIONARY)];
 chomp($rule_name);
 
+my $rid_list = ();
+my $touch;
+my $untouch;
+
 # Create a fake Developer
 my $system_key = Kynetx::Modules::PCI::create_system_key($result);
 $logger->debug("Key: $system_key");
@@ -143,7 +147,8 @@ $expected = 'b' . $userid .'x0.prod';
 $rid = Kynetx::Persistence::Ruleset::create_rid($ken);
 is($rid,$expected,$description);
 $test_count++;
-
+push(@{$rid_list},$rid);
+$untouch = $rid;
 
 $logger->debug("Rid: $rid");
 
@@ -152,6 +157,15 @@ $expected = 'b' . $userid .'x1.prod';
 $rid = Kynetx::Persistence::Ruleset::create_rid($ken);
 is($rid,$expected,$description);
 $test_count++;
+push(@{$rid_list},$rid);
+
+$description = "Set the last_modified attribute";
+my $now = DateTime->now->epoch;
+$result = Kynetx::Persistence::Ruleset::touch_ruleset($rid);
+is($result >= $now,1,$description);
+$test_count++;
+
+$touch = $rid;
 
 $logger->debug("Rid: $rid");
 $description = "First prefix rid ($prefix)";
@@ -159,6 +173,7 @@ $expected = $prefix . $userid .'x0.prod';
 $rid = Kynetx::Persistence::Ruleset::create_rid($ken,$prefix);
 is($rid,$expected,$description);
 $test_count++;
+push(@{$rid_list},$rid);
 
 $logger->debug("Rid: $rid");
 
@@ -168,6 +183,7 @@ $rid = Kynetx::Persistence::Ruleset::create_rid($ken,$prefix);
 is($rid,$expected,$description);
 $test_count++;
 $logger->debug("Rid: $rid");
+push(@{$rid_list},$rid);
 
 $description = "Pull proto registry entry";
 $expected = {
@@ -204,7 +220,47 @@ my $rules = Kynetx::Repository::get_rules_from_repository($rid_info, $my_req_inf
 cmp_deeply($rules,$ast,$description);
 $test_count++;
 
+$description = "Get the rulesets created for KEN";
+$result = Kynetx::Persistence::Ruleset::get_rulesets_by_owner($ken);
+cmp_deeply($result,bag(@{$rid_list}),$description);
+$test_count++;
 
+$description = "Calculate signature for last_modified ruleset";
+$result = Kynetx::Persistence::Ruleset::signature($touch);
+isnt($result,undef,$description);
+$test_count++;
+
+my $sig1 = $result;
+
+$description = "Calculate signature for new ruleset";
+$result = Kynetx::Persistence::Ruleset::signature($untouch);
+isnt($result,undef,$description);
+$test_count++;
+my $sig2 = $result;
+
+$description = "Signatures differ";
+isnt($sig1,$sig2,$description);
+$test_count++;
+
+$description = "Modify a ruleset and make sure the signature changes";
+diag "Touch $untouch";
+my $ts = Kynetx::Persistence::Ruleset::touch_ruleset($untouch);
+
+diag "Sign $untouch";
+$result = Kynetx::Persistence::Ruleset::signature($untouch);
+isnt($result,$sig2,$description);
+$test_count++;
+
+foreach my $stale (@{$rid_list}) {
+  $logger->debug("Delete $stale");
+  Kynetx::Persistence::Ruleset::delete_registry($stale);
+}
+
+$description = "Rulesets all gone";
+$result = Kynetx::Persistence::Ruleset::get_rulesets_by_owner($ken);
+cmp_deeply($result,[],$description);
+$test_count++;
+$logger->debug("Rid list after: ", sub {Dumper($result)});
 
 
 # Clean up anonymous KENS

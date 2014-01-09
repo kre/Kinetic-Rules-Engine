@@ -232,6 +232,9 @@ sub session_cleanup {
 
 sub session_id {
     my ($session) = @_;
+    my $logger = get_logger();
+    my $parent = (caller(1))[3];
+    $logger->trace("Session parent: $parent");
     return $session->{_session_id};
 }
 
@@ -300,7 +303,7 @@ sub session_defined {
 sub session_delete {
     my ($rid, $session, $var) = @_;
     my $logger = get_logger();
-    $logger->debug("Delete session var: $var");
+    $logger->trace("Delete session var: $var");
     my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
     return delete_edatum($rid,$ken,$var);
 }

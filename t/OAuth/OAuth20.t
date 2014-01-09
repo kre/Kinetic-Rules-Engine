@@ -148,6 +148,13 @@ my $count = 0;
   'system_credentials',
   $keys);
 
+my $platform = '127.0.0.1';
+$platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
+$platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
+$platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox');
+
+#goto ENDY;
+
 $description = "Check system key";
 $result = Kynetx::Modules::PCI::pci_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[]);
 isnt($result,undef,$description);
@@ -237,6 +244,7 @@ cmp_deeply($result,$expected,$description);
 $test_count++;
 my @cb = @{$result};
 
+
 $callback = "http://www.bar.com/foo";
 $description = "Add another callback url to developer eci";
 push(@cb,$callback);
@@ -257,8 +265,35 @@ $test_count++;
 $description = "List remaining callbacks";
 $expected = \@cb;
 $result = Kynetx::Modules::PCI::list_callback($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci]);
-ll(Dumper $result);
+$logger->info("Callbacks: ",sub {Dumper($result)});
 cmp_deeply($result,$expected,$description);
+$test_count++;
+
+###################### Add App info
+$description = "Add OAuth application info";
+my $app_info = {
+  'icon' => 'https://squaretag.com/assets/img/st_logo_white_trans.png',
+  'name' => "Burt's Magic Fingers",
+  'description' => "Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.",
+  'info_page' => 'http://www.exampley.com'
+};
+$result = Kynetx::Modules::PCI::add_oauth_app_info($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci,$app_info]);
+cmp_deeply($result,scalar keys %{$app_info},$description);
+$test_count++;
+
+$description = "Get OAuth application info";
+$result = Kynetx::Modules::PCI::get_oauth_app_info($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci]);
+cmp_deeply($result,$app_info,$description);
+$test_count++;
+
+$description = "Store OAuth secret";
+$result = Kynetx::Modules::PCI::add_oauth_secret($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci,$dev_key]);
+cmp_deeply($result,1,$description);
+$test_count++;
+
+$description = "Get OAuth secret";
+$result = Kynetx::Persistence::KPDS::get_developer_secret($dken,$d_eci);
+cmp_deeply($result,$dev_key,$description);
 $test_count++;
 
 $description = "Make authorization request uri: check client_id";
@@ -267,6 +302,8 @@ $result = Kynetx::Modules::PCI::make_request_uri($my_req_info,$rule_env,$session
 ll(Dumper $result);
 cmp_deeply($result,$expected,$description);
 $test_count++;
+
+$logger->info("client_id=$d_eci");
 
 $description = "Make authorization request uri: check response_type";
 $expected = re(qr/response_type=code/);
@@ -336,22 +373,6 @@ cmp_deeply($result->code(),$expected,$description);
 $test_count++;
 
 
-#goto ENDY;
-#
-#$description = "Response has developer ECI";
-#$expected = re(qr/name="oauthClient" value="$d_eci/);
-#cmp_deeply($result->content(),$expected,$description);
-#$test_count++;
-#
-#$description = "Response has correct redirect";
-#$expected = re(qr/name="oauthRedirect" value="$cb[0]/);
-#cmp_deeply($result->content(),$expected,$description);
-#$test_count++;
-#
-#$description = "Response has correct state";
-#$expected = re(qr/name="oauthState" value="$state/);
-#cmp_deeply($result->content(),$expected,$description);
-#$test_count++;
 
 # test the Access Token
 my $access_token_code = Kynetx::Modules::PCI::oauth_authorization_code($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci,$u_eci,$dev_key]);
@@ -388,10 +409,6 @@ cmp_deeply($result,$expected,$description);
 $test_count++;
 
 BAIL_OUT("OAuth Token Fail") unless $otoken;
-my $platform = '127.0.0.1';
-$platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
-$platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
-$platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox');
 
 # Now with the OAuth token make a protected request
 
@@ -454,6 +471,103 @@ cmp_deeply($result->code(),401,$description);
 $test_count++;
 
 
+# MEH - I started with building a restful interface but that 
+# had limitations when I needed to build the user authorization piece
+# and I decided that it was not central to the idea of an centralized CloudOS OAuth service
+
+#$description = "Test username available";
+#$query = {
+#  "username" => $username
+#};
+#$base_url = $dn . "/available";
+#
+#$logger->debug("URL: $base_url");
+#$response = $ua->post($base_url,$query);
+#$json = $response->content;
+#$result = Kynetx::Json::jsonToAst_w($json);
+#cmp_deeply($result->{'available'},1,$description);
+#$test_count++;
+#
+#
+#
+#$test_user = Kynetx::Test::gen_user($my_req_info,$root_env,$session,$username);
+#$description = "Create test user";
+#isnt($test_user,undef,$description);
+#$test_count++;
+#
+#####################################
+## Set password for test user
+#Kynetx::Modules::PCI::_set_password($test_user,$password);
+#
+#
+#$description = "Test username un-available";
+#$response = $ua->post($base_url,$query);
+#$json = $response->content;
+#$result = Kynetx::Json::jsonToAst_w($json);
+#cmp_deeply($result->{'available'},0,$description);
+#$test_count++;
+#
+#
+#$description = "Test login fail";
+#my $bad_password = "shibboleth";
+#$post = {
+#  'user' => $username,
+#  'pass' => $bad_password
+#};
+#$base_url = $dn . "/signin";
+#$response = $ua->post($base_url,$post);
+#cmp_deeply($response->code,'401',$description);
+#$test_count++;
+#
+#$description = "Test login pass";
+#$post = {
+#  'user' => $username,
+#  'pass' => $password
+#};
+#$base_url = $dn . "/signin";
+#$response = $ua->post($base_url,$post);
+#cmp_deeply($response->code,'200',$description);
+#$test_count++;
+#
+#$description = "Returns token on signin pass";
+#$expected = {
+#  'eci' => re(qr/$uuid_re/)
+#};
+#$json = $response->content;
+#$result = Kynetx::Json::jsonToAst_w($json);
+#cmp_deeply($result,$expected,$description);
+#$test_count++;
+#$test_eci = $result->{'eci'};
+#$logger->debug("Token: $test_eci");
+#
+#$description = "Check login status by eci";
+#$base_url = $dn . "/status";
+#$post = {
+#  'eci' => $test_eci
+#};
+#$response = $ua->post($base_url,$post);
+#$json = $response->content;
+#$result = Kynetx::Json::jsonToAst_w($json);
+#cmp_deeply($result->{'status'},1,$description);
+#$test_count++;
+#
+#$description = "Log an account off";
+#$base_url = $dn . "/logout";
+#$ua->post($base_url,$post);
+#$base_url = $dn . "/status";
+#$post = {
+#  'eci' => $test_eci
+#};
+#$response = $ua->post($base_url,$post);
+#$json = $response->content;
+#$result = Kynetx::Json::jsonToAst_w($json);
+#cmp_deeply($result->{'status'},0,$description);
+#$test_count++;
+#
+#
+#Log::Log4perl->easy_init($INFO);
+###################################### End Login portal
+#
 
 sub test_request_url {
   my ($client_id,$response_type,$state,$rd_uri) = @_;
@@ -473,8 +587,6 @@ sub test_request_url {
   }
   return Kynetx::Util::mk_url($base,$params);
 }
-
-ENDY:
 
 done_testing($test_count);
 

@@ -633,6 +633,7 @@ sub _flush {
   $logger->debug("[flush] flushing rules for $rid (version $version)");
   $memd->delete(Kynetx::Repository::make_ruleset_key($rid, $version));  
   Kynetx::Modules::RuleEnv::delete_module_caches($req_info,$memd);
+  Kynetx::Persistence::Ruleset::touch_ruleset($rid);
 }
 
 sub _validate {

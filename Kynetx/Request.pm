@@ -90,7 +90,6 @@ sub build_request_env {
     my $body = retrieve_json_from_post($r);
 #    $logger->debug("Body: ", $body);
     $body_params = JSON::XS::->new->convert_blessed(1)->pretty(1)->decode($body || "{}");
-    $logger->debug("Body JSON: ", sub{Dumper $body_params});
 
     # you'd think you could just grab the POST body and parse it here, setting the 
     # params as necessary. Unfortunately, it's not that simple since parsing the request
@@ -188,7 +187,7 @@ sub build_request_env {
 
   foreach my $n (keys %{$req_params}) {
     my $enc = Kynetx::Util::str_in( $req_params->{$n} );
-    $logger->debug( "Param $n -> ", $req_params->{$n}, " ", $enc );
+    $logger->trace( "Param $n -> ", $req_params->{$n}, " ", $enc );
     my $not_attr = {
       '_rids'   => 1,
       '_eci'   => 1,

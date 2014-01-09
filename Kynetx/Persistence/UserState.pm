@@ -76,7 +76,7 @@ sub get_current_state {
   my ($rid,$session,$rulename) = @_;
   my $logger = get_logger();
   my $state_key = $rulename . ':sm_current';
-  $logger->debug("Get SM current: ", $state_key);
+  $logger->trace("Get SM current: ", $state_key);
   my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
 	my $key = {
         "ken" => $ken,
@@ -89,11 +89,11 @@ sub get_current_state {
   if (defined $value) {
   	$logger->trace("$state_key found in ",STATE_COLLECTION,sub {Dumper($value)});
   } else {
-  	$logger->debug("$state_key not found in ",STATE_COLLECTION);
+  	$logger->trace("$state_key not found in ",STATE_COLLECTION);
   	$value = Kynetx::MongoDB::get_singleton(COLLECTION,$key);
   	if (defined $value) {
-  		$logger->debug("Found $state_key in ", COLLECTION);
-  		$logger->debug("Copy state to ",STATE_COLLECTION);
+  		$logger->trace("Found $state_key in ", COLLECTION);
+  		$logger->trace("Copy state to ",STATE_COLLECTION);
   		set_current_state($rid,$session,$rulename,$value);
   		purge_state_from_edata($rid,$session,$rulename);
   	}
@@ -215,7 +215,7 @@ sub push_aggregator {
 	if (ref $vals eq "ARRAY") {
 		@val = @{$vals};
 	} else {
-		$logger->debug("Vals is: ", sub {Dumper($vals)});
+		$logger->trace("Vals is: ", sub {Dumper($vals)});
 		push(@val, $vals);
 	}
 	my $a_object =  {

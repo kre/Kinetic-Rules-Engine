@@ -1,0 +1,56 @@
+  <!-- ========================================================================================= -->    
+  		<div data-role="page" id="oauthenticate">
+	  		<div data-role="dialog" class="dialog-actionsheet ui-page ui-body-a ui-dialog ui-overlay-a
+	  				ui-page-active" data-url="/login" data-external-page="true" tabindex="0" 
+	  				data-overlay-theme="a" data-title="KMCP landing page" style="min-height: 380px;">  			 
+	  				<div data-role="content" data-theme="a" class="ui-corner-top ui-corner-bottom ui-content ui-body-a" role="main">	  					  
+	  					<div data-role="controlgroup" data-type="horizontal" data-mini="true"
+	  						style="text-align:right;">
+	  						
+							<a href="#" data-rel="dialog" data-transition="slidedown" 
+									data-theme="a" data-corners="true" data-shadow="true" data-iconshadow="true"
+									data-mini="true" data-wrapperels="span" 
+									class="ui-shadow ui-btn-up-b ui-corner-left">
+								<TMPL_VAR NAME="USERNAME">
+							</a>&nbsp;
+							<a href="http://127.0.0.1/login/logout" data-rel="dialog" data-transition="slidedown" 
+									data-theme="a" data-corners="true" data-shadow="true" data-iconshadow="true"
+									data-mini="true" data-ajax="false" data-wrapperels="span" class="ui-shadow">
+								logout
+							</a>
+								
+						</div>						
+						
+					</div>
+					
+						<div data-role="content" data-theme="a" class="ui-corner-top ui-corner-bottom ui-content ui-body-a" style="float:right;"><TMPL_IF NAME="ICON">
+									
+										<a href="<TMPL_VAR NAME="INFO_PAGE">">
+											<img src="<TMPL_VAR NAME="ICON">" alt="<TMPL_VAR NAME="APP_NAME">" />
+										</a>
+									
+								</TMPL_IF>
+					   	</div>								 
+					<div data-role="content" data-theme="a" class="ui-corner-top ui-corner-bottom ui-content ui-body-a" role="main">							  					  
+						<form action="http://127.0.0.1/login/oauth/allow" method="post" data-url="/login/oauth/authorize" data-external-page="true" data-ajax="false">
+							<fieldset style="padding:10px 20px;">
+							
+							  <legend>The application <TMPL_VAR NAME="APP_NAME"> would like to access your personal cloud</legend>	
+							  <input type="hidden" name="developer_eci" value="<TMPL_VAR NAME="ECI">" >
+						  		<input type="hidden" name="user_state" value="<TMPL_VAR NAME="STATE">" >
+				          		<input type="hidden" name="uri_redirect" value="<TMPL_VAR NAME="REDIRECT">" >	
+					    	  <button type="submit" data-inline="true" data-theme="b"  data-mini="true" class="ui-btn-hidden" aria-disabled="false">Allow</button>
+					    	  <a href="#" data-role="button" data-inline="true" data-rel="back" data-mini="true" class="ui-btn-hidden" aria-disabled="false">Deny</a>
+							</fieldset>
+						</form>	
+						
+					</div>
+					<p><ul>
+						<li>eci: 	<TMPL_VAR NAME="ECI"></li>
+						<li>state: 	<TMPL_VAR NAME="STATE"></li>
+						<li>uri:  <TMPL_VAR NAME="REDIRECT"></li>
+						</ul></p>										  
+					
+				</div>
+				
+  		</div>

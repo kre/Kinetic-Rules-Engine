@@ -36,6 +36,7 @@ use Cache::Memcached;
 use DateTime::Format::ISO8601;
 use Benchmark ':hireswallclock';
 use Encode qw(from_to);
+use Digest::MD5 qw(md5_base64);
 
 use Kynetx::Util;
 use Kynetx::Persistence::KEN qw(
@@ -96,6 +97,15 @@ sub handler {
   $logger->debug("Code: $code");
   $logger->debug("Grant: $grant");
   $logger->debug("Redirect: $redirect_uri");
+  
+  
+  my $md5_sig = md5_base64($code);
+  $logger->debug("Check cache for $md5_sig");
+  my $code_exists = Kynetx::Memcached::check_cache($md5_sig);
+  if ($code_exists) {
+    $logger->debug("Fail on duplicate code");
+    return return_error($r,$redirect_uri,'invalid_request','Duplicate request codes not allowed');
+  }
   my $decon = Kynetx::Modules::PCI::deconstruct_oauth_code($user,$code);
   my $time = $decon->[0];
   my $eci = $decon->[1];
@@ -105,9 +115,16 @@ sub handler {
     $logger->debug("Client Id/Developer code mis-match");
     return Apache2::Const::HTTP_BAD_REQUEST;
   }
+  
+  $logger->debug("Time: $time");
+  $logger->debug("ECI: $eci");
+  $logger->debug("secret: $secret");
+  $logger->debug("oauth user: ", sub {Dumper($oauth_user)});
   my $now = time();
   my $elapsed = $now - $time;
-  return_error($r,$redirect_uri,'invalid_request',"Request token code is stale") unless ($elapsed < $TEN_MINUTES);
+  return return_error($r,$redirect_uri,'invalid_request',"Request token code is stale") unless ($elapsed < $TEN_MINUTES);
+  
+  
   
   # so far so good, now create the official token
   my $token = Kynetx::Modules::PCI::create_oauth_token($cid,$oauth_user,$secret);
@@ -115,6 +132,10 @@ sub handler {
   my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($oauth_user);
   my $oauth_eci = Kynetx::Modules::PCI::create_oauth_indexed_eci($ken,$token,$eci);
   $logger->debug("OECI: $oauth_eci");
+  
+  # store the code in memcached so it can't be used again
+  
+  Kynetx::Memcached::mset_cache($md5_sig,1,6060);
   
   # Server response
   $r->content_type('application/json;charset=UTF-8');
@@ -127,14 +148,12 @@ sub handler {
 
 sub return_error {
   my ($r,$uri,$code,$description) = @_;
-  my $params = {
-    "error" => $code,
-    "error_description" => $description
-  };
-  my $redirect = Kynetx::Util::mk_url($uri,$params);
-  $r->headers_out->set('Location' => $redirect);
-  $r->status(Apache2::Const::HTTP_TEMPORARY_REDIRECT);
-  return Apache2::Const::OK;
+  $r->content_type('application/json;charset=UTF-8');
+  $r->headers_out->set('Cache-Control' => 'no-store');
+  $r->headers_out->set('Pragma' => 'no-cache');
+  $r->status(Apache2::Const::HTTP_BAD_REQUEST);
+  $r->custom_response(Apache2::Const::HTTP_BAD_REQUEST, "{\n \"error\":\"$code\",\n \"error_description\":\"$description\"\n}");
+  return Apache2::Const::HTTP_BAD_REQUEST;
 }
 
 1;

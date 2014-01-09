@@ -101,7 +101,7 @@ my $test_count;
 my $config;
 my $config2;
 
-goto ENDY;
+
 
 #diag "_____________________________START TEST____________________________";
 sub local_gen_req_info {
@@ -4773,12 +4773,12 @@ $test_count++;
 ENDY:
 
 ###########
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 ###########
 
 ## these rulesets are tied together because of the provide keys restriction on rids
-my $provide = 'a144x171';
-my $uses = 'a144x172';
+my $provide = 'a144x171.prod';
+my $uses = 'a144x172.prod';
 my $version = 'prod';
 
 my $rid_info = mk_rid_info($my_req_info,$provide);
