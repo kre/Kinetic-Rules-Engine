@@ -585,19 +585,8 @@ sub add_ruleset_to_account {
 	  
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
 		my $installed = Kynetx::Persistence::KPDS::add_ruleset($ken,\@ridlist);
-		
-		# Grab installed rulesets from legacy repository
-#		my $id_token = Kynetx::Persistence::KToken::get_default_token($ken);
-#		my $legacy = Kynetx::Dispatch::old_repository($req_info,$id_token,$ken);
-#		for my $ruleset (@{$legacy}) {
-#		  my $orid = $ruleset->{'rid'};
-#		  my $over = $ruleset->{'kinetic_app_version'} || 'prod';
-#		  if ($orid) {
-#		    my $fqrid = $orid . '.' . $over;
-#		    Kynetx::Persistence::KPDS::add_ruleset($ken,$fqrid);
-#		  }
-#		}
-		
+		Kynetx::Dispatch::clear_rid_list_by_ken($ken);
+				
 		return {
 			'nid' => $userid,
 			'rids' => $installed->{'value'}
@@ -635,6 +624,7 @@ sub remove_ruleset_from_account {
 	if ($ken && scalar @{$args} >= 1) {
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
 		my $installed = Kynetx::Persistence::KPDS::remove_ruleset($ken,\@ridlist);
+		Kynetx::Dispatch::clear_rid_list_by_ken($ken);
 		foreach my $orid (@ridlist) {
 		  Kynetx::Persistence::SchedEv::delete_entity_sched_ev($ken,$orid)
 		}

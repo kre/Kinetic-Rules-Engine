@@ -130,7 +130,8 @@ sub get_ridlist {
       $logger->debug("Installed ($ken): $installed_rid");
       my $rid_data = Kynetx::Persistence::Ruleset::get_ruleset_info($installed_rid);
       $logger->debug("Found: ", sub {Dumper($rid_data)});
-      $rid_info = Kynetx::Persistence::Ruleset::to_rid_info($installed_rid);       
+      $rid_info = Kynetx::Persistence::Ruleset::to_rid_info($installed_rid);
+      $logger->debug("Calculated: ", sub {Dumper($rid_info)});       
       push(@list,$rid_info);
     }
     Kynetx::Memcached::mset_cache($rid_list_key,\@list);
@@ -251,21 +252,25 @@ sub calculate_rid_list {
   return $r;
 }
 
+sub clear_rid_list_by_ken {
+  my ($ken) = @_;
+  my $rid_list = get_ridlist(undef,undef,$ken);
+  flush_ridlist($ken);
+  Kynetx::Memcached::flush_cache(mk_eventtree_key($rid_list));
+}
+
 sub clear_rid_list {
   my ($session) = @_;
   my $logger = get_logger();
   $logger->debug( "[flush] flushing RID list for ",
     Kynetx::Session::session_id($session) );
-  my $ken = Kynetx::Persistence::get_ken( $session, "", "web" );
-  my $memd = get_memd();
+  my $ken = Kynetx::Persistence::get_ken( $session, "", "web" );  
 
-  my $rid_list = $memd->get( mk_ridlist_key($ken) );
-
-  $memd->delete( mk_ridlist_key($ken) );
-
+  my $rid_list = get_ridlist(undef,undef,$ken);
+  flush_ridlist($ken);
+  
   $logger->debug("Flushing event tree because RID list changed");
-  delete_stashed_eventtree({}, $memd, mk_eventtree_key($rid_list));
-
+  Kynetx::Memcached::flush_cache(mk_eventtree_key($rid_list));
 }
 
 sub calculate_dispatch {
@@ -430,7 +435,7 @@ sub mk_eventtree_key {
   my ($rid_list) = @_;
   my $logger = get_logger();
   my $sig_str = "seed";
-  $logger->debug("mk eventree key: ", sub {Dumper($rid_list)});
+  #$logger->debug("mk eventree key: ", sub {Dumper($rid_list)});
   foreach my $rid_info (sort {$a->{'rid'} cmp $b->{'rid'}}@{$rid_list}) {
     my $sig = Kynetx::Persistence::Ruleset::signature(Kynetx::Rids::get_fqrid($rid_info));
     $sig_str .= $sig;

@@ -263,6 +263,7 @@ sub newaccount {
   $logger->debug("New account page: ");
   my $template = DEFAULT_TEMPLATE_DIR . "/login/create.tmpl";
 	my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+	_set_host($dialog);
 }
 
 sub authorize_app {
@@ -287,6 +288,7 @@ sub authorize_app {
 	$dialog->param('ECI' => $developer_eci );
 	$dialog->param('STATE' =>  $state);
 	$dialog->param('REDIRECT' =>  $redirect);
+	_set_host($dialog);
 	return $dialog->output();
   
 }
@@ -327,7 +329,7 @@ sub profile_page {
     $dialog->param("PAGEFORM" => profile_update($ken));
   }
 	
-	
+	_set_host($dialog);
 	return $dialog->output();
 }
 
@@ -339,6 +341,7 @@ sub page_error {
   my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
 	$dialog->param("PLATFORM" => _platform());
   $dialog->param("ERROR_TEXT" => $error);	
+	_set_host($dialog);
 	return $dialog->output();
 }
 
@@ -353,6 +356,7 @@ sub profile_update {
   $dialog->param("EMAIL" => $email);
   $dialog->param("FNAME" => $fname);
   $dialog->param("LNAME" => $lname);
+  _set_host($dialog);
   return $dialog->output();
 }
 
@@ -369,6 +373,7 @@ sub native_login {
 	    $dialog->param("STICKY_USER" => $username)
 	  }
 	}
+	_set_host($dialog);
 	return $dialog->output();
 }
 
@@ -387,6 +392,7 @@ sub oauth_signin_page {
   $logger->debug("Present authorization page: ");
   my $template = DEFAULT_TEMPLATE_DIR . "/login/oauth_signin.tmpl";
 	my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+	_set_host($dialog);
 	my $username = $params->{'user'};
 	my $password = $params->{'pass'};
 	$logger->debug("User: ", $username);
@@ -461,6 +467,7 @@ sub oauth_login_page {
   my ($params,$error) = @_;
   my $template = DEFAULT_TEMPLATE_DIR . "/login/oauth_login.tmpl";
 	my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+	_set_host($dialog);
 	$dialog->param('ECI' => $params->{'developer_eci'} );
 	$dialog->param('STATE' => $params->{'client_state'} );
 	$dialog->param('REDIRECT' => $params->{'uri_redirect'} );
@@ -534,9 +541,26 @@ sub post_param {
 
 sub base_login {
   my ($r) = @_;
+  my $logger = get_logger();
   my $template = DEFAULT_TEMPLATE_DIR . "/Login.tmpl";
-	my $login_page = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+	my $login_page = HTML::Template->new(filename => $template,die_on_bad_params => 0);	
+	_set_host($login_page);
 	return $login_page;
+}
+
+sub _set_host {
+  my ($t) = @_;
+  my $logger = get_logger();
+  my $host = Kynetx::Configure::get_config("EVAL_HOST");
+  my $prefix;
+  if (Kynetx::Configure::get_config("RUN_MODE") eq "development") {
+    $prefix = "http://"
+  } else {
+    $prefix = "https://"
+  }
+  my $template_host = $prefix . $host;
+	$logger->debug("Eval $template_host");
+	$t->param("THOST" => $template_host);
 }
 
 sub login_session {
