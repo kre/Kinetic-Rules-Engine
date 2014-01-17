@@ -81,18 +81,19 @@ sub handler {
     my $login_info;
     my $session = login_session($r);
     my $login_page = base_login($r);
+    $login_page->param('SMODE' => _smode());
 
     $logger->debug("OAuth2.0 Main");
-    $logger->debug("Args: ",$r->args);
-    $logger->debug("unURI: ",$r->unparsed_uri());
-    $logger->debug("path: ",$r->path_info());
+    $logger->trace("Args: ",$r->args);
+    $logger->trace("unURI: ",$r->unparsed_uri());
+    $logger->trace("path: ",$r->path_info());
     #Kynetx::Util::request_dump($r);
     my ($method,$path) = $r->path_info() =~ m!/([a-z+_]+)/*(.*)!;
     my $req = Apache2::Request->new($r);
     my $p = $req->param();    
-    $logger->debug("Method: $method");
-    $logger->debug("Path: $path");
-    $logger->debug("params: ", sub {Dumper($p)});
+    $logger->trace("Method: $method");
+    $logger->trace("Path: $path");
+    $logger->trace("params: ", sub {Dumper($p)});
     
     my $result = workflow($login_page,$session, $method, $path,$p);
     
@@ -112,10 +113,10 @@ sub handler {
 sub refresh_token {
   my ($oauth_token,$session_token,$params) = @_;
   my $logger = get_logger();
-  $logger->debug("Refresh delete: $oauth_token");
+  $logger->trace("Refresh delete: $oauth_token");
   my $oauth_eci = Kynetx::Persistence::KToken::get_token_by_token_name($oauth_token);
   my $result = Kynetx::Persistence::KToken::delete_token($oauth_eci);
-  $logger->debug("delete result: ", sub {Dumper($result)});
+  $logger->trace("delete result: ", sub {Dumper($result)});
   return _code_redirect($session_token,$params);
 }
 
@@ -126,10 +127,10 @@ sub _code_redirect {
   my $state =  $params->{'client_state'};
   my $uri = $params->{'uri_redirect'};
   my $code = oauth_code($eci,$session_token);
-  $logger->debug("eci: $eci");
-  $logger->debug("state: $state");
-  $logger->debug("uri: $uri");
-  $logger->debug("uri: $uri");
+  $logger->trace("eci: $eci");
+  $logger->trace("state: $state");
+  $logger->trace("uri: $uri");
+  $logger->trace("uri: $uri");
   my $location = Kynetx::Util::mk_url($uri,{
      'code' => $code,
      'state' => $state
@@ -150,12 +151,12 @@ sub workflow {
   if ($method eq 'oauth') {
     if ($ken) {
       # check for oauth token
-      $logger->debug("Is logged in: $ken");
+      $logger->trace("Is logged in: $ken");
       if ($path eq "signin") {
         $logger->debug("sign_in");
         my $oauth_token = _oauth_token($ken,$params);
         if ($oauth_token) {
-          $logger->debug("SI Has oauth token: $oauth_token");
+          $logger->trace("SI Has oauth token: $oauth_token");
           # This guy has already authorized the app
           return refresh_token($oauth_token,$session_token,$params);
           
@@ -171,10 +172,10 @@ sub workflow {
         # Present the application authorize page
         $logger->debug("Path is not specific");
         my $oauth_token = _oauth_token($ken,$params);
-        $logger->debug("OAuth token: $oauth_token");
+        $logger->trace("OAuth token: $oauth_token");
         if ($oauth_token) {
           # This guy has already authorized the app
-          $logger->debug("Has oauth token: $oauth_token");
+          $logger->trace("Has oauth token: $oauth_token");
           return refresh_token($oauth_token,$session_token,$params);          
         } else {
           $template->param("DIALOG" => authorize_app($ken,$params));
@@ -226,7 +227,7 @@ sub workflow {
       } else {
         $json->{'available'} = 1
       }
-      $logger->debug("HASH: ", sub {Dumper($json)});
+      $logger->trace("HASH: ", sub {Dumper($json)});
       return $json;
   } elsif ($method eq 'create') {   
       $ken = create_account($params);
@@ -283,10 +284,10 @@ sub set_profile {
   my $form_token = $params->{'login_session'};
   my $session_token = Kynetx::Persistence::KToken::get_token_by_endpoint_id($form_token);
   my $session_ken = Kynetx::Persistence::KEN::ken_lookup_by_token($session_token);
-  $logger->debug("        Ken: $ken");
-  $logger->debug("Session Ken: $session_ken");
+  $logger->trace("        Ken: $ken");
+  $logger->trace("Session Ken: $session_ken");
   if ($session_ken eq $ken) {
-    $logger->debug("params: ",sub {Dumper($params)});
+    $logger->trace("params: ",sub {Dumper($params)});
     my @update_allowed = ('firstname', 'lastname', 'email');
     foreach my $element (@update_allowed) {
       my $string = $element;
@@ -294,7 +295,7 @@ sub set_profile {
         $string .= ":" . $params->{$element};
         Kynetx::Persistence::KEN::set_ken_value($ken,$element,$params->{$element})
       }
-      $logger->debug("$string");
+      $logger->trace("$string");
     }
   }
   
@@ -307,7 +308,7 @@ sub create_account {
   my $password = $params->{'password1'};
   my $email = $params->{'email'};
   my $type = 'PCI';
-  $logger->debug("$username $password $email");
+  $logger->trace("$username $password $email");
   if ($username && $password && $email) {
     # check username 
     my $ken = Kynetx::Persistence::KEN::ken_lookup_by_username($username);
@@ -336,16 +337,16 @@ sub create_account {
 sub _oauth_token {
   my ($ken,$params) = @_;
   my $logger = get_logger();
-  $logger->debug("Params: ",sub {Dumper($params)});
+  $logger->trace("Params: ",sub {Dumper($params)});
   my $developer_eci =  $params->{'developer_eci'};
   my $etype = "OAUTH-$developer_eci";
   my $var = {
     'endpoint_type' => $etype,
     'ken' => $ken
   };
-  $logger->debug("Key: ", sub {Dumper($var)});
+  $logger->trace("Key: ", sub {Dumper($var)});
   my $token = Kynetx::Persistence::KToken::token_query($var);
-  $logger->debug("token: ", sub {Dumper($token)});
+  $logger->trace("token: ", sub {Dumper($token)});
   if ($token) {
     return $token->{"token_name"};
   }
@@ -366,7 +367,7 @@ sub authorize_app {
   my ($ken,$params) = @_;
   my $logger = get_logger();
   $logger->debug("Present authorization page: ");
-  $logger->debug("Params: ", sub {Dumper($params)});
+  $logger->trace("Params: ", sub {Dumper($params)});
   my $template = DEFAULT_TEMPLATE_DIR . "/login/oapp_auth.tmpl";
 	my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
 	my $developer_eci = $params->{'developer_eci'};
@@ -394,7 +395,7 @@ sub _logged_in {
   my $logger = get_logger();
   $logger->debug("get token");
   my $token = Kynetx::Persistence::KToken::get_token($session,undef,"web");
-  $logger->debug("get token: ", sub {Dumper($token)});
+  $logger->trace("get token: ", sub {Dumper($token)});
   if (defined $token && ref $token eq "HASH") {
     return $token->{'ktoken'}
   }
@@ -405,7 +406,7 @@ sub create_login_token {
   my ($session,$ken) = @_;
   my $logger = get_logger();
   my $token = Kynetx::Persistence::KToken::create_token($ken,LOGIN_TAG,"KMCP",$session);
-  $logger->debug("Made token: ", sub {Dumper($token)});
+  $logger->trace("Made token: ", sub {Dumper($token)});
   return $token;  
 }
 
@@ -431,7 +432,7 @@ sub profile_page {
 sub page_error {
   my ($error) = @_;
   my $logger = get_logger();
-  $logger->debug("Profile");
+  $logger->trace("Profile");
   my $template = DEFAULT_TEMPLATE_DIR . "/login/error.tmpl";
   my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
 	$dialog->param("PLATFORM" => _platform());
@@ -493,8 +494,8 @@ sub oauth_signin_page {
 	$dialog->param('PLATFORM' => _platform());
 	my $username = $params->{'user'};
 	my $password = $params->{'pass'};
-	$logger->debug("User: ", $username);
-	$logger->debug("Password: ",$password);
+	$logger->trace("User: ", $username);
+	$logger->trace("Password: ",$password);
 	my $developer_eci = $params->{'developer_eci'};
 	my $state = $params->{'client_state'};
 	my $redirect = $params->{'uri_redirect'};
@@ -531,9 +532,9 @@ sub _validate_password {
   my ($username,$password) = @_;
   my $logger = get_logger();
   if ($username) {
-    $logger->debug("Uname: $username");
+    $logger->trace("Uname: $username");
     my $ken = Kynetx::Modules::PCI::_username($username);
-    $logger->debug("Pword: $password");    
+    $logger->trace("Pword: $password");    
     if ($ken) {
       if (Kynetx::Modules::PCI::auth_ken($ken,$password)){
         return $ken
@@ -549,8 +550,8 @@ sub _signin {
   my $logger = get_logger();
 	my $username = $params->{'user'};
 	my $password = $params->{'pass'};
-	$logger->debug("User: ", $username);
-	$logger->debug("Password: ",$password);
+	$logger->trace("User: ", $username);
+	$logger->trace("Password: ",$password);
 	my $ken = _validate_password($username,$password);
 	if ($ken) {
 	  create_login_token($session,$ken);
@@ -607,11 +608,11 @@ sub show_account {
   my $logger = get_logger();
   my $div;
   if ($token) {
-    $logger->debug("token: $token");
+    $logger->trace("token: $token");
     my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($token);
     if ($ken) {
       my $username = Kynetx::Persistence::KEN::get_ken_value($ken,"username");
-      $logger->debug("ken: $ken");
+      $logger->trace("ken: $ken");
       $html_template->param("LOGGED_IN" => 1);
       $html_template->param("USERNAME" => $username);
       
@@ -633,7 +634,7 @@ sub post_param {
   my ($r,$key) = @_;
   my $logger= get_logger();
   my $req = Apache2::Request->new($r);
-  $logger->debug("Request: ", sub {Dumper($req)});
+  $logger->trace("Request: ", sub {Dumper($req)});
   return $req->param($key);  
 }
 
