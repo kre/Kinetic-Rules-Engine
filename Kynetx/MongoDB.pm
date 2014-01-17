@@ -147,6 +147,7 @@ sub get_mongo {
     return $db;
 }
 
+
 sub get_collection {
     my ($name) = @_;
     my $logger = get_logger();
@@ -160,6 +161,44 @@ sub get_collection {
     }
     return $c;
 }
+
+
+sub aggregate_group {
+  my ($collection,$match,$group,$sort,$limit,$skip) = @_;
+  my $logger = get_logger();
+  my $c = get_collection($collection);
+  my $db = get_mongo();
+  my $pipeline = ();
+  if ($match and ref $match eq "HASH") {
+    push(@{$pipeline}, {'$match' => $match});
+    push(@{$pipeline},{'$group' => $group});
+    if (defined $sort && ref $sort eq "HASH") {
+      push(@{$pipeline},{'$sort' => $sort})
+    }
+    if (defined $limit && ref $limit eq "HASH") {
+      push(@{$pipeline},{'$limit' => $limit})
+    }
+    if (defined $skip && ref $skip eq "HASH") {
+      push(@{$pipeline},{'$skip' => $skip})
+    }
+    my $command = {
+      "aggregate" =>  $collection,"pipeline" =>
+        [{'$match' => $match},
+         {'$group' => $group}
+         ]
+      
+    };
+    my $result = $db->run_command($command);
+    if (ref $result eq "HASH" && $result->{'ok'} == 1) {
+      return $result->{'result'}
+    }
+    
+  } 
+  return undef;
+  
+  
+}
+
 
 sub get_array_element {
 	my ($collection, $key,$index) = @_;

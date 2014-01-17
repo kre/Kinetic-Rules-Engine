@@ -329,6 +329,19 @@ sub get_token_by_token_name {
   return undef;
 }
 
+sub get_token_by_endpoint_id {
+  my ($eid) = @_;
+  my $key = {
+    'endpoint_id' => $eid
+  };
+  my $result = Kynetx::MongoDB::get_value(COLLECTION,$key);
+  if (defined $result) {
+    return $result->{'ktoken'};
+  }
+  return undef;
+}
+
+
 sub get_token_by_token_type {
 	my ($type) = @_;
 	my $logger = get_logger();

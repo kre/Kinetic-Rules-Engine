@@ -1,30 +1,115 @@
   <!-- ========================================================================================= -->    
-  		<div data-role="page" id="profile">
-	  		<div data-role="dialog" class="dialog-actionsheet ui-page ui-body-a ui-dialog ui-overlay-a
-	  				ui-page-active" data-url="/login" data-external-page="true" tabindex="0" 
-	  				data-overlay-theme="a" data-title="KMCP landing page" style="min-height: 380px;">  			 
-	  				<div data-role="content-primary" data-theme="a" class="ui-corner-top ui-corner-bottom ui-content ui-body-a" role="main">	  					  
-	  					<div data-role="controlgroup" data-type="horizontal" data-mini="true"
-	  						style="text-align:right;">
-	  						
-							<a href="#" data-rel="dialog" data-transition="slidedown" 
-									data-theme="a" data-corners="true" data-shadow="true" data-iconshadow="true"
-									data-mini="true" data-wrapperels="span" 
-									class="ui-shadow ui-btn-up-b ui-corner-left">
-								<TMPL_VAR NAME="USERNAME">
-							</a>&nbsp;
-							<a href="<TMPL_VAR NAME="PLATFORM">/login/logout" data-rel="dialog" data-transition="slidedown" 
-									data-theme="a" data-corners="true" data-shadow="true" data-iconshadow="true"
-									data-mini="true" data-ajax="false" data-wrapperels="span" class="ui-shadow">
-								logout
-							</a>
-								
-						</div>						
-						
-					</div>
-					<div data-role="content-secondary" data-theme="a" 
-							class="ui-corner-top ui-corner-bottom ui-content ui-body-a">
-						<TMPL_VAR NAME="PAGEFORM">
-					</div>
-				</div>					
-  		</div>
+<div data-role="page" id="create">
+	<div data-role="dialog" class="dialog-actionsheet ui-page ui-body-a ui-dialog ui-overlay-a
+			ui-page-active" data-url="/login" data-external-page="true" tabindex="0" 
+			data-overlay-theme="c" data-title="KMCP account creation page" style="min-height: 380px;">  			 
+			<div data-role="content" data-theme="a" class="ui-corner-top ui-corner-bottom ui-content ui-body-a" role="main">
+				<h3>Kynetx Micro Cloud Platform</h3>	  					
+					<form action="<TMPL_VAR NAME="PLATFORM">/login/create/" method="post" data-url="<TMPL_VAR NAME="PLATFORM">/login/create" data-external-page="true" data-ajax="false">
+						<div style="padding:10px 20px;">
+						  <strong>Creating your own personal cloud is easy</strong>
+						  <div data-role="fieldcontain" class="ui-field-contain ui-body ui-br">
+						  	<label for="new_user_name">username:</label>
+    						<input type="search" name="new_user_name" id="new_user_name" value="" data-mini="true" placeholder="username"/>
+						  </div>
+						  <div data-role="fieldcontain" class="ui-field-contain ui-body ui-br">
+						  	<label for="password1">password:</label>
+    						<input type="password" name="password1" id="password1" value="" data-mini="true" placeholder="password"/>
+ 						  	<label for="password2">&nbsp;</label>
+    						<input type="password" name="password2" id="password2" value="" data-mini="true" placeholder="confirm password"/>    						
+						  </div>
+						  <div data-role="fieldcontain" class="ui-field-contain ui-body ui-br">
+						  	<label for="email">email:</label>
+    						<input type="email" name="email" id="email" value="" data-mini="true" class="required"/>
+						  </div>
+						  <div data-role="fieldcontain" class="ui-fieldcontain ui-body ui-br">
+						  	<input type="submit" value="Create" id="create_submit" data-role="button" data-inline="true" data-mini="true"/>
+						  	<a href="#" data-role="button" data-inline="true" data-mini="true" data-rel="back">Cancel</a>
+						  </div>
+						</div>
+					</form>
+										  					
+			</div>  	
+			
+	</div>  			
+</div>
+
+<script>
+	$(document).ready(function() {
+		var min_char = 3;
+		var timer;
+		
+		$('[type="submit"]').button('disable');
+		$('#new_user_name').keyup(function(){
+			clearTimeout(timer);
+			nowspace = nows($('#new_user_name').val());
+			nobadchars = badchars(nowspace);
+			$('#new_user_name').val(nobadchars);
+			timer = setTimeout (function() {
+				if($('#new_user_name').val().length < min_char) {
+					$('[type="submit"]').button('disable'); 
+					
+				} else {
+					check_username($('#new_user_name').val());	
+										
+				}
+				$('[type="submit"]').button('refresh');
+			},500);
+		});
+	});
+	
+	$('#password2').blur(function () {
+		var p1 = $('#password1').val();
+		var p2 = $('#password2').val();
+		if (p1 === p2) {
+			$('label[for=password1]').removeClass('error').addClass('okay');
+			$('label[for=password2]').val("&nbsp;");
+			$('[type="submit"]').button('enable');			
+		} else {
+			$('[type="submit"]').button('disable');
+			$('label[for=password1]').removeClass('okay').addClass('error');
+			$('label[for=password2]').val("no match");
+		}
+		$('[type="submit"]').button('refresh');
+	});
+	
+	$('#email').blur(function () {
+		var emailaddress = $('#email').val();		
+		if (isValidEmailAddress(emailaddress)) {
+			$('label[for=email]').removeClass('error').addClass('okay');			
+			$('[type="submit"]').button('enable');			
+		} else {
+			$('[type="submit"]').button('disable');
+			$('label[for=email]').removeClass('okay').addClass('error');			
+		}
+		$('[type="submit"]').button('refresh');
+	});
+	function nows(str) {
+		return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+	};
+	
+	function badchars(str) {
+		return str.replace(/[^\u00C0-\u1FFF\u2C00-\uD7FF\w\@\-\.]+/,'');
+	};
+	
+	function check_username(uname) {
+		console.log("Username " + uname);
+		$.post("<TMPL_VAR NAME="PLATFORM">/login/check_username", {username : uname},
+			function(data) {
+				console.log("r_uname " + data.username);
+				console.log("r_avail " + data.available);
+				if (data.available) {
+					$('[type="submit"]').button('enable');
+					$('label[for=new_user_name]').removeClass('error').addClass('okay');
+				} else {
+					$('[type="submit"]').button('disable');
+					$('label[for=new_user_name]').removeClass('okay').addClass('error');
+				}
+			},'json');
+		};
+		
+	function isValidEmailAddress(emailAddress) {
+    	var pattern = new RegExp(/^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i);
+    	return pattern.test(emailAddress);
+	};		
+</script>

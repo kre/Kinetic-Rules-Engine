@@ -13,7 +13,7 @@
 									class="ui-shadow ui-btn-up-b ui-corner-left">
 								<TMPL_VAR NAME="USERNAME">
 							</a>&nbsp;
-							<a href="<TMPL_VAR NAME="THOST">/login/logout" data-rel="dialog" data-transition="slidedown" 
+							<a href="<TMPL_VAR NAME="PLATFORM">/login/logout" data-rel="dialog" data-transition="slidedown" 
 									data-theme="a" data-corners="true" data-shadow="true" data-iconshadow="true"
 									data-mini="true" data-ajax="false" data-wrapperels="span" class="ui-shadow">
 								logout
@@ -32,7 +32,7 @@
 								</TMPL_IF>
 					   	</div>								 
 					<div data-role="content" data-theme="a" class="ui-corner-top ui-corner-bottom ui-content ui-body-a" role="main">							  					  
-						<form action="<TMPL_VAR NAME="THOST">/login/oauth/allow" method="post" data-url="/login/oauth/authorize" data-external-page="true" data-ajax="false">
+						<form action="<TMPL_VAR NAME="PLATFORM">/login/oauth/allow" method="post" data-url="/login/oauth/authorize" data-external-page="true" data-ajax="false">
 							<fieldset style="padding:10px 20px;">
 							
 							  <legend>The application <TMPL_VAR NAME="APP_NAME"> would like to access your personal cloud</legend>	
@@ -45,7 +45,7 @@
 						</form>	
 						
 					</div>
-					<p><ul>
+					<p><ul style="display: none;">
 						<li>eci: 	<TMPL_VAR NAME="ECI"></li>
 						<li>state: 	<TMPL_VAR NAME="STATE"></li>
 						<li>uri:  <TMPL_VAR NAME="REDIRECT"></li>

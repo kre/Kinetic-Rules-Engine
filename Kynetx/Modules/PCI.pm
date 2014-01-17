@@ -26,6 +26,7 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 use Kynetx::Util qw(ll);
 use Kynetx::Rids qw/:all/;
+use Kynetx::Dispatch; #qw/clear_rid_list_by_ken/;
 #use Kynetx::Environments qw/:all/;
 use Kynetx::Modules::Random;
 use Digest::SHA qw/hmac_sha1 hmac_sha1_hex hmac_sha1_base64

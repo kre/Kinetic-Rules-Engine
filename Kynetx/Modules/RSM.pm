@@ -572,7 +572,7 @@ sub response_object {
     'obj' => $rid_object
   };
   $ro->{$event_var} = $thing;
-  $logger->debug("Response object: ", sub {Dumper($ro)});
+  $logger->trace("Response object: ", sub {Dumper($ro)});
   return $ro;
 }
 

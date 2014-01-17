@@ -280,10 +280,15 @@ sub get_rid_index {
   my $logger = get_logger();
   my $rid;
   my $rid_index = 0;
-  my $query = {"rid" => {'$regex' => "^$prefix"}};
-  my $result = Kynetx::MongoDB::get_hash_element(COLLECTION,$query,['rid_index']);
-  if (defined $result) {
-    $rid_index = $result->{'value'} + 1;
+  my $match = {"rid" => {'$regex' => "^$prefix"},'hashkey'=> {'$in' => ['rid_index']}};
+  my $group = {'_id' => 'value',
+      'max' => {'$max' => '$value'}
+  };
+  my $result = Kynetx::MongoDB::aggregate_group(COLLECTION,$match,$group);
+  if (defined $result && ref $result eq "ARRAY" && scalar @{$result} > 0) {
+    #$logger->debug("rid index: ",sub {Dumper($result)});
+    my $element = $result->[0];
+    $rid_index = $element->{'max'} + 1;
   }  
   return $rid_index;
 }

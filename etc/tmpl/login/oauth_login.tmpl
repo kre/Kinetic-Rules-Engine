@@ -5,7 +5,7 @@
 			data-overlay-theme="a" data-title="KMCP landing page" style="min-height: 380px;">  			 
 			<div data-role="content" data-theme="a" class="ui-corner-top ui-corner-bottom ui-content ui-body-a" role="main">
 				<h3>Kynetx Micro Cloud Platform (OAUTH)</h3>	  					
-					<form action="<TMPL_VAR NAME="THOST">/login/oauth/signin" method="post" data-url="/login/oauth/signin" data-external-page="true" data-ajax="false">
+					<form action="<TMPL_VAR NAME="PLATFORM">/login/oauth/signin" method="post" data-url="/login/oauth/signin" data-external-page="true" data-ajax="false">
 						<div style="padding:10px 20px;">
 						  <h3>Please sign in</h3>
 						  <TMPL_VAR NAME="LOGIN_ERROR">
@@ -33,7 +33,7 @@
 						</div>
 					</div>	  						  					
 			</div>  	
-			<p><ul>
+			<p><ul style="display: none;">
 				<li>eci: 	<TMPL_VAR NAME="ECI"></li>
 				<li>state: 	<TMPL_VAR NAME="STATE"></li>
 				<li>uri:  <TMPL_VAR NAME="REDIRECT"></li>

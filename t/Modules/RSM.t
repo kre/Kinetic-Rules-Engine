@@ -506,7 +506,20 @@ $result = Kynetx::Persistence::Ruleset::get_rulesets_by_owner($session_ken);
 cmp_deeply($result,superbagof(@rids),$description);
 $test_count++;
 
-for my $d_rid (@{$result}) {
+$description = "Create more than 10 rulesets with the same prefix";
+$args = [];
+my $max = 11;
+my $temp;
+for (my $i = 0;$i < $max;$i++) {
+  my $rid = Kynetx::Modules::RSM::make_ruleset_id($my_req_info,$rule_env,$session,$rule_name,$function_name,$args);
+  $temp->{$rid} = 1+ $temp->{$rid} || 0;
+}
+is(scalar keys %{$temp},$max,$description);
+$test_count++;
+
+
+#for my $d_rid (@{$result}) {
+for my $d_rid (@{ Kynetx::Persistence::Ruleset::get_rulesets_by_owner($session_ken) }) {
   $logger->debug("Delete $d_rid");
   Kynetx::Persistence::Ruleset::delete_registry($d_rid);
 }

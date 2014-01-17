@@ -238,6 +238,27 @@ sub get_ken_value {
     return $valid->{$key};
 }
 
+sub set_ken_value {
+  my ($ken,$vkey,$val) = @_;
+  my $logger = get_logger();
+	my $oid = MongoDB::OID->new(value => $ken);
+	my $key = {"_id" => $oid};
+  my $update = {
+		'$inc' => {'accesses' => 1},
+		'$set' => {$vkey => $val}
+	};
+	my $fnmod = {
+	  'query' => $key,
+	  'update' => $update	  
+	};
+  my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod,1);          
+	if (defined $result->{"value"}) {
+	  Kynetx::MongoDB::clear_cache(COLLECTION,$key);
+	  return 1;
+	}
+	return 0;
+}
+
 sub touch_ken {
 	my ($ken,$ts) = @_;
     my $logger = get_logger();
