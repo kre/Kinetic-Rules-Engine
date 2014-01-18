@@ -154,8 +154,10 @@ sub handler {
 	  Kynetx::Response::respond( $r, $req_info, $session, $js, $dd, "Cloud API" );
 
 	}
+	$metric->token($req_info->{'id_token'});
 	$metric->stop_and_store();
 	$logger->info("Processed Cloud API for ". $r->path_info);
+	
 
 
 	return Apache2::Const::OK;
