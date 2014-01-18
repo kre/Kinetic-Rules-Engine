@@ -67,13 +67,23 @@ sub handler {
 	Kynetx::Util::config_logging($r);
 
 	my $logger = get_logger();
-	eval {
-		 $logger->remove_appender('ConsoleLogger');
-	};
+  my $metric = new Kynetx::Metrics::Datapoint();
+	$metric->start_timer();
+	$metric->series("sky-cloud");
+	$metric->path($r->path_info);
+	$metric->mem_stats();
 	my $req = Apache2::Request->new($r);
 	my @params = $req->param;
-
-	$r->content_type('text/javascript');
+	for my $parm (@params) {
+	  my $val = $req->param($parm);
+	  $metric->push($parm,$val);
+	}
+	if (scalar @params > 0){
+	  $metric->add_tag(join(",",@params));
+	}	eval {
+		 $logger->remove_appender('ConsoleLogger');
+	};
+	
 
 	$logger->trace(
 "\n\n------------------------------ begin ID evaluation with CLOUDID API---------------------"
@@ -131,6 +141,8 @@ sub handler {
 	  $req_info->{'module_version'} = $version;
 	  $req_info->{'module_alias'} = $module_alias;
 	  $req_info->{'function_name'} = $path_components[3];
+	  
+	  $metric->add_tag($rid);
 
 	  Kynetx::Request::log_request_env( $logger, $req_info );
 
@@ -142,6 +154,7 @@ sub handler {
 	  Kynetx::Response::respond( $r, $req_info, $session, $js, $dd, "Cloud API" );
 
 	}
+	$metric->stop_and_store();
 	$logger->info("Processed Cloud API for ". $r->path_info);
 
 
