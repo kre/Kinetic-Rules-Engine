@@ -330,7 +330,7 @@ sub process_event_for_rid {
 		);
 	}
 	else {
-		$logger->trace("No rules in $rid.$ver match event $domain:$type");
+		$logger->debug("No rules in $rid.$ver match event $domain:$type");
 	}
 
 	foreach my $rule (
@@ -377,7 +377,7 @@ sub process_event_for_rid {
 
 			my $rulename = $rule->{'name'};
 
-			$logger->trace(
+			$logger->debug(
 				"Adding to schedule: ",
 				Kynetx::Rids::print_rid_info($rid_info),
 				" & ", $rulename
