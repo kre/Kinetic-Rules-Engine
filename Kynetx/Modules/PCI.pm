@@ -1006,6 +1006,75 @@ sub add_oauth_callback {
 }
 $funcs->{'add_callback'} = \&add_oauth_callback;
 
+sub add_oauth_bootstrap {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+  my $keys = _key_filter($args);
+	return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
+	my $developer_eci = $args->[0];
+	my $arg2 = $args->[1];
+	my @bootstrap = ();
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+	if (defined $arg2) {
+		if (ref $arg2 eq "ARRAY") {
+			@bootstrap = @{$arg2};
+		} elsif (ref $arg2 eq "") {
+			push(@bootstrap,$arg2);
+		}
+	}	
+	# callbacks must be installed to an eci
+	$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($developer_eci);
+	if ($ken && scalar @{$args} >= 1) {
+		my $installed = Kynetx::Persistence::KPDS::add_bootstrap($ken,$developer_eci,\@bootstrap);
+		return $installed->{'value'};
+	}
+	return undef;
+	
+}
+$funcs->{'add_bootstrap'} = \&add_oauth_bootstrap;
+
+sub list_oauth_bootstrap {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	return 0 unless (pci_authorized($req_info,$rule_env,$session));
+  my $rid = get_rid($req_info->{'rid'});		
+	my $arg1 = $args->[0];
+	my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);	
+	if ($ken) {
+	  return Kynetx::Persistence::KPDS::get_bootstrap($ken,$arg1);
+	} 
+	return undef;
+	
+}
+$funcs->{'list_bootstrap'} = \&list_oauth_bootstrap;
+
+sub remove_oauth_bootstrap {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+  my $keys = _key_filter($args);
+	return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
+	my $developer_eci = $args->[0];
+	my $arg2 = $args->[1];
+	my $ken;
+	my @bootstrap = ();
+	if (defined $arg2) {
+		if (ref $arg2 eq "ARRAY") {
+			@bootstrap = @{$arg2};
+		} elsif (ref $arg2 eq "") {
+			push(@bootstrap,$arg2);
+		}
+	}	
+	$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($developer_eci);
+	if ($ken && scalar @{$args} >= 1) {
+		my $installed = Kynetx::Persistence::KPDS::remove_bootstrap($ken,$developer_eci,\@bootstrap);
+		return $installed->{'value'};
+	}
+	return undef;
+	
+}
+$funcs->{'remove_bootstrap'} = \&remove_callback;
+
 sub add_oauth_app_info {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
 	my $logger = get_logger();

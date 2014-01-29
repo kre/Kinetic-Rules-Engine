@@ -88,7 +88,7 @@ sub get_token {
     my $session_id = Kynetx::Session::session_id($session);
     $domain = $domain || "web";
     my $var;
-    $logger->trace("Get token for session: ",  sub {$session_id});
+    $logger->debug("Get token for session: ",  sub {$session_id});
     # There might be other ways to find a token for other endpoint domains
     if ($domain eq "web") {
         # Check mongo.tokens for any tokens for a matching sessionid
@@ -164,10 +164,13 @@ sub create_token {
         "token_name" => $label,
         "endpoint_type" => $type,
     };
-    my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0);
-    $logger->debug("Token struct: ", sub {Dumper($token)});
-    $logger->debug("Token status: ", sub {Dumper($status)});
-    if ($status) {
+    my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0,1);
+    $logger->debug("Token ken: ", sub {Dumper($token->{'ken'})});
+    $logger->trace("Token status: ", sub {Dumper($status)});
+    if (ref $status eq 'HASH' && ($status->{'ok'} == 1)) {
+        Kynetx::Persistence::KEN::touch_ken($ken);
+        return $ktoken;
+    } elsif ($status) {
         Kynetx::Persistence::KEN::touch_ken($ken);
         return $ktoken;
     } else {

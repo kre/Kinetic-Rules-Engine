@@ -1,7 +1,8 @@
     
     <!--===============================================-->
     <!--==== Create Account Page ======================-->
-    <div data-role="page" id="create">
+    <div data-role="page" id="page-account-create">
+
         <!-- Header -->
         <div data-role="header">
             <h2>Kynetx Guard Tour Login</h2>
@@ -10,7 +11,11 @@
         <!-- Content -->
         <div data-role="content">
             <h3>Creating your own personal cloud is easy</h3>
-            <form action="<TMPL_VAR NAME="PLATFORM">/login/create/" method="post" data-url="<TMPL_VAR NAME="PLATFORM">/login/create" data-external-page="true" data-ajax="false">                
+            <form action="<TMPL_VAR NAME="PLATFORM">/login/oauth/create" method="post" data-url="<TMPL_VAR NAME="PLATFORM">/login/oauth/create" data-external-page="true" data-ajax="false">
+                <input type="hidden" name="developer_eci" value="<TMPL_VAR NAME="ECI">" >
+				<input type="hidden" name="client_state" value="<TMPL_VAR NAME="STATE">" >
+				<input type="hidden" name="uri_redirect" value="<TMPL_VAR NAME="REDIRECT">" >
+                
                 <ul data-role="listview" data-inset="true">
                     <li class="ui-field-contain">
                         <label for="username">Username:</label>
@@ -29,7 +34,7 @@
                         <input type="text" data-theme="b" name="email" id="new-email" value="" placeholder="johndoe@email.com">
                     </li>
                     <li class="ui-field-contain">
-                        <a href="<TMPL_VAR NAME="PLATFORM">/login" class="ui-btn ui-mini" id="login-signup">Sign In</a>
+                        <a href="<TMPL_VAR NAME="OAUTH_LOGIN_LINK">" class="ui-btn ui-mini" id="login-signup">Sign In</a>
                     </li>
                 </ul>
                 <input type="submit" value="Create" id="submit_new_user" data-inline="true" data-role="button" class="ui-btn ui-corner-all ui-btn-b ui-btn-inline">

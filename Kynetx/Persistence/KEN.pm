@@ -224,7 +224,7 @@ sub new_ken {
     my $logger = get_logger();
     $struct = $struct || get_ken_defaults();
     my $kpds = Kynetx::MongoDB::get_collection(COLLECTION);
-    my $ken = $kpds->insert($struct);
+    my $ken = $kpds->insert($struct,{'safe' => 1});
     $logger->debug("Generated new KEN: $ken");
     return $ken->{"value"};
 }

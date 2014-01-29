@@ -81,7 +81,7 @@ sub handler {
   Log::Log4perl::MDC->put('rule', '[RequestToken]');
   Log::Log4perl::MDC->put( 'eid', undef );    # no eid
   
-  my $logger = get_logger('Kynetx');
+  my $logger = get_logger();
   my $error;
   my $error_code;
   
@@ -174,7 +174,18 @@ sub code_request {
   if ($state) {
     $rparams->{'client_state'} = $state;
   }  
-  my $ruleset_redirect = Kynetx::Util::mk_url($oauth_handler . _eid(),$rparams);
+  my ($method,$path) = $r->path_info() =~ m!/([a-z+_]+)/*(.*)!;
+  
+  my $path_part;
+  
+  # Determine whether this is a pure OAuth or a OAuth invitation
+  if (defined $path && $path eq "newuser") {
+    $path_part = $path;
+  } else {
+    $path_part = _eid();
+  }
+  
+  my $ruleset_redirect = Kynetx::Util::mk_url($oauth_handler . $path_part ,$rparams);
   $logger->debug("Auth rule: $ruleset_redirect");
   $r->headers_out->set(Location => $ruleset_redirect);
 	return Apache2::Const::HTTP_MOVED_TEMPORARILY;          

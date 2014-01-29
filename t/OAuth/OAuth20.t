@@ -53,6 +53,7 @@ use Kynetx::Configure qw/:all/;
 use Kynetx::Expressions qw/:all/;
 use Kynetx::Response qw/:all/;
 use Kynetx::Persistence::KPDS qw/:all/;
+use Kynetx::OAuth::OAuth20;
 
 
 use Kynetx::FakeReq qw/:all/;
@@ -137,7 +138,7 @@ $result = Kynetx::Modules::PCI::check_system_key($system_key);
 is($result,1,$description);
 $test_count++;
 my $keys = {'root' => $system_key};
-
+my $create;
 my $count = 0;
 
 # system authorized tokens
@@ -192,6 +193,7 @@ isnt($result,undef,$description);
 $test_count++;
 $eci = $result->{'cid'};
 $d_uid = $result->{'nid'};
+
 
 # Developer ken
 my $dken = Kynetx::Persistence::KEN::ken_lookup_by_userid($d_uid);
@@ -285,6 +287,49 @@ $description = "Get OAuth application info";
 $result = Kynetx::Modules::PCI::get_oauth_app_info($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci]);
 cmp_deeply($result,$app_info,$description);
 $test_count++;
+
+
+my $bootstrap = "a144x175.prod";
+$description = "Add OAuth bootstrap ruleset";
+$expected = [$bootstrap];
+$result = Kynetx::Modules::PCI::add_oauth_bootstrap($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci,$bootstrap]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+$logger->debug("Bootstrap: ", sub {Dumper($result)});
+
+$description = "Get OAuth bootstrap ruleset";
+$expected = [$bootstrap];
+$result = Kynetx::Modules::PCI::list_oauth_bootstrap($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+$logger->debug("Bootstrap: ", sub {Dumper($result)});
+
+$description = "Add additional OAuth bootstrap ruleset";
+my $new_bootstrap = "foo.dev";
+$expected = [$bootstrap, $new_bootstrap];
+$result = Kynetx::Modules::PCI::add_oauth_bootstrap($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci,$new_bootstrap]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+$logger->debug("Bootstrap: ", sub {Dumper($result)});
+
+$description = "Get OAuth bootstrap ruleset (has 2)";
+$result = Kynetx::Modules::PCI::list_oauth_bootstrap($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Delete a bootstrap";
+$expected = [$bootstrap];
+$result = Kynetx::Modules::PCI::remove_oauth_bootstrap($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci,$new_bootstrap]);
+ll(Dumper $result);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Get OAuth bootstrap ruleset (has 1)";
+$result = Kynetx::Modules::PCI::list_oauth_bootstrap($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$logger->info("Using dev: $d_eci");
 
 $description = "Store OAuth secret";
 $result = Kynetx::Modules::PCI::add_oauth_secret($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci,$dev_key]);
@@ -388,6 +433,8 @@ $result = $ua->post($base,[
 ]);
 $logger->debug("Return: ",$result->decoded_content());
 
+
+
 $description = "Check to see that OAuth eci maps to access_token and ken";
 my $json = Kynetx::Json::decode_json($result->content());
 my $otoken = $json->{'access_token'};
@@ -407,6 +454,52 @@ $expected = [$oeci];
 $result = Kynetx::Modules::PCI::get_developer_oauth_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci]);
 cmp_deeply($result,$expected,$description);
 $test_count++;
+
+#Log::Log4perl->easy_init($DEBUG);
+$description = "Create a user through login portal";
+my $luname = Kynetx::Modules::Random::rword();
+$create = Kynetx::OAuth::OAuth20::_platform() . '/login/oauth/create';
+$result = $ua->post($create,[
+  'developer_eci' => $d_eci,
+  'client_state' => time(),
+  'uri_redirect' => $cb[0],
+  'username' => $luname,
+  'password' => 'foo',
+  'email'    => 'a@b.c'
+  
+]);
+cmp_deeply($result->code(),200,$description);
+$test_count++;
+
+$description = "Check that user ($luname) is created";
+my $portal_ken = Kynetx::Persistence::KEN::ken_lookup_by_username($luname);
+isnt($portal_ken,undef,$description);
+$test_count++;
+
+
+$description = "Check installed rulesets";
+$result = Kynetx::Persistence::KPDS::get_rulesets($portal_ken);
+cmp_deeply($result,superbagof($bootstrap),$description);
+$test_count++;
+
+$description = "Test that you can make a sky call against the bootstrap ruleset";
+my $dn = "http://$platform/sky/event";
+my $portal_eci = Kynetx::Persistence::KToken::get_default_token($portal_ken);
+my $sky_url = "$dn/$portal_eci?_rids=$bootstrap&_domain=web&_name=catch_sky_event";
+$result = $ua->get($sky_url);
+cmp_deeply($result->code(),200,$description);
+$test_count++;
+
+$description = "Sky cloud event is raised";
+
+my $dt = DateTime->now('time_zone' => '+0000');
+$expected = $dt->strftime("%F");
+$logger->debug("Expected: $expected");
+cmp_deeply($result->content(),re(qr/$expected/),$description);
+$test_count++;
+
+
+
 
 BAIL_OUT("OAuth Token Fail") unless $otoken;
 
@@ -471,103 +564,8 @@ cmp_deeply($result->code(),401,$description);
 $test_count++;
 
 
-# MEH - I started with building a restful interface but that 
-# had limitations when I needed to build the user authorization piece
-# and I decided that it was not central to the idea of an centralized CloudOS OAuth service
-
-#$description = "Test username available";
-#$query = {
-#  "username" => $username
-#};
-#$base_url = $dn . "/available";
-#
-#$logger->debug("URL: $base_url");
-#$response = $ua->post($base_url,$query);
-#$json = $response->content;
-#$result = Kynetx::Json::jsonToAst_w($json);
-#cmp_deeply($result->{'available'},1,$description);
-#$test_count++;
-#
-#
-#
-#$test_user = Kynetx::Test::gen_user($my_req_info,$root_env,$session,$username);
-#$description = "Create test user";
-#isnt($test_user,undef,$description);
-#$test_count++;
-#
-#####################################
-## Set password for test user
-#Kynetx::Modules::PCI::_set_password($test_user,$password);
-#
-#
-#$description = "Test username un-available";
-#$response = $ua->post($base_url,$query);
-#$json = $response->content;
-#$result = Kynetx::Json::jsonToAst_w($json);
-#cmp_deeply($result->{'available'},0,$description);
-#$test_count++;
-#
-#
-#$description = "Test login fail";
-#my $bad_password = "shibboleth";
-#$post = {
-#  'user' => $username,
-#  'pass' => $bad_password
-#};
-#$base_url = $dn . "/signin";
-#$response = $ua->post($base_url,$post);
-#cmp_deeply($response->code,'401',$description);
-#$test_count++;
-#
-#$description = "Test login pass";
-#$post = {
-#  'user' => $username,
-#  'pass' => $password
-#};
-#$base_url = $dn . "/signin";
-#$response = $ua->post($base_url,$post);
-#cmp_deeply($response->code,'200',$description);
-#$test_count++;
-#
-#$description = "Returns token on signin pass";
-#$expected = {
-#  'eci' => re(qr/$uuid_re/)
-#};
-#$json = $response->content;
-#$result = Kynetx::Json::jsonToAst_w($json);
-#cmp_deeply($result,$expected,$description);
-#$test_count++;
-#$test_eci = $result->{'eci'};
-#$logger->debug("Token: $test_eci");
-#
-#$description = "Check login status by eci";
-#$base_url = $dn . "/status";
-#$post = {
-#  'eci' => $test_eci
-#};
-#$response = $ua->post($base_url,$post);
-#$json = $response->content;
-#$result = Kynetx::Json::jsonToAst_w($json);
-#cmp_deeply($result->{'status'},1,$description);
-#$test_count++;
-#
-#$description = "Log an account off";
-#$base_url = $dn . "/logout";
-#$ua->post($base_url,$post);
-#$base_url = $dn . "/status";
-#$post = {
-#  'eci' => $test_eci
-#};
-#$response = $ua->post($base_url,$post);
-#$json = $response->content;
-#$result = Kynetx::Json::jsonToAst_w($json);
-#cmp_deeply($result->{'status'},0,$description);
-#$test_count++;
-#
-#
-#Log::Log4perl->easy_init($INFO);
 ###################################### End Login portal
-#
+
 
 sub test_request_url {
   my ($client_id,$response_type,$state,$rd_uri) = @_;
@@ -588,7 +586,20 @@ sub test_request_url {
   return Kynetx::Util::mk_url($base,$params);
 }
 
+ENDY:
+
+
 done_testing($test_count);
+if ($portal_ken) {
+  Kynetx::Test::flush_test_user($portal_ken,$luname);
+}
+if ($u_eci) {
+  my $lken = Kynetx::Persistence::KEN::ken_lookup_by_token($u_eci);
+  Kynetx::Test::flush_test_user($lken,$uname);
+}
+if ($dken) {  
+  Kynetx::Test::flush_test_user($dken,$dname);
+}
 
 
 1;

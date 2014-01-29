@@ -63,6 +63,9 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 use constant DEFAULT_TEMPLATE_DIR => Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
 use constant LOGIN_TAG => "__login__";
+use constant DEFAULT_RULESET => [
+  'a169x625.prod'
+];
 
 my $unsafe_global;
 
@@ -70,6 +73,7 @@ sub handler {
     my $r = shift;
     $unsafe_global = '<ul>';
     Kynetx::Memcached->init();
+    Kynetx::MongoDB->init();
     Kynetx::Util::config_logging($r);
     Log::Log4perl::MDC->put('site', 'OAuth2.0');
     Log::Log4perl::MDC->put('rule', '[OAuth Main]');
@@ -84,16 +88,17 @@ sub handler {
     $login_page->param('SMODE' => _smode());
 
     $logger->debug("OAuth2.0 Main");
-    $logger->trace("Args: ",$r->args);
-    $logger->trace("unURI: ",$r->unparsed_uri());
-    $logger->trace("path: ",$r->path_info());
+    $logger->debug("Session: ", sub {Dumper($session)});
     #Kynetx::Util::request_dump($r);
     my ($method,$path) = $r->path_info() =~ m!/([a-z+_]+)/*(.*)!;
     my $req = Apache2::Request->new($r);
     my $p = $req->param();    
-    $logger->trace("Method: $method");
-    $logger->trace("Path: $path");
-    $logger->trace("params: ", sub {Dumper($p)});
+    $logger->debug("Method: $method");
+    $logger->debug("Path: $path");
+#    $logger->debug("params: ", sub {Dumper($p)});
+#    $logger->debug("Args: ",$r->args);
+#    $logger->debug("unURI: ",$r->unparsed_uri());
+#    $logger->debug("path: ",$r->path_info());
     
     my $result = workflow($login_page,$session, $method, $path,$p);
     
@@ -127,7 +132,7 @@ sub _code_redirect {
   my $state =  $params->{'client_state'};
   my $uri = $params->{'uri_redirect'};
   my $code = oauth_code($eci,$session_token);
-  $logger->trace("eci: $eci");
+  $logger->debug("session token: $session_token");
   $logger->trace("state: $state");
   $logger->trace("uri: $uri");
   $logger->trace("uri: $uri");
@@ -144,9 +149,12 @@ sub workflow {
   my $ken;
   my $session_id;
   my $session_token = _logged_in($session);
+  $logger->debug("Session token: $session_token");
   if ($session_token) {
-    $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($session_token);
     $session_id = get_session_id($session);
+    $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($session_token);
+    $logger->debug("Ken: $ken");
+    $logger->debug("session id: $session_id");
   }
   if ($method eq 'oauth') {
     if ($ken) {
@@ -167,6 +175,7 @@ sub workflow {
       } elsif ($path eq "allow"){
          $logger->debug("allow");
          return _code_redirect($session_token,$params);
+              
       } else {
         # could be link from app
         # Present the application authorize page
@@ -183,7 +192,7 @@ sub workflow {
       }
     } else {
       # not logged in
-      $logger->debug("Is logged in");
+      $logger->debug("not logged in");
       $ken = _signin($session,$params);
       if ($ken) {
         # login passed correct user/pass
@@ -196,7 +205,27 @@ sub workflow {
           # Present the application authorize page
           $template->param("DIALOG" => authorize_app($ken,$params));          
         }
-        
+      } elsif ($path eq "newuser"){
+        $logger->debug("CREATE NEW USER");
+        if ($ken) {
+          my $error = "Log out before you try to create a new account";
+          $template->param("DIALOG" => profile_page($ken,$error));
+        } else {
+          $template->param("DIALOG" => oauth_account($params));  
+        }  
+      } elsif ($path eq 'create') {   
+        $ken = create_account($params);
+        my $developer_eci = $params->{'developer_eci'};
+        $logger->debug("Params: ", sub {Dumper($params)});
+        add_bootstrap_ruleset($ken,$developer_eci);
+        if ($ken) {
+          $template->param("DIALOG" => authorize_app($ken,$params));
+          Kynetx::Persistence::KToken::delete_token($session_token,get_session_id($session));
+          create_login_token($session,$ken);
+        } else {
+          my $error = "Unable to create account for (" . $params->{'new_user_name'} . ")";
+          $template->param("DIALOG" => native_login($params,$error));
+        }
       } else {
         # Neither logged in nor credentials
         if ($path eq "signin") {
@@ -278,6 +307,31 @@ sub workflow {
   return undef;
 }
 
+sub oauth_account {
+  my ($params) = @_;
+  my $logger = get_logger();
+  $logger->debug("OAuth account page: ");
+  my $template = DEFAULT_TEMPLATE_DIR . "/login/oauth_create.tmpl";
+	my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+	my $developer_eci = $params->{'developer_eci'};
+	my $state = $params->{'client_state'};
+	my $redirect = $params->{'uri_redirect'};
+	my $base = Kynetx::Configure::get_config('oauth_server')->{'authorize'} || "oauth_not_configured";
+	my $login_url = Kynetx::Util::mk_url($base, {
+	 'client_id' => $developer_eci,
+	 'response_type' => 'code',
+	 'state' => $state,
+	 'redirect_uri' => $redirect 
+	}	);
+	$dialog->param('PLATFORM' => _platform());
+	$dialog->param('ECI' => $developer_eci );
+	$dialog->param('STATE' =>  $state);
+	$dialog->param('REDIRECT' =>  $redirect);
+	$dialog->param("OAUTH_LOGIN_LINK" => $login_url);
+	return $dialog->output();
+}
+
+
 sub set_profile {
   my ($ken,$params) = @_;
   my $logger = get_logger();
@@ -301,11 +355,36 @@ sub set_profile {
   
 }
 
+sub add_bootstrap_ruleset {
+  my ($ken, $developer_eci) = @_;
+  my $logger = get_logger();
+  my $dken = Kynetx::Persistence::KEN::ken_lookup_by_token($developer_eci);
+  my $list = Kynetx::Persistence::KPDS::get_bootstrap($dken,$developer_eci);
+  if (defined $list) {
+    add_ruleset_to_account($ken,$list);
+  } else {
+    $logger->debug("No bootstrap ruleset(s) defined for $dken/$developer_eci")
+  }
+  
+  
+}
+
+sub add_ruleset_to_account {
+  my ($ken, $rid) = @_;
+  my @ridlist = ();
+  if (ref $rid eq "ARRAY") {
+    @ridlist = @{$rid};
+  } else {
+    push(@ridlist,$rid);
+  }
+  my $installed = Kynetx::Persistence::KPDS::add_ruleset($ken,\@ridlist);
+}
+
 sub create_account {
   my ($params) = @_;
   my $logger = get_logger();
-  my $username = $params->{'new_user_name'};
-  my $password = $params->{'password1'};
+  my $username = $params->{'username'};
+  my $password = $params->{'password'};
   my $email = $params->{'email'};
   my $type = 'PCI';
   $logger->trace("$username $password $email");
@@ -328,6 +407,7 @@ sub create_account {
 	    };
 	  $ken = Kynetx::Persistence::KEN::new_ken($dflt);
 	  Kynetx::Persistence::KToken::create_token($ken,"_LOGIN",$type);
+	  add_ruleset_to_account($ken,+DEFAULT_RULESET);	  
 	  return $ken;
   } else {
     return undef;
@@ -393,9 +473,9 @@ sub authorize_app {
 sub _logged_in {
   my ($session) = @_;
   my $logger = get_logger();
-  $logger->debug("get token");
+  $logger->debug("get token for $session");
   my $token = Kynetx::Persistence::KToken::get_token($session,undef,"web");
-  $logger->trace("get token: ", sub {Dumper($token)});
+  $logger->debug("get token: ", sub {Dumper($token)});
   if (defined $token && ref $token eq "HASH") {
     return $token->{'ktoken'}
   }
@@ -405,6 +485,7 @@ sub _logged_in {
 sub create_login_token {
   my ($session,$ken) = @_;
   my $logger = get_logger();
+  Kynetx::Persistence::KToken::delete_token(undef,get_session_id($session));
   my $token = Kynetx::Persistence::KToken::create_token($ken,LOGIN_TAG,"KMCP",$session);
   $logger->trace("Made token: ", sub {Dumper($token)});
   return $token;  
@@ -570,6 +651,15 @@ sub oauth_login_page {
 	$dialog->param('ECI' => $params->{'developer_eci'} );
 	$dialog->param('STATE' => $params->{'client_state'} );
 	$dialog->param('REDIRECT' => $params->{'uri_redirect'} );
+	my $base = Kynetx::Configure::get_config('oauth_server')->{'authorize'} || "oauth_not_configured";
+	$base .= '/newuser';
+	my $create_url = Kynetx::Util::mk_url($base, {
+	 'client_id' => $params->{'developer_eci'},
+	 'response_type' => 'code',
+	 'state' => $params->{'client_state'},
+	 'redirect_uri' => $params->{'uri_redirect'} 
+	}	);
+	$dialog->param("OAUTH_CREATE" => $create_url);
 	if ($error) {
 	  my $error_msg = '<strong>' . $error . '</strong>';
 	  $dialog->param("LOGIN_ERROR" => $error_msg)
@@ -684,6 +774,8 @@ sub get_session_id {
   my ($session) = @_;
   if (ref $session eq "HASH") {
     return $session->{'_session_id'}
+  } else {
+    return $session;
   }
 }
 

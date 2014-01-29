@@ -1,13 +1,58 @@
 <!DOCTYPE html>
 <html>
     <head>
+    	<title>Login</title>
+
+    	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+    	<!-- Themes -->
+    	<link rel="stylesheet" href="<TMPL_VAR NAME="SMODE">cs.kobj.net/themes/jquery.mobile.icons.min.css">
+    	
+    	<!-- Javascript -->
     	<script src="<TMPL_VAR NAME="SMODE">code.jquery.com/jquery-1.10.2.min.js"></script>
     	<script src="<TMPL_VAR NAME="SMODE">code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
     	<script src="<TMPL_VAR NAME="SMODE">cs.kobj.net/js/jquery.ui.touch-punch.min.js"></script>
     	<script src="<TMPL_VAR NAME="SMODE">code.jquery.com/mobile/1.4.0-rc.1/jquery.mobile-1.4.0-rc.1.min.js"></script>
+
+		<!-- Css -->
     	<link rel="stylesheet" href="<TMPL_VAR NAME="SMODE">code.jquery.com/mobile/1.4.0-rc.1/jquery.mobile-1.4.0-rc.1.min.css">		
+		<link rel="stylesheet" href="<TMPL_VAR NAME="SMODE">cs.kobj.net/css/login.css">
+    	<link rel="stylesheet" href="<TMPL_VAR NAME="SMODE">cs.kobj.net/css/byu_eight.min.css">
+
 		<style>
-			.ui-dialog .ui-dialog-contain { margin-top: 0 }		
+			#login-create-account {
+			    text-align: right;
+			    border-top: 1px solid #e9e9e9;
+			    background-color: #e9e9e9;
+			}
+			
+			#login-signup {
+			    text-align: right;
+			    border-top: 1px solid #e9e9e9;
+			    background-color: #e9e9e9;
+			}
+			
+			#login-create-account:hover {
+			    background-color: #a8c7e3;
+			    border-top: 1px solid #628cb6;
+			}
+			
+			#list-re-enter-password {
+			    border-top: none;
+			}
+			
+			.header-image {
+			    margin-top: 4px;
+			    text-align: center;
+			}
+			
+			@media (min-width:800px) {
+			    .ui-content {
+			        width: 800px;
+			        margin-left: auto;
+			        margin-right: auto;
+			    }
+			}
 			label.error { 
 				float: left; 
 				color: red; 
@@ -16,11 +61,11 @@
 			label.okay { 
 				float: left; 
 				color: green; 
-			}	
+			}
 		</style>
     </head>
     
-    <body class="ui-mobile-viewport ui-overlay-a" screen_capture_injected="true">
+    <body>
 		<TMPL_VAR NAME="DIALOG">		
     </body>
 </html>

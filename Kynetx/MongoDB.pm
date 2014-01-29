@@ -762,6 +762,10 @@ sub update_value {
     $multi = ($multi) ? 1 : 0;
     my $c = get_collection($collection);
     my $status = $c->update($var,$val,{"upsert" => $upsert,"multiple" => $multi, "safe" => $safe});
+    my $err = get_mongo()->last_error({'w' => 1});
+    if (defined $err->{'err'}) {
+      $logger->debug("Update failed: ", sub {Dumper($err)});
+    }
     if ($status) {
         clear_cache($collection,$var);
         return $status;

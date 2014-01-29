@@ -270,6 +270,35 @@ sub get_callbacks {
 	return $result;		
 }
 
+sub add_bootstrap {
+	my ($ken,$dev_eci,$bootstrap_list) = @_;
+	my $logger = get_logger();
+	my $keypath = [OAUTH, $dev_eci, 'bootstrap'];
+	my $result = push_kpds_set_element($ken,$keypath,$bootstrap_list);
+	$logger->debug("Set: ", sub {Dumper($result)});
+	return $result;    
+}
+
+sub remove_bootstrap {
+	my ($ken,$dev_eci,$bootstrap_list) = @_;
+	my $logger=get_logger();
+	my $keypath = [OAUTH, $dev_eci, 'bootstrap'];
+	my $result = remove_kpds_set_element($ken,$keypath,$bootstrap_list);
+	$logger->debug("remove: ", sub {Dumper($result)});
+	return $result;
+}
+
+sub get_bootstrap {
+	my ($ken, $dev_eci) = @_;
+	my $logger=get_logger();
+	my $keypath = [OAUTH, $dev_eci, 'bootstrap'];
+	my $result = get_kpds_element($ken,$keypath);
+	$logger->debug("list: ", sub {Dumper($result)});
+	return $result;		
+}
+
+
+
 sub add_app_info {
 	my ($ken,$dev_eci,$app_info) = @_;
 	my $logger = get_logger();
