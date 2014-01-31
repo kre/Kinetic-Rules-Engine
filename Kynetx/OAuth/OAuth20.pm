@@ -786,10 +786,13 @@ sub login_session {
   my $expires = $dt->strftime("%a, %d-%b-%Y 23:59:59 GMT");
   
   
+#  my $session_cookie =
+#        "SESSION_ID=$session->{_session_id};path=/;domain=" .
+#        Kynetx::Configure::get_config('COOKIE_DOMAIN') .
+#        ';expires=' . $expires; #Mon, 31-Dec-2012 00:00:00 GMT';
   my $session_cookie =
         "SESSION_ID=$session->{_session_id};path=/;domain=" .
-        Kynetx::Configure::get_config('COOKIE_DOMAIN') .
-        ';expires=' . $expires; #Mon, 31-Dec-2012 00:00:00 GMT';
+        Kynetx::Configure::get_config('COOKIE_DOMAIN');
   $logger->debug("Sending cookie: ", $session_cookie);
   $r->err_headers_out->add('Set-Cookie' => $session_cookie);
   _add_to_info("Cookie: $session_cookie");
