@@ -458,13 +458,14 @@ $test_count++;
 #Log::Log4perl->easy_init($DEBUG);
 $description = "Create a user through login portal";
 my $luname = Kynetx::Modules::Random::rword();
+my $lpass = 'foo';
 $create = Kynetx::OAuth::OAuth20::_platform() . '/login/oauth/create';
 $result = $ua->post($create,[
   'developer_eci' => $d_eci,
   'client_state' => time(),
   'uri_redirect' => $cb[0],
   'username' => $luname,
-  'password' => 'foo',
+  'password' => $lpass,
   'email'    => 'a@b.c'
   
 ]);
@@ -476,6 +477,33 @@ my $portal_ken = Kynetx::Persistence::KEN::ken_lookup_by_username($luname);
 isnt($portal_ken,undef,$description);
 $test_count++;
 
+$description = "Sign into the account";
+my $signin = Kynetx::OAuth::OAuth20::_platform() . '/login/local/auth';
+$result = $ua->post($signin,[
+  'user' => $luname,
+  'pass' => $lpass 
+]);
+cmp_deeply($result->code(),200,$description);
+$test_count++;
+
+$description = "Get the login ECI since we can't use the OAuth ECI";
+$result = Kynetx::Persistence::KToken::get_default_token($portal_ken);
+isnt($result,undef,$description);
+$test_count++;
+
+my $portal_eci = $result;
+
+$description = "Simulate an authorize";
+$args = {
+  'developer_eci' => $d_eci,
+  'client_state' => time(),
+  'uri_redirect' => $cb[0]
+};
+$expected = qr/$cb[0]/;
+$result = Kynetx::OAuth::OAuth20::_code_redirect($portal_eci,$args);
+cmp_deeply($result,re($expected),$description);
+$test_count++;
+
 
 $description = "Check installed rulesets";
 $result = Kynetx::Persistence::KPDS::get_rulesets($portal_ken);
@@ -484,7 +512,6 @@ $test_count++;
 
 $description = "Test that you can make a sky call against the bootstrap ruleset";
 my $dn = "http://$platform/sky/event";
-my $portal_eci = Kynetx::Persistence::KToken::get_default_token($portal_ken);
 my $sky_url = "$dn/$portal_eci?_rids=$bootstrap&_domain=web&_name=catch_sky_event";
 $result = $ua->get($sky_url);
 cmp_deeply($result->code(),200,$description);
@@ -590,16 +617,16 @@ ENDY:
 
 
 done_testing($test_count);
-if ($portal_ken) {
-  Kynetx::Test::flush_test_user($portal_ken,$luname);
-}
-if ($u_eci) {
-  my $lken = Kynetx::Persistence::KEN::ken_lookup_by_token($u_eci);
-  Kynetx::Test::flush_test_user($lken,$uname);
-}
-if ($dken) {  
-  Kynetx::Test::flush_test_user($dken,$dname);
-}
+#if ($portal_ken) {
+#  Kynetx::Test::flush_test_user($portal_ken,$luname);
+#}
+#if ($u_eci) {
+#  my $lken = Kynetx::Persistence::KEN::ken_lookup_by_token($u_eci);
+#  Kynetx::Test::flush_test_user($lken,$uname);
+#}
+#if ($dken) {  
+#  Kynetx::Test::flush_test_user($dken,$dname);
+#}
 
 
 1;

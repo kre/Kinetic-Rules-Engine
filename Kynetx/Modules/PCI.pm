@@ -515,6 +515,33 @@ sub get_account_username {
 $funcs->{'get_username'} = \&get_account_username;
 $funcs->{'cloudnumber'} = \&get_account_username;
 
+sub get_account_email {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+  my $keys = _key_filter($args);
+	return 0 unless ( pci_authorized($req_info, $rule_env, $session, $keys));
+	my $ken;
+	my $arg0 = $args->[0];
+  if (! defined $arg0) {
+		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+	} else {
+		# Check to see if it is an eci or a userid
+		if ($arg0 =~ m/^\d+$/) {
+			ll("userid $arg0");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg0);
+		} else {
+			ll("eci $arg0");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg0);
+		}					
+	}
+	if (defined $ken) {
+	  return Kynetx::Persistence::KEN::get_ken_value($ken,'email');
+	}
+	return undef;
+}
+$funcs->{'get_email'} = \&get_account_email;
+
 sub set_parent {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
 	my $logger = get_logger();
