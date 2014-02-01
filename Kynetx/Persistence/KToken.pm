@@ -386,6 +386,31 @@ sub get_token_by_ken_and_label {
 	return undef;  
 }
 
+sub update_token_name {
+  my ($ken,$token_name,$endpoint_type) = @_;
+  my $logger = get_logger();
+  my $findnmod = {
+    'query' => {'ken' => $ken,'endpoint_type' => $endpoint_type},
+    'update' => {'$set' => {'token_name' => $token_name}},
+    'upsert' => 1,
+    'new' => 1
+  };
+  my $result;
+  my $exists = Kynetx::MongoDB::get_value(COLLECTION,$findnmod->{'query'});
+  if ($exists) {
+    $logger->debug("Update $token_name ");
+    $result =  Kynetx::MongoDB::find_and_modify(COLLECTION,$findnmod,1);
+    if ($result && ref $result eq "HASH") {
+      my $token = $result->{'value'};
+      return $token;
+    }
+    
+  } else {    
+    $result = create_token($ken,$token_name,$endpoint_type);
+  }
+  return $result;
+}
+
 sub get_oldest_token {
   my ($ken) = @_;
   my $key = {

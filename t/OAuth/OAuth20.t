@@ -444,6 +444,24 @@ $result = Kynetx::Persistence::KEN::ken_lookup_by_token($oeci);
 cmp_deeply($result,$expected,$description);
 $test_count++;
 
+sleep(1);
+
+$description = "Update the token name";
+$access_token_code = Kynetx::Modules::PCI::oauth_authorization_code($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci,$u_eci,$dev_key]);
+$result = $ua->post($base,[
+  'grant_type' => 'authorization_code',
+  'code' => $access_token_code,
+  'redirect_uri' => $cb[0],
+  'client_id' => $d_eci
+]);
+$json = Kynetx::Json::decode_json($result->content());
+isnt($json->{'access_token'},$otoken,$description);
+$test_count++;
+
+$description = "Don't create double tokens";
+is($json->{'OAUTH_ECI'},$oeci,$description);
+$test_count++;
+
 $description = "Return the USER OAuth ECI";
 my $user_OECI = $json->{'OAUTH_ECI'};
 cmp_deeply($user_OECI,$oeci,$description);

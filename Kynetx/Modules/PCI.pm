@@ -1390,8 +1390,14 @@ sub create_oauth_token {
 sub create_oauth_indexed_eci {
   my ($ken,$token_name,$developer_eci) = @_;
   my $type = 'OAUTH-' . $developer_eci;
-  my $eci =  Kynetx::Persistence::KToken::create_token($ken,$token_name,$type);
-  return $eci;
+  
+  my $obj = Kynetx::Persistence::KToken::update_token_name($ken,$token_name,$type);
+  if ($obj && ref $obj eq "HASH") {
+    return $obj->{'ktoken'}
+  }  elsif ($obj) {
+    return $obj;
+  }
+  return undef;
 }
 
 
