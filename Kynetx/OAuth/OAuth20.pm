@@ -118,10 +118,10 @@ sub handler {
 sub refresh_token {
   my ($oauth_token,$session_token,$params) = @_;
   my $logger = get_logger();
-  $logger->trace("Refresh delete: $oauth_token");
-  my $oauth_eci = Kynetx::Persistence::KToken::get_token_by_token_name($oauth_token);
-  my $result = Kynetx::Persistence::KToken::delete_token($oauth_eci);
-  $logger->trace("delete result: ", sub {Dumper($result)});
+#  $logger->trace("Refresh delete: $oauth_token");
+#  my $oauth_eci = Kynetx::Persistence::KToken::get_token_by_token_name($oauth_token);
+#  my $result = Kynetx::Persistence::KToken::delete_token($oauth_eci);
+#  $logger->trace("delete result: ", sub {Dumper($result)});
   return _code_redirect($session_token,$params);
 }
 

@@ -75,7 +75,7 @@ sub handler {
   Log::Log4perl::MDC->put('site', 'OAuth2.0');
   Log::Log4perl::MDC->put('rule', '[OAccessToken]');
   
-  my $logger = get_logger('Kynetx');
+  my $logger = get_logger();
   eval {
      $logger->remove_appender('ConsoleLogger');
   };
@@ -125,12 +125,19 @@ sub handler {
   return return_error($r,$redirect_uri,'invalid_request',"Request token code is stale") unless ($elapsed < $TEN_MINUTES);
   
   
-  
-  # so far so good, now create the official token
-  my $token = Kynetx::Modules::PCI::create_oauth_token($cid,$oauth_user,$secret);
-  $logger->debug("Token: $token");
   my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($oauth_user);
-  my $oauth_eci = Kynetx::Modules::PCI::create_oauth_indexed_eci($ken,$token,$eci);
+  my ($token,$oauth_eci);
+  my $otoken = check_token($ken,$user);
+  if ($otoken && ref $otoken eq "HASH") {
+    $token = $otoken->{'token_name'};
+    $oauth_eci = $otoken->{'ktoken'};
+  } else {
+    # so far so good, now create the encrypted token name
+    $token = Kynetx::Modules::PCI::create_oauth_token($cid,$oauth_user,$secret);
+    $oauth_eci = Kynetx::Modules::PCI::create_oauth_indexed_eci($ken,$token,$eci);
+  }
+  
+  $logger->debug("Token: $token");    
   $logger->debug("OECI: $oauth_eci");
   
   # store the code in memcached so it can't be used again
@@ -154,6 +161,19 @@ sub return_error {
   $r->status(Apache2::Const::HTTP_BAD_REQUEST);
   $r->print( "{\n \"error\":\"$code\",\n \"error_description\":\"$description\"\n}");
   return Apache2::Const::HTTP_BAD_REQUEST;
+}
+
+sub check_token {
+  my ($ken,$developer_eci) = @_;
+  my $logger = get_logger();
+  my $etype = "OAUTH-$developer_eci";
+  my $var = {
+    'endpoint_type' => $etype,
+    'ken' => $ken
+  };
+  $logger->debug("Key: ", sub {Dumper($var)});
+  my $token = Kynetx::Persistence::KToken::token_query($var);
+  $logger->debug("token: ", sub {Dumper($token)});
 }
 
 1;
