@@ -125,14 +125,21 @@ sub handler {
   return return_error($r,$redirect_uri,'invalid_request',"Request token code is stale") unless ($elapsed < $TEN_MINUTES);
   
   
-  
-  # so far so good, now create the official token
-  my $token = Kynetx::Modules::PCI::create_oauth_token($cid,$oauth_user,$secret);
-  $logger->debug("Token: $token");
+  # Check to see if there is already a token
+  my $token;
+  my $oauth_eci;
+ 
   my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($oauth_user);
-  my $oauth_eci = Kynetx::Modules::PCI::create_oauth_indexed_eci($ken,$token,$eci);
-  $logger->debug("OECI: $oauth_eci");
-  
+  ($token,$oauth_eci) = check_token($ken,$eci);
+  if ($token && $eci) {
+    $logger->debug("Return existing token ($token)");
+  } else {
+    $token = Kynetx::Modules::PCI::create_oauth_token($cid,$oauth_user,$secret);
+    $oauth_eci = Kynetx::Modules::PCI::create_oauth_indexed_eci($ken,$token,$eci);
+    $logger->debug("Create new token ($token)");
+    $logger->debug("ECI ($oauth_eci) for $ken");
+  }
+    
   # store the code in memcached so it can't be used again
   
   Kynetx::Memcached::mset_cache($md5_sig,1,6060);
@@ -154,6 +161,11 @@ sub return_error {
   $r->status(Apache2::Const::HTTP_BAD_REQUEST);
   $r->custom_response(Apache2::Const::HTTP_BAD_REQUEST, "{\n \"error\":\"$code\",\n \"error_description\":\"$description\"\n}");
   return Apache2::Const::HTTP_BAD_REQUEST;
+}
+
+sub check_token {
+  my ($ken,$dev_eci) = @_;
+  
 }
 
 1;
