@@ -29,6 +29,7 @@ use Kynetx::Rids qw/:all/;
 use Kynetx::Dispatch; #qw/clear_rid_list_by_ken/;
 #use Kynetx::Environments qw/:all/;
 use Kynetx::Modules::Random;
+use Kynetx::Persistence::DevLog;
 use Digest::SHA qw/hmac_sha1 hmac_sha1_hex hmac_sha1_base64
 				hmac_sha256 hmac_sha256_hex hmac_sha256_base64/;
 use Crypt::RC4::XS;
@@ -711,10 +712,13 @@ sub logging_eci {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
 	my $logger = get_logger();
   my $keys = _key_filter($args);
-	return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
+  my $auth = pci_authorized($req_info, $rule_env, $session, $keys);
+  $logger->debug("Logging eci auth: $auth");
+	return 0 unless ($auth);
 	my $ken;
 	my ($token_name,$type);
 	my $arg1 = $args->[0];
+	$logger->debug("Use: $arg1");
 	if (! defined $arg1) {
 		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
 		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
@@ -728,6 +732,7 @@ sub logging_eci {
 			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
 		}					
 	}
+	#$logger->debug("Found KEN: $ken");
 	if ($ken) {
 	 return Kynetx::Persistence::DevLog::create_logging_eci($ken);
 	}
@@ -804,7 +809,7 @@ sub get_log_messages {
 	my $ken;
 	my ($token_name,$type);
 	my $arg1 = $args->[0];
-	$logger->debug("log eci: $arg1");
+	#$logger->debug("log eci: $arg1");
 	my $list = Kynetx::Persistence::DevLog::get_all_msg($arg1);
 	if (defined $list) {
 	 return $list;  

@@ -88,7 +88,7 @@
 		$('[type="submit"]').button('refresh');
 	});
 	
-	$('#new-email').blur(function () {
+	$('#new-email').keyup(function () {
 		var emailaddress = $('#new-email').val();		
 		if (isValidEmailAddress(emailaddress)) {
 			$('label[for=email]').removeClass('error').addClass('okay');			

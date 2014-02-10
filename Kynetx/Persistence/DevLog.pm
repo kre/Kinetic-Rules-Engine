@@ -68,6 +68,7 @@ our @ISA         = qw(Exporter);
 our %EXPORT_TAGS = (all => [
 qw(
   create_logging_eci
+  has_logging
 ) ]);
 our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
 

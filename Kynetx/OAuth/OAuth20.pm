@@ -341,7 +341,7 @@ sub set_profile {
   $logger->trace("Session Ken: $session_ken");
   if ($session_ken eq $ken) {
     $logger->trace("params: ",sub {Dumper($params)});
-    my @update_allowed = ('firstname', 'lastname', 'email');
+    my @update_allowed = ('first_name', 'last_name', 'email');
     foreach my $element (@update_allowed) {
       my $string = $element;
       if (defined $params->{$element}) {
@@ -553,8 +553,8 @@ sub profile_update {
   my $template = DEFAULT_TEMPLATE_DIR . "/login/update_profile.tmpl";
   my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
   my $email = Kynetx::Persistence::KEN::get_ken_value($ken,'email');
-  my $fname = Kynetx::Persistence::KEN::get_ken_value($ken,'firstname');
-  my $lname = Kynetx::Persistence::KEN::get_ken_value($ken,'lastname');
+  my $fname = Kynetx::Persistence::KEN::get_ken_value($ken,'first_name');
+  my $lname = Kynetx::Persistence::KEN::get_ken_value($ken,'last_name');
   if ($session_id) {
     $dialog->param('L_SESSION' => $session_id)
   }
