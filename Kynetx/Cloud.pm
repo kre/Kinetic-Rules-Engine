@@ -30,6 +30,7 @@ use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
 use JSON::XS;
+use Apache2::Const qw( :http );
 
 use Kynetx::Version;
 use Kynetx::Rules;
@@ -80,7 +81,9 @@ sub handler {
 	}
 	if (scalar @params > 0){
 	  $metric->add_tag(join(",",@params));
-	}	eval {
+	}	
+	
+	eval {
 		 $logger->remove_appender('ConsoleLogger');
 	};
 	
@@ -99,8 +102,10 @@ sub handler {
 	my @path_components = split( /\//, $r->path_info );
 
 	my $req_info = Kynetx::Request::build_request_env($r, $path_components[4], $rids);
-
-
+	
+	my $session = _cloud_session($r,$req_info);
+  return Apache2::Const::HTTP_BAD_REQUEST unless ($session);
+  
 
 	if ( Kynetx::Configure::get_config('RUN_MODE') eq 'development' ) {
 
@@ -129,8 +134,7 @@ sub handler {
 	  Log::Log4perl::MDC->put( 'eid', "Sky Cloud API" );    # no eid
 
 
-	  # get a session, if _sid param is defined it will override cookie
-	  my $session = Kynetx::Session::process_session($r, undef,  $req_info->{'id_token'});
+	  
 
 
 	  my ($module_alias, $version) = split(/\./,$path_components[2]);
@@ -207,6 +211,8 @@ sub eval_ruleset_function {
   elsif (! $req_info->{'id_token'}
 	) {
     $logger->debug("No ECI defined");
+    $logger->debug("Request info: ", sub {Dumper($req_info)});
+    die;
     $result = {"error" => 103,
 	       "error_str" => "No ECI defined"
 	      };
@@ -313,6 +319,32 @@ sub unalias {
   }
   $logger->trace("[unalias] : $alias -> $rid");
   return $rid;
+}
+
+# repeat some code from Kynetx::Request for
+# cloud specific debugging
+sub _cloud_session {
+  my ($r,$req_info) = @_;
+  my $logger = get_logger();
+  my $session = undef;
+  my $id_token = $req_info->{'id_token'};
+  unless ($id_token) {
+    my $req = Apache2::Request->new($r);
+    $logger->debug("Request type: ", $r->method_number);
+    $logger->debug("URI: ",$r->unparsed_uri());
+    $logger->debug("Path: ",$r->path_info());
+    $logger->debug("Args: ", sub {Dumper($r->args)});
+    $logger->debug("Header: ",$r->headers_in->{'Kobj-Session'});
+    $logger->debug("Cookie: ",$r->headers_in->{'Cookie'});    
+  }
+  my $valid = Kynetx::Persistence::KToken::is_valid_token($id_token);
+  if ($valid) {
+    my $session_id = $valid->{"endpoint_id"};
+    $session = { "_session_id" => $session_id};
+  } else {
+    $logger->debug("SkyCloud token ($id_token) is invalid")
+  }
+  return $session;
 }
 
 

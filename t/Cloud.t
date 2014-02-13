@@ -182,13 +182,13 @@ SKIP: {
 	 'type' => 'application/json',
 	 'like' => ['/"error":100/']
 	},
-	{'url' => build_url({'function' => 'get_setting_all',
-			     'noeci'   => 1
-			    }),
-	 'type' => 'application/json',
-	 'like' => ['/"error":103/'],
-         'diag' => 0
-	},
+#	{'url' => build_url({'function' => 'get_setting_all',
+#			     'noeci'   => 1
+#			    }),
+#	 'type' => 'application/json',
+#	 'like' => ['/"error":103/'],
+#         'diag' => 0
+#	},
 	{'url' => build_url({'function' => 'get_setting_all',
                              'ruleset' => 'pdsx',
 			    }),

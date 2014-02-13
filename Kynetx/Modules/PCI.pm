@@ -1178,7 +1178,7 @@ sub remove_oauth_app_info {
 	my $developer_eci = $args->[0];
 	my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($developer_eci);
 	if ($ken && $developer_eci) {
-		my $installed = Kynetx::Persistence::KPDS::remove_callback($ken,$developer_eci);
+		my $installed = Kynetx::Persistence::KPDS::remove_app_info($ken,$developer_eci);
 		return $installed->{'value'};
 	}
 	return undef;

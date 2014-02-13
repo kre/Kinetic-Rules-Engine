@@ -1483,7 +1483,7 @@ sub cachable_expr {
 	 ) {
     return 1;
   } else {
-    $logger->debug("Module not cachable because expression has type ", $expr->{'type'}, " ", sub{Dumper $expr});
+    $logger->debug("Module not cachable because expression has type ", $expr->{'type'});
     return 0;
   }
 }

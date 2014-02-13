@@ -127,11 +127,11 @@ sub get_ridlist {
     my @list = ();
     foreach my $installed_rid (@{$rid_list}){
       my ($rid_info);
-      $logger->debug("Installed ($ken): $installed_rid");
+      $logger->trace("Installed ($ken): $installed_rid");
       my $rid_data = Kynetx::Persistence::Ruleset::get_ruleset_info($installed_rid);
-      $logger->debug("Found: ", sub {Dumper($rid_data)});
+      $logger->trace("Found: ", sub {Dumper($rid_data)});
       $rid_info = Kynetx::Persistence::Ruleset::to_rid_info($installed_rid);
-      $logger->debug("Calculated: ", sub {Dumper($rid_info)});       
+      $logger->trace("Calculated: ", sub {Dumper($rid_info)});       
       push(@list,$rid_info);
     }
     Kynetx::Memcached::mset_cache($rid_list_key,\@list);
