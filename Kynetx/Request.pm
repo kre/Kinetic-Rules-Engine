@@ -65,6 +65,19 @@ sub retrieve_json_from_post {
     return $content;
 }
 
+sub path_params {
+  my ($r) = @_;
+  my $logger= get_logger();
+  my @path_components = split( /\//, $r->path_info );
+  return \@path_components;
+}
+
+sub query_params {
+  my ($r) = @_;
+  my $req= Apache2::Request->new($r);
+  
+}
+
 sub build_request_env {
   my ( $r, $method, $rids, $eventtype, $eid, $options ) = @_;
 
@@ -85,10 +98,12 @@ sub build_request_env {
   }
 
   my $body_params;
+  $logger->debug("Request body: ",sub {Dumper($req->body())});
+  $logger->debug("Request param: ",sub {Dumper($req->param())});
   if ($content_type eq 'application/json') {
 
     my $body = retrieve_json_from_post($r);
-#    $logger->debug("Body: ", $body);
+    $logger->debug("Body: ", $body);
     $body_params = JSON::XS::->new->convert_blessed(1)->pretty(1)->decode($body || "{}");
 
     # you'd think you could just grab the POST body and parse it here, setting the 
@@ -103,13 +118,16 @@ sub build_request_env {
 
   my $domain = 
        $method                   # give path component precedence
-    || $req_params->{'_domain'} 
+    || $req_params->{'_domain'}
+    || $body_params->{'_domain'} 
     || 'discovery';
 
   $eventtype =
        $eventtype                # give path component precedence
     || $req_params->{'_type'}
     || $req_params->{'_name'}
+    || $body_params->{'_name'}
+    || $body_params->{'_type'}
     || 'hello';
 
   if ( $domain eq "discovery" && $eventtype eq "hello" ) {
@@ -117,7 +135,7 @@ sub build_request_env {
   }
 
   # we rely on this being undef if nothing passed in
-  $rids = $req_params->{'_rids'} || $rids;
+  $rids = $req_params->{'_rids'} || $body_params->{'_rids'} || $rids;
   my $explicit_rids = defined $req_params->{'_rids'};
 
   # endpoint identifier
@@ -128,7 +146,10 @@ sub build_request_env {
 
   # manage optional params
   # The ID token comes in as a header in Blue API
-  my $id_token = $options->{'id_token'} || $req_params->{'_eci'} || $r->headers_in->{'Kobj-Session'};
+  my $id_token = $options->{'id_token'} 
+                  || $req_params->{'_eci'} 
+                  || $body_params->{'_eci'}
+                  || $r->headers_in->{'Kobj-Session'};
   my $api      = $options->{'api'}      || 'ruleset';
 
   # build initial envv

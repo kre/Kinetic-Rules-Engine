@@ -39,6 +39,7 @@ use Clone qw(clone);
 use Benchmark ':hireswallclock';
 use Data::Diver qw(
 	Dive
+	DiveError
 );
 use Devel::Size qw(
   size
@@ -219,19 +220,19 @@ sub get_hash_element {
     
     my $cached = get_cache_for_hash($collection,$vKey,$hKey);
     if (defined $cached) {        
-        $logger->trace("Found in cache ",sub {Dumper(@{$hKey})}, sub {Dumper($cached)});
+        $logger->debug("Found in cache ",sub {Dumper(@{$hKey})}, sub {Dumper($cached)});
         return $cached;
     } else {
         $cached = get_cache($collection,$vKey);
         if (defined $cached) {
-          $logger->trace("Found in root cache ");
+          $logger->debug("Found in root cache ");
           my $value = Dive($cached->{'value'},@$hKey); 
           return {
             'value' => $value
           };
         }
     }
-    $logger->trace("Cache not found");
+    $logger->debug("Cache not found");
   
   if (defined $hKey && ref $hKey eq "ARRAY") {
     if (scalar @$hKey > 0) {
@@ -268,8 +269,14 @@ sub get_hash_element {
     }
     # reassemble (vivify) the hash from the elements
     my $frankenstein = Kynetx::Util::elements_to_hash(\@array_of_elements);
-    $logger->trace("Dive for ", sub {Dumper($hKey)});
+    $logger->debug("Dive for ", sub {Dumper($hKey)});
     my $value = Dive($frankenstein,@$hKey);
+    if (ref $value eq "ARRAY" && scalar @{$value} == 0) {
+      my ( $errDesc, $ref, $svKey )= DiveError();
+      $logger->debug("Dive error: $errDesc");
+      $logger->debug("Dive error ref: ", sub {Dumper($ref)});
+      $logger->debug("Dive error key: ", sub {Dumper($svKey)});
+    }
     my $composed_hash = clone ($vKey);
     $composed_hash->{'value'} = $value;
     $composed_hash->{'created'} = $last_updated *1;
@@ -300,10 +307,10 @@ sub get_value {
     my $keystring = make_keystring($collection,$var);
     my $cached = get_cache($collection,$var);
     if (defined $cached) {
-        $logger->trace("Found $collection variable $keystring in cache");
+        $logger->debug("Found $collection variable $keystring in cache");
         return $cached;
     }  else {
-        $logger->trace("$keystring not in cache");
+        $logger->debug("$keystring not in cache");
         $logger->trace("$collection variable NOT cached");
     }
     my $c = get_collection($collection);
@@ -327,7 +334,7 @@ sub get_value {
 	        		$composed_hash->{'created'} = $result->{'created'};
 	        		return $composed_hash;
 	        	}
-	            $logger->trace("Save $keystring to memcache");
+	            $logger->debug("Save $keystring to memcache");
 	            set_cache($collection,$var,$result);
 	            return $result;
 	        } else {
@@ -347,7 +354,7 @@ sub get_value {
 	        		});
 	        	}
 	        	my $hash = Kynetx::Util::elements_to_hash(\@array_of_elements);
-	        	$logger->trace("Resurrected: $keystring");
+	        	$logger->debug("Resurrected: $keystring");
 	        	$composed_hash->{'value'} = $hash;
 	        	$composed_hash->{'created'} = $last_updated *1;
 	        	set_cache($collection,$var,$composed_hash);
