@@ -231,12 +231,15 @@ sub do_register {
   my $uri = $args->[0];
   if (defined $uri) {
     my $new_rid = Kynetx::Persistence::Ruleset::create_rid($ken,$prefix,$uri);
+    # Immediately create a fork for a *dev* ruleset
+    my $fork = Kynetx::Persistence::Ruleset::fork_rid($ken,$new_rid,'dev',$uri);
     $logger->debug("Rid created: $new_rid");
     for my $key (keys %{$config}) {
       if ($key eq 'headers') {
         my $headers = $config->{'headers'};
         if (ref $headers eq "HASH") {
-          Kynetx::Persistence::Ruleset::put_registry_element($new_rid,['headers'],$headers)
+          Kynetx::Persistence::Ruleset::put_registry_element($new_rid,['headers'],$headers);
+          Kynetx::Persistence::Ruleset::put_registry_element($fork,['headers'],$headers);
         }
       } else {
         if ($key eq 'rule_name' ||
@@ -247,6 +250,7 @@ sub do_register {
           next;
         } else {
           Kynetx::Persistence::Ruleset::put_registry_element($new_rid,[$key],$config->{$key});
+          Kynetx::Persistence::Ruleset::put_registry_element($fork,[$key],$config->{$key});
         }
       }
     }

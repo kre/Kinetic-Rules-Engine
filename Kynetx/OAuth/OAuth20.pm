@@ -372,11 +372,15 @@ sub has_bootstrap_ruleset {
   my $installed = Kynetx::Persistence::KPDS::get_rulesets($ken);
   $logger->debug("Boot: ", sub {Dumper($list)});
   $logger->debug("Inst: ", sub {Dumper($installed)});
-  if  (Kynetx::Sets::has($list,$installed)) {
-    return 1
-  } else {
-    return 0
-  }  
+  if (defined $list) {
+    if  (Kynetx::Sets::has($list,$installed)) {
+      return 1
+    } else {
+      return 0
+    }
+  }
+  return 0;
+    
 }
 
 sub add_bootstrap_ruleset {
