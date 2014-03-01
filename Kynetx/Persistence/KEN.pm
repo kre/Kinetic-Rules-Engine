@@ -224,7 +224,7 @@ sub new_ken {
     my $logger = get_logger();
     $struct = $struct || get_ken_defaults();
     my $kpds = Kynetx::MongoDB::get_collection(COLLECTION);
-    my $ken = $kpds->insert($struct);
+    my $ken = $kpds->insert($struct,{'safe' => 1});
     $logger->debug("Generated new KEN: $ken");
     return $ken->{"value"};
 }
@@ -236,6 +236,27 @@ sub get_ken_value {
     my $valid = Kynetx::MongoDB::get_singleton(COLLECTION,{"_id" => $oid});
     $logger->trace("Ken: ", sub {Dumper($valid)});
     return $valid->{$key};
+}
+
+sub set_ken_value {
+  my ($ken,$vkey,$val) = @_;
+  my $logger = get_logger();
+	my $oid = MongoDB::OID->new(value => $ken);
+	my $key = {"_id" => $oid};
+  my $update = {
+		'$inc' => {'accesses' => 1},
+		'$set' => {$vkey => $val}
+	};
+	my $fnmod = {
+	  'query' => $key,
+	  'update' => $update	  
+	};
+  my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod,1);          
+	if (defined $result->{"value"}) {
+	  Kynetx::MongoDB::clear_cache(COLLECTION,$key);
+	  return 1;
+	}
+	return 0;
 }
 
 sub touch_ken {

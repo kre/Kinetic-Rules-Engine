@@ -91,7 +91,7 @@ sub handler {
     my @pairs = split(/\&/,$args);
     $params = Kynetx::Util::from_pairs(\@pairs);
   }elsif ($r->method_number==Apache2::Const::M_POST) {
-    $logger->debug("Request method is GET");
+    $logger->debug("Request method is POST");
     
     return OK;
   } else {

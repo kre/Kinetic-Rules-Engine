@@ -39,6 +39,7 @@ use Clone qw(clone);
 use Benchmark ':hireswallclock';
 use Data::Diver qw(
 	Dive
+	DiveError
 );
 use Devel::Size qw(
   size
@@ -147,6 +148,7 @@ sub get_mongo {
     return $db;
 }
 
+
 sub get_collection {
     my ($name) = @_;
     my $logger = get_logger();
@@ -160,6 +162,44 @@ sub get_collection {
     }
     return $c;
 }
+
+
+sub aggregate_group {
+  my ($collection,$match,$group,$sort,$limit,$skip) = @_;
+  my $logger = get_logger();
+  my $c = get_collection($collection);
+  my $db = get_mongo();
+  my $pipeline = ();
+  if ($match and ref $match eq "HASH") {
+    push(@{$pipeline}, {'$match' => $match});
+    push(@{$pipeline},{'$group' => $group});
+    if (defined $sort && ref $sort eq "HASH") {
+      push(@{$pipeline},{'$sort' => $sort})
+    }
+    if (defined $limit && ref $limit eq "HASH") {
+      push(@{$pipeline},{'$limit' => $limit})
+    }
+    if (defined $skip && ref $skip eq "HASH") {
+      push(@{$pipeline},{'$skip' => $skip})
+    }
+    my $command = {
+      "aggregate" =>  $collection,"pipeline" =>
+        [{'$match' => $match},
+         {'$group' => $group}
+         ]
+      
+    };
+    my $result = $db->run_command($command);
+    if (ref $result eq "HASH" && $result->{'ok'} == 1) {
+      return $result->{'result'}
+    }
+    
+  } 
+  return undef;
+  
+  
+}
+
 
 sub get_array_element {
 	my ($collection, $key,$index) = @_;
@@ -180,19 +220,19 @@ sub get_hash_element {
     
     my $cached = get_cache_for_hash($collection,$vKey,$hKey);
     if (defined $cached) {        
-        $logger->trace("Found in cache ",sub {Dumper(@{$hKey})}, sub {Dumper($cached)});
+        $logger->debug("Found in cache ",sub {Dumper(@{$hKey})}, sub {Dumper($cached)});
         return $cached;
     } else {
         $cached = get_cache($collection,$vKey);
         if (defined $cached) {
-          $logger->trace("Found in root cache ");
+          $logger->debug("Found in root cache ");
           my $value = Dive($cached->{'value'},@$hKey); 
           return {
             'value' => $value
           };
         }
     }
-    $logger->trace("Cache not found");
+    $logger->debug("Cache not found");
   
   if (defined $hKey && ref $hKey eq "ARRAY") {
     if (scalar @$hKey > 0) {
@@ -229,8 +269,14 @@ sub get_hash_element {
     }
     # reassemble (vivify) the hash from the elements
     my $frankenstein = Kynetx::Util::elements_to_hash(\@array_of_elements);
-    $logger->trace("Dive for ", sub {Dumper($hKey)});
+    $logger->debug("Dive for ", sub {Dumper($hKey)});
     my $value = Dive($frankenstein,@$hKey);
+    if (ref $value eq "ARRAY" && scalar @{$value} == 0) {
+      my ( $errDesc, $ref, $svKey )= DiveError();
+      $logger->debug("Dive error: $errDesc");
+      $logger->debug("Dive error ref: ", sub {Dumper($ref)});
+      $logger->debug("Dive error key: ", sub {Dumper($svKey)});
+    }
     my $composed_hash = clone ($vKey);
     $composed_hash->{'value'} = $value;
     $composed_hash->{'created'} = $last_updated *1;
@@ -261,10 +307,10 @@ sub get_value {
     my $keystring = make_keystring($collection,$var);
     my $cached = get_cache($collection,$var);
     if (defined $cached) {
-        $logger->trace("Found $collection variable $keystring in cache");
+        $logger->debug("Found $collection variable $keystring in cache");
         return $cached;
     }  else {
-        $logger->trace("$keystring not in cache");
+        $logger->debug("$keystring not in cache");
         $logger->trace("$collection variable NOT cached");
     }
     my $c = get_collection($collection);
@@ -288,7 +334,7 @@ sub get_value {
 	        		$composed_hash->{'created'} = $result->{'created'};
 	        		return $composed_hash;
 	        	}
-	            $logger->trace("Save $keystring to memcache");
+	            $logger->debug("Save $keystring to memcache");
 	            set_cache($collection,$var,$result);
 	            return $result;
 	        } else {
@@ -308,7 +354,7 @@ sub get_value {
 	        		});
 	        	}
 	        	my $hash = Kynetx::Util::elements_to_hash(\@array_of_elements);
-	        	$logger->trace("Resurrected: $keystring");
+	        	$logger->debug("Resurrected: $keystring");
 	        	$composed_hash->{'value'} = $hash;
 	        	$composed_hash->{'created'} = $last_updated *1;
 	        	set_cache($collection,$var,$composed_hash);
@@ -338,7 +384,6 @@ sub get_list {
       $logger->trace("$keystring not in cache");
   }
   my $c = get_collection($collection);
-  my $val = get_value($collection,$var)->{'value'};
   my @rlist;
   if ($c) {
     my $cursor = $c->find($var);
@@ -724,6 +769,10 @@ sub update_value {
     $multi = ($multi) ? 1 : 0;
     my $c = get_collection($collection);
     my $status = $c->update($var,$val,{"upsert" => $upsert,"multiple" => $multi, "safe" => $safe});
+    my $err = get_mongo()->last_error({'w' => 1});
+    if (defined $err->{'err'}) {
+      $logger->debug("Update failed: ", sub {Dumper($err)});
+    }
     if ($status) {
         clear_cache($collection,$var);
         return $status;

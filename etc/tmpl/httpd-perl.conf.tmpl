@@ -369,7 +369,6 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %{X-Forwarded-For}i %{METHOD}e" OAUTH
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/oauth_log /web/logs/kynetx/OAUTH-%Y%m%d-%H%M.log" OAUTH env=OAUTH
 
-
 # use setrlimit to limit processes by cpu time and address space
 # Apache2::Resource requires BSD:Resource
 
@@ -502,6 +501,17 @@ Allow from .kobj.net
   SetHandler perl-script
   PerlHandler Kynetx::KOBJ
   PerlLogHandler Kynetx::Persistence::DevLog
+
+</LocationMatch>
+
+<LocationMatch /login>
+  # P3P compressed policy header
+  Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
+
+  # env var to turn on rule logging
+  PerlSetEnv LOGIN 1
+  SetHandler perl-script
+  PerlHandler Kynetx::OAuth::OAuth20
 
 </LocationMatch>
 

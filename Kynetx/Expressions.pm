@@ -954,7 +954,7 @@ sub ineq_test {
     my($op, $rand0, $rand1) = @_;
 
     my $logger = get_logger();
-    $logger->trace("[ineq_test] $rand0 $op $rand1");
+    $logger->trace(sub { "[ineq_test] $rand0 $op $rand1" });
     $rand0 = undef unless (defined $rand0);
     $rand1 = undef unless (defined $rand1);
 
@@ -1483,7 +1483,7 @@ sub cachable_expr {
 	 ) {
     return 1;
   } else {
-    $logger->debug("Module not cachable because expression has type ", $expr->{'type'}, " ", sub{Dumper $expr});
+    $logger->debug("Module not cachable because expression has type ", $expr->{'type'});
     return 0;
   }
 }

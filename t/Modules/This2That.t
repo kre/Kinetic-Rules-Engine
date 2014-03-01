@@ -20,6 +20,7 @@
 #
 use lib qw(/web/lib/perl);
 use strict;
+use utf8;
 use warnings;
 use charnames ':full';
 
@@ -38,7 +39,7 @@ use DateTime;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Modules::This2That qw/:all/;
@@ -642,6 +643,108 @@ $test_count++;
 ######################
 #goto ENDY;
 ######################
+######################
+Log::Log4perl->easy_init($DEBUG);
+######################
+# Char ops 
+$description = "to char";
+$function = "chr";
+$args = [101];
+$expected = "e";
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+$test_count++;
+cmp_deeply($result,$expected, $description);
+
+$description = "to ord";
+$function = "ord";
+$args = ['e'];
+$expected = 101;
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+$test_count++;
+cmp_deeply($result,$expected, $description);
+
+$description = "to Unicode";
+$function = "chr";
+$args = [ 0x010f ];
+#$expected = "\N{U+010f}";
+$expected = 'ď';
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+$test_count++;
+cmp_deeply($result,$expected, $description);
+
+$description = "to ord (Unicode)";
+$function = "ord";
+$args = ['☺'];
+$expected = 0x263a;
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+$test_count++;
+cmp_deeply($result,$expected, $description);
+
+$description = "pack";
+$function = "pack";
+$args = [[101, 102, 103]];
+$expected = "efg";
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+$test_count++;
+cmp_deeply($result,$expected, $description);
+
+
+$description = "unpack";
+$function = "unpack";
+$args = ["hij"];
+$expected = [104, 105, 106];
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+$test_count++;
+cmp_deeply($result,$expected, $description);
+
 
 ENDY:
 done_testing($test_count);

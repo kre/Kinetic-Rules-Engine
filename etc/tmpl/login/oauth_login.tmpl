@@ -1,0 +1,39 @@
+    <!--===============================================-->
+    <!--==== Login Page ===============================-->
+    <div data-role="page" id="page-login">
+
+        <!-- Header -->
+        <div data-role="header">
+            <div class="header-image">
+                <!-- <img class="byu-logo" src="images/byu.png"> -->
+            </div>
+        </div> <!-- /header -->
+
+        <!-- Content -->
+        <div data-role="content">
+            <h3>Please sign in</h3>
+            <TMPL_VAR NAME="LOGIN_ERROR">
+            <form action="<TMPL_VAR NAME="PLATFORM">/login/oauth/signin" method="post" data-url="/login/oauth/signin" data-external-page="true" data-ajax="false">
+                <input type="hidden" name="developer_eci" value="<TMPL_VAR NAME="ECI">" >
+				<input type="hidden" name="client_state" value="<TMPL_VAR NAME="STATE">" >
+				<input type="hidden" name="uri_redirect" value="<TMPL_VAR NAME="REDIRECT">" >
+				<ul data-role="listview" data-inset="true">
+                    <li class="ui-field-contain">
+                        <input type="text" data-theme="b" name="user" id="login-username" value="" placeholder="username">
+                        <input type="password" data-theme="b" name="pass" id="login-password" value="" placeholder="password">
+                    </li>
+                    <li class="ui-field-contain">
+                        <a href="<TMPL_VAR NAME="OAUTH_CREATE">" class="ui-btn ui-mini" id="login-create-account">Create an account</a>
+                    </li>
+                </ul>
+                <button type="submit" class="ui-btn ui-corner-all ui-btn-b ui-btn-inline">Sign in</button>
+                <a href="#" class="ui-btn ui-corner-all ui-btn-inline">Cancel</a>
+            </form>
+        </div> <!-- /content -->
+
+        <!-- Footer -->
+        <div data-role="footer" data-theme="b">
+            <h2>Thank You</h2>
+        </div> <!-- /footer -->
+
+    </div><!-- /page -->

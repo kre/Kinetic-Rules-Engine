@@ -1,0 +1,35 @@
+    <!--===============================================-->
+    <!--==== Access Page ==============================-->
+    <div data-role="page" data-dialog="true" id="page-access">
+
+        <!-- Header -->
+        <div data-role="header">
+            <h2>Kynetx Guard Tour Login</h2>
+            <a href="<TMPL_VAR NAME="PLATFORM">/login/logout" data-theme="b" class="ui-btn-right">Logout</a>
+        </div> <!-- /header -->
+
+        <!-- Content -->
+        <div data-role="content">
+            <h5>The application <TMPL_VAR NAME="APP_NAME"> would like to access your personal cloud</h5>
+            <form action="<TMPL_VAR NAME="PLATFORM">/login/oauth/allow" method="post" data-url="/login/oauth/authorize" data-external-page="true" data-ajax="false">
+			  	<input type="hidden" name="developer_eci" value="<TMPL_VAR NAME="ECI">" >
+		  		<input type="hidden" name="client_state" value="<TMPL_VAR NAME="STATE">" >
+          		<input type="hidden" name="uri_redirect" value="<TMPL_VAR NAME="REDIRECT">" >	
+                <li class="ui-field-contain">
+	                <TMPL_IF NAME="ICON">
+	                    <a href="<TMPL_VAR NAME="INFO_PAGE">">
+                    <img src="<TMPL_VAR NAME="ICON">" alt="<TMPL_VAR NAME="APP_NAME">">
+	                	</a>
+	                </TMPL_IF>
+                </li>
+                <button type="submit" class="ui-btn ui-corner-all ui-btn-b  ui-btn-inline">Allow</button>
+                <a href="#page-login" class="ui-btn ui-corner-all ui-btn-inline">Deny</a>
+            </form>
+        </div> <!-- /content -->
+
+        <!-- Footer -->
+        <div data-role="footer"  data-theme="b">
+            <h2>Thank You</h2>
+        </div> <!-- /footer -->
+
+    </div><!-- /page -->

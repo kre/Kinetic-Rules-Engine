@@ -53,6 +53,7 @@ use Kynetx::Configure qw/:all/;
 use Kynetx::Expressions qw/:all/;
 use Kynetx::Response qw/:all/;
 use Kynetx::Persistence::KPDS qw/:all/;
+use Kynetx::OAuth::OAuth20;
 
 
 use Kynetx::FakeReq qw/:all/;
@@ -137,7 +138,7 @@ $result = Kynetx::Modules::PCI::check_system_key($system_key);
 is($result,1,$description);
 $test_count++;
 my $keys = {'root' => $system_key};
-
+my $create;
 my $count = 0;
 
 # system authorized tokens
@@ -147,6 +148,13 @@ my $count = 0;
   $rule_env,
   'system_credentials',
   $keys);
+
+my $platform = '127.0.0.1';
+$platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
+$platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
+$platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox');
+
+#goto ENDY;
 
 $description = "Check system key";
 $result = Kynetx::Modules::PCI::pci_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[]);
@@ -185,6 +193,7 @@ isnt($result,undef,$description);
 $test_count++;
 $eci = $result->{'cid'};
 $d_uid = $result->{'nid'};
+
 
 # Developer ken
 my $dken = Kynetx::Persistence::KEN::ken_lookup_by_userid($d_uid);
@@ -237,6 +246,7 @@ cmp_deeply($result,$expected,$description);
 $test_count++;
 my @cb = @{$result};
 
+
 $callback = "http://www.bar.com/foo";
 $description = "Add another callback url to developer eci";
 push(@cb,$callback);
@@ -257,8 +267,78 @@ $test_count++;
 $description = "List remaining callbacks";
 $expected = \@cb;
 $result = Kynetx::Modules::PCI::list_callback($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci]);
+$logger->info("Callbacks: ",sub {Dumper($result)});
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+###################### Add App info
+$description = "Add OAuth application info";
+my $app_info = {
+  'icon' => 'https://squaretag.com/assets/img/st_logo_white_trans.png',
+  'name' => "Burt's Magic Fingers",
+  'description' => "Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.",
+  'info_page' => 'http://www.exampley.com'
+};
+$result = Kynetx::Modules::PCI::add_oauth_app_info($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci,$app_info]);
+cmp_deeply($result,scalar keys %{$app_info},$description);
+$test_count++;
+
+$description = "Get OAuth application info";
+$result = Kynetx::Modules::PCI::get_oauth_app_info($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci]);
+cmp_deeply($result,$app_info,$description);
+$test_count++;
+
+
+my $bootstrap = "a144x175.prod";
+$description = "Add OAuth bootstrap ruleset";
+$expected = [$bootstrap];
+$result = Kynetx::Modules::PCI::add_oauth_bootstrap($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci,$bootstrap]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+$logger->debug("Bootstrap: ", sub {Dumper($result)});
+
+$description = "Get OAuth bootstrap ruleset";
+$expected = [$bootstrap];
+$result = Kynetx::Modules::PCI::list_oauth_bootstrap($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+$logger->debug("Bootstrap: ", sub {Dumper($result)});
+
+$description = "Add additional OAuth bootstrap ruleset";
+my $new_bootstrap = "foo.dev";
+$expected = [$bootstrap, $new_bootstrap];
+$result = Kynetx::Modules::PCI::add_oauth_bootstrap($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci,$new_bootstrap]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+$logger->debug("Bootstrap: ", sub {Dumper($result)});
+
+$description = "Get OAuth bootstrap ruleset (has 2)";
+$result = Kynetx::Modules::PCI::list_oauth_bootstrap($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Delete a bootstrap";
+$expected = [$bootstrap];
+$result = Kynetx::Modules::PCI::remove_oauth_bootstrap($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci,$new_bootstrap]);
 ll(Dumper $result);
 cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Get OAuth bootstrap ruleset (has 1)";
+$result = Kynetx::Modules::PCI::list_oauth_bootstrap($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$logger->info("Using dev: $d_eci");
+
+$description = "Store OAuth secret";
+$result = Kynetx::Modules::PCI::add_oauth_secret($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci,$dev_key]);
+cmp_deeply($result,1,$description);
+$test_count++;
+
+$description = "Get OAuth secret";
+$result = Kynetx::Persistence::KPDS::get_developer_secret($dken,$d_eci);
+cmp_deeply($result,$dev_key,$description);
 $test_count++;
 
 $description = "Make authorization request uri: check client_id";
@@ -267,6 +347,8 @@ $result = Kynetx::Modules::PCI::make_request_uri($my_req_info,$rule_env,$session
 ll(Dumper $result);
 cmp_deeply($result,$expected,$description);
 $test_count++;
+
+$logger->info("client_id=$d_eci");
 
 $description = "Make authorization request uri: check response_type";
 $expected = re(qr/response_type=code/);
@@ -336,22 +418,6 @@ cmp_deeply($result->code(),$expected,$description);
 $test_count++;
 
 
-#goto ENDY;
-#
-#$description = "Response has developer ECI";
-#$expected = re(qr/name="oauthClient" value="$d_eci/);
-#cmp_deeply($result->content(),$expected,$description);
-#$test_count++;
-#
-#$description = "Response has correct redirect";
-#$expected = re(qr/name="oauthRedirect" value="$cb[0]/);
-#cmp_deeply($result->content(),$expected,$description);
-#$test_count++;
-#
-#$description = "Response has correct state";
-#$expected = re(qr/name="oauthState" value="$state/);
-#cmp_deeply($result->content(),$expected,$description);
-#$test_count++;
 
 # test the Access Token
 my $access_token_code = Kynetx::Modules::PCI::oauth_authorization_code($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci,$u_eci,$dev_key]);
@@ -367,6 +433,8 @@ $result = $ua->post($base,[
 ]);
 $logger->debug("Return: ",$result->decoded_content());
 
+
+
 $description = "Check to see that OAuth eci maps to access_token and ken";
 my $json = Kynetx::Json::decode_json($result->content());
 my $otoken = $json->{'access_token'};
@@ -374,6 +442,24 @@ my $oeci = Kynetx::Modules::PCI::get_oauth_token_eci($my_req_info,$rule_env,$ses
 $expected = Kynetx::Persistence::KEN::ken_lookup_by_token($u_eci);
 $result = Kynetx::Persistence::KEN::ken_lookup_by_token($oeci);
 cmp_deeply($result,$expected,$description);
+$test_count++;
+
+sleep(1);
+
+$description = "Update the token name";
+$access_token_code = Kynetx::Modules::PCI::oauth_authorization_code($my_req_info,$rule_env,$session,$rule_name,"foo",[$d_eci,$u_eci,$dev_key]);
+$result = $ua->post($base,[
+  'grant_type' => 'authorization_code',
+  'code' => $access_token_code,
+  'redirect_uri' => $cb[0],
+  'client_id' => $d_eci
+]);
+$json = Kynetx::Json::decode_json($result->content());
+isnt($json->{'access_token'},$otoken,$description);
+$test_count++;
+
+$description = "Don't create double tokens";
+is($json->{'OAUTH_ECI'},$oeci,$description);
 $test_count++;
 
 $description = "Return the USER OAuth ECI";
@@ -387,11 +473,80 @@ $result = Kynetx::Modules::PCI::get_developer_oauth_eci($my_req_info,$rule_env,$
 cmp_deeply($result,$expected,$description);
 $test_count++;
 
+#Log::Log4perl->easy_init($DEBUG);
+$description = "Create a user through login portal";
+my $luname = Kynetx::Modules::Random::rword();
+my $lpass = 'foo';
+$create = Kynetx::OAuth::OAuth20::_platform() . '/login/oauth/create';
+$result = $ua->post($create,[
+  'developer_eci' => $d_eci,
+  'client_state' => time(),
+  'uri_redirect' => $cb[0],
+  'username' => $luname,
+  'password' => $lpass,
+  'email'    => 'a@b.c'
+  
+]);
+cmp_deeply($result->code(),200,$description);
+$test_count++;
+
+$description = "Check that user ($luname) is created";
+my $portal_ken = Kynetx::Persistence::KEN::ken_lookup_by_username($luname);
+isnt($portal_ken,undef,$description);
+$test_count++;
+
+$description = "Sign into the account";
+my $signin = Kynetx::OAuth::OAuth20::_platform() . '/login/local/auth';
+$result = $ua->post($signin,[
+  'user' => $luname,
+  'pass' => $lpass 
+]);
+cmp_deeply($result->code(),200,$description);
+$test_count++;
+
+$description = "Get the login ECI since we can't use the OAuth ECI";
+$result = Kynetx::Persistence::KToken::get_default_token($portal_ken);
+isnt($result,undef,$description);
+$test_count++;
+
+my $portal_eci = $result;
+
+$description = "Simulate an authorize";
+$args = {
+  'developer_eci' => $d_eci,
+  'client_state' => time(),
+  'uri_redirect' => $cb[0]
+};
+$expected = qr/$cb[0]/;
+$result = Kynetx::OAuth::OAuth20::_code_redirect($portal_eci,$args);
+cmp_deeply($result,re($expected),$description);
+$test_count++;
+
+
+$description = "Check installed rulesets";
+$result = Kynetx::Persistence::KPDS::get_rulesets($portal_ken);
+cmp_deeply($result,superbagof($bootstrap),$description);
+$test_count++;
+
+$description = "Test that you can make a sky call against the bootstrap ruleset";
+my $dn = "http://$platform/sky/event";
+my $sky_url = "$dn/$portal_eci?_rids=$bootstrap&_domain=web&_name=catch_sky_event";
+$result = $ua->get($sky_url);
+cmp_deeply($result->code(),200,$description);
+$test_count++;
+
+$description = "Sky cloud event is raised";
+
+my $dt = DateTime->now('time_zone' => '+0000');
+$expected = $dt->strftime("%F");
+$logger->debug("Expected: $expected");
+cmp_deeply($result->content(),re(qr/$expected/),$description);
+$test_count++;
+
+
+
+
 BAIL_OUT("OAuth Token Fail") unless $otoken;
-my $platform = '127.0.0.1';
-$platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
-$platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
-$platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox');
 
 # Now with the OAuth token make a protected request
 
@@ -454,6 +609,8 @@ cmp_deeply($result->code(),401,$description);
 $test_count++;
 
 
+###################################### End Login portal
+
 
 sub test_request_url {
   my ($client_id,$response_type,$state,$rd_uri) = @_;
@@ -476,7 +633,18 @@ sub test_request_url {
 
 ENDY:
 
+
 done_testing($test_count);
+#if ($portal_ken) {
+#  Kynetx::Test::flush_test_user($portal_ken,$luname);
+#}
+#if ($u_eci) {
+#  my $lken = Kynetx::Persistence::KEN::ken_lookup_by_token($u_eci);
+#  Kynetx::Test::flush_test_user($lken,$uname);
+#}
+#if ($dken) {  
+#  Kynetx::Test::flush_test_user($dken,$dname);
+#}
 
 
 1;

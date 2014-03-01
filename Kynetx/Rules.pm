@@ -616,7 +616,9 @@ sub eval_use_module {
             push(@{$tuple},$name);
             push (@{$tuple},Kynetx::Keys::get_key($req_info,$module_rule_env,$obj));
             $export_keys->{$obj} = $tuple;
-          }
+	  }
+        } else {
+          $logger->debug("Ruleset $self_rid is NOT permitted by $name");
         }
       }
     }

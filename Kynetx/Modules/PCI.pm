@@ -26,8 +26,10 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
 use Kynetx::Util qw(ll);
 use Kynetx::Rids qw/:all/;
+use Kynetx::Dispatch; #qw/clear_rid_list_by_ken/;
 #use Kynetx::Environments qw/:all/;
 use Kynetx::Modules::Random;
+use Kynetx::Persistence::DevLog;
 use Digest::SHA qw/hmac_sha1 hmac_sha1_hex hmac_sha1_base64
 				hmac_sha256 hmac_sha256_hex hmac_sha256_base64/;
 use Crypt::RC4::XS;
@@ -371,11 +373,17 @@ sub reset_account_password {
     $logger->warn("Reset Password args invalid: ", sub {join(",",@{$args})});
     return undef;
   }
-  my $hash = _hash_password($new_password);
-  return Kynetx::Persistence::KEN::set_authorizing_password($ken,$hash);
+  return _set_password($ken,$new_password);
+  
   
 }
 $funcs->{'reset_password'} = \&reset_account_password;
+
+sub _set_password {
+  my ($ken,$new_password) = @_;
+  my $hash = _hash_password($new_password);
+  return Kynetx::Persistence::KEN::set_authorizing_password($ken,$hash);
+}
 
 sub check_username {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
@@ -388,7 +396,7 @@ sub check_username {
   my $uid = $args->[0];
   $logger->debug("Check for username ($uid)");
   if (defined $uid) {
-    my $ken = Kynetx::Persistence::KEN::ken_lookup_by_username($uid);
+    my $ken = _username($uid);
     if ($ken) {
       return 1;
     }
@@ -396,6 +404,15 @@ sub check_username {
   return 0;
 }
 $funcs->{'exists'} = \&check_username;
+
+sub _username {
+  my ($uid) = @_;
+  my $ken;
+  if (defined $uid) {
+    $ken = Kynetx::Persistence::KEN::ken_lookup_by_username($uid);    
+  }
+  return $ken;
+}
 
 sub list_children {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
@@ -499,6 +516,33 @@ sub get_account_username {
 $funcs->{'get_username'} = \&get_account_username;
 $funcs->{'cloudnumber'} = \&get_account_username;
 
+sub get_account_email {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+  my $keys = _key_filter($args);
+	return 0 unless ( pci_authorized($req_info, $rule_env, $session, $keys));
+	my $ken;
+	my $arg0 = $args->[0];
+  if (! defined $arg0) {
+		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+	} else {
+		# Check to see if it is an eci or a userid
+		if ($arg0 =~ m/^\d+$/) {
+			ll("userid $arg0");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg0);
+		} else {
+			ll("eci $arg0");
+			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg0);
+		}					
+	}
+	if (defined $ken) {
+	  return Kynetx::Persistence::KEN::get_ken_value($ken,'email');
+	}
+	return undef;
+}
+$funcs->{'get_email'} = \&get_account_email;
+
 sub set_parent {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
 	my $logger = get_logger();
@@ -570,19 +614,8 @@ sub add_ruleset_to_account {
 	  
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
 		my $installed = Kynetx::Persistence::KPDS::add_ruleset($ken,\@ridlist);
-		
-		# Grab installed rulesets from legacy repository
-#		my $id_token = Kynetx::Persistence::KToken::get_default_token($ken);
-#		my $legacy = Kynetx::Dispatch::old_repository($req_info,$id_token,$ken);
-#		for my $ruleset (@{$legacy}) {
-#		  my $orid = $ruleset->{'rid'};
-#		  my $over = $ruleset->{'kinetic_app_version'} || 'prod';
-#		  if ($orid) {
-#		    my $fqrid = $orid . '.' . $over;
-#		    Kynetx::Persistence::KPDS::add_ruleset($ken,$fqrid);
-#		  }
-#		}
-		
+		Kynetx::Dispatch::clear_rid_list_by_ken($ken);
+				
 		return {
 			'nid' => $userid,
 			'rids' => $installed->{'value'}
@@ -620,6 +653,7 @@ sub remove_ruleset_from_account {
 	if ($ken && scalar @{$args} >= 1) {
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
 		my $installed = Kynetx::Persistence::KPDS::remove_ruleset($ken,\@ridlist);
+		Kynetx::Dispatch::clear_rid_list_by_ken($ken);
 		foreach my $orid (@ridlist) {
 		  Kynetx::Persistence::SchedEv::delete_entity_sched_ev($ken,$orid)
 		}
@@ -678,10 +712,13 @@ sub logging_eci {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
 	my $logger = get_logger();
   my $keys = _key_filter($args);
-	return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
+  my $auth = pci_authorized($req_info, $rule_env, $session, $keys);
+  $logger->debug("Logging eci auth: $auth");
+	return 0 unless ($auth);
 	my $ken;
 	my ($token_name,$type);
 	my $arg1 = $args->[0];
+	$logger->debug("Use: $arg1");
 	if (! defined $arg1) {
 		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
 		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
@@ -695,6 +732,7 @@ sub logging_eci {
 			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
 		}					
 	}
+	#$logger->debug("Found KEN: $ken");
 	if ($ken) {
 	 return Kynetx::Persistence::DevLog::create_logging_eci($ken);
 	}
@@ -771,7 +809,7 @@ sub get_log_messages {
 	my $ken;
 	my ($token_name,$type);
 	my $arg1 = $args->[0];
-	$logger->debug("log eci: $arg1");
+	#$logger->debug("log eci: $arg1");
 	my $list = Kynetx::Persistence::DevLog::get_all_msg($arg1);
 	if (defined $list) {
 	 return $list;  
@@ -1000,6 +1038,112 @@ sub add_oauth_callback {
 }
 $funcs->{'add_callback'} = \&add_oauth_callback;
 
+sub add_oauth_bootstrap {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+  my $keys = _key_filter($args);
+	return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
+	my $developer_eci = $args->[0];
+	my $arg2 = $args->[1];
+	my @bootstrap = ();
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+	if (defined $arg2) {
+		if (ref $arg2 eq "ARRAY") {
+			@bootstrap = @{$arg2};
+		} elsif (ref $arg2 eq "") {
+			push(@bootstrap,$arg2);
+		}
+	}	
+	# callbacks must be installed to an eci
+	$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($developer_eci);
+	if ($ken && scalar @{$args} >= 1) {
+		my $installed = Kynetx::Persistence::KPDS::add_bootstrap($ken,$developer_eci,\@bootstrap);
+		return $installed->{'value'};
+	}
+	return undef;
+	
+}
+$funcs->{'add_bootstrap'} = \&add_oauth_bootstrap;
+
+sub list_oauth_bootstrap {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	return 0 unless (pci_authorized($req_info,$rule_env,$session));
+  my $rid = get_rid($req_info->{'rid'});		
+	my $arg1 = $args->[0];
+	my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);	
+	if ($ken) {
+	  return Kynetx::Persistence::KPDS::get_bootstrap($ken,$arg1);
+	} 
+	return undef;
+	
+}
+$funcs->{'list_bootstrap'} = \&list_oauth_bootstrap;
+
+sub remove_oauth_bootstrap {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+  my $keys = _key_filter($args);
+	return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
+	my $developer_eci = $args->[0];
+	my $arg2 = $args->[1];
+	my $ken;
+	my @bootstrap = ();
+	if (defined $arg2) {
+		if (ref $arg2 eq "ARRAY") {
+			@bootstrap = @{$arg2};
+		} elsif (ref $arg2 eq "") {
+			push(@bootstrap,$arg2);
+		}
+	}	
+	$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($developer_eci);
+	if ($ken && scalar @{$args} >= 1) {
+		my $installed = Kynetx::Persistence::KPDS::remove_bootstrap($ken,$developer_eci,\@bootstrap);
+		return $installed->{'value'};
+	}
+	return undef;
+	
+}
+$funcs->{'remove_bootstrap'} = \&remove_callback;
+
+sub add_oauth_app_info {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+  my $keys = _key_filter($args);
+	return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
+	my $developer_eci = $args->[0];	
+	my $app_info= $args->[1];;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+	$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($developer_eci);
+	if ($ken && scalar @{$args} >= 1) {
+		return Kynetx::Persistence::KPDS::add_app_info($ken,$developer_eci,$app_info);
+	}
+	return undef;
+	
+}
+$funcs->{'add_appinfo'} = \&add_oauth_app_info;
+
+sub add_oauth_secret {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+  my $keys = _key_filter($args);
+	return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
+	my $developer_eci = $args->[0];	
+	my $secret = $args->[1];;
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+	$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($developer_eci);
+	if ($ken && scalar @{$args} >= 1) {
+		return Kynetx::Persistence::KPDS::set_developer_secret($ken,$developer_eci,$secret);
+	}
+	return undef;
+	
+}
+$funcs->{'add_oauth_secret'} = \&add_oauth_secret;
+
+
 sub remove_callback {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
 	my $logger = get_logger();
@@ -1026,6 +1170,21 @@ sub remove_callback {
 }
 $funcs->{'remove_callback'} = \&remove_callback;
 
+sub remove_oauth_app_info {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+  my $keys = _key_filter($args);
+	return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
+	my $developer_eci = $args->[0];
+	my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($developer_eci);
+	if ($ken && $developer_eci) {
+		my $installed = Kynetx::Persistence::KPDS::remove_app_info($ken,$developer_eci);
+		return $installed->{'value'};
+	}
+	return undef;
+	
+}
+$funcs->{'remove_appinfo'} = \&remove_oauth_app_info;
 
 sub list_callback {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
@@ -1041,6 +1200,21 @@ sub list_callback {
 	
 }
 $funcs->{'list_callback'} = \&list_callback;
+
+sub get_oauth_app_info {
+	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+	my $logger = get_logger();
+	return 0 unless (pci_authorized($req_info,$rule_env,$session));
+  my $rid = get_rid($req_info->{'rid'});		
+	my $arg1 = $args->[0];
+	my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);	
+	if ($ken) {
+	  return Kynetx::Persistence::KPDS::get_app_info($ken,$arg1);
+	} 
+	return undef;
+	
+}
+$funcs->{'get_appinfo'} = \&get_oauth_app_info;
 
 sub make_request_uri {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
@@ -1162,33 +1336,47 @@ sub oauth_authorization_code {
 	$logger->debug("OAuth code");
   my $keys = _key_filter($args);
   return unless (pci_authorized($req_info, $rule_env, $session, $keys));
-  my $t = time();
+  
   my $developer_eci = $args->[0];
   my $user_eci = $args->[1];
   my $developer_secret = $args->[2];
+  return _construct_oauth_code($developer_eci,$developer_secret,$user_eci);  
+}
+$funcs->{'OAuth_code'} = \&oauth_authorization_code;
+
+sub _construct_oauth_code {
+  my ($developer_eci,$developer_secret,$user_eci) = @_;
+  my $t = time();
   my $syskey = syskey();
   my $oauth_key = "$syskey" ^ "$developer_eci";
   my $raw_token = $t . "|" . $developer_eci . "|" . $developer_secret . "|" . $user_eci;
-  my $encr = RC4($oauth_key,$raw_token);
-  my $encrypted = unpack('H*', $encr);
-  my $b64 = MIME::Base64::encode_base64url($encrypted);
-  return $b64;
+  return _obfuscate($oauth_key,$raw_token);
 }
-$funcs->{'OAuth_code'} = \&oauth_authorization_code;
 
 sub deconstruct_oauth_code {
   my ($developer_eci,$code) = @_;
   my $logger = get_logger();
-  my $de64 = MIME::Base64::decode_base64url($code);
   my $syskey = syskey();
   my $oauth_key = "$syskey" ^ "$developer_eci";
-  my $packed = pack('H*', $de64);
-	my $decoded = RC4($oauth_key,$packed);	
-  $logger->debug("Length: ", length($de64));
-  $logger->debug("Code string: ", $decoded);
+	my $decoded = _fuscate($oauth_key,$code);	
   my @val = split(/\|/,$decoded);
-  return \@val;
-  
+  return \@val;  
+}
+
+sub _obfuscate {
+  my ($key,$string) = @_;
+  my $encr = RC4($key,$string);
+  my $encrypted = unpack('H*', $encr);
+  my $b64 = MIME::Base64::encode_base64url($encrypted);
+  return $b64;
+}
+
+sub _fuscate {
+  my ($key,$estring) = @_;
+  my $de64 = MIME::Base64::decode_base64url($estring);
+  my $packed = pack('H*', $de64);
+  my $decoded = RC4($key,$packed);
+  return $decoded;
 }
 
 sub create_oauth_token {
@@ -1207,8 +1395,14 @@ sub create_oauth_token {
 sub create_oauth_indexed_eci {
   my ($ken,$token_name,$developer_eci) = @_;
   my $type = 'OAUTH-' . $developer_eci;
-  my $eci =  Kynetx::Persistence::KToken::create_token($ken,$token_name,$type);
-  return $eci;
+  
+  my $obj = Kynetx::Persistence::KToken::update_token_name($ken,$token_name,$type);
+  if ($obj && ref $obj eq "HASH") {
+    return $obj->{'ktoken'}
+  }  elsif ($obj) {
+    return $obj;
+  }
+  return undef;
 }
 
 
@@ -1280,6 +1474,8 @@ sub auth_ken {
 	my $logger = get_logger();
 	my $hashed = Kynetx::Persistence::KEN::get_authorizing_password($ken);
 	my $passed = _hash_password($string);
+	$logger->debug("hash: $hashed");
+	$logger->debug("Pass: $passed");
 	if ($hashed eq $passed) {
 		return 1;
 	}

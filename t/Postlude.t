@@ -674,6 +674,88 @@ run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
 ok(! defined $my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last not modified req_info when false");
 $test_count++;
 
+$krl_src = <<_KRL_;
+fired {
+  last if (3 == 3)
+}
+_KRL_
+
+$my_req_info = Kynetx::Test::gen_req_info($rid); # reset
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+ok(defined $my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last modified req_info when expr");
+$test_count++;
+
+
+$krl_src = <<_KRL_;
+fired {
+  last if 3 == 3 && 'b' neq 'c'
+}
+_KRL_
+
+$my_req_info = Kynetx::Test::gen_req_info($rid); # reset
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+ok(defined $my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last modified req_info when expr");
+$test_count++;
+
+$krl_src = <<_KRL_;
+fired {
+  last if 3 == 3 && 'b' neq 'c' && 5 != 6
+}
+_KRL_
+
+$my_req_info = Kynetx::Test::gen_req_info($rid); # reset
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+ok(defined $my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last modified req_info when expr");
+$test_count++;
+
+$krl_src = <<_KRL_;
+fired {
+  last if (3 == 3 && 'b' neq 'c' && 5 == 6) || 'a' eq 'a'
+}
+_KRL_
+
+$my_req_info = Kynetx::Test::gen_req_info($rid); # reset
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+ok(defined $my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last modified req_info when expr");
+$test_count++;
+
+
+$krl_src = <<_KRL_;
+fired {
+  last if ((event:attr("namespace") eq "meta") && 
+           (event:attr("keyvalue") eq "namespace") && 
+           (event:attr("gtourInit").match(re/yes/gi))); 
+}
+_KRL_
+
+$my_req_info = Kynetx::Test::gen_req_info($rid); # reset
+Kynetx::Request::add_event_attr($my_req_info, 'namespace', 'meta');
+Kynetx::Request::add_event_attr($my_req_info, 'keyvalue', 'namespace');
+Kynetx::Request::add_event_attr($my_req_info, 'gtourInit', 'yes');
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+ok(defined $my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last modified req_info when expr");
+$test_count++;
+
+
+$krl_src = <<_KRL_;
+fired {
+  last if ((event:attr("namespace") eq "meta") && 
+           (event:attr("keyvalue") eq "namespace") && 
+           (event:attr("gtourInit").match(re/yes/gi))); 
+}
+_KRL_
+
+$my_req_info = Kynetx::Test::gen_req_info($rid); # reset
+Kynetx::Request::add_event_attr($my_req_info, 'namespace', 'meta');
+Kynetx::Request::add_event_attr($my_req_info, 'keyvalue', 'namespace');
+Kynetx::Request::add_event_attr($my_req_info, 'gtourInit', 'no');
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+ok(! defined $my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last modified req_info when expr");
+$test_count++;
+
+
 
 
 
@@ -707,6 +789,9 @@ $res = eval_post_expr($krl,
 is(Kynetx::Request::get_attr($my_req_info,'b'), 2, "attributes correctly stored");
 is(Kynetx::Request::get_attr($my_req_info,'c'), 3, "attributes correctly stored");
 $test_count += 2;
+
+
+
 
 
 # testing modifiers clause

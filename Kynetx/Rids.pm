@@ -121,6 +121,16 @@ sub get_uri {
   return $rid_info->{'uri'};
 }
 
+sub get_owner {
+  my ($rid_info) = @_;
+  return $rid_info->{'owner'};
+}
+
+sub get_last_modified {
+  my ($rid_info) = @_;
+  return $rid_info->{'last_modified'};
+}
+
 sub get_username {
   my ($rid_info) = @_;
   return $rid_info->{'username'};
@@ -249,12 +259,16 @@ sub mk_fqrid {
   return $fqrid
 }
 
-sub fq_to_rid_info {
+sub normalize {
   my ($fqrid) = @_;
-  my $rid = strip_version($fqrid);
-  my $version = $fqrid;
-  $version =~ s/^($rid\.).+//;
-  
+  my ($rid, $version) = split(/\./,$fqrid);
+  #$version =~ s/^($rid\.).+//;
+  $version = default_version() unless ($version);
+  my $rid_info = {
+      'rid'                 => $rid,
+      'kinetic_app_version' => $version
+  };
+  return $rid_info;
 }
 
 1;

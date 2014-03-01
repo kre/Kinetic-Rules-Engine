@@ -1,0 +1,20 @@
+<h3>Account details</h3>
+<form action="<TMPL_VAR NAME="PLATFORM">/login/update" method="post" data-url="<TMPL_VAR NAME="PLATFORM">/login/<TMPL_VAR NAME="FMETHOD">" data-external-page="true" data-ajax="false">	
+	<input type="hidden" name="login_session" value="<TMPL_VAR NAME="L_SESSION">" />
+    <ul data-role="listview" data-inset="true">
+        <li class="ui-field-contain">
+            <label for="email">Email:</label>
+            <input type="text" data-theme="b" name="email" id="account-email" value="<TMPL_VAR NAME="EMAIL">" placeholder="johndoe@email.com">
+        </li>
+        <li class="ui-field-contain">
+            <label for="pfn">First Name:</label>
+            <input type="text" data-theme="b" name="first_name" id="pfn" value="<TMPL_VAR NAME="FNAME">" placeholder="John">
+        </li>
+        <li class="ui-field-contain">
+            <label for="pln">Last Name:</label>
+            <input type="text" data-theme="b" name="last_name" id="pln" value="<TMPL_VAR NAME="LNAME">" placeholder="Doe">
+        </li>
+    </ul>
+    <button type="submit" class="ui-btn ui-corner-all ui-btn-b ui-btn-inline">Update</button>
+    <a href="#" class="ui-btn ui-corner-all ui-btn-inline">Cancel</a>
+</form>

@@ -157,6 +157,41 @@ sub _string2base64 {
 $funcs->{'string2base64'} = \&_string2base64;
 $funcs->{'encodeBase64'} = \&_string2base64;
 
+sub _chr {
+  my ($req_info, $function, $args) = @_;
+  my $number = $args->[0];
+  if ($number =~ m/^\d+$/) {
+    return chr($number)        
+  }
+  return undef
+}
+$funcs->{'chr'} = \&_chr;
+
+sub _ord {
+  my ($req_info, $function, $args) = @_;
+  my $string = $args->[0];
+  if ($string) {
+    return ord($string)        
+  }
+  return undef
+}
+$funcs->{'ord'} = \&_ord;
+
+sub _pack {
+  my ($req_info, $function, $args) = @_;
+  my $charArray = $args->[0];
+  return pack("C*",@{$charArray});
+}
+$funcs->{'pack'} = \&_pack;
+
+sub _unpack {
+  my ($req_info, $function, $args) = @_;
+  my $string = $args->[0];
+  my @array_of_ord =  unpack("C*",$string);
+  return \@array_of_ord;
+}
+$funcs->{'unpack'} = \&_unpack;
+
 sub _url2base64 {
     my ($req_info, $function, $args) = @_;
     my $string = $args->[0];

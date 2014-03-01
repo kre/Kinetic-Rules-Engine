@@ -18,3 +18,4 @@ parser/semantic.cache
 /.settings
 *.bak
 /i386-linux*
+workspace.txt

@@ -145,6 +145,9 @@ my $hash_var = "aaBaa";
 my $array_val = ['a','b','c','d','e','f','g',];
 my $array_var = "abcd";
 
+#goto ENDY;
+
+
 $logger->debug("Save Array: ", sub {Dumper($array_val)});
 $start = new Benchmark;
 Kynetx::MongoDB::update_value($cruft,{'key' => $array_var},{'key' => $array_var, 'value' => $array_val},1);
@@ -168,7 +171,6 @@ $base_save = timediff($end,$start);
 diag "Element retrieval: " . $base_save->[0];
 $logger->debug( "Fourth element: ", sub {Dumper($result)});
 
-#goto ENDY;
 
 #Kynetx::MongoDB::insert_hash($cruft,{'key' => $hash_var},$dummy_hash);
 Kynetx::MongoDB::update_value($cruft,{'key' => $hash_var},{'key' => $hash_var, 'value' => $dummy_hash});
@@ -435,7 +437,7 @@ $expected = undef;
 $got = Kynetx::MongoDB::get_cache("edata",$key);
 compare($got,$expected,"Not in memcache yet");
 
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 
 $start = new Benchmark;
@@ -528,6 +530,47 @@ compare($result->{"value"},0,"Initalize a $where to 0 (touch)",1);
 delete_value($cruft,$key);
 
 
+
+ENDY:
+
+my $num_vals = 5;
+$key = $DICTIONARY[rand(@DICTIONARY)];
+chomp($key);
+my @list = ();
+my $upper_limit = 100;
+my $min = $upper_limit;
+my $max = 0;
+my $sum = 0;
+my $collection = Kynetx::MongoDB::get_collection($cruft);
+for (my $i=0;$i<$num_vals;$i++ ) {
+  my $rnd = int (rand($upper_limit));
+  push (@list,$rnd);
+  if ($rnd > $max) {
+    $max = $rnd;
+  }
+  if ($rnd < $min) {
+    $min = $rnd;
+  }
+  $sum += $rnd;
+  $collection->save({'key' => $key, 'value' => $rnd});  
+}
+$description = "Test mongoDB pipeline operators";
+my $match = {'key' => $key};
+my $group = {'_id' => $key, 
+    'max' => {'$max' => '$value'},
+  'min' => {'$min' => '$value'},
+  'sum' => {'$sum' => '$value'}
+};
+$result = Kynetx::MongoDB::aggregate_group($cruft,$match,$group);
+cmp_deeply($result->[0]->{'max'}, $max,$description. " (max)");
+$num_tests++;
+cmp_deeply($result->[0]->{'min'}, $min,$description. " (min)");
+$num_tests++;
+cmp_deeply($result->[0]->{'sum'}, $sum,$description. " (sum)");
+$num_tests++;
+
+delete_value($cruft,$match);
+
 sub compare {
     my ($got,$expected,$description,$diag) =@_;
     if ($diag) {
@@ -538,7 +581,6 @@ sub compare {
     die unless ($r);
 }
 
-ENDY:
 
 
 plan tests => $num_tests;

@@ -1,0 +1,131 @@
+    
+    <!--===============================================-->
+    <!--==== Create Account Page ======================-->
+    <div data-role="page" id="create">
+        <!-- Header -->
+        <div data-role="header">
+            <h2>Kynetx Guard Tour Login</h2>
+        </div> <!-- /header -->
+
+        <!-- Content -->
+        <div data-role="content">
+            <h3>Creating your own personal cloud is easy</h3>
+            <form action="<TMPL_VAR NAME="PLATFORM">/login/create/" method="post" data-url="<TMPL_VAR NAME="PLATFORM">/login/create" data-external-page="true" data-ajax="false">                
+                <ul data-role="listview" data-inset="true">
+                    <li class="ui-field-contain">
+                        <label for="username">Username:</label>
+                        <input type="search" data-theme="b" name="username" id="new_user_name" value="" placeholder="username">
+                    </li>
+                    <li class="ui-field-contain">
+                        <label for="password">Password:</label>
+                        <input type="password" data-theme="b" name="password" id="new-password" value="" placeholder="password">
+                    </li>
+                    <li class="ui-field-contain" id="list-re-enter-password">
+                        <label for="renter-password"></label>
+                        <input type="password" data-theme="b" name="re-enter-password" id="re-enter-password" value="" placeholder="re-enter password">
+                    </li>
+                    <li class="ui-field-contain">
+                        <label for="email">Email:</label>
+                        <input type="text" data-theme="b" name="email" id="new-email" value="" placeholder="johndoe@email.com">
+                    </li>
+                    <li class="ui-field-contain">
+                        <a href="<TMPL_VAR NAME="PLATFORM">/login" class="ui-btn ui-mini" id="login-signup">Sign In</a>
+                    </li>
+                </ul>
+                <input type="submit" value="Create" id="submit_new_user" data-inline="true" data-role="button" class="ui-btn ui-corner-all ui-btn-b ui-btn-inline">
+                <a href="#page-login" class="ui-btn ui-corner-all ui-btn-inline">Cancel</a>
+            </form>
+        </div> <!-- /content -->
+
+        <!-- Footer -->
+        <div data-role="footer"  data-theme="b">
+            <h2>Thank You</h2>
+        </div> <!-- /footer -->
+
+    </div><!-- /page -->
+
+
+
+<!--===============================================-->
+<!--==== Create Account Page JS ===================-->
+
+<script>
+	$(document).ready(function() {
+		var min_char = 3;
+		var timer;
+		
+		$('#submit_new_user').button('disable');
+		$('#new_user_name').keyup(function(){
+			clearTimeout(timer);
+			nowspace = nows($('#new_user_name').val());
+			nobadchars = badchars(nowspace);
+			$('#new_user_name').val(nobadchars);
+			timer = setTimeout (function() {
+				if($('#new_user_name').val().length < min_char) {
+					$('#submit_new_user').button('disable'); 
+					
+				} else {
+					check_username($('#new_user_name').val());	
+										
+				}
+				$('#submit_new_user').button('refresh');
+			},500);
+		});
+	});
+	
+	$('#re-enter-password').blur(function () {
+		var p1 = $('#new-password').val();
+		var p2 = $('#re-enter-password').val();
+		if (p1 === p2) {
+			$('label[for=password]').removeClass('error').addClass('okay');
+			$('label[for=re-enter-password]').val("&nbsp;");
+			$('[type="submit"]').button('enable');			
+		} else {
+			$('[type="submit"]').button('disable');
+			$('label[for=password]').removeClass('okay').addClass('error');
+			$('label[for=re-enter-password]').val("no match");
+		}
+		$('[type="submit"]').button('refresh');
+	});
+	
+	$('#new-email').keyup(function () {
+		var emailaddress = $('#new-email').val();		
+		if (isValidEmailAddress(emailaddress)) {
+			$('label[for=email]').removeClass('error').addClass('okay');			
+			$('[type="submit"]').button('enable');			
+		} else {
+			$('[type="submit"]').button('disable');
+			$('label[for=email]').removeClass('okay').addClass('error');			
+		}
+		$('[type="submit"]').button('refresh');
+	});
+	function nows(str) {
+		return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+	};
+	
+	function badchars(str) {
+		return str.replace(/[^\u00C0-\u1FFF\u2C00-\uD7FF\w\@\-\.]+/,'');
+	};
+	
+	function check_username(uname) {
+		console.log("Username " + uname);
+		$.post("<TMPL_VAR NAME="PLATFORM">/login/check_username", {username : uname},
+			function(data) {
+				console.log("r_uname " + data.username);
+				console.log("r_avail " + data.available);
+				if (data.available) {
+					$('#submit_new_user').button('enable');
+					$('label[for=username]').removeClass('error').addClass('okay');
+				} else {
+					$('#submit_new_user').button('disable');
+					$('label[for=username]').removeClass('okay').addClass('error');
+				}
+			},'json');
+		};
+		
+	function isValidEmailAddress(emailAddress) {
+    	var pattern = new RegExp(/^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i);
+    	return pattern.test(emailAddress);
+	};		
+</script>
+    
