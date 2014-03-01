@@ -206,13 +206,13 @@ sub eval_module {
 	     $val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || 0;
       } elsif ($function eq 'rulesetName' ) {
 	     my $rid = get_rid($req_info->{'rid'});
-	     $val = $req_info->{"$rid:name"};
+	     $val = $req_info->{"meta:$rid:name"};
       } elsif ($function eq 'rulesetAuthor' ) {
 	     my $rid = get_rid($req_info->{'rid'});
-	     $val = $req_info->{"$rid:author"};
+	     $val = $req_info->{"meta:$rid:author"};
       } elsif ($function eq 'rulesetDescription' ) {
 	     my $rid = get_rid($req_info->{'rid'});
-	     $val = $req_info->{"$rid:description"};
+	     $val = $req_info->{"meta:$rid:description"};
       } elsif ($function eq 'ruleName' ) {
 	     $val = $rule_name;
       } elsif ($function eq 'eci' ) {

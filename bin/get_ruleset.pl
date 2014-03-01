@@ -67,7 +67,7 @@ $Data::Dumper::Indent = 1;
 use Time::HiRes qw/tv_interval gettimeofday/;
 
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 # configure KNS
 Kynetx::Configure::configure();

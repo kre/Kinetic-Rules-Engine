@@ -92,6 +92,9 @@ is_deeply($rid_info_list,
   }
 ], "parsing works");
 
+diag "print_rids ", print_rids($rid_info_list);
+diag "rid_info_string ", rid_info_string($rid_info_list);
+
 
 
 
