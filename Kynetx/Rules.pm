@@ -400,10 +400,10 @@ sub eval_meta {
 
 	my $this_js;
 
-	$req_info->{"$rid:ruleset_name"} = $ruleset->{'ruleset_name'};
-	$req_info->{"$rid:name"}         = $ruleset->{'meta'}->{'name'};
-	$req_info->{"$rid:author"}       = $ruleset->{'meta'}->{'author'};
-	$req_info->{"$rid:description"}  = $ruleset->{'meta'}->{'description'};
+	$req_info->{"meta:$rid:ruleset_name"} = $ruleset->{'ruleset_name'};
+	$req_info->{"meta:$rid:name"}         = $ruleset->{'meta'}->{'name'};
+	$req_info->{"meta:$rid:author"}       = $ruleset->{'meta'}->{'author'};
+	$req_info->{"meta:$rid:description"}  = $ruleset->{'meta'}->{'description'};
 
 	# process keys now so that they're available for use in configuring modules
 	if ( $ruleset->{'meta'}->{'keys'} ) {
