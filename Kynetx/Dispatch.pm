@@ -218,7 +218,7 @@ sub calculate_rid_list {
 
 
     foreach my $rid_info ( @{$rid_list} ) {
-
+	
       my $rid = get_rid($rid_info);
 
       # add RID to ridlist. We use this to filter incoming RID requests to see
@@ -229,13 +229,15 @@ sub calculate_rid_list {
         Kynetx::Repository::get_rules_from_repository( $rid_info, $req_info,
         $rid_info->{'kinetic_app_version'} );
 
-      
+#      $logger->debug("Rule list for $rid ", $ruleset->{'rule_lists'});
 
       my $dispatch_info = process_dispatch_list( $rid, $ruleset );
 #      $logger->debug( "Domain ", sub { Dumper $dispatch_info } );
       foreach my $d ( @{ $dispatch_info->{'domains'} } ) {
         $r->{'ridlist'}->{$rid}->{'domains'}->{$d} = 1;
       }
+
+#      $logger->debug("Rule list for $rid ", sub {Dumper $ruleset->{'rules_lists'}});
 
       foreach my $d ( keys %{ $ruleset->{'rule_lists'} } ) { 
 	foreach my $t ( keys %{ $ruleset->{'rule_lists'}->{$d} } ) {

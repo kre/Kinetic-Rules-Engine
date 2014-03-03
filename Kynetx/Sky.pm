@@ -320,8 +320,10 @@ sub _handler {
 	   $hostname = Kynetx::Util::get_host($req_info->{'url'} );
 	}
 
+  
 	foreach my $rid_info ( @{$rid_list} ) {
 
+	    $logger->debug("Looking at ", sub { Dumper $rid_info});
 		# check dispatch if domain is web and rids weren't specified
 		my $rid = $rid_info->{'rid'};
 		if (   $domain eq 'web'
