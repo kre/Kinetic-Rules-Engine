@@ -252,10 +252,10 @@ sub signature {
 	my $logger = get_logger();
 	my $rid_info = to_rid_info($rid);
 	my @fields = ();
-	push(@fields, Kynetx::Rids::get_rid($rid_info)) ;
-	push(@fields, Kynetx::Rids::get_version($rid_info)) ;
-	push(@fields, Kynetx::Rids::get_last_modified($rid_info)) ;
-	push(@fields, Kynetx::Rids::get_owner($rid_info)) ;
+	push(@fields, Kynetx::Rids::get_rid($rid_info)|| "") ;
+	push(@fields, Kynetx::Rids::get_version($rid_info) || "") ;
+	push(@fields, Kynetx::Rids::get_last_modified($rid_info) || "") ;
+	push(@fields, Kynetx::Rids::get_owner($rid_info)  || "");
 	my $sig_str = join("-",@fields);
 	$logger->trace("rid sig: $sig_str");
 	return Digest::MD5::md5_hex( $sig_str );
