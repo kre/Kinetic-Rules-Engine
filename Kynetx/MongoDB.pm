@@ -911,8 +911,8 @@ sub delete_value {
     my $logger = get_logger();
     $logger->trace("Deleting from $collection: ", sub {Dumper($var)});
     my $c = get_collection($collection);
-    my $success = $c->remove($var,{"safe" => 1});
     clear_cache($collection,$var);
+    my $success = $c->remove($var,{"safe" => 1});
     if (!$success ) {
         $logger->debug("Delete error: ", mongo_error());
     }
