@@ -79,7 +79,7 @@ sub handler {
     my $eid = '';
     $logger->debug($r->path_info);
 
-    ($method,$rid,$eid) = $r->path_info =~ m!/([a-z+_]+)/([A-Za-z0-9_;]*)/?(\d+)?!;
+    ($method,$rid,$eid) = $r->path_info =~ m!/([a-z+_]+)/([A-Za-z0-9_;.]*)/?(\d+)?!;
     
     $metric->eid($eid);
     $metric->rid($rid);

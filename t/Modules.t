@@ -66,9 +66,9 @@ my $rid = 'cs_test';
 
 my $my_req_info = Kynetx::Test::gen_req_info($rid, 
 					     {'ridver' => 'dev',
-					      "$rid:name" => 'rule_1',
-					      "$rid:author" => 'Web-san',
-					      "$rid:description" => "A ruleset for testing",
+					      "meta:$rid:name" => 'rule_1',
+					      "meta:$rid:author" => 'Web-san',
+					      "meta:$rid:description" => "A ruleset for testing",
 					      'id_token' => 'flipperoo!!',
 					     });
 
