@@ -602,11 +602,13 @@ sub eval_use_module {
 				    $use_ruleset );
       $js .= $this_js;
     }
-    
+
+    my $is_cachable;
+
     # Check to see if this module exposes any keys to external ruleset
     if ($use_ruleset->{'meta'}->{'module_keys'}) {
       my $key_permissions = $use_ruleset->{'meta'}->{'module_keys'};
-      $logger->trace("Exposing keys to parent rid: $self_rid");
+      $logger->debug("Exposing keys to parent rid: $self_rid");
       my $permitted = $key_permissions->{'provides_rids'};
       if (defined $permitted) {
         if (Kynetx::Sets::has($permitted,[$self_rid])) {
@@ -635,7 +637,6 @@ sub eval_use_module {
 
 
     # eval the module's global block
-    my $is_cachable;
     if ( $use_ruleset->{'global'} ) {
       ( $js, $module_rule_env, $is_cachable ) =
 	process_one_global_block( $req_info, $use_ruleset->{'global'},

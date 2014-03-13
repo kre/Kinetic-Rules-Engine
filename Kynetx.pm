@@ -269,6 +269,8 @@ sub flush_ruleset_cache {
     my $msg = '';
     foreach my $rid_info ( @{$req_info->{'rids'} }) {
 
+      $req_info->{'rid'} = $rid_info;
+
       my $rid = Kynetx::Rids::get_rid($rid_info);
       my $version = Kynetx::Rids::get_version($rid_info);
 
@@ -277,6 +279,8 @@ sub flush_ruleset_cache {
 
 
       Kynetx::Modules::RuleEnv::delete_module_caches($req_info, $memd);
+
+
       my $fqrid = Kynetx::Rids::get_fqrid($rid_info);
       Kynetx::Persistence::Ruleset::touch_ruleset($fqrid);
 
