@@ -105,8 +105,8 @@ sub get_rules_from_repository {
     Kynetx::Rules::get_optimization_version()
     && !$text )
   {
-    $logger->trace(
-"Using cached ruleset for $rid ($version) with key $rs_key & optimization version ",
+    $logger->debug(
+"Using cache $rid ($version) with key $rs_key & opt v.",
       $ruleset->{'optimization_version'}
     );
 
