@@ -2527,10 +2527,11 @@ meta_block
           HashMap tmp = new HashMap();
           if(!$op.text.equals("keys") )
           {
-	throw new InvalidToken("Found [" + $op.text + "] should have been keys", input);
+              throw new InvalidToken("Found [" + $op.text + "] should have been keys", input);
           }
           tmp.put("provides_keys",pkey_list);
           tmp.put("provides_rids",prid_list);
+          prid_list = new ArrayList(); // clear it out
           meta_block_hash.put("module_keys",tmp);
         }
     | CONFIGURE USING  m=modifier {config_list.add($m.result);} (AND_AND m1=modifier {config_list.add($m1.result);})* {

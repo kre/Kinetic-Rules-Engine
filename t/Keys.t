@@ -100,6 +100,8 @@ $value = Kynetx::Keys::get_key($my_req_info,
 			       $rule_env, 
 			       'twitter');
 
+#diag Dumper $value;
+
 is_deeply($value, 
 	  {'consumer_secret' => '3HNb7NfksjflskIm2BuxKPSg6JYvMtLahvkMt6Std5SO0',
 	   'consumer_key' => '583758935739'
