@@ -4779,6 +4779,7 @@ ENDY:
 ## these rulesets are tied together because of the provide keys restriction on rids
 my $provide = 'a144x171.prod';
 my $uses = 'a144x172.prod';
+my $uses_uses = "b16x14.prod";
 my $version = 'prod';
 
 my $rid_info = mk_rid_info($my_req_info,$provide);
@@ -4809,6 +4810,25 @@ cmp_deeply($local_val,$module_rs->{'meta'}->{'keys'}->{$local},$description);
 $test_count++;
 
 
+$meta_req_info = Kynetx::Test::gen_req_info($uses_uses);
+$rid_info = mk_rid_info($meta_req_info,$uses_uses);
+my $uu_krl = Kynetx::Repository::get_ruleset_krl($rid_info,$version);
+my $uu_rule_env = empty_rule_env();
+my $uu_module_rs = Kynetx::Parser::parse_ruleset($uu_krl);
+($js,$uu_rule_env) = Kynetx::Rules::eval_meta($meta_req_info,$uu_module_rs,$uu_rule_env,$session);
+
+#diag $uu_krl;
+#diag Dumper $uu_rule_env;
+
+my $module_val = Kynetx::Keys::get_key($meta_req_info,$uu_rule_env,"a");
+#diag $module_val;
+is($module_val, "local key", "ensure that we don't see keys not provided to us" );
+$test_count++;
+
+$module_val = Kynetx::Keys::get_key($meta_req_info,$uu_rule_env,"b");
+ok(! defined $module_val, "ensure that we don't see keys not provided to us" );
+#diag $module_val;
+$test_count++;
 
 done_testing($test_count);
 
