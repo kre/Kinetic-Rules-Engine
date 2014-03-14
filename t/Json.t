@@ -25,7 +25,6 @@ use strict;
 my @krl_files = @ARGV ? @ARGV : <data/*.krl>;
 
 use Test::More;
-plan tests => $#krl_files-1;
 use Test::LongString;
 
 # most Kyentx modules require this
@@ -41,9 +40,18 @@ use Encode;
 
 my $logger = get_logger();
 
+my $skip = {"data/events12.krl" => 1,
+	    "data/events13.krl" => 1,
+	   };
+
+
+plan tests => $#krl_files-(length(keys %{$skip})+2);
+
+
 # test the round trip KRL -> Json -> KRL
 foreach my $f (@krl_files) {
     next if ($f =~ m/exprs\d/); # exprs don't pretty print exactly
+    next if ($skip->{$f});
     my ($fl,$krl_text) = getkrl($f);
     my $json = krlToJson($krl_text);
     # Use the internal perl string structure for the compare

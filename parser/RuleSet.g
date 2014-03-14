@@ -1402,12 +1402,12 @@ event_primitive returns[HashMap result]
 }
 
 	:
-		dom=WEB ei = event_intrinsic {			
+		dom=WEB COLON* ei = event_intrinsic {			
 			HashMap tmp = ei.result;
 			tmp.put("domain","web");
 			$result = tmp;
 		}
-		| dom=VAR ee = event_explicit {
+		| dom=VAR COLON* ee = event_explicit {
 			HashMap tmp = ee.result;
 			tmp.put("domain",$dom.text);
 			$result = tmp;
