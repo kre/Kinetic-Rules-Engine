@@ -48,6 +48,13 @@ options {
 	public boolean canbeReg = true;
 }
 
+@rulecatch {
+    // ANTLR does not generate its normal rule try/catch
+    catch(RecognitionException rEx) {
+        throw rEx;
+    }
+}
+
 @members {
 	public boolean check_operator = false;
 	public HashMap rule_json = new HashMap();
@@ -1402,12 +1409,12 @@ event_primitive returns[HashMap result]
 }
 
 	:
-		dom=WEB COLON* ei = event_intrinsic {			
+		dom=WEB ei = event_intrinsic {			
 			HashMap tmp = ei.result;
 			tmp.put("domain","web");
 			$result = tmp;
 		}
-		| dom=VAR COLON* ee = event_explicit {
+		| dom=VAR ee = event_explicit {
 			HashMap tmp = ee.result;
 			tmp.put("domain",$dom.text);
 			$result = tmp;
