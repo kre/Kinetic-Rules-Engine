@@ -726,7 +726,7 @@ sub set_module_configuration {
 	foreach my $mod ( @{$modifiers} ) {
 
 		# only insert names that are already there (honor config)
-		if ( $configuration->{ $mod->{'name'} } ) {
+		if ( defined $configuration->{ $mod->{'name'} } ) {
 
 			# modifiers are executed in rule's environment
 			$configuration->{ $mod->{'name'} } =

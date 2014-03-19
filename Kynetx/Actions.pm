@@ -773,7 +773,7 @@ sub build_one_action {
 		my $name = $action->{'name'};
 		my $required = $defaction->{'val'}->{'vars'} || [];
 		$logger->debug("Found action ($name) in module [$source]");		
-		$logger->debug("Module requires: [", join(",",@$required),"]");
+		$logger->debug("Action requires: [", join(",",@$required),"]");
 		my $modifiers = {};
 		return build_composed_action($source, 
 			$name, 
