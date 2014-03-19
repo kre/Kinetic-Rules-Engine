@@ -611,7 +611,11 @@ sub eval_use_module {
     if ($use_ruleset->{'meta'}->{'module_keys'}) {
       my $key_permissions = $use_ruleset->{'meta'}->{'module_keys'};
       $logger->debug("Exposing keys to parent rid: $using_rid");
-      my $permitted = map { $_ => 1 } @{ $key_permissions->{'provides_rids'} };
+      # this works on devbox, but not productions
+      #my $permitted = map { $_ => 1 } @{ $key_permissions->{'provides_rids'} };
+      my $permitted;
+      $permitted->{$_} = 1 for @{ $key_permissions->{'provides_rids'} };
+
       if (defined $key_permissions->{'provides_rids'} ) {
         if ($permitted->{$using_rid}) {
           $logger->debug("Ruleset $using_rid is permitted by $name");
