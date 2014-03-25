@@ -1210,6 +1210,7 @@ sub get_rule_set {
 
 	my $ruleset;
 	if ( is_ruleset_stashed( $req_info, $rid, $ver ) ) {
+	    $logger->debug("Ruleset $rid.$ver stashed");
 		$ruleset = grab_ruleset( $req_info, $rid, $ver );
 	}
 	else {
