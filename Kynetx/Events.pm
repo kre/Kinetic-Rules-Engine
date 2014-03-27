@@ -90,9 +90,11 @@ sub handler {
 
 	$r->content_type('text/javascript');
 
-	$logger->trace(
-"\n\n------------------------------ begin EVENT evaluation-----------------------------"
+	$logger->debug(
+"\n\n------------------------------ begin EVENT evaluation with Blue API -----------------------------"
 	);
+    $logger->debug($r->path_info);
+
 	$logger->trace("Initializing memcached");
 	Kynetx::Memcached->init();
 

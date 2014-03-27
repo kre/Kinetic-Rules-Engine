@@ -69,17 +69,17 @@ sub handler {
 	
     $r->content_type('text/javascript');
 
-
-    $logger->debug("\n\n>>>>---------------- begin ruleset execution-------------<<<<");
-    $logger->debug("Initializing memcached");
-    Kynetx::Memcached->init();
-
     my $method;
     my $rid;
     my $eid = '';
-    $logger->debug($r->path_info);
-
     ($method,$rid,$eid) = $r->path_info =~ m!/([a-z+_]+)/([A-Za-z0-9_;.]*)/?(\d+)?!;
+
+
+    $logger->debug("\n\n>>>>---------------- begin $method execution-------------<<<<");
+    $logger->trace("Initializing memcached");
+    Kynetx::Memcached->init();
+
+    $logger->debug($r->path_info);
     
     $metric->eid($eid);
     $metric->rid($rid);

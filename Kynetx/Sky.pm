@@ -105,7 +105,9 @@ sub _handler {
 	$logger->debug(
 "\n\n------------------------------ begin EVENT evaluation with SKY API---------------------"
 	);
-	$logger->debug("Initializing memcached");
+        $logger->debug($r->path_info);
+
+	$logger->trace("Initializing memcached");
 	Kynetx::Memcached->init();
 
 	my ( $domain, $eventtype, $eid, $rids, $id_token );
