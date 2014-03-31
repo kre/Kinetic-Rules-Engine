@@ -105,8 +105,8 @@ sub get_rules_from_repository {
     Kynetx::Rules::get_optimization_version()
     && !$text )
   {
-    $logger->trace(
-"Using cached ruleset for $rid ($version) with key $rs_key & optimization version ",
+    $logger->debug(
+"Using cache $rid ($version) with key $rs_key & opt v.",
       $ruleset->{'optimization_version'}
     );
 
@@ -128,7 +128,7 @@ sub get_rules_from_repository {
     unless($ruleset->{'ruleset_name'} eq 'norulesetbythatappid' || 
       defined $ruleset->{'error'}) {
         $ruleset = Kynetx::Rules::optimize_ruleset($ruleset);
-        $logger->debug("Found rules  for $rid");
+        $logger->debug("Found rules for $rid");
         $logger->trace("Caching ruleset for $rid using key $rs_key");
         $memd->set($rs_key,$ruleset);
       } else {
@@ -201,6 +201,7 @@ sub get_ruleset_krl {
     $version = Kynetx::Rids::get_version($rid_info) unless ($version);
     my $uri = Kynetx::Rids::get_uri($rid_info);
     if (defined $uri) {
+      $logger->debug("Retrieving $rid.$version from $uri");
       my $parsed_uri = URI->new($uri);
       my $scheme = $parsed_uri->scheme;
       if ($scheme =~ m/http/) {
@@ -215,7 +216,7 @@ sub get_ruleset_krl {
       }      
     } else {
         # Try the default repository if $rid_info is not fully configured
-        $logger->debug("Check default repository");
+        $logger->debug("No URI found; check default repository");
         my $repo = Kynetx::Configure::get_config('RULE_REPOSITORY');
         my ($base_url,$username,$password) = split(/\|/, $repo);
         $logger->trace("URL: $base_url");

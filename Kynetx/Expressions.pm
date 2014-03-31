@@ -1397,12 +1397,25 @@ sub var_free_in_here_doc {
   my $found = 0;
 
   foreach my $v (@vars) {
-    $v = Kynetx::Parser::parse_expr($v);
+    $v = parse_here_doc($v);
     $found = 1 if var_free_in_expr($var, $v);
   }
 
   return $found;
+}
 
+sub parse_here_doc {
+  my($expr) = @_;
+  my $logger = get_logger();
+  my $v;
+  eval {
+      $v = Kynetx::Parser::parse_expr($expr);
+  };
+  if ($@) {
+      $logger->info("Syntax error in $expr:\n $@");
+      $v = {};
+  };
+  return $v;
 }
 
 #
@@ -1573,7 +1586,7 @@ sub optimize_here_doc {
   while (@parts = $str =~ m/(.*?)\#\{(.+?)\}{1}?(.*)/s) {
     #      $logger->debug("Picked apart ", sub {Dumper @parts});
     last unless $parts[1];
-    my $bee_expr = Kynetx::Parser::parse_expr($parts[1]);
+    my $bee_expr = parse_here_doc($parts[1]);
     my $label = "_____EXPR____".$count++;
     push (@{ $string_array }, ($parts[0], $label));
     push( @{ $expr_array }, $bee_expr);

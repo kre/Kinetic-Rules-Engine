@@ -100,7 +100,7 @@ sub _handler {
 	$logger->debug("--------SchedEv Id: $sched_id-----------");
 	
 	if (defined $proc_id) {
-	  return Apache2::Const::OK unless (sched_verify($sched_id,$proc_id));
+    return Apache2::Const::DECLINED unless sched_verify($sched_id,$proc_id);	  
 	}
 	
 	my ($schedEv, $esl, $event_response) = Kynetx::Modules::Event::send_scheduled_event($sched_id);
@@ -332,11 +332,52 @@ sub sched_verify {
   my $logger = get_logger();
   my $schedev = get_sched_ev($schedEv_id);
   my $active_cron_id = $schedev->{'cron_id'};
-  if ($active_cron_id == $cron_id) {
+  if (defined $schedev->{'timespec'}) {
+    if ($active_cron_id == $cron_id) {
+      return 1;
+    } else {
+      return 0;
+    }
+  } elsif (defined $schedev->{'once'}) {
+    # check to see if the event has already been processed
+    if (sched_cache_hit($schedev)) {
+      $logger->debug("Schedule $schedEv_id failed verification, removing");
+      my $ken = $schedev->{'ken'};
+      my $rid = $schedev->{'source'};
+      delete_sched_ev($schedEv_id,$ken,$rid);
+      return 0
+    } else {
+      my $timeout = 172800; # 2 days
+      my $key = sched_cache_key($schedev);
+      Kynetx::Memcached::mset_cache($key,1,$timeout);
+      return 1;
+    }
+    
+  }
+
+}
+
+sub sched_cache_hit {
+  my ($schedev) = @_;
+  my $logger = get_logger();
+  my $key = sched_cache_key($schedev);
+  $logger->debug("Check cache: $key");
+  my $found = Kynetx::Memcached::check_cache($key);
+  if ($found) {
+    $logger->debug("Check cache: found");
     return 1;
   } else {
+    $logger->debug("Check cache: not found");
     return 0;
   }
+}
+
+sub sched_cache_key {
+  my ($sched_ev) = @_;
+  my $id = $sched_ev->{"_id"};
+  my $ken = $sched_ev->{"ken"};
+  my $key = "_sched_". $id . $ken;
+  return $key;
 }
 
 sub schedev_query {

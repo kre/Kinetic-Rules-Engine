@@ -64,14 +64,18 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 sub mk_rid_info {
   my ( $req_info, $rid, $options ) = @_;
   my $logger = get_logger();
-  my $arid = strip_version($rid);
+
+  my($arid,$aversion) = split(/\./,$rid, 2);
+#  my $arid = strip_version($rid);
   my $fqrid;
   
   $logger->trace("Make rid info for $rid");
-  
+
   my $version = $options->{'version'}
-      || Kynetx::Request::get_attr( $req_info, "$rid:kynetx_app_version" )
-      || Kynetx::Request::get_attr( $req_info, "$rid:kinetic_app_version" );
+      || $aversion 
+      || Kynetx::Request::get_attr( $req_info, "$arid:kynetx_app_version" )
+      || Kynetx::Request::get_attr( $req_info, "$arid:kinetic_app_version" ) 
+      ;
           
   $version = default_version() unless (defined $version);
     return {

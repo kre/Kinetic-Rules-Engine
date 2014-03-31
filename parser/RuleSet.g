@@ -48,6 +48,13 @@ options {
 	public boolean canbeReg = true;
 }
 
+@rulecatch {
+    // ANTLR does not generate its normal rule try/catch
+    catch(RecognitionException rEx) {
+        throw rEx;
+    }
+}
+
 @members {
 	public boolean check_operator = false;
 	public HashMap rule_json = new HashMap();
@@ -1428,7 +1435,7 @@ event_explicit returns[HashMap result]
 	ArrayList filters = new ArrayList();
 	ArrayList exps = new ArrayList();
 }
-	: op=VAR (ef = event_filter{filters.add(ef.result);}(ef2=event_filter{filters.add(ef2.result);})* )  set=setting? {
+	: op=(VAR|OTHER_OPERATORS) (ef = event_filter{filters.add(ef.result);}(ef2=event_filter{filters.add(ef2.result);})* )  set=setting? {
 		HashMap tmp = new HashMap();
 		//tmp.put("domain", $dom.text);
 		tmp.put("type","prim_event");
@@ -1437,7 +1444,7 @@ event_explicit returns[HashMap result]
 		tmp.put("filters",filters);
 		$result = tmp;
 	}
-	| op=VAR WHERE (ee = event_expression{exps.add(ee.result);}(ee2 = event_expression{exps.add(ee2.result);})* ) set=setting? {
+	| op=(VAR|OTHER_OPERATORS) WHERE (ee = event_expression{exps.add(ee.result);}(ee2 = event_expression{exps.add(ee2.result);})* ) set=setting? {
 		HashMap tmp = new HashMap();
 		//tmp.put("domain",$dom.text);
 		tmp.put("type","prim_event");
@@ -1447,7 +1454,7 @@ event_explicit returns[HashMap result]
 		$result = tmp;
 	}
 	// select when explicit foo
-	| op=VAR set=setting? {
+	| op=(VAR|OTHER_OPERATORS) set=setting? {
 		HashMap tmp = new HashMap();
 		tmp.put("type","prim_event");
 		tmp.put("op",$op.text);
@@ -2527,10 +2534,11 @@ meta_block
           HashMap tmp = new HashMap();
           if(!$op.text.equals("keys") )
           {
-	throw new InvalidToken("Found [" + $op.text + "] should have been keys", input);
+              throw new InvalidToken("Found [" + $op.text + "] should have been keys", input);
           }
           tmp.put("provides_keys",pkey_list);
           tmp.put("provides_rids",prid_list);
+          prid_list = new ArrayList(); // clear it out
           meta_block_hash.put("module_keys",tmp);
         }
     | CONFIGURE USING  m=modifier {config_list.add($m.result);} (AND_AND m1=modifier {config_list.add($m1.result);})* {

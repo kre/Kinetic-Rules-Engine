@@ -425,7 +425,7 @@ sub eval_meta {
 }
 
 sub eval_use {
-	my ( $req_info, $ruleset, $rule_env, $session, $env_stash ) = @_;
+	my ( $req_info, $ruleset, $rule_env, $session, $env_stash, $using_rid ) = @_;
 
 	my $logger = get_logger();
 	my $js     = "";
@@ -433,6 +433,8 @@ sub eval_use {
 	my $use = $ruleset->{'meta'}->{'use'};
 
 	my $rid = get_rid( $req_info->{'rid'} );
+
+	$using_rid ||= $rid;  # current rid if not set
 	
 	my $this_js;
 
@@ -449,7 +451,7 @@ sub eval_use {
 			# side effects the rule env.
 			( $this_js, $rule_env ) =
 			  eval_use_module( $req_info, $rule_env, $session, $u->{'name'},
-				$u->{'alias'}, $u->{'modifiers'}, $u->{'version'}, $env_stash );
+				$u->{'alias'}, $u->{'modifiers'}, $u->{'version'}, $env_stash, $using_rid );
 
 			# don't include the module JS in the results.
 			# $js .= $this_js;
@@ -473,7 +475,7 @@ sub _module_sig {
 sub eval_use_module {
   my (
       $req_info, $rule_env,  $session,  $name,
-      $alias,    $modifiers, $mversion, $env_stash
+      $alias,    $modifiers, $mversion, $env_stash, $using_rid
      ) = @_;
 
   my $logger = get_logger();
@@ -602,15 +604,21 @@ sub eval_use_module {
 				    $use_ruleset );
       $js .= $this_js;
     }
-    
+
+    my $is_cachable;
+
     # Check to see if this module exposes any keys to external ruleset
     if ($use_ruleset->{'meta'}->{'module_keys'}) {
       my $key_permissions = $use_ruleset->{'meta'}->{'module_keys'};
-      $logger->trace("Exposing keys to parent rid: $self_rid");
-      my $permitted = $key_permissions->{'provides_rids'};
-      if (defined $permitted) {
-        if (Kynetx::Sets::has($permitted,[$self_rid])) {
-          $logger->debug("Ruleset $self_rid is permitted by $name");
+      $logger->debug("Exposing keys to parent rid: $using_rid");
+      # this works on devbox, but not productions
+      #my $permitted = map { $_ => 1 } @{ $key_permissions->{'provides_rids'} };
+      my $permitted;
+      $permitted->{$_} = 1 for @{ $key_permissions->{'provides_rids'} };
+
+      if (defined $key_permissions->{'provides_rids'} ) {
+        if ($permitted->{$using_rid}) {
+          $logger->debug("Ruleset $using_rid is permitted by $name");
           foreach my $obj (@{$key_permissions->{'provides_keys'}}) {
             my $tuple = ();
             push(@{$tuple},$name);
@@ -618,7 +626,7 @@ sub eval_use_module {
             $export_keys->{$obj} = $tuple;
 	  }
         } else {
-          $logger->debug("Ruleset $self_rid is NOT permitted by $name");
+          $logger->debug("Ruleset $using_rid is NOT permitted by $name allowed: ", sub{Dumper $permitted});
         }
       }
     }
@@ -627,7 +635,7 @@ sub eval_use_module {
     if ( $use_ruleset->{'meta'}->{'use'} ) {
       ( $this_js, $module_rule_env ) =
 	eval_use( $req_info, $use_ruleset, $module_rule_env, $session,
-		  $env_stash );
+		  $env_stash, $name );
       $js .= $this_js;
     }
 
@@ -635,7 +643,6 @@ sub eval_use_module {
 
 
     # eval the module's global block
-    my $is_cachable;
     if ( $use_ruleset->{'global'} ) {
       ( $js, $module_rule_env, $is_cachable ) =
 	process_one_global_block( $req_info, $use_ruleset->{'global'},
@@ -719,7 +726,7 @@ sub set_module_configuration {
 	foreach my $mod ( @{$modifiers} ) {
 
 		# only insert names that are already there (honor config)
-		if ( $configuration->{ $mod->{'name'} } ) {
+		if ( defined $configuration->{ $mod->{'name'} } ) {
 
 			# modifiers are executed in rule's environment
 			$configuration->{ $mod->{'name'} } =
@@ -1203,6 +1210,7 @@ sub get_rule_set {
 
 	my $ruleset;
 	if ( is_ruleset_stashed( $req_info, $rid, $ver ) ) {
+	    $logger->debug("Ruleset $rid.$ver stashed");
 		$ruleset = grab_ruleset( $req_info, $rid, $ver );
 	}
 	else {

@@ -114,7 +114,8 @@ sub jsonToAst_w {
         #$pstruct = JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(1)->decode($json);
         $pstruct = JSON::XS::->new->convert_blessed(1)->pretty(1)->decode($json);
     };
-    if ($@ && not defined $pstruct) {
+#    if ($@ && not defined $pstruct) { # $pstruct is always defined (with a string)
+    if ($@) {
       # Kynetx::Errors::raise_error($req_info, 'warn',
       # 				  "[json] conversion error: $@",
       # 				  {'rule_name' => $rule_name,

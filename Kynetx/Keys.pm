@@ -76,7 +76,7 @@ sub insert_key {
 
   my $rid = get_rid($req_info->{'rid'});
 
-  $logger->debug("Storing key $key ($rid)");
+  $logger->debug("Storing key $key");
 
 
   my $generate_js  = {'errorstack' => 1,
@@ -85,10 +85,10 @@ sub insert_key {
 		     
   my $js = '';
 
+# OLD way
+#  $req_info->{$rid.':key:'.$key} = $value;
 
-  $req_info->{$rid.':key:'.$key} = $value;
-
-  $rule_env = extend_rule_env(mk_key($rid,$key),
+  $rule_env = extend_rule_env(mk_key($key), # rid no longer needed
 			      $value, 
 			      $rule_env);
 
@@ -104,27 +104,22 @@ sub insert_key {
 
 sub get_key {
   my ($req_info, $rule_env, $key) = @_;
-  my $rid = get_rid($req_info->{'rid'});
 
   # my $logger = get_logger();
   # $logger->debug("Rid: $rid, Key: $key");
 
 #  return $req_info->{$rid.':key:'.$key};
 
-  return lookup_rule_env(mk_key($rid,$key), 
+  return lookup_rule_env(mk_key($key), 
 			 $rule_env);
 
 
 }
 
 sub mk_key {
-  my ($rid, $key) = @_;
+  my ($key) = @_;
 #  my $logger = get_logger();
-#  $logger->info("Rid: $rid, Key: $key Np: $name_prefix");
-  #$rid = $rid || '';
-  #$key = $key || '';
-  #$name_prefix = $name_prefix || '';
-#  return join(':', @{[$name_prefix,$rid,$key]});
+#  $logger->info("Key: $key Np: $name_prefix");
   # don't need the rid now that we're in rule_envs
   return join(':', @{[$name_prefix,$key]});
 }

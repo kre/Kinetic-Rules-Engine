@@ -1492,6 +1492,8 @@ sub create_system_key {
 	return undef unless (defined $id);
   $logger->debug("Make system key from $id");
 	my $phrase = get_pass_phrase($id);
+	#$logger->info("System: ",$^O);
+	$phrase = encode('utf8',$phrase);
 	my $data = $id . '||' . $phrase;
 	my $encrypted = RC4($syskey,$data);
 	$encrypted = unpack('H*', $encrypted);

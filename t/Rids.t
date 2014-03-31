@@ -92,12 +92,35 @@ is_deeply($rid_info_list,
   }
 ], "parsing works");
 
+$test_count++;
+
 diag "print_rids ", print_rids($rid_info_list);
 diag "rid_info_string ", rid_info_string($rid_info_list);
 
+my $rid_info;
 
+is_deeply(mk_rid_info($my_req_info,"cs_test.prod"),
+	  {"rid" => "cs_test",
+	   "kinetic_app_version" => "prod"
+	  },
+	  "correctly parse rid with version"
+);
+$test_count++;
 
+is_deeply(mk_rid_info($my_req_info,"cs_test.dev"),
+	  {"rid" => "cs_test",
+	   "kinetic_app_version" => "dev"
+	  },
+	  "correctly parse rid with version"
+);
+$test_count++;
 
+is_deeply(mk_rid_info($my_req_info,"cs_test"),
+	  {"rid" => "cs_test",
+	   "kinetic_app_version" => "prod"
+	  },
+	  "correctly parse rid without version"
+);
 $test_count++;
 
 
