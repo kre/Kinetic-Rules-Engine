@@ -117,7 +117,7 @@ sub init {
 			$logger->debug($@);
 		} else {
 			my $master = $MONGO->{'_master'}->{'host'};
-			$logger->trace("Master is $master");
+			$logger->debug("Master DB is $master");
 			return;
 		}
 		
