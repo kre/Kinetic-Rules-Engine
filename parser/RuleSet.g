@@ -2565,7 +2565,7 @@ dispatch_block
 @after  {
 }
 	: must_be["dispatch"]  LEFT_CURL ( 
-		DOMAIN domain=STRING (RIGHT_SMALL_ARROW rsid=STRING)? {
+		must_be["domain"] domain=STRING (RIGHT_SMALL_ARROW rsid=STRING)? {
 		HashMap tmp = new HashMap();
 		tmp.put("domain",strip_string($domain.text));
 		if($rsid.text != null)	{
@@ -2667,7 +2667,6 @@ REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
 // 	:	'system';
  		
  IFRAME : 'iframe';
- DOMAIN : 'domain';
  RAISE 
  	:	 'raise';
  SCHEDULE : 'schedule';
