@@ -88,8 +88,8 @@ my $endpoint = "http://64.55.47.131:8082/endpoint/kns/sns/FOO/BAR";
 
 
 my $parm_hash = {
-    kAWSAccessKeyId() => 'AKIAI3YUSFFKFNND6TRQ',
-    kAWSSecretKey() => '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',
+    #kAWSAccessKeyId() => '',
+    #kAWSSecretKey() => '',
     'Subject' => $subject,
     'TopicArn' => $topic,
     'Message' => $rquote,
