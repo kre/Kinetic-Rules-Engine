@@ -105,8 +105,8 @@ sub insert_key {
 sub get_key {
   my ($req_info, $rule_env, $key) = @_;
 
-  # my $logger = get_logger();
-  # $logger->debug("Rid: $rid, Key: $key");
+  my $logger = get_logger();
+#  $logger->debug("Retrieving key: $key");
 
 #  return $req_info->{$rid.':key:'.$key};
 

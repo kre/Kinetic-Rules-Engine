@@ -52,7 +52,7 @@ sub lookup_rule_env {
     my($key,$env) = @_;
 
 #    my $logger = get_logger();
-#    $logger->debug("Looking for $key");
+#    $logger->debug("Looking for $key in ", sub {Dumper $env});
 
     if(! defined $env || ! (ref $env eq 'HASH')) {
 	return undef;

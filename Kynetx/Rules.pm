@@ -608,26 +608,29 @@ sub eval_use_module {
     my $is_cachable;
 
     # Check to see if this module exposes any keys to external ruleset
-    if ($use_ruleset->{'meta'}->{'module_keys'}) {
-      my $key_permissions = $use_ruleset->{'meta'}->{'module_keys'};
-      $logger->debug("Exposing keys to parent rid: $using_rid");
-      # this works on devbox, but not productions
-      #my $permitted = map { $_ => 1 } @{ $key_permissions->{'provides_rids'} };
+    if ($use_ruleset->{'meta'}->{'provides_keys'}) {
+      my $key_permissions = $use_ruleset->{'meta'}->{'provides_keys'};
+#      $logger->debug("Exposing keys to parent rid: $using_rid for $name ", sub {Dumper $key_permissions});
       my $permitted;
-      $permitted->{$_} = 1 for @{ $key_permissions->{'provides_rids'} };
 
-      if (defined $key_permissions->{'provides_rids'} ) {
-        if ($permitted->{$using_rid}) {
-          $logger->debug("Ruleset $using_rid is permitted by $name");
-          foreach my $obj (@{$key_permissions->{'provides_keys'}}) {
-            my $tuple = ();
-            push(@{$tuple},$name);
-            push (@{$tuple},Kynetx::Keys::get_key($req_info,$module_rule_env,$obj));
-            $export_keys->{$obj} = $tuple;
+      foreach my $k (keys %{ $key_permissions }) {
+	  foreach my $r (@{ $key_permissions->{$k}}) {
+	      if ($r eq $using_rid){
+		  $logger->debug("Storing key $k for rid $using_rid");
+		  push (@{$permitted}, $k);
+	      }
 	  }
-        } else {
-          $logger->debug("Ruleset $using_rid is NOT permitted by $name allowed: ", sub{Dumper $permitted});
-        }
+      }
+
+      if (defined $permitted ) {
+	  foreach my $obj (@{$permitted}) {
+	      my $tuple = ();
+	      push(@{$tuple},$name);
+	      push (@{$tuple},Kynetx::Keys::get_key($req_info,$module_rule_env,$obj));
+	      $export_keys->{$obj} = $tuple;
+	  }
+      } else {
+	  $logger->debug("Ruleset $using_rid is NOT permitted by $name allowed: ", sub{Dumper $key_permissions});
       }
     }
     

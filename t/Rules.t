@@ -4784,20 +4784,29 @@ my $version = 'prod';
 
 my $rid_info = mk_rid_info($my_req_info,$provide);
 my $source_module = Kynetx::Repository::get_ruleset_krl($rid_info,$version);
+#diag $source_module;
 my $source_ast = Kynetx::Parser::parse_ruleset($source_module);
-my $source_provided = $source_ast->{'meta'}->{'module_keys'}->{'provides_keys'};
+my $source_provided = $source_ast->{'meta'}->{'provides_keys'};
+#diag "Source provided ",  Dumper $source_provided;
 
 my $meta_req_info = Kynetx::Test::gen_req_info($uses);
 $rid_info = mk_rid_info($meta_req_info,$uses);
 my $u_krl = Kynetx::Repository::get_ruleset_krl($rid_info,$version);
 my $u_rule_env = empty_rule_env();
 $module_rs = Kynetx::Parser::parse_ruleset($u_krl);
+#diag "Processing uses ruleset: ", Dumper $module_rs;
 ($js,$u_rule_env) = Kynetx::Rules::eval_meta($meta_req_info,$module_rs,$u_rule_env,$session);
 
-foreach my $key_provided (@{$source_provided}) {
+#diag "Rule env: ", Dumper $u_rule_env;
+
+
+foreach my $key_provided (keys %{$source_provided}) {
   my $description = "Check that shared keys ($key_provided) are equal";
   my $sk_val = $source_ast->{'meta'}->{'keys'}->{$key_provided};
+  # diag "Source key value: ", Dumper $sk_val;
+
   my $module_val = Kynetx::Keys::get_key($meta_req_info,$u_rule_env,$key_provided);
+  #diag "S: $key_provided SV: $sk_val MV: $module_val";
   $logger->debug("S: $key_provided SV: $sk_val MV: $module_val");
   cmp_deeply($module_val,$sk_val,$description);
   $test_count++;

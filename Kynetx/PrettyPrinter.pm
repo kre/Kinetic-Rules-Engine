@@ -101,7 +101,7 @@ sub pp_meta_block {
 
     $o .= pp_configure($mb->{'configure'}, $indent+$g_indent) if ($mb->{'configure'}) ;
     $o .= pp_provide($mb->{'provide'}, $indent+$g_indent) if ($mb->{'provide'}) ;
-    $o .= pp_provides_keys($mb->{'module_keys'},$indent+$g_indent) if ($mb->{'module_keys'}) ;
+    $o .= pp_provides_keys($mb->{'provides_keys'},$indent+$g_indent) if ($mb->{'provides_keys'}) ;
 
     $o .= $beg . "\n$beg}\n";
 
@@ -237,9 +237,10 @@ sub pp_provides_keys {
   my ($node, $indent) = @_;
   my $beg = " "x$indent;
   my $o = $beg;
-  my $keys = join(', ', @{ $node->{'provides_keys'} });
-  my $rids = join(', ', @{ $node->{'provides_rids'} });
-  $o .= 'provide keys ' . $keys . ' to ' . $rids;
+  foreach my $k (sort keys %{$node}) {
+      my $rids = join(', ', @{ $node->{$k} });
+      $o .= 'provide keys ' . $k . ' to ' . $rids . "\n";
+  }
   return $o;
 }
 

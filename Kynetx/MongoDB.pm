@@ -220,7 +220,7 @@ sub get_hash_element {
     
     my $cached = get_cache_for_hash($collection,$vKey,$hKey);
     if (defined $cached) {        
-        $logger->debug("Found in cache ",sub {Dumper(@{$hKey})}, sub {Dumper($cached)});
+#        $logger->debug("Found in cache ",sub {Dumper(@{$hKey})}, sub {Dumper($cached)});
         return $cached;
     } else {
         $cached = get_cache($collection,$vKey);
@@ -307,10 +307,10 @@ sub get_value {
     my $keystring = make_keystring($collection,$var);
     my $cached = get_cache($collection,$var);
     if (defined $cached) {
-        $logger->debug("Found $collection variable $keystring in cache");
+        $logger->trace("Found $collection variable $keystring in cache");
         return $cached;
     }  else {
-        $logger->debug("$keystring not in cache");
+        $logger->trace("$keystring not in cache");
         $logger->trace("$collection variable NOT cached");
     }
     my $c = get_collection($collection);
@@ -354,7 +354,7 @@ sub get_value {
 	        		});
 	        	}
 	        	my $hash = Kynetx::Util::elements_to_hash(\@array_of_elements);
-	        	$logger->debug("Resurrected: $keystring");
+	        	$logger->trace("Resurrected: $keystring");
 	        	$composed_hash->{'value'} = $hash;
 	        	$composed_hash->{'created'} = $last_updated *1;
 	        	set_cache($collection,$var,$composed_hash);
