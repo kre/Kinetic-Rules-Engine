@@ -519,7 +519,7 @@ sub eval_use_module {
 
     # if (! defined $env_stash->{$module_sig}) {
 
-    $logger->debug("----- Loading Module $name.$mversion -------");
+    $logger->debug("----- Loading Module $name.$mversion as $alias -------");
 
     my $js = '';
     my $this_js;

@@ -269,7 +269,7 @@ sub get_hash_element {
     }
     # reassemble (vivify) the hash from the elements
     my $frankenstein = Kynetx::Util::elements_to_hash(\@array_of_elements);
-    $logger->debug("Dive for ", sub {Dumper($hKey)});
+    $logger->trace("Dive for ", sub {Dumper($hKey)});
     my $value = Dive($frankenstein,@$hKey);
     if (ref $value eq "ARRAY" && scalar @{$value} == 0) {
       my ( $errDesc, $ref, $svKey )= DiveError();
