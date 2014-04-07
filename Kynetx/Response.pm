@@ -74,6 +74,7 @@ sub directives {
 
 sub gen_directive_document {
   my $self = shift;
+  my $req_info = shift;
 
   my $logger = get_logger();
 
@@ -88,9 +89,24 @@ sub gen_directive_document {
 #  return JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(0)->encode(
 #	   $directive_doc
 #        );
-  return JSON::XS::->new->convert_blessed(1)->pretty(0)->encode(
-	   $directive_doc
-        );
+  my $json;
+  $json = eval {
+     JSON::XS::->new->convert_blessed(1)->pretty(0)->encode(
+        $directive_doc
+     );
+  }; 
+  if ($@) {
+
+      $logger->error("Can't encode directive document: $@");
+
+      my $result = {"error" => "202", # making this up for now...
+	  	    "error_str" => "bad directive document: $@"
+		   };
+
+      $json = JSON::XS::->new->convert_blessed(1)->pretty(0)->encode($result);
+  }
+
+  return $json
 }
 
 # sub gen_directive_document {
