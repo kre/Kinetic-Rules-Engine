@@ -181,7 +181,7 @@ sub validate_rule {
     my $test_template = HTML::Template->new( filename => $template );
 
 
-    $logger->debug("[validate_rule] req_info: ", sub {Dumper $req_info});
+#    $logger->debug("[validate_rule] req_info: ", sub {Dumper $req_info});
 
     # fill in the parameters
     $test_template->param( ACTION_URL => $req_info->{'uri'} );
