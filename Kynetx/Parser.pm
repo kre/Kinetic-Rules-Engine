@@ -183,10 +183,8 @@ sub parse_ruleset {
     $logger->trace("Result: ",$json);
     my $result;
     eval {
-        $result = Kynetx::Json::jsonToAst($json);
+        $result = Kynetx::Json::jsonToAst_w($json);
     };
-
-
 
     if ($@) {
         my @jsonerr = ("Invalid JSON Format!");
@@ -194,7 +192,7 @@ sub parse_ruleset {
         my $string = $@;
         push (@jsonerr,$string);
         push (@jsonerr,$result);
-        $result->{'error'} = @jsonerr;
+        $result->{'error'} = \@jsonerr;
     }
     if (defined $result->{'error'}) {
         my $estring = join("\n",@{$result->{'error'}});
@@ -397,7 +395,21 @@ sub parse_global_decls {
 
     my $json = $parser->global($element);
     $logger->trace(Dumper($json));
-    my $result = Kynetx::Json::jsonToAst_w($json);
+    my $result;
+
+    eval {
+        $result = Kynetx::Json::jsonToAst_w($json);
+    };
+
+    if ($@) {
+        my @jsonerr = ("Invalid JSON Format!");
+        $logger->warn("JSON error: ", $@);
+        my $string = $@;
+        push (@jsonerr,$string);
+        push (@jsonerr,$result);
+        $result->{'error'} = \@jsonerr;
+    }
+
 
 #    $logger->debug(Dumper($result));
     if (ref $result eq 'HASH' && $result->{'error'}) {
@@ -421,7 +433,19 @@ sub parse_dispatch {
     $element = remove_comments($element);
 
     my $json =  $parser->dispatch_block($element);
-    my $result = Kynetx::Json::jsonToAst_w($json);
+    my $result;
+    eval {
+        $result = Kynetx::Json::jsonToAst_w($json);
+    };
+
+    if ($@) {
+        my @jsonerr = ("Invalid JSON Format!");
+        $logger->warn("JSON error: ", $@);
+        my $string = $@;
+        push (@jsonerr,$string);
+        push (@jsonerr,$result);
+        $result->{'error'} = \@jsonerr;
+    }
 
     if (ref $result eq 'HASH' && $result->{'error'}) {
         my $estring = join("\n",@{$result->{'error'}});

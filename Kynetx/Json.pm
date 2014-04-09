@@ -124,9 +124,9 @@ sub jsonToAst_w {
       # 				  }
       # 				 );
 
-        $logger->warn("####JSON conversion error: ",$@);
+        $logger->debug("####JSON conversion error: ",$@);
         $logger->trace("Source: \n##################################################\n$json");
-        return $json
+        return {'error' => [$json]};
     } else {
         return $pstruct;
     }
