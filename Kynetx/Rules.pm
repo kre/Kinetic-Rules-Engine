@@ -1365,7 +1365,7 @@ sub optimize_rule {
 	my ( $rule, $rule_lists ) = @_;
 
 	my $logger = get_logger();
-	$logger->debug( "Optimizing ", $rule->{'name'} );
+#	$logger->debug( "Optimizing ", $rule->{'name'} );
 
 	# fix up old syntax, if needed
 	if ( $rule->{'pagetype'}->{'pattern'} ) {
