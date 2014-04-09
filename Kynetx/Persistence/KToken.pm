@@ -165,7 +165,7 @@ sub create_token {
         "endpoint_type" => $type,
     };
     my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0,1);
-    $logger->debug("Token ken: ", sub {Dumper($token->{'ken'})});
+    $logger->trace("Token ken: ", sub {Dumper($token->{'ken'})});
     $logger->trace("Token status: ", sub {Dumper($status)});
     if (ref $status eq 'HASH' && ($status->{'ok'} == 1)) {
         Kynetx::Persistence::KEN::touch_ken($ken);

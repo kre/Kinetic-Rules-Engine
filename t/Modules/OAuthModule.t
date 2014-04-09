@@ -59,6 +59,8 @@ use HTTP::Message;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
+use constant MAXTRIES => 5;
+
 
 
 my $preds = Kynetx::Modules::Twitter::get_predicates();
@@ -86,6 +88,7 @@ my $sessionid = '39f67cb8de78e8f036f35a795036e787';
 my $session = Kynetx::Session::process_session($r,$sessionid);
 
 my $test_count = 0;
+my $try = 0;
 
 
 my $logger = get_logger();
@@ -356,7 +359,8 @@ if ($gsession_id) {
 $result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'post',$args);
 $logger->debug("Response: ", sub {Dumper($result)});
 
-while ($result->{'status_code'} == 302) {
+$try = 0;
+while ($result->{'status_code'} == 302 && $try++ < MAXTRIES) {
 	my $redirect = $result->{'location'};
 	my $uri = URI->new( $redirect ); 
 	my %query = $uri->query_form;

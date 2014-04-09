@@ -48,12 +48,6 @@ options {
 	public boolean canbeReg = true;
 }
 
-@rulecatch {
-    // ANTLR does not generate its normal rule try/catch
-    catch(RecognitionException rEx) {
-        throw rEx;
-    }
-}
 
 @members {
 	public boolean check_operator = false;

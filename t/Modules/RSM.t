@@ -424,7 +424,7 @@ $js = Kynetx::Actions::build_one_action(
 	    'dummy_name');
 $result = lookup_rule_env('isCreated',$rule_env);
 
-$logger->debug("Create: ", sub {Dumper($result)});
+$logger->trace("Create: ", sub {Dumper($result)});
 cmp_deeply($result,undef,$description);
 $test_count++;
 
@@ -455,7 +455,7 @@ $js = Kynetx::Actions::build_one_action(
 	    'dummy_name');
 $result = lookup_rule_env('isCreated',$rule_env);
 
-$logger->debug("Create: ", sub {Dumper($result)});
+$logger->trace("Create: ", sub {Dumper($result)});
 cmp_deeply($result,undef,$description);
 $test_count++;
 
@@ -495,7 +495,7 @@ $js = Kynetx::Actions::build_one_action(
 	    'dummy_name');
 $result = lookup_rule_env('isCreated',$rule_env);
 
-$logger->debug("Create: ", sub {Dumper($result)});
+$logger->trace("Create: ", sub {Dumper($result)});
 cmp_deeply($result->{'obj'}->{'uri'},$uri,$description);
 $test_count++;
 

@@ -334,7 +334,7 @@ sub get_value {
 	        		$composed_hash->{'created'} = $result->{'created'};
 	        		return $composed_hash;
 	        	}
-	            $logger->debug("Save $keystring to memcache");
+	            $logger->trace("Save $keystring to memcache");
 	            set_cache($collection,$var,$result);
 	            return $result;
 	        } else {

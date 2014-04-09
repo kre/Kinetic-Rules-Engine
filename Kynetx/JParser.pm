@@ -214,8 +214,12 @@ use Inline (Java => <<'END',
                 sb.append(e.getStackTrace()[0].getClassName()).append(":");
                 sb.append(e.getStackTrace()[0].getMethodName()).append(":");
                 sb.append(e.getStackTrace()[0].getLineNumber()).append("::");
-                sb.append(e);
-                return (sb.toString());
+		            HashMap map = new HashMap();
+		            ArrayList elist = new ArrayList();
+                elist.add(sb.toString());
+                map.put("error",elist);
+                JSONObject error = new JSONObject(map);
+                return error.toString();
             }
         }
 

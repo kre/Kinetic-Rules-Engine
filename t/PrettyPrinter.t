@@ -54,7 +54,7 @@ plan tests => $#krl_files-(length(keys %{$skip}))+4;
 
 
 foreach my $f (@krl_files) {
-   diag $f;
+   #diag $f;
     next if ($f =~ m/exprs\d/); # exprs don't pretty print exactly
     next if ($skip->{$f});
     my ($fl,$krl_text) = getkrl($f);

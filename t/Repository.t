@@ -78,11 +78,11 @@ SKIP: {
 
     # this number must reflect the number of test in this SKIP block
     my $how_many = 1;
-    $logger->debug("request info: ", sub {Dumper($req_info)});
+    $logger->trace("request info: ", sub {Dumper($req_info)});
 
     my $rid_info = mk_rid_info($req_info, 'cs_test'); # the test rid_info.  
     $req_info->{'rid'} = $rid_info;
-    $logger->debug("Make rid info: ", sub {Dumper($rid_info)});
+    $logger->trace("Make rid info: ", sub {Dumper($rid_info)});
     my $rules ;
     eval {
 
