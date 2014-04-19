@@ -2107,9 +2107,9 @@ sub eval_log {
     $msg = Kynetx::Expressions::den_to_exp($rands->[0])
   } 
   my $val = Kynetx::Expressions::den_to_exp($obj);
-  $logger->debug( $msg, ref $obj eq 'HASH' || 
-		        ref $obj eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($val) : $val );
-  return $obj;
+  $logger->debug( $msg, ref $val eq 'HASH' || 
+		        ref $val eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($val) : $val );
+  return $obj; # pass thru unchanged
 }
 $funcs->{'klog'} = \&eval_log;
 
