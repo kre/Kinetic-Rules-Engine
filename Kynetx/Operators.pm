@@ -1998,7 +1998,7 @@ sub hash_keys {
 			return Kynetx::Parser::mk_expr_node('array',\@keys);
 		}
 	}
-	return Kynetx::Parser::mk_expr_node('null','__undef__');
+	return Kynetx::Parser::mk_expr_node('array',[]);
 }
 $funcs->{'keys'} = \&hash_keys;
 
@@ -2046,7 +2046,7 @@ sub hash_values {
 			return Kynetx::Parser::mk_expr_node('array',\@values);
 		}
 	}
-	return Kynetx::Parser::mk_expr_node('null','__undef__');
+	return Kynetx::Parser::mk_expr_node('array',[]);
 }
 $funcs->{'values'} = \&hash_values;
 
@@ -2108,7 +2108,8 @@ sub eval_log {
   } 
   my $val = Kynetx::Expressions::den_to_exp($obj);
   $logger->debug( $msg, ref $val eq 'HASH' || 
-		        ref $val eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($val) : $val );
+		        ref $val eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($val) 
+		                            : $val );
   return $obj; # pass thru unchanged
 }
 $funcs->{'klog'} = \&eval_log;

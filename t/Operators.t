@@ -2614,8 +2614,8 @@ $i++;
 
 $e[$i] = q/k_h.keys([2])/;
 $x[$i] = {
-	'val' => '__undef__',
-	'type'=>'null'
+	'val' => [],
+	'type'=>'array'
 };
 $d[$i] = 0;
 $i++;
@@ -2707,8 +2707,8 @@ $i++;
 
 $e[$i] = q/k_h.values([2])/;
 $x[$i] = {
-	'val' => '__undef__',
-	'type'=>'null'
+	'val' => [],
+	'type'=>'array'
 };
 $d[$i] = 0;
 $i++;
