@@ -30,17 +30,12 @@ use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use DateTime;
-use Data::ICal;
-use Data::ICal::Entry;
 use Data::ICal::Entry::Event;
 use Data::ICal::DateTime; 
-use DateTime::Format::ICal;
 use DateTime::Format::ISO8601 ;
-use DateTime::Format::RFC3339;
 
 use Data::Dumper;
 
-use Kynetx::Predicates::Time;
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
