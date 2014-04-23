@@ -90,6 +90,7 @@ my $trips = [
 	      "dtend"=>"20140419T024441+0000",
 	      "dtstart"=>"20140419T023924+0000",
 	      "comment"=>"273090",
+	      "uid" => "test",
 	      "summary"=>"Trip of 4.1 miles"
 	     },
 	     {
@@ -97,6 +98,7 @@ my $trips = [
 	      "dtend"=>"20140419T164554+0000",
 	      "comment"=>"273350",
 	      "dtstart"=>"20140419T164337+0000",
+	      "uid" => "test",
 	      "summary"=>"Trip of 5.2 miles"
 	     },
 	     {
@@ -104,6 +106,7 @@ my $trips = [
 	      "dtend"=>"20140417T151705+0000",
 	      "comment"=>"271563",
 	      "dtstart"=>"20140417T150313+0000",
+	      "uid" => "test",
 	      "summary"=>"Trip of 3.3 miles"
 	     },
 	     {
@@ -111,6 +114,7 @@ my $trips = [
 	      "dtend"=>"20140419T170113+0000",
 	      "comment"=>"273355",
 	      "dtstart"=>"20140419T165246+0000",
+	      "uid" => "test",
 	      "summary"=>"Trip of 15.4 miles"
 	     },
 	 ];
@@ -126,6 +130,7 @@ COMMENT:273090
 DTEND:20140419T024441Z
 DTSTART:20140419T023924Z
 SUMMARY:Trip of 4.1 miles
+UID:test
 URL:http://maps.google.com/maps?saddr=40.334671,-111.686813
 END:VEVENT
 BEGIN:VEVENT
@@ -133,6 +138,7 @@ COMMENT:273350
 DTEND:20140419T164554Z
 DTSTART:20140419T164337Z
 SUMMARY:Trip of 5.2 miles
+UID:test
 URL:http://maps.google.com/maps?saddr=40.32578,-111.734885
 END:VEVENT
 BEGIN:VEVENT
@@ -140,6 +146,7 @@ COMMENT:271563
 DTEND:20140417T151705Z
 DTSTART:20140417T150313Z
 SUMMARY:Trip of 3.3 miles
+UID:test
 URL:http://maps.google.com/maps?saddr=40.278139,-111.657351
 END:VEVENT
 BEGIN:VEVENT
@@ -147,6 +154,7 @@ COMMENT:273355
 DTEND:20140419T170113Z
 DTSTART:20140419T165246Z
 SUMMARY:Trip of 15.4 miles
+UID:test
 URL:http://maps.google.com/maps?saddr=40.327397,-111.729678
 END:VEVENT
 END:VCALENDAR

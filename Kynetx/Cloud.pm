@@ -285,7 +285,9 @@ sub eval_ruleset_function {
 #  $logger->trace("Result: ", sub{Dumper $result});
  
   my $json = JSON::XS->new->allow_nonref;
-  $result = $json->encode( $result );
+  if (ref $result eq "HASH" || ref $result eq "ARRAY") {
+      $result = $json->encode( $result );
+  }
   my $opts = {'is_raw' => 1,
 	      'content' => $result ,
 	     };

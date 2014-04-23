@@ -946,14 +946,25 @@ sub eval_join {
   my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 #    $logger->debug("obj: ", sub { Dumper($rands) });
 
-  my $v = $obj->{'val'};
-  my $join_val = Kynetx::Expressions::den_to_exp($rands->[0]);
-  my $result;
+
+  my ($result, $join_val);
 
   if($obj->{'type'} eq 'array' &&
      $rands->[0]->{'type'} eq 'str') {
 
-    $result = join($join_val, @{$v});
+      my $v;
+
+      ## is_typed_value
+      if(Kynetx::Expressions::is_typed_value($obj->{"val"}->[1])) {
+	  # if one's typed, assume they're all typed...
+	  $v = [ map { Kynetx::Expressions::den_to_exp($_)} @{ $obj->{'val'}}  ];
+      } else {
+	  $v = $obj->{"val"};
+      }
+
+      $join_val = Kynetx::Expressions::den_to_exp($rands->[0]);
+      
+      $result = join($join_val, @{$v});
 
   } else {
       Kynetx::Errors::raise_error($req_info, 'warn',

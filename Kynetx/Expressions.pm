@@ -1222,6 +1222,16 @@ my %literal_types = ('str' => 1,
 		     'null' => 1,
 		    );
 
+sub is_typed_value {
+  my($val) = @_;
+#  my $logger = get_logger();
+#  $logger->trace("typed value received: ", sub {Dumper($val)});
+   return ref $val eq 'HASH' &&
+     defined $val->{'type'} &&
+       $literal_types{$val->{'type'}};
+}
+
+
 sub typed_value {
   my($val) = @_;
 #  my $logger = get_logger();

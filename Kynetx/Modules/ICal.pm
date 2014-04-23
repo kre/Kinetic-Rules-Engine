@@ -33,6 +33,7 @@ use DateTime;
 use Data::ICal::Entry::Event;
 use Data::ICal::DateTime; 
 use DateTime::Format::ISO8601 ;
+use Data::UUID;
 
 use Data::Dumper;
 
@@ -83,12 +84,13 @@ sub generate_ical_from_array {
     );
 
     
+    my $ug = new Data::UUID;
 
     foreach my $entry (@{ $entries }) {
 	my $vevent = Data::ICal::Entry::Event->new();
 
 	my $start = DateTime::Format::ISO8601->parse_datetime($entry->{"dtstart"});
-	my $end = DateTime::Format::ISO8601->parse_datetime($entry->{"dtend"});
+	my $end = DateTime::Format::ISO8601->parse_datetime($entry->{"dtend"}) if defined $entry->{"dtend"};
 
 	$vevent->start($start);
 	$vevent->end($end);
@@ -104,6 +106,9 @@ sub generate_ical_from_array {
 
 #	$logger->debug("Entry data: ", sub {Dumper $entry});
 	$vevent->add_properties( %{ $entry } );
+
+	
+	$vevent->add_property(uid => $ug->to_string($ug->create())) unless $entry->{"uid"};
 
 	$calendar->add_entry($vevent);
     }
