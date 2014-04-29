@@ -38,6 +38,7 @@ use Kynetx::Persistence qw(:all);
 use Kynetx::Rids qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Modules::PCI qw(:all);
+use Kynetx::Modules::OAuthModule;
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
