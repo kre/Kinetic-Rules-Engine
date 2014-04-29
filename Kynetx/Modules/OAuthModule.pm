@@ -870,6 +870,7 @@ sub protected_resource_request {
 	my $preq;
 	my $method = uc($function) || 'GET';
 	my $request;
+	$logger->debug("Eval");
 	eval {
 		$request = Net::OAuth::ProtectedResourceRequest->new(
 		'consumer_key'    => $ctokens->{'consumer_key'},
@@ -893,6 +894,7 @@ sub protected_resource_request {
 				'Content-Length' => length($@)
 				
 		};
+		  $logger->debug("Error: ", sub {Dumper($e_response)});
     	return $e_response;		
 	}
 	
