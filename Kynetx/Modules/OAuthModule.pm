@@ -900,6 +900,7 @@ sub protected_resource_request {
 	  $request->extra_params($extra_params);
 	}  
 	$request->sign();
+	$logger->debug("sign request");
 	my $purl = $request->to_url;
 	if ($method eq 'GET') {
 		$preq = HTTP::Request->new( GET => $purl );
