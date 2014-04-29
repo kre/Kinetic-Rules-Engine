@@ -962,26 +962,36 @@ sub get_oauth_config {
 		}		
 	}
 	
+	$logger->debug("params");
 	if (my $p = get_params($req_info,$rule_env,$session,$rule_name,$function,$args)) {
 		$config->{'extra_params'} = $p;
 	}	
 	
+	$logger->debug("body");
 	if (my $b = get_body($req_info,$rule_env,$session,$rule_name,$function,$args)) {
 		$config->{'body'} = $b;
 	}
 	
+	
+	$logger->debug("headers");
 	if (my $h = get_headers($req_info,$rule_env,$session,$rule_name,$function,$args)) {
 		$config->{'headers'} = $h;
 	}
 	
+	
+	$logger->debug("url");
 	if (my $u = get_url($req_info,$rule_env,$session,$rule_name,$function,$args)) {
 		$config->{'request_url'} = $u;
 	}
 	
+	
+	$logger->debug("response");
 	if (my $rh = get_response_headers($req_info,$rule_env,$session,$rule_name,$function,$args)) {
 		$config->{'response_headers'} = $rh;
 	}
 
+	
+	$logger->debug("passed tokens");
 	if (my $rh = get_passed_tokens($req_info,$rule_env,$session,$rule_name,$function,$args)) {
 		$config->{'access_tokens'} = $rh;
 	}
