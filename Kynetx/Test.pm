@@ -558,7 +558,7 @@ sub twitter_query_map {
 		'access_tokens' => $anontoken
 	}];
 	
-	$result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,'twitter_test','get',$args);
+	my $result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,'twitter_test','get',$args);
 	my $twit_array = Kynetx::Json::decode_json($result->{'content'});
   my $t_hash;
   my $i = 0;
@@ -566,7 +566,7 @@ sub twitter_query_map {
      $t_hash->{'a' . $i++} = $tweet;
   }
   
-  return $t_hash;
+  return $t_hash; 
 }
 
 1;
