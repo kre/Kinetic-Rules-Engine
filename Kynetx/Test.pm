@@ -537,7 +537,7 @@ sub validate_env {
 
 # twitter query because it returns gloriously complicated json
 sub twitter_query_map {
-  my ($my_req_info,$rule_env,$session,$twitter_id) = @_;
+  my ($my_req_info,$rule_env,$session,$rid, $twitter_id) = @_;
   $twitter_id = "13524182" unless ($twitter_id); # dave wiegel
   
   my $anontoken = {
@@ -559,7 +559,7 @@ sub twitter_query_map {
 		'access_tokens' => $anontoken
 	}];
 	
-	my $result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,'cs_test','get',$args);
+	my $result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rid,'get',$args);
 	my $twit_array = Kynetx::Json::decode_json($result->{'content'});
   my $t_hash;
   my $i = 0;
