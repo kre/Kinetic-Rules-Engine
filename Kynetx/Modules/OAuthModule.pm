@@ -859,8 +859,8 @@ sub run_function {
 
 sub protected_resource_request {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$oauth_config, $args) = @_;
-	$logger->debug("protected request");
 	my $logger = get_logger();
+	$logger->debug("protected request");
 	my $namespace = $oauth_config->{'namespace'};
 	my $extra_params = $oauth_config->{'extra_params'};
 	my $headers = $oauth_config->{'headers'};
