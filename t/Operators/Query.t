@@ -382,6 +382,8 @@ $test_count++;
 # Entity var searching
 Log::Log4perl->easy_init($DEBUG);
 
+$logger->debug("Foo!");
+
 my $map = Kynetx::Test::twitter_query_map($req_info,$rule_env,$session);
 
 $logger->debug("Twitter query: ", sub {Dumper($map)});
