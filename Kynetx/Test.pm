@@ -544,6 +544,20 @@ sub twitter_query_map {
 	 'access_token' => '100844323-XqQfRm33tQqp54mmhKCfNF9VIOaxVISrIYTOTXOy',
 	 'access_token_secret' => 'QdGk4MGc2RiNuD5MHjL5GVk9m1h3SsooGeMWfUQb7f0'
   };
+  my $keys = {
+	'consumer_key' => 'jPlIPAk1gbigEtonC2yNA',
+   	'consumer_secret' => '3HNb7NhKuqRIm2BuxKPSg6JYvMtLahvkMt6Std5SO0'
+  };
+
+  # these are anonymous consumer tokens
+  my $js;
+  ($js, $rule_env) = 
+   Kynetx::Keys::insert_key(
+    $my_req_info,
+    $rule_env,
+    'anon',
+    $keys);
+  
   my $turl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
   my $num_t = 50;
   
