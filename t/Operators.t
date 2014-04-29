@@ -272,6 +272,7 @@ sub test_operator {
     diag "Parsed expr: ", Dumper($v) if $d;
 
     $r = eval_expr($v, $rule_env, $rule_name,$req_info);
+    diag "Expect: ", Dumper($x) if $d;
     diag "Result: ", Dumper($r) if $d;
     my $result = cmp_deeply($r, $x, "Trying $e");   
     
@@ -1740,6 +1741,14 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
+$e[$i] = q#simple_map.typeof()#;
+$x[$i] = {
+   'val' => 'hash',
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
 
 
 #-----------------------------------------------------------------------------------
@@ -2183,10 +2192,16 @@ $i++;
 
 diag("Okay to ignore JSON parse error");
 $e[$i] = q/bad_jstr.decode()/;
+# format's important in this since we're not comparing with no whitespace
 $x[$i] = {
-    "val" => "\n".'    "www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]}
-',
-    "type" => "str"
+    "val" => {
+     'error' => [
+       '
+    "www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]}
+'
+     ]
+   },
+    "type" => "hash"
 };
 $d[$i] = 0;
 $i++;
@@ -2599,8 +2614,8 @@ $i++;
 
 $e[$i] = q/k_h.keys([2])/;
 $x[$i] = {
-	'val' => '__undef__',
-	'type'=>'null'
+	'val' => [],
+	'type'=>'array'
 };
 $d[$i] = 0;
 $i++;
@@ -2692,8 +2707,8 @@ $i++;
 
 $e[$i] = q/k_h.values([2])/;
 $x[$i] = {
-	'val' => '__undef__',
-	'type'=>'null'
+	'val' => [],
+	'type'=>'array'
 };
 $d[$i] = 0;
 $i++;
@@ -2704,6 +2719,14 @@ $i++;
 ## klog
 ##
 $e[$i] = q#c.reverse().klog("Value of reversed array: ").join(";")#;
+$x[$i] = {
+   'val' => "6;5;4",
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#c.reverse().join(";").klog("Value of reversed array: ")#;
 $x[$i] = {
    'val' => "6;5;4",
    'type' => 'str'

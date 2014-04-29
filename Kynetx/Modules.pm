@@ -78,6 +78,7 @@ use Kynetx::Modules::Twilio;
 use Kynetx::Modules::URI;
 use Kynetx::Modules::Address;
 use Kynetx::Modules::PDS;
+use Kynetx::Modules::ICal;
 use Kynetx::Modules::This2That;
 use Kynetx::Modules::OAuthModule;
 use Kynetx::Modules::Random;
@@ -106,6 +107,7 @@ sub eval_module {
     # see if there is a module defined function that matches
     # if so, cut this short.
     $val = lookup_module_env($source, $function, $rule_env);
+    my $function_not_found_in_module = 0;
     if (defined $val && Kynetx::Expressions::is_closure($val)) {
       # manufacture an application and apply it
       my $app = {'function_expr' => $val,
@@ -120,7 +122,9 @@ sub eval_module {
 #      $logger->debug("eval_module returning ", sub {Dumper $val});
 
       return $val;
-    }
+  } else {
+    $function_not_found_in_module = 1;
+  }
 
     #
     # the following code is ugly for historical reasons.  Ultimately,
@@ -491,6 +495,14 @@ sub eval_module {
         } else {
             $val = Kynetx::Modules::This2That::run_function( $req_info,$function,$args );
         }    	
+    } elsif ( $source eq 'ical' ) {
+        $preds = Kynetx::Modules::ICal::get_predicates();
+        if ( defined $preds->{$function} ) {
+            $val = $preds->{$function}->( $req_info, $rule_env, $args );
+            $val = Kynetx::Expressions::boolify($val || 0);
+        } else {
+            $val = Kynetx::Modules::ICal::run_function( $req_info,$function,$args );
+        }    	
     } elsif ( $source eq 'xdi' ) {
         $preds = Kynetx::Persistence::KXDI::get_predicates();
         if ( defined $preds->{$function} ) {
@@ -508,13 +520,15 @@ sub eval_module {
             $val = Kynetx::Modules::RSM::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
         }    	
     } else {
+
 	Kynetx::Errors::raise_error($req_info, 'warn',
-				    "[module] named $source not found",
+				    "function named $function not found in $source or $source not valid",
 				    {'rule_name' => $rule_name,
 				     'genus' => 'module',
-				     'species' => 'module undefined'
+				     'species' => 'module or function undefined'
 				    }
 				   );
+	    
         ###TAKE ME OUT; once we see the rule env for this
 #	$logger->debug("Didn't find $function for $source in ", sub{ Dumper $rule_env });
 	$logger->debug("Didn't find $function for $source; raising error event");

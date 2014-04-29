@@ -946,14 +946,25 @@ sub eval_join {
   my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 #    $logger->debug("obj: ", sub { Dumper($rands) });
 
-  my $v = $obj->{'val'};
-  my $join_val = Kynetx::Expressions::den_to_exp($rands->[0]);
-  my $result;
+
+  my ($result, $join_val);
 
   if($obj->{'type'} eq 'array' &&
      $rands->[0]->{'type'} eq 'str') {
 
-    $result = join($join_val, @{$v});
+      my $v;
+
+      ## is_typed_value
+      if(Kynetx::Expressions::is_typed_value($obj->{"val"}->[1])) {
+	  # if one's typed, assume they're all typed...
+	  $v = [ map { Kynetx::Expressions::den_to_exp($_)} @{ $obj->{'val'}}  ];
+      } else {
+	  $v = $obj->{"val"};
+      }
+
+      $join_val = Kynetx::Expressions::den_to_exp($rands->[0]);
+      
+      $result = join($join_val, @{$v});
 
   } else {
       Kynetx::Errors::raise_error($req_info, 'warn',
@@ -1998,7 +2009,7 @@ sub hash_keys {
 			return Kynetx::Parser::mk_expr_node('array',\@keys);
 		}
 	}
-	return Kynetx::Parser::mk_expr_node('null','__undef__');
+	return Kynetx::Parser::mk_expr_node('array',[]);
 }
 $funcs->{'keys'} = \&hash_keys;
 
@@ -2046,7 +2057,7 @@ sub hash_values {
 			return Kynetx::Parser::mk_expr_node('array',\@values);
 		}
 	}
-	return Kynetx::Parser::mk_expr_node('null','__undef__');
+	return Kynetx::Parser::mk_expr_node('array',[]);
 }
 $funcs->{'values'} = \&hash_values;
 
@@ -2107,9 +2118,10 @@ sub eval_log {
     $msg = Kynetx::Expressions::den_to_exp($rands->[0])
   } 
   my $val = Kynetx::Expressions::den_to_exp($obj);
-  $logger->debug( $msg, ref $obj eq 'HASH' || 
-		        ref $obj eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($val) : $val );
-  return $obj;
+  $logger->debug( $msg, ref $val eq 'HASH' || 
+		        ref $val eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($val) 
+		                            : $val );
+  return $obj; # pass thru unchanged
 }
 $funcs->{'klog'} = \&eval_log;
 

@@ -232,7 +232,7 @@ sub get_hash_element {
           };
         }
     }
-    $logger->debug("Cache not found");
+#    $logger->debug("Cache not found");
   
   if (defined $hKey && ref $hKey eq "ARRAY") {
     if (scalar @$hKey > 0) {

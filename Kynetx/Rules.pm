@@ -171,6 +171,7 @@ sub process_schedule {
 		# set up new context for this task
 		if ($req_info) {
 
+		  # FIXME: why are we putting the req_info into the event_attrs?
 		  my $task_req_info = {'event_attrs' => $task->{'req_info'}};
 #		  $logger->debug("Task attributes ", sub {Dumper $task_req_info});
 		  Kynetx::Request::merge_req_env( $req_info, $task_req_info );
@@ -960,7 +961,7 @@ sub eval_rule {
 	$logger->debug( $cv->recv );
 	my $thread_results = $execenv->get_results();
 	if ( scalar @{$thread_results} > 0 ) {
-#	  $logger->debug("req_info: ", sub {Dumper $req_info});
+	  $logger->debug("All threads complete; sending system:send_complete");
 		Kynetx::Modules::System::raise_system_event(
 			$req_info,
 			$rule->{'name'},
