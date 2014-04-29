@@ -559,7 +559,7 @@ sub twitter_query_map {
 		'access_tokens' => $anontoken
 	}];
 	
-	my $result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,'twitter_test','get',$args);
+	my $result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,'cs_test','get',$args);
 	my $twit_array = Kynetx::Json::decode_json($result->{'content'});
   my $t_hash;
   my $i = 0;
