@@ -534,4 +534,39 @@ sub validate_env {
   $num_tests++;
 }
 
+# twitter query because it returns gloriously complicated json
+sub twitter_query_map {
+  my ($my_req_info,$rule_env,$session,$twitter_id) = @_;
+  $twitter_id = "13524182" unless ($twitter_id); # dave wiegel
+  
+  my $anontoken = {
+	 'access_token' => '100844323-XqQfRm33tQqp54mmhKCfNF9VIOaxVISrIYTOTXOy',
+	 'access_token_secret' => 'QdGk4MGc2RiNuD5MHjL5GVk9m1h3SsooGeMWfUQb7f0'
+  };
+  my $turl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
+  my $num_t = 50;
+  
+  my $args = ['anon', {
+		'url' => $turl,
+		'params' => {
+			'include_entities' => 'true',
+			'include_rts' => 'true',
+			'user_id' => $twitter_id,
+			'count' => $num_t,
+			'trim_user' => 1
+		},
+		'access_tokens' => $anontoken
+	}];
+	
+	$result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,'twitter_test','get',$args);
+	my $twit_array = Kynetx::Json::decode_json($result->{'content'});
+  my $t_hash;
+  my $i = 0;
+  foreach my $tweet (@{$twit_array}) {
+     $t_hash->{'a' . $i++} = $tweet;
+  }
+  
+  return $t_hash;
+}
+
 1;
