@@ -46,7 +46,7 @@ sub query {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
     
-    $logger->debug("Query: ", sub {Dumper($obj)});
+    $logger->debug("Query: ", sub {Dumper($expr)});
     
     my $obj =
         Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
