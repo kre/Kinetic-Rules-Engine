@@ -395,7 +395,7 @@ my $ekey = "searchkey";
 $result = save_persistent_var("ent",$rid,$session,$ekey,$map);
 my $map_check = get_persistent_var("ent",$rid,$session,$ekey);
 
-cmp_deeply($map,eval {$map_check},$description);
+cmp_deeply(Kynetx::Json::astToJson($map),Kynetx::Json::astToJson($map_check),$description);
 $test_count++;
 
 Log::Log4perl->easy_init($INFO);
