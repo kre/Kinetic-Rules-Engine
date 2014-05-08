@@ -117,7 +117,6 @@ my $map_check = get_persistent_var("ent",$rid,$session,$ekey);
 cmp_deeply([keys %{$map}],bag(keys %{$map_check}),$description);
 $test_count++;
 
-Log::Log4perl->easy_init($INFO);
 
 my $op_expr = q/ent:$ekey.query()/;
 
@@ -125,9 +124,8 @@ test_operator($op_expr,undef,1);
 
 
 
-#is_deeply($result, $foo);
+Log::Log4perl->easy_init($INFO);
 
-#$test_count++;
 
 ######################### Clean up
 Kynetx::Test::flush_test_user($user_ken,$user_username);
