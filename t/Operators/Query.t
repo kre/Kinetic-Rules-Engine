@@ -395,6 +395,7 @@ my $ekey = "searchkey";
 $result = save_persistent_var("ent",$rid,$session,$ekey,$map);
 my $map_check = get_persistent_var("ent",$rid,$session,$ekey);
 
+$logger->debug("Desc: $description");
 cmp_deeply(keys %{$map},bag(keys %{$map_check}),$description);
 $test_count++;
 
