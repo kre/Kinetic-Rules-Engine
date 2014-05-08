@@ -118,7 +118,7 @@ cmp_deeply([keys %{$map}],bag(keys %{$map_check}),$description);
 $test_count++;
 
 
-my $op_expr = q/ent:$ekey.query()/;
+my $op_expr = q/ent:searchkey.query()/;
 
 test_operator($op_expr,undef,1);
 
