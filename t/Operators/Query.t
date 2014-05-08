@@ -39,6 +39,7 @@ use Kynetx::Expressions qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::FakeReq qw/:all/;
 use Kynetx::Memcached;
+use Kynetx::Persistence;
 
 
 # most Kyentx modules require this
@@ -384,10 +385,17 @@ Log::Log4perl->easy_init($DEBUG);
 
 $logger->debug("Foo!");
 
+$description = "Optimized query";
 my $map = Kynetx::Test::twitter_query_map($req_info,$rule_env,$session,$rid);
 
 $logger->debug("Twitter query: ", sub {Dumper($map)});
 
+my $ekey = "searchkey";
+$result = save_persistent_var("ent",$rid,$session,$ekey,$map);
+my $map_check = Kynetx::MongoDB::get_value("edata",$ekey);
+
+cmp_deeply($map,$map_check,$description);
+$test_count++;
 
 Log::Log4perl->easy_init($INFO);
 
