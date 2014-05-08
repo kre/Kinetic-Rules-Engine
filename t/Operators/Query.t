@@ -398,7 +398,7 @@ my $map_check = get_persistent_var("ent",$rid,$session,$ekey);
 $logger->debug("Desc: $description");
 $logger->debug("got: ", join(",",keys %{$map}));
 $logger->debug("expected: ", join(",",keys %{$map_check}));
-cmp_deeply(keys %{$map},bag(keys %{$map_check}),$description);
+cmp_deeply([keys %{$map}],bag(keys %{$map_check}),$description);
 $test_count++;
 
 Log::Log4perl->easy_init($INFO);
