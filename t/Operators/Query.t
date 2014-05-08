@@ -108,7 +108,7 @@ $logger->debug("Foo!");
 $description = "Optimized query";
 my $map = Kynetx::Test::twitter_query_map($req_info,$rule_env,$session,$rid);
 
-$logger->debug("Twitter query: ", sub {Dumper($map)});
+#$logger->debug("Twitter query: ", sub {Dumper($map)});
 
 my $ekey = "searchkey";
 my $result = save_persistent_var("ent",$rid,$session,$ekey,$map);
