@@ -72,228 +72,7 @@ Kynetx::Configure::configure();
 my $test_count = 0;
 
 
-is_string_nows(
-    Kynetx::Dispatch::simple_dispatch($my_req_info,"cs_test;cs_test_1"), 
-    '{"cs_test_1":["www.windley.com","www.kynetx.com"],"cs_test":["www.google.com","www.yahoo.com","www.live.com"]}',
-    "Testing dispatch function with two RIDs");
-$test_count++;
-
-my $json = decode_json(Kynetx::Dispatch::extended_dispatch($my_req_info));
-
-#diag Dumper $json;
-
-my $expected = decode_json <<_EOF_;
-{
-   "events":{
-      "web":{
-         "pageview":[
-            {
-               "pattern":"/([^/]+)/bar.html",
-               "type":"url"
-            },
-            {
-               "pattern":"/foo/bazz.html",
-               "type":"url"
-            },
-            {
-               "pattern":"/fizzer/fuzzer.html",
-               "type":"default"
-            },
-            {
-               "pattern":"/foo/bar.html",
-               "type":"url"
-            }
-         ]
-      }, 
-      "system":{
-         "error":[
-            {
-               "pattern":".*",
-               "type":".*"
-            }
-         ]
-      }
-   },
-   "cs_test_authz":{
-      "events":{
-         "web":{
-            "pageview":[
-               {
-                  "pattern":"/foo/bar.html",
-                  "type":"url"
-               }
-            ]
-         }
-      }
-   },
-   "cs_test":{
-      "domains":[
-         "www.google.com",
-         "www.yahoo.com",
-         "www.live.com"
-      ],
-      "events":{
-         "web":{
-            "pageview":[
-               {
-                  "pattern":"/([^/]+)/bar.html",
-                  "type":"url"
-               },
-               {
-                  "pattern":"/foo/bazz.html",
-                  "type":"url"
-               },
-               {
-                  "pattern":"/foo/bazz.html",
-                  "type":"url"
-               },
-               {
-                  "pattern":"/fizzer/fuzzer.html",
-                  "type":"default"
-               }
-            ]
-         },
-         "system":{
-            "error":[
-               {
-                  "pattern":".*",
-                  "type":".*"
-               }
-            ]
-         }
-      }
-   }
-}
-_EOF_
-
-my $a = [#sub {return $_[0]->{events}->{system}->{error};},
-	 #sub {return $_[0]->{events}->{web}->{pageview}->[0];},
-	 sub {return $_[0]->{cs_test}->{domains};},
-	 sub {return $_[0]->{cs_test}->{events}->{web}->{pageview}->[2];},
-	];
-
-for my $f ( @{$a} ) {
-  my $res = &$f($expected);
-  is_deeply(&$f($json), $res, Dumper $res);
-  $test_count++;
-}
-
-my $result = Kynetx::Dispatch::calculate_dispatch($my_req_info);
-
-#diag Dumper $result;
-
-$expected = 
-{
-   "cs_test_authz"=>{
-      "events"=>{
-         "web"=>{
-            "pageview"=>[
-               {
-                  "pattern"=>"/foo/bar.html",
-                  "type"=>"url"
-               }
-            ]
-         }
-      }
-   },
-   "event_rids"=>{
-      "web"=>{
-         "pageview"=>[
-            "cs_test",
-            "cs_test_authz"
-         ]
-      },
-      "system"=>{
-         "error"=>[
-            "cs_test"
-         ]
-      }
-   },
-   "events"=>{
-      "web"=>{
-         "pageview"=>[
-            {
-               "pattern"=>"/([^/]+)/bar.html",
-               "type"=>"url"
-            },
-            {
-               "pattern"=>"/foo/bazz.html",
-               "type"=>"url"
-            },
-            {
-               "pattern"=>"/fizzer/fuzzer.html",
-               "type"=>"default"
-            },
-            {
-               "pattern"=>"/foo/bar.html",
-               "type"=>"url"
-            }
-         ]
-      },
-      "system"=>{
-         "error"=>[
-            {
-               "pattern"=>".*",
-               "type"=>".*"
-            }
-         ]
-      }
-   },
-   "cs_test"=>{
-      "domains"=>[
-         "www.google.com",
-         "www.yahoo.com",
-         "www.live.com"
-      ],
-      "events"=>{
-         "web"=>{
-            "pageview"=>[
-               {
-                  "pattern"=>"/([^/]+)/bar.html",
-                  "type"=>"url"
-               },
-               {
-                  "pattern"=>"/foo/bazz.html",
-                  "type"=>"url"
-               },
-               {
-                  "pattern"=>"/foo/bazz.html",
-                  "type"=>"url"
-               },
-               {
-                  "pattern"=>"/fizzer/fuzzer.html",
-                  "type"=>"default"
-               }
-            ]
-         },
-         "system"=>{
-            "error"=>[
-               {
-                  "pattern"=>".*",
-                  "type"=>".*"
-               }
-            ]
-         }
-      }
-   }
-} ;
-
-
-$a = [sub {return $_[0]->{event_rids}->{web}->{pageview};},
-      sub {return $_[0]->{cs_test}->{domains};},
-      sub {return $_[0]->{cs_test}->{events}->{web}->{pageview}->[2];},
-     ];
-
-for my $f ( @{$a} ) {
-  my $res = &$f($expected);
-  is_deeply(&$f($result), $res, Dumper $res);
-  $test_count++;
-}
-
-
-######################## Ridlist caching
-#Log::Log4perl->easy_init($DEBUG);
-my ($description,$expected,$key,$temp);
+my ($description,$key,$temp);
 
 my $mod_rid = 'a144x172.prod';
 my @default_rules = ['cs_test','10','a144x171.dev',$mod_rid];
@@ -319,66 +98,6 @@ my $user_password = $test_env->{'password'};
 
 my $t_rid = $test_env->{'rid'};
 my $t_eid = $test_env->{'eid'};
-#########################
-
-$description = "Get ridlist";
-$result = Kynetx::Dispatch::get_ridlist($req_info,$user_eci,$user_ken);
-isnt(scalar @{$result},scalar @default_rules,$description);
-$test_count++;
-
-$description = "RID has last_modifed";
-$expected = {
-  'rid' => ignore(),
-  'kinetic_app_version' => any('prod','dev'),
-  'last_modified' => re(qr/\d+/),
-  'owner' => ignore()
-};
-cmp_deeply($result,superbagof($expected),$description);
-$test_count++;
-$temp = $result;
-
-$description = "Check cache for ridlist";
-$key = Kynetx::Dispatch::mk_ridlist_key($user_ken);
-$result = Kynetx::Memcached::check_cache($key);
-cmp_deeply($result,$temp,$description);
-$test_count++;
-
-$description = "Compare rid_list copy from cache";
-$result = Kynetx::Dispatch::get_ridlist($req_info,$user_eci,$user_ken);
-cmp_deeply($result,$temp,$description);
-$test_count++;
-
-$description = "Calculate the eventtree key";
-$result = Kynetx::Dispatch::mk_eventtree_key($temp);
-isnt($result,undef,$description);
-$test_count++;
-
-my $sig0 = $result;
-$logger->debug("E Key: $sig0");
-
-$description = "Compute the eventtree for a session";
-$result = Kynetx::Dispatch::calculate_rid_list($sky_info,$session);
-isnt($result,undef,$description);
-$test_count++;
-
-my $etree = $result;
-
-$description = "Check memcache for eventtree";
-$result = Kynetx::Memcached::check_cache($sig0);
-cmp_deeply($result,$etree,$description);
-$test_count++;
-
-$description = "calculate_rid_list uses the cached copy";
-$result = Kynetx::Dispatch::calculate_rid_list($sky_info,$session);
-cmp_deeply($result,$etree,$description);
-$test_count++;
-
-$description = "RID flush forces new eventtree key";
-$temp = Kynetx::Dispatch::get_ridlist($req_info,$user_eci,$user_ken);
-Kynetx::Modules::RSM::_flush($mod_rid);
-$result = Kynetx::Dispatch::mk_eventtree_key($temp);
-isnt($result,$sig0,$description);
-$test_count++;
 
 ############################
 # Entity var searching
@@ -392,16 +111,17 @@ my $map = Kynetx::Test::twitter_query_map($req_info,$rule_env,$session,$rid);
 $logger->debug("Twitter query: ", sub {Dumper($map)});
 
 my $ekey = "searchkey";
-$result = save_persistent_var("ent",$rid,$session,$ekey,$map);
+my $result = save_persistent_var("ent",$rid,$session,$ekey,$map);
 my $map_check = get_persistent_var("ent",$rid,$session,$ekey);
 
-$logger->debug("Desc: $description");
-$logger->debug("got: ", join(",",keys %{$map}));
-$logger->debug("expected: ", join(",",keys %{$map_check}));
 cmp_deeply([keys %{$map}],bag(keys %{$map_check}),$description);
 $test_count++;
 
 Log::Log4perl->easy_init($INFO);
+
+my $op_expr = q/ent:$ekey.query()/;
+
+test_operator($op_expr,undef,1);
 
 
 
@@ -415,6 +135,24 @@ Kynetx::Test::flush_test_user($user_ken,$user_username);
 my $anon_uname = "_" . $anon_ken;
 Kynetx::Test::flush_test_user($anon_ken,$anon_uname);
 
+sub test_operator {
+    my ($e, $x, $d) = @_;
+
+    my ($v, $r);
+
+    diag "Expr: ", Dumper($e) if $d;
+
+    $v = Kynetx::Parser::parse_expr($e);
+    diag "Parsed expr: ", Dumper($v) if $d;
+
+    $r = eval_expr($v, $rule_env, $rulename,$req_info);
+    diag "Expect: ", Dumper($x) if $d;
+    diag "Result: ", Dumper($r) if $d;
+    my $result = cmp_deeply($r, $x, "Trying $e");   
+    
+    
+    die unless ($result);
+}
 
 
 done_testing($test_count);
