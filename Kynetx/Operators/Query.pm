@@ -45,6 +45,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 sub query {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
+    $logger->debug("Query:");
     my $obj =
         Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
