@@ -48,9 +48,8 @@ sub query {
     my $obj =
         Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-    #my $intpr = Kynetx::Expressions::eval_expr($rands->[0], $rule_env, $rule_name,$req_info, $session);
-    #my $sel_obj = Kynetx::Expressions::den_to_exp(dclone($intpr));
-    #my $selector = make_selector($sel_obj);
+    $logger->debug("obj: ", sub {Dumper($obj)});
+    $logger->debug("rands: ", sub {Dumper($rands)});
     my $selector = make_selector($rands->[0],$rule_env, $rule_name,$req_info, $session);
     my $format = "as_HTML";
     if ($rands->[1]->{'val'}){
