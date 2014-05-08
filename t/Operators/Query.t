@@ -39,7 +39,8 @@ use Kynetx::Expressions qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::FakeReq qw/:all/;
 use Kynetx::Memcached;
-use Kynetx::Persistence;
+use Kynetx::Postlude qw/:all/;
+use Kynetx::Persistence qw/:all/;
 
 
 # most Kyentx modules require this
