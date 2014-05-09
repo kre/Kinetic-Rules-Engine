@@ -118,19 +118,21 @@ cmp_deeply([keys %{$map}],bag(keys %{$map_check}),$description);
 $test_count++;
 
 
-my $op_expr =<<EOQ;
-ent:searchkey.query([],{'\$and' => [
-  { 'search_key' => ['startWaypoint','timestamp']''
-    'operator' => '\$lt',
-    'value' => "20140502T140107+0000"
-  },
-  { 'search_key' => [],
-    'operator' => '\$gt',
-    'value' => ""
-  }
-  ]})
+# my $op_expr =<<EOQ;
+# ent:searchkey.query([],{'\$and' => [
+#   { 'search_key' => ['startWaypoint','timestamp']''
+#     'operator' => '\$lt',
+#     'value' => "20140502T140107+0000"
+#   },
+#   { 'search_key' => [],
+#     'operator' => '\$gt',
+#     'value' => ""
+#   }
+#   ]})
+#
+# EOQ
 
-EOQ
+my $op_expr =q/ent:searchkey.query([],{})/;
 
 
 test_operator($op_expr,undef,1);
