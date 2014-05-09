@@ -1,7 +1,7 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl -w
 #
 # This file is part of the Kinetic Rules Engine (KRE)
-# Copyright (C) 2007-2011 Kynetx, Inc. 
+# Copyright (C) 2007-2011 Kynetx, Inc.
 #
 # KRE is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -118,7 +118,20 @@ cmp_deeply([keys %{$map}],bag(keys %{$map_check}),$description);
 $test_count++;
 
 
-my $op_expr = q/ent:searchkey.query()/;
+my $op_expr =<<EOQ;
+ent:searchkey.query([],{'$and' : [
+  { 'search_key' : ['startWaypoint','timestamp']''
+    'operator' : '$lt',
+    'value' : "20140502T140107+0000"
+  },
+  { 'search_key' : [],
+    'operator' : '$gt',
+    'value' : ""
+  }
+  ]})
+
+EOQ
+
 
 test_operator($op_expr,undef,1);
 
@@ -146,14 +159,12 @@ sub test_operator {
     $r = eval_expr($v, $rule_env, $rulename,$req_info,$session);
     diag "Expect: ", Dumper($x) if $d;
     diag "Result: ", Dumper($r) if $d;
-    my $result = cmp_deeply($r, $x, "Trying $e");   
-    
-    
+    my $result = cmp_deeply($r, $x, "Trying $e");
+
+
     die unless ($result);
 }
 
 
 done_testing($test_count);
 1;
-
-

@@ -77,6 +77,11 @@ sub optimized_hash_query {
   $logger->debug("Get the full object");
   my $p_object = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
   $logger->debug("Found: ", ref $p_object);
+  my $p_rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+  my $path_to_key = $p_rands->[0];
+  my $conditions = $p_rands->[1];
+  $logger->debug("Path: ",ref $path_to_key);
+  $logger->debug("Conditions",ref $conditions);
   return undef;
 
 }
