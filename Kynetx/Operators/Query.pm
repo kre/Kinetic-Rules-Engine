@@ -93,7 +93,11 @@ sub optimized_hash_query {
           my $clean = $obj->{'val'};
           push(@keypath,$clean);
         }
-        $logger->debug("Path: ", sub {Dumper(@keypath)});
+        $logger->debug("Hash path: ", sub {Dumper(@keypath)});
+
+        my $c_obj =
+            Kynetx::Expressions::eval_expr($conditions, $rule_env, $rule_name,$req_info, $session);
+        $logger->debug("Conditions: ", sub{Dumper($c_obj)});
       }
   }
   $logger->warn("Bad format in query expression");
