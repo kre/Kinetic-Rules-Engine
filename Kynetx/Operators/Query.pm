@@ -98,6 +98,8 @@ sub optimized_hash_query {
         my $c_obj =
             Kynetx::Expressions::eval_expr($conditions, $rule_env, $rule_name,$req_info, $session);
         $logger->debug("Conditions: ", sub{Dumper($c_obj)});
+        my $c_den = Kynetx::Expressions::den_to_exp($c_obj);
+        $logger->debug("Denoted: ", sub {Dumper($c_den)});
       }
   }
   $logger->warn("Bad format in query expression");
