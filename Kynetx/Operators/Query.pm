@@ -76,7 +76,7 @@ sub optimized_hash_query {
   my $logger = get_logger();
   $logger->debug("Get the full object");
   my $p_object = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
-  $logger->debug("Found: ", ref $p_object);
+  $logger->debug("Found: ", sub {Dumper($p_object)});
   my $domain = $p_object->{'domain'};
   my $inModule = Kynetx::Environments::lookup_rule_env('_inModule', $rule_env) || 0;
   my $moduleRid = Kynetx::Environments::lookup_rule_env('_moduleRID', $rule_env);
