@@ -119,13 +119,13 @@ $test_count++;
 
 
 my $op_expr =<<EOQ;
-ent:searchkey.query([],{'$and' : [
+ent:searchkey.query([],{'\$and' : [
   { 'search_key' : ['startWaypoint','timestamp']''
-    'operator' : '$lt',
+    'operator' : '\$lt',
     'value' : "20140502T140107+0000"
   },
   { 'search_key' : [],
-    'operator' : '$gt',
+    'operator' : '\$gt',
     'value' : ""
   }
   ]})
