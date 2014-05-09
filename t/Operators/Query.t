@@ -134,7 +134,7 @@ $test_count++;
 
 my $op_expr =q/ent:searchkey.query(["foo", "bar"],{'$and' : [
   {'foo' : 'bar'},
-  {'bar' : 'soom'}
+  {'bar' : time:now()}
 ]})/;
 
 
