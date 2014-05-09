@@ -47,21 +47,26 @@ sub query {
     my $logger = get_logger();
     
     $logger->debug("Query: ", sub {Dumper($expr)});
+    if ($obj->{'type'} eq "persistent") {
+      $logger->debug("Persistent query");
+      return undef;
+    } else {
     
-    my $obj =
-        Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
-    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-    $logger->debug("obj: ", sub {Dumper($obj)});
-    $logger->debug("rands: ", sub {Dumper($rands)});
-    my $selector = make_selector($rands->[0],$rule_env, $rule_name,$req_info, $session);
-    my $format = "as_HTML";
-    if ($rands->[1]->{'val'}){
+      my $obj =
+          Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+      my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+      $logger->debug("obj: ", sub {Dumper($obj)});
+      $logger->debug("rands: ", sub {Dumper($rands)});
+      my $selector = make_selector($rands->[0],$rule_env, $rule_name,$req_info, $session);
+      my $format = "as_HTML";
+      if ($rands->[1]->{'val'}){
         $format = "as_text";
-    }
-    my $source = make_source($obj);
-    my $q = HTML::Query->new($source );
-    my @elements = $q->query($selector)->$format;
-    return Kynetx::Expressions::typed_value(\@elements);
+      }
+      my $source = make_source($obj);
+      my $q = HTML::Query->new($source );
+      my @elements = $q->query($selector)->$format;
+      return Kynetx::Expressions::typed_value(\@elements);
+  }
 }
 
 sub make_source {
