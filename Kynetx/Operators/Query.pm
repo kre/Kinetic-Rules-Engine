@@ -81,7 +81,7 @@ sub optimized_hash_query {
   my $path_to_key = $p_rands->[0];
   my $conditions = $p_rands->[1];
   $logger->debug("Path: ",ref $path_to_key);
-  $logger->debug("Conditions",ref $conditions);
+  $logger->debug("Conditions: ",ref $conditions);
   return undef;
 
 }
