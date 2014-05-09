@@ -112,7 +112,7 @@ my $map = Kynetx::Test::twitter_query_map($req_info,$rule_env,$session,$rid);
 
 my $ekey = "searchkey";
 my $result = save_persistent_var("ent",$t_rid,$session,$ekey,$map);
-my $map_check = get_persistent_var("ent",t_$rid,$session,$ekey);
+my $map_check = get_persistent_var("ent",$t_rid,$session,$ekey);
 
 cmp_deeply([keys %{$map}],bag(keys %{$map_check}),$description);
 $test_count++;
