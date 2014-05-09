@@ -77,7 +77,7 @@ sub optimized_hash_query {
   my $domain = $expr->{'domain'};
   my $inModule = Kynetx::Environments::lookup_rule_env('_inModule', $rule_env) || 0;
   my $moduleRid = Kynetx::Environments::lookup_rule_env('_moduleRID', $rule_env);
-  my $rid = get_rid($req_info->{'rid'});
+  my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
   if ($inModule) {
     $logger->debug("Evaling persistent in module: $moduleRid");
   }
