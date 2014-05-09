@@ -88,7 +88,7 @@ sub optimized_hash_query {
   my $p_object = Kynetx::Persistence::get_persistent_var($domain,
                  $rid,
                  $session,
-                 $expr->{'obj'}->{'name'};) || 0;
+                 $expr->{'obj'}->{'name'}) || 0;
   $logger->debug("Found: ", sub {Dumper($p_object)});
   my $coll_name = +Kynetx::Persistence::Application::COLLECTION;
   $logger->debug("Domain: $domain");
