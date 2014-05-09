@@ -2,7 +2,7 @@ package Kynetx::Operators::Query;
 # file: Kynetx/Operators/Query.pm
 #
 # This file is part of the Kinetic Rules Engine (KRE)
-# Copyright (C) 2007-2011 Kynetx, Inc. 
+# Copyright (C) 2007-2011 Kynetx, Inc.
 #
 # KRE is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -45,15 +45,15 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 sub query {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();
-    
-    
+
+
     $logger->debug("Query: ", sub {Dumper($expr)});
     my $obj = $expr->{'obj'};
     if ($obj->{'type'} eq "persistent") {
       $logger->debug("Persistent query");
-      return undef;
+      return optimized_hash_query($expr, $rule_env, $rule_name, $req_info, $session);
     } else {
-    
+
       $obj =
           Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
       my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
@@ -69,6 +69,16 @@ sub query {
       my @elements = $q->query($selector)->$format;
       return Kynetx::Expressions::typed_value(\@elements);
   }
+}
+
+sub optimized_hash_query {
+  my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+  my $logger = get_logger();
+  $logger->debug("Get the full object");
+  my $p_object = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+  $logger->debug("Found: ", ref $p_object);
+  return undef;
+
 }
 
 sub make_source {
