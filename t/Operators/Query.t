@@ -133,7 +133,8 @@ $test_count++;
 # EOQ
 
 my $op_expr =q/ent:searchkey.query(["foo", "bar"],{'$and' : [
-'foo' : 'bar'
+  {'foo' : 'bar'},
+  {'bar' : 'soom'}
 ]})/;
 
 
