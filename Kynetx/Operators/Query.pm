@@ -83,6 +83,20 @@ sub optimized_hash_query {
   $logger->debug("Path: ",ref $path_to_key);
   $logger->debug("Conditions: ",ref $conditions);
   $logger->debug("rands: ", sub {Dumper($p_rands)});
+  if (defined $path_to_key && defined $conditions) {
+    if ($path_to_key->{'type'} eq "array" &&
+      $conditions->{'type'} eq "hash") {
+        my @keypath;
+        foreach my $pathelement (@{$path_to_key->{'val'}}) {
+          my $obj =
+              Kynetx::Expressions::eval_expr($pathelement, $rule_env, $rule_name,$req_info, $session);
+          my $clean = $obj->{'val'};
+          push(@keypath,$clean);
+        }
+        $logger->debug("Path: ", sub {Dumper(@keypath)});
+      }
+  }
+  $logger->warn("Bad format in query expression");
   return undef;
 
 }

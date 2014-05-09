@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 #
 # This file is part of the Kinetic Rules Engine (KRE)
-# Copyright (C) 2007-2011 Kynetx, Inc. 
+# Copyright (C) 2007-2011 Kynetx, Inc.
 #
 # KRE is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -96,7 +96,7 @@ my $XML = <<_XML_;
                 <harvest_time>4 Hours</harvest_time>
                 <cost type="coins">10</cost>
                 <xp>1</xp>
-                
+
         </seed>
         <seed name="Pink Roses" type="flower">
                 <harvest_time>2 Days</harvest_time>
@@ -267,7 +267,7 @@ $args = [$XML,{
 	'private_elements' => ['seed'],
 	'empty_elements' => ['cost'],
 	'content_key' => "#PCDATA",
-	
+
 }];
 $result = Kynetx::Expressions::den_to_exp(
             Kynetx::Modules::eval_module($my_req_info,
@@ -306,7 +306,7 @@ $function = "base642string";
 my $base64 = 'U3VwZXJEdXBlcjogYXNjaWk=';
 $expected = "SuperDuper: ascii";
 $args = [$base64];
- 
+
 $result = Kynetx::Expressions::den_to_exp(
             Kynetx::Modules::eval_module($my_req_info,
                        $rule_env,
@@ -370,7 +370,7 @@ my $keys = {
 };
 
 # these are anonymous consumer tokens
-($js, $rule_env) = 
+($js, $rule_env) =
  Kynetx::Keys::insert_key(
   $my_req_info,
   $rule_env,
@@ -423,7 +423,7 @@ $result = Kynetx::Expressions::den_to_exp(
                        $function,
                        $args
                       ));
-                      
+
 $l = scalar @{$result};
 cmp_deeply(
   $result->[0]->{$path} >= $result->[1]->{$path} &&
@@ -456,7 +456,7 @@ $result = Kynetx::Expressions::den_to_exp(
                        $function,
                        $args
                       ));
-                      
+
 $l = scalar @{$result};
 cmp_deeply(
   $result->[0]->{$path} >= $result->[1]->{$path} &&
@@ -473,7 +473,7 @@ $opts = {
   'path' => [$path],
   'compare' => 'datetime',
   'date_format' => $format
-  
+
 };
 $function = 'transform';
 $args = [$twit_array,$opts];
@@ -486,7 +486,7 @@ $result = Kynetx::Expressions::den_to_exp(
                        $function,
                        $args
                       ));
-                      
+
 $l = scalar @{$result};
 $a = Kynetx::KTime->parse_datetime($result->[0]->{$path},$format)->epoch;
 $b = Kynetx::KTime->parse_datetime($result->[1]->{$path},$format)->epoch;
@@ -562,7 +562,7 @@ $result = Kynetx::Expressions::den_to_exp(
                        $function,
                        $args
                       ));
-                      
+
 $l = scalar @{$result};
 $a = $result->[0]->{$path};
 $b = $result->[1]->{$path};
@@ -629,8 +629,8 @@ $result = Kynetx::Expressions::den_to_exp(
                        $function,
                        $args
                       ));
-                      
-                   
+
+
 is(($t_hash->{$result->[0]}->{$path} >= $t_hash->{$result->[1]}->{$path}) &&
     ($t_hash->{$result->[0]}->{$path} >= $t_hash->{$result->[$l -1]}->{$path}),'', $description);
 $test_count++;
@@ -646,7 +646,7 @@ $test_count++;
 ######################
 Log::Log4perl->easy_init($DEBUG);
 ######################
-# Char ops 
+# Char ops
 $description = "to char";
 $function = "chr";
 $args = [101];
@@ -765,7 +765,7 @@ sub h_display {
     }
     $logger->debug($row);
   }
-  
+
 }
 
 sub t_display {
@@ -882,6 +882,5 @@ __DATA__
 				{ "id": "5003", "type": "Chocolate" },
 				{ "id": "5004", "type": "Maple" }
 			]
-	}	
+	}
 }
-

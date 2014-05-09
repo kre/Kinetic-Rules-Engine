@@ -132,7 +132,7 @@ $test_count++;
 #
 # EOQ
 
-my $op_expr =q/ent:searchkey.query([],{})/;
+my $op_expr =q/ent:searchkey.query(["foo", "bar"],{})/;
 
 
 test_operator($op_expr,undef,1);
