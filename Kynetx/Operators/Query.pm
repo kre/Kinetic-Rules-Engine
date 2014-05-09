@@ -74,7 +74,10 @@ sub query {
 sub optimized_hash_query {
   my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
   my $logger = get_logger();
-  my $domain = $expr->{'domain'};
+  $logger->debug("Get the full object");
+  my $p_object = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+  $logger->debug("Found: ", ref $p_object);
+  my $domain = $p_object->{'domain'};
   my $inModule = Kynetx::Environments::lookup_rule_env('_inModule', $rule_env) || 0;
   my $moduleRid = Kynetx::Environments::lookup_rule_env('_moduleRID', $rule_env);
   my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
@@ -89,9 +92,6 @@ sub optimized_hash_query {
     $coll_name = +Kynetx::Persistence::Entity::COLLECTION;
   }
   $logger->debug("Collection: $coll_name");
-  $logger->debug("Get the full object");
-  my $p_object = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
-  $logger->debug("Found: ", ref $p_object);
   my $p_rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
   my $path_to_key = $p_rands->[0];
   my $conditions = $p_rands->[1];
