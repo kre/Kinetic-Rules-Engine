@@ -88,7 +88,7 @@ sub optimized_hash_query {
     $rid = $moduleRid;
   }
   my $coll_name = +Kynetx::Persistence::Application::COLLECTION;
-  $logger->debug("Domain: $domain")
+  $logger->debug("Domain: $domain");
   if ($domain eq "ent") {
     $coll_name = +Kynetx::Persistence::Entity::COLLECTION;
   }
