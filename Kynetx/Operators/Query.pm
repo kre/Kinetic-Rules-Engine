@@ -74,10 +74,7 @@ sub query {
 sub optimized_hash_query {
   my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
   my $logger = get_logger();
-  $logger->debug("Get the full object");
-  my $p_object = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
-  $logger->debug("Found: ", sub {Dumper($p_object)});
-  my $domain = $p_object->{'domain'};
+  my $domain = $expr->{'obj'}->{'domain'};
   my $inModule = Kynetx::Environments::lookup_rule_env('_inModule', $rule_env) || 0;
   my $moduleRid = Kynetx::Environments::lookup_rule_env('_moduleRID', $rule_env);
   my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
@@ -87,6 +84,12 @@ sub optimized_hash_query {
   if (defined $moduleRid) {
     $rid = $moduleRid;
   }
+  $logger->debug("Get the full object");
+  my $p_object = Kynetx::Persistence::get_persistent_var($domain,
+                 $rid,
+                 $session,
+                 $expr->{'obj'}->{'name'};) || 0;
+  $logger->debug("Found: ", sub {Dumper($p_object)});
   my $coll_name = +Kynetx::Persistence::Application::COLLECTION;
   $logger->debug("Domain: $domain");
   if ($domain eq "ent") {
