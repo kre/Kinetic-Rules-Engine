@@ -74,6 +74,21 @@ sub query {
 sub optimized_hash_query {
   my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
   my $logger = get_logger();
+  my $domain = $expr->{'domain'};
+  my $inModule = Kynetx::Environments::lookup_rule_env('_inModule', $rule_env) || 0;
+  my $moduleRid = Kynetx::Environments::lookup_rule_env('_moduleRID', $rule_env);
+  my $rid = get_rid($req_info->{'rid'});
+  if ($inModule) {
+    $logger->debug("Evaling persistent in module: $moduleRid");
+  }
+  if (defined $moduleRid) {
+    $rid = $moduleRid;
+  }
+  my $coll_name = +Kynetx::Persistence::Application::COLLECTION;
+  if ($domain eq "ent") {
+    $coll_name = +Kynetx::Persistence::Entity::COLLECTION;
+  }
+  $logger->debug("Collection: $coll_name");
   $logger->debug("Get the full object");
   my $p_object = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
   $logger->debug("Found: ", ref $p_object);
