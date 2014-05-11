@@ -140,7 +140,7 @@ $test_count++;
 my $op_expr =q/ent:searchkey.query([],{'$and' : [
   {'search_key' : ['retweeted_status', 'favorite_count'],
     'operator' : '$gt',
-    'value' : 20
+    'value' : 50
   }
   ]})/;
 
