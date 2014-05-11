@@ -146,9 +146,17 @@ sub _base_key {
         $collection = +Kynetx::Persistence::Application::COLLECTION;
   }
   push(@r_conditions, $root);
+  push(@r_conditions,_conditions_key($conditions));
   my $key = {'$and' => \@r_conditions};
   return ($collection,$key);
 
+}
+
+sub _conditions_key {
+  my ($conditions) = @_;
+  my $logger = get_logger();
+  $logger->debug("Conditions: ", sub {Dumper($conditions)});
+  
 }
 
 sub make_source {
