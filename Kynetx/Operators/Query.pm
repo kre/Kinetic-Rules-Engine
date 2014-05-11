@@ -90,11 +90,7 @@ sub optimized_hash_query {
                  $session,
                  $expr->{'obj'}->{'name'}) || 0;
   $logger->debug("Found: ", sub {Dumper($p_object)});
-  my $coll_name = +Kynetx::Persistence::Application::COLLECTION;
-  $logger->debug("Domain: $domain");
-  if ($domain eq "ent") {
-    $coll_name = +Kynetx::Persistence::Entity::COLLECTION;
-  }
+
   $logger->debug("Collection: $coll_name");
   my $p_rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
   my $path_to_key = $p_rands->[0];
@@ -119,10 +115,39 @@ sub optimized_hash_query {
         $logger->debug("Conditions: ", sub{Dumper($c_obj)});
         my $c_den = Kynetx::Expressions::den_to_exp($c_obj);
         $logger->debug("Denoted: ", sub {Dumper($c_den)});
+        my $results = Kynetx::MongoDB::get_list(_base_key($domain,$rid,$ken,\@keypath,$c_den));
+        $logger->debug("Query: ", sub {Dumper($results)});
       }
   }
   $logger->warn("Bad format in query expression");
   return undef;
+
+}
+
+sub _base_key {
+  my ($domain,$rid,$ken,$base_path,$conditions) = @_;
+  my $logger = get_logger();
+  $rid = Kynetx::Rids::get_rid($rid);
+  my $root;
+  my @r_conditions;
+  my $collection;
+  $logger->debug("Domain: $domain");
+  if ($domain eq "ent") {
+    $collection = +Kynetx::Persistence::Entity::COLLECTION;
+  }
+  if ($domain eq "ent") {
+    $root = {
+        "ken" => $ken,
+        "rid" => $rid};
+    $collection = +Kynetx::Persistence::Entity::COLLECTION;
+  } else {
+    $root = {
+        "rid" => $rid};
+        $collection = +Kynetx::Persistence::Application::COLLECTION;
+  }
+  push(@r_conditions, $root);
+  my $key = {'$and' => @r_conditions};
+  return ($collection,$key);
 
 }
 
