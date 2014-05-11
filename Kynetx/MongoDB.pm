@@ -387,6 +387,7 @@ sub get_list {
     }
   }
   my $c = get_collection($collection);
+  $logger->debug("mongo query: ",sub {Dumper($var)});
   my @rlist;
   if ($c) {
     my $cursor = $c->find($var);
