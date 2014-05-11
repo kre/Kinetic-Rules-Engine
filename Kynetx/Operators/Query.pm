@@ -91,7 +91,6 @@ sub optimized_hash_query {
                  $expr->{'obj'}->{'name'}) || 0;
   $logger->debug("Found: ", sub {Dumper($p_object)});
 
-  $logger->debug("Collection: $coll_name");
   my $p_rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
   my $path_to_key = $p_rands->[0];
   my $conditions = $p_rands->[1];
@@ -115,6 +114,7 @@ sub optimized_hash_query {
         $logger->debug("Conditions: ", sub{Dumper($c_obj)});
         my $c_den = Kynetx::Expressions::den_to_exp($c_obj);
         $logger->debug("Denoted: ", sub {Dumper($c_den)});
+        my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
         my $results = Kynetx::MongoDB::get_list(_base_key($domain,$rid,$ken,\@keypath,$c_den));
         $logger->debug("Query: ", sub {Dumper($results)});
       }
