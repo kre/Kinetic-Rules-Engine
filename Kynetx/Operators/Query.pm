@@ -156,6 +156,24 @@ sub _conditions_key {
   my ($conditions) = @_;
   my $logger = get_logger();
   $logger->debug("Conditions: ", sub {Dumper($conditions)});
+  if (ref $conditions eq "HASH") {
+    my @type = keys %{$conditions};
+    my @c;
+    my $type = $type[0];
+    foreach my $cond (@{$conditions->{$type}}){
+      my $skey = $cond->{'search_key'};
+      my $operator = $cond->{'operator'};
+      my $value = $cond->{'value'};
+      push(@c,{
+        'hashkey' => {'$in' => $skey},
+        'value' => {$operator => $value}
+        }
+      )
+    }
+    my $key = {$type => \@c};
+    return $key;
+    
+  }
   return 1;
 }
 
