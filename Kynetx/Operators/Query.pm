@@ -146,7 +146,7 @@ sub _base_key {
         $collection = +Kynetx::Persistence::Application::COLLECTION;
   }
   push(@r_conditions, $root);
-  my $key = {'$and' => @r_conditions};
+  my $key = {'$and' => \@r_conditions};
   return ($collection,$key);
 
 }
