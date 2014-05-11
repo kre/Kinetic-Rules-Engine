@@ -132,10 +132,17 @@ $test_count++;
 #
 # EOQ
 
-my $op_expr =q/ent:searchkey.query(["foo", "bar"],{'$and' : [
-  {'foo' : 'bar'},
-  {'bar' : time:now()}
-]})/;
+#my $op_expr =q/ent:searchkey.query([],{'$and' : [
+#  {'foo' : 'bar'},
+#  {'bar' : time:now()}
+#]})/;
+
+my $op_expr =q/ent:searchkey.query([],{'$and' : [
+  {'search_key' : ['retweeted_status', 'favorite_count'],
+    'operator' : '$gt',
+    'value' : 3
+  }
+  ]})/;
 
 
 test_operator($op_expr,undef,1);
