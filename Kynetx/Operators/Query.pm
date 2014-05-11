@@ -156,7 +156,7 @@ sub _conditions_key {
   my ($conditions) = @_;
   my $logger = get_logger();
   $logger->debug("Conditions: ", sub {Dumper($conditions)});
-  
+  return undef;
 }
 
 sub make_source {
