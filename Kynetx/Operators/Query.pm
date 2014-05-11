@@ -117,6 +117,7 @@ sub optimized_hash_query {
         my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
         my $results = Kynetx::MongoDB::get_list(_base_key($domain,$rid,$ken,\@keypath,$c_den));
         $logger->debug("Query found : ", scalar @{$results});
+        $logger->debug("Query found : ", sub {Dumper($results)});
       }
   }
   $logger->warn("Bad format in query expression");
