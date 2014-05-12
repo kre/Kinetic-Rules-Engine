@@ -138,7 +138,7 @@ sub _parse_results {
     my $path = $val->{'hashkey'};
     my $index = scalar @{$path};
     my @key = @{$val->{'hashkey'}}[0 .. $index];
-    $matches->{join(','@key)}++;
+    $matches->{join('_,_'@key)}++;
   }
   $logger->debug("Matches: ", sub {Dumper($matches)});
   if ($type eq '$and') {
@@ -147,10 +147,9 @@ sub _parse_results {
   my @results;
   
   foreach my $match (keys %{$matches}) {
-    my $num = $matches->{$match};
     $logger->debug("Num: $num Target: $target");
-    if ( $num >= $target) {
-      push(@results,$match)
+    if ( $matches->{$match} >= $target) {
+      push(@results,split(/_,_/,$match));
     }
   }
   return \@results;
