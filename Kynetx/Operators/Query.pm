@@ -146,12 +146,26 @@ sub do_queries {
     }
   }
   $logger->debug("Count: ", sub {Dumper($count)});
+  my $target = scalar @{$c_den->{'conditions'}};
+  my @result;
+  foreach my $match (keys %{$count}) {
+    if ($count->{$match} >= $target) {
+      push(@result, _path($,match))
+    }
+  }
+  return \@result;
 }
 
 sub _signature {
   my ($path) = @_;  
   my $key = join("-|-",@{$path});
   return $key;
+}
+
+sub _path {
+  my ($sig) = @_;
+  my @path = split(/-\|-/,$sig);
+  return \@path;
 }
 
 sub add_conditions_key {
