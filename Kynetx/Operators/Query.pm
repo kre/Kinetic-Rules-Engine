@@ -165,11 +165,9 @@ sub _conditions_key {
       my $skey = $cond->{'search_key'};
       my $operator = $cond->{'operator'};
       my $value = $cond->{'value'};
-      push(@c,{
-        'hashkey' => {'$in' => $skey},
-        'value' => {$operator => $value}
-        }
-      )
+      push(@c,{'hashkey' => {'$in' => $skey}});
+      push(@c,{'value' => {$operator => $value}});
+      
     }
     my $key = {$type => \@c};
     return $key;
