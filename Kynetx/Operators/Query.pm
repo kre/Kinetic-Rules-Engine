@@ -119,16 +119,7 @@ sub optimized_hash_query {
         $logger->debug("Query found : ", scalar @{$results});
         #$logger->debug("Query found : ", sub {Dumper($results)});
         if (defined $results) {
-          my @r;
-          my $prune = scalar @{_search_key($c_den)};
-          foreach my $val (@{$results}) {
-            $logger->debug(@{$val->{'hashkey'}}); 
-            my $index = scalar @{$val->{'hashkey'}} - $prune -1;      
-            my @path = @{$val->{'hashkey'}}[0 .. $index];
-            $logger->debug("Path: $index ",@path); 
-            push(@r,\@path);
-          }
-          return \@r;                  
+          return _parse_results($results,\@keypath,$c_den);                
         
         }
       }
@@ -136,6 +127,45 @@ sub optimized_hash_query {
   $logger->warn("Bad format in query expression");
   return undef;
 
+}
+
+sub _parse_results {
+  my ($results,$keypath,$conditions) = @_;
+  my $matches;
+  my $target = 1;
+  my $type = $conditions->{'requires'};
+  foreach my $val (@{$results}) {
+    my $path = $val->{'hashkey'};
+    my $index = scalar @{$path};
+    my @key = @{$val->{'hashkey'}}[0 .. $index];
+    $matches->{@key}++;
+  }
+  if ($type eq '$and') {
+    $target = unique_conditions($conditions);
+  }
+  my @results;
+  foreach my $match (keys %{$matches}) {
+    if ($matches->{$match} >= $target) {
+      push(@results,$match)
+    }
+  }
+  return \@results;
+}
+
+sub condition_signature {
+  my ($condition) = @_;
+  my $path = $condition->{'search_key'};
+  my $key = join("--",@{$path});
+  return $key;
+}
+
+sub unique_conditions {
+  my ($conditions) = @_;
+  my $count;
+  foreach my $cond (@{$conditions}) {
+    $count->{condition_signature($cond)} ++;
+  }
+  return scalar keys %{$count};
 }
 
 sub _base_key {
