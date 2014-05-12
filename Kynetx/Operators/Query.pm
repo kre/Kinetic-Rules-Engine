@@ -128,14 +128,30 @@ sub optimized_hash_query {
 sub do_queries {
   my ($domain,$rid,$ken,$keypath,$c_den) = @_;
   my $logger = get_logger();
+  my $count;
+  my $index =0 ;
+  if (defined $keypath) {
+    $index = scalar @{$keypath};
+  }
   foreach my $condition (@{$c_den->{'conditions'}}) {
     my ($collection,$base) = _base_key($domain,$rid,$ken,$keypath);
     add_conditions_key($base,$condition);
     my $key = {'$and' => $base};
     my $query = Kynetx::MongoDB::get_list($collection,$key);
     $logger->debug("Found: ", scalar @{$query},sub {Dumper $condition});
+    foreach my $result (@{$query}) {
+      my @path = @{$result->{'hashkey'}}[0 .. $index];
+      $count->{_signature(\@path)}++;
+      
+    }
   }
-  
+  $logger->debug("Count: ", sub {Dumper($count)});
+}
+
+sub _signature {
+  my ($path) = @_;  
+  my $key = join("-|-",@{$path});
+  return $key;
 }
 
 sub add_conditions_key {
@@ -181,13 +197,6 @@ sub _parse_results {
     }
   }
   return \@results;
-}
-
-sub condition_signature {
-  my ($condition) = @_;
-  my $path = $condition->{'search_key'};
-  my $key = join("--",@{$path});
-  return $key;
 }
 
 sub unique_conditions {
