@@ -224,7 +224,7 @@ sub _conditions_key {
       push(@c,{'value' => {$operator => $value}});
       
     }
-    my $key = {$type => \@c};
+    my $key = {'$or' => \@c};
     return $key;
     
   }
