@@ -161,6 +161,8 @@ sub condition_signature {
 
 sub unique_conditions {
   my ($conditions) = @_;
+  my $logger = get_logger();
+  $logger->debug("unique: ", sub {Dumper($conditions)});
   my $count;
   foreach my $cond (@{$conditions}) {
     $count->{condition_signature($cond)}++;
