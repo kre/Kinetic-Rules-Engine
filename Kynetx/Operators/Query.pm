@@ -140,6 +140,7 @@ sub _parse_results {
     my @key = @{$val->{'hashkey'}}[0 .. $index];
     $matches->{@key}++;
   }
+  $logger->debug("Matches: ", sub {Dumper($matches)});
   if ($type eq '$and') {
     $target = unique_conditions($conditions);
   }
