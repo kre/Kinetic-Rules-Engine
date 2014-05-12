@@ -131,16 +131,17 @@ sub optimized_hash_query {
 
 sub _parse_results {
   my ($results,$keypath,$conditions) = @_;
+  my $logger = get_logger();
   my $matches;
   my $target = 1;
   my $type = $conditions->{'requires'};
   foreach my $val (@{$results}) {
     my $path = $val->{'hashkey'};
     my $index = scalar @{$path};
-    my @key = @{$val->{'hashkey'}}[0 .. $index];
+    my @key = @{$val->{'hashkey'}}[0 .. $index];    
     my $key = join('_,_',@key);
     $matches->{$key}++;
-  }
+  }  
   $logger->debug("Matches: ", sub {Dumper($matches)});
   if ($type eq '$and') {
     $target = unique_conditions($conditions);
