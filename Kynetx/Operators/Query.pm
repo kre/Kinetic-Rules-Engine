@@ -150,7 +150,7 @@ sub do_queries {
   my @result;
   foreach my $match (keys %{$count}) {
     if ($count->{$match} >= $target) {
-      push(@result, _path($,match))
+      push(@result, _path($match))
     }
   }
   return \@result;
