@@ -153,10 +153,10 @@ Log::Log4perl->easy_init($INFO);
 
 
 ######################### Clean up
-#Kynetx::Test::flush_test_user($user_ken,$user_username);
+Kynetx::Test::flush_test_user($user_ken,$user_username);
 
 my $anon_uname = "_" . $anon_ken;
-#Kynetx::Test::flush_test_user($anon_ken,$anon_uname);
+Kynetx::Test::flush_test_user($anon_ken,$anon_uname);
 
 sub test_operator {
     my ($e, $x, $d) = @_;
