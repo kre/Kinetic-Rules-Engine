@@ -154,7 +154,8 @@ sub _parse_results {
   foreach my $match (keys %{$matches}) {
     $logger->debug("Num: $matches->{$match} target: $target");
     if ($matches->{$match} >= $target) {
-      push(@results,split(/_,_/,$match))
+      my @key = split(/_,_/,$match);
+      push(@results,\@key);
     }
   }
   return \@results;
