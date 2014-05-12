@@ -131,7 +131,8 @@ sub do_queries {
   foreach my $condition (@{$c_den->{'conditions'}}) {
     my ($collection,$base) = _base_key($domain,$rid,$ken,$keypath);
     add_conditions_key($base,$condition);
-    my $query = Kynetx::MongoDB::get_list($collection,$base);
+    my $key = {'$and' => $base};
+    my $query = Kynetx::MongoDB::get_list($collection,$key);
     $logger->debug("Found: ", scalar @{$query},sub {Dumper $condition});
   }
   
