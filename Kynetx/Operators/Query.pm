@@ -119,9 +119,16 @@ sub optimized_hash_query {
         $logger->debug("Query found : ", scalar @{$results});
         #$logger->debug("Query found : ", sub {Dumper($results)});
         if (defined $results) {
+          my @r;
+          my $prune = scalar @{_search_key($c_den)};
           foreach my $val (@{$results}) {
-            $logger->debug(@{$val->{'hashkey'}});
+            $logger->debug(@{$val->{'hashkey'}});            
+            my @path = $val->{'hashkey'}->[0,scalar @{$val->{'hashkey'}}- $prune];
+            $logger->debug("Path: ",@path); 
+            push(@r,@path);
           }
+          return \@r;                  
+        
         }
       }
   }
@@ -181,6 +188,11 @@ sub _conditions_key {
     
   }
   return 1;
+}
+
+sub _search_key {
+  my ($conditions) = @_;
+  return $conditions->{'search_key'};
 }
 
 sub make_source {
