@@ -140,12 +140,16 @@ sub _parse_results {
     my @key = @{$val->{'hashkey'}}[0 .. $index];
     $matches->{@key}++;
   }
+  $logger->debug("Keys: ", sub {Dumper(keys %{$matches})});
   if ($type eq '$and') {
     $target = unique_conditions($conditions);
   }
   my @results;
+  $logger->debug("Target: $target");
   foreach my $match (keys %{$matches}) {
-    if ($matches->{$match} >= $target) {
+    my $num = $matches->{$match};
+    $logger->debug("Target: $target num: $num");
+    if ( $num >= $target) {
       push(@results,$match)
     }
   }
