@@ -147,15 +147,18 @@ $test_count++;
 #    'value' : 200
 #  }
 #  ]})/;
-my $op_expr =q/ent:searchkey.query(['a41'],{'$and' : [
-  {'search_key' : ['retweeted_status', 'favorite_count'],
-    'operator' : '$gt',
-    'value' : 5
-  },
-  {'search_key' : ['retweeted_status', 'favorite_count'],
-    'operator' : '$lt',
-    'value' : 200
-  }
+my $op_expr =q/ent:searchkey.query([],{
+  'search_key' : ['retweeted_status', 'favorite_count'],
+  'requires' :  '$and', 
+  'conditions'   : [
+    {
+      'operator' : '$gt',
+      'value' : 5
+    },
+    {
+      'operator' : '$lt',
+      'value' : 200
+    }
   ]})/;
 
 
