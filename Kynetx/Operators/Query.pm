@@ -120,7 +120,7 @@ sub optimized_hash_query {
         #$logger->debug("Query found : ", sub {Dumper($results)});
         if (defined $results) {
           foreach my $val (@{$results}) {
-            $logger->debug($val->{'hashkey'});
+            $logger->debug(@{$val->{'hashkey'}});
           }
         }
       }
