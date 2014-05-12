@@ -140,16 +140,12 @@ sub _parse_results {
     my @key = @{$val->{'hashkey'}}[0 .. $index];
     $matches->{@key}++;
   }
-  $logger->debug("Keys: ", sub {Dumper(keys %{$matches})});
   if ($type eq '$and') {
     $target = unique_conditions($conditions);
   }
   my @results;
-  $logger->debug("Target: $target");
   foreach my $match (keys %{$matches}) {
-    my $num = $matches->{$match};
-    $logger->debug("Target: $target num: $num");
-    if ( $num >= $target) {
+    if ($matches->{$match} >= $target) {
       push(@results,$match)
     }
   }
@@ -165,11 +161,9 @@ sub condition_signature {
 
 sub unique_conditions {
   my ($conditions) = @_;
-  my $logger = get_logger();
-  $logger->debug("unique: ", sub {Dumper($conditions)});
   my $count;
-  foreach my $cond (@{$conditions->{'conditions'}}) {
-    $count->{condition_signature($cond)}++;
+  foreach my $cond (@{$conditions}) {
+    $count->{condition_signature($cond)} ++;
   }
   return scalar keys %{$count};
 }
