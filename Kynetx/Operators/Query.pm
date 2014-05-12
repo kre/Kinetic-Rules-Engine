@@ -141,6 +141,9 @@ sub do_queries {
     my $key = {'$and' => $base};
     my $query = Kynetx::MongoDB::get_list($collection,$key);
     $logger->debug("Found: ", scalar @{$query},sub {Dumper $condition});
+    if (scalar @{$query} == 1) {
+      $logger->debug("Single: ", sub {Dumper($query)});
+    }
     my $temp = "";
     foreach my $result (@{$query}) {
       my @path = @{$result->{'hashkey'}}[0 .. $index];
