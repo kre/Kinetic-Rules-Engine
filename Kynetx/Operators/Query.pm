@@ -137,7 +137,7 @@ sub do_queries {
   
 }
 
-sub _conditions_key {
+sub add_conditions_key {
   my ($base,$cond) = @_;
   my $logger = get_logger();
   my @c;    
