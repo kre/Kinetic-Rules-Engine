@@ -164,7 +164,7 @@ sub unique_conditions {
   my $logger = get_logger();
   $logger->debug("unique: ", sub {Dumper($conditions)});
   my $count;
-  foreach my $cond (@{$conditions}) {
+  foreach my $cond (@{$conditions->{'conditions'}}) {
     $count->{condition_signature($cond)}++;
   }
   return scalar keys %{$count};
