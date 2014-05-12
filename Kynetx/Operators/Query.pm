@@ -123,10 +123,10 @@ sub optimized_hash_query {
           my $prune = scalar @{_search_key($c_den)};
           foreach my $val (@{$results}) {
             $logger->debug(@{$val->{'hashkey'}}); 
-            my $index = scalar @{$val->{'hashkey'}} - $prune ;      
+            my $index = scalar @{$val->{'hashkey'}} - $prune -1;      
             my @path = @{$val->{'hashkey'}}[0,$index];
             $logger->debug("Path: $index ",@path); 
-            push(@r,@path);
+            push(@r,\@path);
           }
           return \@r;                  
         
