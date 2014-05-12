@@ -140,18 +140,10 @@ sub do_queries {
     add_conditions_key($base,$condition);
     my $key = {'$and' => $base};
     my $query = Kynetx::MongoDB::get_list($collection,$key);
-    $logger->debug("Found: ", scalar @{$query},sub {Dumper $condition});
-    if (scalar @{$query} == 1) {
-      $logger->debug("Single: ", sub {Dumper($query)});
-    }
-    my $temp = "";
     foreach my $result (@{$query}) {
-      my @path = @{$result->{'hashkey'}}[0 .. $index];
-      my $sig = _signature(\@path);
-      $count->{$sig}++;
-      $temp .= $sig . " ";
-    }
-    $logger->debug("Sigs: $temp");
+      my @path = @{$result->{'hashkey'}}[0 .. $index];      
+      $count->{_signature(\@path)}++;     
+    }    
   }
   $logger->debug("Count: ", sub {Dumper($count)});
   my $target = scalar @{$c_den->{'conditions'}};
