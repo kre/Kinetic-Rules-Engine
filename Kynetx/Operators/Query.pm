@@ -152,6 +152,9 @@ sub _base_key {
         $collection = +Kynetx::Persistence::Application::COLLECTION;
   }
   push(@r_conditions, $root);
+  if (ref $base_path eq "ARRAY" && (scalar @{$base_path} >0)){
+    push(@r_conditions,{'hashkey' => {'$all' => $base_path}});
+  }
   push(@r_conditions,_conditions_key($conditions));
   my $key = {'$and' => \@r_conditions};
   return ($collection,$key);
