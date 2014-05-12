@@ -118,6 +118,11 @@ sub optimized_hash_query {
         my $results = Kynetx::MongoDB::get_list(_base_key($domain,$rid,$ken,\@keypath,$c_den));
         $logger->debug("Query found : ", scalar @{$results});
         #$logger->debug("Query found : ", sub {Dumper($results)});
+        if (defined $results) {
+          foreach $val (@{$results}) {
+            $logger->debug($results->{'hashkey'});
+          }
+        }
       }
   }
   $logger->warn("Bad format in query expression");
