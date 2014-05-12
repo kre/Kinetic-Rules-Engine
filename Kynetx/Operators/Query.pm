@@ -124,7 +124,7 @@ sub optimized_hash_query {
           foreach my $val (@{$results}) {
             $logger->debug(@{$val->{'hashkey'}}); 
             my $index = scalar @{$val->{'hashkey'}} - $prune ;      
-            my @path = $val->{'hashkey'}->[0,$index];
+            my @path = @{$val->{'hashkey'}}[0,$index];
             $logger->debug("Path: $index ",@path); 
             push(@r,@path);
           }
