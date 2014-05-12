@@ -127,6 +127,7 @@ sub optimized_hash_query {
 
 sub do_queries {
   my ($domain,$rid,$ken,$keypath,$c_den) = @_;
+  my $logger = get_logger();
   foreach my $condition (@{$c_den->{'conditions'}}) {
     my ($collection,$base) = _base_key($domain,$rid,$ken,$keypath);
     add_conditions_key($base,$condition);
