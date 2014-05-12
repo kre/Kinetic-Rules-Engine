@@ -179,7 +179,7 @@ my $op_expr =q/ent:searchkey.query([],{
       'search_key' : ['retweeted_status','retweet_count'],
       'operator' : '$gt',
       'value' : 4000
-    },
+    }
   ]})/;
 
 test_operator($op_expr,undef,1);
