@@ -144,8 +144,11 @@ sub _parse_results {
     $target = unique_conditions($conditions);
   }
   my @results;
+  
   foreach my $match (keys %{$matches}) {
-    if ($matches->{$match} >= $target) {
+    my $num = $matches->{$match};
+    $logger->debug("Num: $num Target: $target");
+    if ( $num >= $target) {
       push(@results,$match)
     }
   }
