@@ -177,7 +177,7 @@ sub _conditions_key {
     my @c;    
     my $type = $conditions->{'requires'};
     foreach my $cond (@{$conditions->{'conditions'}}){      
-      my $skey = $conditions->{'search_key'};
+      my $skey = $cond->{'search_key'};
       my $operator = $cond->{'operator'};
       my $value = $cond->{'value'};
       push(@c,{'hashkey' => {'$all' => $skey}});
