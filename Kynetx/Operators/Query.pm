@@ -162,7 +162,7 @@ sub condition_signature {
 sub unique_conditions {
   my ($conditions) = @_;
   my $count;
-  foreach my $cond (@{$conditions}) {
+  foreach my $cond (@{$conditions->{'conditions'}}) {
     $count->{condition_signature($cond)} ++;
   }
   return scalar keys %{$count};
