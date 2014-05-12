@@ -115,19 +115,38 @@ sub optimized_hash_query {
         my $c_den = Kynetx::Expressions::den_to_exp($c_obj);
         $logger->debug("Denoted: ", sub {Dumper($c_den)});
         my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-        my $results = Kynetx::MongoDB::get_list(_base_key($domain,$rid,$ken,\@keypath,$c_den));
-        $logger->debug("Query found : ", scalar @{$results});
-        #$logger->debug("Query found : ", sub {Dumper($results)});
-        if (defined $results) {
-          return _parse_results($results,\@keypath,$c_den);                
+        my $results = do_queries($domain,$rid,$ken,\@keypath,$c_den);
+        #my $results = Kynetx::MongoDB::get_list(_base_key($domain,$rid,$ken,\@keypath,$c_den));
         
-        }
       }
   }
   $logger->warn("Bad format in query expression");
   return undef;
 
 }
+
+sub do_queries {
+  my ($domain,$rid,$ken,$keypath,$c_den) = @_;
+  foreach my $condition (@{$c_den->{'conditions'}}) {
+    my ($collection,$base) = _base_key($domain,$rid,$ken,$keypath);
+    add_conditions_key($base,$condition);
+    my $query = Kynetx::MongoDB::get_list($collection,$base);
+    $logger->debug("Found: ", scalar @{$query},sub {Dumper $condition});
+  }
+  
+}
+
+sub _conditions_key {
+  my ($base,$cond) = @_;
+  my $logger = get_logger();
+  my @c;    
+  my $skey = $cond->{'search_key'};
+  my $operator = $cond->{'operator'};
+  my $value = $cond->{'value'};
+  push(@{$base},{'hashkey' => {'$all' => $skey}});
+  push(@{$base},{'value' => {$operator => $value}});
+}
+
 
 sub _parse_results {
   my ($results,$keypath,$conditions) = @_;
@@ -179,7 +198,7 @@ sub unique_conditions {
 }
 
 sub _base_key {
-  my ($domain,$rid,$ken,$base_path,$conditions) = @_;
+  my ($domain,$rid,$ken,$base_path) = @_;
   my $logger = get_logger();
   $rid = Kynetx::Rids::get_rid($rid);
   my $root;
@@ -203,33 +222,9 @@ sub _base_key {
   if (ref $base_path eq "ARRAY" && (scalar @{$base_path} >0)){
     push(@r_conditions,{'hashkey' => {'$all' => $base_path}});
   }
-  push(@r_conditions,_conditions_key($conditions));
-  my $key = {'$and' => \@r_conditions};
-  return ($collection,$key);
-
+  return ($collection,\@r_conditions);
 }
 
-sub _conditions_key {
-  my ($conditions) = @_;
-  my $logger = get_logger();
-  $logger->debug("Conditions: ", sub {Dumper($conditions)});
-  if (ref $conditions eq "HASH") {
-    my @c;    
-    my $type = $conditions->{'requires'};
-    foreach my $cond (@{$conditions->{'conditions'}}){      
-      my $skey = $cond->{'search_key'};
-      my $operator = $cond->{'operator'};
-      my $value = $cond->{'value'};
-      push(@c,{'hashkey' => {'$all' => $skey}});
-      push(@c,{'value' => {$operator => $value}});
-      
-    }
-    my $key = {'$or' => \@c};
-    return $key;
-    
-  }
-  return 1;
-}
 
 sub _search_key {
   my ($conditions) = @_;
