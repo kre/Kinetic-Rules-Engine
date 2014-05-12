@@ -138,7 +138,7 @@ sub _parse_results {
     my $path = $val->{'hashkey'};
     my $index = scalar @{$path};
     my @key = @{$val->{'hashkey'}}[0 .. $index];
-    $matches->{join('_,_'@key)}++;
+    $matches->{join('_,_',@key)}++;
   }
   $logger->debug("Matches: ", sub {Dumper($matches)});
   if ($type eq '$and') {
