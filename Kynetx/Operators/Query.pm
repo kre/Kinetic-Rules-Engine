@@ -168,7 +168,7 @@ sub _conditions_key {
   if (ref $conditions eq "HASH") {
     my @c;    
     my $type = $conditions->{'requires'};
-    foreach my $cond (@{$conditions->{'conditions'}}){      
+    foreach my $cond (){      
       my $skey = $cond->{'search_key'};
       my $operator = $cond->{'operator'};
       my $value = $cond->{'value'};
