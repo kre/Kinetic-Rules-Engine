@@ -174,10 +174,10 @@ sub _conditions_key {
   my $logger = get_logger();
   $logger->debug("Conditions: ", sub {Dumper($conditions)});
   if (ref $conditions eq "HASH") {
-    my @c;
-    my $skey = $conditions->{'search_key'};
+    my @c;    
     my $type = $conditions->{'requires'};
     foreach my $cond (@{$conditions->{'conditions'}}){      
+      my $skey = $conditions->{'search_key'};
       my $operator = $cond->{'operator'};
       my $value = $cond->{'value'};
       push(@c,{'hashkey' => {'$all' => $skey}});
