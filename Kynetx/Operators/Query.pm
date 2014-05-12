@@ -117,6 +117,8 @@ sub optimized_hash_query {
         my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
         my $results = do_queries($domain,$rid,$ken,\@keypath,$c_den);
         #my $results = Kynetx::MongoDB::get_list(_base_key($domain,$rid,$ken,\@keypath,$c_den));
+        $logger->debug("Results: ", sub {Dumper($results)});
+        return $results;
         
       }
   }
