@@ -135,11 +135,14 @@ sub _parse_results {
   my $matches;
   my $target = 1;
   my $type = $conditions->{'requires'};
+  my $index = 0;
+  if (defined $keypath && ref $keypath eq "ARRAY") {
+    $index = scalar @{$keypath};
+  }
   $logger->debug("Keypath: ", sub {Dumper($keypath)});
   foreach my $val (@{$results}) {
-    my $path = $val->{'hashkey'};
-    my $index = scalar @{$path};
-    my @key = @{$val->{'hashkey'}}[0 .. $index];    
+    my $path = $val->{'hashkey'};    
+    my @key = @{$path}[0 .. $index];    
     my $key = join('_,_',@key);
     $matches->{$key}++;
   }  
@@ -149,6 +152,7 @@ sub _parse_results {
   }
   my @results;
   foreach my $match (keys %{$matches}) {
+    $logger->debug("Num: $matches->{$match} target: $target");
     if ($matches->{$match} >= $target) {
       push(@results,$match)
     }
