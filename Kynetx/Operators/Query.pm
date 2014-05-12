@@ -155,6 +155,7 @@ sub _parse_results {
     $logger->debug("Num: $matches->{$match} target: $target");
     if ($matches->{$match} >= $target) {
       my @key = split(/_,_/,$match);
+      $logger->debug("Key: ", sub {Dumper(@key)});
       push(@results,\@key);
     }
   }
