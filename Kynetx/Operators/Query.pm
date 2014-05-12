@@ -141,7 +141,7 @@ sub _parse_results {
     my $key = join('_,_',@key);
     $matches->{$key}++;
   }
-  #$logger->debug("Matches: ", sub {Dumper($matches)});
+  $logger->debug("Matches: ", sub {Dumper($matches)});
   if ($type eq '$and') {
     $target = unique_conditions($conditions);
   }
