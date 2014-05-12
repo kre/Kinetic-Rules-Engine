@@ -129,6 +129,50 @@ sub optimized_hash_query {
 
 }
 
+sub _parse_results {
+  my ($results,$keypath,$conditions) = @_;
+  my $matches;
+  my $target = 1;
+  my $type = $conditions->{'requires'};
+  foreach my $val (@{$results}) {
+    my $path = $val->{'hashkey'};
+    my $index = scalar @{$path};
+    my @key = @{$val->{'hashkey'}}[0 .. $index];
+    $matches->{@key}++;
+  }
+  $logger->debug("Keys: ", sub {Dumper(keys %{$matches})});
+  if ($type eq '$and') {
+    $target = unique_conditions($conditions);
+  }
+  my @results;
+  $logger->debug("Target: $target");
+  foreach my $match (keys %{$matches}) {
+    my $num = $matches->{$match};
+    $logger->debug("Target: $target num: $num");
+    if ( $num >= $target) {
+      push(@results,$match)
+    }
+  }
+  return \@results;
+}
+
+sub condition_signature {
+  my ($condition) = @_;
+  my $path = $condition->{'search_key'};
+  my $key = join("--",@{$path});
+  return $key;
+}
+
+sub unique_conditions {
+  my ($conditions) = @_;
+  my $logger = get_logger();
+  $logger->debug("unique: ", sub {Dumper($conditions)});
+  my $count;
+  foreach my $cond (@{$conditions->{'conditions'}}) {
+    $count->{condition_signature($cond)}++;
+  }
+  return scalar keys %{$count};
+}
 
 sub _base_key {
   my ($domain,$rid,$ken,$base_path,$conditions) = @_;
@@ -168,7 +212,7 @@ sub _conditions_key {
   if (ref $conditions eq "HASH") {
     my @c;    
     my $type = $conditions->{'requires'};
-    foreach my $cond (){      
+    foreach my $cond (@{$conditions->{'conditions'}}){      
       my $skey = $cond->{'search_key'};
       my $operator = $cond->{'operator'};
       my $value = $cond->{'value'};
@@ -182,44 +226,6 @@ sub _conditions_key {
   }
   return 1;
 }
-
-sub _parse_results {
-  my ($results,$keypath,$conditions) = @_;
-  my $matches;
-  my $target = 1;
-  my $type = $conditions->{'requires'};
-  foreach my $val (@{$results}) {
-    my $path = $val->{'hashkey'};
-    my $index = scalar @{$path};
-    my @key = @{$val->{'hashkey'}}[0 .. $index];
-    $logger->debug("Key: ", sub {Dumper(@key)});
-  }
-  $logger->debug("Matches: ", sub {Dumper($matches)});
-  if ($type eq '$and') {
-    $target = unique_conditions($conditions);
-  }
-  my @results;
-  return \@results;
-}
-
-sub condition_signature {
-  my ($condition) = @_;
-  my $path = $condition->{'search_key'};
-  my $key = join("--",@{$path});
-  return $key;
-}
-
-sub unique_conditions {
-  my ($conditions) = @_;
-  my $logger = get_logger();
-  $logger->debug("unique: ", sub {Dumper($conditions)});
-  my $count;
-  foreach my $cond (@{$conditions->{'conditions'}}) {
-    $count->{condition_signature($cond)}++;
-  }
-  return scalar keys %{$count};
-}
-
 
 sub _search_key {
   my ($conditions) = @_;
