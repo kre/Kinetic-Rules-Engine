@@ -137,7 +137,17 @@ $test_count++;
 #  {'bar' : time:now()}
 #]})/;
 
-my $op_expr =q/ent:searchkey.query([],{'$and' : [
+#my $op_expr =q/ent:searchkey.query([],{'$and' : [
+#  {'search_key' : ['retweeted_status', 'favorite_count'],
+#    'operator' : '$gt',
+#    'value' : 5
+#  },
+#  {'search_key' : ['retweeted_status', 'favorite_count'],
+#    'operator' : '$lt',
+#    'value' : 200
+#  }
+#  ]})/;
+my $op_expr =q/ent:searchkey.query(['a41'],{'$and' : [
   {'search_key' : ['retweeted_status', 'favorite_count'],
     'operator' : '$gt',
     'value' : 5
@@ -150,6 +160,8 @@ my $op_expr =q/ent:searchkey.query([],{'$and' : [
 
 
 test_operator($op_expr,undef,1);
+
+
 
 
 
