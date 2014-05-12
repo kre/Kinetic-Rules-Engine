@@ -135,6 +135,7 @@ sub _parse_results {
   my $matches;
   my $target = 1;
   my $type = $conditions->{'requires'};
+  $logger->debug("Keypath: ", sub {Dumper($keypath)});
   foreach my $val (@{$results}) {
     my $path = $val->{'hashkey'};
     my $index = scalar @{$path};
