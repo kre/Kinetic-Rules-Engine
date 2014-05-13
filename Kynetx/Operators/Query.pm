@@ -141,6 +141,7 @@ sub do_queries {
     my ($collection,$base) = _base_key($domain,$rid,$ken,$keypath);
     add_conditions_key($base,$condition);
     my $key = {'$and' => $base};
+    $logger->debug("Query $tick using: ",sub {Dumper($key)});
     my $query = Kynetx::MongoDB::get_list($collection,$key);
     $logger->debug("Query $tick complete, found ",scalar @{$query}, " objects");
     foreach my $result (@{$query}) {
