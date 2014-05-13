@@ -115,7 +115,7 @@ sub optimized_hash_query {
         my $c_den = Kynetx::Expressions::den_to_exp($c_obj);
         $logger->debug("Denoted: ", sub {Dumper($c_den)});
         my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-        my $results = do_queries($domain,$rid,$ken,\@keypath,$c_den);
+        my $results = do_queries($domain,$rid,$ken,\@keypath,$expr->{'obj'}->{'name'},$c_den);
         #my $results = Kynetx::MongoDB::get_list(_base_key($domain,$rid,$ken,\@keypath,$c_den));
         $logger->debug("Results: ", sub {Dumper($results)});
         return $results;
@@ -128,7 +128,7 @@ sub optimized_hash_query {
 }
 
 sub do_queries {
-  my ($domain,$rid,$ken,$keypath,$c_den) = @_;
+  my ($domain,$rid,$ken,$keypath,$keyname,$c_den) = @_;
   my $logger = get_logger();
   my $count;
   my $index =0 ;
@@ -138,7 +138,7 @@ sub do_queries {
   $logger->debug("Start queries");
   my $tick = 1;
   foreach my $condition (@{$c_den->{'conditions'}}) {
-    my ($collection,$base) = _base_key($domain,$rid,$ken,$keypath);
+    my ($collection,$base) = _base_key($domain,$rid,$ken,$keypath,$keyname);
     add_conditions_key($base,$condition);
     my $key = {'$and' => $base};
     $logger->debug("Query $tick using: ",sub {Dumper($key)});
@@ -229,7 +229,7 @@ sub unique_conditions {
 }
 
 sub _base_key {
-  my ($domain,$rid,$ken,$base_path) = @_;
+  my ($domain,$rid,$ken,$base_path,$varname) = @_;
   my $logger = get_logger();
   $rid = Kynetx::Rids::get_rid($rid);
   my $root;
@@ -242,11 +242,13 @@ sub _base_key {
   if ($domain eq "ent") {
     $root = {
         "ken" => $ken,
-        "rid" => $rid};
+        "rid" => $rid,
+        "key" => $varname};
     $collection = +Kynetx::Persistence::Entity::COLLECTION;
   } else {
     $root = {
-        "rid" => $rid};
+        "rid" => $rid,
+        "key" => $varname};
         $collection = +Kynetx::Persistence::Application::COLLECTION;
   }
   push(@r_conditions, $root);
