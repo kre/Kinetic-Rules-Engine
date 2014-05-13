@@ -89,7 +89,7 @@ sub optimized_hash_query {
                  $rid,
                  $session,
                  $expr->{'obj'}->{'name'}) || 0;
-  $logger->debug("Found: ", sub {Dumper($p_object)});
+  #$logger->debug("Found: ", sub {Dumper($p_object)});
 
   my $p_rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
   my $path_to_key = $p_rands->[0];
@@ -135,17 +135,21 @@ sub do_queries {
   if (defined $keypath) {
     $index = scalar @{$keypath};
   }
+  $logger->debug("Start queries");
+  my $tick = 1;
   foreach my $condition (@{$c_den->{'conditions'}}) {
     my ($collection,$base) = _base_key($domain,$rid,$ken,$keypath);
     add_conditions_key($base,$condition);
     my $key = {'$and' => $base};
     my $query = Kynetx::MongoDB::get_list($collection,$key);
+    $logger->debug("Query $tick complete, found ",scalar @{$query}, " objects");
     foreach my $result (@{$query}) {
       my @path = @{$result->{'hashkey'}}[0 .. $index];      
       $count->{_signature(\@path)}++;     
-    }    
+    } 
+    $logger->debug("Index ", $tick++, " complete");
   }
-  $logger->debug("Count: ", sub {Dumper($count)});
+  
   my $target = scalar @{$c_den->{'conditions'}};
   my @result;
   foreach my $match (keys %{$count}) {
@@ -153,6 +157,7 @@ sub do_queries {
       push(@result, _path($match))
     }
   }
+  $logger->debug("Search results assembled");
   return \@result;
 }
 
