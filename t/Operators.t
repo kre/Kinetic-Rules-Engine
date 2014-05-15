@@ -24,7 +24,7 @@ use strict;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 #Log::Log4perl->easy_init($TRACE);
 
 use Test::More;
@@ -49,6 +49,7 @@ use Kynetx::Expressions qw/:all/;
 use Kynetx::Environments qw/:all/;
 use Kynetx::FakeReq qw/:all/;
 use Kynetx::Memcached;
+
 
 
 $Data::Dumper::Indent = 1;
@@ -271,7 +272,7 @@ sub test_operator {
     $v = Kynetx::Parser::parse_expr($e);
     diag "Parsed expr: ", Dumper($v) if $d;
 
-    $r = eval_expr($v, $rule_env, $rule_name,$req_info);
+    $r = eval_expr($v, $rule_env, $rule_name,$req_info, $session);
     diag "Expect: ", Dumper($x) if $d;
     diag "Result: ", Dumper($r) if $d;
     my $result = cmp_deeply($r, $x, "Trying $e");   
@@ -2839,9 +2840,10 @@ $i++;
 ENDY:
 
 
+
 # now run the tests....
 my $l = scalar @e;
-plan tests => $l;
+plan tests => $l+6; # bump for persistent tests below that run after these
 
 my $j;
 for ($j = 0; $j < $i; $j++) {
@@ -2849,6 +2851,76 @@ for ($j = 0; $j < $i; $j++) {
 }
 
 
+#---------- set persistent ----------
+my ($v, $r, $p, $x);
+
+$e[$i] = q#a.pset(ent:foo)#;
+$v = Kynetx::Parser::parse_expr($e[$i]);
+#diag Dumper $v;
+$p = $v->{"args"}->[0];
+Kynetx::Persistence::delete_persistent_var($p->{"domain"}, $rid, $session, $p->{"name"});
+
+$r = eval_expr($p, $rule_env, $rule_name,$req_info, $session);
+$x = {
+   'val' => 0,
+   'type' => 'num'
+};
+#diag Dumper $r;
+cmp_deeply($r, $x, "Ensure persistent is cleared");   
+
+$x[$i] = {
+   'val' => 10,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+test_operator($e[$i], $x[$i], $d[$i]);
+
+# test persistent is OK
+
+
+$r = eval_expr($p, $rule_env, $rule_name,$req_info, $session);
+cmp_deeply($r, $x[$i], "Ensure persistent is set");   
+#diag Dumper $r;
+
+$i+=3;
+
+
+#---------- set persistent hash ----------
+my ($v, $r, $p, $x);
+
+#diag "---------------------- persistent hash ----------------";
+$e[$i] = q#a.pset(ent:foo{["flip"]})#;
+$v = Kynetx::Parser::parse_expr($e[$i]);
+#diag Dumper $v;
+$p = $v->{"args"}->[0];
+my $path_r = $p->{'hash_key'};
+my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $path_r);
+
+Kynetx::Persistence::delete_persistent_hash_element($p->{"domain"}, $rid, $session, $p->{"name"}, $path);
+
+$r = eval_expr($p, $rule_env, $rule_name,$req_info, $session);
+$x = {
+   'val' => undef,
+   'type' => "null"
+};
+#diag Dumper $r;
+cmp_deeply($r, $x, "Ensure persistent is cleared");   
+
+$x[$i] = {
+   'val' => 10,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+test_operator($e[$i], $x[$i], $d[$i]);
+
+# test persistent is OK
+
+
+$r = eval_expr($p, $rule_env, $rule_name,$req_info, $session);
+cmp_deeply($r, $x[$i], "Ensure persistent is set");   
+#diag Dumper $r;
+
+$i+=3;
 
 
 

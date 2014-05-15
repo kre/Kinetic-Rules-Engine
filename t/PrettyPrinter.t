@@ -47,6 +47,7 @@ my $logger = get_logger();
 
 my $skip = {"data/events12.krl" => 1,
 	    "data/events13.krl" => 1,
+	    "data/operator2.krl" => 1,
 	   };
 
 

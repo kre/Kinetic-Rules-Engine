@@ -2126,6 +2126,63 @@ sub eval_log {
 $funcs->{'klog'} = \&eval_log;
 
 
+#------------------------------------------------------------------------
+# persistence 
+#------------------------------------------------------------------------
+sub eval_set {
+  my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+  my $logger = get_logger();
+  my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+  my $val = Kynetx::Expressions::den_to_exp($obj);
+  my $name = $expr->{"args"}->[0]->{'name'} || $expr->{"args"}->[0]->{'var_expr'};
+  my $domain = $expr->{"args"}->[0]->{'domain'};
+
+  #### Persistent setter
+  $logger->debug( "expr: ", sub { Dumper($expr) });
+
+  if (! defined $val) {
+      $logger->error("Hash Operation error: $name; Value may not be null (use clear to remove key) ");
+      return $obj;
+  }
+
+
+  if (! $expr->{"args"}->[0]->{"type"} eq "persistent") {
+      $logger->error("pset error: argument must be a persistent ");
+      return $obj;
+  }
+
+
+  $logger->debug( "Set value ", $name, " to $val" );
+  if (Kynetx::MongoDB::validate($val)) {
+      if (defined $expr->{"args"}->[0]->{'hash_key'}) {
+	  my $path_r = $expr->{"args"}->[0]->{'hash_key'};
+	  my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $path_r);
+	  if (! defined $path) {
+	      $logger->error("Hash key for $name is undefined");
+	      return $obj;
+	  }
+	  $logger->debug("Saving to persistent hash $name", sub{Dumper $path});
+	  Kynetx::Persistence::save_persistent_hash_element(
+							    $domain,
+							    Kynetx::Rids::get_rid($req_info->{'rid'}),
+							    $session,
+							    $name,
+							    $path,
+							    $val
+							   );
+      } else {
+	  Kynetx::Persistence::save_persistent_var($domain, Kynetx::Rids::get_rid($req_info->{'rid'}), $session, $name, $val );
+      }
+  } else {
+      $logger->error("Hash Operation error: $name is too large");
+      return $obj;
+  }
+
+  return $obj; #pass thru unchanged
+            
+}
+$funcs->{'pset'} = \&eval_set;
+ 
 
 #-----------------------------------------------------------------------------------
 # make it all happen
