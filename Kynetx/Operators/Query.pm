@@ -25,6 +25,7 @@ use strict;
 use HTML::Query qw(Query);
 use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper;
+use Data::Diver qw(Dive);
 use Storable qw(dclone);
 
 use Kynetx::Expressions;
@@ -94,6 +95,7 @@ sub optimized_hash_query {
   my $p_rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
   my $path_to_key = $p_rands->[0];
   my $conditions = $p_rands->[1];
+  my $expand = $p_rands->[2];
   $logger->debug("Path: ",ref $path_to_key);
   $logger->debug("Conditions: ",ref $conditions);
   $logger->debug("rands: ", sub {Dumper($p_rands)});
@@ -118,7 +120,16 @@ sub optimized_hash_query {
         my $results = do_queries($domain,$rid,$ken,\@keypath,$expr->{'obj'}->{'name'},$c_den);
         #my $results = Kynetx::MongoDB::get_list(_base_key($domain,$rid,$ken,\@keypath,$c_den));
         $logger->debug("Results: ", sub {Dumper($results)});
-        return $results;
+        if ($expand) {
+            my @list = ();
+            foreach my $path (@{$results}) {
+                my $val = Dive($p_object,@{$path});
+                push(@list,$val);
+            }
+            return \@list;
+        } else {
+            return $results;
+        }
         
       }
   }
