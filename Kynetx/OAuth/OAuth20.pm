@@ -157,7 +157,7 @@ sub workflow {
   if ($session_token) {
     $session_id = get_session_id($session);
     $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($session_token);
-    $logger->debug("Ken: $ken");
+#    $logger->debug("Ken: $ken");
     $logger->debug("session id: $session_id");
   }
   if ($method eq 'oauth') {
@@ -261,7 +261,7 @@ sub workflow {
       $logger->trace("HASH: ", sub {Dumper($json)});
       return $json;
   } elsif ($method eq 'create') {   
-      $logger->debug("Creating account for ", sub{Dumper $params});
+#      $logger->debug("Creating account for ", sub{Dumper $params});
       $ken = create_account($params);
       if ($ken) {
         $template->param("DIALOG" => profile_page($ken,undef,$session_id));
@@ -288,7 +288,7 @@ sub workflow {
   } elsif ($method eq 'local') {
     if ($path eq 'auth') {
       $ken = _signin($session,$params);
-      $logger->debug("Ken: ", sub{Dumper $ken});
+#      $logger->debug("Ken: ", sub{Dumper $ken});
       if ($ken) {
         $template->param("DIALOG" => profile_page($ken,undef,$session_id));
       } else {
@@ -355,7 +355,7 @@ sub set_profile {
   $logger->trace("        Ken: $ken");
   $logger->trace("Session Ken: $session_ken");
   if ($session_ken eq $ken) {
-    $logger->debug("params: ",sub {Dumper($params)});
+#    $logger->debug("params: ",sub {Dumper($params)});
     my @update_allowed = ('first_name', 'last_name', 'email');
     foreach my $element (@update_allowed) {
       my $string = $element;
@@ -462,7 +462,7 @@ sub create_account {
 sub _oauth_token {
   my ($ken,$params) = @_;
   my $logger = get_logger();
-  $logger->debug("Params: ",sub {Dumper($params)});
+#  $logger->debug("Params: ",sub {Dumper($params)});
   my $developer_eci =  $params->{'developer_eci'};
   my $etype = "OAUTH-$developer_eci";
   my $var = {
@@ -471,7 +471,7 @@ sub _oauth_token {
   };
   $logger->debug("Key: ", sub {Dumper($var)});
   my $token = Kynetx::Persistence::KToken::token_query($var);
-  $logger->debug("token: ", sub {Dumper($token)});
+#  $logger->debug("token: ", sub {Dumper($token)});
   if ($token) {
     return $token->{"token_name"};
   }
@@ -525,7 +525,7 @@ sub _logged_in {
   my $logger = get_logger();
   $logger->debug("get token for $session");
   my $token = Kynetx::Persistence::KToken::get_token($session,undef,"web");
-  $logger->debug("get token: ", sub {Dumper($token)});
+#  $logger->debug("get token: ", sub {Dumper($token)});
   if (defined $token && ref $token eq "HASH") {
     return $token->{'ktoken'}
   }
@@ -535,10 +535,10 @@ sub _logged_in {
 sub create_login_token {
   my ($session,$ken) = @_;
   my $logger = get_logger();
-  $logger->debug("Ken: $ken ", sub {Dumper($session)});
+#  $logger->debug("Ken: $ken ", sub {Dumper($session)});
   Kynetx::Persistence::KToken::delete_token(undef,get_session_id($session));
   my $token = Kynetx::Persistence::KToken::create_token($ken,LOGIN_TAG,"KMCP",$session);
-  $logger->debug("Made token: ", sub {Dumper($token)});
+#  $logger->debug("Made token: ", sub {Dumper($token)});
   return $token;  
 }
 
@@ -646,10 +646,10 @@ sub _signin {
 	my $username = $params->{'user'};
 	my $password = $params->{'pass'};
 	$logger->debug("User: ", $username);
-	$logger->debug("Password: ",$password);
+#	$logger->debug("Password: ",$password);
 	my $ken = _validate_password($username,$password);
 	if ($ken) {
-	  $logger->debug("Found user ken ($ken)");
+#	  $logger->debug("Found user ken ($ken)");
 	  create_login_token($session,$ken);
 	  return $ken;
 	} else {
