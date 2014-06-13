@@ -168,6 +168,7 @@ sub code_request {
   
   my $rparams;
   my $oauth_handler = Kynetx::Configure::get_config("oauth_server")->{"auth_ruleset"};
+  $oauth_handler =~ s!/*$!/!; # Add a trailing slash  
   $rparams->{'kvars'} = '{}';
   $rparams->{'uri_redirect'} = uri_unescape($redirect);
   $rparams->{'developer_eci'} = $client_id;

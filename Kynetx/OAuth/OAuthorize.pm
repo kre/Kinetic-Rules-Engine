@@ -127,6 +127,7 @@ sub handler {
       return Apache2::Const::HTTP_BAD_REQUEST unless $uri_match;
     }
     my $oauth_handler = Kynetx::Configure::get_config("oauth_server")->{"auth_ruleset"};
+    $oauth_handler =~ s!/*$!/!; # Add a trailing slash  
     $rparams->{'kvars'} = '{}';
     $rparams->{'uri_redirect'} = $plain_redirect;
     $rparams->{'developer_eci'} = $client_id;

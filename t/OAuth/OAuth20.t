@@ -395,7 +395,7 @@ $description = "Bad redirect URI";
 $bad_oauth_request = test_request_url($client_id,$response_type,$state,"http://www.foo.com/");
 $expected = Apache2::Const::HTTP_BAD_REQUEST;
 $result = $ua->get($bad_oauth_request);
-cmp_deeply($result->code(),$expected,$description);
+cmp_deeply(int $result->code(),$expected,$description);
 $test_count++;
 
 $ua->max_redirect(0);

@@ -234,7 +234,7 @@ sub get_ken_value {
     my $logger = get_logger();
     my $oid = MongoDB::OID->new(value => $ken);
     my $valid = Kynetx::MongoDB::get_singleton(COLLECTION,{"_id" => $oid});
-    $logger->trace("Ken: ", sub {Dumper($valid)});
+#    $logger->debug("Ken: ", sub {Dumper($valid)});
     return $valid->{$key};
 }
 
@@ -251,6 +251,7 @@ sub set_ken_value {
 	  'query' => $key,
 	  'update' => $update	  
 	};
+  $logger->debug("Setting ", sub{Dumper $fnmod});
   my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod,1);          
 	if (defined $result->{"value"}) {
 	  Kynetx::MongoDB::clear_cache(COLLECTION,$key);

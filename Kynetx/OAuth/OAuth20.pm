@@ -66,6 +66,8 @@ use constant LOGIN_TAG => "__login__";
 use constant DEFAULT_RULESET => [
   'a169x625.prod'
 ];
+use constant DEFAULT_LOGO => "https://s3.amazonaws.com/Fuse_assets/img/fuse_logo-40.png";
+
 
 my $unsafe_global;
 
@@ -90,6 +92,7 @@ sub handler {
     $logger->debug("OAuth2.0 Main");
     $logger->debug("Session: ", sub {Dumper($session)});
     #Kynetx::Util::request_dump($r);
+    $logger->debug("Path info ", sub{Dumper $r->path_info()});
     my ($method,$path) = $r->path_info() =~ m!/([a-z+_]+)/*(.*)!;
     my $req = Apache2::Request->new($r);
     my $p = $req->param();    
@@ -258,6 +261,7 @@ sub workflow {
       $logger->trace("HASH: ", sub {Dumper($json)});
       return $json;
   } elsif ($method eq 'create') {   
+      $logger->debug("Creating account for ", sub{Dumper $params});
       $ken = create_account($params);
       if ($ken) {
         $template->param("DIALOG" => profile_page($ken,undef,$session_id));
@@ -271,8 +275,9 @@ sub workflow {
     if ($session_token) {
       Kynetx::Persistence::KToken::delete_token($session_token,get_session_id($session));
       my $location = _platform() . '/login';
-      return $location;
+#      return $location;
     }
+    $template->param("DIALOG" => native_login($params));
   } elsif ($method eq 'update') {
     if ($ken) {
       set_profile($ken,$params);
@@ -283,6 +288,7 @@ sub workflow {
   } elsif ($method eq 'local') {
     if ($path eq 'auth') {
       $ken = _signin($session,$params);
+      $logger->debug("Ken: ", sub{Dumper $ken});
       if ($ken) {
         $template->param("DIALOG" => profile_page($ken,undef,$session_id));
       } else {
@@ -310,24 +316,33 @@ sub oauth_account {
   my ($params) = @_;
   my $logger = get_logger();
   $logger->debug("OAuth account page: ");
-  my $template = DEFAULT_TEMPLATE_DIR . "/login/oauth_create.tmpl";
-	my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
-	my $developer_eci = $params->{'developer_eci'};
-	my $state = $params->{'client_state'};
-	my $redirect = $params->{'uri_redirect'};
-	my $base = Kynetx::Configure::get_config('oauth_server')->{'authorize'} || "oauth_not_configured";
-	my $login_url = Kynetx::Util::mk_url($base, {
-	 'client_id' => $developer_eci,
-	 'response_type' => 'code',
-	 'state' => $state,
-	 'redirect_uri' => $redirect 
-	}	);
-	$dialog->param('PLATFORM' => _platform());
-	$dialog->param('ECI' => $developer_eci );
-	$dialog->param('STATE' =>  $state);
-	$dialog->param('REDIRECT' =>  $redirect);
-	$dialog->param("OAUTH_LOGIN_LINK" => $login_url);
-	return $dialog->output();
+  my $template = DEFAULT_TEMPLATE_DIR . "/login/create.tmpl";
+  my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+  my $eci = $params->{'developer_eci'};
+  my $state = $params->{'client_state'};
+  my $redirect = $params->{'uri_redirect'};
+  my $base = Kynetx::Configure::get_config('oauth_server')->{'authorize'} || "oauth_not_configured";
+  my $login_url = Kynetx::Util::mk_url($base, {
+					       'client_id' => $eci,
+					       'response_type' => 'code',
+					       'state' => $state,
+					       'redirect_uri' => $redirect 
+					      }	
+				      );
+  $dialog->param('PLATFORM' => _platform());
+  $dialog->param('ECI' => $eci );
+  $dialog->param('STATE' =>  $state);
+  $dialog->param('REDIRECT' =>  $redirect);
+  $dialog->param("LOGIN_URL" => $login_url);
+  $dialog->param('HIDDEN_FIELDS' => <<_EOF_
+           <input type="hidden" name="developer_eci" value="$eci" >
+   	   <input type="hidden" name="client_state" value="$state" >
+  	   <input type="hidden" name="uri_redirect" value="$redirect" >
+_EOF_
+		);
+  $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  $dialog->param('FORM_URL' => _platform() . "/login/oauth/create");
+  return $dialog->output();
 }
 
 
@@ -340,7 +355,7 @@ sub set_profile {
   $logger->trace("        Ken: $ken");
   $logger->trace("Session Ken: $session_ken");
   if ($session_ken eq $ken) {
-    $logger->trace("params: ",sub {Dumper($params)});
+    $logger->debug("params: ",sub {Dumper($params)});
     my @update_allowed = ('first_name', 'last_name', 'email');
     foreach my $element (@update_allowed) {
       my $string = $element;
@@ -370,8 +385,8 @@ sub has_bootstrap_ruleset {
   my $dken = Kynetx::Persistence::KEN::ken_lookup_by_token($developer_eci);
   my $list = Kynetx::Persistence::KPDS::get_bootstrap($dken,$developer_eci);
   my $installed = Kynetx::Persistence::KPDS::get_rulesets($ken);
-  $logger->debug("Boot: ", sub {Dumper($list)});
-  $logger->debug("Inst: ", sub {Dumper($installed)});
+  $logger->debug("Bootstrap rulesets: ", sub {Dumper($list)});
+  $logger->debug("Installed: ", sub {Dumper($installed)});
   if (defined $list) {
     if  (Kynetx::Sets::has($list,$installed)) {
       return 1
@@ -411,8 +426,10 @@ sub add_ruleset_to_account {
 sub create_account {
   my ($params) = @_;
   my $logger = get_logger();
-  my $username = $params->{'username'};
+  my $username = $params->{'username'} || $params->{'email'};
   my $password = $params->{'password'};
+  my $firstname = $params->{'first_name'};
+  my $lastname = $params->{'last_name'};
   my $email = $params->{'email'};
   my $type = 'PCI';
   $logger->trace("$username $password $email");
@@ -426,17 +443,17 @@ sub create_account {
     }
     my $created = DateTime->now->epoch;
     my $dflt = {
-      "username" => $username,
-      "firstname" => "",
-      "lastname" => "",
-      "password" => $hash,
-      "created" => $created,
-      "email" => $email
-	    };
-	  $ken = Kynetx::Persistence::KEN::new_ken($dflt);
-	  Kynetx::Persistence::KToken::create_token($ken,"_LOGIN",$type);
-	  add_ruleset_to_account($ken,+DEFAULT_RULESET);	  
-	  return $ken;
+		"username" => $username,
+		"first_name" => $firstname,
+		"last_name" => $lastname,
+		"password" => $hash,
+		"created" => $created,
+		"email" => $email
+	       };
+    $ken = Kynetx::Persistence::KEN::new_ken($dflt);
+    Kynetx::Persistence::KToken::create_token($ken,"_LOGIN",$type);
+    add_ruleset_to_account($ken,+DEFAULT_RULESET);	  
+    return $ken;
   } else {
     return undef;
   }
@@ -466,9 +483,13 @@ sub newaccount {
   my $logger = get_logger();
   $logger->debug("New account page: ");
   my $template = DEFAULT_TEMPLATE_DIR . "/login/create.tmpl";
-	my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
-	$dialog->param('PLATFORM' => _platform());
-	return $dialog->output();
+  my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+  $dialog->param('PLATFORM' => _platform());
+  $dialog->param('HIDDEN_FIELDS' => "");
+  $dialog->param('LOGIN_URL' => _platform() . "/login");
+  $dialog->param('FORM_URL' => _platform() . "/login/create");
+  $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  return $dialog->output();
 }
 
 sub authorize_app {
@@ -477,24 +498,25 @@ sub authorize_app {
   $logger->debug("Present authorization page: ");
   $logger->trace("Params: ", sub {Dumper($params)});
   my $template = DEFAULT_TEMPLATE_DIR . "/login/oapp_auth.tmpl";
-	my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
-	my $developer_eci = $params->{'developer_eci'};
-	my $state = $params->{'client_state'};
-	my $redirect = $params->{'uri_redirect'};
-	my $d_ken = Kynetx::Persistence::KEN::ken_lookup_by_token($developer_eci);
+  my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+  my $developer_eci = $params->{'developer_eci'};
+  my $state = $params->{'client_state'};
+  my $redirect = $params->{'uri_redirect'};
+  my $d_ken = Kynetx::Persistence::KEN::ken_lookup_by_token($developer_eci);
   my $app_info = Kynetx::Persistence::KPDS::get_app_info($d_ken,$developer_eci);
-	my $username =   Kynetx::Persistence::KEN::get_ken_value($ken,'username');              
+  my $username =   Kynetx::Persistence::KEN::get_ken_value($ken,'username');              
   $dialog->param('USERNAME' => $username );
   $dialog->param('APP_NAME' => $app_info->{'name'});
   $dialog->param('ICON' => $app_info->{'icon'});
   $dialog->param('DESC' => $app_info->{'description'});
   my $info_page = $app_info->{'info_page'} || "#";
   $dialog->param('INFO_PAGE' => $info_page);
-	$dialog->param('ECI' => $developer_eci );
-	$dialog->param('STATE' =>  $state);
-	$dialog->param('REDIRECT' =>  $redirect);
-	$dialog->param('PLATFORM' => _platform());
-	return $dialog->output();
+  $dialog->param('ECI' => $developer_eci );
+  $dialog->param('STATE' =>  $state);
+  $dialog->param('REDIRECT' =>  $redirect);
+  $dialog->param('PLATFORM' => _platform());
+  $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  return $dialog->output();
   
 }
 
@@ -527,33 +549,32 @@ sub profile_page {
   $logger->debug("Profile");
   my $template = DEFAULT_TEMPLATE_DIR . "/login/nprofile.tmpl";
   my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
-	$dialog->param("PLATFORM" => _platform());
-	my $username = Kynetx::Persistence::KEN::get_ken_value($ken,'username');
+  $dialog->param("PLATFORM" => _platform());
+  $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  my $username = Kynetx::Persistence::KEN::get_ken_value($ken,'username');
   $dialog->param("USERNAME" => $username);
-  if ($error) {
-    $dialog->param("PAGEFORM" => page_error($error));
-  } else {
-    $dialog->param("PAGEFORM" => profile_update($ken,$session_id));
-  }
-	$dialog->param('PLATFORM' => _platform());
-	return $dialog->output();
+  $dialog->param("PAGEFORM" => profile_update($ken,$session_id,$error));
+  $dialog->param('PLATFORM' => _platform());
+  return $dialog->output();
 }
 
+# not used...
 sub page_error {
   my ($error) = @_;
   my $logger = get_logger();
   $logger->trace("Profile");
   my $template = DEFAULT_TEMPLATE_DIR . "/login/error.tmpl";
   my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
-	$dialog->param("PLATFORM" => _platform());
+  $dialog->param("PLATFORM" => _platform());
+  $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
   $dialog->param("ERROR_TEXT" => $error);	
-	$dialog->param('PLATFORM' => _platform());
-	return $dialog->output();
+  $dialog->param('PLATFORM' => _platform());
+  return $dialog->output();
 }
 
 
 sub profile_update {
-  my ($ken,$session_id) = @_;
+  my ($ken,$session_id,$error) = @_;
   my $template = DEFAULT_TEMPLATE_DIR . "/login/update_profile.tmpl";
   my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
   my $email = Kynetx::Persistence::KEN::get_ken_value($ken,'email');
@@ -566,24 +587,31 @@ sub profile_update {
   $dialog->param("FNAME" => $fname);
   $dialog->param("LNAME" => $lname);
   $dialog->param('PLATFORM' => _platform());
+  $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  $dialog->param("ERROR_MSG" => $error);
+
   return $dialog->output();
 }
 
 sub native_login {
   my ($params,$error) = @_;
   my $template = DEFAULT_TEMPLATE_DIR . "/login/native_login.tmpl";
-	my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
-	$dialog->param("PLATFORM" => _platform());
-	if ($error) {
-	  my $error_msg = '<strong>' . $error . '</strong>';
-	  $dialog->param("LOGIN_ERROR" => $error_msg);
-	  my $username = $params->{'user'};
-	  if ($username) {
-	    $dialog->param("STICKY_USER" => $username)
-	  }
-	}
-	$dialog->param('PLATFORM' => _platform());
-	return $dialog->output();
+  my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+  $dialog->param("PLATFORM" => _platform());
+  if ($error) {
+      my $error_msg = '<strong>' . $error . '</strong>';
+      $dialog->param("LOGIN_ERROR" => $error_msg);
+      my $username = $params->{'user'};
+      if ($username) {
+	  $dialog->param("STICKY_USER" => $username)
+      }
+  }
+  $dialog->param('PLATFORM' => _platform());
+  $dialog->param('FORM_URL' => _platform() . "/login/local/auth");
+  $dialog->param('HIDDEN_FIELDS' => "");
+  $dialog->param('CREATE_URL' => _platform() . "/login/newaccount");
+  $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  return $dialog->output();
 }
 
 sub oauth_code {
@@ -594,49 +622,6 @@ sub oauth_code {
   return $code;
 }
 
-
-sub oauth_signin_page {
-  my ($session,$params) = @_;
-  my $logger = get_logger();
-  $logger->debug("Present authorization page: ");
-  my $template = DEFAULT_TEMPLATE_DIR . "/login/oauth_signin.tmpl";
-	my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
-	$dialog->param('PLATFORM' => _platform());
-	my $username = $params->{'user'};
-	my $password = $params->{'pass'};
-	$logger->trace("User: ", $username);
-	$logger->trace("Password: ",$password);
-	my $developer_eci = $params->{'developer_eci'};
-	my $state = $params->{'client_state'};
-	my $redirect = $params->{'uri_redirect'};
-	my $d_ken = Kynetx::Persistence::KEN::ken_lookup_by_token($developer_eci);
-	my $ken;
-	
-	if (my $login_token = _logged_in($session)) {
-	  $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($login_token);
-	} else {
-	  $ken = _authenticate($username,$password);
-	}
-	if ($ken) {
-	  	  
-	  my $app_info = Kynetx::Persistence::KPDS::get_app_info($d_ken,$developer_eci);
-	                 
-	  $dialog->param('USERNAME' => $username );
-	  $dialog->param('APP_NAME' => $app_info->{'name'});
-	  $dialog->param('ICON' => $app_info->{'icon'});
-	  $dialog->param('DESC' => $app_info->{'description'});
-	  my $info_page = $app_info->{'info_page'} || "#";
-	  $dialog->param('INFO_PAGE' => $info_page);
-	} else {
-	  my $error = "Bad username/password combination";
-	  return oauth_login_page($params,$error);
-	}
-	$dialog->param('ECI' => $params->{'developer_eci'} );
-	$dialog->param('STATE' =>  $state);
-	$dialog->param('REDIRECT' =>  $redirect);
-	return $dialog->output();
-  
-}
 
 sub _validate_password {
   my ($username,$password) = @_;
@@ -675,26 +660,41 @@ sub _signin {
 
 sub oauth_login_page {
   my ($params,$error) = @_;
-  my $template = DEFAULT_TEMPLATE_DIR . "/login/oauth_login.tmpl";
-	my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
-	$dialog->param('PLATFORM' => _platform());
-	$dialog->param('ECI' => $params->{'developer_eci'} );
-	$dialog->param('STATE' => $params->{'client_state'} );
-	$dialog->param('REDIRECT' => $params->{'uri_redirect'} );
-	my $base = Kynetx::Configure::get_config('oauth_server')->{'authorize'} || "oauth_not_configured";
-	$base .= '/newuser';
-	my $create_url = Kynetx::Util::mk_url($base, {
-	 'client_id' => $params->{'developer_eci'},
-	 'response_type' => 'code',
-	 'state' => $params->{'client_state'},
-	 'redirect_uri' => $params->{'uri_redirect'} 
-	}	);
-	$dialog->param("OAUTH_CREATE" => $create_url);
-	if ($error) {
-	  my $error_msg = '<strong>' . $error . '</strong>';
-	  $dialog->param("LOGIN_ERROR" => $error_msg)
-	}
-	return $dialog->output();
+  my $logger = get_logger();
+  my $template = DEFAULT_TEMPLATE_DIR . "/login/native_login.tmpl";
+  my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+  $dialog->param('PLATFORM' => _platform());
+  $dialog->param('ECI' => $params->{'developer_eci'} );
+  $dialog->param('STATE' => $params->{'client_state'} );
+  $dialog->param('REDIRECT' => $params->{'uri_redirect'} );
+  my $eci = $params->{'developer_eci'};
+  my $state = $params->{'client_state'};
+  my $redirect = $params->{'uri_redirect'};
+      
+
+  $dialog->param('HIDDEN_FIELDS' => <<_EOF_
+           <input type="hidden" name="developer_eci" value="$eci" >
+   	   <input type="hidden" name="client_state" value="$state" >
+  	   <input type="hidden" name="uri_redirect" value="$redirect" >
+_EOF_
+		);
+  $dialog->param('FORM_URL' => _platform() . "/login/oauth/signin");
+  my $base = Kynetx::Configure::get_config('oauth_server')->{'authorize'} || "oauth_not_configured";
+  $base .= '/newuser';
+  my $create_url = Kynetx::Util::mk_url($base, {
+						'client_id' => $eci,
+						'response_type' => 'code',
+						'state' => $state,
+						'redirect_uri' => $redirect 
+					       }	
+				       );
+  $dialog->param("CREATE_URL" => $create_url);
+  $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  if ($error) {
+      my $error_msg = '<strong>' . $error . '</strong>';
+      $dialog->param("LOGIN_ERROR" => $error_msg)
+  }
+  return $dialog->output();
   
 }
 

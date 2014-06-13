@@ -1,21 +1,22 @@
     <!--===============================================-->
     <!--==== Account Details Page =====================-->
-    <div data-role="page" id="page-account-details">
+    <div data-role="page" data-theme="a" id="page-account-details">
 
         <!-- Header -->
         <div data-role="header">
-            <h2>Kynetx Guard Tour Login</h2>
-            <a href="<TMPL_VAR NAME="PLATFORM">/login/logout" data-theme="b" class="ui-btn-right">Logout</a>
+            <div class="header-image">
+              <img class="fuse-logo" src="<TMPL_VAR NAME="LOGO_IMG_URL">">
+            </div>
+            <a href="<TMPL_VAR NAME="PLATFORM">/login/logout" data-theme="a" class="ui-btn-right">Logout</a>
         </div> <!-- /header -->
 
 								
         <div data-role="content">
-			<TMPL_VAR NAME="PAGEFORM">
+  	  <TMPL_VAR NAME="PAGEFORM">
         </div> <!-- /content -->
 
         <!-- Footer -->
-        <div data-role="footer"  data-theme="b">
-            <h2>Thank You</h2>
+        <div data-role="footer">
         </div> <!-- /footer -->
 
     </div><!-- /page -->
