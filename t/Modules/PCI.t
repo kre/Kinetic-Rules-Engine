@@ -242,6 +242,7 @@ $args = {
 	"firstname" => "Bill",
 	"lastname" => "Last",
 	"password" => $password,
+	"email" => "flip\@flopper.com"
 };
 $result = Kynetx::Modules::PCI::new_account($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
 isnt($result,undef,$description);
@@ -278,6 +279,19 @@ $args = $new_uname;
 $result = Kynetx::Modules::PCI::check_username($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
 is($result,0,$description);
 $test_count++;
+
+$description = "get profile";
+$args = [$eci,$keys];
+$result = Kynetx::Modules::PCI::get_account_profile($my_req_info,$blank_env,$session,$rule_name,"foo",$args);
+#diag Dumper $result;
+my $prfl = {"username" => $uname,
+	    "email" => "flip\@flopper.com",
+	    "firstname" => "Bill",
+	    "lastname" => "Last",
+	   };
+is_deeply($result,$prfl,$description);
+$test_count++;
+
 
 $description = "Create a dependent account";
 $args = {

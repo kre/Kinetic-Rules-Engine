@@ -583,7 +583,7 @@ sub profile_update {
   if ($session_id) {
     $dialog->param('L_SESSION' => $session_id)
   }
-  $dialog->param("EMAIL" => $email);
+  $dialog->param("EMAIL" => $email); 
   $dialog->param("FNAME" => $fname);
   $dialog->param("LNAME" => $lname);
   $dialog->param('PLATFORM' => _platform());
