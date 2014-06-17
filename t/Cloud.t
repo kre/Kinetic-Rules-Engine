@@ -196,6 +196,13 @@ SKIP: {
 	 'like' => ['/"error":102/'],
          'diag' => 0
 	},
+	{'url' => build_url({'function' => 'luv_me_html',
+                             'ruleset' => 'a16x180'}),
+	 'type' => 'text/html',
+	 'like' => ['/<h1>Hello World!/'],
+         'diag' => 0
+	},
+	
        ];
     
     $test_count += test_event_plan($test_plan_1);

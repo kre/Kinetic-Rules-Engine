@@ -285,14 +285,18 @@ sub eval_ruleset_function {
 #  $logger->trace("Result: ", sub{Dumper $result});
  
   my $json = JSON::XS->new->allow_nonref;
+  my $content_type = "application/json";
+
   if (ref $result eq "HASH" || ref $result eq "ARRAY") {
       $result = $json->encode( $result );
+  } elsif ( $result =~ m#^\s*<html>.+</html>\s*#is  # infer content type
+	  ) {
+      $content_type = "text/html";
   }
   my $opts = {'is_raw' => 1,
 	      'content' => $result ,
 	     };
   $req_info->{'send_raw'} = 1;
-  my $content_type = "application/json";
 
   Kynetx::Directives::send_directive($req_info, $dd, $content_type, $opts );
 
