@@ -221,11 +221,11 @@ $funcs->{'new_cloud'} = \&new_account;
 sub delete_account {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
 	my $logger = get_logger();
-  my $keys = _key_filter($args);
+	my $keys = _key_filter($args);
 	if (pci_authorized($req_info, $rule_env, $session, $keys)) {
-		my $eci = $args->[0];
-    	my $valid = Kynetx::Persistence::KToken::is_valid_token($eci);
-    	if (defined $valid and ref $valid eq "HASH") {
+	    my $eci = $args->[0];
+	    my $valid = Kynetx::Persistence::KToken::is_valid_token($eci);
+	    if (defined $valid and ref $valid eq "HASH") {
     		$logger->trace("Valid: ", sub {Dumper($valid)});
     		my $cascade;
     		my $ken = $valid->{'ken'};
@@ -235,11 +235,13 @@ sub delete_account {
     		}
     		Kynetx::Persistence::KPDS::delete_cloud($ken,$cascade);
     		return 1;
-    	} else {
+	    } else {
     		$logger->debug("ECI: $eci not valid ", sub {Dumper($valid)});
-    	}
+		return 0;
+	    }
 	} else {
-		$logger->debug("Not authorized to delete account");
+	    $logger->debug("Not authorized to delete account");
+	    return 0;
 	}
 }
 $funcs->{'delete_cloud'} = \&delete_account;
