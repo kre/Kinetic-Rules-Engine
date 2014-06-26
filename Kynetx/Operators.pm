@@ -2138,7 +2138,7 @@ sub eval_set {
   my $domain = $expr->{"args"}->[0]->{'domain'};
 
   #### Persistent setter
-  $logger->debug( "expr: ", sub { Dumper($expr) });
+  #$logger->debug( "expr: ", sub { Dumper($expr) });
 
   if (! defined $val) {
       $logger->error("Hash Operation error: $name; Value may not be null (use clear to remove key) ");
@@ -2152,7 +2152,7 @@ sub eval_set {
   }
 
 
-  $logger->debug( "Set value ", $name, " to $val" );
+  $logger->debug( "Set value ", $name, " to ", sub{Dumper $val} );
   if (Kynetx::MongoDB::validate($val)) {
       if (defined $expr->{"args"}->[0]->{'hash_key'}) {
 	  my $path_r = $expr->{"args"}->[0]->{'hash_key'};
