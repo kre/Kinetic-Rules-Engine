@@ -261,15 +261,15 @@ sub workflow {
       $logger->trace("HASH: ", sub {Dumper($json)});
       return $json;
   } elsif ($method eq 'create') {   
-#      $logger->debug("Creating account for ", sub{Dumper $params});
+      $logger->debug("Creating account for ", sub{Dumper $params});
       $ken = create_account($params);
       if ($ken) {
         $template->param("DIALOG" => profile_page($ken,undef,$session_id));
         Kynetx::Persistence::KToken::delete_token($session_token,get_session_id($session));
         create_login_token($session,$ken);
       } else {
-        my $error = "Unable to create account for (" . $params->{'new_user_name'} . ")";
-        $template->param("DIALOG" => native_login($params,$error));
+        my $error = "Unable to create account for (" . $params->{'email'} . ")";
+        $template->param("DIALOG" => newaccount($params,$error));
       }
   } elsif ($method eq 'logout') {
     if ($session_token) {
@@ -479,16 +479,26 @@ sub _oauth_token {
 }
 
 sub newaccount {
-  my ($params) = @_;
+  my ($params, $error) = @_;
   my $logger = get_logger();
   $logger->debug("New account page: ");
   my $template = DEFAULT_TEMPLATE_DIR . "/login/create.tmpl";
   my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+
+  if ($error) {
+      my $error_msg = '<strong>' . $error . '</strong>';
+      $logger->debug("returning newaccount page with error ", $error_msg);
+      $dialog->param("ERROR_MSG" => $error_msg);
+      $dialog->param("DISPLAY_ERROR" => 1);
+  }
+
   $dialog->param('PLATFORM' => _platform());
   $dialog->param('HIDDEN_FIELDS' => "");
   $dialog->param('LOGIN_URL' => _platform() . "/login");
   $dialog->param('FORM_URL' => _platform() . "/login/create");
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+
+
   return $dialog->output();
 }
 

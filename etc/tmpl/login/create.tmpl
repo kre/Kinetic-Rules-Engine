@@ -10,15 +10,23 @@
         </div> <!-- /header -->
 
         <!-- Content -->
+
+
+
         <div data-role="content">
             <form action="<TMPL_VAR NAME="FORM_URL">" method="post" data-url=""<TMPL_VAR NAME="FORM_URL">" data-external-page="true" data-ajax="false" class="form-horizontal well cloudUI-form-login">                
 	    <fieldset>
 	      <TMPL_VAR NAME="HIDDEN_FIELDS">
               <ul data-role="listview" data-inset="true">
-	      <li data-role="list-divider" >Create account</li>
-  	      <li id="alert" style="background: #FFEEEE; color:red; display:<TMPL_IF NAME="CREATE_ERROR">show<TMPL_ELSE>none</TMPL_IF>" class="alert">
-                <TMPL_VAR NAME="CREATE_ERROR">
-	      </li>
+	      <li data-role="list-divider" >Create account </li>
+
+		 <li id="alert_email" style="background: #FFEEEE; color:red; display:<TMPL_IF NAME="ERROR_MSG">show<TMPL_ELSE>none</TMPL_IF>" class="alert">
+                   <TMPL_VAR NAME="ERROR_MSG">
+		 </li>
+
+
+  	      <li id="alert_password" style="background: #FFEEEE; color:red; display:none" class="alert">
+	      </li> 
               <li class="ui-field-contain">
                         <input type="text" name="email" id="new_email" value="" placeholder="johndoe@example.com">
                         <input type="password" name="password" id="new-password" value="" placeholder="password">
