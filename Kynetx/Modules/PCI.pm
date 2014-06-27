@@ -262,6 +262,7 @@ sub account_authorized {
 		if (ref $arg1 eq "") {
 			# Default arguments are <username>,<password>
 			my $username = $arg1;
+#			$logger->debug("Username: ", $username);
 			$ken = Kynetx::Persistence::KEN::ken_lookup_by_username($username);
 		} elsif (ref $arg1 eq "HASH") {
 			if ($arg1->{'username'}) {
@@ -279,12 +280,12 @@ sub account_authorized {
 		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);				 
 	}	
 	$logger->warn("Unable to locate KEN: ",sub {Dumper($arg1)}) unless ($ken);
-	$logger->trace(" Ken: $ken");
-	$logger->trace("Pass: $password");
+#	$logger->debug(" Ken: $ken");
+#	$logger->debug("Pass: $password");
 	my $result = auth_ken($ken,$password);
 	if ($result) {
 	  if (pci_authorized($req_info, $rule_env, $session, $keys)) {
-	    #$logger->debug("System auth'd return user_id");
+	    $logger->debug("System auth'd return user_id");
 	    my $nid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
 	    return {
 	      'nid' => $nid

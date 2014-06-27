@@ -432,6 +432,9 @@ sub create_account {
   my $lastname = $params->{'lastname'};
   my $email = $params->{'email'};
   my $type = 'PCI';
+  my $oid = MongoDB::OID->new();
+  my $new_id = $oid->to_string();
+
   $logger->trace("$username $password $email");
   if ($username && $password && $email) {
     # check username 
@@ -442,16 +445,18 @@ sub create_account {
       return undef;
     }
     my $created = DateTime->now->epoch;
+
     my $dflt = {
 		"username" => $username,
 		"firstname" => $firstname,
 		"lastname" => $lastname,
 		"password" => $hash,
 		"created" => $created,
-		"email" => $email
+		"email" => $email,
+		"user_id" => $new_id
 	       };
     $ken = Kynetx::Persistence::KEN::new_ken($dflt);
-    Kynetx::Persistence::KToken::create_token($ken,"_LOGIN",$type);
+    my $neci = Kynetx::Persistence::KToken::create_token($ken,"_LOGIN",$type);
     add_ruleset_to_account($ken,+DEFAULT_RULESET);	  
     return $ken;
   } else {
