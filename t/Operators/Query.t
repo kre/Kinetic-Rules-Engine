@@ -134,7 +134,7 @@ my $op_expr =q/ent:searchkey.query([],{
     }
   ]})/;
   
-  
+my $bag = test_operator($op_expr,undef,0);  
 
 my $op_expr =q/ent:searchkey.query([],{
   'requires' :  '$or', 
@@ -156,7 +156,7 @@ my $op_expr =q/ent:searchkey.query([],{
     }
   ]})/;
 
-$result = test_operator($op_expr,undef,1);
+$result = test_operator($op_expr,superbagof($bag),1);
 foreach my $key (@{$result}) {
   $logger->debug("Key: ", sub {Dumper($key)});
   
@@ -194,7 +194,7 @@ sub test_operator {
     $r = eval_expr($v, $rule_env, $rulename,$req_info,$session);
     diag "Expect: ", Dumper($x) if $d;
     diag "Result: ", Dumper($r) if $d;
-    my $result = cmp_deeply($r, $x, "Trying $e");
+    cmp_deeply($r, $x, "Trying $e") if $d;
 
 
     #die unless ($result);
