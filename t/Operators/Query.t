@@ -136,6 +136,8 @@ my $op_expr =q/ent:searchkey.query([],{
   
 my $bag = test_operator($op_expr,undef,0);  
 
+$logger->debug("Bag: ", join(",", sort @{$bag}));
+
 my $op_expr =q/ent:searchkey.query([],{
   'requires' :  '$or', 
   'conditions'   : [
@@ -168,6 +170,8 @@ foreach my $key (@{$result}) {
   $logger->debug("count < 4000 ", sub {Dumper($lt4000)});
   
 }
+$logger->debug("Bag: ", join(",", sort @{$bag}));
+$logger->debug("result: ", join(",", sort @{$result}));
 
 
 
