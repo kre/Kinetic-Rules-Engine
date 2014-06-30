@@ -118,35 +118,7 @@ cmp_deeply([keys %{$map}],bag(keys %{$map_check}),$description);
 $test_count++;
 
 
-# my $op_expr =<<EOQ;
-# ent:searchkey.query([],{'\$and' => [
-#   { 'search_key' => ['startWaypoint','timestamp']''
-#     'operator' => '\$lt',
-#     'value' => "20140502T140107+0000"
-#   },
-#   { 'search_key' => [],
-#     'operator' => '\$gt',
-#     'value' => ""
-#   }
-#   ]})
-#
-# EOQ
 
-#my $op_expr =q/ent:searchkey.query([],{'$and' : [
-#  {'foo' : 'bar'},
-#  {'bar' : time:now()}
-#]})/;
-
-#my $op_expr =q/ent:searchkey.query([],{'$and' : [
-#  {'search_key' : ['retweeted_status', 'favorite_count'],
-#    'operator' : '$gt',
-#    'value' : 5
-#  },
-#  {'search_key' : ['retweeted_status', 'favorite_count'],
-#    'operator' : '$lt',
-#    'value' : 200
-#  }
-#  ]})/;
 my $op_expr =q/ent:searchkey.query([],{
   'requires' :  '$and', 
   'conditions'   : [
@@ -161,6 +133,15 @@ my $op_expr =q/ent:searchkey.query([],{
       'value' : 200
     }
   ]})/;
+  
+$result = test_operator($op_expr,undef,1);
+foreach my $key (@{$result}) {
+  $logger->debug("Key: ", sub {Dumper($key)});
+  my $value = get_persistent_hash_var("ent",$t_rid,$session,$ekey,$key);
+  $logger->debug("Val: ", sub {Dumper($value)});
+  
+}
+  
 
 my $op_expr =q/ent:searchkey.query([],{
   'requires' :  '$or', 
@@ -214,6 +195,7 @@ sub test_operator {
 
 
     die unless ($result);
+    return $r;
 }
 
 
