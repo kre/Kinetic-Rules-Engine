@@ -136,8 +136,6 @@ my $op_expr =q/ent:searchkey.query([],{
   
 my $bag = test_operator($op_expr,undef,0);  
 
-$logger->debug("Bag: ", join(",", sort @{$bag}));
-
 my $op_expr =q/ent:searchkey.query([],{
   'requires' :  '$or', 
   'conditions'   : [
@@ -158,7 +156,7 @@ my $op_expr =q/ent:searchkey.query([],{
     }
   ]})/;
 
-$result = test_operator($op_expr,$bag,1);
+$result = test_operator($op_expr,superbagof(@{$bag}),1);
 foreach my $key (@{$result}) {
   $logger->debug("Key: ", sub {Dumper($key)});
   
