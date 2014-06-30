@@ -46,7 +46,7 @@ use Kynetx::Persistence qw/:all/;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 my $logger = get_logger();
 
 use Data::Dumper;
@@ -101,7 +101,7 @@ my $t_eid = $test_env->{'eid'};
 
 ############################
 # Entity var searching
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 $logger->debug("Foo!");
 
@@ -169,8 +169,6 @@ foreach my $key (@{$result}) {
   $logger->debug("count < 4000 ", sub {Dumper($lt4000)});
   
 }
-$logger->debug("Bag: ", join(",", sort @{$bag}));
-$logger->debug("result: ", join(",", sort @{$result}));
 
 
 
