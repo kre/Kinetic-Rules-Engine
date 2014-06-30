@@ -162,25 +162,25 @@ my $op_expr =q/ent:searchkey.query([],{
     }
   ]})/;
 
-#my $op_expr =q/ent:searchkey.query([],{
-#  'requires' :  '$and', 
-#  'conditions'   : [
-#    {
-#      'search_key' : ['retweeted_status', 'favorite_count'],
-#      'operator' : '$gt',
-#      'value' : 5
-#    },
-#    {
-#      'search_key' : ['retweeted_status', 'favorite_count'],
-#      'operator' : '$lt',
-#      'value' : 200
-#    },
-#    {
-#      'search_key' : ['retweeted_status','retweet_count'],
-#      'operator' : '$gt',
-#      'value' : 4000
-#    }
-#  ]})/;
+my $op_expr =q/ent:searchkey.query([],{
+  'requires' :  '$or', 
+  'conditions'   : [
+    {
+      'search_key' : ['retweeted_status', 'favorite_count'],
+      'operator' : '$gt',
+      'value' : 5
+    },
+    {
+      'search_key' : ['retweeted_status', 'favorite_count'],
+      'operator' : '$lt',
+      'value' : 200
+    },
+    {
+      'search_key' : ['retweeted_status','retweet_count'],
+      'operator' : '$gt',
+      'value' : 4000
+    }
+  ]})/;
 
 test_operator($op_expr,undef,1);
 
