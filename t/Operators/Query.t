@@ -157,6 +157,7 @@ my $op_expr =q/ent:searchkey.query([],{
   ]})/;
 
 $result = test_operator($op_expr,superbagof(@{$bag}),1);
+$test_count++;
 foreach my $key (@{$result}) {
   $logger->debug("Key: ", sub {Dumper($key)});
   
