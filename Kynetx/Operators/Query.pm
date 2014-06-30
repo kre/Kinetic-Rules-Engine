@@ -147,6 +147,7 @@ sub do_queries {
     $index = scalar @{$keypath};
   }
   $logger->debug("Start queries");
+  my $query_type = $c_den->{'requires'};
   my $tick = 1;
   foreach my $condition (@{$c_den->{'conditions'}}) {
     my ($collection,$base) = _base_key($domain,$rid,$ken,$keypath,$keyname);
@@ -162,7 +163,13 @@ sub do_queries {
     $logger->debug("Index ", $tick++, " complete");
   }
   
-  my $target = scalar @{$c_den->{'conditions'}};
+  my $target;
+  if ($query_type eq '$or') {
+    $target = 1;
+  } else {
+    $target = scalar @{$c_den->{'conditions'}};
+  }
+  
   my @result;
   foreach my $match (keys %{$count}) {
     if ($count->{$match} >= $target) {
