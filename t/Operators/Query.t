@@ -137,7 +137,7 @@ my $op_expr =q/ent:searchkey.query([],{
 $result = test_operator($op_expr,undef,1);
 foreach my $key (@{$result}) {
   $logger->debug("Key: ", sub {Dumper($key)});
-  my $value = get_persistent_hash_var("ent",$t_rid,$session,$ekey,$key);
+  my $value = get_persistent_hash_element("ent",$t_rid,$session,$ekey,$key);
   $logger->debug("Val: ", sub {Dumper($value)});
   
 }
