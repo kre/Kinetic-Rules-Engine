@@ -134,13 +134,6 @@ my $op_expr =q/ent:searchkey.query([],{
     }
   ]})/;
   
-$result = test_operator($op_expr,undef,1);
-foreach my $key (@{$result}) {
-  $logger->debug("Key: ", sub {Dumper($key)});
-  my $value = Kynetx::Persistence::get_persistent_hash_element("ent",$t_rid,$session,$ekey,$key);
-  $logger->debug("Val: ", sub {Dumper($value)});
-  
-}
   
 
 my $op_expr =q/ent:searchkey.query([],{
@@ -163,8 +156,18 @@ my $op_expr =q/ent:searchkey.query([],{
     }
   ]})/;
 
-test_operator($op_expr,undef,1);
-
+$result = test_operator($op_expr,undef,1);
+foreach my $key (@{$result}) {
+  $logger->debug("Key: ", sub {Dumper($key)});
+  
+  my $gt5 = Kynetx::Persistence::get_persistent_hash_element("ent",$t_rid,$session,$ekey,[$key->[0],'retweeted_status', 'favorite_count' ]);
+  $logger->debug("gt5 ", sub {Dumper($gt5)});
+  my $lt200 = Kynetx::Persistence::get_persistent_hash_element("ent",$t_rid,$session,$ekey,[$key->[0],'retweeted_status', 'favorite_count' ]);
+  $logger->debug("lt200 ", sub {Dumper($lt200)});
+  my $lt4000 = Kynetx::Persistence::get_persistent_hash_element("ent",$t_rid,$session,$ekey,[$key->[0],'retweeted_status', 'retweet_count' ]);
+  $logger->debug("count < 4000 ", sub {Dumper($lt4000)});
+  
+}
 
 
 
