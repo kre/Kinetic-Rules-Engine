@@ -434,6 +434,7 @@ sub create_account {
   my $type = 'PCI';
   my $oid = MongoDB::OID->new();
   my $new_id = $oid->to_string();
+  my $userid = Kynetx::MongoDB::counter("userid");
 
   $logger->trace("$username $password $email");
   if ($username && $password && $email) {
@@ -453,7 +454,8 @@ sub create_account {
 		"password" => $hash,
 		"created" => $created,
 		"email" => $email,
-		"user_id" => $new_id
+		"_id" => $oid,
+		"user_id" => $userid
 	       };
     $ken = Kynetx::Persistence::KEN::new_ken($dflt);
     my $neci = Kynetx::Persistence::KToken::create_token($ken,"_LOGIN",$type);
