@@ -72,8 +72,7 @@ eval_prelude
 eval_one_decl
 eval_expr
 eval_decl
-den_to_exp
-exp_to_den
+den_to_expexp_to_den
 infer_type
 mk_den_str
 typed_value
@@ -889,6 +888,13 @@ sub eval_pred {
     my $val = 0;
     foreach my $p ( @{ $pred->{'args'} } ) {
       my $result = den_to_exp(Kynetx::Expressions::eval_expr($p, $rule_env, $rule_name, $req_info, $session));
+       $logger->debug("With result ", $result);
+       if (! (JSON::XS::is_bool $result)
+	 && "__undef__" eq $result
+          ) {
+	 $logger->debug("Saw __undef__ in complex predicate");
+ 	 $result = 0;
+       }
 
       if($pred->{'op'} eq '&&') {
 	$val = $result;
@@ -909,7 +915,7 @@ sub eval_pred {
       }
     }
 
-    $logger->debug("Complex predicate value: ", $val);
+    $logger->debug("Complex predicate value: ", sub{ Dumper $val});
     return mk_den_value(boolify($val))
 
 
