@@ -1140,7 +1140,7 @@ sub remove_oauth_bootstrap {
 	return undef;
 	
 }
-$funcs->{'remove_bootstrap'} = \&remove_callback;
+$funcs->{'remove_bootstrap'} = \&remove_oauth_bootstrap;
 
 sub add_oauth_app_info {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
