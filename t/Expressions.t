@@ -534,11 +534,11 @@ check_cachable('is not', 'x = ent:x', 'entity');
 sub test_exp_to_den {
   my($ds, $desc, $diag) = @_;
 
-  my $new_ds = exp_to_den($ds);
+  my $new_ds = Kynetx::Expressions::exp_to_den($ds);
 
   diag Dumper $new_ds if $diag;
 
-  my $rebuilt_ds = den_to_exp($new_ds);
+  my $rebuilt_ds = Kynetx::Expressions::den_to_exp($new_ds);
 
   diag $rebuilt_ds if $diag;
 

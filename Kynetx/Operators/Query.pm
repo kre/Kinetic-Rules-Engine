@@ -85,20 +85,11 @@ sub optimized_hash_query {
   if (defined $moduleRid) {
     $rid = $moduleRid;
   }
-  $logger->debug("Get the full object");
-  my $p_object = Kynetx::Persistence::get_persistent_var($domain,
-                 $rid,
-                 $session,
-                 $expr->{'obj'}->{'name'}) || 0;
-  #$logger->debug("Found: ", sub {Dumper($p_object)});
 
   my $p_rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
   my $path_to_key = $p_rands->[0];
   my $conditions = $p_rands->[1];
   my $expand = $p_rands->[2];
-  $logger->debug("Path: ",ref $path_to_key);
-  $logger->debug("Conditions: ",ref $conditions);
-  $logger->debug("rands: ", sub {Dumper($p_rands)});
   if (defined $path_to_key && defined $conditions) {
     if ($path_to_key->{'type'} eq "array" &&
       $conditions->{'type'} eq "hash") {
@@ -109,18 +100,18 @@ sub optimized_hash_query {
           my $clean = $obj->{'val'};
           push(@keypath,$clean);
         }
-        $logger->debug("Hash path: ", sub {Dumper(@keypath)});
 
         my $c_obj =
             Kynetx::Expressions::eval_expr($conditions, $rule_env, $rule_name,$req_info, $session);
-        $logger->debug("Conditions: ", sub{Dumper($c_obj)});
         my $c_den = Kynetx::Expressions::den_to_exp($c_obj);
-        $logger->debug("Denoted: ", sub {Dumper($c_den)});
         my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
         my $results = do_queries($domain,$rid,$ken,\@keypath,$expr->{'obj'}->{'name'},$c_den);
-        #my $results = Kynetx::MongoDB::get_list(_base_key($domain,$rid,$ken,\@keypath,$c_den));
-        $logger->debug("Results: ", sub {Dumper($results)});
         if ($expand) {
+              $logger->debug("Get the full object");
+              my $p_object = Kynetx::Persistence::get_persistent_var($domain,
+                 $rid,
+                 $session,
+                 $expr->{'obj'}->{'name'}) || 0;
             my @list = ();
             foreach my $path (@{$results}) {
                 my $val = Dive($p_object,@{$path});
@@ -147,6 +138,7 @@ sub do_queries {
     $index = scalar @{$keypath};
   }
   $logger->debug("Start queries");
+  my $query_type = $c_den->{'requires'};
   my $tick = 1;
   foreach my $condition (@{$c_den->{'conditions'}}) {
     my ($collection,$base) = _base_key($domain,$rid,$ken,$keypath,$keyname);
@@ -162,8 +154,15 @@ sub do_queries {
     $logger->debug("Index ", $tick++, " complete");
   }
   
-  my $target = scalar @{$c_den->{'conditions'}};
+  my $target;
+  if ($query_type eq '$or') {
+    $target = 1;
+  } else {
+    $target = scalar @{$c_den->{'conditions'}};
+  }
+  
   my @result;
+  $logger->debug("Need $target matches");
   foreach my $match (keys %{$count}) {
     if ($count->{$match} >= $target) {
       push(@result, _path($match))

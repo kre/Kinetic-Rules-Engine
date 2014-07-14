@@ -332,8 +332,6 @@ add_expr_testcase(
     mk_expr_node('num', 5),
     0);
 
-
-
 $krl_src = <<_KRL_;
 [5, 6, 7]
 _KRL_
@@ -2018,6 +2016,18 @@ add_expr_testcase(
 	'expr',
 	'_ignore_',
 	mk_expr_node("bool","false"),
+	0
+);
+
+$krl_src = <<_KRL_;
+    null || 5
+_KRL_
+
+add_expr_testcase(
+	$krl_src,
+	'expr',
+	'_ignore_',
+	mk_expr_node("num",5),
 	0
 );
 

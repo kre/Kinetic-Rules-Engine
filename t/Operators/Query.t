@@ -101,7 +101,7 @@ my $t_eid = $test_env->{'eid'};
 
 ############################
 # Entity var searching
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 $logger->debug("Foo!");
 
@@ -118,35 +118,7 @@ cmp_deeply([keys %{$map}],bag(keys %{$map_check}),$description);
 $test_count++;
 
 
-# my $op_expr =<<EOQ;
-# ent:searchkey.query([],{'\$and' => [
-#   { 'search_key' => ['startWaypoint','timestamp']''
-#     'operator' => '\$lt',
-#     'value' => "20140502T140107+0000"
-#   },
-#   { 'search_key' => [],
-#     'operator' => '\$gt',
-#     'value' => ""
-#   }
-#   ]})
-#
-# EOQ
 
-#my $op_expr =q/ent:searchkey.query([],{'$and' : [
-#  {'foo' : 'bar'},
-#  {'bar' : time:now()}
-#]})/;
-
-#my $op_expr =q/ent:searchkey.query([],{'$and' : [
-#  {'search_key' : ['retweeted_status', 'favorite_count'],
-#    'operator' : '$gt',
-#    'value' : 5
-#  },
-#  {'search_key' : ['retweeted_status', 'favorite_count'],
-#    'operator' : '$lt',
-#    'value' : 200
-#  }
-#  ]})/;
 my $op_expr =q/ent:searchkey.query([],{
   'requires' :  '$and', 
   'conditions'   : [
@@ -161,29 +133,42 @@ my $op_expr =q/ent:searchkey.query([],{
       'value' : 200
     }
   ]})/;
+  
+my $bag = test_operator($op_expr,undef,0);  
 
-#my $op_expr =q/ent:searchkey.query([],{
-#  'requires' :  '$and', 
-#  'conditions'   : [
-#    {
-#      'search_key' : ['retweeted_status', 'favorite_count'],
-#      'operator' : '$gt',
-#      'value' : 5
-#    },
-#    {
-#      'search_key' : ['retweeted_status', 'favorite_count'],
-#      'operator' : '$lt',
-#      'value' : 200
-#    },
-#    {
-#      'search_key' : ['retweeted_status','retweet_count'],
-#      'operator' : '$gt',
-#      'value' : 4000
-#    }
-#  ]})/;
+my $op_expr =q/ent:searchkey.query([],{
+  'requires' :  '$or', 
+  'conditions'   : [
+    {
+      'search_key' : ['retweeted_status', 'favorite_count'],
+      'operator' : '$gt',
+      'value' : 5
+    },
+    {
+      'search_key' : ['retweeted_status', 'favorite_count'],
+      'operator' : '$lt',
+      'value' : 200
+    },
+    {
+      'search_key' : ['retweeted_status','retweet_count'],
+      'operator' : '$gt',
+      'value' : 4000
+    }
+  ]})/;
 
-test_operator($op_expr,undef,1);
-
+$result = test_operator($op_expr,superbagof(@{$bag}),1);
+$test_count++;
+foreach my $key (@{$result}) {
+  $logger->debug("Key: ", sub {Dumper($key)});
+  
+  my $gt5 = Kynetx::Persistence::get_persistent_hash_element("ent",$t_rid,$session,$ekey,[$key->[0],'retweeted_status', 'favorite_count' ]);
+  $logger->debug("gt5 ", sub {Dumper($gt5)});
+  my $lt200 = Kynetx::Persistence::get_persistent_hash_element("ent",$t_rid,$session,$ekey,[$key->[0],'retweeted_status', 'favorite_count' ]);
+  $logger->debug("lt200 ", sub {Dumper($lt200)});
+  my $lt4000 = Kynetx::Persistence::get_persistent_hash_element("ent",$t_rid,$session,$ekey,[$key->[0],'retweeted_status', 'retweet_count' ]);
+  $logger->debug("count < 4000 ", sub {Dumper($lt4000)});
+  
+}
 
 
 
@@ -210,10 +195,11 @@ sub test_operator {
     $r = eval_expr($v, $rule_env, $rulename,$req_info,$session);
     diag "Expect: ", Dumper($x) if $d;
     diag "Result: ", Dumper($r) if $d;
-    my $result = cmp_deeply($r, $x, "Trying $e");
+    cmp_deeply($r, $x, "Trying $e") if $d;
 
 
-    die unless ($result);
+    #die unless ($result);
+    return $r;
 }
 
 
