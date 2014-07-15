@@ -72,7 +72,8 @@ eval_prelude
 eval_one_decl
 eval_expr
 eval_decl
-den_to_expexp_to_den
+den_to_exp
+exp_to_den
 infer_type
 mk_den_str
 typed_value
