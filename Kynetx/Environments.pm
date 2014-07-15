@@ -45,7 +45,7 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
 
 
 sub empty_rule_env {
-    return {};
+    return {'___BOTTOM' => 1};
 }
 
 sub lookup_rule_env {
@@ -54,8 +54,13 @@ sub lookup_rule_env {
 #    my $logger = get_logger();
 #    $logger->debug("Looking for $key in ", sub {Dumper $env});
 
-    if(! defined $env || ! (ref $env eq 'HASH')) {
-	return undef;
+    if( ! defined $env 
+     || (ref $env ne 'HASH') 
+     || ! defined $key
+      ) { # bad env
+	return undef; 
+    } elsif (defined $env->{'___BOTTOM'} && $key eq '___BOTTOM')  { # find bottom and return it
+	return $env
     } elsif (defined $env->{$key}) {
 #    	$logger->debug("Found: $key with (", sub{ Dumper $env->{$key} }, ")");
 	return $env->{$key};
@@ -122,6 +127,7 @@ sub extend_rule_env {
 
 
 }
+
 
 sub event_rule_env {
 	my ($event) = @_;

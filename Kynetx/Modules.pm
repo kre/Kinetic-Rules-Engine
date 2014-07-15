@@ -32,6 +32,7 @@ use Kynetx::Actions::LetItSnow;
 use Kynetx::Actions::JQueryUI;
 use Kynetx::Actions::FlippyLoo;
 use Kynetx::Rids qw/:all/;
+use Kynetx::Memcached;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -106,7 +107,7 @@ sub eval_module {
 
     # see if there is a module defined function that matches
     # if so, cut this short.
-    $val = lookup_module_env($source, $function, $rule_env);
+    $val = lookup_module_env($source, $function, $rule_env, $req_info); 
     my $function_not_found_in_module = 0;
     if (defined $val && Kynetx::Expressions::is_closure($val)) {
       # manufacture an application and apply it
@@ -523,6 +524,8 @@ sub eval_module {
         }    	
     } else {
 
+	$logger->debug("Didn't find $function for $source in ", sub{ Dumper $req_info->{'module:defs'} });
+
 	Kynetx::Errors::raise_error($req_info, 'warn',
 				    "function named $function not found in $source or $source not valid",
 				    {'rule_name' => $rule_name,
@@ -532,7 +535,6 @@ sub eval_module {
 				   );
 	    
         ###TAKE ME OUT; once we see the rule env for this
-#	$logger->debug("Didn't find $function for $source in ", sub{ Dumper $rule_env });
 	$logger->debug("Didn't find $function for $source; raising error event");
 
     }
@@ -545,16 +547,45 @@ sub eval_module {
 }
 
 sub lookup_module_env {
-  my ($name,$key,$env) = @_;
-#  my $logger = get_logger();
-#  $logger->debug("Find ($key) in [$name]");
+  my ($name,$key,$env,$req_info) = @_;
+  my $logger = get_logger();
+  $logger->debug("Find ($key) in [$name]");
+#  $logger->debug("Env: ", sub{Dumper $env});
   $name = $name || "";
-  my $provided = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name . '_provided', $env);
-#  $logger->debug("Module's environment: ",sub {Dumper($provided)});
+#  my $provided = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name . '_provided', $env);
 
+  my $module_sig = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name, $env);
+  $logger->debug("Signature for ", $Kynetx::Modules::name_prefix . $name, " ", $module_sig);
+
+  if (defined $module_sig && ! Kynetx::Request::module_loaded($module_sig, $req_info)) {
+      $logger->debug("Module $name:$key not loaded; attempting to load");
+      my $memd = Kynetx::Memcached::get_memd();
+  
+      my $self_rid = Kynetx::Rids::get_rid( $req_info->{'rid'} );
+      my $mod_rid = $name;
+  
+      my $module_cache = Kynetx::Modules::RuleEnv::get_module_cache($module_sig, $memd);
+      my $module_rule_env = $module_cache->{Kynetx::Modules::RuleEnv::get_re_key($module_sig)};
+      my $provided = $module_cache->{Kynetx::Modules::RuleEnv::get_pr_key($module_sig)} || {};
+      my $js = $module_cache->{Kynetx::Modules::RuleEnv::get_js_key($module_sig)} || '';
+      my $export_keys = $module_cache->{Kynetx::Modules::RuleEnv::get_export_keys_key($module_sig)} || {};
+      $req_info = Kynetx::Request::put_module_in_request_info($module_sig,
+							      $name,
+							      "unknown",
+							      $provided,
+							      $module_rule_env,
+							      $js,
+							      $export_keys,
+							      $req_info
+							     );
+  }
+
+
+  my $provided = Kynetx::Request::get_module_provides($module_sig, $req_info);
+#  $logger->debug("Module's environment: ", sub {Dumper($provided)});
   my $r;
   if ($provided->{$key}) {
-    my $mod_env = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name, $env);
+    my $mod_env = Kynetx::Request::get_module_env($module_sig, $req_info);
     $r = Kynetx::Environments::lookup_rule_env($key, $mod_env);
   }
 #  $logger->debug("Returning val for $key in [$name]");

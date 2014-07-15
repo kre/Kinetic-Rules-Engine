@@ -4118,7 +4118,7 @@ my $env_stash = {};
 
 # diag Dumper $mod_rule_env;
 
-is(lookup_module_env("a16x78", "a", $mod_rule_env), 5, "a is 5" );
+is(lookup_module_env("a16x78", "a", $mod_rule_env, $my_req_info), 5, "a is 5" );
 $test_count++;
 
 
@@ -4159,10 +4159,10 @@ $mod_rule_env = empty_rule_env();
 #diag Dumper $empty_rule_env;
 ($js, $mod_rule_env) = Kynetx::Rules::eval_use($my_req_info, $module_rs, $empty_rule_env, $env_stash);
 
-is(lookup_module_env("flipper", "a", $mod_rule_env), 5, "a is 5 again" );
+is(lookup_module_env("flipper", "a", $mod_rule_env, $my_req_info), 5, "a is 5 again" );
 $test_count++;
 
-is(lookup_module_env("flipper", "b", $mod_rule_env), undef, "b is undef" );
+is(lookup_module_env("flipper", "b", $mod_rule_env, $my_req_info), undef, "b is undef" );
 $test_count++;
 
 
@@ -4266,10 +4266,10 @@ is(lookup_rule_env("b", $mod_rule_env), "hello", "b is hello" );
 $test_count++;
 
 
-is(lookup_module_env("a16x78", "a", $mod_rule_env), 5, "a is 5" );
+is(lookup_module_env("a16x78", "a", $mod_rule_env, $my_req_info), 5, "a is 5" );
 $test_count++;
 
-is(lookup_module_env("a16x78", "floppy", $mod_rule_env), "six", "got six" );
+is(lookup_module_env("a16x78", "floppy", $mod_rule_env, $my_req_info), "six", "got six" );
 $test_count++;
 
 
@@ -4313,10 +4313,10 @@ is(lookup_rule_env("d", $mod_rule_env), "prod", "d id prod" );
 $test_count++;
 
 
-is(lookup_module_env("a16x78", "a", $mod_rule_env), 5, "a is 5" );
+is(lookup_module_env("a16x78", "a", $mod_rule_env, $my_req_info), 5, "a is 5" );
 $test_count++;
 
-is(lookup_module_env("a16x78", "floppy", $mod_rule_env), "six", "got six" );
+is(lookup_module_env("a16x78", "floppy", $mod_rule_env, $my_req_info), "six", "got six" );
 $test_count++;
 
 
@@ -4325,9 +4325,10 @@ $test_count++;
 
 # look up in module env even though the var isn't provided...
 sub poke_mod_env {
-  my($name, $key, $env) = @_;
-  my $mod_env = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name, $env);
-    return Kynetx::Environments::lookup_rule_env($key, $mod_env);
+  my($name, $key, $env, $req_info) = @_;
+  my $sig = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name, $env);
+  my $mod_env = Kynetx::Request::get_module_env($sig, $req_info);
+   return Kynetx::Environments::lookup_rule_env($key, $mod_env);
 }
 
 
@@ -4364,11 +4365,11 @@ is(lookup_rule_env("a", $mod_rule_env), "world", "a is world" );
 $test_count++;
 
 
-is(poke_mod_env("a16x78", "c", $mod_rule_env), "world", "key gets passed to config" );
+is(poke_mod_env("a16x78", "c", $mod_rule_env, $my_req_info), "world", "key gets passed to config" );
 $test_count++;
 
 
-is(poke_mod_env("a16x78", "d", $mod_rule_env), undef, "key gets passed to config" );
+is(poke_mod_env("a16x78", "d", $mod_rule_env, $my_req_info), undef, "key gets passed to config" );
 $test_count++;
 
 
@@ -4402,7 +4403,7 @@ is(lookup_rule_env("a", $mod_rule_env), "Hello", "a is Hello" );
 $test_count++;
 
 
-is(poke_mod_env("a16x78", "c", $mod_rule_env), "Hello", "key gets passed to config" );
+is(poke_mod_env("a16x78", "c", $mod_rule_env, $my_req_info), "Hello", "key gets passed to config" );
 $test_count++;
 
 #diag "############ use a16x78 alias foo with c configured #################";

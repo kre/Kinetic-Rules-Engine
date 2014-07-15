@@ -205,4 +205,37 @@ sub delete_module_caches {
 
 }
 
+
+sub put_module_in_rule_env {
+
+    my($sig, $name, $version, $provides, $module_env, $env) = @_;
+    my $module_rep = {"name" => $name,
+		      "version" => $version,
+		      "sig" => $sig,
+		      "provides" => $provides,
+		      "module_env" => $module_env
+		     };
+    my $bottom_env = Kynetx::Environments::lookup_rule_env("___BOTTOM", $env);
+    $bottom_env->{$sig} = $module_rep;
+    return $env
+      
+}
+
+sub get_module_provides {
+    my($sig, $env) = @_;
+#    my $logger = get_logger();
+ 
+    my $bottom_env = Kynetx::Environments::lookup_rule_env($sig, $env);
+#    $logger->debug("looking up $sig ", Dumper $bottom_env);
+    return $bottom_env->{"provides"}
+}
+
+sub get_module_env {
+    my($sig, $env) = @_;
+ 
+    return Kynetx::Environments::lookup_rule_env($sig,$env)->{"module_env"}
+}
+
+
+
 1;

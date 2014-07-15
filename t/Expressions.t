@@ -252,7 +252,6 @@ _KRL_
         my $decl = Kynetx::Parser::parse_decl($decl_src);
 
 	diag(Dumper($decl)) if $diag;
-
 	my ($v,$js_decl) = Kynetx::Expressions::eval_decl(
 	    $my_req_info,
 	    $rule_env,

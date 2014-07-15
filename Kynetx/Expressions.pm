@@ -866,7 +866,7 @@ sub eval_persistent {
 						     $name) || 0;
 #	$logger->debug("[persistent] $expr->{'domain'}:$name -> ", sub {Dumper $v});
       } else {
-	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
+	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env, $req_info);
         $logger->debug("[module reference] ", sub {"$expr->{'domain'}:$name->$v"});
       }
     }

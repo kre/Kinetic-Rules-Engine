@@ -48,7 +48,7 @@ sub query {
     my $logger = get_logger();
 
 
-    $logger->debug("Query: ", sub {Dumper($expr)});
+#    $logger->debug("Query: ", sub {Dumper($expr)});
     my $obj = $expr->{'obj'};
     if ($obj->{'type'} eq "persistent") {
       $logger->debug("Persistent query");
