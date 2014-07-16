@@ -301,7 +301,7 @@ for my $f ( @{$a} ) {
 
 ######################## Ridlist caching
 #Log::Log4perl->easy_init($DEBUG);
-my ($description,$expected,$key,$temp);
+my ($description,$key,$temp);
 
 my $mod_rid = 'a144x172.prod';
 my @default_rules = ['cs_test','10','a144x171.dev',$mod_rid];
@@ -404,7 +404,28 @@ my $anon_uname = "_" . $anon_ken;
 Kynetx::Test::flush_test_user($anon_ken,$anon_uname);
 
 
+######################## Event tree stashing
 
+my $et1 = {"test" => "eventtree", "foo" => {"a" => 1, "b" => 3}};
+my $rl1 = [{"rid" => "a16x8"},{"rid" => "a16x55"},{"rid" => "a8x33"} ];
+my $et_key1 =  Kynetx::Dispatch::mk_eventtree_key($rl1);
+
+my $memd = 0; # not using memcache right now...
+
+ok(! Kynetx::Dispatch::is_eventtree_stashed($my_req_info, $memd, $et_key1), "No event tree right now");
+
+Kynetx::Dispatch::stash_eventtree($my_req_info, $et1, $memd, $et_key1);
+ok(Kynetx::Dispatch::is_eventtree_stashed($my_req_info, $memd, $et_key1), "Event tree stashed");
+
+is_deeply(Kynetx::Dispatch::grab_eventtree($my_req_info, $memd, $et_key1), $et1, "We get back the eventree we stashed");
+
+Kynetx::Dispatch::delete_stashed_eventtree($my_req_info, $memd, $et_key1);
+ok(! Kynetx::Dispatch::is_eventtree_stashed($my_req_info, $memd, $et_key1), "No event tree after deleting");
+
+
+$test_count += 4;
+
+		
 done_testing($test_count);
 1;
 
