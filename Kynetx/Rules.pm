@@ -182,7 +182,7 @@ sub process_schedule {
 							Kynetx::Request::get_attr($task->{'req_info'}, $n)
 						       );
 		    }
-		    $logger->debug("Task attributes ", sub {Dumper $task_req_info});
+#		    $logger->debug("Task attributes ", sub {Dumper $task_req_info});
 		    Kynetx::Request::merge_req_env( $req_info, $task_req_info );
 		}
 		else {

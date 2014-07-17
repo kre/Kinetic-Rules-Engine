@@ -403,8 +403,8 @@ sub _send_event {
           'body'   => $body,
         }
       );
-      my $ilogger = get_logger();
-      $ilogger->debug( "HDR: ", sub { Dumper($hdr) } );
+      # my $ilogger = get_logger();
+      # $ilogger->debug( "HDR: ", sub { Dumper($hdr) } );
       if ( $hdr->{Status} =~ /^2/ ) {
         $logger->debug(
           "------------------------ event:send() success for $esl");
