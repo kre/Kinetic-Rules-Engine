@@ -595,7 +595,7 @@ sub eval_application {
 	     $func_name = $expr->{"function_expr"}->{"val"};
 	 }
 	 my $error_msg = "[application] $func_name function not found (args are " + $arg_names.join(", ") + ")";
-	 $logger->info($error_msg)
+	 $logger->info($error_msg);
 	 Kynetx::Errors::raise_error($req_info, 
 				     'warn',
 				     $error_msg,
