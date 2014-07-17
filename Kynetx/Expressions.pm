@@ -594,9 +594,11 @@ sub eval_application {
 	 if ($expr->{"function_expr"}->{"type"} eq "var") {
 	     $func_name = $expr->{"function_expr"}->{"val"};
 	 }
-	
-	 Kynetx::Errors::raise_error($req_info, 'warn',
-				     "[application] $func_name function not found (args are " + $arg_names.join(", ") + ")",
+	 my $error_msg = "[application] $func_name function not found (args are " + $arg_names.join(", ") + ")";
+	 $logger->info($error_msg)
+	 Kynetx::Errors::raise_error($req_info, 
+				     'warn',
+				     $error_msg,
 				     {'rule_name' => $rule_name,
 				      'genus' => 'expression',
 				      'species' => 'undefined function'
