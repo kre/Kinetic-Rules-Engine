@@ -496,6 +496,12 @@ sub eval_schedule_statement {
         $logger->debug("Create single event $domain / $event_name at $val")
       }      
     }
+    if ($sched_id && defined $expr->{"setting"}) { # store the ID
+      my $var = $expr->{"setting"}->[0];
+      $logger->debug("Storing ID $sched_id for ", $var);
+      Kynetx::Environments::add_to_env({$var => $sched_id}, $rule_env);
+      $logger->debug("Looking up ", $var, " -> ", Kynetx::Environments::lookup_rule_env($var, $rule_env) );
+    }      
     $logger->debug("Created scheduled event ($sched_id)"); 
     return $js;
 }

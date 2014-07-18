@@ -199,8 +199,8 @@ _KRL_
 
 }
 
-$subscriptions = [{'cid' => $token},
-		  {'cid' => $other_token}];
+$subscriptions = [{'eci' => $token},
+		  {'eci' => $other_token}];
 
 foreach my $sm ( @{$subscriptions}) {
 

@@ -507,7 +507,7 @@ raise_statement returns[HashMap result]
 	
 schedule_statement returns[HashMap result]
   :
-   rd=SCHEDULE  dom=VAR must_be["event"]  evt=expr sched=schedule_clause? (m=modifier_clause| must_be["attributes"] attrs=expr)? {
+   rd=SCHEDULE  dom=VAR must_be["event"]  evt=expr sched=schedule_clause? (m=modifier_clause| must_be["attributes"] attrs=expr)? s=setting? {
     HashMap tmp = new HashMap();
     tmp.put("event",$evt.result);
     tmp.put("domain", $dom.text);
@@ -515,6 +515,7 @@ schedule_statement returns[HashMap result]
     tmp.put("timespec",$sched.result);
     tmp.put("modifiers",$m.result);
     tmp.put("attributes",$attrs.result);
+    tmp.put("setting",$s.result);
 
     $result = tmp;
   }
