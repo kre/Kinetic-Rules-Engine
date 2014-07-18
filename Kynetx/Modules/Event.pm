@@ -267,7 +267,9 @@ sub send_event {
 
   my $token =
        $sm->{'cid'}
+    || $sm->{'eci'}
     || $sm->{ $config->{'cid_key'} }
+    || $sm->{ $config->{'eci_key'} }
     || $sm->{'token'}
     || $sm->{ $config->{'token_key'} };
 
