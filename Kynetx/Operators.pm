@@ -620,8 +620,8 @@ sub eval_reduce {
 	$result = Kynetx::Expressions::exp_to_den(shift @{$obj_val});
 	foreach my $av (@{$obj_val}) {
 
-	  $logger->debug("Result so far ", sub {Dumper $result});
-	  $logger->debug("Next value ", sub {Dumper Kynetx::Expressions::exp_to_den($av)});
+#	  $logger->debug("Result so far ", sub {Dumper $result});
+#	  $logger->debug("Next value ", sub {Dumper Kynetx::Expressions::exp_to_den($av)});
 
 	  my $app = {'type' => 'app',
 		     'function_expr' => $op_fn,
