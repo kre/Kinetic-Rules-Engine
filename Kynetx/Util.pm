@@ -664,8 +664,9 @@ sub elements_to_hash {
 sub normalize_path {
 	my ($req_info, $rule_env, $rule_name, $session, $path) = @_;
 	my $logger = get_logger();
-	my @normalized = ();
+	my $normalized = [];
 	return undef unless (defined $path);
+
 	if ($path->{'type'} eq "array") {
 		foreach my $element (@{$path->{'val'}}) {
 			my $norm_key = Kynetx::Expressions::den_to_exp(
@@ -674,7 +675,7 @@ sub normalize_path {
 				    $rule_name,
 				    $req_info,
 				    $session) );
-			push(@normalized,$norm_key);
+			push(@{ $normalized },$norm_key);
 		}
 	} else {
 		my $norm_key = Kynetx::Expressions::den_to_exp(
@@ -683,9 +684,14 @@ sub normalize_path {
 				$rule_name,
 				$req_info,
 				$session) );
-		push(@normalized,$norm_key);
+#		$logger->debug("Path for entity before normalization >> ", sub{ Dumper $norm_key});
+		if (ref $norm_key eq "ARRAY") {
+		    $normalized = $norm_key
+		} else {
+		    push(@{$normalized},$norm_key);
+		}
 	} 	
-	return \@normalized;
+	return $normalized;
 	
 	
 }
