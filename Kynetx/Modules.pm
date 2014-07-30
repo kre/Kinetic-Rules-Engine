@@ -524,7 +524,7 @@ sub eval_module {
         }    	
     } else {
 
-	$logger->debug("Didn't find $function for $source in ", sub{ Dumper $req_info->{'module:defs'} });
+	#$logger->debug("Didn't find $function for $source in ", sub{ Dumper $req_info->{'module:defs'} });
 
 	Kynetx::Errors::raise_error($req_info, 'warn',
 				    "function named $function not found in $source or $source not valid",
@@ -554,6 +554,7 @@ sub lookup_module_env {
   $name = $name || "";
 #  my $provided = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name . '_provided', $env);
 
+  # $logger->debug("Looking for ", $Kynetx::Modules::name_prefix . $name, " in ", sub{Dumper $env});
   my $module_sig = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name, $env);
   $logger->debug("Signature for ", $Kynetx::Modules::name_prefix . $name, " ", $module_sig);
 
