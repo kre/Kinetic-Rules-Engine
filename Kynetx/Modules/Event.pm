@@ -267,7 +267,9 @@ sub send_event {
 
   my $token =
        $sm->{'cid'}
+    || $sm->{'eci'}
     || $sm->{ $config->{'cid_key'} }
+    || $sm->{ $config->{'eci_key'} }
     || $sm->{'token'}
     || $sm->{ $config->{'token_key'} };
 
@@ -403,8 +405,8 @@ sub _send_event {
           'body'   => $body,
         }
       );
-      my $ilogger = get_logger();
-      $ilogger->debug( "HDR: ", sub { Dumper($hdr) } );
+      # my $ilogger = get_logger();
+      # $ilogger->debug( "HDR: ", sub { Dumper($hdr) } );
       if ( $hdr->{Status} =~ /^2/ ) {
         $logger->debug(
           "------------------------ event:send() success for $esl");

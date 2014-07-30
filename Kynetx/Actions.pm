@@ -758,7 +758,7 @@ sub build_one_action {
 	# Check for composable action before any other built-ins
 	my $defaction;
 	if (defined $action->{'source'}) {
-		$defaction = Kynetx::Modules::lookup_module_env($action->{'source'},$action->{'name'},$rule_env);
+		$defaction = Kynetx::Modules::lookup_module_env($action->{'source'},$action->{'name'},$rule_env,$req_info);
 	} else {
 		$defaction = Kynetx::Environments::lookup_rule_env($action->{'name'},$rule_env);
 	}

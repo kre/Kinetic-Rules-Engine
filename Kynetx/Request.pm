@@ -137,6 +137,7 @@ sub build_request_env {
   # we rely on this being undef if nothing passed in
   $rids = $req_params->{'_rids'} || $body_params->{'_rids'} || $rids;
   my $explicit_rids = defined $req_params->{'_rids'};
+  $logger->debug("Explicitly declared rids ", $rids) if $explicit_rids;
 
   # endpoint identifier
   my $epi = $req_params->{'_epi'} || 'any';
@@ -255,7 +256,9 @@ sub add_event_attr {
 
 sub get_attr_names {
   my ($req_info) = @_;
-  return $req_info->{'event_attrs'}->{'attr_names'};
+  # my $logger = get_logger();
+  # $logger->debug("Getting attr names ", sub{ Dumper $req_info->{'event_attrs'}->{'attr_names'} });
+  return $req_info->{'event_attrs'}->{'attr_names'} || [] ;
 }
 
 sub get_attrs {
@@ -396,5 +399,52 @@ sub set_capabilities {
   }
 
 }
+
+### top level storage for module envs
+my $module_key = 'module:defs';
+sub put_module_in_request_info {
+
+    my($sig, $name, $version, $provides, $module_env, $js, $export_keys, $request_info) = @_;
+    my $module_rep = {"name" => $name,
+		      "version" => $version,
+		      "sig" => $sig,
+		      "provides" => $provides,
+		      "module_env" => $module_env,
+		      "js" => $js,
+		      "export_keys" => $export_keys
+		     };
+    $request_info->{$module_key}->{$sig} = $module_rep;
+    return $request_info
+      
+}
+
+sub module_loaded {
+  my($sig, $request_info) = @_;
+  return defined $request_info->{$module_key}->{$sig}->{"module_env"};
+}
+
+sub get_module_provides {
+    my($sig, $request_info) = @_;
+    # my $logger = get_logger();
+    # $logger->debug("looking up $sig ", sub {Dumper $request_info->{$module_key}});
+    my $result = defined $sig && defined $request_info ? $request_info->{$module_key}->{$sig}->{"provides"}
+               : {};
+    return $result
+}
+
+sub get_module_env {
+    my($sig, $request_info) = @_;
+    # my $logger = get_logger();
+    # $logger->debug("looking up $sig ", sub {Dumper $request_info->{$module_key}});
+    return $request_info->{$module_key}->{$sig}->{"module_env"}
+}
+
+sub get_module {
+    my($sig, $request_info) = @_;
+    # my $logger = get_logger();
+    # $logger->debug("looking up $sig ", sub {Dumper $request_info->{$module_key}});
+    return $request_info->{$module_key}->{$sig}
+}
+
 
 1;

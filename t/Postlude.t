@@ -887,6 +887,36 @@ $result = Kynetx::Persistence::SchedEv::schedev_query($ken,$key);
 $logger->debug("SchedEv Query: ", sub { Dumper($result)});
 cmp_deeply($result,superbagof(@expected),$description);
 $test_count++;
+
+#Log::Log4perl->easy_init($DEBUG);
+
+$description = "Add a repeating schedEv with setting";
+$krl_src = <<_KRL_;
+always {
+  schedule $sdomain event $ename repeat "$min * * * *"
+   with 
+     x = 5 and
+     y = 6
+   setting(foo)
+} 
+_KRL_
+
+$krl = Kynetx::Parser::parse_post($krl_src);
+
+chomp $krl;
+$krl = {'post' => $krl};
+$res = eval_post_expr($krl,
+		      $session,
+		      $sched_req_info,
+		      $rule_env,
+		      1);
+
+$result = Kynetx::Persistence::SchedEv::schedev_query($ken,$key);
+#diag ("SchedEv Query: ", Dumper($result));
+like(Kynetx::Environments::lookup_rule_env("foo", $rule_env), qr#[0-9abcdef]+#, "Got a reasonable ID back" );
+$test_count+=1;
+
+
 #Log::Log4perl->easy_init($INFO);
 
 # Clean up testing data

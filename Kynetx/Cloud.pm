@@ -248,7 +248,9 @@ sub eval_ruleset_function {
 
     my $closure = Kynetx::Modules::lookup_module_env($req_info->{'module_alias'}, 
 						     $req_info->{'function_name'}, 
-						     $rule_env);
+						     $rule_env,
+						     $req_info
+						    );
 
     #$logger->trace("Closure: ", sub{Dumper $closure});
 

@@ -246,7 +246,7 @@ sub calculate_rid_list {
       }
     }
     $logger->debug("Calculating and stashing the event tree ");
-    #stash_eventtree( $req_info, $r, $memd, $eventtree_key);
+    stash_eventtree( $req_info, $r, $memd, $eventtree_key);
     Kynetx::Memcached::mset_cache($eventtree_key,$r);
 
   }
@@ -455,27 +455,27 @@ sub flush_ridlist {
 
 sub stash_eventtree {
   my ( $req_info, $eventtree, $memd, $eventtree_key  ) = @_;
-#  $req_info->{"KOBJ.eventtree"} = $eventtree;
-  $memd->set($eventtree_key, $eventtree);
+  $req_info->{"KOBJ.eventtree"} = $eventtree;
+#  $memd->set($eventtree_key, $eventtree);
 }
 
 sub grab_eventtree {
   my ($req_info, $memd, $eventtree_key) = @_;
-#  return $req_info->{"KOBJ.eventtree"};
-  return $memd->get($eventtree_key);
+  return $req_info->{"KOBJ.eventtree"};
+#  return $memd->get($eventtree_key);
 }
 
 sub is_eventtree_stashed {
   my ($req_info, $memd, $eventtree_key) = @_;
-#  return defined $req_info->{"KOBJ.eventtree"};
+  return defined $req_info->{"KOBJ.eventtree"};
   #return defined $memd->get($eventtree_key);
-  return 0;
+#  return 0;
 }
 
 sub delete_stashed_eventtree {
   my ($req_info, $memd, $eventtree_key) = @_;
-#  return defined $req_info->{"KOBJ.eventtree"};
-  $memd->delete($eventtree_key);
+  delete $req_info->{"KOBJ.eventtree"};
+#  $memd->delete($eventtree_key);
 }
 
 

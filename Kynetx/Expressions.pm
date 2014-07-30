@@ -72,7 +72,8 @@ eval_prelude
 eval_one_decl
 eval_expr
 eval_decl
-den_to_expexp_to_den
+den_to_exp
+exp_to_den
 infer_type
 mk_den_str
 typed_value
@@ -571,32 +572,44 @@ sub eval_application {
 #  $logger->debug("Evaluation function...", sub { Dumper $expr} );
 
   my $closure;
+
+
+
   if (defined $expr->{'function_expr'}->{'type'} &&
       $expr->{'function_expr'}->{'type'} eq 'closure'){
-    $closure = $expr->{'function_expr'};
+      $closure = $expr->{'function_expr'};
+
+
   } else {
-    $closure = eval_expr($expr->{'function_expr'},
-			  $rule_env,
-			  $rule_name,
-			  $req_info,
-			  $session
-			 );
+      $closure = eval_expr($expr->{'function_expr'},
+			   $rule_env,
+			   $rule_name,
+			   $req_info,
+			   $session
+			  );
 
-    unless ($closure->{'type'} eq 'closure') {
-      Kynetx::Errors::raise_error($req_info, 'warn',
-				  "[application] function not found",
-				  {'rule_name' => $rule_name,
-				   'genus' => 'expression',
-				   'species' => 'undefined function'
-				  }
-				 );
+     unless ($closure->{'type'} eq 'closure') {
+	 my $func_name = "anonymous";
+	 my $arg_names =  $closure->{'val'}->{'vars'} || "unknown";
+	 if ($expr->{"function_expr"}->{"type"} eq "var") {
+	     $func_name = $expr->{"function_expr"}->{"val"};
+	 }
+	 my $error_msg = "[application] $func_name function not found (args are " . $arg_names.join(", ") . ")";
+	 $logger->info($error_msg);
+	 Kynetx::Errors::raise_error($req_info, 
+				     'warn',
+				     $error_msg,
+				     {'rule_name' => $rule_name,
+				      'genus' => 'expression',
+				      'species' => 'undefined function'
+				     }
+				    );
 
 
-      return mk_expr_node('str', '');
-    }
+	 return mk_expr_node('str', '');
+     }
 
   }
-
 
 
   $req_info->{$closure->{'val'}->{'sig'}} = 0
@@ -623,11 +636,11 @@ sub eval_application {
   my $arg_vals;
   my $arg_names;
   if (ref $expr->{'args'} eq 'HASH') { 
-    $arg_vals = [values (%{  $expr->{'args'} })];
-    $arg_names = [keys (%{  $expr->{'args'} })];
+      $arg_vals = [values (%{  $expr->{'args'} })];
+      $arg_names = [keys (%{  $expr->{'args'} })];
   } else { # array
-     $arg_vals = $expr->{'args'};
-     $arg_names = $closure->{'val'}->{'vars'}
+      $arg_vals = $expr->{'args'};
+      $arg_names = $closure->{'val'}->{'vars'};
   }
 
 
@@ -866,7 +879,7 @@ sub eval_persistent {
 						     $name) || 0;
 #	$logger->debug("[persistent] $expr->{'domain'}:$name -> ", sub {Dumper $v});
       } else {
-	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
+	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env, $req_info);
         $logger->debug("[module reference] ", sub {"$expr->{'domain'}:$name->$v"});
       }
     }
