@@ -1081,7 +1081,11 @@ sub eval_emit {
 sub den_to_exp {
     my ($expr) = @_;
 
-#    my $logger = get_logger();
+
+    # if (ref $expr eq "HASH" && defined $expr->{"type"} && not defined $expr->{"val"}) {
+    # 	my $logger = get_logger();
+    # 	$logger->warn("*** Warning, cannot use 'type' as map key *** \n", sub{ Dumper $expr});
+    # }
 
     return $expr unless (ref $expr eq 'HASH' && defined $expr->{'type'});
     case: for ($expr->{'type'}) {
@@ -1111,7 +1115,10 @@ sub den_to_exp {
 	  return $expr;
 	};
 
-
+	# if we didn't find a valid type, return the expression
+	1 && do {
+	  return $expr;
+	};
 
     }
 
