@@ -932,6 +932,14 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
+$e[$i] = q#a.as("str"),"do you want a")#;
+$x[$i] = {
+   'val' => '10',
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
 $e[$i] = q%my_url.replace(re#http://www.amazon.com#,"foozle::")%;
 $x[$i] = {
    'val' => 'foozle::/gp/products/123456789/',
