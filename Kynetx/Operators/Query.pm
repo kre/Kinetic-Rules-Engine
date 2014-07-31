@@ -119,7 +119,7 @@ sub optimized_hash_query {
             }
             return \@list;
         } else {
-            return $results;
+            return Kynetx::Expressions::mk_den_value($results);
         }
         
       }

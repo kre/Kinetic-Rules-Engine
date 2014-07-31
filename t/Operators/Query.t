@@ -192,14 +192,14 @@ sub test_operator {
     $v = Kynetx::Parser::parse_expr($e);
     diag "Parsed expr: ", Dumper($v) if $d;
 
-    $r = eval_expr($v, $rule_env, $rulename,$req_info,$session);
+    $r = Kynetx::Expressions::den_to_exp(eval_expr($v, $rule_env, $rulename,$req_info,$session));
     diag "Expect: ", Dumper($x) if $d;
     diag "Result: ", Dumper($r) if $d;
     cmp_deeply($r, $x, "Trying $e") if $d;
 
 
     #die unless ($result);
-    return $r;
+    return Kynetx::Expressions::den_to_exp($r);
 }
 
 
