@@ -1657,6 +1657,7 @@ sub eval_as {
     } elsif ($obj->{'type'} eq 'num') {
       if ($rands->[0]->{'val'} eq 'str' ) {
 	$obj->{'type'} = $rands->[0]->{'val'};
+	$obj->{'val'} = "$obj->{'val'}";
       }
     } elsif ($obj->{'type'} eq 'regexp') {
       if ($rands->[0]->{'val'} eq 'str') {
