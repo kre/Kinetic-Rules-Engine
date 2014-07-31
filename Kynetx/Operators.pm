@@ -1648,7 +1648,10 @@ sub eval_as {
 
     my $v = 0;
     if ($obj->{'type'} eq 'str') {
-      if ($rands->[0]->{'val'} eq 'num' || $rands->[0]->{'val'} eq 'regexp' ) {
+	if ($rands->[0]->{'val'} eq 'num' && $obj->{'val'} =~ /\d*/) {
+	  $obj->{'type'} = $rands->[0]->{'val'};
+	  $obj->{'val'} = $obj->{'val'} + 0;
+      } elsif ($rands->[0]->{'val'} eq 'regexp' ) {
 	   $obj->{'type'} = $rands->[0]->{'val'};
       } elsif (uc($rands->[0]->{'val'}) eq 'JSON') {
           my $str = $obj->{'val'};
