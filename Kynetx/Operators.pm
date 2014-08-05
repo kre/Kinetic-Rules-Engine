@@ -982,8 +982,13 @@ sub eval_join {
       $result = join($join_val, @{$v});
 
   } else {
+
+      my $emsg = $obj->{'type'} eq 'array'       ? " must be applied to an array" :
+	         $rands->[0]->{'type'} eq 'str'  ? " not a string: $join_val" :
+                                                   "";
+
       Kynetx::Errors::raise_error($req_info, 'warn',
-				  "[join] not a string:  $join_val",
+				  "[join] $emsg",
 				  {'rule_name' => $rule_name,
 				   'genus' => 'operator',
 				   'species' => 'type mismatch'
