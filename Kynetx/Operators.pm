@@ -509,9 +509,24 @@ sub eval_map {
 
       } else {
 	$logger->debug("map used with non-function argument");
+        Kynetx::Errors::raise_error($req_info, 'warn',
+  				  "[map] used with non-function argument",
+				  {'rule_name' => $rule_name,
+				   'genus' => 'operator',
+				   'species' => 'type mismatch'
+				  }
+				 )
+
       }
     } else {
       $logger->debug("map used in non-array or non-map context or without argument");
+      Kynetx::Errors::raise_error($req_info, 'warn',
+  				  "[map] used in non-array or non-map context or without argument",
+				  {'rule_name' => $rule_name,
+				   'genus' => 'operator',
+				   'species' => 'type mismatch'
+				  }
+				 )
     }
 
     return Kynetx::Expressions::typed_value($v);
