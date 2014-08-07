@@ -90,7 +90,7 @@ $( document ).on( "pagecreate", "#create", function() {
   var min_char = 3;
   var timer;
   $('[type="submit"]').button().button('disable');
-  $('#new_email').keyup(function(){
+  $('#new_email').blur(function(){
      clearTimeout(timer);
      var email = $('#new_email').val();
      nowspace = nows(email);
@@ -136,7 +136,21 @@ $( document ).on( "pagecreate", "#create", function() {
      }
      $('[type="submit"]').button('refresh');
   });
-	
+
+  $('[type="submit"]').click(function() {
+     var p1 = $('#new-password').val();
+     var p2 = $('#re-enter-password').val();
+     if (p1 !== p2) {
+	$('#alert_password').html("Passwords don't match").show();
+	return false;
+     } else if (p1 === "") {
+	$('#alert_password').html("Password can't be empty").show();
+	return false;
+     } else {
+	$('#alert_password').html("").hide();
+	return true;
+     }
+  });
 	
 });
 
