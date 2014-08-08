@@ -526,7 +526,7 @@ sub eval_prim {
 		    'val' => $val0 * $val1};
 	};
 	/\// && do {
-	    if ($val1 == 0) {
+	    if (! defined $val1 || 0 == $val1) {
 		my $error_msg = "Division by zero";
 		$logger->info($error_msg);
 		Kynetx::Errors::raise_error($req_info, 
