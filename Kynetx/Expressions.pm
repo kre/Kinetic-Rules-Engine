@@ -526,8 +526,22 @@ sub eval_prim {
 		    'val' => $val0 * $val1};
 	};
 	/\// && do {
-	    return {'type' => 'num',
-		    'val' => $val0 / $val1};
+	    if ($val1 == 0) {
+		my $error_msg = "Division by zero";
+		$logger->info($error_msg);
+		Kynetx::Errors::raise_error($req_info, 
+					    'warn',
+					    $error_msg,
+					    {'rule_name' => $rule_name,
+					     'genus' => 'expression',
+					     'species' => 'division by zero'
+					    }
+					   );
+		return mk_expr_node('null','__undef__')
+	    } else {
+		return {'type' => 'num',
+			'val' => $val0 / $val1};
+	    }
 	};
 	/\%/ && do {
 	    return {'type' => 'num',

@@ -192,6 +192,7 @@ add_expr_testcase(
     '(25 / 5)',
     mk_expr_node('num', 5));
 
+
 $krl_src = <<_KRL_;
  -5
 _KRL_
@@ -521,7 +522,6 @@ add_expr_testcase(
     "'UNTRANSLATABLE KRL EXPRESSION'",
     mk_expr_node('str', 'q=foo'),
     0);
-
 
 $krl_src = <<_KRL_;
 page:param("datasets");
@@ -3577,6 +3577,17 @@ add_expr_testcase(
     '{}',
     mk_expr_node('str', '3.b'),
     0);;
+
+# do it last cause raising an error messes up the test req_info env
+$krl_src = <<_KRL_;
+25 / 0
+_KRL_
+add_expr_testcase(
+    $krl_src,
+    'expr',
+    '(25 / 0)',
+    mk_expr_node("null","__undef__")
+   );
 
 
 	 
