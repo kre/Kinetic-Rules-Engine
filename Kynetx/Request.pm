@@ -28,6 +28,7 @@ use Data::Dumper;
 use Log::Log4perl qw(get_logger :levels);
 use IPC::Lock::Memcached;
 use JSON::XS;
+use DateTime;
 
 use Kynetx::Rids;
 
@@ -98,8 +99,8 @@ sub build_request_env {
   }
 
   my $body_params;
-  $logger->debug("Request body: ",sub {Dumper($req->body())});
-  $logger->debug("Request param: ",sub {Dumper($req->param())});
+#  $logger->debug("Request body: ",sub {Dumper($req->body())});
+#  $logger->debug("Request param: ",sub {Dumper($req->param())});
   if ($content_type eq 'application/json') {
 
     my $body = retrieve_json_from_post($r);
@@ -172,6 +173,7 @@ sub build_request_env {
     page   => $caller,
     url    => $caller,
     now    => time,
+    timestamp => DateTime->now(),
     method => $domain,
 
     # this is also determines the endpint capability type
@@ -319,8 +321,9 @@ sub log_request_env {
 
   my $skip = {"KOBJ.ridlist" => 1,
 	     };
-  
+  my $max_val_length = 100;
   if ( $logger->is_debug() ) {
+    $logger->debug("--------------- REQUEST ---------------");
     foreach my $entry ( keys %{$request_info} ) {
 
       next if $skip->{$entry};
@@ -337,20 +340,21 @@ sub log_request_env {
         }
       }
       elsif ( $entry eq 'event_attrs' ) {
-        $value = "{";
+	my @attrs = ();
         while ( my ( $k, $v ) = each %{ $request_info->{$entry} } ) {
-          $value .= "$k:$v, ";
+	  next if $k eq "attr_names";
+          push  @attrs, "$k:" . substr( $v, 0, $max_val_length );
         }
-        $value .= "}";
+        $value = "{" . join(", ", @attrs) . "}";
 
       }
       elsif ( ref $value eq 'ARRAY' ) {
-        my @tmp = map { substr( $_, 0, 50 ) } @$value;
+        my @tmp = map { substr( $_, 0, $max_val_length ) } @$value;
         $value = '[' . join( ',', @tmp ) . ']';
       }
       else {
         if ($value) {
-          $value = substr( $value, 0, 50 );
+          $value = substr( $value, 0, $max_val_length );
         }
         else {
           $value = '';
