@@ -179,8 +179,9 @@ sub eval_ruleset_function {
   # my $unfiltered_rid_list =
   #   Kynetx::Dispatch::calculate_rid_list( $req_info, $session );
 
-  my $ken = Kynetx::Persistence::get_ken( $session, "", "web" );   # empty rid
-  my $rid_list = Kynetx::Dispatch::get_ridlist( $req_info, $req_info->{'id_token'}, $ken );
+  # my $ken = Kynetx::Persistence::get_ken( $session, "", "web" );   # empty rid
+  # my $rid_list = Kynetx::Dispatch::get_ridlist( $req_info, $req_info->{'id_token'}, $ken );
+  my $rid_list = Kynetx::Dispatch::get_ridlist( $req_info, $req_info->{'id_token'});
   my $rid_list_hash = {map { $_->{'rid'} => 1 } @{ $rid_list }};
 
 #  $logger->trace("Ridlist: ", sub { Dumper $rid_list_hash } );

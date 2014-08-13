@@ -89,6 +89,8 @@ sub get_ken {
     $logger->trace("KEN Request");
     my $ken = get_cached_ken($session);
     if (defined $ken) {
+#      $logger->debug("Session: ", sub{Dumper $session});
+#      $logger->debug("Returning cached ken", $ken);
       return $ken;
     }
     $logger->warn("get_ken called with invalid session: ", sub {Dumper($session)}) unless ($session);
@@ -137,9 +139,10 @@ sub ken_lookup_by_userid {
 sub ken_lookup_by_token {
     my ($ktoken) = @_;
     my $logger = get_logger();
-    my $ken = Kynetx::Memcached::check_cache($ktoken);
+    my $ken = get_cached_ken($ktoken);
     if ($ken) {
-        $logger->trace("Found KEN in memcache: $ken");
+#        $logger->debug("Found KEN in memcache: $ken");
+	return $ken;
     } else {
         $logger->trace("Check mongo for token: $ktoken");
 	    my $var = {
@@ -147,6 +150,8 @@ sub ken_lookup_by_token {
 	    };
 	    my $result = Kynetx::Persistence::KToken::token_query($var);
 	    if ($result) {
+#		$logger->debug("Seeing ken for $ktoken: ", $result->{"ken"});
+		cache_ken($ktoken,$result->{"ken"});
 	        return $result->{"ken"};
 	    } else {
 	    	return undef;
@@ -285,7 +290,11 @@ sub get_ken_defaults {
 
 sub make_ken_cache_keystring {
   my ($session) = @_;
-  my $keystring = "_ken_cache_" . $session;
+  my $token = $session;
+  if (ref $session eq "HASH") {
+    $token = Kynetx::Session::session_id($session);
+  }
+  my $keystring = "_ken_cache_" . $token;
   return $keystring;
 }
 
