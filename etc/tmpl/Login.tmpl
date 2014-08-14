@@ -151,6 +151,8 @@ $( document ).on( "pagecreate", "#create", function() {
 	return true;
      }
   });
+
+  $("#logout").click(function(){console.log("Logout button clicked"); document.cookie = 'SESSION_ID=; path=/;domain=.kobj.net'});
 	
 });
 
