@@ -275,7 +275,7 @@ sub workflow {
     if ($session_token) {
       Kynetx::Persistence::KToken::delete_token($session_token,get_session_id($session));
       my $location = _platform() . '/login';
-      return $location;
+#      return $location;
     }
     $template->param("DIALOG" => native_login($params));
   } elsif ($method eq 'update') {
