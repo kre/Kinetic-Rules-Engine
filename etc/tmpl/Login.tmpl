@@ -152,9 +152,14 @@ $( document ).on( "pagecreate", "#create", function() {
      }
   });
 
-  $("#logout").click(function(){delete_session_cookie();return true});
 	
 });
+
+$( document ).on( "pagecreate", "#page-account-details", function() {
+  console.log("Loading profile page");
+  $("#logout").click(function(){delete_session_cookie();return true});
+});
+
 
 function delete_session_cookie(){
    console.log("deleting session cookie");
