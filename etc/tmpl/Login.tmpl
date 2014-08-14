@@ -152,10 +152,14 @@ $( document ).on( "pagecreate", "#create", function() {
      }
   });
 
-  $("#logout").click(function(){console.log("Logout button clicked"); document.cookie = 'SESSION_ID=; path=/;domain=.kobj.net'});
+  $("#logout").click(function(){delete_session_cookie();return true});
 	
 });
 
+function delete_session_cookie(){
+   console.log("deleting session cookie");
+   document.cookie = 'SESSION_ID=; path=/;domain=.kobj.net';
+}
 
 function nows(str) {
   return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
