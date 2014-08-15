@@ -87,12 +87,13 @@ sub get_ken {
     my ($session,$rid,$domain) = @_;
     my $logger = get_logger();
     $logger->trace("KEN Request");
-    my $ken = get_cached_ken($session);
-    if (defined $ken) {
-#      $logger->debug("Session: ", sub{Dumper $session});
-#      $logger->debug("Returning cached ken", $ken);
-      return $ken;
-    }
+    my $ken;
+#     $ken = get_cached_ken($session);
+#     if (defined $ken) {
+# #      $logger->debug("Session: ", sub{Dumper $session});
+# #      $logger->debug("Returning cached ken", $ken);
+#       return $ken;
+#     }
     $logger->warn("get_ken called with invalid session: ", sub {Dumper($session)}) unless ($session);
     my $ktoken = Kynetx::Persistence::KToken::get_token($session,$rid,$domain);
     if ($ktoken) {
@@ -100,14 +101,14 @@ sub get_ken {
         # update the KEN so we can do a better job of determining stale KENS
         $ken = $ktoken->{'ken'};
         touch_ken($ken);
-        cache_ken($session,$ken);
+#        cache_ken($session,$ken); 
         return $ken;
     }
     $ken = new_ken() unless ($ken);
 
     # A new token must be created
     Kynetx::Persistence::KToken::new_token($rid,$session,$ken);
-    cache_ken($session,$ken);    
+#    cache_ken($session,$ken);    
     return $ken;
 }
 
@@ -139,25 +140,24 @@ sub ken_lookup_by_userid {
 sub ken_lookup_by_token {
     my ($ktoken) = @_;
     my $logger = get_logger();
-    my $ken = get_cached_ken($ktoken);
-    if ($ken) {
-#        $logger->debug("Found KEN in memcache: $ken");
-	return $ken;
+#     my $ken = get_cached_ken($ktoken);
+#     if ($ken) {
+# #        $logger->debug("Found KEN in memcache: $ken");
+# 	return $ken;
+#     } else {
+    $logger->trace("Check mongo for token: $ktoken");
+    my $var = {
+	       'ktoken' => $ktoken
+	      };
+    my $result = Kynetx::Persistence::KToken::token_query($var);
+    if ($result) {
+#     $logger->debug("Seeing ken for $ktoken: ", $result->{"ken"});
+#		cache_ken($ktoken,$result->{"ken"});
+	return $result->{"ken"};
     } else {
-        $logger->trace("Check mongo for token: $ktoken");
-	    my $var = {
-	        'ktoken' => $ktoken
-	    };
-	    my $result = Kynetx::Persistence::KToken::token_query($var);
-	    if ($result) {
-#		$logger->debug("Seeing ken for $ktoken: ", $result->{"ken"});
-		cache_ken($ktoken,$result->{"ken"});
-	        return $result->{"ken"};
-	    } else {
-	    	return undef;
-	    }
-       
+	return undef;
     }
+#    }
 }
 
 sub mongo_has_ken {
@@ -170,26 +170,26 @@ sub mongo_has_ken {
     return undef;
 }
 sub set_authorizing_password {
-	my ($ken,$password_hash) = @_;
-	my $logger = get_logger();
-	my $oid = MongoDB::OID->new(value => $ken);
-	my $key = {"_id" => $oid};
-  my $update = {
-		'$inc' => {'accesses' => 1},
-		'$set' => {'password' => $password_hash}
-	};
-	my $fnmod = {
-	  'query' => $key,
-	  'update' => $update
-	};
-  my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod,1);          
-	if (defined $result->{"value"}) {
-	  Kynetx::MongoDB::clear_cache(COLLECTION,$key);
-	  return 1;
-	}
-	return 0;
-  
+    my ($ken,$password_hash) = @_;
+    my $logger = get_logger();
+    my $oid = MongoDB::OID->new(value => $ken);
+    my $key = {"_id" => $oid};
+    my $update = {
+		  '$inc' => {'accesses' => 1},
+		  '$set' => {'password' => $password_hash}
+		 };
+    my $fnmod = {
+		 'query' => $key,
+		 'update' => $update
+		};
+    my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod,1);          
+    if (defined $result->{"value"}) {
+	Kynetx::MongoDB::clear_cache(COLLECTION,$key);
+	return 1;
+    }
+    return 0;
 }
+
 sub get_authorizing_password {
 	my ($ken) = @_;
 	my $logger = get_logger();
