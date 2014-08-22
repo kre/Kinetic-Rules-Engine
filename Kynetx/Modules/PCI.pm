@@ -335,8 +335,9 @@ sub set_account_password {
   }
   my $p_match = auth_ken($ken,$old_password);
   if ($p_match) {
-    my $hash = _hash_password($new_password);
-    return Kynetx::Persistence::KEN::set_authorizing_password($ken,$hash);
+    set_password($ken, $new_password);
+    # my $hash = _hash_password($new_password);
+    # return Kynetx::Persistence::KEN::set_authorizing_password($ken,$hash);
   } else {
     $logger->debug("Failed to authenticate");
     return 0;
@@ -376,13 +377,13 @@ sub reset_account_password {
     $logger->warn("Reset Password args invalid: ", sub {join(",",@{$args})});
     return undef;
   }
-  return _set_password($ken,$new_password);
+  return set_password($ken,$new_password);
   
   
 }
 $funcs->{'reset_password'} = \&reset_account_password;
 
-sub _set_password {
+sub set_password {
   my ($ken,$new_password) = @_;
   my $hash = _hash_password($new_password);
   return Kynetx::Persistence::KEN::set_authorizing_password($ken,$hash);

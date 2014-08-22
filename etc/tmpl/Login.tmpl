@@ -159,6 +159,24 @@ $( document ).on( "pagecreate", "#page-account-details", function() {
   console.log("Loading profile page");
   $("#logout").click(function(){delete_session_cookie();return true});
 });
+ 
+$( document ).on( "pagecreate", "#page-reset-password", function() {
+  console.log("Loading password reset page");
+  $('[type="submit"]').button().button('disable');
+  $('#re-enter-password').blur(function () {
+     var p1 = $('#new-password').val();
+     var p2 = $('#re-enter-password').val();
+     console.log("Seeing " + p1 + " and " + p2);
+     if (p1 === p2) {
+	$('[type="submit"]').button('enable');
+	$('#alert_password').html("").hide();
+     } else {
+	$('[type="submit"]').button('disable');
+	$('#alert_password').html("Passwords don't match").show();
+     }
+     $('[type="submit"]').button('refresh');
+  });
+});
 
 
 function delete_session_cookie(){

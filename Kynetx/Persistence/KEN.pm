@@ -136,6 +136,17 @@ sub ken_lookup_by_userid {
 	return Kynetx::Persistence::KEN::_ken_query($key);
 }
 
+sub ken_lookup_by_email {
+	my ($email) = @_;
+	if (! defined $email || $email eq "") {
+		return undef;
+	}
+	my $key = {
+		'email' => $email
+	};
+	return Kynetx::Persistence::KEN::_ken_query($key);
+}
+
 
 sub ken_lookup_by_token {
     my ($ktoken) = @_;

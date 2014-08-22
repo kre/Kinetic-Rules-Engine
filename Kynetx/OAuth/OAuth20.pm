@@ -36,10 +36,15 @@ use Cache::Memcached;
 use DateTime::Format::ISO8601;
 use Benchmark ':hireswallclock';
 use Encode qw(from_to);
+use Data::UUID;
+
+use Mail::SendGrid;
+use Mail::SendGrid::Transport::REST;
 
 use Kynetx::Util;
 use Kynetx::Modules::PCI;
 use Kynetx::Persistence::KPDS;
+use Kynetx::Memcached qw(:all);
 
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -271,6 +276,14 @@ sub workflow {
         my $error = "Unable to create account for (" . $params->{'email'} . ")";
         $template->param("DIALOG" => newaccount($params,$error));
       }
+  } elsif ($method eq "forgot_password") {
+    $template->param("DIALOG" => forgot_password($params));
+  } elsif ($method eq "email_reset_link") {
+    $template->param("DIALOG" => email_reset_link($params));
+  } elsif ($method eq "reset_password") {
+    $template->param("DIALOG" => reset_password($params));
+  } elsif ($method eq "change_password") {
+    $template->param("DIALOG" => change_password($params));
   } elsif ($method eq 'logout') {
     if ($session_token) {
       Kynetx::Persistence::KToken::delete_token($session_token,get_session_id($session));
@@ -627,8 +640,224 @@ sub native_login {
   $dialog->param('FORM_URL' => _platform() . "/login/local/auth");
   $dialog->param('HIDDEN_FIELDS' => "");
   $dialog->param('CREATE_URL' => _platform() . "/login/newaccount");
+  $dialog->param("FORGOT_URL" => _platform() . "/login/forgot_password");
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
   return $dialog->output();
+}
+
+sub forgot_password {
+  my ($params,$error) = @_;
+  my $template = DEFAULT_TEMPLATE_DIR . "/login/forgot_password.tmpl";
+  my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+  $dialog->param("PLATFORM" => _platform());
+  if ($error) {
+      my $error_msg = '<strong>' . $error . '</strong>';
+      $dialog->param("LOGIN_ERROR" => $error_msg);
+      my $username = $params->{'user'};
+  }
+
+  # my $email = Kynetx::Persistence::KEN::get_ken_value($ken,'email');
+  # my $n = 2;
+  # # replace all but the first n and last n chars (ignoring domain name) with *
+  # $email =~ s/^(.{$n})(.*)@(.*)(.{$n})\.(.+)$/$1."*" x length($2)."@". "*" x length($3) . $4. "." . $5/e;
+
+
+  $dialog->param('LOGIN_URL' => _platform() . "/login");
+  $dialog->param('FORM_URL' => _platform() . "/login/email_reset_link");
+  $dialog->param('HIDDEN_FIELDS' => "");
+  $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  return $dialog->output();
+}
+
+sub email_reset_link {
+  my ($params,$error) = @_;
+
+  my $logger = get_logger();
+
+  my $template = DEFAULT_TEMPLATE_DIR . "/login/login_message.tmpl";
+  my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+  my $platform =  _platform();
+  my $acct_system_owner_email =  Kynetx::Configure::get_config('ACCT_SYSTEM_OWNER_EMAIL') || 'noreply@kynetx.com';
+
+
+  my $reset_email = $params->{'reset-email'};
+  $logger->debug("Seeing ", sub{Dumper $reset_email});
+  $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  $dialog->param('MSG' => <<_EOF_);
+<p>Your reset link has been sent to</p>
+<p><code>$reset_email</code></p>
+<p>The message will come from <code>$acct_system_owner_email</code>. It may end up in your SPAM folder.</p>
+<p>(<a href="$platform/login/forgot_password">send again</a>)
+_EOF_
+
+  # put all the checking, etc. here...
+  my $ken = Kynetx::Persistence::KEN::ken_lookup_by_email($reset_email);
+  $logger->debug("Ken: ", $ken);
+  if ($ken) { # account exists
+      my $ug = new Data::UUID;
+      my $key = $ug->create_str();
+      my $memd = get_memd();
+      my $reset_obj = {"timestamp" => time, 
+		       "email" => $reset_email, 
+		       "ken" => $ken,
+		       "key" => $key
+		      };
+      
+      $logger->debug("Reset obj: ", sub { Dumper $reset_obj });
+      $memd->set($key, $reset_obj);
+
+      my $acct_system_owner =  Kynetx::Configure::get_config('ACCT_SYSTEM_OWNER') || "Kynetx";
+      my $acct_system_owner_email =  Kynetx::Configure::get_config('ACCT_SYSTEM_OWNER_EMAIL') || 'noreply@kynetx.com';
+
+      my $password_reset_link = "$platform/login/reset_password?key=$key";
+
+      my $msg = <<_EOF_;
+Someone (hopefully you) has requested a password reset from $acct_system_owner. 
+
+To reset your password, click on the following link:
+
+$password_reset_link
+
+If you did not request a password reset from $acct_system_owner, please ignore this message. 
+_EOF_
+
+      $reset_email =~ s/\+/%2B/g;
+      my $sg = Mail::SendGrid->new( from => $acct_system_owner_email,
+				    to => $reset_email,
+				    subject => "Reset your $acct_system_owner password",
+				    text => $msg,
+				  );
+
+      #disable click tracking filter for this request
+      $sg->disableClickTracking();
+
+      #set a category
+      $sg->header->setCategory('password_reset');
+
+      #add unique arguments
+      $sg->header->addUniqueIdentifier( customer => $key );
+
+      $logger->debug("un/password: /", Kynetx::Configure::get_config('SENDGRID_USERNAME'), "/", Kynetx::Configure::get_config('SENDGRID_PASSWORD'), "/");
+
+      my $trans = Mail::SendGrid::Transport::REST->new( username =>  Kynetx::Configure::get_config('SENDGRID_USERNAME'), 
+							password =>  Kynetx::Configure::get_config('SENDGRID_PASSWORD') );
+
+      my $error = $trans->deliver($sg);
+      if ($error) {
+	  $logger->debug("Sendgrid error in password reset for $reset_email:" , $error);
+	  $dialog->param('MSG' => <<_EOF_);
+<h3>Something went wrong! </h3>
+<p>We were unable to send an email to <code>$acct_system_owner_email</code>.</p>
+<p>(<a href="$platform/login/forgot_password">Try again</a>)
+_EOF_
+
+      }
+
+  }
+
+  return $dialog->output();
+}
+
+sub reset_password {
+  my ($params,$error) = @_;
+
+  my $logger = get_logger();
+
+  my $key = $params->{'key'};
+  $logger->debug("Seeing ", sub{Dumper $key});
+  my $memd = get_memd();
+  my $reset_obj = $memd->get($key);
+  $logger->debug("Reset obj: ", sub { Dumper $reset_obj });
+
+  my $dialog;
+  if (! defined $reset_obj || _reset_expired($reset_obj) ) {
+
+      my $template = DEFAULT_TEMPLATE_DIR . "/login/login_message.tmpl";
+      $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+
+      my $forgot_url = _platform() . "/login/forgot_password";
+      $dialog->param('MSG' => <<_EOF_);
+<p>Your password was <strong>not reset</strong> because the reset link is expired.</p>
+<p>Please <a href="$forgot_url">try again</a></p>
+_EOF_
+
+  } else {
+      my $template = DEFAULT_TEMPLATE_DIR . "/login/reset_password.tmpl";
+      $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+
+      my $platform =  _platform();
+      $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+      $dialog->param('FORM_URL' => "/login/change_password");
+      $dialog->param('LOGIN_URL' => _platform() . "/login");
+
+      $dialog->param('HIDDEN_FIELDS' => <<_EOF_
+<input type="hidden" name="key" value="$key" >
+_EOF_
+		    );
+  }
+  return $dialog->output();
+
+}
+
+sub change_password {
+  my ($params,$error) = @_;
+
+  my $logger = get_logger();
+
+  my $template = DEFAULT_TEMPLATE_DIR . "/login/login_message.tmpl";
+  my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+  my $platform =  _platform();
+
+  my $login_url = _platform() . "/login/";
+  my $forgot_url = _platform() . "/login/forgot_password";
+  $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+
+  my $key = $params->{'key'};
+  my $p1 = $params->{'password'};
+  my $p2 = $params->{'re-enter-password'};
+  $logger->debug("Got: ", $key, ":", $p1, ":", $p2 );
+  
+  my $memd = get_memd();
+  my $reset_obj = $memd->get($key);
+  $logger->debug("Reset obj: ", sub { Dumper $reset_obj });
+  
+      # my $reset_obj = {"timestamp" => time, 
+      # 		       "email" => $reset_email, 
+      # 		       "ken" => $ken,
+      # 		       "key" => $key
+      # 		      };
+      
+
+  if (_reset_expired($reset_obj) ) {
+      $dialog->param('MSG' => <<_EOF_);
+<p>Your password was <strong>not reset</strong> because the reset link is expired.</p>
+<p>Please <a href="$forgot_url">try again</a></p>
+_EOF_
+  } elsif ($p1 ne $p2) {
+      $dialog->param('MSG' => <<_EOF_);
+<p>Your password was <strong>not reset</strong> because the passwords you supplied did not match.</p>
+<p>Please <a href="$forgot_url">try again</a></p>
+_EOF_
+  } else {
+
+      my $ken = $reset_obj->{"ken"};
+      my $res = Kynetx::Modules::PCI::set_password($ken, $p1);
+      $memd->delete($key); # you can only use it once
+      $logger->debug("Set password returned ", $res);
+      $dialog->param('MSG' => <<_EOF_);
+<p>Your password has been reset</p>
+<p>Please <a href="$login_url">login</a></p>
+_EOF_
+      
+  }
+
+  return $dialog->output();
+}
+
+sub _reset_expired {
+  my ($reset_obj) = @_;
+  my $expire_seconds = 3600; # one hour
+  return time > ($reset_obj->{"timestamp"} + $expire_seconds)
 }
 
 sub oauth_code {
@@ -706,6 +935,7 @@ _EOF_
 					       }	
 				       );
   $dialog->param("CREATE_URL" => $create_url);
+  $dialog->param("FORGOT_URL" => _platform() . "/login/forgot_password");
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
   if ($error) {
       my $error_msg = '<strong>' . $error . '</strong>';
