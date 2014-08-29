@@ -173,6 +173,79 @@ $result = Kynetx::Expressions::den_to_exp(
 is_string_nows($result,$csv,$description);
 $test_count++;
 
+$trips = [{
+          "startWaypoint"=> "-111.712441, 40.332897",
+          "cost"=> "2.02",
+          "name"=> "school",
+          "interval"=> 1372,
+          "mileage"=> "8.7",
+          "endWaypoint"=> "-111.658318, 40.251986",
+          "endTime"=> "20140829T143628+0000",
+          "avgSpeed"=> "22.8",
+          "startTime"=> "20140829T141336+0000",
+          "category"=> "business"
+       },
+       {
+          "cost"=> "0.63",
+          "startWaypoint"=> "-111.687001, 40.334647",
+          "name"=> "shopping",
+          "interval"=> 734,
+          "mileage"=> "2.7",
+          "endWaypoint"=> "-111.71217, 40.332837",
+          "endTime"=> "20140829T132710+0000",
+          "avgSpeed"=> "13.2",
+          "startTime"=> "20140829T131456+0000",
+          "category"=> ""
+      }];
+
+
+$description = "Other trip data";
+$source = 'csv';
+$function = 'from_array';
+$args = [$trips];
+
+$csv = <<_EOF_;
+cost,startWaypoint,name,interval,mileage,endWaypoint,endTime,avgSpeed,category,startTime
+2.02,"-111.712441, 40.332897",school,1372,8.7,"-111.658318, 40.251986",20140829T143628+0000,22.8,business,20140829T141336+0000
+0.63,"-111.687001, 40.334647",shopping,734,2.7,"-111.71217, 40.332837",20140829T132710+0000,13.2,,20140829T131456+0000
+_EOF_
+
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+#diag $result, "\n";
+is_string_nows($result,$csv,$description);
+$test_count++;
+
+$description = "Other trip data with fields";
+$source = 'csv';
+$function = 'from_array';
+$args = [$trips, ["endTime", "category"]];
+
+$csv = <<_EOF_;
+endTime,category
+20140829T143628+0000,business
+20140829T132710+0000,
+_EOF_
+
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+#diag $result, "\n";
+is_string_nows($result,$csv,$description);
+$test_count++;
 
 
 
