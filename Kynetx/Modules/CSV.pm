@@ -70,8 +70,10 @@ sub generate_csv_from_array {
     my $logger = get_logger();
 
     my $entries = $args->[0];
+    my $keys = $args->[1];
 
-    if (! ref $entries eq 'array') {
+
+    if (! ref $entries eq 'ARRAY') {
 	$logger->debug("Arg one to csv_from_array should be array; saw ", ref $entries)
     }
 
@@ -79,11 +81,12 @@ sub generate_csv_from_array {
 
     # create first line
     my $first = $entries->[0];
-    #$logger->debug("Seeing ", defined $csv, sub{ Dumper keys %{$first} });
+    my @first_line = (ref $keys eq "ARRAY") ? @{$keys} : keys %{$first};
 
-    my @first_line = keys %{$first};
+    #$logger->debug("Seeing ", (ref $keys), sub{ Dumper $keys }, sub{Dumper @first_line});
+
     
-    my $first_status = $csv->combine(keys %{$first}); # use keys as column names
+    my $first_status = $csv->combine(@first_line); # use keys as column names
     my $result;
     push @{$result}, $csv->string();
     
@@ -91,12 +94,17 @@ sub generate_csv_from_array {
     foreach my $entry (@{ $entries }) {
 
 	#$logger->debug("Seeing ", sub{ Dumper $entry});
-	my $status = $csv->combine(values %{$entry});
+	my @values;
+	# ensure the order
+	foreach my $k (@first_line) {
+	    push @values, $entry->{$k}
+	}
+	my $status = $csv->combine(@values);
 	push @{$result}, $csv->string();
     }
 
     my $csv_string = join("\n", @{$result});
-#    $logger->debug($csv_string);
+    #$logger->debug($csv_string);
     return $csv_string;
 
 }

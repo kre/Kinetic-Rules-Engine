@@ -147,6 +147,33 @@ is_string_nows($result,$csv,$description);
 $test_count++;
 
 
+$description = "Initial csv_from_array test with specified keys";
+$source = 'csv';
+$function = 'from_array';
+$args = [$trips, ["dtend","url"]];
+
+$csv = <<_EOF_;
+dtend,url
+20140419T024441+0000,"http://maps.google.com/maps?saddr=40.334671,-111.686813"
+20140419T164554+0000,"http://maps.google.com/maps?saddr=40.32578,-111.734885"
+20140417T151705+0000,"http://maps.google.com/maps?saddr=40.278139,-111.657351"
+20140419T170113+0000,"http://maps.google.com/maps?saddr=40.327397,-111.729678"
+_EOF_
+
+$result = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info,
+                       $rule_env,
+                       $session,
+                       $rule_name,
+                       $source,
+                       $function,
+                       $args
+                      ));
+#diag $result, "\n";
+is_string_nows($result,$csv,$description);
+$test_count++;
+
+
 
 
 ok(1,"dummy test");
