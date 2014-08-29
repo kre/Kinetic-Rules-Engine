@@ -80,6 +80,7 @@ use Kynetx::Modules::URI;
 use Kynetx::Modules::Address;
 use Kynetx::Modules::PDS;
 use Kynetx::Modules::ICal;
+use Kynetx::Modules::CSV;
 use Kynetx::Modules::This2That;
 use Kynetx::Modules::OAuthModule;
 use Kynetx::Modules::Random;
@@ -505,6 +506,14 @@ sub eval_module {
             $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::ICal::run_function( $req_info,$function,$args );
+        }    	
+    } elsif ( $source eq 'csv' ) {
+        $preds = Kynetx::Modules::CSV::get_predicates();
+        if ( defined $preds->{$function} ) {
+            $val = $preds->{$function}->( $req_info, $rule_env, $args );
+            $val = Kynetx::Expressions::boolify($val || 0);
+        } else {
+            $val = Kynetx::Modules::CSV::run_function( $req_info,$function,$args );
         }    	
     } elsif ( $source eq 'xdi' ) {
         $preds = Kynetx::Persistence::KXDI::get_predicates();
