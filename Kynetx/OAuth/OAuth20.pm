@@ -747,7 +747,7 @@ _EOF_
 	  $logger->debug("Sendgrid error in password reset for $reset_email:" , $error);
 	  $dialog->param('MSG' => <<_EOF_);
 <h3>Something went wrong! </h3>
-<p>We were unable to send an email to <code>$acct_system_owner_email</code>.</p>
+<p>We were unable to send an email to <code>$reset_email</code>.</p>
 <p>(<a href="$platform/login/forgot_password">Try again</a>)
 _EOF_
 
