@@ -2232,6 +2232,31 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+$e[$i] = q/i_h.encode({"pretty": true})/;
+$x[$i] = {
+    'val' => <<_EOF_,
+{
+   "mKey" : "mValue",
+   "hKey" : {
+      "innerKey" : "innerVal"
+   }
+}
+_EOF_
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+
+$e[$i] = q/i_h.encode({"pretty": false})/;
+$x[$i] = {
+    'val' => '{"mKey":"mValue","hKey":{"innerKey":"innerVal"}}',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+
 $e[$i] = q/c_h.encode()/;
 $x[$i] ={
     'val' => '[{"hKey":"hValue"}]',

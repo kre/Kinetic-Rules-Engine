@@ -1733,8 +1733,17 @@ sub eval_encode {
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
     my $tmp = Kynetx::Expressions::den_to_exp($obj);
     $logger->trace("EXP: ", sub {Dumper($tmp)});
+
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+    my $pretty = 0;
+    my $r = Kynetx::Expressions::den_to_exp($rands->[0]);
+    if (JSON::XS::is_bool $r->{'pretty'}) {
+	$pretty = $r->{"pretty"} ? 1 : 0;
+    }
+
+
     #my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
-    my $json = JSON::XS::->new->convert_blessed(1)->allow_nonref->encode($tmp);
+    my $json = JSON::XS::->new->convert_blessed(1)->allow_nonref->pretty($pretty)->encode($tmp);
     $logger->trace("JSON: ", $json);
     $obj->{'type'} = "str";
     $obj->{'val'} = $json;
