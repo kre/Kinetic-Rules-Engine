@@ -1736,14 +1736,18 @@ sub eval_encode {
 
     my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
     my $pretty = 0;
+    my $canonical = 0;
     my $r = Kynetx::Expressions::den_to_exp($rands->[0]);
     if (JSON::XS::is_bool $r->{'pretty'}) {
 	$pretty = $r->{"pretty"} ? 1 : 0;
     }
+    if (JSON::XS::is_bool $r->{'canonical'}) {
+	$canonical = $r->{"canonical"} ? 1 : 0;
+    }
 
 
     #my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
-    my $json = JSON::XS::->new->convert_blessed(1)->allow_nonref->pretty($pretty)->encode($tmp);
+    my $json = JSON::XS::->new->convert_blessed(1)->allow_nonref->pretty($pretty)->canonical($canonical)->encode($tmp);
     $logger->trace("JSON: ", $json);
     $obj->{'type'} = "str";
     $obj->{'val'} = $json;

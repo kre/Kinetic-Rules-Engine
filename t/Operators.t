@@ -2256,6 +2256,16 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+$e[$i] = q/i_h.encode({"canonical":true})/;
+$x[$i] = {
+    'val' => '{"hKey":{"innerKey":"innerVal"},"mKey":"mValue"}',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+
+
 
 $e[$i] = q/c_h.encode()/;
 $x[$i] ={
