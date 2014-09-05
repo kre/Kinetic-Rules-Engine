@@ -2560,6 +2560,29 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+$e[$i] = q/j_h.delete("colors of the wind")/;
+$x[$i] = {
+	'val' => {
+	  'pi as array' => [
+	    3,
+	    1,
+	    4,
+	    1,
+	    5,
+	    6,
+	    9
+	  ],
+	  'foo' => {
+	  	'bar' => {
+	  		10 => 'I like cheese'
+	  	}
+	  }
+	},
+	'type'=>'hash'
+};
+$d[$i] = 0;
+$i++;
+
 $e[$i] = q/j_h.keys()/;
 $x[$i] = {
 	'val' => [

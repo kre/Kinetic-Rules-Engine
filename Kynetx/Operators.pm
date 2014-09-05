@@ -1917,7 +1917,6 @@ sub hash_put {
         my $hash = clone ($obj->{'val'});
         my $path = Kynetx::Expressions::den_to_exp($rands->[0]);
         if (ref $path eq 'ARRAY') {
-        	$logger->debug("Is array");
         	my $value = Kynetx::Expressions::den_to_exp($rands->[1]);
         	_merge_hash($hash,$path,$value);
         	return Kynetx::Expressions::typed_value($hash);        	
@@ -1969,8 +1968,13 @@ sub hash_delete {
     if ($type eq 'hash') {
         my $hash = clone ($obj->{'val'});
         my $path = Kynetx::Expressions::den_to_exp($rands->[0]);
+	$logger->debug("Arg is ", ref $path);
+	unless (ref $path eq "ARRAY") {
+	    $logger->debug("Delete arg not array; fixing");
+	    $path = [$path];
+	}
+	my $path_str = join("",@$path);
         my $temp = $hash;
-        my $path_str = join("",@$path);
         my $str = "";
         foreach my $path_element (@$path) {
         	$str .= $path_element;
