@@ -120,6 +120,7 @@ sub difference {
 
 sub has {
   my ($a,$b) = @_;
+  return 0 if (! (defined $a &&  defined $b) );
   my $logger = get_logger();
   my $hash;
   my $sub_set = scalar @{$b};
