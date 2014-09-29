@@ -2918,7 +2918,7 @@ ENDY:
 
 # now run the tests....
 my $l = scalar @e;
-plan tests => $l+6; # bump for persistent tests below that run after these
+plan tests => $l+10; # bump for persistent tests below that run after these
 
 my $j;
 for ($j = 0; $j < $i; $j++) {
@@ -2996,6 +2996,12 @@ cmp_deeply($r, $x[$i], "Ensure persistent is set");
 #diag Dumper $r;
 
 $i+=3;
+
+is(Kynetx::Sets::has([1,2,3], [3]), 1, "testing has with singleton");
+is(Kynetx::Sets::has([1,2,3], [2,4]), 0, "testing has with no match");
+is(Kynetx::Sets::has([1,2,3], undef), 0, "testing has with undef");
+is(Kynetx::Sets::has(undef, [2,4]), 0, "testing has with undef");
+
 
 
 

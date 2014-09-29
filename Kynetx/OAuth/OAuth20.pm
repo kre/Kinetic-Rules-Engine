@@ -397,7 +397,7 @@ sub has_bootstrap_ruleset {
   my $logger = get_logger();
   my $dken = Kynetx::Persistence::KEN::ken_lookup_by_token($developer_eci);
   my $list = Kynetx::Persistence::KPDS::get_bootstrap($dken,$developer_eci);
-  my $installed = Kynetx::Persistence::KPDS::get_rulesets($ken);
+  my $installed = Kynetx::Persistence::KPDS::get_rulesets($ken) || [];
   $logger->debug("Bootstrap rulesets: ", sub {Dumper($list)});
   $logger->debug("Installed: ", sub {Dumper($installed)});
   if (defined $list) {

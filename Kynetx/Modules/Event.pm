@@ -157,7 +157,7 @@ sub get_eventinfo {
       else {
         $name = $pn;
       }
-      $ps->{$name} = get_attr( $req_info, $rid, $pn ) unless $skip{$name};
+      $ps->{$name} = get_attr( $req_info, $rid, $pn ) unless $skip{$name} || $name =~ m/^_.+/;
 
     }
 
