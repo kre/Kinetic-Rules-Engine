@@ -112,7 +112,7 @@ sub jsonToAst_w {
     my $pstruct;
     eval {
         #$pstruct = JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(1)->decode($json);
-        $pstruct = JSON::XS::->new->convert_blessed(1)->pretty(1)->decode($json);
+        $pstruct = JSON::XS::->new->convert_blessed(1)->allow_nonref->pretty(1)->decode($json);
     };
 #    if ($@ && not defined $pstruct) { # $pstruct is always defined (with a string)
     if ($@) {

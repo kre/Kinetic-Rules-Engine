@@ -726,7 +726,7 @@ sub validate {
 	my $logger = get_logger();
 	my $size = Devel::Size::total_size($val);
 	if ($size > $MONGO_MAX_SIZE) {
-		$logger->debug("Value ($size) is larger than $MONGO_MAX_SIZE bytes");
+		$logger->info("Value is larger than $MONGO_MAX_SIZE bytes: $size");
 		return 0;
 	} else {
 		return 1;

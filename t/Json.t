@@ -42,10 +42,12 @@ my $logger = get_logger();
 
 my $skip = {"data/events12.krl" => 1,
 	    "data/events13.krl" => 1,
+	    "data/operator2.krl" => 1,
+	    "data/schedule3.krl" => 1,
 	   };
 
 
-plan tests => $#krl_files-(length(keys %{$skip})+2);
+plan tests => $#krl_files-(length(keys %{$skip})+4);
 
 
 # test the round trip KRL -> Json -> KRL

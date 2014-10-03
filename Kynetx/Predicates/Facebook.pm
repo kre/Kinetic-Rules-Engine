@@ -31,7 +31,7 @@ use Storable qw/dclone freeze/;
 use Digest::MD5 qw/md5_hex/;
 use Clone qw/clone/;
 
-use Kynetx::Expressions qw(mk_den_str);
+use Kynetx::Expressions;
 use Kynetx::OAuth;
 use Kynetx::Errors;
 use Kynetx::Environments qw/:all/;

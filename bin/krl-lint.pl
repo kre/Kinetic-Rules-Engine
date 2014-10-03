@@ -68,6 +68,14 @@ $Data::Dumper::Indent = 1;
 
 my $logger = get_logger();
 
+<<<<<<< HEAD
+=======
+#
+# check for undefined vars
+# check for redefined vars
+# 
+
+>>>>>>> 0e7d9a0df758d9ca1358bf609bc9ef0e12701785
 
 my $tree;
 
