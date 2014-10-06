@@ -399,14 +399,14 @@ sub has_default_ruleset {
   my ($ken) = @_;
   my $logger = get_logger();
   my $installed = Kynetx::Persistence::KPDS::get_rulesets($ken) || [];
-  $logger->debug("Default rulesets: ", sub {Dumper(+DEFAULT_RULESET)});
-  $logger->debug("Installed: ", sub {Dumper($installed)});
+#  $logger->debug("Default rulesets: ", sub {Dumper(+DEFAULT_RULESET)});
+#  $logger->debug("Installed: ", sub {Dumper($installed)});
   if (defined +DEFAULT_RULESET && defined $installed && scalar @{ $installed })  {
       if  (Kynetx::Sets::has($installed, +DEFAULT_RULESET)) {
-	  $logger->debug("Default ruleset is installed");
+	  $logger->debug("Default rulesets are installed");
 	  return 1
       } else {
-	  $logger->debug("Default ruleset NOT installed");
+	  $logger->debug("Default rulesets are NOT installed");
 	  return 0
       }
   } else {
@@ -420,8 +420,8 @@ sub has_bootstrap_ruleset {
   my $dken = Kynetx::Persistence::KEN::ken_lookup_by_token($developer_eci);
   my $list = Kynetx::Persistence::KPDS::get_bootstrap($dken,$developer_eci);
   my $installed = Kynetx::Persistence::KPDS::get_rulesets($ken) || [];
-  $logger->debug("Bootstrap rulesets: ", sub {Dumper($list)});
-  $logger->debug("Installed: ", sub {Dumper($installed)});
+#  $logger->debug("Bootstrap rulesets: ", sub {Dumper($list)});
+#  $logger->debug("Installed: ", sub {Dumper($installed)});
   if (defined $list && defined $installed && scalar @{ $installed })  {
       if  (Kynetx::Sets::has($installed,$list)) {
 	  $logger->debug("Bootstrap rulesets are installed");
