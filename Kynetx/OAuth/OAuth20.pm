@@ -401,12 +401,15 @@ sub has_default_ruleset {
   my $installed = Kynetx::Persistence::KPDS::get_rulesets($ken) || [];
   $logger->debug("Default rulesets: ", sub {Dumper(+DEFAULT_RULESET)});
   $logger->debug("Installed: ", sub {Dumper($installed)});
-  if  (Kynetx::Sets::has(+DEFAULT_RULESET,$installed)) {
-      return 1
+  if (defined +DEFAULT_RULESET && defined $installed && scalar @{ $installed })  {
+      if  (Kynetx::Sets::has(+DEFAULT_RULESET,$installed)) {
+	  return 1
+      } else {
+	  return 0
+      }
   } else {
-      return 0
+      return 0;
   }
-  return 0;
 }
 
 sub has_bootstrap_ruleset {
@@ -417,15 +420,15 @@ sub has_bootstrap_ruleset {
   my $installed = Kynetx::Persistence::KPDS::get_rulesets($ken) || [];
   $logger->debug("Bootstrap rulesets: ", sub {Dumper($list)});
   $logger->debug("Installed: ", sub {Dumper($installed)});
-  if (defined $list) {
-    if  (Kynetx::Sets::has($list,$installed)) {
-      return 1
-    } else {
-      return 0
-    }
+  if (defined $list && defined $installed && scalar @{ $installed })  {
+      if  (Kynetx::Sets::has($list,$installed)) {
+	  return 1
+      } else {
+	  return 0
+      }
+  } else {
+      return 0;
   }
-  return 0;
-    
 }
 
 sub add_bootstrap_ruleset {
