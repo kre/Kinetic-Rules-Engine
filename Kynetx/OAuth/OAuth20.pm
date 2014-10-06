@@ -445,6 +445,7 @@ sub add_bootstrap_ruleset {
 sub add_ruleset_to_account {
   my ($ken, $rid) = @_;
   my @ridlist = ();
+  my $logger = get_logger();
   $logger->debug("Installing ", sub{ Dumper $rid });
   if (ref $rid eq "ARRAY") {
     @ridlist = @{$rid};
