@@ -402,9 +402,11 @@ sub has_default_ruleset {
   $logger->debug("Default rulesets: ", sub {Dumper(+DEFAULT_RULESET)});
   $logger->debug("Installed: ", sub {Dumper($installed)});
   if (defined +DEFAULT_RULESET && defined $installed && scalar @{ $installed })  {
-      if  (Kynetx::Sets::has(+DEFAULT_RULESET,$installed)) {
+      if  (Kynetx::Sets::has(+DEFAULT_installed,$RULESET)) {
+	  $logger->debug("Default ruleset is installed");
 	  return 1
       } else {
+	  $logger->debug("Default ruleset NOT installed");
 	  return 0
       }
   } else {
@@ -421,9 +423,11 @@ sub has_bootstrap_ruleset {
   $logger->debug("Bootstrap rulesets: ", sub {Dumper($list)});
   $logger->debug("Installed: ", sub {Dumper($installed)});
   if (defined $list && defined $installed && scalar @{ $installed })  {
-      if  (Kynetx::Sets::has($list,$installed)) {
+      if  (Kynetx::Sets::has($installed,$list)) {
+	  $logger->debug("Bootstrap rulesets are installed");
 	  return 1
       } else {
+	  $logger->debug("Bootstrap rulesets are NOT installed");
 	  return 0
       }
   } else {
@@ -456,7 +460,7 @@ sub add_ruleset_to_account {
     push(@ridlist,$rid);
   }
   my $installed = Kynetx::Persistence::KPDS::add_ruleset($ken,\@ridlist);
-  $logger->debug("Installed rulesets: ", sub{ Dumper $installed });
+  $logger->debug("Installed rulesets: ", sub{ Dumper $installed->{'value'} });
 }
 
 sub create_account {
