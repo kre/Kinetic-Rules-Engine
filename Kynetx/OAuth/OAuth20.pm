@@ -387,9 +387,24 @@ sub _bootstrap {
   my $logger = get_logger();
   my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($user_eci);
   if ($ken) {
+    add_ruleset_to_account($ken,+DEFAULT_RULESET) unless (has_default_ruleset($ken));	  
     add_bootstrap_ruleset($ken,$developer_eci) unless (has_bootstrap_ruleset($ken,$developer_eci)) ;
   }
     
+}
+
+sub has_default_ruleset {
+  my ($ken) = @_;
+  my $logger = get_logger();
+  my $installed = Kynetx::Persistence::KPDS::get_rulesets($ken) || [];
+  $logger->debug("Default rulesets: ", sub {Dumper(+DEFAULT_RULESET)});
+  $logger->debug("Installed: ", sub {Dumper($installed)});
+  if  (Kynetx::Sets::has(+DEFAULT_RULESET,$installed)) {
+      return 1
+  } else {
+      return 0
+  }
+  return 0;
 }
 
 sub has_bootstrap_ruleset {
