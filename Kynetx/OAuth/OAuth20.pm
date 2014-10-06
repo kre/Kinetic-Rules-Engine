@@ -402,7 +402,7 @@ sub has_default_ruleset {
   $logger->debug("Default rulesets: ", sub {Dumper(+DEFAULT_RULESET)});
   $logger->debug("Installed: ", sub {Dumper($installed)});
   if (defined +DEFAULT_RULESET && defined $installed && scalar @{ $installed })  {
-      if  (Kynetx::Sets::has(+DEFAULT_installed,$RULESET)) {
+      if  (Kynetx::Sets::has(+DEFAULT_RULESET,$installed)) {
 	  $logger->debug("Default ruleset is installed");
 	  return 1
       } else {
