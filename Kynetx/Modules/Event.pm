@@ -139,6 +139,8 @@ sub get_eventinfo {
       element            => 1,
       kvars              => 1,
       _generatedby       => 1,
+      _type              => 1,
+      _domain            => 1,
     );
 
     #      $logger->debug("Req info: ", sub {Dumper($req_info)});
