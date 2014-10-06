@@ -137,7 +137,8 @@ sub get_eventinfo {
       txn_id             => 1,
       kynetx_app_version => 1,
       element            => 1,
-      kvars              => 1
+      kvars              => 1,
+      _generatedby       => 1,
     );
 
     #      $logger->debug("Req info: ", sub {Dumper($req_info)});
