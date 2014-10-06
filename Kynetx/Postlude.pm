@@ -59,6 +59,12 @@ use Kynetx::Persistence::SchedEv;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
+use Devel::Size qw(
+  size
+  total_size
+);
+
+
 sub eval_post_expr {
     my ( $rule, $session, $req_info, $rule_env, $fired, $execenv ) = @_;
 
@@ -151,8 +157,8 @@ sub eval_post_statement {
 					$expr->{'level'} || 'error',
 					$p_expr->{'DEBUG'},
 					{'rule_name' => $rule_name,
-				 	'genus' => 'user',
-				 	'species' => 'error'
+				 	'genus' => 'postlude',
+				 	'species' => 'persistent'
 					}
 			      );
     		
@@ -223,7 +229,8 @@ sub eval_persistent_expr {
             if (Kynetx::MongoDB::validate($value)) {
             	save_persistent_var($domain, get_rid($req_info->{'rid'}), $session, $expr->{'name'}, $value );
             } else {
-            	my $msg = $expr->{'name'} . " is too large";
+		my $size = Devel::Size::total_size($value);
+            	my $msg = $expr->{'name'} . " is too large ($size bytes)";
             	return Kynetx::Errors::merror($msg);
             }
             
@@ -256,8 +263,9 @@ sub eval_persistent_expr {
 					$path,
 					$value);
         } else {
-            	my $msg = $expr->{'name'} . " is too large";
-            	return Kynetx::Errors::merror($msg);        	
+	    my $size = Devel::Size::total_size($value);
+	    my $msg = $expr->{'name'} . " is too large ($size bytes)";
+	    return Kynetx::Errors::merror($msg);        	
         }
     } elsif ( $expr->{'action'} eq 'iterator' ) {
         my $op = $expr->{'op'};
