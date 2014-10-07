@@ -266,7 +266,7 @@ sub get_callbacks {
 	my $logger=get_logger();
 	my $keypath = [OAUTH, $dev_eci, 'callbacks'];
 	my $result = get_kpds_element($ken,$keypath);
-	$logger->debug("list: ", sub {Dumper($result)});
+	$logger->debug("Callbacks: ", sub {Dumper($result)});
 	return $result;		
 }
 
@@ -293,7 +293,7 @@ sub get_bootstrap {
 	my $logger=get_logger();
 	my $keypath = [OAUTH, $dev_eci, 'bootstrap'];
 	my $result = get_kpds_element($ken,$keypath);
-	$logger->debug("list: ", sub {Dumper($result)});
+	$logger->debug("bootstrap rulesets: ", sub {Dumper($result)});
 	return $result;		
 }
 

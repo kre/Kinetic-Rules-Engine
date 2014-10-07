@@ -516,7 +516,7 @@ sub _oauth_token {
     'endpoint_type' => $etype,
     'ken' => $ken
   };
-  $logger->debug("Key: ", sub {Dumper($var)});
+#  $logger->debug("Key: ", sub {Dumper($var)});
   my $token = Kynetx::Persistence::KToken::token_query($var);
 #  $logger->debug("token: ", sub {Dumper($token)});
   if ($token) {
