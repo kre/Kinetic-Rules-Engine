@@ -227,6 +227,8 @@ sub eval_module {
 	$val = Kynetx::Configure::get_config('EVAL_HOST');
       } elsif ($function eq 'txnId') {
 	$val =  $req_info->{"txn_id"};
+      } elsif ($function eq 'uri') {
+	$val =  $req_info->{"uri"};
       } else {
 	     $val = "No meta information for $function available";
       }
