@@ -528,7 +528,7 @@ sub eval_prim {
 	};
 	/\// && do {
 	    if (! defined $val1 || ! looks_like_number($val1) || JSON::XS::is_bool $val1 || 0 == $val1) {
-		my $error_msg = "Division by zero";
+		my $error_msg = "Division by zero or non-number: $val1";
 		$logger->info($error_msg);
 		Kynetx::Errors::raise_error($req_info, 
 					    'warn',
