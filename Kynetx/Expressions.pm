@@ -35,6 +35,7 @@ use Digest::MD5 qw/md5_hex/;
 use Encode qw/encode_utf8/;
 use Clone qw/clone/;
 use Data::Diver qw(Dive);
+use Scalar::Util qw(looks_like_number);
 
 use XDI;
 
@@ -526,7 +527,7 @@ sub eval_prim {
 		    'val' => $val0 * $val1};
 	};
 	/\// && do {
-	    if (! defined $val1 || 0 == $val1) {
+	    if (! defined $val1 || ! looks_like_number($val1) || 0 == ($val1 + 0)) {
 		my $error_msg = "Division by zero";
 		$logger->info($error_msg);
 		Kynetx::Errors::raise_error($req_info, 
