@@ -2877,7 +2877,7 @@ OTHER_OPERATORS
     | 'duplicates' | 'append' | 'put' | 'delete' | 'keys' | 'values'
     | 'encode' | 'decode' 
     | 'typeof' | 'isnull'
-    | 'klog'
+    | 'klog' | 'defaultsTo'
     ;
 
 AGGREGATORS

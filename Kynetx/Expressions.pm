@@ -944,8 +944,6 @@ sub eval_pred {
 
     $logger->debug("Complex predicate ", $pred->{'op'}, " returns value: ", sub{ Dumper $val});
     return mk_den_value(boolify($val))
-
-
 }
 
 sub eval_ineq {

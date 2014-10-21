@@ -2112,17 +2112,7 @@ sub eval_null {
 	my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 	my $isNull = 0;
 	# Not optimizing test cases for easy debugging
-	if (defined $obj) {
-		if ($obj->{'type'} eq 'null') {
-			$isNull = 1;
-		} elsif (! defined $obj->{'val'}) {
-			$isNull = 1;
-		}
-	} else {
-		$isNull = 1;
-	}
-	
-	if ($isNull) {
+	if (_is_null($obj)) {
 		return Kynetx::Parser::mk_expr_node('bool','true');
 	} else {
 		return Kynetx::Parser::mk_expr_node('bool','false');
@@ -2130,6 +2120,21 @@ sub eval_null {
 	
 }
 $funcs->{'isnull'} = \&eval_null;
+
+sub _is_null {
+  my($obj) = @_;
+  my $isNull = 0;
+  if (defined $obj) {
+      if ($obj->{'type'} eq 'null') {
+	  $isNull = 1;
+      } elsif (! defined $obj->{'val'}) {
+	  $isNull = 1;
+      }
+  } else {
+      $isNull = 1;
+  }
+  return $isNull;
+}
 
 sub eval_type {
 	my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
@@ -2165,6 +2170,27 @@ sub eval_log {
   return $obj; # pass thru unchanged
 }
 $funcs->{'klog'} = \&eval_log;
+
+sub eval_defaults_to {
+  my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+  my $logger = get_logger();
+  my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+  my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+  my $val = Kynetx::Expressions::den_to_exp($obj);
+  my $msg = '';
+  if (defined $rands->[1]  ) { # optional log message
+    $msg = Kynetx::Expressions::den_to_exp($rands->[1]);
+    $logger->debug( $msg, ref $val eq 'HASH' || 
+  		          ref $val eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($val) 
+		                              : $val );
+  } 
+  my $new_val = $obj;
+  if (_is_null($obj)) {
+      $new_val = $rands->[0];
+  }
+  return $new_val
+}
+$funcs->{'defaultsTo'} = \&eval_defaults_to;
 
 
 #------------------------------------------------------------------------
