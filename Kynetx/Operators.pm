@@ -2220,6 +2220,15 @@ sub eval_set {
 
 
   $logger->debug( "Set value ", $name, " to ", sub{Dumper $val} );
+
+  my $inModule = Kynetx::Environments::lookup_rule_env('_inModule', $rule_env) || 0;
+  my $moduleRid = Kynetx::Environments::lookup_rule_env('_moduleRID', $rule_env);
+  my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+  if ($inModule && defined $moduleRid) {
+      $logger->debug("Setting persistent in module: $moduleRid");
+      $rid = $moduleRid;
+  } 
+
   if (Kynetx::MongoDB::validate($val)) {
       if (defined $expr->{"args"}->[0]->{'hash_key'}) {
 	  my $path_r = $expr->{"args"}->[0]->{'hash_key'};
@@ -2228,17 +2237,19 @@ sub eval_set {
 	      $logger->error("Hash key for $name is undefined");
 	      return $obj;
 	  }
+
+
 	  $logger->debug("Saving to persistent hash $name", sub{Dumper $path});
 	  Kynetx::Persistence::save_persistent_hash_element(
 							    $domain,
-							    Kynetx::Rids::get_rid($req_info->{'rid'}),
+							    $rid,
 							    $session,
 							    $name,
 							    $path,
 							    $val
 							   );
       } else {
-	  Kynetx::Persistence::save_persistent_var($domain, Kynetx::Rids::get_rid($req_info->{'rid'}), $session, $name, $val );
+	  Kynetx::Persistence::save_persistent_var($domain, $rid, $session, $name, $val );
       }
   } else {
       $logger->error("Hash Operation error: $name is too large");
