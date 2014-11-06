@@ -2751,6 +2751,78 @@ add_testcase(
     0
     );
 
+##
+## test event:type() and event:domain() after raise
+##
+
+$krl_src = <<_KRL_;
+ruleset two_rules_first_raises_second {
+    rule t10 is active {
+      select when web pageview
+      pre {
+        firstdomain = event:domain();
+        firsttype = event:type();
+      }
+      fired {
+        raise explicit event foo for 'two_rules_first_raises_second.dev';
+        raise flip event flop; // just to schedule something after and mess up the req_info
+      }
+    }
+    rule t12 is active {
+      select when explicit foo
+      pre {
+        x = 5;
+        seconddomain = event:domain();
+        secondtype = event:type();
+      }
+      noop();
+    }
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 't10'},
+   {"rid" => 'two_rules_first_raises_second'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$config2 = mk_config_string(
+  [
+   {"rule_name" => 't12'},
+   {"rid" => 'two_rules_first_raises_second'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$js = <<_JS_;
+(function(){
+(function(){
+var firstdomain='web';
+var firsttype='pageview';
+function callBacks () {
+};
+}());
+(function(){
+var x = 5;
+var seconddomain='explicit';
+var secondtype='foo';
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config2));
+}());
+}());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $js,
+    $dummy_final_req_info,
+    );
 
 
 
@@ -4767,6 +4839,32 @@ $is_cachable = 0;
     eval_globals($my_req_info, $module_rs, $mod_rule_env, $session);
 ok($is_cachable, "here_docs are cachable");
 $test_count++;
+
+
+###### Test pset, ensure it respect module encapsulation of persistent vars
+#diag "############ use a16x78 alias flipper #################";
+$krl =  << "_KRL_";
+ruleset foobar {
+  meta {
+    use module a16x78 alias flipper
+  }
+  global {
+    x = flipper:b;
+  }
+}
+_KRL_
+
+$module_rs = Kynetx::Parser::parse_ruleset($krl);
+#diag Dumper $module_rs;
+$mod_rule_env = empty_rule_env();
+($js, $mod_rule_env) = Kynetx::Rules::eval_use($my_req_info, $module_rs, $empty_rule_env, $env_stash);
+
+#diag Dumper $mod_rule_env;
+
+is(lookup_rule_env("x", $mod_rule_env), undef, "x is undef" );
+$test_count++;
+
+
 
 
 ####### META test provide keys value

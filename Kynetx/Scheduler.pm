@@ -196,6 +196,8 @@ sub mk_task {
 	my $ruleset  = shift;
 	my $rule     = shift;
 	my $req_info = shift || {};
+	my $new_type = Kynetx::Request::get_event_type($req_info);
+	my $new_domain = Kynetx::Request::get_event_domain($req_info);
 	my $new_attrs = clone Kynetx::Request::get_attrs($req_info);
 	# my $logger = get_logger();
 	# $logger->debug("Attributes ", sub {Dumper $new_attrs});
@@ -204,7 +206,10 @@ sub mk_task {
 		'rule'     => $rule,
 		'rid'      => $rid,
 		'ver'      => $ver,
-		'req_info' => {"event_attrs" => $new_attrs},
+		'req_info' => {"event_attrs" => $new_attrs,
+			       "eventtype" => $new_type,
+			       "domain" => $new_domain
+			      },
 		'_ts'      => time,
 	};
 }

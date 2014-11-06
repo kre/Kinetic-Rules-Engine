@@ -284,6 +284,16 @@ sub get_event_type {
   return $req_info->{'eventtype'}
 }
 
+sub set_event_domain {
+  my ( $req_info, $new_domain ) = @_;
+  $req_info->{'domain'} = $new_domain;
+}
+
+sub set_event_type {
+  my ( $req_info, $new_type ) = @_;
+  $req_info->{'eventtype'} = $new_type;
+}
+
 ### final
 sub set_final_flag {
   my ($self) = @_;
