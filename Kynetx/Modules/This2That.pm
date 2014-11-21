@@ -28,10 +28,7 @@ use Kynetx::Util qw(ll);
 use Kynetx::KTime;
 
 use XML::XML2JSON;
-use MIME::Base64 qw(
-	encode_base64url
-	decode_base64url
-);
+use MIME::Base64;
 use Data::Diver qw( Dive DiveRef DiveError );
 
 use Exporter;
