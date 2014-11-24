@@ -110,6 +110,15 @@ Listen 80
 LoadModule perl_module modules/mod_perl.so
 </ifModule>
 
+# Apache 2.4 doesn't load these by default
+<IfDefine APACHE24>
+LoadModule log_config_module modules/mod_log_config.so
+LoadModule info_module modules/mod_info.so
+LoadModule status_module modules/mod_status.so
+LoadModule setenvif_module modules/mod_setenvif.so
+LoadModule alias_module modules/mod_alias.so
+</IfDefine>
+
 LoadModule deflate_module modules/mod_deflate.so
 LoadModule expires_module modules/mod_expires.so
 LoadModule headers_module modules/mod_headers.so
@@ -142,15 +151,15 @@ DocumentRoot "/web/htdocs"
     AllowOverride None
 
     # version > 2.2
-    <IfModule mod_authz_core.c>
+    <IfDefine APACHE24>
      Require all denied
-    </IfModule>
+    </IfDefine>
 
     # version <= 2.2
-    <IfModule !mod_authz_core.c>
+    <IfDefine !APACHE24>
      Order deny,allow
      Deny from all
-    </IfModule>
+    </IfDefine>
 </Directory>
 
 #
@@ -162,14 +171,14 @@ DocumentRoot "/web/htdocs"
     Options None
     AllowOverride None
 
-    <IfModule mod_authz_core.c>
+    <IfDefine APACHE24>
      Require all granted
-    </IfModule>
+    </IfDefine>
 
-    <IfModule !mod_authz_core.c>
+    <IfDefine !APACHE24>
      Order allow,deny
      Allow from all
-    </IfModule>
+    </IfDefine>
 
 <IfModule mod_rewrite.c>
 RewriteEngine on
@@ -200,16 +209,16 @@ RewriteRule   ^(.*)$ <TMPL_VAR NAME=KNS_LANDING_PAGE>
 <FilesMatch "^\.ht">
 
     # version > 2.2
-    <IfModule mod_authz_core.c>
+    <IfDefine APACHE24>
      Require all denied
-    </IfModule>
+    </IfDefine>
 
     # version <= 2.2
-    <IfModule !mod_authz_core.c>
+    <IfDefine !APACHE24>
      Order allow,deny
      Deny from all
      Satisfy All
-    </IfModule>
+    </IfDefine>
 </FilesMatch>
 
 # logging all happens in the http-perl.conf file
@@ -409,16 +418,16 @@ ExtendedStatus Off
 SetHandler server-status
 
     # version > 2.2
-    <IfModule mod_authz_core.c>
+    <IfDefine APACHE24>
      Require all denied
-    </IfModule>
+    </IfDefine>
 
     # version <= 2.2
-    <IfModule !mod_authz_core.c>
+    <IfDefine !APACHE24>
      Order deny,allow
-     Deny from all
-    </IfModule>
-    Allow from .kobj.net
+     Deny from all 
+     Allow from .kobj.net
+    </IfDefine>
 
 </Location>
 
@@ -673,14 +682,14 @@ Alias /widgets/ "/web/lib/perl/widgets/"
   PerlOptions +ParseHeaders
   Options +ExecCGI
 
-  <IfModule mod_authz_core.c>
+  <IfDefine APACHE24>
    Require all granted
-  </IfModule>
+  </IfDefine>
 
-  <IfModule !mod_authz_core.c>
+  <IfDefine !APACHE24>
    Order allow,deny
    Allow from all
-  </IfModule>
+  </IfDefine>
 </Location>
 
 <Location /widgets/components>
