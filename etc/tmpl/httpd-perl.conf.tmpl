@@ -152,6 +152,7 @@ DocumentRoot "/web/htdocs"
 
     # version > 2.2
     <IfDefine APACHE24>
+     AuthType None
      Require all denied
     </IfDefine>
 
@@ -172,6 +173,7 @@ DocumentRoot "/web/htdocs"
     AllowOverride None
 
     <IfDefine APACHE24>
+     AuthType None
      Require all granted
     </IfDefine>
 
@@ -210,6 +212,7 @@ RewriteRule   ^(.*)$ <TMPL_VAR NAME=KNS_LANDING_PAGE>
 
     # version > 2.2
     <IfDefine APACHE24>
+     AuthType None
      Require all denied
     </IfDefine>
 
@@ -418,8 +421,9 @@ ExtendedStatus Off
 SetHandler server-status
 
     # version > 2.2
-    <IfDefine APACHE24>
-     Require all denied
+    <IfDefine APACHE24> 
+     AuthType None
+    # Require host .kobj.net
     </IfDefine>
 
     # version <= 2.2
@@ -683,6 +687,7 @@ Alias /widgets/ "/web/lib/perl/widgets/"
   Options +ExecCGI
 
   <IfDefine APACHE24>
+   AuthType None
    Require all granted
   </IfDefine>
 
