@@ -136,11 +136,21 @@ RequestHeader unset Range
 
 DocumentRoot "/web/htdocs"
 
+
 <Directory />
     Options FollowSymLinks
     AllowOverride None
-    Order deny,allow
-    Deny from all
+
+    # version > 2.2
+    <IfModule mod_authz_core.c>
+     Require all denied
+    </IfModule>
+
+    # version <= 2.2
+    <IfModule !mod_authz_core.c>
+     Order deny,allow
+     Deny from all
+    </IfModule>
 </Directory>
 
 #
@@ -151,8 +161,15 @@ DocumentRoot "/web/htdocs"
 <Directory "/web/htdocs">
     Options None
     AllowOverride None
-    Order allow,deny
-    Allow from all
+
+    <IfModule mod_authz_core.c>
+     Require all granted
+    </IfModule>
+
+    <IfModule !mod_authz_core.c>
+     Order allow,deny
+     Allow from all
+    </IfModule>
 
 <IfModule mod_rewrite.c>
 RewriteEngine on
@@ -181,9 +198,18 @@ RewriteRule   ^(.*)$ <TMPL_VAR NAME=KNS_LANDING_PAGE>
 # viewed by Web clients.
 #
 <FilesMatch "^\.ht">
-    Order allow,deny
-    Deny from all
-    Satisfy All
+
+    # version > 2.2
+    <IfModule mod_authz_core.c>
+     Require all denied
+    </IfModule>
+
+    # version <= 2.2
+    <IfModule !mod_authz_core.c>
+     Order allow,deny
+     Deny from all
+     Satisfy All
+    </IfModule>
 </FilesMatch>
 
 # logging all happens in the http-perl.conf file
@@ -378,13 +404,22 @@ PerlChildInitHandler Apache2::Resource
 PerlSetEnv PERL_RLIMIT_CPU <TMPL_VAR NAME=CPU_LIMIT>
 
 # allow internal requests to view apache process statistics
-ExtendedStatus On
+ExtendedStatus Off
 <Location /server-status>
 SetHandler server-status
 
-Order Deny,Allow
-Deny from all
-Allow from .kobj.net
+    # version > 2.2
+    <IfModule mod_authz_core.c>
+     Require all denied
+    </IfModule>
+
+    # version <= 2.2
+    <IfModule !mod_authz_core.c>
+     Order deny,allow
+     Deny from all
+    </IfModule>
+    Allow from .kobj.net
+
 </Location>
 
 
@@ -637,8 +672,15 @@ Alias /widgets/ "/web/lib/perl/widgets/"
   PerlResponseHandler ModPerl::Registry
   PerlOptions +ParseHeaders
   Options +ExecCGI
-  Order allow,deny
-  Allow from all
+
+  <IfModule mod_authz_core.c>
+   Require all granted
+  </IfModule>
+
+  <IfModule !mod_authz_core.c>
+   Order allow,deny
+   Allow from all
+  </IfModule>
 </Location>
 
 <Location /widgets/components>
