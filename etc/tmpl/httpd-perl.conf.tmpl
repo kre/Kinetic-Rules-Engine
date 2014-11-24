@@ -112,6 +112,7 @@ LoadModule perl_module modules/mod_perl.so
 
 # Apache 2.4 doesn't load these by default
 <IfDefine APACHE24>
+LoadModule authn_core_module modules/mod_authn_core.so
 LoadModule log_config_module modules/mod_log_config.so
 LoadModule info_module modules/mod_info.so
 LoadModule status_module modules/mod_status.so
