@@ -372,17 +372,6 @@ SKIP: {
   }
 
 
-# check media market datasource
-
-my $mm_function = mk_datasource_function('mediamarket','', 0);
-
-like(&{$mm_function}('dma'), qr#\d\d\d#, 'dma');
-like(&{$mm_function}('rank'), qr#\d+#, 'rank');
-like(&{$mm_function}('name'), qr#\w#, 'name');
-like(&{$mm_function}('households'), qr#\d+#, 'households');
-$test_count += 4;
-
-
 my $math_function = mk_datasource_function('math', 9, 0);
 like(&{$math_function}('random'), qr#^\d$#, 'one digit random number');
 $test_count++;
