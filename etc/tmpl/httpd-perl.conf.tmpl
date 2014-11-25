@@ -110,14 +110,23 @@ Listen 80
 LoadModule perl_module modules/mod_perl.so
 </ifModule>
 
-# Apache 2.4 doesn't load these by default
-<IfDefine APACHE24>
-LoadModule authn_core_module modules/mod_authn_core.so
+
+<IfDefine APACHE22_STOCK>
+<IfModule !log_config_module>
 LoadModule log_config_module modules/mod_log_config.so
+</IfModule>
+<IfModule !info_module>
 LoadModule info_module modules/mod_info.so
+</IfModule>
+<IfModule !status_module>
 LoadModule status_module modules/mod_status.so
+</IfModule>
+<IfModule !setenvif_module>
 LoadModule setenvif_module modules/mod_setenvif.so
+</IfModule>
+<IfModule !alias_module>
 LoadModule alias_module modules/mod_alias.so
+</IfModule>
 </IfDefine>
 
 LoadModule deflate_module modules/mod_deflate.so
@@ -151,17 +160,8 @@ DocumentRoot "/web/htdocs"
     Options FollowSymLinks
     AllowOverride None
 
-    # version > 2.2
-    <IfDefine APACHE24>
-     AuthType None
-     Require all denied
-    </IfDefine>
-
-    # version <= 2.2
-    <IfDefine !APACHE24>
-     Order deny,allow
-     Deny from all
-    </IfDefine>
+    Order deny,allow
+    Deny from all
 </Directory>
 
 #
@@ -173,15 +173,8 @@ DocumentRoot "/web/htdocs"
     Options None
     AllowOverride None
 
-    <IfDefine APACHE24>
-     AuthType None
-     Require all granted
-    </IfDefine>
-
-    <IfDefine !APACHE24>
-     Order allow,deny
-     Allow from all
-    </IfDefine>
+    Order allow,deny
+    Allow from all
 
 <IfModule mod_rewrite.c>
 RewriteEngine on
@@ -211,18 +204,9 @@ RewriteRule   ^(.*)$ <TMPL_VAR NAME=KNS_LANDING_PAGE>
 #
 <FilesMatch "^\.ht">
 
-    # version > 2.2
-    <IfDefine APACHE24>
-     AuthType None
-     Require all denied
-    </IfDefine>
-
-    # version <= 2.2
-    <IfDefine !APACHE24>
      Order allow,deny
      Deny from all
      Satisfy All
-    </IfDefine>
 </FilesMatch>
 
 # logging all happens in the http-perl.conf file
@@ -421,18 +405,9 @@ ExtendedStatus Off
 <Location /server-status>
 SetHandler server-status
 
-    # version > 2.2
-    <IfDefine APACHE24> 
-     AuthType None
-    # Require host .kobj.net
-    </IfDefine>
-
-    # version <= 2.2
-    <IfDefine !APACHE24>
-     Order deny,allow
-     Deny from all 
-     Allow from .kobj.net
-    </IfDefine>
+    Order deny,allow
+    Deny from all 
+    Allow from .kobj.net
 
 </Location>
 
@@ -687,15 +662,8 @@ Alias /widgets/ "/web/lib/perl/widgets/"
   PerlOptions +ParseHeaders
   Options +ExecCGI
 
-  <IfDefine APACHE24>
-   AuthType None
-   Require all granted
-  </IfDefine>
-
-  <IfDefine !APACHE24>
-   Order allow,deny
-   Allow from all
-  </IfDefine>
+  Order allow,deny
+  Allow from all
 </Location>
 
 <Location /widgets/components>
