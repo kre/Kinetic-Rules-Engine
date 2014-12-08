@@ -131,7 +131,7 @@ open DICT, $dict_path;
 @DICTIONARY = <DICT>;
 
 my $big_val = [];
-my $max = 1000000;
+my $max = 1500000;
 for (my $i = 0; $i < $max; $i++) {
 	my $yav = $DICTIONARY[rand(@DICTIONARY)];
 	chomp($yav);
@@ -153,9 +153,33 @@ my $expr = {
 };
 
 $result = Kynetx::Postlude::eval_persistent_expr($expr,$session,$my_req_info,$big_e,"cs_test");
-#$logger->debug("Result: ", sub {Dumper($result)});
+#diag "Result: ", Dumper $result;
 cmp_deeply($result->{'_error_'},1,"set persistent variable which is too large");
 $test_count++;
+
+my $expr = {
+	    'domain' => 'ent',
+	    'test' => undef,
+	    'action' => 'set_hash',
+	    'value' => {
+			'type' => 'var',
+			'val' => 'foosh'
+		       },
+	    'name' => 'kvstore',
+	    'type' => 'persistent',
+	    'hash_element' => {
+			       'type' => 'str',
+			       'val' => 'a'
+			      }
+	   };
+
+
+$result = Kynetx::Postlude::eval_persistent_expr($expr,$session,$my_req_info,$big_e,"cs_test");
+#diag "Result: ", Dumper $result;
+cmp_deeply($result->{'_error_'},1,"set persistent variable which is too large");
+$test_count++;
+
+
 #goto ENDY;
 
 my $description = "Insert a hash element (creating the hash)";
@@ -377,7 +401,6 @@ $test_count++;
 
 
 
-diag "New SET syntax!";
 #Log::Log4perl->easy_init($DEBUG);
 
 #my $val_to_store = rand(100);
