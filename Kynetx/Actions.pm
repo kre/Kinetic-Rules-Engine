@@ -539,6 +539,7 @@ sub build_js_load {
 		$session,
 		$rule->{'blocktype'},
 		$rule->{'actions'},
+		$rule->{"choice"},
 		$rule->{'name'},
 		$cb_func_name,
 		$execenv
@@ -549,7 +550,7 @@ sub build_js_load {
 }
 
 sub eval_action_block {
-	my ($req_info, $dd, $rule_env,$session, $blocktype,$action_block,$rulename,$cb_function, $execenv) = @_;
+	my ($req_info, $dd, $rule_env,$session, $blocktype,$action_block,$choice,$rulename,$cb_function, $execenv) = @_;
 	my $logger = get_logger();	
 	my $js = "";
 	
@@ -584,15 +585,41 @@ sub eval_action_block {
 	}
 	elsif ( $blocktype eq 'choose' ) {
 
-		# choose one action at random
-		my $choice = int( rand($action_num) );
-		$logger->debug("chose $choice of $action_num");
-		$js .= build_one_action( $action_block->[$choice],
-			$req_info, $dd, $rule_env, $session, $cb_function, $rulename, $execenv);
+	    my $action;
+
+	   
+	    # choose one action at random
+	    if (defined $choice && $choice) {
+
+		$logger->debug("choice expr => ", sub{ Dumper $choice });
+		my $val = Kynetx::Expressions::den_to_exp(
+			    Kynetx::Expressions::eval_expr( $choice, 
+							    $rule_env, 
+							    $rulename, 
+							    $req_info,
+							    $session 
+							  ));
+
+		$logger->debug("Looking for $val in action labels");
+
+		foreach my $a (@{$action_block}) {
+#		    $logger->debug("checking action for $val ", sub{ Dumper $a });
+		    if ($a->{"label"} eq $val) {
+			$action = $a;
+			last;
+		    }
+		}
+	    } else {
+	      $choice = int( rand($action_num) );
+	      $action = $action_block->[$choice];
+	      $logger->debug("chose choice number $choice in block with $action_num choices");
+	    }
+	    $js .= build_one_action( $action,
+				     $req_info, $dd, $rule_env, $session, $cb_function, $rulename, $execenv);
 
 	}
 	else {
-		$logger->debug('bad blocktype');
+	    $logger->debug('bad blocktype');
 	}
 	return $js;
 }
@@ -607,10 +634,11 @@ sub build_composed_action {
 	my $decls = $rule_env->{'decls'};
 	my $actions = $rule_env->{'actions'};
 	my $blocktype = $rule_env->{'blocktype'};
+	my $choice =  $rule_env->{'choice'};
 	my $required = $rule_env->{'vars'};
 	$rule_env = $rule_env->{'env'};
 	
-	
+	$logger->debug("Blocktype is $blocktype and choice is ", sub{Dumper $choice});
 	$logger->trace("Configuration: ", sub {Dumper($config_array)});
 	if ($source) {
 		$action_tag = $source . ":" . $name;
@@ -684,6 +712,7 @@ sub build_composed_action {
 		$session,
 		$blocktype,
 		\@action_block,
+		$choice,
 		$rule_name,
 		$cb_func_name, 
 		$execenv

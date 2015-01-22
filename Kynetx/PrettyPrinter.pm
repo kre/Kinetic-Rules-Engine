@@ -487,7 +487,7 @@ sub pp_rule_body {
     if(defined $r->{'cond'}) {
 	$o.= pp_cond($r,$indent+$g_indent);
     } else { # just actions
-	$o.= pp_actions($r->{'actions'},$r->{'blocktype'},$indent+$g_indent);
+	$o.= pp_actions($r->{'actions'},$r->{'blocktype'}, $r->{"choice"} || "" , $indent+$g_indent);
     }
 
     if(defined $r->{'callbacks'}) {
@@ -722,13 +722,13 @@ sub pp_cond {
 
     if($pred eq 'true') {
         
-	$o .= pp_actions($node->{'actions'},$node->{'blocktype'},$indent);
+	$o .= pp_actions($node->{'actions'},$node->{'blocktype'}, $node->{"choice"} || "",$indent);
     } else {
 
 	$o .= $beg . "if ";
 	$o .= $pred;
 	$o .= "\n" . $beg . "then\n";
-	$o .= pp_actions($node->{'actions'},$node->{'blocktype'},$g_indent+$indent);
+	$o .= pp_actions($node->{'actions'},$node->{'blocktype'},$node->{"choice"} || "",$g_indent+$indent);
 	$o .= $beg . "\n";
     } 
 
@@ -761,14 +761,14 @@ sub pp_pred {
 
 
 sub pp_actions {
-    my ($node, $blocktype, $indent) = @_;
+    my ($node, $blocktype, $choicevar, $indent) = @_;
     my $beg = " "x$indent;
     my $o = "";
 
 
 
     if(defined $node && @{$node} > 1) { #actionblock
-	$o .= pp_actionblock($node, $blocktype, $indent);
+	$o .= pp_actionblock($node, $blocktype, $choicevar, $indent);
     } else { # primrule
 	# singleton block; deal with it
 	$o .= pp_primrule($node->[0], $indent);
@@ -779,12 +779,13 @@ sub pp_actions {
 
 
 sub pp_actionblock {
-    my ($node, $blocktype, $indent) = @_;
+    my ($node, $blocktype, $choicevar, $indent) = @_;
     my $beg = " "x$indent;
     my $o = $beg;
 #    my $o;
-    
-    $o .= $blocktype . " {\n";
+# my $logger = get_logger();
+# $logger->info("Choice: ", sub{ Dumper $choicevar })    ;
+    $o .= $blocktype . ($choicevar ? " " . pp_expr($choicevar) : "") . " {\n";
     foreach my $pr (@{ $node }) {
 	$o .= pp_primrule($pr,$indent+$g_indent);
     }
