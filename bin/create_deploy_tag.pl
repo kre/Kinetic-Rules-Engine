@@ -32,13 +32,13 @@ my $ver = $dt->ymd('')."_prod_ver";
 
 
 use vars qw/ %opt /;
-my $opt_string = 'm:';
+my $opt_string = 'm:n';
 getopts( "$opt_string", \%opt ); 
 die "must supply message with -m" unless $opt{'m'};
 
 my $msg = $opt{"m"};
 
-`git tag -a $ver -m $msg`
+`git tag -a $ver -m "$msg"` unless $opt{"n"};
 print "push to server with this command\n";
 print "git push origin $ver", "\n";
 

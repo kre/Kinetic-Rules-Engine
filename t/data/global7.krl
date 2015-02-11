@@ -17,6 +17,7 @@ var pagename = 'foobar';
 <p>This is a test</p>
 >>;
 
+	f = function(x, y){(x + (y + 2))};
 
     }
 

@@ -1473,6 +1473,21 @@ sub developer_key {
 }
 $funcs->{'create_developer_key'} = \&developer_key;
 
+# the default for kns_config.yml
+# permissions: 
+#   developer : 
+#     cloud : 
+#       create : 0
+#       destroy : 0
+#       auth : 1
+#     ruleset : 
+#       create : 0
+#       destroy : 0
+#       show : 1
+#     eci : 
+#       create : 1
+#       destroy : 1
+#       show : 1
 
 
 sub _default_permissions {
