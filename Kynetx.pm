@@ -299,7 +299,7 @@ sub describe_ruleset {
     my $logger = get_logger();
 
     my $req = Apache2::Request->new($r);
-    my $flavor = $req->param('flavor') || 'html';
+    my $flavor = $req->param('flavor') || 'json';
 
     $logger->debug("Getting ruleset $rid");
 
@@ -387,10 +387,7 @@ sub describe_ruleset {
     my $json = new JSON::XS;
 
 
-    if($flavor eq 'json') {
-	$r->content_type('text/plain');
-	print $json->encode($data_list) ;
-    } else {
+    if($flavor eq 'html') {
 	# print the page
 	my $template = DEFAULT_TEMPLATE_DIR . "/describe.tmpl";
 	my $test_template = HTML::Template->new(filename => $template);
@@ -401,6 +398,9 @@ sub describe_ruleset {
 
 	$r->content_type('text/html');
 	print $test_template->output;
+    } else {
+	$r->content_type('application/json');
+	print $json->encode($data_list) ;
     }
 }
     

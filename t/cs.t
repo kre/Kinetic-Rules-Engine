@@ -120,14 +120,14 @@ SKIP: {
     #diag "Testing console with $url_describe_1";
 
     $mech->get_ok($url_describe_1);
-    is($mech->content_type(), 'text/html');
+    is($mech->content_type(), 'application/json');
 
-    $mech->title_is('Describe Ruleset');
+#    $mech->title_is('Describe Ruleset');
 
     $mech->content_like('/"ruleset_version"\s*:\s*"(prod|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
     $mech->content_like('/"ruleset_id"\s*:\s*"[^"]+"/s');
-    $test_count += 6;
+    $test_count += 5;
 
 
     # test DESCRIBE function
@@ -136,7 +136,7 @@ SKIP: {
     #diag "Testing console with $url_describe_2";
 
     $mech->get_ok($url_describe_2);
-    is($mech->content_type(), 'text/plain');
+    is($mech->content_type(), 'application/json');
 
     $mech->content_like('/"ruleset_version"\s*:\s*"(prod|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
@@ -150,7 +150,7 @@ SKIP: {
     diag "Testing console with $url_describe_3";
 
     $mech->get_ok($url_describe_3);
-    is($mech->content_type(), 'text/html');
+    is($mech->content_type(), 'application/json');
 
     $mech->content_like('/"ruleset_version"\s*:\s*"(dev|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
@@ -164,7 +164,7 @@ SKIP: {
 #    diag "Testing console with $url_describe_4";
 
     $mech->get_ok($url_describe_4);
-    is($mech->content_type(), 'text/plain');
+    is($mech->content_type(), 'application/json');
 
     $mech->content_like('/"ruleset_version"\s*:\s*"(dev|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
