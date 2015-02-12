@@ -594,7 +594,7 @@ sub pp_event_expr {
 				if ($filter->{'type'} ne 'default') {
 					$ftype = $filter->{'type'} . " ";
 				}
-				$fpat = pp_string($filter->{'pattern'}) . " ";
+				$fpat = pp_pattern($filter->{'pattern'}) . " ";
 				$o .= $op . " " . $ftype . $fpat;
 			}
 			$o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
@@ -617,14 +617,14 @@ sub pp_event_expr {
       $o .= $node->{'domain'} . " ";
       $o .= $node->{'op'} . ' ';
       foreach my $f (@{ $node->{'filters'} }) {
-	$o .= $f->{'type'} . ' ' . pp_string($f->{'pattern'}) . ' ' ;
+	$o .= $f->{'type'} . ' ' . pp_pattern($f->{'pattern'}) . ' ' ;
       }
       $o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
     } else {
       $o .= $node->{'domain'} . " ";
       $o .= $node->{'op'} . ' ';
       foreach my $f (@{ $node->{'filters'} }) {
-	$o .= $f->{'type'} . ' ' . pp_string($f->{'pattern'}) . ' ' ;
+	$o .= $f->{'type'} . ' ' . pp_pattern($f->{'pattern'}) . ' ' ;
       }
       $o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
      
@@ -635,6 +635,16 @@ sub pp_event_expr {
   return $o;
 
 }
+
+sub pp_pattern {
+  my $node = shift;
+  if (ref $node eq "HASH") {
+      return pp_expr($node)
+  } else {
+      return pp_string($node)
+  }
+}
+
 
 sub pp_on_expr {
   my $node = shift;
