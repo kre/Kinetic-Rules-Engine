@@ -307,7 +307,7 @@ sub describe_ruleset {
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
     # no locking
 
-    my $data_list = [];
+    my $data_list = {};
     foreach my $rid_info ( @{$req_info->{'rids'} }) {
 
       $req_info->{'rid'} = $rid_info;
@@ -381,7 +381,9 @@ sub describe_ruleset {
       $data->{'active_rules'} = \@active_rules;
       $data->{'number_of_inactive_rules'} = $inactive;
       $data->{'inactive_rules'} = \@inactive_rules;
-      push(@{$data_list}, $data);
+      
+      $data_list->{Kynetx::Rids::print_rid_info($rid_info)} = $data;
+#      push(@{$data_list}, $data);
     }
       
     my $json = new JSON::XS;
