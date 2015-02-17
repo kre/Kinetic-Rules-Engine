@@ -37,6 +37,7 @@ use Schedule::Cron::Events;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 use Kynetx::Session qw(:all);
+use Kynetx::Request qw( build_request_env );
 use Kynetx::Configure qw(:all);
 use Kynetx::MongoDB qw(:all);
 use Kynetx::Memcached qw(
@@ -75,19 +76,45 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
 sub handler {
   my $r = shift;	
   my $logger = get_logger();
-  my $req = Apache2::Request->new($r);
-  my @params = $req->param;
+
+  my ( $domain, $eventtype, $eid, $rids, $id_token );
   my @path_components = split( /\//, $r->path_info );
-  my $id_token = $path_components[2];
-  $logger->trace("Token: $id_token");
-	my $eid = $path_components[3] || '';
+  $id_token = $path_components[2];
+  $eid = $path_components[3] || '';
+
+  # optional...usually passed in as parameters
+  $domain    = $path_components[4];
+  $eventtype = $path_components[5];
+  # build the request data structure. No RIDs yet. (undef)
+  my $req_info = Kynetx::Request::build_request_env(
+		$r, $domain, $rids,
+		$eventtype,
+		$eid,
+		{
+			'api'      => 'sky',
+			'id_token' => $id_token
+		}
+	   );
+
+  # use the calculated values...
+  # $domain    = $req_info->{'domain'};
+  # $eventtype = $req_info->{'eventtype'};
+
+
+  # my $req = Apache2::Request->new($r);
+  # my @params = $req->param;
+  # my @path_components = split( /\//, $r->path_info );
+  # my $id_token = $path_components[2];
+  # $logger->trace("Token: $id_token");
+  # 	my $eid = $path_components[3] || '';
   my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($id_token);
   $logger->trace("KEN: $ken");
   if ($ken) {
     my $list = Kynetx::Persistence::KToken::get_token_by_ken_and_label($ken, TOKEN_NAME);
     my $logging_token = $list->[0];
     if ($logging_token) {
-      Log::Log4perl::MDC->put( '_ECI_',  $logging_token);          
+      Log::Log4perl::MDC->put( '_ECI_',  $logging_token);
+      Log::Log4perl::MDC->put( 'eid',  $eid);
       $logger->debug("__MONGO__");
     }
   }
@@ -106,9 +133,10 @@ sub get_all_msg {
   $logger->debug("Found: ($eci) ", $cursor->count());
   while (my $obj = $cursor->next) {
     my $id = $obj->{'_id'}->to_string;
-    $list->{$id} = _normalize($obj);
+    push @{$list}, _normalize($obj);
   }
-  return $list;
+  my @result = sort {$b->{"created"} <=> $a->{"created"}} @{ $list };
+  return \@result;
 }
 
 sub get_active {
@@ -162,7 +190,7 @@ sub _all {
 sub _single {
   my ($eci,$log_id) = @_;
   my $mid = MongoDB::OID->new(value => $log_id);
-  my $tkey = {'$and' => [{'eci' => $eci}, {'_id' => $mid}]};
+  my $tkey = {'$and' => [{'eci' => '$id' => $mid}]};
   return $tkey;
 }
 
@@ -177,7 +205,10 @@ sub flush {
 sub _normalize {
   my ($obj) = @_;
   my $struct = {
+    'id' => $obj->{"_id"},
     'created' => $obj->{'created'},
+    'eid' => $obj->{"eid"},
+    'timestamp' => DateTime->from_epoch(epoch => $obj->{'created'})->iso8601(),
     'log_text' => $obj->{'text'}
   };
   return $struct;

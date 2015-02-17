@@ -101,7 +101,7 @@ sub handler {
 
 	my @path_components = split( /\//, $r->path_info );
 
-	my $req_info = Kynetx::Request::build_request_env($r, $path_components[4], $rids);
+	my $req_info = Kynetx::Request::build_request_env($r, $path_components[4], $rids, undef, int(rand(999999999999)) ); # EID for Cloud is random since API doesn't provide one
 	
 	my $session = _cloud_session($r,$req_info);
   return Apache2::Const::HTTP_BAD_REQUEST unless ($session);
@@ -131,7 +131,7 @@ sub handler {
 	  # store these for later logging
 	  Log::Log4perl::MDC->put( 'site',  $path_components[2]);
 	  Log::Log4perl::MDC->put( 'rule', $path_components[3] );    # function.
-	  Log::Log4perl::MDC->put( 'eid', "Sky Cloud API" );    # no eid
+	  Log::Log4perl::MDC->put( 'eid', $req_info->{"eid"} );    # no eid
 
 
 	  

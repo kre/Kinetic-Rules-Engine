@@ -94,7 +94,7 @@ sub log {
   my $msg = $params{'message'};
   
     
-  if (Log::Log4perl::Level::to_priority($params{'log4p_level'}) >= $DEBUG) {
+  if (Log::Log4perl::Level::to_priority($params{'log4p_level'}) >= $INFO) {
     push(@{$self->{'buffer'}},$msg);
   }
   
@@ -107,8 +107,9 @@ sub flush {
 ##################################################
   my $self = shift;
   my $eci = Log::Log4perl::MDC->get("_ECI_");
+  my $eid = Log::Log4perl::MDC->get("eid");
   my $text = join("", @{$self->{'buffer'}});
-  $self->put($eci,$text);
+  $self->put($eci,$eid,$text);
   $self->{'buffer'} = [];  
 }
 
@@ -127,13 +128,14 @@ sub flush {
 sub put {
 ##################################################
   my $self = shift;
-  my ($eci,$text) = @_;
+  my ($eci,$eid,$text) = @_;
   
   my $c = $self->get_collection();
-  my $timestamp = DateTime->now->epoch;
+  my $timestamp = DateTime->now;
   my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
   my $val = {
     'eci' => $eci,
+    'eid' => $eid,
     'text' => $text,
     'created'   => $timestamp,
     'maxlife' => DateTime->now,
