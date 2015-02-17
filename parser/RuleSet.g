@@ -349,6 +349,7 @@ rule
 				current_rule.put("cond",condt);
 			}
 			current_rule.put("blocktype",(actions_result.get("blocktype") != null ? actions_result.get("blocktype") : "every"));
+            if(actions_result.get("choice") != null) current_rule.put("choice",actions_result.get("choice") );
 
 			current_rule.put("actions",actions_result.get("actions"));
 //			if($postb.text != null)
@@ -854,7 +855,11 @@ action_block[HashMap result]
 @init {
 	ArrayList temp_list = new ArrayList();
 }
-	: at=(EVERY|CHOOSE)? {result.put("blocktype",$at.text); }
+	: (at=EVERY|(bt=CHOOSE (choicevar=expr)? ))? {
+                         if($at.text != null) result.put("blocktype",$at.text);
+                         if($bt.text != null) result.put("blocktype",$bt.text);
+                         if($choicevar.result != null) result.put("choice",$choicevar.result);
+        }
 		'{' (p=primrule {temp_list.add($p.result);}
 			(';' p=primrule{temp_list.add($p.result);})* ) ';'? '}' {
 		result.put("actions",temp_list);
@@ -874,9 +879,6 @@ primrule returns[HashMap result]
 		 	tmp.put("args",temp_list);
 
 
-//		 	if($label.text != null)
-//			 	tmp.put("label",$label.text);
-
 
 //            if($set.text != null)
 				tmp.put("vars",$set.result);
@@ -886,7 +888,7 @@ primrule returns[HashMap result]
 			tmp2.put("action",tmp);
 
 //			if($label.text != null)
-				tmp2.put("label",$label.text);
+			tmp2.put("label",$label.text);
 			$result = tmp2;
 
 		 }
@@ -1855,11 +1857,13 @@ action_def returns[Object result]
 		tmp.put("vars",nargs);
 		tmp.put("type","defaction");
 		tmp.put("decls",block_array);
-       		conf.put("configuration", config_list);
-        		tmp.put("configure",conf); 
-       		tmp.put("configure",config_list); 
+        conf.put("configuration", config_list);
+        tmp.put("configure",conf); 
+       	tmp.put("configure",config_list); 
 		tmp.put("blocktype",(actions_result.get("blocktype") != null ? actions_result.get("blocktype") : "every"));
 		tmp.put("actions",actions_result.get("actions"));
+        if(actions_result.get("choice") != null) tmp.put("choice",actions_result.get("choice") );
+
 		//if($e1.text != null)
 		//	tmp.put("expr",$e1.result);
 

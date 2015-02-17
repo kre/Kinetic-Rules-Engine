@@ -110,6 +110,39 @@ Listen 80
 LoadModule perl_module modules/mod_perl.so
 </ifModule>
 
+
+<IfDefine APACHE22_STOCK>
+
+<IfModule !authz_default_module>
+LoadModule authz_default_module modules/mod_authz_default.so 
+</IfModule>
+<IfModule !authz_groupfile_module>
+LoadModule authz_groupfile_module modules/mod_authz_groupfile.so 
+</IfModule>
+<IfModule !authz_host_module>
+LoadModule authz_host_module modules/mod_authz_host.so 
+</IfModule>
+<IfModule !authz_user_module>
+LoadModule authz_user_module modules/mod_authz_user.so 
+</IfModule>
+<IfModule !log_config_module>
+LoadModule log_config_module modules/mod_log_config.so
+</IfModule>
+<IfModule !info_module>
+LoadModule info_module modules/mod_info.so
+</IfModule>
+<IfModule !status_module>
+LoadModule status_module modules/mod_status.so
+</IfModule>
+<IfModule !setenvif_module>
+LoadModule setenvif_module modules/mod_setenvif.so
+</IfModule>
+<IfModule !alias_module>
+LoadModule alias_module modules/mod_alias.so
+</IfModule>
+
+</IfDefine>
+
 LoadModule deflate_module modules/mod_deflate.so
 LoadModule expires_module modules/mod_expires.so
 LoadModule headers_module modules/mod_headers.so
@@ -136,9 +169,11 @@ RequestHeader unset Range
 
 DocumentRoot "/web/htdocs"
 
+
 <Directory />
     Options FollowSymLinks
     AllowOverride None
+
     Order deny,allow
     Deny from all
 </Directory>
@@ -151,6 +186,7 @@ DocumentRoot "/web/htdocs"
 <Directory "/web/htdocs">
     Options None
     AllowOverride None
+
     Order allow,deny
     Allow from all
 
@@ -181,9 +217,10 @@ RewriteRule   ^(.*)$ <TMPL_VAR NAME=KNS_LANDING_PAGE>
 # viewed by Web clients.
 #
 <FilesMatch "^\.ht">
-    Order allow,deny
-    Deny from all
-    Satisfy All
+
+     Order allow,deny
+     Deny from all
+     Satisfy All
 </FilesMatch>
 
 # logging all happens in the http-perl.conf file
@@ -292,7 +329,7 @@ ErrorDocument 404 "<TMPL_VAR NAME=KNS_ERROR_MSG>"
 # Include conf/extra/httpd-mpm.conf
 
 # Real-time info on requests and configuration
-Include conf/extra/httpd-info.conf
+# Include conf/extra/httpd-info.conf
 
 # Secure (SSL/TLS) connections
 #Include conf/extra/httpd-ssl.conf
@@ -378,13 +415,14 @@ PerlChildInitHandler Apache2::Resource
 PerlSetEnv PERL_RLIMIT_CPU <TMPL_VAR NAME=CPU_LIMIT>
 
 # allow internal requests to view apache process statistics
-ExtendedStatus On
+ExtendedStatus Off
 <Location /server-status>
 SetHandler server-status
 
-Order Deny,Allow
-Deny from all
-Allow from .kobj.net
+    Order deny,allow
+    Deny from all 
+    Allow from .kobj.net
+
 </Location>
 
 
@@ -637,6 +675,7 @@ Alias /widgets/ "/web/lib/perl/widgets/"
   PerlResponseHandler ModPerl::Registry
   PerlOptions +ParseHeaders
   Options +ExecCGI
+
   Order allow,deny
   Allow from all
 </Location>

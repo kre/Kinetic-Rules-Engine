@@ -85,7 +85,7 @@ SKIP: {
 
     # test CONSOLE function
     my $url_console_1 = "$ruleset_base/console/$rid?caller=http://www.windley.com/foo/bazz.html";
-    diag "Testing console with $url_console_1";
+    #diag "Testing console with $url_console_1";
 
     $mech->get_ok($url_console_1);
     is($mech->content_type(), 'text/html');
@@ -120,14 +120,14 @@ SKIP: {
     #diag "Testing console with $url_describe_1";
 
     $mech->get_ok($url_describe_1);
-    is($mech->content_type(), 'text/html');
+    is($mech->content_type(), 'application/json');
 
-    $mech->title_is('Describe Ruleset cs_test');
+#    $mech->title_is('Describe Ruleset');
 
     $mech->content_like('/"ruleset_version"\s*:\s*"(prod|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
     $mech->content_like('/"ruleset_id"\s*:\s*"[^"]+"/s');
-    $test_count += 6;
+    $test_count += 5;
 
 
     # test DESCRIBE function
@@ -136,7 +136,7 @@ SKIP: {
     #diag "Testing console with $url_describe_2";
 
     $mech->get_ok($url_describe_2);
-    is($mech->content_type(), 'text/plain');
+    is($mech->content_type(), 'application/json');
 
     $mech->content_like('/"ruleset_version"\s*:\s*"(prod|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
@@ -150,7 +150,7 @@ SKIP: {
     diag "Testing console with $url_describe_3";
 
     $mech->get_ok($url_describe_3);
-    is($mech->content_type(), 'text/html');
+    is($mech->content_type(), 'application/json');
 
     $mech->content_like('/"ruleset_version"\s*:\s*"(dev|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
@@ -164,7 +164,7 @@ SKIP: {
 #    diag "Testing console with $url_describe_4";
 
     $mech->get_ok($url_describe_4);
-    is($mech->content_type(), 'text/plain');
+    is($mech->content_type(), 'application/json');
 
     $mech->content_like('/"ruleset_version"\s*:\s*"(dev|\d+)"/s');
     $mech->content_like('/"description"\s*:\s*"[^"]+"/s');
@@ -285,9 +285,9 @@ SKIP: {
     # globals
     $mech->content_contains('var foobar = 5;');
 
-    $mech->content_contains(q/KOBJ['data']['public_timeline'] = {/);
-    $mech->content_lacks("KOBJ['data']['cached_timeline'] =");
-    $test_count += 10;
+    # $mech->content_contains(q/KOBJ['data']['public_timeline'] = {/);
+    # $mech->content_lacks("KOBJ['data']['cached_timeline'] =");
+    $test_count += 8;
 
     # sets search referer with events
     my $url_4a = "$event_base/web/pageview/$rid/1231363179515.js?caller=http%3A//www.windley.com/foo/bazz.html&referer=http%3A//www.google.com/&kvars={%22foo%22%3A%205%2C%20%22bar%22%3A%20%22fizz%22%2C%20%22bizz%22%3A%20[1%2C%202%2C%203]}&title=Phil%20Windleys%20Technometria";
@@ -309,9 +309,9 @@ SKIP: {
     # globals
     $mech->content_contains('var foobar = 5;');
 
-    $mech->content_contains(q/KOBJ['data']['public_timeline'] = {/);
-    $mech->content_lacks("KOBJ['data']['cached_timeline'] =");
-    $test_count += 6;
+    # $mech->content_contains(q/KOBJ['data']['public_timeline'] = {/);
+    # $mech->content_lacks("KOBJ['data']['cached_timeline'] =");
+    $test_count += 4;
 
     my $url_5 = "$ruleset_base/eval/$rid/1237475272090.js?caller=http%3A//search.barnesandnoble.com/booksearch/isbnInquiry.asp%3FEAN%3D9781400066940&referer=http%3A//www.barnesandnoble.com/index.asp&kvars=&title=Stealing MySpace, Julia Angwin, Book - Barnes & Noble";
 

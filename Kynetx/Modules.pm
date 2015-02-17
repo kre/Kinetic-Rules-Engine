@@ -61,7 +61,6 @@ use Kynetx::Predicates::Time;
 use Kynetx::Predicates::Markets;
 use Kynetx::Predicates::Referers;
 use Kynetx::Predicates::Mobile;
-use Kynetx::Predicates::MediaMarkets;
 use Kynetx::Predicates::Useragent;
 use Kynetx::Predicates::KPDS;
 use Kynetx::Predicates::Page;
@@ -312,15 +311,6 @@ sub eval_module {
         } else {
             $val =
               Kynetx::Predicates::Referers::get_referer( $req_info, $function );
-        }
-    } elsif ( $source eq 'mediamarket' ) {
-        $preds = Kynetx::Predicates::MediaMarkets::get_predicates();
-        if ( defined $preds->{$function} ) {
-            $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val = Kynetx::Expressions::boolify($val || 0);
-        } else {
-            $val = Kynetx::Predicates::MediaMarkets::get_mediamarket( $req_info,
-                                                                    $function );
         }
     } elsif ( $source eq 'useragent' ) {
         $preds = Kynetx::Predicates::Useragent::get_predicates();

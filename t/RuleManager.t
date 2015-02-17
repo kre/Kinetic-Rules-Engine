@@ -516,7 +516,8 @@ $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "ruleset");
 $expect = <<_EOF_;
 {
     "error" : [
-       "Parser Exception (Invalid value [rule] found should have been one of [dispatch]): com.kynetx.RuleSetParser:cn:241::com.kynetx.RuleSetParser\$InvalidToken: Invalid value [rule] found should have been one of [dispatch]"
+       "line 2:9 Invalid value [rule] found should have been one of [dispatch]",
+       "line 3:4 mismatched input ';' expecting RIGHT_CURL"
     ]
 }
 _EOF_
@@ -617,7 +618,9 @@ $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "meta");
 $expect = <<_EOF_;
 {
     "error" : [
-       "Parser Exception (null): org.antlr.runtime.BaseRecognizer:recoverFromMismatchedToken:610:"
+       "line 3:8 mismatched input 'qwb' expecting STRING",
+       "line 4:8 mismatched input 'sjf' expecting STRING",
+       "line 6:0 Found [butt] should have been key"
     ]
  }
 _EOF_
@@ -788,10 +791,11 @@ SKIP: {
 
     is($mech->content_type(), 'text/plain');
 
+#diag $mech->response()->content;
 $expect = <<_EOF_;
 {
     "error" : [
-       "Parser Exception (Invalid value [datastink] found should have been one of [dataset, datasource]): com.kynetx.RuleSetParser:cn:241:"
+       "line 4:15 Invalid value [datastink] found should have been one of [dataset, datasource]"
     ]
  }
 _EOF_

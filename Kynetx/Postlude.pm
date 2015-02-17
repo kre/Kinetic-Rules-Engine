@@ -264,7 +264,7 @@ sub eval_persistent_expr {
 					$value);
         } else {
 	    my $size = Devel::Size::total_size($value);
-	    my $msg = $expr->{'name'} . " is too large ($size bytes)";
+	    my $msg = $expr->{'name'} . "[". join(",", @{$path}) . "] is too large ($size bytes)";
 	    return Kynetx::Errors::merror($msg);        	
         }
     } elsif ( $expr->{'action'} eq 'iterator' ) {

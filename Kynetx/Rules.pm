@@ -172,9 +172,14 @@ sub process_schedule {
 		if ($req_info) {
 		    $logger->debug("switching event attributes in");
 
-		    # FIXME: why are we putting the req_info into the event_attrs?
-		    # my $task_req_info = {'event_attrs' => $task->{'req_info'}};
 		    my $task_req_info = {};
+		    Kynetx::Request::set_event_domain($task_req_info, 
+						      Kynetx::Request::get_event_domain($task->{'req_info'})
+						     );
+		    Kynetx::Request::set_event_type($task_req_info, 
+						    Kynetx::Request::get_event_type($task->{'req_info'})
+						   );
+		    
 		    foreach my $n (@{ Kynetx::Request::get_attr_names($task->{'req_info'}) }) {
 			$logger->debug("Adding name ", $n);
 			Kynetx::Request::add_event_attr($task_req_info, 

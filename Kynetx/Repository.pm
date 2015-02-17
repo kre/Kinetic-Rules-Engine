@@ -128,9 +128,10 @@ sub get_rules_from_repository {
     unless($ruleset->{'ruleset_name'} eq 'norulesetbythatappid' || 
       defined $ruleset->{'error'}) {
         $ruleset = Kynetx::Rules::optimize_ruleset($ruleset);
-        $logger->debug("Found rules for $rid");
+        $logger->debug("Found rules for $rid with cache key $rs_key");
         $logger->trace("Caching ruleset for $rid using key $rs_key");
         $memd->set($rs_key,$ruleset);
+	$memd->set($rs_key."_timestamp", DateTime->now()->iso8601()) ;
       } else {
         if ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid') {
           $logger->error("Ruleset $rid not found");

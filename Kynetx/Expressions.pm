@@ -1288,7 +1288,7 @@ sub mk_action_expr {
   my $logger = get_logger();
   my $blocktype = $expr->{'blocktype'} || 'every';
   my @action_array =();
-  $logger->trace("Make action expression for: ", sub {Dumper($expr)});
+#  $logger->debug("Make action expression for: ", sub {Dumper($expr)});
   my $sig = md5_hex(freeze $expr);
   if (defined $expr->{'actions'}) {
   	foreach my $action (@{$expr->{'actions'}}) {
@@ -1326,11 +1326,13 @@ sub mk_action_expr {
   		{
   		'blocktype' => $blocktype,
   		'actions' => \@action_array,
+		'choice' => $expr->{'choice'},
   		'vars' => $expr->{'vars'},
 		'decls' => $expr->{'decls'},
 		'configure' => $expr->{'configure'},
 		'env' => $env,
-		'sig' => $sig});
+		'sig' => $sig
+		});
   
 	
 }
