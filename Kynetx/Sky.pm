@@ -177,7 +177,7 @@ sub _handler {
 	Log::Log4perl::MDC->put( 'eid',  $eid );          # identify event
        
 	# get a session
-	$logger->info( "KBX token ", $req_info->{'id_token'} );
+	$logger->debug( "KBX token ", $req_info->{'id_token'} );
 
 #    my $session = Kynetx::Session::process_session($r, $req_info->{'kntx_token'});
 	my $session =
@@ -308,7 +308,7 @@ sub _handler {
 
 	my $ev = Kynetx::Events::mk_event($req_info);
 
-	$logger->debug("\n----***----- Start scheduling ----***-----");
+	$logger->info("-----***---- START SCHEDULING ----***-----");
 
 	my $schedule = Kynetx::Scheduler->new();
 
@@ -348,7 +348,7 @@ sub _handler {
 		$ev_metric->token( $id_token );
 
 		eval {
-			$logger->debug("Processing event for $rid");
+			$logger->info("Processing event $domain/$eventtype for $rid");
 			Kynetx::Events::process_event_for_rid( $ev, $req_info, $session,
 				$schedule, $rid_info );
 		};

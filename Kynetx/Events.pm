@@ -379,10 +379,10 @@ sub process_event_for_rid {
 
 			my $rulename = $rule->{'name'};
 
-			$logger->debug(
+			$logger->info(
 				"Adding to schedule: ",
 				Kynetx::Rids::print_rid_info($rid_info),
-				" & ", $rulename
+				":", $rulename 
 			);
 			my $task =
 			  $schedule->add( $rid, $rule, $ruleset, $req_info,

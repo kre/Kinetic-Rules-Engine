@@ -2164,9 +2164,8 @@ sub eval_log {
     $msg = Kynetx::Expressions::den_to_exp($rands->[0])
   } 
   my $val = Kynetx::Expressions::den_to_exp($obj);
-  $logger->debug( $msg, ref $val eq 'HASH' || 
-		        ref $val eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($val) 
-		                            : $val );
+  $logger->info( $msg, Kynetx::Json::perlToJson($val));
+
   return $obj; # pass thru unchanged
 }
 $funcs->{'klog'} = \&eval_log;
@@ -2176,17 +2175,13 @@ sub eval_defaults_to {
   my $logger = get_logger();
   my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
   my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
-  my $val = Kynetx::Expressions::den_to_exp($obj);
-  my $msg = '';
-  if (defined $rands->[1]  ) { # optional log message
-    $msg = Kynetx::Expressions::den_to_exp($rands->[1]);
-    $logger->debug( $msg, ref $val eq 'HASH' || 
-  		          ref $val eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($val) 
-		                              : $val );
-  } 
   my $new_val = $obj;
   if (_is_null($obj)) {
       $new_val = $rands->[0];
+      if (defined $rands->[1]  ) { # optional log message
+	  my $msg = Kynetx::Expressions::den_to_exp($rands->[1]);
+	  $logger->info( $msg );
+      } 
   }
   return $new_val
 }

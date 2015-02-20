@@ -76,46 +76,42 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
 sub handler {
   my $r = shift;	
   my $logger = get_logger();
-
   my ( $domain, $eventtype, $eid, $rids, $id_token );
   my @path_components = split( /\//, $r->path_info );
-  $id_token = $path_components[2];
-  $eid = $path_components[3] || '';
+  $logger->debug("Path on logging: ", $r->path_info);
 
-  # optional...usually passed in as parameters
-  $domain    = $path_components[4];
-  $eventtype = $path_components[5];
-  # build the request data structure. No RIDs yet. (undef)
-  my $req_info = Kynetx::Request::build_request_env(
-		$r, $domain, $rids,
-		$eventtype,
-		$eid,
-		{
-			'api'      => 'sky',
-			'id_token' => $id_token
-		}
-	   );
+  my ($req_info, $rids);
+  if ($path_components[1] eq "event") {
+    my $id_token = $path_components[2];
+    my $eid = $path_components[3] || '';
 
-  # use the calculated values...
-  # $domain    = $req_info->{'domain'};
-  # $eventtype = $req_info->{'eventtype'};
+    # optional...usually passed in as parameters
+    my $domain    = $path_components[4];
+    my $eventtype = $path_components[5];
+    # build the request data structure. No RIDs yet. (undef)
+    $req_info = Kynetx::Request::build_request_env(
+						   $r, $domain, $rids,
+						   $eventtype,
+						   $eid,
+						   {
+						    'api'      => 'sky',
+						    'id_token' => $id_token
+						   }
+						  );
+  } else { # cloud
+    $req_info = Kynetx::Request::build_request_env($r, $path_components[4], $rids, undef, int(rand(999999999999)) );
+  }
 
-
-  # my $req = Apache2::Request->new($r);
-  # my @params = $req->param;
-  # my @path_components = split( /\//, $r->path_info );
-  # my $id_token = $path_components[2];
-  # $logger->trace("Token: $id_token");
-  # 	my $eid = $path_components[3] || '';
-  my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($id_token);
-  $logger->trace("KEN: $ken");
+  # Kynetx::Request::log_request_env( $logger, $req_info );
+  my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($req_info->{"id_token"});
+  $logger->debug("KEN: $ken");
   if ($ken) {
     my $list = Kynetx::Persistence::KToken::get_token_by_ken_and_label($ken, TOKEN_NAME);
     my $logging_token = $list->[0];
     if ($logging_token) {
       Log::Log4perl::MDC->put( '_ECI_',  $logging_token);
       Log::Log4perl::MDC->put( 'eid',  $eid);
-      $logger->debug("__MONGO__");
+      $logger->debug("__DEVLOG__");
     }
   }
   return Apache2::Const::OK;
@@ -135,7 +131,8 @@ sub get_all_msg {
     my $id = $obj->{'_id'}->to_string;
     push @{$list}, _normalize($obj);
   }
-  my @result = sort {$b->{"created"} <=> $a->{"created"}} @{ $list };
+#  my @result = sort {$b->{"created"} <=> $a->{"created"}} @{ $list };
+  my @result = reverse @{ $list };
   return \@result;
 }
 
@@ -149,9 +146,11 @@ sub get_active {
   my $cursor = $c->query($tkey)->sort({'$natural' => 1});
   while (my $obj = $cursor->next) {
     my $id = $obj->{'_id'}->to_string;
-    $list->{$id} = _normalize($obj);
+    push @{$list}, _normalize($obj);
   }
-  return $list;  
+#  my @result = sort {$b->{"created"} <=> $a->{"created"}} @{ $list };
+  my @result = reverse @{ $list };
+  return \@result;
 }
 
 sub get_log {
@@ -208,7 +207,7 @@ sub _normalize {
     'id' => $obj->{"_id"},
     'created' => $obj->{'created'},
     'eid' => $obj->{"eid"},
-    'timestamp' => DateTime->from_epoch(epoch => $obj->{'created'})->iso8601(),
+    'timestamp' => $obj->{'created'},
     'log_text' => $obj->{'text'}
   };
   return $struct;

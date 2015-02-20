@@ -81,7 +81,8 @@ sub get_ruleset {
     if($res->is_success) {
       $result = encode("UTF-8",$res->decoded_content);
     } else {
-      $logger->warn("Error retrieving ruleset: ",  $res->status_line);
+      my $rid = Kynetx::Rids::get_rid($rid_info);
+      $logger->warn("HTTP error retrieving ruleset ID $rid: ",  $res->status_line);
       return undef;
     }
 

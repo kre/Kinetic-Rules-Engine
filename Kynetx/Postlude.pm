@@ -336,15 +336,13 @@ sub eval_log_statement {
 #    $js = Kynetx::Log::explicit_callback( $req_info, $rule_name, $log_val );
 
     # this puts the statement in the log data for when debug is on
-    $logger->debug( $msg, ref $log_val eq 'HASH' || 
-		          ref $log_val eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($log_val) : $log_val );
+    $logger->info( $msg, Kynetx::Json::perlToJson($log_val) );
     $js = join("", 
                "KOBJ.log('",
 	       $msg,
 	       $log_val,
 	       "');"
 	      );
-    # huh?    return $msg . $log_val;
     return $js;
 }
 
@@ -378,9 +376,9 @@ sub eval_error_statement {
 
 
     # this puts the statement in the log data for when debug is on
-    $logger->debug("Explicit user error", $msg_val );
+    $logger->info("Explicit user error", Kynetx::Json::perlToJson($msg_val));
+#    $logger->debug("Explicit user error", $msg_val );
 
-    # huh?    return $msg . $log_val;
     return $js;
 }
 

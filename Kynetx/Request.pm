@@ -104,7 +104,7 @@ sub build_request_env {
   if ($content_type eq 'application/json') {
 
     my $body = retrieve_json_from_post($r);
-    $logger->debug("Body: ", $body);
+#    $logger->debug("Body: ", $body);
     $body_params = JSON::XS::->new->convert_blessed(1)->pretty(1)->decode($body || "{}");
 
     # you'd think you could just grab the POST body and parse it here, setting the 
@@ -333,8 +333,8 @@ sub log_request_env {
 	     };
   my $max_val_length = 100;
   if ( $logger->is_debug() ) {
-    $logger->debug("--------------- REQUEST ---------------");
-    foreach my $entry ( keys %{$request_info} ) {
+    $logger->info("-----***---- REQUEST ----***-----");
+    foreach my $entry ( sort keys %{$request_info} ) {
 
       next if $skip->{$entry};
 
@@ -372,10 +372,16 @@ sub log_request_env {
 
       }
 
+      $skip = {"directives" => 1,
+	       "majv" => 1,
+	       "minv" => 1,
+	       "KOBJ.eventtree" => 1,
+	      };
+
       # print out first 50 chars of the request string
       $entry = 'undef' unless defined $entry;
       $value = 'undef' unless defined $value;
-      $logger->debug("$entry:$value");
+      $logger->info("$entry:$value") unless $skip->{$entry};
 
     }
 

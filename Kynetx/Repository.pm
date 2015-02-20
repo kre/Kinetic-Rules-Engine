@@ -124,7 +124,7 @@ sub get_rules_from_repository {
   
   if (defined $ruleset) {
     $req_info->{'rule_version'} = $version;
-    $ruleset = Kynetx::Parser::parse_ruleset($ruleset);
+    $ruleset = Kynetx::Parser::parse_ruleset($ruleset, $rid_info);
     unless($ruleset->{'ruleset_name'} eq 'norulesetbythatappid' || 
       defined $ruleset->{'error'}) {
         $ruleset = Kynetx::Rules::optimize_ruleset($ruleset);
@@ -134,7 +134,7 @@ sub get_rules_from_repository {
 	$memd->set($rs_key."_timestamp", DateTime->now()->iso8601()) ;
       } else {
         if ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid') {
-          $logger->error("Ruleset $rid not found");
+          $logger->error("Ruleset ID $rid not valid or not found");
       } elsif (defined $ruleset->{'error'}) {
           $logger->error("Ruleset parsing error for $rid: ");
       } else {

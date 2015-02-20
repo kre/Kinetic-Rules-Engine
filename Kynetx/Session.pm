@@ -98,11 +98,11 @@ sub process_session {
 
     # Sky flow
     if (defined $tk) {
-      $logger->info("Explicit token: (SKY) $tk");
+      $logger->debug("Explicit token: (SKY) $tk");
       if ($tk ne "") {
         my $token;
         if ($token = Kynetx::Persistence::KToken::is_valid_token($tk)) {
-            $logger->info("Received valid SKY token: ", $tk);
+            $logger->debug("Received valid SKY token: ", $tk);
             # Set the session ID for this SKY token
             my $sky_session = $token->{"endpoint_id"};
             my $session = {"_session_id" => $sky_session};

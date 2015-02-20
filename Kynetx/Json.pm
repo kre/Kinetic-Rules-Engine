@@ -50,6 +50,7 @@ our %EXPORT_TAGS = (
           astToJson
           jsonToAst
           jsonToAst_w
+          perlToJson
           get_items
           deserialize_regexp_objects
           serialize_regexp_objects
@@ -130,6 +131,14 @@ sub jsonToAst_w {
     } else {
         return $pstruct;
     }
+}
+
+sub perlToJson {
+    my ($log_val, $pretty_print) = @_;
+    $pretty_print ||= 0; # default to no pretty print
+    return ref $log_val eq 'HASH' || 
+           ref $log_val eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty($pretty_print)->encode($log_val) 
+                                   : $log_val
 }
 
 sub serialize_regexp_objects {

@@ -170,7 +170,11 @@ sub process_schedule {
 
 		# set up new context for this task
 		if ($req_info) {
-		    $logger->debug("switching event attributes in");
+		    $logger->info("Context switch to ", 
+				  $task->{"rid"}, ":",  $task->{"rule"}->{"name"},
+				  " for event ",
+				  $task->{"req_info"}->{"domain"}, ":",  $task->{"req_info"}->{"eventtype"}
+				 );
 
 		    my $task_req_info = {};
 		    Kynetx::Request::set_event_domain($task_req_info, 
@@ -196,8 +200,9 @@ sub process_schedule {
 		}
 
 		$rid = $task->{'rid'};
+		my $rid_version =  $task->{'ver'};
 		$req_info->{'rid'} =
-		  mk_rid_info( $req_info, $rid, { 'version' => $task->{'ver'} } );
+		  mk_rid_info( $req_info, $rid, { 'version' => $rid_version } );
 		$logger->debug( "Using RID ",
 			Kynetx::Rids::print_rid_info( $req_info->{'rid'} ) );
 			
@@ -282,7 +287,7 @@ sub process_schedule {
 		$task_metric->rulename($rule_name);
 		$task_metric->eid($req_info->{'eid'});
 
-		Log::Log4perl::MDC->put( 'rule', $rule_name );
+		Log::Log4perl::MDC->put( 'rule', $rule_name);
 
 		$logger->trace( "[rules] foreach pre: ",
 			sub { Dumper( $rule->{'pre'} ) } );
@@ -922,9 +927,7 @@ sub eval_rule {
 
 	my $logger = get_logger();
 
-	$logger->debug(
-"\n------------------- begin rule execution: $rule->{'name'} ------------------------\n"
-	);
+	$logger->info("-----***---- begin rule execution: $rule->{'name'} ----***-----");
 
 	my $js = '';
 	my $rule_metric = new Kynetx::Metrics::Datapoint( {
@@ -946,7 +949,7 @@ sub eval_rule {
 # assume the rule doesn't fire.  We will change this if it EVER fires in this eval
 	$req_info->{ $rule->{'name'} . '_result' } = 'notfired';
 
-	#	$logger->info("Rule pre ", sub {Dumper $rule->{'pre'}});
+	#	$logger->debug("Rule pre ", sub {Dumper $rule->{'pre'}});
 
 	if (   $rule->{'pre'}
 		&& scalar @{ $rule->{'pre'} } > 0
@@ -1201,7 +1204,7 @@ sub eval_rule_body {
 	my $fired = 0;
 	if ($pred_value) {
 
-		$logger->debug("fired");
+		$logger->info("rule fired");
 
 		# this is the main event.  The browser has asked for a
 		# chunk of Javascrip and this is where we deliver...
@@ -1220,7 +1223,7 @@ sub eval_rule_body {
 
 	}
 	else {
-		$logger->debug("did not fire");
+		$logger->info("rule did not fire");
 
 		$fired = 0;
 

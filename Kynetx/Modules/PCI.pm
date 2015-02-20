@@ -846,6 +846,7 @@ sub get_log_messages {
 	my ($token_name,$type);
 	my $arg1 = $args->[0];
 	#$logger->debug("log eci: $arg1");
+#	my $list = Kynetx::Persistence::DevLog::get_active($arg1);
 	my $list = Kynetx::Persistence::DevLog::get_all_msg($arg1);
 	if (defined $list) {
 	 return $list;  

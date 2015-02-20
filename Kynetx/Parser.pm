@@ -171,7 +171,7 @@ sub utf8_parse_ruleset {
 }
 
 sub parse_ruleset {
-    my ($ruleset) = @_;
+    my ($ruleset, $rid_info) = @_;
 
     my $logger = get_logger();
     $logger->trace("[parser::parse_ruleset] passed: ", sub {Dumper($ruleset)});
@@ -195,8 +195,9 @@ sub parse_ruleset {
         $result->{'error'} = \@jsonerr;
     }
     if (defined $result->{'error'}) {
-        my $estring = join("\n",@{$result->{'error'}});
-	   $logger->error("Can't parse ruleset: $estring");
+#        my $estring = join('\n',@{$result->{'error'}});
+	my $rid = defined $rid_info ? Kynetx::Rids::print_rid_info($rid_info): "undefined";
+        $logger->error("Can't parse ruleset $rid: ", Kynetx::Json::perlToJson($result->{"error"}));
     } else {
 	   $logger->trace("Parsed rules");
     }
