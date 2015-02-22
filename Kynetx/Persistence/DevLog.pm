@@ -209,7 +209,7 @@ sub flush {
 sub _normalize {
   my ($obj) = @_;
   my $eid = $obj->{"eid"};
-  my @items = grep(/^\d+\s+$eid/,split(/\n/,$obj->{'text'}));
+  my @items = grep(/^\d+\s+$eid\s+/,split(/\n/,$obj->{'text'}));
   my $timestamp = DateTime->from_epoch( epoch => $obj->{'created'} );
   my $struct = {
     'id' => $obj->{"_id"}. "",
