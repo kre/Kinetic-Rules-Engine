@@ -102,10 +102,9 @@ sub _handler {
 
 	$r->content_type('text/javascript');
 
-	$logger->debug(
-"\n\n------------------------------ begin EVENT evaluation with SKY API---------------------"
-	);
-        $logger->debug($r->path_info);
+	$logger->info("-----***---- Event evaluation with SKY API ----***-----");
+
+#        $logger->debug($r->path_info);
 
 	$logger->trace("Initializing memcached");
 	Kynetx::Memcached->init();
@@ -156,6 +155,9 @@ sub _handler {
 		}
 	);
 
+        # store the EID so we have it in the PerlLogHandler
+        $r->pnotes(EID => $req_info->{"eid"});
+  
 	# use the calculated values...
 	$domain    = $req_info->{'domain'};
 	$eventtype = $req_info->{'eventtype'};
@@ -224,9 +226,13 @@ sub _handler {
 
 	my ( $rid_list, $unfiltered_rid_list, $domain_test );
 
+	$logger->info("-----***---- Determine Saliance Graph ----***-----");
+
+
 	# this can be a big list...
 	$unfiltered_rid_list =
 	  Kynetx::Dispatch::calculate_rid_list( $req_info, $session );
+
 
 	$logger->debug("Calculated RID list: ", sub { join(', ', keys %{$unfiltered_rid_list->{'ridlist'}}) });
 

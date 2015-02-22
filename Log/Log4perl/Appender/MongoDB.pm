@@ -131,7 +131,7 @@ sub put {
   my ($eci,$eid,$text) = @_;
   
   my $c = $self->get_collection();
-  my $timestamp = DateTime->now;
+  my $timestamp = time;
   my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
   my $val = {
     'eci' => $eci,
@@ -193,13 +193,13 @@ sub set_ttl {
   my $c = $self->get_collection();
   my $ttl = $self->{'ttl'} || TTL_INDEX . "";
   my $id = MongoDB::OID->new(value => $oid);
-	my $key = {
-		"_id" => $id
-	};
-	my $val = {
-	  '$set' => {$ttl => DateTime->now}
-	};
-	$c->update($key,$val);
+  my $key = {
+	     "_id" => $id
+	    };
+  my $val = {
+	     '$set' => {$ttl => DateTime->now}
+	    };
+  $c->update($key,$val);
 }
 
 1;

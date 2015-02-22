@@ -745,115 +745,137 @@ $funcs->{'list_rulesets'} = \&installed_rulesets;
 ############################# Logging
 
 sub logging_eci {
-	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
-	my $logger = get_logger();
-  my $keys = _key_filter($args);
-  my $auth = pci_authorized($req_info, $rule_env, $session, $keys);
-  $logger->debug("Logging eci auth: $auth");
-	return 0 unless ($auth);
-	my $ken;
-	my ($token_name,$type);
-	my $arg1 = $args->[0];
-	$logger->debug("Use: $arg1");
-	if (! defined $arg1) {
-		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
-		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+    my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+    my $logger = get_logger();
+    my $keys = _key_filter($args);
+    my $auth = pci_authorized($req_info, $rule_env, $session, $keys);
+    $logger->debug("Logging eci auth: $auth");
+    return 0 unless ($auth);
+    my $ken;
+    my ($token_name,$type);
+    my $arg1 = $args->[0];
+    $logger->debug("Use: $arg1");
+    if (! defined $arg1) {
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+    } else {
+	# Check to see if it is an eci or a userid
+	if ($arg1 =~ m/^\d+$/) {
+	    ll("userid $arg1");
+	    $ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg1);
 	} else {
-		# Check to see if it is an eci or a userid
-		if ($arg1 =~ m/^\d+$/) {
-			ll("userid $arg1");
-			$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg1);
-		} else {
-			ll("eci $arg1");
-			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
-		}					
-	}
-	#$logger->debug("Found KEN: $ken");
-	if ($ken) {
-	 return Kynetx::Persistence::DevLog::create_logging_eci($ken);
-	}
-	return undef;
-	
+	    ll("eci $arg1");
+	    $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
+	}					
+    }
+    $logger->debug("Found KEN: $ken");
+    if ($ken) {
+	return Kynetx::Persistence::DevLog::create_logging_eci($ken);
+    }
+    return undef;
 }
 $funcs->{'set_logging'} = \&logging_eci;
 
 sub clear_logging {
-	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
-	my $logger = get_logger();
-  my $keys = _key_filter($args);
-	return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
-	my $ken;
-	my ($token_name,$type);
-	my $arg1 = $args->[0];
-	if (! defined $arg1) {
-		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
-		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+    my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+    my $logger = get_logger();
+    my $keys = _key_filter($args);
+    return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
+    my $ken;
+    my ($token_name,$type);
+    my $arg1 = $args->[0];
+    if (! defined $arg1) {
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+    } else {
+	# Check to see if it is an eci or a userid
+	if ($arg1 =~ m/^\d+$/) {
+	    ll("userid $arg1");
+	    $ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg1);
 	} else {
-		# Check to see if it is an eci or a userid
-		if ($arg1 =~ m/^\d+$/) {
-			ll("userid $arg1");
-			$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg1);
-		} else {
-			ll("eci $arg1");
-			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
-		}					
-	}
-	if ($ken) {
-	 return Kynetx::Persistence::DevLog::clear_logging_eci($ken);
-	}
-	return undef;
+	    ll("eci $arg1");
+	    $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
+	}					
+    }
+    if ($ken) {
+	return Kynetx::Persistence::DevLog::clear_logging_eci($ken);
+    }
+    return undef;
 	
 }
 $funcs->{'clear_logging'} = \&clear_logging;
 
 
 sub get_logging {
-	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
-	my $logger = get_logger();
-  my $keys = _key_filter($args);
-	return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
-	my $ken;
-	my ($token_name,$type);
-	my $arg1 = $args->[0];
-	if (! defined $arg1) {
-		my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
-		$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+    my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+    my $logger = get_logger();
+    my $keys = _key_filter($args);
+    return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
+    my $ken;
+    my ($token_name,$type);
+    my $arg1 = $args->[0];
+    if (! defined $arg1) {
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+    } else {
+	# Check to see if it is an eci or a userid
+	if ($arg1 =~ m/^\d+$/) {
+	    ll("userid $arg1");
+	    $ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg1);
 	} else {
-		# Check to see if it is an eci or a userid
-		if ($arg1 =~ m/^\d+$/) {
-			ll("userid $arg1");
-			$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($arg1);
-		} else {
-			ll("eci $arg1");
-			$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
-		}					
-	}
-	if ($ken) {
-	 return Kynetx::Persistence::DevLog::has_logging($ken);
-	}
-	return undef;
+	    ll("eci $arg1");
+	    $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($arg1);
+	}					
+    }
+    #ll("Ken: ", $ken);
+    if ($ken) {
+	my $status = Kynetx::Persistence::DevLog::has_logging($ken);
+	# ll("Status: ", $status );
+	return $status;
+    }
+    return undef;
 	
 }
-$funcs->{'get_logging'} = \&get_logging;
+$funcs->{'logging_enabled'} = \&get_logging;
 
 sub get_log_messages {
-	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
-	my $logger = get_logger();
-  my $keys = _key_filter($args);
-	return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys) ||
-	 developer_authorized($req_info,$rule_env,$session,['ruleset','log'])  );
-	my $ken;
-	my ($token_name,$type);
-	my $arg1 = $args->[0];
-	#$logger->debug("log eci: $arg1");
-#	my $list = Kynetx::Persistence::DevLog::get_active($arg1);
-	my $list = Kynetx::Persistence::DevLog::get_all_msg($arg1);
-	if (defined $list) {
-	 return $list;  
-	}
-	return undef;	
+    my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+    my $logger = get_logger();
+    my $keys = _key_filter($args);
+    return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys) ||
+		     developer_authorized($req_info,$rule_env,$session,['ruleset','log'])  );
+    my $ken;
+    my ($token_name,$type);
+    my $arg1 = $args->[0];
+    $logger->debug("logging eci: $arg1");
+    #	my $list = Kynetx::Persistence::DevLog::get_active($arg1);
+    my $list = Kynetx::Persistence::DevLog::get_all_msg($arg1);
+    if (defined $list) {
+	return $list;  
+    }
+    return undef;	
 }
 $funcs->{'get_logs'} = \&get_log_messages;
+
+sub flush_log_messages {
+    my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+    my $logger = get_logger();
+    my $keys = _key_filter($args);
+    return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys) ||
+		     developer_authorized($req_info,$rule_env,$session,['ruleset','log'])  );
+    my $ken;
+    my ($token_name,$type);
+    my $arg1 = $args->[0];
+    #$logger->debug("log eci: $arg1");
+    #	my $list = Kynetx::Persistence::DevLog::get_active($arg1);
+    my $list = Kynetx::Persistence::DevLog::flush($arg1);
+    if (defined $list) {
+	return $list;  
+    }
+    return undef;	
+}
+$funcs->{'flush_logs'} = \&get_log_messages;
+
 
 
 

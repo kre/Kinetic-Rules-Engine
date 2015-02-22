@@ -102,6 +102,10 @@ sub handler {
 	my @path_components = split( /\//, $r->path_info );
 
 	my $req_info = Kynetx::Request::build_request_env($r, $path_components[4], $rids, undef, int(rand(999999999999)) ); # EID for Cloud is random since API doesn't provide one
+
+        # store the EID so we have it in the PerlLogHandler
+        $r->pnotes(EID => $req_info->{"eid"});
+	
 	
 	my $session = _cloud_session($r,$req_info);
   return Apache2::Const::HTTP_BAD_REQUEST unless ($session);
@@ -285,7 +289,7 @@ sub eval_ruleset_function {
 
 
 
-#  $logger->trace("Result: ", sub{Dumper $result});
+ # $logger->debug("Result: ", sub{Dumper $result});
  
   my $json = JSON::XS->new->allow_nonref;
   my $content_type = "application/json";

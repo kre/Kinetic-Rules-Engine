@@ -102,15 +102,20 @@ sub handler {
     $req_info = Kynetx::Request::build_request_env($r, $path_components[4], $rids, undef, int(rand(999999999999)) );
   }
 
+  # Set the EID from the notes to get the same one the PerlHandler had
+  $req_info->{"eid"} = $r->pnotes("EID");
+  
   # Kynetx::Request::log_request_env( $logger, $req_info );
   my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($req_info->{"id_token"});
-  $logger->debug("KEN: $ken");
+#  $logger->debug("KEN: $ken");
   if ($ken) {
     my $list = Kynetx::Persistence::KToken::get_token_by_ken_and_label($ken, TOKEN_NAME);
+    ###$logger->debug("Seeing these DECIs ", sub{Dumper $list});
     my $logging_token = $list->[0];
+    $logger->debug("Logging token: ", $logging_token);
     if ($logging_token) {
       Log::Log4perl::MDC->put( '_ECI_',  $logging_token);
-      Log::Log4perl::MDC->put( 'eid',  $eid);
+      Log::Log4perl::MDC->put( 'eid',  $req_info->{'eid'});
       $logger->debug("__DEVLOG__");
     }
   }
@@ -131,8 +136,8 @@ sub get_all_msg {
     my $id = $obj->{'_id'}->to_string;
     push @{$list}, _normalize($obj);
   }
-#  my @result = sort {$b->{"created"} <=> $a->{"created"}} @{ $list };
-  my @result = reverse @{ $list };
+  my @result = sort {$b->{"created"} <=> $a->{"created"}} @{ $list || [] };
+#  my @result = reverse @{ $list || [] };
   return \@result;
 }
 
@@ -148,8 +153,8 @@ sub get_active {
     my $id = $obj->{'_id'}->to_string;
     push @{$list}, _normalize($obj);
   }
-#  my @result = sort {$b->{"created"} <=> $a->{"created"}} @{ $list };
-  my @result = reverse @{ $list };
+  my @result = sort {$b->{"created"} <=> $a->{"created"}} @{ $list || [] };
+#  my @result = reverse @{ $list || [] };
   return \@result;
 }
 
@@ -203,18 +208,23 @@ sub flush {
 
 sub _normalize {
   my ($obj) = @_;
+  my $eid = $obj->{"eid"};
+  my @items = grep(/^\d+\s+$eid/,split(/\n/,$obj->{'text'}));
+  my $timestamp = DateTime->from_epoch( epoch => $obj->{'created'} );
   my $struct = {
-    'id' => $obj->{"_id"},
-    'created' => $obj->{'created'},
+    'id' => $obj->{"_id"}. "",
+    'created' => $obj->{'created'} ,
     'eid' => $obj->{"eid"},
-    'timestamp' => $obj->{'created'},
-    'log_text' => $obj->{'text'}
+    'timestamp' =>  $timestamp. "",
+#    'log_text' => $obj->{'text'}
+    'log_items' => \@items
   };
   return $struct;
 }
 
 sub create_logging_eci {
   my ($ken) = @_;
+  clear_logging_eci($ken); # we only want one!!
   my $eci = Kynetx::Persistence::KToken::create_token($ken,TOKEN_NAME,$collection);
   return $eci;
 }
@@ -222,21 +232,23 @@ sub create_logging_eci {
 sub clear_logging_eci {
   my ($ken) = @_;
   my $list = Kynetx::Persistence::KToken::get_token_by_ken_and_label($ken, TOKEN_NAME);
+  my $logger = get_logger();
+  $logger->debug("Seeing these DECIs ", sub{Dumper $list});
   foreach my $eci (@{$list}) {
     Kynetx::Persistence::KToken::delete_token($eci);
   }
 }
 
 sub has_logging {
-  my ($ken) = @_;
-  my $logger = get_logger();
-  my $list = Kynetx::Persistence::KToken::get_token_by_ken_and_label($ken, TOKEN_NAME);
-  $logger->trace("Logging eci: ", sub {Dumper($list)});
-  if (ref $list eq "ARRAY" && scalar @{$list} >= 1) {
-   return 1
-  } else {
-    return 0;
-  }
+    my ($ken) = @_;
+    my $logger = get_logger();
+    my $list = Kynetx::Persistence::KToken::get_token_by_ken_and_label($ken, TOKEN_NAME);
+    $logger->debug("Logging eci: ", sub {Dumper($list)});
+    if (defined $list && ref $list eq "ARRAY" && scalar @{$list} >= 1) {
+	return 1
+    } else {
+	return 0;
+    }
 }
 
 

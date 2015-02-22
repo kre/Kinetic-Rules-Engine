@@ -179,6 +179,9 @@ sub process_event {
 	  Kynetx::Request::build_request_env( $r, $domain, $rids, $eventtype, $eid,
 		{ 'api' => 'blue' } );
 
+        # store the EID so we have it in the PerlLogHandler
+        $r->pnotes(EID => $req_info->{"eid"});
+
 	Kynetx::Request::log_request_env( $logger, $req_info );
 
 # Extend $req_info if we have any extra information passed in through the pnotes
