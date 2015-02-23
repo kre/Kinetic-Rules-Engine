@@ -208,6 +208,7 @@ sub eval_ruleset_function {
     || $ruleset->{'meta'}->{'sharing'} eq "off" 
      ) {
 
+    $logger->info("Sharing not on for module $req_info->{'module_alias'}");
     $result = {"error" => 100,
 	       "error_str" => "Sharing not on for module $req_info->{'module_alias'}"
 	      };
@@ -215,8 +216,8 @@ sub eval_ruleset_function {
   } 
   elsif (! $req_info->{'id_token'}
 	) {
-    $logger->debug("No ECI defined");
     $logger->debug("Request info: ", sub {Dumper($req_info)});
+    $logger->error("Bad ECI; aborting");
     die;
     $result = {"error" => 103,
 	       "error_str" => "No ECI defined"
@@ -227,14 +228,15 @@ sub eval_ruleset_function {
 	  || Kynetx::Configure::get_config('ALLOW_ALL_RULESETS')
            )
 	) {
-    $logger->debug("$req_info->{'module_name'} is not installed");
+    $logger->info("$req_info->{'module_name'} is not installed in pico");
     $result = {"error" => 102,
-	       "error_str" => "Module $req_info->{'module_alias'} is not installed for user"
+	       "error_str" => "Module $req_info->{'module_alias'} is not installed in pico"
 	      };
 
   }
   else {
      
+    $logger->info("Executing $req_info->{'module_alias'}/$req_info->{'function_name'}");
 
     my $rule_env = Kynetx::Rules::mk_initial_env();
 
@@ -278,6 +280,9 @@ sub eval_ruleset_function {
 							$req_info, $session));
 
     } else {
+
+      $logger->info("Function $req_info->{'function_name'} does not exist");
+
       $result = {"error" => 101,
 		 "error_str" => "Function $req_info->{'function_name'} does not exist"
 		};
