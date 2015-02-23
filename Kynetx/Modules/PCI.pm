@@ -874,7 +874,7 @@ sub flush_log_messages {
     }
     return undef;	
 }
-$funcs->{'flush_logs'} = \&flush_logs;
+$funcs->{'flush_logs'} = \&flush_log_messages;
 
 
 
