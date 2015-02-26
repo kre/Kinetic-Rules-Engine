@@ -181,7 +181,7 @@ sub respond {
   Kynetx::Session::session_cleanup($session,$req_info);
 
   # return the JS load to the client
-  $logger->info("-----***---- $realm processing finished ----***-----");
+  $logger->info("-----***---- $realm processing finished; assembling response ----***-----");
   
   # Send any ErrorStack warnings/errors if a KEY is configured
   my $stack_key = Kynetx::Configure::get_config('ERRORSTACK_KEY');
