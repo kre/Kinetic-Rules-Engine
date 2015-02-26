@@ -309,6 +309,8 @@ sub _handler {
 	}
 
 #    $logger->info("Rids for $domain/$eventtype: ", sub {Kynetx::Rids::print_rids($rid_list)});
+        # store the RIDS so we have it in the PerlLogHandler
+        $r->pnotes(RIDS => Kynetx::Rids::print_rids($req_info->{"rids"}));
 
 	Kynetx::Request::log_request_env( $logger, $req_info );
 

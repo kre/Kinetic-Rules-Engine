@@ -59,6 +59,7 @@ use Time::Local qw(timelocal);
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use constant TOKEN_NAME => "Active Logging";
+use constant SKIP_RIDS => [ "b16x29" ];
 
 our $collection = Kynetx::Configure::get_config('MONGO_LOG') || 'devlog';
 
@@ -100,11 +101,21 @@ sub handler {
 						  );
   } else { # cloud
     $req_info = Kynetx::Request::build_request_env($r, $path_components[4], $rids, undef, int(rand(999999999999)) );
+    my ($module_alias, $version) = split(/\./,$path_components[2]);
+    my $rid = Kynetx::Cloud::unalias($module_alias);
+
+    $req_info->{'module_name'} = $rid;
+    $req_info->{'rid'} = Kynetx::Rids::mk_rid_info( $req_info, $rid );
+    $req_info->{'module_version'} = $version;
+    $req_info->{'module_alias'} = $module_alias;
+    $req_info->{'function_name'} = $path_components[3];
+
   }
 
-  # Set the EID from the notes to get the same one the PerlHandler had
+  # use pnotes from handlers
   $req_info->{"eid"} = $r->pnotes("EID");
-  
+  $req_info->{"rids"} = Kynetx::Rids::parse_rid_list($req_info, $r->pnotes("RIDS"));
+
   # Kynetx::Request::log_request_env( $logger, $req_info );
   my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($req_info->{"id_token"});
 #  $logger->debug("KEN: $ken");
@@ -113,10 +124,27 @@ sub handler {
     ###$logger->debug("Seeing these DECIs ", sub{Dumper $list});
     my $logging_token = $list->[0];
     $logger->debug("Logging token: ", $logging_token);
-    if ($logging_token) {
-      Log::Log4perl::MDC->put( '_ECI_',  $logging_token);
-      Log::Log4perl::MDC->put( 'eid',  $req_info->{'eid'});
-      $logger->debug("__DEVLOG__");
+
+    my $skip_rids = { map { $_ => 1 } @{ (SKIP_RIDS) } };
+
+    my $logging_rid = 0;
+
+    # don't flush logging some dires (in skip list) to mongo log
+    if (  defined $req_info->{'function_name'} ) {
+      $logging_rid =  $skip_rids->{Kynetx::Rids::get_rid($req_info->{"rid"})}
+    } else {
+      $logging_rid =  length(@{ $req_info->{"rids"}}) == 1
+                   && $skip_rids->{Kynetx::Rids::get_rid($req_info->{"rids"}->[0])}
+    }
+
+    # $logger->debug("SKIP: ", sub{ Dumper  $req_info->{"rids"} } );
+
+    if ($logging_token && ! $logging_rid) {
+	Log::Log4perl::MDC->put( '_ECI_',  $logging_token);
+	Log::Log4perl::MDC->put( 'eid',  $req_info->{'eid'});
+	$logger->debug("__DEVLOG__"); # write the trigger to the log (see log.conf for Log4Perl)
+    } else {
+	$logger->debug("Dev Log not writing");
     }
   }
   return Apache2::Const::OK;
@@ -209,7 +237,10 @@ sub flush {
 sub _normalize {
   my ($obj) = @_;
   my $eid = $obj->{"eid"};
-  my @items = grep(/^\d+\s+$eid\s+/,split(/\n/,$obj->{'text'}));
+  my $skip_rids = join("|", @{ (SKIP_RIDS) } );
+  my $logger = get_logger();
+  $logger->debug("Skip RIDS ", sub{ Dumper $skip_rids });
+  my @items = grep(!/$skip_rids/, grep(/^\d+\s+$eid\s+/,split(/\n/,$obj->{'text'})));
   my $timestamp = DateTime->from_epoch( epoch => $obj->{'created'} );
   my $struct = {
     'id' => $obj->{"_id"}. "",
@@ -232,8 +263,8 @@ sub create_logging_eci {
 sub clear_logging_eci {
   my ($ken) = @_;
   my $list = Kynetx::Persistence::KToken::get_token_by_ken_and_label($ken, TOKEN_NAME);
-  my $logger = get_logger();
-  $logger->debug("Seeing these DECIs ", sub{Dumper $list});
+#  my $logger = get_logger();
+#  $logger->debug("Seeing these DECIs ", sub{Dumper $list});
   foreach my $eci (@{$list}) {
     Kynetx::Persistence::KToken::delete_token($eci);
   }
