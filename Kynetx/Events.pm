@@ -181,6 +181,7 @@ sub process_event {
 
         # store the EID so we have it in the PerlLogHandler
         $r->pnotes(EID => $req_info->{"eid"});
+        $r->pnotes(RIDS => Kynetx::Rids::print_rids($req_info->{"rids"}));
 
 	Kynetx::Request::log_request_env( $logger, $req_info );
 
@@ -204,7 +205,7 @@ sub process_event {
 
 	# not clear we need the request env now
 	#    my $req_info = Kynetx::Request::build_request_env($r, $domain, $rids);
-	$req_info->{'eid'} = $eid || '';
+	$req_info->{'eid'} = $eid ||  int(rand(999999999999)) ; # create random EID
 
 	# error checking for event domains and types
 	unless ( $domain =~ m/[A-Za-z+_]+/ ) {
@@ -268,7 +269,7 @@ sub process_event {
 	}
 
 
-	$logger->trace("\n----***----- Schedule Complete ----***-----");
+	$logger->trace("----***----- Schedule Complete ----***-----");
 
 	my $dd = Kynetx::Response->create_directive_doc( $req_info->{'eid'} );
 	my $js = '';

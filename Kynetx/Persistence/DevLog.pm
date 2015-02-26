@@ -77,11 +77,10 @@ our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} });
 sub handler {
   my $r = shift;	
   my $logger = get_logger();
-  my ( $domain, $eventtype, $eid, $rids, $id_token );
+  my ( $domain, $eventtype, $eid, $rids, $id_token, $req_info );
   my @path_components = split( /\//, $r->path_info );
   $logger->debug("Path on logging: ", $r->path_info);
 
-  my ($req_info, $rids);
   if ($path_components[1] eq "event") {
     my $id_token = $path_components[2];
     my $eid = $path_components[3] || '';
