@@ -333,7 +333,7 @@ sub log_request_env {
 	     };
   my $max_val_length = 100;
   if ( $logger->is_debug() ) {
-    my $req_type = defined $request_info->{"function_name"} ? "Query" : "Event"
+    my $req_type = defined $request_info->{"function_name"} ? "Query" : "Event";
     $logger->info("-----***---- Decode $req_type ----***-----");
     foreach my $entry ( sort keys %{$request_info} ) {
 
