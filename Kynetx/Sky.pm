@@ -316,7 +316,7 @@ sub _handler {
 
 	my $ev = Kynetx::Events::mk_event($req_info);
 
-	$logger->info("-----***---- START SCHEDULING ----***-----");
+	$logger->info("-----***---- Start Scheduling ----***-----");
 
 	my $schedule = Kynetx::Scheduler->new();
 

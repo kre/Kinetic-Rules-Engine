@@ -329,8 +329,10 @@ sub merge_req_env {
 sub log_request_env {
   my ( $logger, $request_info ) = @_;
 
-  my $skip = {"KOBJ.ridlist" => 1,
+  my $skip = {
+	      "KOBJ.eventtree" => 1,
 	     };
+
   my $max_val_length = 100;
   if ( $logger->is_debug() ) {
     my $req_type = defined $request_info->{"function_name"} ? "Query" : "Event";
@@ -373,16 +375,30 @@ sub log_request_env {
 
       }
 
-      $skip = {"directives" => 1,
-	       "majv" => 1,
-	       "minv" => 1,
-	       "KOBJ.eventtree" => 1,
-	      };
-
+      my $debug_only = {"directives" => 1,
+			"majv" => 1,
+			"minv" => 1,
+			"KOBJ.eventtree" => 1,
+			"g_id" => 1,
+			"url" => 1,
+			"epi" => 1,
+			"epl" => 1,
+			"caller" => 1,
+			"ip" => 1,
+			"now" => 1,
+			"page" => 1,
+			"site" => 1,
+			"ua" => 1
+		       };
+      
       # print out first 50 chars of the request string
       $entry = 'undef' unless defined $entry;
       $value = 'undef' unless defined $value;
-      $logger->info("$entry:$value") unless $skip->{$entry};
+      if ( $debug_only->{$entry} ) {
+	  $logger->debug("$entry:$value");
+      } else {
+	  $logger->info("$entry:$value");
+      }
 
     }
 
