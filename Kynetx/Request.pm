@@ -182,6 +182,7 @@ sub build_request_env {
     eid       => $eid,
 
     id_token => $id_token,
+    eci => $id_token,  # add this without removing other 
 
     explicit_rids => $explicit_rids,
 
@@ -384,6 +385,7 @@ sub log_request_env {
 			"epi" => 1,
 			"epl" => 1,
 			"caller" => 1,
+			"id_token" => 1,
 			"ip" => 1,
 			"now" => 1,
 			"page" => 1,
