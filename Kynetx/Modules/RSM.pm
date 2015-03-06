@@ -640,8 +640,9 @@ sub _flush {
   my $req_info = Kynetx::Util::dummy_req_info($rid);
   my $version = Kynetx::Rids::get_version(Kynetx::Rids::get_current_rid_info($req_info));
   my $memd = get_memd();
-  $logger->debug("[flush] flushing rules for $rid (version $version)");
-  $memd->delete(Kynetx::Repository::make_ruleset_key($rid, $version));  
+  my $rid_key = Kynetx::Repository::make_ruleset_key($rid, $version);
+  $logger->debug("[flush] flushing rules for $rid (version $version) for key $rid_key");
+  $memd->delete($rid_key);  
   Kynetx::Modules::RuleEnv::delete_module_caches($req_info,$memd);
   Kynetx::Persistence::Ruleset::touch_ruleset($rid);
 }
