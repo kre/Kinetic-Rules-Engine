@@ -518,7 +518,7 @@ sub eval_module {
     } elsif ( $source eq 'rsm' ) {
         $preds = Kynetx::Modules::RSM::get_predicates();
         if ( defined $preds->{$function} ) {
-            $val = $preds->{$function}->( $req_info,$rule_env,$session,$rule_name,$function,$args );
+            $val = $preds->{$function}->( $req_info, $rule_env, $args );
             $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::RSM::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
