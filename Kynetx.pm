@@ -315,7 +315,7 @@ sub describe_ruleset {
 
       my $ruleset = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
 
-      my $numrules = @{ $ruleset->{'rules'} } + 0;
+      my $numrules = @{ $ruleset->{'rules'} || [] } + 0;
 
       my $rs_timestamp_key = Kynetx::Repository::make_ruleset_key(get_rid($rid_info), $req_info->{'rule_version'}) . "_timestamp";
       #$logger->debug("Timestamp key ", $rs_timestamp_key);
