@@ -112,6 +112,7 @@ foreach my $pn (@pnames) {
     $test_count++;
 }
 
+
 my $dict_path = "/usr/share/dict/words";
 my @DICTIONARY;
 open DICT, $dict_path;
@@ -233,6 +234,23 @@ $description = "Validate the new ruleset";
 $result = Kynetx::Modules::RSM::_validate($result->{'rid'});
 cmp_deeply($result,1,$description);
 $test_count++;
+
+$description = "Use is_valid to validate ruleset";
+
+#diag ">>>> is_valid for $new_rid <<<<";
+$function_name = "is_valid";
+$args = [$new_rid];
+$result = Kynetx::Modules::RSM::run_function($my_req_info,$rule_env,$session,$rule_name,$function_name,$args);
+ok($result,$description);
+$test_count++;
+
+$function_name = "is_valid";
+$args = [$new_rid."xx"];
+$result = Kynetx::Modules::RSM::run_function($my_req_info,$rule_env,$session,$rule_name,$function_name,$args);
+ok(! $result,$description);
+$test_count++;
+#diag ">>>> is_valid <<<<";
+
 
 $description = "Use action to validate the new ruleset";
 $krl_src = <<_KRL_;

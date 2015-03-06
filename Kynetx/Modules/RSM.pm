@@ -50,12 +50,6 @@ use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
 my $predicates = {
-  'is_valid' => sub {
-    my ($req_info, $rule_env, $args) = @_;
-    my $logger = get_logger();
-    $logger->debug("Arg to is_valid: $args->[0]");
-    return _validate($args->[0]) == 1;
-  },
   'is_owner' => sub {
     my ($req_info, $rule_env, $args) = @_;
   	my $logger = get_logger();
@@ -71,6 +65,7 @@ my $predicates = {
     return 0;    
   }
 };
+
 
 my $default_actions = {
 	'register' => {
@@ -164,6 +159,17 @@ sub run_function {
 
 
 ##################### Methods
+
+sub is_valid {
+    my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+    my $logger = get_logger();
+    $logger->debug("Arg to is_valid: $args->[0]");
+    my $val = _validate($args->[0]) == 1;
+    return Kynetx::Expressions::boolify($val || 0);
+
+};
+$funcs->{'is_valid'} = \&is_valid;
+
 
 sub appkeys {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
