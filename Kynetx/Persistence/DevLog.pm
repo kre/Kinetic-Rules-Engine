@@ -113,7 +113,7 @@ sub handler {
 
   # use pnotes from handlers
   $req_info->{"eid"} = $r->pnotes("EID");
-  $req_info->{"rids"} = Kynetx::Rids::parse_rid_list($req_info, $r->pnotes("RIDS"));
+  $req_info->{"rids"} = Kynetx::Rids::parse_rid_list($req_info, $r->pnotes("RIDS")) || [] ;
 
   # Kynetx::Request::log_request_env( $logger, $req_info );
   my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($req_info->{"id_token"});
@@ -132,7 +132,7 @@ sub handler {
     if (  defined $req_info->{'function_name'} ) {
       $logging_rid =  $skip_rids->{Kynetx::Rids::get_rid($req_info->{"rid"})}
     } else {
-      $logging_rid =  length(@{ $req_info->{"rids"}}) == 1
+      $logging_rid =  length( @{ $req_info->{"rids"} || [] } ) == 1
                    && $skip_rids->{Kynetx::Rids::get_rid($req_info->{"rids"}->[0])}
     }
 
