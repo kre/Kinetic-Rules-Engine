@@ -631,20 +631,25 @@ sub _entkeys {
 }
 
 sub _flush {
-  my ($rid) = @_;
+  my ($rid_string) = @_;
   my $logger = get_logger();
-  unless ($rid){
+  unless ($rid_string){
     return 0 
   };
+
   # Create a dummy req_info object for the RuleEnv.pm methods
-  my $req_info = Kynetx::Util::dummy_req_info($rid);
-  my $version = Kynetx::Rids::get_version(Kynetx::Rids::get_current_rid_info($req_info));
+  my $req_info = Kynetx::Util::dummy_req_info($rid_string);
+
+  my $rid_info_list = Kynetx::Rids::parse_rid_list($req_info, $rid_string);
+
+  my $rid = Kynetx::Rids::get_rid($rid_info_list->[0]);
+  my $version = Kynetx::Rids::get_version($rid_info_list->[0]);
   my $memd = get_memd();
   my $rid_key = Kynetx::Repository::make_ruleset_key($rid, $version);
   $logger->debug("[flush] flushing rules for $rid (version $version) for key $rid_key");
   $memd->delete($rid_key);  
   Kynetx::Modules::RuleEnv::delete_module_caches($req_info,$memd);
-  Kynetx::Persistence::Ruleset::touch_ruleset($rid);
+  Kynetx::Persistence::Ruleset::touch_ruleset($rid_string);
 }
 
 sub _validate {
