@@ -238,22 +238,24 @@ sub flush {
 }
 
 sub _normalize {
-  my ($obj) = @_;
-  my $eid = $obj->{"eid"};
-  my $skip_rids = join("|", @{ (SKIP_RIDS) } );
-  my $logger = get_logger();
-  $logger->debug("Skip RIDS ", sub{ Dumper $skip_rids });
-  my @items = grep(!/$skip_rids/, grep(/^\d+\s+$eid\s+/,split(/\n/,$obj->{'text'})));
-  my $timestamp = DateTime->from_epoch( epoch => $obj->{'created'} );
-  my $struct = {
-    'id' => $obj->{"_id"}. "",
-    'created' => $obj->{'created'} ,
-    'eid' => $obj->{"eid"},
-    'timestamp' =>  $timestamp. "",
-#    'log_text' => $obj->{'text'}
-    'log_items' => \@items
-  };
-  return $struct;
+    my ($obj) = @_;
+    my $eid = $obj->{"eid"};
+    my $skip_rids = join("|", @{ (SKIP_RIDS) } );
+    my $logger = get_logger();
+    $logger->debug("Skip RIDS ", sub{ Dumper $skip_rids });
+#    my @items = grep(!/^\d+\s+\d+\w+\s+$skip_rids/, grep(/^\d+\s+$eid\s+/,split(/\n/,$obj->{'text'})));
+    my @items = grep(/^\d+\s+$eid\s+/,split(/\n/,$obj->{'text'}));
+ #   $logger->debug("Seeing items", sub{ Dumper \@items });
+    my $timestamp = DateTime->from_epoch( epoch => $obj->{'created'} );
+    my $struct = {
+		  'id' => $obj->{"_id"}. "",
+		  'created' => $obj->{'created'} ,
+		  'eid' => $obj->{"eid"},
+		  'timestamp' => $timestamp. "",
+#		  'log_text' => $obj->{'text'},
+		  'log_items' => \@items
+		 };
+    return $struct;
 }
 
 sub create_logging_eci {

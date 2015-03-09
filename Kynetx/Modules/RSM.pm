@@ -376,6 +376,7 @@ sub do_validate {
   my $js = raise_response_event($req_info, $rule_env, $session, $config, $response, $v );
   return $js;
 }
+
 sub do_update {
   my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
   my $logger = get_logger();
