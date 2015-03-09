@@ -56,6 +56,7 @@ our @ISA     = qw(Exporter);
 our %EXPORT_TAGS = (
 	all => [
 		qw(
+unalias
 		  )
 	]
 );

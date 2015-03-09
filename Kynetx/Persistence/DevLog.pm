@@ -47,6 +47,9 @@ use Kynetx::Memcached qw(
 use Kynetx::Persistence::KEN;
 use Kynetx::Persistence::KToken qw(:all);
 use Kynetx::Modules::Event;
+use Kynetx::Cloud qw( unalias );
+
+
 use MongoDB;
 use MongoDB::OID;
 use Digest::MD5 qw(
@@ -102,6 +105,7 @@ sub handler {
     $req_info = Kynetx::Request::build_request_env($r, $path_components[4], $rids, undef, int(rand(999999999999)) );
     my ($module_alias, $version) = split(/\./,$path_components[2]);
     my $rid = Kynetx::Cloud::unalias($module_alias);
+    $logger->debug("Sky Cloud logging with rid ", sub{Dumper $rid});
 
     $req_info->{'module_name'} = $rid;
     $req_info->{'rid'} = Kynetx::Rids::mk_rid_info( $req_info, $rid );
