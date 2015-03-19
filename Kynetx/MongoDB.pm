@@ -94,6 +94,7 @@ our $CACHETIME = 180;
 our $DBREF;
 our $COLLECTION_REF;
 our $MONGO_MAX_SIZE = 838860;
+our $MONGO_TIMEOUT = 10000;
 
 use constant SAFE => 0;
 use constant RETRIES => 5;
@@ -106,12 +107,13 @@ sub init {
     $MONGO_DB = Kynetx::Configure::get_config('MONGO_DB') || $MONGO_DB;
     $CACHETIME = Kynetx::Configure::get_config('MONGO_CACHETIME') || $CACHETIME;
     $MONGO_MAX_SIZE = Kynetx::Configure::get_config('MONGO_MAX_SIZE') || $MONGO_MAX_SIZE;
+    $MONGO_TIMEOUT = Kynetx::Configure::get_config('MONGO_TIMEOUT') || $MONGO_TIMEOUT;
 
     my @hosts = split(",",$MONGO_SERVER);
 	$logger->debug("Initializing MongoDB connection (cache $CACHETIME)");
 	foreach my $host (@hosts) {
 		eval {
-			$MONGO = MongoDB::Connection->new(host => $host,find_master =>1,query_timeout =>5000);
+			$MONGO = MongoDB::Connection->new(host => $host,find_master =>1,query_timeout => $MONGO_TIMEOUT);
 		};
 		if ($@) {
 			$logger->debug($@);
