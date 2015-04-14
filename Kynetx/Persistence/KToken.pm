@@ -262,7 +262,7 @@ sub delete_token {
     }
     
     my $result = Kynetx::MongoDB::delete_value(COLLECTION,$var);    
-    $logger->debug("Deleting token $ktoken");
+#    $logger->debug("Deleting token $ktoken with result ", sub{ Dumper $result });
     # We store the token in cache to quickly get the ken
     if (defined $session_id) {
     	my $additional_ref = COLLECTION .$session_id;

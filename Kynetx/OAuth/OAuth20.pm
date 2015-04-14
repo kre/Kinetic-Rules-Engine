@@ -302,6 +302,7 @@ sub workflow {
     if ($path eq 'auth') {
       $ken = _signin($session,$params);
 #      $logger->debug("Ken: ", sub{Dumper $ken});
+#      $logger->debug("List of tokens ", sub {Dumper Kynetx::Persistence::KToken::list_tokens($ken)});
       if ($ken) {
         $template->param("DIALOG" => profile_page($ken,undef,$session_id));
       } else {
@@ -583,7 +584,7 @@ sub authorize_app {
 sub _logged_in {
   my ($session) = @_;
   my $logger = get_logger();
-  $logger->debug("get token for $session");
+#  $logger->debug("get token for ", sub { Dumper $session } );
   my $token = Kynetx::Persistence::KToken::get_token($session,undef,"web");
 #  $logger->debug("get token: ", sub {Dumper($token)});
   if (defined $token && ref $token eq "HASH") {
