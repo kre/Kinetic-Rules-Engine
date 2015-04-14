@@ -72,7 +72,7 @@ use constant DEFAULT_RULESET => [
   'a169x625.prod'
 ];
 use constant DEFAULT_LOGO => "https://s3.amazonaws.com/Fuse_assets/img/fuse_logo-40.png";
-
+use constant DEFAULT_FOOTER => "Pico Labs Accounts";
 
 my $unsafe_global;
 
@@ -354,6 +354,7 @@ sub oauth_account {
 _EOF_
 		);
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  $dialog->param('FOOTER_TEXT' => DEFAULT_FOOTER);
   $dialog->param('FORM_URL' => _platform() . "/login/oauth/create");
   return $dialog->output();
 }
@@ -544,6 +545,7 @@ sub newaccount {
   $dialog->param('LOGIN_URL' => _platform() . "/login");
   $dialog->param('FORM_URL' => _platform() . "/login/create");
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  $dialog->param('FOOTER_TEXT' => DEFAULT_FOOTER);
 
 
   return $dialog->output();
@@ -573,6 +575,7 @@ sub authorize_app {
   $dialog->param('REDIRECT' =>  $redirect);
   $dialog->param('PLATFORM' => _platform());
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  $dialog->param('FOOTER_TEXT' => DEFAULT_FOOTER);
   return $dialog->output();
   
 }
@@ -608,6 +611,7 @@ sub profile_page {
   my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
   $dialog->param("PLATFORM" => _platform());
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  $dialog->param('FOOTER_TEXT' => DEFAULT_FOOTER);
   my $username = Kynetx::Persistence::KEN::get_ken_value($ken,'username');
   $dialog->param("USERNAME" => $username);
   $dialog->param("PAGEFORM" => profile_update($ken,$session_id,$error));
@@ -624,6 +628,7 @@ sub page_error {
   my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
   $dialog->param("PLATFORM" => _platform());
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  $dialog->param('FOOTER_TEXT' => DEFAULT_FOOTER);
   $dialog->param("ERROR_TEXT" => $error);	
   $dialog->param('PLATFORM' => _platform());
   return $dialog->output();
@@ -645,6 +650,7 @@ sub profile_update {
   $dialog->param("LNAME" => $lname);
   $dialog->param('PLATFORM' => _platform());
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  $dialog->param('FOOTER_TEXT' => DEFAULT_FOOTER);
   $dialog->param("ERROR_MSG" => $error);
 
   return $dialog->output();
@@ -669,6 +675,7 @@ sub native_login {
   $dialog->param('CREATE_URL' => _platform() . "/login/newaccount");
   $dialog->param("FORGOT_URL" => _platform() . "/login/forgot_password");
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  $dialog->param('FOOTER_TEXT' => DEFAULT_FOOTER);
   return $dialog->output();
 }
 
@@ -693,6 +700,7 @@ sub forgot_password {
   $dialog->param('FORM_URL' => _platform() . "/login/email_reset_link");
   $dialog->param('HIDDEN_FIELDS' => "");
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  $dialog->param('FOOTER_TEXT' => DEFAULT_FOOTER);
   return $dialog->output();
 }
 
@@ -710,6 +718,7 @@ sub email_reset_link {
   my $reset_email = $params->{'reset-email'};
   $logger->debug("Seeing ", sub{Dumper $reset_email});
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  $dialog->param('FOOTER_TEXT' => DEFAULT_FOOTER);
   $dialog->param('MSG' => <<_EOF_);
 <p>Your reset link has been sent to</p>
 <p><code>$reset_email</code></p>
@@ -814,6 +823,7 @@ _EOF_
 
       my $platform =  _platform();
       $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+      $dialog->param('FOOTER_TEXT' => DEFAULT_FOOTER);
       $dialog->param('FORM_URL' => "/login/change_password");
       $dialog->param('LOGIN_URL' => _platform() . "/login");
 
@@ -838,6 +848,7 @@ sub change_password {
   my $login_url = _platform() . "/login/";
   my $forgot_url = _platform() . "/login/forgot_password";
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  $dialog->param('FOOTER_TEXT' => DEFAULT_FOOTER);
 
   my $key = $params->{'key'};
   my $p1 = $params->{'password'};
@@ -964,6 +975,7 @@ _EOF_
   $dialog->param("CREATE_URL" => $create_url);
   $dialog->param("FORGOT_URL" => _platform() . "/login/forgot_password");
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  $dialog->param('FOOTER_TEXT' => DEFAULT_FOOTER);
   if ($error) {
       my $error_msg = '<strong>' . $error . '</strong>';
       $dialog->param("LOGIN_ERROR" => $error_msg)
