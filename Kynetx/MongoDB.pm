@@ -39,6 +39,7 @@ use Clone qw(clone);
 use Benchmark ':hireswallclock';
 use Data::Diver qw(
 	Dive
+	DiveVal
 	DiveError
 );
 use Devel::Size qw(
@@ -320,6 +321,7 @@ sub get_value {
         my $cursor = $c->find($var);
         if  ($cursor->has_next) {
         	$logger->trace("Elements to retrieve: ", $cursor->count);
+		my $hash = {};
        		if ($cursor->count == 1) {
 	        	my $result = $cursor->next();
 	        	if (defined $result and $result->{'serialize'}) {
@@ -350,12 +352,13 @@ sub get_value {
 	        		if ($ts > $last_updated) {
 	        			$last_updated = $ts;
 	        		}
-	        		push(@array_of_elements,{
-						'ancestors' => $kv,
-						'value' => $v
-	        		});
+				DiveVal($hash, @$kv) = $v;
+	        		# push(@array_of_elements,{
+				# 		'ancestors' => $kv,
+				# 		'value' => $v
+	        		# });
 	        	}
-	        	my $hash = Kynetx::Util::elements_to_hash(\@array_of_elements);
+	        	# my $hash = Kynetx::Util::elements_to_hash(\@array_of_elements); 
 	        	$logger->trace("Resurrected: $keystring");
 	        	$composed_hash->{'value'} = $hash;
 	        	$composed_hash->{'created'} = $last_updated *1;

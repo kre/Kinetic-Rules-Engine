@@ -59,6 +59,9 @@ use Kynetx::Modules::HTTP;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
+use constant DEFAULT_EVENT_SEND_TIMEOUT => Kynetx::Configure::get_config('DEFAULT_EVENT_SEND_TIMEOUT') || 6;
+
+
 my $predicates = {};
 
 sub get_predicates {
@@ -377,7 +380,7 @@ sub send_scheduled_event {
 sub _send_event {
   my ( $attrs, $execenv, $esl ) = @_;
   my $logger  = get_logger();
-  my $timeout = 2;                         # seconds
+  my $timeout = DEFAULT_EVENT_SEND_TIMEOUT;                         # seconds
   my $cv      = $execenv->get_condvar();
   $cv->begin;
 
