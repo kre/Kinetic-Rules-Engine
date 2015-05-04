@@ -1,0 +1,30 @@
+<!-- Haven't updated this and it's not used [PJW 20140613] -->
+
+  <!-- ========================================================================================= -->    
+<form action="<TMPL_VAR NAME="PLATFORM">/login/<TMPL_VAR NAME="FMETHOD">" method="post" data-url="<TMPL_VAR NAME="PLATFORM">/login/<TMPL_VAR NAME="FMETHOD">" data-external-page="true" data-ajax="false">
+	<h3>Account details</h3>
+	<div style="padding:10px 20px;" data-mini="true" data-role="controlgroup">
+		<div data-role="fieldcontain" class="ui-body ui-br">
+			<label for="pem" class="ui-input-text" data-theme="b">Email:</label>
+      		<input type="text" name="email" id="pem" value="<TMPL_VAR NAME="EMAIL">" placeholder="email" data-theme="b" data-mini="true" class="ui-input-text ui-body-b ui-corner-all ui-shadow-inset">
+		</div>
+		<div data-role="fieldcontain" class="ui-field-contain ui-body ui-br">
+	      <label for="pfn" class=" ui-input-text">First Name:</label>
+	      <input type="text" name="fname" id="pfn" value="<TMPL_VAR NAME="FNAME">" data-theme="b" data-mini="true" class="ui-input-text ui-body-b ui-corner-all ui-shadow-inset">
+		</div>
+		<div data-role="fieldcontain" class="ui-field-contain ui-body ui-br">
+	      <label for="pln" class="ui-input-text">Last Name:</label>
+	      <input type="text" name="lname" id="pln" value="<TMPL_VAR NAME="LNAME">" data-theme="b" data-mini="true" class="ui-input-text ui-body-b ui-corner-all ui-shadow-inset">
+		<div>
+	</div>
+	<div class="ui-body" data-corners="true">
+		<fieldset class="ui-grid-a"> 
+			<div class="ui-block-a">
+		  		<button type="submit" data-inline="true" data-theme="a"  data-mini="true" class="ui-btn-hidden" aria-disabled="false">Update</button>
+		  	</div>
+		  <div class="ui-block-b">
+		  		<a href="#" data-role="button" data-inline="true" data-rel="back" data-mini="true" class="ui-btn-hidden" aria-disabled="false">Cancel</a>
+			</div>
+		</fieldset>
+	</div>
+</form>

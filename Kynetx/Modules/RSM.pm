@@ -50,12 +50,6 @@ use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
 my $predicates = {
-  'is_valid' => sub {
-    my ($req_info, $rule_env, $args) = @_;
-    my $logger = get_logger();
-    $logger->debug("Arg to is_valid: $args->[0]");
-    return _validate($args->[0]) == 1;
-  },
   'is_owner' => sub {
     my ($req_info, $rule_env, $args) = @_;
   	my $logger = get_logger();
@@ -71,6 +65,7 @@ my $predicates = {
     return 0;    
   }
 };
+
 
 my $default_actions = {
 	'register' => {
@@ -165,6 +160,17 @@ sub run_function {
 
 ##################### Methods
 
+sub is_valid {
+    my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+    my $logger = get_logger();
+    $logger->debug("Arg to is_valid: $args->[0]");
+    my $val = _validate($args->[0]) == 1;
+    return Kynetx::Expressions::boolify($val || 0);
+
+};
+$funcs->{'is_valid'} = \&is_valid;
+
+
 sub appkeys {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
 	my $logger = get_logger();
@@ -231,12 +237,15 @@ sub do_register {
   my $uri = $args->[0];
   if (defined $uri) {
     my $new_rid = Kynetx::Persistence::Ruleset::create_rid($ken,$prefix,$uri);
+    # Immediately create a fork for a *dev* ruleset
+    my $fork = Kynetx::Persistence::Ruleset::fork_rid($ken,$new_rid,'dev',$uri);
     $logger->debug("Rid created: $new_rid");
     for my $key (keys %{$config}) {
       if ($key eq 'headers') {
         my $headers = $config->{'headers'};
         if (ref $headers eq "HASH") {
-          Kynetx::Persistence::Ruleset::put_registry_element($new_rid,['headers'],$headers)
+          Kynetx::Persistence::Ruleset::put_registry_element($new_rid,['headers'],$headers);
+          Kynetx::Persistence::Ruleset::put_registry_element($fork,['headers'],$headers);
         }
       } else {
         if ($key eq 'rule_name' ||
@@ -247,6 +256,7 @@ sub do_register {
           next;
         } else {
           Kynetx::Persistence::Ruleset::put_registry_element($new_rid,[$key],$config->{$key});
+          Kynetx::Persistence::Ruleset::put_registry_element($fork,[$key],$config->{$key});
         }
       }
     }
@@ -366,6 +376,7 @@ sub do_validate {
   my $js = raise_response_event($req_info, $rule_env, $session, $config, $response, $v );
   return $js;
 }
+
 sub do_update {
   my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
   my $logger = get_logger();
@@ -572,7 +583,7 @@ sub response_object {
     'obj' => $rid_object
   };
   $ro->{$event_var} = $thing;
-  $logger->debug("Response object: ", sub {Dumper($ro)});
+  $logger->trace("Response object: ", sub {Dumper($ro)});
   return $ro;
 }
 
@@ -621,18 +632,25 @@ sub _entkeys {
 }
 
 sub _flush {
-  my ($rid) = @_;
+  my ($rid_string) = @_;
   my $logger = get_logger();
-  unless ($rid){
+  unless ($rid_string){
     return 0 
   };
+
   # Create a dummy req_info object for the RuleEnv.pm methods
-  my $req_info = Kynetx::Util::dummy_req_info($rid);
-  my $version = Kynetx::Rids::get_version(Kynetx::Rids::get_current_rid_info($req_info));
+  my $req_info = Kynetx::Util::dummy_req_info($rid_string);
+
+  my $rid_info_list = Kynetx::Rids::parse_rid_list($req_info, $rid_string);
+
+  my $rid = Kynetx::Rids::get_rid($rid_info_list->[0]);
+  my $version = Kynetx::Rids::get_version($rid_info_list->[0]);
   my $memd = get_memd();
-  $logger->debug("[flush] flushing rules for $rid (version $version)");
-  $memd->delete(Kynetx::Repository::make_ruleset_key($rid, $version));  
+  my $rid_key = Kynetx::Repository::make_ruleset_key($rid, $version);
+  $logger->debug("[flush] flushing rules for $rid (version $version) for key $rid_key");
+  $memd->delete($rid_key);  
   Kynetx::Modules::RuleEnv::delete_module_caches($req_info,$memd);
+  Kynetx::Persistence::Ruleset::touch_ruleset($rid_string);
 }
 
 sub _validate {

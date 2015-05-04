@@ -196,11 +196,11 @@ SKIP: {
     
     my $after_test_plan = 
        [{'url' => "$dn/$token?_rids=a144x132&_domain=web&_name=pageview&caller=http://www.windley.com/first.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/first page/']
        },
        {'url' => "$dn/$token?_rids=a144x132&_domain=web&_name=pageview&caller=http://www.windley.com/second.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/second after first/',
 		 ]
        }];
@@ -209,12 +209,12 @@ SKIP: {
     
     my $before_test_plan =
       [{'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/archives/2006/foo.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/test_rule_4/',
 		   '/var year = 2006/']
        },
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/archives/2006/bar.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		 ]
        },
@@ -227,12 +227,12 @@ SKIP: {
        },
        # next series of three shows that interceding events don't matter
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/archives/2006/bar.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		 ]
        },
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/something_else.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		 ]
        },
@@ -249,24 +249,24 @@ SKIP: {
 
     my $and_test_plan =
       [{'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/and1.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/']
        },
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/and2.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/test_rule_and/',
 		 ]
        },
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/and2.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/']
        },
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/and2.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/']
        },
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/and1.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/test_rule_and/',
 		  ]
        },
@@ -276,7 +276,7 @@ SKIP: {
 
     my $or_test_plan =
       [{'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/or1.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 'like' => ['/test_rule_or/',
 		   '/var num = 1/',
 		  ],
@@ -284,7 +284,7 @@ SKIP: {
 		  ],
        },
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/or2.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/test_rule_or/',
 		   '/var num = 2/',
 		  ],
@@ -297,7 +297,7 @@ SKIP: {
 
     my $then_test_plan =
       [{'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/then1.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
 	'unlike' => ['/var two = 2/',
@@ -305,7 +305,7 @@ SKIP: {
 		  ],
        },
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/then2.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/test_rule_then/',
 		   '/var two = 2/',
 		   '/var one = 1/',
@@ -314,7 +314,7 @@ SKIP: {
        },
        # next series of three shows that an interceding event cancels then1
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/then1.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
 	'unlike' => ['/var two = 2/',
@@ -322,7 +322,7 @@ SKIP: {
 		  ],
        },
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/something_else.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
 	'unlike' => ['/var two = 2/',
@@ -330,7 +330,7 @@ SKIP: {
 		  ],
        },
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/then2.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/'],
 	'unlike' => ['/test_rule_then/',
 		   '/var two = 2/',
@@ -345,7 +345,7 @@ SKIP: {
 
     my $between_test_plan =
       [{'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/first.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
 	'unlike' => ["/var a = 't'/",
@@ -354,7 +354,7 @@ SKIP: {
 		  ],
        },
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/mid.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
 	'unlike' => ["/var a = 't'/",
@@ -363,7 +363,7 @@ SKIP: {
 		  ],
        },
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/last.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ["/test_rule_between/",
 		   "/var a = 't'/",
 		   "/var b = 'd'/",
@@ -372,7 +372,7 @@ SKIP: {
        },
        # without intervening 'mid' event, should not fire
       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/first.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
 	'unlike' => ["/var a = 't'/",
@@ -381,7 +381,7 @@ SKIP: {
 		  ],
        },
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/last.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
 	'unlike' => ["/var a = 't'/",
@@ -397,7 +397,7 @@ SKIP: {
     my $not_between_test_plan =
        # with intervening 'mid' event, should not fire
       [{'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/firstn.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
 	'unlike' => ["/var a = 't'/",
@@ -406,7 +406,7 @@ SKIP: {
 		  ],
        },
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/midn.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
 	'unlike' => ["/var a = 't'/",
@@ -416,7 +416,7 @@ SKIP: {
        },
        # without intervening 'mid' event, should  fire
       {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/firstn.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/^\/\/ KNS \w\w\w \w\w\w\s+\d+ \d\d:\d\d:\d\d \d\d\d\d/',
 		  ],
 	'unlike' => ["/var a = 't'/",
@@ -424,7 +424,7 @@ SKIP: {
 		  ],
        },
        {'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.windley.com/lastn.html",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ["/test_rule_notbetween/",
 		   "/var a = 't'/",
 		   "/var c = 't'/",
@@ -437,7 +437,7 @@ SKIP: {
 
     my $multi_test_plan =
       [{'url' => "$dn/$token?_rids=cs_test_1&_domain=web&_name=pageview&caller=http://www.google.com/search",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/test_rule_google_1/',
 		   '/test_rule_google_2/',
 		   "/var search = 'search';/",
@@ -451,7 +451,7 @@ SKIP: {
 
     my $email_test_plan =
       [{'url' => "$dn/$token?_domain=mail&_name=received&_rids=cs_test_1",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/forward/',
 		   '/pjw@kynetx.com/',
 		   '/"msg_id":15/',
@@ -462,7 +462,7 @@ SKIP: {
 	'diag' => 0,
        },
        {'url' => "$dn/$token" .'?_domain=mail&_name=received&_rids=cs_test_1&from=swf@windley.com',
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/forward/',
 		   '/"msg_id":25/',
 		   '/"address":"swf"/',
@@ -472,7 +472,7 @@ SKIP: {
 	'diag' => 0,
        },
        {'url' => "$dn/$token" .'?_domain=mail&_name=received&_rids=cs_test_1&from=pjw@windley.org&to=swf@fulling.org&subj=Hey Phil you rock!',
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/forward/',
 		   '/"name":"Phil"/',
 		   '/"address":"pjw"/',
@@ -483,7 +483,7 @@ SKIP: {
 	'diag' => 0,
        },
        {'url' => "$dn/$token?_domain=mail&_name=sent&_rids=cs_test_1",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/send/',
 		   '/qwb@kynetx.com/',
 		   '/"msg_id":35/',
@@ -500,7 +500,7 @@ SKIP: {
 
     my $no_rid_email_test_plan =
       [{'url' => "$dn/$token?_domain=mail&_name=received",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/forward/',
 		   '/pjw@kynetx.com/',
 		   '/"msg_id":15/',
@@ -511,7 +511,7 @@ SKIP: {
 	'diag' => 0,
        },
        {'url' => "$dn/$token" .'?_domain=mail&_name=received&from=swf@windley.com',
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/forward/',
 		   '/"msg_id":25/',
 		   '/"address":"swf"/',
@@ -521,7 +521,7 @@ SKIP: {
 	'diag' => 0,
        },
        {'url' => "$dn/$token" .'?_domain=mail&_name=received&from=pjw@windley.org&to=swf@fulling.org&subj=Hey Phil you rock!',
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/forward/',
 		   '/"name":"Phil"/',
 		   '/"address":"pjw"/',
@@ -532,7 +532,7 @@ SKIP: {
 	'diag' => 0,
        },
        {'url' => "$dn/$token?_domain=mail&_name=sent",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/send/',
 		   '/qwb@kynetx.com/',
 		   '/"msg_id":35/',
@@ -550,14 +550,14 @@ SKIP: {
 
     my $no_rid_multi_token_test_plan =
       [{'url' => "$dn/$token?_domain=token&_type=new_value&value=$val",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/"directives":\[\]/',
 		  ],
 	'unlike' => [],
 	'diag' => 0,
        },
        {'url' => "$dn/$other_token?_domain=token&_type=need_value",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ["/value is $val/",
 		  ],
 	'unlike' => [],
@@ -570,7 +570,7 @@ SKIP: {
 
     my $no_rid_multi_rule_test_plan =
       [{'url' => "$dn/$token/123456789?_domain=d1&_type=t1",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/"name":"see_two_1"/',
 		   '/"name":"see_two_2"/',
 		   '/{"opt_3":"one"}/',
@@ -591,7 +591,7 @@ SKIP: {
 #       [{'url' => "$dn/web/submit/cs_test_1",
 # 	'method' => 'post',
 # 	'post_data' => {'fname' => 'John', 'lname' => 'Doe'},
-# 	'type' => 'text/javascript',
+# 	'type' => 'application/json',
 # 	'like' => ["/var form_data = {'fname': 'John', 'lname': 'Doe'}/",
 # 		   "/submit_rule/"
 # 		  ],
@@ -732,7 +732,7 @@ SKIP: {
 
     my $persistent_with_rids_test_plan =
       [{'url' => "$dn/$token?_domain=flip&_name=init&_rids=a1856x3",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/"name":"init"/',
 		   '/"rule_name":"A"/',
 		  ],
@@ -741,7 +741,7 @@ SKIP: {
 	'diag' => 0,
        },
        {'url' => "$dn/$token?_domain=flip&_name=restore_state&_rids=a1856x3",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/"name":"results"/',
 		   '/"state":\["single","news","facebook","twitter","map"\]/',
 		  ],
@@ -756,7 +756,7 @@ SKIP: {
 
     my $battery_set_test_plan =
       [{'url' => "$dn/$token?_domain=smartphone&_name=battery_set&_rids=a1856x6&percent=83",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/"name":"log"/',
 		   '/"rule_name":"record_level"/',
 		   '/"battery":"83"/',
@@ -766,7 +766,7 @@ SKIP: {
 	'diag' => 0,
        },
        {'url' => "$dn/$token?_domain=smartphone&_name=battery_read&_rids=a1856x6",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'like' => ['/"name":"log"/',
 		   '/"rule_name":"read_back"/',
 		   '/"read_battery":"83"/',
@@ -782,7 +782,7 @@ SKIP: {
 
     my $discovery_test_plan =
       [{'url' => "$dn/$token?_rids=a1856x7",
-    	'type' => 'text/javascript',
+    	'type' => 'application/json',
     	'like' => ['/"rule_name":"discovery_hello"/',
     		  ],
     	'unlike' => [
@@ -795,7 +795,7 @@ SKIP: {
 
     my $event_send_test_plan =
       [{'url' => "$dn/$token?_domain=flip&_type=flop&_rids=a1856x12",
-    	'type' => 'text/javascript',
+    	'type' => 'application/json',
     	'like' => ['/"status":"\d\d\d".*"status":"\d\d\d"/',
     		  ],
     	'unlike' => [
@@ -811,7 +811,7 @@ SKIP: {
     # this doesn't do anything yet....
     my $event_send_test_plan_2 =
       [{'url' => "$dn/$token?_domain=flip&_type=flop&_rids=a16x60",
-    	'type' => 'text/javascript',
+    	'type' => 'application/json',
     	'like' => [
     		  ],
     	'unlike' => [
@@ -828,7 +828,7 @@ SKIP: {
 
     my $json_battery_set_test_plan =
       [{'url' => "$dn/$token",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'method' => 'post',
 	'param_type' => 'application/json',
 	'body' => {'_domain' => 'smartphone',
@@ -845,7 +845,7 @@ SKIP: {
 	'diag' => 0,
        },
        {'url' => "$dn/$token",
-	'type' => 'text/javascript',
+	'type' => 'application/json',
 	'method' => 'post',
 	'param_type' => 'application/json',
 	'body' => {'_domain' => 'smartphone',

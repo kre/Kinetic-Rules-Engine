@@ -181,7 +181,7 @@ sub validate_rule {
     my $test_template = HTML::Template->new( filename => $template );
 
 
-    $logger->debug("[validate_rule] req_info: ", sub {Dumper $req_info});
+#    $logger->debug("[validate_rule] req_info: ", sub {Dumper $req_info});
 
     # fill in the parameters
     $test_template->param( ACTION_URL => $req_info->{'uri'} );
@@ -213,7 +213,20 @@ sub validate_rule {
 
     if ( $flavor eq 'json' ) {
         $type = 'text/plain';
-        $result = $json || $tree->{'error'};
+	if (defined $tree->{'error'}) {
+	  $json = astToJson({'status' => 'error',
+			       'result' => join("\n", @{$tree->{'error'}})
+                              });
+            
+	} else {
+	  $json = <<_EOF_;
+{'status' : 'success',
+ 'result' : 
+  $json}
+_EOF_
+	}
+	
+        $result = $json;
     } else {
 
         # print the page

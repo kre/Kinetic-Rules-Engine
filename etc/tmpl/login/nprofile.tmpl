@@ -1,0 +1,23 @@
+    <!--===============================================-->
+    <!--==== Account Details Page =====================-->
+    <div data-role="page" data-theme="a" id="page-account-details">
+
+        <!-- Header -->
+        <div data-role="header">
+            <div class="header-image">
+              <img class="fuse-logo" src="<TMPL_VAR NAME="LOGO_IMG_URL">">
+            </div>
+            <a href="<TMPL_VAR NAME="PLATFORM">/login/logout" id="logout" data-theme="a" class="ui-btn-right">Logout</a>
+        </div> <!-- /header -->
+
+								
+        <div data-role="content">
+  	  <TMPL_VAR NAME="PAGEFORM">
+        </div> <!-- /content -->
+
+        <!-- Footer -->
+        <div data-role="footer" data-position="fixed">
+	  <h4><TMPL_VAR NAME="FOOTER_TEXT"></h4>
+        </div> <!-- /footer -->
+
+    </div><!-- /page -->

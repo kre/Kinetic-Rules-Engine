@@ -69,17 +69,17 @@ sub handler {
 	
     $r->content_type('text/javascript');
 
-
-    $logger->debug("\n\n>>>>---------------- begin ruleset execution-------------<<<<");
-    $logger->debug("Initializing memcached");
-    Kynetx::Memcached->init();
-
     my $method;
     my $rid;
     my $eid = '';
-    $logger->debug($r->path_info);
+    ($method,$rid,$eid) = $r->path_info =~ m!/([a-z+_]+)/([A-Za-z0-9_;.]*)/?(\d+)?!;
 
-    ($method,$rid,$eid) = $r->path_info =~ m!/([a-z+_]+)/([A-Za-z0-9_;]*)/?(\d+)?!;
+
+    $logger->debug("\n\n>>>>---------------- begin $method execution-------------<<<<");
+    $logger->trace("Initializing memcached");
+    Kynetx::Memcached->init();
+
+    $logger->debug($r->path_info);
     
     $metric->eid($eid);
     $metric->rid($rid);
@@ -269,14 +269,20 @@ sub flush_ruleset_cache {
     my $msg = '';
     foreach my $rid_info ( @{$req_info->{'rids'} }) {
 
+      $req_info->{'rid'} = $rid_info;
+
       my $rid = Kynetx::Rids::get_rid($rid_info);
       my $version = Kynetx::Rids::get_version($rid_info);
-
-      $logger->info("[flush] flushing rules for $rid (version $version)");
-      $memd->delete(Kynetx::Repository::make_ruleset_key($rid, $version));
+      my $rs_key = Kynetx::Repository::make_ruleset_key($rid, $version);
+      $logger->info("[flush] flushing rules for $rid (version $version) with cache key $rs_key");
+      $memd->delete($rs_key);
 
 
       Kynetx::Modules::RuleEnv::delete_module_caches($req_info, $memd);
+
+
+      my $fqrid = Kynetx::Rids::get_fqrid($rid_info);
+      Kynetx::Persistence::Ruleset::touch_ruleset($fqrid);
 
       $msg .= "Rules flushed for site $rid (version $version)<br/>";
     }
@@ -289,10 +295,11 @@ sub flush_ruleset_cache {
 sub describe_ruleset {
     my ($r, $method, $rid) = @_;
 
+
     my $logger = get_logger();
 
     my $req = Apache2::Request->new($r);
-    my $flavor = $req->param('flavor') || 'html';
+    my $flavor = $req->param('flavor') || 'json';
 
     $logger->debug("Getting ruleset $rid");
 
@@ -300,15 +307,40 @@ sub describe_ruleset {
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
     # no locking
 
-    my $rid_info = mk_rid_info($req_info, $rid);
+    my $data_list = {};
+    foreach my $rid_info ( @{$req_info->{'rids'} }) {
 
-    my $ruleset = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
+      $req_info->{'rid'} = $rid_info;
 
-    my $numrules = @{ $ruleset->{'rules'} } + 0;
 
-    $logger->debug("Found $numrules rules..." );
+      my $ruleset = Kynetx::Repository::get_rules_from_repository($rid_info, $req_info);
 
-    my $data = {
+      my $numrules = @{ $ruleset->{'rules'} || [] } + 0;
+
+      my $rs_timestamp_key = Kynetx::Repository::make_ruleset_key(get_rid($rid_info), $req_info->{'rule_version'}) . "_timestamp";
+      #$logger->debug("Timestamp key ", $rs_timestamp_key);
+      my $memd = get_memd();
+
+      my $timestamp = $memd->get($rs_timestamp_key);
+    
+      $logger->debug("Found $numrules rules..." );
+
+      my $func_names = [];
+
+      foreach my $finfo (map { {"function_name" => $_ } } @{$ruleset->{'meta'}->{'provide'}->{"names"} || [] }) {
+	  my $name = $finfo->{"function_name"};
+	  my @func = grep {$_->{"lhs"} eq $name} @{$ruleset->{"global"}};
+	  if (defined $func[0]) {
+	      $finfo->{"parameters"} = $func[0]->{"rhs"}->{"vars"} || [];
+	      $finfo->{"type"} = $func[0]->{"rhs"}->{"type"};
+	  } else {
+	      $finfo->{"parameters"} = [];
+	      $finfo->{"type"} = "undefined";
+	  }
+	  push @{$func_names}, $finfo;
+      }
+
+      my $data = {
 	'ruleset_id' => $ruleset->{'ruleset_name'},
 	'ruleset_version' => $req_info->{'rule_version'},
 	'number_of_rules' => $numrules,
@@ -316,58 +348,73 @@ sub describe_ruleset {
 	'author' => $ruleset->{'meta'}->{'author'} || '',
 	'description' => $ruleset->{'meta'}->{'description'} || '',
 	'logging' => $ruleset->{'meta'}->{'logging'} || '',
-    };
+        'sharing' => $ruleset->{'meta'}->{'sharing'} || 'off',
+	'provides' => $func_names,
+	'ruleset_cached' => $timestamp || "no timestamp"
+        };
 
 
-    my($active)  = 0;
-    my($inactive) = 0;
-    my @active_rules;
-    my @inactive_rules;
-    foreach my $rule ( @{ $ruleset->{'rules'} } ) {
+      my($active)  = 0;
+      my($inactive) = 0;
+      my @active_rules;
+      my @inactive_rules;
+      foreach my $rule ( @{ $ruleset->{'rules'} } ) {
 
-	my $rule_info = {'rule_name' => $rule->{'name'},
-			 'selected_using' => Kynetx::Actions::get_precondition_test($rule)
-	};
+	  my $rule_info = {'rule_name' => $rule->{'name'},
+			   'selector' => remove_whitespace(Kynetx::PrettyPrinter::pp_select($rule->{"pagetype"})),
+			  };
 
-	if($rule->{'state'} eq 'active') {
-	    $active++;
-	    push(@active_rules, $rule_info);
-	} elsif($rule->{'state'} eq 'inactive') {
-	    $inactive++;
-	    push(@inactive_rules, $rule_info);
-	}
+	  if ( ! defined $rule->{'state'} # defaults to active
+	       || $rule->{'state'}  eq 'active'
+	     ) {
+	      $active++;
+	      push(@active_rules, $rule_info);
+	  } elsif ($rule->{'state'} eq 'inactive') {
+	      $inactive++;
+	      push(@inactive_rules, $rule_info);
+	  } 
 
 
+      }
 
+      $data->{'number_of_active_rules'} = $active;
+      $data->{'active_rules'} = \@active_rules;
+      $data->{'number_of_inactive_rules'} = $inactive;
+      $data->{'inactive_rules'} = \@inactive_rules;
+      
+      $data_list->{Kynetx::Rids::print_rid_info($rid_info)} = $data;
+#      push(@{$data_list}, $data);
     }
-
-    $data->{'number_of_active_rules'} = $active;
-    $data->{'active_rules'} = \@active_rules;
-    $data->{'number_of_inactive_rules'} = $inactive;
-    $data->{'inactive_rules'} = \@inactive_rules;
-
+      
     my $json = new JSON::XS;
 
 
-    if($flavor eq 'json') {
-	$r->content_type('text/plain');
-	print $json->encode($data) ;
-    } else {
+    if($flavor eq 'html') {
 	# print the page
 	my $template = DEFAULT_TEMPLATE_DIR . "/describe.tmpl";
 	my $test_template = HTML::Template->new(filename => $template);
 
-	my $html_data = $json->pretty->encode($data);
-	$test_template->param(RULESET_ID => $data->{'ruleset_id'});
+	my $html_data = $json->pretty->encode($data_list);
 	$test_template->param(DATA => $html_data);
 
 
 	$r->content_type('text/html');
 	print $test_template->output;
+    } else {
+	$r->content_type('application/json');
+	print $json->encode($data_list) ;
     }
 }
     
 sub metric {
     
     
+}
+
+sub remove_whitespace {
+    my ($str) = @_;
+    $str =~ s/\s+/ /g;
+    $str =~ s/\s+$//;
+    $str =~ s/^\s+//;
+    return $str
 }

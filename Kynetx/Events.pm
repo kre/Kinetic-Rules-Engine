@@ -90,9 +90,11 @@ sub handler {
 
 	$r->content_type('text/javascript');
 
-	$logger->trace(
-"\n\n------------------------------ begin EVENT evaluation-----------------------------"
+	$logger->debug(
+"\n\n------------------------------ begin EVENT evaluation with Blue API -----------------------------"
 	);
+    $logger->debug($r->path_info);
+
 	$logger->trace("Initializing memcached");
 	Kynetx::Memcached->init();
 
@@ -177,6 +179,10 @@ sub process_event {
 	  Kynetx::Request::build_request_env( $r, $domain, $rids, $eventtype, $eid,
 		{ 'api' => 'blue' } );
 
+        # store the EID so we have it in the PerlLogHandler
+        $r->pnotes(EID => $req_info->{"eid"});
+        $r->pnotes(RIDS => Kynetx::Rids::print_rids($req_info->{"rids"}));
+
 	Kynetx::Request::log_request_env( $logger, $req_info );
 
 # Extend $req_info if we have any extra information passed in through the pnotes
@@ -199,7 +205,7 @@ sub process_event {
 
 	# not clear we need the request env now
 	#    my $req_info = Kynetx::Request::build_request_env($r, $domain, $rids);
-	$req_info->{'eid'} = $eid || '';
+	$req_info->{'eid'} = $eid ||  int(rand(999999999999)) ; # create random EID
 
 	# error checking for event domains and types
 	unless ( $domain =~ m/[A-Za-z+_]+/ ) {
@@ -263,7 +269,7 @@ sub process_event {
 	}
 
 
-	$logger->trace("\n----***----- Schedule Complete ----***-----");
+	$logger->trace("----***----- Schedule Complete ----***-----");
 
 	my $dd = Kynetx::Response->create_directive_doc( $req_info->{'eid'} );
 	my $js = '';
@@ -330,7 +336,7 @@ sub process_event_for_rid {
 		);
 	}
 	else {
-		$logger->trace("No rules in $rid.$ver match event $domain:$type");
+		$logger->debug("No rules in $rid.$ver match event $domain:$type");
 	}
 
 	foreach my $rule (
@@ -377,10 +383,10 @@ sub process_event_for_rid {
 
 			my $rulename = $rule->{'name'};
 
-			$logger->trace(
+			$logger->info(
 				"Adding to schedule: ",
 				Kynetx::Rids::print_rid_info($rid_info),
-				" & ", $rulename
+				":", $rulename 
 			);
 			my $task =
 			  $schedule->add( $rid, $rule, $ruleset, $req_info,

@@ -860,6 +860,7 @@ sub run_function {
 sub protected_resource_request {
 	my ($req_info,$rule_env,$session,$rule_name,$function,$oauth_config, $args) = @_;
 	my $logger = get_logger();
+	$logger->debug("protected request");
 	my $namespace = $oauth_config->{'namespace'};
 	my $extra_params = $oauth_config->{'extra_params'};
 	my $headers = $oauth_config->{'headers'};
@@ -869,6 +870,7 @@ sub protected_resource_request {
 	my $preq;
 	my $method = uc($function) || 'GET';
 	my $request;
+	$logger->debug("Eval");
 	eval {
 		$request = Net::OAuth::ProtectedResourceRequest->new(
 		'consumer_key'    => $ctokens->{'consumer_key'},
@@ -892,6 +894,7 @@ sub protected_resource_request {
 				'Content-Length' => length($@)
 				
 		};
+		  $logger->debug("Error: ", sub {Dumper($e_response)});
     	return $e_response;		
 	}
 	
@@ -899,10 +902,11 @@ sub protected_resource_request {
 	  $request->extra_params($extra_params);
 	}  
 	$request->sign();
+	$logger->debug("sign request");
 	my $purl = $request->to_url;
 	if ($method eq 'GET') {
 		$preq = HTTP::Request->new( GET => $purl );
-		$logger->trace("Request: ", sub {Dumper($preq->as_string())});
+		$logger->debug("Request: ", sub {Dumper($preq->as_string())});
 	} elsif ($method eq 'POST') {
 		$preq = HTTP::Request->new( POST => $purl );
 		my $content = $oauth_config->{'body'};
@@ -970,18 +974,22 @@ sub get_oauth_config {
 		$config->{'body'} = $b;
 	}
 	
+	
 	if (my $h = get_headers($req_info,$rule_env,$session,$rule_name,$function,$args)) {
 		$config->{'headers'} = $h;
 	}
+	
 	
 	if (my $u = get_url($req_info,$rule_env,$session,$rule_name,$function,$args)) {
 		$config->{'request_url'} = $u;
 	}
 	
+	
 	if (my $rh = get_response_headers($req_info,$rule_env,$session,$rule_name,$function,$args)) {
 		$config->{'response_headers'} = $rh;
 	}
 
+	
 	if (my $rh = get_passed_tokens($req_info,$rule_env,$session,$rule_name,$function,$args)) {
 		$config->{'access_tokens'} = $rh;
 	}

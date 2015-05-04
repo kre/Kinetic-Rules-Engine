@@ -48,6 +48,7 @@ options {
 	public boolean canbeReg = true;
 }
 
+
 @members {
 	public boolean check_operator = false;
 	public HashMap rule_json = new HashMap();
@@ -348,6 +349,7 @@ rule
 				current_rule.put("cond",condt);
 			}
 			current_rule.put("blocktype",(actions_result.get("blocktype") != null ? actions_result.get("blocktype") : "every"));
+            if(actions_result.get("choice") != null) current_rule.put("choice",actions_result.get("choice") );
 
 			current_rule.put("actions",actions_result.get("actions"));
 //			if($postb.text != null)
@@ -506,7 +508,7 @@ raise_statement returns[HashMap result]
 	
 schedule_statement returns[HashMap result]
   :
-   rd=SCHEDULE  dom=VAR must_be["event"]  evt=expr sched=schedule_clause? (m=modifier_clause| must_be["attributes"] attrs=expr)? {
+   rd=SCHEDULE  dom=VAR must_be["event"]  evt=expr sched=schedule_clause? (m=modifier_clause| must_be["attributes"] attrs=expr)? s=setting? {
     HashMap tmp = new HashMap();
     tmp.put("event",$evt.result);
     tmp.put("domain", $dom.text);
@@ -514,6 +516,7 @@ schedule_statement returns[HashMap result]
     tmp.put("timespec",$sched.result);
     tmp.put("modifiers",$m.result);
     tmp.put("attributes",$attrs.result);
+    tmp.put("setting",$s.result);
 
     $result = tmp;
   }
@@ -852,7 +855,11 @@ action_block[HashMap result]
 @init {
 	ArrayList temp_list = new ArrayList();
 }
-	: at=(EVERY|CHOOSE)? {result.put("blocktype",$at.text); }
+	: (at=EVERY|(bt=CHOOSE (choicevar=expr)? ))? {
+                         if($at.text != null) result.put("blocktype",$at.text);
+                         if($bt.text != null) result.put("blocktype",$bt.text);
+                         if($choicevar.result != null) result.put("choice",$choicevar.result);
+        }
 		'{' (p=primrule {temp_list.add($p.result);}
 			(';' p=primrule{temp_list.add($p.result);})* ) ';'? '}' {
 		result.put("actions",temp_list);
@@ -864,16 +871,13 @@ primrule returns[HashMap result]
 	ArrayList temp_list = new ArrayList();
 }
 	:  (label=VAR ARROW_RIGHT)? (
-		 src=namespace?  name=(VAR|REPLACE|MATCH|EXTRACT|OTHER_OPERATORS) LEFT_PAREN (ex=expr{temp_list.add($ex.result);}  (COMMA ex1=expr{temp_list.add($ex1.result);})* )? COMMA?  RIGHT_PAREN  set=setting? m=modifier_clause? {
+		 src=namespace?  name=(VAR|REPLACE|MATCH|EXTRACT|OTHER_OPERATORS|SUCCESS|FAILURE) LEFT_PAREN (ex=expr{temp_list.add($ex.result);}  (COMMA ex1=expr{temp_list.add($ex1.result);})* )? COMMA?  RIGHT_PAREN  set=setting? m=modifier_clause? {
 
 		 	HashMap tmp = new HashMap();
 		 	tmp.put("source",$src.result);
 		 	tmp.put("name",$name.text);
 		 	tmp.put("args",temp_list);
 
-
-//		 	if($label.text != null)
-//			 	tmp.put("label",$label.text);
 
 
 //            if($set.text != null)
@@ -884,7 +888,7 @@ primrule returns[HashMap result]
 			tmp2.put("action",tmp);
 
 //			if($label.text != null)
-				tmp2.put("label",$label.text);
+			tmp2.put("label",$label.text);
 			$result = tmp2;
 
 		 }
@@ -1428,7 +1432,7 @@ event_explicit returns[HashMap result]
 	ArrayList filters = new ArrayList();
 	ArrayList exps = new ArrayList();
 }
-	: op=VAR (ef = event_filter{filters.add(ef.result);}(ef2=event_filter{filters.add(ef2.result);})* )  set=setting? {
+	: op=(VAR|OTHER_OPERATORS) (ef = event_filter{filters.add(ef.result);}(ef2=event_filter{filters.add(ef2.result);})* )  set=setting? {
 		HashMap tmp = new HashMap();
 		//tmp.put("domain", $dom.text);
 		tmp.put("type","prim_event");
@@ -1437,7 +1441,7 @@ event_explicit returns[HashMap result]
 		tmp.put("filters",filters);
 		$result = tmp;
 	}
-	| op=VAR WHERE (ee = event_expression{exps.add(ee.result);}(ee2 = event_expression{exps.add(ee2.result);})* ) set=setting? {
+	| op=(VAR|OTHER_OPERATORS) WHERE (ee = event_expression{exps.add(ee.result);}(ee2 = event_expression{exps.add(ee2.result);})* ) set=setting? {
 		HashMap tmp = new HashMap();
 		//tmp.put("domain",$dom.text);
 		tmp.put("type","prim_event");
@@ -1447,7 +1451,7 @@ event_explicit returns[HashMap result]
 		$result = tmp;
 	}
 	// select when explicit foo
-	| op=VAR set=setting? {
+	| op=(VAR|OTHER_OPERATORS) set=setting? {
 		HashMap tmp = new HashMap();
 		tmp.put("type","prim_event");
 		tmp.put("op",$op.text);
@@ -1853,11 +1857,13 @@ action_def returns[Object result]
 		tmp.put("vars",nargs);
 		tmp.put("type","defaction");
 		tmp.put("decls",block_array);
-       		conf.put("configuration", config_list);
-        		tmp.put("configure",conf); 
-       		tmp.put("configure",config_list); 
+        conf.put("configuration", config_list);
+        tmp.put("configure",conf); 
+       	tmp.put("configure",config_list); 
 		tmp.put("blocktype",(actions_result.get("blocktype") != null ? actions_result.get("blocktype") : "every"));
 		tmp.put("actions",actions_result.get("actions"));
+        if(actions_result.get("choice") != null) tmp.put("choice",actions_result.get("choice") );
+
 		//if($e1.text != null)
 		//	tmp.put("expr",$e1.result);
 
@@ -2420,6 +2426,7 @@ meta_block
 	 ArrayList use_list = new ArrayList();
 	 HashMap keys_map = new HashMap();
 	 HashMap key_values = new HashMap();
+	 HashMap provide_keys_map = new HashMap();
      ArrayList provide_list = new ArrayList();
      ArrayList pkey_list = new ArrayList();
      ArrayList prid_list = new ArrayList();
@@ -2436,6 +2443,10 @@ meta_block
 	if(!use_list.isEmpty())
 	{
 		meta_block_hash.put("use",use_list);
+	}
+	if(!provide_keys_map.isEmpty())
+	{
+		meta_block_hash.put("provides_keys",provide_keys_map);
 	}
 }
 	: META LEFT_CURL
@@ -2521,17 +2532,24 @@ meta_block
       	tmp.put("names",provide_list);
         meta_block_hash.put("provide",tmp); 
         }
+/*
     | PROVIDE op=OTHER_OPERATORS k=VAR {  pkey_list.add($k.text); } (COMMA k2=VAR { pkey_list.add($k2.text);})*  
+    	must_be["to"] r=VAR {  prid_list.add($r.text); } (COMMA r2=VAR { prid_list.add($r2.text);})*
+       {
+*/
+    | PROVIDE op=OTHER_OPERATORS k=VAR   
     	must_be["to"] r=VAR {  prid_list.add($r.text); } (COMMA r2=VAR { prid_list.add($r2.text);})*
        {
           HashMap tmp = new HashMap();
           if(!$op.text.equals("keys") )
           {
-	throw new InvalidToken("Found [" + $op.text + "] should have been keys", input);
+              throw new InvalidToken("Found [" + $op.text + "] should have been keys", input);
           }
           tmp.put("provides_keys",pkey_list);
           tmp.put("provides_rids",prid_list);
-          meta_block_hash.put("module_keys",tmp);
+          provide_keys_map.put($k.text,prid_list);
+          prid_list = new ArrayList(); // clear it out
+//          meta_block_hash.put("module_keys",tmp);
         }
     | CONFIGURE USING  m=modifier {config_list.add($m.result);} (AND_AND m1=modifier {config_list.add($m1.result);})* {
       	HashMap tmp = new HashMap();
@@ -2557,7 +2575,7 @@ dispatch_block
 @after  {
 }
 	: must_be["dispatch"]  LEFT_CURL ( 
-		DOMAIN domain=STRING (RIGHT_SMALL_ARROW rsid=STRING)? {
+		must_be["domain"] domain=STRING (RIGHT_SMALL_ARROW rsid=STRING)? {
 		HashMap tmp = new HashMap();
 		tmp.put("domain",strip_string($domain.text));
 		if($rsid.text != null)	{
@@ -2659,7 +2677,6 @@ REX 	: 're/' ((ESC_SEQ)=>ESC_SEQ | '\\/' | ~('/')  )* '/' ('g'|'i'|'m')* |
 // 	:	'system';
  		
  IFRAME : 'iframe';
- DOMAIN : 'domain';
  RAISE 
  	:	 'raise';
  SCHEDULE : 'schedule';
@@ -2857,13 +2874,14 @@ EXTRACT
 
 OTHER_OPERATORS
 	: 'pick'|'length'|'as'|'head'|'tail'|'sort'|'index'
+    | 'pset'
     | 'filter'|'collect'|'map'|'reduce'|'reverse' | 'range' | 'pairwise'| 'any' | 'all' | 'none' | 'notall'
     | 'substr'| 'uc'|'lc' | 'capitalize' | 'split' | 'sprintf' | 'join' | 'query' | 'trim' 
     | 'has' | 'union' | 'difference' | 'intersection' | 'unique' | 'once' | 'slice'| 'splice'
     | 'duplicates' | 'append' | 'put' | 'delete' | 'keys' | 'values'
     | 'encode' | 'decode' 
     | 'typeof' | 'isnull'
-    | 'klog'
+    | 'klog' | 'defaultsTo'
     ;
 
 AGGREGATORS

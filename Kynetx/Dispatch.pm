@@ -110,61 +110,38 @@ sub get_ridlist {
   my $logger     = get_logger();
   my $rid        = get_rid( $req_info->{'rid'} );
 
-  if (is_ridlist_stashed($req_info)) {
-    $logger->debug("Using stashed RID list");
-    return grab_ridlist($req_info);
-  }
-
-  unless ($ken) {
-    $logger->trace("Find ken from token: $id_token");
+  
+  if ($id_token) {
+    $logger->debug("Find ken from token: $id_token");
     $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($id_token);
   }
-  my $rid_struct = Kynetx::Modules::PCI::_installed_rulesets($ken);
-  $logger->trace("Token: $id_token");
-  $logger->trace("Ken: $ken");
-  my $rid_list   = $rid_struct->{'rids'};
-  $logger->trace("Rid struct: ", sub {Dumper($rid_struct)});
-  $logger->trace("Rid list: ", sub {Dumper($rid_list)});
-  if ( defined $rid_list ) {
-    my $temp = ();
-    foreach my $ridstring ( @{$rid_list} ) {
-      my $rid;
-      my $ver     = 1;
-      my $kver    = "prod";
-      my @ridinfo = split( /\./, $ridstring );
-      if ( length(@ridinfo) == 1 ) {
-        $rid = $ridinfo[0];
-      }
-      elsif ( length(@ridinfo) == 2 ) {
-        $rid = $ridinfo[0];
-        my $alt = $ridinfo[1];
-        if ( $alt =~ m/^\d+$/ ) {
-          $ver = $alt;
-        }
-        else {
-          $kver = $alt;
-        }
-      }
-      elsif ( length(@ridinfo) > 2 ) {
-        $rid  = $ridinfo[0];
-        $ver  = $ridinfo[1];
-        $kver = $ridinfo[2];
-      }
-      my $map = {
-        "rid"                 => $rid,
-        "version"             => $ver,
-        "kinetic_app_version" => $kver
-      };
-      push( @{$temp}, $map );
-    }
-    $rid_list = $temp;
-    stash_ridlist($req_info, $rid_list);
+  
+  my $rid_list_key = mk_ridlist_key($ken);
+  my $rid_list = Kynetx::Memcached::check_cache($rid_list_key);
+  
+  if (defined $rid_list) {
     return $rid_list;
-  }
-  else {
-    return old_repository($req_info, $id_token, $ken);
+  } else {
+    my $rid_struct = Kynetx::Modules::PCI::_installed_rulesets($ken);
+    my $rid_list   = $rid_struct->{'rids'};
+    my @list = ();
+    foreach my $installed_rid (@{$rid_list}){
+      my ($rid_info);
+      $logger->trace("Installed ($ken): $installed_rid");
+      my $rid_data = Kynetx::Persistence::Ruleset::get_ruleset_info($installed_rid);
+      $logger->trace("Found: ", sub {Dumper($rid_data)});
+      $rid_info = Kynetx::Persistence::Ruleset::to_rid_info($installed_rid);
+      $logger->trace("Calculated: ", sub {Dumper($rid_info)});       
+      push(@list,$rid_info);
+    }
+    Kynetx::Memcached::mset_cache($rid_list_key,\@list);
+    return \@list;
+    
   }
 }
+
+
+
 
 sub old_repository {
   my ($req_info, $id_token, $ken) = @_;
@@ -228,34 +205,10 @@ sub calculate_rid_list {
 
   my $ken = Kynetx::Persistence::get_ken( $session, "", "web" );   # empty rid
 
-  my $rid_list_key = mk_ridlist_key($ken);
-
-  #my $rid_list = $memd->get($rid_list_key);
-  my $rid_list = undef;
+  my $rid_list = get_ridlist( $req_info, $id_token,$ken );
   my $eventtree_key = mk_eventtree_key($rid_list);
-
-  if ($rid_list) {
-    $logger->debug( "Using cached rid_list ", print_rids($rid_list) );
-
-  } else { 
-    $rid_list = get_ridlist( $req_info, $id_token,$ken );
-    $logger->debug( "Retrieved rid_list: ", print_rids($rid_list) );
-
-    # update key
-    $eventtree_key = mk_eventtree_key($rid_list);
-  }
-
-  # if a ruleset isn't cached, then it was flushed and the event tree
-  # should be recalculated
-#  foreach my $rid_info ( @{$rid_list} ) {
-#    if (! Kynetx::Repository::is_ruleset_cached( get_rid($rid_info), 
-#					     get_version($rid_info), 
-#					     $memd ) ) {
-#    	$logger->debug("Flushing event tree because of ruleset flush");
-#    	delete_stashed_eventtree($req_info, $memd, $eventtree_key);
-#    	last;
-#    } 
-#  }
+  
+  $logger->debug("Eventtree key: $eventtree_key");
 
   if ( is_eventtree_stashed($req_info, $memd, $eventtree_key) ) {
     $logger->debug("Using stashed eventtree");
@@ -265,7 +218,7 @@ sub calculate_rid_list {
 
 
     foreach my $rid_info ( @{$rid_list} ) {
-
+	
       my $rid = get_rid($rid_info);
 
       # add RID to ridlist. We use this to filter incoming RID requests to see
@@ -276,13 +229,15 @@ sub calculate_rid_list {
         Kynetx::Repository::get_rules_from_repository( $rid_info, $req_info,
         $rid_info->{'kinetic_app_version'} );
 
-      
+#      $logger->debug("Rule list for $rid ", $ruleset->{'rule_lists'});
 
       my $dispatch_info = process_dispatch_list( $rid, $ruleset );
 #      $logger->debug( "Domain ", sub { Dumper $dispatch_info } );
       foreach my $d ( @{ $dispatch_info->{'domains'} } ) {
         $r->{'ridlist'}->{$rid}->{'domains'}->{$d} = 1;
       }
+
+#      $logger->debug("Rule list for $rid ", sub {Dumper $ruleset->{'rules_lists'}});
 
       foreach my $d ( keys %{ $ruleset->{'rule_lists'} } ) { 
 	foreach my $t ( keys %{ $ruleset->{'rule_lists'}->{$d} } ) {
@@ -291,17 +246,19 @@ sub calculate_rid_list {
       }
     }
     $logger->debug("Calculating and stashing the event tree ");
-
-    #    $logger->debug("Event Tree: ", sub { Dumper $r });
-
-    # cache this...
-    #    $memd->set($eventtree_key, $r);
-
     stash_eventtree( $req_info, $r, $memd, $eventtree_key);
+    Kynetx::Memcached::mset_cache($eventtree_key,$r);
 
   }
 
   return $r;
+}
+
+sub clear_rid_list_by_ken {
+  my ($ken) = @_;
+  my $rid_list = get_ridlist(undef,undef,$ken);
+  flush_ridlist($ken);
+  Kynetx::Memcached::flush_cache(mk_eventtree_key($rid_list));
 }
 
 sub clear_rid_list {
@@ -309,16 +266,13 @@ sub clear_rid_list {
   my $logger = get_logger();
   $logger->debug( "[flush] flushing RID list for ",
     Kynetx::Session::session_id($session) );
-  my $ken = Kynetx::Persistence::get_ken( $session, "", "web" );
-  my $memd = get_memd();
+  my $ken = Kynetx::Persistence::get_ken( $session, "", "web" );  
 
-  my $rid_list = $memd->get( mk_ridlist_key($ken) );
-
-  $memd->delete( mk_ridlist_key($ken) );
-
+  my $rid_list = get_ridlist(undef,undef,$ken);
+  flush_ridlist($ken);
+  
   $logger->debug("Flushing event tree because RID list changed");
-  delete_stashed_eventtree({}, $memd, mk_eventtree_key($rid_list));
-
+  Kynetx::Memcached::flush_cache(mk_eventtree_key($rid_list));
 }
 
 sub calculate_dispatch {
@@ -475,38 +429,53 @@ sub get_dispatch_info {
 }
 
 sub mk_ridlist_key {
-  my ($id_token) = @_;
-  return "ridlist:$id_token";
+  my ($ken) = @_;
+  return "ridlist:$ken";
 }
 
 sub mk_eventtree_key {
   my ($rid_list) = @_;
-  return Digest::MD5::md5_hex( rid_info_string($rid_list) );
+  my $logger = get_logger();
+  my $sig_str = "seed";
+  #$logger->debug("mk eventree key: ", sub {Dumper($rid_list)});
+  foreach my $rid_info (sort {$a->{'rid'} cmp $b->{'rid'}}@{$rid_list}) {
+    my $sig = Kynetx::Persistence::Ruleset::signature(Kynetx::Rids::get_fqrid($rid_info));
+    $sig_str .= $sig;
+  }
+  return Digest::MD5::md5_hex( $sig_str );
+  #return Digest::MD5::md5_hex( rid_info_string($rid_list) );
 }
+
+sub flush_ridlist {
+  my ($ken) = @_;
+  my $key = mk_ridlist_key($ken);
+  Kynetx::Memcached::flush_cache($key);
+}
+
 
 sub stash_eventtree {
   my ( $req_info, $eventtree, $memd, $eventtree_key  ) = @_;
-#  $req_info->{"KOBJ.eventtree"} = $eventtree;
-  $memd->set($eventtree_key, $eventtree);
+  $req_info->{"KOBJ.eventtree"} = $eventtree;
+#  $memd->set($eventtree_key, $eventtree);
 }
 
 sub grab_eventtree {
   my ($req_info, $memd, $eventtree_key) = @_;
-#  return $req_info->{"KOBJ.eventtree"};
-  return $memd->get($eventtree_key);
+  return $req_info->{"KOBJ.eventtree"};
+#  return $memd->get($eventtree_key);
 }
 
 sub is_eventtree_stashed {
   my ($req_info, $memd, $eventtree_key) = @_;
-#  return defined $req_info->{"KOBJ.eventtree"};
+  return defined $req_info->{"KOBJ.eventtree"};
   #return defined $memd->get($eventtree_key);
-  return 0;
+#  return 0;
 }
 
 sub delete_stashed_eventtree {
   my ($req_info, $memd, $eventtree_key) = @_;
-#  return defined $req_info->{"KOBJ.eventtree"};
-  $memd->delete($eventtree_key);
+  delete $req_info->{"KOBJ.eventtree"};
+#  $memd->delete($eventtree_key);
 }
 
 

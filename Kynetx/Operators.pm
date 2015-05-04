@@ -509,9 +509,24 @@ sub eval_map {
 
       } else {
 	$logger->debug("map used with non-function argument");
+        Kynetx::Errors::raise_error($req_info, 'warn',
+  				  "[map] used with non-function argument",
+				  {'rule_name' => $rule_name,
+				   'genus' => 'operator',
+				   'species' => 'type mismatch'
+				  }
+				 )
+
       }
     } else {
       $logger->debug("map used in non-array or non-map context or without argument");
+      Kynetx::Errors::raise_error($req_info, 'warn',
+  				  "[map] used in non-array or non-map context or without argument",
+				  {'rule_name' => $rule_name,
+				   'genus' => 'operator',
+				   'species' => 'type mismatch'
+				  }
+				 )
     }
 
     return Kynetx::Expressions::typed_value($v);
@@ -620,8 +635,8 @@ sub eval_reduce {
 	$result = Kynetx::Expressions::exp_to_den(shift @{$obj_val});
 	foreach my $av (@{$obj_val}) {
 
-	  $logger->debug("Result so far ", sub {Dumper $result});
-	  $logger->debug("Next value ", sub {Dumper Kynetx::Expressions::exp_to_den($av)});
+#	  $logger->debug("Result so far ", sub {Dumper $result});
+#	  $logger->debug("Next value ", sub {Dumper Kynetx::Expressions::exp_to_den($av)});
 
 	  my $app = {'type' => 'app',
 		     'function_expr' => $op_fn,
@@ -946,18 +961,34 @@ sub eval_join {
   my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
 #    $logger->debug("obj: ", sub { Dumper($rands) });
 
-  my $v = $obj->{'val'};
-  my $join_val = Kynetx::Expressions::den_to_exp($rands->[0]);
-  my $result;
+
+  my ($result, $join_val);
 
   if($obj->{'type'} eq 'array' &&
      $rands->[0]->{'type'} eq 'str') {
 
-    $result = join($join_val, @{$v});
+      my $v;
+
+      ## is_typed_value
+      if(Kynetx::Expressions::is_typed_value($obj->{"val"}->[1])) {
+	  # if one's typed, assume they're all typed...
+	  $v = [ map { Kynetx::Expressions::den_to_exp($_)} @{ $obj->{'val'}}  ];
+      } else {
+	  $v = $obj->{"val"};
+      }
+
+      $join_val = Kynetx::Expressions::den_to_exp($rands->[0]);
+      
+      $result = join($join_val, @{$v});
 
   } else {
+
+      my $emsg = $obj->{'type'} eq 'array'       ? " must be applied to an array" :
+	         $rands->[0]->{'type'} eq 'str'  ? " not a string: $join_val" :
+                                                   "";
+
       Kynetx::Errors::raise_error($req_info, 'warn',
-				  "[join] not a string:  $join_val",
+				  "[join] $emsg",
 				  {'rule_name' => $rule_name,
 				   'genus' => 'operator',
 				   'species' => 'type mismatch'
@@ -1637,7 +1668,10 @@ sub eval_as {
 
     my $v = 0;
     if ($obj->{'type'} eq 'str') {
-      if ($rands->[0]->{'val'} eq 'num' || $rands->[0]->{'val'} eq 'regexp' ) {
+	if ($rands->[0]->{'val'} eq 'num' && $obj->{'val'} =~ /\d*/) {
+	  $obj->{'type'} = $rands->[0]->{'val'};
+	  $obj->{'val'} = $obj->{'val'} + 0;
+      } elsif ($rands->[0]->{'val'} eq 'regexp' ) {
 	   $obj->{'type'} = $rands->[0]->{'val'};
       } elsif (uc($rands->[0]->{'val'}) eq 'JSON') {
           my $str = $obj->{'val'};
@@ -1646,6 +1680,7 @@ sub eval_as {
     } elsif ($obj->{'type'} eq 'num') {
       if ($rands->[0]->{'val'} eq 'str' ) {
 	$obj->{'type'} = $rands->[0]->{'val'};
+	$obj->{'val'} = "$obj->{'val'}";
       }
     } elsif ($obj->{'type'} eq 'regexp') {
       if ($rands->[0]->{'val'} eq 'str') {
@@ -1698,8 +1733,21 @@ sub eval_encode {
     my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
     my $tmp = Kynetx::Expressions::den_to_exp($obj);
     $logger->trace("EXP: ", sub {Dumper($tmp)});
+
+    my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+    my $pretty = 0;
+    my $canonical = 0;
+    my $r = Kynetx::Expressions::den_to_exp($rands->[0]);
+    if (JSON::XS::is_bool $r->{'pretty'}) {
+	$pretty = $r->{"pretty"} ? 1 : 0;
+    }
+    if (JSON::XS::is_bool $r->{'canonical'}) {
+	$canonical = $r->{"canonical"} ? 1 : 0;
+    }
+
+
     #my $json = JSON::XS::->new->convert_blessed(1)->utf8(1)->encode($tmp);
-    my $json = JSON::XS::->new->convert_blessed(1)->allow_nonref->encode($tmp);
+    my $json = JSON::XS::->new->convert_blessed(1)->allow_nonref->pretty($pretty)->canonical($canonical)->encode($tmp);
     $logger->trace("JSON: ", $json);
     $obj->{'type'} = "str";
     $obj->{'val'} = $json;
@@ -1873,7 +1921,6 @@ sub hash_put {
         my $hash = clone ($obj->{'val'});
         my $path = Kynetx::Expressions::den_to_exp($rands->[0]);
         if (ref $path eq 'ARRAY') {
-        	$logger->debug("Is array");
         	my $value = Kynetx::Expressions::den_to_exp($rands->[1]);
         	_merge_hash($hash,$path,$value);
         	return Kynetx::Expressions::typed_value($hash);        	
@@ -1925,8 +1972,13 @@ sub hash_delete {
     if ($type eq 'hash') {
         my $hash = clone ($obj->{'val'});
         my $path = Kynetx::Expressions::den_to_exp($rands->[0]);
+	$logger->debug("Arg is ", ref $path);
+	unless (ref $path eq "ARRAY") {
+	    $logger->debug("Delete arg not array; fixing");
+	    $path = [$path];
+	}
+	my $path_str = join("",@$path);
         my $temp = $hash;
-        my $path_str = join("",@$path);
         my $str = "";
         foreach my $path_element (@$path) {
         	$str .= $path_element;
@@ -1998,7 +2050,7 @@ sub hash_keys {
 			return Kynetx::Parser::mk_expr_node('array',\@keys);
 		}
 	}
-	return Kynetx::Parser::mk_expr_node('null','__undef__');
+	return Kynetx::Parser::mk_expr_node('array',[]);
 }
 $funcs->{'keys'} = \&hash_keys;
 
@@ -2046,7 +2098,7 @@ sub hash_values {
 			return Kynetx::Parser::mk_expr_node('array',\@values);
 		}
 	}
-	return Kynetx::Parser::mk_expr_node('null','__undef__');
+	return Kynetx::Parser::mk_expr_node('array',[]);
 }
 $funcs->{'values'} = \&hash_values;
 
@@ -2060,17 +2112,7 @@ sub eval_null {
 	my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
 	my $isNull = 0;
 	# Not optimizing test cases for easy debugging
-	if (defined $obj) {
-		if ($obj->{'type'} eq 'null') {
-			$isNull = 1;
-		} elsif (! defined $obj->{'val'}) {
-			$isNull = 1;
-		}
-	} else {
-		$isNull = 1;
-	}
-	
-	if ($isNull) {
+	if (_is_null($obj)) {
 		return Kynetx::Parser::mk_expr_node('bool','true');
 	} else {
 		return Kynetx::Parser::mk_expr_node('bool','false');
@@ -2078,6 +2120,21 @@ sub eval_null {
 	
 }
 $funcs->{'isnull'} = \&eval_null;
+
+sub _is_null {
+  my($obj) = @_;
+  my $isNull = 0;
+  if (defined $obj) {
+      if ($obj->{'type'} eq 'null') {
+	  $isNull = 1;
+      } elsif (! defined $obj->{'val'}) {
+	  $isNull = 1;
+      }
+  } else {
+      $isNull = 1;
+  }
+  return $isNull;
+}
 
 sub eval_type {
 	my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
@@ -2107,13 +2164,98 @@ sub eval_log {
     $msg = Kynetx::Expressions::den_to_exp($rands->[0])
   } 
   my $val = Kynetx::Expressions::den_to_exp($obj);
-  $logger->debug( $msg, ref $obj eq 'HASH' || 
-		        ref $obj eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($val) : $val );
-  return $obj;
+  $logger->info( $msg, Kynetx::Json::perlToJson($val));
+
+  return $obj; # pass thru unchanged
 }
 $funcs->{'klog'} = \&eval_log;
 
+sub eval_defaults_to {
+  my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+  my $logger = get_logger();
+  my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+  my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
+  my $new_val = $obj;
+  if (_is_null($obj)) {
+      $new_val = $rands->[0];
+      if (defined $rands->[1]  ) { # optional log message
+	  my $msg = Kynetx::Expressions::den_to_exp($rands->[1]);
+	  $logger->info( $msg );
+      } 
+  }
+  return $new_val
+}
+$funcs->{'defaultsTo'} = \&eval_defaults_to;
 
+
+#------------------------------------------------------------------------
+# persistence 
+#------------------------------------------------------------------------
+sub eval_set {
+  my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+  my $logger = get_logger();
+  my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+  my $val = Kynetx::Expressions::den_to_exp($obj);
+  my $name = $expr->{"args"}->[0]->{'name'} || $expr->{"args"}->[0]->{'var_expr'};
+  my $domain = $expr->{"args"}->[0]->{'domain'};
+
+  #### Persistent setter
+  #$logger->debug( "expr: ", sub { Dumper($expr) });
+
+  if (! defined $val) {
+      $logger->error("Hash Operation error: $name; Value may not be null (use clear to remove key) ");
+      return $obj;
+  }
+
+
+  if (! $expr->{"args"}->[0]->{"type"} eq "persistent") {
+      $logger->error("pset error: argument must be a persistent ");
+      return $obj;
+  }
+
+
+  $logger->debug( "Set value ", $name, " to ", sub{Dumper $val} );
+
+  my $inModule = Kynetx::Environments::lookup_rule_env('_inModule', $rule_env) || 0;
+  my $moduleRid = Kynetx::Environments::lookup_rule_env('_moduleRID', $rule_env);
+  my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+  if ($inModule && defined $moduleRid) {
+      $logger->debug("Setting persistent in module: $moduleRid");
+      $rid = $moduleRid;
+  } 
+
+  if (Kynetx::MongoDB::validate($val)) {
+      if (defined $expr->{"args"}->[0]->{'hash_key'}) {
+	  my $path_r = $expr->{"args"}->[0]->{'hash_key'};
+	  my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $path_r);
+	  if (! defined $path) {
+	      $logger->error("Hash key for $name is undefined");
+	      return $obj;
+	  }
+
+
+	  $logger->debug("Saving to persistent hash $name", sub{Dumper $path});
+	  Kynetx::Persistence::save_persistent_hash_element(
+							    $domain,
+							    $rid,
+							    $session,
+							    $name,
+							    $path,
+							    $val
+							   );
+      } else {
+	  Kynetx::Persistence::save_persistent_var($domain, $rid, $session, $name, $val );
+      }
+  } else {
+      $logger->error("Hash Operation error: $name is too large");
+      return $obj;
+  }
+
+  return $obj; #pass thru unchanged
+            
+}
+$funcs->{'pset'} = \&eval_set;
+ 
 
 #-----------------------------------------------------------------------------------
 # make it all happen

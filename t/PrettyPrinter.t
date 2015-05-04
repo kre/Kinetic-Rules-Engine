@@ -32,7 +32,6 @@ my @krl_files = @ARGV ? @ARGV : <data/*.krl>;
 
 
 use Test::More;
-plan tests => $#krl_files+5;
 use Test::LongString;
 use Data::Dumper;
 use Encode;
@@ -46,9 +45,20 @@ Log::Log4perl->easy_init($INFO);
 #Log::Log4perl->easy_init($DEBUG);
 my $logger = get_logger();
 
+my $skip = {"data/events12.krl" => 1,
+	    "data/events13.krl" => 1,
+	    "data/operator2.krl" => 1,
+	    "data/schedule3.krl" => 1,
+	   };
+
+
+plan tests => $#krl_files-(length(keys %{$skip}))+2;
+
+
 foreach my $f (@krl_files) {
-#   diag $f;
+   #diag $f;
     next if ($f =~ m/exprs\d/); # exprs don't pretty print exactly
+    next if ($skip->{$f});
     my ($fl,$krl_text) = getkrl($f);
     my $tree = parse_ruleset($krl_text);
     $logger->debug("$fl: ", sub {Dumper($tree)});

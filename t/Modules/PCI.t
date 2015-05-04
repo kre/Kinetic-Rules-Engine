@@ -25,6 +25,7 @@ use warnings;
 use Test::More;
 use Test::LongString;
 use Test::Deep;
+use Test::WWW::Mechanize;
 
 use Apache::Session::Memcached;
 use DateTime;
@@ -36,7 +37,6 @@ use Storable 'dclone';
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
@@ -47,6 +47,7 @@ use Kynetx::Configure qw/:all/;
 use Kynetx::Expressions qw/:all/;
 use Kynetx::Response qw/:all/;
 use Kynetx::Persistence::KPDS qw/:all/;
+use Kynetx::Persistence::DevLog qw/:all/;
 
 
 use Kynetx::FakeReq qw/:all/;
@@ -76,6 +77,7 @@ my $my_req_info = Kynetx::Test::gen_req_info($rid);
 my $rule_name = 'foo';
 
 my $rule_env = Kynetx::Test::gen_rule_env();
+my $blank_env = Kynetx::Test::gen_rule_env();
 
 my $session = Kynetx::Test::gen_session($r, $rid);
 
@@ -140,9 +142,21 @@ my $count = 0;
   $keys);
 
 $description = "Check system key";
-$result = Kynetx::Modules::PCI::pci_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[]);
-isnt($result,undef,$description);
+$result = Kynetx::Modules::PCI::pci_authorized($my_req_info,$rule_env,$session,[]);
+isnt($result,0,$description);
 $test_count++;
+
+$description = "Check empty key";
+$result = Kynetx::Modules::PCI::pci_authorized($my_req_info,$blank_env,$session,[]);
+is($result,0,$description);
+$test_count++;
+
+$description = "Check explicit key";
+$result = Kynetx::Modules::PCI::pci_authorized($my_req_info,$blank_env,$session,$keys);
+is($result,1,$description);
+$test_count++;
+
+
 
 # System level operations
 
@@ -207,7 +221,6 @@ $result = Kynetx::Modules::PCI::clear_permissions($my_req_info,$rule_env,$sessio
 is($result,0,$description);
 $test_count++;
 
-Log::Log4perl->easy_init($DEBUG);
 
 $keypath = ['ruleset','destroy'];
 $description = "get a single permission";
@@ -229,6 +242,7 @@ $args = {
 	"firstname" => "Bill",
 	"lastname" => "Last",
 	"password" => $password,
+	"email" => "flip\@flopper.com"
 };
 $result = Kynetx::Modules::PCI::new_account($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
 isnt($result,undef,$description);
@@ -245,12 +259,39 @@ is($result,1,$description);
 $test_count++;
 
 
+$description = "Check for username exists, explicit permissions 2nd";
+$args = [$uname,$keys];
+$result = Kynetx::Modules::PCI::check_username($my_req_info,$blank_env,$session,$rule_name,"foo",$args);
+is($result,1,$description);
+$test_count++;
+
+$description = "Check for username exists, explicit permissions 1st";
+$args = [$keys,$uname];
+$result = Kynetx::Modules::PCI::check_username($my_req_info,$blank_env,$session,$rule_name,"foo",$args);
+is($result,1,$description);
+$test_count++;
+
+Log::Log4perl->easy_init($INFO);
+
 $description = "Check for username exists (false)";
 my $new_uname = $uname . '-dep';
 $args = $new_uname;
 $result = Kynetx::Modules::PCI::check_username($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
 is($result,0,$description);
 $test_count++;
+
+$description = "get profile";
+$args = [$eci,$keys];
+$result = Kynetx::Modules::PCI::get_account_profile($my_req_info,$blank_env,$session,$rule_name,"foo",$args);
+#diag Dumper $result;
+my $prfl = {"username" => $uname,
+	    "email" => "flip\@flopper.com",
+	    "firstname" => "Bill",
+	    "lastname" => "Last",
+	   };
+is_deeply($result,$prfl,$description);
+$test_count++;
+
 
 $description = "Create a dependent account";
 $args = {
@@ -422,6 +463,47 @@ $result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_env,$sessi
 is($result,0,$description);
 $test_count++;
 
+
+my $test_pci_auth_password = "foomanchoo";
+$description = "Try to set password without credentials";
+$expected = 0;
+$result = Kynetx::Modules::PCI::set_account_password($my_req_info,$blank_env,$session,$rule_name,"foo",[$uname,$new_password,$test_pci_auth_password]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Password not set";
+$result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[$uname,$new_password]);
+is($result,1,$description);
+$test_count++;
+
+$description = "Try to set password with explicit credentials";
+$expected = 1;
+$result = Kynetx::Modules::PCI::set_account_password($my_req_info,$blank_env,$session,$rule_name,"foo",[$uname,$new_password,$test_pci_auth_password,$keys]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Password is set (with explicit credentials)";
+$expected = { 'nid' => ignore() };
+$result = Kynetx::Modules::PCI::account_authorized($my_req_info,$blank_env,$session,$rule_name,"foo",[$uname,$keys,$test_pci_auth_password]);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Set \$new_password with order sensitive parameters";
+$expected = 1;
+$result = Kynetx::Modules::PCI::set_account_password($my_req_info,$blank_env,$session,$rule_name,"foo",[$keys,$uname,$test_pci_auth_password,$new_password]);
+is($result,1,$description);
+$test_count++;
+
+$description = "Fail the old password";
+$result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[$uname,$test_pci_auth_password]);
+is($result,0,$description);
+$test_count++;
+
+$description = "Pass the expected password";
+$result = Kynetx::Modules::PCI::account_authorized($my_req_info,$rule_env,$session,$rule_name,"foo",[$uname,$new_password]);
+is($result,1,$description);
+$test_count++;
+
 $new_password = "ResetME";
 $expected = 1;
 $description = "Reset Password with username";
@@ -571,8 +653,6 @@ $test_count++;
 
 ####### Predicates (after ECIs have been created)
 # check that predicates at least run without error
-Log::Log4perl->easy_init($DEBUG);
-
 
 my $temp_ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($uid);
 my @token_list = map {$_->{'cid'}} @{Kynetx::Persistence::KToken::list_tokens($temp_ken)};
@@ -773,6 +853,99 @@ $result = Kynetx::Modules::PCI::get_eci_policy($my_req_info,
 cmp_deeply($result,$expected,$description);
 $test_count++;
 
+
+######################### Logging tests
+
+my ($root_env,$username, $user_ken,$user_eci, $dev_ken,$dev_eci,$dev_env, $dev_secret);
+my ($log_eci,$fqurl,$base_url,$ruleset,$opts,$mech,$eid,$dn,$platform);
+$platform = '127.0.0.1';
+$platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
+$platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
+$platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox');
+
+$root_env= Kynetx::Test::gen_root_env($my_req_info,$rule_env,$session);
+
+$username = $DICTIONARY[rand(@DICTIONARY)];
+chomp($username);
+
+$user_ken = Kynetx::Test::gen_user($my_req_info,$root_env,$session,$username);
+$user_eci = Kynetx::Persistence::KToken::get_oldest_token($user_ken);
+
+$dev_ken = $session_ken;
+$dev_eci = Kynetx::Persistence::KToken::create_token($dev_ken,"_null_","temp");
+($dev_env,$dev_secret) = Kynetx::Test::gen_dev_env($my_req_info,$root_env,$session,$dev_eci);
+
+$ruleset = "a144x132";
+$eid = time;
+$mech = Test::WWW::Mechanize->new(cookie_jar => undef);
+$dn = "http://$platform/sky/event";
+$base_url = "$dn/$user_eci/$eid";
+
+########### Logging admin
+
+$description = "Developer test environment created";
+isnt($dev_env,undef,$description);
+$test_count++;
+
+$description = "Add permissions to view logs";
+$keypath = ['ruleset','log'];
+$result = Kynetx::Modules::PCI::set_permissions($my_req_info,$root_env,$session,$rule_name,"foo",[$dev_eci,$dev_secret,$keypath]);
+is($result,1,$description);
+$test_count++;
+
+$description = "get a single permission";
+$result = Kynetx::Modules::PCI::get_permissions($my_req_info,$root_env,$session,$rule_name,"foo",[$dev_eci,$dev_secret,$keypath]);
+is($result,1,$description);
+$test_count++;
+
+############ Logging methods
+$description = "Activate logging for test_user";
+$args = [$user_eci];
+$log_eci = Kynetx::Modules::PCI::logging_eci($my_req_info,$root_env,$session,$rule_name,'foo',$args);
+isnt($log_eci,undef,$description);
+$test_count++;
+
+$description="Logging now set for test_user";
+$result = Kynetx::Modules::PCI::get_logging($my_req_info,$root_env,$session,$rule_name,'foo',$args);
+is($result,1,$description);
+$test_count++;
+
+$description = "de-activate logging for test_user";
+$args = [$user_eci];
+Kynetx::Modules::PCI::clear_logging($my_req_info,$root_env,$session,$rule_name,'foo',$args);
+$result = Kynetx::Modules::PCI::get_logging($my_req_info,$root_env,$session,$rule_name,'foo',$args);
+is($result,0,$description);
+$test_count++;
+
+$description = "Create a new, active logging eci";
+$log_eci = Kynetx::Modules::PCI::logging_eci($my_req_info,$root_env,$session,$rule_name,'foo',$args);
+isnt($log_eci,undef,$description);
+$test_count++;
+
+# It doesn't actually have to fire the rule
+# An uninstalled ruleset generates debug of it's own
+$description = "URL generates debug";
+$fqurl = "$base_url/web/pageview";
+$opts = {
+  '_rids' => $ruleset,
+  'caller' => "http://www.windley.com/first.html"  
+};
+$expected = re(qr/$ruleset/);
+$result = $mech->get(Kynetx::Util::mk_url($fqurl,$opts));
+cmp_deeply($result->code,200,$description);
+$test_count++;
+
+sleep 1;
+
+# $description = "Log created for ruleset";
+# $args = [$log_eci];
+# $result = Kynetx::Modules::PCI::get_log_messages($my_req_info,$dev_env,$session,$rule_name,'foo',$args);
+# my $id = (keys %{$result})[0];
+# cmp_deeply($result->{$id}->{'log_text'},$expected,$description);
+# $test_count++;
+
+
+Log::Log4perl->easy_init($INFO);
 
 
 ####### CLEANUP

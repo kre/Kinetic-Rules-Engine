@@ -88,7 +88,7 @@ sub get_token {
     my $session_id = Kynetx::Session::session_id($session);
     $domain = $domain || "web";
     my $var;
-    $logger->trace("Get token for session: ",  sub {$session_id});
+    $logger->debug("Get token for session: ",  sub {$session_id});
     # There might be other ways to find a token for other endpoint domains
     if ($domain eq "web") {
         # Check mongo.tokens for any tokens for a matching sessionid
@@ -244,12 +244,17 @@ sub create_token {
 	       "policy" => $policy,
 	       "endpoint_type" => $type,
 	      };
-  my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0);
-  if ($status) {
-    Kynetx::Persistence::KEN::touch_ken($ken);
-    return $ktoken;
+  my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0,1);
+  $logger->trace("Token ken: ", sub {Dumper($token->{'ken'})});
+  $logger->trace("Token status: ", sub {Dumper($status)});
+  if (ref $status eq 'HASH' && ($status->{'ok'} == 1)) {
+      Kynetx::Persistence::KEN::touch_ken($ken);
+      return $ktoken;
+  } elsif ($status) {
+      Kynetx::Persistence::KEN::touch_ken($ken);
+      return $ktoken;
   } else {
-    $logger->warn("Token request error: ", mongo_error());
+      $logger->warn("Token request error: ", mongo_error());
   }
 }
 
@@ -338,7 +343,7 @@ sub delete_token {
     }
     
     my $result = Kynetx::MongoDB::delete_value(COLLECTION,$var);    
-    $logger->info("Deleting token $ktoken");
+#    $logger->debug("Deleting token $ktoken with result ", sub{ Dumper $result });
     # We store the token in cache to quickly get the ken
     if (defined $session_id) {
     	my $additional_ref = COLLECTION .$session_id;
@@ -408,6 +413,19 @@ sub get_token_by_token_name {
   return undef;
 }
 
+sub get_token_by_endpoint_id {
+  my ($eid) = @_;
+  my $key = {
+    'endpoint_id' => $eid
+  };
+  my $result = Kynetx::MongoDB::get_value(COLLECTION,$key);
+  if (defined $result) {
+    return $result->{'ktoken'};
+  }
+  return undef;
+}
+
+
 sub get_token_by_token_type {
 	my ($type) = @_;
 	my $logger = get_logger();
@@ -447,6 +465,31 @@ sub get_token_by_ken_and_label {
 		return \@tokens_array; 
 	}
 	return undef;  
+}
+
+sub update_token_name {
+  my ($ken,$token_name,$endpoint_type) = @_;
+  my $logger = get_logger();
+  my $findnmod = {
+    'query' => {'ken' => $ken,'endpoint_type' => $endpoint_type},
+    'update' => {'$set' => {'token_name' => $token_name}},
+    'upsert' => 1,
+    'new' => 1
+  };
+  my $result;
+  my $exists = Kynetx::MongoDB::get_value(COLLECTION,$findnmod->{'query'});
+  if ($exists) {
+    $logger->debug("Update $token_name ");
+    $result =  Kynetx::MongoDB::find_and_modify(COLLECTION,$findnmod,1);
+    if ($result && ref $result eq "HASH") {
+      my $token = $result->{'value'};
+      return $token;
+    }
+    
+  } else {    
+    $result = create_token($ken,$token_name,$endpoint_type);
+  }
+  return $result;
 }
 
 sub get_oldest_token {

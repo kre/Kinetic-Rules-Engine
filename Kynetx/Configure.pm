@@ -144,7 +144,7 @@ sub config_logging {
     my $appenders = Log::Log4perl->appenders();
     my $logger = Log::Log4perl::get_logger('');
     my $threshold = get_log_threshold();
-    $logger->level(Log::Log4perl::Level::to_priority($threshold));
+    #$logger->level(Log::Log4perl::Level::to_priority($threshold));
   }
 
 }
@@ -152,6 +152,7 @@ sub config_logging {
 sub get_log_threshold {
   my $mode = Kynetx::Configure::get_config('RUN_MODE');
   my $debug = Kynetx::Configure::get_config('DEBUG');
+  #return "DEBUG";
   if ($debug eq 'on') {
     return "DEBUG"
   } elsif ($debug eq 'off') {
@@ -184,7 +185,7 @@ sub set_run_mode {
     $mode = $mode || $config->{'RUN_MODE'} || 'production';
     $config->{'RUN_MODE'} = $mode;
 
-    for my $k (qw/INIT_HOST CB_HOST EVAL_HOST KRL_HOST KNS_PORT COOKIE_DOMAIN OAUTH_CALLBACK_HOST OAUTH_CALLBACK_PORT/) {
+    for my $k (qw/INIT_HOST CB_HOST EVAL_HOST KRL_HOST KNS_PORT COOKIE_DOMAIN OAUTH_CALLBACK_HOST OAUTH_CALLBACK_PORT LOGIN/) {
       $config->{$k} = $config->{$mode}->{$k};
     }
 

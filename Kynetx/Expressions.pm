@@ -35,6 +35,7 @@ use Digest::MD5 qw/md5_hex/;
 use Encode qw/encode_utf8/;
 use Clone qw/clone/;
 use Data::Diver qw(Dive);
+use Scalar::Util qw(looks_like_number);
 
 use XDI;
 
@@ -526,8 +527,22 @@ sub eval_prim {
 		    'val' => $val0 * $val1};
 	};
 	/\// && do {
-	    return {'type' => 'num',
-		    'val' => $val0 / $val1};
+	    if (! defined $val1 || ! looks_like_number($val1) || JSON::XS::is_bool $val1 || 0 == $val1) {
+		my $error_msg = "Division by zero or non-number: $val1";
+		$logger->info($error_msg);
+		Kynetx::Errors::raise_error($req_info, 
+					    'warn',
+					    $error_msg,
+					    {'rule_name' => $rule_name,
+					     'genus' => 'expression',
+					     'species' => 'division by zero'
+					    }
+					   );
+		return mk_expr_node('null','__undef__')
+	    } else {
+		return {'type' => 'num',
+			'val' => $val0 / $val1};
+	    }
 	};
 	/\%/ && do {
 	    return {'type' => 'num',
@@ -572,32 +587,44 @@ sub eval_application {
 #  $logger->debug("Evaluation function...", sub { Dumper $expr} );
 
   my $closure;
+
+
+
   if (defined $expr->{'function_expr'}->{'type'} &&
       $expr->{'function_expr'}->{'type'} eq 'closure'){
-    $closure = $expr->{'function_expr'};
+      $closure = $expr->{'function_expr'};
+
+
   } else {
-    $closure = eval_expr($expr->{'function_expr'},
-			  $rule_env,
-			  $rule_name,
-			  $req_info,
-			  $session
-			 );
+      $closure = eval_expr($expr->{'function_expr'},
+			   $rule_env,
+			   $rule_name,
+			   $req_info,
+			   $session
+			  );
 
-    unless ($closure->{'type'} eq 'closure') {
-      Kynetx::Errors::raise_error($req_info, 'warn',
-				  "[application] function not found",
-				  {'rule_name' => $rule_name,
-				   'genus' => 'expression',
-				   'species' => 'undefined function'
-				  }
-				 );
+     unless ($closure->{'type'} eq 'closure') {
+	 my $func_name = "anonymous";
+	 my $arg_names =  $closure->{'val'}->{'vars'} || "unknown";
+	 if ($expr->{"function_expr"}->{"type"} eq "var") {
+	     $func_name = $expr->{"function_expr"}->{"val"};
+	 }
+	 my $error_msg = "[application] $func_name function not found (args are " . $arg_names.join(", ") . ")";
+	 $logger->info($error_msg);
+	 Kynetx::Errors::raise_error($req_info, 
+				     'warn',
+				     $error_msg,
+				     {'rule_name' => $rule_name,
+				      'genus' => 'expression',
+				      'species' => 'undefined function'
+				     }
+				    );
 
 
-      return mk_expr_node('str', '');
-    }
+	 return mk_expr_node('str', '');
+     }
 
   }
-
 
 
   $req_info->{$closure->{'val'}->{'sig'}} = 0
@@ -624,11 +651,11 @@ sub eval_application {
   my $arg_vals;
   my $arg_names;
   if (ref $expr->{'args'} eq 'HASH') { 
-    $arg_vals = [values (%{  $expr->{'args'} })];
-    $arg_names = [keys (%{  $expr->{'args'} })];
+      $arg_vals = [values (%{  $expr->{'args'} })];
+      $arg_names = [keys (%{  $expr->{'args'} })];
   } else { # array
-     $arg_vals = $expr->{'args'};
-     $arg_names = $closure->{'val'}->{'vars'}
+      $arg_vals = $expr->{'args'};
+      $arg_names = $closure->{'val'}->{'vars'};
   }
 
 
@@ -867,7 +894,7 @@ sub eval_persistent {
 						     $name) || 0;
 #	$logger->debug("[persistent] $expr->{'domain'}:$name -> ", sub {Dumper $v});
       } else {
-	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env);
+	$v = Kynetx::Modules::lookup_module_env($expr->{'domain'}, $name, $rule_env, $req_info);
         $logger->debug("[module reference] ", sub {"$expr->{'domain'}:$name->$v"});
       }
     }
@@ -884,11 +911,17 @@ sub eval_pred {
 
 #    $logger->debug("[eval_pred] ", Dumper $pred);
 
-    $logger->debug("Complex predicate: ", $pred->{'op'});
+#    $logger->debug("Complex predicate: ", $pred->{'op'});
 
     my $val = 0;
     foreach my $p ( @{ $pred->{'args'} } ) {
       my $result = den_to_exp(Kynetx::Expressions::eval_expr($p, $rule_env, $rule_name, $req_info, $session));
+       if (! (JSON::XS::is_bool $result)
+	 && "__undef__" eq $result
+          ) {
+#	 $logger->debug("Saw __undef__ in complex predicate");
+ 	 $result = 0;
+       }
 
       if($pred->{'op'} eq '&&') {
 	$val = $result;
@@ -909,10 +942,8 @@ sub eval_pred {
       }
     }
 
-    $logger->debug("Complex predicate value: ", $val);
+    $logger->debug("Complex predicate ", $pred->{'op'}, " returns value: ", sub{ Dumper $val});
     return mk_den_value(boolify($val))
-
-
 }
 
 sub eval_ineq {
@@ -954,7 +985,7 @@ sub ineq_test {
     my($op, $rand0, $rand1) = @_;
 
     my $logger = get_logger();
-    $logger->trace("[ineq_test] $rand0 $op $rand1");
+    $logger->trace(sub { "[ineq_test] $rand0 $op $rand1" });
     $rand0 = undef unless (defined $rand0);
     $rand1 = undef unless (defined $rand1);
 
@@ -1063,7 +1094,11 @@ sub eval_emit {
 sub den_to_exp {
     my ($expr) = @_;
 
-#    my $logger = get_logger();
+
+    # if (ref $expr eq "HASH" && defined $expr->{"type"} && not defined $expr->{"val"}) {
+    # 	my $logger = get_logger();
+    # 	$logger->warn("*** Warning, cannot use 'type' as map key *** \n", sub{ Dumper $expr});
+    # }
 
     return $expr unless (ref $expr eq 'HASH' && defined $expr->{'type'});
     case: for ($expr->{'type'}) {
@@ -1093,7 +1128,10 @@ sub den_to_exp {
 	  return $expr;
 	};
 
-
+	# if we didn't find a valid type, return the expression
+	1 && do {
+	  return $expr;
+	};
 
     }
 
@@ -1222,6 +1260,16 @@ my %literal_types = ('str' => 1,
 		     'null' => 1,
 		    );
 
+sub is_typed_value {
+  my($val) = @_;
+#  my $logger = get_logger();
+#  $logger->trace("typed value received: ", sub {Dumper($val)});
+   return ref $val eq 'HASH' &&
+     defined $val->{'type'} &&
+       $literal_types{$val->{'type'}};
+}
+
+
 sub typed_value {
   my($val) = @_;
 #  my $logger = get_logger();
@@ -1240,7 +1288,7 @@ sub mk_action_expr {
   my $logger = get_logger();
   my $blocktype = $expr->{'blocktype'} || 'every';
   my @action_array =();
-  $logger->trace("Make action expression for: ", sub {Dumper($expr)});
+#  $logger->debug("Make action expression for: ", sub {Dumper($expr)});
   my $sig = md5_hex(freeze $expr);
   if (defined $expr->{'actions'}) {
   	foreach my $action (@{$expr->{'actions'}}) {
@@ -1278,11 +1326,13 @@ sub mk_action_expr {
   		{
   		'blocktype' => $blocktype,
   		'actions' => \@action_array,
+		'choice' => $expr->{'choice'},
   		'vars' => $expr->{'vars'},
 		'decls' => $expr->{'decls'},
 		'configure' => $expr->{'configure'},
 		'env' => $env,
-		'sig' => $sig});
+		'sig' => $sig
+		});
   
 	
 }
@@ -1397,12 +1447,25 @@ sub var_free_in_here_doc {
   my $found = 0;
 
   foreach my $v (@vars) {
-    $v = Kynetx::Parser::parse_expr($v);
+    $v = parse_here_doc($v);
     $found = 1 if var_free_in_expr($var, $v);
   }
 
   return $found;
+}
 
+sub parse_here_doc {
+  my($expr) = @_;
+  my $logger = get_logger();
+  my $v;
+  eval {
+      $v = Kynetx::Parser::parse_expr($expr);
+  };
+  if ($@) {
+      $logger->info("Syntax error in $expr:\n $@");
+      $v = {};
+  };
+  return $v;
 }
 
 #
@@ -1483,7 +1546,7 @@ sub cachable_expr {
 	 ) {
     return 1;
   } else {
-    $logger->debug("Module not cachable because expression has type ", $expr->{'type'}, " ", sub{Dumper $expr});
+    $logger->debug("Module not cachable because expression has type ", $expr->{'type'});
     return 0;
   }
 }
@@ -1573,7 +1636,7 @@ sub optimize_here_doc {
   while (@parts = $str =~ m/(.*?)\#\{(.+?)\}{1}?(.*)/s) {
     #      $logger->debug("Picked apart ", sub {Dumper @parts});
     last unless $parts[1];
-    my $bee_expr = Kynetx::Parser::parse_expr($parts[1]);
+    my $bee_expr = parse_here_doc($parts[1]);
     my $label = "_____EXPR____".$count++;
     push (@{ $string_array }, ($parts[0], $label));
     push( @{ $expr_array }, $bee_expr);

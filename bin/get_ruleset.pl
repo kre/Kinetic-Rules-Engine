@@ -67,7 +67,7 @@ $Data::Dumper::Indent = 1;
 use Time::HiRes qw/tv_interval gettimeofday/;
 
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 # configure KNS
 Kynetx::Configure::configure();
@@ -83,14 +83,26 @@ getopts( "$opt_string", \%opt ); # or &usage();
 
 
 my $rid = $opt{'r'};
+my $version = "prod";
+
+($rid, $version) = split(/\./, $rid);
+$version ||= "prod";
+
+print "$rid . $version\n";
 
 my $section = $opt{'s'};
 
 my $req_info = Kynetx::Test::gen_req_info($rid);
 
+my $rid_info = Kynetx::Rids::mk_rid_info($req_info, $rid, {'version' => $version});
+
+print Dumper $rid_info;
+
 my $t0 = [gettimeofday];
-#my $tree = Kynetx::Repository::get_rules_from_repository($rid,$req_info);
-my $tree = Kynetx::Rules::get_rule_set($req_info);
+my $tree =
+        Kynetx::Repository::get_rules_from_repository( $rid_info, $req_info,
+        $rid_info->{'kinetic_app_version'} );
+#my $tree = Kynetx::Rules::get_rule_set($req_info);
 $tree = $tree->{$section} if $section;
 my $t1 = tv_interval($t0, [gettimeofday]);
 

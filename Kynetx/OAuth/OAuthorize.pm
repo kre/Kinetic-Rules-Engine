@@ -91,7 +91,7 @@ sub handler {
     my @pairs = split(/\&/,$args);
     $params = Kynetx::Util::from_pairs(\@pairs);
   }elsif ($r->method_number==Apache2::Const::M_POST) {
-    $logger->debug("Request method is GET");
+    $logger->debug("Request method is POST");
     
     return OK;
   } else {
@@ -127,6 +127,7 @@ sub handler {
       return Apache2::Const::HTTP_BAD_REQUEST unless $uri_match;
     }
     my $oauth_handler = Kynetx::Configure::get_config("oauth_server")->{"auth_ruleset"};
+    $oauth_handler =~ s!/*$!/!; # Add a trailing slash  
     $rparams->{'kvars'} = '{}';
     $rparams->{'uri_redirect'} = $plain_redirect;
     $rparams->{'developer_eci'} = $client_id;

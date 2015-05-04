@@ -28,6 +28,7 @@ use Data::Dumper;
 use Log::Log4perl qw(get_logger :levels);
 use IPC::Lock::Memcached;
 use JSON::XS;
+use DateTime;
 
 use Kynetx::Rids;
 
@@ -65,6 +66,19 @@ sub retrieve_json_from_post {
     return $content;
 }
 
+sub path_params {
+  my ($r) = @_;
+  my $logger= get_logger();
+  my @path_components = split( /\//, $r->path_info );
+  return \@path_components;
+}
+
+sub query_params {
+  my ($r) = @_;
+  my $req= Apache2::Request->new($r);
+  
+}
+
 sub build_request_env {
   my ( $r, $method, $rids, $eventtype, $eid, $options ) = @_;
 
@@ -85,12 +99,13 @@ sub build_request_env {
   }
 
   my $body_params;
+#  $logger->debug("Request body: ",sub {Dumper($req->body())});
+#  $logger->debug("Request param: ",sub {Dumper($req->param())});
   if ($content_type eq 'application/json') {
 
     my $body = retrieve_json_from_post($r);
 #    $logger->debug("Body: ", $body);
     $body_params = JSON::XS::->new->convert_blessed(1)->pretty(1)->decode($body || "{}");
-    $logger->debug("Body JSON: ", sub{Dumper $body_params});
 
     # you'd think you could just grab the POST body and parse it here, setting the 
     # params as necessary. Unfortunately, it's not that simple since parsing the request
@@ -104,13 +119,16 @@ sub build_request_env {
 
   my $domain = 
        $method                   # give path component precedence
-    || $req_params->{'_domain'} 
+    || $req_params->{'_domain'}
+    || $body_params->{'_domain'} 
     || 'discovery';
 
   $eventtype =
        $eventtype                # give path component precedence
     || $req_params->{'_type'}
     || $req_params->{'_name'}
+    || $body_params->{'_name'}
+    || $body_params->{'_type'}
     || 'hello';
 
   if ( $domain eq "discovery" && $eventtype eq "hello" ) {
@@ -118,8 +136,9 @@ sub build_request_env {
   }
 
   # we rely on this being undef if nothing passed in
-  $rids = $req_params->{'_rids'} || $rids;
+  $rids = $req_params->{'_rids'} || $body_params->{'_rids'} || $rids;
   my $explicit_rids = defined $req_params->{'_rids'};
+  $logger->debug("Explicitly declared rids ", $rids) if $explicit_rids;
 
   # endpoint identifier
   my $epi = $req_params->{'_epi'} || 'any';
@@ -129,7 +148,10 @@ sub build_request_env {
 
   # manage optional params
   # The ID token comes in as a header in Blue API
-  my $id_token = $options->{'id_token'} || $req_params->{'_eci'} || $r->headers_in->{'Kobj-Session'};
+  my $id_token = $options->{'id_token'} 
+                  || $req_params->{'_eci'} 
+                  || $body_params->{'_eci'}
+                  || $r->headers_in->{'Kobj-Session'};
   my $api      = $options->{'api'}      || 'ruleset';
 
   # build initial envv
@@ -151,6 +173,7 @@ sub build_request_env {
     page   => $caller,
     url    => $caller,
     now    => time,
+    timestamp => DateTime->now(),
     method => $domain,
 
     # this is also determines the endpint capability type
@@ -159,6 +182,7 @@ sub build_request_env {
     eid       => $eid,
 
     id_token => $id_token,
+    eci => $id_token,  # add this without removing other 
 
     explicit_rids => $explicit_rids,
 
@@ -188,7 +212,7 @@ sub build_request_env {
 
   foreach my $n (keys %{$req_params}) {
     my $enc = Kynetx::Util::str_in( $req_params->{$n} );
-    $logger->debug( "Param $n -> ", $req_params->{$n}, " ", $enc );
+    $logger->trace( "Param $n -> ", $req_params->{$n}, " ", $enc );
     my $not_attr = {
       '_rids'   => 1,
       '_eci'   => 1,
@@ -235,7 +259,9 @@ sub add_event_attr {
 
 sub get_attr_names {
   my ($req_info) = @_;
-  return $req_info->{'event_attrs'}->{'attr_names'};
+  # my $logger = get_logger();
+  # $logger->debug("Getting attr names ", sub{ Dumper $req_info->{'event_attrs'}->{'attr_names'} });
+  return $req_info->{'event_attrs'}->{'attr_names'} || [] ;
 }
 
 sub get_attrs {
@@ -257,6 +283,16 @@ sub get_event_domain {
 sub get_event_type {
   my ( $req_info ) = @_;
   return $req_info->{'eventtype'}
+}
+
+sub set_event_domain {
+  my ( $req_info, $new_domain ) = @_;
+  $req_info->{'domain'} = $new_domain;
+}
+
+sub set_event_type {
+  my ( $req_info, $new_type ) = @_;
+  $req_info->{'eventtype'} = $new_type;
 }
 
 ### final
@@ -294,11 +330,15 @@ sub merge_req_env {
 sub log_request_env {
   my ( $logger, $request_info ) = @_;
 
-  my $skip = {"KOBJ.ridlist" => 1,
+  my $skip = {
+	      "KOBJ.eventtree" => 1,
 	     };
-  
+
+  my $max_val_length = 100;
   if ( $logger->is_debug() ) {
-    foreach my $entry ( keys %{$request_info} ) {
+    my $req_type = defined $request_info->{"function_name"} ? "Query" : "Event";
+    $logger->info("-----***---- Decode $req_type ----***-----");
+    foreach my $entry ( sort keys %{$request_info} ) {
 
       next if $skip->{$entry};
 
@@ -314,20 +354,21 @@ sub log_request_env {
         }
       }
       elsif ( $entry eq 'event_attrs' ) {
-        $value = "{";
+	my @attrs = ();
         while ( my ( $k, $v ) = each %{ $request_info->{$entry} } ) {
-          $value .= "$k:$v, ";
+	  next if $k eq "attr_names";
+          push  @attrs, "$k:" . substr( $v, 0, $max_val_length );
         }
-        $value .= "}";
+        $value = "{" . join(", ", @attrs) . "}";
 
       }
       elsif ( ref $value eq 'ARRAY' ) {
-        my @tmp = map { substr( $_, 0, 50 ) } @$value;
+        my @tmp = map { substr( $_, 0, $max_val_length ) } @$value;
         $value = '[' . join( ',', @tmp ) . ']';
       }
       else {
         if ($value) {
-          $value = substr( $value, 0, 50 );
+          $value = substr( $value, 0, $max_val_length );
         }
         else {
           $value = '';
@@ -335,10 +376,31 @@ sub log_request_env {
 
       }
 
+      my $debug_only = {"directives" => 1,
+			"majv" => 1,
+			"minv" => 1,
+			"KOBJ.eventtree" => 1,
+			"g_id" => 1,
+			"url" => 1,
+			"epi" => 1,
+			"epl" => 1,
+			"caller" => 1,
+			"id_token" => 1,
+			"ip" => 1,
+			"now" => 1,
+			"page" => 1,
+			"site" => 1,
+			"ua" => 1
+		       };
+      
       # print out first 50 chars of the request string
       $entry = 'undef' unless defined $entry;
       $value = 'undef' unless defined $value;
-      $logger->debug("$entry:$value");
+      if ( $debug_only->{$entry} ) {
+	  $logger->debug("$entry:$value");
+      } else {
+	  $logger->info("$entry:$value");
+      }
 
     }
 
@@ -376,5 +438,52 @@ sub set_capabilities {
   }
 
 }
+
+### top level storage for module envs
+my $module_key = 'module:defs';
+sub put_module_in_request_info {
+
+    my($sig, $name, $version, $provides, $module_env, $js, $export_keys, $request_info) = @_;
+    my $module_rep = {"name" => $name,
+		      "version" => $version,
+		      "sig" => $sig,
+		      "provides" => $provides,
+		      "module_env" => $module_env,
+		      "js" => $js,
+		      "export_keys" => $export_keys
+		     };
+    $request_info->{$module_key}->{$sig} = $module_rep;
+    return $request_info
+      
+}
+
+sub module_loaded {
+  my($sig, $request_info) = @_;
+  return defined $request_info->{$module_key}->{$sig}->{"module_env"};
+}
+
+sub get_module_provides {
+    my($sig, $request_info) = @_;
+    # my $logger = get_logger();
+    # $logger->debug("looking up $sig ", sub {Dumper $request_info->{$module_key}});
+    my $result = defined $sig && defined $request_info ? $request_info->{$module_key}->{$sig}->{"provides"}
+               : {};
+    return $result
+}
+
+sub get_module_env {
+    my($sig, $request_info) = @_;
+    # my $logger = get_logger();
+    # $logger->debug("looking up $sig ", sub {Dumper $request_info->{$module_key}});
+    return $request_info->{$module_key}->{$sig}->{"module_env"}
+}
+
+sub get_module {
+    my($sig, $request_info) = @_;
+    # my $logger = get_logger();
+    # $logger->debug("looking up $sig ", sub {Dumper $request_info->{$module_key}});
+    return $request_info->{$module_key}->{$sig}
+}
+
 
 1;

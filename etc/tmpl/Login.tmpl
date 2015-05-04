@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    	<title>Accounts</title>
+
+    	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+	<!-- Css -->
+    	<link rel="stylesheet" href="<TMPL_VAR NAME="SMODE">code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css">	
+
+    	<!-- Themes -->
+	<link rel="stylesheet" href="https://s3.amazonaws.com/Fuse_assets/themes/Fuse.css" />
+	<link rel="stylesheet" href="https://s3.amazonaws.com/Fuse_assets/themes/jquery.mobile.icons.min.css" />
+
+    	<!-- Javascript -->
+    	<script src="<TMPL_VAR NAME="SMODE">code.jquery.com/jquery-1.10.2.min.js"></script>
+    	<script src="<TMPL_VAR NAME="SMODE">code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+    	<script src="<TMPL_VAR NAME="SMODE">code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>
+
+
+
+		<style>
+			#login-create-account {
+			    text-align: right;
+			    border-top: 1px solid #e9e9e9;
+			    background-color: #e9e9e9;
+			}
+			
+			#login-signup {
+			    text-align: right;
+			    border-top: 1px solid #e9e9e9;
+			    background-color: #e9e9e9;
+			}
+			
+			#login-create-account:hover {
+			    background-color: #a8c7e3;
+			    border-top: 1px solid #628cb6;
+			}
+			
+			#list-re-enter-password {
+			    border-top: none;
+			}
+			
+			.header-image {
+			    margin-top: 4px;
+			    text-align: center;
+			}
+			
+			.alert {
+			   color: red
+			}
+			
+			@media (min-width:800px) {
+			    .ui-content {
+			        width: 800px;
+			        margin-left: auto;
+			        margin-right: auto;
+			    }
+			}
+			label.error { 
+				float: left; 
+				color: red; 
+				font-weight:bold
+			}	
+			label.okay { 
+				float: left; 
+				color: green; 
+			}
+
+			.center-wrapper{
+			  text-align: center;
+			}			  
+			.center-wrapper * {
+			  margin: 0 auto;
+			}
+		</style>
+    </head>
+    
+    <body>
+		<TMPL_VAR NAME="DIALOG">		
+
+<!--===============================================-->
+<!--==== Create Account Page JS ===================-->
+
+<script type="text/javascript">
+$( document ).on( "pagecreate", "#create", function() {
+//$("#create").on("pageshow", function() {
+  console.log("Loading login page");
+  var min_char = 3;
+  var timer;
+  $('[type="submit"]').button().button('disable');
+  $('#new_email').blur(function(){
+     clearTimeout(timer);
+     var email = $('#new_email').val();
+     nowspace = nows(email);
+//     nobadchars = badchars(nowspace);
+//     $('#new_email').val(nobadchars);
+     timer = setTimeout (function() {
+       check_username(email, function(data) {
+         var msg = "";
+         if($('#new_email').val().length < min_char) {
+      	   $('[type="submit"]').button('disable'); 
+         } else if( ! data.available
+                 || ! isValidEmailAddress(email)
+	        ) {
+  	  console.log("Available: ", data.available);
+	  if (! data.available) {
+	    msg = msg + "User name is not available<br/>";
+	  }
+	  if (! isValidEmailAddress(email)) {
+	    msg = msg + "User name is not a valid email address<br/>";
+	  }
+	  
+	  $('[type="submit"]').button('disable');
+	  $('#alert_email').html(msg).show(); 
+        } else {
+  	  $('[type="submit"]').button('enable');
+	  $('#alert_email').html("").hide();
+        }
+        $('[type="submit"]').button('refresh');
+       }, 500);
+    });
+  });
+
+  $('#re-enter-password').blur(function () {
+     var p1 = $('#new-password').val();
+     var p2 = $('#re-enter-password').val();
+     console.log("Seeing " + p1 + " and " + p2);
+     if (p1 === p2) {
+	$('[type="submit"]').button('enable');
+	$('#alert_password').html("").hide();
+     } else {
+	$('[type="submit"]').button('disable');
+	$('#alert_password').html("Passwords don't match").show();
+     }
+     $('[type="submit"]').button('refresh');
+  });
+
+  $('[type="submit"]').click(function() {
+     var p1 = $('#new-password').val();
+     var p2 = $('#re-enter-password').val();
+     if (p1 !== p2) {
+	$('#alert_password').html("Passwords don't match").show();
+	return false;
+     } else if (p1 === "") {
+	$('#alert_password').html("Password can't be empty").show();
+	return false;
+     } else {
+	$('#alert_password').html("").hide();
+	return true;
+     }
+  });
+
+	
+});
+
+$( document ).on( "pagecreate", "#page-account-details", function() {
+  console.log("Loading profile page");
+  $("#logout").click(function(){delete_session_cookie();return true});
+});
+ 
+$( document ).on( "pagecreate", "#page-reset-password", function() {
+  console.log("Loading password reset page");
+  $('[type="submit"]').button().button('disable');
+  $('#re-enter-password').blur(function () {
+     var p1 = $('#new-password').val();
+     var p2 = $('#re-enter-password').val();
+     console.log("Seeing " + p1 + " and " + p2);
+     if (p1 === p2) {
+	$('[type="submit"]').button('enable');
+	$('#alert_password').html("").hide();
+     } else {
+	$('[type="submit"]').button('disable');
+	$('#alert_password').html("Passwords don't match").show();
+     }
+     $('[type="submit"]').button('refresh');
+  });
+});
+
+
+function delete_session_cookie(){
+   console.log("deleting session cookie");
+   document.cookie = 'SESSION_ID=; path=/;domain=.kobj.net';
+}
+
+function nows(str) {
+  return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+};
+	
+function badchars(str) {
+  return str.replace(/[^\u00C0-\u1FFF\u2C00-\uD7FF\w\@\+\-\.]+/,'');
+};
+
+	
+function check_username(uname, cb) {
+  console.log("Username " + uname);
+  $.post("<TMPL_VAR NAME="PLATFORM">/login/check_username", {username : uname},
+    function(data) {
+      console.log("r_uname " + data.username + " is available: " + data.available);
+      cb(data);
+  },'json');
+};
+		
+function isValidEmailAddress(emailAddress) {
+  console.log("Checking email address: ", emailAddress);
+  var pattern = new RegExp(/^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i);
+  return pattern.test(emailAddress);
+};	
+
+</script>
+
+    </body>
+</html>

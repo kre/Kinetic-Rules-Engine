@@ -1,0 +1,60 @@
+    
+    <!--===============================================-->
+    <!--==== Create Account Page ======================-->
+    <div data-role="page" data-theme="a" id="create">
+        <!-- Header -->
+        <div data-role="header">
+            <div class="header-image">
+              <img class="fuse-logo" src="<TMPL_VAR NAME="LOGO_IMG_URL">">
+            </div>
+        </div> <!-- /header -->
+
+        <!-- Content -->
+
+
+
+        <div data-role="content">
+            <form action="<TMPL_VAR NAME="FORM_URL">" method="post" data-url="<TMPL_VAR NAME="FORM_URL">" data-external-page="true" data-ajax="false" class="form-horizontal well cloudUI-form-login">                
+	    <fieldset>
+	      <TMPL_VAR NAME="HIDDEN_FIELDS">
+              <ul data-role="listview" data-inset="true">
+	      <li data-role="list-divider" >Create account </li>
+
+		 <li id="alert_email" style="background: #FFEEEE; color:red; display:<TMPL_IF NAME="ERROR_MSG">show<TMPL_ELSE>none</TMPL_IF>" class="alert">
+                   <TMPL_VAR NAME="ERROR_MSG">
+		 </li>
+
+
+  	      <li id="alert_password" style="background: #FFEEEE; color:red; display:none" class="alert">
+	      </li> 
+              <li class="ui-field-contain">
+                        <input type="text" name="email" id="new_email" value="" placeholder="johndoe@example.com">
+                        <input type="password" name="password" id="new-password" value="" placeholder="password">
+                        <input type="password" name="re-enter-password" id="re-enter-password" value="" placeholder="re-enter password">
+                        <input type="text" name="firstname" id="new-firstname" value="" placeholder="First name">
+                        <input type="text" name="lastname" id="new-lastname" value="" placeholder="Last name">
+                    </li>
+                </ul>
+             </fieldset>
+	    <div class="form-actions" style="">
+	    <button type="submit" id="submit_new_user" class="ui-btn ui-corner-all ui-btn-b ">Create account</button>
+	      <input type="reset" id="reset_new_user" value="Cancel" class="ui-btn ui-corner-all">
+            </div>
+
+            </form>
+      <div class="center-wrapper">
+       <div>(or <a id="login" href="<TMPL_VAR NAME="LOGIN_URL">" class="">sign in</a>)</div>
+      </div>
+
+        </div> <!-- /content -->
+
+        <!-- Footer -->
+        <div data-role="footer" data-position="fixed">
+	  <h4><TMPL_VAR NAME="FOOTER_TEXT"></h4>
+        </div> <!-- /footer -->
+
+    </div><!-- /page -->
+
+
+
+    

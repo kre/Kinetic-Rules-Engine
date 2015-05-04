@@ -252,7 +252,6 @@ _KRL_
         my $decl = Kynetx::Parser::parse_decl($decl_src);
 
 	diag(Dumper($decl)) if $diag;
-
 	my ($v,$js_decl) = Kynetx::Expressions::eval_decl(
 	    $my_req_info,
 	    $rule_env,
@@ -371,17 +370,6 @@ SKIP: {
     like(&{$weather_function}('tomorrow_cond_code'), qr#\d+#, 'tomorrow_cond_code');
 
   }
-
-
-# check media market datasource
-
-my $mm_function = mk_datasource_function('mediamarket','', 0);
-
-like(&{$mm_function}('dma'), qr#\d\d\d#, 'dma');
-like(&{$mm_function}('rank'), qr#\d+#, 'rank');
-like(&{$mm_function}('name'), qr#\w#, 'name');
-like(&{$mm_function}('households'), qr#\d+#, 'households');
-$test_count += 4;
 
 
 my $math_function = mk_datasource_function('math', 9, 0);
@@ -534,11 +522,11 @@ check_cachable('is not', 'x = ent:x', 'entity');
 sub test_exp_to_den {
   my($ds, $desc, $diag) = @_;
 
-  my $new_ds = exp_to_den($ds);
+  my $new_ds = Kynetx::Expressions::exp_to_den($ds);
 
   diag Dumper $new_ds if $diag;
 
-  my $rebuilt_ds = den_to_exp($new_ds);
+  my $rebuilt_ds = Kynetx::Expressions::den_to_exp($new_ds);
 
   diag $rebuilt_ds if $diag;
 

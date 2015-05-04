@@ -101,7 +101,7 @@ my $test_count;
 my $config;
 my $config2;
 
-goto ENDY;
+
 
 #diag "_____________________________START TEST____________________________";
 sub local_gen_req_info {
@@ -2751,6 +2751,78 @@ add_testcase(
     0
     );
 
+##
+## test event:type() and event:domain() after raise
+##
+
+$krl_src = <<_KRL_;
+ruleset two_rules_first_raises_second {
+    rule t10 is active {
+      select when web pageview
+      pre {
+        firstdomain = event:domain();
+        firsttype = event:type();
+      }
+      fired {
+        raise explicit event foo for 'two_rules_first_raises_second.dev';
+        raise flip event flop; // just to schedule something after and mess up the req_info
+      }
+    }
+    rule t12 is active {
+      select when explicit foo
+      pre {
+        x = 5;
+        seconddomain = event:domain();
+        secondtype = event:type();
+      }
+      noop();
+    }
+}
+_KRL_
+
+$config = mk_config_string(
+  [
+   {"rule_name" => 't10'},
+   {"rid" => 'two_rules_first_raises_second'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$config2 = mk_config_string(
+  [
+   {"rule_name" => 't12'},
+   {"rid" => 'two_rules_first_raises_second'},
+   {"txn_id" => 'txn_id'},
+  ]
+ );
+
+
+$js = <<_JS_;
+(function(){
+(function(){
+var firstdomain='web';
+var firsttype='pageview';
+function callBacks () {
+};
+}());
+(function(){
+var x = 5;
+var seconddomain='explicit';
+var secondtype='foo';
+function callBacks () {
+};
+(function(uniq, cb, config) {cb();}
+ ('%uniq%',callBacks,$config2));
+}());
+}());
+_JS_
+
+add_testcase(
+    $krl_src,
+    $js,
+    $dummy_final_req_info,
+    );
 
 
 
@@ -4118,7 +4190,7 @@ my $env_stash = {};
 
 # diag Dumper $mod_rule_env;
 
-is(lookup_module_env("a16x78", "a", $mod_rule_env), 5, "a is 5" );
+is(lookup_module_env("a16x78", "a", $mod_rule_env, $my_req_info), 5, "a is 5" );
 $test_count++;
 
 
@@ -4159,10 +4231,10 @@ $mod_rule_env = empty_rule_env();
 #diag Dumper $empty_rule_env;
 ($js, $mod_rule_env) = Kynetx::Rules::eval_use($my_req_info, $module_rs, $empty_rule_env, $env_stash);
 
-is(lookup_module_env("flipper", "a", $mod_rule_env), 5, "a is 5 again" );
+is(lookup_module_env("flipper", "a", $mod_rule_env, $my_req_info), 5, "a is 5 again" );
 $test_count++;
 
-is(lookup_module_env("flipper", "b", $mod_rule_env), undef, "b is undef" );
+is(lookup_module_env("flipper", "b", $mod_rule_env, $my_req_info), undef, "b is undef" );
 $test_count++;
 
 
@@ -4266,10 +4338,10 @@ is(lookup_rule_env("b", $mod_rule_env), "hello", "b is hello" );
 $test_count++;
 
 
-is(lookup_module_env("a16x78", "a", $mod_rule_env), 5, "a is 5" );
+is(lookup_module_env("a16x78", "a", $mod_rule_env, $my_req_info), 5, "a is 5" );
 $test_count++;
 
-is(lookup_module_env("a16x78", "floppy", $mod_rule_env), "six", "got six" );
+is(lookup_module_env("a16x78", "floppy", $mod_rule_env, $my_req_info), "six", "got six" );
 $test_count++;
 
 
@@ -4313,10 +4385,10 @@ is(lookup_rule_env("d", $mod_rule_env), "prod", "d id prod" );
 $test_count++;
 
 
-is(lookup_module_env("a16x78", "a", $mod_rule_env), 5, "a is 5" );
+is(lookup_module_env("a16x78", "a", $mod_rule_env, $my_req_info), 5, "a is 5" );
 $test_count++;
 
-is(lookup_module_env("a16x78", "floppy", $mod_rule_env), "six", "got six" );
+is(lookup_module_env("a16x78", "floppy", $mod_rule_env, $my_req_info), "six", "got six" );
 $test_count++;
 
 
@@ -4325,9 +4397,10 @@ $test_count++;
 
 # look up in module env even though the var isn't provided...
 sub poke_mod_env {
-  my($name, $key, $env) = @_;
-  my $mod_env = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name, $env);
-    return Kynetx::Environments::lookup_rule_env($key, $mod_env);
+  my($name, $key, $env, $req_info) = @_;
+  my $sig = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name, $env);
+  my $mod_env = Kynetx::Request::get_module_env($sig, $req_info);
+   return Kynetx::Environments::lookup_rule_env($key, $mod_env);
 }
 
 
@@ -4364,11 +4437,11 @@ is(lookup_rule_env("a", $mod_rule_env), "world", "a is world" );
 $test_count++;
 
 
-is(poke_mod_env("a16x78", "c", $mod_rule_env), "world", "key gets passed to config" );
+is(poke_mod_env("a16x78", "c", $mod_rule_env, $my_req_info), "world", "key gets passed to config" );
 $test_count++;
 
 
-is(poke_mod_env("a16x78", "d", $mod_rule_env), undef, "key gets passed to config" );
+is(poke_mod_env("a16x78", "d", $mod_rule_env, $my_req_info), undef, "key gets passed to config" );
 $test_count++;
 
 
@@ -4402,7 +4475,7 @@ is(lookup_rule_env("a", $mod_rule_env), "Hello", "a is Hello" );
 $test_count++;
 
 
-is(poke_mod_env("a16x78", "c", $mod_rule_env), "Hello", "key gets passed to config" );
+is(poke_mod_env("a16x78", "c", $mod_rule_env, $my_req_info), "Hello", "key gets passed to config" );
 $test_count++;
 
 #diag "############ use a16x78 alias foo with c configured #################";
@@ -4768,35 +4841,71 @@ ok($is_cachable, "here_docs are cachable");
 $test_count++;
 
 
+###### Test pset, ensure it respect module encapsulation of persistent vars
+#diag "############ use a16x78 alias flipper #################";
+$krl =  << "_KRL_";
+ruleset foobar {
+  meta {
+    use module a16x78 alias flipper
+  }
+  global {
+    x = flipper:b;
+  }
+}
+_KRL_
+
+$module_rs = Kynetx::Parser::parse_ruleset($krl);
+#diag Dumper $module_rs;
+$mod_rule_env = empty_rule_env();
+($js, $mod_rule_env) = Kynetx::Rules::eval_use($my_req_info, $module_rs, $empty_rule_env, $env_stash);
+
+#diag Dumper $mod_rule_env;
+
+is(lookup_rule_env("x", $mod_rule_env), undef, "x is undef" );
+$test_count++;
+
+
+
+
 ####### META test provide keys value
 
 ENDY:
 
 ###########
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 ###########
 
 ## these rulesets are tied together because of the provide keys restriction on rids
-my $provide = 'a144x171';
-my $uses = 'a144x172';
+my $provide = 'a144x171.prod';
+my $uses = 'a144x172.prod';
+my $uses_uses = "b16x14.prod";
 my $version = 'prod';
 
 my $rid_info = mk_rid_info($my_req_info,$provide);
 my $source_module = Kynetx::Repository::get_ruleset_krl($rid_info,$version);
+#diag $source_module;
 my $source_ast = Kynetx::Parser::parse_ruleset($source_module);
-my $source_provided = $source_ast->{'meta'}->{'module_keys'}->{'provides_keys'};
+my $source_provided = $source_ast->{'meta'}->{'provides_keys'};
+#diag "Source provided ",  Dumper $source_provided;
 
 my $meta_req_info = Kynetx::Test::gen_req_info($uses);
 $rid_info = mk_rid_info($meta_req_info,$uses);
 my $u_krl = Kynetx::Repository::get_ruleset_krl($rid_info,$version);
 my $u_rule_env = empty_rule_env();
 $module_rs = Kynetx::Parser::parse_ruleset($u_krl);
+#diag "Processing uses ruleset: ", Dumper $module_rs;
 ($js,$u_rule_env) = Kynetx::Rules::eval_meta($meta_req_info,$module_rs,$u_rule_env,$session);
 
-foreach my $key_provided (@{$source_provided}) {
+#diag "Rule env: ", Dumper $u_rule_env;
+
+
+foreach my $key_provided (keys %{$source_provided}) {
   my $description = "Check that shared keys ($key_provided) are equal";
   my $sk_val = $source_ast->{'meta'}->{'keys'}->{$key_provided};
+  # diag "Source key value: ", Dumper $sk_val;
+
   my $module_val = Kynetx::Keys::get_key($meta_req_info,$u_rule_env,$key_provided);
+  #diag "S: $key_provided SV: $sk_val MV: $module_val";
   $logger->debug("S: $key_provided SV: $sk_val MV: $module_val");
   cmp_deeply($module_val,$sk_val,$description);
   $test_count++;
@@ -4809,6 +4918,25 @@ cmp_deeply($local_val,$module_rs->{'meta'}->{'keys'}->{$local},$description);
 $test_count++;
 
 
+$meta_req_info = Kynetx::Test::gen_req_info($uses_uses);
+$rid_info = mk_rid_info($meta_req_info,$uses_uses);
+my $uu_krl = Kynetx::Repository::get_ruleset_krl($rid_info,$version);
+my $uu_rule_env = empty_rule_env();
+my $uu_module_rs = Kynetx::Parser::parse_ruleset($uu_krl);
+($js,$uu_rule_env) = Kynetx::Rules::eval_meta($meta_req_info,$uu_module_rs,$uu_rule_env,$session);
+
+#diag $uu_krl;
+#diag Dumper $uu_rule_env;
+
+my $module_val = Kynetx::Keys::get_key($meta_req_info,$uu_rule_env,"a");
+#diag $module_val;
+is($module_val, "local key", "ensure that we don't see keys not provided to us" );
+$test_count++;
+
+$module_val = Kynetx::Keys::get_key($meta_req_info,$uu_rule_env,"b");
+ok(! defined $module_val, "ensure that we don't see keys not provided to us" );
+#diag $module_val;
+$test_count++;
 
 done_testing($test_count);
 

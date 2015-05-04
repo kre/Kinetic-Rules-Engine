@@ -51,6 +51,7 @@ use Kynetx::FakeReq qw/:all/;
 use Kynetx::Memcached;
 
 
+
 $Data::Dumper::Indent = 1;
 
 
@@ -88,6 +89,7 @@ pre {
   j = [{"a" : 1, "b" : 2, "c": 3}, {"a" : 4, "b" : 5, "c": 6}, {"a" : 7, "b" : 8, "c": 9}];
   k = [100, 1, 10, 1000, 21, 92];
   m = [76];
+  n = "76";
 
   simple_a_of_a = [["test", 80], ["foo", 100]];
   simple_map = {"test": 80, "foo": 100};
@@ -271,7 +273,8 @@ sub test_operator {
     $v = Kynetx::Parser::parse_expr($e);
     diag "Parsed expr: ", Dumper($v) if $d;
 
-    $r = eval_expr($v, $rule_env, $rule_name,$req_info);
+    $r = eval_expr($v, $rule_env, $rule_name,$req_info, $session);
+    diag "Expect: ", Dumper($x) if $d;
     diag "Result: ", Dumper($r) if $d;
     my $result = cmp_deeply($r, $x, "Trying $e");   
     
@@ -926,6 +929,22 @@ $e[$i] = q#my_str.replace(("re/"+ e + "/i").as("regexp"),"do you want a")#;
 $x[$i] = {
    'val' => 'do you want a is a string',
    'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#a.as("str")#;
+$x[$i] = {
+   'val' => '10',
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#n.as("num")#;
+$x[$i] = {
+   'val' => 76,
+   'type' => 'num'
 };
 $d[$i]  = 0;
 $i++;
@@ -1740,6 +1759,53 @@ $x[$i] = {
 $d[$i]  = 0;
 $i++;
 
+$e[$i] = q#simple_map.typeof()#;
+$x[$i] = {
+   'val' => 'hash',
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
+#------------------------------------------------------------------
+# null stuff
+#------------------------------------------------------------------
+
+$e[$i] = q#c.isnull()#;
+$x[$i] = {
+   'val' => 'false',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
+diag "expect errors about substr outside of string";
+$e[$i] = q!my_str.substr(25).isnull()!;
+$x[$i] = {
+   'val' => 'true',
+   'type' => 'bool'
+};
+$d[$i]  = 0;
+$i++;
+
+
+$e[$i] = q#a.defaultsTo(5)#;
+$x[$i] = {
+   'val' => 10,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q!my_str.substr(25).defaultsTo("hello")!;
+$x[$i] = {
+   'val' => 'hello',
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
+
 
 
 #-----------------------------------------------------------------------------------
@@ -2183,10 +2249,16 @@ $i++;
 
 diag("Okay to ignore JSON parse error");
 $e[$i] = q/bad_jstr.decode()/;
+# format's important in this since we're not comparing with no whitespace
 $x[$i] = {
-    "val" => "\n".'    "www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]}
-',
-    "type" => "str"
+    "val" => {
+     'error' => [
+       '
+    "www.barnesandnoble.com":[{"link":"http://aaa.com/barnesandnoble","text":"AAA members save money!","type":"AAA"}]}
+'
+     ]
+   },
+    "type" => "hash"
 };
 $d[$i] = 0;
 $i++;
@@ -2198,6 +2270,41 @@ $x[$i] = {
 };
 $d[$i] = 0;
 $i++;
+
+$e[$i] = q/i_h.encode({"pretty": true})/;
+$x[$i] = {
+    'val' => <<_EOF_,
+{
+   "mKey" : "mValue",
+   "hKey" : {
+      "innerKey" : "innerVal"
+   }
+}
+_EOF_
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+
+$e[$i] = q/i_h.encode({"pretty": false})/;
+$x[$i] = {
+    'val' => '{"mKey":"mValue","hKey":{"innerKey":"innerVal"}}',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+$e[$i] = q/i_h.encode({"canonical":true})/;
+$x[$i] = {
+    'val' => '{"hKey":{"innerKey":"innerVal"},"mKey":"mValue"}',
+    'type' => 'str'
+};
+$d[$i] = 0;
+$i++;
+
+
+
 
 $e[$i] = q/c_h.encode()/;
 $x[$i] ={
@@ -2502,6 +2609,29 @@ $x[$i] = {
 $d[$i] = 0;
 $i++;
 
+$e[$i] = q/j_h.delete("colors of the wind")/;
+$x[$i] = {
+	'val' => {
+	  'pi as array' => [
+	    3,
+	    1,
+	    4,
+	    1,
+	    5,
+	    6,
+	    9
+	  ],
+	  'foo' => {
+	  	'bar' => {
+	  		10 => 'I like cheese'
+	  	}
+	  }
+	},
+	'type'=>'hash'
+};
+$d[$i] = 0;
+$i++;
+
 $e[$i] = q/j_h.keys()/;
 $x[$i] = {
 	'val' => [
@@ -2599,8 +2729,8 @@ $i++;
 
 $e[$i] = q/k_h.keys([2])/;
 $x[$i] = {
-	'val' => '__undef__',
-	'type'=>'null'
+	'val' => [],
+	'type'=>'array'
 };
 $d[$i] = 0;
 $i++;
@@ -2692,8 +2822,8 @@ $i++;
 
 $e[$i] = q/k_h.values([2])/;
 $x[$i] = {
-	'val' => '__undef__',
-	'type'=>'null'
+	'val' => [],
+	'type'=>'array'
 };
 $d[$i] = 0;
 $i++;
@@ -2704,6 +2834,14 @@ $i++;
 ## klog
 ##
 $e[$i] = q#c.reverse().klog("Value of reversed array: ").join(";")#;
+$x[$i] = {
+   'val' => "6;5;4",
+   'type' => 'str'
+};
+$d[$i]  = 0;
+$i++;
+
+$e[$i] = q#c.reverse().join(";").klog("Value of reversed array: ")#;
 $x[$i] = {
    'val' => "6;5;4",
    'type' => 'str'
@@ -2816,15 +2954,92 @@ $i++;
 ENDY:
 
 
+
 # now run the tests....
 my $l = scalar @e;
-plan tests => $l;
+plan tests => $l+10; # bump for persistent tests below that run after these
 
 my $j;
 for ($j = 0; $j < $i; $j++) {
     test_operator($e[$j], $x[$j], $d[$j]);
 }
 
+
+#---------- set persistent ----------
+my ($v, $r, $p, $x);
+
+$e[$i] = q#a.pset(ent:foo)#;
+$v = Kynetx::Parser::parse_expr($e[$i]);
+#diag Dumper $v;
+$p = $v->{"args"}->[0];
+Kynetx::Persistence::delete_persistent_var($p->{"domain"}, $rid, $session, $p->{"name"});
+
+$r = eval_expr($p, $rule_env, $rule_name,$req_info, $session);
+$x = {
+   'val' => 0,
+   'type' => 'num'
+};
+#diag Dumper $r;
+cmp_deeply($r, $x, "Ensure persistent is cleared");   
+
+$x[$i] = {
+   'val' => 10,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+test_operator($e[$i], $x[$i], $d[$i]);
+
+# test persistent is OK
+
+
+$r = eval_expr($p, $rule_env, $rule_name,$req_info, $session);
+cmp_deeply($r, $x[$i], "Ensure persistent is set");   
+#diag Dumper $r;
+
+$i+=3;
+
+
+#---------- set persistent hash ----------
+my ($v, $r, $p, $x);
+
+#diag "---------------------- persistent hash ----------------";
+$e[$i] = q#a.pset(ent:foo{["flip"]})#;
+$v = Kynetx::Parser::parse_expr($e[$i]);
+#diag Dumper $v;
+$p = $v->{"args"}->[0];
+my $path_r = $p->{'hash_key'};
+my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $path_r);
+
+Kynetx::Persistence::delete_persistent_hash_element($p->{"domain"}, $rid, $session, $p->{"name"}, $path);
+
+$r = eval_expr($p, $rule_env, $rule_name,$req_info, $session);
+$x = {
+   'val' => undef,
+   'type' => "null"
+};
+#diag Dumper $r;
+cmp_deeply($r, $x, "Ensure persistent is cleared");   
+
+$x[$i] = {
+   'val' => 10,
+   'type' => 'num'
+};
+$d[$i]  = 0;
+test_operator($e[$i], $x[$i], $d[$i]);
+
+# test persistent is OK
+
+
+$r = eval_expr($p, $rule_env, $rule_name,$req_info, $session);
+cmp_deeply($r, $x[$i], "Ensure persistent is set");   
+#diag Dumper $r;
+
+$i+=3;
+
+is(Kynetx::Sets::has([1,2,3], [3]), 1, "testing has with singleton");
+is(Kynetx::Sets::has([1,2,3], [2,4]), 0, "testing has with no match");
+is(Kynetx::Sets::has([1,2,3], undef), 0, "testing has with undef");
+is(Kynetx::Sets::has(undef, [2,4]), 0, "testing has with undef");
 
 
 

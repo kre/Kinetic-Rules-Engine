@@ -131,7 +131,7 @@ open DICT, $dict_path;
 @DICTIONARY = <DICT>;
 
 my $big_val = [];
-my $max = 1000000;
+my $max = 1500000;
 for (my $i = 0; $i < $max; $i++) {
 	my $yav = $DICTIONARY[rand(@DICTIONARY)];
 	chomp($yav);
@@ -153,9 +153,33 @@ my $expr = {
 };
 
 $result = Kynetx::Postlude::eval_persistent_expr($expr,$session,$my_req_info,$big_e,"cs_test");
-#$logger->debug("Result: ", sub {Dumper($result)});
+#diag "Result: ", Dumper $result;
 cmp_deeply($result->{'_error_'},1,"set persistent variable which is too large");
 $test_count++;
+
+my $expr = {
+	    'domain' => 'ent',
+	    'test' => undef,
+	    'action' => 'set_hash',
+	    'value' => {
+			'type' => 'var',
+			'val' => 'foosh'
+		       },
+	    'name' => 'kvstore',
+	    'type' => 'persistent',
+	    'hash_element' => {
+			       'type' => 'str',
+			       'val' => 'a'
+			      }
+	   };
+
+
+$result = Kynetx::Postlude::eval_persistent_expr($expr,$session,$my_req_info,$big_e,"cs_test");
+#diag "Result: ", Dumper $result;
+cmp_deeply($result->{'_error_'},1,"set persistent variable which is too large");
+$test_count++;
+
+
 #goto ENDY;
 
 my $description = "Insert a hash element (creating the hash)";
@@ -377,7 +401,6 @@ $test_count++;
 
 
 
-diag "New SET syntax!";
 #Log::Log4perl->easy_init($DEBUG);
 
 #my $val_to_store = rand(100);
@@ -674,6 +697,88 @@ run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
 ok(! defined $my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last not modified req_info when false");
 $test_count++;
 
+$krl_src = <<_KRL_;
+fired {
+  last if (3 == 3)
+}
+_KRL_
+
+$my_req_info = Kynetx::Test::gen_req_info($rid); # reset
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+ok(defined $my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last modified req_info when expr");
+$test_count++;
+
+
+$krl_src = <<_KRL_;
+fired {
+  last if 3 == 3 && 'b' neq 'c'
+}
+_KRL_
+
+$my_req_info = Kynetx::Test::gen_req_info($rid); # reset
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+ok(defined $my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last modified req_info when expr");
+$test_count++;
+
+$krl_src = <<_KRL_;
+fired {
+  last if 3 == 3 && 'b' neq 'c' && 5 != 6
+}
+_KRL_
+
+$my_req_info = Kynetx::Test::gen_req_info($rid); # reset
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+ok(defined $my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last modified req_info when expr");
+$test_count++;
+
+$krl_src = <<_KRL_;
+fired {
+  last if (3 == 3 && 'b' neq 'c' && 5 == 6) || 'a' eq 'a'
+}
+_KRL_
+
+$my_req_info = Kynetx::Test::gen_req_info($rid); # reset
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+ok(defined $my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last modified req_info when expr");
+$test_count++;
+
+
+$krl_src = <<_KRL_;
+fired {
+  last if ((event:attr("namespace") eq "meta") && 
+           (event:attr("keyvalue") eq "namespace") && 
+           (event:attr("gtourInit").match(re/yes/gi))); 
+}
+_KRL_
+
+$my_req_info = Kynetx::Test::gen_req_info($rid); # reset
+Kynetx::Request::add_event_attr($my_req_info, 'namespace', 'meta');
+Kynetx::Request::add_event_attr($my_req_info, 'keyvalue', 'namespace');
+Kynetx::Request::add_event_attr($my_req_info, 'gtourInit', 'yes');
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+ok(defined $my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last modified req_info when expr");
+$test_count++;
+
+
+$krl_src = <<_KRL_;
+fired {
+  last if ((event:attr("namespace") eq "meta") && 
+           (event:attr("keyvalue") eq "namespace") && 
+           (event:attr("gtourInit").match(re/yes/gi))); 
+}
+_KRL_
+
+$my_req_info = Kynetx::Test::gen_req_info($rid); # reset
+Kynetx::Request::add_event_attr($my_req_info, 'namespace', 'meta');
+Kynetx::Request::add_event_attr($my_req_info, 'keyvalue', 'namespace');
+Kynetx::Request::add_event_attr($my_req_info, 'gtourInit', 'no');
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+ok(! defined $my_req_info->{'cs_test:__KOBJ_EXEC_LAST'}, "last modified req_info when expr");
+$test_count++;
+
+
 
 
 
@@ -707,6 +812,9 @@ $res = eval_post_expr($krl,
 is(Kynetx::Request::get_attr($my_req_info,'b'), 2, "attributes correctly stored");
 is(Kynetx::Request::get_attr($my_req_info,'c'), 3, "attributes correctly stored");
 $test_count += 2;
+
+
+
 
 
 # testing modifiers clause
@@ -802,6 +910,36 @@ $result = Kynetx::Persistence::SchedEv::schedev_query($ken,$key);
 $logger->debug("SchedEv Query: ", sub { Dumper($result)});
 cmp_deeply($result,superbagof(@expected),$description);
 $test_count++;
+
+#Log::Log4perl->easy_init($DEBUG);
+
+$description = "Add a repeating schedEv with setting";
+$krl_src = <<_KRL_;
+always {
+  schedule $sdomain event $ename repeat "$min * * * *"
+   with 
+     x = 5 and
+     y = 6
+   setting(foo)
+} 
+_KRL_
+
+$krl = Kynetx::Parser::parse_post($krl_src);
+
+chomp $krl;
+$krl = {'post' => $krl};
+$res = eval_post_expr($krl,
+		      $session,
+		      $sched_req_info,
+		      $rule_env,
+		      1);
+
+$result = Kynetx::Persistence::SchedEv::schedev_query($ken,$key);
+#diag ("SchedEv Query: ", Dumper($result));
+like(Kynetx::Environments::lookup_rule_env("foo", $rule_env), qr#[0-9abcdef]+#, "Got a reasonable ID back" );
+$test_count+=1;
+
+
 #Log::Log4perl->easy_init($INFO);
 
 # Clean up testing data

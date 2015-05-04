@@ -87,6 +87,13 @@ my $lessYear = Kynetx::Predicates::Time::add($my_req_info,"foo",[$now,{years => 
 # Fake User
 my $user_ken = Kynetx::Test::gen_user($my_req_info,$rule_env,$session,$uname);
 
+my $platform = '127.0.0.1';
+$platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
+$platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
+$platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox');
+my $mode = "http://";
+$mode = "https://" unless ($platform eq '127.0.0.1');
+
 my $domain;
 my $eventname;
 my $timespec;
@@ -150,33 +157,74 @@ is($schedEv->{'next_schedule'} ,$e_time,$description);
 $num_tests++;
 $num_events++;
 
-# save this SchedEv id for testing later
-my $recurring_event = $sched_id;
-
 $description = "A send event can be built from a schedEv";
-$result = Kynetx::Modules::Event::send_scheduled_event($recurring_event);
+$result = Kynetx::Modules::Event::send_scheduled_event($sched_id);
 is($result->code(),'200',$description);
-$num_tests++;
-
-my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime(time);
-$year += 1900;
-my @abbr = qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec );
-my $month = $abbr[$mon];
-
-$description = "Event is timely";
-my $expected = qr/.+foo sits.+$mday $month $year $hour/;
-cmp_deeply($result->decoded_content(),re($expected),$description);
-$num_tests++;
-
-$description = "A bad schedId blows up";
-$result = Kynetx::Modules::Event::send_scheduled_event('_fake_');
-is($result,undef,$description);
 $num_tests++;
 
 my $key = {
   "ken" => $user_ken,
   "source" => $rid
 };
+
+
+$description = "Look for scheduled events";
+$result = Kynetx::Persistence::SchedEv::get_schedev_list($key);
+cmp_deeply(scalar @{$result},$num_events,$description);
+$num_tests++;
+$logger->debug("SchedEvs: ", sub {Dumper($result)});
+
+
+$description = "Test the event";
+my $url = "$mode$platform/sky/schedule/$sched_id/001";
+my $ua = LWP::UserAgent->new;
+my $req = HTTP::Request->new(GET => $url);
+$result = $ua->request($req);
+cmp_deeply($result->code(),200,$description);
+$num_tests++;
+
+sleep 2;
+
+$description = "Test the single event again";
+$url = "$mode$platform/sky/schedule/$sched_id/002";
+$req = HTTP::Request->new(GET => $url);
+$result = $ua->request($req);
+cmp_deeply($result->code(),200,$description);
+$num_tests++;
+$num_events--;
+
+sleep 1;
+
+$description = "Look for scheduled events";
+$result = Kynetx::Persistence::SchedEv::get_schedev_list($key);
+cmp_deeply(scalar @{$result},$num_events,$description);
+$num_tests++;
+$logger->debug("SchedEvs: ", sub {Dumper($result)});
+
+
+# save this SchedEv id for testing later
+my $recurring_event = $sched_id;
+
+
+
+
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime(time);
+$year += 1900;
+my @abbr = qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec );
+my $month = $abbr[$mon];
+
+# Smoke test is not set up to install rulesets
+
+#$description = "Event is timely";
+#my $expected = qr/.+foo sits.+$mday $month $year $hour/;
+#cmp_deeply($result->decoded_content(),re($expected),$description);
+#$num_tests++;
+
+$description = "A bad schedId blows up";
+$result = Kynetx::Modules::Event::send_scheduled_event('_fake_');
+is($result,undef,$description);
+$num_tests++;
+
 $description = "Look for scheduled events";
 $result = Kynetx::Persistence::SchedEv::get_schedev_list($key);
 cmp_deeply(scalar @{$result},$num_events,$description);

@@ -66,10 +66,10 @@ my $rid = 'cs_test';
 
 my $my_req_info = Kynetx::Test::gen_req_info($rid, 
 					     {'ridver' => 'dev',
-					      "$rid:name" => 'rule_1',
-					      "$rid:author" => 'Web-san',
-					      "$rid:description" => "A ruleset for testing",
-					      'id_token' => 'flipperoo!!',
+					      "meta:$rid:name" => 'rule_1',
+					      "meta:$rid:author" => 'Web-san',
+					      "meta:$rid:description" => "A ruleset for testing",
+					      'id_token' => 'flipperoo!!'
 					     });
 
 my $rule_name = 'foo';
@@ -283,6 +283,23 @@ $val = Kynetx::Expressions::den_to_exp(
 is($val,"flipperoo!!","Testing ECI");
 $test_count++;
 
+
+
+
+
+
+$val = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
+					 $rule_env, 
+					 $session, 
+					 $rule_name, 
+					 'meta', 
+					 'ruleName', 
+					 [] 
+					));
+is($val,'foo',"Meta data for Rule");
+$test_count++;
+
 $val = Kynetx::Expressions::den_to_exp(
             Kynetx::Modules::eval_module($my_req_info, 
 					 $rule_env, 
@@ -311,6 +328,20 @@ $val = Kynetx::Expressions::den_to_exp(
 
 
 is($val,$host,"meta:hostname()");
+$test_count++;
+
+$val = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
+					 $rule_env, 
+					 $session, 
+					 $rule_name, 
+					 'meta', 
+					 'txnId', 
+					 [] 
+					));
+
+
+is($val,$my_req_info->{"txn_id"},"meta:txnId()");
 $test_count++;
 
 

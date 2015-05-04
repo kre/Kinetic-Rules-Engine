@@ -80,7 +80,7 @@ use constant LOG_FILE => 'scheduler.log';
 use constant LOOKAHEAD => 5;
 use constant TIMEOUT => 60 * LOOKAHEAD * 2;
 use constant SKIP => 4;
-use constant JOB_MAX => 100;
+use constant JOB_MAX => 50;
 
 our $ME = $0; $ME =~ s|.*/||; $ME =~ s|\.pl||;
 
@@ -133,16 +133,16 @@ getopts( "$opt_string", \%opt );
 my %children;
 $SIG{CHLD} = 'IGNORE';	
 
-$SIG{INT}  = sub { my $logger = get_log();$logger->warn("Caught SIGINT:  exiting gracefully");safeExit() };
-$SIG{QUIT} = sub { my $logger = get_log();$logger->warn("Caught SIGQUIT:  exiting gracefully");safeExit() };
+$SIG{INT}  = \&sighup;
+$SIG{QUIT} = \&sighup;
 $SIG{HUP}  = \&sighup;
 $SIG{USR1} = \&consolidate_cron_processes;
+$SIG{USR2} = \&clean;
 
 my $platform = '127.0.0.1';
 $platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
 $platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
 $platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox');
-#our $dn = "http://$platform";
 our $dn = "http://cs.kobj.net";
 
 my $run = 1;
@@ -167,6 +167,24 @@ sub main() {
   }  
 }
 
+
+sub clean {
+  my $logger = get_log();
+  $logger->warn("USR2 signal handler");
+  my ($p_name,$p_self,$p_parent) = proc_info();
+  
+}
+
+sub proc_info {
+  my $logger = get_log();
+  my $pgrp = getpgrp(0);
+  my $ppid = getppid();
+  $logger->debug("Process $0");
+  $logger->debug("Process group: $pgrp");
+  $logger->debug("Process parent: $ppid");
+  return ($0,$pgrp,$ppid);
+  
+}
 
 sub consolidate_cron_processes {
   my $logger = get_log();
@@ -234,7 +252,7 @@ sub sighup {
 sub safeExit {
   my ($exit_code) = @_;
   my $logger = get_log();
-  my $pid = $$;
+  my ($p_name,$pid,$p_parent) = proc_info();
   $logger->debug("Pid: $pid releasing $0");
   my $release_key = {'$or' => [
     {'cron_id' => $pid},
@@ -242,25 +260,12 @@ sub safeExit {
     ]    
   };
   eval {
-    Kynetx::Persistence::SchedEv::clear_cron_ids($release_key);
+    my $num = Kynetx::Persistence::SchedEv::clear_cron_ids($release_key);
+    $logger->debug("Released ($num) scheduled events");
   };
-  if ($@) {
-    dienice("Problem clearing cron_id for $pid: $@");
-  } 
-  
-  eval {
-    Proc::PID::File->release({
-        debug => 0,
-        #name => $ME 
-        name => $0 
-    });    
-  };
-  if ($@) {
-    dienice("Problem releasing $0: $@");
-  } 
   
   $exit_code = $exit_code || 0;
-  _exit(0);
+  exit $exit_code;
 }
 
 sub get_pid {
@@ -329,16 +334,30 @@ sub REAPER { 1 until waitpid(-1 , WNOHANG) == -1 };
 sub cron_dispatcher {
   my ($id,@args) = @_;
   my $logger = get_log();
-  my $url = "$dn/sky/schedule/$id";
-  $logger->debug("Call: ",$url);
-  my $ua = LWP::UserAgent->new();
-  my $req = new HTTP::Request 'POST', $url;
-  my $response = $ua->request($req);
-  $logger->debug("Args: ",join(" ",@args));
-  $logger->debug("Code: ",$response->code());
-  $logger->debug("Status: ",$response->status_line());
+  
+  my ($p_name,$p_self,$p_parent) = proc_info();
+  
+  if (has_parent($p_parent)) {
+    my $url = "$dn/sky/schedule/$id/$p_self";
+    $logger->debug("Call: ",$url);
+    my $ua = LWP::UserAgent->new();
+    my $req = new HTTP::Request 'POST', $url;
+    my $response = $ua->request($req);
+    $logger->debug("Args: ",join(" ",@args));
+    $logger->debug("Code: ",$response->code());
+    $logger->debug("Status: ",$response->status_line());    
+  } else {
+    $logger->debug("Parent process ($p_parent) not found");
+    safeExit(1);
+  }
   
   
+  
+}
+
+sub has_parent {
+  my ($parent) = @_;
+  return kill 'ZERO', $parent;
 }
 
 sub once_loop {
@@ -465,7 +484,7 @@ sub cron_loop {
     $logger->debug("Found $num_events cron events");
     $cron_num = 0;
   }
-  
+  my $limit = 0;
   if ($num_events > 0) {
     my $cron = new Schedule::Cron(\&cron_dispatcher,processprefix => "perl_cron");  
     foreach my $sched_id (@{$cron_list}) {
@@ -478,22 +497,28 @@ sub cron_loop {
           my $timespec = $schedEv->{'timespec'};
           $logger->trace("Cron: ",$timespec);          
           $cron->add_entry($timespec,$schedId => $next);
+          $limit++;
         } 
-      }  
-    }
-    # Fork the cron process so it starts 
-    my $cronpid = "$CRONDIR/cron-$pid-$jobs.pid";
-    if ($cron->list_entries()) {
-      $cron->run(detach => 1,pid_file => $cronpid);
-      my $cpid = get_pid($cronpid);
-      chomp($cpid);
-      $logger->debug("Started cron batch ",$jobs++, " as process $cpid");      
-      foreach my $sched_id (@{$cron_list}) {
-        Kynetx::Persistence::SchedEv::update_lock($sched_id,$pid,$cpid*1);
+          
+      } 
+      if ($limit >= JOB_MAX) {
+        # Fork the cron process so it starts 
+        my $cronpid = "$CRONDIR/cron-$pid-$jobs.pid";
+        $limit = 0;
+        if ($cron->list_entries()) {
+          $cron->run(detach => 1,pid_file => $cronpid);
+          my $cpid = get_pid($cronpid);
+          chomp($cpid);
+          $logger->debug("Started cron batch ",$jobs++, " as process $cpid");      
+          foreach my $sched_id (@{$cron_list}) {
+            Kynetx::Persistence::SchedEv::update_lock($sched_id,$pid,$cpid*1);
+          }
+          push(@child,$cronpid);
+        } else {
+          $logger->debug("No cron jobs to run")
+        }
+        $cron = new Schedule::Cron(\&cron_dispatcher,processprefix => "perl_cron"); 
       }
-      push(@child,$cronpid);
-    } else {
-      $logger->debug("No cron jobs to run")
     }
     
   }  

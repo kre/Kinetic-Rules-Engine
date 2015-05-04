@@ -65,6 +65,7 @@ my $my_req_info = {};
 
 my $r = new Kynetx::FakeReq();
 
+my $expect;
 
 my $dn = "http://127.0.0.1/manage";
 
@@ -488,7 +489,12 @@ my $mech = Test::WWW::Mechanize->new();
 
 # check the API calls
 
-
+diag <<_EOF_;
+========================================================================
+This test intentionally generates parser errors, etc. so parser warning 
+messages are normal.
+========================================================================
+_EOF_
 
 Kynetx::Request::add_event_attr($my_req_info,'krl',$test_ruleset);
 
@@ -505,10 +511,19 @@ cmp_deeply($ast,
 
 Kynetx::Request::add_event_attr($my_req_info,'krl', $test_ruleset_bad);
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "ruleset");
-diag $json;
+#diag $json;
 
-contains_string($json,
-	       'Invalid value [rule] found',
+$expect = <<_EOF_;
+{
+    "error" : [
+       "line 2:9 Invalid value [rule] found should have been one of [dispatch]",
+       "line 3:4 mismatched input ';' expecting RIGHT_CURL"
+    ]
+}
+_EOF_
+
+is_string_nows($json,
+	       $expect,
 	       "Parsing ruleset with syntax error");
 
 
@@ -597,10 +612,20 @@ Kynetx::Request::add_event_attr($my_req_info,'krl', $meta_key_bad);
 #diag $my_req_info->{'krl'};
 
 $json = Kynetx::RuleManager::parse_api($my_req_info, "parse", "meta");
+
 #diag $json;
 
-contains_string($json,
-           'Found [butt] should have been key',
+$expect = <<_EOF_;
+{
+    "error" : [
+       "line 3:8 mismatched input 'qwb' expecting STRING",
+       "line 4:8 mismatched input 'sjf' expecting STRING",
+       "line 6:0 Found [butt] should have been key"
+    ]
+ }
+_EOF_
+
+is_string_nows($json, $expect,
            "Parsing meta decls with syntax error");
 
 
@@ -765,7 +790,17 @@ SKIP: {
     $mech->post_ok($url_version_7a, ['krl'=> $test_global_bad]);
 
     is($mech->content_type(), 'text/plain');
-    is_string_nows($mech->response()->content,'{"error":["line4:15Invalidvalue[datastink]foundshouldhavebeenoneof[dataset,datasource]"]}');
+
+#diag $mech->response()->content;
+$expect = <<_EOF_;
+{
+    "error" : [
+       "line 4:15 Invalid value [datastink] found should have been one of [dataset, datasource]"
+    ]
+ }
+_EOF_
+
+    is_string_nows($mech->response()->content,$expect);
 
     # parse/dispatch
     my $url_version_71 = "$dn/parse/dispatch";

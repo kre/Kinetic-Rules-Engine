@@ -506,10 +506,10 @@ $args = [{'type' => 'square','return_ssl_resources' => 1}];
 test_facebook('picture',$args,$expected,$description,0);
 
 ##
-$description = "Get object picture";
-$expected = re(qr(http:\/\/.+jpg|png|gif$));
-$args = [{'type' => 'square','return_ssl_resources' => 0}];
-test_facebook('picture',$args,$expected,$description,0);
+#$description = "Get object picture";
+#$expected = re(qr(http:\/\/.+jpg|png|gif$));
+#$args = [{'type' => 'square','return_ssl_resources' => 0}];
+#test_facebook('picture',$args,$expected,$description,0);
 
 
 ## Get the fbid for Lehi

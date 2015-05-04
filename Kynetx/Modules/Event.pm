@@ -59,6 +59,9 @@ use Kynetx::Modules::HTTP;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
+use constant DEFAULT_EVENT_SEND_TIMEOUT => Kynetx::Configure::get_config('DEFAULT_EVENT_SEND_TIMEOUT') || 6;
+
+
 my $predicates = {};
 
 sub get_predicates {
@@ -137,7 +140,10 @@ sub get_eventinfo {
       txn_id             => 1,
       kynetx_app_version => 1,
       element            => 1,
-      kvars              => 1
+      kvars              => 1,
+      _generatedby       => 1,
+      _type              => 1,
+      _domain            => 1,
     );
 
     #      $logger->debug("Req info: ", sub {Dumper($req_info)});
@@ -157,7 +163,7 @@ sub get_eventinfo {
       else {
         $name = $pn;
       }
-      $ps->{$name} = get_attr( $req_info, $rid, $pn ) unless $skip{$name};
+      $ps->{$name} = get_attr( $req_info, $rid, $pn ) unless $skip{$name} || $name =~ m/^_.+/;
 
     }
 
@@ -267,7 +273,9 @@ sub send_event {
 
   my $token =
        $sm->{'cid'}
+    || $sm->{'eci'}
     || $sm->{ $config->{'cid_key'} }
+    || $sm->{ $config->{'eci_key'} }
     || $sm->{'token'}
     || $sm->{ $config->{'token_key'} };
 
@@ -372,7 +380,7 @@ sub send_scheduled_event {
 sub _send_event {
   my ( $attrs, $execenv, $esl ) = @_;
   my $logger  = get_logger();
-  my $timeout = 2;                         # seconds
+  my $timeout = DEFAULT_EVENT_SEND_TIMEOUT;                         # seconds
   my $cv      = $execenv->get_condvar();
   $cv->begin;
 
@@ -403,8 +411,8 @@ sub _send_event {
           'body'   => $body,
         }
       );
-      my $ilogger = get_logger();
-      $ilogger->debug( "HDR: ", sub { Dumper($hdr) } );
+      # my $ilogger = get_logger();
+      # $ilogger->debug( "HDR: ", sub { Dumper($hdr) } );
       if ( $hdr->{Status} =~ /^2/ ) {
         $logger->debug(
           "------------------------ event:send() success for $esl");

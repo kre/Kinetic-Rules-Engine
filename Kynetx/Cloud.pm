@@ -30,6 +30,7 @@ use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
 use JSON::XS;
+use Apache2::Const qw( :http );
 
 use Kynetx::Version;
 use Kynetx::Rules;
@@ -55,6 +56,7 @@ our @ISA     = qw(Exporter);
 our %EXPORT_TAGS = (
 	all => [
 		qw(
+unalias
 		  )
 	]
 );
@@ -67,13 +69,25 @@ sub handler {
 	Kynetx::Util::config_logging($r);
 
 	my $logger = get_logger();
+  my $metric = new Kynetx::Metrics::Datapoint();
+	$metric->start_timer();
+	$metric->series("sky-cloud");
+	$metric->path($r->path_info);
+	$metric->mem_stats();
+	my $req = Apache2::Request->new($r);
+	my @params = $req->param;
+	for my $parm (@params) {
+	  my $val = $req->param($parm);
+	  $metric->push($parm,$val);
+	}
+	if (scalar @params > 0){
+	  $metric->add_tag(join(",",@params));
+	}	
+	
 	eval {
 		 $logger->remove_appender('ConsoleLogger');
 	};
-	my $req = Apache2::Request->new($r);
-	my @params = $req->param;
-
-	$r->content_type('text/javascript');
+	
 
 	$logger->trace(
 "\n\n------------------------------ begin ID evaluation with CLOUDID API---------------------"
@@ -88,9 +102,15 @@ sub handler {
 
 	my @path_components = split( /\//, $r->path_info );
 
-	my $req_info = Kynetx::Request::build_request_env($r, $path_components[4], $rids);
+	my $req_info = Kynetx::Request::build_request_env($r, $path_components[4], $rids, undef, int(rand(999999999999)) ); # EID for Cloud is random since API doesn't provide one
 
-
+        # store the EID so we have it in the PerlLogHandler
+        $r->pnotes(EID => $req_info->{"eid"});
+	
+	
+	my $session = _cloud_session($r,$req_info);
+  return Apache2::Const::HTTP_BAD_REQUEST unless ($session);
+  
 
 	if ( Kynetx::Configure::get_config('RUN_MODE') eq 'development' ) {
 
@@ -116,20 +136,22 @@ sub handler {
 	  # store these for later logging
 	  Log::Log4perl::MDC->put( 'site',  $path_components[2]);
 	  Log::Log4perl::MDC->put( 'rule', $path_components[3] );    # function.
-	  Log::Log4perl::MDC->put( 'eid', "Sky Cloud API" );    # no eid
+	  Log::Log4perl::MDC->put( 'eid', $req_info->{"eid"} );    # no eid
 
 
-	  # get a session, if _sid param is defined it will override cookie
-	  my $session = Kynetx::Session::process_session($r, undef,  $req_info->{'id_token'});
+	  
 
 
 	  my ($module_alias, $version) = split(/\./,$path_components[2]);
 	  my $rid = unalias($module_alias);
 
 	  $req_info->{'module_name'} = $rid;
+	  $req_info->{'rid'} = Kynetx::Rids::mk_rid_info( $req_info, $rid );
 	  $req_info->{'module_version'} = $version;
 	  $req_info->{'module_alias'} = $module_alias;
 	  $req_info->{'function_name'} = $path_components[3];
+	  
+	  $metric->add_tag($rid);
 
 	  Kynetx::Request::log_request_env( $logger, $req_info );
 
@@ -141,7 +163,10 @@ sub handler {
 	  Kynetx::Response::respond( $r, $req_info, $session, $js, $dd, "Cloud API" );
 
 	}
+	$metric->token($req_info->{'id_token'});
+	$metric->stop_and_store();
 	$logger->info("Processed Cloud API for ". $r->path_info);
+	
 
 
 	return Apache2::Const::OK;
@@ -159,8 +184,9 @@ sub eval_ruleset_function {
   # my $unfiltered_rid_list =
   #   Kynetx::Dispatch::calculate_rid_list( $req_info, $session );
 
-  my $ken = Kynetx::Persistence::get_ken( $session, "", "web" );   # empty rid
-  my $rid_list = Kynetx::Dispatch::get_ridlist( $req_info, $req_info->{'id_token'}, $ken );
+  # my $ken = Kynetx::Persistence::get_ken( $session, "", "web" );   # empty rid
+  # my $rid_list = Kynetx::Dispatch::get_ridlist( $req_info, $req_info->{'id_token'}, $ken );
+  my $rid_list = Kynetx::Dispatch::get_ridlist( $req_info, $req_info->{'id_token'});
   my $rid_list_hash = {map { $_->{'rid'} => 1 } @{ $rid_list }};
 
 #  $logger->trace("Ridlist: ", sub { Dumper $rid_list_hash } );
@@ -183,6 +209,7 @@ sub eval_ruleset_function {
     || $ruleset->{'meta'}->{'sharing'} eq "off" 
      ) {
 
+    $logger->info("Sharing not on for module $req_info->{'module_alias'}");
     $result = {"error" => 100,
 	       "error_str" => "Sharing not on for module $req_info->{'module_alias'}"
 	      };
@@ -190,7 +217,9 @@ sub eval_ruleset_function {
   } 
   elsif (! $req_info->{'id_token'}
 	) {
-    $logger->debug("No ECI defined");
+    $logger->debug("Request info: ", sub {Dumper($req_info)});
+    $logger->error("Bad ECI; aborting");
+    die;
     $result = {"error" => 103,
 	       "error_str" => "No ECI defined"
 	      };
@@ -200,14 +229,15 @@ sub eval_ruleset_function {
 	  || Kynetx::Configure::get_config('ALLOW_ALL_RULESETS')
            )
 	) {
-    $logger->debug("$req_info->{'module_name'} is not installed");
+    $logger->info("$req_info->{'module_name'} is not installed in pico");
     $result = {"error" => 102,
-	       "error_str" => "Module $req_info->{'module_alias'} is not installed for user"
+	       "error_str" => "Module $req_info->{'module_alias'} is not installed in pico"
 	      };
 
   }
   else {
      
+    $logger->info("Executing $req_info->{'module_alias'}/$req_info->{'function_name'}");
 
     my $rule_env = Kynetx::Rules::mk_initial_env();
 
@@ -226,7 +256,9 @@ sub eval_ruleset_function {
 
     my $closure = Kynetx::Modules::lookup_module_env($req_info->{'module_alias'}, 
 						     $req_info->{'function_name'}, 
-						     $rule_env);
+						     $rule_env,
+						     $req_info
+						    );
 
     #$logger->trace("Closure: ", sub{Dumper $closure});
 
@@ -249,6 +281,9 @@ sub eval_ruleset_function {
 							$req_info, $session));
 
     } else {
+
+      $logger->info("Function $req_info->{'function_name'} does not exist");
+
       $result = {"error" => 101,
 		 "error_str" => "Function $req_info->{'function_name'} does not exist"
 		};
@@ -260,15 +295,21 @@ sub eval_ruleset_function {
 
 
 
-#  $logger->trace("Result: ", sub{Dumper $result});
+ # $logger->debug("Result: ", sub{Dumper $result});
  
   my $json = JSON::XS->new->allow_nonref;
-  $result = $json->encode( $result );
+  my $content_type = "application/json";
+
+  if (ref $result eq "HASH" || ref $result eq "ARRAY") {
+      $result = $json->encode( $result );
+  } elsif ( $result =~ m#^\s*<html>.+</html>\s*#is  # infer content type
+	  ) {
+      $content_type = "text/html";
+  }
   my $opts = {'is_raw' => 1,
 	      'content' => $result ,
 	     };
   $req_info->{'send_raw'} = 1;
-  my $content_type = "application/json";
 
   Kynetx::Directives::send_directive($req_info, $dd, $content_type, $opts );
 
@@ -285,6 +326,7 @@ sub unalias {
 			"squaretag" => "a41x178",
 			"mythings" => "a169x667",
                         "pdsx" => "a369x202",
+			"gtour" => "b501810x1",
 		       };
   my $logger = get_logger();
 
@@ -296,6 +338,32 @@ sub unalias {
   }
   $logger->trace("[unalias] : $alias -> $rid");
   return $rid;
+}
+
+# repeat some code from Kynetx::Request for
+# cloud specific debugging
+sub _cloud_session {
+  my ($r,$req_info) = @_;
+  my $logger = get_logger();
+  my $session = undef;
+  my $id_token = $req_info->{'id_token'};
+  unless ($id_token) {
+    my $req = Apache2::Request->new($r);
+    $logger->debug("Request type: ", $r->method_number);
+    $logger->debug("URI: ",$r->unparsed_uri());
+    $logger->debug("Path: ",$r->path_info());
+    $logger->debug("Args: ", sub {Dumper($r->args)});
+    $logger->debug("Header: ",$r->headers_in->{'Kobj-Session'});
+    $logger->debug("Cookie: ",$r->headers_in->{'Cookie'});    
+  }
+  my $valid = Kynetx::Persistence::KToken::is_valid_token($id_token);
+  if ($valid) {
+    my $session_id = $valid->{"endpoint_id"};
+    $session = { "_session_id" => $session_id};
+  } else {
+    $logger->debug("SkyCloud token ($id_token) is invalid")
+  }
+  return $session;
 }
 
 

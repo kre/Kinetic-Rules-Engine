@@ -6,6 +6,8 @@ ruleset 10 {
 
 	  x = 5 ;
 	  x = (6-5);
+	  x = 6 - 5;
+          x = y - 1;
           x = -5;
           x = -(4+5);
           x = 0.9;
@@ -15,7 +17,7 @@ ruleset 10 {
           x = "1234567890";
 	  x = true;
 	  x = false;
-//	  x = re/f|g+/i;
+	  x = re/f|g+/i;
 	  x = foo(5);
 	  x = foo(5,"hello");
 	  x = (4 + 5);

@@ -106,7 +106,7 @@ sub get_rules_from_repository {
     && !$text )
   {
     $logger->debug(
-"Using cached ruleset for $rid ($version) with key $rs_key & optimization version ",
+"Using cache $rid ($version) with key $rs_key & opt v.",
       $ruleset->{'optimization_version'}
     );
 
@@ -115,7 +115,7 @@ sub get_rules_from_repository {
 
 
   # this gets cleared when we're done
-  $logger->debug("Setting parsing semaphore for $rs_key");
+  $logger->trace("Setting parsing semaphore for $rs_key");
   Kynetx::Memcached::set_parsing_flag( $memd, $rs_key );
   
   $ruleset = get_ruleset_krl($rid_info,$version);
@@ -124,16 +124,17 @@ sub get_rules_from_repository {
   
   if (defined $ruleset) {
     $req_info->{'rule_version'} = $version;
-    $ruleset = Kynetx::Parser::parse_ruleset($ruleset);
+    $ruleset = Kynetx::Parser::parse_ruleset($ruleset, $rid_info);
     unless($ruleset->{'ruleset_name'} eq 'norulesetbythatappid' || 
       defined $ruleset->{'error'}) {
         $ruleset = Kynetx::Rules::optimize_ruleset($ruleset);
-        $logger->debug("Found rules  for $rid");
-        $logger->debug("Caching ruleset for $rid using key $rs_key");
+        $logger->debug("Found rules for $rid with cache key $rs_key");
+        $logger->trace("Caching ruleset for $rid using key $rs_key");
         $memd->set($rs_key,$ruleset);
+	$memd->set($rs_key."_timestamp", DateTime->now()->iso8601()) ;
       } else {
         if ($ruleset->{'ruleset_name'} eq 'norulesetbythatappid') {
-          $logger->error("Ruleset $rid not found");
+          $logger->error("Ruleset ID $rid not valid or not found");
       } elsif (defined $ruleset->{'error'}) {
           $logger->error("Ruleset parsing error for $rid: ");
       } else {
@@ -190,7 +191,7 @@ sub get_ruleset_krl {
     my $logger = get_logger();
     my $fqrid = Kynetx::Rids::get_fqrid($rid_info);
     
-    $logger->debug("FQRID: $fqrid");
+    $logger->trace("FQRID: $fqrid");
     # Check to see if there is a Repository record
     my $repository_record = Kynetx::Persistence::Ruleset::get_ruleset_info($fqrid);
     #$logger->debug("From repository: ",sub {Dumper($repository_record)});
@@ -201,24 +202,25 @@ sub get_ruleset_krl {
     $version = Kynetx::Rids::get_version($rid_info) unless ($version);
     my $uri = Kynetx::Rids::get_uri($rid_info);
     if (defined $uri) {
+      $logger->debug("Retrieving $rid.$version from $uri");
       my $parsed_uri = URI->new($uri);
       my $scheme = $parsed_uri->scheme;
       if ($scheme =~ m/http/) {
-        $logger->debug("HTTP repository");
+        $logger->trace("HTTP repository");
         return Kynetx::Repository::HTTP::get_ruleset($rid_info);
       } elsif ($scheme =~ m/file/) {
-        $logger->debug("File repository");
+        $logger->trace("File repository");
         return Kynetx::Repository::File::get_ruleset($rid_info);
       } elsif ($scheme =~ m/xri/) {
-        $logger->debug("XDI repository");
+        $logger->trace("XDI repository");
         return Kynetx::Repository::XDI::get_ruleset($rid_info);
       }      
     } else {
         # Try the default repository if $rid_info is not fully configured
-        $logger->debug("Check default repository");
+        $logger->debug("No URI found; check default repository");
         my $repo = Kynetx::Configure::get_config('RULE_REPOSITORY');
         my ($base_url,$username,$password) = split(/\|/, $repo);
-        $logger->debug("URL: $base_url");
+        $logger->trace("URL: $base_url");
         my $rs_url = join('/', ($base_url, $rid, $version, 'krl/'));
         $rid_info->{'uri'} = $rs_url;
         $rid_info->{'username'} = $username;

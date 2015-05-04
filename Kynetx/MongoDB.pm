@@ -2,7 +2,7 @@ package Kynetx::MongoDB;
 # file: Kynetx/MongoDB.pm
 #
 # This file is part of the Kinetic Rules Engine (KRE)
-# Copyright (C) 2007-2011 Kynetx, Inc. 
+# Copyright (C) 2007-2011 Kynetx, Inc.
 #
 # KRE is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -39,6 +39,8 @@ use Clone qw(clone);
 use Benchmark ':hireswallclock';
 use Data::Diver qw(
 	Dive
+	DiveVal
+	DiveError
 );
 use Devel::Size qw(
   size
@@ -93,6 +95,7 @@ our $CACHETIME = 180;
 our $DBREF;
 our $COLLECTION_REF;
 our $MONGO_MAX_SIZE = 838860;
+our $MONGO_TIMEOUT = 10000;
 
 use constant SAFE => 0;
 use constant RETRIES => 5;
@@ -105,21 +108,22 @@ sub init {
     $MONGO_DB = Kynetx::Configure::get_config('MONGO_DB') || $MONGO_DB;
     $CACHETIME = Kynetx::Configure::get_config('MONGO_CACHETIME') || $CACHETIME;
     $MONGO_MAX_SIZE = Kynetx::Configure::get_config('MONGO_MAX_SIZE') || $MONGO_MAX_SIZE;
+    $MONGO_TIMEOUT = Kynetx::Configure::get_config('MONGO_TIMEOUT') || $MONGO_TIMEOUT;
 
     my @hosts = split(",",$MONGO_SERVER);
 	$logger->debug("Initializing MongoDB connection (cache $CACHETIME)");
 	foreach my $host (@hosts) {
 		eval {
-			$MONGO = MongoDB::Connection->new(host => $host,find_master =>1,query_timeout =>5000);
+			$MONGO = MongoDB::Connection->new(host => $host,find_master =>1,query_timeout => $MONGO_TIMEOUT);
 		};
 		if ($@) {
 			$logger->debug($@);
 		} else {
 			my $master = $MONGO->{'_master'}->{'host'};
-			$logger->trace("Master is $master");
+			$logger->debug("Master DB is $master");
 			return;
 		}
-		
+
 	}
 
 }
@@ -130,22 +134,23 @@ sub get_mongo {
     my $logger = get_logger();
     init unless $MONGO;
     my $db;
-    eval {$db = $MONGO->get_database($MONGO_DB)}; 
+    eval {$db = $MONGO->get_database($MONGO_DB)};
     if ($@) {
     	$retry = 1 unless ($retry);
     	if ($retry < RETRIES) {
     		$logger->debug("Get Mongo error: ",$@);
-    		return get_mongo($retry++);    		
+    		return get_mongo($retry++);
     	} elsif ($retry == RETRIES) {
     		$logger->warn("Get Mongo error: ",$@);
     		init;
-    		return get_mongo($retry++); 
+    		return get_mongo($retry++);
     	} else {
     		$logger->error("No connection to MongoDB")
-    	}    	
+    	}
     }
     return $db;
 }
+
 
 sub get_collection {
     my ($name) = @_;
@@ -161,6 +166,44 @@ sub get_collection {
     return $c;
 }
 
+
+sub aggregate_group {
+  my ($collection,$match,$group,$sort,$limit,$skip) = @_;
+  my $logger = get_logger();
+  my $c = get_collection($collection);
+  my $db = get_mongo();
+  my $pipeline = ();
+  if ($match and ref $match eq "HASH") {
+    push(@{$pipeline}, {'$match' => $match});
+    push(@{$pipeline},{'$group' => $group});
+    if (defined $sort && ref $sort eq "HASH") {
+      push(@{$pipeline},{'$sort' => $sort})
+    }
+    if (defined $limit && ref $limit eq "HASH") {
+      push(@{$pipeline},{'$limit' => $limit})
+    }
+    if (defined $skip && ref $skip eq "HASH") {
+      push(@{$pipeline},{'$skip' => $skip})
+    }
+    my $command = {
+      "aggregate" =>  $collection,"pipeline" =>
+        [{'$match' => $match},
+         {'$group' => $group}
+         ]
+
+    };
+    my $result = $db->run_command($command);
+    if (ref $result eq "HASH" && $result->{'ok'} == 1) {
+      return $result->{'result'}
+    }
+
+  }
+  return undef;
+
+
+}
+
+
 sub get_array_element {
 	my ($collection, $key,$index) = @_;
 	my $logger = get_logger();
@@ -174,31 +217,31 @@ sub get_hash_element {
   my $logger = get_logger();
   my $key = clone $vKey;
   my $c = get_collection($collection);
-  
+
   # Check for hash of full object
     #my $keystring = make_keystring($collection,$vKey);
-    
+
     my $cached = get_cache_for_hash($collection,$vKey,$hKey);
-    if (defined $cached) {        
-        $logger->trace("Found in cache ",sub {Dumper(@{$hKey})}, sub {Dumper($cached)});
+    if (defined $cached) {
+#        $logger->debug("Found in cache ",sub {Dumper(@{$hKey})}, sub {Dumper($cached)});
         return $cached;
     } else {
         $cached = get_cache($collection,$vKey);
         if (defined $cached) {
-          $logger->trace("Found in root cache ");
-          my $value = Dive($cached->{'value'},@$hKey); 
+          $logger->debug("Found in root cache ");
+          my $value = Dive($cached->{'value'},@$hKey);
           return {
             'value' => $value
           };
         }
     }
-    $logger->trace("Cache not found");
-  
+#    $logger->debug("Cache not found");
+
   if (defined $hKey && ref $hKey eq "ARRAY") {
     if (scalar @$hKey > 0) {
       $key->{'hashkey'} = {'$all' => $hKey};
     }
-  }  
+  }
   $logger->trace("Element key: ", sub {Dumper($key)});
   my $cursor = $c->find($key);
   if  ($cursor->has_next) {
@@ -231,12 +274,18 @@ sub get_hash_element {
     my $frankenstein = Kynetx::Util::elements_to_hash(\@array_of_elements);
     $logger->trace("Dive for ", sub {Dumper($hKey)});
     my $value = Dive($frankenstein,@$hKey);
+    if (ref $value eq "ARRAY" && scalar @{$value} == 0) {
+      my ( $errDesc, $ref, $svKey )= DiveError();
+      $logger->debug("Dive error: $errDesc");
+      $logger->debug("Dive error ref: ", sub {Dumper($ref)});
+      $logger->debug("Dive error key: ", sub {Dumper($svKey)});
+    }
     my $composed_hash = clone ($vKey);
     $composed_hash->{'value'} = $value;
     $composed_hash->{'created'} = $last_updated *1;
     $logger->trace("Set cache for hash element", sub {Dumper($hKey)});
     set_cache_for_hash($collection,$vKey,$hKey,$composed_hash);
-    return $composed_hash;					
+    return $composed_hash;
   } else {
     return undef;
   }
@@ -251,8 +300,8 @@ sub get_matches {
   my $obj_array = ();
   while (my $object = $cursor->next) {
     push(@{$obj_array},$object)
-  } 
-  return $obj_array; 
+  }
+  return $obj_array;
 }
 
 sub get_value {
@@ -272,12 +321,13 @@ sub get_value {
         my $cursor = $c->find($var);
         if  ($cursor->has_next) {
         	$logger->trace("Elements to retrieve: ", $cursor->count);
+		my $hash = {};
        		if ($cursor->count == 1) {
 	        	my $result = $cursor->next();
 	        	if (defined $result and $result->{'serialize'}) {
 	            	my $ast = Kynetx::Json::jsonToAst($result->{"value"});
                 	$logger->trace("Found a old style", ref $ast," to deserialize");
-                	$result->{"value"} = $ast;	        		
+                	$result->{"value"} = $ast;
 	        	} elsif (defined $result and $result->{'hashkey'}) {
 	        		my $hash = Kynetx::Util::elements_to_hash([{
 	        			'ancestors' => $result->{'hashkey'},
@@ -302,23 +352,24 @@ sub get_value {
 	        		if ($ts > $last_updated) {
 	        			$last_updated = $ts;
 	        		}
-	        		push(@array_of_elements,{
-						'ancestors' => $kv,
-						'value' => $v
-	        		});
+				DiveVal($hash, @$kv) = $v;
+	        		# push(@array_of_elements,{
+				# 		'ancestors' => $kv,
+				# 		'value' => $v
+	        		# });
 	        	}
-	        	my $hash = Kynetx::Util::elements_to_hash(\@array_of_elements);
+	        	# my $hash = Kynetx::Util::elements_to_hash(\@array_of_elements); 
 	        	$logger->trace("Resurrected: $keystring");
 	        	$composed_hash->{'value'} = $hash;
 	        	$composed_hash->{'created'} = $last_updated *1;
 	        	set_cache($collection,$var,$composed_hash);
 	        	return $composed_hash;
 	        }
-        	
+
         } else {
         	return undef;
         }
-        
+
 
     } else {
         $logger->warn("Could not access collection: $collection");
@@ -326,23 +377,26 @@ sub get_value {
     }
 }
 
+
 sub get_list {
-  my ($collection,$var) = @_;
+  my ($collection,$var,$skip_cache) = @_;
   my $logger = get_logger();
   my $keystring = make_keystring($collection,$var);
-  my $cached = get_cache($collection,$var);
-  if (defined $cached) {
-      $logger->trace("Found $collection variable in cache (",sub {Dumper($cached)},",");
-      return $cached;
-  }  else {
-      $logger->trace("$keystring not in cache");
+  unless ($skip_cache) {
+    my $cached = get_cache($collection,$var);
+    if (defined $cached) {
+        $logger->trace("Found $collection variable in cache (",sub {Dumper($cached)},",");
+        return $cached;
+    }  else {
+        $logger->trace("$keystring not in cache");
+    }
   }
   my $c = get_collection($collection);
-  my $val = get_value($collection,$var)->{'value'};
+#  $logger->debug("mongo query: ",sub {Dumper($var)});
   my @rlist;
   if ($c) {
     my $cursor = $c->find($var);
-#    $logger->debug("# In mongo: ", $cursor->count);	
+#    $logger->debug("# In mongo: ", $cursor->count);
     while (my $object = $cursor->next) {
         push(@rlist,$object);
     }
@@ -373,7 +427,7 @@ sub get_list_and_clear {
   } else {
     return undef;
   }
-  
+
 }
 
 
@@ -383,12 +437,12 @@ sub atomic_pop_value {
 	$direction ||= -1;
     my $c = get_collection($collection);
     my $cursor = $c->find($var,{"value" => {'$slice' => [0,1]}});
-    $logger->trace("# In mongo: ", $cursor->count);	
+    $logger->trace("# In mongo: ", $cursor->count);
     my $result;
     if ($cursor->has_next) {
-		my $object = $cursor->next;   
+		my $object = $cursor->next;
 		$logger->trace("Cursor: ", sub {Dumper($object)});
-		$result = $object->{'value'}->[0];	
+		$result = $object->{'value'}->[0];
     } else {
     	$logger->debug("Cursor empty ");
     }
@@ -505,7 +559,7 @@ sub counter {
 	};
 	my $result = Kynetx::MongoDB::find_and_modify($collection,$fnmod);
 	return $result->{"next"};
-	
+
 }
 
 sub push_value {
@@ -558,11 +612,11 @@ sub type_data {
     		} else {
     			$var_list->{$key} = Kynetx::Expressions::infer_type($object->{'value'})
     		}
-    		
+
     	}
   	}
   	return $var_list;
-	
+
 }
 
 sub unique_elements {
@@ -581,7 +635,7 @@ sub unique_elements {
 	if ($result && $result->{'ok'}) {
 	  return $result->{'values'};
 	}
-	
+
 }
 
 sub count_elements {
@@ -620,7 +674,7 @@ sub find_and_modify {
 	# Something may have changed in the database so flush data from memcache in case
 	# $query should have the key so we can flush the cache
 	if (defined $command->{'query'}) {
-		clear_cache($collection,$command->{'query'});		
+		clear_cache($collection,$command->{'query'});
 	}
 	if (defined $status && ref $status eq 'HASH' && $status->{'ok'}) {
 		if ($verbose) {
@@ -628,13 +682,13 @@ sub find_and_modify {
 		} else {
 			return $status->{'value'};
 		}
-		
+
 	} else {
 		$logger->debug("Query failed: ", sub {Dumper($status)});
 		return undef;
 	}
-	
-		
+
+
 }
 
 # find and modify only operates on a max of one document, so it won't work
@@ -655,21 +709,21 @@ sub get_singleton {
 		'$inc' => {'accesses' => 1},
 		'$set' => {'last_active' => $ts}
 	};
-	
+
 	my $fnmod = {
 		'query' => $var,
 		'update' => $update,
 	};
 	$logger->trace("Find and modify:" , sub {Dumper($fnmod)});
-	my $result = find_and_modify($collection,$fnmod,1);          
+	my $result = find_and_modify($collection,$fnmod,1);
     $logger->trace("Status: ", sub {Dumper($result)});
 	if (defined $result->{"value"}) {
 		set_cache($collection,$var,$result->{"value"});
-		return $result->{"value"};		
+		return $result->{"value"};
 	} else {
 		return undef;
 	}
-	
+
 }
 
 sub validate {
@@ -677,11 +731,11 @@ sub validate {
 	my $logger = get_logger();
 	my $size = Devel::Size::total_size($val);
 	if ($size > $MONGO_MAX_SIZE) {
-		$logger->debug("Value is larger than $MONGO_MAX_SIZE bytes");
+		$logger->info("Value is larger than $MONGO_MAX_SIZE bytes: $size");
 		return 0;
 	} else {
 		return 1;
-	}	
+	}
 }
 
 ####### TTL operations
@@ -689,7 +743,7 @@ sub validate {
 # never cache
 sub get_ttl {
   my ($collection,$var) = @_;
-  
+
 }
 
 sub set_ttl {
@@ -704,7 +758,7 @@ sub set_ttl {
 	my $val = {
 	  '$set' => {$ttl_index => DateTime->now}
 	};
-	$c->update($key,$val);	   
+	$c->update($key,$val);
 }
 
 #######
@@ -724,6 +778,10 @@ sub update_value {
     $multi = ($multi) ? 1 : 0;
     my $c = get_collection($collection);
     my $status = $c->update($var,$val,{"upsert" => $upsert,"multiple" => $multi, "safe" => $safe});
+    my $err = get_mongo()->last_error({'w' => 1});
+    if (defined $err->{'err'}) {
+      $logger->debug("Update failed: ", sub {Dumper($err)});
+    }
     if ($status) {
         clear_cache($collection,$var);
         return $status;
@@ -749,7 +807,7 @@ sub put_hash {
 		$object->{'hashkey'} = $hash_key;
 		$object->{'value'} = $value;
 		$object->{'created'} = $timestamp;
-		push(@batch_elements,$object);		
+		push(@batch_elements,$object);
 	}
 	my $c = get_collection($collection);
 	my @ids = $c->batch_insert(\@batch_elements);
@@ -758,7 +816,7 @@ sub put_hash {
 }
 
 sub put_array {
-	
+
 }
 
 sub put_blob {
@@ -770,7 +828,7 @@ sub put_blob {
 		return $id->value;
 	} else {
 		return undef;
-	}		
+	}
 }
 
 sub get_blob {
@@ -788,7 +846,7 @@ sub put_hash_element {
     my $c = get_collection($collection);
 	if (ref $hKey eq 'ARRAY') {
 	  return unless verify_hash_path($hKey);
-		delete_hash_element($collection,$vKey,$hKey);		
+		delete_hash_element($collection,$vKey,$hKey);
 		my @adds = ();
 		my $a_of_hash_elements = Kynetx::Util::hash_to_elements($val->{'value'},$hKey);
 		if (ref $a_of_hash_elements ne "ARRAY") {
@@ -815,14 +873,14 @@ sub put_hash_element {
 sub delete_hash_element {
 	my ($collection,$vKey,$hKey) = @_;
 	my $logger = get_logger();
-	# Protect me from doing something stupid	
+	# Protect me from doing something stupid
 	if (ref $vKey eq "HASH") {
 		if (
-			((defined $vKey->{'key'}) 
+			((defined $vKey->{'key'})
 				&& ($vKey->{'key'} ne ""))
-			|| 	((defined $vKey->{'ken'}) 
+			|| 	((defined $vKey->{'ken'})
 				&& ($vKey->{'ken'} ne ""))
-		  || ((defined $vKey->{'rid'}) 
+		  || ((defined $vKey->{'rid'})
 				&& ($vKey->{'rid'} ne ""))
 			) {
 			  clear_cache($collection,$vKey);
@@ -862,8 +920,8 @@ sub delete_value {
     my $logger = get_logger();
     $logger->trace("Deleting from $collection: ", sub {Dumper($var)});
     my $c = get_collection($collection);
-    my $success = $c->remove($var,{"safe" => 1});
     clear_cache($collection,$var);
+    my $success = $c->remove($var,{"safe" => 1});
     if (!$success ) {
         $logger->debug("Delete error: ", mongo_error());
     }
@@ -878,7 +936,7 @@ sub get_cache {
   	if ($collection eq "edata") {
   	  $logger->trace("get cache keystring (get) $keystring: ", sub {Dumper($var)});
   	}
-    
+
     my $result = Kynetx::Memcached::check_cache($keystring);
     if (defined $result) {
         return $result;
@@ -905,7 +963,7 @@ sub clear_cache {
   	if ($collection eq "kpds") {
   	   $logger->trace("Clear cache for: $keystring");
   	}
-    
+
     Kynetx::Memcached::flush_cache($keystring);
     #clear any reference to hash parts as well
     clear_cache_for_hash($collection,$var);
@@ -918,7 +976,7 @@ sub make_keystring {
     foreach my $key (sort (keys %$var)) {
     	if ($var->{$key}) {
     		$keystring .= $var->{$key};
-    	}        
+    	}
     }
     $logger->trace("Keystring: $keystring");
     my $encode = md5_base64($keystring);
@@ -954,7 +1012,7 @@ sub get_cache_for_hash {
 	if ($collection eq "kpds") {
 	  $logger->trace("list key cache: $lookup_key");
 	}
-	
+
 	my $mcache_prefix = Kynetx::Memcached::check_cache($lookup_key);
 	my $dupe = clone $var;
 	$logger->trace("$lookup_key: ", sub {Dumper($mcache_prefix)});
@@ -973,12 +1031,12 @@ sub set_cache_for_hash {
 	my $logger = get_logger();
 	my $key = make_keystring($collection,$var);
 	my $hashpath = make_path_keystring($path);
-	
+
 	$logger->trace("Var: ",sub {Dumper($var)});
 	if ($collection eq "kpds") {
 	  $logger->trace("Calculated keystring in scfh list key: $key");
 	}
-	
+
 	$logger->trace("SCFH: ", sub {Dumper($path)});
 	my $lookup_key = "_map_" . $key;
 	my $mcache_prefix =  time();
@@ -986,7 +1044,7 @@ sub set_cache_for_hash {
 	if ($collection eq "kpds") {
 	  $logger->trace("Set master $lookup_key: ($mcache_prefix)");
 	}
-	
+
 	$var->{"cachemap"} = $mcache_prefix;
 	$var->{"hashpath"} = $hashpath;
 	Kynetx::MongoDB::set_cache($collection,$var,$value);
@@ -1029,7 +1087,7 @@ sub get_cache_for_map {
 
 sub map_key {
 	my ($key,$hkey) = @_;
-	my $logger = get_logger();  	
+	my $logger = get_logger();
   my $struct = {
 		'a' => $key
 	};
@@ -1062,12 +1120,12 @@ sub normalize {
 }
 
 # Data cleanup functions.
-# 
+#
 sub flush_user {
   my ($ken,$username) = @_;
   my $logger = get_logger();
   my $collection = get_collection('kens');
-  my $mid = MongoDB::OID->new(value => $ken);  
+  my $mid = MongoDB::OID->new(value => $ken);
   my $key = {
     '_id' => $mid,
     'username' =>$username
@@ -1080,11 +1138,21 @@ sub flush_user {
     _delete_kpds($ken);
     _delete_userstate($ken);
     _delete_scheduled_events($ken);
+    _delete_devlog($ken);
     _delete_ken($ken);
   } else {
     $logger->warn("User $username not flushed: matched $result records");
   }
-  
+
+}
+
+sub _delete_devlog {
+  my ($ken) = @_;
+  my $collection = get_collection('devlog');
+  my $key = {
+      'ken' => $ken,
+  };
+  my $result = $collection->remove($key);
 }
 sub _delete_edata {
   my ($ken) = @_;
@@ -1110,7 +1178,7 @@ sub _delete_userstate {
   my $key = {
     'ken' => $ken
   };
-  my $result = $collection->remove($key);  
+  my $result = $collection->remove($key);
 }
 
 sub _delete_scheduled_events {
@@ -1119,7 +1187,7 @@ sub _delete_scheduled_events {
   my $key = {
     'ken' => $ken
   };
-  my $result = $collection->remove($key);  
+  my $result = $collection->remove($key);
 }
 
 sub _delete_ken {
@@ -1129,7 +1197,7 @@ sub _delete_ken {
   my $key = {
     '_id' => $mid
   };
-  my $result = $collection->remove($key);  
+  my $result = $collection->remove($key);
 }
 
 sub _delete_kpds {
@@ -1138,8 +1206,7 @@ sub _delete_kpds {
   my $key = {
     'ken' => $ken
   };
-  my $result = $collection->remove($key);  
+  my $result = $collection->remove($key);
 }
 
 1;
-

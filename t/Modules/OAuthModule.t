@@ -59,6 +59,8 @@ use HTTP::Message;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
+use constant MAXTRIES => 5;
+
 
 
 my $preds = Kynetx::Modules::Twitter::get_predicates();
@@ -86,6 +88,7 @@ my $sessionid = '39f67cb8de78e8f036f35a795036e787';
 my $session = Kynetx::Session::process_session($r,$sessionid);
 
 my $test_count = 0;
+my $try = 0;
 
 
 my $logger = get_logger();
@@ -256,6 +259,8 @@ $logger->debug("Return auth URL: ", sub {Dumper($result)});
 
 ### Test with google
 
+my $gsession_id;
+
 $keys = {
 	'consumer_key' => 'kynetx.com',
    	'consumer_secret' => '6aXgrwSCnpLutnJy0W8Vg5Tq'
@@ -287,7 +292,7 @@ $logger->trace("Auth url: ", $result);
 Kynetx::Modules::OAuthModule::store_access_tokens($my_req_info,$rule_env,$session,'google',$atoken);
 
 $description = "Make a google calendar request";
-my $purl = 'https://www.google.com/calendar/feeds/default';
+my $purl = 'https://www.google.com/calendar/feeds/default/owncalendars/full';
 $args = ['google', {
 		'url' => $purl,
 		'headers' => {
@@ -303,12 +308,13 @@ $args = ['google', {
 	}];
 
 $result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'get',$args);
-$logger->debug("Response: ", sub {Dumper($result)});
+$logger->info("Response: ", sub {Dumper($result)});
 if (defined $result->{'location'}) {
 	my $redirect = $result->{'location'};
 	my $uri = URI->new( $redirect ); 
 	my %query = $uri->query_form;
 	$args->[1]->{'params'}->{'gsessionid'} = $query{'gsessionid'};
+	$gsession_id = $query{'gsessionid'};
 	$result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'get',$args);
 	
 }
@@ -316,6 +322,7 @@ cmp_deeply($result->{'status_code'},'200',$description);
 $test_count++;
 
 
+$description = "Insert a new google calendar event";
 my $body = <<_JSONC_;
 {
 	"data" : {
@@ -340,28 +347,29 @@ $args = ['google', {
 			'Content-type'  => 'application/json',
 			'GData-Version' => "2.0"
 		},
-#		'params' => {
-#			'gsessionid' => 'hNWGV-MhXJ_OoHh_IiI-NQ'
-#		},
 		'body' => $body,
 		'response_headers' => ['Location', 'header_field_names']
 		
 	}];
 
-
+if ($gsession_id) {
+  $args->[1]->{'params'}->{'gsessionid'} = $gsession_id;
+}
 
 $result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'post',$args);
 $logger->debug("Response: ", sub {Dumper($result)});
-if ($result->{'status_code'} == 302) {
-	#$logger->info("Response: ", sub {Dumper($result)});
+
+$try = 0;
+while ($result->{'status_code'} == 302 && $try++ < MAXTRIES) {
 	my $redirect = $result->{'location'};
 	my $uri = URI->new( $redirect ); 
 	my %query = $uri->query_form;
+	$logger->info("Following google redirect: $description ",$query{'gsessionid'});
 	$args->[1]->{'params'}->{'gsessionid'} = $query{'gsessionid'};
-	$result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'post',$args);
-	
+	$gsession_id = $query{'gsessionid'};
+	$result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'post',$args);	
 }
-$description = "Insert a new google calendar event";
+
 cmp_deeply($result->{'status_code'},'201',$description);
 $test_count++;
 
@@ -385,12 +393,13 @@ $args = ['google', {
 			'Content-type'  => 'application/json',
 			'GData-Version' => "2.0"
 		},
-		'params' => {
-			'gsessionid' => 'hNWGV-MhXJ_OoHh_IiI-NQ'
-		},
 		'body' => $content,
 		'response_headers' => ['ETag']		
 	}];
+	
+if ($gsession_id) {
+  $args->[1]->{'params'}->{'gsessionid'} = $gsession_id;
+}
 	
 $result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'put',$args);
 #diag("Response: ", Dumper($result));
@@ -400,7 +409,8 @@ if ($result->{'status_code'} == 302 && defined $result->{'location'}) {
 	my $uri = URI->new( $redirect ); 
 	my %query = $uri->query_form;
 	$args->[1]->{'params'}->{'gsessionid'} = $query{'gsessionid'};
-	$result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'post',$args);
+	$gsession_id = $query{'gsessionid'};
+	$result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'put',$args);
 	
 }
 $description = "Update a calendar entry";
@@ -419,21 +429,24 @@ $args = ['google', {
 		'headers' => {
 			'Content-type'  => 'application/json',
 			'GData-Version' => "2.0",
-			'If-Match' => $etag
+			'If-Match' => '*'
 		},
-#		'params' => {
-#			'gsessionid' => 'hNWGV-MhXJ_OoHh_IiI-NQ',
-#		}
 	}];
+	
+if ($gsession_id) {
+  $args->[1]->{'params'}->{'gsessionid'} = $gsession_id;
+}
+	
 $result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'delete',$args);
-#diag("Delete Response: ", Dumper($result));
+diag("Delete Response: ", Dumper($result));
 if ($result->{'status_code'} == 302 && defined $result->{'location'}) {
 	#$logger->info("Response: ", sub {Dumper($result)});
 	my $redirect = $result->{'location'};
 	my $uri = URI->new( $redirect ); 
 	my %query = $uri->query_form;
 	$args->[1]->{'params'}->{'gsessionid'} = $query{'gsessionid'};
-	$result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'post',$args);
+	$gsession_id = $query{'gsessionid'};
+	$result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'delete',$args);
 	
 }
 $description = "Delete a calendar entry";

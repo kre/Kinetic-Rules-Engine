@@ -64,14 +64,18 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 sub mk_rid_info {
   my ( $req_info, $rid, $options ) = @_;
   my $logger = get_logger();
-  my $arid = strip_version($rid);
+
+  my($arid,$aversion) = split(/\./,$rid, 2);
+#  my $arid = strip_version($rid);
   my $fqrid;
   
   $logger->trace("Make rid info for $rid");
-  
+
   my $version = $options->{'version'}
-      || Kynetx::Request::get_attr( $req_info, "$rid:kynetx_app_version" )
-      || Kynetx::Request::get_attr( $req_info, "$rid:kinetic_app_version" );
+      || $aversion 
+      || Kynetx::Request::get_attr( $req_info, "$arid:kynetx_app_version" )
+      || Kynetx::Request::get_attr( $req_info, "$arid:kinetic_app_version" ) 
+      ;
           
   $version = default_version() unless (defined $version);
     return {
@@ -119,6 +123,16 @@ sub get_versionnum {
 sub get_uri {
   my ($rid_info) = @_;
   return $rid_info->{'uri'};
+}
+
+sub get_owner {
+  my ($rid_info) = @_;
+  return $rid_info->{'owner'};
+}
+
+sub get_last_modified {
+  my ($rid_info) = @_;
+  return $rid_info->{'last_modified'};
 }
 
 sub get_username {
@@ -249,12 +263,16 @@ sub mk_fqrid {
   return $fqrid
 }
 
-sub fq_to_rid_info {
+sub normalize {
   my ($fqrid) = @_;
-  my $rid = strip_version($fqrid);
-  my $version = $fqrid;
-  $version =~ s/^($rid\.).+//;
-  
+  my ($rid, $version) = split(/\./,$fqrid);
+  #$version =~ s/^($rid\.).+//;
+  $version = default_version() unless ($version);
+  my $rid_info = {
+      'rid'                 => $rid,
+      'kinetic_app_version' => $version
+  };
+  return $rid_info;
 }
 
 1;

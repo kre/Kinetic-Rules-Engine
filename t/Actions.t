@@ -196,6 +196,21 @@ add_testcase($krl_src,
 	     );
 
 
+$krl_src = <<_KRL_;
+{
+redirect("http://www.google.com", "foo");
+redirect("http://www.froogle.com", "flip");
+}
+_KRL_
+add_testcase($krl_src,
+	     'redirect',
+	     $my_req_info,
+	     'not_changed',
+	     'redirect',
+	     0
+	     );
+
+
 
 
 #$krl = Kynetx::Parser::parse_action($krl_src);
@@ -1102,6 +1117,100 @@ foreach my $case (@action_test_cases) {
 }
 
 
+#### Test eval_action_block #####
+my $action_block_tests = 0;
+sub test_action_block {
+  my($krl_src, $results, $number) = @_;
+  my $krl = Kynetx::Parser::parse_action($krl_src);
+  # diag( Dumper($krl));
+
+  my $dd = Kynetx::Response->create_directive_doc( $my_req_info->{'eid'} );
+  my $js = Kynetx::Actions::eval_action_block(
+			   $my_req_info, 
+			   $dd, 
+			   extend_rule_env(['state', 'actions','labels','tags'],
+					   ["flip", [],[],[]],
+					   $rule_env),
+                           $session,
+                           $krl->{"blocktype"},
+                           $krl->{"actions"},
+			   $krl->{"choice"},
+                           "action_block_test",
+                           "callback23"
+			  );
+
+  is(@{$dd->directives()} + 0, $results->{"expected_num"}, "Got the right number of results");
+  $action_block_tests++;
+
+  my $result_hash = { map { $_ => 1  } @{$results->{"names"}} };
+  foreach my $d (@{$dd->directives()}) {
+      #diag Dumper $d;
+      $action_block_tests++;
+      ok( $result_hash->{$d->type()}, "Looking for ". $d->{"type"} )
+  }
+
+}
+
+
+$krl_src = <<_KRL_;
+every {
+  send_directive("flip");
+  send_directive("flop");
+}
+_KRL_
+
+$result = {"names" => ["flip", "flop"],
+           "expected_num" => 2
+          };
+
+test_action_block($krl_src, $result);
+
+
+
+$krl_src = <<_KRL_;
+every {
+  flip => send_directive("flip");
+  flop => send_directive("flop");
+}
+_KRL_
+
+$result = {"names" => ["flip", "flop"],
+           "expected_num" => 2
+          };
+
+test_action_block($krl_src, $result);
+
+
+$krl_src = <<_KRL_;
+choose {
+  flip => send_directive("flip");
+  flop => send_directive("flop");
+}
+_KRL_
+
+# could be one or the other. Probabilistic
+$result = {"names" => ["flip", "flop"],
+           "expected_num" => 1
+          };
+
+
+test_action_block($krl_src, $result);
+
+
+
+$krl_src = <<_KRL_;
+choose state {
+  flip => send_directive("flip");
+  flop => send_directive("flop");
+}
+_KRL_
+
+# should always be flip because we defined "state => flip" in the rule_env above
+$result = {"names" => ["flip"],
+           "expected_num" => 1
+          };
+
+test_action_block($krl_src, $result);
 
 
 #diag Dumper($session);
@@ -1142,7 +1251,7 @@ $resource_js = $ast->mk_registered_resource_js($rid);
 #diag Dumper $my_req_info;
 #diag "Resource JS: ", $resource_js;
 
-done_testing(3 + (@test_cases * 3) + (@action_test_cases * 1));
+done_testing(3 + (@test_cases * 3) + (@action_test_cases * 1) + $action_block_tests);
 
 #diag("Safe to ignore warnings about unrecognized escapes");
 

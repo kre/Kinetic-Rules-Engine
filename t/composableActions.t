@@ -57,7 +57,7 @@ use Log::Log4perl::Level;
 #use Log::Log4perl::Appender::FileLogger;
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($WARN);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -89,6 +89,7 @@ my $js;
 my $test_count;
 my $config;
 my $config2;
+my $options;
 
 #diag "_____________________________START TEST____________________________";
 sub local_gen_req_info {
@@ -115,14 +116,16 @@ my $final_req_info = {};
 my (@test_cases, $json, $krl,$result);
 
 sub doer {
-	my ($req_info,$krl,$rule_env,$session) = @_;
+	my ($req_info,$krl,$session,$options) = @_;
 	my $logger = get_logger();
 	my $rs = Kynetx::Parser::parse_ruleset($krl);
+	diag Dumper $rs if $options->{"diag"};
+
 	my $rid_info = mk_rid_info($req_info,$rs->{'ruleset_name'});
 
 	
-	$req_info->{'eventtype'} = 'pageview';
-	$req_info->{'domain'} = 'web';
+	$req_info->{'eventtype'} = $options->{"eventtype"} || 'pageview';
+	$req_info->{'domain'} =  $options->{"domain"} || 'web';
 	
 	Kynetx::Rules::stash_ruleset($req_info,
 		Kynetx::Rules::optimize_ruleset($rs));
@@ -130,7 +133,8 @@ sub doer {
 	my $ev = Kynetx::Events::mk_event($req_info);
 	my $schedule = Kynetx::Scheduler->new();
 	
-	Kynetx::Events::process_event_for_rid($ev,
+	Kynetx::Events::process_event_for_rid(
+		$ev,
 		$req_info,
 		$session,
 		$schedule,
@@ -148,8 +152,10 @@ sub doer {
 	);
 	
 	#$logger->debug("Final javascript: $js");	
+
+	my $result = $options->{"directives"} ? $dd->directives() : nows($js);
 	
-	return nows($js);
+	return $result;
 }
 # test module configuration
 
@@ -178,8 +184,7 @@ ruleset dueling_notifies {
 _KRL_
 
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'dueling_notifies');
-$mod_rule_env = empty_rule_env();
-$result = doer($my_req_info, $krl, $empty_rule_env, $session);
+$result = doer($my_req_info, $krl, $session);
 
 cmp_deeply($result,re(qr/kGrowl.*Header.,.Message/),"Regular action fired correctly");
 $test_count++;
@@ -217,8 +222,7 @@ ruleset foobar {
 _KRL_
 
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'foobar');
-$mod_rule_env = empty_rule_env();
-$result = doer($my_req_info, $krl, $empty_rule_env, $session);
+$result = doer($my_req_info, $krl, $session);
 
 cmp_deeply($result,re(qr/varfarb=.loobyloofiddyfiddyfappap/),"defaction decl expressed correctly");
 $test_count++;
@@ -245,8 +249,7 @@ ruleset postbar {
 _KRL_
 
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'postbar');
-$mod_rule_env = empty_rule_env();
-$result = doer($my_req_info, $krl, $empty_rule_env, $session);
+$result = doer($my_req_info, $krl, $session);
 
 cmp_deeply($result,re(qr/varstink=.yes./),"Post action emits no JS");
 $test_count++;
@@ -295,8 +298,7 @@ ruleset inline {
 _KRL_
 
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'inline');
-$mod_rule_env = empty_rule_env();
-$result = doer($my_req_info, $krl, $empty_rule_env, $session);
+$result = doer($my_req_info, $krl, $session);
 
 cmp_deeply($result,re(qr/varfarb=.\d{4}.\d{2}.\d{2}T\d{2}.\d{2}.\d{2}.\d{2}.\d{2}fiddyfiddyfappap/),"inline defaction");
 $test_count++;
@@ -348,8 +350,7 @@ _KRL_
 
 
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'use_nulls');
-$mod_rule_env = empty_rule_env();
-$result = doer($my_req_info, $krl, $empty_rule_env, $session);
+$result = doer($my_req_info, $krl, $session);
 
 $krl =  << "_KRL_";
 ruleset send_directive_nulls {
@@ -393,8 +394,7 @@ ruleset send_directive_nulls {
 _KRL_
 
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'send_directive_nulls');
-$mod_rule_env = empty_rule_env();
-$result = doer($my_req_info, $krl, $empty_rule_env, $session);
+$result = doer($my_req_info, $krl, $session);
 cmp_deeply($result,re(qr/varfarb=null/),"Null value passed to send_directive");
 $test_count++;
 
@@ -447,11 +447,148 @@ ruleset inline {
 _KRL_
 
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'inline');
-$mod_rule_env = empty_rule_env();
-$result = doer($my_req_info, $krl, $empty_rule_env, $session);
+$result = doer($my_req_info, $krl, $session);
 
 cmp_deeply($result,re(qr/.+alert\(.Regularemit.\).+alert\(farb\)/),"emit defaction");
 $test_count++;
+
+#diag "####################################################";
+### choose 
+$krl =  << "_KRL_";
+ruleset inline2 {
+  meta {
+    name "defAction"
+    description <<
+      For testing composable actions in modules
+      System tests depend on this ruleset.  
+    >>
+ 
+   configure using c = "Hello"
+   provide x
+  }
+ 
+  global {
+     a = function(x) {5 + x};
+     x = defaction (y) {
+        farb = (y + "blue");
+        choose farb {
+          brightblue => send_directive("brightblue");
+          babyblue => send_directive("babyblue");
+        }
+     };
+  }
+  rule test1 is active {
+    select when mail received
+    {
+      x("bright");
+    }
+  }
+}
+_KRL_
+
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'inline2');
+$options = {"eventtype" => "received", 
+	    "domain" => "mail",
+	    "directives" => 1,
+	    "diag" => 0,
+	   };
+$result = doer($my_req_info, $krl, $session, $options);
+
+is($result->[0]->type(),"brightblue"," choose brightblue in defaction");
+$test_count++;
+
+
+
+$krl =  << "_KRL_";
+ruleset inline2 {
+  meta {
+    name "defAction"
+    description <<
+      For testing composable actions in modules
+      System tests depend on this ruleset.  
+    >>
+ 
+   configure using c = "Hello"
+   provide x
+  }
+ 
+  global {
+     a = function(x) {5 + x};
+     x = defaction (y) {
+        farb = (y + "blue");
+        choose farb {
+          brightblue => send_directive("brightblue");
+          babyblue => send_directive("babyblue");
+        }
+     };
+  }
+  rule test1 is active {
+    select when mail received
+    {
+      x("baby");
+    }
+  }
+}
+_KRL_
+
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'inline2');
+$options = {"eventtype" => "received", 
+	    "domain" => "mail",
+	    "directives" => 1,
+	    "diag" => 0,
+	   };
+$result = doer($my_req_info, $krl, $session, $options);
+
+is($result->[0]->type(),"babyblue"," choose babyblue in defaction");
+$test_count++;
+
+
+
+$krl =  << "_KRL_";
+ruleset inline2 {
+  meta {
+    name "defAction"
+    description <<
+      For testing composable actions in modules
+      System tests depend on this ruleset.  
+    >>
+ 
+   configure using c = "Hello"
+   provide x
+  }
+ 
+  global {
+     a = function(x) {5 + x};
+     x = defaction (y) {
+        farb = (y + "blue");
+        send_directive("babyblue");
+     };
+  }
+  rule test1 is active {
+    select when mail received
+    pre {
+      cvar = "bright";
+      dvar = "blue";
+    }
+    choose cvar + dvar {
+          brightblue => send_directive("brightblue");
+          babyblue => x("baby");
+    }
+  }
+}
+_KRL_
+
+$my_req_info->{'rid'} = mk_rid_info($my_req_info,'inline2');
+$options = {"eventtype" => "received", 
+	    "domain" => "mail",
+	    "directives" => 1,
+	    "diag" => 1,
+	   };
+$result = doer($my_req_info, $krl, $session, $options);
+
+is($result->[0]->type(),"brightblue"," choose brightblue in defaction");
+$test_count++;
+
 
 
 

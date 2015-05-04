@@ -102,10 +102,11 @@ sub _handler {
 
 	$r->content_type('text/javascript');
 
-	$logger->debug(
-"\n\n------------------------------ begin EVENT evaluation with SKY API---------------------"
-	);
-	$logger->debug("Initializing memcached");
+	$logger->info("-----***---- Event evaluation with SKY API ----***-----");
+
+#        $logger->debug($r->path_info);
+
+	$logger->trace("Initializing memcached");
 	Kynetx::Memcached->init();
 
 	my ( $domain, $eventtype, $eid, $rids, $id_token );
@@ -154,6 +155,9 @@ sub _handler {
 		}
 	);
 
+        # store the EID so we have it in the PerlLogHandler
+        $r->pnotes(EID => $req_info->{"eid"});
+  
 	# use the calculated values...
 	$domain    = $req_info->{'domain'};
 	$eventtype = $req_info->{'eventtype'};
@@ -173,9 +177,9 @@ sub _handler {
 	Log::Log4perl::MDC->put( 'site', "[no rid]" );
 	Log::Log4perl::MDC->put( 'rule', '[global]' );    # no rule for now...
 	Log::Log4perl::MDC->put( 'eid',  $eid );          # identify event
-
+       
 	# get a session
-	$logger->info( "KBX token ", $req_info->{'id_token'} );
+	$logger->debug( "KBX token ", $req_info->{'id_token'} );
 
 #    my $session = Kynetx::Session::process_session($r, $req_info->{'kntx_token'});
 	my $session =
@@ -190,7 +194,7 @@ sub _handler {
 	elsif ( $path_components[1] eq 'flush' ) {
 
 		# /sky/flush/<id_token>...
-		flush_ridlist_cache( $r, $session );
+		flush_ridlist_cache( $r, $session, $req_info );
 		exit();
 	}
 
@@ -222,9 +226,13 @@ sub _handler {
 
 	my ( $rid_list, $unfiltered_rid_list, $domain_test );
 
+	$logger->info("-----***---- Determine Saliance Graph ----***-----");
+
+
 	# this can be a big list...
 	$unfiltered_rid_list =
 	  Kynetx::Dispatch::calculate_rid_list( $req_info, $session );
+
 
 	$logger->debug("Calculated RID list: ", sub { join(', ', keys %{$unfiltered_rid_list->{'ridlist'}}) });
 
@@ -301,12 +309,14 @@ sub _handler {
 	}
 
 #    $logger->info("Rids for $domain/$eventtype: ", sub {Kynetx::Rids::print_rids($rid_list)});
+        # store the RIDS so we have it in the PerlLogHandler
+        $r->pnotes(RIDS => Kynetx::Rids::print_rids($req_info->{"rids"}));
 
 	Kynetx::Request::log_request_env( $logger, $req_info );
 
 	my $ev = Kynetx::Events::mk_event($req_info);
 
-	$logger->debug("\n----***----- Start scheduling ----***-----");
+	$logger->info("-----***---- Start Scheduling ----***-----");
 
 	my $schedule = Kynetx::Scheduler->new();
 
@@ -320,8 +330,10 @@ sub _handler {
 	   $hostname = Kynetx::Util::get_host($req_info->{'url'} );
 	}
 
+  
 	foreach my $rid_info ( @{$rid_list} ) {
 
+	    $logger->debug("Looking at ", sub { Dumper $rid_info});
 		# check dispatch if domain is web and rids weren't specified
 		my $rid = $rid_info->{'rid'};
 		if (   $domain eq 'web'
@@ -344,7 +356,7 @@ sub _handler {
 		$ev_metric->token( $id_token );
 
 		eval {
-			$logger->debug("Processing event for $rid");
+			$logger->info("Processing event $domain/$eventtype for $rid");
 			Kynetx::Events::process_event_for_rid( $ev, $req_info, $session,
 				$schedule, $rid_info );
 		};
@@ -423,9 +435,9 @@ sub _handler {
 }
 
 sub flush_ridlist_cache {
-	my ( $r, $session ) = @_;
+	my ( $r, $session, $req_info ) = @_;
 
-	Kynetx::Dispatch::clear_rid_list($session);
+	Kynetx::Dispatch::clear_rid_list($session, $req_info);
 
 	$r->content_type('text/html');
 	my $msg = "RID List flushed for " . Kynetx::Session::session_id($session);

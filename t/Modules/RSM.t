@@ -112,6 +112,7 @@ foreach my $pn (@pnames) {
     $test_count++;
 }
 
+
 my $dict_path = "/usr/share/dict/words";
 my @DICTIONARY;
 open DICT, $dict_path;
@@ -140,6 +141,8 @@ my @rids = ();
 my $expected;
 
 my $tests = [$sval,$nval,$aval,$hval,$jsval];
+
+my $sigs;
 
 for my $value (@{$tests}) {
 	my $key = $DICTIONARY[rand(@DICTIONARY)];
@@ -176,6 +179,14 @@ cmp_deeply($result,re(qr/^$expected/),$description);
 $test_count++;
 push(@rids,$result);
 $rid = $result;
+
+$description = "Get the ruleset signature";
+$result = Kynetx::Persistence::Ruleset::signature($rid);
+isnt($result,undef,$description);
+$test_count++;
+
+$sigs->{$rid} = $result;
+
 
 #  This *could* fail if the same random word is picked from the dictionary (wouldn't end 'x0')
 $description = "Create an empty ruleset registration with a prefix";
@@ -224,6 +235,23 @@ $result = Kynetx::Modules::RSM::_validate($result->{'rid'});
 cmp_deeply($result,1,$description);
 $test_count++;
 
+$description = "Use is_valid to validate ruleset";
+
+#diag ">>>> is_valid for $new_rid <<<<";
+$function_name = "is_valid";
+$args = [$new_rid];
+$result = Kynetx::Modules::RSM::run_function($my_req_info,$rule_env,$session,$rule_name,$function_name,$args);
+ok($result,$description);
+$test_count++;
+
+$function_name = "is_valid";
+$args = [$new_rid."xx"];
+$result = Kynetx::Modules::RSM::run_function($my_req_info,$rule_env,$session,$rule_name,$function_name,$args);
+ok(! $result,$description);
+$test_count++;
+#diag ">>>> is_valid <<<<";
+
+
 $description = "Use action to validate the new ruleset";
 $krl_src = <<_KRL_;
   rsm:validate("$new_rid") setting (isValid);
@@ -266,6 +294,14 @@ push(@rids,$result->{'rid'});
 
 $new_rid = $result->{'rid'};
 
+$description = "Get the ruleset signature for $new_rid";
+$result = Kynetx::Persistence::Ruleset::signature($new_rid);
+isnt($result,undef,$description);
+$test_count++;
+
+$sigs->{$new_rid} = $result;
+
+
 $description = "Use action to invalidate the bad ruleset";
 $krl_src = <<_KRL_;
   rsm:validate("$new_rid") setting (isValid);
@@ -305,6 +341,14 @@ $js = Kynetx::Actions::build_one_action(
 $result = lookup_rule_env('isUpdate',$rule_env);
 cmp_deeply($result,1,$description);
 $test_count++;
+
+$description = "Get the ruleset signature for updated $new_rid";
+$result = Kynetx::Persistence::Ruleset::signature($new_rid);
+isnt($result,$sigs->{$new_rid},$description);
+$test_count++;
+
+$sigs->{$new_rid} = $result;
+
 
 #$result = Kynetx::Persistence::Ruleset::get_registry($new_rid);
 $description = "Fork a ruleset";
@@ -398,7 +442,7 @@ $js = Kynetx::Actions::build_one_action(
 	    'dummy_name');
 $result = lookup_rule_env('isCreated',$rule_env);
 
-$logger->debug("Create: ", sub {Dumper($result)});
+$logger->trace("Create: ", sub {Dumper($result)});
 cmp_deeply($result,undef,$description);
 $test_count++;
 
@@ -429,7 +473,7 @@ $js = Kynetx::Actions::build_one_action(
 	    'dummy_name');
 $result = lookup_rule_env('isCreated',$rule_env);
 
-$logger->debug("Create: ", sub {Dumper($result)});
+$logger->trace("Create: ", sub {Dumper($result)});
 cmp_deeply($result,undef,$description);
 $test_count++;
 
@@ -469,7 +513,7 @@ $js = Kynetx::Actions::build_one_action(
 	    'dummy_name');
 $result = lookup_rule_env('isCreated',$rule_env);
 
-$logger->debug("Create: ", sub {Dumper($result)});
+$logger->trace("Create: ", sub {Dumper($result)});
 cmp_deeply($result->{'obj'}->{'uri'},$uri,$description);
 $test_count++;
 
@@ -480,7 +524,20 @@ $result = Kynetx::Persistence::Ruleset::get_rulesets_by_owner($session_ken);
 cmp_deeply($result,superbagof(@rids),$description);
 $test_count++;
 
-for my $d_rid (@{$result}) {
+$description = "Create more than 10 rulesets with the same prefix";
+$args = [];
+my $max = 11;
+my $temp;
+for (my $i = 0;$i < $max;$i++) {
+  my $rid = Kynetx::Modules::RSM::make_ruleset_id($my_req_info,$rule_env,$session,$rule_name,$function_name,$args);
+  $temp->{$rid} = 1+ $temp->{$rid} || 0;
+}
+is(scalar keys %{$temp},$max,$description);
+$test_count++;
+
+
+#for my $d_rid (@{$result}) {
+for my $d_rid (@{ Kynetx::Persistence::Ruleset::get_rulesets_by_owner($session_ken) }) {
   $logger->debug("Delete $d_rid");
   Kynetx::Persistence::Ruleset::delete_registry($d_rid);
 }

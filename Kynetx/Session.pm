@@ -98,11 +98,11 @@ sub process_session {
 
     # Sky flow
     if (defined $tk) {
-      $logger->info("Explicit token: (SKY) $tk");
+      $logger->debug("Explicit token: (SKY) $tk");
       if ($tk ne "") {
         my $token;
         if ($token = Kynetx::Persistence::KToken::is_valid_token($tk)) {
-            $logger->info("Received valid SKY token: ", $tk);
+            $logger->debug("Received valid SKY token: ", $tk);
             # Set the session ID for this SKY token
             my $sky_session = $token->{"endpoint_id"};
             my $session = {"_session_id" => $sky_session};
@@ -232,6 +232,9 @@ sub session_cleanup {
 
 sub session_id {
     my ($session) = @_;
+    my $logger = get_logger();
+    my $parent = (caller(1))[3];
+    $logger->trace("Session parent: $parent");
     return $session->{_session_id};
 }
 
@@ -300,7 +303,7 @@ sub session_defined {
 sub session_delete {
     my ($rid, $session, $var) = @_;
     my $logger = get_logger();
-    $logger->debug("Delete session var: $var");
+    $logger->trace("Delete session var: $var");
     my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
     return delete_edatum($rid,$ken,$var);
 }

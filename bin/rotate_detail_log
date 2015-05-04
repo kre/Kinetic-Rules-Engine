@@ -1,0 +1,6 @@
+#/bin/bash
+
+sudo service httpd stop
+sudo mv /web/logs/detail_log /web/logs/detail_log.DELETE_ME
+sudo service httpd start
+echo This does NOT delete the old detail_log file, but moves it. Delete for disk space recovery. 

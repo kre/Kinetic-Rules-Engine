@@ -166,23 +166,43 @@ sub process_schedule {
 		$task_metric->start_timer();
 		$task_metric->push($task->{'vars'},$task->{'vals'});
 
-		$logger->trace( "[task] ", sub { Dumper($task) } );
+		#$logger->debug( "[task] ", sub { Dumper($task) } );
 
 		# set up new context for this task
 		if ($req_info) {
+		    $logger->info("Context switch to ", 
+				  $task->{"rid"}, ":",  $task->{"rule"}->{"name"},
+				  " for event ",
+				  $task->{"req_info"}->{"domain"}, ":",  $task->{"req_info"}->{"eventtype"}
+				 );
 
-		  my $task_req_info = {'event_attrs' => $task->{'req_info'}};
-#		  $logger->debug("Task attributes ", sub {Dumper $task_req_info});
-		  Kynetx::Request::merge_req_env( $req_info, $task_req_info );
+		    my $task_req_info = {};
+		    Kynetx::Request::set_event_domain($task_req_info, 
+						      Kynetx::Request::get_event_domain($task->{'req_info'})
+						     );
+		    Kynetx::Request::set_event_type($task_req_info, 
+						    Kynetx::Request::get_event_type($task->{'req_info'})
+						   );
+		    
+		    foreach my $n (@{ Kynetx::Request::get_attr_names($task->{'req_info'}) }) {
+			$logger->debug("Adding name ", $n);
+			Kynetx::Request::add_event_attr($task_req_info, 
+							$n, 
+							Kynetx::Request::get_attr($task->{'req_info'}, $n)
+						       );
+		    }
+#		    $logger->debug("Task attributes ", sub {Dumper $task_req_info});
+		    Kynetx::Request::merge_req_env( $req_info, $task_req_info );
 		}
 		else {
-		  $logger->warn("Warning: We are processing a schedule with no request info object!!!");
-		  $req_info = $task->{'req_info'};
+		    $logger->warn("Warning: We are processing a schedule with no request info object!!!");
+		    $req_info = $task->{'req_info'};
 		}
 
 		$rid = $task->{'rid'};
+		my $rid_version =  $task->{'ver'};
 		$req_info->{'rid'} =
-		  mk_rid_info( $req_info, $rid, { 'version' => $task->{'ver'} } );
+		  mk_rid_info( $req_info, $rid, { 'version' => $rid_version } );
 		$logger->debug( "Using RID ",
 			Kynetx::Rids::print_rid_info( $req_info->{'rid'} ) );
 			
@@ -267,7 +287,7 @@ sub process_schedule {
 		$task_metric->rulename($rule_name);
 		$task_metric->eid($req_info->{'eid'});
 
-		Log::Log4perl::MDC->put( 'rule', $rule_name );
+		Log::Log4perl::MDC->put( 'rule', $rule_name);
 
 		$logger->trace( "[rules] foreach pre: ",
 			sub { Dumper( $rule->{'pre'} ) } );
@@ -400,10 +420,10 @@ sub eval_meta {
 
 	my $this_js;
 
-	$req_info->{"$rid:ruleset_name"} = $ruleset->{'ruleset_name'};
-	$req_info->{"$rid:name"}         = $ruleset->{'meta'}->{'name'};
-	$req_info->{"$rid:author"}       = $ruleset->{'meta'}->{'author'};
-	$req_info->{"$rid:description"}  = $ruleset->{'meta'}->{'description'};
+	$req_info->{"meta:$rid:ruleset_name"} = $ruleset->{'ruleset_name'};
+	$req_info->{"meta:$rid:name"}         = $ruleset->{'meta'}->{'name'};
+	$req_info->{"meta:$rid:author"}       = $ruleset->{'meta'}->{'author'};
+	$req_info->{"meta:$rid:description"}  = $ruleset->{'meta'}->{'description'};
 
 	# process keys now so that they're available for use in configuring modules
 	if ( $ruleset->{'meta'}->{'keys'} ) {
@@ -414,7 +434,7 @@ sub eval_meta {
 
 	if ( $ruleset->{'meta'}->{'use'} ) {
 		( $this_js, $rule_env ) =
-		  eval_use( $req_info, $ruleset, $rule_env, $session, $env_stash );
+		  eval_use( $req_info, $ruleset, $rule_env, $session, $env_stash, undef);
 		$js .= $this_js;
 	}
 
@@ -425,7 +445,7 @@ sub eval_meta {
 }
 
 sub eval_use {
-	my ( $req_info, $ruleset, $rule_env, $session, $env_stash ) = @_;
+	my ( $req_info, $ruleset, $rule_env, $session, $env_stash, $using_rid) = @_;
 
 	my $logger = get_logger();
 	my $js     = "";
@@ -433,6 +453,8 @@ sub eval_use {
 	my $use = $ruleset->{'meta'}->{'use'};
 
 	my $rid = get_rid( $req_info->{'rid'} );
+
+	$using_rid ||= $rid;  # current rid if not set
 	
 	my $this_js;
 
@@ -449,7 +471,9 @@ sub eval_use {
 			# side effects the rule env.
 			( $this_js, $rule_env ) =
 			  eval_use_module( $req_info, $rule_env, $session, $u->{'name'},
-				$u->{'alias'}, $u->{'modifiers'}, $u->{'version'}, $env_stash );
+					   $u->{'alias'}, $u->{'modifiers'}, $u->{'version'}, $env_stash, 
+					   $using_rid
+					 );
 
 			# don't include the module JS in the results.
 			# $js .= $this_js;
@@ -473,7 +497,7 @@ sub _module_sig {
 sub eval_use_module {
   my (
       $req_info, $rule_env,  $session,  $name,
-      $alias,    $modifiers, $mversion, $env_stash
+      $alias,    $modifiers, $mversion, $env_stash, $using_rid
      ) = @_;
 
   my $logger = get_logger();
@@ -497,12 +521,22 @@ sub eval_use_module {
   
   $logger->trace("$self_rid uses $mod_rid");
 
-  my $module_cache = Kynetx::Modules::RuleEnv::get_module_cache($module_sig, $memd);
-  my $module_rule_env = $module_cache->{Kynetx::Modules::RuleEnv::get_re_key($module_sig)};
-  my $provided = $module_cache->{Kynetx::Modules::RuleEnv::get_pr_key($module_sig)} || {};
-  my $js = $module_cache->{Kynetx::Modules::RuleEnv::get_js_key($module_sig)} || '';
-  my $export_keys = $module_cache->{Kynetx::Modules::RuleEnv::get_export_keys_key($module_sig)} || {};
+  my($module_cache, $module_rule_env, $provided, $js, $export_keys);
+  if (Kynetx::Request::module_loaded($module_sig, $req_info)) {
+      my $module_data = Kynetx::Request::get_module($module_sig, $req_info);
+      $module_rule_env = $module_data->{"module_env"};
+      $provided = $module_data->{"provides"} || {};
+      $js = $module_data->{"js"} || '';
+      $export_keys = $module_data->{"export_keys"} || {};
+  } else {
+      $module_cache = Kynetx::Modules::RuleEnv::get_module_cache($module_sig, $memd);
+      $module_rule_env = $module_cache->{Kynetx::Modules::RuleEnv::get_re_key($module_sig)};
+      $provided = $module_cache->{Kynetx::Modules::RuleEnv::get_pr_key($module_sig)} || {};
+      $js = $module_cache->{Kynetx::Modules::RuleEnv::get_js_key($module_sig)} || '';
+      $export_keys = $module_cache->{Kynetx::Modules::RuleEnv::get_export_keys_key($module_sig)} || {};
+  }
 
+  
 
   # build a list of module sigs associated with a calling rid/version
   my $msig_list = Kynetx::Modules::RuleEnv::get_msig_list($req_info, $memd);
@@ -517,7 +551,7 @@ sub eval_use_module {
 
     # if (! defined $env_stash->{$module_sig}) {
 
-    $logger->debug("----- Loading Module $name.$mversion -------");
+    $logger->debug("----- Loading Module $name.$mversion as $alias -------");
 
     my $js = '';
     my $this_js;
@@ -602,22 +636,33 @@ sub eval_use_module {
 				    $use_ruleset );
       $js .= $this_js;
     }
-    
+
+    my $is_cachable;
+
     # Check to see if this module exposes any keys to external ruleset
-    if ($use_ruleset->{'meta'}->{'module_keys'}) {
-      my $key_permissions = $use_ruleset->{'meta'}->{'module_keys'};
-      $logger->trace("Exposing keys to parent rid: $self_rid");
-      my $permitted = $key_permissions->{'provides_rids'};
-      if (defined $permitted) {
-        if (Kynetx::Sets::has($permitted,[$self_rid])) {
-          $logger->debug("Ruleset $self_rid is permitted by $name");
-          foreach my $obj (@{$key_permissions->{'provides_keys'}}) {
-            my $tuple = ();
-            push(@{$tuple},$name);
-            push (@{$tuple},Kynetx::Keys::get_key($req_info,$module_rule_env,$obj));
-            $export_keys->{$obj} = $tuple;
-          }
-        }
+    if ($use_ruleset->{'meta'}->{'provides_keys'}) {
+      my $key_permissions = $use_ruleset->{'meta'}->{'provides_keys'};
+#      $logger->debug("Exposing keys to parent rid: $using_rid for $name ", sub {Dumper $key_permissions});
+      my $permitted;
+
+      foreach my $k (keys %{ $key_permissions }) {
+	  foreach my $r (@{ $key_permissions->{$k}}) {
+	      if ($r eq $using_rid){
+		  $logger->debug("Storing key $k for rid $using_rid");
+		  push (@{$permitted}, $k);
+	      }
+	  }
+      }
+
+      if (defined $permitted ) {
+	  foreach my $obj (@{$permitted}) {
+	      my $tuple = ();
+	      push(@{$tuple},$name);
+	      push (@{$tuple},Kynetx::Keys::get_key($req_info,$module_rule_env,$obj));
+	      $export_keys->{$obj} = $tuple;
+	  }
+      } else {
+	  $logger->debug("Ruleset $using_rid is NOT permitted by $name allowed: ", sub{Dumper $key_permissions});
       }
     }
     
@@ -625,7 +670,7 @@ sub eval_use_module {
     if ( $use_ruleset->{'meta'}->{'use'} ) {
       ( $this_js, $module_rule_env ) =
 	eval_use( $req_info, $use_ruleset, $module_rule_env, $session,
-		  $env_stash );
+		  $env_stash, $name);
       $js .= $this_js;
     }
 
@@ -633,7 +678,6 @@ sub eval_use_module {
 
 
     # eval the module's global block
-    my $is_cachable;
     if ( $use_ruleset->{'global'} ) {
       ( $js, $module_rule_env, $is_cachable ) =
 	process_one_global_block( $req_info, $use_ruleset->{'global'},
@@ -661,12 +705,26 @@ sub eval_use_module {
     $logger->debug("Using cached rule env for module $name.$mversion with signature $module_sig");
   }
 
+  # just put sig in where env was before
+  $rule_env = extend_rule_env( $namespace_name, $module_sig, $rule_env);
 
-  $rule_env = extend_rule_env( $namespace_name, $module_rule_env,
-			       extend_rule_env( $namespace_name . '_provided', $provided, $rule_env )
-			     );
+  # put the module_env in the $req_info
+  $req_info = Kynetx::Request::put_module_in_request_info($module_sig,
+							  $name,
+							  $mversion,
+							  $provided,
+							  $module_rule_env,
+							  $js,
+							  $export_keys,
+							  $req_info
+							 );
+  
+
+  # $rule_env = extend_rule_env( $namespace_name, $module_rule_env,
+  # 			       extend_rule_env( $namespace_name . '_provided', $provided, $rule_env )
+  # 			     );
 			     
-	# Place the exported keys in the current key environment		     
+  # Place the exported keys in the current key environment		     
   foreach my $kkey (keys %{$export_keys}) {
     my $tuple = $export_keys->{$kkey};
     my $source = $tuple->[0];
@@ -717,7 +775,7 @@ sub set_module_configuration {
 	foreach my $mod ( @{$modifiers} ) {
 
 		# only insert names that are already there (honor config)
-		if ( $configuration->{ $mod->{'name'} } ) {
+		if ( defined $configuration->{ $mod->{'name'} } ) {
 
 			# modifiers are executed in rule's environment
 			$configuration->{ $mod->{'name'} } =
@@ -869,9 +927,7 @@ sub eval_rule {
 
 	my $logger = get_logger();
 
-	$logger->debug(
-"\n------------------- begin rule execution: $rule->{'name'} ------------------------\n"
-	);
+	$logger->info("-----***---- begin rule execution: $rule->{'name'} ----***-----");
 
 	my $js = '';
 	my $rule_metric = new Kynetx::Metrics::Datapoint( {
@@ -893,7 +949,7 @@ sub eval_rule {
 # assume the rule doesn't fire.  We will change this if it EVER fires in this eval
 	$req_info->{ $rule->{'name'} . '_result' } = 'notfired';
 
-	#	$logger->info("Rule pre ", sub {Dumper $rule->{'pre'}});
+	#	$logger->debug("Rule pre ", sub {Dumper $rule->{'pre'}});
 
 	if (   $rule->{'pre'}
 		&& scalar @{ $rule->{'pre'} } > 0
@@ -948,7 +1004,7 @@ sub eval_rule {
 	$logger->debug( $cv->recv );
 	my $thread_results = $execenv->get_results();
 	if ( scalar @{$thread_results} > 0 ) {
-#	  $logger->debug("req_info: ", sub {Dumper $req_info});
+	  $logger->debug("All threads complete; sending system:send_complete");
 		Kynetx::Modules::System::raise_system_event(
 			$req_info,
 			$rule->{'name'},
@@ -1148,7 +1204,7 @@ sub eval_rule_body {
 	my $fired = 0;
 	if ($pred_value) {
 
-		$logger->debug("fired");
+		$logger->info("rule fired");
 
 		# this is the main event.  The browser has asked for a
 		# chunk of Javascrip and this is where we deliver...
@@ -1167,7 +1223,7 @@ sub eval_rule_body {
 
 	}
 	else {
-		$logger->debug("did not fire");
+		$logger->info("rule did not fire");
 
 		$fired = 0;
 
@@ -1201,6 +1257,7 @@ sub get_rule_set {
 
 	my $ruleset;
 	if ( is_ruleset_stashed( $req_info, $rid, $ver ) ) {
+	    $logger->debug("Ruleset $rid.$ver stashed");
 		$ruleset = grab_ruleset( $req_info, $rid, $ver );
 	}
 	else {
@@ -1266,7 +1323,8 @@ sub get_rule_env {
 
 	my $rid = get_rid( $req_info->{'rid'} );
 	my $ver = get_version( $req_info->{'rid'} ) || 'prod';
-
+	
+	
 	if ( !defined $env_stash->{ $rid . $ver } ) {
 
 		$logger->debug("No rule env found for $rid...generating");
@@ -1280,7 +1338,7 @@ sub get_rule_env {
 		# generate JS for meta
 		( $mjs, $rule_env ) =
 		  eval_meta( $req_info, $ruleset, $init_rule_env, $session,
-			$env_stash );
+			$env_stash, undef, $init_rule_env );
 
 		$logger->debug("Processing globals for ruleset $rid");
 
@@ -1352,7 +1410,7 @@ sub optimize_rule {
 	my ( $rule, $rule_lists ) = @_;
 
 	my $logger = get_logger();
-	$logger->debug( "Optimizing ", $rule->{'name'} );
+#	$logger->debug( "Optimizing ", $rule->{'name'} );
 
 	# fix up old syntax, if needed
 	if ( $rule->{'pagetype'}->{'pattern'} ) {
@@ -1454,19 +1512,19 @@ sub mk_initial_env {
 	my $rule_env = empty_rule_env();
 
 	# define initial environment to have a truth function
-	$rule_env = extend_rule_env(
-		{
-			'truth' => Kynetx::Expressions::mk_closure(
-				{
-					'vars'  => [],
-					'decls' => [],
-					'expr'  => mk_expr_node( 'num', 1 ),
-				},
-				$rule_env
-			)
-		},
-		$rule_env
-	);
+	# $rule_env = extend_rule_env(
+	# 	{
+	# 		'truth' => Kynetx::Expressions::mk_closure(
+	# 			{
+	# 				'vars'  => [],
+	# 				'decls' => [],
+	# 				'expr'  => mk_expr_node( 'num', 1 ),
+	# 			},
+	# 			$rule_env
+	# 		)
+	# 	},
+	# 	$rule_env
+	# );
 	return $rule_env;
 }
 

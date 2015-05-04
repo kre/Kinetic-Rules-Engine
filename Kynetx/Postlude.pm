@@ -59,6 +59,12 @@ use Kynetx::Persistence::SchedEv;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
+use Devel::Size qw(
+  size
+  total_size
+);
+
+
 sub eval_post_expr {
     my ( $rule, $session, $req_info, $rule_env, $fired, $execenv ) = @_;
 
@@ -151,8 +157,8 @@ sub eval_post_statement {
 					$expr->{'level'} || 'error',
 					$p_expr->{'DEBUG'},
 					{'rule_name' => $rule_name,
-				 	'genus' => 'user',
-				 	'species' => 'error'
+				 	'genus' => 'postlude',
+				 	'species' => 'persistent'
 					}
 			      );
     		
@@ -223,7 +229,8 @@ sub eval_persistent_expr {
             if (Kynetx::MongoDB::validate($value)) {
             	save_persistent_var($domain, get_rid($req_info->{'rid'}), $session, $expr->{'name'}, $value );
             } else {
-            	my $msg = $expr->{'name'} . " is too large";
+		my $size = Devel::Size::total_size($value);
+            	my $msg = $expr->{'name'} . " is too large ($size bytes)";
             	return Kynetx::Errors::merror($msg);
             }
             
@@ -256,8 +263,9 @@ sub eval_persistent_expr {
 					$path,
 					$value);
         } else {
-            	my $msg = $expr->{'name'} . " is too large";
-            	return Kynetx::Errors::merror($msg);        	
+	    my $size = Devel::Size::total_size($value);
+	    my $msg = $expr->{'name'} . "[". join(",", @{$path}) . "] is too large ($size bytes)";
+	    return Kynetx::Errors::merror($msg);        	
         }
     } elsif ( $expr->{'action'} eq 'iterator' ) {
         my $op = $expr->{'op'};
@@ -328,15 +336,13 @@ sub eval_log_statement {
 #    $js = Kynetx::Log::explicit_callback( $req_info, $rule_name, $log_val );
 
     # this puts the statement in the log data for when debug is on
-    $logger->debug( $msg, ref $log_val eq 'HASH' || 
-		          ref $log_val eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty(1)->encode($log_val) : $log_val );
+    $logger->info( $msg, Kynetx::Json::perlToJson($log_val) );
     $js = join("", 
                "KOBJ.log('",
 	       $msg,
 	       $log_val,
 	       "');"
 	      );
-    # huh?    return $msg . $log_val;
     return $js;
 }
 
@@ -370,9 +376,9 @@ sub eval_error_statement {
 
 
     # this puts the statement in the log data for when debug is on
-    $logger->debug("Explicit user error", $msg_val );
+    $logger->info("Explicit user error", Kynetx::Json::perlToJson($msg_val));
+#    $logger->debug("Explicit user error", $msg_val );
 
-    # huh?    return $msg . $log_val;
     return $js;
 }
 
@@ -413,6 +419,11 @@ sub _domainname {
 	   'notification' => 1 ,
 	   'pds' => 1 ,
 	   'error' => 1,
+	   'gtour' => 1,
+	   'test' => 1,
+	   'fuse' => 1,
+	   'carvoyant' => 1,
+  	   'location' => 1,
 	  };
   if ($allowed->{$expr->{'domain'}}) {
     return $expr->{'domain'}
@@ -491,6 +502,12 @@ sub eval_schedule_statement {
         $logger->debug("Create single event $domain / $event_name at $val")
       }      
     }
+    if ($sched_id && defined $expr->{"setting"}) { # store the ID
+      my $var = $expr->{"setting"}->[0];
+      $logger->debug("Storing ID $sched_id for ", $var);
+      Kynetx::Environments::add_to_env({$var => $sched_id}, $rule_env);
+      $logger->debug("Looking up ", $var, " -> ", Kynetx::Environments::lookup_rule_env($var, $rule_env) );
+    }      
     $logger->debug("Created scheduled event ($sched_id)"); 
     return $js;
 }

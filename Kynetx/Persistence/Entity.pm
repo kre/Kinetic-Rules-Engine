@@ -83,6 +83,9 @@ sub get_edatum {
         "rid" => $rid,
         "key" => $var};
     my $value = Kynetx::MongoDB::get_value(COLLECTION,$key);
+    if ($var =~ m/idToECI/) {
+      $logger->debug("Found $var: ", sub {Dumper($value)});
+    }
     if ($get_ts) {
         return $value->{"created"};
     } else {

@@ -196,13 +196,30 @@ use Inline (Java => <<'END',
                 }
                 //return unescapeUnicode(js.toString());
                 return js.toString();
+            } catch(NoViableAltException nvA) {
+                StringBuffer errorText = new StringBuffer();
+                errorText.append(nvA.toString());
+                org.antlr.runtime.Token t = nvA.token;
+                errorText.append("[").append(t.getLine()).append(":").append(t.getCharPositionInLine()).append("]");
+                errorText.append(" near \"").append(t.getText()).append("\"");
+                HashMap map = new HashMap();
+                ArrayList elist = new ArrayList();
+                elist.add(errorText.toString());
+                map.put("error",elist);
+                JSONObject error = new JSONObject(map);
+                return error.toString();                            
             } catch(Exception e) {
                 StringBuffer sb = new StringBuffer();
                 sb.append("Parser Exception (" + e.getMessage() + "): ");
                 sb.append(e.getStackTrace()[0].getClassName()).append(":");
                 sb.append(e.getStackTrace()[0].getMethodName()).append(":");
-                sb.append(e.getStackTrace()[0].getLineNumber()).append(":");
-                return (sb.toString());
+                sb.append(e.getStackTrace()[0].getLineNumber()).append("::");
+		            HashMap map = new HashMap();
+		            ArrayList elist = new ArrayList();
+                elist.add(sb.toString());
+                map.put("error",elist);
+                JSONObject error = new JSONObject(map);
+                return error.toString();
             }
         }
 

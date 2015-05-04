@@ -1,0 +1,23 @@
+
+<form action="<TMPL_VAR NAME="PLATFORM">/login/update" method="post" data-url="<TMPL_VAR NAME="PLATFORM">/login/<TMPL_VAR NAME="FMETHOD">" data-external-page="true" data-ajax="false" class="form-horizontal well cloudUI-form-login">	
+    <fieldset>
+	<input type="hidden" name="login_session" value="<TMPL_VAR NAME="L_SESSION">" />
+    <ul data-role="listview" data-inset="true">
+        <li data-role="list-divider">Profile</li>
+        <li id="alert" style="background: #FFEEEE; color:red; display:<TMPL_IF NAME="ERROR_MSG">show<TMPL_ELSE>none</TMPL_IF>" class="alert">
+          <TMPL_VAR NAME="ERROR_MSG">
+        </li>
+        <li class="ui-field-contain">
+            <label for="email">Email:</label>
+            <input type="text" name="email" id="account-email" value="<TMPL_VAR NAME="EMAIL">" placeholder="johndoe@email.com">
+            <label for="pfn">First Name:</label> 
+            <input type="text" name="firstname" id="pfn" value="<TMPL_VAR NAME="FNAME">" placeholder="Jane">
+            <label for="pln">Last Name:</label>
+            <input type="text" name="lastname" id="pln" value="<TMPL_VAR NAME="LNAME">" placeholder="Doe">
+        </li>
+    </ul>
+    <div class="form-actions" style="background-color:inherit;border:none;margin:0;padding-top:0;padding-bottom:0;">
+      <button type="submit" class="ui-btn ui-corner-all ui-btn-b ">Update</button>
+    </div>
+ </fieldset>
+</form>

@@ -101,7 +101,7 @@ sub pp_meta_block {
 
     $o .= pp_configure($mb->{'configure'}, $indent+$g_indent) if ($mb->{'configure'}) ;
     $o .= pp_provide($mb->{'provide'}, $indent+$g_indent) if ($mb->{'provide'}) ;
-    $o .= pp_provides_keys($mb->{'module_keys'},$indent+$g_indent) if ($mb->{'module_keys'}) ;
+    $o .= pp_provides_keys($mb->{'provides_keys'},$indent+$g_indent) if ($mb->{'provides_keys'}) ;
 
     $o .= $beg . "\n$beg}\n";
 
@@ -237,9 +237,10 @@ sub pp_provides_keys {
   my ($node, $indent) = @_;
   my $beg = " "x$indent;
   my $o = $beg;
-  my $keys = join(', ', @{ $node->{'provides_keys'} });
-  my $rids = join(', ', @{ $node->{'provides_rids'} });
-  $o .= 'provide keys ' . $keys . ' to ' . $rids;
+  foreach my $k (sort keys %{$node}) {
+      my $rids = join(', ', @{ $node->{$k} });
+      $o .= 'provide keys ' . $k . ' to ' . $rids . "\n";
+  }
   return $o;
 }
 
@@ -486,7 +487,7 @@ sub pp_rule_body {
     if(defined $r->{'cond'}) {
 	$o.= pp_cond($r,$indent+$g_indent);
     } else { # just actions
-	$o.= pp_actions($r->{'actions'},$r->{'blocktype'},$indent+$g_indent);
+	$o.= pp_actions($r->{'actions'},$r->{'blocktype'}, $r->{"choice"} || "" , $indent+$g_indent);
     }
 
     if(defined $r->{'callbacks'}) {
@@ -593,7 +594,7 @@ sub pp_event_expr {
 				if ($filter->{'type'} ne 'default') {
 					$ftype = $filter->{'type'} . " ";
 				}
-				$fpat = pp_string($filter->{'pattern'}) . " ";
+				$fpat = pp_pattern($filter->{'pattern'}) . " ";
 				$o .= $op . " " . $ftype . $fpat;
 			}
 			$o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
@@ -616,14 +617,14 @@ sub pp_event_expr {
       $o .= $node->{'domain'} . " ";
       $o .= $node->{'op'} . ' ';
       foreach my $f (@{ $node->{'filters'} }) {
-	$o .= $f->{'type'} . ' ' . pp_string($f->{'pattern'}) . ' ' ;
+	$o .= $f->{'type'} . ' ' . pp_pattern($f->{'pattern'}) . ' ' ;
       }
       $o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
     } else {
       $o .= $node->{'domain'} . " ";
       $o .= $node->{'op'} . ' ';
       foreach my $f (@{ $node->{'filters'} }) {
-	$o .= $f->{'type'} . ' ' . pp_string($f->{'pattern'}) . ' ' ;
+	$o .= $f->{'type'} . ' ' . pp_pattern($f->{'pattern'}) . ' ' ;
       }
       $o .= pp_setting($node->{'vars'}) if defined $node->{'vars'};
      
@@ -634,6 +635,16 @@ sub pp_event_expr {
   return $o;
 
 }
+
+sub pp_pattern {
+  my $node = shift;
+  if (ref $node eq "HASH") {
+      return pp_expr($node)
+  } else {
+      return pp_string($node)
+  }
+}
+
 
 sub pp_on_expr {
   my $node = shift;
@@ -721,13 +732,13 @@ sub pp_cond {
 
     if($pred eq 'true') {
         
-	$o .= pp_actions($node->{'actions'},$node->{'blocktype'},$indent);
+	$o .= pp_actions($node->{'actions'},$node->{'blocktype'}, $node->{"choice"} || "",$indent);
     } else {
 
 	$o .= $beg . "if ";
 	$o .= $pred;
 	$o .= "\n" . $beg . "then\n";
-	$o .= pp_actions($node->{'actions'},$node->{'blocktype'},$g_indent+$indent);
+	$o .= pp_actions($node->{'actions'},$node->{'blocktype'},$node->{"choice"} || "",$g_indent+$indent);
 	$o .= $beg . "\n";
     } 
 
@@ -760,14 +771,14 @@ sub pp_pred {
 
 
 sub pp_actions {
-    my ($node, $blocktype, $indent) = @_;
+    my ($node, $blocktype, $choicevar, $indent) = @_;
     my $beg = " "x$indent;
     my $o = "";
 
 
 
     if(defined $node && @{$node} > 1) { #actionblock
-	$o .= pp_actionblock($node, $blocktype, $indent);
+	$o .= pp_actionblock($node, $blocktype, $choicevar, $indent);
     } else { # primrule
 	# singleton block; deal with it
 	$o .= pp_primrule($node->[0], $indent);
@@ -778,12 +789,13 @@ sub pp_actions {
 
 
 sub pp_actionblock {
-    my ($node, $blocktype, $indent) = @_;
+    my ($node, $blocktype, $choicevar, $indent) = @_;
     my $beg = " "x$indent;
     my $o = $beg;
 #    my $o;
-    
-    $o .= $blocktype . " {\n";
+# my $logger = get_logger();
+# $logger->info("Choice: ", sub{ Dumper $choicevar })    ;
+    $o .= $blocktype . ($choicevar ? " " . pp_expr($choicevar) : "") . " {\n";
     foreach my $pr (@{ $node }) {
 	$o .= pp_primrule($pr,$indent+$g_indent);
     }

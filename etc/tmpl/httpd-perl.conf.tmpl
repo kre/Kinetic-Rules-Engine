@@ -110,6 +110,39 @@ Listen 80
 LoadModule perl_module modules/mod_perl.so
 </ifModule>
 
+
+<IfDefine APACHE22_STOCK>
+
+<IfModule !authz_default_module>
+LoadModule authz_default_module modules/mod_authz_default.so 
+</IfModule>
+<IfModule !authz_groupfile_module>
+LoadModule authz_groupfile_module modules/mod_authz_groupfile.so 
+</IfModule>
+<IfModule !authz_host_module>
+LoadModule authz_host_module modules/mod_authz_host.so 
+</IfModule>
+<IfModule !authz_user_module>
+LoadModule authz_user_module modules/mod_authz_user.so 
+</IfModule>
+<IfModule !log_config_module>
+LoadModule log_config_module modules/mod_log_config.so
+</IfModule>
+<IfModule !info_module>
+LoadModule info_module modules/mod_info.so
+</IfModule>
+<IfModule !status_module>
+LoadModule status_module modules/mod_status.so
+</IfModule>
+<IfModule !setenvif_module>
+LoadModule setenvif_module modules/mod_setenvif.so
+</IfModule>
+<IfModule !alias_module>
+LoadModule alias_module modules/mod_alias.so
+</IfModule>
+
+</IfDefine>
+
 LoadModule deflate_module modules/mod_deflate.so
 LoadModule expires_module modules/mod_expires.so
 LoadModule headers_module modules/mod_headers.so
@@ -136,9 +169,11 @@ RequestHeader unset Range
 
 DocumentRoot "/web/htdocs"
 
+
 <Directory />
     Options FollowSymLinks
     AllowOverride None
+
     Order deny,allow
     Deny from all
 </Directory>
@@ -151,6 +186,7 @@ DocumentRoot "/web/htdocs"
 <Directory "/web/htdocs">
     Options None
     AllowOverride None
+
     Order allow,deny
     Allow from all
 
@@ -181,9 +217,10 @@ RewriteRule   ^(.*)$ <TMPL_VAR NAME=KNS_LANDING_PAGE>
 # viewed by Web clients.
 #
 <FilesMatch "^\.ht">
-    Order allow,deny
-    Deny from all
-    Satisfy All
+
+     Order allow,deny
+     Deny from all
+     Satisfy All
 </FilesMatch>
 
 # logging all happens in the http-perl.conf file
@@ -292,7 +329,7 @@ ErrorDocument 404 "<TMPL_VAR NAME=KNS_ERROR_MSG>"
 # Include conf/extra/httpd-mpm.conf
 
 # Real-time info on requests and configuration
-Include conf/extra/httpd-info.conf
+# Include conf/extra/httpd-info.conf
 
 # Secure (SSL/TLS) connections
 #Include conf/extra/httpd-ssl.conf
@@ -369,7 +406,6 @@ CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/we
 LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %{X-Forwarded-For}i %{METHOD}e" OAUTH
 CustomLog "|/web/sbin/cronolog --period=<TMPL_VAR NAME=LOG_PERIOD> --symlink=/web/logs/oauth_log /web/logs/kynetx/OAUTH-%Y%m%d-%H%M.log" OAUTH env=OAUTH
 
-
 # use setrlimit to limit processes by cpu time and address space
 # Apache2::Resource requires BSD:Resource
 
@@ -379,13 +415,14 @@ PerlChildInitHandler Apache2::Resource
 PerlSetEnv PERL_RLIMIT_CPU <TMPL_VAR NAME=CPU_LIMIT>
 
 # allow internal requests to view apache process statistics
-ExtendedStatus On
+ExtendedStatus Off
 <Location /server-status>
 SetHandler server-status
 
-Order Deny,Allow
-Deny from all
-Allow from .kobj.net
+    Order deny,allow
+    Deny from all 
+    Allow from .kobj.net
+
 </Location>
 
 
@@ -399,6 +436,7 @@ Allow from .kobj.net
   PerlSetEnv EVENT 1
   SetHandler perl-script
   PerlHandler Kynetx::Sky
+  PerlLogHandler Kynetx::Persistence::DevLog
 
 </LocationMatch>
 
@@ -410,6 +448,7 @@ Allow from .kobj.net
   PerlSetEnv EVENT 1
   SetHandler perl-script
   PerlHandler Kynetx::Persistence::SchedEv
+  PerlLogHandler Kynetx::Persistence::DevLog
 </LocationMatch>
 
 <LocationMatch /sky/cloud/>
@@ -420,6 +459,7 @@ Allow from .kobj.net
   PerlSetEnv EVENT 1
   SetHandler perl-script
   PerlHandler Kynetx::Cloud
+  PerlLogHandler Kynetx::Persistence::DevLog
 
 </LocationMatch>
 
@@ -446,6 +486,7 @@ Allow from .kobj.net
   PerlSetEnv KOBJ 1
   SetHandler perl-script
   PerlHandler Kynetx::Events
+  PerlLogHandler Kynetx::Persistence::DevLog
 
 </LocationMatch>
 
@@ -458,6 +499,7 @@ Allow from .kobj.net
   PerlSetEnv KOBJ 1
   SetHandler perl-script
   PerlHandler Kynetx
+  PerlLogHandler Kynetx::Persistence::DevLog
 
 </LocationMatch>
 
@@ -473,7 +515,7 @@ Allow from .kobj.net
 
 </TMPL_IF>
 <TMPL_IF NAME="API_CALLBACK">
-<LocationMatch /callback|log/>
+<LocationMatch /callback/>
 
   # P3P compressed policy header
   Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
@@ -496,6 +538,18 @@ Allow from .kobj.net
   PerlSetEnv INIT 1
   SetHandler perl-script
   PerlHandler Kynetx::KOBJ
+  PerlLogHandler Kynetx::Persistence::DevLog
+
+</LocationMatch>
+
+<LocationMatch /login>
+  # P3P compressed policy header
+  Header append P3P "CP=\"NOI DSP CURa ADMo DEVo TAIo PSAo PSDo IVAo IVDo OUR BUS IND PHY ONL UNI PUR COM NAV DEM STA\""
+
+  # env var to turn on rule logging
+  PerlSetEnv LOGIN 1
+  SetHandler perl-script
+  PerlHandler Kynetx::OAuth::OAuth20
 
 </LocationMatch>
 
@@ -621,6 +675,7 @@ Alias /widgets/ "/web/lib/perl/widgets/"
   PerlResponseHandler ModPerl::Registry
   PerlOptions +ParseHeaders
   Options +ExecCGI
+
   Order allow,deny
   Allow from all
 </Location>

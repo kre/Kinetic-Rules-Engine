@@ -337,7 +337,7 @@ sub eval_query() {
 	    my ($name, $op, $rand) = 
 		($loc =~ m/@\.([a-zA-Z0-9_-]*)\s*(><|<|>|<=|>=|==|!=|eq|neq|ne|like)\s*["|']?([^'"]*)['|"]?/);
 
-	    my $o = $name ? $obj->{$name} : $obj;
+	    my $o = $name && $obj_type eq "HASH" ? $obj->{$name} : $obj;
 
 #	    $logger->debug("Filtering ", sub {Dumper($o)});
 #	    $logger->debug("$o // $op // $rand");

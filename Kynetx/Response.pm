@@ -74,6 +74,7 @@ sub directives {
 
 sub gen_directive_document {
   my $self = shift;
+  my $req_info = shift;
 
   my $logger = get_logger();
 
@@ -88,9 +89,24 @@ sub gen_directive_document {
 #  return JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(0)->encode(
 #	   $directive_doc
 #        );
-  return JSON::XS::->new->convert_blessed(1)->pretty(0)->encode(
-	   $directive_doc
-        );
+  my $json;
+  $json = eval {
+     JSON::XS::->new->convert_blessed(1)->pretty(0)->encode(
+        $directive_doc
+     );
+  }; 
+  if ($@) {
+
+      $logger->error("Can't encode directive document: $@");
+
+      my $result = {"error" => "202", # making this up for now...
+	  	    "error_str" => "bad directive document: $@"
+		   };
+
+      $json = JSON::XS::->new->convert_blessed(1)->pretty(0)->encode($result);
+  }
+
+  return $json
 }
 
 # sub gen_directive_document {
@@ -165,7 +181,7 @@ sub respond {
   Kynetx::Session::session_cleanup($session,$req_info);
 
   # return the JS load to the client
-  $logger->info("$realm processing finished");
+  $logger->info("-----***---- $realm processing finished; assembling response ----***-----");
   
   # Send any ErrorStack warnings/errors if a KEY is configured
   my $stack_key = Kynetx::Configure::get_config('ERRORSTACK_KEY');
@@ -176,7 +192,8 @@ sub respond {
   $logger->trace("Called with ", $r->the_request);
 
   # heartbeat string (let's people know we returned something)
-  my $heartbeat = "// KNS " . gmtime() . " (" . Kynetx::Util::get_hostname() . ")\n";
+#  my $heartbeat = "// KNS " . gmtime() . " (" . Kynetx::Util::get_hostname() . ")\n";
+  my $heartbeat = "";
 
   # this is where we return the JS
   binmode(STDOUT, ":encoding(UTF-8)");
@@ -192,6 +209,8 @@ sub respond {
     print $heartbeat, $js;
   } else {
     $logger->debug("Returning directives from evaluation");
+
+    $r->content_type('application/json');
 
     print $heartbeat, $dd->gen_directive_document();
   }

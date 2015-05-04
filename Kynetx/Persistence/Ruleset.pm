@@ -99,7 +99,7 @@ sub put_registry_element {
 	my $value = {
 		'value' => $val
 	};
-	$logger->debug("Hash: ", sub {Dumper($hkey)});
+	$logger->trace("Hash: ", sub {Dumper($hkey)});
 	my $success = Kynetx::MongoDB::put_hash_element(COLLECTION,$key,$hkey,$value);
 	return $success;
 	
@@ -223,6 +223,44 @@ sub get_registry {
 	return undef;
 }
 
+sub to_rid_info {
+  my ($ruleset) = @_;
+  my $logger = get_logger();
+  my $rid_info;
+  if (defined $ruleset && ref $ruleset eq "") {
+    my $rid_info = get_ruleset_info($ruleset);
+    if ($rid_info) {
+      $ruleset = $rid_info;
+    } else {
+      return Kynetx::Rids::normalize($ruleset)
+    }
+  }
+  if (defined $ruleset && ref $ruleset eq "HASH") {
+    my $rid_info = Kynetx::Rids::normalize($ruleset->{'rid'});
+    if ($ruleset->{'last_modified'}) {
+      $rid_info->{'last_modified'} = $ruleset->{'last_modified'};
+    }
+    if ($ruleset->{'owner'}) {
+      $rid_info->{'owner'} = $ruleset->{'owner'};
+    }
+    return $rid_info;
+  } 
+  return undef;
+}
+sub signature {
+  my ($rid) = @_;
+	my $logger = get_logger();
+	my $rid_info = to_rid_info($rid);
+	my @fields = ();
+	push(@fields, Kynetx::Rids::get_rid($rid_info)|| "") ;
+	push(@fields, Kynetx::Rids::get_version($rid_info) || "") ;
+	push(@fields, Kynetx::Rids::get_last_modified($rid_info) || "") ;
+	push(@fields, Kynetx::Rids::get_owner($rid_info)  || "");
+	my $sig_str = join("-",@fields);
+	$logger->trace("rid sig: $sig_str");
+	return Digest::MD5::md5_hex( $sig_str );
+}
+
 sub get_ruleset_info {
   my ($rid) = @_;
   my $logger = get_logger();
@@ -242,10 +280,15 @@ sub get_rid_index {
   my $logger = get_logger();
   my $rid;
   my $rid_index = 0;
-  my $query = {"rid" => {'$regex' => "^$prefix"}};
-  my $result = Kynetx::MongoDB::get_hash_element(COLLECTION,$query,['rid_index']);
-  if (defined $result) {
-    $rid_index = $result->{'value'} + 1;
+  my $match = {"rid" => {'$regex' => "^$prefix"},'hashkey'=> {'$in' => ['rid_index']}};
+  my $group = {'_id' => 'value',
+      'max' => {'$max' => '$value'}
+  };
+  my $result = Kynetx::MongoDB::aggregate_group(COLLECTION,$match,$group);
+  if (defined $result && ref $result eq "ARRAY" && scalar @{$result} > 0) {
+    #$logger->debug("rid index: ",sub {Dumper($result)});
+    my $element = $result->[0];
+    $rid_index = $element->{'max'} + 1;
   }  
   return $rid_index;
 }
@@ -367,6 +410,43 @@ sub increment_version {
   
 } 
 
+sub touch_ruleset {
+  my ($rid) = @_;
+  my $logger = get_logger();
+  my $exists = get_registry($rid);
+  return undef unless ($exists);
+  my $hkey = ['last_modified'];
+  my $query = {
+    "rid" => $rid,
+    "hashkey" => $hkey
+  };
+  my $timestamp = DateTime->now->epoch;
+  my $update = {
+    '$set' => {"value" => $timestamp}
+  };
+  my $new = 'true';
+	my $upsert = 'true';
+	my $fields = { "value"=>1, "_id" => 0};
+	my $fnmod = {
+		'query' => $query,
+		'update' => $update,
+		'new' => $new,
+		'upsert' => $upsert,
+		#'fields' => $fields
+	};
+	my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod);
+	$logger->trace("Touched ruleset: ", sub {Dumper($result)});
+	my $cachekey = {
+	  'rid' => $rid
+	};
+	Kynetx::MongoDB::clear_cache(COLLECTION,$cachekey);
+	if ($result && ref $result eq "HASH") {
+	  return $result->{'value'};
+	} else {
+	  return undef;
+	}
+}
+
 sub get_rulesets_by_owner {
   my ($ken) = @_;
   my $logger = get_logger();
@@ -377,7 +457,7 @@ sub get_rulesets_by_owner {
     ]
   };
   my $result = Kynetx::MongoDB::get_list(COLLECTION,$key);
-  $logger->trace("list: ", sub {Dumper($result)});
+  #$logger->debug("list: ", sub {Dumper($result)});
   my @rids = ();
   if (ref $result eq "ARRAY") {
     for my $rs (@{$result}) {

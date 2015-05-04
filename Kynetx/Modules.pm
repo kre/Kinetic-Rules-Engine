@@ -32,6 +32,7 @@ use Kynetx::Actions::LetItSnow;
 use Kynetx::Actions::JQueryUI;
 use Kynetx::Actions::FlippyLoo;
 use Kynetx::Rids qw/:all/;
+use Kynetx::Memcached;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -60,7 +61,6 @@ use Kynetx::Predicates::Time;
 use Kynetx::Predicates::Markets;
 use Kynetx::Predicates::Referers;
 use Kynetx::Predicates::Mobile;
-use Kynetx::Predicates::MediaMarkets;
 use Kynetx::Predicates::Useragent;
 use Kynetx::Predicates::KPDS;
 use Kynetx::Predicates::Page;
@@ -78,6 +78,8 @@ use Kynetx::Modules::Twilio;
 use Kynetx::Modules::URI;
 use Kynetx::Modules::Address;
 use Kynetx::Modules::PDS;
+use Kynetx::Modules::ICal;
+use Kynetx::Modules::CSV;
 use Kynetx::Modules::This2That;
 use Kynetx::Modules::OAuthModule;
 use Kynetx::Modules::Random;
@@ -105,7 +107,8 @@ sub eval_module {
 
     # see if there is a module defined function that matches
     # if so, cut this short.
-    $val = lookup_module_env($source, $function, $rule_env);
+    $val = lookup_module_env($source, $function, $rule_env, $req_info); 
+    my $function_not_found_in_module = 0;
     if (defined $val && Kynetx::Expressions::is_closure($val)) {
       # manufacture an application and apply it
       my $app = {'function_expr' => $val,
@@ -120,7 +123,9 @@ sub eval_module {
 #      $logger->debug("eval_module returning ", sub {Dumper $val});
 
       return $val;
-    }
+  } else {
+    $function_not_found_in_module = 1;
+  }
 
     #
     # the following code is ugly for historical reasons.  Ultimately,
@@ -206,17 +211,23 @@ sub eval_module {
 	     $val = Kynetx::Environments::lookup_rule_env('_'.$function, $rule_env) || 0;
       } elsif ($function eq 'rulesetName' ) {
 	     my $rid = get_rid($req_info->{'rid'});
-	     $val = $req_info->{"$rid:name"};
+	     $val = $req_info->{"meta:$rid:name"};
       } elsif ($function eq 'rulesetAuthor' ) {
 	     my $rid = get_rid($req_info->{'rid'});
-	     $val = $req_info->{"$rid:author"};
+	     $val = $req_info->{"meta:$rid:author"};
       } elsif ($function eq 'rulesetDescription' ) {
 	     my $rid = get_rid($req_info->{'rid'});
-	     $val = $req_info->{"$rid:description"};
+	     $val = $req_info->{"meta:$rid:description"};
+      } elsif ($function eq 'ruleName' ) {
+	     $val = $rule_name;
       } elsif ($function eq 'eci' ) {
 	     $val = $req_info->{"id_token"};
       } elsif ($function eq 'host' ||  $function eq 'hostname' ) {
 	$val = Kynetx::Configure::get_config('EVAL_HOST');
+      } elsif ($function eq 'txnId') {
+	$val =  $req_info->{"txn_id"};
+      } elsif ($function eq 'uri') {
+	$val =  $req_info->{"uri"};
       } else {
 	     $val = "No meta information for $function available";
       }
@@ -300,15 +311,6 @@ sub eval_module {
         } else {
             $val =
               Kynetx::Predicates::Referers::get_referer( $req_info, $function );
-        }
-    } elsif ( $source eq 'mediamarket' ) {
-        $preds = Kynetx::Predicates::MediaMarkets::get_predicates();
-        if ( defined $preds->{$function} ) {
-            $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val = Kynetx::Expressions::boolify($val || 0);
-        } else {
-            $val = Kynetx::Predicates::MediaMarkets::get_mediamarket( $req_info,
-                                                                    $function );
         }
     } elsif ( $source eq 'useragent' ) {
         $preds = Kynetx::Predicates::Useragent::get_predicates();
@@ -489,6 +491,22 @@ sub eval_module {
         } else {
             $val = Kynetx::Modules::This2That::run_function( $req_info,$function,$args );
         }    	
+    } elsif ( $source eq 'ical' ) {
+        $preds = Kynetx::Modules::ICal::get_predicates();
+        if ( defined $preds->{$function} ) {
+            $val = $preds->{$function}->( $req_info, $rule_env, $args );
+            $val = Kynetx::Expressions::boolify($val || 0);
+        } else {
+            $val = Kynetx::Modules::ICal::run_function( $req_info,$function,$args );
+        }    	
+    } elsif ( $source eq 'csv' ) {
+        $preds = Kynetx::Modules::CSV::get_predicates();
+        if ( defined $preds->{$function} ) {
+            $val = $preds->{$function}->( $req_info, $rule_env, $args );
+            $val = Kynetx::Expressions::boolify($val || 0);
+        } else {
+            $val = Kynetx::Modules::CSV::run_function( $req_info,$function,$args );
+        }    	
     } elsif ( $source eq 'xdi' ) {
         $preds = Kynetx::Persistence::KXDI::get_predicates();
         if ( defined $preds->{$function} ) {
@@ -500,21 +518,24 @@ sub eval_module {
     } elsif ( $source eq 'rsm' ) {
         $preds = Kynetx::Modules::RSM::get_predicates();
         if ( defined $preds->{$function} ) {
-            $val = $preds->{$function}->( $req_info,$rule_env,$session,$rule_name,$function,$args );
+            $val = $preds->{$function}->( $req_info, $rule_env, $args );
             $val = Kynetx::Expressions::boolify($val || 0);
         } else {
             $val = Kynetx::Modules::RSM::run_function( $req_info,$rule_env,$session,$rule_name,$function,$args );
         }    	
     } else {
+
+	#$logger->debug("Didn't find $function for $source in ", sub{ Dumper $req_info->{'module:defs'} });
+
 	Kynetx::Errors::raise_error($req_info, 'warn',
-				    "[module] named $source not found",
+				    "function named $function not found in $source or $source not valid",
 				    {'rule_name' => $rule_name,
 				     'genus' => 'module',
-				     'species' => 'module undefined'
+				     'species' => 'module or function undefined'
 				    }
 				   );
+	    
         ###TAKE ME OUT; once we see the rule env for this
-#	$logger->debug("Didn't find $function for $source in ", sub{ Dumper $rule_env });
 	$logger->debug("Didn't find $function for $source; raising error event");
 
     }
@@ -527,16 +548,46 @@ sub eval_module {
 }
 
 sub lookup_module_env {
-  my ($name,$key,$env) = @_;
-#  my $logger = get_logger();
-#  $logger->debug("Find ($key) in [$name]");
+  my ($name,$key,$env,$req_info) = @_;
+  my $logger = get_logger();
+  $logger->debug("Find ($key) in [$name]");
+#  $logger->debug("Env: ", sub{Dumper $env});
   $name = $name || "";
-  my $provided = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name . '_provided', $env);
-#  $logger->debug("Module's environment: ",sub {Dumper($provided)});
+#  my $provided = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name . '_provided', $env);
 
+  # $logger->debug("Looking for ", $Kynetx::Modules::name_prefix . $name, " in ", sub{Dumper $env});
+  my $module_sig = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name, $env);
+  $logger->debug("Signature for ", $Kynetx::Modules::name_prefix . $name, " ", $module_sig);
+
+  if (defined $module_sig && ! Kynetx::Request::module_loaded($module_sig, $req_info)) {
+      $logger->debug("Module $name:$key not loaded; attempting to load");
+      my $memd = Kynetx::Memcached::get_memd();
+  
+      my $self_rid = Kynetx::Rids::get_rid( $req_info->{'rid'} );
+      my $mod_rid = $name;
+  
+      my $module_cache = Kynetx::Modules::RuleEnv::get_module_cache($module_sig, $memd);
+      my $module_rule_env = $module_cache->{Kynetx::Modules::RuleEnv::get_re_key($module_sig)};
+      my $provided = $module_cache->{Kynetx::Modules::RuleEnv::get_pr_key($module_sig)} || {};
+      my $js = $module_cache->{Kynetx::Modules::RuleEnv::get_js_key($module_sig)} || '';
+      my $export_keys = $module_cache->{Kynetx::Modules::RuleEnv::get_export_keys_key($module_sig)} || {};
+      $req_info = Kynetx::Request::put_module_in_request_info($module_sig,
+							      $name,
+							      "unknown",
+							      $provided,
+							      $module_rule_env,
+							      $js,
+							      $export_keys,
+							      $req_info
+							     );
+  }
+
+
+  my $provided = Kynetx::Request::get_module_provides($module_sig, $req_info);
+#  $logger->debug("Module's environment: ", sub {Dumper($provided)});
   my $r;
   if ($provided->{$key}) {
-    my $mod_env = Kynetx::Environments::lookup_rule_env($Kynetx::Modules::name_prefix . $name, $env);
+    my $mod_env = Kynetx::Request::get_module_env($module_sig, $req_info);
     $r = Kynetx::Environments::lookup_rule_env($key, $mod_env);
   }
 #  $logger->debug("Returning val for $key in [$name]");

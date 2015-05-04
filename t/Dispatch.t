@@ -299,12 +299,133 @@ for my $f ( @{$a} ) {
 }
 
 
+######################## Ridlist caching
+#Log::Log4perl->easy_init($DEBUG);
+my ($description,$key,$temp);
+
+my $mod_rid = 'a144x172.prod';
+my @default_rules = ['cs_test','10','a144x171.dev',$mod_rid];
+my $test_env = Kynetx::Test::enchilada('ridlist','ridlist_rule',\@default_rules);
+$logger->debug("Dump: ",sub {Dumper($test_env)});
+
+subtest 'Environment created' => sub {Kynetx::Test::validate_env($test_env)};
+$test_count++;
+
+######################### Test Environment definitions
+my $req_info = $test_env->{'req_info'};
+my $sky_info = $test_env->{'sky_request_info'};
+my $rule_env = $test_env->{'root_env'};
+my $session  = $test_env->{'session'};
+my $rulename = $test_env->{'rulename'};
+
+my $anon_ken = $test_env->{'anonymous_user'};
+
+my $user_ken = $test_env->{'user_ken'};
+my $user_eci = $test_env->{'user_eci'};
+my $user_username = $test_env->{'username'};
+my $user_password = $test_env->{'password'};
+
+my $t_rid = $test_env->{'rid'};
+my $t_eid = $test_env->{'eid'};
+#########################
+
+$description = "Get ridlist";
+$result = Kynetx::Dispatch::get_ridlist($req_info,$user_eci,$user_ken);
+isnt(scalar @{$result},scalar @default_rules,$description);
+$test_count++;
+
+$description = "RID has last_modifed";
+$expected = {
+  'rid' => ignore(),
+  'kinetic_app_version' => any('prod','dev'),
+  'last_modified' => re(qr/\d+/),
+  'owner' => ignore()
+};
+cmp_deeply($result,superbagof($expected),$description);
+$test_count++;
+$temp = $result;
+
+$description = "Check cache for ridlist";
+$key = Kynetx::Dispatch::mk_ridlist_key($user_ken);
+$result = Kynetx::Memcached::check_cache($key);
+cmp_deeply($result,$temp,$description);
+$test_count++;
+
+$description = "Compare rid_list copy from cache";
+$result = Kynetx::Dispatch::get_ridlist($req_info,$user_eci,$user_ken);
+cmp_deeply($result,$temp,$description);
+$test_count++;
+
+$description = "Calculate the eventtree key";
+$result = Kynetx::Dispatch::mk_eventtree_key($temp);
+isnt($result,undef,$description);
+$test_count++;
+
+my $sig0 = $result;
+$logger->debug("E Key: $sig0");
+
+$description = "Compute the eventtree for a session";
+$result = Kynetx::Dispatch::calculate_rid_list($sky_info,$session);
+isnt($result,undef,$description);
+$test_count++;
+
+my $etree = $result;
+
+$description = "Check memcache for eventtree";
+$result = Kynetx::Memcached::check_cache($sig0);
+cmp_deeply($result,$etree,$description);
+$test_count++;
+
+$description = "calculate_rid_list uses the cached copy";
+$result = Kynetx::Dispatch::calculate_rid_list($sky_info,$session);
+cmp_deeply($result,$etree,$description);
+$test_count++;
+
+$description = "RID flush forces new eventtree key";
+$temp = Kynetx::Dispatch::get_ridlist($req_info,$user_eci,$user_ken);
+Kynetx::Modules::RSM::_flush($mod_rid);
+$result = Kynetx::Dispatch::mk_eventtree_key($temp);
+isnt($result,$sig0,$description);
+$test_count++;
+
+
+Log::Log4perl->easy_init($INFO);
+
+
 
 #is_deeply($result, $foo);
 
 #$test_count++;
 
+######################### Clean up
+Kynetx::Test::flush_test_user($user_ken,$user_username);
 
+my $anon_uname = "_" . $anon_ken;
+Kynetx::Test::flush_test_user($anon_ken,$anon_uname);
+
+
+######################## Event tree stashing
+
+my $et1 = {"test" => "eventtree", "foo" => {"a" => 1, "b" => 3}};
+my $rl1 = [{"rid" => "a16x8"},{"rid" => "a16x55"},{"rid" => "a8x33"} ];
+my $et_key1 =  Kynetx::Dispatch::mk_eventtree_key($rl1);
+
+my $memd = 0; # not using memcache right now...
+
+ok(! Kynetx::Dispatch::is_eventtree_stashed($my_req_info, $memd, $et_key1), "No event tree right now");
+
+Kynetx::Dispatch::stash_eventtree($my_req_info, $et1, $memd, $et_key1);
+ok(Kynetx::Dispatch::is_eventtree_stashed($my_req_info, $memd, $et_key1), "Event tree stashed");
+
+is_deeply(Kynetx::Dispatch::grab_eventtree($my_req_info, $memd, $et_key1), $et1, "We get back the eventree we stashed");
+
+Kynetx::Dispatch::delete_stashed_eventtree($my_req_info, $memd, $et_key1);
+ok(! Kynetx::Dispatch::is_eventtree_stashed($my_req_info, $memd, $et_key1), "No event tree after deleting");
+
+
+$test_count += 4;
+
+		
 done_testing($test_count);
 1;
 

@@ -50,6 +50,7 @@ our %EXPORT_TAGS = (
           astToJson
           jsonToAst
           jsonToAst_w
+          perlToJson
           get_items
           deserialize_regexp_objects
           serialize_regexp_objects
@@ -112,9 +113,10 @@ sub jsonToAst_w {
     my $pstruct;
     eval {
         #$pstruct = JSON::XS::->new->convert_blessed(1)->utf8(1)->pretty(1)->decode($json);
-        $pstruct = JSON::XS::->new->convert_blessed(1)->pretty(1)->decode($json);
+        $pstruct = JSON::XS::->new->convert_blessed(1)->allow_nonref->pretty(1)->decode($json);
     };
-    if ($@ && not defined $pstruct) {
+#    if ($@ && not defined $pstruct) { # $pstruct is always defined (with a string)
+    if ($@) {
       # Kynetx::Errors::raise_error($req_info, 'warn',
       # 				  "[json] conversion error: $@",
       # 				  {'rule_name' => $rule_name,
@@ -123,12 +125,20 @@ sub jsonToAst_w {
       # 				  }
       # 				 );
 
-        $logger->warn("####JSON conversion error: ",$@);
+        $logger->debug("####JSON conversion error: ",$@);
         $logger->trace("Source: \n##################################################\n$json");
-        return $json
+        return {'error' => [$json]};
     } else {
         return $pstruct;
     }
+}
+
+sub perlToJson {
+    my ($log_val, $pretty_print) = @_;
+    $pretty_print ||= 0; # default to no pretty print
+    return ref $log_val eq 'HASH' || 
+           ref $log_val eq 'ARRAY' ? JSON::XS::->new->convert_blessed(1)->pretty($pretty_print)->encode($log_val) 
+                                   : $log_val
 }
 
 sub serialize_regexp_objects {

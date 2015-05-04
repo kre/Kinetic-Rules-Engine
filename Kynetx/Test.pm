@@ -28,6 +28,8 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use Log::Log4perl qw(get_logger :levels);
 use IPC::Lock::Memcached;
 
+use Clone qw(clone);
+
 use Kynetx::Environments qw/:all/;
 use Kynetx::Memcached qw/:all/;
 use Kynetx::Session qw/:all/;
@@ -36,6 +38,7 @@ use Kynetx::Persistence qw(:all);
 use Kynetx::Rids qw(:all);
 use Kynetx::Request qw(:all);
 use Kynetx::Modules::PCI qw(:all);
+use Kynetx::Modules::OAuthModule;
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
@@ -46,8 +49,51 @@ getkrl
 trim
 nows
 mk_config_string
-) ]);
-our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} }) ;
+gen_root_env
+platform
+gen_user
+rword
+) ],
+vars => [
+  qw(
+    $root_env
+    $username
+    $user_ken
+    $user_eci
+    $dev_ken
+    $dev_eci
+    $dev_env
+    $dev_secret
+    $description
+    $result
+    @results
+    $expected
+    $args
+    $uuid_re
+    $platform
+  )
+]);
+our @EXPORT_OK   =(@{ $EXPORT_TAGS{'all'} },@{$EXPORT_TAGS{'vars'}}) ;
+
+
+our (
+  $root_env,
+  $username, 
+  $user_ken,
+  $user_eci, 
+  $dev_ken,
+  $dev_eci,
+  $dev_env, 
+  $dev_secret,
+  $description,
+  $result,
+  @results,
+  $expected,
+  $args,
+  $platform
+);
+
+our $uuid_re = "^[A-F|0-9]{8}\-[A-F|0-9]{4}\-[A-F|0-9]{4}\-[A-F|0-9]{4}\-[A-F|0-9]{12}\$";
 
 my $re_rid;
 
@@ -277,28 +323,32 @@ sub gen_user {
   my ($req_info,$rule_env,$session,$uname) = @_;
   my $js;
   # This system key auto expires
-  my $system_key = Kynetx::Modules::PCI::create_system_key();
-  if (Kynetx::Modules::PCI::check_system_key($system_key)){
-    my $keys = {'root' => $system_key};
-    ($js, $rule_env) = 
-     Kynetx::Keys::insert_key(
-      $req_info,
-      $rule_env,
-      'system_credentials',
-      $keys);
-    my $args = {
-      "username" => $uname,
-      "firstname" => "Test",
-      "lastname" => "Test.pm",
-      "password" => "*",
-    };
-    my $rule_name = "test_pm";
-    my $account = Kynetx::Modules::PCI::new_account($req_info,$rule_env,$session,$rule_name,"foo",[$args]);
-    my $eci = $account->{'cid'};
-    my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
-    if ($ken) {
-      return $ken
+  my $rule_name = "test_gen_user";
+  unless (Kynetx::Modules::PCI::pci_authorized($req_info,$rule_env,$session,$rule_name,"foo",[])) {
+    my $system_key = Kynetx::Modules::PCI::create_system_key();
+    if (Kynetx::Modules::PCI::check_system_key($system_key)){
+      my $keys = {'root' => $system_key};
+      ($js, $rule_env) = 
+       Kynetx::Keys::insert_key(
+        $req_info,
+        $rule_env,
+        'system_credentials',
+        $keys);    
+    } else {
+      return undef;
     }
+  }
+  my $args = {
+    "username" => $uname,
+    "firstname" => "Test",
+    "lastname" => "Test.pm",
+    "password" => "*",
+  };
+  my $account = Kynetx::Modules::PCI::new_account($req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+  my $eci = $account->{'cid'};
+  my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
+  if ($ken) {
+    return $ken
   }
   return undef;
 }
@@ -307,6 +357,49 @@ sub flush_test_user {
   my ($ken,$username) = @_;
   Kynetx::MongoDB::flush_user($ken,$username);
   
+}
+
+sub gen_root_env {
+  my ($req_info, $rule_env,$session) = @_;
+  my $rule_name = "test_env";
+  my $system_key = Kynetx::Modules::PCI::create_system_key();
+  if (Kynetx::Modules::PCI::check_system_key($system_key)) {
+    my $keys =  { 'root' => $system_key };
+    my ($js,$root_env)=  Kynetx::Keys::insert_key(
+      $req_info,
+      $rule_env,
+      'system_credentials',
+      $keys);
+    if (Kynetx::Modules::PCI::pci_authorized($req_info,$root_env,$session,$rule_name,"foo",[])) {
+      return $root_env;
+    } else {
+      return undef;
+    }
+  } else {
+    return undef;
+  }
+  
+}
+
+sub gen_dev_env {
+  my ($req_info, $rule_env,$session,$eci) = @_;
+  my $rule_name = "dev_env";
+  my $secret = Kynetx::Modules::PCI::developer_key($req_info,$rule_env,$session,$rule_name,"foo",[$eci]);
+  my $dev_cred = {
+    'developer_eci' => $eci,
+    'developer_secret' => $secret
+  };
+  my ($js, $dev_env) = 
+        Kynetx::Keys::insert_key(
+          $req_info,
+          $rule_env,
+          'system_credentials',
+          $dev_cred);
+  if (Kynetx::Modules::PCI::developer_authorized($req_info,$dev_env,$session,['cloud', 'auth'])) {
+    return ($dev_env,$secret);
+  } else {
+    return undef;
+  }
 }
 
 sub mk_config_string {
@@ -326,6 +419,169 @@ sub mk_config_string {
   return  '{' . join(",", @items) . '}';
 }
 
+sub platform {
+  my $platform = '127.0.0.1';
+  $platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
+  $platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
+  $platform = 'kibdev.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'sandbox');
+  return $platform;
+}
 
+sub rword {
+  my $dict_path = "/usr/share/dict/words";
+  my @DICTIONARY;
+  open DICT, $dict_path;
+  @DICTIONARY = <DICT>;
+  my $word = $DICTIONARY[rand(@DICTIONARY)];
+  chomp($word);
+  close DICT;
+  return $word;
+}
+
+sub add_test_rule {
+  my ($req_info,$rule_env,$session,$user_eci,$rid) = @_;
+  my $rule_name = "add_test_rule";
+  my $function_name = "_null_";
+  return Kynetx::Modules::PCI::add_ruleset_to_account($req_info,$rule_env,$session,$rule_name,"foo",[$user_eci,$rid]);
+}
+
+
+sub enchilada {
+  my ($rid,$rulename,$rules) = @_;
+  my $test_environment;
+  
+  ### Defaults
+  $rid = "test_rid" unless ($rid);
+  $rulename = "test_rulename" unless ($rulename);
+  
+  $test_environment->{'rid'} = $rid;
+  $test_environment->{'rulename'} = $rulename;
+    
+  my $eid = time;
+  $test_environment->{'eid'} = $eid;
+  
+  ### Environments
+  my $request_info = gen_req_info($rid);
+  my $rule_env = gen_rule_env();
+  my $r = configure();
+  my $session = gen_session($r,$rid);
+  my $anon = Kynetx::Persistence::KEN::get_ken($session,$rid);
+  
+  $test_environment->{'req_info'} = $request_info;
+  $test_environment->{'rule_env'} = $rule_env;
+  $test_environment->{'r'} = $r;
+  $test_environment->{'session'} = $session;
+  $test_environment->{'anonymous_user'} = $anon;
+  
+  $test_environment->{'platform'} = platform();
+  
+  ### Users
+  my $username = rword();
+  my $password = rword();
+  
+  $test_environment->{'username'} = $username;
+  $test_environment->{'password'} = $password;
+  
+  my $root_env = gen_root_env($request_info,$rule_env,$session);
+  my $user_ken = gen_user($request_info,$root_env,$session,$username);
+  my $user_eci = Kynetx::Persistence::KToken::get_oldest_token($user_ken);
+  
+  $test_environment->{'root_env'} = $root_env;
+  $test_environment->{'user_ken'} = $user_ken;
+  $test_environment->{'user_eci'} = $user_eci;
+  
+  my $sky_request = make_sky_request_info($request_info,$user_eci,'web','pageview');
+  
+  $test_environment->{'sky_request_info'} = $sky_request;
+  
+  if ($rules && ref $rules eq "ARRAY") {    
+    my $args = [$user_eci,@{$rules}];
+    Kynetx::Modules::PCI::add_ruleset_to_account($request_info,$root_env,$session,$rulename,"foo",$args);    
+  }
+  
+  return $test_environment;
+}
+
+sub make_sky_request_info {
+  my ($req_info,$id_token,$domain,$eventtype) = @_;
+  my $sky_info = clone $req_info;
+  $sky_info->{'_api'} = 'sky';
+  $sky_info->{'domain'} = $domain || 'web';
+  $sky_info->{'eventtype'} = $eventtype || 'submit';
+  $sky_info->{'id_token'} = $id_token;
+  return $sky_info;
+}
+
+sub validate_env {
+  my ($test_env) = @_;
+  my $num_tests = 0;
+  my $req_info = $test_env->{'req_info'};
+  my $rule_env = $test_env->{'root_env'};
+  my $session = $test_env->{'session'};
+  my $rulename = $test_env->{'rulename'};
+  
+  my ($description,$result,$expected);
+  
+  $description = "Validate root environment";
+  $result = Kynetx::Modules::PCI::pci_authorized($req_info,$rule_env,$session,$rulename,"foo",[]);
+  Test::More::is($result,1,$description);
+  $num_tests++;
+  
+  $description = "KEN and ECI match";
+  my $ken = $test_env->{'user_ken'};
+  my $eci = $test_env->{'user_eci'};
+  my $eken = Kynetx::Persistence::KEN::ken_lookup_by_token($eci);
+  Test::More::is($ken,$eken,$description);
+  $num_tests++;
+}
+
+# twitter query because it returns gloriously complicated json
+sub twitter_query_map {
+  my ($my_req_info,$rule_env,$session,$rid, $twitter_id) = @_;
+  $twitter_id = "13524182" unless ($twitter_id); # dave wiegel
+  
+  my $anontoken = {
+	 'access_token' => '100844323-XqQfRm33tQqp54mmhKCfNF9VIOaxVISrIYTOTXOy',
+	 'access_token_secret' => 'QdGk4MGc2RiNuD5MHjL5GVk9m1h3SsooGeMWfUQb7f0'
+  };
+  my $keys = {
+	'consumer_key' => 'jPlIPAk1gbigEtonC2yNA',
+   	'consumer_secret' => '3HNb7NhKuqRIm2BuxKPSg6JYvMtLahvkMt6Std5SO0'
+  };
+
+  # these are anonymous consumer tokens
+  my $js;
+  ($js, $rule_env) = 
+   Kynetx::Keys::insert_key(
+    $my_req_info,
+    $rule_env,
+    'anon',
+    $keys);
+  
+  my $turl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
+  my $num_t = 50;
+  
+  my $args = ['anon', {
+		'url' => $turl,
+		'params' => {
+			'include_entities' => 'true',
+			'include_rts' => 'true',
+			'user_id' => $twitter_id,
+			'count' => $num_t,
+			'trim_user' => 1
+		},
+		'access_tokens' => $anontoken
+	}];
+	
+	my $result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rid,'get',$args);
+	my $twit_array = Kynetx::Json::decode_json($result->{'content'});
+  my $t_hash;
+  my $i = 0;
+  foreach my $tweet (@{$twit_array}) {
+     $t_hash->{'a' . $i++} = $tweet;
+  }
+  
+  return $t_hash; 
+}
 
 1;
