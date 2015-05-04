@@ -223,7 +223,7 @@ sub set_ttl {
 
 # Slightly different format for ECI tokens
 sub create_token {
-  my ($ken, $label,$type,$attributes,$policy) = @_;
+  my ($ken, $label,$type,$session,$attributes,$policy) = @_;
   my $logger = get_logger();
   my $ug = new Data::UUID;
   my $ktoken = $ug->create_str();

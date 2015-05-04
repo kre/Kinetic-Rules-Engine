@@ -97,7 +97,7 @@ sub get_ken {
     $logger->warn("get_ken called with invalid session: ", sub {Dumper($session)}) unless ($session);
     my $ktoken = Kynetx::Persistence::KToken::get_token($session,$rid,$domain);
     if ($ktoken) {
-        $logger->trace("Token found: ",sub {Dumper($ktoken)});
+        $logger->debug("Token found: ",sub {Dumper($ktoken)});
         # update the KEN so we can do a better job of determining stale KENS
         $ken = $ktoken->{'ken'};
         touch_ken($ken);

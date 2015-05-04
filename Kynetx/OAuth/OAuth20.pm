@@ -598,7 +598,7 @@ sub create_login_token {
   my $logger = get_logger();
 #  $logger->debug("Ken: $ken ", sub {Dumper($session)});
   Kynetx::Persistence::KToken::delete_token(undef,get_session_id($session));
-  my $token = Kynetx::Persistence::KToken::create_token($ken,LOGIN_TAG,"KMCP",$session);
+  my $token = Kynetx::Persistence::KToken::create_token($ken,LOGIN_TAG,$session);
 #  $logger->debug("Made token: ", sub {Dumper($token)});
   return $token;  
 }

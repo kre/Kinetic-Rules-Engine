@@ -37,6 +37,7 @@ use Storable 'dclone';
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
+#Log::Log4perl->easy_init($DEBUG);
 
 use Kynetx::Test qw/:all/;
 use Kynetx::Actions qw/:all/;
@@ -691,12 +692,12 @@ $test_count++;
 
 ####### ECI Attributes and Policy
 
+
 my ($pre_result, $first);
 
 $description = "Add an ECI with attributes";
 $expected = ['hello', 'goodbye'];
 $pre_result = Kynetx::Modules::PCI::new_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$uid,{'name' => $uname, 'attributes' => $expected}]);
-#diag Dumper $result;
 $result = Kynetx::Modules::PCI::get_eci_attributes($my_req_info,
 						   $rule_env,
 						   $session,
@@ -704,6 +705,9 @@ $result = Kynetx::Modules::PCI::get_eci_attributes($my_req_info,
 						   "foo",
 						   [$pre_result->{'cid'}]
 						 );
+
+#diag Dumper $result;
+
 cmp_deeply($result,$expected,$description);
 $test_count++;
 

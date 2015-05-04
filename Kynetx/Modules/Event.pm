@@ -322,8 +322,7 @@ sub send_scheduled_event {
   my $ken = $schedEvent->{'ken'};
   my $valid = Kynetx::Persistence::KEN::get_ken_value( $ken, '_id' );
   return undef unless ($valid);
-  my $token = Kynetx::Persistence::KToken::create_token( $ken, '_schedev_',
-    '_temporary_' );
+  my $token = Kynetx::Persistence::KToken::create_token( $ken, '_schedev_', '_temporary_' );
   Kynetx::Persistence::KToken::set_ttl( $token, 'ttl5' );
   my $sm = { 'token' => $token };
 
