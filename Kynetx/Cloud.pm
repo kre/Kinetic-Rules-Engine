@@ -98,7 +98,7 @@ sub handler {
 	my ($rids);
 	$r->subprocess_env( START_TIME => Time::HiRes::time );
 
-	# path looks like: /sky/{event|flush}/{version|<id_token>}/<eid>?_domain=...&_name=...&...
+	# path looks like: /sky/{cloud|version|flush}/<module>/<function>?_eci=...&arg0=...&arg1=...&...&argn=...
 
 	my @path_components = split( /\//, $r->path_info );
 
@@ -146,7 +146,7 @@ sub handler {
 	  my $rid = unalias($module_alias);
 
 	  $req_info->{'module_name'} = $rid;
-	  $req_info->{'rid'} = Kynetx::Rids::mk_rid_info( $req_info, $rid );
+	  $req_info->{'rid'} = Kynetx::Rids::mk_rid_info( $req_info, $rid, {"version" => $version} );
 	  $req_info->{'module_version'} = $version;
 	  $req_info->{'module_alias'} = $module_alias;
 	  $req_info->{'function_name'} = $path_components[3];

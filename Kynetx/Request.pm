@@ -110,6 +110,7 @@ sub build_request_env {
     # you'd think you could just grab the POST body and parse it here, setting the 
     # params as necessary. Unfortunately, it's not that simple since parsing the request
     # with Apache2::Request doesn't work and destroys the body...
+    # BTW, this is MUCH slower than a form encoded body. Need to optimize
   }
 
   foreach my $k ( keys %{$body_params}) {
