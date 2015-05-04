@@ -228,6 +228,12 @@ sub create_token {
   my $ug = new Data::UUID;
   my $ktoken = $ug->create_str();
   my $oid = MongoDB::OID->new();
+  my $e_id;
+  if ($session) {
+      $e_id = $session->{"_session_id"};
+  } else {
+      $e_id = $ktoken;
+  }
   my $lastactive = DateTime->now->epoch;
   $type = $type || "KRE";
   my $var = {
@@ -238,15 +244,15 @@ sub create_token {
 	       "ktoken" => $ktoken,
 	       "_id" => $oid,
 	       "last_active" => $lastactive,
-	       "endpoint_id" => $ktoken,
+	       "endpoint_id" => $e_id,
 	       "token_name" => $label,
 	       "attributes" => $attributes,
 	       "policy" => $policy,
 	       "endpoint_type" => $type,
 	      };
   my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0,1);
-  $logger->trace("Token ken: ", sub {Dumper($token->{'ken'})});
-  $logger->trace("Token status: ", sub {Dumper($status)});
+  $logger->debug("Token ken: ", sub {Dumper($token->{'ken'})});
+  $logger->debug("Token status: ", sub {Dumper($status)});
   if (ref $status eq 'HASH' && ($status->{'ok'} == 1)) {
       Kynetx::Persistence::KEN::touch_ken($ken);
       return $ktoken;

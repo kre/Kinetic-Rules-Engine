@@ -586,7 +586,7 @@ sub _logged_in {
   my $logger = get_logger();
 #  $logger->debug("get token for ", sub { Dumper $session } );
   my $token = Kynetx::Persistence::KToken::get_token($session,undef,"web");
-#  $logger->debug("get token: ", sub {Dumper($token)});
+  #$logger->debug("get token: ", sub {Dumper($token)});
   if (defined $token && ref $token eq "HASH") {
     return $token->{'ktoken'}
   }
@@ -596,10 +596,10 @@ sub _logged_in {
 sub create_login_token {
   my ($session,$ken) = @_;
   my $logger = get_logger();
-#  $logger->debug("Ken: $ken ", sub {Dumper($session)});
+  $logger->debug("Ken: $ken ", sub {Dumper($session)});
   Kynetx::Persistence::KToken::delete_token(undef,get_session_id($session));
-  my $token = Kynetx::Persistence::KToken::create_token($ken,LOGIN_TAG,$session);
-#  $logger->debug("Made token: ", sub {Dumper($token)});
+  my $token = Kynetx::Persistence::KToken::create_token($ken,LOGIN_TAG, 'OAUTH',$session);
+  $logger->debug("Made token: ", sub {Dumper($token)});
   return $token;  
 }
 
@@ -934,7 +934,7 @@ sub _signin {
 #	$logger->debug("Password: ",$password);
 	my $ken = _validate_password($username,$password);
 	if ($ken) {
-#	  $logger->debug("Found user ken ($ken)");
+	  #$logger->debug("Found user ken ($ken)");
 	  create_login_token($session,$ken);
 	  return $ken;
 	} else {
