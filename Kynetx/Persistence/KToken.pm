@@ -131,6 +131,90 @@ sub get_token_id {
   return $id;
 }
 
+sub get_eci_attributes {
+  my ($token) = @_;
+#  my $logger = get_logger();
+  my $key = {
+    'ktoken' => $token
+  };
+  my $attrs = undef;
+  my $result = Kynetx::MongoDB::get_singleton(COLLECTION,$key);
+#  $logger->debug("ECI contents for $token", sub {Dumper $result});
+  if ($result && $result->{'attributes'}) {
+    $attrs = $result->{'attributes'};    
+  }
+  return $attrs;
+}
+
+sub set_eci_attributes {
+  my ($token, $attrs) = @_;
+#  my $logger = get_logger();
+  my $key = {
+    'ktoken' => $token
+  };
+
+  my $update = {
+		'$set' =>{"attributes" => $attrs}
+	       };
+
+  my $fnmod = {
+	       'query' => $key,
+	       'update' => $update,
+	       'new' => 'true',
+	       'upsert' => 'true',
+	      };
+#  $logger->trace("query: ", sub {Dumper($fnmod)});
+
+  my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod);
+  my $cachekey = {
+    'ktoken' => $token
+  };
+  Kynetx::MongoDB::clear_cache(COLLECTION,$cachekey);
+#  $logger->trace("fnm: ", sub {Dumper($result)});
+  return $result;
+}
+
+sub get_eci_policy {
+  my ($token) = @_;
+  my $key = {
+    'ktoken' => $token
+  };
+  my $policy = undef;
+  my $result = Kynetx::MongoDB::get_singleton(COLLECTION,$key);
+  if ($result && $result->{'policy'}) {
+    $policy = $result->{'policy'};    
+  }
+  return $policy;
+}
+
+sub set_eci_policy {
+  my ($token, $policy) = @_;
+#  my $logger = get_logger();
+  my $key = {
+    'ktoken' => $token
+  };
+
+  my $update = {
+		'$set' =>{"policy" => $policy}
+	       };
+
+  my $fnmod = {
+	       'query' => $key,
+	       'update' => $update,
+	       'new' => 'true',
+	       'upsert' => 'true',
+	      };
+#  $logger->trace("query: ", sub {Dumper($fnmod)});
+
+  my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod);
+  my $cachekey = {
+    'ktoken' => $token
+  };
+  Kynetx::MongoDB::clear_cache(COLLECTION,$cachekey);
+#  $logger->trace("fnm: ", sub {Dumper($result)});
+  return $result;
+}
+
 sub set_ttl {
   my ($token,$ttl_index) = @_;
   my $oid = Kynetx::Persistence::KToken::get_token_id($token);
@@ -139,43 +223,39 @@ sub set_ttl {
 
 # Slightly different format for ECI tokens
 sub create_token {
-	my ($ken, $label,$type, $session) = @_;
-	my $logger = get_logger();
-	my $ug = new Data::UUID;
-	my $ktoken = $ug->create_str();
-	my $oid = MongoDB::OID->new();
-	my $e_id;
-	if ($session) {
-	  $e_id = $session->{"_session_id"};
-	} else {
-	  $e_id = $ktoken;
-	}
-	my $lastactive = DateTime->now->epoch;
-	$type = $type || "KRE";
-    my $var = {
-        "ktoken" => $ktoken,
-    };
-	my $token = {
-        "ken" => $ken,
-        "ktoken" => $ktoken,
-        "_id" => $oid,
-        "last_active" => $lastactive,
-        "endpoint_id" => $e_id,
-        "token_name" => $label,
-        "endpoint_type" => $type,
-    };
-    my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0,1);
-    $logger->trace("Token ken: ", sub {Dumper($token->{'ken'})});
-    $logger->trace("Token status: ", sub {Dumper($status)});
-    if (ref $status eq 'HASH' && ($status->{'ok'} == 1)) {
-        Kynetx::Persistence::KEN::touch_ken($ken);
-        return $ktoken;
-    } elsif ($status) {
-        Kynetx::Persistence::KEN::touch_ken($ken);
-        return $ktoken;
-    } else {
-        $logger->warn("Token request error: ", mongo_error());
-    }
+  my ($ken, $label,$type,$attributes,$policy) = @_;
+  my $logger = get_logger();
+  my $ug = new Data::UUID;
+  my $ktoken = $ug->create_str();
+  my $oid = MongoDB::OID->new();
+  my $lastactive = DateTime->now->epoch;
+  $type = $type || "KRE";
+  my $var = {
+	     "ktoken" => $ktoken,
+	    };
+  my $token = {
+	       "ken" => $ken,
+	       "ktoken" => $ktoken,
+	       "_id" => $oid,
+	       "last_active" => $lastactive,
+	       "endpoint_id" => $ktoken,
+	       "token_name" => $label,
+	       "attributes" => $attributes,
+	       "policy" => $policy,
+	       "endpoint_type" => $type,
+	      };
+  my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0,1);
+  $logger->trace("Token ken: ", sub {Dumper($token->{'ken'})});
+  $logger->trace("Token status: ", sub {Dumper($status)});
+  if (ref $status eq 'HASH' && ($status->{'ok'} == 1)) {
+      Kynetx::Persistence::KEN::touch_ken($ken);
+      return $ktoken;
+  } elsif ($status) {
+      Kynetx::Persistence::KEN::touch_ken($ken);
+      return $ktoken;
+  } else {
+      $logger->warn("Token request error: ", mongo_error());
+  }
 }
 
 # this should be okay for small numbers of tokens
@@ -234,6 +314,7 @@ sub is_authenticated {
 	$logger->trace("Token: ", sub {Dumper($valid)});
 	return $valid->{'authenticated'};
 }
+
 
 
 sub is_valid_token {

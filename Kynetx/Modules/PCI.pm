@@ -887,7 +887,7 @@ sub new_eci {
 	return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys) ||
 	                 developer_authorized($req_info,$rule_env,$session,['eci','create']));
 	my $ken;
-	my ($token_name,$type);
+	my ($token_name,$type,$attributes,$policy);
 	my $arg1 = $args->[0];
 	my $arg2 = $args->[1];
 	if (! defined $arg1) {
@@ -906,13 +906,19 @@ sub new_eci {
 		if (defined $arg2 && ref $arg2 eq "HASH") {
 				$token_name = $arg2->{'name'};
 				$type = $arg2->{'eci_type'};
+				$attributes = $arg2->{'attributes'};
+				$policy = $arg2->{'policy'};
 		} 
 	}
 	$token_name ||= "Generic ECI channel";
 	$type ||= 'PCI';
 	if ($ken) {
 		my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');	
-		my $eci =  Kynetx::Persistence::KToken::create_token($ken,$token_name,$type);	
+		my $eci =  Kynetx::Persistence::KToken::create_token($ken,
+								     $token_name,
+								     $type,
+								     $attributes,
+								     $policy);
 		return {
 			"nid" => $userid,
 			"name" => $token_name,
@@ -922,6 +928,39 @@ sub new_eci {
 	return undef;
 }
 $funcs->{'new_eci'} = \&new_eci;
+
+sub get_eci_attributes {
+  my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+  my $eci = $args->[0];
+  return Kynetx::Persistence::KToken::get_eci_attributes($eci);	
+}
+$funcs->{'get_eci_attributes'} = \&get_eci_attributes;
+
+sub set_eci_attributes {
+  my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+  my $eci = $args->[0];
+  my $attrs = $args->[1];
+  return Kynetx::Persistence::KToken::set_eci_attributes($eci, $attrs);	
+}
+$funcs->{'set_eci_attributes'} = \&set_eci_attributes;
+
+
+sub get_eci_policy {
+  my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+  my $eci = $args->[0];
+  return Kynetx::Persistence::KToken::get_eci_policy($eci);	
+}
+$funcs->{'get_eci_policy'} = \&get_eci_policy;
+
+sub set_eci_policy {
+  my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+  my $eci = $args->[0];
+  my $policy = $args->[1];
+  return Kynetx::Persistence::KToken::set_eci_policy($eci, $policy);	
+}
+$funcs->{'set_eci_policy'} = \&set_eci_policy;
+
+
 
 
 

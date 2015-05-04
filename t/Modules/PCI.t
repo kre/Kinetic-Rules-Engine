@@ -650,6 +650,7 @@ $result = Kynetx::Modules::PCI::list_eci($my_req_info,$rule_env,$session,$rule_n
 cmp_deeply($result,$expected,$description);
 $test_count++;
 
+
 ####### Predicates (after ECIs have been created)
 # check that predicates at least run without error
 
@@ -685,6 +686,170 @@ $static_eci = "D808DAC2-84E6-11E2-B4CC-22BD87B7806A";
 @dummy_arg = ($static_eci,\@t_list);
 $expected = 0;
 $result = &{$preds->{'is_related'}}($my_req_info, $rule_env,\@dummy_arg);
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+####### ECI Attributes and Policy
+
+my ($pre_result, $first);
+
+$description = "Add an ECI with attributes";
+$expected = ['hello', 'goodbye'];
+$pre_result = Kynetx::Modules::PCI::new_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$uid,{'name' => $uname, 'attributes' => $expected}]);
+#diag Dumper $result;
+$result = Kynetx::Modules::PCI::get_eci_attributes($my_req_info,
+						   $rule_env,
+						   $session,
+						   $rule_name,
+						   "foo",
+						   [$pre_result->{'cid'}]
+						 );
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Add ECI attributes";
+$expected = ['hello', 'goodbye'];
+$pre_result = Kynetx::Modules::PCI::new_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$uid,{'name' => $uname}]);
+#diag "Pre: ", Dumper $pre_result;
+$result = Kynetx::Modules::PCI::set_eci_attributes($my_req_info,
+						   $rule_env,
+						   $session,
+						   $rule_name,
+						   "foo",
+						   [$pre_result->{'cid'},
+						    $expected
+						   ]
+						 );
+#diag "Set: ", Dumper $result;
+$result = Kynetx::Modules::PCI::get_eci_attributes($my_req_info,
+						   $rule_env,
+						   $session,
+						   $rule_name,
+						   "foo",
+						   [$pre_result->{'cid'}]
+						 );
+#diag "Get: ", Dumper $result;
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Change ECI attributes";
+$first =  ['foo', 'bar'];
+$expected = ['hello', 'goodbye'];
+$pre_result = Kynetx::Modules::PCI::new_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$uid,{'name' => $uname, 'attributes' => $first}]);
+#diag "Pre: ", Dumper $pre_result;
+
+# make sure they stuck
+$result = Kynetx::Modules::PCI::get_eci_attributes($my_req_info,
+						   $rule_env,
+						   $session,
+						   $rule_name,
+						   "foo",
+						   [$pre_result->{'cid'}]
+						 );
+#diag "Get: ", Dumper $result;
+cmp_deeply($result,$first,$description);
+$test_count++;
+
+# now change them
+$result = Kynetx::Modules::PCI::set_eci_attributes($my_req_info,
+						   $rule_env,
+						   $session,
+						   $rule_name,
+						   "foo",
+						   [$pre_result->{'cid'},
+						    $expected
+						   ]
+						 );
+#diag "Set: ", Dumper $result;
+$result = Kynetx::Modules::PCI::get_eci_attributes($my_req_info,
+						   $rule_env,
+						   $session,
+						   $rule_name,
+						   "foo",
+						   [$pre_result->{'cid'}]
+						 );
+#diag "Get: ", Dumper $result;
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Add an ECI with policy";
+$expected = {'add_ok' => 1, 'places' => [1,2,3,4]};
+$pre_result = Kynetx::Modules::PCI::new_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$uid,{'name' => $uname, 'policy' => $expected}]);
+#diag "ECI Creation: ", Dumper $pre_result;
+$result = Kynetx::Modules::PCI::get_eci_policy($my_req_info,
+					       $rule_env,
+					       $session,
+					       $rule_name,
+					       "foo",
+					       [$pre_result->{'cid'}]
+					      );
+#diag "Result: ", Dumper $result;
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+
+$description = "Add ECI policy";
+$expected = {'add_ok' => 1, 'places' => [1,2,3,4]};
+$pre_result = Kynetx::Modules::PCI::new_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$uid,{'name' => $uname}]);
+#diag "Pre: ", Dumper $pre_result;
+$result = Kynetx::Modules::PCI::set_eci_policy($my_req_info,
+					       $rule_env,
+					       $session,
+					       $rule_name,
+					       "foo",
+					       [$pre_result->{'cid'},
+						$expected
+					       ]
+					      );
+#diag "Set: ", Dumper $result;
+$result = Kynetx::Modules::PCI::get_eci_policy($my_req_info,
+					       $rule_env,
+					       $session,
+					       $rule_name,
+					       "foo",
+					       [$pre_result->{'cid'}]
+					      );
+#diag "Get: ", Dumper $result;
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Change ECI policy";
+$expected = {'add_ok' => 1, 'places' => [1,2,3,4]};
+$first = {'foo' => [1,2,3], 'bar' => {'hello' => 'world'}};
+$pre_result = Kynetx::Modules::PCI::new_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$uid,{'name' => $uname, 'policy' => $first}]);
+#diag "Pre: ", Dumper $pre_result;
+
+# make sure it stuck
+$result = Kynetx::Modules::PCI::get_eci_policy($my_req_info,
+					       $rule_env,
+					       $session,
+					       $rule_name,
+					       "foo",
+					       [$pre_result->{'cid'}]
+					      );
+#diag "Get: ", Dumper $result;
+cmp_deeply($result,$first,$description);
+$test_count++;
+
+# now make sure we can change it
+$result = Kynetx::Modules::PCI::set_eci_policy($my_req_info,
+					       $rule_env,
+					       $session,
+					       $rule_name,
+					       "foo",
+					       [$pre_result->{'cid'},
+						$expected
+					       ]
+					      );
+#diag "Set: ", Dumper $result;
+$result = Kynetx::Modules::PCI::get_eci_policy($my_req_info,
+					       $rule_env,
+					       $session,
+					       $rule_name,
+					       "foo",
+					       [$pre_result->{'cid'}]
+					      );
+#diag "Get: ", Dumper $result;
 cmp_deeply($result,$expected,$description);
 $test_count++;
 
@@ -772,12 +937,12 @@ $test_count++;
 
 sleep 1;
 
-$description = "Log created for ruleset";
-$args = [$log_eci];
-$result = Kynetx::Modules::PCI::get_log_messages($my_req_info,$dev_env,$session,$rule_name,'foo',$args);
-my $id = (keys %{$result})[0];
-cmp_deeply($result->{$id}->{'log_text'},$expected,$description);
-$test_count++;
+# $description = "Log created for ruleset";
+# $args = [$log_eci];
+# $result = Kynetx::Modules::PCI::get_log_messages($my_req_info,$dev_env,$session,$rule_name,'foo',$args);
+# my $id = (keys %{$result})[0];
+# cmp_deeply($result->{$id}->{'log_text'},$expected,$description);
+# $test_count++;
 
 
 Log::Log4perl->easy_init($INFO);
