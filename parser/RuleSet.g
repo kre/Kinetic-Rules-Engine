@@ -1441,7 +1441,8 @@ event_explicit returns[HashMap result]
 		tmp.put("filters",filters);
 		$result = tmp;
 	}
-	| op=(VAR|OTHER_OPERATORS) WHERE (ee = event_expression{exps.add(ee.result);}(ee2 = event_expression{exps.add(ee2.result);})* ) set=setting? {
+	// | op=(VAR|OTHER_OPERATORS) WHERE (ee = event_expression{exps.add(ee.result);}(ee2 = event_expression{exps.add(ee2.result);})* ) set=setting? {
+    | op=(VAR|OTHER_OPERATORS) WHERE (ef = event_filter{filters.add(ef.result);}(ef2=event_filter{filters.add(ef2.result);})* )  set=setting? {
 		HashMap tmp = new HashMap();
 		//tmp.put("domain",$dom.text);
 		tmp.put("type","prim_event");
@@ -1535,7 +1536,8 @@ event_pageview returns[HashMap result]
 	ArrayList filters = new ArrayList();
 	ArrayList exps = new ArrayList();
 }
-	: op=PAGEVIEW WHERE (ee = event_expression{exps.add(ee.result);}(ee2 = event_expression{exps.add(ee2.result);})* ) set=setting? {
+	// : op=PAGEVIEW WHERE (ee = event_expression{exps.add(ee.result);}(ee2 = event_expression{exps.add(ee2.result);})* ) set=setting? {
+    : op=PAGEVIEW WHERE (ef = event_filter{filters.add(ef.result);}(ef2=event_filter{filters.add(ef2.result);})* ) set=setting? {
 		HashMap tmp = new HashMap();
 		//tmp.put("domain",$dom.text);
 		tmp.put("type","prim_event");
