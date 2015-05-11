@@ -1,7 +1,20 @@
 
 # Kinetic Rules Engine (KRE)
 
-*What is KRE?*
+The Kinetic Rules Engine (KRE), a open-source, cloud-based rule processing system. All of the properties listed above are present in any KRE system.
+
+KRE is a container for [persistent compute objects](http://developer.kynetx.com/display/docs/Persistent+Compute+Objects) or picos. Each KRE instance hosts a number of picos. 
+
+Picos ececute a rule-based programming langauge called KRL. 
+
+- KRL is a rule-based language. 
+- KRL primarily follows an event-based programming model. 
+- KRL programs execute with a cloud-based model; there is no way to execute them from the command line.
+- KRL programs are loaded from the cloud using HTTP. 
+- KRL programs execute in a system where identity is pervasive; all events are raised on behalf of a specific entity.
+- KRL programs have built-in, entity-specific persistent storage; there is no need for external databases.
+
+The result of these properties is a programming model that more closely resembles programming cloud-based persistent objects. 
 
 ## Project Roadmap
 
@@ -9,7 +22,13 @@
 
 ## Using the Rules Engine
 
+You can use the rules engine by createing an [account on the server that Pico Labs maintains](https://accounts.kobj.net).
+
+Further instructions are available at the [Quickstart](http://developer.kynetx.com/display/docs/Quickstart). 
+
 ## Running the Rules Engine
+
+There is currently no good way for developers to host their own instance of KRE. There is a Docker project in the roadmap that will allow this. 
 
 ## Contributing
 
