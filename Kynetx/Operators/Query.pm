@@ -113,10 +113,19 @@ sub optimized_hash_query {
                  $session,
                  $expr->{'obj'}->{'name'}) || 0;
             my @list = ();
+	      $logger->debug("Now loop through it to get the objects");
             foreach my $path (@{$results}) {
                 my $val = Dive($p_object,@{$path});
+
+#	    	my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $expr->{'hash_key'});
+#	    	my $var = $expr->{'var_expr'};
+#	    	$logger->debug("Value in persistent $var with path: ", sub {Dumper($path)});
+#	    	$v = Kynetx::Persistence::get_persistent_hash_element($domain,$rid,$session,$var,$path);
+
+
                 push(@list,$val);
             }
+	      $logger->debug("Done");
             return \@list;
         } else {
             return Kynetx::Expressions::mk_den_value($results);

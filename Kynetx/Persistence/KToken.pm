@@ -250,8 +250,9 @@ sub create_token {
 	       "policy" => $policy,
 	       "endpoint_type" => $type,
 	      };
+  $logger->debug("Var: ", sub {Dumper($var)});
+  $logger->debug("Token: ", sub {Dumper($token)});
   my $status = Kynetx::MongoDB::update_value(COLLECTION,$var,$token,1,0,1);
-  $logger->debug("Token ken: ", sub {Dumper($token->{'ken'})});
   $logger->debug("Token status: ", sub {Dumper($status)});
   if (ref $status eq 'HASH' && ($status->{'ok'} == 1)) {
       Kynetx::Persistence::KEN::touch_ken($ken);
