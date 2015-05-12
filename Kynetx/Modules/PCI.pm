@@ -917,7 +917,7 @@ sub new_eci {
 		my $eci =  Kynetx::Persistence::KToken::create_token($ken,
 								     $token_name,
 								     $type,
-								     $session,
+								     {}, # new ECI, don't pass in session
 								     $attributes,
 								     $policy);
 		return {
