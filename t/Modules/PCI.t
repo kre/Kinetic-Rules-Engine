@@ -597,8 +597,6 @@ cmp_deeply($result,$expected,$description);
 $test_count++;
 push(@new_eci, $result->{'cid'});
 
-diag "xxxxx";
-
 $description = "Add an ECI";
 $expected = {
 	'nid' => $uid,
@@ -608,8 +606,6 @@ $expected = {
 $result = Kynetx::Modules::PCI::new_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$uid]);
 cmp_deeply($result,$expected,$description);
 $test_count++;
-
-diag "yyyyy";
 
 push(@new_eci, $result->{'cid'});
 

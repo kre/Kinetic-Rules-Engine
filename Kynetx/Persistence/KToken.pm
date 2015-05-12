@@ -229,7 +229,7 @@ sub create_token {
   my $ktoken = $ug->create_str();
   my $oid = MongoDB::OID->new();
   my $e_id;
-  if ($session) {
+  if (defined $session) {
       $e_id = $session->{"_session_id"};
   } else {
       $e_id = $ktoken;
