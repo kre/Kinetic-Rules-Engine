@@ -583,6 +583,8 @@ cmp_deeply($result,$expected,$description);
 $test_count++;
 
 ####### ECI
+diag "#### ECIs ####";
+
 my @new_eci = ();
 $description = "Add an ECI";
 $expected = {
@@ -595,6 +597,8 @@ cmp_deeply($result,$expected,$description);
 $test_count++;
 push(@new_eci, $result->{'cid'});
 
+diag "xxxxx";
+
 $description = "Add an ECI";
 $expected = {
 	'nid' => $uid,
@@ -604,6 +608,8 @@ $expected = {
 $result = Kynetx::Modules::PCI::new_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$uid]);
 cmp_deeply($result,$expected,$description);
 $test_count++;
+
+diag "yyyyy";
 
 push(@new_eci, $result->{'cid'});
 
@@ -654,7 +660,6 @@ $test_count++;
 
 ####### Predicates (after ECIs have been created)
 # check that predicates at least run without error
-
 my $temp_ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($uid);
 my @token_list = map {$_->{'cid'}} @{Kynetx::Persistence::KToken::list_tokens($temp_ken)};
 
