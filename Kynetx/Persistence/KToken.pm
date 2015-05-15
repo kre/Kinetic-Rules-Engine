@@ -388,7 +388,12 @@ sub list_tokens {
 			$logger->trace("Found: ", sub {Dumper($obj)});
 			$logger->trace("Found: $eci");
 			my $label = $obj->{'token_name'};
-			push(@tokens_array,{'name' => $label,'cid' => $eci});
+			push(@tokens_array,{"name" => $label,
+					    "cid" => $eci,
+					    "attributes" => $obj->{"attributes"},
+					    "type" => $obj->{"endpoint_type"},
+					    "last_active" => $obj->{"last_active"}
+					   });
 		}
 		return \@tokens_array; 
 	}
