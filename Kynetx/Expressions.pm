@@ -875,7 +875,7 @@ sub eval_persistent {
     	if ($expr->{'domain'} eq 'ent' || $expr->{'domain'} eq 'app') {
 	    	my $path = Kynetx::Util::normalize_path($req_info, $rule_env, $rule_name, $session, $expr->{'hash_key'});
 	    	my $var = $expr->{'var_expr'};
-	    	$logger->debug("Value in persistent $var with path: ", sub {Dumper($path)});
+	    	$logger->debug("Value in persistent $var with path: ", sub {Dumper($path)}, " and RID ", sub{Dumper $rid});
 	    	$v = Kynetx::Persistence::get_persistent_hash_element($domain,$rid,$session,$var,$path);
     	} else {
     		$logger->warn("Hash indexes only implemented for persistent variables");
