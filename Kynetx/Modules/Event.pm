@@ -504,7 +504,7 @@ sub get_schedev_history {
           ($sched_ev->{'source'} eq $rid) && 
           ($sched_ev->{'ken'} eq $ken) ) {
       my $history = $sched_ev->{'last'};
-      my $fired = $history->{'fired'};
+      my $fired = $history->{'fired'} || 0;
       my $dt = DateTime->from_epoch(epoch => $fired);
       $history->{'fired'} = Kynetx::Predicates::Time::new($req_info,$function,[$dt]);
       if (defined $sched_ev->{'expired'}) {

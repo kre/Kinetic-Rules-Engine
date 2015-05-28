@@ -188,7 +188,8 @@ sleep 1;
 
 $description = "Request is logged";
 $result = Kynetx::Persistence::DevLog::get_all_msg($logging_eci);
-cmp_deeply(scalar keys %{$result},1,$description);
+#diag Dumper $result;
+cmp_deeply(scalar @{$result},1,$description);
 $num_tests++;
 
 #goto ENDY;
@@ -207,26 +208,27 @@ sleep 1;
 
 $description = "All requests logged";
 $result = Kynetx::Persistence::DevLog::get_all_msg($logging_eci);
-cmp_deeply(scalar keys %{$result},$max_array + 1,$description);
+cmp_deeply(scalar @{$result},$max_array + 1,$description);
 $num_tests++;
 
 $description = "$maxlog requests active";
 $result = Kynetx::Persistence::DevLog::get_active($logging_eci);
-cmp_deeply(scalar keys %{$result},$maxlog,$description);
+cmp_deeply(scalar @{$result},$maxlog,$description);
 $num_tests++;
 
 $description = "Get a single log entry";
-$index = int rand(scalar keys %{$result});
-$log_id = (keys %{$result})[$index];
-$expected = $result->{$log_id};
+$index = int rand(scalar @{$result});
+$expected = $result->[$index];
+$log_id = $expected->{"id"};
 $result = Kynetx::Persistence::DevLog::get_log($logging_eci,$log_id);
+#diag Dumper $expected, $result;
 cmp_deeply($result,$expected,$description);
 $num_tests++;
 
 $description = "Delete a log entry";
 Kynetx::Persistence::DevLog::delete_log($logging_eci,$log_id);
 $result = Kynetx::Persistence::DevLog::get_active($logging_eci);
-cmp_deeply(scalar keys %{$result},$maxlog-1,$description);
+cmp_deeply(scalar @{$result},$maxlog-1,$description);
 $num_tests++;
 
 ENDY:

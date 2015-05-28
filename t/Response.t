@@ -181,7 +181,7 @@ $test_count++;
 
 $description = "Test send_raw REDIRECT";
 $url = $dn . "/web/pageview/a144x160";
-$expected = re(qr/<h2>Introducing Social Products<\/h2>/);
+$expected = re(qr/Kynetx/);
 $response = $mech->get($url);
 $result = $mech->content();
 cmp_deeply($result,$expected,$description);

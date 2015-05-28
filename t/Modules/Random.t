@@ -170,7 +170,7 @@ $test_count++;
 $description = "Random Photo";
 $source = 'random';
 $function = 'photo';
-$args = [];
+$args = [{"q" => "*"}]; # take any photo
 
 $result = Kynetx::Expressions::den_to_exp(
             Kynetx::Modules::eval_module($my_req_info,

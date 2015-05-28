@@ -67,14 +67,12 @@ my $rule_env = Kynetx::Test::gen_rule_env({'foo' => 56});
 my $session = Kynetx::Test::gen_session($r, $rid);
 
 my $rel_url = "/kynetx/newsletter_invite.inc";
-my $non_matching_url = "http://frag.kobj.net/widgets/weather.pl?zip=84042";
 my $first_arg = "kobj_test";
 my $second_arg = "This is a string";
 my $given_args;
 
 
 my($action,$args,$krl_src, $krl, $name, $url, $config, @test_cases);
-
 
 sub add_testcase {
     my($str, $expected, $req_info, $url_changed, $desc, $diag) = @_;
@@ -99,13 +97,14 @@ sub add_testcase {
 
 
 $krl_src = <<_KRL_;
-replace("kob_test", "http://frag.kobj.net/widgets/weather.pl?zip=84042");
+replace("kob_test", "https://raw.githubusercontent.com/kre/Kinetic-Rules-Engine/master/README.md");
 _KRL_
 add_testcase($krl_src,
 	     'replace_html',
 	     $my_req_info,
 	     'changed',
-	     'replace with non matching URL'
+	     'replace with non matching URL',
+	     0
 	     );
 
 
@@ -132,7 +131,7 @@ add_testcase($krl_src,
 
 
 $krl_src = <<_KRL_;
-float("kob_test", "http://frag.kobj.net/widgets/weather.pl?zip=84042");
+float("kob_test", "https://raw.githubusercontent.com/kre/Kinetic-Rules-Engine/master/README.md");
 _KRL_
 add_testcase($krl_src,
 	     'float_html',

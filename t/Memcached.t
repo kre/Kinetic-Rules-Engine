@@ -37,7 +37,7 @@ use Kynetx::Configure;
 
 my $logger = get_logger();
 
-my $numtests = 11;
+my $numtests = 10;
 plan tests => $numtests;
 
 my $config_file = "/web/etc/kns_config.yml";
@@ -64,17 +64,17 @@ SKIP: {
     is($memd->get("test1"), undef, "Did it get deleted?");
 
 
-    my $content = get_remote_data('http://www.google.com/calendar/feeds/developer-calendar@google.com/public/full?alt=json&orderby=starttime&max-results=15&singleevents=true&sortorder=ascending&futureevents=true',1);
-    contains_string(
-	$content,
-	'"title":',
-	'Get public timeline');
+    # my $content = get_remote_data('http://www.google.com/calendar/feeds/developer-calendar@google.com/public/full?alt=json&orderby=starttime&max-results=15&singleevents=true&sortorder=ascending&futureevents=true',1);
+    # contains_string(
+    # 	$content,
+    # 	'"title":',
+    # 	'Get public timeline');
     
-    $content = get_remote_data('https://www.google.com/calendar/feeds/developer-calendar@google.com/public/full?alt=json&orderby=starttime&max-results=15&singleevents=true&sortorder=ascending&futureevents=true',1);
+    my $content = get_remote_data('https://raw.githubusercontent.com/kre/Kinetic-Rules-Engine/master/README.md',1);
     contains_string(
 	$content,
-	'"title":',
-	'Get public timeline with HTTPS');
+	'Kinetic Rules Engine',
+	'Get something with HTTPS');
 	
 	$content = get_remote_data("http://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-demo.txt",10);
 	Kynetx::Memcached::mset_cache('test1', $content,1);

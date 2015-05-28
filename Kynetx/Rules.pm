@@ -1261,13 +1261,14 @@ sub get_rule_set {
 		$ruleset = grab_ruleset( $req_info, $rid, $ver );
 	}
 	else {
-		my $rid_info = mk_rid_info( $req_info, $rid );
-		$ruleset =
-		  Kynetx::Repository::get_rules_from_repository( $rid_info, $req_info,
-			$ver, $localparsing, 0 );
+	    # remake incase the rid and ver were passed in
+	    my $rid_info = mk_rid_info( $req_info, $rid, {"version" => $ver} );
+	    $ruleset =
+	      Kynetx::Repository::get_rules_from_repository( $rid_info, $req_info,
+							     $ver, $localparsing, 0 );
 
-		# do not store ruleset in the request info here
-		# or it ends up in the session for the user
+	    # do not store ruleset in the request info here
+	    # or it ends up in the session for the user
 	}
 
 	# if we're not in a module, set up logging

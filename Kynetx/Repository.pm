@@ -191,7 +191,7 @@ sub get_ruleset_krl {
     my $logger = get_logger();
     my $fqrid = Kynetx::Rids::get_fqrid($rid_info);
     
-    $logger->trace("FQRID: $fqrid");
+    #$logger->debug("FQRID: $fqrid");
     # Check to see if there is a Repository record
     my $repository_record = Kynetx::Persistence::Ruleset::get_ruleset_info($fqrid);
     #$logger->debug("From repository: ",sub {Dumper($repository_record)});

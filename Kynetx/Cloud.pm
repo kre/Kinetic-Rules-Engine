@@ -237,7 +237,7 @@ sub eval_ruleset_function {
   }
   else {
      
-    $logger->info("Executing $req_info->{'module_alias'}/$req_info->{'function_name'}");
+    $logger->info("Executing $req_info->{'module_alias'}.$req_info->{'module_version'}/$req_info->{'function_name'}");
 
     my $rule_env = Kynetx::Rules::mk_initial_env();
 

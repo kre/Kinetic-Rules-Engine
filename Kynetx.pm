@@ -253,17 +253,6 @@ sub flush_ruleset_cache {
     my $logger = get_logger();
 
     my $req_info = Kynetx::Request::build_request_env($r, $method, $rid);
-    # no locking
-
-    # default to production for svn repo
-    # defaults to production when no version specified
-
-
-#    Kynetx::Request::log_request_env( $logger, $req_info );
-
-    #FIXME: This needs to be put in Repository.pm
-
-    # my $version = Kynetx::Predicates::Page::get_pageinfo($req_info, 'param', ['kynetx_app_version']) || 'prod';
 
     my $memd = get_memd();
     my $msg = '';

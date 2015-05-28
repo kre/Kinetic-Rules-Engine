@@ -225,7 +225,7 @@ sub _all {
 sub _single {
   my ($eci,$log_id) = @_;
   my $mid = MongoDB::OID->new(value => $log_id);
-  my $tkey = {'$and' => [{'eci' => '$id' => $mid}]};
+  my $tkey = {'$and' => [{'eci' => $eci}, {'_id' => $mid}]};
   return $tkey;
 }
 
@@ -242,7 +242,7 @@ sub _normalize {
     my $eid = $obj->{"eid"};
     my $skip_rids = join("|", @{ (SKIP_RIDS) } );
     my $logger = get_logger();
-    $logger->debug("Skip RIDS ", sub{ Dumper $skip_rids });
+#    $logger->debug("Skip RIDS ", sub{ Dumper $skip_rids });
 #    my @items = grep(!/^\d+\s+\d+\w+\s+$skip_rids/, grep(/^\d+\s+$eid\s+/,split(/\n/,$obj->{'text'})));
     my @items = grep(/^\d+\s+$eid\s+/,split(/\n/,$obj->{'text'}));
  #   $logger->debug("Seeing items", sub{ Dumper \@items });

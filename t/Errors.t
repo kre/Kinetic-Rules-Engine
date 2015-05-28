@@ -113,7 +113,7 @@ Kynetx::Errors::raise_error($my_req_info,
 $rl = []; 
 while (my $task = $my_req_info->{'schedule'}->next()) {
 #	$logger->debug("Task: ",sub {Dumper($task)});
-	push(@{ $rl }, $task->{'req_info'}->{'error_rid'});	
+	push(@{ $rl }, $task->{'req_info'}->{"event_attrs"}->{'error_rid'});	
 }
 
 
