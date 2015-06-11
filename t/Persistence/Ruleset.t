@@ -103,8 +103,10 @@ my $rule_name = $DICTIONARY[rand(@DICTIONARY)];
 chomp($rule_name);
 
 my $rid_list = ();
+my $rid_index;
 my $touch;
 my $untouch;
+my $exists;
 
 # Create a fake Developer
 my $system_key = Kynetx::Modules::PCI::create_system_key($result);
@@ -145,6 +147,7 @@ $logger->debug("Developer ken: $ken User: $userid");
 $description = "First generic rid";
 $expected = 'b' . $userid .'x0.prod';
 $rid = Kynetx::Persistence::Ruleset::create_rid($ken);
+$logger->debug("$description:", $rid);
 is($rid,$expected,$description);
 $test_count++;
 push(@{$rid_list},$rid);
@@ -155,6 +158,7 @@ $logger->debug("Rid: $rid");
 $description = "Second generic rid";
 $expected = 'b' . $userid .'x1.prod';
 $rid = Kynetx::Persistence::Ruleset::create_rid($ken);
+$logger->debug("$description:", $rid);
 is($rid,$expected,$description);
 $test_count++;
 push(@{$rid_list},$rid);
@@ -168,6 +172,60 @@ $test_count++;
 $touch = $rid;
 
 $logger->debug("Rid: $rid");
+
+$description = "Third generic rid";
+$expected = 'b' . $userid .'x2.prod';
+$rid = Kynetx::Persistence::Ruleset::create_rid($ken);
+my $delete_rid = $rid;
+$logger->debug("$description:", $rid);
+is($rid,$expected,$description);
+$test_count++;
+
+
+$description = "RID index is ";
+$expected = '3'; # we get current + 1
+$rid_index = Kynetx::Persistence::Ruleset::get_rid_index($ken, $userid, "b".$userid);
+$logger->debug("$description:", $rid_index);
+is($rid_index,$expected,$description);
+$test_count++;
+
+
+$description = "Fork third generic rid";
+$expected = 'b' . $userid .'x2.dev';
+$rid = Kynetx::Persistence::Ruleset::fork_rid($ken, $rid, "dev", "uri:test");
+$logger->debug("$description:", $rid);
+is($rid,$expected,$description);
+$test_count++;
+push(@{$rid_list},$rid);
+
+$description = "RID index after fork is still ";
+$expected = '3'; # we get current + 1
+$rid_index = Kynetx::Persistence::Ruleset::get_rid_index($ken, $userid, "b".$userid);
+$logger->debug("$description:", $rid_index);
+is($rid_index,$expected,$description);
+$test_count++;
+
+$description = "Delete third generic rid";
+$rid = Kynetx::Persistence::Ruleset::delete_registry($delete_rid);
+$exists = get_registry($delete_rid);
+$logger->debug("$description: ", $exists);
+ok(! defined $exists,$description);
+$test_count++;
+
+#
+# since we forked, the index should still be the same, not one less. 
+#
+$description = "RID index after delete is still ";
+$expected = '3'; # we get current + 1
+$rid_index = Kynetx::Persistence::Ruleset::get_rid_index($ken, $userid, "b".$userid);
+$logger->debug("$description:", $rid_index);
+is($rid_index,$expected,$description);
+$test_count++;
+
+
+######################### with custom prefix ##################################
+
+
 $description = "First prefix rid ($prefix)";
 $expected = $prefix . $userid .'x0.prod';
 $rid = Kynetx::Persistence::Ruleset::create_rid($ken,$prefix);
@@ -222,6 +280,7 @@ $test_count++;
 
 $description = "Get the rulesets created for KEN";
 $result = Kynetx::Persistence::Ruleset::get_rulesets_by_owner($ken);
+$logger->debug("$description: ", sub{Dumper $result});
 cmp_deeply($result,bag(@{$rid_list}),$description);
 $test_count++;
 

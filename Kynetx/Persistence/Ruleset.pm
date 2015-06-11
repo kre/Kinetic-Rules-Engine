@@ -286,7 +286,7 @@ sub get_rid_index {
   };
   my $result = Kynetx::MongoDB::aggregate_group(COLLECTION,$match,$group);
   if (defined $result && ref $result eq "ARRAY" && scalar @{$result} > 0) {
-    #$logger->debug("rid index: ",sub {Dumper($result)});
+    $logger->debug("rid index: ",sub {Dumper($result)});
     my $element = $result->[0];
     $rid_index = $element->{'max'} + 1;
   }  
@@ -326,6 +326,7 @@ sub fork_rid {
   $logger->debug("Fork Branch: $branch");
   $logger->debug("Fork URI: $uri");
   my $ruleset = get_ruleset_info($fqrid);
+  $logger->debug("Ruleset info for main ", sub{Dumper $ruleset});
   my $root = Kynetx::Rids::strip_version($fqrid);
   my $nq_rid = $root . '.' . $branch;
   my $exists = get_registry($nq_rid);
@@ -334,7 +335,9 @@ sub fork_rid {
   }
   my $default = {
     'uri' => $uri,
-    'owner' => $ken
+    'owner' => $ken,
+    'rid_index' => $ruleset->{"rid_index"}, # w/o index and prefix, this won't be seen by get_rid_index();
+    'prefix'    => $ruleset->{"prefix"},
   };
   put_registry_element($nq_rid,[],$default);
   return $nq_rid;
