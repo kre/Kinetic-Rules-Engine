@@ -323,47 +323,47 @@ sub get_value {
         	$logger->trace("Elements to retrieve: ", $cursor->count);
 		my $hash = {};
        		if ($cursor->count == 1) {
-	        	my $result = $cursor->next();
-	        	if (defined $result and $result->{'serialize'}) {
-	            	my $ast = Kynetx::Json::jsonToAst($result->{"value"});
-                	$logger->trace("Found a old style", ref $ast," to deserialize");
-                	$result->{"value"} = $ast;
-	        	} elsif (defined $result and $result->{'hashkey'}) {
-	        		my $hash = Kynetx::Util::elements_to_hash([{
+		    my $result = $cursor->next();
+		    if (defined $result and $result->{'serialize'}) {
+			my $ast = Kynetx::Json::jsonToAst($result->{"value"});
+			$logger->trace("Found a old style", ref $ast," to deserialize");
+			$result->{"value"} = $ast;
+		    } elsif (defined $result and $result->{'hashkey'}) {
+			my $hash = Kynetx::Util::elements_to_hash([{
 	        			'ancestors' => $result->{'hashkey'},
-	        			'value' => $result->{'value'}
+					'value' => $result->{'value'}
 	        		}]);
-	        		my $composed_hash = clone ($var);
-	        		$composed_hash->{'value'} = $hash;
-	        		$composed_hash->{'created'} = $result->{'created'};
-	        		return $composed_hash;
-	        	}
+			my $composed_hash = clone ($var);
+			$composed_hash->{'value'} = $hash;
+			$composed_hash->{'created'} = $result->{'created'};
+			return $composed_hash;
+		    }
 	            $logger->trace("Save $keystring to memcache");
 	            set_cache($collection,$var,$result);
 	            return $result;
 	        } else {
-	        	my $composed_hash = clone ($var);
-	        	my @array_of_elements = ();
-	        	my $last_updated = 0;
-	        	while (my $object = $cursor->next) {
-	        		my $v = $object->{'value'};
-	        		my $kv = $object->{'hashkey'};
-	        		my $ts = $object->{'created'};
-	        		if ($ts > $last_updated) {
-	        			$last_updated = $ts;
-	        		}
-				DiveVal($hash, @$kv) = $v;
-	        		# push(@array_of_elements,{
-				# 		'ancestors' => $kv,
-				# 		'value' => $v
-	        		# });
-	        	}
-	        	# my $hash = Kynetx::Util::elements_to_hash(\@array_of_elements); 
-	        	$logger->trace("Resurrected: $keystring");
-	        	$composed_hash->{'value'} = $hash;
-	        	$composed_hash->{'created'} = $last_updated *1;
-	        	set_cache($collection,$var,$composed_hash);
-	        	return $composed_hash;
+		    my $composed_hash = clone ($var);
+		    my @array_of_elements = ();
+		    my $last_updated = 0;
+		    while (my $object = $cursor->next) {
+			my $v = $object->{'value'};
+			my $kv = $object->{'hashkey'};
+			my $ts = $object->{'created'};
+			if ($ts > $last_updated) {
+			    $last_updated = $ts;
+			}
+			DiveVal($hash, @$kv) = $v;
+			# push(@array_of_elements,{
+			# 		'ancestors' => $kv,
+			# 		'value' => $v
+			# });
+		    }
+		    # my $hash = Kynetx::Util::elements_to_hash(\@array_of_elements); 
+		    $logger->trace("Resurrected: $keystring");
+		    $composed_hash->{'value'} = $hash;
+		    $composed_hash->{'created'} = $last_updated *1;
+		    set_cache($collection,$var,$composed_hash);
+		    return $composed_hash;
 	        }
 
         } else {

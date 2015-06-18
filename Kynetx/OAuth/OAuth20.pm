@@ -527,6 +527,52 @@ sub _oauth_token {
   return undef;
 }
 
+sub _active_oauth_tokens {
+  my ($ken) = @_;
+  my $logger = get_logger();
+  my $var = {
+    'endpoint_type' => qr/^OAUTH-.+/,
+    'ken' => $ken
+  };
+  $logger->debug("Key: ", sub {Dumper($var)});
+  my $tokens = Kynetx::Persistence::KToken::get_all_tokens($var);
+
+  my ($by_deci, $by_ktoken);
+  for my $t (@{$tokens}) {
+      if (! defined $by_deci->{$t->{"endpoint_type"}}  || 
+	  $by_deci->{$t->{"endpoint_type"}}->{"created"} < $t->{"created"})
+	{
+	  $by_deci->{$t->{"endpoint_type"}} = $t;
+      }
+  }
+
+  my $result;
+  for my $deci (keys %{$by_deci}) {
+      my $dk = $deci;
+      $deci =~ s/^OAUTH-(.+)$/$1/;
+      my $callbacks = Kynetx::Persistence::KPDS::get_callbacks($ken,$deci);
+      my $boostraps = Kynetx::Persistence::KPDS::get_bootstrap($ken,$deci);
+      my $appinfo = Kynetx::Persistence::KPDS::get_app_info($ken,$deci);
+      push(@{$result}, {"developer_eci" => $deci,
+			"app_info" => $appinfo,
+			"boostrap_rids" => $boostraps,
+			"callbacks" => $callbacks,
+			"token_name" => $by_deci->{$dk}->{"token_name"},
+			"created" => $by_deci->{$dk}->{"created"},
+			"last_active" => $by_deci->{$dk}->{"last_active"},
+			"ktoken" => $by_deci->{$dk}->{"ktoken"},
+			"endpoint_id" => $by_deci->{$dk}->{"endpoint_id"},
+		       });
+  }
+
+  $logger->debug("Result: ", sub{Dumper $result});
+
+  if ($result) {
+    return $result;
+  }
+  return undef;
+}
+
 sub newaccount {
   my ($params, $error) = @_;
   my $logger = get_logger();
@@ -614,6 +660,7 @@ sub profile_page {
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
   $dialog->param('FOOTER_TEXT' => DEFAULT_FOOTER);
   my $username = Kynetx::Persistence::KEN::get_ken_value($ken,'username');
+  my $tokens = _active_oauth_tokens($ken);
   $dialog->param("USERNAME" => $username);
   $dialog->param("PAGEFORM" => profile_update($ken,$session_id,$error));
   $dialog->param('PLATFORM' => _platform());

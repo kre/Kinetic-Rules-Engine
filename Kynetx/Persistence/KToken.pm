@@ -81,6 +81,13 @@ sub token_query {
     return Kynetx::MongoDB::get_value(COLLECTION,$var);
 }
 
+# $var is a query with a regex, returns list
+sub get_all_tokens {
+    my ($var) = @_;
+    my $logger = get_logger();
+    my $skip_cache = 1;
+    return Kynetx::MongoDB::get_list(COLLECTION,$var,$skip_cache);
+}
 
 sub get_token {
     my ($session, $rid,$domain) = @_;
