@@ -344,6 +344,23 @@ $val = Kynetx::Expressions::den_to_exp(
 is($val,$my_req_info->{"txn_id"},"meta:txnId()");
 $test_count++;
 
+$val = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
+					 $rule_env, 
+					 $session, 
+					 $rule_name, 
+					 'meta', 
+					 'errorCount', 
+					 [] 
+					));
+
+
+is($val,$my_req_info->{"error_count"},"meta:errorCount()");
+$test_count++;
+
+is($val,0,"meta:errorCount() is zero");
+$test_count++;
+
 
 #diag Dumper $rule_env;
 

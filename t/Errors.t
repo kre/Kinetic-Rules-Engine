@@ -70,7 +70,7 @@ my $test_count = 0;
 
 my $logger = get_logger();
 
-my $rl;
+my ($rl, $val);
 
 #----------- start over -------------------
 $my_req_info->{'schedule'} = Kynetx::Scheduler->new();
@@ -142,6 +142,52 @@ while (my $task = $my_req_info->{'schedule'}->next()) {
 #diag Dumper $rl;
 
 is_deeply($rl, ['test_error_1','test_error_2'], "select two error rules");
+$test_count++;
+
+
+# Error marker
+#----------- start over -------------------
+$my_req_info = Kynetx::Test::gen_req_info($rid);
+$my_req_info->{'schedule'} = Kynetx::Scheduler->new();
+
+$logger->debug("req_info (before): ", sub{Dumper $my_req_info});
+
+$val = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
+					 $rule_env, 
+					 $session, 
+					 $rule_name, 
+					 'meta', 
+					 'errorCount', 
+					 [] 
+					));
+
+is($val,0,"meta:errorCount() is zero");
+$test_count++;
+
+
+Kynetx::Errors::raise_error($my_req_info, 'warn',
+			    "[keys] invalid operator argument",
+			    {'rule_name' => $rule_name,
+			     'genus' => 'operator',
+			     'species' => 'type mismatch'
+			    }
+			   );
+
+
+$logger->debug("req_info (after): ", sub{Dumper $my_req_info});
+
+$val = Kynetx::Expressions::den_to_exp(
+            Kynetx::Modules::eval_module($my_req_info, 
+					 $rule_env, 
+					 $session, 
+					 $rule_name, 
+					 'meta', 
+					 'errorCount', 
+					 [] 
+					));
+
+is($val,1,"meta:errorCount() is one");
 $test_count++;
 
 

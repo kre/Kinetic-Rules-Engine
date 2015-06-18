@@ -222,6 +222,8 @@ sub eval_module {
 	     $val = $rule_name;
       } elsif ($function eq 'eci' ) {
 	     $val = $req_info->{"id_token"};
+      } elsif ($function eq 'errorCount' ) {
+	     $val = $req_info->{"error_count"};
       } elsif ($function eq 'host' ||  $function eq 'hostname' ) {
 	$val = Kynetx::Configure::get_config('EVAL_HOST');
       } elsif ($function eq 'txnId') {

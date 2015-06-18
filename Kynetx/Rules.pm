@@ -282,6 +282,8 @@ sub process_schedule {
 			
 		}    # done with context
 
+		$req_info->{"error_count"} = 0; # reset for each rule
+
 		my $rule      = $task->{'rule'};
 		my $rule_name = $rule->{'name'};
 		$task_metric->rulename($rule_name);

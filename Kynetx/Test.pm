@@ -147,7 +147,7 @@ sub gen_req_info {
     $req_info->{'txn_id'} = '1234';
     $req_info->{$rid.':kinetic_app_version'} = 'dev';
     $req_info->{'eid'} = '0123456789abcdef';
-
+    $req_info->{"error_count"} = 0;
 
     Kynetx::Request::add_event_attr($req_info, 'msg', 'Hello World!');
 #    Kynetx::Request::add_event_attr($req_info, 'caller', 'http://www.windley.com/');

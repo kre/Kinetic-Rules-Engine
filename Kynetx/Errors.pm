@@ -67,6 +67,8 @@ sub raise_error {
 
   $req_info->{$sig}++;
 
+  $req_info->{"error_count"}++;
+
 #  $logger->debug("*** $sig has value ", $req_info->{$sig}, " ***");
 
   $errormsg ||= "An unspecified error occured";
