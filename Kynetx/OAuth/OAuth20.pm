@@ -73,6 +73,7 @@ use constant DEFAULT_RULESET => [
 ];
 use constant DEFAULT_LOGO => "https://s3.amazonaws.com/Fuse_assets/img/fuse_logo-40.png";
 use constant DEFAULT_FOOTER => "Pico Labs Accounts";
+use constant UNKNOWN_APP_ICON => "https://s3.amazonaws.com/CloudOS_assets/unknown-app-icon.png";
 
 my $unsafe_global;
 
@@ -527,7 +528,7 @@ sub _oauth_token {
   return undef;
 }
 
-sub _active_oauth_tokens {
+sub _active_oauth_apps {
   my ($ken) = @_;
   my $logger = get_logger();
   my $var = {
@@ -660,10 +661,19 @@ sub profile_page {
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
   $dialog->param('FOOTER_TEXT' => DEFAULT_FOOTER);
   my $username = Kynetx::Persistence::KEN::get_ken_value($ken,'username');
-  my $tokens = _active_oauth_tokens($ken);
   $dialog->param("USERNAME" => $username);
   $dialog->param("PAGEFORM" => profile_update($ken,$session_id,$error));
   $dialog->param('PLATFORM' => _platform());
+  my $apps = _active_oauth_apps($ken);
+  my @app_info_list;
+  for my $app_info (@{$apps}) {
+      push @app_info_list, {app_info_icon => $app_info->{"app_info"}->{"icon"} || UNKNOWN_APP_ICON,
+			    app_info_name  => $app_info->{"app_info"}->{"name"} || "unknown",
+			    app_info_description  => $app_info->{"app_info"}->{"description"} || "",
+			    app_last_active  => DateTime->from_epoch(epoch => $app_info->{"last_active"})->strftime("%a, %d-%b-%Y 23:59:59 GMT") || ""
+			   }
+  }
+  $dialog->param('APP_LIST' => \@app_info_list);
   return $dialog->output();
 }
 

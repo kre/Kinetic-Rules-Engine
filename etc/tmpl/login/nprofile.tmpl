@@ -13,6 +13,21 @@
 								
         <div data-role="content">
   	  <TMPL_VAR NAME="PAGEFORM">
+
+        <ul data-role="listview" data-split-icon="gear" data-split-theme="a" data-inset="true">
+          <li data-role="list-divider">Authorized Applications</li>
+          <TMPL_LOOP NAME=APP_LIST>
+            <li>
+               <a href="#">
+                <img src="<TMPL_VAR NAME=APP_INFO_ICON>">
+                <h2><TMPL_VAR NAME=APP_INFO_NAME></h2>
+                <p><TMPL_VAR NAME=APP_INFO_DESCRIPTION></p>
+                <p class="ui-li-aside"><TMPL_VAR NAME=APP_LAST_ACTIVE></p>
+               </a>
+            </li>
+          </TMPL_LOOP>
+	</ul>
+
         </div> <!-- /content -->
 
         <!-- Footer -->
