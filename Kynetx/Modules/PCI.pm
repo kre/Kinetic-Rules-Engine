@@ -1632,6 +1632,7 @@ sub check_system_key {
 		return 1;
 	} else {
 		return 0;
+		$logger->info("*** system credential check failed ***");
 	}
 }
 

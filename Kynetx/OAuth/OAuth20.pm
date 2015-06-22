@@ -566,7 +566,7 @@ sub _active_oauth_apps {
 		       });
   }
 
-  $logger->debug("Result: ", sub{Dumper $result});
+#  $logger->debug("Result: ", sub{Dumper $result});
 
   if ($result) {
     return $result;
@@ -670,10 +670,16 @@ sub profile_page {
       push @app_info_list, {app_info_icon => $app_info->{"app_info"}->{"icon"} || UNKNOWN_APP_ICON,
 			    app_info_name  => $app_info->{"app_info"}->{"name"} || "unknown",
 			    app_info_description  => $app_info->{"app_info"}->{"description"} || "",
-			    app_last_active  => DateTime->from_epoch(epoch => $app_info->{"last_active"})->strftime("%a, %d-%b-%Y 23:59:59 GMT") || ""
+			    last_active  => DateTime->from_epoch(epoch => $app_info->{"last_active"})->strftime("%a, %d-%b-%Y 23:59:59 GMT") || "",
+			    last_active_raw => $app_info->{"last_active"},
+			    eci => $app_info->{"ktoken"},
+			    eci_name => $app_info->{"token_name"},
+			    developer_eci => $app_info->{"developer_eci"},
 			   }
   }
-  $dialog->param('APP_LIST' => \@app_info_list);
+  my @sorted_app_info_list  = sort {$b->{last_active_raw} cmp $a->{last_active_raw}}  @app_info_list;   
+  $logger->debug("Sorted list: ", sub { Dumper @sorted_app_info_list});
+  $dialog->param('APP_LIST' => \@sorted_app_info_list);
   return $dialog->output();
 }
 
