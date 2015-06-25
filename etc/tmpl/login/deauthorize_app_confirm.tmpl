@@ -1,0 +1,45 @@
+<!--==== Email Reset Link Page ===============================-->
+<div data-role="page" data-theme="a" id="page-login">
+
+  <!-- Header -->
+  <div data-role="header">
+     <div class="header-image">
+        <img class="fuse-logo" src="<TMPL_VAR NAME="LOGO_IMG_URL">">
+     </div>
+  </div> <!-- /header -->
+
+  <!-- Content -->
+  <div data-role="content">
+         <div id="alertLogin" class="alert alert-info" style="margin-bottom:18px;display:none;">
+         </div>
+         <ul data-role="listview" data-inset="true">
+           <li data-role="list-divider" >Deauthorize Application</li>
+           <li class="ui-field-contain">
+<p>
+Deauthorize the application <b><TMPL_VAR NAME=APP_INFO_NAME></b>?
+</p>
+<p>
+Note: you can reauthorize access at any time.
+</p>
+           </li>
+         </ul>
+
+     <form action="<TMPL_VAR NAME="FORM_URL">" method="post" data-url="<TMPL_VAR NAME="FORM_URL">" data-external-page="true" data-ajax="false" class="form-horizontal well cloudUI-form-login">
+       <TMPL_VAR NAME="HIDDEN_FIELDS">
+       <fieldset>
+ 	 <div class="form-actions" style="background-color:inherit;border:none;margin:0;padding-top:0;padding-bottom:0;">
+	   <button type="submit" class="ui-btn ui-corner-all ui-btn-b ">Deauthorize App</button>
+ 	 </div>
+        </fieldset>
+     </form>
+
+  </div><!-- content -->
+
+  <!-- Footer -->
+  <div data-role="footer" data-position="fixed">
+	  <h4><TMPL_VAR NAME="FOOTER_TEXT"></h4>
+  </div> <!-- /footer -->
+</div><!-- /page -->
+
+
+

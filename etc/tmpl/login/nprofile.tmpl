@@ -18,7 +18,7 @@
           <li data-role="list-divider">Authorized Applications</li>
           <TMPL_LOOP NAME=APP_LIST>
             <li>
-               <a href="#">
+               <a href="<TMPL_VAR NAME=PLATFORM>/login/deauthorize_app_confirm?app_info_name=<TMPL_VAR NAME=APP_INFO_NAME>&developer_eci=<TMPL_VAR NAME=DEVELOPER_ECI>">
                 <img src="<TMPL_VAR NAME=APP_INFO_ICON>">
                 <h2><TMPL_VAR NAME=APP_INFO_NAME></h2>
                 <p><TMPL_VAR NAME=APP_INFO_DESCRIPTION></p>

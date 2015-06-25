@@ -285,6 +285,11 @@ sub workflow {
     $template->param("DIALOG" => reset_password($params));
   } elsif ($method eq "change_password") {
     $template->param("DIALOG" => change_password($params));
+  } elsif ($method eq "deauthorize_app_confirm") {
+    $template->param("DIALOG" => deauthorize_app_confirm($params));
+  } elsif ($method eq "deauthorize_app") {
+    my $error = deauthorize_app($params);
+    $template->param("DIALOG" => profile_page($ken,$error));
   } elsif ($method eq 'logout') {
     if ($session_token) {
       Kynetx::Persistence::KToken::delete_token($session_token,get_session_id($session));
@@ -681,6 +686,51 @@ sub profile_page {
   $logger->debug("Sorted list: ", sub { Dumper @sorted_app_info_list});
   $dialog->param('APP_LIST' => \@sorted_app_info_list);
   return $dialog->output();
+}
+
+sub deauthorize_app_confirm {
+  my ($params,$error) = @_;
+
+  my $logger = get_logger();
+
+  my $template = DEFAULT_TEMPLATE_DIR . "/login/deauthorize_app_confirm.tmpl";
+  my $dialog = HTML::Template->new(filename => $template,die_on_bad_params => 0);
+  my $platform =  _platform();
+  my $deci = $params->{"developer_eci"};
+  my $ain = $params->{"app_info_name"};
+
+#  $logger->debug("Params in deauthorize_app_confirm() ", sub {Dumper $params});
+
+
+  $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
+  $dialog->param('FOOTER_TEXT' => DEFAULT_FOOTER);
+
+  $dialog->param('APP_INFO_NAME' => $ain);
+  $dialog->param('HIDDEN_FIELDS' => <<_EOF_
+<input type="hidden" name="developer_eci" value="$deci" >
+<input type="hidden" name="app_info_name" value="$ain" >
+_EOF_
+                );
+
+  $dialog->param("FORM_URL" => "$platform/login/deauthorize_app");
+
+  return $dialog->output();
+}
+
+sub deauthorize_app {
+  my ($params,$error) = @_;
+
+  my $logger = get_logger();
+  $logger->debug("Params in deauthorize_app_confirm() ", sub {Dumper $params});
+
+  my $msg = "<p>Application " . $params->{"app_info_name"} . " has been deauthorized</p>";
+
+  my $new_error = <<_EOF_;
+$error $msg
+_EOF_
+
+  return $new_error;
+
 }
 
 # not used...
