@@ -288,7 +288,7 @@ sub workflow {
   } elsif ($method eq "deauthorize_app_confirm") {
     $template->param("DIALOG" => deauthorize_app_confirm($params));
   } elsif ($method eq "deauthorize_app") {
-    my $error = deauthorize_app($params);
+    my $error = deauthorize_app($ken, $params);
     $template->param("DIALOG" => profile_page($ken,$error));
   } elsif ($method eq 'logout') {
     if ($session_token) {
@@ -579,6 +579,34 @@ sub _active_oauth_apps {
   return undef;
 }
 
+sub delete_oauth_app {
+  my ($ken, $developer_eci) = @_;
+  my $logger = get_logger();
+
+  $logger->debug("Deleting tokens for $developer_eci");
+
+  my $var = {
+    'endpoint_type' => qr/^OAUTH-.+/,
+    'ken' => $ken
+  };
+  $logger->debug("Key: ", sub {Dumper($var)});
+  my $tokens = Kynetx::Persistence::KToken::get_all_tokens($var);
+
+  $developer_eci = "OAUTH-" . $developer_eci unless $developer_eci =~ m/^OAUTH-/;
+
+  my $count = 0;
+  for my $t (@{$tokens}) {
+      $logger->debug("Seeing this token info ", sub {Dumper $t});
+      if ($t->{"endpoint_type"} eq $developer_eci ) {
+	  Kynetx::Persistence::KToken::delete_token($t->{"ktoken"});
+	  $count++;
+      }
+  }
+
+  $logger->debug("Deleted ($count) tokens for $developer_eci");
+}
+
+
 sub newaccount {
   my ($params, $error) = @_;
   my $logger = get_logger();
@@ -718,10 +746,12 @@ _EOF_
 }
 
 sub deauthorize_app {
-  my ($params,$error) = @_;
+  my ($ken, $params,$error) = @_;
 
   my $logger = get_logger();
-  $logger->debug("Params in deauthorize_app_confirm() ", sub {Dumper $params});
+  $logger->debug("Params in deauthorize_app ", sub {Dumper $params});
+
+  delete_oauth_app($ken, $params->{"developer_eci"});
 
   my $msg = "<p>Application " . $params->{"app_info_name"} . " has been deauthorized</p>";
 

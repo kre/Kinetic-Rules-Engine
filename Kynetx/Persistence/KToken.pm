@@ -378,8 +378,6 @@ sub delete_ken_tokens {
   $logger->debug("Deleted ($count) tokens for $ken");
 }
 
-
-
 sub list_tokens {
 	my ($ken) = @_;
 	my $logger = get_logger();
