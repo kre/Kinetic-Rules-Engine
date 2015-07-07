@@ -540,7 +540,7 @@ sub _active_oauth_apps {
     'endpoint_type' => qr/^OAUTH-.+/,
     'ken' => $ken
   };
-  $logger->debug("Key: ", sub {Dumper($var)});
+#  $logger->debug("Key: ", sub {Dumper($var)});
   my $tokens = Kynetx::Persistence::KToken::get_all_tokens($var);
 
   my ($by_deci, $by_ktoken);
@@ -711,7 +711,7 @@ sub profile_page {
 			   }
   }
   my @sorted_app_info_list  = sort {$b->{last_active_raw} cmp $a->{last_active_raw}}  @app_info_list;   
-  $logger->debug("Sorted list: ", sub { Dumper @sorted_app_info_list});
+  # $logger->debug("Sorted list: ", sub { Dumper @sorted_app_info_list});
   $dialog->param('APP_LIST' => \@sorted_app_info_list);
   return $dialog->output();
 }
@@ -749,7 +749,7 @@ sub deauthorize_app {
   my ($ken, $params,$error) = @_;
 
   my $logger = get_logger();
-  $logger->debug("Params in deauthorize_app ", sub {Dumper $params});
+#  $logger->debug("Params in deauthorize_app ", sub {Dumper $params});
 
   delete_oauth_app($ken, $params->{"developer_eci"});
 
