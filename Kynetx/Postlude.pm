@@ -424,6 +424,7 @@ sub _domainname {
 	   'fuse' => 1,
 	   'carvoyant' => 1,
   	   'location' => 1,
+	   'nano_manager' => 1,
 	  };
   if ($allowed->{$expr->{'domain'}}) {
     return $expr->{'domain'}
