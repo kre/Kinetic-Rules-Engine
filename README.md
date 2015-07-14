@@ -22,7 +22,7 @@ The result of these properties is a programming model that more closely resemble
 
 ## Using the Rules Engine
 
-You can use the rules engine by createing an [account on the server that Pico Labs maintains](https://accounts.kobj.net).
+You can use the rules engine by createing an [account on the server that Pico Labs maintains](https://accounts.kobj.net/login).
 
 Further instructions are available at the [Quickstart](http://developer.kynetx.com/display/docs/Quickstart). 
 
