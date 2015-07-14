@@ -34,7 +34,7 @@ There is currently no good way for developers to host their own instance of KRE.
 
 If you'd like to contribute, please [contact Phil Windley](http://xri.net/=windley). Be sure to include your Github account name.
 
-We use [HuBoard](https://huboard.com/) to organize and track issues. Once you have access to KRE you should be able to use HuBoard to watch issues. Anything in the *Ready* column should be ready to work. Please assign yourself and move it to the ready column. Do your work in a fork of the project and submit your changes as a pull request. 
+We use [HuBoard](https://huboard.com/kre/Kinetic-Rules-Engine) to organize and track issues. Once you have access to KRE you should be able to use HuBoard to watch issues. Anything in the *Ready* column should be ready to work. Please assign yourself and move it to the ready column. Do your work in a fork of the project and submit your changes as a pull request. 
 
 The following process is recommended:
 
