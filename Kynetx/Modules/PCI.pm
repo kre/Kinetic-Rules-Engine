@@ -1103,19 +1103,151 @@ sub get_oauth_token_eci {
 $funcs->{'oauth_eci'} = \&get_oauth_token_eci;
 
 sub get_developer_oauth_eci {
-	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
-	my $logger=get_logger();
-  my $keys = _key_filter($args);
-	return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys) ||
-	 developer_authorized($req_info,$rule_env,$session,['oauth','access_token']));
-	my $developer_eci = $args->[0];
-	my $type = 'OAUTH-' . $developer_eci;
-  my $primary = Kynetx::Persistence::KToken::get_token_by_token_type($type);
-  return $primary
+    my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+    my $logger=get_logger();
+    my $keys = _key_filter($args);
+    return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys) ||
+		     developer_authorized($req_info,$rule_env,$session,['oauth','access_token']));
+    my $developer_eci = $args->[0];
+    my $type = 'OAUTH-' . $developer_eci;
+    my $primary = Kynetx::Persistence::KToken::get_token_by_token_type($type);
+    return $primary
 }
 $funcs->{'list_oauth_eci'} = \&get_developer_oauth_eci;
 
-############################# ECI
+############################# OAuth Apps
+
+sub new_oauth_app {
+    my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+    my $logger = get_logger();
+    $logger->debug("Creating new OAuth app");
+    my $keys = _key_filter($args);
+    return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
+    
+    my ($ken,$token_name,$token_type,$attributes,$policy);
+    my $account_id = $args->[0];
+
+    $logger->debug("Account ID: ", $account_id);
+
+    my $options = $args->[1];
+    if (! defined $account_id) {
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+    } else {
+	# Check to see if it is an eci or a userid
+	if ($account_id =~ m/^\d+$/) {
+	    ll("userid $account_id");
+	    $ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($account_id);
+	} else {
+	    ll("eci $account_id");
+	    $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($account_id);
+	}			
+    }
+
+    
+    $token_name = "OAuth Developer Token";
+    $token_type = "OAUTH";
+
+    if ($ken) {
+	my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');	
+	my $token =  Kynetx::Persistence::KToken::create_token($ken,
+							       $token_name,
+							       $token_type,
+							       undef, # new ECI, don't pass in session
+							       {}, # no attributes
+							       {}  # no policy
+							      );
+
+	my $developer_secret = _generate_developer_key($ken);
+	my $permission =  _dev_permissions($ken,$developer_secret, ['oauth','access_token'], 1);
+
+	my $app_info;
+	if (defined $options && ref $options eq "HASH") {
+
+	    $app_info = {"icon" => $options->{"icon"},
+			 "name"=> $options->{"name"},
+			 "description"=> $options->{"description"},
+			 "info_url"=> $options->{"info_url"},
+			 "declined_url" => $options->{"declined_url"},
+			};
+
+	    if (defined $options->{"callbacks"}) {
+		Kynetx::Persistence::KPDS::add_callback($ken, $token, $options->{"callbacks"});
+	    }
+	    if (defined $options->{"bootstrap"}) {
+		Kynetx::Persistence::KPDS::add_bootstrap($ken, $token, $options->{"bootstrap"});
+	    }
+	} 
+
+	$app_info->{"developer_secret"} =  $developer_secret; # add even if no options
+
+	my $app_info_result = Kynetx::Persistence::KPDS::add_app_info($ken, $token, $app_info);
+
+	return {
+		"nid" => $userid,
+		"name" => $token_name,
+		"cid" => $token
+	       }
+
+    }
+    return undef;
+}
+$funcs->{'new_oauth_app'} = \&new_oauth_app;
+
+
+sub delete_oauth_app {
+    my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+    my $logger = get_logger();
+    my $keys = _key_filter($args);
+    return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
+	
+    my $token = $args->[0];
+    my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($token);
+    if ($ken) {
+	my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');	
+#	$logger->debug("Deleting app: ", $token);
+
+	Kynetx::Persistence::KPDS::delete_app($ken, $token);
+	return {
+		"nid" => $userid,
+		"cid" => $token
+	       }
+    }
+    return undef;
+}
+$funcs->{'delete_oauth_app'} = \&delete_oauth_app;
+
+sub list_oauth_apps {
+    my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+    my $logger = get_logger();
+    my $keys = _key_filter($args);
+    return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
+
+    my $account_id = $args->[0];
+    $logger->debug("Account ID: ", $account_id);
+
+    my $ken;
+    if (! defined $account_id) {
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+    } else {
+	# Check to see if it is an eci or a userid
+	if ($account_id =~ m/^\d+$/) {
+	    ll("userid $account_id");
+	    $ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($account_id);
+	} else {
+	    ll("eci $account_id");
+	    $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($account_id);
+	}			
+    }
+
+    if ($ken) {
+	return Kynetx::Persistence::KPDS::get_all_apps($ken);
+    }
+    return undef;
+}
+$funcs->{'list_oauth_apps'} = \&list_oauth_apps;
+
 
 sub add_oauth_callback {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
@@ -1527,22 +1659,27 @@ sub developer_key {
 	}
 	$logger->trace("Create developer key for $ken");
 	return undef unless ($ken);
-	my $syskey = syskey();
-  my $keys = _key_filter($args);
+	my $keys = _key_filter($args);
 	if (pci_authorized($req_info, $rule_env, $session, $keys)) {		
-		my $t = time();
-		my $r = int(rand($t));
-		my $nonce = "$t" ^ "$r"; 
-		my $data = $ken . $nonce;
-		my $digest = hmac_sha256_base64($data,$syskey);
-		_default_permissions($ken,$digest);
-		return $digest;
+	    return _generate_developer_key($ken);
 	} else {
-		$logger->warn("Account not authorized for developer keys");
+	    $logger->warn("Account not authorized for developer keys");
 	}
 	return undef;
 }
 $funcs->{'create_developer_key'} = \&developer_key;
+
+sub _generate_developer_key {
+    my ($ken) = @_;
+    my $t = time();
+    my $r = int(rand($t));
+    my $nonce = "$t" ^ "$r"; 
+    my $data = $ken . $nonce;
+    my $syskey = syskey();
+    my $digest = hmac_sha256_base64($data,$syskey);
+    _default_permissions($ken,$digest);
+    return $digest;
+}
 
 # the default for kns_config.yml
 # permissions: 
@@ -1702,15 +1839,15 @@ sub pci_authorized {
 	my $logger = get_logger();
 	my $keys = Kynetx::Keys::get_key($req_info,$rule_env,CREDENTIALS);
 	if (defined $keys and ref $keys eq "HASH") {
-		my $super_key = $keys->{'root'};
-		if (defined $super_key) {
-		  return check_system_key($super_key);		
-		}		
+	    my $super_key = $keys->{'root'};
+	    if (defined $super_key) {
+		return check_system_key($super_key);		
+	    }		
 	} elsif (defined $explicit and ref $explicit eq "HASH") {
 	  my $super_key = $explicit->{'root'};
-		if (defined $super_key) {
-		  return check_system_key($super_key);		
-		}
+	  if (defined $super_key) {
+	      return check_system_key($super_key);		
+	  }
 	}
 	
 	return 0;

@@ -89,6 +89,7 @@ my $test_count = 0;
 
 my($config, $mods, $args, $krl, $krl_src, $js, $result, $v,$description,$dev_key,$eci,$uid,$expected);
 my $uuid_re = "^[A-F|0-9]{8}\-[A-F|0-9]{4}\-[A-F|0-9]{4}\-[A-F|0-9]{4}\-[A-F|0-9]{12}\$";
+my $secret_re = "^[A-Za-z0-9+/]+\$";
 
 # check that predicates at least run without error
 my @dummy_arg = (0);
@@ -229,7 +230,8 @@ $description = "get a single permission";
 $result = Kynetx::Modules::PCI::get_permissions($my_req_info,$rule_env,$session,$rule_name,"foo",[$new_token,$dk2,$keypath]);
 is($result,0,$description);
 $test_count++;
-Log::Log4perl->easy_init($INFO);
+
+
 $keypath = ['ruleset','destroy'];
 $description = "Set a single permission";
 $result = Kynetx::Modules::PCI::set_permissions($my_req_info,$rule_env,$session,$rule_name,"foo",[$new_token,$dk2,$keypath]);
@@ -272,8 +274,6 @@ $args = [$keys,$uname];
 $result = Kynetx::Modules::PCI::check_username($my_req_info,$blank_env,$session,$rule_name,"foo",$args);
 is($result,1,$description);
 $test_count++;
-
-Log::Log4perl->easy_init($INFO);
 
 $description = "Check for username exists (false)";
 my $new_uname = $uname . '-dep';
@@ -856,6 +856,194 @@ $result = Kynetx::Modules::PCI::get_eci_policy($my_req_info,
 #diag "Get: ", Dumper $result;
 cmp_deeply($result,$expected,$description);
 $test_count++;
+
+######################### OAuth
+
+Log::Log4perl->easy_init($DEBUG);
+
+
+# need system cred for this
+($js, $rule_env) = 
+ Kynetx::Keys::insert_key(
+  $my_req_info,
+  $rule_env,
+  'system_credentials',
+  $keys);
+
+
+my @oauth_apps;
+
+my $oname = "OAuth Developer Token";
+
+$description = "Add a new OAuth app";
+$expected = {
+	'nid' => $uid,
+	'name' => $oname,
+	'cid' => re(qr/$uuid_re/)
+};
+
+my $app_options = {"name" => "Oauth App 1",
+		   "icon" => "http://example.com/default.png",
+		   "description" => "First Oauth App for Testing",
+		   "info_url" => "http://example.com/info",
+		   "declined_url" => "http://example.com/declined",
+		   "callbacks" => ["http://example.com/callbacks"],
+		   "bootstrap" => ["b16x51.prod", "b16x29.prod"]
+		  };
+
+$args  =[$uid,
+	 $app_options
+	];
+
+
+$result = Kynetx::Modules::PCI::new_oauth_app($my_req_info,$rule_env,$session,$rule_name,"foo",$args);
+#diag "Result from $description ", Dumper $result;
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+my $first_app_token = $result->{'cid'};
+
+push(@oauth_apps, $first_app_token);
+
+$description = "List OAuth apps";
+$expected = {$first_app_token =>
+	     {"app_info"=> {"name" => "Oauth App 1",
+			    "icon" => "http://example.com/default.png",
+			    "description" => "First Oauth App for Testing",
+			    "info_url" => "http://example.com/info",
+			    "declined_url" => "http://example.com/declined",
+			    "developer_secret" => re(qr/$secret_re/),
+			   },
+	      "callbacks" => ["http://example.com/callbacks"],
+	      "bootstrap" => ["b16x51.prod", "b16x29.prod"]
+	     }
+	    };
+$result = Kynetx::Modules::PCI::list_oauth_apps($my_req_info,
+						$rule_env,
+						$session,
+						$rule_name,
+						"foo",
+						[$uid]
+					       );
+
+#diag "Result from $description ", Dumper $result;
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+
+$description = "Add another new OAuth app";
+$expected = {
+	'nid' => $uid,
+	'name' => $oname,
+	'cid' => re(qr/$uuid_re/)
+};
+
+$app_options = {"name" => "Oauth App 2",
+		"icon" => "http://example.com/default.png",
+		"description" => "Second Oauth App for Testing",
+		"info_url" => "http://example.com/info",
+		"declined_url" => "http://example.com/declined",
+		"callbacks" => ["http://example.com/callbacks"],
+		"bootstrap" => ["b16x876.prod"]
+	       };
+
+$args  =[$uid,
+	 $app_options
+	];
+
+
+$result = Kynetx::Modules::PCI::new_oauth_app($my_req_info,$rule_env,$session,$rule_name,"foo",$args);
+#diag "Result from $description ", Dumper $result;
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+my $second_app_token = $result->{'cid'};
+
+push(@oauth_apps, $second_app_token);
+
+
+$description = "List OAuth apps";
+$expected = {"app_info"=> {"name" => "Oauth App 2",
+			    "icon" => "http://example.com/default.png",
+			    "description" => "Second Oauth App for Testing",
+			    "info_url" => "http://example.com/info",
+			    "declined_url" => "http://example.com/declined",
+			    "developer_secret" => re(qr/$secret_re/),
+			   },
+	      "callbacks" => ["http://example.com/callbacks"],
+	      "bootstrap" => ["b16x876.prod"]
+	    };
+$result = Kynetx::Modules::PCI::list_oauth_apps($my_req_info,
+						$rule_env,
+						$session,
+						$rule_name,
+						"foo",
+						[$uid]
+					       );
+
+#diag "Result from $description ", Dumper $result;
+
+is(scalar keys %$result, 2, "We now have two apps");
+$test_count++;
+
+
+
+cmp_deeply($result->{$second_app_token},$expected,$description);
+$test_count++;
+
+$description = "Delete first OAuth app";
+$result = Kynetx::Modules::PCI::delete_oauth_app($my_req_info,
+						 $rule_env,
+						 $session,
+						 $rule_name,
+						 "foo",
+						 [$first_app_token]
+					       );
+
+$result = Kynetx::Modules::PCI::list_oauth_apps($my_req_info,
+						$rule_env,
+						$session,
+						$rule_name,
+						"foo",
+						[$uid]
+					       );
+
+#diag "Result from $description ", Dumper $result;
+
+is(scalar keys %$result, 1, "We now have one app");
+$test_count++;
+
+ok(defined $result->{$second_app_token},$description);
+$test_count++;
+
+
+$description = "Delete second OAuth app";
+$result = Kynetx::Modules::PCI::delete_oauth_app($my_req_info,
+						 $rule_env,
+						 $session,
+						 $rule_name,
+						 "foo",
+						 [$second_app_token]
+					       );
+
+$result = Kynetx::Modules::PCI::list_oauth_apps($my_req_info,
+						$rule_env,
+						$session,
+						$rule_name,
+						"foo",
+						[$uid]
+					       );
+#diag "Result from $description ", Dumper $result;
+
+is(scalar keys %$result, 0, "We now have no apps");
+$test_count++;
+
+
+
+
+
+
+Log::Log4perl->easy_init($INFO);
 
 
 ######################### Logging tests

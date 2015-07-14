@@ -81,7 +81,7 @@ sub get_kpds_element {
 		} 
 		my $result = Kynetx::MongoDB::get_hash_element(COLLECTION,$key,$hkey);
 #		$logger->debug("Result from KPDS query: ", sub {Dumper $result});
-		if (defined $result && ref $result eq "HASH") {
+		if (defined $result && ref $result eq "HASH" && defined $result->{value}) {
 			Kynetx::MongoDB::set_cache_for_hash(COLLECTION,$key,$hkey,$result->{"value"});
 			return $result->{"value"};
 		} else {
@@ -190,16 +190,16 @@ sub delete_kpds_element {
 	my ($ken,$hkey) = @_;
 	my $logger = get_logger();
 	if (defined $ken) {
-		my $key = {
-			"ken" => $ken
-		};
-		if (defined $hkey) {
-			$logger->trace("Delete element: ", sub {Dumper($hkey)});
-			Kynetx::MongoDB::delete_hash_element(COLLECTION,$key,$hkey);
-    	Kynetx::MongoDB::clear_cache(COLLECTION,$key);
-		} else {
-			$logger->warn("Attempted to delete $key in ", COLLECTION, " (use delete_kpds(<KEN>) )");
-		}
+	    my $key = {
+		       "ken" => $ken
+		      };
+	    if (defined $hkey) {
+		$logger->trace("Delete element: ", sub {Dumper($hkey)});
+		Kynetx::MongoDB::delete_hash_element(COLLECTION,$key,$hkey);
+		Kynetx::MongoDB::clear_cache(COLLECTION,$key);
+	    } else {
+		$logger->warn("Attempted to delete $key in ", COLLECTION, " (use delete_kpds(<KEN>) )");
+	    }
 	}
 	
 }
@@ -245,6 +245,30 @@ sub link_dependent_cloud {
 	Kynetx::Persistence::KPDS::push_kpds_set_element($ken,$hkey,$dependent);	
 }
 ########################### KPDS OAuth Methods
+
+sub get_all_apps {
+	my ($ken) = @_;
+	my $logger=get_logger();
+	my $keypath = [OAUTH];
+	my $result = get_kpds_element($ken,$keypath);
+#	$logger->debug("All OAuth apps: ", sub {Dumper($result)});
+	return $result;		
+}
+
+sub delete_app {
+    my ($ken, $token) = @_;
+    my $key = {
+	       "ken" => $ken
+	      };
+
+    remove_app_info($ken, $token);
+    remove_all_callbacks($ken, $token);
+    remove_all_bootstraps($ken, $token);
+    my $result = Kynetx::Persistence::KToken::delete_token($token);
+    Kynetx::MongoDB::clear_cache(COLLECTION,$key);
+    return $result;
+}
+
 sub add_callback {
 	my ($ken,$dev_eci,$callback_list) = @_;
 	my $logger = get_logger();
@@ -263,12 +287,19 @@ sub remove_callback {
 	return $result;
 }
 
+sub remove_all_callbacks {
+	my ($ken,$dev_eci,$callback_list) = @_;
+	my $logger=get_logger();
+	my $keypath = [OAUTH, $dev_eci, 'callbacks'];
+	my $result = delete_kpds_element($ken,$keypath);
+	return $result;
+}
+
 sub get_callbacks {
 	my ($ken, $dev_eci) = @_;
 	my $logger=get_logger();
 	my $keypath = [OAUTH, $dev_eci, 'callbacks'];
 	my $result = get_kpds_element($ken,$keypath);
-	$logger->debug("Callbacks: ", sub {Dumper($result)});
 	return $result;		
 }
 
@@ -277,7 +308,6 @@ sub add_bootstrap {
 	my $logger = get_logger();
 	my $keypath = [OAUTH, $dev_eci, 'bootstrap'];
 	my $result = push_kpds_set_element($ken,$keypath,$bootstrap_list);
-	$logger->debug("Set: ", sub {Dumper($result)});
 	return $result;    
 }
 
@@ -289,6 +319,16 @@ sub remove_bootstrap {
 	$logger->debug("remove: ", sub {Dumper($result)});
 	return $result;
 }
+
+sub remove_all_bootstraps {
+	my ($ken,$dev_eci,$bootstrap_list) = @_;
+	my $logger=get_logger();
+	my $keypath = [OAUTH, $dev_eci, 'bootstrap'];
+	my $result = delete_kpds_element($ken,$keypath);
+	return $result;
+}
+
+
 
 sub get_bootstrap {
 	my ($ken, $dev_eci) = @_;
@@ -324,7 +364,6 @@ sub remove_app_info {
 	my $logger=get_logger();
 	my $keypath = [OAUTH, $dev_eci, 'app_info'];
 	my $result = delete_kpds_element($ken,$keypath);
-	$logger->debug("remove: ", sub {Dumper($result)});
 	return $result;
 }
 
