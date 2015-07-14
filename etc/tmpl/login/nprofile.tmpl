@@ -14,18 +14,19 @@
         <div data-role="content">
   	  <TMPL_VAR NAME="PAGEFORM">
 
-        <ul data-role="listview" data-split-icon="gear" data-split-theme="a" data-inset="true">
+        <ul data-role="listview" data-split-icon="delete" data-split-theme="a" data-inset="true">
           <li data-role="list-divider">Authorized Applications</li>
           <TMPL_LOOP NAME=APP_LIST>
             <li>
-               <a href="<TMPL_VAR NAME=PLATFORM>/login/deauthorize_app_confirm?app_info_name=<TMPL_VAR NAME=APP_INFO_NAME>&developer_eci=<TMPL_VAR NAME=DEVELOPER_ECI>">
+               <a href="#">
                 <img src="<TMPL_VAR NAME=APP_INFO_ICON>">
                 <h2><TMPL_VAR NAME=APP_INFO_NAME></h2>
                 <p><TMPL_VAR NAME=APP_INFO_DESCRIPTION></p>
-                <p><TMPL_VAR NAME=eci_name></p>
-                <p><TMPL_VAR NAME=eci></p>
-                <p class="ui-li-aside"><TMPL_VAR NAME=LAST_ACTIVE></p>
+                <!-- <p><TMPL_VAR NAME=eci_name></p> -->
+                <!-- <p><TMPL_VAR NAME=eci></p> -->
+                <p class="ui-li-aside">Authorized: <TMPL_VAR NAME=LAST_ACTIVE></p>
                </a>
+               <a href="<TMPL_VAR NAME=PLATFORM>/login/deauthorize_app_confirm?app_info_name=<TMPL_VAR NAME=APP_INFO_NAME>&developer_eci=<TMPL_VAR NAME=DEVELOPER_ECI>">Remove Authorization</a>
             </li>
           </TMPL_LOOP>
 	</ul>

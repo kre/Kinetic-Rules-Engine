@@ -730,10 +730,10 @@ sub installed_rulesets {
 	return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys) ||
 			 developer_authorized($req_info,$rule_env,$session,['ruleset','show']));
 	my $rid = get_rid($req_info->{'rid'});		
-	$logger->debug("Session and RID: ", sub{Dumper $session}, sub{Dumper $rid});
+#	$logger->debug("Session and RID: ", sub{Dumper $session}, sub{Dumper $rid});
 	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);;
 	my $arg1 = $args->[0];
-	$logger->debug("KEN and ECI: ", $ken, $arg1);
+#	$logger->debug("KEN and ECI: ", $ken, $arg1);
 	if (defined $arg1) {
 		if ($arg1 =~ m/^\d+$/) {
 			#ll("userid");

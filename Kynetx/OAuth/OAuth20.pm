@@ -545,6 +545,7 @@ sub _active_oauth_apps {
 
   my ($by_deci, $by_ktoken);
   for my $t (@{$tokens}) {
+#      $logger->debug("Token ", sub {Dumper $t});
       if (! defined $by_deci->{$t->{"endpoint_type"}}  || 
 	  $by_deci->{$t->{"endpoint_type"}}->{"created"} < $t->{"created"})
 	{
@@ -556,9 +557,10 @@ sub _active_oauth_apps {
   for my $deci (keys %{$by_deci}) {
       my $dk = $deci;
       $deci =~ s/^OAUTH-(.+)$/$1/;
-      my $callbacks = Kynetx::Persistence::KPDS::get_callbacks($ken,$deci);
-      my $boostraps = Kynetx::Persistence::KPDS::get_bootstrap($ken,$deci);
-      my $appinfo = Kynetx::Persistence::KPDS::get_app_info($ken,$deci);
+      my $d_ken = Kynetx::Persistence::KEN::ken_lookup_by_token($deci);
+      my $callbacks = Kynetx::Persistence::KPDS::get_callbacks($d_ken,$deci);
+      my $boostraps = Kynetx::Persistence::KPDS::get_bootstrap($d_ken,$deci);
+      my $appinfo = Kynetx::Persistence::KPDS::get_app_info($d_ken,$deci);
       push(@{$result}, {"developer_eci" => $deci,
 			"app_info" => $appinfo,
 			"boostrap_rids" => $boostraps,
@@ -571,7 +573,7 @@ sub _active_oauth_apps {
 		       });
   }
 
-#  $logger->debug("Result: ", sub{Dumper $result});
+  #$logger->debug("Result: ", sub{Dumper $result});
 
   if ($result) {
     return $result;

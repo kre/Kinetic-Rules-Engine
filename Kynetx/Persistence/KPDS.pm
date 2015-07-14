@@ -76,9 +76,11 @@ sub get_kpds_element {
 		};
 		my $cache = Kynetx::MongoDB::get_cache_for_hash(COLLECTION,$key,$hkey);
 		if (defined $cache) {
-			return $cache;
+		    $logger->debug("Returning cached KPDS element");
+		    return $cache;
 		} 
 		my $result = Kynetx::MongoDB::get_hash_element(COLLECTION,$key,$hkey);
+#		$logger->debug("Result from KPDS query: ", sub {Dumper $result});
 		if (defined $result && ref $result eq "HASH") {
 			Kynetx::MongoDB::set_cache_for_hash(COLLECTION,$key,$hkey,$result->{"value"});
 			return $result->{"value"};
@@ -313,7 +315,7 @@ sub get_app_info {
 	my $logger=get_logger();
 	my $keypath = [OAUTH, $dev_eci, 'app_info'];
 	my $result = get_kpds_element($ken,$keypath);
-	$logger->debug("list: ", sub {Dumper($result)});
+	$logger->debug("app info: ", sub {Dumper($result)});
 	return $result;		  
 }
 
