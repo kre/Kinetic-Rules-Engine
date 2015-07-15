@@ -1193,6 +1193,7 @@ sub new_oauth_app {
     return undef;
 }
 $funcs->{'new_oauth_app'} = \&new_oauth_app;
+$funcs->{'register_oauth_app'} = \&new_oauth_app;
 
 
 sub delete_oauth_app {
