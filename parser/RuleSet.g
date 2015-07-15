@@ -918,7 +918,7 @@ modifier_clause returns[ArrayList result]
 	;
 
 modifier returns[HashMap result]
-	: name=(VAR|REPLACE|MATCH|EXTRACT|OTHER_OPERATORS|SPECIAL_MODIFIERS) EQUAL(e=expr | j=JS | x=XDI) {
+	: name=(VAR|REPLACE|MATCH|EXTRACT|OTHER_OPERATORS|SPECIAL_MODIFIERS|CALLBACKS) EQUAL(e=expr | j=JS | x=XDI) {
 		HashMap tmp2 = new HashMap();
 
 		HashMap tmp = new HashMap();

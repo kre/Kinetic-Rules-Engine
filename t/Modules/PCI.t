@@ -84,6 +84,9 @@ my $session = Kynetx::Test::gen_session($r, $rid);
 
 my $session_ken = Kynetx::Persistence::KEN::get_ken($session,"null");
 
+my $dd = Kynetx::Response->create_directive_doc($my_req_info->{'eid'});
+
+
 my $test_count = 0;
 
 
@@ -859,7 +862,7 @@ $test_count++;
 
 ######################### OAuth
 
-Log::Log4perl->easy_init($DEBUG);
+#Log::Log4perl->easy_init($DEBUG);
 
 
 # need system cred for this
@@ -871,39 +874,42 @@ Log::Log4perl->easy_init($DEBUG);
   $keys);
 
 
-my @oauth_apps;
-
-my $oname = "OAuth Developer Token";
+# my @oauth_apps;
 
 $description = "Add a new OAuth app";
-$expected = {
-	'nid' => $uid,
-	'name' => $oname,
-	'cid' => re(qr/$uuid_re/)
-};
 
-my $app_options = {"name" => "Oauth App 1",
-		   "icon" => "http://example.com/default.png",
-		   "description" => "First Oauth App for Testing",
-		   "info_url" => "http://example.com/info",
-		   "declined_url" => "http://example.com/declined",
-		   "callbacks" => ["http://example.com/callbacks"],
-		   "bootstrap" => ["b16x51.prod", "b16x29.prod"]
-		  };
+# register the first app
+$krl_src = <<_KRL_;
+pci:register_app($uid) setting(token, secret)
+     with name = "Oauth App 1" and
+ 	  icon = "http://example.com/default.png" and
+	  description = "First Oauth App for Testing" and
+	  info_url = "http://example.com/info" and
+	  declined_url = "http://example.com/declined" and
+          callbacks = ["http://example.com/callbacks"] and
+	  bootstrap = ["b16x51.prod", "b16x29.prod"]
+_KRL_
 
-$args  =[$uid,
-	 $app_options
-	];
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#diag Dumper $krl;
 
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
 
-$result = Kynetx::Modules::PCI::new_oauth_app($my_req_info,$rule_env,$session,$rule_name,"foo",$args);
-#diag "Result from $description ", Dumper $result;
-cmp_deeply($result,$expected,$description);
-$test_count++;
+my $token = lookup_rule_env('token',$rule_env);
+my $secret = lookup_rule_env('secret',$rule_env);
+#diag Dumper "Got a token and secret: ", $token, $secret;
+like($token, qr/$uuid_re/, "$description token matches");
+like($secret, qr/$secret_re/, "$description secret matches");
+$test_count += 2;
 
-my $first_app_token = $result->{'cid'};
-
-push(@oauth_apps, $first_app_token);
+my $first_app_token = $token;
 
 $description = "List OAuth apps";
 $expected = {$first_app_token =>
@@ -932,34 +938,40 @@ $test_count++;
 
 
 $description = "Add another new OAuth app";
-$expected = {
-	'nid' => $uid,
-	'name' => $oname,
-	'cid' => re(qr/$uuid_re/)
-};
 
-$app_options = {"name" => "Oauth App 2",
-		"icon" => "http://example.com/default.png",
-		"description" => "Second Oauth App for Testing",
-		"info_url" => "http://example.com/info",
-		"declined_url" => "http://example.com/declined",
-		"callbacks" => ["http://example.com/callbacks"],
-		"bootstrap" => ["b16x876.prod"]
-	       };
+# register the first app
+$krl_src = <<_KRL_;
+pci:register_app($uid) setting(my_token, my_secret)
+     with name = "Oauth App 2" and
+ 	  icon = "http://example.com/default.png" and
+	  description = "Second Oauth App for Testing" and
+	  info_url = "http://example.com/info" and
+	  declined_url = "http://example.com/declined" and
+          callbacks = ["http://example.com/callbacks"] and
+	  bootstrap = ["b16x876.prod"]
+_KRL_
 
-$args  =[$uid,
-	 $app_options
-	];
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#diag Dumper $krl;
 
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
 
-$result = Kynetx::Modules::PCI::new_oauth_app($my_req_info,$rule_env,$session,$rule_name,"foo",$args);
-#diag "Result from $description ", Dumper $result;
-cmp_deeply($result,$expected,$description);
-$test_count++;
+$token = lookup_rule_env('my_token',$rule_env);
+$secret = lookup_rule_env('my_secret',$rule_env);
+#diag Dumper "Got a token and secret: ", $token, $secret;
+like($token, qr/$uuid_re/, "$description token matches");
+like($secret, qr/$secret_re/, "$description secret matches");
+$test_count += 2;
 
-my $second_app_token = $result->{'cid'};
+my $second_app_token = $token;
 
-push(@oauth_apps, $second_app_token);
 
 
 $description = "List OAuth apps";
@@ -992,13 +1004,22 @@ cmp_deeply($result->{$second_app_token},$expected,$description);
 $test_count++;
 
 $description = "Delete first OAuth app";
-$result = Kynetx::Modules::PCI::delete_oauth_app($my_req_info,
-						 $rule_env,
-						 $session,
-						 $rule_name,
-						 "foo",
-						 [$first_app_token]
-					       );
+$krl_src = <<_KRL_;
+pci:delete_app("$first_app_token")
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#diag Dumper $krl;
+
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
 
 $result = Kynetx::Modules::PCI::list_oauth_apps($my_req_info,
 						$rule_env,
@@ -1018,13 +1039,22 @@ $test_count++;
 
 
 $description = "Delete second OAuth app";
-$result = Kynetx::Modules::PCI::delete_oauth_app($my_req_info,
-						 $rule_env,
-						 $session,
-						 $rule_name,
-						 "foo",
-						 [$second_app_token]
-					       );
+$krl_src = <<_KRL_;
+pci:delete_app("$second_app_token")
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+#diag Dumper $krl;
+
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+
 
 $result = Kynetx::Modules::PCI::list_oauth_apps($my_req_info,
 						$rule_env,
@@ -1039,11 +1069,7 @@ is(scalar keys %$result, 0, "We now have no apps");
 $test_count++;
 
 
-
-
-
-
-Log::Log4perl->easy_init($INFO);
+#Log::Log4perl->easy_init($INFO);
 
 
 ######################### Logging tests

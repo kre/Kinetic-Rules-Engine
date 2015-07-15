@@ -274,7 +274,7 @@ sub add_callback {
 	my $logger = get_logger();
 	my $keypath = [OAUTH, $dev_eci, 'callbacks'];
 	my $result = push_kpds_set_element($ken,$keypath,$callback_list);
-	$logger->debug("Set: ", sub {Dumper($result)});
+#	$logger->debug("Set: ", sub {Dumper($result)});
 	return $result;    
 }
 
@@ -283,7 +283,7 @@ sub remove_callback {
 	my $logger=get_logger();
 	my $keypath = [OAUTH, $dev_eci, 'callbacks'];
 	my $result = remove_kpds_set_element($ken,$keypath,$callback_list);
-	$logger->debug("remove: ", sub {Dumper($result)});
+#	$logger->debug("remove: ", sub {Dumper($result)});
 	return $result;
 }
 
@@ -316,7 +316,7 @@ sub remove_bootstrap {
 	my $logger=get_logger();
 	my $keypath = [OAUTH, $dev_eci, 'bootstrap'];
 	my $result = remove_kpds_set_element($ken,$keypath,$bootstrap_list);
-	$logger->debug("remove: ", sub {Dumper($result)});
+#	$logger->debug("remove: ", sub {Dumper($result)});
 	return $result;
 }
 
@@ -335,7 +335,7 @@ sub get_bootstrap {
 	my $logger=get_logger();
 	my $keypath = [OAUTH, $dev_eci, 'bootstrap'];
 	my $result = get_kpds_element($ken,$keypath);
-	$logger->debug("bootstrap rulesets: ", sub {Dumper($result)});
+#	$logger->debug("bootstrap rulesets: ", sub {Dumper($result)});
 	return $result;		
 }
 
@@ -346,7 +346,7 @@ sub add_app_info {
 	my $logger = get_logger();
 	my $keypath = [OAUTH, $dev_eci, 'app_info'];
 	my $result = put_kpds_element($ken,$keypath,$app_info);
-	$logger->debug("Set: ", sub {Dumper($result)});
+#	$logger->debug("Set: ", sub {Dumper($result)});
 	return $result;      
 }
 
@@ -355,7 +355,7 @@ sub get_app_info {
 	my $logger=get_logger();
 	my $keypath = [OAUTH, $dev_eci, 'app_info'];
 	my $result = get_kpds_element($ken,$keypath);
-	$logger->debug("app info: ", sub {Dumper($result)});
+#	$logger->debug("app info: ", sub {Dumper($result)});
 	return $result;		  
 }
 

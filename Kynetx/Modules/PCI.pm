@@ -27,7 +27,7 @@ use Data::Dumper;
 use Kynetx::Util qw(ll);
 use Kynetx::Rids qw/:all/;
 use Kynetx::Dispatch; #qw/clear_rid_list_by_ken/;
-#use Kynetx::Environments qw/:all/;
+use Kynetx::Environments qw/add_to_env/;
 use Kynetx::Modules::Random;
 use Kynetx::Persistence::DevLog;
 use Digest::SHA qw/hmac_sha1 hmac_sha1_hex hmac_sha1_base64
@@ -88,16 +88,28 @@ my $predicates = {
   }
 };
 
-my $default_actions = {
-};
-
-
 
 sub get_resources {
     return {};
 }
+
+
+my $actions = { 
+	'register_app' => {
+		'js' =>'NO_JS',    # this action does not emit JS, used in build_one_action
+		'before' => \&register_app,
+		'after'  => []
+	},
+	'delete_app' => {
+		'js' =>'NO_JS',    # this action does not emit JS, used in build_one_action
+		'before' => \&delete_oauth_app,
+		'after'  => []
+	},
+};
+
+
 sub get_actions {
-    return $default_actions;
+    return $actions;
 }
 sub get_predicates {
     return $predicates;
@@ -1117,6 +1129,102 @@ $funcs->{'list_oauth_eci'} = \&get_developer_oauth_eci;
 
 ############################# OAuth Apps
 
+
+# actions
+sub register_app {
+    my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
+
+    my $logger = get_logger();
+    $logger->debug("Creating new OAuth app");
+    my $keys = _key_filter([$config->{"credentials"}]);
+    return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
+    
+    my ($ken,$token_name,$token_type,$attributes,$policy);
+    my $account_id = $args->[0];
+
+    $logger->debug("Account ID: ", $account_id);
+
+#    my $options = $args->[1];
+    if (! defined $account_id) {
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);		
+    } else {
+	# Check to see if it is an eci or a userid
+	if ($account_id =~ m/^\d+$/) {
+	    ll("userid $account_id");
+	    $ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($account_id);
+	} else {
+	    ll("eci $account_id");
+	    $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($account_id);
+	}			
+    }
+
+    
+    $token_name = "OAuth Developer Token";
+    $token_type = "OAUTH";
+    
+    if ($ken) {
+	my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');	
+	my $token =  Kynetx::Persistence::KToken::create_token($ken,
+							       $token_name,
+							       $token_type,
+							       undef, # new ECI, don't pass in session
+							       {}, # no attributes
+							       {}  # no policy
+							      );
+
+	my $developer_secret = _generate_developer_key($ken);
+	my $permission =  _dev_permissions($ken,$developer_secret, ['oauth','access_token'], 1);
+
+	my $app_info;
+	if (defined $config && ref $config eq "HASH") {
+
+	    $app_info = {"icon" => $config->{"icon"},
+			 "name"=> $config->{"name"},
+			 "description"=> $config->{"description"},
+			 "info_url"=> $config->{"info_url"},
+			 "declined_url" => $config->{"declined_url"},
+			};
+
+	    if (defined $config->{"callbacks"}) {
+		Kynetx::Persistence::KPDS::add_callback($ken, $token, $config->{"callbacks"});
+	    }
+	    if (defined $config->{"bootstrap"}) {
+		Kynetx::Persistence::KPDS::add_bootstrap($ken, $token, $config->{"bootstrap"});
+	    }
+	} 
+
+	$app_info->{"developer_secret"} =  $developer_secret; # add even if no config
+
+	my $app_info_result = Kynetx::Persistence::KPDS::add_app_info($ken, $token, $app_info);
+
+	if ( defined $vars->[0] ) {
+	    my $resp = {$vars->[0]             => $token,
+			$vars->[1] || "secret" => $developer_secret
+		       };
+	    $rule_env = add_to_env( $resp, $rule_env );
+	}
+    }
+}
+
+sub delete_oauth_app {
+    my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
+    my $logger = get_logger();
+    my $keys = _key_filter($args);
+    return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
+	
+    my $token = $args->[0];
+    my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($token);
+    if ($ken) {
+	my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');	
+#	$logger->debug("Deleting app: ", $token);
+
+	Kynetx::Persistence::KPDS::delete_app($ken, $token);
+    }
+}
+
+
+# delete after action works
 sub new_oauth_app {
     my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
     my $logger = get_logger();

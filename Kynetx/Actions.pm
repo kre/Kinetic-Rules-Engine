@@ -870,10 +870,6 @@ sub build_one_action {
 		
 
 		$config->{ $m->{'name'} } = Kynetx::Expressions::den_to_exp($dobj);
-#			Kynetx::Expressions::eval_expr(
-#				$m->{'value'}, $rule_env, $rule_name, $req_info, $session
-#			)
-#		);
 
 		# don't eval for sending to client.
 		push @{$js_config},
@@ -914,6 +910,9 @@ sub build_one_action {
 		}
 		elsif ( $action->{'source'} eq 'http' ) {
 			$actions = Kynetx::Modules::HTTP::get_actions();
+		}
+		elsif ( $action->{'source'} eq 'pci' ) {
+			$actions = Kynetx::Modules::PCI::get_actions();
 		}
 		elsif ( $action->{'source'} eq 'twilio' ) {
 			$actions = Kynetx::Modules::Twilio::get_actions();
