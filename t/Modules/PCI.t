@@ -924,13 +924,13 @@ $expected = {$first_app_token =>
 	      "bootstrap" => ["b16x51.prod", "b16x29.prod"]
 	     }
 	    };
-$result = Kynetx::Modules::PCI::list_oauth_apps($my_req_info,
-						$rule_env,
-						$session,
-						$rule_name,
-						"foo",
-						[$uid]
-					       );
+$result = Kynetx::Modules::PCI::list_apps($my_req_info,
+					  $rule_env,
+					  $session,
+					  $rule_name,
+					  "foo",
+					  [$uid]
+					 );
 
 #diag "Result from $description ", Dumper $result;
 cmp_deeply($result,$expected,$description);
@@ -985,7 +985,7 @@ $expected = {"app_info"=> {"name" => "Oauth App 2",
 	      "callbacks" => ["http://example.com/callbacks"],
 	      "bootstrap" => ["b16x876.prod"]
 	    };
-$result = Kynetx::Modules::PCI::list_oauth_apps($my_req_info,
+$result = Kynetx::Modules::PCI::list_apps($my_req_info,
 						$rule_env,
 						$session,
 						$rule_name,
@@ -1021,7 +1021,7 @@ $js = Kynetx::Actions::build_one_action(
 	    'dummy_name');
 
 
-$result = Kynetx::Modules::PCI::list_oauth_apps($my_req_info,
+$result = Kynetx::Modules::PCI::list_apps($my_req_info,
 						$rule_env,
 						$session,
 						$rule_name,
@@ -1056,7 +1056,7 @@ $js = Kynetx::Actions::build_one_action(
 	    'dummy_name');
 
 
-$result = Kynetx::Modules::PCI::list_oauth_apps($my_req_info,
+$result = Kynetx::Modules::PCI::list_apps($my_req_info,
 						$rule_env,
 						$session,
 						$rule_name,
