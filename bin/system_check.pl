@@ -21,7 +21,7 @@ Kynetx::Configure::configure();
 my $dir = "/home";
  
 # warning level
-my $diskspace_warning_level=get_config("DISK_SPACE_THRESHOLD") || 100;
+my $diskspace_warning_level=get_config("DISK_SPACE_THRESHOLD") || 10;
 
 # check diskspace 
 # get df
@@ -34,7 +34,7 @@ my $out;
  
 # compare 
 if ($df_free < $diskspace_warning_level) {
- $out .= sprintf("WARNING Low Disk Space on $dir : %0.2f%% ()\n",$df_free);
+ $out .= sprintf("WARNING Disk Space on $dir lower than threshold value (%0.2f%%): %0.2f%% \n", $diskspace_warning_level, $df_free);
 }
  
 
@@ -50,7 +50,7 @@ if (defined $out) {
     my $subject='KRE System Check Alert';
 
     $out .= "\n$acct_system_owner on ". $this_host;
-    warn $out;
+#    warn $out;
 
     my $sg = Mail::SendGrid->new( from => $acct_system_owner_email,
 				  to => $to,
@@ -64,15 +64,17 @@ if (defined $out) {
     #set a category
     $sg->header->setCategory('system_check_alert');
 
-    
+    my $un = Kynetx::Configure::get_config('SENDGRID_USERNAME');
+    my $pw = Kynetx::Configure::get_config('SENDGRID_PASSWORD');
 
-    my $trans = Mail::SendGrid::Transport::REST->new( username =>  Kynetx::Configure::get_config('SENDGRID_USERNAME'), 
-						      password =>  Kynetx::Configure::get_config('SENDGRID_PASSWORD') );
+    my $trans = Mail::SendGrid::Transport::REST->new( username =>  $un, 
+						      password =>  $pw
+						    );
 
-      my $error = $trans->deliver($sg);
-      if ($error) {
-	  my $msg = "Sendgrid error sending system check alert: " . $error;
-	  $logger->warn($msg);
-	  warn $msg;
-      }
+    my $error = $trans->deliver($sg);
+    if ($error) {
+	my $msg = "Sendgrid error sending system check alert: " . $error;
+	$logger->warn($msg);
+	warn $msg;
+    }
 }
