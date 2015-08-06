@@ -3,11 +3,13 @@
 use strict;
 use warnings;
 
-use Filesys::DiskSpace;
+use Filesys::Df;
 use Getopt::Std;
 use Log::Log4perl qw(get_logger :levels);
 use Mail::SendGrid;
 use Mail::SendGrid::Transport::REST;
+
+use Data::Dumper;
 
 
 use Kynetx::Configure qw/:all/;
@@ -18,17 +20,19 @@ my $logger=get_logger();
 Kynetx::Configure::configure();
 
 # file system to monitor
-my $dir = "/home";
+my $dir = "/";
  
 # warning level
 my $diskspace_warning_level=get_config("DISK_SPACE_THRESHOLD") || 10;
 
 # check diskspace 
 # get df
-my ($fs_type, $fs_desc, $used, $avail, $fused, $favail) = df $dir;
+my $df = df $dir;
+
+# warn Dumper df $dir;
  
 # calculate 
-my $df_free = (($avail) / ($avail+$used)) * 100.0;
+my $df_free = 100 - $df->{"per"};
 
 my $out;
  
