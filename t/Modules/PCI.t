@@ -344,14 +344,14 @@ is($result,1,$description);
 $test_count++;
 
 $description = "Get child accounts";
-$expected = [[ignore(),$new_uname,"_LOGIN"],[ignore(),$new_uname.2,"_LOGIN"]];
+$expected = [[ignore(),$new_uname,"_CHILD"],[ignore(),$new_uname.2,"_CHILD"]];
 $args = {'username' => $uname};
 $result = Kynetx::Modules::PCI::list_children($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
 cmp_deeply($result,$expected,$description);
 $test_count++;
 
 $description = "Get child accounts of child";
-$expected = [[ignore(),$new_uname."dep","_LOGIN"]];
+$expected = [[ignore(),$new_uname."dep","_CHILD"]];
 $args = {'username' => $new_uname};
 $result = Kynetx::Modules::PCI::list_children($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
 cmp_deeply($result,$expected,$description);
@@ -366,14 +366,17 @@ $test_count++;
 $description = "Get parent of dependent account";
 $args = $eci2;
 $result = Kynetx::Modules::PCI::list_parent($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+#diag Dumper $result;
 isnt($result,undef,$description);
-$test_count++;
+is($result->[0], $eci, "has parent's ECI'");
+$test_count += 2;
 
 $description = "Get parent of dependent account";
 $args = $eci3;
 $result = Kynetx::Modules::PCI::list_parent($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
 isnt($result,undef,$description);
-$test_count++;
+is($result->[0], $eci, "has parent's ECI'");
+$test_count += 2;
 
 
 $description = "Change owner of account";
@@ -383,8 +386,8 @@ my $p_account = Kynetx::Modules::PCI::list_parent($my_req_info,$rule_env,$sessio
 $logger->trace("New parent: ",sub {Dumper($p_account)});
 
 $description = "Is child added to $eci2";
-$expected = bag([ignore(),$new_uname . 2,"_LOGIN"],
-                [ignore(),$new_uname. "dep","_LOGIN"]);
+$expected = bag([ignore(),$new_uname . 2,"_CHILD"],
+                [ignore(),$new_uname. "dep","_CHILD"]);
 $args = $eci2;
 $result = Kynetx::Modules::PCI::list_children($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
 cmp_deeply($result,$expected,$description);
@@ -392,7 +395,7 @@ $test_count++;
 $logger->trace("Children of $eci2: ", sub {Dumper($result)});
 
 $description = "Is child removed from $eci";
-$expected = [[ignore(),$new_uname,"_LOGIN"]];
+$expected = [[ignore(),$new_uname,"_CHILD"]];
 $args = $eci;
 $result = Kynetx::Modules::PCI::list_children($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
 cmp_deeply($result,$expected,$description);

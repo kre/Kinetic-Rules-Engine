@@ -145,6 +145,7 @@ sub handler {
 	  my ($module_alias, $version) = split(/\./,$path_components[2]);
 	  my $rid = unalias($module_alias);
 
+	  $version ||= 'prod';
 	  $req_info->{'module_name'} = $rid;
 	  $req_info->{'rid'} = Kynetx::Rids::mk_rid_info( $req_info, $rid, {"version" => $version} );
 	  $req_info->{'module_version'} = $version;

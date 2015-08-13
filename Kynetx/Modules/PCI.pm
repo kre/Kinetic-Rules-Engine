@@ -147,86 +147,90 @@ sub run_function {
 
 
 sub new_account {
-	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
-	my $logger = get_logger();
-	my $keys = _key_filter($args);
-	if (pci_authorized($req_info, $rule_env, $session, $keys)) {
-		my $pken = Kynetx::Persistence::KEN::get_ken($session,'');
-		my $oid = MongoDB::OID->new();
-	    my $new_id = $oid->to_string();
-	    my $username = "_$new_id";
-	    my $created = DateTime->now->epoch;
-	    my $dflt = {
-	        "username" => $username,
-	        "_id" => $oid,
-	        "firstname" => "",
-	        "lastname" => "",
-	        "password" => "*",
-	        "created" => $created
-	    };
-	    my ($parent,$options,$userid);
-	    my $type = 'PCI';
-	    if (defined $args->[0] && ref $args->[0] eq "") {
-	    	my $eci = $args->[0];
-	    	my $valid = Kynetx::Persistence::KToken::is_valid_token($eci);
-	    	if (defined $valid and ref $valid eq "HASH") {
+    my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+    my $logger = get_logger();
+    my $keys = _key_filter($args);
+    if (pci_authorized($req_info, $rule_env, $session, $keys)) {
+	my $pken = Kynetx::Persistence::KEN::get_ken($session,'');
+	my $oid = MongoDB::OID->new();
+	my $new_id = $oid->to_string();
+	my $username = "_$new_id";
+	my $created = DateTime->now->epoch;
+	my $dflt = {
+		    "username" => $username,
+		    "_id" => $oid,
+		    "firstname" => "",
+		    "lastname" => "",
+		    "password" => "*",
+		    "created" => $created
+		   };
+	my ($parent,$options,$userid);
+	my $name = '_LOGIN';
+	my $type = 'PCI';
+	if (defined $args->[0] && ref $args->[0] eq "") {
+	    my $eci = $args->[0];
+	    my $valid = Kynetx::Persistence::KToken::is_valid_token($eci);
+	    if (defined $valid and ref $valid eq "HASH") {
 	    	$logger->trace("Valid: ", sub {Dumper($valid)});
-	    		$parent = $valid->{"ken"};
-	    	}
-	    	if ($args->[1] && ref $args->[1] eq "HASH") {
-	    		$options = $args->[1];
-	    	}
-	    } elsif (defined $args->[0] && ref $args->[0] eq "HASH") {
-	    	$options = $args->[0];
-	    	$parent = undef;
-	    } else {
-	    	$logger->debug("Invalid parameters for new_account");
-	    	return undef;
+		$parent = $valid->{"ken"};
 	    }
-	    foreach my $key (keys %{$options}) {
-	    	next if ($key eq "_id");
-	    	if ($key eq "password") {
-	    		my $pass = $options->{$key};
-	    		if ($pass eq "") {
-	    			$dflt->{$key} = "*";
-	    		} else {
-	    			$dflt->{$key} = _hash_password($pass);
-	    		}
-	    	} elsif ($key eq "cloudnumber"){
-	    	    $dflt->{"username"} = $options->{$key};
-	    	} else {
-	    		$dflt->{$key} = $options->{$key};
-	    	}
-	    	
+	    if ($args->[1] && ref $args->[1] eq "HASH") {
+		$options = $args->[1];
 	    }
-      # Check that the final username is unique
-      my $found = Kynetx::Persistence::KEN::ken_lookup_by_username($dflt->{'username'});
-      if ($found) {
-        $logger->warn($dflt->{'username'}, " is already in use");
-        return undef;
-      }
-	    if (defined $parent) {
-	    	$logger->trace("Parent: ", sub {Dumper($parent)});
-	    	$dflt->{'parent'} = $parent;
-	    	Kynetx::Persistence::KPDS::link_dependent_cloud($parent,$new_id);
-	    } else {
-	    	$userid = Kynetx::MongoDB::counter("userid");
-	    	$dflt->{"user_id"} = $userid;
-	    	$logger->trace("user id: ", sub {Dumper($userid)});
-	    }
-	    my $ken = Kynetx::Persistence::KEN::new_ken($dflt);
-	    my $neci =  Kynetx::Persistence::KToken::create_token($ken,"_LOGIN",$type);
-	    my $struc = {
-	    	"nid" => $userid,
-	    	"cid" => $neci
-	    };
-	    return $struc;
+	} elsif (defined $args->[0] && ref $args->[0] eq "HASH") {
+	    $options = $args->[0];
+	    $parent = undef;
 	} else {
-		$logger->debug("Not authorized to create account");
+	    $logger->debug("Invalid parameters for new_account");
+	    return undef;
 	}
-	return undef;
+	foreach my $key (keys %{$options}) {
+	    next if ($key eq "_id");
+	    if ($key eq "password") {
+		my $pass = $options->{$key};
+		if ($pass eq "") {
+		    $dflt->{$key} = "*";
+		} else {
+		    $dflt->{$key} = _hash_password($pass);
+		}
+	    } elsif ($key eq "cloudnumber") {
+		$dflt->{"username"} = $options->{$key};
+	    } else {
+		$dflt->{$key} = $options->{$key};
+	    }
+	    	
+	}
+	# Check that the final username is unique
+	my $found = Kynetx::Persistence::KEN::ken_lookup_by_username($dflt->{'username'});
+	if ($found) {
+	    $logger->warn($dflt->{'username'}, " is already in use");
+	    return undef;
+	}
+	if (defined $parent) {
+	    $logger->trace("Parent: ", sub {Dumper($parent)});
+	    $dflt->{'parent'} = $parent;
+	    Kynetx::Persistence::KPDS::link_dependent_cloud($parent,$new_id);
+	    $name = $options->{'label'} || '_CHILD';
+	} else {
+	    $userid = Kynetx::MongoDB::counter("userid");
+	    $dflt->{"user_id"} = $userid;
+	    $logger->trace("user id: ", sub {Dumper($userid)});
+	}
+	my $ken = Kynetx::Persistence::KEN::new_ken($dflt);
+	my $neci =  Kynetx::Persistence::KToken::create_token($ken,$name,$type);
+	my $struc = {
+		     "nid" => $userid,
+		     "cid" => $neci,
+		     "eci" => $neci
+		    };
+	return $struc;
+    } else {
+	$logger->debug("Not authorized to create account");
+    }
+    return undef;
 }
 $funcs->{'new_cloud'} = \&new_account;
+$funcs->{'new_pico'} = \&new_account;
 
 
 
@@ -257,6 +261,7 @@ sub delete_account {
 	}
 }
 $funcs->{'delete_cloud'} = \&delete_account;
+$funcs->{'delete_pico'} = \&delete_account;
 
 sub account_authorized {
 	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
@@ -465,6 +470,7 @@ sub list_children {
     my $key = ['dependents'];
     my $children = Kynetx::Persistence::KPDS::get_kpds_element($ken,['dependents']);
     if (defined $children && ref $children eq "ARRAY") {
+      $logger->debug("Children from KPDS elements ", sub{Dumper $children});
       foreach my $child (@{$children}) {
         my $username = Kynetx::Persistence::KEN::get_ken_value($child,'username');
         my $token = Kynetx::Persistence::KToken::get_default_token($child);
@@ -483,22 +489,22 @@ sub list_children {
 $funcs->{'list_children'} = \&list_children;
 
 sub list_parent {
-	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
-	my $logger = get_logger();
-	my $keys = _key_filter($args);
-	return 0 unless ( pci_authorized($req_info, $rule_env, $session, $keys));
-  my $uid = $args->[0];
-  my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($uid);
-  my $parent = Kynetx::Persistence::KEN::get_ken_value($ken,'parent');
-  if (defined $parent){
-    my $token = Kynetx::Persistence::KToken::get_default_token($ken);
-    $token = Kynetx::Persistence::KToken::get_oldest_token($ken) unless ($token);
-    my $username = Kynetx::Persistence::KEN::get_ken_value($ken,'username');
-    my $label = Kynetx::Persistence::KToken::token_query({'ktoken' => $token})->{'token_name'};
-    my $tmp = [$token,$username,$label];
-    return $tmp;
-  }
-  return undef;
+    my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+    my $logger = get_logger();
+    my $keys = _key_filter($args);
+    return 0 unless ( pci_authorized($req_info, $rule_env, $session, $keys));
+    my $uid = $args->[0];
+    my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($uid);
+    my $parent = Kynetx::Persistence::KEN::get_ken_value($ken,'parent');
+    if (defined $parent){
+	my $token = Kynetx::Persistence::KToken::get_default_token($parent);
+	$token = Kynetx::Persistence::KToken::get_oldest_token($parent) unless ($token);
+	my $username = Kynetx::Persistence::KEN::get_ken_value($parent,'username');
+	my $label = Kynetx::Persistence::KToken::token_query({'ktoken' => $token})->{'token_name'};
+	my $tmp = [$token,$username,$label];
+	return $tmp;
+    }
+    return undef;
   
 }
 $funcs->{'list_parent'} = \&list_parent;

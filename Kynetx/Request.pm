@@ -243,6 +243,7 @@ sub build_request_env {
   $request_info->{'site'} = $rids;    #historical
        # this will get overridden with a single RID later
   $request_info->{'rid'} = $rids->[0];
+  $request_info->{'version'} = Kynetx::Rids::get_version($rids->[0]);
 
   set_capabilities($request_info);
 
