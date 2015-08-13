@@ -243,11 +243,15 @@ sub delete_account {
 	    my $valid = Kynetx::Persistence::KToken::is_valid_token($eci);
 	    if (defined $valid and ref $valid eq "HASH") {
     		$logger->trace("Valid: ", sub {Dumper($valid)});
-    		my $cascade;
+    		my $cascade = 0;
     		my $ken = $valid->{'ken'};
     		# Check to see if any dependent clouds should be deleted
     		if (defined $args->[1] && ref $args->[1] eq "HASH") {
     			$cascade =  $args->[1]->{"cascade"};
+			if (JSON::XS::is_bool $cascade) {
+			  $cascade = $cascade ? 1 : 0;
+			}
+
     		}
     		Kynetx::Persistence::KPDS::delete_cloud($ken,$cascade);
     		return 1;
@@ -436,53 +440,55 @@ sub _username {
 }
 
 sub list_children {
-	my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
-	my $logger = get_logger();
-	my $keys = _key_filter($args);
-	return 0 unless ( pci_authorized($req_info, $rule_env, $session, $keys));
-	my $ken;
-  my $uid = $args->[0];
-  if (defined $uid) {
-    if (ref $uid eq "HASH") {
-			if ($uid->{'username'}) {
-				$ken = Kynetx::Persistence::KEN::ken_lookup_by_username($uid->{'username'});
-			} elsif ($uid->{'user_id'}) {
-				$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($uid->{'user_id'});
-			} elsif ($uid->{'eci'}) {
-				$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($uid->{'eci'});
-			}      
+    my($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;
+    my $logger = get_logger();
+    my $keys = _key_filter($args);
+    return 0 unless ( pci_authorized($req_info, $rule_env, $session, $keys));
+    my $ken;
+    my $uid = $args->[0];
+    if (defined $uid) {
+	if (ref $uid eq "HASH") {
+	    if ($uid->{'username'}) {
+		$ken = Kynetx::Persistence::KEN::ken_lookup_by_username($uid->{'username'});
+	    } elsif ($uid->{'user_id'}) {
+		$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($uid->{'user_id'});
+	    } elsif ($uid->{'eci'}) {
+		$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($uid->{'eci'});
+	    }      
+	} else {
+	    if ($uid =~ m/^\d+$/) {
+		#ll("userid");
+		$ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($uid);
+	    } else {
+		#ll("eci");
+		$ken = Kynetx::Persistence::KEN::ken_lookup_by_token($uid);
+	    }      
+	}
     } else {
-      if ($uid =~ m/^\d+$/) {
-		    #ll("userid");
-		    $ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($uid);
-	     } else {
-		    #ll("eci");
-		    $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($uid);
-	     }      
+	my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
+	$ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
     }
-  } else {
-    my $rid = Kynetx::Rids::get_rid($req_info->{'rid'});
-	  $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-  }
+
+    #$logger->debug("Ken in list_children ", sub{Dumper $ken});
   
-  if ($ken) {
-    my $blob = ();
-    my $key = ['dependents'];
-    my $children = Kynetx::Persistence::KPDS::get_kpds_element($ken,['dependents']);
-    if (defined $children && ref $children eq "ARRAY") {
-      $logger->debug("Children from KPDS elements ", sub{Dumper $children});
-      foreach my $child (@{$children}) {
-        my $username = Kynetx::Persistence::KEN::get_ken_value($child,'username');
-        my $token = Kynetx::Persistence::KToken::get_default_token($child);
-        $token = Kynetx::Persistence::KToken::get_oldest_token($child) unless ($token);
-        my $label = Kynetx::Persistence::KToken::token_query({'ktoken' => $token})->{'token_name'};
-        my $tmp = [$token,$username,$label];
-        push(@{$blob},$tmp);
-      }
-      return $blob;
+    if ($ken) {
+	my $blob = ();
+	my $key = ['dependents'];
+	my $children = Kynetx::Persistence::KPDS::get_kpds_element($ken,['dependents']);
+	if (defined $children && ref $children eq "ARRAY") {
+#	    $logger->debug("Children from KPDS elements ", sub{Dumper $children});
+	    foreach my $child (@{$children}) {
+		my $username = Kynetx::Persistence::KEN::get_ken_value($child,'username');
+		my $token = Kynetx::Persistence::KToken::get_default_token($child);
+		$token = Kynetx::Persistence::KToken::get_oldest_token($child) unless ($token);
+		my $label = Kynetx::Persistence::KToken::token_query({'ktoken' => $token})->{'token_name'};
+		my $tmp = [$token,$username,$label];
+		push(@{$blob},$tmp);
+	    }
+	    return $blob;
+	}
+	return $children;
     }
-    return $children;
-  }
   
   return undef;
 }

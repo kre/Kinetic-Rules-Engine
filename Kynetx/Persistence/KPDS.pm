@@ -68,29 +68,29 @@ use constant RID => "ridlist";
 use constant OAUTH => "oauth";
 
 sub get_kpds_element {
-	my ($ken,$hkey) = @_;
-	my $logger = get_logger();
-	if (defined $ken) {
-		my $key = {
-			"ken" => $ken
-		};
-		my $cache = Kynetx::MongoDB::get_cache_for_hash(COLLECTION,$key,$hkey);
-		if (defined $cache) {
-		    $logger->debug("Returning cached KPDS element");
-		    return $cache;
-		} 
-		my $result = Kynetx::MongoDB::get_hash_element(COLLECTION,$key,$hkey);
-#		$logger->debug("Result from KPDS query: ", sub {Dumper $result});
-		if (defined $result && ref $result eq "HASH" && defined $result->{value}) {
-			Kynetx::MongoDB::set_cache_for_hash(COLLECTION,$key,$hkey,$result->{"value"});
-			return $result->{"value"};
-		} else {
-			return undef;
-		}
+    my ($ken,$hkey) = @_;
+    my $logger = get_logger();
+    if (defined $ken) {
+	my $key = {
+		   "ken" => $ken
+		  };
+	my $cache = Kynetx::MongoDB::get_cache_for_hash(COLLECTION,$key,$hkey);
+	if (defined $cache) {
+	    $logger->debug("Returning cached KPDS element");
+	    return $cache;
+	} 
+	my $result = Kynetx::MongoDB::get_hash_element(COLLECTION,$key,$hkey);
+	#$logger->debug("Result from KPDS query: ", sub {Dumper $result});
+	if (defined $result && ref $result eq "HASH" && defined $result->{value}) {
+	    Kynetx::MongoDB::set_cache_for_hash(COLLECTION,$key,$hkey,$result->{"value"});
+	    return $result->{"value"};
 	} else {
-		$logger->warn("KEN undefined in KPDS information request");
- 		return undef;		
+	    return undef;
 	}
+    } else {
+	$logger->warn("KEN undefined in KPDS information request");
+	return undef;		
+    }
 	
 }
 
@@ -175,7 +175,7 @@ sub remove_kpds_set_element {
 		'upsert' => $upsert,
 		#'fields' => $fields
 	};
-	$logger->trace("query: ", sub {Dumper($fnmod)});
+	#$logger->debug("query: ", sub {Dumper($fnmod)});
 	my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod);
 	my $cachekey = {
 	  'ken' => $ken
@@ -194,7 +194,7 @@ sub delete_kpds_element {
 		       "ken" => $ken
 		      };
 	    if (defined $hkey) {
-		$logger->trace("Delete element: ", sub {Dumper($hkey)});
+		$logger->debug("Delete element: ", sub {Dumper($hkey)});
 		Kynetx::MongoDB::delete_hash_element(COLLECTION,$key,$hkey);
 		Kynetx::MongoDB::clear_cache(COLLECTION,$key);
 	    } else {
@@ -223,11 +223,17 @@ sub delete_cloud {
 	my $logger = get_logger();
 	if ($cascade) {
 		my $dependents = Kynetx::Persistence::KPDS::get_kpds_element($ken,['dependents']);	
+		$logger->debug("Cascading pico deletion");
 		foreach my $depnd (@{$dependents}) {
 	    	delete_cloud($depnd,$cascade);
 		}		
 	}
-	$logger->trace("Delete: $ken");
+	my $parent = Kynetx::Persistence::KEN::get_ken_value($ken,'parent');
+	if (defined $parent) {
+	    $logger->debug("Unlinking from parent: ", sub{Dumper $parent});
+	    unlink_dependent_cloud($parent, $ken);
+	}
+	$logger->debug("Delete: $ken");
 	Kynetx::Persistence::KEN::delete_ken($ken);
 	Kynetx::Persistence::KPDS::delete_kpds($ken);
 	Kynetx::Persistence::KToken::delete_ken_tokens($ken);

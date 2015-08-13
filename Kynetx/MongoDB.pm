@@ -242,7 +242,7 @@ sub get_hash_element {
       $key->{'hashkey'} = {'$all' => $hKey};
     }
   }
-  $logger->trace("Element key: ", sub {Dumper($key)});
+  # $logger->debug("MongoDB Element key: ", sub {Dumper($key)});
   my $cursor = $c->find($key);
   if  ($cursor->has_next) {
     my @array_of_elements = ();

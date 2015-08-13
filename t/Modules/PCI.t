@@ -1186,12 +1186,63 @@ $test_count++;
   $keys);
 $logger->debug("Delete: $eci");
 $description = "Delete account and dependents";
+
+# delete one of the children we created
+
+$description = "Create another dependent account";
+$args = {
+	"username" => $uname."_dep_4",
+	"firstname" => "",
+	"lastname" => "",
+	"password" => "",
+};
+$result = Kynetx::Modules::PCI::new_account($my_req_info,$rule_env,$session,$rule_name,"foo",[$eci,$args]);
+#diag Dumper $result;
+my $eci4 = $result->{'cid'};
+isnt($result,undef,$description);
+$test_count++;
+
+
+$description = "Get child accounts";
+$expected = [[ignore(),$new_uname,"_CHILD"],[ignore(),$args->{"username"},"_CHILD"]];
+$args = {'username' => $uname};
+$result = Kynetx::Modules::PCI::list_children($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+#diag Dumper $result;
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+#Log::Log4perl->easy_init($DEBUG);
+
+my $delete_result = Kynetx::Modules::PCI::delete_account($my_req_info,$rule_env,$session,$rule_name,"foo",[$result->[0]->[0]]);
+
+$description = "Get child accounts";
+$expected = [[ignore(),$result->[1]->[1],"_CHILD"]];
+$args = {'username' => $uname};
+$result = Kynetx::Modules::PCI::list_children($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+#diag Dumper $result;
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
 $args = {
 	"cascade" => 1
 };
 $result = Kynetx::Modules::PCI::delete_account($my_req_info,$rule_env,$session,$rule_name,"foo",[$eci,$args]);
 isnt($result,undef,$description);
 $test_count++;
+
+$description = "After deleting with cascade the primary pico should be gone";
+$args = {'username' => $uname};
+$result = Kynetx::Modules::PCI::list_children($my_req_info,$rule_env,$session,$rule_name,"foo",[$args]);
+#diag Dumper $result;
+is($result, undef, $description);
+$test_count++;
+
+$description = "With cascade, the 4th pico ought to be gone as well";
+$result = Kynetx::Modules::PCI::list_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$eci4]);
+#diag Dumper $result;
+is($result, undef, $description);
+$test_count++;
+
 
 
 ENDY:

@@ -250,7 +250,7 @@ sub get_ken_value {
     my $logger = get_logger();
     my $oid = MongoDB::OID->new(value => $ken);
     my $valid = Kynetx::MongoDB::get_singleton(COLLECTION,{"_id" => $oid});
-    $logger->debug("Ken: ", sub {Dumper($valid)});
+#    $logger->debug("Ken: ", sub {Dumper($valid)});
     return $valid->{$key};
 }
 
