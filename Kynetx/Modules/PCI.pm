@@ -1137,7 +1137,7 @@ sub get_developer_oauth_eci {
     my $primary = Kynetx::Persistence::KToken::get_token_by_token_type($type);
     return $primary
 }
-$funcs->{'list_eci'} = \&get_developer_oauth_eci;
+$funcs->{'list_oauth_eci'} = \&get_developer_oauth_eci;
 
 ############################# OAuth Apps
 
