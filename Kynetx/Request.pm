@@ -254,9 +254,22 @@ sub build_request_env {
 
 # mutates $req_info with a new event_attribute
 sub add_event_attr {
-  my ( $req_info, $attr_name, $attr_val ) = @_;
-  $req_info->{'event_attrs'}->{$attr_name} = $attr_val;
-  push( @{ $req_info->{'event_attrs'}->{'attr_names'} }, $attr_name );
+    my ( $req_info, $attr_name, $attr_val ) = @_;
+
+    my $logger = get_logger();
+
+    my $reserved = {"type" => 1
+		   };
+
+    if (not $reserved->{$attr_name}) {
+
+	$req_info->{'event_attrs'}->{$attr_name} = $attr_val;
+	push( @{ $req_info->{'event_attrs'}->{'attr_names'} }, $attr_name );
+
+    } else {
+	$logger->warn("$attr_name is a reserved word and cannot be used as an event attribute");
+    }
+
 }
 
 sub get_attr_names {

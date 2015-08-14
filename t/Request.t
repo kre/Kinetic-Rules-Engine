@@ -133,6 +133,7 @@ my $req = HTTP::Request->new(POST => $url);
 $req->header('Content-Type'=>'application/json');
 $req->content($json);
 
+my $expected;
 my $result = $ua->request($req);
 
 my $description = "POST using GET style url params";
@@ -159,6 +160,26 @@ $description = "POST using pure JSON to pass parameters";
 $logger->debug("Content: ", $result->content());
 cmp_deeply($result->content(),re($re),$description);
 $test_count++;
+
+######################### Attributes
+
+$description = "Add an attribute";
+Kynetx::Request::add_event_attr($my_req_info, "flip", "flop");
+is(Kynetx::Request::get_attr($my_req_info, "flip"), "flop", $description);
+$test_count++;
+
+$description = "Get attribute names";
+$expected = ["msg", "flip"];
+$result = Kynetx::Request::get_attr_names($my_req_info);
+cmp_deeply($result, $expected, $description);
+$test_count++;
+
+$description = "Add a reserved word attribute";
+Kynetx::Request::add_event_attr($my_req_info, "type", "tope");
+is(Kynetx::Request::get_attr($my_req_info, "type"), undef, $description);
+$test_count++;
+
+
 
 ######################### Clean up
 Kynetx::Test::flush_test_user($user_ken,$user_username);
