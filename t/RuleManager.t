@@ -685,7 +685,7 @@ SKIP: {
     my $ua = LWP::UserAgent->new;
 
     my $check_url = "$dn/version/$ruleset";
-    diag "Checking $check_url";
+#    diag "Checking $check_url";
     my $response = $ua->get($check_url);
     skip "No server available", $skippable if (! $response->is_success);
 
@@ -731,11 +731,11 @@ SKIP: {
 
     # jsontokrl
     my $url_version_4 = "$dn/jsontokrl/$ruleset";
-#    diag "Testing validate with $url_version_4";
+    #diag "Testing validate with $url_version_4";
 
     $mech->get_ok($url_version_4);
     $mech->field('json',$test_json_ruleset);
-    $mech->field('type', 'ruleset');
+    $mech->field('_type', 'ruleset');
     $mech->submit_form_ok();
 
     is($mech->content_type(), 'text/html');
@@ -743,7 +743,7 @@ SKIP: {
 
     $mech->back();
     $mech->field('json',$test_json_rule);
-    $mech->field('type', 'bodyonly');
+    $mech->field('_type', 'bodyonly');
     $mech->submit_form_ok();
 
     is($mech->content_type(), 'text/html');

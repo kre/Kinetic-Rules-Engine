@@ -54,11 +54,7 @@ lookup_module_env
 );
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
-use Kynetx::Predicates::Demographics;
-use Kynetx::Predicates::Location;
-use Kynetx::Predicates::Weather;
 use Kynetx::Predicates::Time;
-use Kynetx::Predicates::Markets;
 use Kynetx::Predicates::Referers;
 use Kynetx::Predicates::Mobile;
 use Kynetx::Predicates::Useragent;
@@ -66,10 +62,8 @@ use Kynetx::Predicates::KPDS;
 use Kynetx::Predicates::Page;
 use Kynetx::Predicates::Math;
 use Kynetx::Predicates::Amazon;
-use Kynetx::Predicates::Google;
 use Kynetx::Predicates::OData;
 use Kynetx::Predicates::RSS;
-use Kynetx::Predicates::Facebook;
 use Kynetx::Modules::Twitter;
 use Kynetx::Modules::Email;
 use Kynetx::Modules::Event;
@@ -266,44 +260,6 @@ sub eval_module {
             $val =
               Kynetx::Predicates::Math::do_math( $req_info, $function, $args );
         }
-    } elsif ( $source eq 'weather' ) {
-        $preds = Kynetx::Predicates::Weather::get_predicates();
-        if ( defined $preds->{$function} ) {
-            $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val = Kynetx::Expressions::boolify($val || 0);
-        } else {
-            $val =
-              Kynetx::Predicates::Weather::get_weather( $req_info, $function );
-        }
-    } elsif ( $source eq 'demographics' ) {
-        $preds = Kynetx::Predicates::Demographics::get_predicates();
-        if ( defined $preds->{$function} ) {
-            $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val = Kynetx::Expressions::boolify($val || 0);
-        } else {
-            $val =
-              Kynetx::Predicates::Demographics::get_demographics( $req_info,
-                                                                  $function );
-        }
-    } elsif ( $source eq 'geoip' || $source eq 'location' ) {
-        $preds = Kynetx::Predicates::Location::get_predicates();
-        if ( defined $preds->{$function} ) {
-            $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val = Kynetx::Expressions::boolify($val || 0);
-        } else {
-            $val =
-              Kynetx::Predicates::Location::get_geoip( $req_info, $function );
-        }
-    } elsif ( $source eq 'stocks' || $source eq 'markets' ) {
-        $preds = Kynetx::Predicates::Markets::get_predicates();
-        if ( defined $preds->{$function} ) {
-            $val = $preds->{$function}->( $req_info, $rule_env, $args );
-            $val = Kynetx::Expressions::boolify($val || 0);
-        } else {
-            $val =
-              Kynetx::Predicates::Markets::get_stocks( $req_info, $args->[0],
-                                                       $function );
-        }
     } elsif ( $source eq 'referer' ) {
         $preds = Kynetx::Predicates::Referers::get_predicates();
 
@@ -404,26 +360,6 @@ sub eval_module {
         } else {
             $val = Kynetx::Predicates::RSS::eval_rss($req_info,$rule_env,$session,$rule_name,$function,$args);
         }
-    } elsif ($source eq 'google') {
-        $preds = Kynetx::Predicates::Google::get_predicates();
-        if (defined $preds->{$function}) {
-            $val = $preds->{$function}->($req_info,$rule_env,$args);
-            $val = Kynetx::Expressions::boolify($val || 0);
-        } else {
-            $val = Kynetx::Predicates::Google::eval_google($req_info,$rule_env,$session,$rule_name,$function,$args);
-        }
-    } elsif ($source eq 'facebook') {
-        $preds = Kynetx::Predicates::Facebook::get_predicates();
-        if (defined $preds->{$function}) {
-            $val = $preds->{$function}->($req_info,$rule_env,$args);
-            $val = Kynetx::Expressions::boolify($val || 0);
-        } else {
-            $val = Kynetx::Predicates::Facebook::eval_facebook($req_info,$rule_env,$session,$rule_name,$function,$args);
-        }
-    # } elsif ( $source eq 'snow' ) {
-    #     $preds = Kynetx::Actions::LetItSnow::get_predicates();
-    #     $val = $preds->{$function}->( $req_info, $rule_env, $args );
-    #     $val = Kynetx::Expressions::boolify($val || 0);
     } elsif ( $source eq 'jquery_ui' ) {
         $preds = Kynetx::Actions::JQueryUI::get_predicates();
         $val = $preds->{$function}->( $req_info, $rule_env, $args );

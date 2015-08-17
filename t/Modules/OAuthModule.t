@@ -105,19 +105,6 @@ my $plus4a = Kynetx::Predicates::Time::get_time($my_req_info,'atom',
 my $plus5a = Kynetx::Predicates::Time::get_time($my_req_info,'atom',
     ["$plus5"]);
            
-# get a random quote
-$logger->debug("Get a random quote");
-my $rquote = "contactless not, swipe again please";
-my $ua = LWP::UserAgent->new;
-$ua->timeout(10);
-my $quote_url = 'http://www.iheartquotes.com/api/v1/random?max_lines=4&show_permalink=false&show_source=0';
-my $qresp = $ua->request(GET $quote_url);
-if ($qresp->is_success) {
-    $rquote = $qresp->content;
-    $rquote =~ s/\s+$//;
-}
-$rquote = Kynetx::JavaScript::mk_js_str($rquote);
-    
 # get a random words
 $logger->debug("Get random words");
 
@@ -132,6 +119,10 @@ my $where = $DICTIONARY[rand(@DICTIONARY)];
 chomp($what);
 chomp($where);
 chomp($who);
+
+my $rquote = Kynetx::JavaScript::mk_js_str("$what $who $where event");
+    
+
     
 #goto ENDY;
 
@@ -287,7 +278,8 @@ $args = ['google',{
 		}];
 
 $result = Kynetx::Modules::OAuthModule::run_function($my_req_info,$rule_env,$session,$rule_name,'get_auth_url',$args);
-$logger->trace("Auth url: ", $result);
+
+diag ("Auth url: ", $result);
 
 Kynetx::Modules::OAuthModule::store_access_tokens($my_req_info,$rule_env,$session,'google',$atoken);
 

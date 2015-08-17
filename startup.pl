@@ -56,8 +56,7 @@ use Apache::Session::Memcached;
 use Apache2::Request ();
 
 
-
-use Geo::IP ();
+# use Geo::IP ();
 use Time::HiRes qw(time);
 use Data::UUID ();
 

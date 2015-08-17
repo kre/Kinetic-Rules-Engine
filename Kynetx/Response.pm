@@ -125,7 +125,7 @@ sub gen_raw_document {
 	my @directives = map {$_->to_directive($eid)} @{$self->{'directives'}};
 	if (scalar @directives == 1) {
 	  my $directive = $directives[0];
-	  $logger->trace("Directive: ", sub {Dumper($directive)});
+	  #$logger->debug("Directive: ", sub {Dumper($directive)});
 	  my $raw = $directive->{'options'};
 	  my $status = $raw->{'status'};
 	  $logger->trace("Status: ",sub {Dumper($status)});

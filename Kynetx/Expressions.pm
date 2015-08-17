@@ -500,7 +500,7 @@ sub eval_prim {
     my $val0 = den_to_exp($vals->[0]);
     my $val1 = den_to_exp($vals->[1]);
 
-    if ($val0 eq "__undef__" || $val1 eq "__undef__") {
+    if (! defined $val0 || $val0 eq "__undef__" || $val1 eq "__undef__") {
     	return mk_expr_node('null','__undef__');
     }
 

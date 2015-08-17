@@ -105,7 +105,7 @@ my $keys = {'account_sid' => 'AC906568eb40ef29e45c53920fb9ae60e6',
 
 my $test_count = 1;
 
-my $creds = Kynetx::Predicates::Google::OAuthHelper::get_consumer_tokens($my_req_info,$rule_env,$session,'twilio');
+my $creds = Kynetx::OAuth::OAuthHelper::get_consumer_tokens($my_req_info,$rule_env,$session,'twilio');
 
 $logger->debug("twilio creds: ", sub {Dumper($creds)});
 ok(1);

@@ -329,7 +329,7 @@ sub contains_trail_element {
     if (defined $res) {
         return $res->[0];
     } else {
-        return undef;
+        return 0;
     }
 }
 

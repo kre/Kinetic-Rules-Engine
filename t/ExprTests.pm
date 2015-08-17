@@ -2188,7 +2188,7 @@ add_expr_testcase(
 
 
 $krl_src = <<_KRL_;
-demographics:urban()
+math:random(999) > 0
 _KRL_
 add_expr_testcase(
     $krl_src,
@@ -2199,7 +2199,7 @@ add_expr_testcase(
     );
 
 $krl_src = <<_KRL_;
-demographics:rural()
+time:weekday() && time:weekend()
 _KRL_
 add_expr_testcase(
     $krl_src,
@@ -2209,8 +2209,9 @@ add_expr_testcase(
 		  0
     );
 
+
 $krl_src = <<_KRL_;
-demographics:median_income_above(5000)
+not (math:random(999) < 0)
 _KRL_
 add_expr_testcase(
     $krl_src,
@@ -2221,42 +2222,7 @@ add_expr_testcase(
     );
 
 $krl_src = <<_KRL_;
-demographics:median_income_below(50000)
-_KRL_
-add_expr_testcase(
-    $krl_src,
-		  'expr',
-		  '_ignore_',
-		  mk_expr_node('bool',    'true'),
-		  0
-    );
-
-
-$krl_src = <<_KRL_;
-demographics:urban() && demographics:median_income_below(50000)
-_KRL_
-add_expr_testcase(
-    $krl_src,
-		  'expr',
-		  '_ignore_',
-		  mk_expr_node('bool',    'true'),
-		  0
-    );
-
-
-$krl_src = <<_KRL_;
-demographics:urban() || demographics:median_income_below(50000)
-_KRL_
-add_expr_testcase(
-    $krl_src,
-		  'expr',
-		  '_ignore_',
-		  mk_expr_node('bool',   'true'),
-		  0
-    );
-
-$krl_src = <<_KRL_;
-demographics:rural() || demographics:median_income_below(50000)
+not time:weekday() || not time:weekend()
 _KRL_
 add_expr_testcase(
     $krl_src,
@@ -2267,7 +2233,7 @@ add_expr_testcase(
     );
 
 $krl_src = <<_KRL_;
-demographics:urban() || demographics:median_income_below(1000)
+not (time:weekday() && time:weekend())
 _KRL_
 add_expr_testcase(
     $krl_src,
@@ -2278,72 +2244,6 @@ add_expr_testcase(
     );
 
 
-$krl_src = <<_KRL_;
-not demographics:rural()
-_KRL_
-add_expr_testcase(
-    $krl_src,
-		  'expr',
-		  '_ignore_',
-		  mk_expr_node('bool',    'true'),
-		  0
-    );
-
-$krl_src = <<_KRL_;
-not demographics:urban() || not demographics:median_income_below(1000)
-_KRL_
-add_expr_testcase(
-    $krl_src,
-		  'expr',
-		  '_ignore_',
-		  mk_expr_node('bool',    'true'),
-		  0
-    );
-
-$krl_src = <<_KRL_;
-not (demographics:urban() && demographics:median_income_below(1000))
-_KRL_
-add_expr_testcase(
-    $krl_src,
-		  'expr',
-		  '_ignore_',
-		  mk_expr_node('bool',    'true'),
-		  0
-    );
-
-
-$krl_src = <<_KRL_;
-location:country_code() eq "US"
-_KRL_
-add_expr_testcase(
-    $krl_src,
-		  'expr',
-		  '_ignore_',
-		  mk_expr_node('bool',    'true'),
-		  0
-    );
-
-$krl_src = <<_KRL_;
-location:country_code() eq "GB"
-_KRL_
-add_expr_testcase(
-    $krl_src,
-		  'expr',
-		  '_ignore_',
-		  mk_expr_node('bool',    'false'),
-		  0
-    );
-
-$krl_src = <<_KRL_;
-location:country_code() eq "US" && demographics:urban()
-_KRL_
-add_expr_testcase(
-    $krl_src,
-		  'expr',
-		  '_ignore_',
-		  mk_expr_node('bool',    'true'),
-		  0
-    );
 
 $krl_src = <<_KRL_;
 page:var("foo") > 3
@@ -2424,62 +2324,6 @@ add_expr_testcase(
 
 
 
-
-$krl_src = <<_KRL_;
-demographics:urban() && "Seattle" eq location:city()
-_KRL_
-add_expr_testcase(
-    $krl_src,
-		  'expr',
-		  '_ignore_',
-		  mk_expr_node('bool', 'true'),
-		  0
-    );
-
-$krl_src = <<_KRL_;
-demographics:urban() && location:city() eq "Seattle"
-_KRL_
-add_expr_testcase(
-    $krl_src,
-		  'expr',
-		  '_ignore_',
-		  mk_expr_node('bool', 'true'),
-		  0
-    );
-
-
-$krl_src = <<_KRL_;
-demographics:urban() && city2 eq location:city()
-_KRL_
-add_expr_testcase(
-    $krl_src,
-		  'expr',
-		  '_ignore_',
-		  mk_expr_node('bool', 'true'),
-		  0
-    );
-
-$krl_src = <<_KRL_;
-demographics:urban() && location:city() eq city2
-_KRL_
-add_expr_testcase(
-    $krl_src,
-		  'expr',
-		  '_ignore_',
-		  mk_expr_node('bool', 'true'),
-		  0
-    );
-
-$krl_src = <<_KRL_;
-demographics:urban() && location:city() eq "Sea" + "ttle"
-_KRL_
-add_expr_testcase(
-		  $krl_src,
-		  'expr',
-		  '_ignore_',
-		  mk_expr_node('bool', 'true'),
-		  0
-    );
 
 
 #---------------------------------------------------------------------------------

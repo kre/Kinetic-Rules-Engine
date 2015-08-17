@@ -37,10 +37,7 @@ use Kynetx::Rules qw(:all);
 use Kynetx::Rids qw(:all);
 use Kynetx::Modules qw(:all);
 use Kynetx::Expressions qw(:all);
-use Kynetx::Predicates::Location qw(:all);
 use Kynetx::Predicates::Time qw(:all);
-use Kynetx::Predicates::Weather qw(:all);
-use Kynetx::Predicates::Demographics qw(:all);
 use Kynetx::Configure qw(:all);
 
 
@@ -191,46 +188,7 @@ sub show_context {
 
     $context_template->param(client_info => \@client_info);
 
-    my $demo_preds = Kynetx::Predicates::Demographics::get_predicates();
-
     my @user_info = (       
-
-	{ name => 'User IP Address',
-	  value => $req_info->{'ip'}},
-
-	{ name => 'City',
-	  value => get_geoip($req_info,'city')},
-	{ name => 'Region',
-	  value => get_geoip($req_info,'region')},
-	{ name => 'Zip Code',
-	  value => get_geoip($req_info,'postal_code')},
-	{ name => 'Country',
-	  value => get_geoip($req_info,'country_name')},
-
-	{ name => 'Local time',
-	  value => get_local_time($req_info)},
-	{ name => 'Local time zone',
-	  value => get_local_time($req_info)->time_zone->name},
-
-
-	{ name => 'Current temperature',
-	  value => get_weather($req_info,'curr_temp') . ' F'},
-	{ name => 'Current conditions',
-	  value => get_weather($req_info,'curr_cond') . ' '},
-	{ name => 'Tomorrow high',
-	  value => get_weather($req_info,'tomorrow_high') . ' F'},
-	{ name => 'Tomorrow low',
-	  value => get_weather($req_info,'tomorrow_low') . ' F'},
-	{ name => 'Tomorrow forecast',
-	  value => get_weather($req_info,'tomorrow_cond') . ' '},
-
-
-	{ name => 'Median income',
-	  value => '$'.get_demographics($req_info, 'median_income')},
-	{ name => 'Urban',
-	  value => &{$demo_preds->{'urban'}}($req_info) ? 'yes' : 'no'},
-	{ name => 'Rural',
-	  value => &{$demo_preds->{'rural'}}($req_info) ? 'yes' : 'no'},
 
 	);
 
