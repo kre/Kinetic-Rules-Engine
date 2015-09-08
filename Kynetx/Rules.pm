@@ -574,6 +574,7 @@ sub eval_use_module {
     #
     
     # sanity check, we're not in a big loop
+#    $logger->debug(">>>>>> Module list: ", sub{Dumper lookup_rule_env( '_module_list', $rule_env ) });
     foreach my $module_name (
 	    @{ lookup_rule_env( '_module_list', $rule_env ) || [] } )
       {
@@ -611,8 +612,9 @@ sub eval_use_module {
 
     # create the module rule_env by extending an empty env with the config
     
-    my @mod_list = @{ $rule_env->{'_module_list'} || [] };
+    my @mod_list = @{ lookup_rule_env( '_module_list', $rule_env ) || [] };
     push( @mod_list, $name );
+#    $logger->debug(">>>>>> Augmented module list: ", sub{ Dumper \@mod_list });
 
     my $init_mod_env = extend_rule_env(
             {
