@@ -165,11 +165,15 @@ sub eval_one_decl {
 sub eval_decl {
     my ($req_info, $rule_env, $rule_name, $session, $decl) = @_;
     my $val = '0';
+    my $var = $decl->{'lhs'}; 
     my $type = undef;
 
 #    my $logger = get_logger();
 #    $logger->debug("decl type: ",$decl->{'type'});
 #    $logger->debug("[eval_decl]: ", sub {Dumper $decl->{'rhs'}});
+#    $logger->debug("Evaling $var with type ", $decl->{"type"});
+
+
 
     if ($decl->{'type'} eq 'expr' ) {
       my $r = eval_expr($decl->{'rhs'}, $rule_env, $rule_name, $req_info, $session);
@@ -186,7 +190,7 @@ sub eval_decl {
 #    $logger->trace("Evaling " . $rule_name.":".$decl->{'lhs'});
 #    $logger->trace("returning ", sub{ Dumper $val });
 
-    return ($decl->{'lhs'}, $val,$type);
+    return ($var, $val,$type);
 
 }
 
