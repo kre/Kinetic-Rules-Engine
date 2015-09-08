@@ -302,7 +302,15 @@ sub eval_ruleset_function {
   my $content_type = "application/json";
 
   if (ref $result eq "HASH" || ref $result eq "ARRAY") {
-      $result = $json->encode( $result );
+
+      eval {
+	  $result = $json->encode( $result );
+      };
+      if ($@) {
+	  $result = $json->encode({"error" => 104,
+				   "error_str" => "Error encoding JSON: $@"
+				  });
+      }
   } elsif ( $result =~ m#^\s*<html>.+</html>\s*#is  # infer content type
 	  ) {
       $content_type = "text/html";

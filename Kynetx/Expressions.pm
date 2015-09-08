@@ -1366,8 +1366,8 @@ sub eval_action {
 
 sub mk_closure {
   my ($expr, $env)  = @_;
-  my $logger = get_logger();
-  $logger->trace("Make closure for: ", sub {Dumper($expr)});
+  # my $logger = get_logger();
+  # $logger->debug("Make closure for: ", sub {Dumper($expr)});
   my $sig = md5_hex(freeze $expr);
 
   return mk_expr_node('closure',

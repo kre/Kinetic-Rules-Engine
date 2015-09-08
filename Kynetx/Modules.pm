@@ -573,6 +573,8 @@ sub lookup_module_env {
       my $provided = $module_cache->{Kynetx::Modules::RuleEnv::get_pr_key($module_sig)} || {};
       my $js = $module_cache->{Kynetx::Modules::RuleEnv::get_js_key($module_sig)} || '';
       my $export_keys = $module_cache->{Kynetx::Modules::RuleEnv::get_export_keys_key($module_sig)} || {};
+
+
       $req_info = Kynetx::Request::put_module_in_request_info($module_sig,
 							      $name,
 							      "unknown",
@@ -586,10 +588,13 @@ sub lookup_module_env {
 
 
   my $provided = Kynetx::Request::get_module_provides($module_sig, $req_info);
-#  $logger->debug("Module's environment: ", sub {Dumper($provided)});
+  # $logger->debug("Module's environment: ", sub {Dumper($provided)});
   my $r;
   if ($provided->{$key}) {
     my $mod_env = Kynetx::Request::get_module_env($module_sig, $req_info);
+
+    #$logger->debug(">>>> Module rule env loaded: ", sub { Dumper $mod_env});
+
     $r = Kynetx::Environments::lookup_rule_env($key, $mod_env);
   }
 #  $logger->debug("Returning val for $key in [$name]");
