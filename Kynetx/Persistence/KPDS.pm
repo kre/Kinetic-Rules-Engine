@@ -256,8 +256,8 @@ sub get_all_apps {
 	my ($ken) = @_;
 	my $logger=get_logger();
 	my $keypath = [OAUTH];
-	my $result = get_kpds_element($ken,$keypath);
-#	$logger->debug("All OAuth apps: ", sub {Dumper($result)});
+	my $result = get_kpds_element($ken,$keypath) || {};
+	# $logger->debug("All OAuth apps: ", sub {Dumper($result)});
 	return $result;		
 }
 

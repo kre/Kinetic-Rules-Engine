@@ -390,8 +390,8 @@ sub list_tokens {
 		my @tokens_array = ();
 		while (my $obj = $cursor->next) {
 			my $eci = $obj->{'ktoken'};
-			$logger->trace("Found: ", sub {Dumper($obj)});
-			$logger->trace("Found: $eci");
+#			$logger->trace("Found: ", sub {Dumper($obj)});
+#			$logger->trace("Found: $eci");
 			my $label = $obj->{'token_name'};
 			push(@tokens_array,{"name" => $label,
 					    "cid" => $eci,

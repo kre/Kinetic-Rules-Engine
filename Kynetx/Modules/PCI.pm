@@ -1242,7 +1242,7 @@ sub list_apps {
     return 0 unless (pci_authorized($req_info, $rule_env, $session, $keys));
 
     my $account_id = $args->[0];
-    $logger->debug("Account ID: ", $account_id);
+    #$logger->debug("Account ID: ", $account_id);
 
     my $ken;
     if (! defined $account_id) {
@@ -1251,10 +1251,10 @@ sub list_apps {
     } else {
 	# Check to see if it is an eci or a userid
 	if ($account_id =~ m/^\d+$/) {
-	    ll("userid $account_id");
+	    #ll("userid $account_id");
 	    $ken = Kynetx::Persistence::KEN::ken_lookup_by_userid($account_id);
 	} else {
-	    ll("eci $account_id");
+	    #ll("eci $account_id");
 	    $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($account_id);
 	}			
     }
