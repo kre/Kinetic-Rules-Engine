@@ -250,8 +250,9 @@ sub pp_json {
     # fill in the parameters
     $test_template->param( ACTION_URL => $req_info->{'uri'} );
 
+    #$logger->debug("ReqInfo: ", sub {Dumper $req_info});
     my $json = Kynetx::Request::get_attr($req_info,'json');
-    my $type = Kynetx::Request::get_attr($req_info,'type');
+    my $type = Kynetx::Request::get_attr($req_info,'kind');
     my ($krl);
     if ($json) {
 

@@ -731,11 +731,11 @@ SKIP: {
 
     # jsontokrl
     my $url_version_4 = "$dn/jsontokrl/$ruleset";
-#    diag "Testing validate with $url_version_4";
+    diag "Testing validate with $url_version_4";
 
     $mech->get_ok($url_version_4);
     $mech->field('json',$test_json_ruleset);
-    $mech->field('type', 'ruleset');
+    $mech->field('kind', 'ruleset');
     $mech->submit_form_ok();
 
     is($mech->content_type(), 'text/html');
@@ -743,7 +743,7 @@ SKIP: {
 
     $mech->back();
     $mech->field('json',$test_json_rule);
-    $mech->field('type', 'bodyonly');
+    $mech->field('kind', 'bodyonly');
     $mech->submit_form_ok();
 
     is($mech->content_type(), 'text/html');
