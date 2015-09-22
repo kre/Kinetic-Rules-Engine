@@ -200,12 +200,17 @@ sub get_weather {
 	    } else {
 		$url .= "$city%20$country_name";
 	    }
-	    my $locxml = new XML::XPath->new(
-		xml => 
-		get_remote_data($url, 60 * 60 * 24 * 29) # expire after 29 days
-		);
-	    # grab the first location ID
-	    $zip = $locxml->find('//loc[1]/@id');
+	    eval {
+		my $locxml = new XML::XPath->new(
+						 xml => 
+						 get_remote_data($url, 60 * 60 * 24 * 29) # expire after 29 days
+						);
+		# grab the first location ID
+		$zip = $locxml->find('//loc[1]/@id');
+	    };
+	    if ($@) {
+		$zip = "84043";
+	    }
 	    $logger->debug("[weather] Using code $zip for ZIP");
 	    
 	}

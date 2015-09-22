@@ -871,43 +871,43 @@ sub put_hash_element {
 }
 
 sub delete_hash_element {
-	my ($collection,$vKey,$hKey) = @_;
-	my $logger = get_logger();
-	# Protect me from doing something stupid
-	if (ref $vKey eq "HASH") {
-		if (
-			((defined $vKey->{'key'})
-				&& ($vKey->{'key'} ne ""))
-			|| 	((defined $vKey->{'ken'})
-				&& ($vKey->{'ken'} ne ""))
-		  || ((defined $vKey->{'rid'})
-				&& ($vKey->{'rid'} ne ""))
-			) {
-			  clear_cache($collection,$vKey);
-			my $del = clone ($vKey);
-		    my $c = get_collection($collection);
-			if (ref $hKey eq 'ARRAY' && scalar @$hKey > 0) {
-				$del->{'hashkey'} = {'$all' => $hKey};
-			}
-			my $success = $c->remove($del,{'safe' => 1});
-			$logger->trace("Delete results ",sub {Dumper($success)});
-			if (defined $success) {
-				if ($success->{'ok'}) {
-					my $count = $success->{'n'};
-					$logger->trace("Deleted $count hash element(s) from ", $del->{'key'});
-				} else {
-					$logger->trace("Mongodb error trying to delete ", sub {Dumper($del)},
-						" error msg: ", $success->{'err'});
-				}
-			} else {
-				$logger->warn("Mongodb error trying to delete ", sub {Dumper($del)});
-			}
+    my ($collection,$vKey,$hKey) = @_;
+    my $logger = get_logger();
+    # Protect me from doing something stupid
+    if (ref $vKey eq "HASH") {
+	if (
+	    ((defined $vKey->{'key'})
+	     && ($vKey->{'key'} ne ""))
+	    || 	((defined $vKey->{'ken'})
+		 && ($vKey->{'ken'} ne ""))
+	    || ((defined $vKey->{'rid'})
+		&& ($vKey->{'rid'} ne ""))
+	   ) {
+	    clear_cache($collection,$vKey);
+	    my $del = clone ($vKey);
+	    my $c = get_collection($collection);
+	    if (ref $hKey eq 'ARRAY' && scalar @$hKey > 0) {
+		$del->{'hashkey'} = {'$all' => $hKey};
+	    }
+	    my $success = $c->remove($del,{'safe' => 1});
+	    $logger->trace("Delete results ",sub {Dumper($success)});
+	    if (defined $success) {
+		if ($success->{'ok'}) {
+		    my $count = $success->{'n'};
+		    $logger->trace("Deleted $count hash element(s) from ", $del->{'key'});
 		} else {
-			$logger->debug("Key not valid: ", sub {Dumper($vKey)});
+		    $logger->trace("Mongodb error trying to delete ", sub {Dumper($del)},
+				   " error msg: ", $success->{'err'});
 		}
+	    } else {
+		$logger->warn("Mongodb error trying to delete ", sub {Dumper($del)});
+	    }
 	} else {
-		$logger->debug("Key not a hash");
+	    $logger->debug("Key not valid: ", sub {Dumper($vKey)});
 	}
+    } else {
+	$logger->debug("Key not a hash");
+    }
 }
 
 sub mongo_error {
