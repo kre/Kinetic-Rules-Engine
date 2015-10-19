@@ -59,7 +59,7 @@ use Kynetx::Modules::HTTP;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
-use constant DEFAULT_EVENT_SEND_TIMEOUT => Kynetx::Configure::get_config('DEFAULT_EVENT_SEND_TIMEOUT') || 6;
+use constant DEFAULT_EVENT_SEND_TIMEOUT => Kynetx::Configure::get_config('DEFAULT_EVENT_SEND_TIMEOUT') || 30;
 
 
 my $predicates = {};
@@ -331,6 +331,8 @@ sub send_scheduled_event {
   my $cv      = AnyEvent->condvar();
   $execenv->set_condvar($cv);
 
+  AnyEvent->now_update();
+
   # Build the esl
   my $esl = mk_sky_esl($token);
 
@@ -377,66 +379,62 @@ sub send_scheduled_event {
 }
 
 sub _send_event {
-  my ( $attrs, $execenv, $esl ) = @_;
-  my $logger  = get_logger();
-  my $timeout = DEFAULT_EVENT_SEND_TIMEOUT;                         # seconds
-  my $cv      = $execenv->get_condvar();
-  $cv->begin;
+    my ( $attrs, $execenv, $esl ) = @_;
+    my $logger  = get_logger();
+    my $timeout = DEFAULT_EVENT_SEND_TIMEOUT; # seconds
+    my $cv      = $execenv->get_condvar();
+    $cv->begin;
 
-  my $body = join(
-    '&',
-    map( "$_=" . URI::Escape::uri_escape_utf8( correct_bool( $attrs->{$_} ) ),
-      keys %{$attrs} )
-  );
+    my $body = join(
+		    '&',
+		    map( "$_=" . URI::Escape::uri_escape_utf8( correct_bool( $attrs->{$_} ) ),
+			 keys %{$attrs} )
+		   );
 
-  $logger->trace( "Body of event: ", sub { Dumper $body} );
+    $logger->trace( "Body of event: ", sub { Dumper $body} );
 
-  my $request;
-  $request = AnyEvent::HTTP::http_request(
-    'POST' => $esl,
-    'headers' =>
-      { 'content-type' => "application/x-www-form-urlencoded; charset=UTF-8" },
-    'timeout' => $timeout,
-    'body'    => $body,
-    sub {
-      my ( $body, $hdr ) = @_;
+    my $request;
+    $request = AnyEvent::HTTP::http_request(
+		    'POST' => $esl,
+		    'headers' =>
+			    {
+			     'content-type' => "application/x-www-form-urlencoded; charset=UTF-8" },
+ 	            'timeout' => $timeout,
+	            'body'    => $body,
+		    sub {
+			my ( $body, $hdr ) = @_;
 
-      #	$logger->debug("Making HTTP post to $esl");
-      $execenv->set_result(
-        $esl,
-        {
-          'status' => $hdr->{Status},
-          'reason' => $hdr->{Reason},
-          'body'   => $body,
-        }
-      );
-      # my $ilogger = get_logger();
-      # $ilogger->debug( "HDR: ", sub { Dumper($hdr) } );
-      if ( $hdr->{Status} =~ /^2/ ) {
-        $logger->debug(
-          "------------------------ event:send() success for $esl");
+			#	$logger->debug("Making HTTP post to $esl");
+			$execenv->set_result(
+					     $esl,
+					     {
+					      'status' => $hdr->{Status},
+					      'reason' => $hdr->{Reason},
+					      'body'   => $body,
+					     }
+					    );
+			# my $ilogger = get_logger();
+			# $ilogger->debug( "HDR: ", sub { Dumper($hdr) } );
+			if ( $hdr->{Status} =~ /^2/ ) {
+			    $logger->debug(
+					   "------------------------ event:send() success for $esl");
 
-        # this is where we would parse returned directives and add them to $dd
-      }
-      else {
-
-        my $err_msg =
-"------------------------ event:send() failed for $esl, ($hdr->{Status}) $hdr->{Reason}";
-        $logger->debug($err_msg);
-
-        # I'd like to do this, but don't have $session
-        # Kynetx::Errors::raise_error($req_info,
-        # 			      $session,
-        # 			      'error',
-        # 			      $err_msg
-        # 			     );
-
-      }
-      undef $request;
-      $cv->end;
-
-    }
-  );
+			    # this is where we would parse returned directives and add them to $dd
+			} else {
+			    my $err_msg =
+			      "------------------------ event:send() failed for $esl, ($hdr->{Status}) $hdr->{Reason}";
+			    $logger->debug($err_msg);
+			    # I'd like to do this, but don't have $session
+			    # Kynetx::Errors::raise_error($req_info,
+			    # 			      $session,
+			    # 			      'error',
+			    # 			      $err_msg
+			    # 			     );
+			}
+			undef $request;
+			$cv->end;
+		    }
+		   );
 
 }
 

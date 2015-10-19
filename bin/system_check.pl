@@ -2,6 +2,7 @@
 # Adapted from http://www.cyberciti.biz/tips/howto-write-perl-script-to-monitor-disk-space.html
 use strict;
 use warnings;
+use lib qw(/web/lib/perl);
 
 use Filesys::Df;
 use Getopt::Std;

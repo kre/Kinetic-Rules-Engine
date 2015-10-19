@@ -991,6 +991,8 @@ sub eval_rule {
 	$execenv->set_condvar($cv);
 	$cv->begin( sub { shift->send("All threads complete") } );
 
+	AnyEvent->now_update();
+
 	$js .= eval_foreach(
 		$r,
 		$req_info,

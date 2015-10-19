@@ -83,61 +83,61 @@ sub handler {
 }
 
 sub _handler {
-  my ($r) = @_;
-	my $logger = get_logger();
-	$r->subprocess_env( START_TIME => Time::HiRes::time );
-	Log::Log4perl::MDC->put( 'site', "[no rid]" );
-	Log::Log4perl::MDC->put( 'rule', '[global]' );    # no rule for now...
+    my ($r) = @_;
+    my $logger = get_logger();
+    $r->subprocess_env( START_TIME => Time::HiRes::time );
+    Log::Log4perl::MDC->put( 'site', "[no rid]" );
+    Log::Log4perl::MDC->put( 'rule', '[global]' ); # no rule for now...
 	
-	Kynetx::Memcached->init();	
+    Kynetx::Memcached->init();	
 	
-	my @path_components = split( /\//, $r->path_info );
+    my @path_components = split( /\//, $r->path_info );
 	
-	# 0 = "sky"
-	# 1 = "schedule"
-	my $sched_id = $path_components[2];
-	my $proc_id = $path_components[3];
-	$logger->debug("--------SchedEv Id: $sched_id-----------");
+    # 0 = "sky"
+    # 1 = "schedule"
+    my $sched_id = $path_components[2];
+    my $proc_id = $path_components[3];
+    $logger->debug("--------SchedEv Id: $sched_id-----------");
 	
-	if (defined $proc_id) {
-    return Apache2::Const::DECLINED unless sched_verify($sched_id,$proc_id);	  
-	}
+    if (defined $proc_id) {
+	return Apache2::Const::DECLINED unless sched_verify($sched_id,$proc_id);	  
+    }
 	
-	my ($schedEv, $esl, $event_response) = Kynetx::Modules::Event::send_scheduled_event($sched_id);
-	my ($code,$status);
-	my $now = time();
-	if (defined $event_response) {
-	  $code = $event_response->code();
-	  $status = $event_response->status_line();
-	} 
-	if (defined $schedEv) {
-	  if ($schedEv->{'once'}) {
+    my ($schedEv, $esl, $event_response) = Kynetx::Modules::Event::send_scheduled_event($sched_id);
+    my ($code,$status);
+    my $now = time();
+    if (defined $event_response) {
+	$code = $event_response->code();
+	$status = $event_response->status_line();
+    } 
+    if (defined $schedEv) {
+	if ($schedEv->{'once'}) {
 	    $logger->debug("Expire $sched_id");
 	    set_expiration($sched_id);
-	  } else {
+	} else {
 	    # figure the next scheduled date for a cron timespec
 	    my $timespec = $schedEv->{'timespec'};
 	    my $last = $schedEv->{'next_schedule'};	    
 	    my $cron = new Schedule::Cron::Events( $timespec . ' /bin/foo',  Seconds => $now);
 	    my $next = timelocal($cron->nextEvent);
 	    if ($next == $last) {
-	      $next = timelocal($cron->nextEvent);
+		$next = timelocal($cron->nextEvent);
 	    }
 	    update($sched_id,'next_schedule',$next);
-	  }
-    my $status = {
-      'code' => $code,
-	    'status' => $status,
-	    'fired' => $now  
-    };
-    update($sched_id,'last',$status);
+	}
+	my $status = {
+		      'code' => $code,
+		      'status' => $status,
+		      'fired' => $now  
+		     };
+	update($sched_id,'last',$status);
 	  
-	} else {
-	  $logger->warn("--------Invalid SchedEv Id $sched_id--------");
-	  return Apache2::Const::OK;
-	}	
-  $logger->debug("--------SchedEv END-----------");
+    } else {
+	$logger->warn("--------Invalid SchedEv Id $sched_id--------");
 	return Apache2::Const::OK;
+    }	
+    $logger->debug("--------SchedEv END-----------");
+    return Apache2::Const::OK;
 }
 
 sub set_expiration {
