@@ -863,6 +863,91 @@ $result = Kynetx::Modules::PCI::get_eci_policy($my_req_info,
 cmp_deeply($result,$expected,$description);
 $test_count++;
 
+
+#################### ECI types
+$description = "Add an ECI with type";
+$expected = 'hello';
+$pre_result = Kynetx::Modules::PCI::new_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$uid,{'name' => $uname, 'eci_type' => $expected}]);
+$result = Kynetx::Modules::PCI::get_eci_type($my_req_info,
+						   $rule_env,
+						   $session,
+						   $rule_name,
+						   "foo",
+						   [$pre_result->{'cid'}]
+						 );
+
+#diag Dumper $result;
+
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Add ECI types";
+$expected = 'hello';
+$pre_result = Kynetx::Modules::PCI::new_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$uid,{'name' => $uname}]);
+#diag "Pre: ", Dumper $pre_result;
+$result = Kynetx::Modules::PCI::set_eci_type($my_req_info,
+						   $rule_env,
+						   $session,
+						   $rule_name,
+						   "foo",
+						   [$pre_result->{'cid'},
+						    $expected
+						   ]
+						 );
+#diag "Set: ", Dumper $result;
+$result = Kynetx::Modules::PCI::get_eci_type($my_req_info,
+						   $rule_env,
+						   $session,
+						   $rule_name,
+						   "foo",
+						   [$pre_result->{'cid'}]
+						 );
+#diag "Get: ", Dumper $result;
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+$description = "Change ECI type";
+$first =  'foo';
+$expected = 'hello';
+$pre_result = Kynetx::Modules::PCI::new_eci($my_req_info,$rule_env,$session,$rule_name,"foo",[$uid,{'name' => $uname, 'eci_type' => $first}]);
+#diag "Pre: ", Dumper $pre_result;
+
+# make sure they stuck
+$result = Kynetx::Modules::PCI::get_eci_type($my_req_info,
+						   $rule_env,
+						   $session,
+						   $rule_name,
+						   "foo",
+						   [$pre_result->{'cid'}]
+						 );
+#diag "Get: ", Dumper $result;
+cmp_deeply($result,$first,$description);
+$test_count++;
+
+# now change them
+$result = Kynetx::Modules::PCI::set_eci_type($my_req_info,
+						   $rule_env,
+						   $session,
+						   $rule_name,
+						   "foo",
+						   [$pre_result->{'cid'},
+						    $expected
+						   ]
+						 );
+#diag "Set: ", Dumper $result;
+$result = Kynetx::Modules::PCI::get_eci_type($my_req_info,
+						   $rule_env,
+						   $session,
+						   $rule_name,
+						   "foo",
+						   [$pre_result->{'cid'}]
+						 );
+#diag "Get: ", Dumper $result;
+cmp_deeply($result,$expected,$description);
+$test_count++;
+
+
+
 ######################### OAuth
 
 #Log::Log4perl->easy_init($DEBUG);

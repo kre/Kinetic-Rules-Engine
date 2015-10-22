@@ -222,6 +222,47 @@ sub set_eci_policy {
   return $result;
 }
 
+sub get_eci_type {
+  my ($token) = @_;
+  my $key = {
+    'ktoken' => $token
+  };
+  my $type = undef;
+  my $result = Kynetx::MongoDB::get_singleton(COLLECTION,$key);
+  if ($result && $result->{'endpoint_type'}) {
+    $type = $result->{'endpoint_type'};    
+  }
+  return $type;
+}
+
+sub set_eci_type {
+  my ($token, $type) = @_;
+#  my $logger = get_logger();
+  my $key = {
+    'ktoken' => $token
+  };
+
+  my $update = {
+		'$set' =>{"endpoint_type" => $type}
+	       };
+
+  my $fnmod = {
+	       'query' => $key,
+	       'update' => $update,
+	       'new' => 'true',
+	       'upsert' => 'true',
+	      };
+#  $logger->trace("query: ", sub {Dumper($fnmod)});
+
+  my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$fnmod);
+  my $cachekey = {
+    'ktoken' => $token
+  };
+  Kynetx::MongoDB::clear_cache(COLLECTION,$cachekey);
+#  $logger->trace("fnm: ", sub {Dumper($result)});
+  return $result;
+}
+
 sub set_ttl {
   my ($token,$ttl_index) = @_;
   my $oid = Kynetx::Persistence::KToken::get_token_id($token);

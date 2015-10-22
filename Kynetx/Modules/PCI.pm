@@ -993,6 +993,23 @@ $funcs->{'set_eci_policy'} = \&set_eci_policy;
 
 
 
+sub get_eci_type {
+  my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+  my $eci = $args->[0];
+  return Kynetx::Persistence::KToken::get_eci_type($eci);	
+}
+$funcs->{'get_eci_type'} = \&get_eci_type;
+
+sub set_eci_type {
+  my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+  my $eci = $args->[0];
+  my $type = $args->[1];
+  return Kynetx::Persistence::KToken::set_eci_type($eci, $type);	
+}
+$funcs->{'set_eci_type'} = \&set_eci_type;
+
+
+
 
 
 sub destroy_eci {
