@@ -36,7 +36,7 @@ my $df = df $dir;
 my $df_free = 100 - $df->{"per"};
 
 my $out;
- 
+
 # compare 
 if ($df_free < $diskspace_warning_level) {
  $out .= sprintf("WARNING Disk Space on $dir lower than threshold value (%0.2f%%): %0.2f%% \n", $diskspace_warning_level, $df_free);
@@ -44,6 +44,8 @@ if ($df_free < $diskspace_warning_level) {
  
 
 if (defined $out) {
+
+ 
 
 
     my $this_host = get_config("EVAL_HOST");
@@ -53,9 +55,10 @@ if (defined $out) {
  
     my $to = get_config("SERVER_ADMIN");
     my $subject='KRE System Check Alert';
-
+ 
+    $out .= "Occured at " . localtime(time) . "\n";
     $out .= "\n$acct_system_owner on ". $this_host;
-#    warn $out;
+    #warn $out;
 
     my $sg = Mail::SendGrid->new( from => $acct_system_owner_email,
 				  to => $to,
