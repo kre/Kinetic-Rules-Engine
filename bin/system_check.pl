@@ -35,18 +35,16 @@ my $df = df $dir;
 # calculate 
 my $df_free = 100 - $df->{"per"};
 
+# If $out is undefined below, no email is sent
 my $out;
 
-# compare 
+# Add checks for anything here. Set $out to force email to send
 if ($df_free < $diskspace_warning_level) {
  $out .= sprintf("WARNING Disk Space on $dir lower than threshold value (%0.2f%%): %0.2f%% \n", $diskspace_warning_level, $df_free);
 }
  
 
 if (defined $out) {
-
- 
-
 
     my $this_host = get_config("EVAL_HOST");
     # email setup
