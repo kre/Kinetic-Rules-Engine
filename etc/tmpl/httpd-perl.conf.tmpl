@@ -12,13 +12,14 @@ ServerRoot "/web"
 #
 # Timeout: The number of seconds before receives and sends time out.
 #
-Timeout 20
+Timeout 60
 
 #
 # KeepAlive: Whether or not to allow persistent connections (more than
 # one request per connection). Set to "Off" to deactivate.
 #
-KeepAlive On
+# Off for servicing events since they're almost never repeated soon
+KeepAlive Off
 
 
 #
@@ -67,9 +68,9 @@ LockFile "logs/accept.lock"
 # MaxClients: maximum number of server processes allowed to start
 # MaxRequestsPerChild: maximum number of requests a server process serves
 <IfModule mpm_prefork_module>
-    StartServers          1
-    MinSpareServers       1
-    MaxSpareServers       5
+    StartServers          5
+    MinSpareServers       5
+    MaxSpareServers       <TMPL_VAR NAME=MAX_SERVERS>
     MaxClients      	  <TMPL_VAR NAME=MAX_SERVERS>
     MaxRequestsPerChild   <TMPL_VAR NAME=MAX_REQUESTS_PER_CHILD>
 </IfModule>
