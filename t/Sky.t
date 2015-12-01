@@ -90,8 +90,8 @@ $my_req_info->{'eventtype'} = 'pageview';
 $my_req_info->{'caller'} = "http://www.windley.com/archives/2006/09/test.html";
 
 my $platform = '127.0.0.1';
-$platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
-$platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
+#$platform = 'qa.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'qa');
+#$platform = 'cs.kobj.net' if (Kynetx::Configure::get_config('RUN_MODE') eq 'production');
 
 my $dn = "http://$platform/sky/event";
 
