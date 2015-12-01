@@ -181,7 +181,6 @@ sub _handler {
 	# get a session
 	$logger->debug( "KBX token ", $req_info->{'id_token'} );
 
-#    my $session = Kynetx::Session::process_session($r, $req_info->{'kntx_token'});
 	my $session =
 	  Kynetx::Session::process_session( $r, undef, $req_info->{'id_token'} );
 

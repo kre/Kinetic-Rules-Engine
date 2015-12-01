@@ -55,6 +55,9 @@ use Kynetx::Postlude;
 use Kynetx::Response;
 use Kynetx::ExecEnv;
 
+use Cache::Memcached::Semaphore;
+
+
 use Kynetx::JavaScript::AST qw/:all/;
 
 use Kynetx::Modules::System qw/:all/;
@@ -109,7 +112,7 @@ sub process_rules {
 	$req_info->{'eid'} = $eid;
 
 	# get a session, if _sid param is defined it will override cookie
-	my $session = process_session( $r, $req_info->{'kntx_token'} );
+	my $session = process_session( $r, $req_info->{'id_token'} );
 
 	# initialization
 	my $js       = '';
@@ -151,10 +154,32 @@ sub process_schedule {
 	$rid = '';
 	my $current_rid = '';
 
-	my $env_stash = {};
+	my $env_stash = {}; 
 
 	#$logger->debug( "Schedule: ", Dumper($schedule) );
 	my $ktoken = Kynetx::Persistence::KToken::get_token($session);
+	my $ken = $ktoken->{"ken"};
+        my $memd = get_memd();
+#	$logger->debug("Kens:", sub {Dumper $ken, $ktoken});
+	
+	my $lock_name =  "eval-" . $ken;
+	$logger->debug("Using lock named $lock_name");
+
+	# try to acquire semaphore during 60 seconds
+	my $evallock;
+        $evallock->{$lock_name} = Cache::Memcached::Semaphore::wait_acquire(
+                memd => $memd, 
+                name => $lock_name,
+                max_wait        => 60,
+                poll_time       => 0.1,
+        );
+
+	if (! defined $evallock->{$lock_name}) {
+	    $logger->debug("Failed to acquire lock for evaluation; exiting schedule evaluation.");
+	    return $ast->generate_js();
+
+	}
+
 	while ( my $task = $schedule->next() ) {
 		if (defined $overmetric) {
 			my $c = $overmetric->count;
@@ -402,6 +427,9 @@ sub process_schedule {
 		}
 		$task_metric->stop_and_store();
 	}
+	
+	# release evaluation lock
+	$evallock->{$lock_name} = undef;
 
 	# process for final context
 	$ast->add_resources( $current_rid, $req_info->{'resources'} );
