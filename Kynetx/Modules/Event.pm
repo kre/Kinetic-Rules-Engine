@@ -400,6 +400,7 @@ sub _send_event {
 			    {
 			     'content-type' => "application/x-www-form-urlencoded; charset=UTF-8" },
  	            'timeout' => $timeout,
+		    'persistent' => 0,
 	            'body'    => $body,
 		    sub {
 			my ( $results, $hdr ) = @_;
