@@ -402,7 +402,7 @@ sub _send_event {
  	            'timeout' => $timeout,
 	            'body'    => $body,
 		    sub {
-			my ( $body, $hdr ) = @_;
+			my ( $results, $hdr ) = @_;
 
 			#	$logger->debug("Making HTTP post to $esl");
 			$execenv->set_result(
@@ -411,6 +411,7 @@ sub _send_event {
 					      'status' => $hdr->{Status},
 					      'reason' => $hdr->{Reason},
 					      'body'   => $body,
+                                              'results' => $results
 					     }
 					    );
 			# my $ilogger = get_logger();
@@ -424,12 +425,6 @@ sub _send_event {
 			    my $err_msg =
 			      "------------------------ event:send() failed for $esl, ($hdr->{Status}) $hdr->{Reason}";
 			    $logger->debug($err_msg);
-			    # I'd like to do this, but don't have $session
-			    # Kynetx::Errors::raise_error($req_info,
-			    # 			      $session,
-			    # 			      'error',
-			    # 			      $err_msg
-			    # 			     );
 			}
 			undef $request;
 			$cv->end;

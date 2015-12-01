@@ -989,9 +989,9 @@ sub eval_rule {
 	# set condition var for AnyEvent, check after loop...
 	my $cv = AnyEvent->condvar();
 	$execenv->set_condvar($cv);
-	$cv->begin( sub { shift->send("All threads complete") } );
-
 	AnyEvent->now_update();
+
+	$cv->begin( sub { shift->send("All threads complete") } );
 
 	$js .= eval_foreach(
 		$r,
