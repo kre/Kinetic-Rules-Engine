@@ -170,7 +170,7 @@ sub process_schedule {
         $evallock->{$lock_name} = Cache::Memcached::Semaphore::wait_acquire(
                 memd => $memd, 
                 name => $lock_name,
-                max_wait        => 60,
+                max_wait        => 300,
                 poll_time       => 0.1,
         );
 
