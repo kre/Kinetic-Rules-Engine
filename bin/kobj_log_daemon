@@ -29,6 +29,8 @@ my $web_root = get_config('WEB_ROOT') ||
 my $log_sink = get_config('LOG_SINK');
 my $log_account = get_config('LOG_ACCOUNT') || 'web';
 
+my $days_to_live = "90";
+
 my $GZIP = '/bin/gzip';
 my $RSYNC = '/usr/bin/rsync';
 my @logdirs = ("$web_root/logs/kynetx");
@@ -142,7 +144,12 @@ if (int(@tmpfiles)) {
 	$tmpdir . "/*.gz " .
 	$log_account . "@" . $machine . ":logs";
     print "Running $rsync_cmd\n" if $verbose;
-    system $rsync_cmd
+    eval { system $rsync_cmd };
+
+    # if anything's left (i.e. we're not rsyncing)    
+    my $rm_cmd = "find $tmpdir  -mtime +$days_to_live -delete";
+    system $rm_cmd;
+     
 }
 
 

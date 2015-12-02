@@ -28,7 +28,7 @@ use Getopt::Std;
 
 my $dt = DateTime->now;
 
-my $ver = $dt->ymd('')."_prod_ver";
+my $ver = $dt->ymd('').sprintf("%.2d",$dt->hour()).sprintf("%.2d",$dt->min())."_prod_ver";
 
 
 use vars qw/ %opt /;
