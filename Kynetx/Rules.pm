@@ -165,13 +165,14 @@ sub process_schedule {
 	my $lock_name =  "eval-" . $ken;
 	$logger->debug("Using lock named $lock_name");
 
-	# try to acquire semaphore during 60 seconds
+	# try to acquire semaphore
 	my $evallock;
         $evallock->{$lock_name} = Cache::Memcached::Semaphore::wait_acquire(
                 memd => $memd, 
                 name => $lock_name,
-                max_wait        => 300,
+                max_wait        => 1200,
                 poll_time       => 0.1,
+		force_after_timeout => 1
         );
 
 	if (! defined $evallock->{$lock_name}) {
