@@ -33,20 +33,24 @@
 <h2>Evaluate KRL Declarations</h2>
 
 <p>
-Enter a list of <a href="http://developer.kynetx.com/display/docs/Declarations">KRL declarations</a> in the editor block. Note that they should not be wrapped in a <code>pre</code> or <code>global</code>. The editor is doing Javascript highlighting and syntax checking, which is close, but not exact. 
+Enter a list of <a href="http://developer.picolabs.io/display/docs/Declarations">KRL declarations</a> in the editor block. Note that they should not be wrapped in a <code>pre</code> or <code>global</code>. The editor is doing Javascript highlighting and syntax checking, which is close, but not exact. 
 </p>
 </div> <!-- row -->
 
 <div class="row">
 
 <div id="editor_div"><TMPL_VAR NAME=EXPR></div>
+
+</div> <!-- row -->
+
+<div class="row">
     
 <form method="post" action="<TMPL_VAR NAME=ACTION_URL>">
 
 <textarea name="expr" rows="20" cols="80">
 </textarea>
 
-<p>
+<p style="margin-top:10px">
 <input id="submit" type="submit" value="Evaluate!" />
 </p>
 </form>
