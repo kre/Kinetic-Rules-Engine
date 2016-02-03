@@ -1,0 +1,154 @@
+<html>
+<head>
+<title>Evaluate Expression</title>
+
+
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+
+<style type="text/css" media="screen">
+    textarea {
+        display: block;
+        margin: auto;
+        width: 600px;
+        height: 5px;
+    }
+    #editor_div {
+        display: block;
+        margin: auto;
+//        width: 600px;
+        height: 400px;
+        border: 1px solid #888;
+    }
+    form {
+        text-align: center;
+    }
+    .code { font-family: monospace; }
+</style>
+
+</head>
+<body>
+
+<div class="container">
+<div class="row">
+<h2>Evaluate KRL Declarations</h2>
+
+<p>
+Enter a list of <a href="http://developer.kynetx.com/display/docs/Declarations">KRL declarations</a> in the editor block. Note that they should not be wrapped in a <code>pre</code> or <code>global</code>. The editor is doing Javascript highlighting and syntax checking, which is close, but not exact. 
+</p>
+</div> <!-- row -->
+
+<div class="row">
+
+<div id="editor_div"><TMPL_VAR NAME=EXPR></div>
+    
+<form method="post" action="<TMPL_VAR NAME=ACTION_URL>">
+
+<textarea name="expr" rows="20" cols="80">
+</textarea>
+
+<p>
+<input id="submit" type="submit" value="Evaluate!" />
+</p>
+</form>
+
+</div> <!-- row -->
+
+<div class="row">
+
+<TMPL_IF NAME=JSON>
+<h2>Results</h2>
+
+<p>
+The results for the above expression are:
+</p>
+
+<pre id="json" class="alert alert-success code" role="alert">
+<TMPL_VAR NAME=JSON>
+</pre>
+</form>
+</TMPL_IF>
+
+<TMPL_IF NAME=ERROR>
+<h2>Evaluation Error</h2>
+
+<p>
+There is a syntax error:
+</p>
+
+<div class="alert alert-danger code" role="alert" id="error">
+<TMPL_VAR NAME=ERROR>
+</div>
+</TMPL_IF>
+
+<p>
+Note: The evaluation doesn't know about persistent variables, event attributes, and other values that are only available within the context of a specific pico. 
+</p>
+</div> <!-- row -->
+
+<div class="row">
+
+<h2>Examples</h2>
+
+
+<p>
+This is a simple example:
+</p>
+
+<pre class='code'>
+a = 4;
+b = 6;
+c = a * b;
+</pre>
+
+
+<p>
+The results don't show functions. 
+</p>
+
+<pre class='code'>
+a = [5, 6, 7];
+f = function(x){x * x};
+b = a.map(f)
+</pre>
+
+
+<p>
+This is an example where the JavaScript syntax checker fails because this <em>is</em> valid KRL:
+</p>
+
+
+<pre class='code'>
+a = [5, 6, 7];
+b = {"x" : 40};
+f = function(x){x * x};
+c = a.map(f)
+     .filter(function(x){x < b{"x"}})
+</pre>
+
+</div> <!-- row -->
+
+</div> <!-- container -->
+
+
+        <!-- jQuery -->
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+        <!-- Bootstrap JavaScript-->
+        <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+	<script src="http://ajaxorg.github.io/ace-builds/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    var textarea = $('textarea[name="expr"]');
+    textarea.hide();
+    var editor = ace.edit("editor_div");
+    editor.setTheme("ace/theme/monokai");
+    editor.getSession().setMode("ace/mode/javascript");
+    $('#submit').on('click', function() {
+        textarea.val(editor.getSession().getValue());
+    });
+
+</script>
+
+
+
+</body>
+</html>
