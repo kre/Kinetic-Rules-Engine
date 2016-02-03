@@ -167,5 +167,9 @@ sub flatten_env_aux {
     }
 }
 
+sub vars {
+  my ($env) = @_;
+  $env->{'___vars'};
+}
 
 1;

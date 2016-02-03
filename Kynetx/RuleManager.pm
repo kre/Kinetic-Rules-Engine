@@ -37,6 +37,7 @@ use DateTime::Format::ISO8601;
 use Benchmark ':hireswallclock';
 use Encode;
 
+use Kynetx::Environments;
 use Kynetx::OParser;
 use Kynetx::Parser qw(:all);
 use Kynetx::PrettyPrinter qw(:all);
@@ -47,6 +48,8 @@ use Kynetx::Util qw(:all);
 use Kynetx::Version qw/:all/;
 use Kynetx::Memcached qw(:all);
 use Kynetx::Repository;
+use Kynetx::Rules;
+use Kynetx::Test;
 use Kynetx::Configure qw(get_config);
 use Kynetx::Directives qw(
   set_options
@@ -94,7 +97,7 @@ sub handler {
     Kynetx::Util::config_logging($r);
 
     my $logger = get_logger();
-    my ( $method, $rid, $version ) = $r->path_info =~ m!/([a-z]+)/([A-Za-z0-9_]*)/?([A-Za-z0-9_]*)!;
+    my ( $method, $rid, $version ) = $r->path_info =~ m!/([a-z]+)/?([A-Za-z0-9_]*)/?([A-Za-z0-9_]*)!;
     $logger->debug("Performing $method method on ruleset $rid");
 
     Log::Log4perl::MDC->put( 'site', $method );
@@ -118,6 +121,8 @@ sub handler {
     # at some point we need a better dispatch function
     if ( $method eq "validate" ) {
         ( $result, $type ) = validate_rule( $req_info, $method, $rid );
+    } elsif ( $method eq "evalexpr" ) {
+        ( $result, $type ) = evaluate_expr($r, $req_info, $method, $rid );
     } elsif ( $method eq "jsontokrl" ) {
         ( $result, $type ) = pp_json( $req_info, $method, $rid );
     } elsif ( $method eq "version" ) {
@@ -236,6 +241,106 @@ _EOF_
 
     return ( $result, $type );
 
+}
+
+sub evaluate_expr {
+    my ($r, $req_info, $method, $rid ) = @_;
+
+    my $logger = get_logger();
+
+    my $template = Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR')
+      . "/evaluate_expr.tmpl";
+    my $test_template = HTML::Template->new( filename => $template );
+
+
+#    $logger->debug("[evaluate_expr] req_info: ", sub {Dumper $req_info});
+
+    # fill in the parameters
+    $test_template->param( ACTION_URL => $req_info->{'uri'} );
+
+    my $result = "";
+    my $type   = "";
+    my $flavor   = Kynetx::Request::get_attr($req_info,'flavor')   || '';
+
+
+    my $expr   = Kynetx::Request::get_attr($req_info,'expr')   || '';
+
+    my $global = "global { " . $expr . "}";
+    $logger->debug("[evaluate_expr] evaluating ", sub { Dumper($global)});
+
+    my ( $json, $tree );
+    if ($expr) {
+
+	my $results = {};
+	$tree = Kynetx::Parser::parse_global_decls($global);
+	$tree = {"global" => $tree};
+
+#	$logger->debug("[evaluate_expr] evaluating ", sub { Dumper($tree)});
+
+	$test_template->param( EXPR => $expr );
+
+	if (ref $tree->{"global"} eq "HASH" && defined $tree->{"global"}->{"error"}) {
+	    $results = $tree->{"global"}->{"error"};
+
+	    $logger->debug("[eval_expression]  error ", sub {Dumper $results });
+	    $json = astToJson($results);
+	    $test_template->param( ERROR => $json );
+
+	} else {
+
+	    my $rid = 'cs_test';
+	    my $session = Kynetx::Test::gen_session($r, $rid);
+	    my $rule_env = Kynetx::Test::gen_rule_env();
+	    my $js;
+
+	    ($js, $rule_env) = 
+	      Kynetx::Rules::eval_globals($req_info, $tree, $rule_env, $session);
+
+	    foreach my $v (@{Kynetx::Environments::vars($rule_env)}) {
+		my $val = Kynetx::Environments::lookup_rule_env($v, $rule_env);
+		if (! is_function($val)) {
+		    $results->{$v} = $val;
+		}
+	    }
+
+	    $logger->debug("[eval_expression]  results ", sub {Dumper $results });
+	    $json = astToJson($results);
+	    $test_template->param( JSON => $json );
+	}
+
+
+    }
+
+    if ( $flavor eq 'json' ) {
+        $type = 'text/plain';
+	if (defined $tree->{'error'}) {
+	  $json = astToJson({'status' => 'error',
+			       'result' => join("\n", @{$tree->{'error'}})
+                              });
+            
+	} else {
+	  $json = <<_EOF_;
+{'status' : 'success',
+ 'result' : 
+  $json}
+_EOF_
+	}
+	
+        $result = $json;
+    } else {
+
+        # print the page
+        $type   = 'text/html';
+        $result = $test_template->output;
+    }
+
+    return ( $result, $type );
+
+}
+
+sub is_function {
+    my ($val) = @_;
+    return ref $val eq 'HASH' && defined $val->{'val'} && defined $val->{'val'}->{'sig'}
 }
 
 sub pp_json {
