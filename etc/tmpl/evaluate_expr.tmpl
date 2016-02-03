@@ -146,6 +146,8 @@ c = a.map(f)
     var editor = ace.edit("editor_div");
     editor.setTheme("ace/theme/monokai");
     editor.getSession().setMode("ace/mode/javascript");
+    editor.getSession().setUseWorker(false);
+    editor.setOption("showPrintMargin", false);
     $('#submit').on('click', function() {
         textarea.val(editor.getSession().getValue());
     });
