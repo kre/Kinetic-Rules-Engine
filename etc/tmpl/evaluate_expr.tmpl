@@ -44,7 +44,7 @@ Enter a list of <a href="http://developer.picolabs.io/display/docs/Declarations"
 </div> <!-- row -->
 
 <div class="row">
-    
+<div class="col-md-6">    
 <form method="post" action="<TMPL_VAR NAME=ACTION_URL>">
 
 <textarea name="expr" rows="20" cols="80">
@@ -55,26 +55,17 @@ Enter a list of <a href="http://developer.picolabs.io/display/docs/Declarations"
 </p>
 </form>
 
-</div> <!-- row -->
+</div> <!-- left side -->
 
-<div class="row">
+<div class="col-md-6">
 
 <TMPL_IF NAME=JSON>
-<h2>Results</h2>
-
-<p>
-The results for the above declarations are:
-</p>
-
 <pre id="json" class="alert alert-success code" role="alert">
 <TMPL_VAR NAME=JSON>
 </pre>
-</form>
 </TMPL_IF>
 
 <TMPL_IF NAME=ERROR>
-<h2>Evaluation Error</h2>
-
 <p>
 There is a syntax error:
 </p>
@@ -87,7 +78,8 @@ There is a syntax error:
 <p>
 Note: The evaluation doesn't know about persistent variables, event attributes, and other values that are only available within the context of a specific pico. 
 </p>
-</div> <!-- row -->
+</div> <!-- right side -->
+</div><!-- row -->
 
 <div class="row">
 
