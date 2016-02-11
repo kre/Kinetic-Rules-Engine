@@ -1513,6 +1513,62 @@ sub eval_range {
 }
 $funcs->{'range'} = \&eval_range;
 
+sub eval_chr {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+    #$logger->debug("obj: ", sub { Dumper($obj) });
+
+#    $logger->trace("obj: ", sub { Dumper($rands) });
+
+    if($obj->{'type'} eq 'num') {
+        my $v = $obj->{'val'};
+        $v = chr($v);
+        return Kynetx::Expressions::typed_value($v);
+    } else {
+      my $msg = defined $obj ? "object undefined" 
+                             : "object not a number";
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[chr] $msg",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   )
+    }
+}
+$funcs->{'chr'} = \&eval_chr;
+
+sub eval_ord {
+    my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
+    my $logger = get_logger();
+    my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
+
+    #$logger->debug("obj: ", sub { Dumper($obj) });
+
+#    $logger->trace("obj: ", sub { Dumper($rands) });
+
+    if($obj->{'type'} eq 'str') {
+        my $v = $obj->{'val'};
+        $v = ord($v);
+        return Kynetx::Expressions::typed_value($v);
+    } else {
+      my $msg = defined $obj ? "object undefined" 
+                             : "object not a string";
+      Kynetx::Errors::raise_error($req_info, 'warn',
+				  "[ord] $msg",
+				    {'rule_name' => $rule_name,
+				     'genus' => 'operator',
+				     'species' => 'type mismatch'
+				    }
+				   )
+    }
+}
+$funcs->{'ord'} = \&eval_ord;
+
+
+
 sub eval_slice {
     my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
     my $logger = get_logger();

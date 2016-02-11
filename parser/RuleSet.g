@@ -2882,6 +2882,7 @@ OTHER_OPERATORS
     | 'encode' | 'decode' 
     | 'typeof' | 'isnull'
     | 'klog' | 'defaultsTo'
+    | 'chr' | 'ord'
     ;
 
 AGGREGATORS
