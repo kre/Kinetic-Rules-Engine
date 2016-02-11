@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>Evaluate Expression</title>
+<title>Try KRL</title>
 
 
 <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
@@ -30,7 +30,7 @@
 
 <div class="container">
 <div class="row">
-<h2>Evaluate KRL Declarations</h2>
+<h2>KRL Declarations Evaluator</h2>
 
 <p>
 Enter a list of <a href="http://developer.picolabs.io/display/docs/Declarations">KRL declarations</a> in the editor block. Note that they should not be wrapped in a <code>pre</code> or <code>global</code>. The editor is doing Javascript highlighting, which is close, but not exact. 
@@ -39,21 +39,29 @@ Enter a list of <a href="http://developer.picolabs.io/display/docs/Declarations"
 
 <div class="row">
 
-<div id="editor_div"><TMPL_VAR NAME=EXPR></div>
-
 </div> <!-- row -->
 
 <div class="row">
 <div class="col-md-6">    
+<div id="editor_div"><TMPL_VAR NAME=CODE></div>
+
+
 <form method="post" action="<TMPL_VAR NAME=ACTION_URL>">
 
-<textarea name="expr" rows="20" cols="80">
+<textarea name="code" rows="20" cols="80">
 </textarea>
 
 <p style="margin-top:10px">
 <input id="submit" type="submit" value="Evaluate!" />
+<input id="reset" type="reset" value="Reset" />
+<input id="shorten" type="button" value="Short URL" />
+<div id="results"></div>
 </p>
 </form>
+<p>
+Note: The evaluation doesn't know about persistent variables, event attributes, and other values that are only available within the context of a specific pico. 
+</p>
+
 
 </div> <!-- left side -->
 
@@ -75,10 +83,8 @@ There is a syntax error:
 </div>
 </TMPL_IF>
 
-<p>
-Note: The evaluation doesn't know about persistent variables, event attributes, and other values that are only available within the context of a specific pico. 
-</p>
 </div> <!-- right side -->
+
 </div><!-- row -->
 
 <div class="row">
@@ -133,7 +139,7 @@ c = a.map(f)
 
 	<script src="https://ajaxorg.github.io/ace-builds/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
 <script>
-    var textarea = $('textarea[name="expr"]');
+    var textarea = $('textarea[name="code"]');
     textarea.hide();
     var editor = ace.edit("editor_div");
     editor.setTheme("ace/theme/monokai");
@@ -143,9 +149,37 @@ c = a.map(f)
     $('#submit').on('click', function() {
         textarea.val(editor.getSession().getValue());
     });
+    $('#reset').on('click', function() {
+        editor.getSession().setValue("");
+    });
+
+    function makeRequest() {
+      var longUrl = location.protocol + "://" + 
+                    location.hostname + 
+                    location.pathname + "?code=" +
+                    encodeURIComponent(editor.getSession().getValue());
+      var request = gapi.client.urlshortener.url.insert({
+	         'longUrl': longUrl
+      });
+      request.then(function(response) {
+        $('#results').html(response.result.id);
+      }, function(reason) {
+        console.log('Error: ' + reason.result.error.message);
+      });
+    }
+
+    function init() {
+      gapi.client.setApiKey('<TMPL_VAR NAME=GOOGLE_SHORTENER_API_KEY>');
+      gapi.client.load('urlshortener', 'v1').then(makeRequest);
+    }
+
+    $("#shorten").on('click', function() {
+      init();
+    });
 
 </script>
 
+<script src="https://apis.google.com/js/client.js"></script>
 
 
 </body>

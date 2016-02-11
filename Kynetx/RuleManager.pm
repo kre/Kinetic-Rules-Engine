@@ -121,7 +121,7 @@ sub handler {
     # at some point we need a better dispatch function
     if ( $method eq "validate" ) {
         ( $result, $type ) = validate_rule( $req_info, $method, $rid );
-    } elsif ( $method eq "evalexpr" ) {
+    } elsif ( $method eq "evalexpr" || $method eq "repl") {
         ( $result, $type ) = evaluate_expr($r, $req_info, $method, $rid );
     } elsif ( $method eq "jsontokrl" ) {
         ( $result, $type ) = pp_json( $req_info, $method, $rid );
@@ -252,6 +252,9 @@ sub evaluate_expr {
       . "/evaluate_expr.tmpl";
     my $test_template = HTML::Template->new( filename => $template );
 
+    $test_template->param(GOOGLE_SHORTENER_API_KEY => 
+			  Kynetx::Configure::get_config('GOOGLE_SHORTENER_API_KEY')
+			 );
 
 #    $logger->debug("[evaluate_expr] req_info: ", sub {Dumper $req_info});
 
@@ -263,13 +266,15 @@ sub evaluate_expr {
     my $flavor   = Kynetx::Request::get_attr($req_info,'flavor')   || '';
 
 
-    my $expr   = Kynetx::Request::get_attr($req_info,'expr')   || '';
+    my $code   = Kynetx::Request::get_attr($req_info,'code')   || '';
 
-    my $global = "global { " . $expr . "}";
+    my $commentless_code = Kynetx::Parser::remove_comments($code);
+
+    my $global = "global { " . $commentless_code . "}";
     $logger->debug("[evaluate_expr] evaluating ", sub { Dumper($global)});
 
     my ( $json, $tree );
-    if ($expr) {
+    if ($code) {
 
 	my $results = {};
 	$tree = Kynetx::Parser::parse_global_decls($global);
@@ -277,7 +282,7 @@ sub evaluate_expr {
 
 #	$logger->debug("[evaluate_expr] evaluating ", sub { Dumper($tree)});
 
-	$test_template->param( EXPR => $expr );
+	$test_template->param( CODE => $code );
 
 	if (ref $tree->{"global"} eq "HASH" && defined $tree->{"global"}->{"error"}) {
 	    $results = $tree->{"global"}->{"error"};

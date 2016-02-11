@@ -128,6 +128,11 @@ sub configure {
     $config->{'METRICS'}->{'HOSTNAME'} = $host[0];
     $config->{'METRICS'}->{'PROC'} = $$;
 
+    # HOST values
+    $config->{'SCHEME'} ||= "https";
+    $config->{'BASE_URL'} = $config->{'SCHEME'} . "://" . $config->{'EVAL_HOST'};
+    $config->{'BASE_URL'} .= ":" . $config->{'KNS_PORT'} if(defined $config->{'KNS_PORT'});
+
     config_logging();
     return 1;
 }
