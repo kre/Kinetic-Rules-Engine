@@ -376,6 +376,56 @@ $result = lookup_rule_env('isFork',$rule_env);
 cmp_deeply($result,$expected,$description);
 $test_count++;
 
+
+$description = "Register a new ruleset with different dev URI";
+$local_file = 'data/action5.krl';
+my $local_file_dev = 'data/action4.krl';
+$uri = "https://raw.github.com/kre/Kinetic-Rules-Engine/master/t/" . $local_file;
+my $dev_uri = "https://raw.github.com/kre/Kinetic-Rules-Engine/master/t/" . $local_file_dev;
+$krl_src = <<_KRL_;
+  rsm:register("$uri") setting(myRid)
+    with dev_uri = "$dev_uri"
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0]; # just the first one
+$js = Kynetx::Actions::build_one_action(
+	    $krl,
+	    $my_req_info, 
+	    $dd,
+	    $rule_env,
+	    $session,
+	    'callback23',
+	    'dummy_name');
+$result = lookup_rule_env('myRid',$rule_env);
+diag Dumper $result;
+
+cmp_deeply($result->{'rid'},re(qr/b$nid/),$description);
+$test_count++;
+push(@rids,$result->{'rid'});
+
+
+$new_rid = $result->{'rid'};
+
+$description = "Validate the prod version of the new ruleset";
+my $valid_result = Kynetx::Modules::RSM::_validate($result->{'rid'});
+cmp_deeply($valid_result,1,$description);
+$test_count++;
+
+
+$description = "Validate the dev version of the new ruleset";
+my $dev_rid = $result->{'obj'}->{'prefix'}."x".$result->{"obj"}->{"rid_index"}.".dev";
+diag $dev_rid;
+
+
+$function_name = "get_ruleset";
+$args = [$dev_rid];
+$result = Kynetx::Modules::RSM::run_function($my_req_info,$rule_env,$session,$rule_name,$function_name,$args);
+diag Dumper $result;
+cmp_deeply($result->{uri},$dev_uri,$description);
+$test_count++;
+
+
+
 #goto ENDY;
 
 $description = "Import a ruleset from Kynetx Repo";
@@ -529,7 +579,7 @@ $args = [];
 my $max = 11;
 my $temp;
 for (my $i = 0;$i < $max;$i++) {
-  my $rid = Kynetx::Modules::RSM::make_ruleset_id($my_req_info,$rule_env,$session,$rule_name,$function_name,$args);
+  $rid = Kynetx::Modules::RSM::make_ruleset_id($my_req_info,$rule_env,$session,$rule_name,$function_name,$args);
   $temp->{$rid} = 1+ $temp->{$rid} || 0;
 }
 is(scalar keys %{$temp},$max,$description);

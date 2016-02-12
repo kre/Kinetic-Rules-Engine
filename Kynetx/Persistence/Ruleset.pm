@@ -212,12 +212,13 @@ sub delete_registry {
 
 sub get_registry {
 	my ($rid) = @_;
-	my $logger = get_logger();
+#	my $logger = get_logger();
 	if (defined $rid) {
 		my $key = {
 			"rid" => $rid
 		};
 		my $hkey = [];
+#		$logger->debug("[get_registry]", sub{Dumper $key});
 		return Kynetx::MongoDB::get_value(COLLECTION,$key);
 	}
 	return undef;
@@ -460,7 +461,7 @@ sub get_rulesets_by_owner {
     ]
   };
   my $result = Kynetx::MongoDB::get_list(COLLECTION,$key);
-  #$logger->debug("list: ", sub {Dumper($result)});
+  # $logger->debug("list: ", sub {Dumper($result)});
   my @rids = ();
   if (ref $result eq "ARRAY") {
     for my $rs (@{$result}) {

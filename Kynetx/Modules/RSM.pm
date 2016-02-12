@@ -214,61 +214,73 @@ sub owner_rulesets {
 $funcs->{'list_rulesets'} = \&owner_rulesets;
 
 sub get_ruleset {
-	my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
-  my $fqrid = $args->[0];
-  if (Kynetx::Modules::PCI::pci_authorized($req_info, $rule_env, $session)) {
-      my $result = _sanitize_ruleset(Kynetx::Persistence::Ruleset::get_ruleset_info($fqrid));
-      return $result;    
-  }
-  return undef;
+    my ($req_info,$rule_env,$session,$rule_name,$function,$args) = @_;	
+    my $fqrid = $args->[0];
+    my $logger = get_logger();
+#    $logger->debug("[get_ruleset] ", sub{Dumper $fqrid});
+    my $result = _sanitize_ruleset(Kynetx::Persistence::Ruleset::get_ruleset_info($fqrid));
+    return $result;    
 }
 $funcs->{'get_ruleset'} = \&get_ruleset;
 
 
 ##################### Actions
 sub do_register {
-  my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
-  my $logger = get_logger();
-  my $rid = get_rid($req_info->{'rid'});
-	my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
-  my $v = $vars->[0] || '__dummy';
-  
-  my $prefix = $config->{'prefix'} || undef;
-  my $uri = $args->[0];
-  if (defined $uri) {
-    my $new_rid = Kynetx::Persistence::Ruleset::create_rid($ken,$prefix,$uri);
-    # Immediately create a fork for a *dev* ruleset
-    my $fork = Kynetx::Persistence::Ruleset::fork_rid($ken,$new_rid,'dev',$uri);
-    $logger->debug("Rid created: $new_rid");
-    for my $key (keys %{$config}) {
-      if ($key eq 'headers') {
-        my $headers = $config->{'headers'};
-        if (ref $headers eq "HASH") {
-          Kynetx::Persistence::Ruleset::put_registry_element($new_rid,['headers'],$headers);
-          Kynetx::Persistence::Ruleset::put_registry_element($fork,['headers'],$headers);
-        }
-      } else {
-        if ($key eq 'rule_name' ||
-            $key eq 'rid' ||
-            $key eq 'txn_id' ||
-            $key eq 'target' ||
-            $key eq 'autoraise') {
-          next;
-        } else {
-          Kynetx::Persistence::Ruleset::put_registry_element($new_rid,[$key],$config->{$key});
-          Kynetx::Persistence::Ruleset::put_registry_element($fork,[$key],$config->{$key});
-        }
-      }
+    my ( $req_info, $rule_env, $session, $config, $mods, $args, $vars ) = @_;
+    my $logger = get_logger();
+    my $rid = get_rid($req_info->{'rid'});
+    my $ken = Kynetx::Persistence::KEN::get_ken($session,$rid);
+    my $v = $vars->[0] || '__dummy';
+
+    # if userid not defined then we're not in a root pico and shouldn't register
+    my $userid = Kynetx::Persistence::KEN::get_ken_value($ken,'user_id');
+
+    my $prefix = $config->{'prefix'} || undef;
+    my $uri = $args->[0];
+    my ($ruleset, $error);
+    if (defined $uri && defined $userid) {
+	my $new_rid = Kynetx::Persistence::Ruleset::create_rid($ken,$prefix,$uri);
+
+	my $dev_uri = $config->{"dev_uri"} || $uri;
+
+	# Immediately create a fork for a *dev* ruleset
+	my $fork = Kynetx::Persistence::Ruleset::fork_rid($ken,$new_rid,'dev',$dev_uri);
+	$logger->debug("Rid created: $new_rid");
+	$logger->debug("Production: ", sub{Dumper $new_rid});
+	$logger->debug("Development: ", sub{Dumper $fork});
+	for my $key (keys %{$config}) {
+	    if ($key eq 'headers') {
+		my $headers = $config->{'headers'};
+		if (ref $headers eq "HASH") {
+		    Kynetx::Persistence::Ruleset::put_registry_element($new_rid,['headers'],$headers);
+		    Kynetx::Persistence::Ruleset::put_registry_element($fork,['headers'],$headers);
+		}
+	    } else {
+		if ($key eq 'rule_name' ||
+		    $key eq 'rid' ||
+		    $key eq 'txn_id' ||
+		    $key eq 'target' ||
+                    $key eq 'dev_uri' || 
+		    $key eq 'autoraise') {
+		    next;
+		} else {
+		    Kynetx::Persistence::Ruleset::put_registry_element($new_rid,[$key],$config->{$key});
+		    Kynetx::Persistence::Ruleset::put_registry_element($fork,[$key],$config->{$key});
+		}
+	    }
+	}
+	$ruleset = _sanitize_ruleset(Kynetx::Persistence::Ruleset::get_ruleset_info($new_rid));
+    } else {
+	my $msg = ! defined $uri    ? "Must supply URI to register ruleset"
+	        : ! defined $userid ? "Rulesets can only be registered in root pico"
+	        :                     "";
+	$error = {"error" => $msg};
     }
     
-    my $ruleset = _sanitize_ruleset(Kynetx::Persistence::Ruleset::get_ruleset_info($new_rid));
-    my $response = response_object($v,$ruleset);
+    my $response = response_object($v,$ruleset, $error);
     $rule_env = add_to_env( $response, $rule_env ) unless $v eq '__dummy';
     my $js = raise_response_event('register',$req_info, $rule_env, $session, $config, $response, $v );
     return $js;
-    
-  }  
-  return '';
 }
 
 sub do_create {
@@ -575,15 +587,20 @@ sub _appkeys {
 }
 
 sub response_object {
-  my ($event_var,$rid_object) = @_;
+  my ($event_var,$rid_object, $error_object) = @_;
   my $logger = get_logger();
   my $ro;
-  my $thing = {
-    'rid' => $rid_object->{'rid'},
-    'obj' => $rid_object
-  };
+  my $thing;
+  if (defined $rid_object) {
+      $thing = {
+		'rid' => $rid_object->{'rid'},
+		'obj' => $rid_object
+	       };
+  } else {
+      $thing = $error_object
+  }
   $ro->{$event_var} = $thing;
-  $logger->trace("Response object: ", sub {Dumper($ro)});
+#  $logger->debug("Response object: ", sub {Dumper($ro)});
   return $ro;
 }
 
