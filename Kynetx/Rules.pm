@@ -1180,7 +1180,7 @@ sub eval_foreach {
 
 			$logger->trace( "Evaluating rule body with " . Dumper($val) );
 
-			$logger->debug( "----------- foreach iteration " . $i++ . " \n" );
+			$logger->info( "----------- foreach iteration " . $i++ . " \n" );
 
 			my $vjs =
 			  Kynetx::JavaScript::gen_js_var_list( $vars,

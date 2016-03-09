@@ -427,11 +427,12 @@ sub _domainname {
 	   'nano_manager' => 1,
 	   'wrangler' => 1,
 	  };
-  if ($allowed->{$expr->{'domain'}}) {
-    return $expr->{'domain'}
-  } else {
-    return 'explicit'
-  }
+  # if ($allowed->{$expr->{'domain'}}) {
+  #   return $expr->{'domain'}
+  # } else {
+  #   return 'explicit'
+  # }
+  return $expr->{'domain'}
 }
 
 sub eval_schedule_statement {
@@ -665,7 +666,7 @@ sub eval_raise_statement {
       if ( $ver =~ /v\d+/ ) {
 	$ver =~ s/v(\d+)/$1/;
       }
-      $logger->debug(
+      $logger->info(
                "Raising explicit event $domain:$eventtype for $rid:$ver");
 
       my $schedule = $req_info->{'schedule'};
