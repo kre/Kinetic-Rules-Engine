@@ -77,7 +77,7 @@ Kynetx::Util::config_logging();
 
 # global options
 use vars qw/ %opt /;
-my $opt_string = 'r:s:ht?';
+my $opt_string = 'r:s:kht?';
 getopts( "$opt_string", \%opt ); # or &usage();
 &usage() if $opt{'h'} || $opt{'?'};
 
@@ -99,11 +99,22 @@ my $rid_info = Kynetx::Rids::mk_rid_info($req_info, $rid, {'version' => $version
 print Dumper $rid_info;
 
 my $t0 = [gettimeofday];
-my $tree =
-        Kynetx::Repository::get_rules_from_repository( $rid_info, $req_info,
-        $rid_info->{'kinetic_app_version'} );
-#my $tree = Kynetx::Rules::get_rule_set($req_info);
-$tree = $tree->{$section} if $section;
+
+my $tree = '';
+
+if($opt{'k'}) {
+    $tree = Kynetx::Repository::get_ruleset_krl($rid_info,$version);
+} else {
+
+    $tree =
+      Kynetx::Repository::get_rules_from_repository( $rid_info, $req_info,
+						     $rid_info->{'kinetic_app_version'} );
+    #my $tree = Kynetx::Rules::get_rule_set($req_info);
+    $tree = $tree->{$section} if $section;
+
+    
+}
+
 my $t1 = tv_interval($t0, [gettimeofday]);
 
 print Dumper $tree;
@@ -128,8 +139,9 @@ it is in the cache or retrieve it and optimize it (and cache) it if not.
 Options are:
 
    -r : rid to retrieve
-   -s : section of ruleset to return
+   -s : section of ruleset to return (not compatible with -k switch)
    -t : print elapsed retrieval time as well
+   -k : retrieve KRL source rather than parse tree
 
 
 EOF
