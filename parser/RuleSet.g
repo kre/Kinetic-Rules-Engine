@@ -2991,18 +2991,20 @@ SEEN :'seen';
 VAR_DOMAIN:  'ent' | 'app'
     ;
 
- NULL	:	'null';
+NULL	:	'null';
 
 
 VAR  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*
    ;
 
 
+
+
 INT :	DIGIT+
     ;
 
 
- FLOAT
+FLOAT
     :    DIGIT+ '.' DIGIT*
     |    '.' DIGIT+
 
