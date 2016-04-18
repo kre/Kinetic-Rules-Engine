@@ -45,6 +45,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 use JSON::XS;
 use AnyEvent::HTTP;
 use DateTime::Format::RFC3339;
+use Math::Random;
 
 use Kynetx::Util qw(:all);
 use Kynetx::Memcached qw(:all);
@@ -436,13 +437,16 @@ sub _send_event {
 
 sub mk_sky_esl {
   my ($token) = @_;
-
+#  my $eid = int( rand(999999999) );
+  my $eid = int( random_uniform() * 10000000);
+  my $logger = get_logger();
+  $logger->debug("EID: ", $eid);
   return "http://" . join(
     "/", Kynetx::Configure::get_config('EVAL_HOST'),    # cs.kobj.net
     "sky",
     "event",
     $token,                                             # channel ID
-    int( rand(999999999) )                              # eid
+    $eid   
   );
 }
 

@@ -437,7 +437,8 @@ SetHandler server-status
   PerlSetEnv EVENT 1
   SetHandler perl-script
   PerlHandler Kynetx::Sky
-  PerlLogHandler Kynetx::Persistence::DevLog
+  # we have to do this in the Sky handler since it is sometimes invoked in Cleanup handler
+#  PerlLogHandler Kynetx::Persistence::DevLog
 
 </LocationMatch>
 

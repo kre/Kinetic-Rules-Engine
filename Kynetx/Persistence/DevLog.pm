@@ -82,15 +82,23 @@ sub handler {
   my $logger = get_logger();
   my ( $domain, $eventtype, $eid, $rids, $id_token, $req_info );
   my @path_components = split( /\//, $r->path_info );
-  $logger->debug("Path on logging: ", $r->path_info);
+  $logger->debug("Path on logging for DevLog: ", $r->path_info);
+#  $logger->debug("Path components for logging: ", @path_components);
 
   if ($path_components[1] eq "event") {
     my $id_token = $path_components[2];
     my $eid = $path_components[3] || '';
+    if (! defined $eid || $eid eq "" || $eid eq "none") {
+	$eid = int( random_uniform() * 10000000);
+	$logger->debug("Setting EID: ", $eid);
+    }
+
 
     # optional...usually passed in as parameters
     my $domain    = $path_components[4];
     my $eventtype = $path_components[5];
+
+#    $logger->debug("DEBUG EID: ", $eid);
     # build the request data structure. No RIDs yet. (undef)
     $req_info = Kynetx::Request::build_request_env(
 						   $r, $domain, $rids,
@@ -116,43 +124,55 @@ sub handler {
   }
 
   # use pnotes from handlers
-  $req_info->{"eid"} = $r->pnotes("EID");
-  $req_info->{"rids"} = Kynetx::Rids::parse_rid_list($req_info, $r->pnotes("RIDS")) || [] ;
+  $req_info->{"eid"} = $r->pnotes("EID") || $req_info->{"eid"};
+  $req_info->{"rids"} = Kynetx::Rids::parse_rid_list($req_info, $r->pnotes("RIDS")) || [];
+  Log::Log4perl::MDC->put( 'eid',  $req_info->{'eid'});
 
-  # Kynetx::Request::log_request_env( $logger, $req_info );
-  my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($req_info->{"id_token"});
-#  $logger->debug("KEN: $ken");
-  if ($ken) {
-    my $list = Kynetx::Persistence::KToken::get_token_by_ken_and_label($ken, TOKEN_NAME);
-    ###$logger->debug("Seeing these DECIs ", sub{Dumper $list});
-    my $logging_token = $list->[0];
-    $logger->debug("Logging token: ", $logging_token);
+  _handler($req_info);
 
-    my $skip_rids = { map { $_ => 1 } @{ (SKIP_RIDS) } };
-
-    my $logging_rid = 0;
-
-    # don't flush logging some dires (in skip list) to mongo log
-    if (  defined $req_info->{'function_name'} ) {
-      $logging_rid =  $skip_rids->{Kynetx::Rids::get_rid($req_info->{"rid"})}
-    } else {
-      $logging_rid =  length( @{ $req_info->{"rids"} || [] } ) == 1
-                   && $skip_rids->{Kynetx::Rids::get_rid($req_info->{"rids"}->[0])}
-    }
-
-    # $logger->debug("SKIP: ", sub{ Dumper  $req_info->{"rids"} } );
-
-    if ($logging_token && ! $logging_rid) {
-	Log::Log4perl::MDC->put( '_ECI_',  $logging_token);
-	Log::Log4perl::MDC->put( 'eid',  $req_info->{'eid'});
-	$logger->debug("__DEVLOG__"); # write the trigger to the log (see log.conf for Log4Perl)
-    } else {
-	$logger->debug("Dev Log not writing");
-    }
-  }
   return Apache2::Const::OK;
 }
 
+sub _handler {
+    my ($req_info) = @_;
+    my $logger = get_logger();
+ #  Kynetx::Request::log_request_env( $logger, $req_info );
+    my $ken = Kynetx::Persistence::KEN::ken_lookup_by_token($req_info->{"id_token"});
+#    $logger->debug("Logging KEN: $ken");
+    if ($ken) {
+	my $list = Kynetx::Persistence::KToken::get_token_by_ken_and_label($ken, TOKEN_NAME);
+	#    $logger->debug("Seeing these DECIs ", sub{Dumper $list});
+	my $logging_token = $list->[0];
+#	$logger->debug("Logging token: ", $logging_token);
+
+	my $skip_rids = { map { $_ => 1 } @{ (SKIP_RIDS) } };
+
+	my $logging_rid = 0;
+
+	# don't flush logging some dires (in skip list) to mongo log
+	if (  defined $req_info->{'function_name'} ) {
+	    $logging_rid =  $skip_rids->{Kynetx::Rids::get_rid($req_info->{"rid"})}
+	} else {
+	    $logging_rid =  length( @{ $req_info->{"rids"} || [] } ) == 1
+	      && $skip_rids->{Kynetx::Rids::get_rid($req_info->{"rids"}->[0])}
+	}
+
+	# $logger->debug("SKIP: ", sub{ Dumper  $req_info->{"rids"} } );
+
+	if ($logging_token && ! $logging_rid) {
+	    Log::Log4perl::MDC->put( '_ECI_',  $logging_token);
+	    if (! $req_info->{'eid'}) {
+		$logger->debug("No EID for Logging");
+	    } else {
+		$logger->debug("EID for Logging: ", $req_info->{'eid'});
+	    }
+	    $logger->debug("__DEVLOG__"); # write the trigger to the log (see log.conf for Log4Perl)
+	} else {
+	    $logger->debug("Dev Log not writing");
+	}
+    }
+    return;
+}
 
 sub get_all_msg {
   my ($eci) = @_;
@@ -241,16 +261,15 @@ sub _normalize {
     my ($obj) = @_;
     my $eid = $obj->{"eid"};
     my $skip_rids = join("|", @{ (SKIP_RIDS) } );
-    my $logger = get_logger();
-#    $logger->debug("Skip RIDS ", sub{ Dumper $skip_rids });
-#    my @items = grep(!/^\d+\s+\d+\w+\s+$skip_rids/, grep(/^\d+\s+$eid\s+/,split(/\n/,$obj->{'text'})));
-    my @items = grep(/^\d+\s+$eid\s+/,split(/\n/,$obj->{'text'}));
- #   $logger->debug("Seeing items", sub{ Dumper \@items });
+#    my $logger = get_logger();
+#    $logger->debug("Text for $eid: \n", $obj->{'text'});
+    my @items = grep(/^\d+\s+\d+\s+$eid\s+/,split(/\n/,$obj->{'text'}));
+#    $logger->debug("Seeing items", sub{ Dumper \@items });
     my $timestamp = DateTime->from_epoch( epoch => $obj->{'created'} );
     my $struct = {
 		  'id' => $obj->{"_id"}. "",
 		  'created' => $obj->{'created'} ,
-		  'eid' => $obj->{"eid"},
+		  'eid' => $eid,
 		  'timestamp' => $timestamp. "",
 #		  'log_text' => $obj->{'text'},
 		  'log_items' => \@items

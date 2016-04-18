@@ -139,57 +139,57 @@ SKIP: {
       my $test_plan = shift;
       my $tc = 0;
       foreach my $test (@{$test_plan}) {
-    $logger->debug( "Requesting: ". $test->{'url'});
-    my $resp;
-    if (defined $test->{'method'} && $test->{'method'} eq 'post') {
+	  $logger->debug( "Requesting: ". $test->{'url'});
+	  my $resp;
+	  if (defined $test->{'method'} && $test->{'method'} eq 'post') {
 
-      $resp = $mech->get($test->{'url'});
-    } else {
-      #$mech->get_ok($test->{'url'});
-      $resp = $mech->get($test->{'url'});
-    }
+	      $resp = $mech->get($test->{'url'});
+	  } else {
+	      #$mech->get_ok($test->{'url'});
+	      $resp = $mech->get($test->{'url'});
+	  }
 
-#    like($mech->status(), /2../, 'Status OK');
-#    $tc++;
-    ok($resp->header('Set-Cookie'), 'has cookie header');
-    $tc++;
-#    diag "Response header: ", $resp->as_string();
-#    diag "Cookies: ", Dumper $mech->cookie_jar;
-    like($mech->cookie_jar->as_string(), qr/SESSION_ID/, 'cookie was accepted');
-    $tc++;
+	  #    like($mech->status(), /2../, 'Status OK');
+	  #    $tc++;
+	  ok($resp->header('Set-Cookie'), 'has cookie header');
+	  $tc++;
+	  #    diag "Response header: ", $resp->as_string();
+	  #    diag "Cookies: ", Dumper $mech->cookie_jar;
+	  like($mech->cookie_jar->as_string(), qr/SESSION_ID/, 'cookie was accepted');
+	  $tc++;
 
 
-    diag $mech->content() if $test->{'diag'};
-    is($mech->content_type(), $test->{'type'});
-    $tc += 1;
-    foreach my $like (@{$test->{'like'}}) {
-      my $resp = $mech->content_like($like);
-      if ($resp){
-          $tc++;
-      } else {
-          diag $like;
-          diag $mech->content();
-          diag $test->{'url'};
-          die;
-      }
+	  diag $mech->content() if $test->{'diag'};
+	  is($mech->content_type(), $test->{'type'});
+	  $tc += 1;
+	  foreach my $like (@{$test->{'like'}}) {
+	      my $resp = $mech->content_like($like);
+	      if ($resp) {
+		  $tc++;
+	      } else {
+		  diag $like;
+		  diag $mech->content();
+		  diag $test->{'url'};
+		  die;
+	      }
 
-    }
-    foreach my $unlike (@{$test->{'unlike'}}) {
-      my $resp = $mech->content_unlike($unlike);
-      if ($resp){
-          $tc++;
-      } else {
-          diag $unlike;
-          diag $mech->content();
-          diag $test->{'url'};
-          die;
-      }
-    }
+	  }
+	  foreach my $unlike (@{$test->{'unlike'}}) {
+	      my $resp = $mech->content_unlike($unlike);
+	      if ($resp) {
+		  $tc++;
+	      } else {
+		  diag $unlike;
+		  diag $mech->content();
+		  diag $test->{'url'};
+		  die;
+	      }
+	  }
       }
 
       return $tc;
-    }
-
+  }
+    
     # tests in an event plan are order dependent since events are order dependent.
     # Each plan is running different events in order to test a specific
     #   scenario defined in the rule's select statement

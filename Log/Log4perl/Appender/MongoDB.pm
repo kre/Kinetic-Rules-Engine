@@ -45,7 +45,7 @@ sub new {
 ##################################################
   my($class, %options) = @_;
   my $self = {
-    buffer => [],
+    buffer => {},
     level => $DEBUG,
     mongo => undef,
     trigger => sub {return 0},
@@ -92,10 +92,11 @@ sub log {
 ##################################################
   my ($self, %params) = @_;
   my $msg = $params{'message'};
+  my $eid = Log::Log4perl::MDC->get("eid") || "[undef]";
   
     
   if (Log::Log4perl::Level::to_priority($params{'log4p_level'}) >= $INFO) {
-    push(@{$self->{'buffer'}},$msg);
+    push(@{$self->{'buffer'}->{$eid}},$msg);
   }
   
   $self->flush() if $self->{trigger}->($self, \%params);
@@ -107,10 +108,14 @@ sub flush {
 ##################################################
   my $self = shift;
   my $eci = Log::Log4perl::MDC->get("_ECI_");
-  my $eid = Log::Log4perl::MDC->get("eid");
-  my $text = join("", @{$self->{'buffer'}});
+  my $eid = Log::Log4perl::MDC->get("eid") || "[undef]";
+
+#  my $with_eid = grep(/^\d+\s+$eid\s+/,@{$self->{'buffer'}});
+#  my $without_eid = grep(!/^\d+\s+$eid\s+/,@{$self->{'buffer'}});
+
+  my $text = join("", @{$self->{'buffer'}->{$eid}});
   $self->put($eci,$eid,$text);
-  $self->{'buffer'} = [];  
+  $self->{'buffer'}->{$eid} = [];  
 }
 
 ###################################################
