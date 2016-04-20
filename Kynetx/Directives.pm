@@ -88,7 +88,6 @@ sub send_directive {
   my $direct = Kynetx::Directives->new($name);
   $direct->set_options($opts);
   $dir_doc->add($direct);
-#  push @{$req_info->{'directives'}}, $direct;
 }
 
 sub emit_js {

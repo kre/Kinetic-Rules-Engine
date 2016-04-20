@@ -128,6 +128,8 @@ my $domain = "notification";
 my $eventname = "agrajag";
 my $re = qr/^foo\{.*\"$key\":\"$value\".*\}off$/;
 
+$logger->level($DEBUG);
+
 my $url = "$sky_uri?_rids=$mod_rid&_domain=$domain&_name=$eventname";
 my $req = HTTP::Request->new(POST => $url);
 $req->header('Content-Type'=>'application/json');
@@ -140,6 +142,7 @@ my $description = "POST using GET style url params";
 $logger->debug("Content: ", $result->content());
 cmp_deeply($result->content(),re($re),$description);
 $test_count++;
+
 
 $description = "POST using pure JSON to pass parameters";
 $url = $sky_uri;

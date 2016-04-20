@@ -105,48 +105,6 @@ sub rword {
 }
 $funcs->{'word'} = \&rword;
 
-sub rquote {
-	my ($req_info, $function, $args) = @_;
-    my $logger = get_logger();
-	my $qurl = 	"http://www.iheartquotes.com/api/v1/random";
-	my $opts = {};
-	if (ref $args->[0] eq "HASH") {
-		foreach my $key (keys %{$args->[0]}) {
-			$logger->debug("Key: ", $key);
-			$opts->{$key} = $args->[0]->{$key};
-		}
-	}
-	$opts->{'format'} = 'json';
-	my $response = Kynetx::Modules::HTTP::mk_http_request('GET',undef,$qurl,$opts,undef);
-	my $struct= Kynetx::Json::jsonToAst_w($response->{'_content'});
-	return  $struct;
-	
-}
-$funcs->{'quote'} = \&rquote;
-$funcs->{'fortune'} = \&rquote;
-
-sub rphoto {
-	my ($req_info, $function, $args) = @_;
-    my $logger = get_logger();
-	my $purl = 	"http://picasaweb.google.com/data/feed/api/all";
-	my $max = 1000;
-	my $opts = {};
-	$opts->{'alt'} = 'json';
-	$opts->{'kind'} = 'photo';
-	$opts->{'max-results'} = 1;
-	if (ref $args->[0] eq "HASH") {
-		foreach my $key (keys %{$args->[0]}) {
-			$logger->debug("Key: ", $key);
-			$opts->{$key} = $args->[0]->{$key};
-		}
-	}	
-	$opts->{'q'} = 'kitten' unless (defined $opts->{'q'});
-	$opts->{'start-index'} = int(rand($max)) +1  unless (defined $opts->{'start-index'});
-	my $response = Kynetx::Modules::HTTP::mk_http_request('GET',undef,$purl,$opts,undef);
-	my $struct = Kynetx::Json::jsonToAst_w($response->{'_content'});
-	return $struct->{'feed'}->{'entry'}->[0]->{'media$group'};
-}
-$funcs->{'photo'} = \&rphoto;
 
 sub _uuid {
 	my ($req_info, $function, $args) = @_;

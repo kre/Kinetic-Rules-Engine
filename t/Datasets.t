@@ -368,9 +368,11 @@ global {
 }
 _KRL_
     $krl = Kynetx::Parser::parse_global_decls($krl_src);
-#    diag Dumper($krl);
+    diag Dumper($krl);
 
-    is_string_nows(get_dataset($krl->[0],$req_info),get_local_file("aaa.json"),"URL file as string");
+    my $ds = get_dataset($krl->[0],$req_info);
+    diag Dumper($ds);
+    is_string_nows($ds,get_local_file("aaa.json"),"URL file as string");
 
     $rule_env = {};
 

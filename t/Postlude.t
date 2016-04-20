@@ -157,7 +157,7 @@ $result = Kynetx::Postlude::eval_persistent_expr($expr,$session,$my_req_info,$bi
 cmp_deeply($result->{'_error_'},1,"set persistent variable which is too large");
 $test_count++;
 
-my $expr = {
+$expr = {
 	    'domain' => 'ent',
 	    'test' => undef,
 	    'action' => 'set_hash',
@@ -640,12 +640,23 @@ fired {
 }
 _KRL_
 
+
+run_post_testcase($krl_src, $my_req_info, $session, $rule_env, FIRED, 0);
+is(contains_trail_element($domain,$rid, $session, 'my_trail',"testing"),
+   0,
+   'testing cleared'
+  );
+$test_count++;
+
+
+
 run_post_testcase($krl_src, $my_req_info, $session, $rule_env, NOTFIRED, 0);
 is(contains_trail_element($domain,$rid, $session, 'my_trail',"testing"),
    1,
    'testing added'
   );
 $test_count++;
+
 
 is(contains_trail_element($domain,$rid, $session, 'my_trail',"windley"),
    0,

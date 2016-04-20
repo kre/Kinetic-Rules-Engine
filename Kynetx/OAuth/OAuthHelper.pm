@@ -1,6 +1,6 @@
-package Kynetx::Predicates::Google::OAuthHelper;
+package Kynetx::OAuth::OAuthHelper;
 
-# file: Kynetx/Predicates/Google/OAuthHelper.pm
+# file: Kynetx/OAuth/OAuthHelper.pm
 #
 # This file is part of the Kinetic Rules Engine (KRE)
 # Copyright (C) 2007-2011 Kynetx, Inc. 

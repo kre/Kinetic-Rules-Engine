@@ -80,7 +80,7 @@ my $test_env = Kynetx::Test::enchilada('ridlist','ridlist_rule',\@default_rules)
 $logger->debug("Dump: ",sub {Dumper($test_env)});
 
 subtest 'Environment created' => sub {Kynetx::Test::validate_env($test_env)};
-$test_count++;
+#$test_count++;
 
 ######################### Test Environment definitions
 my $req_info = $test_env->{'req_info'};
@@ -101,7 +101,6 @@ my $t_eid = $test_env->{'eid'};
 
 ############################
 # Entity var searching
-#Log::Log4perl->easy_init($DEBUG);
 
 $logger->debug("Foo!");
 
@@ -136,7 +135,7 @@ my $op_expr =q/ent:searchkey.query([],{
   
 my $bag = test_operator($op_expr,undef,0);  
 
-my $op_expr =q/ent:searchkey.query([],{
+$op_expr =q/ent:searchkey.query([],{
   'requires' :  '$or', 
   'conditions'   : [
     {
@@ -156,8 +155,14 @@ my $op_expr =q/ent:searchkey.query([],{
     }
   ]})/;
 
-$result = test_operator($op_expr,superbagof(@{$bag}),1);
+$result = test_operator($op_expr,
+			superbagof(@{$bag}),
+			0
+		       );
 $test_count++;
+#Log::Log4perl->easy_init($DEBUG);
+
+
 foreach my $key (@{$result}) {
   $logger->debug("Key: ", sub {Dumper($key)});
   

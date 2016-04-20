@@ -30,7 +30,7 @@ use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Kynetx::Environments qw/:all/;
-use Kynetx::Predicates::Google::OAuthHelper qw(
+use Kynetx::OAuth::OAuthHelper qw(
     get_consumer_tokens
 );
 use Kynetx::Directives qw/:all/;
@@ -272,7 +272,7 @@ sub do_place_call {
       'Url'    => $args->[2],
   };
   my $twilio_tokens =
-    Kynetx::Predicates::Google::OAuthHelper::get_consumer_tokens(
+    Kynetx::OAuth::OAuthHelper::get_consumer_tokens(
     	$req_info,
     	$rule_env,
     	$session,

@@ -685,7 +685,7 @@ SKIP: {
     my $ua = LWP::UserAgent->new;
 
     my $check_url = "$dn/version/$ruleset";
-    diag "Checking $check_url";
+#    diag "Checking $check_url";
     my $response = $ua->get($check_url);
     skip "No server available", $skippable if (! $response->is_success);
 

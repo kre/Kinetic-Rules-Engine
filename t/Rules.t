@@ -27,7 +27,6 @@ use Test::Deep;
 
 use Apache::Session::Memcached;
 use DateTime;
-use Geo::IP;
 use Cache::Memcached;
 use LWP::Simple;
 use LWP::UserAgent;
@@ -190,7 +189,6 @@ sub add_json_testcase {
 #goto ENDY;
 
 
-
 #
 # note if the rules don't have unique names, you can get rule environment cross
 # contamination
@@ -230,7 +228,7 @@ $krl_src = <<_KRL_;
 rule test_2 is active {
   select using "/archives/" setting ()
   pre {
-      c = location:city();
+      c = 'Seattle';
   }
   alert("testing " + c);
 }
@@ -265,9 +263,9 @@ $krl_src = <<_KRL_;
 rule test_3 is active {
   select using "/archives/" setting ()
   pre {
-      c = location:city();
+      c = 'Seattle';
   }
-  if demographics:urban() then
+  if c eq 'Seattle' then
     alert("testing " + c);
 }
 _KRL_
@@ -300,9 +298,9 @@ $krl_src = <<_KRL_;
 rule test_4 is active {
   select using "/archives/" setting ()
   pre {
-      c = location:city();
+      c = 'Seattle';
   }
-  if demographics:urban() && location:city() eq "Seattle" then
+  if 3 < 5 && c eq "Seattle" then
     alert("testing " + c);
 }
 _KRL_

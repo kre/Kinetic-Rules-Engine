@@ -30,8 +30,6 @@ use DateTime::Format::ISO8601;
 # why wasn't this required earlier
 use DateTime::Format::RFC3339;
 
-use Kynetx::Predicates::Weather qw(get_weather);
-
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
@@ -62,57 +60,9 @@ my %predicates = (
         my $desired = $args->[0];
         $desired =~ s/^'(.*)'$/$1/;    # for now, we have to remove quotes
 
-        my $tz = get_weather( $req_info, 'timezone' );
+        my $tz = get_timezone( $req_info);
 
         return $tz eq $desired;
-    },
-
-    'daytime' => sub {
-        my ( $req_info, $rule_env, $args ) = @_;
-        my $logger = get_logger();
-
-        my $sunrise = get_weather( $req_info, 'sunrise' );
-        $sunrise =~ y/ /:/;
-        my @sr = split( /:/, $sunrise );
-        $sr[0] += 12 if $sr[2] eq 'pm';
-
-        # assume it's daytime if we don't get good data
-        return 1 unless defined $sr[0];
-
-        my $sunset = get_weather( $req_info, 'sunset' );
-        $sunset =~ y/ /:/;
-        my @ss = split( /:/, $sunset );
-        $ss[0] += 12 if $ss[2] eq 'pm';
-	$ss[0] -= 24 if $ss[0] > 23;
-
-        # assume it's daytime if we don't get good data
-        return 1 unless defined $ss[0];
-
-        my $now = get_local_time($req_info);
-
-        my $srto = $now->clone;
-        $srto->set_hour( $sr[0] );
-        $srto->set_minute( $sr[1] );
-
-        my $ssto = $now->clone;
-        $ssto->set_hour( $ss[0] );
-        $ssto->set_minute( $ss[1] );
-
-        # returns 1 if a > b
-        my $after_sunrise = DateTime->compare( $now,  $srto );
-        my $before_sunset = DateTime->compare( $ssto, $now );
-
-        $logger->debug(   "Time for cust: "
-                        . $now->hms . " ("
-                        . $now->time_zone->name . ") "
-                        . "After Sunrise: "
-                        . $after_sunrise . " "
-                        . "Before Sunset: "
-                        . $before_sunset
-                        . " " );
-
-        return $after_sunrise eq 1 && $before_sunset eq 1;
-
     },
 
     # between 6:00 and 12:00
@@ -229,12 +179,6 @@ my %predicates = (
 
 );
 
-# need predicates already defined for this
-$predicates{'nighttime'} = sub {
-    return !$predicates{'daytime'}(@_)
-
-};
-
 sub get_predicates {
     return \%predicates;
 }
@@ -248,7 +192,7 @@ sub now {
     if ( defined $args ) {
         if ( $args->[0] ) {
             my $p = $args->[0];
-            my $tz = $p->{'timezone'} || $p->{'tz'};
+            my $tz = $p->{'timezone'} || $p->{'tz'} || get_timezone($req_info);
             if ($tz) {
                 $now->set_time_zone($tz);
             }
@@ -282,7 +226,7 @@ sub add {
         my $utime = $args->[0];
         my $dt = ISO8601($utime);
         if (defined $dt) {
-        	my $tz = $dt->time_zone();
+	    my $tz = $dt->time_zone();
             $dt->set_time_zone('UTC');
             if ( ref $args->[1] eq 'HASH' ) {
                 $dt->add( $args->[1] );
@@ -315,7 +259,7 @@ sub strformat {
         if (defined $dt) {
             if (defined $args->[2]) {
                 my $p = $args->[2];
-                my $tz = $p->{'timezone'} || $p->{'tz'};
+                my $tz = $p->{'timezone'} || $p->{'tz'} || get_timezone($req_info);
                 if ($tz) {
                     $dt->set_time_zone($tz);
                 }
@@ -392,7 +336,7 @@ sub atom {
         	$dt->set_formatter($f);
             if (defined $args->[1] ) {
                 my $p = $args->[1];
-                my $tz = $p->{'timezone'} || $p->{'tz'};
+                my $tz = $p->{'timezone'} || $p->{'tz'} || get_timezone($req_info);
                 if ($tz) {
                     $dt->set_time_zone($tz);
                 } 
@@ -444,17 +388,10 @@ sub get_local_time {
 
     my $logger = get_logger();
 
-    my $tz = get_weather( $req_info, 'timezone' );
+    my $tz = get_timezone($req_info);
+
     $logger->debug( "Timezone ", $tz );
 
-    # FIXME: need to do better with time zones
-    $tz =~ s#E.T#America/New_York#;
-    $tz =~ s#C.T#America/Chicago#;
-    $tz =~ s#M.T#America/Denver#;
-    $tz =~ s#P.T#America/Los_Angeles#;
-
-    # FIXME: this code has the potential of breaking badly when the server
-    # clock/timzone is not set right...
     my $now = DateTime->now;
     if (defined $tz) {
       eval {
@@ -464,39 +401,15 @@ sub get_local_time {
         $logger->warn("Error: set time zone $tz: $@")
       }
     }
-    
-
     return $now;
-
 }
 
-# Default to a timezone that is specified in options
 sub get_timezone {
-  my ($req_info,$options) = @_;
-  my $logger = get_logger();
-  my $tz;
-  if (defined $options && ref $options eq "HASH") {
-    if ($options->{'timezone'}) {
-      $tz = $options->{'timezone'};
-    } elsif ($options->{'tz'}) {
-      $tz = $options->{'tz'};
-    }
-  }
-  if ($tz) {
-    return $tz;
-  } else {
-    $tz = get_weather( $req_info, 'timezone' );
-    $logger->debug( "Timezone ", $tz );
-
-    # FIXME: need to do better with time zones
-    $tz =~ s#E.T#America/New_York#;
-    $tz =~ s#C.T#America/Chicago#;
-    $tz =~ s#M.T#America/Denver#;
-    $tz =~ s#P.T#America/Los_Angeles#;
-    return $tz
-  }
-  return undef;
+  my($req_info) = @_;
+  my $tz = Kynetx::Request::get_attr($req_info,"_timezone") || "UTC";
+  return $tz;
 }
+
 
 sub local_time_between {
 

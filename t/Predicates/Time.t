@@ -29,7 +29,7 @@ use Data::Dumper;
 # most Kyentx modules require this
 use Log::Log4perl qw(get_logger :levels);
 Log::Log4perl->easy_init($INFO);
-#Log::Log4perl->easy_init($DEBUG);
+Log::Log4perl->easy_init($DEBUG);
 
 
 use LWP::Simple;
@@ -42,17 +42,17 @@ use Kynetx::Predicates::Time qw/:all/;
 
 my $preds = Kynetx::Predicates::Time::get_predicates();
 my @pnames = keys (%{ $preds } );
-plan tests => 26 + int(@pnames);
+plan tests => 21 + int(@pnames);
 
 
-my $NYU_req_info;
-$NYU_req_info->{'ip'} = '128.122.108.71'; # New York (NYU)
+my $NYU_req_info = Kynetx::Test::gen_req_info();
+Kynetx::Request::add_event_attr($NYU_req_info,'_timezone', 'America/New_York'); # New York (NYU)
 
-my $Amazon_req_info;
-$Amazon_req_info->{'ip'} = '72.21.203.1'; # Seattle (Amazon)
+my $Amazon_req_info  = Kynetx::Test::gen_req_info();
+Kynetx::Request::add_event_attr($Amazon_req_info, '_timezone','America/Los_Angeles'); # Seattle (Amazon)
 
-my $BYU_req_info;
-$BYU_req_info->{'ip'} = '128.187.16.242'; # Utah (BYU)
+my $BYU_req_info  = Kynetx::Test::gen_req_info();
+Kynetx::Request::add_event_attr($BYU_req_info, '_timezone', 'America/Denver'); # Utah (BYU)
 
 my %rule_env = ();
 
@@ -77,26 +77,6 @@ is(get_local_time($Amazon_req_info)->time_zone->name,
 is(get_local_time($BYU_req_info)->time_zone->name,
    "America/Denver",
    "Checking mountain time zone");
-
-ok(&{$preds->{'morning'}}($BYU_req_info) ?
-     &{$preds->{'daytime'}}($BYU_req_info) : 1,
-   "Its daytime if it's morning");
-
-ok(&{$preds->{'lunch_time'}}($BYU_req_info) ?
-     &{$preds->{'daytime'}}($BYU_req_info) : 1,
-   "Its daytime if it's lunchtime");
-
-ok(&{$preds->{'late_morning'}}($BYU_req_info) ?
-     &{$preds->{'daytime'}}($BYU_req_info) : 1,
-   "Its daytime if it's late morning");
-
-ok(&{$preds->{'early_afternoon'}}($BYU_req_info) ?
-     &{$preds->{'daytime'}}($BYU_req_info) : 1,
-   "Its daytime if it's early afternoon");
-
-ok(&{$preds->{'early_afternoon'}}($BYU_req_info) ?
-     &{$preds->{'daytime'}}($BYU_req_info) : 1,
-   "Its daytime if it's early afternoon");
 
 
 ok(&{$preds->{'weekday'}}($BYU_req_info) ?

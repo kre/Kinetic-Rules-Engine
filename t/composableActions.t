@@ -27,7 +27,6 @@ use Test::Deep;
 
 use Apache::Session::Memcached;
 use DateTime;
-use Geo::IP;
 use Cache::Memcached;
 use LWP::Simple;
 use LWP::UserAgent;
@@ -62,6 +61,8 @@ Log::Log4perl->easy_init($INFO);
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
+
+my $logger = get_logger();
 
 my $r = Kynetx::Test::configure();
 
@@ -104,14 +105,6 @@ sub local_gen_req_info {
 
 my $dummy_final_req_info = undef;
 my $final_req_info = {};
-
-
-#diag Dumper gen_req_info();
-
-# $Amazon_req_info->{'ip'} = '72.21.203.1'w; # Seattle (Amazon)
-# $Amazon_req_info->{'rid'} = $rid;
-# $Amazon_req_info->{'txn_id'} = 'txn_id';
-# $Amazon_req_info->{'caller'} = 'http://www.google.com/search';
 
 my (@test_cases, $json, $krl,$result);
 
@@ -300,8 +293,9 @@ _KRL_
 $my_req_info->{'rid'} = mk_rid_info($my_req_info,'inline');
 $result = doer($my_req_info, $krl, $session);
 
-cmp_deeply($result,re(qr/varfarb=.\d{4}.\d{2}.\d{2}T\d{2}.\d{2}.\d{2}.\d{2}.\d{2}fiddyfiddyfappap/),"inline defaction");
+cmp_deeply($result,re(qr/varfarb=.\d{4}.\d{2}.\d{2}T\d{2}.\d{2}.\d{2}Zfiddyfiddyfappap/),"inline defaction");
 $test_count++;
+
 
 cmp_deeply($result,re(qr/kGrowl\(msg,config\).+alert\(msg\)/),"inline defaction actions expressed correctly");
 $test_count++;
@@ -582,7 +576,7 @@ $my_req_info->{'rid'} = mk_rid_info($my_req_info,'inline2');
 $options = {"eventtype" => "received", 
 	    "domain" => "mail",
 	    "directives" => 1,
-	    "diag" => 1,
+	    "diag" => 0,
 	   };
 $result = doer($my_req_info, $krl, $session, $options);
 
