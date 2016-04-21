@@ -104,8 +104,9 @@ sub build_request_env {
   if ($content_type eq 'application/json') {
 
     my $body = retrieve_json_from_post($r);
-#    $logger->debug("Body: ", $body);
+    # $logger->debug("Body: ", $body);
     $body_params = JSON::XS::->new->convert_blessed(1)->pretty(1)->decode($body || "{}");
+    #$logger->debug("Body params: ", sub { Dumper $body_params});
 
     # you'd think you could just grab the POST body and parse it here, setting the 
     # params as necessary. Unfortunately, it's not that simple since parsing the request
@@ -212,18 +213,17 @@ sub build_request_env {
   };
 
   foreach my $n (keys %{$req_params}) {
-    my $enc = Kynetx::Util::str_in( $req_params->{$n} );
-    $logger->trace( "Param $n -> ", $req_params->{$n}, " ", $enc );
+    # $logger->debug( "Param $n -> ", sub{Dumper $req_params->{$n} });
     my $not_attr = {
       '_rids'   => 1,
       '_eci'   => 1,
       'referer' => 1
     };
     if ( $not_attr->{$n} ) {
-      $request_info->{$n} = $enc;
+      	$request_info->{$n} = $req_params->{$n};
     }
     else {
-      add_event_attr( $request_info, $n, $enc );
+      add_event_attr( $request_info, $n, $req_params->{$n} );
     }
   }
 
@@ -257,6 +257,8 @@ sub add_event_attr {
     my ( $req_info, $attr_name, $attr_val ) = @_;
 
     my $logger = get_logger();
+    # not doing UTF encoding on attributes for now...
+    # my $enc = Kynetx::Util::str_in( $attr_val );
 
     my $reserved = {"type" => 1
 		   };

@@ -32,6 +32,8 @@ use JSON::XS;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
+use Math::Random;
+
 use Schedule::Cron::Events;
 
 # most Kyentx modules require this
