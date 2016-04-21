@@ -265,7 +265,7 @@ sub _normalize {
     my $skip_rids = join("|", @{ (SKIP_RIDS) } );
 #    my $logger = get_logger();
 #    $logger->debug("Text for $eid: \n", $obj->{'text'});
-    my @items = grep(/^\d+\s+\d+\s+$eid\s+/,split(/\n/,$obj->{'text'}));
+    my @items = grep(/^\d+\s+$eid\s+/,split(/\n/,$obj->{'text'}));
 #    $logger->debug("Seeing items", sub{ Dumper \@items });
     my $timestamp = DateTime->from_epoch( epoch => $obj->{'created'} );
     my $struct = {
