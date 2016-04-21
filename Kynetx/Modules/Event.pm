@@ -394,6 +394,9 @@ sub _send_event {
 
     $logger->trace( "Body of event: ", sub { Dumper $body} );
 
+    my $eventdomain = $attrs->{"_domain"};
+    my $eventtype = $attrs->{"_type"};
+
     my $request;
     $request = AnyEvent::HTTP::http_request(
 		    'POST' => $esl,
@@ -419,14 +422,14 @@ sub _send_event {
 			# my $ilogger = get_logger();
 			# $ilogger->debug( "HDR: ", sub { Dumper($hdr) } );
 			if ( $hdr->{Status} =~ /^2/ ) {
-			    $logger->debug(
-					   "------------------------ event:send() success for $esl");
+			    $logger->info(
+					   "------ event:send($eventdomain:$eventtype) success for $esl ------");
 
 			    # this is where we would parse returned directives and add them to $dd
 			} else {
 			    my $err_msg =
-			      "------------------------ event:send() failed for $esl, ($hdr->{Status}) $hdr->{Reason}";
-			    $logger->debug($err_msg);
+			      "----- event:send() failed for $esl, ($hdr->{Status}) $hdr->{Reason} -----";
+			    $logger->info($err_msg);
 			}
 			undef $request;
 			$cv->end;
