@@ -437,6 +437,7 @@ sub list_tokens {
 			push(@tokens_array,{"name" => $label,
 					    "cid" => $eci,
 					    "attributes" => $obj->{"attributes"},
+					    "policy" => $obj->{'policy'},
 					    "type" => $obj->{"endpoint_type"},
 					    "last_active" => $obj->{"last_active"}
 					   });
