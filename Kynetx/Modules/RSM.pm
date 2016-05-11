@@ -479,6 +479,8 @@ sub do_delete {
     (Kynetx::Modules::PCI::developer_authorized($req_info,$rule_env,$session,['ruleset','create']) && $ken eq $owner)
   ) {
     Kynetx::Persistence::Ruleset::delete_registry($flush_rid);
+    _flush($flush_rid);
+
   }
 }
 
