@@ -156,6 +156,12 @@ sub build_request_env {
                   || $r->headers_in->{'Kobj-Session'};
   my $api      = $options->{'api'}      || 'ruleset';
 
+  # allow the random EID to be overridden
+  $eid =  $req_params->{'_eid'} 
+       || $body_params->{'_eid'}
+       || $eid;
+
+
   # build initial envv
   my $ug = new Data::UUID;
 

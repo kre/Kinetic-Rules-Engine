@@ -183,7 +183,6 @@ is(Kynetx::Request::get_attr($my_req_info, "type"), undef, $description);
 $test_count++;
 
 
-
 ######################### Clean up
 Kynetx::Test::flush_test_user($user_ken,$user_username);
 
