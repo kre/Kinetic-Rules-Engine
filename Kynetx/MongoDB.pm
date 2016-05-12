@@ -840,33 +840,33 @@ sub get_blob {
 }
 
 sub put_hash_element {
-	my ($collection,$vKey,$hKey,$val) = @_;
-	my $logger = get_logger();
-	my $timestamp = DateTime->now->epoch;
+    my ($collection,$vKey,$hKey,$val) = @_;
+    my $logger = get_logger();
+    my $timestamp = DateTime->now->epoch;
     my $c = get_collection($collection);
-	if (ref $hKey eq 'ARRAY') {
-	  return unless verify_hash_path($hKey);
-		delete_hash_element($collection,$vKey,$hKey);
-		my @adds = ();
-		my $a_of_hash_elements = Kynetx::Util::hash_to_elements($val->{'value'},$hKey);
-		if (ref $a_of_hash_elements ne "ARRAY") {
-			push(@adds, $a_of_hash_elements);
-		} else {
-			@adds = @$a_of_hash_elements;
-		}
-		my @batch_elements = ();
-		my $timestamp = DateTime->now->epoch;
-		foreach my $element (@adds) {
-			my $object = clone $vKey;
-			$object->{'hashkey'} = $element->{'ancestors'};
-			$object->{'value'} = $element->{'value'};
-			$object->{'created'} = $timestamp;
-			push(@batch_elements,$object);
-		}
-		my @ids = $c->batch_insert(\@batch_elements);
-		$logger->trace("Inserted ",scalar @ids," hash element(s)");
-		clear_cache($collection,$vKey);
-		return scalar @ids;
+    if (ref $hKey eq 'ARRAY') {
+	return unless verify_hash_path($hKey);
+	delete_hash_element($collection,$vKey,$hKey);
+	my @adds = ();
+	my $a_of_hash_elements = Kynetx::Util::hash_to_elements($val->{'value'},$hKey);
+	if (ref $a_of_hash_elements ne "ARRAY") {
+	    push(@adds, $a_of_hash_elements);
+	} else {
+	    @adds = @$a_of_hash_elements;
+	}
+	my @batch_elements = ();
+	my $timestamp = DateTime->now->epoch;
+	foreach my $element (@adds) {
+	    my $object = clone $vKey;
+	    $object->{'hashkey'} = $element->{'ancestors'};
+	    $object->{'value'} = $element->{'value'};
+	    $object->{'created'} = $timestamp;
+	    push(@batch_elements,$object);
+	}
+	my @ids = $c->batch_insert(\@batch_elements);
+	$logger->trace("Inserted ",scalar @ids," hash element(s)");
+	clear_cache($collection,$vKey);
+	return scalar @ids;
 	}
 }
 
