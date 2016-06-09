@@ -73,7 +73,7 @@ sub get_rules_from_repository {
   my $requests_so_far  = Kynetx::System::Ruleset::read("rid_usage",$logging_path) 
                       || 0;
   $logger->debug("Requests for $rid_string: ", $requests_so_far);
-  Kynetx::System::Ruleset::write("rid_usage",$logging_path,$requests_so_far++);
+  Kynetx::System::Ruleset::write("rid_usage",$logging_path,$requests_so_far+1);
 
   my $rid = Kynetx::Rids::get_rid($rid_info);
 

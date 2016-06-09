@@ -52,6 +52,8 @@ sub write {
     if (Kynetx::MongoDB::validate($value)) {
 	$status = Kynetx::Persistence::Application::put_hash_app_element($rid,$var,$path,$value);
     }
+    my $logger = get_logger();
+    $logger->debug("writing ", "[".join(",",@{$path})."] -> ", $value);
     return $status;
 }
 
