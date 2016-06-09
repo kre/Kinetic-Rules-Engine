@@ -895,9 +895,11 @@ sub delete_hash_element {
 		if ($success->{'ok'}) {
 		    my $count = $success->{'n'};
 		    $logger->trace("Deleted $count hash element(s) from ", $del->{'key'});
+		    return 1;
 		} else {
 		    $logger->trace("Mongodb error trying to delete ", sub {Dumper($del)},
 				   " error msg: ", $success->{'err'});
+		    return 0;
 		}
 	    } else {
 		$logger->warn("Mongodb error trying to delete ", sub {Dumper($del)});

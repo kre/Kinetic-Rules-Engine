@@ -62,4 +62,17 @@ sub read {
     return $val
 }
 
+sub delete {
+    my($var, $path) = @_;
+    my $rid = system_rid();
+    my $status = 0;
+    if (defined $path) {
+	$status = Kynetx::Persistence::Application::delete_hash_app_element($rid,$var,$path);
+    } else {
+	$status = Kynetx::Persistence::Application::delete($rid,$var);
+    }
+    return $status;
+}
+
+
 1;

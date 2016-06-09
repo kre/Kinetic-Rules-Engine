@@ -45,6 +45,7 @@ use Kynetx::Repository::HTTP;
 use Kynetx::Repository::File;
 use Kynetx::Repository::XDI;
 use Kynetx::Persistence::Ruleset;
+use Kynetx::System::Ruleset;
 
 our $VERSION = 1.00;
 our @ISA     = qw(Exporter);
@@ -65,6 +66,14 @@ sub get_rules_from_repository {
   my ( $rid_info, $req_info, $sversion, $localparsing, $text ) = @_;
 
   my $logger = get_logger();
+
+  # log RID usage
+  my $rid_string = Kynetx::Rids::print_rid_info($rid_info);
+  my $logging_path = ["requests",$rid_string];
+  my $requests_so_far  = Kynetx::System::Ruleset::read("rid_usage",$logging_path) 
+                      || 0;
+  $logger->debug("Requests for $rid_string: ", $requests_so_far);
+  Kynetx::System::Ruleset::write("rid_usage",$logging_path,$requests_so_far++);
 
   my $rid = Kynetx::Rids::get_rid($rid_info);
 

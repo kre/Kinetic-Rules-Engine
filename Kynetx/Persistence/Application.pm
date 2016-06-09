@@ -110,7 +110,7 @@ sub delete_hash_app_element {
     my $key = {
         "rid" => $rid,
         "key" => $var};
-    Kynetx::MongoDB::delete_hash_element(COLLECTION,$key,$hvar);	
+    return Kynetx::MongoDB::delete_hash_element(COLLECTION,$key,$hvar);	
 }
 
 sub put_hash_app_element {
@@ -160,9 +160,6 @@ sub get_created {
     my ($rid,$var) = @_;
     return get($rid,$var,1);
 }
-
-
-
 
 sub put {
     my ($rid,$var,$val,$expires) = @_;

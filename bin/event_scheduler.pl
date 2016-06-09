@@ -289,8 +289,8 @@ sub startDaemon {
   eval {Proc::Daemon::Init({
     work_dir => Kynetx::Configure::get_config('KOBJ_ROOT'),
     pid_file => $PIDFILE,
-    child_STDERR => '+>>/tmp/error.txt',
-    child_STDOUT => '+>>/tmp/error.txt',
+    child_STDERR => '+>>$LOG_DIR/error.txt',
+    child_STDOUT => '+>>$LOG_DIR/error.txt',
   });};
   if ($@) {
     dienice("Unable to start $ME daemon: $@");
@@ -344,7 +344,7 @@ sub cron_dispatcher {
     my $req = new HTTP::Request 'POST', $url;
     my $response = $ua->request($req);
     $logger->debug("Args: ",join(" ",@args));
-    $logger->debug("Code: ",$response->code());
+#    $logger->debug("Code: ",$response->code());
     $logger->debug("Status: ",$response->status_line());    
   } else {
     $logger->debug("Parent process ($p_parent) not found");

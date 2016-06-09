@@ -90,6 +90,41 @@ $result =  Kynetx::System::Ruleset::read("flip",$extended_path);
 is_deeply($result, $extended_expected, "exteneded path result for ". $desc);
 $test_count += 3;
 
+$desc = "delete simple value at [key0]";
+$expected = undef;
+$path = ["key0"];
+$status = Kynetx::System::Ruleset::delete("flip", $path);
+
+ok($status, $desc . ": status");
+$result =  Kynetx::System::Ruleset::read("flip",$path);
+is($result, $expected, $desc. ": value");
+$test_count += 2;
+
+$desc = "delete simple value at [key1,foo]";
+$path = ["key1","foo"];
+$status = Kynetx::System::Ruleset::delete("flip", $path);
+
+ok($status, $desc . ": status");
+$result =  Kynetx::System::Ruleset::read("flip",$path);
+$expected = undef;
+is($result, $expected, $desc. ": value");
+$extended_path = ["key1","bar"];
+$result =  Kynetx::System::Ruleset::read("flip",$extended_path);
+$expected = "bird";
+is_deeply($result, $expected, "result for ". $desc);
+$test_count += 3;
+
+
+$desc = "delete entire var";
+$status = Kynetx::System::Ruleset::delete("flip");
+ok($status, $desc . ": status");
+$expected = undef;
+$result =  Kynetx::System::Ruleset::read("flip",[]);
+is($result, $expected, $desc. ": value");
+$test_count += 2;
+
+
+
 # TODO: 
 # - cleanup, delete
 
