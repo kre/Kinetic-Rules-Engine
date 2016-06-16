@@ -310,14 +310,14 @@ if ($tsmin > 59) {
 
 my $description = "Create a new recurring event";
 $timespec = "$tsmin * * * *";
-$attr->{'timezone'} = 'America/Denver';
+$attr->{'_timezone'} = 'America/Denver';
 my $sched_id = Kynetx::Persistence::SchedEv::repeating_event($user_ken,$rid,$domain,$ename1,$timespec,$attr);
 #ll("Created: $sched_id");
 my $schedEv = Kynetx::Persistence::SchedEv::get_sched_ev($sched_id);
 #ll("$sched_id: ", sub {Dumper($schedEv)});
 
 $description = "Check event list";
-my $schedev1 = [$sched_id,"$domain/$ename1",'repeat',$rid,re(qr/\d{10}/)];
+my $schedev1 = [$sched_id,"$domain/$ename1",'repeat',$rid,re(qr/\d{10}/),$timespec];
 my $expected = [$schedev1];
 cmp_deeply(get_eventinfo($my_req_info, 'get_list', [],$sky_session), $expected, $description);
 $test_count++;
@@ -332,10 +332,32 @@ my $single_event_id = $sched_id;
 $description = "Check event list (repeat and single)";
 my $schedev2 = [$sched_id,"$domain/$ename2",'once',$rid,re(qr/\d{10}/)];
 $expected = bag($schedev2,$schedev1);
+my $expected_map = 
+  [
+   {
+    'next_scheduled' => $schedev1->[4],
+    'rid' => $rid,
+    'type' => 'repeat',
+    'id' => $schedev1->[0],
+    'event' => $schedev1->[1],
+    'timespec' => $schedev1->[5]
+   },
+   {
+    'next_scheduled' => $schedev2->[4],
+    'rid' => $rid,
+    'type' => 'once',
+    'id' => $schedev2->[0],
+    'event' => $schedev2->[1],
+   }
+  ];
+
 my $result = get_eventinfo($my_req_info, 'get_list', [],$sky_session);
-#ll("$sched_id: ", sub {Dumper($result)});
+my $result_map = get_eventinfo($my_req_info, 'list_scheduled_events', [],$sky_session);
+#ll("$sched_id: ", sub {Dumper($result_map)});
+#diag Dumper $result_map;
 cmp_deeply($result, $expected, $description);
-$test_count++;
+cmp_deeply($result_map, $expected_map, $description." as map");
+$test_count+=2;
 
 # Check that the single event can be called
 my $url = $dn . $single_event_id;
@@ -347,11 +369,10 @@ $result = $ua->get($url);
 is($result->code(),'200',$description);
 $test_count++;
 
-sleep 2; 
+sleep 5; 
 
 $description = "Get history of single event";
 $result = get_eventinfo($my_req_info, 'get_history', [$single_event_id],$sky_session);
-#ll("history $sched_id: ", sub {Dumper($result)});
 is($result->{'code'},'200',$description);
 $test_count++;
 

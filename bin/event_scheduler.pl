@@ -486,7 +486,7 @@ sub cron_loop {
   }
   my $limit = 0;
   if ($num_events > 0) {
-    my $cron = new Schedule::Cron(\&cron_dispatcher,processprefix => "perl_cron");  
+    my $cron = new Schedule::Cron(\&cron_dispatcher,processprefix => "picoengine_cron");  
     foreach my $sched_id (@{$cron_list}) {
       my $schedEv = Kynetx::Persistence::SchedEv::get_and_lock($sched_id,$pid);
       #$logger->debug("Event: ",sub {Dumper($schedEv)});
@@ -517,7 +517,7 @@ sub cron_loop {
         } else {
           $logger->debug("No cron jobs to run")
         }
-        $cron = new Schedule::Cron(\&cron_dispatcher,processprefix => "perl_cron"); 
+        $cron = new Schedule::Cron(\&cron_dispatcher,processprefix => "picoengine_cron"); 
       }
     }
     

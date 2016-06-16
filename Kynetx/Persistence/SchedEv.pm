@@ -133,7 +133,8 @@ sub _handler {
 	update($sched_id,'last',$status);
 	  
     } else {
-	$logger->warn("--------Invalid SchedEv Id $sched_id--------");
+	$logger->warn("--------Invalid SchedEv Id $sched_id--------");	
+	set_expiration($sched_id); # get rid of it 
 	return Apache2::Const::OK;
     }	
     $logger->debug("--------SchedEv END-----------");
@@ -182,6 +183,7 @@ sub update {
     'update' => $update,
     'new' => $new_val
   };
+#  $logger->debug("Updating scheduled event record: ", sub {Dumper $findandmodify});
   my $result = Kynetx::MongoDB::find_and_modify(COLLECTION,$findandmodify);
   return Kynetx::MongoDB::normalize($result);
 }
@@ -246,11 +248,11 @@ sub get_and_lock {
 sub get_sched_ev {
   my ($schedEv_id) = @_;
   my $logger = get_logger();
-	my $mongoid = MongoDB::OID->new("value" => $schedEv_id);
-	my $mongo_key = {
-		"_id" => $mongoid
-	};
-	my $result = Kynetx::MongoDB::get_value(COLLECTION,$mongo_key);
+  my $mongoid = MongoDB::OID->new("value" => $schedEv_id);
+  my $mongo_key = {
+		   "_id" => $mongoid
+		  };
+  my $result = Kynetx::MongoDB::get_value(COLLECTION,$mongo_key);
   return Kynetx::MongoDB::normalize($result);
 }
 
@@ -398,18 +400,49 @@ sub schedev_query {
       } else {
         $etype = 'repeat'
       }
+#      $logger->debug("Scheduled event: ", sub {Dumper $object});
+      $logger->debug("Scheduled event cron_id: ", $object->{"cron_id"});
       my $next = $object->{'next_schedule'};
       my $domain = $object->{'domain'};
       my $event_name = $object->{'event_name'};
       my $rid = $object->{'source'};
-      my @temp = [$mongoid,"$domain/$event_name",$etype,$rid,$next];
-      push(@list,@temp);
+      my @temp = ($mongoid,"$domain/$event_name",$etype,$rid,$next);
+      if (defined $object->{"timespec"}) {
+	  $temp[5]= $object->{"timespec"};
+      }
+      if (defined $object->{"name"}) {
+	  $temp[6]= $object->{"name"};
+      }
+      push(@list,\@temp);
     }
     return \@list;
   } 
   return undef; 
 }
 
+# this is a big hack to get a hash
+sub schedev_query_hash {
+  my ($ken,$key) = @_;
+  my $logger = get_logger();
+  my $list = schedev_query($ken, $key);
+  my $new_list = [];
+  foreach my $event (@{$list}) {
+      my $temp = {'id' => $event->[0],
+		  'event' => $event->[1],
+		  'type' => $event->[2],
+		  'rid' => $event->[3],
+		  'next_scheduled' => $event->[4],
+		 };
+      if (defined $event->[5]) {
+	  $temp->{'timespec'} = $event->[5];
+      }
+      if (defined $event->[6]) {
+	  $temp->{'name'} = $event->[6];
+      }
+      push(@{$new_list}, $temp);
+  }
+  return $new_list;
+}
 
 sub get_schedev_list {
   my ($key) = @_;
@@ -487,16 +520,31 @@ sub repeating_event {
       (defined $domain) && 
       (defined $eventname))
     ); 
+
+
+  my $name;
+  if (ref $attr eq "HASH" && $attr->{'_name'}) {
+    $name = $attr->{'_name'};
+    my $key = { 'source' => $rid};
+    my $list = Kynetx::Persistence::SchedEv::schedev_query( $ken, $key );
+    $logger->debug("Events with name $name: ", sub {Dumper $list});
+    foreach my $event (@{$list}) {
+	# if we find an event with this name, we can return its ID
+	if (defined $event->[6] && $event->[6] eq $name) {
+	    my $sched_id = $event->[0] ;
+	    $logger->debug("Scheduled event named $name already exists as $sched_id; skipping");
+	    return $sched_id
+	}
+    }
+  }
   
   my $timezone = DateTime::TimeZone::UTC->new;
   
-  if (ref $attr eq "HASH" && $attr->{'timezone'}) {
-    $timezone = $attr->{'timezone'};
+  if (ref $attr eq "HASH" && $attr->{'_timezone'}) {
+    $timezone = $attr->{'_timezone'};
   }
   my $dt = DateTime->now;
   $dt->set_time_zone($timezone);
-  
-  
   
   my $cron = DateTime::Event::Cron->new(cron => $timespec,user_mode => 0);
   
@@ -510,7 +558,8 @@ sub repeating_event {
     'domain' => $domain,
     'event_name' => $eventname,
     'timespec' => $timespec,
-    'next_schedule' => $next
+    'next_schedule' => $next,
+    'name' => $name
   };
   
   if (defined $attr) {

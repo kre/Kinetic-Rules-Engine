@@ -67,14 +67,6 @@ sub get_rules_from_repository {
 
   my $logger = get_logger();
 
-  # log RID usage
-  my $rid_string = Kynetx::Rids::print_rid_info($rid_info);
-  my $logging_path = ["requests",$rid_string];
-  my $requests_so_far  = Kynetx::System::Ruleset::read("rid_usage",$logging_path) 
-                      || 0;
-  $logger->debug("Requests for $rid_string: ", $requests_so_far);
-  Kynetx::System::Ruleset::write("rid_usage",$logging_path,$requests_so_far+1);
-
   my $rid = Kynetx::Rids::get_rid($rid_info);
 
   # default to production for svn repo
@@ -122,6 +114,13 @@ sub get_rules_from_repository {
     return $ruleset;
   }
 
+  # log RID usage if not cached
+  my $rid_string = Kynetx::Rids::print_rid_info($rid_info);
+  my $logging_path = ["requests",$rid_string];
+  my $requests_so_far  = Kynetx::System::Ruleset::read("rid_usage",$logging_path) 
+                      || 0;
+  $logger->debug("Requests for $rid_string: ", $requests_so_far);
+  Kynetx::System::Ruleset::write("rid_usage",$logging_path,$requests_so_far+1);
 
   # this gets cleared when we're done
   $logger->trace("Setting parsing semaphore for $rs_key");

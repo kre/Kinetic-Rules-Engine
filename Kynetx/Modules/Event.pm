@@ -471,6 +471,24 @@ sub scheduled_event_list {
 }
 $funcs->{'get_list'} = \&scheduled_event_list;
 
+sub scheduled_event_list_hash {
+  my ( $req_info, $function, $args, $session ) = @_;
+  my $logger = get_logger();
+  my $rid    = get_rid( $req_info->{'rid'} );
+  if ( defined $session ) {
+    my $ken = Kynetx::Persistence::KEN::get_ken( $session, $rid );
+    my $key = { 'source' => $rid };
+    my $list = Kynetx::Persistence::SchedEv::schedev_query_hash( $ken, $key );
+    return $list;
+  }
+  else {
+    $logger->warn("Event list requested, but session not provided");
+    return undef;
+  }
+
+}
+$funcs->{'list_scheduled_events'} = \&scheduled_event_list_hash;
+
 sub delete_scheduled_event {
   my ( $req_info, $function, $args, $session ) = @_;
   my $logger = get_logger();
@@ -489,18 +507,20 @@ sub delete_scheduled_event {
   }  
 }
 $funcs->{'delete'} = \&delete_scheduled_event;
+$funcs->{'delete_scheduled_event'} = \&delete_scheduled_event;
 
 sub get_schedev_history {
   my ( $req_info, $function, $args, $session ) = @_;
   my $logger = get_logger();
   my $rid    = get_rid( $req_info->{'rid'} );
-  $logger->trace("Args: ", sub {Dumper($args)});
+  #$logger->debug("Args: ", sub {Dumper($args)});
   my $sched_id = $args->[0];
   return undef unless ($sched_id);
   if ( defined $session ) {
     my $f = DateTime::Format::RFC3339->new();
     my $ken = Kynetx::Persistence::KEN::get_ken( $session, $rid );
     my $sched_ev = Kynetx::Persistence::SchedEv::get_sched_ev($sched_id);
+    $logger->debug("Event in history: ", sub{Dumper $sched_ev});
     if ( (defined $sched_ev) && 
           ($sched_ev->{'source'} eq $rid) && 
           ($sched_ev->{'ken'} eq $ken) ) {
@@ -527,5 +547,6 @@ sub get_schedev_history {
   return undef;
 }
 $funcs->{'get_history'} = \&get_schedev_history;
+$funcs->{'scheduled_event_history'} = \&get_schedev_history;
 
 1;

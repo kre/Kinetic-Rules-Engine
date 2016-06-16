@@ -104,13 +104,19 @@ my $r_min = int (rand(59));
 my $description = "Create a new recurring event";
 $domain = "notification";
 $eventname = $ename;
-$attr->{'timezone'} = 'America/Denver';
+$attr->{'_timezone'} = 'America/Denver';
+$attr->{'_name'} = 'flipper00';
 $timespec = "$r_min * * * *";
 my $sched_id = Kynetx::Persistence::SchedEv::repeating_event($user_ken,$rid,$domain,$eventname,$timespec,$attr);
 isnt($sched_id,undef,$description);
 $num_tests++;
 $logger->debug("SchedEv: $sched_id");
 $num_events++;
+
+my $description = "Create a new recurring event with same name";
+my $second_sched_id = Kynetx::Persistence::SchedEv::repeating_event($user_ken,$rid,$domain,$eventname,$timespec,$attr);
+$num_tests++;
+is($sched_id, $second_sched_id, $description); #check idempotent
 
 $description = "Check that event is saved to database";
 my $schedEv = Kynetx::Persistence::SchedEv::get_sched_ev($sched_id);
