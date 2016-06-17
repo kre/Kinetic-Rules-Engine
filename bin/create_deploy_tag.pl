@@ -32,7 +32,7 @@ my $ver = $dt->ymd('').sprintf("%.2d",$dt->hour()).sprintf("%.2d",$dt->min())."_
 
 
 use vars qw/ %opt /;
-my $opt_string = 'm:ns';
+my $opt_string = 'm:ns?h';
 getopts( "$opt_string", \%opt ); 
 &usage() if $opt{'h'} || $opt{'?'};
 
