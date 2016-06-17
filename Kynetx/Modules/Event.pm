@@ -56,6 +56,8 @@ use Kynetx::Persistence::SchedEv;
 use Kynetx::Persistence::KEN;
 use Kynetx::ExecEnv;
 use Kynetx::Modules::HTTP;
+use Kynetx::Environments qw/:all/;
+use Kynetx::Parser;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
@@ -69,7 +71,12 @@ sub get_predicates {
   return $predicates;
 }
 
-my $actions = { send => { directive => \&send_event }, };
+my $actions = { send => { directive => \&send_event }, 
+		remove_scheduled => {'js' => '',
+				     'before' => \&delete_scheduled_event_action,
+				     'after' => []
+				    },
+	      };
 
 sub get_actions {
   return $actions;
@@ -509,6 +516,21 @@ sub delete_scheduled_event {
 $funcs->{'delete'} = \&delete_scheduled_event;
 $funcs->{'delete_scheduled_event'} = \&delete_scheduled_event;
 
+sub delete_scheduled_event_action {
+  my($req_info,$rule_env,$session,$config,$mods,$args,$vars)  = @_;
+
+  my $status = delete_scheduled_event( $req_info, undef, $args, $session );
+
+  my $v = $vars->[0] || '__dummy';
+
+  # return a boolean
+  my $resp = {$v => Kynetx::Parser::mk_expr_node('bool', $status ? 'true' : 'false')} 
+    unless $v eq '__dummy';
+  $rule_env = add_to_env($resp, $rule_env);
+
+
+}
+
 sub get_schedev_history {
   my ( $req_info, $function, $args, $session ) = @_;
   my $logger = get_logger();
@@ -520,7 +542,7 @@ sub get_schedev_history {
     my $f = DateTime::Format::RFC3339->new();
     my $ken = Kynetx::Persistence::KEN::get_ken( $session, $rid );
     my $sched_ev = Kynetx::Persistence::SchedEv::get_sched_ev($sched_id);
-    $logger->debug("Event in history: ", sub{Dumper $sched_ev});
+#    $logger->debug("Event in history: ", sub{Dumper $sched_ev});
     if ( (defined $sched_ev) && 
           ($sched_ev->{'source'} eq $rid) && 
           ($sched_ev->{'ken'} eq $ken) ) {

@@ -258,14 +258,15 @@ sub get_sched_ev {
 
 sub delete_sched_ev {
   my ($schedEv_id,$ken,$rid) = @_;
-  my $logger = get_logger();
-	my $mongoid = MongoDB::OID->new("value" => $schedEv_id);
-	my $mongo_key = {
-		"_id" => $mongoid,
-		"ken" => $ken,
-		"source" => $rid
-	};
+#  my $logger = get_logger();
+  my $mongoid = MongoDB::OID->new("value" => $schedEv_id);
+  my $mongo_key = {
+		   "_id" => $mongoid,
+		   "ken" => $ken,
+		   "source" => $rid
+		  };
   my $result = Kynetx::MongoDB::delete_value(COLLECTION,$mongo_key);
+#  $logger->debug("Key for delete: ", sub{Dumper $mongo_key});
   if (defined $result && ref $result eq "HASH") {
     if ($result->{'ok'}) {
       return $result->{'n'};

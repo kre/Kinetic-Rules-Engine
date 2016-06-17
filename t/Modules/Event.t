@@ -44,6 +44,7 @@ use Kynetx::JavaScript qw/:all/;
 use Kynetx::Session qw/:all/;
 use Kynetx::Configure qw/:all/;
 use Kynetx::ExecEnv qw/:all/;
+use Kynetx::Environments qw/:all/;
 
 # required for schedev tests
 use Kynetx::Predicates::Time;
@@ -315,6 +316,7 @@ my $sched_id = Kynetx::Persistence::SchedEv::repeating_event($user_ken,$rid,$dom
 #ll("Created: $sched_id");
 my $schedEv = Kynetx::Persistence::SchedEv::get_sched_ev($sched_id);
 #ll("$sched_id: ", sub {Dumper($schedEv)});
+my $repeat_event_id = $sched_id;
 
 $description = "Check event list";
 my $schedev1 = [$sched_id,"$domain/$ename1",'repeat',$rid,re(qr/\d{10}/),$timespec];
@@ -353,8 +355,10 @@ my $expected_map =
 
 my $result = get_eventinfo($my_req_info, 'get_list', [],$sky_session);
 my $result_map = get_eventinfo($my_req_info, 'list_scheduled_events', [],$sky_session);
-#ll("$sched_id: ", sub {Dumper($result_map)});
-#diag Dumper $result_map;
+# diag "Result: ";
+# diag Dumper $result_map;
+# diag "Expected: ";
+# diag Dumper $expected_map;
 cmp_deeply($result, $expected, $description);
 cmp_deeply($result_map, $expected_map, $description." as map");
 $test_count+=2;
@@ -387,9 +391,37 @@ $test_count++;
 $description = "Check the event list";
 $expected = [$schedev1];
 $result = get_eventinfo($my_req_info, 'get_list', [],$sky_session);
-#ll("List: ", sub {Dumper($result)});
+#diag "List: ", Dumper($result);
 cmp_deeply($result, $expected, $description);
 $test_count++;
+
+
+$description = "remove_scheduled action";
+$krl_src = <<_KRL_;
+event:remove_scheduled("$repeat_event_id") setting (r);
+_KRL_
+
+$krl = Kynetx::Parser::parse_action($krl_src)->{'actions'}->[0];
+
+$js = Kynetx::Actions::build_one_action(
+        $krl,
+        $my_req_info,
+	$dd,
+        $rule_env,
+        $sky_session,
+        'callback23',
+        'stinky_cheese');
+
+$result = lookup_rule_env('r',$rule_env);
+#diag "Delete action result: ", Dumper $result;
+cmp_deeply($result, Kynetx::Parser::mk_expr_node('bool','true'), $description . " status");
+
+$result = get_eventinfo($my_req_info, 'get_list', [],$sky_session);
+$expected = [];
+cmp_deeply($result, $expected, $description . " empty list");
+$test_count += 2;
+
+
 
 Kynetx::Test::flush_test_user($user_ken,$uname);
 done_testing($test_count);

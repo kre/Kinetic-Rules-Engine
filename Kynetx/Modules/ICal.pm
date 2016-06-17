@@ -53,8 +53,9 @@ sub get_predicates {
   return $predicates;
 }
 
-my $actions = { send => { directive => \&send_event }, };
+#my $actions = { send => { directive => \&send_event }, };
 
+my $actions = {};
 sub get_actions {
   return $actions;
 }
