@@ -494,7 +494,7 @@ sub scheduled_event_list_hash {
   }
 
 }
-$funcs->{'list_scheduled_events'} = \&scheduled_event_list_hash;
+$funcs->{'list_scheduled'} = \&scheduled_event_list_hash;
 
 sub delete_scheduled_event {
   my ( $req_info, $function, $args, $session ) = @_;
@@ -514,7 +514,6 @@ sub delete_scheduled_event {
   }  
 }
 $funcs->{'delete'} = \&delete_scheduled_event;
-$funcs->{'delete_scheduled_event'} = \&delete_scheduled_event;
 
 sub delete_scheduled_event_action {
   my($req_info,$rule_env,$session,$config,$mods,$args,$vars)  = @_;
@@ -569,6 +568,6 @@ sub get_schedev_history {
   return undef;
 }
 $funcs->{'get_history'} = \&get_schedev_history;
-$funcs->{'scheduled_event_history'} = \&get_schedev_history;
+$funcs->{'scheduled_history'} = \&get_schedev_history;
 
 1;

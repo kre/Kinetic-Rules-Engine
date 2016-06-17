@@ -334,8 +334,7 @@ my $single_event_id = $sched_id;
 $description = "Check event list (repeat and single)";
 my $schedev2 = [$sched_id,"$domain/$ename2",'once',$rid,re(qr/\d{10}/)];
 $expected = bag($schedev2,$schedev1);
-my $expected_map = 
-  [
+my $expected_map = bag(
    {
     'next_scheduled' => $schedev1->[4],
     'rid' => $rid,
@@ -351,10 +350,10 @@ my $expected_map =
     'id' => $schedev2->[0],
     'event' => $schedev2->[1],
    }
-  ];
+  );
 
 my $result = get_eventinfo($my_req_info, 'get_list', [],$sky_session);
-my $result_map = get_eventinfo($my_req_info, 'list_scheduled_events', [],$sky_session);
+my $result_map = get_eventinfo($my_req_info, 'list_scheduled', [],$sky_session);
 # diag "Result: ";
 # diag Dumper $result_map;
 # diag "Expected: ";
@@ -376,7 +375,7 @@ $test_count++;
 sleep 5; 
 
 $description = "Get history of single event";
-$result = get_eventinfo($my_req_info, 'get_history', [$single_event_id],$sky_session);
+$result = get_eventinfo($my_req_info, 'scheduled_history', [$single_event_id],$sky_session);
 is($result->{'code'},'200',$description);
 $test_count++;
 
