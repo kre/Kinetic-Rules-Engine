@@ -32,16 +32,54 @@ my $ver = $dt->ymd('').sprintf("%.2d",$dt->hour()).sprintf("%.2d",$dt->min())."_
 
 
 use vars qw/ %opt /;
-my $opt_string = 'm:n';
+my $opt_string = 'm:ns';
 getopts( "$opt_string", \%opt ); 
-die "must supply message with -m" unless $opt{'m'};
+&usage() if $opt{'h'} || $opt{'?'};
 
 my $msg = $opt{"m"};
+my $show_changes = $opt{"s"};
 
-`git tag -a $ver -m "$msg"` unless $opt{"n"};
-print "push to server with this command\n";
-print "git push origin $ver", "\n";
+if($show_changes) {
+
+  my $tags = `git tag -l "*_prod_ver" |tail -2`;
+  my $tag_expr =  join("..", split(/\n/,$tags));
+  print "Changes between $tag_expr\n";
+  print `git log --pretty=oneline $tag_expr`;
+    
+
+} else {
+
+    die "must supply message with -m" unless $opt{'m'};
+    `git tag -a $ver -m "$msg"` ;
+    if ($opt{"n"}) {
+	print "push to server with this command\n";
+	print "git push origin $ver", "\n";
+    } else {
+	`git push origin $ver` 
+    }
+}
+
+1;
+
+sub usage {
+    print STDERR <<EOF;
+
+usage:  
+
+   create_deploy_tag.pl [-?sm]
+
+Create deploy tags for production
+
+Options:
+
+   -m       : message with tag
+   -n       : don't push to origin
+   -s       : show changes between tags (don't create tag)
 
 
+EOF
+
+exit;
+}
 
 1;
