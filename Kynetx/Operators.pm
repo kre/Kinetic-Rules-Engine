@@ -519,9 +519,13 @@ sub eval_map {
 
       }
     } else {
-      $logger->debug("map used in non-array or non-map context or without argument");
+      my $msg = "map used in non-array or non-map context or without argument";
+
+      my $offending_obj = Kynetx::PrettyPrinter::pp_expr($expr->{'obj'});
+
+      $logger->debug($msg);
       Kynetx::Errors::raise_error($req_info, 'warn',
-  				  "[map] used in non-array or non-map context or without argument",
+  				  "[map] $msg: $offending_obj",
 				  {'rule_name' => $rule_name,
 				   'genus' => 'operator',
 				   'species' => 'type mismatch'

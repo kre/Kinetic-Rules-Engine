@@ -2988,7 +2988,7 @@ for ($j = 0; $j < $i; $j++) {
 
 
 #---------- set persistent ----------
-my ($v, $r, $p, $x);
+my ($v, $x);
 
 $e[$i] = q#a.pset(ent:foo)#;
 $v = Kynetx::Parser::parse_expr($e[$i]);
@@ -3022,7 +3022,7 @@ $i+=3;
 
 
 #---------- set persistent hash ----------
-my ($v, $r, $p, $x);
+# my ($v, $r, $p, $x);
 
 #diag "---------------------- persistent hash ----------------";
 $e[$i] = q#a.pset(ent:foo{["flip"]})#;
