@@ -182,6 +182,12 @@ Kynetx::Request::add_event_attr($my_req_info, "type", "tope");
 is(Kynetx::Request::get_attr($my_req_info, "type"), undef, $description);
 $test_count++;
 
+$description = "Add an attribute";
+Kynetx::Request::add_event_attr($my_req_info, "name", "flop");
+is(Kynetx::Request::get_attr($my_req_info, "name"), "flop", $description);
+$test_count++;
+
+
 
 ######################### Clean up
 Kynetx::Test::flush_test_user($user_ken,$user_username);

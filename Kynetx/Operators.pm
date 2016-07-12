@@ -2234,9 +2234,9 @@ sub eval_defaults_to {
   my ($expr, $rule_env, $rule_name, $req_info, $session) = @_;
   my $logger = get_logger();
   my $obj = Kynetx::Expressions::eval_expr($expr->{'obj'}, $rule_env, $rule_name,$req_info, $session);
-  my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
   my $new_val = $obj;
   if (_is_null($obj)) {
+      my $rands = Kynetx::Expressions::eval_rands($expr->{'args'}, $rule_env, $rule_name,$req_info, $session);
       $new_val = $rands->[0];
       if (defined $rands->[1]  ) { # optional log message
 	  my $msg = Kynetx::Expressions::den_to_exp($rands->[1]);
