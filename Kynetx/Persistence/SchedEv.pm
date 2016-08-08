@@ -100,7 +100,10 @@ sub _handler {
     $logger->debug("--------SchedEv Id: $sched_id-----------");
 	
     if (defined $proc_id) {
-	return Apache2::Const::DECLINED unless sched_verify($sched_id,$proc_id);	  
+	if (sched_verify($sched_id,$proc_id)) {
+	    $logger->debug("--------Invalid SchedEv Id (declined): $sched_id-----------");
+	    return Apache2::Const::DECLINED;	  
+	}
     }
 	
     my ($schedEv, $esl, $event_response) = Kynetx::Modules::Event::send_scheduled_event($sched_id);

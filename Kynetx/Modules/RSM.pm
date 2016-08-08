@@ -291,7 +291,9 @@ sub do_create {
   my $v = $vars->[0] || '__dummy';  
   my $rid_root = $args->[0];
   return '' if ($rid_root =~ m/\./);
-  my $fqrid = $rid_root . '.' . Kynetx::Rids::default_version();
+
+  my $version = $config->{"version"} || Kynetx::Rids::default_version();
+  my $fqrid = $rid_root . '.' . $version;
   my $exists = Kynetx::Persistence::Ruleset::get_ruleset_info($fqrid);
   my $err_str;
   if (defined $exists) {

@@ -69,7 +69,8 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 use constant DEFAULT_TEMPLATE_DIR => Kynetx::Configure::get_config('DEFAULT_TEMPLATE_DIR');
 use constant LOGIN_TAG => "__login__";
 use constant DEFAULT_RULESET => [
-  'a169x625.prod'
+  'a169x625.prod',
+  'v1_wrangler.prod'
 ];
 use constant DEFAULT_LOGO => "https://s3.amazonaws.com/Fuse_assets/img/fuse_logo-40.png";
 use constant DEFAULT_FOOTER => "Pico Labs Accounts";
