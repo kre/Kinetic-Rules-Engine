@@ -292,7 +292,7 @@ sub do_create {
   my $rid_root = $args->[0];
   return '' if ($rid_root =~ m/\./);
 
-  my $version = $config->{"version"} || Kynetx::Rids::default_version();
+  my $version = $config->{"rid_version"} || Kynetx::Rids::default_version();
   my $fqrid = $rid_root . '.' . $version;
   my $exists = Kynetx::Persistence::Ruleset::get_ruleset_info($fqrid);
   my $err_str;
