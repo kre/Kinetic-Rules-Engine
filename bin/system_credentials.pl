@@ -57,10 +57,11 @@ $Data::Dumper::Indent = 1;
 my $logger = get_logger();
 my $r = Kynetx::Test::configure();
 
-my $salt =  $ARGV[0];
+# this is the PCI_KEY config param in the system configuration
+my $pci_key =  $ARGV[0];
 
 
-my $system_key = Kynetx::Modules::PCI::create_system_key($salt);
+my $system_key = Kynetx::Modules::PCI::create_system_key($pci_key);
 
-print "System key: $system_key";
+print "System key: $system_key \n";
 
