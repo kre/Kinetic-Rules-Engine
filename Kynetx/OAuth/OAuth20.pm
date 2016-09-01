@@ -257,9 +257,10 @@ sub workflow {
       my $username = $params->{'username'};
       $logger->debug("Username: $username");
        my $json = {
-        "username" => $username
+        "username" => lc($username)
       };
-      my $found = Kynetx::Persistence::KEN::ken_lookup_by_username($username);
+      my $found =  Kynetx::Persistence::KEN::ken_lookup_by_username($username)
+                || Kynetx::Persistence::KEN::ken_lookup_by_username(lc($username));
       if ($found) {
         $json->{'available'} = 0
       } else {
@@ -488,7 +489,8 @@ sub create_account {
   $logger->trace("$username $password $email");
   if ($username && $password && $email) {
     # check username 
-    my $ken = Kynetx::Persistence::KEN::ken_lookup_by_username($username);
+    my $ken =  Kynetx::Persistence::KEN::ken_lookup_by_username($username)
+            || Kynetx::Persistence::KEN::ken_lookup_by_username(lc($username));
     my $hash = Kynetx::Modules::PCI::_hash_password($password);
     if ($ken) {
       $logger->warn("$username is already in use");
@@ -497,12 +499,12 @@ sub create_account {
     my $created = DateTime->now->epoch;
 
     my $dflt = {
-		"username" => $username,
+		"username" => lc($username),
 		"firstname" => $firstname,
 		"lastname" => $lastname,
 		"password" => $hash,
 		"created" => $created,
-		"email" => $email,
+		"email" => lc($email),
 		"_id" => $oid,
 		"user_id" => $userid
 	       };
@@ -647,7 +649,7 @@ sub authorize_app {
   my $redirect = $params->{'uri_redirect'};
   my $d_ken = Kynetx::Persistence::KEN::ken_lookup_by_token($developer_eci);
   my $app_info = Kynetx::Persistence::KPDS::get_app_info($d_ken,$developer_eci);
-  my $username =   Kynetx::Persistence::KEN::get_ken_value($ken,'username');              
+  my $username =   lc(Kynetx::Persistence::KEN::get_ken_value($ken,'username'));              
   $dialog->param('USERNAME' => $username );
   $dialog->param('APP_NAME' => $app_info->{'name'});
   $dialog->param('ICON' => $app_info->{'icon'});
@@ -696,7 +698,7 @@ sub profile_page {
   $dialog->param("PLATFORM" => _platform());
   $dialog->param('LOGO_IMG_URL' => DEFAULT_LOGO);
   $dialog->param('FOOTER_TEXT' => DEFAULT_FOOTER);
-  my $username = Kynetx::Persistence::KEN::get_ken_value($ken,'username');
+  my $username = lc(Kynetx::Persistence::KEN::get_ken_value($ken,'username'));
   $dialog->param("USERNAME" => $username);
   $dialog->param("PAGEFORM" => profile_update($ken,$session_id,$error));
   $dialog->param('PLATFORM' => _platform());
@@ -874,14 +876,15 @@ sub email_reset_link {
 _EOF_
 
   # put all the checking, etc. here...
-  my $ken = Kynetx::Persistence::KEN::ken_lookup_by_email($reset_email);
+  my $ken =  Kynetx::Persistence::KEN::ken_lookup_by_email($reset_email) 
+          || Kynetx::Persistence::KEN::ken_lookup_by_email(lc($reset_email));
   $logger->debug("Ken: ", $ken);
   if ($ken) { # account exists
       my $ug = new Data::UUID;
       my $key = $ug->create_str();
       my $memd = get_memd();
       my $reset_obj = {"timestamp" => time, 
-		       "email" => $reset_email, 
+		       "email" => lc($reset_email), 
 		       "ken" => $ken,
 		       "key" => $key
 		      };
@@ -906,7 +909,7 @@ _EOF_
 
       $reset_email =~ s/\+/%2B/g;
       my $sg = Mail::SendGrid->new( from => $acct_system_owner_email,
-				    to => $reset_email,
+				    to => lc($reset_email),
 				    subject => "Reset your $acct_system_owner password",
 				    text => $msg,
 				  );
@@ -1059,7 +1062,8 @@ sub _validate_password {
   my $logger = get_logger();
   if ($username) {
     $logger->trace("Uname: $username");
-    my $ken = Kynetx::Modules::PCI::_username($username);
+    my $ken =  Kynetx::Modules::PCI::_username($username) 
+            || Kynetx::Modules::PCI::_username(lc($username));
     $logger->trace("Pword: $password");    
     if ($ken) {
       if (Kynetx::Modules::PCI::auth_ken($ken,$password)){
@@ -1139,7 +1143,8 @@ sub username_available {
   my $json = {
     "username" => $username
   };
-  my $found = Kynetx::Persistence::KEN::ken_lookup_by_username($username);
+  my $found =  Kynetx::Persistence::KEN::ken_lookup_by_username($username)
+            || Kynetx::Persistence::KEN::ken_lookup_by_username(lc($username));
   if ($found) {
     $json->{'available'} = 0
   } else {
