@@ -220,7 +220,6 @@ sub eval_ruleset_function {
 	) {
     $logger->debug("Request info: ", sub {Dumper($req_info)});
     $logger->error("Bad ECI; aborting");
-    die;
     $result = {"error" => 103,
 	       "error_str" => "No ECI defined"
 	      };
