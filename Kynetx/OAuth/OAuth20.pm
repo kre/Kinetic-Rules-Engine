@@ -20,6 +20,31 @@ package Kynetx::OAuth::OAuth20;
 # Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 # MA 02111-1307 USA
 #
+
+# Note: 12 July 2017
+# This is a gateway that bridged the gap between OAuth and the KRL system
+# It's primary purpose was to provide the Resource Owner's hosted 'authorize' page
+# as part of the OAuth dance, but as part of that. It needed to provide the login
+# or 'authenticate' page for the User.
+#
+# The other half of the process was to collect the 'OAuth' Access Token and translate that into
+# the native KRL engine KEN/Token scheme
+# 
+# If the token was invalid the workflow offered the choice of re-authorizing an app, performing a
+# token refresh or stopping the whole process.
+#
+# Since this also acted as the gateway to a project we were working on, the workflow also offered 
+# a plain login system to jump start the process and bring the user back into the project.
+# As a cloud application engine that could host many applications by a multitude of developers
+# (and a user could be subscribed to any number of these, with concurrent logins on multiple devices)
+# There were a number of edge cases and ways to get into trouble.
+# 
+# Some of these cases we simplified out of existence and others we might have forced to work via
+# some specific (or arcane) logic.  That being said, while the other files in this repo attempt to 
+# hew closely to the OAuth flow, this file should be not be considered dogma and in the face of code
+# that seems to be arbitrary, it may well be arbitrary--so don't panic.
+# MEH
+
 use strict;
 use lib qw(/web/lib/perl);
 use utf8;
