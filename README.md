@@ -1,4 +1,10 @@
 
+# Historical Note (301 - Permanent Redirect)
+
+The code in this repository is no longer being maintained. We have rebuilt the rules engine as a Node.js application. The [new version of the engine is available from this repository](https://github.com/Picolab/pico-engine). 
+
+The easiest way to get started with the new engine is to [use this Quickstart](https://picolabs.atlassian.net/wiki/spaces/docs/pages/19791878/Pico+Engine+Quickstart). 
+
 # Kinetic Rules Engine (KRE)
 
 The Kinetic Rules Engine (KRE), a open-source, cloud-based rule processing system. All of the properties listed above are present in any KRE system.
@@ -16,23 +22,9 @@ Picos ececute a rule-based programming langauge called KRL.
 
 The result of these properties is a programming model that more closely resembles programming cloud-based persistent objects. 
 
-## Project Roadmap
-
-### Picos
-
-## Using the Rules Engine
-
-You can use the rules engine by createing an [account on the server that Pico Labs maintains](https://accounts.kobj.net/login).
-
-Further instructions are available at the [Quickstart](http://developer.kynetx.com/display/docs/Quickstart). 
-
-## Running the Rules Engine
-
-There is currently no good way for developers to host their own instance of KRE. There is a Docker project in the roadmap that will allow this. 
-
 ## Contributing
 
-If you'd like to contribute, please [contact Phil Windley](http://xri.net/=windley). Be sure to include your Github account name.
+If you'd like to contribute, please [contact Phil Windley](http://www.windley.com/contact). Be sure to include your Github account name.
 
 We use [HuBoard](https://huboard.com/kre/Kinetic-Rules-Engine) to organize and track issues. Once you have access to KRE you should be able to use HuBoard to watch issues. Anything in the *Ready* column should be ready to work. Please assign yourself and move it to the ready column. Do your work in a fork of the project and submit your changes as a pull request. 
 
